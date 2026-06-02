@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   tiempoFinal: string; filtroTipo: string; sugerenciasUso: string;
+  _insight?: any;
 }
 
 export function filtroNdStopsTiempo(inputs: Inputs): Outputs {
@@ -41,9 +42,31 @@ export function filtroNdStopsTiempo(inputs: Inputs): Outputs {
   else if (tiempoFinal < 30) uso = 'Aguas sedosas, atardeceres largos.';
   else if (tiempoFinal < 120) uso = 'Nubes fluidas, personas borrosas en calles.';
   else uso = 'Personas desaparecen, día como noche. Usá trípode muy robusto.';
+  const filtroNombre = mapND[stops] || `ND ${Math.pow(2, stops)}×`;
+  let insTone: 'good' | 'warn' | 'neutral';
+  let insTitle: string;
+  let insIcon: string;
+  let insText: string;
+  if (tiempoFinal < 1) {
+    insTone = 'neutral';
+    insTitle = 'Exposición rápida';
+    insIcon = '📷';
+    insText = `Con el **${filtroNombre}** (+${stops} stops) la exposición queda en **${formato}**: muy corta para barridos, ideal para bajar la velocidad en video o disparar a diafragma abierto bajo sol fuerte.`;
+  } else if (tiempoFinal < 30) {
+    insTone = 'good';
+    insTitle = 'Larga exposición a mano de trípode';
+    insIcon = '🌊';
+    insText = `El **${filtroNombre}** lleva la exposición a **${formato}**: el punto justo para aguas sedosas y nubes con movimiento. Con trípode estable y disparador remoto sale limpio.`;
+  } else {
+    insTone = 'warn';
+    insTitle = 'Exposición muy larga';
+    insIcon = '⏱️';
+    insText = `Con el **${filtroNombre}** la exposición trepa a **${formato}**: a esos tiempos cualquier viento o vibración arruina la toma. Usá trípode muy robusto, bloqueá el espejo y dispará con remoto o temporizador.`;
+  }
   return {
     tiempoFinal: formato,
-    filtroTipo: mapND[stops] || `ND ${Math.pow(2, stops)}×`,
+    filtroTipo: filtroNombre,
     sugerenciasUso: uso,
+    _insight: { title: insTitle, text: insText, tone: insTone, icon: insIcon },
   };
 }

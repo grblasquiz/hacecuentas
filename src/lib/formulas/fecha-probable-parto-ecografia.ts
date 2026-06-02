@@ -8,6 +8,8 @@ export interface Outputs {
   fechaParto: string;
   semanasActuales: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function fechaProbablePartoEcografia(i: Inputs): Outputs {
@@ -51,9 +53,47 @@ export function fechaProbablePartoEcografia(i: Inputs): Outputs {
     `FPP: ${fechaParto} | ` +
     `Hoy: ${semanasActuales}.`;
 
+  const diasHastaParto = Math.max(0, Math.floor((fpp.getTime() - hoy.getTime()) / 86400000));
+
+  // Insight dinámico según edad gestacional actual
+  let insight;
+  if (semanasHoy >= 37) {
+    insight = {
+      title: 'Embarazo a término',
+      text: `Según la ecografía, hoy llevás **${semanasActuales}**: ya estás en zona de término. La fecha probable de parto es el **${fechaParto}**.`,
+      tone: 'good',
+      icon: '👶',
+    };
+  } else {
+    insight = {
+      title: 'Datación por ecografía',
+      text: `La ecografía ubica el embarazo en **${semanasActuales}** hoy, con fecha probable de parto el **${fechaParto}** (faltan **${diasHastaParto} ${diasHastaParto === 1 ? 'día' : 'días'}**). La datación por eco del primer trimestre es la más precisa.`,
+      tone: 'neutral',
+      icon: '🩺',
+    };
+  }
+
+  // Gauge de avance del embarazo (0–42 semanas) con zonas por trimestre.
+  const markerSem = Math.max(0, Math.min(semanasHoy, 42));
+  const chart = {
+    type: 'scale',
+    marker: markerSem,
+    markerLabel: `Semana ${markerSem}`,
+    min: 0,
+    segments: [
+      { nombre: '1.er trimestre', max: 13, color: '#bfdbfe', colorDark: '#1e3a8a' },
+      { nombre: '2.º trimestre', max: 27, color: '#a7f3d0', colorDark: '#065f46' },
+      { nombre: '3.er trimestre', max: 40, color: '#fde68a', colorDark: '#92400e' },
+      { nombre: 'Postérmino', max: 42, color: '#fecaca', colorDark: '#991b1b' },
+    ],
+    ariaLabel: `Avance del embarazo: semana ${markerSem} de 40.`,
+  };
+
   return {
     fechaParto,
     semanasActuales,
     detalle,
+    _insight: insight,
+    _chart: chart,
   };
 }

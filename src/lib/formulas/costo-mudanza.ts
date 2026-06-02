@@ -1,6 +1,6 @@
 /** Estimador de costo de mudanza */
 export interface Inputs { ambientes?: string; distanciaKm: number; piso?: string; ascensor?: string; }
-export interface Outputs { costoEstimado: number; detalle: string; }
+export interface Outputs { costoEstimado: number; detalle: string; _insight?: any; }
 
 export function costoMudanza(i: Inputs): Outputs {
   const amb = String(i.ambientes || '2-dormitorios');
@@ -28,16 +28,18 @@ export function costoMudanza(i: Inputs): Outputs {
   costo += Math.min(dist, 10) * 1000;
 
   // Recargo piso con ascensor
+  let recargoPiso = 1.0;
   if (asc === 'si') {
-    if (piso === '1-3') costo *= 1.05;
-    else if (piso === '4-6') costo *= 1.10;
-    else if (piso === '7-mas') costo *= 1.15;
+    if (piso === '1-3') recargoPiso = 1.05;
+    else if (piso === '4-6') recargoPiso = 1.10;
+    else if (piso === '7-mas') recargoPiso = 1.15;
   } else {
     // Sin ascensor: recargo mayor
-    if (piso === '1-3') costo *= 1.30;
-    else if (piso === '4-6') costo *= 1.45;
-    else if (piso === '7-mas') costo *= 1.50;
+    if (piso === '1-3') recargoPiso = 1.30;
+    else if (piso === '4-6') recargoPiso = 1.45;
+    else if (piso === '7-mas') recargoPiso = 1.50;
   }
+  costo *= recargoPiso;
 
   costo = Math.round(costo / 1000) * 1000; // Redondear a miles
 
@@ -56,8 +58,30 @@ export function costoMudanza(i: Inputs): Outputs {
     '7-mas': 'piso 7+',
   };
 
+  const pctRecargo = Math.round((recargoPiso - 1) * 100);
+  const sinAscAlto = asc === 'no' && (piso === '4-6' || piso === '7-mas');
+
+  let insightText: string;
+  let insightTone: string;
+  if (sinAscAlto) {
+    insightText = `Tu mudanza de ${ambLabel[amb] || amb} sale **$${fmt.format(costo)}**. Subir por escalera (${pisoLabel[piso] || piso}, **sin ascensor**) le suma un **+${pctRecargo}%** de recargo por la carga a pulso: es el factor que más encarece. Si conseguís un montacargas o ascensor de servicio, bajás bastante el presupuesto.`;
+    insightTone = 'warn';
+  } else if (recargoPiso > 1) {
+    insightText = `Tu mudanza de ${ambLabel[amb] || amb} sale **$${fmt.format(costo)}**, ya con un **+${pctRecargo}%** de recargo por el piso (${pisoLabel[piso] || piso}). La distancia de **${fmt.format(dist)} km** influye, pero el peso real lo ponen el volumen y la altura.`;
+    insightTone = 'neutral';
+  } else {
+    insightText = `Tu mudanza de ${ambLabel[amb] || amb} en planta baja/casa sale **$${fmt.format(costo)}** para **${fmt.format(dist)} km**. Al no haber escaleras ni ascensor que compliquen la carga, evitás los recargos de altura que suelen encarecer estos servicios.`;
+    insightTone = 'good';
+  }
+
   return {
     costoEstimado: costo,
     detalle: `Mudanza de ${ambLabel[amb] || amb}, ${pisoLabel[piso] || piso} ${asc === 'no' ? 'sin ascensor' : 'con ascensor'}, ${fmt.format(dist)} km de distancia. Costo estimado: $${fmt.format(costo)}. Pedí al menos 3 presupuestos para comparar.`,
+    _insight: {
+      title: 'Qué encarece tu mudanza',
+      text: insightText,
+      tone: insightTone,
+      icon: '📦',
+    },
   };
 }

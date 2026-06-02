@@ -2,7 +2,7 @@
  * Conversor Binario ↔ Decimal ↔ Hexadecimal ↔ Octal
  */
 export interface ConversorBinarioInputs { numero: string; sistemaOrigen: string; }
-export interface ConversorBinarioOutputs { decimal: string; binario: string; hexadecimal: string; octal: string; resultado: string; }
+export interface ConversorBinarioOutputs { decimal: string; binario: string; hexadecimal: string; octal: string; resultado: string; _insight?: any; }
 
 function validarBinario(s: string): boolean {
   return /^[01]+$/.test(s);
@@ -61,5 +61,16 @@ export function conversorBinarioDecimal(inputs: ConversorBinarioInputs): Convers
 
   const resultado = `${numero} (${nombreSistema[sistema] || 'Decimal'}) = ${decimal} (Decimal) = ${binario} (Binario) = ${hexadecimal} (Hex) = ${octal} (Octal)`;
 
-  return { decimal, binario, hexadecimal, octal, resultado };
+  const bits = binario.length;
+  const bytesNec = Math.ceil(bits / 8);
+  const paridad = valorDecimal % 2 === 0 ? 'par' : 'impar';
+
+  const _insight = {
+    title: 'Cómo se guarda este número',
+    text: `El decimal **${decimal}** ocupa **${bits} bit${bits === 1 ? '' : 's'}** en binario (${bytesNec} byte${bytesNec === 1 ? '' : 's'}) y es un número **${paridad}**. En hexadecimal se escribe **${hexadecimal}**, la notación que usan colores, direcciones de memoria y códigos de error.`,
+    tone: 'neutral',
+    icon: '🔢',
+  };
+
+  return { decimal, binario, hexadecimal, octal, resultado, _insight };
 }

@@ -9,5 +9,15 @@ export function huronFerretDietaProteinaAnimal(i: Inputs): Outputs {
     : __lang === 'pt'
     ? `Cálculo: ${v1} × ${v2} / 10 = ${r.toFixed(2)}.`
     : `Cálculo: ${v1} × ${v2} / 10 = ${r.toFixed(2)}.`;
-  return { resultado:r.toFixed(2), resumen };
+  const insight = {
+    title: __lang === 'en' ? 'Result' : __lang === 'pt' ? 'Resultado' : 'Resultado',
+    text: __lang === 'en'
+      ? `Ferrets are obligate carnivores: their diet must be **high in animal protein** and **fat**, with almost no carbohydrates or fiber. With your inputs the result is **${r.toFixed(2)}**.`
+      : __lang === 'pt'
+      ? `O furão é um carnívoro obrigatório: a dieta deve ser **rica em proteína animal** e **gordura**, com quase nada de carboidratos ou fibra. Com seus dados o resultado é **${r.toFixed(2)}**.`
+      : `El hurón es un carnívoro estricto: su dieta debe ser **alta en proteína animal** y **grasa**, con casi nada de carbohidratos ni fibra. Con tus datos el resultado es **${r.toFixed(2)}**.`,
+    tone: 'neutral',
+    icon: '🦦',
+  };
+  return { resultado:r.toFixed(2), resumen, _insight: insight };
 }

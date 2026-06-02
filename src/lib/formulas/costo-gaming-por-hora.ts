@@ -10,6 +10,7 @@ export interface Outputs {
   costoCineHora: number;
   costoNetflixHora: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function costoGamingPorHora(i: Inputs): Outputs {
@@ -35,10 +36,29 @@ export function costoGamingPorHora(i: Inputs): Outputs {
     mensaje = `A $${costoPorHora.toFixed(0)}/hora, el gaming está caro. Necesitás jugar al menos ${horasAmortizar} hs para que sea más barato que el cine.`;
   }
 
+  let insightTone: string, insightText: string;
+  if (costoPorHora < costoNetflixHora) {
+    insightTone = 'good';
+    insightText = `A **$${costoPorHora.toFixed(0)}/hora** el juego ya es tu entretenimiento más barato: por debajo de Netflix ($${costoNetflixHora.toFixed(0)}/h) y muy por debajo del cine ($${costoCineHora.toFixed(0)}/h). Lo amortizaste de sobra.`;
+  } else if (costoPorHora < costoCineHora) {
+    insightTone = 'neutral';
+    insightText = `A **$${costoPorHora.toFixed(0)}/hora** el juego rinde mejor que el cine ($${costoCineHora.toFixed(0)}/h) pero todavía sale más que Netflix ($${costoNetflixHora.toFixed(0)}/h). Cada hora extra que le metas baja el costo.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `A **$${costoPorHora.toFixed(0)}/hora** el juego sale más caro que ir al cine ($${costoCineHora.toFixed(0)}/h): jugaste pocas horas para lo que pagaste. Dale más uso antes de juzgar la compra.`;
+  }
+  const _insight = {
+    title: 'Vale lo que pagaste?',
+    text: insightText,
+    tone: insightTone,
+    icon: '🎮',
+  };
+
   return {
     costoPorHora: Number(costoPorHora.toFixed(0)),
     costoCineHora: Number(costoCineHora.toFixed(0)),
     costoNetflixHora: Number(costoNetflixHora.toFixed(0)),
     mensaje,
+    _insight,
   };
 }

@@ -1,6 +1,6 @@
 /** Instagram Pago por Historia */
 export interface Inputs { seguidores: number; engagementRate: number; conLink: string; cantidadStories: number; }
-export interface Outputs { precioUnitario: string; precioTotal: string; reachEstimado: string; cpmEquivalente: string; }
+export interface Outputs { precioUnitario: string; precioTotal: string; reachEstimado: string; cpmEquivalente: string; _insight?: any; }
 
 export function instagramInfluencerPagoHistoria(i: Inputs): Outputs {
   const seg = Number(i.seguidores);

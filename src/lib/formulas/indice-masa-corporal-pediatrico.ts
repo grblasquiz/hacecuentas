@@ -13,6 +13,7 @@ export interface Outputs {
   clasificacion: string;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // CDF de la normal estándar — aproximación Abramowitz & Stegun 26.2.17 (error < 7.5e-8).
@@ -130,11 +131,26 @@ export function indiceMasaCorporalPediatrico(i: Inputs): Outputs {
     ariaLabel: 'Escala de percentil de IMC pediátrico (CDC 2000): bajo peso, normal, sobrepeso y obesidad.',
   };
 
+  const esNormal = percentilExacto >= 5 && percentilExacto < 85;
+  const insight = {
+    title: `${clasificacion} para la edad`,
+    text: esNormal
+      ? `Un IMC de **${imc.toFixed(1)} kg/m²** ubica a ${sexo === 'f' ? 'la nena' : 'el nene'} de **${edadAnios} años** en el **percentil ${pRound}**, dentro del rango saludable (P5–P85) según las tablas CDC.`
+      : percentilExacto < 5
+      ? `Un IMC de **${imc.toFixed(1)} kg/m²** cae en el **percentil ${pRound}** (por debajo del P5): bajo peso para la edad. Conviene una evaluación pediátrica del crecimiento.`
+      : percentilExacto < 95
+      ? `Un IMC de **${imc.toFixed(1)} kg/m²** ubica a ${sexo === 'f' ? 'la nena' : 'el nene'} en el **percentil ${pRound}** (P85–P95): sobrepeso para la edad. Vale revisar hábitos de alimentación y actividad con el pediatra.`
+      : `Un IMC de **${imc.toFixed(1)} kg/m²** alcanza el **percentil ${pRound}** (≥ P95): obesidad para la edad. Se recomienda consulta pediátrica para un plan de seguimiento.`,
+    tone: esNormal ? 'good' : 'warn',
+    icon: esNormal ? '✅' : '⚠️',
+  };
+
   return {
     imc: Number(imc.toFixed(1)),
     percentilAprox,
     clasificacion,
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

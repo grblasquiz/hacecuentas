@@ -15,6 +15,8 @@ export interface Outputs {
   anticipo_siguiente: number;
   tasa_efectiva: number;
   impuesto_neto_retenciones: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -39,7 +41,13 @@ export function compute(i: Inputs): Outputs {
       renta_total_a_pagar: 0,
       anticipo_siguiente: 0,
       tasa_efectiva: 0,
-      impuesto_neto_retenciones: 0
+      impuesto_neto_retenciones: 0,
+      _insight: {
+        title: 'Sin utilidad fiscal',
+        text: `Con una utilidad fiscal negativa no se genera impuesto de renta este período. Podés trasladar la **pérdida fiscal** a ejercicios siguientes según el Estatuto Tributario.`,
+        tone: 'neutral',
+        icon: '🏢'
+      }
     };
   }
   
@@ -79,13 +87,42 @@ export function compute(i: Inputs): Outputs {
   // 8. Tarifa aplicable a reportar (expresada como porcentaje)
   const tarifa_aplicable = (tarifa_zona + (i.sector === 'financiera' || i.sector === 'seguros' ? SOBRETASA_FINANCIERA : 0)) * 100;
   
-  return {
+  // Insight narrativo dinámico
+  const fmtCo = (n: number) => '$' + Math.round(n).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+  const _insight = {
+    title: 'Cuánto paga tu sociedad de renta',
+    text: sobretasa > 0
+      ? `Con tarifa del **35%** más la **sobretasa del 5%** del sector financiero, el impuesto sobre **${fmtCo(i.utilidad_fiscal)}** de utilidad es **${fmtCo(renta_bruta)}** (tasa efectiva **${(Math.round(tasa_efectiva * 100) / 100)}%**). Tras descontar **${fmtCo(i.retenciones_pagadas)}** de retenciones, te quedan por pagar **${fmtCo(renta_total_a_pagar)}**.`
+      : `A la tarifa del **${(Math.round(tarifa_aplicable * 100) / 100)}%**, el impuesto sobre **${fmtCo(i.utilidad_fiscal)}** de utilidad fiscal es **${fmtCo(renta_bruta)}**. Descontando **${fmtCo(i.retenciones_pagadas)}** de retenciones ya pagadas, el saldo a pagar es **${fmtCo(renta_total_a_pagar)}**.`,
+    tone: 'warn',
+    icon: '🏢'
+  };
+
+  // Donut solo si hay sobretasa (renta ordinaria + sobretasa componen el impuesto bruto)
+  const out: Outputs = {
     tarifa_aplicable: tarifa_aplicable,
     renta_ordinaria: Math.round(renta_ordinaria),
     sobretasa: Math.round(sobretasa),
     renta_total_a_pagar: Math.round(renta_total_a_pagar),
     anticipo_siguiente: Math.round(anticipo_siguiente),
     tasa_efectiva: Math.round(tasa_efectiva * 100) / 100,
-    impuesto_neto_retenciones: Math.round(impuesto_neto_retenciones)
+    impuesto_neto_retenciones: Math.round(impuesto_neto_retenciones),
+    _insight
   };
+
+  if (sobretasa > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Renta ordinaria (35%)', value: Math.round(renta_ordinaria) },
+        { label: 'Sobretasa (5%)', value: Math.round(sobretasa) }
+      ],
+      prefix: '$',
+      centerValue: fmtCo(renta_bruta),
+      centerLabel: 'Impuesto bruto',
+      ariaLabel: `Composición del impuesto bruto de ${fmtCo(renta_bruta)}: renta ordinaria ${fmtCo(renta_ordinaria)} más sobretasa financiera ${fmtCo(sobretasa)}`
+    };
+  }
+
+  return out;
 }

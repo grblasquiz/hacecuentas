@@ -1,5 +1,5 @@
 export interface Inputs { orientacion: string; }
-export interface Outputs { zonaEntrada: string; zonaFondo: string; zonaCentro: string; consejo: string; }
+export interface Outputs { zonaEntrada: string; zonaFondo: string; zonaCentro: string; consejo: string; _insight?: any; }
 const BAGUA: Record<string, { entrada: string; fondo: string; centro: string; consejo: string }> = {
   norte: { entrada: 'Carrera/Profesión (agua)', fondo: 'Fama/Reputación (fuego)', centro: 'Salud/Equilibrio (tierra)', consejo: 'Puerta al norte: activá la zona con fuentes de agua o espejos. El color azul potencia la carrera.' },
   sur: { entrada: 'Fama/Reputación (fuego)', fondo: 'Carrera/Profesión (agua)', centro: 'Salud/Equilibrio (tierra)', consejo: 'Puerta al sur: zona de fuego. Usá velas, luces cálidas y colores rojos o naranjas en la entrada.' },
@@ -13,5 +13,14 @@ const BAGUA: Record<string, { entrada: string; fondo: string; centro: string; co
 export function fengShuiBaguaOrientacion(i: Inputs): Outputs {
   const ori = String(i.orientacion || 'norte');
   const data = BAGUA[ori]; if (!data) throw new Error('Orientación no válida');
-  return { zonaEntrada: data.entrada, zonaFondo: data.fondo, zonaCentro: data.centro, consejo: data.consejo };
+
+  const oriLabel = ori.charAt(0).toUpperCase() + ori.slice(1);
+  const _insight = {
+    title: 'Tu mapa Bagua',
+    text: `Con la puerta al **${oriLabel}**, la entrada cae en la zona de **${data.entrada}** y el fondo en **${data.fondo}**. El centro siempre es Salud/Equilibrio: mantenelo despejado y ordenado.`,
+    tone: 'neutral' as const,
+    icon: '🧭',
+  };
+
+  return { zonaEntrada: data.entrada, zonaFondo: data.fondo, zonaCentro: data.centro, consejo: data.consejo, _insight };
 }

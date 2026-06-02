@@ -2,7 +2,7 @@
  * Comida diaria del perro por raza.
  */
 export interface Inputs { raza: string; pesoActual: number; edad: string; actividad: string; }
-export interface Outputs { gramosDia: number; gramosMin: number; gramosMax: number; comidasDia: number; kgMes: number; }
+export interface Outputs { gramosDia: number; gramosMin: number; gramosMax: number; comidasDia: number; kgMes: number; _insight?: any; _chart?: any; }
 
 const RAZAS: Record<string, { comidaMin: number; comidaMax: number }> = {
   'labrador-retriever': { comidaMin: 300, comidaMax: 450 },
@@ -44,11 +44,41 @@ export function comidaDiariaRazaPerro(inputs: Inputs): Outputs {
   const comidasDia = edad === 'cachorro' ? 3 : 2;
   const kgMes = (promedio * 30) / 1000;
 
+  const gramosDia = Math.round(promedio);
+  const razaTxt = raza.replace(/-/g, ' ');
+  const _insight = {
+    title: 'Su ración diaria',
+    text: `Un ${razaTxt} de **${peso} kg** (${edad}, actividad ${actividad}) necesita unos **${gramosDia} g** de balanceado por día —entre **${Math.round(min)}** y **${Math.round(max)} g** según la marca—, repartidos en **${comidasDia} comidas**. Eso son cerca de **${Number(kgMes.toFixed(1))} kg al mes**. Ajustá dentro del rango mirando su condición corporal: tiene que tener cintura y costillas que se palpen sin verse.`,
+    tone: 'neutral',
+    icon: '🐶',
+  };
+
+  // Donut: la ración diaria repartida en comidas (suman gramosDia exacto)
+  const slices = [];
+  let acumulado = 0;
+  const base = Math.floor(gramosDia / comidasDia);
+  for (let k = 0; k < comidasDia; k++) {
+    const esUltima = k === comidasDia - 1;
+    const val = esUltima ? gramosDia - acumulado : base;
+    acumulado += val;
+    slices.push({ label: `Comida ${k + 1}`, value: val });
+  }
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '',
+    centerValue: `${gramosDia} g`,
+    centerLabel: 'por día',
+    ariaLabel: `Ración diaria de ${gramosDia} gramos repartida en ${comidasDia} comidas`,
+  };
+
   return {
-    gramosDia: Math.round(promedio),
+    gramosDia,
     gramosMin: Math.round(min),
     gramosMax: Math.round(max),
     comidasDia,
     kgMes: Number(kgMes.toFixed(1)),
+    _insight,
+    _chart,
   };
 }

@@ -16,6 +16,8 @@ export interface Outputs {
   gasto_anual_con_adicionales: number;
   costo_esterilizacion: number;
   detalle_mascota: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -88,14 +90,51 @@ export function compute(i: Inputs): Outputs {
   const comida_nombre = i.tipo_comida === 'premium' ? 'Premium' : 'Estándar';
   const detalle_mascota = `${tipo_nombre[i.tipo_mascota]} | Comida ${comida_nombre} | ${i.veterinario_anual} visitas vet/año | ${i.peluqueria_anual} peluquería/año | Esterilizado: ${i.incluir_esterilizacion ? 'Sí' : 'No'}`;
 
+  const totalRound = Math.round(gasto_mensual_total);
+  const comidaRound = Math.round(gasto_mensual_comida);
+  const vetRound = Math.round(gasto_mensual_veterinario);
+  const peluRound = Math.round(gasto_mensual_peluqueria);
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  // Rubro dominante del gasto mensual
+  const rubros = [
+    { nombre: 'comida', valor: comidaRound },
+    { nombre: 'veterinario', valor: vetRound },
+    { nombre: 'peluquería', valor: peluRound }
+  ].sort((a, b) => b.valor - a.valor);
+  const dominante = rubros[0];
+  const pctDominante = totalRound > 0 ? Math.round((dominante.valor / totalRound) * 100) : 0;
+
+  const _insight = {
+    title: 'Cuánto sale tu mascota al mes',
+    text: `Mantener a tu mascota cuesta **${fmtCLP(totalRound)}/mes** (~**${fmtCLP(gasto_anual_base)}/año**), y el rubro más pesado es **${dominante.nombre}** con el **${pctDominante}%** del total. ${costo_esterilizacion > 0 ? `Sumá un único pago de **${fmtCLP(costo_esterilizacion)}** por la esterilización pendiente.` : 'La esterilización ya está cubierta, así que no carga el presupuesto.'}`,
+    tone: 'neutral',
+    icon: '🐾'
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Comida', value: comidaRound },
+      { label: 'Veterinario', value: vetRound },
+      { label: 'Peluquería', value: peluRound }
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(totalRound),
+    centerLabel: 'al mes',
+    ariaLabel: `Gasto mensual de ${fmtCLP(totalRound)} repartido en comida ${fmtCLP(comidaRound)}, veterinario ${fmtCLP(vetRound)} y peluquería ${fmtCLP(peluRound)}`
+  };
+
   return {
-    gasto_mensual_comida: Math.round(gasto_mensual_comida),
-    gasto_mensual_veterinario: Math.round(gasto_mensual_veterinario),
-    gasto_mensual_peluqueria: Math.round(gasto_mensual_peluqueria),
-    gasto_mensual_total: Math.round(gasto_mensual_total),
+    gasto_mensual_comida: comidaRound,
+    gasto_mensual_veterinario: vetRound,
+    gasto_mensual_peluqueria: peluRound,
+    gasto_mensual_total: totalRound,
     gasto_anual_base: Math.round(gasto_anual_base),
     gasto_anual_con_adicionales: Math.round(gasto_anual_con_adicionales),
     costo_esterilizacion: Math.round(costo_esterilizacion),
-    detalle_mascota: detalle_mascota
+    detalle_mascota: detalle_mascota,
+    _insight,
+    _chart
   };
 }

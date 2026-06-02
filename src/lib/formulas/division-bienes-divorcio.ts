@@ -15,6 +15,7 @@ export interface DivisionBienesOutputs {
   parteOtro: number;
   gananciales50: number;
   deudaCadaUno: number;
+  _insight?: any;
 }
 
 export function divisionBienesDivorcio(inputs: DivisionBienesInputs): DivisionBienesOutputs {
@@ -33,10 +34,23 @@ export function divisionBienesDivorcio(inputs: DivisionBienesInputs): DivisionBi
   const tuParte = gananciales50 + propiosA - deudaCadaUno;
   const parteOtro = gananciales50 + propiosB - deudaCadaUno;
 
+  const tuParteR = Math.round(tuParte);
+  const parteOtroR = Math.round(parteOtro);
+  const fmt = (n: number) => '$' + Math.abs(n).toLocaleString('es-AR');
+  const insightText = tuParteR < 0
+    ? `Tu liquidación final da **negativa (−${fmt(tuParteR)})**: tu mitad de deudas supera lo que recibís por gananciales y bienes propios. En la práctica significa que te quedás haciéndote cargo de deuda neta.`
+    : `Te corresponden **${fmt(tuParteR)}**: la mitad de los gananciales (${fmt(gananciales50)}) más tus bienes propios, menos tu mitad de las deudas (${fmt(deudaCadaUno)}). Los bienes propios no se reparten, por eso tu parte y la del otro cónyuge difieren según quién traía más patrimonio propio.`;
+
   return {
-    tuParte: Math.round(tuParte),
-    parteOtro: Math.round(parteOtro),
+    tuParte: tuParteR,
+    parteOtro: parteOtroR,
     gananciales50: Math.round(gananciales50),
     deudaCadaUno: Math.round(deudaCadaUno),
+    _insight: {
+      title: 'Cómo queda tu parte',
+      text: insightText,
+      tone: tuParteR < 0 ? 'warn' : 'neutral',
+      icon: '⚖️',
+    },
   };
 }

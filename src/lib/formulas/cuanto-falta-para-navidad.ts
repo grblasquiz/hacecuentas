@@ -1,6 +1,6 @@
 /** Cuenta regresiva para Navidad */
 export interface Inputs { fechaHoy: string; }
-export interface Outputs { diasFaltan: number; semanas: number; horas: number; diaNavidad: string; mensaje: string; }
+export interface Outputs { diasFaltan: number; semanas: number; horas: number; diaNavidad: string; mensaje: string; _insight?: any; }
 
 export function cuantoFaltaParaNavidad(i: Inputs): Outputs {
   const parts = String(i.fechaHoy || '').split('-').map(Number);
@@ -26,5 +26,16 @@ export function cuantoFaltaParaNavidad(i: Inputs): Outputs {
   else if (diasFaltan <= 30) mensaje = `Faltan ${diasFaltan} días (${semanas} semanas). ¡Hora de comprar regalos!`;
   else mensaje = `Faltan ${diasFaltan} días (${semanas} semanas y ${diasFaltan % 7} días) para Navidad ${year}.`;
 
-  return { diasFaltan: Math.max(0, diasFaltan), semanas, horas: Math.max(0, horas), diaNavidad, mensaje };
+  let _insight;
+  if (diasFaltan <= 0) {
+    _insight = { title: '¡Llegó Navidad!', text: 'Hoy es **25 de diciembre**: a disfrutar la mesa y los regalos. ¡Feliz Navidad! 🎄', tone: 'good', icon: '🎅' };
+  } else if (diasFaltan <= 7) {
+    _insight = { title: 'Recta final', text: `Quedan apenas **${diasFaltan} días** (${horas} horas) para Navidad. Últimas compras, envoltorios y a confirmar la cena del **${diaNavidad}**.`, tone: 'warn', icon: '⏰' };
+  } else if (diasFaltan <= 30) {
+    _insight = { title: 'Hora de organizarse', text: `Faltan **${diasFaltan} días** (${semanas} semanas) para el **${diaNavidad}**. Buen momento para cerrar la lista de regalos antes de que suban los precios.`, tone: 'neutral', icon: '🎁' };
+  } else {
+    _insight = { title: 'Todavía hay tiempo', text: `Faltan **${diasFaltan} días** (${semanas} semanas) para Navidad. Con esta anticipación podés ahorrar de a poco y cazar ofertas sin apuro.`, tone: 'good', icon: '🎄' };
+  }
+
+  return { diasFaltan: Math.max(0, diasFaltan), semanas, horas: Math.max(0, horas), diaNavidad, mensaje, _insight };
 }

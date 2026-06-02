@@ -12,6 +12,8 @@ export interface Outputs {
   total_anual_con_recargo: number;
   tasa_efectiva: number;
   exento: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -51,6 +53,47 @@ export function compute(i: Inputs): Outputs {
   // Tasa efectiva (porcentaje total sobre avalúo)
   const tasa_efectiva = (total_anual_con_recargo / i.avalu_fiscal) * 100;
 
+  const contribR = Math.round(contribucion_anual);
+  const recargoR = Math.round(recargo_conaf_anual);
+  const totalR = Math.round(total_anual_con_recargo);
+  const cuotaR = Math.round(valor_cuota);
+  const esPotExento = i.avalu_fiscal < LIMITE_EXENCION_PESOS;
+  const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  // Insight dinámico: exención potencial vs contribución plena
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (esPotExento) {
+    insightTone = 'good';
+    insightText = `Tu avalúo fiscal (**${fmtCL(i.avalu_fiscal)}**) está bajo el límite exento de ~${fmtCL(LIMITE_EXENCION_PESOS)} (${LIMITE_EXENCION_UF.toLocaleString('es-CL')} UF): **probablemente no pagás contribuciones**. La estimación plena sería **${fmtCL(totalR)}/año** — confirmá tu situación en el SII.`;
+  } else if (recargoR > 0) {
+    insightTone = 'warn';
+    insightText = `Pagás **${fmtCL(totalR)}/año** en 4 cuotas de **${fmtCL(cuotaR)}**: **${fmtCL(contribR)}** de contribución más **${fmtCL(recargoR)}** de recargo CONAF (tasa efectiva **${(Math.round(tasa_efectiva * 100) / 100).toFixed(2)}%** sobre el avalúo).`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `Tu contribución de bienes raíces es **${fmtCL(totalR)}/año**, que se paga en 4 cuotas de **${fmtCL(cuotaR)}** (abril, junio, septiembre y noviembre). Tasa efectiva: **${(Math.round(tasa_efectiva * 100) / 100).toFixed(2)}%** del avalúo fiscal.`;
+  }
+
+  const _insight = {
+    title: 'Tus contribuciones anuales',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏡',
+  };
+
+  // Donut: solo cuando el recargo CONAF aporta una segunda parte real.
+  const _chart = (recargoR > 0 && contribR > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Contribución base', value: contribR },
+      { label: 'Recargo CONAF', value: recargoR },
+    ],
+    prefix: '$',
+    centerValue: fmtCL(totalR),
+    centerLabel: 'Total anual',
+    ariaLabel: `Total anual de ${fmtCL(totalR)}: contribución base ${fmtCL(contribR)} más recargo CONAF ${fmtCL(recargoR)}`,
+  } : undefined;
+
   return {
     contribucion_anual: Math.round(contribucion_anual),
     valor_cuota: Math.round(valor_cuota),
@@ -58,5 +101,7 @@ export function compute(i: Inputs): Outputs {
     total_anual_con_recargo: Math.round(total_anual_con_recargo),
     tasa_efectiva: Math.round(tasa_efectiva * 100) / 100,
     exento,
+    _insight,
+    _chart,
   };
 }

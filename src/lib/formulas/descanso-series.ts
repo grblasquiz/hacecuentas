@@ -5,6 +5,8 @@ export interface Outputs {
   descansoFormateado: string;
   explicacion: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const BASE_DESCANSO: Record<string, number> = {
@@ -58,10 +60,32 @@ export function descansoSeries(i: Inputs): Outputs {
     ? 'Para hipertrofia, descansos de 90-180 seg generan estrés metabólico suficiente manteniendo la capacidad de trabajo. Estudios recientes (Schoenfeld 2016) sugieren que 2-3 min puede ser incluso mejor para compuestos.'
     : 'Para resistencia muscular, descansos cortos (30-60 seg) mantienen la FC alta y trabajan la capacidad de tolerar lactato. El peso es bajo, así que no necesitás recuperación de ATP completa.';
 
+  const zona = totalSeg <= 60 ? 'corto' : totalSeg <= 180 ? 'medio' : 'largo';
+  const _insight = {
+    title: 'Tu ventana de descanso',
+    text: `Para ${objNombres[obj] || obj} con intensidad ${int} en ${grupoNombres[grupo] || grupo}, lo óptimo es descansar **${formateado}** entre series. Es un descanso **${zona}**: ${zona === 'corto' ? 'mantenés la FC alta y el estrés metabólico, ideal para resistencia.' : zona === 'medio' ? 'equilibra recuperación y bombeo, el clásico para ganar masa.' : 'recuperás casi todo el ATP-CP para mover el máximo peso en cada serie.'}`,
+    tone: 'neutral' as const,
+    icon: '⏱️',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: totalSeg,
+    markerLabel: formateado,
+    min: 0,
+    segments: [
+      { nombre: 'Corto (resistencia)', max: 60, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Medio (hipertrofia)', max: 180, color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: 'Largo (fuerza)', max: 300, color: '#3b82f6', colorDark: '#60a5fa' },
+    ],
+    ariaLabel: `Descanso recomendado de ${totalSeg} segundos dentro de las zonas de entrenamiento`,
+  };
+
   return {
     descansoSegundos: totalSeg,
     descansoFormateado: formateado,
     explicacion,
     detalle: `Objetivo: ${objNombres[obj] || obj} | Intensidad: ${int} | ${grupoNombres[grupo] || grupo} → descanso recomendado: ${formateado} (${totalSeg} seg).`,
+    _insight,
+    _chart,
   };
 }

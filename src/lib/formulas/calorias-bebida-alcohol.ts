@@ -1,6 +1,6 @@
 /** Calorías en bebidas alcohólicas */
 export interface Inputs { tipoBebida?: string; cantidadMl: number; }
-export interface Outputs { calorias: number; gramosAlcohol: number; equivalenteCaminar: string; detalle: string; }
+export interface Outputs { calorias: number; gramosAlcohol: number; equivalenteCaminar: string; detalle: string; _insight?: any; }
 
 export function caloriasBebidaAlcohol(i: Inputs): Outputs {
   const tipo = String(i.tipoBebida || 'cerveza');
@@ -37,10 +37,21 @@ export function caloriasBebidaAlcohol(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  // Calorías del alcohol (7 kcal/g): la fracción que viene del etanol y es "vacía"
+  const calAlcohol = Math.round(gramosAlc * 7);
+  const pctAlcohol = calorias > 0 ? Math.round((calAlcohol / calorias) * 100) : 0;
+  const _insight = {
+    title: 'Calorías líquidas',
+    text: `${fmt.format(ml)} ml de ${b.nombre} suman **${fmt.format(calorias)} kcal**, y cerca de **${pctAlcohol}%** vienen del alcohol (${gramosAlc} g): calorías "vacías", sin nutrientes. Para quemarlas necesitás **${caminataStr}**.`,
+    tone: 'warn',
+    icon: '🍺',
+  };
+
   return {
     calorias,
     gramosAlcohol: gramosAlc,
     equivalenteCaminar: caminataStr,
     detalle: `${fmt.format(ml)} ml de ${b.nombre} = ${fmt.format(calorias)} kcal y ${gramosAlc} g de alcohol. Para quemar esas calorías necesitás ~${caminataStr}.`,
+    _insight,
   };
 }

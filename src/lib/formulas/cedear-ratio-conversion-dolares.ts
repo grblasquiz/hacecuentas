@@ -23,6 +23,8 @@ export interface CedearRatioConversionDolaresOutputs {
   primaDcto: string;
   valorUSD: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cedearRatioConversionDolares(
@@ -75,11 +77,63 @@ export function cedearRatioConversionDolares(
     ? ` Precio teórico (vs CCL $${tcCCL.toLocaleString('es-AR')}): $${Math.round(precioTeorico).toLocaleString('es-AR')}.`
     : '';
 
+  // Insight dinámico: si hay CCL, interpretamos prima/descuento; si no, el TC implícito.
+  let _insight: any;
+  let _chart: any;
+  if (tcCCL > 0) {
+    const diffPct = ((tcImplicito / tcCCL) - 1) * 100;
+    const absPct = Math.abs(diffPct).toFixed(2);
+    if (diffPct > 0.5) {
+      _insight = {
+        title: 'CEDEAR con prima',
+        text: `Estás pagando un dólar implícito de **$${tcImplicito.toFixed(2)}**, un **${absPct}% más caro** que el CCL de referencia ($${tcCCL.toLocaleString('es-AR')}). Comprás los dólares con sobreprecio: conviene esperar o mirar el activo subyacente.`,
+        tone: 'warn',
+        icon: '📈',
+      };
+    } else if (diffPct < -0.5) {
+      _insight = {
+        title: 'CEDEAR con descuento',
+        text: `El dólar implícito es **$${tcImplicito.toFixed(2)}**, un **${absPct}% más barato** que el CCL ($${tcCCL.toLocaleString('es-AR')}). Estás comprando dólares con descuento vía CEDEAR: oportunidad de arbitraje a favor tuyo.`,
+        tone: 'good',
+        icon: '💸',
+      };
+    } else {
+      _insight = {
+        title: 'CEDEAR a precio justo',
+        text: `El dólar implícito ($${tcImplicito.toFixed(2)}) está prácticamente **alineado con el CCL** ($${tcCCL.toLocaleString('es-AR')}): sólo **${absPct}%** de diferencia. El CEDEAR cotiza en paridad, sin prima ni descuento relevante.`,
+        tone: 'neutral',
+        icon: '⚖️',
+      };
+    }
+    // Gauge: dólar implícito sobre el eje del CCL (zonas de descuento / paridad / prima).
+    _chart = {
+      type: 'scale',
+      marker: Number(tcImplicito.toFixed(2)),
+      markerLabel: `Implícito $${tcImplicito.toFixed(2)}`,
+      min: 0,
+      segments: [
+        { nombre: 'Descuento', max: Number((tcCCL * 0.995).toFixed(2)), color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Paridad', max: Number((tcCCL * 1.005).toFixed(2)), color: '#64748b', colorDark: '#94a3b8' },
+        { nombre: 'Prima', max: Number(Math.max(tcImplicito * 1.05, tcCCL * 1.05).toFixed(2)), color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Dólar implícito $${tcImplicito.toFixed(2)} frente al CCL $${tcCCL.toLocaleString('es-AR')}: zonas de descuento, paridad y prima`,
+    };
+  } else {
+    _insight = {
+      title: 'Tipo de cambio implícito',
+      text: `Comprando este CEDEAR a $${Math.round(precioCedear).toLocaleString('es-AR')} con ratio ${ratio}:1, estás comprando dólares a **$${tcImplicito.toFixed(2)}/USD**. Ingresá el CCL de referencia para saber si pagás prima o descuento.`,
+      tone: 'neutral',
+      icon: '💵',
+    };
+  }
+
   return {
     tcImplicito: `$${tcImplicito.toFixed(2)}/USD`,
     precioTeorico: Math.round(precioTeorico),
     primaDcto,
     valorUSD: valorUSDStr,
     detalle: `El CEDEAR cotiza a $${Math.round(precioCedear).toLocaleString('es-AR')} con ratio ${ratio}:1. Tipo de cambio implícito: $${tcImplicito.toFixed(2)}/USD. Cada CEDEAR equivale a 1/${ratio} de acción = USD ${(precioUSD / ratio).toFixed(2)}.${precioTeoricoStr}${detalleExtra}`,
+    _insight,
+    _chart,
   };
 }

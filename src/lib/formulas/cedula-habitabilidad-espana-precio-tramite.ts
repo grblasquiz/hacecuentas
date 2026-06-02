@@ -16,6 +16,8 @@ export interface Outputs {
   validez_anos: string;
   requisito_minimo: string;
   documentacion_necesaria: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Aranceles técnicos 2026 (estimados, varían por provincia y colegio)
@@ -138,6 +140,32 @@ export function compute(i: Inputs): Outputs {
     documentacion_necesaria = 'Vivienda usada: Proyecto (si disponible), permisos originales. Si no hay documentación: inspección técnica substitutoria.';
   }
 
+  const honorariosMaxR = Math.round(coste_honorarios_max);
+  const tasaR = Math.round(tasa_administrativa);
+  const totalMinR = Math.round(coste_total_min);
+  const totalMaxR = Math.round(coste_total_max);
+  const pctTecnico = Math.round((honorariosMaxR / (honorariosMaxR + tasaR)) * 100);
+
+  const _insight = {
+    title: 'Coste de la cédula de habitabilidad',
+    text: `La cédula te saldrá entre **${totalMinR} € y ${totalMaxR} €**: el grueso son los honorarios del técnico (hasta **${honorariosMaxR} €**, ${pctTecnico}% del total), más **${tasaR} €** de tasa administrativa. Validez: ${validez_anos.toLowerCase()}.`,
+    tone: 'neutral',
+    icon: '🏠',
+  };
+
+  // Donut: composición del coste máximo (honorarios técnico + tasa = total máx).
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Honorarios técnico', value: honorariosMaxR },
+      { label: 'Tasa administrativa', value: tasaR },
+    ],
+    prefix: '€',
+    centerValue: `${totalMaxR} €`,
+    centerLabel: 'Coste máx.',
+    ariaLabel: `Coste máximo de la cédula ${totalMaxR} €: ${honorariosMaxR} € de honorarios y ${tasaR} € de tasa`,
+  };
+
   return {
     coste_honorarios_min: Math.round(coste_honorarios_min * 100) / 100,
     coste_honorarios_max: Math.round(coste_honorarios_max * 100) / 100,
@@ -148,5 +176,7 @@ export function compute(i: Inputs): Outputs {
     validez_anos,
     requisito_minimo,
     documentacion_necesaria,
+    _insight,
+    _chart,
   };
 }

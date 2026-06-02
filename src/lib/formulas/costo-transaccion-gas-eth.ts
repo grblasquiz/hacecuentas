@@ -14,6 +14,7 @@ export interface Outputs {
   gasPriceGwei: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 // Gas limits típicos por tipo de transacción
@@ -49,6 +50,19 @@ export function costoTransaccionGasEth(i: Inputs): Outputs {
   const formula = `${gasLimit.toLocaleString()} gas × ${gasPriceGwei} Gwei / 1,000,000,000 = ${costoEth.toFixed(6)} ETH`;
   const explicacion = `Una transacción tipo "${tipo}" usa ~${gasLimit.toLocaleString()} gas. A ${gasPriceGwei} Gwei de gas price, el costo es ${costoEth.toFixed(6)} ETH ($${costoUsd.toFixed(2)} USD al precio actual de $${precioEth.toLocaleString()} por ETH).`;
 
+  let tone: 'good' | 'warn' | 'neutral';
+  let estado: string;
+  if (gasPriceGwei < 20) { tone = 'good'; estado = 'la red está barata, buen momento para operar'; }
+  else if (gasPriceGwei <= 50) { tone = 'neutral'; estado = 'el gas está en niveles normales'; }
+  else { tone = 'warn'; estado = 'la red está congestionada y el gas está caro; si no es urgente, conviene esperar'; }
+
+  const _insight = {
+    title: 'Cuánto pagás de gas',
+    text: `Esta transacción "${tipo}" cuesta **${costoEth.toFixed(6)} ETH** (**$${costoUsd.toFixed(2)} USD**) a **${gasPriceGwei} Gwei**. A ese precio ${estado}.`,
+    tone,
+    icon: '⛽',
+  };
+
   return {
     costoEth: Number(costoEth.toFixed(8)),
     costoUsd: Number(costoUsd.toFixed(2)),
@@ -56,5 +70,6 @@ export function costoTransaccionGasEth(i: Inputs): Outputs {
     gasPriceGwei,
     formula,
     explicacion,
+    _insight,
   };
 }

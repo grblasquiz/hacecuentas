@@ -16,6 +16,8 @@ export interface Outputs {
   capital_actuarial_aproximado: number;
   regulacion_vigente: string;
   consideraciones_especiales: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -171,6 +173,33 @@ export function compute(i: Inputs): Outputs {
     msg_especial += 'Policía elegible a 56 años con 20 años servicio. Pensión incluye prima riesgos operacionales.';
   }
   
+  // Insight: pensión estimada y qué tan elegible está
+  const elegible = i.edad_actual >= edad_jubilacion_sector;
+  const _insight = {
+    title: elegible ? 'Pensión estimada (elegible)' : 'Pensión estimada proyectada',
+    text: elegible
+      ? `Tu pensión bruta rondaría **$${Math.round(pension_revalorizada).toLocaleString('es-CO')}/mes** (${mensualidades_anuales} mensualidades/año), un **${porcentaje_sust.toFixed(1)}%** de tu salario promedio. Ya cumplís la edad mínima del sector.`
+      : `Tu pensión bruta proyectada es **$${Math.round(pension_revalorizada).toLocaleString('es-CO')}/mes** (**${porcentaje_sust.toFixed(1)}%** de sustitución), pero te faltan **${anos_restantes.toFixed(1)} años** para la edad mínima (${edad_jubilacion_sector}).`,
+    tone: !elegible ? 'warn' : porcentaje_sust < 60 ? 'neutral' : 'good',
+    icon: '👴'
+  };
+
+  // Gauge: tasa de sustitución en zonas (sobre salario promedio)
+  const markerSust = parseFloat(porcentaje_sust.toFixed(1));
+  const _chart = {
+    type: 'scale',
+    marker: markerSust,
+    markerLabel: markerSust.toFixed(1) + '%',
+    min: 0,
+    segments: [
+      { nombre: 'Baja', max: 50, color: '#f87171', colorDark: '#dc2626' },
+      { nombre: 'Moderada', max: 70, color: '#fbbf24', colorDark: '#d97706' },
+      { nombre: 'Buena', max: 85, color: '#34d399', colorDark: '#059669' },
+      { nombre: 'Alta', max: Math.max(100, Math.ceil(markerSust) + 1), color: '#10b981', colorDark: '#047857' }
+    ],
+    ariaLabel: 'Tasa de sustitución de la pensión sobre el salario promedio'
+  };
+
   // Output final
   return {
     pension_mensual_estimada: Math.round(pension_revalorizada),
@@ -180,6 +209,8 @@ export function compute(i: Inputs): Outputs {
     mensualidades_estimadas: mensualidades_anuales,
     capital_actuarial_aproximado: Math.round(capital_actuarial),
     regulacion_vigente: regulacion,
-    consideraciones_especiales: msg_especial || consideraciones
+    consideraciones_especiales: msg_especial || consideraciones,
+    _insight,
+    _chart
   };
 }

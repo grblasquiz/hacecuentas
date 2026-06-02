@@ -11,6 +11,7 @@ export interface Outputs {
   result: number;
   proporcion: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function interpolacionLinealValor(i: Inputs): Outputs {
@@ -31,9 +32,20 @@ export function interpolacionLinealValor(i: Inputs): Outputs {
   let tipoStr = 'interpolación';
   if (t < 0 || t > 1) tipoStr = 'extrapolación (fuera del rango)';
 
+  const esExtrap = t < 0 || t > 1;
+  const _insight = {
+    title: esExtrap ? 'Estás extrapolando' : 'Interpolación dentro del rango',
+    text: esExtrap
+      ? `Con x = **${x}** el valor estimado es **${Number(y.toFixed(6))}**, pero x cae **fuera** del intervalo [${Math.min(x0, x1)}, ${Math.max(x0, x1)}]: t = **${t.toFixed(4)}**. La extrapolación asume que la recta sigue igual más allá de los datos, así que tomá el resultado con cautela.`
+      : `Para x = **${x}**, ubicado al **${(t * 100).toFixed(1)}%** del tramo entre ${x0} y ${x1}, la recta da y = **${Number(y.toFixed(6))}**. Al estar dentro del rango medido, la estimación es confiable.`,
+    tone: esExtrap ? 'warn' : 'good',
+    icon: esExtrap ? '⚠️' : '📈',
+  };
+
   return {
     result: Number(y.toFixed(6)),
     proporcion: Number(t.toFixed(6)),
     detalle: `**Puntos**: (${x0}, ${y0}) y (${x1}, ${y1})\n**x** = ${x}\n**t** = (${x} − ${x0}) / (${x1} − ${x0}) = **${t.toFixed(6)}** (${tipoStr})\n**y** = ${y0} + ${t.toFixed(6)} × (${y1} − ${y0}) = **${y.toFixed(6)}**`,
+    _insight,
   };
 }

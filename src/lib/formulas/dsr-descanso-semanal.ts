@@ -15,6 +15,8 @@ export interface Outputs {
   baseMes: string;
   totalComDsr: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -31,10 +33,30 @@ export function dsrDescansoSemanal(i: Inputs): Outputs {
   const dsr = (base / uteis) * descanso;
   const total = base + dsr;
 
+  const pctDsr = base > 0 ? (dsr / base) * 100 : 0;
+  const _insight = {
+    title: 'DSR sobre horas extras',
+    text: `O DSR adiciona **${brl(dsr)}** (${pctDsr.toFixed(1)}%) sobre as **${brl(base)}** de horas extras, totalizando **${brl(total)}** a receber. O cálculo usa ${descanso} dia(s) de descanso e ${uteis} dia(s) útil(eis) no mês, conforme a Lei 605/1949.`,
+    tone: 'good',
+    icon: '💵',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Horas extras', value: Number(base.toFixed(2)) },
+      { label: 'DSR', value: Number(dsr.toFixed(2)) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(total),
+    centerLabel: 'Total',
+    ariaLabel: `Total de ${brl(total)}: horas extras ${brl(base)} mais DSR ${brl(dsr)}.`,
+  };
   return {
     valorDsr: brl(dsr),
     baseMes: brl(base),
     totalComDsr: brl(total),
     resumen: `DSR sobre ${brl(base)} de horas extras: ${brl(dsr)} (Lei 605/1949). Total recebido: ${brl(total)}.`,
+    _insight,
+    _chart,
   };
 }

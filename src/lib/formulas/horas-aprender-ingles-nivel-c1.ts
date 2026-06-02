@@ -8,6 +8,8 @@ export interface Outputs {
   meses: number;
   anos: number;
   categoriaFsi: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function horasAprenderInglesNivelC1(i: Inputs): Outputs {
@@ -31,12 +33,46 @@ export function horasAprenderInglesNivelC1(i: Inputs): Outputs {
   const meses = semanas / 4.33;
   const anos = meses / 12;
 
+  const hTot = Math.round(restante);
+  const mes = Math.round(meses * 10) / 10;
+  const hWk = Math.round(horasSemana);
+  const tone = mes <= 12 ? 'good' : mes <= 24 ? 'neutral' : 'warn';
+  const ritmo =
+    mes <= 12
+      ? `A **${hWk} h/semana** llegás en menos de un año: el C1 es nivel avanzado, así que ese ritmo está muy bien.`
+      : mes <= 24
+        ? `Con **${hWk} h/semana** son **${mes} meses** hasta el C1, un nivel avanzado; sumar inmersión o más horas lo acorta.`
+        : `A **${hWk} h/semana** te llevaría **${mes} meses**; el C1 es un nivel avanzado y exigente, así que subir el ritmo o agregar inmersión recorta bastante el plazo.`;
+
+  const segTop = Math.max(Math.ceil(mes * 1.15), 30);
+  const _insight = {
+    title: 'Tu camino al inglés C1',
+    text: `Te faltan **${hTot.toLocaleString('es-AR')} h** de estudio, unos **${mes} meses** a tu ritmo actual. ${ritmo}`,
+    tone,
+    icon: '📚',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: mes,
+    markerLabel: `${mes} meses`,
+    min: 0,
+    segments: [
+      { nombre: 'Rápido', max: 6, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Moderado', max: 12, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Largo', max: 24, color: '#d97706', colorDark: '#f59e0b' },
+      { nombre: 'Maratón', max: segTop, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Horizonte de estudio: ${mes} meses para llegar a inglés C1`,
+  };
+
   return {
-    horasTotales: Math.round(restante),
+    horasTotales: hTot,
     semanas: Math.round(semanas),
-    meses: Math.round(meses * 10) / 10,
+    meses: mes,
     anos: Math.round(anos * 10) / 10,
     categoriaFsi: 'Cat II FSI (cercano)',
+    _insight,
+    _chart,
   };
 
 }

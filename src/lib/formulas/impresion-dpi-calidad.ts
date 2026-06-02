@@ -1,6 +1,6 @@
 /** Calculadora de DPI para Impresión según Distancia */
 export interface Inputs { distanciaCm: number; anchoImpresionCm: number; altoImpresionCm: number; }
-export interface Outputs { dpiMinimo: number; dpiRecomendado: number; pixelesAncho: number; mpNecesarios: number; }
+export interface Outputs { dpiMinimo: number; dpiRecomendado: number; pixelesAncho: number; mpNecesarios: number; _insight?: any; }
 
 export function impresionDpiCalidad(i: Inputs): Outputs {
   const dist = Number(i.distanciaCm);
@@ -19,10 +19,18 @@ export function impresionDpiCalidad(i: Inputs): Outputs {
   const pixelesAlto = Math.ceil((alto / 2.54) * dpiRecomendado);
   const mpNecesarios = (pixelesAncho * pixelesAlto) / 1000000;
 
+  const _insight = {
+    title: 'Resolución que necesitás',
+    text: `A **${dist} cm** de distancia, imprimí a **${dpiRecomendado} DPI** (mínimo aceptable: ${dpiMinimo} DPI). Para llenar ${ancho}×${alto} cm sin pixelar necesitás un archivo de al menos **${pixelesAncho}×${pixelesAlto} px** (~**${Number(mpNecesarios.toFixed(1))} MP**).`,
+    tone: 'neutral' as const,
+    icon: '🖨️',
+  };
+
   return {
     dpiMinimo,
     dpiRecomendado,
     pixelesAncho,
     mpNecesarios: Number(mpNecesarios.toFixed(1)),
+    _insight,
   };
 }

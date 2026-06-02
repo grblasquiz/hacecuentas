@@ -28,6 +28,8 @@ export interface DivisorVoltajeOutputs {
   voutConCarga: number;
   errorCarga: number; // %
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function formatOhms(ohms: number): string {
@@ -100,6 +102,26 @@ export function divisorVoltajeResistencias(i: DivisorVoltajeInputs): DivisorVolt
     resumen += ` ⚠️ Potencia >250 mW — usá resistencia de 1/2 W o superior.`;
   }
 
+  // Insight dinámico: prioriza el problema más crítico (potencia > carga > ok)
+  const vDropR1 = Vin - Vout;
+  const potMax = Math.max(PR1, PR2);
+  let insightTone: 'good' | 'warn' | 'neutral' = 'good';
+  let insightTitle = 'Divisor balanceado';
+  let insightText = `Con **Vin = ${Vin} V** obtenés **Vout = ${Vout.toFixed(3)} V** (${((Vout / Vin) * 100).toFixed(0)}% de la entrada), drenando **${(I * 1000).toFixed(2)} mA** por R1 y R2.`;
+  if (potMax > 250) {
+    insightTone = 'warn';
+    insightTitle = 'Disipación alta';
+    insightText = `Una resistencia disipa **${potMax.toFixed(0)} mW**: superás los 250 mW de una resistencia común de 1/4 W. Usá una de **1/2 W o más** o subí R1+R2 para bajar la corriente (**${(I * 1000).toFixed(2)} mA**).`;
+  } else if (rCarga > 0 && errorCarga > 5) {
+    insightTone = 'warn';
+    insightTitle = 'Carga hunde el Vout';
+    insightText = `La carga de ${formatOhms(rCarga)} baja el Vout de ${Vout.toFixed(3)} V a **${voutConCarga.toFixed(3)} V** (error **${errorCarga.toFixed(1)}%**). Reducí R1+R2 o intercalá un buffer op-amp para que la salida no dependa de la carga.`;
+  } else if (rCarga > 0) {
+    insightTone = 'good';
+    insightTitle = 'Carga bien tolerada';
+    insightText = `Con la carga de ${formatOhms(rCarga)} el Vout real es **${voutConCarga.toFixed(3)} V** (error **${errorCarga.toFixed(1)}%**, despreciable): el divisor está bien dimensionado frente a la carga.`;
+  }
+
   return {
     vout: Number(Vout.toFixed(3)),
     r1Calc: Number(R1.toFixed(1)),
@@ -110,5 +132,22 @@ export function divisorVoltajeResistencias(i: DivisorVoltajeInputs): DivisorVolt
     voutConCarga: Number(voutConCarga.toFixed(3)),
     errorCarga: Number(errorCarga.toFixed(2)),
     resumen,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: '🔌',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: `Caída en R1`, value: Number(vDropR1.toFixed(3)) },
+        { label: `Vout (R2)`, value: Number(Vout.toFixed(3)) },
+      ],
+      suffix: ' V',
+      centerValue: `${Vout.toFixed(2)} V`,
+      centerLabel: 'Vout',
+      ariaLabel: `Reparto del voltaje de entrada ${Vin} V: ${vDropR1.toFixed(2)} V caen en R1 y ${Vout.toFixed(2)} V quedan en la salida`,
+    },
   };
 }

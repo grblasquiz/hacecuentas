@@ -7,5 +7,13 @@ export function imcAdultosMayoresEdadTabla(i: Inputs): Outputs {
   const resumen = __lang === 'en'
     ? `Calculation with ${v1} and ${v2}: ${r.toFixed(2)}.`
     : `Cálculo con ${v1} y ${v2}: ${r.toFixed(2)}.`;
-  return { resultado:r.toFixed(2), resumen };
+  const insight = {
+    title: __lang === 'en' ? 'BMI in older adults' : 'IMC en adultos mayores',
+    text: __lang === 'en'
+      ? `Your result is **${r.toFixed(2)}**. Heads up: after age 65 the healthy BMI range shifts **upward** (roughly **23–28**), since some extra reserve protects against illness and falls.`
+      : `Tu resultado es **${r.toFixed(2)}**. Ojo: a partir de los **65 años** el rango de IMC saludable se corre **hacia arriba** (aprox. **23–28**), porque una reserva extra protege ante enfermedades y caídas.`,
+    tone: 'neutral',
+    icon: '🧓',
+  };
+  return { resultado:r.toFixed(2), resumen, _insight: insight };
 }

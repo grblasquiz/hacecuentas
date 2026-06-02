@@ -16,6 +16,8 @@ export interface Outputs {
   refund_or_owed: number;
   refund_status: string;
   bracket_breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -119,6 +121,14 @@ export function compute(i: Inputs): Outputs {
         ? 'Full refund of withholding (no tax owed)'
         : 'No tax owed and no withholding entered.',
       bracket_breakdown: 'No taxable income — no tax calculated.',
+      _insight: {
+        title: 'No federal tax owed',
+        text: (Number(i.withholding) || 0) > 0
+          ? `With no taxable income, you owe **$0** in federal tax and get a **full refund** of your withholding.`
+          : `With no taxable income, your 2026 federal income tax is **$0**.`,
+        tone: 'good',
+        icon: '✅',
+      },
     };
   }
 
@@ -165,6 +175,49 @@ export function compute(i: Inputs): Outputs {
     '  |  Effective Rate: ' + (effectiveRate * 100).toFixed(2) + '%' +
     '  |  Marginal Rate: ' + (marginalRate * 100).toFixed(0) + '%';
 
+  // After-tax portion of taxable income (clamp for rounding)
+  const afterTax = Math.max(0, Math.round((taxableIncome - totalTax) * 100) / 100);
+  const effPct = (effectiveRate * 100).toFixed(2);
+  const margPct = (marginalRate * 100).toFixed(0);
+
+  // Dynamic insight: tone depends on whether there's a balance due
+  let insight;
+  if (withholding > 0 && refundOrOwed < -0.005) {
+    insight = {
+      title: 'You owe a balance at filing',
+      text: `Your 2026 federal tax is **${formatUSD(totalTax)}** (effective rate **${effPct}%**), but your withholding falls short, leaving a **balance due of ${formatUSD(Math.abs(refundOrOwed))}**. Your top dollar is taxed at the **${margPct}%** marginal rate.`,
+      tone: 'warn',
+      icon: '💸',
+    };
+  } else if (withholding > 0 && refundOrOwed > 0.005) {
+    insight = {
+      title: 'You are getting a refund',
+      text: `Your 2026 federal tax is **${formatUSD(totalTax)}** (effective rate **${effPct}%**), and your withholding covers it with an estimated **refund of ${formatUSD(refundOrOwed)}**. Your marginal rate is **${margPct}%**.`,
+      tone: 'good',
+      icon: '💰',
+    };
+  } else {
+    insight = {
+      title: 'Your 2026 federal tax',
+      text: `On **${formatUSD(taxableIncome)}** of taxable income you owe **${formatUSD(totalTax)}** in federal tax — an effective rate of **${effPct}%**, even though your top bracket is **${margPct}%**.`,
+      tone: 'neutral',
+      icon: '🧾',
+    };
+  }
+
+  // Donut: taxable income split into federal tax + what you keep (sums to taxable income)
+  const chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Federal tax', value: totalTax },
+      { label: 'After-tax income', value: afterTax },
+    ],
+    prefix: '$',
+    centerValue: formatUSD(taxableIncome),
+    centerLabel: 'Taxable income',
+    ariaLabel: `Of ${formatUSD(taxableIncome)} taxable income, ${formatUSD(totalTax)} goes to federal tax and ${formatUSD(afterTax)} is kept.`,
+  };
+
   return {
     tax_owed: totalTax,
     effective_rate: Math.round(effectiveRate * 10000) / 10000,
@@ -173,5 +226,7 @@ export function compute(i: Inputs): Outputs {
     refund_or_owed: Math.round(refundOrOwed * 100) / 100,
     refund_status: refundStatus,
     bracket_breakdown,
+    _insight: insight,
+    _chart: chart,
   };
 }

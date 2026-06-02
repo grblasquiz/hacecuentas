@@ -17,6 +17,8 @@ export interface Outputs {
   comision_anual_estimada: number;
   valor_uf_operativo: number;
   banco_recomendado: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Parámetros 2026 Chile — fuentes SII, Banco Central, CMF
@@ -186,6 +188,30 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // Insight + gráfico
+  const fmt = (n: number) => Math.round(n).toLocaleString('es-CL');
+  const otroBancoMejor = banco_recomendado !== params_banco.nombre;
+  const cuotaRedondeada = Math.round(cuota_mensual);
+  const insight = {
+    title: 'Lo que realmente vas a pagar',
+    text: `Tu cuota mensual es **$${fmt(cuota_mensual)}** con un CAE real de **${(Math.round(cae_real * 100) / 100).toFixed(2)}%** (incluye seguros y comisión, por eso supera la tasa de ${tasa_ajustada.toFixed(2)}%). En total pagás **$${fmt(total_interes_pagado)}** de intereses sobre un crédito de $${fmt(monto_credito)}.${otroBancoMejor ? ` Ojo: **${banco_recomendado}** te daría un CAE más bajo.` : ` ${params_banco.nombre} es la opción más conveniente de las comparadas.`}`,
+    tone: otroBancoMejor ? 'warn' : 'good',
+    icon: '🏠',
+  };
+  const chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital + interés', value: Math.round(cuota_base) },
+      { label: 'Seguro desgravamen', value: Math.round(seguro_desgravamen_mensual) },
+      { label: 'Seguro incendio', value: Math.round(seguro_incendio_mensual) },
+      { label: 'Comisión', value: Math.round(comision_mensual) },
+    ],
+    prefix: '$',
+    centerValue: '$' + fmt(cuotaRedondeada),
+    centerLabel: 'Cuota mensual',
+    ariaLabel: 'Composición de la cuota mensual del crédito hipotecario entre capital, seguros y comisión',
+  };
+
   return {
     monto_credito: Math.round(monto_credito),
     cae_real_anual: Math.round(cae_real * 100) / 100,
@@ -195,6 +221,8 @@ export function compute(i: Inputs): Outputs {
     seguro_incendio_prima: Math.round(seguro_incendio_anual),
     comision_anual_estimada: Math.round(comision_anual),
     valor_uf_operativo: uf_operativa,
-    banco_recomendado: banco_recomendado
+    banco_recomendado: banco_recomendado,
+    _insight: insight,
+    _chart: chart
   };
 }

@@ -41,6 +41,7 @@ export interface GananciasSueldoOutputs {
   mensaje: string;
   umbralMensual: number; // sueldo bruto desde el que empieza a pagar
   _chart?: any;
+  _insight?: any;
 }
 
 export function gananciasSueldo(inputs: GananciasSueldoInputs): GananciasSueldoOutputs {
@@ -105,6 +106,20 @@ export function gananciasSueldo(inputs: GananciasSueldoInputs): GananciasSueldoO
     ariaLabel: 'Composición del sueldo bruto mensual: en mano, aportes y retención de Ganancias',
   };
 
+  const insight = paga
+    ? {
+        title: 'Cuánto te llevás a casa',
+        text: `De tus **$${Math.round(brutoMensual).toLocaleString('es-AR')}** brutos, Ganancias te retiene **$${retencionMensual.toLocaleString('es-AR')}/mes** (alícuota efectiva **${Number(alicuotaEfectiva.toFixed(2))}%** sobre el bruto anual). Tu sueldo en mano queda en **$${enManoMensual.toLocaleString('es-AR')}**.`,
+        tone: 'warn' as const,
+        icon: '💸',
+      }
+    : {
+        title: 'No pagás Ganancias',
+        text: `Tu bruto de **$${Math.round(brutoMensual).toLocaleString('es-AR')}/mes** no supera el mínimo no imponible (~**$${umbralMensual.toLocaleString('es-AR')}/mes** en tu caso), así que tu retención es **$0**.`,
+        tone: 'good' as const,
+        icon: '✅',
+      };
+
   return {
     retencionMensual,
     retencionAnual: Math.round(retencionAnual),
@@ -124,5 +139,6 @@ export function gananciasSueldo(inputs: GananciasSueldoInputs): GananciasSueldoO
     mensaje,
     umbralMensual,
     _chart: chart,
+    _insight: insight,
   };
 }

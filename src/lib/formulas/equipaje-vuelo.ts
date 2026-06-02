@@ -7,6 +7,7 @@ export interface Outputs {
   excedenteTradicional: number;
   mensajeBajoCosto: string;
   mensajeTradicional: string;
+  _insight?: any;
 }
 
 export function equipajeVuelo(i: Inputs): Outputs {
@@ -31,6 +32,16 @@ export function equipajeVuelo(i: Inputs): Outputs {
   if (excTrad <= 0) msgTrad = `Dentro del límite de bodega (${limTrad} kg).`;
   else msgTrad = `${excTrad.toFixed(1)} kg por encima del límite tradicional (${limTrad} kg).`;
 
+  const _insight = {
+    title: 'Tu valija de un vistazo',
+    text: excTrad > 0
+      ? `Tus **${kg.toFixed(1)} kg** (${lb.toFixed(1)} lb) superan en **${excTrad.toFixed(1)} kg** el límite de bodega tradicional (${limTrad} kg)${excBC > 0 ? ` y en ${excBC.toFixed(1)} kg el de mano low-cost (${limBC} kg)` : ''}. Sacá peso o pagá el exceso por kilo.`
+      : excBC > 0
+      ? `Tus **${kg.toFixed(1)} kg** (${lb.toFixed(1)} lb) entran en bodega (${limTrad} kg) pero pasan en **${excBC.toFixed(1)} kg** el límite de mano de low-cost (${limBC} kg): te conviene despacharla.`
+      : `Tus **${kg.toFixed(1)} kg** (${lb.toFixed(1)} lb) entran tanto en mano (${limBC} kg) como en bodega (${limTrad} kg). Viajás sin pagar exceso.`,
+    tone: excTrad > 0 ? 'warn' : excBC > 0 ? 'neutral' : 'good',
+    icon: '🧳',
+  };
   return {
     pesoKg: Number(kg.toFixed(2)),
     pesoLb: Number(lb.toFixed(2)),
@@ -38,5 +49,6 @@ export function equipajeVuelo(i: Inputs): Outputs {
     excedenteTradicional: Number(excTrad.toFixed(2)),
     mensajeBajoCosto: msgBC,
     mensajeTradicional: msgTrad,
+    _insight,
   };
 }

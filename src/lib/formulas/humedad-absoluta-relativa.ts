@@ -11,6 +11,8 @@ export interface Outputs {
   categoria: string;
   recomendacion: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function humedadAbsolutaRelativa(i: Inputs): Outputs {
@@ -50,6 +52,31 @@ export function humedadAbsolutaRelativa(i: Inputs): Outputs {
     rec = 'Revisar ventilación, filtraciones y usar deshumidificador. >70% prolongada daña muebles y salud.';
   }
 
+  const tone = RH < 30 || RH > 60 ? 'warn' : RH <= 50 ? 'good' : 'neutral';
+  const icon = RH < 30 ? '🏜️' : RH > 70 ? '🦠' : RH > 60 ? '💦' : '💧';
+  const insight = {
+    title: `Humedad relativa: ${categoria}`,
+    text: `A **${T.toFixed(1)} °C** el aire contiene **${AH.toFixed(1)} g/m³** de agua, con una humedad relativa del **${RH.toFixed(0)}%** (${zona}). ${rec}`,
+    tone,
+    icon,
+  };
+
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(RH.toFixed(0)),
+    markerLabel: `HR: ${RH.toFixed(0)}%`,
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Seco', max: 30, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Ideal', max: 50, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Aceptable', max: 60, color: '#d9f99d', colorDark: '#4d7c0f' },
+      { nombre: 'Incómodo', max: 70, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Riesgo moho', max: 100, color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de humedad relativa: de aire seco a riesgo de moho',
+  };
+
   return {
     humedadAbsoluta: `${AH.toFixed(1)} g/m³`,
     humedadAbsolutaNumero: Number(AH.toFixed(2)),
@@ -57,5 +84,7 @@ export function humedadAbsolutaRelativa(i: Inputs): Outputs {
     categoria,
     recomendacion: rec,
     mensaje: `Con ${T.toFixed(1)} °C y ${RH.toFixed(0)}% HR hay ${AH.toFixed(1)} g/m³ de agua en el aire (${categoria}).`,
+    _insight: insight,
+    _chart: chart,
   };
 }

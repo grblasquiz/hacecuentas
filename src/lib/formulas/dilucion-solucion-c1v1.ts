@@ -1,6 +1,6 @@
 /** Calculadora de Dilución — C₁V₁ = C₂V₂ */
 export interface Inputs { c1?: number; v1?: number; c2?: number; v2?: number; }
-export interface Outputs { resultado: string; solventeAgregar: number; factorDilucion: string; formula: string; }
+export interface Outputs { resultado: string; solventeAgregar: number; factorDilucion: string; formula: string; _insight?: any; _chart?: any; }
 
 export function dilucionSolucionC1v1(i: Inputs): Outputs {
   const c1 = i.c1 != null && Number(i.c1) > 0 ? Number(i.c1) : null;
@@ -19,10 +19,37 @@ export function dilucionSolucionC1v1(i: Inputs): Outputs {
   const solvente = V2 - V1;
   const factor = V2 / V1;
 
-  return {
+  let insightText: string;
+  let tone: 'good' | 'warn' | 'neutral';
+  if (solvente > 0) {
+    insightText = `Tomá **${V1.toFixed(2)} mL** de la solución madre (**${C1.toFixed(4)} M**) y agregá **${solvente.toFixed(2)} mL** de solvente hasta **${V2.toFixed(2)} mL**: obtenés **${C2.toFixed(4)} M** (dilución **${factor.toFixed(1)}×**).`;
+    tone = 'neutral';
+  } else {
+    insightText = `El volumen final (**${V2.toFixed(2)} mL**) es menor al inicial (**${V1.toFixed(2)} mL**): esto implica **concentrar**, no diluir. Revisá que C₂ < C₁ para una dilución real.`;
+    tone = 'warn';
+  }
+
+  const out: Outputs = {
     resultado: `C₁=${C1.toFixed(4)} M, V₁=${V1.toFixed(2)} mL → C₂=${C2.toFixed(4)} M, V₂=${V2.toFixed(2)} mL`,
     solventeAgregar: Number(solvente.toFixed(2)),
     factorDilucion: `1:${factor.toFixed(1)} (factor ${factor.toFixed(1)}×)`,
     formula: `${C1.toFixed(4)} × ${V1.toFixed(2)} = ${C2.toFixed(4)} × ${V2.toFixed(2)}`,
+    _insight: { title: 'Cómo preparar la dilución', text: insightText, tone, icon: '🧫' },
   };
+
+  if (solvente > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Solución madre (V₁)', value: Number(V1.toFixed(2)) },
+        { label: 'Solvente a agregar', value: Number(solvente.toFixed(2)) },
+      ],
+      prefix: '',
+      centerValue: `${V2.toFixed(2)} mL`,
+      centerLabel: 'Volumen final',
+      ariaLabel: `Volumen final de ${V2.toFixed(2)} mL: ${V1.toFixed(2)} mL de solución madre más ${solvente.toFixed(2)} mL de solvente`,
+    };
+  }
+
+  return out;
 }

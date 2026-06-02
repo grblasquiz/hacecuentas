@@ -9,6 +9,8 @@ export interface Outputs {
   totalGolesReferencia: number;
   contextoPartido: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Datos 2022-25 Opta / FBref. El Mundial 2022 (Qatar) marcó récord por el añadido extendido (~10-12 min/tiempo).
@@ -27,6 +29,7 @@ const TABLA: Record<string, { label: string; pct: number; golesPost90: number; t
 export function golesTiempoAnadido(i: Inputs): Outputs {
   const fila = TABLA[i.competencia];
   if (!fila) throw new Error('Competencia inválida.');
+  const golesAntes = fila.total - fila.golesPost90;
   return {
     competenciaLabel: fila.label,
     porcentajeGolesPost90: fila.pct,
@@ -34,5 +37,21 @@ export function golesTiempoAnadido(i: Inputs): Outputs {
     totalGolesReferencia: fila.total,
     contextoPartido: fila.contexto,
     mensaje: `${fila.label}: ${fila.pct}% de los goles llegan después del minuto 90 (${fila.golesPost90}/${fila.total}).`,
+    _insight: {
+      title: `1 de cada ${Math.round(100 / fila.pct)} goles, tras el 90'`,
+      text: `En ${fila.label}, **${fila.pct}%** de los goles (${fila.golesPost90} de ${fila.total}) caen en el tiempo añadido. ${fila.contexto} Nunca te vayas antes del pitazo final.`,
+      tone: 'neutral',
+      icon: '⏱️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Después del 90\'', value: fila.golesPost90 },
+        { label: 'En los 90\'', value: golesAntes },
+      ],
+      centerValue: `${fila.pct}%`,
+      centerLabel: 'tras el 90\'',
+      ariaLabel: `De ${fila.total} goles, ${fila.golesPost90} después del minuto 90 y ${golesAntes} dentro de los 90 minutos`,
+    },
   };
 }

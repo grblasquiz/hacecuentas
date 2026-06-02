@@ -1,6 +1,6 @@
 /** Costo input/output con contexto 1M tokens en Claude Sonnet vs Opus */
 export interface Inputs { tokensInput: number; tokensOutput: number; modelo: 'sonnet-1m' | 'opus-1m' | 'sonnet' | 'opus'; requestsPorMes: number; }
-export interface Outputs { costoInputUsd: number; costoOutputUsd: number; costoPorRequestUsd: number; costoMensualUsd: number; explicacion: string; }
+export interface Outputs { costoInputUsd: number; costoOutputUsd: number; costoPorRequestUsd: number; costoMensualUsd: number; explicacion: string; _insight?: any; _chart?: any; }
 export function context1mTokensClaudeCostoInput(i: Inputs): Outputs {
   const tIn = Number(i.tokensInput);
   const tOut = Number(i.tokensOutput);
@@ -20,11 +20,37 @@ export function context1mTokensClaudeCostoInput(i: Inputs): Outputs {
   const costoOut = (tOut / 1_000_000) * p.output;
   const costoReq = costoIn + costoOut;
   const costoMes = costoReq * reqs;
-  return {
-    costoInputUsd: Number(costoIn.toFixed(4)),
-    costoOutputUsd: Number(costoOut.toFixed(4)),
+  const costoInRound = Number(costoIn.toFixed(4));
+  const costoOutRound = Number(costoOut.toFixed(4));
+  const pctOut = costoReq > 0 ? Math.round((costoOut / costoReq) * 100) : 0;
+  const out: Outputs = {
+    costoInputUsd: costoInRound,
+    costoOutputUsd: costoOutRound,
     costoPorRequestUsd: Number(costoReq.toFixed(4)),
     costoMensualUsd: Number(costoMes.toFixed(2)),
     explicacion: `${i.modelo}: USD ${costoReq.toFixed(4)} por request (${tIn.toLocaleString('es-AR')} input + ${tOut.toLocaleString('es-AR')} output). Mensual con ${reqs} reqs: USD ${costoMes.toFixed(2)}.`,
+    _insight: {
+      title: 'Costo estimado de la API',
+      text: `Cada request cuesta **USD ${costoReq.toFixed(4)}** y el **output pesa el ${pctOut}%** del total. Con **${reqs.toLocaleString('es-AR')} requests/mes** acumulás **USD ${costoMes.toFixed(2)}**.`,
+      tone: 'neutral',
+      icon: '🤖',
+    },
   };
+
+  // Donut sólo si hay costo de output: muestra input vs output por request.
+  if (costoOutRound > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Input', value: costoInRound },
+        { label: 'Output', value: costoOutRound },
+      ],
+      prefix: '$',
+      centerValue: `$${costoReq.toFixed(4)}`,
+      centerLabel: 'por request',
+      ariaLabel: `Costo por request: input USD ${costoIn.toFixed(4)} más output USD ${costoOut.toFixed(4)}`,
+    };
+  }
+
+  return out;
 }

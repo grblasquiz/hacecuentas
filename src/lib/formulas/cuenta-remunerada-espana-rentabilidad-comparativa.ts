@@ -19,6 +19,7 @@ export interface Outputs {
   diferencia_mejor_peor: number;
   retencion_aplicada: number;
   ajuste_irpf_final: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -166,17 +167,20 @@ export function compute(i: Inputs): Outputs {
 
   let mejorOpcionTexto = "Sin datos suficientes";
   let netoBrutoMejor = brutoTR; // para ajuste IRPF, usar siempre Trade Republic como referencia
+  let mejorNeto = netoTR;
 
   if (opcionesValidas.length === 0) {
     // Trade Republic siempre disponible aunque neto sea 0 con saldo 0
     mejorOpcionTexto = "Trade Republic (3,50% TAE) — sin requisitos";
     netoBrutoMejor = brutoTR;
+    mejorNeto = netoTR;
   } else {
     const mejor = opcionesValidas.reduce((prev, curr) =>
       curr.neto > prev.neto ? curr : prev
     );
     mejorOpcionTexto = mejor.nombre;
     netoBrutoMejor = mejor.bruto;
+    mejorNeto = mejor.neto;
   }
 
   // Diferencia entre mejor y peor opción disponible
@@ -199,6 +203,22 @@ export function compute(i: Inputs): Outputs {
     return Math.round(n * 100) / 100;
   }
 
+  // --- Insight ---
+  const fmtEUR = (n: number) =>
+    (Math.round(n * 100) / 100).toLocaleString("es-ES", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  const ajustePositivo = ajusteIRPF > 0.005;
+  const _insight = {
+    title: "Tu mejor cuenta remunerada",
+    text: ajustePositivo
+      ? `Tu mejor opción es **${mejorOpcionTexto}**, con **${fmtEUR(mejorNeto)} €** netos en ${plazo} ${plazo === 1 ? "mes" : "meses"} (tras la retención del 19%). Ojo: como tu tramo del ahorro es del ${Math.round(tipoAhorro * 100)}%, en la Renta tendrás que pagar unos **${fmtEUR(ajusteIRPF)} €** más sobre esos intereses.`
+      : `Tu mejor opción es **${mejorOpcionTexto}**, con **${fmtEUR(mejorNeto)} €** netos en ${plazo} ${plazo === 1 ? "mes" : "meses"} (tras la retención del 19%). Con tu tramo del ${Math.round(tipoAhorro * 100)}%, la retención ya cubre el impuesto: **no pagarás de más** en la Renta.`,
+    tone: ajustePositivo ? "warn" : "good",
+    icon: "🏦",
+  };
+
   return {
     resultado_trade_republic: r2(netoTR),
     resultado_myinvestor: r2(netoMI),
@@ -209,6 +229,7 @@ export function compute(i: Inputs): Outputs {
     mejor_opcion: mejorOpcionTexto,
     diferencia_mejor_peor: r2(diferenciaMejorPeor),
     retencion_aplicada: 19,
-    ajuste_irpf_final: r2(ajusteIRPF)
+    ajuste_irpf_final: r2(ajusteIRPF),
+    _insight
   };
 }

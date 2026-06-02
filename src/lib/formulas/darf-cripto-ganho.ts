@@ -10,7 +10,7 @@
  * Declaração mensal à RFB (e-CAC) via Coleta Nacional quando volume > R$ 30k com exchange estrangeira ou P2P.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 
 const LIMITE_ISENCAO = 35000;
 
@@ -34,6 +34,32 @@ export function darfCriptoGanho(i: Inputs): Outputs {
   const aliq = tipoOperacao === 'daytrade' ? 0.20 : aliqGanho(ganho);
   const imposto = isento ? 0 : ganho * aliq;
 
+  const custoNoTotal = Math.min(custoAquisicao, vendasMes);
+  const _insight = {
+    title: isento ? 'Operação isenta' : 'IR a recolher',
+    text: isento
+      ? `Suas vendas de **${fmt(vendasMes)}** no mês ficam abaixo do teto de **R$ 35.000**: nada de IR sobre o ganho (swing trade). Mesmo isento, declare os saldos na ficha "Bens e Direitos" grupo 08.`
+      : tipoOperacao === 'daytrade'
+        ? `Day trade é sempre tributado: sobre o ganho de **${fmt(ganho)}** incide **20%**, gerando **${fmt(imposto)}** de DARF (código 4600), independente do volume.`
+        : `Vendas de **${fmt(vendasMes)}** passam do teto de R$ 35.000: o ganho de **${fmt(ganho)}** é tributado a **${(aliq * 100).toFixed(1)}%**, totalizando **${fmt(imposto)}** de IR.`,
+    tone: (isento ? 'good' : 'warn') as 'good' | 'warn' | 'neutral',
+    icon: isento ? '✅' : '🧾',
+  };
+
+  const _chart = (!isento && ganho > 0 && custoNoTotal > 0)
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Custo de aquisição', value: Math.round(custoNoTotal * 100) / 100 },
+          { label: 'Ganho de capital', value: Math.round(ganho * 100) / 100 },
+        ],
+        prefix: 'R$ ',
+        centerValue: fmt(vendasMes),
+        centerLabel: 'Vendas no mês',
+        ariaLabel: `Das vendas de ${fmt(vendasMes)}, ${fmt(custoNoTotal)} é custo e ${fmt(ganho)} é ganho tributável.`,
+      }
+    : undefined;
+
   return {
     vendasMes: fmt(vendasMes),
     ganhoCapital: fmt(ganho),
@@ -42,6 +68,8 @@ export function darfCriptoGanho(i: Inputs): Outputs {
     impostoDevido: fmt(imposto),
     codigoDarf: '4600',
     declaracaoMensal: vendasMes > 30000 ? 'Obrigatória via e-CAC (IN RFB 1.888/19) se exchange estrangeira/P2P' : 'Dispensada',
+    ...(_chart ? { _chart } : {}),
+    _insight,
     resumo: isento
       ? `Vendas cripto ${fmt(vendasMes)} ≤ R$ 35.000 no mês: ISENTO de IR (swing). Declare saldos na ficha "Bens e Direitos" grupo 08 da DIRPF.`
       : tipoOperacao === 'daytrade'

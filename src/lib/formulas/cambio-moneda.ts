@@ -15,6 +15,8 @@ export interface Outputs {
   enTarjeta: number;
   brechaPct: number;
   mejorParaComprar: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cambioMoneda(i: Inputs): Outputs {
@@ -42,13 +44,57 @@ export function cambioMoneda(i: Inputs): Outputs {
 
   const brecha = ((blue / oficial) - 1) * 100;
   const mejor = dir === 'a-pesos' ? 'blue (mayor rendimiento)' : 'oficial (menor costo)';
+  const brechaR = Number(brecha.toFixed(2));
 
-  return {
-    enOficial: Math.round(valorOf),
-    enBlue: Math.round(valorBl),
+  const fmtArs = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const divLabel = String(i.moneda || 'usd').toUpperCase();
+  const ofR = Math.round(valorOf);
+  const blR = Math.round(valorBl);
+
+  // Insight: dependiente de dirección y de la brecha
+  let tone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  const brechaTxt = `**${brechaR.toFixed(1)}%**`;
+  if (dir === 'a-pesos') {
+    const extra = blR - ofR;
+    tone = brecha >= 50 ? 'warn' : 'neutral';
+    insightText = `Tus ${fmtArs.format(monto)} ${divLabel} valen **$${fmtArs.format(ofR)}** al oficial y **$${fmtArs.format(blR)}** al blue: liquidar en el paralelo te deja **$${fmtArs.format(extra)}** más. La brecha del ${brechaTxt} mide cuánta presión cambiaria hay sobre el peso.`;
+  } else {
+    tone = brecha >= 50 ? 'warn' : 'neutral';
+    insightText = `Con $${fmtArs.format(monto)} comprás **${fmtArs.format(ofR)} ${divLabel}** al oficial pero solo **${fmtArs.format(blR)} ${divLabel}** al blue. La brecha del ${brechaTxt} es lo que pagás de más cuando no accedés al tipo de cambio oficial.`;
+  }
+
+  const out: Outputs = {
+    enOficial: ofR,
+    enBlue: blR,
     enMEP: Math.round(valorMep),
     enTarjeta: Math.round(valorTarj),
-    brechaPct: Number(brecha.toFixed(2)),
+    brechaPct: brechaR,
     mejorParaComprar: mejor,
+    _insight: {
+      title: 'Brecha cambiaria',
+      text: insightText,
+      tone,
+      icon: '💵',
+    },
   };
+
+  // Gauge de brecha: zonas de presión cambiaria (solo si la brecha es positiva)
+  if (brechaR >= 0) {
+    out._chart = {
+      type: 'scale',
+      marker: brechaR,
+      markerLabel: `${brechaR.toFixed(0)}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Baja', max: 20, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Moderada', max: 50, color: '#eab308', colorDark: '#facc15' },
+        { nombre: 'Alta', max: 100, color: '#f97316', colorDark: '#fb923c' },
+        { nombre: 'Extrema', max: Math.max(110, Math.ceil(brechaR) + 10), color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Brecha cambiaria entre dólar blue y oficial: ${brechaR.toFixed(0)}%`,
+    };
+  }
+
+  return out;
 }

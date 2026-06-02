@@ -17,6 +17,8 @@ export interface Outputs {
   gastos_notaria: number;
   otros_gastos: number;
   resumen_pasos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -149,6 +151,42 @@ export function compute(i: Inputs): Outputs {
   const honorarios_text = `$${Math.round(honorarios_min / 1000000).toLocaleString('es-CO')}M–$${Math.round(honorarios_max / 1000000).toLocaleString('es-CO')}M`;
   const cuota_litis_text = `${Math.round(cuota_litis_pct_min)}%–${Math.round(cuota_litis_pct_max)}%`;
 
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const fmtM = (n: number) => '$' + (Math.round(n / 100000) / 10).toLocaleString('es-CO') + 'M';
+  let _insight: any;
+  let _chart: any;
+
+  if (i.tipo_divorcio === 'mutuo_acuerdo') {
+    _insight = {
+      title: 'Mutuo acuerdo: vía económica',
+      text: `Por notaría resolvés el divorcio en **${duracion_min}–${duracion_max} meses** por solo **${fmtM(costo_minimo)}–${fmtM(costo_maximo)}**, sin abogado obligatorio ni cuota litis. Es la opción más barata y rápida cuando hay acuerdo total sobre bienes, custodia y pensión.`,
+      tone: 'good',
+      icon: '🤝',
+    };
+  } else {
+    // Componentes del costo máximo (mismos valores usados en el cálculo, no se altera la matemática)
+    const cuota_litis_monto_max = i.patrimonio_estimado * 0.6 * CUOTA_LITIS_MAX;
+    _insight = {
+      title: 'Contencioso: cuidá la cuota litis',
+      text: `Litigar cuesta entre **${fmtM(costo_minimo)}** y **${fmtM(costo_maximo)}** y se estira **${duracion_min}–${duracion_max} meses**. Ojo con la **cuota litis (${cuota_litis_text})**: sobre lo recuperado puede sumar hasta **${fmtM(cuota_litis_monto_max)}** a tu factura. Un acuerdo extrajudicial casi siempre sale más barato.`,
+      tone: 'warn',
+      icon: '⚖️',
+    };
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Honorarios abogado', value: Math.round(honorarios_max) },
+        { label: 'Cuota litis', value: Math.round(cuota_litis_monto_max) },
+        { label: 'Gastos juzgado', value: GASTOS_JUZGADO_MAX },
+        { label: 'Peritajes y otros', value: Math.round(otros_gastos) },
+      ],
+      prefix: '$',
+      centerValue: fmtM(costo_maximo),
+      centerLabel: 'Costo máx.',
+      ariaLabel: `Composición del costo máximo del divorcio contencioso ${fmtCOP(costo_maximo)}: honorarios, cuota litis, gastos de juzgado y peritajes`,
+    };
+  }
+
   return {
     costo_total_minimo: Math.round(costo_minimo),
     costo_total_maximo: Math.round(costo_maximo),
@@ -158,6 +196,8 @@ export function compute(i: Inputs): Outputs {
     honorarios_abogado: honorarios_text,
     gastos_notaria: Math.round(gastos_notaria),
     otros_gastos: Math.round(otros_gastos),
-    resumen_pasos: resumen
+    resumen_pasos: resumen,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

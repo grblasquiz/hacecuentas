@@ -12,6 +12,32 @@ export interface Outputs {
   total_interest: number;
   interest_ratio: number;
   yearly_breakdown: string;
+  _insight?: any;
+  _chart?: any;
+}
+
+// Builds the narrative insight + donut for a finished projection.
+function buildVisuals(endBalance: number, totalContributions: number, totalInterest: number, years: number) {
+  const fmt = (v: number) => '$' + Math.round(v).toLocaleString('en-US');
+  const ratio = endBalance > 0 ? (totalInterest / endBalance) * 100 : 0;
+  const insight = {
+    title: 'Where your balance comes from',
+    text: `After **${years} ${years === 1 ? 'year' : 'years'}**, you end with **${fmt(endBalance)}**. Of that, **${fmt(totalContributions)}** is money you put in and **${fmt(totalInterest)}** is compound interest — **${ratio.toFixed(0)}%** of the final balance is growth you never deposited.`,
+    tone: ratio >= 40 ? 'good' : 'neutral',
+    icon: '📈',
+  };
+  const chart = totalInterest > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Contributions', value: Math.round(totalContributions) },
+      { label: 'Interest', value: Math.round(totalInterest) },
+    ],
+    prefix: '$',
+    centerValue: fmt(endBalance),
+    centerLabel: 'End balance',
+    ariaLabel: `End balance ${fmt(endBalance)}: ${fmt(totalContributions)} contributions plus ${fmt(totalInterest)} interest`,
+  } : undefined;
+  return { insight, chart };
 }
 
 // Compounding periods per year map
@@ -103,12 +129,15 @@ export function compute(i: Inputs): Outputs {
     const totalInterest = endBalance - totalContributions;
     const interestRatio = endBalance > 0 ? totalInterest / endBalance : 0;
 
+    const v = buildVisuals(endBalance, totalContributions, totalInterest, years);
     return {
       end_balance: parseFloat(endBalance.toFixed(2)),
       total_contributions: parseFloat(totalContributions.toFixed(2)),
       total_interest: parseFloat(totalInterest.toFixed(2)),
       interest_ratio: parseFloat((interestRatio * 100).toFixed(4)),
       yearly_breakdown: yearlyRows.join("\n"),
+      _insight: v.insight,
+      _chart: v.chart,
     };
   }
 
@@ -141,11 +170,14 @@ export function compute(i: Inputs): Outputs {
   const totalInterest = endBalance - totalContributions;
   const interestRatio = endBalance > 0 ? totalInterest / endBalance : 0;
 
+  const v = buildVisuals(endBalance, totalContributions, totalInterest, years);
   return {
     end_balance: parseFloat(endBalance.toFixed(2)),
     total_contributions: parseFloat(totalContributions.toFixed(2)),
     total_interest: parseFloat(totalInterest.toFixed(2)),
     interest_ratio: parseFloat((interestRatio * 100).toFixed(4)),
     yearly_breakdown: yearlyRows.join("\n"),
+    _insight: v.insight,
+    _chart: v.chart,
   };
 }

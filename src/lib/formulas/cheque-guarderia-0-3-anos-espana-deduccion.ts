@@ -17,6 +17,8 @@ export interface Outputs {
   deduccion_total_estimada: number;
   requisitos_cumplidos: string;
   notas_aplicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -135,6 +137,26 @@ export function compute(i: Inputs): Outputs {
       'No cumples requisitos mínimos (debes tener al menos 1 hijo < 3 años en guardería autorizada).';
   }
 
+  // Insight narrativo dinámico
+  const fmtEur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  let _insight: any;
+  if (!cumple_todos || deduccion_aplicable === 0) {
+    _insight = {
+      title: 'Sin deducción aplicable',
+      text: 'Con estos datos **no podés deducir** la guardería: hace falta al menos **1 hijo menor de 3 años** en un centro autorizado y gasto efectivo. Revisá los requisitos.',
+      tone: 'neutral',
+      icon: '🍼',
+    };
+  } else {
+    const topado = gasto_anual_guarderia > deduccion_permitida_maximo;
+    _insight = {
+      title: 'Tu ahorro en el IRPF',
+      text: `Podés deducir **${fmtEur(deduccion_aplicable)} €** de guardería y sumar **${fmtEur(deduccion_maternidad_compatible)} €** de maternidad: hasta **${fmtEur(deduccion_total_estimada)} €** menos en tu IRPF, un ahorro de **${fmtEur(ahorro_fiscal_estimado)} €** al tramo ~30%.` + (topado ? ` Ojo: tu gasto real (${fmtEur(gasto_anual_guarderia)} €) **supera el tope legal**, así que el excedente no resta.` : ''),
+      tone: topado ? 'warn' : 'good',
+      icon: '🍼',
+    };
+  }
+
   return {
     gasto_anual_guarderia: parseFloat(gasto_anual_guarderia.toFixed(2)),
     deduccion_permitida_maximo: parseFloat(deduccion_permitida_maximo.toFixed(2)),
@@ -147,5 +169,21 @@ export function compute(i: Inputs): Outputs {
     deduccion_total_estimada: parseFloat(deduccion_total_estimada.toFixed(2)),
     requisitos_cumplidos: requisitos_cumplidos.trim(),
     notas_aplicacion: notas_aplicacion.trim(),
+    _insight,
+    ...(cumple_todos && deduccion_aplicable > 0
+      ? {
+          _chart: {
+            type: 'doughnut',
+            slices: [
+              { label: 'Deducción guardería', value: parseFloat(deduccion_aplicable.toFixed(2)) },
+              { label: 'Deducción maternidad', value: parseFloat(deduccion_maternidad_compatible.toFixed(2)) },
+            ],
+            prefix: '€',
+            centerValue: `${fmtEur(deduccion_total_estimada)} €`,
+            centerLabel: 'Deducción total',
+            ariaLabel: `Deducción total de ${fmtEur(deduccion_total_estimada)} euros: ${fmtEur(deduccion_aplicable)} de guardería más ${fmtEur(deduccion_maternidad_compatible)} de maternidad`,
+          },
+        }
+      : {}),
   };
 }

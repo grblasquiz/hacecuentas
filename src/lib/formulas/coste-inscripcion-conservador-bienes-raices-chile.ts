@@ -13,6 +13,8 @@ export interface Outputs {
   total_gastos: number;
   porcentaje_precio: number;
   costo_efectivo: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -75,14 +77,69 @@ export function compute(i: Inputs): Outputs {
   // Costo efectivo total
   const costo_efectivo = i.precio_venta + total_gastos;
 
+  // Valores redondeados (los mismos que se devuelven)
+  const r_notaria = Math.round(arancel_notaria);
+  const r_conservador = Math.round(arancel_conservador);
+  const r_timbre = Math.round(impuesto_timbre);
+  const r_comisiones = Math.round(comisiones_banco);
+  const r_otros = Math.round(otros_gastos);
+  const r_total = Math.round(total_gastos);
+  const r_pct = Math.round(porcentaje_precio * 100) / 100;
+
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  // --- Insight narrativo ---
+  // Los gastos de cierre en Chile suelen ubicarse en torno al 2–4% del precio.
+  let insightTone: 'good' | 'warn' | 'neutral' = 'neutral';
+  if (r_pct >= 4) insightTone = 'warn';
+  else if (r_pct <= 2) insightTone = 'good';
+
+  // Ítem que más pesa
+  const items = [
+    { label: 'Impuesto al timbre', val: r_timbre },
+    { label: 'Conservador', val: r_conservador },
+    { label: 'Notaría', val: r_notaria },
+    { label: 'Comisión bancaria', val: r_comisiones },
+    { label: 'Otros gastos', val: r_otros }
+  ];
+  const mayor = items.reduce((a, b) => (b.val > a.val ? b : a));
+
+  const _insight = {
+    title: 'Cuánto suman los gastos de inscripción',
+    text: `Inscribir esta propiedad cuesta unos **${fmtCLP(r_total)}**, equivalente al **${r_pct}%** del precio de venta. El ítem que más pesa es **${mayor.label}** (${fmtCLP(mayor.val)})${r_timbre > 0 ? ', y el impuesto al timbre escala con el monto de la hipoteca' : ''}.`,
+    tone: insightTone,
+    icon: '🏠'
+  };
+
+  // --- Gráfico donut: composición de los gastos totales ---
+  const slices = [
+    { label: 'Notaría', value: r_notaria },
+    { label: 'Conservador', value: r_conservador },
+    { label: 'Timbre (hipoteca)', value: r_timbre },
+    { label: 'Comisión banco', value: r_comisiones },
+    { label: 'Otros', value: r_otros }
+  ].filter(s => s.value > 0);
+  const sumaSlices = slices.reduce((a, s) => a + s.value, 0);
+
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: Math.round(sumaSlices).toLocaleString('es-CL'),
+    centerLabel: 'Gastos totales',
+    ariaLabel: `Desglose de los gastos de inscripción: notaría ${fmtCLP(r_notaria)}, conservador ${fmtCLP(r_conservador)}, impuesto al timbre ${fmtCLP(r_timbre)}, comisión bancaria ${fmtCLP(r_comisiones)} y otros ${fmtCLP(r_otros)}.`
+  };
+
   return {
-    arancel_notaria: Math.round(arancel_notaria),
-    arancel_conservador: Math.round(arancel_conservador),
-    impuesto_timbre: Math.round(impuesto_timbre),
-    comisiones_banco: Math.round(comisiones_banco),
-    otros_gastos: Math.round(otros_gastos),
-    total_gastos: Math.round(total_gastos),
-    porcentaje_precio: Math.round(porcentaje_precio * 100) / 100,
-    costo_efectivo: Math.round(costo_efectivo)
+    arancel_notaria: r_notaria,
+    arancel_conservador: r_conservador,
+    impuesto_timbre: r_timbre,
+    comisiones_banco: r_comisiones,
+    otros_gastos: r_otros,
+    total_gastos: r_total,
+    porcentaje_precio: r_pct,
+    costo_efectivo: Math.round(costo_efectivo),
+    _insight,
+    _chart
   };
 }

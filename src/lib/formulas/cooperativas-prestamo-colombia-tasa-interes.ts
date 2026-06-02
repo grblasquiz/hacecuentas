@@ -15,6 +15,8 @@ export interface Outputs {
   ahorro_mensual: number;
   ahorro_total: number;
   porcentaje_ahorro: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -57,6 +59,29 @@ export function compute(i: Inputs): Outputs {
   const ahorro_total = interes_banco - interes_coop;
   const porcentaje_ahorro = interes_banco > 0 ? (ahorro_total / interes_banco) * 100 : 0;
 
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const ahorroPos = ahorro_total >= 0;
+  const _insight = {
+    title: ahorroPos ? 'La cooperativa te conviene' : 'El banco sale más barato',
+    text: ahorroPos
+      ? `Con la cooperativa pagás **${fmtCOP(interes_coop)}** de intereses contra **${fmtCOP(interes_banco)}** del banco: ahorrás **${fmtCOP(ahorro_total)}** (**${(Math.round(porcentaje_ahorro * 100) / 100).toFixed(1)}%** menos) y **${fmtCOP(ahorro_mensual)}** por cuota.`
+      : `Acá el banco resulta más barato: pagarías **${fmtCOP(interes_coop)}** de intereses en la cooperativa contra **${fmtCOP(interes_banco)}** del banco. Revisá la tasa cargada${i.es_asociado === 'si' ? ' (ya se aplicó el -1% EA de asociado)' : ''}.`,
+    tone: ahorroPos ? 'good' : 'warn',
+    icon: ahorroPos ? '🤝' : '🏦',
+  };
+
+  const _chart = ahorroPos && interes_coop > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Intereses cooperativa', value: Math.round(interes_coop * 100) / 100 },
+      { label: 'Ahorro vs banco', value: Math.round(ahorro_total * 100) / 100 },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(ahorro_total),
+    centerLabel: 'Ahorrás',
+    ariaLabel: `De los ${fmtCOP(interes_banco)} en intereses que cobraría el banco, la cooperativa cobra ${fmtCOP(interes_coop)} y te ahorra ${fmtCOP(ahorro_total)}.`,
+  } : undefined;
+
   return {
     cuota_mensual_cooperativa: Math.round(cuota_coop * 100) / 100,
     tasa_mensual_cooperativa: Math.round(tasa_mensual_coop * 10000) / 100, // en %
@@ -65,6 +90,8 @@ export function compute(i: Inputs): Outputs {
     interes_total_banco: Math.round(interes_banco * 100) / 100,
     ahorro_mensual: Math.round(ahorro_mensual * 100) / 100,
     ahorro_total: Math.round(ahorro_total * 100) / 100,
-    porcentaje_ahorro: Math.round(porcentaje_ahorro * 100) / 100
+    porcentaje_ahorro: Math.round(porcentaje_ahorro * 100) / 100,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

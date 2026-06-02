@@ -14,6 +14,8 @@ export interface Outputs {
   costo_efectivo: number;
   requisitos_cumplidos: string;
   proximos_pasos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -87,6 +89,40 @@ export function compute(i: Inputs): Outputs {
     proximosPasosTexto = "Antes de solicitar: (1) Completa 1 año en tu empleo actual y reporta al IMSS; (2) Mejora tu historial crediticio (paga puntualmente tus deudas, consulta Buró).";
   }
 
+  // Insight: costo del crédito y elegibilidad
+  const fmtMX = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const pctIntereses = totalPagado > 0 ? (totalIntereses / montoFinal) * 100 : 0;
+  let _insight: any;
+  if (requisitosNoMet.length > 0) {
+    _insight = {
+      title: 'Todavía no calificás',
+      text: `Con tu perfil actual FONACOT no aprobaría el crédito: ${requisitosNoMet.join('; ').toLowerCase()}. Resolvé eso antes de solicitar.`,
+      tone: 'warn',
+      icon: '🚫'
+    };
+  } else {
+    const limitadoPorCapacidad = montoFinal < montoMaximoPrestable - 1;
+    _insight = {
+      title: 'Costo de tu crédito',
+      text: `Pedís **${fmtMX(montoFinal)}** y terminás pagando **${fmtMX(totalPagado)}**: son **${fmtMX(totalIntereses)}** de intereses (**${pctIntereses.toFixed(1)}%** sobre el capital) con CAT **${catAnual.toFixed(1)}%**.` + (limitadoPorCapacidad ? ` El monto se ajustó al tope FONACOT de cuota ≤15% de tu salario.` : ``),
+      tone: pctIntereses > 20 ? 'warn' : 'neutral',
+      icon: '💳'
+    };
+  }
+
+  // Donut: total pagado = capital + intereses
+  const _chart = montoFinal > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital prestado', value: Math.round(montoFinal) },
+      { label: 'Intereses (CAT)', value: Math.round(totalIntereses) }
+    ],
+    prefix: '$',
+    centerValue: fmtMX(totalPagado),
+    centerLabel: 'Total a pagar',
+    ariaLabel: `Total a pagar ${fmtMX(totalPagado)}: ${fmtMX(montoFinal)} de capital y ${fmtMX(totalIntereses)} de intereses.`
+  } : undefined;
+
   return {
     monto_maximo_prestable: Math.round(montoMaximoPrestable * 100) / 100,
     monto_solicitado: Math.round(montoFinal * 100) / 100,
@@ -95,6 +131,8 @@ export function compute(i: Inputs): Outputs {
     total_pagado: Math.round(totalPagado * 100) / 100,
     costo_efectivo: Math.round(costoEfectivoMensual * 100) / 100,
     requisitos_cumplidos: requisitosTexto,
-    proximos_pasos: proximosPasosTexto
+    proximos_pasos: proximosPasosTexto,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

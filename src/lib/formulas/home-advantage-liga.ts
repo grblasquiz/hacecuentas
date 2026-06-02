@@ -9,6 +9,8 @@ export interface Outputs {
   porcentajeVictoriasVisitante: number;
   diferencialLocalVisitante: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Promedios históricos 2010-2025 (FBref + Opta Analyst).
@@ -27,6 +29,32 @@ export function homeAdvantageLiga(i: Inputs): Outputs {
   const fila = TABLA[i.liga];
   if (!fila) throw new Error('Liga inválida.');
   const diff = fila.local - fila.visitante;
+
+  // Insight: cuánto pesa la ventaja de local en esta liga.
+  const fuerte = diff >= 25;
+  const moderada = diff >= 18;
+  const intensidad = fuerte ? 'muy marcada' : moderada ? 'clara' : 'moderada';
+  const insight = {
+    title: `Ventaja de local ${intensidad}`,
+    text: `En **${fila.label}** el local gana el **${fila.local}%** de los partidos contra el **${fila.visitante}%** del visitante: **${diff} puntos** a favor de jugar en casa. El **${fila.empate}%** termina en empate.`,
+    tone: 'neutral',
+    icon: '⚽',
+  };
+
+  // Donut: las tres salidas posibles del partido (suman 100%).
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Gana local', value: fila.local },
+      { label: 'Empate', value: fila.empate },
+      { label: 'Gana visitante', value: fila.visitante },
+    ],
+    suffix: '%',
+    centerValue: `${fila.local}%`,
+    centerLabel: 'Gana local',
+    ariaLabel: `Distribución de resultados en ${fila.label}: local ${fila.local}%, empate ${fila.empate}%, visitante ${fila.visitante}%.`,
+  };
+
   return {
     ligaLabel: fila.label,
     porcentajeVictoriasLocal: fila.local,
@@ -34,5 +62,7 @@ export function homeAdvantageLiga(i: Inputs): Outputs {
     porcentajeVictoriasVisitante: fila.visitante,
     diferencialLocalVisitante: diff,
     mensaje: `${fila.label}: ${fila.local}% victorias locales vs ${fila.visitante}% visitantes (diferencial ${diff} pp).`,
+    _insight: insight,
+    _chart: chart,
   };
 }

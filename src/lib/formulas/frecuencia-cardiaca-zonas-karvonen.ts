@@ -12,6 +12,8 @@ export interface Outputs {
   zone3: string;
   zone4: string;
   zone5: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Porcentajes de FC de Reserva para cada zona (método Karvonen)
@@ -88,6 +90,9 @@ export function compute(i: Inputs): Outputs {
     high: Math.round(hrReserve * z.high + restingHr),
   }));
 
+  // Objetivo aeróbico: 75% de la reserva (centro de Z3), siempre dentro de las zonas y por debajo de FCmáx
+  const objetivoAerobico = Math.round(hrReserve * 0.75 + restingHr);
+
   return {
     hr_max: hrMax,
     hr_reserve: hrReserve,
@@ -96,5 +101,25 @@ export function compute(i: Inputs): Outputs {
     zone3: formatZone(zoneValues[2].low, zoneValues[2].high),
     zone4: formatZone(zoneValues[3].low, zoneValues[3].high),
     zone5: formatZone(zoneValues[4].low, zoneValues[4].high),
+    _insight: {
+      title: 'Tus zonas de entrenamiento',
+      text: `Tu FCmáx es **${hrMax} bpm** y tu reserva cardíaca **${hrReserve} bpm**. La base aeróbica (Z2-Z3) va de **${zoneValues[1].low} a ${zoneValues[2].high} bpm**: ahí pasás la mayor parte del tiempo. Las zonas 4-5 (${zoneValues[3].low} bpm en adelante) son para intervalos cortos.`,
+      tone: 'neutral',
+      icon: '🏃',
+    },
+    _chart: {
+      type: 'scale',
+      marker: objetivoAerobico,
+      markerLabel: `Aeróbico ${objetivoAerobico}`,
+      min: restingHr,
+      segments: [
+        { nombre: 'Z1', max: zoneValues[0].high, color: '#22c55e', colorDark: '#4ade80' },
+        { nombre: 'Z2', max: zoneValues[1].high, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Z3', max: zoneValues[2].high, color: '#eab308', colorDark: '#facc15' },
+        { nombre: 'Z4', max: zoneValues[3].high, color: '#f97316', colorDark: '#fb923c' },
+        { nombre: 'Z5 (FCmáx)', max: zoneValues[4].high, color: '#ef4444', colorDark: '#f87171' },
+      ],
+      ariaLabel: `Zonas de entrenamiento Karvonen de ${restingHr} a ${hrMax} bpm; objetivo aeróbico en ${objetivoAerobico} bpm`,
+    },
   };
 }

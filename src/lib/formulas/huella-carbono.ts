@@ -1,6 +1,6 @@
 /** Huella de carbono diaria estimada */
 export interface Inputs { kmAuto: number; kmTransportePublico: number; horasElectricidad: number; comidas?: string; }
-export interface Outputs { co2DiarioKg: number; co2AnualTon: number; comparacionPromedio: string; detalle: string; }
+export interface Outputs { co2DiarioKg: number; co2AnualTon: number; comparacionPromedio: string; detalle: string; _insight?: any; _chart?: any; }
 
 export function huellaCarbono(i: Inputs): Outputs {
   const kmAuto = Number(i.kmAuto) || 0;
@@ -26,10 +26,39 @@ export function huellaCarbono(i: Inputs): Outputs {
     ? `Tu huella estimada (${fmt.format(anual)} ton) está **por encima** del promedio argentino (4,2 ton/año).`
     : `Tu huella estimada (${fmt.format(anual)} ton) está **por debajo** del promedio argentino (4,2 ton/año).`;
 
-  return {
+  // Fuente que más pesa en la huella diaria
+  const fuentes = [
+    { label: 'Auto', value: co2Auto },
+    { label: 'Transporte público', value: co2TP },
+    { label: 'Electricidad', value: co2Elec },
+    { label: 'Alimentación', value: co2Dieta },
+  ];
+  const mayor = fuentes.slice().sort((a, b) => b.value - a.value)[0];
+  const tone = anual > promedioArg ? 'warn' : 'good';
+  const _insight = {
+    title: anual > promedioArg ? 'Por encima del promedio' : 'Por debajo del promedio',
+    text: `Tu huella estimada es de **${fmt.format(anual)} ton de CO₂/año** (${pct}% del promedio argentino de 4,2 ton). Lo que más pesa es **${mayor.label.toLowerCase()}** con **${fmt.format(mayor.value)} kg/día**.`,
+    tone,
+    icon: '🌍',
+  };
+
+  const out: Outputs = {
     co2DiarioKg: Number(diario.toFixed(2)),
     co2AnualTon: Number(anual.toFixed(2)),
     comparacionPromedio: comp,
     detalle: `Auto: ${fmt.format(co2Auto)} kg | Transporte público: ${fmt.format(co2TP)} kg | Electricidad: ${fmt.format(co2Elec)} kg | Alimentación: ${fmt.format(co2Dieta)} kg. Total diario: ${fmt.format(diario)} kg (${pct}% del promedio ARG).`,
+    _insight,
   };
+  const slices = fuentes.filter(f => f.value > 0);
+  if (slices.length >= 2) {
+    out._chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '',
+      centerValue: fmt.format(diario) + ' kg',
+      centerLabel: 'CO₂/día',
+      ariaLabel: `Distribución de tu huella de carbono diaria por fuente. Total ${fmt.format(diario)} kg de CO₂ por día.`,
+    };
+  }
+  return out;
 }

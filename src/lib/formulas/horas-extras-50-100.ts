@@ -19,6 +19,7 @@ export interface HorasExtrasOutputs {
   subtotal50: number;
   subtotal100: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function horasExtras50100(inputs: HorasExtrasInputs): HorasExtrasOutputs {
@@ -51,6 +52,15 @@ export function horasExtras50100(inputs: HorasExtrasInputs): HorasExtrasOutputs 
     ariaLabel: 'Composición del total de horas extra: subtotal al 50% y subtotal al 100%',
   } : undefined;
 
+  const fmtAr = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const horasTotal = horasExtra50 + horasExtra100;
+  const insight = {
+    title: 'Cuánto cobrás de extras',
+    text: `Por **${horasTotal} horas extra** te corresponden **${fmtAr(totalExtras)}**: ${fmtAr(subtotal50)} al 50% (${horasExtra50} h × ${fmtAr(valorHora50)}) y ${fmtAr(subtotal100)} al 100% (${horasExtra100} h × ${fmtAr(valorHora100)}). Recordá que las del 100% (sábado tras 13 h, domingos y feriados) rinden el doble de la hora normal.`,
+    tone: 'good',
+    icon: '💵',
+  };
+
   return {
     totalExtras: Math.round(totalExtras),
     valorHoraNormal: Math.round(valorHoraNormal),
@@ -59,5 +69,6 @@ export function horasExtras50100(inputs: HorasExtrasInputs): HorasExtrasOutputs 
     subtotal50: Math.round(subtotal50),
     subtotal100: Math.round(subtotal100),
     _chart: chart,
+    _insight: insight,
   };
 }

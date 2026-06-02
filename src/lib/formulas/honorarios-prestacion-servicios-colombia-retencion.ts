@@ -23,6 +23,8 @@ export interface Outputs {
   tasa_retencion_efectiva: number;
   periodicidad_declaracion_resultado: string;
   obligaciones_complementarias: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -124,6 +126,43 @@ export function compute(i: Inputs): Outputs {
   obligaciones.push("Mantener factura y retención documentadas mínimo 5 años (Código Tributario)");
   const obligaciones_complementarias = obligaciones.join("; ");
 
+  // Insight narrativo sobre la mordida de las retenciones
+  const fmtCOP = (n: number) => "$" + Math.round(n).toLocaleString("es-CO");
+  let insight_tone: "good" | "warn" | "neutral" = "neutral";
+  let insight_text: string;
+  if (total_retenciones <= 0) {
+    insight_tone = "good";
+    insight_text = `Tu cliente **no te retiene** nada: cobrás los **${fmtCOP(base_retencion)}** completos de honorario (más el IVA que factures). Igual recordá declarar renta y aportes como independiente.`;
+  } else {
+    insight_tone = tasa_retencion_efectiva >= 11 ? "warn" : "neutral";
+    insight_text = `De cada honorario te retienen el **${tasa_retencion_efectiva}%**: sobre una base de **${fmtCOP(base_retencion)}** se van **${fmtCOP(total_retenciones)}** y recibís **${fmtCOP(neto_recibido_sin_iva)}** neto. No es un costo perdido: esas retenciones son un **anticipo** que descontás en tu declaración de renta anual.`;
+  }
+  const _insight = {
+    title: "Qué pasa con tu honorario",
+    text: insight_text,
+    tone: insight_tone,
+    icon: "🇨🇴",
+  };
+
+  // Gráfico: cómo se reparte la base entre neto y retenciones (anticipo)
+  let _chart: any = undefined;
+  if (total_retenciones > 0 && neto_recibido_sin_iva >= 0) {
+    const slices = [
+      { label: "Neto en tu bolsillo", value: Math.round(neto_recibido_sin_iva) },
+      { label: "Retención renta (11%)", value: Math.round(retencion_renta) },
+    ];
+    if (retencion_ica > 0) slices.push({ label: "Retención ICA", value: Math.round(retencion_ica) });
+    if (retencion_reteiva > 0) slices.push({ label: "ReteIVA", value: Math.round(retencion_reteiva) });
+    _chart = {
+      type: "doughnut",
+      slices,
+      prefix: "$",
+      centerValue: fmtCOP(base_retencion),
+      centerLabel: "Base honorario",
+      ariaLabel: `De ${fmtCOP(base_retencion)} de base, ${fmtCOP(neto_recibido_sin_iva)} quedan netos y ${fmtCOP(total_retenciones)} son retenciones (anticipo de impuestos).`,
+    };
+  }
+
   return {
     base_retencion,
     iva_honorario,
@@ -138,6 +177,8 @@ export function compute(i: Inputs): Outputs {
     efectivo_neto_total,
     tasa_retencion_efectiva,
     periodicidad_declaracion_resultado,
-    obligaciones_complementarias
+    obligaciones_complementarias,
+    _insight,
+    _chart
   };
 }

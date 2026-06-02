@@ -1,6 +1,6 @@
 /** Conversor: milímetro ↔ pulgada */
 export interface Inputs { valor: number | string; direccion?: string; ingrediente?: string; }
-export interface Outputs { resultado: string; resumen: string; }
+export interface Outputs { resultado: string; resumen: string; _insight?: any; }
 
 export function conversorMilimetrosAPulgadas(i: Inputs): Outputs {
   const v = Number(i.valor);
@@ -16,8 +16,18 @@ export function conversorMilimetrosAPulgadas(i: Inputs): Outputs {
     r = v / factor;
     fromLabel = 'pulgadas'; toLabel = 'milímetros';
   }
+  const rFmt = r.toFixed(6).replace(/\.?0+$/, '');
+  const inches = (d === 'ida' ? r : v);
+  const inchesFmt = inches.toLocaleString('es-AR', { maximumFractionDigits: 3 });
+  const _insight = {
+    title: 'Métrico vs. imperial',
+    text: `**${v} ${fromLabel}** son **${rFmt} ${toLabel}**, porque 1 pulgada = 25,4 mm exactos. Tené a mano esos **${inchesFmt} in**: caños, tornillos, mechas y pantallas suelen venir en pulgadas y rara vez calzan justo con la medida métrica.`,
+    tone: 'neutral',
+    icon: '🔧',
+  };
   return {
     resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'in'.toString(),
-    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.'
+    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
+    _insight
   };
 }

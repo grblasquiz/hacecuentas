@@ -10,6 +10,7 @@ export interface Outputs {
   minutes_remaining: number;
   seconds_remaining: number;
   countdown_text: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -36,7 +37,13 @@ export function compute(i: Inputs): Outputs {
       hours_remaining: 0,
       minutes_remaining: 0,
       seconds_remaining: 0,
-      countdown_text: 'La fecha ya ha llegado'
+      countdown_text: 'La fecha ya ha llegado',
+      _insight: {
+        title: '¡Ya llegó!',
+        text: `La fecha objetivo **ya pasó**. El contador quedó en cero: ¡feliz año nuevo!`,
+        tone: 'good',
+        icon: '🎉',
+      }
     };
   }
 
@@ -58,6 +65,19 @@ export function compute(i: Inputs): Outputs {
   const targetLabel = i.target_date === 'año_nuevo' ? '1 de enero de 2027' : '31 de diciembre de 2026';
   const countdownText = `${days} días, ${hours} horas, ${minutes} minutos y ${seconds} segundos hasta ${targetLabel}`;
 
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (days <= 0) {
+    insightText = `¡Última cuenta atrás! Quedan solo **${hours} h ${minutes} min** para ${targetLabel}.`;
+    insightTone = 'good';
+  } else if (days <= 30) {
+    insightText = `Recta final: faltan **${days} días** (unas **${weeks} semanas**) para ${targetLabel}. Buen momento para cerrar pendientes y armar planes de fin de año.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Faltan **${days} días** — unas **${weeks} semanas** o **${months} meses** — para ${targetLabel}.`;
+    insightTone = 'neutral';
+  }
+
   return {
     days_remaining: days,
     weeks_remaining: weeks,
@@ -65,6 +85,12 @@ export function compute(i: Inputs): Outputs {
     hours_remaining: hours,
     minutes_remaining: minutes,
     seconds_remaining: seconds,
-    countdown_text: countdownText
+    countdown_text: countdownText,
+    _insight: {
+      title: 'Cuenta regresiva',
+      text: insightText,
+      tone: insightTone,
+      icon: '⏳',
+    }
   };
 }

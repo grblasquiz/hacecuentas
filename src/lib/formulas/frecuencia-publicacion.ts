@@ -9,6 +9,7 @@ export interface FrecuenciaPublicacionOutputs {
   mejoresHorarios: string;
   tipoContenido: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface RedConfig {
@@ -108,10 +109,21 @@ export function frecuenciaPublicacion(inputs: FrecuenciaPublicacionInputs): Frec
   const publicaciones = Math.max(red.minSemana, Math.min(maxPosts, red.idealSemana * 2));
   const contenido = red.contenido[objetivo] || red.contenido.engagement;
 
+  const limitadoPorTiempo = maxPosts < red.idealSemana;
+  const porDia = Math.round((publicaciones / 7) * 10) / 10;
+  const insText = limitadoPorTiempo
+    ? `Con **${horas} hs/semana** te alcanza para **${publicaciones} posts** en ${red.nombre}, por debajo del ideal de ${red.idealSemana}. El tiempo es el cuello de botella: priorizá calidad o sumá horas para crecer el alcance.`
+    : `Con **${horas} hs/semana** podés sostener **${publicaciones} posts** en ${red.nombre} (~${porDia}/día), en línea o por encima del ideal de ${red.idealSemana}. Constancia gana: mantené el ritmo y medí qué formato rinde.`;
   return {
     publicacionesSemana: publicaciones,
     mejoresHorarios: red.horarios,
     tipoContenido: contenido,
     detalle: `${red.nombre} con objetivo ${objetivo} y ${horas} hs/semana → ${publicaciones} publicaciones/semana. Horarios: ${red.horarios}. Contenido recomendado: ${contenido}.`,
+    _insight: {
+      title: `Ritmo en ${red.nombre}`,
+      text: insText,
+      tone: limitadoPorTiempo ? 'warn' : 'good',
+      icon: '📅',
+    },
   };
 }

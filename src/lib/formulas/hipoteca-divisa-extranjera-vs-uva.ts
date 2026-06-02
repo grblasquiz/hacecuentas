@@ -1,6 +1,6 @@
 /** Riesgo cambiario hipoteca USD vs hipoteca UVA pesos */
 export interface Inputs { montoUsd: number; tipoCambioActual: number; tasaUsdAnualPct: number; plazoAnios: number; tasaUvaAnualPct: number; inflacionAnualEstPct: number; devaluacionAnualEstPct: number; }
-export interface Outputs { cuotaUsdMensualUsd: number; cuotaUsdMensualArs: number; cuotaUvaMensualArs: number; totalPagadoUsdEnArs: number; totalPagadoUva: number; diferencia: number; mejorOpcion: string; explicacion: string; }
+export interface Outputs { cuotaUsdMensualUsd: number; cuotaUsdMensualArs: number; cuotaUvaMensualArs: number; totalPagadoUsdEnArs: number; totalPagadoUva: number; diferencia: number; mejorOpcion: string; explicacion: string; _insight?: any; }
 export function hipotecaDivisaExtranjeraVsUva(i: Inputs): Outputs {
   const usd = Number(i.montoUsd);
   const tc = Number(i.tipoCambioActual);
@@ -30,6 +30,18 @@ export function hipotecaDivisaExtranjeraVsUva(i: Inputs): Outputs {
   }
   const dif = totalUsdArs - totalUva;
   const mejor = totalUva < totalUsdArs ? 'UVA' : 'USD';
+  const fmtArs = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+  const gap = Math.abs(dif);
+  const baseTot = Math.min(totalUsdArs, totalUva);
+  const gapPct = baseTot > 0 ? (gap / baseTot) * 100 : 0;
+  const _insight = {
+    title: 'USD vs UVA: tu escenario',
+    text: mejor === 'UVA'
+      ? `Con tus supuestos (devaluación **${(dev * 100).toFixed(0)}%/año**, inflación **${(inf * 100).toFixed(0)}%/año**), la hipoteca **UVA** termina más barata: pagarías **${fmtArs(totalUva)}** contra **${fmtArs(totalUsdArs)}** en dólares, un ahorro de **${fmtArs(gap)}** (~${gapPct.toFixed(0)}%). El gran riesgo de la opción en USD es que un salto del dólar dispare la cuota en pesos.`
+      : `Con tus supuestos (devaluación **${(dev * 100).toFixed(0)}%/año**, inflación **${(inf * 100).toFixed(0)}%/año**), la hipoteca en **USD** termina más barata: **${fmtArs(totalUsdArs)}** contra **${fmtArs(totalUva)}** en UVA, una diferencia de **${fmtArs(gap)}** (~${gapPct.toFixed(0)}%). Aun así, recordá que la cuota en dólares depende de cómo evolucione el tipo de cambio: el resultado es muy sensible a ese supuesto.`,
+    tone: 'warn' as const,
+    icon: '💱',
+  };
   return {
     cuotaUsdMensualUsd: Number(cuotaUsd.toFixed(2)),
     cuotaUsdMensualArs: Number(cuotaUsdArs.toFixed(2)),
@@ -39,5 +51,6 @@ export function hipotecaDivisaExtranjeraVsUva(i: Inputs): Outputs {
     diferencia: Number(dif.toFixed(2)),
     mejorOpcion: mejor,
     explicacion: `Hipoteca USD total: $${totalUsdArs.toFixed(0)} ARS. UVA total: $${totalUva.toFixed(0)} ARS. Mejor escenario estimado: ${mejor}.`,
+    _insight,
   };
 }

@@ -13,6 +13,7 @@ export interface Outputs {
   daily: number;
   effective_hourly: number;
   breakdown: string;
+  _insight?: any;
 }
 
 // US FLSA overtime multiplier — 29 U.S.C. § 207
@@ -85,6 +86,22 @@ export function compute(i: Inputs): Outputs {
   const totalHoursWorked = hoursPerWeek * weeksPerYear;
   const effectiveHourly = totalHoursWorked > 0 ? annual / totalHoursWorked : 0;
 
+  const fmtUsd = (v: number) => "$" + v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  const otApplied = overtimeMode === "ot_1_5x" && hoursPerWeek > OT_THRESHOLD;
+  const _insight = otApplied
+    ? {
+        title: "With overtime included",
+        text: `At **$${hourlyRate.toFixed(2)}/hr** working **${hoursPerWeek} hrs/week**, time-and-a-half on the hours past 40 lifts your gross to about **${fmtUsd(annual)}/year** — an effective **$${effectiveHourly.toFixed(2)}/hr** across all hours worked.`,
+        tone: "good",
+        icon: "💰",
+      }
+    : {
+        title: "Annual salary estimate",
+        text: `**$${hourlyRate.toFixed(2)}/hr** at **${hoursPerWeek} hrs/week** for **${weeksPerYear} weeks** works out to about **${fmtUsd(annual)}/year** (**${fmtUsd(monthly)}/month**). This is gross pay, before taxes and deductions.`,
+        tone: "good",
+        icon: "💰",
+      };
+
   return {
     annual,
     monthly,
@@ -93,5 +110,6 @@ export function compute(i: Inputs): Outputs {
     daily,
     effective_hourly: effectiveHourly,
     breakdown: breakdownText,
+    _insight,
   };
 }

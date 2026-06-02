@@ -10,6 +10,7 @@ export interface Outputs {
   kcalMin: number;
   metUsado: number;
   detalle: string;
+  _insight?: any;
 }
 
 const MET_ESCALADA: Record<string, { met: number; nombre: string }> = {
@@ -32,10 +33,24 @@ export function caloriasEscaladaBoulderMuro(i: Inputs): Outputs {
   const kcalPorMin = (info.met * 3.5 * peso) / 200;
   const total = kcalPorMin * min;
 
+  // Equivalencia para dar contexto: 1 alfajor ~ 230 kcal, 1 hora de caminata ~ MET 3.5
+  const totalR = Math.round(total);
+  const alfajores = total / 230;
+  const intensa = info.met >= 8;
+  const _insight = {
+    title: intensa ? 'Sesión de alto gasto' : 'Gasto moderado',
+    text: intensa
+      ? `**${info.nombre}** es de las actividades que más queman: en ${min} min te llevaste **${totalR} kcal**, equivalente a casi **${alfajores.toFixed(1)} alfajores**. La escalada suma fuerza, técnica y cardio a la vez.`
+      : `En ${min} min de **${info.nombre}** quemaste **${totalR} kcal** (~**${alfajores.toFixed(1)} alfajores**). Subir de intensidad o encadenar más vías eleva bastante el gasto.`,
+    tone: intensa ? 'good' : 'neutral',
+    icon: '🧗',
+  };
+
   return {
-    result: Math.round(total),
+    result: totalR,
     kcalMin: Number(kcalPorMin.toFixed(2)),
     metUsado: info.met,
-    detalle: `Haciendo **${info.nombre}** durante ${min} min quemás **${Math.round(total)} kcal** (${kcalPorMin.toFixed(2)} kcal/min, MET ${info.met}).`,
+    detalle: `Haciendo **${info.nombre}** durante ${min} min quemás **${totalR} kcal** (${kcalPorMin.toFixed(2)} kcal/min, MET ${info.met}).`,
+    _insight,
   };
 }

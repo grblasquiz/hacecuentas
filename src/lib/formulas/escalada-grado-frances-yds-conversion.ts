@@ -1,6 +1,6 @@
 /** Conversión grados de escalada deportiva: francés ↔ YDS ↔ UIAA. */
 export interface Inputs { sistemaOrigen: 'frances' | 'yds' | 'uiaa'; gradoOrigen: string; }
-export interface Outputs { gradoFrances: string; gradoYds: string; gradoUiaa: string; nivel: string; explicacion: string; }
+export interface Outputs { gradoFrances: string; gradoYds: string; gradoUiaa: string; nivel: string; explicacion: string; _insight?: any; }
 export function escaladaGradoFrancesYdsConversion(i: Inputs): Outputs {
   // Tabla canónica de conversión (UIAA - Francés - YDS)
   const tabla: Array<{ frances: string; yds: string; uiaa: string; nivel: string }> = [
@@ -41,11 +41,31 @@ export function escaladaGradoFrancesYdsConversion(i: Inputs): Outputs {
     return f.uiaa.toLowerCase() === g;
   });
   if (!fila) throw new Error(`Grado ${i.gradoOrigen} no encontrado en sistema ${i.sistemaOrigen}`);
+
+  // --- Insight narrativo según nivel ---
+  const nivelDesc: Record<string, { desc: string; tone: 'good' | 'neutral' }> = {
+    principiante: { desc: 'rutas de iniciación, ideales para tus primeras vías en pared', tone: 'good' },
+    iniciado: { desc: 'ya dominás lo básico y empezás a leer movimientos más técnicos', tone: 'good' },
+    intermedio: { desc: 'el grueso de los escaladores recreativos vive en este nivel', tone: 'good' },
+    avanzado: { desc: 'requiere fuerza de dedos y técnica depurada; escaladores constantes', tone: 'good' },
+    experto: { desc: 'nivel alto: pocos llegan acá sin entrenamiento específico', tone: 'neutral' },
+    élite: { desc: 'territorio de escaladores de élite con años de preparación', tone: 'neutral' },
+    mundial: { desc: 'grados de clase mundial: solo un puñado de personas los encadena', tone: 'neutral' },
+  };
+  const info = nivelDesc[fila.nivel] || { desc: 'nivel de escalada deportiva', tone: 'neutral' as const };
+  const _insight = {
+    title: 'Tu nivel de escalada',
+    text: `El grado **${fila.frances}** (francés) equivale a **${fila.yds}** en YDS y **${fila.uiaa}** en UIAA. Es un nivel **${fila.nivel}**: ${info.desc}.`,
+    tone: info.tone,
+    icon: '🧗',
+  };
+
   return {
     gradoFrances: fila.frances,
     gradoYds: fila.yds,
     gradoUiaa: fila.uiaa,
     nivel: fila.nivel,
     explicacion: `${i.gradoOrigen} (${i.sistemaOrigen}) equivale a ${fila.frances} francés / ${fila.yds} YDS / ${fila.uiaa} UIAA. Nivel: ${fila.nivel}.`,
+    _insight,
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   composicion: string;
   suplementos: string;
   alimentosProhibidos: string;
+  _insight?: any;
 }
 
 export function comidaTortugaDiariaGramos(i: Inputs): Outputs {
@@ -42,11 +43,30 @@ export function comidaTortugaDiariaGramos(i: Inputs): Outputs {
 
   const prohibidos = 'Lechuga iceberg, pan, lácteos, chocolate, ajo, cebolla, comida humana condimentada, carne roja salada.';
 
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (etapa === 'cria') {
+    insightText = `Como **cría** tu tortuga come **${gramos} g por día** (frecuencia: ${frecuencia.toLowerCase()}): en esta etapa el calcio diario y la lámpara **UVB** no son opcionales, son lo que evita el caparazón blando y deforme.`;
+    insightTone = 'warn';
+  } else if (esAcuatica) {
+    insightText = `Tu tortuga acuática necesita **${gramos} g por día** (${frecuencia.toLowerCase()}). Comen menos seguido que las terrestres: el exceso de comida ensucia el agua y favorece infecciones, así que retirá lo que no consuma.`;
+    insightTone = 'neutral';
+  } else {
+    insightText = `Tu tortuga terrestre necesita **${gramos} g por día** (${frecuencia.toLowerCase()}), con base de hojas verdes oscuras. El calcio y la **UVB** son clave: sin radiación UVB no fija el calcio aunque coma bien.`;
+    insightTone = 'neutral';
+  }
+
   return {
     gramosDia: gramos,
     frecuencia,
     composicion,
     suplementos,
     alimentosProhibidos: prohibidos,
+    _insight: {
+      title: 'Qué significa esta ración',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐢',
+    },
   };
 }

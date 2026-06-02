@@ -1,6 +1,6 @@
 /** Frecuencia y longitud de onda: f = c / λ */
 export interface Inputs { frecuenciaMhz: number; longitudOndaM: number; }
-export interface Outputs { frecuenciaHz: number; longitudOndaResultado: string; antena4: number; detalle: string; }
+export interface Outputs { frecuenciaHz: number; longitudOndaResultado: string; antena4: number; detalle: string; _insight?: any; }
 
 const C = 299_792_458; // velocidad de la luz en m/s
 
@@ -45,10 +45,25 @@ export function frecuenciaLongitudOnda(i: Inputs): Outputs {
   else if (fHz >= 1e3) fTexto = `${fmt.format(fHz / 1e3)} kHz`;
   else fTexto = `${fmtF.format(fHz)} Hz`;
 
+  let banda = 'radio';
+  if (fHz >= 3e14) banda = 'luz visible / infrarrojo';
+  else if (fHz >= 3e11) banda = 'microondas / infrarrojo';
+  else if (fHz >= 3e9) banda = 'microondas (SHF)';
+  else if (fHz >= 3e8) banda = 'UHF (TV, celular, WiFi)';
+  else if (fHz >= 3e7) banda = 'VHF (FM, TV)';
+  else if (fHz >= 3e6) banda = 'onda corta (HF)';
+  else banda = 'onda media / larga';
+
   return {
     frecuenciaHz: Number(fHz.toFixed(0)),
     longitudOndaResultado: lambdaTexto,
     antena4: Number(antena4.toFixed(6)),
     detalle: `f = ${fTexto}, λ = ${lambdaTexto}. Antena λ/4 = ${fmt.format(antena4)} m.`,
+    _insight: {
+      title: 'Frecuencia, onda y antena',
+      text: `Con **${fTexto}** la onda mide **${lambdaTexto}** y cae en la banda **${banda}**. Para sintonizarla, una antena de cuarto de onda (λ/4) debe medir **${fmt.format(antena4)} m**.`,
+      tone: 'neutral',
+      icon: '📡',
+    },
   };
 }

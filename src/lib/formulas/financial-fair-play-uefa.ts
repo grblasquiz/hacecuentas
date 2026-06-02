@@ -18,6 +18,8 @@ export interface Outputs {
   sancionEstimada: number; // multa estimada MEUR
   moneda: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function financialFairPlayUefa(i: Inputs): Outputs {
@@ -51,6 +53,31 @@ export function financialFairPlayUefa(i: Inputs): Outputs {
     ? 'Cumple. Sin sanción'
     : (problemas.length === 1 ? 'Incumple 1 regla UEFA' : `Incumple ${problemas.length} reglas UEFA`);
 
+  const cumpleTodo = cumpleDef && cumpleRatio && cumpleSpons;
+  const insText = cumpleTodo
+    ? `El club cumple las reglas UEFA: squad cost ratio **${ratio.toFixed(1)}%** (límite 70%) y déficit 3 años **€${defAcum}M** dentro de los **€${deficitMaxPermitido}M** permitidos. Sin sanción estimada.`
+    : `${diagnostico}. ${problemas.join('; ')}. Sanción estimada: **€${sancion.toFixed(1)}M**.`;
+  const _insight = {
+    title: cumpleTodo ? 'Dentro de los límites UEFA' : 'Riesgo de sanción UEFA',
+    text: insText,
+    tone: cumpleTodo ? 'good' : 'warn',
+    icon: '⚽',
+  };
+
+  const ratioMarker = Math.min(Number(ratio.toFixed(1)), 100);
+  const _chart = ing > 0 ? {
+    type: 'scale',
+    marker: ratioMarker,
+    markerLabel: `${ratio.toFixed(1)}% del ingreso en plantilla`,
+    min: 0,
+    segments: [
+      { nombre: 'Saludable', max: 70, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Alerta', max: 85, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Incumple', max: 110, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Squad cost ratio de ${ratio.toFixed(1)}% sobre un límite UEFA de 70%`,
+  } : undefined;
+
   return {
     deficitPermitidoMax: deficitMaxPermitido,
     squadCostRatioActual: Number(ratio.toFixed(2)),
@@ -62,5 +89,7 @@ export function financialFairPlayUefa(i: Inputs): Outputs {
     sancionEstimada: Number(sancion.toFixed(2)),
     moneda: 'EUR',
     resumen: `${diagnostico} Déficit 3y: €${defAcum}M (máx €${deficitMaxPermitido}M). Squad cost ratio: ${ratio.toFixed(1)}% (máx 70%). Sanción estimada: €${sancion.toFixed(1)}M.`,
+    _insight,
+    _chart,
   };
 }

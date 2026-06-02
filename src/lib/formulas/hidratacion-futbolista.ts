@@ -14,6 +14,8 @@ export interface Outputs {
   tomasRecomendadas: number;
   mlPorToma: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tasa base de sudor L/hr por clima (70 kg referencia)
@@ -49,13 +51,49 @@ export function hidratacionFutbolista(i: Inputs): Outputs {
   const sodioMg = Math.round((perdidaTotal / 1000) * 600);
   const potasioMg = Math.round((perdidaTotal / 1000) * 180);
 
+  const perdidaTotalR = Math.round(perdidaTotal);
+  const reposicionR = Math.round(reposicion);
+  const postPartido = perdidaTotalR - reposicionR;
+  // Deshidratación como % del peso corporal (>2% afecta rendimiento)
+  const pctPeso = (perdidaTotal / 1000) / peso * 100;
+
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (pctPeso >= 2) {
+    insightText = `Pérdida fuerte: ~**${perdidaTotalR} mL** equivalen a **${pctPeso.toFixed(1)}% de tu peso**, por encima del 2% que ya baja el rendimiento. Tomá **${mlToma} mL** cada 15 min sin saltearte tomas.`;
+    insightTone = 'warn';
+  } else if (pctPeso >= 1) {
+    insightText = `Vas a perder ~**${perdidaTotalR} mL** (${pctPeso.toFixed(1)}% de tu peso). Reponé **${reposicionR} mL** durante el juego en ${tomas} tomas de ~${mlToma} mL para no caer en deshidratación.`;
+    insightTone = 'neutral';
+  } else {
+    insightText = `Pérdida controlada: ~**${perdidaTotalR} mL** (${pctPeso.toFixed(1)}% de tu peso). Con **${mlToma} mL** cada 15 min mantenés la hidratación sin problemas.`;
+    insightTone = 'good';
+  }
+
   return {
-    perdidaTotalMl: Math.round(perdidaTotal),
-    reposicionMl: Math.round(reposicion),
+    perdidaTotalMl: perdidaTotalR,
+    reposicionMl: reposicionR,
     sodioMg,
     potasioMg,
     tomasRecomendadas: tomas,
     mlPorToma: mlToma,
-    detalle: `Futbolista ${peso} kg, ${min} min, **${info.nombre}**: pérdida ~${Math.round(perdidaTotal)} mL. Reponer **${Math.round(reposicion)} mL** durante el juego, en ${tomas} tomas de ~${mlToma} mL cada 15 min. Sodio ${sodioMg} mg, potasio ${potasioMg} mg.`,
+    detalle: `Futbolista ${peso} kg, ${min} min, **${info.nombre}**: pérdida ~${perdidaTotalR} mL. Reponer **${reposicionR} mL** durante el juego, en ${tomas} tomas de ~${mlToma} mL cada 15 min. Sodio ${sodioMg} mg, potasio ${potasioMg} mg.`,
+    _insight: {
+      title: 'Tu reposición en cancha',
+      text: insightText,
+      tone: insightTone,
+      icon: '⚽',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Durante el juego', value: reposicionR },
+        { label: 'Post-partido', value: postPartido },
+      ],
+      prefix: '',
+      centerValue: `${perdidaTotalR} mL`,
+      centerLabel: 'Pérdida total',
+      ariaLabel: `Reparto de la pérdida de ${perdidaTotalR} mL: ${reposicionR} mL a reponer durante el juego y ${postPartido} mL post-partido`,
+    },
   };
 }

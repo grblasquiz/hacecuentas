@@ -1,6 +1,6 @@
 /** Calculadora del Efecto Doppler — f' = f × (v ± vo) / (v ∓ vs) */
 export interface Inputs { frecuenciaFuente: number; velocidadSonido: number; velocidadFuente: number; velocidadObservador: number; acercandose: string; }
-export interface Outputs { frecuenciaPercibida: number; cambio: string; porcentaje: string; formula: string; }
+export interface Outputs { frecuenciaPercibida: number; cambio: string; porcentaje: string; formula: string; _insight?: any; }
 
 export function efectoDopplerFrecuencia(i: Inputs): Outputs {
   const f0 = Number(i.frecuenciaFuente);
@@ -27,10 +27,18 @@ export function efectoDopplerFrecuencia(i: Inputs): Outputs {
   const delta = fp - f0;
   const pct = (delta / f0) * 100;
 
+  const _insight = {
+    title: delta >= 0 ? 'El sonido se percibe más agudo' : 'El sonido se percibe más grave',
+    text: `La fuente emite **${f0} Hz**, pero ${acercandose ? 'al acercarse' : 'al alejarse'} las ondas se ${acercandose ? 'comprimen' : 'estiran'} y el observador escucha **${fp.toFixed(1)} Hz** (${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%). Por eso la sirena ${delta >= 0 ? 'suena más aguda mientras se acerca' : 'cae a un tono más grave al pasar de largo'}.`,
+    tone: 'neutral',
+    icon: delta >= 0 ? '🔊' : '🔉',
+  };
+
   return {
     frecuenciaPercibida: Number(fp.toFixed(2)),
     cambio: `${delta >= 0 ? '+' : ''}${delta.toFixed(2)} Hz (${delta >= 0 ? 'más agudo' : 'más grave'})`,
     porcentaje: `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`,
     formula: formulaStr,
+    _insight,
   };
 }

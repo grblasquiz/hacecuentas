@@ -22,6 +22,8 @@ export interface Outputs {
   irGanhoCapital: string;
   rendimentoTotalLiquido: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -50,6 +52,30 @@ export function fiiRendimento(i: Inputs): Outputs {
   const irGanho = ganhoCapital * 0.20;
   const totalLiquido = dividendos + (valorFinal - irGanho) - investidoReal;
 
+  const ganhoLiquidoCapital = valorFinal - irGanho - investidoReal;
+  const retornoPct = investidoReal > 0 ? (totalLiquido / investidoReal) * 100 : 0;
+
+  const _insight = {
+    title: 'Retorno total estimado',
+    text: `Com **${qtd} cotas**, em **${meses} meses** você acumula **${brl(dividendos)}** em dividendos (isentos de IR) e um ganho de capital líquido de **${brl(ganhoLiquidoCapital)}**, somando **${brl(totalLiquido)}** sobre os ${brl(investidoReal)} aplicados (**${retornoPct.toFixed(1)}%**). O dividend yield equivale a **${(dyAnual * 100).toFixed(2)}% ao ano**.`,
+    tone: totalLiquido >= 0 ? 'good' : 'warn',
+    icon: '🏢',
+  };
+
+  const _chart = (dividendos >= 0 && ganhoLiquidoCapital >= 0 && totalLiquido > 0)
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Dividendos (isentos)', value: Math.round(dividendos * 100) / 100 },
+          { label: 'Ganho de capital líquido', value: Math.round(ganhoLiquidoCapital * 100) / 100 },
+        ],
+        prefix: 'R$ ',
+        centerValue: brl(totalLiquido),
+        centerLabel: 'Retorno líquido',
+        ariaLabel: `Retorno total líquido de ${brl(totalLiquido)}: ${brl(dividendos)} em dividendos e ${brl(ganhoLiquidoCapital)} de ganho de capital líquido.`,
+      }
+    : undefined;
+
   return {
     qtdCotas: qtd.toString() + ' cotas (' + brl(investidoReal) + ' aplicados)',
     dividendosTotais: brl(dividendos),
@@ -60,5 +86,7 @@ export function fiiRendimento(i: Inputs): Outputs {
     irGanhoCapital: brl(irGanho),
     rendimentoTotalLiquido: brl(totalLiquido),
     resumen: `Com ${qtd} cotas a ${brl(preco)} e dividendo ${brl(divMes)}/cota/mês, em ${meses} meses você recebe ${brl(dividendos)} em dividendos (isentos) e ${brl(valorFinal - irGanho - investidoReal)} de ganho líquido.`,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

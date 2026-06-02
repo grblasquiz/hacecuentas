@@ -6,6 +6,7 @@ export interface Outputs {
   octal: string;
   hexadecimal: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function conversionBases(i: Inputs): Outputs {
@@ -41,11 +42,19 @@ export function conversionBases(i: Inputs): Outputs {
     16: 'hexadecimal',
   };
 
+  const _insight = {
+    title: 'El mismo número en 4 bases',
+    text: `**${num}** en ${baseNombres[base]} (base ${base}) vale **${Number(decimal).toLocaleString('es-ES')}** en decimal. Se escribe **${binario}** en binario y **${hexadecimal}** en hexadecimal: cambia la notación, no la cantidad.`,
+    tone: 'neutral',
+    icon: '🔢',
+  };
+
   return {
     decimal,
     binario,
     octal,
     hexadecimal,
     detalle: `${num} en ${baseNombres[base]} (base ${base}) = ${decimal} decimal = ${binario} binario = ${octal} octal = ${hexadecimal} hexadecimal.`,
+    _insight,
   };
 }

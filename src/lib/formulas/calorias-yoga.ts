@@ -8,6 +8,7 @@ export interface Outputs {
   caloriasQuemadas: number;
   equivalenteKmCaminata: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function caloriasYoga(i: Inputs): Outputs {
@@ -35,9 +36,18 @@ export function caloriasYoga(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const kcalR = Math.round(calorias);
+  const kmR = Number(kmCaminata.toFixed(1));
+
   return {
-    caloriasQuemadas: Math.round(calorias),
-    equivalenteKmCaminata: Number(kmCaminata.toFixed(1)),
+    caloriasQuemadas: kcalR,
+    equivalenteKmCaminata: kmR,
     detalle: `${nombre} por ${fmt.format(duracion)} min quema ~${fmt.format(calorias)} kcal. Equivale a caminar ${fmt.format(kmCaminata)} km.`,
+    _insight: {
+      title: 'Tu sesión en perspectiva',
+      text: `Una clase de **${nombre}** de ${fmt.format(duracion)} min quema unas **${fmt.format(kcalR)} kcal**, lo mismo que caminar **${fmt.format(kmR)} km**. El yoga suma flexibilidad y descarga de estrés además del gasto calórico.`,
+      tone: 'good',
+      icon: '🧘',
+    },
   };
 }

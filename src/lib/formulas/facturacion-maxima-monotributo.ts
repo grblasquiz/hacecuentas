@@ -16,6 +16,8 @@ export interface Outputs {
   costoResponsableInscripto: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface CatInfo {
@@ -73,6 +75,46 @@ export function facturacionMaximaMonotributo(i: Inputs): Outputs {
   const formula = `Tope ${catActual}: $${topeCategoria.toLocaleString()} — Proyectado: $${Math.round(facturacionProyectada).toLocaleString()}`;
   const explicacion = `Categoría ${catActual} (${actividad}): tope $${topeCategoria.toLocaleString()}/año. Facturación actual: $${facActual.toLocaleString()} en ${meses} meses (promedio $${Math.round(facMensualPromedio).toLocaleString()}/mes). Proyección anual: $${Math.round(facturacionProyectada).toLocaleString()}. ${margenRestante > 0 ? `Margen: $${Math.round(margenRestante).toLocaleString()} (podés facturar ~$${Math.round(margenRestante / Math.max(1, 12 - meses)).toLocaleString()} más por mes).` : `¡Excedés el tope! Debés recategorizarte a ${proximaCategoria}.`}${mesesHastaExceder < 12 ? ` Al ritmo actual, en ${mesesHastaExceder} meses excedés esta categoría.` : ''} Si pasaras a RI, la carga fiscal estimada sería ~$${Math.round(costoResponsableInscripto).toLocaleString()}/año.`;
 
+  // ========== INSIGHT ==========
+  const proyFmt = Math.round(facturacionProyectada).toLocaleString();
+  const topeFmt = topeCategoria.toLocaleString();
+  const pctTope = topeCategoria > 0 ? (facturacionProyectada / topeCategoria) * 100 : 0;
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (margenRestante < 0) {
+    insightTitle = 'Excedés el tope';
+    insightText = `Tu proyección anual de **$${proyFmt}** supera el tope de la categoría ${catActual} (**$${topeFmt}**). Tenés que recategorizarte a **${proximaCategoria}** o pasar a Responsable Inscripto.`;
+    insightTone = 'warn';
+    insightIcon = '🚨';
+  } else if (pctTope >= 80) {
+    insightTitle = 'Cerca del límite';
+    insightText = `Proyectás **$${proyFmt}** al año, un **${pctTope.toFixed(0)}%** del tope de la categoría ${catActual} (**$${topeFmt}**). Te quedan **$${Math.round(margenRestante).toLocaleString()}** de margen${mesesHastaExceder < 12 ? `; al ritmo actual lo superás en **${mesesHastaExceder} meses**` : ''}.`;
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+  } else {
+    insightTitle = 'Margen holgado';
+    insightText = `Tu proyección de **$${proyFmt}** está en el **${pctTope.toFixed(0)}%** del tope de la categoría ${catActual}. Podés facturar hasta **$${Math.round(margenRestante).toLocaleString()}** más este año sin recategorizar.`;
+    insightTone = 'good';
+    insightIcon = '✅';
+  }
+
+  // ========== GAUGE: proyección dentro del tope ==========
+  const segMax = Math.max(topeCategoria * 1.1, facturacionProyectada * 1.05);
+  const chart = {
+    type: 'scale',
+    marker: Math.round(facturacionProyectada),
+    markerLabel: `Proyección $${proyFmt}`,
+    min: 0,
+    segments: [
+      { nombre: 'Margen holgado', max: Math.round(topeCategoria * 0.8), color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Cerca del tope', max: topeCategoria, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Excedido', max: Math.round(segMax), color: '#dc2626', colorDark: '#ef4444' }
+    ],
+    ariaLabel: `Facturación proyectada de $${proyFmt} sobre un tope de $${topeFmt} para la categoría ${catActual}`
+  };
+
   return {
     topeCategoria,
     facturacionProyectada: Math.round(facturacionProyectada),
@@ -82,5 +124,12 @@ export function facturacionMaximaMonotributo(i: Inputs): Outputs {
     costoResponsableInscripto: Math.round(costoResponsableInscripto),
     formula,
     explicacion,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon
+    },
+    _chart: chart,
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   tecnica: string;
   alerta: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function frecuenciaCorteUnasPerroGato(i: Inputs): Outputs {
@@ -94,11 +95,25 @@ export function frecuenciaCorteUnasPerroGato(i: Inputs): Outputs {
     ? `Cada ${semMin} semanas`
     : `Cada ${semMin}-${semMax} semanas`;
 
+  const animal = especie === 'gato' ? 'tu gato' : 'tu perro';
+  const cadencia = semMin === semMax ? `cada **${semMin} semanas**` : `cada **${semMin} a ${semMax} semanas**`;
+  const insightText =
+    `Para este perfil (${edad}, actividad ${actividad}), cortale las uñas a ${animal} ${cadencia}. ` +
+    (especie === 'gato'
+      ? 'Si esperás de más, el quick (la vena interna) avanza y ya no podés cortar corto sin lastimar; no te olvides del espolón, que nunca se desgasta.'
+      : 'Si las uñas hacen clic-clic en el piso liso, ya te pasaste: cuanto más larga la uña, más crece el quick por dentro y más difícil se hace volver a la longitud sana.');
+
   return {
     frecuenciaSemanas,
     herramienta,
     tecnica,
     alerta,
     detalle: `${especie === 'gato' ? 'Gato' : 'Perro'} (${edad}, actividad ${actividad}): cortá las uñas ${frecuenciaSemanas.toLowerCase()}. ${herramienta} ${alerta}`,
+    _insight: {
+      title: 'Cada cuánto cortar',
+      text: insightText,
+      tone: 'neutral',
+      icon: '🐾',
+    },
   };
 }

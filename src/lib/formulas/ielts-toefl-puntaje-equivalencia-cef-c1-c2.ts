@@ -11,6 +11,8 @@ export interface Outputs {
   equivalenciaCambridge: string;
   equivalenciaDuolingo: string;
   universidades: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tabla de niveles CEFR con rangos por examen
@@ -202,6 +204,39 @@ export function compute(i: Inputs): Outputs {
     ? `${Math.round(puntaje)} (tu puntaje) — Rango equivalente: ${band.duolingoTxt}`
     : band.duolingoTxt;
 
+  // --- Gauge: posición del nivel CEFR en la escala A1→C2 ---
+  const nivelIdx = BANDS.findIndex(b => b.nivel === band!.nivel); // 0..5
+  const examenNombre = examen.charAt(0).toUpperCase() + examen.slice(1);
+  const chart = {
+    type: "scale" as const,
+    marker: nivelIdx + 0.5,
+    markerLabel: band.nivel,
+    min: 0,
+    segments: [
+      { nombre: "A1", max: 1, color: "#fca5a5", colorDark: "#b91c1c" },
+      { nombre: "A2", max: 2, color: "#fdba74", colorDark: "#c2410c" },
+      { nombre: "B1", max: 3, color: "#fde047", colorDark: "#a16207" },
+      { nombre: "B2", max: 4, color: "#bef264", colorDark: "#4d7c0f" },
+      { nombre: "C1", max: 5, color: "#86efac", colorDark: "#15803d" },
+      { nombre: "C2", max: 6, color: "#34d399", colorDark: "#047857" },
+    ],
+    ariaLabel: `Nivel CEFR ${band.nivel} sobre la escala A1 a C2`,
+  };
+
+  // --- Insight dinámico por nivel ---
+  const esCompetente = nivelIdx >= 4; // C1 o C2
+  const esB2 = nivelIdx === 3;
+  const insight = {
+    title: `Nivel ${band.nivel} en el marco europeo (CEFR)`,
+    text: esCompetente
+      ? `Con tu puntaje de ${examenNombre} alcanzás **${band.nivel}**, nivel de **usuario competente**: habilita admisión directa en universidades top de EE. UU., Reino Unido y Australia, e incluso profesiones reguladas.`
+      : esB2
+      ? `Tu puntaje de ${examenNombre} equivale a **B2** (usuario independiente avanzado): suficiente para muchas universidades de Reino Unido, Europa y algunas de EE. UU. Para las más exigentes apuntá a **C1 (${band.nivel === 'B2' ? 'IELTS 6.5+' : 'el siguiente tramo'})**.`
+      : `Tu puntaje de ${examenNombre} corresponde a **${band.nivel}**: todavía por debajo del **B2** que pide la mayoría de las universidades. Conviene seguir preparando antes de postular a admisión directa.`,
+    tone: esCompetente ? "good" : esB2 ? "neutral" : "warn",
+    icon: esCompetente ? "🎓" : "📚",
+  };
+
   return {
     nivelCEFR: band.nivel,
     descripcionCEFR: band.descripcion,
@@ -209,6 +244,8 @@ export function compute(i: Inputs): Outputs {
     equivalenciaTOEFL: toeflDisplay,
     equivalenciaCambridge: cambridgeDisplay,
     equivalenciaDuolingo: duolingoDisplay,
-    universidades: band.universidades
+    universidades: band.universidades,
+    _insight: insight,
+    _chart: chart
   };
 }

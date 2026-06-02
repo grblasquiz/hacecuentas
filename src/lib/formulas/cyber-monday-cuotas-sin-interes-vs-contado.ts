@@ -11,6 +11,7 @@ export interface Outputs {
   diferencia: number;
   recomendacion: string;
   ahorroPctRealEnCuotas: number;
+  _insight?: any;
 }
 
 export function cyberMondayCuotasSinInteresVsContado(i: Inputs): Outputs {
@@ -41,11 +42,36 @@ export function cyberMondayCuotasSinInteresVsContado(i: Inputs): Outputs {
   } else {
     recomendacion = `Contado con ${desc}% CyberMonday conviene: ahorrás $${fmt(-diferencia)} sobre el valor presente de las cuotas. Es buena opción si querés liberar el aguinaldo para otras cosas.`;
   }
+  let _insight;
+  if (diferencia > 0) {
+    _insight = {
+      title: `Ganan las ${cuotas} cuotas`,
+      text: `El valor presente de pagar en **${cuotas} cuotas** ($${fmt(valorPresenteCuotas)}) es **$${fmt(diferencia)}** más barato que el contado con ${desc}% ($${fmt(valorContadoConDescuento)}). La inflación licúa **${ahorroPctRealEnCuotas.toFixed(1)}%** del precio.`,
+      tone: 'good',
+      icon: '💳',
+    };
+  } else if (diferencia === 0) {
+    _insight = {
+      title: 'Empate técnico',
+      text: `Cuotas y contado quedan equivalentes en valor presente (~$${fmt(valorPresenteCuotas)}). Decidí por flujo de caja: cuotas si está apretado, contado si tenés el efectivo.`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  } else {
+    _insight = {
+      title: `Gana el contado (-${desc}%)`,
+      text: `Pagar contado con **${desc}%** ($${fmt(valorContadoConDescuento)}) ahorra **$${fmt(-diferencia)}** frente al valor presente de las ${cuotas} cuotas ($${fmt(valorPresenteCuotas)}).`,
+      tone: 'neutral',
+      icon: '💵',
+    };
+  }
+
   return {
     valorPresenteCuotas: Math.round(valorPresenteCuotas),
     valorContadoConDescuento: Math.round(valorContadoConDescuento),
     diferencia: Math.round(diferencia),
     recomendacion,
     ahorroPctRealEnCuotas: Number(ahorroPctRealEnCuotas.toFixed(2)),
+    _insight,
   };
 }

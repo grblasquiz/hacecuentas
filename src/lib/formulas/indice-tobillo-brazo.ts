@@ -1,6 +1,6 @@
 /** Índice Tobillo-Brazo */
 export interface Inputs { presionTobillo: number; presionBrazo: number; }
-export interface Outputs { itb: number; clasificacion: string; recomendacion: string; mensaje: string; _chart?: any; }
+export interface Outputs { itb: number; clasificacion: string; recomendacion: string; mensaje: string; _chart?: any; _insight?: any; }
 
 export function indiceTobilloBrazo(i: Inputs): Outputs {
   const tobillo = Number(i.presionTobillo);
@@ -50,5 +50,19 @@ export function indiceTobilloBrazo(i: Inputs): Outputs {
     ariaLabel: 'Escala del índice tobillo-brazo (ITB): de enfermedad arterial periférica severa a calcificación arterial.',
   };
 
-  return { itb, clasificacion, recomendacion, mensaje: `ITB: ${itb}. ${clasificacion}.`, _chart: chart };
+  const clasifLimpia = clasificacion.replace(/[🟢🟡🟠🔴⚠️]/g, '').trim();
+  const insightTone = itb >= 1.0 && itb <= 1.3 ? 'good' : (itb >= 0.91 && itb < 1.0) ? 'neutral' : 'warn';
+  const insight = {
+    title: itb >= 1.0 && itb <= 1.3 ? 'Circulación periférica normal' : `Resultado: ${clasifLimpia.toLowerCase()}`,
+    text: itb >= 1.0 && itb <= 1.3
+      ? `Un ITB de **${itb}** indica flujo arterial periférico normal (rango 1,00–1,30). Sin signos de enfermedad arterial periférica; control de rutina según factores de riesgo.`
+      : itb > 1.3
+      ? `Un ITB de **${itb}** sugiere arterias calcificadas (no compresibles): el valor no es confiable y conviene un estudio vascular con otro método.`
+      : itb >= 0.91
+      ? `Un ITB de **${itb}** queda en zona limítrofe (0,91–0,99): conviene repetir en 6–12 meses y controlar los factores de riesgo cardiovascular.`
+      : `Un ITB de **${itb}** es compatible con **${clasifLimpia.toLowerCase()}**. ${recomendacion}`,
+    tone: insightTone,
+    icon: itb >= 1.0 && itb <= 1.3 ? '🦵' : (itb >= 0.91 && itb < 1.0) ? '🩺' : '⚠️',
+  };
+  return { itb, clasificacion, recomendacion, mensaje: `ITB: ${itb}. ${clasificacion}.`, _chart: chart, _insight: insight };
 }

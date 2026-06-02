@@ -10,6 +10,8 @@ export interface Outputs {
   restriccion_zbe_barcelona: string;
   detalles_restricciones: string;
   beneficios_incentivos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -139,12 +141,73 @@ export function compute(i: Inputs): Outputs {
     beneficios_incentivos = '❌ Sin incentivos. Vehículo no elegible para ZBE. Opción: exportación (Europa del Este, Magreb) o desguace. Accede a MOVES IV para sustitución por Cero (subvención hasta 7.000 € si ingresos reducidos).';
   }
 
+  // Insight dinámico según la etiqueta obtenida
+  const rank: Record<string, number> = {
+    'Cero': 4.5, 'Eco': 3.5, 'C': 2.5, 'B': 1.5, 'Sin etiqueta': 0.5,
+  };
+  const marker = rank[etiqueta] ?? 0.5;
+
+  let _insight: any;
+  if (etiqueta === 'Cero') {
+    _insight = {
+      title: 'Etiqueta Cero — acceso total',
+      text: `Tu vehículo obtiene la etiqueta **Cero** (cero emisiones): circula **sin restricciones** en las ZBE de Madrid y Barcelona y accede a los mayores incentivos (MOVES, exención de circulación, aparcamiento gratuito).`,
+      tone: 'good',
+      icon: '🟢',
+    };
+  } else if (etiqueta === 'Eco') {
+    _insight = {
+      title: 'Etiqueta Eco — circulación libre',
+      text: `Tu vehículo obtiene la etiqueta **Eco**: hoy circula **sin restricciones** en las ZBE, aunque es la categoría más expuesta a un endurecimiento normativo futuro si la UE aprieta los límites.`,
+      tone: 'good',
+      icon: '🟡',
+    };
+  } else if (etiqueta === 'C') {
+    _insight = {
+      title: 'Etiqueta C — restricciones progresivas',
+      text: `Tu vehículo obtiene la etiqueta **C**: circula con **limitaciones horarias** y está sujeto a **restricciones progresivas** en Madrid y Barcelona durante 2026-2028. Conviene seguir el plan municipal.`,
+      tone: 'warn',
+      icon: '🟠',
+    };
+  } else if (etiqueta === 'B') {
+    _insight = {
+      title: 'Etiqueta B — prohibido en ZBE',
+      text: `Tu vehículo obtiene la etiqueta **B** y está **prohibido circular** en las ZBE principales desde 2024 (salvo residentes o servicios esenciales). Plantéate el cambio antes de 2027.`,
+      tone: 'warn',
+      icon: '🔵',
+    };
+  } else {
+    _insight = {
+      title: 'Sin etiqueta — circulación vetada',
+      text: `Tu vehículo **no obtiene etiqueta ambiental** (anterior a Euro 3): **prohibido** en todas las ZBE activas salvo emergencias o discapacidad. La salida es achatarrar (MOVES) o exportar.`,
+      tone: 'warn',
+      icon: '⛔',
+    };
+  }
+
+  const _chart = {
+    type: 'scale',
+    marker,
+    markerLabel: etiqueta === 'Sin etiqueta' ? 'Sin etiqueta' : `Etiqueta ${etiqueta}`,
+    min: 0,
+    segments: [
+      { nombre: 'Sin etiqueta', max: 1, color: '#9ca3af', colorDark: '#6b7280' },
+      { nombre: 'B', max: 2, color: '#3b82f6', colorDark: '#2563eb' },
+      { nombre: 'C', max: 3, color: '#f97316', colorDark: '#ea580c' },
+      { nombre: 'Eco', max: 4, color: '#eab308', colorDark: '#ca8a04' },
+      { nombre: 'Cero', max: 5, color: '#22c55e', colorDark: '#16a34a' },
+    ],
+    ariaLabel: `Tu vehículo se clasifica como etiqueta ${etiqueta} en la escala ambiental de la DGT, de Sin etiqueta (más restringido) a Cero (acceso total).`,
+  };
+
   return {
     etiqueta: etiqueta,
     color_etiqueta: color_etiqueta,
     restriccion_zbe_madrid: restriccion_zbe_madrid,
     restriccion_zbe_barcelona: restriccion_zbe_barcelona,
     detalles_restricciones: detalles_restricciones,
-    beneficios_incentivos: beneficios_incentivos
+    beneficios_incentivos: beneficios_incentivos,
+    _insight,
+    _chart
   };
 }

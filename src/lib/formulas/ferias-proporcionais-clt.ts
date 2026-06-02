@@ -19,6 +19,8 @@ export interface Outputs {
   feriasLiquidas: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -44,6 +46,27 @@ export function feriasProporcionaisClt(i: Inputs): Outputs {
   const formula = `Férias prop. = (${fmt(salario)}/12) × ${meses} + 1/3 = ${fmt(bruto)} (líquido ${fmt(liquido)})`;
   const explicacao = `Férias proporcionais a ${meses}/12 meses: ${fmt(proporcional)} + 1/3 (${fmt(terco)}) = ${fmt(bruto)}. INSS ${fmt(inss)}, IRRF ${fmt(irrf)}. Líquido: ${fmt(liquido)}. Fração ≥ 15 dias conta como mês completo (CLT art. 146).`;
 
+  const totalDescontos = inss + irrf;
+  const pctDesconto = bruto > 0 ? Math.round((totalDescontos / bruto) * 100) : 0;
+  const _insight = {
+    title: `Proporcional a ${meses}/12`,
+    text: `Por ${meses} ${meses === 1 ? 'mês' : 'meses'} trabalhados: ${fmt(proporcional)} + 1/3 = ${fmt(bruto)} bruto. Após **${fmt(totalDescontos)}** de descontos (**${pctDesconto}%**), você recebe **${fmt(liquido)}**.`,
+    tone: (pctDesconto >= 20 ? 'warn' : 'good') as 'warn' | 'good',
+    icon: '🏖️',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Líquido', value: liquido },
+      { label: 'INSS', value: inss },
+      { label: 'IRRF', value: irrf },
+    ],
+    prefix: 'R$ ',
+    centerValue: fmt(liquido),
+    centerLabel: 'Líquido',
+    ariaLabel: `Férias proporcionais brutas de ${fmt(bruto)}: ${fmt(liquido)} líquidas, ${fmt(inss)} de INSS e ${fmt(irrf)} de IRRF.`,
+  };
+
   return {
     feriasProporcionais: fmt(proporcional),
     tercoConstitucional: fmt(terco),
@@ -53,5 +76,7 @@ export function feriasProporcionaisClt(i: Inputs): Outputs {
     feriasLiquidas: fmt(liquido),
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

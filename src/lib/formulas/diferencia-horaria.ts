@@ -7,6 +7,7 @@ export interface DiferenciaHorariaOutputs {
   diferenciaHoras: number;
   horaActualDestino: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface CiudadInfo {
@@ -57,9 +58,27 @@ export function diferenciaHoraria(inputs: DiferenciaHorariaInputs): DiferenciaHo
       ? `${destino.nombre} está ${Math.abs(diferencia)} hora(s) atrasada`
       : 'Misma zona horaria';
 
+  const abs = Math.abs(diferencia);
+  let insightText: string;
+  let tone: 'good' | 'warn' | 'neutral';
+  if (abs === 0) {
+    insightText = `${origen.nombre} y ${destino.nombre} comparten la **misma hora**: podés coordinar llamadas a cualquier horario sin cálculos.`;
+    tone = 'good';
+  } else if (abs <= 3) {
+    insightText = `Apenas **${abs} h** de diferencia (${destino.nombre} ${diferencia > 0 ? 'adelantada' : 'atrasada'}): hay franjas cómodas en común para coordinar reuniones.`;
+    tone = 'good';
+  } else if (abs <= 7) {
+    insightText = `**${abs} h** de diferencia: la ventana en común es chica. Buscá horarios de mañana en uno / tarde en el otro.`;
+    tone = 'neutral';
+  } else {
+    insightText = `**${abs} h** de diferencia es mucho: cuando en ${origen.nombre} es mediodía, en ${destino.nombre} son las **${horaDestino.toString().padStart(2, '0')}:00**. Coordinar en vivo es difícil, considerá modo asíncrono.`;
+    tone = 'warn';
+  }
+
   return {
     diferenciaHoras: diferencia,
     horaActualDestino: horaStr,
     detalle: `${origen.nombre} (UTC${origen.utc >= 0 ? '+' : ''}${origen.utc}) → ${destino.nombre} (UTC${destino.utc >= 0 ? '+' : ''}${destino.utc}): diferencia de ${signo}${diferencia} horas. ${adelanteAtraso}. Si en ${origen.nombre} son las 12:00, en ${destino.nombre} son las ${horaStr}. Nota: la diferencia puede variar ±1 hora por horario de verano (DST).`,
+    _insight: { title: 'Coordinar entre zonas', text: insightText, tone, icon: '🕐' },
   };
 }

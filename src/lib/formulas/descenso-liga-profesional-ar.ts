@@ -30,6 +30,7 @@ export interface DescensoLPFOutputs {
   puntosNecesariosSalvarse: number;
   diferenciaConCorte: number;
   veredicto: string;
+  _insight?: any;
 }
 
 export function descensoLigaProfesionalAr(inputs: DescensoLPFInputs): DescensoLPFOutputs {
@@ -77,6 +78,30 @@ export function descensoLigaProfesionalAr(inputs: DescensoLPFInputs): DescensoLP
     veredicto = '🟡 Dependés de vos: con 2-3 triunfos te salvás.';
   }
 
+  const arriba = corte > 0 && diferenciaConCorte >= 0;
+  const muerto = corte > 0 && puntosNecesariosSalvarse > restantes * 3;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (corte === 0) {
+    insightText = `Tu promedio es **${promedioActual.toFixed(3)}** (${puntosTotales} pts en ${partidosJugados} partidos). Cargá el promedio del 4º peor para saber a qué distancia estás del corte de salvación.`;
+    insightTone = 'neutral';
+  } else if (arriba) {
+    insightText = `Tu promedio (**${promedioActual.toFixed(3)}**) está **${Math.abs(diferenciaConCorte).toFixed(3)}** por encima del corte (${corte.toFixed(3)}). Estás fuera de los 4 que se van: ${restantes > 0 ? `con sumar lo razonable en los **${restantes}** partidos restantes te mantenés a salvo.` : 'y no quedan partidos, zafaste.'}`;
+    insightTone = 'good';
+  } else if (muerto) {
+    insightText = `Te faltan **${puntosNecesariosSalvarse} pts** para alcanzar el corte, pero en **${restantes}** partidos solo podés sumar hasta ${restantes * 3}. El promedio ya no alcanza.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `Tu promedio (**${promedioActual.toFixed(3)}**) está **${Math.abs(diferenciaConCorte).toFixed(3)}** por debajo del corte. Necesitás **${puntosNecesariosSalvarse} pts** en los **${restantes}** partidos que quedan para salir de los 4 del descenso.`;
+    insightTone = 'warn';
+  }
+  const _insight = {
+    title: 'Tu situación en los promedios',
+    text: insightText,
+    tone: insightTone,
+    icon: '⚽',
+  };
+
   return {
     promedioActual: Number(promedioActual.toFixed(3)),
     puntosTotales,
@@ -87,5 +112,6 @@ export function descensoLigaProfesionalAr(inputs: DescensoLPFInputs): DescensoLP
     puntosNecesariosSalvarse,
     diferenciaConCorte: Number(diferenciaConCorte.toFixed(3)),
     veredicto,
+    _insight,
   };
 }

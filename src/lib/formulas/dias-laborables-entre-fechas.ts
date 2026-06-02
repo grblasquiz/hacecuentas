@@ -15,6 +15,8 @@ export interface DiasLaborablesOutputs {
   finDeSemana: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function diasLaborablesEntreFechas(inputs: DiasLaborablesInputs): DiasLaborablesOutputs {
@@ -68,11 +70,35 @@ export function diasLaborablesEntreFechas(inputs: DiasLaborablesInputs): DiasLab
 
   const sabadosTexto = incluirSabados ? 'Los sábados se cuentan como laborables.' : 'Los sábados se excluyen (fin de semana).';
 
-  return {
+  const pctHabiles = diasTotales > 0 ? Math.round((laborables / diasTotales) * 100) : 0;
+
+  const out: DiasLaborablesOutputs = {
     diasLaborables: `${laborables} días hábiles`,
     diasTotales: `${diasTotales} días calendario`,
     finDeSemana: `${finDeSemana} días de fin de semana`,
     formula: `Días hábiles = Días totales (${diasTotales}) − Fines de semana (${finDeSemana}) = ${laborables}`,
     explicacion: `Entre el **${formatFecha(desde)}** y el **${formatFecha(hasta)}** hay **${diasTotales} días calendario**. Descontando ${finDeSemana} días de fin de semana, quedan **${laborables} días laborables/hábiles**. ${sabadosTexto} Nota: no se descuentan feriados nacionales porque varían según el país y el año.`,
+    _insight: {
+      title: 'Hábiles vs calendario',
+      text: `De los **${diasTotales} días calendario** del período, **${laborables} son hábiles** (${pctHabiles}%) y ${finDeSemana} caen en fin de semana. ${incluirSabados ? 'Estás contando los sábados como laborables.' : 'Los sábados quedan afuera junto con los domingos.'}`,
+      tone: 'neutral',
+      icon: '🗓️',
+    },
   };
+
+  if (diasTotales > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Días hábiles', value: laborables },
+        { label: 'Fin de semana', value: finDeSemana },
+      ],
+      prefix: '',
+      centerValue: `${diasTotales}`,
+      centerLabel: 'días totales',
+      ariaLabel: `Composición del período: ${laborables} días hábiles y ${finDeSemana} días de fin de semana sobre ${diasTotales} totales`,
+    };
+  }
+
+  return out;
 }

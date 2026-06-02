@@ -11,6 +11,7 @@ export interface Outputs {
   verdurasSemana: string;
   premiosSemana: string;
   mixMesKg: number;
+  _insight?: any;
 }
 
 export function comidaHamsterSemana(i: Inputs): Outputs {
@@ -55,6 +56,25 @@ export function comidaHamsterSemana(i: Inputs): Outputs {
       ? 'Pipa de girasol, cacahuete sin sal o trocito de manzana, 1-2 veces por semana.'
       : 'Semillas de calabaza, arándano deshidratado. Ocasional.';
 
+  const nombreEspecie: Record<string, string> = {
+    'sirio': 'sirio', 'ruso': 'ruso enano', 'campbell': 'Campbell',
+    'roborowski': 'Roborowski', 'chino': 'chino',
+  };
+  const nombre = nombreEspecie[especie] ?? 'hámster';
+
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (isDiabetico) {
+    insightText = `Tu hámster ${nombre} come **${semana} g de mix por semana** (~${diaRedondeo} g/día), pero por ser una especie **propensa a la diabetes** lo crítico no es la cantidad sino evitar el azúcar: cero fruta dulce, maíz ni miel, y premios solo bajos en azúcar.`;
+    insightTone = 'warn';
+  } else if (edad === 'cachorro') {
+    insightText = `Como **cachorro en crecimiento**, tu ${nombre} come **${semana} g de mix por semana** (~${diaRedondeo} g/día), un 20% más que un adulto, más proteína 2 veces por semana para sostener el desarrollo.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Tu hámster ${nombre} necesita **${semana} g de mix por semana** (~${diaRedondeo} g/día), unos **${mesKg} kg al mes**. Dejá siempre el cuenco con comida: acumular semillas en la madriguera es normal, no señal de que coma de más.`;
+    insightTone = 'neutral';
+  }
+
   return {
     mixSemillasSemanaGr: semana,
     mixPorDiaGr: diaRedondeo,
@@ -62,5 +82,11 @@ export function comidaHamsterSemana(i: Inputs): Outputs {
     verdurasSemana: verduras,
     premiosSemana: premios,
     mixMesKg: mesKg,
+    _insight: {
+      title: 'Qué significa esta ración',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐹',
+    },
   };
 }

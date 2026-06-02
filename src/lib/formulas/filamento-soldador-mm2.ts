@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  diametro: string; seccionMm2: string; alternativo: string; consejo: string;
+  diametro: string; seccionMm2: string; alternativo: string; consejo: string; _insight?: any;
 }
 
 export function filamentoSoldadorMm2(inputs: Inputs): Outputs {
@@ -25,10 +25,17 @@ export function filamentoSoldadorMm2(inputs: Inputs): Outputs {
   };
   const i = tabla[t] || tabla[4];
   const seccion = Math.PI * Math.pow(i.d / 2, 2);
+  const _insight = {
+    title: 'Diámetro de estaño recomendado',
+    text: `Para tu trabajo, el estaño ideal es de **${i.d} mm** de diámetro (**${seccion.toFixed(2)} mm²** de sección), con **${i.alt}** como alternativa válida. ${i.tip}`,
+    tone: 'neutral',
+    icon: '🔧',
+  };
   return {
     diametro: `${i.d} mm`,
     seccionMm2: `${seccion.toFixed(2)} mm² de sección`,
     alternativo: i.alt,
     consejo: i.tip,
+    _insight,
   };
 }

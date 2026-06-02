@@ -15,6 +15,8 @@ export interface Outputs {
   pasos: number;
   equivalentes: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function caloriasCaminando(i: Inputs): Outputs {
@@ -32,6 +34,15 @@ export function caloriasCaminando(i: Inputs): Outputs {
       intMuyVigorosa: 'Muy vigorosa',
       intMarcaAtletica: 'Marcha atlética',
       intCasiTrote: 'Casi trote',
+      insTitle: 'Tu caminata en números',
+      insText: (cal: number, vel: string, pas: string, inten: string) =>
+        `A **${vel} km/h** (${inten}) quemás **${cal} kcal** y das **${pas} pasos**. Subir el ritmo o agregar pendiente aumenta el gasto sin alargar la caminata.`,
+      chartMarker: 'Tu ritmo',
+      chartAria: 'Velocidad de caminata ubicada en su zona de intensidad',
+      zPaseo: 'Paseo',
+      zModerada: 'Moderada',
+      zVigorosa: 'Vigorosa',
+      zAtletica: 'Atlética',
     },
     en: {
       errPeso: 'Weight must be between 20 and 300 kg',
@@ -44,6 +55,15 @@ export function caloriasCaminando(i: Inputs): Outputs {
       intMuyVigorosa: 'Very vigorous',
       intMarcaAtletica: 'Race walking',
       intCasiTrote: 'Near jog',
+      insTitle: 'Your walk by the numbers',
+      insText: (cal: number, vel: string, pas: string, inten: string) =>
+        `At **${vel} km/h** (${inten}) you burn **${cal} kcal** and take **${pas} steps**. Picking up the pace or adding incline raises the burn without walking longer.`,
+      chartMarker: 'Your pace',
+      chartAria: 'Walking speed placed within its intensity zone',
+      zPaseo: 'Stroll',
+      zModerada: 'Moderate',
+      zVigorosa: 'Vigorous',
+      zAtletica: 'Athletic',
     },
   } as const)[__lang];
 
@@ -104,6 +124,8 @@ export function caloriasCaminando(i: Inputs): Outputs {
     ? `Walking ${distanciaFinal.toFixed(2)} km at ${velocidad.toFixed(1)} km/h${pendiente ? ` (slope ${pendiente}%)` : ''} you burn approximately ${Math.round(calorias)} kcal in ${Math.round(tiempoFinal)} min (${pasos.toLocaleString('en-US')} steps).`
     : `Caminando ${distanciaFinal.toFixed(2)} km a ${velocidad.toFixed(1)} km/h${pendiente ? ` (pendiente ${pendiente}%)` : ''} quemás aproximadamente ${Math.round(calorias)} kcal en ${Math.round(tiempoFinal)} min (${pasos.toLocaleString('es-AR')} pasos).`;
 
+  const velMax = Math.max(8.5, Number((velocidad + 1).toFixed(1)));
+
   return {
     calorias: Math.round(calorias),
     velocidadCalc: Number(velocidad.toFixed(1)),
@@ -112,5 +134,29 @@ export function caloriasCaminando(i: Inputs): Outputs {
     pasos,
     equivalentes,
     resumen,
+    _insight: {
+      title: T.insTitle,
+      text: T.insText(
+        Math.round(calorias),
+        velocidad.toFixed(1),
+        pasos.toLocaleString(__lang === 'en' ? 'en-US' : 'es-AR'),
+        intensidad,
+      ),
+      tone: 'good',
+      icon: '🚶',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(velocidad.toFixed(1)),
+      markerLabel: `${T.chartMarker}: ${velocidad.toFixed(1)} km/h`,
+      min: 0,
+      segments: [
+        { nombre: T.zPaseo, max: 3.2, color: '#bfdbfe', colorDark: '#1e3a8a' },
+        { nombre: T.zModerada, max: 4.8, color: '#86efac', colorDark: '#166534' },
+        { nombre: T.zVigorosa, max: 6.4, color: '#fde047', colorDark: '#854d0e' },
+        { nombre: T.zAtletica, max: velMax, color: '#fca5a5', colorDark: '#7f1d1d' },
+      ],
+      ariaLabel: T.chartAria,
+    },
   };
 }

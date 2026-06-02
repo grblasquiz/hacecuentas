@@ -4,6 +4,7 @@ export interface Outputs {
   caloriasQuemadas: number;
   equivalenteKmCorrer: number;
   detalle: string;
+  _insight?: any;
 }
 
 const DISCIPLINAS: Record<string, { met: number; nombre: string }> = {
@@ -36,5 +37,11 @@ export function caloriasBoxeo(i: Inputs): Outputs {
     caloriasQuemadas: Math.round(total),
     equivalenteKmCorrer: Number(kmEquiv.toFixed(1)),
     detalle: `${info.nombre} ${min} min (MET ${info.met}): ~${fmt.format(Math.round(total))} kcal. Equivale a correr ~${kmEquiv.toFixed(1)} km a 10 km/h.`,
+    _insight: {
+      title: 'Quema en el ring',
+      text: `${info.nombre} es de alta intensidad (MET ${info.met}): en **${min} min** quemás **${fmt.format(Math.round(total))} kcal**, lo mismo que correr **${kmEquiv.toFixed(1)} km** a 10 km/h. Sumá rondas para subir el gasto.`,
+      tone: 'good',
+      icon: '🥊',
+    },
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   anosRestantes: string;
   etapaActual: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface DatosRaza {
@@ -94,10 +95,29 @@ export function esperanzaVidaGatoRazaIndoor(i: Inputs): Outputs {
   const razaLabel = raza.replace(/_/g, ' ');
   const estiloLabel = estilo === 'indoor' ? 'indoor' : estilo === 'outdoor' ? 'outdoor' : 'mixto';
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (estilo === 'outdoor') {
+    insightTone = 'warn';
+    insightText = `Un ${razaLabel} con acceso a la calle vive en promedio **${min}-${max} años**, muy por debajo de los **${datos.min}-${datos.max} años** de un gato indoor: atropellos, peleas y enfermedades pesan fuerte. Pasarlo a indoor es lo que más le suma vida.`;
+  } else if (!castrado) {
+    insightTone = 'warn';
+    insightText = `Esperanza estimada para tu ${razaLabel} ${estiloLabel}: **${min}-${max} años**. Al estar sin castrar pierde ~2 años (tumores, peleas, escapadas); castrarlo lo acerca a los **${datos.min}-${datos.max} años** de la raza. ${datos.notas}.`;
+  } else {
+    insightTone = 'good';
+    insightText = `Tu ${razaLabel} ${estiloLabel} castrado tiene una esperanza de **${min}-${max} años**, en el rango sano de la raza. ${datos.notas}. ${edadActual !== null && edadActual >= 0 ? anosRestantes : 'Controles veterinarios anuales ayudan a llegar al tope.'}`;
+  }
+
   return {
     esperanzaAnos,
     anosRestantes,
     etapaActual,
     detalle: `Gato ${razaLabel} ${estiloLabel}${castrado ? ' castrado' : ' entero'}: esperanza ${esperanzaAnos}. ${datos.notas}. ${anosRestantes}`,
+    _insight: {
+      title: 'Esperanza de vida de tu gato',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐱',
+    },
   };
 }

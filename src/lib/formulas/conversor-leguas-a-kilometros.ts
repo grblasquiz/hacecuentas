@@ -1,6 +1,6 @@
 /** Conversor: legua ↔ kilómetro */
 export interface Inputs { valor: number | string; direccion?: string; ingrediente?: string; }
-export interface Outputs { resultado: string; resumen: string; }
+export interface Outputs { resultado: string; resumen: string; _insight?: any; }
 
 export function conversorLeguasAKilometros(i: Inputs): Outputs {
   const v = Number(i.valor);
@@ -16,8 +16,18 @@ export function conversorLeguasAKilometros(i: Inputs): Outputs {
     r = v / factor;
     fromLabel = 'kilómetros'; toLabel = 'leguas';
   }
+  const rTxt = r.toFixed(4).replace(/\.?0+$/, '');
+  const _insight = {
+    title: 'Sobre la legua',
+    text: d === 'ida'
+      ? '**' + v + ' leguas** equivalen a **' + rTxt + ' km**. Acá se usa la legua española de ≈ 5,572 km; ojo que existen otras (la legua marina son ~5,556 km y otras versiones rondan los 4 a 6 km).'
+      : '**' + v + ' km** son aprox. **' + rTxt + ' leguas** (legua española de ≈ 5,572 km). El valor cambia si la fuente usa otra definición de legua.',
+    tone: 'neutral',
+    icon: '🐎'
+  };
   return {
     resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'km'.toString(),
-    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.'
+    resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
+    _insight
   };
 }

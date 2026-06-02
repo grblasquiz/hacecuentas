@@ -15,6 +15,8 @@ export interface Outputs {
   cuota_mensual: number;
   comparativa: string;
   tipo_aplicado: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tipos impositivos IBI urbano 2026 — fuente: ordenanzas fiscales municipales
@@ -125,12 +127,45 @@ export function compute(i: Inputs): Outputs {
     lineasComparativa.join('\n') +
     '\n\nNota: Importes sin bonificaciones. Tipos orientativos 2026.';
 
-  return {
-    cuota_integra: Math.round(cuotaIntegra * 100) / 100,
-    descuento_familia_numerosa: Math.round(descuentoFamiliaNumerosa * 100) / 100,
-    cuota_final: Math.round(cuotaFinal * 100) / 100,
-    cuota_mensual: Math.round(cuotaMensual * 100) / 100,
+  const cuotaIntegraR = Math.round(cuotaIntegra * 100) / 100;
+  const descuentoR = Math.round(descuentoFamiliaNumerosa * 100) / 100;
+  const cuotaFinalR = Math.round(cuotaFinal * 100) / 100;
+  const cuotaMensualR = Math.round(cuotaMensual * 100) / 100;
+  const tipoPct = (tipoAplicado * 100).toFixed(3).replace('.', ',');
+
+  const tieneDescuento = descuentoR > 0;
+  const insight = {
+    title: tieneDescuento ? 'IBI con bonificación' : 'Cuota anual de IBI',
+    text: tieneDescuento
+      ? `Tu IBI íntegro sería **${formatEur(cuotaIntegraR)}**/año, pero la bonificación por familia numerosa descuenta **${formatEur(descuentoR)}**, dejándolo en **${formatEur(cuotaFinalR)}**/año (**${formatEur(cuotaMensualR)}**/mes) con un tipo del ${tipoPct}%.`
+      : `Con un valor catastral de **${formatEur(valorCatastral)}** y un tipo del **${tipoPct}%**, pagarás **${formatEur(cuotaFinalR)}** de IBI al año, equivalente a **${formatEur(cuotaMensualR)}**/mes.`,
+    tone: tieneDescuento ? 'good' : 'neutral',
+    icon: '🏠',
+  };
+
+  const out: Outputs = {
+    cuota_integra: cuotaIntegraR,
+    descuento_familia_numerosa: descuentoR,
+    cuota_final: cuotaFinalR,
+    cuota_mensual: cuotaMensualR,
     comparativa: comparativaTexto,
     tipo_aplicado: Math.round(tipoAplicado * 100000) / 1000, // devuelve % con 3 decimales
+    _insight: insight,
   };
+
+  if (tieneDescuento) {
+    out._chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Cuota final', value: cuotaFinalR },
+        { label: 'Bonificación familia numerosa', value: descuentoR },
+      ],
+      prefix: '€',
+      centerValue: formatEur(cuotaIntegraR),
+      centerLabel: 'Cuota íntegra',
+      ariaLabel: 'Reparto de la cuota íntegra de IBI entre cuota final y bonificación',
+    };
+  }
+
+  return out;
 }

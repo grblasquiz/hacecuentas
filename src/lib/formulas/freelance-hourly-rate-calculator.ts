@@ -15,6 +15,8 @@ export interface Outputs {
   total_billable_hours: number;
   gross_revenue_needed: number;
   summary: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Default tax rates by bracket — source: IRS Publication 505 (2026)
@@ -127,6 +129,9 @@ export function compute(i: Inputs): Outputs {
     `${totalBillableHours.toLocaleString("en-US")} hrs = ` +
     `$${hourlyRate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/hr`;
 
+  const fmtUSD = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+  const taxShare = Math.round((taxAmount / grossRevenueNeeded) * 100);
+
   return {
     hourly_rate: Math.round(hourlyRate * 100) / 100,
     daily_rate: Math.round(dailyRate * 100) / 100,
@@ -135,5 +140,23 @@ export function compute(i: Inputs): Outputs {
     total_billable_hours: Math.round(totalBillableHours),
     gross_revenue_needed: Math.round(grossRevenueNeeded * 100) / 100,
     summary,
+    _insight: {
+      title: "Your minimum billable rate",
+      text: `To take home **${fmtUSD(targetIncome)}** after **${taxRatePct}%** taxes and **${fmtUSD(annualExpenses)}** in expenses, you must bill **${fmtUSD(grossRevenueNeeded)}** across ${Math.round(totalBillableHours).toLocaleString("en-US")} hours — that's **$${hourlyRate.toFixed(2)}/hr**. Quote below this and you're working at a loss.`,
+      tone: "warn",
+      icon: "💼",
+    },
+    _chart: {
+      type: "doughnut",
+      slices: [
+        { label: "Take-home", value: Math.round(targetIncome) },
+        { label: "Expenses", value: Math.round(annualExpenses) },
+        { label: `Taxes (${taxRatePct}%)`, value: Math.round(taxAmount) },
+      ],
+      prefix: "$",
+      centerValue: fmtUSD(grossRevenueNeeded),
+      centerLabel: "Gross needed",
+      ariaLabel: `Gross revenue of ${fmtUSD(grossRevenueNeeded)} split into take-home, expenses and ${taxShare}% taxes`,
+    },
   };
 }

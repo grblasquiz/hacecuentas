@@ -13,6 +13,8 @@ export interface Outputs {
   percentual_multa_aplicado: number;
   aviso_saque_aniversario: string;
   observacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Alíquota de depósito mensal FGTS — art. 15 da Lei 8.036/1990
@@ -103,12 +105,52 @@ export function compute(i: Inputs): Outputs {
     ? "Saldo calculado com base no valor real informado."
     : `Saldo estimado com base em 8% × R$ ${salario.toFixed(2).replace(".", ",")} × ${meses} meses. Para o valor exato, consulte o app FGTS da Caixa.`;
 
+  const brl = (n: number) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const _insight = multaRescisoria > 0
+    ? {
+        title: `Multa de ${(percentualMulha * 100).toFixed(0)}% a receber`,
+        text: `Além do saldo de **${brl(saldoBase)}**, o empregador paga **${brl(multaRescisoria)}** de multa (${(percentualMulha * 100).toFixed(0)}%), totalizando **${brl(totalFgtsComMulta)}** no seu bolso.`,
+        tone: 'good',
+        icon: '💰',
+      }
+    : (aderiu === 'sim'
+        ? {
+            title: 'Sem multa por causa do saque-aniversário',
+            text: `Por estar no saque-aniversário, você **perde a multa rescisória**: deixa de receber cerca de **${brl(saldoEstimado * MULTA_SEM_JUSTA_CAUSA)}** que teria numa demissão sem justa causa. O cancelamento exige 25 meses de carência.`,
+            tone: 'warn',
+            icon: '⚠️',
+          }
+        : {
+            title: 'Sem multa neste tipo de rescisão',
+            text: `No pedido de demissão **não há multa** e o saldo de **${brl(saldoBase)}** fica bloqueado, liberado só em casos previstos em lei (aposentadoria, doença grave, compra de imóvel).`,
+            tone: 'neutral',
+            icon: '🔒',
+          });
+
+  let _chart: any;
+  if (multaRescisoria > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Saldo FGTS', value: parseFloat(saldoBase.toFixed(2)) },
+        { label: `Multa ${(percentualMulha * 100).toFixed(0)}%`, value: parseFloat(multaRescisoria.toFixed(2)) },
+      ],
+      prefix: 'R$ ',
+      centerValue: brl(totalFgtsComMulta),
+      centerLabel: 'Total a receber',
+      ariaLabel: `Composição do total: saldo de ${brl(saldoBase)} mais multa de ${brl(multaRescisoria)}.`,
+    };
+  }
+
   return {
     saldo_fgts_estimado: parseFloat(saldoBase.toFixed(2)),
     multa_rescisoria: parseFloat(multaRescisoria.toFixed(2)),
     total_fgts_mais_multa: parseFloat(totalFgtsComMulta.toFixed(2)),
     percentual_multa_aplicado: parseFloat((percentualMulha * 100).toFixed(0)),
     aviso_saque_aniversario: avisoSaqueAniversario,
-    observacao: `${obsRescisao} ${fonteBase}`.trim()
+    observacao: `${obsRescisao} ${fonteBase}`.trim(),
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

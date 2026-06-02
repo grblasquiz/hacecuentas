@@ -7,6 +7,7 @@ export interface Outputs {
   tipo: string;
   vertice: string;
   formula: string;
+  _insight?: any;
 }
 
 export function ecuacionCuadratica(i: Inputs): Outputs {
@@ -44,11 +45,19 @@ export function ecuacionCuadratica(i: Inputs): Outputs {
 
   const formula = `x = (−${b} ± √${disc}) / (2 × ${a})`;
 
+  const abre = a > 0 ? 'hacia arriba' : 'hacia abajo';
+  let insText = '';
+  if (disc > 0) insText = `El discriminante **${Number(disc.toFixed(2))}** es positivo: la parábola (que abre **${abre}**) corta el eje x en **x=${x1}** y **x=${x2}**. Su vértice está en **${vertice}**.`;
+  else if (disc === 0) insText = `El discriminante es **0**: la parábola toca el eje x en un único punto, **x=${x1}**, que coincide con el vértice **${vertice}**.`;
+  else insText = `El discriminante **${Number(disc.toFixed(2))}** es negativo: la parábola (abre **${abre}**) **no corta el eje x** y las raíces son complejas. El vértice queda en **${vertice}**.`;
+  const _insight = { title: 'Qué dicen las raíces', text: insText, tone: 'neutral', icon: '📐' };
+
   return {
     x1, x2,
     discriminante: Number(disc.toFixed(4)),
     tipo,
     vertice,
     formula,
+    _insight,
   };
 }

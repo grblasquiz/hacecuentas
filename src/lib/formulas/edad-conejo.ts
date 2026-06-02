@@ -9,6 +9,7 @@ export interface Outputs {
   etapaVida: string;
   esperanzaVida: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function edadConejo(i: Inputs): Outputs {
@@ -25,6 +26,9 @@ export function edadConejo(i: Inputs): Outputs {
       adultoMaduro: 'Adulto maduro',
       senior: 'Senior',
       seniorAvanzado: 'Senior avanzado (geriátrico)',
+      insTitle: 'Tu conejo en años humanos',
+      insGeriatric: 'Etapa geriátrica: cuidá la dieta, los controles veterinarios y un entorno tranquilo.',
+      insNormal: 'Está en una etapa sana de su vida; mantené dieta, ejercicio y revisiones al día.',
     },
     en: {
       errorEdad: 'Enter the rabbit\'s age',
@@ -37,6 +41,9 @@ export function edadConejo(i: Inputs): Outputs {
       adultoMaduro: 'Mature adult',
       senior: 'Senior',
       seniorAvanzado: 'Advanced senior (geriatric)',
+      insTitle: 'Your rabbit in human years',
+      insGeriatric: 'Geriatric stage: watch the diet, schedule vet check-ups and keep a calm environment.',
+      insNormal: 'It is in a healthy stage of life; keep diet, exercise and check-ups up to date.',
     },
   } as const)[__lang];
 
@@ -83,6 +90,16 @@ export function edadConejo(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const esGeriatrico = etapa === T.seniorAvanzado || etapa === T.senior;
+  const _insight = {
+    title: T.insTitle,
+    text: __lang === 'en'
+      ? `A ${raza} rabbit aged **${edad} years** is roughly **${fmt.format(edadHumana)} human years**, in the **${etapa}** stage (average life expectancy ${esperanza}). ${esGeriatrico ? T.insGeriatric : T.insNormal}`
+      : `Un conejo ${raza} de **${edad} años** equivale a unos **${fmt.format(edadHumana)} años humanos**, en etapa **${etapa}** (esperanza de vida promedio ${esperanza}). ${esGeriatrico ? T.insGeriatric : T.insNormal}`,
+    tone: esGeriatrico ? 'warn' : 'neutral',
+    icon: '🐰',
+  };
+
   return {
     edadHumana: Math.round(edadHumana),
     etapaVida: etapa,
@@ -90,5 +107,6 @@ export function edadConejo(i: Inputs): Outputs {
     detalle: __lang === 'en'
       ? `Your rabbit (${raza}) aged ${edad} years is equivalent to ~${fmt.format(edadHumana)} human years. Life stage: ${etapa}. Average life expectancy: ${esperanza}.`
       : `Tu conejo (${raza}) de ${edad} años equivale a ~${fmt.format(edadHumana)} años humanos. Etapa: ${etapa}. Esperanza de vida promedio: ${esperanza}.`,
+    _insight,
   };
 }

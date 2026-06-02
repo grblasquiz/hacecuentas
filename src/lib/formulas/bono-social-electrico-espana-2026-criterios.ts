@@ -19,6 +19,7 @@ export interface Outputs {
   limite_ingresos_aplicado: number;
   margen_ingresos: number;
   como_solicitarlo: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -122,6 +123,25 @@ export function compute(i: Inputs): Outputs {
       'Tus ingresos actuales superan el umbral para el bono social. Si tu situación económica cambia (reducción de ingresos, cambio en la unidad familiar, reconocimiento de discapacidad o pensión con mínimos), podrás volver a solicitarlo. Consulta también si tu comunidad autónoma dispone de ayudas complementarias al pago de la factura eléctrica.';
   }
 
+  // ── Insight narrativo ─────────────────────────────────────
+  const fmtEUR = (n: number) => Math.round(n).toLocaleString('es-ES') + ' €';
+  let _insight;
+  if (tieneDerecho) {
+    _insight = {
+      title: `Bono ${tipoBono.toLowerCase()}`,
+      text: `Cumples los requisitos: tendrías un **${porcentajeDescuento}% de descuento** en el término de tu factura PVPC, con hasta **${topeKwh.toLocaleString('es-ES')} kWh/año** subvencionados según tu zona y los ${miembros} miembro(s) del hogar. Tus ingresos (**${fmtEUR(ingresos)}**) quedan **${fmtEUR(margen)}** por debajo del límite de ${fmtEUR(limiteAplicado)}.`,
+      tone: 'good',
+      icon: '🔌'
+    };
+  } else {
+    _insight = {
+      title: 'Por encima del umbral de renta',
+      text: `Con **${fmtEUR(ingresos)}** de ingresos superas en **${fmtEUR(-margen)}** el límite de ${fmtEUR(limiteAplicado)} fijado para tu situación familiar, así que ahora mismo no tienes derecho al bono social. Si baja tu renta o cambia tu unidad familiar, podrás volver a solicitarlo.`,
+      tone: 'warn',
+      icon: '🔌'
+    };
+  }
+
   // ── Salida ──────────────────────────────────────────────────
   return {
     tiene_derecho: tienDerechoTexto,
@@ -131,5 +151,6 @@ export function compute(i: Inputs): Outputs {
     limite_ingresos_aplicado: Math.round(limiteAplicado * 100) / 100,
     margen_ingresos: Math.round(margen * 100) / 100,
     como_solicitarlo: comoSolicitarlo,
+    _insight,
   };
 }

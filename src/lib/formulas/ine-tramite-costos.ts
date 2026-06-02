@@ -29,6 +29,8 @@ export interface Outputs {
   duracion: string;
   tipoAplicado: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const COSTO_ACTA: Record<string, number> = {
@@ -85,6 +87,35 @@ export function ineTramiteCostos(i: Inputs): Outputs {
   const costoComprobante = i.tieneComprobante === 'no' ? 150 : 0; // estimado emisión copia certificada
   const costoTotal = costoIne + costoActa + costoComprobante;
 
+  const _insight = costoTotal === 0
+    ? {
+        title: 'El trámite es gratis',
+        text: `La **${tipoLabel.toLowerCase()}** ante el INE no tiene costo y ya tenés todos los documentos: tu gasto de bolsillo es **$0**. La credencial se entrega en **${duracion}**.`,
+        tone: 'good',
+        icon: '🆔',
+      }
+    : {
+        title: 'El INE es gratis, los documentos no',
+        text: `El trámite INE cuesta **$0**, pero te faltan documentos por **$${costoTotal}** (${costoActa > 0 ? `acta $${costoActa}` : ''}${costoActa > 0 && costoComprobante > 0 ? ' + ' : ''}${costoComprobante > 0 ? `comprobante $${costoComprobante}` : ''}). Conseguilos antes de ir para no perder el turno.`,
+        tone: 'warn',
+        icon: '🧾',
+      };
+
+  const slices: Array<{ label: string; value: number }> = [];
+  if (costoActa > 0) slices.push({ label: 'Acta de nacimiento', value: costoActa });
+  if (costoComprobante > 0) slices.push({ label: 'Comprobante de domicilio', value: costoComprobante });
+
+  const _chart = slices.length > 0
+    ? {
+        type: 'doughnut',
+        slices,
+        prefix: '$',
+        centerValue: `$${costoTotal}`,
+        centerLabel: 'Costo en documentos',
+        ariaLabel: `Desglose del costo de documentos para el trámite: total $${costoTotal}`,
+      }
+    : undefined;
+
   return {
     costoTotal,
     costoIne,
@@ -94,5 +125,7 @@ export function ineTramiteCostos(i: Inputs): Outputs {
     duracion,
     tipoAplicado: tipoLabel,
     mensaje: `${tipoLabel}: trámite INE $0. Costo total (docs): $${costoTotal}. Entrega: ${duracion}.`,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

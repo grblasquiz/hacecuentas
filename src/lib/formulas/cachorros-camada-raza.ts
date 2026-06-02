@@ -2,7 +2,7 @@
  * Cachorros por camada según raza.
  */
 export interface Inputs { raza: string; primeraCamada: string; edadPerra: string; }
-export interface Outputs { cachorrosEstimados: number; minimo: number; maximo: number; comentario: string; }
+export interface Outputs { cachorrosEstimados: number; minimo: number; maximo: number; comentario: string; _insight?: any; }
 
 const RAZAS: Record<string, { min: number; max: number }> = {
   'labrador-retriever': { min: 6, max: 8 },
@@ -40,5 +40,15 @@ export function cachorrosCamadaRaza(inputs: Inputs): Outputs {
   if (primera) comentario = 'Primera camada suele ser 20-30% más chica.';
   if (edad === 'mayor') comentario = 'Perra mayor: camadas más chicas y mayor riesgo. Consultá al vet.';
 
-  return { cachorrosEstimados: estimados, minimo: Math.round(min), maximo: Math.round(max), comentario };
+  const minR = Math.round(min);
+  const maxR = Math.round(max);
+  const razaLegible = raza.replace(/-/g, ' ');
+  const insight = {
+    title: 'Qué esperar de la camada',
+    text: `Para una **${razaLegible}** se esperan alrededor de **${estimados} cachorros**, en un rango de **${minR} a ${maxR}**. ${comentario}`,
+    tone: edad === 'mayor' ? 'warn' : 'neutral',
+    icon: '🐶',
+  };
+
+  return { cachorrosEstimados: estimados, minimo: minR, maximo: maxR, comentario, _insight: insight };
 }

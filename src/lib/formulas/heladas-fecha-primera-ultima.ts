@@ -1,6 +1,6 @@
 /** Heladas: fecha probable por zona */
 export interface Inputs { zona: string; }
-export interface Outputs { primeraHelada: string; ultimaHelada: string; diasLibres: number; consejo: string; }
+export interface Outputs { primeraHelada: string; ultimaHelada: string; diasLibres: number; consejo: string; _insight?: any; }
 
 interface HeladaData { primera: string; ultima: string; libre: number; consejo: string; }
 const ZONAS: Record<string, HeladaData> = {
@@ -16,14 +16,35 @@ const ZONAS: Record<string, HeladaData> = {
   salta: { primera: '~15 de mayo', ultima: '~15 de agosto', libre: 270, consejo: 'Valles templados. Heladas leves en invierno. Cuidado con heladas tardías en agosto.' },
 };
 
+const NOMBRES: Record<string, string> = {
+  buenosaires: 'Buenos Aires', rosario: 'Rosario', cordoba: 'Córdoba', mendoza: 'Mendoza',
+  tucuman: 'Tucumán', misiones: 'Misiones', neuquen: 'Neuquén', bariloche: 'Bariloche',
+  mardelplata: 'Mar del Plata', salta: 'Salta',
+};
+
 export function heladasFechaPrimeraUltima(i: Inputs): Outputs {
   const zona = String(i.zona || 'buenosaires');
   const data = ZONAS[zona];
   if (!data) throw new Error('Zona no encontrada');
+
+  const nombre = NOMBRES[zona] || 'tu zona';
+  let toneIns: 'good' | 'warn' | 'neutral';
+  let calif: string;
+  if (data.libre >= 270) { toneIns = 'good'; calif = 'una temporada de cultivo larga y holgada'; }
+  else if (data.libre >= 200) { toneIns = 'neutral'; calif = 'una temporada de cultivo media'; }
+  else { toneIns = 'warn'; calif = 'una temporada de cultivo corta — invernadero casi obligatorio'; }
+  const _insight = {
+    title: 'Tu ventana libre de heladas',
+    text: `En **${nombre}** tenés ~**${data.libre} días** sin heladas (de la última ${data.ultima} a la primera ${data.primera}): ${calif}. Plantá los cultivos sensibles después de la última helada y cosechá los de ciclo largo antes de la primera.`,
+    tone: toneIns,
+    icon: '❄️',
+  };
+
   return {
     primeraHelada: data.primera,
     ultimaHelada: data.ultima,
     diasLibres: data.libre,
     consejo: data.consejo,
+    _insight,
   };
 }

@@ -1,6 +1,6 @@
 /** Costo de fine-tunear Llama según tamaño dataset, épocas y precio GPU/hora */
 export interface Inputs { datasetMb: number; epocas: number; tokensSegundo: number; precioGpuHoraUsd: number; cantidadGpus: number; }
-export interface Outputs { totalTokens: number; horasEntrenamiento: number; costoTotalUsd: number; costoPorEpocaUsd: number; explicacion: string; }
+export interface Outputs { totalTokens: number; horasEntrenamiento: number; costoTotalUsd: number; costoPorEpocaUsd: number; explicacion: string; _insight?: any; }
 export function fineTuningLlamaCostoDatasetTokens(i: Inputs): Outputs {
   const mb = Number(i.datasetMb);
   const ep = Number(i.epocas);
@@ -18,11 +18,19 @@ export function fineTuningLlamaCostoDatasetTokens(i: Inputs): Outputs {
   const horas = segundos / 3600;
   const costoTotal = horas * precio * gpus;
   const costoEpoca = costoTotal / ep;
+  const fmtUsd = (v: number) => 'USD ' + Number(v.toFixed(0)).toLocaleString('en-US');
+  const _insight = {
+    title: 'Costo estimado del fine-tuning',
+    text: `Procesar **${(totalTokens / 1e6).toFixed(1)}M tokens** (${mb} MB × ${ep} épocas) toma **${horas.toFixed(1)} h** con ${gpus}× GPU a USD ${precio}/h, lo que da **${fmtUsd(costoTotal)}** en total (${fmtUsd(costoEpoca)} por época). Bajar el costo pasa por menos épocas o GPUs más rápidas (mayor tok/s), no por bajar el precio/hora.`,
+    tone: costoTotal >= 500 ? 'warn' : (costoTotal <= 50 ? 'good' : 'neutral'),
+    icon: '🤖',
+  };
   return {
     totalTokens: Number(totalTokens.toFixed(0)),
     horasEntrenamiento: Number(horas.toFixed(2)),
     costoTotalUsd: Number(costoTotal.toFixed(2)),
     costoPorEpocaUsd: Number(costoEpoca.toFixed(2)),
     explicacion: `Dataset ${mb} MB × ${ep} épocas = ${(totalTokens / 1e6).toFixed(1)}M tokens. A ${tps.toLocaleString('en-US')} tok/s tarda ${horas.toFixed(1)}h. Costo ${gpus}× GPU a USD ${precio}/h: USD ${costoTotal.toFixed(0)}.`,
+    _insight,
   };
 }

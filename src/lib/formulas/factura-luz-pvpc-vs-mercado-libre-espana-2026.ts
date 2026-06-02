@@ -15,6 +15,7 @@ export interface Outputs {
   recomendacion: string;
   precio_promedio_kwh_pvpc: number;
   precio_promedio_kwh_mercado_libre: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -112,6 +113,28 @@ export function compute(i: Inputs): Outputs {
     recomendacion += ' (Tu consumo es alto: negocia bien mercado libre o revisa PVPC horario.)\n';
   }
   
+  // ========== INSIGHT ==========
+  const pvpcFmt = coste_total_pvpc.toFixed(2);
+  const mlFmt = coste_total_mercado_libre.toFixed(2);
+  const ganadora = diferencia > 0 ? 'mercado libre' : 'PVPC';
+  const ahorroMesAbs = Math.abs(diferencia).toFixed(2);
+  const ahorroAnioAbs = Math.abs(ahorro_anual).toFixed(0);
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (Math.abs(diferencia) < 2) {
+    insightTitle = 'Prácticamente empatan';
+    insightText = `PVPC sale **${pvpcFmt}€/mes** y mercado libre **${mlFmt}€/mes**: menos de **2€** de diferencia. A este nivel, decide el servicio y la atención al cliente, no el precio.`;
+    insightTone = 'neutral';
+    insightIcon = '⚖️';
+  } else {
+    insightTitle = `Te conviene ${ganadora}`;
+    insightText = `Con **${ganadora}** pagarías **${ahorroMesAbs}€/mes** menos (**${ahorroAnioAbs}€** al año). Tu factura quedaría en **${(diferencia > 0 ? mlFmt : pvpcFmt)}€/mes** frente a **${(diferencia > 0 ? pvpcFmt : mlFmt)}€** de la otra opción.`;
+    insightTone = 'good';
+    insightIcon = '💡';
+  }
+
   return {
     coste_total_pvpc_mes: Math.round(coste_total_pvpc * 100) / 100,
     coste_total_mercado_libre_mes: Math.round(coste_total_mercado_libre * 100) / 100,
@@ -119,6 +142,12 @@ export function compute(i: Inputs): Outputs {
     ahorro_anual: Math.round(ahorro_anual * 100) / 100,
     recomendacion: recomendacion.trim(),
     precio_promedio_kwh_pvpc: Math.round(precio_promedio_pvpc * 10000) / 10000,
-    precio_promedio_kwh_mercado_libre: Math.round(precio_promedio_mercado_libre * 10000) / 10000
+    precio_promedio_kwh_mercado_libre: Math.round(precio_promedio_mercado_libre * 10000) / 10000,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon
+    }
   };
 }

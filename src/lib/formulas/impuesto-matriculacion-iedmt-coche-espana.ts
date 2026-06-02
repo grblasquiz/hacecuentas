@@ -12,6 +12,8 @@ export interface Outputs {
   cuota_iva: number;      // Cuota IVA o IGIC en euros
   total_a_pagar: number;  // Total estimado: precio sin IVA + IEDMT + IVA/IGIC
   exento: string;         // 'Sí' | 'No'
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tipos IEDMT vigentes 2026 — Ley 38/1992, art. 70
@@ -65,6 +67,41 @@ export function compute(i: Inputs): Outputs {
 
   const exento = tipo === 0 ? 'Sí' : 'No';
 
+  const fmtEUR = (n: number) =>
+    n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const ivaLabel = ccaa === 'canarias' ? `IGIC ${ivaRate}%` : `IVA ${ivaRate}%`;
+
+  // ── Insight narrativo (dinámico: exento vs gravado) ────────────────
+  const _insight = tipo === 0
+    ? {
+        title: 'Coche exento de IEDMT',
+        text: `Con **${co2} g/km** caés en el tramo exento (≤ 120 g/km): **no pagás impuesto de matriculación**. Sobre el precio sólo se suma el ${ivaLabel.toLowerCase()}, dejando el total en **${fmtEUR(total_a_pagar)}**.`,
+        tone: 'good',
+        icon: '🔋',
+      }
+    : {
+        title: 'Impuesto de matriculación a pagar',
+        text: `Con **${co2} g/km** (${tramo.label}) el IEDMT es del **${tipo}%**: **${fmtEUR(cuota_iedmt)}**. Sumando el ${ivaLabel.toLowerCase()}, matricular el coche cuesta en total **${fmtEUR(total_a_pagar)}**.`,
+        tone: 'warn',
+        icon: '🚙',
+      };
+
+  // ── Gráfico: el total se compone de precio + IEDMT + IVA/IGIC ──────
+  const _chart = total_a_pagar > 0
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Precio sin impuestos', value: round2(precio) },
+          ...(cuota_iedmt > 0 ? [{ label: `IEDMT ${tipo}%`, value: cuota_iedmt }] : []),
+          { label: ivaLabel, value: cuota_iva },
+        ],
+        prefix: '€',
+        centerValue: fmtEUR(total_a_pagar),
+        centerLabel: 'Total',
+        ariaLabel: 'Composición del coste total de matriculación entre precio, IEDMT e IVA o IGIC',
+      }
+    : undefined;
+
   return {
     tramo_co2:    tramo.label,
     tipo_iedmt:   tipo,
@@ -72,5 +109,7 @@ export function compute(i: Inputs): Outputs {
     cuota_iva,
     total_a_pagar,
     exento,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

@@ -22,6 +22,8 @@ export interface Outputs {
   herencia_neta_heredero: number;
   tasa_efectiva: number;
   resumen_herederos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -121,6 +123,45 @@ export function compute(i: Inputs): Outputs {
     resumen_herederos += `  Herencia Neta: $${Math.round(herencia_neta_hijo).toLocaleString('es-CO')}`;
   }
   
+  const cuotaR = Math.round(cuota_heredero_principal);
+  const impuestoR = Math.round(impuesto_ganancia_ocasional);
+  const netaR = Math.round(herencia_neta_heredero);
+  const fmtCO = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+
+  // Insight dinámico según carga de ganancia ocasional sobre el heredero principal
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (impuestoR <= 0) {
+    insightTone = 'good';
+    insightText = `Como **${i.parentesco_principal}**, tu cuota de **${fmtCO(cuotaR)}** queda dentro de la exención de **${uxt_exencion} UVT** (**${fmtCO(monto_exento)}**): **no pagás impuesto de ganancia ocasional**. Recibís la cuota completa.`;
+  } else if (tasa_efectiva < 5) {
+    insightTone = 'neutral';
+    insightText = `Sobre tu cuota de **${fmtCO(cuotaR)}**, el excedente de la exención (**${uxt_exencion} UVT**) tributa al 15%: pagás **${fmtCO(impuestoR)}** y te quedan **${fmtCO(netaR)}** netos (tasa efectiva **${tasa_efectiva.toFixed(2)}%**).`;
+  } else {
+    insightTone = 'warn';
+    insightText = `El impuesto de ganancia ocasional (15%) te toma **${fmtCO(impuestoR)}** de una cuota de **${fmtCO(cuotaR)}**: herencia neta **${fmtCO(netaR)}**. La exención de ${uxt_exencion} UVT cubre poco frente al monto, así que la carga pesa.`;
+  }
+
+  const _insight = {
+    title: 'Tu herencia y el impuesto',
+    text: insightText,
+    tone: insightTone,
+    icon: '🇨🇴',
+  };
+
+  // Donut: solo si hay impuesto. Cuota = neto recibido + impuesto pagado.
+  const _chart = (impuestoR > 0 && cuotaR > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Herencia neta', value: netaR },
+      { label: 'Impuesto (15%)', value: impuestoR },
+    ],
+    prefix: '$',
+    centerValue: fmtCO(cuotaR),
+    centerLabel: 'Cuota heredero',
+    ariaLabel: `Cuota del heredero principal ${fmtCO(cuotaR)}: herencia neta ${fmtCO(netaR)} e impuesto de ganancia ocasional ${fmtCO(impuestoR)}`,
+  } : undefined;
+
   return {
     patrimonio_liquido: Math.round(patrimonio_liquido),
     gastos_sucesion_total: Math.round(gastos_sucesion),
@@ -133,6 +174,8 @@ export function compute(i: Inputs): Outputs {
     impuesto_ganancia_ocasional: Math.round(impuesto_ganancia_ocasional),
     herencia_neta_heredero: Math.round(herencia_neta_heredero),
     tasa_efectiva: Math.round(tasa_efectiva * 100) / 100,
-    resumen_herederos: resumen_herederos
+    resumen_herederos: resumen_herederos,
+    _insight,
+    _chart
   };
 }

@@ -19,6 +19,8 @@ export interface Outputs {
   ctsAnual: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function ctsPeru(i: Inputs): Outputs {
@@ -50,6 +52,24 @@ export function ctsPeru(i: Inputs): Outputs {
   const formula = `CTS = (S/${baseCalculo.toFixed(2)} / 12) × ${meses} meses + (S/${baseCalculo.toFixed(2)} / 360) × ${dias} días = S/${ctsSemestral.toFixed(2)}`;
   const explicacion = `Remuneración computable: S/${remuneracionComputable.toFixed(2)}${tieneAsignacion ? ` (incluye asignación familiar S/${asignacion.toFixed(2)})` : ''}. 1/6 gratificación: S/${sextoGratificacion.toFixed(2)}. Base CTS: S/${baseCalculo.toFixed(2)}. CTS del semestre (${meses} meses, ${dias} días): S/${ctsSemestral.toFixed(2)}. Estimado anual (2 depósitos): S/${ctsAnual.toFixed(2)}. Se deposita hasta el 15 de mayo y 15 de noviembre.`;
 
+  const soles = (n: number) => 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const _insight = {
+    title: 'Tu depósito CTS del semestre',
+    text: `Con una base de cálculo de **${soles(baseCalculo)}** y ${meses} meses${dias > 0 ? ` y ${dias} días` : ''} computados, te corresponde un depósito de **${soles(ctsSemestral)}** este semestre (≈ **${soles(ctsAnual)}** al año entre los dos depósitos). Se acredita hasta el 15 de mayo y el 15 de noviembre.`,
+    tone: 'good',
+    icon: '🇵🇪',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Remuneración computable', value: Number(remuneracionComputable.toFixed(2)) },
+      { label: '1/6 de gratificación', value: Number(sextoGratificacion.toFixed(2)) },
+    ],
+    prefix: 'S/ ',
+    centerValue: soles(baseCalculo),
+    centerLabel: 'Base de cálculo',
+    ariaLabel: `Base CTS ${soles(baseCalculo)}: ${soles(remuneracionComputable)} de remuneración computable más ${soles(sextoGratificacion)} de un sexto de gratificación.`,
+  };
   return {
     remuneracionComputable: Number(remuneracionComputable.toFixed(2)),
     sextoGratificacion: Number(sextoGratificacion.toFixed(2)),
@@ -58,5 +78,7 @@ export function ctsPeru(i: Inputs): Outputs {
     ctsAnual: Number(ctsAnual.toFixed(2)),
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

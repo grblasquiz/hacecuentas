@@ -12,6 +12,8 @@ export interface Outputs {
   impuesto_timbre: number;
   retenedor: string;
   valor_total_documento: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -73,14 +75,55 @@ export function compute(i: Inputs): Outputs {
   
   // Valor total del documento (incluye timbre)
   const valor_total = i.valor_documento + impuesto_timbre;
-  
+
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const timbre_red = Math.round(impuesto_timbre);
+
+  let _insight: any;
+  let _chart: any;
+
+  if (aplica_timbre) {
+    _insight = {
+      title: 'El documento causa timbre',
+      text: `Este documento paga **${fmtCOP(timbre_red)}** de impuesto de timbre `
+        + `(tarifa **${(tarifa * 100).toFixed(1)}%** sobre ${fmtCOP(i.valor_documento)}). `
+        + `El costo total queda en **${fmtCOP(valor_total)}** y lo retiene: ${retenedor}.`,
+      tone: 'warn',
+      icon: '🖋️'
+    };
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Valor del documento', value: Math.round(i.valor_documento) },
+        { label: 'Impuesto de timbre', value: timbre_red }
+      ],
+      prefix: '$',
+      centerValue: fmtCOP(valor_total),
+      centerLabel: 'Costo total',
+      ariaLabel: `Costo total de ${fmtCOP(valor_total)}: ${fmtCOP(i.valor_documento)} de valor del documento más ${fmtCOP(timbre_red)} de impuesto de timbre.`
+    };
+  } else {
+    _insight = {
+      title: 'No causa impuesto de timbre',
+      text: i.exento_timbre
+        ? `Este documento está **exento por ley**, así que no pagás impuesto de timbre. El costo queda en **${fmtCOP(i.valor_documento)}**.`
+        : tarifa === 0
+          ? `Los documentos jurisdiccionales están **exentos** de timbre. No hay impuesto: el costo es **${fmtCOP(i.valor_documento)}**.`
+          : `Tu documento (${fmtCOP(i.valor_documento)}) está **por debajo del umbral de 6.000 UVT** (${fmtCOP(VALOR_MINIMO)}), así que **no causa timbre**.`,
+      tone: 'good',
+      icon: '✅'
+    };
+  }
+
   return {
     aplica_timbre: aplica_mensaje,
     uvt_2026: UVT_2026,
     valor_minimo_uvt: VALOR_MINIMO,
     tarifa_aplicable: tarifa * 100,
-    impuesto_timbre: Math.round(impuesto_timbre),
+    impuesto_timbre: timbre_red,
     retenedor: retenedor,
-    valor_total_documento: Math.round(valor_total)
+    valor_total_documento: Math.round(valor_total),
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

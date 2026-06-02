@@ -20,6 +20,8 @@ export interface Outputs {
   clasificacion_tributaria: string;
   neto_a_recibir_clp: number;
   rentabilidad_neta_pct: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -92,6 +94,42 @@ export function compute(i: Inputs): Outputs {
     ? ((neto_a_recibir_clp - monto_compra_clp) / monto_compra_clp) * 100 
     : 0;
   
+  const rent_pct = Math.round(rentabilidad_neta_pct * 100) / 100;
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const esTrader = i.numero_operaciones_mes > UMBRAL_OPERACIONES_MES_TRADER;
+
+  let insightTexto: string;
+  let insightTono: 'good' | 'warn' | 'neutral';
+  if (ganancia_bruta_clp <= 0) {
+    insightTono = 'warn';
+    insightTexto = `La operación no deja ganancia: vendés en **${fmtCLP(monto_venta_clp)}** lo que compraste en **${fmtCLP(monto_compra_clp)}**, sin base imponible para el SII.`;
+  } else if (esTrader) {
+    insightTono = 'warn';
+    insightTexto = `Como **trader habitual** (más de ${UMBRAL_OPERACIONES_MES_TRADER} ops/mes) pagás IGC del **35%**: **${fmtCLP(impuesto_estimado_clp)}** sobre ${fmtCLP(ganancia_neta_clp)}, dejándote un neto de **${fmtCLP(neto_a_recibir_clp)}** (**${rent_pct}%**).`;
+  } else {
+    insightTono = rent_pct >= 0 ? 'good' : 'warn';
+    insightTexto = `Como **inversionista ocasional** tributás ~15%: **${fmtCLP(impuesto_estimado_clp)}** sobre ${fmtCLP(ganancia_neta_clp)}, con un neto de **${fmtCLP(neto_a_recibir_clp)}** (rentabilidad **${rent_pct}%**).`;
+  }
+
+  // Donut sólo si hay ganancia bruta positiva para repartir
+  const te_queda = Math.max(0, ganancia_bruta_clp - comision_total_clp - retencion_plataforma_clp - impuesto_estimado_clp);
+  const _chart =
+    ganancia_bruta_clp > 0
+      ? {
+          type: 'doughnut',
+          slices: [
+            { label: 'Te queda', value: te_queda },
+            { label: 'Impuesto SII', value: impuesto_estimado_clp },
+            { label: 'Comisiones', value: comision_total_clp },
+            { label: 'Retención plataforma', value: retencion_plataforma_clp },
+          ].filter((s) => s.value > 0),
+          prefix: '$',
+          centerValue: fmtCLP(ganancia_bruta_clp),
+          centerLabel: 'Ganancia bruta',
+          ariaLabel: `Ganancia bruta ${fmtCLP(ganancia_bruta_clp)}: te queda ${fmtCLP(te_queda)}, impuesto ${fmtCLP(impuesto_estimado_clp)}, comisiones ${fmtCLP(comision_total_clp)}, retención ${fmtCLP(retencion_plataforma_clp)}`,
+        }
+      : undefined;
+
   return {
     monto_compra_clp,
     monto_venta_clp,
@@ -102,6 +140,13 @@ export function compute(i: Inputs): Outputs {
     impuesto_estimado_clp,
     clasificacion_tributaria,
     neto_a_recibir_clp,
-    rentabilidad_neta_pct: Math.round(rentabilidad_neta_pct * 100) / 100
+    rentabilidad_neta_pct: rent_pct,
+    _insight: {
+      title: 'Tu resultado tras impuestos',
+      text: insightTexto,
+      tone: insightTono,
+      icon: '🇨🇱',
+    },
+    _chart,
   };
 }

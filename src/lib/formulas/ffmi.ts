@@ -13,6 +13,8 @@ export interface Outputs {
   categoria: string;
   resumen: string;
   natural: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function ffmi(i: Inputs): Outputs {
@@ -57,13 +59,60 @@ export function ffmi(i: Inputs): Outputs {
     else natural = 'Muy por encima del rango habitual en mujeres entrenadas naturalmente.';
   }
 
+  const ffmiAjR = Number(ffmiAjustado.toFixed(1));
+  const masaMagraR = Number(masaMagra.toFixed(1));
+  const techoNatural = sexo === 'hombre' ? 25 : 22;
+  const sobreTecho = ffmiAjR > techoNatural;
+  // tono: warn si supera el techo natural; good si excelente/sobresaliente dentro de lo natural; neutral si promedio o menos
+  const umbralBueno = sexo === 'hombre' ? 22 : 18;
+  let tone: 'good' | 'warn' | 'neutral' = 'neutral';
+  if (sobreTecho) tone = 'warn';
+  else if (ffmiAjR >= umbralBueno) tone = 'good';
+
+  const insightText = sobreTecho
+    ? `Tu FFMI ajustado de **${ffmiAjR}** supera el techo natural de **~${techoNatural}** descripto por Kouri (1995): cae en "${categoria}". Alcanzable de forma natural sólo con muchos años de entrenamiento y genética excepcional.`
+    : ffmiAjR >= umbralBueno
+      ? `Con **${ffmiAjR}** de FFMI ajustado y **${masaMagraR} kg** de masa magra estás en "${categoria}" — top del rango natural, todavía por debajo del techo de ~${techoNatural}.`
+      : `Tu FFMI ajustado es **${ffmiAjR}** ("${categoria}"), con **${masaMagraR} kg** de masa magra. Hay margen para ganar músculo dentro del rango natural (techo ~${techoNatural}).`;
+
+  const segments = sexo === 'hombre'
+    ? [
+        { nombre: 'Bajo', max: 18, color: '#94a3b8', colorDark: '#64748b' },
+        { nombre: 'Promedio', max: 20, color: '#60a5fa', colorDark: '#3b82f6' },
+        { nombre: 'Sobre promedio', max: 22, color: '#34d399', colorDark: '#10b981' },
+        { nombre: 'Excelente', max: 25, color: '#fbbf24', colorDark: '#f59e0b' },
+        { nombre: 'Sospechoso', max: Math.max(30, Math.ceil(ffmiAjR) + 1), color: '#f87171', colorDark: '#ef4444' },
+      ]
+    : [
+        { nombre: 'Bajo', max: 14, color: '#94a3b8', colorDark: '#64748b' },
+        { nombre: 'Promedio', max: 16, color: '#60a5fa', colorDark: '#3b82f6' },
+        { nombre: 'Sobre promedio', max: 18, color: '#34d399', colorDark: '#10b981' },
+        { nombre: 'Excelente', max: 19, color: '#a3e635', colorDark: '#84cc16' },
+        { nombre: 'Sobresaliente', max: 22, color: '#fbbf24', colorDark: '#f59e0b' },
+        { nombre: 'Excepcional', max: Math.max(26, Math.ceil(ffmiAjR) + 1), color: '#f87171', colorDark: '#ef4444' },
+      ];
+
   return {
     ffmi: Number(ffmi.toFixed(1)),
-    ffmiAjustado: Number(ffmiAjustado.toFixed(1)),
-    masaMagra: Number(masaMagra.toFixed(1)),
+    ffmiAjustado: ffmiAjR,
+    masaMagra: masaMagraR,
     masaGrasa: Number(masaGrasa.toFixed(1)),
     categoria,
     resumen: `Tu FFMI es ${ffmi.toFixed(1)} (ajustado a 1.80m: ${ffmiAjustado.toFixed(1)}) → ${categoria}.`,
     natural,
+    _insight: {
+      title: 'Qué dice tu FFMI',
+      text: insightText,
+      tone,
+      icon: '💪',
+    },
+    _chart: {
+      type: 'scale',
+      marker: ffmiAjR,
+      markerLabel: `FFMI ${ffmiAjR}`,
+      min: sexo === 'hombre' ? 14 : 10,
+      segments,
+      ariaLabel: `FFMI ajustado ${ffmiAjR} sobre la escala de categorías: ${categoria}`,
+    },
   };
 }

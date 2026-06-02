@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | object; }
 export function diasHabilesMesActualFeriados(i: Inputs): Outputs {
   const f=String(i.fecha1||'');
   if (!f) {
@@ -14,5 +14,11 @@ export function diasHabilesMesActualFeriados(i: Inputs): Outputs {
   const hoy=new Date();
   hoy.setHours(0,0,0,0);
   const diff=Math.round((d.getTime()-hoy.getTime())/86400000);
-  return { resultado:diff+' días', resumen:`Entre hoy y ${f}: ${diff} días.` };
+  const abs=Math.abs(diff);
+  const insight = diff===0
+    ? { title:'Es hoy', text:'La fecha que ingresaste es **hoy mismo**: faltan 0 días.', tone:'neutral', icon:'📆' }
+    : diff>0
+      ? { title:'Cuenta regresiva', text:`Faltan **${abs} días** para el ${f} (≈ ${(abs/7).toFixed(1)} semanas). Tenés ese margen para organizarte.`, tone:'good', icon:'⏳' }
+      : { title:'Fecha ya pasada', text:`El ${f} fue hace **${abs} días** (≈ ${(abs/7).toFixed(1)} semanas). Es una fecha pasada respecto de hoy.`, tone:'neutral', icon:'🕰️' };
+  return { resultado:diff+' días', resumen:`Entre hoy y ${f}: ${diff} días.`, _insight: insight };
 }

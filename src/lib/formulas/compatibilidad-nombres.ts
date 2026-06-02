@@ -1,6 +1,6 @@
 /** Compatibilidad de nombres por numerología pitagórica */
 export interface Inputs { nombre1: string; nombre2: string; }
-export interface Outputs { porcentaje: number; numero1: number; numero2: number; mensaje: string; }
+export interface Outputs { porcentaje: number; numero1: number; numero2: number; mensaje: string; _insight?: any; _chart?: any; }
 
 function normalize(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
@@ -53,5 +53,26 @@ export function compatibilidadNombres(i: Inputs): Outputs {
      pct >= 55 ? 'Compatibilidad moderada — hay potencial si ambos ponen de su parte.' :
      'Vibración distinta — los desafíos pueden ser oportunidades de crecimiento.');
 
-  return { porcentaje: pct, numero1: d1, numero2: d2, mensaje: msg };
+  const nivel = pct >= 85 ? 'excepcional' : pct >= 70 ? 'buena' : pct >= 55 ? 'moderada' : 'desafiante';
+  const _insight = {
+    title: `Compatibilidad ${nivel}`,
+    text: `**${n1}** (número ${d1}, ${MSGS[d1]}) y **${n2}** (número ${d2}, ${MSGS[d2]}) alcanzan un **${pct}%** de afinidad numerológica: una conexión **${nivel}**.`,
+    tone: pct >= 70 ? 'good' : pct >= 55 ? 'neutral' : 'warn',
+    icon: '💞',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: pct,
+    markerLabel: `${pct}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Desafiante', max: 55, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Moderada', max: 70, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Buena', max: 85, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: 'Excepcional', max: 100, color: '#22c55e', colorDark: '#4ade80' },
+    ],
+    ariaLabel: `Compatibilidad de ${pct}% en la escala de afinidad`,
+  };
+
+  return { porcentaje: pct, numero1: d1, numero2: d2, mensaje: msg, _insight, _chart };
 }

@@ -22,6 +22,8 @@ export interface Outputs {
   porcentaje_conyuge1: number;
   porcentaje_conyuge2: number;
   saldo_ajuste: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -81,17 +83,48 @@ export function compute(i: Inputs): Outputs {
   // Paso 12: Saldo de ajuste (diferencia por redondeos o deudas personales no compensadas)
   const saldo_ajuste = corresponde_final_c1 - corresponde_final_c2;
   
+  const recibe_c1 = Math.max(0, corresponde_final_c1);
+  const recibe_c2 = Math.max(0, corresponde_final_c2);
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const hayPension = i.hay_pensión_alimentaria === 'si' && monto_pensión > 0;
+  const _insight = {
+    title: 'Reparto de la sociedad conyugal',
+    text:
+      `El patrimonio social neto a repartir 50/50 es **${fmtCOP(patrimonio_a_repartir)}**. Sumando los bienes propios, al cónyuge 1 le corresponden **${fmtCOP(recibe_c1)}** y al cónyuge 2 **${fmtCOP(recibe_c2)}**.` +
+      (gastos > 0 ? ` Los **${fmtCOP(gastos)}** de notaría y registro se reparten en partes iguales.` : '') +
+      (hayPension ? ` Se descontó la capitalización de la pensión alimentaria del obligado.` : ''),
+    tone: 'neutral' as const,
+    icon: '⚖️',
+  };
+  // Donut: cómo se reparte el patrimonio entre los dos cónyuges
+  const _chart =
+    recibe_c1 + recibe_c2 > 0
+      ? {
+          type: 'doughnut',
+          slices: [
+            { label: 'Cónyuge 1', value: Math.round(recibe_c1) },
+            { label: 'Cónyuge 2', value: Math.round(recibe_c2) },
+          ],
+          prefix: '$',
+          centerValue: fmtCOP(recibe_c1 + recibe_c2),
+          centerLabel: 'Total repartido',
+          ariaLabel: `Reparto del patrimonio: cónyuge 1 recibe ${fmtCOP(recibe_c1)} y cónyuge 2 recibe ${fmtCOP(recibe_c2)}`,
+        }
+      : undefined;
+
   return {
     patrimonio_social: Math.max(0, patrimonio_social),
     patrimonio_social_neto: Math.max(0, patrimonio_social_neto),
     gastos_totales_liquidacion: Math.max(0, gastos_totales_liquidacion),
     patrimonio_a_repartir: Math.max(0, patrimonio_a_repartir),
-    corresponde_conyuge1: Math.max(0, corresponde_final_c1),
-    corresponde_conyuge2: Math.max(0, corresponde_final_c2),
+    corresponde_conyuge1: recibe_c1,
+    corresponde_conyuge2: recibe_c2,
     ajuste_conyuge1: Math.max(0, ajuste_conyuge1),
     ajuste_conyuge2: Math.max(0, ajuste_conyuge2),
     porcentaje_conyuge1: Math.round(porcentaje_conyuge1 * 100) / 100,
     porcentaje_conyuge2: Math.round(porcentaje_conyuge2 * 100) / 100,
-    saldo_ajuste: Math.round(saldo_ajuste * 100) / 100
+    saldo_ajuste: Math.round(saldo_ajuste * 100) / 100,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

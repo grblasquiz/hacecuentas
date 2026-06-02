@@ -27,6 +27,8 @@ export interface Outputs {
   ahorro_comparacion: number;
   tiempo_ahorrado: number;
   composicion_minima_primer_mes: ComposicionPago;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -128,6 +130,37 @@ export function compute(i: Inputs): Outputs {
   const ahorro = total_pagado_minimo - total_pagado_fijo;
   const tiempo_ahorrado = meses_minimo - meses_fijo;
 
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+
+  // Donut: composición de la primera cuota mínima (las partes suman el total)
+  const partes: { label: string; value: number }[] = [
+    { label: 'Capital', value: composicion_mes_1.capital },
+    { label: 'Interés', value: composicion_mes_1.interes },
+  ];
+  if (composicion_mes_1.cuota_manejo > 0) partes.push({ label: 'Cuota de manejo', value: composicion_mes_1.cuota_manejo });
+  if (composicion_mes_1.seguro > 0) partes.push({ label: 'Seguro', value: composicion_mes_1.seguro });
+  const totalCuota = partes.reduce((s, p) => s + p.value, 0);
+
+  const _chart = {
+    type: 'doughnut',
+    slices: partes,
+    prefix: '$',
+    centerValue: cop(totalCuota),
+    centerLabel: 'Cuota mínima',
+    ariaLabel: `Composición de la primera cuota mínima de ${cop(totalCuota)}: capital ${cop(composicion_mes_1.capital)}, interés ${cop(composicion_mes_1.interes)}${composicion_mes_1.cuota_manejo > 0 ? `, cuota de manejo ${cop(composicion_mes_1.cuota_manejo)}` : ''}${composicion_mes_1.seguro > 0 ? `, seguro ${cop(composicion_mes_1.seguro)}` : ''}.`,
+  };
+
+  // Insight: qué porción de tu primera cuota mínima se va en interés + costos
+  const noCapital = composicion_mes_1.interes + composicion_mes_1.cuota_manejo + composicion_mes_1.seguro;
+  const pctCapital = totalCuota > 0 ? Math.round((composicion_mes_1.capital / totalCuota) * 100) : 0;
+  const pctNoCapital = 100 - pctCapital;
+  const _insight = {
+    title: 'Pagar solo el mínimo te ancla a la deuda',
+    text: `De tu primera cuota mínima (${cop(totalCuota)}), solo **${cop(composicion_mes_1.capital)}** (${pctCapital}%) baja el capital: el resto **${cop(noCapital)}** (${pctNoCapital}%) se va en interés y costos. Pagando una cuota fija mayor saldás la tarjeta en **${meses_fijo > 0 ? meses_fijo : 1} meses** en vez de **${meses_minimo > 0 ? meses_minimo : 1}** y ahorrás **${cop(Math.abs(ahorro))}**.`,
+    tone: 'warn',
+    icon: '💳',
+  };
+
   return {
     cuota_minima_primera: Math.round(cuota_minima_mes_1),
     interes_primer_mes: Math.round(interes_mes_1),
@@ -140,5 +173,7 @@ export function compute(i: Inputs): Outputs {
     ahorro_comparacion: Math.round(ahorro),
     tiempo_ahorrado: Math.max(0, tiempo_ahorrado),
     composicion_minima_primer_mes: composicion_mes_1,
+    _insight,
+    _chart,
   };
 }

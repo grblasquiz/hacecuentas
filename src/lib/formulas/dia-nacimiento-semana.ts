@@ -1,5 +1,5 @@
 export interface Inputs { fechaNacimiento: string; }
-export interface Outputs { diaSemana: string; significado: string; proximoCumpleDia: string; }
+export interface Outputs { diaSemana: string; significado: string; proximoCumpleDia: string; _insight?: any; }
 const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const SIGS: Record<string,string> = {
   Domingo:'Bonito/a y alegre — persona optimista, bondadosa y con luz propia.',
@@ -22,5 +22,12 @@ export function diaNacimientoSemana(i: Inputs): Outputs {
   let proxAnio = hoy.getFullYear();
   let prox = new Date(proxAnio, d.getMonth(), d.getDate());
   if (prox <= hoy) { proxAnio++; prox = new Date(proxAnio, d.getMonth(), d.getDate()); }
-  return { diaSemana: dia, significado: SIGS[dia] || '', proximoCumpleDia: `${DIAS[prox.getDay()]} ${prox.toLocaleDateString('es-AR')}` };
+  const diasFalta = Math.round((prox.getTime() - hoy.getTime()) / 86400000);
+  const _insight = {
+    title: `Naciste un ${dia}`,
+    text: `Viniste al mundo un **${dia}**. Según el refrán popular: ${SIGS[dia] || ''} Tu próximo cumpleaños cae **${DIAS[prox.getDay()]}** y faltan **${diasFalta} días**.`,
+    tone: 'neutral',
+    icon: '🎂',
+  };
+  return { diaSemana: dia, significado: SIGS[dia] || '', proximoCumpleDia: `${DIAS[prox.getDay()]} ${prox.toLocaleDateString('es-AR')}`, _insight };
 }

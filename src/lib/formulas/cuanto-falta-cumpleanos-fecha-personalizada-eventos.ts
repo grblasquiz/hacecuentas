@@ -10,6 +10,7 @@ export interface Outputs {
   hours_remaining: number;
   time_breakdown: string;
   status_message: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -51,21 +52,46 @@ export function compute(i: Inputs): Outputs {
 
   let statusMessage = "";
   let timeBreakdown = "";
+  let _insight: any;
 
   if (daysRemaining < 0) {
     const absDays = Math.abs(daysRemaining);
     statusMessage = `${eventName} fue hace ${absDays} día${absDays !== 1 ? "s" : ""}`;
     timeBreakdown = `Tiempo transcurrido: ${absDays} días (${Math.floor(absDays / 7)} semanas, ${(absDays / 30.44).toFixed(1)} meses)`;
+    _insight = {
+      title: "La fecha ya pasó",
+      text: `**${eventName}** fue hace **${absDays} día${absDays !== 1 ? "s" : ""}** (unas **${Math.floor(absDays / 7)} semanas**). Si querés contar para la próxima vez, cargá la fecha del año que viene.`,
+      tone: "neutral",
+      icon: "📅"
+    };
   } else if (daysRemaining === 0) {
     statusMessage = `¡Hoy es el día de ${eventName}!`;
     timeBreakdown = "Hora 0 - ¡El momento ha llegado!";
+    _insight = {
+      title: "¡Es hoy!",
+      text: `Hoy es el día de **${eventName}**. Llegaste justo: ¡a disfrutarlo!`,
+      tone: "good",
+      icon: "🎉"
+    };
   } else if (daysRemaining === 1) {
     statusMessage = `Falta 1 día para ${eventName}`;
     timeBreakdown = `1 día = ${hoursRemaining} horas`;
+    _insight = {
+      title: "Falta 1 día",
+      text: `Mañana es **${eventName}**: quedan **${hoursRemaining} horas**. Última chance para dejar todo listo.`,
+      tone: "good",
+      icon: "⏰"
+    };
   } else {
     statusMessage = `Faltan ${daysRemaining} días para ${eventName}`;
     const remainingDaysAfterWeeks = daysRemaining % 7;
     timeBreakdown = `${weeksRemaining} semana${weeksRemaining !== 1 ? "s" : ""} + ${remainingDaysAfterWeeks} día${remainingDaysAfterWeeks !== 1 ? "s" : ""} = ${daysRemaining} días totales (${(monthsRemaining).toFixed(1)} meses)`;
+    _insight = {
+      title: `Faltan ${daysRemaining} días`,
+      text: `Para **${eventName}** quedan **${daysRemaining} días** = **${weeksRemaining} semana${weeksRemaining !== 1 ? "s" : ""}** y ${remainingDaysAfterWeeks} día${remainingDaysAfterWeeks !== 1 ? "s" : ""} (${monthsRemaining.toFixed(1)} meses). Tiempo de sobra para planificar con calma.`,
+      tone: "neutral",
+      icon: "📅"
+    };
   }
 
   return {
@@ -74,6 +100,7 @@ export function compute(i: Inputs): Outputs {
     months_remaining: Math.round(monthsRemaining * 100) / 100,
     hours_remaining: Math.max(0, hoursRemaining),
     time_breakdown: timeBreakdown,
-    status_message: statusMessage
+    status_message: statusMessage,
+    _insight
   };
 }

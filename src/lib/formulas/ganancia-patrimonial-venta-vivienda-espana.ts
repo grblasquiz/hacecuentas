@@ -19,6 +19,8 @@ export interface Outputs {
   cuota_irpf: number;
   tipo_efectivo: number;
   detalle_tramos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tramos base del ahorro IRPF 2026 (art. 66 LIRPF + escala autonómica general)
@@ -141,7 +143,13 @@ export function compute(i: Inputs): Outputs {
       ganancia_tributable: 0,
       cuota_irpf: 0,
       tipo_efectivo: 0,
-      detalle_tramos: 'Pérdida patrimonial: no tributa. Puedes compensarla con ganancias del ahorro de este ejercicio o los 4 siguientes.'
+      detalle_tramos: 'Pérdida patrimonial: no tributa. Puedes compensarla con ganancias del ahorro de este ejercicio o los 4 siguientes.',
+      _insight: {
+        title: 'Pérdida patrimonial',
+        text: `La transmisión genera una pérdida de **${Math.abs(ganancia_bruta).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €**: no pagas IRPF y puedes **compensarla** con ganancias del ahorro de este ejercicio o los **4 siguientes**.`,
+        tone: 'neutral',
+        icon: '📉',
+      },
     };
   }
 
@@ -204,6 +212,43 @@ export function compute(i: Inputs): Outputs {
     detalle_tramos = desglose || 'Sin desglose disponible.';
   }
 
+  // --- Insight narrativo (dinámico) ---
+  const fmtEur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  let _insight: any;
+  if (cuota_irpf <= 0) {
+    _insight = {
+      title: 'Sin cuota a pagar',
+      text: `Tu ganancia de **${fmtEur(ganancia_bruta)}** queda **totalmente exenta** y no genera cuota de IRPF. Te quedas con la ganancia íntegra.`,
+      tone: 'good',
+      icon: '🏠',
+    };
+  } else {
+    const exentaTxt = ganancia_exenta > 0
+      ? ` Quedan exentos **${fmtEur(ganancia_exenta)}**.`
+      : '';
+    _insight = {
+      title: 'IRPF de la venta',
+      text: `Por una ganancia tributable de **${fmtEur(ganancia_tributable)}**, Hacienda se lleva **${fmtEur(cuota_irpf)}** (tipo efectivo **${tipo_efectivo.toFixed(2)}%** sobre la ganancia total).${exentaTxt}`,
+      tone: 'warn',
+      icon: '🏠',
+    };
+  }
+
+  // --- Gráfico: reparto de la ganancia bruta ---
+  const netoTributable = Math.max(0, ganancia_tributable - cuota_irpf);
+  const _slices: Array<{ label: string; value: number }> = [];
+  if (ganancia_exenta > 0) _slices.push({ label: 'Exenta', value: Number(ganancia_exenta.toFixed(2)) });
+  if (netoTributable > 0) _slices.push({ label: 'Te queda (neto)', value: Number(netoTributable.toFixed(2)) });
+  if (cuota_irpf > 0) _slices.push({ label: 'IRPF (Hacienda)', value: Number(cuota_irpf.toFixed(2)) });
+  const _chart = _slices.length >= 2 ? {
+    type: 'doughnut' as const,
+    slices: _slices,
+    prefix: '',
+    centerValue: fmtEur(ganancia_bruta),
+    centerLabel: 'Ganancia bruta',
+    ariaLabel: 'Reparto de la ganancia patrimonial entre parte exenta, neto que te queda y cuota de IRPF',
+  } : undefined;
+
   return {
     valor_transmision,
     valor_adquisicion,
@@ -212,6 +257,8 @@ export function compute(i: Inputs): Outputs {
     ganancia_tributable,
     cuota_irpf,
     tipo_efectivo,
-    detalle_tramos
+    detalle_tramos,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

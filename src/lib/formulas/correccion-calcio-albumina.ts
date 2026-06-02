@@ -7,6 +7,8 @@ export interface Outputs {
   calcioCorregido: number;
   interpretacion: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function correccionCalcioAlbumina(i: Inputs): Outputs {
@@ -43,9 +45,36 @@ export function correccionCalcioAlbumina(i: Inputs): Outputs {
     `Ca corregido: ${calcioCorregido.toFixed(1)} mg/dL | ` +
     `${interpretacion}.${nota}`;
 
+  const caR = Number(calcioCorregido.toFixed(1));
+  const esNormal = calcioCorregido >= 8.5 && calcioCorregido <= 10.5;
+  const _insight = {
+    title: esNormal ? 'Calcio corregido normal' : (calcioCorregido < 8.5 ? 'Hipocalcemia corregida' : 'Hipercalcemia corregida'),
+    text: nota
+      ? `El calcio total (**${ca} mg/dL**) cambia de categoría al corregir por albúmina: corregido da **${caR} mg/dL**.${nota}`
+      : `Con albúmina de **${alb} g/dL**, el calcio corregido es **${caR} mg/dL** (corrección de **${correccion >= 0 ? '+' : ''}${correccion.toFixed(1)} mg/dL** sobre el medido de **${ca} mg/dL**). ${interpretacion}.`,
+    tone: esNormal ? 'good' : 'warn',
+    icon: '🦴',
+  };
+
+  const topMax = Math.max(13, Math.ceil(caR) + 1);
+  const _chart = {
+    type: 'scale',
+    marker: caR,
+    markerLabel: caR.toFixed(1) + ' mg/dL',
+    min: 6,
+    segments: [
+      { nombre: 'Hipocalcemia', max: 8.5, color: '#3b82f6', colorDark: '#2563eb' },
+      { nombre: 'Normal', max: 10.5, color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: 'Hipercalcemia', max: topMax, color: '#ef4444', colorDark: '#dc2626' },
+    ],
+    ariaLabel: `Calcio corregido ${caR.toFixed(1)} mg/dL; el rango normal es 8,5 a 10,5 mg/dL.`,
+  };
+
   return {
-    calcioCorregido: Number(calcioCorregido.toFixed(1)),
+    calcioCorregido: caR,
     interpretacion: interpretacion + nota,
     detalle,
+    _insight,
+    _chart,
   };
 }

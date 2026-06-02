@@ -18,6 +18,7 @@ export interface Outputs {
   comparativa_nuda_propiedad_valor: number;
   comparativa_nuda_propiedad_renta: number;
   advertencia_fiscal: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -193,6 +194,23 @@ export function compute(i: Inputs): Outputs {
       '- Consulta asesor fiscal especializado en sucesiones y vivienda habitual para tu comunidad autónoma.';
   }
 
+  // Insight: la renta NO tributa IRPF, pero la deuda crece con el tiempo.
+  // Mostramos cuánto habrá crecido el saldo vivo a 10 años respecto al capital recibido.
+  const fmtEur = (n: number) =>
+    new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Math.round(n));
+  const modalidadTxt =
+    i.modalidad === 'vitalicia' ? 'renta vitalicia'
+    : i.modalidad === 'temporal' ? 'renta temporal'
+    : 'capital único + renta';
+  const _insight = {
+    title: 'Cobrás sin tributar, pero la deuda crece',
+    text: renta_mensual_estimada > 0
+      ? `Con ${modalidadTxt} cobrarías **${fmtEur(renta_mensual_estimada)}/mes** (**${fmtEur(ingreso_anual_neto)}/año**) sin tributar IRPF, pero a los 10 años la deuda con el banco rondaría **${fmtEur(saldo_vivo_10anos)}** y la heredan tus herederos junto a la vivienda.`
+      : `Con los datos cargados no se genera renta mensual: revisá el LTV (**${i.porcentaje_ltv}%**) y el valor de la vivienda (**${fmtEur(i.valor_vivienda)}**).`,
+    tone: renta_mensual_estimada > 0 ? 'warn' : 'neutral',
+    icon: '🏡',
+  };
+
   return {
     capital_disponible,
     renta_mensual_estimada,
@@ -203,5 +221,6 @@ export function compute(i: Inputs): Outputs {
     comparativa_nuda_propiedad_valor,
     comparativa_nuda_propiedad_renta,
     advertencia_fiscal,
+    _insight,
   };
 }

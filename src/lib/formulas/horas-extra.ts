@@ -26,6 +26,7 @@ export interface HorasExtraOutputs {
   totalExtras: number;
   sueldoConExtras: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function horasExtra(inputs: HorasExtraInputs): HorasExtraOutputs {
@@ -63,6 +64,15 @@ export function horasExtra(inputs: HorasExtraInputs): HorasExtraOutputs {
     ariaLabel: 'Composición del sueldo con extras: sueldo base más horas al 50% y al 100%',
   };
 
+  const pctExtra = sueldoConExtras > 0 ? (totalExtras / sueldoConExtras) * 100 : 0;
+  const fmtAr = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Cuánto suman tus horas extra',
+    text: `Tus **${h50 + h100} horas extra** agregan **${fmtAr(totalExtras)}** al sueldo: pasás de ${fmtAr(sueldo)} a **${fmtAr(sueldoConExtras)}**, un **${pctExtra.toFixed(0)}%** más. La hora al 50% vale ${fmtAr(valorHora50)} y la del 100% ${fmtAr(valorHora100)} (hora normal: ${fmtAr(valorHoraNormal)}).`,
+    tone: 'good',
+    icon: '⏱️',
+  };
+
   return {
     valorHoraNormal: Math.round(valorHoraNormal),
     valorHora50: Math.round(valorHora50),
@@ -72,5 +82,6 @@ export function horasExtra(inputs: HorasExtraInputs): HorasExtraOutputs {
     totalExtras: Math.round(totalExtras),
     sueldoConExtras: Math.round(sueldoConExtras),
     _chart: chart,
+    _insight: insight,
   };
 }

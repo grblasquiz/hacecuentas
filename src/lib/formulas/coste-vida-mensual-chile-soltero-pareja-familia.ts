@@ -18,6 +18,8 @@ export interface Outputs {
   total_mensual: number;
   rango_ahorro: string;
   notas_ciudad: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -138,6 +140,41 @@ export function compute(i: Inputs): Outputs {
   // Notas por ciudad
   const notas_ciudad = getNotasCiudad(i.ciudad);
 
+  // --- Insight + gráfico ---
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const labelCiudad: Record<string, string> = {
+    santiago: 'Santiago', valparaiso: 'Valparaíso', concepcion: 'Concepción',
+    puerto_montt: 'Puerto Montt', antofagasta: 'Antofagasta', iquique: 'Iquique',
+    temuco: 'Temuco', otra_region: 'tu región'
+  };
+  const categorias = [
+    { label: 'Arriendo', value: arriendo_estimado },
+    { label: 'Alimentación', value: alimentacion_estimada },
+    { label: 'Transporte', value: transporte_estimado },
+    { label: 'Salud', value: salud_estimada },
+    { label: 'Servicios', value: servicios_basicos },
+    { label: 'Ocio', value: ocio_cultura },
+    { label: 'Otros', value: otros_gastos }
+  ];
+  const mayor = categorias.reduce((a, b) => (b.value > a.value ? b : a));
+  const pctMayor = Math.round((mayor.value / total_mensual) * 100);
+
+  const _insight = {
+    title: 'Tu presupuesto mensual',
+    text: `Vivir en **${labelCiudad[i.ciudad] || 'tu ciudad'}** con este perfil cuesta unos **${fmtCLP(total_mensual)}** al mes. El **${mayor.label.toLowerCase()}** se lleva la mayor tajada (${fmtCLP(mayor.value)}, **${pctMayor}%** del total). Apuntá a ahorrar entre ${rango_ahorro.split('(')[0].trim()}.`,
+    tone: pctMayor >= 40 ? 'warn' : 'neutral',
+    icon: '🇨🇱'
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: categorias.filter(c => c.value > 0),
+    prefix: '$',
+    centerValue: Math.round(total_mensual).toLocaleString('es-CL'),
+    centerLabel: 'Total/mes',
+    ariaLabel: `Reparto del gasto mensual de ${fmtCLP(total_mensual)} entre arriendo, alimentación, transporte, salud, servicios, ocio y otros.`
+  };
+
   return {
     arriendo_estimado,
     alimentacion_estimada,
@@ -148,7 +185,9 @@ export function compute(i: Inputs): Outputs {
     otros_gastos,
     total_mensual,
     rango_ahorro,
-    notas_ciudad
+    notas_ciudad,
+    _insight,
+    _chart
   };
 }
 

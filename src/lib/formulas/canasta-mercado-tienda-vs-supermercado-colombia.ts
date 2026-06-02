@@ -19,6 +19,7 @@ export interface Outputs {
   canal_mas_economico: string;
   diferencia_super_vs_hiper: number;
   punto_equilibrio_membesia_meses: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -76,6 +77,30 @@ export function compute(i: Inputs): Outputs {
     }
   }
   
+  // Ahorro del canal ganador vs tienda de barrio
+  const ahorroMensualGanador = Math.round(gastoTienda - minGasto);
+  const ahorroAnualGanador = ahorroMensualGanador * 12;
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  // Nombre corto del canal (antes del primer paréntesis)
+  const canalCorto = canalMasEconomico.split('(')[0].trim();
+
+  let textoInsight: string;
+  let toneInsight: string;
+  if (ahorroMensualGanador > 0) {
+    textoInsight = `Comprando en **${canalCorto}** en vez de la tienda de barrio ahorrás **${fmtCOP(ahorroMensualGanador)} al mes** (**${fmtCOP(ahorroAnualGanador)} al año**). ${membresia > 0 && canalMasEconomico.includes('Hipermercado') ? `La membresía se paga sola en **${Math.round(puntosEquilibrioMeses * 10) / 10} meses**.` : 'No necesitás pagar membresía para capturar ese ahorro.'}`;
+    toneInsight = 'good';
+  } else {
+    textoInsight = `Para tu nivel de compra, la **tienda de barrio** termina siendo lo más conveniente: los descuentos de super e hiper no compensan transporte ni membresía. Conviene quedarte cerca y evitar el costo extra de desplazarte.`;
+    toneInsight = 'neutral';
+  }
+
+  const _insight = {
+    title: 'Dónde te conviene mercar',
+    text: textoInsight,
+    tone: toneInsight,
+    icon: '🛒'
+  };
+
   return {
     gasto_mensual_tienda: Math.round(gastoTienda),
     gasto_mensual_supermercado: Math.round(gastoSuper),
@@ -87,6 +112,7 @@ export function compute(i: Inputs): Outputs {
     ahorro_anual_hipermercado: Math.round(ahorroAnualHiper),
     canal_mas_economico: canalMasEconomico,
     diferencia_super_vs_hiper: Math.round(diferenciaHiperVsSuper),
-    punto_equilibrio_membesia_meses: Math.round(puntosEquilibrioMeses * 10) / 10
+    punto_equilibrio_membesia_meses: Math.round(puntosEquilibrioMeses * 10) / 10,
+    _insight
   };
 }

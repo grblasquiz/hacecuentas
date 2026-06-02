@@ -16,6 +16,7 @@ export interface InteresJudicialOutputs {
   diasTranscurridos: number;
   porcentajeTotal: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudicialOutputs {
@@ -63,11 +64,25 @@ export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudic
     ariaLabel: 'Composición de la deuda: capital más intereses judiciales.',
   };
 
+  const pctNum = (interesesGenerados / capital) * 100;
+  const anios = (diasTranscurridos / 365);
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (pctNum >= 100) insightTone = 'warn';
+  else if (pctNum >= 30) insightTone = 'neutral';
+  else insightTone = 'good';
+  const insight = {
+    title: 'Cuánto pesan los intereses',
+    text: `Sobre un capital de **$${Math.round(capital).toLocaleString('es-AR')}**, en **${diasTranscurridos.toLocaleString('es-AR')} días** (${anios.toFixed(1)} años) se acumulan **$${Math.round(interesesGenerados).toLocaleString('es-AR')}** de intereses, un **${porcentajeTotal}%** del capital. El total reclamable asciende a **$${Math.round(totalConIntereses).toLocaleString('es-AR')}**.`,
+    tone: insightTone,
+    icon: '⚖️',
+  };
+
   return {
     totalConIntereses: Math.round(totalConIntereses),
     interesesGenerados: Math.round(interesesGenerados),
     diasTranscurridos,
     porcentajeTotal: `${porcentajeTotal}% sobre el capital`,
     _chart: chart,
+    _insight: insight,
   };
 }

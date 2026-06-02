@@ -1,6 +1,6 @@
 /** Estimación de espacio necesario para backups con crecimiento mensual */
 export interface Inputs { tamanoActualGb: number; crecimientoMensual: number; mesesRetencion: number; frecuenciaBackup?: string; }
-export interface Outputs { espacioTotalGb: number; espacioTotalTb: number; tamanoFinalGb: number; cantidadBackups: number; detalle: string; }
+export interface Outputs { espacioTotalGb: number; espacioTotalTb: number; tamanoFinalGb: number; cantidadBackups: number; detalle: string; _insight?: any; }
 
 export function espacioBackupCrecimientoMensual(i: Inputs): Outputs {
   const tamano = Number(i.tamanoActualGb);
@@ -33,11 +33,34 @@ export function espacioBackupCrecimientoMensual(i: Inputs): Outputs {
 
   const tamanoFinal = tamano * Math.pow(1 + crecimiento, meses);
 
+  const totalTb = espacioTotal / 1024;
+  const veces = espacioTotal / tamano;
+  const crecePct = (tamanoFinal / tamano - 1) * 100;
+  const tamanoStr = totalTb >= 1 ? `**${totalTb.toFixed(2)} TB**` : `**${espacioTotal.toFixed(0)} GB**`;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (crecimiento === 0) {
+    insightTone = 'neutral';
+    insightText = `Guardar ${cantidadBackups} backups ${frecuencia}es de ${tamano} GB durante ${meses} meses pide ${tamanoStr} de almacenamiento — unas **${veces.toFixed(1)}×** tu dataset actual. Sin crecimiento, el tamaño se mantiene parejo.`;
+  } else if (crecePct >= 50) {
+    insightTone = 'warn';
+    insightText = `Con **${(crecimiento * 100).toFixed(1)}%/mes** de crecimiento, en ${meses} meses tus datos pasan de ${tamano} a **${tamanoFinal.toFixed(0)} GB** (+${crecePct.toFixed(0)}%). El pool de ${cantidadBackups} backups necesita ${tamanoStr}: dimensioná con margen porque la curva se acelera.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `${cantidadBackups} backups ${frecuencia}es en ${meses} meses suman ${tamanoStr} (unas **${veces.toFixed(1)}×** el dataset actual). Con **${(crecimiento * 100).toFixed(1)}%/mes**, los datos cierran en **${tamanoFinal.toFixed(0)} GB**.`;
+  }
+
   return {
     espacioTotalGb: Number(espacioTotal.toFixed(1)),
     espacioTotalTb: Number((espacioTotal / 1024).toFixed(3)),
     tamanoFinalGb: Number(tamanoFinal.toFixed(1)),
     cantidadBackups,
     detalle: `${cantidadBackups} backups ${frecuencia}es durante ${meses} meses: ${espacioTotal.toFixed(1)} GB (${(espacioTotal / 1024).toFixed(2)} TB) totales. Datos finales: ${tamanoFinal.toFixed(1)} GB (crecimiento ${(crecimiento * 100).toFixed(1)}%/mes).`,
+    _insight: {
+      title: 'Espacio de backup a reservar',
+      text: insightText,
+      tone: insightTone,
+      icon: '💾',
+    },
   };
 }

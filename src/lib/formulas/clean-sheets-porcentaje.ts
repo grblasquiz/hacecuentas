@@ -9,6 +9,8 @@ export interface Outputs {
   categoriaRendimiento: string;
   benchmark: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cleanSheetsPorcentaje(i: Inputs): Outputs {
@@ -28,11 +30,33 @@ export function cleanSheetsPorcentaje(i: Inputs): Outputs {
   else if (pct >= 35) { cat = 'Top arquero europeo'; bm = 'Rango típico de arqueros de equipos top-6 en top-5 ligas.'; }
   else if (pct >= 25) { cat = 'Arquero titular promedio'; bm = 'Mediana de titulares en ligas top-5.'; }
 
+  const pctR = Math.round(pct * 10) / 10;
+  const tone = pct >= 35 ? 'good' : pct >= 25 ? 'neutral' : 'warn';
+
   return {
-    porcentaje: Math.round(pct * 10) / 10,
+    porcentaje: pctR,
     partidosConGolEnContra: conGol,
     categoriaRendimiento: cat,
     benchmark: bm,
     mensaje: `${i.cleanSheets}/${i.partidosJugados} = ${pct.toFixed(1)}% clean sheets → ${cat}.`,
+    _insight: {
+      title: 'Lectura del arco en cero',
+      text: `**${i.cleanSheets} de ${i.partidosJugados}** partidos sin recibir goles dan un **${pctR}%** de vallas invictas, dejando **${conGol}** partidos con gol en contra. Eso ubica el rendimiento como "${cat}". ${bm}`,
+      tone,
+      icon: '🧤',
+    },
+    _chart: {
+      type: 'scale',
+      marker: pctR,
+      markerLabel: pctR + '%',
+      min: 0,
+      segments: [
+        { nombre: 'Bajo', max: 25, color: '#fca5a5', colorDark: '#7f1d1d' },
+        { nombre: 'Promedio', max: 35, color: '#fde68a', colorDark: '#78350f' },
+        { nombre: 'Top europeo', max: 45, color: '#86efac', colorDark: '#14532d' },
+        { nombre: 'Elite mundial', max: 100, color: '#6ee7b7', colorDark: '#064e3b' },
+      ],
+      ariaLabel: `${pctR}% de clean sheets sobre la temporada`,
+    },
   };
 }

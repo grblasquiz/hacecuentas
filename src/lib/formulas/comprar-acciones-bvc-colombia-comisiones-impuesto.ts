@@ -17,6 +17,8 @@ export interface Outputs {
   costo_total_operacion: number;
   rentabilidad_neta_anual: number;
   comparativa_brokers: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -87,6 +89,33 @@ export function compute(i: Inputs): Outputs {
     .map(b => b.nombre + ' ' + (b.tasa * 100).toFixed(2) + '% = $' + (i.monto_compra * b.tasa).toLocaleString('es-CO', { maximumFractionDigits: 0 }))
     .join(' | ');
 
+  // --- Insight + gráfico ---
+  const cop = (v: number) => '$' + Math.round(v).toLocaleString('es-CO');
+  const pctSobreMonto = i.monto_compra > 0 ? (costo_total_operacion / i.monto_compra) * 100 : 0;
+
+  const slices = [
+    { label: 'Comisión compra', value: Math.round(comision_compra) },
+    { label: 'Retención dividendos', value: Math.round(retencion_dividendos) },
+    { label: 'Impuesto ganancia ocasional', value: Math.round(impuesto_ganancia_ocasional) },
+  ].filter(s => s.value > 0);
+
+  const _insight = {
+    title: 'Cuánto te cuesta operar',
+    text: `Entre comisión, retención e impuestos, esta operación te cuesta **${cop(costo_total_operacion)}** — un **${pctSobreMonto.toFixed(2)}%** de los ${cop(i.monto_compra)} que invertís. La comisión de compra (${cop(comision_compra)}) es el costo que pagás sí o sí al entrar.`,
+    tone: pctSobreMonto >= 1 ? 'warn' : 'neutral',
+    icon: '🇨🇴',
+  };
+
+  // Donut sólo si hay más de un componente de costo (si no, no aporta sobre la comisión sola)
+  const _chart = slices.length >= 2 ? {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: cop(costo_total_operacion),
+    centerLabel: 'Costo total',
+    ariaLabel: `Costo total de la operación ${cop(costo_total_operacion)}, desglosado en comisión, retención de dividendos e impuesto a la ganancia ocasional`,
+  } : undefined;
+
   return {
     comision_compra: Math.round(comision_compra * 100) / 100,
     valor_neto_invertido: Math.round(valor_neto_invertido * 100) / 100,
@@ -96,6 +125,8 @@ export function compute(i: Inputs): Outputs {
     impuesto_ganancia_ocasional: Math.round(impuesto_ganancia_ocasional * 100) / 100,
     costo_total_operacion: Math.round(costo_total_operacion * 100) / 100,
     rentabilidad_neta_anual: Math.round(rentabilidad_neta_anual * 100) / 100,
-    comparativa_brokers: comparativa
+    comparativa_brokers: comparativa,
+    _insight,
+    _chart
   };
 }

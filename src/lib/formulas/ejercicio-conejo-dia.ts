@@ -11,6 +11,7 @@ export interface Outputs {
   saltosPorSesion: string;
   enriquecimiento: string;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function ejercicioConejoDia(i: Inputs): Outputs {
@@ -57,11 +58,25 @@ export function ejercicioConejoDia(i: Inputs): Outputs {
   else if (edad === 'cachorro') rec = 'Cachorro necesita mucho ejercicio y estímulo. Supervisá sueltas iniciales y rabbit-proofing de cables.';
   else rec = 'Combiná suelta diaria con enriquecimiento rotativo. Ideal: conejo libre en una habitación las 24 h con corral como refugio.';
 
+  // Tono dinámico: jaula chica o sobrepeso piden atención; cachorro neutral; resto OK.
+  const tone = (jaula < 1 || cond === 'sobrepeso') ? 'warn' : edad === 'cachorro' ? 'neutral' : 'good';
+  const motivo = jaula < 1
+    ? ` La jaula de **${jaula} m²** queda corta, así que necesita más tiempo suelto para compensar.`
+    : cond === 'sobrepeso'
+      ? ' El sobrepeso suma una hora extra de movimiento al plan.'
+      : '';
+  const insight = {
+    title: 'El plan de ejercicio de tu conejo',
+    text: `Tu conejo ${raza} ${edad} necesita unas **${horas} horas** de suelta por día y un mínimo de **${espacioMin} m²** de espacio para moverse.${motivo}`,
+    tone,
+    icon: '🐰',
+  };
   return {
     horasSueltaDia: horas,
     espacioMinM2: espacioMin,
     saltosPorSesion: saltos,
     enriquecimiento: enriq,
     recomendacion: rec,
+    _insight: insight,
   };
 }

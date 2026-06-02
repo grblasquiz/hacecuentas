@@ -1,6 +1,6 @@
 /** Instagram Ads CPM */
 export interface Inputs { nicho: string; pais: string; objetivo: string; }
-export interface Outputs { cpmEstimado: string; rangoCPM: string; cpcEstimado: string; tip: string; }
+export interface Outputs { cpmEstimado: string; rangoCPM: string; cpcEstimado: string; tip: string; _insight?: any; }
 
 export function instagramAdsCpmNicho(i: Inputs): Outputs {
   const n = String(i.nicho);
@@ -27,10 +27,24 @@ export function instagramAdsCpmNicho(i: Inputs): Outputs {
   const rangoMin = cpm * 0.7;
   const rangoMax = cpm * 1.3;
   const cpc = cpm / 10; // CTR 1%
+  const _insight = cpm > 15
+    ? {
+        title: 'CPM alto para este nicho y país',
+        text: `Pagás **$${cpm.toFixed(2)} USD** cada 1.000 impresiones en ${n} (${p}), un costo elevado: cada click te sale ~**$${cpc.toFixed(2)} USD** con CTR 1%. El nicho y la geo encarecen la puja; probá audiencias más amplias y placements automáticos.`,
+        tone: 'warn',
+        icon: '📈',
+      }
+    : {
+        title: 'CPM dentro de rango saludable',
+        text: `Para ${n} en ${p}, un CPM de **$${cpm.toFixed(2)} USD** es competitivo: cada click ronda **$${cpc.toFixed(2)} USD** con CTR 1%. Mantené la config de targeting y enfocate en el creativo para bajar el CPC real.`,
+        tone: 'good',
+        icon: '📊',
+      };
   return {
     cpmEstimado: `$${cpm.toFixed(2)} USD`,
     rangoCPM: `$${rangoMin.toFixed(2)} - $${rangoMax.toFixed(2)} USD`,
     cpcEstimado: `$${cpc.toFixed(2)} USD por click (con CTR 1%)`,
     tip: cpm > 15 ? 'CPM alto — probá audiencias más amplias y placements automáticos' : 'CPM saludable — mantené la config de targeting',
+    _insight,
   };
 }

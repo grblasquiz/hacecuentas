@@ -20,6 +20,7 @@ export interface Outputs {
   aider_per_dev: number;
   codex_per_dev: number;
   ranking: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -112,6 +113,17 @@ export function compute(i: Inputs): Outputs {
   const winnerTotal = tools[0].total.toFixed(2);
   const winnerLabel = `${winner} — $${winnerTotal}/mes total para ${developers} dev${developers !== 1 ? 's' : ''}`;
 
+  const cheapest = tools[0];
+  const priciest = tools[tools.length - 1];
+  const ahorroMensual = priciest.total - cheapest.total;
+  const ahorroAnual = ahorroMensual * 12;
+  const _insight = {
+    title: `Más barato: ${cheapest.name}`,
+    text: `Para **${developers} dev${developers !== 1 ? 's' : ''}**, **${cheapest.name}** es la opción más económica a **$${cheapest.total.toFixed(2)}/mes**, frente a $${priciest.total.toFixed(2)}/mes de ${priciest.name}. Elegir bien ahorra **$${ahorroMensual.toFixed(2)}/mes** (~$${ahorroAnual.toFixed(0)}/año). Ojo: las herramientas por API (Claude Code, Aider, Codex) varían con el uso real de tokens, no son asiento fijo.`,
+    tone: 'good',
+    icon: '💸',
+  };
+
   return {
     winner: winnerLabel,
     cursor_total:     Math.round(cursorTotal  * 100) / 100,
@@ -127,5 +139,6 @@ export function compute(i: Inputs): Outputs {
     aider_per_dev:    Math.round(aiderPerDev   * 100) / 100,
     codex_per_dev:    Math.round(codexPerDev   * 100) / 100,
     ranking,
+    _insight,
   };
 }

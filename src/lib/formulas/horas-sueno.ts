@@ -11,6 +11,8 @@ export interface Outputs {
   deficit: number;
   resumen: string;
   consejos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function horasSueno(i: Inputs): Outputs {
@@ -78,6 +80,61 @@ export function horasSueno(i: Inputs): Outputs {
 
   const consejos = `Consejos para mejorar el sueño: 1) Acostarse y levantarse a la misma hora. 2) Evitar pantallas 1 h antes. 3) Cuarto oscuro y fresco (18–20 °C). 4) Cafeína sólo en la mañana. 5) Si no dormís en 20 min, levantate y volvé cuando tengas sueño.`;
 
+  // Insight narrativo dinámico
+  let _insight: any;
+  if (horasActuales > 0) {
+    const optimo = horasActuales >= minRec && horasActuales <= maxRec;
+    const insuficiente = horasActuales < minAcep;
+    const excesivo = horasActuales > maxAcep;
+    let tone: 'good' | 'warn' | 'neutral' = 'neutral';
+    let icon = '😴';
+    let title = '';
+    let text = '';
+    if (optimo) {
+      tone = 'good'; icon = '✅'; title = 'Dormís lo justo';
+      text = `Con **${horasActuales} h** estás dentro del rango recomendado de **${recomendado}** para tu grupo (${grupoEtario}). Mantené esta rutina.`;
+    } else if (insuficiente) {
+      tone = 'warn'; icon = '🚨'; title = 'Déficit crónico de sueño';
+      text = `**${horasActuales} h** está por debajo del mínimo aceptable (**${minAcep} h**). Te faltan **${deficit} h** para llegar al óptimo: la deuda de sueño acumulada afecta memoria, ánimo y defensas.`;
+    } else if (excesivo) {
+      tone = 'warn'; icon = '⚠️'; title = 'Dormís de más';
+      text = `**${horasActuales} h** supera el máximo aceptable (**${maxAcep} h**) para tu edad. Dormir de más de forma sostenida también puede ser señal de un problema; vale la pena revisarlo.`;
+    } else if (deficit > 0) {
+      tone = 'warn'; icon = '🌙'; title = 'Un poco por debajo del óptimo';
+      text = `**${horasActuales} h** es aceptable pero te faltan **${deficit} h** para el rango ideal de **${recomendado}**. Sumar media hora ya hace diferencia.`;
+    } else {
+      tone = 'neutral'; icon = '🌙'; title = 'Por encima del óptimo';
+      text = `**${horasActuales} h** está por arriba del rango recomendado de **${recomendado}**, aunque todavía dentro de lo aceptable para tu edad.`;
+    }
+    _insight = { title, text, tone, icon };
+  } else {
+    _insight = {
+      title: 'Tu objetivo de sueño',
+      text: `Para tu grupo (${grupoEtario}) la recomendación es **${recomendado}**. Ingresá cuántas horas dormís para ver cómo te comparás.`,
+      tone: 'neutral',
+      icon: '🛌',
+    };
+  }
+
+  // Gauge: ubica las horas actuales dentro de las zonas (sólo si las ingresó)
+  let _chart: any;
+  if (horasActuales > 0) {
+    _chart = {
+      type: 'scale',
+      marker: horasActuales,
+      markerLabel: `${horasActuales} h`,
+      min: 0,
+      segments: [
+        { nombre: 'Insuficiente', max: minAcep, color: '#ef4444', colorDark: '#dc2626' },
+        { nombre: 'Aceptable bajo', max: minRec, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Óptimo', max: maxRec, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Aceptable alto', max: maxAcep, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Excesivo', max: Math.max(maxAcep + 2, horasActuales + 0.5), color: '#ef4444', colorDark: '#dc2626' },
+      ],
+      ariaLabel: `Tus ${horasActuales} h de sueño ubicadas en la escala de zonas para ${grupoEtario}`,
+    };
+  }
+
   return {
     grupoEtario,
     recomendado,
@@ -86,5 +143,7 @@ export function horasSueno(i: Inputs): Outputs {
     deficit,
     resumen: `${grupoEtario}: necesitás ${recomendado}.${horasActuales ? ` Estás durmiendo ${horasActuales} h → ${evaluacion}.` : ''}`,
     consejos,
+    _insight,
+    _chart,
   };
 }

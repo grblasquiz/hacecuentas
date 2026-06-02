@@ -13,6 +13,7 @@ export interface Outputs {
   ahorroAnual: number;
   ahorro6anos: number;
   detalle: string;
+  _insight?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -197,6 +198,17 @@ export function compute(i: Inputs): Outputs {
     `(mínimo personal de ${MINIMO_PERSONAL.toLocaleString("es-ES")} € deducido). ` +
     `Estimación orientativa sin otras deducciones personales.`;
 
+  const fmtEur = (n: number) => Math.round(n).toLocaleString("es-ES") + " €";
+  const ahorraBeckham = ahorroAnual > 0;
+  const insight = {
+    title: ahorraBeckham ? "El régimen Beckham te conviene" : "El régimen Beckham no te ahorra",
+    text: ahorraBeckham
+      ? `Sobre **${fmtEur(totalBruto)}** de renta, Beckham paga **${fmtEur(cuotaBeckham)}** (${tipoBeckham.toFixed(1)}% efectivo) frente a **${fmtEur(cuotaIRPF)}** del IRPF normal en ${ccLabel}: ahorrás **${fmtEur(ahorroAnual)}** al año, unos **${fmtEur(ahorro6anos)}** en los 6 años del régimen.`
+      : `Sobre **${fmtEur(totalBruto)}** de renta, Beckham paga **${fmtEur(cuotaBeckham)}** (${tipoBeckham.toFixed(1)}% efectivo) y el IRPF normal en ${ccLabel} **${fmtEur(cuotaIRPF)}** (${tipoIRPF.toFixed(1)}%): a este nivel de renta **no hay ahorro** con Beckham.`,
+    tone: ahorraBeckham ? "good" : "neutral",
+    icon: ahorraBeckham ? "💸" : "⚖️",
+  };
+
   return {
     totalBruto,
     cuotaBeckham:  Math.round(cuotaBeckham  * 100) / 100,
@@ -206,5 +218,6 @@ export function compute(i: Inputs): Outputs {
     ahorroAnual:   Math.round(ahorroAnual   * 100) / 100,
     ahorro6anos:   Math.round(ahorro6anos   * 100) / 100,
     detalle,
+    _insight: insight,
   };
 }

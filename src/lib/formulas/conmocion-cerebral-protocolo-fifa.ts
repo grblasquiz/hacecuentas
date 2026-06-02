@@ -12,6 +12,8 @@ export interface Outputs {
   minimoDiasTotal: string;
   recomendacion: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function parseFecha(s: string): number {
@@ -70,11 +72,36 @@ export function conmocionCerebralProtocoloFifa(i: Inputs): Outputs {
     ? `Paso ${nroPaso} de 6 · volvé a reposo`
     : `Paso ${nroPaso} de 6`;
 
+  const _insight = {
+    title: 'Tu retorno al juego',
+    text: sint === 'si'
+      ? `Tenés **síntomas activos**: el protocolo manda volver al **Paso 1 (reposo)** y no avanzar hasta estar **≥24 hs sin síntomas**. La regla de oro es nunca apurar el regreso.`
+      : `Estás **asintomático** en el **Paso ${nroPaso} de 6**. Podés pasar al siguiente si llevás **≥24 hs** sin síntomas; el mínimo total es de **${minDiasTotal} días** desde la conmoción${edad < 18 ? ' (más conservador por ser menor de 18)' : ''}.`,
+    tone: sint === 'si' ? 'warn' : (nroPaso >= 6 ? 'good' : 'neutral'),
+    icon: sint === 'si' ? '🚑' : (nroPaso >= 6 ? '🏆' : '🧠')
+  };
+  const _chart = {
+    type: 'scale',
+    marker: nroPaso,
+    markerLabel: `Paso ${nroPaso}`,
+    min: 1,
+    segments: [
+      { nombre: 'Reposo', max: 1, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'Aeróbico', max: 2, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Sin contacto', max: 4, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Con contacto', max: 5, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: 'Competencia', max: 6, color: '#16a34a', colorDark: '#22c55e' }
+    ],
+    ariaLabel: `Paso ${nroPaso} de 6 del protocolo de retorno al juego`
+  };
+
   return {
     pasoActual: pasoActualTxt,
     siguientesPasos: siguientes,
     minimoDiasTotal: `${minDiasTotal} días mínimo hasta retorno a competencia (protocolo FIFA / Consenso Ámsterdam 2022).`,
     recomendacion,
-    mensaje: titular
+    mensaje: titular,
+    _insight,
+    _chart
   };
 }

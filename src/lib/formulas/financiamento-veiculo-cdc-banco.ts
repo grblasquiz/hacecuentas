@@ -17,6 +17,8 @@ export interface Outputs {
   consortium_total: number;
   savings_vs_consortium: string;
   summary: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Taxa IOF diária padrão para CDC/crédito pessoal (Decreto 6.306/2007)
@@ -166,6 +168,26 @@ export function compute(i: Inputs): Outputs {
     `Taxa: ${monthlyRatePct.toFixed(2).replace(".", ",")}% a.m. (~${annualRate.toFixed(1).replace(".", ",")}% a.a.). ` +
     `CET ≈ ${cetAnnual.toFixed(1).replace(".", ",")}% a.a. | Juros totais: R$ ${totalInterest.toFixed(2).replace(".", ",")}.`;
 
+  const fmtBRL = (v: number) => 'R$ ' + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const jurosPct = financedValue > 0 ? (totalInterest / financedValue) * 100 : 0;
+  const _insight = {
+    title: 'Custo real do CDC',
+    text: `Financiando **${fmtBRL(financedValue)}** em ${n}x você devolve **${fmtBRL(totalPaid)}** — ou seja **${fmtBRL(totalInterest)}** só de juros (**${jurosPct.toFixed(0)}%** do valor financiado), com CET de **${cetAnnual.toFixed(1).replace('.', ',')}% a.a.** incluindo IOF. Aumentar a entrada ou encurtar o prazo é o que mais reduz esse custo.`,
+    tone: cetAnnual >= 25 ? 'warn' : 'neutral',
+    icon: '🚗',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Valor financiado', value: Math.round(financedValue) },
+      { label: 'Juros', value: Math.round(totalInterest) },
+    ],
+    prefix: 'R$ ',
+    centerValue: fmtBRL(totalPaid),
+    centerLabel: 'Total pago',
+    ariaLabel: `Total pago de ${fmtBRL(totalPaid)}: ${fmtBRL(financedValue)} financiados e ${fmtBRL(totalInterest)} de juros`,
+  };
+
   return {
     monthly_payment: Math.round(pmt * 100) / 100,
     total_paid: Math.round(totalPaid * 100) / 100,
@@ -175,5 +197,7 @@ export function compute(i: Inputs): Outputs {
     consortium_total: Math.round(consortiumTotal * 100) / 100,
     savings_vs_consortium: savingsText,
     summary,
+    _insight,
+    _chart,
   };
 }

@@ -20,6 +20,8 @@ export interface Outputs {
   instrumentos_sugeridos: string;
   plazo_cumplimiento_meses: number;
   recomendacion_nivel_riesgo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -141,6 +143,36 @@ export function compute(i: Inputs): Outputs {
       'Rentabilidad segura (depósito) es prioridad sobre rendimiento.';
   }
 
+  // Insight: objetivo del fondo según perfil
+  const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const inestable = i.tipo_contrato === 'honorarios' || i.tipo_contrato === 'independiente';
+  const _insight = {
+    title: 'Tu fondo de emergencia ideal',
+    text: `Con gastos de **${fmtCL(gastoMensualTotal)}/mes** y contrato **${i.tipo_contrato}**, apuntá a **${mesesOptimo} meses** de colchón: **${fmtCL(pesosObjetivoOptimo)}** (mínimo **${fmtCL(pesosObjetivoMinimo)}**). Ahorrando ~$200.000/mes lo juntás en **${plazoMeses} meses**.`,
+    tone: inestable ? 'warn' : 'good',
+    icon: '🛟'
+  };
+
+  // Donut: en qué se compone tu gasto mensual (las partes suman el total)
+  const slicesGasto = [
+    { label: 'Arriendo', value: Math.round(i.gasto_arriendo) },
+    { label: 'Servicios comunes', value: Math.round(i.gasto_servicios_comunes) },
+    { label: 'Alimentación', value: Math.round(i.gasto_alimentacion) },
+    { label: 'Transporte', value: Math.round(i.gasto_transporte) },
+    { label: 'Salud', value: Math.round(i.gasto_salud) },
+    { label: 'AFP', value: Math.round(i.gasto_afp) },
+    { label: 'Deuda mínima', value: Math.round(i.deuda_minima_mensual) },
+    { label: 'Otros esenciales', value: Math.round(i.otros_gastos_esenciales) }
+  ].filter(s => s.value > 0);
+  const _chart = gastoMensualTotal > 0 && slicesGasto.length >= 2 ? {
+    type: 'doughnut',
+    slices: slicesGasto,
+    prefix: '$',
+    centerValue: fmtCL(gastoMensualTotal),
+    centerLabel: 'Gasto mensual',
+    ariaLabel: `Gasto mensual total ${fmtCL(gastoMensualTotal)}, base para calcular tu fondo de emergencia.`
+  } : undefined;
+
   return {
     gasto_mensual_total: Math.round(gastoMensualTotal),
     meses_minimo_recomendado: mesesMinimo,
@@ -149,6 +181,8 @@ export function compute(i: Inputs): Outputs {
     pesos_objetivo_optimo: pesosObjetivoOptimo,
     instrumentos_sugeridos: instrumentosSugeridos,
     plazo_cumplimiento_meses: plazoMeses,
-    recomendacion_nivel_riesgo: recomendacionRiesgo
+    recomendacion_nivel_riesgo: recomendacionRiesgo,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

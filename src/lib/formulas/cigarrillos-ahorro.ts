@@ -13,6 +13,7 @@ export interface Outputs {
   ahorro10Anios: number;
   diasVidaRecuperados: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function cigarrillosAhorro(i: Inputs): Outputs {
@@ -43,5 +44,11 @@ export function cigarrillosAhorro(i: Inputs): Outputs {
     ahorro10Anios: Math.round(ahorro10Anios),
     diasVidaRecuperados,
     mensaje: `Ahorrás $${Math.round(gastoMensual)}/mes y $${Math.round(gastoAnual)}/año. En 10 años: $${Math.round(ahorro10Anios)}. Recuperás ~${diasVidaRecuperados} días de vida por año.`,
+    _insight: {
+      title: 'Lo que te cuesta fumar',
+      text: `Fumar **${cigPorDia}** cigarrillos por día te cuesta **$${Math.round(gastoAnual)}** al año; en 10 años son **$${Math.round(ahorro10Anios)}** que dejarías de quemar, además de recuperar unos **${diasVidaRecuperados} días** de vida por año.`,
+      tone: 'warn',
+      icon: '🚬',
+    },
   };
 }

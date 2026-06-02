@@ -16,6 +16,7 @@ export interface CervezaPorInvitadoFiestaOutputs {
   botellas1L: number;
   barril30L: number;
   litrosPorPersona: number;
+  _insight?: any;
 }
 
 export function cervezaPorInvitadoFiesta(
@@ -41,11 +42,21 @@ export function cervezaPorInvitadoFiesta(
   const botellas1L = Math.ceil(litrosTotales);
   const barril30L = Math.ceil(litrosTotales / 30);
 
+  const lpp = Number(litrosPorPersona.toFixed(2));
+  const ltot = Number(litrosTotales.toFixed(1));
+  const climaTxt = clima === 'verano' ? ' (ajustado por calor de verano)' : clima === 'invierno' ? ' (ajustado a la baja por el frío)' : '';
+  const _insight = {
+    title: 'Cerveza por persona y total',
+    text: `Con **${horas} h** de fiesta calculá **${lpp.toLocaleString('es-AR')} L por persona**${climaTxt}${unica === 'si' ? ', tomando que la cerveza es la única bebida' : ''}. Para **${invitados}** invitados son **${ltot.toLocaleString('es-AR')} L**: comprá **${latas473} latas** de 473 ml o **${botellas1L} botellas** de litro${barril30L === 1 ? ', o 1 barril de 30 L' : barril30L > 1 ? `, o ${barril30L} barriles de 30 L` : ''}.`,
+    tone: 'neutral',
+    icon: '🍻',
+  };
   return {
-    litrosTotales: Number(litrosTotales.toFixed(1)),
+    litrosTotales: ltot,
     latas473,
     botellas1L,
     barril30L,
-    litrosPorPersona: Number(litrosPorPersona.toFixed(2)),
+    litrosPorPersona: lpp,
+    _insight,
   };
 }

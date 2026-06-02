@@ -1,6 +1,6 @@
 /** Conversor: joule ↔ caloría */
 export interface Inputs { valor: number | string; direccion?: string; ingrediente?: string; }
-export interface Outputs { resultado: string; resumen: string; }
+export interface Outputs { resultado: string; resumen: string; _insight?: any; }
 
 export function conversorJoulesACalorias(i: Inputs): Outputs {
   const v = Number(i.valor);
@@ -16,8 +16,16 @@ export function conversorJoulesACalorias(i: Inputs): Outputs {
     r = v / factor;
     fromLabel = 'calorías'; toLabel = 'joules';
   }
+  const cal = d === 'ida' ? r : v;
+  const kcal = cal / 1000;
   return {
     resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'cal'.toString(),
-    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.'
+    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
+    _insight: {
+      title: 'Caloría chica vs. kcal de las etiquetas',
+      text: 'Acá hablamos de la **caloría chica (cal)**: tu resultado son **' + cal.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + ' cal**, que son apenas **' + kcal.toLocaleString('es-AR', { maximumFractionDigits: 4 }) + ' kcal**. Las "calorías" de los alimentos son en realidad kilocalorías (1 kcal = 1.000 cal = 4.184 J).',
+      tone: 'neutral',
+      icon: '🔥'
+    }
   };
 }

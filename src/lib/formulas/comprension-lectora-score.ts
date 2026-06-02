@@ -7,6 +7,8 @@ export interface Outputs {
   scoreAjustado: number;
   interpretacion: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function comprensionLectoraScore(i: Inputs): Outputs {
@@ -32,11 +34,35 @@ export function comprensionLectoraScore(i: Inputs): Outputs {
   else if (ajustado < 80) rec = 'Buena base. Practicá SQ3R y resúmenes.';
   else rec = 'Sólido. Desafiate con textos más densos.';
 
+  const scoreAjustado = Math.round(ajustado);
+  const tone: 'good' | 'warn' | 'neutral' =
+    scoreAjustado >= 75 ? 'good' : scoreAjustado >= 60 ? 'neutral' : 'warn';
+
   return {
     scorePorcentaje: Math.round(crudo),
-    scoreAjustado: Math.round(ajustado),
+    scoreAjustado,
     interpretacion: interp,
     recomendacion: rec,
+    _insight: {
+      title: `Comprensión ${interp.toLowerCase()}`,
+      text: `Acertaste **${correctas} de ${totales}** preguntas. Ajustado por dificultad ${dif} del texto, tu score es **${scoreAjustado}/100** (${interp}). ${rec}`,
+      tone,
+      icon: '📖',
+    },
+    _chart: {
+      type: 'scale',
+      marker: scoreAjustado,
+      markerLabel: `${scoreAjustado} pts`,
+      min: 0,
+      segments: [
+        { nombre: 'Muy bajo', max: 40, color: '#ef4444', colorDark: '#b91c1c' },
+        { nombre: 'Bajo', max: 60, color: '#f59e0b', colorDark: '#b45309' },
+        { nombre: 'Normal', max: 75, color: '#eab308', colorDark: '#a16207' },
+        { nombre: 'Muy bueno', max: 90, color: '#84cc16', colorDark: '#4d7c0f' },
+        { nombre: 'Excelente', max: 101, color: '#22c55e', colorDark: '#15803d' },
+      ],
+      ariaLabel: `Score de comprensión lectora ${scoreAjustado} sobre 100, categoría ${interp}`,
+    },
   };
 
 }

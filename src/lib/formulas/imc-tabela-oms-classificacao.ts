@@ -11,6 +11,8 @@ export interface Outputs {
   weight_to_normal: string;
   healthy_range: string;
   disclaimer: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 // Pontos de corte OMS para adultos (WHO, 2000 / atualizado 2024)
@@ -86,12 +88,42 @@ export function compute(i: Inputs): Outputs {
     disclaimer += " Mulheres naturalmente têm maior percentual de gordura que homens com o mesmo IMC; considere medidas complementares.";
   }
 
+  // Gauge de escala IMC: mostra em qual faixa OMS o valor cai
+  const chart = {
+    type: "scale" as const,
+    marker: imcRounded,
+    markerLabel: `Seu IMC: ${imcRounded}`,
+    min: 10,
+    unit: '',
+    segments: [
+      { nombre: 'Magreza', max: 18.5, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Normal', max: 25, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Sobrepeso', max: 30, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Obesidade I', max: 35, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Obesidade II', max: 40, color: '#e8b4b8', colorDark: '#991b1b' },
+      { nombre: 'Obesidade III', max: Math.max(50, Math.ceil(imcRounded) + 2), color: '#d4a0a8', colorDark: '#7f1d1d' },
+    ],
+    ariaLabel: `Escala de IMC: seu valor ${imcRounded} corresponde a "${classification}".`,
+  };
+
+  const isNormal = imcRounded >= IMC_UNDERWEIGHT && imcRounded <= IMC_NORMAL_MAX;
+  const insight = {
+    title: isNormal ? 'IMC na faixa saudável' : 'IMC fora da faixa saudável',
+    text: isNormal
+      ? `Com **${weight.toFixed(1)} kg** e **${heightCm} cm**, seu IMC é **${imcRounded}**, na faixa normal da OMS (18,5–24,9). A faixa de peso saudável para sua altura vai de **${healthy_range}**.`
+      : `Com **${weight.toFixed(1)} kg** e **${heightCm} cm**, seu IMC é **${imcRounded}** — classificação **${classification}**. ${weight_to_normal} A faixa saudável para sua altura é **${healthy_range}**.`,
+    tone: isNormal ? 'good' : 'warn',
+    icon: isNormal ? '✅' : '⚖️',
+  };
+
   return {
     imc: imcRounded,
     classification,
     ideal_weight,
     weight_to_normal,
     healthy_range,
-    disclaimer
+    disclaimer,
+    _chart: chart,
+    _insight: insight
   };
 }

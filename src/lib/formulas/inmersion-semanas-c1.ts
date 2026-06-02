@@ -7,6 +7,8 @@ export interface Outputs {
   meses: number;
   horasTotales: number;
   observacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function inmersionSemanasC1(i: Inputs): Outputs {

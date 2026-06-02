@@ -1,6 +1,6 @@
 /** Throughput LLM: tokens/segundo y costo por 1M tokens según modelo y batch */
 export interface Inputs { tokensSegundoPorRequest: number; batchSize: number; precioGpuHoraUsd: number; cantidadGpus: number; tokensPromedioPorRequest: number; }
-export interface Outputs { tokensSegundoTotal: number; requestsPorHora: number; costoPorMillonTokensUsd: number; costoPorRequestUsd: number; explicacion: string; }
+export interface Outputs { tokensSegundoTotal: number; requestsPorHora: number; costoPorMillonTokensUsd: number; costoPorRequestUsd: number; explicacion: string; _insight?: any; }
 export function inferenciaLlmTokensSegundoThroughput(i: Inputs): Outputs {
   const tps = Number(i.tokensSegundoPorRequest);
   const batch = Number(i.batchSize);
@@ -16,11 +16,20 @@ export function inferenciaLlmTokensSegundoThroughput(i: Inputs): Outputs {
   const costoHora = precio * gpus;
   const costoPorMillon = (costoHora / tokensHora) * 1e6;
   const costoRequest = tokRequest > 0 ? (costoPorMillon * tokRequest) / 1e6 : 0;
+  const costoTone = costoPorMillon < 1 ? 'good' : costoPorMillon < 5 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Costo por millón de tokens',
+    text: `Servís **${tpsTotal.toLocaleString('es')} tok/s** en total y cada millón de tokens te cuesta **USD ${costoPorMillon.toFixed(2)}**${costoTone === 'warn' ? ' — subí el batch o bajá el costo de GPU para ser competitivo' : costoTone === 'good' ? ' — muy eficiente frente a las APIs comerciales' : ''}.`,
+    tone: costoTone,
+    icon: '⚡',
+  };
+
   return {
     tokensSegundoTotal: Number(tpsTotal.toFixed(0)),
     requestsPorHora: Number(requestsHora.toFixed(0)),
     costoPorMillonTokensUsd: Number(costoPorMillon.toFixed(3)),
     costoPorRequestUsd: Number(costoRequest.toFixed(5)),
     explicacion: `${batch} requests concurrentes × ${tps} tok/s = ${tpsTotal} tok/s totales. ${gpus}× GPU a USD ${precio}/h → USD ${costoPorMillon.toFixed(2)}/M tokens.`,
+    _insight,
   };
 }

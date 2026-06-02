@@ -13,6 +13,8 @@ export interface Outputs {
   gasto_estimado_anual: number;
   gasto_vs_tope: string;
   exonerado: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -107,6 +109,53 @@ export function compute(i: Inputs): Outputs {
 
   const exonerado_texto = exonerado_flag ? 'Sí, por ingresos <2 SMMLV' : 'No';
 
+  // Insight narrativo según situación de cobertura
+  let _insight: any;
+  const gastoFmt = `$${Math.round(gasto_final).toLocaleString('es-CO')}`;
+  const topeFmt = `$${TOPE_ANUAL.toLocaleString('es-CO')}`;
+  if (exonerado_flag) {
+    _insight = {
+      title: 'Estás exonerado',
+      text: `Con ingresos menores a 2 SMMLV **no pagás cuota moderadora ni copago**: tu EPS cubre el 100% sin desembolso de tu bolsillo.`,
+      tone: 'good',
+      icon: '🩺',
+    };
+  } else if (gasto_estimado_anual > TOPE_ANUAL) {
+    _insight = {
+      title: 'Llegás al tope anual',
+      text: `Tu uso estimado supera el tope: pagás como máximo **${topeFmt}** al año y todo lo que exceda lo **cubre tu EPS**. Guardá los recibos para acreditar que ya alcanzaste el límite.`,
+      tone: 'warn',
+      icon: '🧾',
+    };
+  } else {
+    const pctTope = (gasto_final / TOPE_ANUAL) * 100;
+    _insight = {
+      title: 'Dentro del tope',
+      text: `Tu gasto anual estimado en cuotas es **${gastoFmt}**, el **${pctTope.toFixed(0)}%** del tope de ${topeFmt}. Te queda margen antes de que la EPS asuma el resto.`,
+      tone: 'neutral',
+      icon: '💊',
+    };
+  }
+
+  // Gauge: gasto anual dentro del tope (solo cuando hay gasto que graficar)
+  let _chart: any;
+  if (!exonerado_flag) {
+    const markerVal = Math.round(gasto_final);
+    _chart = {
+      type: 'scale',
+      marker: markerVal,
+      markerLabel: gastoFmt,
+      min: 0,
+      segments: [
+        { nombre: 'Bajo', max: Math.round(TOPE_ANUAL * 0.4), color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Medio', max: Math.round(TOPE_ANUAL * 0.75), color: '#eab308', colorDark: '#ca8a04' },
+        { nombre: 'Cerca del tope', max: TOPE_ANUAL, color: '#f97316', colorDark: '#ea580c' },
+        { nombre: 'Tope (cubre EPS)', max: Math.max(Math.round(TOPE_ANUAL * 1.05), markerVal + 1), color: '#ef4444', colorDark: '#dc2626' },
+      ],
+      ariaLabel: `Gasto anual estimado en cuotas moderadoras (${gastoFmt}) frente al tope legal de ${topeFmt}.`,
+    };
+  }
+
   return {
     tramo_ingresos,
     cuota_consulta_general: Math.round(cuota_consulta_general),
@@ -116,6 +165,8 @@ export function compute(i: Inputs): Outputs {
     tope_anual_maximo: TOPE_ANUAL,
     gasto_estimado_anual: Math.round(gasto_final),
     gasto_vs_tope,
-    exonerado: exonerado_texto
+    exonerado: exonerado_texto,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

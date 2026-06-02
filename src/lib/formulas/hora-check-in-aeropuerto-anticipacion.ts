@@ -11,6 +11,7 @@ export interface HoraCheckInOutputs {
   horaSalirCasa: string;
   anticipacionMin: number;
   detalle: string;
+  _insight?: any;
 }
 
 function parseHora(h: string): { horas: number; minutos: number } | null {
@@ -88,10 +89,37 @@ export function horaCheckInAeropuertoAnticipacion(inputs: HoraCheckInInputs): Ho
 
   const tipoLabel = tipo === 'internacional' ? 'internacional' : tipo === 'nacional' ? 'nacional' : 'low-cost';
 
+  // ¿La salida de casa cae el día anterior?
+  const minutosSalirAbs = hora.horas * 60 + hora.minutos - (anticipacion + traslado);
+  const cruzaMedianoche = minutosSalirAbs < 0;
+  const horasAntic = Math.floor(anticipacion / 60);
+  const minAntic = anticipacion % 60;
+  const anticTxt = minAntic === 0 ? `${horasAntic} h` : `${horasAntic} h ${minAntic} min`;
+
+  let insight_text: string;
+  let insight_tone: 'good' | 'warn' | 'neutral' = 'neutral';
+  if (cruzaMedianoche) {
+    insight_tone = 'warn';
+    insight_text = `Para tu vuelo ${tipoLabel} de las **${horaStr}** tenés que salir de casa a las **${horaSalir} del día anterior**: con ${anticTxt} de anticipación más ${traslado} min de traslado, la cuenta cruza la medianoche. Planificá el descanso y el transporte nocturno.`;
+  } else if (anticipacion >= 180) {
+    insight_tone = 'warn';
+    insight_text = `Llegá al aeropuerto a las **${horaAeropuerto}** (**${anticTxt}** antes del vuelo) y salí de casa a las **${horaSalir}**. Es bastante margen, pero en vuelo ${tipoLabel} migraciones y seguridad se comen ese tiempo rápido: no lo recortes.`;
+  } else {
+    insight_tone = 'good';
+    insight_text = `Salí de casa a las **${horaSalir}** y estás en el aeropuerto a las **${horaAeropuerto}**, con **${anticTxt}** de colchón antes de tu vuelo ${tipoLabel} de las ${horaStr}. Margen cómodo sin madrugar de más.`;
+  }
+  const _insight = {
+    title: 'A qué hora salir',
+    text: insight_text,
+    tone: insight_tone,
+    icon: '✈️',
+  };
+
   return {
     horaLlegarAeropuerto: horaAeropuerto,
     horaSalirCasa: horaSalir,
     anticipacionMin: anticipacion,
     detalle: `Vuelo ${tipoLabel} a las ${horaStr}. Anticipación: ${anticipacion} min. Llegar al aeropuerto: ${horaAeropuerto}. Con ${traslado} min de traslado: salir de casa a las ${horaSalir}. Pasos: ${pasos.join(' → ')}.`,
+    _insight,
   };
 }

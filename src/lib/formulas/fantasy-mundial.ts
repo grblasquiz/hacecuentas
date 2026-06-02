@@ -1,6 +1,6 @@
 /** Fantasy Mundial 2026 — puntos estimados de un once para torneo corto (max 7 partidos) */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 
 export function fantasyMundial(i: Inputs): Outputs {
   const partidos = Math.min(Number(i.partidosEstimados) || 5, 7); // max 7: 3 grupo + 4 eliminatoria
@@ -43,13 +43,40 @@ export function fantasyMundial(i: Inputs): Outputs {
 
   const nivel = ptsRedondeo >= 400 ? 'Plantilla élite' : ptsRedondeo >= 300 ? 'Plantilla fuerte' : ptsRedondeo >= 200 ? 'Plantilla media' : 'Plantilla baja';
 
+  const ptsPorPartido = (pts / partidos).toFixed(1);
+  const insightTone: 'good' | 'warn' | 'neutral' = ptsRedondeo >= 300 ? 'good' : ptsRedondeo >= 200 ? 'neutral' : 'warn';
+  const insightIcon = ptsRedondeo >= 300 ? '🏆' : ptsRedondeo >= 200 ? '⚽' : '📉';
+  const insight = {
+    title: nivel,
+    text: `Tu once proyecta **${ptsRedondeo} pts** en **${partidos} partidos** del Mundial (**${ptsPorPartido} pts/partido**), una **${nivel.toLowerCase()}**. Los **${golesTeam}** goles esperados del equipo son el motor del puntaje.`,
+    tone: insightTone,
+    icon: insightIcon
+  };
+
+  const gaugeTop = Math.max(450, ptsRedondeo + 20);
+  const chart = {
+    type: 'scale',
+    marker: ptsRedondeo,
+    markerLabel: `${ptsRedondeo} pts`,
+    min: 0,
+    segments: [
+      { nombre: 'Baja', max: 200, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'Media', max: 300, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Fuerte', max: 400, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Élite', max: gaugeTop, color: '#0d9488', colorDark: '#2dd4bf' }
+    ],
+    ariaLabel: `Plantilla con ${ptsRedondeo} puntos estimados: nivel ${nivel}`
+  };
+
   return {
     puntosEstimados: `${ptsRedondeo} pts`,
-    puntosPorPartido: `${(pts / partidos).toFixed(1)} pts/partido`,
+    puntosPorPartido: `${ptsPorPartido} pts/partido`,
     partidosEvaluados: `${partidos} partidos`,
     ptsPorGoles: `${(gFwd * 4 + gMid * 5 + gDef * 6).toFixed(0)} pts`,
     ptsPorAsistencias: `${(aTotal * 3).toFixed(0)} pts`,
     ptsPorCleanSheets: `${(cleanSheetsEsperados * (4 + nDef * 4 + nMid * 1)).toFixed(0)} pts`,
     nivelPlantilla: nivel,
+    _insight: insight,
+    _chart: chart,
   };
 }

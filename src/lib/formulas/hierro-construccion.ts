@@ -14,6 +14,8 @@ export interface Outputs {
   alambre: number;
   tipo: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // kg/m² aproximados según tipo de losa y luz típica
@@ -55,14 +57,41 @@ export function hierroConstruccion(i: Inputs): Outputs {
   // Alambre de atar: 0.02 kg/kg de hierro
   const alambre = Number((kgTotales * 0.02).toFixed(2));
 
+  const kgFinal = Math.round(kgTotales);
+  const totalBarras = barras8 + barras10 + barras12;
+  const diamUsado = t.diam;
+  const fmtKg = (n: number) => `${Math.round(n).toLocaleString('es-AR')} kg`;
+
+  const _insight = {
+    title: 'Tu cómputo de acero',
+    text: `Para ${m2} m² de **${t.nombre.toLowerCase()}** necesitás **${fmtKg(kgFinal)}** de hierro (**${kgPorM2.toFixed(1)} kg/m²**), que se arman con **${totalBarras} barras de Ø${diamUsado} mm** (12 m c/u) más **${alambre} kg de alambre** de atar. Pedí siempre algún metro de más: el desperdicio por cortes y solapes ya está contemplado al ${desperd}%.`,
+    tone: 'neutral' as const,
+    icon: '🏗️',
+  };
+
+  // Donut: composición del acero a comprar (barras estructurales + alambre de atar = total)
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: `Barras Ø${diamUsado} mm`, value: kgFinal },
+      { label: 'Alambre de atar', value: alambre },
+    ],
+    prefix: '',
+    centerValue: fmtKg(kgFinal + alambre),
+    centerLabel: 'Acero total',
+    ariaLabel: `El acero total a comprar (${fmtKg(kgFinal + alambre)}) se compone de ${fmtKg(kgFinal)} en barras y ${alambre} kg de alambre de atar.`,
+  };
+
   return {
-    kgTotales: Math.round(kgTotales),
+    kgTotales: kgFinal,
     kgPorM2: Number(kgPorM2.toFixed(2)),
     barras8mm: barras8,
     barras10mm: barras10,
     barras12mm: barras12,
     alambre,
     tipo: t.nombre,
-    resumen: `Necesitás ~${Math.round(kgTotales)} kg de hierro (${kgPorM2.toFixed(1)} kg/m²) para ${m2} m² de ${t.nombre.toLowerCase()}.`,
+    resumen: `Necesitás ~${kgFinal} kg de hierro (${kgPorM2.toFixed(1)} kg/m²) para ${m2} m² de ${t.nombre.toLowerCase()}.`,
+    _insight,
+    _chart,
   };
 }

@@ -23,6 +23,7 @@ export interface Outputs {
   months_difference: number;
   payoff_order: string;
   payoff_schedule: string;
+  _insight?: any;
 }
 
 interface Debt {
@@ -251,6 +252,24 @@ export function compute(i: Inputs): Outputs {
 
   scheduleLines.push(comparisonNote);
 
+  const usd = (n: number) => "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const avMonths = avalanche.months;
+  const avYrs = Math.floor(avMonths / 12);
+  const avMos = avMonths % 12;
+  const avTime = avYrs > 0 ? `${avYrs} yr${avYrs !== 1 ? "s" : ""} ${avMos} mo` : `${avMos} mo`;
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  if (Math.abs(interestSaved) < 0.01) {
+    insightText = `For this debt set, avalanche and snowball cost the same in interest (**${usd(avalanche.totalInterest)}**) and you're debt-free in **${avTime}**. Pick snowball if you want quicker psychological wins.`;
+    insightTone = "neutral";
+  } else if (interestSaved > 0) {
+    insightText = `Paying highest-APR first (avalanche) saves you **${usd(interestSaved)}** in interest versus snowball${monthsDiff > 0 ? ` and clears the debt **${Math.abs(monthsDiff)} month${Math.abs(monthsDiff) !== 1 ? "s" : ""} sooner**` : ""}. You'd be debt-free in **${avTime}** with **${usd(avalanche.totalInterest)}** total interest.`;
+    insightTone = "good";
+  } else {
+    insightText = `Unusually, snowball costs **${usd(interestSaved)}** less interest than avalanche for this exact mix of balances and rates. Either order works — snowball also gives you faster early wins.`;
+    insightTone = "neutral";
+  }
+
   return {
     avalanche_total_interest: Math.round(avalanche.totalInterest * 100) / 100,
     avalanche_months: avalanche.months,
@@ -259,6 +278,12 @@ export function compute(i: Inputs): Outputs {
     interest_saved: Math.round(interestSaved * 100) / 100,
     months_difference: monthsDiff,
     payoff_order: payoffOrderStr,
-    payoff_schedule: scheduleLines.join(" | ")
+    payoff_schedule: scheduleLines.join(" | "),
+    _insight: {
+      title: "Avalanche vs. snowball",
+      text: insightText,
+      tone: insightTone,
+      icon: "🏔️",
+    }
   };
 }

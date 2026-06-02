@@ -13,6 +13,7 @@ export interface InflacionAcumuladaPeriodoOutputs {
   factorMultiplicador: string;
   equivalenteAnual: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function inflacionAcumuladaPeriodo(
@@ -42,10 +43,19 @@ export function inflacionAcumuladaPeriodo(
       ? `${anios} año${anios > 1 ? 's' : ''}${mesesRestantes > 0 ? ` y ${mesesRestantes} mes${mesesRestantes > 1 ? 'es' : ''}` : ''}`
       : `${meses} mes${meses > 1 ? 'es' : ''}`;
 
+  const brechaPuntos = inflacionAcumulada - sumaSimple;
+  const _insight = {
+    title: 'El interés compuesto no perdona',
+    text: `En ${periodoStr} al ${tasaMensual}% mensual los precios subieron **${inflacionAcumulada.toFixed(1)}%** (×${factorAcumulado.toFixed(2)}), no el ${sumaSimple.toFixed(1)}% de la suma simple: la capitalización agrega **${brechaPuntos.toFixed(1)} puntos** extra. Equivale a **${equivalenteAnual.toFixed(1)}% anual**.`,
+    tone: inflacionAcumulada >= 50 ? 'warn' : 'neutral',
+    icon: '📈',
+  };
+
   return {
     inflacionAcumulada: `${inflacionAcumulada.toFixed(1)}%`,
     factorMultiplicador: `${factorAcumulado.toFixed(3)}x`,
     equivalenteAnual: `${equivalenteAnual.toFixed(1)}% anual`,
     detalle: `En ${periodoStr} con inflación promedio del ${tasaMensual}% mensual, la acumulada es ${inflacionAcumulada.toFixed(1)}% (suma simple sería ${sumaSimple.toFixed(1)}%, diferencia de ${(inflacionAcumulada - sumaSimple).toFixed(1)} puntos). Los precios se multiplicaron por ${factorAcumulado.toFixed(3)}. Equivalente anualizada: ${equivalenteAnual.toFixed(1)}%.`,
+    _insight,
   };
 }

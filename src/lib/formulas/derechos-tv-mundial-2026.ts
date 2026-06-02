@@ -13,6 +13,7 @@ export interface Outputs {
   poblacionAproxMillones: number;
   costoPerCapita: number;
   resumen: string;
+  _insight?: any;
 }
 
 // Estimaciones públicas 2025-2026 (USD o EUR según país) para ciclo mundial
@@ -48,6 +49,12 @@ export function derechosTvMundial2026(i: Inputs): Outputs {
   const costoPorPartido = costoAnual / partidosMundial;
   const perCapita = costoAnual / (info.poblMill * 1_000_000);
 
+  const _insight = {
+    title: 'Cuánto cuesta transmitir el Mundial',
+    text: `En ${info.nombrePais.split(' (')[0]} los derechos rondan **${(costoAnual / 1e6).toFixed(1)} M ${info.moneda}/año**, lo que da **${Math.round(costoPorPartido / 1e3)}k ${info.moneda} por partido** (104 partidos) y unos **${perCapita.toFixed(2)} ${info.moneda} por habitante**. En ${anos} ${anos === 1 ? 'año' : 'años'} de contrato suma **${(costoTotal / 1e6).toFixed(1)} M ${info.moneda}**.`,
+    tone: 'neutral',
+    icon: '📺',
+  };
   return {
     costoAnual: Math.round(costoAnual),
     costoTotal: Math.round(costoTotal),
@@ -56,5 +63,6 @@ export function derechosTvMundial2026(i: Inputs): Outputs {
     poblacionAproxMillones: info.poblMill,
     costoPerCapita: Number(perCapita.toFixed(2)),
     resumen: `${info.nombrePais}: derechos Mundial 2026 ~**${(costoAnual / 1e6).toFixed(1)} M ${info.moneda}/año** (${Math.round(costoPorPartido / 1e3)}k por partido · ${perCapita.toFixed(2)} ${info.moneda}/habitante).`,
+    _insight,
   };
 }

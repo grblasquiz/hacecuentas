@@ -9,6 +9,7 @@ export interface Outputs {
   distanciaEntreHileras: number;
   plantasTotales: number;
   plantasPorM2: number;
+  _insight?: any;
 }
 
 interface EspecieData { entrePlantas: number; entreHileras: number; }
@@ -49,10 +50,19 @@ export function distanciaEntrePlantas(i: Inputs): Outputs {
   const m2 = largo * ancho;
   const porM2 = m2 > 0 ? total / m2 : 0;
 
+  const nombreEspecie = especie.charAt(0).toUpperCase() + especie.slice(1);
+  const _insight = {
+    title: 'Tu plantación',
+    text: `En un cantero de **${largo}×${ancho} m** entran **${total} plantas** de ${nombreEspecie} (${hileras} hileras × ${plantasPorHilera} por hilera), unas **${Number(porM2.toFixed(1))} plantas/m²** respetando ${data.entrePlantas} cm entre plantas y ${data.entreHileras} cm entre hileras.`,
+    tone: 'good',
+    icon: '🌱',
+  };
+
   return {
     distanciaEntrePlantas: data.entrePlantas,
     distanciaEntreHileras: data.entreHileras,
     plantasTotales: total,
     plantasPorM2: Number(porM2.toFixed(1)),
+    _insight,
   };
 }

@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   metrosTotales: string; metrosPorColor: string; madejasNecesarias: string; consejo: string;
+  _insight?: any;
 }
 
 export function hiloBordadoDiseno(inputs: Inputs): Outputs {
@@ -29,10 +30,18 @@ export function hiloBordadoDiseno(inputs: Inputs): Outputs {
   if (pt === 1 || pt === 5) tip = 'Comprá 2 madejas por color para que todo el lote tenga igual tono.';
   else if (pt === 2 || pt === 4) tip = 'Consumo alto: considerá comprar 30% extra del color dominante.';
   else tip = 'Consumo medio: 1-2 madejas por color alcanza en diseños pequeños.';
+  const madejasTotales = madejas * c;
+  const _insight = {
+    title: 'Tu compra de hilo',
+    text: `Tu diseño de **${a}×${h} cm** con **${c} ${c === 1 ? 'color' : 'colores'}** consume unos **${metrosReales.toFixed(0)} m** de hilo en total (**${metrosPC.toFixed(0)} m por color**), lo que equivale a **${madejas} madejas por color** y **${madejasTotales} madejas** en total. ${tip}`,
+    tone: 'neutral' as const,
+    icon: '🧵',
+  };
   return {
     metrosTotales: `${metrosReales.toFixed(1)} m`,
     metrosPorColor: `${metrosPC.toFixed(1)} m`,
     madejasNecesarias: `${madejas} madejas por color`,
     consejo: tip,
+    _insight,
   };
 }

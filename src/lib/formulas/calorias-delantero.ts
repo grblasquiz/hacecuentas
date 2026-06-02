@@ -12,6 +12,7 @@ export interface Outputs {
   tipoNombre: string;
   sprintsEstimados: number;
   detalle: string;
+  _insight?: any;
 }
 
 const TIPOS: Record<string, { met: number; nombre: string; sprints: number }> = {
@@ -34,6 +35,9 @@ export function caloriasDelantero(i: Inputs): Outputs {
   const total = kcalMin * min;
   const sprints = Math.round(info.sprints * (min / 90));
 
+  // Reposición orientativa: 1 banana ~105 kcal, 1 gel deportivo ~25 g CHO ~100 kcal
+  const bananas = Math.max(1, Math.round(total / 105));
+
   return {
     caloriasTotal: Math.round(total),
     caloriasPorMinuto: Number(kcalMin.toFixed(2)),
@@ -41,5 +45,11 @@ export function caloriasDelantero(i: Inputs): Outputs {
     tipoNombre: info.nombre,
     sprintsEstimados: sprints,
     detalle: `**${info.nombre}** de ${peso} kg en ${min} min quema **~${Math.round(total)} kcal** (MET ${info.met}) y realiza **~${sprints} sprints** (>24 km/h).`,
+    _insight: {
+      title: 'Gasto del partido',
+      text: `Como **${info.nombre.toLowerCase()}** quemás **~${Math.round(total)} kcal** en ${min} min, con **~${sprints} piques** a alta velocidad. Para reponer hace falta el equivalente a **~${bananas} ${bananas === 1 ? 'banana' : 'bananas'}**.`,
+      tone: 'good',
+      icon: '⚽',
+    },
   };
 }

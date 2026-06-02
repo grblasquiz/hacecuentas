@@ -57,6 +57,7 @@ export interface IndemnizacionDespidoFuerzaMayorOutputs {
   baseArt245: number;
   vizzotiAplicado: boolean;
   mensaje: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -137,6 +138,15 @@ export function indemnizacionDespidoFuerzaMayorArt247(
   const mensaje =
     'El Art. 247 LCT aplica solo si la causa (fuerza mayor o falta/disminución de trabajo) es acreditada fehacientemente y se respeta el orden inverso de antigüedad. Sin prueba estricta, la jurisprudencia reactiva el 100 % del Art. 245.';
 
+  const reduccion = Math.round(antiguedad245Completa - antiguedad);
+  const fmtArs = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Cuánto recorta el Art. 247',
+    text: `Al pagarse la antigüedad al 50%, la liquidación queda en **${fmtArs(total)}**. Si la causa no se acredita y se reactiva el Art. 245 completo, la antigüedad subiría de **${fmtArs(antiguedad)}** a **${fmtArs(antiguedad245Completa)}**: hay **${fmtArs(reduccion)}** en juego.`,
+    tone: 'warn' as const,
+    icon: '⚖️',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -167,6 +177,7 @@ export function indemnizacionDespidoFuerzaMayorArt247(
     baseArt245: Math.round(baseArt245),
     vizzotiAplicado,
     mensaje,
+    _insight: insight,
     _chart: chart,
   };
 }

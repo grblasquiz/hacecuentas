@@ -1,6 +1,6 @@
 /** Goles por 90 minutos (g/90) — métrica normalizada por minutaje */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 
 export function golesPor90Minutos(i: Inputs): Outputs {
   const goles = Number(i.goles) || 0;
@@ -26,6 +26,9 @@ export function golesPor90Minutos(i: Inputs): Outputs {
 
   const partidos90 = (minutos / 90).toFixed(1);
 
+  const tone = (nivel === 'Elite mundial' || nivel === 'Buen nivel') ? 'good'
+    : nivel === 'Nivel medio' ? 'neutral' : 'warn';
+  const topMax = Number(Math.max(b.elite * 1.6, g90 * 1.1).toFixed(2));
   return {
     g90: g90.toFixed(3),
     golesPor90: `${g90.toFixed(2)} goles/90 min`,
@@ -33,5 +36,24 @@ export function golesPor90Minutos(i: Inputs): Outputs {
     nivelComparativo: nivel,
     benchmarkPosicion: `Elite ${posicion}: ${b.elite} g/90 — Medio: ${b.medio} g/90`,
     interpretacion: `Con ${goles} goles en ${minutos} min, el jugador anota ${g90.toFixed(2)} goles cada 90'. Equivale a ${(g90 * 38).toFixed(0)} goles en una temporada completa de 38 jornadas.`,
+    _insight: {
+      title: `${nivel} (${posicion})`,
+      text: `Anota **${g90.toFixed(2)} goles/90 min** en ${partidos90} partidos completos: nivel **${nivel.toLowerCase()}** para un ${posicion}. Proyecta **${(g90 * 38).toFixed(0)} goles** en una temporada de 38 fechas (elite ronda ${b.elite} g/90).`,
+      tone,
+      icon: '🥅',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(g90.toFixed(2)),
+      markerLabel: `${g90.toFixed(2)} g/90`,
+      min: 0,
+      segments: [
+        { nombre: 'Bajo', max: b.medio, color: '#dc2626', colorDark: '#ef4444' },
+        { nombre: 'Medio', max: b.bueno, color: '#eab308', colorDark: '#facc15' },
+        { nombre: 'Bueno', max: b.elite, color: '#65a30d', colorDark: '#84cc16' },
+        { nombre: 'Elite', max: topMax, color: '#16a34a', colorDark: '#22c55e' },
+      ],
+      ariaLabel: `${g90.toFixed(2)} goles por 90 minutos: nivel ${nivel} para ${posicion}`,
+    },
   };
 }

@@ -1,6 +1,6 @@
 /** Combinación de colores para paredes */
 export interface Inputs { colorBase: string; ambiente?: string; }
-export interface Outputs { complementario: string; analogos: string; acento: string; consejo: string; }
+export interface Outputs { complementario: string; analogos: string; acento: string; consejo: string; _insight?: any; }
 
 interface ColorData { comp: string; analogos: string; acento: string; }
 const COLORES: Record<string, ColorData> = {
@@ -33,10 +33,18 @@ export function colorParedCombinacion(i: Inputs): Outputs {
   const data = COLORES[color];
   if (!data) throw new Error('Color no encontrado');
 
+  const primerAnalogo = data.analogos.split(',')[0].trim();
+  const _insight = {
+    title: `Paleta para tu pared ${color}`,
+    text: `Con base **${color}**, el contraste más fuerte lo da su complementario **${data.comp.toLowerCase()}**, mientras que **${primerAnalogo.toLowerCase()}** y los análogos suman armonía sin saturar. Reservá el acento para detalles puntuales, no para paredes enteras.`,
+    tone: 'neutral',
+    icon: '🎨',
+  };
   return {
     complementario: data.comp,
     analogos: data.analogos,
     acento: data.acento,
     consejo: CONSEJOS_AMB[amb] || 'Usá el color base como dominante y el acento en detalles decorativos.',
+    _insight,
   };
 }

@@ -4,6 +4,7 @@ export interface Outputs {
   termino: number;
   secuencia: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function fibonacci(i: Inputs): Outputs {
@@ -28,9 +29,26 @@ export function fibonacci(i: Inputs): Outputs {
     ? seq.map(v => fmt.format(v)).join(', ')
     : seq.slice(0, 20).map(v => fmt.format(v)).join(', ') + ', ..., ' + fmt.format(seq[seq.length - 1]);
 
+  const prev = n >= 1 ? seq[n - 1] : 0;
+  const ratio = prev > 0 ? termino / prev : 0;
+  const _insight = ratio > 0
+    ? {
+        title: `F(${n}) = ${fmt.format(termino)}`,
+        text: `El término **${fmt.format(termino)}** dividido por el anterior (${fmt.format(prev)}) da **${ratio.toFixed(6).replace('.', ',')}**, que se acerca al número áureo **φ ≈ 1,618034**. Cuanto más grande es n, más exacta es esa proporción.`,
+        tone: 'neutral',
+        icon: '🌀',
+      }
+    : {
+        title: `F(${n}) = ${fmt.format(termino)}`,
+        text: `Estás en el arranque de la sucesión: cada término es la suma de los dos anteriores (0, 1, 1, 2, 3...). A partir de F(2), el cociente entre términos consecutivos tiende al número áureo **φ ≈ 1,618**.`,
+        tone: 'neutral',
+        icon: '🌀',
+      };
+
   return {
     termino,
     secuencia: seqMostrada,
     detalle: `F(${n}) = ${fmt.format(termino)}. Secuencia: ${seqMostrada}.`,
+    _insight,
   };
 }

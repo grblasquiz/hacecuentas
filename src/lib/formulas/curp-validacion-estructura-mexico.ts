@@ -22,6 +22,7 @@ export interface Outputs {
   es_valida: boolean;
   componentes: Componentes;
   notas_validacion: string[];
+  _insight?: any;
 }
 
 function normalizarTexto(texto: string): string {
@@ -193,6 +194,22 @@ export function compute(inputs: Inputs): Outputs {
     notas.push('CURP no cumple estructura esperada (18 caracteres alfanuméricos)');
   }
   
+  const _insight = esValida
+    ? {
+        title: notas.length > 0 ? 'Estructura válida, con observaciones' : 'CURP con estructura válida',
+        text: notas.length > 0
+          ? `La CURP estimada **${curpCompleta}** cumple la estructura de 18 caracteres, pero hay **${notas.length} observación${notas.length === 1 ? '' : 'es'}** a revisar. Verificá siempre el dato oficial en RENAPO.`
+          : `La CURP estimada **${curpCompleta}** cumple la estructura de 18 caracteres y su dígito verificador es **${digito}**. Es una reconstrucción: confirmá el dato oficial en RENAPO.`,
+        tone: notas.length > 0 ? 'neutral' : 'good',
+        icon: '🪪',
+      }
+    : {
+        title: 'Estructura no válida',
+        text: `La CURP reconstruida **no cumple** la estructura esperada de 18 caracteres alfanuméricos. Revisá los datos cargados (nombre, fecha, entidad y sexo) antes de usarla.`,
+        tone: 'warn',
+        icon: '⚠️',
+      };
+
   return {
     curp_esperada: curpCompleta,
     digito_verificador: digito,
@@ -205,6 +222,7 @@ export function compute(inputs: Inputs): Outputs {
       entidad: comp.entidad,
       folio: comp.folio
     },
-    notas_validacion: notas.length > 0 ? notas : ['CURP válida según estructura SAT 2026']
+    notas_validacion: notas.length > 0 ? notas : ['CURP válida según estructura SAT 2026'],
+    _insight
   };
 }

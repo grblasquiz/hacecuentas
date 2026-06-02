@@ -11,6 +11,7 @@ export interface Outputs {
   golpesSobrePar: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function handicapGolfDiferencial(i: Inputs): Outputs {
@@ -43,11 +44,27 @@ export function handicapGolfDiferencial(i: Inputs): Outputs {
     ariaLabel: 'Escala de handicap de golf: el diferencial menor indica mejor nivel de juego',
   };
 
+  let nivelDif: string;
+  let toneDif: 'good' | 'warn' | 'neutral';
+  if (dif <= 5) { nivelDif = 'nivel scratch / avanzado'; toneDif = 'good'; }
+  else if (dif <= 10) { nivelDif = 'single digit'; toneDif = 'good'; }
+  else if (dif <= 18) { nivelDif = 'nivel intermedio'; toneDif = 'neutral'; }
+  else if (dif <= 28) { nivelDif = 'nivel principiante-intermedio'; toneDif = 'neutral'; }
+  else { nivelDif = 'nivel principiante'; toneDif = 'neutral'; }
+
+  const _insight = {
+    title: 'Qué dice este diferencial',
+    text: `Tu diferencial de **${dif}** (jugaste **${golpesSobre.toFixed(1)} golpes** sobre el Course Rating) te ubica en **${nivelDif}**. Es el de una sola vuelta: tu handicap index oficial sale del promedio de los mejores 8 de tus últimas 20 tarjetas, así que sumá rondas para que se estabilice.`,
+    tone: toneDif,
+    icon: '⛳',
+  };
+
   return {
     result: dif,
     hcpEstimado: dif,
     golpesSobrePar: Number(golpesSobre.toFixed(1)),
     detalle: `Con score **${score}** en un campo de CR ${cr} y Slope ${slope}, tu diferencial es **${diferencial.toFixed(1)}**. Jugaste ${golpesSobre.toFixed(1)} golpes sobre el Course Rating.`,
     _chart: chart,
+    _insight,
   };
 }

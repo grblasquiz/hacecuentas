@@ -12,6 +12,7 @@ export interface Outputs {
   vtr: number;
   costoPorClick: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function costoPorViewCpvVideo(i: Inputs): Outputs {
@@ -43,10 +44,20 @@ export function costoPorViewCpvVideo(i: Inputs): Outputs {
     `Presupuesto: $${fmt.format(pres)}. Vistas: ${fmt.format(vistas)}. ` +
     `CPV: $${fmtDec.format(cpv)} por vista.` + extra;
 
+  const _insight = {
+    title: 'Qué te dice el CPV',
+    text: clicks > 0
+      ? `Pagás **$${fmtDec.format(cpv)} por vista** y de cada 100 vistas el **${vtr.toFixed(1)}%** hizo click (VTR), a **$${fmtDec.format(costoPorClick)}** el click. El CPV mide cuán barato llegás a la audiencia; el VTR, cuán bien el creativo la engancha.`
+      : `Cada vista te cuesta **$${fmtDec.format(cpv)}** (${fmt.format(vistas)} vistas por $${fmt.format(pres)}). Sumá los **clicks** para ver el VTR y el costo por click, y así saber si el video además de barato convierte.`,
+    tone: 'neutral',
+    icon: '📹',
+  };
+
   return {
     cpv: Number(cpv.toFixed(2)),
     vtr: Number(vtr.toFixed(2)),
     costoPorClick: Number(costoPorClick.toFixed(2)),
     detalle,
+    _insight,
   };
 }

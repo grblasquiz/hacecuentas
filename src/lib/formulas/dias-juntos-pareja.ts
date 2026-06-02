@@ -1,6 +1,6 @@
 /** Contador de días en pareja */
 export interface Inputs { fechaInicio: string; }
-export interface Outputs { dias: number; horas: number; minutos: number; hitos: string; }
+export interface Outputs { dias: number; horas: number; minutos: number; hitos: string; _insight?: any; }
 
 export function diasJuntosPareja(i: Inputs): Outputs {
   const parts = String(i.fechaInicio || '').split('-').map(Number);
@@ -28,5 +28,24 @@ export function diasJuntosPareja(i: Inputs): Outputs {
     }
   }).join('\n');
 
-  return { dias, horas, minutos, hitos: hitosTexto };
+  const anios = dias / 365.25;
+  const proxHito = hitosArr.find(h => h > dias);
+  let insightText: string;
+  if (proxHito) {
+    const faltan = proxHito - dias;
+    const fechaProx = new Date(inicio.getTime() + proxHito * 86400000).toLocaleDateString('es-AR');
+    insightText = `Llevan **${dias.toLocaleString('es-AR')} días** juntos (≈ ${anios.toFixed(1)} años). El próximo hito son los **${proxHito.toLocaleString('es-AR')} días**: faltan **${faltan.toLocaleString('es-AR')} días**, el ${fechaProx}.`;
+  } else {
+    insightText = `Llevan **${dias.toLocaleString('es-AR')} días** juntos (≈ ${anios.toFixed(1)} años): superaron todos los hitos de la lista. ¡Una relación de las largas!`;
+  }
+
+  return {
+    dias, horas, minutos, hitos: hitosTexto,
+    _insight: {
+      title: 'Su próximo aniversario de días',
+      text: insightText,
+      tone: 'good',
+      icon: '❤️',
+    },
+  };
 }

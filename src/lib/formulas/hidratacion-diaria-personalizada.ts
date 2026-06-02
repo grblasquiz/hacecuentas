@@ -1,6 +1,6 @@
 /** Hidratación diaria personalizada */
 export interface Inputs { peso: number; actividad: string; clima: string; }
-export interface Outputs { litrosDia: number; vasos: number; distribucion: string; mensaje: string; }
+export interface Outputs { litrosDia: number; vasos: number; distribucion: string; mensaje: string; _insight?: any; }
 
 export function hidratacionDiariaPersonalizada(i: Inputs): Outputs {
   const peso = Number(i.peso);
@@ -24,10 +24,22 @@ export function hidratacionDiariaPersonalizada(i: Inputs): Outputs {
 
   const distribucion = `Al despertar: 1-2 vasos. Mañana: ${Math.round(vasos * 0.3)} vasos. Tarde: ${Math.round(vasos * 0.35)} vasos. Noche: ${Math.round(vasos * 0.2)} vasos. Pre-sueño: 1 vaso.`;
 
+  const litrosBase = Number(((peso * 35) / 1000).toFixed(1));
+  const extra = Number((litros - litrosBase).toFixed(1));
+  const _insight = {
+    title: 'Tu meta de agua diaria',
+    text: extra > 0
+      ? `Apuntá a **${litros} L** (${vasos} vasos de 250 ml). Tu actividad ${actividad} y el clima ${clima} suman **${extra} L** sobre los ${litrosBase} L base por peso, así que repartilos a lo largo del día para no quedarte corto.`
+      : `Apuntá a **${litros} L** (${vasos} vasos de 250 ml), en línea con tu base por peso. Repartí los vasos durante el día y arrancá apenas te levantás.`,
+    tone: 'neutral',
+    icon: '💧',
+  };
+
   return {
     litrosDia: litros,
     vasos,
     distribucion,
-    mensaje: `Necesitás ~${litros}L de agua por día (${vasos} vasos de 250ml). Distribuí a lo largo del día.`
+    mensaje: `Necesitás ~${litros}L de agua por día (${vasos} vasos de 250ml). Distribuí a lo largo del día.`,
+    _insight,
   };
 }

@@ -8,6 +8,7 @@ export interface Outputs {
   dias_restantes: number;
   tipo_feriado: string;
   proximos_cinco: string;
+  _insight?: any;
 }
 
 interface Feriado {
@@ -79,11 +80,35 @@ export function compute(i: Inputs): Outputs {
     })
     .join(" | ");
 
+  const diaSemana = proximoFeriado.fecha.toLocaleDateString('es-AR', { weekday: 'long' });
+  const esFinde = proximoFeriado.fecha.getDay() === 1 || proximoFeriado.fecha.getDay() === 5;
+  const notaTipo = proximoFeriado.tipo === 'Trasladable'
+    ? ' Al ser **trasladable**, puede correrse al lunes para armar fin de semana largo.'
+    : ' Es **inamovible**: se conmemora en su fecha exacta sin importar el día.';
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (diasRestantes <= 1) {
+    insightText = `El próximo feriado es **${proximoFeriado.nombre}** ¡mañana mismo (${diaSemana})!${notaTipo}`;
+    insightTone = 'good';
+  } else if (diasRestantes <= 14) {
+    insightText = `Faltan solo **${diasRestantes} días** para **${proximoFeriado.nombre}** (${diaSemana}).${esFinde ? ' Cae pegado al fin de semana: posible escapada.' : ''}${notaTipo}`;
+    insightTone = 'good';
+  } else {
+    insightText = `El próximo feriado es **${proximoFeriado.nombre}**, dentro de **${diasRestantes} días** (${diaSemana}).${notaTipo}`;
+    insightTone = 'neutral';
+  }
+
   return {
     proximo_feriado: proximoFeriado.nombre,
     fecha_feriado: fechaFormato,
     dias_restantes: diasRestantes,
     tipo_feriado: proximoFeriado.tipo,
-    proximos_cinco: proximos || "Sin feriados próximos"
+    proximos_cinco: proximos || "Sin feriados próximos",
+    _insight: {
+      title: 'Próximo feriado',
+      text: insightText,
+      tone: insightTone,
+      icon: '🇦🇷',
+    }
   };
 }

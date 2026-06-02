@@ -1,6 +1,6 @@
 /** Calculadora de Distancia Focal Equivalente */
 export interface Inputs { focalReal: number; sensorOrigen: string; sensorDestino: string; }
-export interface Outputs { focalEquivalente: number; focalFF: number; anguloCampo: number; tipo: string; }
+export interface Outputs { focalEquivalente: number; focalFF: number; anguloCampo: number; tipo: string; _insight?: any; _chart?: any; }
 
 export function distanciaFocalEquivalente(i: Inputs): Outputs {
   const focal = Number(i.focalReal);
@@ -27,10 +27,37 @@ export function distanciaFocalEquivalente(i: Inputs): Outputs {
   else if (focalFF < 300) tipo = 'Teleobjetivo — deportes, fauna, eventos';
   else tipo = 'Super teleobjetivo — fauna lejana, astronomía';
 
+  const ffR = Number(focalFF.toFixed(1));
+  const eqR = Number(focalEquivalente.toFixed(1));
+  const _insight = {
+    title: 'Cómo se ve esa lente',
+    text: `Tu **${focal} mm** en este sensor encuadra como un **${eqR} mm** equivalente full frame (${ffR} mm FF, ${Number(anguloCampo.toFixed(1))}° de ángulo horizontal). ${tipo}.`,
+    tone: 'neutral',
+    icon: '📷',
+  };
+  const lastMax = Math.max(400, Math.ceil(ffR / 100) * 100 + 50);
+  const _chart = {
+    type: 'scale',
+    marker: ffR,
+    markerLabel: `${ffR} mm FF`,
+    min: 0,
+    segments: [
+      { nombre: 'Ultra gran angular', max: 20, color: '#60a5fa', colorDark: '#3b82f6' },
+      { nombre: 'Gran angular', max: 35, color: '#34d399', colorDark: '#10b981' },
+      { nombre: 'Angular / normal', max: 60, color: '#a3e635', colorDark: '#84cc16' },
+      { nombre: 'Tele corto', max: 135, color: '#fbbf24', colorDark: '#f59e0b' },
+      { nombre: 'Teleobjetivo', max: 300, color: '#fb923c', colorDark: '#f97316' },
+      { nombre: 'Super tele', max: lastMax, color: '#f87171', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Distancia focal equivalente full frame de ${ffR} mm ubicada en la escala de tipos de lente`,
+  };
+
   return {
-    focalEquivalente: Number(focalEquivalente.toFixed(1)),
-    focalFF: Number(focalFF.toFixed(1)),
+    focalEquivalente: eqR,
+    focalFF: ffR,
     anguloCampo: Number(anguloCampo.toFixed(1)),
     tipo,
+    _insight,
+    _chart,
   };
 }

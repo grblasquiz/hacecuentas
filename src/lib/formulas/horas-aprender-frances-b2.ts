@@ -8,6 +8,8 @@ export interface Outputs {
   meses: number;
   anos: number;
   categoriaFsi: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function horasAprenderFrancesB2(i: Inputs): Outputs {
@@ -31,12 +33,46 @@ export function horasAprenderFrancesB2(i: Inputs): Outputs {
   const meses = semanas / 4.33;
   const anos = meses / 12;
 
+  const hTot = Math.round(restante);
+  const mes = Math.round(meses * 10) / 10;
+  const hWk = Math.round(horasSemana);
+  const tone = mes <= 12 ? 'good' : mes <= 24 ? 'neutral' : 'warn';
+  const ritmo =
+    mes <= 12
+      ? `A **${hWk} h/semana** lo alcanzás en menos de un año: el francés es **Cat I del FSI**, de los más cercanos al español, así que tenés mucho a favor.`
+      : mes <= 24
+        ? `Con **${hWk} h/semana** son **${mes} meses**; al ser **Cat I del FSI** (muy cercano al español), subir un poco el ritmo lo acorta rápido.`
+        : `A **${hWk} h/semana** te llevaría **${mes} meses**; como el francés es **Cat I del FSI** (muy cercano al español), con más horas semanales bajás bastante ese plazo.`;
+
+  const segTop = Math.max(Math.ceil(mes * 1.15), 30);
+  const _insight = {
+    title: 'Tu camino al francés B2',
+    text: `Te faltan **${hTot.toLocaleString('es-AR')} h** de estudio, unos **${mes} meses** a tu ritmo actual. ${ritmo}`,
+    tone,
+    icon: '📚',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: mes,
+    markerLabel: `${mes} meses`,
+    min: 0,
+    segments: [
+      { nombre: 'Rápido', max: 6, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Moderado', max: 12, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Largo', max: 24, color: '#d97706', colorDark: '#f59e0b' },
+      { nombre: 'Maratón', max: segTop, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Horizonte de estudio: ${mes} meses para llegar a francés B2`,
+  };
+
   return {
-    horasTotales: Math.round(restante),
+    horasTotales: hTot,
     semanas: Math.round(semanas),
-    meses: Math.round(meses * 10) / 10,
+    meses: mes,
     anos: Math.round(anos * 10) / 10,
     categoriaFsi: 'Cat I FSI (muy cercano)',
+    _insight,
+    _chart,
   };
 
 }

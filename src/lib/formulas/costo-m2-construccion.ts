@@ -11,6 +11,8 @@ export interface Outputs {
   costoTotalARS: number;
   desglose: string;
   tipo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Costos orientativos Argentina 2026 en USD/m² (fuente: CAC, CPIC, índice ICCo).
@@ -61,12 +63,38 @@ export function costoM2Construccion(i: Inputs): Outputs {
 
   const desglose = 'Materiales 50% · Mano de obra 30% · Dirección+honorarios 10% · Permisos+contingencias 10%';
 
+  const totalUSD = Math.round(usd * m2);
+  const matUSD = Math.round(totalUSD * 0.5);
+  const moUSD = Math.round(totalUSD * 0.3);
+  const dirUSD = Math.round(totalUSD * 0.1);
+  const permUSD = totalUSD - matUSD - moUSD - dirUSD; // resto exacto para que sume el total
+  const fmtUSD = (n: number) => `US$${Math.round(n).toLocaleString('es-AR')}`;
+
   return {
     costoPorM2USD: Math.round(usd),
     costoPorM2ARS: Math.round(ars),
-    costoTotalUSD: Math.round(usd * m2),
+    costoTotalUSD: totalUSD,
     costoTotalARS: Math.round(ars * m2),
     desglose,
     tipo: t.nombre,
+    _insight: {
+      title: 'Cuánto sale construir esos m²',
+      text: `Construir **${m2} m²** del tipo "${t.nombre}" cuesta unos **${fmtUSD(totalUSD)}** (${fmtUSD(usd)}/m²). La mitad (${fmtUSD(matUSD)}) se va en materiales y un 30% (${fmtUSD(moUSD)}) en mano de obra; el resto es dirección, honorarios y permisos.`,
+      tone: 'neutral',
+      icon: '🏗️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Materiales', value: matUSD },
+        { label: 'Mano de obra', value: moUSD },
+        { label: 'Dirección + honorarios', value: dirUSD },
+        { label: 'Permisos + contingencias', value: permUSD },
+      ],
+      prefix: 'US$',
+      centerValue: fmtUSD(totalUSD),
+      centerLabel: 'Costo total',
+      ariaLabel: `El costo total de ${fmtUSD(totalUSD)} se reparte en materiales ${fmtUSD(matUSD)}, mano de obra ${fmtUSD(moUSD)}, dirección y honorarios ${fmtUSD(dirUSD)} y permisos más contingencias ${fmtUSD(permUSD)}.`,
+    },
   };
 }

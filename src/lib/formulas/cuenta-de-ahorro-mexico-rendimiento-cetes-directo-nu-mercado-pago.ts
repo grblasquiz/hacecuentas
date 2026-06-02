@@ -17,6 +17,8 @@ export interface Outputs {
   mejor_opcion_perfil: string;
   poder_adquisitivo_real: number;
   ganancia_vs_inflacion: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -115,6 +117,37 @@ export function compute(i: Inputs): Outputs {
     mejor_opcion_perfil = "Perfil: Ahorrador general. Recomendación: NU (10%) o Mercado Pago (9.1%). Ambas sin mínimo exigente, retiro flexible, sin comisiones.";
   }
   
+  // --- Insight + gráfico ---
+  const fmtMX = (n: number) =>
+    Math.round(n).toLocaleString("es-MX", { maximumFractionDigits: 0 });
+  const ganaInflacion = ganancia_vs_inflacion > 0;
+  const rendNetoPct = Math.max(0, rendimiento_efectivo_anual * 100);
+
+  const _insight = {
+    title: "Tu rendimiento real",
+    text: ganaInflacion
+      ? `Con una tasa de **${(tasa_anual * 100).toFixed(2)}%** ganás **$${fmtMX(interes_neto)}** netos (ya descontado el ISR) y tu saldo final queda en **$${fmtMX(saldo_final)}**. Le ganás a la inflación del 2,80%: tu dinero **mantiene poder de compra**.`
+      : `Con una tasa de **${(tasa_anual * 100).toFixed(2)}%** ganás **$${fmtMX(interes_neto)}** netos (ya descontado el ISR), pero no alcanzás a cubrir la inflación del 2,80%: en términos reales tu dinero **pierde poder adquisitivo**. Tasa neta ≈ ${rendNetoPct.toFixed(2)}%.`,
+    tone: ganaInflacion ? "good" : "warn",
+    icon: "💰",
+  };
+
+  const slicesMX = [
+    { label: "Capital inicial", value: Math.round(i.monto_inicial) },
+    { label: "Depósitos", value: Math.round(depositos_totales) },
+    { label: "Interés neto", value: Math.round(interes_neto) },
+  ].filter((s) => s.value > 0);
+
+  const _chart = {
+    type: "doughnut",
+    slices: slicesMX,
+    prefix: "$",
+    centerValue: "$" + fmtMX(saldo_final),
+    centerLabel: "Saldo final",
+    ariaLabel:
+      "Composición del saldo final: capital inicial, depósitos acumulados e interés neto ganado.",
+  };
+
   return {
     tasa_anual_seleccionada: tasa_anual,
     interes_bruto_total: Math.round(interes_bruto_total * 100) / 100,
@@ -125,6 +158,8 @@ export function compute(i: Inputs): Outputs {
     comparativa_ranking: comparativa_ranking,
     mejor_opcion_perfil: mejor_opcion_perfil,
     poder_adquisitivo_real: Math.round(poder_adquisitivo_real * 100) / 100,
-    ganancia_vs_inflacion: Math.round(ganancia_vs_inflacion * 10000) / 100
+    ganancia_vs_inflacion: Math.round(ganancia_vs_inflacion * 10000) / 100,
+    _insight,
+    _chart
   };
 }

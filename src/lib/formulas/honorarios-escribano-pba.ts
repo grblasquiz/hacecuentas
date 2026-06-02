@@ -39,6 +39,14 @@ export function honorariosEscribanoPba(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo de escritura: honorarios, IVA, aportes y gastos fijos',
   };
 
+  const pctSobreValor = v > 0 ? (total / v) * 100 : 0;
+  const insight = {
+    title: 'Qué significa',
+    text: `Escriturar una propiedad de ${fmt(v)} en la Provincia de Buenos Aires cuesta unos **${fmt(total)}** vía escribano, ~**${pctSobreValor.toFixed(1)}%** del valor. De ese total, ${fmt(honorarios)} son honorarios y el resto es IVA, aportes a la Caja y gastos fijos. En compraventa, suele afrontarlos el comprador salvo pacto distinto.`,
+    tone: 'neutral' as 'good' | 'warn' | 'neutral',
+    icon: '📜',
+  };
+
   return {
     honorarios: fmt(honorarios),
     iva: fmt(iva),
@@ -47,5 +55,6 @@ export function honorariosEscribanoPba(i: Inputs): Outputs {
     total: fmt(total),
     resumen: `Honorarios ${fmt(honorarios)} + IVA 21% + aportes Caja ~12% + gastos. Total ${fmt(total)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -13,6 +13,7 @@ export interface Outputs {
   gastoMensualNafta: number;
   gastoMensualGnc: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function compararNaftaVsGncAhorro(i: Inputs): Outputs {
@@ -45,6 +46,29 @@ export function compararNaftaVsGncAhorro(i: Inputs): Outputs {
     detalleStr += ` El equipo de $${Math.round(costoEquipo).toLocaleString('es-AR')} se amortiza en ${mesesAmortizacion.toFixed(1)} meses.`;
   }
 
+  const ars = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  let _insight;
+  if (ahorroMensual <= 0) {
+    _insight = {
+      title: 'Con estos precios el GNC no conviene',
+      text: `Llenar con GNC te cuesta **${ars(gastoMensualGnc)}/mes**, más caro que la nafta (${ars(gastoMensualNafta)}). A estos valores no hay ahorro por convertir.`,
+      tone: 'warn' as const,
+      icon: '⛽'
+    };
+  } else {
+    const pct = (ahorroMensual / gastoMensualNafta) * 100;
+    let txt = `Usando GNC ahorrás **${ars(ahorroMensual)} por mes** (${ars(ahorroAnual)} al año), un **${pct.toFixed(0)}% menos** que cargando nafta.`;
+    if (mesesAmortizacion > 0) {
+      txt += ` El equipo de ${ars(costoEquipo)} se paga solo en **${mesesAmortizacion.toFixed(1)} meses**.`;
+    }
+    _insight = {
+      title: 'El GNC te ahorra plata',
+      text: txt,
+      tone: 'good' as const,
+      icon: '⛽'
+    };
+  }
+
   return {
     ahorroMensual: Math.round(ahorroMensual),
     ahorroAnual: Math.round(ahorroAnual),
@@ -52,5 +76,6 @@ export function compararNaftaVsGncAhorro(i: Inputs): Outputs {
     gastoMensualNafta: Math.round(gastoMensualNafta),
     gastoMensualGnc: Math.round(gastoMensualGnc),
     detalle: detalleStr,
+    _insight,
   };
 }

@@ -19,6 +19,8 @@ export interface Outputs {
   gap: number;
   months_to_goal: string;
   coverage_status: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Coverage base months by income type — based on CFPB guidelines and BLS job search data (2026)
@@ -121,6 +123,46 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  const fmtUsd = (n: number) =>
+    n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  let _insight: any;
+  if (current_savings >= target_amount) {
+    _insight = {
+      title: "You're covered",
+      text: `Your **$${fmtUsd(current_savings)}** already covers **${current_months_covered.toFixed(1)} months** of essential expenses — past your **${recommended_months}-month** target of **$${fmtUsd(target_amount)}**.`,
+      tone: "good",
+      icon: "🛟",
+    };
+  } else {
+    const pctFunded = target_amount > 0 ? (current_savings / target_amount) * 100 : 0;
+    _insight = {
+      title: "Your safety gap",
+      text: `Aim for **$${fmtUsd(target_amount)}** (${recommended_months} months of your **$${fmtUsd(total_monthly_essentials)}** in essentials). You're **${pctFunded.toFixed(0)}%** there, so you still need **$${fmtUsd(gap)}**.`,
+      tone: current_months_covered < 1 ? "warn" : "neutral",
+      icon: "🛟",
+    };
+  }
+
+  const slices = [
+    { label: "Rent / housing", value: rent },
+    { label: "Food", value: food },
+    { label: "Utilities", value: utilities },
+    { label: "Insurance", value: insurance },
+    { label: "Transport", value: transport },
+    { label: "Debt payments", value: debt_payments },
+    { label: "Other essentials", value: other_essentials },
+  ].filter((s) => s.value > 0);
+
+  const _chart = {
+    type: "doughnut",
+    slices,
+    prefix: "$",
+    centerValue: `$${fmtUsd(total_monthly_essentials)}`,
+    centerLabel: "Monthly essentials",
+    ariaLabel: `Breakdown of $${fmtUsd(total_monthly_essentials)} in monthly essential expenses, multiplied by ${recommended_months} months for a $${fmtUsd(target_amount)} target.`,
+  };
+
   return {
     total_monthly_essentials,
     recommended_months,
@@ -128,5 +170,7 @@ export function compute(i: Inputs): Outputs {
     gap,
     months_to_goal,
     coverage_status,
+    _insight,
+    _chart,
   };
 }

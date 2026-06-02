@@ -13,6 +13,7 @@ export interface Outputs {
   egg_servings: string;
   tofu_servings: string;
   rate_applied: string;
+  _insight?: any;
 }
 
 // Evidence-based protein rate ranges (g per kg body weight per day)
@@ -83,6 +84,16 @@ export function compute(i: Inputs): Outputs {
     ? `${rates.label} × 1.20 (age ≥65)`
     : rates.label;
 
+  const rangeLabel = proteinMin === proteinMax
+    ? `**${proteinMin} g**`
+    : `**${proteinMin}–${proteinMax} g**`;
+  const _insight = {
+    title: 'Your daily protein target',
+    text: `Aim for ${rangeLabel} of protein per day (about **${rateNote}** for your goal). That is roughly **${chickenServings.toFixed(1)} chicken servings** or **${eggUnits.toFixed(0)} large eggs** a day.${seniorFactor > 1 ? ' A +20% senior adjustment is included.' : ''}`,
+    tone: 'neutral',
+    icon: '🍗',
+  };
+
   return {
     protein_min: proteinMin,
     protein_max: proteinMax,
@@ -91,5 +102,6 @@ export function compute(i: Inputs): Outputs {
     egg_servings:     `~${eggUnits.toFixed(0)} large eggs (≈ 6.3 g each)`,
     tofu_servings:    `~${tofuServings.toFixed(1)} servings (½ cup firm tofu ≈ 20 g each)`,
     rate_applied:     rateNote,
+    _insight,
   };
 }

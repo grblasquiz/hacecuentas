@@ -12,6 +12,7 @@ export interface Outputs {
   tipoLabel: string;
   observacion: string;
   mensaje: string;
+  _insight?: any;
 }
 
 // Valores 2026 (referenciales). Argentina en ARS mensuales; Europa usualmente anuales en EUR/GBP
@@ -51,6 +52,29 @@ export function cuotaSocioFutbol(i: Inputs): Outputs {
   const cuotaMensual = fila.periodo === 'mes' ? cuota : cuota / 12;
   const totalPeriodo = fila.periodo === 'mes' ? cuota * meses : (cuota / 12) * meses;
 
+  // Insight: monto y matiz de periodicidad / vitalicio
+  const mensualFmt = `${Math.round(cuotaMensual).toLocaleString('es-AR')} ${fila.moneda}`;
+  const totalFmt = `${Math.round(totalPeriodo).toLocaleString('es-AR')} ${fila.moneda}`;
+  let _insight: any;
+  if (i.tipoSocio === 'vitalicio') {
+    _insight = {
+      title: 'Socio vitalicio',
+      text: `Como vitalicio de **${fila.label}** no pagás cuota: tu antigüedad ya te exime del aporte mensual.`,
+      tone: 'good',
+      icon: '🎖️',
+    };
+  } else {
+    const periodoNota = fila.periodo === 'anio'
+      ? ` El club cobra de forma anual (${Math.round(cuota).toLocaleString('es-AR')} ${fila.moneda}/año); el valor mensual es prorrateo.`
+      : '';
+    _insight = {
+      title: `Cuota de ${fila.label}`,
+      text: `Ser **${tipoLabel[i.tipoSocio]}** te cuesta **${mensualFmt}/mes**, o sea **${totalFmt}** en ${meses} meses.${periodoNota}`,
+      tone: 'neutral',
+      icon: '⚽',
+    };
+  }
+
   return {
     cuotaMensual: Math.round(cuotaMensual * 100) / 100,
     moneda: fila.moneda,
@@ -59,5 +83,6 @@ export function cuotaSocioFutbol(i: Inputs): Outputs {
     tipoLabel: tipoLabel[i.tipoSocio] || i.tipoSocio,
     observacion: fila.obs,
     mensaje: `${fila.label} — ${tipoLabel[i.tipoSocio]}: ${Math.round(cuotaMensual)} ${fila.moneda}/mes (${Math.round(totalPeriodo)} ${fila.moneda} en ${meses} meses).`,
+    _insight,
   };
 }

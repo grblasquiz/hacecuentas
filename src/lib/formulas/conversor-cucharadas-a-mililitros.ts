@@ -1,6 +1,6 @@
 /** Conversor: cucharada ↔ mililitro */
 export interface Inputs { valor: number | string; direccion?: string; ingrediente?: string; }
-export interface Outputs { resultado: string; resumen: string; }
+export interface Outputs { resultado: string; resumen: string; _insight?: any; }
 
 export function conversorCucharadasAMililitros(i: Inputs): Outputs {
   const v = Number(i.valor);
@@ -16,8 +16,19 @@ export function conversorCucharadasAMililitros(i: Inputs): Outputs {
     r = v / factor;
     fromLabel = 'mililitros'; toLabel = 'cucharadas';
   }
+
+  const cdas = d === 'ida' ? v : r;
+  const ml = d === 'ida' ? r : v;
+  const insight = {
+    title: 'Para medir sin balanza',
+    text: '**' + cdas.toFixed(2).replace(/\.?0+$/, '') + ' cucharadas** equivalen a **' + ml.toFixed(1).replace(/\.0$/, '') + ' mL**. Una cucharada sopera ronda los **15 mL** (≈ 3 cucharaditas), así que sirve para dosificar líquidos cuando no tenés vaso medidor.',
+    tone: 'neutral',
+    icon: '🥄'
+  };
+
   return {
     resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'mL'.toString(),
-    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.'
+    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
+    _insight: insight
   };
 }

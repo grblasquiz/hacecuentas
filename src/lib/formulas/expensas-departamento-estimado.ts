@@ -10,6 +10,7 @@ export interface Outputs {
   costoPorM2: number;
   rangoMinimo: number;
   rangoMaximo: number;
+  _insight?: any;
 }
 
 export function expensasDepartamentoEstimado(i: Inputs): Outputs {
@@ -45,10 +46,20 @@ export function expensasDepartamentoEstimado(i: Inputs): Outputs {
   const rangoMinimo = expensasEstimadas * 0.75;
   const rangoMaximo = expensasEstimadas * 1.30;
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const amenLabel = amenities === 'completo' ? 'amenities completos' : amenities === 'basico' ? 'amenities básicos' : 'sin amenities';
+  const tonePack = amenities === 'completo' ? 'warn' : 'neutral';
+
   return {
     expensasEstimadas: Math.round(expensasEstimadas),
     costoPorM2: Math.round(costoPorM2),
     rangoMinimo: Math.round(rangoMinimo),
     rangoMaximo: Math.round(rangoMaximo),
+    _insight: {
+      title: 'Tu estimación en contexto',
+      text: `Para ${m2}m² (${amenLabel}, ~${unidades} unidades) la expensa ronda **${fmt(expensasEstimadas)}/mes** a **${fmt(costoPorM2)}/m²**. Según el edificio real, esperá entre **${fmt(rangoMinimo)}** y **${fmt(rangoMaximo)}** — pedí el último balance antes de firmar.`,
+      tone: tonePack,
+      icon: '📊',
+    },
   };
 }

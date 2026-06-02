@@ -15,6 +15,7 @@ export interface Outputs {
   requiereEstudios: boolean;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 function categoriaITB(itb: number): string {
@@ -89,6 +90,16 @@ export function indiceTobilloBrazoItb(i: Inputs): Outputs {
     ariaLabel: 'Escala del índice tobillo-brazo: normal entre 0,9 y 1,4; valores menores indican enfermedad arterial periférica y mayores arterias no compresibles',
   };
 
+  const esNormalITB = interpretacion === 'ITB normal';
+  const insight = {
+    title: esNormalITB ? 'ITB dentro de lo normal' : `Hallazgo: ${interpretacion.toLowerCase()}`,
+    text: esNormalITB
+      ? `El ITB más bajo de las dos piernas es **${itbMenor.toFixed(2)}** (derecha ${itbDer.toFixed(2)}, izquierda ${itbIzq.toFixed(2)}), dentro del rango normal (0,90–1,40). Sin evidencia de enfermedad arterial periférica.`
+      : `El ITB más bajo de las dos piernas es **${itbMenor.toFixed(2)}** (derecha ${itbDer.toFixed(2)}, izquierda ${itbIzq.toFixed(2)}): compatible con **${interpretacion.toLowerCase()}**. ${detalle}`,
+    tone: esNormalITB ? 'good' : 'warn',
+    icon: esNormalITB ? '🦵' : '⚠️',
+  };
+
   return {
     itbDerecho: Number(itbDer.toFixed(2)),
     itbIzquierdo: Number(itbIzq.toFixed(2)),
@@ -99,5 +110,6 @@ export function indiceTobilloBrazoItb(i: Inputs): Outputs {
     requiereEstudios,
     resumen: `ITB derecho ${itbDer.toFixed(2)} (${catDer}), izquierdo ${itbIzq.toFixed(2)} (${catIzq}). ${detalle}`,
     _chart: chart,
+    _insight: insight,
   };
 }

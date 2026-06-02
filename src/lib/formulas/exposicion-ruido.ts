@@ -1,6 +1,6 @@
 /** Tiempo máximo de exposición segura a ruido (NIOSH) */
 export interface Inputs { nivelDecibeles: number; }
-export interface Outputs { tiempoMaximoSeguro: string; nivelRiesgo: string; equivalente: string; detalle: string; }
+export interface Outputs { tiempoMaximoSeguro: string; nivelRiesgo: string; equivalente: string; detalle: string; _insight?: any; _chart?: any; }
 
 export function exposicionRuido(i: Inputs): Outputs {
   const dB = Number(i.nivelDecibeles);
@@ -56,10 +56,37 @@ export function exposicionRuido(i: Inputs): Outputs {
     else riesgo = 'Severo — daño inmediato posible';
   }
 
+  const tone = dB >= 85 ? 'warn' : dB >= 70 ? 'neutral' : 'good';
+
   return {
     tiempoMaximoSeguro: tiempoStr,
     nivelRiesgo: riesgo,
     equivalente: equiv,
     detalle: `A ${dB} dB (${equiv}), el tiempo máximo de exposición segura es de ${tiempoStr}. Nivel de riesgo: ${riesgo}.`,
+    _insight: {
+      title: 'Tu exposición al ruido',
+      text: dB < 70
+        ? `A **${dB} dB** (${equiv}) estás en zona segura: podés exponerte **sin límite** sin riesgo auditivo.`
+        : dB < 85
+          ? `A **${dB} dB** (${equiv}) el riesgo es bajo, pero el límite seguro baja a **${tiempoStr}**. Recién a 85 dB el daño se vuelve acumulativo.`
+          : `A **${dB} dB** (${equiv}) cada salto de 3 dB corta el tiempo seguro a la mitad: solo **${tiempoStr}** sin protección. ${riesgo}.`,
+      tone,
+      icon: dB >= 100 ? '🔇' : dB >= 85 ? '🎧' : '🔊',
+    },
+    _chart: {
+      type: 'scale',
+      marker: dB,
+      markerLabel: `${dB} dB`,
+      min: 0,
+      segments: [
+        { nombre: 'Seguro', max: 70, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Bajo', max: 85, color: '#84cc16', colorDark: '#65a30d' },
+        { nombre: 'Moderado', max: 90, color: '#eab308', colorDark: '#ca8a04' },
+        { nombre: 'Alto', max: 100, color: '#f97316', colorDark: '#ea580c' },
+        { nombre: 'Muy alto', max: 110, color: '#ef4444', colorDark: '#dc2626' },
+        { nombre: 'Severo', max: Math.max(120, Math.ceil(dB) + 5), color: '#b91c1c', colorDark: '#991b1b' },
+      ],
+      ariaLabel: `Nivel sonoro de ${dB} dB sobre una escala de riesgo auditivo de 0 a 120+ dB.`,
+    },
   };
 }

@@ -11,6 +11,8 @@ export interface Outputs {
   gastoAnual: number;
   gastoPropinaMensual: number;
   equivalente: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cuantoGastoEnDelivery(i: Inputs): Outputs {
@@ -39,5 +41,29 @@ export function cuantoGastoEnDelivery(i: Inputs): Outputs {
 
   const equivalente = `Con $${gastoAnual.toLocaleString()} al año podrías comprar: ${equivs.join(', ')}.`;
 
-  return { gastoMensual, gastoAnual, gastoPropinaMensual, equivalente };
+  // Insight: el delivery es un gasto hormiga que escala fuerte al año
+  const propinaPct = gastoMensual > 0 ? Math.round((gastoPropinaMensual / gastoMensual) * 100) : 0;
+  const propinaFrase = gastoPropinaMensual > 0 ? ` De eso, **$${gastoPropinaMensual.toLocaleString()}/mes** son solo propinas (${propinaPct}%).` : '';
+  const _insight = {
+    title: 'El delivery suma más de lo que parece',
+    text: `Gastás **$${gastoMensual.toLocaleString()} por mes** en delivery, que se vuelven **$${gastoAnual.toLocaleString()} al año**.${propinaFrase} Cocinar algunos de esos pedidos en casa libera una buena parte de ese monto.`,
+    tone: 'warn',
+    icon: '🛵'
+  };
+
+  // Donut: el gasto mensual se compone de comida + propina (suman el total exacto)
+  const baseMensual = gastoMensual - gastoPropinaMensual;
+  const _chart = gastoPropinaMensual > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Pedidos (comida/envío)', value: baseMensual },
+      { label: 'Propinas', value: gastoPropinaMensual }
+    ],
+    prefix: '$',
+    centerValue: `$${gastoMensual.toLocaleString()}`,
+    centerLabel: 'por mes',
+    ariaLabel: `Gasto mensual en delivery de $${gastoMensual.toLocaleString()}, de los cuales $${gastoPropinaMensual.toLocaleString()} son propinas`
+  } : undefined;
+
+  return { gastoMensual, gastoAnual, gastoPropinaMensual, equivalente, _insight, ...(_chart ? { _chart } : {}) };
 }

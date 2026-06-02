@@ -12,6 +12,7 @@ export interface Outputs {
   resumen: string;
   alerta: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function interesAcumuladoTarjeta(i: Inputs): Outputs {
@@ -55,6 +56,27 @@ export function interesAcumuladoTarjeta(i: Inputs): Outputs {
     ariaLabel: 'Composición del total pagado: saldo original más intereses',
   };
 
+  const sobrecostoPct = Math.round((interesTotal / saldo) * 100);
+  const anios = meses / 12;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (interesTotal > saldo || meses > 60) {
+    insightTone = 'warn';
+    insightText = `Vas a pagar **$${Math.round(interesTotal).toLocaleString('es-AR')}** en intereses, un **${sobrecostoPct}%** sobre el saldo original, y tardás **${anios.toFixed(1)} años** en saldar. Cada peso extra por mes recorta meses de deuda.`;
+  } else if (sobrecostoPct > 40) {
+    insightTone = 'neutral';
+    insightText = `Los intereses suman **$${Math.round(interesTotal).toLocaleString('es-AR')}** (**${sobrecostoPct}%** del saldo) en **${Math.ceil(meses)} meses**. Es manejable, pero subir un poco la cuota lo abarata bastante.`;
+  } else {
+    insightTone = 'good';
+    insightText = `Buen plan: liquidás la tarjeta en **${Math.ceil(meses)} meses** pagando solo **$${Math.round(interesTotal).toLocaleString('es-AR')}** de intereses (**${sobrecostoPct}%** del saldo).`;
+  }
+  const insight = {
+    title: 'Qué te dice este plan',
+    text: insightText,
+    tone: insightTone,
+    icon: '💳',
+  };
+
   return {
     mesesParaPagar: Math.ceil(meses),
     interesTotal: Math.round(interesTotal),
@@ -63,5 +85,6 @@ export function interesAcumuladoTarjeta(i: Inputs): Outputs {
     resumen,
     alerta,
     _chart: chart,
+    _insight: insight,
   };
 }

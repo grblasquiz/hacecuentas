@@ -12,6 +12,8 @@ export interface Outputs {
   cantidadChorizos: number;
   cantidadMorcillas: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function carneAsadoKgPorPersona(i: Inputs): Outputs {
@@ -40,12 +42,40 @@ export function carneAsadoKgPorPersona(i: Inputs): Outputs {
   const morcillas = conAchuras ? Math.ceil(adultos * 0.5) : 0;
 
   const totalPersonas = adultos + menores;
+  const kgTotalParrilla = kgCarne + kgAchuras;
 
-  return {
+  const _insight = {
+    title: 'Cuánto comprar',
+    text: conAchuras
+      ? `Para **${totalPersonas}** comensales planificá **${kgCarne} kg** de carne más **${kgAchuras} kg** de achuras (**${kgTotalParrilla.toFixed(1)} kg** a la parrilla), con **${chorizos} chorizos** y **${morcillas} morcillas**. Calculado a **${gramosPorAdulto} g** de carne por adulto${hayEntrada ? ' (ajustado por la entrada previa)' : ''}.`
+      : `Para **${totalPersonas}** comensales alcanzan **${kgCarne} kg** de carne, a razón de **${gramosPorAdulto} g** por adulto${hayEntrada ? ' (ajustado por la entrada previa)' : ''}. Sumá un 10% extra si hay buenos asadores en la mesa.`,
+    tone: 'neutral',
+    icon: '🥩',
+  };
+
+  const out: Outputs = {
     kgCarne: kgCarne,
     kgAchuras: kgAchuras,
     cantidadChorizos: chorizos,
     cantidadMorcillas: morcillas,
     detalle: `Para ${totalPersonas} personas (${adultos} adultos + ${menores} menores): ${kgCarne} kg de carne (${gramosPorAdulto} g/adulto, ${gramosPorMenor} g/menor)${conAchuras ? `, ${kgAchuras} kg de achuras, ${chorizos} chorizos y ${morcillas} morcillas` : ''}. Tipo: ${evento}${hayEntrada ? ' con entrada previa' : ''}.`,
+    _insight,
   };
+
+  // Donut solo si hay achuras: reparte el peso total de la parrilla entre carne y achuras (suman el total).
+  if (conAchuras && kgAchuras > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Carne', value: kgCarne },
+        { label: 'Achuras', value: kgAchuras },
+      ],
+      prefix: '',
+      centerValue: `${kgTotalParrilla.toFixed(1)} kg`,
+      centerLabel: 'A la parrilla',
+      ariaLabel: `De ${kgTotalParrilla.toFixed(1)} kg totales, ${kgCarne} kg son de carne y ${kgAchuras} kg de achuras.`,
+    };
+  }
+
+  return out;
 }

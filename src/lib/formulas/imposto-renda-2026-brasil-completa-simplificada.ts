@@ -21,6 +21,8 @@ export interface Outputs {
   total_deducoes_completa: number;
   aliquota_efetiva_simplificada: number;
   aliquota_efetiva_completa: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ── Tabela progressiva IRPF 2026 (ano-calendário 2025) ──────────────────────
@@ -133,6 +135,45 @@ export function compute(i: Inputs): Outputs {
   const aliquotaEfetivaSimplificada = rendaBruta > 0 ? (irSimplificada / rendaBruta) * 100 : 0;
   const aliquotaEfetivaCompleta     = rendaBruta > 0 ? (irCompleta     / rendaBruta) * 100 : 0;
 
+  // ── INSIGHT + GRÁFICO ───────────────────────────────────────────────────────
+  const irMenor   = Math.min(irSimplificada, irCompleta);
+  const aliqMenor = Math.min(aliquotaEfetivaSimplificada, aliquotaEfetivaCompleta);
+  const melhorNome = irSimplificada <= irCompleta ? 'Simplificada' : 'Completa';
+  const brl = (v: number) => 'R$ ' + v.toFixed(2).replace('.', ',');
+
+  let _insight;
+  if (diferencaAbsoluta < 0.01) {
+    _insight = {
+      title: 'Empate técnico',
+      text: `As duas modalidades resultam em **${brl(irMenor)}** de imposto. Escolha a **Simplificada** pela praticidade — menos documentos para guardar.`,
+      tone: 'neutral' as const,
+      icon: '⚖️',
+    };
+  } else {
+    _insight = {
+      title: `Vá de ${melhorNome}`,
+      text: `A declaração **${melhorNome}** te faz pagar **${brl(irMenor)}** (alíquota efetiva **${aliqMenor.toFixed(2).replace('.', ',')}%**), economizando **${brl(diferencaAbsoluta)}** frente à outra modalidade.`,
+      tone: 'good' as const,
+      icon: '🇧🇷',
+    };
+  }
+
+  // Gauge: onde a alíquota efetiva da melhor opção cai na tabela progressiva IRPF
+  const _chart = {
+    type: 'scale' as const,
+    marker: Math.round(aliqMenor * 100) / 100,
+    markerLabel: `${aliqMenor.toFixed(1).replace('.', ',')}% efetiva`,
+    min: 0,
+    segments: [
+      { nombre: 'Isento', max: 0.01, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: '7,5%', max: 7.5, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: '15%', max: 15, color: '#eab308', colorDark: '#facc15' },
+      { nombre: '22,5%', max: 22.5, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: '27,5%', max: 27.5, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: 'Alíquota efetiva da melhor declaração na tabela progressiva do IRPF',
+  };
+
   return {
     ir_simplificada:           Math.round(irSimplificada * 100) / 100,
     ir_completa:               Math.round(irCompleta * 100) / 100,
@@ -143,5 +184,7 @@ export function compute(i: Inputs): Outputs {
     total_deducoes_completa:   Math.round(totalDeducoesCompleta * 100) / 100,
     aliquota_efetiva_simplificada: Math.round(aliquotaEfetivaSimplificada * 100) / 100,
     aliquota_efetiva_completa:     Math.round(aliquotaEfetivaCompleta * 100) / 100,
+    _insight,
+    _chart,
   };
 }

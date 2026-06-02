@@ -13,6 +13,7 @@ export interface Outputs {
   requiere_foto: string;
   requiere_comprobante: string;
   valida_voto: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -148,6 +149,21 @@ export function compute(i: Inputs): Outputs {
     valida_voto = 'No (solo a los 18 años con cédula nueva)';
   }
   
+  const costoFmt = '$' + costo_tramite.toLocaleString('es-CO') + ' COP';
+  const _insight = costo_tramite === 0
+    ? {
+        title: 'Trámite gratuito',
+        text: `Este trámite **no tiene costo** en la Registraduría. La cédula queda lista en unos **${plazo_dias} días hábiles** y tiene una validez de **${validez_anios} años** (vence aprox. el ${fecha_vencimiento}).`,
+        tone: 'good',
+        icon: '🪪',
+      }
+    : {
+        title: 'Costo y vigencia del trámite',
+        text: `El trámite cuesta **${costoFmt}** y demora cerca de **${plazo_dias} días hábiles**. La cédula tendrá una validez de **${validez_anios} años** (vence aprox. el ${fecha_vencimiento}).`,
+        tone: 'neutral',
+        icon: '🪪',
+      };
+
   return {
     costo_tramite,
     plazo_dias,
@@ -155,6 +171,7 @@ export function compute(i: Inputs): Outputs {
     fecha_vencimiento,
     requiere_foto,
     requiere_comprobante,
-    valida_voto
+    valida_voto,
+    _insight
   };
 }

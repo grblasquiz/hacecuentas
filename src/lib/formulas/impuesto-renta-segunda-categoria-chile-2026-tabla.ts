@@ -12,6 +12,8 @@ export interface Outputs {
   sueldo_neto: number;
   tasa_efectiva: number;
   detalle_tramos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -110,6 +112,54 @@ export function compute(i: Inputs): Outputs {
     detalle_tramos = `Tramo > ${tramo_aplicable.desde} UTM: Tasa ${(tramo_aplicable.tasa * 100).toFixed(1)}%`;
   }
   
+  // Monto de cotizaciones descontadas (si aplica)
+  const cotizaciones_monto = i.incluir_cotizaciones ? Math.round(i.sueldo_bruto * tasa_cotizaciones) : 0;
+  const neto_redondeado = Math.round(sueldo_neto);
+  const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const tasaEfPct = tasa_efectiva * 100;
+
+  // Insight dinámico según carga de IUSC
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (iusc <= 0) {
+    insightTone = 'good';
+    insightText = `Tu base imponible (**${base_imponible_utm_fmt(base_utm)} UTM**) cae en el tramo exento: **no pagás Impuesto Único de Segunda Categoría**. Lo único que se te descuenta son las cotizaciones de AFP y salud.`;
+  } else if (tasaEfPct < 5) {
+    insightTone = 'good';
+    insightText = `El IUSC te toma **${fmtCL(iusc)}** al mes, apenas **${tasaEfPct.toFixed(1)}%** de tu sueldo bruto. Tu líquido a recibir queda en **${fmtCL(sueldo_neto)}**.`;
+  } else if (tasaEfPct < 15) {
+    insightTone = 'neutral';
+    insightText = `Estás en el tramo del **${(tramo_aplicable.tasa * 100).toFixed(1)}% marginal**: pagás **${fmtCL(iusc)}** de IUSC al mes (tasa efectiva **${tasaEfPct.toFixed(1)}%**) y recibís un líquido de **${fmtCL(sueldo_neto)}**.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Carga alta: el IUSC se lleva **${fmtCL(iusc)}** al mes (tasa efectiva **${tasaEfPct.toFixed(1)}%**, marginal **${(tramo_aplicable.tasa * 100).toFixed(1)}%**). Sobre cada peso extra sobre tu tramo tributás al máximo.`;
+  }
+
+  const _insight = {
+    title: 'Tu Impuesto Único de Segunda Categoría',
+    text: insightText,
+    tone: insightTone,
+    icon: '🇨🇱',
+  };
+
+  // Donut: composición del sueldo bruto → líquido + IUSC (+ cotizaciones si se incluyen)
+  // Las slices suman exactamente sueldo_bruto.
+  const slices: Array<{ label: string; value: number }> = [
+    { label: 'Líquido a recibir', value: neto_redondeado },
+  ];
+  if (iusc > 0) slices.push({ label: 'IUSC (impuesto)', value: iusc });
+  if (cotizaciones_monto > 0) slices.push({ label: 'AFP + Salud', value: cotizaciones_monto });
+
+  // Solo mostramos el gráfico si el bruto se reparte en más de una parte
+  const _chart = slices.length > 1 ? {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: fmtCL(i.sueldo_bruto),
+    centerLabel: 'Sueldo bruto',
+    ariaLabel: `Distribución del sueldo bruto de ${fmtCL(i.sueldo_bruto)}: líquido ${fmtCL(neto_redondeado)}, IUSC ${fmtCL(iusc)}${cotizaciones_monto > 0 ? `, cotizaciones ${fmtCL(cotizaciones_monto)}` : ''}`,
+  } : undefined;
+
   return {
     utm_2026: UTM_2026,
     base_imponible_utm: Math.round(base_utm * 100) / 100,
@@ -118,6 +168,12 @@ export function compute(i: Inputs): Outputs {
     iusc_calculado: iusc,
     sueldo_neto: Math.round(sueldo_neto),
     tasa_efectiva: Math.round(tasa_efectiva * 10000) / 10000,
-    detalle_tramos: detalle_tramos
+    detalle_tramos: detalle_tramos,
+    _insight,
+    _chart,
   };
+}
+
+function base_imponible_utm_fmt(utm: number): string {
+  return (Math.round(utm * 100) / 100).toLocaleString('es-CL');
 }

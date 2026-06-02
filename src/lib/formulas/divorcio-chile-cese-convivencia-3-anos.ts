@@ -18,6 +18,8 @@ export interface Outputs {
   tipo_divorcio_label: string;
   tramites_requeridos: string;
   recomendaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -123,6 +125,17 @@ export function compute(i: Inputs): Outputs {
     recomendaciones += ' | Sin acuerdo en custodia, tribunal familia decide. Incluye perícia de ingresos para pensión alimenticia.';
   }
 
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const insightTone: 'good' | 'warn' | 'neutral' =
+    i.tipo_divorcio === 'mutuo_acuerdo' ? 'good' : i.tipo_divorcio === 'culpa' ? 'warn' : 'neutral';
+  const insightText =
+    `Un divorcio ${i.tipo_divorcio === 'mutuo_acuerdo' ? 'de mutuo acuerdo' : i.tipo_divorcio === 'unilateral' ? 'unilateral por 3 años de cese' : 'por culpa'} con tu configuración cuesta entre **${fmtCLP(costo_total_minimo)}** y **${fmtCLP(costo_total_maximo)}** y tarda **${tiempo_min}–${tiempo_max} meses**.` +
+    (i.tipo_divorcio === 'culpa'
+      ? ' Es la vía más cara y lenta: solo conviene si el mutuo acuerdo o el unilateral no son viables.'
+      : i.tipo_divorcio === 'mutuo_acuerdo'
+        ? ' Es la opción más rápida y económica de las tres.'
+        : ' Negociar un acuerdo antes de demandar puede recortar el costo hasta 30%.');
+
   return {
     costo_abogado_minimo: honorarios_min,
     costo_abogado_maximo: honorarios_max,
@@ -133,6 +146,23 @@ export function compute(i: Inputs): Outputs {
     costo_total_maximo: costo_total_maximo,
     tipo_divorcio_label: tipo_labels[i.tipo_divorcio],
     tramites_requeridos: tramites,
-    recomendaciones: recomendaciones
+    recomendaciones: recomendaciones,
+    _insight: {
+      title: 'Costo y plazo estimados',
+      text: insightText,
+      tone: insightTone,
+      icon: '⚖️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Honorarios abogado', value: honorarios_max },
+        { label: 'Aranceles tribunal', value: aranceles },
+      ],
+      prefix: '$',
+      centerValue: fmtCLP(costo_total_maximo),
+      centerLabel: 'Costo máx.',
+      ariaLabel: `Composición del costo máximo ${fmtCLP(costo_total_maximo)}: honorarios de abogado ${fmtCLP(honorarios_max)} y aranceles de tribunal ${fmtCLP(aranceles)}`,
+    },
   };
 }

@@ -18,6 +18,8 @@ export interface Outputs {
   interes_total_pagado: number;
   deuda_condonable_20anos: number;
   descuento_condonacion: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -96,14 +98,40 @@ export function compute(i: Inputs): Outputs {
   const descuento_condonacion = i.incluir_condonacion ? deuda_condonable : 0;
 
   // Redondeo a enteros (pesos)
-  return {
-    deuda_nominal_acumulada: Math.round(deuda_nominal),
-    deuda_con_capitalizacion: Math.round(deuda_capitalizada),
+  const deudaNominalR = Math.round(deuda_nominal);
+  const deudaCapR = Math.round(deuda_capitalizada);
+  const capExtra = Math.max(0, deudaCapR - deudaNominalR);
+  const anosPagoR = Math.round(anos_pago * 10) / 10;
+  const cuotaPromR = Math.round(cuota_promedio);
+  const fmtCLP = (x: number) => '$' + Math.round(x).toLocaleString('es-CL');
+  const _insight = {
+    title: 'Tu deuda CAE al egresar',
+    text: `Al terminar la carrera tu deuda capitalizada es de **${fmtCLP(deudaCapR)}** (la capitalización del **${(tasa_cae * 100).toFixed(1)}%** suma **${fmtCLP(capExtra)}** sobre lo prestado). Pagando el tope del 10% de la renta, la saldás en unos **${anosPagoR} años** con cuotas promedio de **${fmtCLP(cuotaPromR)}**.`,
+    tone: anosPagoR >= 15 ? 'warn' : 'neutral',
+    icon: '🎓',
+  };
+  const _chart = capExtra > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Aranceles (capital)', value: deudaNominalR },
+      { label: 'Capitalización CAE', value: capExtra },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(deudaCapR),
+    centerLabel: 'Deuda al egresar',
+    ariaLabel: `Deuda al egresar de ${fmtCLP(deudaCapR)}: ${fmtCLP(deudaNominalR)} en aranceles y ${fmtCLP(capExtra)} de capitalización durante la carrera`,
+  } : undefined;
+  const out: Outputs = {
+    deuda_nominal_acumulada: deudaNominalR,
+    deuda_con_capitalizacion: deudaCapR,
     cuota_maxima_inicial: Math.round(cuota_inicial),
-    anos_pago_estimados: Math.round(anos_pago * 10) / 10,
-    cuota_promedio_mensual: Math.round(cuota_promedio),
+    anos_pago_estimados: anosPagoR,
+    cuota_promedio_mensual: cuotaPromR,
     interes_total_pagado: Math.round(Math.max(0, suma_cuotas - deuda_nominal)),
     deuda_condonable_20anos: Math.round(deuda_condonable),
-    descuento_condonacion: Math.round(descuento_condonacion)
+    descuento_condonacion: Math.round(descuento_condonacion),
+    _insight
   };
+  if (_chart) out._chart = _chart;
+  return out;
 }

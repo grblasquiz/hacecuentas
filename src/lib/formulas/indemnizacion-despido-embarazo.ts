@@ -48,6 +48,7 @@ export interface IndemnizacionDespidoEmbarazoOutputs {
   baseArt245: number;
   vizzotiAplicado: boolean;
   mensaje: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -129,6 +130,15 @@ export function indemnizacionDespidoEmbarazo(
 
   const mensaje = `Si el despido se produjo dentro de los 7,5 meses anteriores o posteriores al parto y notificaste el embarazo al empleador, se presume causa de maternidad (Art. 178 LCT) y corresponde la indemnización agravada del Art. 182: 13 sueldos brutos adicionales al Art. 245.`;
 
+  const pctAgravamiento = total > 0 ? (estabilidadMaternidad / total) * 100 : 0;
+  const fmtArs = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'El peso de la indemnización agravada',
+    text: `La protección por maternidad (Art. 182) suma **${fmtArs(estabilidadMaternidad)}** —13 sueldos brutos— que representan el **${pctAgravamiento.toFixed(0)}%** del total de **${fmtArs(total)}**. Es lo que diferencia este despido de uno común: casi se duplica la liquidación a favor de la trabajadora.`,
+    tone: 'good' as const,
+    icon: '🤰',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -160,6 +170,7 @@ export function indemnizacionDespidoEmbarazo(
     baseArt245: Math.round(baseArt245),
     vizzotiAplicado,
     mensaje,
+    _insight: insight,
     _chart: chart,
   };
 }

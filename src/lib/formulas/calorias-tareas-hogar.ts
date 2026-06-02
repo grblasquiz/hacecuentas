@@ -9,6 +9,7 @@ export interface Outputs {
   caloriasQuemadas: number;
   equivalenteMinutosCaminata: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function caloriasTareasHogar(i: Inputs): Outputs {
@@ -46,9 +47,21 @@ export function caloriasTareasHogar(i: Inputs): Outputs {
     ? `${taskName} for ${fmt.format(duracion)} min burns ~${fmt.format(calorias)} kcal (MET ${tareaData.met}). Equivalent to ${fmt.format(equivalenteMin)} min of walking.`
     : `${tareaData.nombre} por ${fmt.format(duracion)} min quema ~${fmt.format(calorias)} kcal (MET ${tareaData.met}). Equivale a ${fmt.format(equivalenteMin)} min de caminata.`;
 
+  const kcalR = Math.round(calorias);
+  const eqMinR = Math.round(equivalenteMin);
+  const insightText = __lang === 'en'
+    ? `${fmt.format(duracion)} min of ${taskName.toLowerCase()} burns about **${fmt.format(kcalR)} kcal** — the same as roughly **${fmt.format(eqMinR)} min of walking**. Chores add up: doing this daily means a real dent in your weekly energy balance.`
+    : `${fmt.format(duracion)} min de ${taskName.toLowerCase()} queman cerca de **${fmt.format(kcalR)} kcal** — lo mismo que unos **${fmt.format(eqMinR)} min de caminata**. Las tareas suman: hacerlo a diario mueve la aguja de tu gasto semanal.`;
+
   return {
-    caloriasQuemadas: Math.round(calorias),
-    equivalenteMinutosCaminata: Math.round(equivalenteMin),
+    caloriasQuemadas: kcalR,
+    equivalenteMinutosCaminata: eqMinR,
     detalle,
+    _insight: {
+      title: __lang === 'en' ? 'Movement that counts' : 'Movimiento que cuenta',
+      text: insightText,
+      tone: 'good',
+      icon: '🧹',
+    },
   };
 }

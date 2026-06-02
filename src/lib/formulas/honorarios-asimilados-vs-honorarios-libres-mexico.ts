@@ -19,6 +19,7 @@ export interface Outputs {
   diferencia_neto: number;
   diferencia_cliente: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 // Tarifa ISR Salarios 2026 México (UMA 2026 = ~$312.05 MXN)
@@ -179,6 +180,35 @@ export function compute(i: Inputs): Outputs {
     }
 
     resultado.recomendacion = recomendacion;
+  }
+
+  // Insight dinámico según la modalidad calculada
+  const fmtMX = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  if (modalidad === 'ambas') {
+    const ganaAsimilado = resultado.diferencia_neto > 0;
+    const empate = Math.abs(resultado.diferencia_neto) <= 1000;
+    resultado._insight = {
+      title: 'Qué te conviene',
+      text: empate
+        ? `Ambas modalidades te dejan un neto casi igual (diferencia de **${fmtMX(Math.abs(resultado.diferencia_neto))}/mes**). Decidí por lo no monetario: **asimilado** te da IMSS; **honorarios** te da deducciones e independencia.`
+        : `**${ganaAsimilado ? 'Asimilado' : 'Honorarios'}** te deja **${fmtMX(Math.abs(resultado.diferencia_neto))} más al mes** en neto. ${ganaAsimilado ? 'Sumás cobertura IMSS, pero perdés flexibilidad de deducciones.' : `Ganás flexibilidad e independencia, pero tu cliente paga **${fmtMX(resultado.diferencia_cliente)}** más de IVA y no tenés IMSS automático.`}`,
+      tone: 'neutral' as 'good' | 'warn' | 'neutral',
+      icon: '⚖️',
+    };
+  } else if (modalidad === 'asimilado') {
+    resultado._insight = {
+      title: 'Qué significa',
+      text: `Como asimilado a salarios, de **${fmtMX(ingreso_bruto)}** brutos te quedan **${fmtMX(resultado.asimilado_neto_mensual)}** netos: ${fmtMX(resultado.asimilado_isr)} de ISR y ${fmtMX(resultado.asimilado_imss_aportacion)} de IMSS. A cambio del descuento, sumás seguridad social.`,
+      tone: 'neutral' as 'good' | 'warn' | 'neutral',
+      icon: '🧾',
+    };
+  } else if (modalidad === 'honorarios') {
+    resultado._insight = {
+      title: 'Qué significa',
+      text: `Por honorarios, de **${fmtMX(ingreso_bruto)}** te quedan **${fmtMX(resultado.honorarios_neto_mensual)}** netos tras retención (${fmtMX(resultado.honorarios_isr_retension)}) e ISR estimado. Tu cliente paga **${fmtMX(resultado.honorarios_costo_cliente)}** con el IVA del 16% incluido.`,
+      tone: 'neutral' as 'good' | 'warn' | 'neutral',
+      icon: '🧾',
+    };
   }
 
   return resultado;

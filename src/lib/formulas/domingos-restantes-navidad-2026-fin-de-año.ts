@@ -12,6 +12,7 @@ export interface Outputs {
   mondays: number;
   weeks_count: number;
   summary: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -125,6 +126,13 @@ export function compute(i: Inputs): Outputs {
 
   const summary = `${totalDays} días hasta el ${targetDateStr}: ${countSundays} domingos, ${countSaturdays} sábados, ${countFridays} viernes, ${countMondays} lunes.`;
 
+  const _insight = {
+    title: totalDays <= 7 ? '¡Última semana!' : totalDays <= 31 ? 'Cuenta regresiva final' : 'Faltan varias semanas',
+    text: `Quedan **${totalDays} días** (${weeksCount} semanas) hasta el ${targetDateStr}: eso incluye **${countSundays} ${countSundays === 1 ? 'domingo' : 'domingos'}** y **${countFridays} ${countFridays === 1 ? 'viernes' : 'viernes'}** para terminar compras y planes.`,
+    tone: totalDays <= 7 ? 'warn' : totalDays <= 31 ? 'good' : 'neutral',
+    icon: '🎄',
+  };
+
   return {
     total_days: totalDays,
     sundays: countSundays,
@@ -132,6 +140,7 @@ export function compute(i: Inputs): Outputs {
     fridays: countFridays,
     mondays: countMondays,
     weeks_count: weeksCount,
-    summary: summary
+    summary: summary,
+    _insight
   };
 }

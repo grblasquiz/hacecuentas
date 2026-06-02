@@ -15,6 +15,7 @@ export interface Outputs {
   latasMes: number;
   costoMensual: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -92,6 +93,17 @@ export function compute(i: Inputs): Outputs {
     `Polvo: ${gramosPolvosDia.toFixed(1)} g/día = ${gramosPolvosMes.toFixed(0)} g/mes → ${latasMes.toFixed(2)} latas (redondeado: ${latasEnteras} latas).` +
     (precioLata > 0 ? ` Costo estimado: $${costoMensual.toLocaleString("es-AR")} ARS.` : "");
 
+  const _insight = {
+    title: "Cuántas latas vas a necesitar",
+    text:
+      `Tu bebé toma unos **${mlPorDia.toFixed(0)} ml/día** de ${nombreMarca}, lo que consume cerca de **${latasEnteras} lata${latasEnteras === 1 ? "" : "s"} de ${GRAMOS_POR_LATA} g** al mes` +
+      (precioLata > 0
+        ? `, un gasto estimado de **$${costoMensual.toLocaleString("es-AR")}** mensuales. Comprá con margen: conviene tener siempre una lata de reserva.`
+        : `. Cargá el precio de la lata para estimar el gasto mensual.`),
+    tone: "neutral",
+    icon: "🍼",
+  };
+
   return {
     mlPorDia: Math.round(mlPorDia * 10) / 10,
     tomasPorDia,
@@ -101,5 +113,6 @@ export function compute(i: Inputs): Outputs {
     latasMes: Math.round(latasMes * 100) / 100,
     costoMensual,
     detalle,
+    _insight,
   };
 }

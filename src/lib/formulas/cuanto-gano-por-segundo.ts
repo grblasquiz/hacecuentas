@@ -1,6 +1,6 @@
 /** Sueldo por segundo */
 export interface Inputs { sueldo: number; horasSemana: number; }
-export interface Outputs { porSegundo: number; porMinuto: number; porHora: number; porDia: number; mientras8hSueno: number; mensaje: string; }
+export interface Outputs { porSegundo: number; porMinuto: number; porHora: number; porDia: number; mientras8hSueno: number; mensaje: string; _insight?: any; }
 
 export function cuantoGanoPorSegundo(i: Inputs): Outputs {
   const sueldo = Number(i.sueldo);
@@ -14,8 +14,16 @@ export function cuantoGanoPorSegundo(i: Inputs): Outputs {
   const porDia = Math.round(sueldo / 22);
   const mientras8hSueno = Math.round(porHora * 8);
 
+  const _insight = {
+    title: 'Tu tiempo en plata',
+    text: `Cada segundo trabajado valen **$${porSegundo}** y cada hora **$${porHora.toLocaleString()}**. Mientras dormís 8 horas tu sueldo igual rinde **$${mientras8hSueno.toLocaleString()}**: dimensioná así cuánto te cuesta cada distracción o cada hora extra.`,
+    tone: 'neutral',
+    icon: '⏱️'
+  };
+
   return {
     porSegundo, porMinuto, porHora, porDia, mientras8hSueno,
-    mensaje: `Ganás $${porSegundo}/seg, $${porMinuto}/min, $${porHora.toLocaleString()}/hora. En 8h de sueño: $${mientras8hSueno.toLocaleString()}.`
+    mensaje: `Ganás $${porSegundo}/seg, $${porMinuto}/min, $${porHora.toLocaleString()}/hora. En 8h de sueño: $${mientras8hSueno.toLocaleString()}.`,
+    _insight
   };
 }

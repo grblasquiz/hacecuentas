@@ -12,6 +12,8 @@ export interface Outputs {
   liquidosExtraLitros: number;
   recomendacion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function caloriasAmamantarExtra(i: Inputs): Outputs {
@@ -51,6 +53,32 @@ export function caloriasAmamantarExtra(i: Inputs): Outputs {
     recomendacion = 'Lactancia prolongada aporta menos calorías extra. Ajustá a tus señales de hambre.';
   }
 
+  const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const etapa = meses < 6 ? 'los primeros 6 meses' : meses < 12 ? 'entre los 6 y 12 meses' : 'la lactancia prolongada (12+ meses)';
+  const _insight = {
+    title: 'Energía extra por la lactancia',
+    text: obj === 'perder'
+      ? `Buscando bajar de peso, sumás solo **${fmt.format(Math.round(extra))} kcal/día** (total **${fmt.format(Math.round(caloriasTotales))} kcal**): tus reservas aportan el resto. Mantené la calidad nutricional y no bajes de golpe para no afectar la producción de leche.`
+      : `Durante ${etapa}${exclusiva ? ' con lactancia exclusiva' : ' con lactancia parcial'} necesitás **+${fmt.format(Math.round(extra))} kcal/día** (total **${fmt.format(Math.round(caloriasTotales))} kcal**), **+${proteinaExtra} g** de proteína y **${liquidosExtra} L** extra de líquidos.`,
+    tone: obj === 'perder' ? 'warn' : 'good',
+    icon: '🤱',
+  };
+
+  // Donut sólo si el extra es positivo (con objetivo "perder" el extra puede ser negativo y no compone un total)
+  const _chart = extra > 0
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Tu base', value: Math.round(base) },
+          { label: 'Extra lactancia', value: Math.round(extra) },
+        ],
+        prefix: '',
+        centerValue: `${fmt.format(Math.round(caloriasTotales))} kcal`,
+        centerLabel: 'total diario',
+        ariaLabel: `Calorías diarias totales: base ${Math.round(base)} kcal más ${Math.round(extra)} kcal extra por lactancia`,
+      }
+    : undefined;
+
   return {
     caloriasExtra: Math.round(extra),
     caloriasTotales: Math.round(caloriasTotales),
@@ -58,5 +86,7 @@ export function caloriasAmamantarExtra(i: Inputs): Outputs {
     liquidosExtraLitros: liquidosExtra,
     recomendacion,
     resumen: `Necesitás ~${Math.round(extra)} kcal extra por día (total ${Math.round(caloriasTotales)} kcal) y +${proteinaExtra} g de proteína. Tomá ${liquidosExtra} L extra de líquidos.`,
+    _insight,
+    _chart,
   };
 }

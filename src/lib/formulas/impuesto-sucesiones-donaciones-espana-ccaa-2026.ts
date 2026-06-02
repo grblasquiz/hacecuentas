@@ -15,6 +15,8 @@ export interface Outputs {
   cuota_a_pagar: number;
   tipo_efectivo: number;
   aviso: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -266,6 +268,48 @@ export function compute(i: Inputs): Outputs {
   // --- Tipo efectivo sobre herencia bruta ---
   const tipoEfectivo = valorHerencia > 0 ? (cuotaFinal / valorHerencia) * 100 : 0;
 
+  const cuotaFinalR = Math.round(cuotaFinal * 100) / 100;
+  const cuotaAntesR = Math.round(cuotaAntesBoif * 100) / 100;
+  const bonifR = Math.round(bonificacion * 100) / 100;
+  const fmtEUR = (n: number) => Math.round(n).toLocaleString('es-ES') + '€';
+
+  // Insight dinámico según carga efectiva tras bonificación autonómica
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (cuotaFinalR <= 0) {
+    insightTone = 'good';
+    insightText = `**No pagás Impuesto de Sucesiones**: las reducciones (**${fmtEUR(reduccionTotal)}**) y/o la bonificación autonómica dejan la cuota en cero sobre una herencia de **${fmtEUR(valorHerencia)}**.`;
+  } else if (bonifR > 0) {
+    insightTone = tipoEfectivo < 5 ? 'good' : 'neutral';
+    insightText = `Antes de la bonificación tu cuota sería **${fmtEUR(cuotaAntesR)}**, pero la rebaja autonómica te ahorra **${fmtEUR(bonifR)}**: pagás **${fmtEUR(cuotaFinalR)}** (tipo efectivo **${tipoEfectivo.toFixed(2)}%** sobre la herencia).`;
+  } else if (tipoEfectivo >= 15) {
+    insightTone = 'warn';
+    insightText = `Carga alta: pagás **${fmtEUR(cuotaFinalR)}** sobre una herencia de **${fmtEUR(valorHerencia)}** (tipo efectivo **${tipoEfectivo.toFixed(2)}%**). Tu comunidad no aplica bonificación relevante para tu grupo de parentesco.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `Tu cuota a pagar es **${fmtEUR(cuotaFinalR)}**, un tipo efectivo del **${tipoEfectivo.toFixed(2)}%** sobre la herencia. Sin bonificación autonómica para tu caso, la carga sale de la escala estatal.`;
+  }
+
+  const _insight = {
+    title: 'Tu Impuesto de Sucesiones',
+    text: insightText,
+    tone: insightTone,
+    icon: '🇪🇸',
+  };
+
+  // Donut: solo si hay bonificación. Cuota antes = lo que pagás + lo bonificado.
+  const _chart = (bonifR > 0 && cuotaAntesR > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Cuota a pagar', value: cuotaFinalR },
+      { label: 'Bonificación autonómica', value: bonifR },
+    ],
+    prefix: '',
+    centerValue: fmtEUR(cuotaAntesR),
+    centerLabel: 'Cuota sin bonificar',
+    ariaLabel: `Cuota antes de bonificación ${fmtEUR(cuotaAntesR)}: pagás ${fmtEUR(cuotaFinalR)} y te bonifican ${fmtEUR(bonifR)}`,
+  } : undefined;
+
   return {
     reduccion_aplicada:        Math.round(reduccionTotal * 100) / 100,
     base_liquidable:           Math.round(baseLiquidable * 100) / 100,
@@ -276,5 +320,7 @@ export function compute(i: Inputs): Outputs {
     cuota_a_pagar:             Math.round(cuotaFinal * 100) / 100,
     tipo_efectivo:             Math.round(tipoEfectivo * 100) / 100,
     aviso: cfg.nota,
+    _insight,
+    _chart,
   };
 }

@@ -29,6 +29,8 @@ export interface Outputs {
   retencion_irpf_estimada: number;
   total_neto_estimado: number;
   aviso: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ─── Constantes 2026 ──────────────────────────────────────────────────────────
@@ -316,6 +318,54 @@ export function compute(i: Inputs): Outputs {
     'Cálculo orientativo. La retención real de IRPF la determina la empresa según tu situación personal y familiar (Reglamento IRPF art. 80).'
   );
 
+  // ── Insight + gráfico ──────────────────────────────────────────────────────────
+  const fmtEUR = (n: number) =>
+    new Intl.NumberFormat('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(n)) + ' €';
+
+  let _insight: any;
+  if (i.tipo_despido === 'disciplinario_procedente') {
+    _insight = {
+      title: 'Despido procedente: solo finiquito',
+      text: `El despido disciplinario procedente **no genera indemnización** (art. 55.7 ET): cobrás únicamente el finiquito de **${fmtEUR(finiquitoBruto)}** (vacaciones, pagas y días pendientes).`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (i.tipo_despido === 'objetivo') {
+    _insight = {
+      title: 'Despido objetivo: 20 días/año',
+      text: `Indemnización de **${fmtEUR(indemnizacionTotal)}** (20 días/año) más finiquito: total bruto **${fmtEUR(totalBruto)}**, neto estimado **${fmtEUR(totalNetoEstimado)}** tras IRPF.`,
+      tone: 'neutral',
+      icon: '💼',
+    };
+  } else {
+    const pctIndem = totalBruto > 0 ? Math.round((indemnizacionTotal / totalBruto) * 100) : 0;
+    _insight = {
+      title: 'Despido improcedente: 33 días/año',
+      text: `La indemnización de **${fmtEUR(indemnizacionTotal)}** es el **${pctIndem}%** del total bruto de **${fmtEUR(totalBruto)}**. Está **exenta de IRPF** hasta 180.000 €, por eso el neto estimado es **${fmtEUR(totalNetoEstimado)}**.`,
+      tone: 'good',
+      icon: '💼',
+    };
+  }
+
+  const _chartSlices = [
+    { label: 'Indemnización', value: Math.round(indemnizacionTotal) },
+    { label: 'Vacaciones', value: Math.round(importeVacaciones) },
+    { label: 'Paga extra prorr.', value: Math.round(pagaExtraProrrateada) },
+    { label: 'Días pendientes', value: Math.round(diasPendientesImporte) },
+  ].filter((s) => s.value > 0);
+
+  const _chart =
+    totalBruto > 0 && _chartSlices.length >= 2
+      ? {
+          type: 'doughnut',
+          slices: _chartSlices,
+          prefix: '€',
+          centerValue: fmtEUR(totalBruto),
+          centerLabel: 'Total bruto',
+          ariaLabel: 'Composición del finiquito e indemnización por despido en España',
+        }
+      : undefined;
+
   return {
     anios_anteriores_2012:          Math.round(aniosAnteriores2012  * 100) / 100,
     anios_posteriores_2012:         Math.round(aniosPosteriores2012 * 100) / 100,
@@ -333,5 +383,7 @@ export function compute(i: Inputs): Outputs {
     retencion_irpf_estimada:        retencionIRPF,
     total_neto_estimado:            totalNetoEstimado,
     aviso:                          avisos.join(' | '),
+    _insight,
+    _chart,
   };
 }

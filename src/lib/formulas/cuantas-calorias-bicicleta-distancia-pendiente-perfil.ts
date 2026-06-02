@@ -12,6 +12,7 @@ export interface Outputs {
   met_value: number;
   speed_kmh: number;
   intensity_label: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -80,10 +81,20 @@ export function compute(i: Inputs): Outputs {
   // Calories = weight (kg) * MET * time (hours)
   const calories = Math.round(weight * metFinal * timeHours);
 
+  const calFinal = Math.max(calories, 0);
+  const minutos = Math.round(timeMinutes);
+  const terrainLabel = terrain === 'hilly' ? 'con cuestas' : terrain === 'mixed' ? 'en perfil mixto' : 'en llano';
+  const _insight = {
+    title: 'Lo que quemaste en esta salida',
+    text: `Pedaleaste **${distance} km** ${terrainLabel} a **${speedKmh.toFixed(1)} km/h** en ${minutos} min y gastaste **${calFinal.toLocaleString('es-AR')} kcal**. El esfuerzo ${intensityLabel.toLowerCase()} equivale a un MET de **${(Math.round(metFinal * 100) / 100)}**; la pendiente y el tipo de bici ajustan ese gasto respecto del llano.`,
+    tone: 'good',
+    icon: '🚴',
+  };
   return {
-    calories: Math.max(calories, 0),
+    calories: calFinal,
     met_value: Math.round(metFinal * 100) / 100,
     speed_kmh: Math.round(speedKmh * 100) / 100,
-    intensity_label: intensityLabel
+    intensity_label: intensityLabel,
+    _insight
   };
 }

@@ -1,6 +1,6 @@
 /** Calculadora del Triángulo de Exposición */
 export interface Inputs { isoActual: number; aperturaActual: number; velocidadActual: number; parametroCambio: string; nuevoValor: number; }
-export interface Outputs { compensacion: number; isoEquiv: number; aperturaEquiv: number; velocidadEquiv: number; }
+export interface Outputs { compensacion: number; isoEquiv: number; aperturaEquiv: number; velocidadEquiv: number; _insight?: any; }
 
 export function exposicionTriangulo(i: Inputs): Outputs {
   const iso = Number(i.isoActual);
@@ -43,10 +43,20 @@ export function exposicionTriangulo(i: Inputs): Outputs {
       throw new Error('Seleccioná qué parámetro cambiar');
   }
 
+  const absS = Math.abs(stops);
+  const cambiado = i.parametroCambio === 'iso' ? `ISO ${nv}` : i.parametroCambio === 'apertura' ? `f/${nv}` : `1/${nv} s`;
+  const subio = stops > 0;
+
   return {
     compensacion: Number(stops.toFixed(1)),
     isoEquiv: Math.round(isoEquiv),
     aperturaEquiv: Number(aperturaEquiv.toFixed(1)),
     velocidadEquiv: Math.round(velocidadEquiv),
+    _insight: {
+      title: 'Compensá para igualar la luz',
+      text: `Pasar a **${cambiado}** mueve la exposición **${subio ? '+' : ''}${stops.toFixed(1)} stops**. Para mantener la misma foto, ajustá los otros dos: **ISO ${Math.round(isoEquiv)}**, **f/${aperturaEquiv.toFixed(1)}** y **1/${Math.round(velocidadEquiv)} s** quedan equivalentes. ${absS < 0.1 ? 'El cambio es mínimo, casi no necesitás compensar.' : 'Repartí los ' + absS.toFixed(1) + ' stops entre apertura y obturador según busques profundidad o congelar movimiento.'}`,
+      tone: 'neutral',
+      icon: '📸',
+    },
   };
 }

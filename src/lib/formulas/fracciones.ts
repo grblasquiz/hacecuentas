@@ -13,6 +13,7 @@ export interface Outputs {
   decimal: number;
   formula: string;
   mixto: string;
+  _insight?: any;
 }
 
 function gcd(x: number, y: number): number {
@@ -81,12 +82,41 @@ export function fracciones(i: Inputs): Outputs {
   }
 
   const s = simplificar(num, den);
+  const decimal = Number((s.n / s.d).toFixed(6));
+  const mixto = toMixto(s.n, s.d);
+
+  const opNombre: Record<string, string> = {
+    suma: 'La suma',
+    resta: 'La resta',
+    multiplicacion: 'El producto',
+    division: 'La división',
+    simplificar: 'La fracción simplificada',
+  };
+  const huboSimplificacion = (s.n !== num || s.d !== den);
+  const esEntero = s.d === 1;
+  const esMixto = Math.abs(s.n) > s.d && s.d !== 1;
+  let cierre: string;
+  if (esEntero) cierre = `un número entero: **${s.n}**`;
+  else if (esMixto) cierre = `equivale al número mixto **${mixto}** (≈ **${decimal}**)`;
+  else cierre = `≈ **${decimal}** en decimal`;
+  const _insight = {
+    title: 'Tu resultado, paso a paso',
+    text:
+      `${opNombre[op] || 'El resultado'} da **${s.n}/${s.d}**, que ${cierre}. ` +
+      (huboSimplificacion
+        ? `Ya está **simplificada al máximo** (numerador y denominador no tienen factores comunes).`
+        : `La fracción ya estaba en su forma más simple.`),
+    tone: 'neutral',
+    icon: '➗',
+  };
+
   return {
     numerador: s.n,
     denominador: s.d,
     resultado: `${s.n}/${s.d}`,
-    decimal: Number((s.n / s.d).toFixed(6)),
+    decimal,
     formula,
-    mixto: toMixto(s.n, s.d),
+    mixto,
+    _insight,
   };
 }

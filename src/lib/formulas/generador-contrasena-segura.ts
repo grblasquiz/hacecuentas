@@ -1,6 +1,6 @@
 /** Evaluador de fortaleza de contraseña */
 export interface Inputs { contrasena: string; }
-export interface Outputs { nivel: string; entropia: number; tiempoCrackeo: string; largo: number; sugerencias: string; }
+export interface Outputs { nivel: string; entropia: number; tiempoCrackeo: string; largo: number; sugerencias: string; _insight?: any; _chart?: any; }
 
 export function generadorContrasenaSegura(i: Inputs): Outputs {
   const pw = String(i.contrasena || '');
@@ -44,5 +44,32 @@ export function generadorContrasenaSegura(i: Inputs): Outputs {
   if (/^[a-z]+$/i.test(pw)) sugs.push('Usá una frase: "mesa-caballo-lampara-azul"');
   if (sugs.length === 0) sugs.push('Tu contraseña es fuerte. Usá un password manager para no olvidarla.');
 
-  return { nivel, entropia, tiempoCrackeo, largo, sugerencias: sugs.join('. ') };
+  const _tone = entropia < 36 ? 'warn' : entropia < 60 ? 'neutral' : 'good';
+  const _icon = entropia < 36 ? '🚨' : entropia < 60 ? '🔐' : '🛡️';
+  const _insight = {
+    title: 'Qué tan segura es',
+    text: entropia < 36
+      ? `Con **${entropia} bits** de entropía, una PC potente la adivina en **${tiempoCrackeo.toLowerCase()}**. Sumá largo y variedad de caracteres antes de usarla.`
+      : entropia < 60
+        ? `Tiene **${entropia} bits** de entropía: resiste **${tiempoCrackeo.toLowerCase()}** ante un ataque masivo. Aceptable, pero llegar a 60+ bits la vuelve realmente sólida.`
+        : `Excelente: **${entropia} bits** de entropía hacen falta **${tiempoCrackeo.toLowerCase()}** para crackearla a 10 mil millones de intentos/segundo. Guardala en un gestor de contraseñas.`,
+    tone: _tone,
+    icon: _icon,
+  };
+  const _chart = {
+    type: 'scale',
+    marker: entropia,
+    markerLabel: `${entropia} bits`,
+    min: 0,
+    segments: [
+      { nombre: 'Muy débil', max: 28, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'Débil', max: 36, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Moderada', max: 60, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Fuerte', max: 128, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Excelente', max: Math.max(160, entropia + 10), color: '#059669', colorDark: '#10b981' },
+    ],
+    ariaLabel: `Entropía de ${entropia} bits sobre una escala de fortaleza de contraseñas`,
+  };
+
+  return { nivel, entropia, tiempoCrackeo, largo, sugerencias: sugs.join('. '), _insight, _chart };
 }

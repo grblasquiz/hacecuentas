@@ -11,6 +11,8 @@ export interface Outputs {
   mejorEstrategia: string;
   ejemploOptimizacion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function diasMesVacacionesOptimo(i: Inputs): Outputs {
@@ -34,11 +36,34 @@ export function diasMesVacacionesOptimo(i: Inputs): Outputs {
 
   const ejemplo = `Si tomás desde el viernes antes de un lunes feriado hasta el domingo siguiente (5 días hábiles), sumás 2 fines de semana + 1 feriado: **10 días libres gastando solo 5 de vacaciones**.`;
 
+  const ratioR = Number(ratio.toFixed(2));
+  const tone = ratio >= 1.6 ? 'good' : ratio < 1.3 ? 'warn' : 'neutral';
+  const extras = diasTotales - dv;
+
   return {
     diasTotalesLibres: diasTotales,
-    ratioDiasPorVacacion: Number(ratio.toFixed(2)),
+    ratioDiasPorVacacion: ratioR,
     mejorEstrategia: estrategia,
     ejemploOptimizacion: ejemplo,
     resumen: `Usando ${dv} días de vacaciones + ${fer} feriados + fines de semana adyacentes conseguís **${diasTotales} días libres** (ratio ${ratio.toFixed(2)}x). ${estrategia}`,
+    _insight: {
+      title: 'Cuánto rinden tus días',
+      text: `Gastando **${dv} días** de vacaciones terminás con **${diasTotales} días libres**: cada día tomado te rinde **${ratioR}x**. Los **${extras} días extra** salen de feriados y fines de semana pegados, sin descontar de tu saldo.`,
+      tone,
+      icon: '🏖️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: ratioR,
+      markerLabel: `${ratioR}x`,
+      min: 1,
+      segments: [
+        { nombre: 'Mejorable', max: 1.3, color: '#fca5a5', colorDark: '#7f1d1d' },
+        { nombre: 'Buena', max: 1.6, color: '#fcd34d', colorDark: '#78350f' },
+        { nombre: 'Muy buena', max: 2.0, color: '#86efac', colorDark: '#14532d' },
+        { nombre: 'Excelente', max: Math.max(3, ratioR + 0.5), color: '#4ade80', colorDark: '#166534' },
+      ],
+      ariaLabel: `Ratio de aprovechamiento de vacaciones: ${ratioR}x días libres por cada día de vacaciones tomado`,
+    },
   };
 }

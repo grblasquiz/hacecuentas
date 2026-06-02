@@ -1,6 +1,6 @@
 /** Edad corregida para bebés prematuros */
 export interface Inputs { fechaNacPrem: string; semanasGestPrem: number; __lang?: string; }
-export interface Outputs { edadCronologica: string; edadCorregida: string; semanasPrematurez: string; nota: string; }
+export interface Outputs { edadCronologica: string; edadCorregida: string; semanasPrematurez: string; nota: string; _insight?: any; }
 
 export function edadCorregidaPrematuro(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -12,6 +12,9 @@ export function edadCorregidaPrematuro(i: Inputs): Outputs {
       errorFutura: 'La fecha de nacimiento no puede ser futura',
       notaDefault: 'Usá la edad corregida para evaluar desarrollo motor, crecimiento y alimentación. Las vacunas se dan por edad cronológica.',
       notaDos: 'Tu bebé ya tiene más de 2 años de edad corregida. A partir de ahora se puede empezar a usar la edad cronológica para la mayoría de las evaluaciones.',
+      insTitle: 'Qué edad usar',
+      insGap: (sem: number) => `Tu bebé nació **${sem} semanas antes** de término, así que su desarrollo se evalúa con la **edad corregida**, no la del calendario. Es esperable que vaya “atrasado” respecto a su edad cronológica: ese desfasaje se recupera solo, en general hacia los 2 años.`,
+      insDos: (sem: number) => `Tu bebé nació **${sem} semanas antes** de término, pero ya superó los **2 años de edad corregida**: a partir de ahora podés usar la edad del calendario para casi todas las evaluaciones. La prematurez ya no marca diferencia en el desarrollo.`,
     },
     en: {
       errorFecha: 'Enter a valid date of birth',
@@ -19,6 +22,9 @@ export function edadCorregidaPrematuro(i: Inputs): Outputs {
       errorFutura: 'Date of birth cannot be in the future',
       notaDefault: 'Use the corrected age to evaluate motor development, growth, and feeding. Vaccines are given based on chronological age.',
       notaDos: 'Your baby is already over 2 years of corrected age. From now on, chronological age can be used for most evaluations.',
+      insTitle: 'Which age to use',
+      insGap: (sem: number) => `Your baby was born **${sem} weeks early**, so development is assessed using the **corrected age**, not the calendar one. It is expected to lag behind the chronological age: that gap usually catches up on its own, generally by age 2.`,
+      insDos: (sem: number) => `Your baby was born **${sem} weeks early**, but is already over **2 years of corrected age**: from now on you can use the calendar age for almost all evaluations. Prematurity no longer makes a difference in development.`,
     },
   } as const)[__lang];
 
@@ -48,6 +54,13 @@ export function edadCorregidaPrematuro(i: Inputs): Outputs {
   let nota = T.notaDefault;
   if (mesesCorr >= 24) nota = T.notaDos;
 
+  const _insight = {
+    title: T.insTitle,
+    text: mesesCorr >= 24 ? T.insDos(semanasPrematurez) : T.insGap(semanasPrematurez),
+    tone: mesesCorr >= 24 ? 'good' : 'neutral',
+    icon: '👶',
+  };
+
   return {
     edadCronologica: __lang === 'en'
       ? `${mesesCron} months and ${diasExtraCron} days`
@@ -59,5 +72,6 @@ export function edadCorregidaPrematuro(i: Inputs): Outputs {
       ? `${semanasPrematurez} weeks (born at ${semGest} weeks instead of 40)`
       : `${semanasPrematurez} semanas (nació a las ${semGest} semanas en vez de 40)`,
     nota,
+    _insight,
   };
 }

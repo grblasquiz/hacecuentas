@@ -14,6 +14,8 @@ export interface Outputs {
   years_to_fi: number;
   fi_age: number;
   savings_rate_note: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Multipliers based on Safe Withdrawal Rate variants
@@ -100,12 +102,46 @@ export function compute(i: Inputs): Outputs {
       note = `Coast FIRE target: $${coastTarget.toLocaleString("en-US", { maximumFractionDigits: 0 })}. Once reached at ~age ${fiAge}, you can stop contributing and still retire at ${retirementAge} with $${standardFireNumber.toLocaleString("en-US", { maximumFractionDigits: 0 })}.`;
     }
 
+    const coastReached = currentPortfolio >= coastTarget;
+    const coastInsight = coastReached
+      ? {
+          title: "Coast FIRE reached",
+          text: `Your **$${currentPortfolio.toLocaleString("en-US", { maximumFractionDigits: 0 })}** already covers the Coast FIRE target of **$${Math.round(coastTarget).toLocaleString("en-US", { maximumFractionDigits: 0 })}**. You can stop saving and it should still grow to **$${standardFireNumber.toLocaleString("en-US", { maximumFractionDigits: 0 })}** by age ${retirementAge}.`,
+          tone: "good",
+          icon: "🏖️",
+        }
+      : !isFinite_
+      ? {
+          title: "Not reachable yet",
+          text: `With **$0/mo** saved and **0%** real return you can't reach the Coast FIRE target of **$${Math.round(coastTarget).toLocaleString("en-US", { maximumFractionDigits: 0 })}**. Add contributions or raise the return assumption.`,
+          tone: "warn",
+          icon: "⚠️",
+        }
+      : {
+          title: `Coast FIRE around age ${fiAge}`,
+          text: `You're **$${Math.round(gap).toLocaleString("en-US", { maximumFractionDigits: 0 })}** away from the **$${Math.round(coastTarget).toLocaleString("en-US", { maximumFractionDigits: 0 })}** target. Reach it in about **${(Math.round(yearsToCoast * 10) / 10).toFixed(1)} years** and you can coast to retirement at ${retirementAge} without adding another dollar.`,
+          tone: "neutral",
+          icon: "🏖️",
+        };
+
     return {
       fire_number: Math.round(coastTarget),
       gap: Math.round(gap),
       years_to_fi: isFinite_ ? Math.round(yearsToCoast * 10) / 10 : 9999,
       fi_age: fiAge,
       savings_rate_note: note,
+      _insight: coastInsight,
+      _chart: {
+        type: "doughnut",
+        slices: [
+          { label: "Already saved", value: Math.round(Math.min(currentPortfolio, coastTarget)) },
+          { label: "Still to go", value: Math.round(gap) },
+        ],
+        prefix: "$",
+        centerValue: "$" + Math.round(coastTarget).toLocaleString("en-US", { maximumFractionDigits: 0 }),
+        centerLabel: "Coast FIRE target",
+        ariaLabel: `Coast FIRE target of $${Math.round(coastTarget).toLocaleString("en-US", { maximumFractionDigits: 0 })}: $${Math.round(Math.min(currentPortfolio, coastTarget)).toLocaleString("en-US")} saved and $${Math.round(gap).toLocaleString("en-US")} still to go.`,
+      },
     };
   }
 
@@ -176,11 +212,45 @@ export function compute(i: Inputs): Outputs {
     note = `${variantLabel}: $${fireNumber.toLocaleString("en-US", { maximumFractionDigits: 0 })} target. Saving $${(monthlySavings * 12).toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr (${savingsPct.toFixed(1)}% savings rate) at ${realReturnPct}% real return → FI in ~${(Math.round(yearsToFI * 10) / 10).toFixed(1)} years (age ${fiAge}).`;
   }
 
+  const alreadyFI = currentPortfolio >= fireNumber;
+  const insight = alreadyFI
+    ? {
+        title: "You're financially independent",
+        text: `Your **$${currentPortfolio.toLocaleString("en-US", { maximumFractionDigits: 0 })}** already meets the ${variantLabel} target of **$${fireNumber.toLocaleString("en-US", { maximumFractionDigits: 0 })}**. Work is now optional.`,
+        tone: "good",
+        icon: "🎉",
+      }
+    : !isFinite_
+    ? {
+        title: "Target not reachable",
+        text: `With **$0/mo** saved and **0%** real return you can't reach the **$${fireNumber.toLocaleString("en-US", { maximumFractionDigits: 0 })}** target. Increase contributions or expected return.`,
+        tone: "warn",
+        icon: "⚠️",
+      }
+    : {
+        title: `FI in about ${(Math.round(yearsToFI * 10) / 10).toFixed(1)} years`,
+        text: `You're **$${gap.toLocaleString("en-US", { maximumFractionDigits: 0 })}** short of the **$${fireNumber.toLocaleString("en-US", { maximumFractionDigits: 0 })}** target. Saving **$${(monthlySavings * 12).toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr** at ${realReturnPct}% real return gets you there around **age ${fiAge}** (${savingsPct.toFixed(0)}% savings rate).`,
+        tone: yearsToFI <= 15 ? "good" : "neutral",
+        icon: "🔥",
+      };
+
   return {
     fire_number: Math.round(fireNumber),
     gap: Math.round(gap),
     years_to_fi: isFinite_ ? Math.round(yearsToFI * 10) / 10 : 9999,
     fi_age: fiAge,
     savings_rate_note: note,
+    _insight: insight,
+    _chart: {
+      type: "doughnut",
+      slices: [
+        { label: "Already saved", value: Math.round(Math.min(currentPortfolio, fireNumber)) },
+        { label: "Still to go", value: Math.round(gap) },
+      ],
+      prefix: "$",
+      centerValue: "$" + Math.round(fireNumber).toLocaleString("en-US", { maximumFractionDigits: 0 }),
+      centerLabel: "FIRE number",
+      ariaLabel: `${variantLabel} number of $${Math.round(fireNumber).toLocaleString("en-US")}: $${Math.round(Math.min(currentPortfolio, fireNumber)).toLocaleString("en-US")} already saved and $${Math.round(gap).toLocaleString("en-US")} still to go.`,
+    },
   };
 }

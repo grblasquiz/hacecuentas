@@ -10,6 +10,7 @@ export interface Outputs {
   kmBase90: number;
   sprintEstimado: number;
   detalle: string;
+  _insight?: any;
 }
 
 const KM_POR_POSICION: Record<string, { km90: number; sprints: number; nombre: string }> = {
@@ -41,10 +42,20 @@ export function distanciaRecorridaFutbolJugador(i: Inputs): Outputs {
   const kmAjustado = kmBase * factor * (min / 90);
   const sprints = Math.round(info.sprints * factor * (min / 90));
 
+  const kmR = Number(kmAjustado.toFixed(1));
+  const nivelTxt = nivel.replace(/-/g, ' ');
+  const _insight = {
+    title: 'Tu desgaste en cancha',
+    text: `Como **${info.nombre.toLowerCase()}** (${nivelTxt}) en ${min} min recorrés unos **${kmR} km** y hacés **~${sprints} sprints**. La referencia profesional para esa posición es ${kmBase} km cada 90 min; tu nivel aplica un factor de ${factor}.`,
+    tone: 'neutral',
+    icon: '⚽',
+  };
+
   return {
-    result: Number(kmAjustado.toFixed(1)),
+    result: kmR,
     kmBase90: kmBase,
     sprintEstimado: sprints,
     detalle: `Como **${info.nombre}** en ${min} min recorrés **${kmAjustado.toFixed(1)} km** (base profesional: ${kmBase} km/90min, factor nivel: ${factor}). Sprints estimados: ~${sprints}.`,
+    _insight,
   };
 }

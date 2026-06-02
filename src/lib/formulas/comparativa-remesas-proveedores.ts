@@ -34,6 +34,7 @@ export interface Outputs {
   remitlyRecibido: string;
   wiseRecibido: string;
   moneyGramRecibido: string;
+  _insight?: any;
 }
 
 function fmtUSD(n: number): string {
@@ -78,7 +79,16 @@ export function comparativaRemesasProveedores(i: Inputs): Outputs {
 
   const simb = 'MXN $';
 
+  const ahorroPct = peor.costoTotalUSD > 0 ? (ahorro / peor.costoTotalUSD) * 100 : 0;
+  const _insight = {
+    title: 'Conviene ' + mejor.nombre,
+    text: `Con **${mejor.nombre}** el costo total (comisión + spread) es de **${fmtUSD(mejor.costoTotalUSD)}** (**${mejor.costoPct.toFixed(2)}%** del envío), el más barato de los ${lista.length}. Frente a ${peor.nombre} te ahorrás **${fmtUSD(ahorro)}** (${ahorroPct.toFixed(0)}% menos de costo) por cada giro de ${fmtUSD(monto)}.`,
+    tone: mejor.costoPct <= 2 ? 'good' : mejor.costoPct <= 5 ? 'neutral' : 'warn',
+    icon: '💸',
+  };
+
   return {
+    _insight,
     mejorProveedor: `${mejor.nombre} (costo total ${fmtUSD(mejor.costoTotalUSD)}, ${mejor.costoPct.toFixed(2)}%)`,
     ahorroVsPeor: `${fmtUSD(ahorro)} vs ${peor.nombre}`,
     resumen: lista.map(p => `${p.nombre}: ${fmtUSD(p.costoTotalUSD)} (${p.costoPct.toFixed(2)}%)`).join(' | '),

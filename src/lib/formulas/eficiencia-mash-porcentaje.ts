@@ -1,6 +1,6 @@
 /** Eficiencia mash */
 export interface Inputs { kgGrano: number; ppgPromedio: number; ogReal: number; volumenPostHervor: number; }
-export interface Outputs { eficiencia: number; ogEsperadaIdeal: number; clasificacion: string; diagnostico: string; }
+export interface Outputs { eficiencia: number; ogEsperadaIdeal: number; clasificacion: string; diagnostico: string; _insight?: any; _chart?: any; }
 
 export function eficienciaMashPorcentaje(i: Inputs): Outputs {
   const kg = Number(i.kgGrano);
@@ -32,10 +32,37 @@ export function eficienciaMashPorcentaje(i: Inputs): Outputs {
   else if (eficiencia > 90) diag = 'Verificá hidrómetro y volumen real.';
   else diag = 'Rango esperado — consistencia es lo importante.';
 
+  const eff = Number(eficiencia.toFixed(1));
+  // Tono dinámico: muy baja o sospechosa = warn; rango estándar/bueno/pro = good; intermedio = neutral.
+  const tone = eficiencia < 65 || eficiencia > 92 ? 'warn' : eficiencia >= 75 ? 'good' : 'neutral';
+  const insight = {
+    title: 'Tu rendimiento de macerado',
+    text: `Extrajiste el **${eff}%** del azúcar potencial del grano (**${clasif.split(' —')[0].split(' (')[0]}**), llegando a una OG de **${(og).toFixed(3)}** frente a la ideal de **${Number(ogIdeal.toFixed(3))}**.`,
+    tone,
+    icon: '🍺',
+  };
+  // Gauge: eficiencia de macerado con las mismas zonas que la clasificación.
+  const chart = {
+    type: 'scale',
+    marker: eff,
+    markerLabel: eff + '%',
+    min: 50,
+    segments: [
+      { nombre: 'Muy baja', max: 60, color: '#fca5a5', colorDark: '#f87171' },
+      { nombre: 'Baja', max: 70, color: '#fdba74', colorDark: '#fb923c' },
+      { nombre: 'Estándar', max: 80, color: '#fde68a', colorDark: '#fbbf24' },
+      { nombre: 'Buena', max: 85, color: '#bef264', colorDark: '#a3e635' },
+      { nombre: 'Profesional', max: 92, color: '#86efac', colorDark: '#4ade80' },
+      { nombre: 'Sospechosa', max: Math.max(100, Math.ceil(eff) + 2), color: '#fca5a5', colorDark: '#f87171' },
+    ],
+    ariaLabel: `Eficiencia de macerado de ${eff}% sobre una escala de muy baja a profesional`,
+  };
   return {
-    eficiencia: Number(eficiencia.toFixed(1)),
+    eficiencia: eff,
     ogEsperadaIdeal: Number(ogIdeal.toFixed(3)),
     clasificacion: clasif,
     diagnostico: diag,
+    _insight: insight,
+    _chart: chart,
   };
 }

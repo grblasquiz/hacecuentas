@@ -13,6 +13,8 @@ export interface Outputs {
   total_con_regularizacion: number;
   ahorro_regularizacion: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(inputs: Inputs): Outputs {
@@ -95,6 +97,14 @@ export function compute(inputs: Inputs): Outputs {
     multa_base = 1810; // Multa mínima CFF
   }
 
+  const fmt = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const insightText = inputs.presenta_regularizacion === 'no'
+    ? `Sin regularizar pagás **${fmt(total_sin_regularizacion)} MXN** (multa **${fmt(multa_base)}** + recargos y actualización **${fmt(recargo_actualizacion)}**). Regularizar a tiempo te ahorraría hasta un **30%**.`
+    : `Pagás **${fmt(total_con_regularizacion)} MXN** tras un **${Math.round(descuento_regularizacion * 100)}%** de descuento por regularización voluntaria, ahorrando **${fmt(ahorro_regularizacion)} MXN** frente a no regularizar.`;
+
+  // El componente de multa que entró al total (consistente con el redondeo del total).
+  const multaEnTotal = Math.round((total_sin_regularizacion - recargo_actualizacion) * 100) / 100;
+
   return {
     multa_base: Math.round(multa_base * 100) / 100,
     recargo_actualizacion,
@@ -102,6 +112,23 @@ export function compute(inputs: Inputs): Outputs {
     descuento_regularizacion: Math.round(descuento_regularizacion * 10000) / 100,
     total_con_regularizacion,
     ahorro_regularizacion,
-    recomendacion
+    recomendacion,
+    _insight: {
+      title: 'Cuánto vas a pagar al SAT',
+      text: insightText,
+      tone: 'warn',
+      icon: '⚠️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Multa base', value: multaEnTotal },
+        { label: 'Recargos + actualización', value: recargo_actualizacion },
+      ],
+      prefix: '$',
+      centerValue: fmt(total_sin_regularizacion),
+      centerLabel: 'total sin regularizar (MXN)',
+      ariaLabel: `Composición de la sanción: multa base ${fmt(multaEnTotal)} más recargos y actualización ${fmt(recargo_actualizacion)}, total ${fmt(total_sin_regularizacion)} MXN`,
+    },
   };
 }

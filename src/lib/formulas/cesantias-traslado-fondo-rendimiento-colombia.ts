@@ -20,6 +20,7 @@ export interface Outputs {
   valor_neto_traslado: number;
   dias_traslado: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 // Rentabilidades históricas 2026 Colombia según Superfinanciera
@@ -143,6 +144,39 @@ export function compute(i: Inputs): Outputs {
     recomendacion = "Ambos fondos tienen rentabilidad similar. La decisión depende de otros factores: servicio al cliente, acceso digital, comisiones específicas.";
   }
 
+  const fmtCo = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  let _insight: any;
+  if (i.fondo_origen === i.fondo_destino) {
+    _insight = {
+      title: 'Compará dos fondos distintos',
+      text: `Elegiste **${cap(i.fondo_origen)}** como origen y destino. Seleccioná un fondo destino diferente para ver la diferencia de rentabilidad neta y el valor futuro proyectado.`,
+      tone: 'neutral',
+      icon: '🔁',
+    };
+  } else if (diferencia_valor_futuro > 0) {
+    _insight = {
+      title: 'Trasladarte conviene',
+      text: `**${cap(i.fondo_destino)}** rinde **${diferencia_rentabilidad.toFixed(2).replace('.', ',')}%** neto más por año que **${cap(i.fondo_origen)}**. En ${i.años_proyeccion} años eso son **${fmtCo(diferencia_valor_futuro)}** extra. Ojo: el traslado cuesta ~**${fmtCo(costo_traslado)}** y tarda **${dias_traslado} días** hábiles; solo podés trasladarte una vez cada 2 años.`,
+      tone: 'good',
+      icon: '📈',
+    };
+  } else if (diferencia_valor_futuro < 0) {
+    _insight = {
+      title: 'Mejor quedarte donde estás',
+      text: `**${cap(i.fondo_origen)}** rinde más neto que **${cap(i.fondo_destino)}**: trasladarte te costaría **${fmtCo(Math.abs(diferencia_valor_futuro))}** menos en ${i.años_proyeccion} años, más ~**${fmtCo(costo_traslado)}** del traslado. No conviene mover el saldo.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: 'Rentabilidad pareja',
+      text: `Ambos fondos rinden prácticamente igual en neto. La decisión pasa por otros factores: servicio, app, atención. No esperes diferencia de plata trasladándote.`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  }
+
   return {
     rentabilidad_origen: Math.round(rentabilidad_origen * 100) / 100,
     rentabilidad_destino: Math.round(rentabilidad_destino * 100) / 100,
@@ -157,6 +191,7 @@ export function compute(i: Inputs): Outputs {
     costo_traslado: Math.round(costo_traslado),
     valor_neto_traslado: Math.round(valor_neto_traslado),
     dias_traslado: dias_traslado,
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight
   };
 }

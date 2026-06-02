@@ -19,6 +19,8 @@ export interface Outputs {
   decimoLiquidoTotal: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -46,6 +48,19 @@ export function decimoTerceiroProporcional(i: Inputs): Outputs {
   const formula = `13º = (${fmt(salario)} / 12) × ${meses} = ${fmt(decimoBruto)}; líquido total = ${fmt(liquidoTotal)}`;
   const explicacao = `13º salário proporcional a ${meses}/12 meses: bruto ${fmt(decimoBruto)}. 1ª parcela (até 30/nov, sem descontos): ${fmt(primeira)}. 2ª parcela (até 20/dez): saldo ${fmt(primeira)} − INSS ${fmt(inss)} − IRRF ${fmt(irrf)} = ${fmt(segunda)}. Líquido total: ${fmt(liquidoTotal)}. Base legal: Lei 4.090/1962.`;
 
+  const descontos = inss + irrf;
+  const pctDesconto = decimoBruto > 0 ? (descontos / decimoBruto) * 100 : 0;
+  const tone = descontos > 0 ? 'warn' : 'good';
+  const insightText = descontos > 0
+    ? `Do 13º bruto de **${fmt(decimoBruto)}**, saem **${fmt(descontos)}** em descontos (INSS + IRRF, ~${pctDesconto.toFixed(0)}%) na 2ª parcela. Você fica com **${fmt(liquidoTotal)}** líquidos.`
+    : `Seu 13º proporcional de **${fmt(decimoBruto)}** fica **isento de IRRF** e você recebe **${fmt(liquidoTotal)}** líquidos (apenas INSS de ${fmt(inss)}).`;
+
+  const slices = [
+    { label: 'Líquido no bolso', value: Number(liquidoTotal.toFixed(2)) },
+    { label: 'INSS', value: Number(inss.toFixed(2)) },
+  ];
+  if (irrf > 0) slices.push({ label: 'IRRF', value: Number(irrf.toFixed(2)) });
+
   return {
     decimoBruto: fmt(decimoBruto),
     primeiraParcela: fmt(primeira),
@@ -55,5 +70,19 @@ export function decimoTerceiroProporcional(i: Inputs): Outputs {
     decimoLiquidoTotal: fmt(liquidoTotal),
     formula,
     explicacao,
+    _insight: {
+      title: 'Bruto x líquido',
+      text: insightText,
+      tone,
+      icon: '🧾',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices,
+      prefix: 'R$ ',
+      centerValue: fmt(decimoBruto),
+      centerLabel: '13º bruto',
+      ariaLabel: `13º bruto de ${fmt(decimoBruto)} repartido entre líquido, INSS e IRRF`,
+    },
   };
 }

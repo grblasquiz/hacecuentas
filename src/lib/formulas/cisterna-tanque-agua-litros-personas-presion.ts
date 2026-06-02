@@ -11,6 +11,8 @@ export interface Outputs {
   alturaColumnaM: number;
   consumoDiario: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -68,11 +70,35 @@ export function compute(i: Inputs): Outputs {
     `Presión requerida: ${labelPresion[presionKey] ?? presionKey + " bar"} → ` +
     `el fondo del tanque debe estar al menos ${alturaColumnaM.toFixed(1)} m sobre el punto de uso más desfavorable.`;
 
+  // Margen de seguridad en litros (litrosConMargen = litrosTanque + margen)
+  const margenLitros = litrosConMargen - litrosTanque;
+
+  const _insight = {
+    title: 'Tanque recomendado',
+    text: `Para **${personas} persona${personas !== 1 ? "s" : ""}** con **${diasReserva} día${diasReserva !== 1 ? "s" : ""}** de reserva necesitás un tanque de **${litrosConMargen.toLocaleString('es-AR')} L** (${litrosTanque.toLocaleString('es-AR')} L de consumo + 20% de margen). El fondo del tanque debe quedar al menos **${alturaColumnaM.toFixed(1)} m** sobre la canilla más alta para lograr la presión pedida.`,
+    tone: 'neutral',
+    icon: '🚰',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Consumo base', value: litrosTanque },
+      { label: 'Margen 20%', value: margenLitros },
+    ],
+    prefix: '',
+    centerValue: `${litrosConMargen.toLocaleString('es-AR')} L`,
+    centerLabel: 'Tanque',
+    ariaLabel: `Volumen recomendado de ${litrosConMargen} litros: ${litrosTanque} de consumo base más ${margenLitros} de margen de seguridad.`,
+  };
+
   return {
     litrosTanque,
     litrosConMargen,
     alturaColumnaM: Math.round(alturaColumnaM * 100) / 100,
     consumoDiario,
     detalle,
+    _insight,
+    _chart,
   };
 }

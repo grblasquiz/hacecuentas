@@ -26,6 +26,8 @@ export interface Outputs {
     diferencia: number;
     regimen_recomendado: string;
   };
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -135,6 +137,40 @@ export function compute(i: Inputs): Outputs {
         : 'Régimen Simplificado (más ventajoso)'
   };
   
+  // Reparto del arriendo anual bruto: gastos + impuesto + lo que le queda al dueño
+  const queda_propietario = Math.max(0, arriendo_anual_bruto - gastos_capped - impuesto_renta_anual);
+  const fmtCl = (n: number) => '$' + Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 });
+  const exento_dfl2 = i.es_vivienda_dfl2 && i.anios_exencion_restantes > 0;
+
+  // Insight narrativo dinámico
+  const _insight = exento_dfl2
+    ? {
+        title: 'Arriendo exento por DFL2',
+        text: `Tu propiedad acogida al **DFL2** mantiene la exención (te quedan **${i.anios_exencion_restantes}** año(s)), así que el arriendo anual de **${fmtCl(arriendo_anual_bruto)}** **no paga Impuesto a la Renta**. El arrendatario igual puede retener **${fmtCl(retension_mensual_estimada)}**/mes que recuperás en tu declaración.`,
+        tone: 'good',
+        icon: '🏡'
+      }
+    : {
+        title: 'Cuánto te queda del arriendo',
+        text: `De los **${fmtCl(arriendo_anual_bruto)}** anuales, descontás **${fmtCl(gastos_capped)}** de gastos y pagás **${fmtCl(impuesto_renta_anual)}** de impuesto (tasa efectiva **${(Math.round(tasa_efectiva * 10) / 10)}%**), quedándote **${fmtCl(queda_propietario)}** líquidos. Conviene el régimen de **${analisis_regimen.regimen_recomendado}**.`,
+        tone: 'warn',
+        icon: '🏡'
+      };
+
+  // Donut: composición del arriendo anual bruto
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Gastos deducibles', value: Math.round(gastos_capped) },
+      { label: 'Impuesto a la renta', value: Math.round(impuesto_renta_anual) },
+      { label: 'Te queda', value: Math.round(queda_propietario) }
+    ],
+    prefix: '$',
+    centerValue: fmtCl(arriendo_anual_bruto),
+    centerLabel: 'Arriendo anual',
+    ariaLabel: `Reparto del arriendo anual bruto de ${fmtCl(arriendo_anual_bruto)}: gastos ${fmtCl(gastos_capped)}, impuesto ${fmtCl(impuesto_renta_anual)} y neto para el propietario ${fmtCl(queda_propietario)}`
+  };
+
   return {
     arriendo_anual_bruto: Math.round(arriendo_anual_bruto),
     gastos_deducibles_totales: Math.round(gastos_capped),
@@ -144,6 +180,8 @@ export function compute(i: Inputs): Outputs {
     tasa_efectiva: Math.round(tasa_efectiva * 10) / 10,
     retension_mensual_estimada,
     renta_neta_mensual,
-    analisis_regimen
+    analisis_regimen,
+    _insight,
+    _chart
   };
 }

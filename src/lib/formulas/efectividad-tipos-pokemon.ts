@@ -9,6 +9,7 @@ export interface Outputs {
   multiplicador: number;
   efectividad: string;
   resumen: string;
+  _insight?: any;
 }
 
 type T = 'normal' | 'fire' | 'water' | 'grass' | 'electric' | 'ice' | 'fighting' | 'poison' | 'ground' | 'flying' | 'psychic' | 'bug' | 'rock' | 'ghost' | 'dragon' | 'dark' | 'steel' | 'fairy';
@@ -60,9 +61,28 @@ export function efectividadTiposPokemon(i: Inputs): Outputs {
   else if (total === 2) efec = 'Súper efectivo';
   else if (total === 4) efec = '¡Súper efectivo x4!';
 
+  const defLabel = `${d1.toUpperCase()}${d2 ? '/' + d2.toUpperCase() : ''}`;
+  let _texto: string;
+  let _tone: string;
+  let _icon: string;
+  if (total === 0) {
+    _texto = `**${defLabel}** es **inmune** a ataques tipo **${atk.toUpperCase()}**: no recibe ningún daño. Cambiá de tipo de ataque.`;
+    _tone = 'warn'; _icon = '🛡️';
+  } else if (total < 1) {
+    _texto = `Los ataques **${atk.toUpperCase()}** pegan **×${total}** contra **${defLabel}**: resistido. Buscá un tipo más efectivo para no desperdiciar el turno.`;
+    _tone = 'warn'; _icon = '🔻';
+  } else if (total === 1) {
+    _texto = `Daño **neutral (×1)** de **${atk.toUpperCase()}** contra **${defLabel}**: ni ventaja ni desventaja.`;
+    _tone = 'neutral'; _icon = '⚖️';
+  } else {
+    _texto = `**${atk.toUpperCase()}** golpea **×${total}** a **${defLabel}**: ${total === 4 ? 'doble debilidad, daño demoledor' : 'súper efectivo'}. Aprovechá esta ventaja de tipo.`;
+    _tone = 'good'; _icon = '⚡';
+  }
+
   return {
     multiplicador: Number(total.toFixed(2)),
     efectividad: efec,
     resumen: `**${atk.toUpperCase()}** vs **${d1.toUpperCase()}${d2 ? '/' + d2.toUpperCase() : ''}** = **×${total}** — ${efec}.`,
+    _insight: { title: efec, text: _texto, tone: _tone, icon: _icon },
   };
 }

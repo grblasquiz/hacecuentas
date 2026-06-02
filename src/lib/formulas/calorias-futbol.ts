@@ -15,6 +15,7 @@ export interface Outputs {
   kmEstimadosCorridos: number;
   kmCorridosEstimados: number;
   resumen: string;
+  _insight?: any;
 }
 
 const MET: Record<string, { met: number; nombre: string; kmH: number }> = {
@@ -51,6 +52,18 @@ export function caloriasFutbol(i: Inputs): Outputs {
   const formatoLabel = info.nombre + (pos === 'arquero' ? ' (arquero)' : '');
   const kmRounded = Number(km.toFixed(1));
 
+  const totalR = Math.round(total);
+  const alfajores = total / 230;
+  const esArquero = pos === 'arquero';
+  const _insight = {
+    title: esArquero ? 'Bajo el arco se quema menos' : 'El picado cuenta como cardio',
+    text: esArquero
+      ? `De **arquero** corrés mucho menos: en ${min} min sumaste **${totalR} kcal** y ~**${kmRounded} km**. Si querés más gasto, jugá un rato de campo.`
+      : `En ${min} min de **${info.nombre}** quemaste **${totalR} kcal** (~**${alfajores.toFixed(1)} alfajores**) y corriste ~**${kmRounded} km**. Los cambios de ritmo del fútbol lo hacen un cardio muy completo.`,
+    tone: esArquero ? 'neutral' : 'good',
+    icon: '⚽',
+  };
+
   return {
     caloriasTotal: Math.round(total),
     caloriasPorMinuto: Number(kcalMin.toFixed(2)),
@@ -59,6 +72,7 @@ export function caloriasFutbol(i: Inputs): Outputs {
     modalidadMostrada: formatoLabel,
     kmEstimadosCorridos: kmRounded,
     kmCorridosEstimados: kmRounded,
-    resumen: `Jugando **${info.nombre}**${pos === 'arquero' ? ' de arquero' : ''} ${min} minutos quemás **${Math.round(total)} kcal** y corrés ~${km.toFixed(1)} km (MET ${met.toFixed(1)}).`,
+    resumen: `Jugando **${info.nombre}**${pos === 'arquero' ? ' de arquero' : ''} ${min} minutos quemás **${totalR} kcal** y corrés ~${km.toFixed(1)} km (MET ${met.toFixed(1)}).`,
+    _insight,
   };
 }

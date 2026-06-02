@@ -9,6 +9,8 @@ export interface Outputs {
   tensionKg: number;
   tensionN: number;
   evaluacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cuerdaGuitarraTension(i: Inputs): Outputs {
@@ -42,10 +44,67 @@ export function cuerdaGuitarraTension(i: Inputs): Outputs {
   else if (tensionLbs < 22) evaluacion = 'Tensión media-alta — buen sustain y tono completo. Los bends requieren más fuerza.';
   else evaluacion = 'Tensión alta — muy firme, difícil para bends. Buena para ritmo pesado y drop tunings.';
 
+  // --- Insight + gauge ---
+  const lbs1 = Number(tensionLbs.toFixed(1));
+  const kg1 = Number(tensionKg.toFixed(1));
+  let tono: "good" | "warn" | "neutral";
+  let etiquetaZona: string;
+  if (tensionLbs < 10) {
+    tono = "warn";
+    etiquetaZona = "muy baja";
+  } else if (tensionLbs < 14) {
+    tono = "neutral";
+    etiquetaZona = "baja";
+  } else if (tensionLbs < 18) {
+    tono = "good";
+    etiquetaZona = "ideal";
+  } else if (tensionLbs < 22) {
+    tono = "neutral";
+    etiquetaZona = "media-alta";
+  } else {
+    tono = "warn";
+    etiquetaZona = "alta";
+  }
+
+  const _insight = {
+    title: "Tensión de la cuerda",
+    text: `Esta cuerda queda con **${lbs1} lbs** (${kg1} kg) de tensión, una zona **${etiquetaZona}**. ${
+      tono === "good"
+        ? "Buen balance entre comodidad y tono."
+        : tono === "warn"
+          ? "Conviene ajustar calibre, afinación o escala para llevarla a un rango más cómodo."
+          : "Es usable; el tacto y el sustain van a depender de tu estilo."
+    }`,
+    tone: tono,
+    icon: "🎸",
+  };
+
+  const _chart = {
+    type: "scale",
+    marker: lbs1,
+    markerLabel: lbs1 + " lbs",
+    min: 0,
+    segments: [
+      { nombre: "Muy baja", max: 10, color: "#ef4444", colorDark: "#b91c1c" },
+      { nombre: "Baja", max: 14, color: "#f59e0b", colorDark: "#b45309" },
+      { nombre: "Ideal", max: 18, color: "#22c55e", colorDark: "#15803d" },
+      { nombre: "Media-alta", max: 22, color: "#f59e0b", colorDark: "#b45309" },
+      {
+        nombre: "Alta",
+        max: Math.max(26, Math.ceil(lbs1) + 2),
+        color: "#ef4444",
+        colorDark: "#b91c1c",
+      },
+    ],
+    ariaLabel: `Tensión de ${lbs1} libras ubicada en la zona ${etiquetaZona} (muy baja, baja, ideal, media-alta o alta).`,
+  };
+
   return {
     tensionLbs: Number(tensionLbs.toFixed(1)),
     tensionKg: Number(tensionKg.toFixed(1)),
     tensionN: Number(tensionN.toFixed(1)),
     evaluacion,
+    _insight,
+    _chart,
   };
 }

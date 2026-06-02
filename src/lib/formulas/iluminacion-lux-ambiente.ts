@@ -1,6 +1,6 @@
 /** Iluminación: lúmenes por ambiente */
 export interface Inputs { ambiente: string; m2: number; wattsLed?: string; }
-export interface Outputs { lumenesTotal: number; luxRecomendado: string; cantidadFocos: number; consejo: string; }
+export interface Outputs { lumenesTotal: number; luxRecomendado: string; cantidadFocos: number; consejo: string; _insight?: any; }
 
 const LUX_RECO: Record<string, [number, number]> = {
   cocina: [300, 500], living: [150, 300], dormitorio: [100, 200], bano: [200, 400],
@@ -19,10 +19,18 @@ export function iluminacionLuxAmbiente(i: Inputs): Outputs {
   const lumFoco = LUMENS_LED[watts] || 900;
   const focos = Math.ceil(lumTotal / lumFoco);
 
+  const insight = {
+    title: `Cuántos focos LED necesitás`,
+    text: `Para **${m2} m²** de ${amb} hace falta apuntar a **${lumTotal.toLocaleString('es-AR')} lúmenes** (${luxMin}–${luxMax} lux): unos **${focos} foco${focos === 1 ? '' : 's'} LED de ${watts}W** (~${lumFoco} lm c/u). Repartilos para evitar zonas oscuras.`,
+    tone: 'neutral',
+    icon: '💡',
+  };
+
   return {
     lumenesTotal: lumTotal,
     luxRecomendado: `${luxMin}–${luxMax} lux`,
     cantidadFocos: focos,
+    _insight: insight,
     consejo: amb === 'cocina' ? 'Usá luz neutra (4000K) para buena visibilidad al cocinar.' :
              amb === 'dormitorio' ? 'Usá luz cálida (2700K) y regulable (dimmer) para relax.' :
              amb === 'escritorio' ? 'Sumá una luz de escritorio focalizada además de la general.' :

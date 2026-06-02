@@ -11,6 +11,7 @@ export interface DeckMaderaOutputs {
   tornillos: number;
   listonesMl: number;
   detalle: string;
+  _insight?: any;
 }
 
 const DISTANCIA_LISTONES_CM = 50; // cada 50 cm
@@ -50,5 +51,11 @@ export function deckMaderaTablastornillos(inputs: DeckMaderaInputs): DeckMaderaO
     tornillos,
     listonesMl,
     detalle: `Para ${fmt.format(superficie)} m² de deck con tablas de ${fmt.format(anchoTabla)} cm: ${tablas} tablas de ${fmt.format(largoTabla)} m (${fmt.format(mlConDesp)} ml con ${desperdicio}% desperdicio), ${tornillos} tornillos tirafondo y ${fmt.format(listonesMl)} ml de listones de apoyo.`,
+    _insight: {
+      title: 'Tu lista de compra',
+      text: `Para **${fmt.format(superficie)} m²** vas a necesitar **${tablas} tablas** de ${fmt.format(largoTabla)} m, **${tornillos} tornillos** tirafondo y **${fmt.format(listonesMl)} ml** de listones de apoyo. Ya incluye **${desperdicio}%** de desperdicio por cortes; comprá los tornillos en caja cerrada para tener margen.`,
+      tone: 'neutral',
+      icon: '🪵',
+    },
   };
 }

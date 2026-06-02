@@ -16,6 +16,7 @@ export interface Outputs {
   capital_year1: number;
   capital_year5: number;
   payoff_date: string;
+  _insight?: any;
   _chart?: any;
   _table?: any;
 }
@@ -182,6 +183,18 @@ export function compute(i: Inputs): Outputs {
     note: "Montos redondeados, en la moneda de tu país. Con el sistema francés la cuota es fija: al principio pagás más interés y menos capital, y la proporción se invierte con el tiempo.",
   };
 
+  // Insight: cuota fija mensual y peso de los intereses sobre el capital.
+  const fmtMoney = (x: number) => "$" + Math.round(x).toLocaleString("es-AR");
+  const interestRatio = totalInterest / principal;
+  const insight = {
+    title: "Tu cuota fija y el peso de los intereses",
+    text: interestRatio >= 1
+      ? `Pagarías **${fmtMoney(monthlyTotal)}/mes** durante ${termYears} años. Al final, los intereses suman **${fmtMoney(totalInterest)}**: **más que los ${fmtMoney(principal)}** que pedís prestados.`
+      : `Pagarías **${fmtMoney(monthlyTotal)}/mes** durante ${termYears} años. Los intereses totales (**${fmtMoney(totalInterest)}**) representan un **${Math.round(interestRatio * 100)}%** sobre el capital de ${fmtMoney(principal)}.`,
+    tone: interestRatio >= 1 ? "warn" : "neutral",
+    icon: "🏠",
+  };
+
   return {
     monthly_payment: Math.round(monthlyPayment * 100) / 100,
     monthly_total: Math.round(monthlyTotal * 100) / 100,
@@ -191,6 +204,7 @@ export function compute(i: Inputs): Outputs {
     capital_year1: Math.round(capitalYear1 * 100) / 100,
     capital_year5: Math.round(capitalYear5 * 100) / 100,
     payoff_date: payoffDate,
+    _insight: insight,
     _chart: chart,
     _table: table
   };

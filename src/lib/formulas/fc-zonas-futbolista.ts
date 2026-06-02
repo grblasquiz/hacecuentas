@@ -13,6 +13,7 @@ export interface Outputs {
   z5Min: number; z5Max: number;
   metodo: string;
   detalle: string;
+  _insight?: any;
 }
 
 const ZONAS = [
@@ -54,6 +55,14 @@ export function fcZonasFutbolista(i: Inputs): Outputs {
     });
   }
 
+  const usaKarvonen = metodo.startsWith('Karvonen');
+  const _insight = {
+    title: `Tu zona de juego: ${zonas[2].min}–${zonas[3].max} lpm`,
+    text: `Con **${fcMax} lpm** de FC máxima, el trabajo específico de fútbol vive en **Z3–Z4 (${zonas[2].min}–${zonas[3].max} lpm)**: ahí entrenás los esprines repetidos y el ritmo de partido. Reservá la **Z5 (${zonas[4].min}–${zonas[4].max} lpm)** para esfuerzos máximos cortos y la **Z1 (${zonas[0].min}–${zonas[0].max} lpm)** para recuperar.${usaKarvonen ? ' Calculado con **Karvonen**, más preciso por usar tu FC de reposo.' : ''}`,
+    tone: 'neutral',
+    icon: '⚽',
+  };
+
   return {
     fcMax,
     z1Min: zonas[0].min, z1Max: zonas[0].max,
@@ -63,5 +72,6 @@ export function fcZonasFutbolista(i: Inputs): Outputs {
     z5Min: zonas[4].min, z5Max: zonas[4].max,
     metodo,
     detalle: `FCmax Tanaka (${edad} años): **${fcMax} lpm**. Método: ${metodo}. Z1 ${zonas[0].min}-${zonas[0].max} | Z2 ${zonas[1].min}-${zonas[1].max} | Z3 ${zonas[2].min}-${zonas[2].max} | Z4 ${zonas[3].min}-${zonas[3].max} | Z5 ${zonas[4].min}-${zonas[4].max} lpm.`,
+    _insight,
   } as Outputs;
 }

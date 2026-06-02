@@ -39,6 +39,7 @@ export interface IndiceSaciedadAlimentoOutputs {
   clasificacion: string;
   comparacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function indiceSaciedadAlimento(inputs: IndiceSaciedadAlimentoInputs): IndiceSaciedadAlimentoOutputs {
@@ -55,6 +56,12 @@ export function indiceSaciedadAlimento(inputs: IndiceSaciedadAlimentoInputs): In
       segSaciante: 'Saciante',
       segMuySaciante: 'Muy saciante',
       ariaLabel: 'Escala de índice de saciedad Holt (pan blanco = 100): poco saciante menos de 100, muy saciante 200 o más',
+      insightTitleHigh: 'Te llena más por caloría',
+      insightTitleMid: 'Saciedad intermedia',
+      insightTitleLow: 'Sacia poco para lo que aporta',
+      insightHigh: (n: string, si: number, ratio: string) => `${n} tiene un índice de saciedad de **${si}**: sacia **${ratio}×** lo que el pan blanco. Es una buena elección para quedar satisfecho con menos calorías.`,
+      insightMid: (n: string, si: number, ratio: string) => `${n} tiene un índice de saciedad de **${si}** (**${ratio}×** el pan blanco): saciedad intermedia. Combinalo con proteína o fibra para que rinda más.`,
+      insightLow: (n: string, si: number, ratio: string) => `${n} tiene un índice de saciedad de **${si}**, por debajo del pan blanco (**${ratio}×**): llena poco para las calorías que aporta, fácil de comer de más.`,
     },
     en: {
       errorAlimento: 'Select a valid food',
@@ -67,6 +74,12 @@ export function indiceSaciedadAlimento(inputs: IndiceSaciedadAlimentoInputs): In
       segSaciante: 'Satiating',
       segMuySaciante: 'Very satiating',
       ariaLabel: 'Holt satiety index scale (white bread = 100): low satiety below 100, very satiating 200 or more',
+      insightTitleHigh: 'Fills you up per calorie',
+      insightTitleMid: 'Moderate satiety',
+      insightTitleLow: 'Low satiety for what it delivers',
+      insightHigh: (n: string, si: number, ratio: string) => `${n} has a satiety index of **${si}**: it satiates **${ratio}×** as much as white bread. A solid choice to feel full on fewer calories.`,
+      insightMid: (n: string, si: number, ratio: string) => `${n} has a satiety index of **${si}** (**${ratio}×** white bread): moderate satiety. Pair it with protein or fiber to make it last longer.`,
+      insightLow: (n: string, si: number, ratio: string) => `${n} has a satiety index of **${si}**, below white bread (**${ratio}×**): low satiety for the calories it provides, easy to overeat.`,
     },
   } as const)[__lang];
   const data = SI_TABLE[inputs.alimento];
@@ -91,6 +104,16 @@ export function indiceSaciedadAlimento(inputs: IndiceSaciedadAlimentoInputs): In
     ],
     ariaLabel: T.ariaLabel,
   };
+  const insight = {
+    title: data.si >= 130 ? T.insightTitleHigh : data.si >= 100 ? T.insightTitleMid : T.insightTitleLow,
+    text: data.si >= 130
+      ? T.insightHigh(data.nombre, data.si, ratio)
+      : data.si >= 100
+      ? T.insightMid(data.nombre, data.si, ratio)
+      : T.insightLow(data.nombre, data.si, ratio),
+    tone: data.si >= 130 ? 'good' : data.si >= 100 ? 'neutral' : 'warn',
+    icon: data.si >= 130 ? '🥗' : data.si >= 100 ? '🍽️' : '⚠️',
+  };
   return {
     si: data.si,
     clasificacion: clasif,
@@ -98,5 +121,6 @@ export function indiceSaciedadAlimento(inputs: IndiceSaciedadAlimentoInputs): In
       ? `Satiates ${ratio}× white bread (reference).`
       : `Sacia ${ratio}× el pan blanco (referencia).`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -17,6 +17,8 @@ export interface Outputs {
   total_mensual: number;
   salario_recomendado: number;
   comparativa_ciudad: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -122,6 +124,59 @@ export function compute(i: Inputs): Outputs {
   const bogota_base_total = (base_arriendo + base_alimentacion + base_transporte + base_servicios + base_salud_personal + base_ocio) * composicion_coef * nivel_coef;
   const comparativa_ciudad = ((total_mensual - bogota_base_total) / bogota_base_total) * 100;
 
+  // --- Insight + gráfico ---
+  const r_total = Math.round(total_mensual);
+  const r_salario = Math.round(salario_recomendado);
+  const r_comp = Math.round(comparativa_ciudad * 10) / 10;
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const labelCiudad: Record<string, string> = {
+    bogota: 'Bogotá', medellin: 'Medellín', cali: 'Cali', barranquilla: 'Barranquilla',
+    bucaramanga: 'Bucaramanga', cartagena: 'Cartagena', santa_marta: 'Santa Marta',
+    manizales: 'Manizales', pereira: 'Pereira', armenia: 'Armenia'
+  };
+
+  const categorias = [
+    { label: 'Arriendo', value: Math.round(arriendo) },
+    { label: 'Alimentación', value: Math.round(alimentacion) },
+    { label: 'Transporte', value: Math.round(transporte) },
+    { label: 'Servicios', value: Math.round(servicios) },
+    { label: 'Educación', value: Math.round(educacion) },
+    { label: 'Salud', value: Math.round(salud_personal) },
+    { label: 'Ocio', value: Math.round(ocio) }
+  ];
+  const mayor = categorias.reduce((a, b) => (b.value > a.value ? b : a));
+  const pctMayor = Math.round((mayor.value / r_total) * 100);
+
+  // Comparativa vs Bogotá (mismo perfil), tono dinámico
+  let compFrase: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (i.ciudad === 'bogota') {
+    compFrase = 'Es la ciudad de referencia del país.';
+    insightTone = pctMayor >= 40 ? 'warn' : 'neutral';
+  } else if (r_comp < 0) {
+    compFrase = `Sale **${Math.abs(r_comp)}% más barato** que el mismo perfil en Bogotá.`;
+    insightTone = 'good';
+  } else {
+    compFrase = `Sale **${r_comp}% más caro** que el mismo perfil en Bogotá.`;
+    insightTone = 'warn';
+  }
+
+  const _insight = {
+    title: 'Tu costo de vida mensual',
+    text: `Mantener este hogar en **${labelCiudad[i.ciudad] || 'tu ciudad'}** cuesta unos **${fmtCOP(r_total)}** al mes (se recomienda ganar al menos **${fmtCOP(r_salario)}** brutos). El **${mayor.label.toLowerCase()}** es el rubro más pesado: ${pctMayor}% del total. ${compFrase}`,
+    tone: insightTone,
+    icon: '🇨🇴'
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: categorias.filter(c => c.value > 0),
+    prefix: '$',
+    centerValue: r_total.toLocaleString('es-CO'),
+    centerLabel: 'Total/mes',
+    ariaLabel: `Reparto del costo de vida mensual de ${fmtCOP(r_total)} entre arriendo, alimentación, transporte, servicios, educación, salud y ocio.`
+  };
+
   return {
     arriendo_mensual: Math.round(arriendo),
     alimentacion_mensual: Math.round(alimentacion),
@@ -130,8 +185,10 @@ export function compute(i: Inputs): Outputs {
     educacion_mensual: Math.round(educacion),
     salud_personal_mensual: Math.round(salud_personal),
     ocio_mensual: Math.round(ocio),
-    total_mensual: Math.round(total_mensual),
-    salario_recomendado: Math.round(salario_recomendado),
-    comparativa_ciudad: Math.round(comparativa_ciudad * 10) / 10,
+    total_mensual: r_total,
+    salario_recomendado: r_salario,
+    comparativa_ciudad: r_comp,
+    _insight,
+    _chart
   };
 }

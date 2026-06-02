@@ -18,6 +18,7 @@ export interface Outputs {
   mejorEstrategia: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function dollarCostAveragingCripto(i: Inputs): Outputs {
@@ -55,6 +56,31 @@ export function dollarCostAveragingCripto(i: Inputs): Outputs {
   const diferencia = resultadoDca - resultadoLumpSum;
   const mejorEstrategia = diferencia > 0 ? 'DCA' : diferencia < 0 ? 'Lump Sum' : 'Igual';
 
+  const absDif = Math.round(Math.abs(diferencia)).toLocaleString();
+  let _insight: any;
+  if (mejorEstrategia === 'DCA') {
+    _insight = {
+      title: 'DCA habría rendido más',
+      text: `Repartir la compra en **${meses} cuotas** mensuales habría dado **$${absDif} más** que comprar todo de una, porque promediaste mejores precios de entrada (promedio **$${precioPromedioDca.toFixed(2)}** vs $${precioInicial.toLocaleString()} del lump sum).`,
+      tone: 'good',
+      icon: '📈',
+    };
+  } else if (mejorEstrategia === 'Lump Sum') {
+    _insight = {
+      title: 'Comprar todo de una ganaba',
+      text: `En este escenario el **Lump Sum** superó al DCA por **$${absDif}**: al comprar todo al inicio a $${precioInicial.toLocaleString()} capturaste la suba completa, mientras que dosificar te dejó comprando a precios más altos (promedio **$${precioPromedioDca.toFixed(2)}**).`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: 'Empate técnico',
+      text: `Con estos precios, **DCA y Lump Sum dan prácticamente lo mismo** (~$${Math.round(resultadoDca).toLocaleString()}). En cripto el DCA igual reduce el riesgo de elegir mal el momento de entrada.`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  }
+
   const formula = `DCA: $${montoTotal.toLocaleString()} / ${meses} meses = $${montoMensual.toFixed(2)}/mes → ${tokensDca.toFixed(4)} tokens`;
   const explicacion = `Con **Lump Sum** (todo de una a $${precioInicial}), comprás ${tokensLumpSum.toFixed(4)} tokens que al precio final valen $${Math.round(resultadoLumpSum).toLocaleString()}. Con **DCA** ($${montoMensual.toFixed(0)}/mes durante ${meses} meses), acumulás ${tokensDca.toFixed(4)} tokens (precio promedio $${precioPromedioDca.toFixed(2)}) que valen $${Math.round(resultadoDca).toLocaleString()}. ${mejorEstrategia === 'DCA' ? `DCA gana por $${Math.round(Math.abs(diferencia)).toLocaleString()}.` : mejorEstrategia === 'Lump Sum' ? `Lump Sum gana por $${Math.round(Math.abs(diferencia)).toLocaleString()}.` : 'Ambas estrategias dan igual.'}`;
 
@@ -68,5 +94,6 @@ export function dollarCostAveragingCripto(i: Inputs): Outputs {
     mejorEstrategia,
     formula,
     explicacion,
+    _insight,
   };
 }

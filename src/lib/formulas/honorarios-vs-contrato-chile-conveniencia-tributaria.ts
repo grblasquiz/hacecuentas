@@ -33,6 +33,7 @@ export interface Outputs {
     vacaciones: number;
     total_anual_con_beneficios: number;
   };
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -106,6 +107,26 @@ export function compute(i: Inputs): Outputs {
   const diferencia = con_total_beneficios - hon_liquido_anual;
   const diferencia_pct = hon_liquido_anual > 0 ? (diferencia / hon_liquido_anual) * 100 : 0;
 
+  // Insight comparativo: qué modalidad conviene y por cuánto al año
+  const fmtCLP = (n: number) => "$" + Math.round(n).toLocaleString("es-CL");
+  const ganador = diferencia >= 0 ? "contrato" : "honorarios";
+  const brecha = Math.abs(Math.round(diferencia));
+  const brechaPct = Math.abs(Math.round(diferencia_pct * 10) / 10);
+  let insight_text: string;
+  if (Math.abs(diferencia_pct) < 3) {
+    insight_text = `Con un bruto de **${fmtCLP(con_bruto)}**, las dos modalidades quedan casi empatadas: la diferencia anual es de apenas **${fmtCLP(brecha)}** (**${brechaPct}%**). Decidí por la flexibilidad y la estabilidad, no por la plata.`;
+  } else if (ganador === "contrato") {
+    insight_text = `Con un bruto de **${fmtCLP(con_bruto)}**, el **contrato indefinido** te deja **${fmtCLP(brecha)}** más al año (**+${brechaPct}%**) una vez sumás gratificación y vacaciones. La aparente "ventaja" de honorarios desaparece al contar los beneficios legales.`;
+  } else {
+    insight_text = `Con un bruto de **${fmtCLP(con_bruto)}**, los **honorarios** rinden **${fmtCLP(brecha)}** más al año (**+${brechaPct}%**) en líquido. Ojo: sin contrato no tenés gratificación, finiquito, seguro de cesantía ni licencias pagadas; ese colchón vale más cuando algo sale mal.`;
+  }
+  const _insight = {
+    title: "Honorarios vs. contrato",
+    text: insight_text,
+    tone: "neutral" as const,
+    icon: "🇨🇱",
+  };
+
   return {
     honorarios_liquido_mensual: Math.round(hon_liquido_mensual),
     honorarios_liquido_anual: Math.round(hon_liquido_anual),
@@ -133,5 +154,6 @@ export function compute(i: Inputs): Outputs {
       vacaciones: Math.round(con_vacaciones),
       total_anual_con_beneficios: Math.round(con_total_beneficios),
     },
+    _insight,
   };
 }

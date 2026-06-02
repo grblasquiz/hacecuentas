@@ -13,6 +13,7 @@ export interface Outputs {
   modelo_recomendado: string;
   ahorro_vs_caro: number;
   detalle: string;
+  _insight?: any;
 }
 
 // ─── Precios por millón de tokens (USD/MTok) — revisados 2026-04-27 ───
@@ -132,6 +133,21 @@ export function compute(i: Inputs): Outputs {
 
   const modelo_recomendado = masBarato.nombre;
 
+  const pctAhorroIns = masCaro.costo > 0 ? (ahorro_vs_caro / masCaro.costo) * 100 : 0;
+  const _insight = activos.length > 1
+    ? {
+        title: "Modelo más conveniente",
+        text: `**${masBarato.nombre}** es el más barato a USD **${masBarato.costo.toFixed(2)}/mes** con este volumen: ahorrás **USD ${ahorro_vs_caro.toFixed(2)}/mes** (${pctAhorroIns.toFixed(0)}%) frente a ${masCaro.nombre}.`,
+        tone: "good",
+        icon: "🤖",
+      }
+    : {
+        title: "Costo estimado",
+        text: `Con este volumen, **${masBarato.nombre}** te cuesta USD **${masBarato.costo.toFixed(2)}/mes**. Ajustá caché y batch para bajarlo aún más.`,
+        tone: "neutral",
+        icon: "🤖",
+      };
+
   return {
     costo_gpt5:   costo_gpt5   >= 0 ? parseFloat(costo_gpt5.toFixed(2))   : 0,
     costo_claude: costo_claude >= 0 ? parseFloat(costo_claude.toFixed(2)) : 0,
@@ -139,5 +155,6 @@ export function compute(i: Inputs): Outputs {
     modelo_recomendado,
     ahorro_vs_caro: parseFloat(ahorro_vs_caro.toFixed(2)),
     detalle: lines.join("\n"),
+    _insight,
   };
 }

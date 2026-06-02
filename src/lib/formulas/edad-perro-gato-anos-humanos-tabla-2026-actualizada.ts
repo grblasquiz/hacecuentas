@@ -8,6 +8,8 @@ export interface Outputs {
   human_age: number;
   life_stage: string;
   health_notes: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -75,9 +77,39 @@ export function compute(i: Inputs): Outputs {
     healthNotes = 'Alto riesgo de enfermedades crónicas. Controles veterinarios cada 3–4 meses. Ambiente confortable y sin estrés.';
   }
 
+  const humanAgeR = Math.round(humanAge * 10) / 10;
+  const especie = species === 'cat' ? 'gato' : 'perro';
+  const toneStage: 'good' | 'warn' | 'neutral' =
+    humanAge >= 50 ? (humanAge >= 75 ? 'warn' : 'neutral') :
+    (humanAge >= 24 ? 'good' : 'neutral');
+  const _insight = {
+    title: `Tu ${especie} en años humanos`,
+    text: `Con **${ageYears} ${ageYears === 1 ? 'año' : 'años'}** reales, tu ${especie} equivale a unos **${humanAgeR} años humanos**: está en etapa **${lifeStage.toLowerCase()}**. ${healthNotes}`,
+    tone: toneStage,
+    icon: species === 'cat' ? '🐱' : '🐶',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: humanAgeR,
+    markerLabel: lifeStage,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Bebé', max: 15, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Cachorro', max: 24, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Adulto joven', max: 50, color: '#bfdbfe', colorDark: '#1e40af' },
+      { nombre: 'Senior', max: 75, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Geriátrico', max: Math.max(100, Math.ceil(humanAgeR) + 1), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Escala de etapa de vida de tu ${especie}: ${humanAgeR} años humanos (${lifeStage}).`,
+  };
+
   return {
-    human_age: Math.round(humanAge * 10) / 10, // 1 decimal
+    human_age: humanAgeR, // 1 decimal
     life_stage: lifeStage,
-    health_notes: healthNotes
+    health_notes: healthNotes,
+    _insight,
+    _chart,
   };
 }

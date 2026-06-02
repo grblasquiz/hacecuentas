@@ -17,6 +17,8 @@ export interface Outputs {
   desembolso_total: number;          // suma de los anteriores
   duracion_minima_contrato: string;  // texto explicativo
   aviso_legalidad: string;           // advertencia si procede
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -96,6 +98,50 @@ export function compute(i: Inputs): Outputs {
     aviso_legalidad = 'Las condiciones introducidas son conformes con los límites legales de la LAU.';
   }
 
+  // --- Caja de insight narrativa ---
+  const fmtEur = (n: number) =>
+    '€' + Math.round(n).toLocaleString('es-ES');
+  const mesesEquivalentes = renta > 0
+    ? Math.round((desembolso_total / renta) * 10) / 10
+    : 0;
+  // Tono dinámico: warn si hay un aviso de legalidad real (no el mensaje "todo conforme")
+  const hayAvisoReal =
+    mesesGarantia > MAXIMO_MESES_GARANTIA_ADICIONAL ||
+    i.hay_agencia === 'si_fisica' ||
+    renta === 0;
+  let insightText: string;
+  if (renta === 0) {
+    insightText =
+      'Introducí una **renta mensual válida** para estimar el desembolso inicial del alquiler.';
+  } else {
+    insightText =
+      `Para entrar a vivir necesitás desembolsar **${fmtEur(desembolso_total)}**, ` +
+      `equivalente a **${mesesEquivalentes} mensualidades** de renta. ` +
+      `La fianza legal de 1 mes (**${fmtEur(fianza_legal)}**) es reembolsable al final del contrato.`;
+  }
+  const _insight = {
+    title: 'Qué significa este desembolso',
+    text: insightText,
+    tone: hayAvisoReal ? 'warn' : 'neutral',
+    icon: '🔑',
+  };
+
+  // --- Gráfico donut: composición del desembolso inicial ---
+  const slices: { label: string; value: number }[] = [];
+  if (fianza_legal > 0) slices.push({ label: 'Fianza legal (1 mes)', value: fianza_legal });
+  if (garantia_adicional > 0) slices.push({ label: 'Garantía adicional', value: garantia_adicional });
+  if (comision_agencia > 0) slices.push({ label: 'Comisión agencia', value: comision_agencia });
+  if (primera_mensualidad > 0) slices.push({ label: 'Primera mensualidad', value: primera_mensualidad });
+
+  const _chart = (slices.length >= 2 && desembolso_total > 0) ? {
+    type: 'doughnut',
+    slices,
+    prefix: '€',
+    centerValue: fmtEur(desembolso_total),
+    centerLabel: 'Desembolso',
+    ariaLabel: 'Composición del desembolso inicial de alquiler: fianza, garantía, comisión y primera mensualidad',
+  } : undefined;
+
   return {
     fianza_legal,
     garantia_adicional,
@@ -103,6 +149,8 @@ export function compute(i: Inputs): Outputs {
     primera_mensualidad,
     desembolso_total,
     duracion_minima_contrato,
-    aviso_legalidad: aviso_legalidad.trim()
+    aviso_legalidad: aviso_legalidad.trim(),
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

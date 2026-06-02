@@ -13,6 +13,8 @@ export interface Outputs {
   monthlySavings: number;
   savingsPercent: number;
   breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Precios en USD por millón de tokens — Anthropic 2026
@@ -120,11 +122,42 @@ export function compute(i: Inputs): Outputs {
     `Tokens variables (${variableTokensPerRequest.toLocaleString()} tokens): $${fmt(costVariablePerRequest * requestsPerMonth)}/mes\n` +
     `Output (${outputTokensPerRequest.toLocaleString()} tokens): $${fmt(costOutputPerRequest * requestsPerMonth)}/mes`;
 
+  // --- Insight + gráfico ---
+  const usd = (n: number) => `US$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const _insight = {
+    title: 'Ahorro por caching',
+    text: `Con **${cacheHitRatePct.toFixed(0)}% de aciertos de caché**, el prompt te cuesta **${usd(monthlyCostWithCache)}/mes** en lugar de **${usd(monthlyCostWithoutCache)}/mes**: ahorrás **${usd(monthlySavings)}** (**${savingsPercent.toFixed(1)}%**). Subir el hit rate o reducir los tokens de salida es lo que más mueve la factura.`,
+    tone: savingsPercent >= 15 ? 'good' : 'neutral',
+    icon: '💸',
+  };
+
+  // Componentes mensuales que suman monthlyCostWithCache
+  const mWrite = costWritePerRequest * requestsPerMonth;
+  const mRead = costReadPerRequest * requestsPerMonth;
+  const mVariable = costVariablePerRequest * requestsPerMonth;
+  const mOutput = costOutputPerRequest * requestsPerMonth;
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Cache write', value: r2(mWrite) },
+      { label: 'Cache read', value: r2(mRead) },
+      { label: 'Input variable', value: r2(mVariable) },
+      { label: 'Output', value: r2(mOutput) },
+    ].filter(s => s.value > 0),
+    prefix: 'US$',
+    centerValue: usd(monthlyCostWithCache),
+    centerLabel: 'Costo/mes',
+    ariaLabel: `Costo mensual con caché ${usd(monthlyCostWithCache)}: cache write ${usd(mWrite)}, cache read ${usd(mRead)}, input variable ${usd(mVariable)}, output ${usd(mOutput)}.`,
+  };
+
   return {
     monthlyCostWithCache: Math.round(monthlyCostWithCache * 100) / 100,
     monthlyCostWithoutCache: Math.round(monthlyCostWithoutCache * 100) / 100,
     monthlySavings: Math.round(monthlySavings * 100) / 100,
     savingsPercent: Math.round(savingsPercent * 10) / 10,
     breakdown,
+    _insight,
+    _chart,
   };
 }

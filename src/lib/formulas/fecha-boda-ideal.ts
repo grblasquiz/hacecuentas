@@ -1,6 +1,6 @@
 /** Fecha de boda ideal 2026 */
 export interface Inputs { mesPreferido?: string; evitarSupersticiones?: string; }
-export interface Outputs { mejoresFechas: string; listaFechas: string; totalSabados: number; mensaje: string; }
+export interface Outputs { mejoresFechas: string; listaFechas: string; totalSabados: number; mensaje: string; _insight?: any; }
 
 const FERIADOS_2026 = [
   '2026-01-01','2026-02-16','2026-02-17','2026-03-23','2026-03-24',
@@ -67,5 +67,25 @@ export function fechaBodaIdeal(i: Inputs): Outputs {
     ? (Number(mesPref) >= 10 || Number(mesPref) <= 11 ? 'Excelente época — primavera argentina.' : 'Buena elección de mes.')
     : 'Te mostramos las mejores opciones de todo 2026.';
 
-  return { mejoresFechas: mejores, listaFechas, totalSabados: sabados.length, mensaje: estacion };
+  let _insight;
+  if (top.length) {
+    const t = top[0];
+    const fechaLarga = t.fecha.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const buena = t.score >= 80;
+    _insight = {
+      title: `Mejor fecha: ${fechaLarga}`,
+      text: `Entre **${sabados.length} sábados** evaluados, el **${fechaLarga} de ${anio}** lidera con **puntaje ${t.score}/100**${t.nota && t.nota !== 'Sin observaciones.' ? ` (${t.nota.trim()})` : ''}. ${buena ? 'Excelente combinación de estación y sin choques con feriados ni supersticiones.' : 'Es la mejor disponible, pero revisá las observaciones antes de reservar.'}`,
+      tone: buena ? 'good' : 'neutral',
+      icon: '💍',
+    };
+  } else {
+    _insight = {
+      title: 'Sin sábados en el rango',
+      text: 'No encontramos sábados para el mes elegido. Probá con **todos los meses** para ver las mejores opciones de 2026.',
+      tone: 'warn',
+      icon: '💍',
+    };
+  }
+
+  return { mejoresFechas: mejores, listaFechas, totalSabados: sabados.length, mensaje: estacion, _insight };
 }

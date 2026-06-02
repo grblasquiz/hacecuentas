@@ -1,6 +1,6 @@
 /** Edad en semanas, días y horas */
 export interface Inputs { fechaNacimiento: string; }
-export interface Outputs { semanas: number; dias: number; horas: number; proximoHito: string; mensaje: string; }
+export interface Outputs { semanas: number; dias: number; horas: number; proximoHito: string; mensaje: string; _insight?: any; }
 
 export function edadEnSemanas(i: Inputs): Outputs {
   const parts = String(i.fechaNacimiento || '').split('-').map(Number);
@@ -32,8 +32,16 @@ export function edadEnSemanas(i: Inputs): Outputs {
 
   const anos = Math.floor(dias / 365.25);
 
+  const _insight = {
+    title: 'Tu edad, otra escala',
+    text: `Tus **${anos} años** son **${semanas.toLocaleString()} semanas**, o sea **${dias.toLocaleString()} días** y unas **${horas.toLocaleString()} horas** de vida. Pensar en semanas ayuda a dimensionar el tiempo: una vida de 82 años son apenas ~4.300 semanas.`,
+    tone: 'neutral',
+    icon: '⏳',
+  };
+
   return {
     semanas, dias, horas, proximoHito,
-    mensaje: `Tenés ${anos} años = ${semanas.toLocaleString()} semanas = ${dias.toLocaleString()} días = ~${horas.toLocaleString()} horas de vida.`
+    mensaje: `Tenés ${anos} años = ${semanas.toLocaleString()} semanas = ${dias.toLocaleString()} días = ~${horas.toLocaleString()} horas de vida.`,
+    _insight
   };
 }

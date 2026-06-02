@@ -10,6 +10,8 @@ export interface Outputs {
   costoOtros: number;
   costoAnual: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function costoMascotaMes(i: Inputs): Outputs {
@@ -32,6 +34,13 @@ export function costoMascotaMes(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const pctAlim = costoMensual > 0 ? Math.round((data.alimento / costoMensual) * 100) : 0;
+  const slices = [
+    { label: 'Alimento', value: data.alimento },
+  ];
+  if (costoVeterinario > 0) slices.push({ label: 'Veterinario', value: costoVeterinario });
+  slices.push({ label: 'Higiene y extras', value: data.otros });
+
   return {
     costoMensual,
     costoAlimento: data.alimento,
@@ -39,5 +48,19 @@ export function costoMascotaMes(i: Inputs): Outputs {
     costoOtros: data.otros,
     costoAnual,
     detalle: `${data.nombre}: ~$${fmt.format(costoMensual)}/mes (alimento $${fmt.format(data.alimento)} + ${incluyeVet === 'si' ? `veterinario $${fmt.format(costoVeterinario)} + ` : ''}higiene y extras $${fmt.format(data.otros)}). Costo anual: ~$${fmt.format(costoAnual)}. Valores orientativos Argentina abril 2026.`,
+    _insight: {
+      title: 'Lo que sale tener tu mascota',
+      text: `${data.nombre} cuesta unos **$${fmt.format(costoMensual)}/mes**, o sea **$${fmt.format(costoAnual)}** al año. El alimento se lleva el grueso del gasto (**${pctAlim}%**, $${fmt.format(data.alimento)}/mes).`,
+      tone: 'neutral',
+      icon: tipo === 'gato' ? '🐱' : '🐶',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: `$${fmt.format(costoMensual)}`,
+      centerLabel: 'Por mes',
+      ariaLabel: `El costo mensual de $${fmt.format(costoMensual)} se reparte en alimento $${fmt.format(data.alimento)}${costoVeterinario > 0 ? `, veterinario $${fmt.format(costoVeterinario)}` : ''} e higiene y extras $${fmt.format(data.otros)}.`,
+    },
   };
 }

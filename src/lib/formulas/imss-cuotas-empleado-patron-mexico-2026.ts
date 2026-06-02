@@ -17,6 +17,8 @@ export interface Outputs {
   cuota_patron_total: number;
   costo_total_empleado: number;
   porcentaje_costo_total: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -66,6 +68,26 @@ export function compute(i: Inputs): Outputs {
   const costo_total_empleado = cuota_empleado_total + cuota_patron_total;
   const porcentaje_costo_total = sbc_tope > 0 ? (costo_total_empleado / sbc_tope) * 100 : 0;
 
+  const topado = sbc > SBC_MAXIMO;
+  const fmt = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const _insight = {
+    title: 'Quién paga las cuotas del IMSS',
+    text: `Sobre un SBC de **${fmt(sbc_tope)}**, las cuotas IMSS suman **${fmt(costo_total_empleado)}** (un **${porcentaje_costo_total.toFixed(1)}%** del salario). El patrón aporta el grueso, **${fmt(cuota_patron_total)}**, y al trabajador se le retienen **${fmt(cuota_empleado_total)}**.${topado ? ' El salario supera el tope de 25 UMA, así que las cuotas se calculan sobre ese máximo.' : ''}`,
+    tone: 'neutral' as const,
+    icon: '🇲🇽',
+  };
+  const _chart = sbc_tope > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cuota patrón', value: Math.round(cuota_patron_total * 100) / 100 },
+      { label: 'Cuota empleado', value: Math.round(cuota_empleado_total * 100) / 100 },
+    ],
+    prefix: '$',
+    centerValue: fmt(costo_total_empleado),
+    centerLabel: 'Cuota IMSS total',
+    ariaLabel: 'Reparto de las cuotas del IMSS entre la parte que paga el patrón y la que se retiene al empleado',
+  } : undefined;
+
   return {
     cuota_empleado_enfermedades: Math.round(cuota_empleado_enfermedades * 100) / 100,
     cuota_empleado_gmp: Math.round(cuota_empleado_gmp * 100) / 100,
@@ -80,6 +102,8 @@ export function compute(i: Inputs): Outputs {
     cuota_patron_guarderia: Math.round(cuota_patron_guarderia * 100) / 100,
     cuota_patron_total: Math.round(cuota_patron_total * 100) / 100,
     costo_total_empleado: Math.round(costo_total_empleado * 100) / 100,
-    porcentaje_costo_total: Math.round(porcentaje_costo_total * 100) / 100
+    porcentaje_costo_total: Math.round(porcentaje_costo_total * 100) / 100,
+    _insight,
+    _chart
   };
 }

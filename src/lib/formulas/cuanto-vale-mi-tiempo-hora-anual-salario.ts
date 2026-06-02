@@ -11,6 +11,7 @@ export interface Outputs {
   minute_rate: number;
   annual_hours: number;
   comparison_text: string;
+  _insight?: any;
 }
 
 function getMinimumWageUSD(country: string): { wage: number; label: string } {
@@ -51,21 +52,46 @@ export function compute(i: Inputs): Outputs {
   const minuteRate = hourlyRate / 60;
 
   let comparisonText = "";
+  let ratioNum = 0;
   if (countryComparison !== "none") {
     const minWage = getMinimumWageUSD(countryComparison);
     if (minWage.wage > 0) {
-      const ratio = (monthlySalary / minWage.wage).toFixed(2);
+      ratioNum = monthlySalary / minWage.wage;
+      const ratio = ratioNum.toFixed(2);
       comparisonText = `Tu salario es ${ratio}x el mínimo. ${minWage.label}.`;
     }
   } else {
     comparisonText = "Sin comparación seleccionada";
   }
 
+  const hourlyR = Math.round(hourlyRate * 100) / 100;
+  const annualH = Math.round(annualHours);
+  const fmtHora = hourlyR.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  let insightTone: "good" | "warn" | "neutral" = "neutral";
+  let insightText = `Cada hora trabajada vale **$${fmtHora}**. Trabajás unas **${annualH.toLocaleString("es-AR")} horas al año**, así que cada minuto que regalás en reuniones o trámites tiene un precio concreto.`;
+  if (ratioNum > 0) {
+    if (ratioNum >= 3) {
+      insightTone = "good";
+      insightText = `Cada hora vale **$${fmtHora}** y tu sueldo es **${ratioNum.toFixed(1)}x el salario mínimo**: estás bastante por encima del piso, valuá bien tu tiempo antes de aceptar trabajo extra mal pago.`;
+    } else if (ratioNum < 1.5) {
+      insightTone = "warn";
+      insightText = `Cada hora vale **$${fmtHora}** y tu sueldo es apenas **${ratioNum.toFixed(1)}x el salario mínimo**: estás cerca del piso, cada hora extra sin pagar te cuesta proporcionalmente más.`;
+    } else {
+      insightText = `Cada hora vale **$${fmtHora}** (**${ratioNum.toFixed(1)}x el salario mínimo**). Tené este número a mano para decidir si te conviene tercerizar tareas o cobrar horas extra.`;
+    }
+  }
+
   return {
-    hourly_rate: Math.round(hourlyRate * 100) / 100,
+    hourly_rate: hourlyR,
     daily_rate: Math.round(dailyRate * 100) / 100,
     minute_rate: Math.round(minuteRate * 100) / 100,
-    annual_hours: Math.round(annualHours),
-    comparison_text: comparisonText
+    annual_hours: annualH,
+    comparison_text: comparisonText,
+    _insight: {
+      title: "Qué dice tu hora",
+      text: insightText,
+      tone: insightTone,
+      icon: "⏱️"
+    }
   };
 }

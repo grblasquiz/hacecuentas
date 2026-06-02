@@ -25,6 +25,8 @@ export interface Outputs {
   perdida_precio_porcentaje: number;
   resumen_tributacion: number;
   rendimiento_total_neto: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -98,6 +100,45 @@ export function compute(i: Inputs): Outputs {
   // 10. Rendimiento total neto ($ o UF)
   const rendimiento_total_neto = flujo_neto_cupones + ganancia_capital_neta;
 
+  // --- Valores finales mostrados ---
+  const tirBrutaPct = Math.max(0, tir_bruta) * 100;
+  const tirNetaPct = Math.max(0, tir_neta) * 100;
+  const duracionFinal = Math.max(0, duracion);
+  const perdidaPrecioPct = perdida_precio_porcentaje * 100;
+
+  // --- Insight narrativo ---
+  const esUF = i.tipo_bono === 'bcu_uf';
+  const unidad = esUF ? 'UF' : '$';
+  const fmtMonto = (n: number) => esUF
+    ? Math.round(n).toLocaleString('es-CL') + ' UF'
+    : '$' + Math.round(n).toLocaleString('es-CL');
+  const subePb = i.subida_tasa_puntos;
+  const tone = tirNetaPct <= 0 ? 'warn' : tirNetaPct >= 4 ? 'good' : 'neutral';
+  const realTxt = esUF
+    ? ' Al ser un BCU en UF, esa rentabilidad es **real** (ya descuenta la inflación).'
+    : ' Al ser un BCP en pesos, ese rendimiento es **nominal** y la inflación le resta poder de compra.';
+  const _insight = {
+    title: 'Rendimiento neto del bono',
+    text: `Este bono del Tesoro a ${i.plazo_anos} años rinde un **${tirBrutaPct.toFixed(2)}% TIR bruta**, que tras impuestos queda en **${tirNetaPct.toFixed(2)}% neta**. Sumando cupones y ganancia de capital netos obtenés **${fmtMonto(rendimiento_total_neto)}**.${realTxt} Con una duración de **${duracionFinal.toFixed(1)} años**, una subida de ${subePb} pb en las tasas haría caer el precio cerca del **${perdidaPrecioPct.toFixed(1)}%**.`,
+    tone,
+    icon: '📊'
+  };
+
+  // --- Gráfico: gauge de TIR neta por zonas ---
+  const _chart = {
+    type: 'scale',
+    marker: Math.round(tirNetaPct * 100) / 100,
+    markerLabel: `${tirNetaPct.toFixed(2)}% neta`,
+    min: 0,
+    segments: [
+      { nombre: 'Muy baja', max: 2, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Moderada', max: 4, color: '#84cc16', colorDark: '#4d7c0f' },
+      { nombre: 'Buena', max: 6, color: '#22c55e', colorDark: '#15803d' },
+      { nombre: 'Alta', max: Math.max(8, Math.ceil(tirNetaPct + 1)), color: '#16a34a', colorDark: '#166534' }
+    ],
+    ariaLabel: `Termómetro de rentabilidad neta del bono: ${tirNetaPct.toFixed(2)}% anual tras impuestos.`
+  };
+
   return {
     cupones_totales_brutos: Math.round(cupones_totales_brutos),
     numero_cupones: numero_cupones,
@@ -106,13 +147,15 @@ export function compute(i: Inputs): Outputs {
     ganancia_capital_bruta: Math.round(ganancia_capital_bruta),
     impuesto_ganancia_capital: Math.round(impuesto_ganancia_capital),
     ganancia_capital_neta: Math.round(ganancia_capital_neta),
-    tir_anual_bruta: Math.max(0, tir_bruta) * 100, // en %
-    tir_anual_neta: Math.max(0, tir_neta) * 100, // en %
-    duracion_macaulay: Math.max(0, duracion),
+    tir_anual_bruta: tirBrutaPct, // en %
+    tir_anual_neta: tirNetaPct, // en %
+    duracion_macaulay: duracionFinal,
     precio_si_tasas_suben: Math.max(0, precio_si_tasas_suben),
-    perdida_precio_porcentaje: perdida_precio_porcentaje * 100,
+    perdida_precio_porcentaje: perdidaPrecioPct,
     resumen_tributacion: Math.round(resumen_tributacion),
-    rendimiento_total_neto: Math.round(rendimiento_total_neto)
+    rendimiento_total_neto: Math.round(rendimiento_total_neto),
+    _insight,
+    _chart
   };
 }
 

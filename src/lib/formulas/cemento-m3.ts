@@ -11,6 +11,7 @@ export interface Outputs {
   piedraM3: number;
   aguaL: number;
   tipoHormigon: string;
+  _insight?: any;
 }
 
 const DOSIFICACIONES: Record<string, {
@@ -42,12 +43,21 @@ export function cementoM3(i: Inputs): Outputs {
   const piedraM3 = m3 * d.piedra * factor;
   const aguaL = m3 * d.aguaL;
 
+  const bolsas = Math.ceil(cementoKg / 50);
+  const _insight = {
+    title: 'Materiales para tu hormigón',
+    text: `Para ${m3} m³ de **${d.nombre}** necesitás **${bolsas} bolsas de cemento** (${Math.round(cementoKg)} kg), **${arenaM3.toFixed(2)} m³ de arena**, **${piedraM3.toFixed(2)} m³ de piedra** y ${Math.round(aguaL)} L de agua. Incluye ${desperd}% de desperdicio.`,
+    tone: 'neutral',
+    icon: '🏗️',
+  };
+
   return {
     cementoKg: Math.round(cementoKg),
-    cementoBolsas: Math.ceil(cementoKg / 50),
+    cementoBolsas: bolsas,
     arenaM3: Number(arenaM3.toFixed(2)),
     piedraM3: Number(piedraM3.toFixed(2)),
     aguaL: Math.round(aguaL),
     tipoHormigon: d.nombre,
+    _insight,
   };
 }

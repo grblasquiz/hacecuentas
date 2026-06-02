@@ -9,6 +9,8 @@ export interface Outputs {
   reduccion: number;
   tiempoExposicion: string;
   comparacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function decibeliosDistanciaSonido(i: Inputs): Outputs {
@@ -48,10 +50,43 @@ export function decibeliosDistanciaSonido(i: Inputs): Outputs {
   else if (db < 130) comparacion = 'Sirena de ambulancia, umbral de dolor';
   else comparacion = 'Despegue de avión — daño auditivo inmediato';
 
+  const db1 = Number(dbObjetivo.toFixed(1));
+  const red1 = Number(reduccion.toFixed(1));
+
+  // Tono dinámico según riesgo auditivo (criterio NIOSH, 85 dB = límite seguro 8h)
+  const tone = db1 >= 100 ? 'warn' : (db1 >= 85 ? 'warn' : 'good');
+  const insightText = db1 < 85
+    ? `A **${dObj} m** el nivel baja a **${db1} dB** (−${red1} dB respecto de ${dbF} dB). Por debajo de 85 dB no hay límite de exposición: ${comparacion.toLowerCase()}.`
+    : db1 < 100
+      ? `A **${dObj} m** todavía hay **${db1} dB**: superás el umbral seguro de 85 dB. ${tiempoExposicion}`
+      : `Cuidado: a **${dObj} m** seguís expuesto a **${db1} dB** (${comparacion.toLowerCase()}). ${tiempoExposicion}`;
+
+  // Gauge: dB objetivo sobre zonas de riesgo auditivo
+  const gaugeMax = Math.max(140, Math.ceil(db1 + 10));
   return {
-    dbObjetivo: Number(dbObjetivo.toFixed(1)),
-    reduccion: Number(reduccion.toFixed(1)),
+    dbObjetivo: db1,
+    reduccion: red1,
     tiempoExposicion,
     comparacion,
+    _insight: {
+      title: 'Riesgo auditivo a esa distancia',
+      text: insightText,
+      tone,
+      icon: '🔊',
+    },
+    _chart: {
+      type: 'scale',
+      marker: db1,
+      markerLabel: `${db1} dB`,
+      min: 0,
+      segments: [
+        { nombre: 'Seguro', max: 70, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Molesto', max: 85, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Riesgo con exposición', max: 100, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Dañino', max: 115, color: '#f97316', colorDark: '#fb923c' },
+        { nombre: 'Peligro inmediato', max: gaugeMax, color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Nivel de ${db1} decibelios a ${dObj} metros sobre escala de riesgo auditivo`,
+    },
   };
 }

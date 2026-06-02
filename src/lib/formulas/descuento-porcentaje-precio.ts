@@ -8,6 +8,8 @@ export interface Outputs {
   precioFinal: number;
   ahorro: number;
   descuentoTotal: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function descuentoPorcentajePrecio(i: Inputs): Outputs {
@@ -25,9 +27,33 @@ export function descuentoPorcentajePrecio(i: Inputs): Outputs {
   const ahorro = precio - precioFinal;
   const descuentoTotalPct = ((ahorro / precio) * 100);
 
+  const precioFinalR = Math.round(precioFinal);
+  const ahorroR = Math.round(ahorro);
+  const fmt = (n: number) => n.toLocaleString('es-AR');
+  const aplicado = d2 > 0
+    ? `Encadenando **${d1}%** y **${d2}%** el descuento real es **${descuentoTotalPct.toFixed(1)}%** (no ${d1 + d2}%: el segundo se aplica sobre el precio ya rebajado).`
+    : `Con **${d1}%** de descuento pagás **$${fmt(precioFinalR)}** y ahorrás **$${fmt(ahorroR)}**.`;
+
   return {
-    precioFinal: Math.round(precioFinal),
-    ahorro: Math.round(ahorro),
+    precioFinal: precioFinalR,
+    ahorro: ahorroR,
     descuentoTotal: `${descuentoTotalPct.toFixed(1)}%`,
+    _insight: {
+      title: 'Tu descuento real',
+      text: aplicado,
+      tone: descuentoTotalPct >= 30 ? 'good' : 'neutral',
+      icon: '🏷️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Pagás', value: precioFinalR },
+        { label: 'Ahorrás', value: ahorroR },
+      ],
+      prefix: '$',
+      centerValue: `$${fmt(Math.round(precio))}`,
+      centerLabel: 'Precio original',
+      ariaLabel: `De $${fmt(Math.round(precio))} originales, pagás $${fmt(precioFinalR)} y ahorrás $${fmt(ahorroR)}.`,
+    },
   };
 }

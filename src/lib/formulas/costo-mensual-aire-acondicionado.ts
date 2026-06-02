@@ -16,6 +16,7 @@ export interface Outputs {
   potenciaConsumoWatts: string;
   costoMes: number;
   ahorroInverterVsFijo: string;
+  _insight?: any;
 }
 
 function fmt(moneda: string, n: number): string {
@@ -59,6 +60,9 @@ export function costoMensualAireAcondicionado(i: Inputs): Outputs {
   const ahorroKwh = kwhFijo - kwhInverter;
   const ahorroMoney = ahorroKwh * tarifa;
 
+  const esInverter = eer >= 4;
+  const ahorroAnual = ahorroMoney * 12;
+
   return {
     kwhMes: kwhMes.toFixed(1) + ' kWh',
     costoMesFormateado: fmt(moneda, costoMes),
@@ -67,5 +71,13 @@ export function costoMensualAireAcondicionado(i: Inputs): Outputs {
     potenciaConsumoWatts: Math.round(wattsElectricos) + ' W',
     costoMes: Math.round(costoMes),
     ahorroInverterVsFijo: fmt(moneda, ahorroMoney) + ' / mes',
+    _insight: {
+      title: esInverter ? 'Equipo eficiente' : 'Pasarte a inverter conviene',
+      text: esInverter
+        ? `Tu aire consume **${kwhMes.toFixed(0)} kWh/mes** y te cuesta **${fmt(moneda, costoMes)}** usándolo ${hsDia} h por día. Con EER ${eer} ya estás en el rango eficiente (inverter), así que el margen de ahorro por equipo es bajo: el palanca real es bajar horas de uso o subir 1 °C el termostato.`
+        : `Con EER ${eer} (equipo de velocidad fija), tu aire cuesta **${fmt(moneda, costoMes)}/mes**. Un inverter moderno (EER 4,5) gastaría **${fmt(moneda, ahorroMoney)} menos por mes** —unos **${fmt(moneda, ahorroAnual)} al año** al ritmo actual de ${hsDia} h/día. Si lo usás mucho, el recambio se paga solo.`,
+      tone: esInverter ? 'good' : 'warn',
+      icon: '❄️',
+    },
   };
 }

@@ -1,6 +1,6 @@
 /** Costo estimado de boda en Argentina */
 export interface Inputs { invitados: number; nivel?: string; musica?: string; }
-export interface Outputs { totalEstimado: number; costoPorInvitado: number; desglose: string; mensaje: string; }
+export interface Outputs { totalEstimado: number; costoPorInvitado: number; desglose: string; mensaje: string; _insight?: any; _chart?: any; }
 
 export function costoBodaArgentina(i: Inputs): Outputs {
   const inv = Math.round(Number(i.invitados));
@@ -39,5 +39,32 @@ export function costoBodaArgentina(i: Inputs): Outputs {
 
   const msg = `Boda nivel ${nivel} para ${inv} invitados: ~$${total.toLocaleString('es-AR')} ARS. Costo por invitado: ~$${porInv.toLocaleString('es-AR')}.`;
 
-  return { totalEstimado: total, costoPorInvitado: porInv, desglose, mensaje: msg };
+  const fmt = (n: number) => Math.round(n).toLocaleString('es-AR');
+  const pctSalon = total > 0 ? Math.round((salon / total) * 100) : 0;
+  const _insight = {
+    title: 'El salón manda en el presupuesto',
+    text:
+      `**Salón + catering** se lleva el **${pctSalon}%** del total ($${fmt(salon)}), y crece con cada invitado: ` +
+      `sumás unos **$${fmt(cpp)}** por cada persona que invitás. ` +
+      `Recortar la lista es la palanca más rápida para bajar los $${fmt(total)} totales.`,
+    tone: 'neutral' as const,
+    icon: '💍',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Salón + catering', value: salon },
+      { label: `Música (${musica})`, value: musicaCosto },
+      { label: 'Foto + video', value: fotoVideo },
+      { label: 'Decoración', value: decoracion },
+      { label: 'Torta + mesa dulce', value: torta },
+      { label: 'Varios', value: varios },
+    ],
+    prefix: '$',
+    centerValue: `$${fmt(total)}`,
+    centerLabel: 'Total boda',
+    ariaLabel: `Reparto del costo total de la boda de $${fmt(total)} entre salón y catering, música, foto y video, decoración, torta y varios`,
+  };
+
+  return { totalEstimado: total, costoPorInvitado: porInv, desglose, mensaje: msg, _insight, _chart };
 }

@@ -15,6 +15,7 @@ export interface Outputs {
   mejor_opcion: string;
   ahorro_anual: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -137,6 +138,13 @@ export function compute(i: Inputs): Outputs {
 
   const mejor_opcion = mejor.name;
 
+  const _insight = {
+    title: `${mejor.name} te deja más plata`,
+    text: `Con **${mejor.name}** te queda neto **USD ${mejor.neto.toFixed(2)}** (comisión USD ${mejor.comision.toFixed(2)}), frente a USD ${peor.neto.toFixed(2)} con ${peor.name}. Esa diferencia suma **USD ${ahorro_anual.toFixed(2)} al año** si cobrás todos los meses.`,
+    tone: 'good' as const,
+    icon: '💸',
+  };
+
   return {
     neto_deel: parseFloat(neto_deel.toFixed(2)),
     comision_deel: parseFloat(comision_deel.toFixed(2)),
@@ -149,5 +157,6 @@ export function compute(i: Inputs): Outputs {
     mejor_opcion,
     ahorro_anual,
     detalle,
+    _insight,
   };
 }

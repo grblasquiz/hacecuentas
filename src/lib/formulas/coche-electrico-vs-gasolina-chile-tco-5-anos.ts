@@ -34,6 +34,7 @@ export interface Outputs {
   ahorro_anual_promedio: number;
   costo_por_km_electrico: number;
   costo_por_km_gasolina: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -145,6 +146,14 @@ export function compute(i: Inputs): Outputs {
   const costo_por_km_electrico = km_totales_5anos > 0 ? tco_electrico_5anos / km_totales_5anos : 0;
   const costo_por_km_gasolina = km_totales_5anos > 0 ? tco_gasolina_5anos / km_totales_5anos : 0;
 
+  const tcoE = Math.round(tco_electrico_5anos);
+  const tcoG = Math.round(tco_gasolina_5anos);
+  const ahorro = Math.round(ahorro_neto_5anos);
+  const pctAhorro = Math.round(porcentaje_ahorro * 10) / 10;
+  const beAno = breakeven_ano <= ANOS ? Math.round(breakeven_ano * 10) / 10 : ANOS + 0.5;
+  const evGana = ahorro >= 0;
+  const fmtClp = (n: number) => '$' + Math.abs(n).toLocaleString('es-CL');
+
   return {
     costo_combustible_total_5anos: Math.round(costo_combustible_total_5anos),
     costo_mantencin_total_5anos: Math.round(costo_mantencin_total_5anos),
@@ -153,13 +162,21 @@ export function compute(i: Inputs): Outputs {
     costo_seguro_total_5anos: Math.round(costo_seguro_total_5anos),
     valor_residual_electrico: Math.round(valor_residual_electrico),
     valor_residual_gasolina: Math.round(valor_residual_gasolina),
-    tco_electrico_5anos: Math.round(tco_electrico_5anos),
-    tco_gasolina_5anos: Math.round(tco_gasolina_5anos),
-    ahorro_neto_5anos: Math.round(ahorro_neto_5anos),
-    porcentaje_ahorro: Math.round(porcentaje_ahorro * 10) / 10,
-    breakeven_ano: breakeven_ano <= ANOS ? Math.round(breakeven_ano * 10) / 10 : ANOS + 0.5,
+    tco_electrico_5anos: tcoE,
+    tco_gasolina_5anos: tcoG,
+    ahorro_neto_5anos: ahorro,
+    porcentaje_ahorro: pctAhorro,
+    breakeven_ano: beAno,
     ahorro_anual_promedio: Math.round(ahorro_anual_promedio),
     costo_por_km_electrico: Math.round(costo_por_km_electrico * 10) / 10,
-    costo_por_km_gasolina: Math.round(costo_por_km_gasolina * 10) / 10
+    costo_por_km_gasolina: Math.round(costo_por_km_gasolina * 10) / 10,
+    _insight: {
+      title: evGana ? 'El eléctrico te conviene' : 'El bencinero gana en 5 años',
+      text: evGana
+        ? `A 5 años el eléctrico tiene un costo total (TCO) de **${fmtClp(tcoE)}** contra **${fmtClp(tcoG)}** del bencinero: ahorrás **${fmtClp(ahorro)}** (**${pctAhorro}%**). ${beAno <= ANOS ? `Recuperás el sobreprecio inicial en el **año ${beAno}**.` : `El sobreprecio inicial no se recupera dentro de los 5 años, pero el costo total ya es menor.`}`
+        : `A 5 años el eléctrico cuesta **${fmtClp(tcoE)}** de TCO contra **${fmtClp(tcoG)}** del bencinero: el eléctrico sale **${fmtClp(ahorro)}** más caro (**${Math.abs(pctAhorro)}%**). El menor gasto en energía no alcanza a compensar el precio de compra ni la depreciación en este escenario.`,
+      tone: evGana ? 'good' : 'warn',
+      icon: '🔌',
+    },
   };
 }

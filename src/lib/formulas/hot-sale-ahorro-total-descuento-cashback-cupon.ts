@@ -14,6 +14,8 @@ export interface Outputs {
   ahorroTotal: number;
   ahorroPctEfectivo: string;
   desglose: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function hotSaleAhorroTotalDescuentoCashbackCupon(i: Inputs): Outputs {
@@ -47,13 +49,52 @@ export function hotSaleAhorroTotalDescuentoCashbackCupon(i: Inputs): Outputs {
     `final $${fmt(precioFinal)}`,
   ].filter(Boolean);
 
+  const ahorroR = Math.round(ahorroTotal);
+  const finalR = Math.round(precioFinal);
+  const precioR = Math.round(precio);
+
+  let tone: 'good' | 'warn' | 'neutral';
+  let icon: string;
+  let title: string;
+  let text: string;
+  if (ahorroTotal <= 0) {
+    tone = 'warn'; icon = '🚩'; title = 'No estás ahorrando nada';
+    text = `Pagás **$${fmt(precioFinal)}** sobre una lista de **$${fmt(precio)}**: el envío se come cualquier descuento. Acá no hay Hot Sale que valga, revisá si conviene.`;
+  } else if (ahorroPctEfectivo >= 40) {
+    tone = 'good'; icon = '🔥'; title = '¡Ofertón real!';
+    text = `Te llevás **$${fmt(ahorroTotal)}** de ahorro (**${ahorroPctEfectivo.toFixed(1)}%** efectivo): pagás $${fmt(precioFinal)} en vez de $${fmt(precio)}. Apilar descuento + cupón + cashback rindió de verdad.`;
+  } else {
+    tone = 'good'; icon = '💸'; title = 'Ahorro confirmado';
+    text = `Sumando todo, el precio real queda en **$${fmt(precioFinal)}** y ahorrás **$${fmt(ahorroTotal)}** (**${ahorroPctEfectivo.toFixed(1)}%** sobre la lista de $${fmt(precio)}).`;
+  }
+
+  const _insight = { title, text, tone, icon };
+
+  // Donut: lo que pagás + lo que ahorrás = precio de lista
+  let _chart: any;
+  if (ahorroR > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Lo que pagás', value: finalR },
+        { label: 'Lo que ahorrás', value: ahorroR },
+      ],
+      prefix: '$',
+      centerValue: `$${fmt(precio)}`,
+      centerLabel: 'precio de lista',
+      ariaLabel: `Del precio de lista de $${fmt(precio)}, pagás $${fmt(precioFinal)} y ahorrás $${fmt(ahorroTotal)}`,
+    };
+  }
+
   return {
     precioConDescuento: Math.round(precioConDescuento),
     cuponPesos: Math.round(precioConDescuento - precioConCupon),
     cashbackPesos: Math.round(cashbackPesos),
-    precioFinal: Math.round(precioFinal),
-    ahorroTotal: Math.round(ahorroTotal),
+    precioFinal: finalR,
+    ahorroTotal: ahorroR,
     ahorroPctEfectivo: `${ahorroPctEfectivo.toFixed(1)}%`,
     desglose: partes.join(' · '),
+    _insight,
+    _chart,
   };
 }

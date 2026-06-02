@@ -13,6 +13,8 @@ export interface Outputs {
   rango_estimado: string;
   funerarias_comparacion: string;
   opciones_ahorro: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -102,12 +104,44 @@ export function compute(i: Inputs): Outputs {
     ahorroTexto = 'Cremación básica vs completa: ahorro $100K | Omitir catering: ahorro $200K-400K | Usar funeraria económica: ahorro 10-15%';
   }
 
+  const rBase = Math.round(costoBase);
+  const rAdic = Math.round(costoAdicionales);
+  const totalSlices = rBase + rAdic;
+  const totalFmt = '$' + totalSlices.toLocaleString('es-CL');
+  const adicPct = totalSlices > 0 ? Math.round((rAdic / totalSlices) * 100) : 0;
+
+  const esSepelio = i.tipo_servicio.includes('sepelio');
+  const esPremium = i.tipo_servicio === 'sepelio_premium';
+  const insightTone = esPremium ? 'warn' : i.tipo_servicio === 'cremacion_basica' ? 'good' : 'neutral';
+  const insightText = esSepelio
+    ? `Un ${esPremium ? 'sepelio premium' : 'sepelio tradicional'} estimado suma **${totalFmt} CLP**${rAdic > 0 ? `, con un **${adicPct}%** en servicios adicionales` : ''}. Pasarte a cremación puede ahorrarte cerca de **$1,5M**.`
+    : `Tu cremación estimada suma **${totalFmt} CLP**${rAdic > 0 ? ` (servicios adicionales: **${adicPct}%**)` : ''}. Es la opción más económica; un cementerio público y menos extras bajan aún más el total.`;
+
+  const sliceDefs = [
+    { label: 'Servicio + cementerio', value: rBase },
+    { label: 'Servicios adicionales', value: rAdic },
+  ].filter(s => s.value > 0);
+
   return {
-    costo_base: Math.round(costoBase),
-    costo_adicionales: Math.round(costoAdicionales),
+    costo_base: rBase,
+    costo_adicionales: rAdic,
     costo_total: Math.round(costoTotal),
     rango_estimado: `$${minimo.toLocaleString('es-CL')} - $${maximo.toLocaleString('es-CL')} (variación ±15% según funeraria)`,
     funerarias_comparacion: funerariaTexto,
-    opciones_ahorro: ahorroTexto
+    opciones_ahorro: ahorroTexto,
+    _insight: {
+      title: 'Desglose del costo funerario',
+      text: insightText,
+      tone: insightTone,
+      icon: '🕊️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: sliceDefs,
+      prefix: '$',
+      centerValue: totalFmt,
+      centerLabel: 'costo total',
+      ariaLabel: `Desglose del costo funerario: servicio base y servicios adicionales, total ${totalFmt} pesos chilenos`,
+    },
   };
 }

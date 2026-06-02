@@ -15,6 +15,7 @@ export interface ConversorMonedaLatamOutputs {
   formula: string;
   explicacion: string;
   disclaimer: string;
+  _insight?: any;
 }
 
 // Tipo de cambio: cuántas unidades de cada moneda equivalen a 1 USD
@@ -91,11 +92,30 @@ export function conversorMonedaLatam(inputs: ConversorMonedaLatamInputs): Conver
 
   const disclaimer = 'Tipo de cambio referencial aproximado (abril 2026). Puede variar significativamente respecto al valor actual del mercado. Para operaciones reales, consultá tu banco o casa de cambio. En Argentina existen múltiples tipos de dólar (oficial, blue, MEP, tarjeta).';
 
+  // Insight: interpreta el resultado y advierte sobre monedas volátiles
+  const arsInvolucrada = origen === 'ARS' || destino === 'ARS';
+  const resultadoFmt = fmt(resultadoRedondeado, decimalesResultado);
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (arsInvolucrada) {
+    insightTone = 'warn';
+    insightText = `**${fmt(monto)} ${origen}** ≈ **${resultadoFmt} ${destino}** al cambio referencial **${tipoCambio.replace('1 ' + origen + ' = ', '')}** por unidad. El peso argentino es muy volátil y conviven varios dólares (oficial, blue, MEP): tomá este número como orientativo, no como cotización real.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `**${fmt(monto)} ${origen}** equivalen a **${resultadoFmt} ${destino}**, con un tipo de cambio de **${tipoCambio.replace('1 ' + origen + ' = ', '')}** por unidad de ${origen}. Es un valor de referencia (abril 2026); confirmá la cotización del día antes de operar.`;
+  }
+
   return {
     resultado: resultadoRedondeado,
     tipoCambio,
     formula,
     explicacion,
     disclaimer,
+    _insight: {
+      title: 'Cómo leer el cambio',
+      text: insightText,
+      tone: insightTone,
+      icon: '💱',
+    },
   };
 }

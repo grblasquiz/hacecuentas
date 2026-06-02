@@ -19,6 +19,7 @@ export interface Outputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function gratificacionPeru(i: Inputs): Outputs {
@@ -62,6 +63,17 @@ export function gratificacionPeru(i: Inputs): Outputs {
     ariaLabel: 'Composición de la gratificación: proporcional más bonificación extraordinaria del 9%',
   };
 
+  const solS = (n: number) => 'S/' + Math.round(n).toLocaleString('es-PE');
+  const completa = meses >= 6 && dias === 0;
+  const _insight = {
+    title: completa ? 'Semestre completo' : 'Gratificación proporcional',
+    text: completa
+      ? `Trabajaste el semestre completo, así que cobrás un sueldo entero: **${solS(gratificacionTotal)}** (incluye la bonificación extraordinaria del 9%, **${solS(bonificacion9Porc)}**). No se le descuenta ONP/AFP ni EsSalud: lo recibís íntegro.`
+      : `Por **${meses} mes${meses === 1 ? '' : 'es'}${dias > 0 ? ` y ${dias} día${dias === 1 ? '' : 's'}` : ''}** te corresponden **${solS(gratificacionTotal)}** (incluye 9% extra: ${solS(bonificacion9Porc)}). Es proporcional al tiempo trabajado y se paga libre de descuentos (ONP/AFP, EsSalud).`,
+    tone: 'good',
+    icon: '🎉',
+  };
+
   return {
     remuneracionComputable: Number(remuneracionComputable.toFixed(2)),
     gratificacionProporcional: Number(gratificacionProporcional.toFixed(2)),
@@ -70,5 +82,6 @@ export function gratificacionPeru(i: Inputs): Outputs {
     formula,
     explicacion,
     _chart: chart,
+    _insight,
   };
 }

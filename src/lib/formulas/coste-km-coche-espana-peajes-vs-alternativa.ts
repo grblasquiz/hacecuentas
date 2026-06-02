@@ -31,6 +31,8 @@ export interface Outputs {
   rentabilidad_peaje: string;
   km_break_even: number;
   comparativa_aeat_baremo: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -131,7 +133,65 @@ export function compute(i: Inputs): Outputs {
   // Diferencia respecto baremo oficial (si es para gastos deducibles)
   const comparativa_aeat_baremo = coste_total_km - BAREMO_AEAT_KM;
   
+  // ==================== INSIGHT + GRÁFICO (solo presentación) ====================
+
+  const fmtEur = (n: number) => `${(Math.round(n * 100) / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  const costeTotalKmR = Math.round(coste_total_km * 1000) / 1000;
+  const difBaremoR = Math.round((coste_total_km - BAREMO_AEAT_KM) * 1000) / 1000;
+  const difCosteR = Math.round(diferencia_coste * 100) / 100;
+
+  // Insight: foco en la decisión peaje vs alternativa (núcleo de la calc), tono dinámico
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (diferencia_coste <= 0) {
+    insightTone = 'good';
+    insightText = `La ruta con peaje sale **${fmtEur(Math.abs(difCosteR))} más barata** por trayecto y encima ahorrás **${tiempo_ahorro_min} min**: conviene sin dudar.`;
+  } else if (coste_tiempo_ahorrado > diferencia_coste * 1.3) {
+    insightTone = 'good';
+    insightText = `El peaje cuesta **${fmtEur(difCosteR)} extra** por trayecto, pero los **${tiempo_ahorro_min} min** que ahorrás valen unos ${fmtEur(coste_tiempo_ahorrado)} de tu tiempo: compensa pagarlo.`;
+  } else if (coste_tiempo_ahorrado > diferencia_coste) {
+    insightTone = 'neutral';
+    insightText = `Decisión ajustada: el peaje suma **${fmtEur(difCosteR)}** por trayecto y el tiempo ahorrado vale apenas ${fmtEur(coste_tiempo_ahorrado)}. Depende de cuánto repitas la ruta.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `El peaje suma **${fmtEur(difCosteR)} por trayecto** y solo ahorra ${tiempo_ahorro_min} min (valor ${fmtEur(coste_tiempo_ahorrado)}): la ruta gratuita te conviene más.`;
+  }
+  // Matiz sobre el coste real vs baremo AEAT
+  if (difBaremoR > 0) {
+    insightText += ` Tu coste real de **${fmtEur(costeTotalKmR)}/km** supera el baremo AEAT de 0,19 €/km en ${fmtEur(difBaremoR)}.`;
+  }
+
+  const _insight = {
+    title: '¿Compensa el peaje?',
+    text: insightText,
+    tone: insightTone,
+    icon: '🛣️'
+  };
+
+  // Gráfico donut: en qué se va el coste ANUAL del coche (componentes que suman el total)
+  const anual_combustible = coste_combustible_km * i.km_anuales;
+  const anual_mantenimiento = coste_mantenimiento_km * i.km_anuales;
+  const anual_amortizacion = coste_amortizacion_km * i.km_anuales;
+  const anual_fijos = coste_fijos_km * i.km_anuales;
+  const slicesKm = [
+    { label: 'Amortización', value: Math.round(anual_amortizacion) },
+    { label: 'Combustible', value: Math.round(anual_combustible) },
+    { label: 'Mantenimiento', value: Math.round(anual_mantenimiento) },
+    { label: 'Seguro + impuesto', value: Math.round(anual_fijos) }
+  ].filter(s => s.value > 0);
+  const sumaAnual = slicesKm.reduce((a, s) => a + s.value, 0);
+  const _chart = {
+    type: 'doughnut',
+    slices: slicesKm,
+    prefix: '€',
+    centerValue: `${sumaAnual.toLocaleString('es-ES')} €`,
+    centerLabel: 'coste/año',
+    ariaLabel: `Reparto del coste anual del coche: amortización ${fmtEur(anual_amortizacion)}, combustible ${fmtEur(anual_combustible)}, mantenimiento ${fmtEur(anual_mantenimiento)} y costes fijos ${fmtEur(anual_fijos)}.`
+  };
+
   return {
+    _insight,
+    _chart,
     coste_combustible_km: Math.round(coste_combustible_km * 1000) / 1000,
     coste_mantenimiento_km: Math.round(coste_mantenimiento_km * 1000) / 1000,
     coste_amortizacion_km: Math.round(coste_amortizacion_km * 1000) / 1000,

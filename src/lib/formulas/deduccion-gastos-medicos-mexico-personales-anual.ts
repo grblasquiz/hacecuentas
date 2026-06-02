@@ -18,6 +18,8 @@ export interface Outputs {
   ahorro_isr_estimado: number;
   porcentaje_gastos_sobre_ingresos: number;
   gastosno_deducibles: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -71,6 +73,49 @@ export function compute(i: Inputs): Outputs {
     gasto_total_reportado - monto_deducible_real
   );
 
+  const fmtMx = (n: number) => '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+  const topeQueAplica = LIMITE_5_UMA <= limite_15_porciento_ingresos ? '5 UMA' : '15% de tus ingresos';
+
+  let _insight: any;
+  if (gasto_total_reportado <= 0) {
+    _insight = {
+      title: 'Cargá tus gastos médicos',
+      text: 'Todavía no ingresaste gastos médicos deducibles. Sumá hospitales, consultas, dentista y demás para ver cuánto podés bajar de tu ISR anual.',
+      tone: 'neutral',
+      icon: '🩺',
+    };
+  } else if (gastosno_deducibles > 0) {
+    _insight = {
+      title: 'Topaste el límite deducible',
+      text: `De **${fmtMx(gasto_total_reportado)}** en gastos, solo **${fmtMx(monto_deducible_real)}** son deducibles (tope: ${topeQueAplica}). Los **${fmtMx(gastosno_deducibles)}** restantes no bajan tu ISR este año, pero igual te ahorrás unos **${fmtMx(ahorro_isr_estimado)}** de impuesto.`,
+      tone: 'warn',
+      icon: '🩺',
+    };
+  } else {
+    _insight = {
+      title: 'Todos tus gastos son deducibles',
+      text: `Tus **${fmtMx(gasto_total_reportado)}** en gastos médicos entran completos dentro del límite, así que reducís tu ISR en aproximadamente **${fmtMx(ahorro_isr_estimado)}** al presentar tu declaración anual.`,
+      tone: 'good',
+      icon: '🩺',
+    };
+  }
+
+  let _chart: any;
+  if (gasto_total_reportado > 0) {
+    const slices = [{ label: 'Deducible', value: Math.round(monto_deducible_real * 100) / 100 }];
+    if (gastosno_deducibles > 0) slices.push({ label: 'No deducible (excede tope)', value: Math.round(gastosno_deducibles * 100) / 100 });
+    if (slices.length >= 2) {
+      _chart = {
+        type: 'doughnut',
+        slices,
+        prefix: '$',
+        centerValue: fmtMx(gasto_total_reportado),
+        centerLabel: 'Gasto total',
+        ariaLabel: 'Parte deducible vs no deducible de tus gastos médicos anuales',
+      };
+    }
+  }
+
   return {
     gasto_total_reportado: Math.round(gasto_total_reportado * 100) / 100,
     uma_anual_2026: Math.round(LIMITE_5_UMA * 100) / 100,
@@ -79,6 +124,8 @@ export function compute(i: Inputs): Outputs {
     monto_deducible_real: Math.round(monto_deducible_real * 100) / 100,
     ahorro_isr_estimado: Math.round(ahorro_isr_estimado * 100) / 100,
     porcentaje_gastos_sobre_ingresos: Math.round(porcentaje_gastos_sobre_ingresos * 100) / 100,
-    gastosno_deducibles: Math.round(gastosno_deducibles * 100) / 100
+    gastosno_deducibles: Math.round(gastosno_deducibles * 100) / 100,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

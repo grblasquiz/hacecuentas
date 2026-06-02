@@ -1,6 +1,6 @@
 /** Instagram Hashtags Óptimos */
 export interface Inputs { tipoPost: string; tamano: string; }
-export interface Outputs { cantidadOptima: string; mixRecomendado: string; donePonerlos: string; evitar: string; }
+export interface Outputs { cantidadOptima: string; mixRecomendado: string; donePonerlos: string; evitar: string; _insight?: any; }
 
 export function instagramHashtagsOptimos(i: Inputs): Outputs {
   const tp = String(i.tipoPost);
@@ -14,10 +14,17 @@ export function instagramHashtagsOptimos(i: Inputs): Outputs {
   };
   const cant = grid[tp]?.[tam] || '3-5';
   const donde = tp === 'Story' ? 'Sticker de hashtag dentro de la story' : 'Caption o primer comentario (reach similar)';
+  const _insight = {
+    title: `${cant} hashtags para tu ${tp.toLowerCase()}`,
+    text: `Con un perfil de **${tam}**, lo óptimo en un ${tp} son **${cant} hashtags** bien elegidos — en 2026 menos pero más relevantes rinde más que 30 al voleo. Ubicación: ${donde.toLowerCase()}.`,
+    tone: 'neutral',
+    icon: '#️⃣',
+  };
   return {
     cantidadOptima: `${cant} hashtags`,
     mixRecomendado: '1 grande (+5M) + 2 medianos (100K-1M) + 2 nicho (<100K)',
     donePonerlos: donde,
     evitar: 'No repitas el mismo set 10 posts seguidos — IG lo marca como spam',
+    _insight,
   };
 }

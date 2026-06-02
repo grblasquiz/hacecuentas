@@ -1,6 +1,6 @@
 /** Predicción de estatura adulta del hijo — Tanner */
 export interface Inputs { alturaPadre: number; alturaMadre: number; sexoHijo: string; __lang?: string; }
-export interface Outputs { tallaDiana: string; rangoEstimado: string; explicacion: string; }
+export interface Outputs { tallaDiana: string; rangoEstimado: string; explicacion: string; _insight?: any; }
 
 export function estaturaAdultaHijo(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -39,5 +39,13 @@ export function estaturaAdultaHijo(i: Inputs): Outputs {
     explicacion: __lang === 'en'
       ? `Your ${sexoLabel} would have an estimated adult height of ${talla.toFixed(1)} cm. Formula: ${formula}. The ±8.5 cm range covers 95% of cases.`
       : `Tu ${sexoLabel} tendría una estatura adulta estimada de ${talla.toFixed(1)} cm. Fórmula: ${formula}. El rango de ±8,5 cm cubre al 95% de los casos.`,
+    _insight: {
+      title: __lang === 'en' ? 'Estimate, not a sentence' : 'Es una estimación, no un destino',
+      text: __lang === 'en'
+        ? `The genetic target points to **${talla.toFixed(1)} cm**, but the real outcome can land anywhere between **${min.toFixed(1)}** and **${max.toFixed(1)} cm**. Nutrition, sleep and overall health move the final number within that range.`
+        : `La diana genética apunta a **${talla.toFixed(1)} cm**, pero el resultado real puede caer entre **${min.toFixed(1)}** y **${max.toFixed(1)} cm**. La nutrición, el sueño y la salud general mueven el número final dentro de ese rango.`,
+      tone: 'neutral',
+      icon: '📏',
+    },
   };
 }

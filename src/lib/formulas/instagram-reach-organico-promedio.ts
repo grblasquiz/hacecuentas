@@ -1,6 +1,6 @@
 /** Instagram Reach Orgánico */
 export interface Inputs { seguidores: number; engagementRate: number; }
-export interface Outputs { reachFeed: string; reachReel: string; reachStory: string; diagnostico: string; }
+export interface Outputs { reachFeed: string; reachReel: string; reachStory: string; diagnostico: string; _insight?: any; _chart?: any; }
 
 export function instagramReachOrganicoPromedio(i: Inputs): Outputs {
   const seg = Number(i.seguidores);
@@ -19,10 +19,37 @@ export function instagramReachOrganicoPromedio(i: Inputs): Outputs {
   if (feedPct < 0.1) diag = 'Reach bajo — probablemente shadowban o bajo ER sostenido';
   else if (feedPct < 0.2) diag = 'Reach estándar — es el promedio global 2026';
   else diag = 'Reach saludable — el algoritmo te está empujando';
+  const feedPctNum = Math.round(feedPct * 100);
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (feedPct < 0.1) insightTone = 'warn';
+  else if (feedPct < 0.2) insightTone = 'neutral';
+  else insightTone = 'good';
+  const insight = {
+    title: 'Tu alcance orgánico',
+    text: `Un post de feed llega a unas **${feed.toLocaleString('es-AR')}** personas (**${feedPctNum}%** de tus seguidores), mientras que un reel triplica eso con **${reel.toLocaleString('es-AR')}**. ${diag}.`,
+    tone: insightTone,
+    icon: '📣',
+  };
+
+  const chart = {
+    type: 'scale' as const,
+    marker: feedPctNum,
+    markerLabel: `${feedPctNum}% feed`,
+    min: 0,
+    segments: [
+      { nombre: 'Bajo', max: 10, color: '#ef4444', colorDark: '#dc2626' },
+      { nombre: 'Estándar', max: 20, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Saludable', max: 50, color: '#22c55e', colorDark: '#16a34a' },
+    ],
+    ariaLabel: 'Alcance orgánico del feed como porcentaje de seguidores, ubicado en zonas bajo, estándar o saludable.',
+  };
+
   return {
     reachFeed: `${feed.toLocaleString('es-AR')} personas (${(feedPct*100).toFixed(0)}% de followers)`,
     reachReel: `${reel.toLocaleString('es-AR')} personas (${(reelPct*100).toFixed(0)}% de followers)`,
     reachStory: `${story.toLocaleString('es-AR')} personas (${(storyPct*100).toFixed(0)}% de followers)`,
     diagnostico: diag,
+    _insight: insight,
+    _chart: chart,
   };
 }

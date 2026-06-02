@@ -21,6 +21,8 @@ export interface Outputs {
   prestacion_paro_ere_mes_181_plus: number;
   duracion_paro_meses: string;
   resumen_comparativo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -162,7 +164,35 @@ export function compute(i: Inputs): Outputs {
   // --- Redondear outputs a 2 decimales ---
   const r2 = (n: number) => Math.round(n * 100) / 100;
 
-  return {
+  // --- Insight narrativo ---
+  const fmtEur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  // Total económico estimado del ERE durante la prestación: indemnización + paro cobrado
+  const mesesPrimerTramo = Math.min(duracionParoMesesNum, 6);
+  const mesesSegundoTramo = Math.max(duracionParoMesesNum - 6, 0);
+  const totalParoCobrado = prestacionParo1_180 * mesesPrimerTramo + prestacionParo181plus * mesesSegundoTramo;
+  const totalEre = indemnizacionEreBruta + totalParoCobrado;
+
+  const _insight = {
+    title: 'ERTE vs ERE: qué te conviene',
+    text: `Con el **ERTE** (${jornadaTexto}) cobrás ~**${fmtEur(prestacionErte1_180)} €/mes** sin perder tu puesto ni gastar tu paro. El **ERE** te da **${fmtEur(indemnizacionEreBruta)} €** de indemnización más ~**${fmtEur(prestacionParo1_180)} €/mes** de paro durante ${duracionParoMesesNum > 0 ? duracionParoMesesNum + ' meses' : 'menos de 4 meses'}, pero cierra la relación laboral. El ERTE conviene si el empleo se recupera.`,
+    tone: 'warn',
+    icon: '⚖️',
+  };
+
+  // --- Gráfico: composición del total económico del ERE (indemnización + paro) ---
+  const _chart = (duracionParoMesesNum > 0 && totalEre > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Indemnización', value: r2(indemnizacionEreBruta) },
+      { label: `Paro (${duracionParoMesesNum} meses)`, value: r2(totalParoCobrado) },
+    ],
+    prefix: '',
+    centerValue: `${fmtEur(totalEre)} €`,
+    centerLabel: 'Total ERE',
+    ariaLabel: `Total económico del ERE: ${fmtEur(indemnizacionEreBruta)} € de indemnización más ${fmtEur(totalParoCobrado)} € de paro durante ${duracionParoMesesNum} meses.`,
+  } : undefined;
+
+  const out: Outputs = {
     salario_mensual_bruto: r2(salarioMensualBruto),
     base_reguladora_diaria: r2(baseReguladoraDiaria),
     base_reguladora_mensual: r2(baseReguladoraMensual),
@@ -176,5 +206,8 @@ export function compute(i: Inputs): Outputs {
     prestacion_paro_ere_mes_181_plus: r2(prestacionParo181plus),
     duracion_paro_meses: duracionParoMesesStr,
     resumen_comparativo: resumenComparativo,
+    _insight,
   };
+  if (_chart) out._chart = _chart;
+  return out;
 }

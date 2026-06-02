@@ -15,6 +15,8 @@ export interface Outputs {
   costoViajes: number;
   costoTotal: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Rangos estimados 2025-2026 por liga y categoría (precio medio tribuna central)
@@ -50,13 +52,50 @@ export function costoAbonoBundesligaPremier(i: Inputs): Outputs {
   const costoTotal = costoAbono + costoViajes;
   const costoAbonoARS = costoAbono * info.cotizARS;
 
+  const rAbono = Math.round(costoAbono);
+  const rPartido = Math.round(costoPorPartido);
+  const rViajes = Math.round(costoViajes);
+  const rTotal = Math.round(costoTotal);
+
+  // El abono medio europeo de tribuna ronda 20-35 €/partido; arriba de eso es caro.
+  const tone = rPartido >= 35 ? 'warn' : rPartido <= 18 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Cuánto pagás por entrar a cada partido',
+    text:
+      `Sale a **${rPartido} ${info.moneda}/partido** repartiendo el abono entre ${partidos} encuentros de local. ` +
+      (rPartido >= 35
+        ? `Es un precio premium: a ese ritmo, abonarse sólo conviene si vas a la mayoría de los partidos.`
+        : rPartido <= 18
+          ? `Es una relación muy buena frente a comprar entradas sueltas, que casi siempre salen más caras.`
+          : `Es un valor de mercado típico para tribuna; comprar suelto cada fecha saldría bastante más.`) +
+      (away > 0 ? ` Los **${away}** viajes away suman **${rViajes} ${info.moneda}** extra.` : ''),
+    tone,
+    icon: '⚽',
+  };
+
+  const _chart = away > 0
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Abono (de local)', value: rAbono },
+          { label: `Viajes away (${away})`, value: rViajes },
+        ],
+        prefix: info.moneda === 'GBP' ? '£' : '€',
+        centerValue: `${rAbono + rViajes} ${info.moneda}`,
+        centerLabel: 'Total temporada',
+        ariaLabel: `Reparto del costo de temporada de ${rAbono + rViajes} ${info.moneda} entre abono de local y ${away} viajes away`,
+      }
+    : undefined;
+
   return {
-    costoAbono: Math.round(costoAbono),
-    costoPorPartido: Math.round(costoPorPartido),
+    costoAbono: rAbono,
+    costoPorPartido: rPartido,
     monedaLiga: info.moneda,
     costoAbonoARS: Math.round(costoAbonoARS),
-    costoViajes: Math.round(costoViajes),
-    costoTotal: Math.round(costoTotal),
-    resumen: `Abono temporada en ${liga} club ${cat}, sector ${ubic}: **${Math.round(costoAbono)} ${info.moneda}** (~${Math.round(costoPorPartido)} ${info.moneda}/partido). Con ${away} viajes away: **${Math.round(costoTotal)} ${info.moneda}**.`,
+    costoViajes: rViajes,
+    costoTotal: rTotal,
+    resumen: `Abono temporada en ${liga} club ${cat}, sector ${ubic}: **${rAbono} ${info.moneda}** (~${rPartido} ${info.moneda}/partido). Con ${away} viajes away: **${rTotal} ${info.moneda}**.`,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

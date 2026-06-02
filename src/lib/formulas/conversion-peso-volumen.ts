@@ -1,6 +1,6 @@
 /** Conversión peso-volumen para ingredientes de cocina */
 export interface Inputs { ingrediente?: string; cantidad: number; unidadOrigen?: string; }
-export interface Outputs { resultado: number; unidadDestino: string; detalle: string; }
+export interface Outputs { resultado: number; unidadDestino: string; detalle: string; _insight?: any; }
 
 export function conversionPesoVolumen(i: Inputs): Outputs {
   const ing = String(i.ingrediente || 'harina');
@@ -49,5 +49,18 @@ export function conversionPesoVolumen(i: Inputs): Outputs {
     detalleStr = `${fmt.format(cant)} cucharada${cant !== 1 ? 's' : ''} de ${d.nombre} = ${fmt.format(gramos)} g o ${fmt.format(cant / 16)} tazas.`;
   }
 
-  return { resultado, unidadDestino: unidadDest, detalle: detalleStr };
+  // Insight: equivalencia útil según el sentido de la conversión
+  const gramosTotal = unidad === 'gramos' ? cant : (unidad === 'tazas' ? cant * d.taza : cant * d.cda);
+  const tazasEq = gramosTotal / d.taza;
+  const cdasEq = gramosTotal / d.cda;
+  const _insight = {
+    title: 'Equivalencia en la cocina',
+    text: unidad === 'gramos'
+      ? `**${fmt.format(cant)} g** de ${d.nombre} equivalen a **${fmt.format(tazasEq)} taza${tazasEq === 1 ? '' : 's'}** o **${fmt.format(cdasEq)} cucharada${cdasEq === 1 ? '' : 's'}**. Como la densidad cambia según el ingrediente, una taza de ${d.nombre} pesa **${fmt.format(d.taza)} g** (no son 250 g universales).`
+      : `Eso suma **${fmt.format(gramosTotal)} g** de ${d.nombre}: una taza de este ingrediente pesa **${fmt.format(d.taza)} g** y una cucharada **${fmt.format(d.cda)} g**, así que medir por peso es más preciso que por volumen.`,
+    tone: 'neutral' as const,
+    icon: '🥄',
+  };
+
+  return { resultado, unidadDestino: unidadDest, detalle: detalleStr, _insight };
 }

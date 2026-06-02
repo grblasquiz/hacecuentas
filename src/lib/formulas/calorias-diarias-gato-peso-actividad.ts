@@ -12,6 +12,7 @@ export interface Outputs {
   gramosHumedoDia: number;
   factorUsado: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function caloriasDiariasGatoPesoActividad(i: Inputs): Outputs {
@@ -80,11 +81,36 @@ export function caloriasDiariasGatoPesoActividad(i: Inputs): Outputs {
   const gramosSecoDia = Math.round(kcalDia / 3.8);
   const gramosHumedoDia = Math.round(kcalDia / 0.9);
 
+  // Mensaje según ajuste por condición corporal
+  let insightTitle: string, insightText: string, insightTone: string, insightIcon: string;
+  if (condicion === 'sobrepeso' || condicion === 'obeso') {
+    insightTitle = 'Plan de descenso';
+    insightText = `Por la condición **${condicion}**, el cálculo aplica una **restricción** sobre el peso actual: **~${kcalDia} kcal/día** (~${gramosSecoDia} g de seco). Ajustá según peso objetivo y controlá con tu veterinario.`;
+    insightTone = 'warn';
+    insightIcon = '⚖️';
+  } else if (condicion === 'bajo') {
+    insightTitle = 'Plan de recuperación';
+    insightText = `Por bajo peso se suben las raciones a **~${kcalDia} kcal/día** (~${gramosSecoDia} g de seco) para recuperar masa. Revisá la evolución con tu veterinario.`;
+    insightTone = 'warn';
+    insightIcon = '🐱';
+  } else {
+    insightTitle = 'Ración diaria';
+    insightText = `Tu gato de **${peso} kg** necesita **~${kcalDia} kcal/día** (${factorLabel}): **~${gramosSecoDia} g** de seco o **~${gramosHumedoDia} g** de húmedo. Repartilo en 2-3 tomas.`;
+    insightTone = 'good';
+    insightIcon = '🐱';
+  }
+
   return {
     kcalDia,
     gramosSecoDia,
     gramosHumedoDia,
     factorUsado: factorLabel,
     detalle: `Tu gato de ${peso} kg necesita ~${kcalDia} kcal/día (${factorLabel}). Equivale a ~${gramosSecoDia} g de seco o ~${gramosHumedoDia} g de húmedo.`,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon,
+    },
   };
 }

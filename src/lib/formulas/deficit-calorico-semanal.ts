@@ -13,6 +13,8 @@ export interface Outputs {
   tdee: number;
   semanasPara5kg: number;
   alerta: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function deficitCaloricoSemanal(i: Inputs): Outputs {
@@ -53,5 +55,30 @@ export function deficitCaloricoSemanal(i: Inputs): Outputs {
     alerta = '⚠️ Déficit elevado pero aceptable. Asegurate de comer suficiente proteína (2g/kg).';
   }
 
-  return { deficitDiario, caloriasObjetivo, tdee, semanasPara5kg, alerta };
+  const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  let tono: 'good' | 'warn' | 'neutral';
+  if (caloriasObjetivo < minCal || deficitDiario > 1000) tono = 'warn';
+  else if (deficitDiario <= 500) tono = 'good';
+  else tono = 'neutral';
+
+  const _insight = {
+    title: 'Tu plan en una línea',
+    text: `Para bajar **${kgPerder} kg/semana** comé **${fmt.format(caloriasObjetivo)} kcal/día** (tu gasto es ${fmt.format(tdee)} y restás **${fmt.format(deficitDiario)} kcal** de déficit). En este ritmo, **5 kg** te llevan unas **${semanasPara5kg} semanas**.`,
+    tone: tono,
+    icon: '🔥',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Comés (objetivo)', value: caloriasObjetivo },
+      { label: 'Déficit diario', value: deficitDiario },
+    ],
+    prefix: '',
+    centerValue: `${fmt.format(tdee)}`,
+    centerLabel: 'kcal de gasto (TDEE)',
+    ariaLabel: `De tu gasto de ${fmt.format(tdee)} kcal, comés ${fmt.format(caloriasObjetivo)} y generás un déficit de ${fmt.format(deficitDiario)} kcal por día`,
+  };
+
+  return { deficitDiario, caloriasObjetivo, tdee, semanasPara5kg, alerta, _insight, _chart };
 }

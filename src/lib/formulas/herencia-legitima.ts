@@ -15,6 +15,8 @@ export interface HerenciaLegitimaOutputs {
   porcionDisponible: number;
   porcionPorHeredero: string;
   detalleReparto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function herenciaLegitima(inputs: HerenciaLegitimaInputs): HerenciaLegitimaOutputs {
@@ -78,10 +80,33 @@ export function herenciaLegitima(inputs: HerenciaLegitimaInputs): HerenciaLegiti
   const legitimaTotal = patrimonio * fraccionLegitima;
   const porcionDisponible = patrimonio - legitimaTotal;
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const pctDisponible = Math.round((porcionDisponible / patrimonio) * 100);
+  const tone = pctDisponible <= 34 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Cuánto podés repartir libremente',
+    text: `De ${fmt(patrimonio)}, la ley blinda ${fmt(legitimaTotal)} para los herederos forzosos y solo **${fmt(porcionDisponible)}** (el **${pctDisponible}%**) podés dejarlo a quien quieras por testamento.${pctDisponible <= 34 ? ' Es una porción acotada: planificá con cuidado si querés favorecer a alguien fuera de los forzosos.' : ''}`,
+    tone,
+    icon: '⚖️',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Legítima (forzosos)', value: Math.round(legitimaTotal) },
+      { label: 'Porción disponible', value: Math.round(porcionDisponible) },
+    ],
+    prefix: '$',
+    centerValue: fmt(patrimonio),
+    centerLabel: 'Patrimonio',
+    ariaLabel: `De ${fmt(patrimonio)}, ${fmt(legitimaTotal)} es legítima protegida y ${fmt(porcionDisponible)} es de libre disposición`,
+  };
+
   return {
     legitimaTotal: Math.round(legitimaTotal),
     porcionDisponible: Math.round(porcionDisponible),
     porcionPorHeredero,
     detalleReparto: detalle,
+    _insight,
+    _chart,
   };
 }

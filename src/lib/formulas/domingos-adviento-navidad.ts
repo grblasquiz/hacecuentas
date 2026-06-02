@@ -23,6 +23,7 @@ export interface Outputs {
   proximoAdviento: string;
   diaNavidad: string;
   mensaje: string;
+  _insight?: any;
 }
 
 function parseLocal(s: string): Date {
@@ -106,6 +107,30 @@ export function domingosAdvientoNavidad(i: Inputs): Outputs {
   else if (totalDomingos <= 4) mensaje = `Quedan ${totalDomingos} domingos — estás en pleno Adviento.`;
   else mensaje = `Faltan ${totalDomingos} domingos hasta Navidad ${year}. Adviento arranca el ${formatNice(I)}.`;
 
+  let _insight: any;
+  if (totalDomingos === 0) {
+    _insight = {
+      title: 'Adviento terminado',
+      text: `Ya no quedan domingos antes del **${formatNice(navidad)}**: el ciclo de Adviento de ${year} concluyó y Navidad es inminente.`,
+      tone: 'neutral',
+      icon: '🎄',
+    };
+  } else if (totalDomingos <= 4) {
+    _insight = {
+      title: 'En pleno Adviento',
+      text: `Quedan **${totalDomingos} ${totalDomingos === 1 ? 'domingo' : 'domingos'}** hasta Navidad ${year}: ya estás dentro de las cuatro semanas de Adviento. El próximo es el **${formatNice(prox)}**.`,
+      tone: 'good',
+      icon: '🕯️',
+    };
+  } else {
+    _insight = {
+      title: 'Todavía falta para Adviento',
+      text: `Faltan **${totalDomingos} domingos** hasta Navidad ${year} y el Adviento recién arranca el **${formatNice(I)}**, así que aún quedan ${totalDomingos - 4} domingo(s) ordinarios antes de encender la primera vela.`,
+      tone: 'neutral',
+      icon: '📅',
+    };
+  }
+
   return {
     totalDomingos,
     domingosAdviento,
@@ -113,5 +138,6 @@ export function domingosAdvientoNavidad(i: Inputs): Outputs {
     proximoAdviento,
     diaNavidad,
     mensaje,
+    _insight,
   };
 }

@@ -13,6 +13,8 @@ export interface Outputs {
   tarifaPremium: number;
   ingresoMensualRecomendado: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cuantoCobroPorHoraFreelance(i: Inputs): Outputs {
@@ -45,5 +47,33 @@ export function cuantoCobroPorHoraFreelance(i: Inputs): Outputs {
 
   const detalle = `Gastos: $${gastos.toLocaleString()}/mes. Horas facturables: ${horas}h/mes. Impuestos: ${impuestos}%. Con tarifa recomendada facturás $${ingresoMensualRecomendado.toLocaleString()}/mes bruto, te quedan $${netoMensual.toLocaleString()} neto, ganancia: $${gananciaReal.toLocaleString()}/mes.`;
 
-  return { tarifaRecomendada, tarifaMinima, tarifaPremium, ingresoMensualRecomendado, detalle };
+  const impuestoMonto = ingresoMensualRecomendado - netoMensual;
+  const tone = gananciaReal <= 0 ? 'warn' : gananciaReal < gastos ? 'neutral' : 'good';
+  const _insight = {
+    title: gananciaReal <= 0
+      ? 'La tarifa no deja ganancia'
+      : gananciaReal < gastos
+        ? 'Cubrís costos con margen ajustado'
+        : 'Tarifa con buen colchón',
+    text: gananciaReal <= 0
+      ? `A **$${tarifaRecomendada.toLocaleString()}/h** apenas cubrís gastos e impuestos: la ganancia real queda en **$${gananciaReal.toLocaleString()}/mes**. Subí la tarifa o recortá gastos fijos.`
+      : `Cobrando **$${tarifaRecomendada.toLocaleString()}/h** facturás **$${ingresoMensualRecomendado.toLocaleString()}/mes** bruto; tras **${impuestos}% de impuestos** te quedan $${netoMensual.toLocaleString()} neto y una ganancia de **$${gananciaReal.toLocaleString()}/mes** sobre tus gastos.`,
+    tone,
+    icon: '💻',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Gastos', value: gastos },
+      { label: 'Impuestos', value: impuestoMonto },
+      { label: 'Ganancia', value: Math.max(0, gananciaReal) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: '$' + ingresoMensualRecomendado.toLocaleString(),
+    centerLabel: 'bruto/mes',
+    ariaLabel: `De $${ingresoMensualRecomendado.toLocaleString()} facturados al mes: $${gastos.toLocaleString()} a gastos, $${impuestoMonto.toLocaleString()} a impuestos y $${Math.max(0, gananciaReal).toLocaleString()} de ganancia.`,
+  };
+
+  return { tarifaRecomendada, tarifaMinima, tarifaPremium, ingresoMensualRecomendado, detalle, _insight, _chart };
 }

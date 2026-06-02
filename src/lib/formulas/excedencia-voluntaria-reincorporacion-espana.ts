@@ -21,6 +21,7 @@ export interface Outputs {
   fecha_disponible_nueva_excedencia: string;
   comparativa_cuidado_hijos: string;
   resumen: string;
+  _insight?: any;
 }
 
 // Constantes legales ET art. 46.2 (España 2026)
@@ -135,6 +136,12 @@ export function compute(i: Inputs): Outputs {
       fecha_disponible_nueva_excedencia: '-',
       comparativa_cuidado_hijos: '-',
       resumen: 'Por favor, introduce todas las fechas requeridas.',
+      _insight: {
+        title: 'Faltan datos',
+        text: 'Introducí la **fecha de alta** y la **fecha de inicio** de la excedencia (formato AAAA-MM-DD) para calcular antigüedad, fechas de reingreso y preaviso.',
+        tone: 'neutral',
+        icon: '📅',
+      },
     };
   }
 
@@ -150,6 +157,12 @@ export function compute(i: Inputs): Outputs {
       fecha_disponible_nueva_excedencia: '-',
       comparativa_cuidado_hijos: '-',
       resumen: 'La fecha de alta en la empresa debe ser anterior a la fecha de inicio de la excedencia.',
+      _insight: {
+        title: 'Revisá las fechas',
+        text: 'La **fecha de alta** debe ser anterior a la **fecha de inicio** de la excedencia: la antigüedad se cuenta desde que entraste en la empresa hasta que empieza la excedencia.',
+        tone: 'warn',
+        icon: '⚠️',
+      },
     };
   }
 
@@ -207,6 +220,32 @@ export function compute(i: Inputs): Outputs {
       '· Durante la excedencia NO cotizas a la SS ni conservas tu puesto concreto, pero tienes derecho preferente de reingreso en vacante igual o similar.'
     : `No es posible calcular la excedencia con los datos introducidos.${advertenciaAntiguedad}${advertenciaDuracion}`;
 
+  // --- Insight dinámico según elegibilidad ---
+  let _insight: any;
+  if (cumpleAntiguedad && duracionValida) {
+    _insight = {
+      title: 'Excedencia viable',
+      text:
+        `Con **${antiguedadTexto}** de antigüedad y **${meses} mes${meses !== 1 ? 'es' : ''}** solicitados, cumplís los requisitos del art. 46.2 ET. ` +
+        `Tu fecha límite para comunicar el reingreso es el **${formatFecha(fechaFin)}** y debés preavisar antes del **${formatFecha(fechaLimitePreaviso)}** (${preaviso} días). ` +
+        `Recordá: durante la excedencia **no cotizás a la SS** y solo tenés derecho preferente —no reserva— de tu puesto.`,
+      tone: 'good',
+      icon: '🗓️',
+    };
+  } else {
+    const motivos: string[] = [];
+    if (!cumpleAntiguedad) motivos.push(`solo llevás **${antiguedadTexto}** (se exige 1 año)`);
+    if (!duracionValida) motivos.push(`**${meses} mes${meses !== 1 ? 'es' : ''}** está fuera del rango legal de 4 a 60`);
+    _insight = {
+      title: 'Todavía no cumplís los requisitos',
+      text:
+        `No podés solicitar la excedencia voluntaria con estos datos: ${motivos.join(' y ')} (art. 46.2 ET). ` +
+        `Ajustá la duración o esperá a cumplir la antigüedad mínima antes de presentar la solicitud.`,
+      tone: 'warn',
+      icon: '⛔',
+    };
+  }
+
   return {
     cumple_antiguedad: cumpleAntiguedad
       ? `✅ Sí — llevas ${antiguedadTexto} en la empresa (mínimo requerido: 1 año, ET art. 46.2).`
@@ -228,5 +267,6 @@ export function compute(i: Inputs): Outputs {
       : '-',
     comparativa_cuidado_hijos: comparativaCuidado,
     resumen,
+    _insight,
   };
 }

@@ -20,6 +20,7 @@ export interface Outputs {
   costeImagen3PorImagen: number;
   modeloMasBarato: string;
   resumen: string;
+  _insight?: any;
 }
 
 // Precios DALL-E 3 por imagen (USD) — OpenAI API 2026
@@ -159,6 +160,20 @@ export function compute(i: Inputs): Outputs {
 
   const resumen = lineas.join("\n");
 
+  // --- Insight: ganador y brecha vs el más caro ---
+  const masCaro = candidatos.reduce((prev, curr) => (curr.costo > prev.costo ? curr : prev));
+  const ahorro = masCaro.costo - masBarato.costo;
+  const ahorroPct = masCaro.costo > 0 ? Math.round((ahorro / masCaro.costo) * 100) : 0;
+  const hayBrecha = ahorro > 0.005;
+  const insight = {
+    title: `El más barato para ${imagenes} imágenes/mes`,
+    text: hayBrecha
+      ? `Para **${imagenes} imágenes/mes**, **${masBarato.nombre}** es el más económico con **${fmt(masBarato.costo)}/mes**: **${fmt(ahorro)}** menos que ${masCaro.nombre} (${fmt(masCaro.costo)}), un **${ahorroPct}%** de ahorro.`
+      : `Para **${imagenes} imágenes/mes** todas las opciones quedan parejas; **${masBarato.nombre}** lidera con **${fmt(masBarato.costo)}/mes**. Recordá que Midjourney es **abono fijo**: cuanto más generes, más conviene.`,
+    tone: hayBrecha ? "good" : "neutral",
+    icon: "🎨",
+  };
+
   return {
     costeDalle,
     costeDallePorImagen,
@@ -172,5 +187,6 @@ export function compute(i: Inputs): Outputs {
     costeImagen3PorImagen,
     modeloMasBarato: `${masBarato.nombre} — ${fmt(masBarato.costo)}/mes`,
     resumen,
+    _insight: insight,
   };
 }

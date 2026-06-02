@@ -15,6 +15,8 @@ export interface Outputs {
   milestone_morpho: string;  // ecografía morfológica sem 20 (YYYY-MM-DD)
   milestone_viability: string; // viabilidad fetal sem 24 (YYYY-MM-DD)
   milestone_term: string;    // término temprano sem 37 (YYYY-MM-DD)
+  _insight?: any;
+  _chart?: any;
 }
 
 // Convierte string de fecha a objeto Date (acepta YYYY-MM-DD y DD/MM/YYYY)
@@ -147,6 +149,50 @@ export function compute(i: Inputs): Outputs {
   const milestone_viability_date = addDays(fumDate, 168 + cycleAdjustment); // sem 24
   const milestone_term_date = addDays(fumDate, 259 + cycleAdjustment);    // sem 37
 
+  // FPP en formato legible para el insight
+  const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const fppNice = `${fppDate.getDate()} de ${MESES[fppDate.getMonth()]} de ${fppDate.getFullYear()}`;
+
+  // Insight dinámico según el trimestre / etapa
+  let insight;
+  if (weeksGest >= 42) {
+    insight = {
+      title: 'Embarazo postérmino',
+      text: `Llevás **${gestationalWeeks}** de gestación, superando las 42 semanas. La fecha probable de parto era el **${fppNice}**: consultá a tu equipo médico cuanto antes.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (weeksGest >= 37) {
+    insight = {
+      title: 'Embarazo a término',
+      text: `Con **${gestationalWeeks}** ya entraste en zona de término: el bebé puede nacer en cualquier momento. La fecha probable de parto es el **${fppNice}**, dentro de **${daysRemaining} ${daysRemaining === 1 ? 'día' : 'días'}**.`,
+      tone: 'good',
+      icon: '👶',
+    };
+  } else {
+    insight = {
+      title: 'Embarazo en curso',
+      text: `Estás en el **${trimester}** con **${gestationalWeeks}** de gestación. Faltan **${daysRemaining} ${daysRemaining === 1 ? 'día' : 'días'}** para la fecha probable de parto (**${fppNice}**).`,
+      tone: 'neutral',
+      icon: '🤰',
+    };
+  }
+
+  // Gauge de avance del embarazo (0–42 semanas) con zonas por trimestre
+  const chart = {
+    type: 'scale',
+    marker: weeksGest,
+    markerLabel: `Semana ${weeksGest}`,
+    min: 0,
+    segments: [
+      { nombre: '1.er trimestre', max: 13, color: '#bfdbfe', colorDark: '#1e3a8a' },
+      { nombre: '2.º trimestre', max: 27, color: '#a7f3d0', colorDark: '#065f46' },
+      { nombre: '3.er trimestre', max: 40, color: '#fde68a', colorDark: '#92400e' },
+      { nombre: 'Postérmino', max: 42, color: '#fecaca', colorDark: '#991b1b' },
+    ],
+    ariaLabel: `Avance del embarazo: semana ${weeksGest} de 40, en el ${trimester}.`,
+  };
+
   return {
     fpp: formatISO(fppDate),
     gestational_weeks: gestationalWeeks,
@@ -156,5 +202,7 @@ export function compute(i: Inputs): Outputs {
     milestone_morpho: formatISO(milestone_morpho_date),
     milestone_viability: formatISO(milestone_viability_date),
     milestone_term: formatISO(milestone_term_date),
+    _insight: insight,
+    _chart: chart,
   };
 }

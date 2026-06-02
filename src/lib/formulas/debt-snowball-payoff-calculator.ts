@@ -25,6 +25,7 @@ export interface Outputs {
   interest_saved: number;
   months_saved: number;
   payoff_order: string;
+  _insight?: any;
 }
 
 interface Debt {
@@ -181,6 +182,17 @@ export function compute(i: Inputs): Outputs {
   const interestSaved = Math.max(0, minimum.totalInterest - snowball.totalInterest);
   const monthsSaved = Math.max(0, minimum.months - snowball.months);
 
+  const usd = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+  const snYrs = Math.floor(snowball.months / 12);
+  const snMos = snowball.months % 12;
+  const snTime = snYrs > 0 ? `${snYrs} yr${snYrs !== 1 ? "s" : ""} ${snMos} mo` : `${snMos} mo`;
+  const yrsSaved = Math.floor(monthsSaved / 12);
+  const mosSaved = monthsSaved % 12;
+  const savedTime = yrsSaved > 0 ? `${yrsSaved} yr${yrsSaved !== 1 ? "s" : ""} ${mosSaved} mo` : `${monthsSaved} month${monthsSaved !== 1 ? "s" : ""}`;
+  const insightText = (extra > 0 && (interestSaved > 0 || monthsSaved > 0))
+    ? `Adding **${usd(extra)}/mo** and rolling each paid-off minimum into the next debt (the snowball) clears everything in **${snTime}** — that's **${savedTime} faster** and **${usd(interestSaved)} less interest** than paying only the minimums.`
+    : `With these minimums you're debt-free in **${snTime}**, paying **${usd(snowball.totalInterest)}** in interest. Add an extra monthly payment to trigger the snowball and cut both the time and the interest.`;
+
   return {
     months_snowball: snowball.months,
     total_interest_snowball: Math.round(snowball.totalInterest * 100) / 100,
@@ -189,5 +201,11 @@ export function compute(i: Inputs): Outputs {
     interest_saved: Math.round(interestSaved * 100) / 100,
     months_saved: monthsSaved,
     payoff_order: orderLines.join("\n"),
+    _insight: {
+      title: "Snowball vs. minimums only",
+      text: insightText,
+      tone: (interestSaved > 0 || monthsSaved > 0) ? "good" : "neutral",
+      icon: "⛄",
+    },
   };
 }

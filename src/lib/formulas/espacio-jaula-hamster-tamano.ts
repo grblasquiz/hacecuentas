@@ -12,6 +12,8 @@ export interface Outputs {
   lechoProfundidadCm: number;
   cumpleMinimo: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function espacioJaulaHamsterTamano(i: Inputs): Outputs {
@@ -59,6 +61,22 @@ export function espacioJaulaHamsterTamano(i: Inputs): Outputs {
     rec = `Jaula adecuada. Asegurate de tener lecho de ${lecho[especie] ?? 18} cm y rueda sólida de ${rueda[especie] ?? 22}+ cm. Sumá túneles, refugios y baño de arena de chinchilla.`;
   }
 
+  const pct = Math.round(actual / min * 100);
+  const especieLabel = especie.charAt(0).toUpperCase() + especie.slice(1);
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (especie === 'sirio' && cantidad > 1) {
+    insightTone = 'warn';
+    insightText = `Los hámsters sirios son **solitarios y territoriales**: ${cantidad} juntos terminan peleándose, a veces a muerte. Separalos ya en jaulas independientes; el mínimo mostrado (${min} cm²) es por animal, no para convivencia.`;
+  } else if (actual >= min) {
+    insightTone = 'good';
+    const sobra = actual - min;
+    insightText = `Tu jaula de **${actual} cm²** cubre el **${pct}%** del piso mínimo para ${especieLabel}${sobra > 0 ? ` y le sobran **${sobra} cm²**` : ''}. Mantené lecho de **${lecho[especie] ?? 18} cm** para que pueda cavar y rueda sólida de **${rueda[especie] ?? 22}+ cm**.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Con **${actual} cm²** llegás solo al **${pct}%** del mínimo recomendado (**${min} cm²**) para ${especieLabel}: faltan **${min - actual} cm²**. Espacio chico estresa al hámster; pasá a un bin cage o acuario más grande.`;
+  }
+
   return {
     baseMinimaCm2: min,
     baseActualCm2: actual,
@@ -66,5 +84,23 @@ export function espacioJaulaHamsterTamano(i: Inputs): Outputs {
     lechoProfundidadCm: lecho[especie] ?? 18,
     cumpleMinimo: cumple,
     recomendacion: rec,
+    _insight: {
+      title: 'Tamaño de jaula vs. mínimo',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐹',
+    },
+    _chart: {
+      type: 'scale',
+      marker: pct,
+      markerLabel: `${pct}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Insuficiente', max: 100, color: '#ef4444', colorDark: '#dc2626' },
+        { nombre: 'Cumple', max: 150, color: '#84cc16', colorDark: '#65a30d' },
+        { nombre: 'Amplia', max: Math.max(200, pct + 10), color: '#22c55e', colorDark: '#16a34a' },
+      ],
+      ariaLabel: `La jaula cubre el ${pct}% del piso mínimo recomendado para ${especieLabel}`,
+    },
   };
 }

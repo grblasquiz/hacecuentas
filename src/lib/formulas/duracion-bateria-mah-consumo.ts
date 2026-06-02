@@ -1,6 +1,6 @@
 /** Estimación de duración de batería según capacidad mAh y consumo */
 export interface Inputs { capacidadMah: number; consumoMa: number; eficiencia?: number; }
-export interface Outputs { horasEstimadas: number; minutosEstimados: number; energiaWh: number; detalle: string; }
+export interface Outputs { horasEstimadas: number; minutosEstimados: number; energiaWh: number; detalle: string; _insight?: any; }
 
 export function duracionBateriaMahConsumo(i: Inputs): Outputs {
   const capacidad = Number(i.capacidadMah);
@@ -16,10 +16,22 @@ export function duracionBateriaMahConsumo(i: Inputs): Outputs {
   const minutos = horas * 60;
   const energiaWh = (capacidad * 3.7) / 1000; // voltaje típico Li-ion
 
+  const hWhole = Math.floor(horas);
+  const mRest = Math.round((horas - hWhole) * 60);
+  const duracionTxt = hWhole >= 1 ? `${hWhole} h ${mRest} min` : `${Math.round(minutos)} min`;
+  const perdida = Math.round((1 - eficiencia) * 100);
+  const _insight = {
+    title: 'Cuánto te dura la batería',
+    text: `Una batería de **${capacidad} mAh** con un consumo de **${consumo} mA** rinde unas **${duracionTxt}** (${horas.toFixed(1)} h). La eficiencia del **${(eficiencia * 100).toFixed(0)}%** se come cerca del **${perdida}%** de la capacidad nominal.`,
+    tone: 'neutral' as const,
+    icon: '🔋',
+  };
+
   return {
     horasEstimadas: Number(horas.toFixed(2)),
     minutosEstimados: Math.round(minutos),
     energiaWh: Number(energiaWh.toFixed(2)),
     detalle: `Batería de ${capacidad} mAh (${(eficiencia * 100).toFixed(0)}% eficiencia) con consumo de ${consumo} mA: ~${horas.toFixed(1)} horas (${Math.round(minutos)} min). Energía: ${energiaWh.toFixed(1)} Wh a 3,7V.`,
+    _insight,
   };
 }

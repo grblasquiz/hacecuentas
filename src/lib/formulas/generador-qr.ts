@@ -3,7 +3,7 @@
  * Genera la URL de un código QR usando la API de Google Charts
  */
 export interface GeneradorQrInputs { tipoContenido: string; contenido: string; tamano: number; }
-export interface GeneradorQrOutputs { qrUrl: string; contenidoFinal: string; tipoDetectado: string; instrucciones: string; }
+export interface GeneradorQrOutputs { qrUrl: string; contenidoFinal: string; tipoDetectado: string; instrucciones: string; _insight?: any; }
 
 export function generadorQr(inputs: GeneradorQrInputs): GeneradorQrOutputs {
   const tipo = (inputs.tipoContenido || 'texto').toLowerCase();
@@ -69,5 +69,12 @@ export function generadorQr(inputs: GeneradorQrInputs): GeneradorQrOutputs {
   const encoded = encodeURIComponent(contenidoFinal);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${tamano}x${tamano}&data=${encoded}`;
 
-  return { qrUrl, contenidoFinal, tipoDetectado, instrucciones };
+  const _insight = {
+    title: 'Tu QR está listo',
+    text: `Generamos un QR de tipo **${tipoDetectado}** en **${tamano}×${tamano}px**. ${instrucciones} Descargalo e imprimilo a buen tamaño: para escanear de lejos, cuanto más grande, mejor.`,
+    tone: 'good' as const,
+    icon: '🔳',
+  };
+
+  return { qrUrl, contenidoFinal, tipoDetectado, instrucciones, _insight };
 }

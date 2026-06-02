@@ -12,6 +12,8 @@ export interface Outputs {
   deduccion_autonomica: number;
   deduccion_total: number;
   nota_regimen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -74,6 +76,12 @@ export function compute(i: Inputs): Outputs {
       deduccion_total: 0,
       nota_regimen:
         'Las adquisiciones de vivienda habitual desde el 1 de enero de 2013 no generan derecho a deducción en el IRPF estatal.',
+      _insight: {
+        title: 'No tienes derecho a esta deducción',
+        text: `Compraste en **${anioCompra}**, posterior a 2012. La deducción por vivienda habitual se suprimió para adquisiciones desde el **1 de enero de 2013**, así que en tu caso la cuota a deducir es **0 €**.`,
+        tone: 'warn',
+        icon: '🏠',
+      },
     };
   }
 
@@ -110,6 +118,32 @@ export function compute(i: Inputs): Outputs {
     anioCompra +
     ') es anterior a 2013. Puedes aplicar el régimen transitorio de deducción por vivienda habitual.';
 
+  const fmtEur = (n: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+
+  const _insight = {
+    title: 'Lo que recuperas en la renta',
+    text:
+      `Sobre una base de **${fmtEur(baseDeduccion)}** te deduces **${fmtEur(deduccionTotal)}** de la cuota del IRPF (**${fmtEur(deduccionEstatal)}** estatal + **${fmtEur(deduccionAutonomica)}** autonómico). Es dinero que restas directamente del impuesto a pagar.`,
+    tone: 'good' as const,
+    icon: '🏠',
+  };
+
+  const _chart =
+    deduccionTotal > 0
+      ? {
+          type: 'doughnut',
+          slices: [
+            { label: 'Tramo estatal', value: deduccionEstatal },
+            { label: 'Tramo autonómico', value: deduccionAutonomica },
+          ],
+          prefix: '',
+          centerValue: fmtEur(deduccionTotal),
+          centerLabel: 'Deducción total',
+          ariaLabel: 'Reparto de la deducción por vivienda habitual entre tramo estatal y autonómico',
+        }
+      : undefined;
+
   return {
     tiene_derecho: tieneDerechoTexto,
     base_deduccion: parseFloat(baseDeduccion.toFixed(2)),
@@ -117,5 +151,7 @@ export function compute(i: Inputs): Outputs {
     deduccion_autonomica: deduccionAutonomica,
     deduccion_total: deduccionTotal,
     nota_regimen: notaRegimen,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

@@ -28,6 +28,7 @@ export interface Outputs {
   coste_km_gasolina: number;
   diferencia_compra: number;
   resumen: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -121,10 +122,35 @@ export function compute(i: Inputs): Outputs {
     resumen = `El coste total de ambos vehículos es idéntico en ${anos} años. Cualquier variación en precio de energía o mantenimiento decantará la balanza.`;
   }
 
+  // --- Insight ---
+  const eur = (v: number) => Math.round(v).toLocaleString('es-ES') + '€';
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (ahorroTotal > 0) {
+    insightTitle = 'El eléctrico gana a largo plazo';
+    const beTxt = breakevenAnos === 0
+      ? 'es más barato desde el primer día (con la ayuda MOVES III aplicada)'
+      : breakevenAnos === 999
+        ? 'no llega a amortizar el sobrecoste de compra con estos parámetros'
+        : `recupera el sobrecoste de compra en **${breakevenAnos.toFixed(1).replace('.', ',')} años**`;
+    insightText = `En ${anos} años el eléctrico te ahorra **${eur(ahorroTotal)}** frente al gasolina y ${beTxt}. El ahorro solo en energía es de **${eur(ahorroAnualEnergia)}/año**.`;
+    insightTone = 'good';
+  } else if (ahorroTotal < 0) {
+    insightTitle = 'El gasolina sale más a cuenta';
+    insightText = `Con estos parámetros, en ${anos} años el gasolina resulta **${eur(Math.abs(ahorroTotal))}** más barato. El sobreprecio de compra del eléctrico (**${eur(diferenciaCompra)}**) no se compensa con el ahorro operativo. Revisá los km anuales o las ayudas disponibles.`;
+    insightTone = 'warn';
+  } else {
+    insightTitle = 'Empate técnico';
+    insightText = `El coste total de ambos coches es idéntico en ${anos} años. Cualquier subida del precio del combustible o de la electricidad decantará la balanza.`;
+    insightTone = 'neutral';
+  }
+
   return {
     coste_total_electrico: Math.round(costeTotalElectrico * 100) / 100,
     coste_total_gasolina: Math.round(costeTotalGasolina * 100) / 100,
     ahorro_total: Math.round(ahorroTotal * 100) / 100,
+    _insight: { title: insightTitle, text: insightText, tone: insightTone, icon: '🔌' },
     ahorro_anual_energia: Math.round(ahorroAnualEnergia * 100) / 100,
     breakeven_anos: breakevenAnos === 999 ? 999 : Math.round(breakevenAnos * 100) / 100,
     coste_km_electrico: Math.round(costeKmElectrico * 10000) / 10000,

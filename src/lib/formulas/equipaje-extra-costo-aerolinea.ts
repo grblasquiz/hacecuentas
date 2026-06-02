@@ -16,6 +16,7 @@ export interface EquipajeExtraCostoAerolineaOutputs {
   costoARS: number;
   ahorroVsMostrador: string;
   recomendacion: string;
+  _insight?: any;
 }
 
 type TarifaBase = { cabina10: number; bodega15: number; bodega23: number; bodega32: number };
@@ -85,6 +86,12 @@ export function equipajeExtraCostoAerolinea(
       costoARS: 0,
       ahorroVsMostrador,
       recomendacion: 'Tu tarifa ya incluye este equipaje. No pagues de más.',
+      _insight: {
+        title: 'Buena noticia',
+        text: 'Esta combinación de aerolínea y tramo **incluye este equipaje sin cargo**: no tenés que pagar ningún extra. Verificá que la tarifa que compraste sea la misma del cálculo.',
+        tone: 'good',
+        icon: '🧳',
+      },
     };
   }
 
@@ -102,10 +109,21 @@ export function equipajeExtraCostoAerolinea(
     recomendacion = 'Excelente — estás pagando la tarifa más barata.';
   }
 
+  const _insight = {
+    title: inputs.momento === 'mostrador' ? 'Estás pagando de más' : 'Cómo cae tu costo',
+    text: inputs.momento === 'mostrador'
+      ? `Comprar el equipaje **en el mostrador** te cuesta **USD ${costoUSD}** (~$${costoARS.toLocaleString('es-AR')}), el doble de la tarifa online. Comprándolo por la web pagarías la mitad y te ahorrarías **USD ${diffUSD}**.`
+      : inputs.momento === 'previo'
+      ? `Sumarlo **antes del vuelo** cuesta **USD ${costoUSD}** (~$${costoARS.toLocaleString('es-AR')}) y ya te ahorra **USD ${diffUSD}** frente al mostrador. Si lo hubieras agregado junto al ticket, ahorrabas otros USD ${Math.round(base * 0.25)}.`
+      : `Comprándolo **online junto al ticket** pagás la tarifa más barata: **USD ${costoUSD}** (~$${costoARS.toLocaleString('es-AR')}), **USD ${diffUSD}** menos que en el mostrador.`,
+    tone: inputs.momento === 'mostrador' ? 'warn' : inputs.momento === 'previo' ? 'neutral' : 'good',
+    icon: '🧳',
+  };
   return {
     costoUSD,
     costoARS,
     ahorroVsMostrador,
     recomendacion,
+    _insight,
   };
 }

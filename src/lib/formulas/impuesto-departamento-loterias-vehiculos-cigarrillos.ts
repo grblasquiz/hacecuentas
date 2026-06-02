@@ -16,6 +16,8 @@ export interface Outputs {
   diferencia_porcentual: number;
   plazo_pago: string;
   observaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tarifas departamentales 2026 (fuente: DIAN, Gobernaciones)
@@ -271,6 +273,61 @@ export function compute(i: Inputs): Outputs {
   const comparativa_max = Math.max(...valores_comparar);
   const diferencia_porcentual = comparativa_min > 0 ? ((comparativa_max - comparativa_min) / comparativa_min) * 100 : 0;
 
+  // ── Insight narrativo ──────────────────────────────────────────────
+  const fmtCO = (n: number) => '$' + Math.round(n).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+  const totalFmt = fmtCO(impuesto_total);
+  const ahorroMax = Math.round(comparativa_max - comparativa_min);
+  let _insight: any;
+  if (i.tipo_impuesto === 'vehiculo') {
+    _insight = {
+      title: 'Tu impuesto vehicular del año 1',
+      text: `Entre registro y rodamiento, el primer año pagás **${totalFmt}** (tasa efectiva **${tasa_efectiva.toFixed(2)}%** del avalúo). Según el departamento, el mismo vehículo va de ${fmtCO(comparativa_min)} a ${fmtCO(comparativa_max)}: hay hasta **${fmtCO(ahorroMax)}** de diferencia por dónde lo matricules.`,
+      tone: 'warn',
+      icon: '🚗',
+    };
+  } else if (i.tipo_impuesto === 'loteria') {
+    _insight = {
+      title: 'Impuesto a las loterías',
+      text: `El gravamen departamental es **${totalFmt}** (**${tasa_efectiva.toFixed(2)}%**). Lo paga el operador, pero recorta el valor neto del premio; entre departamentos varía de ${fmtCO(comparativa_min)} a ${fmtCO(comparativa_max)}.`,
+      tone: 'neutral',
+      icon: '🎰',
+    };
+  } else if (i.tipo_impuesto === 'cigarrillos') {
+    _insight = {
+      title: 'Impuesto departamental al tabaco',
+      text: `Por ${cantidad} cajetilla${cantidad === 1 ? '' : 's'} el componente departamental suma **${totalFmt}**, y todavía falta sumar IVA nacional (19%) y gravamen municipal. Es uno de los tributos con mayor peso sobre el precio final.`,
+      tone: 'warn',
+      icon: '🚬',
+    };
+  } else {
+    _insight = {
+      title: 'Impuesto adicional a licores',
+      text: `El impuesto departamental sobre el valor de venta es **${totalFmt}** (**${tasa_efectiva.toFixed(2)}%**), que se suma al IVA nacional del 19%. Entre departamentos la carga va de ${fmtCO(comparativa_min)} a ${fmtCO(comparativa_max)}.`,
+      tone: 'warn',
+      icon: '🥃',
+    };
+  }
+
+  // ── Gráfico: sólo para vehículo, donde el total se compone de registro + rodamiento ──
+  let _chart: any;
+  if (i.tipo_impuesto === 'vehiculo') {
+    const tarifa_registro = TARIFAS_REGISTRO[i.departamento] || 0.10;
+    const tarifa_rodamiento = TARIFAS_RODAMIENTO[i.departamento] || 0.02;
+    const slice_registro = Math.round(avaluo * tarifa_registro);
+    const slice_rodamiento = Math.max(0, Math.round(impuesto_total) - slice_registro);
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Impuesto de registro', value: slice_registro },
+        { label: 'Impuesto de rodamiento (año 1)', value: slice_rodamiento },
+      ],
+      prefix: '$',
+      centerValue: totalFmt,
+      centerLabel: 'Total año 1',
+      ariaLabel: 'Composición del impuesto vehicular del primer año entre registro y rodamiento',
+    };
+  }
+
   return {
     impuesto_total: Math.round(impuesto_total),
     tasa_efectiva: parseFloat(tasa_efectiva.toFixed(2)),
@@ -279,6 +336,8 @@ export function compute(i: Inputs): Outputs {
     comparativa_max: Math.round(comparativa_max),
     diferencia_porcentual: parseFloat(diferencia_porcentual.toFixed(1)),
     plazo_pago,
-    observaciones
+    observaciones,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

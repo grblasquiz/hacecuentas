@@ -18,6 +18,7 @@ export interface DolarOutputs {
   oficial: string;
   tarjeta: string;
   cripto: string;
+  _insight?: any;
 }
 
 // Cache de cotizaciones (se llena al cargar la página)
@@ -77,7 +78,19 @@ export function dolarAR(inputs: DolarInputs): DolarOutputs {
     }).format(value);
   };
 
+  // Brecha blue/oficial y premium tarjeta sobre la cotización cargada
+  const brechaBlue = cot.oficial > 0 ? (cot.blue / cot.oficial - 1) * 100 : 0;
+
   if (tipo === 'usd_a_ars') {
+    const difBlueOficial = monto * (cot.blue - cot.oficial);
+    const _insight = {
+      title: 'Cuánto cambia según el dólar',
+      text: monto > 0
+        ? `Tus **US$ ${monto.toLocaleString('es-AR')}** valen **${fmt(monto * cot.oficial)}** al oficial pero **${fmt(monto * cot.blue)}** al blue: **${fmt(difBlueOficial)}** de diferencia (brecha **${brechaBlue.toFixed(0)}%**). Con tarjeta saltan a ${fmt(monto * cot.tarjeta)}.`
+        : `El blue está **${brechaBlue.toFixed(0)}%** sobre el oficial. El dólar tarjeta es el más caro de todos.`,
+      tone: brechaBlue >= 30 ? 'warn' : 'neutral',
+      icon: '💵',
+    };
     return {
       blue: fmt(monto * cot.blue),
       mep: fmt(monto * cot.bolsa),
@@ -85,8 +98,19 @@ export function dolarAR(inputs: DolarInputs): DolarOutputs {
       oficial: fmt(monto * cot.oficial),
       tarjeta: fmt(monto * cot.tarjeta),
       cripto: fmt(monto * cot.cripto),
+      _insight,
     };
   } else {
+    const usdOficial = monto / cot.oficial;
+    const usdBlue = monto / cot.blue;
+    const _insight = {
+      title: 'Cuántos dólares te llevás',
+      text: monto > 0
+        ? `Con **${fmt(monto)}** comprás **US$ ${usdOficial.toFixed(2)}** al oficial, pero solo **US$ ${usdBlue.toFixed(2)}** al blue: te quedan **US$ ${(usdOficial - usdBlue).toFixed(2)}** menos por la brecha del **${brechaBlue.toFixed(0)}%**.`
+        : `Por la brecha del **${brechaBlue.toFixed(0)}%**, el mismo monto en pesos rinde bastante menos en dólares al blue que al oficial.`,
+      tone: brechaBlue >= 30 ? 'warn' : 'neutral',
+      icon: '💵',
+    };
     return {
       blue: fmtUsd(monto / cot.blue),
       mep: fmtUsd(monto / cot.bolsa),
@@ -94,6 +118,7 @@ export function dolarAR(inputs: DolarInputs): DolarOutputs {
       oficial: fmtUsd(monto / cot.oficial),
       tarjeta: fmtUsd(monto / cot.tarjeta),
       cripto: fmtUsd(monto / cot.cripto),
+      _insight,
     };
   }
 }

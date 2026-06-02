@@ -13,6 +13,8 @@ export interface Outputs {
   proximaLunaLlena: string;
   proximoCuartoCreciente: string;
   proximoCuartoMenguante: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const CICLO = 29.530589;
@@ -72,6 +74,44 @@ export function faseLunarProximaLunaLlena(i: Inputs): Outputs {
   const proxCuartoCre = proximoEvento(ms, CICLO / 4);
   const proxCuartoMen = proximoEvento(ms, (3 * CICLO) / 4);
 
+  // Días hasta la próxima luna llena
+  const diasHastaLlena = (proxLlena.getTime() - ms) / 86400000;
+  const iluminacionPct = iluminacion * 100;
+  const creciendo = edad < CICLO / 2;
+  let insightText: string;
+  if (nombre === 'Luna llena') {
+    insightText = `Esta noche hay **luna llena**: el disco está **${iluminacionPct.toFixed(0)}%** iluminado. A partir de ahora empieza a menguar.`;
+  } else if (diasHastaLlena < 1) {
+    insightText = `Estás a horas de la **luna llena**. El disco ya muestra el **${iluminacionPct.toFixed(0)}%** iluminado.`;
+  } else {
+    insightText = `Hoy la Luna está **${nombre.toLowerCase()}** con el **${iluminacionPct.toFixed(0)}%** del disco iluminado y ${creciendo ? 'creciendo' : 'menguando'}. La **próxima luna llena** es en **${Math.round(diasHastaLlena)} día(s)**.`;
+  }
+  const insight = {
+    title: nombre,
+    text: insightText,
+    tone: 'neutral' as const,
+    icon: '🌙'
+  };
+
+  const chart = {
+    type: 'scale',
+    marker: Math.round(edad * 100) / 100,
+    markerLabel: `${edad.toFixed(1)} días`,
+    min: 0,
+    unit: 'días',
+    segments: [
+      { nombre: 'Nueva', max: 1, color: '#475569', colorDark: '#64748b' },
+      { nombre: 'Creciente', max: 6.38, color: '#0ea5e9', colorDark: '#38bdf8' },
+      { nombre: 'Cuarto creciente', max: 8.38, color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: 'Gibosa creciente', max: 13.77, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: 'Llena', max: 15.77, color: '#facc15', colorDark: '#fde047' },
+      { nombre: 'Gibosa menguante', max: 21.14, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Cuarto menguante', max: 23.14, color: '#a855f7', colorDark: '#c084fc' },
+      { nombre: 'Menguante', max: CICLO, color: '#475569', colorDark: '#64748b' }
+    ],
+    ariaLabel: `La Luna tiene ${edad.toFixed(1)} días de edad en su ciclo de 29.5 días: fase ${nombre}`
+  };
+
   return {
     faseActual: nombre,
     iluminacion: `${(iluminacion * 100).toFixed(1)} % del disco iluminado`,
@@ -80,5 +120,7 @@ export function faseLunarProximaLunaLlena(i: Inputs): Outputs {
     proximaLunaLlena: fechaISO(proxLlena),
     proximoCuartoCreciente: fechaISO(proxCuartoCre),
     proximoCuartoMenguante: fechaISO(proxCuartoMen),
+    _insight: insight,
+    _chart: chart,
   };
 }

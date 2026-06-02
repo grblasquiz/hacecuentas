@@ -10,6 +10,7 @@ export interface Outputs {
   diasCarga: number;
   poteDuracion: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function creatinaDosisarga(i: Inputs): Outputs {
@@ -36,5 +37,21 @@ export function creatinaDosisarga(i: Inputs): Outputs {
     mensaje = `Directo a mantenimiento: ${dosisMantenimiento}g/día. Saturación completa en ~28 días.`;
   }
 
-  return { dosisMantenimiento, dosisCargaDiaria, dosisCargaPorToma, diasCarga, poteDuracion, mensaje };
+  let _insight: any;
+  if (protocolo === 'carga') {
+    _insight = {
+      title: 'Tu protocolo con carga',
+      text: `Arrancá con **${dosisCargaDiaria} g/día** (${dosisCargaPorToma} g × 4 tomas) durante 5 días para saturar rápido, y después bajá a **${dosisMantenimiento} g/día**. Un pote de 300 g te dura unos **${poteDuracion} días** en mantenimiento.`,
+      tone: 'neutral',
+      icon: '💪',
+    };
+  } else {
+    _insight = {
+      title: 'Directo a mantenimiento',
+      text: `Sin carga, tomás **${dosisMantenimiento} g/día** desde el día 1: llegás a la saturación completa en **~28 días**. Un pote de 300 g te rinde unos **${poteDuracion} días**.`,
+      tone: 'good',
+      icon: '💪',
+    };
+  }
+  return { dosisMantenimiento, dosisCargaDiaria, dosisCargaPorToma, diasCarga, poteDuracion, mensaje, _insight };
 }

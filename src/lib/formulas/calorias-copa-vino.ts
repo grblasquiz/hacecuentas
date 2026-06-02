@@ -1,6 +1,6 @@
 /** Calorías copa vino */
 export interface Inputs { tipoVino: string; mlCopa: number; copasPorSemana: number; }
-export interface Outputs { caloriasPorCopa: number; caloriasPorBotella: number; caloriasSemana: number; equivalenteEjercicio: string; comentario: string; }
+export interface Outputs { caloriasPorCopa: number; caloriasPorBotella: number; caloriasSemana: number; equivalenteEjercicio: string; comentario: string; _insight?: any; _chart?: any; }
 
 export function caloriasCopaVino(i: Inputs): Outputs {
   const tipo = String(i.tipoVino);
@@ -30,10 +30,14 @@ export function caloriasCopaVino(i: Inputs): Outputs {
   const equiv = `${minCaminata} min caminata rápida o ${Math.round(minCaminata / 2)} min correr`;
 
   let com = '';
-  if (kcalSemana < 300) com = 'Consumo moderado — impacto calórico bajo.';
-  else if (kcalSemana < 700) com = 'Consumo estándar — equivale a 1 pizza chica al mes.';
-  else if (kcalSemana < 1400) com = 'Consumo medio-alto — 1 comida extra/semana.';
-  else com = 'Consumo alto — considerá reducir por salud y calorías.';
+  let tone = 'neutral';
+  if (kcalSemana < 300) { com = 'Consumo moderado — impacto calórico bajo.'; tone = 'good'; }
+  else if (kcalSemana < 700) { com = 'Consumo estándar — equivale a 1 pizza chica al mes.'; tone = 'neutral'; }
+  else if (kcalSemana < 1400) { com = 'Consumo medio-alto — 1 comida extra/semana.'; tone = 'warn'; }
+  else { com = 'Consumo alto — considerá reducir por salud y calorías.'; tone = 'warn'; }
+
+  const semanaR = Math.round(kcalSemana);
+  const segMax = Math.max(1600, Number((semanaR * 1.1).toFixed(0)));
 
   return {
     caloriasPorCopa: Number(kcalCopa.toFixed(0)),
@@ -41,5 +45,24 @@ export function caloriasCopaVino(i: Inputs): Outputs {
     caloriasSemana: Number(kcalSemana.toFixed(0)),
     equivalenteEjercicio: equiv,
     comentario: com,
+    _insight: {
+      title: 'Impacto de tu copa',
+      text: `Cada copa suma **${Math.round(kcalCopa)} kcal**; con ${semana} por semana llegás a **${semanaR.toLocaleString('es-AR')} kcal/semana** (${equiv} por copa). ${com}`,
+      tone,
+      icon: '🍷',
+    },
+    _chart: {
+      type: 'scale',
+      marker: semanaR,
+      markerLabel: `${semanaR.toLocaleString('es-AR')} kcal/sem`,
+      min: 0,
+      segments: [
+        { nombre: 'Bajo', max: 300, color: '#86efac', colorDark: '#166534' },
+        { nombre: 'Estándar', max: 700, color: '#fde047', colorDark: '#854d0e' },
+        { nombre: 'Medio-alto', max: 1400, color: '#fdba74', colorDark: '#9a3412' },
+        { nombre: 'Alto', max: segMax, color: '#fca5a5', colorDark: '#7f1d1d' },
+      ],
+      ariaLabel: 'Calorías semanales de vino ubicadas en su zona de consumo',
+    },
   };
 }

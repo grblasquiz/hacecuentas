@@ -1,6 +1,6 @@
 /** Embarazo gemelar — FPP ajustada y controles */
 export interface Inputs { fum: string; tipoGemelar?: string; semanaActual?: number; }
-export interface Outputs { fppGemelar: string; pesoEstimado: string; controles: string; riesgos: string; }
+export interface Outputs { fppGemelar: string; pesoEstimado: string; controles: string; riesgos: string; _insight?: any; }
 
 export function embarazoGemelar(i: Inputs): Outputs {
   const parts = String(i.fum || '').split('-').map(Number);
@@ -55,10 +55,34 @@ export function embarazoGemelar(i: Inputs): Outputs {
     pesoEstimado = `${pesosGemelar[closest]} por bebé (semana ${closest})`;
   }
 
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const fppTxt = `${fpp.getDate()} de ${meses[fpp.getMonth()]} de ${fpp.getFullYear()}`;
+  const tipoTxt: Record<string, string> = {
+    'bicorial': 'bicorial-biamniótico (dos placentas)',
+    'monocorial-bi': 'monocorial-biamniótico (placenta compartida)',
+    'monocorial-mono': 'monocorial-monoamniótico (placenta y bolsa compartidas)',
+    'no-se': 'gemelar',
+  };
+  const tono = (tipo === 'monocorial-mono' || tipo === 'monocorial-bi') ? 'warn'
+    : tipo === 'no-se' ? 'neutral' : 'warn';
+  const extra = tipo === 'monocorial-mono'
+    ? ' Es el tipo de mayor riesgo: requiere centro de alta complejidad y controles muy frecuentes.'
+    : tipo === 'monocorial-bi'
+    ? ' Al compartir placenta hay que vigilar el STFF con ecografías cada 2 semanas.'
+    : tipo === 'bicorial'
+    ? ' Al tener placentas separadas es el escenario más favorable dentro de un embarazo gemelar.'
+    : ' Definir la corionicidad con tu obstetra es clave para ajustar controles y fecha de parto.';
+
   return {
     fppGemelar: `${fpp.getFullYear()}-${String(fpp.getMonth()+1).padStart(2,'0')}-${String(fpp.getDate()).padStart(2,'0')}`,
     pesoEstimado,
     controles,
     riesgos,
+    _insight: {
+      title: 'Tu embarazo gemelar',
+      text: `Para un embarazo ${tipoTxt[tipo] || 'gemelar'}, los mellizos suelen nacer alrededor de la **semana ${semanasParto}** — antes que un embarazo único — con FPP estimada para el **${fppTxt}**.${extra}`,
+      tone: tono,
+      icon: '👶',
+    },
   };
 }

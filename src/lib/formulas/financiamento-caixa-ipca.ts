@@ -19,6 +19,8 @@ export interface Outputs {
   totalPago: string;
   totalJuros: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -60,6 +62,25 @@ export function financiamentoCaixaIpca(i: Inputs): Outputs {
   }
 
   const totalJuros = totalPago - pv;
+  const jurosPct = pv > 0 ? (totalJuros / pv) * 100 : 0;
+
+  const _insight = {
+    title: 'Peso dos juros + correção',
+    text: `Nesta linha você paga **${brl(totalJuros)}** de juros + correção IPCA sobre **${brl(pv)}** financiados — equivale a **${jurosPct.toFixed(0)}%** do valor emprestado. A parcela cai de ${brl(primeira)} para ${brl(ultima)} ao longo de ${n} meses (SAC), mas a correção pelo IPCA pode elevar todas elas se a inflação subir.`,
+    tone: jurosPct >= 60 ? 'warn' : 'neutral',
+    icon: '🏠',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Valor financiado', value: Math.round(pv) },
+      { label: 'Juros + correção', value: Math.round(totalJuros) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(totalPago),
+    centerLabel: 'Total pago',
+    ariaLabel: `Total pago de ${brl(totalPago)}: ${brl(pv)} de principal e ${brl(totalJuros)} de juros e correção`,
+  };
 
   return {
     valorFinanciado: brl(pv),
@@ -69,5 +90,7 @@ export function financiamentoCaixaIpca(i: Inputs): Outputs {
     totalPago: brl(totalPago),
     totalJuros: brl(totalJuros),
     resumen: `Linha IPCA Caixa: IPCA (${ipca}%) + 3,95% = ${taxaNominalAnual.toFixed(2)}% aa nominal. Em ${n} meses (SAC), 1ª parcela ${brl(primeira)}, última ${brl(ultima)}, juros totais ${brl(totalJuros)}.`,
+    _insight,
+    _chart,
   };
 }

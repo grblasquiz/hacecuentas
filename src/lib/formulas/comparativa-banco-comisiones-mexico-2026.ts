@@ -19,6 +19,8 @@ export interface Outputs {
   total_anual: number;
   beneficiario_exencion: string;
   ranking_competitivo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -154,27 +156,59 @@ export function compute(i: Inputs): Outputs {
     gastosOtrosBancos[banco] = totalTemp;
   });
   
-  const ranking = Object.entries(gastosOtrosBancos)
-    .sort((a, b) => a[1] - b[1])
+  const bancosNombre: Record<string, string> = {
+    nu: 'NU',
+    stori: 'Stori',
+    klar: 'Klar',
+    bbva: 'BBVA',
+    santander: 'Santander',
+    citibanamex: 'Citibanamex',
+    banorte: 'Banorte',
+    hsbc: 'HSBC'
+  };
+  const rankingOrdenado = Object.entries(gastosOtrosBancos).sort((a, b) => a[1] - b[1]);
+  const ranking = rankingOrdenado
     .map(([banco, gasto], idx) => {
       const posicion = idx + 1;
-      const bancosNombre: Record<string, string> = {
-        nu: 'NU',
-        stori: 'Stori',
-        klar: 'Klar',
-        bbva: 'BBVA',
-        santander: 'Santander',
-        citibanamex: 'Citibanamex',
-        banorte: 'Banorte',
-        hsbc: 'HSBC'
-      };
       return `${posicion}. ${bancosNombre[banco]} - $${Math.round(gasto * 100) / 100} MXN/mes`;
     })
     .join(' | ');
-  
+
   const ranking_competitivo = `Ranking mensual según perfil:\n${ranking}`;
-  
-  return {
+
+  // Insight + gráfico
+  const mxn = (n: number) => '$' + (Math.round(n * 100) / 100).toLocaleString('es-MX');
+  const nombreBanco = bancosNombre[i.banco_seleccionado] || i.banco_seleccionado;
+  const posicionBanco = rankingOrdenado.findIndex(([b]) => b === i.banco_seleccionado) + 1;
+  const totalBancos = rankingOrdenado.length;
+  const componentesMx = [
+    { label: 'Manejo de cuenta', value: Math.round(comision_manejo * 100) / 100 },
+    { label: 'Retiros cajero ajeno', value: Math.round(comision_retiros * 100) / 100 },
+    { label: 'Transferencias', value: Math.round(comision_transferencias * 100) / 100 },
+    { label: 'Consultas de saldo', value: Math.round(comision_consultas * 100) / 100 },
+    { label: 'Depósitos', value: Math.round(comision_depositos * 100) / 100 },
+    { label: 'Servicios adicionales', value: Math.round(comision_servicios_adic * 100) / 100 },
+  ].filter(c => c.value > 0);
+
+  let _insight;
+  if (total_comisiones_mes <= 0) {
+    _insight = {
+      title: `${nombreBanco} no te cobra comisiones`,
+      text: `Con tu perfil, **${nombreBanco}** te deja en **$0/mes**. ${i.banco_seleccionado === 'nu' || i.banco_seleccionado === 'stori' || i.banco_seleccionado === 'klar' ? 'Los bancos digitales no cobran retiros, SPEI ni consultas.' : 'Tu saldo promedio te exime de la comisión de manejo.'}`,
+      tone: 'good' as const,
+      icon: '🏦'
+    };
+  } else {
+    const mayor = componentesMx.slice().sort((a, b) => b.value - a.value)[0];
+    _insight = {
+      title: `${nombreBanco}: ${mxn(total_comisiones_mes)} MXN/mes`,
+      text: `Pagás **${mxn(total_comisiones_mes)}/mes** (${mxn(total_anual)} al año). Tu mayor gasto es **${mayor.label.toLowerCase()}** (${mxn(mayor.value)}). En el ranking de ${totalBancos} bancos, ${nombreBanco} queda **${posicionBanco}°** según tu uso.`,
+      tone: (posicionBanco <= Math.ceil(totalBancos / 2) ? 'neutral' : 'warn') as 'neutral' | 'warn',
+      icon: '🏦'
+    };
+  }
+
+  const out: Outputs = {
     comision_manejo_cuenta: Math.round(comision_manejo * 100) / 100,
     comision_retiros: Math.round(comision_retiros * 100) / 100,
     comision_transferencias: Math.round(comision_transferencias * 100) / 100,
@@ -184,6 +218,20 @@ export function compute(i: Inputs): Outputs {
     total_comisiones_mes: Math.round(total_comisiones_mes * 100) / 100,
     total_anual: total_anual,
     beneficiario_exencion: beneficiario_exencion,
-    ranking_competitivo: ranking_competitivo
+    ranking_competitivo: ranking_competitivo,
+    _insight
   };
+
+  if (componentesMx.length >= 2) {
+    out._chart = {
+      type: 'doughnut',
+      slices: componentesMx,
+      prefix: '$',
+      centerValue: mxn(total_comisiones_mes),
+      centerLabel: 'Comisión mensual',
+      ariaLabel: `Desglose de las comisiones mensuales de ${nombreBanco} por ${mxn(total_comisiones_mes)} MXN.`
+    };
+  }
+
+  return out;
 }

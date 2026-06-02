@@ -15,6 +15,8 @@ export interface Outputs {
   plazo_dias: number;
   pasos_resumen: string;
   requisitos_documentos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -137,6 +139,40 @@ export function compute(i: Inputs): Outputs {
     "- Depósito capital inicial en banco a nombre de la empresa (Ltda/SA)"
   ].filter(Boolean).join("\n");
 
+  // Insight + gráfico de composición de costos
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const tipoNombre: Record<string, string> = {
+    eirl: 'EIRL', spa: 'SpA', ltda: 'Ltda.', sa: 'S.A.',
+  };
+  const nombreSoc = tipoNombre[i.tipo_sociedad] ?? i.tipo_sociedad.toUpperCase();
+  // EIRL/SpA = vía Empresa en Un Día, rápida y barata
+  const esExpres = i.tipo_sociedad === 'eirl' || i.tipo_sociedad === 'spa';
+  const tono = esExpres ? 'good' : i.tipo_sociedad === 'sa' ? 'warn' : 'neutral';
+  const textoTono = esExpres
+    ? `Constituir una **${nombreSoc}** te sale **${fmtCLP(costoTotal)}** y la tenés lista en **${plazoDias} día${plazoDias === 1 ? '' : 's'} hábil${plazoDias === 1 ? '' : 'es'}** vía "Empresa en Un Día".`
+    : `Una **${nombreSoc}** requiere notaría y registro: **${fmtCLP(costoTotal)}** en total y unos **${plazoDias} días hábiles** para quedar operativa.`;
+  const _insight = {
+    title: 'Costo y plazo de constitución',
+    text: textoTono,
+    tone: tono as 'good' | 'warn' | 'neutral',
+    icon: esExpres ? '🚀' : '🏛️',
+  };
+
+  const costoSlices = [
+    { label: 'SII', value: Math.round(costoSii) },
+    { label: 'Notaría', value: Math.round(costoNotaria) },
+    { label: 'Registro Mercantil', value: Math.round(costoRegistro) },
+    { label: 'Asesoría legal', value: Math.round(costoAsesoria) },
+  ].filter(s => s.value > 0);
+  const _chart = costoSlices.length > 1 ? {
+    type: 'doughnut',
+    slices: costoSlices,
+    prefix: '$',
+    centerValue: fmtCLP(costoTotal),
+    centerLabel: 'costo total',
+    ariaLabel: `Desglose del costo de constitución por concepto, total ${fmtCLP(costoTotal)}`,
+  } : undefined;
+
   return {
     costo_total: Math.round(costoTotal),
     costo_sii: Math.round(costoSii),
@@ -145,6 +181,8 @@ export function compute(i: Inputs): Outputs {
     costo_asesoria: Math.round(costoAsesoria),
     plazo_dias: plazoDias,
     pasos_resumen: pasos,
-    requisitos_documentos: requisitos
+    requisitos_documentos: requisitos,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

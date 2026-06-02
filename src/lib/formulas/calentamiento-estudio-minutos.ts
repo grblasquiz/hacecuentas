@@ -7,6 +7,7 @@ export interface Outputs {
   primerosMin: string;
   transicion: string;
   consejo: string;
+  _insight?: any;
 }
 
 export function calentamientoEstudioMinutos(i: Inputs): Outputs {
@@ -29,11 +30,23 @@ export function calentamientoEstudioMinutos(i: Inputs): Outputs {
     programacion: 'Revisá código de ayer, setup entorno',
   };
 
+  const tareaLabel: Record<string, string> = {
+    memorizacion: 'memorización',
+    razonamiento: 'razonamiento',
+    escritura: 'escritura',
+    programacion: 'programación',
+  };
+  const tLabel = tareaLabel[tarea] || 'razonamiento';
+  const gapTxt = gap >= 6 ? '6+ h' : `${gap} h`;
+  const insTone = minCalc >= 25 ? 'warn' : minCalc >= 15 ? 'neutral' : 'good';
+  const insText = `Tras **${gapTxt}** sin estudiar, una tarea de ${tLabel} necesita **${minCalc} min** de calentamiento antes de entrar en foco. ${minCalc >= 25 ? 'Es un arranque largo: no lo saltees o vas a rendir a media máquina.' : 'Arrancá con algo fácil y subí la dificultad de a poco.'}`;
+
   return {
     calentamientoMin: minCalc,
     primerosMin: primerosMin[tarea] || 'Releé apuntes anteriores',
     transicion: 'Subí dificultad gradualmente del min 10 al 15',
     consejo: 'Sesión efectiva >60 min para aprovechar el flow. No interrumpir con notificaciones.',
+    _insight: { title: 'Tu rampa de arranque', text: insText, tone: insTone, icon: '🧠' },
   };
 
 }

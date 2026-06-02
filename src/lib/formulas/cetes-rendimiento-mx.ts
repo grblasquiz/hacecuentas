@@ -19,6 +19,8 @@ export interface Outputs {
   saldoFinal: number;
   tasaRealAnual: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cetesRendimientoMx(i: Inputs): Outputs {
@@ -44,12 +46,41 @@ export function cetesRendimientoMx(i: Inputs): Outputs {
   const saldoFinal = monto + rendimientoNeto;
   const tasaRealAnual = (rendimientoNeto / monto) * (360 / diasTotales) * 100;
 
+  const rendNetoR = Number(rendimientoNeto.toFixed(2));
+  const isrR = Number(isrRetenido.toFixed(2));
+  const capitalR = Number(monto.toFixed(2));
+  const saldoR = Number((capitalR + rendNetoR).toFixed(2));
+  const tasaRealR = Number(tasaRealAnual.toFixed(2));
+  const mxn = (v: number) => '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const reinvTxt = reinversiones > 1 ? ` reinvirtiendo **${reinversiones} veces**` : '';
+
+  const _insight = {
+    title: 'Tu rendimiento neto',
+    text: `Invirtiendo ${mxn(capitalR)} a **${dias} días**${reinvTxt} ganás **${mxn(rendNetoR)} netos** (descontado el ISR de ${mxn(isrR)}) y terminás con **${mxn(saldoR)}**. Eso equivale a una tasa real de **${tasaRealR.toFixed(2)} % anual**.`,
+    tone: 'good' as const,
+    icon: '🏦',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital invertido', value: capitalR },
+      { label: 'Rendimiento neto', value: rendNetoR },
+    ],
+    prefix: '$',
+    centerValue: mxn(saldoR),
+    centerLabel: 'saldo final',
+    ariaLabel: `Composición del saldo final de ${mxn(saldoR)}: capital invertido más rendimiento neto`,
+  };
+
   return {
     rendimientoBruto: Number(rendimientoBruto.toFixed(2)),
-    isrRetenido: Number(isrRetenido.toFixed(2)),
-    rendimientoNeto: Number(rendimientoNeto.toFixed(2)),
+    isrRetenido: isrR,
+    rendimientoNeto: rendNetoR,
     saldoFinal: Number(saldoFinal.toFixed(2)),
-    tasaRealAnual: Number(tasaRealAnual.toFixed(2)),
+    tasaRealAnual: tasaRealR,
     mensaje: `Invirtiendo $${monto} a ${dias} días (${reinversiones} reinv.) al ${tasa}% anual ganás $${rendimientoNeto.toFixed(2)} netos. Saldo final $${saldoFinal.toFixed(2)}.`,
+    _insight,
+    _chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Rate hora diseñador gráfico freelance */
 export interface Inputs { anosExperiencia: number; paisCliente: string; especializado: string; }
-export interface Outputs { rateHora: number; rateMin: number; rateMax: number; rateProyecto: number; }
+export interface Outputs { rateHora: number; rateMin: number; rateMax: number; rateProyecto: number; _insight?: any; }
 export function costoHoraDisenadorGrafico(i: Inputs): Outputs {
   const anos = Number(i.anosExperiencia);
   const pais = String(i.paisCliente || 'latam');
@@ -16,10 +16,21 @@ export function costoHoraDisenadorGrafico(i: Inputs): Outputs {
   const mult = mkts[pais] || 1.0;
   const espMult = esp === 'si' ? 1.35 : 1.0;
   const rate = byExp * mult * espMult;
+  const rateHora = Math.round(rate);
+  const rateMin = Math.round(rate * 0.8);
+  const rateMax = Math.round(rate * 1.3);
+  const paisLbl: Record<string, string> = { usa: 'Estados Unidos', europa: 'Europa', latam: 'Latinoamérica', asia: 'Asia' };
+  const _insight = {
+    title: 'Tu rate sugerido',
+    text: `Como diseñador gráfico con **${anos} ${anos === 1 ? 'año' : 'años'}** de experiencia y clientes en **${paisLbl[pais] || pais}**, un rate sano ronda los **USD ${rateHora}/hora** (banda USD ${rateMin}–${rateMax}). En diseño conviene cotizar por proyecto, no por hora: el cliente paga el resultado, no las horas que tardás.`,
+    tone: 'neutral',
+    icon: '🎨',
+  };
   return {
-    rateHora: Math.round(rate),
-    rateMin: Math.round(rate * 0.8),
-    rateMax: Math.round(rate * 1.3),
-    rateProyecto: Math.round(rate * 40)
+    rateHora,
+    rateMin,
+    rateMax,
+    rateProyecto: Math.round(rate * 40),
+    _insight,
   };
 }

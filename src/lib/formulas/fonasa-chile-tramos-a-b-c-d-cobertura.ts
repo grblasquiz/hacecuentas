@@ -18,6 +18,8 @@ export interface Outputs {
   costo_isapre_estimado: number;
   ahorro_fonasa_vs_isapre: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -115,6 +117,43 @@ export function compute(i: Inputs): Outputs {
     }
   }
   
+  // Insight: tramo y costo según cobertura
+  const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  let _insight: any;
+  if (tramo_fonasa === 'A' || tramo_fonasa === 'B') {
+    _insight = {
+      title: `Tramo ${tramo_fonasa}: cobertura gratuita`,
+      text: `Quedás en **Tramo ${tramo_fonasa}** con **0% de copago**: tu atención en la red pública es **gratuita** (sin cotización extra ni pago por consulta).`,
+      tone: 'good',
+      icon: '🩺'
+    };
+  } else {
+    const ahorroTxt = i.comparar_isapre
+      ? (ahorro_fonasa_vs_isapre > 0
+          ? ` Frente a una Isapre promedio ahorrás **${fmtCL(ahorro_fonasa_vs_isapre)}/año**.`
+          : ` En tu caso una Isapre podría costar parecido o menos: compará planes concretos.`)
+      : ``;
+    _insight = {
+      title: `Tramo ${tramo_fonasa}: copago ${copago_porcentaje}%`,
+      text: `Estás en **Tramo ${tramo_fonasa}** con **${copago_porcentaje}% de copago**. Entre cotización (**${fmtCL(costo_anual_cotizacion)}/año**) y atenciones, tu costo anual estimado es **${fmtCL(costo_anual_fonasa)}**.` + ahorroTxt,
+      tone: i.comparar_isapre && ahorro_fonasa_vs_isapre <= 0 ? 'warn' : 'neutral',
+      icon: '🩺'
+    };
+  }
+
+  // Donut: costo anual Fonasa = cotización + atenciones (consultas+exámenes)
+  const _chart = costo_anual_fonasa > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Cotización (7%)', value: Math.round(costo_anual_cotizacion) },
+      { label: 'Consultas + exámenes', value: Math.round(gasto_anual_consultas) }
+    ].filter(s => s.value > 0),
+    prefix: '$',
+    centerValue: fmtCL(costo_anual_fonasa),
+    centerLabel: 'Costo anual',
+    ariaLabel: `Costo anual Fonasa ${fmtCL(costo_anual_fonasa)}: ${fmtCL(costo_anual_cotizacion)} de cotización y ${fmtCL(gasto_anual_consultas)} en consultas y exámenes.`
+  } : undefined;
+
   return {
     tramo_fonasa,
     descripcion_tramo,
@@ -126,6 +165,8 @@ export function compute(i: Inputs): Outputs {
     costo_anual_fonasa,
     costo_isapre_estimado: i.comparar_isapre ? costo_isapre_estimado : 0,
     ahorro_fonasa_vs_isapre: i.comparar_isapre ? ahorro_fonasa_vs_isapre : 0,
-    recomendacion
+    recomendacion,
+    _insight,
+    ...(_chart && _chart.slices.length >= 2 ? { _chart } : {})
   };
 }

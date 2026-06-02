@@ -14,6 +14,8 @@ export interface Outputs {
   indiceCalor: number;
   recomendacion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function conversionTemperaturaClima(i: Inputs): Outputs {
@@ -70,6 +72,66 @@ export function conversionTemperaturaClima(i: Inputs): Outputs {
   else if (c < 35) recomendacion = 'Calor — algodón, hidratación, protector solar.';
   else recomendacion = 'Calor extremo — evitá exposición al sol 11-16h, mucha agua.';
 
+  // Insight dinámico según banda térmica y sensación percibida
+  const sensDiff = sensacion - c; // negativo = el viento la baja
+  const calorDiff = indiceCalor - c; // positivo = la humedad la sube
+  let insight: { title: string; text: string; tone: string; icon: string };
+  if (c < 0) {
+    insight = {
+      title: 'Frío bajo cero',
+      text: `**${c.toFixed(1)}°C** (${f.toFixed(1)}°F). ` +
+        (sensDiff < -1
+          ? `El viento la hace sentir como **${sensacion.toFixed(1)}°C**: priorizá cortavientos y cubrir piel expuesta.`
+          : `Abrigo térmico y capas para protegerte del frío.`),
+      tone: 'warn',
+      icon: '🥶',
+    };
+  } else if (c >= 32) {
+    insight = {
+      title: 'Calor intenso',
+      text: `**${c.toFixed(1)}°C** (${f.toFixed(1)}°F). ` +
+        (calorDiff > 1
+          ? `Con la humedad la sensación trepa a **${indiceCalor.toFixed(1)}°C**: hidratate y evitá el sol del mediodía.`
+          : `Hidratación, protector solar y sombra en las horas pico.`),
+      tone: 'warn',
+      icon: '🥵',
+    };
+  } else if (c >= 18 && c < 28) {
+    insight = {
+      title: 'Temperatura agradable',
+      text: `**${c.toFixed(1)}°C** (${f.toFixed(1)}°F) es zona de confort: ropa liviana alcanza para todo el día.`,
+      tone: 'good',
+      icon: '🌤️',
+    };
+  } else {
+    insight = {
+      title: 'Clima templado',
+      text: `**${c.toFixed(1)}°C** equivale a **${f.toFixed(1)}°F** y **${k.toFixed(2)}K**. ` +
+        (sensDiff < -1 ? `Con viento se siente como ${sensacion.toFixed(1)}°C. ` : ``) + recomendacion,
+      tone: 'neutral',
+      icon: '🌡️',
+    };
+  }
+
+  const chartMin = Math.min(-15, Math.floor(c) - 5);
+  const chartTop = Math.max(45.01, c + 5);
+  const chart = {
+    type: 'scale',
+    marker: Number(c.toFixed(1)),
+    markerLabel: `${c.toFixed(1)}°C`,
+    min: chartMin,
+    segments: [
+      { nombre: 'Frío extremo', max: -10, color: '#1d4ed8', colorDark: '#1e3a8a' },
+      { nombre: 'Muy frío', max: 0, color: '#3b82f6', colorDark: '#1d4ed8' },
+      { nombre: 'Frío', max: 10, color: '#38bdf8', colorDark: '#0284c7' },
+      { nombre: 'Fresco', max: 18, color: '#22c55e', colorDark: '#15803d' },
+      { nombre: 'Agradable', max: 28, color: '#84cc16', colorDark: '#4d7c0f' },
+      { nombre: 'Calor', max: 35, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Calor extremo', max: Number(chartTop.toFixed(1)), color: '#ef4444', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Temperatura de ${c.toFixed(1)} grados Celsius en la escala de confort térmico`,
+  };
+
   return {
     celsius: Number(c.toFixed(2)),
     fahrenheit: Number(f.toFixed(2)),
@@ -78,5 +140,7 @@ export function conversionTemperaturaClima(i: Inputs): Outputs {
     indiceCalor: Number(indiceCalor.toFixed(1)),
     recomendacion,
     resumen: `**${c.toFixed(1)}°C** = ${f.toFixed(1)}°F = ${k.toFixed(2)}K. Sensación térmica ${sensacion.toFixed(1)}°C. ${recomendacion}`,
+    _insight: insight,
+    _chart: chart,
   };
 }

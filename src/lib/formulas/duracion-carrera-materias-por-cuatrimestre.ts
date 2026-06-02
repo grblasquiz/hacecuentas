@@ -11,6 +11,7 @@ export interface Outputs {
   cuatrimestresRestantes: number;
   fechaEstimada: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function duracionCarreraMateriasPorCuatrimestre(i: Inputs): Outputs {
@@ -37,10 +38,20 @@ export function duracionCarreraMateriasPorCuatrimestre(i: Inputs): Outputs {
   const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const fechaEstimada = `${meses[fechaGraduacion.getMonth()]} ${fechaGraduacion.getFullYear()}`;
 
+  const aniosRound = Math.round(aniosRestantes * 10) / 10;
+  const tone: 'good' | 'warn' | 'neutral' = aniosRound <= 2 ? 'good' : aniosRound >= 5 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Cuánto te falta para recibirte',
+    text: `Con **${materiasPorCuatri} materia(s) por cuatrimestre** te quedan **${cuatrimestresRestantes} cuatrimestres** (~**${aniosRound} años**), así que apuntás a **${fechaEstimada}**. Sumar una materia por cuatrimestre te acorta el plazo de forma notable.`,
+    tone,
+    icon: '🎓',
+  };
+
   return {
-    aniosRestantes: Math.round(aniosRestantes * 10) / 10,
+    aniosRestantes: aniosRound,
     cuatrimestresRestantes,
     fechaEstimada: `Graduación estimada: ${fechaEstimada}`,
     detalle: `Con ${materiasPorCuatri} materia(s) por cuatrimestre y ${cuatrisPorAnio} cuatrimestre(s) por año, te faltan ${cuatrimestresRestantes} cuatrimestres (${aniosRestantes.toFixed(1)} años)`,
+    _insight,
   };
 }

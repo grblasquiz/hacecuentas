@@ -13,6 +13,8 @@ export interface Outputs {
   required_payment: number;
   interest_ratio: number;
   payoff_summary: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Default APR reflects US Federal Reserve G.19 average for accounts assessed interest, 2025-2026
@@ -63,6 +65,12 @@ export function compute(i: Inputs): Outputs {
         interest_ratio: 0,
         payoff_summary:
           `At 0% APR, paying $${payment.toFixed(2)}/month, you will pay off $${balance.toFixed(2)} in ${months} month${months !== 1 ? 's' : ''} with $0 in interest.`,
+        _insight: {
+          title: 'Interest-free payoff',
+          text: `At **0% APR**, every dollar goes to principal — you clear **$${balance.toFixed(2)}** in **${months} month${months !== 1 ? 's' : ''}** with **$0 interest**. Pay it off before any promo rate ends.`,
+          tone: 'good',
+          icon: '💳',
+        },
       };
     }
 
@@ -115,6 +123,23 @@ export function compute(i: Inputs): Outputs {
       required_payment: payment,
       interest_ratio: Math.round(interestRatio * 100) / 100,
       payoff_summary: summary,
+      _insight: {
+        title: 'What this payoff costs you',
+        text: `Paying **$${payment.toFixed(2)}/month**, you clear the card in **${months} month${months !== 1 ? 's' : ''}** but hand the issuer **$${totalInterest.toFixed(2)}** in interest — **${interestRatio.toFixed(1)}%** of what you borrowed.${interestRatio >= 20 ? ' Bumping the payment shrinks this fast.' : ''}`,
+        tone: interestRatio >= 20 ? 'warn' : 'neutral',
+        icon: '💳',
+      },
+      _chart: {
+        type: 'doughnut',
+        slices: [
+          { label: 'Principal', value: Math.round(balance * 100) / 100 },
+          { label: 'Interest', value: Math.round(totalInterest * 100) / 100 },
+        ],
+        prefix: '$',
+        centerValue: `$${(Math.round(simulatedTotalPaid * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        centerLabel: 'Total paid',
+        ariaLabel: `Of $${simulatedTotalPaid.toFixed(2)} total paid, $${balance.toFixed(2)} is principal and $${totalInterest.toFixed(2)} is interest`,
+      },
     };
   }
 
@@ -149,14 +174,34 @@ export function compute(i: Inputs): Outputs {
       `you need to pay $${payment.toFixed(2)}/month. ` +
       `Total interest: $${totalInterest.toFixed(2)} (${interestRatio.toFixed(1)}% of original balance).`;
 
-    return {
+    const mode2Out: Outputs = {
       months_to_payoff: targetMonths,
       total_interest: Math.round(totalInterest * 100) / 100,
       total_paid: Math.round(totalPaid * 100) / 100,
       required_payment: Math.round(payment * 100) / 100,
       interest_ratio: Math.round(interestRatio * 100) / 100,
       payoff_summary: summary,
+      _insight: {
+        title: 'The payment to hit your deadline',
+        text: `Clearing **$${balance.toFixed(2)}** in **${periodLabel}** means **$${payment.toFixed(2)}/month**, with **$${totalInterest.toFixed(2)}** going to interest (**${interestRatio.toFixed(1)}%** of the balance).${interestRatio >= 20 ? ' A shorter term cuts that interest sharply.' : ''}`,
+        tone: interestRatio >= 20 ? 'warn' : 'neutral',
+        icon: '💳',
+      },
     };
+    if (totalInterest > 0) {
+      mode2Out._chart = {
+        type: 'doughnut',
+        slices: [
+          { label: 'Principal', value: Math.round(balance * 100) / 100 },
+          { label: 'Interest', value: Math.round(totalInterest * 100) / 100 },
+        ],
+        prefix: '$',
+        centerValue: `$${(Math.round(totalPaid * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        centerLabel: 'Total paid',
+        ariaLabel: `Of $${totalPaid.toFixed(2)} total paid, $${balance.toFixed(2)} is principal and $${totalInterest.toFixed(2)} is interest`,
+      };
+    }
+    return mode2Out;
   }
 
   return { ...EMPTY, payoff_summary: 'Select a calculation mode.' };

@@ -1,6 +1,6 @@
 /** Calculadora de Filtro ND */
 export interface Inputs { velocidadSin: number; stopsND: number; }
-export interface Outputs { velocidadCon: string; factorND: number; densidadOptica: number; nota: string; }
+export interface Outputs { velocidadCon: string; factorND: number; densidadOptica: number; nota: string; _insight?: any; }
 
 export function filtroNdPasosExposicion(i: Inputs): Outputs {
   const vel = Number(i.velocidadSin);
@@ -27,10 +27,17 @@ export function filtroNdPasosExposicion(i: Inputs): Outputs {
   else if (segs > 1) nota = 'Usá trípode obligatoriamente para esta velocidad.';
   else nota = 'Velocidad manejable, trípode recomendado para máxima nitidez.';
 
+  const _insight = {
+    title: `Filtro ND de ${stops} pasos`,
+    text: `Un ND de **${stops} stops** (factor **${factor}×**, densidad óptica **${densidadOptica}**) corta la luz lo suficiente para llevar tu exposición de 1/${Math.round(vel)} seg a **${velocidadCon}**. ${nota}`,
+    tone: segs > 30 ? 'warn' : 'neutral',
+    icon: '📷',
+  };
   return {
     velocidadCon,
     factorND: factor,
     densidadOptica,
     nota,
+    _insight,
   };
 }

@@ -13,6 +13,8 @@ export interface Outputs {
   zona5Min: number;
   zona5Max: number;
   formulaUsada: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function frecuenciaCardiaca(i: Inputs): Outputs {
@@ -44,13 +46,38 @@ export function frecuenciaCardiaca(i: Inputs): Outputs {
   const [z4lo, z4hi] = pct(0.80, 0.90);
   const [z5lo, z5hi] = pct(0.90, 1.00);
 
+  const fcMaxR = Math.round(fcMax);
+  // Objetivo aeróbico: 75% (centro de Z3), siempre dentro de las zonas y por debajo de FCmax
+  const objetivoAerobico = Math.round(base + reserva * 0.75);
+  const metodoTxt = useKarvonen ? ' (zonas por método Karvonen, usando tu FC reposo)' : '';
+
   return {
-    fcMax: Math.round(fcMax),
+    fcMax: fcMaxR,
     zona1Min: z1lo, zona1Max: z1hi,
     zona2Min: z2lo, zona2Max: z2hi,
     zona3Min: z3lo, zona3Max: z3hi,
     zona4Min: z4lo, zona4Max: z4hi,
     zona5Min: z5lo, zona5Max: z5hi,
     formulaUsada: nombreF + (useKarvonen ? ' + Karvonen' : ''),
+    _insight: {
+      title: 'Tu FCmax y zonas',
+      text: `Tu FCmax es **${fcMaxR} lpm** (${nombreF})${metodoTxt}. Para fondo aeróbico y quema de grasa, entrená en zona 2-3: **${z2lo}-${z3hi} lpm**. Las zonas 4-5 (${z4lo} lpm en adelante) son esfuerzo alto, solo en series cortas.`,
+      tone: 'neutral',
+      icon: '❤️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: objetivoAerobico,
+      markerLabel: `Aeróbico ${objetivoAerobico}`,
+      min: base > 0 ? base : Math.round(fcMax * 0.5),
+      segments: [
+        { nombre: 'Z1', max: z1hi, color: '#22c55e', colorDark: '#4ade80' },
+        { nombre: 'Z2', max: z2hi, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Z3', max: z3hi, color: '#eab308', colorDark: '#facc15' },
+        { nombre: 'Z4', max: z4hi, color: '#f97316', colorDark: '#fb923c' },
+        { nombre: 'Z5 (FCmax)', max: z5hi, color: '#ef4444', colorDark: '#f87171' },
+      ],
+      ariaLabel: `FCmax ${fcMaxR} lpm y zonas de entrenamiento; objetivo aeróbico en ${objetivoAerobico} lpm`,
+    },
   };
 }

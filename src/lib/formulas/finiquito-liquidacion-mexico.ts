@@ -23,6 +23,8 @@ export interface Outputs {
   desglose: Record<string, number>;
   tipoCalculado: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // LFT 2023: dias vacaciones por antiguedad
@@ -97,6 +99,51 @@ export function finiquitoLiquidacionMexico(i: Inputs): Outputs {
 
   const total = finiquitoPartes + tresMeses + veinteDias + primaAntiguedad;
 
+  // --- Insight + gráfico ---
+  const fmtMXN = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const extraDespido = tresMeses + veinteDias + primaAntiguedad;
+
+  let _insight: any;
+  if (tipoTerm === 'despido-injustificado') {
+    const pctExtra = total > 0 ? Math.round((extraDespido / total) * 100) : 0;
+    _insight = {
+      title: 'Liquidación por despido injustificado',
+      text: `Al finiquito base se le suman 3 meses, 20 días/año y prima de antigüedad: **${fmtMXN(extraDespido)}** extra, el **${pctExtra}%** de un total de **${fmtMXN(total)}**.`,
+      tone: 'good',
+      icon: '💼',
+    };
+  } else if (tipoTerm === 'renuncia' && anios >= 15) {
+    _insight = {
+      title: 'Renuncia con +15 años: hay prima',
+      text: `Por renunciar con **${anios} años** de antigüedad te corresponde prima de antigüedad (Art. 162 LFT): **${fmtMXN(primaAntiguedad)}** sumados al finiquito, total **${fmtMXN(total)}**.`,
+      tone: 'neutral',
+      icon: '✍️',
+    };
+  } else {
+    _insight = {
+      title: 'Finiquito sin indemnización',
+      text: `Por **${tipoTerm}** solo corresponde el finiquito de partes proporcionales: **${fmtMXN(total)}** (sueldo pendiente, vacaciones, prima vacacional y aguinaldo). No hay indemnización por despido.`,
+      tone: 'neutral',
+      icon: '📄',
+    };
+  }
+
+  const _chartSlices = Object.entries(desglose)
+    .map(([label, value]) => ({ label, value }))
+    .filter((s) => s.value > 0);
+
+  const _chart =
+    total > 0 && _chartSlices.length >= 2
+      ? {
+          type: 'doughnut',
+          slices: _chartSlices,
+          prefix: '$',
+          centerValue: fmtMXN(total),
+          centerLabel: tipoCalculado,
+          ariaLabel: 'Composición de la liquidación o finiquito en México por concepto',
+        }
+      : undefined;
+
   return {
     total: Number(total.toFixed(2)),
     finiquitoPartes: Number(finiquitoPartes.toFixed(2)),
@@ -106,5 +153,7 @@ export function finiquitoLiquidacionMexico(i: Inputs): Outputs {
     desglose,
     tipoCalculado,
     mensaje: `${tipoCalculado}: $${total.toFixed(2)} en total.`,
+    _insight,
+    _chart,
   };
 }

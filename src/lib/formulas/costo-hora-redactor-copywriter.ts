@@ -1,6 +1,6 @@
 /** Rate hora redactor copywriter freelance */
 export interface Inputs { anosExperiencia: number; paisCliente: string; especializado: string; }
-export interface Outputs { rateHora: number; rateMin: number; rateMax: number; rateProyecto: number; }
+export interface Outputs { rateHora: number; rateMin: number; rateMax: number; rateProyecto: number; _insight?: any; }
 export function costoHoraRedactorCopywriter(i: Inputs): Outputs {
   const anos = Number(i.anosExperiencia);
   const pais = String(i.paisCliente || 'latam');
@@ -16,10 +16,27 @@ export function costoHoraRedactorCopywriter(i: Inputs): Outputs {
   const mult = mkts[pais] || 1.0;
   const espMult = esp === 'si' ? 1.35 : 1.0;
   const rate = byExp * mult * espMult;
+  const rateHora = Math.round(rate);
+  const rateMin = Math.round(rate * 0.8);
+  const rateMax = Math.round(rate * 1.3);
+  const nivel = anos < 2 ? 'junior' : anos < 5 ? 'semi-senior' : anos < 10 ? 'senior' : 'experto';
+  const mercado = pais === 'usa' ? 'Estados Unidos' : pais === 'europa' ? 'Europa' : pais === 'asia' ? 'Asia' : 'Latinoamérica';
+  const tono = mult >= 1.3 ? 'good' : mult <= 0.7 ? 'warn' : 'neutral';
+  const txtMercado = mult >= 1.3
+    ? `escribir para clientes de **${mercado}** te sube la tarifa frente a la base.`
+    : mult <= 0.7
+      ? `el mercado **${mercado}** paga por debajo de la media: apuntá a clientes de USA/Europa para subir el rate.`
+      : `estás en un mercado de tarifa media.`;
   return {
-    rateHora: Math.round(rate),
-    rateMin: Math.round(rate * 0.8),
-    rateMax: Math.round(rate * 1.3),
-    rateProyecto: Math.round(rate * 40)
+    rateHora,
+    rateMin,
+    rateMax,
+    rateProyecto: Math.round(rate * 40),
+    _insight: {
+      title: 'Tu tarifa de referencia',
+      text: `Con perfil **${nivel}** podés cobrar entre **US$${rateMin}** y **US$${rateMax}/hora** (referencia US$${rateHora}). Para ${mercado}, ${txtMercado}`,
+      tone: tono,
+      icon: '✍️',
+    },
   };
 }

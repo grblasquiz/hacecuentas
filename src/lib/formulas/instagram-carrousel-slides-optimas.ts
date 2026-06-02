@@ -1,6 +1,6 @@
 /** Carrousel Instagram Slides */
 export interface Inputs { objetivo: string; tipoContenido: string; }
-export interface Outputs { slidesOptimas: string; rangoAceptable: string; estructura: string; tip: string; }
+export interface Outputs { slidesOptimas: string; rangoAceptable: string; estructura: string; tip: string; _insight?: any; }
 
 export function instagramCarrouselSlidesOptimas(i: Inputs): Outputs {
   const obj = String(i.objetivo);
@@ -26,10 +26,17 @@ export function instagramCarrouselSlidesOptimas(i: Inputs): Outputs {
   const mnF = Math.max(3, mn + adj);
   const mxF = Math.min(10, mx + adj);
   const opt = Math.round((mnF + mxF) / 2);
+  const _insight = {
+    title: `${opt} slides es tu punto óptimo`,
+    text: `Para "${obj}" con formato "${tipo}", apuntá a **${opt} slides** (rango sano: ${mnF}-${mxF}). Pocas slides limitan el dwell time; demasiadas hacen que la gente abandone antes del CTA.`,
+    tone: 'neutral',
+    icon: '🎠',
+  };
   return {
     slidesOptimas: `${opt} slides`,
     rangoAceptable: `${mnF}-${mxF} slides`,
     estructura: 'Slide 1 hook → 2-${opt-1} valor → ${opt} CTA (guardá / seguime)'.replace('${opt-1}', String(opt-1)).replace('${opt}', String(opt)),
     tip: 'Slide 2 es el gateway: si supera esta, la gente suele llegar al final',
+    _insight,
   };
 }

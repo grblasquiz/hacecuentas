@@ -9,6 +9,8 @@ export interface Outputs {
   co2Anual: number;
   co2AnualTon: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function emisionCo2AutoCombustible(i: Inputs): Outputs {
@@ -40,10 +42,37 @@ export function emisionCo2AutoCombustible(i: Inputs): Outputs {
   else if (co2PorKm < 300) nivel = 'Alta emisión';
   else nivel = 'Muy alta emisión';
 
+  const co2PorKmR = Math.round(co2PorKm);
+  const tonR = co2AnualTon.toFixed(2);
+  const arboles = Math.round(co2Anual / 22); // ~22 kg CO2 absorbidos por árbol/año
+  const tone = co2PorKm < 180 ? 'good' : co2PorKm < 230 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Huella de tu auto',
+    text: `Tu ${info.nombre} emite **${co2PorKmR} g CO2/km** (${nivel.toLowerCase()}): en ${km.toLocaleString('es-AR')} km/año son **${tonR} toneladas** de CO2, lo que absorberían unos **${arboles.toLocaleString('es-AR')} árboles** en un año.`,
+    tone,
+    icon: co2PorKm < 180 ? '🌱' : '🌍',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: co2PorKmR,
+    markerLabel: `${co2PorKmR} g/km`,
+    min: 0,
+    segments: [
+      { nombre: 'Muy baja', max: 130, color: '#86efac', colorDark: '#15803d' },
+      { nombre: 'Baja', max: 180, color: '#bef264', colorDark: '#4d7c0f' },
+      { nombre: 'Promedio', max: 230, color: '#fde047', colorDark: '#a16207' },
+      { nombre: 'Alta', max: 300, color: '#fdba74', colorDark: '#c2410c' },
+      { nombre: 'Muy alta', max: Math.max(380, co2PorKmR + 1), color: '#fca5a5', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Emisión de ${co2PorKmR} gramos de CO2 por km: nivel ${nivel.toLowerCase()}.`,
+  };
+
   return {
-    co2PorKm: Math.round(co2PorKm),
+    co2PorKm: co2PorKmR,
     co2Anual: Math.round(co2Anual),
     co2AnualTon: Number(co2AnualTon.toFixed(2)),
-    detalle: `Tu auto a ${info.nombre} emite ${Math.round(co2PorKm)} g CO2/km (${nivel}). En ${km.toLocaleString('es-AR')} km/año: ${Math.round(co2Anual).toLocaleString('es-AR')} kg (${co2AnualTon.toFixed(2)} toneladas) de CO2.`,
+    detalle: `Tu auto a ${info.nombre} emite ${co2PorKmR} g CO2/km (${nivel}). En ${km.toLocaleString('es-AR')} km/año: ${Math.round(co2Anual).toLocaleString('es-AR')} kg (${co2AnualTon.toFixed(2)} toneladas) de CO2.`,
+    _insight,
+    _chart,
   };
 }

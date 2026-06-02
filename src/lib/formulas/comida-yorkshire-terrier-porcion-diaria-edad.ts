@@ -12,6 +12,7 @@ export interface Outputs {
   frecuencia: number;
   etapa: string;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -153,11 +154,38 @@ export function compute(i: Inputs): Outputs {
     "Estos valores son orientativos. Verificá las kcal/kg en el envase de tu alimento específico y ajustá según la condición corporal del perro."
   );
 
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  let insightIcon: string;
+  if (edadMeses < 4) {
+    insightText = `Tu Yorkie cachorro come **${gramosDia} g/día** en **${frecuencia} tomas** de ~${gramosPorToma} g. A esta edad el riesgo es la **hipoglucemia**: nunca dejes pasar más de 3 horas sin comida y ante temblores o letargo consultá de urgencia.`;
+    insightTone = "warn";
+    insightIcon = "⚠️";
+  } else if (i.castrado === "si" || peso > 3.8) {
+    insightText = `Tu Yorkie (**${etapa.toLowerCase()}**) necesita **${gramosDia} g/día** en **${frecuencia} tomas** de ~${gramosPorToma} g. Es un perfil propenso al sobrepeso: pesá la ración y controlá el peso cada mes, porque en una raza tan chica unos gramos de más pesan mucho.`;
+    insightTone = "warn";
+    insightIcon = "⚖️";
+  } else if (etapa.startsWith("Adulto")) {
+    insightText = `Tu Yorkie adulto necesita **${gramosDia} g/día** en **${frecuencia} tomas** de ~${gramosPorToma} g. Usá croquetas chicas (≤8 mm) para que mastique bien y acumule menos sarro.`;
+    insightTone = "good";
+    insightIcon = "🐕";
+  } else {
+    insightText = `Tu Yorkie (**${etapa.toLowerCase()}**) necesita **${gramosDia} g/día** en **${frecuencia} tomas** de ~${gramosPorToma} g. Ajustá ±10% según la condición corporal: tenés que palparle las costillas sin exceso de grasa.`;
+    insightTone = "neutral";
+    insightIcon = "🐕";
+  }
+
   return {
     gramos_dia: gramosDia,
     gramos_por_toma: gramosPorToma,
     frecuencia,
     etapa,
     recomendacion: recomendaciones.join(" | "),
+    _insight: {
+      title: "Qué significa esta ración",
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon,
+    },
   };
 }

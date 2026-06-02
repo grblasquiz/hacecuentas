@@ -17,6 +17,8 @@ export interface Outputs {
   tasa_interes_mes: number;
   deduccion_isr: number;
   ahorro_comparativa: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -86,15 +88,38 @@ export function compute(i: Inputs): Outputs {
     ahorro_comparativa = costo_neto_crédito - costo_neto_renting;
   }
 
+  const r2 = (x: number) => Math.round(x * 100) / 100;
+  const fmtMXN = (x: number) => '$' + Math.round(x).toLocaleString('es-MX');
+  const intereses_pct = monto_financiado > 0 ? (intereses_totales / monto_financiado) * 100 : 0;
+  const _insight = {
+    title: 'Lo que pagás de más por financiar',
+    text: `Tu mensualidad es de **${fmtMXN(mensualidad)}** durante **${n} meses**. Al final, los intereses suman **${fmtMXN(intereses_totales)}** — un **${intereses_pct.toFixed(1)}%** extra sobre lo financiado, con un CAT de **${i.cat_anual}%**.`,
+    tone: intereses_pct >= 20 ? 'warn' : 'neutral',
+    icon: '🚗',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Enganche', value: r2(enganche_monto) },
+      { label: 'Capital financiado', value: r2(monto_financiado) },
+      { label: 'Intereses', value: r2(intereses_totales) },
+    ],
+    prefix: '$',
+    centerValue: fmtMXN(pago_total),
+    centerLabel: 'Pago total',
+    ariaLabel: `Desembolso total de ${fmtMXN(pago_total)}: enganche ${fmtMXN(enganche_monto)}, capital financiado ${fmtMXN(monto_financiado)} e intereses ${fmtMXN(intereses_totales)}`,
+  };
   return {
-    monto_financiado: Math.round(monto_financiado * 100) / 100,
-    enganche_monto: Math.round(enganche_monto * 100) / 100,
-    mensualidad: Math.round(mensualidad * 100) / 100,
-    mensualidad_con_seguro: Math.round(mensualidad_con_seguro * 100) / 100,
-    intereses_totales: Math.round(intereses_totales * 100) / 100,
-    pago_total: Math.round(pago_total * 100) / 100,
+    monto_financiado: r2(monto_financiado),
+    enganche_monto: r2(enganche_monto),
+    mensualidad: r2(mensualidad),
+    mensualidad_con_seguro: r2(mensualidad_con_seguro),
+    intereses_totales: r2(intereses_totales),
+    pago_total: r2(pago_total),
     tasa_interes_mes: Math.round(tasa_interes_mes_porcentaje * 1000) / 1000,
-    deduccion_isr: Math.round(deduccion_isr * 100) / 100,
-    ahorro_comparativa: Math.round(ahorro_comparativa * 100) / 100,
+    deduccion_isr: r2(deduccion_isr),
+    ahorro_comparativa: r2(ahorro_comparativa),
+    _insight,
+    _chart,
   };
 }

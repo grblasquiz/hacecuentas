@@ -1,6 +1,6 @@
 /** Conversor: kilowatt-hora ↔ joule */
 export interface Inputs { valor: number | string; direccion?: string; ingrediente?: string; }
-export interface Outputs { resultado: string; resumen: string; }
+export interface Outputs { resultado: string; resumen: string; _insight?: any; }
 
 export function conversorKwhAJoules(i: Inputs): Outputs {
   const v = Number(i.valor);
@@ -16,8 +16,19 @@ export function conversorKwhAJoules(i: Inputs): Outputs {
     r = v / factor;
     fromLabel = 'joules'; toLabel = 'kilowatts-hora';
   }
+  const fmtV = v.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+  const fmtR = r.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+  const _insight = {
+    title: 'Cómo interpretar el resultado',
+    text: d === 'ida'
+      ? '**' + fmtV + ' kWh** equivalen a **' + fmtR + ' J**. Un kilowatt-hora son **3.600.000 joules** (3,6 MJ), por eso el número en joules es enorme: el joule es una unidad muy chica.'
+      : '**' + fmtV + ' J** equivalen a **' + fmtR + ' kWh**. Como cada kWh son **3,6 millones de joules**, un puñado de joules representa una fracción mínima de kWh.',
+    tone: 'neutral',
+    icon: '⚡'
+  };
   return {
     resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'J'.toString(),
-    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.'
+    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
+    _insight
   };
 }

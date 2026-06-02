@@ -20,6 +20,8 @@ export interface Outputs {
   ratio_endeudamiento_leasing: number;
   ratio_endeudamiento_hipoteca: number;
   diferencia_mensual: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -90,6 +92,30 @@ export function compute(i: Inputs): Outputs {
   const diferencia_costo_total = total_pagado_leasing - total_pagado_hipoteca;
   const diferencia_mensual = canon_mensual_leasing - cuota_hipoteca_mensual;
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const leasingMasCaro = diferencia_costo_total > 0;
+  const _insight = {
+    title: leasingMasCaro ? 'La hipoteca sale más barata en total' : 'El leasing sale más barato en total',
+    text: leasingMasCaro
+      ? `Con leasing pagás **${fmt(Math.abs(diferencia_costo_total))}** más en todo el plazo que con hipoteca (canon **${fmt(canon_mensual_leasing)}/mes** vs cuota **${fmt(cuota_hipoteca_mensual)}/mes**). El leasing igual deduce el canon completo (~**${fmt(beneficio_fiscal_leasing_anual)}/año** de ahorro fiscal), algo a sopesar.`
+      : `El leasing termina **${fmt(Math.abs(diferencia_costo_total))}** más barato que la hipoteca en todo el plazo, con canon de **${fmt(canon_mensual_leasing)}/mes** y deducción fiscal del 100% (~**${fmt(beneficio_fiscal_leasing_anual)}/año**). La hipoteca exige cuota inicial; el leasing no.`,
+    tone: leasingMasCaro ? 'warn' : 'good',
+    icon: '🏘️'
+  };
+  const ratioLeasing = Math.round(ratio_endeudamiento_leasing * 100) / 100;
+  const _chart = {
+    type: 'scale',
+    marker: ratioLeasing,
+    markerLabel: `${ratioLeasing}% del ingreso`,
+    min: 0,
+    segments: [
+      { nombre: 'Sano', max: 30, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Ajustado', max: 40, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Riesgo', max: Math.max(50, Math.ceil(ratioLeasing) + 5), color: '#dc2626', colorDark: '#ef4444' }
+    ],
+    ariaLabel: `El canon del leasing representa ${ratioLeasing}% de tus ingresos mensuales brutos.`
+  };
+
   return {
     canon_mensual_leasing: Math.round(canon_mensual_leasing),
     cuota_hipoteca_mensual: Math.round(cuota_hipoteca_mensual),
@@ -109,5 +135,7 @@ export function compute(i: Inputs): Outputs {
       ratio_endeudamiento_hipoteca * 100
     ) / 100,
     diferencia_mensual: Math.round(diferencia_mensual),
+    _insight,
+    _chart,
   };
 }

@@ -13,6 +13,8 @@ export interface Outputs {
   diferencia: number;
   evaluacion: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function edadMetabolica(i: Inputs): Outputs {
@@ -61,12 +63,40 @@ export function edadMetabolica(i: Inputs): Outputs {
   else if (diferencia <= 5) evaluacion = 'Regular — tu metabolismo es algo más lento de lo esperado';
   else evaluacion = 'Atención — tu metabolismo funciona como alguien mayor. Mejorá composición corporal y actividad.';
 
+  const dif = Math.round(diferencia);
+  const tone: 'good' | 'warn' = dif <= 0 ? 'good' : 'warn';
+  const _insight = {
+    title: 'Qué dice tu edad metabólica',
+    text: dif <= 0
+      ? `Tu cuerpo quema energía como el de alguien de **${edadMetabolica} años**, ${dif === 0 ? 'justo tu edad real' : `**${Math.abs(dif)} años menos** que tus **${edad}**`}. Buena señal: tu metabolismo en reposo (~**${Math.round(rmrReal)} kcal/día**) está a la par o por encima de lo esperado.`
+      : `Tu cuerpo quema energía como el de alguien de **${edadMetabolica} años**, **${dif} años más** que tus **${edad}**. Tu metabolismo en reposo (~**${Math.round(rmrReal)} kcal/día**) rinde por debajo de lo esperado: ganar masa muscular y sumar actividad lo acelera.`,
+    tone,
+    icon: '🔥',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: dif,
+    markerLabel: dif === 0 ? 'En tu edad' : (dif > 0 ? `+${dif} años` : `${dif} años`),
+    min: Math.min(-15, dif - 1),
+    unit: '',
+    segments: [
+      { nombre: 'Excelente', max: -5, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Bueno', max: 0, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Regular', max: 5, color: '#fef9c3', colorDark: '#854d0e' },
+      { nombre: 'Atención', max: Math.max(15, dif + 1), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Escala de la diferencia entre edad metabólica (${edadMetabolica}) y edad real (${edad}): ${dif} años.`,
+  };
+
   return {
     edadMetabolica,
     rmrReal: Math.round(rmrReal),
     rmrEsperado: Math.round(rmrEsperado),
-    diferencia: Math.round(diferencia),
+    diferencia: dif,
     evaluacion,
     mensaje: `Edad metabólica: ${edadMetabolica} años (edad real: ${edad}). ${evaluacion}.`,
+    _insight,
+    _chart,
   };
 }

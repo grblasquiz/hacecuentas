@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function edadConversarTemasDificilesHijo(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const t=String(i.tema||'sexo');
@@ -12,5 +12,15 @@ export function edadConversarTemasDificilesHijo(i: Inputs): Outputs {
   };
   const entry=g[t]||g.sexo;
   const [e,en]=entry[__lang];
-  return { edad:e, enfoque:en, resumen:`${t}: ${e}. ${en}.` };
+
+  const _insight = {
+    title: __lang === 'en' ? 'How to approach it' : 'Cómo encararlo',
+    text: __lang === 'en'
+      ? `For the topic **${t}**, the recommended window is **${e}**. The key is not a single talk but an open, ongoing conversation adapted to your child's questions: **${en}**.`
+      : `Para el tema **${t}**, la ventana recomendada es **${e}**. La clave no es una única charla sino una conversación abierta y sostenida en el tiempo, adaptada a las preguntas de tu hijo/a: **${en}**.`,
+    tone: 'neutral',
+    icon: '🗣️',
+  };
+
+  return { edad:e, enfoque:en, resumen:`${t}: ${e}. ${en}.`, _insight };
 }

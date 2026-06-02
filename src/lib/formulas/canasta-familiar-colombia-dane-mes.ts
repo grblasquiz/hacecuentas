@@ -15,6 +15,8 @@ export interface Outputs {
   indice_canasta_dane: number;
   comparativa_cadenas: {cadena: string; minimo: number; maximo: number}[];
   presupuesto_mensual_recomendado: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -136,13 +138,49 @@ export function compute(i: Inputs): Outputs {
   const presupuesto_recomendado = Math.round(costo_mensual * 1.15 / 100) * 100;
   
   // Validaciones y defaults
+  // Costo final mostrado (con piso coherente) y % de SMMLV recalculado sobre ese costo
+  const costo_final = Math.max(costo_mensual, 500000);
+  const pct_smmlv_final = (costo_final / SALARIO_MINIMO_2026) * 100;
+  const pct_round = Math.round(pct_smmlv_final * 100) / 100;
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+
+  // Tono dinámico según peso de la canasta sobre un salario mínimo
+  let tone = 'good';
+  let lectura = 'deja un margen cómodo del salario mínimo para el resto de gastos';
+  if (pct_smmlv_final >= 100) { tone = 'warn'; lectura = 'supera un salario mínimo completo: la alimentación sola no alcanza con un solo ingreso'; }
+  else if (pct_smmlv_final >= 75) { tone = 'warn'; lectura = 'consume gran parte del salario mínimo y deja poco aire para arriendo y servicios'; }
+  else if (pct_smmlv_final >= 50) { tone = 'neutral'; lectura = 'se lleva la mitad larga del salario mínimo, un peso considerable en el presupuesto'; }
+
+  const _insight = {
+    title: 'Peso de la canasta en tu bolsillo',
+    text: `Alimentar a tu hogar de **${i.num_personas} personas** cuesta unos **${fmtCOP(costo_final)}/mes** (**${fmtCOP(Math.round(costo_per_capita))}** por persona al día), equivalente al **${pct_round}%** de un salario mínimo 2026. Eso ${lectura}.`,
+    tone,
+    icon: '🛒'
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: pct_round,
+    markerLabel: pct_round + '% del SMMLV',
+    min: 0,
+    segments: [
+      { nombre: 'Holgado', max: 50, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Considerable', max: 75, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Ajustado', max: 100, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Insostenible', max: Math.max(150, Math.ceil(pct_smmlv_final) + 10), color: '#dc2626', colorDark: '#ef4444' }
+    ],
+    ariaLabel: `La canasta familiar representa el ${pct_round}% de un salario mínimo mensual`
+  };
+
   const outputs: Outputs = {
-    costo_mensual_alimentos: Math.max(costo_mensual, 500000), // mínimo coherente
+    costo_mensual_alimentos: costo_final, // mínimo coherente
     costo_per_capita: Math.round(costo_per_capita),
     porcentaje_salario_minimo: Math.round(porcentaje_sminimo * 100) / 100,
     indice_canasta_dane: Math.round(indice_variacion * 100) / 100,
     comparativa_cadenas: comparativa,
-    presupuesto_mensual_recomendado: presupuesto_recomendado
+    presupuesto_mensual_recomendado: presupuesto_recomendado,
+    _insight,
+    _chart
   };
   
   return outputs;

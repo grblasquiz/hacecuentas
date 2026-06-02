@@ -16,6 +16,7 @@ export interface Outputs {
   litrosSemana: string;
   litrosMes: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function evaporacionPiscinaLitrosDia(i: Inputs): Outputs {
@@ -36,13 +37,33 @@ export function evaporacionPiscinaLitrosDia(i: Inputs): Outputs {
   let mmDia = (2.2 + 1.5 * v) * (es - ea); // coeficientes empíricos para piscinas
   if (mmDia < 0) mmDia = 0;
   const litrosDia = mmDia * S;
+  const litrosMes = litrosDia * 30;
+
+  const fmtL = (n: number) => Math.round(n).toLocaleString('es-AR');
+  const _insight = (() => {
+    if (mmDia >= 6) {
+      return {
+        title: 'Evaporación alta',
+        text: `Con ${T}°C, ${H}% de humedad y viento de ${vkmh} km/h, tu piscina pierde **${fmtL(litrosDia)} L/día** (**${mmDia.toFixed(1)} mm**) — unos **${fmtL(litrosMes)} L/mes**. Una manta o cobertor puede recortar gran parte de esa pérdida.`,
+        tone: 'warn',
+        icon: '💦',
+      };
+    }
+    return {
+      title: 'Evaporación moderada',
+      text: `En estas condiciones tu piscina pierde **${fmtL(litrosDia)} L/día** (**${mmDia.toFixed(1)} mm**), unos **${fmtL(litrosMes)} L/mes**. Es la reposición que vas a necesitar para mantener el nivel.`,
+      tone: 'neutral',
+      icon: '💦',
+    };
+  })();
 
   return {
     litrosDia: `${litrosDia.toFixed(0)} L/día`,
     litrosDiaNumero: Number(litrosDia.toFixed(1)),
     mmDia: `${mmDia.toFixed(1)} mm/día`,
     litrosSemana: `${(litrosDia * 7).toFixed(0)} L/semana`,
-    litrosMes: `${(litrosDia * 30).toFixed(0)} L/mes`,
+    litrosMes: `${litrosMes.toFixed(0)} L/mes`,
     mensaje: `Evaporación estimada: ${mmDia.toFixed(1)} mm/día → ${litrosDia.toFixed(0)} L/día sobre ${S} m².`,
+    _insight,
   };
 }

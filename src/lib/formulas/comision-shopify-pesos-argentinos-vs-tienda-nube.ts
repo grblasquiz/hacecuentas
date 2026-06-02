@@ -13,6 +13,7 @@ export interface Outputs {
   cost_difference: number;
   annual_savings: number;
   recommendation: string;
+  _insight?: any;
 }
 
 const SHOPIFY_PLANS_USD = {
@@ -91,11 +92,31 @@ export function compute(i: Inputs): Outputs {
     recommendation = 'Ambas plataformas tienen costo equivalente. Elige según funcionalidades que necesites.';
   }
 
+  const fmt = (n: number) => 'ARS ' + Math.round(n).toLocaleString('es-AR');
+  const ganadora = costDifference > 0 ? 'Tienda Nube' : costDifference < 0 ? 'Shopify' : null;
+  const deltaMensual = Math.abs(costDifference);
+  let _insight;
+  if (ganadora) {
+    _insight = {
+      title: `${ganadora} te sale más barata`,
+      text: `Con ${Math.round(actualSalesConversion).toLocaleString('es-AR')} ARS/mes en ventas reales, **${ganadora}** cuesta **${fmt(deltaMensual)} menos por mes** (${fmt(annualSavings)} al año). Shopify: ${fmt(shopifyMonthlyCost)}/mes vs Tienda Nube: ${fmt(tiendaNuebaMonthlyCost)}/mes.`,
+      tone: 'good',
+      icon: '🛒'
+    };
+  } else {
+    _insight = {
+      title: 'Costos casi iguales',
+      text: `Las dos plataformas te quedan en torno a **${fmt(shopifyMonthlyCost)}/mes**. La decisión pasa por las funcionalidades, no por el precio.`,
+      tone: 'neutral',
+      icon: '🛒'
+    };
+  }
   return {
     shopify_monthly_cost: Math.round(shopifyMonthlyCost * 100) / 100,
     tienda_nube_monthly_cost: Math.round(tiendaNuebaMonthlyCost * 100) / 100,
     cost_difference: Math.round(costDifference * 100) / 100,
     annual_savings: Math.round(annualSavings * 100) / 100,
-    recommendation
+    recommendation,
+    _insight
   };
 }

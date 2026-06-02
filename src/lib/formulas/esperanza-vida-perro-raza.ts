@@ -13,6 +13,8 @@ export interface Outputs {
   anosRestantes: number;
   factorPeso: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface RazaInfo { nombre: string; min: number; max: number; }
@@ -95,6 +97,39 @@ export function esperanzaVidaPerroRaza(i: Inputs): Outputs {
   else if (peso < 45) factorPeso = 'Grande (vida moderada)';
   else factorPeso = 'Gigante (vida corta — envejecen rápido)';
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (edad > 0) {
+    if (etapa === 'Geriátrico') {
+      insightTone = 'warn';
+      insightText = `Tu ${r.nombre} de **${edad} años** ya superó el promedio de **${prom.toFixed(1)} años** de la raza: está en etapa **geriátrica**. Cada año es un regalo; pasá a controles veterinarios cada 6 meses y dieta senior.`;
+    } else if (restantes <= 2) {
+      insightTone = 'neutral';
+      insightText = `Con **${edad} años**, tu ${r.nombre} está en etapa **${etapa.toLowerCase()}** y le quedan ~**${restantes.toFixed(1)} años** hasta el promedio de ${prom.toFixed(1)}. Buen momento para reforzar chequeos y cuidar el peso.`;
+    } else {
+      insightTone = 'good';
+      insightText = `Tu ${r.nombre} de **${edad} años** está en etapa **${etapa.toLowerCase()}**, con ~**${restantes.toFixed(1)} años** por delante hasta el promedio de ${prom.toFixed(1)} (rango ${min}-${max.toFixed(1)}). ${factorPeso.includes('corta') ? 'Por su tamaño envejece más rápido: controlá articulaciones y corazón.' : 'Mantené ejercicio y peso ideal para llegar al tope.'}`;
+    }
+  } else {
+    insightTone = 'neutral';
+    insightText = `Un ${r.nombre} vive en promedio **${prom.toFixed(1)} años** (rango **${min}-${max.toFixed(1)}**). ${factorPeso.includes('corta') ? 'Las razas grandes envejecen más rápido que las chicas.' : 'Ingresá la edad para ver en qué etapa está y cuántos años le quedan.'}`;
+  }
+
+  const chart = edad > 0 ? {
+    type: 'scale',
+    marker: Number(edad.toFixed(1)),
+    markerLabel: `${edad} años`,
+    min: 0,
+    segments: [
+      { nombre: 'Cachorro', max: 1, color: '#38bdf8', colorDark: '#0ea5e9' },
+      { nombre: 'Joven', max: 3, color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: 'Adulto', max: Number((prom * 0.75).toFixed(1)), color: '#84cc16', colorDark: '#65a30d' },
+      { nombre: 'Senior', max: Number(prom.toFixed(1)), color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Geriátrico', max: Math.max(Number(max.toFixed(1)), Math.ceil(edad) + 1), color: '#ef4444', colorDark: '#dc2626' },
+    ],
+    ariaLabel: `Tu perro de ${edad} años en la línea de vida de la raza (promedio ${prom.toFixed(1)} años)`,
+  } : undefined;
+
   return {
     esperanzaVida: Number(prom.toFixed(1)),
     esperanzaMin: min,
@@ -103,5 +138,12 @@ export function esperanzaVidaPerroRaza(i: Inputs): Outputs {
     anosRestantes: Number(restantes.toFixed(1)),
     factorPeso,
     resumen: `${r.nombre}: esperanza de vida ${min}-${max.toFixed(1)} años (promedio ${prom.toFixed(1)}).${edad > 0 ? ` Tu perro (${edad} años) está en etapa: ${etapa}.` : ''}`,
+    _insight: {
+      title: 'Etapa de vida de tu perro',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐶',
+    },
+    ...(chart ? { _chart: chart } : {}),
   };
 }

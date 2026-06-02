@@ -20,6 +20,7 @@ export interface Outputs {
   cuota_total_efectiva: number;
   tipo_efectivo: number;
   aviso: string;
+  _insight?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -168,6 +169,33 @@ export function compute(i: Inputs): Outputs {
       (aviso ? ' ' + aviso : '');
   }
 
+  // 11. Insight narrativo dinámico
+  const fmtEur = (n: number) =>
+    '€' + Math.round(n).toLocaleString('es-ES', { maximumFractionDigits: 0 });
+  let _insight: { title: string; text: string; tone: string; icon: string };
+  if (cuotaTotalEfectiva <= 0) {
+    _insight = {
+      title: 'No pagás Impuesto al Patrimonio',
+      text: `Con un patrimonio neto de **${fmtEur(patrimonioNeto)}** no superás la base imponible una vez aplicado el mínimo exento${porcentajeBonificacion >= 1 ? ' y la bonificación autonómica del 100%' : ''}. **Cuota total: €0**.`,
+      tone: 'good',
+      icon: '🏛️',
+    };
+  } else if (cuotaITSGFAIngresar > 0 && porcentajeBonificacion >= 1) {
+    _insight = {
+      title: 'El ITSGF anula tu bonificación',
+      text: `Tu comunidad bonifica el IP al **${(porcentajeBonificacion * 100).toFixed(0)}%**, pero como tu patrimonio neto (**${fmtEur(patrimonioNeto)}**) supera los €3.000.000, el **Impuesto de Solidaridad (ITSGF)** actúa como suelo y igual pagás **${fmtEur(cuotaTotalEfectiva)}** (tipo efectivo **${tipoEfectivo.toFixed(2)}%**).`,
+      tone: 'warn',
+      icon: '⚖️',
+    };
+  } else {
+    _insight = {
+      title: 'Cuánto pagás de patrimonio',
+      text: `Sobre una base imponible de **${fmtEur(baseImponible)}**, tu cuota total es **${fmtEur(cuotaTotalEfectiva)}**${bonificacionCCAA > 0 ? ` (ya descontada una bonificación autonómica de ${fmtEur(bonificacionCCAA)})` : ''}, un tipo efectivo del **${tipoEfectivo.toFixed(2)}%** sobre tu patrimonio neto.`,
+      tone: 'warn',
+      icon: '🏛️',
+    };
+  }
+
   return {
     patrimonio_neto: parseFloat(patrimonioNeto.toFixed(2)),
     base_imponible: parseFloat(baseImponible.toFixed(2)),
@@ -179,5 +207,6 @@ export function compute(i: Inputs): Outputs {
     cuota_total_efectiva: parseFloat(cuotaTotalEfectiva.toFixed(2)),
     tipo_efectivo: parseFloat(tipoEfectivo.toFixed(4)),
     aviso: aviso,
+    _insight,
   };
 }

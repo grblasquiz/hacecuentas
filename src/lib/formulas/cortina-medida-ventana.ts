@@ -1,6 +1,6 @@
 /** Cortina: medida según ventana */
 export interface Inputs { anchoVentana: number; altoVentana: number; alturaBarral: number; estilo?: string; pliegue?: string; }
-export interface Outputs { anchoTelaTotal: number; largoTela: number; metrosTela: number; anchoPorPano: number; }
+export interface Outputs { anchoTelaTotal: number; largoTela: number; metrosTela: number; anchoPorPano: number; _insight?: any; }
 
 export function cortinaMedidaVentana(i: Inputs): Outputs {
   const ancho = Number(i.anchoVentana);
@@ -25,10 +25,18 @@ export function cortinaMedidaVentana(i: Inputs): Outputs {
   const panosNecesarios = Math.ceil(anchoTela / anchoRollo);
   const metrosTela = (largoTela / 100) * panosNecesarios;
 
+  const estiloTxt = estilo === 'marco' ? 'al marco' : estilo === 'piso' ? 'al piso' : 'con caída (pooling)';
+
   return {
     anchoTelaTotal: anchoTela,
     largoTela: largoTela,
     metrosTela: Number(metrosTela.toFixed(1)),
     anchoPorPano: anchoPorPano,
+    _insight: {
+      title: 'Tela que necesitás comprar',
+      text: `Comprá **${metrosTela.toFixed(1)} m** de tela (rollo de 150 cm) para una cortina ${estiloTxt} con pliegue ×${factor}. Cada paño lleva **${anchoPorPano} cm** de ancho y **${largoTela} cm** de largo (ya incluye 25 cm de dobladillo).`,
+      tone: 'neutral',
+      icon: '🪟',
+    },
   };
 }

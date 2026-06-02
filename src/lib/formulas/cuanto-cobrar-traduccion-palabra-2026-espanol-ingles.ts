@@ -11,6 +11,7 @@ export interface Outputs {
   hourly_equivalent: number;
   estimated_hours: number;
   rate_range: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -67,11 +68,30 @@ export function compute(i: Inputs): Outputs {
   
   const rateRangeText = `USD ${minRate.toFixed(3)}-${maxRate.toFixed(3)}/palabra (Total: USD ${minTotal.toFixed(0)}-${maxTotal.toFixed(0)})`;
 
+  const expLabels: { [key: string]: string } = {
+    junior: 'junior',
+    mid: 'intermedio',
+    senior: 'senior',
+    specialist: 'especialista'
+  };
+  const dirLabel = (i.direction === 'es_to_en') ? 'español → inglés' : 'inglés → español';
+  const feeRound = Math.round(totalFee * 100) / 100;
+  const hourlyRound = Math.round(hourlyEquivalent * 100) / 100;
+  const hoursRound = Math.round(estimatedHours * 10) / 10;
+  const tone = hourlyRound >= 40 ? 'good' : hourlyRound >= 20 ? 'neutral' : 'warn';
+  const _insight = {
+    title: `Cotización ${expLabels[experience] || 'intermedio'} (${dirLabel})`,
+    text: `Por **${wordCount.toLocaleString()} palabras** a USD ${(Math.round(ratePerWord * 1000) / 1000).toFixed(3)}/palabra cobrás **USD ${feeRound.toLocaleString()}**. Son ~**${hoursRound} h** de trabajo, equivalente a **USD ${hourlyRound.toLocaleString()}/hora**.`,
+    tone,
+    icon: '🌐'
+  };
+
   return {
-    total_fee: Math.round(totalFee * 100) / 100,
+    total_fee: feeRound,
     rate_per_word: Math.round(ratePerWord * 1000) / 1000,
-    hourly_equivalent: Math.round(hourlyEquivalent * 100) / 100,
-    estimated_hours: Math.round(estimatedHours * 10) / 10,
-    rate_range: rateRangeText
+    hourly_equivalent: hourlyRound,
+    estimated_hours: hoursRound,
+    rate_range: rateRangeText,
+    _insight
   };
 }

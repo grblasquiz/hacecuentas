@@ -17,6 +17,8 @@ export interface Outputs {
   gasto_total: number;
   ingreso_recomendado: number;
   rango_comparativo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -114,16 +116,64 @@ export function compute(i: Inputs): Outputs {
     rango_comparativo = `Hogar multigeneracional en ${i.ciudad}: ${Math.round(gasto_total).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} mensuales.`;
   }
 
+  // --- Insight + gráfico ---
+  const r_vivienda = Math.round(gasto_vivienda);
+  const r_alimentacion = Math.round(gasto_alimentacion);
+  const r_transporte = Math.round(gasto_transporte);
+  const r_servicios = Math.round(gasto_servicios);
+  const r_salud = Math.round(gasto_salud);
+  const r_educacion = Math.round(gasto_educacion);
+  const r_ocio = Math.round(gasto_ocio);
+  const r_total = Math.round(gasto_total);
+  const r_ingreso = Math.round(ingreso_recomendado);
+
+  const fmtMXN = (n: number) => Math.round(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
+  const labelCiudad: Record<string, string> = {
+    cdmx: 'CDMX', monterrey: 'Monterrey', guadalajara: 'Guadalajara',
+    puebla: 'Puebla', ciudad_mediana: 'una ciudad mediana', ciudad_pequena: 'una ciudad pequeña'
+  };
+
+  const categorias = [
+    { label: 'Vivienda', value: r_vivienda },
+    { label: 'Alimentación', value: r_alimentacion },
+    { label: 'Transporte', value: r_transporte },
+    { label: 'Servicios', value: r_servicios },
+    { label: 'Salud', value: r_salud },
+    { label: 'Educación', value: r_educacion },
+    { label: 'Ocio', value: r_ocio }
+  ].filter(c => c.value > 0);
+  const sumaSlices = categorias.reduce((a, c) => a + c.value, 0);
+  const mayor = categorias.reduce((a, b) => (b.value > a.value ? b : a));
+  const pctMayor = Math.round((mayor.value / sumaSlices) * 100);
+
+  const _insight = {
+    title: 'Tu gasto mensual estimado',
+    text: `Vivir en **${labelCiudad[i.ciudad] || 'tu ciudad'}** con este perfil cuesta unos **${fmtMXN(r_total)}** al mes. La **${mayor.label.toLowerCase()}** concentra el **${pctMayor}%** del gasto (${fmtMXN(mayor.value)}). Para cubrirlo con holgura y ahorro conviene un ingreso cercano a **${fmtMXN(r_ingreso)}**.`,
+    tone: pctMayor >= 45 ? 'warn' : 'neutral',
+    icon: '🇲🇽'
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: categorias,
+    prefix: '$',
+    centerValue: sumaSlices.toLocaleString('es-MX'),
+    centerLabel: 'Total/mes',
+    ariaLabel: `Reparto del gasto mensual de ${fmtMXN(r_total)} entre vivienda, alimentación, transporte, servicios, salud, educación y ocio.`
+  };
+
   return {
-    gasto_vivienda: Math.round(gasto_vivienda),
-    gasto_alimentacion: Math.round(gasto_alimentacion),
-    gasto_transporte: Math.round(gasto_transporte),
-    gasto_servicios: Math.round(gasto_servicios),
-    gasto_salud: Math.round(gasto_salud),
-    gasto_educacion: Math.round(gasto_educacion),
-    gasto_ocio: Math.round(gasto_ocio),
-    gasto_total: Math.round(gasto_total),
-    ingreso_recomendado: Math.round(ingreso_recomendado),
-    rango_comparativo: rango_comparativo
+    gasto_vivienda: r_vivienda,
+    gasto_alimentacion: r_alimentacion,
+    gasto_transporte: r_transporte,
+    gasto_servicios: r_servicios,
+    gasto_salud: r_salud,
+    gasto_educacion: r_educacion,
+    gasto_ocio: r_ocio,
+    gasto_total: r_total,
+    ingreso_recomendado: r_ingreso,
+    rango_comparativo: rango_comparativo,
+    _insight,
+    _chart
   };
 }

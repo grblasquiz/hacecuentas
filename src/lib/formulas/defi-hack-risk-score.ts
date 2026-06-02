@@ -1,6 +1,6 @@
 /** DeFi hack risk score heurístico */
 export interface Inputs { tvlUsd: number; audits: number; ageMonths: number; hasBounty: boolean; hasTimelock: boolean; multisig: number; tokenHolders: number; }
-export interface Outputs { riskScore: number; riskLabel: string; breakdown: string; recommendedExposure: number; explicacion: string; }
+export interface Outputs { riskScore: number; riskLabel: string; breakdown: string; recommendedExposure: number; explicacion: string; _insight?: any; _chart?: any; }
 export function defiProtocolHackRisk(i: Inputs): Outputs {
   const tvl = Number(i.tvlUsd);
   const audits = Number(i.audits);
@@ -35,11 +35,36 @@ export function defiProtocolHackRisk(i: Inputs): Outputs {
   else if (total >= 40) { label = 'Riesgo medio'; exposure = 5; }
   else if (total >= 20) { label = 'Alto riesgo'; exposure = 1; }
   else { label = 'Riesgo extremo'; exposure = 0.25; }
+  const tone: 'good' | 'warn' | 'neutral' = total >= 60 ? 'good' : total >= 40 ? 'neutral' : 'warn';
+  const _insight = {
+    title: `${label} (${total}/100)`,
+    text: `Este protocolo puntúa **${total}/100** en seguridad → **${label}**. La heurística sugiere no exponer más del **${exposure}% de tu portfolio**${total < 40 ? '. A este nivel, un exploit puede vaciar el contrato: tratalo como capital que estás dispuesto a perder.' : total >= 80 ? '. Aun así, ningún score elimina el riesgo de smart contract por completo.' : '.'}`,
+    tone,
+    icon: total >= 60 ? '🛡️' : '⚠️',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: total,
+    markerLabel: `${total}/100`,
+    min: 0,
+    segments: [
+      { nombre: 'Extremo', max: 20, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'Alto', max: 40, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Medio', max: 60, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Bajo', max: 80, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: 'Muy bajo', max: 100, color: '#16a34a', colorDark: '#22c55e' },
+    ],
+    ariaLabel: `Score de seguridad ${total} de 100 en la franja de riesgo ${label}`,
+  };
+
   return {
     riskScore: total,
     riskLabel: label,
     breakdown: breakdown,
     recommendedExposure: Number(exposure.toFixed(2)),
     explicacion: `Score ${total}/100 → ${label}. Exposure máxima sugerida: ${exposure}% del portfolio.`,
+    _insight,
+    _chart,
   };
 }

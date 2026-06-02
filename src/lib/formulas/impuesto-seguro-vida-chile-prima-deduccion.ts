@@ -17,6 +17,8 @@ export interface Outputs {
   prima_neta_anual: number;
   comparativa_aseguradoras: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -111,6 +113,46 @@ export function compute(i: Inputs): Outputs {
     recomendacion = `⚠ **Edad muy avanzada.** Cotiza directamente: acceso limitado, primas muy altas. Algunos asegurados se encuentran no asegurables. Consulta a corredor especializado.`;
   }
 
+  const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const primaMensualR = Math.round(primaMensualTotal);
+  const primaAnualR = Math.round(primaAnual);
+  const ahorroR = Math.round(ahorroFiscalAnual);
+  const primaNetaR = Math.round(primaNetaAnual);
+
+  // Insight dinámico según deducibilidad APV
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (esDeducibleAPV && ahorroR > 0) {
+    insightTone = 'good';
+    insightText = `Tu prima estimada es **${fmtCL(primaMensualR)}/mes** (**${fmtCL(primaAnualR)}/año**). Al estar asociada a APV, deducís y recuperás **${fmtCL(ahorroR)}/año** por tu tramo ${i.tramo_isc}%: el costo neto real baja a **${fmtCL(primaNetaR)}/año**.`;
+  } else if (i.edad >= 55) {
+    insightTone = 'warn';
+    insightText = `A los ${i.edad} años la prima trepa a **${fmtCL(primaMensualR)}/mes** (**${fmtCL(primaAnualR)}/año**): el factor de mortalidad pesa fuerte. Sin asociar a APV no hay deducción, así que ese es tu costo neto.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `Tu prima estimada es **${fmtCL(primaMensualR)}/mes** (**${fmtCL(primaAnualR)}/año**). Hoy **no es deducible**: asociándola a un APV podrías recuperar parte vía tu tramo de Impuesto Único y bajar el costo neto.`;
+  }
+
+  const _insight = {
+    title: 'Tu prima de seguro de vida',
+    text: insightText,
+    tone: insightTone,
+    icon: '🛡️',
+  };
+
+  // Donut solo si hay ahorro fiscal (APV): prima anual = costo neto + ahorro fiscal
+  const _chart = ahorroR > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Costo neto real', value: primaNetaR },
+      { label: 'Ahorro fiscal (recuperás)', value: ahorroR },
+    ],
+    prefix: '$',
+    centerValue: fmtCL(primaAnualR),
+    centerLabel: 'Prima anual',
+    ariaLabel: `Prima anual de ${fmtCL(primaAnualR)}: costo neto ${fmtCL(primaNetaR)} más ahorro fiscal recuperado ${fmtCL(ahorroR)}`,
+  } : undefined;
+
   return {
     prima_mensual_base: Math.round(primaBaseMensual),
     prima_mensual_total: Math.round(primaMensualTotal),
@@ -120,6 +162,8 @@ export function compute(i: Inputs): Outputs {
     ahorro_fiscal_anual: Math.round(ahorroFiscalAnual),
     prima_neta_anual: Math.round(primaNetaAnual),
     comparativa_aseguradoras: comparativaAseguradoras,
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight,
+    _chart
   };
 }

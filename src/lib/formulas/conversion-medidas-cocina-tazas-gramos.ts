@@ -10,6 +10,7 @@ export interface Outputs {
   result_label: string;
   grams_per_cup: string;
   reference_table: string;
+  _insight?: any;
 }
 
 // Densidades en gramos por taza (240 ml) — fuente: USDA & King Arthur Baking 2024-2025
@@ -174,10 +175,21 @@ export function compute(i: Inputs): Outputs {
 
   const grams_per_cup_str = `${ingredientName}: ${gramsPerCup} g por taza (240 ml)`;
 
+  const fromIsVolume = VOLUME_UNITS.has(from_unit);
+  const insightText = fromIsVolume
+    ? `Tu medida equivale a **${formatNumber(grams)} g** de ${ingredientName.toLowerCase()}. Medir por peso evita el error de la taza (compactar o airear cambia el resultado hasta un 20%): si tenés balanza, usá los gramos.`
+    : `Esos **${formatNumber(grams)} g** de ${ingredientName.toLowerCase()} son **${formatNumber(result)} ${toUnitLabel}**, calculados con su densidad real de **${gramsPerCup} g por taza**. Cada ingrediente pesa distinto, no asumas la misma equivalencia para todos.`;
+
   return {
     result: Math.round(result * 1000) / 1000,
     result_label,
     grams_per_cup: grams_per_cup_str,
     reference_table: buildReferenceTable(ingredient, gramsPerCup),
+    _insight: {
+      title: fromIsVolume ? 'El peso es más preciso que el volumen' : 'Convertido por densidad real',
+      text: insightText,
+      tone: 'neutral',
+      icon: '⚖️',
+    },
   };
 }

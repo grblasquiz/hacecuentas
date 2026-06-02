@@ -11,6 +11,8 @@ export interface Outputs {
   oz_per_day: number;
   cups_per_day: number;
   breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Base hydration rate: 35 ml per kg bodyweight
@@ -100,10 +102,36 @@ export function compute(i: Inputs): Outputs {
     `Total: ${totalML.toFixed(0)} ml = ${liters.toFixed(2)} L = ${oz.toFixed(1)} fl oz = ${cups.toFixed(1)} cups`
   ];
 
+  const slices: { label: string; value: number }[] = [
+    { label: "Base (weight)", value: Math.round(baseML) },
+  ];
+  if (exerciseML > 0) slices.push({ label: "Exercise", value: Math.round(exerciseML) });
+  if (climateML > 0) slices.push({ label: "Hot climate", value: Math.round(climateML) });
+  if (statusML > 0) slices.push({ label: statusLabel.replace(/\s*\(.*\)/, ""), value: Math.round(statusML) });
+
+  const _chart = {
+    type: "doughnut",
+    slices,
+    prefix: "",
+    centerValue: `${liters.toFixed(2)} L`,
+    centerLabel: "Per day",
+    ariaLabel: `Daily water intake of ${liters.toFixed(2)} liters broken down by base needs, exercise, climate and pregnancy or lactation status`,
+  };
+
+  const extraML = Math.round(exerciseML + climateML + statusML);
+  const _insight = {
+    title: `Drink about ${liters.toFixed(2)} L a day`,
+    text: `That is roughly **${cups.toFixed(1)} cups** (**${oz.toFixed(0)} fl oz**) daily. Of that, **${Math.round(baseML)} ml** is your baseline${extraML > 0 ? ` and **${extraML} ml** comes from exercise, climate or pregnancy/lactation` : ""}.`,
+    tone: "neutral",
+    icon: "💧",
+  };
+
   return {
     liters_per_day: Math.round(liters * 100) / 100,
     oz_per_day: Math.round(oz * 10) / 10,
     cups_per_day: Math.round(cups * 10) / 10,
-    breakdown: lines.join("\n")
+    breakdown: lines.join("\n"),
+    _insight,
+    _chart,
   };
 }

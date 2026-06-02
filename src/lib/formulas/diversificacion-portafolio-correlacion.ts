@@ -16,6 +16,7 @@ export interface Outputs {
   beneficioDiversificacion: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function diversificacionPortafolioCorrelacion(i: Inputs): Outputs {
@@ -49,6 +50,14 @@ export function diversificacionPortafolioCorrelacion(i: Inputs): Outputs {
   const formula = `σp = √((${(w1 * 100).toFixed(0)}%×${s1}%)² + (${(w2 * 100).toFixed(0)}%×${s2}%)² + 2×${(w1 * 100).toFixed(0)}%×${(w2 * 100).toFixed(0)}%×${s1}%×${s2}%×${corr}) = ${riesgoPortafolio.toFixed(2)}%`;
   const explicacion = `Portafolio: ${(w1 * 100).toFixed(0)}% activo 1 (rend. ${r1}%, riesgo ${s1}%) + ${(w2 * 100).toFixed(0)}% activo 2 (rend. ${r2}%, riesgo ${s2}%). Correlación: ${corr}. Rendimiento esperado: ${rendimientoPortafolio.toFixed(2)}%. Riesgo diversificado: ${riesgoPortafolio.toFixed(2)}% (vs ${riesgoSinDiversificacion.toFixed(2)}% sin diversificación). Beneficio de diversificación: ${beneficioDiversificacion.toFixed(2)} puntos de menor riesgo.${corr < 0 ? ' La correlación negativa amplifica el efecto de diversificación.' : corr > 0.8 ? ' La alta correlación reduce el beneficio de diversificar.' : ''}`;
 
+  const reduccionPct = riesgoSinDiversificacion > 0 ? (beneficioDiversificacion / riesgoSinDiversificacion) * 100 : 0;
+  const insightTone = reduccionPct >= 15 ? 'good' : reduccionPct >= 3 ? 'neutral' : 'warn';
+  const insightText = reduccionPct >= 15
+    ? `Combinar ambos activos baja el riesgo de ${riesgoSinDiversificacion.toFixed(2)}% a **${riesgoPortafolio.toFixed(2)}%**, una reducción del **${reduccionPct.toFixed(0)}%** sin resignar rendimiento esperado (${rendimientoPortafolio.toFixed(2)}%). La correlación ${corr} hace que las pérdidas de uno se compensen con el otro.`
+    : reduccionPct >= 3
+    ? `La diversificación recorta el riesgo de ${riesgoSinDiversificacion.toFixed(2)}% a **${riesgoPortafolio.toFixed(2)}%** (un **${reduccionPct.toFixed(0)}%** menos), con rendimiento esperado de ${rendimientoPortafolio.toFixed(2)}%. Un beneficio moderado: la correlación ${corr} limita cuánto se cancelan los riesgos.`
+    : `Con correlación ${corr} el beneficio de diversificar es casi nulo: el riesgo apenas baja de ${riesgoSinDiversificacion.toFixed(2)}% a **${riesgoPortafolio.toFixed(2)}%** (${reduccionPct.toFixed(0)}%). Activos tan correlacionados se mueven juntos, así que repartir entre ellos protege poco.`;
+
   return {
     rendimientoPortafolio: Number(rendimientoPortafolio.toFixed(2)),
     riesgoPortafolio: Number(riesgoPortafolio.toFixed(4)),
@@ -56,5 +65,11 @@ export function diversificacionPortafolioCorrelacion(i: Inputs): Outputs {
     beneficioDiversificacion: Number(beneficioDiversificacion.toFixed(4)),
     formula,
     explicacion,
+    _insight: {
+      title: 'El efecto de diversificar',
+      text: insightText,
+      tone: insightTone,
+      icon: '📉',
+    },
   };
 }

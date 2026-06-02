@@ -15,6 +15,8 @@ export interface Outputs {
   valorConAhorro: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function inflacionPoderAdquisitivo(i: Inputs): Outputs {
@@ -43,6 +45,25 @@ export function inflacionPoderAdquisitivo(i: Inputs): Outputs {
   const formula = `Poder adquisitivo = $${monto.toLocaleString()} / (1 + ${inflacion}%)^${anios} = $${Math.round(valorReal).toLocaleString()}`;
   const explicacion = `$${monto.toLocaleString()} de hace ${anios} año(s) hoy equivalen a $${Math.round(valorReal).toLocaleString()} en poder de compra. Perdiste $${Math.round(perdidaPoder).toLocaleString()} (${perdidaPorcentaje.toFixed(1)}%) de poder adquisitivo. Para comprar lo mismo que antes, hoy necesitarías $${Math.round(montoNecesario).toLocaleString()}.${tasaAhorro > 0 ? ` Si hubieras ahorrado al ${tasaAhorro}% anual, tu poder adquisitivo real sería $${Math.round(valorConAhorro).toLocaleString()} ${valorConAhorro > monto ? '(ganaste poder de compra)' : '(aún perdiste poder de compra)'}.` : ''}`;
 
+  const _insight = {
+    title: 'Lo que la inflación se comió',
+    text: `Tus **$${monto.toLocaleString('es')}** de hace ${anios} año${anios > 1 ? 's' : ''} hoy compran como **$${Math.round(valorReal).toLocaleString('es')}**: perdiste **${perdidaPorcentaje.toFixed(1)}%** de poder adquisitivo (**$${Math.round(perdidaPoder).toLocaleString('es')}**).${tasaAhorro > 0 ? ` Ahorrando al ${tasaAhorro}% anual tu valor real sería $${Math.round(valorConAhorro).toLocaleString('es')}, así que ${valorConAhorro > monto ? '**le ganaste** a la inflación' : '**aún perdiste** contra la inflación'}.` : ''}`,
+    tone: tasaAhorro > 0 && valorConAhorro >= monto ? 'good' : perdidaPorcentaje >= 30 ? 'warn' : 'neutral',
+    icon: '💸',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Poder de compra que conservás', value: Math.round(valorReal) },
+      { label: 'Poder perdido por inflación', value: Math.round(perdidaPoder) },
+    ],
+    prefix: '$',
+    centerValue: `$${monto.toLocaleString('es')}`,
+    centerLabel: 'Monto original',
+    ariaLabel: `De $${monto.toLocaleString('es')} originales conservás $${Math.round(valorReal).toLocaleString('es')} de poder de compra y perdiste $${Math.round(perdidaPoder).toLocaleString('es')}`,
+  };
+
   return {
     valorReal: Math.round(valorReal),
     perdidaPoder: Math.round(perdidaPoder),
@@ -51,5 +72,7 @@ export function inflacionPoderAdquisitivo(i: Inputs): Outputs {
     valorConAhorro: Math.round(valorConAhorro),
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

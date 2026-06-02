@@ -1,5 +1,5 @@
 export interface Inputs { material: string; largoCm: number; profundidadCm: number; soportes?: string; }
-export interface Outputs { pesoMaxKg: number; equivalente: string; pandeo: string; consejo: string; }
+export interface Outputs { pesoMaxKg: number; equivalente: string; pandeo: string; consejo: string; _insight?: any; }
 const RESISTENCIA: Record<string, number> = { mdf: 15, pino: 25, roble: 40, vidrio: 12, metal: 50 };
 const FACTOR_SOP: Record<string, number> = { mensulas: 1, rieles: 1.2, oculto: 0.6, esquineros: 0.8 };
 export function estantePesoMaximo(i: Inputs): Outputs {
@@ -14,5 +14,13 @@ export function estantePesoMaximo(i: Inputs): Outputs {
                  largo > 120 && mat === 'pino' ? 'Medio — Pino de más de 120 cm necesita soporte central.' : 'Bajo — medidas seguras.';
   const consejo = mat === 'mdf' ? 'MDF no debe superar 80 cm sin soporte central. Reforzá con perfil L atrás.' :
                   mat === 'vidrio' ? 'Vidrio SIEMPRE templado para estantes. Nunca vidrio común.' : 'Asegurate de que las ménsulas estén bien fijadas al muro (tarugo + tornillo en ladrillo).';
-  return { pesoMaxKg: pesoMax, equivalente: `~${libros} libros estándar`, pandeo, consejo };
+  const riesgo = pandeo.split(' ')[0]; // 'Alto' | 'Medio' | 'Bajo'
+  const tone = riesgo === 'Alto' ? 'warn' : riesgo === 'Medio' ? 'warn' : 'good';
+  const _insight = {
+    title: `Aguanta ~${pesoMax} kg`,
+    text: `Un estante de **${mat}** de **${largo} cm** soporta unos **${pesoMax} kg** repartidos (≈ **${libros} libros**) con soporte ${sop}. Riesgo de pandeo: **${riesgo.toLowerCase()}**.${riesgo !== 'Bajo' ? ' Sumá un soporte central para no jugártela.' : ' Distribuí el peso parejo y evitá cargar todo en el centro.'}`,
+    tone,
+    icon: '📚',
+  };
+  return { pesoMaxKg: pesoMax, equivalente: `~${libros} libros estándar`, pandeo, consejo, _insight };
 }

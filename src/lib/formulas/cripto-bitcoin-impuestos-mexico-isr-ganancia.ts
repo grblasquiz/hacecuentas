@@ -16,6 +16,8 @@ export interface Outputs {
   ptu_potencial: number;
   carga_fiscal_total: number;
   advertencia: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -62,7 +64,13 @@ export function compute(i: Inputs): Outputs {
       isr_pendiente: 0,
       ptu_potencial: 0,
       carga_fiscal_total: 0,
-      advertencia: 'Pérdida fiscal detectada. Puedes compensar en años posteriores (máx 5 años).'
+      advertencia: 'Pérdida fiscal detectada. Puedes compensar en años posteriores (máx 5 años).',
+      _insight: {
+        title: 'Operación en pérdida',
+        text: `Tu operación cerró con una pérdida de **$${Math.abs(Math.round(ganancia_neta)).toLocaleString('es-MX')} MXN**: no generas ISR este año y puedes **compensarla hasta 5 ejercicios** posteriores.`,
+        tone: 'warn',
+        icon: '📉',
+      }
     };
   }
 
@@ -105,6 +113,10 @@ export function compute(i: Inputs): Outputs {
     advertencia = 'Clasificación: Enajenación ocasional de bienes (persona física). Declaración anual obligatoria en Anexo de Ingresos por Enajenación.';
   }
 
+  // Lo que queda tras ISR + retención (slice "te queda" del donut)
+  const neto_despues_impuestos = Math.max(0, ganancia_neta - isr_estimado - retencion_bitso);
+  const fmtMXN = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+
   return {
     ganancia_bruta: Math.round(ganancia_bruta * 100) / 100,
     ganancia_neta: Math.round(ganancia_neta * 100) / 100,
@@ -114,6 +126,24 @@ export function compute(i: Inputs): Outputs {
     isr_pendiente,
     ptu_potencial,
     carga_fiscal_total,
-    advertencia
+    advertencia,
+    _insight: {
+      title: 'Tu carga fiscal cripto',
+      text: `Sobre una ganancia de **${fmtMXN(ganancia_neta)}** pagas **${fmtMXN(isr_estimado + retencion_bitso)}** entre ISR y retención (carga total **${carga_fiscal_total}%**), con **${fmtMXN(isr_pendiente)}** de ISR pendiente al declarar.`,
+      tone: 'warn',
+      icon: '🪙',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Te queda', value: Math.round(neto_despues_impuestos) },
+        { label: 'ISR estimado', value: Math.round(isr_estimado) },
+        { label: 'Retención exchange', value: Math.round(retencion_bitso) },
+      ],
+      prefix: '$',
+      centerValue: fmtMXN(ganancia_neta),
+      centerLabel: 'Ganancia neta',
+      ariaLabel: `Ganancia neta ${fmtMXN(ganancia_neta)}: te queda ${fmtMXN(neto_despues_impuestos)}, ISR ${fmtMXN(isr_estimado)}, retención ${fmtMXN(retencion_bitso)}`,
+    },
   };
 }

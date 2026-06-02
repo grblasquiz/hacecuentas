@@ -14,6 +14,8 @@ export interface ExpensasVsAlquilerRatioOutputs {
   costoTotalVivienda: number;
   costoAnual: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function expensasVsAlquilerRatio(
@@ -42,10 +44,33 @@ export function expensasVsAlquilerRatio(
     serviciosStr = ` + servicios $${Math.round(servicios).toLocaleString('es-AR')}`;
   }
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const tone = ratio >= 35 ? 'warn' : ratio < 25 ? 'good' : 'neutral';
+
   return {
     ratioExpensas: `${ratio.toFixed(1)}%`,
     costoTotalVivienda: Math.round(costoTotal),
     costoAnual: Math.round(costoAnual),
     detalle: `Las expensas ($${Math.round(expensas).toLocaleString('es-AR')}) representan el ${ratio.toFixed(1)}% del alquiler ($${Math.round(alquiler).toLocaleString('es-AR')}). ${evaluacion} Costo total de vivienda: $${Math.round(costoTotal).toLocaleString('es-AR')}/mes (alquiler + expensas${serviciosStr}). Anual: $${Math.round(costoAnual).toLocaleString('es-AR')}.`,
+    _insight: {
+      title: 'Qué dice el ratio',
+      text: `Las expensas son el **${ratio.toFixed(1)}%** del alquiler: por cada $100 de alquiler pagás **$${Math.round(ratio).toLocaleString('es-AR')}** extra de expensas. ${evaluacion} El bolsillo total queda en **${fmt(costoTotal)}/mes** (${fmt(costoAnual)} al año).`,
+      tone,
+      icon: ratio >= 35 ? '⚠️' : '🏠',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(ratio.toFixed(1)),
+      markerLabel: `${ratio.toFixed(1)}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Bajo', max: 15, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Normal', max: 25, color: '#84cc16', colorDark: '#65a30d' },
+        { nombre: 'Medio-alto', max: 35, color: '#eab308', colorDark: '#ca8a04' },
+        { nombre: 'Alto', max: 50, color: '#f97316', colorDark: '#ea580c' },
+        { nombre: 'Muy alto', max: Math.max(70, Math.ceil(ratio) + 5), color: '#ef4444', colorDark: '#dc2626' },
+      ],
+      ariaLabel: `Ratio expensas/alquiler de ${ratio.toFixed(1)}% sobre una escala de 0 a 50%+.`,
+    },
   };
 }

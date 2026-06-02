@@ -15,6 +15,7 @@ export interface Outputs {
   modalidadMostrada: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function honorariosAbogadoLaboralMexico(i: Inputs): Outputs {
@@ -61,6 +62,25 @@ export function honorariosAbogadoLaboralMexico(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo del abogado: honorarios e IVA del 16%',
   };
 
+  const fmtMX = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  let insight;
+  if (finiquito > 0) {
+    const shareAbogado = (conIva / finiquito) * 100;
+    insight = {
+      title: 'Qué significa',
+      text: `El abogado se lleva **${fmtMX(conIva)} MXN** (honorarios + IVA), el **${shareAbogado.toFixed(0)}%** de tu finiquito de ${fmtMX(finiquito)}; te quedan **${fmtMX(neto)} MXN** netos. ${shareAbogado > 35 ? 'Es una tajada alta: cotizá una suma fija o un porcentaje más bajo antes de firmar.' : 'Es una proporción razonable para un asunto laboral con resultado.'}`,
+      tone: (shareAbogado > 35 ? 'warn' : 'good') as 'good' | 'warn' | 'neutral',
+      icon: '⚖️',
+    };
+  } else {
+    insight = {
+      title: 'Qué significa',
+      text: `Con esta modalidad, el costo del abogado es **${fmtMX(conIva)} MXN** (honorarios ${fmtMX(honor)} + IVA 16% ${fmtMX(iva)}). Cargá tu finiquito para ver cuánto te quedaría neto después de pagarle.`,
+      tone: 'neutral' as 'good' | 'warn' | 'neutral',
+      icon: '⚖️',
+    };
+  }
+
   return {
     honorariosBrutos: Number(honor.toFixed(2)),
     iva: Number(iva.toFixed(2)),
@@ -69,5 +89,6 @@ export function honorariosAbogadoLaboralMexico(i: Inputs): Outputs {
     modalidadMostrada: label,
     resumen: `**${label}** → honorarios $${honor.toFixed(0)} + IVA 16% ($${iva.toFixed(0)}) = **$${conIva.toFixed(0)} MXN**.${finiquito > 0 ? ` Neto para el trabajador: **$${neto.toFixed(0)} MXN**.` : ''}`,
     _chart: chart,
+    _insight: insight,
   };
 }

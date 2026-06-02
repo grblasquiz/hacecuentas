@@ -14,6 +14,7 @@ export interface Outputs {
   kcal_dia: number;
   gramos_mes: number;
   nota: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -138,6 +139,23 @@ export function compute(i: Inputs): Outputs {
     notas.push("Ajustá ±10 % según condición corporal observada (costillas palpables sin exceso).");
   }
 
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  let insightIcon: string;
+  if (i.etapa === "cachorro") {
+    insightText = `Tu Golden cachorro necesita **${gramosDia} g/día** (${kcalDia} kcal) repartidos en **3 tomas** de ~${gramosPorRacion} g. En esta etapa la sobrealimentación acelera el crecimiento y agrava el riesgo articular: respetá la ración con alimento large breed puppy.`;
+    insightTone = "good";
+    insightIcon = "🐕";
+  } else if (i.displasia === "si") {
+    insightText = `La ración de **${gramosDia} g/día** (${kcalDia} kcal) ya viene **reducida un 10% por displasia**: mantener el peso magro es la medida que más alivia las articulaciones. Pesá la porción y controlá el peso cada mes.`;
+    insightTone = "warn";
+    insightIcon = "⚖️";
+  } else {
+    insightText = `Tu Golden adulto necesita **${gramosDia} g/día** (${kcalDia} kcal) en **2 tomas** de ~${gramosPorRacion} g, equivalente a **${gramosMes} g al mes**. Es una raza propensa al sobrepeso: ajustá ±10% según le palpés las costillas sin exceso de grasa.`;
+    insightTone = "neutral";
+    insightIcon = "🐕";
+  }
+
   return {
     gramos_dia: gramosDia,
     raciones_dia: racionesTexto,
@@ -145,5 +163,11 @@ export function compute(i: Inputs): Outputs {
     kcal_dia: kcalDia,
     gramos_mes: gramosMes,
     nota: notas.join(" "),
+    _insight: {
+      title: "Qué significa esta ración",
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon,
+    },
   };
 }

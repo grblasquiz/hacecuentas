@@ -30,6 +30,7 @@ export interface Outputs {
   ahorroEstimadoMax: number;
   rangoDescuento: string;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function cyberMondayCountdownAhorroEstimado(i: Inputs): Outputs {
@@ -68,11 +69,36 @@ export function cyberMondayCountdownAhorroEstimado(i: Inputs): Outputs {
     reco = `El CyberMonday ya pasó (${fechaStr}). La próxima oportunidad grande es Black Friday (noviembre internacional) o Hot Sale (mayo). Mientras tanto, podés esperar promos puntuales por banco/billetera.`;
   }
 
+  let _insight;
+  if (diff > 0) {
+    _insight = {
+      title: `Faltan ${diff} días`,
+      text: `En **${nombre}** el descuento esperado es **${descMin}–${descMax}%**: sobre $${fmt(monto)} ahorrarías entre **$${fmt(ahorroMin)}** y **$${fmt(ahorroMax)}**. Anotá el precio de hoy para detectar descuentos inflados.`,
+      tone: 'good',
+      icon: '🛒',
+    };
+  } else if (diff === 0) {
+    _insight = {
+      title: 'Es hoy',
+      text: `Ahorro estimado en **${nombre}**: entre **$${fmt(ahorroMin)}** y **$${fmt(ahorroMax)}** sobre $${fmt(monto)} (descuento ${descMin}–${descMax}%). Compará con el precio previo al evento.`,
+      tone: 'good',
+      icon: '🔥',
+    };
+  } else {
+    _insight = {
+      title: 'El evento ya pasó',
+      text: `El CyberMonday fue hace **${Math.abs(diff)} días**. Las próximas oportunidades grandes son Black Friday (noviembre) y Hot Sale (mayo).`,
+      tone: 'neutral',
+      icon: '📅',
+    };
+  }
+
   return {
     diasFaltantes: diasTxt,
     ahorroEstimadoMin: Math.round(ahorroMin),
     ahorroEstimadoMax: Math.round(ahorroMax),
     rangoDescuento: `${descMin}–${descMax}%`,
     recomendacion: reco,
+    _insight,
   };
 }

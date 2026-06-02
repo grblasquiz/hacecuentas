@@ -16,6 +16,8 @@ export interface Outputs {
   costo_total_combustion: number;
   ahorro_total: number;
   ahorro_porcentaje: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tarifas impuesto circulación año 2+ por departamento (DIAN 2026)
@@ -89,6 +91,33 @@ export function compute(i: Inputs): Outputs {
   // Ahorro como % del precio base
   const ahorro_porcentaje = precio > 0 ? ahorro_total / precio : 0;
   
+  const fmtCOP = (v: number) => '$' + Math.round(v).toLocaleString('es-CO');
+  const ahorro_pct_txt = (ahorro_porcentaje * 100).toFixed(1);
+
+  const insight = {
+    title: 'Ahorro por elegir eléctrico',
+    text: `Comprar eléctrico te ahorra **${fmtCOP(ahorro_total)}** frente a uno de combustión: **${fmtCOP(ahorro_iva)}** por el IVA reducido (5% vs 19%)` +
+      (deduccion_renta > 0 ? ` más **${fmtCOP(deduccion_renta)}** de deducción en renta` : '') +
+      `. Equivale al **${ahorro_pct_txt}%** del precio del vehículo, y el primer año está exento del impuesto de circulación.`,
+    tone: 'good',
+    icon: '🔋',
+  };
+
+  const slices_ded = deduccion_renta > 0
+    ? [{ label: 'Deducción en renta', value: Math.round(deduccion_renta) }]
+    : [];
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Ahorro de IVA', value: Math.round(ahorro_iva) },
+      ...slices_ded,
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(ahorro_total),
+    centerLabel: 'Ahorro total',
+    ariaLabel: 'Composición del ahorro total: ahorro de IVA más deducción en renta',
+  };
+
   return {
     iva_electrico: Math.round(iva_electrico),
     iva_combustion: Math.round(iva_combustion),
@@ -98,6 +127,8 @@ export function compute(i: Inputs): Outputs {
     costo_total_electrico: Math.round(costo_total_electrico),
     costo_total_combustion: Math.round(costo_total_combustion),
     ahorro_total: Math.round(ahorro_total),
-    ahorro_porcentaje: ahorro_porcentaje
+    ahorro_porcentaje: ahorro_porcentaje,
+    _insight: insight,
+    _chart: chart
   };
 }

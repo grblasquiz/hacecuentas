@@ -22,6 +22,8 @@ export interface ProbDescensoOutputs {
   probabilidadSalvacion: number;
   descendidoMatematico: boolean;
   veredicto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function descensoProbabilidadMatematica(
@@ -71,6 +73,34 @@ export function descensoProbabilidadMatematica(
     veredicto = '⚠️ Casi perdido: solo un milagro estadístico.';
   }
 
+  const posTxt = diferenciaActual > 0
+    ? `le sacás **${diferenciaActual}** ${diferenciaActual === 1 ? 'punto' : 'puntos'} al último salvado`
+    : diferenciaActual === 0
+      ? `estás **igualado** en puntos con el último salvado`
+      : `estás **${Math.abs(diferenciaActual)}** ${Math.abs(diferenciaActual) === 1 ? 'punto' : 'puntos'} por debajo del último salvado`;
+  const _insight = {
+    title: descendidoMatematico ? 'Descenso matemático' : 'Tu probabilidad de zafar',
+    text: descendidoMatematico
+      ? `Tu techo es **${puntosMaxEquipo} pts** y el rival ya tiene **${pts18}**: ni ganando las **${fechas}** ${fechas === 1 ? 'fecha' : 'fechas'} restantes lo alcanzás. Descenso confirmado.`
+      : `Con **${fechas}** ${fechas === 1 ? 'fecha' : 'fechas'} por jugar ${posTxt}, la probabilidad estimada de salvación es **${probabilidadSalvacion}%**. ${probabilidadSalvacion >= 55 ? 'La inercia te favorece, pero no aflojes.' : probabilidadSalvacion >= 30 ? 'Es una moneda al aire: cada partido pesa el doble.' : 'Necesitás una racha y que los rivales pinchen.'}`,
+    tone: probabilidadSalvacion >= 55 ? 'good' : probabilidadSalvacion >= 30 ? 'neutral' : 'warn',
+    icon: '⚽',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: probabilidadSalvacion,
+    markerLabel: `${probabilidadSalvacion}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Casi perdido', max: 10, color: '#ef4444', colorDark: '#f87171' },
+      { nombre: 'Complicado', max: 30, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: '50/50', max: 55, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Favorito', max: 85, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: 'Casi salvado', max: 100, color: '#22c55e', colorDark: '#4ade80' },
+    ],
+    ariaLabel: `Probabilidad de salvación: ${probabilidadSalvacion}%`,
+  };
+
   return {
     puntosMaxEquipo,
     puntosMaxRival,
@@ -78,5 +108,7 @@ export function descensoProbabilidadMatematica(
     probabilidadSalvacion,
     descendidoMatematico,
     veredicto,
+    _insight,
+    _chart,
   };
 }

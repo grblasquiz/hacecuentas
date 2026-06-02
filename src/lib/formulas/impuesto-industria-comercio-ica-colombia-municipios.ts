@@ -13,6 +13,7 @@ export interface Outputs {
   ica_anual_estimado: number;
   retencion_ica: number;
   mensaje_obligaciones: string;
+  _insight?: any;
 }
 
 // Tarifas por mil (‰) según municipio y actividad económica (2026)
@@ -579,12 +580,34 @@ export function compute(i: Inputs): Outputs {
     mensaje_obligaciones = MENSAJE_CONTRIBUYENTE_ORDINARIO;
   }
 
+  // ── Insight narrativo ──────────────────────────────────────────────
+  const fmtCO = (n: number) => '$' + Math.round(n).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+  const periodoLabel = i.periodicidad === 'bimestral' ? 'bimestre' : 'mes';
+  const munLabel = String(i.municipio || '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'tu municipio';
+  let _insight: any;
+  if (tarifa_aplicada === 0) {
+    _insight = {
+      title: 'Actividad no gravada con ICA',
+      text: `En ${munLabel} esta actividad tiene tarifa **0‰**, así que no genera ICA sobre los ingresos declarados. Igual conservá el registro y verificá tu obligación formal de declarar.`,
+      tone: 'good',
+      icon: '🏪',
+    };
+  } else {
+    _insight = {
+      title: `Tu ICA por ${periodoLabel}`,
+      text: `Con tarifa de **${tarifa_aplicada}‰** en ${munLabel}, pagás **${fmtCO(ica_total_periodo)}** por ${periodoLabel} (~**${fmtCO(ica_anual_estimado)}** al año).${retencion_ica > 0 ? ` Como gran contribuyente, además retenés **${fmtCO(retencion_ica)}** de ICA a tus proveedores.` : ''}`,
+      tone: 'neutral',
+      icon: '🏪',
+    };
+  }
+
   return {
     ica_basico,
     tarifa_aplicada,
     ica_total_periodo,
     ica_anual_estimado,
     retencion_ica,
-    mensaje_obligaciones
+    mensaje_obligaciones,
+    _insight,
   };
 }

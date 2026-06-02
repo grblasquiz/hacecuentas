@@ -11,6 +11,7 @@ export interface Outputs {
   total_cost: number;       // total fuel cost in user currency
   cost_per_person: number;  // total_cost / passengers
   summary: string;          // human-readable trip summary
+  _insight?: any;
 }
 
 // Reference: EIA national avg regular gas price, early 2026
@@ -73,10 +74,20 @@ export function compute(i: Inputs): Outputs {
     summary += ` → $${perPersonRounded} per person (${passengers} passengers)`;
   }
 
+  const _insight = {
+    title: 'Your trip fuel cost',
+    text: passengers > 1
+      ? `This trip burns **${fuelRounded} ${fuelUnit}** of fuel for **$${totalRounded}** total. Split between ${passengers} people, that's just **$${perPersonRounded} each** — carpooling cuts your share sharply.`
+      : `This trip burns **${fuelRounded} ${fuelUnit}** of fuel for **$${totalRounded}** total at ${efficiencyLabel}. Bringing passengers would split this cost.`,
+    tone: 'neutral',
+    icon: '🚗',
+  };
+
   return {
     fuel_needed: Math.round(fuelNeeded * 100) / 100,
     total_cost: Math.round(totalCost * 100) / 100,
     cost_per_person: Math.round(costPerPerson * 100) / 100,
     summary,
+    _insight,
   };
 }

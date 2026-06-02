@@ -13,6 +13,8 @@ export interface Outputs {
   interval_2sigma: string;
   interval_3sigma: string;
   error_msg: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 /**
@@ -126,6 +128,41 @@ export function compute(i: Inputs): Outputs {
     error_msg = `Nota: con solo ${n} valor(es), los resultados son orientativos. Se recomienda trabajar con al menos 5 datos.`;
   }
 
+  // --- Insight + gráfico (CV = dispersión relativa) ---
+  const tipoLabel = populationType === 'population' ? 'poblacional (σ)' : 'muestral (s)';
+  let _insight: any;
+  let _chart: any;
+  if (cv > 0) {
+    const dispersion = cv < 15 ? 'baja (datos homogéneos)' : cv < 30 ? 'moderada' : 'alta (datos muy dispersos)';
+    const tone = cv < 15 ? 'good' : cv < 30 ? 'neutral' : 'warn';
+    _insight = {
+      title: 'Qué tan dispersos están tus datos',
+      text: `La desviación estándar ${tipoLabel} es **${fmt(std_dev)}** sobre una media de **${fmt(mean)}**, lo que da un coeficiente de variación de **${fmt(cv)}%**: dispersión **${dispersion}**.`,
+      tone,
+      icon: '📊',
+    };
+    const topGauge = Math.max(45, cv * 1.15);
+    _chart = {
+      type: 'scale',
+      marker: Number(cv.toFixed(2)),
+      markerLabel: `CV ${fmt(cv)}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Baja', max: 15, color: '#22c55e', colorDark: '#15803d' },
+        { nombre: 'Moderada', max: 30, color: '#f59e0b', colorDark: '#b45309' },
+        { nombre: 'Alta', max: Number(topGauge.toFixed(2)), color: '#ef4444', colorDark: '#b91c1c' },
+      ],
+      ariaLabel: `Coeficiente de variación de ${fmt(cv)}%, dispersión ${dispersion}.`,
+    };
+  } else {
+    _insight = {
+      title: 'Qué tan dispersos están tus datos',
+      text: `Sobre ${n} dato(s), la desviación estándar ${tipoLabel} es **${fmt(std_dev)}** y la varianza **${fmt(variance)}** (media **${fmt(mean)}**).`,
+      tone: 'neutral',
+      icon: '📊',
+    };
+  }
+
   return {
     mean,
     variance,
@@ -135,6 +172,8 @@ export function compute(i: Inputs): Outputs {
     interval_1sigma,
     interval_2sigma,
     interval_3sigma,
-    error_msg
+    error_msg,
+    _insight,
+    _chart
   };
 }

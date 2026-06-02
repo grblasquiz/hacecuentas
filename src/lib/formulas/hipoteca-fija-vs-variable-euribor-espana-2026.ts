@@ -25,6 +25,7 @@ export interface Outputs {
   diferencia_cuota_actual: number;
   diferencia_intereses_actual: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 /**
@@ -127,6 +128,29 @@ export function compute(i: Inputs): Outputs {
       `Valora tu tolerancia al riesgo y la estabilidad de tus ingresos.`;
   }
 
+  // --- Insight narrativo (resumen accionable del comparativo) ---
+  const fmtEur = (n: number) => `${Math.round(n).toLocaleString('es-ES')} €`;
+  const variableMasBarataAhora = cuotaVariableActual < cuotaFija;
+  const saltoSubida = Math.round(cuotaVariableSubida - cuotaVariableActual);
+  let insTone: 'good' | 'warn' | 'neutral';
+  let insText: string;
+  const diffAbs = Math.abs(Math.round(diferenciasCuota));
+  if (variableMasBarataAhora) {
+    // La variable arranca más barata, pero el escenario de subida es el riesgo
+    insTone = saltoSubida > 0 ? 'warn' : 'neutral';
+    insText = `Hoy la **variable** (${tipoVariableActual.toFixed(2)}%) sale **${fmtEur(diffAbs)}/mes** más barata que la **fija** (${tipoFijo.toFixed(2)}%): **${fmtEur(cuotaVariableActual)}** vs **${fmtEur(cuotaFija)}**. Pero si el Euríbor sube al escenario que cargaste, la cuota variable treparía a **${fmtEur(cuotaVariableSubida)}** (**+${fmtEur(saltoSubida)}/mes**). La fija te blinda ese riesgo; la variable apuesta a que las tasas no suban.`;
+  } else {
+    // La fija es igual o más barata que la variable actual → la fija gana sin asumir riesgo
+    insTone = 'good';
+    insText = `La **fija** al ${tipoFijo.toFixed(2)}% (**${fmtEur(cuotaFija)}/mes**) ya sale **${fmtEur(diffAbs)}/mes** más barata que la **variable** actual (${tipoVariableActual.toFixed(2)}%, ${fmtEur(cuotaVariableActual)}). Te quedás con la cuota más baja **y** sin riesgo de subidas del Euríbor: la fija es la opción eficiente en tu escenario.`;
+  }
+  const _insight = {
+    title: 'Fija vs variable: tu veredicto',
+    text: insText,
+    tone: insTone,
+    icon: '🏡',
+  };
+
   return {
     capital_prestado: capitalPrestado,
     entrada_importe: entradaImporte,
@@ -142,6 +166,7 @@ export function compute(i: Inputs): Outputs {
     intereses_totales_variable_subida: interesesVariableSubida,
     diferencia_cuota_actual: diferenciasCuota,
     diferencia_intereses_actual: diferenciasIntereses,
-    recomendacion
+    recomendacion,
+    _insight
   };
 }

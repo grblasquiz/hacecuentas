@@ -15,6 +15,8 @@ export interface Outputs {
   coste_gestor: number;
   gastos_totales: number;
   porcentaje_precio: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -122,14 +124,69 @@ export function compute(i: Inputs): Outputs {
   // 8. % sobre precio
   const porcentajePrecio = precioCompra > 0 ? (gastosTotales / precioCompra) * 100 : 0;
 
+  // Valores redondeados (los mismos que se devuelven)
+  const r_compra = Math.round(costeEscrituraCompra * 100) / 100;
+  const r_hipoteca = Math.round(costeEscrituraHipoteca * 100) / 100;
+  const r_registro = Math.round(registroPropiedad * 100) / 100;
+  const r_tasacion = Math.round(tasacion * 100) / 100;
+  const r_ajd = Math.round(ajd * 100) / 100;
+  const r_gestor = Math.round(costeGestor * 100) / 100;
+  const r_total = Math.round(gastosTotales * 100) / 100;
+  const r_pct = Math.round(porcentajePrecio * 100) / 100;
+
+  const fmtEur = (n: number) => `${Math.round(n).toLocaleString('es-ES')} €`;
+
+  // --- Insight narrativo ---
+  // Sin ITP/IVA, los gastos notariales+registro+AJD de obra nueva rondan el 1–2% del precio.
+  let insightTone: 'good' | 'warn' | 'neutral' = 'neutral';
+  if (r_pct >= 2) insightTone = 'warn';
+  else if (r_pct > 0 && r_pct <= 1) insightTone = 'good';
+
+  const partidas = [
+    { label: 'el AJD', val: r_ajd },
+    { label: 'la escritura de compra', val: r_compra },
+    { label: 'la escritura de hipoteca', val: r_hipoteca },
+    { label: 'el registro', val: r_registro }
+  ];
+  const mayor = partidas.reduce((a, b) => (b.val > a.val ? b : a));
+
+  const _insight = {
+    title: 'Cuánto sumás a la compra',
+    text: `Comprar esta vivienda te añade unos **${fmtEur(r_total)}** en gastos (notaría, registro, AJD${tieneHipoteca ? ', tasación' : ''}), un **${r_pct}%** sobre el precio. La partida más pesada es **${mayor.label}** (${fmtEur(mayor.val)})${r_ajd >= mayor.val ? ', un impuesto que varía según tu comunidad autónoma' : ''}. Ojo: esto no incluye ITP ni IVA.`,
+    tone: insightTone,
+    icon: '🏡'
+  };
+
+  // --- Gráfico donut: composición de los gastos totales ---
+  const slices = [
+    { label: 'AJD', value: r_ajd },
+    { label: 'Escritura compra', value: r_compra },
+    { label: 'Escritura hipoteca', value: r_hipoteca },
+    { label: 'Registro', value: r_registro },
+    { label: 'Tasación', value: r_tasacion },
+    { label: 'Gestoría', value: r_gestor }
+  ].filter(s => s.value > 0);
+  const sumaSlices = slices.reduce((a, s) => a + s.value, 0);
+
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '€',
+    centerValue: `${Math.round(sumaSlices).toLocaleString('es-ES')} €`,
+    centerLabel: 'gastos totales',
+    ariaLabel: `Reparto de los gastos de compra: AJD ${fmtEur(r_ajd)}, escritura de compra ${fmtEur(r_compra)}${r_hipoteca > 0 ? `, escritura de hipoteca ${fmtEur(r_hipoteca)}` : ''}, registro ${fmtEur(r_registro)}${r_tasacion > 0 ? `, tasación ${fmtEur(r_tasacion)}` : ''}${r_gestor > 0 ? `, gestoría ${fmtEur(r_gestor)}` : ''}.`
+  };
+
   return {
-    coste_escritura_compra: Math.round(costeEscrituraCompra * 100) / 100,
-    coste_escritura_hipoteca: Math.round(costeEscrituraHipoteca * 100) / 100,
-    registro_propiedad: Math.round(registroPropiedad * 100) / 100,
-    tasacion: Math.round(tasacion * 100) / 100,
-    ajd: Math.round(ajd * 100) / 100,
-    coste_gestor: Math.round(costeGestor * 100) / 100,
-    gastos_totales: Math.round(gastosTotales * 100) / 100,
-    porcentaje_precio: Math.round(porcentajePrecio * 100) / 100
+    coste_escritura_compra: r_compra,
+    coste_escritura_hipoteca: r_hipoteca,
+    registro_propiedad: r_registro,
+    tasacion: r_tasacion,
+    ajd: r_ajd,
+    coste_gestor: r_gestor,
+    gastos_totales: r_total,
+    porcentaje_precio: r_pct,
+    _insight,
+    _chart
   };
 }

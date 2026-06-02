@@ -17,6 +17,8 @@ export interface Outputs {
   total_mensual: number;
   total_anual: number;
   alerta_patrimonio: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -137,6 +139,67 @@ export function compute(i: Inputs): Outputs {
       '⚠️ Con los datos introducidos la cuantía estimada es de 0€. Revisa los ingresos y composición de la unidad.';
   }
 
+  // --- Insight narrativo dinámico ---
+  const fmtEur = (n: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+  let _insight: any;
+  if (supera_patrimonio) {
+    _insight = {
+      title: 'Patrimonio fuera de límite',
+      text:
+        `Tu patrimonio de **${patrimonio.toLocaleString('es-ES')}€** supera el tope de **${limite_patrimonio.toLocaleString('es-ES')}€** ` +
+        `fijado para una unidad de ${total_miembros} ${total_miembros === 1 ? 'persona' : 'personas'}, así que de entrada no tendrías derecho al IMV por este motivo.`,
+      tone: 'warn' as const,
+      icon: '🚫',
+    };
+  } else if (ingresos_anuales >= renta_garantizada_anual) {
+    _insight = {
+      title: 'Ingresos por encima del umbral',
+      text:
+        `Tus ingresos anuales (**${ingresos_anuales.toLocaleString('es-ES')}€**) ya igualan o superan la renta garantizada de **${renta_garantizada_anual.toLocaleString('es-ES')}€** ` +
+        `para tu unidad, por lo que no quedaría cuantía de IMV${menores > 0 ? ', aunque sí podrías cobrar el complemento de infancia por tus ' + menores + (menores === 1 ? ' menor' : ' menores') : ''}.`,
+      tone: 'warn' as const,
+      icon: '⚠️',
+    };
+  } else if (total_mensual > 0) {
+    _insight = {
+      title: 'Cuantía estimada del IMV',
+      text:
+        `Con tus datos cobrarías unos **${fmtEur(total_mensual)}/mes** (${fmtEur(total_anual)} al año): ` +
+        `**${fmtEur(cuantia_mensual_imv)}** de prestación IMV` +
+        (complemento_infancia_mensual > 0 ? ` más **${fmtEur(complemento_infancia_mensual)}** de complemento de infancia` : '') +
+        `. Es una estimación; el INSS verifica todos los datos antes de resolver.`,
+      tone: 'good' as const,
+      icon: '💶',
+    };
+  } else {
+    _insight = {
+      title: 'Sin cuantía con estos datos',
+      text:
+        `Con la composición y los ingresos introducidos la cuantía estimada es de **0€**. ` +
+        `Revisá los ingresos declarados y los miembros de la unidad de convivencia.`,
+      tone: 'neutral' as const,
+      icon: 'ℹ️',
+    };
+  }
+
+  // --- Gráfico: composición del total mensual (solo si hay importe) ---
+  let _chart: any;
+  if (total_mensual > 0) {
+    _chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Prestación IMV', value: Math.round(cuantia_mensual_imv) },
+        { label: 'Complemento infancia', value: Math.round(complemento_infancia_mensual) },
+      ].filter((s) => s.value > 0),
+      prefix: '',
+      centerValue: Math.round(total_mensual).toLocaleString('es-ES') + '€',
+      centerLabel: 'Total al mes',
+      ariaLabel:
+        'Composición del importe mensual: prestación del Ingreso Mínimo Vital y complemento de ayuda a la infancia.',
+    };
+  }
+
   return {
     cumple_requisitos,
     renta_garantizada_anual,
@@ -144,6 +207,8 @@ export function compute(i: Inputs): Outputs {
     complemento_infancia_mensual,
     total_mensual,
     total_anual,
-    alerta_patrimonio
+    alerta_patrimonio,
+    _insight,
+    _chart
   };
 }

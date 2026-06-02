@@ -1,6 +1,6 @@
 /** Generador de Citas APA 7ma Ed. */
 export interface Inputs { apellido: string; inicial: string; ano: number; titulo: string; fuente: string; tipo: string; }
-export interface Outputs { referencia: string; citaTexto: string; citaParentesis: string; notas: string; }
+export interface Outputs { referencia: string; citaTexto: string; citaParentesis: string; notas: string; _insight?: any; }
 
 export function formulaCitacionApa(i: Inputs): Outputs {
   const apellido = String(i.apellido).trim();
@@ -36,5 +36,13 @@ export function formulaCitacionApa(i: Inputs): Outputs {
   const citaTexto = `${apellido} (${ano})`;
   const citaParentesis = `(${apellido}, ${ano})`;
 
-  return { referencia, citaTexto, citaParentesis, notas };
+  const tipoLabel = i.tipo === 'libro' ? 'libro' : i.tipo === 'articulo' ? 'artículo' : i.tipo === 'web' ? 'página web' : 'fuente';
+  const _insight = {
+    title: 'Cómo usar tu cita',
+    text: `Tu referencia de **${tipoLabel}** va en la lista final con sangría francesa. Dentro del texto, usá **${citaTexto}** al nombrar al autor en la oración, o **${citaParentesis}** al final de la idea.`,
+    tone: 'neutral',
+    icon: '📚',
+  };
+
+  return { referencia, citaTexto, citaParentesis, notas, _insight };
 }

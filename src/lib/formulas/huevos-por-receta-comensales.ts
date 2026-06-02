@@ -88,6 +88,7 @@ export interface Outputs {
   escala: string;
   ingredientes: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function huevosPorRecetaComensales(i: Inputs): Outputs {
@@ -112,11 +113,20 @@ export function huevosPorRecetaComensales(i: Inputs): Outputs {
     ingredientes.push(`${ing.nombre}: ${cantRed} ${ing.unidad}`);
   }
 
+  const sube = factor > 1;
+  const _insight = {
+    title: `${base.nombre} para ${comensales}`,
+    text: `Para **${comensales} comensales** vas a necesitar **${huevos} huevos** (la receta base rinde ${base.baseComensales}, así que escalás **×${factor.toFixed(2)}**). ${sube ? 'Acordate de **agrandar** el resto de los ingredientes en la misma proporción.' : factor < 1 ? 'Ajustá hacia **abajo** el resto de los ingredientes en la misma proporción.' : 'Es la receta original sin cambios.'}`,
+    tone: 'neutral',
+    icon: '🥚',
+  };
+
   return {
     recetaNombre: base.nombre,
     huevosNecesarios: huevos,
     escala: `×${factor.toFixed(2)} (base ${base.baseComensales} pax → ${comensales} pax)`,
     ingredientes: ingredientes.join(' | '),
     resumen: `Para ${comensales} comensales de ${base.nombre}: ${huevos} huevos + ${ingredientes.join(', ')}.`,
+    _insight,
   };
 }

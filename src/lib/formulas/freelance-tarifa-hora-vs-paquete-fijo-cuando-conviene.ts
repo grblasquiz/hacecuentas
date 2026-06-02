@@ -13,6 +13,7 @@ export interface Outputs {
   precioPaquete: number;
   multiplicadorPaquete: number;
   razonesDetalle: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -158,11 +159,33 @@ export function compute(i: Inputs): Outputs {
 
   const razonesDetalle = razones.join(" · ");
 
+  const fmtNum = (n: number) => Math.round(n).toLocaleString("es-AR");
+  const esPaquete = modeloRecomendado.includes("Paquete") || modeloRecomendado.includes("Retainer");
+  const esHora = modeloRecomendado.includes("Tarifa por hora");
+  let insTone: 'good' | 'warn' | 'neutral';
+  let insText: string;
+  if (esHora) {
+    insTone = 'warn';
+    insText = `Conviene cobrar **por hora** (${fmtNum(tarifaHoraAjustada)}/h): con este scope, un precio cerrado te expone al scope creep. Cobrando tiempo real, cada cambio del cliente lo pagás vos cubierto.`;
+  } else if (esPaquete) {
+    insTone = 'good';
+    insText = `Conviene **${modeloRecomendado.replace(/[^\p{L}\s]/gu, '').trim().toLowerCase()}**: con ~${fmtNum(horas)} h, el paquete sale **$${fmtNum(precioPaquete)}** (×${(Math.round(multiplicadorPaquete * 100) / 100)} sobre las horas). Cerrar precio captura el valor y le da certeza al cliente.`;
+  } else {
+    insTone = 'neutral';
+    insText = `Los factores quedan **equilibrados**: lo más seguro es una **tarifa hora con tope** de ~$${fmtNum(precioPaquete)}. Le das certeza al cliente y te cubrís si el proyecto se estira.`;
+  }
+
   return {
     modeloRecomendado,
     tarifaHoraAjustada: Math.round(tarifaHoraAjustada * 100) / 100,
     precioPaquete: Math.round(precioPaquete * 100) / 100,
     multiplicadorPaquete: Math.round(multiplicadorPaquete * 100) / 100,
     razonesDetalle,
+    _insight: {
+      title: "Qué modelo te conviene",
+      text: insText,
+      tone: insTone,
+      icon: "🤝",
+    },
   };
 }

@@ -15,6 +15,7 @@ export interface Outputs {
   ideal_weight_max: number;
   bmi_reference: number;
   reference_table: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -76,6 +77,10 @@ export function compute(i: Inputs): Outputs {
     `| 6'5" | 196.0 | 1.96 |\n\n` +
     `**Peso ideal para tu altura (${i.gender === 'male' ? 'hombre' : 'mujer'}):** ${idealWeightMin.toFixed(1)} — ${idealWeightMax.toFixed(1)} kg`;
   
+  const insightText = i.input_method === 'feet_inches'
+    ? `Tu altura de **${feetInt}'${Math.round(inchesDecimal)}"** equivale a **${totalCm.toFixed(1)} cm** (**${totalMeters.toFixed(2)} m**). Como referencia, el peso saludable para esa estatura ronda los **${idealWeightMin.toFixed(0)}–${idealWeightMax.toFixed(0)} kg** (fórmula de Devine, ${i.gender === 'male' ? 'hombre' : 'mujer'}).`
+    : `Tu altura de **${totalCm.toFixed(1)} cm** equivale a **${feetInt}'${Math.round(inchesDecimal)}"** en el sistema imperial (**${totalMeters.toFixed(2)} m**). El peso saludable de referencia para esa estatura ronda los **${idealWeightMin.toFixed(0)}–${idealWeightMax.toFixed(0)} kg** (${i.gender === 'male' ? 'hombre' : 'mujer'}).`;
+
   return {
     total_centimeters: parseFloat(totalCm.toFixed(2)),
     total_meters: parseFloat(totalMeters.toFixed(3)),
@@ -84,6 +89,12 @@ export function compute(i: Inputs): Outputs {
     ideal_weight_min: parseFloat(idealWeightMin.toFixed(1)),
     ideal_weight_max: parseFloat(idealWeightMax.toFixed(1)),
     bmi_reference: parseFloat(bmiRef.toFixed(1)),
-    reference_table: refTable
+    reference_table: refTable,
+    _insight: {
+      title: 'Tu altura en los dos sistemas',
+      text: insightText,
+      tone: 'neutral' as const,
+      icon: '📏',
+    }
   };
 }

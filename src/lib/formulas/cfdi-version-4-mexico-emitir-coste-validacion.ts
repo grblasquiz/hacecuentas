@@ -14,6 +14,8 @@ export interface Outputs {
   sancion_rfc_invalido_anual: number;
   costo_total_anual: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -92,6 +94,43 @@ export function compute(i: Inputs): Outputs {
     recomendacion += ` ⚠️ ALERTA: ${porcentajeErrorRfc}% RFC inválido = sanción anual $${sancionRfcAnual.toFixed(2)}. Valida RFC antes de emitir CFDI.`;
   }
   
+  // Insight + gráfico
+  const pacAnualR = Math.round(costoAnualPac * 100) / 100;
+  const sancionR = Math.round(sancionRfcAnual * 100) / 100;
+  const totalR = Math.round(costoTotalAnual * 100) / 100;
+  const mxn = (v: number) => '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const insightTone = sancionR > 0 ? 'warn' : totalR === 0 ? 'good' : 'neutral';
+  let insightText: string;
+  if (totalR === 0) {
+    insightText = `Emitiendo **${facturasMes} CFDI/mes** te quedás dentro del límite gratuito del SAT (50/mes) y sin RFC inválidos: tu costo anual de timbrado es **$0**.`;
+  } else if (sancionR > 0) {
+    insightText = `Timbrar te cuesta **${mxn(pacAnualR)}/año**, pero el **${porcentajeErrorRfc}% de RFC inválidos** suma **${mxn(sancionR)}** en multas: total **${mxn(totalR)}/año**. Validar el RFC antes de emitir elimina casi todo ese costo.`;
+  } else {
+    insightText = `Con **${facturasMes} CFDI/mes** y tarifa de $${tarifaPorCfdi.toFixed(2)}/CFDI, el timbrado te cuesta **${mxn(totalR)}/año**. Negociar tarifa por volumen con el PAC puede bajarlo.`;
+  }
+  const _insight = {
+    title: 'Costo anual de timbrado',
+    text: insightText,
+    tone: insightTone as 'good' | 'warn' | 'neutral',
+    icon: '🧾',
+  };
+
+  let _chart: any = undefined;
+  if (totalR > 0) {
+    const slices = [];
+    if (pacAnualR > 0) slices.push({ label: 'Timbrado PAC', value: pacAnualR });
+    if (sancionR > 0) slices.push({ label: 'Multas RFC inválido', value: sancionR });
+    _chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: mxn(totalR),
+      centerLabel: 'al año',
+      ariaLabel: `Composición del costo anual de ${mxn(totalR)}: timbrado PAC y multas por RFC inválido`,
+    };
+  }
+
   return {
     costo_mensual_pac: Math.round(costoMensualPac * 100) / 100,
     costo_anual_pac: Math.round(costoAnualPac * 100) / 100,
@@ -99,6 +138,8 @@ export function compute(i: Inputs): Outputs {
     facturas_excedentes_mes: facturasExcedentesMes,
     sancion_rfc_invalido_anual: Math.round(sancionRfcAnual * 100) / 100,
     costo_total_anual: Math.round(costoTotalAnual * 100) / 100,
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight,
+    _chart
   };
 }

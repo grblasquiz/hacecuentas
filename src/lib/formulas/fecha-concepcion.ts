@@ -7,6 +7,7 @@ export interface Outputs {
   fechaConcepcion: string;
   semanasGestacion: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function fechaConcepcion(i: Inputs): Outputs {
@@ -61,9 +62,20 @@ export function fechaConcepcion(i: Inputs): Outputs {
   const fpp = new Date(fum);
   fpp.setDate(fpp.getDate() + 280);
 
+  const futura = diasGestacion < 0;
+  const _insight = {
+    title: `Concepción estimada: ${formatFecha(concepcion)}`,
+    text: futura
+      ? `La FUM ingresada es **futura**, así que todavía no hay embarazo para datar. Verificá la fecha o usá la opción "fecha de parto".`
+      : `Concebiste alrededor del **${formatFecha(concepcion)}** y la **fecha probable de parto es el ${formatFecha(fpp)}**.${semanasCompletas <= 42 ? ` Hoy llevás **${semanasTexto}** de gestación.` : ' La fecha calculada ya pasó.'} Son estimaciones; la ecografía del primer trimestre es lo más exacto.`,
+    tone: futura ? 'warn' : 'neutral',
+    icon: '🤰',
+  };
+
   return {
     fechaConcepcion: formatFecha(concepcion),
     semanasGestacion: semanasTexto,
     detalle: `Concepción estimada: ${formatFecha(concepcion)}. FUM: ${formatFecha(fum)}. Fecha probable de parto: ${formatFecha(fpp)}. Gestación al día de hoy: ${semanasTexto}.`,
+    _insight,
   };
 }

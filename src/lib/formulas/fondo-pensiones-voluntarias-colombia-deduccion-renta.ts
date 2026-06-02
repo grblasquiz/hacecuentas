@@ -18,6 +18,8 @@ export interface Outputs {
   capital_sin_rentabilidad: number;
   ganancia_rendimientos: number;
   observacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -93,6 +95,32 @@ export function compute(i: Inputs): Outputs {
   // Advertencia retiro anticipado
   observacion += '\n⚠️ Retiro antes de 62 años: sanción DIAN 5–10% + tributación ordinaria.';
 
+  // Insight: foco en el ahorro de renta y si todo el aporte es deducible
+  const topado = deduccion_permitida < aporte_anual - 1;
+  const _insight = {
+    title: topado ? 'Tu aporte supera el tope deducible' : 'Lo que te ahorrás en renta',
+    text: topado
+      ? `De tus **$${Math.round(aporte_anual).toLocaleString('es-CO')}** aportados al año, solo **$${Math.round(deduccion_permitida).toLocaleString('es-CO')}** son deducibles. Bajás tu renta en **$${Math.round(ahorro_irpf_anual).toLocaleString('es-CO')}**; el excedente no genera beneficio fiscal.`
+      : `Aportando **$${Math.round(aporte_anual).toLocaleString('es-CO')}/año** reducís tu impuesto de renta en **$${Math.round(ahorro_irpf_anual).toLocaleString('es-CO')}** y en ${n} años acumulás **$${Math.round(capital_acumulado).toLocaleString('es-CO')}**.`,
+    tone: topado ? 'warn' : 'good',
+    icon: '🏦'
+  };
+
+  // Donut: capital acumulado = aportes propios + rendimientos
+  const capAcum = Math.round(capital_acumulado);
+  const capAportes = Math.round(capital_sin_rentabilidad);
+  const _chart = capAcum > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Tus aportes', value: capAportes },
+      { label: 'Rendimientos', value: capAcum - capAportes }
+    ],
+    prefix: '$',
+    centerValue: '$' + capAcum.toLocaleString('es-CO'),
+    centerLabel: 'Capital final',
+    ariaLabel: 'Composición del capital acumulado entre aportes propios y rendimientos'
+  } : undefined;
+
   return {
     aporte_anual: Math.round(aporte_anual),
     tope_deduccion_uvt: TOPE_DEDUCCION_UVT,
@@ -103,6 +131,8 @@ export function compute(i: Inputs): Outputs {
     capital_acumulado: Math.round(capital_acumulado),
     capital_sin_rentabilidad: Math.round(capital_sin_rentabilidad),
     ganancia_rendimientos: Math.round(ganancia_rendimientos),
-    observacion: observacion
+    observacion: observacion,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   kcalMin: number;
   metUsado: number;
   detalle: string;
+  _insight?: any;
 }
 
 const MET_BASQUET: Record<string, { met: number; nombre: string }> = {
@@ -32,10 +33,21 @@ export function caloriasBasquetIntensidad(i: Inputs): Outputs {
   const kcalPorMin = (info.met * 3.5 * peso) / 200;
   const total = kcalPorMin * min;
 
+  // Equivalencias rápidas
+  const minCaminar = Math.round(total / 5); // ~5 kcal/min caminando
+  const alfajores = total / 230; // alfajor común ~230 kcal
+  const _insight = {
+    title: 'Lo que dejaste en la cancha',
+    text: `${info.nombre} durante ${min} min te hace quemar **~${Math.round(total)} kcal** (${kcalPorMin.toFixed(2)} kcal/min). Equivale a **${minCaminar} min** de caminata${alfajores >= 0.5 ? ` o **${alfajores.toFixed(1)} alfajores**` : ''}. A mayor intensidad (MET ${info.met}), más gasto por minuto.`,
+    tone: 'good',
+    icon: '🏀',
+  };
+
   return {
     result: Math.round(total),
     kcalMin: Number(kcalPorMin.toFixed(2)),
     metUsado: info.met,
     detalle: `Jugando **${info.nombre}** durante ${min} min quemás **${Math.round(total)} kcal** (${kcalPorMin.toFixed(2)} kcal/min, MET ${info.met}).`,
+    _insight,
   };
 }

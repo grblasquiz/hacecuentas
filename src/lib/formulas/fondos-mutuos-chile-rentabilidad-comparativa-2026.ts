@@ -19,6 +19,8 @@ export interface Outputs {
   tasa_retorno_neta_anual: number;
   recomendacion: string;
   comparativa_administradoras: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -95,6 +97,33 @@ export function compute(i: Inputs): Outputs {
   comparativa += `Rentabilidad neta estimada: ${rentabilidadAdminNetaEstimada.toFixed(2)}% anual (antes impuesto). `;
   comparativa += `Verifica prospectos en CMF y webs oficiales para comisiones exactas según monto y fondo específico.`;
 
+  // Insight: cuánto te queda neto y cuánto se llevan comisiones + impuesto
+  const brutaR = Math.round(rentabilidadBrutaTotal);
+  const comR = Math.round(comisionesTotales);
+  const impR = Math.round(impuestoRetenido);
+  const netaR = Math.round(rentabilidadNetaTotal);
+  const cuotaCostos = brutaR > 0 ? Math.round(((comR + impR) / brutaR) * 100) : 0;
+  const _insight = {
+    title: 'Lo que te queda en el bolsillo',
+    text: `De **$${brutaR.toLocaleString('es-CL')}** de rentabilidad bruta, comisiones e impuesto se llevan **${cuotaCostos}%**: terminás con **$${netaR.toLocaleString('es-CL')}** netos (TIR ${tasaRetornoNetaAnual.toFixed(2)}% anual).`,
+    tone: cuotaCostos >= 40 ? 'warn' : cuotaCostos >= 25 ? 'neutral' : 'good',
+    icon: '📊'
+  };
+
+  // Donut: rentabilidad bruta = neta + comisiones + impuesto
+  const _chart = (brutaR > 0 && netaR >= 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Rentabilidad neta', value: netaR },
+      { label: 'Comisiones', value: comR },
+      { label: 'Impuesto', value: brutaR - netaR - comR }
+    ],
+    prefix: '$',
+    centerValue: '$' + brutaR.toLocaleString('es-CL'),
+    centerLabel: 'Rentab. bruta',
+    ariaLabel: 'Reparto de la rentabilidad bruta entre neto, comisiones e impuesto'
+  } : undefined;
+
   return {
     rentabilidad_bruta_total: Math.round(rentabilidadBrutaTotal),
     rentabilidad_bruta_porcentaje: Number(rentabilidadBrutaPorcentaje.toFixed(2)),
@@ -105,6 +134,8 @@ export function compute(i: Inputs): Outputs {
     valor_final_cartera: Math.round(valorFinalCartera),
     tasa_retorno_neta_anual: Number(tasaRetornoNetaAnual.toFixed(2)),
     recomendacion: recomendacion,
-    comparativa_administradoras: comparativa
+    comparativa_administradoras: comparativa,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

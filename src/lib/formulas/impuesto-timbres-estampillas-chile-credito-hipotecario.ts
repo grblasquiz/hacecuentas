@@ -13,6 +13,8 @@ export interface Outputs {
   gasto_total_tramite: number;
   gasto_por_cuota: number;
   deducible: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -72,12 +74,48 @@ export function compute(i: Inputs): Outputs {
     deducible = 'No deducible en Impuesto Global Complementario. Deducible para empresas si crédito es para operación comercial.';
   }
 
-  return {
-    impuesto_timbre: Math.round(impuesto_timbre),
-    tasa_efectiva: parseFloat(tasa_efectiva.toFixed(3)),
-    costo_seguro: Math.round(costo_seguro),
-    gasto_total_tramite: Math.round(gasto_total_tramite),
-    gasto_por_cuota: Math.round(gasto_por_cuota),
-    deducible: deducible
+  const timbre_red = Math.round(impuesto_timbre);
+  const seguro_red = Math.round(costo_seguro);
+  const total_red = Math.round(gasto_total_tramite);
+  const cuota_red = Math.round(gasto_por_cuota);
+
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const nombreCredito = i.tipo_credito === 'hipotecario' ? 'hipotecario' : 'de consumo';
+
+  const _insight = {
+    title: 'Costo del impuesto de timbres',
+    text: `Tu crédito ${nombreCredito} paga **${fmtCLP(timbre_red)}** de impuesto de timbres `
+      + `(**${tasa_efectiva.toFixed(3)}%** del monto)`
+      + (seguro_red > 0 ? `, más **${fmtCLP(seguro_red)}** de seguro de desgravamen: total **${fmtCLP(total_red)}**.` : '.')
+      + (cuota_red > 0 ? ` El timbre prorrateado suma ~**${fmtCLP(cuota_red)}** por cuota.` : ''),
+    tone: 'warn',
+    icon: '🏦'
   };
+
+  const out: Outputs = {
+    impuesto_timbre: timbre_red,
+    tasa_efectiva: parseFloat(tasa_efectiva.toFixed(3)),
+    costo_seguro: seguro_red,
+    gasto_total_tramite: total_red,
+    gasto_por_cuota: cuota_red,
+    deducible: deducible,
+    _insight
+  };
+
+  // Donut solo si el gasto se compone de timbre + seguro (dos partes que suman)
+  if (timbre_red > 0 && seguro_red > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Impuesto de timbres', value: timbre_red },
+        { label: 'Seguro de desgravamen', value: seguro_red }
+      ],
+      prefix: '$',
+      centerValue: fmtCLP(total_red),
+      centerLabel: 'Gasto total',
+      ariaLabel: `Gasto total de trámite de ${fmtCLP(total_red)}: ${fmtCLP(timbre_red)} de impuesto de timbres más ${fmtCLP(seguro_red)} de seguro de desgravamen.`
+    };
+  }
+
+  return out;
 }

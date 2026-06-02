@@ -1,6 +1,6 @@
 /** Calculadora del ciclo menstrual */
 export interface Inputs { fumCiclo: string; duracionCicloM: number; duracionSangrado?: number; }
-export interface Outputs { proximaMenstruacion: string; ovulacionEstimada: string; fasesActuales: string; proximosTresCiclos: string; }
+export interface Outputs { proximaMenstruacion: string; ovulacionEstimada: string; fasesActuales: string; proximosTresCiclos: string; _insight?: any; _chart?: any; }
 
 export function cicloMenstrual(i: Inputs): Outputs {
   const parts = String(i.fumCiclo || '').split('-').map(Number);
@@ -48,10 +48,42 @@ export function cicloMenstrual(i: Inputs): Outputs {
     d = new Date(d.getTime()); d.setDate(d.getDate() + ciclo);
   }
 
+  const diaActual = diaEnCiclo + 1;
+  const diasAProxima = Math.round((proxReal.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+  const esFertil = diaEnCiclo >= diaOvulacion - 1 && diaEnCiclo <= diaOvulacion + 1;
+  const esMenstrual = diaEnCiclo < sangrado;
+  const faseCorta = esMenstrual ? 'menstrual' : diaEnCiclo < diaOvulacion - 1 ? 'folicular' : esFertil ? 'ovulatoria' : 'lútea';
+  const tone = esFertil ? 'warn' : 'neutral';
+  const icon = esFertil ? '🔴' : esMenstrual ? '🩸' : '🌸';
+  const textoFase = esFertil
+    ? `estás en tu **ventana fértil**: la concepción es más probable estos días`
+    : esMenstrual
+    ? `estás en fase **menstrual**`
+    : `estás en fase **${faseCorta}**`;
+
   return {
     proximaMenstruacion: fmt(proxReal),
     ovulacionEstimada: fmt(ovulReal),
     fasesActuales: fase,
     proximosTresCiclos: ciclos.join(', '),
+    _insight: {
+      title: 'En qué punto de tu ciclo estás',
+      text: `Hoy es el **día ${diaActual}** de un ciclo de **${ciclo} días** y ${textoFase}. Tu próxima menstruación cae en **${diasAProxima} día${diasAProxima === 1 ? '' : 's'}**.`,
+      tone,
+      icon,
+    },
+    _chart: {
+      type: 'scale',
+      marker: diaActual,
+      markerLabel: `Día ${diaActual}`,
+      min: 1,
+      segments: [
+        { nombre: 'Menstrual', max: sangrado, color: '#ef4444', colorDark: '#dc2626' },
+        { nombre: 'Folicular', max: diaOvulacion - 1, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Fértil', max: diaOvulacion + 1, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Lútea', max: ciclo, color: '#8b5cf6', colorDark: '#7c3aed' },
+      ],
+      ariaLabel: `Día ${diaActual} de un ciclo de ${ciclo} días, ubicado en la fase ${faseCorta}.`,
+    },
   };
 }

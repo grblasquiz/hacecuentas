@@ -11,6 +11,7 @@ export interface EspesorVidrioOutputs {
   superficieM2: number;
   pesoEstimado: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function espesorVidrio(inputs: EspesorVidrioInputs): EspesorVidrioOutputs {
@@ -75,11 +76,27 @@ export function espesorVidrio(inputs: EspesorVidrioInputs): EspesorVidrioOutputs
   const peso = Number((superficie * espesor * 2.5).toFixed(1));
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const esTemplado = tipo === 'Templado';
+  const _insight = esTemplado
+    ? {
+        title: 'Requiere vidrio templado',
+        text: `Para **${fmt.format(superficie)} m²** se recomienda **${tipo} de ${espesor} mm** (~**${fmt.format(peso)} kg**). El templado es obligatorio por seguridad: al romperse se fragmenta en gránulos, no en esquirlas. Verificá que el marco soporte el peso.`,
+        tone: 'warn',
+        icon: '🪟',
+      }
+    : {
+        title: `Vidrio ${tipo} de ${espesor} mm`,
+        text: `Para una ventana de **${fmt.format(superficie)} m²** alcanza con **Float de ${espesor} mm** (~**${fmt.format(peso)} kg**). Es la opción estándar y económica para esta superficie y ubicación.`,
+        tone: 'neutral',
+        icon: '🪟',
+      };
+
   return {
     espesorMinimo: espesor,
     tipoVidrio: tipo,
     superficieM2: Number(superficie.toFixed(2)),
     pesoEstimado: peso,
     detalle: `Ventana de ${fmt.format(ancho)} × ${fmt.format(alto)} m (${fmt.format(superficie)} m²), piso ${piso}, zona ${zona} → vidrio ${tipo} de ${espesor} mm, peso estimado ${fmt.format(peso)} kg.`,
+    _insight,
   };
 }

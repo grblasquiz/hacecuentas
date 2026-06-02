@@ -18,6 +18,8 @@ export interface Outputs {
   diferencia_intereses_totales: number;
   cuota_mensual_uvr_estimada_final: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -92,6 +94,28 @@ export function compute(i: Inputs): Outputs {
     recomendacion = `Considera pesos: inflación esperada (${i.ipc_esperado_anual}%) es igual o superior a diferencial (tasa pesos ${i.tasa_nominal_pesos_anual}% vs UVR real ${i.tasa_real_uvr_anual}%). Cuota fija en nominal $${Math.round(cuota_pesos).toLocaleString('es-CO')} facilita presupuesto, aunque pagas ~$${Math.round(diferencia_intereses).toLocaleString('es-CO')} más en intereses.`;
   }
   
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const uvrConviene = diferencia_intereses > 0;
+  const _insight = {
+    title: uvrConviene ? 'La UVR arranca más barata' : 'Cuota fija en pesos: previsibilidad',
+    text: uvrConviene
+      ? `Empezás con una cuota de **${fmt(cuota_uvr_mes1)}** en UVR contra **${fmt(cuota_pesos)}** en pesos, y a lo largo del crédito pagarías **${fmt(Math.abs(diferencia_intereses))}** menos de intereses. Cuidado: la cuota UVR sube con la inflación y podría llegar a ~**${fmt(cuota_uvr_final)}** al final.`
+      : `La cuota en pesos (**${fmt(cuota_pesos)}**) es fija y no se mueve con la inflación, mientras la UVR arranca en **${fmt(cuota_uvr_mes1)}** pero termina pagando **${fmt(Math.abs(diferencia_intereses))}** más de intereses si el IPC se sostiene. Previsibilidad a cambio de costo.`,
+    tone: uvrConviene ? 'good' : 'warn',
+    icon: '🏠'
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Cuota inicial', value: Math.round(cuota_inicial) },
+      { label: 'Monto a financiar', value: Math.round(saldo_inicial) }
+    ],
+    prefix: '$',
+    centerValue: fmt(precio),
+    centerLabel: 'Precio vivienda',
+    ariaLabel: `Del precio de ${fmt(precio)}, ${fmt(cuota_inicial)} es cuota inicial y ${fmt(saldo_inicial)} se financia.`
+  };
+
   return {
     valor_financiar: Math.round(saldo_inicial),
     cuota_inicial_valor: Math.round(cuota_inicial),
@@ -102,6 +126,8 @@ export function compute(i: Inputs): Outputs {
     diferencia_cuota_mensual: Math.round(diferencia_cuota_mes1),
     diferencia_intereses_totales: Math.round(diferencia_intereses),
     cuota_mensual_uvr_estimada_final: Math.round(cuota_uvr_final),
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight,
+    _chart
   };
 }

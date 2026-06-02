@@ -13,6 +13,8 @@ export interface Outputs {
   pagoDobles: number;
   pagoTriples: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 /**
@@ -66,10 +68,33 @@ export function horasExtrasMexico(inputs: Inputs): Outputs {
       `aunque deba pagarse al triple. El patron puede ser sancionado por la STPS.`;
   }
 
+  const _insight = {
+    title: horasTriples > 0 ? 'Atención: tope legal superado' : 'Tu pago por tiempo extra',
+    text: horasTriples > 0
+      ? `Cobrás **${fmt(pagoTotalExtras)}** por ${horasExtraSemana} hrs extra, pero ${horasTriples} de ellas exceden el tope de **9 hrs/semana** (Art. 66 LFT): el patrón puede ser sancionado aunque las pague al triple.`
+      : `Por ${horasExtraSemana} hrs extra a la semana cobrás **${fmt(pagoTotalExtras)}**, todas al doble. Tu hora ordinaria vale **${fmt(valorHoraNormal)}**.`,
+    tone: horasTriples > 0 ? 'warn' : 'good',
+    icon: horasTriples > 0 ? '⚠️' : '💸',
+  };
+
+  const _chart = pagoTotalExtras > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Horas dobles', value: Math.round(pagoDobles * 100) / 100 },
+      { label: 'Horas triples', value: Math.round(pagoTriples * 100) / 100 },
+    ],
+    prefix: '$',
+    centerValue: fmt(pagoTotalExtras),
+    centerLabel: 'Total extras',
+    ariaLabel: 'Composición del pago semanal de horas extra entre dobles y triples',
+  } : undefined;
+
   return {
     pagoTotalExtras: Math.round(pagoTotalExtras * 100) / 100,
     pagoDobles: Math.round(pagoDobles * 100) / 100,
     pagoTriples: Math.round(pagoTriples * 100) / 100,
     detalle,
+    _insight,
+    _chart,
   };
 }

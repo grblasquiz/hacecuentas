@@ -10,6 +10,8 @@ export interface Outputs {
   rotacionPagos: number;
   diagnostico: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function diasPromedioPagoProveedoresDpp(i: Inputs): Outputs {
@@ -42,10 +44,40 @@ export function diasPromedioPagoProveedoresDpp(i: Inputs): Outputs {
     `DPP: ${dpp.toFixed(1)} días. Rotación: ${rotacionPagos.toFixed(2)} veces/año. ` +
     `${diagnostico}`;
 
+  const dppR = Number(dpp.toFixed(1));
+  const tone: 'good' | 'warn' | 'neutral' =
+    dppR > 90 ? 'warn' : dppR < 15 ? 'warn' : dppR <= 60 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Tus plazos de pago',
+    text:
+      `Tardás en promedio **${dppR} días** en pagar a proveedores y rotás esas cuentas **${rotacionPagos.toFixed(2)} veces al año**. ` +
+      diagnostico,
+    tone,
+    icon: '🧾',
+  };
+
+  const segMax = Math.max(120, Math.ceil(dppR / 10) * 10 + 5);
+  const _chart = {
+    type: 'scale',
+    marker: dppR,
+    markerLabel: `${dppR} días`,
+    min: 0,
+    segments: [
+      { nombre: 'Muy rápido', max: 15, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Estándar', max: 30, color: '#84cc16', colorDark: '#65a30d' },
+      { nombre: 'Buena caja', max: 60, color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: 'Agresivo', max: 90, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Alerta', max: segMax, color: '#ef4444', colorDark: '#dc2626' },
+    ],
+    ariaLabel: `Días promedio de pago a proveedores: ${dppR} días, en zona ${tone === 'good' ? 'favorable' : tone === 'warn' ? 'a cuidar' : 'estándar'}.`,
+  };
+
   return {
-    dpp: Number(dpp.toFixed(1)),
+    dpp: dppR,
     rotacionPagos: Number(rotacionPagos.toFixed(2)),
     diagnostico,
     detalle,
+    _insight,
+    _chart,
   };
 }

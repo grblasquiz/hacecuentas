@@ -1,6 +1,6 @@
 /** Huerta: producción estimada por m² */
 export interface Inputs { especie: string; m2: number; experiencia?: string; }
-export interface Outputs { kgTemporada: number; kgPorM2: number; kgAnual: number; equivalenteDinero: string; }
+export interface Outputs { kgTemporada: number; kgPorM2: number; kgAnual: number; equivalenteDinero: string; _insight?: any; }
 
 const REND_KG_M2: Record<string, number> = {
   tomate: 5, lechuga: 3.5, zanahoria: 3, cebolla: 3, zapallo: 2.5,
@@ -22,10 +22,19 @@ export function huertaProduccionM2(i: Inputs): Outputs {
   const kgAnual = kgTemp * 1.7; // 2 temporadas, invierno rinde menos
   const ahorro = Math.round(kgAnual * PRECIO_KG);
 
+  const fmt1 = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(n);
+  const _insight = {
+    title: 'Tu huerta en números',
+    text: `Con **${fmt1(m2)} m²** de ${especie} (nivel ${exp}) cosechás unos **${fmt1(kgAnual)} kg al año**, ahorrándote **~$${ahorro.toLocaleString('es-AR')} ARS** en verdulería. Cada m² te rinde **${fmt1(kgM2)} kg por temporada**.`,
+    tone: 'good',
+    icon: '🌱',
+  };
+
   return {
     kgTemporada: Number(kgTemp.toFixed(1)),
     kgPorM2: Number(kgM2.toFixed(1)),
     kgAnual: Number(kgAnual.toFixed(1)),
     equivalenteDinero: `~$${ahorro.toLocaleString('es-AR')} ARS/año en verdulería`,
+    _insight,
   };
 }

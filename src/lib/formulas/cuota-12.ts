@@ -8,6 +8,8 @@ export interface Outputs {
   tasaMensualImplicita: number;
   convieneContado: boolean;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cuota12(i: Inputs): Outputs {
@@ -42,7 +44,22 @@ export function cuota12(i: Inputs): Outputs {
     ? 'Es realmente sin interés — las 12 cuotas no tienen recargo.'
     : `Las cuotas te cobran un ${sobrePorcentual.toFixed(1)}% más que el contado. Equivale a una tasa mensual del ${(tasa * 100).toFixed(2)}%.`;
 
-  return {
+  const fmt = (x: number) => '$' + Math.round(x).toLocaleString('es-AR');
+  const _insight = conviene
+    ? {
+        title: 'Tienen recargo',
+        text: `No son gratis: pagás **${fmt(sobreprecio)}** más que al contado (**${sobrePorcentual.toFixed(1)}%**), un CFT anual del **${cftAnual.toFixed(1)}%**. Si tenés la plata, conviene el contado.`,
+        tone: 'warn',
+        icon: '💳',
+      }
+    : {
+        title: 'Sin interés real',
+        text: `Las ${n} cuotas no tienen recargo: pagás lo mismo que al contado (**${fmt(total12)}**). Financiarlo no te cuesta nada — conviene aprovecharlo.`,
+        tone: 'good',
+        icon: '✅',
+      };
+
+  const out: Outputs = {
     cuotaMensual: Math.round(cuotaMensual),
     sobreprecio: Math.round(sobreprecio),
     sobreprecioPorcentual: Number(sobrePorcentual.toFixed(2)),
@@ -50,5 +67,23 @@ export function cuota12(i: Inputs): Outputs {
     tasaMensualImplicita: Number((tasa * 100).toFixed(2)),
     convieneContado: conviene,
     mensaje,
+    _insight,
   };
+
+  // Donut: el precio financiado = precio contado + sobreprecio (recargo)
+  if (sobreprecio > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Precio contado', value: Math.round(contado) },
+        { label: 'Recargo financiero', value: Math.round(sobreprecio) },
+      ],
+      prefix: '$',
+      centerValue: fmt(total12),
+      centerLabel: 'Total en cuotas',
+      ariaLabel: `El total financiado de ${fmt(total12)} se compone de ${fmt(contado)} de precio al contado y ${fmt(sobreprecio)} de recargo`,
+    };
+  }
+
+  return out;
 }

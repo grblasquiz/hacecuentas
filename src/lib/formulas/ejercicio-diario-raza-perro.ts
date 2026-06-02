@@ -2,7 +2,7 @@
  * Ejercicio diario del perro por raza.
  */
 export interface Inputs { raza: string; edad: string; }
-export interface Outputs { minutosDia: number; sesiones: number; intensidad: string; tipos: string; }
+export interface Outputs { minutosDia: number; sesiones: number; intensidad: string; tipos: string; _insight?: any; _chart?: any; }
 
 const RAZAS: Record<string, { ejercicioMin: number; tamano: string }> = {
   'labrador-retriever': { ejercicioMin: 90, tamano: 'grande' },
@@ -40,5 +40,27 @@ export function ejercicioDiarioRazaPerro(inputs: Inputs): Outputs {
       ? 'Caminatas largas, running, juegos de cobro, agility'
       : 'Caminatas, juegos con pelota, olfato';
 
-  return { minutosDia: min, sesiones, intensidad, tipos };
+  // Tono dinámico: alta exigencia = warn (cuidar de cumplirla), media = good, suave = neutral.
+  const tone = intensidad === 'Alta' ? 'warn' : intensidad === 'Media' ? 'good' : 'neutral';
+  const edadTxt = edad === 'cachorro' ? ' (ajustado por ser cachorro)' : edad === 'senior' ? ' (reducido por ser senior)' : '';
+  const insight = {
+    title: 'El ejercicio diario de tu perro',
+    text: `Tu ${raza.replace(/-/g, ' ')} necesita unos **${min} minutos** de ejercicio por día${edadTxt}, repartidos en **${sesiones} ${sesiones === 1 ? 'sesión' : 'sesiones'}**, con intensidad **${intensidad.toLowerCase()}**.`,
+    tone,
+    icon: '🐕',
+  };
+  // Gauge: minutos/día con las mismas zonas que la intensidad (Suave / Media / Alta).
+  const chart = {
+    type: 'scale',
+    marker: min,
+    markerLabel: min + ' min',
+    min: 0,
+    segments: [
+      { nombre: 'Suave', max: 60, color: '#86efac', colorDark: '#4ade80' },
+      { nombre: 'Media', max: 90, color: '#fde68a', colorDark: '#fbbf24' },
+      { nombre: 'Alta', max: Math.max(120, min + 10), color: '#fca5a5', colorDark: '#f87171' },
+    ],
+    ariaLabel: `Necesidad de ejercicio de ${min} minutos por día en una escala de suave a alta`,
+  };
+  return { minutosDia: min, sesiones, intensidad, tipos, _insight: insight, _chart: chart };
 }

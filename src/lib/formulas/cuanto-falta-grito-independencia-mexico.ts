@@ -11,6 +11,7 @@ export interface Outputs {
   horasAlGrito: number;
   diaSemanaGrito: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function cuantoFaltaGritoIndependenciaMexico(_inputs: Inputs = {}): Outputs {
@@ -63,11 +64,30 @@ export function cuantoFaltaGritoIndependenciaMexico(_inputs: Inputs = {}): Outpu
     detalle = `Faltan ${diasAlGrito} día(s) (${horasAlGrito} horas) para el Grito de Independencia del ${diaSemana} 15 de septiembre de ${year} a las 23:00 hrs CDMX. El 16 de septiembre es feriado obligatorio (Art. 74 fr. V LFT).`;
   }
 
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (diasAlGrito === 0) {
+    insightText = `¡Es hoy! Quedan apenas **${horasAlGrito} hora(s)** para el Grito en Palacio Nacional. Mañana 16 de septiembre de ${year} es **feriado obligatorio**.`;
+    insightTone = 'good';
+  } else if (diasAlGrito <= 7) {
+    insightText = `Falta muy poco: **${diasAlGrito} día(s)** (${horasAlGrito} horas) para el Grito del **${diaSemana} 15 de septiembre**. El 16 es feriado obligatorio, así que conviene planear el puente.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Faltan **${diasAlGrito} días** para el Grito de Independencia (**${diaSemana} 15 de septiembre de ${year}**, 23:00 hrs CDMX). El 16 es **feriado obligatorio** por el Art. 74 de la LFT.`;
+    insightTone = 'neutral';
+  }
+
   return {
     diasAlGrito,
     diasAlDia16,
     horasAlGrito,
     diaSemanaGrito: diaSemana,
     detalle,
+    _insight: {
+      title: 'Cuenta regresiva al Grito',
+      text: insightText,
+      tone: insightTone,
+      icon: '🇲🇽',
+    },
   };
 }

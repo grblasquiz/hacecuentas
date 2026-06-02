@@ -20,6 +20,7 @@ export interface Outputs {
   roas: number;
   recommendation: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -115,6 +116,21 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Escala de ROAS: crítico (<1), marginal (<2), aceptable (<3), rentable (<5), excepcional (>5)',
   };
 
+  const netRounded = Math.round(netProfit * 100) / 100;
+  const cacRounded = Math.round(cac * 100) / 100;
+  const profitTxt = netRounded >= 0
+    ? `ganás **$${netRounded.toLocaleString('es-AR')} USD** netos`
+    : `perdés **$${Math.abs(netRounded).toLocaleString('es-AR')} USD**`;
+  const _insight = {
+    title:
+      roasRounded < 2 ? 'Campaña en rojo o al límite' :
+      roasRounded < 3 ? 'Rentabilidad aceptable, escalá con cuidado' :
+      'Campaña rentable, lista para escalar',
+    text: `Con $${budget.toLocaleString('es-AR')} USD generás **${totalConversions.toLocaleString('es-AR')} conversiones** a un CAC de **$${cacRounded.toLocaleString('es-AR')} USD** y un ROAS de **${roasRounded.toFixed(2)}:1**: ${profitTxt}.`,
+    tone: roasRounded < 2 ? 'warn' : roasRounded < 3 ? 'neutral' : 'good',
+    icon: roasRounded < 2 ? '🔴' : roasRounded < 3 ? '⚖️' : '🚀',
+  };
+
   return {
     total_impressions: totalImpressions,
     estimated_reach: actualReach,
@@ -125,6 +141,7 @@ export function compute(i: Inputs): Outputs {
     net_profit: Math.round(netProfit * 100) / 100,
     roas: roasRounded,
     recommendation: recommendation,
-    _chart: chart
+    _chart: chart,
+    _insight
   };
 }

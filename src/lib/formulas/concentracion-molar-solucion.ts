@@ -1,6 +1,6 @@
 /** Calculadora de Concentración Molar — M = n/V */
 export interface Inputs { molessoluto?: number; volumenL?: number; molaridad?: number; }
-export interface Outputs { resultado: string; molaridadOut: number; molesOut: number; volumenOut: number; }
+export interface Outputs { resultado: string; molaridadOut: number; molesOut: number; volumenOut: number; _insight?: any; }
 
 export function concentracionMolarSolucion(i: Inputs): Outputs {
   const n = i.molessoluto != null && Number(i.molessoluto) > 0 ? Number(i.molessoluto) : null;
@@ -14,10 +14,19 @@ export function concentracionMolarSolucion(i: Inputs): Outputs {
   else if (n === null) { molar = M; vol = V!; moles = molar * vol; }
   else { molar = M; moles = n; vol = moles / molar; }
 
+  const categoria = molar < 0.1 ? 'diluida' : molar <= 1 ? 'moderada' : 'concentrada';
+  const _insight = {
+    title: 'Tu solución',
+    text: `**${moles.toFixed(4)} mol** de soluto en **${vol.toFixed(4)} L** dan una concentración de **${molar.toFixed(4)} M**, una solución **${categoria}**.`,
+    tone: 'neutral',
+    icon: '🧪',
+  };
+
   return {
     resultado: `Molaridad: ${molar.toFixed(4)} M, Moles: ${moles.toFixed(6)} mol, Volumen: ${vol.toFixed(4)} L`,
     molaridadOut: Number(molar.toFixed(6)),
     molesOut: Number(moles.toFixed(6)),
     volumenOut: Number(vol.toFixed(6)),
+    _insight,
   };
 }

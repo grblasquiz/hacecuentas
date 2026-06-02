@@ -1,6 +1,6 @@
 /** Consumo eléctrico de un electrodoméstico */
 export interface Inputs { potenciaWatts: number; horasDia: number; diasMes?: number; precioKwh: number; }
-export interface Outputs { consumoMensualKwh: string; costoMensual: number; costoAnual: number; consumoDiarioKwh: string; }
+export interface Outputs { consumoMensualKwh: string; costoMensual: number; costoAnual: number; consumoDiarioKwh: string; _insight?: any; }
 
 export function consumoElectricidadElectrodomestico(i: Inputs): Outputs {
   const watts = Number(i.potenciaWatts);
@@ -16,10 +16,24 @@ export function consumoElectricidadElectrodomestico(i: Inputs): Outputs {
   const costoMensual = kwhMes * precio;
   const costoAnual = costoMensual * 12;
 
+  const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const nivel = kwhMes >= 150 ? 'alto' : kwhMes >= 50 ? 'moderado' : 'bajo';
+  const insightText = nivel === 'alto'
+    ? `Consumo **alto**: este aparato suma **${kwhMes.toFixed(0)} kWh/mes** ($${fmt.format(Math.round(costoMensual))}). En el año pesa **$${fmt.format(Math.round(costoAnual))}** en la factura — vale la pena reducir horas o cambiarlo por uno eficiente.`
+    : nivel === 'moderado'
+    ? `Consumo **moderado**: **${kwhMes.toFixed(0)} kWh/mes** ($${fmt.format(Math.round(costoMensual))}/mes, **$${fmt.format(Math.round(costoAnual))}/año**). Bajar el uso diario impacta directo en el costo anual.`
+    : `Consumo **bajo**: apenas **${kwhMes.toFixed(1)} kWh/mes** ($${fmt.format(Math.round(costoMensual))}/mes). En 12 meses son **$${fmt.format(Math.round(costoAnual))}**.`;
+
   return {
     consumoMensualKwh: `${kwhMes.toFixed(1)} kWh/mes`,
     costoMensual: Math.round(costoMensual),
     costoAnual: Math.round(costoAnual),
     consumoDiarioKwh: `${kwhDia.toFixed(2)} kWh/día`,
+    _insight: {
+      title: 'Qué significa este consumo',
+      text: insightText,
+      tone: nivel === 'alto' ? 'warn' : nivel === 'bajo' ? 'good' : 'neutral',
+      icon: '⚡',
+    },
   };
 }

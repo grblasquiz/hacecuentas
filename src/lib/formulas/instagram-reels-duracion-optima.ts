@@ -1,6 +1,6 @@
 /** Reels Duración Óptima */
 export interface Inputs { objetivo: string; nicho: string; }
-export interface Outputs { duracionRecomendada: string; rangoAceptable: string; justificacion: string; tip: string; }
+export interface Outputs { duracionRecomendada: string; rangoAceptable: string; justificacion: string; tip: string; _insight?: any; }
 
 export function instagramReelsDuracionOptima(i: Inputs): Outputs {
   const obj = String(i.objetivo);

@@ -14,6 +14,7 @@ export interface EdadOutputs {
   horasTotal: string;
   proximoCumpleanios: string;
   diasHastaCumple: number;
+  _insight?: any;
 }
 
 export function edad(inputs: EdadInputs): EdadOutputs {
@@ -57,6 +58,15 @@ export function edad(inputs: EdadInputs): EdadOutputs {
   }
   const diasHastaCumple = Math.round((proxCumple.getTime() - hoy.getTime()) / msPerDay);
 
+  const insight = {
+    title: 'Tu edad en números',
+    text: diasHastaCumple === 0
+      ? `Viviste **${diasTotal.toLocaleString('es-AR')} días** desde tu nacimiento. Y hoy es tu cumpleaños: **¡feliz cumple!** 🎉`
+      : `Viviste **${diasTotal.toLocaleString('es-AR')} días** desde tu nacimiento. Para tu próximo cumpleaños (cumplís ${anios + 1}) faltan **${diasHastaCumple} días**.`,
+    tone: diasHastaCumple <= 7 ? 'good' : 'neutral',
+    icon: '🎂',
+  };
+
   return {
     edad: `${anios} años, ${meses} meses y ${dias} días`,
     diasTotal,
@@ -64,5 +74,6 @@ export function edad(inputs: EdadInputs): EdadOutputs {
     horasTotal,
     proximoCumpleanios: `${proxCumple.getFullYear()}-${String(proxCumple.getMonth()+1).padStart(2,'0')}-${String(proxCumple.getDate()).padStart(2,'0')}`,
     diasHastaCumple,
+    _insight: insight,
   };
 }

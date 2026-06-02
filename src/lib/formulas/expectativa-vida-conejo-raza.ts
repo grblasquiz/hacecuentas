@@ -13,6 +13,8 @@ export interface Outputs {
   gananciaPorCastrar: number;
   perfilRiesgo: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function expectativaVidaConejoRaza(i: Inputs): Outputs {
@@ -60,11 +62,58 @@ export function expectativaVidaConejoRaza(i: Inputs): Outputs {
   else if (aloj === 'jaula') rec = 'Sumá al menos 3-4 horas de suelta diaria. La jaula 24 h genera obesidad y estrés crónico.';
   else rec = 'Mantené heno ilimitado, verduras variadas, espacio amplio y controles veterinarios anuales (semestrales si >6 años).';
 
+  // --- Insight dinámico ---
+  let toneIns: 'good' | 'warn' | 'neutral';
+  let textIns: string;
+  if (!castrado && sexo === 'hembra') {
+    toneIns = 'warn';
+    textIns =
+      `Tu coneja sin castrar tiene una expectativa de **${expectativa} años**, frente a **${expectativaSiCastra} años** si la castrás: ` +
+      `son **+${ganancia} años** en juego. La castración baja el riesgo de cáncer de útero del 60-80% a menos del 5%.`;
+  } else if (perfil.startsWith('Óptimo')) {
+    toneIns = 'good';
+    textIns =
+      `Excelente: con dieta correcta, espacio amplio y castración, tu conejo apunta a **${expectativa} años**, en el techo de su raza. ` +
+      `Le quedan unos **${aniosRestantes} años** desde los ${edad} actuales.`;
+  } else if (dieta === 'mala') {
+    toneIns = 'warn';
+    textIns =
+      `La dieta inadecuada recorta la expectativa a **${expectativa} años**. Una alimentación correcta (heno ilimitado) puede devolverle varios años de vida.`;
+  } else {
+    toneIns = 'neutral';
+    textIns =
+      `Tu conejo tiene una expectativa de **${expectativa} años** (perfil: ${perfil.toLowerCase()}). ` +
+      `Desde los ${edad} años actuales, le quedan aproximadamente **${aniosRestantes} años**.`;
+  }
+  const _insight = {
+    title: 'Qué dice esta expectativa',
+    text: textIns,
+    tone: toneIns,
+    icon: '🐇',
+  };
+
+  // --- Gauge: zonas de longevidad del conejo ---
+  const _chart = {
+    type: 'scale',
+    marker: expectativa,
+    markerLabel: `${expectativa} años`,
+    min: 0,
+    segments: [
+      { nombre: 'Corta', max: 5, color: '#ef4444', colorDark: '#b91c1c' },
+      { nombre: 'Media', max: 8, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Buena', max: 10, color: '#84cc16', colorDark: '#4d7c0f' },
+      { nombre: 'Óptima', max: 13, color: '#22c55e', colorDark: '#15803d' },
+    ],
+    ariaLabel: `Expectativa de ${expectativa} años en una escala de longevidad del conejo de 0 a 13.`,
+  };
+
   return {
     expectativaAnios: expectativa,
     aniosRestantes,
     gananciaPorCastrar: ganancia,
     perfilRiesgo: perfil,
     recomendacion: rec,
+    _insight,
+    _chart,
   };
 }

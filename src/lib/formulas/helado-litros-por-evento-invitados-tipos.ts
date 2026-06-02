@@ -13,6 +13,7 @@ export interface Outputs {
   mlPorPersona: number;
   distribucion: string;
   consejo: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -103,6 +104,14 @@ export function compute(i: Inputs): Outputs {
     consejo = `Apuntá a ${litrosTotales} L como cantidad central. El rango seguro es ${litrosMinimo}-${litrosMaximo} L según cuánto coman tus invitados.`;
   }
 
+  const calorMasa = i.temperatura === "calor" && invitados >= 50;
+  const _insight = {
+    title: "Cuánto helado comprar",
+    text: `Para **${invitados} invitados** comprá alrededor de **${litrosTotales} L** (${mlPorPersona} ml por persona). El rango seguro va de ${litrosMinimo} a ${litrosMaximo} L: quedate cerca del máximo si tus invitados son golosos o repiten.${calorMasa ? " Con calor y mucha gente, asegurate la cadena de frío (freezer o conservadora con hielo seco) para que no se derrita." : ""}`,
+    tone: calorMasa ? "warn" : "good",
+    icon: "🍨",
+  };
+
   return {
     litrosTotales,
     litrosMinimo,
@@ -110,5 +119,6 @@ export function compute(i: Inputs): Outputs {
     mlPorPersona,
     distribucion,
     consejo,
+    _insight,
   };
 }

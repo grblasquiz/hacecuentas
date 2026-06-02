@@ -22,6 +22,7 @@ export interface Outputs {
   metrosLineales: number;
   metrosCuadrados: number;
   anchoUsado: number;
+  _insight?: any;
 }
 
 export function conversorMetrosLinealesAMetrosCuadrados(i: Inputs): Outputs {
@@ -62,11 +63,21 @@ export function conversorMetrosLinealesAMetrosCuadrados(i: Inputs): Outputs {
   const resultado = `${valorResultado.toFixed(2).replace(/\.?0+$/, '')} ${toLabel}`;
   const resumen = `${v} ${fromLabel} con ancho ${ancho} m = ${valorResultado.toFixed(2).replace(/\.?0+$/, '')} ${toLabel}.`;
 
+  const mlFmt = ml.toFixed(2).replace(/\.?0+$/, '');
+  const m2Fmt = m2.toFixed(2).replace(/\.?0+$/, '');
+  const _insight = {
+    title: 'Lo que cambia es el ancho',
+    text: `Con un ancho de **${ancho} m**, cada metro lineal rinde **${ancho} m²**: por eso **${mlFmt} m lineales** equivalen a **${m2Fmt} m²**. Si el ancho real del material es otro, el resultado cambia — confirmá la medida del rollo, tabla o chapa antes de comprar.`,
+    tone: 'neutral',
+    icon: '📐',
+  };
+
   return {
     resultado,
     resumen,
     metrosLineales: Number(ml.toFixed(4)),
     metrosCuadrados: Number(m2.toFixed(4)),
     anchoUsado: ancho,
+    _insight,
   };
 }

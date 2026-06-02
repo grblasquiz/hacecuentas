@@ -1,6 +1,6 @@
 /** Calorías aproximadas de un plato por macronutrientes */
 export interface Inputs { gramosProteina: number; gramosCarbs: number; gramosGrasa: number; porciones: number; }
-export interface Outputs { caloriasTotales: number; caloriasPorPorcion: number; distribucion: string; detalle: string; }
+export interface Outputs { caloriasTotales: number; caloriasPorPorcion: number; distribucion: string; detalle: string; _insight?: any; _chart?: any; }
 
 export function caloriasReceta(i: Inputs): Outputs {
   const prot = Number(i.gramosProteina) || 0;
@@ -24,10 +24,50 @@ export function caloriasReceta(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const totalR = Math.round(total);
+  const porPorcionR = Math.round(porPorcion);
+  const nProt = Number(pctProt);
+  const nGrasa = Number(pctGrasa);
+
+  // Macro dominante para interpretar la receta
+  let insTitle: string;
+  let insText: string;
+  let insTone: 'good' | 'warn' | 'neutral';
+  let insIcon: string;
+  if (nGrasa >= 45) {
+    insTitle = 'Receta alta en grasa';
+    insText = `Cada porción aporta **${fmt.format(porPorcionR)} kcal**, y la grasa pesa el **${pctGrasa}%** del total. Es una receta calórica: cuidá el tamaño de la porción.`;
+    insTone = 'warn';
+    insIcon = '🧈';
+  } else if (nProt >= 35) {
+    insTitle = 'Receta proteica';
+    insText = `Cada porción tiene **${fmt.format(porPorcionR)} kcal** con la proteína liderando (**${pctProt}%**). Buen perfil para saciedad y mantenimiento muscular.`;
+    insTone = 'good';
+    insIcon = '💪';
+  } else {
+    insTitle = 'Distribución de la receta';
+    insText = `Cada porción suma **${fmt.format(porPorcionR)} kcal**: ${pctProt}% proteína, ${pctCarbs}% carbohidratos y ${pctGrasa}% grasa. Un reparto balanceado de macros.`;
+    insTone = 'neutral';
+    insIcon = '🍽️';
+  }
+
   return {
-    caloriasTotales: Math.round(total),
-    caloriasPorPorcion: Math.round(porPorcion),
+    caloriasTotales: totalR,
+    caloriasPorPorcion: porPorcionR,
     distribucion: `Proteína: ${pctProt}% (${fmt.format(calProt)} kcal) | Carbs: ${pctCarbs}% (${fmt.format(calCarbs)} kcal) | Grasa: ${pctGrasa}% (${fmt.format(calGrasa)} kcal)`,
     detalle: `Total: ${fmt.format(total)} kcal en ${porc} porciones = ${fmt.format(porPorcion)} kcal/porción. Macros: ${fmt.format(prot)} g prot, ${fmt.format(carbs)} g carbs, ${fmt.format(grasa)} g grasa.`,
+    _insight: { title: insTitle, text: insText, tone: insTone, icon: insIcon },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Proteína', value: Math.round(calProt) },
+        { label: 'Carbohidratos', value: Math.round(calCarbs) },
+        { label: 'Grasa', value: Math.round(calGrasa) },
+      ],
+      prefix: '',
+      centerValue: `${fmt.format(totalR)} kcal`,
+      centerLabel: 'total',
+      ariaLabel: `Reparto calórico por macronutriente: proteína ${Math.round(calProt)} kcal, carbohidratos ${Math.round(calCarbs)} kcal, grasa ${Math.round(calGrasa)} kcal`,
+    },
   };
 }

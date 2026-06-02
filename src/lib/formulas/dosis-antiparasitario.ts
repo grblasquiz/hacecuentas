@@ -8,6 +8,7 @@ export interface Outputs {
   frecuenciaMeses: string;
   advertencia: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function dosisAntiparasitario(i: Inputs): Outputs {
@@ -55,11 +56,38 @@ export function dosisAntiparasitario(i: Inputs): Outputs {
   const frecuencia = 'Cada 30 días (pipetas estándar). Comprimidos como Bravecto: cada 12 semanas.';
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
+  const especieLabel = tipo === 'gato' ? 'Gato' : 'Perro';
+  const necesitaVet = rango.includes('veterinario');
+
+  let _insight: any;
+  if (tipo === 'gato') {
+    _insight = {
+      title: 'Solo producto felino',
+      text: `Para tu gato de **${fmt.format(peso)} kg** corresponde la **${rango.replace(' — consultá con tu veterinario', '')}**. Ojo: la **permetrina de los antiparasitarios de perro es mortal para gatos**, comprá únicamente la versión para felinos.`,
+      tone: 'warn',
+      icon: '🐱',
+    };
+  } else if (necesitaVet) {
+    _insight = {
+      title: 'Caso fuera de rango estándar',
+      text: `Tu perro de **${fmt.format(peso)} kg** queda en un extremo (${rango}). En estos casos **no conviene dividir ni combinar pipetas a ojo**: que el veterinario defina la presentación exacta.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: 'Pipeta que te corresponde',
+      text: `Por sus **${fmt.format(peso)} kg**, tu perro entra en la pipeta **${rango}**. Aplicala **cada 30 días** sin cortar la dosis; si está justo en el límite, elegí el talle superior.`,
+      tone: 'good',
+      icon: '🐶',
+    };
+  }
 
   return {
     rangoPipeta: rango,
     frecuenciaMeses: frecuencia,
     advertencia,
-    detalle: `${tipo === 'gato' ? 'Gato' : 'Perro'} de ${fmt.format(peso)} kg → pipeta rango: ${rango}. ${frecuencia}`,
+    detalle: `${especieLabel} de ${fmt.format(peso)} kg → pipeta rango: ${rango}. ${frecuencia}`,
+    _insight,
   };
 }

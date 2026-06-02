@@ -15,6 +15,8 @@ export interface Outputs {
   cumpleEdad: boolean;
   cumpleAportes: boolean;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function edadJubilacionAnosAporte(i: Inputs): Outputs {
@@ -53,6 +55,35 @@ export function edadJubilacionAnosAporte(i: Inputs): Outputs {
     faltaResumen = `Te faltan ${anosFaltaEdad.toFixed(1)} años de edad y ${anosFaltaAporte.toFixed(1)} años de aportes.`;
   }
 
+  const aportesRedondeados = Number(aportesActuales.toFixed(1));
+  const _insight = {
+    title: 'Tu camino a la jubilación',
+    text: cumpleEdad && cumpleAportes
+      ? `Ya cumplís los **${edadMinima} años** de edad y los **30 años** de aportes: podés iniciar el trámite en ANSES ahora mismo.`
+      : (cumpleEdad
+          ? `Tenés la edad (**${edad}** ≥ **${edadMinima}**) pero te faltan **${anosFaltaAporte.toFixed(1)} años** de aportes para llegar a los 30. La Moratoria Previsional puede cubrir ese hueco; sin ella, recién accederías cerca de **${anoJubilacion}**.`
+          : (cumpleAportes
+              ? `Ya tenés los **30 años** de aportes, pero te faltan **${anosFaltaEdad.toFixed(1)} años** de edad: podrías jubilarte alrededor de **${anoJubilacion}**.`
+              : `Te faltan **${anosFaltaEdad.toFixed(1)} años** de edad y **${anosFaltaAporte.toFixed(1)} años** de aportes. Cumpliendo ambos, te jubilarías aproximadamente en **${anoJubilacion}**.`)),
+    tone: (cumpleEdad && cumpleAportes ? 'good' : 'warn') as 'good' | 'warn',
+    icon: '👵',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: aportesRedondeados,
+    markerLabel: `${aportesRedondeados} años aportados`,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Inicial', max: 10, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Medio', max: 20, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Casi', max: 30, color: '#fef9c3', colorDark: '#854d0e' },
+      { nombre: 'Completo', max: Math.max(35, Math.ceil(aportesActuales) + 2), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: `Escala de avance de aportes jubilatorios: ${aportesRedondeados} de 30 años requeridos.`,
+  };
+
   return {
     edadMinima,
     aportesRequeridos,
@@ -63,5 +94,7 @@ export function edadJubilacionAnosAporte(i: Inputs): Outputs {
     cumpleEdad,
     cumpleAportes,
     resumen: `Podés jubilarte aproximadamente en ${anoJubilacion}. ${faltaResumen}`,
+    _insight,
+    _chart,
   };
 }

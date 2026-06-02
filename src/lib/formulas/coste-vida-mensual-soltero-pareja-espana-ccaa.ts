@@ -21,6 +21,8 @@ export interface Outputs {
   otros: number;
   salario_neto_recomendado: number;
   resumen_texto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -281,6 +283,45 @@ export function compute(i: Inputs): Outputs {
     `del que ${formatEur(alquiler)} corresponden al alquiler/vivienda. ` +
     `Para ahorrar un mínimo del 20% se recomienda un salario neto de ${formatEur(salario_neto_recomendado)}/mes.`;
 
+  // ---------------------------------------------------------------------------
+  // 11. INSIGHT + GRÁFICO
+  // ---------------------------------------------------------------------------
+  const pctAlquiler = total_mensual > 0 ? Math.round((alquiler / total_mensual) * 100) : 0;
+  // El alquiler "sano" no debería superar ~35% del gasto total del hogar.
+  const insightTone = pctAlquiler >= 40 ? 'warn' : pctAlquiler <= 28 ? 'good' : 'neutral';
+  const insightText =
+    `La vivienda se lleva el **${pctAlquiler}%** de los ${formatEur(total_mensual)} mensuales. ` +
+    (pctAlquiler >= 40
+      ? `Es un peso alto: por encima del 35% recomendado, te deja poco margen para ahorro o imprevistos.`
+      : pctAlquiler <= 28
+        ? `Es un reparto holgado: el alquiler queda bien por debajo del 35% recomendado y libera margen para ahorrar.`
+        : `Está dentro del rango razonable (alquiler por debajo del 35% del gasto). Con **${formatEur(salario_neto_recomendado)}** netos llegás a ahorrar el 20%.`);
+
+  const _insight = {
+    title: 'Peso de la vivienda en tu presupuesto',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏠',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Alquiler / vivienda', value: alquiler },
+      { label: 'Alimentación', value: alimentacion },
+      { label: 'Transporte', value: transporte },
+      { label: 'Suministros', value: suministros },
+      { label: 'Ocio y cultura', value: ocio_cultura },
+      { label: 'Ropa y hogar', value: ropa_hogar },
+      { label: 'Salud', value: salud },
+      { label: 'Otros', value: otros },
+    ],
+    prefix: '€',
+    centerValue: formatEur(total_mensual),
+    centerLabel: 'Gasto mensual',
+    ariaLabel: `Reparto del gasto mensual de ${formatEur(total_mensual)} entre vivienda, alimentación, transporte, suministros, ocio, ropa, salud y otros`,
+  };
+
   return {
     total_mensual,
     alquiler,
@@ -293,5 +334,7 @@ export function compute(i: Inputs): Outputs {
     otros,
     salario_neto_recomendado,
     resumen_texto,
+    _insight,
+    _chart,
   };
 }

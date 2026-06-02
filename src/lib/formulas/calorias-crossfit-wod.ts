@@ -13,6 +13,7 @@ export interface Outputs {
   duracionMin: number;
   wodMostrado: string;
   resumen: string;
+  _insight?: any;
 }
 
 // MET 10.5-13.0 (Compendium)
@@ -52,5 +53,11 @@ export function caloriasCrossfitWod(i: Inputs): Outputs {
     duracionMin: min,
     wodMostrado: `${info.nombre} — ${info.desc}`,
     resumen: `**${info.nombre}** (${min} min, MET ${met.toFixed(1)}) quema **${Math.round(total)} kcal** para un atleta de ${peso} kg.`,
+    _insight: {
+      title: `WOD ${info.nombre}`,
+      text: `${info.desc}. A MET ${met.toFixed(1)} quemás **${Math.round(total)} kcal** en **${min} min** (${kcalMin.toFixed(1)} kcal/min). Los benchmarks cortos como este son de los entrenamientos más intensos por minuto.`,
+      tone: 'good',
+      icon: '🏋️',
+    },
   };
 }

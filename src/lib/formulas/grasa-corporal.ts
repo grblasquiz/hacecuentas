@@ -37,6 +37,8 @@ export function grasaCorporal(i: Inputs): Outputs {
       segPromedio: 'Promedio',
       segObesidad: 'Obesidad',
       ariaLabel: 'Escala de porcentaje de grasa corporal por categorías (US Navy)',
+      insTitle: 'Tu grasa corporal',
+      insText: (p: string, c: string) => `Con **${p}%** de grasa corporal, el método US Navy te ubica en la categoría **${c}**.`,
     },
     en: {
       errAltura: 'Enter height',
@@ -56,6 +58,8 @@ export function grasaCorporal(i: Inputs): Outputs {
       segPromedio: 'Average',
       segObesidad: 'Obesity',
       ariaLabel: 'Body fat percentage scale by category (US Navy)',
+      insTitle: 'Your body fat',
+      insText: (p: string, c: string) => `At **${p}%** body fat, the US Navy method places you in the **${c}** category.`,
     },
   } as const)[__lang];
 
@@ -122,11 +126,22 @@ export function grasaCorporal(i: Inputs): Outputs {
     ariaLabel: T.ariaLabel,
   };
 
+  const insTone = (categoria === T.catEsencialMuy || categoria === T.catObesidad)
+    ? 'warn'
+    : ((categoria === T.catAtletica || categoria === T.catFitness) ? 'good' : 'neutral');
+  const _insight = {
+    title: T.insTitle,
+    text: T.insText(pg.toFixed(1), categoria),
+    tone: insTone,
+    icon: '📐',
+  };
+
   return {
     porcentajeGrasa: pg,
     categoria,
     masaGrasa: 0, // se setea luego si hay peso
     masaMagra: 0,
     _chart: chart,
+    _insight,
   };
 }

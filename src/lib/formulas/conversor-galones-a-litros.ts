@@ -1,6 +1,6 @@
 /** Conversor: galón ↔ litro */
 export interface Inputs { valor: number | string; direccion?: string; ingrediente?: string; }
-export interface Outputs { resultado: string; resumen: string; }
+export interface Outputs { resultado: string; resumen: string; _insight?: any; }
 
 export function conversorGalonesALitros(i: Inputs): Outputs {
   const v = Number(i.valor);
@@ -16,8 +16,18 @@ export function conversorGalonesALitros(i: Inputs): Outputs {
     r = v / factor;
     fromLabel = 'litros'; toLabel = 'galones';
   }
+  // Litros de referencia (ida da litros; en vuelta el input ya está en litros)
+  const litros = d === 'ida' ? r : v;
+  const tanques = litros / 50; // tanque típico de auto ≈ 50 L
+  const insight = {
+    title: 'Para que te des una idea',
+    text: '**' + litros.toFixed(1) + ' litros** equivalen a unos **' + tanques.toFixed(1) + ' tanques** de auto (≈50 L c/u). Ojo: acá usamos el galón estadounidense (1 gal = 3,785 L); el galón imperial británico son 4,546 L.',
+    tone: 'neutral',
+    icon: '⛽'
+  };
   return {
     resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'L'.toString(),
-    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.'
+    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
+    _insight: insight
   };
 }

@@ -14,6 +14,7 @@ export interface Outputs {
   costoPorLavadoLavanderia: number;
   ahorroMensual: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function costoLavadoRopaLavadoraVsLavanderia(i: Inputs): Outputs {
@@ -55,5 +56,11 @@ export function costoLavadoRopaLavadoraVsLavanderia(i: Inputs): Outputs {
     costoPorLavadoLavanderia: Math.round(costoLavanderiaPorLavado),
     ahorroMensual: Math.round(ahorro),
     detalle: `${fmt.format(lavadosMes)} lavados/mes de ${kgLavado} kg: en casa $${fmt.format(costoCasaMes)}/mes (operativo $${fmt.format(costoOperativoPorLavado)} + amortización $${fmt.format(amortizacionPorLavado)} por lavado) vs lavandería $${fmt.format(costoLavanderiaMes)}/mes. Lavar en ${masBarato} ahorra $${fmt.format(ahorro)}/mes.`,
+    _insight: {
+      title: masBarato === 'casa' ? 'Te conviene lavar en casa' : 'Te conviene la lavandería',
+      text: `Lavar en **${masBarato}** te ahorra **$${fmt.format(ahorro)}/mes** (en casa $${fmt.format(costoCasaMes)} vs lavandería $${fmt.format(costoLavanderiaMes)}). En el año son **$${fmt.format(ahorro * 12)}** de diferencia.`,
+      tone: masBarato === 'casa' ? 'good' : 'warn',
+      icon: '🧺',
+    },
   };
 }

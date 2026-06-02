@@ -14,6 +14,7 @@ export interface FeriadosArgentina2026Outputs {
   diasHastaProximo: number;
   listaFeriados: string;
   explicacion: string;
+  _insight?: any;
 }
 
 interface Feriado {
@@ -131,6 +132,29 @@ export function feriadosArgentina2026(inputs: FeriadosArgentina2026Inputs): Feri
     explicacion = `Argentina tiene ${FERIADOS_2026.length} feriados nacionales en 2026. Quedan ${feriadosRestantes} por disfrutar.`;
   }
 
+  // Insight
+  let _insight: FeriadosArgentina2026Outputs['_insight'];
+  if (futuros.length === 0) {
+    _insight = {
+      title: 'No quedan feriados',
+      text: `Ya pasaron los **${FERIADOS_2026.length}** feriados nacionales de 2026. El próximo descanso largo recién llega con el calendario del año siguiente.`,
+      tone: 'neutral',
+      icon: '📅',
+    };
+  } else {
+    const prox = futuros[0];
+    const nombreProx = prox.nombre;
+    const cercano = diasHastaProximo <= 14;
+    _insight = {
+      title: cercano ? '¡Feriado a la vuelta!' : 'Próximo feriado',
+      text: diasHastaProximo === 0
+        ? `Hoy es feriado: **${nombreProx}**. Todavía quedan **${feriadosRestantes - 1}** feriados más en lo que resta de 2026.`
+        : `Faltan **${diasHastaProximo} días** para el próximo feriado (**${nombreProx}**). En total te quedan **${feriadosRestantes}** feriados por disfrutar este año.`,
+      tone: cercano ? 'good' : 'neutral',
+      icon: cercano ? '🎉' : '📅',
+    };
+  }
+
   return {
     totalFeriados: filtrados.length,
     feriadosRestantes,
@@ -138,5 +162,6 @@ export function feriadosArgentina2026(inputs: FeriadosArgentina2026Inputs): Feri
     diasHastaProximo,
     listaFeriados: lista || 'No hay feriados con ese filtro.',
     explicacion,
+    _insight,
   };
 }

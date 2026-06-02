@@ -12,6 +12,7 @@ export interface Outputs {
   valido_para: string;
   alternativa: string;
   advertencia: string;
+  _insight?: any;
 }
 
 // Costos de referencia 2026 (USD)
@@ -175,6 +176,20 @@ export function compute(i: Inputs): Outputs {
 
   const costoUsd = info.costo_usd;
   const costoArs = costoUsd * tipoCambio;
+  const sobra = presupuesto - costoUsd;
+
+  const arsFmt = Math.round(costoArs).toLocaleString("es-AR");
+  const insightText =
+    sobra >= 0
+      ? `Con tu presupuesto te alcanza para el **${info.nombre}** (USD ${costoUsd} ≈ $${arsFmt}) y te sobran **USD ${sobra}** para clases o un segundo intento.`
+      : `El **${info.nombre}** cuesta USD ${costoUsd} (≈ $${arsFmt}) y tu presupuesto se queda corto por **USD ${Math.abs(sobra)}**: es la mejor opción para tu objetivo, pero tendrás que estirar el presupuesto.`;
+
+  const _insight = {
+    title: sobra >= 0 ? "Examen recomendado" : "Ajustá el presupuesto",
+    text: insightText,
+    tone: sobra >= 0 ? "good" : "warn",
+    icon: sobra >= 0 ? "🎓" : "💸",
+  };
 
   return {
     examen_recomendado: info.nombre,
@@ -183,5 +198,6 @@ export function compute(i: Inputs): Outputs {
     valido_para: info.valido_para,
     alternativa,
     advertencia: info.advertencia,
+    _insight,
   };
 }

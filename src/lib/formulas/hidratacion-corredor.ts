@@ -5,6 +5,7 @@ export interface Outputs {
   aguaPorHoraMl: number;
   sodioMg: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function hidratacionCorredor(i: Inputs): Outputs {
@@ -52,10 +53,23 @@ export function hidratacionCorredor(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const sudaAlto = aguaPorHora >= 1000;
+  const tiradaLarga = tiempoH >= 1;
+  const tone = (sudaAlto || (tiradaLarga && temp >= 25)) ? 'warn' : 'good';
+  const _insight = {
+    title: 'Plan de hidratación en carrera',
+    text: tiradaLarga
+      ? `Vas a perder ~**${fmt.format(aguaPorHora)} ml/h** de sudor durante ~${Math.floor(tiempoH)}h ${Math.round((tiempoH % 1) * 60)}min. No esperes a tener sed: tomá **150-250 ml cada 15-20 min**${sudaAlto || temp >= 25 ? ` y reponé los **${fmt.format(sodio)} mg de sodio** con sales o bebida isotónica para no descompensarte` : ''}.`
+      : `Para una salida corta de ~${Math.round(tiempoMin)} min con ~**${fmt.format(aguaPorHora)} ml/h** de sudoración, te alcanza con **${fmt.format(aguaTotal)} ml** de agua; los electrolitos no son críticos en tiradas tan breves.`,
+    tone,
+    icon: '🏃',
+  };
+
   return {
     aguaTotalMl: aguaTotal,
     aguaPorHoraMl: aguaPorHora,
     sodioMg: sodio,
     detalle: `Para ${fmt.format(dist)} km a ${ritmo} min/km con ${temp}°C, necesitás ~${fmt.format(aguaTotal)} ml de agua (${fmt.format(aguaPorHora)} ml/h) y ~${fmt.format(sodio)} mg de sodio. Tiempo estimado: ${Math.floor(tiempoH)}h ${Math.round((tiempoH % 1) * 60)}min.`,
+    _insight,
   };
 }

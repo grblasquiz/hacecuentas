@@ -16,6 +16,8 @@ export interface Outputs {
   saldoRemanescente: string;
   mesSaque: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface Faixa {
@@ -56,6 +58,26 @@ export function fgtsSaqueAniversario(i: Inputs): Outputs {
   const saldoRemanescente = saldo - valorSaque;
   const mesIdx = Math.min(12, Math.max(1, Math.round(mes))) - 1;
 
+  const pctSaque = saldo > 0 ? (valorSaque / saldo) * 100 : 0;
+  const _insight = {
+    title: `Você libera ${pctSaque.toFixed(0)}% do saldo`,
+    text: `No saque-aniversário você retira **${brl(valorSaque)}** em ${MESES[mesIdx]} e **${brl(saldoRemanescente)}** ficam bloqueados no FGTS. Lembre: ao aderir, você abre mão da multa de 40% numa demissão sem justa causa.`,
+    tone: 'warn',
+    icon: '🎂',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Você saca', value: Number(valorSaque.toFixed(2)) },
+      { label: 'Fica bloqueado', value: Number(saldoRemanescente.toFixed(2)) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(saldo),
+    centerLabel: 'Saldo total',
+    ariaLabel: `Do saldo de ${brl(saldo)}, você saca ${brl(valorSaque)} e ${brl(saldoRemanescente)} ficam bloqueados.`,
+  };
+
   return {
     valorSaque: brl(valorSaque),
     aliquotaFaixa: (faixa.aliquota * 100).toFixed(0) + '%',
@@ -63,5 +85,7 @@ export function fgtsSaqueAniversario(i: Inputs): Outputs {
     saldoRemanescente: brl(saldoRemanescente),
     mesSaque: MESES[mesIdx],
     resumen: `Com saldo de ${brl(saldo)} você pode sacar ${brl(valorSaque)} em ${MESES[mesIdx]} (${(faixa.aliquota * 100).toFixed(0)}% + parcela adicional de ${brl(faixa.adicional)}).`,
+    _insight,
+    _chart,
   };
 }

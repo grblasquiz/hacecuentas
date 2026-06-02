@@ -12,6 +12,8 @@ export interface EdadGatoHumanoOutputs {
   edadHumana: number;
   etapaVida: string;
   esperanzaVida: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function edadGatoHumano(inputs: EdadGatoHumanoInputs): EdadGatoHumanoOutputs {
@@ -46,9 +48,35 @@ export function edadGatoHumano(inputs: EdadGatoHumanoInputs): EdadGatoHumanoOutp
     mixto: '8-14 años',
   };
 
+  const tono = edadGato >= 14 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Edad de tu gato',
+    text: `Con **${edadGato} ${edadGato === 1 ? 'año' : 'años'}** felinos, tu gato equivale a unos **${edadHumana} años humanos** y está en etapa **${etapaVida}**.${edadGato >= 14 ? ' Es un gato geriátrico: conviene controles veterinarios más seguidos.' : edadGato >= 10 ? ' Ya es senior: chequeos anuales y atención a peso y riñón.' : ''}`,
+    tone: tono,
+    icon: '🐈',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: edadGato,
+    markerLabel: `${edadGato} ${edadGato === 1 ? 'año' : 'años'}`,
+    min: 0,
+    segments: [
+      { nombre: 'Gatito', max: 0.5, color: '#bfdbfe', colorDark: '#1e3a8a' },
+      { nombre: 'Junior', max: 2, color: '#86efac', colorDark: '#166534' },
+      { nombre: 'Adulto', max: 6, color: '#a7f3d0', colorDark: '#065f46' },
+      { nombre: 'Adulto maduro', max: 10, color: '#fde68a', colorDark: '#854d0e' },
+      { nombre: 'Senior', max: 14, color: '#fdba74', colorDark: '#9a3412' },
+      { nombre: 'Geriátrico', max: Math.max(20, edadGato + 1), color: '#fca5a5', colorDark: '#991b1b' },
+    ],
+    ariaLabel: `Etapa de vida del gato: ${edadGato} años felinos, etapa ${etapaVida}.`,
+  };
+
   return {
     edadHumana,
     etapaVida,
     esperanzaVida: `${esperanza[tipoVida] || '12-18 años'} (gato de ${tipoVida === 'interior' ? 'interior' : tipoVida === 'exterior' ? 'exterior' : 'vida mixta'})`,
+    _insight,
+    _chart,
   };
 }

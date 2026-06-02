@@ -15,6 +15,8 @@ export interface CuentaRegresivaFechaOutputs {
   finesDeSemana: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cuentaRegresivaFecha(inputs: CuentaRegresivaFechaInputs): CuentaRegresivaFechaOutputs {
@@ -73,6 +75,45 @@ export function cuentaRegresivaFecha(inputs: CuentaRegresivaFechaInputs): Cuenta
     ? `${fechaFmt} → hoy = ${diasAbs} días transcurridos`
     : `hoy → ${fechaFmt} = ${diasAbs} días restantes`;
 
+  const etiqueta = inputs.nombre ? inputs.nombre : "esta fecha";
+  let _insight: any;
+  if (diasTotales === 0) {
+    _insight = {
+      title: "Es hoy",
+      text: `**${etiqueta.charAt(0).toUpperCase() + etiqueta.slice(1)}** cae **hoy** (${fechaFmt}). La cuenta regresiva llegó a cero.`,
+      tone: "good",
+      icon: "🎯",
+    };
+  } else if (esPasado) {
+    _insight = {
+      title: "Fecha ya pasada",
+      text: `Ya pasaron **${diasAbs} días** desde ${fechaFmt} — unas **${semanas} semanas**. De esos días, **${laborables}** fueron laborables y **${finDeSemana}** de fin de semana.`,
+      tone: "neutral",
+      icon: "🗓️",
+    };
+  } else {
+    _insight = {
+      title: "Cuenta regresiva",
+      text: `Faltan **${diasAbs} días** para ${fechaFmt} — unas **${semanas} semanas**. Vas a vivir **${laborables} días laborables** y **${finDeSemana} días de fin de semana** hasta entonces.`,
+      tone: "neutral",
+      icon: "⏳",
+    };
+  }
+
+  let _chart: any = undefined;
+  if (diasAbs > 0) {
+    _chart = {
+      type: "doughnut",
+      slices: [
+        { label: "Laborables", value: laborables },
+        { label: "Fin de semana", value: finDeSemana },
+      ],
+      centerValue: String(diasAbs),
+      centerLabel: diasAbs === 1 ? "día" : "días",
+      ariaLabel: `Reparto de los ${diasAbs} días entre ${laborables} laborables y ${finDeSemana} de fin de semana.`,
+    };
+  }
+
   return {
     diasFaltan: diasTotales,
     semanasRestan: esPasado ? -semanas : semanas,
@@ -81,5 +122,7 @@ export function cuentaRegresivaFecha(inputs: CuentaRegresivaFechaInputs): Cuenta
     finesDeSemana: esPasado ? -finDeSemana : finDeSemana,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

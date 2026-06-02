@@ -22,6 +22,8 @@ export interface Outputs {
   requisitos: string;
   beneficios_especiales: string;
   tabla_amortizacion_resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -254,18 +256,45 @@ export function compute(i: Inputs): Outputs {
     tabla += `... (${meses_postgrado - 12} cuotas más) ...\n`;
   }
   
-  return {
+  const capitalR = Math.round(i.monto_credito);
+  const interesR = Math.round(interes_total);
+  const costoTotalR = Math.round(costo_total_credito);
+  const ahorroR = Math.round(ahorro_vs_banco);
+  const fmtCOP = (x: number) => '$' + Math.round(x).toLocaleString('es-CO');
+  const esBanco = i.tipo_credito.includes('banco') || i.tipo_credito === 'sufi';
+  const _insight = {
+    title: 'Cuánto te cuesta el crédito',
+    text: `Con una tasa de **${tasa_anual}% anual**, pagás **${fmtCOP(interesR)}** de intereses sobre **${fmtCOP(capitalR)}** prestados: un costo total de **${fmtCOP(costoTotalR)}**.` +
+      (!esBanco && ahorroR > 0 ? ` Frente a un banco tradicional ahorrás cerca de **${fmtCOP(ahorroR)}**.` : ''),
+    tone: esBanco ? 'warn' : 'good',
+    icon: '🎓',
+  };
+  const _chart = interesR > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital prestado', value: capitalR },
+      { label: 'Intereses', value: interesR },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(costoTotalR),
+    centerLabel: 'Costo total',
+    ariaLabel: `Costo total del crédito ${fmtCOP(costoTotalR)}: ${fmtCOP(capitalR)} de capital e ${fmtCOP(interesR)} de intereses`,
+  } : undefined;
+  const out: Outputs = {
     tasa_aplicada: tasa_anual,
     cuota_mensual_estudio: Math.round(cuota_mensual_estudio),
     pago_total_estudio: Math.round(pago_total_estudio),
     capital_acumulado_estudio: Math.round(capital_acumulado_estudio),
     cuota_mensual_postgrado: Math.round(cuota_mensual_postgrado),
     pago_total_postgrado: Math.round(pago_total_postgrado),
-    interes_total: Math.round(interes_total),
-    costo_total_credito: Math.round(costo_total_credito),
-    ahorro_vs_banco: Math.round(ahorro_vs_banco),
+    interes_total: interesR,
+    costo_total_credito: costoTotalR,
+    ahorro_vs_banco: ahorroR,
     requisitos: requisitos,
     beneficios_especiales: beneficios_especiales,
-    tabla_amortizacion_resumen: tabla
+    tabla_amortizacion_resumen: tabla,
+    _insight
   };
+  if (_chart) out._chart = _chart;
+  return out;
 }

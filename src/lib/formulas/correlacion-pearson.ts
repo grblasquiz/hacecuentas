@@ -1,6 +1,6 @@
 /** Calculadora Correlación de Pearson */
 export interface Inputs { datosX: string; datosY: string; }
-export interface Outputs { r: number; r2: number; interpretacion: string; n: number; }
+export interface Outputs { r: number; r2: number; interpretacion: string; n: number; _insight?: any; _chart?: any; }
 
 export function correlacionPearson(i: Inputs): Outputs {
   const X = String(i.datosX).split(/[,;\s]+/).map(s => s.trim()).filter(s => s !== '').map(Number).filter(n => !isNaN(n));
@@ -36,10 +36,39 @@ export function correlacionPearson(i: Inputs): Outputs {
   else if (ar < 0.9) interp = `Correlación ${dir} fuerte`;
   else interp = `Correlación ${dir} muy fuerte`;
 
+  const rR = Number(r.toFixed(4));
+  const pctExpl = (r2 * 100).toFixed(1);
+  const fuerte = ar >= 0.7;
+  const _insight = {
+    title: ar < 0.1 ? 'Sin relación lineal' : `Correlación ${dir} ${fuerte ? 'fuerte' : ar >= 0.5 ? 'moderada' : 'débil'}`,
+    text: ar < 0.1
+      ? `Con **${n}** pares, r = **${rR}**: prácticamente no hay relación lineal entre X e Y. Saber X casi no te dice nada de Y.`
+      : `Con **${n}** pares de datos, r = **${rR}** (${interp.toLowerCase()}). X explica el **${pctExpl}%** de la variabilidad de Y (R² = ${(r2 * 100).toFixed(2)}%); cuando X ${r >= 0 ? 'sube, Y tiende a subir' : 'sube, Y tiende a bajar'}.`,
+    tone: fuerte ? 'good' : 'neutral',
+    icon: '📈',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: rR,
+    markerLabel: 'r = ' + rR.toFixed(2),
+    min: -1,
+    segments: [
+      { nombre: 'Negativa fuerte', max: -0.5, color: '#3b82f6', colorDark: '#2563eb' },
+      { nombre: 'Negativa débil', max: -0.1, color: '#93c5fd', colorDark: '#60a5fa' },
+      { nombre: 'Sin relación', max: 0.1, color: '#9ca3af', colorDark: '#6b7280' },
+      { nombre: 'Positiva débil', max: 0.5, color: '#86efac', colorDark: '#4ade80' },
+      { nombre: 'Positiva fuerte', max: 1, color: '#22c55e', colorDark: '#16a34a' },
+    ],
+    ariaLabel: `Coeficiente de Pearson r = ${rR.toFixed(2)} en una escala de -1 a 1; cerca de 0 no hay relación lineal y cerca de ±1 la relación es muy fuerte.`,
+  };
+
   return {
     r: Number(r.toFixed(6)),
     r2: Number(r2.toFixed(6)),
     interpretacion: `${interp}. R² = ${(r2 * 100).toFixed(2)}% (X explica ${(r2 * 100).toFixed(1)}% de la variabilidad de Y).`,
     n,
+    _insight,
+    _chart,
   };
 }

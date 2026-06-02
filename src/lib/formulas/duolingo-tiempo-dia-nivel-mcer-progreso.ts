@@ -7,5 +7,16 @@ export function duolingoTiempoDiaNivelMcerProgreso(i: Inputs): Outputs {
   const resumenStr = __lang === 'en'
     ? `Calculation: ${v1} / ${v2} = ${r.toFixed(2)}.`
     : `Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`;
-  return { resultado:r.toFixed(2), resumen:resumenStr };
+
+  const rTxt = r.toFixed(2);
+  const _insight = {
+    title: __lang === 'en' ? 'Your result' : 'Tu resultado',
+    text: __lang === 'en'
+      ? `Dividing **${v1}** by **${v2}** gives **${rTxt}**.`
+      : `Al dividir **${v1}** entre **${v2}** obtenés **${rTxt}**.`,
+    tone: 'neutral' as const,
+    icon: '🦉',
+  };
+
+  return { resultado:r.toFixed(2), resumen:resumenStr, _insight };
 }

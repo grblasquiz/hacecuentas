@@ -17,6 +17,7 @@ export interface IpvaMgOutputs {
   parcela: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 const ALIQUOTAS_MG: Record<string, number> = {
@@ -43,6 +44,16 @@ export function ipvaMinasGerais(inputs: IpvaMgInputs): IpvaMgOutputs {
   const formula = `IPVA MG = R$ ${valorFipe.toLocaleString('pt-BR')} × ${aliquota}% = R$ ${ipvaAnual.toFixed(2)}`;
   const explicacion = `Para veículo tipo ${tipo} com valor FIPE R$ ${valorFipe.toLocaleString('pt-BR')}, alíquota MG é ${aliquota}% (Lei 14.937/2003). IPVA: R$ ${ipvaAnual.toFixed(2)}. Pagamento único com desconto 3%: R$ ${valorComDesconto.toFixed(2)}. Parcelado em 3x de R$ ${parcela.toFixed(2)}.`;
 
+  const brl = (n: number) =>
+    'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const economia = ipvaAnual - valorComDesconto;
+  const _insight = {
+    title: 'Seu IPVA em Minas Gerais',
+    text: `Com valor FIPE de **${brl(valorFipe)}** e alíquota de **${aliquota}%**, o IPVA é **${brl(ipvaAnual)}**. À vista você paga **${brl(valorComDesconto)}** e economiza **${brl(economia)}** com os 3% de desconto; parcelado fica em **3x de ${brl(parcela)}**.`,
+    tone: 'neutral',
+    icon: '🚗',
+  };
+
   return {
     aliquota: `${aliquota}%`,
     ipvaAnual: Math.round(ipvaAnual * 100) / 100,
@@ -50,5 +61,6 @@ export function ipvaMinasGerais(inputs: IpvaMgInputs): IpvaMgOutputs {
     parcela: Math.round(parcela * 100) / 100,
     formula,
     explicacion,
+    _insight,
   };
 }

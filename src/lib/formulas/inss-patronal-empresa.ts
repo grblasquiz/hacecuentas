@@ -18,6 +18,8 @@ export interface Outputs {
   percentualTotalFolha: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -39,6 +41,26 @@ export function inssPatronalEmpresa(i: Inputs): Outputs {
   const formula = `20% + ${(aliqRat * 100).toFixed(0)}% (RAT) + ${pTerc.toFixed(1)}% (terceiros) = ${pctTotal.toFixed(1)}% × ${fmtBRL(folha)}`;
   const explicacao = `INSS patronal é a contribuição previdenciária devida pela empresa: 20% sobre o total da folha de pagamento + RAT/SAT (1%, 2% ou 3% conforme grau de risco da atividade — baixo/médio/alto) + contribuição para Terceiros (Sistema S, INCRA, SEBRAE) que varia de 2,5% a 5,8%. Empresas optantes pelo Simples Nacional recolhem via DAS (não se aplica essa regra). Recolhimento via GPS até o dia 20 do mês seguinte.`;
 
+  const _insight = {
+    title: 'Quanto a folha custa a mais para a empresa',
+    text: `Sobre uma folha de ${fmtBRL(folha)}, os encargos patronais somam **${fmtBRL(total)}/mês** — ou seja, cada real de salário custa **${pctTotal.toFixed(1)}%** extra à empresa. A parcela do INSS (20%) é a mais pesada: ${fmtBRL(inss)}.`,
+    tone: 'warn',
+    icon: '🏢',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'INSS patronal (20%)', value: Math.round(inss * 100) / 100 },
+      { label: `RAT (${(aliqRat * 100).toFixed(0)}%)`, value: Math.round(rat * 100) / 100 },
+      { label: `Terceiros (${pTerc.toFixed(1)}%)`, value: Math.round(terceiros * 100) / 100 },
+    ],
+    prefix: 'R$ ',
+    centerValue: fmtBRL(total),
+    centerLabel: 'Encargos/mês',
+    ariaLabel: `Composição dos encargos patronais sobre a folha: INSS ${fmtBRL(inss)}, RAT ${fmtBRL(rat)}, Terceiros ${fmtBRL(terceiros)}.`,
+  };
+
   return {
     inssPatronal: fmtBRL(inss),
     rat: `${fmtBRL(rat)} (${(aliqRat * 100).toFixed(0)}%)`,
@@ -47,5 +69,7 @@ export function inssPatronalEmpresa(i: Inputs): Outputs {
     percentualTotalFolha: pctTotal.toFixed(2) + '%',
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

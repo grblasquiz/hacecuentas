@@ -38,6 +38,7 @@ export interface IndemnizacionOutputs {
   baseArt245: number;
   vizzotiAplicado: boolean;
   _chart?: any;
+  _insight?: any;
 }
 
 export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs {
@@ -56,6 +57,12 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
       anioSingular: 'año',
       anioPlural: 'años',
       aniosComputables: (n: number) => `${n} ${n === 1 ? 'año' : 'años'} computables`,
+      insTitle: 'Liquidación final',
+      insTitleVizzoti: 'Tope aplicado (Vizzoti)',
+      insText: (totalFmt: string, antFmt: string, n: number, sueldosTotal: string) =>
+        `Tu liquidación por despido suma **${totalFmt}** (≈ **${sueldosTotal} sueldos**), donde la antigüedad (**${antFmt}**) es el componente principal. Se computan **${n}** ${n === 1 ? 'año' : 'años'}: la fracción mayor a 3 meses suma un año entero.`,
+      insTextVizzoti: (totalFmt: string, baseFmt: string) =>
+        `El tope de convenio reducía la base más del 33%, así que por el fallo **Vizzoti** se tomó el **67% de tu sueldo** (**${baseFmt}**) para el Art. 245. Total estimado: **${totalFmt}**.`,
     },
     en: {
       errSueldo: 'Enter the gross monthly salary',
@@ -70,6 +77,12 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
       anioSingular: 'year',
       anioPlural: 'years',
       aniosComputables: (n: number) => `${n} ${n === 1 ? 'year' : 'years'} computed`,
+      insTitle: 'Final settlement',
+      insTitleVizzoti: 'Cap applied (Vizzoti)',
+      insText: (totalFmt: string, antFmt: string, n: number, sueldosTotal: string) =>
+        `Your dismissal severance totals **${totalFmt}** (≈ **${sueldosTotal} salaries**), with seniority pay (**${antFmt}**) as the main component. **${n}** ${n === 1 ? 'year' : 'years'} are counted: any fraction over 3 months adds a full year.`,
+      insTextVizzoti: (totalFmt: string, baseFmt: string) =>
+        `The collective-agreement cap cut the base by more than 33%, so under the **Vizzoti** ruling **67% of your salary** (**${baseFmt}**) was used for Art. 245. Estimated total: **${totalFmt}**.`,
     },
   } as const)[__lang];
 
@@ -153,6 +166,24 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
     vacacionesProporcionales +
     sacVacaciones;
 
+  const locale = __lang === 'en' ? 'en-US' : 'es-AR';
+  const totalFmt = '$' + Math.round(total).toLocaleString(locale);
+  const antFmt = '$' + Math.round(antiguedad).toLocaleString(locale);
+  const sueldosTotal = (total / sueldo).toFixed(1);
+  const insight = vizzotiAplicado
+    ? {
+        title: T.insTitleVizzoti,
+        text: T.insTextVizzoti(totalFmt, '$' + Math.round(baseArt245).toLocaleString(locale)),
+        tone: 'warn',
+        icon: '⚖️',
+      }
+    : {
+        title: T.insTitle,
+        text: T.insText(totalFmt, antFmt, aniosComputables, sueldosTotal),
+        tone: 'neutral',
+        icon: '💼',
+      };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -182,5 +213,6 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
     baseArt245: Math.round(baseArt245),
     vizzotiAplicado,
     _chart: chart,
+    _insight: insight,
   };
 }

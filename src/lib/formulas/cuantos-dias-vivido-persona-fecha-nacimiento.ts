@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | any; }
 export function cuantosDiasVividoPersonaFechaNacimiento(i: Inputs): Outputs {
   const f=String(i.fecha1||'');
   if (!f) {
@@ -14,5 +14,22 @@ export function cuantosDiasVividoPersonaFechaNacimiento(i: Inputs): Outputs {
   const hoy=new Date();
   hoy.setHours(0,0,0,0);
   const diff=Math.round((d.getTime()-hoy.getTime())/86400000);
-  return { resultado:diff+' días', resumen:`Entre hoy y ${f}: ${diff} días.` };
+  const dias=Math.abs(diff);
+  const anios=Math.floor(dias/365.25);
+  const semanas=Math.floor(dias/7);
+  const enPasado=diff<0;
+  const insight = enPasado
+    ? {
+        title: 'Tu tiempo en números',
+        text: `Viviste **${dias.toLocaleString('es-AR')} días**, lo que equivale a unos **${anios} años** o **${semanas.toLocaleString('es-AR')} semanas**. Cada día suma: aprovechá el de hoy.`,
+        tone: 'good',
+        icon: '🎂'
+      }
+    : {
+        title: 'Fecha en el futuro',
+        text: `La fecha ingresada (**${f}**) todavía no llegó: faltan **${dias.toLocaleString('es-AR')} días**. Para contar días vividos, ingresá una fecha de nacimiento pasada.`,
+        tone: 'neutral',
+        icon: '📅'
+      };
+  return { resultado:diff+' días', resumen:`Entre hoy y ${f}: ${diff} días.`, _insight: insight };
 }

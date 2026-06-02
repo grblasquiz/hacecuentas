@@ -9,6 +9,7 @@ export interface Outputs {
   tasaEfectiva: number;
   ingresoNeto: number;
   detalle: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -176,6 +177,43 @@ export function compute(i: Inputs): Outputs {
   const tasaEfectiva = ingreso > 0 ? (impuestoUSD / ingreso) * 100 : 0;
   const ingresoNeto = ingreso - impuestoUSD;
 
+  // ── Insight narrativo (dinámico según carga fiscal del régimen) ────
+  const REGIMEN_LABEL: Record<string, string> = {
+    portugal_nhr: 'Portugal (NHR/IFICI)',
+    portugal_estandar: 'Portugal (régimen estándar)',
+    espana_beckham: 'España (Ley Beckham)',
+    espana_estandar: 'España (régimen estándar)',
+    estonia_digital: 'Estonia (e-Residency OÜ)',
+    paraguay: 'Paraguay',
+    georgia: 'Georgia (Virtual Zone)',
+    dubai: 'Dubái / EAU',
+  };
+  const regimenLabel = REGIMEN_LABEL[pais] || 'el régimen elegido';
+  const fmtUSD = (n: number) => 'USD ' + Math.round(n).toLocaleString('es');
+  let _insight: any;
+  if (tasaEfectiva <= 0.01) {
+    _insight = {
+      title: `${regimenLabel}: prácticamente 0%`,
+      text: `Sobre **${fmtUSD(ingreso)}** anuales tu carga fiscal es **0%**: conservás los **${fmtUSD(ingresoNeto)}** completos. Acordate de cumplir los requisitos de residencia para que el régimen aplique.`,
+      tone: 'good',
+      icon: '🌴',
+    };
+  } else if (tasaEfectiva < 25) {
+    _insight = {
+      title: `${regimenLabel}: carga baja`,
+      text: `Con una tasa efectiva del **${tasaEfectiva.toFixed(2)}%** pagás **${fmtUSD(impuestoUSD)}** y te quedan **${fmtUSD(ingresoNeto)}** de los ${fmtUSD(ingreso)}. Es un régimen competitivo para nómadas digitales.`,
+      tone: 'good',
+      icon: '🌍',
+    };
+  } else {
+    _insight = {
+      title: `${regimenLabel}: carga alta`,
+      text: `La tasa efectiva trepa al **${tasaEfectiva.toFixed(2)}%**: pagás **${fmtUSD(impuestoUSD)}** y te quedan **${fmtUSD(ingresoNeto)}**. Conviene comparar con regímenes especiales o jurisdicciones de menor presión fiscal.`,
+      tone: 'warn',
+      icon: '🧾',
+    };
+  }
+
   const chart =
     impuestoUSD > 0
       ? {
@@ -196,6 +234,7 @@ export function compute(i: Inputs): Outputs {
     tasaEfectiva: Math.round(tasaEfectiva * 100) / 100,
     ingresoNeto: Math.round(ingresoNeto * 100) / 100,
     detalle,
+    _insight,
     _chart: chart,
   };
 }

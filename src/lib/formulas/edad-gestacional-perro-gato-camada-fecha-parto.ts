@@ -12,6 +12,7 @@ export interface Outputs {
   premonitory_signs: string;
   expected_litter_size: string;
   preparation_notes: string;
+  _insight?: any;
 }
 
 function addDays(dateStr: string, days: number): string {
@@ -91,6 +92,20 @@ export function compute(i: Inputs): Outputs {
     `5. Durante parto: Permite privacidad; intervén solo si hay signos de angustia materna (más de 2 horas sin expulsión de primera cría, o más de 30 minutos entre crías).\n` +
     `6. Recomendación: Radiografía a los 60 días para contar fetos y ecografía a los 50–55 días (consulta veterinario).`;
 
+  const animal = species === 'cat' ? 'gata' : 'perra';
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (daysRemaining < 0) {
+    insightTone = 'warn';
+    insightText = `La fecha estimada (**${estimatedDueDate}**) ya pasó hace **${Math.abs(daysRemaining)} día${Math.abs(daysRemaining) !== 1 ? 's' : ''}**. Si tu ${animal} aún no parió, contactá al veterinario: una gestación que se extiende más allá de la ventana puede requerir control.`;
+  } else if (daysRemaining <= 7) {
+    insightTone = 'warn';
+    insightText = `Faltan solo **${daysRemaining} día${daysRemaining !== 1 ? 's' : ''}** para el parto estimado (**${estimatedDueDate}**). Empezá a medir la temperatura dos veces al día: una caída a ~37 °C anticipa el parto en 12–24 h. Camada esperada: **${expectedLitterSize}**.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `Parto estimado para el **${estimatedDueDate}** (faltan **${daysRemaining} días**), con ventana del ${earliestDate} al ${latestDate}. Camada esperada: **${expectedLitterSize}**. Tenés tiempo para acondicionar el nido con calma.`;
+  }
+
   return {
     estimated_due_date: estimatedDueDate,
     earliest_date: earliestDate,
@@ -98,6 +113,12 @@ export function compute(i: Inputs): Outputs {
     days_remaining: Math.max(0, daysRemaining),
     premonitory_signs: premonitorySigns,
     expected_litter_size: expectedLitterSize,
-    preparation_notes: preparationNotes
+    preparation_notes: preparationNotes,
+    _insight: {
+      title: `Cuenta regresiva del parto`,
+      text: insightText,
+      tone: insightTone,
+      icon: species === 'cat' ? '🐱' : '🐶',
+    },
   };
 }

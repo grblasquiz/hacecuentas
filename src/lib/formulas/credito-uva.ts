@@ -16,6 +16,7 @@ export interface Outputs {
   ratioCuotaSalarioInicial: number;
   ratioCuotaSalarioFinal: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 function cuotaFrancesa(capital: number, tasaMensual: number, meses: number): number {
@@ -61,6 +62,18 @@ export function creditoUva(i: Inputs): Outputs {
     recomendacion = 'Ambas opciones son similares — depende de tu tolerancia al riesgo y estabilidad laboral.';
   }
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const ahorroInicial = cuotaFija - cuotaUVA0;
+  const uvaMasBarataInicio = ahorroInicial > 0;
+  const _insight = {
+    title: uvaMasBarataInicio ? 'La cuota UVA arranca más baja' : 'La cuota fija arranca más baja',
+    text: uvaMasBarataInicio
+      ? `Empezás pagando **${fmt(cuotaUVA0)}/mes** con UVA contra **${fmt(cuotaFija)}/mes** con tasa fija: **${fmt(ahorroInicial)}** menos por mes al inicio. Pero la cuota UVA se ajusta por inflación y podría trepar a ~**${fmt(cuotaUVAFinal)}** hacia el final${salario > 0 ? `, llevando el ratio cuota/sueldo del **${ratio0.toFixed(1)}%** al **${ratioF.toFixed(1)}%**` : ''}.`
+      : `La tasa fija arranca en **${fmt(cuotaFija)}/mes** y no se mueve, mientras la UVA empieza en **${fmt(cuotaUVA0)}/mes** pero se ajusta por inflación hasta ~**${fmt(cuotaUVAFinal)}**. Con la inflación esperada, la fija te da previsibilidad sin sorpresas.`,
+    tone: (uvaMasBarataInicio ? 'neutral' : 'good') as 'good' | 'neutral',
+    icon: '🏦'
+  };
+
   return {
     cuotaInicialUVA: Math.round(cuotaUVA0),
     cuotaInicialFija: Math.round(cuotaFija),
@@ -70,5 +83,6 @@ export function creditoUva(i: Inputs): Outputs {
     ratioCuotaSalarioInicial: Number(ratio0.toFixed(1)),
     ratioCuotaSalarioFinal: Number(ratioF.toFixed(1)),
     recomendacion,
+    _insight,
   };
 }

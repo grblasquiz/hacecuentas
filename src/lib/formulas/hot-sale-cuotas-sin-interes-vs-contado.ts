@@ -11,6 +11,7 @@ export interface Outputs {
   diferencia: number;
   recomendacion: string;
   ahorroPctRealEnCuotas: number;
+  _insight?: any;
 }
 
 export function hotSaleCuotasSinInteresVsContado(i: Inputs): Outputs {
@@ -41,11 +42,27 @@ export function hotSaleCuotasSinInteresVsContado(i: Inputs): Outputs {
   } else {
     recomendacion = `Contado con ${desc}% Hot Sale conviene: ahorrás $${fmt(-diferencia)} sobre el valor presente de las cuotas. Pagá al toque si tenés la plata disponible.`;
   }
+  let tone: 'good' | 'warn' | 'neutral';
+  let icon: string;
+  let title: string;
+  let text: string;
+  if (diferencia > 0) {
+    tone = 'good'; icon = '💳'; title = `Conviene en ${cuotas} cuotas`;
+    text = `Pagar en **${cuotas} cuotas sin interés** te ahorra **$${fmt(diferencia)}** en valor presente: la inflación licúa las cuotas y el descuento contado de ${desc}% no alcanza a compensarlo.`;
+  } else if (diferencia === 0) {
+    tone = 'neutral'; icon = '⚖️'; title = 'Empate técnico';
+    text = `En valor presente, cuotas y contado quedan **iguales**. Decidí por tu flujo de caja: si la plata te rinde más en otro lado, financiá.`;
+  } else {
+    tone = 'warn'; icon = '💵'; title = `Mejor contado con ${desc}%`;
+    text = `El descuento de **${desc}% al contado** le gana al financiamiento: ahorrás **$${fmt(-diferencia)}** sobre el valor presente de las ${cuotas} cuotas. Si tenés la plata, pagá al toque.`;
+  }
+
   return {
     valorPresenteCuotas: Math.round(valorPresenteCuotas),
     valorContadoConDescuento: Math.round(valorContadoConDescuento),
     diferencia: Math.round(diferencia),
     recomendacion,
     ahorroPctRealEnCuotas: Number(ahorroPctRealEnCuotas.toFixed(2)),
+    _insight: { title, text, tone, icon },
   };
 }

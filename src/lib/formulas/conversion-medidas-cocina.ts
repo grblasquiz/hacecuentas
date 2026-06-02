@@ -8,6 +8,7 @@ export interface Outputs {
   resultado: number;
   ml: number;
   resumen: string;
+  _insight?: any;
 }
 
 // Todas las unidades en ml
@@ -44,9 +45,26 @@ export function conversionMedidasCocina(i: Inputs): Outputs {
 
   const resumen = `${c} ${UNIDADES[uo].nombre} = ${resultado.toFixed(3)} ${UNIDADES[ud].nombre} (${ml.toFixed(2)} ml).`;
 
+  const cupUnits = new Set(['taza', 'media_taza', 'tercio_taza', 'cuarto_taza', 'us_cup', 'uk_cup']);
+  const involvesCup = cupUnits.has(uo) || cupUnits.has(ud);
+  const insight = involvesCup
+    ? {
+        title: 'Ojo: no todas las "tazas" son iguales',
+        text: `Tu conversión da **${ml.toFixed(0)} ml** usando la taza de **240 ml (estándar latino)**. La US cup son 236,6 ml y la UK cup 284 ml: en recetas grandes esa diferencia se nota, confirmá de qué país viene la receta.`,
+        tone: 'warn' as const,
+        icon: '🥄',
+      }
+    : {
+        title: 'Equivalencia en mililitros',
+        text: `**${c} ${UNIDADES[uo].nombre}** equivalen a **${ml.toFixed(0)} ml**, o sea **${resultado.toFixed(2)} ${UNIDADES[ud].nombre}**. El mililitro es la unidad neutra: convertí siempre a ml para no mezclar sistemas.`,
+        tone: 'neutral' as const,
+        icon: '🥄',
+      };
+
   return {
     resultado: Number(resultado.toFixed(4)),
     ml: Number(ml.toFixed(2)),
     resumen,
+    _insight: insight,
   };
 }

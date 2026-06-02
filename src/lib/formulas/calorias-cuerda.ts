@@ -4,6 +4,7 @@ export interface Outputs {
   caloriasQuemadas: number;
   equivalenteKmCorrer: number;
   detalle: string;
+  _insight?: any;
 }
 
 const MET_CUERDA: Record<string, number> = {
@@ -29,9 +30,17 @@ export function caloriasCuerda(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const kcalMinR = Number(kcalMin.toFixed(1));
+
   return {
     caloriasQuemadas: Math.round(total),
     equivalenteKmCorrer: Number(kmEquiv.toFixed(1)),
     detalle: `Saltando la cuerda ${min} min a intensidad ${int} (MET ${met}), quemás ~${fmt.format(Math.round(total))} kcal. Equivale a correr ~${fmt.format(Number(kmEquiv.toFixed(1)))} km a 10 km/h.`,
+    _insight: {
+      title: 'Quema concentrada',
+      text: `Saltar la cuerda gasta **~${fmt.format(kcalMinR)} kcal/min**: en ${min} min quemás lo mismo que corriendo **~${fmt.format(Number(kmEquiv.toFixed(1)))} km**. Es de los ejercicios más eficientes por minuto.`,
+      tone: 'good',
+      icon: '🤸',
+    },
   };
 }

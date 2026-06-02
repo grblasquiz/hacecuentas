@@ -17,6 +17,8 @@ export interface Outputs {
   price_total_paid: number;
   interest_difference: number;
   recommendation: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Taxa referência Caixa SBPE 2026: ~10,5% a.a. (fonte: caixa.gov.br)
@@ -202,6 +204,32 @@ export function compute(i: Inputs): Outputs {
     recommendation = "SAC e Price apresentam custo total equivalente neste cenário.";
   }
 
+  const fmtBRL = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  const _insight = savings > 0
+    ? {
+        title: 'SAC economiza nos juros',
+        text: `No SAC você paga **${fmtBRL(savings)}** a menos em juros do que no Price, mas a 1ª parcela (**${fmtBRL(sacFirstPayment)}**) é mais alta que a do Price (**${fmtBRL(pricePaymentFixed)}**). Se a sua renda comporta esse começo, o SAC compensa no longo prazo.`,
+        tone: 'good',
+        icon: '🏠',
+      }
+    : {
+        title: 'Cenário atípico: Price na frente',
+        text: `Neste cenário o Price ficou **${fmtBRL(Math.abs(savings))}** mais barato em juros que o SAC — algo incomum, que costuma aparecer com prazos muito curtos ou TR elevada. Revise os dados informados.`,
+        tone: 'warn',
+        icon: '🏠',
+      };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Valor financiado', value: Math.round(financedAmount) },
+      { label: 'Juros (SAC)', value: Math.round(sacTotalInterest) },
+    ],
+    prefix: 'R$ ',
+    centerValue: fmtBRL(sacTotalPaid),
+    centerLabel: 'Total pago (SAC)',
+    ariaLabel: `Total pago no SAC de ${fmtBRL(sacTotalPaid)}: ${fmtBRL(financedAmount)} financiados e ${fmtBRL(sacTotalInterest)} de juros`,
+  };
+
   return {
     financed_amount: Math.round(financedAmount * 100) / 100,
     sac_first_payment: Math.round(sacFirstPayment * 100) / 100,
@@ -212,6 +240,8 @@ export function compute(i: Inputs): Outputs {
     price_total_interest: Math.round(priceTotalInterest * 100) / 100,
     price_total_paid: Math.round(priceTotalPaid * 100) / 100,
     interest_difference: Math.round(interestDifference * 100) / 100,
-    recommendation
+    recommendation,
+    _insight,
+    _chart
   };
 }

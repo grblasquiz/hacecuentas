@@ -15,6 +15,8 @@ export interface Outputs {
   cuota_mensual: number;
   plazo_maximo_meses: number;
   salario_minimo_referencia: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -97,13 +99,59 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  const puntajeRedondeado = Math.round(puntaje_total);
+  const montoRedondeado = Math.round(monto_maximo_credito);
+  const cuotaRedondeada = Math.round(cuota_mensual);
+  const fmt = (n: number) => '$' + n.toLocaleString('es-MX');
+
+  // INSIGHT dinámico según calificación
+  const califica = puntaje_total >= PUNTAJE_MINIMO;
+  const marginal = !califica && puntaje_total >= PUNTAJE_MINIMO - 200;
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (califica) {
+    insightTitle = 'Calificás para el crédito';
+    insightText = `Con **${puntajeRedondeado} puntos** superás el mínimo de **${PUNTAJE_MINIMO}** y podés solicitar hasta **${fmt(montoRedondeado)}**, con una mensualidad estimada de **${fmt(cuotaRedondeada)}** a ${Math.round(plazo_meses / 12)} años.`;
+    insightTone = 'good';
+    insightIcon = '🏠';
+  } else if (marginal) {
+    insightTitle = 'Estás al borde del mínimo';
+    insightText = `Tenés **${puntajeRedondeado} puntos**, a **${PUNTAJE_MINIMO - puntajeRedondeado}** del mínimo de **${PUNTAJE_MINIMO}**. Sumando antigüedad o saldo en tu subcuenta de vivienda llegás; conviene revisar tu caso directo con INFONAVIT.`;
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+  } else {
+    insightTitle = 'Todavía no calificás';
+    insightText = `Con **${puntajeRedondeado} puntos** te faltan **${PUNTAJE_MINIMO - puntajeRedondeado}** para el mínimo de **${PUNTAJE_MINIMO}**. Cada año cotizado suma 10 puntos y cada $250 de subcuenta suma 1 punto: seguí cotizando para alcanzarlo.`;
+    insightTone = 'warn';
+    insightIcon = '📉';
+  }
+
+  // GAUGE del puntaje con zonas de calificación
+  const gaugeMax = Math.max(PUNTAJE_MINIMO + 400, puntajeRedondeado + 50);
+  const _chart = {
+    type: 'scale',
+    marker: puntajeRedondeado,
+    markerLabel: `${puntajeRedondeado} pts`,
+    min: 0,
+    segments: [
+      { nombre: 'No califica', max: PUNTAJE_MINIMO - 200, color: '#ef4444', colorDark: '#b91c1c' },
+      { nombre: 'Marginal', max: PUNTAJE_MINIMO, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Califica', max: gaugeMax, color: '#22c55e', colorDark: '#15803d' }
+    ],
+    ariaLabel: `Puntaje INFONAVIT de ${puntajeRedondeado} sobre un mínimo de ${PUNTAJE_MINIMO} para calificar`
+  };
+
   return {
-    puntaje_infonavit: Math.round(puntaje_total),
+    puntaje_infonavit: puntajeRedondeado,
     calificacion: calificacion,
-    monto_maximo_credito: Math.round(monto_maximo_credito),
+    monto_maximo_credito: montoRedondeado,
     poder_adquisitivo: Math.round(poder_adquisitivo),
-    cuota_mensual: Math.round(cuota_mensual),
+    cuota_mensual: cuotaRedondeada,
     plazo_maximo_meses: Math.round(plazo_meses),
-    salario_minimo_referencia: Math.round(SALARIO_MINIMO_MENSUAL_2026 * 100) / 100
+    salario_minimo_referencia: Math.round(SALARIO_MINIMO_MENSUAL_2026 * 100) / 100,
+    _insight: { title: insightTitle, text: insightText, tone: insightTone, icon: insightIcon },
+    _chart
   };
 }

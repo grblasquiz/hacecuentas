@@ -16,6 +16,7 @@ export interface Outputs {
   fpp_fum: string;
   discrepancy: string;
   recommendation: string;
+  _insight?: any;
 }
 
 // ── Constantes Hadlock ─────────────────────────────────────────────────────
@@ -147,6 +148,8 @@ export function compute(i: Inputs): Outputs {
   let fppFumStr = '—';
   let discrepancyStr = '—';
   let recommendation = '';
+  let insightExceeds: boolean | null = null;
+  let insightDiffDays = 0;
 
   if (useFum && fumRaw) {
     const fumDate = new Date(fumRaw);
@@ -183,6 +186,9 @@ export function compute(i: Inputs): Outputs {
       discrepancyStr = `${diffDays} día${diffDays !== 1 ? 's' : ''} (ecografía ${diffSign} que FUM)`;
     }
 
+    insightDiffDays = diffDays;
+    insightExceeds = diffDays > discThreshold;
+
     // Recomendación según umbral
     if (diffDays > discThreshold) {
       recommendation =
@@ -202,11 +208,32 @@ export function compute(i: Inputs): Outputs {
       + rangeWarning;
   }
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (insightExceeds === true || outOfRange) {
+    insightTone = 'warn';
+    insightText = outOfRange && insightExceeds !== true
+      ? `Edad gestacional estimada: **${egDaysToLabel(egEcoDays)}**, con FPP por ecografía el **${fppEcoStr}**. La medición quedó fuera del rango validado para ${method.toUpperCase()}: interpretá con cautela.`
+      : `Discrepancia de **${insightDiffDays} días** entre ecografía y FUM, por encima del umbral de **${discThreshold} días** para ${trimesterLabel}. Conviene **corregir la FPP** según la ecografía: **${fppEcoStr}**.`;
+  } else if (insightExceeds === false) {
+    insightTone = 'good';
+    insightText = `Ecografía y FUM concuerdan: discrepancia de solo **${insightDiffDays} día${insightDiffDays !== 1 ? 's' : ''}** (≤${discThreshold} días para ${trimesterLabel}). Se mantiene la FPP por FUM: **${fppFumStr}**.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `Edad gestacional estimada por ${method.toUpperCase()}: **${egDaysToLabel(egEcoDays)}**, con fecha probable de parto el **${fppEcoStr}**. Cargá la FUM para contrastarla y decidir si corregir la fecha.`;
+  }
+
   return {
     gest_age_label: gestAgeLabel,
     fpp_eco: fppEcoStr,
     fpp_fum: fppFumStr,
     discrepancy: discrepancyStr,
     recommendation,
+    _insight: {
+      title: 'Lectura de tu ecografía',
+      text: insightText,
+      tone: insightTone,
+      icon: '🤰',
+    },
   };
 }

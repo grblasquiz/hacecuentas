@@ -9,6 +9,7 @@ export interface Outputs {
   metrosSubidos: number;
   equivalenteMinutosCaminata: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function caloriasEscaleras(i: Inputs): Outputs {
@@ -34,10 +35,20 @@ export function caloriasEscaleras(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const calR = Math.round(caloriasQuemadas);
+  const ratio = equivalenteMinutosCaminata / Math.max(tiempoMin, 0.01); // cuánto rinde vs caminar
+  const _insight = {
+    title: 'Subir escaleras rinde mucho por minuto',
+    text: `Esos **${calR} kcal** los lográs en apenas **${fmt.format(tiempoMin)} min**: equivalen a **${fmt.format(equivalenteMinutosCaminata)} min de caminata**, casi **${ratio.toFixed(1)}×** más rendimiento por minuto. Cambiar el ascensor por la escalera es de los gestos más eficientes del día.`,
+    tone: 'good',
+    icon: '🪜',
+  };
+
   return {
-    caloriasQuemadas: Math.round(caloriasQuemadas),
+    caloriasQuemadas: calR,
     metrosSubidos: Math.round(metrosSubidos),
     equivalenteMinutosCaminata: Number(equivalenteMinutosCaminata.toFixed(1)),
     detalle: `Subir ${pisos} pisos (${fmt.format(metrosSubidos)} m) quema ~${fmt.format(caloriasQuemadas)} kcal en ~${fmt.format(tiempoMin)} min. Equivale a ${fmt.format(equivalenteMinutosCaminata)} min de caminata.`,
+    _insight,
   };
 }

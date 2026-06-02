@@ -20,6 +20,8 @@ export interface Outputs {
   interes_total_2porciento: number;
   ahorro_beca_vs_cae: number;
   recomendacion_financiera: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -135,6 +137,43 @@ export function compute(i: Inputs): Outputs {
     recomendacion_financiera = 'No eres elegible para CAE ni Beca Bicentenario con estos datos. Consulta a tu IES sobre otras becas o financiamiento disponible.';
   }
 
+  // Insight + gráfico (sólo en el camino válido)
+  const fmt = (n: number) => Math.round(n).toLocaleString('es-CL');
+  const pctBeca = costo_total_carrera_pesos > 0 ? (cobertura_beca_bicentenario_pesos / costo_total_carrera_pesos) * 100 : 0;
+  let insightTone: string;
+  let insightText: string;
+  if (es_elegible_beca && i.beca_bicentenario_opcion !== 'no' && cobertura_beca_bicentenario_pesos > 0) {
+    insightTone = 'good';
+    insightText = `La Beca Bicentenario te cubre **$${fmt(cobertura_beca_bicentenario_pesos)}** (${pctBeca.toFixed(0)}% del costo total de **$${fmt(costo_total_carrera_pesos)}**). El saldo lo financiás con CAE al 2%, quedando una deuda de **$${fmt(deuda_cae_post_titulacion_pesos)}** post-titulación. Es la opción más barata.`;
+  } else if (es_elegible_cae) {
+    insightTone = 'warn';
+    insightText = `Sin beca, financiás el costo total de **$${fmt(costo_total_carrera_pesos)}** con CAE: la deuda crece a **$${fmt(deuda_cae_post_titulacion_pesos)}** con el 2% anual (**$${fmt(interes_total_2porciento)}** sólo de intereses). Cuota máx **$${fmt(cuota_cae_mensual_maxima)}**/mes.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Con estos datos **no calificás** ni para CAE ni para Beca Bicentenario, sobre un costo total de **$${fmt(costo_total_carrera_pesos)}**. Revisá tu RSH y PAES, o explorá becas de excelencia y crédito privado.`;
+  }
+  const insight = {
+    title: 'CAE vs Beca: qué te conviene',
+    text: insightText,
+    tone: insightTone,
+    icon: '🎓',
+  };
+
+  // Donut: costo total = cubierto por beca + financiado con CAE (capital). Suma exacta el total.
+  const cae_chart: any = (cobertura_beca_bicentenario_pesos > 0 && deuda_neta_cae > 0)
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Cubierto por Beca', value: Math.round(cobertura_beca_bicentenario_pesos) },
+          { label: 'Financiado con CAE', value: Math.round(deuda_neta_cae) },
+        ],
+        prefix: '$',
+        centerValue: '$' + fmt(costo_total_carrera_pesos),
+        centerLabel: 'Costo total carrera',
+        ariaLabel: 'Reparto del costo de la carrera entre cobertura de beca y deuda CAE',
+      }
+    : undefined;
+
   return {
     costo_total_carrera_pesos: Math.round(costo_total_carrera_pesos),
     costo_anual_medio: Math.round(costo_anual_medio),
@@ -146,6 +185,8 @@ export function compute(i: Inputs): Outputs {
     plazo_pago_meses: Math.round(plazo_pago_meses),
     interes_total_2porciento: Math.round(interes_total_2porciento),
     ahorro_beca_vs_cae: Math.round(ahorro_beca_vs_cae),
-    recomendacion_financiera
+    recomendacion_financiera,
+    _insight: insight,
+    ...(cae_chart ? { _chart: cae_chart } : {})
   };
 }

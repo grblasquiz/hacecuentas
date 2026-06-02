@@ -13,6 +13,7 @@ export interface Outputs {
   costoTotal: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Precios orientativos AMBA, abril 2026 (sin IVA)
@@ -116,6 +117,18 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: "Composición del costo: membrana, pegamento y mano de obra",
   };
 
+  const costoPorM2 = superficie > 0 ? costoTotal / superficie : 0;
+  const fmt = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
+  const pctMO = costoTotal > 0 ? Math.round((costoManoObra / costoTotal) * 100) : 0;
+  const insight = {
+    title: "Costo de impermeabilizar el techo",
+    text: conManoObra
+      ? `Impermeabilizar **${superficie} m²** con ${config.label} sale **${fmt(costoTotal)}** (**${fmt(costoPorM2)}/m²**), de los cuales la mano de obra es el **${pctMO}%** (${fmt(costoManoObra)}). Vas a necesitar **${rollosNecesarios} rollos** y **${kgPegamento} kg** de adhesivo.`
+      : `Solo los materiales para **${superficie} m²** con ${config.label} suman **${fmt(costoMateriales)}** (**${fmt(costoPorM2)}/m²**): **${rollosNecesarios} rollos** y **${kgPegamento} kg** de adhesivo. La mano de obra no está incluida.`,
+    tone: "neutral",
+    icon: "🏠",
+  };
+
   return {
     rollosNecesarios,
     kgPegamento,
@@ -124,5 +137,6 @@ export function compute(i: Inputs): Outputs {
     costoTotal,
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

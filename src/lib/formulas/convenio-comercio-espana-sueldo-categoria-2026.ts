@@ -18,6 +18,8 @@ export interface Outputs {
   neto_anual: number;
   tipo_irpf_aplicado: number;
   aviso: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -166,6 +168,42 @@ export function compute(i: Inputs): Outputs {
   }
   aviso += "El IRPF no incluye deducciones personales ni familiares. Consulta el simulador de retenciones de la AEAT para un cálculo exacto.";
 
+  // --- Caja de insight narrativa ---
+  const fmtEur = (n: number) =>
+    '€' + n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const totalDescuentos = Math.round((cuotaSSTrabajadorMensual + retencionIRPFMensual) * 100) / 100;
+  const pctRetenido = brutoMensualTotal > 0
+    ? Math.round((totalDescuentos / brutoMensualTotal) * 1000) / 10
+    : 0;
+  const pctNeto = brutoMensualTotal > 0
+    ? Math.round((netoMensual / brutoMensualTotal) * 1000) / 10
+    : 0;
+  // Tono: warn si la retención total se come >25% del bruto, neutral si no
+  const insightTone = pctRetenido > 25 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'De tu bruto a tu bolsillo',
+    text:
+      `De **${fmtEur(brutoMensualTotal)}** brutos al mes te quedan **${fmtEur(netoMensual)}** netos ` +
+      `(${pctNeto}%), tras descontar **${fmtEur(totalDescuentos)}** entre Seguridad Social e IRPF ` +
+      `(${pctRetenido}% del bruto). En cómputo anual son **${fmtEur(netoAnual)}** netos.`,
+    tone: insightTone,
+    icon: '🛒',
+  };
+
+  // --- Gráfico donut: reparto del bruto mensual ---
+  const _chart = brutoMensualTotal > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Neto en mano', value: netoMensual },
+      { label: 'Seguridad Social', value: cuotaSSTrabajadorMensual },
+      { label: 'Retención IRPF', value: retencionIRPFMensual },
+    ],
+    prefix: '€',
+    centerValue: fmtEur(brutoMensualTotal),
+    centerLabel: 'Bruto/mes',
+    ariaLabel: 'Reparto del salario bruto mensual entre neto, Seguridad Social e IRPF',
+  } : undefined;
+
   return {
     salario_base_mensual: salarioBaseMensual,
     complemento_antiguedad_mensual: complementoAntiguedadMensual,
@@ -178,5 +216,7 @@ export function compute(i: Inputs): Outputs {
     neto_anual: netoAnual,
     tipo_irpf_aplicado: Math.round(tipoIRPF * 100) / 100,
     aviso,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

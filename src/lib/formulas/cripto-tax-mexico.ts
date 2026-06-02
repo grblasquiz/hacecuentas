@@ -1,6 +1,6 @@
 /** Cripto tax México ISR */
 export interface Inputs { gananciaPesos: number; otrosIngresosAnuales: number; }
-export interface Outputs { isrAplicable: number; tramoMarginal: number; netoPesos: number; explicacion: string; }
+export interface Outputs { isrAplicable: number; tramoMarginal: number; netoPesos: number; explicacion: string; _insight?: any; _chart?: any; }
 export function criptoTaxMexicoIsr(i: Inputs): Outputs {
   const gan = Number(i.gananciaPesos);
   const otros = Number(i.otrosIngresosAnuales) || 0;
@@ -43,10 +43,32 @@ export function criptoTaxMexicoIsr(i: Inputs): Outputs {
   })();
   const isrCripto = isrTotal - isrOtrosSolo;
   const neto = gan - isrCripto;
+  const tasaEfectiva = gan > 0 ? (isrCripto / gan) * 100 : 0;
+  const fmt = (n: number) => 'MXN ' + n.toLocaleString('es-MX', { maximumFractionDigits: 0 });
+  const tone = tasaEfectiva >= 25 ? 'warn' : tasaEfectiva >= 12 ? 'neutral' : 'good';
+  const _insight = {
+    title: 'Tu ISR sobre la ganancia cripto',
+    text: `De ${fmt(gan)} de ganancia, el ISR incremental se lleva **${fmt(isrCripto)}** (${tasaEfectiva.toFixed(1)}% efectivo) y te quedan **${fmt(neto)}** netos. Tu tramo marginal es **${marginal}%** porque tus otros ingresos (${fmt(otros)}) empujan la ganancia a ese escalón.`,
+    tone,
+    icon: '🇲🇽',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Neto para vos', value: Number(neto.toFixed(2)) },
+      { label: 'ISR a pagar', value: Number(isrCripto.toFixed(2)) },
+    ],
+    prefix: '$',
+    centerValue: fmt(gan),
+    centerLabel: 'Ganancia bruta',
+    ariaLabel: `De ${fmt(gan)} de ganancia, ${fmt(neto)} quedan netos y ${fmt(isrCripto)} se van en ISR.`,
+  };
   return {
     isrAplicable: Number(isrCripto.toFixed(2)),
     tramoMarginal: Number(marginal.toFixed(2)),
     netoPesos: Number(neto.toFixed(2)),
     explicacion: `Ganancia MXN ${gan.toLocaleString()} + otros ingresos ${otros.toLocaleString()} = total ${total.toLocaleString()}. ISR incremental sobre cripto: ${isrCripto.toLocaleString()} (tramo marginal ${marginal}%). Neto ${neto.toLocaleString()} MXN.`,
+    _insight,
+    _chart,
   };
 }

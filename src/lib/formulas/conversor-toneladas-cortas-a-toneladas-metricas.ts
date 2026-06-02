@@ -1,6 +1,6 @@
 /** Conversor: tonelada corta ↔ tonelada métrica */
 export interface Inputs { valor: number | string; direccion?: string; ingrediente?: string; }
-export interface Outputs { resultado: string; resumen: string; }
+export interface Outputs { resultado: string; resumen: string; _insight?: any; }
 
 export function conversorToneladasCortasAToneladasMetricas(i: Inputs): Outputs {
   const v = Number(i.valor);
@@ -16,8 +16,16 @@ export function conversorToneladasCortasAToneladasMetricas(i: Inputs): Outputs {
     r = v / factor;
     fromLabel = 'toneladas métricas'; toLabel = 'toneladas cortas';
   }
+  const rTxt = r.toFixed(4).replace(/\.?0+$/, '');
+  const vTxt = String(v);
   return {
     resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 't'.toString(),
-    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.'
+    resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
+    _insight: {
+      title: 'Tonelada corta vs métrica',
+      text: 'La **tonelada corta** de EE.UU. (2000 libras) equivale a **0,907 toneladas métricas**, un **9 % menos**. Por eso **' + vTxt + ' ' + fromLabel + '** dan **' + rTxt + ' ' + toLabel + '**. En contratos de commodities (granos, mineral) esta diferencia mueve mucha plata, conviene aclarar siempre qué tonelada se cotiza.',
+      tone: 'warn',
+      icon: '⚖️'
+    }
   };
 }

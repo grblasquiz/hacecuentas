@@ -9,5 +9,15 @@ export function idiomasMasUtilesProfesionInternacional(i: Inputs): Outputs {
   const t = __lang === 'en' ? tEn : __lang === 'pt' ? tPt : tEs;
   const top = t[p] || t.tech;
   const resumen = __lang === 'en' ? `Profession ${p}: top languages are ${t[p]}.` : __lang === 'pt' ? `Profissão ${p}: os principais idiomas são ${t[p]}.` : `Profesión ${p}: top idiomas son ${t[p]}.`;
-  return { top, resumen };
+  const insight = {
+    title: __lang === 'en' ? 'Recommended languages' : __lang === 'pt' ? 'Idiomas recomendados' : 'Idiomas recomendados',
+    text: __lang === 'en'
+      ? `For **${p}** the highest-leverage languages are **${top}**. English is the baseline; the next two open the most international doors in this field.`
+      : __lang === 'pt'
+      ? `Para **${p}**, os idiomas de maior impacto são **${top}**. O inglês é a base; os outros dois abrem mais portas internacionais nesta área.`
+      : `Para **${p}**, los idiomas con mayor retorno son **${top}**. El inglés es la base; los otros dos son los que más puertas internacionales abren en este rubro.`,
+    tone: 'neutral',
+    icon: '🌐',
+  };
+  return { top, resumen, _insight: insight };
 }

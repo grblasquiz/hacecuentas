@@ -1,6 +1,6 @@
 /** Carta natal básica — Big Three simplificado */
 export interface Inputs { fechaNacimiento: string; horaNacimiento: number; }
-export interface Outputs { sol: string; luna: string; ascendente: string; resumen: string; }
+export interface Outputs { sol: string; luna: string; ascendente: string; resumen: string; _insight?: any; }
 
 const S = ['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Escorpio','Sagitario','Capricornio','Acuario','Piscis'];
 const RANGOS: [number,number][] = [[3,21],[4,20],[5,21],[6,21],[7,23],[8,23],[9,23],[10,23],[11,22],[12,22],[1,20],[2,19]];
@@ -67,5 +67,15 @@ export function cartaNatalBasica(i: Inputs): Outputs {
   const resumen = `Sol en ${sol} (${DESC_SOL[sol]}), Luna en ${luna}, Ascendente en ${asc}. ` +
     `Tu esencia es ${sol.toLowerCase()}, tus emociones son ${luna.toLowerCase()} y los demás te ven como ${asc.toLowerCase()}.`;
 
-  return { sol, luna, ascendente: asc, resumen };
+  const _insight = {
+    title: 'Tu Big Three',
+    text: `Tu Sol está en **${sol}** (${DESC_SOL[sol]}), tu Luna en **${luna}** y tu Ascendente en **${asc}**. ` +
+      (sol === asc
+        ? `Sol y Ascendente coinciden en ${sol}: tu esencia y la imagen que proyectás van en la misma dirección.`
+        : `Tu identidad (${sol}) y la primera impresión que dan los demás (${asc}) tiran para lados distintos.`),
+    tone: 'neutral',
+    icon: '✨',
+  };
+
+  return { sol, luna, ascendente: asc, resumen, _insight };
 }

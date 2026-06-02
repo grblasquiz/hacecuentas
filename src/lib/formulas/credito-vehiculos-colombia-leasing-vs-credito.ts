@@ -26,6 +26,7 @@ export interface Outputs {
   valor_residual_leasing: number;
   diferencia_costo_total: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 // Constantes DIAN 2026 Colombia
@@ -116,7 +117,13 @@ export function compute(i: Inputs): Outputs {
       beneficio_fiscal_leasing_operativo_5anos: 0,
       valor_residual_leasing: 0,
       diferencia_costo_total: 0,
-      recomendacion: 'Valores inválidos. Revisa precio y plazo.'
+      recomendacion: 'Valores inválidos. Revisa precio y plazo.',
+      _insight: {
+        title: 'Faltan datos',
+        text: 'Ingresá un **precio de vehículo** y un **plazo** mayores a cero para comparar crédito contra leasing.',
+        tone: 'neutral',
+        icon: '🚗'
+      }
     };
   }
 
@@ -240,6 +247,17 @@ export function compute(i: Inputs): Outputs {
     }
   }
   
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const creditoMasCaro = diferenciaCostoTotal > 0;
+  const _insight = {
+    title: creditoMasCaro ? 'El leasing financiero sale más barato' : 'El crédito sale más barato',
+    text: creditoMasCaro
+      ? `El leasing financiero te ahorra **${fmt(Math.abs(diferenciaCostoTotal))}** en el costo total frente al crédito (cuota **${fmt(cuotaLeasingFinancieroMensual)}/mes** vs **${fmt(cuotaCreditoMensual)}/mes**), e incluye opción de compra del **${i.valor_residual_porcentaje}%** al final.${i.es_uso_empresarial ? ` Para uso empresarial sumá el beneficio fiscal del leasing operativo (~${fmt(beneficioFiscalLeasingOperativo5Anos)} en 5 años).` : ''}`
+      : `El crédito termina **${fmt(Math.abs(diferenciaCostoTotal))}** más barato en total que el leasing financiero, con cuota de **${fmt(cuotaCreditoMensual)}/mes**, y te dejás el vehículo en propiedad sin opción de compra final.${i.es_uso_empresarial ? ` Si es empresarial, el beneficio fiscal por depreciación ronda ${fmt(beneficioFiscalCredito5Anos)} en 5 años.` : ''}`,
+    tone: (creditoMasCaro ? 'good' : 'neutral') as 'good' | 'neutral',
+    icon: '🚗'
+  };
+
   return {
     cuota_credito_mensual: cuotaCreditoMensual,
     cuota_leasing_financiero_mensual: cuotaLeasingFinancieroMensual,
@@ -255,6 +273,7 @@ export function compute(i: Inputs): Outputs {
     beneficio_fiscal_leasing_operativo_5anos: Math.round(beneficioFiscalLeasingOperativo5Anos),
     valor_residual_leasing: Math.round(valorResidualPesos),
     diferencia_costo_total: Math.round(diferenciaCostoTotal),
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight
   };
 }

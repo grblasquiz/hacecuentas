@@ -10,6 +10,8 @@ export interface Outputs {
   rendimiento_neto: number;
   monto_vencimiento: number;
   tasa_neta_anualizada: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -66,11 +68,39 @@ export function compute(i: Inputs): Outputs {
     (DIAS_ANNO_COMERCIAL / i.plazo_dias) *
     100;
 
+  const rendNetoR = Math.round(rendimiento_neto * 100) / 100;
+  const isrR = Math.round(retencion_isr * 100) / 100;
+  const capitalR = Math.round(i.monto_invertido * 100) / 100;
+  const vencimientoR = Math.round((capitalR + rendNetoR) * 100) / 100;
+  const tasaNetaR = Math.round(tasa_neta_anualizada * 100) / 100;
+  const mxn = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const _insight = {
+    title: 'Tu rendimiento neto',
+    text: `Invirtiendo ${mxn(capitalR)} a **${i.plazo_dias} días** ganás **${mxn(rendNetoR)} netos** (ya descontado el ISR de ${mxn(isrR)}) y al vencimiento recibís **${mxn(vencimientoR)}**. La tasa neta anualizada equivale a **${tasaNetaR.toFixed(2)} %**.`,
+    tone: 'good' as const,
+    icon: '🏦',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital invertido', value: capitalR },
+      { label: 'Rendimiento neto', value: rendNetoR },
+    ],
+    prefix: '$',
+    centerValue: mxn(vencimientoR),
+    centerLabel: 'al vencimiento',
+    ariaLabel: `Composición del monto al vencimiento de ${mxn(vencimientoR)}: capital invertido más rendimiento neto`,
+  };
+
   return {
     rendimiento_bruto: Math.round(rendimiento_bruto * 100) / 100,
-    retencion_isr: Math.round(retencion_isr * 100) / 100,
-    rendimiento_neto: Math.round(rendimiento_neto * 100) / 100,
+    retencion_isr: isrR,
+    rendimiento_neto: rendNetoR,
     monto_vencimiento: Math.round(monto_vencimiento * 100) / 100,
-    tasa_neta_anualizada: Math.round(tasa_neta_anualizada * 100) / 100,
+    tasa_neta_anualizada: tasaNetaR,
+    _insight,
+    _chart,
   };
 }

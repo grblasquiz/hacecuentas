@@ -10,6 +10,7 @@ export interface Outputs {
   fl_oz: number;
   milliliters: number;
   table_ref: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -21,7 +22,13 @@ export function compute(i: Inputs): Outputs {
       liters: 0,
       fl_oz: 0,
       milliliters: 0,
-      table_ref: "Ingresa un valor válido (mayor a cero)"
+      table_ref: "Ingresa un valor válido (mayor a cero)",
+      _insight: {
+        title: 'Valor inválido',
+        text: `Ingresá una cantidad **mayor a cero** para ver las equivalencias entre galones, litros, onzas fluidas y mililitros.`,
+        tone: 'warn',
+        icon: '⚠️'
+      }
     };
   }
 
@@ -90,12 +97,26 @@ export function compute(i: Inputs): Outputs {
     table_ref = "Valor muy pequeño. Ingresa una cantidad mayor para ver referencias.";
   }
 
+  // Referencia tangible según el volumen en litros
+  let ref = '';
+  if (liters < 0.25) ref = 'menos de una taza';
+  else if (liters < 1) ref = `cerca de ${Math.round(liters / 0.75 * 10) / 10} botellas de vino`;
+  else if (liters < 10) ref = `unas ${Math.round(liters / 1.5 * 10) / 10} botellas grandes de 1,5 L`;
+  else if (liters < 100) ref = `aprox. ${Math.round(liters / 20)} bidones de 20 L`;
+  else ref = `unos ${Math.round(liters / 1000 * 10) / 10} m³ de agua`;
+
   return {
     gal_us: Math.round(gal_us * 1000000) / 1000000,
     gal_uk: Math.round(gal_uk * 1000000) / 1000000,
     liters: Math.round(liters * 1000000) / 1000000,
     fl_oz: Math.round(fl_oz * 100) / 100,
     milliliters: Math.round(milliliters),
-    table_ref: table_ref
+    table_ref: table_ref,
+    _insight: {
+      title: 'Volumen equivalente',
+      text: `Ese volumen equivale a **${(Math.round(liters * 1000) / 1000)} L** = **${Math.round(gal_us * 1000) / 1000} gal US** = **${Math.round(milliliters)} ml**. Para hacerte una idea, es ${ref}.`,
+      tone: 'neutral',
+      icon: '🧴'
+    }
   };
 }

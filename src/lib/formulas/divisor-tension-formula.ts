@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  vOut: string; r1Sugerido: string; corriente: string; potenciaTotal: string;
+  vOut: string; r1Sugerido: string; corriente: string; potenciaTotal: string; _insight?: any; _chart?: any;
 }
 
 export function divisorTensionFormula(inputs: Inputs): Outputs {
@@ -36,10 +36,30 @@ export function divisorTensionFormula(inputs: Inputs): Outputs {
     r1Sug = `${r1Com} Ω (calculado ${r1Calc.toFixed(0)})`;
   }
   const iMa = corriente * 1000;
+  const vDropR1 = Math.max(0, vin - vout);
+  const fraccion = vin !== 0 ? (vout / vin) * 100 : 0;
   return {
     vOut: `${vout.toFixed(3)} V`,
     r1Sugerido: r1Sug,
     corriente: iMa < 1 ? `${(iMa * 1000).toFixed(1)} µA` : `${iMa.toFixed(2)} mA`,
     potenciaTotal: `${(pot * 1000).toFixed(2)} mW`,
+    _insight: {
+      title: 'Cómo se reparte la tensión',
+      text: `De los **${vin.toFixed(2)} V** de entrada, la salida sobre R2 entrega **${vout.toFixed(3)} V** (${fraccion.toFixed(1)}% del total); los ${vDropR1.toFixed(3)} V restantes caen en R1. Acordate: este divisor sirve como referencia, pero si conectás una carga que consuma corriente apreciable, la tensión de salida baja.`,
+      tone: 'neutral',
+      icon: '🔌',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Salida (sobre R2)', value: Number(vout.toFixed(3)) },
+        { label: 'Caída en R1', value: Number(vDropR1.toFixed(3)) },
+      ],
+      prefix: '',
+      suffix: ' V',
+      centerValue: `${vin.toFixed(2)} V`,
+      centerLabel: 'Tensión de entrada',
+      ariaLabel: `De ${vin.toFixed(2)} V, ${vout.toFixed(2)} V salen por R2 y ${vDropR1.toFixed(2)} V caen en R1`,
+    },
   };
 }

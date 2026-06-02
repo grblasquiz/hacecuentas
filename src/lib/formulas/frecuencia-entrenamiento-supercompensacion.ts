@@ -10,6 +10,8 @@ export interface Outputs {
   rangoHoras: string;
   frecuenciaSemanal: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const HORAS_BASE: Record<string, { min: number; max: number; nombre: string }> = {
@@ -52,10 +54,37 @@ export function frecuenciaEntrenamientoSupercompensacion(i: Inputs): Outputs {
   const sesionesMax = Math.floor(7 / (dias + 0.01));
   const frecuencia = sesionesMax >= 7 ? 'Todos los días' : `${Math.min(sesionesMax, 7)} veces por semana`;
 
+  const diasR = Number(dias.toFixed(1));
+  const ventana = diasR < 1.5 ? 'corta' : diasR <= 3 ? 'media' : 'larga';
+  const tone = diasR < 1.5 ? 'warn' : diasR <= 3 ? 'good' : 'neutral';
+  const matiz = diasR < 1.5
+    ? 'recuperás rápido: podés volver casi a diario, pero cuidá la técnica para no acumular fatiga'
+    : diasR <= 3
+    ? 'es la ventana clásica de supercompensación: entrenar acá aprovecha el pico de adaptación'
+    : 'el músculo necesita descanso largo; entrenar demasiado seguido te dejaría en sobreentrenamiento';
+
   return {
-    result: Number(dias.toFixed(1)),
+    result: diasR,
     rangoHoras: `${horasMin}-${horasMax} horas`,
     frecuenciaSemanal: frecuencia,
     detalle: `Para **${info.nombre}** con RPE ${rpe} (nivel ${nivel}): descanso recomendado **${dias.toFixed(1)} días** (${horasMin}-${horasMax}h). Frecuencia máxima: **${frecuencia}**.`,
+    _insight: {
+      title: 'Tu ventana de supercompensación',
+      text: `Tras **${info.nombre}** a RPE ${rpe} necesitás unas **${diasR} días** de descanso (ventana ${ventana}): ${matiz}. Eso permite hasta **${frecuencia.toLowerCase()}**.`,
+      tone,
+      icon: '🏋️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: diasR,
+      markerLabel: `${diasR} días`,
+      min: 0,
+      segments: [
+        { nombre: 'Recuperación rápida', max: 1.5, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Supercompensación', max: 3, color: '#3b82f6', colorDark: '#2563eb' },
+        { nombre: 'Descanso largo', max: Math.max(5, Math.ceil(diasR) + 1), color: '#f59e0b', colorDark: '#d97706' },
+      ],
+      ariaLabel: `Descanso de ${diasR} días en la escala de recuperación muscular`,
+    },
   };
 }

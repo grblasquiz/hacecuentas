@@ -7,6 +7,8 @@ export interface Outputs {
   semanas: number;
   meses: number;
   factibilidad: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function horasPrepararSat(i: Inputs): Outputs {
@@ -36,11 +38,36 @@ export function horasPrepararSat(i: Inputs): Outputs {
   else if (meses < 6) fact = 'Plan sostenible.';
   else fact = 'Plan largo — considerá reducir horas/sem o objetivo intermedio.';
 
+  const tone: 'good' | 'warn' | 'neutral' = (meses < 1 || meses >= 6) ? 'warn' : meses < 3 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Cuánto necesitás para tu objetivo SAT',
+    text: `Subir **${gap} puntos** (de ${ac} a ${obj}) pide unas **${Math.round(horas)} h** de estudio. A **${hsem} h/semana** son ~**${Math.round(sem)} semanas** (${meses} meses). ${fact}`,
+    tone,
+    icon: '📝',
+  };
+
+  const topMax = Math.max(8, Math.ceil(meses) + 1);
+  const _chart = {
+    type: 'scale',
+    marker: meses,
+    markerLabel: 'Tu plan',
+    min: 0,
+    segments: [
+      { nombre: 'Agresivo', max: 1, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Realista', max: 3, color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: 'Sostenible', max: 6, color: '#3b82f6', colorDark: '#60a5fa' },
+      { nombre: 'Largo', max: topMax, color: '#eab308', colorDark: '#facc15' },
+    ],
+    ariaLabel: `Tu plan de estudio para el SAT dura ${meses} meses, en la zona de factibilidad correspondiente`,
+  };
+
   return {
     horasTotales: Math.round(horas),
     semanas: Math.round(sem),
     meses,
     factibilidad: fact,
+    _insight,
+    _chart,
   };
 
 }

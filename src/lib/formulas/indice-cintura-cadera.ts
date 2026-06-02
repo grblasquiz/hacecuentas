@@ -10,6 +10,7 @@ export interface Outputs {
   clasificacion: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function indiceCinturaCadera(i: Inputs): Outputs {
@@ -57,11 +58,21 @@ export function indiceCinturaCadera(i: Inputs): Outputs {
     ariaLabel: 'Escala de índice cintura-cadera y riesgo cardiovascular según sexo.',
   };
 
+  const tone = riesgo === 'Bajo' ? 'good' : riesgo === 'Alto' ? 'warn' : 'neutral';
+  const icon = riesgo === 'Bajo' ? '💚' : riesgo === 'Alto' ? '🫀' : '⚖️';
+  const insight = {
+    title: 'Riesgo cardiovascular: ' + riesgo,
+    text: `Tu ICC es **${icc.toFixed(2)}** (cintura ${Math.round(cintura)} / cadera ${Math.round(cadera)} cm), un riesgo **${riesgo.toLowerCase()}** para ${sexo === 'f' ? 'mujeres' : 'hombres'}. ${clasificacion}.`,
+    tone,
+    icon,
+  };
+
   return {
     icc: Number(icc.toFixed(3)),
     riesgo,
     clasificacion,
     mensaje: `ICC: ${icc.toFixed(3)} — Riesgo cardiovascular: ${riesgo}. ${clasificacion}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

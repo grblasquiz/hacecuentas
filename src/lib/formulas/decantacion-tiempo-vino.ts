@@ -1,6 +1,6 @@
 /** Decantación vino */
 export interface Inputs { tipoVino: string; añadaVino?: number; }
-export interface Outputs { tiempoDecantacion: string; metodo: string; razon: string; precaucion: string; }
+export interface Outputs { tiempoDecantacion: string; metodo: string; razon: string; precaucion: string; _insight?: any; }
 
 export function decantacionTiempoVino(i: Inputs): Outputs {
   const tipo = String(i.tipoVino || 'tinto_medio');
@@ -64,5 +64,28 @@ export function decantacionTiempoVino(i: Inputs): Outputs {
     prec = 'Servir directo.';
   }
 
-  return { tiempoDecantacion: tiempo, metodo, razon, precaucion: prec };
+  // Tono dinámico según fragilidad / beneficio de la decantación
+  const esFragil = tipo === 'tinto_anejo' || tipo === 'espumante' || tipo === 'rosado' || (tipo === 'tinto_joven_tanico' && edad > 15);
+  const esBeneficio = (tipo === 'tinto_joven_tanico' && edad <= 5) || tipo === 'tinto_medio';
+  const tone = esFragil ? 'warn' : (esBeneficio ? 'good' : 'neutral');
+
+  const edadTxt = edad > 0 ? ` (añada de hace **${edad} años**)` : '';
+  const insightText = esFragil
+    ? `Para este vino${edadTxt}, la ventana es corta: **${tiempo}**. ${prec} Más aire del necesario lo perjudica.`
+    : esBeneficio
+      ? `Decantá **${tiempo}**${edadTxt}: el oxígeno acá juega a favor y abre los aromas. ${razon}`
+      : `Tiempo sugerido: **${tiempo}**${edadTxt}. ${razon}`;
+
+  return {
+    tiempoDecantacion: tiempo,
+    metodo,
+    razon,
+    precaucion: prec,
+    _insight: {
+      title: 'Cómo interpretarlo',
+      text: insightText,
+      tone,
+      icon: '🍷',
+    },
+  };
 }

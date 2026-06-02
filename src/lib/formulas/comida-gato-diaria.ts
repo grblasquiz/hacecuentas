@@ -15,6 +15,7 @@ export interface Outputs {
   aguaRecomendadaMl: number;
   etapa: string;
   resumen: string;
+  _insight?: any;
 }
 
 const FACTORES: Record<string, number> = {
@@ -69,14 +70,46 @@ export function comidaGatoDiaria(i: Inputs): Outputs {
   else if (edad === 'senior') etapa = 'Senior (7+ años)';
   else etapa = castrado ? 'Adulto castrado' : 'Adulto estándar';
 
+  const gSecoR = Math.round(gSeco);
+  const gHumedoR = Math.round(gHumedo);
+  const kcalR = Math.round(kcalDia);
+  const gPorTomaR = Math.round(gramosPorToma);
+
+  const propensoPeso = (castrado || edad === 'senior' || (edad === 'adulto' && act === 'interior'));
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (edad === 'gatito') {
+    insightText = `Como **gatito en crecimiento** repartí los **${gSecoR} g** en **${tomas} tomas** de ~${gPorTomaR} g: necesita comer seguido y a libre demanda controlada para sostener el desarrollo.`;
+    insightTone = 'good';
+    insightIcon = '🐱';
+  } else if (propensoPeso) {
+    insightText = `Por ser **${etapa.toLowerCase()}** quema menos: con **${kcalR} kcal/día** (${gSecoR} g de seco) es clave pesar la ración y no dejar el plato lleno todo el día, porque es el perfil más propenso al sobrepeso.`;
+    insightTone = 'warn';
+    insightIcon = '⚖️';
+  } else {
+    insightText = `Tu gato necesita **${gSecoR} g de seco** o **${gHumedoR} g de húmedo** al día (**${kcalR} kcal**), repartidos en ${tomas} tomas de ~${gPorTomaR} g.`;
+    insightTone = 'neutral';
+    insightIcon = '🐱';
+  }
+  if (alim === 'seco') {
+    insightText += ` Como comés solo seco, asegurá **${Math.round(agua)} ml de agua** fresca diaria: los gatos beben poco y el alimento seco no aporta humedad.`;
+  }
+
   return {
-    gramosSecoPorDia: Math.round(gSeco),
-    gramosHumedoPorDia: Math.round(gHumedo),
-    kcalPorDia: Math.round(kcalDia),
+    gramosSecoPorDia: gSecoR,
+    gramosHumedoPorDia: gHumedoR,
+    kcalPorDia: kcalR,
     tomas,
-    gramosPorToma: Math.round(gramosPorToma),
+    gramosPorToma: gPorTomaR,
     aguaRecomendadaMl: Math.round(agua),
     etapa,
-    resumen: `Tu gato de ${peso} kg (${etapa}) necesita ~${Math.round(gSeco)} g de seco o ~${Math.round(gHumedo)} g de húmedo/día (${Math.round(kcalDia)} kcal).`,
+    resumen: `Tu gato de ${peso} kg (${etapa}) necesita ~${gSecoR} g de seco o ~${gHumedoR} g de húmedo/día (${kcalR} kcal).`,
+    _insight: {
+      title: 'Qué significa esta ración',
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon,
+    },
   };
 }

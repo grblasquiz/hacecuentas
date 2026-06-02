@@ -8,6 +8,8 @@ export interface Outputs {
   meses: number;
   anos: number;
   categoriaFsi: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function horasAprenderArabeB2(i: Inputs): Outputs {
@@ -31,12 +33,46 @@ export function horasAprenderArabeB2(i: Inputs): Outputs {
   const meses = semanas / 4.33;
   const anos = meses / 12;
 
+  const hTot = Math.round(restante);
+  const mes = Math.round(meses * 10) / 10;
+  const hWk = Math.round(horasSemana);
+  const tone = mes <= 12 ? 'good' : mes <= 24 ? 'neutral' : 'warn';
+  const ritmo =
+    mes <= 12
+      ? `A **${hWk} h/semana** lo tenés en poco más de un año: un ritmo exigente pero sostenible.`
+      : mes <= 24
+        ? `Con **${hWk} h/semana** es un proyecto de **${mes} meses**: pensalo como una maratón, no un sprint.`
+        : `A **${hWk} h/semana** te llevaría **${mes} meses**; el árabe es **Cat IV del FSI** (de los idiomas más difíciles para hispanohablantes), así que subir el ritmo o sumar inmersión acorta mucho el camino.`;
+
+  const segTop = Math.max(Math.ceil(mes * 1.15), 30);
+  const _insight = {
+    title: 'Tu camino al árabe B2',
+    text: `Te faltan **${hTot.toLocaleString('es-AR')} h** de estudio, unos **${mes} meses** a tu ritmo actual. ${ritmo}`,
+    tone,
+    icon: '📚',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: mes,
+    markerLabel: `${mes} meses`,
+    min: 0,
+    segments: [
+      { nombre: 'Rápido', max: 6, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Moderado', max: 12, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Largo', max: 24, color: '#d97706', colorDark: '#f59e0b' },
+      { nombre: 'Maratón', max: segTop, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Horizonte de estudio: ${mes} meses para llegar a árabe B2`,
+  };
+
   return {
-    horasTotales: Math.round(restante),
+    horasTotales: hTot,
     semanas: Math.round(semanas),
-    meses: Math.round(meses * 10) / 10,
+    meses: mes,
     anos: Math.round(anos * 10) / 10,
     categoriaFsi: 'Cat IV FSI (súper-difícil)',
+    _insight,
+    _chart,
   };
 
 }

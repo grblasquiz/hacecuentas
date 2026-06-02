@@ -1,5 +1,5 @@
 export interface Inputs { ambiente: string; humedadActual: number; }
-export interface Outputs { rangoIdeal: string; estado: string; accion: string; riesgo: string; }
+export interface Outputs { rangoIdeal: string; estado: string; accion: string; riesgo: string; _insight?: any; _chart?: any; }
 interface HumData { min: number; max: number; }
 const AMB: Record<string, HumData> = {
   dormitorio: { min: 40, max: 60 }, living: { min: 40, max: 55 }, bebe: { min: 45, max: 55 },
@@ -21,5 +21,29 @@ export function humedadIdealAmbiente(i: Inputs): Outputs {
     estado = 'Dentro del rango ideal'; accion = 'No necesitás ajustar. Mantené buena ventilación.';
     riesgo = 'Sin riesgo. Condiciones óptimas de confort.';
   }
-  return { rangoIdeal: `${data.min}–${data.max}%`, estado, accion, riesgo };
+  const dentro = actual >= data.min && actual <= data.max;
+  const tone = dentro ? 'good' : 'warn';
+  const icon = dentro ? '✅' : actual < data.min ? '🏜️' : '💦';
+  const insight = {
+    title: `Humedad ${estado.toLowerCase()}`,
+    text: `Con **${actual}%** de humedad, el ambiente está **${estado.toLowerCase()}** frente al rango ideal de **${data.min}–${data.max}%**. ${accion}`,
+    tone,
+    icon,
+  };
+
+  const chart = {
+    type: 'scale' as const,
+    marker: Math.round(actual),
+    markerLabel: `Actual: ${Math.round(actual)}%`,
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Seco', max: data.min, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Ideal', max: data.max, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Húmedo', max: Math.max(100, Math.ceil(actual) + 1), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala de humedad: zona seca, ideal y húmeda para el ambiente elegido',
+  };
+
+  return { rangoIdeal: `${data.min}–${data.max}%`, estado, accion, riesgo, _insight: insight, _chart: chart };
 }

@@ -37,6 +37,7 @@ export interface IndiceGlucemicoPorAlimentoOutputs {
   clasificacion: string;
   recomendacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function indiceGlucemicoPorAlimento(inputs: IndiceGlucemicoPorAlimentoInputs): IndiceGlucemicoPorAlimentoOutputs {
@@ -59,5 +60,15 @@ export function indiceGlucemicoPorAlimento(inputs: IndiceGlucemicoPorAlimentoInp
     ],
     ariaLabel: 'Escala de índice glucémico: bajo menos de 55, medio 55-69, alto 70 o más',
   };
-  return { ig: data.ig, clasificacion: clasif, recomendacion: rec, _chart: chart };
+  const insight = {
+    title: `${data.nombre}: IG ${clasif.toLowerCase()}`,
+    text: clasif === 'Bajo'
+      ? `Con un índice glucémico de **${data.ig}**, ${data.nombre.toLowerCase()} libera glucosa de forma lenta y sostenida: buena opción para mantener la glucemia estable y prolongar la saciedad.`
+      : clasif === 'Medio'
+      ? `${data.nombre} tiene IG **${data.ig}** (medio). Eleva la glucemia a un ritmo intermedio; combinalo con proteína, grasa o fibra para amortiguar el pico.`
+      : `${data.nombre} tiene IG **${data.ig}** (alto): eleva la glucosa en sangre rápidamente. Cuidá la porción y evitalo en ayunas, sobre todo con diabetes o resistencia a la insulina.`,
+    tone: clasif === 'Bajo' ? 'good' : clasif === 'Medio' ? 'neutral' : 'warn',
+    icon: clasif === 'Bajo' ? '🟢' : clasif === 'Medio' ? '🟡' : '⚠️',
+  };
+  return { ig: data.ig, clasificacion: clasif, recomendacion: rec, _chart: chart, _insight: insight };
 }

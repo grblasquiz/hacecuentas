@@ -21,6 +21,8 @@ export interface Outputs {
   ragVectorDbCost: number;
   savingsPercent: number;
   scoreBreakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -173,6 +175,50 @@ export function compute(i: Inputs): Outputs {
     recommendation = `Empate · ${cheaperOption} más barato`;
   }
 
+  // ============================================================
+  // INSIGHT + GRÁFICO
+  // ============================================================
+  const fmtUSD = (n: number) => '$' + (Math.round(n * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const savingsRounded = Math.round(savingsPercent * 10) / 10;
+
+  let _insight: any;
+  if (score >= 6) {
+    _insight = {
+      title: 'Conviene Fine-tuning',
+      text: `Tu caso favorece **Fine-tuning** (score **${score}/8**). Además el costo mensual es ${cheaperOption === 'Fine-tune' ? `**${savingsRounded}% más barato** (${fmtUSD(ftTotalMonthly)} vs ${fmtUSD(ragTotalMonthly)} de RAG)` : `mayor que RAG (${fmtUSD(ftTotalMonthly)} vs ${fmtUSD(ragTotalMonthly)}), pero el ajuste de calidad lo justifica`}.`,
+      tone: 'good',
+      icon: '🎯',
+    };
+  } else if (score <= 3) {
+    _insight = {
+      title: 'Conviene RAG',
+      text: `Tu caso favorece **RAG** (score **${score}/8**): datos cambiantes o bajo volumen. Costo mensual ${cheaperOption === 'RAG' ? `**${savingsRounded}% más barato** (${fmtUSD(ragTotalMonthly)} vs ${fmtUSD(ftTotalMonthly)} de fine-tune)` : `algo mayor (${fmtUSD(ragTotalMonthly)} vs ${fmtUSD(ftTotalMonthly)}), pero gana en flexibilidad`}.`,
+      tone: 'good',
+      icon: '📚',
+    };
+  } else {
+    _insight = {
+      title: 'Zona de empate técnico',
+      text: `Score **${score}/8**: ninguna técnica domina claramente. Decidí por costo: **${cheaperOption}** es **${savingsRounded}% más barato** (${fmtUSD(cheaperCost)}/mes vs ${fmtUSD(Math.max(ftTotalMonthly, ragTotalMonthly))}/mes).`,
+      tone: 'warn',
+      icon: '⚖️',
+    };
+  }
+
+  // Gauge sobre el score 0–8 (RAG ← → Fine-tune)
+  const _chart = {
+    type: 'scale',
+    marker: score,
+    markerLabel: `Score ${score}/8`,
+    min: 0,
+    segments: [
+      { nombre: 'RAG', max: 3, color: '#3b82f6', colorDark: '#60a5fa' },
+      { nombre: 'Empate', max: 5, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Fine-tune', max: Math.max(8, score + 1), color: '#10b981', colorDark: '#34d399' },
+    ],
+    ariaLabel: 'Indicador de conveniencia entre RAG y Fine-tuning según el score de 0 a 8',
+  };
+
   return {
     recommendation,
     ftTotalMonthly:   Math.round(ftTotalMonthly   * 100) / 100,
@@ -184,5 +230,7 @@ export function compute(i: Inputs): Outputs {
     ragVectorDbCost:  Math.round(ragVectorDbCost  * 100) / 100,
     savingsPercent:   Math.round(savingsPercent   * 100) / 100,
     scoreBreakdown:   scoreSummary,
+    _insight,
+    _chart,
   };
 }

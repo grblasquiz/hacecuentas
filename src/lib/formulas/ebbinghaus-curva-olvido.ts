@@ -7,6 +7,8 @@ export interface Outputs {
   porcentajeOlvidado: number;
   proximoRepaso: string;
   interpretacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function ebbinghausCurvaOlvido(i: Inputs): Outputs {
@@ -29,11 +31,34 @@ export function ebbinghausCurvaOlvido(i: Inputs): Outputs {
   else if (repasos >= 3) interp = 'Buena consolidación. Seguí con intervalos largos.';
   else interp = 'Curva en caída: cada repaso a tiempo aplana la pendiente.';
 
+  const ret = Math.round(retencion);
+  const olv = 100 - ret;
+  const tone = ret > 60 ? 'good' : ret >= 30 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Tu memoria ahora',
+    text: `A las **${horas}h** del estudio${repasos > 0 ? ` y con **${repasos} repaso${repasos === 1 ? '' : 's'}**` : ' y sin repasos'}, retenés ~**${ret}%** y ya olvidaste **${olv}%**. ${proximoRepaso}.`,
+    tone,
+    icon: '🧠',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Retenido', value: ret },
+      { label: 'Olvidado', value: olv },
+    ],
+    centerValue: `${ret}%`,
+    centerLabel: 'Retenido',
+    ariaLabel: `Memoria a las ${horas} horas: ${ret}% retenido y ${olv}% olvidado`,
+  };
+
   return {
-    porcentajeRetenido: Math.round(retencion),
-    porcentajeOlvidado: Math.round(100 - retencion),
+    porcentajeRetenido: ret,
+    porcentajeOlvidado: olv,
     proximoRepaso,
     interpretacion: interp,
+    _insight,
+    _chart,
   };
 
 }

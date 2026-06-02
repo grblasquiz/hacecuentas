@@ -27,6 +27,8 @@ export interface Outputs {
     comisiones_especiales: number;
     total: number;
   };
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -168,12 +170,46 @@ export function compute(i: Inputs): Outputs {
     }
   }
   
+  // --- Insight + gráfico ---
+  const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
+  const diff_mensual = costo_mensual_corriente - costo_mensual_vista;
+  const tono: 'good' | 'warn' | 'neutral' =
+    diff_mensual >= 5000 ? 'warn' : (diff_mensual >= 1000 ? 'neutral' : 'good');
+  const _insight = {
+    title: 'Vista vs. corriente, en plata',
+    text: diff_mensual > 0
+      ? `Con tu uso, la **cuenta vista cuesta ${clp(costo_mensual_vista)}/mes** y la **corriente ${clp(costo_mensual_corriente)}/mes**: quedarte en vista te ahorra **${clp(ahorro_anual)} al año**.`
+      : `Con tu uso, ambas cuentas salen casi lo mismo (**${clp(costo_mensual_vista)}** vs **${clp(costo_mensual_corriente)}/mes**); decidí por beneficios (cheques, sobregiro, crédito) más que por costo.`,
+    tone: tono,
+    icon: '🏧',
+  };
+
+  // Donut: de qué se compone el costo de la cuenta corriente
+  const dc = desglose_corriente;
+  const slicesCorriente = [
+    { label: 'Mantención', value: dc.mantension },
+    { label: 'Transacciones', value: dc.comision_transacciones },
+    { label: 'Cheques', value: dc.comision_cheques },
+    { label: 'Especiales/sobregiro', value: dc.comisiones_especiales },
+  ].filter(s => s.value > 0);
+  const totalSlices = slicesCorriente.reduce((a, s) => a + s.value, 0);
+  const _chart = totalSlices > 0 ? {
+    type: 'doughnut',
+    slices: slicesCorriente,
+    prefix: '$',
+    centerValue: clp(totalSlices),
+    centerLabel: 'costo corriente/mes',
+    ariaLabel: `El costo mensual de la cuenta corriente (${clp(totalSlices)}) se reparte entre mantención, transacciones, cheques y comisiones especiales`,
+  } : undefined;
+
   return {
     costo_mensual_vista,
     costo_mensual_corriente,
     ahorro_anual,
     recomendacion,
     desglose_vista,
-    desglose_corriente
+    desglose_corriente,
+    _insight,
+    _chart
   };
 }

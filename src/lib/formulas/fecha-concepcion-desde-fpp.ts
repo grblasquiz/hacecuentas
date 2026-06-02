@@ -13,6 +13,7 @@ export interface Outputs {
   gestational_age: string;    // texto "X semanas y Y días"
   fpp_display: string;        // ISO date YYYY-MM-DD
   ovulation_day: number;      // día del ciclo en que ocurrió la ovulación
+  _insight?: any;
 }
 
 // Constantes basadas en fisiología estándar (ACOG 2017)
@@ -125,11 +126,20 @@ export function compute(i: Inputs): Outputs {
   const conceptionWindow =
     `Del ${formatDateReadable(windowStart)} al ${formatDateReadable(windowEnd)}`;
 
+  const ajustada = cycleLength !== STANDARD_CYCLE;
+  const _insight = {
+    title: `Concepción estimada: ${formatDateReadable(conceptionDate)}`,
+    text: `La concepción más probable fue el **${formatDateReadable(conceptionDate)}**, con una ventana fértil **del ${formatDateReadable(windowStart)} al ${formatDateReadable(windowEnd)}**.${diffDays >= 0 && diffDays <= 320 ? ` Hoy llevarías **${gestationalAgeText}** de gestación.` : ''}${ajustada ? ` Cálculo ajustado a tu ciclo de **${cycleLength} días** (${ovulationDay > OVULATION_DAY_STD ? '+' : ''}${ovulationDay - OVULATION_DAY_STD} días vs. el estándar).` : ''} Es una estimación: solo una ecografía confirma la fecha.`,
+    tone: 'neutral',
+    icon: '🤰',
+  };
+
   return {
     conception_date: formatDate(conceptionDate),
     conception_window: conceptionWindow,
     gestational_age: gestationalAgeText,
     fpp_display: formatDate(fppDate),
-    ovulation_day: ovulationDay
+    ovulation_day: ovulationDay,
+    _insight
   };
 }

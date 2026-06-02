@@ -21,6 +21,8 @@ export interface Outputs {
   porcObrero: number;
   desglose: Record<string, { obrero: number; patron: number }>;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cuotasImssMexico(i: Inputs): Outputs {
@@ -83,6 +85,29 @@ export function cuotasImssMexico(i: Inputs): Outputs {
     };
   }
 
+  // Sobrecosto patronal sobre el sueldo (cuánto suma el IMSS+Infonavit)
+  const sobrecostoPct = (cuotaPatron / sueldoMensual) * 100;
+  const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-MX')}`;
+  const _insight = {
+    title: 'Lo que cuesta el empleado al patrón',
+    text: `Sobre un sueldo de **${fmt(sueldoMensual)}**, las cuotas patronales (IMSS + Infonavit) agregan **${fmt(cuotaPatron)}** (+${sobrecostoPct.toFixed(1)}%), elevando el costo real a **${fmt(costoTotalPatron)}**. Al trabajador se le retiene **${fmt(cuotaObrero)}**.`,
+    tone: (sobrecostoPct >= 25 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '🏭',
+  };
+
+  // Donut: costo total patrón = sueldo + cuota patronal (suman el total)
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Sueldo neto base', value: Math.round(sueldoMensual) },
+      { label: 'Cuotas patronales IMSS/Infonavit', value: Math.round(cuotaPatron) },
+    ],
+    prefix: '$',
+    centerValue: fmt(costoTotalPatron),
+    centerLabel: 'costo total',
+    ariaLabel: `Costo mensual total para el patrón de ${fmt(costoTotalPatron)}: sueldo más cuotas obrero-patronales.`,
+  };
+
   return {
     cuotaObrero: Number(cuotaObrero.toFixed(2)),
     cuotaPatron: Number(cuotaPatron.toFixed(2)),
@@ -91,5 +116,7 @@ export function cuotasImssMexico(i: Inputs): Outputs {
     porcObrero: Number(porcObrero.toFixed(2)),
     desglose: desgloseRedondeado,
     mensaje: `SBC diario $${sbcDiario.toFixed(2)}. Cuota obrera: $${cuotaObrero.toFixed(2)} | Cuota patronal: $${cuotaPatron.toFixed(2)} | Costo total patrón: $${costoTotalPatron.toFixed(2)}.`,
+    _insight,
+    _chart,
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   metUsado: number;
   nivelMostrado: string;
   resumen: string;
+  _insight?: any;
 }
 
 const MET_PICKLE: Record<string, { met: number; nombre: string }> = {
@@ -31,12 +32,26 @@ export function caloriasPickleball(i: Inputs): Outputs {
   const info = MET_PICKLE[nivel] || MET_PICKLE['recreativo'];
   const kcalMin = (info.met * 3.5 * peso) / 200;
   const total = kcalMin * min;
+  const totalR = Math.round(total);
+
+  // Equivalencia tangible: 1 alfajor de maicena ~250 kcal
+  const alfajores = (total / 250);
+  let equiv: string;
+  if (alfajores >= 1) equiv = `${alfajores.toFixed(1)} alfajor${alfajores >= 2 ? 'es' : ''} de maicena`;
+  else equiv = `media porción de pizza (~${Math.round(total)} kcal)`;
+  const intenso = info.met >= 5.0;
 
   return {
-    caloriasTotal: Math.round(total),
+    caloriasTotal: totalR,
     caloriasPorMinuto: Number(kcalMin.toFixed(2)),
     metUsado: info.met,
     nivelMostrado: info.nombre,
-    resumen: `Jugando **${info.nombre}** ${min} min quemás **${Math.round(total)} kcal** (${kcalMin.toFixed(2)} kcal/min, MET ${info.met}).`,
+    resumen: `Jugando **${info.nombre}** ${min} min quemás **${totalR} kcal** (${kcalMin.toFixed(2)} kcal/min, MET ${info.met}).`,
+    _insight: {
+      title: 'Lo que quemaste en la cancha',
+      text: `${min} min de **${info.nombre}** te queman **${totalR} kcal**, equivalente a ${equiv}. ${intenso ? 'A este ritmo el pickleball cuenta como ejercicio cardiovascular de intensidad moderada-alta.' : 'Un ritmo social que igual suma movimiento real al día.'}`,
+      tone: 'good',
+      icon: '🏓',
+    },
   };
 }

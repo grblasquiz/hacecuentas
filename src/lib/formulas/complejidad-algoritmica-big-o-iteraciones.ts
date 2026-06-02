@@ -15,5 +15,14 @@ export function complejidadAlgoritmicaBigOIteraciones(i: Inputs): Outputs {
   else if (seg<1e-3) txt=`${(seg*1e6).toFixed(1)} µs`;
   else if (seg<1) txt=`${(seg*1000).toFixed(1)} ms`;
   else txt=`${seg.toFixed(2)} s`;
-  return { ops:ops.toExponential(2), tiempo:txt, resumen:`n=${n}, ${t}: ${ops.toExponential(1)} ops ≈ ${txt}.` };
+  const notacion:Record<string,string>={'1':'O(1)','logn':'O(log n)','n':'O(n)','nlogn':'O(n log n)','n2':'O(n²)','2n':'O(2ⁿ)'};
+  const big=notacion[t]||t;
+  const veredicto = seg<1e-3 ? 'prácticamente instantáneo' : seg<1 ? 'rápido' : seg<60 ? 'lento pero tolerable' : 'inviable en la práctica';
+  const _insight = {
+    title: `${big}: ${veredicto}`,
+    text: `Con **n=${n.toLocaleString('es-AR')}** y complejidad **${big}** el algoritmo ejecuta **${ops.toExponential(1)} operaciones**, que a 10⁹ ops/s tardan **≈ ${txt}**: ${veredicto}.`,
+    tone: seg<1 ? 'good' : seg<60 ? 'neutral' : 'warn',
+    icon: '⏱️',
+  };
+  return { ops:ops.toExponential(2), tiempo:txt, resumen:`n=${n}, ${t}: ${ops.toExponential(1)} ops ≈ ${txt}.`, _insight };
 }

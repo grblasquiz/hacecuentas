@@ -33,6 +33,7 @@ export interface Outputs {
   diferencia: number;
   veredicto: string;
   breakeven_anos: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -213,9 +214,29 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // --- Insight ---
+  const eur = (v: number) => formatCurrency(Math.abs(v));
+  let insTitle: string;
+  let insText: string;
+  let insTone: 'good' | 'warn' | 'neutral';
+  if (Math.abs(diferencia) < umbralSignificativo) {
+    insTitle = 'Prácticamente lo mismo';
+    insText = `En ${anosAnalisis} años, comprar y alquilar tienen un coste neto casi idéntico (diferencia de solo ${eur(diferencia)}). La decisión pasa a ser de estilo de vida y flexibilidad, no de dinero.`;
+    insTone = 'neutral';
+  } else if (diferencia > 0) {
+    insTitle = 'Alquilar sale mejor';
+    insText = `En ${anosAnalisis} años, **alquilar** te ahorra unos **${eur(diferencia)}** frente a comprar, asumiendo que invertís la entrada y los gastos al ${rentabilidadInversion.toFixed(1).replace('.', ',')}% anual. La cuota hipotecaria sería de ${formatCurrency(cuotaMensual)}/mes.`;
+    insTone = 'neutral';
+  } else {
+    insTitle = 'Comprar sale mejor';
+    insText = `En ${anosAnalisis} años, **comprar** te ahorra unos **${eur(diferencia)}** frente a alquilar. Al final del periodo tu patrimonio en vivienda sería de **${formatCurrency(patrimonioNetoCompra)}**, con una cuota de ${formatCurrency(cuotaMensual)}/mes.`;
+    insTone = 'good';
+  }
+
   return {
     entrada_euros: round2(entrada),
     gastos_compra_euros: round2(gastosCompra),
+    _insight: { title: insTitle, text: insText, tone: insTone, icon: '🏠' },
     capital_hipoteca: round2(capitalHipoteca),
     cuota_hipoteca_mensual: round2(cuotaMensual),
     total_pagado_hipoteca_periodo: round2(totalCuotasPeriodo),

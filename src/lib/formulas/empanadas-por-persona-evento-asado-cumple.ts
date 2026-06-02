@@ -19,6 +19,8 @@ export interface Outputs {
   estimated_cost: number;
   adults_portion: number;
   children_portion: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -74,6 +76,30 @@ export function compute(i: Inputs): Outputs {
   // Costo estimado
   const estimated_cost = total_dozens * cost_per_dozen;
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const _insight = {
+    title: 'Resumen del pedido',
+    text: `Para **${total_guests} invitados** necesitás **${total_dozens} docenas** (${total_empanadas} empanadas), con un costo estimado de **${fmt(estimated_cost)}** a ${fmt(cost_per_dozen)} la docena.`,
+    tone: 'neutral' as const,
+    icon: '🥟',
+  };
+
+  const flavorSlices = [
+    { label: 'Carne', value: empanadas_carne },
+    { label: 'Pollo', value: empanadas_pollo },
+    { label: 'Jamón y queso', value: empanadas_jyq },
+    { label: 'Verdura', value: empanadas_verdura },
+  ].filter(s => s.value > 0);
+  const flavorTotal = flavorSlices.reduce((a, s) => a + s.value, 0);
+  const _chart = flavorSlices.length > 1 ? {
+    type: 'doughnut',
+    slices: flavorSlices,
+    prefix: '',
+    centerValue: `${flavorTotal}`,
+    centerLabel: 'empanadas',
+    ariaLabel: `Desglose de ${flavorTotal} empanadas por sabor`,
+  } : undefined;
+
   return {
     total_empanadas,
     total_dozens: Math.round(total_dozens * 100) / 100,
@@ -83,6 +109,8 @@ export function compute(i: Inputs): Outputs {
     empanadas_verdura,
     estimated_cost,
     adults_portion,
-    children_portion
+    children_portion,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

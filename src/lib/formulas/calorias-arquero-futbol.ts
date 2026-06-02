@@ -11,6 +11,7 @@ export interface Outputs {
   metUsado: number;
   intensidadNombre: string;
   detalle: string;
+  _insight?: any;
 }
 
 const NIVELES: Record<string, { met: number; nombre: string }> = {
@@ -31,11 +32,22 @@ export function caloriasArqueroFutbol(i: Inputs): Outputs {
   const kcalMin = (info.met * 3.5 * peso) / 200;
   const total = kcalMin * min;
 
+  // Equivalencias: una banana ~90 kcal, 5 kcal/min caminando
+  const bananas = total / 90;
+  const minCaminar = Math.round(total / 5);
+  const _insight = {
+    title: 'Tu gasto bajo los tres palos',
+    text: `En ${min} min al arco quemás **~${Math.round(total)} kcal** (${kcalMin.toFixed(2)} kcal/min). Es como ${bananas >= 1 ? `**${bananas.toFixed(1)} bananas**` : 'media banana'} o **${minCaminar} min** de caminata. El arquero gasta menos que un jugador de campo: más explosión, menos volumen.`,
+    tone: 'good',
+    icon: '🧤',
+  };
+
   return {
     caloriasTotal: Math.round(total),
     caloriasPorMinuto: Number(kcalMin.toFixed(2)),
     metUsado: info.met,
     intensidadNombre: info.nombre,
     detalle: `Un arquero de ${peso} kg en ${min} min a intensidad **${intensidad}** (MET ${info.met}) quema **~${Math.round(total)} kcal** (${kcalMin.toFixed(2)} kcal/min).`,
+    _insight,
   };
 }

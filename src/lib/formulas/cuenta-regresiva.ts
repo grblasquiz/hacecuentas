@@ -7,6 +7,7 @@ export interface Outputs {
   semanas: number;
   meses: number;
   resumen: string;
+  _insight?: any;
 }
 
 export function cuentaRegresiva(i: Inputs): Outputs {
@@ -33,6 +34,30 @@ export function cuentaRegresiva(i: Inputs): Outputs {
   else if (dias < 60) resumen = `Faltan ${dias} días (${semanas} semanas).`;
   else resumen = `Faltan ${dias} días (aprox. ${meses} meses).`;
 
+  let _insight: any;
+  if (dias < 0) {
+    _insight = {
+      title: "Fecha pasada",
+      text: `Esa fecha ya quedó atrás: pasaron **${Math.abs(dias)} días**. La cuenta regresiva está en negativo.`,
+      tone: "neutral",
+      icon: "🗓️",
+    };
+  } else if (dias === 0) {
+    _insight = {
+      title: "¡Es hoy!",
+      text: `El día llegó: la cuenta regresiva marca **0 días**. Quedan apenas **${Math.max(0, horas)} horas**.`,
+      tone: "good",
+      icon: "🎯",
+    };
+  } else {
+    _insight = {
+      title: "Cuenta regresiva activa",
+      text: `Faltan **${dias} días** (${horas.toLocaleString("es-AR")} horas o ${minutos.toLocaleString("es-AR")} minutos). Son unas **${semanas} semanas**${meses >= 2 ? ` / ${meses} meses` : ""}.`,
+      tone: "neutral",
+      icon: "⏳",
+    };
+  }
+
   return {
     diasTotales: dias,
     horasTotales: horas,
@@ -40,5 +65,6 @@ export function cuentaRegresiva(i: Inputs): Outputs {
     semanas,
     meses,
     resumen,
+    _insight,
   };
 }

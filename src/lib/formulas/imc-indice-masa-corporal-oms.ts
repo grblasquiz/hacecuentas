@@ -9,6 +9,7 @@ export interface Outputs {
   ideal_weight_range: string;
   weight_to_normal: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Umbrales de categoría IMC según OMS (vigentes 2026)
@@ -85,11 +86,22 @@ export function compute(i: Inputs): Outputs {
     ],
   };
 
+  const isNormal = imc >= IMC_UNDERWEIGHT && imc <= IMC_NORMAL_MAX;
+  const insight = {
+    title: isNormal ? 'IMC en rango saludable' : 'IMC fuera del rango saludable',
+    text: isNormal
+      ? `Con **${weight.toFixed(1)} kg** y **${heightCm} cm** tu IMC es **${imcRounded}**, dentro del rango normal OMS (18,5–24,9). El peso saludable para tu altura va de **${ideal_weight_range}**.`
+      : `Con **${weight.toFixed(1)} kg** y **${heightCm} cm** tu IMC es **${imcRounded}**, categoría **${category}**. ${weight_to_normal} El rango saludable para tu altura es **${ideal_weight_range}**.`,
+    tone: isNormal ? 'good' : 'warn',
+    icon: isNormal ? '✅' : '⚖️',
+  };
+
   return {
     imc: imcRounded,
     category,
     ideal_weight_range,
     weight_to_normal,
     _chart: chart,
+    _insight: insight,
   };
 }

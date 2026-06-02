@@ -9,6 +9,7 @@ export interface Outputs {
   caloriasHora: number;
   equivalenteCaminar: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function caloriasQuemadasEjercicio(i: Inputs): Outputs {
@@ -58,10 +59,30 @@ export function caloriasQuemadasEjercicio(i: Inputs): Outputs {
   const metCaminar = 2.5;
   const equivalenteCaminar = (caloriasQuemadas / (metCaminar * peso)) * 60;
 
+  const quemadasR = Math.round(caloriasQuemadas);
+  const horaR = Math.round(caloriasHora);
+
+  // Equivalencia tangible: 1 medialuna ~170 kcal
+  const medialunas = caloriasQuemadas / 170;
+  let equiv: string;
+  if (medialunas >= 1) equiv = `${medialunas.toFixed(1)} medialuna${medialunas >= 2 ? 's' : ''}`;
+  else equiv = `un vaso de gaseosa (~${quemadasR} kcal)`;
+
+  let intensidad: string;
+  if (met >= 8) intensidad = 'Es un esfuerzo intenso: gran gasto calórico por minuto.';
+  else if (met >= 5) intensidad = 'Intensidad moderada, un buen ritmo sostenible.';
+  else intensidad = 'Intensidad suave: ideal para sumar movimiento sin agotarte.';
+
   return {
-    caloriasQuemadas: Math.round(caloriasQuemadas),
-    caloriasHora: Math.round(caloriasHora),
+    caloriasQuemadas: quemadasR,
+    caloriasHora: horaR,
     equivalenteCaminar: Math.round(equivalenteCaminar),
-    mensaje: `Quemás ~${Math.round(caloriasQuemadas)} kcal en ${minutos} minutos (${Math.round(caloriasHora)} kcal/hora). Equivale a ${Math.round(equivalenteCaminar)} min caminando.`,
+    mensaje: `Quemás ~${quemadasR} kcal en ${minutos} minutos (${horaR} kcal/hora). Equivale a ${Math.round(equivalenteCaminar)} min caminando.`,
+    _insight: {
+      title: 'Lo que quemaste',
+      text: `En ${minutos} min quemaste **${quemadasR} kcal**, equivalente a ${equiv}. ${intensidad}`,
+      tone: 'good',
+      icon: '🔥',
+    },
   };
 }

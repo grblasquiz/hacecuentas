@@ -15,6 +15,8 @@ export interface Outputs {
   milestone_t3: string;     // início 3° trimestre – 28 semanas
   milestone_preterm: string;// termo precoce – 37 semanas
   trimester_label: string;  // "1° Trimestre", "2° Trimestre", "3° Trimestre" ou mensagem
+  _insight?: any;
+  _chart?: any;
 }
 
 // Duração padrão de uma gestação a termo em dias (Regra de Naegele)
@@ -126,6 +128,35 @@ export function compute(i: Inputs): Outputs {
   const milestoneT3 = addDias(dumAjustada, semanasMarcoDias(MARCO_INICIO_T3_SEM, 0));
   const milestonePreterm = addDias(dumAjustada, semanasMarcoDias(MARCO_TERMO_PRECOCE_SEM, 0));
 
+  // Idade gestacional limitada à faixa do gráfico (0–42 semanas)
+  const semGrafico = Math.max(0, Math.min(42, semanas + diasRestantes / 7));
+  const dppFmt = `${String(dppDate.getDate()).padStart(2, "0")}/${String(dppDate.getMonth() + 1).padStart(2, "0")}/${dppDate.getFullYear()}`;
+  const semDecorridas = Math.max(0, semanas);
+  const semParaParto = Math.max(0, 40 - semDecorridas);
+
+  const _insight = {
+    title: "Onde você está na gestação",
+    text: diffDias < 0
+      ? `Pela DUM informada a gestação ainda não começou. A **DPP** estimada é **${dppFmt}** (DUM + 280 dias pela regra de Naegele).`
+      : `Você está com **${gestacionalStr}** (${trimesterLabel.split(" (")[0]}). Faltam cerca de **${semParaParto} semana${semParaParto !== 1 ? "s" : ""}** para a DPP de **${dppFmt}**.`,
+    tone: "neutral",
+    icon: "🤰",
+  };
+
+  const _chart = {
+    type: "scale",
+    marker: Math.round(semGrafico * 10) / 10,
+    markerLabel: `${semDecorridas} sem`,
+    min: 0,
+    segments: [
+      { nombre: "1° trimestre", max: 12, color: "#f472b6", colorDark: "#f9a8d4" },
+      { nombre: "2° trimestre", max: 28, color: "#a78bfa", colorDark: "#c4b5fd" },
+      { nombre: "3° trimestre", max: 37, color: "#60a5fa", colorDark: "#93c5fd" },
+      { nombre: "Termo", max: 42, color: "#34d399", colorDark: "#6ee7b7" },
+    ],
+    ariaLabel: `Progresso da gestação: ${semDecorridas} semanas de 40, DPP em ${dppFmt}.`,
+  };
+
   return {
     dpp: toISO(dppDate),
     gestational_age: gestacionalStr,
@@ -133,6 +164,8 @@ export function compute(i: Inputs): Outputs {
     milestone_morpho: toISO(milestoneMorpho),
     milestone_t3: toISO(milestoneT3),
     milestone_preterm: toISO(milestonePreterm),
-    trimester_label: trimesterLabel
+    trimester_label: trimesterLabel,
+    _insight,
+    _chart
   };
 }

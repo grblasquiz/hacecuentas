@@ -6,6 +6,8 @@ export interface Outputs {
   diasEmbarazo: number;
   trimestre: number;
   fechaControl: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function fechaParto(i: Inputs): Outputs {
@@ -39,11 +41,58 @@ export function fechaParto(i: Inputs): Outputs {
 
   const fmt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 
+  const fppStr = fmt(fpp);
+  const trimNombre = trim === 1 ? '1.er trimestre' : trim === 2 ? '2.º trimestre' : '3.er trimestre';
+
+  // Insight dinámico según etapa del embarazo
+  let insight;
+  if (semanas >= 37) {
+    insight = {
+      title: 'Embarazo a término',
+      text: `Con **${semanas} semanas y ${dias} ${dias === 1 ? 'día' : 'días'}** ya estás en zona de término: el parto puede ocurrir en cualquier momento. Fecha probable de parto: **${fppStr}**.`,
+      tone: 'good',
+      icon: '👶',
+    };
+  } else if (semanas >= 0) {
+    insight = {
+      title: 'Embarazo en curso',
+      text: `Llevás **${semanas} semanas y ${dias} ${dias === 1 ? 'día' : 'días'}** de gestación (**${trimNombre}**). Tu fecha probable de parto es el **${fppStr}** y tu próximo control sugerido, el **${fmt(proxControl)}**.`,
+      tone: 'neutral',
+      icon: '🤰',
+    };
+  } else {
+    insight = {
+      title: 'Fecha de parto estimada',
+      text: `Según la FUM ingresada, tu fecha probable de parto sería el **${fppStr}** (regla de Naegele: FUM + 280 días).`,
+      tone: 'neutral',
+      icon: '🗓️',
+    };
+  }
+
+  // Gauge de avance del embarazo (0–42 semanas) con zonas por trimestre.
+  // El marcador se acota al rango del gráfico para no salirse de la última zona.
+  const markerSem = Math.max(0, Math.min(semanas, 42));
+  const chart = {
+    type: 'scale',
+    marker: markerSem,
+    markerLabel: `Semana ${markerSem}`,
+    min: 0,
+    segments: [
+      { nombre: '1.er trimestre', max: 13, color: '#bfdbfe', colorDark: '#1e3a8a' },
+      { nombre: '2.º trimestre', max: 27, color: '#a7f3d0', colorDark: '#065f46' },
+      { nombre: '3.er trimestre', max: 40, color: '#fde68a', colorDark: '#92400e' },
+      { nombre: 'Postérmino', max: 42, color: '#fecaca', colorDark: '#991b1b' },
+    ],
+    ariaLabel: `Avance del embarazo: semana ${markerSem} de 40.`,
+  };
+
   return {
-    fechaProbableParto: fmt(fpp),
+    fechaProbableParto: fppStr,
     semanasEmbarazo: semanas,
     diasEmbarazo: dias,
     trimestre: trim,
     fechaControl: fmt(proxControl),
+    _insight: insight,
+    _chart: chart,
   };
 }

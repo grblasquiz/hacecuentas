@@ -11,6 +11,7 @@ export interface Outputs {
   ahorroReal: number;
   recomendacion: string;
   valorCuota: number;
+  _insight?: any;
 }
 
 export function cuotasSinInteresPrecio(i: Inputs): Outputs {
@@ -37,6 +38,23 @@ export function cuotasSinInteresPrecio(i: Inputs): Outputs {
   const ahorroReal = Math.abs(precioContado - costoRealCuotas);
   const convieneCuotas = costoRealCuotas < precioContado;
 
+  // Insight: ganador y magnitud relativa del ahorro
+  const ahorroFmt = `$${Math.round(ahorroReal).toLocaleString('es-AR')}`;
+  const ahorroPct = precioContado > 0 ? (ahorroReal / precioContado) * 100 : 0;
+  const _insight = convieneCuotas
+    ? {
+        title: 'Pagá en cuotas',
+        text: `Con inflación del **${inflMensual}% mensual**, el valor presente de las ${cuotas} cuotas (${ahorroFmt} más barato, ${ahorroPct.toFixed(1)}%) le gana al contado: la inflación te licúa las cuotas futuras.`,
+        tone: 'good' as const,
+        icon: '💳',
+      }
+    : {
+        title: 'Pagá de contado',
+        text: `El **${descContado}% de descuento** por contado supera lo que ganarías difiriendo: pagar al contado te ahorra **${ahorroFmt}** (${ahorroPct.toFixed(1)}%) frente al valor real de las ${cuotas} cuotas.`,
+        tone: 'warn' as const,
+        icon: '💵',
+      };
+
   return {
     costoRealCuotas: Math.round(costoRealCuotas),
     precioContado: Math.round(precioContado),
@@ -45,5 +63,6 @@ export function cuotasSinInteresPrecio(i: Inputs): Outputs {
       ? `Convienen las cuotas sin interés. Ahorrás $${Math.round(ahorroReal).toLocaleString('es-AR')} en términos reales.`
       : `Conviene pagar de contado. Ahorrás $${Math.round(ahorroReal).toLocaleString('es-AR')} respecto a las cuotas.`,
     valorCuota: Math.round(valorCuota),
+    _insight,
   };
 }

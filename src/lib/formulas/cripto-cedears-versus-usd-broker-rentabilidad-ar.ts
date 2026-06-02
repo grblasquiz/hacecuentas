@@ -16,6 +16,8 @@ export interface Outputs {
   rentabilidad_neta_pct: number;
   capital_final_usd: number;
   resumen_activo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tasa cedular Ganancias art. 98 Ley 27.430 (vigente 2026)
@@ -168,14 +170,57 @@ export function compute(i: Inputs): Outputs {
     bpLabel +
     (retornoPct < 0 ? " | ⚠️ Retorno negativo: se muestra pérdida estimada." : "");
 
+  const rentNetaR = Math.round(rentabilidadNetaPct * 100) / 100;
+  const gananciaNetaR = Math.round(gananciaNeta * 100) / 100;
+  const cargaImpositiva = Math.round((impuestoGanancias + impuestoBP) * 100) / 100;
+  const fmtUSD = (n: number) => 'US$' + Math.round(n).toLocaleString('es-AR');
+
+  let insightTexto: string;
+  let insightTono: 'good' | 'warn' | 'neutral';
+  if (gananciaNetaR > 0) {
+    insightTono = 'good';
+    insightTexto = `Con ${info.label} tu ganancia neta sería **${fmtUSD(gananciaNetaR)}** (rentabilidad **${rentNetaR}%**) tras descontar **${fmtUSD(cargaImpositiva)}** de impuestos y **${fmtUSD(costoComision)}** de comisión.`;
+  } else if (gananciaNetaR < 0) {
+    insightTono = 'warn';
+    insightTexto = `Con ${info.label} el escenario da pérdida: **${fmtUSD(gananciaNetaR)}** (**${rentNetaR}%**), arrastrado por comisiones e impuestos sobre un retorno bruto bajo o negativo.`;
+  } else {
+    insightTono = 'neutral';
+    insightTexto = `Con ${info.label} quedás en cero neto: las comisiones (**${fmtUSD(costoComision)}**) e impuestos compensan toda la ganancia bruta.`;
+  }
+
+  // El donut sólo aporta si hay ganancia bruta positiva que repartir
+  const _chart =
+    gananciaBruta > 0
+      ? {
+          type: 'doughnut',
+          slices: [
+            { label: 'Ganancia neta', value: Math.max(0, gananciaNetaR) },
+            { label: 'Comisión broker', value: Math.round(costoComision * 100) / 100 },
+            { label: 'Imp. Ganancias', value: Math.round(impuestoGanancias * 100) / 100 },
+            { label: 'Bienes Personales', value: Math.round(impuestoBP * 100) / 100 },
+          ].filter((s) => s.value > 0),
+          prefix: 'US$',
+          centerValue: fmtUSD(gananciaBruta),
+          centerLabel: 'Ganancia bruta',
+          ariaLabel: `Reparto de la ganancia bruta ${fmtUSD(gananciaBruta)}: neto ${fmtUSD(Math.max(0, gananciaNetaR))}, comisión ${fmtUSD(costoComision)}, Ganancias ${fmtUSD(impuestoGanancias)}, Bienes Personales ${fmtUSD(impuestoBP)}`,
+        }
+      : undefined;
+
   return {
     ganancia_bruta_usd: Math.round(gananciaBruta * 100) / 100,
     costo_comision_usd: Math.round(costoComision * 100) / 100,
     impuesto_ganancias_usd: Math.round(impuestoGanancias * 100) / 100,
     impuesto_bp_usd: Math.round(impuestoBP * 100) / 100,
-    ganancia_neta_usd: Math.round(gananciaNeta * 100) / 100,
-    rentabilidad_neta_pct: Math.round(rentabilidadNetaPct * 100) / 100,
+    ganancia_neta_usd: gananciaNetaR,
+    rentabilidad_neta_pct: rentNetaR,
     capital_final_usd: Math.round(capitalFinal * 100) / 100,
     resumen_activo: resumen,
+    _insight: {
+      title: 'Rentabilidad neta del activo',
+      text: insightTexto,
+      tone: insightTono,
+      icon: '📊',
+    },
+    _chart,
   };
 }

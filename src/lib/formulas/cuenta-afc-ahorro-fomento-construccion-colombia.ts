@@ -16,6 +16,8 @@ export interface Outputs {
   rentabilidad_acumulada: number;
   patrimonio_total: number;
   aviso_limite: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -75,6 +77,32 @@ export function compute(i: Inputs): Outputs {
     aviso_limite = `⚠ Aporte excede límite: $${exceso.toLocaleString('es-CO', { maximumFractionDigits: 0 })} no es deducible en renta.`;
   }
 
+  const excedeLimite = aporte_anual > LIMITE_LEGAL_PESOS;
+  const fmtCO = (n: number) =>
+    Math.round(n).toLocaleString("es-CO", { maximumFractionDigits: 0 });
+
+  const _insight = {
+    title: "Tu cuenta AFC en perspectiva",
+    text: excedeLimite
+      ? `Aportando **$${fmtCO(aporte_mensual)}/mes** ahorrás **$${fmtCO(ahorro_fiscal_anual)}** al año en renta, pero el aporte anual supera el tope de 3.800 UVT: el excedente **no es deducible**. En ${años_proyeccion} años tu patrimonio llega a **$${fmtCO(patrimonio_total)}**.`
+      : `Aportando **$${fmtCO(aporte_mensual)}/mes** ahorrás **$${fmtCO(ahorro_fiscal_anual)}** al año en renta gracias a la deducción AFC. En ${años_proyeccion} años, sumando rentabilidad y beneficio fiscal, tu patrimonio llega a **$${fmtCO(patrimonio_total)}**.`,
+    tone: excedeLimite ? "warn" : "good",
+    icon: "🏦",
+  };
+
+  const _chart = {
+    type: "doughnut",
+    slices: [
+      { label: "Capital aportado", value: Math.round(capital_acumulado_sin_rentabilidad) },
+      { label: "Rentabilidad", value: Math.round(rentabilidad_acumulada) },
+      { label: "Ahorro fiscal", value: Math.round(ahorro_fiscal_acumulado) },
+    ],
+    prefix: "$",
+    centerValue: "$" + fmtCO(patrimonio_total),
+    centerLabel: "Patrimonio",
+    ariaLabel: `Composición del patrimonio AFC en ${años_proyeccion} años: capital aportado, rentabilidad generada y ahorro fiscal acumulado.`,
+  };
+
   return {
     aporte_anual: Math.round(aporte_anual),
     aporte_anual_permitido: Math.round(aporte_anual_permitido),
@@ -90,5 +118,7 @@ export function compute(i: Inputs): Outputs {
     rentabilidad_acumulada: Math.round(rentabilidad_acumulada),
     patrimonio_total: Math.round(patrimonio_total),
     aviso_limite: aviso_limite,
+    _insight,
+    _chart,
   };
 }

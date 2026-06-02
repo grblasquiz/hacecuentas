@@ -21,6 +21,7 @@ export interface Outputs {
   resultado_declaracion: number;
   tipo_resultado: string;
   anticipo_obligatorio: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -139,6 +140,33 @@ export function compute(i: Inputs): Outputs {
     anticipo_obligatorio = Math.round(resultado_declaracion * 0.5);
   }
 
+  const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const resultadoAbs = Math.abs(Math.round(resultado_declaracion));
+  const tasaMargPct = Math.round(tasa_marginal * 10000) / 100;
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (resultado_declaracion < 0) {
+    insightTone = 'good';
+    insightText = `Tu Operación Renta da **devolución de ${fmtCL(resultadoAbs)}**: las retenciones y créditos superaron tu Impuesto Global Complementario (**${fmtCL(impuesto_igc)}**). El SII te reintegra esa diferencia.`;
+  } else if (resultado_declaracion === 0) {
+    insightTone = 'neutral';
+    insightText = `Tu declaración queda **sin movimiento**: el IGC de **${fmtCL(impuesto_igc)}** se cubre exactamente con tus retenciones y créditos. No pagás ni te devuelven.`;
+  } else if (anticipo_obligatorio > 0) {
+    insightTone = 'warn';
+    insightText = `Te queda un **cargo de ${fmtCL(resultadoAbs)}** (tramo ${tramo_impositivo}, marginal ${tasaMargPct}%). Por superar el umbral, además te aplican un **anticipo obligatorio de ${fmtCL(anticipo_obligatorio)}** a cuenta del próximo período.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Te queda un **cargo a pagar de ${fmtCL(resultadoAbs)}**: tu IGC (**${fmtCL(impuesto_igc)}**) superó lo retenido durante el año. Estás en el tramo ${tramo_impositivo} (marginal ${tasaMargPct}%).`;
+  }
+
+  const _insight = {
+    title: 'Resultado de tu Operación Renta',
+    text: insightText,
+    tone: insightTone,
+    icon: '🇨🇱',
+  };
+
   return {
     renta_imponible_total: Math.round(renta_imp_final),
     renta_en_uta: Math.round(renta_en_uta * 100) / 100,
@@ -148,6 +176,7 @@ export function compute(i: Inputs): Outputs {
     impuesto_menos_creditos: Math.round(impuesto_menos_creditos),
     resultado_declaracion: Math.round(resultado_declaracion),
     tipo_resultado,
-    anticipo_obligatorio
+    anticipo_obligatorio,
+    _insight
   };
 }

@@ -18,6 +18,7 @@ export interface Outputs {
   ahorro_vs_particular: number;
   gasto_anual_estimado: number;
   tiempo_espera_dias: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -90,14 +91,35 @@ export function compute(i: Inputs): Outputs {
   // Tiempo espera según sistema elegido
   const tiempoEsperaDias = ESPERA_DIAS[i.sistema_elegido];
 
+  // --- Insight narrativo (comparación de alternativas, tono dinámico) ---
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const ahorroR = Math.round(ahorroVsParticular);
+  const gastoAnualR = Math.round(gastoAnualEstimado);
+
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (ahorroR > 0) {
+    insightText = `La opción más económica es **${opcionMasEconomica.sistema}** (${fmtCLP(Math.round(opcionMasEconomica.costo))} por consulta): te ahorra **${fmtCLP(ahorroR)}** frente al particular. Con ${i.consultas_anuales} consulta(s) al año por tu sistema, gastarías unos **${fmtCLP(gastoAnualR)}** y esperarías ~${tiempoEsperaDias} día(s) por hora.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Acá la vía **particular** ya es la más barata por consulta. Por tu sistema elegido el gasto anual ronda **${fmtCLP(gastoAnualR)}** (${i.consultas_anuales} consulta/s) con ~${tiempoEsperaDias} día(s) de espera por hora.`;
+    insightTone = 'neutral';
+  }
+
   return {
     costo_consulta_particular: Math.round(costoParticularFinal),
     costo_fonasa_mai: Math.round(costoFonasaMai),
     costo_fonasa_mle: Math.round(costoFonasaMle),
     costo_isapre: Math.round(costoIsapre),
     opcion_mas_economica: opcionMasEconomica.sistema,
-    ahorro_vs_particular: Math.round(ahorroVsParticular),
-    gasto_anual_estimado: Math.round(gastoAnualEstimado),
-    tiempo_espera_dias: tiempoEsperaDias
+    ahorro_vs_particular: ahorroR,
+    gasto_anual_estimado: gastoAnualR,
+    tiempo_espera_dias: tiempoEsperaDias,
+    _insight: {
+      title: 'Tu opción más conveniente',
+      text: insightText,
+      tone: insightTone,
+      icon: '🩺'
+    }
   };
 }

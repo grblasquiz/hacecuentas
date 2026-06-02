@@ -11,6 +11,7 @@ export interface Outputs {
   ahorroPesos: number;
   ahorroPorcentaje: number;
   desglose: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -117,12 +118,21 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: "Composición del costo final sin Impuesto PAIS: base, IVA y percepciones",
   };
 
+  // ── Insight narrativo ──────────────────────────────────────────────
+  const _insight = {
+    title: 'Lo que te ahorra que no exista el PAIS',
+    text: `Sin el Impuesto PAIS, tu operación de **USD ${montoUsd.toFixed(2)}** como ${perfil} cuesta **${fmt(costoSinPais)}** en lugar de ${fmt(costoConPais)}: te ahorrás **${fmt(ahorroPesos)}** (**${ahorroPorcentaje.toFixed(1)}%**). El IVA del 21%${GANANCIAS_RATE > 0 ? ' y la percepción de Ganancias' : ''}${conIIBB ? ' más IIBB' : ''} siguen vigentes sobre la base oficial.`,
+    tone: 'good',
+    icon: '🇦🇷',
+  };
+
   return {
     costoConPais,
     costoSinPais,
     ahorroPesos,
     ahorroPorcentaje,
     desglose,
+    _insight,
     _chart: chart,
   };
 }

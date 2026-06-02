@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   tiempoHoras: string; seguridadC: string; ahNecesarios: string; consejo: string;
+  _insight?: any; _chart?: any;
 }
 
 export function cargaBateriaTiempoAmp(inputs: Inputs): Outputs {
@@ -35,10 +36,40 @@ export function cargaBateriaTiempoAmp(inputs: Inputs): Outputs {
     4: 'LiFePO4: robusta, acepta tasas de carga altas (1-2C).',
     5: 'NiMH: eficiencia baja, lenta, permite trickle charge indefinido.',
   };
+  const nombres: Record<number, string> = { 1: 'plomo-ácido', 2: 'LiPo', 3: 'Li-Ion', 4: 'LiFePO4', 5: 'NiMH' };
+  const tipoNom = nombres[tp] || 'batería';
+  const _insight = {
+    title: 'Tiempo y seguridad de carga',
+    text: tasaC <= mc
+      ? `Reponer **${ahNec.toFixed(1)} Ah** con tu cargador de **${ca} A** tarda **${tStr}**. La tasa de **${tasaC.toFixed(2)}C** está dentro del máximo seguro (**${mc}C**) para ${tipoNom}: carga tranquila.`
+      : tasaC <= mc * 1.5
+        ? `Reponer **${ahNec.toFixed(1)} Ah** tarda **${tStr}**, pero la tasa de **${tasaC.toFixed(2)}C** supera el máximo de **${mc}C** para ${tipoNom}. Vigilá la temperatura; conviene bajar la corriente.`
+        : `La tasa de **${tasaC.toFixed(2)}C** excede de sobra el límite seguro (**${mc}C**) de ${tipoNom}. Cargar a **${ca} A** así arriesga sobrecalentamiento; reducí el cargador aunque tarde más que ${tStr}.`,
+    tone: tasaC <= mc ? 'good' : tasaC <= mc * 1.5 ? 'warn' : 'warn',
+    icon: tasaC <= mc ? '🔋' : '⚠️',
+  };
+
+  // Gauge: tasa C real contra las zonas segura / alta / excesiva del tipo de batería.
+  const topMax = Math.max(mc * 2, tasaC * 1.1);
+  const _chart = {
+    type: 'scale',
+    marker: Number(tasaC.toFixed(2)),
+    markerLabel: `${tasaC.toFixed(2)}C`,
+    min: 0,
+    segments: [
+      { nombre: 'Segura', max: Number(mc.toFixed(2)), color: '#34d399', colorDark: '#059669' },
+      { nombre: 'Alta', max: Number((mc * 1.5).toFixed(2)), color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Excesiva', max: Number(topMax.toFixed(2)), color: '#ef4444', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Tasa de carga ${tasaC.toFixed(2)}C frente al máximo recomendado de ${mc}C para ${tipoNom}.`,
+  };
+
   return {
     tiempoHoras: tStr,
     seguridadC: `${tasaC.toFixed(2)}C — ${seguro} (máx ${mc}C)`,
     ahNecesarios: `${ahNec.toFixed(1)} Ah a reponer`,
     consejo: tips[tp] || tips[1],
+    _insight,
+    _chart,
   };
 }

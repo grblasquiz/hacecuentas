@@ -17,6 +17,8 @@ export interface Outputs {
   etapa_construccion: string;
   composicion_recomendada: string;
   alerta_dependientes: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -104,12 +106,43 @@ export function compute(i: Inputs): Outputs {
       'Evalúa fuentes alternas ingresos (pareja empleo, ingresos complementarios).';
   }
 
+  // Insight: objetivo del fondo según perfil
+  const fmtCO = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const inestable = i.tipo_trabajo === 'independiente' || i.tipo_trabajo === 'informal';
+  const _insight = {
+    title: 'Tu meta de fondo de emergencia',
+    text: `Con gastos esenciales de **${fmtCO(gasto_total)}/mes** y trabajo **${i.tipo_trabajo.replace(/_/g,' ')}**, tu fondo debería cubrir **${meses_recomendados.toFixed(1)} meses**: **${fmtCO(valor_objetivo)}**.` + (i.personas_dependientes > 0 ? ` Tus **${i.personas_dependientes}** dependiente(s) suben la meta porque tu ingreso los sostiene.` : ``),
+    tone: inestable ? 'warn' : 'good',
+    icon: '🛟'
+  };
+
+  // Donut: composición del gasto mensual esencial (las partes suman el total)
+  const slicesGasto = [
+    { label: 'Arriendo', value: Math.round(i.arriendo_mensual || 0) },
+    { label: 'Servicios', value: Math.round(i.servicios_basicos || 0) },
+    { label: 'Alimentación', value: Math.round(i.alimentacion_mensual || 0) },
+    { label: 'Transporte', value: Math.round(i.transporte_mensual || 0) },
+    { label: 'EPS', value: Math.round(i.eps_mensual || 0) },
+    { label: 'Deuda mínima', value: Math.round(i.deuda_minima_mensual || 0) },
+    { label: 'Otros', value: Math.round(i.otros_gastos || 0) }
+  ].filter(s => s.value > 0);
+  const _chart = gasto_total > 0 && slicesGasto.length >= 2 ? {
+    type: 'doughnut',
+    slices: slicesGasto,
+    prefix: '$',
+    centerValue: fmtCO(gasto_total),
+    centerLabel: 'Gasto mensual',
+    ariaLabel: `Gasto mensual esencial ${fmtCO(gasto_total)}, base para calcular tu fondo de emergencia.`
+  } : undefined;
+
   return {
     gasto_mensual_total: gasto_total,
     meses_recomendados: parseFloat(meses_recomendados.toFixed(1)),
     valor_objetivo_pesos: valor_objetivo,
     etapa_construccion: etapa_construccion,
     composicion_recomendada: composicion_recomendada,
-    alerta_dependientes: alerta_dependientes
+    alerta_dependientes: alerta_dependientes,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

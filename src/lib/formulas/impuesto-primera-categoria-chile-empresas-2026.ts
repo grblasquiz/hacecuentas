@@ -18,6 +18,7 @@ export interface Outputs {
   impuesto_neto: number;
   credito_igc: number;
   carga_tributaria_efectiva: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -88,6 +89,23 @@ export function compute(i: Inputs): Outputs {
   // Fórmula: (Impuesto ÷ RLI) × 100
   const carga_tributaria_efectiva = rli > 0 ? (impuesto_primera_categoria / rli) * 100 : 0;
 
+  // Insight narrativo dinámico
+  const fmtCl = (n: number) => '$' + Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 });
+  const tasaPct = Math.round(tarifa_efectiva * 100);
+  const _insight = rli <= 0
+    ? {
+        title: 'Sin renta líquida imponible',
+        text: `Con los gastos y rentas ingresados, tu **RLI es $0**, así que no se genera Impuesto de Primera Categoría este ejercicio.`,
+        tone: 'neutral',
+        icon: '🏭'
+      }
+    : {
+        title: 'Impuesto de Primera Categoría a pagar',
+        text: `Bajo el régimen **${regimen_aplicado}** (tasa **${tasaPct}%**), sobre una RLI de **${fmtCl(rli)}** el impuesto es **${fmtCl(impuesto_primera_categoria)}**, es decir un PPM de **${fmtCl(ppm_mensual)}** al mes. Este monto queda como **crédito contra el Global Complementario** de los socios al retirar utilidades.`,
+        tone: 'warn',
+        icon: '🏭'
+      };
+
   return {
     rli: Math.round(rli),
     tarifa_efectiva: Math.round(tarifa_efectiva * 100),
@@ -95,6 +113,7 @@ export function compute(i: Inputs): Outputs {
     ppm_mensual,
     impuesto_neto: Math.round(impuesto_neto),
     credito_igc: Math.round(credito_igc),
-    carga_tributaria_efectiva: Number(carga_tributaria_efectiva.toFixed(2))
+    carga_tributaria_efectiva: Number(carga_tributaria_efectiva.toFixed(2)),
+    _insight
   };
 }

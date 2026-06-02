@@ -10,6 +10,7 @@ export interface Outputs {
   descuento_pago_anticipado: number;
   impuesto_neto: number;
   ahorro_anual: number;
+  _insight?: any;
 }
 
 // Tarifas máximas por departamento Colombia 2026 (DIAN)
@@ -93,11 +94,36 @@ export function compute(i: Inputs): Outputs {
   // Ahorro anual
   const ahorro_anual = descuento_pago_anticipado;
 
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const baseR = Math.round(impuesto_anual_base);
+  const descR = Math.round(descuento_pago_anticipado);
+  const netoR = Math.round(impuesto_neto);
+  const deptoLabel = i.departamento
+    ? i.departamento.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : 'tu departamento';
+
+  const _insight = descR > 0
+    ? {
+        title: 'Pagás con descuento por pronto pago',
+        text: `El impuesto vehicular en **${deptoLabel}** es **${fmtCOP(baseR)}** (tarifa **${(Math.round(tarifa_aplicable * 100) / 100).toFixed(1)}%**), `
+          + `pero por pagar anticipado ahorrás **${fmtCOP(descR)}** y quedás en **${fmtCOP(netoR)}**.`,
+        tone: 'good',
+        icon: '🚗'
+      }
+    : {
+        title: 'Tu impuesto vehicular 2026',
+        text: `Pagás **${fmtCOP(netoR)}** de impuesto en **${deptoLabel}** (tarifa **${(Math.round(tarifa_aplicable * 100) / 100).toFixed(1)}%** sobre ${fmtCOP(i.valor_comercial)}). `
+          + `Pagando anticipado podés ahorrar hasta un **10%**.`,
+        tone: 'warn',
+        icon: '🚗'
+      };
+
   return {
     tarifa_aplicable: Math.round(tarifa_aplicable * 100) / 100,
-    impuesto_anual_base: Math.round(impuesto_anual_base),
-    descuento_pago_anticipado: Math.round(descuento_pago_anticipado),
-    impuesto_neto: Math.round(impuesto_neto),
-    ahorro_anual: Math.round(ahorro_anual)
+    impuesto_anual_base: baseR,
+    descuento_pago_anticipado: descR,
+    impuesto_neto: netoR,
+    ahorro_anual: Math.round(ahorro_anual),
+    _insight
   };
 }

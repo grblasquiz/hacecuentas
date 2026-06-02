@@ -8,6 +8,8 @@ export interface Outputs {
   horasQuant: number;
   meses: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function horasPrepararGre(i: Inputs): Outputs {
@@ -33,12 +35,36 @@ export function horasPrepararGre(i: Inputs): Outputs {
   else if (totObj >= 310) rec = 'Mid-tier programs. 3-5 meses sostenidos.';
   else rec = 'State programs alcanzables con 2-3 meses.';
 
-  return {
+  const tone: 'good' | 'warn' | 'neutral' = meses > 6 ? 'warn' : meses < 3 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Tu plan de estudio para el GRE',
+    text: `Subir de **${vA}→${vO}** en Verbal y **${qA}→${qO}** en Quant pide unas **${Math.round(total)} h** de estudio (${Math.round(horasVerbal)} h Verbal + ${Math.round(horasQuant)} h Quant). A **${hsem} h/semana** son ~**${meses} meses**. ${rec}`,
+    tone,
+    icon: '📚',
+  };
+
+  const slices = [
+    { label: 'Verbal', value: Math.round(horasVerbal) },
+    { label: 'Quant', value: Math.round(horasQuant) },
+  ].filter(s => s.value > 0);
+
+  const _chart = slices.length > 1 ? {
+    type: 'doughnut',
+    slices,
+    centerValue: `${Math.round(total)} h`,
+    centerLabel: 'Total estudio',
+    ariaLabel: `Gráfico de torta de las horas de estudio para el GRE: ${Math.round(horasVerbal)} h de Verbal y ${Math.round(horasQuant)} h de Quant, total ${Math.round(total)} h`,
+  } : undefined;
+
+  const out: Outputs = {
     horasTotales: Math.round(total),
     horasVerbal: Math.round(horasVerbal),
     horasQuant: Math.round(horasQuant),
     meses,
     recomendacion: rec,
+    _insight,
   };
+  if (_chart) out._chart = _chart;
+  return out;
 
 }

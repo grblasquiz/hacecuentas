@@ -12,6 +12,8 @@ export interface Outputs {
   tipoAlimento: string;
   consumoMensual: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -115,6 +117,33 @@ export function compute(i: Inputs): Outputs {
     detalle += " Nivel de actividad alto: verificá que el perro mantenga condición corporal óptima (no costillas visibles, cintura perceptible).";
   }
 
+  const esCachorro = i.etapa === "cachorro_temprano" || i.etapa === "cachorro_medio" || i.etapa === "cachorro_tardio";
+  const _insight = {
+    title: "Cuánto darle por día",
+    text: `Tu Bulldog Francés de **${peso} kg** necesita unos **${gramosTotal} g** de balanceado por día, repartidos en **${cantidadPorciones} comida${cantidadPorciones === 1 ? '' : 's'}** de ~${porcion} g. Eso son cerca de **${consumoMensual} kg al mes**. ${esCachorro ? 'Al ser cachorro, respetá los horarios y no dejes comida a libre disposición.' : 'Pesá la ración con una taza medidora o balanza para no sobrealimentarlo: la raza tiende al sobrepeso.'}`,
+    tone: "neutral",
+    icon: "🐶",
+  };
+
+  // Donut: la ración diaria repartida en comidas (las porciones suman gramosTotal exacto)
+  const slices = [];
+  let acumulado = 0;
+  const base = Math.floor(gramosTotal / cantidadPorciones);
+  for (let k = 0; k < cantidadPorciones; k++) {
+    const esUltima = k === cantidadPorciones - 1;
+    const val = esUltima ? gramosTotal - acumulado : base;
+    acumulado += val;
+    slices.push({ label: `Comida ${k + 1}`, value: val });
+  }
+  const _chart = {
+    type: "doughnut",
+    slices,
+    prefix: "",
+    centerValue: `${gramosTotal} g`,
+    centerLabel: "por día",
+    ariaLabel: `Ración diaria de ${gramosTotal} gramos repartida en ${cantidadPorciones} comidas`,
+  };
+
   return {
     gramosTotal,
     porcion,
@@ -122,5 +151,7 @@ export function compute(i: Inputs): Outputs {
     tipoAlimento,
     consumoMensual,
     detalle: detalle.trim(),
+    _insight,
+    _chart,
   };
 }

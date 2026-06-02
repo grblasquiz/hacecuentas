@@ -10,6 +10,7 @@ export interface Outputs {
   costoAnual: number;
   costoMensual: number;
   detalle: string;
+  _insight?: any;
 }
 
 const PRECIOS: Record<string, Record<string, [number, number]>> = {
@@ -54,10 +55,20 @@ export function costoVeterinarioConsultaPromedio(i: Inputs): Outputs {
   const nombreTipo = NOMBRES[tipo] || tipo;
   const zonaLabel = zona === 'caba' ? 'CABA/GBA norte' : zona === 'gba' ? 'GBA sur/oeste' : 'Interior';
 
+  const esQuirurgico = tipo === 'cirugiaMayor' || tipo === 'cirugiaMenor' || tipo === 'castracion';
+  const tone: 'good' | 'warn' | 'neutral' = (esQuirurgico || costoConsulta >= 100000) ? 'warn' : 'neutral';
+  const _insight = {
+    title: tone === 'warn' ? 'Gasto veterinario fuerte' : 'Tu presupuesto veterinario',
+    text: `Una ${nombreTipo.toLowerCase()} para tu ${especie} en ${zonaLabel} ronda los **$${costoConsulta.toLocaleString('es-AR')}**. Con ${visitas} ${visitas === 1 ? 'visita' : 'visitas'} al año son **$${costoAnual.toLocaleString('es-AR')}/año** (**$${costoMensual.toLocaleString('es-AR')}/mes**)${tone === 'warn' ? ', un monto que conviene tener previsto o cubrir con un seguro de mascota.' : '.'}`,
+    tone,
+    icon: '🐾',
+  };
+
   return {
     costoConsulta,
     costoAnual,
     costoMensual,
     detalle: `${nombreTipo} para ${especie} en ${zonaLabel}: ~$${costoConsulta.toLocaleString('es-AR')} por consulta. Con ${visitas} visitas/año = $${costoAnual.toLocaleString('es-AR')}/año ($${costoMensual.toLocaleString('es-AR')}/mes).`,
+    _insight,
   };
 }

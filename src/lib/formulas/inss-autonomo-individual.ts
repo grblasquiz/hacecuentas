@@ -16,6 +16,7 @@ export interface Outputs {
   direitos: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -50,6 +51,20 @@ export function inssAutonomoIndividual(i: Inputs): Outputs {
   const formula = `${plano === 'simplificado' ? '11%' : '20%'} × ${fmtBRL(baseAplicada)} = ${fmtBRL(contribuicao)}`;
   const explicacao = `Contribuinte individual (autônomo) pode optar por dois planos: (1) Simplificado 11% sobre o salário mínimo (${fmtBRL(salarioMinimo)}) — só dá direito à aposentadoria por idade; (2) Normal 20% sobre a base escolhida entre ${fmtBRL(salarioMinimo)} e o teto (${fmtBRL(teto)}) — dá direito a todos os benefícios. Código de recolhimento GPS: 1007 (normal) ou 1163 (simplificado mensal).`;
 
+  const _insight = plano === 'simplificado'
+    ? {
+        title: 'Plano Simplificado: barato, mas limitado',
+        text: `Você paga **${fmtBRL(contribuicao)}/mês** (11% sobre o salário mínimo), o mais econômico — mas só garante **aposentadoria por idade**. Não conta para aposentadoria por tempo de contribuição.`,
+        tone: 'warn',
+        icon: '⚠️',
+      }
+    : {
+        title: 'Plano Normal: acesso a todos os benefícios',
+        text: `Contribuindo **${fmtBRL(contribuicao)}/mês** (20% sobre ${fmtBRL(baseAplicada)}) você garante **todos os benefícios** do INSS: aposentadoria por idade e por tempo de contribuição, auxílio-doença, salário-maternidade e pensão por morte.`,
+        tone: 'good',
+        icon: '🛡️',
+      };
+
   return {
     planoEscolhido: planoDesc,
     aliquota: plano === 'simplificado' ? '11%' : '20%',
@@ -58,5 +73,6 @@ export function inssAutonomoIndividual(i: Inputs): Outputs {
     direitos,
     formula,
     explicacao,
+    _insight,
   };
 }

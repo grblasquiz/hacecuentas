@@ -31,6 +31,8 @@ export interface FiniquitoBoliviaOutputs {
   totalFiniquito: string;
   anosComputables: string;
   observaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmtBOB = (n: number) =>
@@ -104,6 +106,59 @@ export function finiquitoBoliviaLtg(i: FiniquitoBoliviaInputs): FiniquitoBolivia
   const totalFiniquito =
     indemnizacion + desahucio + aguinaldoProporcional + vacacionesPendientes;
 
+  // --- Insight narrativo ---
+  const pctDesahucio = totalFiniquito > 0 ? Math.round((desahucio / totalFiniquito) * 100) : 0;
+  let _insight: any;
+  if (tipo === 'despido-injustificado') {
+    _insight = {
+      title: 'Despido injustificado: cobrás todo',
+      text: `Por despido sin causa te corresponde indemnización **+** desahucio. El desahucio (**${fmt(desahucio)}**, 3 sueldos) pesa el **${pctDesahucio}%** del total de **${fmt(totalFiniquito)}**.`,
+      tone: 'good',
+      icon: '💼',
+    };
+  } else if (tipo === 'despido-justificado') {
+    _insight = {
+      title: 'Despido con causa: perdés indemnización',
+      text: `Con causa justificada (Art. 16 LGT) pierdes indemnización y desahucio: tu finiquito queda en **${fmt(totalFiniquito)}**, solo aguinaldo y vacaciones proporcionales.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (tipo === 'renuncia') {
+    _insight = {
+      title: 'Renuncia: indemnización sí, desahucio no',
+      text: `Por renuncia cobrás indemnización por tiempo de servicio (DS 110/2009) más aguinaldo y vacaciones, pero **no hay desahucio**. Total estimado: **${fmt(totalFiniquito)}**.`,
+      tone: 'neutral',
+      icon: '✍️',
+    };
+  } else {
+    _insight = {
+      title: 'Mutuo acuerdo',
+      text: `Por mutuo acuerdo se paga la indemnización por tiempo de servicio; el desahucio es **negociable**. Base estimada: **${fmt(totalFiniquito)}**.`,
+      tone: 'neutral',
+      icon: '🤝',
+    };
+  }
+
+  // --- Gráfico donut: composición del finiquito ---
+  const slices = [
+    { label: 'Indemnización', value: Math.round(indemnizacion * 100) / 100 },
+    { label: 'Desahucio', value: Math.round(desahucio * 100) / 100 },
+    { label: 'Aguinaldo prop.', value: Math.round(aguinaldoProporcional * 100) / 100 },
+    { label: 'Vacaciones', value: Math.round(vacacionesPendientes * 100) / 100 },
+  ].filter((s) => s.value > 0);
+
+  const _chart =
+    totalFiniquito > 0
+      ? {
+          type: 'doughnut',
+          slices,
+          prefix: 'Bs ',
+          centerValue: fmt(totalFiniquito),
+          centerLabel: 'Total finiquito',
+          ariaLabel: 'Composición del finiquito boliviano por concepto',
+        }
+      : undefined;
+
   return {
     indemnizacionTiempoServicio: fmt(indemnizacion),
     desahucio: fmt(desahucio),
@@ -112,5 +167,7 @@ export function finiquitoBoliviaLtg(i: FiniquitoBoliviaInputs): FiniquitoBolivia
     totalFiniquito: fmt(totalFiniquito),
     anosComputables: anosComputablesStr,
     observaciones,
+    _insight,
+    _chart,
   };
 }

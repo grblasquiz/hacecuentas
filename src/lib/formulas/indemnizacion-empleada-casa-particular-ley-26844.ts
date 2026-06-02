@@ -45,6 +45,7 @@ export interface IndemAgravadaOutputs {
   aniosComputables: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function indemnizacionEmpleadaCasaParticularLey26844(
@@ -121,6 +122,33 @@ export function indemnizacionEmpleadaCasaParticularLey26844(
 
   const total = antiguedad + agravada + preaviso + sac + vacaciones;
 
+  const totalFmt = '$' + Math.round(total).toLocaleString('es-AR');
+  const sueldosTotal = total / sueldo;
+  let insight: any;
+  if (agravada > 0) {
+    const etiqueta = supuesto === 'embarazo' ? 'embarazo' : 'matrimonio';
+    insight = {
+      title: 'Indemnización agravada',
+      text: `Por ${etiqueta} se suman **6 sueldos** (**$${Math.round(agravada).toLocaleString('es-AR')}**) a la liquidación ordinaria: el total trepa a **${totalFmt}**, equivalente a **${sueldosTotal.toFixed(1)} sueldos**. Conservá la comunicación fehaciente que activa la presunción del Art. ${supuesto === 'embarazo' ? '41' : '44'}.`,
+      tone: 'warn',
+      icon: supuesto === 'embarazo' ? '🤰' : '💍',
+    };
+  } else if (supuesto === 'sin-causa') {
+    insight = {
+      title: 'Liquidación final',
+      text: `El despido sin causa suma **${totalFmt}** (**${sueldosTotal.toFixed(1)} sueldos**), donde la antigüedad (**$${Math.round(antiguedad).toLocaleString('es-AR')}**) es el componente más pesado. Se computan **${aniosComputables}** ${aniosComputables === 1 ? 'año' : 'años'} (la fracción mayor a 3 meses suma un año).`,
+      tone: 'neutral',
+      icon: '🧹',
+    };
+  } else {
+    insight = {
+      title: 'Extinción sin agravante',
+      text: `En este supuesto la liquidación da **${totalFmt}**. ${supuesto === 'jubilacion-empleador' ? 'Si la intimación previa fue correcta, **no corresponde indemnización por antigüedad**: solo SAC y vacaciones proporcionales.' : 'La incapacidad absoluta y permanente habilita indemnización del Art. 48 (**1 mes por año**), sin preaviso.'}`,
+      tone: 'neutral',
+      icon: supuesto === 'jubilacion-empleador' ? '👵' : '🩺',
+    };
+  }
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -146,5 +174,6 @@ export function indemnizacionEmpleadaCasaParticularLey26844(
     aniosComputables: `${aniosComputables} ${aniosComputables === 1 ? 'año' : 'años'} computables`,
     mensaje,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -22,6 +22,30 @@ export interface CuposConferenceOutputs {
   viaDeClasificacion: string;
   cuposPais: number;
   detalle: string;
+  _insight?: any;
+}
+
+function buildInsightConference(o: {
+  clasifica: boolean;
+  fase: string;
+  viaDeClasificacion: string;
+  rank: number;
+  pos: number;
+}) {
+  if (o.clasifica) {
+    return {
+      title: 'Clasifica a la Conference League',
+      text: `Con el ranking UEFA **${o.rank}** y la posición **${o.pos}** en la liga, el equipo entra a la **${o.fase}** vía: ${o.viaDeClasificacion}. Es la puerta de entrada europea más accesible.`,
+      tone: 'good',
+      icon: '🟢',
+    };
+  }
+  return {
+    title: 'No alcanza cupo Conference',
+    text: `Con ranking UEFA **${o.rank}** y posición **${o.pos}**, el equipo queda **fuera** de los cupos a la Conference League. Para entrar necesitaría mejorar puesto o ganar la copa nacional.`,
+    tone: 'warn',
+    icon: '🟡',
+  };
 }
 
 export function cuposConferenceLeague(
@@ -44,6 +68,7 @@ export function cuposConferenceLeague(
         cuposPais,
         detalle:
           'En ligas top, el último cupo europeo muchas veces cae al 6º o 7º vía Conference League playoff.',
+        _insight: buildInsightConference({ clasifica: true, fase: 'Playoff Conference League', viaDeClasificacion: `Posición ${pos} — liga top UEFA, acceso marginal`, rank, pos }),
       };
     }
     return {
@@ -53,6 +78,7 @@ export function cuposConferenceLeague(
       cuposPais,
       detalle:
         'En ligas top (España, Inglaterra, Italia, Alemania, Francia) los cupos Conference son marginales y dependen de la copa nacional.',
+      _insight: buildInsightConference({ clasifica: false, fase: 'No clasifica', viaDeClasificacion: `Posición ${pos} — liga top UEFA sin cupo Conference`, rank, pos }),
     };
   }
 
@@ -66,6 +92,7 @@ export function cuposConferenceLeague(
         cuposPais,
         detalle:
           'Ligas ranking 6-15 UEFA tienen 1 cupo Conference que entra por fase previa (1-2 rondas).',
+        _insight: buildInsightConference({ clasifica: true, fase: 'Fase previa Conference League', viaDeClasificacion: `Posición ${pos} — cupo Conference del país`, rank, pos }),
       };
     }
     if (campeonCopa) {
@@ -76,6 +103,7 @@ export function cuposConferenceLeague(
         cuposPais,
         detalle:
           'El campeón de copa puede ir a Conference si la liga no le da lugar a EL.',
+        _insight: buildInsightConference({ clasifica: true, fase: 'Fase previa Conference League', viaDeClasificacion: 'Campeón de copa nacional', rank, pos }),
       };
     }
     return {
@@ -85,6 +113,7 @@ export function cuposConferenceLeague(
       cuposPais,
       detalle:
         'No alcanzó zona de cupos europeos en su liga.',
+      _insight: buildInsightConference({ clasifica: false, fase: 'No clasifica', viaDeClasificacion: `Posición ${pos} — fuera de cupos`, rank, pos }),
     };
   }
 
@@ -97,6 +126,7 @@ export function cuposConferenceLeague(
       cuposPais,
       detalle:
         'Campeones de federaciones pequeñas juegan primero previas de UCL; si pierden caen a Conference.',
+      _insight: buildInsightConference({ clasifica: true, fase: 'Fase previa Champions League (luego cae a Conference si pierde)', viaDeClasificacion: 'Campeón de liga federación pequeña', rank, pos }),
     };
   }
   if (pos >= 2 && pos <= 4) {
@@ -107,6 +137,7 @@ export function cuposConferenceLeague(
       cuposPais,
       detalle:
         'Ligas ranking 16+ suelen repartir 2-3 cupos entre Conference y previas. Todos sus equipos juegan varias rondas previas antes de fase de liga.',
+      _insight: buildInsightConference({ clasifica: true, fase: 'Fase previa Conference League', viaDeClasificacion: `Posición ${pos} — cupo Conference por ranking bajo`, rank, pos }),
     };
   }
   return {
@@ -116,5 +147,6 @@ export function cuposConferenceLeague(
     cuposPais,
     detalle:
       'La liga tiene muy pocos cupos, típicamente campeón + 1 a 2 equipos más.',
+    _insight: buildInsightConference({ clasifica: false, fase: 'No clasifica', viaDeClasificacion: `Posición ${pos} — fuera de cupos`, rank, pos }),
   };
 }

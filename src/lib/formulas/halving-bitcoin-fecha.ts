@@ -17,6 +17,7 @@ export interface Outputs {
   halvingsOcurridos: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function halvingBitcoinFecha(i: Inputs): Outputs {
@@ -47,6 +48,20 @@ export function halvingBitcoinFecha(i: Inputs): Outputs {
 
   const explicacion = `Bitcoin está en el bloque ${bloqueActual.toLocaleString()}. El próximo halving (#${halvingsOcurridos + 1}) será en el bloque ${proximoHalving.toLocaleString()}, faltan ${bloquesRestantes.toLocaleString()} bloques (~${diasEstimados} días, estimado ${fechaEstimada}). La recompensa bajará de ${recompensaActual} BTC a ${recompensaPostHalving} BTC por bloque. Históricamente, los halvings precedieron subas significativas de precio, aunque rendimientos pasados no garantizan rendimientos futuros.`;
 
+  // Emisión nueva diaria antes y después (bloques/día ≈ 86400 / tiempoBloque)
+  const bloquesPorDia = 86400 / tiempoBloque;
+  const btcDiariosAntes = bloquesPorDia * recompensaActual;
+  const btcDiariosDespues = bloquesPorDia * recompensaPostHalving;
+  const anios = Math.floor(diasEstimados / 365);
+  const meses = Math.round((diasEstimados % 365) / 30);
+  const cuando = anios > 0 ? `${anios} año${anios !== 1 ? 's' : ''}${meses > 0 ? ` y ${meses} mes${meses !== 1 ? 'es' : ''}` : ''}` : `${diasEstimados} días`;
+  const _insight = {
+    title: 'Qué pasa en el halving #' + (halvingsOcurridos + 1),
+    text: `Faltan **${bloquesRestantes.toLocaleString()} bloques** (~**${cuando}**, estimado **${fechaEstimada}**): la recompensa por bloque se parte de **${recompensaActual} BTC a ${recompensaPostHalving} BTC** y la emisión diaria nueva cae de ~${Math.round(btcDiariosAntes)} a ~${Math.round(btcDiariosDespues)} BTC. Ese golpe de oferta es el motor de la tesis alcista, pero no garantiza nada.`,
+    tone: 'neutral',
+    icon: '₿',
+  };
+
   return {
     proximoHalving,
     bloquesRestantes,
@@ -57,5 +72,6 @@ export function halvingBitcoinFecha(i: Inputs): Outputs {
     halvingsOcurridos,
     formula,
     explicacion,
+    _insight,
   };
 }

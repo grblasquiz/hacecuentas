@@ -13,6 +13,8 @@ export interface Outputs {
   total_interest: number;
   financed_amount: number;
   amortization_table: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Average APRs — Experian Q1 2026
@@ -105,11 +107,34 @@ export function compute(i: Inputs): Outputs {
 
   const amortizationTable = rows.join("\n");
 
+  const fmtUSD = (v: number) =>
+    "$" + v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const interestShare = totalPaid > 0 ? (totalInterest / totalPaid) * 100 : 0;
+  const _insight = {
+    title: "What this loan really costs",
+    text: `You'll pay **${fmtUSD(monthlyPayment)}/mo** for ${n} months. On top of the **${fmtUSD(financedAmount)}** financed, interest adds **${fmtUSD(totalInterest)}** — that's **${interestShare.toFixed(0)}%** of every dollar you pay going to the lender.`,
+    tone: interestShare >= 20 ? "warn" : interestShare >= 10 ? "neutral" : "good",
+    icon: "🚗",
+  };
+  const _chart = {
+    type: "doughnut",
+    slices: [
+      { label: "Amount financed", value: financedAmount },
+      { label: "Total interest", value: totalInterest },
+    ],
+    prefix: "$",
+    centerValue: fmtUSD(totalPaid),
+    centerLabel: "Total paid",
+    ariaLabel: `Of ${fmtUSD(totalPaid)} total, ${fmtUSD(financedAmount)} is principal and ${fmtUSD(totalInterest)} is interest.`,
+  };
+
   return {
     monthly_payment: monthlyPayment,
     total_paid: totalPaid,
     total_interest: totalInterest,
     financed_amount: financedAmount,
     amortization_table: amortizationTable,
+    _insight,
+    _chart,
   };
 }

@@ -31,6 +31,8 @@ export interface FiniquitoDespidoInjustificadoMxOutputs {
   totalBruto: string;
   topePrimaAplicado: string;
   anosComputables: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -89,6 +91,35 @@ export function finiquitoDespidoInjustificadoMexico(
     vacacionesPendientes +
     primaVacacional;
 
+  // --- Insight: el indemnizatorio (3 meses + 20 días) suele dominar ---
+  const indemnizatorio = indemnizacion3Meses + indemnizacion20Dias + primaAntiguedad;
+  const pctIndem = totalBruto > 0 ? Math.round((indemnizatorio / totalBruto) * 100) : 0;
+  const _insight = {
+    title: 'Despido injustificado: pesa la indemnización',
+    text: `Con **${anosComputables} ${anosComputables === 1 ? 'año' : 'años'}** computables, el bloque indemnizatorio (3 meses + 20 días/año + prima de antigüedad) suma **${fmt(indemnizatorio)}**, el **${pctIndem}%** de un total bruto de **${fmt(totalBruto)}**.`,
+    tone: 'good',
+    icon: '💼',
+  };
+
+  // --- Gráfico donut: composición del finiquito ---
+  const _chartSlices = [
+    { label: 'Indemniz. 3 meses', value: Math.round(indemnizacion3Meses * 100) / 100 },
+    { label: '20 días/año', value: Math.round(indemnizacion20Dias * 100) / 100 },
+    { label: 'Prima antigüedad', value: Math.round(primaAntiguedad * 100) / 100 },
+    { label: 'Aguinaldo prop.', value: Math.round(aguinaldoProporcional * 100) / 100 },
+    { label: 'Vacaciones', value: Math.round(vacacionesPendientes * 100) / 100 },
+    { label: 'Prima vacacional', value: Math.round(primaVacacional * 100) / 100 },
+  ].filter((s) => s.value > 0);
+
+  const _chart = {
+    type: 'doughnut',
+    slices: _chartSlices,
+    prefix: '$',
+    centerValue: fmt(totalBruto),
+    centerLabel: 'Total bruto',
+    ariaLabel: 'Composición del finiquito por despido injustificado en México',
+  };
+
   return {
     indemnizacion3Meses: fmt(indemnizacion3Meses),
     primaAntiguedad: fmt(primaAntiguedad),
@@ -101,5 +132,7 @@ export function finiquitoDespidoInjustificadoMexico(
       ? `Sí — se aplicó tope 2 × SMG ($${tope2Smg.toFixed(2)}) para prima de antigüedad`
       : 'No — salario debajo del tope de 2 × SMG',
     anosComputables: `${anosComputables} ${anosComputables === 1 ? 'año' : 'años'}`,
+    _insight,
+    _chart,
   };
 }

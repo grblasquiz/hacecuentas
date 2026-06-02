@@ -1,6 +1,6 @@
 /** Tiempo recomendado cold plunge según temperatura del agua y nivel */
 export interface Inputs { temperaturaAgua: number; nivel: 'principiante' | 'intermedio' | 'avanzado'; }
-export interface Outputs { tiempoMinSegundos: number; tiempoMaxSegundos: number; tiempoMinutos: string; explicacion: string; }
+export interface Outputs { tiempoMinSegundos: number; tiempoMaxSegundos: number; tiempoMinutos: string; explicacion: string; _insight?: any; }
 export function coldPlungeTiempoTemperaturaCortisol(i: Inputs): Outputs {
   const t = Number(i.temperaturaAgua);
   if (isNaN(t) || t < 0 || t > 20) throw new Error('Temperatura debe estar entre 0 y 20 °C');
@@ -19,10 +19,23 @@ export function coldPlungeTiempoTemperaturaCortisol(i: Inputs): Outputs {
   const min = Math.round(base[0] * factor * ajusteFrio);
   const max = Math.round(base[1] * factor * ajusteFrio);
   const minutos = `${(min / 60).toFixed(1)}-${(max / 60).toFixed(1)} min`;
+  const frioExtremo = t < 3;
+  const sesionesSemana = Math.max(2, Math.ceil(660 / ((min + max) / 2)));
+  const _insight = {
+    title: frioExtremo ? 'Agua muy fría: cortá antes' : t <= 5 ? 'Frío intenso, dosis corta' : 'Más templada, podés estirar',
+    text: `A **${t}°C** y nivel ${i.nivel}, apuntá a **${minutos}** por sesión. ` +
+      (frioExtremo
+        ? `Por debajo de 3°C el tiempo se recorta sí o sí: priorizá salir antes que aguantar.`
+        : `Con sesiones así necesitás unas **${sesionesSemana}** por semana para juntar los ~11 min de exposición acumulada.`) +
+      ` Informativo, no es asesoramiento médico.`,
+    tone: frioExtremo ? 'warn' : 'neutral',
+    icon: '🧊',
+  };
   return {
     tiempoMinSegundos: min,
     tiempoMaxSegundos: max,
     tiempoMinutos: minutos,
     explicacion: `A ${t}°C, nivel ${i.nivel}: ${minutos} por sesión. Para alcanzar el target de ~11 min/semana de exposición acumulada, distribuí en 2-4 sesiones. INFORMATIVO — no es asesoramiento médico.`,
+    _insight,
   };
 }

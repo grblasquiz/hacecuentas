@@ -13,6 +13,8 @@ export interface Outputs {
   lista_espera_media: number;
   nota_ccaa: string;
   nota_prestacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -185,6 +187,32 @@ export function compute(i: Inputs): Outputs {
 
   const nota_ccaa = NOTAS_CCAA[ccaa] ?? 'Consulta los servicios sociales de tu comunidad autónoma para información actualizada sobre cuantías y plazos.';
 
+  // --- Insight + gráfico ---
+  const eur = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 });
+  const pct_copago_redondo = Math.round(pct_copago * 100);
+  const tono: 'good' | 'warn' | 'neutral' =
+    pct_copago >= 0.35 ? 'warn' : (pct_copago > 0 ? 'neutral' : 'good');
+  const _insight = {
+    title: 'Lo que vas a cobrar',
+    text: copago_mensual > 0
+      ? `Te corresponden **${eur.format(cuantia_bruta)} €/mes** brutos, pero tu copago del **${pct_copago_redondo}%** (${eur.format(copago_mensual)} €) deja **${eur.format(cuantia_neta)} € netos**. La espera media en tu comunidad ronda los **${lista_espera_media} meses**.`
+      : `Te corresponden **${eur.format(cuantia_neta)} €/mes** netos, **sin copago** por tu nivel de renta. La espera media en tu comunidad ronda los **${lista_espera_media} meses**.`,
+    tone: tono,
+    icon: '🧓',
+  };
+
+  const _chart = cuantia_bruta > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Recibís (neto)', value: cuantia_neta },
+      { label: 'Tu copago', value: copago_mensual },
+    ],
+    prefix: '',
+    centerValue: `${eur.format(cuantia_bruta)} €`,
+    centerLabel: 'prestación bruta/mes',
+    ariaLabel: `De ${eur.format(cuantia_bruta)} € brutos al mes, recibís ${eur.format(cuantia_neta)} € netos y aportás ${eur.format(copago_mensual)} € de copago`,
+  } : undefined;
+
   return {
     cuantia_bruta,
     copago_mensual,
@@ -192,5 +220,7 @@ export function compute(i: Inputs): Outputs {
     lista_espera_media,
     nota_ccaa,
     nota_prestacion,
+    _insight,
+    _chart,
   };
 }

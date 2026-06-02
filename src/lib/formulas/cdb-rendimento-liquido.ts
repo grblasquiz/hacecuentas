@@ -21,6 +21,8 @@ export interface Outputs {
   rendimentoLiquido: string;
   rentabilidadeAnualLiquida: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -56,6 +58,29 @@ export function cdbRendimentoLiquido(i: Inputs): Outputs {
   const anos = meses / 12;
   const rentAnualLiq = (Math.pow(valorLiquido / aporte, 1 / anos) - 1) * 100;
 
+  const irAlto = aliq >= 0.225;
+  const _insight = {
+    title: 'Rendimento líquido',
+    text: `Seu aporte de **${brl(aporte)}** vira **${brl(valorLiquido)}** em ${meses} meses — um ganho líquido de **${brl(rendimentoLiquido)}** (${rentAnualLiq.toFixed(2)}% aa). O IR de **${(aliq * 100).toFixed(1)}%** levou **${brl(imposto)}**` +
+      (irAlto
+        ? `; resgatando após **180 dias** a alíquota cai e você fica com mais.`
+        : `, a alíquota mais baixa da tabela regressiva por manter o prazo.`),
+    tone: irAlto ? 'warn' : 'good',
+    icon: '💰',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Aporte', value: Number(aporte.toFixed(2)) },
+      { label: 'Rendimento líquido', value: Number(rendimentoLiquido.toFixed(2)) },
+      { label: 'IR', value: Number(imposto.toFixed(2)) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(valorBruto),
+    centerLabel: 'Valor bruto',
+    ariaLabel: `Composição do valor bruto: aporte, rendimento líquido e imposto de renda`,
+  };
+
   return {
     valorBruto: brl(valorBruto),
     rendimentoBruto: brl(rendimentoBruto),
@@ -65,5 +90,7 @@ export function cdbRendimentoLiquido(i: Inputs): Outputs {
     rendimentoLiquido: brl(rendimentoLiquido),
     rentabilidadeAnualLiquida: rentAnualLiq.toFixed(2) + '% aa',
     resumen: `Aporte ${brl(aporte)} a ${pctCdi}% do CDI (${cdiAnual}% aa) por ${meses} meses rende ${brl(rendimentoLiquido)} líquido (IR ${(aliq * 100).toFixed(1)}%).`,
+    _insight,
+    _chart,
   };
 }

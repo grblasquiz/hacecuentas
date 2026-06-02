@@ -1,5 +1,5 @@
 export interface Inputs { fechaNacimiento: string; }
-export interface Outputs { diasVividos: number; hitos: string; mensaje: string; }
+export interface Outputs { diasVividos: number; hitos: string; mensaje: string; _insight?: any; _chart?: any; }
 export function edadEnDias(i: Inputs): Outputs {
   const parts = String(i.fechaNacimiento || '').split('-').map(Number);
   if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Ingresá una fecha válida');
@@ -21,5 +21,29 @@ export function edadEnDias(i: Inputs): Outputs {
   }).join('\n');
   const pct = Math.round(dias / 30000 * 100);
   const msg = `Viviste ${dias.toLocaleString('es-AR')} días. Eso es el ${pct}% de 30.000 días (~82 años).`;
-  return { diasVividos: dias, hitos, mensaje: msg };
+
+  const anos = Math.floor(dias / 365.25);
+  const _insight = {
+    title: 'Tu vida en números',
+    text: `Llevás **${dias.toLocaleString('es-AR')} días** vividos, unos **${anos} años**. Eso equivale al **${pct}%** de los 30.000 días (~82 años) que dura una vida promedio.`,
+    tone: 'neutral',
+    icon: '📅',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: dias,
+    markerLabel: `${dias.toLocaleString('es-AR')} días`,
+    min: 0,
+    segments: [
+      { nombre: 'Infancia', max: 6575, color: '#bfdbfe', colorDark: '#1e3a8a' },
+      { nombre: 'Juventud', max: 14610, color: '#86efac', colorDark: '#166534' },
+      { nombre: 'Adultez', max: 23741, color: '#fde68a', colorDark: '#854d0e' },
+      { nombre: 'Madurez', max: 30000, color: '#fdba74', colorDark: '#9a3412' },
+      { nombre: 'Longevidad', max: Math.max(36500, dias + 365), color: '#d8b4fe', colorDark: '#6b21a8' },
+    ],
+    ariaLabel: `Progreso de vida: ${dias.toLocaleString('es-AR')} días sobre una referencia de 30.000 días (~82 años).`,
+  };
+
+  return { diasVividos: dias, hitos, mensaje: msg, _insight, _chart };
 }

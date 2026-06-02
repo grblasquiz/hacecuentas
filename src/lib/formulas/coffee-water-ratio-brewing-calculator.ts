@@ -15,6 +15,8 @@ export interface Outputs {
   coffee_tbsp: number;
   ratio_label: string;
   grind_recommendation: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // SCA-based brew ratios (1 part coffee : X parts water, by mass)
@@ -93,12 +95,39 @@ export function compute(i: Inputs): Outputs {
       ? grind + " | Standard dose: 18 g in → 36 g out at 9 bar"
       : grind;
 
+  const coffeeR = Math.round(coffeeG * 10) / 10;
+  const waterR = Math.round(totalWaterG * 10) / 10;
+  const totalMass = Math.round((coffeeG + totalWaterG) * 10) / 10;
+  const strength =
+    ratio <= 4 ? "a very concentrated extraction" : ratio < 15 ? "a bold, full-bodied cup" : "a clean, balanced cup";
+
+  const insight = {
+    title: "Your brew",
+    text: `Use **${coffeeR} g of coffee** to **${waterR} g of water** (1:${ratio}) for ${cups} serving(s) — ${strength}. Weigh your dose: **${Math.round(coffeeTbsp * 10) / 10} tbsp** is only a rough fallback.`,
+    tone: "neutral",
+    icon: "☕",
+  };
+
+  const chart = {
+    type: "doughnut",
+    slices: [
+      { label: "Coffee", value: coffeeR },
+      { label: "Water", value: waterR },
+    ],
+    prefix: "",
+    centerValue: `${totalMass} g`,
+    centerLabel: "total brew mass",
+    ariaLabel: `Brew breakdown: ${coffeeR} g coffee and ${waterR} g water, total ${totalMass} g`,
+  };
+
   return {
-    coffee_grams: Math.round(coffeeG * 10) / 10,
-    water_grams: Math.round(totalWaterG * 10) / 10,
+    coffee_grams: coffeeR,
+    water_grams: waterR,
     water_oz: Math.round(waterOz * 10) / 10,
     coffee_tbsp: Math.round(coffeeTbsp * 10) / 10,
     ratio_label: ratioLabel,
     grind_recommendation: grindNote,
+    _insight: insight,
+    _chart: chart,
   };
 }

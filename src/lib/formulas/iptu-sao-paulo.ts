@@ -17,6 +17,8 @@ export interface Outputs {
   iptuMensal: string;
   parcelaCota: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -59,6 +61,41 @@ export function iptuSaoPaulo(i: Inputs): Outputs {
   const iptuMensal = iptuAnual / 12;
   const cota = iptuAnual / 10; // SP parcela em até 10 cotas
 
+  const tipoLabel = tipo === 'residencial' ? 'residencial' : 'não-residencial';
+  const _insight = {
+    title: 'Sua conta de IPTU',
+    text: `Com valor venal de **${brl(vv)}** (${tipoLabel}), a alíquota é **${(aliquotaBase * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%** e o IPTU fica em **${brl(iptuAnual)}/ano** — cerca de **${brl(iptuMensal)}/mês** ou **${brl(cota)}** por cota em até 10 parcelas.`,
+    tone: 'neutral',
+    icon: '🏠',
+  };
+
+  // Gauge: posiciona o valor venal nas faixas progressivas residenciais.
+  const _chart =
+    tipo === 'residencial'
+      ? {
+          type: 'scale',
+          marker: vv,
+          markerLabel: brl(vv),
+          min: 0,
+          segments: [
+            { nombre: '1,0%', max: 94435, color: '#86efac', colorDark: '#16a34a' },
+            { nombre: '1,3%', max: 188870, color: '#fde047', colorDark: '#ca8a04' },
+            { nombre: '1,5%', max: Math.max(283305, vv * 1.15), color: '#fca5a5', colorDark: '#dc2626' },
+          ],
+          ariaLabel: `Valor venal de ${brl(vv)} dentro das faixas de alíquota do IPTU residencial de São Paulo`,
+        }
+      : {
+          type: 'scale',
+          marker: vv,
+          markerLabel: brl(vv),
+          min: 0,
+          segments: [
+            { nombre: '1,5%', max: 188870, color: '#fde047', colorDark: '#ca8a04' },
+            { nombre: '2,0%', max: Math.max(283305, vv * 1.15), color: '#fca5a5', colorDark: '#dc2626' },
+          ],
+          ariaLabel: `Valor venal de ${brl(vv)} dentro das faixas de alíquota do IPTU não-residencial de São Paulo`,
+        };
+
   return {
     valorVenal: brl(vv),
     aliquotaAplicada: aliquotaLabel,
@@ -66,5 +103,7 @@ export function iptuSaoPaulo(i: Inputs): Outputs {
     iptuMensal: brl(iptuMensal),
     parcelaCota: brl(cota),
     resumen: `IPTU-SP ${tipo}: ${aliquotaLabel} sobre ${brl(vv)} = ${brl(iptuAnual)}/ano (${brl(cota)} por cota em 10 parcelas).`,
+    _insight,
+    _chart,
   };
 }

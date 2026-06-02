@@ -24,6 +24,8 @@ export interface Outputs {
   isr_sueldo: number;
   finiquito_neto_liquido: number;
   nota_precaución: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -122,7 +124,50 @@ export function compute(i: Inputs): Outputs {
   const nota_precaución = `⚠️ Cálculo estimado. Validar con nómina final del patrón y asesor laboral. ` +
     `La retención real depende del RFC, régimen fiscal y cálculos de patrón. ` +
     `Si hay rescisión, confirmar causa (justificada/injustificada) con STPS o PROFEDET.`;
-  
+
+  // --- Insight + gráfico ---
+  const fmtMXN = (n: number) => '$' + (Math.round(n * 100) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const isrPct = finiquito_bruto_total > 0 ? Math.round((isr_retenido_total / finiquito_bruto_total) * 1000) / 10 : 0;
+
+  let _insight: any;
+  if (i.es_rescision_injustificada) {
+    const indemnizatorio = prima_antigüedad_bruto + indemnizacion_rescision_injusta;
+    _insight = {
+      title: 'Rescisión injustificada: con indemnización',
+      text: `Por rescisión injustificada se suman prima de antigüedad e indemnización (**${fmtMXN(indemnizatorio)}**). Tu finiquito neto queda en **${fmtMXN(finiquito_neto_liquido)}** tras un ISR de **${fmtMXN(isr_retenido_total)}** (**${isrPct}%**).`,
+      tone: 'good',
+      icon: '💼',
+    };
+  } else {
+    _insight = {
+      title: 'Finiquito sin indemnización',
+      text: `Sin rescisión injustificada, el finiquito reúne partes proporcionales: bruto **${fmtMXN(finiquito_bruto_total)}**, neto **${fmtMXN(finiquito_neto_liquido)}** tras retener ISR por **${fmtMXN(isr_retenido_total)}** (**${isrPct}%**).`,
+      tone: 'neutral',
+      icon: '📄',
+    };
+  }
+
+  const _chartSlices = [
+    { label: 'Sueldo pendiente', value: Math.round(sueldo_pendiente_bruto * 100) / 100 },
+    { label: 'Vacaciones', value: Math.round(vacaciones_pendientes_bruto * 100) / 100 },
+    { label: 'Prima vacacional', value: Math.round(prima_vacacional_bruto * 100) / 100 },
+    { label: 'Aguinaldo prop.', value: Math.round(aguinaldo_proporcional_bruto * 100) / 100 },
+    { label: 'Prima antigüedad', value: Math.round(prima_antigüedad_bruto * 100) / 100 },
+    { label: 'Indemnización', value: Math.round(indemnizacion_rescision_injusta * 100) / 100 },
+  ].filter((s) => s.value > 0);
+
+  const _chart =
+    finiquito_bruto_total > 0 && _chartSlices.length >= 2
+      ? {
+          type: 'doughnut',
+          slices: _chartSlices,
+          prefix: '$',
+          centerValue: fmtMXN(finiquito_bruto_total),
+          centerLabel: 'Finiquito bruto',
+          ariaLabel: 'Composición del finiquito mexicano bruto por concepto',
+        }
+      : undefined;
+
   return {
     sueldo_pendiente_bruto: Math.round(sueldo_pendiente_bruto * 100) / 100,
     vacaciones_pendientes_bruto: Math.round(vacaciones_pendientes_bruto * 100) / 100,
@@ -136,6 +181,8 @@ export function compute(i: Inputs): Outputs {
     isr_aguinaldo: Math.round(isr_aguinaldo * 100) / 100,
     isr_sueldo: Math.round(isr_sueldo * 100) / 100,
     finiquito_neto_liquido: Math.round(finiquito_neto_liquido * 100) / 100,
-    nota_precaución: nota_precaución
+    nota_precaución: nota_precaución,
+    _insight,
+    _chart,
   };
 }

@@ -26,6 +26,8 @@ export interface Outputs {
   comparativa_funerarias: Array<{funeraria: string; basico: number; medio: number; premium: number}>;
   opciones_seguro: Array<{plan: string; prima_mensual: number; cobertura: string; limite: number}>;
   recomendaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -183,18 +185,60 @@ export function compute(i: Inputs): Outputs {
     recomendaciones = '✓ Tu presupuesto está dentro de los rangos nacionales. Compara con otras funerarias y solicita póliza de seguro si corresponde.';
   }
 
+  // Slices del donut (valores ya redondeados; el total del gráfico = su suma exacta)
+  const rBase = Math.round(costoBase);
+  const rTraslado = Math.round(costoTraslado);
+  const rEmbals = Math.round(costoEmbalsamamiento);
+  const rVelatorio = Math.round(costoVelatorio);
+  const rAtaude = Math.round(costoAtaude);
+  const rCeremonia = Math.round(costoCeremonia);
+  const rCatering = Math.round(costoCatering);
+  const sliceDefs = [
+    { label: 'Servicio base', value: rBase },
+    { label: 'Ataúd', value: rAtaude },
+    { label: 'Velatorio', value: rVelatorio },
+    { label: 'Traslado', value: rTraslado },
+    { label: 'Embalsamamiento', value: rEmbals },
+    { label: 'Ceremonia', value: rCeremonia },
+    { label: 'Catering', value: rCatering },
+  ].filter(s => s.value > 0);
+  const totalSlices = sliceDefs.reduce((a, s) => a + s.value, 0);
+  const totalFmt = '$' + totalSlices.toLocaleString('es-MX');
+
+  const esPremium = rangoPaquete.includes('Premium');
+  const insightTone = esPremium ? 'warn' : rangoPaquete.includes('Básico') ? 'good' : 'neutral';
+  const mayor = sliceDefs.slice().sort((a, b) => b.value - a.value)[0];
+  const mayorPct = totalSlices > 0 ? Math.round((mayor.value / totalSlices) * 100) : 0;
+  const insightText = esPremium
+    ? `El presupuesto total ronda **${totalFmt} MXN** (${rangoPaquete}). El rubro más pesado es **${mayor.label}** (~${mayorPct}% del total). Pedí cotizaciones a varias funerarias y evaluá un seguro funerario para no descapitalizarte.`
+    : `Tu servicio estimado suma **${totalFmt} MXN** (${rangoPaquete}). El ítem que más pesa es **${mayor.label}** (~${mayorPct}% del total). Comparar funerarias puede mover el precio ±10%.`;
+
   return {
-    costo_base_servicio: Math.round(costoBase),
-    costo_traslado: Math.round(costoTraslado),
-    costo_embalsamamiento: Math.round(costoEmbalsamamiento),
-    costo_velatorio: Math.round(costoVelatorio),
-    costo_ataude: Math.round(costoAtaude),
-    costo_ceremonia: Math.round(costoCeremonia),
-    costo_catering: Math.round(costoCatering),
+    costo_base_servicio: rBase,
+    costo_traslado: rTraslado,
+    costo_embalsamamiento: rEmbals,
+    costo_velatorio: rVelatorio,
+    costo_ataude: rAtaude,
+    costo_ceremonia: rCeremonia,
+    costo_catering: rCatering,
     costo_total: Math.round(costoTotal),
     rango_paquete: rangoPaquete,
     comparativa_funerarias: comparativaFunerarias,
     opciones_seguro: opcionesSeguro,
-    recomendaciones: recomendaciones
+    recomendaciones: recomendaciones,
+    _insight: {
+      title: 'Desglose del costo funerario',
+      text: insightText,
+      tone: insightTone,
+      icon: '🕊️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: sliceDefs,
+      prefix: '$',
+      centerValue: totalFmt,
+      centerLabel: 'costo total',
+      ariaLabel: `Desglose del costo funerario por rubro, total ${totalFmt} pesos mexicanos`,
+    },
   };
 }

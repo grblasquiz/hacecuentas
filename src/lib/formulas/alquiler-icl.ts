@@ -3,9 +3,17 @@ import { ICL_FECHAS, ICL_VALORES, ICL_LAST_UPDATED } from './_bcra-icl';
 
 export interface Inputs {
   valorActual: number;
-  /** Fecha de firma del contrato o última actualización. ISO YYYY-MM-DD. */
+  /** Fecha de inicio por selects día/mes/año (UX cómoda: llegar a 2020 es 1 clic). */
+  diaInicio?: number | string;
+  mesInicio?: number | string;
+  anioInicio?: number | string;
+  /** Fecha del ajuste por selects día/mes/año. */
+  diaAjuste?: number | string;
+  mesAjuste?: number | string;
+  anioAjuste?: number | string;
+  /** Compat: fecha ISO YYYY-MM-DD directa (links viejos, embeds, querystring). */
   fechaInicio?: string;
-  /** Fecha de la nueva actualización. ISO YYYY-MM-DD. */
+  /** Compat: fecha ISO YYYY-MM-DD directa. */
   fechaActualizacion?: string;
   /** Override manual (avanzado): si se ingresa un coeficiente válido, pisa el cálculo por fechas. */
   coeficienteICL?: number | string;
@@ -57,6 +65,19 @@ function validDate(s: string | undefined): s is string {
 function fmtFecha(iso: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
+}
+
+/** Arma una fecha ISO desde los selects día/mes/año, clampeando el día al
+ *  máximo del mes (ej. 31/02 → 28/02). Devuelve '' si falta mes o año. */
+function buildIso(dia: unknown, mes: unknown, anio: unknown): string {
+  const y = parseInt(String(anio ?? ''), 10);
+  const m = parseInt(String(mes ?? ''), 10);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || y < 2000 || m < 1 || m > 12) return '';
+  let d = parseInt(String(dia ?? ''), 10);
+  if (!Number.isFinite(d) || d < 1) d = 1;
+  const diasDelMes = new Date(y, m, 0).getDate(); // día 0 del mes siguiente = último del mes actual
+  if (d > diasDelMes) d = diasDelMes;
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
 export function alquilerIcl(i: Inputs): Outputs {
@@ -129,6 +150,11 @@ export function alquilerIcl(i: Inputs): Outputs {
   const valor = Number(i.valorActual);
   if (!valor || valor <= 0) throw new Error(T.errValor);
 
+  // Resolver fechas: preferimos los selects día/mes/año; si vienen como ISO
+  // (links viejos / embeds / querystring), los usamos tal cual.
+  const fInicio = validDate(i.fechaInicio) ? i.fechaInicio! : buildIso(i.diaInicio, i.mesInicio, i.anioInicio);
+  const fAjuste = validDate(i.fechaActualizacion) ? i.fechaActualizacion! : buildIso(i.diaAjuste, i.mesAjuste, i.anioAjuste);
+
   let coefUsado: number;
   let iclInicio = 0;
   let iclActualizacion = 0;
@@ -148,11 +174,11 @@ export function alquilerIcl(i: Inputs): Outputs {
     if (coefUsado < 0.5 || coefUsado > 50) throw new Error(T.errRango);
     modoManual = true;
   }
-  // Modo automático (default): fechas → lookup en la tabla del BCRA.
-  else if (validDate(i.fechaInicio) && validDate(i.fechaActualizacion)) {
-    if (i.fechaInicio > i.fechaActualizacion) throw new Error(T.errOrden);
-    const ini = lookupICL(i.fechaInicio);
-    const fin = lookupICL(i.fechaActualizacion);
+  // Modo automático (default): fechas (selects día/mes/año, o ISO compat) → lookup BCRA.
+  else if (validDate(fInicio) && validDate(fAjuste)) {
+    if (fInicio > fAjuste) throw new Error(T.errOrden);
+    const ini = lookupICL(fInicio);
+    const fin = lookupICL(fAjuste);
     iclInicio = ini.valor;
     iclActualizacion = fin.valor;
     fechaInicioUsada = ini.fecha;

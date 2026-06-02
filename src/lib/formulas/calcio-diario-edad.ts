@@ -12,6 +12,7 @@ export interface CalcioDiarioEdadOutputs {
   calcioMg: number;
   alimentosSugeridos: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function calcioDiarioEdad(inputs: CalcioDiarioEdadInputs): CalcioDiarioEdadOutputs {
@@ -27,9 +28,17 @@ export function calcioDiarioEdad(inputs: CalcioDiarioEdadInputs): CalcioDiarioEd
   else if (edad < 51) ca = 1000;
   else if (sexo === 'mujer' || edad >= 71) ca = 1200;
   else ca = 1000;
+  const vasos = (ca / 300).toFixed(1);
+  const _insight = {
+    title: 'Tu calcio diario',
+    text: `Tu requerimiento es de **${ca} mg/día**, equivalente a unos **${vasos} vasos de leche** (300 mg cada uno). ${ca >= 1300 ? 'Es de los tramos con mayor demanda: combiná lácteos con verde, almendras y sardinas para llegar.' : 'Con lácteos y algo de verde, almendras o sardinas se cubre sin problema.'}`,
+    tone: ca >= 1300 ? 'warn' : 'neutral',
+    icon: '🦴',
+  };
   return {
     calcioMg: ca,
     alimentosSugeridos: '3 lácteos (900mg) + brócoli + almendras + sardinas con espina',
     resumen: `Tu RDA: ${ca} mg calcio/día.`,
+    _insight,
   };
 }

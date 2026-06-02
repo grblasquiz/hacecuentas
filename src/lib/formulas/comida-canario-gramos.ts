@@ -11,6 +11,7 @@ export interface Outputs {
   verdurasSemana: string;
   huevoCocido: string;
   mixMesGr: number;
+  _insight?: any;
 }
 
 export function comidaCanarioGramos(i: Inputs): Outputs {
@@ -47,6 +48,20 @@ export function comidaCanarioGramos(i: Inputs): Outputs {
         ? 'Diario'
         : '2-3 veces por semana';
 
+  const etapaTxt: Record<string, string> = {
+    descanso: 'descanso',
+    reproduccion: 'reproducción',
+    muda: 'muda',
+    pichones: 'cría de pichones',
+  };
+  const exigente = etapa === 'reproduccion' || etapa === 'pichones' || etapa === 'muda';
+  const _insight = {
+    title: 'Cuánta semilla preparar',
+    text: `Cada canario come ~**${diaPorAve} g** de mezcla de semillas por día${cant > 1 ? `, así que para tus **${cant}** aves son **${total} g** diarios` : ''}. En un mes vas a usar unos **${Math.round(total * 30)} g** (≈ ${(Math.round(total * 30) / 1000).toFixed(1)} kg). ${exigente ? `Durante la ${etapaTxt[etapa]} reforzá con pasta de cría y huevo según indica el resultado: solo semilla no alcanza.` : 'Sumá verduras y un poco de hueso de jibia para el calcio; la semilla sola no cubre todo.'}`,
+    tone: 'neutral',
+    icon: '🐤',
+  };
+
   return {
     semillasDiaGr: diaPorAve,
     semillasTotalDiaGr: total,
@@ -54,5 +69,6 @@ export function comidaCanarioGramos(i: Inputs): Outputs {
     verdurasSemana: verduras,
     huevoCocido: huevo,
     mixMesGr: Math.round(total * 30),
+    _insight,
   };
 }

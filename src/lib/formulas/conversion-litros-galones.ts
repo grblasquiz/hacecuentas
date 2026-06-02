@@ -11,6 +11,7 @@ export interface Outputs {
   onzasUS: number;
   onzasUK: number;
   resumen: string;
+  _insight?: any;
 }
 
 export function conversionLitrosGalones(i: Inputs): Outputs {
@@ -34,6 +35,9 @@ export function conversionLitrosGalones(i: Inputs): Outputs {
   const onzasUS = litros / 0.0295735296;
   const onzasUK = litros / 0.0284130625;
 
+  const difUSUK = galonesUS - galonesUK;
+  const difPct = galonesUK > 0 ? (difUSUK / galonesUK) * 100 : 0;
+
   return {
     litros: Number(litros.toFixed(4)),
     mililitros: Number(mililitros.toFixed(2)),
@@ -42,5 +46,11 @@ export function conversionLitrosGalones(i: Inputs): Outputs {
     onzasUS: Number(onzasUS.toFixed(2)),
     onzasUK: Number(onzasUK.toFixed(2)),
     resumen: `${valor} ${unidad.replace('-', ' ')} equivalen a ${litros.toFixed(3)} litros o ${galonesUS.toFixed(3)} galones US.`,
+    _insight: {
+      title: 'Cuidado: el galón US no es el galón UK',
+      text: `Estos ${litros.toFixed(2)} L son **${galonesUS.toFixed(2)} galones US** pero **${galonesUK.toFixed(2)} galones UK (imperiales)**: una diferencia de **${Math.abs(difUSUK).toFixed(2)} gal (${Math.abs(difPct).toFixed(0)}%)**. Fijate cuál usa la receta o el surtidor antes de cargar.`,
+      tone: 'warn',
+      icon: '⛽',
+    },
   };
 }

@@ -13,6 +13,8 @@ export interface Outputs {
   precio_final: number;
   carga_tributaria_porciento: number;
   impuesto_por_100ml: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -57,6 +59,45 @@ export function compute(i: Inputs): Outputs {
   // 7. Impuesto normalizado a 100ml
   const impuestoPor100ml = tarifaImpuesto;
 
+  // ── INSIGHT + GRÁFICO ───────────────────────────────────────────────────────
+  const cop = (v: number) => '$' + Math.round(v).toLocaleString('es-CO');
+  const tramo =
+    gramoAzucar < 5 ? 'exenta (menos de 5 g/100 ml)' :
+    gramoAzucar < 9 ? 'tarifa media (5–9 g/100 ml)' :
+    'tarifa alta (9 g/100 ml o más)';
+  const cargaFmt = (Math.round(cargaTributaria * 100) / 100).toLocaleString('es-CO');
+
+  const _insight = tarifaImpuesto === 0
+    ? {
+        title: 'Bebida sin IBUA',
+        text: `Con **${gramoAzucar} g de azúcar/100 ml** la bebida es **${tramo}**: no paga impuesto saludable. El precio final de ${cop(precioFinal)} solo carga el IVA del 19%.`,
+        tone: 'good' as const,
+        icon: '🥤',
+      }
+    : {
+        title: 'Cuánto suma el impuesto saludable',
+        text: `Con **${gramoAzucar} g/100 ml** aplica **${tramo}**: ${cop(impuestoBebida)} de IBUA en ${volumen} ml. Sumando el IVA, los impuestos son el **${cargaFmt}%** del precio final de **${cop(precioFinal)}**.`,
+        tone: 'warn' as const,
+        icon: '🥤',
+      };
+
+  const slices = [
+    { label: 'Precio base', value: Math.round(precioBase * 100) / 100 },
+    { label: 'IBUA (azúcar)', value: Math.round(impuestoBebida * 100) / 100 },
+    { label: 'IVA 19%', value: Math.round(ivaTotal * 100) / 100 },
+  ].filter((s) => s.value > 0);
+
+  const _chart = precioFinal > 0 && slices.length >= 2
+    ? {
+        type: 'doughnut' as const,
+        slices,
+        prefix: '$',
+        centerValue: cop(precioFinal),
+        centerLabel: 'Precio final',
+        ariaLabel: 'Composición del precio final: base, impuesto a bebidas azucaradas e IVA',
+      }
+    : undefined;
+
   return {
     tarifa_impuesto: Math.round(tarifaImpuesto * 100) / 100,
     impuesto_bebida: Math.round(impuestoBebida * 100) / 100,
@@ -64,6 +105,8 @@ export function compute(i: Inputs): Outputs {
     iva_total: Math.round(ivaTotal * 100) / 100,
     precio_final: Math.round(precioFinal * 100) / 100,
     carga_tributaria_porciento: Math.round(cargaTributaria * 100) / 100,
-    impuesto_por_100ml: Math.round(impuestoPor100ml * 100) / 100
+    impuesto_por_100ml: Math.round(impuestoPor100ml * 100) / 100,
+    _insight,
+    _chart
   };
 }

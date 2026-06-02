@@ -4,6 +4,7 @@ export interface Outputs {
   resultado: number;
   formula: string;
   detalle: string;
+  _insight?: any;
 }
 
 function factorial(x: number): number {
@@ -56,10 +57,20 @@ export function combinatoriaPermutaciones(i: Inputs): Outputs {
   };
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const res = Math.round(resultado);
+  const importaOrden = tipo === 'permutacion' || tipo === 'permutacion-repeticion';
+
+  const _insight = {
+    title: 'Lo que dice este número',
+    text: `Hay **${fmt.format(res)}** formas distintas de ${importaOrden ? 'ordenar' : 'elegir'} **${r}** elemento${r === 1 ? '' : 's'} ${tipo.includes('repeticion') ? 'pudiendo repetir' : 'sin repetir'} a partir de un conjunto de **${n}**. ${importaOrden ? 'Como es una permutación, el orden importa: cambiar la secuencia cuenta como un caso nuevo.' : 'Como es una combinación, el orden no importa: solo cuenta qué elementos entran, no en qué posición.'}`,
+    tone: 'neutral',
+    icon: '🔢',
+  };
 
   return {
-    resultado: Math.round(resultado),
+    resultado: res,
     formula,
-    detalle: `${tipoNombres[tipo]}: n=${n}, r=${r}. ${formula}. Resultado: ${fmt.format(Math.round(resultado))}.`,
+    detalle: `${tipoNombres[tipo]}: n=${n}, r=${r}. ${formula}. Resultado: ${fmt.format(res)}.`,
+    _insight,
   };
 }

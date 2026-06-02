@@ -23,6 +23,8 @@ export interface Outputs {
   meses_para_objetivo_min: number;
   meses_para_objetivo_rec: number;
   estado_fondo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -130,6 +132,51 @@ export function compute(i: Inputs): Outputs {
     estado_fondo = `🔴 Sin fondo de emergencia. El objetivo mínimo recomendado para tu situación es ${objetivo_minimo.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}.`;
   }
 
+  // --- Insight: progreso hacia el objetivo
+  const eur = (n: number) => n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  let _insight: any;
+  if (gasto_esencial_mensual === 0) {
+    _insight = {
+      title: 'Completá tus gastos',
+      text: 'Introducí tus gastos esenciales mensuales para calcular cuánto necesitás de colchón.',
+      tone: 'neutral',
+      icon: '🛟'
+    };
+  } else if (ahorro_actual >= objetivo_recomendado) {
+    _insight = {
+      title: 'Fondo a buen nivel',
+      text: `Tenés **${eur(ahorro_actual)}** ahorrados, ya cubrís el objetivo recomendado de **${eur(objetivo_recomendado)}** (${meses_medio} meses). Podés seguir hasta el máximo de **${eur(objetivo_maximo)}**.`,
+      tone: 'good',
+      icon: '✅'
+    };
+  } else {
+    const pendiente = objetivo_minimo - ahorro_actual;
+    const plazoTxt = meses_para_objetivo_min > 0
+      ? ` A tu ritmo de ahorro lo alcanzás en **${meses_para_objetivo_min} meses**.`
+      : (meses_para_objetivo_min === -1 ? ` Definí un ahorro mensual para estimar el plazo.` : ``);
+    _insight = {
+      title: 'Aún por debajo del mínimo',
+      text: `Llevás **${porcentaje_cubierto}%** del objetivo mínimo (**${eur(objetivo_minimo)}** para ${meses_recomendados_min} meses). Te faltan **${eur(pendiente)}**.` + plazoTxt,
+      tone: 'warn',
+      icon: '🔴'
+    };
+  }
+
+  // --- Gauge: % del objetivo mínimo cubierto, por zonas
+  const marker = Math.min(porcentaje_cubierto, 100);
+  const _chart = gasto_esencial_mensual > 0 ? {
+    type: 'scale',
+    marker,
+    markerLabel: `${porcentaje_cubierto}% cubierto`,
+    min: 0,
+    segments: [
+      { nombre: 'Insuficiente', max: 50, color: '#ef4444', colorDark: '#b91c1c' },
+      { nombre: 'En construcción', max: 99, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Mínimo cubierto', max: 110, color: '#22c55e', colorDark: '#15803d' }
+    ],
+    ariaLabel: `Llevás ${porcentaje_cubierto}% del objetivo mínimo del fondo de emergencia.`
+  } : undefined;
+
   return {
     gasto_esencial_mensual,
     meses_recomendados_min,
@@ -141,5 +188,7 @@ export function compute(i: Inputs): Outputs {
     meses_para_objetivo_min,
     meses_para_objetivo_rec,
     estado_fondo,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

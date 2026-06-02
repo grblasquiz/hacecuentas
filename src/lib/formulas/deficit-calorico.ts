@@ -11,6 +11,8 @@ export interface Outputs {
   kgPorSemana: number;
   viable: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function deficitCalorico(i: Inputs): Outputs {
@@ -49,11 +51,38 @@ export function deficitCalorico(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  let tono: 'good' | 'warn' | 'neutral';
+  if (caloriasObjetivo < 1200 || deficitDiario > 1000) tono = 'warn';
+  else if (deficitDiario >= 300 && deficitDiario <= 750) tono = 'good';
+  else if (deficitDiario < 300) tono = 'good';
+  else tono = 'neutral';
+
+  const _insight = {
+    title: 'Lo que tenés que comer',
+    text: `Bajar **${fmt.format(kgPerder)} kg en ${semanas} semanas** implica comer **${fmt.format(caloriasObjetivo)} kcal/día**: un déficit de **${fmt.format(deficitDiario)} kcal** sobre tu TDEE de ${fmt.format(tdee)}. Eso es **${kgPorSemana} kg/semana** de pérdida estimada.`,
+    tone: tono,
+    icon: '🥗',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Comés (objetivo)', value: caloriasObjetivo },
+      { label: 'Déficit diario', value: deficitDiario },
+    ],
+    prefix: '',
+    centerValue: `${fmt.format(tdee)}`,
+    centerLabel: 'kcal de gasto (TDEE)',
+    ariaLabel: `De tu gasto de ${fmt.format(tdee)} kcal, comés ${fmt.format(caloriasObjetivo)} y generás un déficit de ${fmt.format(deficitDiario)} kcal por día`,
+  };
+
   return {
     deficitDiario,
     caloriasObjetivo,
     kgPorSemana,
     viable,
     detalle: `Para perder ${fmt.format(kgPerder)} kg en ${semanas} semanas necesitás un déficit de ${fmt.format(deficitDiario)} kcal/día. Comé ${fmt.format(caloriasObjetivo)} kcal/día (TDEE ${fmt.format(tdee)} - ${fmt.format(deficitDiario)}). Pérdida estimada: ${kgPorSemana} kg/semana.`,
+    _insight,
+    _chart,
   };
 }

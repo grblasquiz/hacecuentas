@@ -9,6 +9,8 @@ export interface Outputs {
   clearance: number;
   estadio: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function clearanceCreatininaCockcroftGault(i: Inputs): Outputs {
@@ -39,9 +41,34 @@ export function clearanceCreatininaCockcroftGault(i: Inputs): Outputs {
     `${estadio}. ` +
     `⚠️ Orientativo — no reemplaza evaluación nefrológica.`;
 
+  const clr = Number(clcr.toFixed(1));
+  const tone = clr >= 60 ? 'good' : clr >= 30 ? 'warn' : 'warn';
+  const topMax = Math.max(120, Math.ceil(clr + 10));
+
   return {
-    clearance: Number(clcr.toFixed(1)),
+    clearance: clr,
     estadio,
     detalle,
+    _insight: {
+      title: 'Qué dice tu filtrado renal',
+      text: `Con creatinina **${cr} mg/dL** a los **${edad}** años, el clearance estimado es **${clr} ml/min**, que corresponde al estadio **${estadio.split('—')[0].trim()}**. ${clr >= 60 ? 'Está dentro del rango funcional; mantené el control de rutina.' : clr >= 30 ? 'Hay disminución moderada: conviene evaluación nefrológica y revisar dosis de fármacos de eliminación renal.' : 'Es una caída marcada del filtrado: requiere seguimiento nefrológico cercano.'} Valor orientativo, no reemplaza una evaluación médica.`,
+      tone,
+      icon: '🩺',
+    },
+    _chart: {
+      type: 'scale',
+      marker: clr,
+      markerLabel: clr + ' ml/min',
+      min: 0,
+      segments: [
+        { nombre: 'G5 fallo', max: 15, color: '#7f1d1d', colorDark: '#450a0a' },
+        { nombre: 'G4 severa', max: 30, color: '#ef4444', colorDark: '#7f1d1d' },
+        { nombre: 'G3b', max: 45, color: '#f97316', colorDark: '#7c2d12' },
+        { nombre: 'G3a', max: 60, color: '#fde68a', colorDark: '#78350f' },
+        { nombre: 'G2 leve', max: 90, color: '#bef264', colorDark: '#3f6212' },
+        { nombre: 'G1 normal', max: topMax, color: '#86efac', colorDark: '#14532d' },
+      ],
+      ariaLabel: `Clearance de creatinina ${clr} ml/min, estadio ${estadio.split('—')[0].trim()}`,
+    },
   };
 }

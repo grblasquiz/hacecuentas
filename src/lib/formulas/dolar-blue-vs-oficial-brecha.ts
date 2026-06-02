@@ -24,6 +24,8 @@ export interface Outputs {
   detalle: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function dolarBlueVsOficialBrecha(i: Inputs): Outputs {
@@ -69,6 +71,37 @@ export function dolarBlueVsOficialBrecha(i: Inputs): Outputs {
   const formula = `Brecha = ($${blue} - $${oficial}) / $${oficial} × 100 = ${brechaBlue.toFixed(1)}%`;
   const explicacion = `Oficial: $${oficial}. Blue: $${blue} (brecha ${brechaBlue.toFixed(1)}%).${mep > 0 ? ` MEP: $${mep} (brecha ${brechaMep.toFixed(1)}%).` : ''}${ccl > 0 ? ` CCL: $${ccl} (brecha ${brechaCcl.toFixed(1)}%).` : ''}${pesos > 0 ? ` Con $${pesos.toLocaleString()} pesos: al oficial comprás USD ${dolaresOficial.toFixed(2)}, al blue USD ${dolaresBlue.toFixed(2)}${mep > 0 ? `, al MEP USD ${dolaresMep.toFixed(2)}` : ''}${ccl > 0 ? `, al CCL USD ${dolaresCcl.toFixed(2)}` : ''}.` : ''}`;
 
+  // Tono del insight según la zona de la brecha
+  let tone: 'good' | 'warn' | 'neutral';
+  if (brechaBlue < 10) tone = 'good';
+  else if (brechaBlue < 30) tone = 'neutral';
+  else tone = 'warn';
+
+  const _insight = {
+    title: 'Qué dice la brecha',
+    text: pesos > 0
+      ? `La brecha blue/oficial es **${brechaBlue.toFixed(1)}%** (${clasificacionBrecha}). Con $${Math.round(pesos).toLocaleString()} comprás **USD ${dolaresOficial.toFixed(2)}** al oficial vs **USD ${dolaresBlue.toFixed(2)}** al blue: perdés **USD ${(dolaresOficial - dolaresBlue).toFixed(2)}** yendo al paralelo.`
+      : `El blue ($${blue}) está **${brechaBlue.toFixed(1)}%** sobre el oficial ($${oficial}): brecha ${clasificacionBrecha}. Cada dólar paralelo cuesta **$${diferenciaPesos.toLocaleString()}** más que el oficial.`,
+    tone,
+    icon: '💵',
+  };
+
+  // Gauge: zona de la brecha (mismos umbrales que la clasificación)
+  const segTop = Math.max(70, Math.ceil((brechaBlue + 10) / 10) * 10);
+  const _chart = {
+    type: 'scale',
+    marker: Number(brechaBlue.toFixed(1)),
+    markerLabel: `${brechaBlue.toFixed(1)}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Baja', max: 10, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Moderada', max: 30, color: '#ca8a04', colorDark: '#eab308' },
+      { nombre: 'Preocupante', max: 50, color: '#ea580c', colorDark: '#f97316' },
+      { nombre: 'Alta', max: segTop, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Brecha del ${brechaBlue.toFixed(1)}% sobre una escala: baja hasta 10%, moderada hasta 30%, preocupante hasta 50%, alta por encima.`,
+  };
+
   return {
     brechaBlue: Number(brechaBlue.toFixed(2)),
     brechaPct,
@@ -84,5 +117,7 @@ export function dolarBlueVsOficialBrecha(i: Inputs): Outputs {
     detalle,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   costoConTelepase: number;
   costoIda: number;
   detalle: string;
+  _insight?: any;
 }
 
 interface RutaInfo {
@@ -65,11 +66,20 @@ export function costoPeajeRuta(i: Inputs): Outputs {
 
   const tipoLabel = tipo === 'camioneta_grande' ? 'camioneta/SUV' : tipo === 'moto' ? 'moto' : 'auto';
 
+  const ahorroTelepase = costoTotal - costoConTelepase;
+  const _insight = {
+    title: 'Pagá con Telepase y ahorrá',
+    text: `Este viaje en ${tipoLabel} suma **$${costoTotal.toLocaleString('es-AR')}** en peajes${idaVuelta ? ' (ida y vuelta)' : ''}. Con **Telepase** pagás **$${costoConTelepase.toLocaleString('es-AR')}** y te ahorrás **$${ahorroTelepase.toLocaleString('es-AR')}** (15% off) por el solo hecho de tener el dispositivo.`,
+    tone: 'warn',
+    icon: '🛣️',
+  };
+
   return {
     costoTotal,
     cantidadCabinas: idaVuelta ? cabinas * 2 : cabinas,
     costoConTelepase,
     costoIda,
     detalle: `${nombreRuta} — ${cabinas} cabinas por sentido × $${precioBase.toLocaleString('es-AR')} (${tipoLabel})${idaVuelta ? ' × 2 (ida y vuelta)' : ''}`,
+    _insight,
   };
 }

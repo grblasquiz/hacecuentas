@@ -1,6 +1,6 @@
 /** IBU Tinseth 1997 */
 export interface Inputs { gramosLupulo: number; alfaAcidos: number; tiempoHervor: number; volumenHervor: number; ogMosto: number; __lang?: string; }
-export interface Outputs { ibu: number; utilizacion: number; clasificacion: string; }
+export interface Outputs { ibu: number; utilizacion: number; clasificacion: string; _insight?: any; _chart?: any; }
 
 export function ibuCervezaLupuloTinseth(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -16,6 +16,17 @@ export function ibuCervezaLupuloTinseth(i: Inputs): Outputs {
       c3: 'Amargo (IPA)',
       c4: 'Muy amargo (Double IPA)',
       c5: 'Extremo (Imperial IPA)',
+      insightTitle: 'Amargor: ',
+      insightText: (ibu: string, clas: string, util: string) =>
+        `Tu receta da **${ibu} IBU** (${clas}), con una utilización del lúpulo del **${util}%** según el modelo Tinseth.`,
+      segMuySuave: 'Muy suave',
+      segSuave: 'Suave',
+      segModerado: 'Moderado',
+      segAmargo: 'Amargo',
+      segMuyAmargo: 'Muy amargo',
+      segExtremo: 'Extremo',
+      markerLabel: 'IBU: ',
+      ariaLabel: 'Escala de amargor IBU: de muy suave a extremo',
     },
     en: {
       errGramos: 'Enter hops weight in grams',
@@ -28,6 +39,17 @@ export function ibuCervezaLupuloTinseth(i: Inputs): Outputs {
       c3: 'Bitter (IPA)',
       c4: 'Very bitter (Double IPA)',
       c5: 'Extreme (Imperial IPA)',
+      insightTitle: 'Bitterness: ',
+      insightText: (ibu: string, clas: string, util: string) =>
+        `Your recipe yields **${ibu} IBU** (${clas}), with a hop utilization of **${util}%** per the Tinseth model.`,
+      segMuySuave: 'Very mild',
+      segSuave: 'Mild',
+      segModerado: 'Moderate',
+      segAmargo: 'Bitter',
+      segMuyAmargo: 'Very bitter',
+      segExtremo: 'Extreme',
+      markerLabel: 'IBU: ',
+      ariaLabel: 'IBU bitterness scale: from very mild to extreme',
     },
   } as const)[__lang];
 
@@ -54,9 +76,37 @@ export function ibuCervezaLupuloTinseth(i: Inputs): Outputs {
   else if (ibu < 100) clasificacion = T.c4;
   else clasificacion = T.c5;
 
+  const ibuFmt = ibu.toFixed(1);
+  const utilFmt = (utilizacion * 100).toFixed(1);
+  const insight = {
+    title: T.insightTitle + clasificacion,
+    text: T.insightText(ibuFmt, clasificacion, utilFmt),
+    tone: ibu >= 100 ? 'warn' : 'neutral',
+    icon: '🍺',
+  };
+
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(ibuFmt),
+    markerLabel: T.markerLabel + ibuFmt,
+    min: 0,
+    unit: ' IBU',
+    segments: [
+      { nombre: T.segMuySuave, max: 15, color: '#fef9c3', colorDark: '#854d0e' },
+      { nombre: T.segSuave, max: 30, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: T.segModerado, max: 45, color: '#fcd34d', colorDark: '#92400e' },
+      { nombre: T.segAmargo, max: 70, color: '#fbbf24', colorDark: '#78350f' },
+      { nombre: T.segMuyAmargo, max: 100, color: '#f59e0b', colorDark: '#713f12' },
+      { nombre: T.segExtremo, max: Math.max(120, Math.ceil(ibu) + 1), color: '#d97706', colorDark: '#451a03' },
+    ],
+    ariaLabel: T.ariaLabel,
+  };
+
   return {
     ibu: Number(ibu.toFixed(1)),
     utilizacion: Number((utilizacion * 100).toFixed(1)),
     clasificacion,
+    _insight: insight,
+    _chart: chart,
   };
 }

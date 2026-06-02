@@ -29,6 +29,7 @@ export interface DespidoObjetivoOutputs {
   topeAplicado: string;
   importePreaviso: string;
   totalAPercibir: string;
+  _insight?: any;
 }
 
 const fmtEUR = (n: number) =>
@@ -70,6 +71,13 @@ export function indemnizacionDespidoObjetivoEspana(
 
   const total = indemnizacion + importePreaviso;
 
+  const insight = {
+    title: 'Indemnización por despido objetivo',
+    text: `Por **${tiempo.toFixed(1)} años** te corresponden **${fmtEUR(indemnizacion)}** (20 días de salario por año, ${diasIndemnizacion.toFixed(0)} días en total)${sinPreaviso ? `, más **${fmtEUR(importePreaviso)}** por la falta de preaviso: cobrás **${fmtEUR(total)}**` : ''}. ${topeAplicado ? 'El tope de 12 mensualidades recortó tu indemnización por debajo de lo que daría el cálculo lineal.' : 'Estás dentro del tope legal de 12 mensualidades.'}`,
+    tone: (topeAplicado ? 'warn' : 'good') as 'good' | 'warn' | 'neutral',
+    icon: '🇪🇸',
+  };
+
   return {
     indemnizacionTotal: fmtEUR(indemnizacion),
     diasIndemnizacion: `${diasIndemnizacion.toFixed(2)} días de salario`,
@@ -81,5 +89,6 @@ export function indemnizacionDespidoObjetivoEspana(
       ? fmtEUR(importePreaviso) + ' (15 días por falta de preaviso)'
       : 'No aplica (preaviso respetado)',
     totalAPercibir: fmtEUR(total),
+    _insight: insight,
   };
 }

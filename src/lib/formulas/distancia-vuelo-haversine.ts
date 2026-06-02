@@ -12,6 +12,7 @@ export interface Outputs {
   distanciaNm: number;
   tiempoVueloEstimado: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function distanciaVueloHaversine(i: Inputs): Outputs {
@@ -44,11 +45,24 @@ export function distanciaVueloHaversine(i: Inputs): Outputs {
   const m = Math.round((horasVuelo - h) * 60);
   const tiempo = `${h}h ${String(m).padStart(2, '0')}m`;
 
+  const categoria = km < 1500 ? 'corto' : km < 4000 ? 'medio' : 'largo';
+  const insightText = categoria === 'corto'
+    ? `Trayecto de **${km.toFixed(0)} km**: vuelo de cabotaje o regional. Suele cubrirse en una sola etapa de **${tiempo}**, sin escalas y con aviones de fuselaje angosto.`
+    : categoria === 'medio'
+    ? `Trayecto de **${km.toFixed(0)} km**: alcance medio. Un vuelo directo lo recorre en aproximadamente **${tiempo}**; según las rutas disponibles puede haber una escala.`
+    : `Trayecto de **${km.toFixed(0)} km**: vuelo de largo alcance (**${tiempo}** estimados). A esta distancia es habitual una o más escalas y conviene prever fatiga y diferencia horaria.`;
+
   return {
     distanciaKm: Number(km.toFixed(2)),
     distanciaMi: Number(mi.toFixed(2)),
     distanciaNm: Number(nm.toFixed(2)),
     tiempoVueloEstimado: tiempo,
     resumen: `La distancia ortodrómica (círculo máximo) entre los dos puntos es de **${km.toFixed(0)} km** (${mi.toFixed(0)} mi). Un vuelo comercial la recorre en aproximadamente ${tiempo}.`,
+    _insight: {
+      title: 'Tu vuelo en perspectiva',
+      text: insightText,
+      tone: categoria === 'largo' ? 'warn' : 'neutral',
+      icon: '✈️',
+    },
   };
 }

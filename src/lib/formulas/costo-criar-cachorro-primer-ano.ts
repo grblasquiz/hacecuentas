@@ -5,6 +5,7 @@ export interface Inputs { raza: string; incluyeCastracion: string; calidadAlimen
 export interface Outputs {
   costoTotal: number; setupInicial: number; vacunasPlan: number;
   castracion: number; alimento12Meses: number; vetExtras: number;
+  _insight?: any; _chart?: any;
 }
 
 const RAZAS: Record<string, { comidaMin: number; comidaMax: number; tamano: string }> = {
@@ -44,6 +45,30 @@ export function costoCriarCachorroPrimerAno(inputs: Inputs): Outputs {
 
   const total = setup + vacunas + castracion + alimento + vetExtras;
 
+  const fmt = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
+  const porMes = total / 12;
+  const _insight = {
+    title: 'El primer año es el más caro',
+    text: `Criar este cachorro ${r.tamano} cuesta **$${fmt(total)}** el primer año, unos **$${fmt(porMes)}/mes**. El gasto único de arranque (kit + vacunas${castra ? ' + castración' : ''}) ya son **$${fmt(setup + vacunas + castracion)}**; del segundo año en adelante baja porque ese desembolso no se repite.`,
+    tone: 'warn',
+    icon: '🐶',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Alimento (12 meses)', value: Math.round(alimento) },
+      { label: 'Veterinario / extras', value: vetExtras },
+      { label: 'Castración', value: castracion },
+      { label: 'Plan de vacunas', value: vacunas },
+      { label: 'Kit inicial', value: setup },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: `$${fmt(total)}`,
+    centerLabel: 'Primer año',
+    ariaLabel: `Composición del costo del primer año: alimento $${fmt(alimento)}, veterinario y extras $${fmt(vetExtras)}, castración $${fmt(castracion)}, vacunas $${fmt(vacunas)}, kit inicial $${fmt(setup)}.`,
+  };
+
   return {
     costoTotal: Math.round(total),
     setupInicial: setup,
@@ -51,5 +76,7 @@ export function costoCriarCachorroPrimerAno(inputs: Inputs): Outputs {
     castracion,
     alimento12Meses: Math.round(alimento),
     vetExtras,
+    _insight,
+    _chart,
   };
 }

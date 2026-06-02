@@ -5,6 +5,8 @@ export interface Outputs {
   caloriasPostEjercicio: number;
   totalCalorias: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const WOD_DATA: Record<string, { met: number; epoc: number; nombre: string }> = {
@@ -29,10 +31,31 @@ export function caloriasCrossfit(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const durR = Math.round(durante);
+  const epocR = Math.round(epoc);
+  const totalSlices = durR + epocR;
+
   return {
-    caloriasQuemadas: Math.round(durante),
-    caloriasPostEjercicio: Math.round(epoc),
+    caloriasQuemadas: durR,
+    caloriasPostEjercicio: epocR,
     totalCalorias: Math.round(total),
-    detalle: `WOD ${info.nombre} de ${min} min (MET ${info.met}): ~${fmt.format(Math.round(durante))} kcal durante + ~${fmt.format(Math.round(epoc))} kcal afterburn (EPOC ${Math.round(info.epoc * 100)}%) = ~${fmt.format(Math.round(total))} kcal totales.`,
+    detalle: `WOD ${info.nombre} de ${min} min (MET ${info.met}): ~${fmt.format(durR)} kcal durante + ~${fmt.format(epocR)} kcal afterburn (EPOC ${Math.round(info.epoc * 100)}%) = ~${fmt.format(Math.round(total))} kcal totales.`,
+    _insight: {
+      title: `WOD ${info.nombre} + afterburn`,
+      text: `Durante el WOD quemás **${fmt.format(durR)} kcal** y el efecto EPOC (afterburn del ${Math.round(info.epoc * 100)}%) suma **${fmt.format(epocR)} kcal** más en reposo, para un total de **${fmt.format(totalSlices)} kcal**. Ese gasto post-ejercicio es lo que distingue al entrenamiento de alta intensidad.`,
+      tone: 'good',
+      icon: '🔥',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Durante el WOD', value: durR },
+        { label: 'Afterburn (EPOC)', value: epocR },
+      ],
+      prefix: '',
+      centerValue: fmt.format(totalSlices),
+      centerLabel: 'kcal totales',
+      ariaLabel: `Reparto de calorías: ${fmt.format(durR)} kcal durante el WOD y ${fmt.format(epocR)} kcal de afterburn`,
+    },
   };
 }

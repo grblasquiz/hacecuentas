@@ -1,6 +1,6 @@
 /** Honorarios persona fisica Mexico */
 export interface Inputs { ingresoAnual: number; gastosDeducibles: number; regimen: string; }
-export interface Outputs { netoAnual: number; isrAnual: number; tasaEfectiva: number; ivaCobrado: number; netoMensual: number; }
+export interface Outputs { netoAnual: number; isrAnual: number; tasaEfectiva: number; ivaCobrado: number; netoMensual: number; _insight?: any; _chart?: any; }
 export function honorariosPersonaFisicaMexico(i: Inputs): Outputs {
   const ing = Number(i.ingresoAnual);
   const gastos = Number(i.gastosDeducibles);
@@ -31,11 +31,40 @@ export function honorariosPersonaFisicaMexico(i: Inputs): Outputs {
   }
   const neto = ing - gastos - isr;
   const iva = ing * 0.16;
+  const tasaEfectiva = ing > 0 ? Number(((isr / ing) * 100).toFixed(2)) : 0;
+  const fmtMX = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const regLabel = reg === 'resico' ? 'RESICO' : 'régimen general de actividad profesional';
+
+  // Donut: cómo se reparte el ingreso anual (neto + ISR + gastos deducibles). Suman el ingreso.
+  const gastosSlice = ing - neto - isr; // = gastos efectivamente usados
+  const slices: { label: string; value: number }[] = [
+    { label: 'Neto para vos', value: Math.round(neto) },
+    { label: 'ISR', value: Math.round(isr) },
+  ];
+  if (gastosSlice > 0) slices.push({ label: 'Gastos deducibles', value: Math.round(gastosSlice) });
+  const chart = {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: fmtMX(ing),
+    centerLabel: 'Ingreso anual',
+    ariaLabel: 'Reparto del ingreso anual: neto, ISR y gastos deducibles',
+  };
+
+  const insight = {
+    title: 'Qué significa',
+    text: `Bajo **${regLabel}**, de **${fmtMX(ing)}** facturados pagás **${fmtMX(isr)}** de ISR (tasa efectiva **${tasaEfectiva}%**) y te quedan **${fmtMX(neto)}** al año (${fmtMX(neto / 12)}/mes). El IVA cobrado (${fmtMX(iva)}) es ajeno: lo trasladás al SAT, no es tu ganancia.`,
+    tone: (tasaEfectiva <= 5 ? 'good' : tasaEfectiva >= 20 ? 'warn' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🧾',
+  };
+
   return {
     netoAnual: Math.round(neto),
     isrAnual: Math.round(isr),
-    tasaEfectiva: Number(((isr / ing) * 100).toFixed(2)),
+    tasaEfectiva,
     ivaCobrado: Math.round(iva),
-    netoMensual: Math.round(neto / 12)
+    netoMensual: Math.round(neto / 12),
+    _insight: insight,
+    _chart: chart
   };
 }

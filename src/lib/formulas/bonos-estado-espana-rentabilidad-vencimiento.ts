@@ -20,6 +20,8 @@ export interface Outputs {
   precio_compra_euros: number;       // €
   duracion_modificada: number;       // años
   alerta_tipo: string;               // texto informativo
+  _insight?: any;
+  _chart?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -163,6 +165,43 @@ export function compute(i: Inputs): Outputs {
     alertaTipo = `Obligación del Estado a ${plazo} años. Duración modificada ${durMod.toFixed(2)}: alta sensibilidad a subidas de tipos. Por cada +1 % en tipos, el precio cae ~${durMod.toFixed(2)} %.`;
   }
 
+  const tirBrutaPct = Math.round(tirBruta * 10000) / 100;
+  const tirNetaPct = Math.round(tirNeta * 10000) / 100;
+  const tipoMarginalPct = Math.round(tipoMarginal * 10000) / 100;
+
+  // --- Insight narrativo ---
+  const fmtEUR = (n: number) => Math.round(n).toLocaleString('es-ES') + ' €';
+  const detalleCapital = gananciaCapital > 0
+    ? ` Al comprar al ${precioPct}% (bajo par), al vencimiento embolsas **${fmtEUR(gananciaCapital)}** de plusvalía además de los cupones.`
+    : gananciaCapital < 0
+      ? ` Compras sobre par (${precioPct}%), así que asumes **${fmtEUR(-gananciaCapital)}** de minusvalía al vencimiento que recorta tu rentabilidad.`
+      : '';
+  const tone = tirNetaPct <= 0 ? 'warn' : tirNetaPct >= 4 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Rentabilidad real tras impuestos',
+    text: `Este bono a ${plazo} años rinde un **${tirBrutaPct.toFixed(2)}% TIR bruta**, que baja a **${tirNetaPct.toFixed(2)}% neta** tras aplicar tu tipo marginal del ahorro (${tipoMarginalPct.toFixed(0)}%).${detalleCapital} Su duración modificada de **${durMod.toFixed(2)}** indica que ante una subida de 1% en los tipos el precio caería ~${durMod.toFixed(2)}%.`,
+    tone,
+    icon: '📈'
+  };
+
+  // --- Gráfico: gauge de TIR neta por zonas ---
+  const markerTir = tirNetaPct;
+  const gaugeMin = Math.min(-2, Math.floor(markerTir - 1));
+  const _chart = {
+    type: 'scale',
+    marker: markerTir,
+    markerLabel: `${tirNetaPct.toFixed(2)}% neta`,
+    min: gaugeMin,
+    segments: [
+      { nombre: 'Pérdida', max: 0, color: '#ef4444', colorDark: '#b91c1c' },
+      { nombre: 'Baja', max: 2, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Moderada', max: 4, color: '#84cc16', colorDark: '#4d7c0f' },
+      { nombre: 'Buena', max: 6, color: '#22c55e', colorDark: '#15803d' },
+      { nombre: 'Alta', max: Math.max(8, Math.ceil(markerTir + 1)), color: '#16a34a', colorDark: '#166534' }
+    ],
+    ariaLabel: `Termómetro de rentabilidad neta: ${tirNetaPct.toFixed(2)}% anual tras impuestos, sobre una escala de zonas de pérdida a alta.`
+  };
+
   return {
     cupon_bruto_anual: Math.round(cuponBrutoAnual * 100) / 100,
     retencion_anual: Math.round(retencionAnual * 100) / 100,
@@ -170,12 +209,14 @@ export function compute(i: Inputs): Outputs {
     total_cupones_brutos: Math.round(totalCuponesBrutos * 100) / 100,
     total_cupones_netos: Math.round(totalCuponesNetos * 100) / 100,
     ganancia_perdida_capital: Math.round(gananciaCapital * 100) / 100,
-    tir_bruta_pct: Math.round(tirBruta * 10000) / 100,       // a porcentaje con 2 decimales
-    tir_neta_pct: Math.round(tirNeta * 10000) / 100,
-    tipo_marginal_ahorro_pct: Math.round(tipoMarginal * 10000) / 100,
+    tir_bruta_pct: tirBrutaPct,       // a porcentaje con 2 decimales
+    tir_neta_pct: tirNetaPct,
+    tipo_marginal_ahorro_pct: tipoMarginalPct,
     impuesto_ganancia_capital: Math.round(impuestoGananciaCapital * 100) / 100,
     precio_compra_euros: Math.round(precioCompraEuros * 100) / 100,
     duracion_modificada: Math.round(durMod * 100) / 100,
     alerta_tipo: alertaTipo,
+    _insight,
+    _chart,
   };
 }

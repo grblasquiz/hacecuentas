@@ -24,6 +24,8 @@ export interface EmbarazoOutputs {
   inicioTercerTrimestre: string;
   proximoControl: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function parseLocal(s: string, lang: string): Date {
@@ -134,6 +136,35 @@ export function embarazo(inputs: EmbarazoInputs): EmbarazoOutputs {
     ? `LMP: ${formatNice(fum, __lang)} | Week ${semanasTotales}+${diasExtra} | Trimester ${trimestre} (ACOG) | EDD: ${formatNice(fpp, __lang)} | Progress ${progreso}% | Days remaining: ${diasRestantes}.`
     : `FUM: ${formatNice(fum, __lang)} | Semana ${semanasTotales}+${diasExtra} | Trimestre ${trimestre} (ACOG) | FPP: ${formatNice(fpp, __lang)} | Progreso ${progreso}% | Días restantes: ${diasRestantes}.`;
 
+  const semFmt = __lang === 'en'
+    ? `${semanasTotales}w ${diasExtra}d`
+    : `${semanasTotales}s ${diasExtra}d`;
+  const trimNombre = __lang === 'en'
+    ? (trimestre === 1 ? '1st trimester' : trimestre === 2 ? '2nd trimester' : '3rd trimester')
+    : (trimestre === 1 ? '1er trimestre' : trimestre === 2 ? '2º trimestre' : '3er trimestre');
+  const _insight = {
+    title: __lang === 'en' ? 'Where you are' : 'En qué punto estás',
+    text: __lang === 'en'
+      ? `You're at **${semanasTotales} weeks ${diasExtra} days** (${trimNombre}), **${progreso}%** of the way through. Your estimated due date is **${formatNice(fpp, __lang)}**, about **${diasRestantes} days** away.`
+      : `Estás de **${semanasTotales} semanas ${diasExtra} días** (${trimNombre}), un **${progreso}%** del camino recorrido. La fecha probable de parto es el **${formatNice(fpp, __lang)}**, dentro de unos **${diasRestantes} días**.`,
+    tone: 'good' as const,
+    icon: '🤰',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: Math.min(diasTranscurridos, 280),
+    markerLabel: semFmt,
+    min: 0,
+    segments: [
+      { nombre: __lang === 'en' ? '1st trim.' : '1er trim.', max: 97, color: '#a7f3d0', colorDark: '#065f46' },
+      { nombre: __lang === 'en' ? '2nd trim.' : '2º trim.', max: 195, color: '#6ee7b7', colorDark: '#047857' },
+      { nombre: __lang === 'en' ? '3rd trim.' : '3er trim.', max: 280, color: '#34d399', colorDark: '#059669' },
+    ],
+    ariaLabel: __lang === 'en'
+      ? `Gestation progress: day ${diasTranscurridos} of 280 (${trimNombre}).`
+      : `Avance del embarazo: día ${diasTranscurridos} de 280 (${trimNombre}).`,
+  };
+
   return {
     fpp: formatIso(fpp),
     semanas: __lang === 'en'
@@ -147,5 +178,7 @@ export function embarazo(inputs: EmbarazoInputs): EmbarazoOutputs {
     inicioTercerTrimestre: formatIso(inicioTerTrim),
     proximoControl: proximoHito(semanasTotales, __lang),
     detalle,
+    _insight,
+    _chart,
   };
 }

@@ -13,6 +13,7 @@ export interface Outputs {
   nopat: number;
   margenFcf: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function flujoCajaLibreFcf(i: Inputs): Outputs {
@@ -50,10 +51,22 @@ export function flujoCajaLibreFcf(i: Inputs): Outputs {
     `− CAPEX: $${fmt.format(capex)}. ` +
     `= FCF: $${fmt.format(fcf)}. ${estado}`;
 
+  const insight = {
+    title: fcf > 0 ? 'Genera caja libre' : (fcf === 0 ? 'Caja en equilibrio' : 'Consume caja'),
+    text: fcf > 0
+      ? `La empresa genera **$${fmt.format(fcf)}** de caja libre (margen FCF **${margenFcf.toFixed(1)}%** sobre EBIT). Ese excedente puede ir a dividendos, repago de deuda o reinversión.`
+      : fcf === 0
+      ? `El flujo de caja libre queda en **$0**: la operación no genera ni consume efectivo libre tras impuestos, CAPEX y capital de trabajo.`
+      : `El FCF es **−$${fmt.format(Math.abs(fcf))}** (margen **${margenFcf.toFixed(1)}%**): la empresa consume más caja de la que produce y necesitará financiamiento para sostenerse.`,
+    tone: fcf > 0 ? 'good' : (fcf === 0 ? 'neutral' : 'warn'),
+    icon: '💵',
+  };
+
   return {
     fcf: Math.round(fcf),
     nopat: Math.round(nopat),
     margenFcf: Number(margenFcf.toFixed(1)),
     detalle,
+    _insight: insight,
   };
 }

@@ -20,6 +20,8 @@ export interface Outputs {
   total_anual: number;
   banco_recomendado: string;
   ahorro_anual_mejor: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tarifas 2026 Colombia - Fuente: DIAN, Superfinanciera, carteradores oficiales
@@ -172,7 +174,36 @@ export function compute(i: Inputs): Outputs {
 
   const total_anual = total_comisiones_mes * 12;
 
-  return {
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const componentes = [
+    { label: 'Manejo de cuenta', value: Math.round(comision_manejo) },
+    { label: 'Transferencias', value: Math.round(comision_transferencias) },
+    { label: 'Retiros en cajero', value: Math.round(comision_retiros_atm) },
+    { label: 'Depósitos', value: Math.round(comision_depositos) },
+    { label: 'Consultas/extractos', value: Math.round(otras_comisiones) },
+    { label: 'Gravamen 4x1000 (GMF)', value: gravamen_gmf },
+  ].filter(c => c.value > 0);
+
+  let _insight;
+  if (total_comisiones_mes <= 0) {
+    _insight = {
+      title: `${tarifa.nombre} no te cobra comisiones`,
+      text: `Con tu perfil de uso, **${tarifa.nombre}** te deja en **$0 de comisiones**. Los bancos digitales suelen eliminar cuota de manejo, transferencias y consultas.`,
+      tone: 'good' as const,
+      icon: '🏦'
+    };
+  } else {
+    const mayor = componentes.slice().sort((a, b) => b.value - a.value)[0];
+    const pctMayor = (mayor.value / total_comisiones_mes) * 100;
+    _insight = {
+      title: `${tarifa.nombre}: ${cop(total_comisiones_mes)} al mes`,
+      text: `Pagás **${cop(total_comisiones_mes)}/mes** (${cop(total_anual)} al año) en comisiones. El mayor peso es **${mayor.label.toLowerCase()}** con ${cop(mayor.value)} (${pctMayor.toFixed(0)}% del total).`,
+      tone: (total_anual > 200000 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+      icon: '🏦'
+    };
+  }
+
+  const out: Outputs = {
     comision_manejo_cuenta: Math.round(comision_manejo),
     comision_transferencias: Math.round(comision_transferencias),
     comision_retiros_atm: Math.round(comision_retiros_atm),
@@ -182,8 +213,22 @@ export function compute(i: Inputs): Outputs {
     total_comisiones_mes,
     total_anual,
     banco_recomendado: tarifa.nombre,
-    ahorro_anual_mejor: 0
+    ahorro_anual_mejor: 0,
+    _insight
   };
+
+  if (componentes.length >= 2) {
+    out._chart = {
+      type: 'doughnut',
+      slices: componentes,
+      prefix: '$',
+      centerValue: cop(total_comisiones_mes),
+      centerLabel: 'Comisión mensual',
+      ariaLabel: `Desglose de las comisiones mensuales de ${tarifa.nombre} por ${cop(total_comisiones_mes)}.`
+    };
+  }
+
+  return out;
 }
 
 function getDefaultOutputs(recomendacion: string, ahorro: number): Outputs {

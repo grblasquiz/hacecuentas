@@ -14,6 +14,7 @@ export interface Outputs {
   gestational_age: string;   // e.g. "28 weeks, 2 days"
   lmp_result: string;        // ISO date
   due_date_result: string;   // ISO date
+  _insight?: any;
 }
 
 // Standard pregnancy length from LMP in days (Naegele's Rule)
@@ -122,11 +123,20 @@ export function compute(i: Inputs): Outputs {
   const fertileWindowStr =
     `${formatDateDisplay(fertileStart)} – ${formatDateDisplay(fertileEnd)}`;
 
+  const conceptionInFuture = conceptionDate.getTime() > today.getTime();
+  const _insight = {
+    title: 'Most likely conception date',
+    text: `Conception most likely occurred around **${formatDateDisplay(conceptionDate)}**, within the fertile window **${fertileWindowStr}**.${conceptionInFuture ? '' : ` That puts the pregnancy at **${gestAge}** today.`} These dates are estimates based on a ${clampedCycle}-day cycle.`,
+    tone: 'neutral',
+    icon: '🤰',
+  };
+
   return {
     conception_date: formatDateISO(conceptionDate),
     fertile_window: fertileWindowStr,
     gestational_age: gestAge,
     lmp_result: formatDateISO(lmp),
-    due_date_result: formatDateISO(edd)
+    due_date_result: formatDateISO(edd),
+    _insight
   };
 }

@@ -17,6 +17,8 @@ export interface Outputs {
   sensibilidad_precio_clp: number;
   porcentaje_presupuesto_fiscal: number;
   fondo_estabilizacion_aporte: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -88,15 +90,43 @@ export function compute(i: Inputs): Outputs {
     fondeEstabilizacionAporteClp = ingresoExcesoUsd * FACTOR_FONDO_ESTABILIZACION * tipoCambioUsdClp;
   }
 
+  // Valores redondeados (millones / miles de millones)
+  const royaltyM = Math.round(ingresoRoyaltyUsd / 1e6 * 100) / 100;
+  const irpfM = Math.round(ingresoIrpfCodelcoUsd / 1e6 * 100) / 100;
+  const totalM = Math.round((royaltyM + irpfM) * 100) / 100; // suma exacta de las slices
+  const mineriaClpMM = Math.round(totalIngresosMineriaClp / 1e9 * 100) / 100;
+  const fondoMM = Math.round(fondeEstabilizacionAporteClp / 1e9 * 100) / 100;
+  const pctFiscal = Math.round(porcentajePresupuestoFiscal * 10) / 10;
+
+  const fmtM = (n: number) => 'USD ' + n.toLocaleString('es-CL') + ' M';
+  const royaltyShare = totalM > 0 ? Math.round((royaltyM / totalM) * 100) : 0;
+
   // Retorno de outputs
   return {
-    ingreso_royalty_usd: Math.round(ingresoRoyaltyUsd / 1e6 * 100) / 100, // Millones USD
-    ingreso_irpf_codelco_usd: Math.round(ingresoIrpfCodelcoUsd / 1e6 * 100) / 100, // Millones USD
+    ingreso_royalty_usd: royaltyM, // Millones USD
+    ingreso_irpf_codelco_usd: irpfM, // Millones USD
     total_ingresos_codelco_usd: Math.round(totalIngresosCodelcoUsd / 1e6 * 100) / 100, // Millones USD
-    total_ingresos_mineria_clp: Math.round(totalIngresosMineriaClp / 1e9 * 100) / 100, // Miles de millones CLP
+    total_ingresos_mineria_clp: mineriaClpMM, // Miles de millones CLP
     sensibilidad_precio_usd: Math.round(sensibilidadPrecioUsd / 1e6 * 100) / 100, // Millones USD por USD/lb
     sensibilidad_precio_clp: Math.round(sensibilidadPrecioClp / 1e9 * 100) / 100, // Miles de millones CLP por USD/lb
-    porcentaje_presupuesto_fiscal: Math.round(porcentajePresupuestoFiscal * 10) / 10, // Porcentaje
-    fondo_estabilizacion_aporte: Math.round(fondeEstabilizacionAporteClp / 1e9 * 100) / 100 // Miles de millones CLP
+    porcentaje_presupuesto_fiscal: pctFiscal, // Porcentaje
+    fondo_estabilizacion_aporte: fondoMM, // Miles de millones CLP
+    _insight: {
+      title: 'El cobre en las arcas fiscales',
+      text: `Con el cobre a **USD ${precioCobreUsdLibra.toFixed(2)}/lb**, Codelco aportaría **${fmtM(totalM)}** al fisco (**${royaltyShare}%** royalty + **${100 - royaltyShare}%** impuesto a las utilidades), ~**${pctFiscal}%** del presupuesto fiscal. ${precioCobreUsdLibra > PRECIO_EQUILIBRIO_FISCAL ? `Está **sobre** el precio de equilibrio (USD ${PRECIO_EQUILIBRIO_FISCAL}/lb): **CLP ${fondoMM.toLocaleString('es-CL')} mil M** irían al Fondo de Estabilización.` : precioCobreUsdLibra < PRECIO_EQUILIBRIO_FISCAL ? `Está **bajo** el precio de equilibrio (USD ${PRECIO_EQUILIBRIO_FISCAL}/lb): presiona el presupuesto fiscal a la baja.` : `Está justo en el precio de equilibrio fiscal (USD ${PRECIO_EQUILIBRIO_FISCAL}/lb).`}`,
+      tone: precioCobreUsdLibra >= PRECIO_EQUILIBRIO_FISCAL ? 'good' : 'warn',
+      icon: '🪙',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Royalty minero', value: royaltyM },
+        { label: 'Impuesto a utilidades (IRPF)', value: irpfM },
+      ],
+      prefix: 'USD ',
+      centerValue: totalM.toLocaleString('es-CL') + ' M',
+      centerLabel: 'Aporte Codelco',
+      ariaLabel: `Aporte fiscal de Codelco ${fmtM(totalM)}: royalty ${fmtM(royaltyM)} más impuesto a utilidades ${fmtM(irpfM)}`,
+    },
   };
 }

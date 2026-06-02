@@ -7,6 +7,7 @@ export interface Outputs {
   jurisdiccion: string;
   actividadAplicada: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Alícuotas típicas 2026 (valores aproximados — consultar código fiscal vigente)
@@ -74,12 +75,24 @@ export function ingresosBrutos(i: Inputs): Outputs {
     centerLabel: 'Total',
     ariaLabel: 'Composición: facturación más impuesto sobre los Ingresos Brutos.',
   };
+  const provLabel = PROV_LABEL[prov] ?? prov;
+  const actLabel = ACT_LABEL[act] ?? act;
+  const _insight = {
+    title: 'Impuesto sobre tu facturación',
+    text:
+      `Sobre **$${Math.round(fact).toLocaleString('es-AR')}** facturados en ${provLabel} (${actLabel.toLowerCase()}), ` +
+      `Ingresos Brutos te aplica una alícuota del **${alicuota}%**, lo que da **$${Math.round(impuesto).toLocaleString('es-AR')}** de impuesto. ` +
+      `Es un tributo sobre el ingreso, no sobre la ganancia: se paga aunque el margen sea bajo.`,
+    tone: 'warn' as const,
+    icon: '🧾',
+  };
   return {
     alicuota,
     impuesto: Math.round(impuesto),
     total: Math.round(fact + impuesto),
-    jurisdiccion: PROV_LABEL[prov] ?? prov,
-    actividadAplicada: ACT_LABEL[act] ?? act,
+    jurisdiccion: provLabel,
+    actividadAplicada: actLabel,
     _chart: chart,
+    _insight,
   };
 }

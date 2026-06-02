@@ -13,6 +13,8 @@ export interface Outputs {
   rendimiento_neto: number;
   capital_final: number;
   rentabilidad_efectiva_neta: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 function getTasaEA(banco: string, plazo: number): number {
@@ -71,13 +73,41 @@ export function compute(i: Inputs): Outputs {
   const exp_anual = 365 / dias_exactos;
   const rentabilidad_efectiva_neta = (Math.pow(razon_capital, exp_anual) - 1) * 100;
 
+  const r_bruto = parseFloat(rendimiento_bruto.toFixed(2));
+  const r_ret = parseFloat(retencion_fuente.toFixed(2));
+  const r_neto = parseFloat(rendimiento_neto.toFixed(2));
+  const r_capfinal = parseFloat(capital_final.toFixed(2));
+  const r_ren = parseFloat(rentabilidad_efectiva_neta.toFixed(2));
+
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const _insight = {
+    title: 'Tu CDT en cifras',
+    text: `A ${plazo_dias} días al **${tasa_ea.toFixed(2)}% E.A.**, tu capital pasa de ${cop(monto_inicial)} a **${cop(r_capfinal)}**. ` +
+      `Ganás **${cop(r_neto)}** netos: la retención en la fuente (4%) se lleva **${cop(r_ret)}** de los ${cop(r_bruto)} de interés bruto. La rentabilidad neta anualizada queda en **${r_ren.toFixed(2)}%**.`,
+    tone: 'good',
+    icon: '🏦',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Rendimiento neto', value: r_neto },
+      { label: 'Retención fuente (4%)', value: r_ret },
+    ],
+    prefix: '$',
+    centerValue: cop(r_bruto),
+    centerLabel: 'Interés bruto',
+    ariaLabel: 'Interés bruto del CDT repartido entre rendimiento neto y retención en la fuente',
+  };
+
   return {
     tasa_ea_vigente: parseFloat(tasa_ea.toFixed(2)),
     dias_exactos,
-    rendimiento_bruto: parseFloat(rendimiento_bruto.toFixed(2)),
-    retencion_fuente: parseFloat(retencion_fuente.toFixed(2)),
-    rendimiento_neto: parseFloat(rendimiento_neto.toFixed(2)),
-    capital_final: parseFloat(capital_final.toFixed(2)),
-    rentabilidad_efectiva_neta: parseFloat(rentabilidad_efectiva_neta.toFixed(2))
+    rendimiento_bruto: r_bruto,
+    retencion_fuente: r_ret,
+    rendimiento_neto: r_neto,
+    capital_final: r_capfinal,
+    rentabilidad_efectiva_neta: r_ren,
+    _insight,
+    _chart
   };
 }

@@ -12,6 +12,8 @@ export interface Outputs {
   costoAnual: number;
   costoMensualTotal: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function costoUniversidadPrivadaCuota(i: Inputs): Outputs {
@@ -34,10 +36,35 @@ export function costoUniversidadPrivadaCuota(i: Inputs): Outputs {
   const costoTotal = costoAnual * anios;
   const costoMensualTotal = costoTotal / (anios * 12);
 
-  return {
+  const totalCuotas = cuota * meses * anios;
+  const totalMatricula = matricula * anios;
+
+  const _insight = {
+    title: 'La carrera completa, en números',
+    text: `Recibirte cuesta unos **$${Math.round(costoTotal).toLocaleString('es-AR')}** a lo largo de ${anios} año(s), lo que equivale a **$${Math.round(costoMensualTotal).toLocaleString('es-AR')}/mes** prorrateados en toda la carrera.${matricula > 0 ? ` Solo en matrículas se van **$${Math.round(totalMatricula).toLocaleString('es-AR')}**.` : ''}`,
+    tone: 'neutral' as const,
+    icon: '🎓',
+  };
+
+  const slices = [{ label: 'Cuotas', value: Math.round(totalCuotas) }];
+  if (totalMatricula > 0) slices.push({ label: 'Matrículas', value: Math.round(totalMatricula) });
+
+  const _chart = slices.length > 1 ? {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: `$${Math.round(costoTotal).toLocaleString('es-AR')}`,
+    centerLabel: 'Carrera completa',
+    ariaLabel: `Gráfico de torta del costo total de la carrera, total $${Math.round(costoTotal).toLocaleString('es-AR')}`,
+  } : undefined;
+
+  const out: Outputs = {
     costoTotal: Math.round(costoTotal),
     costoAnual: Math.round(costoAnual),
     costoMensualTotal: Math.round(costoMensualTotal),
     detalle: `Costo total estimado: $${costoTotal.toLocaleString('es-AR')} por ${anios} año(s). Cuota mensual $${cuota.toLocaleString('es-AR')} × ${meses} meses + matrícula $${matricula.toLocaleString('es-AR')}/año`,
+    _insight,
   };
+  if (_chart) out._chart = _chart;
+  return out;
 }

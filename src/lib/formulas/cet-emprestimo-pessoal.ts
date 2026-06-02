@@ -22,6 +22,8 @@ export interface Outputs {
   jurosPagos: string;
   encargosExtras: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -64,6 +66,27 @@ export function cetEmprestimoPessoal(i: Inputs): Outputs {
   const encargosExtras = iof + tarifas + seguros;
   const jurosPagos = totalPago - liberado;
 
+  const cetAnoPct = cetAno * 100;
+  const insightTone = cetAnoPct >= 50 ? 'warn' : cetAnoPct >= 25 ? 'neutral' : 'good';
+  const _insight = {
+    title: 'Quanto custa de fato',
+    text: `Você recebe **${brl(liquidoRecebido)}** líquido e paga ${n}x de ${brl(pmt)}, totalizando **${brl(totalPago)}**. O CET é **${cetAnoPct.toFixed(2)}% ao ano** (${(cetMes * 100).toFixed(2)}% a.m.), ou seja **${brl(custoTotal)}** de custo total entre juros e encargos.`,
+    tone: insightTone as 'good' | 'warn' | 'neutral',
+    icon: '💳',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Valor líquido recebido', value: Math.round(liquidoRecebido * 100) / 100 },
+      { label: 'Custo total (juros + encargos)', value: Math.round(custoTotal * 100) / 100 },
+    ],
+    prefix: 'R$',
+    centerValue: brl(totalPago),
+    centerLabel: 'total pago',
+    ariaLabel: `Composição do total pago de ${brl(totalPago)}: valor líquido recebido mais custo total`,
+  };
+
   return {
     cetMensal: (cetMes * 100).toFixed(2) + '% am',
     cetAnual: (cetAno * 100).toFixed(2) + '% aa',
@@ -72,5 +95,7 @@ export function cetEmprestimoPessoal(i: Inputs): Outputs {
     jurosPagos: brl(jurosPagos),
     encargosExtras: brl(encargosExtras),
     resumen: `Empréstimo com ${brl(liquidoRecebido)} líquido e ${n}x de ${brl(pmt)}: CET ${(cetAno * 100).toFixed(2)}% aa (${(cetMes * 100).toFixed(2)}% am). Custo total ${brl(custoTotal)}.`,
+    _insight,
+    _chart,
   };
 }

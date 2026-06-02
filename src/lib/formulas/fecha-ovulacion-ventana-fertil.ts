@@ -14,6 +14,7 @@ export interface Outputs {
   peak_days: string;              // texto descriptivo
   next_period_date: string;       // fecha ISO
   days_until_ovulation: number;   // puede ser negativo si ya pasó
+  _insight?: any;
 }
 
 // Constante clínica: fase lútea promedio = 14 días
@@ -104,12 +105,42 @@ export function compute(i: Inputs): Outputs {
     (ovulationDate.getTime() - today.getTime()) / msPerDay
   );
 
+  // Días hasta el inicio / fin de la ventana fértil (desde hoy)
+  const daysUntilFertileStart = Math.round((fertileStart.getTime() - today.getTime()) / msPerDay);
+  const daysUntilFertileEnd = Math.round((fertileEnd.getTime() - today.getTime()) / msPerDay);
+
+  // Insight dinámico según dónde cae HOY respecto de la ventana fértil
+  let insight;
+  if (daysUntilFertileStart > 0) {
+    insight = {
+      title: 'Faltan días para tu ventana fértil',
+      text: `Tu ventana fértil arranca en **${daysUntilFertileStart} ${daysUntilFertileStart === 1 ? 'día' : 'días'}** (${formatDateES(fertileStart)}) y la ovulación se estima para el **${formatDateES(ovulationDate)}**. Los días de mayor probabilidad de embarazo son los **2 previos a la ovulación**.`,
+      tone: 'neutral',
+      icon: '🌱',
+    };
+  } else if (daysUntilFertileEnd >= 0) {
+    insight = {
+      title: 'Estás en tu ventana fértil',
+      text: `Hoy estás dentro de tu ventana fértil (hasta el **${formatDateES(fertileEnd)}**), con la ovulación estimada para el **${formatDateES(ovulationDate)}**. Es el período de **mayor probabilidad de embarazo** del ciclo.`,
+      tone: 'good',
+      icon: '🔥',
+    };
+  } else {
+    insight = {
+      title: 'Tu ventana fértil ya pasó',
+      text: `La ovulación de este ciclo (estimada el **${formatDateES(ovulationDate)}**) ya quedó atrás. Tu próximo período se espera para el **${formatDateES(nextPeriod)}**.`,
+      tone: 'neutral',
+      icon: '🗓️',
+    };
+  }
+
   return {
     ovulation_date: toISODateString(ovulationDate),
     fertile_window_start: toISODateString(fertileStart),
     fertile_window_end: toISODateString(fertileEnd),
     peak_days: peakText,
     next_period_date: toISODateString(nextPeriod),
-    days_until_ovulation: daysUntilOvulation
+    days_until_ovulation: daysUntilOvulation,
+    _insight: insight,
   };
 }

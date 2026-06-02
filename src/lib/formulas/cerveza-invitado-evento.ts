@@ -1,6 +1,6 @@
 /** Cerveza por invitado */
 export interface Inputs { personas: number; horasEvento: number; tipoEvento: string; porcentajeTomadores: number; esVerano: string; }
-export interface Outputs { litrosTotal: number; latas473: number; botellasLitro: number; barriles30L: number; hieloNecesario: number; }
+export interface Outputs { litrosTotal: number; latas473: number; botellasLitro: number; barriles30L: number; hieloNecesario: number; _insight?: any; }
 
 export function cervezaInvitadoEvento(i: Inputs): Outputs {
   const p = Number(i.personas);
@@ -24,11 +24,20 @@ export function cervezaInvitadoEvento(i: Inputs): Outputs {
   const barriles = litros / 30;
   const hielo = litros / 2;
 
+  const tomadores = Math.round(p * pct);
+  const litrosR = Number(litros.toFixed(1));
+  const _insight = {
+    title: 'Cuánta cerveza comprar',
+    text: `Para **${tomadores}** tomadores en **${h} h** necesitás unos **${litrosR.toLocaleString('es-AR')} L** de cerveza: alcanza con **${Math.ceil(latas)} latas** de 473 ml o **${Math.ceil(botellas)} botellas** de litro${verano ? ', con el plus de verano ya incluido' : ''}. Sumá **${Math.ceil(hielo)} kg de hielo** para enfriarla. Ya está contemplado un 15% de margen para que no falte.`,
+    tone: 'neutral',
+    icon: '🍺',
+  };
   return {
-    litrosTotal: Number(litros.toFixed(1)),
+    litrosTotal: litrosR,
     latas473: Math.ceil(latas),
     botellasLitro: Math.ceil(botellas),
     barriles30L: Number(barriles.toFixed(1)),
     hieloNecesario: Math.ceil(hielo),
+    _insight,
   };
 }

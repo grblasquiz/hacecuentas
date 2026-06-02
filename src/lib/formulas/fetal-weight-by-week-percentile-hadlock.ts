@@ -8,6 +8,8 @@ export interface Outputs {
   weight_pounds: number;
   growth_category: string;
   normal_range: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Hadlock regression curves: weight (grams) by gestational week and percentile
@@ -126,11 +128,47 @@ export function compute(i: Inputs): Outputs {
   }
 
   const normalRange = getNormalRange(weeks);
+  const wG = Math.round(weightGrams);
+  const wLb = parseFloat(weightPounds.toFixed(2));
+  const pNum = Number(percentile);
+  const weeksLabel = Number.isInteger(weeks) ? `${weeks}` : `${weeks.toFixed(1)}`;
+
+  // Extremes (SGA p10 / LGA p90) warrant closer follow-up; median/normal are reassuring
+  const tone: 'good' | 'warn' | 'neutral' =
+    pNum <= 10 || pNum >= 90 ? 'warn' : pNum === 50 ? 'good' : 'neutral';
+  const insightText =
+    pNum <= 10
+      ? `At **${weeksLabel} weeks** the 10th percentile is **${wG} g** (${wLb} lb). A baby measuring at or below this line is flagged **small for gestational age** — worth a growth-scan follow-up with your OB.`
+      : pNum >= 90
+        ? `At **${weeksLabel} weeks** the 90th percentile is **${wG} g** (${wLb} lb). At or above this line the baby is **large for gestational age**; your OB may monitor for macrosomia.`
+        : pNum === 50
+          ? `The median (50th percentile) weight at **${weeksLabel} weeks** is **${wG} g** (${wLb} lb) — right in the expected range. Most babies land between ${normalRange}.`
+          : `At the ${percentile}th percentile, **${weeksLabel} weeks** corresponds to **${wG} g** (${wLb} lb) — within the normal band of ${normalRange}.`;
 
   return {
-    weight_grams: Math.round(weightGrams),
-    weight_pounds: parseFloat(weightPounds.toFixed(2)),
+    weight_grams: wG,
+    weight_pounds: wLb,
     growth_category: category,
     normal_range: normalRange,
+    _insight: {
+      title: 'What this percentile means',
+      text: insightText,
+      tone,
+      icon: '👶',
+    },
+    _chart: {
+      type: 'scale',
+      marker: pNum,
+      markerLabel: `${percentile}th pct`,
+      min: 0,
+      segments: [
+        { nombre: 'SGA (<10th)', max: 10, color: '#f87171', colorDark: '#ef4444' },
+        { nombre: 'Low-normal', max: 25, color: '#fbbf24', colorDark: '#f59e0b' },
+        { nombre: 'Normal', max: 75, color: '#34d399', colorDark: '#10b981' },
+        { nombre: 'High-normal', max: 90, color: '#fbbf24', colorDark: '#f59e0b' },
+        { nombre: 'LGA (>90th)', max: 100, color: '#f87171', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Fetal weight at the ${percentile}th percentile for ${weeksLabel} weeks: ${wG} grams`,
+    },
   };
 }

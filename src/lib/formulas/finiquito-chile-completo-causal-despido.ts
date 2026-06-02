@@ -23,6 +23,8 @@ export interface Outputs {
   total_descuentos: number;
   total_neto_finiquito: number;
   tasa_retencion_efectiva: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -154,6 +156,48 @@ export function compute(i: Inputs): Outputs {
       ? (total_descuentos / total_bruto_finiquito) * 100
       : 0;
 
+  // --- Insight + gráfico ---
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 });
+  const retPct = Math.round(tasa_retencion_efectiva * 10) / 10;
+  const cobraIndemnizacion = indemnizacion_anos_servicio > 0;
+
+  let _insight: any;
+  if (!cobraIndemnizacion && (i.causal_termino === 'renuncia' || i.causal_termino === 'despido_causa' || i.causal_termino === 'vencimiento_plazo')) {
+    _insight = {
+      title: 'Sin indemnización por años de servicio',
+      text: `Por esta causal no corresponde indemnización por años de servicio: tu finiquito neto queda en **${fmtCLP(total_neto_finiquito)}**, formado por vacaciones y haberes pendientes.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: 'Finiquito con indemnización',
+      text: `Con **${anos_servicio.toFixed(1)} años** de servicio, el bruto es **${fmtCLP(total_bruto_finiquito)}** y el neto **${fmtCLP(total_neto_finiquito)}** tras descontar AFP, salud e impuesto (**${retPct}%** de retención efectiva).`,
+      tone: 'good',
+      icon: '💼',
+    };
+  }
+
+  const _chartSlices = [
+    { label: 'Indemnización años', value: Math.round(indemnizacion_anos_servicio) },
+    { label: 'Aviso previo', value: Math.round(aviso_previo) },
+    { label: 'Vacaciones', value: Math.round(vacaciones_proporcionales) },
+    { label: 'Sueldo pendiente', value: Math.round(sueldo_pendiente_pago) },
+    { label: 'Asignaciones', value: Math.round(total_asignaciones) },
+  ].filter((s) => s.value > 0);
+
+  const _chart =
+    total_bruto_finiquito > 0
+      ? {
+          type: 'doughnut',
+          slices: _chartSlices,
+          prefix: '$',
+          centerValue: fmtCLP(total_bruto_finiquito),
+          centerLabel: 'Total bruto',
+          ariaLabel: 'Composición del finiquito chileno bruto por concepto',
+        }
+      : undefined;
+
   return {
     anos_servicio: Math.round(anos_servicio * 100) / 100,
     indemnizacion_anos_servicio: Math.round(indemnizacion_anos_servicio),
@@ -168,5 +212,7 @@ export function compute(i: Inputs): Outputs {
     total_descuentos: Math.round(total_descuentos),
     total_neto_finiquito: Math.round(total_neto_finiquito),
     tasa_retencion_efectiva: Math.round(tasa_retencion_efectiva * 100) / 100,
+    _insight,
+    _chart,
   };
 }

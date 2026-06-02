@@ -12,6 +12,7 @@ export interface Outputs {
   procedimientoMostrado: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Baremos orientativos 2026 (EUR), basados en normativa autonómica
@@ -86,6 +87,13 @@ export function honorariosAbogadoEspanaTurnoOficio(i: Inputs): Outputs {
     ariaLabel: 'Composición del total facturado: honorarios base e IVA del 21%',
   };
 
+  const insight = {
+    title: 'Qué significa',
+    text: `El baremo de **${item.label}** en ${COMUNIDADES[com]} reconoce **€${base.toFixed(2)}** de honorarios; con el IVA del 21% (€${iva.toFixed(2)}) facturás **€${total.toFixed(2)}** en total. Es una indemnización orientativa del turno de oficio, no una tarifa libre: cobrás del baremo público, no del cliente.`,
+    tone: 'neutral' as 'good' | 'warn' | 'neutral',
+    icon: '⚖️',
+  };
+
   return {
     importeBase: Number(base.toFixed(2)),
     iva: Number(iva.toFixed(2)),
@@ -94,5 +102,6 @@ export function honorariosAbogadoEspanaTurnoOficio(i: Inputs): Outputs {
     procedimientoMostrado: item.label,
     resumen: `Turno de oficio **${item.label}** en ${COMUNIDADES[com]} = **€${base.toFixed(2)}** + IVA 21% (€${iva.toFixed(2)}) = **€${total.toFixed(2)}**.`,
     _chart: chart,
+    _insight: insight,
   };
 }

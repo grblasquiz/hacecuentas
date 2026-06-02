@@ -10,6 +10,7 @@ export interface Outputs {
   fase: string;
   recomendacion: string;
   contraccionesPorHora: number;
+  _insight?: any;
 }
 
 export function contraccionesParto(i: Inputs): Outputs {
@@ -64,5 +65,24 @@ export function contraccionesParto(i: Inputs): Outputs {
     fase = 'Posible amenaza de parto prematuro';
   }
 
-  return { evaluacion, fase, recomendacion, contraccionesPorHora };
+  // El insight es informativo salvo que el patrón sugiera ir al hospital o haya alerta de pretérmino.
+  const urgente = (esPretermino && freq <= 10 && dur >= 30)
+    || (freq >= 3 && freq < 5 && dur >= 45 && dur <= 90)
+    || (freq <= 5 && dur >= 60 && horas >= 1)
+    || (freq < 3 && dur >= 60);
+  const tone = urgente ? 'warn' : 'neutral';
+  const icon = urgente ? '🚨' : '🤰';
+  const insightText = urgente
+    ? `Con contracciones cada **${freq} min** de **${dur} s** (~**${contraccionesPorHora}/hora**) a las **${semanas} semanas**, el patrón indica: **${evaluacion}**. ${recomendacion}`
+    : `Contracciones cada **${freq} min** de **${dur} s** (~**${contraccionesPorHora}/hora**) a las **${semanas} semanas**: **${evaluacion}**. ${recomendacion}`;
+
+  return {
+    evaluacion, fase, recomendacion, contraccionesPorHora,
+    _insight: {
+      title: fase,
+      text: insightText,
+      tone,
+      icon,
+    },
+  };
 }

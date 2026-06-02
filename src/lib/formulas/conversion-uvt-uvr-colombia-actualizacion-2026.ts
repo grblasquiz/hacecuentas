@@ -11,6 +11,7 @@ export interface Outputs {
   valor_unitario_aplicado: number;
   tipo_ajuste: string;
   referencia_normativa: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -71,11 +72,27 @@ export function compute(i: Inputs): Outputs {
     referencia_normativa = 'Banco de la República - Certificación diaria UVR';
   }
 
+  const resFinal = Math.round(resultado_conversion * 100) / 100;
+  const esUvt = i.tipo_conversion === 'pesos_a_uvt' || i.tipo_conversion === 'uvt_a_pesos';
+  const usaAproximado = !esUvt && !(i.uvr_valor_diario && i.uvr_valor_diario > 0);
+  const fmtCop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const resTxt = unidad_destino === 'Pesos COP'
+    ? fmtCop(resFinal)
+    : `${resFinal.toLocaleString('es-CO')} ${unidad_destino}`;
+  const insight = {
+    title: 'Resultado de la conversión',
+    text: `El monto equivale a **${resTxt}**, aplicando ${esUvt ? `la UVT 2026 (**${fmtCop(valor_unitario)}**)` : `un valor UVR de **${fmtCop(valor_unitario)}**`}.` +
+      (usaAproximado ? ` Es un **valor UVR aproximado**: para trámites oficiales cargá la UVR certificada del día por el Banco de la República.` : ``),
+    tone: usaAproximado ? 'warn' : 'neutral',
+    icon: '🇨🇴',
+  };
+
   return {
-    resultado_conversion: Math.round(resultado_conversion * 100) / 100,
+    resultado_conversion: resFinal,
     unidad_destino: unidad_destino,
     valor_unitario_aplicado: Math.round(valor_unitario * 10000) / 10000,
     tipo_ajuste: tipo_ajuste,
-    referencia_normativa: referencia_normativa
+    referencia_normativa: referencia_normativa,
+    _insight: insight
   };
 }

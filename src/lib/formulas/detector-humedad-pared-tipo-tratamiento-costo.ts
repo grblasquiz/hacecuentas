@@ -14,6 +14,7 @@ export interface Outputs {
   costo_estimado_max: number;
   urgencia: string;
   advertencia: string;
+  _insight?: any;
 }
 
 // Costos de referencia 2026 — CABA/GBA
@@ -151,6 +152,28 @@ export function compute(i: Inputs): Outputs {
       "Los tres tipos de humedad pueden coexistir. Un arquitecto o ingeniero puede usar un higrómetro de pared y una cámara termográfica para un diagnóstico preciso.";
   }
 
+  const fmt = (n: number) => n.toLocaleString('es-AR');
+  let _insight: any;
+  if (tipo === "indeterminado") {
+    _insight = {
+      title: 'Diagnóstico no concluyente',
+      text: 'Los síntomas que marcaste **no encajan en un único patrón** de humedad. Conviene una inspección presencial con higrómetro antes de gastar en tratamientos.',
+      tone: 'neutral',
+      icon: '🔍',
+    };
+  } else {
+    const urgenciaTone = urgencia.startsWith('Alta') ? 'warn' : 'neutral';
+    const nombreCorto = tipo === 'capilaridad' ? 'capilaridad (humedad ascendente)'
+      : tipo === 'filtracion' ? 'filtración (agua de lluvia)'
+      : 'condensación (vapor interior)';
+    _insight = {
+      title: 'Diagnóstico y costo estimado',
+      text: `El patrón apunta a **${nombreCorto}**. El tratamiento ronda **$${fmt(costo_estimado_min)} a $${fmt(costo_estimado_max)}** (valores CABA/GBA 2026, deterioro ${nivel_deterioro}). Urgencia: **${urgencia.split('—')[0].trim()}**.`,
+      tone: urgenciaTone,
+      icon: '💧',
+    };
+  }
+
   return {
     tipo_humedad,
     tratamiento_recomendado,
@@ -158,5 +181,6 @@ export function compute(i: Inputs): Outputs {
     costo_estimado_max,
     urgencia,
     advertencia,
+    _insight,
   };
 }

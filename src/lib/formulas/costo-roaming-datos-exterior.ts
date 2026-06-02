@@ -9,6 +9,7 @@ export interface CostoRoamingOutputs {
   costoEsim: number;
   costoChipLocal: number;
   detalle: string;
+  _insight?: any;
 }
 
 interface PrecioRegion {
@@ -61,11 +62,23 @@ export function costoRoamingDatosExterior(inputs: CostoRoamingInputs): CostoRoam
   }
 
   const ahorro = costoRoaming - Math.min(costoEsim, costoChipLocal);
+  const opcionBarata = masBarato === costoChipLocal ? 'el chip local' : masBarato === costoEsim ? 'la eSIM internacional' : 'el roaming';
+  const roamingGana = masBarato === costoRoaming;
+
+  const _insight = {
+    title: roamingGana ? 'Viaje corto: roaming alcanza' : `Lo más barato: ${opcionBarata}`,
+    text: roamingGana
+      ? `Para ${dias} días en ${region.nombre}, el **roaming** es lo más conveniente (**USD ${fmt.format(costoRoaming)}**): el viaje es tan corto que no compensa comprar eSIM ni chip. Activá el paquete de tu operador antes de salir.`
+      : `Para ${dias} días en ${region.nombre}, **${opcionBarata}** sale **USD ${fmt.format(masBarato)}** frente a **USD ${fmt.format(costoRoaming)}** del roaming: te ahorrás **USD ${fmt.format(ahorro)}** (${costoRoaming > 0 ? Math.round((ahorro / costoRoaming) * 100) : 0}%). ${masBarato === costoChipLocal ? 'Solo tené en cuenta que el chip lo comprás recién al llegar.' : 'La eSIM la activás antes de viajar, sin trámites en destino.'}`,
+    tone: roamingGana ? 'neutral' : 'good',
+    icon: '📶',
+  };
 
   return {
     costoRoaming,
     costoEsim,
     costoChipLocal,
     detalle: `${dias} días en ${region.nombre} (~${fmt.format(usoGb)} GB/día): Roaming ~USD ${fmt.format(costoRoaming)} | eSIM ~USD ${fmt.format(costoEsim)} | Chip local ~USD ${fmt.format(costoChipLocal)}. ${recomendacion} Ahorro vs roaming: ~USD ${fmt.format(ahorro)}.`,
+    _insight,
   };
 }

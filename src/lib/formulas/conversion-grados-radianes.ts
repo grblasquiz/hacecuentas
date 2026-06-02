@@ -5,6 +5,7 @@ export interface Outputs {
   radianes: number;
   gradianes: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function conversionGradosRadianes(i: Inputs): Outputs {
@@ -43,10 +44,28 @@ export function conversionGradosRadianes(i: Inputs): Outputs {
     gradianes: 'gradianes',
   };
 
+  // Clasificación geométrica del ángulo (en grados)
+  const absG = Math.abs(grados) % 360;
+  let tipo: string;
+  if (Math.abs(absG) < 1e-6) tipo = 'nulo / vuelta completa';
+  else if (Math.abs(absG - 90) < 1e-6) tipo = 'recto (90°)';
+  else if (Math.abs(absG - 180) < 1e-6) tipo = 'llano (180°)';
+  else if (absG < 90) tipo = 'agudo';
+  else if (absG < 180) tipo = 'obtuso';
+  else if (absG < 360) tipo = 'cóncavo (> 180°)';
+  else tipo = 'completo';
+  const piFactor = grados / 180;
+
   return {
     grados: Number(grados.toFixed(6)),
     radianes: Number(radianes.toFixed(6)),
     gradianes: Number(gradianes.toFixed(6)),
     detalle: `${fmt.format(val)} ${unidadNombres[unidad]} = ${fmt.format(grados)}° = ${fmt.format(radianes)} rad = ${fmt.format(gradianes)} grad.`,
+    _insight: {
+      title: 'Lectura del ángulo',
+      text: `Son **${fmt.format(Number(grados.toFixed(2)))}°** = **${fmt.format(Number(radianes.toFixed(4)))} rad** (≈ ${piFactor.toFixed(3)}·π) = **${fmt.format(Number(gradianes.toFixed(2)))} grad**. Es un ángulo **${tipo}**.`,
+      tone: 'neutral',
+      icon: '📐'
+    },
   };
 }

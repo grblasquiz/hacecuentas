@@ -20,6 +20,7 @@ export interface Outputs {
   anos_falta_retiro: number;
   recomendacion: string;
   comparativa_completa: Record<string, any>;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -183,6 +184,19 @@ export function compute(i: Inputs): Outputs {
     };
   });
 
+  // Insight narrativo
+  const difAbsM = Math.abs(diferencia) / 1000000;
+  const difFmt = difAbsM >= 1 ? `${difAbsM.toFixed(1)}M` : `${Math.round(Math.abs(diferencia) / 1000)}K`;
+  const privadoGana = diferencia > 0;
+  const _insight = {
+    title: privadoGana ? 'El fondo privado rinde más' : 'El FNA queda parejo o mejor',
+    text: privadoGana
+      ? `En ${i.anos_aporte} años, un fondo privado proyecta **$${difFmt}** más que el FNA (neto **${rentabilidad_privado_pct.toFixed(2)}%** vs **${rentabilidad_fna_pct.toFixed(2)}%** del FNA). Pero el FNA suma crédito de vivienda con subsidio (~**$${Math.round(subsidio_vivienda / 1000000)}M**) que el privado no ofrece.`
+      : `El FNA garantiza **${rentabilidad_fna_pct.toFixed(2)}%** y, en este escenario, el privado no lo supera (neto **${rentabilidad_privado_pct.toFixed(2)}%**). Sumá el crédito de vivienda con subsidio (~**$${Math.round(subsidio_vivienda / 1000000)}M**) y el FNA queda claramente conveniente.`,
+    tone: privadoGana ? 'neutral' : 'good',
+    icon: '🏠',
+  };
+
   return {
     saldo_acumulado_fna: Math.round(saldo_fna),
     saldo_acumulado_privado: Math.round(saldo_privado),
@@ -194,6 +208,7 @@ export function compute(i: Inputs): Outputs {
     cuota_mensual_fna: Math.round(cuota_mensual),
     anos_falta_retiro: anos_falta,
     recomendacion: recomendacion,
-    comparativa_completa: comparativa
+    comparativa_completa: comparativa,
+    _insight
   };
 }

@@ -1,6 +1,6 @@
 /** Calculadora de Golden Hour */
 export interface Inputs { latitud: number; diaDelAno: number; }
-export interface Outputs { amanecer: string; atardecer: string; duracionGolden: number; horasLuz: number; }
+export interface Outputs { amanecer: string; atardecer: string; duracionGolden: number; horasLuz: number; _insight?: any; }
 
 export function goldenHourHorario(i: Inputs): Outputs {
   const lat = Number(i.latitud);
@@ -35,10 +35,19 @@ export function goldenHourHorario(i: Inputs): Outputs {
   const sunAngle = Math.abs(Math.cos(toRad(lat - decl)));
   const duracionGolden = Math.round(6 / (15 * Math.max(sunAngle, 0.3)) * 60);
 
+  const golden = Math.min(duracionGolden, 120);
+  // Golden hour de la tarde: termina al atardecer, empieza 'golden' minutos antes.
+  const goldenTardeIni = atardecerDecimal - golden / 60;
   return {
     amanecer: formatHora(amanecerDecimal),
     atardecer: formatHora(atardecerDecimal),
-    duracionGolden: Math.min(duracionGolden, 120),
+    duracionGolden: golden,
     horasLuz: Number(horasLuz.toFixed(1)),
+    _insight: {
+      title: 'Tu ventana de luz dorada',
+      text: `La golden hour dura ~**${golden} min** y ocurre dos veces: justo tras el amanecer (**${formatHora(amanecerDecimal)}**) y antes del atardecer. A la tarde, dispará entre las **${formatHora(goldenTardeIni)}** y el ocaso (**${formatHora(atardecerDecimal)}**). El día tiene **${horasLuz.toFixed(1)} h** de luz.`,
+      tone: 'neutral',
+      icon: '🌅',
+    },
   };
 }

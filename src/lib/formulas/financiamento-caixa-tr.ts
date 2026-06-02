@@ -20,6 +20,8 @@ export interface Outputs {
   totalPago: string;
   totalJuros: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -61,6 +63,25 @@ export function financiamentoCaixaTr(i: Inputs): Outputs {
   }
 
   const totalJuros = totalPago - pv;
+  const jurosPct = pv > 0 ? (totalJuros / pv) * 100 : 0;
+
+  const _insight = {
+    title: 'Peso dos juros no financiamento',
+    text: `Na linha Poupança (TR + 3,0% + spread) você paga **${brl(totalJuros)}** de juros sobre **${brl(pv)}** financiados — cerca de **${jurosPct.toFixed(0)}%** do valor emprestado. A parcela começa em ${brl(primeira)} e cai até ${brl(ultima)} em ${n} meses pelo SAC; reduzir o spread negociado com o banco é o que mais derruba esse total.`,
+    tone: jurosPct >= 60 ? 'warn' : 'neutral',
+    icon: '🏠',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Valor financiado', value: Math.round(pv) },
+      { label: 'Juros', value: Math.round(totalJuros) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(totalPago),
+    centerLabel: 'Total pago',
+    ariaLabel: `Total pago de ${brl(totalPago)}: ${brl(pv)} de principal e ${brl(totalJuros)} de juros`,
+  };
 
   return {
     valorFinanciado: brl(pv),
@@ -70,5 +91,7 @@ export function financiamentoCaixaTr(i: Inputs): Outputs {
     totalPago: brl(totalPago),
     totalJuros: brl(totalJuros),
     resumen: `Linha Poupança Caixa a TR (${tr}%) + 3,0% + spread ${spread}% = ${taxaAnual.toFixed(2)}% aa. Em ${n} meses (SAC), 1ª parcela ${brl(primeira)}, última ${brl(ultima)}, juros totais ${brl(totalJuros)}.`,
+    _insight,
+    _chart,
   };
 }

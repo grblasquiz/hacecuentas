@@ -15,6 +15,8 @@ export interface Outputs {
   totalRespuestas: number;
   pctBajoEsfuerzo: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function customerEffortScoreCes(i: Inputs): Outputs {
@@ -62,10 +64,35 @@ export function customerEffortScoreCes(i: Inputs): Outputs {
     `Alto esfuerzo (1-3): ${pctAltoEsfuerzo.toFixed(1)}% (${fmt.format(altoEsfuerzo)} resp.). ` +
     diagnostico;
 
+  const tone = ces >= 5 ? 'good' : ces < 4 ? 'warn' : 'neutral';
+  const _insight = {
+    title: `CES ${ces.toFixed(2)} / 7`,
+    text: `Con **${fmt.format(totalRespuestas)} respuestas**, el **${pctBajoEsfuerzo.toFixed(1)}%** reporta bajo esfuerzo (5-7) y el **${pctAltoEsfuerzo.toFixed(1)}%** alto esfuerzo (1-3). ${diagnostico}`,
+    tone,
+    icon: ces >= 5 ? '🟢' : ces < 4 ? '🔴' : '🟡',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: Number(ces.toFixed(2)),
+    markerLabel: `CES ${ces.toFixed(2)}`,
+    min: 1,
+    segments: [
+      { nombre: 'Crítico', max: 3, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'Malo', max: 4, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Aceptable', max: 5, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Bueno', max: 6, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: 'Excelente', max: 7, color: '#16a34a', colorDark: '#22c55e' },
+    ],
+    ariaLabel: `Customer Effort Score de ${ces.toFixed(2)} sobre 7 en una escala de 1 (crítico) a 7 (excelente)`,
+  };
+
   return {
     ces: Number(ces.toFixed(2)),
     totalRespuestas,
     pctBajoEsfuerzo: Number(pctBajoEsfuerzo.toFixed(1)),
     detalle,
+    _insight,
+    _chart,
   };
 }

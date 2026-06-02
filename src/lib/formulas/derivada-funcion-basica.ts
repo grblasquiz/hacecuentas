@@ -12,6 +12,7 @@ export interface Outputs {
   result: string;
   funcionOriginal: string;
   detalle: string;
+  _insight?: any;
 }
 
 function formatTerm(coef: number, exp: number): string {
@@ -73,9 +74,21 @@ export function derivadaFuncionBasica(i: Inputs): Outputs {
 
   const pasos = derivadas.map((d, idx) => `Término ${idx + 1}: ${d.paso}`).join('\n');
 
+  const constantes = terms.filter((t) => t.exp === 0 && t.coef !== 0).length;
+  const _insight = {
+    title: 'De la función a su derivada',
+    text:
+      `Aplicando la regla de la potencia término a término, la derivada de **f(x) = ${original}** es **f'(x) = ${resultado}**.` +
+      (constantes > 0
+        ? ` ${constantes === 1 ? 'El término constante desaparece' : `Los ${constantes} términos constantes desaparecen`} porque su derivada es 0.`
+        : ''),
+    tone: 'neutral',
+    icon: '📐',
+  };
   return {
     result: `f'(x) = ${resultado}`,
     funcionOriginal: `f(x) = ${original}`,
     detalle: `**f(x) = ${original}**\n\n${pasos}\n\n**Resultado: f'(x) = ${resultado}**`,
+    _insight,
   };
 }

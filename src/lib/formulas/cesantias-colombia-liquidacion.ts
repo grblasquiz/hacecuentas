@@ -15,6 +15,8 @@ export interface Outputs {
   cesantiasAnuales: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cesantiasColombiaLiquidacion(i: Inputs): Outputs {
@@ -46,6 +48,25 @@ export function cesantiasColombiaLiquidacion(i: Inputs): Outputs {
   const formula = `Cesantías = ($${baseLiquidacion.toLocaleString()} × ${dias}) / 360 = $${Math.round(cesantias).toLocaleString()} + 12% intereses`;
   const explicacion = `${tipo === 'parcial' ? 'Liquidación parcial' : 'Liquidación anual'} de cesantías: salario base $${baseLiquidacion.toLocaleString()} COP${incluyeAuxilio && salario <= SMLMV * 2 ? ` (incluye auxilio $${AUXILIO.toLocaleString()})` : ''}. ${dias} días trabajados. Cesantías: $${Math.round(cesantias).toLocaleString()}. Intereses (12% anual): $${Math.round(interesesCesantias).toLocaleString()}. Total: $${Math.round(totalLiquidacion).toLocaleString()} COP. El empleador debe consignar las cesantías al fondo antes del 14 de febrero y los intereses al trabajador antes del 31 de enero.`;
 
+  const fmtCop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const _insight = {
+    title: tipo === 'parcial' ? 'Liquidación parcial' : 'Liquidación anual',
+    text: `Sobre una base de **${fmtCop(baseLiquidacion)}**${incluyeAuxilio && salario <= SMLMV * 2 ? ' (con auxilio de transporte)' : ''} y **${dias} días** trabajados, te corresponden **${fmtCop(cesantias)}** de cesantías más **${fmtCop(interesesCesantias)}** de intereses: total **${fmtCop(totalLiquidacion)}** COP. Las cesantías se consignan al fondo antes del **14 de febrero** y los intereses se pagan al trabajador antes del **31 de enero**.`,
+    tone: 'neutral',
+    icon: '💼',
+  };
+  const _chart = interesesCesantias > 0 && cesantias > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Cesantías', value: Math.round(cesantias) },
+      { label: 'Intereses (12%)', value: Math.round(interesesCesantias) },
+    ],
+    prefix: '$',
+    centerValue: fmtCop(totalLiquidacion),
+    centerLabel: 'Total',
+    ariaLabel: `Total a liquidar ${fmtCop(totalLiquidacion)}: ${fmtCop(cesantias)} de cesantías más ${fmtCop(interesesCesantias)} de intereses.`,
+  } : undefined;
+
   return {
     baseLiquidacion: Math.round(baseLiquidacion),
     cesantias: Math.round(cesantias),
@@ -54,5 +75,7 @@ export function cesantiasColombiaLiquidacion(i: Inputs): Outputs {
     cesantiasAnuales: Math.round(cesantiasAnuales),
     formula,
     explicacion,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

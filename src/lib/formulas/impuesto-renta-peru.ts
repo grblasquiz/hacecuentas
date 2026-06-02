@@ -17,6 +17,8 @@ export interface Outputs {
   tasaEfectiva: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const UIT = 5_350; // UIT 2026 estimada
@@ -74,6 +76,47 @@ export function impuestoRentaPeru(i: Inputs): Outputs {
   const formula = `Renta neta = S/${ingreso.toLocaleString()} - ${categoria === '4ta' ? `20% (S/${deduccion20Porc.toLocaleString()}) - ` : ''}7 UIT (S/${deduccion7Uit.toLocaleString()}) = S/${rentaNetaTrabajo.toLocaleString()}`;
   const explicacion = `Renta ${catStr}: ingreso anual S/${ingreso.toLocaleString()}.${deduccion20Porc > 0 ? ` Deducción 20%: S/${deduccion20Porc.toLocaleString()}.` : ''} Deducción 7 UIT: S/${deduccion7Uit.toLocaleString()}${deduccionesAd > 0 ? `. Otras deducciones: S/${deduccionesAd.toLocaleString()}` : ''}. Renta neta: S/${rentaNetaTrabajo.toLocaleString()}. Impuesto a la renta: S/${Math.round(impuestoBruto).toLocaleString()} (tasa efectiva ${tasaEfectiva.toFixed(2)}%). UIT 2026: S/${UIT.toLocaleString()}.`;
 
+  const impuestoR = Math.round(impuestoBruto);
+  const netoDespues = Math.round(ingreso - impuestoBruto);
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (impuestoR <= 0) {
+    insightTone = 'good';
+    insightText = `Tu renta neta de **S/${Math.round(rentaNetaTrabajo).toLocaleString()}** queda por debajo del tramo gravado: **no pagás impuesto a la renta**. La deducción de 7 UIT (**S/${deduccion7Uit.toLocaleString()}**) absorbe todo el ingreso imponible.`;
+  } else if (tasaEfectiva < 8) {
+    insightTone = 'good';
+    insightText = `Pagás **S/${impuestoR.toLocaleString()}** al año, una tasa efectiva de apenas **${tasaEfectiva.toFixed(2)}%** sobre tu ingreso. Te queda **S/${netoDespues.toLocaleString()}** después del impuesto a la renta.`;
+  } else if (tasaEfectiva < 15) {
+    insightTone = 'neutral';
+    insightText = `El impuesto a la renta te toma **S/${impuestoR.toLocaleString()}** al año (tasa efectiva **${tasaEfectiva.toFixed(2)}%**). La progresividad mantiene la carga moderada: pagás más sobre cada tramo, no sobre todo el ingreso.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Carga alta: **S/${impuestoR.toLocaleString()}** al año, tasa efectiva **${tasaEfectiva.toFixed(2)}%**. Sobre el excedente de tus tramos altos la marginal llega al 30% — cada sol adicional tributa fuerte.`;
+  }
+
+  const _insight = {
+    title: 'Tu impuesto a la renta',
+    text: insightText,
+    tone: insightTone,
+    icon: '🇵🇪',
+  };
+
+  // Gauge de tasa efectiva: zonas de carga sobre el ingreso bruto
+  const _chart = {
+    type: 'scale',
+    marker: Number(tasaEfectiva.toFixed(2)),
+    markerLabel: `${tasaEfectiva.toFixed(2)}% efectiva`,
+    min: 0,
+    segments: [
+      { nombre: 'Sin impuesto / baja', max: 8, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Moderada', max: 15, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Alta', max: 22, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Muy alta', max: 30, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Tasa efectiva del impuesto a la renta: ${tasaEfectiva.toFixed(2)}% sobre el ingreso bruto`,
+  };
+
   return {
     ingresos: ingreso,
     deduccion20Porc: Math.round(deduccion20Porc),
@@ -83,5 +126,7 @@ export function impuestoRentaPeru(i: Inputs): Outputs {
     tasaEfectiva: Number(tasaEfectiva.toFixed(2)),
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

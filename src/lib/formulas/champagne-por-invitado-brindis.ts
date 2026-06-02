@@ -14,6 +14,7 @@ export interface ChampagnePorInvitadoBrindisOutputs {
   copasTotales: number;
   litros: number;
   costoEstimado: number;
+  _insight?: any;
 }
 
 export function champagnePorInvitadoBrindis(
@@ -31,11 +32,19 @@ export function champagnePorInvitadoBrindis(
   const botellas = Math.ceil((copasTotales * 1.1) / copasPorBotella);
   const litros = botellas * (formato === '1500' ? 1.5 : 0.75);
   const precioUnit = formato === '1500' ? 22 : 12;
+  const costoEstimado = botellas * precioUnit;
 
+  const fmtFormato = formato === '1500' ? 'magnum (1,5 L)' : 'estándar (750 ml)';
   return {
     botellas,
     copasTotales,
     litros: Number(litros.toFixed(1)),
-    costoEstimado: botellas * precioUnit,
+    costoEstimado,
+    _insight: {
+      title: 'Tu compra para el brindis',
+      text: `Para ${invitados} invitados (${copas} ${copas === 1 ? 'copa' : 'copas'} c/u = ${copasTotales} copas) necesitás **${botellas} ${botellas === 1 ? 'botella' : 'botellas'}** ${fmtFormato}, unos **$${costoEstimado}**. Ya incluye un **10% de margen** por descorches y los que repiten.`,
+      tone: 'neutral',
+      icon: '🥂',
+    },
   };
 }

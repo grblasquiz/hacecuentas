@@ -13,6 +13,8 @@ export interface Outputs {
   total_cesantia_interes: number;
   cesantia_diaria: number;
   dias_restantes_año: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -57,12 +59,33 @@ export function compute(i: Inputs): Outputs {
   const ms_diferencia = proxima_fecha_deposito.getTime() - hoy.getTime();
   const dias_restantes = Math.ceil(ms_diferencia / (1000 * 60 * 60 * 24));
   
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const _insight = {
+    title: 'Tus cesantías + intereses',
+    text: `Acumulás **${fmt(cesantia_acumulada)}** de cesantías más **${fmt(interes_anual)}** de intereses (al ${(tasa * 100).toFixed(0).replace('.', ',')}% anual), un total de **${fmt(total_cesantia_interes)}**. El empleador consigna las cesantías al fondo antes del **14 de febrero** y te paga los intereses directamente antes del **31 de enero**.`,
+    tone: 'neutral',
+    icon: '🏦',
+  };
+  const _chart = interes_anual > 0 && cesantia_acumulada > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Cesantías al fondo', value: Math.round(cesantia_acumulada) },
+      { label: 'Intereses (a vos)', value: Math.round(interes_anual) },
+    ],
+    prefix: '$',
+    centerValue: fmt(total_cesantia_interes),
+    centerLabel: 'Total',
+    ariaLabel: `Total de ${fmt(total_cesantia_interes)}: ${fmt(cesantia_acumulada)} en cesantías al fondo más ${fmt(interes_anual)} de intereses al trabajador.`,
+  } : undefined;
+
   return {
     cesantia_anual: Math.round(cesantia_anual),
     cesantia_acumulada: Math.round(cesantia_acumulada),
     interes_anual_12pct: Math.round(interes_anual),
     total_cesantia_interes: Math.round(total_cesantia_interes),
     cesantia_diaria: Math.round(cesantia_diaria),
-    dias_restantes_año: Math.max(0, dias_restantes)
+    dias_restantes_año: Math.max(0, dias_restantes),
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

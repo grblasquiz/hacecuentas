@@ -11,6 +11,7 @@ export interface Outputs {
   metUsado: number;
   intensidadMostrada: string;
   resumen: string;
+  _insight?: any;
 }
 
 const MET_PADEL: Record<string, { met: number; nombre: string }> = {
@@ -38,5 +39,11 @@ export function caloriasPadel(i: Inputs): Outputs {
     metUsado: info.met,
     intensidadMostrada: info.nombre,
     resumen: `Pádel **${info.nombre}** ${min} min = **${Math.round(total)} kcal** (MET ${info.met}, ${kcalMin.toFixed(2)} kcal/min).`,
+    _insight: {
+      title: 'Lo que quemaste en la cancha',
+      text: `Jugando a **${kcalMin.toFixed(1)} kcal/min**, en ${min} min de pádel gastaste **~${Math.round(total)} kcal**. Es cardio en intervalos: sumá más minutos de juego seguido para que el gasto rinda.`,
+      tone: 'good',
+      icon: '🎾',
+    },
   };
 }

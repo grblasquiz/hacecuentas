@@ -28,6 +28,8 @@ export interface DespidoImprocedenteOutputs {
   indemnizacionPost2012: string;
   topeAplicado: string;
   aniosTotales: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmtEUR = (n: number) =>
@@ -104,6 +106,26 @@ export function indemnizacionDespidoImprocedenteEspana(
   const total = indemPre + indemPost;
   const totalDias = diasPre + diasPost;
 
+  const hayTope = topeInfo !== 'No';
+  const insight = {
+    title: 'Tu indemnización por despido improcedente',
+    text: `Te corresponden **${fmtEUR(total)}** (${totalDias.toFixed(0)} días de salario)${tiempoPre > 0 ? ', combinando el tramo previo a 2012 a 45 días/año con el posterior a 33 días/año' : ' a razón de 33 días por año trabajado'}. ${hayTope ? 'Atención: el tope legal recortó parte de lo que te tocaría sin límite.' : 'No te aplica ningún tope: cobrás la cuantía completa.'}`,
+    tone: (hayTope ? 'warn' : 'good') as 'good' | 'warn' | 'neutral',
+    icon: '🇪🇸',
+  };
+
+  const chart = (diasPre > 0 && diasPost > 0) ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Tramo pre-2012 (45 días/año)', value: Math.round(indemPre) },
+      { label: 'Tramo post-2012 (33 días/año)', value: Math.round(indemPost) },
+    ],
+    prefix: '€',
+    centerValue: fmtEUR(total),
+    centerLabel: 'Indemnización',
+    ariaLabel: 'Reparto de la indemnización entre el tramo de antigüedad anterior y posterior a la reforma de 2012',
+  } : undefined;
+
   return {
     indemnizacionTotal: fmtEUR(total),
     diasIndemnizacion: `${totalDias.toFixed(2)} días de salario`,
@@ -117,5 +139,7 @@ export function indemnizacionDespidoImprocedenteEspana(
         : 'No aplica (sin antigüedad post-2012)',
     topeAplicado: topeInfo,
     aniosTotales: `${(tiempoPre + tiempoPost).toFixed(2)} años totales (${tiempoPre.toFixed(2)} pre + ${tiempoPost.toFixed(2)} post-reforma 2012)`,
+    _insight: insight,
+    _chart: chart,
   };
 }

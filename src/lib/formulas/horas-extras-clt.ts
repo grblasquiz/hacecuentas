@@ -21,6 +21,8 @@ export interface Outputs {
   totalReceber: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -47,6 +49,26 @@ export function horasExtrasClt(i: Inputs): Outputs {
   const formula = `HE = ${he50}h × ${fmt(hora50)} + ${he100}h × ${fmt(hora100)} + DSR ${fmt(reflexoDsr)} = ${fmt(totalReceber)}`;
   const explicacao = `Hora normal: ${fmt(horaNormal)} (salário ${fmt(salario)} / ${horasMes}h). HE 50% dia útil: ${he50}h × ${fmt(hora50)} = ${fmt(total50)}. HE 100% domingo/feriado: ${he100}h × ${fmt(hora100)} = ${fmt(total100)}. Reflexo no DSR: (${fmt(somaHe)} / ${dUt}) × ${dDesc} = ${fmt(reflexoDsr)}. Total: ${fmt(totalReceber)}. Base legal: CF art. 7º XVI e CLT art. 59.`;
 
+  const pctDsr = totalReceber > 0 ? (reflexoDsr / totalReceber) * 100 : 0;
+  const insight = {
+    title: 'O que você recebe de hora extra',
+    text: `Por **${he50 + he100}h extras** você recebe **${fmt(totalReceber)}**: ${fmt(total50)} a 50%, ${fmt(total100)} a 100% e mais **${fmt(reflexoDsr)}** de reflexo no DSR (**${pctDsr.toFixed(0)}%** do total). Muita gente esquece o DSR, mas ele é devido por lei (Súmula 172 do TST).`,
+    tone: 'good',
+    icon: '💰',
+  };
+  const chart = totalReceber > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'HE 50%', value: Math.round(total50 * 100) / 100 },
+      { label: 'HE 100%', value: Math.round(total100 * 100) / 100 },
+      { label: 'Reflexo DSR', value: Math.round(reflexoDsr * 100) / 100 },
+    ],
+    prefix: 'R$ ',
+    centerValue: fmt(totalReceber),
+    centerLabel: 'Total a receber',
+    ariaLabel: 'Composição do total de horas extras: HE a 50%, HE a 100% e reflexo no DSR',
+  } : undefined;
+
   return {
     valorHoraNormal: fmt(horaNormal),
     valorHora50: fmt(hora50),
@@ -57,5 +79,7 @@ export function horasExtrasClt(i: Inputs): Outputs {
     totalReceber: fmt(totalReceber),
     formula,
     explicacao,
+    _insight: insight,
+    _chart: chart,
   };
 }

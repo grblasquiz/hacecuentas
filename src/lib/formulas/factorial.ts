@@ -5,6 +5,7 @@ export interface Outputs {
   resultadoNum: number;
   formula: string;
   descripcion: string;
+  _insight?: any;
 }
 
 function factorial(n: number): number {
@@ -88,10 +89,31 @@ export function factorialCalc(i: Inputs): Outputs {
       break;
   }
 
+  let insightText: string;
+  if (tipo === 'permutacion') {
+    insightText = __lang === 'en'
+      ? `There are **${resultado}** ordered arrangements of ${r} elements taken from ${n} — order matters, so ABC and CBA count separately.`
+      : `Hay **${resultado}** maneras ordenadas de tomar ${r} elementos de ${n}: importa el orden, así que ABC y CBA cuentan por separado.`;
+  } else if (tipo === 'combinacion') {
+    insightText = __lang === 'en'
+      ? `There are **${resultado}** ways to pick ${r} elements from ${n} when order doesn't matter — ABC and CBA are the same group.`
+      : `Hay **${resultado}** formas de elegir ${r} elementos de ${n} sin que importe el orden: ABC y CBA son el mismo grupo.`;
+  } else {
+    insightText = __lang === 'en'
+      ? `**${n}!** = ${resultado}: the number of distinct ways to arrange ${n} different objects in a row.`
+      : `**${n}!** = ${resultado}: la cantidad de formas distintas de ordenar ${n} objetos diferentes en fila.`;
+  }
+
   return {
     resultado,
     resultadoNum: isFinite(resNum) ? resNum : 0,
     formula,
     descripcion,
+    _insight: {
+      title: __lang === 'en' ? 'What it means' : 'Qué significa',
+      text: insightText,
+      tone: 'neutral',
+      icon: '🔢',
+    },
   };
 }

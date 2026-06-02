@@ -9,6 +9,7 @@ export interface Outputs {
   kilojoules: number;
   caloriasHora: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function caloriasCiclismoWatts(i: Inputs): Outputs {
@@ -37,6 +38,12 @@ export function caloriasCiclismoWatts(i: Inputs): Outputs {
     calorias,
     kilojoules,
     caloriasHora,
-    mensaje: `${duracion} min a ${potencia}W = ${kilojoules} kJ de trabajo ≈ ${calorias} kcal quemadas (${caloriasHora} kcal/h).`
+    mensaje: `${duracion} min a ${potencia}W = ${kilojoules} kJ de trabajo ≈ ${calorias} kcal quemadas (${caloriasHora} kcal/h).`,
+    _insight: {
+      title: 'Potencia a calorías',
+      text: `Sostener **${potencia} W** durante **${duracion} min** produce **${kilojoules} kJ** de trabajo y quema **${calorias} kcal** (${caloriasHora} kcal/h). El potenciómetro mide el gasto real mejor que la velocidad o el ritmo cardíaco.`,
+      tone: 'good',
+      icon: '🚴',
+    },
   };
 }

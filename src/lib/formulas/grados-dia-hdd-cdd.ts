@@ -17,6 +17,8 @@ export interface Outputs {
   consumoRefrigeracion: string;
   interpretacion: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function gradosDiaHddCdd(i: Inputs): Outputs {
@@ -45,6 +47,30 @@ export function gradosDiaHddCdd(i: Inputs): Outputs {
   else if (hdd < 50 && cdd < 50) interp = 'Período templado, bajo consumo de climatización.';
   else interp = 'Período mixto o transicional; revisar mes a mes.';
 
+  const dominante = hdd >= cdd
+    ? `predomina **calefacción** (${hdd.toFixed(0)} HDD)`
+    : `predomina **refrigeración** (${cdd.toFixed(0)} CDD)`;
+  const _insight = {
+    title: 'Demanda térmica del período',
+    text: `Con T media de **${T.toFixed(1)} °C** durante ${dias} días, ${dominante}. ${interp}`,
+    tone: (hdd > 100 || cdd > 80) ? 'warn' : (hdd < 50 && cdd < 50 ? 'good' : 'neutral'),
+    icon: hdd >= cdd ? '🔥' : '❄️',
+  };
+
+  const totalGD = hdd + cdd;
+  const _chart = totalGD > 0
+    ? {
+        type: 'doughnut' as const,
+        slices: [
+          { label: 'Calefacción (HDD)', value: Number(hdd.toFixed(1)) },
+          { label: 'Refrigeración (CDD)', value: Number(cdd.toFixed(1)) },
+        ],
+        centerValue: totalGD.toFixed(0),
+        centerLabel: 'Grados-día',
+        ariaLabel: 'Reparto de la demanda térmica del período entre calefacción (HDD) y refrigeración (CDD).',
+      }
+    : undefined;
+
   return {
     hdd: `${hdd.toFixed(1)} HDD`,
     cdd: `${cdd.toFixed(1)} CDD`,
@@ -54,5 +80,7 @@ export function gradosDiaHddCdd(i: Inputs): Outputs {
     consumoRefrigeracion: consumoRef,
     interpretacion: interp,
     mensaje: `Con T media ${T.toFixed(1)} °C por ${dias} días: ${hdd.toFixed(1)} HDD y ${cdd.toFixed(1)} CDD.`,
+    _insight,
+    _chart,
   };
 }

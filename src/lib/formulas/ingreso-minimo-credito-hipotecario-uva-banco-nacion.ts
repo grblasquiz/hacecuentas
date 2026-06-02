@@ -15,6 +15,8 @@ export interface Outputs {
   montoCreditoArs: number;
   tasaUsada: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tasas reales anuales por banco (TNA sobre UVA, referencia 2026)
@@ -109,6 +111,34 @@ export function compute(i: Inputs): Outputs {
     `Relación cuota/ingreso: ${relacionCuotaIngreso}% | ` +
     `TC referencia: $${tipoCambio.toLocaleString("es-AR")}/USD`;
 
+  // El ingreso mínimo se compone de la parte que va a la cuota más el resto disponible
+  const restoIngreso = Math.max(0, ingresoMinimoArs - cuotaInicialArs);
+  const fmtArs = (n: number) =>
+    '$' + Math.round(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
+
+  const _insight = {
+    title: 'Ingreso en blanco que te van a pedir',
+    text:
+      `Para financiar este crédito en ${nombreBanco} necesitás demostrar un ingreso de al menos **${fmtArs(ingresoMinimoArs)}** mensuales: ` +
+      `la cuota inicial de **${fmtArs(cuotaInicialArs)}** representa el **${relacionCuotaIngreso}%** de ese ingreso. ` +
+      `Al ser UVA, la cuota se ajusta por inflación, así que tu sueldo tiene que seguirle el ritmo para no apretarte el bolsillo.`,
+    tone: 'warn' as const,
+    icon: '🏠',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cuota del crédito', value: Math.round(cuotaInicialArs) },
+      { label: 'Resto del ingreso', value: Math.round(restoIngreso) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: fmtArs(ingresoMinimoArs),
+    centerLabel: 'Ingreso mínimo',
+    ariaLabel:
+      `Composición del ingreso mínimo mensual: cuota inicial del crédito (${relacionCuotaIngreso}%) y resto del ingreso disponible.`,
+  };
+
   return {
     ingresoMinimoArs,
     cuotaInicialArs,
@@ -116,5 +146,7 @@ export function compute(i: Inputs): Outputs {
     montoCreditoArs,
     tasaUsada: tasaAnualReal / 100,
     detalle,
+    _insight,
+    _chart,
   };
 }

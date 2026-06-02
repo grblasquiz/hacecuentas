@@ -15,6 +15,8 @@ export interface Outputs {
   gratuity_amount: number;
   tax_amount: number;
   breakdown_note: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // 2026 US average catering rates per head (USD)
@@ -98,6 +100,41 @@ export function compute(i: Inputs): Outputs {
     ` · ${gratuity_pct.toFixed(1)}% gratuity ($${gratuity_amount.toFixed(2)})` +
     ` · ${tax_pct.toFixed(1)}% tax ($${tax_amount.toFixed(2)})`;
 
+  // --- Insight: interpret cost-per-head vs typical US event budgets ---
+  const fmt = (n: number) => "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  const cph = Math.round(cost_per_head);
+  const addOnPct = pretax_total > 0 ? ((gratuity_amount + tax_amount) / pretax_total) * 100 : 0;
+  let tone: "good" | "warn" | "neutral";
+  let perHeadLabel: string;
+  if (cph <= 45) { tone = "good"; perHeadLabel = "budget-friendly"; }
+  else if (cph <= 90) { tone = "neutral"; perHeadLabel = "mid-range"; }
+  else { tone = "warn"; perHeadLabel = "premium"; }
+
+  const _insight = {
+    title: "What this means for your budget",
+    text:
+      `At **${fmt(cph)}/head** across ${guests} guests, this lands in the **${perHeadLabel}** range, ` +
+      `for a total of **${fmt(total_cost)}**. Gratuity and tax add **${addOnPct.toFixed(0)}%** on top of the ` +
+      `${fmt(pretax_total)} food + bar subtotal — line items that are easy to forget when comparing quotes.`,
+    tone,
+    icon: "🍽️",
+  };
+
+  // --- Chart: donut of the four cost components (they sum to total_cost) ---
+  const _chart = {
+    type: "doughnut",
+    slices: [
+      { label: "Food", value: Math.round(food_subtotal) },
+      { label: "Bar", value: Math.round(bar_subtotal) },
+      { label: "Gratuity", value: Math.round(gratuity_amount) },
+      { label: "Tax", value: Math.round(tax_amount) },
+    ].filter((s) => s.value > 0),
+    prefix: "$",
+    centerValue: fmt(total_cost),
+    centerLabel: "Total",
+    ariaLabel: `Cost breakdown: food ${fmt(food_subtotal)}, bar ${fmt(bar_subtotal)}, gratuity ${fmt(gratuity_amount)}, tax ${fmt(tax_amount)}.`,
+  };
+
   return {
     total_cost,
     cost_per_head,
@@ -106,5 +143,7 @@ export function compute(i: Inputs): Outputs {
     gratuity_amount,
     tax_amount,
     breakdown_note,
+    _insight,
+    _chart,
   };
 }

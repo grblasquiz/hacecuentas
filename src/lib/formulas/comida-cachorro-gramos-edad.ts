@@ -11,6 +11,8 @@ export interface Outputs {
   gramosPorToma: number;
   transicionAdulto: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const FACTOR_TAMANO: Record<string, number> = {
@@ -62,6 +64,32 @@ export function comidaCachorroGramosEdad(i: Inputs): Outputs {
   const gramosPorToma = Math.round(gramosDia / tomas);
   const transicionAdulto = TRANSICION[tamano] || TRANSICION.mediano;
 
+  const _insight = {
+    title: 'Su ración de hoy',
+    text: `A los **${edad} meses** y **${peso} kg**, tu cachorro necesita ~**${gramosDia} g** de balanceado puppy por día (${Math.round(kcalDia)} kcal), en **${tomas} tomas** de ~${gramosPorToma} g. Recalculá cada 2-3 semanas: a esta edad el peso cambia rápido y la ración tiene que seguirlo.`,
+    tone: 'neutral',
+    icon: '🐕',
+  };
+
+  // Donut: la ración diaria repartida en tomas (suman gramosDia exacto)
+  const slices = [];
+  let acumulado = 0;
+  const base = Math.floor(gramosDia / tomas);
+  for (let k = 0; k < tomas; k++) {
+    const esUltima = k === tomas - 1;
+    const val = esUltima ? gramosDia - acumulado : base;
+    acumulado += val;
+    slices.push({ label: `Toma ${k + 1}`, value: val });
+  }
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '',
+    centerValue: `${gramosDia} g`,
+    centerLabel: 'por día',
+    ariaLabel: `Ración diaria de ${gramosDia} gramos repartida en ${tomas} tomas`,
+  };
+
   return {
     gramosDia,
     kcalDia: Math.round(kcalDia),
@@ -69,5 +97,7 @@ export function comidaCachorroGramosEdad(i: Inputs): Outputs {
     gramosPorToma,
     transicionAdulto,
     detalle: `Tu cachorro de ${peso} kg (${edad} meses, raza ${tamano}) necesita ~${gramosDia} g de balanceado puppy por día en ${tomas} tomas de ~${gramosPorToma} g. ${transicionAdulto}`,
+    _insight,
+    _chart,
   };
 }

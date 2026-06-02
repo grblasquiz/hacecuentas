@@ -24,6 +24,7 @@ export interface Outputs {
   baseGravable: number;
   topeDeducciones: number;
   mensaje: string;
+  _insight?: any;
 }
 
 const TABLA_ISR_ANUAL_2026 = [
@@ -79,6 +80,36 @@ export function devolucionIsrAnualMexico(i: Inputs): Outputs {
     mensaje = `Tus retenciones coinciden con el ISR anual calculado.`;
   }
 
+  const mxn = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const topeAlcanzado = deduccionesInput > topeDeducciones;
+  const notaTope = topeAlcanzado
+    ? ` Ojo: tus deducciones (${mxn(deduccionesInput)}) superan el tope, así que solo se aplicaron **${mxn(deduccionesAplicadas)}** — lo demás no resta.`
+    : '';
+
+  let _insight: any;
+  if (montoDevolucion > 0) {
+    _insight = {
+      title: 'Tenés saldo a favor',
+      text: `Te retuvieron más ISR del que te tocaba: podés pedir al SAT una devolución de **${mxn(montoDevolucion)}**.${notaTope}`,
+      tone: 'good',
+      icon: '💸',
+    };
+  } else if (debePagar > 0) {
+    _insight = {
+      title: 'Te falta ISR por pagar',
+      text: `El ISR anual (${mxn(isrAnualCalculado)}) supera tus retenciones: en tu declaración te resulta **${mxn(debePagar)}** a cargo.${notaTope}`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: 'Tus números cuadran',
+      text: `Tus retenciones coinciden con el ISR anual calculado (**${mxn(isrAnualCalculado)}**): no te devuelven ni debés pagar extra.${notaTope}`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  }
+
   return {
     saldoFavor: Number(saldoFavor.toFixed(2)),
     montoDevolucion: Number(montoDevolucion.toFixed(2)),
@@ -88,5 +119,6 @@ export function devolucionIsrAnualMexico(i: Inputs): Outputs {
     baseGravable: Number(baseGravable.toFixed(2)),
     topeDeducciones: Number(topeDeducciones.toFixed(2)),
     mensaje,
+    _insight,
   };
 }

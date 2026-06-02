@@ -2,7 +2,7 @@
  * Conversor de Colores HEX ↔ RGB ↔ HSL
  */
 export interface CodigoColorInputs { hexColor: string; red: number; green: number; blue: number; }
-export interface CodigoColorOutputs { hex: string; rgb: string; hsl: string; css: string; }
+export interface CodigoColorOutputs { hex: string; rgb: string; hsl: string; css: string; _insight?: any; }
 
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   r /= 255; g /= 255; b /= 255;
@@ -45,5 +45,15 @@ export function codigoColorHexRgb(inputs: CodigoColorInputs): CodigoColorOutputs
   const [h, s, l] = rgbToHsl(r, g, b);
   const hsl = `hsl(${h}°, ${s}%, ${l}%)`;
 
-  return { hex, rgb, hsl, css: `color: ${hex}; /* ${rgb} */` };
+  const luz = l < 35 ? 'oscuro' : l > 70 ? 'claro' : 'de luminosidad media';
+  const sat = s < 15 ? 'casi gris (muy poco saturado)' : s > 70 ? 'muy vivo y saturado' : 'de saturación moderada';
+  const textoContraste = l < 50 ? 'texto blanco' : 'texto negro';
+  const insight = {
+    title: 'Tu color',
+    text: `**${hex}** es un color **${luz}** y **${sat}** (luminosidad ${l}%, saturación ${s}%). Para buen contraste, usá **${textoContraste}** encima.`,
+    tone: 'neutral',
+    icon: '🎨',
+  };
+
+  return { hex, rgb, hsl, css: `color: ${hex}; /* ${rgb} */`, _insight: insight };
 }

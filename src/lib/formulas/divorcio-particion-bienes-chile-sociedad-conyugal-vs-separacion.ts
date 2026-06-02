@@ -31,6 +31,8 @@ export interface Outputs {
   patrimonio_liquido_b: number;
   tabla_comparativa: OutputRow[];
   impuesto_estimado: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -176,6 +178,40 @@ export function compute(i: Inputs): Outputs {
     },
   ];
 
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const regimen_label =
+    i.regimen_patrimonial === 'sociedad_conyugal'
+      ? 'sociedad conyugal'
+      : i.regimen_patrimonial === 'separacion_bienes'
+        ? 'separación de bienes'
+        : 'participación en gananciales';
+  const _insight = {
+    title: 'Cómo queda el reparto',
+    text:
+      `Bajo **${regimen_label}**, el cónyuge A se queda con **${fmtCLP(patrimonio_bruto_a)}** y el B con **${fmtCLP(patrimonio_bruto_b)}** (patrimonio bruto).` +
+      (costo_total_divorcio > 0
+        ? ` El costo del divorcio es **${fmtCLP(costo_total_divorcio)}**, un **${(Math.round(costo_porcentaje_activo * 100) / 100).toFixed(2)}%** del activo total.`
+        : ''),
+    tone: (costo_porcentaje_activo > 10 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '⚖️',
+  };
+  // Donut: composición del costo del divorcio (gastos legales + arancel notarial + impuesto)
+  const _chart =
+    costo_total_divorcio > 0
+      ? {
+          type: 'doughnut',
+          slices: [
+            { label: 'Gastos proceso legal', value: Math.round(i.gastos_proceso_legal) },
+            { label: 'Arancel notarial', value: Math.round(i.arancel_notarial) },
+            { label: 'Impuesto transferencia', value: Math.round(impuesto_estimado) },
+          ].filter((s) => s.value > 0),
+          prefix: '$',
+          centerValue: fmtCLP(costo_total_divorcio),
+          centerLabel: 'Costo divorcio',
+          ariaLabel: `Composición del costo del divorcio ${fmtCLP(costo_total_divorcio)}: gastos legales, arancel notarial e impuesto de transferencia`,
+        }
+      : undefined;
+
   return {
     porcentaje_conyugue_a: porcentaje_a,
     porcentaje_conyugue_b: porcentaje_b,
@@ -189,5 +225,7 @@ export function compute(i: Inputs): Outputs {
     patrimonio_liquido_b: Math.round(patrimonio_liquido_b),
     tabla_comparativa: tabla_comparativa,
     impuesto_estimado: Math.round(impuesto_estimado),
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

@@ -10,6 +10,8 @@ export interface Outputs {
   caloriasTotal: number;
   caloriasExtra: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function caloriasEmbarazoTrimestre(i: Inputs): Outputs {
@@ -56,9 +58,42 @@ export function caloriasEmbarazoTrimestre(i: Inputs): Outputs {
     `Extra ${triNames[trimestre] || ''} trimestre: +${extra} kcal | ` +
     `Total recomendado: ${total} kcal/día.`;
 
-  return {
+  const fmt = new Intl.NumberFormat('es-AR');
+  const triNombre = triNames[trimestre] || 'segundo';
+
+  // Composición exacta del total: reposo (BMR) + actividad + extra del trimestre
+  const bmrR = Math.round(bmr);
+  const actividadR = total - bmrR - extra; // se deriva para que las porciones sumen el total exacto
+
+  const out: Outputs = {
     caloriasTotal: total,
     caloriasExtra: extra,
     detalle,
+    _insight: {
+      title: 'Tu requerimiento del trimestre',
+      text: extra === 0
+        ? `En el **primer trimestre** todavía no se suman calorías extra (ACOG): tu objetivo se mantiene en **${fmt.format(total)} kcal/día**, igual que tu TDEE pre-embarazo.`
+        : `Para el **${triNombre} trimestre** sumás **+${extra} kcal** sobre tu gasto pre-embarazo, llegando a **${fmt.format(total)} kcal/día**. De ese total, **~${fmt.format(bmrR)} kcal** son sólo tu metabolismo en reposo.`,
+      tone: 'neutral',
+      icon: '🤰',
+    },
   };
+
+  // Donut: reposo + actividad + extra suman el total
+  const slices = [
+    { label: 'Metabolismo basal', value: bmrR },
+    { label: 'Actividad física', value: actividadR },
+  ];
+  if (extra > 0) slices.push({ label: `Extra ${triNombre} trim.`, value: extra });
+
+  out._chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '',
+    centerValue: fmt.format(total),
+    centerLabel: 'kcal/día',
+    ariaLabel: `Total de ${fmt.format(total)} kcal diarias: ${fmt.format(bmrR)} de metabolismo basal, ${fmt.format(actividadR)} de actividad y ${extra} extra del trimestre`,
+  };
+
+  return out;
 }

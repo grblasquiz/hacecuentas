@@ -16,6 +16,8 @@ export interface Outputs {
   gratificacion_neta_30: number;
   diferencia_modalidades: number;
   tope_maximo_umm: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -65,6 +67,53 @@ export function compute(i: Inputs): Outputs {
   // Diferencia (positivo = modalidad 30% es mayor)
   const diferencia_modalidades = gratificacion_neta_30 - gratificacion_neta_25;
 
+  // Insight: ¿el tope de 4,75 UMM recorta la gratificación del 25%?
+  const tope_aplica = gratificacion_sin_tope_25 > TOPE_GRATIFICACION;
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  let _insight: any;
+  if (tope_aplica) {
+    _insight = {
+      title: 'Tope legal alcanzado',
+      text: `Tu 25% da ${fmt(gratificacion_sin_tope_25)} mensual, pero la ley topa la gratificación en **4,75 UMM (${fmt(TOPE_GRATIFICACION)})**, así que cobrás ese máximo. En el año son **${fmt(gratificacion_anual_25)}** y te quedan **${fmt(gratificacion_neta_25)}** netos tras el IUSC.`,
+      tone: 'warn',
+      icon: '🚧',
+    };
+  } else if (utilidades_validas > 0 && diferencia_modalidades > 0) {
+    _insight = {
+      title: 'Te conviene el 30% de utilidades',
+      text: `Con el 30% de utilidades cobrarías **${fmt(gratificacion_neta_30)}** netos al año, **${fmt(Math.abs(diferencia_modalidades))} más** que con el 25% de tu sueldo (${fmt(gratificacion_neta_25)}). El empleador puede elegir la modalidad, pero esta te favorece.`,
+      tone: 'good',
+      icon: '📈',
+    };
+  } else if (utilidades_validas > 0 && diferencia_modalidades < 0) {
+    _insight = {
+      title: 'Te conviene el 25% de tu sueldo',
+      text: `El 25% de tu sueldo te deja **${fmt(gratificacion_neta_25)}** netos al año, **${fmt(Math.abs(diferencia_modalidades))} más** que el 30% de utilidades (${fmt(gratificacion_neta_30)}). Sin tope aplicado, esta es la opción más alta para vos.`,
+      tone: 'good',
+      icon: '💰',
+    };
+  } else {
+    _insight = {
+      title: 'Tu gratificación anual',
+      text: `Con el 25% de tu sueldo cobrás **${fmt(gratificacion_anual_25)}** brutos al año (**${fmt(gratificacion_mensual_25)}** mensuales), que quedan en **${fmt(gratificacion_neta_25)}** netos tras descontar el IUSC.`,
+      tone: 'neutral',
+      icon: '💵',
+    };
+  }
+
+  // Gráfico: el bruto anual del 25% se reparte en neto + IUSC retenido
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Gratificación neta', value: Math.round(gratificacion_neta_25) },
+      { label: 'IUSC retenido', value: Math.round(iusc_25_anual) },
+    ],
+    prefix: '$',
+    centerValue: fmt(gratificacion_anual_25),
+    centerLabel: 'Bruto anual',
+    ariaLabel: 'Composición de la gratificación anual del 25%: monto neto más el IUSC retenido',
+  };
+
   return {
     gratificacion_mensual_25: Math.round(gratificacion_mensual_25),
     gratificacion_anual_25: Math.round(gratificacion_anual_25),
@@ -75,6 +124,8 @@ export function compute(i: Inputs): Outputs {
     gratificacion_neta_25: Math.round(gratificacion_neta_25),
     gratificacion_neta_30: Math.round(gratificacion_neta_30),
     diferencia_modalidades: Math.round(diferencia_modalidades),
-    tope_maximo_umm: Math.round(TOPE_GRATIFICACION)
+    tope_maximo_umm: Math.round(TOPE_GRATIFICACION),
+    _insight,
+    _chart
   };
 }

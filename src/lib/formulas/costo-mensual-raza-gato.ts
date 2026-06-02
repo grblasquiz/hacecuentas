@@ -14,6 +14,8 @@ export interface Outputs {
   costoAnual: number;
   moneda: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function costoMensualRazaGato(i: Inputs): Outputs {
@@ -67,14 +69,51 @@ export function costoMensualRazaGato(i: Inputs): Outputs {
 
   const round = (n: number) => cfg.moneda === 'EUR' || cfg.moneda === 'USD' ? Number(n.toFixed(1)) : Math.round(n);
 
+  const rTotal = round(total);
+  const rAlim = round(alimento);
+  const rArena = round(arena);
+  const rVet = round(vet);
+  const rAcc = round(acc);
+  const rAnual = round(total * 12);
+  const fmtN = (n: number) => n.toLocaleString('es-AR');
+  const prefix = cfg.moneda === 'EUR' ? '€' : '$';
+  const fc = (n: number) => prefix + fmtN(n);
+  const peludo = raza === 'persa' || raza === 'maine-coon' || raza === 'ragdoll' || raza === 'sphynx';
+
+  const rubros = [
+    { label: 'Alimento', value: rAlim },
+    { label: 'Arena', value: rArena },
+    { label: 'Veterinario', value: rVet },
+    { label: 'Accesorios/peluquería', value: rAcc },
+  ];
+  const mayor = rubros.reduce((a, b) => (b.value > a.value ? b : a), rubros[0]);
+  const pctMayor = rTotal > 0 ? Math.round((mayor.value / rTotal) * 100) : 0;
+  const razaLabel = raza.replace(/-/g, ' ');
+
   return {
-    costoTotal: round(total),
-    costoAlimento: round(alimento),
-    costoArena: round(arena),
-    costoVeterinario: round(vet),
-    costoAccesorios: round(acc),
-    costoAnual: round(total * 12),
+    costoTotal: rTotal,
+    costoAlimento: rAlim,
+    costoArena: rArena,
+    costoVeterinario: rVet,
+    costoAccesorios: rAcc,
+    costoAnual: rAnual,
     moneda: cfg.moneda,
     resumen: `Costo mensual estimado: ${round(total)} ${cfg.moneda}. Anual: ${round(total * 12)} ${cfg.moneda}.`,
+    _insight: {
+      title: peludo ? `Un ${razaLabel} pide cuidado extra` : `Cuánto cuesta tu ${razaLabel}`,
+      text: peludo
+        ? `Tener un **${razaLabel}** sale **${fc(rTotal)} ${cfg.moneda}/mes** (**${fc(rAnual)}** al año). Es una raza de mantenimiento alto: la **peluquería y los accesorios** suman **${fc(rAcc)}** porque el pelo${raza === 'sphynx' ? ' (o la falta de él)' : ' largo'} exige cuidado frecuente. El rubro que más pesa es **${mayor.label}** (**${pctMayor}%**).`
+        : `Mantener tu **${razaLabel}** cuesta **${fc(rTotal)} ${cfg.moneda}/mes** (**${fc(rAnual)}** al año). El gasto que más pesa es **${mayor.label}**, con **${fc(mayor.value)}** (**${pctMayor}%** del total). Tenelo en cuenta para armar el presupuesto mensual.`,
+      tone: 'neutral',
+      icon: '🐱',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: rubros,
+      prefix,
+      centerValue: fc(rTotal),
+      centerLabel: 'Total/mes',
+      ariaLabel: `Desglose del costo mensual del gato: alimento ${fmtN(rAlim)}, arena ${fmtN(rArena)}, veterinario ${fmtN(rVet)}, accesorios ${fmtN(rAcc)} ${cfg.moneda}.`,
+    },
   };
 }

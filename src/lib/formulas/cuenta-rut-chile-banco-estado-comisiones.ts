@@ -18,6 +18,8 @@ export interface Outputs {
   mantention_cuenta_corriente_equivalente: number;
   ahorro_respecto_cc: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -75,6 +77,39 @@ export function compute(i: Inputs): Outputs {
     recomendacion = "❌ Costo muy alto. Con este perfil de uso intenso, Cuenta Corriente BancoEstado (~$" + MANTENTION_CC_PROMEDIO.toLocaleString("es-CL") + "/mes sin límites) es mejor opción.";
   }
 
+  // --- Insight + gráfico ---
+  const fmtCL = (n: number) => Math.round(n).toLocaleString("es-CL");
+  const caroComoCC = comision_promedio_mensual >= MANTENTION_CC_PROMEDIO;
+  const _insight = {
+    title: "Tu costo real con CuentaRUT",
+    text: caroComoCC
+      ? `Pagás unos **$${fmtCL(comision_promedio_mensual)}/mes** en comisiones (**$${fmtCL(comision_total_periodo)}** en ${i.meses_analisis} ${i.meses_analisis === 1 ? "mes" : "meses"}), igual o más que una Cuenta Corriente (~$${fmtCL(MANTENTION_CC_PROMEDIO)}/mes sin límites). Con este nivel de uso, **conviene comparar** con la CC.`
+      : comision_total_periodo === 0
+        ? `No pagás **nada** en comisiones: tu uso entra dentro de las operaciones gratuitas de CuentaRUT. Frente a una Cuenta Corriente te ahorrás unos **$${fmtCL(ahorro_respecto_cc)}** al año.`
+        : `Pagás unos **$${fmtCL(comision_promedio_mensual)}/mes** en comisiones (**$${fmtCL(comision_total_periodo)}** en ${i.meses_analisis} ${i.meses_analisis === 1 ? "mes" : "meses"}), bastante menos que una Cuenta Corriente. Te ahorrás unos **$${fmtCL(ahorro_respecto_cc)}** al año.`,
+    tone: caroComoCC ? "warn" : "good",
+    icon: "🏧",
+  };
+
+  const slicesCL = [
+    { label: "Giros en caja", value: Math.round(comision_giros * i.meses_analisis) },
+    { label: "Retiros ATM", value: Math.round(comision_retiros_atm * i.meses_analisis) },
+    { label: "Transferencias", value: Math.round(comision_transferencias * i.meses_analisis) },
+    { label: "Consultas saldo", value: Math.round(comision_consultas * i.meses_analisis) },
+  ].filter((s) => s.value > 0);
+
+  let _chart: any = undefined;
+  if (comision_total_periodo > 0 && slicesCL.length > 0) {
+    _chart = {
+      type: "doughnut",
+      slices: slicesCL,
+      prefix: "$",
+      centerValue: "$" + fmtCL(comision_total_periodo),
+      centerLabel: "Comisiones",
+      ariaLabel: `Desglose de las comisiones de CuentaRUT en ${i.meses_analisis} meses por tipo de operación.`,
+    };
+  }
+
   return {
     comision_giros: Math.round(comision_giros),
     comision_retiros_atm: Math.round(comision_retiros_atm),
@@ -84,6 +119,8 @@ export function compute(i: Inputs): Outputs {
     comision_promedio_mensual: Math.round(comision_promedio_mensual),
     mantention_cuenta_corriente_equivalente: Math.round(mantention_cuenta_corriente_equivalente),
     ahorro_respecto_cc: Math.round(ahorro_respecto_cc),
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight,
+    _chart
   };
 }

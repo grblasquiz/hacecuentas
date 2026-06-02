@@ -18,6 +18,8 @@ export interface Outputs {
   valorFinalReais: string;
   custoExtraPct: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -40,13 +42,34 @@ export function dolarRealIofCartao(i: Inputs): Outputs {
   const cotEfet = brlFinal / usd;
   const custoExtra = (brlFinal / brlBase - 1) * 100;
 
+  const spreadValor = brlComSpread - brlBase;
+  const _insight = {
+    title: 'O custo real no cartão',
+    text: `Sua compra de US$ ${usd.toFixed(2)} vira **${brl(brlFinal)}** na fatura: **${brl(spreadValor + iofValor)}** a mais que a cotação comercial (**${custoExtra.toFixed(2)}%**). A cotação efetiva do seu dólar fica em **${brl(cotEfet)}/USD**.`,
+    tone: custoExtra >= 6 ? 'warn' : 'neutral',
+    icon: '💳',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Valor na cotação', value: Number(brlBase.toFixed(2)) },
+      { label: `Spread banco (${spread}%)`, value: Number(spreadValor.toFixed(2)) },
+      { label: `IOF (${iofPct}%)`, value: Number(iofValor.toFixed(2)) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(brlFinal),
+    centerLabel: 'Total na fatura',
+    ariaLabel: `Dos ${brl(brlFinal)} cobrados, ${brl(brlBase)} são a cotação comercial, ${brl(spreadValor)} o spread do banco e ${brl(iofValor)} de IOF.`,
+  };
   return {
     valorBrlSemEncargos: brl(brlBase),
-    spreadBanco: brl(brlComSpread - brlBase),
+    spreadBanco: brl(spreadValor),
     iofValor: brl(iofValor),
     cotacaoEfetiva: brl(cotEfet) + '/USD',
     valorFinalReais: brl(brlFinal),
     custoExtraPct: custoExtra.toFixed(2) + '%',
     resumen: `Compra de US$ ${usd.toFixed(2)} a ${brl(cot)}/USD = ${brl(brlFinal)} no cartão (IOF 3,38% + spread ${spread}% = ${custoExtra.toFixed(2)}% acima da cotação).`,
+    _insight,
+    _chart,
   };
 }

@@ -8,6 +8,7 @@ export interface Outputs {
   momento: string;
   alimentos: string;
   nota: string;
+  _insight?: any;
 }
 
 export function dosisAcidoFolico(i: Inputs): Outputs {
@@ -58,5 +59,30 @@ export function dosisAcidoFolico(i: Inputs): Outputs {
 
   const alimentos = 'Lentejas (358 mcg/taza), espinaca cocida (263 mcg), brócoli (168 mcg), palta (163 mcg), espárragos (134 mcg)';
 
-  return { dosis: dosisTexto, momento, alimentos, nota };
+  const mgEquiv = (dosisMcg / 1000).toLocaleString('es-AR', { maximumFractionDigits: 1 });
+  let _insight: any;
+  if (altoRiesgo) {
+    _insight = {
+      title: 'Dosis alta: receta obligatoria',
+      text: `Tu factor de riesgo eleva la recomendación a **${dosisMcg} mcg (${mgEquiv} mg)**, 10 veces la dosis estándar. Esta cantidad **no se compra ni se toma sin prescripción**: tu obstetra debe indicártela.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (riesgoModerado) {
+    _insight = {
+      title: 'Dosis reforzada',
+      text: `Por tu factor de riesgo moderado la dosis sube a **${dosisMcg} mcg (${mgEquiv} mg)/día**, por encima de los 400 mcg habituales. Tomala una vez al día y confirmá con tu médico.`,
+      tone: 'neutral',
+      icon: '💊',
+    };
+  } else {
+    _insight = {
+      title: 'Suplementación estándar',
+      text: `La dosis indicada es **${dosisMcg} mcg/día**. La clave es la **constancia diaria**: el tubo neural se cierra en las primeras semanas, así que no saltees tomas.`,
+      tone: 'good',
+      icon: '🤰',
+    };
+  }
+
+  return { dosis: dosisTexto, momento, alimentos, nota, _insight };
 }

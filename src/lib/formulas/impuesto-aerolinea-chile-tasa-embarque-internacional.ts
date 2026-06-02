@@ -10,6 +10,8 @@ export interface Outputs {
   iva_tasa_embarque: number;
   tasa_total_neta: number;
   desglose_detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -95,11 +97,35 @@ Por pasajero (con IVA): $${Math.round((tasa_total_neta / i.numero_pasajeros)).to
 *Nota: Valores referenciales 2026. DGAC publica tasas exactas en sitio oficial. TC referencial: 1 USD = $${TC_REFERENCIAL_2026} CLP.*
   `.trim();
 
+  const clp = (v: number) => '$' + Math.round(v).toLocaleString('es-CL');
+  const porPax = tasa_total_neta / i.numero_pasajeros;
+
+  const _insight = {
+    title: 'Lo que pagás de tasa',
+    text: `${tipo_vuelo_label} para ${i.numero_pasajeros} pasajero(s): la tasa de embarque total con IVA es **${clp(tasa_total_neta)} CLP** (${clp(porPax)} por pasajero). De ese monto, **${clp(iva_tasa_embarque)} CLP** son IVA del 19%.`,
+    tone: 'warn' as const,
+    icon: '✈️',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Tasa (neta)', value: Math.round(tasa_total_bruta) },
+      { label: 'IVA 19%', value: iva_tasa_embarque },
+    ],
+    prefix: '$',
+    centerValue: clp(tasa_total_neta),
+    centerLabel: 'Total CLP',
+    ariaLabel: 'Composición de la tasa de embarque: tarifa más IVA',
+  };
+
   return {
     tasa_embarque_unitaria: Math.round(tasa_unitaria),
     tasa_total_bruta: Math.round(tasa_total_bruta),
     iva_tasa_embarque: iva_tasa_embarque,
     tasa_total_neta: Math.round(tasa_total_neta),
-    desglose_detalle: desglose_detalle
+    desglose_detalle: desglose_detalle,
+    _insight,
+    _chart
   };
 }

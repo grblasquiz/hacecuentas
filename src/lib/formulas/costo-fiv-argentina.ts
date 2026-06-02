@@ -1,6 +1,6 @@
 /** Costo estimado de FIV en Argentina */
 export interface Inputs { tipoTratamiento: string; cobertura?: string; extras?: string; }
-export interface Outputs { costoEstimado: string; desglose: string; cobertura: string; nota: string; }
+export interface Outputs { costoEstimado: string; desglose: string; cobertura: string; nota: string; _insight?: any; }
 
 export function costoFivArgentina(i: Inputs): Outputs {
   const tipo = String(i.tipoTratamiento);
@@ -37,10 +37,37 @@ export function costoFivArgentina(i: Inputs): Outputs {
 
   const desglose = `Tratamiento base: USD ${min}-${max}. ${desgloseExtra}Medicación estimulación: incluida o ~USD 500-1.500 extra. Estudios previos: ~USD 300-500.`;
 
+  const tratLbl: Record<string, string> = {
+    'fiv-clasica': 'FIV clásica',
+    'fiv-icsi': 'FIV con ICSI',
+    'ovodonacion': 'ovodonación',
+    'doble-donacion': 'doble donación',
+    'transferencia': 'transferencia de embriones',
+  };
+  const tratNombre = tratLbl[tipo] || 'el tratamiento';
+  let insightText: string, insightTone: string;
+  if (cob === 'si') {
+    insightTone = 'good';
+    insightText = `Con cobertura de la **Ley 26.862**, tu gasto de bolsillo para ${tratNombre} baja a **${costoFinal.replace(' (gastos de bolsillo con cobertura)', '')}**. La obra social cubre el tratamiento base; presupuestá copagos y estudios previos no incluidos.`;
+  } else if (cob === 'parcial') {
+    insightTone = 'neutral';
+    insightText = `Con cobertura parcial, ${tratNombre} te queda en **${costoFinal.replace(' (cobertura parcial)', '')}**. Pedí por escrito qué cubre exactamente tu obra social: el rango cambia mucho según el ítem.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Sin cobertura, ${tratNombre} es 100% particular: **${costoFinal.replace(' (pago particular total)', '')}**. Tené presente que la Ley 26.862 te da derecho a cobertura; vale la pena reclamarla antes de pagar todo de tu bolsillo.`;
+  }
+  const _insight = {
+    title: 'Tu costo estimado',
+    text: insightText,
+    tone: insightTone,
+    icon: '🤰',
+  };
+
   return {
     costoEstimado: costoFinal,
     desglose,
     cobertura: cobStr,
     nota: 'Los precios son estimaciones 2026 en USD y varían según la clínica, zona y caso clínico. Consultá presupuesto en al menos 2-3 clínicas.',
+    _insight,
   };
 }

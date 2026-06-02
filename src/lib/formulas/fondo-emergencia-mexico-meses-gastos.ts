@@ -17,6 +17,8 @@ export interface Outputs {
   tiempo_ahorrar_meses: number;
   instrumentos_sugeridos: string;
   distribucion_sugerida: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -99,12 +101,60 @@ export function compute(i: Inputs): Outputs {
         '15% NU ($' + Math.round(monto_objetivo * 0.15).toLocaleString('es-MX') + '); ' +
         '5% Efectivo ($' + Math.round(monto_objetivo * 0.05).toLocaleString('es-MX') + ') - Emergencias'; // freelance
 
+  const monto_objetivo_r = Math.round(monto_objetivo);
+  const anos_ahorrar = (Math.max(1, tiempo_ahorrar_meses) / 12);
+
+  // Insight narrativo según volatilidad del trabajo
+  const trabajoLabel = i.tipo_trabajo === 'formal' ? 'empleo formal' : i.tipo_trabajo === 'informal' ? 'trabajo informal' : 'trabajo freelance';
+  const _insight = {
+    title: 'Tu colchón en perspectiva',
+    text: `Con **${trabajoLabel}**${i.dependientes !== 'no' ? ' y dependientes a cargo' : ''}, tu meta es **$${monto_objetivo_r.toLocaleString('es-MX')}** (${meses_recomendados} meses de gastos). Ahorrando ~12.5% de tus gastos al mes tardarías cerca de **${anos_ahorrar.toFixed(1)} años** en armarlo.`,
+    tone: meses_recomendados >= 9 ? 'warn' : meses_recomendados >= 6 ? 'neutral' : 'good',
+    icon: '🛟'
+  };
+
+  // Donut: composición del fondo por instrumento (las slices suman el total)
+  let slices: { label: string; value: number }[];
+  if (i.tipo_trabajo === 'formal') {
+    slices = [
+      { label: 'CETES Directo', value: Math.round(monto_objetivo * 0.5) },
+      { label: 'Mercado Pago', value: Math.round(monto_objetivo * 0.3) },
+      { label: 'NU débito', value: monto_objetivo_r - Math.round(monto_objetivo * 0.5) - Math.round(monto_objetivo * 0.3) }
+    ];
+  } else if (i.tipo_trabajo === 'informal') {
+    slices = [
+      { label: 'CETES Directo', value: Math.round(monto_objetivo * 0.4) },
+      { label: 'Mercado Pago', value: Math.round(monto_objetivo * 0.4) },
+      { label: 'NU débito', value: monto_objetivo_r - Math.round(monto_objetivo * 0.4) - Math.round(monto_objetivo * 0.4) }
+    ];
+  } else {
+    const sCetes = Math.round(monto_objetivo * 0.4);
+    const sMp = Math.round(monto_objetivo * 0.4);
+    const sNu = Math.round(monto_objetivo * 0.15);
+    slices = [
+      { label: 'CETES Directo', value: sCetes },
+      { label: 'Mercado Pago', value: sMp },
+      { label: 'NU débito', value: sNu },
+      { label: 'Efectivo', value: monto_objetivo_r - sCetes - sMp - sNu }
+    ];
+  }
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: '$' + monto_objetivo_r.toLocaleString('es-MX'),
+    centerLabel: 'Meta total',
+    ariaLabel: 'Distribución sugerida del fondo de emergencia por instrumento'
+  };
+
   return {
     gastos_esenciales_mensuales: Math.round(gastos_esenciales_mensuales),
     meses_recomendados,
-    monto_objetivo: Math.round(monto_objetivo),
+    monto_objetivo: monto_objetivo_r,
     tiempo_ahorrar_meses: Math.max(1, tiempo_ahorrar_meses),
     instrumentos_sugeridos,
-    distribucion_sugerida
+    distribucion_sugerida,
+    _insight,
+    _chart
   };
 }

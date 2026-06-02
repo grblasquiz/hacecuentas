@@ -18,6 +18,7 @@ export interface Outputs {
   mejor_opcion: string;
   ahorro_mejor: number;
   ahorro_anual: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -149,8 +150,19 @@ export function compute(i: Inputs): Outputs {
   const menor = Math.min(...Object.values(gastos));
   const mayor = Math.max(...Object.values(gastos));
   const mejor_opcion_key = Object.keys(gastos).find(k => gastos[k as keyof typeof gastos] === menor) || "Nú";
+  const peor_opcion_key = Object.keys(gastos).find(k => gastos[k as keyof typeof gastos] === mayor) || "Davivienda";
   const ahorro_mejor = mayor - menor;
   const ahorro_anual = ahorro_mejor * 12;
+
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const _insight = {
+    title: `${mejor_opcion_key} es la opción más barata`,
+    text: ahorro_mejor > 0
+      ? `Con tu uso, **${mejor_opcion_key}** te cuesta **${cop(menor)}/mes** mientras que ${peor_opcion_key} se va a ${cop(mayor)}. Cambiar al más barato te ahorra **${cop(ahorro_anual)} al año**.`
+      : `Con este nivel de uso todas las opciones cuestan **${cop(menor)}/mes**. Los bancos digitales (Nú, Lulo, RappiPay, Daviplata) no cobran cuota de manejo.`,
+    tone: (ahorro_anual > 100000 ? 'warn' : 'good') as 'warn' | 'good',
+    icon: '💳'
+  };
 
   return {
     gasto_bancolombia: Math.round(gasto_bancolombia),
@@ -163,6 +175,7 @@ export function compute(i: Inputs): Outputs {
     gasto_daviplata: Math.round(gasto_daviplata),
     mejor_opcion: mejor_opcion_key,
     ahorro_mejor: Math.round(ahorro_mejor),
-    ahorro_anual: Math.round(ahorro_anual)
+    ahorro_anual: Math.round(ahorro_anual),
+    _insight
   };
 }

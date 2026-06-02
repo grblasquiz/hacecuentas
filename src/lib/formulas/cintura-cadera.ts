@@ -10,6 +10,8 @@ export interface Outputs {
   riesgoCintura: string;
   cinturaSaludable: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cinturaCadera(i: Inputs): Outputs {
@@ -49,11 +51,49 @@ export function cinturaCadera(i: Inputs): Outputs {
     else riesgoCintura = 'Riesgo muy alto (≥ 88 cm)';
   }
 
+  // Tono dinámico según nivel de riesgo
+  const esAlto = categoriaRcc.startsWith('Riesgo alto');
+  const esModerado = categoriaRcc.startsWith('Riesgo moderado');
+  const tone = esAlto ? 'warn' : esModerado ? 'neutral' : 'good';
+  const icon = esAlto ? '⚠️' : esModerado ? '📏' : '✅';
+  const lecturaRiesgo = esAlto
+    ? 'indica acumulación de grasa abdominal asociada a mayor riesgo cardiometabólico'
+    : esModerado
+    ? 'está en zona intermedia: conviene vigilar el contorno de cintura'
+    : 'refleja una distribución de grasa favorable para tu salud cardiovascular';
+
+  // Umbrales OMS por sexo para el gauge
+  const segments = sexo === 'hombre'
+    ? [
+        { nombre: 'Bajo', max: 0.90, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Moderado', max: 1.0, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Alto', max: Math.max(1.15, rcc + 0.05), color: '#ef4444', colorDark: '#dc2626' },
+      ]
+    : [
+        { nombre: 'Bajo', max: 0.80, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Moderado', max: 0.85, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Alto', max: Math.max(1.05, rcc + 0.05), color: '#ef4444', colorDark: '#dc2626' },
+      ];
+
   return {
     rcc: Number(rcc.toFixed(3)),
     categoriaRcc,
     riesgoCintura,
     cinturaSaludable,
     resumen: `Tu RCC es ${rcc.toFixed(2)} (${categoriaRcc}). Tu cintura abdominal: ${riesgoCintura}.`,
+    _insight: {
+      title: 'Qué significa tu RCC',
+      text: `Con cintura **${Math.round(cintura)} cm** y cadera **${Math.round(cadera)} cm**, tu relación cintura-cadera es **${rcc.toFixed(2)}**, que ${lecturaRiesgo}.`,
+      tone,
+      icon,
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(rcc.toFixed(2)),
+      markerLabel: `RCC ${rcc.toFixed(2)}`,
+      min: sexo === 'hombre' ? 0.7 : 0.6,
+      segments,
+      ariaLabel: `Relación cintura-cadera ${rcc.toFixed(2)} ubicada en la zona de ${esAlto ? 'riesgo alto' : esModerado ? 'riesgo moderado' : 'bajo riesgo'} según los umbrales OMS para ${sexo === 'hombre' ? 'hombres' : 'mujeres'}.`,
+    },
   };
 }

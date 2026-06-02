@@ -18,6 +18,8 @@ export interface Outputs {
   custom_split_breakdown: string;
   custom_cost_per_night_unit: number;
   summary: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -68,6 +70,12 @@ export function compute(i: Inputs): Outputs {
       custom_split_breakdown: "N/A — using even split mode.",
       custom_cost_per_night_unit: 0,
       summary,
+      _insight: {
+        title: "Each person's share",
+        text: `Split evenly, each of the **${numTravelers} traveler${numTravelers !== 1 ? "s" : ""}** pays **$${evenCostPerPerson.toFixed(2)}** for the whole stay — about **$${costPerPersonPerNight.toFixed(2)} per night** each. If people stayed different numbers of nights, switch to a custom split for a fairer share.`,
+        tone: "neutral",
+        icon: "🏨",
+      },
     };
   }
 
@@ -133,6 +141,35 @@ export function compute(i: Inputs): Outputs {
   const evenCostPerPerson = totalCost / activeCount;
   const costPerPersonPerNight = totalCost / (activeCount * numNights);
 
+  // Donut: each traveler's share sums to the total cost
+  const _chart = {
+    type: "doughnut",
+    slices: activeTravelers.map((n, idx) => ({
+      label: `Traveler ${idx + 1} (${n}n)`,
+      value: Number(shares[idx].toFixed(2)),
+    })),
+    prefix: "$",
+    centerValue: `$${totalCost.toFixed(2)}`,
+    centerLabel: "total cost",
+    ariaLabel: `Custom split of $${totalCost.toFixed(2)} across ${activeTravelers.length} travelers by nights stayed`,
+  };
+
+  const maxShare = Math.max(...shares);
+  const maxIdx = shares.indexOf(maxShare);
+  const _insight = nightsWarning
+    ? {
+        title: "Check the night counts",
+        text: `At least one traveler's nights exceed the **${numNights}** total nights you entered. The split still works at **$${ratePerPersonNight.toFixed(2)} per person-night**, but double-check the numbers so nobody overpays.`,
+        tone: "warn",
+        icon: "⚠️",
+      }
+    : {
+        title: "Fair split by nights stayed",
+        text: `At **$${ratePerPersonNight.toFixed(2)} per person-night**, whoever stays longest pays most: Traveler ${maxIdx + 1} owes **$${maxShare.toFixed(2)}**. This is fairer than an even split when people stay different numbers of nights.`,
+        tone: "neutral",
+        icon: "🤝",
+      };
+
   return {
     cost_per_night: costPerNight,
     even_cost_per_person: evenCostPerPerson,
@@ -140,5 +177,7 @@ export function compute(i: Inputs): Outputs {
     custom_split_breakdown: breakdownText,
     custom_cost_per_night_unit: ratePerPersonNight,
     summary,
+    _insight,
+    _chart,
   };
 }

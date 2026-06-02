@@ -6,6 +6,8 @@ export interface Outputs {
   fcMaxTanaka: number;
   fcMaxFox: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function frecuenciaCardiacaMaximaEdad(i: Inputs): Outputs {
@@ -35,9 +37,34 @@ export function frecuenciaCardiacaMaximaEdad(i: Inputs): Outputs {
     `FCmax Tanaka: ${tanaka} lpm | FCmax Fox: ${fox} lpm | ` +
     `Zonas (Tanaka): ${zonasTexto}.`;
 
+  // Zona de quema de grasa / aeróbica recomendada (60-80% de FCmax)
+  const quemaMin = Math.round(tanaka * 0.6);
+  const aerobicoMax = Math.round(tanaka * 0.8);
+  const dif = Math.abs(tanaka - fox);
+
   return {
     fcMaxTanaka: tanaka,
     fcMaxFox: fox,
     detalle,
+    _insight: {
+      title: 'Tu frecuencia cardíaca máxima',
+      text: `Tu FCmax estimada es **${tanaka} lpm** (Tanaka, la más precisa hoy; Fox da ${fox} lpm, ${dif} de diferencia). Para quemar grasa y mejorar el fondo aeróbico, entrená entre **${quemaMin} y ${aerobicoMax} lpm** (60-80%). Acercarte a ${tanaka} solo en esfuerzos máximos cortos.`,
+      tone: 'neutral',
+      icon: '❤️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: tanaka,
+      markerLabel: `FCmax ${tanaka}`,
+      min: Math.round(tanaka * 0.5),
+      segments: [
+        { nombre: 'Z1 Recuperación', max: Math.round(tanaka * 0.6), color: '#22c55e', colorDark: '#4ade80' },
+        { nombre: 'Z2 Quema grasa', max: Math.round(tanaka * 0.7), color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Z3 Aeróbico', max: Math.round(tanaka * 0.8), color: '#eab308', colorDark: '#facc15' },
+        { nombre: 'Z4 Umbral', max: Math.round(tanaka * 0.9), color: '#f97316', colorDark: '#fb923c' },
+        { nombre: 'Z5 Máximo', max: tanaka, color: '#ef4444', colorDark: '#f87171' },
+      ],
+      ariaLabel: `Frecuencia cardíaca máxima de ${tanaka} lpm y las cinco zonas de entrenamiento`,
+    },
   };
 }

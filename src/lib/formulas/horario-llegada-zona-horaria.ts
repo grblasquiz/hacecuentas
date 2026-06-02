@@ -11,6 +11,7 @@ export interface Outputs {
   diasQueAvanza: number;
   horaLlegadaOrigen: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function horarioLlegadaZonaHoraria(i: Inputs): Outputs {
@@ -56,11 +57,34 @@ export function horarioLlegadaZonaHoraria(i: Inputs): Outputs {
 
   const diaTexto = dias === 0 ? 'mismo día' : dias === 1 ? 'día siguiente' : dias === -1 ? 'día anterior' : `${Math.abs(dias)} días ${dias > 0 ? 'después' : 'antes'}`;
 
+  const llegadaStr = fmt(llegadaDestinoH, llegadaDestinoM);
+  // Jet lag: viajar al este (diff > 0) cuesta más que al oeste
+  let insight_text: string;
+  let insight_tone: 'good' | 'warn' | 'neutral';
+  const horasJet = Math.abs(diff);
+  if (horasJet === 0) {
+    insight_tone = 'good';
+    insight_text = `Llegás a las **${llegadaStr}** del ${diaTexto}, sin cambio de huso horario: cero jet lag. Tu cuerpo sigue en hora, aprovechá el día desde que aterrizás.`;
+  } else if (diff > 0) {
+    insight_tone = horasJet >= 5 ? 'warn' : 'neutral';
+    insight_text = `Tras ${durH}h ${durM}m de vuelo llegás a las **${llegadaStr} del ${diaTexto}**. Vas **${horasJet}h al este**, la dirección que más cuesta: cada día de adaptación recuperás ~1 hora, así que dale margen al sueño los primeros días.`;
+  } else {
+    insight_tone = horasJet >= 6 ? 'warn' : 'neutral';
+    insight_text = `Tras ${durH}h ${durM}m de vuelo llegás a las **${llegadaStr} del ${diaTexto}**. Vas **${horasJet}h al oeste**, que se lleva mejor: te dará sueño temprano los primeros días, pero el cuerpo se acomoda rápido.`;
+  }
+  const _insight = {
+    title: 'Tu llegada y el jet lag',
+    text: insight_text,
+    tone: insight_tone,
+    icon: '🛬',
+  };
+
   return {
-    horaLlegadaLocal: fmt(llegadaDestinoH, llegadaDestinoM),
+    horaLlegadaLocal: llegadaStr,
     duracionReal: `${durH}h ${String(durM).padStart(2, '0')}m`,
     diasQueAvanza: dias,
     horaLlegadaOrigen: fmt(llegadaOrigenH, llegadaOrigenM),
-    resumen: `Salís a las ${hs}, viajás ${durH}h ${durM}m con ${diff >= 0 ? '+' : ''}${diff}h de diferencia → **llegás a las ${fmt(llegadaDestinoH, llegadaDestinoM)} del ${diaTexto}**.`,
+    resumen: `Salís a las ${hs}, viajás ${durH}h ${durM}m con ${diff >= 0 ? '+' : ''}${diff}h de diferencia → **llegás a las ${llegadaStr} del ${diaTexto}**.`,
+    _insight,
   };
 }

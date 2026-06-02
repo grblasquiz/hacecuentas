@@ -15,6 +15,8 @@ export interface CuotaAlimentariaEstimacionOutputs {
   rangoMinMax: string;
   porcentajeIngreso: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cuotaAlimentariaEstimacion(
@@ -71,10 +73,34 @@ export function cuotaAlimentariaEstimacion(
   const hijosStr = hijos === 1 ? '1 hijo' : `${hijos} hijos`;
   const espStr = necesidadesEsp ? ' con necesidades especiales' : '';
 
+  const fmt = (x: number) => '$' + Math.round(x).toLocaleString('es-AR');
+  const resto = Math.max(0, ingreso - cuotaEstimada);
+  const _insight = {
+    title: 'Cuota orientativa',
+    text: `Para ${hijosStr}${espStr}, la cuota estimada ronda los **${fmt(cuotaEstimada)}/mes** (**${pctMedio}%** del ingreso neto), dentro de un rango de ${fmt(cuotaMin)} a ${fmt(cuotaMax)}. Es una referencia: el monto final lo fija el juez.`,
+    tone: pctMedio >= 45 ? 'warn' : 'neutral',
+    icon: '⚖️',
+  };
+
+  // Donut: el ingreso neto se reparte entre la cuota y el resto disponible
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Cuota alimentaria', value: Math.round(cuotaEstimada) },
+      { label: 'Resto del ingreso', value: Math.round(resto) },
+    ],
+    prefix: '$',
+    centerValue: fmt(ingreso),
+    centerLabel: 'Ingreso neto',
+    ariaLabel: `Del ingreso neto de ${fmt(ingreso)}, la cuota estimada es ${fmt(cuotaEstimada)} y el resto ${fmt(resto)}`,
+  };
+
   return {
     cuotaEstimada: Math.round(cuotaEstimada),
     rangoMinMax: `$${Math.round(cuotaMin).toLocaleString('es-AR')} — $${Math.round(cuotaMax).toLocaleString('es-AR')}`,
     porcentajeIngreso: `${pctMedio}% del ingreso neto (rango: ${pctMin}%-${pctMax}%)`,
     detalle: `Estimación orientativa para ${hijosStr}${espStr} con ingreso neto de $${Math.round(ingreso).toLocaleString('es-AR')}: cuota ~$${Math.round(cuotaEstimada).toLocaleString('es-AR')}/mes (${pctMedio}%). Rango: $${Math.round(cuotaMin).toLocaleString('es-AR')} a $${Math.round(cuotaMax).toLocaleString('es-AR')} (${pctMin}%-${pctMax}%). IMPORTANTE: esta es una estimación basada en jurisprudencia. El monto real lo define el juez según cada caso.`,
+    _insight,
+    _chart,
   };
 }

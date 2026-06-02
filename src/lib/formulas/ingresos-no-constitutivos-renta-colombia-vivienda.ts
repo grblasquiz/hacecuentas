@@ -13,6 +13,7 @@ export interface Outputs {
   exceso_tributable: number;
   obligacion_declarativa: string;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -142,6 +143,38 @@ export function compute(i: Inputs): Outputs {
     obligacion_declarativa = `${obligacion_declarativa} (ingresos totales superan tope no declarantes: $${TOPE_NO_DECLARANTES_2026.toLocaleString('es-CO')})`;
   }
 
+  // --- Insight narrativo dinámico ---
+  const fmtCop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  let _insight: any;
+  if (es_incrgo && exceso_tributable <= 0) {
+    _insight = {
+      title: 'Ingreso no constitutivo de renta',
+      text:
+        `Tus **${fmtCop(montoPrueba)}** por concepto de ${categoria_incrgo.toLowerCase()} se consideran **ingreso no constitutivo de renta ni ganancia ocasional (INCRGO)**: ` +
+        `no pagan impuesto de renta. Igual conservá el soporte documental, porque la DIAN lo puede exigir.`,
+      tone: 'good' as const,
+      icon: '🛡️',
+    };
+  } else if (es_incrgo && exceso_tributable > 0) {
+    _insight = {
+      title: 'Parte exenta y parte gravada',
+      text:
+        `Hasta **${fmtCop(tope_legal_2026)}** quedan exentos como INCRGO, pero el excedente de **${fmtCop(exceso_tributable)}** ` +
+        `entra a la base gravable de renta ordinaria y sí tributa. Declaralo separado en el formulario 210.`,
+      tone: 'warn' as const,
+      icon: '⚖️',
+    };
+  } else {
+    _insight = {
+      title: 'Requiere validación con la DIAN',
+      text:
+        `Este tipo de ingreso (**${fmtCop(montoPrueba)}**) no se puede dar por exento de forma automática: ` +
+        `de manera conservadora se asume gravable hasta confirmarlo con la DIAN o un contador público.`,
+      tone: 'warn' as const,
+      icon: 'ℹ️',
+    };
+  }
+
   return {
     es_incrgo,
     categoria_incrgo,
@@ -149,6 +182,7 @@ export function compute(i: Inputs): Outputs {
     monto_dentro_tope,
     exceso_tributable,
     obligacion_declarativa,
-    recomendacion
+    recomendacion,
+    _insight
   };
 }

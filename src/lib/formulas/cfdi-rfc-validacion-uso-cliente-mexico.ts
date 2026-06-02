@@ -15,6 +15,7 @@ export interface Outputs {
   validacion_cp: string;
   errores_detectados: string[];
   recomendaciones: string[];
+  _insight?: any;
 }
 
 // Catálogo SAT Regímenes Fiscales 2026
@@ -199,6 +200,26 @@ export function compute(i: Inputs): Outputs {
   }
   recomendaciones.push("Antes de emitir CFDI, valida estatus fiscal en consultas.sat.gob.mx");
   
+  // Insight: refleja el resultado real de la validación
+  const numErrores = errores.length;
+  const tipoTxt = tipoRFC === 'PF' ? 'persona física' : tipoRFC === 'PM' ? 'persona moral' : 'RFC';
+  let _insight;
+  if (numErrores === 0 && validacionRFC) {
+    _insight = {
+      title: 'RFC listo para facturar',
+      text: `El RFC (${tipoTxt}) **pasó todas las validaciones**: estructura, código postal y coherencia de régimen correctos. ${usosCFDICompatibles.length > 0 ? `Podés usar **${usosCFDICompatibles.length} uso${usosCFDICompatibles.length !== 1 ? 's' : ''} de CFDI** con este régimen.` : ''} Confirmá el estatus fiscal en consultas.sat.gob.mx antes de emitir.`.trim(),
+      tone: 'good' as const,
+      icon: '✅',
+    };
+  } else {
+    _insight = {
+      title: 'Revisá antes de emitir',
+      text: `Se detectaron **${numErrores} ${numErrores === 1 ? 'problema' : 'problemas'}** en los datos${validacionRFC ? '' : ', empezando por la estructura del RFC'}. Si emitís el CFDI así, el SAT puede rechazarlo o aplicar multas (de $500 a $5.000 por RFC inválido). Corregí los errores listados antes de timbrar.`,
+      tone: 'warn' as const,
+      icon: '⚠️',
+    };
+  }
+
   return {
     validacion_rfc: validacionRFC,
     rfc_estructura: estructuraRFC,
@@ -207,6 +228,7 @@ export function compute(i: Inputs): Outputs {
     usos_cfdi_compatibles: usosCFDICompatibles,
     validacion_cp: validacionCP,
     errores_detectados: errores.length > 0 ? errores : ["Sin errores detectados"],
-    recomendaciones: recomendaciones
+    recomendaciones: recomendaciones,
+    _insight
   };
 }

@@ -9,6 +9,8 @@ export interface Outputs {
   categoria: string;
   benchmark: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function golesPelotaParada(i: Inputs): Outputs {
@@ -31,11 +33,29 @@ export function golesPelotaParada(i: Inputs): Outputs {
   else if (pct >= 10) { cat = 'Bajo peso — juego desde pase'; bm = 'Equipos de juego de posición puro (Barça Guardiola 2010-13, Bayern tiki-taka).'; }
   else { cat = 'Muy bajo — modelo colectivo'; bm = 'Ejemplos aislados; históricamente <10% es excepción.'; }
 
+  const pctR = Math.round(pct * 10) / 10;
+  const tone = pct >= 40 ? 'warn' : 'neutral';
   return {
-    porcentaje: Math.round(pct * 10) / 10,
+    porcentaje: pctR,
     golesJuegoCorrido: juego,
     categoria: cat,
     benchmark: bm,
     mensaje: `${i.golesPelotaParada}/${i.golesTotales} = ${pct.toFixed(1)}% goles de pelota parada (${cat}).`,
+    _insight: {
+      title: cat,
+      text: `**${pctR}%** de los goles (${i.golesPelotaParada} de ${i.golesTotales}) llegan de pelota parada; los otros **${juego}** son de juego corrido. El promedio profesional ronda el **30%**${pct >= 40 ? ', así que este equipo depende fuerte del balón parado.' : '.'}`,
+      tone,
+      icon: '⚽',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Pelota parada', value: i.golesPelotaParada },
+        { label: 'Juego corrido', value: juego },
+      ],
+      centerValue: `${pctR}%`,
+      centerLabel: 'pelota parada',
+      ariaLabel: `De ${i.golesTotales} goles, ${i.golesPelotaParada} de pelota parada y ${juego} de juego corrido`,
+    },
   };
 }

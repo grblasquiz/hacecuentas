@@ -1,6 +1,6 @@
 /** Cronología de erupción de dientes de leche */
 export interface Inputs { edadBebeDientes: number; __lang?: string; }
-export interface Outputs { dientesEsperados: string; dientesDetalle: string; cantidadDientes: string; proximosDientes: string; cuidados: string; }
+export interface Outputs { dientesEsperados: string; dientesDetalle: string; cantidadDientes: string; proximosDientes: string; cuidados: string; _insight?: any; _chart?: any; }
 
 const cronologia = [
   { mes: 6,  diente: { es: 'Incisivos centrales inferiores (2)',  en: 'Lower central incisors (2)'  }, total: 2  },
@@ -27,6 +27,15 @@ const T = {
     cuidados1:      'Cepillá los dientes con cepillo suave y agua. Primera visita al dentista antes del año.',
     cuidados2:      'Cepillado 2 veces al día con pasta con flúor (cantidad de un grano de arroz). Visitas al dentista cada 6 meses.',
     cantidad:       (total: number, aprox: number) => `~${total} dientes (regla práctica: edad en meses − 6 = ~${aprox})`,
+    insightTitle:   'Dentición de tu bebé',
+    insightNada:    (edad: number) => `A los **${edad} mes${edad === 1 ? '' : 'es'}** todavía no se esperan dientes. Los primeros incisivos suelen asomar entre los **6 y 10 meses**: tranqui, cada bebé lleva su ritmo.`,
+    insightSalidos: (edad: number, total: number, prox: string) => `A los **${edad} meses** lo esperable son **${total} de 20** dientes de leche. Lo que sigue: **${prox}**. La cronología es orientativa; un par de meses de diferencia es normal.`,
+    insightCompleto:(edad: number) => `A los **${edad} meses** la dentición de leche suele estar **completa: los 20 dientes**. A partir de acá el foco es el cepillado con flúor y el control odontológico cada 6 meses.`,
+    scaleLabel:     (total: number) => `${total} de 20`,
+    segPrimeros:    'Primeros',
+    segMolares:     'Molares/caninos',
+    segCompleta:    'Completa',
+    aria:           (total: number, edad: number) => `Dientes de leche a los ${edad} meses: ${total} de 20.`,
   },
   en: {
     error:          'Enter an age between 0 and 36 months',
@@ -39,6 +48,15 @@ const T = {
     cuidados1:      'Brush teeth with a soft toothbrush and water. First dentist visit before age 1.',
     cuidados2:      'Brush twice a day with a rice-grain-sized amount of fluoride toothpaste. Dental checkups every 6 months.',
     cantidad:       (total: number, aprox: number) => `~${total} teeth (rule of thumb: age in months − 6 = ~${aprox})`,
+    insightTitle:   "Your baby's teething",
+    insightNada:    (edad: number) => `At **${edad} month${edad === 1 ? '' : 's'}** no teeth are expected yet. The first incisors usually show up between **6 and 10 months** — every baby has their own pace.`,
+    insightSalidos: (edad: number, total: number, prox: string) => `At **${edad} months** you'd expect about **${total} of 20** baby teeth. Coming up next: **${prox}**. The timeline is a guide; a couple of months either way is normal.`,
+    insightCompleto:(edad: number) => `At **${edad} months** the baby teeth are usually **complete: all 20**. From here the focus is fluoride brushing and a dental checkup every 6 months.`,
+    scaleLabel:     (total: number) => `${total} of 20`,
+    segPrimeros:    'First teeth',
+    segMolares:     'Molars/canines',
+    segCompleta:    'Complete',
+    aria:           (total: number, edad: number) => `Baby teeth at ${edad} months: ${total} of 20.`,
   },
 } as const;
 
@@ -72,11 +90,40 @@ export function dientesBebe(i: Inputs): Outputs {
   else if (edad < 24) cuidados = L.cuidados1;
   else cuidados = L.cuidados2;
 
+  // primer próximo diente para el insight (sin el "(~X meses)")
+  const proxLabel = proximos.length > 0 ? proximos[0].diente[__lang] : L.completo;
+  let insightText: string;
+  if (total === 0) insightText = L.insightNada(edad);
+  else if (total >= 20) insightText = L.insightCompleto(edad);
+  else insightText = L.insightSalidos(edad, total, proxLabel);
+
+  const _insight = {
+    title: L.insightTitle,
+    text: insightText,
+    tone: 'neutral' as 'good' | 'warn' | 'neutral',
+    icon: '🦷',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: total,
+    markerLabel: L.scaleLabel(total),
+    min: 0,
+    segments: [
+      { nombre: L.segPrimeros, max: 8, color: '#fef3c7', colorDark: '#b45309' },
+      { nombre: L.segMolares, max: 16, color: '#fde68a', colorDark: '#d97706' },
+      { nombre: L.segCompleta, max: total >= 20 ? 21 : 20, color: '#fbbf24', colorDark: '#b45309' },
+    ],
+    ariaLabel: L.aria(total, edad),
+  };
+
   return {
     dientesEsperados: esperados,
     dientesDetalle,
     cantidadDientes: L.cantidad(total, aprox),
     proximosDientes: proxStr,
     cuidados,
+    _insight,
+    _chart,
   };
 }

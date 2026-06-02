@@ -13,6 +13,7 @@ export interface Outputs {
   intensidadMostrada: string;
   equivalenteKm: number;
   resumen: string;
+  _insight?: any;
 }
 
 const MET_BICI: Record<string, { met: number; nombre: string; nombreEn: string; kmh: number }> = {
@@ -34,10 +35,16 @@ export function caloriasCiclismo(i: Inputs): Outputs {
     es: {
       errorPeso: 'Ingresá tu peso',
       errorMinutos: 'Ingresá los minutos',
+      insTitle: 'Tu salida en bici',
+      insText: (cal: number, min: number, km: string, met: number) =>
+        `En **${min} min** quemás **${cal} kcal** y recorrés unos **${km} km** (MET ${met}). A mayor velocidad sostenida, más calorías por minuto.`,
     },
     en: {
       errorPeso: 'Enter your weight',
       errorMinutos: 'Enter the minutes',
+      insTitle: 'Your bike ride',
+      insText: (cal: number, min: number, km: string, met: number) =>
+        `In **${min} min** you burn **${cal} kcal** and cover about **${km} km** (MET ${met}). The faster the sustained pace, the more calories per minute.`,
     },
   } as const)[__lang];
 
@@ -66,5 +73,11 @@ export function caloriasCiclismo(i: Inputs): Outputs {
     intensidadMostrada: nombreLang,
     equivalenteKm: Number(km.toFixed(1)),
     resumen,
+    _insight: {
+      title: T.insTitle,
+      text: T.insText(Math.round(total), min, km.toFixed(1), info.met),
+      tone: 'good',
+      icon: '🚴',
+    },
   };
 }

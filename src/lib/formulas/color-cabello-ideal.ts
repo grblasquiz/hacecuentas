@@ -10,6 +10,7 @@ export interface Outputs {
   coloresEvitar: string;
   tecnicaSugerida: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function colorCabelloIdeal(i: Inputs): Outputs {
@@ -65,10 +66,22 @@ export function colorCabelloIdeal(i: Inputs): Outputs {
     }
   }
 
+  const primerRec = coloresRec.split(',')[0].trim();
+  const hayRiesgoDano = /daño|decoloraci/i.test(coloresEvitar);
+  const _insight = {
+    title: hayRiesgoDano ? 'Cuidado con la decoloración' : 'Tu paleta ideal',
+    text: `Para piel **${tonoPiel}** con subtono **${subtono}**, tu mejor apuesta arranca por **${primerRec.toLowerCase()}** y la técnica que más te favorece es ${tecnica.split(',')[0].trim().toLowerCase()}.` +
+      (hayRiesgoDano
+        ? ` Evitá ${coloresEvitar.split(',')[0].trim().toLowerCase()}: en tu base implica decoloración fuerte y riesgo de daño capilar.`
+        : ` Mantené la armonía esquivando ${coloresEvitar.split(',')[0].trim().toLowerCase()}.`),
+    tone: hayRiesgoDano ? 'warn' : 'good',
+    icon: '💇',
+  };
   return {
     coloresRecomendados: coloresRec,
     coloresEvitar,
     tecnicaSugerida: tecnica,
     mensaje: `Para piel ${tonoPiel} con subtono ${subtono}: te van bien ${coloresRec}. Técnica sugerida: ${tecnica}.`,
+    _insight,
   };
 }

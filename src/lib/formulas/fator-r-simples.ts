@@ -19,6 +19,8 @@ export interface Outputs {
   folhaFaltante: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const F_III = [
@@ -65,6 +67,29 @@ export function fatorRSimples(i: Inputs): Outputs {
   const formula = `Fator R = Folha 12m / RBT12 = R$ ${folha.toFixed(2)} / R$ ${rbt12.toFixed(2)} = ${fatorR.toFixed(3)}% → ${anexo}`;
   const explicacion = `Fator R = ${fatorR.toFixed(2)}% (folha R$ ${folha.toLocaleString('pt-BR')} / RBT12 R$ ${rbt12.toLocaleString('pt-BR')}). ${usaIII ? '✓ Como é ≥ 28%, aplica-se o Anexo III (alíquota efetiva ' + aliqIII.toFixed(2) + '%).' : '⚠️ Como é < 28%, aplica-se o Anexo V (alíquota efetiva ' + aliqV.toFixed(2) + '%).'} Diferença de alíquota: ${(aliqV - aliqIII).toFixed(2)} p.p. Economia anual se migrar para III: R$ ${(economiaPotencial * 12).toFixed(2)}. Para cair no Anexo III, folha mínima 12m = R$ ${folhaMinimaIII.toFixed(2)}${folhaFaltante > 0 ? ' (faltam R$ ' + folhaFaltante.toFixed(2) + ')' : ' — você já está!'}.`;
 
+  const economiaAnual = economiaPotencial * 12;
+  const _insight = {
+    title: usaIII ? 'Você está no Anexo III' : 'Você caiu no Anexo V',
+    text: usaIII
+      ? `Com Fator R de **${fatorR.toFixed(1)}%** (≥ 28%) você tributa pelo **Anexo III**, alíquota efetiva **${aliqIII.toFixed(2)}%** — a faixa mais vantajosa. Está **${(fatorR - 28).toFixed(1)} p.p.** acima do limite.`
+      : `Com Fator R de **${fatorR.toFixed(1)}%** (< 28%) você tributa pelo **Anexo V** a **${aliqV.toFixed(2)}%**, **${(aliqV - aliqIII).toFixed(2)} p.p.** acima do Anexo III. Aumentar a folha em **R$ ${folhaFaltante.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}** migraria para o III e economizaria **R$ ${economiaAnual.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}/ano**.`,
+    tone: usaIII ? 'good' : 'warn',
+    icon: usaIII ? '✅' : '⚠️',
+  };
+
+  const topMax = Math.max(60, Math.ceil(fatorR / 10) * 10 + 5);
+  const _chart = {
+    type: 'scale',
+    marker: Number(fatorR.toFixed(1)),
+    markerLabel: `${fatorR.toFixed(1)}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Anexo V (< 28%)', max: 28, color: '#ef4444', colorDark: '#b91c1c' },
+      { nombre: 'Anexo III (≥ 28%)', max: topMax, color: '#22c55e', colorDark: '#15803d' },
+    ],
+    ariaLabel: `Fator R de ${fatorR.toFixed(1)}%, limite de 28% entre Anexo V e Anexo III`,
+  };
+
   return {
     fatorR: Number(fatorR.toFixed(2)),
     anexo,
@@ -75,5 +100,7 @@ export function fatorRSimples(i: Inputs): Outputs {
     folhaFaltante: Number(folhaFaltante.toFixed(2)),
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

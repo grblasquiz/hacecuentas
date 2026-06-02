@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | object; }
 export function diasMinimosTestEmbarazoPositivo(i: Inputs): Outputs {
   const f=String(i.fum||''); const c=Number(i.cicloDias)||28;
   if (!f) return { proxRegla:'—', testFiable:'—', betaHcg:'—', resumen:'Ingresá FUM.' };
@@ -11,5 +11,18 @@ export function diasMinimosTestEmbarazoPositivo(i: Inputs): Outputs {
   const prox=new Date(d.getTime()+c*86400000);
   const testOk=new Date(prox.getTime()-0);
   const beta=new Date(d.getTime()+(c-14+9)*86400000);
-  return { proxRegla:prox.toISOString().slice(0,10), testFiable:testOk.toISOString().slice(0,10)+' (orina)', betaHcg:beta.toISOString().slice(0,10)+' (sangre)', resumen:`Test orina confiable: ${testOk.toISOString().slice(0,10)}. Beta: desde ${beta.toISOString().slice(0,10)}.` };
+  const fmt=(x:Date)=>x.toLocaleDateString('es-AR');
+  const diaCicloBeta=c-5; // (c-14)+9
+  return {
+    proxRegla:prox.toISOString().slice(0,10),
+    testFiable:testOk.toISOString().slice(0,10)+' (orina)',
+    betaHcg:beta.toISOString().slice(0,10)+' (sangre)',
+    resumen:`Test orina confiable: ${testOk.toISOString().slice(0,10)}. Beta: desde ${beta.toISOString().slice(0,10)}.`,
+    _insight: {
+      title: 'Cuándo testear sin falsos negativos',
+      text: `El **análisis de sangre (beta hCG)** ya detecta el embarazo desde el **${fmt(beta)}** (día ~${diaCicloBeta} del ciclo). El **test de orina** recién es confiable desde el **${fmt(testOk)}**, el día de la regla esperada: antes de esa fecha podés tener un falso negativo aunque estés embarazada.`,
+      tone: 'neutral',
+      icon: '🧪',
+    },
+  };
 }

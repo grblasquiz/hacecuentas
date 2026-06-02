@@ -14,6 +14,8 @@ export interface Outputs {
   costoPorAnio: number;
   costoPorMes: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function costoCarreraUniversitaria(i: Inputs): Outputs {
@@ -41,6 +43,29 @@ export function costoCarreraUniversitaria(i: Inputs): Outputs {
 
   const fmt = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
 
+  const pctCuotas = Math.round((costoCuotas / costoTotal) * 100);
+  const cuotaFinal = cuota * Math.pow(1 + aumentoAnual / 100, anios - 1);
+  const inflaTone = aumentoAnual >= 40 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Lo que pesa la inflación',
+    text: `Las cuotas son el **${pctCuotas}%** del total. Con **${aumentoAnual}% de aumento anual**, la cuota del último año trepa a **$${fmt(cuotaFinal)}** (hoy arrancás en $${fmt(cuota)}). Presupuestá $${fmt(costoPorMes)}/mes promedio durante ${anios} años.`,
+    tone: inflaTone,
+    icon: '🎓',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Cuotas', value: Math.round(costoCuotas) },
+      { label: 'Inscripciones', value: Math.round(costoInscripciones) },
+      { label: 'Materiales', value: Math.round(costoMateriales) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: `$${fmt(costoTotal)}`,
+    centerLabel: 'Costo total',
+    ariaLabel: `Composición del costo total de la carrera: cuotas $${fmt(costoCuotas)}, inscripciones $${fmt(costoInscripciones)}, materiales $${fmt(costoMateriales)}.`,
+  };
+
   return {
     costoTotal: Math.round(costoTotal),
     costoCuotas: Math.round(costoCuotas),
@@ -49,5 +74,7 @@ export function costoCarreraUniversitaria(i: Inputs): Outputs {
     costoPorAnio: Math.round(costoPorAnio),
     costoPorMes: Math.round(costoPorMes),
     mensaje: `Costo total estimado: $${fmt(costoTotal)} en ${anios} años. Promedio: $${fmt(costoPorMes)}/mes (con ${aumentoAnual}% de aumento anual).`,
+    _insight,
+    _chart,
   };
 }

@@ -26,6 +26,7 @@ export interface ImpuestoSellosInmuebleContratoOutputs {
   alicuotaAplicada: number;
   provinciaNombre: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface AlicuotaProvincia {
@@ -108,11 +109,31 @@ export function impuestoSellosInmuebleContrato(
   const partesStr = partes === 'mitades' ? '50% cada parte' : 'una sola parte';
   const opLabel = tipoOperacion === 'alquiler' ? 'contrato de alquiler' : 'compraventa de inmueble';
 
+  const impuestoR = Math.round(impuesto);
+  const porParteR = Math.round(porParte);
+  const fmtAR = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+
+  // Insight: el sello suele cargarse a la base imponible del costo de cierre.
+  // tone warn cuando la alícuota es alta (compraventa típica) y representa peso real.
+  const insightTone: 'good' | 'warn' | 'neutral' = alicuota >= 2.5 ? 'warn' : 'neutral';
+  const distrib = partes === 'mitades'
+    ? `repartido al 50% son **${fmtAR(porParteR)}** por parte`
+    : `lo absorbe **una sola parte**: **${fmtAR(porParteR)}**`;
+  const insightText = `El sello sobre ${tipoOperacion === 'alquiler' ? 'este contrato de alquiler' : 'esta compraventa'} en ${provinciaNombre} es **${fmtAR(impuestoR)}** (${alicuota}% sobre ${fmtAR(monto)}); ${distrib}.${alicuota >= 2.5 ? ' Es un costo de cierre relevante — verificá si aplica exención por vivienda única.' : ' Recordá que vivienda única suele tener exención o alícuota reducida.'}`;
+
+  const _insight = {
+    title: 'Tu impuesto de sellos',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏠',
+  };
+
   return {
     impuestoTotal: Math.round(impuesto),
     montoPorParte: Math.round(porParte),
     alicuotaAplicada: alicuota,
     provinciaNombre,
     detalle: `Sellos ${provinciaNombre} (${opLabel}): $${Math.round(monto).toLocaleString('es-AR')} × ${alicuota}% = $${Math.round(impuesto).toLocaleString('es-AR')}. Distribución: ${partesStr} → $${Math.round(porParte).toLocaleString('es-AR')} por parte. Muchas provincias tienen exenciones para vivienda única — consultá con escribano.`,
+    _insight,
   };
 }

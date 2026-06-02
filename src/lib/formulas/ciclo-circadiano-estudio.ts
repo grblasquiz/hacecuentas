@@ -7,6 +7,7 @@ export interface Outputs {
   segundoPico: string;
   evitarHoras: string;
   nota: string;
+  _insight?: any;
 }
 
 export function cicloCircadianoEstudio(i: Inputs): Outputs {
@@ -35,11 +36,22 @@ export function cicloCircadianoEstudio(i: Inputs): Outputs {
   };
   const t = TABLA[crono]?.[tarea] || TABLA.intermedio.memorizar;
 
+  const NOMBRE_CRONO: Record<string, string> = { alondra: 'alondra (madrugador)', intermedio: 'intermedio', buho: 'búho (nocturno)' };
+  const NOMBRE_TAREA: Record<string, string> = { memorizar: 'memorizar', razonar: 'razonar', creativo: 'trabajo creativo', revisar: 'revisar' };
+  const cronoTxt = NOMBRE_CRONO[crono] || crono;
+  const tareaTxt = NOMBRE_TAREA[tarea] || tarea;
+
   return {
     picoOptimo: t.pico,
     segundoPico: t.seg,
     evitarHoras: t.evitar,
     nota: 'El 50% del cronotipo es genético. Respetalo para ganar 20% eficiencia.',
+    _insight: {
+      title: 'Tu mejor franja para estudiar',
+      text: `Con cronotipo **${cronoTxt}** y tareas de **${tareaTxt}**, tu pico de rendimiento es **${t.pico}** (con un segundo pico **${t.seg}**). Evitá las **${t.evitar}**, cuando tu energía cae.`,
+      tone: 'good',
+      icon: '🧠',
+    },
   };
 
 }

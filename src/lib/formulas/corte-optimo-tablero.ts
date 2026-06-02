@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   piezasPorTabla: string; tablasNecesarias: string; desperdicio: string; orientacion: string;
+  _insight?: any; _chart?: any;
 }
 
 export function corteOptimoTablero(inputs: Inputs): Outputs {
@@ -31,10 +32,38 @@ export function corteOptimoTablero(inputs: Inputs): Outputs {
   const tablas = Math.ceil(need / piezasMax);
   const usado = piezasMax * pw * ph;
   const desperdicio = ((TW * TH - usado) / (TW * TH)) * 100;
+  const sobran = tablas * piezasMax - need;
+
+  const tone = desperdicio <= 15 ? 'good' : desperdicio <= 35 ? 'neutral' : 'warn';
+  const aprovecha = (100 - desperdicio).toFixed(0);
+  const insightText = desperdicio <= 15
+    ? `Aprovechás el **${aprovecha}%** de cada tablero: ${piezasMax} piezas por placa con solo **${desperdicio.toFixed(1)}%** de descarte. Plan de corte muy eficiente.`
+    : desperdicio <= 35
+    ? `Sacás **${piezasMax} piezas** por tablero y necesitás **${tablas} placa${tablas > 1 ? 's' : ''}**, con **${desperdicio.toFixed(1)}%** de descarte. Probá rotar la pieza o ajustar medidas para mejorar el aprovechamiento.`
+    : `El descarte es alto: **${desperdicio.toFixed(1)}%** del tablero queda sin usar (solo ${piezasMax} pieza${piezasMax > 1 ? 's' : ''} por placa). Reconsiderá las medidas de la pieza o el tamaño del tablero.`;
+
   return {
     piezasPorTabla: `${piezasMax} piezas por tabla`,
-    tablasNecesarias: `${tablas} tabla${tablas > 1 ? 's' : ''} (sobran ${tablas * piezasMax - need})`,
+    tablasNecesarias: `${tablas} tabla${tablas > 1 ? 's' : ''} (sobran ${sobran})`,
     desperdicio: `${desperdicio.toFixed(1)}% sin usar`,
     orientacion: orient,
+    _insight: {
+      title: 'Aprovechamiento del tablero',
+      text: insightText,
+      tone,
+      icon: '🪚',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(desperdicio.toFixed(1)),
+      markerLabel: `${desperdicio.toFixed(1)}% descarte`,
+      min: 0,
+      segments: [
+        { nombre: 'Eficiente', max: 15, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Aceptable', max: 35, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Alto descarte', max: 100, color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Nivel de descarte del tablero: ${desperdicio.toFixed(1)} por ciento sin usar`,
+    },
   };
 }

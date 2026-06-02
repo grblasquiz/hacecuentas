@@ -20,6 +20,7 @@ export interface Outputs {
   diferencia_max_min: number;
   ccaa_mas_barata: string;
   ccaa_mas_cara: string;
+  _insight?: any;
 }
 
 // ─── Tipos auxiliares ───────────────────────────────────────────────
@@ -195,6 +196,22 @@ export function compute(i: Inputs): Outputs {
   const masCara   = cuotas.reduce((a, b) => a.cuota >= b.cuota ? a : b);
   const diferencia = round2(masCara.cuota - masBarata.cuota);
 
+  const fmtEur = (n: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' €';
+  const _insight = baseLiquidable <= 0
+    ? {
+        title: 'Sin cuota de IRPF',
+        text: `Con un bruto de **${fmtEur(salario)}** tu base liquidable queda en **0 €** tras cotización, reducciones y mínimo personal: no pagás IRPF en ninguna comunidad.`,
+        tone: 'good',
+        icon: '🟢',
+      }
+    : {
+        title: 'Cuánto cambia según dónde vivas',
+        text: `Con tu base liquidable de **${fmtEur(baseLiquidable)}**, mudarte de **${masCara.nombre}** (la más cara) a **${masBarata.nombre}** (la más barata) te ahorra **${fmtEur(diferencia)}** de IRPF al año por el mismo sueldo.`,
+        tone: diferencia >= 600 ? 'warn' : 'neutral',
+        icon: '🗺️',
+      };
+
   return {
     base_liquidable:         round2(baseLiquidable),
     cuota_madrid:            round2(cuotaMadrid),
@@ -211,6 +228,7 @@ export function compute(i: Inputs): Outputs {
     tipo_efectivo_galicia:   tipoEfectivo(cuotaGalicia),
     diferencia_max_min:      diferencia,
     ccaa_mas_barata:         masBarata.nombre,
-    ccaa_mas_cara:           masCara.nombre
+    ccaa_mas_cara:           masCara.nombre,
+    _insight
   };
 }

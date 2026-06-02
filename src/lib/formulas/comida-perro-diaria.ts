@@ -14,6 +14,7 @@ export interface Outputs {
   bolsaDuracion15kg: number;
   etapa: string;
   resumen: string;
+  _insight?: any;
 }
 
 // RER (Resting Energy Requirement) kcal/día = 70 × (peso_kg)^0.75
@@ -80,13 +81,42 @@ export function comidaPerroDiaria(i: Inputs): Outputs {
   else if (edad === 'senior') etapa = 'Adulto senior (7+ años)';
   else etapa = castrado ? 'Adulto castrado' : act === 'alta' ? 'Adulto activo' : act === 'baja' ? 'Adulto sedentario' : 'Adulto estándar';
 
+  const gramosR = Math.round(gramos);
+  const kcalR = Math.round(kcalDia);
+  const gPorTomaR = Math.round(gramosPorToma);
+  const duracionR = Math.round(duracion);
+
+  const propensoPeso = castrado || (edad === 'adulto' && act === 'baja') || edad === 'senior';
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (edad === 'cachorro') {
+    insightText = `Como **cachorro en crecimiento** necesita **${gramosR} g/día** (${kcalR} kcal) en **${tomas} tomas** de ~${gPorTomaR} g: comer seguido sostiene su energía y desarrollo. Reajustá la ración a medida que gana peso.`;
+    insightTone = 'good';
+    insightIcon = '🐶';
+  } else if (propensoPeso) {
+    insightText = `Por ser **${etapa.toLowerCase()}** gasta menos energía: con **${gramosR} g/día** (${kcalR} kcal) conviene pesar la ración y no improvisar a ojo, porque es el perfil más propenso a engordar.`;
+    insightTone = 'warn';
+    insightIcon = '⚖️';
+  } else {
+    insightText = `Tu perro necesita **${gramosR} g/día** (${kcalR} kcal) en **${tomas} tomas** de ~${gPorTomaR} g. Una bolsa de 15 kg le dura unos **${duracionR} días**, útil para planificar la compra.`;
+    insightTone = 'neutral';
+    insightIcon = '🐶';
+  }
+
   return {
-    gramosPorDia: Math.round(gramos),
-    kcalPorDia: Math.round(kcalDia),
+    gramosPorDia: gramosR,
+    kcalPorDia: kcalR,
     tomas,
-    gramosPorToma: Math.round(gramosPorToma),
-    bolsaDuracion15kg: Math.round(duracion),
+    gramosPorToma: gPorTomaR,
+    bolsaDuracion15kg: duracionR,
     etapa,
-    resumen: `Tu perro de ${peso} kg (${etapa}) necesita ~${Math.round(gramos)} g/día (${Math.round(kcalDia)} kcal), repartido en ${tomas} tomas de ${Math.round(gramosPorToma)} g.`,
+    resumen: `Tu perro de ${peso} kg (${etapa}) necesita ~${gramosR} g/día (${kcalR} kcal), repartido en ${tomas} tomas de ${gPorTomaR} g.`,
+    _insight: {
+      title: 'Qué significa esta ración',
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon,
+    },
   };
 }

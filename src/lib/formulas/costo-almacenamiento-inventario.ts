@@ -13,6 +13,8 @@ export interface Outputs {
   costoMensual: number;
   holdingCostPct: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function costoAlmacenamientoInventario(i: Inputs): Outputs {
@@ -42,10 +44,47 @@ export function costoAlmacenamientoInventario(i: Inputs): Outputs {
     `Merma (${merma}%): $${fmt.format(valor * merma / 100)}. ` +
     `Holding cost total: ${holdingCostPct.toFixed(1)}% = $${fmt.format(costoAnual)}/año ($${fmt.format(costoMensual)}/mes).`;
 
+  const cCapital = valor * capital / 100;
+  const cAlmacenaje = valor * almacenaje / 100;
+  const cSeguros = valor * seguros / 100;
+  const cMerma = valor * merma / 100;
+
+  // Benchmark logístico: el holding cost suele caer entre 20% y 30% anual del valor del stock.
+  const hc = holdingCostPct;
+  const tone = hc >= 30 ? 'warn' : hc <= 18 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Tu inventario inmovilizado cuesta plata',
+    text:
+      `Mantener este stock te cuesta **${hc.toFixed(1)}% anual** ($${fmt.format(Math.round(costoAnual))}/año, $${fmt.format(Math.round(costoMensual))}/mes). ` +
+      (hc >= 30
+        ? `Está por encima del rango habitual (20-30%): cada mes que la mercadería no rota, te come margen. Conviene revisar niveles de compra.`
+        : hc <= 18
+          ? `Está por debajo del rango habitual (20-30%): tu costo de mantener inventario es eficiente.`
+          : `Está dentro del rango habitual del 20-30% anual que maneja la logística.`),
+    tone,
+    icon: '📦',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: `Costo de capital (${capital}%)`, value: Math.round(cCapital) },
+      { label: `Almacenaje (${almacenaje}%)`, value: Math.round(cAlmacenaje) },
+      { label: `Seguros (${seguros}%)`, value: Math.round(cSeguros) },
+      { label: `Merma (${merma}%)`, value: Math.round(cMerma) },
+    ],
+    prefix: '$',
+    centerValue: `$${fmt.format(Math.round(costoAnual))}`,
+    centerLabel: 'Costo anual',
+    ariaLabel: `Reparto del costo anual de almacenamiento de $${fmt.format(Math.round(costoAnual))} entre capital, almacenaje, seguros y merma`,
+  };
+
   return {
     costoAnual: Math.round(costoAnual),
     costoMensual: Math.round(costoMensual),
     holdingCostPct: Number(holdingCostPct.toFixed(1)),
     detalle,
+    _insight,
+    _chart,
   };
 }

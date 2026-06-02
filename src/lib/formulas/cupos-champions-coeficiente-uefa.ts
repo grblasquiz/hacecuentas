@@ -26,6 +26,7 @@ export interface CuposChampionsOutputs {
   cuposPaisBase: number;
   cuposPaisConBonus: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function cuposChampionsCoeficienteUefa(
@@ -55,6 +56,12 @@ export function cuposChampionsCoeficienteUefa(
       cuposPaisConBonus: cuposConBonus,
       detalle:
         'El campeón vigente de Champions League tiene cupo asegurado a la fase de liga, independiente de su posición doméstica.',
+      _insight: {
+        title: 'Clasificado como campeón',
+        text: `Por ser **campeón vigente de la Champions**, el equipo entra directo a la fase de liga sin importar dónde termine en su liga local. Su país reparte **${cuposConBonus} cupos** por ranking UEFA.`,
+        tone: 'good',
+        icon: '🏆',
+      },
     };
   }
   if (campeonEL) {
@@ -66,6 +73,12 @@ export function cuposChampionsCoeficienteUefa(
       cuposPaisConBonus: cuposConBonus,
       detalle:
         'Desde 2015 el campeón de Europa League clasifica directo a fase de liga de Champions.',
+      _insight: {
+        title: 'Sube por la Europa League',
+        text: `Ganar la **Europa League** da pase directo a la fase de liga de Champions, una vía extra al margen de los **${cuposConBonus} cupos** que reparte su país por ranking UEFA.`,
+        tone: 'good',
+        icon: '🥈',
+      },
     };
   }
 
@@ -77,6 +90,12 @@ export function cuposChampionsCoeficienteUefa(
       cuposPaisBase: cuposBase,
       cuposPaisConBonus: cuposConBonus,
       detalle: `El país tiene ${cuposConBonus} cupos directos a Champions por su ranking UEFA. Con posición ${pos} clasifica.`,
+      _insight: {
+        title: 'Clasifica directo',
+        text: `Con el **puesto ${pos}** entra a los **${cuposConBonus} cupos directos** que tiene su país (ranking UEFA #${rank}). Pase a la fase de liga sin jugar playoff.`,
+        tone: 'good',
+        icon: '✅',
+      },
     };
   }
 
@@ -90,6 +109,12 @@ export function cuposChampionsCoeficienteUefa(
       cuposPaisConBonus: cuposConBonus,
       detalle:
         'Algunas ligas top tienen una plaza adicional vía playoff a dos partidos (Champions Path).',
+      _insight: {
+        title: 'Depende del playoff',
+        text: `Quedó **justo afuera** de los ${cuposConBonus} cupos directos: con el puesto ${pos} se juega la última plaza en un **playoff a dos partidos** (Champions Path). Aún no está dentro.`,
+        tone: 'warn',
+        icon: '🎯',
+      },
     };
   }
 
@@ -101,5 +126,11 @@ export function cuposChampionsCoeficienteUefa(
     cuposPaisConBonus: cuposConBonus,
     detalle:
       'Con ese puesto no entra a Champions. Puede clasificar a Europa League o Conference League según ranking.',
+    _insight: {
+      title: 'Fuera de Champions',
+      text: `El **puesto ${pos}** no alcanza: su país solo tiene **${cuposConBonus} cupos** a Champions (ranking UEFA #${rank}). El destino más probable es Europa League o Conference League.`,
+      tone: 'warn',
+      icon: '🚫',
+    },
   };
 }

@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function celiacoGlutenAlimentosPpmSinTacc(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const a=String(i.alimento||'arroz');
@@ -14,6 +14,12 @@ export function celiacoGlutenAlimentosPpmSinTacc(i: Inputs): Outputs {
       altCebada: 'Arroz, mijo',
       altAvena: 'Avena certificada sin TACC',
       altYogur: 'Verificar marcas',
+      insTitleSi: 'Contiene gluten',
+      insTitlePosible: 'Riesgo de contaminación',
+      insTitleNo: 'Apto sin TACC',
+      insSi: (p:string,alt:string)=>`Este alimento aporta gluten (**${p}**), muy por encima del límite seguro de **20 ppm**. No es apto para celíacos: reemplazalo por ${alt.toLowerCase()}.`,
+      insPosible: (p:string,alt:string)=>`Puede estar contaminado con trazas (**${p} ppm**). El umbral seguro es **20 ppm**: consumilo sólo si es ${alt.toLowerCase()}.`,
+      insNo: ()=>`Es naturalmente **libre de gluten** (por debajo de **20 ppm**, el límite legal "sin TACC"). Apto para celíacos.`,
     },
     en: {
       si: 'Yes',
@@ -25,6 +31,12 @@ export function celiacoGlutenAlimentosPpmSinTacc(i: Inputs): Outputs {
       altCebada: 'Rice, millet',
       altAvena: 'Certified gluten-free oats',
       altYogur: 'Check brand labels',
+      insTitleSi: 'Contains gluten',
+      insTitlePosible: 'Cross-contamination risk',
+      insTitleNo: 'Gluten-free',
+      insSi: (p:string,alt:string)=>`This food contains gluten (**${p}**), far above the safe limit of **20 ppm**. Not safe for celiacs: replace it with ${alt.toLowerCase()}.`,
+      insPosible: (p:string,alt:string)=>`It may carry trace contamination (**${p} ppm**). The safe threshold is **20 ppm**: only eat it if it's ${alt.toLowerCase()}.`,
+      insNo: ()=>`It is naturally **gluten-free** (below **20 ppm**, the legal "gluten-free" limit). Safe for celiacs.`,
     },
   } as const)[__lang];
   const data={
@@ -39,5 +51,14 @@ export function celiacoGlutenAlimentosPpmSinTacc(i: Inputs): Outputs {
     'yogur':{t:T.noNatural,p:'<20',alt:T.altYogur}
   };
   const d=data[a];
-  return { contieneTacc:d.t, ppm:`${d.p}${typeof d.p==='number'?' ppm':''}`, alternativa:d.alt };
+  const ppmStr = `${d.p}${typeof d.p==='number'?' ppm':''}`;
+  let _insight: any;
+  if (d.t === T.si) {
+    _insight = { title: T.insTitleSi, text: T.insSi(ppmStr, d.alt), tone: 'warn', icon: '🚫' };
+  } else if (d.t === T.posible) {
+    _insight = { title: T.insTitlePosible, text: T.insPosible(String(d.p), d.alt), tone: 'warn', icon: '⚠️' };
+  } else {
+    _insight = { title: T.insTitleNo, text: T.insNo(), tone: 'good', icon: '✅' };
+  }
+  return { contieneTacc:d.t, ppm:ppmStr, alternativa:d.alt, _insight };
 }

@@ -11,6 +11,8 @@ export interface Outputs {
   taquipneaUmbral: number;
   resumen: string;
   causasAlteradas: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function frecuenciaRespiratoria(i: Inputs): Outputs {
@@ -66,7 +68,22 @@ export function frecuenciaRespiratoria(i: Inputs): Outputs {
 
   const causasAlteradas = `Aumenta (taquipnea): fiebre, ejercicio, ansiedad, dolor, anemia, hipoxia, neumonía, EPOC, insuficiencia cardíaca, acidosis metabólica. Disminuye (bradipnea): sueño, deportistas entrenados, sedantes, opioides, hipotermia, hipertensión intracraneal.`;
 
-  return {
+  let categoria = '';
+  let insTone: 'good' | 'warn' | 'neutral' = 'neutral';
+  let insText = '';
+  if (fr > 0) {
+    if (fr < min) { categoria = 'bradipnea'; insTone = 'warn'; }
+    else if (fr <= max) { categoria = 'normal'; insTone = 'good'; }
+    else if (fr <= max + 5) { categoria = 'taquipnea leve'; insTone = 'warn'; }
+    else { categoria = 'taquipnea importante'; insTone = 'warn'; }
+    insText = categoria === 'normal'
+      ? `Una FR de **${fr} rpm** está **dentro del rango normal** (${rangoNormal}) para ${grupoEtario.toLowerCase()}. Medila siempre en reposo y durante 60 segundos completos.`
+      : `Una FR de **${fr} rpm** queda como **${categoria}** frente al rango normal de ${rangoNormal} para ${grupoEtario.toLowerCase()}. ${evaluacion.split('.').slice(1).join('.').trim() || evaluacion}`;
+  } else {
+    insText = `Para ${grupoEtario.toLowerCase()}, lo normal es **${rangoNormal}**. Contá las elevaciones del tórax durante **60 segundos** en reposo e ingresá el valor para evaluarlo.`;
+  }
+
+  const out: Outputs = {
     grupoEtario,
     rangoNormal,
     evaluacion,
@@ -74,5 +91,28 @@ export function frecuenciaRespiratoria(i: Inputs): Outputs {
     taquipneaUmbral: max,
     resumen: `${grupoEtario}: lo normal es ${rangoNormal}.${fr ? ` Tu FR es ${fr} rpm → ${evaluacion.split('.')[0]}.` : ''}`,
     causasAlteradas,
+    _insight: {
+      title: 'Tu frecuencia respiratoria',
+      text: insText,
+      tone: insTone,
+      icon: '🫁',
+    },
   };
+
+  if (fr > 0) {
+    out._chart = {
+      type: 'scale',
+      marker: fr,
+      markerLabel: `${fr} rpm`,
+      min: 0,
+      segments: [
+        { nombre: 'Bradipnea', max: min, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Normal', max: max, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Taquipnea', max: Math.max(max + 10, fr + 2), color: '#ef4444', colorDark: '#dc2626' },
+      ],
+      ariaLabel: `Frecuencia respiratoria de ${fr} rpm frente al rango normal ${rangoNormal}`,
+    };
+  }
+
+  return out;
 }

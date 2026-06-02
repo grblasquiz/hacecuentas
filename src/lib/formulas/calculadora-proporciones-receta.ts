@@ -2,7 +2,7 @@
  * Calculadora de Proporciones de Receta — Ajustar a X porciones
  */
 export interface ProporcionesRecetaInputs { porcionesOriginal: number; porcionesDeseadas: number; ingrediente1: string; cantidad1: number; ingrediente2: string; cantidad2: number; ingrediente3: string; cantidad3: number; ingrediente4: string; cantidad4: number; ingrediente5: string; cantidad5: number; }
-export interface ProporcionesRecetaOutputs { factor: string; recetaAjustada: string; resumen: string; }
+export interface ProporcionesRecetaOutputs { factor: string; recetaAjustada: string; resumen: string; _insight?: any; }
 
 export function calculadoraProporcionesReceta(inputs: ProporcionesRecetaInputs): ProporcionesRecetaOutputs {
   const original = Number(inputs.porcionesOriginal);
@@ -41,5 +41,21 @@ export function calculadoraProporcionesReceta(inputs: ProporcionesRecetaInputs):
 
   const resumen = `${original} → ${deseadas} porciones`;
 
-  return { factor: factorStr, recetaAjustada, resumen };
+  const factorPct = Math.round(factor * 100);
+  const ejemplo = ingredientes[0];
+  const insightText = factor === 1
+    ? `Las porciones no cambian: la receta queda **igual** para ${deseadas} porciones. Copiá las cantidades originales tal cual.`
+    : `Multiplicá cada cantidad por **${factor.toLocaleString('es-AR', { maximumFractionDigits: 2 })}** (${factorPct}% del original) para pasar de ${original} a ${deseadas} porciones${ejemplo ? `: ${ejemplo.nombre} pasa de ${ejemplo.cantidadOriginal} a **${ejemplo.cantidadAjustada}**` : ''}.`;
+
+  return {
+    factor: factorStr,
+    recetaAjustada,
+    resumen,
+    _insight: {
+      title: factor === 1 ? 'Misma cantidad' : factor > 1 ? 'Receta ampliada' : 'Receta reducida',
+      text: insightText,
+      tone: 'neutral',
+      icon: factor > 1 ? '📈' : factor < 1 ? '📉' : '🍳',
+    },
+  };
 }

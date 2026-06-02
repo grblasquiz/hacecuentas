@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  cortes: string; telaUnidad: string; telaTotal: string;
+  cortes: string; telaUnidad: string; telaTotal: string; _insight?: any;
 }
 
 export function forroAlmohadonMedidas(inputs: Inputs): Outputs {
@@ -42,9 +42,16 @@ export function forroAlmohadonMedidas(inputs: Inputs): Outputs {
   }
   const areaTotal = areaUnidad * n / 10000; // m²
   const metrosTela = areaTotal / 1.40 * 1.10; // Tela 140 cm, 10% margen
+  const cierreNombre = tc === 1 ? 'sobre' : tc === 2 ? 'cierre' : 'botones';
   return {
     cortes: cortes,
     telaUnidad: `${(areaUnidad / 10000).toFixed(3)} m² por funda`,
     telaTotal: `${areaTotal.toFixed(2)} m² total → ${metrosTela.toFixed(2)} m de tela 140 cm`,
+    _insight: {
+      title: 'Cuánta tela comprar',
+      text: `Para ${n === 1 ? 'una funda' : `${n} fundas`} de **${a}×${h} cm** con cierre tipo **${cierreNombre}** necesitás aproximadamente **${metrosTela.toFixed(2)} m** de tela de 140 cm de ancho (ya incluye **10% de margen** por encogimiento y errores de corte). Si la tela tiene estampado con dirección, sumá un poco más.`,
+      tone: 'neutral',
+      icon: '🧵',
+    },
   };
 }

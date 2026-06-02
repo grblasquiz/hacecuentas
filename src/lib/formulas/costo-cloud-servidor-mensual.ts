@@ -1,6 +1,6 @@
 /** Estimación de costo mensual de servidor cloud */
 export interface Inputs { vcpus: number; ramGb: number; storageGb: number; traficoGb?: number; }
-export interface Outputs { costoMensualUsd: number; costoCompute: number; costoStorage: number; costoTrafico: number; detalle: string; }
+export interface Outputs { costoMensualUsd: number; costoCompute: number; costoStorage: number; costoTrafico: number; detalle: string; _insight?: any; _chart?: any; }
 
 export function costoCloudServidorMensual(i: Inputs): Outputs {
   const vcpus = Number(i.vcpus);
@@ -24,11 +24,35 @@ export function costoCloudServidorMensual(i: Inputs): Outputs {
   const costoTrafico = trafico * precioTrafico;
   const total = costoCompute + costoStorage + costoTrafico;
 
+  const anual = total * 12;
+  const pctCompute = Math.round((costoCompute / total) * 100);
+  const _insight = {
+    title: 'A dónde se va la plata',
+    text: `El **compute** (vCPU + RAM) se lleva el **${pctCompute}%** del costo: USD ${costoCompute.toFixed(2)}/mes. En un año pagás **USD ${anual.toFixed(0)}**. Reservar la instancia (1-3 años) suele recortar 30-60% sobre estos precios on-demand.`,
+    tone: 'neutral',
+    icon: '☁️',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Compute (CPU+RAM)', value: Number(costoCompute.toFixed(2)) },
+      { label: 'Storage SSD', value: Number(costoStorage.toFixed(2)) },
+      { label: 'Tráfico (egress)', value: Number(costoTrafico.toFixed(2)) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: `$${total.toFixed(2)}`,
+    centerLabel: 'USD/mes',
+    ariaLabel: `Composición del costo mensual del servidor: compute $${costoCompute.toFixed(2)}, storage $${costoStorage.toFixed(2)}, tráfico $${costoTrafico.toFixed(2)}.`,
+  };
+
   return {
     costoMensualUsd: Number(total.toFixed(2)),
     costoCompute: Number(costoCompute.toFixed(2)),
     costoStorage: Number(costoStorage.toFixed(2)),
     costoTrafico: Number(costoTrafico.toFixed(2)),
     detalle: `Servidor ${vcpus} vCPU / ${ram} GB RAM / ${storage} GB SSD: ~USD ${total.toFixed(2)}/mes (Compute: $${costoCompute.toFixed(2)}, Storage: $${costoStorage.toFixed(2)}, Tráfico ${trafico} GB: $${costoTrafico.toFixed(2)}). Precios on-demand de referencia.`,
+    _insight,
+    _chart,
   };
 }

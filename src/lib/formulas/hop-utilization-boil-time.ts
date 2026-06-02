@@ -1,6 +1,6 @@
 /** Hop utilization Tinseth */
 export interface Inputs { tiempoHervor: number; ogMosto: number; }
-export interface Outputs { utilizacion: number; factorDensidad: number; factorTiempo: number; comentario: string; }
+export interface Outputs { utilizacion: number; factorDensidad: number; factorTiempo: number; comentario: string; _insight?: any; _chart?: any; }
 
 export function hopUtilizationBoilTime(i: Inputs): Outputs {
   const t = Number(i.tiempoHervor);
@@ -20,10 +20,49 @@ export function hopUtilizationBoilTime(i: Inputs): Outputs {
   else if (t < 90) com = 'Bittering — amargor máximo eficiente';
   else com = 'Plateau — hervor largo, poco extra por tiempo';
 
+  const utilPct = Number((utilizacion * 100).toFixed(2));
+
+  // Insight: qué significa esta utilización en IBU reales
+  let insight_tone: "good" | "warn" | "neutral" = "neutral";
+  let insight_text: string;
+  if (t < 15) {
+    insight_tone = "neutral";
+    insight_text = `A **${t} min** de hervor la utilización es de apenas **${utilPct}%**: casi todo el lúpulo se va en aroma y sabor, no en amargor. Si buscás IBU, este lúpulo casi no cuenta.`;
+  } else if (t >= 60) {
+    insight_tone = "good";
+    insight_text = `A **${t} min** estás cerca del techo de extracción: la utilización es de **${utilPct}%** y pasados los 60 min sumás muy poco amargor por cada minuto extra. Hervir más es gasto de gas, no de IBU.`;
+  } else {
+    insight_tone = "neutral";
+    insight_text = `A **${t} min** de hervor extraés un **${utilPct}%** de los alfa-ácidos: zona de transición donde el amargor sube rápido con el tiempo. La densidad del mosto (OG **${og.toFixed(3)}**) ajusta esa eficiencia.`;
+  }
+  const _insight = {
+    title: "Tu extracción de amargor",
+    text: insight_text,
+    tone: insight_tone,
+    icon: "🍺",
+  };
+
+  // Gauge: la utilización cae en zonas de eficiencia de extracción
+  const _chart = {
+    type: "scale",
+    marker: utilPct,
+    markerLabel: `${utilPct}%`,
+    min: 0,
+    segments: [
+      { nombre: "Aroma (bajo IBU)", max: 8, color: "#bae6fd", colorDark: "#0c4a6e" },
+      { nombre: "Sabor", max: 16, color: "#bbf7d0", colorDark: "#14532d" },
+      { nombre: "Amargor eficiente", max: 24, color: "#fde68a", colorDark: "#78350f" },
+      { nombre: "Techo de extracción", max: Math.max(40, Math.ceil(utilPct) + 2), color: "#fca5a5", colorDark: "#7f1d1d" },
+    ],
+    ariaLabel: `Utilización de lúpulo del ${utilPct}% para ${t} minutos de hervor con OG ${og.toFixed(3)}.`,
+  };
+
   return {
-    utilizacion: Number((utilizacion * 100).toFixed(2)),
+    utilizacion: utilPct,
     factorDensidad: Number(factorDensidad.toFixed(3)),
     factorTiempo: Number(factorTiempo.toFixed(3)),
     comentario: com,
+    _insight,
+    _chart,
   };
 }

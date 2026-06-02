@@ -11,6 +11,8 @@ export interface Outputs {
   weeks_remaining: number;
   calendar_data: string;
   key_appointments: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface SizeData {
@@ -139,19 +141,60 @@ export function compute(i: Inputs): Outputs {
   const currentWeek = getWeekNumber(today, lmpDate);
   const trimester = getTrimesterInfo(currentWeek);
   const babySize = getBabySizeAtWeek(currentWeek);
-  
+
   const weeksRemaining = Math.max(0, getWeekNumber(dueDate, today));
-  
+
   const calendarData = buildCalendarData(lmpDate, today);
   const appointmentsList = buildAppointmentsList(lmpDate);
 
+  const displayWeek = Math.max(1, currentWeek);
+  const dueLabel = dueDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  const trimShort = currentWeek <= 13 ? 'first trimester' : currentWeek <= 27 ? 'second trimester' : 'third trimester';
+
+  let tone: 'good' | 'warn' | 'neutral' = 'neutral';
+  let insightText: string;
+  if (currentWeek > 42) {
+    insightText = `At week **${currentWeek}** you're past the due date (**${dueLabel}**): this is post-term, so close medical monitoring is recommended.`;
+    tone = 'warn';
+  } else if (currentWeek >= 37) {
+    insightText = `You're in week **${displayWeek}** and officially **full term** — only **${weeksRemaining} week(s)** to your due date, **${dueLabel}**. Baby is about the size of a ${babySize.split(' (')[0].toLowerCase()}.`;
+    tone = 'good';
+  } else {
+    insightText = `You're in week **${displayWeek}** of 40 (${trimShort}), with **${weeksRemaining} weeks** to go until **${dueLabel}**. Right now baby is about the size of a ${babySize.split(' (')[0].toLowerCase()}.`;
+    tone = 'neutral';
+  }
+
+  const _insight = {
+    title: 'Where you are in your pregnancy',
+    text: insightText,
+    tone,
+    icon: '🤰',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: displayWeek,
+    markerLabel: `Week ${displayWeek}`,
+    min: 0,
+    unit: 'wk',
+    segments: [
+      { nombre: '1st trim.', max: 13, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: '2nd trim.', max: 27, color: '#fef9c3', colorDark: '#854d0e' },
+      { nombre: '3rd trim.', max: 37, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Full term', max: Math.max(42, displayWeek + 1), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Pregnancy progress scale by trimester in gestational weeks, current position week ${displayWeek}.`,
+  };
+
   return {
     due_date: formatDate(dueDate),
-    current_week: Math.max(1, currentWeek),
+    current_week: displayWeek,
     trimester: trimester,
     baby_size: babySize,
     weeks_remaining: weeksRemaining,
     calendar_data: calendarData,
-    key_appointments: appointmentsList
+    key_appointments: appointmentsList,
+    _insight,
+    _chart
   };
 }

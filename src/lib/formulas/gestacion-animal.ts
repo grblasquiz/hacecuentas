@@ -9,6 +9,8 @@ export interface Outputs {
   semanaActual: string;
   etapa: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function gestacionAnimal(i: Inputs): Outputs {
@@ -72,11 +74,46 @@ export function gestacionAnimal(i: Inputs): Outputs {
     semanaTexto = `Semana ${semanaActual} de ${semanasTotal} (día ${diasTranscurridos} de ${gest.dias})`;
   }
 
+  let _tone: 'good' | 'warn' | 'neutral' = 'neutral';
+  let _text = '';
+  if (diasTranscurridos < 0) {
+    _tone = 'neutral';
+    _text = `La cruza de tu **${gest.nombre.toLowerCase()}** es a futuro. Si se concreta, el parto caería alrededor del **${formatFecha(fpp)}**, tras ${gest.dias} días de gestación.`;
+  } else if (diasRestantes < 0) {
+    _tone = 'warn';
+    _text = `La fecha estimada de parto pasó hace **${Math.abs(diasRestantes)} días**. Si tu **${gest.nombre.toLowerCase()}** todavía no parió, consultá al veterinario.`;
+  } else if (porcentaje >= 0.75) {
+    _tone = 'warn';
+    _text = `Recta final: faltan **~${diasRestantes} días** para el parto estimado (**${formatFecha(fpp)}**). Preparale un nido tranquilo y tené el contacto del veterinario a mano.`;
+  } else {
+    _tone = 'good';
+    _text = `Van **${diasTranscurridos} de ${gest.dias} días** de gestación (${etapa.toLowerCase()}). El parto estimado es el **${formatFecha(fpp)}**, faltan ~${diasRestantes} días.`;
+  }
+  const _insight = { title: 'En qué etapa va', text: _text, tone: _tone, icon: '🐾' };
+
+  const _markerRaw = diasTranscurridos < 0 ? 0 : diasTranscurridos;
+  const _marker = Math.min(_markerRaw, gest.dias);
+  const _chart = {
+    type: 'scale',
+    marker: _marker,
+    markerLabel: diasTranscurridos < 0 ? 'Sin comenzar' : `Día ${Math.min(diasTranscurridos, gest.dias)}`,
+    min: 0,
+    segments: [
+      { nombre: 'Inicial', max: Math.round(gest.dias * 0.25), color: '#bae6fd', colorDark: '#0ea5e9' },
+      { nombre: 'Embrionaria', max: Math.round(gest.dias * 0.5), color: '#7dd3fc', colorDark: '#0284c7' },
+      { nombre: 'Fetal', max: Math.round(gest.dias * 0.75), color: '#fbbf24', colorDark: '#f59e0b' },
+      { nombre: 'Final', max: gest.dias + 1, color: '#fb923c', colorDark: '#ea580c' },
+    ],
+    ariaLabel: `Progreso de gestación: día ${Math.min(Math.max(diasTranscurridos, 0), gest.dias)} de ${gest.dias}`,
+  };
+
   return {
     duracionDias: gest.dias,
     fechaEstimadaParto: formatFecha(fpp),
     semanaActual: semanaTexto,
     etapa,
     detalle: `${gest.nombre}: gestación de ${gest.dias} días. Cruza: ${formatFecha(fechaCruza)}. Parto estimado: ${formatFecha(fpp)}. ${diasRestantes > 0 ? `Faltan ~${diasRestantes} días.` : diasRestantes === 0 ? '¡Hoy es el día estimado!' : `La fecha estimada pasó hace ${Math.abs(diasRestantes)} días.`} ${etapa}.`,
+    _insight,
+    _chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Exposición solar para vitamina D */
 export interface Inputs { fototipo: string; latitud: number; estacion: string; }
-export interface Outputs { minutosSol: string; frecuencia: string; zonaExpuesta: string; suplementar: string; mensaje: string; }
+export interface Outputs { minutosSol: string; frecuencia: string; zonaExpuesta: string; suplementar: string; mensaje: string; _insight?: any; }
 
 export function exposicionSolVitaminaD(i: Inputs): Outputs {
   const fototipo = Number(i.fototipo) || 3;
@@ -38,6 +38,9 @@ export function exposicionSolVitaminaD(i: Inputs): Outputs {
     ? 'Insuficiente radiación UVB en invierno a tu latitud'
     : `${minutosRedondeados}-${minutosRedondeados + 10} minutos`;
 
+  const fototipoNombre: Record<number, string> = { 1: 'muy clara', 2: 'clara', 3: 'intermedia', 4: 'morena', 5: 'oscura', 6: 'muy oscura' };
+  const pielTxt = fototipoNombre[fototipo] || 'intermedia';
+
   return {
     minutosSol,
     frecuencia: '3-4 veces por semana',
@@ -45,6 +48,14 @@ export function exposicionSolVitaminaD(i: Inputs): Outputs {
     suplementar,
     mensaje: minutos === 0
       ? `En invierno a ${latitud}° de latitud no hay suficiente UVB. Suplementá 800-1000 UI/día de vitamina D.`
-      : `Exponete ${minutosRedondeados}-${minutosRedondeados + 10} min al sol, 3-4 veces/semana. ${suplementar}`
+      : `Exponete ${minutosRedondeados}-${minutosRedondeados + 10} min al sol, 3-4 veces/semana. ${suplementar}`,
+    _insight: {
+      title: 'Tu dosis de sol',
+      text: minutos === 0
+        ? `En **${estacion}** a **${latitud}°** de latitud el sol está demasiado bajo: no genera UVB útil. La única vía real es **suplementar 800-1000 UI/día**.`
+        : `Con piel **${pielTxt}** te alcanza con **${minutosRedondeados}-${minutosRedondeados + 10} min** de sol, 3-4 veces/semana, en brazos y piernas y sin protector durante ese rato. ${suplementar}`,
+      tone: minutos === 0 ? 'warn' : 'good',
+      icon: minutos === 0 ? '💊' : '☀️',
+    },
   };
 }

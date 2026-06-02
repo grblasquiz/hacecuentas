@@ -18,6 +18,7 @@ export interface Outputs {
   out_mph: number;
   out_knot: number;
   reference_note: string;
+  _insight?: any;
 }
 
 // ── Factores de distancia (base: metros) ────────────────────────────────────
@@ -134,6 +135,12 @@ export function compute(i: Inputs): Outputs {
       reference_note: "",
     };
     result.reference_note = buildNote(unit, value, result);
+    result._insight = {
+      title: "Misma distancia, tres referencias",
+      text: `Lo que medís son **${result.out_km.toFixed(2)} km**, **${result.out_mi.toFixed(2)} millas terrestres** y **${result.out_nmi.toFixed(2)} millas náuticas**. Ojo: la milla náutica (1852 m) es ~15% más larga que la terrestre (1609 m), no las mezcles entre mapa de ruta y carta de navegación.`,
+      tone: "neutral",
+      icon: "🧭",
+    };
 
   } else if (SPEED_UNITS.has(unit)) {
     // Convertir a km/h primero
@@ -153,6 +160,15 @@ export function compute(i: Inputs): Outputs {
       reference_note: "",
     };
     result.reference_note = buildNote(unit, value, result);
+    const fast = result.out_kmh > 130;
+    result._insight = {
+      title: fast ? "Velocidad alta: pasa el límite habitual" : "La misma velocidad en cada sistema",
+      text: `Equivale a **${result.out_kmh.toFixed(1)} km/h**, **${result.out_mph.toFixed(1)} mph** y **${result.out_knot.toFixed(1)} nudos**.` + (fast
+        ? ` Está por encima de los 130 km/h: supera el tope de autopista en casi toda LATAM y buena parte de Europa.`
+        : ` El nudo (1 milla náutica/hora) es el estándar en aviación y náutica; mph manda en EE.UU. y Reino Unido.`),
+      tone: fast ? "warn" : "neutral",
+      icon: fast ? "⚠️" : "🚥",
+    };
 
   } else {
     return {

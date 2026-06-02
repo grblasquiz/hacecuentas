@@ -9,6 +9,7 @@ export interface Outputs {
   origen: string;
   destino: string;
   factor: number;
+  _insight?: any;
 }
 
 // Factores a unidad base: metro, gramo, litro
@@ -49,31 +50,53 @@ export function conversorUnidades(i: Inputs): Outputs {
   // Temperatura
   if (['C', 'F', 'K'].includes(o) && ['C', 'F', 'K'].includes(d)) {
     const res = tempConvertir(v, o, d);
+    const resRound = Number(res.toFixed(4));
     return {
-      resultado: Number(res.toFixed(4)),
+      resultado: resRound,
       origen: o,
       destino: d,
       factor: 0,
+      _insight: {
+        title: 'Conversión de temperatura',
+        text: '**' + v + ' °' + o + '** equivalen a **' + resRound + ' °' + d + '**. La temperatura no escala con un factor fijo: cada conversión aplica su propia fórmula (offset + pendiente), por eso 0 °C son 32 °F y 100 °C son 212 °F.',
+        tone: 'neutral',
+        icon: '🌡️'
+      }
     };
   }
 
   let factor = 0;
+  let categoria = '';
   if (LONGITUD[o] && LONGITUD[d]) {
     factor = LONGITUD[o] / LONGITUD[d];
+    categoria = 'longitud';
   } else if (PESO[o] && PESO[d]) {
     factor = PESO[o] / PESO[d];
+    categoria = 'peso';
   } else if (VOLUMEN[o] && VOLUMEN[d]) {
     factor = VOLUMEN[o] / VOLUMEN[d];
+    categoria = 'volumen';
   } else {
     throw new Error('Unidades incompatibles');
   }
 
   const resultado = v * factor;
+  const resRound = Number(resultado.toFixed(6));
+  const factorRound = Number(factor.toFixed(8));
+  const sentido = factor >= 1
+    ? 'Cada ' + o + ' contiene **' + factorRound + ' ' + d + '**, así que el número crece al convertir.'
+    : 'Cada ' + o + ' es apenas **' + factorRound + ' ' + d + '**, así que el número se achica al convertir.';
 
   return {
-    resultado: Number(resultado.toFixed(6)),
+    resultado: resRound,
     origen: o,
     destino: d,
-    factor: Number(factor.toFixed(8)),
+    factor: factorRound,
+    _insight: {
+      title: 'Conversión de ' + categoria,
+      text: '**' + v + ' ' + o + '** = **' + resRound + ' ' + d + '**. ' + sentido,
+      tone: 'neutral',
+      icon: categoria === 'longitud' ? '📏' : (categoria === 'peso' ? '⚖️' : '🧪')
+    }
   };
 }

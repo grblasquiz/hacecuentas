@@ -1,6 +1,6 @@
 /** Hitos del desarrollo motor del bebé por edad */
 export interface Inputs { edadBebeMotor: number; }
-export interface Outputs { hitosEsperados: string; proximosHitos: string; estimulacion: string; alerta: string; }
+export interface Outputs { hitosEsperados: string; proximosHitos: string; estimulacion: string; alerta: string; _insight?: any; }
 
 const hitos: Record<number, { esperados: string; proximos: string; estimulacion: string; alerta: string }> = {
   0: { esperados: 'Movimientos reflejos, gira la cabeza, reflejo de prensión', proximos: 'Levantar cabeza boca abajo, seguir objetos con la mirada', estimulacion: 'Contacto piel con piel, hablarle, ponerlo boca abajo brevemente', alerta: 'No succiona, no responde a sonidos fuertes, muy flácido' },
@@ -21,5 +21,20 @@ export function desarrolloMotor(i: Inputs): Outputs {
   let closest = edades[0];
   for (const e of edades) { if (e <= edad) closest = e; }
   const h = hitos[closest];
-  return { hitosEsperados: h.esperados, proximosHitos: h.proximos, estimulacion: h.estimulacion, alerta: h.alerta };
+
+  const idx = edades.indexOf(closest);
+  const siguiente = idx >= 0 && idx < edades.length - 1 ? edades[idx + 1] : null;
+  const bandaTxt = closest === 0
+    ? 'el primer mes'
+    : siguiente
+      ? `el rango de ${closest} a ${siguiente} meses`
+      : `los ${closest} meses en adelante`;
+  const _insight = {
+    title: 'Cómo leer estos hitos',
+    text: `A los **${edad} ${edad === 1 ? 'mes' : 'meses'}** tu bebé está en ${bandaTxt}: lo esperable es **${h.esperados.split(',')[0].toLowerCase()}**. Cada bebé tiene su ritmo, pero consultá al pediatra si aparecen señales de alerta como **${h.alerta.split(',')[0].toLowerCase()}**.`,
+    tone: 'neutral',
+    icon: '👶',
+  };
+
+  return { hitosEsperados: h.esperados, proximosHitos: h.proximos, estimulacion: h.estimulacion, alerta: h.alerta, _insight };
 }

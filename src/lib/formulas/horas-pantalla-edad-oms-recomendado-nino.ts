@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function horasPantallaEdadOmsRecomendadoNino(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const e=Number(i.edad)||0;
@@ -29,5 +29,14 @@ export function horasPantallaEdadOmsRecomendadoNino(i: Inputs): Outputs {
     alt=__lang==='en'?'Social media with limits':'Redes sociales con límite';
     adv=__lang==='en'?'Clear family agreements':'Acuerdos familiares claros';
   }
-  return { maxRecomendado:max, alternativas:alt, advertencia:adv };
+  const tone = e < 2 ? 'warn' : e < 13 ? 'good' : 'neutral';
+  const _insight = {
+    title: __lang === 'en' ? 'WHO recommendation by age' : 'Recomendación OMS por edad',
+    text: __lang === 'en'
+      ? `For a **${e}-year-old**, the WHO guideline is **${max}** of recreational screen time. ${adv}.`
+      : `Para un niño de **${e} años**, la pauta OMS es **${max}** de pantalla recreativa. ${adv}.`,
+    tone,
+    icon: e < 2 ? '🚫' : '📱',
+  };
+  return { maxRecomendado:max, alternativas:alt, advertencia:adv, _insight };
 }

@@ -17,6 +17,7 @@ export interface Outputs {
   margenNeto: number;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function grossMarginVsNet(i: Inputs): Outputs {
@@ -59,6 +60,33 @@ export function grossMarginVsNet(i: Inputs): Outputs {
     ariaLabel: 'Composición de los ingresos: costo de ventas, gastos operativos, depreciación, intereses e impuestos y ganancia neta',
   };
 
+  // Insight: salud del margen neto (dinámico)
+  const mb = Number(margenBruto.toFixed(1));
+  const mn = Number(margenNeto.toFixed(1));
+  let _insight: any;
+  if (gananciaNeta < 0) {
+    _insight = {
+      title: 'Estás operando a pérdida',
+      text: `Aunque el margen bruto es **${mb}%**, después de gastos, depreciación e impuestos el resultado es **negativo (${mn}%)**: perdés **$${Math.abs(Math.round(gananciaNeta)).toLocaleString('es-AR')}**. La estructura de costos se come toda la ganancia bruta.`,
+      tone: 'warn',
+      icon: '🔻',
+    };
+  } else if (mn >= 10) {
+    _insight = {
+      title: 'Margen neto sólido',
+      text: `De cada $100 de ventas te quedan **$${mn.toFixed(0)} netos** (margen neto ${mn}%). Partís de un bruto del **${mb}%** y la diferencia se va en operación e impuestos: una conversión saludable.`,
+      tone: 'good',
+      icon: '💹',
+    };
+  } else {
+    _insight = {
+      title: 'Margen neto ajustado',
+      text: `Tu margen bruto es **${mb}%** pero el neto baja a **${mn}%**: de cada $100 vendidos quedan apenas $${mn.toFixed(0)} netos. La brecha (${(mb - mn).toFixed(1)} pts) son gastos, depreciación e impuestos a vigilar.`,
+      tone: 'neutral',
+      icon: '📊',
+    };
+  }
+
   return {
     gananciaBruta: Math.round(gananciaBruta),
     margenBruto: Number(margenBruto.toFixed(2)),
@@ -70,5 +98,6 @@ export function grossMarginVsNet(i: Inputs): Outputs {
     margenNeto: Number(margenNeto.toFixed(2)),
     resumen,
     _chart: chart,
+    _insight,
   };
 }

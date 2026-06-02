@@ -31,6 +31,8 @@ export interface FiniquitoChileOutputs {
   topeAplicado: string;
   anosComputables: string;
   observaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmtCLP = (n: number) =>
@@ -89,6 +91,51 @@ export function finiquitoRenunciaChile(i: FiniquitoChileInputs): FiniquitoChileO
 
   const totalFiniquito = ias + sustitutivaAviso + feriadoProporcional;
 
+  // --- Insight dinámico por causal ---
+  let _insight: any;
+  if (causal === 'necesidades' || causal === 'caso-fortuito') {
+    const pctIas = totalFiniquito > 0 ? Math.round((ias / totalFiniquito) * 100) : 0;
+    _insight = {
+      title: 'Despido Art. 161: cobrás IAS',
+      text: `Corresponde indemnización por años de servicio: **${fmtCLP(ias)}**${!aviso ? ' más 1 sueldo por aviso no dado' : ''}, el **${pctIas}%** de un finiquito total de **${fmtCLP(totalFiniquito)}**.`,
+      tone: 'good',
+      icon: '💼',
+    };
+  } else if (causal === 'renuncia') {
+    _insight = {
+      title: 'Renuncia: sin IAS ni aviso',
+      text: `Por renuncia voluntaria (Art. 159 N°2) **no corresponde** indemnización por años ni aviso: solo feriado proporcional y haberes pendientes, total **${fmtCLP(totalFiniquito)}**.`,
+      tone: 'warn',
+      icon: '✍️',
+    };
+  } else {
+    _insight = {
+      title: 'Mutuo acuerdo: IAS negociable',
+      text: `Por mutuo acuerdo (Art. 159 N°1) la indemnización por años es **negociable**; lo exigible es el feriado proporcional de **${fmtCLP(feriadoProporcional)}**. Base mínima: **${fmtCLP(totalFiniquito)}**.`,
+      tone: 'neutral',
+      icon: '🤝',
+    };
+  }
+
+  // --- Gráfico donut: solo si hay 2+ componentes ---
+  const _chartSlices = [
+    { label: 'Indemnización años', value: Math.round(ias) },
+    { label: 'Aviso sustitutivo', value: Math.round(sustitutivaAviso) },
+    { label: 'Feriado prop.', value: Math.round(feriadoProporcional) },
+  ].filter((s) => s.value > 0);
+
+  const _chart =
+    totalFiniquito > 0 && _chartSlices.length >= 2
+      ? {
+          type: 'doughnut',
+          slices: _chartSlices,
+          prefix: '$',
+          centerValue: fmtCLP(totalFiniquito),
+          centerLabel: 'Total finiquito',
+          ariaLabel: 'Composición del finiquito chileno por concepto',
+        }
+      : undefined;
+
   return {
     indemnizacionAnosServicio: fmtCLP(ias),
     indemnizacionSustitutivaAviso: fmtCLP(sustitutivaAviso),
@@ -99,5 +146,7 @@ export function finiquitoRenunciaChile(i: FiniquitoChileInputs): FiniquitoChileO
       : 'No — antigüedad dentro del tope de 11 años',
     anosComputables: `${anosComputables} ${anosComputables === 1 ? 'año' : 'años'} computables`,
     observaciones,
+    _insight,
+    _chart,
   };
 }

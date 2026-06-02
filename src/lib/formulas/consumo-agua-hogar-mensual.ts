@@ -15,6 +15,8 @@ export interface Outputs {
   litrosPorPersonaDia: number;
   categoria: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function consumoAguaHogarMensual(i: Inputs): Outputs {
@@ -55,12 +57,53 @@ export function consumoAguaHogarMensual(i: Inputs): Outputs {
   else if (litrosPorPersonaDia < 200) categoria = 'Consumo alto';
   else categoria = 'Consumo excesivo — revisá hábitos y fugas';
 
+  const lppd = Math.round(litrosPorPersonaDia);
+  const esEficiente = litrosPorPersonaDia < 80;
+  const esExcesivo = litrosPorPersonaDia >= 200;
+  const _insight = {
+    title: 'Tu consumo de agua',
+    text: esEficiente
+      ? `Tu hogar gasta **${lppd} L por persona/día**, por debajo de los **100 L** que la OMS toma como razonable: muy eficiente.`
+      : esExcesivo
+        ? `Cada persona consume **${lppd} L/día**, más del doble del referente de la OMS (**100 L**). Revisá fugas y duchas largas: el lavarropas y la ducha suelen ser los rubros más pesados.`
+        : `Cada persona usa **${lppd} L/día** (~${consumoMensualM3.toFixed(1)} m³/mes en total). Estás en torno al promedio de la OMS de **100 L**.`,
+    tone: esEficiente ? 'good' : esExcesivo ? 'warn' : 'neutral',
+    icon: esExcesivo ? '🚱' : '💧'
+  };
+
+  // Donut: componentes que suman el consumo diario total
+  const sDucha = Math.round(duchaDiaPersona * h);
+  const sInodoro = Math.round(inodoroDiaPersona * h);
+  const sCocina = Math.round(lavaplatosDia * h);
+  const sHigiene = Math.round(higieneDia * h);
+  const sLav = Math.round(lavarropasDia);
+  const sRiego = Math.round(riego);
+  const sliceTotal = sDucha + sInodoro + sCocina + sHigiene + sLav + sRiego;
+  const slices = [
+    { label: 'Ducha', value: sDucha },
+    { label: 'Inodoro', value: sInodoro },
+    { label: 'Cocina/vajilla', value: sCocina },
+    { label: 'Higiene', value: sHigiene },
+    { label: 'Lavarropas', value: sLav },
+  ];
+  if (sRiego > 0) slices.push({ label: 'Riego', value: sRiego });
+  const _chart = {
+    type: 'doughnut',
+    slices: slices.filter(s => s.value > 0),
+    prefix: '',
+    centerValue: `${sliceTotal.toLocaleString('es-AR')} L`,
+    centerLabel: 'por día',
+    ariaLabel: `Composición del consumo diario de agua: ${sliceTotal} litros por día`
+  };
+
   return {
     consumoDiarioLitros: Math.round(consumoDiarioLitros),
     consumoMensualLitros: Math.round(consumoMensualLitros),
     consumoMensualM3: Number(consumoMensualM3.toFixed(2)),
-    litrosPorPersonaDia: Math.round(litrosPorPersonaDia),
+    litrosPorPersonaDia: lppd,
     categoria,
-    resumen: `Tu hogar consume ~${consumoMensualM3.toFixed(1)} m³ por mes (${Math.round(litrosPorPersonaDia)} L por persona/día). ${categoria}.`,
+    resumen: `Tu hogar consume ~${consumoMensualM3.toFixed(1)} m³ por mes (${lppd} L por persona/día). ${categoria}.`,
+    _insight,
+    _chart,
   };
 }

@@ -9,6 +9,7 @@ export interface Outputs {
   hours_minutes: string;
   total_minutes: number;
   shift_note: string;
+  _insight?: any;
 }
 
 /**
@@ -83,10 +84,26 @@ export function compute(i: Inputs): Outputs {
     shiftNote += " Break time equals or exceeds shift length — net hours are 0.";
   }
 
+  // Insight: interpret the net duration, accounting for break and overnight
+  let _insight: any;
+  if (isSameTime && breakMins === 0) {
+    _insight = { title: "No duration", text: "Start and end times are identical, so the elapsed time is **0:00**. Set different times to measure a shift.", tone: "neutral", icon: "⏱️" };
+  } else if (breakMins > 0 && netMinutes <= 0) {
+    _insight = { title: "Break exceeds shift", text: `The **${breakMins}-min break** is as long as or longer than the elapsed time, so net worked hours come out to **0:00**.`, tone: "warn", icon: "⏱️" };
+  } else {
+    const grossHHMM = formatHHMM(diffMinutes);
+    const overnightTxt = isOvernight ? " The clock crosses midnight, so a full 24 h was added to land on the next day." : "";
+    const breakTxt = breakMins > 0
+      ? ` After deducting the **${breakMins}-min break**, net time is **${hoursMinutes}** (**${decimalHours} h**) out of **${grossHHMM}** elapsed.`
+      : ` That's **${hoursMinutes}** (**${decimalHours} h**) of elapsed time.`;
+    _insight = { title: "Shift duration", text: `${breakTxt.trim()}${overnightTxt}`, tone: "neutral", icon: "⏱️" };
+  }
+
   return {
     decimal_hours: decimalHours,
     hours_minutes: hoursMinutes,
     total_minutes: totalMinutes,
     shift_note: shiftNote,
+    _insight,
   };
 }

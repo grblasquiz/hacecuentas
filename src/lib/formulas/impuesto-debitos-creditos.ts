@@ -6,6 +6,7 @@ export interface Outputs {
   total: number;
   computableContraGanancias: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function impuestoDebitosCreditos(i: Inputs): Outputs {
@@ -36,11 +37,24 @@ export function impuestoDebitosCreditos(i: Inputs): Outputs {
     ariaLabel: 'Composición del total: monto de la operación más el impuesto a los débitos y créditos',
   };
 
+  const fmtARS = (v: number) => '$' + Math.round(v).toLocaleString('es-AR');
+  const tipo_txt = (tipo === 'debito' || tipo === 'credito')
+    ? `un solo movimiento (${tipo})`
+    : 'débito y crédito';
+
+  const insight = {
+    title: 'Impuesto al cheque',
+    text: `Sobre ${fmtARS(monto)} pagás **${fmtARS(impuesto)}** del impuesto a los débitos y créditos (${(alicuota * 100).toFixed(2)}% por ${tipo_txt}). Si estás inscripto en Ganancias, **${fmtARS(computable)}** (el 33%) se computan como pago a cuenta.`,
+    tone: 'warn',
+    icon: '🏦',
+  };
+
   return {
     impuesto: Math.round(impuesto),
     alicuotaAplicada: Number((alicuota * 100).toFixed(2)),
     total: Math.round(monto + impuesto),
     computableContraGanancias: Math.round(computable),
     _chart: chart,
+    _insight: insight,
   };
 }

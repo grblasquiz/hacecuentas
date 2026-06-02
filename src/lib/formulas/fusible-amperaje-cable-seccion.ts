@@ -1,6 +1,6 @@
 /** Fusible y sección de cable según potencia y voltaje */
 export interface Inputs { potenciaWatts: number; voltaje: number; factorSeguridad: number; }
-export interface Outputs { corrienteA: number; corrienteConMargen: number; fusibleA: number; seccionCableMm2: number; detalle: string; }
+export interface Outputs { corrienteA: number; corrienteConMargen: number; fusibleA: number; seccionCableMm2: number; detalle: string; _insight?: any; }
 
 const FUSIBLES = [6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100];
 const CABLES: { seccion: number; ampMax: number }[] = [
@@ -40,11 +40,19 @@ export function fusibleAmperajeCableSeccion(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const _insight = {
+    title: `Cable ${fmt.format(cable.seccion)} mm² y fusible de ${fusible} A`,
+    text: `Tu circuito consume **${fmt.format(corriente)} A** (**${fmt.format(corrienteConMargen)} A** con margen). El cable de **${fmt.format(cable.seccion)} mm²** soporta **${cable.ampMax} A** y el fusible de **${fusible} A** corta antes de que el cable se recaliente. Usá una sección igual o mayor, nunca menor.`,
+    tone: 'good',
+    icon: '⚡',
+  };
+
   return {
     corrienteA: Number(corriente.toFixed(1)),
     corrienteConMargen: Number(corrienteConMargen.toFixed(1)),
     fusibleA: fusible,
     seccionCableMm2: cable.seccion,
     detalle: `${fmt.format(watts)}W / ${fmt.format(voltaje)}V = ${fmt.format(corriente)}A × ${fmt.format(fs)} = ${fmt.format(corrienteConMargen)}A. Fusible: ${fusible}A. Cable: ${fmt.format(cable.seccion)} mm² (soporta ${cable.ampMax}A).`,
+    _insight,
   };
 }

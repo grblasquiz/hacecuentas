@@ -12,6 +12,7 @@ export interface Outputs {
   gananciaRechazada: number;
   diferenciaPorcentual: number;
   resumen: string;
+  _insight?: any;
 }
 
 export function costoOportunidadDecision(i: Inputs): Outputs {
@@ -32,6 +33,16 @@ export function costoOportunidadDecision(i: Inputs): Outputs {
 
   const resumen = `Elegir ${mejor} (gana ${gananciaMejor.toLocaleString()}) implica un costo de oportunidad de ${costoOportunidad.toLocaleString()} — eso es lo que dejás de ganar con la otra.`;
 
+  const ventajaClara = diferenciaPorcentual >= 25;
+  const _insight = {
+    title: ventajaClara ? 'La elección es clara' : 'Opciones parejas: decidí con cuidado',
+    text: ventajaClara
+      ? `**${mejor}** rinde **${diferenciaPorcentual.toFixed(0)}% más** que la alternativa: ganás **$${Math.round(gananciaMejor).toLocaleString('es-AR')}** y resignás **$${Math.round(costoOportunidad).toLocaleString('es-AR')}**. La diferencia justifica la decisión.`
+      : `Las opciones están parejas: **${mejor}** apenas supera a la otra por **${diferenciaPorcentual.toFixed(0)}%**. Tu costo de oportunidad de **$${Math.round(costoOportunidad).toLocaleString('es-AR')}** es casi tan grande como lo que ganás — pesá factores no monetarios (riesgo, tiempo, esfuerzo) antes de decidir.`,
+    tone: ventajaClara ? 'good' : 'warn',
+    icon: '⚖️',
+  };
+
   return {
     mejorOpcion: mejor,
     costoOportunidad: Math.round(costoOportunidad),
@@ -39,5 +50,6 @@ export function costoOportunidadDecision(i: Inputs): Outputs {
     gananciaRechazada: Math.round(gananciaRechazada),
     diferenciaPorcentual: Number(diferenciaPorcentual.toFixed(2)),
     resumen,
+    _insight,
   };
 }

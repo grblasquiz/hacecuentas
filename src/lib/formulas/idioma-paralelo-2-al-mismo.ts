@@ -8,6 +8,7 @@ export interface Outputs {
   minutosEfectivos: number;
   perdida: string;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function idiomaParalelo2AlMismo(i: Inputs): Outputs {
@@ -26,6 +27,9 @@ export function idiomaParalelo2AlMismo(i: Inputs): Outputs {
       recViable: 'Dividí mañana/tarde y mantené consistencia.',
       recA0Suffix: ' Empezar ambos desde cero multiplica interferencia — priorizá uno los primeros 3-6 meses.',
       perdidaSuffix: '% (interferencia entre idiomas)',
+      insightTitle: (v: string) => `Aprender 2 idiomas: ${v.toLowerCase()}`,
+      insightText: (min: number, pct: number) =>
+        `Con tu tiempo, cada idioma recibe unos **${min} min/día** efectivos: la interferencia entre ambos te resta cerca del **${pct}%** del estudio.`,
     },
     en: {
       errorHoras: 'Invalid hours',
@@ -39,6 +43,9 @@ export function idiomaParalelo2AlMismo(i: Inputs): Outputs {
       recViable: 'Split morning/afternoon sessions and stay consistent.',
       recA0Suffix: ' Starting both from scratch multiplies interference — prioritize one for the first 3–6 months.',
       perdidaSuffix: '% (cross-language interference)',
+      insightTitle: (v: string) => `Learning 2 languages: ${v.toLowerCase()}`,
+      insightText: (min: number, pct: number) =>
+        `With your time, each language gets about **${min} effective min/day**: cross-language interference costs you roughly **${pct}%** of your study.`,
     },
   } as const)[__lang];
 
@@ -62,11 +69,22 @@ export function idiomaParalelo2AlMismo(i: Inputs): Outputs {
 
   if (nivel === 'a0') rec += T.recA0Suffix;
 
+  const minEfect = Math.round(horasEfect * 60);
+  const pctInter = Math.round(inter * 100);
+  const tone = horas < 1.5 ? 'warn' : horas < 3 ? 'neutral' : 'good';
+  const insight = {
+    title: T.insightTitle(viable),
+    text: T.insightText(minEfect, pctInter),
+    tone,
+    icon: '🗣️',
+  };
+
   return {
     viable,
-    minutosEfectivos: Math.round(horasEfect * 60),
-    perdida: Math.round(inter * 100) + T.perdidaSuffix,
+    minutosEfectivos: minEfect,
+    perdida: pctInter + T.perdidaSuffix,
     recomendacion: rec,
+    _insight: insight,
   };
 
 }

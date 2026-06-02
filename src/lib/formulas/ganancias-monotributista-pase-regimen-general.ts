@@ -1,6 +1,6 @@
 /** Pase de Monotributo a Régimen General: comparativa de carga fiscal */
 export interface Inputs { facturacionAnual: number; gastosDeducibles: number; categoriaActual: string; ingresosBrutosPct: number; }
-export interface Outputs { impuestoMonotributo: number; impuestoRgEstimado: number; ivaCredito: number; cargaTotalMonotributo: number; cargaTotalRg: number; conviene: string; explicacion: string; }
+export interface Outputs { impuestoMonotributo: number; impuestoRgEstimado: number; ivaCredito: number; cargaTotalMonotributo: number; cargaTotalRg: number; conviene: string; explicacion: string; _insight?: any; }
 export function gananciasMonotributistaPaseRegimenGeneral(i: Inputs): Outputs {
   const fact = Number(i.facturacionAnual);
   const gastos = Number(i.gastosDeducibles);
@@ -27,6 +27,21 @@ export function gananciasMonotributistaPaseRegimenGeneral(i: Inputs): Outputs {
   const cargaMono = monotrib + ibMonotrib;
   const cargaRg = ivaNeto + ganancias + autonomos + ibRg;
   const conviene = cargaMono < cargaRg ? 'Monotributo' : 'Régimen General';
+  const miles = (n: number) => Math.round(n).toLocaleString('es-AR');
+  const diferencia = Math.abs(cargaRg - cargaMono);
+  const _insight = conviene === 'Monotributo'
+    ? {
+        title: 'Te conviene seguir en Monotributo',
+        text: `Hoy el Monotributo te cuesta **$${miles(cargaMono)}/año** contra **$${miles(cargaRg)}/año** del Régimen General: quedándote ahorrás **$${miles(diferencia)}** al año. Igual revisá si superás los topes de facturación.`,
+        tone: 'good',
+        icon: '🟢',
+      }
+    : {
+        title: 'El Régimen General sale más barato',
+        text: `Con tu nivel de facturación, el Régimen General costaría **$${miles(cargaRg)}/año** frente a **$${miles(cargaMono)}/año** del Monotributo: pasarte te ahorraría **$${miles(diferencia)}** al año, además del IVA crédito de **$${miles(ivaCredito)}** que podés computar.`,
+        tone: 'neutral',
+        icon: '🔄',
+      };
   return {
     impuestoMonotributo: Number(monotrib.toFixed(2)),
     impuestoRgEstimado: Number((ivaNeto + ganancias + autonomos).toFixed(2)),
@@ -35,5 +50,6 @@ export function gananciasMonotributistaPaseRegimenGeneral(i: Inputs): Outputs {
     cargaTotalRg: Number(cargaRg.toFixed(2)),
     conviene,
     explicacion: `Monotributo categoría ${i.categoriaActual}: $${cargaMono.toLocaleString('es-AR')}/año. RG estimado: $${cargaRg.toLocaleString('es-AR')}/año. Conviene: ${conviene}.`,
+    _insight,
   };
 }

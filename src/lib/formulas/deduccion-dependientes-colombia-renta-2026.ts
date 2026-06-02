@@ -11,6 +11,7 @@ export interface Outputs {
   ahorro_impuesto_estimado: number;
   porcentaje_ingreso: number;
   detalle_calculo: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -71,12 +72,33 @@ export function compute(i: Inputs): Outputs {
     `Ahorro estimado renta (~28%): $${ahorro_impuesto_estimado.toLocaleString('es-CO', {maximumFractionDigits: 0})}/año`
   ].join('\n');
 
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const topeAplica = deduccion_por_porcentaje > limite_uvt_pesos;
+  let insightText: string;
+  let tone: 'good' | 'warn' | 'neutral';
+  if (i.num_dependientes <= 0) {
+    insightText = `Sin dependientes a cargo no aplica esta deducción. Con un solo dependiente podrías restar hasta **${cop(deduccion_unitaria_mensual)}/mes** de tu base gravable.`;
+    tone = 'warn';
+  } else if (topeAplica) {
+    insightText = `Tu 10% del salario topa en el límite de **32 UVT** (${cop(limite_uvt_pesos)}/mes por dependiente). Aun así deducís **${cop(deduccion_total_anual)}** al año por ${i.num_dependientes} dependiente(s), con un ahorro estimado de **${cop(ahorro_impuesto_estimado)}**.`;
+    tone = 'good';
+  } else {
+    insightText = `Por ${i.num_dependientes} dependiente(s) deducís **${cop(deduccion_total_anual)}** al año (el 10% de tu ingreso laboral), lo que se traduce en un ahorro estimado de renta de **${cop(ahorro_impuesto_estimado)}**.`;
+    tone = 'good';
+  }
+
   return {
     deduccion_unitaria_mensual: Math.round(deduccion_unitaria_mensual),
     deduccion_total_mensual: Math.round(deduccion_total_mensual),
     deduccion_total_anual: Math.round(deduccion_total_anual),
     ahorro_impuesto_estimado: Math.round(ahorro_impuesto_estimado),
     porcentaje_ingreso: Math.round(porcentaje_ingreso * 100) / 100,
-    detalle_calculo: detalle
+    detalle_calculo: detalle,
+    _insight: {
+      title: 'Tu ahorro en renta',
+      text: insightText,
+      tone,
+      icon: '👨‍👩‍👧',
+    }
   };
 }

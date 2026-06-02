@@ -5,6 +5,7 @@ export interface Outputs {
   caloriasPorMinuto: number;
   metUsado: number;
   actividadMostrada: string;
+  _insight?: any;
 }
 
 // Valores MET (Ainsworth Compendium of Physical Activities 2011)
@@ -48,10 +49,30 @@ export function caloriasDeporte(i: Inputs): Outputs {
   const kcalMin = (info.met * 3.5 * peso) / 200;
   const total = kcalMin * min;
 
+  const totalR = Math.round(total);
+  const kcalMinR = Number(kcalMin.toFixed(1));
+  const nombre = __lang === 'en' ? info.nombreEn : info.nombre;
+
+  // Intensidad por MET (Compendium: <3 ligera, 3-6 moderada, >6 vigorosa)
+  let banda: string, tone: string;
+  if (info.met >= 6) { banda = __lang === 'en' ? 'vigorous' : 'vigorosa'; tone = 'good'; }
+  else if (info.met >= 3) { banda = __lang === 'en' ? 'moderate' : 'moderada'; tone = 'neutral'; }
+  else { banda = __lang === 'en' ? 'light' : 'ligera'; tone = 'warn'; }
+
+  const insightText = __lang === 'en'
+    ? `**${nombre}** is **${banda}** activity (MET ${info.met}): you burn **~${kcalMinR} kcal/min**, totaling **~${totalR} kcal** in ${min} min.`
+    : `**${nombre}** es actividad de intensidad **${banda}** (MET ${info.met}): gastás **~${kcalMinR} kcal/min**, que suman **~${totalR} kcal** en ${min} min.`;
+
   return {
-    caloriasTotal: Math.round(total),
+    caloriasTotal: totalR,
     caloriasPorMinuto: Number(kcalMin.toFixed(2)),
     metUsado: info.met,
-    actividadMostrada: __lang === 'en' ? info.nombreEn : info.nombre,
+    actividadMostrada: nombre,
+    _insight: {
+      title: __lang === 'en' ? 'Intensity & burn' : 'Intensidad y gasto',
+      text: insightText,
+      tone,
+      icon: '🔥',
+    },
   };
 }

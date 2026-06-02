@@ -8,6 +8,8 @@ export interface Outputs {
   categoriaLuz: string;
   compatible: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface LuzData { min: number; max: number; categoria: string; }
@@ -51,10 +53,35 @@ export function horasLuzSolarPlanta(i: Inputs): Outputs {
     recomendacion = `Tu espacio tiene suficiente sol. En verano, protegé con media sombra en las horas pico (12-15hs) si ves hojas quemadas.`;
   }
 
+  const _insight = {
+    title: esCompatible ? 'Tu espacio sirve para esta planta' : 'Te falta sol para esta planta',
+    text: esCompatible
+      ? `Con **${hDisp} h** de sol cubrís la necesidad de **${data.min}–${data.max} h/día** de esta especie (${data.categoria.toLowerCase()}).`
+      : `Tenés **${hDisp} h** de sol y esta planta necesita al menos **${data.min} h/día**: te faltan **${(data.min - hDisp).toFixed(1)} h**. Mejor elegí algo de media sombra o sumá luz artificial.`,
+    tone: esCompatible ? 'good' : 'warn',
+    icon: '🌱',
+  };
+
+  const topeEscala = Math.max(data.max + 4, Math.ceil(hDisp) + 1);
+  const _chart = {
+    type: 'scale',
+    marker: Number(hDisp.toFixed(1)),
+    markerLabel: `${Number(hDisp.toFixed(1)).toLocaleString('es-AR')} h`,
+    min: 0,
+    segments: [
+      { nombre: 'Insuficiente', max: data.min, color: '#ef4444', colorDark: '#dc2626' },
+      { nombre: 'Ideal', max: data.max, color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: 'De más', max: topeEscala, color: '#f59e0b', colorDark: '#d97706' },
+    ],
+    ariaLabel: 'Escala de horas de sol disponibles frente al rango ideal de la especie',
+  };
+
   return {
     horasNecesarias: `${data.min}–${data.max} horas/día`,
     categoriaLuz: data.categoria,
     compatible: esCompatible ? 'Sí, tu espacio es compatible' : 'No, necesitás más horas de sol',
     recomendacion,
+    _insight,
+    _chart,
   };
 }

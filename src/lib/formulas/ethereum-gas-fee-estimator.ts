@@ -11,6 +11,7 @@ export interface Outputs {
   l2_fee_usd: number;
   l2_savings_usd: number;
   summary: string;
+  _insight?: any;
 }
 
 // Gas units per transaction type — typical medians (Ethereum Foundation docs, 2026)
@@ -80,6 +81,25 @@ export function compute(i: Inputs): Outputs {
     `${feeEth.toFixed(8)} ETH ($${feeUsd.toFixed(4)} USD).` +
     savingsNote;
 
+  const _insight = (() => {
+    const l1 = `$${feeUsd.toFixed(feeUsd < 1 ? 4 : 2)}`;
+    if (l2SavingsUsd > 0.01) {
+      const pct = feeUsd > 0 ? Math.round((l2SavingsUsd / feeUsd) * 100) : 0;
+      return {
+        title: "Layer 2 saves you money",
+        text: `This ${txLabel} costs **${l1}** on Ethereum mainnet but only **~$${l2Fee.toFixed(2)}** on Arbitrum or Base — about **${pct}% cheaper** (~$${l2SavingsUsd.toFixed(2)} saved).`,
+        tone: feeUsd >= 5 ? "warn" : "neutral",
+        icon: "⛽",
+      };
+    }
+    return {
+      title: "Fees are low right now",
+      text: `At **${gasPriceGwei} gwei** this ${txLabel} costs just **${l1}** on mainnet — already close to L2 pricing, so moving to an L2 saves little here.`,
+      tone: "good",
+      icon: "⛽",
+    };
+  })();
+
   return {
     gas_used: gasUsed,
     fee_eth: feeEth,
@@ -87,5 +107,6 @@ export function compute(i: Inputs): Outputs {
     l2_fee_usd: l2Fee,
     l2_savings_usd: l2SavingsUsd,
     summary,
+    _insight,
   };
 }

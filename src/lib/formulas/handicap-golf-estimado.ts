@@ -14,6 +14,7 @@ export interface Outputs {
   nivel: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function handicapGolfEstimado(i: Inputs): Outputs {
@@ -57,6 +58,14 @@ export function handicapGolfEstimado(i: Inputs): Outputs {
     ariaLabel: 'Escala de handicap de golf: menor handicap indica mejor nivel de juego',
   };
 
+  const toneHcap: 'good' | 'warn' | 'neutral' = hcap <= 10 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Tu handicap estimado',
+    text: `Tu mejor diferencial fue **${sorted[0]}** y, con el ajuste WHS para solo 3 tarjetas (−2), tu handicap estimado queda en **${hcap}** (${nivel.toLowerCase()}). Es una estimación: el index oficial necesita al menos 20 vueltas y promedia los **mejores 8** diferenciales, no el mejor 1.`,
+    tone: toneHcap,
+    icon: '⛳',
+  };
+
   return {
     handicap: hcap,
     diferencial1: diferenciales[0],
@@ -65,5 +74,6 @@ export function handicapGolfEstimado(i: Inputs): Outputs {
     nivel,
     mensaje: `Handicap estimado: ${hcap}. ${nivel}. Mejor diferencial: ${sorted[0]}.`,
     _chart: chart,
+    _insight,
   };
 }

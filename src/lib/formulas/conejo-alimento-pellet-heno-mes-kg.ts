@@ -1,6 +1,6 @@
 /** Kg de pellet + heno por mes para conejo según peso y edad */
 export interface Inputs { pesoKg: number; edadMeses: number; tipoActividad: string; }
-export interface Outputs { pelletKgMes: number; henoKgMes: number; verdurasGramosDia: number; costoMensualEstimado: number; explicacion: string; }
+export interface Outputs { pelletKgMes: number; henoKgMes: number; verdurasGramosDia: number; costoMensualEstimado: number; explicacion: string; _insight?: any; _chart?: any; }
 export function conejoAlimentoPelletHenoMesKg(i: Inputs): Outputs {
   const peso = Number(i.pesoKg);
   const edad = Number(i.edadMeses);
@@ -17,12 +17,40 @@ export function conejoAlimentoPelletHenoMesKg(i: Inputs): Outputs {
   // Verduras frescas: ~10% peso corporal
   const verduras = peso * 100;
   // Costo ref ARS 2026: pellet $4500/kg, heno $3800/kg
-  const costo = pelletMesKg * 4500 + henoMesKg * 3800;
+  const costoPellet = pelletMesKg * 4500;
+  const costoHeno = henoMesKg * 3800;
+  const costo = costoPellet + costoHeno;
+  const costoTotalR = Math.round(costo);
+  const costoPelletR = Math.round(costoPellet);
+  const costoHenoR = costoTotalR - costoPelletR; // garantiza que las partes sumen el total
+
+  const fmtArs = (n: number) => '$' + n.toLocaleString('es-AR');
+  const etapa = edad < 6 ? 'cría en crecimiento' : edad < 12 ? 'joven' : 'adulto';
+  const _insight = {
+    title: 'Plan de comida mensual',
+    text: `Tu conejo **${etapa}** de **${peso} kg** necesita **${pelletMesKg.toFixed(2)} kg** de pellet y **${henoMesKg.toFixed(2)} kg** de heno por mes (más ~${verduras.toFixed(0)} g de verduras al día), por unos **${fmtArs(costoTotalR)}** mensuales.`,
+    tone: 'neutral',
+    icon: '🐰',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Pellet', value: costoPelletR },
+      { label: 'Heno', value: costoHenoR },
+    ],
+    prefix: '$',
+    centerValue: fmtArs(costoTotalR),
+    centerLabel: 'Costo mensual',
+    ariaLabel: `Costo mensual de comida del conejo: ${fmtArs(costoTotalR)} repartido entre pellet y heno`,
+  };
+
   return {
     pelletKgMes: Number(pelletMesKg.toFixed(2)),
     henoKgMes: Number(henoMesKg.toFixed(2)),
     verdurasGramosDia: Number(verduras.toFixed(0)),
-    costoMensualEstimado: Number(costo.toFixed(0)),
+    costoMensualEstimado: costoTotalR,
     explicacion: `Conejo ${peso}kg, ${edad} meses: ${pelletMesKg.toFixed(2)}kg pellet + ${henoMesKg.toFixed(2)}kg heno por mes + ${verduras.toFixed(0)}g verduras/día.`,
+    _insight,
+    _chart,
   };
 }

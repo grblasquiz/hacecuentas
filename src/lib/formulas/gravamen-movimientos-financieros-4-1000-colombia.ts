@@ -13,6 +13,7 @@ export interface Outputs {
   gmf_anual: number;
   ahorro_anual_exencion: number;
   uvt_valor_2026: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -46,6 +47,32 @@ export function compute(i: Inputs): Outputs {
   const gmfAnual = gmfMensualConExencion * 12;
   const ahorroAnualExencion = ahorroMensualExencion * 12;
   
+  // Insight: el 4×1000 es un costo; resaltar el ahorro si marcó cuenta exenta
+  const fmtCo = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  let _insight: any;
+  if (ahorroMensualExencion > 0 && gmfMensualConExencion <= 0) {
+    _insight = {
+      title: 'Cuenta exenta te cubre todo',
+      text: `La marca de cuenta exenta absorbe el 4×1000 de tus retiros: pagás **$0** este mes y ahorrás **${fmtCo(ahorroAnualExencion)}** al año. Cada movimiento sin cubrir te costaría ${fmtCo(gmfPorMovimiento)}.`,
+      tone: 'good',
+      icon: '🛡️',
+    };
+  } else if (ahorroMensualExencion > 0) {
+    _insight = {
+      title: 'La exención reduce el impuesto',
+      text: `Con la cuenta exenta pagás **${fmtCo(gmfMensualConExencion)}** al mes en vez de ${fmtCo(gmfMensualSinExencion)}: ahorrás **${fmtCo(ahorroAnualExencion)}** al año. Aun así, en 12 meses el 4×1000 te cuesta ${fmtCo(gmfAnual)}.`,
+      tone: 'warn',
+      icon: '🏦',
+    };
+  } else {
+    _insight = {
+      title: 'Lo que te cuesta el 4×1000',
+      text: `Cada ${frecuencia} retiro${frecuencia === 1 ? '' : 's'} al mes el banco te cobra **${fmtCo(gmfMensualSinExencion)}** de 4×1000, que en el año suman **${fmtCo(gmfAnual)}**. Si marcás una cuenta como exenta podés librarte de los primeros 350 UVT mensuales.`,
+      tone: 'warn',
+      icon: '💸',
+    };
+  }
+
   return {
     gmf_por_movimiento: Math.round(gmfPorMovimiento),
     gmf_mensual_sin_exencion: Math.round(gmfMensualSinExencion),
@@ -53,6 +80,7 @@ export function compute(i: Inputs): Outputs {
     ahorro_mensual_exencion: Math.round(ahorroMensualExencion),
     gmf_anual: Math.round(gmfAnual),
     ahorro_anual_exencion: Math.round(ahorroAnualExencion),
-    uvt_valor_2026: UVT_2026
+    uvt_valor_2026: UVT_2026,
+    _insight
   };
 }

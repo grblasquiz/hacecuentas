@@ -13,6 +13,7 @@ export interface Outputs {
   recomendacion: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Tabla ampliada de IG (referencia: Universidad de Sydney / International Tables)
@@ -106,6 +107,14 @@ export function indiceGlucemicoAlimentos(i: Inputs): Outputs {
     ariaLabel: 'Escala de índice glucémico: bajo hasta 55, medio 56-69, alto 70 o más',
   };
 
+  const insightTone = cg <= 10 ? 'good' : cg <= 19 ? 'neutral' : 'warn';
+  const insight = {
+    title: 'Qué significa esta carga glucémica',
+    text: `Con **${carbs} g de carbohidratos**, este alimento (IG **${ig}**) genera una carga glucémica de **${cg.toFixed(1)}** (${categoriaCG.replace(/[^\wáéíóúñ ]/gi, '').trim()}). ${impacto} Lo que más mueve la glucemia es la porción, no solo el IG.`,
+    tone: insightTone,
+    icon: cg <= 10 ? '✅' : cg <= 19 ? '🍽️' : '⚠️',
+  };
+
   return {
     indiceGlucemico: ig,
     cargaGlucemica: Number(cg.toFixed(1)),
@@ -115,5 +124,6 @@ export function indiceGlucemicoAlimentos(i: Inputs): Outputs {
     recomendacion,
     resumen: `${alimento} tiene IG ${ig} (${categoriaIG}) y con ${carbs} g de carbos genera CG ${cg.toFixed(1)} (${categoriaCG}). ${impacto}`,
     _chart: chart,
+    _insight: insight,
   };
 }

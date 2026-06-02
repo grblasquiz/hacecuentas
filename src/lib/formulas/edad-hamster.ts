@@ -7,6 +7,8 @@ export interface Outputs {
   etapaVida: string;
   esperanzaVidaRestante: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function edadHamster(i: Inputs): Outputs {
@@ -47,11 +49,41 @@ export function edadHamster(i: Inputs): Outputs {
   }
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const edadHumanaR = Math.round(edadHumana);
+
+  const insightTone = meses < 18 ? 'good' : meses < 24 ? 'neutral' : 'warn';
+  const insightText = meses < 18
+    ? `Tu hámster de **${meses} mes${meses !== 1 ? 'es' : ''}** equivale a **${edadHumanaR} años humanos** (**${etapa}**). Está en buena etapa: ${esperanzaTexto.toLowerCase()}`
+    : meses < 24
+      ? `Con **${meses} meses** ronda los **${edadHumanaR} años humanos** (**${etapa}**). Entra en la recta final: ${esperanzaTexto.toLowerCase()}`
+      : `A los **${meses} meses** ya es **${edadHumanaR} años humanos** (**${etapa}**). ${esperanzaTexto}`;
 
   return {
-    edadHumana: Math.round(edadHumana),
+    edadHumana: edadHumanaR,
     etapaVida: etapa,
     esperanzaVidaRestante: esperanzaTexto,
     detalle: `Tu hámster de ${meses} meses equivale a ~${fmt.format(edadHumana)} años humanos. Etapa: ${etapa}. ${esperanzaTexto}`,
+    _insight: {
+      title: 'Tu hámster en edad humana',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐹',
+    },
+    _chart: {
+      type: 'scale',
+      marker: meses,
+      markerLabel: `${meses} mes${meses !== 1 ? 'es' : ''} · ${etapa}`,
+      min: 0,
+      segments: [
+        { nombre: 'Bebé', max: 2, color: '#bfdbfe', colorDark: '#1e3a5f' },
+        { nombre: 'Adolescente', max: 4, color: '#86efac', colorDark: '#14532d' },
+        { nombre: 'Adulto joven', max: 6, color: '#4ade80', colorDark: '#166534' },
+        { nombre: 'Adulto pleno', max: 12, color: '#a3e635', colorDark: '#3f6212' },
+        { nombre: 'Maduro', max: 18, color: '#fde047', colorDark: '#713f12' },
+        { nombre: 'Senior', max: 24, color: '#fb923c', colorDark: '#7c2d12' },
+        { nombre: 'Geriátrico', max: Math.max(30, meses + 1), color: '#f87171', colorDark: '#7f1d1d' },
+      ],
+      ariaLabel: `Etapa de vida del hámster a los ${meses} meses: ${etapa}`,
+    },
   };
 }

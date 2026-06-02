@@ -1,6 +1,6 @@
 /** Percentil mundial Hyrox según tiempo, edad y categoría */
 export interface Inputs { tiempoMinutos: number; edad: number; categoria: 'open' | 'pro' | 'doubles'; sexo: 'masculino' | 'femenino'; }
-export interface Outputs { percentil: number; categoriaTiempo: string; tiempoVsMedianaMin: number; explicacion: string; _chart?: any; }
+export interface Outputs { percentil: number; categoriaTiempo: string; tiempoVsMedianaMin: number; explicacion: string; _chart?: any; _insight?: any; }
 export function hyroxTiempoEdadCategoriaMundial(i: Inputs): Outputs {
   const t = Number(i.tiempoMinutos);
   const edad = Number(i.edad);
@@ -30,6 +30,19 @@ export function hyroxTiempoEdadCategoriaMundial(i: Inputs): Outputs {
   else if (percentil >= 20) cat = 'Principiante avanzado';
   else cat = 'Finisher';
   const percentilRedondeado = Number(percentil.toFixed(0));
+  const difMediana = Number((t - medianaAjustada).toFixed(1));
+  const tone = percentil >= 80 ? 'good' : percentil >= 40 ? 'neutral' : 'warn';
+  const comparativo = difMediana < 0
+    ? `**${Math.abs(difMediana)} min más rápido** que la mediana de tu grupo`
+    : difMediana > 0
+    ? `**${difMediana} min más lento** que la mediana de tu grupo`
+    : `justo en la mediana de tu grupo`;
+  const insight = {
+    title: `Percentil ${percentilRedondeado}: ${cat}`,
+    text: `Tu tiempo de **${t} min** te ubica en el **percentil ${percentilRedondeado}** mundial (${cat}), ${comparativo} (mediana ajustada por edad: **${medianaAjustada.toFixed(1)} min**).`,
+    tone,
+    icon: percentil >= 95 ? '🏆' : percentil >= 80 ? '🔥' : '🏃',
+  };
   const chart = {
     type: 'scale' as const,
     marker: percentilRedondeado,
@@ -53,5 +66,6 @@ export function hyroxTiempoEdadCategoriaMundial(i: Inputs): Outputs {
     tiempoVsMedianaMin: Number((t - medianaAjustada).toFixed(1)),
     explicacion: `Tiempo ${t} min en Hyrox ${i.categoria} ${i.sexo} (edad ${edad}): percentil ~${percentil.toFixed(0)} mundial — **${cat}**. Mediana ajustada por edad: ${medianaAjustada.toFixed(1)} min.`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function calendarioSiembraHemisferioSur(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const plan: Record<string, { es: string; en: string; pt: string }> = {
@@ -32,5 +32,19 @@ export function calendarioSiembraHemisferioSur(i: Inputs): Outputs {
         : __lang === 'pt'
           ? `Em ${m} no hemisfério sul: plantar culturas variadas.`
           : `En ${m} en hemisferio sur: sembrar variado.`);
-  return { recomendadas, resumen };
+
+  const insTitle = __lang === 'en' ? `What to sow in ${m}` : __lang === 'pt' ? `O que plantar em ${m}` : `Qué sembrar en ${m}`;
+  const insText = entry
+    ? (__lang === 'en'
+        ? `In **${m}** (southern hemisphere) the season favors sowing **${entry.en}**. Match it to your local frost dates.`
+        : __lang === 'pt'
+          ? `Em **${m}** (hemisfério sul) a estação favorece plantar **${entry.pt}**. Ajuste às geadas da sua região.`
+          : `En **${m}** (hemisferio sur) la temporada favorece sembrar **${entry.es}**. Ajustalo a las heladas de tu zona.`)
+    : (__lang === 'en'
+        ? `For **${m}** there's no single recommendation: pick crops that suit your local climate and frost window.`
+        : __lang === 'pt'
+          ? `Para **${m}** não há recomendação única: escolha culturas conforme o clima local e a janela de geadas.`
+          : `Para **${m}** no hay una recomendación única: elegí cultivos según tu clima local y la ventana de heladas.`);
+
+  return { recomendadas, resumen, _insight: { title: insTitle, text: insText, tone: 'neutral', icon: '🌱' } };
 }

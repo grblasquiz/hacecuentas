@@ -15,6 +15,8 @@ export interface Outputs {
   valor_total_pagado: number;
   maximo_prestable: number;
   es_viable: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -58,6 +60,30 @@ export function compute(i: Inputs): Outputs {
   // Viabilidad: monto <= máximo prestable AND cuota <= 50% ingreso disponible
   const esViable = monto <= maximoPrestable && cuotaMensual <= cuotaMaximaPermitida ? "Sí" : "No";
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const viable = esViable === "Sí";
+  const pct = Math.round(pctIngresoDisponible * 100) / 100;
+  const _insight = {
+    title: viable ? 'El crédito es viable por libranza' : 'No pasa el tope de libranza',
+    text: viable
+      ? `Tu cuota de **${fmt(cuotaMensual)}** ocupa el **${pct}%** de tu ingreso disponible, dentro del tope legal del 50%. Podrías pedir hasta **${fmt(maximoPrestable)}** con estas condiciones.`
+      : `La cuota de **${fmt(cuotaMensual)}** equivale al **${pct}%** de tu ingreso disponible y supera el tope legal del 50%. El máximo que te prestarían por libranza es **${fmt(maximoPrestable)}**; bajá el monto o estirá el plazo.`,
+    tone: viable ? 'good' : 'warn',
+    icon: '💼'
+  };
+  const _chart = {
+    type: 'scale',
+    marker: pct,
+    markerLabel: `${pct}% del disponible`,
+    min: 0,
+    segments: [
+      { nombre: 'Holgado', max: 35, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Al límite', max: 50, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'No permitido', max: Math.max(70, Math.ceil(pct) + 5), color: '#dc2626', colorDark: '#ef4444' }
+    ],
+    ariaLabel: `La cuota representa ${pct}% del ingreso disponible; el tope legal de libranza es 50%.`
+  };
+
   return {
     ingreso_disponible: Math.round(ingresoDisponible),
     cuota_maxima_permitida: Math.round(cuotaMaximaPermitida),
@@ -66,6 +92,8 @@ export function compute(i: Inputs): Outputs {
     intereses_totales: Math.round(interesesTotales),
     valor_total_pagado: Math.round(valorTotalPagado),
     maximo_prestable: Math.round(maximoPrestable),
-    es_viable: esViable
+    es_viable: esViable,
+    _insight,
+    _chart
   };
 }

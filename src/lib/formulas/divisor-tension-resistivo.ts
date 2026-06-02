@@ -1,6 +1,6 @@
 /** Divisor de tensión resistivo: Vout = Vin × R2 / (R1 + R2) */
 export interface Inputs { voltajeEntrada: number; r1Ohm: number; r2Ohm: number; }
-export interface Outputs { voltajeSalida: number; factorDivision: number; corrienteCircuito: number; detalle: string; }
+export interface Outputs { voltajeSalida: number; factorDivision: number; corrienteCircuito: number; detalle: string; _insight?: any; _chart?: any; }
 
 export function divisorTensionResistivo(i: Inputs): Outputs {
   const vin = Number(i.voltajeEntrada);
@@ -19,10 +19,29 @@ export function divisorTensionResistivo(i: Inputs): Outputs {
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
   const fmtR = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const vDropR1 = Math.max(0, vin - vout);
   return {
     voltajeSalida: Number(vout.toFixed(3)),
     factorDivision: Number(factor.toFixed(4)),
     corrienteCircuito: Number(corrienteMa.toFixed(3)),
     detalle: `Vout = ${fmt.format(vin)}V × ${fmtR.format(r2)}Ω / (${fmtR.format(r1)}Ω + ${fmtR.format(r2)}Ω) = ${fmt.format(vout)}V. Factor: ${fmt.format(factor)}. Corriente: ${fmt.format(corrienteMa)} mA.`,
+    _insight: {
+      title: 'Cómo se reparte la tensión',
+      text: `El divisor entrega **${fmt.format(vout)} V** a la salida, el **${(factor * 100).toFixed(1)}%** de los ${fmt.format(vin)} V de entrada; los ${fmt.format(vDropR1)} V restantes caen en R1. El factor ${fmt.format(factor)} depende solo de la relación R2/(R1+R2), así que escalar ambas resistencias mantiene la misma salida pero cambia la corriente.`,
+      tone: 'neutral',
+      icon: '🔌',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Salida (sobre R2)', value: Number(vout.toFixed(3)) },
+        { label: 'Caída en R1', value: Number(vDropR1.toFixed(3)) },
+      ],
+      prefix: '',
+      suffix: ' V',
+      centerValue: `${fmt.format(vin)} V`,
+      centerLabel: 'Tensión de entrada',
+      ariaLabel: `De ${fmt.format(vin)} V, ${fmt.format(vout)} V salen por R2 y ${fmt.format(vDropR1)} V caen en R1`,
+    },
   };
 }

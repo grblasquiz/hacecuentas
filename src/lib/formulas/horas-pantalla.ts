@@ -1,5 +1,5 @@
 export interface Inputs { celularHs?: number; computadoraHs?: number; tvHs?: number; tabletHs?: number; }
-export interface Outputs { totalSemanal: number; totalDiario: number; porcentajeDespierto: number; mensaje: string; _chart?: any; }
+export interface Outputs { totalSemanal: number; totalDiario: number; porcentajeDespierto: number; mensaje: string; _chart?: any; _insight?: any; }
 export function horasPantalla(i: Inputs): Outputs {
   const cel = Number(i.celularHs)||0;
   const comp = Number(i.computadoraHs)||0;
@@ -27,5 +27,12 @@ export function horasPantalla(i: Inputs): Outputs {
     centerLabel: 'Horas/día',
     ariaLabel: 'Composición del tiempo de pantalla diario por dispositivo',
   } : undefined;
-  return { totalSemanal: semanal, totalDiario: Number(diario.toFixed(1)), porcentajeDespierto: pct, mensaje: msg, _chart: chart };
+  const tone = diario<=4 ? 'good' : diario<=8 ? 'neutral' : 'warn';
+  const insight = {
+    title: diario<=4 ? 'Uso bajo de pantallas' : diario<=8 ? 'Uso moderado' : 'Uso alto de pantallas',
+    text: `Pasás **${Number(diario.toFixed(1)).toLocaleString('es-AR')} h/día** frente a pantallas, el **${pct}%** de tus horas despierto, y **${semanal} h** por semana.`,
+    tone,
+    icon: diario<=4 ? '✅' : diario<=8 ? '📺' : '⚠️',
+  };
+  return { totalSemanal: semanal, totalDiario: Number(diario.toFixed(1)), porcentajeDespierto: pct, mensaje: msg, _chart: chart, _insight: insight };
 }

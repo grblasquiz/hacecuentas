@@ -10,6 +10,7 @@ export interface Outputs {
   costoMensual: number;
   alerta: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface RangoPeso {
@@ -109,11 +110,31 @@ export function dosisAntipulgasPesoMascota(i: Inputs): Outputs {
     }
   }
 
+  const costoFmt = costoMensual.toLocaleString('es-AR');
+  const costoAnual = (costoMensual * 12).toLocaleString('es-AR');
+  let _insight: any;
+  if (especie === 'gato') {
+    _insight = {
+      title: 'Protección felina segura',
+      text: `Para tu gato de **${peso} kg** corresponde **${presentacion}** (~**$${costoFmt}/mes**). Recordá: **nunca uses producto de perro en gato**, la permetrina puede ser mortal. Comprá solo la línea felina.`,
+      tone: 'warn',
+      icon: '🐱',
+    };
+  } else {
+    _insight = {
+      title: 'Tu plan antipulgas',
+      text: `Tu perro de **${peso} kg** necesita **${presentacion}**, con un costo estimado de **~$${costoFmt}/mes** (≈ $${costoAnual}/año). Mantener la frecuencia es lo que corta el ciclo de la pulga; saltearse un mes reinfesta la casa.`,
+      tone: 'neutral',
+      icon: '🐶',
+    };
+  }
+
   return {
     presentacion,
     frecuencia,
     costoMensual,
     alerta,
     detalle: `${especie === 'gato' ? 'Gato' : 'Perro'} de ${peso} kg → ${presentacionDetalle} ${frecuencia} Costo estimado: ~$${costoMensual.toLocaleString('es-AR')}/mes.${alerta ? ' ⚠️ ' + alerta : ''}`,
+    _insight,
   };
 }

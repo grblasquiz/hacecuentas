@@ -12,6 +12,7 @@ export interface Outputs {
   impuesto_final: number;
   fecha_vencimiento: string;
   detalles: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -76,12 +77,40 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  let _insight: any;
+  if (i.es_electrico) {
+    _insight = {
+      title: 'Vehículo eléctrico: exento',
+      text: `Tu vehículo eléctrico (avalúo ${fmtCOP(avaluo)}) está **100% exento** del impuesto vehicular en Bogotá. **No pagás nada** este año.`,
+      tone: 'good',
+      icon: '🔌'
+    };
+  } else if (descuentoProntoPago > 0) {
+    _insight = {
+      title: 'Pagás con descuento por pronto pago',
+      text: `El impuesto de tu vehículo es **${fmtCOP(impuestoBase)}** (tarifa **${(tarifaAplicable * 100).toFixed(1)}%**), `
+        + `pero por pagar anticipado ahorrás **${fmtCOP(descuentoProntoPago)}** y quedás en **${fmtCOP(impuestoFinal)}**. Plazo: enero 1 a marzo 31.`,
+      tone: 'good',
+      icon: '🚗'
+    };
+  } else {
+    _insight = {
+      title: 'Tu impuesto vehicular 2026',
+      text: `Pagás **${fmtCOP(impuestoFinal)}** de impuesto (tarifa **${(tarifaAplicable * 100).toFixed(1)}%** sobre un avalúo de ${fmtCOP(avaluo)}). `
+        + `Si pagás antes del 31 de marzo te ahorrás un **10%**; el vencimiento normal es el ${fechaVencimiento}.`,
+      tone: 'warn',
+      icon: '🚗'
+    };
+  }
+
   return {
     tarifa_aplicable: tarifaAplicable * 100,
     impuesto_base: impuestoBase,
     descuento_pronto_pago: descuentoProntoPago,
     impuesto_final: impuestoFinal,
     fecha_vencimiento: fechaVencimiento,
-    detalles: detalles
+    detalles: detalles,
+    _insight
   };
 }

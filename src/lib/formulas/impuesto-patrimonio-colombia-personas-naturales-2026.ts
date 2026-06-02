@@ -13,6 +13,8 @@ export interface Outputs {
   cuota_impuesto: number;
   tasa_efectiva: number;
   detalles_escala: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -69,6 +71,39 @@ export function compute(i: Inputs): Outputs {
   // 8. Detalles de escala (informativo)
   const detalles_escala = `Patrimonio líquido: $${patrimonio_liquido.toLocaleString('es-CO', {maximumFractionDigits: 0})} COP = ${patrimonio_en_uvt.toFixed(2).toLocaleString('es-CO')} UVT. Base exenta: ${BASE_EXENTA_UVT.toLocaleString('es-CO')} UVT (~$${base_exenta_cop.toLocaleString('es-CO', {maximumFractionDigits: 0})} COP). Tarifa aplicable: ${tarifa_aplicable}% por tramo ${tramo_patrimonio}.`;
 
+  // Insight narrativo dinámico
+  const exento = cuota_impuesto <= 0;
+  const cuotaFmt = `$${Math.round(cuota_impuesto).toLocaleString('es-CO', {maximumFractionDigits: 0})}`;
+  const _insight = exento
+    ? {
+        title: 'Tu patrimonio está exento',
+        text: `Con un patrimonio líquido de **$${Math.round(patrimonio_liquido).toLocaleString('es-CO', {maximumFractionDigits: 0})} COP** (${patrimonio_en_uvt.toFixed(0)} UVT) no superás el umbral de **72.000 UVT**, así que **no pagás impuesto al patrimonio** este año.`,
+        tone: 'good',
+        icon: '🏠'
+      }
+    : {
+        title: 'Cuánto pagás de patrimonio',
+        text: `Tu patrimonio cae en el tramo de **${tarifa_aplicable}%** marginal. Sobre la base gravable de **$${Math.round(base_gravable_cop).toLocaleString('es-CO', {maximumFractionDigits: 0})} COP** (lo que excede las 72.000 UVT), la cuota anual es **${cuotaFmt}**, equivalente a una tasa efectiva del **${(Math.round(tasa_efectiva * 1000) / 1000)}%** sobre todo tu patrimonio.`,
+        tone: 'warn',
+        icon: '🏛️'
+      };
+
+  // Gauge: tarifa marginal según tramo de la escala progresiva (Ley 2277)
+  const _chart = {
+    type: 'scale',
+    marker: tarifa_aplicable,
+    markerLabel: `${tarifa_aplicable}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Exento', max: 0, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: '0,5%', max: 0.5, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: '0,75%', max: 0.75, color: '#eab308', colorDark: '#facc15' },
+      { nombre: '1,0%', max: 1.0, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: '1,5%', max: 1.6, color: '#dc2626', colorDark: '#ef4444' }
+    ],
+    ariaLabel: `Tarifa marginal aplicable: ${tarifa_aplicable}% dentro de la escala progresiva del impuesto al patrimonio (0% a 1,5%)`
+  };
+
   return {
     patrimonio_liquido: Math.round(patrimonio_liquido),
     uvt_base_exenta: BASE_EXENTA_UVT,
@@ -77,6 +112,8 @@ export function compute(i: Inputs): Outputs {
     tarifa_aplicable: tarifa_aplicable,
     cuota_impuesto: Math.round(cuota_impuesto),
     tasa_efectiva: Math.round(tasa_efectiva * 1000) / 1000,
-    detalles_escala: detalles_escala
+    detalles_escala: detalles_escala,
+    _insight,
+    _chart
   };
 }

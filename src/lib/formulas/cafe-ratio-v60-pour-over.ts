@@ -1,6 +1,6 @@
 /** V60 pour over */
 export interface Inputs { tazas: number; mlPorTaza: number; ratio: number; }
-export interface Outputs { gramosCafe: number; mlAgua: number; gramosBloom: number; tiempoTotal: string; intensidad: string; }
+export interface Outputs { gramosCafe: number; mlAgua: number; gramosBloom: number; tiempoTotal: string; intensidad: string; _insight?: any; _chart?: any; }
 
 export function cafeRatioV60PourOver(i: Inputs): Outputs {
   const t = Number(i.tazas);
@@ -26,11 +26,42 @@ export function cafeRatioV60PourOver(i: Inputs): Outputs {
   else if (r < 18) intens = 'Suave';
   else intens = 'Muy suave';
 
+  const gramosCafe = Number(cafe.toFixed(1));
+  const mlAgua = Number(aguaTotal.toFixed(0));
+  const gramosBloom = Number(bloom.toFixed(0));
+
+  const esBalance = r >= 15 && r <= 17;
+  const _insight = {
+    title: `Perfil ${intens.toLowerCase()}`,
+    text: esBalance
+      ? `Con ratio **1:${r}** caés en la zona **balanceada** de la SCA: **${gramosCafe} g** de café para **${mlAgua} ml** de agua, con un bloom de **${gramosBloom} g**. Es el punto dulce para resaltar acidez y dulzor sin amargor.`
+      : `Ratio **1:${r}** da un café **${intens.toLowerCase()}**: **${gramosCafe} g** de café para **${mlAgua} ml** de agua (bloom de **${gramosBloom} g**). ${r < 15 ? 'Si lo sentís pesado o amargo, subí el ratio hacia 1:16.' : 'Si lo querés con más cuerpo, bajá el ratio hacia 1:16.'}`,
+    tone: esBalance ? 'good' : 'neutral',
+    icon: '☕',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: r,
+    markerLabel: `1:${r}`,
+    min: 10,
+    segments: [
+      { nombre: 'Muy fuerte', max: 14, color: '#92400e', colorDark: '#b45309' },
+      { nombre: 'Intenso', max: 15, color: '#d97706', colorDark: '#f59e0b' },
+      { nombre: 'Balanceado', max: 17, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Suave', max: 18, color: '#0ea5e9', colorDark: '#38bdf8' },
+      { nombre: 'Muy suave', max: Math.max(20, Math.ceil(r) + 1), color: '#6366f1', colorDark: '#818cf8' },
+    ],
+    ariaLabel: `Ratio café-agua 1:${r} ubicado en la escala de intensidad, perfil ${intens.toLowerCase()}`,
+  };
+
   return {
-    gramosCafe: Number(cafe.toFixed(1)),
-    mlAgua: Number(aguaTotal.toFixed(0)),
-    gramosBloom: Number(bloom.toFixed(0)),
+    gramosCafe,
+    mlAgua,
+    gramosBloom,
     tiempoTotal: tiempo,
     intensidad: intens,
+    _insight,
+    _chart,
   };
 }

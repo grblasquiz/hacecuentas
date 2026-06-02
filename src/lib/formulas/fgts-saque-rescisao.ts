@@ -13,6 +13,8 @@ export interface Outputs {
   multa40: string;
   totalReceber: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -30,10 +32,31 @@ export function fgtsSaqueRescisao(i: Inputs): Outputs {
   const multa = base * 0.40;
   const total = saldo + multa;
 
+  const _insight = {
+    title: 'Saldo + multa de 40%',
+    text: `Na demissão sem justa causa você recebe **${brl(saldo)}** de saldo mais **${brl(multa)}** de multa paga pelo empregador, somando **${brl(total)}**. A multa de 40% representa um acréscimo importante sobre o que estava depositado.`,
+    tone: 'good',
+    icon: '💰',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Saldo FGTS', value: Number(saldo.toFixed(2)) },
+      { label: 'Multa 40%', value: Number(multa.toFixed(2)) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(total),
+    centerLabel: 'Total a receber',
+    ariaLabel: `Total de ${brl(total)} formado por saldo de ${brl(saldo)} e multa de 40% de ${brl(multa)}.`,
+  };
+
   return {
     saldoDisponivel: brl(saldo),
     multa40: brl(multa),
     totalReceber: brl(total),
     resumen: `Na rescisão sem justa causa você saca ${brl(saldo)} de saldo + ${brl(multa)} de multa de 40% = ${brl(total)} total.`,
+    _insight,
+    _chart,
   };
 }

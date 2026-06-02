@@ -22,6 +22,8 @@ export interface Outputs {
   mejor_opcion: string;
   total_final_fm: number;
   total_final_dp: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -76,6 +78,38 @@ export function compute(i: Inputs): Outputs {
     mejorOpcion = `Depósito plazo (${Math.abs(Math.round(diferenciaNeta)).toLocaleString()} pesos más neto)`;
   }
 
+  // Insight: qué opción gana y por cuánto, en neto
+  const ganaFM = diferenciaNeta > 100;
+  const _insight = {
+    title: ganaFM ? 'Gana el fondo mutuo' : 'Gana el depósito a plazo',
+    text: ganaFM
+      ? `El **fondo mutuo** te deja **$${Math.round(Math.abs(diferenciaNeta)).toLocaleString('es-CL')}** netos más que el depósito (${rentabilidadNetaFM.toFixed(2)}% vs ${rentabilidadNetaDP.toFixed(2)}% anual). Recordá que su rentabilidad no está garantizada.`
+      : `El **depósito a plazo** rinde igual o mejor en neto (${rentabilidadNetaDP.toFixed(2)}% vs ${rentabilidadNetaFM.toFixed(2)}% anual del FM), con tasa fija y sin volatilidad. Diferencia: **$${Math.round(Math.abs(diferenciaNeta)).toLocaleString('es-CL')}**.`,
+    tone: ganaFM ? 'warn' : 'good',
+    icon: '⚖️'
+  };
+
+  // Donut: a dónde va la ganancia bruta del fondo mutuo (neto + comisión + impuesto = bruto)
+  const gbFM = Math.round(gananciaBrutaFM);
+  const cFM = Math.round(comisionTotalFM);
+  const iFM = Math.round(impuestoTotalFM);
+  const nFM = gbFM - cFM - iFM;
+  let _chart: any = undefined;
+  if (gbFM > 0 && nFM >= 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Ganancia neta', value: nFM },
+        { label: 'Comisión', value: cFM },
+        { label: 'Impuesto', value: iFM }
+      ],
+      prefix: '$',
+      centerValue: '$' + gbFM.toLocaleString('es-CL'),
+      centerLabel: 'Ganancia bruta FM',
+      ariaLabel: 'Reparto de la ganancia bruta del fondo mutuo entre neto, comisión e impuesto'
+    };
+  }
+
   return {
     ganancia_bruta_fm: Math.round(gananciaBrutaFM),
     comision_total_fm: Math.round(comisionTotalFM),
@@ -89,6 +123,8 @@ export function compute(i: Inputs): Outputs {
     diferencia_neta: Math.round(diferenciaNeta),
     mejor_opcion: mejorOpcion,
     total_final_fm: Math.round(totalFinalFM),
-    total_final_dp: Math.round(totalFinalDP)
+    total_final_dp: Math.round(totalFinalDP),
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

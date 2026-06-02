@@ -14,6 +14,8 @@ export interface Outputs {
   costoMensual: number;
   costoDiario: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function costoTotalPropiedadAutoAnual(i: Inputs): Outputs {
@@ -49,10 +51,34 @@ export function costoTotalPropiedadAutoAnual(i: Inputs): Outputs {
     .map(x => `${x.nombre}: $${Math.round(x.valor).toLocaleString('es-AR')} (${((x.valor / costoAnualTotal) * 100).toFixed(0)}%)`)
     .join('. ');
 
-  return {
+  // Ítem dominante para el insight
+  const top = items.slice().sort((a, b) => b.valor - a.valor)[0];
+  const topPct = Math.round((top.valor / costoAnualTotal) * 100);
+  const tone: 'good' | 'warn' | 'neutral' = topPct >= 40 ? 'warn' : 'neutral';
+
+  const _insight = {
+    title: 'Cuánto te cuesta tener el auto',
+    text: `Mantener este auto cuesta **$${Math.round(costoMensual).toLocaleString('es-AR')}/mes** ($${Math.round(costoAnualTotal).toLocaleString('es-AR')}/año, $${Math.round(costoDiario).toLocaleString('es-AR')}/día). El rubro más pesado es **${top.nombre.toLowerCase()}**, que se lleva el **${topPct}%** del total.`,
+    tone,
+    icon: '🚗',
+  };
+
+  const _chart = items.length > 1 ? {
+    type: 'doughnut',
+    slices: items.map(x => ({ label: x.nombre, value: Math.round(x.valor) })),
+    prefix: '$',
+    centerValue: `$${Math.round(costoAnualTotal).toLocaleString('es-AR')}`,
+    centerLabel: 'TCO anual',
+    ariaLabel: `Gráfico de torta del costo total de propiedad anual del auto, total $${Math.round(costoAnualTotal).toLocaleString('es-AR')}`,
+  } : undefined;
+
+  const out: Outputs = {
     costoAnualTotal: Math.round(costoAnualTotal),
     costoMensual: Math.round(costoMensual),
     costoDiario: Math.round(costoDiario),
     detalle: `TCO anual: $${Math.round(costoAnualTotal).toLocaleString('es-AR')} ($${Math.round(costoMensual).toLocaleString('es-AR')}/mes, $${Math.round(costoDiario).toLocaleString('es-AR')}/día). ${desglose}.`,
+    _insight,
   };
+  if (_chart) out._chart = _chart;
+  return out;
 }

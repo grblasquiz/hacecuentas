@@ -1,6 +1,6 @@
 /** Calculadora de Tarifa Estimada de Influencer */
 export interface Inputs { seguidores: number; engagement: number; plataforma: string; tipoContenido: string; }
-export interface Outputs { tarifaEstimada: number; tarifaMinima: number; tarifaMaxima: number; cpe: number; }
+export interface Outputs { tarifaEstimada: number; tarifaMinima: number; tarifaMaxima: number; cpe: number; _insight?: any; }
 
 const BASE_RATE_PER_1K: Record<string, Record<string, number>> = {
   instagram: { post: 60, reel: 80, video: 100, story: 25 },
@@ -37,10 +37,19 @@ export function influencerTarifaEstimada(i: Inputs): Outputs {
   const engagements = Math.round(seg * er / 100);
   const cpe = engagements > 0 ? tarifaEstimada / engagements : 0;
 
+  const erTier = er > 5 ? 'excelente' : er > 3 ? 'muy bueno' : er > 1.5 ? 'promedio' : 'bajo';
+  const _insight = {
+    title: 'Tu tarifa por publicación',
+    text: `Por un ${i.tipoContenido} en ${i.plataforma} podés cobrar alrededor de **$${tarifaEstimada.toLocaleString('es')}** (rango $${tarifaMinima.toLocaleString('es')} – $${tarifaMaxima.toLocaleString('es')}). Tu engagement del **${er}%** es **${erTier}** y ${er > 3 ? 'suma una prima a la tarifa' : er > 1.5 ? 'no mueve la aguja' : 'recorta el valor frente a la marca'}. Cada interacción te sale ~$${cpe.toLocaleString('es')} (CPE).`,
+    tone: er > 3 ? 'good' : er > 1.5 ? 'neutral' : 'warn',
+    icon: '📲',
+  };
+
   return {
     tarifaEstimada,
     tarifaMinima,
     tarifaMaxima,
     cpe: Number(cpe.toFixed(0)),
+    _insight,
   };
 }

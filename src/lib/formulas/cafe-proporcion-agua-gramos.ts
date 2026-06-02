@@ -1,6 +1,6 @@
 /** Proporción café/agua por método */
 export interface Inputs { metodo: string; tazas: number; intensidad?: string; }
-export interface Outputs { gramosCafe: number; mlAgua: number; ratio: string; consejo: string; }
+export interface Outputs { gramosCafe: number; mlAgua: number; ratio: string; consejo: string; _insight?: any; }
 
 interface MetodoData { gPorTaza: number; mlPorTaza: number; ratio: string; consejo: string; }
 const METODOS: Record<string, MetodoData> = {
@@ -22,5 +22,18 @@ export function cafeProporcionAguaGramos(i: Inputs): Outputs {
   const gramos = Math.round(data.gPorTaza * tazas * factor);
   const ml = Math.round(data.mlPorTaza * tazas);
 
-  return { gramosCafe: gramos, mlAgua: ml, ratio: data.ratio, consejo: data.consejo };
+  const NOMBRE: Record<string, string> = {
+    prensa: 'prensa francesa', filtro: 'filtro/pour over', espresso: 'espresso',
+    moka: 'cafetera moka', cold_brew: 'cold brew', cafetera_goteo: 'cafetera de goteo',
+  };
+  const nombreMetodo = NOMBRE[metodo] || metodo;
+  const intensLabel = intensidad === 'suave' ? 'suave' : intensidad === 'fuerte' ? 'fuerte' : 'media';
+  const _insight = {
+    title: `Receta para ${tazas} ${tazas === 1 ? 'taza' : 'tazas'}`,
+    text: `Para **${nombreMetodo}** con intensidad **${intensLabel}** necesitás **${gramos} g** de café y **${ml} ml** de agua (ratio **${data.ratio}**). Pesar el café da una taza mucho más consistente que medir con cuchara.`,
+    tone: 'neutral',
+    icon: '☕',
+  };
+
+  return { gramosCafe: gramos, mlAgua: ml, ratio: data.ratio, consejo: data.consejo, _insight };
 }

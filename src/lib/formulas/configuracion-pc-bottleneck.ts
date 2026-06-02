@@ -11,6 +11,8 @@ export interface Outputs {
   porcentajeBottleneck: number;
   escaladoGpu: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function configuracionPcBottleneck(i: Inputs): Outputs {
@@ -69,10 +71,39 @@ export function configuracionPcBottleneck(i: Inputs): Outputs {
     }
   }
 
+  const pct = Math.min(porcentajeBottleneck, 100);
+  const esBalance = bottleneck.toLowerCase().includes('balance');
+  const quien = bottleneck.startsWith('CPU') ? 'CPU' : bottleneck.startsWith('GPU') ? 'GPU' : null;
+
+  const _insight = {
+    title: 'Diagnóstico de tu PC',
+    text: esBalance
+      ? `Tu **CPU y GPU** trabajan parejas (desbalance de solo **${pct}%**): el equipo está bien armado y ningún componente está frenando al otro.`
+      : quien === 'GPU'
+        ? `La **GPU** es el cuello de botella (**${pct}%**). En juegos es lo deseable: para más FPS bajá resolución o calidad, o subí de placa.`
+        : `La **CPU** es el cuello de botella (**${pct}%**): la placa de video queda esperando. Un mejor procesador (o bajar carga de CPU como NPCs y física) te daría más FPS.`,
+    tone: esBalance ? 'good' : quien === 'GPU' ? 'neutral' : 'warn',
+    icon: esBalance ? '⚖️' : quien === 'GPU' ? '🎮' : '🧠'
+  };
+  const _chart = {
+    type: 'scale',
+    marker: pct,
+    markerLabel: `${pct}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Balanceado', max: 25, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Moderado', max: 50, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Marcado', max: 101, color: '#dc2626', colorDark: '#ef4444' }
+    ],
+    ariaLabel: `Nivel de cuello de botella ${pct}% sobre 100`
+  };
+
   return {
     bottleneck,
-    porcentajeBottleneck: Math.min(porcentajeBottleneck, 100),
+    porcentajeBottleneck: pct,
     escaladoGpu: Number(escaladoGpu.toFixed(1)),
     recomendacion,
+    _insight,
+    _chart,
   };
 }

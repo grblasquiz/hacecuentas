@@ -15,6 +15,8 @@ export interface Outputs {
   porcentaje_cobertura_beca: string;
   salario_medio_inicial: number;
   fp_dual_info: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -192,6 +194,7 @@ export function compute(i: Inputs): Outputs {
   // Cálculo de coste total 2 años
   let coste_total = 0;
   let desglose_items = [];
+  let desglose_slices: Array<{ label: string; value: number }> = [];
 
   const matricula_anual = costes_matricula[i.tipo_centro][i.comunidad_autonoma] || 0;
   const libros_anual = costes_adicionales[i.tipo_centro].libros_material_anual;
@@ -206,6 +209,11 @@ export function compute(i: Inputs): Outputs {
       `Libros y material: ${(libros_anual * ANOS_ESTUDIO).toFixed(2)}€`,
       `Uniforme: ${uniforme.toFixed(2)}€`
     );
+    desglose_slices.push(
+      { label: 'Matrícula', value: matricula_anual * ANOS_ESTUDIO },
+      { label: 'Libros y material', value: libros_anual * ANOS_ESTUDIO },
+      { label: 'Uniforme', value: uniforme }
+    );
   } else if (i.tipo_centro === 'concertado') {
     // Coste concertado: cuota mensual (10 meses/año * 2) + libros + uniforme
     const cuota_mensual = cuotas_mensuales['concertado'][i.comunidad_autonoma] || 100;
@@ -215,6 +223,11 @@ export function compute(i: Inputs): Outputs {
       `Cuota mensual (${cuota_mensual}€ × 10 meses × ${ANOS_ESTUDIO} años): ${coste_cuotas.toFixed(2)}€`,
       `Libros y material: ${(libros_anual * ANOS_ESTUDIO).toFixed(2)}€`,
       `Uniforme: ${uniforme.toFixed(2)}€`
+    );
+    desglose_slices.push(
+      { label: 'Cuotas mensuales', value: coste_cuotas },
+      { label: 'Libros y material', value: libros_anual * ANOS_ESTUDIO },
+      { label: 'Uniforme', value: uniforme }
     );
   } else {
     // Coste privado: cuota mensual (10 meses/año * 2) + libros + uniforme + TIC
@@ -228,6 +241,12 @@ export function compute(i: Inputs): Outputs {
       `Libros y material: ${(libros_anual * ANOS_ESTUDIO).toFixed(2)}€`,
       `Uniforme: ${uniforme.toFixed(2)}€`,
       `Actividades TIC: ${tic_total.toFixed(2)}€`
+    );
+    desglose_slices.push(
+      { label: 'Cuotas mensuales', value: coste_cuotas },
+      { label: 'Libros y material', value: libros_anual * ANOS_ESTUDIO },
+      { label: 'Uniforme', value: uniforme },
+      { label: 'Actividades TIC', value: tic_total }
     );
   }
 
@@ -294,6 +313,36 @@ export function compute(i: Inputs): Outputs {
     fp_dual_info = 'No has seleccionado FP Dual. Considera esta opción para combinar formación + experiencia laboral remunerada + inserción rápida. Disponible en la mayoría de ciclos y CCAA.';
   }
 
+  // --- Insight + gráfico ---
+  const centro_label = i.tipo_centro === 'publico' ? 'pública' : i.tipo_centro === 'concertado' ? 'concertada' : 'privada';
+  const grado_label = i.grado_fp === 'medio' ? 'Grado Medio' : 'Grado Superior';
+  const coste_total_r = Math.round(coste_total);
+  const tono: 'good' | 'warn' | 'neutral' = i.tipo_centro === 'publico' ? 'good' : i.tipo_centro === 'privado' ? 'warn' : 'neutral';
+  // Meses de sueldo inicial que cubren el coste de los 2 años
+  const salario_mensual = salario_inicial / 14; // 14 pagas/año en España
+  const meses_recupero = salario_mensual > 0 ? coste_total / salario_mensual : 0;
+
+  const _insight = {
+    title: `Coste total del ${grado_label}`,
+    text:
+      `Un ${grado_label} en FP ${centro_label} cuesta unos **${coste_total_r.toLocaleString('es-ES')}€** en los 2 años (**${Math.round(coste_anual_promedio).toLocaleString('es-ES')}€/año**). ` +
+      (salario_inicial > 0
+        ? `Con el sueldo inicial medio de **${salario_inicial.toLocaleString('es-ES')}€/año** del sector, recuperás la inversión en apenas **${meses_recupero.toFixed(1)} meses** de trabajo.`
+        : ``),
+    tone: tono,
+    icon: '🎓',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: desglose_slices,
+    prefix: '',
+    suffix: '€',
+    centerValue: `${coste_total_r.toLocaleString('es-ES')}€`,
+    centerLabel: '2 años',
+    ariaLabel: `Desglose del coste total de ${coste_total_r}€ para FP ${centro_label} en 2 años`,
+  };
+
   return {
     coste_total_2anos: Math.round(coste_total * 100) / 100,
     coste_anual_promedio: Math.round(coste_anual_promedio * 100) / 100,
@@ -301,6 +350,8 @@ export function compute(i: Inputs): Outputs {
     becas_disponibles: becas_disponibles.join(' | '),
     porcentaje_cobertura_beca: porcentaje_cobertura,
     salario_medio_inicial: salario_inicial,
-    fp_dual_info: fp_dual_info
+    fp_dual_info: fp_dual_info,
+    _insight,
+    _chart
   };
 }

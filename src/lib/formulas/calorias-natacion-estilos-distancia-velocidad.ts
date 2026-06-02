@@ -13,6 +13,7 @@ export interface Outputs {
   calorias_por_100m: number;
   duracion_estimada: string;
   comparativa: string;
+  _insight?: any;
 }
 
 const MET_VALUES: Record<string, Record<string, number>> = {
@@ -66,10 +67,18 @@ export function compute(i: Inputs): Outputs {
     return `${est.charAt(0).toUpperCase() + est.slice(1)}: ${cal} kcal`;
   }).join(' | ');
 
+  const estiloLabel = estilo.charAt(0).toUpperCase() + estilo.slice(1);
+
   return {
     calorias_totales: calorias,
     calorias_por_100m: parseFloat(calorisPor100m.toFixed(1)),
     duracion_estimada: duracionTexto,
-    comparativa: compEstilos
+    comparativa: compEstilos,
+    _insight: {
+      title: 'Tu gasto en el agua',
+      text: `Nadando **${estiloLabel}** (${intensidad}) quemaste **${calorias} kcal** en ${metros} m, unas **${parseFloat(calorisPor100m.toFixed(1))} kcal cada 100 m**. La natación reparte el esfuerzo en todo el cuerpo y cuida las articulaciones.`,
+      tone: 'good',
+      icon: '🏊',
+    }
   };
 }

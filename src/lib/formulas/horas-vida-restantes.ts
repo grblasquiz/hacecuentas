@@ -1,6 +1,6 @@
 /** Horas de vida restantes */
 export interface Inputs { edad: number; sexo: string; pais: string; }
-export interface Outputs { horasRestantes: number; diasRestantes: number; semanasRestantes: number; horasDespierto: number; mensaje: string; }
+export interface Outputs { horasRestantes: number; diasRestantes: number; semanasRestantes: number; horasDespierto: number; mensaje: string; _insight?: any; _chart?: any; }
 
 export function horasVidaRestantes(i: Inputs): Outputs {
   const edad = Number(i.edad);
@@ -25,11 +25,38 @@ export function horasVidaRestantes(i: Inputs): Outputs {
   const horasDespierto = Math.round(horasRestantes * 0.67); // ~16h awake per day
 
   let mensaje: string;
+  let _insight: any;
+  let _chart: any;
   if (anosRestantes <= 0) {
     mensaje = 'Según las estadísticas, ya superaste la esperanza de vida promedio. ¡Cada día extra es un regalo!';
+    _insight = {
+      title: 'Estás en tiempo de descuento',
+      text: `Ya superaste la esperanza de vida promedio (**${ev} años**) para tu perfil. Las estadísticas no mandan: cada día que sigue es tuyo.`,
+      tone: 'good',
+      icon: '🎁',
+    };
   } else {
+    const horasDormido = horasRestantes - horasDespierto;
+    const veranos = Math.round(anosRestantes);
     mensaje = `Te quedan ~${horasRestantes.toLocaleString()} horas de vida (${horasDespierto.toLocaleString()} despierto/a). Son ${semanasRestantes.toLocaleString()} semanas. ¿En qué las vas a usar?`;
+    _insight = {
+      title: 'Tu tiempo despierto, en perspectiva',
+      text: `De las ~**${horasRestantes.toLocaleString()} h** que te quedan, sólo **${horasDespierto.toLocaleString()} h** las vivís despierto/a (el resto, durmiendo). Son **${semanasRestantes.toLocaleString()} semanas** o unos **${veranos} veranos** más: usalas en lo que importa.`,
+      tone: 'neutral',
+      icon: '⏳',
+    };
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Despierto/a', value: horasDespierto },
+        { label: 'Durmiendo', value: horasDormido },
+      ],
+      prefix: '',
+      centerValue: horasRestantes.toLocaleString(),
+      centerLabel: 'horas de vida',
+      ariaLabel: `De ${horasRestantes.toLocaleString()} horas restantes, ${horasDespierto.toLocaleString()} despierto y ${horasDormido.toLocaleString()} durmiendo`,
+    };
   }
 
-  return { horasRestantes, diasRestantes, semanasRestantes, horasDespierto, mensaje };
+  return { horasRestantes, diasRestantes, semanasRestantes, horasDespierto, mensaje, _insight, _chart };
 }

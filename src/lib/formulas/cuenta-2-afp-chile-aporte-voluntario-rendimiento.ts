@@ -22,6 +22,8 @@ export interface Outputs {
   ahorro_fiscal_total: number;
   capital_efectivo_neto: number;
   comparativa_modalidad: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -106,17 +108,61 @@ export function compute(i: Inputs): Outputs {
   
   // 12. Tasa retorno neta como porcentaje para output
   const tasa_retorno_neta_pct = tasa_neta * 100;
-  
-  return {
+
+  // Valores redondeados para output e insight
+  const aportesR = Math.round(capital_final_sin_interes);
+  const rendimientoR = Math.round(rendimiento_total);
+  const capitalR = Math.round(capital_final_con_interes);
+  const ahorroFiscalR = Math.round(ahorro_fiscal_total);
+  const ventajaBR = Math.round(comparativa_modalidad);
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  let insightTone: 'good' | 'warn' | 'neutral' = 'neutral';
+  let insightText = '';
+  if (tasa_neta <= 0) {
+    insightTone = 'warn';
+    insightText = `Con la comisión y el seguro, tu rendimiento neto queda en **${tasa_retorno_neta_pct.toFixed(1)}%**: las comisiones se comen la rentabilidad del fondo. Reaportarías **${fmtCLP(aportesR)}** y casi no crecería: revisá la AFP o el fondo elegido.`;
+  } else if (modalidad === 'B' && ahorroFiscalR > 0) {
+    insightTone = 'good';
+    insightText = `En ${anos} años aportás **${fmtCLP(aportesR)}** y tu capital llega a **${fmtCLP(capitalR)}** (rendimiento de **${fmtCLP(rendimientoR)}**). Además, la modalidad B te suma **${fmtCLP(ahorroFiscalR)}** de ahorro fiscal: te conviene ~${fmtCLP(ventajaBR)} frente a la A.`;
+  } else {
+    insightTone = 'good';
+    insightText = `En ${anos} años aportás **${fmtCLP(aportesR)}** y el interés compuesto al **${tasa_retorno_neta_pct.toFixed(1)}%** neto lo lleva a **${fmtCLP(capitalR)}**: el rendimiento aporta **${fmtCLP(rendimientoR)}** extra sobre lo que pusiste.`;
+  }
+
+  const out: Outputs = {
     aporte_anual_total: Math.round(aporte_anual),
     rebaja_rgc_anual: Math.round(rebaja_rgc_anual),
     ahorro_fiscal_anual: Math.round(ahorro_fiscal_anual),
     tasa_retorno_neta: tasa_retorno_neta_pct,
-    capital_final_sin_interes: Math.round(capital_final_sin_interes),
-    capital_final_con_interes: Math.round(capital_final_con_interes),
-    rendimiento_total: Math.round(rendimiento_total),
-    ahorro_fiscal_total: Math.round(ahorro_fiscal_total),
+    capital_final_sin_interes: aportesR,
+    capital_final_con_interes: capitalR,
+    rendimiento_total: rendimientoR,
+    ahorro_fiscal_total: ahorroFiscalR,
     capital_efectivo_neto: Math.round(capital_efectivo_neto),
-    comparativa_modalidad: Math.round(comparativa_modalidad)
+    comparativa_modalidad: ventajaBR,
+    _insight: {
+      title: 'Tu APV en perspectiva',
+      text: insightText,
+      tone: insightTone,
+      icon: '🇨🇱'
+    }
   };
+
+  // Donut: capital final = aportes + rendimiento (solo si el rendimiento es positivo)
+  if (rendimientoR > 0 && aportesR > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Tus aportes', value: aportesR },
+        { label: 'Rendimiento', value: rendimientoR }
+      ],
+      prefix: '$',
+      centerValue: fmtCLP(capitalR),
+      centerLabel: 'capital final',
+      ariaLabel: `Capital final de ${fmtCLP(capitalR)}: ${fmtCLP(aportesR)} de aportes y ${fmtCLP(rendimientoR)} de rendimiento`
+    };
+  }
+
+  return out;
 }

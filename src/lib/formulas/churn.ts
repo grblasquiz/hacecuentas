@@ -10,6 +10,8 @@ export interface Outputs {
   churnAnualizado: number;
   ltvMedioMeses: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function churn(i: Inputs): Outputs {
@@ -25,10 +27,19 @@ export function churn(i: Inputs): Outputs {
   const ltv = churnMes > 0 ? 100 / churnMes : Infinity;
 
   let msg = '';
-  if (churnMes < 2) msg = 'Churn bajo — excelente retención (SaaS top).';
-  else if (churnMes < 5) msg = 'Churn moderado — saludable para B2B.';
-  else if (churnMes < 10) msg = 'Churn alto — revisar onboarding y customer success.';
-  else msg = 'Churn crítico — está saliendo plata por la canilla, priorizá retención.';
+  let tone: 'good' | 'warn' | 'neutral';
+  if (churnMes < 2) { msg = 'Churn bajo — excelente retención (SaaS top).'; tone = 'good'; }
+  else if (churnMes < 5) { msg = 'Churn moderado — saludable para B2B.'; tone = 'neutral'; }
+  else if (churnMes < 10) { msg = 'Churn alto — revisar onboarding y customer success.'; tone = 'warn'; }
+  else { msg = 'Churn crítico — está saliendo plata por la canilla, priorizá retención.'; tone = 'warn'; }
+
+  const ltvTxt = isFinite(ltv) ? `unos **${ltv.toFixed(1)} meses** de vida media por cliente` : 'una vida media de cliente prácticamente infinita (churn 0)';
+  const _insight = {
+    title: 'Tu churn mensual',
+    text: `Perdés **${churnMes.toFixed(2)}%** de clientes por mes (retenés ${retencion.toFixed(1)}%), que anualizado son **${churnAnual.toFixed(1)}%**. Eso implica ${ltvTxt}.`,
+    tone,
+    icon: '📉',
+  };
 
   return {
     churnMensual: Number(churnMes.toFixed(2)),
@@ -36,5 +47,19 @@ export function churn(i: Inputs): Outputs {
     churnAnualizado: Number(churnAnual.toFixed(2)),
     ltvMedioMeses: isFinite(ltv) ? Number(ltv.toFixed(1)) : 999,
     mensaje: msg,
+    _insight,
+    _chart: {
+      type: 'scale',
+      marker: Number(churnMes.toFixed(2)),
+      markerLabel: `${churnMes.toFixed(1)}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Excelente', max: 2, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Saludable', max: 5, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Alto', max: 10, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Crítico', max: Math.max(20, Math.ceil(churnMes) + 1), color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Churn mensual de ${churnMes.toFixed(2)}% en una escala de zonas, desde excelente (menos de 2%) hasta crítico (más de 10%)`,
+    },
   };
 }

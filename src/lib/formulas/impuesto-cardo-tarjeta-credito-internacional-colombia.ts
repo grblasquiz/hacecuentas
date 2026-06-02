@@ -13,6 +13,8 @@ export interface Outputs {
   costo_total_cop: number;
   costo_por_usd: number;
   ahorro_vs_caro: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -57,12 +59,43 @@ export function compute(i: Inputs): Outputs {
   const total_bbva = monto_cop_base + comision_bbva_cop + gravamen_4x1000_cop;
   const ahorro_vs_caro = total_bbva - costo_total_cop;
 
+  const fmtCOP = (v: number) => '$' + Math.round(v).toLocaleString('es-CO');
+  const recargo_pct = monto_cop_base > 0
+    ? ((costo_total_cop - monto_cop_base) / monto_cop_base) * 100
+    : 0;
+  const sobrecosto = costo_total_cop - monto_cop_base;
+
+  const insight = {
+    title: 'Costo real de tu compra',
+    text: `Cada dólar te termina costando **${fmtCOP(costo_por_usd)}** (TRM real con comisión y gravamen incluidos). Pagás **${fmtCOP(sobrecosto)}** de sobrecosto sobre la conversión base, un **${recargo_pct.toFixed(2)}%** extra.` +
+      (ahorro_vs_caro > 0
+        ? ` Frente al banco más caro (BBVA 3%), te ahorrás **${fmtCOP(ahorro_vs_caro)}**.`
+        : ` Estás usando una de las opciones más caras del mercado: cambiar de banco podría ahorrarte plata.`),
+    tone: recargo_pct > 2.5 ? 'warn' : (recargo_pct < 1 ? 'good' : 'neutral'),
+    icon: '💳',
+  };
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Conversión base (TRM)', value: Math.round(monto_cop_base) },
+      { label: 'Comisión de cambio', value: Math.round(comision_cambio_cop) },
+      { label: 'Gravamen 4×1000', value: Math.round(gravamen_4x1000_cop) },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(costo_total_cop),
+    centerLabel: 'Costo total',
+    ariaLabel: 'Composición del costo total en pesos: conversión base más comisión de cambio más gravamen 4 por 1000',
+  };
+
   return {
     monto_cop_base: Math.round(monto_cop_base * 100) / 100,
     comision_cambio_cop: Math.round(comision_cambio_cop * 100) / 100,
     gravamen_4x1000_cop: Math.round(gravamen_4x1000_cop * 100) / 100,
     costo_total_cop: Math.round(costo_total_cop * 100) / 100,
     costo_por_usd: Math.round(costo_por_usd * 100) / 100,
-    ahorro_vs_caro: Math.round(ahorro_vs_caro * 100) / 100
+    ahorro_vs_caro: Math.round(ahorro_vs_caro * 100) / 100,
+    _insight: insight,
+    _chart: chart
   };
 }

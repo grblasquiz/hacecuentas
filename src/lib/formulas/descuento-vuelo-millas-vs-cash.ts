@@ -12,6 +12,8 @@ export interface Outputs {
   costoEfectivoMillasUsd: number; // tasas + valor de las millas
   recomendacion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function descuentoVueloMillasVsCash(i: Inputs): Outputs {
@@ -32,11 +34,33 @@ export function descuentoVueloMillasVsCash(i: Inputs): Outputs {
   else if (valorMillaCent < valorRef) recomendacion = 'Decisión ajustada — levemente por debajo del valor de referencia.';
   else if (valorMillaCent >= valorRef * 1.5) recomendacion = 'Excelente canje — muy por encima del valor típico de la milla.';
 
+  const tone = valorMillaCent < valorRef ? 'warn' : 'good';
+  const topGauge = Math.max(valorRef * 1.5, valorMillaCent) * 1.1;
+
   return {
     ahorroEnCashUsd: Number(ahorroCash.toFixed(2)),
     valorMillaObtenidoCent: Number(valorMillaCent.toFixed(2)),
     costoEfectivoMillasUsd: Number(costoMillasUsd.toFixed(2)),
     recomendacion,
     resumen: `Canjeando ${millas.toLocaleString()} millas + US$ ${tasas} en tasas ahorrás US$ ${ahorroCash.toFixed(0)}. Valor obtenido: **${valorMillaCent.toFixed(2)}¢ por milla** (referencia ${valorRef}¢). ${recomendacion}`,
+    _insight: {
+      title: 'Valor que sacás por milla',
+      text: `Cada milla te rinde **${valorMillaCent.toFixed(2)}¢** frente a una referencia de **${valorRef}¢**. ${recomendacion}`,
+      tone,
+      icon: '✈️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(valorMillaCent.toFixed(2)),
+      markerLabel: `${valorMillaCent.toFixed(2)}¢/milla`,
+      min: 0,
+      segments: [
+        { nombre: 'Conviene cash', max: Number((valorRef * 0.7).toFixed(2)), color: '#ef4444', colorDark: '#b91c1c' },
+        { nombre: 'Ajustado', max: Number(valorRef.toFixed(2)), color: '#f59e0b', colorDark: '#b45309' },
+        { nombre: 'Buen canje', max: Number((valorRef * 1.5).toFixed(2)), color: '#84cc16', colorDark: '#4d7c0f' },
+        { nombre: 'Excelente', max: Number(topGauge.toFixed(2)), color: '#22c55e', colorDark: '#15803d' },
+      ],
+      ariaLabel: `El canje rinde ${valorMillaCent.toFixed(2)} centavos por milla; la referencia es ${valorRef} centavos.`,
+    },
   };
 }

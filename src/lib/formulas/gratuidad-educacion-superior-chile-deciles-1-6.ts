@@ -18,6 +18,8 @@ export interface Outputs {
   anos_cobertura_restantes: number;
   requisitos_mantener: string;
   proximo_hito_evaluacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -104,6 +106,41 @@ export function compute(i: Inputs): Outputs {
     proximo_hito_evaluacion = `${evaluacion_semestral}. ${fecha_proximo_rsh} confirma decil RSH.`;
   }
   
+  // Insight dinámico según elegibilidad
+  const fmtCl = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  let _insight: any;
+  if (cumple_requisitos) {
+    _insight = {
+      title: 'Tenés gratuidad este año',
+      text: `Cumplís todos los requisitos: el Estado cubre **${fmtCl(aporte_total_gratuidad)}** (arancel ${fmtCl(cobertura_arancel)} + matrícula ${fmtCl(cobertura_matricula)}). Te quedan **${anos_cobertura_restantes} año${anos_cobertura_restantes === 1 ? '' : 's'}** de cobertura; mantené ≥60% de créditos aprobados para no perderla.`,
+      tone: 'good',
+      icon: '🎓',
+    };
+  } else {
+    _insight = {
+      title: 'No aplica gratuidad',
+      text: `Por ahora pagás vos: ${mensaje_elegibilidad.replace(/^[✓•]\s*/, '')} Revisá el CAE u otras becas como alternativa.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  }
+
+  // Gráfico: solo cuando hay aporte real, desglosando arancel + matrícula
+  let _chart: any = undefined;
+  if (cumple_requisitos && aporte_total_gratuidad > 0) {
+    _chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Arancel', value: Math.round(cobertura_arancel) },
+        { label: 'Matrícula', value: Math.round(cobertura_matricula) },
+      ].filter((s) => s.value > 0),
+      prefix: '$',
+      centerValue: fmtCl(aporte_total_gratuidad),
+      centerLabel: 'Cubre el Estado',
+      ariaLabel: 'Aporte anual de la gratuidad: arancel más matrícula que cubre el Estado',
+    };
+  }
+
   return {
     cobertura_arancel,
     cobertura_matricula,
@@ -112,6 +149,8 @@ export function compute(i: Inputs): Outputs {
     mensaje_elegibilidad,
     anos_cobertura_restantes,
     requisitos_mantener,
-    proximo_hito_evaluacion
+    proximo_hito_evaluacion,
+    _insight,
+    _chart
   };
 }

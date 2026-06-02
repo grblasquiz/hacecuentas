@@ -12,6 +12,7 @@ export interface Outputs {
   metUsado: number;
   estiloMostrado: string;
   resumen: string;
+  _insight?: any;
 }
 
 const MET_NATACION: Record<string, { met: number; nombre: string; nameEn: string }> = {
@@ -60,5 +61,13 @@ export function caloriasNatacion(i: Inputs): Outputs {
     resumen: __lang === 'en'
       ? `Swimming **${estiloMostrado}** for ${min} minutes burns approximately **${Math.round(total)} kcal** (${kcalMin.toFixed(1)} kcal/min, MET ${info.met}).`
       : `Nadando **${info.nombre}** durante ${min} minutos quemás aproximadamente **${Math.round(total)} kcal** (${kcalMin.toFixed(1)} kcal/min, MET ${info.met}).`,
+    _insight: {
+      title: __lang === 'en' ? 'Calories in the pool' : 'Calorías en la pileta',
+      text: __lang === 'en'
+        ? `**${estiloMostrado}** for ${min} min burns about **${Math.round(total)} kcal** at **${kcalMin.toFixed(1)} kcal/min**. Swimming engages your whole body while being easy on the joints — great for steady fat burn.`
+        : `**${estiloMostrado}** durante ${min} min quema unas **${Math.round(total)} kcal** a **${kcalMin.toFixed(1)} kcal/min**. Nadar trabaja todo el cuerpo sin cargar las articulaciones: ideal para quemar parejo.`,
+      tone: 'good',
+      icon: '🏊',
+    },
   };
 }

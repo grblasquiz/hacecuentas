@@ -11,6 +11,8 @@ export interface Outputs {
   fecha_vigencia: string;
   dias_notificacion: number;
   cumple_normativa: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -91,12 +93,36 @@ export function compute(i: Inputs): Outputs {
     cumple_normativa += '. ⚠ Plazo de notificación vencido o próximo a vencer.';
   }
 
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const plazoVencido = cumple_normativa.includes('Plazo de notificación');
+
+  const _insight = {
+    title: 'Tu nuevo canon con el IPC',
+    text: `Aplicando el IPC del **${i.ipc_anterior.toFixed(2)}%**, el arriendo sube de **${fmtCOP(i.canon_actual)}** a **${fmtCOP(nuevo_canon)}**, un alza de **${fmtCOP(incremento_pesos)}** al mes. ${plazoVencido ? 'Ojo: el plazo de los **30 días** de notificación previa está vencido o por vencer, avisá al inquilino cuanto antes.' : `Recordá notificar al inquilino con al menos **${dias_notificacion} días** de anticipación; el tope legal es el IPC, así que estás dentro de la Ley 820 de 2003.`}`,
+    tone: plazoVencido ? 'warn' : 'neutral',
+    icon: '🏠'
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Canon actual', value: Math.round(i.canon_actual) },
+      { label: 'Aumento IPC', value: Math.round(incremento_pesos) }
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(nuevo_canon),
+    centerLabel: 'nuevo canon',
+    ariaLabel: `Nuevo canon de ${fmtCOP(nuevo_canon)}: ${fmtCOP(i.canon_actual)} del canon actual más ${fmtCOP(incremento_pesos)} de aumento por IPC`
+  };
+
   return {
     nuevo_canon: Math.round(nuevo_canon),
     incremento_pesos: Math.round(incremento_pesos),
     incremento_porcentaje: Math.round(incremento_porcentaje * 100) / 100,
     fecha_vigencia: fecha_vigencia_str,
     dias_notificacion,
-    cumple_normativa
+    cumple_normativa,
+    _insight,
+    _chart
   };
 }

@@ -20,6 +20,8 @@ export interface Outputs {
   front_end_ratio_used: number;
   back_end_ratio_used: number;
   limiting_factor: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Default mortgage rate source: Freddie Mac PMMS, 30-yr fixed, early 2026
@@ -156,8 +158,38 @@ export function compute(i: Inputs): Outputs {
     limitingFactor = `Back-end DTI (${backEndDTI}% total debt limit)`;
   }
 
+  const homePriceRounded = Math.round(finalHomePrice);
+  const totalHousingRounded = Math.round(totalMonthlyHousing);
+  const fmtUSD = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+  const isFrontBinding = pass3.maxPIFront < pass3.maxPIBack;
+  const dpPct = homePriceRounded > 0 ? (downPayment / homePriceRounded) * 100 : 0;
+
+  // Donut: how the monthly housing payment breaks down (P&I + property tax + insurance)
+  const insSlice = finalMonthlyIns > 0 ? [{ label: 'Insurance', value: Math.round(finalMonthlyIns) }] : [];
+  const taxSlice = finalMonthlyTax > 0 ? [{ label: 'Property tax', value: Math.round(finalMonthlyTax) }] : [];
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Principal & interest', value: Math.round(finalMonthlyPI) },
+      ...taxSlice,
+      ...insSlice,
+    ],
+    prefix: '$',
+    centerValue: fmtUSD(totalMonthlyHousing) + '/mo',
+    centerLabel: 'Monthly housing',
+    ariaLabel: 'Breakdown of the monthly housing payment: principal and interest, property tax and insurance',
+  };
+
+  // Insight: interpret the max affordable price and which DTI rule is binding
+  const insight = {
+    title: 'What this means',
+    text: `With your income and debts, you can afford a home up to **${fmtUSD(homePriceRounded)}** (loan of **${fmtUSD(finalLoanAmount)}** plus your **${fmtUSD(downPayment)}** down payment, ~${dpPct.toFixed(0)}%). The cap is set by your **${isFrontBinding ? `front-end ${frontEndDTI}% housing limit` : `back-end ${backEndDTI}% total-debt limit`}**, leaving a monthly housing payment of **${fmtUSD(totalHousingRounded)}**.`,
+    tone: (backEndRatioUsed > 43 ? 'warn' : 'good') as 'good' | 'warn' | 'neutral',
+    icon: '🏠',
+  };
+
   return {
-    max_home_price: Math.round(finalHomePrice),
+    max_home_price: homePriceRounded,
     max_loan_amount: Math.round(finalLoanAmount),
     monthly_pi: Math.round(finalMonthlyPI * 100) / 100,
     monthly_tax: Math.round(finalMonthlyTax * 100) / 100,
@@ -166,5 +198,7 @@ export function compute(i: Inputs): Outputs {
     front_end_ratio_used: Math.round(frontEndRatioUsed * 10) / 10,
     back_end_ratio_used: Math.round(backEndRatioUsed * 10) / 10,
     limiting_factor: limitingFactor,
+    _insight: insight,
+    _chart: chart,
   };
 }

@@ -19,6 +19,8 @@ export interface Outputs {
   ahorro_lidl_vs_mercadona: number;
   porcentaje_renta_media: number;
   resumen_texto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -175,6 +177,36 @@ export function compute(i: Inputs): Outputs {
     `Este gasto representa un ${porcentajeRentaMedia.toFixed(1).replace('.', ',')} % ` +
     `de la renta media neta anual del hogar en España (33.872 €, INE 2024).`;
 
+  // --- Insight + gráfico ---
+  const mediaMensualRedondeada = Math.round(mediaMensual * 100) / 100;
+  const higieneRedondeada = Math.round(higieneMensual * 100) / 100;
+  const alimentacionMedia = Math.round((mediaMensualRedondeada - higieneRedondeada) * 100) / 100;
+
+  // Tono según peso sobre la renta del hogar (umbrales orientativos de gasto en alimentación)
+  const insightTone = porcentajeRentaMedia >= 22 ? 'warn' : porcentajeRentaMedia <= 14 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Tu cesta mensual',
+    text: `Un hogar de ${numMiembros} ${numMiembros === 1 ? 'persona' : 'personas'} con perfil ${nombrePerfil[perfil]} en ${nombreCCAA[ccaa]} gasta entre **${costeMensualMin.toFixed(0)} €** y **${costeMensualMax.toFixed(0)} €** al mes, un **${porcentajeRentaMedia.toFixed(1).replace('.', ',')} %** de la renta media neta del hogar. Comprando en Lidl en vez de Mercadona ahorrarías unos **${Math.round(ahorroLidlVsMercadona)} € al año**.`,
+    tone: insightTone as 'good' | 'warn' | 'neutral',
+    icon: '🛒',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: i.incluye_higiene && higieneRedondeada > 0
+      ? [
+          { label: 'Alimentación', value: alimentacionMedia },
+          { label: 'Higiene y droguería', value: higieneRedondeada },
+        ]
+      : [
+          { label: 'Alimentación', value: mediaMensualRedondeada },
+        ],
+    prefix: '€',
+    centerValue: `${mediaMensualRedondeada.toFixed(0)} €`,
+    centerLabel: 'media/mes',
+    ariaLabel: `Reparto del gasto mensual medio de ${mediaMensualRedondeada.toFixed(0)} € entre alimentación e higiene`,
+  };
+
   return {
     coste_mensual_min:       costeMensualMin,
     coste_mensual_max:       costeMensualMax,
@@ -188,5 +220,7 @@ export function compute(i: Inputs): Outputs {
     ahorro_lidl_vs_mercadona:ahorroLidlVsMercadona,
     porcentaje_renta_media:  porcentajeRentaMedia,
     resumen_texto,
+    _insight,
+    _chart,
   };
 }

@@ -16,6 +16,8 @@ export interface Outputs {
   factorAplicado: number;
   recomendacion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Factores kcal/h por m³ según aislación y zona
@@ -56,14 +58,37 @@ export function calefactorWattsAmbiente(i: Inputs): Outputs {
   else if (kcalHora < 5000) recomendacion = 'Calefactor grande 5000 kcal o split 4500-6000 frig';
   else recomendacion = 'Requiere 2 calefactores o caldera con radiadores';
 
+  const kcalR = Math.round(kcalHora);
+  const grande = kcalHora >= 5000;
   return {
-    kcalHora: Math.round(kcalHora),
+    kcalHora: kcalR,
     watts: Math.round(watts),
     btuH: Math.round(btuH),
     calefactorTiroBalanceado: tiroBalanceado,
     m3: Number(m3.toFixed(2)),
     factorAplicado: Number(factor.toFixed(2)),
     recomendacion,
-    resumen: `Necesitás ~${Math.round(kcalHora)} kcal/h (${Math.round(watts)} W) para un ambiente de ${m3.toFixed(0)} m³.`,
+    resumen: `Necesitás ~${kcalR} kcal/h (${Math.round(watts)} W) para un ambiente de ${m3.toFixed(0)} m³.`,
+    _insight: {
+      title: grande ? 'Ambiente grande' : 'Calefactor sugerido',
+      text: grande
+        ? `Para ${m3.toFixed(0)} m³ necesitás **${kcalR.toLocaleString('es-AR')} kcal/h** (${Math.round(watts).toLocaleString('es-AR')} W): equivale a **${tiroBalanceado} calefactores** de tiro balanceado. ${recomendacion}.`
+        : `Con **${kcalR.toLocaleString('es-AR')} kcal/h** (${Math.round(watts).toLocaleString('es-AR')} W, ${Math.round(btuH).toLocaleString('es-AR')} BTU) para ${m3.toFixed(0)} m³, lo cubrís con: ${recomendacion.toLowerCase()}.`,
+      tone: grande ? 'warn' : 'good',
+      icon: '🌡️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: kcalR,
+      markerLabel: `${kcalR.toLocaleString('es-AR')} kcal/h`,
+      min: 0,
+      segments: [
+        { nombre: 'Chico <1500', max: 1500, color: '#bae6fd', colorDark: '#38bdf8' },
+        { nombre: 'Mediano <3000', max: 3000, color: '#86efac', colorDark: '#22c55e' },
+        { nombre: 'Grande <5000', max: 5000, color: '#fde68a', colorDark: '#f59e0b' },
+        { nombre: '2+ equipos', max: Math.max(7000, kcalR + 500), color: '#fdba74', colorDark: '#ea580c' },
+      ],
+      ariaLabel: `Requerimiento de ${kcalR.toLocaleString('es-AR')} kcal por hora ubicado en la escala de potencia de calefacción del ambiente.`,
+    },
   };
 }

@@ -32,6 +32,7 @@ export interface Outputs {
   puntajeRP: number;
   nivelRP: string;
   interpretacion: string;
+  _insight?: any;
 }
 
 // Baremos MBI-HSS (Human Services Survey) — Maslach & Jackson, 3rd ed. 1996
@@ -132,6 +133,17 @@ export function compute(i: Inputs): Outputs {
       "AE: " + puntajeAE + "/54, DP: " + puntajeDP + "/30, RP: " + puntajeRP + "/48.";
   }
 
+  const dimsAlerta = altasCount;
+  const _insight = {
+    title: "Tu perfil en las 3 dimensiones",
+    text: `Agotamiento emocional **${puntajeAE}/54 (${labelAE})**, despersonalización **${puntajeDP}/30 (${labelDP})** y realización personal **${puntajeRP}/48 (${labelRP})**. ` +
+      (dimsAlerta === 0
+        ? `Ninguna dimensión está en zona de riesgo alto: ${nivelGeneral.replace(/^[^\sA-Za-zÀ-ÿ]+\s*/, '').toLowerCase()}.`
+        : `**${dimsAlerta}** de 3 dimensiones en zona de riesgo alto: ${nivelGeneral.replace(/^[^\sA-Za-zÀ-ÿ]+\s*/, '').toLowerCase()}.`),
+    tone: altasCount >= 2 ? "warn" : (altasCount === 1 || moderadasCount >= 2) ? "neutral" : "good",
+    icon: altasCount >= 2 ? "🔴" : altasCount === 1 ? "🟠" : moderadasCount >= 2 ? "🟡" : "🟢",
+  };
+
   return {
     nivelGeneral,
     puntajeAE,
@@ -141,5 +153,6 @@ export function compute(i: Inputs): Outputs {
     puntajeRP,
     nivelRP: labelRP,
     interpretacion,
+    _insight,
   };
 }

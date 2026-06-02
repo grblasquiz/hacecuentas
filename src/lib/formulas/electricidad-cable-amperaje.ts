@@ -15,6 +15,8 @@ export interface Outputs {
   amperajeMaxCable: number;
   termicaRecomendada: number; // amperes
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Secciones comerciales (mm²) y capacidad de corriente (A) en instalación interior 220V
@@ -93,15 +95,43 @@ export function electricidadCableAmperaje(i: Inputs): Outputs {
   }
   if (!termica) termica = TERMICAS[0];
 
+  const caidaPct = Number(caidaRealPct.toFixed(2));
+  // Tono dinámico: la caída real siempre queda bajo el máximo (el cálculo lo garantiza); cerca del tope = neutral.
+  const tone = caidaPct <= caidaMax * 0.66 ? 'good' : 'neutral';
+  const insight = {
+    title: __lang === 'en' ? 'Your cable sizing' : 'El cable que necesitás',
+    text: __lang === 'en'
+      ? `For **${A} A** running **${L} m** on **${V} V**, a **${seccionFinal} mm²** cable keeps the voltage drop at **${caidaPct}%** (under the ${caidaMax}% limit) and pairs with a **${termica} A** breaker.`
+      : `Para **${A} A** a **${L} m** en **${V} V**, un cable de **${seccionFinal} mm²** mantiene la caída de tensión en **${caidaPct}%** (debajo del límite de ${caidaMax}%) y se combina con una térmica de **${termica} A**.`,
+    tone,
+    icon: '⚡',
+  };
+  // Gauge: caída de tensión real contra el límite admisible.
+  const chart = {
+    type: 'scale',
+    marker: caidaPct,
+    markerLabel: caidaPct + '%',
+    min: 0,
+    segments: [
+      { nombre: __lang === 'en' ? 'Ideal' : 'Ideal', max: Number((caidaMax * 0.66).toFixed(2)), color: '#86efac', colorDark: '#4ade80' },
+      { nombre: __lang === 'en' ? 'OK' : 'Aceptable', max: caidaMax, color: '#fde68a', colorDark: '#fbbf24' },
+      { nombre: __lang === 'en' ? 'Over limit' : 'Sobre el límite', max: Math.max(caidaMax + 1, Math.ceil(caidaPct) + 1), color: '#fca5a5', colorDark: '#f87171' },
+    ],
+    ariaLabel: __lang === 'en'
+      ? `Voltage drop of ${caidaPct}% against a ${caidaMax}% limit`
+      : `Caída de tensión de ${caidaPct}% frente a un límite de ${caidaMax}%`,
+  };
   return {
     seccionRecomendada: seccionFinal,
     seccionCalculada: Number(seccionCalc.toFixed(3)),
-    caidaReal: Number(caidaRealPct.toFixed(2)),
+    caidaReal: caidaPct,
     caidaVolts: Number(caidaRealV.toFixed(2)),
     amperajeMaxCable: capCable,
     termicaRecomendada: termica,
     resumen: __lang === 'en'
-      ? `For ${A} A at ${L} m on ${V} V use ${seccionFinal} mm² cable (actual drop ${caidaRealPct.toFixed(2)}%) with a ${termica} A circuit breaker.`
-      : `Para ${A} A a ${L} m en ${V} V usá cable de ${seccionFinal} mm² (caída real ${caidaRealPct.toFixed(2)}%) con térmica de ${termica} A.`,
+      ? `For ${A} A at ${L} m on ${V} V use ${seccionFinal} mm² cable (actual drop ${caidaPct}%) with a ${termica} A circuit breaker.`
+      : `Para ${A} A a ${L} m en ${V} V usá cable de ${seccionFinal} mm² (caída real ${caidaPct}%) con térmica de ${termica} A.`,
+    _insight: insight,
+    _chart: chart,
   };
 }

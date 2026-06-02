@@ -15,6 +15,8 @@ export interface Outputs {
   fondo_reserva_aportacion: number;
   cuota_anual_total: number;
   desglose_json: Record<string, unknown>;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -129,13 +131,49 @@ export function compute(i: Inputs): Outputs {
     }
   };
 
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const cuotaMensualR = r2(cuotaMensualTotal);
+  const gastosComunesR = r2(gastosComunes);
+  const cuotaAscensorR = r2(cuotaAscensor);
+  const cuotaServiciosExtraR = r2(cuotaServiciosExtra);
+  const fondoReservaR = r2(fondoReservaAportacion);
+
+  const fmtEur = (n: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' €';
+  const pctServicios = cuotaMensualR > 0 ? Math.round((cuotaServiciosExtraR / cuotaMensualR) * 100) : 0;
+  const _insight = {
+    title: 'Tu cuota de comunidad',
+    text: `Te toca pagar **${fmtEur(cuotaMensualR)}/mes** (**${fmtEur(r2(cuotaAnualTotal))}** al año) por tu coeficiente del **${coef.toFixed(2)}%**${cuotaServiciosExtraR > 0 ? `. Servicios como ascensor, piscina, jardín o conserje pesan **${pctServicios}%** de tu cuota` : ''}.`,
+    tone: cuotaMensualR >= 200 ? 'warn' : cuotaMensualR >= 100 ? 'neutral' : 'good',
+    icon: '🏢',
+  };
+
+  const slices = [
+    { label: 'Gastos comunes', value: gastosComunesR },
+    { label: 'Ascensor', value: cuotaAscensorR },
+    { label: 'Servicios extra', value: cuotaServiciosExtraR },
+    { label: 'Fondo de reserva', value: fondoReservaR },
+  ].filter((s) => s.value > 0);
+  const _chart = slices.length >= 2
+    ? {
+        type: 'doughnut',
+        slices,
+        prefix: '',
+        centerValue: fmtEur(cuotaMensualR),
+        centerLabel: 'Cuota mensual',
+        ariaLabel: `Desglose de tu cuota mensual de comunidad de ${fmtEur(cuotaMensualR)}`,
+      }
+    : undefined;
+
   return {
-    cuota_mensual_total: Math.round(cuotaMensualTotal * 100) / 100,
-    gastos_comunes: Math.round(gastosComunes * 100) / 100,
-    cuota_ascensor: Math.round(cuotaAscensor * 100) / 100,
-    cuota_servicios_extra: Math.round(cuotaServiciosExtra * 100) / 100,
-    fondo_reserva_aportacion: Math.round(fondoReservaAportacion * 100) / 100,
-    cuota_anual_total: Math.round(cuotaAnualTotal * 100) / 100,
-    desglose_json: desglose
+    cuota_mensual_total: cuotaMensualR,
+    gastos_comunes: gastosComunesR,
+    cuota_ascensor: cuotaAscensorR,
+    cuota_servicios_extra: cuotaServiciosExtraR,
+    fondo_reserva_aportacion: fondoReservaR,
+    cuota_anual_total: r2(cuotaAnualTotal),
+    desglose_json: desglose,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

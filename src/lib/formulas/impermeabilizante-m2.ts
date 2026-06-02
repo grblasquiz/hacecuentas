@@ -9,6 +9,7 @@ export interface ImpermeabilizanteM2Outputs {
   unidadProducto: string;
   primerKg: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function impermeabilizanteM2(inputs: ImpermeabilizanteM2Inputs): ImpermeabilizanteM2Outputs {
@@ -47,10 +48,19 @@ export function impermeabilizanteM2(inputs: ImpermeabilizanteM2Inputs): Impermea
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const tipoLegible = tipo.replace(/-/g, ' ');
+  const _insight = {
+    title: 'Lo que tenés que comprar',
+    text: `Para ${fmt.format(superficie)} m² con ${capas} capa(s) de ${tipoLegible} necesitás **${fmt.format(cantidadProducto)} ${unidadProducto}** (${detalleExtra}). Sumá **${fmt.format(primerKg)} kg de primer/imprimación** para sellar el sustrato antes de la primera mano.`,
+    tone: 'neutral' as const,
+    icon: '🪣',
+  };
+
   return {
     cantidadProducto,
     unidadProducto,
     primerKg,
     detalle: `${fmt.format(superficie)} m² × ${capas} capa(s) de ${tipo.replace(/-/g, ' ')} → ${fmt.format(cantidadProducto)} ${unidadProducto} (${detalleExtra}) + ${fmt.format(primerKg)} kg de primer.`,
+    _insight,
   };
 }

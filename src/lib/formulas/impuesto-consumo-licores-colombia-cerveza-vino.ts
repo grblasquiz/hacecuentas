@@ -15,6 +15,8 @@ export interface Outputs {
   precio_final_unitario: number;
   precio_final_total: number;
   total_impuestos: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -77,6 +79,32 @@ export function compute(i: Inputs): Outputs {
   const precio_final_unitario = precio_final_total / i.cantidad;
   const total_impuestos = impuesto_consumo_total + iva_total;
 
+  const fmtCOP = (v: number) => '$' + Math.round(v).toLocaleString('es-CO');
+  const tarifa_consumo_pct = Math.round(tarifa * 10000) / 100;
+  const peso_impuestos_pct = precio_final_total > 0
+    ? (total_impuestos / precio_final_total) * 100
+    : 0;
+
+  const insight = {
+    title: 'Carga tributaria del producto',
+    text: `De los ${fmtCOP(precio_final_total)} que pagás, **${fmtCOP(total_impuestos)}** son impuestos: impuesto al consumo del **${tarifa_consumo_pct.toFixed(0)}%** (${fmtCOP(impuesto_consumo_total)}) más IVA del 19% (${fmtCOP(iva_total)}). Los tributos representan el **${peso_impuestos_pct.toFixed(1)}%** del precio final.`,
+    tone: peso_impuestos_pct > 40 ? 'warn' : 'neutral',
+    icon: '🍷',
+  };
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Precio base', value: Math.round(subtotal_base) },
+      { label: 'Impuesto al consumo', value: Math.round(impuesto_consumo_total) },
+      { label: 'IVA 19%', value: Math.round(iva_total) },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(precio_final_total),
+    centerLabel: 'Precio final',
+    ariaLabel: 'Composición del precio final: precio base más impuesto al consumo más IVA',
+  };
+
   // Retorna en formato monetario con 2 decimales
   return {
     tarifa_impuesto: Math.round(tarifa * 10000) / 100, // porcentaje con 2 decimales
@@ -87,6 +115,8 @@ export function compute(i: Inputs): Outputs {
     iva_total: Math.round(iva_total * 100) / 100,
     precio_final_unitario: Math.round(precio_final_unitario * 100) / 100,
     precio_final_total: Math.round(precio_final_total * 100) / 100,
-    total_impuestos: Math.round(total_impuestos * 100) / 100
+    total_impuestos: Math.round(total_impuestos * 100) / 100,
+    _insight: insight,
+    _chart: chart
   };
 }

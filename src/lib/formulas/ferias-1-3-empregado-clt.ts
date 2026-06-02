@@ -19,6 +19,8 @@ export interface Outputs {
   liquido: number;
   comparativo: string;
   detalhamento: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ─── Tabela INSS progressiva 2026 (Portaria MPS) ───────────────────────────
@@ -194,6 +196,32 @@ export function compute(i: Inputs): Outputs {
     `IRRF: -R$ ${resultado.irrf.toFixed(2)}\n` +
     `Líquido a receber: R$ ${resultado.liquido.toFixed(2)}`;
 
+  // ─── Insight ────────────────────────────────────────────────────────────
+  const totalDescontos = parseFloat((resultado.inss + resultado.irrf).toFixed(2));
+  const pctDesconto = resultado.totalBruto > 0
+    ? Math.round((totalDescontos / resultado.totalBruto) * 100)
+    : 0;
+  const _insight = {
+    title: 'Suas férias na conta',
+    text: `Do bruto de **R$ ${resultado.totalBruto.toFixed(2)}**, os descontos (INSS + IRRF) somam **R$ ${totalDescontos.toFixed(2)}** (**${pctDesconto}%**) e você recebe **R$ ${resultado.liquido.toFixed(2)}** líquidos.`,
+    tone: (pctDesconto >= 20 ? 'warn' : 'good') as 'warn' | 'good',
+    icon: '🏖️',
+  };
+
+  // ─── Gráfico: composição do bruto ───────────────────────────────────────
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Líquido', value: resultado.liquido },
+      { label: 'INSS', value: resultado.inss },
+      { label: 'IRRF', value: resultado.irrf },
+    ],
+    prefix: 'R$ ',
+    centerValue: `R$ ${resultado.liquido.toFixed(2)}`,
+    centerLabel: 'Líquido',
+    ariaLabel: `Do bruto de R$ ${resultado.totalBruto.toFixed(2)}, R$ ${resultado.liquido.toFixed(2)} são líquidos, R$ ${resultado.inss.toFixed(2)} de INSS e R$ ${resultado.irrf.toFixed(2)} de IRRF.`,
+  };
+
   return {
     salario_ferias_bruto: resultado.feriasBruto,
     abono_bruto: resultado.abonoBruto,
@@ -205,5 +233,7 @@ export function compute(i: Inputs): Outputs {
     liquido: resultado.liquido,
     comparativo,
     detalhamento: det,
+    _insight,
+    _chart,
   };
 }

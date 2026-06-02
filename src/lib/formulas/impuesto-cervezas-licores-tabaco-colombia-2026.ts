@@ -15,6 +15,8 @@ export interface Outputs {
   total_final: number;
   tarifa_efectiva: number;
   costo_unitario_final: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -119,6 +121,38 @@ export function compute(i: Inputs): Outputs {
   // Redondeo a 2 decimales para moneda
   const redondear = (val: number) => Math.round(val * 100) / 100;
 
+  const fmtCOP = (v: number) => '$' + Math.round(v).toLocaleString('es-CO');
+  const nombre_producto: Record<string, string> = {
+    cerveza: 'la cerveza',
+    vino: 'el vino',
+    licor_destilado: 'el licor destilado',
+    tabaco: 'el tabaco',
+  };
+  const prod_txt = nombre_producto[i.tipo_producto] ?? 'el producto';
+
+  const insight = {
+    title: 'Cuánto se va en impuestos',
+    text: `De los ${fmtCOP(total_final)} que pagás por ${prod_txt}, **${fmtCOP(subtotal_impuesto_consumo + iva_19)}** son impuestos (consumo + IVA): la carga tributaria equivale al **${tarifa_efectiva.toFixed(2)}%** sobre el precio base.`,
+    tone: tarifa_efectiva > 40 ? 'warn' : 'neutral',
+    icon: '🍺',
+  };
+
+  const slices_ic = subtotal_impuesto_consumo > 0
+    ? [{ label: 'Impuesto al consumo', value: Math.round(subtotal_impuesto_consumo) }]
+    : [];
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Precio base', value: Math.round(precio_base_total) },
+      ...slices_ic,
+      { label: 'IVA 19%', value: Math.round(iva_19) },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(total_final),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del precio final: precio base más impuesto al consumo más IVA',
+  };
+
   return {
     impuesto_especifico: redondear(impuesto_especifico),
     impuesto_ad_valorem: redondear(impuesto_ad_valorem),
@@ -128,5 +162,7 @@ export function compute(i: Inputs): Outputs {
     total_final: redondear(total_final),
     tarifa_efectiva: redondear(tarifa_efectiva),
     costo_unitario_final: redondear(costo_unitario_final),
+    _insight: insight,
+    _chart: chart,
   };
 }

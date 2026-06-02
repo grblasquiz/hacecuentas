@@ -21,6 +21,8 @@ export interface Outputs {
   anual_neto_equivalente: number;
   salario_minimo_vigente: number;
   desglose_retencion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -186,6 +188,46 @@ export function compute(i: Inputs): Outputs {
   desglose += `Tramo IRPF (${(tramoPorcentaje * 100).toFixed(0)}%): −${irpf.toFixed(2)}€\n`;
   desglose += `Neto: ${netoMensual.toFixed(2)}€`;
 
+  // --- Caja de insight narrativa ---
+  const cotizacionSSRound = Math.round(cotizacionSS * 100) / 100;
+  const brutoRound = Math.round(brutoTotal * 100) / 100;
+  // Total para el centro del donut = suma exacta de las porciones (evita descuadre por redondeo)
+  const totalDonut = Math.round((netoMensual + cotizacionSSRound + irpf) * 100) / 100;
+  const totalDescuentos = Math.round((cotizacionSSRound + irpf) * 100) / 100;
+  const pctNeto = brutoRound > 0 ? Math.round((netoMensual / brutoRound) * 1000) / 10 : 0;
+  const pctRetenido = brutoRound > 0 ? Math.round((totalDescuentos / brutoRound) * 1000) / 10 : 0;
+  const fmtEur = (n: number) =>
+    '€' + n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const vsSmi = netoMensual - smi2026;
+  let insightText =
+    `De **${fmtEur(brutoRound)}** brutos mensuales te quedan **${fmtEur(netoMensual)}** netos (${pctNeto}%), ` +
+    `tras descontar **${fmtEur(totalDescuentos)}** de Seguridad Social e IRPF. `;
+  if (vsSmi >= 0) {
+    insightText += `Supera el SMI 2026 (${fmtEur(smi2026)}) en **${fmtEur(vsSmi)}**.`;
+  } else {
+    insightText += `Queda **${fmtEur(Math.abs(vsSmi))}** por debajo del SMI 2026 (${fmtEur(smi2026)}); revisá jornada y pluses.`;
+  }
+  const _insight = {
+    title: 'De tu bruto a tu bolsillo',
+    text: insightText,
+    tone: vsSmi < 0 || pctRetenido > 25 ? 'warn' : 'neutral',
+    icon: '🍽️',
+  };
+
+  // --- Gráfico donut: reparto del bruto mensual ---
+  const _chart = brutoRound > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Neto en mano', value: netoMensual },
+      { label: 'Seguridad Social', value: cotizacionSSRound },
+      { label: 'Retención IRPF', value: irpf },
+    ],
+    prefix: '€',
+    centerValue: fmtEur(totalDonut),
+    centerLabel: 'Bruto/mes',
+    ariaLabel: 'Reparto del salario bruto mensual entre neto, Seguridad Social e IRPF',
+  } : undefined;
+
   return {
     salario_base_mensual: Math.round(salarioBaseProrrateo * 100) / 100,
     plus_nocturnidad: Math.round(plusNocturnidad * 100) / 100,
@@ -198,6 +240,8 @@ export function compute(i: Inputs): Outputs {
     anual_bruto_equivalente: anualbrutEquiv,
     anual_neto_equivalente: anualnetoEquiv,
     salario_minimo_vigente: smi2026,
-    desglose_retencion: desglose
+    desglose_retencion: desglose,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

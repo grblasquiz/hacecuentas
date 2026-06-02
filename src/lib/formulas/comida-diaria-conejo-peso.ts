@@ -12,6 +12,8 @@ export interface Outputs {
   aguaMl: number;
   henoMesKg: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function comidaDiariaConejoPeso(i: Inputs): Outputs {
@@ -53,12 +55,42 @@ export function comidaDiariaConejoPeso(i: Inputs): Outputs {
   else if (etapa === 'senior') rec = 'Pellets ajustados, heno ilimitado y control veterinario cada 6 meses. Cuidá dentición y peso.';
   else rec = 'Heno ilimitado siempre disponible, rotá al menos 3 verduras por día y limitá pellets a la ración calculada.';
 
+  const henoR = Math.round(heno);
+  const verdurasR = Math.round(verduras);
+  const pelletsR = Math.round(pellets);
+  const totalComida = henoR + verdurasR + pelletsR;
+  const pctHeno = Math.round((henoR / totalComida) * 100);
+
+  const tono = cond === 'sobrepeso' ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'El plato de tu conejo',
+    text: `Un conejo de **${peso} kg** necesita por día **${henoR} g de heno**, **${verdurasR} g de verduras** y **${pelletsR} g de pellets**, más **${Math.round(agua)} ml de agua** fresca. El heno es ~**${pctHeno}%** de la comida y tiene que estar siempre disponible: es clave para sus dientes y digestión. ${cond === 'sobrepeso' ? 'Como está con sobrepeso, los pellets van reducidos: priorizá heno y movimiento.' : `Vas a usar cerca de **${henoMesKg} kg de heno al mes**.`}`,
+    tone: tono,
+    icon: '🐰',
+  };
+
+  // Donut: composición del plato diario (heno + verduras + pellets = total, sin agua)
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Heno', value: henoR },
+      { label: 'Verduras', value: verdurasR },
+      { label: 'Pellets', value: pelletsR },
+    ],
+    prefix: '',
+    centerValue: `${totalComida} g`,
+    centerLabel: 'comida/día',
+    ariaLabel: `Comida diaria de ${totalComida} gramos: ${henoR} de heno, ${verdurasR} de verduras y ${pelletsR} de pellets`,
+  };
+
   return {
-    henoDiaGr: Math.round(heno),
-    verdurasGr: Math.round(verduras),
-    pelletsGr: Math.round(pellets),
+    henoDiaGr: henoR,
+    verdurasGr: verdurasR,
+    pelletsGr: pelletsR,
     aguaMl: Math.round(agua),
     henoMesKg,
     recomendacion: rec,
+    _insight,
+    _chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Calculadora Plan de Estudio */
 export interface Inputs { horasMateria1: number; diasMateria1: number; horasMateria2?: number; diasMateria2?: number; horasMateria3?: number; diasMateria3?: number; }
-export interface Outputs { planDiario: string; horasDiariasTotal: number; detalleMateria1: string; detalleMateria2: string; detalleMateria3: string; viabilidad: string; }
+export interface Outputs { planDiario: string; horasDiariasTotal: number; detalleMateria1: string; detalleMateria2: string; detalleMateria3: string; viabilidad: string; _insight?: any; _chart?: any; }
 
 export function calendarioEstudioParciales(i: Inputs): Outputs {
   const materias: { horas: number; dias: number; hdpd: number }[] = [];
@@ -33,12 +33,47 @@ export function calendarioEstudioParciales(i: Inputs): Outputs {
   else if (totalDiario <= 8) viab = 'Plan ajustado. Necesitás disciplina y buena organización.';
   else viab = 'Plan NO viable a largo plazo. Considerá priorizar o redistribuir.';
 
+  const hd = Number(totalDiario.toFixed(1));
+  const hdTxt = totalDiario.toFixed(1).replace('.', ',');
+  const matsTxt = `${materias.length} materia${materias.length === 1 ? '' : 's'}`;
+  let insText: string, insTone: 'good' | 'warn' | 'neutral', insIcon: string;
+  if (totalDiario <= 4) {
+    insText = `Te alcanza con **${hdTxt} h/día** para cubrir ${matsTxt}: ritmo cómodo, con margen para imprevistos.`;
+    insTone = 'good'; insIcon = '📚';
+  } else if (totalDiario <= 6) {
+    insText = `Vas a necesitar **${hdTxt} h/día** sostenidas para ${matsTxt}: exigente pero realista si cuidás los descansos.`;
+    insTone = 'neutral'; insIcon = '📖';
+  } else if (totalDiario <= 8) {
+    insText = `Son **${hdTxt} h/día** para ${matsTxt}: plan ajustado que solo se sostiene con disciplina y buena organización.`;
+    insTone = 'warn'; insIcon = '⏳';
+  } else {
+    insText = `**${hdTxt} h/día** para ${matsTxt} no es sostenible: priorizá materias o estirá los días disponibles antes de quemarte.`;
+    insTone = 'warn'; insIcon = '🚨';
+  }
+
+  // El marker puede superar 8 h/día → último segmento dinámico para quedar por encima.
+  const lastMax = Math.max(10, Math.ceil(hd) + 1);
+
   return {
-    planDiario: `${totalDiario.toFixed(1).replace('.', ',')} h/día · ${materias.length} materia(s)`,
-    horasDiariasTotal: Number(totalDiario.toFixed(1)),
+    planDiario: `${hdTxt} h/día · ${materias.length} materia(s)`,
+    horasDiariasTotal: hd,
     detalleMateria1: detalles[0] || 'No ingresada',
     detalleMateria2: detalles[1] || 'No ingresada',
     detalleMateria3: detalles[2] || 'No ingresada',
     viabilidad: viab,
+    _insight: { title: 'Carga diaria de estudio', text: insText, tone: insTone, icon: insIcon },
+    _chart: {
+      type: 'scale',
+      marker: hd,
+      markerLabel: `${hdTxt} h/día`,
+      min: 0,
+      segments: [
+        { nombre: 'Cómodo', max: 4, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Exigente', max: 6, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Ajustado', max: 8, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Inviable', max: lastMax, color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: 'Escala de horas diarias de estudio según viabilidad del plan',
+    },
   };
 }

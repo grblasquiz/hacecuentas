@@ -12,6 +12,7 @@ export interface Outputs {
   perfilNombre: string;
   kmEstimados: number;
   detalle: string;
+  _insight?: any;
 }
 
 const PERFILES: Record<string, { met: number; nombre: string; km: number }> = {
@@ -41,5 +42,11 @@ export function caloriasMediocampista(i: Inputs): Outputs {
     perfilNombre: info.nombre,
     kmEstimados: Number(km.toFixed(2)),
     detalle: `**${info.nombre}** de ${peso} kg en ${min} min quema **~${Math.round(total)} kcal** (MET ${info.met}) y recorre ~${km.toFixed(1)} km.`,
+    _insight: {
+      title: 'Lo que dejaste en la cancha',
+      text: `Como **${info.nombre}** quemaste **~${Math.round(total)} kcal** en ${min} min y recorriste **~${km.toFixed(1)} km**. Eso equivale a unos **${Math.round(total / 200)} alfajores** — reponé con hidratos y proteína después del partido.`,
+      tone: 'good',
+      icon: '⚽',
+    },
   };
 }

@@ -15,6 +15,8 @@ export interface CuotaAlimentariaOutputs {
   rangoMinimo: number;
   rangoMaximo: number;
   porcentajeIngreso: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cuotaAlimentariaHijos(inputs: CuotaAlimentariaInputs): CuotaAlimentariaOutputs {
@@ -52,12 +54,38 @@ export function cuotaAlimentariaHijos(inputs: CuotaAlimentariaInputs): CuotaAlim
   const rangoMinimo = ingreso * porcMin;
   const rangoMaximo = ingreso * porcMax;
   const cuotaEstimada = (rangoMinimo + rangoMaximo) / 2;
-  const porcMedio = ((porcMin + porcMax) / 2 * 100).toFixed(0);
+  const porcMedioNum = (porcMin + porcMax) / 2 * 100;
+  const porcMedio = porcMedioNum.toFixed(0);
+
+  const fmt = (x: number) => '$' + Math.round(x).toLocaleString('es-AR');
+  const hijosStr = hijos === 1 ? '1 hijo' : `${hijos} hijos`;
+  const resto = Math.max(0, ingreso - cuotaEstimada);
+  const _insight = {
+    title: 'Cuota orientativa',
+    text: `Para ${hijosStr}, la cuota estimada ronda los **${fmt(cuotaEstimada)}/mes** (**~${porcMedio}%** del ingreso neto), en un rango de ${fmt(rangoMinimo)} a ${fmt(rangoMaximo)}. Es una referencia según criterios judiciales (CCyCN arts. 658-670); el monto final lo fija el juez.`,
+    tone: porcMedioNum >= 45 ? 'warn' : 'neutral',
+    icon: '⚖️',
+  };
+
+  // Donut: el ingreso neto se reparte entre la cuota y el resto disponible
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Cuota alimentaria', value: Math.round(cuotaEstimada) },
+      { label: 'Resto del ingreso', value: Math.round(resto) },
+    ],
+    prefix: '$',
+    centerValue: fmt(ingreso),
+    centerLabel: 'Ingreso neto',
+    ariaLabel: `Del ingreso neto de ${fmt(ingreso)}, la cuota estimada es ${fmt(cuotaEstimada)} y el resto ${fmt(resto)}`,
+  };
 
   return {
     cuotaEstimada: Math.round(cuotaEstimada),
     rangoMinimo: Math.round(rangoMinimo),
     rangoMaximo: Math.round(rangoMaximo),
     porcentajeIngreso: `${(porcMin * 100).toFixed(0)}% - ${(porcMax * 100).toFixed(0)}% (estimado ~${porcMedio}%)`,
+    _insight,
+    _chart,
   };
 }

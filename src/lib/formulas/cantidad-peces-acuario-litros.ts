@@ -10,6 +10,7 @@ export interface Outputs {
   cmPecesTotal: number;
   ejemploCardumenes: string;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function cantidadPecesAcuarioLitros(i: Inputs): Outputs {
@@ -66,10 +67,21 @@ export function cantidadPecesAcuarioLitros(i: Inputs): Outputs {
   else if (peces < 5 && perfil !== 'ciclidos-grandes') rec = 'Tu acuario es chico: limitate a peces nano y respetá cardúmenes mínimos (6+).';
   else rec = 'Sumá los peces en tandas de 2-3 por semana, no todos juntos. Mediá amoníaco y nitritos al agregar cada grupo.';
 
+  const pecesMaxFinal = Math.max(1, peces);
+  const chico = pecesMaxFinal < 5 && perfil !== 'ciclidos-grandes';
+  const insight = {
+    title: chico ? 'Acuario chico: cuidá la carga' : 'Sumá los peces de a poco',
+    text: chico
+      ? `Con **${litros} L** te entran ~**${pecesMaxFinal} peces** (${Math.round(cm)} cm de pez adulto en total). Es poco margen: limitate a especies nano y respetá los cardúmenes mínimos (6+) para que no estén estresados.`
+      : `Con **${litros} L** podés tener hasta ~**${pecesMaxFinal} peces** (${Math.round(cm)} cm de pez adulto en total). No los metas todos juntos: agregalos en tandas de 2-3 por semana y medí amoníaco y nitritos en cada grupo.`,
+    tone: chico ? 'warn' : 'good',
+    icon: '🐟',
+  };
   return {
-    pecesMax: Math.max(1, peces),
+    pecesMax: pecesMaxFinal,
     cmPecesTotal: Math.round(cm),
     ejemploCardumenes: ejemplos[perfil] ?? 'Consultá ejemplos en la explicación extendida.',
     recomendacion: rec,
+    _insight: insight,
   };
 }

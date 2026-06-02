@@ -22,6 +22,7 @@ export interface Outputs {
   mejorMetodo: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 interface Deuda {
@@ -109,6 +110,28 @@ export function deudaAvalanchaVsBolaNieve(i: Inputs): Outputs {
   const formula = `Avalancha: ${avalancha.meses} meses ($${Math.round(avalancha.interesTotal).toLocaleString()} interés) vs Bola de nieve: ${bolaNieve.meses} meses ($${Math.round(bolaNieve.interesTotal).toLocaleString()} interés)`;
   const explicacion = `Deuda total: $${totalDeuda.toLocaleString()}, pago mensual: $${pagoTotal.toLocaleString()}. **Avalancha** (mayor tasa primero): ${avalancha.meses} meses, $${Math.round(avalancha.interesTotal).toLocaleString()} de interés total. **Bola de nieve** (menor saldo primero): ${bolaNieve.meses} meses, $${Math.round(bolaNieve.interesTotal).toLocaleString()} de interés total. ${mejorMetodo === 'Avalancha' ? `Avalancha ahorra $${Math.round(ahorroAvalancha).toLocaleString()} y ${bolaNieve.meses - avalancha.meses} meses. Pero bola de nieve da victorias rápidas que motivan.` : 'Ambos métodos dan resultado similar con estas deudas.'}`;
 
+  const ahorroAbs = Math.abs(Math.round(ahorroAvalancha));
+  const _insight = mejorMetodo === 'Avalancha'
+    ? {
+        title: 'Avalancha rinde más en plata',
+        text: `Atacando primero la deuda de **mayor tasa** ahorrás **$${ahorroAbs.toLocaleString()}** de interés frente a bola de nieve. Si necesitás motivación, bola de nieve (saldar la deuda más chica primero) te da victorias rápidas casi sin costo extra.`,
+        tone: 'good',
+        icon: '🏔️',
+      }
+    : mejorMetodo === 'Bola de nieve'
+    ? {
+        title: 'Bola de nieve es ganadora acá',
+        text: `Con tus deudas, saldar primero la de **menor saldo** termina costando **$${ahorroAbs.toLocaleString()}** menos en interés que avalancha. Llevate lo mejor de ambos mundos: el método más barato y la motivación de cerrar deudas rápido.`,
+        tone: 'good',
+        icon: '⛄',
+      }
+    : {
+        title: 'Empate técnico',
+        text: `Avalancha y bola de nieve dan prácticamente el **mismo interés** con estas deudas, así que elegí por motivación: la bola de nieve cierra deudas más rápido y sostiene el hábito.`,
+        tone: 'neutral',
+        icon: '⚖️',
+      };
+
   return {
     mesesAvalancha: avalancha.meses,
     mesesBolaNieve: bolaNieve.meses,
@@ -118,5 +141,6 @@ export function deudaAvalanchaVsBolaNieve(i: Inputs): Outputs {
     mejorMetodo,
     formula,
     explicacion,
+    _insight,
   };
 }

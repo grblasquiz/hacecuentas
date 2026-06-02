@@ -35,6 +35,7 @@ export interface Outputs {
   tablespoons: string;
   detail: string;
   summary: string;
+  _insight?: any;
 }
 
 const DENSITY_G_PER_CUP: Record<string, { label: string; g: number }> = {
@@ -68,11 +69,19 @@ export function cupsToGramsConverter(i: Inputs): Outputs {
   const ounces = grams / 28.3495; // US oz
   const tbsp = cups * 16;         // 1 cup = 16 tbsp
 
+  const insight = {
+    title: 'Weigh it for accuracy',
+    text: `**${cups} cup${cups === 1 ? '' : 's'}** of ${d.label} weighs about **${grams.toFixed(1)} g** (${d.g} g per cup). Baking by weight is far more reliable than by volume — a kitchen scale removes the packing and scooping error.`,
+    tone: 'neutral',
+    icon: '⚖️',
+  };
+
   return {
     grams: grams.toFixed(1),
     ounces: ounces.toFixed(2),
     tablespoons: tbsp.toFixed(0),
     detail: `${cups} cup${cups === 1 ? '' : 's'} of ${d.label} = ${grams.toFixed(1)} g (≈ ${ounces.toFixed(2)} oz, or ${tbsp.toFixed(0)} tbsp). Density: ${d.g} g per cup.`,
     summary: `${cups} cup → ${grams.toFixed(1)} g`,
+    _insight: insight,
   };
 }

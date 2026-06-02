@@ -15,6 +15,8 @@ export interface FernetColaPorInvitadoJuntadaOutputs {
   botellas750: number;
   botellasCola225: number;
   fernetsPorPersona: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function fernetColaPorInvitadoJuntada(
@@ -41,11 +43,36 @@ export function fernetColaPorInvitadoJuntada(
   const botellas750 = Math.ceil(litrosFernet / 0.75);
   const botellasCola225 = Math.ceil(litrosCola / 2.25);
 
+  const lFernet = Number(litrosFernet.toFixed(1));
+  const lCola = Number(litrosCola.toFixed(1));
+  const totalLitros = Number((lFernet + lCola).toFixed(1));
+  const fpp = Number(fernetsPorPersona.toFixed(1));
+
+  const _insight = {
+    title: 'Tu lista para la juntada',
+    text: `Para **${invitados}** invitados (${fpp} fernets c/u) vas a necesitar **${botellas750}** botella${botellas750 === 1 ? '' : 's'} de fernet de 750 ml y **${botellasCola225}** de cola de 2,25 L. En total se sirven unos **${totalLitros} L** de trago.`,
+    tone: 'neutral' as const,
+    icon: '🥃',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Fernet', value: lFernet },
+      { label: 'Cola', value: lCola },
+    ],
+    prefix: '',
+    centerValue: `${totalLitros} L`,
+    centerLabel: 'Total trago',
+    ariaLabel: `Del total de ${totalLitros} litros de trago, ${lFernet} litros son de fernet y ${lCola} de cola.`,
+  };
+
   return {
-    litrosFernet: Number(litrosFernet.toFixed(1)),
-    litrosCola: Number(litrosCola.toFixed(1)),
+    litrosFernet: lFernet,
+    litrosCola: lCola,
     botellas750,
     botellasCola225,
-    fernetsPorPersona: Number(fernetsPorPersona.toFixed(1)),
+    fernetsPorPersona: fpp,
+    _insight,
+    _chart,
   };
 }

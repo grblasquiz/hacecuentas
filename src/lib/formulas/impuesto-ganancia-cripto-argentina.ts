@@ -21,6 +21,8 @@ export interface Outputs {
   alicuotaEfectiva: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function impuestoGananciaCriptoArgentina(i: Inputs): Outputs {
@@ -50,6 +52,39 @@ export function impuestoGananciaCriptoArgentina(i: Inputs): Outputs {
     ? `No tenés ganancia: vendiste a $${precioVenta.toLocaleString('es-AR')} lo que compraste a $${precioCompra.toLocaleString('es-AR')}. La pérdida de $${Math.abs(gananciabruta).toLocaleString('es-AR')} se puede usar para compensar futuras ganancias del mismo tipo.`
     : `Ganancia bruta: $${Math.round(gananciabruta).toLocaleString('es-AR')} ARS. Deduciendo gastos de $${gastos.toLocaleString('es-AR')}, la ganancia neta es $${Math.round(gananciaNeta).toLocaleString('es-AR')}. Impuesto a las ganancias (15%): $${Math.round(impuesto15).toLocaleString('es-AR')}. Te queda $${Math.round(gananciaNetaPostImpuesto).toLocaleString('es-AR')} neto.`;
 
+  const fmtAR = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+
+  // ── Insight narrativo (dinámico según haya ganancia o no) ──────────
+  const _insight = gananciabruta <= 0
+    ? {
+        title: 'Sin ganancia, sin impuesto',
+        text: `Vendiste por debajo o igual a lo que pagaste: no hay impuesto. La pérdida de **${fmtAR(Math.abs(gananciabruta))}** podés guardarla hasta 5 años para **compensar futuras ganancias** del mismo tipo.`,
+        tone: 'good',
+        icon: '📉',
+      }
+    : {
+        title: 'Lo que te queda después del 15%',
+        text: `De una ganancia bruta de **${fmtAR(gananciabruta)}**, Ganancias se lleva **${fmtAR(impuesto15)}** (15% sobre la neta) y te quedan **${fmtAR(gananciaNetaPostImpuesto)}** limpios. La alícuota efectiva sobre lo vendido es **${alicuotaEfectiva.toFixed(2)}%**.`,
+        tone: 'warn',
+        icon: '₿',
+      };
+
+  // ── Gráfico: sólo si hubo ganancia, donde la bruta se reparte en partes ──
+  const _chart = gananciabruta > 0
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Te queda (neto)', value: Math.round(gananciaNetaPostImpuesto) },
+          { label: 'Impuesto 15%', value: Math.round(impuesto15) },
+          ...(gastosDeducibles > 0 ? [{ label: 'Gastos', value: Math.round(gastosDeducibles) }] : []),
+        ],
+        prefix: '$',
+        centerValue: fmtAR(gananciabruta),
+        centerLabel: 'Ganancia bruta',
+        ariaLabel: 'Reparto de la ganancia bruta entre lo que te queda neto, el impuesto del 15% y los gastos',
+      }
+    : undefined;
+
   return {
     gananciabruta: Math.round(gananciabruta),
     gastosDeducibles: Math.round(gastosDeducibles),
@@ -59,5 +94,7 @@ export function impuestoGananciaCriptoArgentina(i: Inputs): Outputs {
     alicuotaEfectiva: Number(alicuotaEfectiva.toFixed(2)),
     formula,
     explicacion,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

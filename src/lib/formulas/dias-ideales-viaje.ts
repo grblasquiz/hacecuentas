@@ -9,6 +9,8 @@ export interface DiasIdealesViajeOutputs {
   diasIdeales: number;
   diasMaximos: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface DestinoConfig {
@@ -64,10 +66,33 @@ export function diasIdealesViaje(inputs: DiasIdealesViajeInputs): DiasIdealesVia
 
   const extraTraslado = traslados ? 1 : 0;
 
+  const minOut = min + extraTraslado;
+  const idealOut = ideal + extraTraslado;
+  const maxOut = max + extraTraslado;
+
   return {
-    diasMinimos: min + extraTraslado,
-    diasIdeales: ideal + extraTraslado,
-    diasMaximos: max + extraTraslado,
-    detalle: `${d.nombre} con ritmo ${ritmo}${traslados ? ' (incluye traslados)' : ''} → mínimo ${min + extraTraslado} días, ideal ${ideal + extraTraslado} días, máximo recomendado ${max + extraTraslado} días.`,
+    diasMinimos: minOut,
+    diasIdeales: idealOut,
+    diasMaximos: maxOut,
+    detalle: `${d.nombre} con ritmo ${ritmo}${traslados ? ' (incluye traslados)' : ''} → mínimo ${minOut} días, ideal ${idealOut} días, máximo recomendado ${maxOut} días.`,
+    _insight: {
+      title: 'Cuántos días reservar',
+      text: `Para ${d.nombre.toLowerCase()} a ritmo ${ritmo}, el punto óptimo son **${idealOut} días**${traslados ? ' (ya con un día extra de traslados)' : ''}. Con menos de **${minOut} días** vas a correr, y pasados los **${maxOut} días** empezás a tener tiempos muertos.`,
+      tone: 'good',
+      icon: '🧳',
+    },
+    _chart: {
+      type: 'scale',
+      marker: idealOut,
+      markerLabel: `${idealOut} días (ideal)`,
+      min: 0,
+      segments: [
+        { nombre: 'Te quedás corto', max: minOut, color: '#fca5a5', colorDark: '#7f1d1d' },
+        { nombre: 'Justo / suficiente', max: idealOut, color: '#fcd34d', colorDark: '#78350f' },
+        { nombre: 'Zona ideal', max: maxOut, color: '#86efac', colorDark: '#14532d' },
+        { nombre: 'De más', max: maxOut + Math.max(2, Math.round(maxOut * 0.4)), color: '#93c5fd', colorDark: '#1e3a8a' },
+      ],
+      ariaLabel: `Escala de duración del viaje: ${minOut} días mínimo, ${idealOut} ideal, ${maxOut} máximo recomendado`,
+    },
   };
 }

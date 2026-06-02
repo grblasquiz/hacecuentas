@@ -12,6 +12,8 @@ export interface Outputs {
   elegibilidad: string;
   periodicidad: string;
   requisitos_cumplimiento: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -36,7 +38,13 @@ export function compute(i: Inputs): Outputs {
       monto_anual: 0,
       elegibilidad: elegibilidad,
       periodicidad: 'N/A',
-      requisitos_cumplimiento: 'Solo hogares SISBEN A (pobreza extrema) o B (pobreza moderada)'
+      requisitos_cumplimiento: 'Solo hogares SISBEN A (pobreza extrema) o B (pobreza moderada)',
+      _insight: {
+        title: 'No clasificás a Renta Ciudadana',
+        text: 'El programa solo cubre hogares en **SISBÉN A** (pobreza extrema) o **B** (pobreza moderada). Con tu clasificación actual no hay cuantía a liquidar.',
+        tone: 'warn',
+        icon: '🍚'
+      }
     };
   }
 
@@ -88,11 +96,50 @@ export function compute(i: Inputs): Outputs {
 
   const requisitosTexto = requisitos.join(' | ');
 
+  // --- Insight narrativo ---
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const totalBonificaciones = bonificacionEducacion + bonificacionEmbarazo + bonificacionDiscapacidad;
+  const topeAplicado = montoCalculado > TECHO_MAXIMO_MENSUAL;
+  const tipoTxt = i.sisben_clasificacion === 'A' ? 'pobreza extrema (SISBÉN A)' : 'pobreza moderada (SISBÉN B)';
+  const detalleBoni = totalBonificaciones > 0
+    ? ` A la cuantía base de **${fmtCOP(cuantiaBase)}** se le suman **${fmtCOP(totalBonificaciones)}** en bonificaciones.`
+    : ` Por ahora solo recibís la cuantía base; sumando menores en educación podrías aumentarla.`;
+  const detalleTope = topeAplicado
+    ? ` El cálculo llegó al techo máximo por núcleo (${fmtCOP(TECHO_MAXIMO_MENSUAL)}).`
+    : '';
+  const _insight = {
+    title: 'Tu transferencia mensual',
+    text: `Como hogar en ${tipoTxt} te corresponden **${fmtCOP(montoMensual)} al mes**, unos **${fmtCOP(montoAnual)}** en el año.${detalleBoni}${detalleTope}`,
+    tone: 'good',
+    icon: '🍚'
+  };
+
+  // --- Gráfico: composición de la transferencia mensual ---
+  let _chart: any = undefined;
+  if (totalBonificaciones > 0) {
+    // La base se ajusta para que las porciones sumen exactamente el monto liquidado (respeta el techo)
+    const baseMostrada = Math.max(0, montoMensual - totalBonificaciones);
+    const slices = [{ label: 'Cuantía base', value: Math.round(baseMostrada) }];
+    if (bonificacionEducacion > 0) slices.push({ label: 'Bono educación', value: Math.round(bonificacionEducacion) });
+    if (bonificacionEmbarazo > 0) slices.push({ label: 'Bono gestación/lactancia', value: Math.round(bonificacionEmbarazo) });
+    if (bonificacionDiscapacidad > 0) slices.push({ label: 'Bono discapacidad', value: Math.round(bonificacionDiscapacidad) });
+    _chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: fmtCOP(montoMensual),
+      centerLabel: 'Mensual',
+      ariaLabel: `Composición de la transferencia mensual de ${fmtCOP(montoMensual)}: cuantía base más bonificaciones por educación, gestación y discapacidad.`
+    };
+  }
+
   return {
     monto_mensual: Math.round(montoMensual),
     monto_anual: Math.round(montoAnual),
     elegibilidad: elegibilidad,
     periodicidad: 'Mensual (entre 5º y 10º día hábil)',
-    requisitos_cumplimiento: requisitosTexto
+    requisitos_cumplimiento: requisitosTexto,
+    _insight,
+    _chart
   };
 }

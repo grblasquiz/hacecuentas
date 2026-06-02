@@ -6,7 +6,7 @@
  * Resultado: días/meses/años equivalentes a pena efectiva.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; }
 
 export function computoPrisionPreventiva(i: Inputs): Outputs {
   const dias = Math.max(0, Number(i.diasDetenido) || 0);
@@ -37,10 +37,34 @@ export function computoPrisionPreventiva(i: Inputs): Outputs {
   const meses = Math.floor((diasComputo % 365) / 30);
   const diasRest = Math.round((diasComputo % 365) % 30);
 
+  const equivalente = `${anios} años, ${meses} meses, ${diasRest} días`;
+  const diasExtra = diasComputo - dias;
+  const aplico2x1 = diasExtra > 0;
+  const pidio2x1 = regimen === 'doble2x1';
+
+  let insText: string;
+  let insTone: 'good' | 'warn' | 'neutral';
+  if (aplico2x1) {
+    insText = `Con el 2x1 sobre el excedente de 2 años, **${dias} días** de preventiva computan como **${diasComputo} días** de pena efectiva (**${equivalente}**): el cómputo doble te suma **${diasExtra} días** extra.`;
+    insTone = 'good';
+  } else if (pidio2x1) {
+    insText = `El 2x1 **no aplica** a este caso (${aviso.includes('27.362') ? 'la Ley 27.362 lo derogó para hechos desde 2017' : 'se requieren más de 2 años de preventiva'}). Tus **${dias} días** computan 1x1 = **${equivalente}** de pena efectiva.`;
+    insTone = 'warn';
+  } else {
+    insText = `Tus **${dias} días** de prisión preventiva computan 1x1 como **${equivalente}** de pena efectiva (Art. 7 CPPN / Ley 27.362).`;
+    insTone = 'neutral';
+  }
+
   return {
     diasComputables: diasComputo,
-    equivalente: `${anios} años, ${meses} meses, ${diasRest} días`,
+    equivalente,
     aviso: aviso || 'Cómputo 1x1 estándar (Art. 7 CPPN / Ley 27.362).',
     disclaimer: 'Cálculo orientativo — el cómputo formal lo hace el juez de ejecución. Consultar abogado penalista.',
+    _insight: {
+      title: aplico2x1 ? '2x1 aplicado' : 'Cómputo 1x1',
+      text: insText,
+      tone: insTone,
+      icon: '⚖️',
+    },
   };
 }

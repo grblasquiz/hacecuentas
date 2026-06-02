@@ -11,6 +11,8 @@ export interface Outputs {
   depreciacionMensual: number;
   tasaDepreciacion: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function depreciacionActivosLineaRecta(i: Inputs): Outputs {
@@ -36,10 +38,31 @@ export function depreciacionActivosLineaRecta(i: Inputs): Outputs {
     `Depreciación mensual: $${fmt.format(depreciacionMensual)}. ` +
     `En ${vida} años el activo alcanza su valor residual de $${fmt.format(residual)}.`;
 
+  const _insight = {
+    title: 'Cuánto pierde de valor por año',
+    text: `Cada año el activo se deprecia **$${fmt.format(depreciacionAnual)}** (${tasaDepreciacion.toFixed(1)}% del valor amortizable), o **$${fmt.format(depreciacionMensual)}** por mes. Tras **${vida} ${vida === 1 ? 'año' : 'años'}** queda en su valor residual de $${fmt.format(residual)}.`,
+    tone: 'neutral',
+    icon: '📉',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Total a depreciar', value: Math.round(baseDepreciable) },
+      { label: 'Valor residual', value: Math.round(residual) },
+    ],
+    prefix: '$',
+    centerValue: '$' + fmt.format(compra),
+    centerLabel: 'Valor de compra',
+    ariaLabel: `De $${fmt.format(compra)} de compra, $${fmt.format(baseDepreciable)} se deprecian y $${fmt.format(residual)} quedan como valor residual.`,
+  };
+
   return {
     depreciacionAnual: Math.round(depreciacionAnual),
     depreciacionMensual: Math.round(depreciacionMensual),
     tasaDepreciacion: Number(tasaDepreciacion.toFixed(1)),
     detalle,
+    _insight,
+    _chart,
   };
 }

@@ -16,6 +16,8 @@ export interface Outputs {
   total_pagado_clp: number;          // CLP
   ratio_deuda_ingreso: string;       // Texto recomendación
   comparativa_tasa: string;          // Texto impacto
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(inputs: Inputs): Outputs {
@@ -90,6 +92,27 @@ export function compute(inputs: Inputs): Outputs {
 
   const comparativa_text = `Si tasa sube a ${tasa_mayor}%: +$${diferencia_mayor.toLocaleString('es-CL')} CLP en intereses. Si tasa baja a ${tasa_menor}%: -$${diferencia_menor.toLocaleString('es-CL')} CLP en intereses (vs tasa actual ${inputs.tasa_real_anual}%).`;
 
+  // Capital en CLP que cierra exactamente contra total_pagado_clp (evita descuadre por redondeos independientes)
+  const capital_clp = total_pagado_clp - total_intereses_clp;
+  const fmtCLP = (x: number) => '$' + Math.round(x).toLocaleString('es-CL');
+  const intereses_pct = monto_prestamo_uf > 0 ? (total_intereses_uf / monto_prestamo_uf) * 100 : 0;
+  const _insight = {
+    title: 'Tu crédito en UF, traducido a pesos',
+    text: `Financiás **${monto_prestamo_uf.toFixed(0)} UF** a **${inputs.plazo_anos} años** con una cuota de **${fmtCLP(cuota_mensual_clp)}** al mes. A lo largo del crédito los intereses suman **${fmtCLP(total_intereses_clp)}** — un **${intereses_pct.toFixed(0)}%** sobre el capital con tasa real ${inputs.tasa_real_anual}%.`,
+    tone: intereses_pct >= 50 ? 'warn' : 'neutral',
+    icon: '🏠',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital', value: capital_clp },
+      { label: 'Intereses', value: total_intereses_clp },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(total_pagado_clp),
+    centerLabel: 'Total pagado',
+    ariaLabel: `Total pagado de ${fmtCLP(total_pagado_clp)}: ${fmtCLP(capital_clp)} de capital y ${fmtCLP(total_intereses_clp)} de intereses`,
+  };
   return {
     monto_prestamo_uf: parseFloat(monto_prestamo_uf.toFixed(2)),
     cuota_mensual_uf: parseFloat(cuota_mensual_uf.toFixed(2)),
@@ -99,7 +122,9 @@ export function compute(inputs: Inputs): Outputs {
     total_pagado_uf: parseFloat(total_pagado_uf.toFixed(2)),
     total_pagado_clp,
     ratio_deuda_ingreso: ratio_text,
-    comparativa_tasa: comparativa_text
+    comparativa_tasa: comparativa_text,
+    _insight,
+    _chart
   };
 }
 

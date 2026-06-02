@@ -1,6 +1,6 @@
 /** Estimación de esfuerzo de desarrollo por líneas de código */
 export interface Inputs { tipoProyecto?: string; complejidad?: string; cantidadDevs: number; }
-export interface Outputs { lineasEstimadas: number; personaMeses: number; mesesCalendario: number; detalle: string; }
+export interface Outputs { lineasEstimadas: number; personaMeses: number; mesesCalendario: number; detalle: string; _insight?: any; }
 
 const baseLoc: Record<string, number> = {
   landing: 3500,
@@ -47,10 +47,21 @@ export function codigoLineasEstimacionProyecto(i: Inputs): Outputs {
     ecommerce: 'E-commerce',
   };
 
+  const overheadPct = Math.round((overheadFactor - 1) * 100);
+  const mesesId = (personaMeses / devs);
+  const mesesPerdidos = mesesCalendario - mesesId;
+  const insight = {
+    title: 'Plazo estimado',
+    text: `Construir esto te lleva ~**${mesesCalendario.toFixed(1)} meses** con **${devs} dev(s)**. El overhead de comunicación suma **+${overheadPct}%** (~${mesesPerdidos.toFixed(1)} mes(es) extra): más gente no es siempre más rápido.`,
+    tone: overheadFactor >= 1.25 ? 'warn' : 'neutral',
+    icon: '⏱️',
+  };
+
   return {
     lineasEstimadas: loc,
     personaMeses: Number(personaMeses.toFixed(1)),
     mesesCalendario: Number(mesesCalendario.toFixed(1)),
     detalle: `${nombreTipo[tipo] || tipo} complejidad ${comp}: ~${loc.toLocaleString()} LOC, ${personaMeses.toFixed(1)} persona-meses. Con ${devs} dev(s): ~${mesesCalendario.toFixed(1)} meses calendario (incluye overhead de comunicación).`,
+    _insight: insight,
   };
 }

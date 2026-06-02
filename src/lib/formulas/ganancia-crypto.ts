@@ -12,6 +12,7 @@ export interface Outputs {
   gananciaPorcentaje: number;
   montoInvertido: number;
   montoFinal: number;
+  _insight?: any;
 }
 
 export function gananciaCrypto(i: Inputs): Outputs {
@@ -36,10 +37,28 @@ export function gananciaCrypto(i: Inputs): Outputs {
   const gananciaAbsoluta = montoFinal - montoInvertido;
   const gananciaPorcentaje = (gananciaAbsoluta / montoInvertido) * 100;
 
+  const fmt2 = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const gananciaFmt = fmt2(Math.abs(gananciaAbsoluta));
+  const pctFmt = Math.abs(gananciaPorcentaje).toFixed(2);
+  const _insight = gananciaAbsoluta >= 0
+    ? {
+        title: 'Operación en ganancia',
+        text: `Sobre **${fmt2(montoInvertido)}** invertidos (comisión incluida), recibís **${fmt2(montoFinal)}**: ganás **${gananciaFmt}** netos, un **+${pctFmt}%**.`,
+        tone: 'good',
+        icon: '🚀',
+      }
+    : {
+        title: 'Operación en pérdida',
+        text: `Sobre **${fmt2(montoInvertido)}** invertidos (comisión incluida), recibís solo **${fmt2(montoFinal)}**: perdés **${gananciaFmt}**, un **−${pctFmt}%**. Las comisiones de compra y venta agrandan el rojo.`,
+        tone: 'warn',
+        icon: '📉',
+      };
+
   return {
     gananciaAbsoluta: Number(gananciaAbsoluta.toFixed(2)),
     gananciaPorcentaje: Number(gananciaPorcentaje.toFixed(2)),
     montoInvertido: Number(montoInvertido.toFixed(2)),
     montoFinal: Number(montoFinal.toFixed(2)),
+    _insight,
   };
 }

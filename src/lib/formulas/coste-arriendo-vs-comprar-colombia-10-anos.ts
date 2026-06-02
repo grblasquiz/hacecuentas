@@ -28,6 +28,7 @@ export interface Outputs {
   patrimonio_neto_compra: number;
   breakeven_year: string;
   resumen_analisis: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -157,6 +158,12 @@ export function compute(i: Inputs): Outputs {
                       `Breakeven ocurre en ${breakeven}, después del cual compra es cada vez más ventajosa.`;
   }
 
+  const ahorroFmt = Math.round(ahorroConOpcion).toLocaleString('es-CO');
+  const patrimonioFmt = Math.round(patrimonioNetoCompra).toLocaleString('es-CO');
+  const insightText = diferencia >= 0
+    ? `A **${anosHorizonte} años, arrendar sale más barato** por unos **$${ahorroFmt} COP**. Pero comprar te deja un patrimonio de **$${patrimonioFmt} COP**; si planeás quedarte más de 10 años, la balanza se inclina hacia comprar.`
+    : `A **${anosHorizonte} años, comprar sale más barato** por unos **$${ahorroFmt} COP** y además construís un patrimonio de **$${patrimonioFmt} COP**. El punto de equilibrio cae en **${breakeven}**.`;
+
   return {
     cuota_inicial: Math.round(cuotaInicial),
     monto_hipoteca: Math.round(montoHipoteca),
@@ -172,6 +179,12 @@ export function compute(i: Inputs): Outputs {
     deuda_pendiente_10_anos: Math.round(deudaPendiente),
     patrimonio_neto_compra: Math.round(patrimonioNetoCompra),
     breakeven_year: breakeven,
-    resumen_analisis: resumenAnalisis
+    resumen_analisis: resumenAnalisis,
+    _insight: {
+      title: `Veredicto: ${opcionMasEconomica.toLowerCase()} a ${anosHorizonte} años`,
+      text: insightText,
+      tone: 'neutral',
+      icon: '🏠',
+    }
   };
 }

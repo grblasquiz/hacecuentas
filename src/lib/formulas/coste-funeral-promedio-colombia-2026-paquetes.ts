@@ -14,6 +14,8 @@ export interface Outputs {
   costo_repatriacion: number;
   cobertura_seguro: string;
   comparativa_funerarias: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -92,13 +94,68 @@ export function compute(i: Inputs): Outputs {
     comparativaTexto = 'Bucaramanga/Interior - Funerarias locales predominan. Rango: $2.5M–$12M (paquete medio). Solicite presupuesto escrito y sin obligación antes de aceptar.';
   }
 
-  return {
+  // Etiquetas legibles
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const labelServicio: Record<string, string> = {
+    basico: 'paquete básico',
+    medio: 'paquete medio',
+    premium: 'paquete premium'
+  };
+  const labelDisp: Record<string, string> = {
+    sepelio: 'sepelio',
+    cremacion: 'cremación',
+    bovedar: 'bóveda'
+  };
+
+  // --- Insight narrativo ---
+  let insightText = '';
+  let insightTone: 'good' | 'warn' | 'neutral' = 'neutral';
+  if (i.tipo_disposicion === 'cremacion') {
+    insightText = `Un ${labelServicio[i.tipo_servicio]} con **cremación** promedia **${fmtCOP(precio_medio)}** (rango ${fmtCOP(rango_precio_min)}–${fmtCOP(rango_precio_max)}). La cremación te ahorra cerca de **${fmtCOP(ahorro_cremacion)}** frente al sepelio tradicional.`;
+    insightTone = 'good';
+  } else if (costo_repatriacion > 0) {
+    insightText = `El total promedio es **${fmtCOP(precio_medio)}**, de los cuales **${fmtCOP(costo_repatriacion)}** son solo la **repatriación**: pesa fuerte en el presupuesto, conviene verificar si tu seguro la cubre.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `Un ${labelServicio[i.tipo_servicio]} con ${labelDisp[i.tipo_disposicion]} ronda los **${fmtCOP(precio_medio)}** de promedio, con un rango realista de **${fmtCOP(rango_precio_min)} a ${fmtCOP(rango_precio_max)}** según la funeraria. Pedí presupuesto escrito antes de aceptar.`;
+    insightTone = i.tipo_servicio === 'premium' ? 'warn' : 'neutral';
+  }
+
+  const _insight = {
+    title: 'Qué significa este costo',
+    text: insightText,
+    tone: insightTone,
+    icon: '⚰️'
+  };
+
+  // --- Gráfico donut: servicio + repatriación = total promedio ---
+  // Solo aporta cuando hay composición real (servicio + repatriación).
+  const servicioMedio = Math.round(mediaAjustado);
+  let _chart: any = undefined;
+  if (costo_repatriacion > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: `Servicio (${labelDisp[i.tipo_disposicion]})`, value: servicioMedio },
+        { label: 'Repatriación', value: costo_repatriacion }
+      ],
+      prefix: '$',
+      centerValue: fmtCOP(precio_medio).replace('$', ''),
+      centerLabel: 'Total promedio',
+      ariaLabel: `Composición del costo funerario promedio: servicio ${fmtCOP(servicioMedio)} más repatriación ${fmtCOP(costo_repatriacion)}.`
+    };
+  }
+
+  const out: Outputs = {
     rango_precio_min,
     rango_precio_max,
     precio_medio,
     ahorro_cremacion,
     costo_repatriacion,
     cobertura_seguro: coberturaSeguros,
-    comparativa_funerarias: comparativaTexto
+    comparativa_funerarias: comparativaTexto,
+    _insight
   };
+  if (_chart) out._chart = _chart;
+  return out;
 }

@@ -1,5 +1,9 @@
 export interface Inputs { plaga: string; zona?: string; }
-export interface Outputs { frecuencia: string; metodo: string; prevencion: string; costo: string; }
+export interface Outputs { frecuencia: string; metodo: string; prevencion: string; costo: string; _insight?: any; }
+const NOMBRE_PLAGA: Record<string, string> = {
+  cucarachas: 'cucarachas', hormigas: 'hormigas', mosquitos: 'mosquitos',
+  ratas: 'ratas/roedores', aranas: 'arañas', polillas: 'polillas',
+};
 interface PlagaData { freq: string; metodo: string; prev: string; costo: string; }
 const PLAGAS: Record<string, PlagaData> = {
   cucarachas: { freq: 'Cada 3–4 meses', metodo: 'Gel insecticida en grietas + aspersión perimetral', prev: 'Sellá grietas, no dejés comida expuesta, limpiá grasitud de cocina.', costo: '$15.000–$25.000 ARS por servicio (2 ambientes)' },
@@ -13,5 +17,12 @@ const FACTOR_ZONA: Record<string, number> = { urbana: 1, suburbana: 1.3, rural: 
 export function fumigacionFrecuenciaHogar(i: Inputs): Outputs {
   const plaga = String(i.plaga || 'cucarachas');
   const data = PLAGAS[plaga]; if (!data) throw new Error('Plaga no encontrada');
-  return { frecuencia: data.freq, metodo: data.metodo, prevencion: data.prev, costo: data.costo };
+  const nombre = NOMBRE_PLAGA[plaga] || plaga;
+  const _insight = {
+    title: 'Tu plan de fumigación',
+    text: `Para **${nombre}** el control recomendado es **${data.freq.toLowerCase()}**, costando aprox. **${data.costo.split(' ')[0]} ARS** por servicio. La prevención manda: ${data.prev.charAt(0).toLowerCase() + data.prev.slice(1)}`,
+    tone: 'neutral',
+    icon: '🪳',
+  };
+  return { frecuencia: data.freq, metodo: data.metodo, prevencion: data.prev, costo: data.costo, _insight };
 }

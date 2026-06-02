@@ -1,6 +1,6 @@
 /** IMC infantil con percentiles OMS */
 export interface Inputs { pesoNinoIMC: number; tallaNinoIMC: number; edadNinoIMC: number; sexoNinoIMC: string; __lang?: string; }
-export interface Outputs { imc: string; percentilIMC: string; clasificacion: string; recomendacion: string; _chart?: any; }
+export interface Outputs { imc: string; percentilIMC: string; clasificacion: string; recomendacion: string; _chart?: any; _insight?: any; }
 
 // P5, P50, P85, P97 de IMC por edad (simplificado, varones)
 const imcVaron: Record<number, number[]> = {
@@ -46,6 +46,13 @@ export function imcInfantilPercentil(i: Inputs): Outputs {
       segSobre: 'Sobrepeso',
       segObe: 'Obesidad',
       aria: 'Escala de IMC infantil según percentiles OMS para la edad y sexo',
+      insTitleOk: 'Peso saludable para la edad',
+      insTitleAlert: 'IMC fuera del rango saludable',
+      insSexo: { m: 'varón', f: 'niña' } as Record<string, string>,
+      insTextOk: (imc: string, edad: number, sx: string, pct: string) =>
+        `Un IMC de **${imc}** en un **${sx} de ${edad} años** cae en **${pct}**: peso saludable para su edad y sexo según la OMS.`,
+      insTextAlert: (imc: string, edad: number, sx: string, pct: string, cls: string) =>
+        `Un IMC de **${imc}** en un **${sx} de ${edad} años** corresponde a **${pct}** (**${cls}**). En niños el IMC se lee por percentil, no por el valor absoluto.`,
     },
     en: {
       errPeso: 'Enter the child\'s weight',
@@ -68,6 +75,13 @@ export function imcInfantilPercentil(i: Inputs): Outputs {
       segSobre: 'Overweight',
       segObe: 'Obesity',
       aria: 'Child BMI scale by WHO percentiles for age and sex',
+      insTitleOk: 'Healthy weight for age',
+      insTitleAlert: 'BMI outside the healthy range',
+      insSexo: { m: 'boy', f: 'girl' } as Record<string, string>,
+      insTextOk: (imc: string, edad: number, sx: string, pct: string) =>
+        `A BMI of **${imc}** in a **${edad}-year-old ${sx}** falls in the **${pct}**: a healthy weight for age and sex per the WHO.`,
+      insTextAlert: (imc: string, edad: number, sx: string, pct: string, cls: string) =>
+        `A BMI of **${imc}** in a **${edad}-year-old ${sx}** corresponds to the **${pct}** (**${cls}**). In children, BMI is read by percentile, not by the absolute value.`,
     },
   } as const)[__lang];
 
@@ -146,11 +160,24 @@ export function imcInfantilPercentil(i: Inputs): Outputs {
     ariaLabel: T.aria,
   };
 
+  const esSaludable = clasificacion === T.clsNormal;
+  const sexoLabel = T.insSexo[sexo] ?? T.insSexo['m'];
+  const imcStr = imc.toFixed(1);
+  const insight = {
+    title: esSaludable ? T.insTitleOk : T.insTitleAlert,
+    text: esSaludable
+      ? T.insTextOk(imcStr, edad, sexoLabel, percentil)
+      : T.insTextAlert(imcStr, edad, sexoLabel, percentil, clasificacion),
+    tone: esSaludable ? 'good' : 'warn',
+    icon: esSaludable ? '✅' : '👶',
+  };
+
   return {
     imc: `${imc.toFixed(1)} kg/m²`,
     percentilIMC: percentil,
     clasificacion,
     recomendacion,
     _chart: chart,
+    _insight: insight,
   };
 }

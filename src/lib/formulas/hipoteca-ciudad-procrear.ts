@@ -4,7 +4,7 @@
  * Incluye bonificación parcial de seguro si calificás para subsidio.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 
 export function hipotecaCiudadProcrear(i: Inputs): Outputs {
   const monto = Math.max(0, Number(i.monto) || 0);
@@ -28,6 +28,29 @@ export function hipotecaCiudadProcrear(i: Inputs): Outputs {
   const cuotaConSubsidio = cuotaTotal - subsidioMensual;
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+
+  const _insight = {
+    title: 'Tu cuota Procrear',
+    text: tieneSubsidio
+      ? `Tu cuota inicial es **${fmt(cuotaConSubsidio)}** gracias al **subsidio ANSES** de **${fmt(subsidioMensual)}/mes** (sin él pagarías ${fmt(cuotaTotal)}). Ojo: al ser **UVA**, la cuota se ajusta por inflación cada mes, así que en pesos irá subiendo con el tiempo.`
+      : `Tu cuota inicial es **${fmt(cuotaTotal)}** (capital + interés ${tnaPct}% más **${fmt(seguros)}** de seguros). Al ser un préstamo **UVA**, la cuota se ajusta por inflación: en pesos irá creciendo mes a mes, algo a contemplar en tu presupuesto.`,
+    tone: 'warn' as const,
+    icon: '🏠',
+  };
+
+  // Donut: composición de la cuota total (capital+interés + seguros = cuota total mensual)
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital + interés', value: Math.round(cuotaPuraArs) },
+      { label: 'Seguros', value: Math.round(seguros) },
+    ],
+    prefix: '$',
+    centerValue: fmt(cuotaTotal),
+    centerLabel: 'Cuota mensual',
+    ariaLabel: `La cuota mensual de ${fmt(cuotaTotal)} se compone de ${fmt(cuotaPuraArs)} de capital más interés y ${fmt(seguros)} de seguros.`,
+  };
+
   return {
     cuotaInicial: fmt(cuotaConSubsidio),
     cuotaSinSubsidio: fmt(cuotaTotal),
@@ -36,5 +59,7 @@ export function hipotecaCiudadProcrear(i: Inputs): Outputs {
     cftUvaAprox: `${cft.toFixed(2)}%`,
     capitalUvas: `${capitalUvas.toFixed(2)} UVAs`,
     resumen: `Cuota inicial ${fmt(cuotaConSubsidio)}${tieneSubsidio ? ' (con subsidio ANSES)' : ''}. Línea Procrear Banco Ciudad tasa ${tnaPct}% + UVA.`,
+    _insight,
+    _chart,
   };
 }

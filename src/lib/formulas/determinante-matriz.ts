@@ -5,6 +5,7 @@ export interface Outputs {
   inversaTexto: string;
   esInvertible: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function determinanteMatriz(i: Inputs): Outputs {
@@ -32,10 +33,25 @@ export function determinanteMatriz(i: Inputs): Outputs {
     esInvertible = 'Sí';
   }
 
+  const _insight = det === 0
+    ? {
+        title: 'Matriz singular',
+        text: 'El determinante da **0**, por lo que la matriz **no es invertible**: sus filas son linealmente dependientes y el sistema asociado no tiene solución única.',
+        tone: 'warn',
+        icon: '⚠️',
+      }
+    : {
+        title: 'Matriz invertible',
+        text: `El determinante es **${fmt.format(Number(det.toFixed(4)))}** (≠ 0), así que la matriz **sí tiene inversa** y el sistema lineal asociado tiene solución única.`,
+        tone: 'good',
+        icon: '✅',
+      };
+
   return {
     determinante: Number(det.toFixed(4)),
     inversaTexto,
     esInvertible,
     detalle: `Matriz [[${fmt.format(a)}, ${fmt.format(b)}], [${fmt.format(c)}, ${fmt.format(d)}]] → det = ${fmt.format(a)}×${fmt.format(d)} − ${fmt.format(b)}×${fmt.format(c)} = ${fmt.format(det)}. ${esInvertible === 'Sí' ? `Inversa: ${inversaTexto}` : 'No tiene inversa.'}`,
+    _insight,
   };
 }

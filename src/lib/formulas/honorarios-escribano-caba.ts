@@ -44,6 +44,14 @@ export function honorariosEscribanoCaba(i: Inputs): Outputs {
     ariaLabel: 'Composición del costo de escritura: honorarios, IVA, aportes y gastos fijos',
   };
 
+  const pctSobreValor = v > 0 ? (total / v) * 100 : 0;
+  const insight = {
+    title: 'Qué significa',
+    text: `Escriturar una propiedad de ${fmt(v)} en CABA cuesta unos **${fmt(total)}** vía escribano, ~**${pctSobreValor.toFixed(1)}%** del valor. De ese total, ${fmt(honorarios)} son honorarios y el resto es IVA, aportes y gastos fijos. En compraventa, estos costos suele pagarlos el comprador salvo pacto distinto.`,
+    tone: 'neutral' as 'good' | 'warn' | 'neutral',
+    icon: '📜',
+  };
+
   return {
     honorarios: fmt(honorarios),
     iva: fmt(iva),
@@ -52,5 +60,6 @@ export function honorariosEscribanoCaba(i: Inputs): Outputs {
     total: fmt(total),
     resumen: `Honorarios ${fmt(honorarios)} + IVA 21% + aportes ~10% + gastos. Total estimado ${fmt(total)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -1,6 +1,6 @@
 /** Calculadora Intervalo de Confianza — IC = x̄ ± z × (σ/√n) */
 export interface Inputs { media: number; desviacion: number; n: number; confianza: string; }
-export interface Outputs { intervalo: string; margenError: number; errorEstandar: number; limiteInf: number; limiteSup: number; }
+export interface Outputs { intervalo: string; margenError: number; errorEstandar: number; limiteInf: number; limiteSup: number; _insight?: any; _chart?: any; }
 
 export function intervaloConfianzaMedia(i: Inputs): Outputs {
   const xbar = Number(i.media);

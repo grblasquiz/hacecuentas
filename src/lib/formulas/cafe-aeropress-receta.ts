@@ -1,6 +1,6 @@
 /** AeroPress */
 export interface Inputs { metodo: string; mlTazaFinal: number; temperatura: number; }
-export interface Outputs { gramosCafe: number; mlAgua: number; molido: string; timing: string; instrucciones: string; }
+export interface Outputs { gramosCafe: number; mlAgua: number; molido: string; timing: string; instrucciones: string; _insight?: any; }
 
 export function cafeAeropressReceta(i: Inputs): Outputs {
   const m = String(i.metodo);
@@ -16,11 +16,21 @@ export function cafeAeropressReceta(i: Inputs): Outputs {
   else if (m === 'campeon') { ratio = 14; molido = 'Fino'; timing = 'Variable 1:30-2:30'; instr = 'Invertido. Café + agua, stir, esperar 1-2 min según receta. Presionar.'; }
 
   const cafe = ml / ratio;
+  const gramosCafe = Number(cafe.toFixed(1));
+
+  const _insight = {
+    title: "Tu receta AeroPress",
+    text: `Usá **${gramosCafe} g** de café molido **${molido.toLowerCase()}** para **${ml} ml** de agua (ratio **1:${ratio}**). Pesar el café es lo que más diferencia hace: a ojo el error suele ser del 20 % o más.`,
+    tone: "neutral",
+    icon: "☕",
+  };
+
   return {
-    gramosCafe: Number(cafe.toFixed(1)),
+    gramosCafe,
     mlAgua: ml,
     molido,
     timing,
     instrucciones: instr,
+    _insight,
   };
 }

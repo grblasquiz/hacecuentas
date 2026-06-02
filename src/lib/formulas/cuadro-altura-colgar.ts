@@ -1,5 +1,5 @@
 export interface Inputs { altoCuadro: number; ubicacion?: string; }
-export interface Outputs { alturaCentro: number; alturaClavo: number; regla: string; consejo: string; }
+export interface Outputs { alturaCentro: number; alturaClavo: number; regla: string; consejo: string; _insight?: any; }
 export function cuadroAlturaColgar(i: Inputs): Outputs {
   const alto = Number(i.altoCuadro); if (!alto) throw new Error('Ingresá el alto del cuadro');
   const ubi = String(i.ubicacion || 'pared_sola');
@@ -10,5 +10,12 @@ export function cuadroAlturaColgar(i: Inputs): Outputs {
   else if (ubi === 'pasillo') { centro = 155; regla = 'Ligeramente más alto: centro a 155 cm'; consejo = 'En pasillos se ven caminando, por eso van un poco más altos. Para escaleras, seguí la línea de la escalera.'; }
   else { centro = 130; regla = 'Centro más bajo: 130 cm (se ve sentado)'; consejo = 'En comedores se aprecian sentados, por eso el centro baja a 130 cm.'; }
   const clavo = centro + Math.round(alto * 0.4);
-  return { alturaCentro: centro, alturaClavo: clavo, regla, consejo };
+  const offset = clavo - centro;
+  const _insight = {
+    title: 'Dónde clavar exactamente',
+    text: `Marcá el clavo a **${clavo} cm** del piso: así el centro del cuadro queda a **${centro} cm**, la altura justa para esta ubicación. El clavo va ${offset} cm por encima del centro porque el alambre suele tensarse cerca de la parte alta del cuadro de ${alto} cm.`,
+    tone: 'neutral',
+    icon: '🖼️',
+  };
+  return { alturaCentro: centro, alturaClavo: clavo, regla, consejo, _insight };
 }

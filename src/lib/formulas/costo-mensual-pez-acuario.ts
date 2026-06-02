@@ -12,6 +12,8 @@ export interface Outputs {
   filtroYMantenimiento: number;
   costoAnual: number;
   moneda: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function costoMensualPezAcuario(i: Inputs): Outputs {
@@ -67,12 +69,43 @@ export function costoMensualPezAcuario(i: Inputs): Outputs {
   const total = elec + alim + mant;
   const round = (n: number) => (cfg.moneda === 'EUR' || cfg.moneda === 'USD' ? Number(n.toFixed(1)) : Math.round(n));
 
+  const rTotal = round(total);
+  const rElec = round(elec);
+  const rAlim = round(alim);
+  const rMant = round(mant);
+  const rAnual = round(total * 12);
+  const pctElec = total > 0 ? Math.round((elec / total) * 100) : 0;
+  const esMarino = tipo === 'marino';
+  const fmtN = (n: number) => n.toLocaleString('es-AR');
+  const prefix = cfg.moneda === 'EUR' ? '€' : '$';
+  const fc = (n: number) => prefix + fmtN(n);
+
   return {
-    costoTotal: round(total),
-    electricidad: round(elec),
-    alimentoYAgua: round(alim),
-    filtroYMantenimiento: round(mant),
-    costoAnual: round(total * 12),
+    costoTotal: rTotal,
+    electricidad: rElec,
+    alimentoYAgua: rAlim,
+    filtroYMantenimiento: rMant,
+    costoAnual: rAnual,
     moneda: cfg.moneda,
+    _insight: {
+      title: esMarino ? 'Acuario marino: el más exigente' : 'Lo que más pesa: la electricidad',
+      text: esMarino
+        ? `Mantener tus **${litros} L marinos** cuesta **${fc(rTotal)} ${cfg.moneda}/mes** (**${fc(rAnual)}** al año). Es el tipo más caro: la sal, los test kits y el equipamiento elevan el mantenimiento muy por encima de un acuario de agua dulce del mismo tamaño.`
+        : `Tu acuario de **${litros} L** cuesta **${fc(rTotal)} ${cfg.moneda}/mes** (**${fc(rAnual)}** al año). La **electricidad** se lleva el **${pctElec}%** (**${fc(rElec)}**): filtro, luz y calefactor son el gasto fijo que más mueve la aguja${invierno ? ', y en invierno el calefactor lo sube todavía más' : ''}.`,
+      tone: esMarino ? 'warn' : (pctElec >= 50 ? 'warn' : 'neutral'),
+      icon: esMarino ? '🐠' : '🐟',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Electricidad', value: rElec },
+        { label: 'Alimento y agua', value: rAlim },
+        { label: 'Filtro y mantenimiento', value: rMant },
+      ],
+      prefix,
+      centerValue: fc(rTotal),
+      centerLabel: 'Total/mes',
+      ariaLabel: `Desglose del costo mensual del acuario: electricidad ${fmtN(rElec)}, alimento y agua ${fmtN(rAlim)}, filtro y mantenimiento ${fmtN(rMant)} ${cfg.moneda}.`,
+    },
   };
 }

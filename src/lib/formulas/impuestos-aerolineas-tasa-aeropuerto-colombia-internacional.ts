@@ -21,6 +21,8 @@ export interface Outputs {
   porcentaje_impuestos: number;
   costo_por_pasajero: number;
   desglose_conceptos: Record<string, number>;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -81,18 +83,61 @@ export function compute(i: Inputs): Outputs {
     precio_final_cop,
   };
 
+  const baseR = Math.round(tarifa_base_total);
+  const ivaR = Math.round(iva_domestico);
+  const segR = Math.round(tasa_seguridad);
+  const turR = Math.round(contribucion_turismo);
+  const salR = Math.round(tasa_salida_internacional);
+  const admR = Math.round(derechos_administrativos);
+  const impR = Math.round(impuestos_totales);
+  const pctR = Math.round(porcentaje_impuestos * 10) / 10;
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+
+  const esInternacional = i.tipo_vuelo !== 'domestico';
+  const _insight = {
+    title: esInternacional ? 'Tu vuelo internacional con impuestos' : 'Tu vuelo doméstico con impuestos',
+    text: `Sobre una tarifa base de **${fmtCOP(baseR)}** se suman **${fmtCOP(impR)}** en tasas e impuestos `
+      + `(un **${pctR.toFixed(1)}%** extra), dejando el precio final en **${fmtCOP(Math.round(precio_final_cop))}** `
+      + `(~US$${(Math.round(precio_final_usd * 100) / 100).toLocaleString('en-US')}). `
+      + (esInternacional
+          ? `El grueso es la **tasa de salida internacional** (${fmtCOP(salR)}).`
+          : `Incluye el **IVA del 5%** (${fmtCOP(ivaR)}) propio de los vuelos domésticos.`),
+    tone: 'warn',
+    icon: '✈️'
+  };
+
+  // Donut: tarifa base + cada concepto de impuesto (las slices suman el precio final).
+  const slices: { label: string; value: number }[] = [{ label: 'Tarifa base', value: baseR }];
+  if (ivaR > 0) slices.push({ label: 'IVA (5%)', value: ivaR });
+  if (segR > 0) slices.push({ label: 'Tasa de seguridad', value: segR });
+  if (turR > 0) slices.push({ label: 'Contribución turismo (Fontur)', value: turR });
+  if (salR > 0) slices.push({ label: 'Tasa salida internacional', value: salR });
+  if (admR > 0) slices.push({ label: 'Derechos administrativos', value: admR });
+  const totalSlices = slices.reduce((a, s) => a + s.value, 0);
+
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: fmtCOP(totalSlices),
+    centerLabel: 'Precio final',
+    ariaLabel: `Precio final de ${fmtCOP(totalSlices)} compuesto por la tarifa base de ${fmtCOP(baseR)} más ${fmtCOP(impR)} en tasas e impuestos.`
+  };
+
   return {
-    tarifa_base_total: Math.round(tarifa_base_total),
-    iva_domestico: Math.round(iva_domestico),
-    tasa_seguridad: Math.round(tasa_seguridad),
-    contribucion_turismo: Math.round(contribucion_turismo),
-    tasa_salida_internacional: Math.round(tasa_salida_internacional),
-    derechos_administrativos: Math.round(derechos_administrativos),
-    impuestos_totales: Math.round(impuestos_totales),
+    tarifa_base_total: baseR,
+    iva_domestico: ivaR,
+    tasa_seguridad: segR,
+    contribucion_turismo: turR,
+    tasa_salida_internacional: salR,
+    derechos_administrativos: admR,
+    impuestos_totales: impR,
     precio_final_cop: Math.round(precio_final_cop),
     precio_final_usd: Math.round(precio_final_usd * 100) / 100,
-    porcentaje_impuestos: Math.round(porcentaje_impuestos * 10) / 10,
+    porcentaje_impuestos: pctR,
     costo_por_pasajero: Math.round(costo_por_pasajero),
     desglose_conceptos,
+    _insight,
+    _chart,
   };
 }

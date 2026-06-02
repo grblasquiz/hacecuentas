@@ -1,5 +1,5 @@
 export interface Inputs { tipoFiltro: string; personas: number; litrosDia: number; }
-export interface Outputs { mesesCambio: string; litrosTotales: string; senales: string; consejo: string; }
+export interface Outputs { mesesCambio: string; litrosTotales: string; senales: string; consejo: string; _insight?: any; }
 interface FiltroData { litros: number; mesesMax: number; senales: string; consejo: string; }
 const FILTROS: Record<string, FiltroData> = {
   carbon: { litros: 1200, mesesMax: 4, senales: 'Agua con sabor raro, flujo lento, color amarillento', consejo: 'No lo uses más allá de 4 meses aunque no se llegó al máximo de litros.' },
@@ -14,5 +14,14 @@ export function filtroAguaCambioFrecuencia(i: Inputs): Outputs {
   const data = FILTROS[tipo]; if (!data) throw new Error('Tipo de filtro no encontrado');
   const mesesPorLitros = data.litros / (litDia * 30);
   const meses = Math.min(data.mesesMax, Math.floor(mesesPorLitros));
-  return { mesesCambio: `Cada ${meses} meses`, litrosTotales: `~${data.litros} litros de capacidad`, senales: data.senales, consejo: data.consejo };
+  const limitaCaudal = Math.floor(mesesPorLitros) < data.mesesMax;
+  const _insight = {
+    title: `Cambialo cada ${meses} ${meses === 1 ? 'mes' : 'meses'}`,
+    text: limitaCaudal
+      ? `Con **${litDia} L/día** agotás los **${data.litros} L** de capacidad en unos **${meses} ${meses === 1 ? 'mes' : 'meses'}**, antes del límite de ${data.mesesMax} meses: te manda el caudal, no el calendario.`
+      : `Te toca cambiarlo a los **${meses} meses** por vida útil del cartucho, aunque a **${litDia} L/día** todavía no llegues a los ${data.litros} L de capacidad. No lo estires de más: pierde eficacia con el tiempo.`,
+    tone: meses <= 4 ? 'warn' : 'neutral',
+    icon: '💧',
+  };
+  return { mesesCambio: `Cada ${meses} meses`, litrosTotales: `~${data.litros} litros de capacidad`, senales: data.senales, consejo: data.consejo, _insight };
 }

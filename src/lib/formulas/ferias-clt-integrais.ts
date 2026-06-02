@@ -18,6 +18,8 @@ export interface Outputs {
   feriasLiquidas: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -40,6 +42,27 @@ export function feriasCltIntegrais(i: Inputs): Outputs {
   const formula = `Férias = Salário ${fmt(salario)} + 1/3 ${fmt(terco)} − INSS ${fmt(inss)} − IRRF ${fmt(irrf)} = ${fmt(liquido)}`;
   const explicacao = `Férias integrais (30 dias) de ${fmt(salario)} + 1/3 constitucional (${fmt(terco)}) = ${fmt(bruto)}. Descontos sobre o bruto: INSS ${fmt(inss)} e IRRF ${fmt(irrf)}. Líquido a receber: ${fmt(liquido)}. Base legal: CF art. 7º XVII, CLT arts. 129-153.`;
 
+  const totalDescontos = inss + irrf;
+  const pctDesconto = bruto > 0 ? Math.round((totalDescontos / bruto) * 100) : 0;
+  const _insight = {
+    title: 'O que cai na conta',
+    text: `Salário ${fmt(salario)} + 1/3 (${fmt(terco)}) = ${fmt(bruto)} bruto. Descontos de **${fmt(totalDescontos)}** (**${pctDesconto}%**) deixam **${fmt(liquido)}** líquidos.`,
+    tone: (pctDesconto >= 20 ? 'warn' : 'good') as 'warn' | 'good',
+    icon: '🏖️',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Líquido', value: liquido },
+      { label: 'INSS', value: inss },
+      { label: 'IRRF', value: irrf },
+    ],
+    prefix: 'R$ ',
+    centerValue: fmt(liquido),
+    centerLabel: 'Líquido',
+    ariaLabel: `Férias brutas de ${fmt(bruto)}: ${fmt(liquido)} líquidas, ${fmt(inss)} de INSS e ${fmt(irrf)} de IRRF.`,
+  };
+
   return {
     salarioBruto: fmt(salario),
     tercoConstitucional: fmt(terco),
@@ -49,5 +72,7 @@ export function feriasCltIntegrais(i: Inputs): Outputs {
     feriasLiquidas: fmt(liquido),
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

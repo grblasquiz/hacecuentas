@@ -19,6 +19,8 @@ export interface Outputs {
   isr_a_pagar: number;
   tasa_efectiva: number;
   declaracion_tipo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -109,6 +111,47 @@ export function compute(i: Inputs): Outputs {
     declaracion_tipo = 'Estimativa mensual (opcional)';
   }
 
+  const fmtMXN = (v: number) => '$' + Math.round(Math.abs(v)).toLocaleString('es-MX');
+  const metodo_txt = tipo_ded === 'real'
+    ? `deducción de gastos comprobables (**${Math.round(porcentaje_deduccion)}%** de la renta)`
+    : 'deducción ciega del **35%**';
+
+  let insight: any;
+  if (isr_a_pagar > 0) {
+    insight = {
+      title: 'ISR de tu arrendamiento',
+      text: `Con la ${metodo_txt}, tu base gravable queda en **${fmtMXN(renta_neta)}** y pagás **${fmtMXN(isr_a_pagar)}** de ISR sobre los ${fmtMXN(renta_total_periodo)} cobrados (tasa efectiva del **${tasa_efectiva.toFixed(2)}%**).`,
+      tone: 'warn',
+      icon: '🏠',
+    };
+  } else if (isr_a_pagar < 0) {
+    insight = {
+      title: 'Tenés saldo a favor',
+      text: `La retención de **${fmtMXN(menos_retencion)}** supera el ISR calculado (${fmtMXN(isr_calculado)}): te queda un saldo a favor de **${fmtMXN(isr_a_pagar)}** que podés acreditar o solicitar en devolución.`,
+      tone: 'good',
+      icon: '🏠',
+    };
+  } else {
+    insight = {
+      title: 'ISR de tu arrendamiento',
+      text: `Con la ${metodo_txt}, tu base gravable queda en **${fmtMXN(renta_neta)}** y no te queda ISR por pagar este período sobre los ${fmtMXN(renta_total_periodo)} cobrados.`,
+      tone: 'neutral',
+      icon: '🏠',
+    };
+  }
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Base gravable (renta neta)', value: Math.round(renta_neta) },
+      { label: 'Deducciones', value: Math.round(deducciones_totales) },
+    ],
+    prefix: '$',
+    centerValue: fmtMXN(renta_total_periodo),
+    centerLabel: 'Renta cobrada',
+    ariaLabel: 'Composición de la renta cobrada: base gravable más deducciones aplicadas',
+  };
+
   return {
     renta_total_periodo: Math.round(renta_total_periodo * 100) / 100,
     deducciones_totales: Math.round(deducciones_totales * 100) / 100,
@@ -118,6 +161,8 @@ export function compute(i: Inputs): Outputs {
     menos_retencion: Math.round(menos_retencion * 100) / 100,
     isr_a_pagar: Math.round(isr_a_pagar * 100) / 100,
     tasa_efectiva: Math.round(tasa_efectiva * 100) / 100,
-    declaracion_tipo: declaracion_tipo
+    declaracion_tipo: declaracion_tipo,
+    _insight: insight,
+    _chart: chart
   };
 }

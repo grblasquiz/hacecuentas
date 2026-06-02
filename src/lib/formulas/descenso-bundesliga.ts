@@ -19,6 +19,8 @@ export interface DescensoBundesligaOutputs {
   puntosMaxPosibles: number;
   puntosEsperadosFinal: number;
   veredicto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function descensoBundesliga(inputs: DescensoBundesligaInputs): DescensoBundesligaOutputs {
@@ -50,11 +52,37 @@ export function descensoBundesliga(inputs: DescensoBundesligaInputs): DescensoBu
     veredicto = '🟡 En tus manos: 2-3 triunfos te sacan de zona playoff.';
   }
 
+  const zonaDirecta = pts > pts15;
+  const zonaPlayoff = pts > pts16 && pts <= pts15;
+  const _insight = {
+    title: zonaDirecta ? 'Salvado directo, por ahora' : zonaPlayoff ? 'Estás en zona de Relegationsplayoff' : 'Estás en descenso directo',
+    text: `Con **${pts} pts** y **${fechas} ${fechas === 1 ? 'fecha' : 'fechas'}** restantes (techo **${puntosMaxPosibles} pts**), ${zonaDirecta ? `superás al 15º por **${pts - pts15}** y zafás del playoff.` : zonaPlayoff ? `estás arriba del 16º pero abajo del 15º: te faltan **${puntosParaEvitarPlayoff}** para evitar el playoff de promoción.` : `necesitás **${puntosParaSalvarsePlayoff}** ${puntosParaSalvarsePlayoff === 1 ? 'punto' : 'puntos'} solo para alcanzar al 16º y meterte en el playoff.`}`,
+    tone: zonaDirecta ? 'good' : zonaPlayoff ? 'neutral' : 'warn',
+    icon: '🇩🇪',
+  };
+  const segDirecto = Math.max(1, pts16);
+  const segPlayoff = Math.max(segDirecto + 1, pts15);
+  const topMax = Math.max(segPlayoff + 1, pts, pts15) + 6;
+  const _chart = {
+    type: 'scale',
+    marker: pts,
+    markerLabel: `${pts} pts`,
+    min: 0,
+    segments: [
+      { nombre: 'Descenso directo', max: segDirecto, color: '#ef4444', colorDark: '#f87171' },
+      { nombre: 'Playoff', max: segPlayoff, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Salvado directo', max: topMax, color: '#22c55e', colorDark: '#4ade80' },
+    ],
+    ariaLabel: `Puntos del equipo (${pts}) frente al 16º (${pts16}) y el 15º (${pts15})`,
+  };
+
   return {
     puntosParaSalvarsePlayoff,
     puntosParaEvitarPlayoff,
     puntosMaxPosibles,
     puntosEsperadosFinal,
     veredicto,
+    _insight,
+    _chart,
   };
 }

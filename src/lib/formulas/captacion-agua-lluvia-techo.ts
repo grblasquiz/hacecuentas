@@ -11,6 +11,7 @@ export interface Outputs {
   bidones200: string;
   equivalencia: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function captacionAguaLluviaTecho(i: Inputs): Outputs {
@@ -32,6 +33,14 @@ export function captacionAguaLluviaTecho(i: Inputs): Outputs {
   else if (litros < 10000) equiv = `Riego de huerta familiar por ${Math.round(litros / 50)} días.`;
   else equiv = `Abastecimiento de reserva considerable: ${m3.toFixed(1)} m³.`;
 
+  const perdidos = mm * m2 * (1 - eff);
+  const _insight = {
+    title: 'Tu potencial de captación',
+    text: `Con **${mm} mm** sobre **${m2} m²** podés juntar **${litros.toFixed(0)} L** (${m3.toFixed(1)} m³, ~${bidones.toFixed(0)} bidones de 200 L). La eficiencia del **${(eff * 100).toFixed(0)}%** deja escapar **${perdidos.toFixed(0)} L** por evaporación, salpicadura y primer lavado del techo.`,
+    tone: eff >= 0.8 ? 'good' : 'neutral',
+    icon: '🌧️',
+  };
+
   return {
     litros: `${litros.toFixed(0)} L`,
     litrosNumero: Number(litros.toFixed(1)),
@@ -39,5 +48,6 @@ export function captacionAguaLluviaTecho(i: Inputs): Outputs {
     bidones200: `${bidones.toFixed(1)} bidones de 200 L`,
     equivalencia: equiv,
     mensaje: `${mm} mm sobre ${m2} m² (ef. ${(eff * 100).toFixed(0)}%) = ${litros.toFixed(0)} L captables.`,
+    _insight,
   };
 }

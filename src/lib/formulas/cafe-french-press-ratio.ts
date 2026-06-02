@@ -1,6 +1,6 @@
 /** French Press */
 export interface Inputs { tamañoPrensa: string; porcentajeLlenado: number; ratio: number; }
-export interface Outputs { gramosCafe: number; mlAgua: number; molido: string; tiempoTotal: string; temperatura: string; }
+export interface Outputs { gramosCafe: number; mlAgua: number; molido: string; tiempoTotal: string; temperatura: string; _insight?: any; }
 
 export function cafeFrenchPressRatio(i: Inputs): Outputs {
   const size = Number(i.tamañoPrensa);
@@ -11,12 +11,23 @@ export function cafeFrenchPressRatio(i: Inputs): Outputs {
 
   const agua = size * pct;
   const cafe = agua / r;
+  const gramosCafe = Number(cafe.toFixed(1));
+  const mlAgua = Number(agua.toFixed(0));
+
+  const cuerpo = r < 14 ? 'fuerte y con mucho cuerpo' : r <= 16 ? 'equilibrado' : 'suave y liviano';
+  const _insight = {
+    title: 'Tu receta French Press',
+    text: `Pesá **${gramosCafe} g** de café para **${mlAgua} ml** de agua (ratio **1:${r}**): un perfil **${cuerpo}**. La molienda gruesa y los 4 minutos exactos evitan el sabor amargo de la sobre-extracción.`,
+    tone: 'neutral',
+    icon: '☕',
+  };
 
   return {
-    gramosCafe: Number(cafe.toFixed(1)),
-    mlAgua: Number(agua.toFixed(0)),
+    gramosCafe,
+    mlAgua,
     molido: 'Grueso (sal marina gruesa)',
     tiempoTotal: '4:00 min exactos',
     temperatura: '93-96°C (agua hervida reposada 30s)',
+    _insight,
   };
 }

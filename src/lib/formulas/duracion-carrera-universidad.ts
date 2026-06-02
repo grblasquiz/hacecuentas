@@ -12,6 +12,8 @@ export interface Outputs {
   materiasRestantes: number;
   fechaEstimada: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function duracionCarreraUniversidad(i: Inputs): Outputs {
@@ -42,11 +44,40 @@ export function duracionCarreraUniversidad(i: Inputs): Outputs {
     ? `You have ${materiasRestantes} subjects left. At ${porCuatri}/semester (${tasaAprobacion}% pass rate), you'll finish in ~${cuatrimestresRestantes} semesters (${aniosRestantes.toFixed(1)} years, ~${fechaEstimada}).`
     : `Te faltan ${materiasRestantes} materias. A ${porCuatri}/cuatrimestre (${tasaAprobacion}% aprobación), terminás en ~${cuatrimestresRestantes} cuatrimestres (${aniosRestantes.toFixed(1)} años, ~${fechaEstimada}).`;
 
+  const aprobadasShown = Math.max(0, total - materiasRestantes);
+  const pctDone = total > 0 ? Math.round((aprobadasShown / total) * 100) : 0;
+  const aniosR = Number(aniosRestantes.toFixed(1));
+  const tone: 'good' | 'warn' | 'neutral' = pctDone >= 75 ? 'good' : pctDone < 25 ? 'warn' : 'neutral';
+
+  const _insight = {
+    title: __lang === 'en' ? 'How far along you are' : 'Cuánto llevás de la carrera',
+    text: __lang === 'en'
+      ? `You've passed **${aprobadasShown} of ${total}** subjects (**${pctDone}%** done). The remaining **${materiasRestantes}** take ~**${cuatrimestresRestantes} semesters** (${aniosR} years) at this pace, finishing around **${fechaEstimada}**.`
+      : `Ya aprobaste **${aprobadasShown} de ${total}** materias (**${pctDone}%** de la carrera). Las **${materiasRestantes}** que faltan te llevan ~**${cuatrimestresRestantes} cuatrimestres** (${aniosR} años) a este ritmo, terminando cerca de **${fechaEstimada}**.`,
+    tone,
+    icon: '🎓',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: __lang === 'en' ? 'Passed' : 'Aprobadas', value: aprobadasShown },
+      { label: __lang === 'en' ? 'Remaining' : 'Restantes', value: materiasRestantes },
+    ],
+    centerValue: String(total),
+    centerLabel: __lang === 'en' ? 'subjects' : 'materias',
+    ariaLabel: __lang === 'en'
+      ? `Doughnut chart of degree progress: ${aprobadasShown} passed and ${materiasRestantes} remaining out of ${total} subjects.`
+      : `Gráfico de torta del avance de la carrera: ${aprobadasShown} aprobadas y ${materiasRestantes} restantes de ${total} materias.`,
+  };
+
   return {
     cuatrimestresRestantes,
-    aniosRestantes: Number(aniosRestantes.toFixed(1)),
+    aniosRestantes: aniosR,
     materiasRestantes,
     fechaEstimada,
     mensaje,
+    _insight,
+    _chart,
   };
 }

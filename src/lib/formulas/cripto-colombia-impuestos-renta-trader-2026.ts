@@ -18,6 +18,8 @@ export interface Outputs {
   impuesto_neto: number;
   rentabilidad_neta: number;
   clasificacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -87,16 +89,60 @@ export function compute(i: Inputs): Outputs {
     rentabilidad_neta = (utilidad_neta / costo_total) * 100;
   }
 
+  const gananciaBrutaR = Math.round(ganancia_bruta * 100) / 100;
+  const impCausadoR = Math.round(impuesto_causado * 100) / 100;
+  const impNetoR = Math.round(impuesto_neto * 100) / 100;
+  const rentR = Math.round(rentabilidad_neta * 100) / 100;
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const ocasional = i.tipo_operacion === 'ocasional';
+
+  let insightTexto: string;
+  let insightTono: 'good' | 'warn' | 'neutral';
+  if (gananciaBrutaR <= 0) {
+    insightTono = 'warn';
+    insightTexto = `La operación cierra sin ganancia (**${fmtCOP(gananciaBrutaR)}**): no se genera impuesto, pero tampoco utilidad sobre los ${fmtCOP(costo_total)} invertidos.`;
+  } else if (ocasional) {
+    insightTono = 'good';
+    insightTexto = `Como **ganancia ocasional** tributás el **10%**: **${fmtCOP(impCausadoR)}** sobre una utilidad de ${fmtCOP(gananciaBrutaR)}, para una rentabilidad neta del **${rentR}%**.`;
+  } else {
+    insightTono = 'warn';
+    insightTexto = `Como **renta ordinaria** (trading frecuente) tu ganancia se suma a los demás ingresos y tributa por tabla progresiva: **${fmtCOP(impCausadoR)}** de impuesto causado, rentabilidad neta **${rentR}%**.`;
+  }
+
+  // Donut sólo cuando el impuesto causado es atribuible a esta ganancia (no arrastra renta de otros ingresos)
+  const teQueda = gananciaBrutaR - impCausadoR;
+  const _chart =
+    gananciaBrutaR > 0 && impCausadoR >= 0 && teQueda >= 0
+      ? {
+          type: 'doughnut',
+          slices: [
+            { label: 'Utilidad después de impuesto', value: teQueda },
+            { label: 'Impuesto causado', value: impCausadoR },
+          ].filter((s) => s.value > 0),
+          prefix: '$',
+          centerValue: fmtCOP(gananciaBrutaR),
+          centerLabel: 'Ganancia bruta',
+          ariaLabel: `Ganancia bruta ${fmtCOP(gananciaBrutaR)}: te quedan ${fmtCOP(teQueda)} tras un impuesto de ${fmtCOP(impCausadoR)}`,
+        }
+      : undefined;
+
   return {
     costo_total: Math.round(costo_total * 100) / 100,
     ingreso_neto: Math.round(ingreso_neto * 100) / 100,
-    ganancia_bruta: Math.round(ganancia_bruta * 100) / 100,
+    ganancia_bruta: gananciaBrutaR,
     retension_valor: Math.round(retension_valor * 100) / 100,
     base_gravable: Math.round(base_gravable * 100) / 100,
-    impuesto_causado: Math.round(impuesto_causado * 100) / 100,
-    impuesto_neto: Math.round(impuesto_neto * 100) / 100,
-    rentabilidad_neta: Math.round(rentabilidad_neta * 100) / 100,
-    clasificacion: clasificacion
+    impuesto_causado: impCausadoR,
+    impuesto_neto: impNetoR,
+    rentabilidad_neta: rentR,
+    clasificacion: clasificacion,
+    _insight: {
+      title: 'Impuesto cripto en Colombia',
+      text: insightTexto,
+      tone: insightTono,
+      icon: '🇨🇴',
+    },
+    _chart,
   };
 }
 

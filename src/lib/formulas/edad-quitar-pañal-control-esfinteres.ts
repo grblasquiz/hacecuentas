@@ -15,6 +15,8 @@ export interface Outputs {
   edadEstimadaDiurno: string;
   edadEstimadaNocturno: string;
   proximosPasos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -125,6 +127,35 @@ export function compute(i: Inputs): Outputs {
       ? signosArray.join(" · ")
       : "Ninguna señal detectada";
 
+  const _tone = probabilidadListo <= 55 ? "warn" : "good";
+  const _insight = {
+    title: nivelReadiness,
+    text: `Con ${signosArray.length} de 6 señales presentes y la edad de ${edad} meses, la preparación da **${probabilidadListo}%**. ${
+      probabilidadListo <= 30
+        ? "Es pronto: no fuerces el proceso, la madurez física llega sola."
+        : probabilidadListo <= 55
+        ? "Prepará el entorno sin presión y reevaluá en 4-6 semanas."
+        : probabilidadListo <= 79
+        ? "Buen momento para empezar con rutina y mucha paciencia."
+        : "Casi todas las señales presentes: ya podés iniciar el entrenamiento activo."
+    }`,
+    tone: _tone,
+    icon: "🚽",
+  };
+  const _chart = {
+    type: "scale",
+    marker: probabilidadListo,
+    markerLabel: `${probabilidadListo}%`,
+    min: 0,
+    segments: [
+      { nombre: "No listo", max: 30, color: "#f87171", colorDark: "#b91c1c" },
+      { nombre: "Señales tempranas", max: 55, color: "#fbbf24", colorDark: "#b45309" },
+      { nombre: "Listo con apoyo", max: 79, color: "#a3e635", colorDark: "#4d7c0f" },
+      { nombre: "Muy listo", max: 100, color: "#34d399", colorDark: "#047857" },
+    ],
+    ariaLabel: `Preparación para dejar el pañal: ${probabilidadListo}% sobre 100, nivel ${nivelReadiness}`,
+  };
+
   return {
     probabilidadListo,
     nivelReadiness,
@@ -132,5 +163,7 @@ export function compute(i: Inputs): Outputs {
     edadEstimadaDiurno,
     edadEstimadaNocturno,
     proximosPasos,
+    _insight,
+    _chart,
   };
 }

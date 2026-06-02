@@ -7,6 +7,8 @@ export interface Outputs {
   caloriasTotales: number;
   composicion: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface DatoPlato {
@@ -51,9 +53,41 @@ export function caloriasPlayoArgentinoTipico(i: Inputs): Outputs {
   const carbs = Math.round(dato.carbs * porciones);
   const grasa = Math.round(dato.grasa * porciones);
 
+  // kcal aportadas por cada macro (Atwater: 4/4/9)
+  const kcalProt = Math.round(prot * 4);
+  const kcalCarbs = Math.round(carbs * 4);
+  const kcalGrasa = Math.round(grasa * 9);
+  const kcalMacros = kcalProt + kcalCarbs + kcalGrasa;
+
+  // % de una dieta de referencia de 2000 kcal/día
+  const pctDia = Math.round((kcalTotal / 2000) * 100);
+  const fmtN = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const tone: 'good' | 'warn' | 'neutral' = pctDia >= 40 ? 'warn' : 'neutral';
+  const insText = pctDia >= 40
+    ? `${dato.nombre}${porciones !== 1 ? ` ×${porciones}` : ''} suma **${fmtN.format(kcalTotal)} kcal**: cubre cerca del **${pctDia}%** de un día de 2000 kcal. Es un plato pesado, ideal dejar el resto del día más liviano.`
+    : `${dato.nombre}${porciones !== 1 ? ` ×${porciones}` : ''} aporta **${fmtN.format(kcalTotal)} kcal**, alrededor del **${pctDia}%** de un día de 2000 kcal. Entra bien dentro de una comida principal.`;
+
   return {
     caloriasTotales: kcalTotal,
     composicion: `Proteína: ${prot} g | Carbohidratos: ${carbs} g | Grasa: ${grasa} g`,
     detalle: `${dato.nombre} (${dato.porcion}) × ${porciones}: ${kcalTotal} kcal. Proteína ${prot} g, carbs ${carbs} g, grasa ${grasa} g. Valores aproximados por porción estándar.`,
+    _insight: {
+      title: 'Cuánto pesa en tu día',
+      text: insText,
+      tone,
+      icon: '🥩',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Proteína', value: kcalProt },
+        { label: 'Carbohidratos', value: kcalCarbs },
+        { label: 'Grasa', value: kcalGrasa },
+      ],
+      prefix: '',
+      centerValue: `${fmtN.format(kcalMacros)} kcal`,
+      centerLabel: 'según macros',
+      ariaLabel: `Calorías de ${dato.nombre} por macronutriente: proteína ${kcalProt} kcal, carbohidratos ${kcalCarbs} kcal, grasa ${kcalGrasa} kcal`,
+    },
   };
 }

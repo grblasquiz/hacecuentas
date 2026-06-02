@@ -17,7 +17,7 @@
  *   US: FMLA — 12 semanas NO remuneradas a nivel federal. "Remunerada": 0.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | object; }
 
 interface LicenciaPais {
   nombre: string;
@@ -131,11 +131,46 @@ export function diasLicenciaMaternidadPaternidadPais(i: Inputs): Outputs {
   resumen += `. Base legal: ${cfg.fuente}.`;
   if (cfg.nota) resumen += ` ${cfg.nota}`;
 
+  // Referencia: OIT recomienda 14 semanas (98 días) de maternidad remunerada como mínimo.
+  let insight: { title: string; text: string; tone: string; icon: string };
+  if (dias === 0) {
+    insight = {
+      title: 'Sin licencia paga',
+      text: `${cfg.nombre} **no garantiza licencia de ${tipoLabel.toLowerCase()} remunerada** a nivel federal. Conviene revisar qué cubre tu estado o tu empleador por convenio.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (t === 'mat') {
+    const minOIT = 98; // 14 semanas
+    const tone = dias >= minOIT ? 'good' : 'warn';
+    const comp = dias >= minOIT
+      ? `Cumple (y supera) el mínimo de 14 semanas que recomienda la OIT.`
+      : `Queda **por debajo** de las 14 semanas (98 días) que recomienda la OIT como piso.`;
+    insight = {
+      title: 'Cuánto cubre la licencia',
+      text: `En ${cfg.nombre}, la maternidad remunerada llega a **${dias} días** (≈ ${semanas} semanas). ${comp}`,
+      tone,
+      icon: '🍼',
+    };
+  } else {
+    const tone = dias >= 14 ? 'good' : 'neutral';
+    const comp = dias >= 14
+      ? `Es de las licencias de paternidad **más amplias** de la región.`
+      : `Es una licencia de paternidad **acotada**: alcanza para los primeros días, poco más.`;
+    insight = {
+      title: 'Cuánto cubre la licencia',
+      text: `En ${cfg.nombre}, la paternidad remunerada es de **${dias} días** (≈ ${semanas} semanas). ${comp}`,
+      tone,
+      icon: '👨‍🍼',
+    };
+  }
+
   return {
     dias: `${dias} días`,
     semanas,
     remunerada,
     fuente: cfg.fuente,
     resumen,
+    _insight: insight,
   };
 }

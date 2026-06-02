@@ -9,6 +9,8 @@ export interface Outputs {
   aguaRecomendada: number;
   aguaPorHora: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function hidratacionEjercicio(i: Inputs): Outputs {
@@ -41,9 +43,42 @@ export function hidratacionEjercicio(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (aguaPorHora > 700) {
+    insightText = `Demanda alta (calor y/o intensidad): necesitás **${fmt.format(aguaPorHora)} ml/h**, unos **${fmt.format(aguaRecomendada)} ml** en total. Tomá de a sorbos seguido y no esperes a tener sed.`;
+    insightTone = 'warn';
+  } else if (aguaPorHora >= 400) {
+    insightText = `Para esta sesión necesitás **${fmt.format(aguaPorHora)} ml/h**, unos **${fmt.format(aguaRecomendada)} ml** en total. Repartilo en tragos cortos cada 15-20 min.`;
+    insightTone = 'neutral';
+  } else {
+    insightText = `Demanda moderada: con **${fmt.format(aguaPorHora)} ml/h** (${fmt.format(aguaRecomendada)} ml en total) cubrís el ejercicio sin sobrecargarte.`;
+    insightTone = 'good';
+  }
+
+  const ultimoMax = Math.max(1000, Math.ceil((aguaPorHora + 100) / 100) * 100);
+
   return {
     aguaRecomendada,
     aguaPorHora,
     detalle: `Para ${fmt.format(duracion)} min de ejercicio (${intensidad}) a ${fmt.format(temp)}°C, tomá aproximadamente ${fmt.format(aguaRecomendada)} ml (${fmt.format(aguaPorHora)} ml/h).`,
+    _insight: {
+      title: 'Tu hidratación recomendada',
+      text: insightText,
+      tone: insightTone,
+      icon: '💧',
+    },
+    _chart: {
+      type: 'scale',
+      marker: aguaPorHora,
+      markerLabel: `${fmt.format(aguaPorHora)} ml/h`,
+      min: 0,
+      segments: [
+        { nombre: 'Baja', max: 400, color: '#7dd3fc', colorDark: '#0369a1' },
+        { nombre: 'Moderada', max: 700, color: '#38bdf8', colorDark: '#0284c7' },
+        { nombre: 'Alta', max: ultimoMax, color: '#0ea5e9', colorDark: '#075985' },
+      ],
+      ariaLabel: 'Ritmo de hidratación por hora según la demanda del ejercicio',
+    },
   };
 }

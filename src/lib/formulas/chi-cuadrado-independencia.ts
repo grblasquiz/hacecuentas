@@ -1,6 +1,6 @@
 /** Calculadora Chi-Cuadrado 2×2 — χ² = Σ(O-E)²/E */
 export interface Inputs { a: number; b: number; c: number; d: number; }
-export interface Outputs { chi2: number; pValor: string; conclusion: string; esperados: string; }
+export interface Outputs { chi2: number; pValor: string; conclusion: string; esperados: string; _insight?: any; }
 
 // Chi-squared CDF approximation for 1 df using normal approximation
 function chi2pValue1df(chi2: number): number {
@@ -37,10 +37,22 @@ export function chiCuadradoIndependencia(i: Inputs): Outputs {
   const minExpected = Math.min(ea, eb, ec, ed);
   if (minExpected < 5) conclusion += ' ⚠️ Alguna esperada < 5: considerá el test exacto de Fisher.';
 
+  const significativo = pVal < 0.05;
+  const pTxt = pVal < 0.001 ? 'p < 0,001' : `p = ${pVal.toFixed(4)}`;
+  const _insight = {
+    title: significativo ? 'Hay asociación significativa' : 'No hay asociación significativa',
+    text: significativo
+      ? `Con **χ² = ${chi2.toFixed(2)}** (${pTxt}) rechazás la hipótesis de independencia: las dos variables **están asociadas**.` + (minExpected < 5 ? ' Pero alguna frecuencia esperada es **< 5**: validá con el test exacto de Fisher.' : '')
+      : `Con **χ² = ${chi2.toFixed(2)}** (${pTxt} ≥ 0,05) **no podés rechazar** la independencia: no hay evidencia de que las variables estén asociadas.` + (minExpected < 5 ? ' Además alguna esperada es **< 5**: el resultado puede no ser fiable, mirá el test de Fisher.' : ''),
+    tone: minExpected < 5 ? 'warn' : (significativo ? 'good' : 'neutral'),
+    icon: '📊',
+  };
+
   return {
     chi2: Number(chi2.toFixed(4)),
     pValor: pVal < 0.001 ? '< 0,001' : pVal.toFixed(4),
     conclusion,
     esperados: `E(a)=${ea.toFixed(1)}, E(b)=${eb.toFixed(1)}, E(c)=${ec.toFixed(1)}, E(d)=${ed.toFixed(1)}`,
+    _insight,
   };
 }

@@ -8,6 +8,7 @@ export interface Outputs {
   result: number;
   puntoMedio: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function distanciaEntreDosPuntos2d3d(i: Inputs): Outputs {
@@ -40,9 +41,16 @@ export function distanciaEntreDosPuntos2d3d(i: Inputs): Outputs {
     ? `√[(${dx})² + (${dy})² + (${dz})²] = √[${dx ** 2} + ${dy ** 2} + ${dz ** 2}] = √${dx ** 2 + dy ** 2 + dz ** 2}`
     : `√[(${dx})² + (${dy})²] = √[${dx ** 2} + ${dy ** 2}] = √${dx ** 2 + dy ** 2}`;
 
+  const insight = {
+    title: `Distancia ${is3D ? '3D' : '2D'}`,
+    text: `Entre **${pA}** y **${pB}** hay **${dist.toFixed(4)}** unidades${is3D ? ' en el espacio' : ' en el plano'}, con punto medio en **${pM}**. Se calcula con la norma euclidiana de Δx = **${dx}**, Δy = **${dy}**${is3D ? `, Δz = **${dz}**` : ''}.`,
+    tone: 'neutral',
+    icon: '📐',
+  };
   return {
     result: Number(dist.toFixed(4)),
     puntoMedio: pM,
     detalle: `**A** = ${pA}, **B** = ${pB}\n**Δx** = ${dx}, **Δy** = ${dy}${is3D ? `, **Δz** = ${dz}` : ''}\n**Distancia** = ${formula} = **${dist.toFixed(4)}**\n**Punto medio** = ${pM}`,
+    _insight: insight,
   };
 }

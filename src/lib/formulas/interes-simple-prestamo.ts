@@ -14,6 +14,7 @@ export interface Outputs {
   effective_rate: number;
   alert: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Umbral en años a partir del cual se emite advertencia sobre diferencia simple vs compuesto
@@ -98,6 +99,17 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del total a pagar: capital más interés simple',
   };
 
+  const pctInteres = total_amount > 0 ? (interest_simple / total_amount) * 100 : 0;
+  const diffSignificativa = difference > 0 && (interest_simple > 0 ? (difference / interest_simple) * 100 : 0) > ALERT_DIFF_PERCENT;
+  const insight = {
+    title: diffSignificativa ? 'Conviene confirmar el tipo de interés' : 'Costo del préstamo a interés simple',
+    text: diffSignificativa
+      ? `Pagás **$${Math.round(interest_simple).toLocaleString('es-AR')}** de interés simple (el **${pctInteres.toFixed(1)}%** del total). Con interés compuesto serían **$${Math.round(difference).toLocaleString('es-AR')}** más, así que revisá qué método figura en tu contrato.`
+      : `Sobre **$${Math.round(capital).toLocaleString('es-AR')}**, pagás **$${Math.round(interest_simple).toLocaleString('es-AR')}** de interés simple: el **${pctInteres.toFixed(1)}%** del total a devolver. Casi igual que con interés compuesto en este plazo.`,
+    tone: diffSignificativa ? ('warn' as const) : ('neutral' as const),
+    icon: '🏦',
+  };
+
   return {
     interest_simple,
     total_amount,
@@ -105,6 +117,7 @@ export function compute(i: Inputs): Outputs {
     difference,
     effective_rate,
     alert,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

@@ -16,6 +16,8 @@ export interface Outputs {
   racion_insectos_g: number;
   watts_lampara: string;
   alerta: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -150,15 +152,61 @@ export function compute(i: Inputs): Outputs {
 
   const alertaFinal = alertas.length > 0 ? alertas.join(" | ") : "Sin alertas críticas.";
 
+  // --- Insight narrativo ---
+  const tempCritica = tempAmbiente < 20 || tempAmbiente > 32;
+  const tempFueraRango = tempAmbiente < tempMin || tempAmbiente > tempMax;
+  const racionTotalR = Math.round(racionTotal * 10) / 10;
+  const catfoodR = Math.round(racionCatfood * 10) / 10;
+  const insectosR = Math.round(racionInsectos * 10) / 10;
+
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  let insightIcon: string;
+  if (tempCritica) {
+    insightText = `La temperatura ambiente de **${tempAmbiente}°C** está en zona crítica para un erizo de **${peso} g**: el rango seguro es **${tempMin}–${tempMax}°C**. Actuá ya para evitar torpor o golpe de calor.`;
+    insightTone = "warn";
+    insightIcon = "🚨";
+  } else if (tempFueraRango) {
+    insightText = `A **${tempAmbiente}°C** estás fuera del rango ideal **${tempMin}–${tempMax}°C**; conviene una lámpara cerámica de **${wattsLampara}**. La ración diaria total es de **${racionTotalR} g**.`;
+    insightTone = "warn";
+    insightIcon = "🌡️";
+  } else {
+    insightText = `Temperatura **correcta** (${tempAmbiente}°C dentro de ${tempMin}–${tempMax}°C). Dale **${racionTotalR} g** de comida al día: **${catfoodR} g** de cat food y **${insectosR} g** de insectos.`;
+    insightTone = "good";
+    insightIcon = "🦔";
+  }
+
+  const _insight = {
+    title: "Diagnóstico del cuidado",
+    text: insightText,
+    tone: insightTone,
+    icon: insightIcon,
+  };
+
+  // --- Gráfico: composición de la ración diaria (cat food + insectos = total) ---
+  const _chart = {
+    type: "doughnut",
+    slices: [
+      { label: "Cat food", value: catfoodR },
+      { label: "Insectos", value: insectosR },
+    ],
+    prefix: "",
+    centerValue: `${racionTotalR} g`,
+    centerLabel: "Ración diaria",
+    ariaLabel: `Ración diaria de ${racionTotalR} gramos: ${catfoodR} g de cat food y ${insectosR} g de insectos.`,
+  };
+
   return {
     temperatura_ok: temperaturaOk,
     temp_objetivo: tempObjetivoLabel,
     area_m2: Math.round(areaMq * 100) / 100,
     area_ok: areaOk,
-    racion_total_g: Math.round(racionTotal * 10) / 10,
-    racion_catfood_g: Math.round(racionCatfood * 10) / 10,
-    racion_insectos_g: Math.round(racionInsectos * 10) / 10,
+    racion_total_g: racionTotalR,
+    racion_catfood_g: catfoodR,
+    racion_insectos_g: insectosR,
     watts_lampara: wattsLampara,
     alerta: alertaFinal,
+    _insight,
+    _chart,
   };
 }

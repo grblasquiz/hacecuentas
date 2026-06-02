@@ -14,6 +14,7 @@ export interface Outputs {
   requisitos_cumplidos: string;
   ahorro_anual: number;
   proximo_paso: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -149,6 +150,40 @@ export function compute(i: Inputs): Outputs {
       "Si aún no apareces registrado, contacta a tu municipalidad.";
   }
 
+  // --- Insight narrativo ---
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  let _insight;
+  if (!es_elegible) {
+    _insight = {
+      title: 'No aplica el bono estándar',
+      text: `Con RSH en el tramo **${i.rsh_tramo}%** no calificás al bono eléctrico estándar (cubre 40-80%). Tu caso requiere una revisión socioeconómica especial en MIDES antes de acceder a un apoyo complementario.`,
+      tone: 'warn',
+      icon: '⚡'
+    };
+  } else if (bono_mensual_estimado > 0) {
+    const tope_alcanzado = bono_mensual_estimado >= bono_máximo;
+    const tone = i.consumo_kwh > consumo_límite ? 'warn' : 'good';
+    const detalleTope = tope_alcanzado
+      ? ` Alcanzaste el tope mensual del beneficio (${fmtCLP(bono_máximo)}).`
+      : '';
+    const detalleConsumo = i.consumo_kwh > consumo_límite
+      ? ` Ojo: tu consumo de **${i.consumo_kwh} kWh** supera el límite de ${consumo_límite} kWh, así que el bono se reduce proporcionalmente.`
+      : '';
+    _insight = {
+      title: 'Ahorro estimado en tu cuenta',
+      text: `El bono cubre unos **${fmtCLP(bono_mensual_estimado)}/mes** de tu factura, cerca del **${porcentaje_descuento.toFixed(0)}%** del costo sin subsidio. En el año son **${fmtCLP(ahorro_anual)}** menos a pagar.${detalleTope}${detalleConsumo}`,
+      tone,
+      icon: '⚡'
+    };
+  } else {
+    _insight = {
+      title: 'Falta el dato de consumo',
+      text: `Sos elegible por tu tramo RSH **${i.rsh_tramo}%**, pero ingresá tu consumo en kWh para estimar cuánto cubre el bono en tu factura.`,
+      tone: 'neutral',
+      icon: '⚡'
+    };
+  }
+
   return {
     bono_mensual_estimado: Math.round(bono_mensual_estimado),
     tarifa_subsidiada_kwh: Math.round(tarifa_subsidiada * 100) / 100,
@@ -156,6 +191,7 @@ export function compute(i: Inputs): Outputs {
     porcentaje_descuento: Math.round(porcentaje_descuento * 100) / 100,
     requisitos_cumplidos: requisitos_txt,
     ahorro_anual: Math.round(ahorro_anual),
-    proximo_paso: proximo_paso
+    proximo_paso: proximo_paso,
+    _insight
   };
 }

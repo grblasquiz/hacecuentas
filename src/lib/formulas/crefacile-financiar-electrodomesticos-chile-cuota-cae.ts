@@ -15,6 +15,8 @@ export interface Outputs {
   total_interes_banco: number;
   diferencia_interes: number;
   ahorro_potencial: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 function obtenerCAE(tipo_tarjeta: string, cae_personalizado?: number): number {
@@ -95,14 +97,50 @@ export function compute(i: Inputs): Outputs {
     ahorro_potencial = (diferencia_interes / total_interes_tarjeta) * 100;
   }
   
+  const total_pagado_r = Math.round(total_pagado_tarjeta);
+  const total_interes_r = Math.round(total_interes_tarjeta);
+  const diferencia_r = Math.round(diferencia_interes);
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const pctInteres = precio > 0 ? (total_interes_r / precio) * 100 : 0;
+
+  let insightTexto: string;
+  let insightTono: 'good' | 'warn' | 'neutral';
+  if (diferencia_r > 0) {
+    insightTono = 'warn';
+    insightTexto = `En ${cuotas} cuotas con la tarjeta pagás **${fmt(total_interes_r)}** de interés (un **${pctInteres.toFixed(0)}%** sobre el precio). Financiando con el banco ahorrarías **${fmt(diferencia_r)}**.`;
+  } else if (diferencia_r < 0) {
+    insightTono = 'good';
+    insightTexto = `La tarjeta resulta más barata que el banco por **${fmt(Math.abs(diferencia_r))}**: sumás **${fmt(total_interes_r)}** de interés (**${pctInteres.toFixed(0)}%** sobre el precio del producto).`;
+  } else {
+    insightTono = 'neutral';
+    insightTexto = `Tarjeta y banco cuestan casi lo mismo: **${fmt(total_interes_r)}** de interés en ${cuotas} cuotas (**${pctInteres.toFixed(0)}%** sobre el precio).`;
+  }
+
   return {
     cuota_mensual_tarjeta: Math.round(cuota_tarjeta),
-    total_pagado_tarjeta: Math.round(total_pagado_tarjeta),
-    total_interes_tarjeta: Math.round(total_interes_tarjeta),
+    total_pagado_tarjeta: total_pagado_r,
+    total_interes_tarjeta: total_interes_r,
     cae_efectivo_tarjeta: parseFloat((cae_efectivo).toFixed(2)),
     cuota_mensual_banco: Math.round(cuota_banco),
     total_interes_banco: Math.round(total_interes_banco),
-    diferencia_interes: Math.round(diferencia_interes),
-    ahorro_potencial: parseFloat(ahorro_potencial.toFixed(1))
+    diferencia_interes: diferencia_r,
+    ahorro_potencial: parseFloat(ahorro_potencial.toFixed(1)),
+    _insight: {
+      title: 'Cuánto te cuesta financiar',
+      text: insightTexto,
+      tone: insightTono,
+      icon: '🧾',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Precio del producto', value: Math.round(precio) },
+        { label: 'Interés (CAE)', value: total_interes_r },
+      ],
+      prefix: '$',
+      centerValue: fmt(total_pagado_r),
+      centerLabel: 'Total a pagar',
+      ariaLabel: `Total pagado con tarjeta ${fmt(total_pagado_r)}: precio ${fmt(precio)} más ${fmt(total_interes_r)} de interés`,
+    },
   };
 }

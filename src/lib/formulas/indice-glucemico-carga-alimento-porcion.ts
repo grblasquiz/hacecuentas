@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: any; }
 export function indiceGlucemicoCargaAlimentoPorcion(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const v1=Number(i.valor1)||0; const v2=Number(i.valor2)||1;
@@ -7,5 +7,13 @@ export function indiceGlucemicoCargaAlimentoPorcion(i: Inputs): Outputs {
   const resumen = __lang === 'en'
     ? `Calculation: ${v1} × ${v2} / 10 = ${r.toFixed(1)}.`
     : `Cálculo: ${v1} × ${v2} / 10 = ${r.toFixed(1)}.`;
-  return { resultado:r.toFixed(1), resumen };
+  const insight = {
+    title: __lang === 'en' ? 'Your result' : 'Tu resultado',
+    text: __lang === 'en'
+      ? `From the values entered (${v1} and ${v2}), the result is **${r.toFixed(1)}**.`
+      : `Con los valores ingresados (${v1} y ${v2}), el resultado es **${r.toFixed(1)}**.`,
+    tone: 'neutral',
+    icon: '🍽️',
+  };
+  return { resultado:r.toFixed(1), resumen, _insight: insight };
 }

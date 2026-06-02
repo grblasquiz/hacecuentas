@@ -1,6 +1,6 @@
 /** Huella hídrica de alimentos en litros */
 export interface Inputs { tipoAlimento: number; cantidadKg: number; vecesporSemana: number; }
-export interface Outputs { litrosPorKg: number; litrosPorConsumo: number; litrosSemana: number; litrosMes: number; detalle: string; }
+export interface Outputs { litrosPorKg: number; litrosPorConsumo: number; litrosSemana: number; litrosMes: number; detalle: string; _insight?: any; }
 
 const ALIMENTOS: Record<number, { nombre: string; litrosKg: number }> = {
   1: { nombre: 'Carne vacuna', litrosKg: 15400 },
@@ -31,11 +31,22 @@ export function huellaHidricaAlimentosLitros(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  // Equivalencia tangible: una ducha promedio ~100 L
+  const duchas = Math.round(litrosMes / 100);
+  const tone = alimento.litrosKg >= 4000 ? 'warn' : alimento.litrosKg >= 1500 ? 'neutral' : 'good';
+  const _insight = {
+    title: 'Tu consumo de agua oculta',
+    text: `Comer **${alimento.nombre.toLowerCase()}** ${veces} ${veces === 1 ? 'vez' : 'veces'} por semana esconde **${fmt.format(litrosMes)} litros de agua al mes** — el equivalente a unas **${fmt.format(duchas)} duchas**. Su huella es de **${fmt.format(alimento.litrosKg)} L/kg**.`,
+    tone,
+    icon: '💧',
+  };
+
   return {
     litrosPorKg: alimento.litrosKg,
     litrosPorConsumo: Number(litrosPorConsumo.toFixed(0)),
     litrosSemana: Number(litrosSemana.toFixed(0)),
     litrosMes: Number(litrosMes.toFixed(0)),
     detalle: `${alimento.nombre}: ${fmt.format(alimento.litrosKg)} L/kg × ${kg} kg = ${fmt.format(litrosPorConsumo)} L por consumo × ${veces} veces/semana = ${fmt.format(litrosSemana)} L/semana (${fmt.format(litrosMes)} L/mes).`,
+    _insight,
   };
 }

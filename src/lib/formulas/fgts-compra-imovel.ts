@@ -17,6 +17,7 @@ export interface Outputs {
   valorUsavel: string;
   motivo: string;
   resumen: string;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -44,6 +45,21 @@ export function fgtsCompraImovel(i: Inputs): Outputs {
   const pode = motivos.length === 0;
   const usavel = pode ? Math.min(saldo, valor) : 0;
 
+  const pctImovel = valor > 0 ? (usavel / valor) * 100 : 0;
+  const _insight = pode
+    ? {
+        title: 'FGTS liberado para a compra',
+        text: `Você pode aplicar **${brl(usavel)}** do seu FGTS, o que cobre **${pctImovel.toFixed(1).replace('.', ',')}%** do imóvel de ${brl(valor)}. O restante entra como entrada própria ou financiamento.`,
+        tone: 'good',
+        icon: '🏠',
+      }
+    : {
+        title: 'FGTS bloqueado neste caso',
+        text: `Pelas regras do SFH/MCMV você **não pode usar o FGTS** aqui: ${motivos.join(' ')} Ajuste o cenário ou consulte a Caixa antes de contar com esse valor.`,
+        tone: 'warn',
+        icon: '🚫',
+      };
+
   return {
     podeUsar: pode ? 'Sim' : 'Não',
     valorUsavel: brl(usavel),
@@ -51,5 +67,6 @@ export function fgtsCompraImovel(i: Inputs): Outputs {
     resumen: pode
       ? `Você pode usar até ${brl(usavel)} do FGTS para comprar o imóvel de ${brl(valor)}.`
       : `Você NÃO pode usar o FGTS neste caso: ${motivos.join(' ')}`,
+    _insight,
   };
 }

@@ -20,6 +20,8 @@ export interface Outputs {
   aporte_empleador_afp: number;
   aporte_empleador_salud: number;
   costo_nomina_total: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -76,6 +78,34 @@ export function compute(i: Inputs): Outputs {
   // 9. Costo total nómina (empresa)
   const costoNominaTotal = remBrutaTotal + aporteEmpAfp + aporteEmpSalud;
 
+  // --- Insight narrativo ---
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const pctLiquido = remBrutaTotal > 0 ? (sueldoLiquido / remBrutaTotal) * 100 : 0;
+  const pctRetenciones = remBrutaTotal > 0 ? (totalRetenciones / remBrutaTotal) * 100 : 0;
+  const tone = pctRetenciones >= 25 ? 'warn' : 'good';
+  const _insight = {
+    title: 'Cuánto llega al bolsillo',
+    text: `Con un bono al **${objCumplidos}%** de cumplimiento, la remuneración bruta es **${fmt(remBrutaTotal)}** y el líquido a pagar **${fmt(sueldoLiquido)}** (te queda el **${pctLiquido.toFixed(1)}%**). Las retenciones obligatorias se llevan **${fmt(totalRetenciones)}** (${pctRetenciones.toFixed(1)}%). Para la empresa, el costo total de nómina es **${fmt(costoNominaTotal)}** sumando aportes patronales.`,
+    tone,
+    icon: '💼'
+  };
+
+  // --- Gráfico: composición del bruto (líquido + retenciones) ---
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Líquido', value: Math.round(sueldoLiquido) },
+      { label: 'AFP', value: Math.round(descAfp) },
+      { label: 'Comisión AFP', value: Math.round(descComisionAfp) },
+      { label: 'Salud', value: Math.round(descSalud) },
+      { label: 'Impuesto único (IUSC)', value: Math.round(iuscCalculado) }
+    ].filter(s => s.value > 0),
+    prefix: '$',
+    centerValue: fmt(remBrutaTotal),
+    centerLabel: 'Bruto',
+    ariaLabel: `Descomposición de la remuneración bruta de ${fmt(remBrutaTotal)}: líquido ${fmt(sueldoLiquido)} más retenciones de AFP, salud e impuesto.`
+  };
+
   return {
     bono_bruto_calculado: Math.round(bonoBruto),
     remuneracion_bruta_total: Math.round(remBrutaTotal),
@@ -88,7 +118,9 @@ export function compute(i: Inputs): Outputs {
     sueldo_liquido: Math.round(sueldoLiquido),
     aporte_empleador_afp: Math.round(aporteEmpAfp),
     aporte_empleador_salud: Math.round(aporteEmpSalud),
-    costo_nomina_total: Math.round(costoNominaTotal)
+    costo_nomina_total: Math.round(costoNominaTotal),
+    _insight,
+    _chart
   };
 }
 

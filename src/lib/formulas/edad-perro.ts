@@ -8,6 +8,8 @@ export interface Outputs {
   edadHumanaSimple: number;
   etapaVida: string;
   expectativa: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function edadPerro(i: Inputs): Outputs {
@@ -49,10 +51,41 @@ export function edadPerro(i: Inputs): Outputs {
   else if (tamano === 'grande') expectativa = 10;
   else if (tamano === 'gigante') expectativa = 8;
 
+  const edadLogR = Math.round(edadLog);
+  const restante = Math.max(0, Math.round((expectativa - a) * 10) / 10);
+  const toneStage: 'good' | 'warn' | 'neutral' =
+    a >= expectativa ? 'warn' :
+    (a >= 10 ? 'warn' :
+    (a >= 7 ? 'neutral' : 'good'));
+  const _insight = {
+    title: 'La edad real de tu perro',
+    text: `Con la fórmula científica (UCSD 2019), tu perro de **${a} ${a === 1 ? 'año' : 'años'}** equivale a **${edadLogR} años humanos** y está en etapa **${etapa.toLowerCase()}**. Para su tamaño, la expectativa media ronda los **${expectativa} años**${a >= expectativa ? ', que ya superó: cada año extra es un regalo, redoblá los controles veterinarios.' : `, así que le quedarían en promedio unos **${restante} años** por delante.`}`,
+    tone: toneStage,
+    icon: '🐶',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: a,
+    markerLabel: etapa,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Cachorro', max: 1, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Joven adulto', max: 3, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Adulto', max: 7, color: '#bfdbfe', colorDark: '#1e40af' },
+      { nombre: 'Senior', max: 10, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Geriátrico', max: Math.max(Math.ceil(expectativa) + 2, Math.ceil(a) + 1), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Escala de etapa de vida del perro: ${a} años reales (${etapa}), expectativa media ${expectativa} años.`,
+  };
+
   return {
-    edadHumanaLog: Math.round(edadLog),
+    edadHumanaLog: edadLogR,
     edadHumanaSimple: Math.round(edadSimple),
     etapaVida: etapa,
     expectativa,
+    _insight,
+    _chart,
   };
 }

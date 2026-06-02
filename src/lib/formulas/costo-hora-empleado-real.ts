@@ -13,6 +13,8 @@ export interface Outputs {
   costoMensualTotal: number;
   sobrecostoPct: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function costoHoraEmpleadoReal(i: Inputs): Outputs {
@@ -44,10 +46,37 @@ export function costoHoraEmpleadoReal(i: Inputs): Outputs {
     `Costo total mensual: $${fmt.format(costoMensualTotal)}. ` +
     `Costo hora bruto: $${fmt.format(costoHoraBruto)} → Costo hora real: $${fmt.format(costoHoraReal)} (+${sobrecostoPct.toFixed(1)}%).`;
 
+  const cargasMonto = bruto * cargas / 100;
+  const aguinaldoMonto = bruto * aguinaldo / 100;
+  const vacacionesMonto = bruto * vacaciones / 100;
+
+  const _insight = {
+    title: 'Lo que cuesta de verdad',
+    text: `Cada hora de este empleado te cuesta **$${fmt.format(Math.round(costoHoraReal))}**, no los $${fmt.format(Math.round(costoHoraBruto))} del sueldo bruto: las cargas, el aguinaldo y las vacaciones suman un **+${sobrecostoPct.toFixed(1)}%** que rara vez se tiene en cuenta al presupuestar.`,
+    tone: sobrecostoPct >= 50 ? 'warn' : 'neutral',
+    icon: '💼',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Sueldo bruto', value: Math.round(bruto) },
+      { label: 'Cargas sociales', value: Math.round(cargasMonto) },
+      { label: 'Aguinaldo', value: Math.round(aguinaldoMonto) },
+      { label: 'Vacaciones', value: Math.round(vacacionesMonto) },
+    ],
+    prefix: '$',
+    centerValue: `$${fmt.format(Math.round(costoMensualTotal))}`,
+    centerLabel: 'Costo mensual total',
+    ariaLabel: `Composición del costo mensual total de $${fmt.format(Math.round(costoMensualTotal))}: sueldo bruto $${fmt.format(Math.round(bruto))}, cargas sociales $${fmt.format(Math.round(cargasMonto))}, aguinaldo $${fmt.format(Math.round(aguinaldoMonto))} y vacaciones $${fmt.format(Math.round(vacacionesMonto))}.`,
+  };
+
   return {
     costoHoraReal: Math.round(costoHoraReal),
     costoMensualTotal: Math.round(costoMensualTotal),
     sobrecostoPct: Number(sobrecostoPct.toFixed(1)),
     detalle,
+    _insight,
+    _chart,
   };
 }

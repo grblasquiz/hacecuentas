@@ -14,6 +14,8 @@ export interface Outputs {
   total_impuesto: number;
   tasa_efectiva: number;
   obligacion_declaracion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -67,6 +69,41 @@ export function compute(i: Inputs): Outputs {
     obligacion_declaracion = 'Sí, obligado. Declarar formulario 210 (Ganancia ocasional)';
   }
   
+  // Neto final que realmente te queda tras retención + complementario
+  const neto_final = Math.max(0, monto - total_impuesto);
+
+  // ── Insight narrativo (dinámico según umbral) ──────────────────────
+  const fmtCO = (n: number) => '$' + Math.round(n).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+  const _insight = !supera
+    ? {
+        title: 'Premio exento de retención',
+        text: `Tu premio de **${fmtCO(monto)}** no supera el umbral de 48 UVT (**${fmtCO(uvt_48_pesos)}**), así que **no tiene retención** ni impuesto de ganancia ocasional. Te quedás con el total.`,
+        tone: 'good',
+        icon: '🍀',
+      }
+    : {
+        title: 'Lo que te queda del premio',
+        text: `De **${fmtCO(monto)}** te retienen **${fmtCO(retension_17)}** (17%) en la fuente y el impuesto total de ganancia ocasional llega a **${fmtCO(total_impuesto)}** (**${tasa_efectiva}%** efectivo). En la mano te quedan **${fmtCO(neto_final)}** y quedás obligado a declarar (formulario 210).`,
+        tone: 'warn',
+        icon: '🎰',
+      };
+
+  // ── Gráfico: sólo si supera umbral, repartiendo el premio ──────────
+  const _chart = supera
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Te queda', value: Math.round(neto_final) },
+          { label: 'Retención 17%', value: Math.round(retension_17) },
+          ...(impuesto_complementario > 0 ? [{ label: 'Impuesto complementario', value: Math.round(impuesto_complementario) }] : []),
+        ],
+        prefix: '$',
+        centerValue: fmtCO(monto),
+        centerLabel: 'Premio',
+        ariaLabel: 'Reparto del premio entre lo que te queda, la retención del 17% y el impuesto complementario',
+      }
+    : undefined;
+
   return {
     uvt_48_pesos: Math.round(uvt_48_pesos),
     supera_umbral,
@@ -76,6 +113,8 @@ export function compute(i: Inputs): Outputs {
     impuesto_complementario,
     total_impuesto,
     tasa_efectiva,
-    obligacion_declaracion
+    obligacion_declaracion,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

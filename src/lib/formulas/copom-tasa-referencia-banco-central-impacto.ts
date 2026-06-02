@@ -7,5 +7,22 @@ export function copomTasaReferenciaBancoCentralImpacto(i: Inputs): Outputs {
   const resumen = __lang === 'en'
     ? `Amount $${m.toLocaleString('en-US')} × ${p} months: $${r.toFixed(0)}/mo.`
     : `Monto $${m.toLocaleString('es-AR')} × ${p} meses: $${r.toFixed(0)}/mes.`;
-  return { resultado:'$'+r.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), resumen };
+  const totalPagado = r * p;
+  const intereses = Math.max(0, totalPagado - m);
+  const fmt = (n: number) => '$' + n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const tasaAnual = (Number(i.tasa) || 0).toFixed(2);
+  const _insight = __lang === 'en'
+    ? {
+        title: 'Monthly payment',
+        text: `At **${tasaAnual}%** annual over **${p}** months, each installment is **${fmt(r)}**. You'd repay **${fmt(totalPagado)}** total — **${fmt(intereses)}** of it pure interest.`,
+        tone: 'neutral',
+        icon: '🏛️',
+      }
+    : {
+        title: 'Tu cuota mensual',
+        text: `Con una tasa de **${tasaAnual}%** anual a **${p}** meses, cada cuota es **${fmt(r)}**. Vas a devolver **${fmt(totalPagado)}** en total, de los cuales **${fmt(intereses)}** son intereses.`,
+        tone: 'neutral',
+        icon: '🏛️',
+      };
+  return { resultado:'$'+r.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), resumen, _insight };
 }

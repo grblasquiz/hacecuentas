@@ -18,6 +18,8 @@ export interface Outputs {
   dataLimite: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -42,7 +44,14 @@ export function decimoTerceiroSegundaParcela(i: Inputs): Outputs {
   const formula = `2ª parcela = saldo ${fmt(saldoBruto)} − INSS ${fmt(inss)} − IRRF ${fmt(irrf)} = ${fmt(segunda)}`;
   const explicacao = `13º bruto de ${fmt(decimoBruto)} (${meses}/12 meses). 1ª parcela paga: ${fmt(primeira)}. Na 2ª parcela (até 20/dez), descontam-se INSS ${fmt(inss)} e IRRF ${fmt(irrf)} sobre o valor integral do 13º, resultando líquido de ${fmt(segunda)}.`;
 
-  return {
+  const descontos = inss + irrf;
+  const tone = segunda < 0 ? 'warn' : (descontos > 0 ? 'warn' : 'good');
+  const insightText = segunda < 0
+    ? `A 1ª parcela informada (**${fmt(primeira)}**) supera o saldo do 13º bruto de **${fmt(decimoBruto)}** menos os descontos — confira o valor já pago.`
+    : `Na 2ª parcela você recebe **${fmt(segunda)}**: do saldo de ${fmt(saldoBruto)} saem **${fmt(descontos)}** de INSS + IRRF, que incidem só agora (em dez). Total descontado concentra-se nesta parcela.`;
+
+  // Donut só quando os componentes somam o bruto de forma coerente
+  const out: Outputs = {
     decimoBruto: fmt(decimoBruto),
     descontoInss: fmt(inss),
     descontoIrrf: fmt(irrf),
@@ -51,5 +60,30 @@ export function decimoTerceiroSegundaParcela(i: Inputs): Outputs {
     dataLimite: '20 de dezembro',
     formula,
     explicacao,
+    _insight: {
+      title: 'Quanto cai na 2ª parcela',
+      text: insightText,
+      tone,
+      icon: '🎄',
+    },
   };
+
+  if (segunda >= 0 && primeira >= 0 && primeira <= decimoBruto) {
+    const slices = [
+      { label: '1ª parcela (já paga)', value: Number(primeira.toFixed(2)) },
+      { label: '2ª parcela (líquida)', value: Number(segunda.toFixed(2)) },
+      { label: 'INSS', value: Number(inss.toFixed(2)) },
+    ];
+    if (irrf > 0) slices.push({ label: 'IRRF', value: Number(irrf.toFixed(2)) });
+    out._chart = {
+      type: 'doughnut',
+      slices,
+      prefix: 'R$ ',
+      centerValue: fmt(decimoBruto),
+      centerLabel: '13º bruto',
+      ariaLabel: `13º bruto de ${fmt(decimoBruto)} repartido entre as parcelas e os descontos`,
+    };
+  }
+
+  return out;
 }

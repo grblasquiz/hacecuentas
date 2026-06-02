@@ -8,6 +8,7 @@ export interface Outputs {
   meses: number;
   anos: number;
   categoriaFsi: string;
+  _insight?: any;
 }
 
 export function horasAprenderRusoB2(i: Inputs): Outputs {
@@ -31,12 +32,27 @@ export function horasAprenderRusoB2(i: Inputs): Outputs {
   const meses = semanas / 4.33;
   const anos = meses / 12;
 
+  const mesesR = Math.round(meses * 10) / 10;
+  const inmersionTxt = inmersion === 'si'
+    ? ' La inmersión total te recorta el 40% del camino.'
+    : inmersion === 'parcial'
+      ? ' La inmersión parcial te ahorra un 20% de horas.'
+      : ' Sin inmersión, todo el peso recae en el estudio guiado.';
+  const tono = anos >= 2 ? 'warn' : anos >= 1 ? 'neutral' : 'good';
+  const insight = {
+    title: 'Tu ruta al ruso B2',
+    text: `A **${horasDiarias}h/día** y **${diasSemana} días/semana** te faltan **${Math.round(restante)}h** netas: unos **${mesesR} meses** (${Math.round(anos * 10) / 10} años) para alcanzar el B2.${inmersionTxt} El ruso es Categoría III del FSI, de los idiomas más exigentes para un hispanohablante.`,
+    tone: tono,
+    icon: '🇷🇺',
+  };
+
   return {
     horasTotales: Math.round(restante),
     semanas: Math.round(semanas),
-    meses: Math.round(meses * 10) / 10,
+    meses: mesesR,
     anos: Math.round(anos * 10) / 10,
     categoriaFsi: 'Cat III FSI (difícil)',
+    _insight: insight,
   };
 
 }

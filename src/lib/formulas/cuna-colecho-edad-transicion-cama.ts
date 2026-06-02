@@ -15,6 +15,8 @@ export interface Outputs {
   score: number;
   pasos: string;
   tipoCama: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -218,6 +220,46 @@ export function compute(i: Inputs): Outputs {
 
   const pasos = pasosArray.join("\n");
 
+  // --- Insight dinámico: prioriza seguridad, luego preparación por score ---
+  let insightTone: "good" | "warn" | "neutral";
+  let insightText: string;
+  if (riesgoSeguridad) {
+    insightTone = "warn";
+    insightText = `Riesgo de seguridad: el niño trepa y el barandal mide solo **${alturaBarrote} cm** (<66 cm). Conviene pasar a una cama de transición **esta semana**, más allá del puntaje (${score}/100).`;
+  } else if (urgenciaTrepar) {
+    insightTone = "warn";
+    insightText = `El niño ya intenta trepar la cuna: el puntaje de preparación es **${score}/100** y la transición se recomienda **en 2-4 semanas** para adelantarse al riesgo de caída.`;
+  } else if (score >= 75) {
+    insightTone = "good";
+    insightText = `Puntaje de preparación **${score}/100**: muestra señales claras. Es un buen momento para iniciar la transición en las próximas **1-3 semanas**.`;
+  } else if (score >= 50) {
+    insightTone = "neutral";
+    insightText = `Puntaje de preparación **${score}/100**: hay señales positivas pero conviene esperar. Preparás el entorno y hacés la transición en **4-8 semanas**.`;
+  } else {
+    insightTone = "neutral";
+    insightText = `Puntaje de preparación **${score}/100**: todavía no hay señales claras. Sin urgencia — revisá en **4-8 semanas** o cuando aparezcan nuevas señales.`;
+  }
+  const _insight = {
+    title: "Preparación para la cama",
+    text: insightText,
+    tone: insightTone,
+    icon: "🛏️",
+  };
+
+  // --- Gauge del puntaje de preparación (0-100) ---
+  const _chart = {
+    type: "scale",
+    marker: score,
+    markerLabel: `${score}/100`,
+    min: 0,
+    segments: [
+      { nombre: "Esperar", max: 50, color: "#93c5fd", colorDark: "#1e3a8a" },
+      { nombre: "Preparar", max: 75, color: "#fcd34d", colorDark: "#78350f" },
+      { nombre: "Buen momento", max: 100, color: "#86efac", colorDark: "#14532d" },
+    ],
+    ariaLabel: `Puntaje de preparación para la transición a la cama: ${score} de 100`,
+  };
+
   return {
     recomendacion,
     detalleRecomendacion,
@@ -225,5 +267,7 @@ export function compute(i: Inputs): Outputs {
     score,
     pasos,
     tipoCama,
+    _insight,
+    _chart,
   };
 }

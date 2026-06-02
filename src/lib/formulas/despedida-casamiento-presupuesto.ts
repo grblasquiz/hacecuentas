@@ -2,7 +2,7 @@
  * Calculadora de Despedida de Casamiento - Presupuesto.
  */
 export interface DespedidaCasamientoPresupuestoInputs { invitados:number; duracionDias:number; tipoFormato:string; }
-export interface DespedidaCasamientoPresupuestoOutputs { costoTotal:number; costoPorInvitado:number; costoMadrinaExtra:number; checklist:string; }
+export interface DespedidaCasamientoPresupuestoOutputs { costoTotal:number; costoPorInvitado:number; costoMadrinaExtra:number; checklist:string; _insight?:any; }
 export function despedidaCasamientoPresupuesto(inputs: DespedidaCasamientoPresupuestoInputs): DespedidaCasamientoPresupuestoOutputs {
   const inv = Number(inputs.invitados);
   const dias = Number(inputs.duracionDias);
@@ -17,10 +17,18 @@ export function despedidaCasamientoPresupuesto(inputs: DespedidaCasamientoPresup
   const costoTotal = costoPorInvitado * inv;
   const costoMadrinaExtra = Math.round(costoPorInvitado * 1.18);
   const checklist = '3 meses: reservar lugar + WhatsApp grupo. 2 meses: contratar actividades + recaudar 50%. 1 mes: confirmar menu. 1 semana: asistentes finales + plan B lluvia.';
+  const costoPorInvitadoR = Math.round(costoPorInvitado);
+  const fmt = (n: number) => n.toLocaleString('es-AR');
   return {
     costoTotal,
-    costoPorInvitado: Math.round(costoPorInvitado),
+    costoPorInvitado: costoPorInvitadoR,
     costoMadrinaExtra,
     checklist,
+    _insight: {
+      title: 'Presupuesto de la despedida',
+      text: `Entre **${inv} invitadas** y **${dias} día(s)** el costo total ronda **$${fmt(costoTotal)}**, o sea **$${fmt(costoPorInvitadoR)} por persona**. La madrina suele poner ~18% más (**$${fmt(costoMadrinaExtra)}**) para cubrir el detalle de la novia.`,
+      tone: 'neutral',
+      icon: '🥂',
+    },
   };
 }

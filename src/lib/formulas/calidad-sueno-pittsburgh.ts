@@ -14,6 +14,8 @@ export interface Outputs {
   eficiencia: number;
   recomendacion: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function calidadSuenoPittsburgh(i: Inputs): Outputs {
@@ -29,6 +31,13 @@ export function calidadSuenoPittsburgh(i: Inputs): Outputs {
       recPobre: 'Necesitás mejorar tu higiene del sueño: horario fijo, no pantallas antes de dormir, habitación oscura y fresca.',
       resultadoMala: 'Mala calidad de sueño',
       recMala: 'Se recomienda consultar a un especialista en sueño. Tu calidad es significativamente peor que lo normal.',
+      insTitle: 'Tu índice de sueño',
+      insGood: (p: number, e: number) => `Tu PSQI es **${p}/21** con una eficiencia del **${e}%**: descansás dentro de los parámetros sanos. Sostené tus horarios.`,
+      insPoor: (p: number, e: number) => `Tu PSQI de **${p}/21** y una eficiencia del **${e}%** marcan un sueño deficiente: ajustá horarios y rutina nocturna antes de que se acumule la deuda.`,
+      insBad: (p: number, e: number) => `Con **${p}/21** y solo **${e}%** de eficiencia tu sueño es malo: conviene una consulta profesional para descartar un trastorno.`,
+      chartMarker: 'Tu PSQI',
+      segBuena: 'Buena', segPobre: 'Pobre', segMala: 'Mala',
+      chartAria: 'Escala del puntaje PSQI de calidad de sueño',
     },
     en: {
       errorDuracion: 'Enter your sleep hours',
@@ -39,6 +48,13 @@ export function calidadSuenoPittsburgh(i: Inputs): Outputs {
       recPobre: 'You need to improve your sleep hygiene: fixed schedule, no screens before bed, dark and cool room.',
       resultadoMala: 'Bad sleep quality',
       recMala: 'Consulting a sleep specialist is recommended. Your sleep quality is significantly worse than normal.',
+      insTitle: 'Your sleep index',
+      insGood: (p: number, e: number) => `Your PSQI is **${p}/21** with **${e}%** efficiency: you rest within healthy parameters. Keep your schedule steady.`,
+      insPoor: (p: number, e: number) => `A PSQI of **${p}/21** and **${e}%** efficiency point to poor sleep: fix your schedule and nighttime routine before the debt builds up.`,
+      insBad: (p: number, e: number) => `With **${p}/21** and just **${e}%** efficiency your sleep is bad: a professional consult is advisable to rule out a disorder.`,
+      chartMarker: 'Your PSQI',
+      segBuena: 'Good', segPobre: 'Poor', segMala: 'Bad',
+      chartAria: 'PSQI sleep-quality score scale',
     },
   } as const)[__lang];
 
@@ -97,11 +113,31 @@ export function calidadSuenoPittsburgh(i: Inputs): Outputs {
     recomendacion = T.recMala;
   }
 
+  const efClamp = Math.min(100, eficiencia);
+  const insText = puntajeGlobal <= 5 ? T.insGood(puntajeGlobal, efClamp)
+    : puntajeGlobal <= 10 ? T.insPoor(puntajeGlobal, efClamp)
+    : T.insBad(puntajeGlobal, efClamp);
+  const insTone = puntajeGlobal <= 5 ? 'good' : puntajeGlobal <= 10 ? 'warn' : 'warn';
+  const insIcon = puntajeGlobal <= 5 ? '😴' : '🛌';
+
   return {
     puntajeGlobal,
     resultado,
-    eficiencia: Math.min(100, eficiencia),
+    eficiencia: efClamp,
     recomendacion,
-    mensaje: `PSQI: ${puntajeGlobal}/21 — ${resultado}. Eficiencia: ${eficiencia}%.`
+    mensaje: `PSQI: ${puntajeGlobal}/21 — ${resultado}. Eficiencia: ${eficiencia}%.`,
+    _insight: { title: T.insTitle, text: insText, tone: insTone, icon: insIcon },
+    _chart: {
+      type: 'scale',
+      marker: puntajeGlobal,
+      markerLabel: T.chartMarker,
+      min: 0,
+      segments: [
+        { nombre: T.segBuena, max: 5, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: T.segPobre, max: 10, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: T.segMala, max: 21, color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: T.chartAria,
+    },
   };
 }

@@ -12,6 +12,8 @@ export interface Outputs {
   docenasRedondeadas: number;
   empPorPersona: number;
   variedades: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Empanadas por persona según ocasión y apetito
@@ -71,6 +73,7 @@ export function compute(i: Inputs): Outputs {
   // Se ajusta el último ítem para que la suma cierre exacto
   let asignadas = 0;
   const lineas: string[] = [];
+  const sliceVar: { label: string; value: number }[] = [];
 
   VARIEDADES.forEach((v, idx) => {
     let docVar: number;
@@ -82,9 +85,32 @@ export function compute(i: Inputs): Outputs {
     }
     asignadas += docVar;
     lineas.push(`${v.nombre}: ${docVar} doc. (${docVar * 12} emp.)`);
+    if (docVar > 0) sliceVar.push({ label: v.nombre, value: docVar * 12 });
   });
 
   const variedades = lineas.join(" | ");
+
+  // Empanadas que efectivamente comprás (docenas cerradas) vs estimación
+  const empComprar = docenasRedondeadas * 12;
+  const ocasionTxt = momento === "entrada" ? "como entrada"
+    : momento === "picada" ? "para picar"
+    : "como plato principal";
+
+  const _insight = {
+    title: "Tu pedido de empanadas",
+    text: `Para **${invitados} invitados** ${ocasionTxt}, calculá **${docenasRedondeadas} docenas** (${empComprar} empanadas), a razón de **${empBase} por adulto**. Pedí las docenas completas para no quedarte corto.`,
+    tone: "neutral" as const,
+    icon: "🥟",
+  };
+
+  const _chart = sliceVar.length > 1 ? {
+    type: "doughnut",
+    slices: sliceVar,
+    prefix: "",
+    centerValue: `${empComprar}`,
+    centerLabel: "empanadas",
+    ariaLabel: `Distribución de ${empComprar} empanadas por variedad`,
+  } : undefined;
 
   return {
     totalEmpanadas,
@@ -92,5 +118,7 @@ export function compute(i: Inputs): Outputs {
     docenasRedondeadas,
     empPorPersona:       empBase,
     variedades,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

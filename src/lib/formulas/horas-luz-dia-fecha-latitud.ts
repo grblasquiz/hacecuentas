@@ -12,6 +12,8 @@ export interface Outputs {
   diaDelAnio: string;
   categoria: string;
   comentario: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function dayOfYear(fecha: string): number {
@@ -62,11 +64,38 @@ export function horasLuzDiaFechaLatitud(i: Inputs): Outputs {
   const hh = Math.floor(horas);
   const mm = Math.round((horas - hh) * 60);
 
+  const esExtremo = horas >= 23 || horas <= 1;
+  const _insight = {
+    title: categoria,
+    text: esExtremo
+      ? `Con latitud **${lat}°** ese día hay **${horas.toFixed(1)} h** de luz: ${horas >= 23 ? 'el sol no se oculta' : 'el sol prácticamente no sale'} (fenómeno polar).`
+      : `Con latitud **${lat}°** ese día el sol está sobre el horizonte **${hh}h ${mm}min** (declinación solar **${delta.toFixed(1)}°**).`,
+    tone: esExtremo ? 'warn' : 'neutral',
+    icon: horas >= 15 ? '☀️' : horas <= 9 ? '🌙' : '🌥️',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: Number(horas.toFixed(2)),
+    markerLabel: `${horas.toFixed(1)} h`,
+    min: 0,
+    segments: [
+      { nombre: 'Noche polar', max: 1, color: '#1e3a8a', colorDark: '#1e3a8a' },
+      { nombre: 'Día corto', max: 9, color: '#3b82f6', colorDark: '#3b82f6' },
+      { nombre: 'Día moderado', max: 15, color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: 'Día largo', max: 23, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Día polar', max: 24, color: '#ef4444', colorDark: '#dc2626' },
+    ],
+    ariaLabel: 'Escala de horas de luz del día, de noche polar a día polar',
+  };
+
   return {
     horasLuz: `${horas.toFixed(2)} horas (${hh}h ${mm}min)`,
     declinacionSolar: `${delta.toFixed(2)}°`,
     diaDelAnio: `Día ${N} del año`,
     categoria,
     comentario,
+    _insight,
+    _chart,
   };
 }

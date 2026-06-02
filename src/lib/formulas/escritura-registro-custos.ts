@@ -16,6 +16,8 @@ export interface Outputs {
   totalCustos: string;
   percentualSobreValor: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -67,11 +69,34 @@ export function escrituraRegistroCustos(i: Inputs): Outputs {
   const total = escritura + registroAjustado;
   const pct = (total / valor) * 100;
 
+  const insightText = financiado
+    ? `Imóvel financiado de **${brl(valor)}** em ${estado}: o financiamento dispensa a escritura pública, então o cartório fica em **${brl(total)}** (só o registro), equivalente a **${pct.toFixed(2)}%** do valor. Lembre que o ITBI (~2-3%) é cobrado à parte.`
+    : `Comprar à vista um imóvel de **${brl(valor)}** em ${estado} custa **${brl(total)}** de cartório (escritura **${brl(escritura)}** + registro **${brl(registroAjustado)}**), ou **${pct.toFixed(2)}%** do valor. Some o ITBI (~2-3%) para ter o gasto total da transferência.`;
+
+  const slices = [
+    ...(escritura > 0 ? [{ label: 'Escritura pública', value: escritura }] : []),
+    { label: 'Registro imobiliário', value: registroAjustado },
+  ];
+
   return {
     escrituraPublica: brl(escritura) + (financiado ? ' (financiamento dispensa escritura pública)' : ''),
     registroImobiliario: brl(registroAjustado),
     totalCustos: brl(total),
     percentualSobreValor: pct.toFixed(2) + '%',
     resumen: `Imóvel de ${brl(valor)} em ${estado}: escritura ${brl(escritura)} + registro ${brl(registroAjustado)} = ${brl(total)} (${pct.toFixed(2)}% do valor). ${financiado ? 'Financiamento dispensa escritura pública.' : ''}`,
+    _insight: {
+      title: 'Custo de cartório na compra',
+      text: insightText,
+      tone: 'warn',
+      icon: '🏠',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices,
+      prefix: 'R$ ',
+      centerValue: brl(total).replace('R$ ', ''),
+      centerLabel: 'Total cartório',
+      ariaLabel: `Composição do custo de cartório: escritura ${brl(escritura)} e registro ${brl(registroAjustado)}, total ${brl(total)}`,
+    },
   };
 }

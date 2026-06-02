@@ -1,6 +1,6 @@
 /** Fantasy Premier League — valoracion de un once titular con budget 100M */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 
 export function fantasyPremierLeague(i: Inputs): Outputs {
   const budget = Number(i.budget) || 100;
@@ -40,6 +40,48 @@ export function fantasyPremierLeague(i: Inputs): Outputs {
     consejo = 'Budget balanceado: margen sano para swaps y fichajes durante la temporada.';
   }
 
+  const insightTone: 'good' | 'warn' | 'neutral' = restante < 0 ? 'warn' : restante < 2 ? 'neutral' : 'good';
+  const insightIcon = restante < 0 ? '🚫' : '⚽';
+  const insightText = restante < 0
+    ? `Tu once **${formacion}** cuesta **£${totalPlantilla.toFixed(1)}M** y te pasás **£${Math.abs(restante).toFixed(1)}M** del budget de £${budget.toFixed(0)}M. Bajá el precio promedio de alguna línea o cambiá de formación.`
+    : `Tu plantilla **${formacion}** suma **£${totalPlantilla.toFixed(1)}M** (£${costeOnce.toFixed(1)}M el once + £${suplentes.toFixed(1)}M el banco) y te quedan **£${restante.toFixed(1)}M** libres${restante > 10 ? ', margen de sobra para subir a un premium' : restante < 2 ? ', muy justo para fichajes' : ' para swaps durante la temporada'}.`;
+  const insight = {
+    title: viable === 'Viable' ? `Plantilla viable (${formacion})` : `Te pasás del budget`,
+    text: insightText,
+    tone: insightTone,
+    icon: insightIcon
+  };
+
+  let chart: any;
+  if (restante >= 0) {
+    chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Once titular', value: Math.round(costeOnce * 10) / 10 },
+        { label: 'Banco (suplentes)', value: Math.round(suplentes * 10) / 10 },
+        { label: 'Margen libre', value: Math.round(restante * 10) / 10 }
+      ].filter(s => s.value > 0),
+      prefix: '£',
+      suffix: 'M',
+      centerValue: `£${budget.toFixed(0)}M`,
+      centerLabel: 'Budget total',
+      ariaLabel: `Reparto del budget de £${budget.toFixed(0)}M: £${costeOnce.toFixed(1)}M en el once, £${suplentes.toFixed(1)}M en el banco y £${restante.toFixed(1)}M libres`
+    };
+  } else {
+    chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Once titular', value: Math.round(costeOnce * 10) / 10 },
+        { label: 'Banco (suplentes)', value: Math.round(suplentes * 10) / 10 }
+      ].filter(s => s.value > 0),
+      prefix: '£',
+      suffix: 'M',
+      centerValue: `£${totalPlantilla.toFixed(1)}M`,
+      centerLabel: 'Coste plantilla',
+      ariaLabel: `Coste de la plantilla £${totalPlantilla.toFixed(1)}M: £${costeOnce.toFixed(1)}M en el once y £${suplentes.toFixed(1)}M en el banco, por encima del budget`
+    };
+  }
+
   return {
     costeOnce: `£${costeOnce.toFixed(1)}M`,
     costeSuplentes: `£${suplentes.toFixed(1)}M`,
@@ -48,5 +90,7 @@ export function fantasyPremierLeague(i: Inputs): Outputs {
     formacionUsada: formacion,
     estado: viable,
     consejo,
+    _insight: insight,
+    _chart: chart,
   };
 }

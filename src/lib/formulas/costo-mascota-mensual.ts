@@ -3,7 +3,7 @@
  * Estimación: alimento + veterinario + antiparasitarios + otros
  */
 export interface CostoMascotaInputs { tipoMascota: string; tamano: string; tipoAlimento: string; }
-export interface CostoMascotaOutputs { costoMensual: number; alimento: number; veterinario: number; otros: number; costoAnual: number; }
+export interface CostoMascotaOutputs { costoMensual: number; alimento: number; veterinario: number; otros: number; costoAnual: number; _insight?: any; _chart?: any; }
 
 export function costoMascotaMensual(inputs: CostoMascotaInputs): CostoMascotaOutputs {
   const tipo = inputs.tipoMascota || 'perro';
@@ -33,11 +33,36 @@ export function costoMascotaMensual(inputs: CostoMascotaInputs): CostoMascotaOut
   const costoMensual = Math.round(alimento + veterinario + otros);
   const costoAnual = costoMensual * 12;
 
+  const alimentoR = Math.round(alimento);
+  const veterinarioR = Math.round(veterinario);
+  const otrosR = Math.round(otros);
+  const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+  const pctAlim = costoMensual > 0 ? Math.round((alimentoR / costoMensual) * 100) : 0;
+  const nombreTipo = tipo === 'gato' ? 'gato' : 'perro';
+
   return {
     costoMensual,
-    alimento: Math.round(alimento),
-    veterinario: Math.round(veterinario),
-    otros: Math.round(otros),
+    alimento: alimentoR,
+    veterinario: veterinarioR,
+    otros: otrosR,
     costoAnual,
+    _insight: {
+      title: 'Lo que sale mantener tu mascota',
+      text: `Tu ${nombreTipo} ${tamano} cuesta unos **${fmt(costoMensual)}/mes**, o sea **${fmt(costoAnual)}** al año. El alimento se lleva la mayor parte (**${pctAlim}%**, ${fmt(alimentoR)}/mes).`,
+      tone: 'neutral',
+      icon: tipo === 'gato' ? '🐱' : '🐶',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Alimento', value: alimentoR },
+        { label: 'Veterinario', value: veterinarioR },
+        { label: 'Higiene y extras', value: otrosR },
+      ],
+      prefix: '$',
+      centerValue: fmt(costoMensual),
+      centerLabel: 'Por mes',
+      ariaLabel: `El costo mensual de ${fmt(costoMensual)} se reparte en alimento ${fmt(alimentoR)}, veterinario ${fmt(veterinarioR)} e higiene y extras ${fmt(otrosR)}.`,
+    },
   };
 }

@@ -18,6 +18,8 @@ export interface Outputs {
   breakeven_month: number;
   annual_rental_cost: number;
   recommendation: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // GPU presets: [rental_rate_per_hour, tdp_watts, purchase_price]
@@ -114,6 +116,31 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  const cheaperOption = monthly_rental_cost <= monthly_ownership_cost ? "Renting" : "Owning";
+  const _insight = {
+    title: cheaperOption === "Renting" ? "Renting wins this month" : "Owning wins this month",
+    text: breakeven_month > 0
+      ? `**${cheaperOption}** is cheaper right now ($${monthly_rental_cost.toFixed(2)}/mo rental vs $${monthly_ownership_cost.toFixed(2)}/mo owning). Owning pays for itself after **${breakeven_month} months** — buy only if you'll keep the GPU longer.`
+      : `**Renting** is cheaper at this usage — $${monthly_rental_cost.toFixed(2)}/mo vs $${monthly_ownership_cost.toFixed(2)}/mo owning. Electricity and overhead alone exceed the rental rate, so owning never breaks even.`,
+    tone: cheaperOption === "Renting" ? "neutral" : "good",
+    icon: "🖥️",
+  };
+
+  const _chart = monthly_ownership_cost > 0
+    ? {
+        type: "doughnut" as const,
+        slices: [
+          { label: "Amortization", value: Math.round(monthly_amortization * 100) / 100 },
+          { label: "Electricity", value: Math.round(monthly_electricity_cost * 100) / 100 },
+          { label: "Overhead", value: Math.round(monthly_overhead * 100) / 100 },
+        ],
+        prefix: "$",
+        centerValue: "$" + (Math.round(monthly_ownership_cost * 100) / 100).toLocaleString("en-US"),
+        centerLabel: "Owning / mo",
+        ariaLabel: "Monthly ownership cost split into amortization, electricity and overhead.",
+      }
+    : undefined;
+
   return {
     monthly_rental_cost:      Math.round(monthly_rental_cost      * 100) / 100,
     monthly_ownership_cost:   Math.round(monthly_ownership_cost   * 100) / 100,
@@ -122,5 +149,7 @@ export function compute(i: Inputs): Outputs {
     breakeven_month,
     annual_rental_cost:       Math.round(annual_rental_cost       * 100) / 100,
     recommendation,
+    _insight,
+    _chart,
   };
 }

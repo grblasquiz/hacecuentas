@@ -9,6 +9,8 @@ export interface Outputs {
   frecuenciaSemanas: string;
   consejos: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function frecuenciaBanoPerro(i: Inputs): Outputs {
@@ -58,10 +60,42 @@ export function frecuenciaBanoPerro(i: Inputs): Outputs {
 
   const semanasTexto = semanas < 2 ? `cada ~${Math.round(baseDias)} días` : `cada ~${semanas.toFixed(1)} semanas`;
 
+  // Insight dinámico según qué tan seguido sale el baño
+  let insightTone: 'good' | 'warn' | 'neutral' = 'good';
+  let insightText = '';
+  if (baseDias <= 21) {
+    insightTone = 'warn';
+    insightText = `Tocá bañarlo seguido (**cada ~${baseDias} días**). A esta frecuencia conviene shampoo suave para no arrasar con la grasa natural de la piel; un baño de más reseca y pica.`;
+  } else if (baseDias >= 56) {
+    insightTone = 'neutral';
+    insightText = `Baño bien espaciado: **cada ~${baseDias} días** (${semanas.toFixed(1)} semanas). El cepillado regular entre baños hace más por el pelo que el agua, así que no te apures a meterlo a la bañera.`;
+  } else {
+    insightTone = 'good';
+    insightText = `Frecuencia equilibrada: **cada ~${baseDias} días** (${semanas.toFixed(1)} semanas). Mantenés la piel sana sin sobrebañar. Bañarlo de más es tan malo como de menos: reseca y elimina la protección natural.`;
+  }
+
   return {
     frecuenciaDias: baseDias,
     frecuenciaSemanas: semanasTexto,
     consejos: consejosArr.join(' '),
     detalle: `Para pelo ${tipoPelo}, actividad ${actividad} y piel ${piel}: bañalo ${semanasTexto} (~${baseDias} días). ${consejosArr.join(' ')}`,
+    _insight: {
+      title: 'Tu frecuencia de baño',
+      text: insightText,
+      tone: insightTone,
+      icon: '🛁',
+    },
+    _chart: {
+      type: 'scale',
+      marker: baseDias,
+      markerLabel: `${baseDias} días`,
+      min: 14,
+      segments: [
+        { nombre: 'Muy seguido', max: 21, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Equilibrado', max: 49, color: '#22c55e', colorDark: '#4ade80' },
+        { nombre: 'Espaciado', max: 70, color: '#3b82f6', colorDark: '#60a5fa' },
+      ],
+      ariaLabel: `Frecuencia de baño de ${baseDias} días sobre una escala de 14 a 70 días`,
+    },
   };
 }

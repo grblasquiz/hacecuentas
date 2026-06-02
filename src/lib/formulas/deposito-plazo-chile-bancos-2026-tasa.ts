@@ -23,6 +23,8 @@ export interface Outputs {
   monto_final: number;
   comparativa_bancos: OutputBanco[];
   alternativa_uf: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function obtenerTasaPorBancoYPlazo(banco: string, plazo: number): number {
@@ -98,6 +100,28 @@ export function compute(i: Inputs): Outputs {
     alternativa_uf = 'Depósito UF seleccionado. Rendimiento protegido contra inflación mediante reajuste diario IPC.';
   }
   
+  // --- Insight + gráfico ---
+  const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
+  const tasa_neta_pct = parseFloat((tasa_neta_anual * 100).toFixed(2));
+  const brutoSlices = rendimiento_neto + impuesto_retenido; // suma exacta de las slices
+  const _insight = {
+    title: 'Cuánto te queda en el bolsillo',
+    text: `Tu depósito de **${clp(i.monto_deposito)}** a **${i.plazo_dias} días** rinde **${clp(rendimiento_neto)} netos** (te retienen ${clp(impuesto_retenido)} de impuesto, 12,5%). Terminás con **${clp(monto_final)}**, una tasa neta de **${tasa_neta_pct}%** anual.`,
+    tone: 'good',
+    icon: '🏦',
+  };
+  const _chart = brutoSlices > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Te queda (neto)', value: rendimiento_neto },
+      { label: 'Impuesto (12,5%)', value: impuesto_retenido },
+    ],
+    prefix: '$',
+    centerValue: clp(brutoSlices),
+    centerLabel: 'interés bruto',
+    ariaLabel: `Del interés bruto de ${clp(brutoSlices)}, te quedan ${clp(rendimiento_neto)} netos y ${clp(impuesto_retenido)} se van en impuesto`,
+  } : undefined;
+
   return {
     rendimiento_bruto: Math.round(rendimiento_bruto),
     impuesto_retenido,
@@ -105,6 +129,8 @@ export function compute(i: Inputs): Outputs {
     tasa_neta_anual: parseFloat((tasa_neta_anual * 100).toFixed(2)),
     monto_final,
     comparativa_bancos,
-    alternativa_uf
+    alternativa_uf,
+    _insight,
+    _chart
   };
 }

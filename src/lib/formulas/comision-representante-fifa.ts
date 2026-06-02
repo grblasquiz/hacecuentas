@@ -12,6 +12,8 @@ export interface Outputs {
   comisionTotal: number;
   reglaFIFA: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // FIFA Agents Regulations 2023 — caps
@@ -47,12 +49,47 @@ export function comisionRepresentanteFifa(i: Inputs): Outputs {
   const total = comisionJugador + comisionClubComp + comisionClubVend;
   const regla = `FIFA Agents Regulations 2023: jugador hasta ${capJugador*100}% del salario bruto contrato (cap del salario <USD 200k: 5%); club comprador hasta 3%; club vendedor hasta 10% del transfer fee. Doble representación (jugador+comprador) permitida: 6% máx combinado.`;
 
-  return {
+  const usd = (n: number) => 'USD ' + Math.round(n).toLocaleString('en-US');
+  let insightText = '';
+  if (servicio === 'dual') {
+    insightText = `Con doble representación el agente cobra **${usd(total)}**: ${usd(comisionJugador)} del jugador (${capJugador*100}%) más ${usd(comisionClubComp)} del club comprador (3%). FIFA topea esta combinación en 6% del salario del contrato.`;
+  } else if (servicio === 'jugador') {
+    insightText = `El agente cobra **${usd(comisionJugador)}** del jugador: ${capJugador*100}% sobre el salario bruto de todo el contrato (${usd(salarioTotal)} en ${anios} año${anios>1?'s':''}).${salario > UMBRAL_BAJO_USD ? ' Como el salario anual supera los USD 200k, el cap baja de 5% a 3%.' : ''}`;
+  } else if (servicio === 'club-comprador') {
+    insightText = `El club comprador paga **${usd(comisionClubComp)}** al agente: el 3% sobre el salario bruto del contrato (${usd(salarioTotal)} en ${anios} año${anios>1?'s':''}).`;
+  } else {
+    insightText = `El club vendedor paga **${usd(comisionClubVend)}** al agente: el tope FIFA del 10% sobre un transfer fee de ${usd(transfer)}.`;
+  }
+  const _insight = {
+    title: 'Lo que se lleva el agente',
+    text: insightText,
+    tone: 'neutral',
+    icon: '⚽',
+  };
+
+  const out: Outputs = {
     comisionJugador: Math.round(comisionJugador),
     comisionClubComprador: Math.round(comisionClubComp),
     comisionClubVendedor: Math.round(comisionClubVend),
     comisionTotal: Math.round(total),
     reglaFIFA: regla,
     mensaje: `Comisión total agente: USD ${Math.round(total).toLocaleString('en-US')}. Jugador: ${Math.round(comisionJugador).toLocaleString('en-US')}, club comprador: ${Math.round(comisionClubComp).toLocaleString('en-US')}, club vendedor: ${Math.round(comisionClubVend).toLocaleString('en-US')}.`,
+    _insight,
   };
+
+  if (servicio === 'dual' && comisionJugador > 0 && comisionClubComp > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Paga el jugador', value: Math.round(comisionJugador) },
+        { label: 'Paga el club comprador', value: Math.round(comisionClubComp) },
+      ],
+      prefix: 'USD ',
+      centerValue: 'USD ' + Math.round(total).toLocaleString('en-US'),
+      centerLabel: 'Comisión total',
+      ariaLabel: `Reparto de la comisión del agente en doble representación: jugador ${usd(comisionJugador)}, club comprador ${usd(comisionClubComp)}.`,
+    };
+  }
+
+  return out;
 }

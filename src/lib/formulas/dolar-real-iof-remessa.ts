@@ -18,6 +18,8 @@ export interface Outputs {
   valorUsdRecebido: string;
   custoTotalBrl: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -46,13 +48,37 @@ export function dolarRealIofRemessa(i: Inputs): Outputs {
   const usdRecebido = brlDisponivel / cot;
   const cotEfet = brlInput / usdRecebido;
 
+  const custoTotal = spreadValor + iofValor;
+  const custoPct = brlInput > 0 ? (custoTotal / brlInput) * 100 : 0;
+  const _insight = {
+    title: 'Quanto chega lá fora',
+    text: iofPct === 0
+      ? `Enviando ${brl(brlInput)} em ${ano} (IOF já zerado), só o spread de ${spread}% pesa: você recebe **US$ ${usdRecebido.toFixed(2)}** e gasta **${brl(custoTotal)}** em custos (cotação efetiva **${brl(cotEfet)}/USD**).`
+      : `Dos ${brl(brlInput)} enviados em ${ano}, **${brl(custoTotal)}** ficam em IOF (${iofPct}%) + spread (${spread}%) e você recebe **US$ ${usdRecebido.toFixed(2)}**. A cotação efetiva sobe para **${brl(cotEfet)}/USD**.`,
+    tone: custoPct >= 3 ? 'warn' : 'neutral',
+    icon: '🌐',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Vira dólar', value: Number(brlDisponivel.toFixed(2)) },
+      { label: `Spread casa (${spread}%)`, value: Number(spreadValor.toFixed(2)) },
+      { label: `IOF (${iofPct}%)`, value: Number(iofValor.toFixed(2)) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(brlInput),
+    centerLabel: 'Reais enviados',
+    ariaLabel: `Dos ${brl(brlInput)} enviados, ${brl(brlDisponivel)} viram dólar, ${brl(spreadValor)} são o spread da casa e ${brl(iofValor)} de IOF.`,
+  };
   return {
     iofPctAplicada: iofPct.toFixed(2) + '% (IOF câmbio ' + ano + ')',
     iofValor: brl(iofValor),
     spreadCasa: brl(spreadValor),
     cotacaoEfetiva: brl(cotEfet) + '/USD',
     valorUsdRecebido: 'US$ ' + usdRecebido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-    custoTotalBrl: brl(spreadValor + iofValor),
+    custoTotalBrl: brl(custoTotal),
     resumen: `Remessa de ${brl(brlInput)} em ${ano}: IOF ${iofPct}% + spread ${spread}% = você recebe US$ ${usdRecebido.toFixed(2)} (cotação efetiva ${brl(cotEfet)}/USD).`,
+    _insight,
+    _chart,
   };
 }

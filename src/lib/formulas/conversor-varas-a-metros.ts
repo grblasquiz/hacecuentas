@@ -1,6 +1,6 @@
 /** Conversor: vara ↔ metro */
 export interface Inputs { valor: number | string; direccion?: string; ingrediente?: string; }
-export interface Outputs { resultado: string; resumen: string; }
+export interface Outputs { resultado: string; resumen: string; _insight?: any; }
 
 export function conversorVarasAMetros(i: Inputs): Outputs {
   const v = Number(i.valor);
@@ -16,8 +16,16 @@ export function conversorVarasAMetros(i: Inputs): Outputs {
     r = v / factor;
     fromLabel = 'metros'; toLabel = 'varas';
   }
+  const rTxt = r.toFixed(4).replace(/\.?0+$/, '');
+  const vTxt = String(v);
   return {
     resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'm'.toString(),
-    resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.'
+    resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
+    _insight: {
+      title: 'La vara no es universal',
+      text: 'Usamos la **vara de 0,8359 m** (la castellana, común en títulos de propiedad viejos). Así **' + vTxt + ' ' + fromLabel + '** equivalen a **' + rTxt + ' ' + toLabel + '**. Cuidado: cada región tenía su vara (la mexicana mide 0,838 m, otras varían), revisá la escritura antes de medir un terreno.',
+      tone: 'warn',
+      icon: '📏'
+    }
   };
 }

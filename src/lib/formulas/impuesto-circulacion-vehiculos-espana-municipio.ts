@@ -23,6 +23,7 @@ export interface Outputs {
   bonificacion_aplicada: number;  // € de descuento
   comparativa_ciudades: string;   // texto informativo
   periodo_pago: string;           // texto informativo
+  _insight?: any;
 }
 
 // --- Tarifas base art. 95.1 TRLRHL (€) --- vigentes 2026
@@ -199,6 +200,27 @@ export function compute(i: Inputs): Outputs {
       ? ' (bonificación híbrido no garantizada; consulta tu ordenanza fiscal)'
       : '';
 
+  const nombre_municipio = NOMBRES_MUNICIPIO[municipio] ?? 'tu municipio';
+  let insight: any;
+  if (bonificacion_aplicada > 0) {
+    insight = {
+      title: 'IVTM con bonificación',
+      text: `En ${nombre_municipio} pagarías **${formatEUR(cuota_anual)}** al año por tu vehículo ${tipo_vehiculo}. El coeficiente municipal (×${coeficiente_municipio}) sube la tarifa estatal de ${formatEUR(cuota_base)}, pero la bonificación te descuenta **${formatEUR(bonificacion_aplicada)}**.`,
+      tone: 'good',
+      icon: '🚗',
+    };
+  } else {
+    const recargo = coeficiente_municipio > 1
+      ? ` El coeficiente municipal (×${coeficiente_municipio}) eleva la tarifa estatal de ${formatEUR(cuota_base)} hasta esa cifra.`
+      : '';
+    insight = {
+      title: 'Tu cuota de IVTM',
+      text: `En ${nombre_municipio} pagarías **${formatEUR(cuota_anual)}** al año por este vehículo.${recargo}`,
+      tone: 'neutral',
+      icon: '🚗',
+    };
+  }
+
   return {
     cuota_anual,
     cuota_base: Math.round(cuota_base * 100) / 100,
@@ -206,5 +228,6 @@ export function compute(i: Inputs): Outputs {
     bonificacion_aplicada,
     comparativa_ciudades: comparativa_ciudades + nota_bonif,
     periodo_pago,
+    _insight: insight,
   };
 }

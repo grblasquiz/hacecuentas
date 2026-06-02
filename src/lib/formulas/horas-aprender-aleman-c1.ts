@@ -8,6 +8,7 @@ export interface Outputs {
   meses: number;
   anos: number;
   categoriaFsi: string;
+  _insight?: any;
 }
 
 export function horasAprenderAlemanC1(i: Inputs): Outputs {
@@ -31,12 +32,41 @@ export function horasAprenderAlemanC1(i: Inputs): Outputs {
   const meses = semanas / 4.33;
   const anos = meses / 12;
 
+  const horasR = Math.round(restante);
+  const mesesR = Math.round(meses * 10) / 10;
+  const tiempoTxt = mesesR >= 12
+    ? `${Math.round(anos * 10) / 10} años`
+    : `${mesesR} meses`;
+
+  const nivelLabels: Record<string, string> = {
+    a0: 'cero', a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2',
+  };
+  const nivelTxt = nivelLabels[nivelActual] || nivelActual.toUpperCase();
+  const inmersionTxt = inmersion === 'si' ? 'inmersión total en Alemania' : inmersion === 'parcial' ? 'inmersión parcial' : 'estudio sin inmersión';
+
+  let insight_tone: 'good' | 'warn' | 'neutral';
+  let insight_text: string;
+  if (mesesR <= 18) {
+    insight_tone = 'good';
+    insight_text = `Partiendo de **${nivelTxt}** y estudiando **${Math.round(horasSemana)} h/semana** con ${inmersionTxt}, llegás al **C1** en unos **${tiempoTxt}** (**${horasR} h** de estudio). Ritmo ambicioso pero alcanzable: la constancia semanal es lo que decide.`;
+  } else {
+    insight_tone = 'warn';
+    insight_text = `Desde **${nivelTxt}** y con **${Math.round(horasSemana)} h/semana** de ${inmersionTxt}, el **C1** te queda a unos **${tiempoTxt}** (**${horasR} h**). Es un camino largo: subir horas semanales o sumar inmersión lo acorta bastante.`;
+  }
+  const _insight = {
+    title: 'Tu camino al C1',
+    text: insight_text,
+    tone: insight_tone,
+    icon: '🇩🇪',
+  };
+
   return {
-    horasTotales: Math.round(restante),
+    horasTotales: horasR,
     semanas: Math.round(semanas),
-    meses: Math.round(meses * 10) / 10,
+    meses: mesesR,
     anos: Math.round(anos * 10) / 10,
     categoriaFsi: 'Cat II FSI (medio)',
+    _insight,
   };
 
 }

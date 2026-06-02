@@ -19,6 +19,8 @@ export interface Outputs {
   totalJurosPrice: string;
   economiaJurosSac: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -57,6 +59,25 @@ export function financiamentoSacVsPrice(i: Inputs): Outputs {
   const totalJurosPrice = parcelaPrice * n - pv;
 
   const economia = totalJurosPrice - totalJurosSac;
+  const totalPagoSac = pv + totalJurosSac;
+
+  const _insight = {
+    title: 'SAC vs PRICE: quanto você economiza',
+    text: `Optando pelo **SAC** você paga **${brl(economia)}** a menos em juros que no PRICE. A 1ª parcela do SAC (**${brl(parcelaInicialSac)}**) é mais pesada que a parcela fixa do PRICE (**${brl(parcelaFixaPrice)}**), mas vai caindo até ${brl(parcelaFinalSac)}. Se a renda aguenta o começo, o SAC compensa.`,
+    tone: 'good',
+    icon: '📉',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Valor financiado', value: Math.round(pv) },
+      { label: 'Juros (SAC)', value: Math.round(totalJurosSac) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(totalPagoSac),
+    centerLabel: 'Total pago (SAC)',
+    ariaLabel: `Total pago no SAC de ${brl(totalPagoSac)}: ${brl(pv)} financiados e ${brl(totalJurosSac)} de juros`,
+  };
 
   return {
     parcelaInicialSac: brl(parcelaInicialSac),
@@ -66,5 +87,7 @@ export function financiamentoSacVsPrice(i: Inputs): Outputs {
     totalJurosPrice: brl(totalJurosPrice),
     economiaJurosSac: brl(economia),
     resumen: `Em ${n} meses a ${taxaAnual}% aa: SAC começa em ${brl(parcelaInicialSac)} e termina em ${brl(parcelaFinalSac)} (juros totais ${brl(totalJurosSac)}). PRICE fica fixo em ${brl(parcelaPrice)} (juros totais ${brl(totalJurosPrice)}). SAC economiza ${brl(economia)} em juros.`,
+    _insight,
+    _chart,
   };
 }

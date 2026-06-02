@@ -9,5 +9,11 @@ export function conejoComidaHenoPesoEdad(i: Inputs): Outputs {
     : __lang === 'pt'
     ? `Cálculo: ${v1} × ${v2} / 10 = ${r.toFixed(2)}.`
     : `Cálculo: ${v1} × ${v2} / 10 = ${r.toFixed(2)}.`;
-  return { resultado:r.toFixed(2), resumen };
+  const ins = {
+    en: { title: 'Your result', text: `The estimated amount of hay is **${r.toFixed(2)} kg** per month for your rabbit.`, icon: '🐰' },
+    pt: { title: 'Seu resultado', text: `A quantidade estimada de feno é de **${r.toFixed(2)} kg** por mês para o seu coelho.`, icon: '🐰' },
+    es: { title: 'Tu resultado', text: `La cantidad estimada de heno es de **${r.toFixed(2)} kg** al mes para tu conejo.`, icon: '🐰' },
+  }[__lang];
+  const _insight = { ...ins, tone: 'neutral' };
+  return { resultado:r.toFixed(2), resumen, _insight } as Outputs;
 }

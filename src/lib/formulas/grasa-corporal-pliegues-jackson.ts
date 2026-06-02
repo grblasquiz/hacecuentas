@@ -14,6 +14,7 @@ export interface Outputs {
   lean_mass: number;
   classification: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Coeficientes de Jackson & Pollock (1978 hombres, 1980 mujeres)
@@ -126,6 +127,17 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: "Escala de porcentaje de grasa corporal con zonas según sexo.",
   };
 
+  const esEsencial = classification.startsWith("Esencial");
+  const esObesidad = classification.startsWith("Obesidad");
+  const esBuena = classification.startsWith("Atleta") || classification.startsWith("Fitness");
+  const insightTone = (esEsencial || esObesidad) ? "warn" : (esBuena ? "good" : "neutral");
+  const _insight = {
+    title: "Tu composición corporal",
+    text: `Con **${fatRounded} %** de grasa entrás en la categoría **${classification}**: cargás **${(Math.round(fatMass * 10) / 10).toFixed(1)} kg** de masa grasa y **${(Math.round(leanMass * 10) / 10).toFixed(1)} kg** de masa magra.`,
+    tone: insightTone,
+    icon: "📏",
+  };
+
   return {
     body_density: Math.round(density * 1000000) / 1000000,
     fat_percent: Math.round(fatPercent * 10) / 10,
@@ -133,5 +145,6 @@ export function compute(i: Inputs): Outputs {
     lean_mass: Math.round(leanMass * 10) / 10,
     classification,
     _chart: chart,
+    _insight,
   };
 }

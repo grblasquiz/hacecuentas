@@ -11,6 +11,8 @@ export interface Outputs {
   rangoMin: number;
   rangoMax: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function expectativaVidaReptilesEspecie(i: Inputs): Outputs {
@@ -44,11 +46,60 @@ export function expectativaVidaReptilesEspecie(i: Inputs): Outputs {
   else if (dieta === 'pobre') rec = 'Diversificá la dieta y suplementá con calcio+D3 y multivitamínico. La MBD por deficiencia de calcio es la causa más común de muerte temprana.';
   else rec = 'Seguí manteniendo UVB al día, gradiente térmico, humedad y dieta variada. Control veterinario exótico al menos anual.';
 
+  const rangoMin = Math.round(b.tipica * 0.6);
+  const rangoMax = b.max;
+
+  // --- Insight dinámico según factores de cuidado ---
+  let toneIns: 'good' | 'warn' | 'neutral';
+  let textIns: string;
+  if (terr === 'malo' || dieta === 'pobre') {
+    toneIns = 'warn';
+    const culpable = terr === 'malo' ? 'el terrario inadecuado' : 'la dieta pobre';
+    textIns =
+      `La expectativa cae a **${expectativa} años** por ${culpable}: bien cuidado, esta especie alcanza hasta **${rangoMax} años**. ` +
+      `Es la brecha entre una vida media y una larga.`;
+  } else if (fTerr === 1 && fDieta === 1) {
+    toneIns = 'good';
+    textIns =
+      `Con terrario y dieta óptimos, tu reptil apunta a **${expectativa} años**, dentro del techo de la especie (**${rangoMax} años**). ` +
+      `Le quedan unos **${Math.round(restantes)} años** desde los ${edad} actuales.`;
+  } else {
+    toneIns = 'neutral';
+    textIns =
+      `Expectativa estimada de **${expectativa} años** (rango típico **${rangoMin}–${rangoMax}**). ` +
+      `Desde los ${edad} años, le quedan aproximadamente **${Math.round(restantes)} años**.`;
+  }
+  const _insight = {
+    title: 'Qué significa esta expectativa',
+    text: textIns,
+    tone: toneIns,
+    icon: '🦎',
+  };
+
+  // --- Gauge: expectativa dentro del rango de la especie ---
+  const segMedia = Math.max(rangoMin, Math.round(rangoMax * 0.45));
+  const segBuena = Math.max(segMedia + 1, Math.round(rangoMax * 0.75));
+  const _chart = {
+    type: 'scale',
+    marker: expectativa,
+    markerLabel: `${expectativa} años`,
+    min: 0,
+    segments: [
+      { nombre: 'Baja', max: segMedia, color: '#ef4444', colorDark: '#b91c1c' },
+      { nombre: 'Media', max: segBuena, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Buena', max: rangoMax, color: '#84cc16', colorDark: '#4d7c0f' },
+      { nombre: 'Máxima', max: Math.round(rangoMax * 1.15), color: '#22c55e', colorDark: '#15803d' },
+    ],
+    ariaLabel: `Expectativa de ${expectativa} años en una escala de longevidad de la especie de 0 a ${Math.round(rangoMax * 1.15)} años.`,
+  };
+
   return {
     expectativaAnios: expectativa,
     aniosRestantes: Math.round(restantes * 10) / 10,
-    rangoMin: Math.round(b.tipica * 0.6),
-    rangoMax: b.max,
+    rangoMin,
+    rangoMax,
     recomendacion: rec,
+    _insight,
+    _chart,
   };
 }

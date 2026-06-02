@@ -16,6 +16,8 @@ export interface Outputs {
   impuesto_neto: number;
   tasa_efectiva: number;
   observacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -89,6 +91,42 @@ export function compute(i: Inputs): Outputs {
     observacion = 'Beneficiario exento de impuesto. Cero cuota tributaria.';
   }
   
+  const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const tasaEfPct = tasa_efectiva * 100;
+  const netoRecibido = Math.max(0, Math.round(i.monto_herencia - impuesto_neto));
+
+  // ── Insight narrativo (dinámico: exento vs gravado) ────────────────
+  const _insight = impuesto_neto <= 0
+    ? {
+        title: i.parentesco === 'conyuge' ? 'Cónyuge: herencia exenta' : 'No pagás impuesto a la herencia',
+        text: i.parentesco === 'conyuge'
+          ? `Como cónyuge estás **exento**: recibís los **${fmtCL(i.monto_herencia)}** sin cuota tributaria.`
+          : `Entre exenciones y deudas, la base imponible queda en cero o no genera cuota: recibís **${fmtCL(netoRecibido)}** **sin impuesto** a la herencia.`,
+        tone: 'good',
+        icon: '🕊️',
+      }
+    : {
+        title: 'Impuesto a la herencia a pagar',
+        text: `Sobre una base de **${fmtCL(base_imponible)}** te corresponde pagar **${fmtCL(impuesto_neto)}** (tasa del **${(tarifa_aplicada * 100).toFixed(0)}%** por parentesco, **${tasaEfPct.toFixed(1)}%** efectivo sobre el total). Recibís netos **${fmtCL(netoRecibido)}**.`,
+        tone: 'warn',
+        icon: '⚖️',
+      };
+
+  // ── Gráfico: sólo si hay impuesto, repartiendo la herencia declarada ──
+  const _chart = impuesto_neto > 0
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Recibís neto', value: netoRecibido },
+          { label: 'Impuesto a la herencia', value: Math.round(impuesto_neto) },
+        ],
+        prefix: '$',
+        centerValue: fmtCL(i.monto_herencia),
+        centerLabel: 'Herencia',
+        ariaLabel: 'Reparto de la herencia declarada entre lo que recibís neto y el impuesto',
+      }
+    : undefined;
+
   return {
     base_imponible: Math.round(base_imponible),
     tarifa_aplicada: tarifa_aplicada * 100,
@@ -97,6 +135,8 @@ export function compute(i: Inputs): Outputs {
     exencion_vivienda: Math.round(exencion_vivienda),
     impuesto_neto: Math.round(impuesto_neto),
     tasa_efectiva: tasa_efectiva * 100,
-    observacion: observacion.trim() || 'Cálculo completado según Ley 16.271.'
+    observacion: observacion.trim() || 'Cálculo completado según Ley 16.271.',
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

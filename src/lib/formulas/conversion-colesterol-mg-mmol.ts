@@ -7,6 +7,8 @@ export interface Inputs {
 export interface Outputs {
   resultado: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function conversionColesterolMgMmol(i: Inputs): Outputs {
@@ -57,8 +59,48 @@ export function conversionColesterolMgMmol(i: Inputs): Outputs {
     `Factor: ${tipo === 'trigliceridos' ? '÷ 88,57' : '÷ 38,67'} | ` +
     `Referencia: ${clasificacion}.`;
 
+  // Valor en mg/dL para clasificar (sea cual sea la unidad de entrada)
+  const mgVal = unidad === 'mg' ? valor : resultado;
+
+  // Tono dinámico según la clasificación clínica
+  const esBueno = (tipo === 'colesterol' && mgVal < 200) || (tipo === 'trigliceridos' && mgVal < 150);
+  const esLimitrofe = (tipo === 'colesterol' && mgVal >= 200 && mgVal < 240) || (tipo === 'trigliceridos' && mgVal >= 150 && mgVal < 200);
+  const tone: 'good' | 'warn' | 'neutral' = esBueno ? 'good' : esLimitrofe ? 'neutral' : 'warn';
+
+  const _insight = {
+    title: 'Cómo se interpreta',
+    text: `**${valor} ${unidadOrigenLabel}** de ${tipoLabel.toLowerCase()} equivalen a **${resultado.toFixed(2)} ${unidadDestino}**. Según las guías, ese valor (**${mgVal.toFixed(0)} mg/dL**) se clasifica como **${clasificacion}**.`,
+    tone,
+    icon: '🩺',
+  };
+
+  // Gauge con los umbrales clínicos en mg/dL (distintos para colesterol vs triglicéridos)
+  const segments = tipo === 'trigliceridos'
+    ? [
+        { nombre: 'Normal', max: 150, color: '#22c55e', colorDark: '#4ade80' },
+        { nombre: 'Limítrofe', max: 200, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Alto', max: 500, color: '#f97316', colorDark: '#fb923c' },
+        { nombre: 'Muy alto', max: Math.max(700, Math.ceil(mgVal * 1.1)), color: '#ef4444', colorDark: '#f87171' },
+      ]
+    : [
+        { nombre: 'Deseable', max: 200, color: '#22c55e', colorDark: '#4ade80' },
+        { nombre: 'Limítrofe', max: 240, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Alto', max: Math.max(320, Math.ceil(mgVal * 1.1)), color: '#ef4444', colorDark: '#f87171' },
+      ];
+
+  const _chart = {
+    type: 'scale',
+    marker: Math.round(mgVal),
+    markerLabel: `${Math.round(mgVal)} mg/dL`,
+    min: 0,
+    segments,
+    ariaLabel: `Nivel de ${tipoLabel.toLowerCase()}: ${Math.round(mgVal)} mg/dL, clasificado como ${clasificacion}`,
+  };
+
   return {
     resultado: Number(resultado.toFixed(2)),
     detalle,
+    _insight,
+    _chart,
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   tem: number;
   tea: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function conversionTnaTem(i: Inputs): Outputs {
@@ -46,10 +47,22 @@ export function conversionTnaTem(i: Inputs): Outputs {
     `TNA: ${fmt(tna)}% | TEM: ${fmt(tem)}% | TEA: ${fmt(tea)}%. ` +
     `Ingresaste ${tipo} ${fmt(tasa)}%.`;
 
+  const spread = tea - tna; // cuánto suma la capitalización sobre la nominal
+  const insight = {
+    title: 'El interés compuesto manda',
+    text: `Una **${tipo} ${fmt(tasa)}%** equivale a una **TEA de ${fmt(tea)}%**. ` +
+      (spread > 0.05
+        ? `La capitalización mensual agrega **${fmt(spread)}pp** sobre la tasa nominal anual (${fmt(tna)}%): para comparar productos mirá siempre la TEA.`
+        : `Para comparar préstamos o plazos fijos usá la TEA, que ya incluye la capitalización.`),
+    tone: 'neutral',
+    icon: '📈',
+  };
+
   return {
     tna: Number(fmt(tna)),
     tem: Number(fmt(tem)),
     tea: Number(fmt(tea)),
     detalle,
+    _insight: insight,
   };
 }

@@ -1,6 +1,6 @@
 /** Daiquiri */
 export interface Inputs { personas: number; tragosPorPersona: number; mlronblancoPorTrago: number; mljugodelimaPorTrago: number; mljarabesimplePorTrago: number; }
-export interface Outputs { totalTragos: number; totalronblanco: string; totaljugodelima: string; totaljarabesimple: string; listaCompras: string; }
+export interface Outputs { totalTragos: number; totalronblanco: string; totaljugodelima: string; totaljarabesimple: string; listaCompras: string; _insight?: any; }
 
 export function daiquiriClasicoPersonas(i: Inputs): Outputs {
   const p = Number(i.personas);
@@ -16,11 +16,20 @@ export function daiquiriClasicoPersonas(i: Inputs): Outputs {
   const fmt = (ml: number) => `${ml}ml (${(ml / 1000).toFixed(2)}L)`;
   const lista = `Ron blanco: ${fmt(Math.ceil(r * tot * 1.15))} (${Math.ceil(r * tot * 1.15 / 750)} botellas) | Limas: ${limones} | Jarabe: ${fmt(Math.ceil(j * tot * 1.15))} | Hielo: ${(p * 0.5).toFixed(1)}kg`;
 
+  const botellas = Math.ceil(r * tot * 1.15 / 750);
+  const _insight = {
+    title: `${tot} daiquiris para ${p} personas`,
+    text: `Salen **${tot} tragos** (${t} c/u). Comprá **${botellas} botella${botellas === 1 ? '' : 's'}** de ron blanco, **${limones} lima${limones === 1 ? '' : 's'}** y **${(p * 0.5).toFixed(1)} kg** de hielo. La lista ya incluye un 15% de margen.`,
+    tone: 'neutral',
+    icon: '🍹',
+  };
+
   return {
     totalTragos: tot,
     totalronblanco: fmt(r * tot),
     totaljugodelima: fmt(lim * tot),
     totaljarabesimple: fmt(j * tot),
     listaCompras: lista,
+    _insight,
   };
 }

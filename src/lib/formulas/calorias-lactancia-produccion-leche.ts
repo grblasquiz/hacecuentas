@@ -10,6 +10,8 @@ export interface Outputs {
   caloriasTotal: number;
   caloriasExtra: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function caloriasLactanciaProduccionLeche(i: Inputs): Outputs {
@@ -47,9 +49,37 @@ export function caloriasLactanciaProduccionLeche(i: Inputs): Outputs {
     `Total recomendado: ${total} kcal/día. ` +
     `Mínimo recomendado con lactancia exclusiva: 1.800 kcal/día.`;
 
+  // Base derivada del total para que las porciones sumen exacto el total mostrado
+  const tdeeBase = total - extra;
+  const fmt = new Intl.NumberFormat('es-AR');
+  const bajoMinimo = tipo === 'exclusiva' && total < 1800;
+
+  const _insight = {
+    title: bajoMinimo ? 'Por debajo del mínimo sugerido' : 'Energía extra para producir leche',
+    text: bajoMinimo
+      ? `Tu total da **${fmt.format(total)} kcal/día**, por debajo del **mínimo de 1.800 kcal** recomendado en lactancia exclusiva. Comer de menos puede afectar tu energía y la producción de leche: consultá con un profesional.`
+      : `La lactancia ${tipoLabel} suma **+${extra} kcal/día** sobre tu gasto base de ${fmt.format(tdeeBase)} kcal, para un total de **${fmt.format(total)} kcal/día**. Ese extra cubre la energía que tu cuerpo invierte en producir leche.`,
+    tone: bajoMinimo ? 'warn' : 'good',
+    icon: '🤱',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Gasto base (TDEE)', value: tdeeBase },
+      { label: `Extra lactancia ${tipoLabel}`, value: extra },
+    ],
+    prefix: '',
+    centerValue: fmt.format(total),
+    centerLabel: 'kcal/día',
+    ariaLabel: `Total de ${fmt.format(total)} kcal por día: ${fmt.format(tdeeBase)} de gasto base más ${extra} extra por lactancia ${tipoLabel}.`,
+  };
+
   return {
     caloriasTotal: total,
     caloriasExtra: extra,
     detalle,
+    _insight,
+    _chart,
   };
 }

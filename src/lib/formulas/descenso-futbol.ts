@@ -34,6 +34,7 @@ export interface DescensoOutputs {
   proyeccionSiEmpataTodo: number;
   proyeccionSiPierdeTodo: number;
   veredicto: string;
+  _insight?: any;
 }
 
 export function descensoFutbol(inputs: DescensoInputs): DescensoOutputs {
@@ -96,6 +97,30 @@ export function descensoFutbol(inputs: DescensoInputs): DescensoOutputs {
     veredicto = '🟡 Dependés de vos: con pocos triunfos te salvás.';
   }
 
+  const arriba = promRival > 0 && diferenciaConRival >= 0;
+  const muerto = promRival > 0 && puntosNecesariosParaIgualar > restantes * 3;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (promRival === 0) {
+    insightText = `Tu promedio actual es **${promedioActual.toFixed(3)}** (${puntosTotales} pts en ${partidosJugados} partidos). Cargá el promedio del rival directo para saber cuántos puntos te faltan para zafar.`;
+    insightTone = 'neutral';
+  } else if (arriba) {
+    insightText = `Tu promedio (**${promedioActual.toFixed(3)}**) le saca **${Math.abs(diferenciaConRival).toFixed(3)}** al rival (${promRival.toFixed(3)}). Estás del lado bueno de la línea: ${restantes > 0 ? `sumando lo razonable en los **${restantes}** partidos que quedan te mantenés arriba.` : 'y no quedan partidos, te salvaste.'}`;
+    insightTone = 'good';
+  } else if (muerto) {
+    insightText = `Necesitás **${puntosNecesariosParaIgualar} pts** para igualar al rival, pero en **${restantes}** partidos solo podés sumar hasta ${restantes * 3}. La matemática del promedio ya no da.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `Tu promedio (**${promedioActual.toFixed(3)}**) está **${Math.abs(diferenciaConRival).toFixed(3)}** por debajo del rival. Te faltan **${puntosNecesariosParaIgualar} pts** en los **${restantes}** partidos restantes para igualarlo y salir de zona.`;
+    insightTone = 'warn';
+  }
+  const _insight = {
+    title: 'Tu lugar en la tabla de promedios',
+    text: insightText,
+    tone: insightTone,
+    icon: '⚽',
+  };
+
   return {
     promedioActual: Number(promedioActual.toFixed(3)),
     partidosTotales,
@@ -107,5 +132,6 @@ export function descensoFutbol(inputs: DescensoInputs): DescensoOutputs {
     proyeccionSiEmpataTodo: Number(proyEmpataTodo.toFixed(3)),
     proyeccionSiPierdeTodo: Number(proyPierdeTodo.toFixed(3)),
     veredicto,
+    _insight,
   };
 }

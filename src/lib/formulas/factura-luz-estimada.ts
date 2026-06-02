@@ -21,6 +21,8 @@ export interface Outputs {
   cargoFijo: number;
   consumoCategoria: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tarifas oficiales abril 2026 (EDENOR; EDESUR difiere <2%)
@@ -71,11 +73,37 @@ export function facturaLuzEstimada(i: Inputs): Outputs {
       : '') +
     ` + cargo fijo $${cargoFijo.toFixed(0)} + 45% impuestos ≈ $${Math.round(facturaEstimada).toLocaleString('es-AR')}.`;
 
+  const totalR = Math.round(facturaEstimada);
+  const altoTone = categoria === 'Alto' || categoria === 'Muy alto';
+  const esSubsidiada = tarifa === 'subsidiada';
+  const insightText = altoTone
+    ? `Consumo **${categoria.toLowerCase()}** (${kwh} kWh/mes) con tarifa ${cfg.etiqueta.toLowerCase()}: la factura ronda **$${totalR.toLocaleString('es-AR')}**.` +
+      (esSubsidiada && kwh > TOPE_SUBSIDIADO_KWH ? ` Ojo: pasaste los ${TOPE_SUBSIDIADO_KWH} kWh subsidiados y el excedente paga tarifa plena.` : ' Recortar consumo en horas pico se nota acá.')
+    : `Consumo **${categoria.toLowerCase()}** (${kwh} kWh/mes) con tarifa ${cfg.etiqueta.toLowerCase()}: la factura ronda **$${totalR.toLocaleString('es-AR')}**. Los impuestos suman ~45% sobre energía + cargo fijo.`;
+
   return {
-    facturaEstimada: Math.round(facturaEstimada),
+    facturaEstimada: totalR,
     precioKwhEfectivo: kwh > 0 ? Math.round(facturaEstimada / kwh) : 0,
     cargoFijo: Math.round(cargoFijo),
     consumoCategoria: `${categoria} (${kwh} kWh/mes)`,
     detalle,
+    _insight: {
+      title: 'Tu factura de luz',
+      text: insightText,
+      tone: altoTone ? 'warn' : 'neutral',
+      icon: '💡',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Cargo fijo', value: Math.round(cargoFijo) },
+        { label: 'Energía', value: Math.round(energiaBruta) },
+        { label: 'Impuestos', value: Math.round(impuestos) },
+      ],
+      prefix: '$',
+      centerValue: `$${totalR.toLocaleString('es-AR')}`,
+      centerLabel: 'Total mensual',
+      ariaLabel: `Composición de la factura de luz: cargo fijo, energía e impuestos suman $${totalR.toLocaleString('es-AR')}`,
+    },
   };
 }

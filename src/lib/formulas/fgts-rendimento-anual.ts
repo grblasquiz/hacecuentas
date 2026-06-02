@@ -15,6 +15,7 @@ export interface Outputs {
   saldoFinal: string;
   taxaTotal: string;
   resumen: string;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -33,6 +34,14 @@ export function fgtsRendimentoAnual(i: Inputs): Outputs {
   const rendimento = saldo * taxaTotal;
   const rendimentoMensal = rendimento / 12;
   const saldoFinal = saldo + rendimento;
+  const taxaPct = (taxaTotal * 100).toFixed(2).replace('.', ',');
+
+  const _insight = {
+    title: `Rendimento de ${taxaPct}% ao ano`,
+    text: `Seu saldo rende **${brl(rendimentoMensal)}/mês** (${brl(rendimento)} no ano). A **${taxaPct}% aa** o FGTS costuma ficar **abaixo da poupança e da inflação**, então o saldo parado pode perder poder de compra.`,
+    tone: 'warn',
+    icon: '📉',
+  };
 
   return {
     rendimentoAnual: brl(rendimento),
@@ -40,5 +49,6 @@ export function fgtsRendimentoAnual(i: Inputs): Outputs {
     saldoFinal: brl(saldoFinal),
     taxaTotal: (taxaTotal * 100).toFixed(2).replace('.', ',') + '%',
     resumen: `Saldo de ${brl(saldo)} rende aproximadamente ${brl(rendimento)} no ano (TR ${tr.toString().replace('.', ',')}% + 3% aa = ${(taxaTotal * 100).toFixed(2).replace('.', ',')}% aa).`,
+    _insight,
   };
 }

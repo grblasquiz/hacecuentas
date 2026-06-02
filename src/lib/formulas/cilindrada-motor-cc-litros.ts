@@ -9,6 +9,8 @@ export interface Outputs {
   cc: number;
   litros: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function cilindradaMotorCcLitros(i: Inputs): Outputs {
@@ -44,9 +46,30 @@ export function cilindradaMotorCcLitros(i: Inputs): Outputs {
     detalleStr += ` Calculado: ${cilindros} cilindros × ${diametro}mm diámetro × ${carrera}mm carrera.`;
   }
 
+  const ccR = Math.round(cc);
   return {
-    cc: Math.round(cc),
+    cc: ccR,
     litros: Number(litros.toFixed(2)),
     detalle: detalleStr,
+    _insight: {
+      title: 'Tu cilindrada en contexto',
+      text: `**${ccR} cc** equivalen a **${litros.toFixed(2)} litros** de cilindrada: se clasifica como ${categoria.toLowerCase()}.`,
+      tone: 'neutral',
+      icon: '🏎️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: ccR,
+      markerLabel: `${litros.toFixed(1)} L`,
+      min: 0,
+      segments: [
+        { nombre: 'City car', max: 1000, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: 'Mediano-chico', max: 1600, color: '#84cc16', colorDark: '#65a30d' },
+        { nombre: 'Mediano', max: 2000, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Grande', max: 3000, color: '#f97316', colorDark: '#ea580c' },
+        { nombre: 'Muy grande', max: Math.max(4000, ccR + 200), color: '#ef4444', colorDark: '#dc2626' },
+      ],
+      ariaLabel: `Cilindrada de ${ccR} cc (${litros.toFixed(2)} litros) ubicada en la categoría ${categoria}.`,
+    },
   };
 }

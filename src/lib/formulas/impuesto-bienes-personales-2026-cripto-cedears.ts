@@ -21,6 +21,7 @@ export interface Outputs {
   detalle_tramos: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Fuente: Ley 23.966 y RG ARCA vigente para período fiscal 2025
@@ -156,6 +157,31 @@ export function compute(i: Inputs): Outputs {
         }
       : undefined;
 
+  const ars = (v: number) => "$" + Math.round(v).toLocaleString("es-AR");
+  let _insight;
+  if (patrimonioBruto === 0) {
+    _insight = {
+      title: "Cargá tus activos",
+      text: "Ingresá al menos un activo (cripto, cedears, plazo fijo, inmuebles…) para estimar Bienes Personales.",
+      tone: "neutral" as const,
+      icon: "🇦🇷",
+    };
+  } else if (baseImponible <= 0) {
+    _insight = {
+      title: "No pagás Bienes Personales",
+      text: `Tu patrimonio neto de **${ars(patrimonioNeto)}** queda por debajo del mínimo no imponible de **${ars(MNI)}**: impuesto determinado **$0**.`,
+      tone: "good" as const,
+      icon: "✅",
+    };
+  } else {
+    _insight = {
+      title: "Bienes Personales a pagar",
+      text: `Sobre una base imponible de **${ars(baseImponible)}** (excedente del MNI), el impuesto determinado es **${ars(impuesto)}**, una alícuota efectiva del **${alicuotaEfectiva.toFixed(3)}%** sobre tu patrimonio neto.`,
+      tone: "warn" as const,
+      icon: "🇦🇷",
+    };
+  }
+
   return {
     patrimonio_bruto: patrimonioBruto,
     patrimonio_neto: patrimonioNeto,
@@ -166,5 +192,6 @@ export function compute(i: Inputs): Outputs {
     detalle_tramos: detalle || "Sin tramos aplicados.",
     mensaje,
     _chart: chart,
+    _insight,
   };
 }

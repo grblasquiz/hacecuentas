@@ -21,6 +21,7 @@ export interface Outputs {
   mejor_opcion: string;
   ahorro_maximo: number;
   permanencia_info: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -196,6 +197,13 @@ export function compute(i: Inputs): Outputs {
   const infoMes = i.lineas_movil === 1 ? "línea" : "líneas";
   const permanencia_info = `Con ${i.lineas_movil} ${infoMes} móvil y ${i.gb_movil} GB/mes a ${i.velocidad_fibra} Mbps:\n- Mejor opción: ${mejorOpcion.nombre} (${mejorOpcion.anual.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€/año)\n- Permanencia típica: 12 meses\n- Penalización rescisión anticipada: ~50€ por línea\n- Portabilidad número móvil: gratuita\n- IVA 21% incluido en todos los precios`;
 
+  const _insight = {
+    title: `Más barato: ${mejorOpcion.nombre}`,
+    text: `Para tu perfil (${i.lineas_movil} ${infoMes}, ${i.gb_movil} GB, ${i.velocidad_fibra} Mbps), **${mejorOpcion.nombre}** es la opción más económica con **${mejorOpcion.anual.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€/año**. Cambiarte desde la más cara (${peorOpcion.nombre}) te ahorra **${ahorroMaximo.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€ al año**. IVA 21% incluido.`,
+    tone: ahorroMaximo >= 100 ? 'good' : 'neutral',
+    icon: '📶',
+  };
+
   return {
     movistar_mensual: resultados.movistar.mensual,
     movistar_anual: resultados.movistar.anual,
@@ -211,6 +219,7 @@ export function compute(i: Inputs): Outputs {
     pepephone_anual: resultados.pepephone.anual,
     mejor_opcion: `${mejorOpcion.nombre}: ${mejorOpcion.anual.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€/año`,
     ahorro_maximo: ahorroMaximo,
-    permanencia_info: permanencia_info
+    permanencia_info: permanencia_info,
+    _insight
   };
 }
