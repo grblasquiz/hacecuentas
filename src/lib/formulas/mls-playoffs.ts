@@ -21,6 +21,7 @@ export interface MlsOutputs {
   puntosMaxPosibles: number;
   puntosEsperadosFinal: number;
   escenario: string;
+  _insight?: any;
 }
 
 export function mlsPlayoffs(inputs: MlsInputs): MlsOutputs {
@@ -38,16 +39,28 @@ export function mlsPlayoffs(inputs: MlsInputs): MlsOutputs {
   const puntosMaxPosibles = pts + fechas * 3;
 
   let escenario = '';
+  let tone: 'good' | 'warn' | 'neutral';
+  let detalle: string;
   if (puntosMaxPosibles < pts9) {
     escenario = '🔴 Eliminado matemáticamente de los playoffs.';
+    tone = 'warn';
+    detalle = `Incluso ganando todo lo que queda llegás a **${puntosMaxPosibles} pts**, por debajo de los ${pts9} del noveno: ya no alcanza.`;
   } else if (pts > pts7) {
     escenario = '🏆 Round 1 directo: dentro del top 7 de conferencia.';
+    tone = 'good';
+    detalle = `Con **${pts} pts** estás arriba del séptimo (${pts7}): hoy entrás directo a Round 1.`;
   } else if (pts > pts9) {
     escenario = '🟡 Wild Card: puestos 8-9, jugás la ronda extra.';
+    tone = 'neutral';
+    detalle = `Con **${pts} pts** estás en zona de Wild Card; te faltan **${puntosParaDirecto} pts** para saltar al top 7 y evitar la ronda extra.`;
   } else if (puntosParaWildCard <= fechas) {
     escenario = '🟠 Con 1-3 triunfos entrás al Wild Card.';
+    tone = 'neutral';
+    detalle = `Te faltan apenas **${puntosParaWildCard} pts** para el Wild Card y te quedan ${fechas} fechas: está al alcance de la mano.`;
   } else {
     escenario = '⚠️ Necesitás racha ganadora para meterte a playoffs.';
+    tone = 'warn';
+    detalle = `Te faltan **${puntosParaWildCard} pts** para el Wild Card con solo ${fechas} fechas por jugar: necesitás ganar casi todo.`;
   }
 
   return {
@@ -56,5 +69,11 @@ export function mlsPlayoffs(inputs: MlsInputs): MlsOutputs {
     puntosMaxPosibles,
     puntosEsperadosFinal,
     escenario,
+    _insight: {
+      title: 'Tu camino a los playoffs',
+      text: `Al ritmo actual proyectás cerrar la temporada con **${puntosEsperadosFinal} pts**. ${detalle}`,
+      tone,
+      icon: '⚽'
+    },
   };
 }

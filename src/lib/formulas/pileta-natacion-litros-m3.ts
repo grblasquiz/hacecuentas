@@ -10,6 +10,7 @@ export interface PiletaOutputs {
   litros: number;
   m3: number;
   detalle: string;
+  _insight?: any;
 }
 
 const FACTORES_FORMA: Record<string, number> = {
@@ -41,9 +42,17 @@ export function piletaNatacionLitrosM3(inputs: PiletaInputs): PiletaOutputs {
 
   const formaLabel = forma === 'rectangular' ? 'rectangular' : forma === 'circular' ? 'circular' : 'riñón';
 
+  const _insight = {
+    title: 'Volumen de tu pileta',
+    text: `Tu pileta ${formaLabel} de ${fmt.format(largo)}×${fmt.format(ancho)} m (profundidad promedio **${fmt.format(profPromedio)} m**) contiene **${fmt.format(m3)} m³**, o sea **${fmtL.format(litros)} litros**. Usá este dato para dosificar productos químicos y dimensionar la bomba de filtrado.`,
+    tone: 'neutral',
+    icon: '🏊',
+  };
+
   return {
     litros,
     m3,
     detalle: `Pileta ${formaLabel} de ${fmt.format(largo)}×${fmt.format(ancho)} m con profundidad promedio ${fmt.format(profPromedio)} m → ${fmt.format(m3)} m³ = ${fmtL.format(litros)} litros.`,
+    _insight,
   };
 }

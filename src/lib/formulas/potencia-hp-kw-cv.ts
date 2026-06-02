@@ -8,6 +8,7 @@ export interface Outputs {
   kw: number;
   cv: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function potenciaHpKwCv(i: Inputs): Outputs {
@@ -37,11 +38,20 @@ export function potenciaHpKwCv(i: Inputs): Outputs {
   }
 
   const unidades = ['', 'HP', 'kW', 'CV'];
+  const hpR = Number(hp.toFixed(1));
+  const kwR = Number(kw.toFixed(1));
+  const cvR = Number(cv.toFixed(1));
 
   return {
-    hp: Number(hp.toFixed(1)),
-    kw: Number(kw.toFixed(1)),
-    cv: Number(cv.toFixed(1)),
+    hp: hpR,
+    kw: kwR,
+    cv: cvR,
     detalle: `${valor} ${unidades[unidad]} = ${hp.toFixed(1)} HP = ${kw.toFixed(1)} kW = ${cv.toFixed(1)} CV.`,
+    _insight: {
+      title: 'Equivalencia de potencia',
+      text: `**${valor} ${unidades[unidad]}** equivalen a **${hpR} HP**, **${kwR} kW** y **${cvR} CV**. El kW es la unidad del Sistema Internacional; HP (caballo de fuerza) y CV (caballo de vapor) son casi iguales pero no idénticos: 1 HP ≈ 1,014 CV.`,
+      tone: 'neutral',
+      icon: '⚙️',
+    },
   };
 }

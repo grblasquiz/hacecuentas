@@ -9,6 +9,7 @@ export interface LitrosNaftaViajeOutputs {
   costoTotal: number;
   costoPorKm: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function litrosNaftaViaje(inputs: LitrosNaftaViajeInputs): LitrosNaftaViajeOutputs {
@@ -26,10 +27,18 @@ export function litrosNaftaViaje(inputs: LitrosNaftaViajeInputs): LitrosNaftaVia
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const insight = {
+    title: 'Costo del viaje',
+    text: `Para recorrer **${fmt.format(distancia)} km** vas a gastar **${fmt.format(litros)} litros** de nafta, unos **$${fmt.format(costoTotal)}** en total (**$${fmt.format(costoPorKm)}/km**). Si vas con 3 acompañantes y dividen, son **$${fmt.format(Math.round(costoTotal / 4))}** por cabeza.`,
+    tone: 'neutral',
+    icon: '🚗',
+  };
+
   return {
     litrosNecesarios: litros,
     costoTotal,
     costoPorKm,
     detalle: `${fmt.format(distancia)} km × ${fmt.format(consumo)} L/100km = ${fmt.format(litros)} litros × $${fmt.format(precio)}/L = $${fmt.format(costoTotal)} total ($${fmt.format(costoPorKm)}/km).`,
+    _insight: insight,
   };
 }

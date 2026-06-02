@@ -12,6 +12,7 @@ export interface Outputs {
   ajustePosicion: number;
   posicionNombre: string;
   detalle: string;
+  _insight?: any;
 }
 
 // Ajustes sobre IMC base 22 por posición
@@ -42,6 +43,13 @@ export function pesoIdealFutbolista(i: Inputs): Outputs {
   const pMin = pesoIdeal - 3;
   const pMax = pesoIdeal + 3;
 
+  const _insight = {
+    title: `Peso de competición: ${info.nombre}`,
+    text: `Para **${alt} cm** jugando de ${info.nombre.toLowerCase()}, el peso de rendimiento ronda los **${pesoIdeal.toFixed(1)} kg** (rango **${pMin.toFixed(1)}-${pMax.toFixed(1)} kg**). Parte de un IMC objetivo de **${imc}** ${info.ajuste !== 0 ? `con un ajuste de ${info.ajuste > 0 ? '+' : ''}${info.ajuste} kg` : 'sin ajuste'} por la demanda física de la posición.`,
+    tone: 'neutral',
+    icon: '⚽',
+  };
+
   return {
     pesoIdealKg: Number(pesoIdeal.toFixed(1)),
     pesoMinKg: Number(pMin.toFixed(1)),
@@ -50,5 +58,6 @@ export function pesoIdealFutbolista(i: Inputs): Outputs {
     ajustePosicion: info.ajuste,
     posicionNombre: info.nombre,
     detalle: `**${info.nombre}**, altura ${alt} cm: peso ideal **${pesoIdeal.toFixed(1)} kg** (rango ${pMin.toFixed(1)}-${pMax.toFixed(1)} kg). IMC objetivo ${imc} con ajuste ${info.ajuste > 0 ? '+' : ''}${info.ajuste} kg por demanda de la posición.`,
+    _insight,
   };
 }

@@ -20,6 +20,8 @@ export interface Outputs {
   ganancia_por_rentabilidad: number;         // € ganancia por interés compuesto
   ahorro_fiscal_total_acumulado: number;     // € ahorro fiscal acumulado hasta jubilación
   aviso: string;                             // mensaje de alertas
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -136,6 +138,39 @@ export function compute(i: Inputs): Outputs {
 
   const aviso = avisos.length > 0 ? avisos.join(' | ') : 'Cálculo correcto dentro de los límites legales 2026.';
 
+  // --- Insight + gráfico ---
+  const eur = (n: number) => Math.round(n).toLocaleString('es-ES') + ' €';
+  const pctAhorroR = Math.round(porcentaje_ahorro * 100) / 100;
+  const costeNetoR = Math.round(coste_neto_aportacion * 100) / 100;
+
+  const hayProyeccion = anos_hasta_jubilacion > 0 && capital_proyectado > 0;
+  const exoCede = aportacion_ind > LIMITE_INDIVIDUAL_MAX
+    || aportacion_emp > LIMITE_EMPRESA_MAX
+    || (limite_porcentual_euros < limite_monetario_total && rendimientos > 0);
+
+  const _insight = {
+    title: exoCede ? 'Ojo con los límites de deducción' : 'Tu ahorro fiscal este año',
+    text: deduccion_irpf > 0
+      ? `Aportando lo deducible este año te ahorrás **${eur(deduccion_irpf)}** en el IRPF: cada euro que metés en el plan te cuesta de verdad solo **${eur(costeNetoR > 0 ? costeNetoR : 0)}** netos (recuperás el **${pctAhorroR.toFixed(0)}%** vía Hacienda).${hayProyeccion ? ` A ${anos_hasta_jubilacion} años vista proyectás **${eur(capital_proyectado)}**, de los cuales **${eur(ganancia_por_rentabilidad)}** son puro interés compuesto.` : ''}`
+      : `Con los datos cargados no se genera deducción este año${exoCede ? ': revisá los límites (1.500 € individual, 8.500 € empresa, 30% de tus rendimientos netos).' : '.'}`,
+    tone: exoCede ? 'warn' : (deduccion_irpf > 0 ? 'good' : 'neutral'),
+    icon: exoCede ? '⚠️' : '🏦',
+  };
+
+  const _chart = hayProyeccion ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital actual', value: Math.round(capital_inicial) },
+      { label: 'Aportaciones futuras', value: Math.round(total_aportado) },
+      { label: 'Ganancia por rentabilidad', value: Math.round(ganancia_por_rentabilidad) },
+    ],
+    prefix: '',
+    suffix: ' €',
+    centerValue: eur(capital_proyectado),
+    centerLabel: 'A la jubilación',
+    ariaLabel: `Capital proyectado a la jubilación de ${eur(capital_proyectado)}: ${eur(capital_inicial)} de capital actual, ${eur(total_aportado)} de aportaciones futuras y ${eur(ganancia_por_rentabilidad)} de ganancia por rentabilidad.`,
+  } : undefined;
+
   return {
     limite_deducible: Math.round(limite_deducible * 100) / 100,
     aportacion_deducible: Math.round(aportacion_deducible * 100) / 100,
@@ -147,6 +182,8 @@ export function compute(i: Inputs): Outputs {
     total_aportado: Math.round(total_aportado * 100) / 100,
     ganancia_por_rentabilidad: Math.round(ganancia_por_rentabilidad * 100) / 100,
     ahorro_fiscal_total_acumulado: Math.round(ahorro_fiscal_total_acumulado * 100) / 100,
-    aviso
+    aviso,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

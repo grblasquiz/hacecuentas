@@ -20,6 +20,8 @@ export interface Outputs {
   exemplos_alimentos: string;
   tmb_calculada: number;
   get_usado: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Fatores de atividade — Ainsworth et al. / Harris-Benedict revisado
@@ -158,6 +160,39 @@ export function compute(i: Inputs): Outputs {
 
   const exemplos = exemplosAlimentos(proteina_g, carbo_g, gordura_g);
 
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (objetivo === 'cutting') {
+    const corte = Math.round(get_usado - kcal_alvo);
+    insightText = `Para emagrecer, sua meta é **${kcal_alvo} kcal/dia** — cerca de ${corte} kcal abaixo do seu gasto (${get_usado} kcal). A proteína fica em **${proteina_g} g** para preservar massa magra no déficit.`;
+    insightTone = 'good';
+  } else if (objetivo === 'bulking') {
+    const extra = Math.round(kcal_alvo - get_usado);
+    insightText = `Para ganhar massa, sua meta é **${kcal_alvo} kcal/dia** — cerca de ${extra} kcal acima do seu gasto (${get_usado} kcal), com **${proteina_g} g de proteína** e ${carbo_g} g de carboidrato para sustentar o treino.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Para manutenção, sua meta é **${kcal_alvo} kcal/dia**, igualando seu gasto. A divisão fica em **${proteina_g} g de proteína**, ${carbo_g} g de carboidrato e ${gordura_g} g de gordura.`;
+    insightTone = 'neutral';
+  }
+  const _insight = {
+    title: 'Sua meta em números',
+    text: insightText,
+    tone: insightTone,
+    icon: '🍽️',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Carboidrato', value: Math.round(carbo_g * KCAL_CARBO) },
+      { label: 'Proteína', value: Math.round(proteina_g * KCAL_PROTEINA) },
+      { label: 'Gordura', value: Math.round(gordura_g * KCAL_GORDURA) },
+    ],
+    prefix: '',
+    centerValue: `${kcal_alvo} kcal`,
+    centerLabel: 'por dia',
+    ariaLabel: `Divisão das calorias diárias: ${carbo_g} g de carboidrato, ${proteina_g} g de proteína e ${gordura_g} g de gordura, total ${kcal_alvo} kcal`,
+  };
+
   return {
     kcal_alvo,
     proteina_g,
@@ -167,5 +202,7 @@ export function compute(i: Inputs): Outputs {
     exemplos_alimentos: exemplos,
     tmb_calculada,
     get_usado,
+    _insight,
+    _chart,
   };
 }

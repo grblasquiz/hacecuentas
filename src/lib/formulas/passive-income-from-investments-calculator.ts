@@ -17,6 +17,8 @@ export interface Outputs {
   annual_tax_estimate: number;
   monthly_income_net: number;
   allocation_note: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // 2026 benchmark yields per asset class
@@ -96,12 +98,62 @@ export function compute(i: Inputs): Outputs {
     monthlyIncomeNet = (annualIncomeGross - annualTaxEstimate) / 12;
   }
 
+  const monthlyNetRounded = Math.round(monthlyIncomeNet * 100) / 100;
+  const annualNetRounded = Math.round((annualIncomeGross - annualTaxEstimate) * 100) / 100;
+  const yieldPct = (blendedYield * 100).toFixed(2);
+
+  const fmtUsd = (n: number) =>
+    "$" + Math.round(n).toLocaleString("en-US");
+
+  const strategyLabel =
+    strategy === "four_percent" ? "the 4% rule" : "a yield-only strategy";
+
+  // Insight: interpret the monthly net income the portfolio throws off.
+  let insText: string;
+  let insTone: "good" | "warn" | "neutral";
+  if (accountType === "taxable" && annualTaxEstimate > 0) {
+    const taxPctOfGross =
+      annualIncomeGross > 0 ? (annualTaxEstimate / annualIncomeGross) * 100 : 0;
+    insText =
+      `At a **${yieldPct}%** blended yield with ${strategyLabel}, your portfolio throws off **${fmtUsd(monthlyNetRounded)}/month** after an estimated **${fmtUsd(annualTaxEstimate)}/yr** in tax (~${taxPctOfGross.toFixed(0)}% of income). Holding income assets in a tax-advantaged account could meaningfully raise your take-home.`;
+    insTone = "warn";
+  } else {
+    insText =
+      `At a **${yieldPct}%** blended yield with ${strategyLabel}, your portfolio generates **${fmtUsd(monthlyNetRounded)}/month** (**${fmtUsd(annualNetRounded)}/yr**) — tax-free in this account type, so every dollar earned is yours to spend or reinvest.`;
+    insTone = "good";
+  }
+
+  const _insight = {
+    title: "What your money pays you",
+    text: insText,
+    tone: insTone,
+    icon: "💵",
+  };
+
+  // Donut only when there's a real net-vs-tax split to show.
+  let _chart: any = undefined;
+  if (accountType === "taxable" && annualTaxEstimate > 0 && annualIncomeGross > 0) {
+    _chart = {
+      type: "doughnut",
+      slices: [
+        { label: "Net income (you keep)", value: annualNetRounded },
+        { label: "Estimated tax", value: Math.round(annualTaxEstimate * 100) / 100 },
+      ],
+      prefix: "$",
+      centerValue: fmtUsd(annualIncomeGross),
+      centerLabel: "Gross / yr",
+      ariaLabel: `Annual gross income of ${fmtUsd(annualIncomeGross)} split into ${fmtUsd(annualNetRounded)} net and ${fmtUsd(annualTaxEstimate)} estimated tax`,
+    };
+  }
+
   return {
     monthly_income_gross: Math.round(monthlyIncomeGross * 100) / 100,
     annual_income_gross: Math.round(annualIncomeGross * 100) / 100,
     blended_yield: Math.round(blendedYield * 100000) / 100000, // 3 decimal places as fraction
     annual_tax_estimate: Math.round(annualTaxEstimate * 100) / 100,
-    monthly_income_net: Math.round(monthlyIncomeNet * 100) / 100,
-    allocation_note: allocationNote
+    monthly_income_net: monthlyNetRounded,
+    allocation_note: allocationNote,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

@@ -17,6 +17,7 @@ export interface OvulacionOutputs {
   ventanaFertilFin: string;
   diasHastaOvulacion: number;
   proximaMenstruacion: string;
+  _insight?: any;
 }
 
 function addDays(date: Date, days: number): Date {
@@ -55,11 +56,31 @@ export function ovulacion(inputs: OvulacionInputs): OvulacionOutputs {
 
   const diasHasta = Math.round((fechaOvulacion.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
 
+  // Insight: tono dinámico según proximidad de la ovulación
+  const enVentana = diasHasta >= -1 && diasHasta <= 5;
+  const insightTone = enVentana ? 'good' : 'neutral';
+  let insightText: string;
+  if (diasHasta === 0) {
+    insightText = `Hoy es tu día estimado de **ovulación** — pico de fertilidad. La ventana fértil va del **${toISODate(ventanaInicio)}** al **${toISODate(ventanaFin)}**.`;
+  } else if (diasHasta > 0 && enVentana) {
+    insightText = `Estás en tu **ventana fértil**: ovulás en **${diasHasta} día(s)** (${toISODate(fechaOvulacion)}).`;
+  } else if (diasHasta > 0) {
+    insightText = `Faltan **${diasHasta} días** para ovular (${toISODate(fechaOvulacion)}); tu ventana fértil abre el **${toISODate(ventanaInicio)}**.`;
+  } else {
+    insightText = `La ovulación estimada ya pasó hace **${Math.abs(diasHasta)} día(s)**. Tu próxima menstruación se espera el **${toISODate(proximaMenstruacion)}**.`;
+  }
+
   return {
     fechaOvulacion: toISODate(fechaOvulacion),
     ventanaFertilInicio: toISODate(ventanaInicio),
     ventanaFertilFin: toISODate(ventanaFin),
     diasHastaOvulacion: diasHasta,
     proximaMenstruacion: toISODate(proximaMenstruacion),
+    _insight: {
+      title: 'Tu ventana fértil',
+      text: insightText,
+      tone: insightTone,
+      icon: '\u{1FA78}',
+    },
   };
 }

@@ -21,6 +21,8 @@ export interface Outputs {
   loanMonthlyPayment: number;
   breakEvenYear: number;
   summaryText: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tuition de referencia por tier (USD, 2025-2026)
@@ -157,6 +159,12 @@ export function compute(i: Inputs): Outputs {
       breakEvenYear: 0,
       summaryText:
         "El salario post-MBA no supera el salario actual: el ROI es negativo. Revisá las cifras ingresadas.",
+      _insight: {
+        title: 'ROI negativo',
+        text: `Con una inversión total de **USD ${Math.round(totalInvestment).toLocaleString("es")}** y **cero aumento salarial** post-MBA, el programa no se recupera financieramente. Revisá el salario esperado o el costo asumido.`,
+        tone: 'warn',
+        icon: '⚠️',
+      },
     };
   }
 
@@ -209,6 +217,30 @@ export function compute(i: Inputs): Outputs {
     `VAN a 10 años ${vanSign} (USD ${Math.round(npvAt10Years).toLocaleString("es")}). ` +
     `TIR estimada: ${irrPercent.toFixed(1)}% — ${irrVerdict}.`;
 
+  const slices = [
+    { label: "Matrícula", value: Math.round(tuition) },
+    { label: "Costo de oportunidad", value: Math.round(opportunityCost) },
+    { label: "Costo de vida", value: Math.round(livingTotal) },
+    { label: "Intereses del préstamo", value: Math.round(loanInterestTotal) },
+  ].filter((s) => s.value > 0);
+
+  const chart = {
+    type: "doughnut",
+    slices,
+    prefix: "USD ",
+    centerValue: `USD ${Math.round(totalInvestment).toLocaleString("es")}`,
+    centerLabel: "Inversión total",
+    ariaLabel: `Composición de la inversión total del MBA: USD ${Math.round(totalInvestment).toLocaleString("es")}`,
+  };
+
+  const insightTone = irrPercent >= 15 ? "good" : irrPercent >= 8 ? "neutral" : "warn";
+  const insight = {
+    title: "Tu retorno del MBA",
+    text: `Recuperás la inversión de **USD ${Math.round(totalInvestment).toLocaleString("es")}** en **${simplePaybackYears.toFixed(1)} años** post-MBA (año ${breakEvenYear} desde que arrancás), con una TIR estimada de **${irrPercent.toFixed(1)}%** — ${irrVerdict}.`,
+    tone: insightTone,
+    icon: "🎓",
+  };
+
   return {
     totalInvestment,
     annualSalaryGain,
@@ -218,5 +250,7 @@ export function compute(i: Inputs): Outputs {
     loanMonthlyPayment,
     breakEvenYear,
     summaryText,
+    _insight: insight,
+    _chart: chart,
   };
 }

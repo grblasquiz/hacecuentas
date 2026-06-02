@@ -13,6 +13,7 @@ export interface Outputs {
   horaLima: string;
   horaLocalSede: string;
   resumen: string;
+  _insight?: any;
 }
 
 // Offset en horas (junio-julio 2026, DST donde aplica)
@@ -81,6 +82,22 @@ export function mundial2026HorarioZonaHoraria(i: Inputs): Outputs {
   const hLima = fmt(h, m, ZONAS.lima);
   const hLocal = fmt(h, m, sede.offset);
 
+  // Hora absoluta en Buenos Aires (audiencia principal) para clasificar la franja.
+  const bsAsHour = ((((h * 60 + m + ZONAS.bsas * 60) % 1440) + 1440) % 1440) / 60;
+  let franja: string; let tone: string; let icon: string;
+  if (bsAsHour >= 0 && bsAsHour < 7) { franja = 'madrugada — vas a tener que trasnochar o madrugar para verlo en vivo'; tone = 'warn'; icon = '🌙'; }
+  else if (bsAsHour < 12) { franja = 'media mañana — cómodo para ver con café de por medio'; tone = 'good'; icon = '☕'; }
+  else if (bsAsHour < 18) { franja = 'plena tarde — horario ideal de fin de semana'; tone = 'good'; icon = '🌞'; }
+  else if (bsAsHour < 22) { franja = 'prime time — la mejor franja para verlo en familia o con amigos'; tone = 'good'; icon = '📺'; }
+  else { franja = 'noche tardía — ojo si trabajás al otro día'; tone = 'neutral'; icon = '🌆'; }
+
+  const insight = {
+    title: 'A qué hora lo ves desde Argentina',
+    text: `El partido de **${i.horaUtc} UTC** en ${sede.nombre} arranca **${hBsAs} en Buenos Aires**: ${franja}. En España se ve a las **${hMadrid}** y en México (CDMX) a las **${hCdmx}**.`,
+    tone,
+    icon,
+  };
+
   return {
     horaBsAs: hBsAs + ' hs',
     horaMadrid: hMadrid + ' hs',
@@ -90,5 +107,6 @@ export function mundial2026HorarioZonaHoraria(i: Inputs): Outputs {
     horaLima: hLima + ' hs',
     horaLocalSede: `${hLocal} hs (${sede.nombre})`,
     resumen: `Partido **${i.horaUtc} UTC** en ${sede.nombre}: ${hBsAs} BsAs · ${hMadrid} Madrid · ${hCdmx} CDMX · ${hBogota} Bogotá · ${hSantiago} Santiago · ${hLima} Lima. Local: ${hLocal}.`,
+    _insight: insight,
   };
 }

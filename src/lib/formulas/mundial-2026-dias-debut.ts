@@ -11,6 +11,7 @@ export interface Outputs {
   sede: string;
   horarioBsAs: string;
   resumen: string;
+  _insight?: any;
 }
 
 // Fechas de debut basadas en estimación post-sorteo FIFA 2026 (ventana 8-16 junio)
@@ -55,6 +56,18 @@ export function mundial2026DiasDebut(i: Inputs): Outputs {
   const nombre = sel.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   const estado = dias > 0 ? `faltan **${dias} días**` : dias === 0 ? '**debuta hoy**' : `el debut fue hace **${Math.abs(dias)} días**`;
 
+  const semanas = Math.floor(Math.abs(dias) / 7);
+  const _insight = {
+    title: `Debut de ${nombre}`,
+    text: dias > 0
+      ? `Faltan **${dias} días**${semanas >= 1 ? ` (unas ${semanas} semana${semanas === 1 ? '' : 's'})` : ''} para el debut de **${nombre}** ante ${data.rival}, el ${data.fecha} en ${data.sede}. Horario: ${data.hora}.`
+      : dias === 0
+        ? `**${nombre} debuta hoy** ante ${data.rival} en ${data.sede}. Horario: ${data.hora}.`
+        : `El debut de **${nombre}** ya fue hace **${Math.abs(dias)} días** (${data.fecha}), ante ${data.rival} en ${data.sede}.`,
+    tone: dias === 0 ? 'good' : 'neutral',
+    icon: dias === 0 ? '⚽' : '📅',
+  };
+
   return {
     dias,
     fechaDebut: data.fecha,
@@ -62,5 +75,6 @@ export function mundial2026DiasDebut(i: Inputs): Outputs {
     sede: data.sede,
     horarioBsAs: data.hora,
     resumen: `Para el debut de **${nombre}** en el Mundial 2026 ${estado}. Fecha: ${data.fecha}, rival: ${data.rival}, sede: ${data.sede}.`,
+    _insight,
   };
 }

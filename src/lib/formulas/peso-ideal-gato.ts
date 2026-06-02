@@ -12,6 +12,8 @@ export interface Outputs {
   contextura: string;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface RazaInfo { nombre: string; minM: number; maxM: number; minH: number; maxH: number; vida: number }
@@ -59,13 +61,40 @@ export function pesoIdealGato(i: Inputs): Outputs {
 
   const promedio = (min + max) / 2;
 
+  const minR = Number(min.toFixed(2));
+  const maxR = Number(max.toFixed(2));
+  const promR = Number(promedio.toFixed(2));
+  const contexturaLabel = contextura === 'pequena' ? 'pequeña' : contextura === 'grande' ? 'grande' : 'mediana';
+
+  const _insight = {
+    title: `Peso ideal del ${r.nombre}`,
+    text: `Un ${r.nombre} ${sexo === 'hembra' ? 'hembra' : 'macho'} de contextura ${contexturaLabel} debería pesar entre **${minR} y ${maxR} kg**, con un promedio de **${promR} kg**. Con una esperanza de vida de **~${r.vida} años**, mantenerlo en este rango es la mejor forma de evitar diabetes y problemas articulares.`,
+    tone: 'neutral',
+    icon: '🐱',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: promR,
+    markerLabel: `Promedio ${promR} kg`,
+    min: 0,
+    segments: [
+      { nombre: 'Bajo peso', max: minR, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Peso ideal', max: maxR, color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: 'Sobrepeso', max: Number((maxR * 1.4).toFixed(2)), color: '#ef4444', colorDark: '#f87171' },
+    ],
+    ariaLabel: `Escala de peso: la franja ideal del ${r.nombre} va de ${minR} a ${maxR} kg, con promedio ${promR} kg`,
+  };
+
   return {
-    pesoIdealMin: Number(min.toFixed(2)),
-    pesoIdealMax: Number(max.toFixed(2)),
-    pesoPromedio: Number(promedio.toFixed(2)),
+    pesoIdealMin: minR,
+    pesoIdealMax: maxR,
+    pesoPromedio: promR,
     raza: r.nombre,
     contextura: contextura === 'pequena' ? 'Pequeña' : contextura === 'grande' ? 'Grande' : 'Mediana',
     esperanzaAnios: r.vida,
     resumen: `${r.nombre} (${sexo}, contextura ${contextura}): peso ideal ${min.toFixed(1)}-${max.toFixed(1)} kg. Esperanza de vida: ~${r.vida} años.`,
+    _insight,
+    _chart,
   };
 }

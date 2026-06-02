@@ -22,6 +22,8 @@ export interface PlazoFijoOutputs {
   tea: number; // tasa efectiva anual %
   interesDiario: number;
   interesMensualEq: number; // tasa mensual equivalente
+  _insight?: any;
+  _chart?: any;
 }
 
 export function plazoFijo(inputs: PlazoFijoInputs): PlazoFijoOutputs {
@@ -44,12 +46,38 @@ export function plazoFijo(inputs: PlazoFijoInputs): PlazoFijoOutputs {
   const interesDiario = interesGanado / dias;
   const interesMensualEq = capital * tnaDecimal * (30 / 365);
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const capitalRound = Math.round(capital);
+  const interesRound = Math.round(interesGanado);
+  const montoRound = Math.round(montoFinal);
+
+  const _insight = {
+    title: 'Qué ganás con este plazo fijo',
+    text: `A ${dias} días con una TNA de **${tna}%**, tus **${fmt(capital)}** se transforman en **${fmt(montoFinal)}**: ganás **${fmt(interesGanado)}** de interés (**${rendimientoPeriodo.toFixed(2)}%** del período). La TEA equivalente es **${tea.toFixed(2)}%**, el techo real si reinvertís cada vencimiento.`,
+    tone: 'good',
+    icon: '🏦',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital invertido', value: capitalRound },
+      { label: 'Interés ganado', value: interesRound },
+    ],
+    prefix: '$',
+    centerValue: fmt(montoFinal),
+    centerLabel: 'Monto final',
+    ariaLabel: `Monto final de ${fmt(montoFinal)}: capital de ${fmt(capital)} más interés ganado de ${fmt(interesGanado)} en ${dias} días.`,
+  };
+
   return {
-    interesGanado: Math.round(interesGanado),
-    montoFinal: Math.round(montoFinal),
+    interesGanado: interesRound,
+    montoFinal: montoRound,
     rendimientoPeriodo: Number(rendimientoPeriodo.toFixed(2)),
     tea: Number(tea.toFixed(2)),
     interesDiario: Math.round(interesDiario),
     interesMensualEq: Math.round(interesMensualEq),
+    _insight,
+    _chart,
   };
 }

@@ -18,6 +18,8 @@ export interface Outputs {
   effective_rate: number;
   annual_net: number;
   breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ── 2026 Constants ────────────────────────────────────────────────
@@ -255,6 +257,38 @@ export function compute(i: Inputs): Outputs {
     `Health ins: $${healthIns.toFixed(2)} | ` +
     `Net: $${netPay.toFixed(2)}`;
 
+  // ── Insight: take-home percentage of gross
+  const takeHome = Math.max(0, netPay);
+  const takeHomePct = grossPay > 0 ? (takeHome / grossPay) * 100 : 0;
+  const totalDeductions = perPeriodFedTax + perPeriodSSTax + perPeriodMedicare + perPeriodStateTax + pretaxTotal;
+  const deductionsPct = grossPay > 0 ? (totalDeductions / grossPay) * 100 : 0;
+  const insightTone = deductionsPct >= 35 ? 'warn' : deductionsPct <= 22 ? 'good' : 'neutral';
+  const insight = {
+    title: 'Cuánto de tu sueldo te llevás a casa',
+    text: `De tu bruto de **$${grossPay.toFixed(2)}** por período te quedan **$${takeHome.toFixed(2)}** netos (**${takeHomePct.toFixed(0)}%**). Entre impuestos y deducciones se van **$${totalDeductions.toFixed(2)}** (${deductionsPct.toFixed(0)}%), unos **$${Math.max(0, annualNet).toLocaleString('en-US', { maximumFractionDigits: 0 })}** netos al año.`,
+    tone: insightTone,
+    icon: '💵',
+  };
+
+  // ── Chart: doughnut breaking gross into take-home + each deduction
+  const chartSlices = [
+    { label: 'Take-home', value: takeHome },
+    { label: 'Federal tax', value: perPeriodFedTax },
+    { label: 'Social Security', value: perPeriodSSTax },
+    { label: 'Medicare', value: perPeriodMedicare },
+    { label: stateLabel + ' tax', value: perPeriodStateTax },
+    { label: '401(k)', value: retirementDeduction },
+    { label: 'Health insurance', value: healthIns },
+  ].filter((s) => s.value > 0);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: chartSlices,
+    prefix: '$',
+    centerValue: '$' + takeHome.toFixed(0),
+    centerLabel: 'Take-home',
+    ariaLabel: 'Breakdown of gross pay into take-home pay, federal tax, Social Security, Medicare, state tax, 401(k) and health insurance.',
+  };
+
   return {
     net_pay:              Math.max(0, netPay),
     federal_tax:          perPeriodFedTax,
@@ -265,5 +299,7 @@ export function compute(i: Inputs): Outputs {
     effective_rate:       effectiveRate,
     annual_net:           Math.max(0, annualNet),
     breakdown,
+    _insight:             insight,
+    _chart:               chart,
   };
 }

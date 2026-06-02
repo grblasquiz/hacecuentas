@@ -13,6 +13,7 @@ export interface PlazoPrescripcionOutputs {
   fechaPrescripcion: string;
   plazoAnios: string;
   diasRestantes: string;
+  _insight?: any;
 }
 
 const PLAZOS: Record<string, { anios: number; nombre: string }> = {
@@ -65,10 +66,22 @@ export function plazoPrescripcionDeuda(inputs: PlazoPrescripcionInputs): PlazoPr
     diasRestantes = `${diffDias} días (${(diffDias / 30).toFixed(1)} meses)`;
   }
 
+  const prescribio = diffDias <= 0;
+  const meses = Math.round((diffDias / 30) * 10) / 10;
+  const _insight = {
+    title: prescribio ? 'La deuda ya prescribió' : 'Todavía es exigible',
+    text: prescribio
+      ? `Por tratarse de **${config.nombre.toLowerCase()}** el plazo es de **${config.anios} año${config.anios > 1 ? 's' : ''}** y venció el **${formatDate(fechaPrescripcion)}**. Hoy podés oponer la prescripción como defensa, pero ojo: no opera sola, hay que invocarla; y un pago o reconocimiento reciente reinicia el conteo.`
+      : `Como **${config.nombre.toLowerCase()}** prescribe a los **${config.anios} año${config.anios > 1 ? 's' : ''}**, recién dejaría de ser exigible el **${formatDate(fechaPrescripcion)}**: faltan **${diffDias} días** (~${meses} meses). Cualquier pago, reconocimiento o demanda en el medio reinicia el plazo desde cero.`,
+    tone: prescribio ? 'good' : 'warn',
+    icon: prescribio ? '✅' : '⏳',
+  };
+
   return {
     resultado,
     fechaPrescripcion: formatDate(fechaPrescripcion),
     plazoAnios: `${config.anios} año${config.anios > 1 ? 's' : ''} (${config.nombre})`,
     diasRestantes,
+    _insight,
   };
 }

@@ -33,16 +33,40 @@ export function jubilacionDocenteIpsBa(i: Inputs): Outputs {
   }
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
-  const estado = (cumpleEdad && cumpleServicios)
+  const cumple = cumpleEdad && cumpleServicios;
+  const estado = cumple
     ? 'Cumple requisitos — jubilación ordinaria IPS BA.'
     : `Faltan requisitos: edad mínima ${edadRequerida}, servicios mínimos ${serviciosRequeridos}.`;
 
+  const haberFinal = cumple ? haber : haberProporcional;
+  const faltaServicios = Math.max(0, serviciosRequeridos - aniosServicio);
+  const faltaEdad = Math.max(0, edadRequerida - edad);
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (cumple) {
+    insightText = `Cumplís edad y servicios: tu haber es el **82% móvil** sobre el **80%** de tu mejor sueldo, **${fmt(haber)}** por mes.`;
+    insightTone = 'good';
+  } else {
+    const partes: string[] = [];
+    if (faltaEdad > 0) partes.push(`**${faltaEdad} año${faltaEdad === 1 ? '' : 's'}** de edad`);
+    if (faltaServicios > 0) partes.push(`**${faltaServicios} año${faltaServicios === 1 ? '' : 's'}** de servicio`);
+    insightText = `Todavía no llegás al beneficio ordinario: te falta${partes.length > 1 ? 'n' : ''} ${partes.join(' y ')} (mínimos Ley 11.758: ${edadRequerida} años y ${serviciosRequeridos} de servicio). El haber mostrado es proporcional: **${fmt(haberFinal)}**.`;
+    insightTone = 'warn';
+  }
+  const _insight = {
+    title: cumple ? 'Te jubilás con haber pleno' : 'Te faltan requisitos',
+    text: insightText,
+    tone: insightTone,
+    icon: '👩‍🏫',
+  };
+
   return {
-    haberMensual: fmt(cumpleEdad && cumpleServicios ? haber : haberProporcional),
+    haberMensual: fmt(haberFinal),
     base80: fmt(base),
-    aniosFaltantes: Math.max(0, serviciosRequeridos - aniosServicio),
-    edadFaltante: Math.max(0, edadRequerida - edad),
+    aniosFaltantes: faltaServicios,
+    edadFaltante: faltaEdad,
     estado,
     formula: '82% móvil × 80% del mejor sueldo últimos 10 años (Ley 11.758).',
-  };
+    _insight,
+  } as Outputs;
 }

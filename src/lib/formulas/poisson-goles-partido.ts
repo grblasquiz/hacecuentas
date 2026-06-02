@@ -1,6 +1,6 @@
 /** Distribución de Poisson para modelar goles por partido — modelo estadístico educativo */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | any; _insight?: any; _chart?: any; }
 
 function poissonPmf(k: number, lambda: number): number {
   // P(X=k) = e^-lambda * lambda^k / k!
@@ -60,6 +60,37 @@ export function poissonGolesPartido(i: Inputs): Outputs {
     return `${best.g} (${(best.p * 100).toFixed(1)}%)`;
   })();
 
+  const pLocalPct = Number((pLocalGana * 100).toFixed(1));
+  const pEmpatePct = Number((pEmpate * 100).toFixed(1));
+  const pVisitPct = Number((pVisitGana * 100).toFixed(1));
+
+  const outcomes = [
+    { label: 'Gana local', pct: pLocalPct },
+    { label: 'Empate', pct: pEmpatePct },
+    { label: 'Gana visitante', pct: pVisitPct },
+  ];
+  const favorito = outcomes.reduce((a, b) => (b.pct > a.pct ? b : a));
+
+  const _insight = {
+    title: 'Qué dice el modelo',
+    text: `Con **${lambdaLocal} goles esperados** del local y **${lambdaVisit}** del visitante, el resultado más probable es **${favorito.label.toLowerCase()}** (**${favorito.pct.toFixed(1)}%**) y el marcador exacto más probable es **${marcadorMasProbable}**. Over 2.5 goles: **${(pOver25 * 100).toFixed(1)}%**; ambos marcan: **${(pBtts * 100).toFixed(1)}%**.`,
+    tone: 'neutral',
+    icon: '⚽',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Gana local', value: pLocalPct },
+      { label: 'Empate', value: pEmpatePct },
+      { label: 'Gana visitante', value: pVisitPct },
+    ],
+    prefix: '',
+    centerValue: `${favorito.pct.toFixed(1)}%`,
+    centerLabel: favorito.label,
+    ariaLabel: `Probabilidades 1X2: gana local ${pLocalPct}%, empate ${pEmpatePct}%, gana visitante ${pVisitPct}%`,
+  };
+
   return {
     probabilidadLocalGana: `${(pLocalGana * 100).toFixed(1)}%`,
     probabilidadEmpate: `${(pEmpate * 100).toFixed(1)}%`,
@@ -73,5 +104,7 @@ export function poissonGolesPartido(i: Inputs): Outputs {
     probabilidad11: `${p11}%`,
     probabilidad21: `${p21}%`,
     notaEducativa: 'Modelo Poisson educativo: asume independencia y parámetros fijos. No es recomendación de apuestas.',
+    _insight,
+    _chart,
   };
 }

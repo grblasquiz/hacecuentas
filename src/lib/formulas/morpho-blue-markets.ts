@@ -1,6 +1,6 @@
 /** Morpho Blue isolated markets */
 export interface Inputs { supplyUsd: number; supplyApy: number; rewardApr: number; ltv: number; borrowApy: number; borrowUsd: number; months: number; }
-export interface Outputs { netApy: number; supplyUsdEarned: number; borrowUsdCost: number; rewardsUsd: number; leverageMultiplier: number; explicacion: string; }
+export interface Outputs { netApy: number; supplyUsdEarned: number; borrowUsdCost: number; rewardsUsd: number; leverageMultiplier: number; explicacion: string; _insight?: any; }
 export function morphoBlueMarkets(i: Inputs): Outputs {
   const sup = Number(i.supplyUsd);
   const supApy = Number(i.supplyApy) / 100;
@@ -17,6 +17,25 @@ export function morphoBlueMarkets(i: Inputs): Outputs {
   const net = supEarned - borCost + rewards;
   const netApy = (net / sup) * 100 / years;
   const leverage = bor > 0 ? (sup + bor) / sup : 1;
+
+  const netUsd = Math.round(net * 100) / 100;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightTitle: string;
+  let insightText: string;
+  if (netApy <= 0) {
+    insightTone = 'warn';
+    insightTitle = 'Rendimiento neto negativo';
+    insightText = `Con este setup el costo del borrow (**$${borCost.toFixed(2)}**) supera a lo que ganás por supply + rewards: APY neto **${netApy.toFixed(2)}%** (perdés ~$${Math.abs(netUsd).toFixed(2)} en ${months} meses). Bajá el apalancamiento o buscá un market con mejor spread.`;
+  } else if (leverage >= 3) {
+    insightTone = 'warn';
+    insightTitle = 'APY positivo pero muy apalancado';
+    insightText = `Ganás un APY neto de **${netApy.toFixed(2)}%** (+$${netUsd.toFixed(2)} en ${months} meses), pero a **${leverage.toFixed(2)}x** de leverage: una caída del colateral o un salto en el borrow APY puede liquidarte. Vigilá el health factor del market.`;
+  } else {
+    insightTone = 'good';
+    insightTitle = 'Carry positivo';
+    insightText = `Tu posición rinde un APY neto de **${netApy.toFixed(2)}%** (+$${netUsd.toFixed(2)} en ${months} meses) con un apalancamiento moderado de **${leverage.toFixed(2)}x**. El supply y los rewards cubren el costo del borrow.`;
+  }
+
   return {
     netApy: Number(netApy.toFixed(3)),
     supplyUsdEarned: Number(supEarned.toFixed(2)),
@@ -24,5 +43,11 @@ export function morphoBlueMarkets(i: Inputs): Outputs {
     rewardsUsd: Number(rewards.toFixed(2)),
     leverageMultiplier: Number(leverage.toFixed(2)),
     explicacion: `Supply $${sup} (APY ${(supApy*100).toFixed(2)}%) + borrow $${bor} (APY ${(borApy*100).toFixed(2)}%) + rewards ${(rAp*100).toFixed(2)}%: APY neto ${netApy.toFixed(2)}%, leverage ${leverage.toFixed(2)}x.`,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: '🦋',
+    },
   };
 }

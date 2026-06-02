@@ -20,6 +20,8 @@ export interface Outputs {
   complemento_ccaa: number;
   total_anual: number;
   aviso: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -159,6 +161,45 @@ export function compute(i: Inputs): Outputs {
     'Este resultado es una estimación orientativa. La resolución definitiva corresponde al IMSERSO o al organismo autonómico competente.'
   );
 
+  // --- Insight narrativo ---
+  const fmtE = (n: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+  let _insight: any;
+  if (!elegible) {
+    _insight = {
+      title: 'No cumplís los requisitos',
+      text: `Con los datos cargados **no se reconoce derecho** a la pensión no contributiva. Revisá las observaciones: suele ser por edad/grado de discapacidad o porque tu renta (**${fmtE(rentaComputableTotal)}**) iguala o supera el límite de **${fmtE(limiteRentaAnual)}**.`,
+      tone: 'warn',
+      icon: '⛔',
+    };
+  } else {
+    const integra = rentaComputableTotal <= 0;
+    _insight = {
+      title: integra ? 'Cuantía íntegra' : 'Cuantía proporcional a tu renta',
+      text: integra
+        ? `Sin ingresos computables, cobrás la **cuantía íntegra: ${fmtE(cuantiaAnualEstado)}/año** (${fmtE(cuantiaMensualEstado)} en 14 pagas)${complementoCCAA > 0 ? `, más **${fmtE(complementoCCAA)}/año** de complemento autonómico` : ''}. Total estimado **${fmtE(totalAnual)}/año**.`
+        : `Tu renta de **${fmtE(rentaComputableTotal)}** reduce la prestación a **${fmtE(cuantiaAnualEstado)}/año** (${fmtE(cuantiaMensualEstado)} en 14 pagas)${complementoCCAA > 0 ? ` + **${fmtE(complementoCCAA)}** de tu comunidad` : ''}. Total estimado **${fmtE(totalAnual)}/año**.`,
+      tone: 'good',
+      icon: '🇪🇸',
+    };
+  }
+
+  // --- Gráfico: composición del total (solo si hay complemento autonómico) ---
+  let _chart: any;
+  if (elegible && complementoCCAA > 0 && cuantiaAnualEstado > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Cuantía estatal (IMSERSO)', value: parseFloat(cuantiaAnualEstado.toFixed(2)) },
+        { label: 'Complemento autonómico', value: parseFloat(complementoCCAA.toFixed(2)) },
+      ],
+      prefix: '€',
+      centerValue: fmtE(totalAnual),
+      centerLabel: 'Total anual',
+      ariaLabel: `Composición del total anual de ${fmtE(totalAnual)}: ${fmtE(cuantiaAnualEstado)} del Estado y ${fmtE(complementoCCAA)} de complemento autonómico`,
+    };
+  }
+
   return {
     elegible: elegibleTexto,
     limite_renta_anual: parseFloat(limiteRentaAnual.toFixed(2)),
@@ -167,6 +208,8 @@ export function compute(i: Inputs): Outputs {
     cuantia_mensual_estado: parseFloat(cuantiaMensualEstado.toFixed(2)),
     complemento_ccaa: parseFloat(complementoCCAA.toFixed(2)),
     total_anual: parseFloat(totalAnual.toFixed(2)),
-    aviso: avisos.join(' | ')
+    aviso: avisos.join(' | '),
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

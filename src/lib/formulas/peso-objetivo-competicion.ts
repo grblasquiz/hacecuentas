@@ -11,6 +11,7 @@ export interface Outputs {
   pesoMin: number;
   pesoMax: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function pesoObjetivoCompeticion(i: Inputs): Outputs {
@@ -51,6 +52,8 @@ export function pesoObjetivoCompeticion(i: Inputs): Outputs {
   const pesoMin = Number((bmiMin * alturaM * alturaM).toFixed(1));
   const pesoMax = Number((bmiMax * alturaM * alturaM).toFixed(1));
 
+  const banda = Number((pesoMax - pesoMin).toFixed(1));
+
   return {
     pesoIdeal: `${pesoMin}-${pesoMax} kg`,
     bmiRango: `BMI ${bmiMin}-${bmiMax}`,
@@ -58,6 +61,14 @@ export function pesoObjetivoCompeticion(i: Inputs): Outputs {
     pesoMax,
     mensaje: __lang === 'en'
       ? `For ${deporte} at ${altura} cm (${sexo}): competitive weight between ${pesoMin} and ${pesoMax} kg (BMI ${bmiMin}-${bmiMax}).`
-      : `Para ${deporte} a ${altura} cm (${sexo}): peso competitivo entre ${pesoMin} y ${pesoMax} kg (BMI ${bmiMin}-${bmiMax}).`
+      : `Para ${deporte} a ${altura} cm (${sexo}): peso competitivo entre ${pesoMin} y ${pesoMax} kg (BMI ${bmiMin}-${bmiMax}).`,
+    _insight: {
+      title: __lang === 'en' ? 'Your competitive window' : 'Tu ventana competitiva',
+      text: __lang === 'en'
+        ? `Elite ${deporte} athletes of your height usually sit between **${pesoMin} and ${pesoMax} kg** (BMI ${bmiMin}-${bmiMax}). That **${banda} kg** band is a sport benchmark, not a personal target — bone structure and muscle mass shift where you land inside it.`
+        : `Los deportistas de ${deporte} de tu altura suelen ubicarse entre **${pesoMin} y ${pesoMax} kg** (BMI ${bmiMin}-${bmiMax}). Esa banda de **${banda} kg** es una referencia del deporte, no un objetivo personal: tu estructura ósea y masa muscular definen dónde caés adentro.`,
+      tone: 'neutral',
+      icon: '🏅',
+    },
   };
 }

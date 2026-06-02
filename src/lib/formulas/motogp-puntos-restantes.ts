@@ -13,6 +13,7 @@ export interface Outputs {
   matematicaAsegurada: string;
   escenarioEmpate: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function motogpPuntosRestantes(i: Inputs): Outputs {
@@ -40,6 +41,23 @@ export function motogpPuntosRestantes(i: Inputs): Outputs {
 
   const empate = `Si el líder no suma más, el rival necesita **${diff + 1} pts** en las ${gps + sprints} competiciones restantes para superarlo.`;
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightTitle: string;
+  let insightText: string;
+  if (diff > maxPuntos) {
+    insightTone = 'good';
+    insightTitle = 'Campeón matemático';
+    insightText = `La ventaja de **${diff} pts** ya es inalcanzable: aun ganando todo lo que queda el rival sólo sumaría **${maxPuntos} pts** (${gps} GPs + ${sprints} sprints). El título está cerrado.`;
+  } else if (diff === maxPuntos) {
+    insightTone = 'good';
+    insightTitle = 'A un punto del título';
+    insightText = `Con **${diff} pts** de ventaja y **${maxPuntos} pts** en juego, al líder le alcanza con sumar **1 punto** más para ser campeón matemático.`;
+  } else {
+    insightTone = diff < 0 ? 'warn' : 'neutral';
+    insightTitle = 'Campeonato abierto';
+    insightText = `La diferencia es de **${diff} pts** y todavía hay **${maxPuntos} pts** en juego, así que el título sigue en disputa. El perseguidor necesita **${diff + 1} pts** netos sobre el líder en las ${gps + sprints} competiciones restantes.`;
+  }
+
   return {
     diferenciaActual: diff,
     puntosPosiblesRestantes: maxPuntos,
@@ -47,5 +65,11 @@ export function motogpPuntosRestantes(i: Inputs): Outputs {
     matematicaAsegurada: asegurado,
     escenarioEmpate: empate,
     resumen: `Líder ${lider} pts, rival ${rival} pts (diff ${diff}). Quedan ${gps} GPs (×25) + ${sprints} sprints (×12) = **${maxPuntos} pts máx posibles**. ${asegurado}.`,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: '🏁',
+    },
   };
 }

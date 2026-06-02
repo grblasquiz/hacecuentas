@@ -1,6 +1,6 @@
 /** Cálculo de distancia ideal al monitor según tamaño y resolución */
 export interface Inputs { diagonalPulgadas: number; resolucion?: string; }
-export interface Outputs { distanciaMinimaM: number; distanciaMaximaM: number; distanciaIdealM: number; detalle: string; }
+export interface Outputs { distanciaMinimaM: number; distanciaMaximaM: number; distanciaIdealM: number; detalle: string; _insight?: any; _chart?: any; }
 
 const factores: Record<string, { min: number; max: number }> = {
   '1080p': { min: 1.5, max: 2.5 },
@@ -21,10 +21,32 @@ export function monitorTamanoDistanciaIdeal(i: Inputs): Outputs {
   const maxCm = diagonalCm * factor.max;
   const idealCm = (minCm + maxCm) / 2;
 
+  const minM = Number((minCm / 100).toFixed(2));
+  const maxM = Number((maxCm / 100).toFixed(2));
+  const idealM = Number((idealCm / 100).toFixed(2));
+
   return {
-    distanciaMinimaM: Number((minCm / 100).toFixed(2)),
-    distanciaMaximaM: Number((maxCm / 100).toFixed(2)),
-    distanciaIdealM: Number((idealCm / 100).toFixed(2)),
-    detalle: `Monitor/TV de ${diagonal}" en ${resolucion}: distancia ideal ${(idealCm / 100).toFixed(2)} m (rango: ${(minCm / 100).toFixed(2)} - ${(maxCm / 100).toFixed(2)} m). A menor distancia se notan píxeles, a mayor no aprovechás la resolución.`,
+    distanciaMinimaM: minM,
+    distanciaMaximaM: maxM,
+    distanciaIdealM: idealM,
+    detalle: `Monitor/TV de ${diagonal}" en ${resolucion}: distancia ideal ${idealM.toFixed(2)} m (rango: ${minM.toFixed(2)} - ${maxM.toFixed(2)} m). A menor distancia se notan píxeles, a mayor no aprovechás la resolución.`,
+    _insight: {
+      title: 'Distancia ideal de visión',
+      text: `Para un panel de **${diagonal}" en ${resolucion}**, sentate a unos **${idealM.toFixed(2)} m** (rango cómodo: ${minM.toFixed(2)}–${maxM.toFixed(2)} m). Más cerca empezás a distinguir píxeles; más lejos, desperdiciás la resolución que pagaste.`,
+      tone: 'neutral',
+      icon: '🖥️',
+    },
+    _chart: {
+      type: 'scale' as const,
+      marker: idealM,
+      markerLabel: `Ideal ${idealM.toFixed(2)} m`,
+      min: 0,
+      segments: [
+        { nombre: 'Muy cerca', max: minM, color: '#f59e0b', colorDark: '#b45309' },
+        { nombre: 'Distancia ideal', max: maxM, color: '#22c55e', colorDark: '#15803d' },
+        { nombre: 'Muy lejos', max: Number((maxM * 1.6).toFixed(2)), color: '#f59e0b', colorDark: '#b45309' },
+      ],
+      ariaLabel: `Distancia ideal ${idealM.toFixed(2)} m dentro del rango cómodo de ${minM.toFixed(2)} a ${maxM.toFixed(2)} metros`,
+    },
   };
 }

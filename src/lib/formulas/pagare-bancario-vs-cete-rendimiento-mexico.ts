@@ -20,6 +20,7 @@ export interface Outputs {
   diferencia_absoluta: number;
   diferencia_relativa: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -90,6 +91,15 @@ export function compute(i: Inputs): Outputs {
   recomendacion += `\n\n**ISR**: Pagaré retiene ${(RETENCION_ISR_PAGARE * 100).toFixed(1)}%; CETE ${(RETENCION_ISR_CETE * 100).toFixed(1)}%. Ambos automáticos. `;
   recomendacion += `\n\n**Decisión**: Elige CETE si prioriza seguridad y liquidez. Elige pagaré si acepta bloquear capital y busca máxima tasa (verifica realmente en tu banco).`;
 
+  const ganador = diferencia_absoluta > 0 ? 'El pagaré' : 'El CETE';
+  const ganadorRend = diferencia_absoluta > 0 ? rendimiento_neto_pagare : rendimiento_neto_cete;
+  const _insight = {
+    title: 'Quién rinde más a tu plazo',
+    text: `${ganador} te deja **$${Math.abs(diferencia_absoluta).toFixed(0)} MXN más** a los **${dias} días** (rinde **${ganadorRend.toFixed(2)}% neto anual** tras ISR). ${monto > 400000 ? 'Ojo: tu monto **supera la cobertura IPAB de $400k**, el CETE no tiene ese límite de riesgo.' : 'Tu monto está **dentro de la cobertura IPAB**.'}`,
+    tone: (monto > 400000 ? 'warn' : 'good') as 'good' | 'warn' | 'neutral',
+    icon: '🏦',
+  };
+
   return {
     interes_bruto_pagare: parseFloat(interes_bruto_pagare.toFixed(2)),
     retencion_isr_pagare: parseFloat(retencion_isr_pagare.toFixed(2)),
@@ -103,6 +113,7 @@ export function compute(i: Inputs): Outputs {
     monto_final_cete: parseFloat(monto_final_cete.toFixed(2)),
     diferencia_absoluta: parseFloat(diferencia_absoluta.toFixed(2)),
     diferencia_relativa: parseFloat(diferencia_relativa.toFixed(2)),
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight: _insight
   };
 }

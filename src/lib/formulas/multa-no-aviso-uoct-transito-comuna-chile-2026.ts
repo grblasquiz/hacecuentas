@@ -15,6 +15,8 @@ export interface Outputs {
   juzgado_competente: string;
   plazo_pago_sin_recargo: string;
   notas_recurso: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function compute(inputs: Inputs): Outputs {
@@ -120,6 +122,33 @@ export function compute(inputs: Inputs): Outputs {
 
   notas_recurso += "Plazo prescripción deuda: 3 años. Verifica actualización UTM mensual en SII.";
 
+  const recargo_reincidencia = multa_final - multa_final_sin_reincidencia;
+  const fmt = (n: number) => "$" + Math.round(n).toLocaleString("es-CL");
+  const slices: { label: string; value: number }[] = [
+    { label: "Multa base", value: multa_base }
+  ];
+  if (recargo_tardio > 0) slices.push({ label: "Recargo pago tardío", value: recargo_tardio });
+  if (recargo_reincidencia > 0) slices.push({ label: "Recargo reincidencia", value: recargo_reincidencia });
+  const chart = {
+    type: "doughnut" as const,
+    slices,
+    prefix: "$",
+    centerValue: fmt(total_pagar),
+    centerLabel: "Total a pagar",
+    ariaLabel: "Desglose de la multa: monto base, recargo por pago tardío y recargo por reincidencia"
+  };
+
+  const extras: string[] = [];
+  if (tiene_recargo) extras.push("recargo del 50% por pago tardío");
+  if (tiene_reincidencia) extras.push("recargo del 50% por reincidencia");
+  const extrasTxt = extras.length ? ` Incluye ${extras.join(" y ")}.` : "";
+  const insight = {
+    title: `Infracción ${coef.clasificacion.toLowerCase()}`,
+    text: `Esta multa **${coef.clasificacion.toLowerCase()}** suma **${fmt(total_pagar)}** a pagar (base **${fmt(multa_base)}**).${extrasTxt} Tenés **30 días** desde la notificación para pagar sin recargo o presentar reposición.`,
+    tone: "warn" as const,
+    icon: "🚨"
+  };
+
   return {
     monto_multa_base: multa_base,
     monto_multa_final: multa_final_sin_reincidencia,
@@ -128,6 +157,8 @@ export function compute(inputs: Inputs): Outputs {
     clasificacion: coef.clasificacion,
     juzgado_competente: juzgado,
     plazo_pago_sin_recargo: plazo_pago_sin_recargo,
-    notas_recurso: notas_recurso
+    notas_recurso: notas_recurso,
+    _chart: chart,
+    _insight: insight
   };
 }

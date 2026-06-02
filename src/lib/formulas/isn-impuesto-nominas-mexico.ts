@@ -13,6 +13,7 @@ export interface Outputs {
   alicuota: string;
   isnAnual: number;
   detalle: string;
+  _insight?: any;
 }
 
 // Tabla de alícuotas ISN 2026 por estado (en porcentaje)
@@ -102,10 +103,20 @@ export function isnImpuestoNominasMexico(inputs: Inputs): Outputs {
     `Recordá: lo paga el patrón (no se retiene al trabajador) y se entera ` +
     `dentro de los primeros 17 días del mes siguiente. Es deducible para ISR federal.`;
 
+  const _insight = {
+    title: `ISN en ${cfg.nombre}`,
+    text: totalNominaMensual > 0
+      ? `Con una alícuota del **${alicuotaTexto}**, tu nómina de ${formatMXN(totalNominaMensual)} genera **${formatMXN(isnAPagar)}** de ISN al mes (**${formatMXN(isnAnual)}** al año). Lo paga el patrón, pero es **deducible de ISR**, así que el costo neto baja en torno a un tercio.`
+      : `${cfg.nombre} aplica una alícuota del **${alicuotaTexto}** sobre la nómina. Ingresá el total de erogaciones para ver cuánto ISN se entera cada mes.`,
+    tone: (cfg.tasa >= 0.03 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '🇲🇽',
+  };
+
   return {
     isnAPagar: Math.round(isnAPagar * 100) / 100,
     alicuota: alicuotaTexto,
     isnAnual: Math.round(isnAnual * 100) / 100,
     detalle,
+    _insight,
   };
 }

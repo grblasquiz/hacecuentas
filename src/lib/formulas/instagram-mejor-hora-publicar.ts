@@ -1,6 +1,6 @@
 /** Mejor Hora Publicar Instagram */
 export interface Inputs { audiencia: string; dia: string; }
-export interface Outputs { mejorHora: string; alternativa: string; razon: string; tip: string; }
+export interface Outputs { mejorHora: string; alternativa: string; razon: string; tip: string; _insight?: any; }
 
 export function instagramMejorHoraPublicar(i: Inputs): Outputs {
   const aud = String(i.audiencia);
@@ -26,5 +26,11 @@ export function instagramMejorHoraPublicar(i: Inputs): Outputs {
     alternativa: alt + ' local',
     razon: ajuste,
     tip: 'Primera hora post-publicación decide el 80% del reach final — activá notificaciones y respondé rápido',
+    _insight: {
+      title: 'Tu ventana óptima',
+      text: `Para ${dia.toLowerCase()} publicá en la franja **${best} local**; si no llegás, la alternativa es **${alt}**. ${ajuste}.`,
+      tone: 'good',
+      icon: '📸',
+    },
   };
 }

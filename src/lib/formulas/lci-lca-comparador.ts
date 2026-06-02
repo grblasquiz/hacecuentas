@@ -19,6 +19,7 @@ export interface Outputs {
   rentabilidadeLciAnual: string;
   vantagemLci: string;
   resumen: string;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -61,5 +62,11 @@ export function lciLcaComparador(i: Inputs): Outputs {
     rentabilidadeLciAnual: rentLciAnual.toFixed(2) + '% aa',
     vantagemLci: `LCI/LCA ${pctLci}% CDI isento = CDB ${cdbEquiv.toFixed(1)}% CDI bruto`,
     resumen: `Uma LCI/LCA a ${pctLci}% do CDI isenta de IR equivale a um CDB de ${cdbEquiv.toFixed(1)}% do CDI (IR ${(aliq * 100).toFixed(1)}%).`,
+    _insight: {
+      title: 'Equivalência líquida',
+      text: `Como a LCI/LCA é **isenta de IR**, seus **${pctLci}% do CDI** rendem o mesmo que um CDB de **${cdbEquiv.toFixed(1)}% do CDI** (que paga ${(aliq * 100).toFixed(1)}% de IR no resgate). Só vale trocar pelo CDB se ele oferecer mais que isso.`,
+      tone: 'good',
+      icon: '🏦',
+    },
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   dificultad: string;
   notas: string;
   _chart?: any;
+  _insight?: any;
 }
 
 /** Redondea al múltiplo de 0.5 más cercano */
@@ -43,6 +44,12 @@ export function compute(i: Inputs): Outputs {
       duracion_dias: "Sin desfase horario",
       dificultad: "Sin jet lag",
       notas: "No cruzás zonas horarias: no se necesita suplementación con melatonina.",
+      _insight: {
+        title: "Sin jet lag, sin melatonina",
+        text: "No cruzás zonas horarias, así que **no hay desfase circadiano** que corregir. Guardá la melatonina: ningún suplemento es necesario para este viaje.",
+        tone: "good",
+        icon: "😴",
+      },
     };
   }
 
@@ -145,6 +152,14 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: "Escala de severidad del jet lag según zonas horarias y dirección: leve, moderado, alto y muy alto.",
   };
 
+  const dirTxt = direccion === "este" ? "al este" : "al oeste";
+  const _insight = {
+    title: "Tu plan de melatonina",
+    text: `Cruzás **${zonas} zona${zonas !== 1 ? "s" : ""}** ${dirTxt}: tomá **${dosis_mg} mg** a las ${hora_toma.replace(" (hora destino)", "")} en destino, unas 30 min antes de dormir. El desfase es **${dificultad.toLowerCase()}** y se acomoda en ~${duracion_dias}.`,
+    tone: puntuacion > 5 ? "warn" : "neutral",
+    icon: "🌙",
+  };
+
   return {
     dosis_mg,
     hora_toma,
@@ -152,5 +167,6 @@ export function compute(i: Inputs): Outputs {
     dificultad,
     notas,
     _chart: chart,
+    _insight,
   };
 }

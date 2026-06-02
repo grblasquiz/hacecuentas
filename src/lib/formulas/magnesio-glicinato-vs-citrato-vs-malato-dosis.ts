@@ -13,6 +13,8 @@ export interface Outputs {
   biodisponibilidad: number;
   momento_toma: string;
   advertencia: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface FormaInfo {
@@ -136,6 +138,12 @@ export function compute(i: Inputs): Outputs {
     advertencia = "En adultos mayores, la función renal puede estar reducida. Confirmá con tu médico antes de iniciar suplementación. " + advertencia;
   }
 
+  const bioPct = Math.round(formaInfo.biodisponibilidad * 100);
+  const insightTone = formaInfo.biodisponibilidad >= 0.75 ? 'good' : 'neutral';
+  const insightText = formaInfo.biodisponibilidad >= 0.75
+    ? `Para tu caso te conviene **${formaInfo.nombre}** a **${dosisMg} mg** de magnesio elemental, tomado ${formaInfo.momento.toLowerCase()}. Es la forma de **mejor absorción (~${bioPct}%)** y la más amable con el estómago.`
+    : `Para tu caso te conviene **${formaInfo.nombre}** a **${dosisMg} mg** de magnesio elemental, tomado ${formaInfo.momento.toLowerCase()}. Su biodisponibilidad ronda el **${bioPct}%**; tomalo con comida y repartí la dosis si notás molestias digestivas.`;
+
   return {
     forma_recomendada: formaInfo.nombre,
     por_que: formaInfo.descripcion,
@@ -144,5 +152,23 @@ export function compute(i: Inputs): Outputs {
     biodisponibilidad: formaInfo.biodisponibilidad,
     momento_toma: formaInfo.momento,
     advertencia,
+    _insight: {
+      title: 'Tu forma y dosis recomendada',
+      text: insightText,
+      tone: insightTone,
+      icon: '💊',
+    },
+    _chart: {
+      type: 'scale',
+      marker: bioPct,
+      markerLabel: `${formaInfo.nombre.split(' ')[0]} · ${bioPct}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Absorción baja', max: 60, color: '#f59e0b', colorDark: '#b45309' },
+        { nombre: 'Absorción media', max: 75, color: '#84cc16', colorDark: '#4d7c0f' },
+        { nombre: 'Absorción alta', max: 100, color: '#22c55e', colorDark: '#15803d' },
+      ],
+      ariaLabel: `Biodisponibilidad estimada de la forma recomendada: ${bioPct}%`,
+    },
   };
 }

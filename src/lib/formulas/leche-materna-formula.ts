@@ -1,6 +1,6 @@
 /** Cantidad de leche materna o fórmula por edad y peso */
 export interface Inputs { edadBebeSemanas: string; pesoBebe: number; tipoAlimentacion?: string; __lang?: string; }
-export interface Outputs { mlPorToma: string; tomasPorDia: string; totalDiario: string; nota: string; }
+export interface Outputs { mlPorToma: string; tomasPorDia: string; totalDiario: string; nota: string; _insight?: any; }
 
 export function lecheMaterna(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -12,6 +12,7 @@ export function lecheMaterna(i: Inputs): Outputs {
       notaComplementa: 'La leche complementa los sólidos, ya no es el alimento principal.',
       notaMaterna: 'Con lactancia materna exclusiva, el bebé regula la cantidad. Estos valores son orientativos.',
       notaFallback: 'Consultá con tu pediatra para ajustar según tu bebé.',
+      insightTitle: 'Cuánta leche por día',
     },
     en: {
       errorPeso: 'Enter the baby\'s weight',
@@ -19,6 +20,7 @@ export function lecheMaterna(i: Inputs): Outputs {
       notaComplementa: 'Milk complements solids and is no longer the main food source.',
       notaMaterna: 'With exclusive breastfeeding, the baby self-regulates intake. These values are guidelines only.',
       notaFallback: 'Consult your pediatrician to adjust amounts for your baby.',
+      insightTitle: 'How much milk per day',
     },
   } as const)[__lang];
 
@@ -50,10 +52,19 @@ export function lecheMaterna(i: Inputs): Outputs {
     nota = (nota ? nota + ' ' : '') + T.notaMaterna;
   }
 
+  const insightText = __lang === 'en'
+    ? `Around this age, expect roughly **${mlToma} ml per feeding** across **${tomas} feedings**, adding up to **${totalDiario} ml/day** (about ${Math.round(totalDiario / 30)} oz). Use it as a reference, not a fixed target — every baby varies.`
+    : `A esta edad, calculá unos **${mlToma} ml por toma** en **${tomas} tomas**, lo que suma **${totalDiario} ml por día** (unas ${Math.round(totalDiario / 30)} onzas). Tomalo como referencia, no como meta fija — cada bebé es distinto.`;
   return {
     mlPorToma: __lang === 'en' ? `${mlToma} ml per feeding (approx.)` : `${mlToma} ml por toma (aproximado)`,
     tomasPorDia: __lang === 'en' ? `${tomas} feedings per day` : `${tomas} tomas por día`,
     totalDiario: __lang === 'en' ? `${totalDiario} ml/day (${Math.round(totalDiario / 30)} oz)` : `${totalDiario} ml/día (${Math.round(totalDiario / 30)} onzas)`,
     nota: nota || T.notaFallback,
+    _insight: {
+      title: T.insightTitle,
+      text: insightText,
+      tone: 'neutral',
+      icon: '🍼',
+    },
   };
 }

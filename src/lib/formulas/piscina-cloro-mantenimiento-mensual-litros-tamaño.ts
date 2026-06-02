@@ -13,6 +13,8 @@ export interface Outputs {
   alguicidaMesLitros: number;
   costoMensualARS: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -152,11 +154,50 @@ export function compute(i: Inputs): Outputs {
       `Costo alguicida: $${costoAlguicida.toLocaleString("es-AR", { maximumFractionDigits: 0 })} ARS.`;
   }
 
-  return {
+  const costoMensualRedondeado = Math.round(costoMensualARS);
+  const cloroMesKgRedondeado = Math.round(cloroMesKg * 100) / 100;
+  const fmtArs = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
+
+  let _insight: any;
+  if (sistema === "sal") {
+    _insight = {
+      title: "Salino: sin compra de cloro",
+      text: `El clorador salino genera cloro in situ, así que tu costo mensual de químicos baja a **${fmtArs(costoMensualRedondeado)}** (solo alguicida). El gasto real está en la **electricidad de la celda** y el recambio de sal por temporada, que no entran en esta cuenta.`,
+      tone: "good",
+      icon: "🧂",
+    };
+  } else {
+    _insight = {
+      title: "Costo mensual de mantenimiento",
+      text: `Tu pileta de **${volumenM3} m³** con ${usoLabel[uso]} y ${solarLabel[exposicion]} consume unos **${cloroMesKgRedondeado} kg/mes** de ${sistemaLabel[sistema]} y gasta cerca de **${fmtArs(costoMensualRedondeado)}** al mes entre cloro y alguicida. Más sol y más uso disparan el consumo, así que cubrí la pileta cuando no la uses.`,
+      tone: "neutral",
+      icon: "🏊",
+    };
+  }
+
+  const result: Outputs = {
     cloroSemanaGramos: Math.round(cloroSemanaGramos * 10) / 10,
-    cloroMesKg: Math.round(cloroMesKg * 100) / 100,
+    cloroMesKg: cloroMesKgRedondeado,
     alguicidaMesLitros: Math.round(alguicidaMesLitros * 1000) / 1000,
-    costoMensualARS: Math.round(costoMensualARS),
+    costoMensualARS: costoMensualRedondeado,
     detalle,
+    _insight,
   };
+
+  // Gráfico: composición del costo mensual (cloro + alguicida). Solo si hay costo y ambas partes aportan.
+  if (sistema !== "sal" && costoCloro > 0 && costoAlguicida > 0) {
+    result._chart = {
+      type: "doughnut",
+      slices: [
+        { label: "Cloro", value: Math.round(costoCloro) },
+        { label: "Alguicida", value: Math.round(costoAlguicida) },
+      ],
+      prefix: "$",
+      centerValue: fmtArs(costoMensualRedondeado),
+      centerLabel: "por mes",
+      ariaLabel: `Composición del costo mensual: cloro ${fmtArs(costoCloro)} y alguicida ${fmtArs(costoAlguicida)}, total ${fmtArs(costoMensualRedondeado)}.`,
+    };
+  }
+
+  return result;
 }

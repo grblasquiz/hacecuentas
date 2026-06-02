@@ -16,6 +16,7 @@ export interface Outputs {
   itbiDevido: string;
   detalheSfh: string;
   resumen: string;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -44,11 +45,22 @@ export function itbiPortoAlegre(i: Inputs): Outputs {
     itbi = base * 0.03;
   }
 
+  const aliqEfetiva = base > 0 ? (itbi / base) * 100 : 0;
+  const _insight = {
+    title: sfh ? 'Alíquota reduzida pelo SFH' : 'ITBI a recolher na escritura',
+    text: sfh
+      ? `Pelo financiamento via SFH, o ITBI sai por **${brl(itbi)}** (alíquota efetiva de **${aliqEfetiva.toFixed(2)}%** sobre ${brl(base)}), bem abaixo dos 3% da compra à vista.`
+      : `Sobre a base de **${brl(base)}** (maior entre venda e valor venal), o ITBI de Porto Alegre é de **${brl(itbi)}** à alíquota uniforme de **3%**. Some esse valor ao orçamento da escritura.`,
+    tone: (sfh ? 'good' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🏠',
+  };
+
   return {
     baseCalculo: brl(base),
     aliquota: sfh ? '0,5% (SFH) / 3% (livre)' : '3,0% uniforme',
     itbiDevido: brl(itbi),
     detalheSfh,
     resumen: `ITBI-POA: ${sfh ? 'alíquota mista SFH' : '3% uniforme'} sobre ${brl(base)} (maior entre venda ${brl(venda)} e valor venal ${brl(venal)}) = ${brl(itbi)}.`,
+    _insight,
   };
 }

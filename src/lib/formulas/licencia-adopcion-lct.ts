@@ -30,6 +30,8 @@ export interface LicenciaAdopcionOutputs {
   montoBruto: number;
   asignacionAnses: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const DIAS_POR_SECTOR: Record<SectorActividad, { dias: number; norma: string }> = {
@@ -99,10 +101,50 @@ export function licenciaAdopcionLct(inputs: LicenciaAdopcionInputs): LicenciaAdo
       ? `Sin licencia automática`
       : `${dias} días corridos`;
 
-  return {
+  const montoBrutoR = Math.round(montoBruto);
+  const asignacionAnsesR = Math.round(asignacionAnses);
+  const apoyoTotal = montoBrutoR + asignacionAnsesR;
+  const fmt = (n: number) => '$' + n.toLocaleString('es-AR');
+
+  let _insight: any;
+  if (dias === 0) {
+    _insight = {
+      title: 'Sin licencia paga por LCT',
+      text: `Tu sector no tiene licencia automática por adopción: la LCT base no la prevé. El único ingreso asegurado es la **asignación ANSES de ${fmt(asignacionAnsesR)}**, que cobrás aunque no tengas licencia. Para ausentarte vas a depender de vacaciones, permiso sin goce o un acuerdo con el empleador.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: 'Licencia paga por adopción',
+      text: `Te corresponden **${dias} días corridos** pagos al 100%, equivalentes a **${fmt(montoBrutoR)}** de salario, que se suman a la **asignación ANSES de ${fmt(asignacionAnsesR)}**. En total, el apoyo económico estimado del período ronda los **${fmt(apoyoTotal)}**. Recordá que la licencia se activa con la sentencia de guarda judicial.`,
+      tone: 'good',
+      icon: '👶',
+    };
+  }
+
+  const result: LicenciaAdopcionOutputs = {
     diasLicencia,
-    montoBruto: Math.round(montoBruto),
-    asignacionAnses: Math.round(asignacionAnses),
+    montoBruto: montoBrutoR,
+    asignacionAnses: asignacionAnsesR,
     mensaje,
+    _insight,
   };
+
+  // Gráfico sólo cuando hay salario por licencia que componer con la asignación
+  if (dias > 0 && apoyoTotal > 0) {
+    result._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Salario por licencia', value: montoBrutoR },
+        { label: 'Asignación ANSES', value: asignacionAnsesR },
+      ],
+      prefix: '$',
+      centerValue: fmt(apoyoTotal),
+      centerLabel: 'Apoyo total',
+      ariaLabel: `Apoyo económico de ${fmt(apoyoTotal)}: ${fmt(montoBrutoR)} de salario por licencia más ${fmt(asignacionAnsesR)} de asignación ANSES`,
+    };
+  }
+
+  return result;
 }

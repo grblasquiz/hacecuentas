@@ -1,6 +1,6 @@
 /** Calculadora de Pips Forex (valor por par) */
 export interface Inputs { par: number; tamanoLote: number; tipoPar: 'usd_quote'|'usd_base'|'cross'; pipDecimal: number; }
-export interface Outputs { valorPipUSD: number; valor10Pips: number; valor100Pips: number; pipsPorDolar: number; }
+export interface Outputs { valorPipUSD: number; valor10Pips: number; valor100Pips: number; pipsPorDolar: number; _insight?: any; }
 export function pipsProfitForexPar(i: Inputs): Outputs {
   const par = Number(i.par); const lote = Number(i.tamanoLote);
   const pip = Number(i.pipDecimal);
@@ -15,10 +15,20 @@ export function pipsProfitForexPar(i: Inputs): Outputs {
   } else {
     valor = pip * lote;  // approx, usuario ajusta
   }
+  const valorPip = Number(valor.toFixed(4));
+  const v100 = Number((valor * 100).toFixed(2));
+  const fmtUSD = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   return {
-    valorPipUSD: Number(valor.toFixed(4)),
+    valorPipUSD: valorPip,
     valor10Pips: Number((valor * 10).toFixed(2)),
-    valor100Pips: Number((valor * 100).toFixed(2)),
+    valor100Pips: v100,
     pipsPorDolar: Number((1 / valor).toFixed(3)),
+    _insight: {
+      title: 'Cuánto pesa cada pip',
+      text: `Con un lote de **${lote.toLocaleString('es-AR')}** unidades, cada pip vale **USD ${fmtUSD(valorPip)}**: un movimiento de 100 pips a favor o en contra equivale a **USD ${fmtUSD(v100)}** en tu cuenta. Dimensioná el stop loss contra este número antes de operar.`,
+      tone: 'neutral',
+      icon: '💱',
+    },
   };
 }

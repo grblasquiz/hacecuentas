@@ -15,6 +15,7 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
 }
 
 const RAZA = {
@@ -55,11 +56,28 @@ export function pesoIdealShihTzu(inputs: Inputs): Outputs {
 
   const promedio = (min + max) / 2;
 
+  let insightText: string;
+  let insightTone = 'neutral';
+  if (edad === 'cachorro') {
+    insightText = `Todavía en crecimiento: el Shih Tzu alcanza su peso adulto cerca de los 10-12 meses. Debería estabilizarse entre **${min.toFixed(1)} y ${max.toFixed(1)} kg**. En una raza tan chica, un par de kilos de más pesan muchísimo: cuidá las porciones desde cachorro.`;
+  } else if (edad === 'senior') {
+    insightText = `Un Shih Tzu senior puede afinarse un poco: un rango de **${min.toFixed(1)}-${max.toFixed(1)} kg** es esperable. Vigilá que no engorde por el sedentarismo de la edad, que recarga su columna.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `En su punto debería pesar entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). Al ser braquicéfalo, el sobrepeso le complica la respiración: mantenerlo en ese rango es clave para que respire y se mueva cómodo.`;
+  }
+
   return {
     pesoPromedio: Number(promedio.toFixed(1)),
     pesoIdealMin: Number(min.toFixed(1)),
     pesoIdealMax: Number(max.toFixed(1)),
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight: {
+      title: 'Qué significa este rango',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐶',
+    },
   };
 }

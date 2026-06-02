@@ -20,6 +20,8 @@ export interface Outputs {
   tramiteDuracion: string;
   estadoAplicado: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const COSTOS_PLACAS: Record<string, { placas: number; tarjeta: number; derechos: number; duracion: string }> = {
@@ -75,6 +77,28 @@ export function placasAutoMx(i: Inputs): Outputs {
   const derechos = Number((base.derechos * factorDerechos + derechosPorValor).toFixed(2));
   const costoTotal = Number((placasCosto + tarjetaCirculacion + derechos).toFixed(2));
 
+  const estadoNombre = estadoKey === 'cdmx' ? 'CDMX' : estadoKey === 'edomex' ? 'Edomex' : estadoKey.charAt(0).toUpperCase() + estadoKey.slice(1).replace('-', ' ');
+  const fmtMx = (n: number) => Math.round(n).toLocaleString('es-MX');
+  const componentes = [
+    { label: 'Placas', value: placasCosto },
+    { label: 'Tarjeta de circulación', value: tarjetaCirculacion },
+    { label: 'Derechos vehiculares', value: derechos },
+  ];
+  const mayor = componentes.reduce((a, b) => (b.value > a.value ? b : a));
+  const _insight = {
+    title: 'Costo del trámite',
+    text: `El trámite de ${tramite.replace('-', ' ')} en **${estadoNombre}** cuesta aproximadamente **$${fmtMx(costoTotal)} MXN**. El rubro más alto son los **${mayor.label.toLowerCase()}** ($${fmtMx(mayor.value)})${derechosPorValor > 0 ? `, ya incluyendo el extra por valor de factura ($${fmtMx(derechosPorValor)})` : ''}. Trámite listo en ${base.duracion}.`,
+    tone: 'neutral',
+    icon: '🚗',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: componentes.filter((c) => c.value > 0).map((c) => ({ label: c.label, value: c.value })),
+    prefix: '$',
+    centerValue: `$${fmtMx(costoTotal)}`,
+    centerLabel: 'Total MXN',
+    ariaLabel: `Desglose del costo de placas en ${estadoNombre}: placas, tarjeta de circulación y derechos vehiculares, sumando $${fmtMx(costoTotal)} MXN.`,
+  };
   return {
     costoTotal,
     derechos,
@@ -88,5 +112,7 @@ export function placasAutoMx(i: Inputs): Outputs {
     tramiteDuracion: base.duracion,
     estadoAplicado: estadoKey,
     mensaje: `Trámite ${tramite} en ${estadoKey}: $${costoTotal.toFixed(2)}. Duración: ${base.duracion}.`,
+    _insight,
+    _chart,
   };
 }

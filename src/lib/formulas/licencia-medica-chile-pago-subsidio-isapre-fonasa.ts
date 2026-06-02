@@ -15,6 +15,8 @@ export interface Outputs {
   tope_uf_diario: number;
   alcanza_tope: string;
   requisitos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -94,10 +96,40 @@ export function compute(i: Inputs): Outputs {
   }
 
   const total_licencia = pago_dias_empleador + pago_dias_subsidio;
-  const alcanza_tope =
-    i.salario_diario > TOPE_DIARIO
-      ? `Sí, salario supera tope. Limitado a $${Math.round(TOPE_DIARIO).toLocaleString('es-CL')}/día`
-      : `No, salario bajo tope ($${Math.round(TOPE_DIARIO).toLocaleString('es-CL')}/día)`;
+  const supera_tope = i.salario_diario > TOPE_DIARIO;
+  const alcanza_tope = supera_tope
+    ? `Sí, salario supera tope. Limitado a $${Math.round(TOPE_DIARIO).toLocaleString('es-CL')}/día`
+    : `No, salario bajo tope ($${Math.round(TOPE_DIARIO).toLocaleString('es-CL')}/día)`;
+
+  // Insight: dinámico según si el tope UF recorta el subsidio
+  const totalFmt = '$' + Math.round(total_licencia).toLocaleString('es-CL');
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (supera_tope && dias_subsidio > 0) {
+    // Cuánto pierde por el tope sobre los días de subsidio
+    const perdida = Math.round((i.salario_diario - TOPE_DIARIO) * dias_subsidio);
+    insightText = `Cobrarás **${totalFmt}** por los ${i.dias_licencia} días. Como tu sueldo diario supera el tope de **81,4 UF** ($${Math.round(TOPE_DIARIO).toLocaleString('es-CL')}/día), el subsidio se recorta y dejás de percibir unos **$${perdida.toLocaleString('es-CL')}**.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `Por los ${i.dias_licencia} días de licencia cobrarás **${totalFmt}** en total. Tu sueldo diario está **por debajo del tope** de 81,4 UF, así que recibís el 100% sin recorte.`;
+    insightTone = 'good';
+  }
+
+  // Donut: sólo si el total se reparte entre empleador y subsidio (ambas partes > 0)
+  let chart: any = undefined;
+  const slices: { label: string; value: number }[] = [];
+  if (pago_dias_empleador > 0) slices.push({ label: `Empleador (${dias_empleador} días)`, value: Math.round(pago_dias_empleador) });
+  if (pago_dias_subsidio > 0) slices.push({ label: `Subsidio (${dias_subsidio} días)`, value: Math.round(pago_dias_subsidio) });
+  if (slices.length >= 2) {
+    chart = {
+      type: 'doughnut' as const,
+      slices,
+      prefix: '$',
+      centerValue: totalFmt,
+      centerLabel: 'Total licencia',
+      ariaLabel: 'Reparto del pago de la licencia médica entre el empleador y el subsidio estatal',
+    };
+  }
 
   return {
     pago_dias_empleador: Math.round(pago_dias_empleador),
@@ -108,6 +140,13 @@ export function compute(i: Inputs): Outputs {
     tope_uf_diario: Math.round(TOPE_DIARIO),
     alcanza_tope: alcanza_tope,
     requisitos: requisitos_txt,
+    _insight: {
+      title: 'Cuánto cobrás por tu licencia',
+      text: insightText,
+      tone: insightTone,
+      icon: '🏥',
+    },
+    ...(chart ? { _chart: chart } : {}),
   };
 }
 

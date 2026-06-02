@@ -20,6 +20,7 @@ export interface Outputs {
   regimen_economico: string;
   ventaja_recomendacion: string;
   deducciones_autonomicas_info: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -279,6 +280,31 @@ export function compute(i: Inputs): Outputs {
   const deduccionesInfo = DEDUCCIONES_AUTONOMICAS[ccaa] ??
     "Consulta la normativa fiscal autonómica vigente para deducciones específicas.";
 
+  // --- Insight narrativo (interpreta el resultado real)
+  const ccaaLabel = ccaa
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+  const ahorroFmt = ahorroIRPF.toLocaleString("es-ES");
+  let insightTone: string;
+  let insightText: string;
+  if (puedeConjuntaPH) {
+    insightTone = "good";
+    insightText = `En **${ccaaLabel}** (régimen foral) la pareja de hecho inscrita tributa casi igual que el matrimonio, con un ahorro IRPF estimado de **${ahorroFmt} €/año** por conjunta. La diferencia frente a casarte es sobre todo civil, no fiscal.`;
+  } else if (ahorroIRPF > 500) {
+    insightTone = "good";
+    insightText = `Con tus rentas, casarte aportaría un ahorro IRPF estimado de **${ahorroFmt} €/año** por tributación conjunta, vetada a la pareja de hecho en **${ccaaLabel}**. Sumá los derechos hereditarios y la pensión de viudedad sin tope de renta.`;
+  } else {
+    insightTone = "warn";
+    insightText = `Con rentas parejas el ahorro IRPF por conjunta es marginal (**${ahorroFmt} €/año**): el verdadero peso recae en lo sucesorio. Como pareja de hecho en **${ccaaLabel}** podés quedarte sin derechos hereditarios automáticos y con acceso restringido a la viudedad.`;
+  }
+  const _insight = {
+    title: "Lo que más te conviene mirar",
+    text: insightText,
+    tone: insightTone,
+    icon: "💍",
+  };
+
   return {
     ahorro_irpf_matrimonio: ahorroIRPF,
     pareja_hecho_tributacion_conjunta: textConjuntaPH,
@@ -289,5 +315,6 @@ export function compute(i: Inputs): Outputs {
     regimen_economico: textoRegimen,
     ventaja_recomendacion: recomendacion,
     deducciones_autonomicas_info: deduccionesInfo,
+    _insight,
   };
 }

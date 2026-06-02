@@ -44,6 +44,7 @@ export interface LicenciaFallecimientoOutputs {
   parentescoTexto: string;
   valorDia: number;
   mensaje: string;
+  _insight?: any;
 }
 
 // Días por parentesco según LCT base
@@ -156,11 +157,40 @@ export function licenciaFallecimientoFamiliarLct(
       ? 'Sin licencia automática LCT (verificá tu CCT)'
       : `${dias} día${dias > 1 ? 's' : ''} corrido${dias > 1 ? 's' : ''}`;
 
+  const montoBrutoR = Math.round(montoBruto);
+  const fmt = (n: number) => '$' + n.toLocaleString('es-AR');
+
+  let _insight: any;
+  if (parentesco === 'abuelo-no-corresponde-lct') {
+    _insight = {
+      title: 'Sin licencia por LCT',
+      text: `El Art. 158 LCT no contempla a abuelos, suegros ni cuñados, así que no hay licencia automática paga. Algunos convenios suman 1 día; revisá tu CCT. Si necesitás ausentarte, vas a depender de vacaciones, permiso sin goce o un permiso humanitario acordado con el empleador.`,
+      tone: 'warn',
+      icon: '🕊️',
+    };
+  } else if (dias > diasLct) {
+    const extra = dias - diasLct;
+    _insight = {
+      title: 'Tu convenio mejora la LCT',
+      text: `Por ${cctNombre} te corresponden **${dias} días corridos** pagos (${extra} más que los ${diasLct} de la LCT base), equivalentes a **${fmt(montoBrutoR)}**. Son días corridos al 100% del salario y ya están incluidos en el sueldo, no se cobran aparte.`,
+      tone: 'good',
+      icon: '🕊️',
+    };
+  } else {
+    _insight = {
+      title: `Licencia de ${dias} día${dias > 1 ? 's' : ''}`,
+      text: `Por fallecimiento de ${parentescoNombre} te corresponden **${dias} día${dias > 1 ? 's' : ''} corrido${dias > 1 ? 's' : ''}** pagos al 100%, equivalentes a **${fmt(montoBrutoR)}**. El monto ya está dentro del sueldo mensual, no se suma aparte. Presentá el acta de defunción al empleador.`,
+      tone: 'neutral',
+      icon: '🕊️',
+    };
+  }
+
   return {
     diasLicencia,
-    montoBruto: Math.round(montoBruto),
+    montoBruto: montoBrutoR,
     parentescoTexto,
     valorDia: Math.round(valorDia),
     mensaje,
+    _insight,
   };
 }

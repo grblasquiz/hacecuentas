@@ -1,6 +1,6 @@
 /** Calculadora de PnL (Profit and Loss) por Trade */
 export interface Inputs { precioEntrada: number; precioSalida: number; cantidad: number; comisionTotal: number; riesgoInicial?: number; direccion: 'long'|'short'; }
-export interface Outputs { pnlBruto: number; pnlNeto: number; rendimientoPorcentaje: number; multiploR: number; resumen: string; }
+export interface Outputs { pnlBruto: number; pnlNeto: number; rendimientoPorcentaje: number; multiploR: number; resumen: string; _insight?: any; }
 export function pnlTradeStockCripto(i: Inputs): Outputs {
   const e = Number(i.precioEntrada); const s = Number(i.precioSalida);
   const q = Number(i.cantidad); const f = Number(i.comisionTotal) || 0;
@@ -13,11 +13,28 @@ export function pnlTradeStockCripto(i: Inputs): Outputs {
   const cap = e * q;
   const pct = (neto / cap) * 100;
   const rMult = r > 0 ? neto / r : 0;
+  const rTxt = r > 0
+    ? ` Eso equivale a **${rMult.toFixed(2)}R** sobre el riesgo que arriesgaste.`
+    : '';
+  const _insight = neto >= 0
+    ? {
+        title: 'Resultado del trade',
+        text: `Cerraste en **ganancia**: **${neto.toFixed(2)} USD** netos, un **${pct.toFixed(2)}%** sobre el capital invertido${f > 0 ? ` (ya descontando $${f.toFixed(2)} de comisiones)` : ''}.${rTxt}`,
+        tone: 'good' as const,
+        icon: '📈',
+      }
+    : {
+        title: 'Resultado del trade',
+        text: `Cerraste en **pérdida**: **${neto.toFixed(2)} USD** netos (**${pct.toFixed(2)}%** del capital)${f > 0 ? `; las comisiones de $${f.toFixed(2)} sumaron al rojo` : ''}.${rTxt}`,
+        tone: 'warn' as const,
+        icon: '📉',
+      };
   return {
     pnlBruto: Number(bruto.toFixed(2)),
     pnlNeto: Number(neto.toFixed(2)),
     rendimientoPorcentaje: Number(pct.toFixed(2)),
     multiploR: Number(rMult.toFixed(2)),
     resumen: `${neto >= 0 ? 'Ganancia' : 'Pérdida'} neta: ${neto.toFixed(2)} USD (${pct.toFixed(2)}%). ${r > 0 ? `${rMult.toFixed(2)}R.` : ''}`,
+    _insight,
   };
 }

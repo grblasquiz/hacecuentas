@@ -16,6 +16,8 @@ export interface Outputs {
   descuento_previsional_total: number;
   saldo_liquido_aproximado: number;
   detalle_cotizacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -72,6 +74,39 @@ export function compute(i: Inputs): Outputs {
     `Aprox. saldo líquido (antes impuestos): ${formatCLP(saldoLiquidoAproximado)}\n\n` +
     `Nota: este saldo no incluye retención IRPF, Fonasa (7%) o Isapre, ni otros descuentos.`;
 
+  // Insight: cuánto se lleva el descuento previsional del imponible
+  let insight: any = undefined;
+  if (imponibleTotal > 0) {
+    const pctDescuento = (descuentoPrevisionalTotal / imponibleTotal) * 100;
+    insight = {
+      title: 'Cuánto te descuenta la AFP',
+      text: `De un imponible de **${formatCLP(imponibleTotal)}**, la previsión (AFP, comisión${incluyeSeguro ? ' y seguro' : ''}) se lleva **${formatCLP(descuentoPrevisionalTotal)}** (**${pctDescuento.toFixed(1)}%**), dejándote **${formatCLP(saldoLiquidoAproximado)}** líquidos antes de salud e impuestos.`,
+      tone: pctDescuento > 13 ? 'warn' : 'neutral',
+      icon: '🏔️',
+    };
+  }
+
+  // Donut: composición del imponible (líquido + descuentos suman el imponible)
+  let chart: any = undefined;
+  if (imponibleTotal > 0) {
+    const slices = [
+      { label: 'Saldo líquido', value: Math.round(saldoLiquidoAproximado) },
+      { label: 'Aporte AFP (10%)', value: Math.round(aporteAFPObligatorio) },
+      { label: `Comisión (${comisionAFP.toFixed(2)}%)`, value: Math.round(comisionTotal) },
+    ];
+    if (incluyeSeguro) {
+      slices.push({ label: 'Seguro inv./sobrev.', value: Math.round(seguroInvalidezSobrevivencia) });
+    }
+    chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: formatCLP(imponibleTotal),
+      centerLabel: 'Imponible total',
+      ariaLabel: 'Composición del sueldo imponible entre saldo líquido y descuentos previsionales',
+    };
+  }
+
   return {
     sueldo_base_formateado: formatCLP(sueldoBase),
     asignacion_zona_formateado: formatCLP(asignacionZona),
@@ -82,5 +117,7 @@ export function compute(i: Inputs): Outputs {
     descuento_previsional_total: Math.round(descuentoPrevisionalTotal),
     saldo_liquido_aproximado: Math.round(saldoLiquidoAproximado),
     detalle_cotizacion: detalle,
+    ...(insight ? { _insight: insight } : {}),
+    ...(chart ? { _chart: chart } : {})
   };
 }

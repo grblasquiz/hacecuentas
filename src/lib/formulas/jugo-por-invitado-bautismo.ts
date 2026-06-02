@@ -2,7 +2,7 @@
  * Calculadora de Jugo por Invitado - Bautismo.
  */
 export interface JugoPorInvitadoBautismoInputs { invitados:number; ninos:number; tipo:string; }
-export interface JugoPorInvitadoBautismoOutputs { litrosJugo:number; unidades:number; litrosPorPersona:number; costoEstimado:number; }
+export interface JugoPorInvitadoBautismoOutputs { litrosJugo:number; unidades:number; litrosPorPersona:number; costoEstimado:number; _insight?:any; }
 export function jugoPorInvitadoBautismo(inputs: JugoPorInvitadoBautismoInputs): JugoPorInvitadoBautismoOutputs {
   const invitados = Number(inputs.invitados);
   const ninos = Number(inputs.ninos);
@@ -18,10 +18,22 @@ export function jugoPorInvitadoBautismo(inputs: JugoPorInvitadoBautismoInputs): 
   if (tipo === 'polvo') { unidades = Math.ceil(litrosJugo / 1.5); precioUnit = 1.5; }
   else if (tipo === 'caja') { unidades = Math.ceil(litrosJugo); precioUnit = 1.8; }
   else { unidades = Math.ceil(litrosJugo * 11); precioUnit = 0.3; }
+  const litrosFinal = Number(litrosJugo.toFixed(2));
+  const costoFinal = Number((unidades * precioUnit).toFixed(2));
+  const nombreFormato = tipo === 'polvo' ? `sobre${unidades === 1 ? '' : 's'} de polvo (rinde ~1,5 L c/u)`
+    : tipo === 'caja' ? `caja${unidades === 1 ? '' : 's'} de 1 L`
+    : `botella${unidades === 1 ? '' : 's'} de ~90 ml`;
+  const _insight = {
+    title: 'Cuánto jugo comprar',
+    text: `Para **${invitados}** invitados (**${ninos}** chico${ninos === 1 ? '' : 's'} y **${adultos}** adulto${adultos === 1 ? '' : 's'}) calculá unos **${litrosFinal} L** de jugo: comprá **${unidades} ${nombreFormato}**, con un costo estimado de **$${costoFinal.toLocaleString('es-AR')}**. Incluye un 10% de margen por las dudas.`,
+    tone: 'neutral' as const,
+    icon: '🧃',
+  };
   return {
-    litrosJugo: Number(litrosJugo.toFixed(2)),
+    litrosJugo: litrosFinal,
     unidades,
     litrosPorPersona: Number((litrosJugo / invitados).toFixed(2)),
-    costoEstimado: Number((unidades * precioUnit).toFixed(2)),
+    costoEstimado: costoFinal,
+    _insight,
   };
 }

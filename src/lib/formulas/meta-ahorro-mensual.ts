@@ -12,6 +12,7 @@ export interface Outputs {
   interesesGanados: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function metaAhorroMensual(i: Inputs): Outputs {
@@ -61,11 +62,22 @@ export function metaAhorroMensual(i: Inputs): Outputs {
     ariaLabel: 'Composición de la meta: aportes propios e intereses ganados',
   } : undefined;
 
+  const pctInteres = interesesR > 0 ? Math.round((interesesR / Math.round(meta)) * 100) : 0;
+  const _insight = {
+    title: 'Tu cuota de ahorro',
+    text: interesesR > 0
+      ? `Apartando **$${fmt.format(Math.round(ahorroMensual))} por mes** durante ${meses} ${meses === 1 ? 'mes' : 'meses'} llegás a tu meta de **$${fmt.format(Math.round(meta))}**; el rendimiento del ${tasaMensual}% mensual aporta **$${fmt.format(interesesR)}** (${pctInteres}% del total) y reduce lo que ponés de tu bolsillo.`
+      : `Necesitás apartar **$${fmt.format(Math.round(ahorroMensual))} por mes** durante ${meses} ${meses === 1 ? 'mes' : 'meses'} para juntar **$${fmt.format(Math.round(meta))}**. Sin invertir, todo sale de tu bolsillo: poné a rendir ese dinero para que los intereses te acerquen más rápido.`,
+    tone: (interesesR > 0 ? 'good' : 'neutral') as 'good' | 'neutral',
+    icon: '🎯',
+  };
+
   return {
     ahorroMensual: Math.round(ahorroMensual),
     totalAportado: aportadoR,
     interesesGanados: interesesR,
     detalle,
     _chart: chart,
+    _insight,
   };
 }

@@ -18,6 +18,8 @@ export interface Outputs {
   ingresoNeto: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface ISRBracket {
@@ -94,6 +96,30 @@ export function isrMexico2026(i: Inputs): Outputs {
   const formula = `ISR = $${bracket.cuotaFija.toFixed(2)} + ($${baseGravable.toFixed(2)} - $${bracket.limInf.toFixed(2)}) × ${bracket.porcExcedente}% = $${isrAnteSubsidio.toFixed(2)}`;
   const explicacion = `Con un ingreso mensual de $${ingreso.toLocaleString('es-MX')} MXN${deducciones > 0 ? ` y deducciones de $${deducciones.toLocaleString('es-MX')}` : ''}, tu base gravable es $${baseGravable.toLocaleString('es-MX')}. ISR antes de subsidio: $${isrAnteSubsidio.toFixed(2)}.${aplicaSubsidio && subsidioEmpleoMonto > 0 ? ` Subsidio al empleo: $${subsidioEmpleoMonto.toFixed(2)}.` : ''} ISR a retener: $${isrMensual.toFixed(2)} (tasa efectiva ${tasaEfectiva.toFixed(2)}%, marginal ${tasaMarginal}%). Ingreso neto: $${ingresoNeto.toFixed(2)}.`;
 
+  const fmtMxn = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const insightTone: 'good' | 'warn' | 'neutral' =
+    tasaEfectiva >= 20 ? 'warn' : tasaEfectiva < 8 ? 'good' : 'neutral';
+  const _insight = {
+    title: isrMensual <= 0 ? 'No retenés ISR este mes' : `Tu ISR efectivo es ${tasaEfectiva.toFixed(1)}%`,
+    text: isrMensual <= 0
+      ? `Con un ingreso de **${fmtMxn(ingreso)}**${subsidioEmpleoMonto > 0 ? ` y el subsidio al empleo de **${fmtMxn(subsidioEmpleoMonto)}**` : ''}, este mes no te retienen ISR: te quedan **${fmtMxn(ingresoNeto)}** netos.`
+      : `De tus **${fmtMxn(ingreso)}** mensuales, el ISR se lleva **${fmtMxn(isrMensual)}** (tasa efectiva **${tasaEfectiva.toFixed(1)}%**, marginal **${tasaMarginal}%**) y te quedan **${fmtMxn(ingresoNeto)}** netos.`,
+    tone: insightTone,
+    icon: '🇲🇽',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'ISR retenido', value: Math.round(isrMensual) },
+      { label: 'Neto en mano', value: Math.round(ingresoNeto) },
+    ],
+    prefix: '$',
+    centerValue: fmtMxn(ingreso),
+    centerLabel: 'Ingreso mensual',
+    ariaLabel: 'Reparto del ingreso mensual entre ISR retenido y neto en mano',
+  };
+
   return {
     baseGravable: Math.round(baseGravable * 100) / 100,
     isrAnteSubsidio: Math.round(isrAnteSubsidio * 100) / 100,
@@ -104,5 +130,7 @@ export function isrMexico2026(i: Inputs): Outputs {
     ingresoNeto: Math.round(ingresoNeto * 100) / 100,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

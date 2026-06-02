@@ -1,6 +1,6 @@
 /** Patreon Tiers Setup */
 export interface Inputs { audienciaTotal: number; conversionRate: number; plan: string; }
-export interface Outputs { patronsEstimados: number; setupTiers: string; ingresoBruto: string; ingresoNeto: string; _chart?: any; }
+export interface Outputs { patronsEstimados: number; setupTiers: string; ingresoBruto: string; ingresoNeto: string; _chart?: any; _insight?: any; }
 
 export function patreonTiersSetupOptimo(i: Inputs): Outputs {
   const aud = Number(i.audienciaTotal);
@@ -28,11 +28,19 @@ export function patreonTiersSetupOptimo(i: Inputs): Outputs {
     centerLabel: 'Bruto/mes',
     ariaLabel: 'Composición del ingreso bruto mensual por tier de Patreon.',
   };
+  const retencionPct = bruto > 0 ? (neto / bruto) * 100 : 0;
+  const perdidaPct = 100 - retencionPct;
   return {
     patronsEstimados: patrons,
     setupTiers: `${t1} a $5 (Seguidor) + ${t2} a $15 (Fan) + ${t3} a $50 (Super Fan)`,
     ingresoBruto: `$${bruto.toLocaleString('en-US', {maximumFractionDigits: 0})} USD`,
     ingresoNeto: `$${neto.toLocaleString('en-US', {maximumFractionDigits: 0})} USD (después de ${(comPct*100)}% Patreon + fees)`,
     _chart: chart,
+    _insight: {
+      title: 'Lo que te queda en el bolsillo',
+      text: `Con **${patrons.toLocaleString('es-AR')} mecenas** facturás **$${Math.round(bruto).toLocaleString('en-US')}/mes** brutos, pero entre la comisión del plan (${(comPct*100)}%) y las fees de pago te queda **≈ $${Math.round(neto).toLocaleString('en-US')} netos** (te quedás con el **${retencionPct.toFixed(0)}%**, se va el ${perdidaPct.toFixed(0)}%). Plan más barato = más comisión: convení el salto cuando el volumen lo justifique.`,
+      tone: 'good',
+      icon: '🎨',
+    },
   };
 }

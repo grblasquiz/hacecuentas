@@ -11,6 +11,7 @@ export interface MonedaLocalOutputs {
   tarjetaUSD: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function monedaLocalCambioPais(inputs: MonedaLocalInputs): MonedaLocalOutputs {
@@ -45,11 +46,22 @@ export function monedaLocalCambioPais(inputs: MonedaLocalInputs): MonedaLocalOut
     ariaLabel: 'Composición del gasto del viaje: efectivo y tarjeta',
   } : undefined;
 
+  const efectivoAlto = pctEfectivo > 50;
+  const insight = {
+    title: 'Cuánto efectivo llevar',
+    text: `Llevá unos **USD ${fmt.format(efectivoTotal)}** en efectivo (${pctEfectivo}% del gasto) y dejá **USD ${fmt.format(tarjetaTotal)}** para tarjeta${viajeros > 1 ? `, entre ${viajeros} viajeros` : ''}.` + (efectivoAlto
+      ? ` Es bastante plata en mano: repartila entre personas y la caja de seguridad del hotel.`
+      : ` Buena proporción: minimizás el cash a la vista y cubrís lo que no toma plástico (propinas, transporte, mercados).`),
+    tone: efectivoAlto ? 'warn' : 'good',
+    icon: '💵',
+  };
+
   return {
     efectivoTotalUSD: efectivoTotal,
     gastoTotalUSD: gastoTotal,
     tarjetaUSD: tarjetaTotal,
     _chart: chart,
+    _insight: insight,
     detalle: `${dias} días × USD ${fmt.format(gastoDiario)}/día = USD ${fmt.format(totalPorPersona)}/persona. Efectivo (${pctEfectivo}%): USD ${fmt.format(efectivoPorPersona)}/persona. Tarjeta: USD ${fmt.format(tarjetaPorPersona)}/persona.${viajeros > 1 ? ` Total ${viajeros} viajeros: USD ${fmt.format(efectivoTotal)} en efectivo.` : ''}`,
   };
 }

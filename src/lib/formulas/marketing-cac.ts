@@ -21,6 +21,8 @@ export interface CacOutputs {
   ratioTexto: string;
   paybackMeses: number; // cuántos meses tarda el cliente en recuperar el CAC
   benchmark: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function marketingCac(inputs: CacInputs): CacOutputs {
@@ -49,6 +51,30 @@ export function marketingCac(inputs: CacInputs): CacOutputs {
   else if (ratio >= 1) benchmark = '⚠️ Marginal — recuperás CAC pero no crecés';
   else benchmark = '🔴 Perdedor — gastás más de lo que cada cliente te da';
 
+  const tono = ratio >= 3 ? 'good' : ratio >= 2 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Tu relación LTV/CAC',
+    text: `Te cuesta **$${Math.round(cac).toLocaleString('es-AR')}** adquirir cada cliente y cada uno te deja **$${Math.round(ltv).toLocaleString('es-AR')}** de valor de vida: una relación de **${(Math.round(ratio * 10) / 10).toFixed(1)}×**. ${ratio >= 3 ? `Estás en zona saludable y recuperás el CAC en ~**${(Math.round(paybackMeses * 10) / 10).toFixed(1)} meses**.` : ratio >= 1 ? `Recuperás la inversión en ~**${(Math.round(paybackMeses * 10) / 10).toFixed(1)} meses**, pero el objetivo es llegar a 3×.` : `Cada cliente cuesta más de lo que deja: estás perdiendo plata por adquisición.`}`,
+    tone: tono,
+    icon: ratio >= 3 ? '🚀' : ratio >= 1 ? '⚖️' : '🔴',
+  };
+
+  const topSeg = Math.max(6, Math.ceil(ratio) + 1);
+  const _chart = {
+    type: 'scale',
+    marker: Math.round(ratio * 100) / 100,
+    markerLabel: `${(Math.round(ratio * 10) / 10).toFixed(1)}×`,
+    min: 0,
+    segments: [
+      { nombre: 'Perdedor', max: 1, color: '#dc2626', colorDark: '#b91c1c' },
+      { nombre: 'Marginal', max: 2, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Aceptable', max: 3, color: '#facc15', colorDark: '#ca8a04' },
+      { nombre: 'Saludable', max: 5, color: '#84cc16', colorDark: '#65a30d' },
+      { nombre: 'Excelente', max: topSeg, color: '#22c55e', colorDark: '#16a34a' },
+    ],
+    ariaLabel: `Relación LTV sobre CAC de ${(Math.round(ratio * 10) / 10).toFixed(1)} veces`,
+  };
+
   return {
     cac: Math.round(cac),
     ltv: Math.round(ltv),
@@ -56,5 +82,7 @@ export function marketingCac(inputs: CacInputs): CacOutputs {
     ratioTexto: `${(Math.round(ratio * 10) / 10).toFixed(1)}× LTV/CAC`,
     paybackMeses: Math.round(paybackMeses * 10) / 10,
     benchmark,
+    _insight,
+    _chart,
   };
 }

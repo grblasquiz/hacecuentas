@@ -17,6 +17,7 @@ export interface Outputs {
   next_period_date: string;      // ISO date
   cycle_day_today: string;       // text description
   summary: string;               // plain text summary
+  _insight?: any;
 }
 
 // Default luteal phase length in days (clinically accepted range: 12-16)
@@ -168,6 +169,27 @@ export function compute(i: Inputs): Outputs {
 
   const peakFertilityText = `${formatDisplay(peakStart)} – ${formatDisplay(peakEnd)}`;
 
+  // Insight: where you are relative to ovulation, with dynamic tone
+  const daysToOvulation = Math.round((ovulationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const inFertileWindow = daysToOvulation >= -EGG_VIABLE_DAYS_AFTER && daysToOvulation <= SPERM_SURVIVAL_DAYS;
+  const insightTone = inFertileWindow ? "good" : "neutral";
+  let insightText: string;
+  if (daysToOvulation === 0) {
+    insightText = `Today is your estimated **ovulation day** — peak fertility. Your fertile window runs **${formatDisplay(fertileStart)} – ${formatDisplay(fertileEnd)}**.`;
+  } else if (daysToOvulation > 0 && inFertileWindow) {
+    insightText = `You're in your **fertile window**: ovulation is in **${daysToOvulation} day(s)** (${formatDisplay(ovulationDate)}).`;
+  } else if (daysToOvulation > 0) {
+    insightText = `Ovulation is **${daysToOvulation} days** away (${formatDisplay(ovulationDate)}); your fertile window opens **${formatDisplay(fertileStart)}**.`;
+  } else {
+    insightText = `Estimated ovulation passed **${Math.abs(daysToOvulation)} day(s)** ago. Your next period is expected **${formatDisplay(nextPeriodDate)}**.`;
+  }
+  const _insight = {
+    title: "Your fertile window",
+    text: insightText,
+    tone: insightTone,
+    icon: "\u{1FA78}",
+  };
+
   return {
     ovulation_date: formatISO(ovulationDate),
     fertile_window_start: formatISO(fertileStart),
@@ -176,5 +198,6 @@ export function compute(i: Inputs): Outputs {
     next_period_date: formatISO(nextPeriodDate),
     cycle_day_today: cycleDayText,
     summary,
+    _insight,
   };
 }

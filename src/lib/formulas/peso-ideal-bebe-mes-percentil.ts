@@ -11,6 +11,8 @@ export interface Outputs {
   rangoNormal: string;
   percentilBebe: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Días por mes promedio (gregoriano): 365.25 / 12 = 30.4375.
@@ -99,15 +101,17 @@ export function pesoIdealBebeMesPercentil(i: Inputs): Outputs {
   const rangoNormal = `${p15.toFixed(2)} – ${p85.toFixed(2)} kg (p15–p85)`;
 
   let percentilBebe = 'No ingresaste el peso actual';
+  let percentil = -1;
+  let pRound = -1;
+  let label = '';
   if (pesoActual > 0) {
     // Z-score exacto del bebé.
     const z = Math.abs(L) < 1e-9
       ? Math.log(pesoActual / M) / S
       : (Math.pow(pesoActual / M, L) - 1) / (L * S);
-    const percentil = normalCdf(z) * 100;
-    const pRound = Math.round(percentil * 10) / 10;
+    percentil = normalCdf(z) * 100;
+    pRound = Math.round(percentil * 10) / 10;
 
-    let label: string;
     if (percentil < 3) label = 'Bajo peso — Consultá al pediatra';
     else if (percentil < 15) label = 'Rango bajo — Vigilar';
     else if (percentil < 85) label = 'Normal';
@@ -127,10 +131,61 @@ export function pesoIdealBebeMesPercentil(i: Inputs): Outputs {
     (pesoActual > 0 ? ` | Peso actual: ${pesoActual} kg → ${percentilBebe}` : '') +
     '. Tablas LMS oficiales OMS Child Growth Standards 2006.';
 
-  return {
+  // --- Insight + gráfico ---
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (pesoActual > 0) {
+    const diff = pesoActual - p50;
+    const compara = diff > 0.05
+      ? `**${diff.toFixed(2)} kg por encima** de la mediana`
+      : diff < -0.05
+        ? `**${Math.abs(diff).toFixed(2)} kg por debajo** de la mediana`
+        : 'prácticamente **en la mediana**';
+    if (percentil < 3 || percentil >= 97) {
+      insightTone = 'warn';
+      insightText = `Con **${pesoActual} kg**, ${sexoLabel === 'niña' ? 'la' : 'el'} ${sexoLabel} está en el **percentil ${pRound}** (${compara} de ${p50.toFixed(2)} kg). Es un valor fuera de lo esperado para ${mesLabel} meses: conviene consultarlo con el pediatra. Un solo dato no define nada; importa la curva en el tiempo.`;
+    } else if (percentil < 15 || percentil >= 85) {
+      insightTone = 'neutral';
+      insightText = `Con **${pesoActual} kg**, ${sexoLabel === 'niña' ? 'la' : 'el'} ${sexoLabel} está en el **percentil ${pRound}** (${compara} de ${p50.toFixed(2)} kg). Está dentro de lo aceptable pero en un extremo: vale la pena seguir la evolución mes a mes.`;
+    } else {
+      insightTone = 'good';
+      insightText = `Con **${pesoActual} kg**, ${sexoLabel === 'niña' ? 'la' : 'el'} ${sexoLabel} está en el **percentil ${pRound}** (${compara} de ${p50.toFixed(2)} kg): dentro del rango normal de la OMS para ${mesLabel} meses.`;
+    }
+  } else {
+    insightTone = 'neutral';
+    insightText = `Para ${sexoLabel === 'niña' ? 'una' : 'un'} ${sexoLabel} de ${mesLabel} meses, el peso mediano (p50) es **${p50.toFixed(2)} kg** y lo esperable va de **${p15.toFixed(2)} a ${p85.toFixed(2)} kg** (p15–p85). Cargá el peso actual para ubicar su percentil exacto.`;
+  }
+
+  const out: Outputs = {
     pesoMediana,
     rangoNormal,
     percentilBebe,
     detalle,
+    _insight: {
+      title: pesoActual > 0 ? 'Lectura del percentil' : 'Peso esperado para la edad',
+      text: insightText,
+      tone: insightTone,
+      icon: '👶',
+    },
   };
+
+  // Gauge sólo cuando hay peso actual: el percentil cae en zonas OMS p3/p15/p85/p97.
+  if (pesoActual > 0) {
+    out._chart = {
+      type: 'scale',
+      marker: pRound,
+      markerLabel: `Percentil ${pRound}`,
+      min: 0,
+      segments: [
+        { nombre: 'Bajo peso', max: 3, color: '#dc2626', colorDark: '#ef4444' },
+        { nombre: 'Vigilar', max: 15, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Normal', max: 85, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Vigilar', max: 97, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Peso elevado', max: Math.max(100, Number((pRound + 0.5).toFixed(1))), color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Escala de percentiles OMS: el bebé está en el percentil ${pRound}, ${label}`,
+    };
+  }
+
+  return out;
 }

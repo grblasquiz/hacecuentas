@@ -20,6 +20,8 @@ export interface Outputs {
   costo_final_con_credito: number;
   ahorro_vs_universidad_publica: number;
   comparativa_universidades: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -87,16 +89,69 @@ export function compute(i: Inputs): Outputs {
                       `Tec Monterrey: $2,160,000–$3,120,000 (más cara). UVM: $720,000–$1,200,000 (más económica). ` +
                       `ITAM/Anáhuac: $1,440,000–$2,880,000 (intermedio).`;
 
+  // Valores redondeados (para insight y gráfico, coherentes con los outputs)
+  const r_sin_beca = Math.round(costo_total_sin_beca);
+  const r_con_beca = Math.round(costo_total_con_beca);
+  const r_beca = Math.round(monto_beca);
+  const r_credito = Math.round(monto_credito);
+  const r_cuota = Math.round(cuota_mensual_credito);
+  const r_interes = Math.round(interes_total_credito);
+  const r_final = Math.round(costo_final_con_credito);
+  const fmt = (n: number) => `$${n.toLocaleString('es-MX')}`;
+
+  // Insight dinámico
+  let _insight: any;
+  if (i.uso_credito_educativo !== 'no' && r_credito > 0) {
+    _insight = {
+      title: 'Costo con crédito educativo',
+      text: `Financiando **${fmt(r_credito)}** a ${i.plazo_pago_meses} meses pagás **${fmt(r_cuota)}/mes** y sumás **${fmt(r_interes)}** de intereses. El costo final de la carrera trepa a **${fmt(r_final)}** MXN.`,
+      tone: 'warn',
+      icon: '🏦',
+    };
+  } else if (i.porcentaje_beca > 0) {
+    _insight = {
+      title: 'Tu costo con beca',
+      text: `La beca del **${i.porcentaje_beca}%** te ahorra **${fmt(r_beca)}**, dejando el costo de la carrera en **${fmt(r_con_beca)}** MXN (≈ **${fmt(Math.round(costo_por_cuatrimestre))}** por cuatrimestre).`,
+      tone: 'good',
+      icon: '🎓',
+    };
+  } else {
+    _insight = {
+      title: 'Costo total de la carrera',
+      text: `Sin beca, ${i.carrera_duracion_cuatrimestres} cuatrimestres en ${i.universidad.toUpperCase()} cuestan **${fmt(r_sin_beca)}** MXN, es decir **${fmt(Math.round(costo_por_cuatrimestre))}** por cuatrimestre. Una beca de mérito puede bajarlo bastante.`,
+      tone: 'neutral',
+      icon: '🎓',
+    };
+  }
+
+  // Donut: costo sin beca = costo con beca + beca (sólo si hay beca)
+  let _chart: any;
+  if (r_beca > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Pagás (con beca)', value: r_con_beca },
+        { label: 'Cubre la beca', value: r_beca },
+      ],
+      prefix: '$',
+      centerValue: fmt(r_sin_beca),
+      centerLabel: 'Costo sin beca',
+      ariaLabel: `Costo total de ${fmt(r_sin_beca)} dividido entre lo que pagás y lo que cubre la beca`,
+    };
+  }
+
   return {
-    costo_total_sin_beca: Math.round(costo_total_sin_beca),
-    costo_total_con_beca: Math.round(costo_total_con_beca),
-    monto_beca: Math.round(monto_beca),
+    costo_total_sin_beca: r_sin_beca,
+    costo_total_con_beca: r_con_beca,
+    monto_beca: r_beca,
     costo_por_cuatrimestre: Math.round(costo_por_cuatrimestre),
-    monto_credito: Math.round(monto_credito),
-    cuota_mensual_credito: Math.round(cuota_mensual_credito),
-    interes_total_credito: Math.round(interes_total_credito),
-    costo_final_con_credito: Math.round(costo_final_con_credito),
+    monto_credito: r_credito,
+    cuota_mensual_credito: r_cuota,
+    interes_total_credito: r_interes,
+    costo_final_con_credito: r_final,
     ahorro_vs_universidad_publica: Math.round(ahorro_vs_universidad_publica),
-    comparativa_universidades: comparativa
+    comparativa_universidades: comparativa,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

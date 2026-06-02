@@ -1,6 +1,6 @@
 /** Potencia eléctrica P = V × I — calcula el valor faltante */
 export interface Inputs { potencia: number; voltaje: number; corriente: number; }
-export interface Outputs { resultadoValor: number; resultadoUnidad: string; resultadoMagnitud: string; detalle: string; }
+export interface Outputs { resultadoValor: number; resultadoUnidad: string; resultadoMagnitud: string; detalle: string; _insight?: any; }
 
 export function potenciaElectricaWattsVoltsAmperes(i: Inputs): Outputs {
   const p = Number(i.potencia) || 0;

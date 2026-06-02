@@ -13,6 +13,8 @@ export interface Outputs {
   totalPesos: string;
   totalEuros: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Precios oficiales FIFA 2026 (USD)
@@ -71,6 +73,49 @@ export function mundial2026CostoEntrada(i: Inputs): Outputs {
 
   const origenTxt = origen === 'reventa' ? `Reventa (×${multReventa} precio FIFA)` : 'FIFA ticketing oficial';
 
+  // Insight y donut según origen.
+  let _insight: any;
+  let _chart: any;
+  if (origen === 'reventa') {
+    const baseTotal = precioBase * cantidad;
+    const sobreprecio = total - baseTotal;
+    _insight = {
+      title: 'El costo de la reventa',
+      text: `Pagás **$${total.toLocaleString('en-US')} USD** por reventa: son **$${sobreprecio.toLocaleString('en-US')}** por encima del precio oficial FIFA ($${baseTotal.toLocaleString('en-US')}), un **+${Math.round((multReventa - 1) * 100)}%**. El mercado secundario suele inflarse cuanto más avanzada es la fase.`,
+      tone: 'warn',
+      icon: '🎟️',
+    };
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Precio oficial FIFA', value: baseTotal },
+        { label: 'Sobreprecio reventa', value: sobreprecio },
+      ],
+      prefix: '$',
+      centerValue: `$${total.toLocaleString('en-US')}`,
+      centerLabel: 'Total reventa',
+      ariaLabel: `Composición del precio de reventa: $${baseTotal.toLocaleString('en-US')} de precio oficial y $${sobreprecio.toLocaleString('en-US')} de sobreprecio.`,
+    };
+  } else {
+    _insight = {
+      title: 'Precio oficial FIFA',
+      text: `**${cantidad} entrada${cantidad > 1 ? 's' : ''}** de ${NOMBRES_FASE[fase].toLowerCase()} Tier ${tier} salen **$${total.toLocaleString('en-US')} USD** (≈ ARS ${Math.round(totalArs).toLocaleString('es-AR')}), incluida la tasa FIFA del 5% ($${tasaFifa.toLocaleString('en-US')}). Comprar oficial te ahorra el sobreprecio del mercado secundario.`,
+      tone: 'good',
+      icon: '🎟️',
+    };
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Entradas', value: subtotalSinTasa },
+        { label: 'Tasa FIFA (5%)', value: tasaFifa },
+      ],
+      prefix: '$',
+      centerValue: `$${total.toLocaleString('en-US')}`,
+      centerLabel: 'Total',
+      ariaLabel: `Composición del costo: $${subtotalSinTasa.toLocaleString('en-US')} en entradas y $${tasaFifa.toLocaleString('en-US')} de tasa FIFA.`,
+    };
+  }
+
   return {
     precioUnitario,
     tasaFifa,
@@ -78,5 +123,7 @@ export function mundial2026CostoEntrada(i: Inputs): Outputs {
     totalPesos: `ARS ${Math.round(totalArs).toLocaleString('es-AR')}`,
     totalEuros: `€${Math.round(totalEur).toLocaleString('es-ES')}`,
     resumen: `**${cantidad} entrada${cantidad > 1 ? 's' : ''} ${NOMBRES_FASE[fase]} Tier ${tier}** (${origenTxt}): $${precioUnitario} × ${cantidad} + $${tasaFifa} tasa = **$${total.toLocaleString('en-US')} USD** (≈ ARS ${Math.round(totalArs).toLocaleString('es-AR')} / €${Math.round(totalEur).toLocaleString('es-ES')}).`,
+    _insight,
+    _chart,
   };
 }

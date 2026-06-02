@@ -10,6 +10,8 @@ export interface Outputs {
   mortero: number;
   desperdicio: number;
   tipo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const TIPOS: Record<string, { nombre: string; porM2: number; morteroM3: number }> = {
@@ -33,11 +35,32 @@ export function ladrillosM2(i: Inputs): Outputs {
   const conDesp = base * (1 + desperd / 100);
   const mortero = m2 * t.morteroM3;
 
+  const totalLadrillos = Math.ceil(conDesp);
+  const netos = Math.ceil(base);
+  const extraDesp = Math.max(0, totalLadrillos - netos);
+
   return {
-    ladrillos: Math.ceil(conDesp),
+    ladrillos: totalLadrillos,
     ladrillosPorM2: t.porM2,
     mortero: Number(mortero.toFixed(3)),
     desperdicio: desperd,
     tipo: t.nombre,
+    _insight: {
+      title: 'Cuántos comprar',
+      text: `Para **${m2} m²** de pared con ${t.nombre.toLowerCase()} necesitás **${totalLadrillos} ladrillos** (${netos} netos + ${extraDesp} por el ${desperd}% de desperdicio) y ~**${mortero.toFixed(2)} m³** de mortero. Comprá por unidad cerrada de pallet para no quedarte corto.`,
+      tone: 'neutral',
+      icon: '🧱',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Ladrillos netos', value: netos },
+        { label: `Desperdicio (${desperd}%)`, value: extraDesp },
+      ],
+      prefix: '',
+      centerValue: String(totalLadrillos),
+      centerLabel: 'ladrillos',
+      ariaLabel: `Total ${totalLadrillos} ladrillos: ${netos} netos más ${extraDesp} de desperdicio`,
+    },
   };
 }

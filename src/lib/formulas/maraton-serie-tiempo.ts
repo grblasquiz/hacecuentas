@@ -1,6 +1,6 @@
 /** Calculadora de Maratón de Serie */
 export interface Inputs { episodios: number; duracionMin: number; horasDia: number; }
-export interface Outputs { horasTotal: number; diasCompletos: number; finesSemana: number; mensaje: string; }
+export interface Outputs { horasTotal: number; diasCompletos: number; finesSemana: number; mensaje: string; _insight?: any; }
 
 export function maratonSerieTiempo(i: Inputs): Outputs {
   const eps = Number(i.episodios);
@@ -21,10 +21,19 @@ export function maratonSerieTiempo(i: Inputs): Outputs {
   else if (horasTotal < 80) mensaje = 'Serie larga — preparate para un compromiso de varias semanas.';
   else mensaje = 'Serie maratónica — esto es un proyecto de meses. ¡Suerte!';
 
+  const horasFmt = Number(horasTotal.toFixed(1));
+  const tone = horasTotal < 30 ? 'good' : horasTotal < 80 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Cuánto te va a llevar',
+    text: `Son **${horasFmt} h** de pantalla en total (${eps} episodios × ${dur} min). A **${hpd} h por día** la terminás en **${diasCompletos} días**, o en unos **${finesSemana} fin${finesSemana === 1 ? '' : 'es'} de semana** mirando 8 h sábado y 8 h domingo.`,
+    tone,
+    icon: '📺',
+  };
   return {
-    horasTotal: Number(horasTotal.toFixed(1)),
+    horasTotal: horasFmt,
     diasCompletos,
     finesSemana,
     mensaje,
+    _insight,
   };
 }

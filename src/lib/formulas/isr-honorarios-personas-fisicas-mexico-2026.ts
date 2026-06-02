@@ -16,6 +16,8 @@ export interface Outputs {
   utilidad_neta: number;
   obligacion_declarar: string;
   mensaje_rfc: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -43,7 +45,13 @@ export function compute(i: Inputs): Outputs {
       gastos_deducibles_max: 0,
       utilidad_neta: 0,
       obligacion_declarar: "Error: Monto negativo.",
-      mensaje_rfc: "Verifica datos de entrada."
+      mensaje_rfc: "Verifica datos de entrada.",
+      _insight: {
+        title: 'Revisá el monto',
+        text: 'El monto de honorarios no puede ser negativo. Ingresá un valor mayor o igual a cero.',
+        tone: 'warn',
+        icon: '⚠️',
+      },
     };
   }
 
@@ -92,7 +100,19 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
-  return {
+  const fmtMXN = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const pctNeto = monto > 0 ? Math.round((netoRecibido / monto) * 1000) / 10 : 0;
+
+  const _insight = {
+    title: sujetoRetencion ? 'Cobrás con retención' : 'Sin retención',
+    text: sujetoRetencion
+      ? `De tus honorarios de **${fmtMXN(monto)}** te retienen **${fmtMXN(retencionTotal)}** (ISR + IVA) y cobrás **${fmtMXN(netoRecibido)}** netos, el **${pctNeto}%**. Esas retenciones son anticipo de tus impuestos: las acreditás en tu declaración anual.`
+      : `No hay retención sobre estos **${fmtMXN(monto)}**: cobrás el monto completo más el IVA trasladado (**${fmtMXN(ivaTransladado)}**), que vos enterás al SAT.`,
+    tone: sujetoRetencion ? 'warn' : 'neutral',
+    icon: '🧾',
+  };
+
+  const out: Outputs = {
     iva_trasladado: Math.round(ivaTransladado * 100) / 100,
     monto_total_con_iva: Math.round(montoTotalConIva * 100) / 100,
     retencion_isr: Math.round(retencionIsr * 100) / 100,
@@ -102,6 +122,25 @@ export function compute(i: Inputs): Outputs {
     gastos_deducibles_max: Math.round(gastosDeduciblesMax * 100) / 100,
     utilidad_neta: Math.round(utilidadNeta * 100) / 100,
     obligacion_declarar: obligacionDeclarar,
-    mensaje_rfc: mensajeRfc
+    mensaje_rfc: mensajeRfc,
+    _insight,
   };
+
+  // Donut: de tus honorarios (sin IVA), cuánto cobrás neto vs cuánto se retiene (suman el monto)
+  if (sujetoRetencion && retencionTotal > 0 && monto > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Neto a recibir', value: Math.round(netoRecibido * 100) / 100 },
+        { label: 'Retención ISR', value: Math.round(retencionIsr * 100) / 100 },
+        { label: 'Retención IVA', value: Math.round(retencionIva * 100) / 100 },
+      ],
+      prefix: '$',
+      centerValue: fmtMXN(monto),
+      centerLabel: 'Honorarios',
+      ariaLabel: 'Reparto de los honorarios entre el neto a recibir y las retenciones de ISR e IVA',
+    };
+  }
+
+  return out;
 }

@@ -11,6 +11,7 @@ export interface Inputs {
 export interface Outputs {
   result: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function matrizMultiplicacion3x3(i: Inputs): Outputs {
@@ -55,8 +56,16 @@ export function matrizMultiplicacion3x3(i: Inputs): Outputs {
   // Titular corto: una sola línea con las 9 entradas (la matriz completa queda en "detalle")
   const resultInline = `[${C[0].join(', ')}; ${C[1].join(', ')}; ${C[2].join(', ')}]`;
 
+  const traza = C[0][0] + C[1][1] + C[2][2];
+
   return {
     result: resultInline,
     detalle: `**Matriz A × B:**\n\n${matrizStr}\n\n**Cálculo por elemento:**\n${pasos.join('\n')}`,
+    _insight: {
+      title: 'Tu producto A × B',
+      text: `El resultado es una matriz **3×3** donde cada entrada es el producto escalar de una fila de A por una columna de B. Su **traza** (suma de la diagonal) es **${traza}**.`,
+      tone: 'neutral',
+      icon: '🔢',
+    },
   };
 }

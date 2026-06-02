@@ -1,6 +1,6 @@
 /** Planeta regente por signo zodiacal */
 export interface Inputs { signo: string; }
-export interface Outputs { planeta: string; simbolo: string; influencia: string; mensaje: string; }
+export interface Outputs { planeta: string; simbolo: string; influencia: string; mensaje: string; _insight?: any; }
 
 const DATA: Record<string,{p:string;s:string;inf:string;msg:string}> = {
   aries:{p:'Marte',s:'♂',inf:'Acción, energía, competencia, valentía',msg:'Marte te da impulso para actuar, competir y liderar. Tu energía es directa e intensa.'},
@@ -21,5 +21,13 @@ export function planetaRegente(i: Inputs): Outputs {
   const s = String(i.signo).toLowerCase();
   const d = DATA[s];
   if (!d) throw new Error('Seleccioná un signo válido');
-  return { planeta: d.p, simbolo: d.s, influencia: d.inf, mensaje: d.msg };
+  const signoCap = s.charAt(0).toUpperCase() + s.slice(1);
+  const primeraInf = d.inf.split(',')[0].trim().toLowerCase();
+  const _insight = {
+    title: `Tu regente: ${d.p} ${d.s}`,
+    text: `**${signoCap}** está regido por **${d.p}**, el planeta de ${d.inf.toLowerCase()}. Por eso suele marcarte la cancha en lo que tiene que ver con **${primeraInf}**.`,
+    tone: 'neutral',
+    icon: d.s,
+  };
+  return { planeta: d.p, simbolo: d.s, influencia: d.inf, mensaje: d.msg, _insight };
 }

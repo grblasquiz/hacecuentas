@@ -13,6 +13,7 @@ export interface Outputs {
   recomendacion: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function planMaratonSemanas(i: Inputs): Outputs {
@@ -82,6 +83,19 @@ export function planMaratonSemanas(i: Inputs): Outputs {
     },
   };
 
+  const baseInsuficiente = kmActual < 20;
+  const baseSolida = kmActual > kmPico * 0.8;
+  const _insight = {
+    title: baseInsuficiente ? 'Primero construí base' : (baseSolida ? 'Ya estás bien encaminado' : 'Tu hoja de ruta'),
+    text: baseInsuficiente
+      ? `Hoy corrés **${kmActual} km/semana**, muy poco para encarar el plan de tiro. Sumá 4-6 semanas de base hasta llegar a 20+ km/semana antes de arrancar las **${semanas} semanas** que apuntan al pico de **${kmPico} km/semana**.`
+      : baseSolida
+        ? `Con **${kmActual} km/semana** ya tenés una base sólida (el pico del plan es **${kmPico} km/semana**): podés recortar 2-3 semanas y llegar afilado a la maratón de **${meta}h**.`
+        : `Arrancás en **${kmPrimeraSemana} km/semana** y subís de forma progresiva hasta el pico de **${kmPico} km/semana**, con descargas cada 4 semanas y un taper final de **${taperSemanas} semanas** para llegar fresco a la meta de **${meta}h**.`,
+    tone: baseInsuficiente ? 'warn' : (baseSolida ? 'good' : 'neutral'),
+    icon: '🏃',
+  };
+
   return {
     semanasRecomendadas: semanas,
     kmSemanalesPico: kmPico,
@@ -90,5 +104,6 @@ export function planMaratonSemanas(i: Inputs): Outputs {
     recomendacion: recom,
     resumen: `Para una maratón en **${meta}h** con nivel ${exp}: **${semanas} semanas** de entrenamiento, pico de ${kmPico} km/semana y long run máximo de ${longRun} km.`,
     _chart: chart,
+    _insight,
   };
 }

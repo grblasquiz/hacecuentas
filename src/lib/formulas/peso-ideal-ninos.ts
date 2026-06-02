@@ -1,6 +1,6 @@
 /** Peso ideal para niños por edad y sexo — OMS */
 export interface Inputs { edadNinoAnios: number; sexoNino: string; __lang?: string; }
-export interface Outputs { pesoPromedio: string; rangoSaludable: string; evaluacion: string; }
+export interface Outputs { pesoPromedio: string; rangoSaludable: string; evaluacion: string; _insight?: any; _chart?: any; }
 
 const datosVaron: Record<number, [number, number, number]> = { // [P15, P50, P85]
   0: [2.9, 3.3, 3.9], 0.5: [6.7, 7.9, 9.2], 1: [8.6, 9.6, 10.8],
@@ -38,6 +38,12 @@ export function pesoIdealNinos(i: Inputs): Outputs {
       nina: 'una niña',
       nino: 'un niño',
       rango: (child: string) => `El rango saludable para ${child} de ${edad} años es de ${p15} a ${p85} kg. El promedio es ${p50} kg.`,
+      insightTitle: 'Cómo leer estos valores',
+      insightText: (child: string) => `Para ${child} de ${edad} años, un peso de **${p15} a ${p85} kg** se considera saludable según la OMS, con **${p50} kg** como mediana. Estos percentiles son orientativos: lo que importa es que el peso siga su propia curva de crecimiento de forma estable.`,
+      bajoPercentil: 'Bajo P15',
+      mediana: 'Mediana (P50)',
+      altoPercentil: 'Alto P85',
+      chartAria: `Escala de peso saludable: de ${p15} a ${p85} kg, con la mediana en ${p50} kg`,
     },
     en: {
       percentil50: 'percentile 50',
@@ -45,12 +51,40 @@ export function pesoIdealNinos(i: Inputs): Outputs {
       nina: 'a girl',
       nino: 'a boy',
       rango: (child: string) => `The healthy range for ${child} aged ${edad} is ${p15} to ${p85} kg. The average is ${p50} kg.`,
+      insightTitle: 'How to read these values',
+      insightText: (child: string) => `For ${child} aged ${edad}, a weight of **${p15} to ${p85} kg** is considered healthy per the WHO, with **${p50} kg** as the median. These percentiles are indicative: what matters is that the weight follows its own growth curve steadily.`,
+      bajoPercentil: 'Below P15',
+      mediana: 'Median (P50)',
+      altoPercentil: 'Above P85',
+      chartAria: `Healthy weight scale: from ${p15} to ${p85} kg, with the median at ${p50} kg`,
     },
   } as const)[__lang];
+
+  const _insight = {
+    title: T.insightTitle,
+    text: T.insightText(sexo === 'f' ? T.nina : T.nino),
+    tone: 'neutral',
+    icon: '🧒',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: p50,
+    markerLabel: T.mediana,
+    min: 0,
+    segments: [
+      { nombre: T.bajoPercentil, max: p15, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: T.percentil15a85, max: p85, color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: T.altoPercentil, max: Number((p85 * 1.3).toFixed(1)), color: '#f59e0b', colorDark: '#fbbf24' },
+    ],
+    ariaLabel: T.chartAria,
+  };
 
   return {
     pesoPromedio: `${p50} kg (${T.percentil50})`,
     rangoSaludable: `${p15} kg a ${p85} kg (${T.percentil15a85})`,
     evaluacion: T.rango(sexo === 'f' ? T.nina : T.nino),
+    _insight,
+    _chart,
   };
 }

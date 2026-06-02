@@ -18,6 +18,8 @@ export interface Outputs {
   coste_anual_promedio: number;
   tipo_financiacion_recomendado: string;
   elegible_beca_mec: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -77,6 +79,54 @@ export function compute(i: Inputs): Outputs {
     tipoFinanciacion = 'Crédito privado senior (BanCaja, Sabadell) o equity release educativo';
   }
   
+  const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
+
+  // Insight: dinámico según haya beca o no
+  let insight;
+  if (becaMecEstimada > 0) {
+    insight = {
+      title: 'Tu coste real',
+      text: `El máster cuesta **${fmt(costeTotalBruto)} €** brutos, pero la beca MEC estimada cubre **${fmt(becaMecEstimada)} €**: pagás de tu bolsillo **${fmt(costeNeto)} €** (${fmt(costeAnualPromedio)} €/año de media).`,
+      tone: 'good',
+      icon: '🎓',
+    };
+  } else {
+    insight = {
+      title: 'Tu coste real',
+      text: `Este máster cuesta **${fmt(costeTotalBruto)} €** en total (**${fmt(costeAnualPromedio)} €/año** de media) y no accede a beca MEC. Plan de financiación sugerido: ${tipoFinanciacion}.`,
+      tone: costeTotalBruto >= 15000 ? 'warn' : 'neutral',
+      icon: '🎓',
+    };
+  }
+
+  // Gráfico: donut de composición del coste (suma exacta al bruto)
+  let chart;
+  if (becaMecEstimada > 0) {
+    chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Pagás vos', value: Math.round(costeNeto) },
+        { label: 'Cubre la beca MEC', value: Math.round(becaMecEstimada) },
+      ],
+      prefix: '€',
+      centerValue: `${fmt(costeTotalBruto)} €`,
+      centerLabel: 'Coste total',
+      ariaLabel: `Reparto del coste total de ${fmt(costeTotalBruto)} euros entre lo que pagás y la beca MEC`,
+    };
+  } else if (gastosAdicionales > 0) {
+    chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Matrícula', value: Math.round(costeMatricula) },
+        { label: 'Gastos adicionales', value: Math.round(gastosAdicionales) },
+      ],
+      prefix: '€',
+      centerValue: `${fmt(costeTotalBruto)} €`,
+      centerLabel: 'Coste total',
+      ariaLabel: `Composición del coste total de ${fmt(costeTotalBruto)} euros entre matrícula y gastos adicionales`,
+    };
+  }
+
   return {
     coste_total_bruto: Math.round(costeTotalBruto * 100) / 100,
     tarifa_credito_aplicada: Math.round(tarifaCredito * 100) / 100,
@@ -85,6 +135,8 @@ export function compute(i: Inputs): Outputs {
     coste_neto: Math.round(costeNeto * 100) / 100,
     coste_anual_promedio: Math.round(costeAnualPromedio * 100) / 100,
     tipo_financiacion_recomendado: tipoFinanciacion,
-    elegible_beca_mec: elegibleBecaMec
+    elegible_beca_mec: elegibleBecaMec,
+    _insight: insight,
+    ...(chart ? { _chart: chart } : {}),
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   aumentoRecomendadoMax: number;
   pesoActualIdeal: string;
   detalle: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -71,12 +72,24 @@ export function pesoEmbarazo(i: Inputs): Outputs {
     ariaLabel: 'Escala de IMC pre-embarazo (IOM 2009): bajo peso, normal, sobrepeso, obesidad.',
   };
 
+  const tone = catIMC === 'Normal' ? 'good' : 'warn';
+  const _insight = {
+    title: `Aumento recomendado: ${fmt.format(minTotal)}–${fmt.format(maxTotal)} kg`,
+    text:
+      `Con un IMC previo de **${fmt.format(imc)}** (**${catIMC}**), las guías IOM 2009 recomiendan ganar ` +
+      `**${fmt.format(minTotal)}–${fmt.format(maxTotal)} kg** en todo el embarazo. ` +
+      `A la **semana ${semana}** tu peso ideal estaría entre **${fmt.format(pesoIdealMin)} y ${fmt.format(pesoIdealMax)} kg**.`,
+    tone,
+    icon: '🤰',
+  };
+
   return {
     imcPrevio: Number(imc.toFixed(1)),
     aumentoRecomendadoMin: minTotal,
     aumentoRecomendadoMax: maxTotal,
     pesoActualIdeal: `${fmt.format(pesoIdealMin)} – ${fmt.format(pesoIdealMax)} kg`,
     detalle: `IMC previo: ${fmt.format(imc)} (${catIMC}). A la semana ${semana}, tu peso ideal estaría entre ${fmt.format(pesoIdealMin)} y ${fmt.format(pesoIdealMax)} kg. Aumento total recomendado: ${fmt.format(minTotal)}–${fmt.format(maxTotal)} kg.`,
+    _insight,
     _chart: chart,
   };
 }

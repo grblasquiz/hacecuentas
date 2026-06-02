@@ -20,6 +20,8 @@ export interface Outputs {
   roi_hipoteca_vs_alternativa: number;
   recomendacion: string;
   valor_presente_ahorro: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -41,7 +43,13 @@ export function compute(i: Inputs): Outputs {
       intereses_ahorrados: i.cuota_actual * i.plazo_meses - i.saldo_actual,
       roi_hipoteca_vs_alternativa: 100,
       recomendacion: 'Pago anticipado cubre toda la deuda. Hipoteca liquidada.',
-      valor_presente_ahorro: (i.cuota_actual * i.plazo_meses - i.saldo_actual)
+      valor_presente_ahorro: (i.cuota_actual * i.plazo_meses - i.saldo_actual),
+      _insight: {
+        title: 'Hipoteca liquidada',
+        text: `Tu pago anticipado **cubre todo el saldo**: quedás libre de deuda y te ahorrás **$${Math.round(i.cuota_actual * i.plazo_meses - i.saldo_actual).toLocaleString('es-CO')}** en intereses que ya no vas a pagar.`,
+        tone: 'good',
+        icon: '🏠',
+      }
     };
   }
 
@@ -123,7 +131,33 @@ export function compute(i: Inputs): Outputs {
   // Valor presente del ahorro (descontado a tasa hipotecaria)
   const diasPorMes = 30;
   const vpAhorro = interesesAhorrados / Math.pow(1 + tasaMensual, mesesAhorrados);
-  
+
+  const ahorroFmt = Math.round(interesesAhorrados).toLocaleString('es-CO');
+  const efectoCol = i.estrategia === 'reducir_plazo'
+    ? `acortás el crédito **${mesesAhorrados} meses**`
+    : `bajás la cuota **$${Math.round(ahorroCuota).toLocaleString('es-CO')}/mes**`;
+  const _insight = {
+    title: 'Lo que te ahorra el abono',
+    text: `Con un abono de **$${Math.round(i.pago_anticipado).toLocaleString('es-CO')}** ${efectoCol} y dejás de pagar **$${ahorroFmt}** en intereses (saldo nuevo: $${Math.round(saldoNuevo).toLocaleString('es-CO')}).`,
+    tone: 'good' as 'good' | 'warn' | 'neutral',
+    icon: '🏠',
+  };
+
+  let _chart: any = undefined;
+  if (interesesAhorrados > 0 && interesesPagadosNuevo >= 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Intereses que igual pagás', value: Math.round(interesesPagadosNuevo) },
+        { label: 'Intereses ahorrados', value: Math.round(interesesAhorrados) },
+      ],
+      prefix: '$',
+      centerValue: '$' + Math.round(interesesPagadosOriginal).toLocaleString('es-CO'),
+      centerLabel: 'Intereses sin abonar',
+      ariaLabel: `De $${Math.round(interesesPagadosOriginal).toLocaleString('es-CO')} en intereses del plan original, ahorrás $${ahorroFmt} con el pago anticipado.`,
+    };
+  }
+
   return {
     saldo_nuevo: Math.round(saldoNuevo),
     meses_ahorrados: mesesAhorrados,
@@ -135,6 +169,8 @@ export function compute(i: Inputs): Outputs {
     intereses_ahorrados: Math.round(interesesAhorrados),
     roi_hipoteca_vs_alternativa: Math.round(roiHipotecaVsAlternativa * 100) / 100,
     recomendacion: recomendacion,
-    valor_presente_ahorro: Math.round(vpAhorro)
+    valor_presente_ahorro: Math.round(vpAhorro),
+    _insight: _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

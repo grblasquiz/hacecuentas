@@ -9,6 +9,7 @@ export interface Outputs {
   metros_cuadrados: number;
   metros_inversos: number;
   detalle_calculo: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -43,9 +44,19 @@ export function compute(i: Inputs): Outputs {
 
   const detalle = `${nombreMaterial}: ${metrosLineales} m lineales × ${anchoEnMetros.toFixed(2)} m ancho = ${metrosCuadrados.toFixed(2)} m²`;
 
+  const m2 = Math.round(metrosCuadrados * 100) / 100;
+  const fmt2 = (n: number) => n.toFixed(2).replace('.', ',');
+  const _insight = {
+    title: 'Superficie del rollo',
+    text: `**${fmt2(metrosLineales)} m lineales** de ${nombreMaterial.toLowerCase()} con **${fmt2(anchoEnMetros)} m de ancho** cubren **${fmt2(m2)} m²**. Sumá un 10% extra al comprar para cubrir cortes, recortes y posibles errores.`,
+    tone: 'neutral' as const,
+    icon: '🧵',
+  };
+
   return {
-    metros_cuadrados: Math.round(metrosCuadrados * 100) / 100,
+    metros_cuadrados: m2,
     metros_inversos: Math.round(metrosInversos * 100) / 100,
-    detalle_calculo: detalle
+    detalle_calculo: detalle,
+    _insight
   };
 }

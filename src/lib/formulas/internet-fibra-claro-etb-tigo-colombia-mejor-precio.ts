@@ -22,6 +22,8 @@ export interface Outputs {
   mejor_opcion: string;
   ahorro_vs_peor: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -116,6 +118,30 @@ export function compute(i: Inputs): Outputs {
     recomendacion += ' Triple play añade TV y telefonía; útil si los necesitas.';
   }
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const mejorMensualAno = mejorOpcion.precio * 12;
+  const mejorInstalacion = mejorOpcion.costo - mejorMensualAno;
+  const ahorroPct = peorOpcion.costo > 0 ? (ahorro / peorOpcion.costo) * 100 : 0;
+
+  const _insight = {
+    title: 'Operador más conveniente',
+    text: `**${mejorOpcion.nom}** es la opción más barata: ${fmt(mejorOpcion.costo)} en el primer año (${fmt(mejorOpcion.precio)}/mes). Elegirlo en vez de ${peorOpcion.nom} te ahorra **${fmt(ahorro)}** en 12 meses (${ahorroPct.toFixed(0)}% menos).`,
+    tone: ahorro > 0 ? 'good' : 'neutral',
+    icon: '📶',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: `Mensualidades ${mejorOpcion.nom} (12 × ${fmt(mejorOpcion.precio)})`, value: Math.round(mejorMensualAno) },
+      { label: 'Instalación', value: Math.round(mejorInstalacion) },
+    ],
+    prefix: '$',
+    centerValue: fmt(mejorOpcion.costo),
+    centerLabel: `Año 1 con ${mejorOpcion.nom}`,
+    ariaLabel: `Desglose del costo del primer año con ${mejorOpcion.nom}: ${fmt(mejorMensualAno)} en mensualidades más ${fmt(mejorInstalacion)} de instalación.`,
+  };
+
   return {
     precio_mensual_claro: precioMensualClaro,
     precio_mensual_etb: precioMensualEtb,
@@ -131,6 +157,8 @@ export function compute(i: Inputs): Outputs {
     costo_total_12_meses_movistar: costoAno1Movistar,
     mejor_opcion: mejorOpcion.nom,
     ahorro_vs_peor: Math.round(ahorro),
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight,
+    _chart
   };
 }

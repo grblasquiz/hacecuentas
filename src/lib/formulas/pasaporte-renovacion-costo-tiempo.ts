@@ -10,6 +10,7 @@ export interface PasaporteRenovacionCostoTiempoOutputs {
   costoLocal: string;
   tiempoEntrega: string;
   documentacion: string;
+  _insight?: any;
 }
 const PRECIOS: Record<string, {normal: string, express: string, moneda: string}> = {
   argentina: { normal: "ARS 90.000", express: "ARS 180.000", moneda: "ARS" },
@@ -34,9 +35,34 @@ export function pasaporteRenovacionCostoTiempo(i: PasaporteRenovacionCostoTiempo
   const tipo = String(i.tipoTramite || "normal");
   const precios = PRECIOS[p] || PRECIOS.argentina;
   const tiempos = TIEMPOS[p] || TIEMPOS.argentina;
+
+  const NOMBRE_PAIS: Record<string, string> = {
+    argentina: "Argentina", mexico: "México", chile: "Chile", colombia: "Colombia",
+    peru: "Perú", brasil: "Brasil", uruguay: "Uruguay",
+  };
+  const paisNombre = NOMBRE_PAIS[p] || "Argentina";
+  const costo = tipo === "express" ? precios.express : precios.normal;
+  const tiempo = tipo === "express" ? tiempos.express : tiempos.normal;
+  const expressPedidoSinServicio = tipo === "express" && precios.express === "N/A";
+
+  const insight = expressPedidoSinServicio
+    ? {
+        title: "Trámite express no disponible",
+        text: `En **${paisNombre}** no existe trámite express de pasaporte: sólo el ordinario, que cuesta **${precios.normal}** y demora **${tiempos.normal}**. Sacá turno con anticipación si viajás pronto.`,
+        tone: "warn",
+        icon: "🛂",
+      }
+    : {
+        title: `Renovar pasaporte en ${paisNombre}`,
+        text: `El trámite ${tipo === "express" ? "**express**" : "**ordinario**"} cuesta **${costo}** y se entrega en **${tiempo}**. Llevá toda la documentación y reservá turno previo para no perder el viaje.`,
+        tone: "neutral",
+        icon: "🛂",
+      };
+
   return {
-    costoLocal: tipo === "express" ? precios.express : precios.normal,
-    tiempoEntrega: tipo === "express" ? tiempos.express : tiempos.normal,
-    documentacion: "DNI + partida nacimiento + foto biométrica + comprobante + turno previo."
+    costoLocal: costo,
+    tiempoEntrega: tiempo,
+    documentacion: "DNI + partida nacimiento + foto biométrica + comprobante + turno previo.",
+    _insight: insight,
   };
 }

@@ -1,6 +1,6 @@
 /** Precio abono Lollapalooza Argentina 2026 según etapa y modalidad */
 export interface Inputs { etapa: 'preventa1' | 'preventa2' | 'general' | 'ultimas'; modalidad: '3dias' | 'porDia' | 'vip'; cantidadEntradas: number; serviceChargePct: number; }
-export interface Outputs { precioBaseArs: number; serviceChargeArs: number; totalArs: number; precioPorPersonaArs: number; explicacion: string; _chart?: any; }
+export interface Outputs { precioBaseArs: number; serviceChargeArs: number; totalArs: number; precioPorPersonaArs: number; explicacion: string; _chart?: any; _insight?: any; }
 export function lollapaloozaArgentina2026PrecioAbonoDia(i: Inputs): Outputs {
   const cant = Number(i.cantidadEntradas);
   const sc = Number(i.serviceChargePct) / 100;
@@ -27,6 +27,13 @@ export function lollapaloozaArgentina2026PrecioAbonoDia(i: Inputs): Outputs {
     centerLabel: 'Total',
     ariaLabel: 'Composición del total: precio de las entradas más el service charge.',
   };
+  const porPersona = total / cant;
+  const _insight = {
+    title: 'Lo que pagás de verdad',
+    text: `El service charge suma **$${Math.round(cargo).toLocaleString('es-AR')}** (${(sc * 100).toFixed(1)}%) sobre el precio de las entradas, así que cada persona termina pagando **$${Math.round(porPersona).toLocaleString('es-AR')}** y el total es **$${Math.round(total).toLocaleString('es-AR')}**.`,
+    tone: sc > 0 ? 'warn' : 'neutral',
+    icon: '🎫',
+  };
   return {
     precioBaseArs: Number(subtotal.toFixed(2)),
     serviceChargeArs: Number(cargo.toFixed(2)),
@@ -34,5 +41,6 @@ export function lollapaloozaArgentina2026PrecioAbonoDia(i: Inputs): Outputs {
     precioPorPersonaArs: Number((total / cant).toFixed(2)),
     explicacion: `${cant} entrada(s) ${i.modalidad} en ${i.etapa}: $${subtotal.toLocaleString('es-AR')} + service charge ${(sc * 100).toFixed(1)}% ($${cargo.toFixed(0)}) = $${total.toLocaleString('es-AR')} total.`,
     _chart: chart,
+    _insight,
   };
 }

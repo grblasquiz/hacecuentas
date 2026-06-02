@@ -15,6 +15,8 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const RAZA = {
@@ -55,11 +57,43 @@ export function pesoIdealBoxer(inputs: Inputs): Outputs {
 
   const promedio = (min + max) / 2;
 
+  const minR = Number(min.toFixed(1));
+  const maxR = Number(max.toFixed(1));
+  const promR = Number(promedio.toFixed(1));
+  const sexoTxt = sexo === 'macho' ? 'macho' : 'hembra';
+
+  let insightText: string;
+  if (edad === 'cachorro') {
+    insightText = `Tu Boxer cachorro sigue en pleno desarrollo: de adulto debería alcanzar unos **${minR}–${maxR} kg**. Es una raza de crecimiento largo, así que no te alarmes si va estirándose antes de rellenar músculo.`;
+  } else if (edad === 'senior') {
+    insightText = `En un Boxer senior es esperable perder algo de masa muscular: el rango baja a **${minR}–${maxR} kg**. Mantené el ejercicio suave y controlá que no adelgace de más.`;
+  } else {
+    insightText = `Un Boxer ${sexoTxt} de contextura ${contextura} debería pesar entre **${minR} y ${maxR} kg** (centro ideal **${promR} kg**). Es un perro atlético: el objetivo es músculo firme, no grasa, así que palpá las costillas además de mirar la balanza.`;
+  }
+
   return {
-    pesoPromedio: Number(promedio.toFixed(1)),
-    pesoIdealMin: Number(min.toFixed(1)),
-    pesoIdealMax: Number(max.toFixed(1)),
+    pesoPromedio: promR,
+    pesoIdealMin: minR,
+    pesoIdealMax: maxR,
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight: {
+      title: 'Lectura del peso ideal',
+      text: insightText,
+      tone: 'neutral',
+      icon: '🐶',
+    },
+    _chart: {
+      type: 'scale',
+      marker: promR,
+      markerLabel: `Centro ideal ${promR} kg`,
+      min: 0,
+      segments: [
+        { nombre: 'Bajo peso', max: minR, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Peso ideal', max: maxR, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Sobrepeso', max: Number((maxR * 1.3).toFixed(1)), color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Escala de peso del Boxer: zona ideal ${minR} a ${maxR} kg, con el centro en ${promR} kg`,
+    },
   };
 }

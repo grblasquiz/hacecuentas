@@ -20,6 +20,7 @@ export interface Outputs {
   tasaEfectiva: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -80,6 +81,22 @@ export function islrVenezuela(i: Inputs): Outputs {
   const explicacion = `Enriquecimiento neto: Bs ${enriquecimientoNeto.toLocaleString()} (${enriquecimientoUt.toFixed(0)} UT). Impuesto bruto: Bs ${impuestoBruto.toFixed(2)}. Rebajas: ${rebajaPersonalUt} UT personal + ${rebajaCargasUt} UT cargas = Bs ${rebajaTotal.toFixed(2)}. ISLR neto: Bs ${impuestoNeto.toFixed(2)} (tasa efectiva ${tasaEfectiva.toFixed(2)}%). Nota: valores calculados con UT = Bs ${ut}.`;
 
   const teQueda = Math.max(0, enriquecimientoNeto - impuestoNeto);
+
+  const bs = (n: number) => 'Bs ' + Math.round(n).toLocaleString('es-AR');
+  const _insight = impuestoNeto <= 0
+    ? {
+        title: 'No pagás ISLR',
+        text: `Las rebajas (**${bs(rebajaTotal)}**) cubren todo el impuesto bruto, así que tu ISLR neto queda en **Bs 0**. Te quedan íntegros tus **${bs(enriquecimientoNeto)}** de enriquecimiento neto.`,
+        tone: 'good' as const,
+        icon: '🇻🇪',
+      }
+    : {
+        title: 'Tu ISLR del ejercicio',
+        text: `Sobre un enriquecimiento de **${bs(enriquecimientoNeto)}** (${enriquecimientoUt.toFixed(0)} UT) pagás **${bs(impuestoNeto)}** de ISLR, una tasa efectiva del **${tasaEfectiva.toFixed(2)}%**. Las rebajas te descontaron ${bs(rebajaTotal)} del impuesto bruto.`,
+        tone: (tasaEfectiva >= 20 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+        icon: '🇻🇪',
+      };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -101,6 +118,7 @@ export function islrVenezuela(i: Inputs): Outputs {
     tasaEfectiva: Number(tasaEfectiva.toFixed(2)),
     formula,
     explicacion,
+    _insight,
     _chart: chart,
   };
 }

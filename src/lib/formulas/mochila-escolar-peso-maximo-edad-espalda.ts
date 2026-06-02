@@ -9,6 +9,7 @@ export interface Outputs {
   pesoMaximoAbsoluto: number;
   nivelRiesgo: string;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -70,11 +71,13 @@ export function compute(i: Inputs): Outputs {
   // se informa el riesgo general según edad y condición)
   let nivelRiesgo: string;
   let recomendacion: string;
+  let tone: "good" | "warn" | "neutral";
 
   const limiteMuyBajo = edad <= 5;
   const enPicoCrec = edad >= 10 && edad <= 14;
 
   if (limiteMuyBajo) {
+    tone = "warn";
     nivelRiesgo = "⚠️ Alto — columna en desarrollo intensivo";
     recomendacion =
       "En jardín e inicial el límite es estricto: máximo " +
@@ -83,6 +86,7 @@ export function compute(i: Inputs): Outputs {
       "Usá mochila ultraliviana (menos de 400 g vacía), con dos asas y respaldo acolchado. " +
       "No cargar más de 1-2 útiles livianos. Evitá mochilas de un solo hombro.";
   } else if (pesoCorporalSano === "no") {
+    tone = "warn";
     nivelRiesgo = "⚠️ Moderado-alto — peso corporal fuera del rango saludable";
     recomendacion =
       "Como el peso corporal no está en rango saludable, el límite se calcula al 10% estricto: " +
@@ -90,6 +94,7 @@ export function compute(i: Inputs): Outputs {
       " kg. La musculatura de sostén no es proporcional al peso real. " +
       "Recomendamos mochila con ruedas. Consultá con kinesiólogo o pediatra para evaluación postural.";
   } else if (enPicoCrec) {
+    tone = "warn";
     nivelRiesgo = "⚠️ Moderado — pico de crecimiento (mayor vulnerabilidad)";
     recomendacion =
       "Entre los 10 y 14 años es el período de mayor crecimiento: la columna es más vulnerable. " +
@@ -100,6 +105,7 @@ export function compute(i: Inputs): Outputs {
       " kg. Preferí mochila con ruedas si el contenido supera el límite ideal. " +
       "Ajustá las correas para que la mochila quede pegada a la espalda, no colgando.";
   } else {
+    tone = "neutral";
     nivelRiesgo = "✅ Moderado — riesgo estándar para la edad";
     recomendacion =
       "Límite ideal (10%): " +
@@ -128,5 +134,11 @@ export function compute(i: Inputs): Outputs {
     pesoMaximoAbsoluto,
     nivelRiesgo,
     recomendacion,
+    _insight: {
+      title: "El peso que puede cargar",
+      text: `Para un peso de **${pesoNino} kg** a los **${edad} años**, la mochila (cargada y todo) no debería pasar de **${pesoMaximoIdeal.toFixed(1)} kg** en lo ideal, con un máximo absoluto de **${pesoMaximoAbsoluto.toFixed(1)} kg** (${Math.round(porcentajeAbsoluto * 100)}% del peso corporal).`,
+      tone,
+      icon: "🎒",
+    },
   };
 }

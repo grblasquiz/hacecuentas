@@ -13,6 +13,7 @@ export interface Outputs {
   quienPasa: string;
   criterioDesempate: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function mundial2026DiferenciaGol(i: Inputs): Outputs {
@@ -60,11 +61,22 @@ export function mundial2026DiferenciaGol(i: Inputs): Outputs {
     }
   }
 
+  const empateTotal = quien.startsWith('Totalmente');
+  const _insight = {
+    title: 'Desempate FIFA',
+    text: empateTotal
+      ? `**A** y **B** quedan empatados en diferencia de gol (${diffA >= 0 ? '+' : ''}${diffA}) y en goles a favor (${aGf}). Se va al **fair play** (tarjetas) y, si sigue igualado, al **sorteo de la FIFA**.`
+      : `**${quien}**. Criterio que define: ${criterio}. (A: ${diffA >= 0 ? '+' : ''}${diffA} gd · B: ${diffB >= 0 ? '+' : ''}${diffB} gd).`,
+    tone: empateTotal ? 'warn' : 'neutral',
+    icon: empateTotal ? '🎲' : '⚖️',
+  };
+
   return {
     diferenciaA: diffA,
     diferenciaB: diffB,
     quienPasa: quien,
     criterioDesempate: criterio,
     resumen: `**A**: ${aGf} GF / ${aGc} GC = ${diffA >= 0 ? '+' : ''}${diffA} gd. **B**: ${bGf} GF / ${bGc} GC = ${diffB >= 0 ? '+' : ''}${diffB} gd. **Resultado**: ${quien}. Criterio: ${criterio}.`,
+    _insight,
   };
 }

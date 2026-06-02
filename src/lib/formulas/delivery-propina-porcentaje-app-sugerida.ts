@@ -32,5 +32,5 @@ export function deliveryPropinaPorcentajeAppSugerida(i: Inputs): Outputs {
     centerLabel: 'total a pagar',
     ariaLabel: `Total de $${totR.toLocaleString('es-AR')}: $${mR.toLocaleString('es-AR')} del pedido más $${propR.toLocaleString('es-AR')} de propina`,
   };
-  return { propinaSugerida:`$${Math.round(prop).toLocaleString('es-AR')} (${(pct*100).toFixed(0)}%)`, totalConPropina:`$${Math.round(tot).toLocaleString('es-AR')}`, interpretacion:l==='si'?'Clima extremo: propina ${(pct*100).toFixed(0)}% recomendada.':`Propina sugerida: ${(pct*100).toFixed(0)}% del pedido.`, _insight, _chart };
+  return { propinaSugerida:`$${Math.round(prop).toLocaleString('es-AR')} (${(pct*100).toFixed(0)}%)`, totalConPropina:`$${Math.round(tot).toLocaleString('es-AR')}`, interpretacion:l==='si'?`Clima extremo: propina ${(pct*100).toFixed(0)}% recomendada.`:`Propina sugerida: ${(pct*100).toFixed(0)}% del pedido.`, _insight, _chart };
 }

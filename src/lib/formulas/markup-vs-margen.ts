@@ -15,6 +15,8 @@ export interface Outputs {
   multiplicadorPrecio: number;
   costoReferencia: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function markupVsMargen(i: Inputs): Outputs {
@@ -46,16 +48,40 @@ export function markupVsMargen(i: Inputs): Outputs {
 
   const resumen = `Markup ${markup.toFixed(2)}% sobre costo equivale a margen ${margen.toFixed(2)}% sobre venta.`;
 
+  const markupR = Number(markup.toFixed(2));
+  const margenR = Number(margen.toFixed(2));
+  const precioR = Number(precioVenta.toFixed(2));
+  const costoR = Number(costo.toFixed(2));
+  const gananciaR = Number(gananciaNeta.toFixed(2));
+  const fmtMoney = (n: number) => '$' + n.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+
   return {
-    markup: Number(markup.toFixed(2)),
-    margen: Number(margen.toFixed(2)),
-    precioVenta: Number(precioVenta.toFixed(2)),
-    gananciaNeta: Number(gananciaNeta.toFixed(2)),
-    gananciaUnitaria: Number(gananciaNeta.toFixed(2)),
-    markupPorcentaje: Number(markup.toFixed(2)),
-    margenPorcentaje: Number(margen.toFixed(2)),
+    markup: markupR,
+    margen: margenR,
+    precioVenta: precioR,
+    gananciaNeta: gananciaR,
+    gananciaUnitaria: gananciaR,
+    markupPorcentaje: markupR,
+    margenPorcentaje: margenR,
     multiplicadorPrecio: Number(multiplicador.toFixed(2)),
-    costoReferencia: Number(costo.toFixed(2)),
+    costoReferencia: costoR,
     resumen,
+    _insight: {
+      title: 'Markup ≠ Margen',
+      text: `Un **markup del ${markupR}%** sobre el costo equivale a un **margen del ${margenR}%** sobre el precio de venta. El margen siempre da menor que el markup porque se calcula sobre un número más grande (la venta, no el costo).`,
+      tone: 'neutral',
+      icon: '🏷️',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Costo', value: costoR },
+        { label: 'Ganancia', value: gananciaR },
+      ],
+      prefix: '$',
+      centerValue: fmtMoney(precioR),
+      centerLabel: 'Precio de venta',
+      ariaLabel: `Precio de venta de ${fmtMoney(precioR)} compuesto por ${fmtMoney(costoR)} de costo y ${fmtMoney(gananciaR)} de ganancia`,
+    },
   };
 }

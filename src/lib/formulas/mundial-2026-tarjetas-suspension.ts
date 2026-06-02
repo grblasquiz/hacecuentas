@@ -12,6 +12,7 @@ export interface Outputs {
   proximoPartidoElegible: string;
   resetEnFase: string;
   resumen: string;
+  _insight?: any;
 }
 
 const FASES = [
@@ -82,11 +83,32 @@ export function mundial2026TarjetasSuspension(i: Inputs): Outputs {
     ? `**SUSPENDIDO ${suspendido} partido.** ${motivo}`
     : `**NO suspendido.** Podés jugar el próximo partido.`;
 
+  // Riesgo: 1 amarilla acumulada en fase grupos→cuartos significa que una más suspende.
+  const alFilo = suspendido === 0 && am === 1 && idx <= 4;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (suspendido > 0) {
+    insightTone = 'warn';
+    insightText = `Estás **suspendido ${suspendido} partido**: ${motivo} ${proxFase}`;
+  } else if (alFilo) {
+    insightTone = 'warn';
+    insightText = `Con **1 amarilla** acumulada estás al filo: **otra amarilla más y quedás suspendido**. Las tarjetas recién se borran antes de semifinales.`;
+  } else {
+    insightTone = 'good';
+    insightText = `No estás suspendido: jugás el próximo partido. ${resetEnFase}`;
+  }
+
   return {
     suspension: suspensionTxt,
     partidosSuspendido: suspendido,
     proximoPartidoElegible: proxFase,
     resetEnFase,
     resumen: `Con ${am} amarilla(s)${roja ? ' + roja directa' : ''}${doble ? ' + doble amarilla' : ''} en ${FASE_LABEL[fase]}: ${suspensionTxt} ${proxFase} ${resetEnFase}`,
+    _insight: {
+      title: 'Estado disciplinario',
+      text: insightText,
+      tone: insightTone,
+      icon: suspendido > 0 ? '🟥' : '🟨',
+    },
   };
 }

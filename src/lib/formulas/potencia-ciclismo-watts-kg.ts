@@ -14,6 +14,7 @@ export interface Outputs {
   z6: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function potenciaCiclismoWattsKg(i: Inputs): Outputs {
@@ -59,11 +60,18 @@ export function potenciaCiclismoWattsKg(i: Inputs): Outputs {
     ariaLabel: 'Escala de potencia relativa (W/kg) según niveles de Coggan',
   };
 
+  const insTone = wattsKg >= 3.7 ? 'good' : 'neutral';
   return {
     wattsKg,
     nivel,
     z1, z2, z3, z4, z5, z6,
     mensaje: `FTP: ${ftp}W / ${peso}kg = ${wattsKg} W/kg. Nivel: ${nivel}.`,
     _chart: chart,
+    _insight: {
+      title: 'Tu relación potencia-peso',
+      text: `Con **${ftp} W** de FTP y **${peso} kg** rendís **${wattsKg} W/kg**, nivel **${nivel}**. Para subir, podés ganar vatios (más FTP) o bajar peso: cada kilo menos te sube el ratio sin entrenar más.`,
+      tone: insTone,
+      icon: '🚴',
+    },
   };
 }

@@ -21,6 +21,7 @@ export interface Outputs {
   costo_empleador: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Básicos mensuales por categoría — paritaria UOCRA 2026 (enero 2026)
@@ -161,6 +162,13 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del bruto remunerativo: básico, zona, antigüedad, presentismo y horas extra.',
   };
 
+  const insight = {
+    title: 'Bruto, neto y costo real',
+    text: `De un bruto remunerativo de **$${fmt(totalBruto)}**, te llevás **$${fmt(sueldoNeto)}** de neto tras los aportes ($${fmt(descuentosTrabajador)}, 17%). El fondo de cese ($${fmt(fondoCese)}, 12%) lo aporta el empleador y se acumula a tu favor: cobrarte le cuesta $${fmt(costoEmpleador)}.`,
+    tone: 'warn',
+    icon: '👷',
+  };
+
   return {
     salario_basico: Math.round(basicoProporcional),
     adicional_zona: Math.round(adicionalZona),
@@ -174,5 +182,6 @@ export function compute(i: Inputs): Outputs {
     costo_empleador: Math.round(costoEmpleador),
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -14,6 +14,8 @@ export interface Outputs {
   batch_savings_month: number;
   tokens_per_month: number;
   comparison: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Pricing per 1,000,000 tokens (USD) — OpenAI public rates 2026
@@ -157,6 +159,17 @@ export function compute(i: Inputs): Outputs {
     comparisonLines.push(`✅ Your selected model is the lowest cost option for this workload.`);
   }
 
+  const inShare = totalMonth > 0 ? (inputMonth / totalMonth) * 100 : 0;
+  const outShare = 100 - inShare;
+  const cheaperSaving = cheapest.label !== selectedLabel ? totalMonth - cheapest.cost : 0;
+  let insightText = `At ${requestsPerDay.toLocaleString("en-US")} requests/day, **${pricing.label}** costs about **${fmt(totalMonth)}/mo** (${fmt(costPerDay)}/day). Output tokens drive **${outShare.toFixed(0)}%** of the bill vs **${inShare.toFixed(0)}%** for input.`;
+  if (useBatch && batchSavingsMonth > 0) {
+    insightText += ` The Batch API is saving you **${fmt(batchSavingsMonth)}/mo** here.`;
+  } else if (cheaperSaving > 0) {
+    insightText += ` Switching to **${cheapest.label}** would cut **${fmt(cheaperSaving)}/mo**.`;
+  }
+  const tone = cheaperSaving > 0 ? 'warn' : 'good';
+
   return {
     cost_per_day:        parseFloat(costPerDay.toFixed(6)),
     cost_per_month:      parseFloat(totalMonth.toFixed(4)),
@@ -165,5 +178,22 @@ export function compute(i: Inputs): Outputs {
     batch_savings_month: parseFloat(batchSavingsMonth.toFixed(4)),
     tokens_per_month:    tokensPerMonth,
     comparison:          comparisonLines.join("\n"),
+    _insight: {
+      title: 'Your monthly API bill',
+      text: insightText,
+      tone,
+      icon: '🧮',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Input tokens', value: parseFloat(inputMonth.toFixed(4)) },
+        { label: 'Output tokens', value: parseFloat(outputMonth.toFixed(4)) },
+      ],
+      prefix: '$',
+      centerValue: fmt(totalMonth),
+      centerLabel: 'per month',
+      ariaLabel: `Monthly cost of ${fmt(totalMonth)} split into input tokens ${fmt(inputMonth)} and output tokens ${fmt(outputMonth)}`,
+    },
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   result: number;
   primitiva: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function integralDefinidaBasica(i: Inputs): Outputs {
@@ -39,9 +40,22 @@ export function integralDefinidaBasica(i: Inputs): Outputs {
 
   const funcionStr = a === 1 ? `x^${n}` : a === -1 ? `-x^${n}` : `${a}x^${n}`;
 
+  const res = Number(resultado.toFixed(6));
+  const areaTxt = res > 0
+    ? `el área neta es **positiva** (la curva queda mayormente por encima del eje x en ese intervalo)`
+    : res < 0
+    ? `el área neta es **negativa** (la curva queda mayormente por debajo del eje x en ese intervalo)`
+    : `el área neta es **cero** (lo que queda arriba del eje se cancela con lo de abajo)`;
+
   return {
-    result: Number(resultado.toFixed(6)),
+    result: res,
     primitiva: `F(x) = ${primitivaStr}`,
-    detalle: `**∫ ${funcionStr} dx** de ${inf} a ${sup}\n\nPrimitiva: F(x) = ${primitivaStr}\nF(${sup}) = ${Number(Fsup.toFixed(6))}\nF(${inf}) = ${Number(Finf.toFixed(6))}\n**Resultado**: F(${sup}) − F(${inf}) = **${Number(resultado.toFixed(6))}**`,
+    detalle: `**∫ ${funcionStr} dx** de ${inf} a ${sup}\n\nPrimitiva: F(x) = ${primitivaStr}\nF(${sup}) = ${Number(Fsup.toFixed(6))}\nF(${inf}) = ${Number(Finf.toFixed(6))}\n**Resultado**: F(${sup}) − F(${inf}) = **${res}**`,
+    _insight: {
+      title: 'Qué significa el resultado',
+      text: `∫ de ${funcionStr} entre ${inf} y ${sup} da **${res}**: por el teorema fundamental, F(${sup}) − F(${inf}). Como el valor es ${res === 0 ? 'cero' : (res > 0 ? 'positivo' : 'negativo')}, ${areaTxt}.`,
+      tone: 'neutral',
+      icon: '∫',
+    },
   };
 }

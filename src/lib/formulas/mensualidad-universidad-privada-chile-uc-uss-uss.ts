@@ -23,6 +23,8 @@ export interface Outputs {
   costo_credito_privado: number;
   comparativa_financiamiento: string;
   anos_pago_deuda: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -187,6 +189,52 @@ export function compute(i: Inputs): Outputs {
     anos_pago_deuda = 12;
   }
 
+  // Insight dinámico según vía de financiamiento
+  const fmt = (n: number) => `$${n.toLocaleString('es-CL')}`;
+  let _insight: any;
+  if (['cae', 'cae_beca', 'mixto'].includes(i.financiamiento)) {
+    _insight = {
+      title: 'Tu deuda con CAE',
+      text: `Financiando con CAE, la deuda final trepa a **${fmt(deuda_cae_final)}** por el interés capitalizado, que se paga en **~${fmt(cuota_mensual_pago_cae)}/mes** durante **${anos_pago_deuda} años**. Además aportás **${fmt(costo_alumno_cae)}** de tu bolsillo durante la carrera.`,
+      tone: 'warn',
+      icon: '🎓',
+    };
+  } else if (i.financiamiento === 'credito_privado') {
+    _insight = {
+      title: 'Costo del crédito privado',
+      text: `Con crédito privado la deuda final asciende a **${fmt(costo_credito_privado)}** — bastante por encima del costo neto de **${fmt(costo_neto_antes_financiamiento)}** por el interés. Compará siempre contra el CAE antes de firmar.`,
+      tone: 'warn',
+      icon: '🏦',
+    };
+  } else if (i.financiamiento === 'gratuidad') {
+    const cubierto = Math.min(costo_neto_antes_financiamiento, LIMITE_GRATUIDAD_ANUAL * i.anos_carrera);
+    _insight = {
+      title: 'Cobertura de gratuidad',
+      text: `La gratuidad cubre hasta **${fmt(cubierto)}** del arancel. ${costo_neto_post_gratuidad > 0 ? `Quedan **${fmt(costo_neto_post_gratuidad)}** a tu cargo por el excedente sobre el arancel regulado.` : 'Tu carrera queda **totalmente cubierta** sin costo a tu cargo.'}`,
+      tone: costo_neto_post_gratuidad > 0 ? 'neutral' : 'good',
+      icon: '🎓',
+    };
+  } else {
+    _insight = {
+      title: 'Costo total de la carrera',
+      text: `Estudiar ${i.anos_carrera} años cuesta **${fmt(costo_total_con_ajuste)}** con el reajuste anual del ${i.reajuste_anual}%${descuento_beca > 0 ? `, ya descontada la beca de **${fmt(descuento_beca)}**` : ''}. Pagando directo, tu costo neto es de **${fmt(costo_neto_antes_financiamiento)}**.`,
+      tone: descuento_beca > 0 ? 'good' : 'neutral',
+      icon: '🎓',
+    };
+  }
+
+  // Donut: arancel total con ajuste = costo neto + beca
+  const slices = [{ label: 'Costo neto', value: costo_neto_antes_financiamiento }];
+  if (descuento_beca > 0) slices.push({ label: 'Cubierto por beca', value: descuento_beca });
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: fmt(costo_total_con_ajuste),
+    centerLabel: 'Arancel total',
+    ariaLabel: `Arancel total de ${fmt(costo_total_con_ajuste)} dividido en costo neto y beca`,
+  };
+
   return {
     arancel_referencial,
     costo_total_sin_ajuste,
@@ -198,6 +246,8 @@ export function compute(i: Inputs): Outputs {
     cuota_mensual_pago_cae,
     costo_credito_privado,
     comparativa_financiamiento,
-    anos_pago_deuda
+    anos_pago_deuda,
+    _insight,
+    _chart
   };
 }

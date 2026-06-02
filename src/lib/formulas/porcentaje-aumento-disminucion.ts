@@ -8,6 +8,7 @@ export interface Outputs {
   absolute_difference: number;
   change_type: string;
   explanation_text: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -74,10 +75,24 @@ export function compute(i: Inputs): Outputs {
       "). No hubo variación: el cambio porcentual es 0%.";
   }
 
+  const pctAbs = Math.abs(percentChange);
+  const signo = percentChange > 0 ? '+' : percentChange < 0 ? '−' : '';
+  const tono = percentChange > 0 ? 'good' : percentChange < 0 ? 'warn' : 'neutral';
+  const verbo = percentChange > 0 ? 'subió' : percentChange < 0 ? 'bajó' : 'no varió';
+  const _insight = {
+    title: 'Variación porcentual',
+    text: percentChange === 0
+      ? `El valor **no varió**: pasó de **${initialValue.toFixed(2)}** a **${finalValue.toFixed(2)}**, un **0%** de cambio.`
+      : `El valor ${verbo} un **${signo}${pctAbs.toFixed(2)}%** (de **${initialValue.toFixed(2)}** a **${finalValue.toFixed(2)}**), una diferencia de **${signo}${Math.abs(absoluteDifference).toFixed(2)}**.`,
+    tone: tono,
+    icon: percentChange > 0 ? '📈' : percentChange < 0 ? '📉' : '➖',
+  };
+
   return {
     percent_change: Math.round(percentChange * 10000) / 10000,
     absolute_difference: Math.round(absoluteDifference * 10000) / 10000,
     change_type: changeType,
-    explanation_text: explanationText
+    explanation_text: explanationText,
+    _insight
   };
 }

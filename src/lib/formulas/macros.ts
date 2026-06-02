@@ -12,6 +12,8 @@ export interface Outputs {
   carbohidratosKcal: number;
   grasasKcal: number;
   distribucion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function macros(i: Inputs): Outputs {
@@ -35,13 +37,64 @@ export function macros(i: Inputs): Outputs {
   const gC = kcalC / 4;
   const gG = kcalG / 9;
 
+  const gPr = Math.round(gP);
+  const gCr = Math.round(gC);
+  const gGr = Math.round(gG);
+  const kPr = Math.round(kcalP);
+  const kCr = Math.round(kcalC);
+  const kGr = Math.round(kcalG);
+  const kcalFmt = kcal.toLocaleString('es-AR');
+
+  let insight: any;
+  if (obj === 'keto') {
+    insight = {
+      title: 'Reparto cetogénico',
+      text: `Keto al extremo: las grasas dominan con **${gGr}g (70%)** y los carbos caen a **${gCr}g (5%)**, con **${gPr}g de proteína**, sobre tus ${kcalFmt} kcal. Carbos tan bajos buscan inducir cetosis.`,
+      tone: 'warn',
+      icon: '🥑',
+    };
+  } else if (obj === 'lowcarb') {
+    insight = {
+      title: 'Reparto low-carb',
+      text: `Carbos reducidos a **${gCr}g (25%)**, con grasa alta (**${gGr}g**) y **${gPr}g de proteína** sobre tus ${kcalFmt} kcal.`,
+      tone: 'neutral',
+      icon: '🥗',
+    };
+  } else if (obj === 'highprotein') {
+    insight = {
+      title: 'Reparto alto en proteína',
+      text: `La proteína sube a **${gPr}g (35%)** —ideal para preservar o ganar músculo—, con **${gCr}g de carbos** y **${gGr}g de grasa** sobre tus ${kcalFmt} kcal.`,
+      tone: 'good',
+      icon: '🥩',
+    };
+  } else {
+    insight = {
+      title: 'Reparto balanceado',
+      text: `Distribución equilibrada de tus ${kcalFmt} kcal: **${gPr}g de proteína, ${gCr}g de carbos y ${gGr}g de grasa** (25/45/30).`,
+      tone: 'neutral',
+      icon: '🍽️',
+    };
+  }
+
   return {
-    proteinaGramos: Math.round(gP),
-    carbohidratosGramos: Math.round(gC),
-    grasasGramos: Math.round(gG),
-    proteinaKcal: Math.round(kcalP),
-    carbohidratosKcal: Math.round(kcalC),
-    grasasKcal: Math.round(kcalG),
+    proteinaGramos: gPr,
+    carbohidratosGramos: gCr,
+    grasasGramos: gGr,
+    proteinaKcal: kPr,
+    carbohidratosKcal: kCr,
+    grasasKcal: kGr,
     distribucion: `${Math.round(pctP * 100)}% P / ${Math.round(pctC * 100)}% C / ${Math.round(pctG * 100)}% G`,
+    _insight: insight,
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Proteína', value: kPr },
+        { label: 'Carbos', value: kCr },
+        { label: 'Grasa', value: kGr },
+      ],
+      centerValue: `${kcalFmt} kcal`,
+      centerLabel: 'Total diario',
+      ariaLabel: `Reparto de calorías: ${kPr} kcal proteína, ${kCr} kcal carbos, ${kGr} kcal grasa`,
+    },
   };
 }

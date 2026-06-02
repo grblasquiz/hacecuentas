@@ -21,6 +21,8 @@ export interface Outputs {
   pension_neta_estimada: number;
   fondo_garantia_pensional: boolean;
   anos_faltantes: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -113,11 +115,52 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  const pct_pension_num = Math.round(porcentaje_pension * 10000) / 100;
+  const fmtCOP = (v: number) => '$' + Math.round(v).toLocaleString('es-CO');
+
+  // Insight dinámico: elegible vs. cuánto falta
+  let _insight: any;
+  if (elegible) {
+    const aplicaPiso = pension_sin_limites < pension_minima_legal;
+    _insight = {
+      title: 'Cumplís los requisitos de pensión',
+      text: aplicaPiso
+        ? `Te pensionás con la tasa de reemplazo del **${pct_pension_num}%**, pero tu pensión calculada queda por debajo del mínimo, así que cobrarías el piso legal de **${fmtCOP(pension_minima_legal)}/mes** (1 SMLM).`
+        : `Te pensionás con una tasa de reemplazo del **${pct_pension_num}%** del IBL: una pensión aplicable de **${fmtCOP(pension_aplicable)}/mes** (neta estimada **${fmtCOP(pension_neta_estimada)}** tras salud y aporte).`,
+      tone: 'good',
+      icon: '✅',
+    };
+  } else {
+    _insight = {
+      title: 'Todavía no te podés pensionar',
+      text: `${motivo_inelegibilidad} Con tus **${i.semanas_cotizadas.toLocaleString('es-CO')} semanas** la tasa sería del **${pct_pension_num}%**, pero primero hay que completar edad y semanas mínimas (62/57 años y 1.300 semanas).`,
+      tone: 'warn',
+      icon: '⏳',
+    };
+  }
+
+  // Gauge: tasa de reemplazo dentro del rango 55%-79% (sólo si ya es elegible)
+  let _chart: any = undefined;
+  if (elegible) {
+    _chart = {
+      type: 'scale',
+      marker: pct_pension_num,
+      markerLabel: `${pct_pension_num}%`,
+      min: 55,
+      segments: [
+        { nombre: 'Base', max: 62, color: '#fca5a5', colorDark: '#b91c1c' },
+        { nombre: 'Media', max: 71, color: '#fde68a', colorDark: '#b45309' },
+        { nombre: 'Alta', max: 80, color: '#86efac', colorDark: '#15803d' },
+      ],
+      ariaLabel: 'Tasa de reemplazo de la pensión sobre el rango legal de 55% a 79%',
+    };
+  }
+
   return {
     elegible,
     motivo_inelegibilidad,
     semanas_adicionales,
-    porcentaje_pension: Math.round(porcentaje_pension * 10000) / 100, // % con 2 decimales
+    porcentaje_pension: pct_pension_num, // % con 2 decimales
     pension_mensual_bruta: Math.round(pension_mensual_bruta),
     pension_minima_legal: SMLM_2026,
     pension_maxima_legal: TECHO_PENSION,
@@ -127,6 +170,8 @@ export function compute(i: Inputs): Outputs {
     retencion_salud: Math.round(retencion_salud),
     pension_neta_estimada: Math.round(pension_neta_estimada),
     fondo_garantia_pensional,
-    anos_faltantes
+    anos_faltantes,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

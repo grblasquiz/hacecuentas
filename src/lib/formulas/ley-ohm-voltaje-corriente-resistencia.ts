@@ -1,6 +1,6 @@
 /** Ley de Ohm: V = I × R — calcula el valor faltante */
 export interface Inputs { voltaje: number; corriente: number; resistencia: number; }
-export interface Outputs { resultadoValor: number; resultadoUnidad: string; resultadoMagnitud: string; detalle: string; }
+export interface Outputs { resultadoValor: number; resultadoUnidad: string; resultadoMagnitud: string; detalle: string; _insight?: any; }
 
 export function leyOhmVoltajeCorrienteResistencia(i: Inputs): Outputs {
   const v = Number(i.voltaje) || 0;
@@ -36,10 +36,18 @@ export function leyOhmVoltajeCorrienteResistencia(i: Inputs): Outputs {
     detalle = `R = V / I = ${fmt.format(v)} V / ${fmt.format(iA)} A = ${fmt.format(resultadoValor)} Ω`;
   }
 
+  const _insight = {
+    title: 'Resultado',
+    text: `Aplicando la **Ley de Ohm (V = I × R)**, ${resultadoMagnitud.toLowerCase()} es **${fmt.format(Number(resultadoValor.toFixed(4)))} ${resultadoUnidad}**. Las tres magnitudes están atadas: si subís el voltaje manteniendo la resistencia, la corriente sube en la misma proporción.`,
+    tone: 'neutral',
+    icon: '🔌',
+  };
+
   return {
     resultadoValor: Number(resultadoValor.toFixed(4)),
     resultadoUnidad,
     resultadoMagnitud,
     detalle,
+    _insight,
   };
 }

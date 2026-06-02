@@ -13,6 +13,8 @@ export interface Outputs {
   clasificacion: string;
   largoInclinado: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function pendienteTecho(i: Inputs): Outputs {
@@ -53,6 +55,29 @@ export function pendienteTecho(i: Inputs): Outputs {
 
   const largoInclinado = Math.sqrt(altura * altura + base * base);
 
+  const _insight = {
+    title: 'Tu pendiente',
+    text: `Una pendiente de **${pct.toFixed(1)}%** equivale a **${grados.toFixed(1)}°** y sube **${cmPorMetro.toFixed(1)} cm por cada metro** horizontal. Cae en la categoría: ${clasificacion}.`,
+    tone: pct < 5 ? 'warn' : 'neutral',
+    icon: '📐',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: Number(pct.toFixed(1)),
+    markerLabel: `${pct.toFixed(1)}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Plana / losa', max: 5, color: '#93c5fd', colorDark: '#1e40af' },
+      { nombre: 'Muy suave', max: 15, color: '#86efac', colorDark: '#166534' },
+      { nombre: 'Suave', max: 25, color: '#fde68a', colorDark: '#854d0e' },
+      { nombre: 'Media', max: 40, color: '#fdba74', colorDark: '#9a3412' },
+      { nombre: 'Pronunciada', max: 60, color: '#fca5a5', colorDark: '#991b1b' },
+      { nombre: 'Muy empinada', max: Math.max(100, Math.ceil(pct) + 10), color: '#f0abfc', colorDark: '#86198f' },
+    ],
+    ariaLabel: `Pendiente de ${pct.toFixed(1)}% ubicada en la zona ${clasificacion}`,
+  };
+
   return {
     porcentaje: Number(pct.toFixed(2)),
     grados: Number(grados.toFixed(2)),
@@ -60,5 +85,7 @@ export function pendienteTecho(i: Inputs): Outputs {
     clasificacion,
     largoInclinado: Number(largoInclinado.toFixed(2)),
     resumen: `Pendiente: ${pct.toFixed(1)}% / ${grados.toFixed(1)}° / ${cmPorMetro.toFixed(1)} cm por metro. ${clasificacion}.`,
+    _insight,
+    _chart,
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   rangoMin: number;
   rangoMax: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function pesoIdealFormula(i: Inputs): Outputs {
@@ -48,6 +49,14 @@ export function pesoIdealFormula(i: Inputs): Outputs {
   const rangoMin = Math.min(...valores);
   const rangoMax = Math.max(...valores);
 
+  const spread = rangoMax - rangoMin;
+  const _insight = {
+    title: 'Tu peso ideal estimado',
+    text: `Para ${altura} cm (${sexo === 'f' ? 'mujer' : 'varón'}), el promedio de las 4 fórmulas clásicas da **${promedio.toFixed(1)} kg**. Las fórmulas difieren en **${spread.toFixed(1)} kg** (de ${rangoMin.toFixed(1)} a ${rangoMax.toFixed(1)} kg): tomá el rango como referencia, no un número exacto, ya que ninguna considera tu masa muscular ni contextura.`,
+    tone: 'neutral',
+    icon: '⚖️',
+  };
+
   return {
     devine: Number(devine.toFixed(1)),
     robinson: Number(robinson.toFixed(1)),
@@ -57,5 +66,6 @@ export function pesoIdealFormula(i: Inputs): Outputs {
     rangoMin: Number(rangoMin.toFixed(1)),
     rangoMax: Number(rangoMax.toFixed(1)),
     mensaje: `Tu peso ideal estimado: ${promedio.toFixed(1)} kg (rango ${rangoMin.toFixed(1)}–${rangoMax.toFixed(1)} kg según 4 fórmulas).`,
+    _insight,
   };
 }

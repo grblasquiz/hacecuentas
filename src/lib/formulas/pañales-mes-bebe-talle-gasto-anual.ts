@@ -12,6 +12,7 @@ export interface Outputs {
   costoAnual: number;
   precioUnitario: number;
   detalle: string;
+  _insight?: any;
 }
 
 // Precios de referencia por unidad en ARS — abril 2026
@@ -91,6 +92,13 @@ export function compute(i: Inputs): Outputs {
     `${panialesPorDia} cambios/día × 30 días = ${panialesPorMes} pañales/mes. ` +
     `Precio unitario: $${Math.round(precioUnitario).toLocaleString("es-AR")} (${fuentePrecio}).`;
 
+  const insight = {
+    title: 'Cuánto se van en pañales',
+    text: `Con **${panialesPorDia} cambios/día** gastás unos **${panialesPorMes} pañales/mes**, que a $${Math.round(precioUnitario).toLocaleString('es-AR')} la unidad son **$${costoMensual.toLocaleString('es-AR')}/mes** y **$${costoAnual.toLocaleString('es-AR')} en el año**. El número baja a medida que el bebé crece y usa menos cambios por día.`,
+    tone: 'neutral',
+    icon: '🍼',
+  };
+
   return {
     panialesPorDia,
     panialesPorMes,
@@ -98,5 +106,6 @@ export function compute(i: Inputs): Outputs {
     costoAnual,
     precioUnitario: Math.round(precioUnitario),
     detalle,
+    _insight: insight,
   };
 }

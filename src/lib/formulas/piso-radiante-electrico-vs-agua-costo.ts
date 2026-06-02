@@ -1,6 +1,6 @@
 /** Costo instalación + operación piso radiante eléctrico vs hidráulico según m². */
 export interface Inputs { metrosCuadrados: number; horasUsoDiario: number; mesesUso: number; tarifaUsdKwh: number; precioGasUsdM3: number; }
-export interface Outputs { costoInstalacionElectricoUsd: number; costoInstalacionHidraulicoUsd: number; costoOperacionElectricoUsd: number; costoOperacionHidraulicoUsd: number; mejorOpcion: string; explicacion: string; }
+export interface Outputs { costoInstalacionElectricoUsd: number; costoInstalacionHidraulicoUsd: number; costoOperacionElectricoUsd: number; costoOperacionHidraulicoUsd: number; mejorOpcion: string; explicacion: string; _insight?: any; _chart?: any; }
 export function pisoRadianteElectricoVsAguaCosto(i: Inputs): Outputs {
   const m2 = Number(i.metrosCuadrados);
   const hs = Number(i.horasUsoDiario);
@@ -20,6 +20,14 @@ export function pisoRadianteElectricoVsAguaCosto(i: Inputs): Outputs {
   const totalElec = instElec + opElec * 10;
   const totalHidr = instHidr + opHidr * 10;
   const mejor = totalElec < totalHidr ? 'eléctrico' : 'hidráulico';
+  const totalMejor = Math.min(totalElec, totalHidr);
+  const totalPeor = Math.max(totalElec, totalHidr);
+  const ahorro = Math.round(totalPeor - totalMejor);
+  const instMejor = mejor === 'eléctrico' ? instElec : instHidr;
+  const opMejorAnual = mejor === 'eléctrico' ? opElec : opHidr;
+  const opMejor10 = opMejorAnual * 10;
+  const fmtUsd = (n: number) => 'USD ' + Math.round(n).toLocaleString('es-AR');
+
   return {
     costoInstalacionElectricoUsd: Number(instElec.toFixed(0)),
     costoInstalacionHidraulicoUsd: Number(instHidr.toFixed(0)),
@@ -27,5 +35,22 @@ export function pisoRadianteElectricoVsAguaCosto(i: Inputs): Outputs {
     costoOperacionHidraulicoUsd: Number(opHidr.toFixed(0)),
     mejorOpcion: mejor,
     explicacion: `Para ${m2}m² con ${hs}h/día durante ${meses} meses: eléctrico USD ${instElec.toFixed(0)} instalación + USD ${opElec.toFixed(0)}/año operación. Hidráulico USD ${instHidr.toFixed(0)} + USD ${opHidr.toFixed(0)}/año. A 10 años, mejor opción: ${mejor}.`,
+    _insight: {
+      title: `Conviene el ${mejor}`,
+      text: `A 10 años el sistema **${mejor}** sale **${fmtUsd(totalMejor)}** contra ${fmtUsd(totalPeor)} del otro: te ahorrás unos **${fmtUsd(ahorro)}**. ${mejor === 'eléctrico' ? 'Instalación más barata, pero la operación pesa: clave la tarifa eléctrica que pongas.' : 'Instalación más cara por la caldera, pero el gas abarata cada año de uso.'}`,
+      tone: 'good',
+      icon: '🔥',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Instalación', value: Math.round(instMejor) },
+        { label: 'Operación 10 años', value: Math.round(opMejor10) },
+      ],
+      prefix: '$',
+      centerValue: fmtUsd(totalMejor),
+      centerLabel: `${mejor} · 10 años`,
+      ariaLabel: `Costo total a 10 años del sistema ${mejor}: instalación ${fmtUsd(instMejor)} más operación ${fmtUsd(opMejor10)}, total ${fmtUsd(totalMejor)}.`,
+    },
   };
 }

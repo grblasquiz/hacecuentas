@@ -1,6 +1,6 @@
 /** Calculadora de Margin Call en Futuros (precio de llamada) */
 export interface Inputs { precioEntrada: number; contratos: number; multiplicador: number; equityCuenta: number; margenMantenimiento: number; direccion: 'long' | 'short'; }
-export interface Outputs { precioMarginCall: number; distanciaMargin: number; distanciaPorcentaje: number; perdidaAlMC: number; evaluacion: string; }
+export interface Outputs { precioMarginCall: number; distanciaMargin: number; distanciaPorcentaje: number; perdidaAlMC: number; evaluacion: string; _insight?: any; _chart?: any; }
 export function marginCallFuturosPrecio(i: Inputs): Outputs {
   const ent = Number(i.precioEntrada); const n = Number(i.contratos);
   const mul = Number(i.multiplicador); const eq = Number(i.equityCuenta);
@@ -22,11 +22,37 @@ export function marginCallFuturosPrecio(i: Inputs): Outputs {
   else if (pct < 5) eval_ = '⚠️ Moderado';
   else if (pct < 10) eval_ = '✅ Espacio razonable';
   else eval_ = '✅ Muy lejos — buen buffer';
+  const tono = pct < 3 ? 'warn' : pct < 5 ? 'neutral' : 'good';
+  const _insight = {
+    title: 'Distancia al margin call',
+    text: `Con ${n} contrato${n === 1 ? '' : 's'} ${dir === 'long' ? 'long' : 'short'} desde **$${ent.toFixed(2)}**, recibís el margin call si el precio toca **$${mc.toFixed(2)}** — a **${pct.toFixed(2)}%** de tu entrada. Ahí habrías perdido **$${exceso.toLocaleString('es-AR')}** del exceso de equity sobre el mantenimiento.`,
+    tone: tono,
+    icon: pct < 3 ? '🚨' : '📏',
+  };
+
+  const topSeg = Math.max(15, Math.ceil(pct / 5) * 5 + 5);
+  const _chart = {
+    type: 'scale',
+    marker: Number(pct.toFixed(2)),
+    markerLabel: `${pct.toFixed(2)}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Crítico', max: 1, color: '#dc2626', colorDark: '#b91c1c' },
+      { nombre: 'Cerca', max: 3, color: '#ef4444', colorDark: '#dc2626' },
+      { nombre: 'Moderado', max: 5, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Razonable', max: 10, color: '#84cc16', colorDark: '#65a30d' },
+      { nombre: 'Buen buffer', max: topSeg, color: '#22c55e', colorDark: '#16a34a' },
+    ],
+    ariaLabel: `El precio de margin call está a ${pct.toFixed(2)}% de la entrada`,
+  };
+
   return {
     precioMarginCall: Number(mc.toFixed(2)),
     distanciaMargin: Number(puntos.toFixed(2)),
     distanciaPorcentaje: Number(pct.toFixed(2)),
     perdidaAlMC: Number(exceso.toFixed(2)),
     evaluacion: eval_,
+    _insight,
+    _chart,
   };
 }

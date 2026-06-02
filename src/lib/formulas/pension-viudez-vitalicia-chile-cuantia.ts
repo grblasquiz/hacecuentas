@@ -11,6 +11,8 @@ export interface Outputs {
   pension_por_hijo: number;
   pension_total_grupo: number;
   porcentaje_aplicado: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -69,11 +71,57 @@ export function compute(i: Inputs): Outputs {
 
   const pensionPorHijoFinal = cantidadHijos > 0 ? pensionTotalHijosFinal / cantidadHijos : 0;
 
+  // === INSIGHT NARRATIVO ===
+  const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const conyugeRedondo = Math.round(pensionConyugeFinal);
+  const hijosRedondo = Math.round(pensionTotalHijosFinal);
+  let _insight: any;
+  if (!tieneHijos) {
+    _insight = {
+      title: 'Cónyuge sin hijos: 60%',
+      text: `Al no haber hijos dependientes, el cónyuge recibe el **60% de la pensión del causante = ${fmtCL(conyugeRedondo)}/mes** sobre ${fmtCL(pensionCausante)}.`,
+      tone: 'neutral',
+      icon: '🕊️',
+    };
+  } else if (esConyugeInvalido) {
+    _insight = {
+      title: 'Cónyuge inválido: 60% + 40% hijos',
+      text: `Por invalidez, el cónyuge conserva el **60% (${fmtCL(conyugeRedondo)}/mes)** y los ${cantidadHijos} hijo(s) se reparten el 40% (**${fmtCL(hijosRedondo)}/mes**${cantidadHijos > 0 ? `, ${fmtCL(pensionPorHijoFinal)} c/u` : ''}). Total grupo: ${fmtCL(pensionTotalGrupoFinal)}.`,
+      tone: 'neutral',
+      icon: '👪',
+    };
+  } else {
+    _insight = {
+      title: 'Cónyuge con hijos: reparto 25%/25%',
+      text: `Con hijos, el grupo familiar toma el 50% del causante: **cónyuge ${fmtCL(conyugeRedondo)}/mes** e hijos **${fmtCL(hijosRedondo)}/mes**${cantidadHijos > 0 ? ` (${fmtCL(pensionPorHijoFinal)} por hijo)` : ''}. Total: **${fmtCL(pensionTotalGrupoFinal)}/mes**.`,
+      tone: 'neutral',
+      icon: '👪',
+    };
+  }
+
+  // === GRÁFICO: reparto cónyuge vs hijos (solo si hay hijos con monto) ===
+  let _chart: any;
+  if (tieneHijos && hijosRedondo > 0 && conyugeRedondo > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Cónyuge', value: conyugeRedondo },
+        { label: cantidadHijos > 1 ? `Hijos (${cantidadHijos})` : 'Hijo', value: hijosRedondo },
+      ],
+      prefix: '$',
+      centerValue: fmtCL(conyugeRedondo + hijosRedondo),
+      centerLabel: 'Total grupo',
+      ariaLabel: `Reparto de la pensión del grupo familiar (${fmtCL(conyugeRedondo + hijosRedondo)}/mes): ${fmtCL(conyugeRedondo)} para el cónyuge y ${fmtCL(hijosRedondo)} para los hijos`,
+    };
+  }
+
   return {
     pension_conyuge: Math.round(pensionConyugeFinal),
     pension_total_hijos: Math.round(pensionTotalHijosFinal),
     pension_por_hijo: Math.round(pensionPorHijoFinal),
     pension_total_grupo: Math.round(pensionTotalGrupoFinal),
-    porcentaje_aplicado: porcentajeAplicado
+    porcentaje_aplicado: porcentajeAplicado,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

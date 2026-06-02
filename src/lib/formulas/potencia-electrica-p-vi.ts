@@ -24,6 +24,7 @@ export interface PotenciaElectricaOutputs {
   costoMensual: number;
   formulaAplicada: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function potenciaElectricaPVi(i: PotenciaElectricaInputs): PotenciaElectricaOutputs {
@@ -79,6 +80,11 @@ export function potenciaElectricaPVi(i: PotenciaElectricaInputs): PotenciaElectr
     })}.`;
   }
 
+  const insTone = P >= 1000 ? 'warn' : 'neutral';
+  const potTxt = P >= 1000 ? `${(P / 1000).toFixed(2)} kW` : `${P.toFixed(P >= 100 ? 0 : 1)} W`;
+  const costoTxt = '$' + Math.round(costoMensual).toLocaleString('es-AR');
+  const insText = `Una carga de **${potTxt}** funcionando **${horasDia} h/día** consume **${consumoMensual.toFixed(1)} kWh/mes**, unos **${costoTxt}** a $${tarifa}/kWh.` + (P >= 1000 ? ' Al ser una potencia alta, verificá que el cable y la térmica del circuito la soporten.' : '');
+
   return {
     potenciaWatts: Number(P.toFixed(2)),
     potenciaKw: Number((P / 1000).toFixed(3)),
@@ -90,5 +96,11 @@ export function potenciaElectricaPVi(i: PotenciaElectricaInputs): PotenciaElectr
     costoMensual: Math.round(costoMensual),
     formulaAplicada: formula,
     resumen,
+    _insight: {
+      title: 'Potencia y consumo',
+      text: insText,
+      tone: insTone,
+      icon: '⚡',
+    },
   };
 }

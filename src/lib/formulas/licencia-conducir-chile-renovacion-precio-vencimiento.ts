@@ -17,6 +17,8 @@ export interface Outputs {
   fecha_vencimiento: string;
   requisitos_docentes: string;
   sancion_adicional: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -126,16 +128,60 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  const multaR = Math.round(multa_vencimiento);
+  const totalR = Math.round(costo_total);
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  // Insight: la multa por vencer cambia el tono
+  let _insight: any;
+  if (multaR > 0) {
+    const pctMulta = Math.round((multaR / totalR) * 100);
+    _insight = {
+      title: 'La multa por atraso encarece el trámite',
+      text: `Renovar te cuesta **${fmt(totalR)}**, pero **${fmt(multaR)}** (${pctMulta}%) son multa por los ${i.dias_vencida} días de atraso. Si conducís con la licencia vencida arriesgás además una infracción de Carabineros. Conviene renovar cuanto antes para frenar el recargo.`,
+      tone: 'warn',
+      icon: '🚗',
+    };
+  } else {
+    _insight = {
+      title: 'Renovación al día',
+      text: `Renovar tu licencia clase ${i.clase_licencia.toUpperCase().replace('_', ' ')} cuesta **${fmt(totalR)}** y queda vigente **${vigencia} años** (hasta ${fecha_vencimiento}). Al estar dentro de plazo no pagás multa: el grueso es el arancel base y el examen oftalmológico obligatorio.`,
+      tone: 'good',
+      icon: '🚗',
+    };
+  }
+
+  // Donut: el total se compone de varios ítems que suman
+  const slices = [
+    { label: 'Arancel base', value: arancel_base },
+    { label: 'Examen oftalmológico', value: costo_examen_oftalmologico },
+    { label: 'Examen psicotécnico', value: costo_psicotecnico },
+    { label: 'Multa por vencimiento', value: multaR },
+    { label: 'Recargo exprés', value: costo_expedited },
+    { label: 'Primera licencia', value: costo_primera_licencia },
+  ].filter((s) => s.value > 0);
+
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: fmt(totalR),
+    centerLabel: 'Costo total',
+    ariaLabel: `Costo total de la renovación: ${fmt(totalR)}, desglosado en ${slices.length} conceptos`,
+  };
+
   return {
     arancel_base,
     costo_examen_oftalmologico,
     costo_psicotecnico,
-    multa_vencimiento: Math.round(multa_vencimiento),
+    multa_vencimiento: multaR,
     costo_expedited,
-    costo_total: Math.round(costo_total),
+    costo_total: totalR,
     vigencia_anos: vigencia,
     fecha_vencimiento,
     requisitos_docentes,
-    sancion_adicional
+    sancion_adicional,
+    _insight,
+    _chart
   };
 }

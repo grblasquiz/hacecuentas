@@ -21,6 +21,8 @@ export interface Outputs {
   total_accesorios: number;
   plazo_presentacion: string;
   excepciones_aplicables: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -129,6 +131,48 @@ export function compute(i: Inputs): Outputs {
     excepciones = 'Obligación no aplicable. Monitorea el valor de bienes: si superan 50.000€ en alguna categoría, deberás presentar Modelo 720.';
   }
 
+  // Insight narrativo dinámico
+  const fmtEur720 = (n: number) => Math.round(n).toLocaleString('es-ES') + '€';
+  let _insight: any;
+  if (esObligatorio) {
+    const nCats = categoriasObligatorias.length;
+    _insight = {
+      title: 'Estás obligado a presentar el 720',
+      text: `**${nCats}** ${nCats === 1 ? 'categoría supera' : 'categorías superan'} los 50.000€, así que tenés que declarar antes del 31 de marzo. No presentarlo expone a una sanción desde **${fmtEur720(SANCION_MINIMA)}** (criterio TJUE) más posibles intereses.`,
+      tone: 'warn',
+      icon: '🌍',
+    };
+  } else {
+    _insight = {
+      title: 'Sin obligación de declarar',
+      text: `Ninguna categoría llega al umbral de 50.000€ (tu mayor bloque no lo supera), con un total declarable de **${fmtEur720(valorTotal)}**. No tenés que presentar el Modelo 720 este año.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  }
+
+  // Gráfico: composición del patrimonio en el extranjero por categoría (suma = total)
+  let _chart: any;
+  if (valorTotal > 0) {
+    const slices = [
+      { label: 'Cuentas bancarias', value: cuentas },
+      { label: 'Valores mobiliarios', value: valores },
+      { label: 'Inmuebles', value: inmuebles },
+      { label: 'Seguros de vida', value: seguros },
+      { label: 'Préstamos concedidos', value: prestamos },
+      { label: 'Derechos usufructo/uso', value: derechos },
+      { label: 'Otras (cripto, digitales)', value: otras },
+    ].filter(s => s.value > 0);
+    _chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '€',
+      centerValue: `${fmtEur720(valorTotal)}`,
+      centerLabel: 'Patrimonio exterior',
+      ariaLabel: 'Composición del patrimonio en el extranjero por categoría de bien',
+    };
+  }
+
   return {
     obligacion_modelo_720: textoObligacion,
     valor_total_bienes: valorTotal,
@@ -139,6 +183,8 @@ export function compute(i: Inputs): Outputs {
     intereses_mora: Math.round(interesesMora),
     total_accesorios: Math.round(totalAccesorios),
     plazo_presentacion: plazo,
-    excepciones_aplicables: excepciones
+    excepciones_aplicables: excepciones,
+    _insight,
+    _chart
   };
 }

@@ -20,6 +20,7 @@ export interface Outputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function jubilacionHaberMinimoMovilidad(i: Inputs): Outputs {
@@ -65,6 +66,20 @@ export function jubilacionHaberMinimoMovilidad(i: Inputs): Outputs {
     ariaLabel: 'Composición del haber proyectado: haber actual más aumento por movilidad',
   };
 
+  // Variación acumulada de precios en el período (IPC compuesto por trimestre)
+  let ipcAcum = 1;
+  for (let t = 0; t < trimestres; t++) ipcAcum *= (1 + ipc / 100);
+  const inflacionPct = (ipcAcum - 1) * 100;
+  const ganaInflacion = aumentoPorcentaje >= inflacionPct;
+  const _insight = {
+    title: ganaInflacion ? 'Le ganás a la inflación' : 'Perdés poder de compra',
+    text: ganaInflacion
+      ? `En **${trimestres} trimestre${trimestres === 1 ? '' : 's'}** tu haber sube **${aumentoPorcentaje.toFixed(1)}%** (a **$${Math.round(haberProyectado).toLocaleString('es-AR')}**), por encima de la inflación del período (**${inflacionPct.toFixed(1)}%**). Mantenés el poder de compra.`
+      : `En **${trimestres} trimestre${trimestres === 1 ? '' : 's'}** tu haber sube **${aumentoPorcentaje.toFixed(1)}%** (a **$${Math.round(haberProyectado).toLocaleString('es-AR')}**), pero la inflación acumula **${inflacionPct.toFixed(1)}%**: perdés poder de compra porque el RIPTE arrastra la movilidad por debajo del IPC.`,
+    tone: (ganaInflacion ? 'good' : 'warn') as 'good' | 'warn',
+    icon: '📈',
+  };
+
   return {
     haberProyectado: Math.round(haberProyectado),
     aumentoTotal: Math.round(aumentoTotal),
@@ -74,5 +89,6 @@ export function jubilacionHaberMinimoMovilidad(i: Inputs): Outputs {
     formula,
     explicacion,
     _chart: chart,
+    _insight,
   };
 }

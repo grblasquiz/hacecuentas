@@ -20,6 +20,7 @@ export interface Outputs {
   tipo_medio_efectivo: number;   // Tipo efectivo en % (cuota / base)
   resultado_declaracion: number; // A pagar (+) o a devolver (−)
   mensaje_resultado: string;     // Diagnóstico para el usuario
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -112,6 +113,38 @@ export function compute(i: Inputs): Outputs {
       `Las retenciones soportadas (${formatEUR(retencion)}) coinciden exactamente con la cuota íntegra. El resultado de la declaración es 0,00 €.`;
   }
 
+  // --- Insight ---
+  let _insight: any;
+  if (rendimiento_neto === 0) {
+    _insight = {
+      title: 'Nada que declarar',
+      text: 'No hay rendimiento neto de capital mobiliario: los gastos deducibles igualan o superan tus ingresos, así que la cuota es **0 €**.',
+      tone: 'neutral',
+      icon: '📈',
+    };
+  } else if (resultado_declaracion > 0.005) {
+    _insight = {
+      title: 'Te toca ingresar la diferencia',
+      text: `Tu cuota íntegra es **${formatEUR(cuota_integra_total)}** (tipo medio ${tipo_medio_efectivo}%) y las retenciones soportadas (${formatEUR(retencion)}) no la cubren: deberás ingresar **${formatEUR(resultado_declaracion)}** en la declaración.`,
+      tone: 'warn',
+      icon: '📈',
+    };
+  } else if (resultado_declaracion < -0.005) {
+    _insight = {
+      title: 'Hacienda te devuelve',
+      text: `Las retenciones soportadas (${formatEUR(retencion)}) superan tu cuota íntegra de **${formatEUR(cuota_integra_total)}** (tipo medio ${tipo_medio_efectivo}%): la AEAT te devolverá **${formatEUR(Math.abs(resultado_declaracion))}**.`,
+      tone: 'good',
+      icon: '📈',
+    };
+  } else {
+    _insight = {
+      title: 'Declaración a cero',
+      text: `Las retenciones soportadas coinciden con tu cuota íntegra de **${formatEUR(cuota_integra_total)}**: el resultado de la declaración es **0,00 €**.`,
+      tone: 'neutral',
+      icon: '📈',
+    };
+  }
+
   return {
     rendimiento_neto,
     cuota_tramo_19,
@@ -123,6 +156,7 @@ export function compute(i: Inputs): Outputs {
     tipo_medio_efectivo,
     resultado_declaracion,
     mensaje_resultado,
+    _insight,
   };
 }
 

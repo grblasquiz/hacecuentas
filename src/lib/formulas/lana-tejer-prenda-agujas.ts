@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  gramosNecesarios: string; madejas50g: number; madejas100g: number; metrosAproximados: string;
+  gramosNecesarios: string; madejas50g: number; madejas100g: number; metrosAproximados: string; _insight?: any;
 }
 
 export function lanaTejerPrendaAgujas(inputs: Inputs): Outputs {
@@ -34,10 +34,17 @@ export function lanaTejerPrendaAgujas(inputs: Inputs): Outputs {
   const madejas100 = Math.ceil(gramos / 100);
   const metrosPorG = ag <= 3 ? 4 : ag <= 4 ? 2.5 : ag <= 5 ? 2 : ag <= 7 ? 1.4 : ag <= 10 ? 0.8 : 0.5;
   const metros = gramos * metrosPorG;
+  const gramosR = Math.round(gramos);
   return {
-    gramosNecesarios: `${Math.round(gramos)} g`,
+    gramosNecesarios: `${gramosR} g`,
     madejas50g: madejas50,
     madejas100g: madejas100,
     metrosAproximados: `~${Math.round(metros)} m`,
+    _insight: {
+      title: 'Cuánta lana comprar',
+      text: `Vas a necesitar unos **${gramosR} g** (${madejas50} madejas de 50 g o ${madejas100} de 100 g), ~**${Math.round(metros)} m** de hilo. Comprá todo del mismo lote de tintura para que no se note diferencia de color entre madejas.`,
+      tone: 'neutral',
+      icon: '🧶',
+    },
   };
 }

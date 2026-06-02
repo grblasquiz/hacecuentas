@@ -16,6 +16,7 @@ export interface IpvaSaoPauloOutputs {
   descontoUnico: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 const ALIQUOTAS_SP: Record<string, number> = {
@@ -42,6 +43,14 @@ export function ipvaSaoPaulo(inputs: IpvaSaoPauloInputs): IpvaSaoPauloOutputs {
   const formula = `IPVA = R$ ${valorFipe.toLocaleString('pt-BR')} × ${aliquota}% = R$ ${ipvaAnual.toFixed(2)}`;
   const explicacion = `Para um veículo tipo ${tipo} com valor FIPE de R$ ${valorFipe.toLocaleString('pt-BR')}, a alíquota aplicável em SP é ${aliquota}% (Lei 13.296/2008). IPVA anual: R$ ${ipvaAnual.toFixed(2)}. Pode ser parcelado em até 3x de R$ ${parcela.toFixed(2)} ou pago à vista.`;
 
+  const fmtBR = (n: number) => 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const _insight = {
+    title: 'Seu IPVA em São Paulo',
+    text: `Sobre o FIPE de **${fmtBR(valorFipe)}** a alíquota é **${aliquota}%**, gerando um IPVA de **${fmtBR(ipvaAnual)}** no ano. Você pode parcelar em 3x de ${fmtBR(parcela)} ou, nos anos com desconto à vista, pagar **${fmtBR(descontoUnico)}**.`,
+    tone: 'warn',
+    icon: '🚗',
+  };
+
   return {
     aliquota: `${aliquota}%`,
     ipvaAnual: Math.round(ipvaAnual * 100) / 100,
@@ -49,5 +58,6 @@ export function ipvaSaoPaulo(inputs: IpvaSaoPauloInputs): IpvaSaoPauloOutputs {
     descontoUnico: Math.round(descontoUnico * 100) / 100,
     formula,
     explicacion,
+    _insight,
   };
 }

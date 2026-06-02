@@ -1,6 +1,6 @@
 /** Calculadora de Fotos en Tarjeta SD */
 export interface Inputs { capacidadGb: number; megapixeles: number; formato: string; }
-export interface Outputs { fotosTotal: number; tamanoPromedio: number; minutosVideo4k: number; mensaje: string; }
+export interface Outputs { fotosTotal: number; tamanoPromedio: number; minutosVideo4k: number; mensaje: string; _insight?: any; }
 
 const MB_PER_MP: Record<string, number> = {
   jpg_alta: 0.5,
@@ -29,10 +29,19 @@ export function memoriaFotosCapacidad(i: Inputs): Outputs {
   else if (fotosTotal > 300) mensaje = `${fotosTotal} fotos — suficiente para una sesión corta. Considerá una tarjeta más grande para bodas o eventos.`;
   else mensaje = `Solo ${fotosTotal} fotos — muy limitado. Necesitás una tarjeta de mayor capacidad o usar JPG en vez de RAW.`;
 
+  const tone = fotosTotal > 1000 ? 'good' : fotosTotal > 300 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Qué cabe en tu tarjeta',
+    text: `Con **${gb} GB** y fotos de **${mp} MP** (≈**${tamanoPromedio.toFixed(1)} MB** cada una) entran unas **${fotosTotal.toLocaleString('es')} fotos**, o bien **${minutosVideo4k} min** de video 4K. ${fotosTotal > 1000 ? 'Capacidad de sobra para una jornada completa.' : fotosTotal > 300 ? 'Alcanza para una sesión corta; llevá una segunda tarjeta para eventos largos.' : 'Es muy poco: pasá a JPG o conseguí una tarjeta más grande.'}`,
+    tone,
+    icon: '📷',
+  };
+
   return {
     fotosTotal,
     tamanoPromedio: Number(tamanoPromedio.toFixed(1)),
     minutosVideo4k,
     mensaje,
+    _insight,
   };
 }

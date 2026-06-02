@@ -9,6 +9,7 @@ export interface Outputs {
   pingEstimado: number;
   overhead: number;
   diagnostico: string;
+  _insight?: any;
 }
 
 export function pingLatenciaDistancia(i: Inputs): Outputs {
@@ -50,10 +51,51 @@ export function pingLatenciaDistancia(i: Inputs): Outputs {
       : `Para ${km} km, el ping teórico mínimo es ${pingTeorico.toFixed(0)} ms. En la práctica esperá ~${pingEstimado.toFixed(0)} ms.`;
   }
 
+  const pTeo = Number(pingTeorico.toFixed(1));
+  const pEst = Number(pingEstimado.toFixed(0));
+
+  let insTone: 'good' | 'warn' | 'neutral';
+  let insTitle: string;
+  let insText: string;
+  if (pingReal !== null) {
+    const ratio = pingReal / pingTeorico;
+    if (ratio < 2) {
+      insTone = 'good';
+      insTitle = __lang === 'en' ? 'Efficient routing' : 'Ruteo eficiente';
+      insText = __lang === 'en'
+        ? `A real ping of **${pingReal} ms** over ${km} km is close to the theoretical floor of **${pTeo} ms** — your ISP is routing well.`
+        : `Un ping real de **${pingReal} ms** para ${km} km está cerca del piso teórico de **${pTeo} ms** — tu ISP rutea bien.`;
+    } else if (ratio < 3) {
+      insTone = 'neutral';
+      insTitle = __lang === 'en' ? 'Normal overhead' : 'Overhead normal';
+      insText = __lang === 'en'
+        ? `Your **${pingReal} ms** carries **${(pingReal - pingTeorico).toFixed(0)} ms** of overhead over the **${pTeo} ms** minimum — that's expected for ${km} km.`
+        : `Tus **${pingReal} ms** llevan **${(pingReal - pingTeorico).toFixed(0)} ms** de overhead sobre el mínimo de **${pTeo} ms** — es lo esperable para ${km} km.`;
+    } else {
+      insTone = 'warn';
+      insTitle = __lang === 'en' ? 'Ping above expected' : 'Ping por encima de lo esperado';
+      insText = __lang === 'en'
+        ? `Your **${pingReal} ms** is well above the expected **~${pEst} ms** for ${km} km — likely bad ISP routing rather than distance.`
+        : `Tus **${pingReal} ms** están muy por encima de los **~${pEst} ms** esperados para ${km} km — probable mal ruteo del ISP, no la distancia.`;
+    }
+  } else {
+    insTone = 'neutral';
+    insTitle = __lang === 'en' ? 'Distance floor' : 'Piso por distancia';
+    insText = __lang === 'en'
+      ? `Distance alone sets a floor of **${pTeo} ms**; with real-world routing expect around **${pEst} ms** to a server ${km} km away.`
+      : `Solo la distancia fija un piso de **${pTeo} ms**; con el ruteo real esperá cerca de **${pEst} ms** a un servidor a ${km} km.`;
+  }
+
   return {
-    pingTeorico: Number(pingTeorico.toFixed(1)),
-    pingEstimado: Number(pingEstimado.toFixed(0)),
+    pingTeorico: pTeo,
+    pingEstimado: pEst,
     overhead: Number(overhead.toFixed(0)),
     diagnostico,
+    _insight: {
+      title: insTitle,
+      text: insText,
+      tone: insTone,
+      icon: '📡',
+    },
   };
 }

@@ -9,7 +9,7 @@
  * DARF código 4600, vencimento último dia útil do mês seguinte à venda.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | Record<string, any>; }
 
 const fmt = (n: number) => 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
@@ -40,6 +40,30 @@ export function irGanhoCapitalImovel(i: Inputs): Outputs {
   if (isentoUnico) motivoIsencao = 'Único imóvel residencial ≤ R$ 440 mil (Lei 9.250/95, art. 23).';
   else if (isentoRecompra) motivoIsencao = 'Reinvestimento em imóvel residencial em até 180 dias (Lei 11.196/05, art. 39).';
 
+  let _insight;
+  if (ganho <= 0) {
+    _insight = {
+      title: 'Venda sem ganho de capital',
+      text: `O valor de venda não superou o custo de aquisição mais benfeitorias: **não há ganho de capital** e, portanto, nenhum IR a pagar. Ainda assim, informe a operação no programa GCAP.`,
+      tone: 'neutral',
+      icon: '🏡',
+    };
+  } else if (isento) {
+    _insight = {
+      title: 'Ganho isento de imposto',
+      text: `Seu ganho de **${fmt(ganho)}** está **isento** de IR. ${motivoIsencao} Mesmo isento, é obrigatório declarar no GCAP e na DIRPF.`,
+      tone: 'good',
+      icon: '🏡',
+    };
+  } else {
+    _insight = {
+      title: 'IR sobre o ganho de capital',
+      text: `Sobre o ganho de **${fmt(ganho)}** incide a alíquota de **${(aliq * 100).toFixed(1)}%**, gerando **${fmt(impostoDevido)}** de IR (DARF 4600), a pagar até o último dia útil do mês seguinte à venda.`,
+      tone: 'warn',
+      icon: '🏡',
+    };
+  }
+
   return {
     ganhoCapital: fmt(ganho),
     aliquotaAplicada: (aliq * 100).toFixed(1) + '%',
@@ -50,5 +74,6 @@ export function irGanhoCapitalImovel(i: Inputs): Outputs {
     resumo: isento
       ? `Ganho de capital ${fmt(ganho)} ISENTO. ${motivoIsencao} Obrigatório informar no programa Ganhos de Capital (GCAP) e na DIRPF.`
       : `Ganho de capital ${fmt(ganho)} × ${(aliq * 100).toFixed(1)}% = ${fmt(impostoDevido)}. DARF 4600 até o último dia útil do mês seguinte à venda. Informe no GCAP.`,
+    _insight,
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   get: number;
   geb: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function necesidadCaloricaHospitalizado(i: Inputs): Outputs {
@@ -47,9 +48,19 @@ export function necesidadCaloricaHospitalizado(i: Inputs): Outputs {
     `GET: ${Math.round(get)} kcal/día | ` +
     `Proteínas sugeridas: ${proteinasKg} (${Math.round(peso * 1.2)}-${Math.round(peso * 1.5)} g/día).`;
 
+  const getR = Math.round(get);
+  const sobreBasal = Math.round((fa * fe - 1) * 100);
+  const insight = {
+    title: 'Requerimiento calórico estimado',
+    text: `El paciente necesita unas **${getR} kcal/día** (GEB ${Math.round(geb)} kcal + **${sobreBasal}%** por actividad y estrés). Apuntá a **${Math.round(peso * 1.2)}-${Math.round(peso * 1.5)} g/día** de proteína (${proteinasKg.split(' (')[0]}).`,
+    tone: fe >= 1.5 ? 'warn' : 'neutral',
+    icon: '🏥',
+  };
+
   return {
-    get: Math.round(get),
+    get: getR,
     geb: Math.round(geb),
     detalle,
+    _insight: insight,
   };
 }

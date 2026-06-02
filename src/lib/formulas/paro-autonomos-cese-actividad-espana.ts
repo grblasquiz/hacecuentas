@@ -35,6 +35,7 @@ export interface ParoAutonomosOutputs {
   importeTotalBruto: string;
   topeAplicado: string;
   topesInfo: string;
+  _insight?: any;
 }
 
 const fmtEUR = (n: number) =>
@@ -96,6 +97,16 @@ export function paroAutonomosCeseActividadEspana(
 
   const total = importeMensual * meses;
 
+  const topadoArriba = baseCot * 0.7 > maximo;
+  const insight = {
+    title: 'Tu prestación por cese de actividad',
+    text: topadoArriba
+      ? `Cobrarías **${fmtEUR(importeMensual)}/mes** durante **${meses} meses** (**${fmtEUR(total)}** en total). El 70% de tu base supera el tope IPREM, así que la prestación quedó **recortada al máximo legal** de ${fmtEUR(maximo)}/mes.`
+      : `Cobrarías **${fmtEUR(importeMensual)}/mes** durante **${meses} meses**, lo que suma **${fmtEUR(total)}** en total. Recordá estar al corriente de pago de cuotas RETA para no perder el derecho.`,
+    tone: topadoArriba ? 'warn' : 'neutral',
+    icon: topadoArriba ? '✂️' : '🧾',
+  };
+
   return {
     mesesProvision: `${meses} meses`,
     importeMensualBruto: fmtEUR(importeMensual) + '/mes',
@@ -104,5 +115,6 @@ export function paroAutonomosCeseActividadEspana(
       ? `Sí — importe ajustado a los topes IPREM (hijos: ${hijos})`
       : 'No — importe dentro de los topes',
     topesInfo: `Mínimo ${fmtEUR(minimo)}/mes — Máximo ${fmtEUR(maximo)}/mes (IPREM 2026: ${fmtEUR(iprem)}/mes)`,
+    _insight: insight,
   };
 }

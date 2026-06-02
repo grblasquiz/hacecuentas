@@ -10,6 +10,8 @@ export interface Outputs {
   salario_neto: number;
   tasa_efectiva: number;
   beneficio_subsidio: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -96,12 +98,52 @@ export function compute(i: Inputs): Outputs {
     factor = 1 / 4.33;
   }
 
-  return {
-    subsidio_empleo: Math.round((subsidio_empleo_total * factor) * 100) / 100,
-    isr_bruto: Math.round((isr_bruto_total * factor) * 100) / 100,
-    isr_neto: Math.round((isr_neto_total * factor) * 100) / 100,
-    salario_neto: Math.round((salario_neto_total * factor) * 100) / 100,
-    tasa_efectiva: Math.round(tasa_efectiva_pct * 100) / 100,
-    beneficio_subsidio: Math.round((beneficio_subsidio_total * factor) * 100) / 100
+  const subsidioOut = Math.round((subsidio_empleo_total * factor) * 100) / 100;
+  const isrBrutoOut = Math.round((isr_bruto_total * factor) * 100) / 100;
+  const isrNetoOut = Math.round((isr_neto_total * factor) * 100) / 100;
+  const salarioNetoOut = Math.round((salario_neto_total * factor) * 100) / 100;
+  const tasaEfectivaOut = Math.round(tasa_efectiva_pct * 100) / 100;
+  const beneficioOut = Math.round((beneficio_subsidio_total * factor) * 100) / 100;
+
+  const fmtMXN = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const periodoTxt = i.periodo_pago === 'quincenal' ? 'por quincena' : i.periodo_pago === 'semanal' ? 'por semana' : 'al mes';
+  const brutoOut = Math.round((salarioNetoOut + isrNetoOut) * 100) / 100;
+
+  const _insight = {
+    title: isrNetoOut <= 0 ? 'No pagás ISR' : beneficioOut > 0 ? 'El subsidio te baja el ISR' : 'ISR retenido',
+    text: isrNetoOut <= 0
+      ? `Con tu salario, el subsidio al empleo (**${fmtMXN(subsidioOut)}**) cubre todo el ISR: no te retienen impuesto y cobrás **${fmtMXN(salarioNetoOut)}** netos ${periodoTxt}.`
+      : beneficioOut > 0
+      ? `El subsidio al empleo te descuenta **${fmtMXN(beneficioOut)}** del ISR: pagás **${fmtMXN(isrNetoOut)}** netos (en vez de ${fmtMXN(isrBrutoOut)}) y cobrás **${fmtMXN(salarioNetoOut)}** ${periodoTxt}. Tasa efectiva: **${tasaEfectivaOut}%**.`
+      : `Tu salario supera el tope del subsidio, así que retenés el ISR completo de **${fmtMXN(isrNetoOut)}** ${periodoTxt} y cobrás **${fmtMXN(salarioNetoOut)}** netos. Tasa efectiva: **${tasaEfectivaOut}%**.`,
+    tone: isrNetoOut <= 0 || beneficioOut > 0 ? 'good' : 'neutral',
+    icon: '💵',
   };
+
+  const out: Outputs = {
+    subsidio_empleo: subsidioOut,
+    isr_bruto: isrBrutoOut,
+    isr_neto: isrNetoOut,
+    salario_neto: salarioNetoOut,
+    tasa_efectiva: tasaEfectivaOut,
+    beneficio_subsidio: beneficioOut,
+    _insight,
+  };
+
+  // Donut: el salario se reparte entre lo que cobrás neto y el ISR retenido (suman el bruto)
+  if (isrNetoOut > 0 && salarioNetoOut > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Salario neto', value: salarioNetoOut },
+        { label: 'ISR neto', value: isrNetoOut },
+      ],
+      prefix: '$',
+      centerValue: fmtMXN(brutoOut),
+      centerLabel: 'Salario bruto',
+      ariaLabel: 'Reparto del salario bruto entre el neto a cobrar y el ISR retenido',
+    };
+  }
+
+  return out;
 }

@@ -32,6 +32,7 @@ export interface PlusvaliaOutputs {
   percibeEscribano: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 const SELLO_VENDEDOR: Record<Provincia, number> = {
@@ -120,12 +121,32 @@ export function plusvaliaInmueblePba(
         }
       : undefined;
 
+  const totalRed = Math.round(totalTributos);
+  const itiRed = Math.round(iti15Porciento);
+  const sellosRed = Math.round(sellosCompraventa);
+  const pctSobrePrecio = precio > 0 ? (totalTributos / precio) * 100 : 0;
+  let insightText: string;
+  if (tipoVendedor === 'persona-juridica') {
+    insightText = `Como **persona jurídica** no pagás ITI: lo que estimamos son los **sellos provinciales** por **$${sellosRed.toLocaleString('es-AR')}**. La Ganancia (35% sobre la utilidad) la liquida la sociedad aparte con tu contador.`;
+  } else if (exonerado === 'si') {
+    insightText = `Con la **exención del Art. 14** (reemplazo de vivienda única) te ahorrás el ITI, pero igual pagás **$${sellosRed.toLocaleString('es-AR')}** de sellos provinciales. Tramitá el **F. 145 en ARCA** antes de escriturar.`;
+  } else {
+    insightText = `Vas a pagar unos **$${totalRed.toLocaleString('es-AR')}** en tributos (**${pctSobrePrecio.toFixed(1)}%** del precio): **$${itiRed.toLocaleString('es-AR')}** de ITI que retiene el escribano y **$${sellosRed.toLocaleString('es-AR')}** de sellos provinciales.`;
+  }
+  const insight = {
+    title: 'Lo que se lleva la operación',
+    text: insightText,
+    tone: 'warn' as const,
+    icon: '🏠',
+  };
+
   return {
-    iti15Porciento: Math.round(iti15Porciento),
-    sellosCompraventa: Math.round(sellosCompraventa),
-    totalTributos: Math.round(totalTributos),
+    iti15Porciento: itiRed,
+    sellosCompraventa: sellosRed,
+    totalTributos: totalRed,
     percibeEscribano,
     mensaje,
     _chart: chart,
+    _insight: insight,
   };
 }

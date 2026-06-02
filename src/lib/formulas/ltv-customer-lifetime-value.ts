@@ -13,6 +13,8 @@ export interface Outputs {
   payback: number;
   benchmark: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function ltvCustomerLifetimeValue(i: Inputs): Outputs {
@@ -43,12 +45,48 @@ export function ltvCustomerLifetimeValue(i: Inputs): Outputs {
 
   const resumen = `Cada cliente genera ${Math.round(ltvIngresos).toLocaleString()} en ingresos de por vida (${Math.round(ltvMargen).toLocaleString()} de margen).`;
 
-  return {
+  let insightText: string;
+  let tone: 'good' | 'warn' | 'neutral';
+  if (cac <= 0) {
+    insightText = `Cada cliente deja **${Math.round(ltvMargen).toLocaleString()}** de margen a lo largo de su vida (**${Math.round(ltvIngresos).toLocaleString()}** en ingresos). Cargá el CAC para saber si lo recuperás y en cuántos meses.`;
+    tone = 'neutral';
+  } else {
+    insightText = `Con un LTV de margen de **${Math.round(ltvMargen).toLocaleString()}** y un CAC de **${Math.round(cac).toLocaleString()}**, tu ratio LTV/CAC es **${ratio.toFixed(2)}x** y recuperás la inversión en **${payback.toFixed(1)} meses**. ${benchmark}`;
+    tone = ratio >= 3 ? 'good' : ratio >= 2 ? 'neutral' : 'warn';
+  }
+  const _insight = {
+    title: cac > 0 ? 'Tu economía por cliente' : 'Valor por cliente',
+    text: insightText,
+    tone,
+    icon: '💰',
+  };
+
+  const out: Outputs = {
     ltvIngresos: Math.round(ltvIngresos),
     ltvMargen: Math.round(ltvMargen),
     ratio: Number(ratio.toFixed(2)),
     payback: Number(payback.toFixed(1)),
     benchmark,
     resumen,
+    _insight,
   };
+
+  if (cac > 0) {
+    out._chart = {
+      type: 'scale' as const,
+      marker: Math.min(ratio, 6),
+      markerLabel: ratio.toFixed(2) + 'x',
+      min: 0,
+      segments: [
+        { nombre: 'Perdedor', max: 1, color: '#ef4444', colorDark: '#dc2626' },
+        { nombre: 'Marginal', max: 2, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Aceptable', max: 3, color: '#fbbf24', colorDark: '#ca8a04' },
+        { nombre: 'Saludable', max: 5, color: '#84cc16', colorDark: '#65a30d' },
+        { nombre: 'Excelente', max: 6, color: '#22c55e', colorDark: '#16a34a' },
+      ],
+      ariaLabel: `Ratio LTV/CAC de ${ratio.toFixed(2)}x en la escala de salud del negocio, de perdedor a excelente.`,
+    };
+  }
+
+  return out;
 }

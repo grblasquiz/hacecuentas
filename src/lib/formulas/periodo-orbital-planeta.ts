@@ -1,6 +1,6 @@
 /** Calculadora Período Orbital — T² = 4π²a³/(GM) */
 export interface Inputs { semiejeMayor: number; masaCentral: number; __lang?: string; }
-export interface Outputs { periodoS: string; periodoDias: number; periodoAnos: number; formula: string; }
+export interface Outputs { periodoS: string; periodoDias: number; periodoAnos: number; formula: string; _insight?: any; }
 
 export function periodoOrbitalPlaneta(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -19,10 +19,26 @@ export function periodoOrbitalPlaneta(i: Inputs): Outputs {
   else if (T < 365.25 * 86400) periodoStr = __lang === 'en' ? `${dias.toFixed(2)} days` : `${dias.toFixed(2)} días`;
   else periodoStr = __lang === 'en' ? `${anos.toFixed(4)} years (${dias.toFixed(0)} days)` : `${anos.toFixed(4)} años (${dias.toFixed(0)} días)`;
 
+  const compara = anos >= 1
+    ? (__lang === 'en'
+        ? `that's about **${anos.toFixed(2)} Earth years** per orbit`
+        : `equivale a unos **${anos.toFixed(2)} años terrestres** por órbita`)
+    : (__lang === 'en'
+        ? `that's roughly **${dias.toFixed(1)} Earth days** per orbit — shorter than our year`
+        : `equivale a unos **${dias.toFixed(1)} días terrestres** por órbita, más corto que nuestro año`);
+
   return {
     periodoS: periodoStr,
     periodoDias: Number(dias.toFixed(4)),
     periodoAnos: Number(anos.toFixed(6)),
     formula: `T = 2π√(${a.toExponential(3)}³ / (${G.toExponential(3)} × ${M.toExponential(3)})) = ${T.toFixed(0)} s`,
+    _insight: {
+      title: __lang === 'en' ? 'What this orbit means' : 'Qué significa esta órbita',
+      text: __lang === 'en'
+        ? `A full orbit takes **${periodoStr}** by Kepler's third law: ${compara}.`
+        : `Una órbita completa tarda **${periodoStr}** según la tercera ley de Kepler: ${compara}.`,
+      tone: 'neutral',
+      icon: '🪐',
+    },
   };
 }

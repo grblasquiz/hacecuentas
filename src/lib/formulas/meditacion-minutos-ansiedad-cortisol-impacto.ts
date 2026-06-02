@@ -12,6 +12,7 @@ export interface Outputs {
   nivel_evidencia: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Factores por técnica derivados de metaanálisis (Hofmann 2010, Pascoe 2017, Orme-Johnson 2014)
@@ -110,6 +111,26 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: "Escala de dosis acumulada de meditación según evidencia: bajo, moderado, óptimo y meseta.",
   };
 
+  // Insight dinámico según dónde cae la dosis acumulada
+  let insight_tone: "good" | "warn" | "neutral";
+  let insight_text: string;
+  if (dosis_total < 280) {
+    insight_tone = "warn";
+    insight_text = `Con **${dosis_total} min acumulados** todavía estás por debajo del umbral donde la evidencia detecta cambios fiables. La proyección (**~${pct_ansiedad}% en ansiedad**) llega recién al sostener la práctica unas semanas más.`;
+  } else if (dosis_total <= 1400) {
+    insight_tone = "good";
+    insight_text = `Tus **${dosis_total} min acumulados** caen en el rango del protocolo MBSR, el más estudiado: la reducción proyectada de **~${pct_ansiedad}% en ansiedad** y **~${pct_cortisol}% en cortisol** está bien respaldada por metaanálisis.`;
+  } else {
+    insight_tone = "neutral";
+    insight_text = `Ya superaste el protocolo estándar con **${dosis_total} min acumulados**: la mejora proyectada (**~${pct_ansiedad}% en ansiedad**) está cerca de su meseta y el beneficio extra por agregar minutos es pequeño. La clave pasa a ser la **consistencia**.`;
+  }
+  const _insight = {
+    title: "Qué esperar de tu práctica",
+    text: insight_text,
+    tone: insight_tone,
+    icon: "🧘",
+  };
+
   return {
     reduccion_ansiedad: pct_ansiedad,
     reduccion_cortisol: pct_cortisol,
@@ -117,5 +138,6 @@ export function compute(i: Inputs): Outputs {
     nivel_evidencia,
     resumen,
     _chart: chart,
+    _insight,
   };
 }

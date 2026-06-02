@@ -1,6 +1,6 @@
 /** Jardín vertical: plantas por m² */
 export interface Inputs { anchoM: number; altoM: number; sistema?: string; }
-export interface Outputs { plantasTotales: number; plantasPorM2: number; superficieM2: number; consejo: string; }
+export interface Outputs { plantasTotales: number; plantasPorM2: number; superficieM2: number; consejo: string; _insight?: any; }
 
 const DENSIDAD: Record<string, number> = {
   bolsillos: 25, modulos: 16, macetas: 12, palets: 10, tubos: 20,
@@ -22,10 +22,19 @@ export function jardinVerticalPlantasM2(i: Inputs): Outputs {
   const densidad = DENSIDAD[sistema] || 20;
   const total = Math.round(m2 * densidad);
 
+  const sup = Number(m2.toFixed(1));
+  const insight = {
+    title: 'Plantas para tu pared verde',
+    text: `En **${sup} m²** (${ancho} × ${alto} m) con sistema de ${sistema} entran unas **${total} plantas** (${densidad}/m²). Comprá un 10-15% extra para reponer las que no prendan y agrupá por necesidad de riego y luz.`,
+    tone: 'neutral',
+    icon: '🌿',
+  };
+
   return {
     plantasTotales: total,
     plantasPorM2: densidad,
-    superficieM2: Number(m2.toFixed(1)),
+    superficieM2: sup,
     consejo: CONSEJOS[sistema] || 'Elegí plantas de poco peso y raíz superficial.',
+    _insight: insight,
   };
 }

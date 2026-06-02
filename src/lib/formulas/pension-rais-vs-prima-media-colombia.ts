@@ -23,6 +23,7 @@ export interface Outputs {
   requiere_semanas_rpm: number;
   pension_mensual_rpm_inflacion: number;
   rendimiento_total_rais: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -112,6 +113,19 @@ export function compute(i: Inputs): Outputs {
   // Diferencia pensiones (RAIS - RPM)
   const diferencia_mensual = pension_mensual_rais - pension_mensual_rpm;
 
+  // === INSIGHT NARRATIVO ===
+  const fmtCO = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const gana_rais = diferencia_mensual > 0;
+  const diff_abs = Math.abs(Math.round(diferencia_mensual));
+  const _insight = {
+    title: gana_rais ? 'RAIS proyecta más pensión' : 'RPM (Colpensiones) proyecta más pensión',
+    text: gana_rais
+      ? `Con tus supuestos, **RAIS rinde ${fmtCO(pension_mensual_rais)}/mes** contra ${fmtCO(pension_mensual_rpm)} de RPM: **${fmtCO(diff_abs)} más por mes** en la cuenta individual. Ojo: el resultado RAIS depende del rendimiento (${i.rendimiento_anual_esperado}% anual) y no está garantizado.`
+      : `Con tus supuestos, **RPM (Colpensiones) rinde ${fmtCO(pension_mensual_rpm)}/mes** contra ${fmtCO(pension_mensual_rais)} de RAIS: **${fmtCO(diff_abs)} más por mes** con la prima media garantizada por el Estado.`,
+    tone: 'neutral',
+    icon: gana_rais ? '📈' : '🏛️',
+  };
+
   return {
     edad_jubilacion_rais: Math.round(edad_jubilacion_rais * 10) / 10,
     edad_jubilacion_rpm: edad_jubilacion_rpm,
@@ -123,6 +137,7 @@ export function compute(i: Inputs): Outputs {
     ventana_traslado_activa: ventana_traslado_activa,
     requiere_semanas_rpm: semanas_faltantes,
     pension_mensual_rpm_inflacion: Math.round(pension_mensual_rpm_inflacion),
-    rendimiento_total_rais: Math.round(rendimiento_total_rais)
+    rendimiento_total_rais: Math.round(rendimiento_total_rais),
+    _insight
   };
 }

@@ -13,6 +13,8 @@ export interface Outputs {
   fecha_fin_licencia: string;
   dias_pagados: number;
   diferencia_sdi_vs_limite: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -71,14 +73,59 @@ export function compute(i: Inputs): Outputs {
   // 6. Días pagados
   const dias_pagados = cumple_requisito ? DIAS_LICENCIA : 0;
   
+  const subsidioR = Math.round(subsidio_total_maternidad * 100) / 100;
+  const diferenciaR = Math.round(diferencia_sdi_vs_limite * 100) / 100;
+  const excedeLimite = i.salario_diario_integrado > LIMITE_UMA;
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+
+  let _insight: any;
+  let _chart: any;
+  if (!cumple_requisito) {
+    _insight = {
+      title: 'No cumplís el requisito IMSS',
+      text: `Con **${i.semanas_cotizadas} semanas** cotizadas no llegás a las **${SEMANAS_MINIMAS}** que pide el IMSS en los últimos 12 meses, así que no hay subsidio en dinero. Conservás el derecho a las 12 semanas de licencia, pero el pago quedaría a cargo del patrón (Art. 170 LFT) o sin cobertura.`,
+      tone: 'warn',
+      icon: '🤰',
+    };
+  } else if (excedeLimite) {
+    const cubiertoTotal = salario_diario_pagado * DIAS_LICENCIA;
+    const baseTotal = cubiertoTotal + diferenciaR;
+    _insight = {
+      title: 'Tu salario supera el tope IMSS',
+      text: `El IMSS paga hasta **25 UMA** (${fmt(LIMITE_UMA)}/día), así que cobrás **${fmt(subsidioR)}** por las 12 semanas y quedan **${fmt(diferenciaR)}** sin cubrir respecto de tu SDI real. Esa diferencia la asume el patrón sólo si lo pactaron por contrato.`,
+      tone: 'warn',
+      icon: '🤰',
+    };
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Paga el IMSS', value: Math.round(cubiertoTotal) },
+        { label: 'No cubierto', value: Math.round(diferenciaR) },
+      ],
+      prefix: '$',
+      centerValue: fmt(baseTotal),
+      centerLabel: 'Salario 84 días',
+      ariaLabel: `Sobre tu salario de ${fmt(baseTotal)} en 84 días, el IMSS cubre ${fmt(cubiertoTotal)} y quedan ${fmt(diferenciaR)} sin cubrir`,
+    };
+  } else {
+    _insight = {
+      title: 'Subsidio IMSS al 100%',
+      text: `Cumplís las ${SEMANAS_MINIMAS} semanas requeridas y tu SDI está dentro del tope: el IMSS te paga el **100%**, **${fmt(salario_diario_pagado)}/día** durante ${DIAS_LICENCIA} días (6 antes + 6 después del parto), **${fmt(subsidioR)}** en total.`,
+      tone: 'good',
+      icon: '🤰',
+    };
+  }
+
   return {
     cumple_requisito,
     uma_diaria_2026: UMA_DIARIA_2026,
     salario_diario_pagado,
-    subsidio_total_maternidad: Math.round(subsidio_total_maternidad * 100) / 100,
+    subsidio_total_maternidad: subsidioR,
     fecha_inicio_licencia,
     fecha_fin_licencia,
     dias_pagados,
-    diferencia_sdi_vs_limite: Math.round(diferencia_sdi_vs_limite * 100) / 100
+    diferencia_sdi_vs_limite: diferenciaR,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  cantidadBotones: string; distanciaEntre: string; tamanoOjal: string; posiciones: string;
+  cantidadBotones: string; distanciaEntre: string; tamanoOjal: string; posiciones: string; _insight?: any;
 }
 
 export function ojalesDistanciaBotonesCamisa(inputs: Inputs): Outputs {
@@ -32,5 +32,11 @@ export function ojalesDistanciaBotonesCamisa(inputs: Inputs): Outputs {
     distanciaEntre: `${distReal.toFixed(2)} cm`,
     tamanoOjal: `${ojal.toFixed(1)} mm`,
     posiciones: posiciones.map(p => `${p}cm`).join(' · '),
+    _insight: {
+      title: 'Distribución de botones',
+      text: `Para una abertura útil de **${utilCm.toFixed(1)} cm** te entran **${cant} botones** separados cada **${distReal.toFixed(2)} cm**. El ojal mide **${ojal.toFixed(1)} mm** (botón de ${tb} mm + 2,5 mm de holgura para que pase sin forzar).`,
+      tone: 'neutral' as const,
+      icon: '🧵',
+    },
   };
 }

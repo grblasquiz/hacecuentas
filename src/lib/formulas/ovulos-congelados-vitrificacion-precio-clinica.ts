@@ -1,6 +1,6 @@
 /** Costo total vitrificación de óvulos en Argentina (estimulación + extracción + storage) */
 export interface Inputs { costoEstimulacion: number; costoMedicacionHormonal: number; costoExtraccionVitrificacion: number; storageAnual: number; aniosStorage: number; }
-export interface Outputs { costoCicloUnico: number; costoStorageTotal: number; costoTotal: number; costoMensualizadoPrimerAnio: number; explicacion: string; _chart?: any; }
+export interface Outputs { costoCicloUnico: number; costoStorageTotal: number; costoTotal: number; costoMensualizadoPrimerAnio: number; explicacion: string; _chart?: any; _insight?: any; }
 export function ovulosCongeladosVitrificacionPrecioClinica(i: Inputs): Outputs {
   const est = Number(i.costoEstimulacion) || 0;
   const med = Number(i.costoMedicacionHormonal) || 0;
@@ -24,6 +24,16 @@ export function ovulosCongeladosVitrificacionPrecioClinica(i: Inputs): Outputs {
     centerLabel: 'Total',
     ariaLabel: 'Composición del costo de vitrificación: ciclo de estimulación más storage.',
   };
+  const pctStorage = total > 0 ? (storageTotal / total) * 100 : 0;
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Qué pesa más en el total',
+    text: pctStorage >= 30
+      ? `El procedimiento en sí cuesta **${fmt(ciclo)}**, pero el storage por ${anios} año(s) suma **${fmt(storageTotal)}** — ya es el **${pctStorage.toFixed(0)}%** del total de **${fmt(total)}**. El alquiler del tanque es un costo recurrente que se acumula año a año: conviene preguntar si hay tarifa prepaga por bloque de años.`
+      : `Casi todo el costo es el ciclo único: **${fmt(ciclo)}** de ${fmt(total)}. El storage por ${anios} año(s) pesa solo **${pctStorage.toFixed(0)}%** (${fmt(storageTotal)}). Mensualizado en el primer año son **${fmt(mensual)}** por mes.`,
+    tone: pctStorage >= 30 ? 'warn' : 'neutral',
+    icon: '🧊',
+  };
   return {
     costoCicloUnico: Number(ciclo.toFixed(2)),
     costoStorageTotal: Number(storageTotal.toFixed(2)),
@@ -31,5 +41,6 @@ export function ovulosCongeladosVitrificacionPrecioClinica(i: Inputs): Outputs {
     costoMensualizadoPrimerAnio: Number(mensual.toFixed(2)),
     explicacion: `Vitrificación: ${ciclo.toFixed(0)} (ciclo + medicación + extracción) + ${storageTotal.toFixed(0)} de storage por ${anios} año(s) = total ${total.toFixed(0)}. Mensualizado en el primer año: ${mensual.toFixed(0)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

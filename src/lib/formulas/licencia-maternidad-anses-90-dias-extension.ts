@@ -13,6 +13,8 @@ export interface Outputs {
   aplicaTope: string;
   detalleExtension: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -65,6 +67,12 @@ export function compute(i: Inputs): Outputs {
         `AUH por Embarazo: $${cobro80.toLocaleString("es-AR")} /mes (80% mensual) + $${cobro20acumulado.toLocaleString("es-AR")} al presentar certificado de parto. ` +
         `Máximo ${maxMesesAUH} liquidaciones = $${totalAUH.toLocaleString("es-AR")} total. ` +
         `Días totales de licencia considerados: ${diasTotalesLicencia}.`,
+      _insight: {
+        title: 'AUH por Embarazo',
+        text: `Sin empleo formal cobrás la **AUH por Embarazo**: **$${Math.round(cobro80).toLocaleString("es-AR")}/mes** (el 80%) durante hasta ${maxMesesAUH} meses, más **$${Math.round(cobro20acumulado * maxMesesAUH).toLocaleString("es-AR")}** retenidos que se liberan al presentar el certificado de parto. En total son unos **$${Math.round(totalAUH).toLocaleString("es-AR")}**.`,
+        tone: 'neutral',
+        icon: '🤰',
+      },
     };
   }
 
@@ -105,6 +113,36 @@ export function compute(i: Inputs): Outputs {
     ` Distribución: ${distribucionTexto}.` +
     (diasSinGoce > 0 ? ` Más ${diasSinGoce} días sin goce de haberes.` : "");
 
+  let _insight: any;
+  let _chart: any;
+  if (superaTope) {
+    const pctCubierto = Math.round((TOPE_RIPTE_2026 / sueldoBruto) * 100);
+    _insight = {
+      title: 'Tu sueldo supera el tope ANSES',
+      text: `ANSES paga hasta el tope RIPTE de **$${TOPE_RIPTE_2026.toLocaleString("es-AR")}/mes**, así que cobrás el **${pctCubierto}%** de tu sueldo y quedan **$${diferenciaMensual.toLocaleString("es-AR")}/mes** sin cubrir. En los ${diasRemunerados} días de licencia vas a percibir unos **$${Math.round(totalCobrado90dias).toLocaleString("es-AR")}**.`,
+      tone: 'warn',
+      icon: '🤰',
+    };
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Cubierto por ANSES', value: TOPE_RIPTE_2026 },
+        { label: 'No cubierto', value: diferenciaMensual },
+      ],
+      prefix: '$',
+      centerValue: '$' + sueldoBruto.toLocaleString("es-AR"),
+      centerLabel: 'Sueldo mensual',
+      ariaLabel: `De tu sueldo de $${sueldoBruto.toLocaleString("es-AR")}, ANSES cubre $${TOPE_RIPTE_2026.toLocaleString("es-AR")} y quedan $${diferenciaMensual.toLocaleString("es-AR")} sin cubrir`,
+    };
+  } else {
+    _insight = {
+      title: 'ANSES cubre el 100%',
+      text: `Tu sueldo está dentro del tope RIPTE, así que ANSES te paga el **100%**: **$${asignacionMensual.toLocaleString("es-AR")}/mes** durante los ${diasRemunerados} días de licencia, unos **$${Math.round(totalCobrado90dias).toLocaleString("es-AR")}** en total.${diasSinGoce > 0 ? ` Después tenés ${diasSinGoce} días de excedencia sin goce de haberes.` : ''}`,
+      tone: 'good',
+      icon: '🤰',
+    };
+  }
+
   return {
     asignacionMensual,
     totalCobrado90dias,
@@ -112,5 +150,7 @@ export function compute(i: Inputs): Outputs {
     aplicaTope: aplicaTopeTexto,
     detalleExtension: textoExtension,
     resumen,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

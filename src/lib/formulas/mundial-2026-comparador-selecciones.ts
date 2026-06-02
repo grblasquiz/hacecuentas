@@ -3,7 +3,7 @@ export interface Inputs {
   seleccion1: string; ranking1: number; titulos1: number; golesProm1: number;
   seleccion2: string; ranking2: number; titulos2: number; golesProm2: number;
 }
-export interface Outputs { score1: string; score2: string; ganador: string; resumen: string; }
+export interface Outputs { score1: string; score2: string; ganador: string; resumen: string; _insight?: any; }
 
 function scoreSeleccion(ranking: number, titulos: number, golesProm: number): number {
   // Ranking: puesto 1 = 100 pts, se degrada linealmente hasta puesto 100 = 0
@@ -29,10 +29,26 @@ export function mundial2026ComparadorSelecciones(i: Inputs): Outputs {
   if (diff < 3) ganador = `Paridad: ${s1} y ${s2} llegan parejas.`;
   else if (sc1 > sc2) ganador = `${s1} es favorita según los datos.`;
   else ganador = `${s2} es favorita según los datos.`;
+
+  const favorita = sc1 >= sc2 ? s1 : s2;
+  let insightTone: string; let insightText: string;
+  if (diff < 3) {
+    insightTone = 'neutral';
+    insightText = `**${s1}** (${sc1.toFixed(1)}) y **${s2}** (${sc2.toFixed(1)}) quedan a apenas **${diff.toFixed(1)} puntos**: en los papeles es un partido parejo y lo define cualquier detalle.`;
+  } else if (diff < 12) {
+    insightTone = 'neutral';
+    insightText = `**${favorita}** saca **${diff.toFixed(1)} puntos** de ventaja: es favorita, pero la diferencia es chica y un mal día la empareja.`;
+  } else {
+    insightTone = 'good';
+    insightText = `**${favorita}** domina con **${diff.toFixed(1)} puntos** de diferencia sobre 100: favorita clara según ranking, títulos y goles.`;
+  }
+  const _insight = { title: 'Quién llega mejor', text: insightText, tone: insightTone, icon: '🏆' };
+
   return {
     score1: `${s1}: ${sc1.toFixed(1)} / 100`,
     score2: `${s2}: ${sc2.toFixed(1)} / 100`,
     ganador,
     resumen: `Diferencia de score: ${diff.toFixed(1)} puntos. Ranking (40%) + Títulos (40%) + Goles (20%).`,
+    _insight,
   };
 }

@@ -9,6 +9,7 @@ export interface MorteroJuntasOutputs {
   arenaM3: number;
   aguaLitros: number;
   detalle: string;
+  _insight?: any;
 }
 
 const TIPOS: Record<string, { nombre: string; morteroM3PorM2: number }> = {
@@ -48,5 +49,11 @@ export function morteroJuntas(inputs: MorteroJuntasInputs): MorteroJuntasOutputs
     arenaM3,
     aguaLitros,
     detalle: `${fmt.format(superficie)} m² de ${t.nombre} con junta de ${fmt.format(espesor)} cm → ${fmt.format(morteroM3)} m³ de mortero = ${fmt.format(cementoKg)} kg cemento (${bolsas} bolsas de 50 kg) + ${fmt.format(arenaM3)} m³ arena + ${fmt.format(aguaLitros)} L agua.`,
+    _insight: {
+      title: 'Lo que tenés que comprar',
+      text: `Para los **${fmt.format(superficie)} m²** de ${t.nombre} con junta de ${fmt.format(espesor)} cm necesitás **${bolsas} bolsas** de cemento de 50 kg (${fmt.format(cementoKg)} kg) y **${fmt.format(arenaM3)} m³** de arena, en proporción 1:3. Comprá una bolsa de más por desperdicio y para tener margen.`,
+      tone: 'neutral',
+      icon: '🧱',
+    },
   };
 }

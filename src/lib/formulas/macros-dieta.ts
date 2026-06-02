@@ -16,6 +16,8 @@ export interface Outputs {
   carbosCal: number;
   grasasCal: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function macrosDieta(i: Inputs): Outputs {
@@ -69,14 +71,57 @@ export function macrosDieta(i: Inputs): Outputs {
   const carbosG = carbosCal / 4;
   const grasasG = grasasCal / 9;
 
+  const calRound = Math.round(calorias);
+  const protGRound = Math.round(proteinasG);
+  const carbGRound = Math.round(carbosG);
+  const grasaGRound = Math.round(grasasG);
+  const protKcalRound = Math.round(proteinasCal);
+  const carbKcalRound = Math.round(carbosCal);
+  const grasaKcalRound = Math.round(grasasCal);
+  const tdeeRound = Math.round(tdee);
+  const diff = calRound - tdeeRound;
+
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (objetivo === 'perder') {
+    insightText = `Para bajar de peso comés **${calRound} kcal/día**, unas ${Math.abs(diff)} kcal por debajo de tu gasto (${tdeeRound}). La proteína sube a **${protGRound}g** para proteger músculo durante el déficit.`;
+    insightTone = 'good';
+  } else if (objetivo === 'ganar') {
+    insightText = `Para ganar masa comés **${calRound} kcal/día**, unas ${Math.abs(diff)} kcal por encima de tu gasto (${tdeeRound}). Apuntá a **${protGRound}g de proteína** y **${carbGRound}g de carbos** para alimentar el entrenamiento.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Para mantenerte comés **${calRound} kcal/día**, igualando tu gasto estimado. El reparto queda en **${protGRound}g proteína**, ${carbGRound}g carbos y ${grasaGRound}g grasa.`;
+    insightTone = 'neutral';
+  }
+  const _insight = {
+    title: 'Tu objetivo en números',
+    text: insightText,
+    tone: insightTone,
+    icon: '🍽️',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Carbos', value: carbKcalRound },
+      { label: 'Proteínas', value: protKcalRound },
+      { label: 'Grasas', value: grasaKcalRound },
+    ],
+    prefix: '',
+    centerValue: `${calRound} kcal`,
+    centerLabel: 'por día',
+    ariaLabel: `Reparto de calorías diarias: ${carbGRound}g carbos, ${protGRound}g proteínas y ${grasaGRound}g grasas, total ${calRound} kcal`,
+  };
+
   return {
-    caloriasTotal: Math.round(calorias),
-    proteinasG: Math.round(proteinasG),
-    carbosG: Math.round(carbosG),
-    grasasG: Math.round(grasasG),
-    proteinasCal: Math.round(proteinasCal),
-    carbosCal: Math.round(carbosCal),
-    grasasCal: Math.round(grasasCal),
-    mensaje: `${Math.round(calorias)} kcal/día: ${Math.round(proteinasG)}g proteínas, ${Math.round(carbosG)}g carbos, ${Math.round(grasasG)}g grasas.`,
+    caloriasTotal: calRound,
+    proteinasG: protGRound,
+    carbosG: carbGRound,
+    grasasG: grasaGRound,
+    proteinasCal: protKcalRound,
+    carbosCal: carbKcalRound,
+    grasasCal: grasaKcalRound,
+    mensaje: `${calRound} kcal/día: ${protGRound}g proteínas, ${carbGRound}g carbos, ${grasaGRound}g grasas.`,
+    _insight,
+    _chart,
   };
 }

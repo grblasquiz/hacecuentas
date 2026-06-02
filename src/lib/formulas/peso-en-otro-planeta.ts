@@ -1,6 +1,6 @@
 /** Calculadora Peso en Otro Planeta */
 export interface Inputs { pesoTierra: number; __lang?: string; }
-export interface Outputs { resultado: string; pesoLuna: number; pesoMarte: number; pesoJupiter: number; pesoTodos: string; }
+export interface Outputs { resultado: string; pesoLuna: number; pesoMarte: number; pesoJupiter: number; pesoTodos: string; _insight?: any; }
 
 export function pesoEnOtroPlaneta(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -8,9 +8,15 @@ export function pesoEnOtroPlaneta(i: Inputs): Outputs {
   const T = ({
     es: {
       errorPeso: 'El peso debe ser mayor a 0',
+      insightTitle: 'La gravedad cambia todo',
+      insightText: (luna: number, jup: number, peso: number) =>
+        `En la **Luna** pesarías apenas **${luna} kg** (casi 6 veces menos que en la Tierra), pero en **Júpiter** la gravedad te aplastaría hasta los **${jup} kg**. Tu masa sigue siendo la misma: lo que cambia es la fuerza con que cada astro tira de vos.`,
     },
     en: {
       errorPeso: 'Weight must be greater than 0',
+      insightTitle: 'Gravity changes everything',
+      insightText: (luna: number, jup: number, peso: number) =>
+        `On the **Moon** you'd weigh just **${luna} kg** (almost 6 times less than on Earth), but on **Jupiter** gravity would crush you up to **${jup} kg**. Your mass stays the same: what changes is how hard each body pulls on you.`,
     },
   } as const)[__lang];
 
@@ -48,5 +54,11 @@ export function pesoEnOtroPlaneta(i: Inputs): Outputs {
     pesoMarte: marte,
     pesoJupiter: jupiter,
     pesoTodos: todos,
+    _insight: {
+      title: T.insightTitle,
+      text: T.insightText(luna, jupiter, peso),
+      tone: 'neutral',
+      icon: '🪐',
+    },
   };
 }

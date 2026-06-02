@@ -15,6 +15,7 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
 }
 
 const RAZA = {
@@ -55,11 +56,29 @@ export function pesoIdealRottweiler(inputs: Inputs): Outputs {
 
   const promedio = (min + max) / 2;
 
+  const sexoTxt = sexo === 'macho' ? 'Un macho' : 'Una hembra';
+  let insightText: string;
+  let insightTone = 'neutral';
+  if (edad === 'cachorro') {
+    insightText = `Todavía en crecimiento: el Rottweiler completa su desarrollo recién a los 18-24 meses. ${sexoTxt} ${contextura} debería estabilizarse entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** de adulto. En razas grandes, un crecimiento lento y controlado protege las articulaciones.`;
+  } else if (edad === 'senior') {
+    insightText = `${sexoTxt} senior suele perder masa muscular: un rango de **${min.toFixed(1)}-${max.toFixed(1)} kg** es esperable. Por su esperanza de vida acotada (~${RAZA.esperanza} años), los controles cardíacos y de peso son clave en esta etapa.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `${sexoTxt} ${contextura} en su punto debería pesar entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). Es una raza pesada propensa a displasia: cada kilo de más sobre ese rango recarga caderas y corazón.`;
+  }
+
   return {
     pesoPromedio: Number(promedio.toFixed(1)),
     pesoIdealMin: Number(min.toFixed(1)),
     pesoIdealMax: Number(max.toFixed(1)),
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight: {
+      title: 'Qué significa este rango',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐕',
+    },
   };
 }

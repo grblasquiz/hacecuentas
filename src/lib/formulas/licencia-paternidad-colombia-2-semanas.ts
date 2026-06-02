@@ -17,6 +17,7 @@ export interface Outputs {
   comparativa_oecd: string;
   elegibilidad: string;
   aviso_reforma: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -88,6 +89,21 @@ export function compute(i: Inputs): Outputs {
   // Aviso reforma 2026
   const aviso_reforma = 'ℹ️ En tramite legislativo: Proyecto de Ley ampliar a 4 semanas (28 días). Estado: Discusión Congreso. Plazo estimado: 2026-2027.';
 
+  // Insight: dinámico según elegibilidad y días adicionales negociados
+  const montoFmt = '$' + subsidio_total_con_adicionales.toLocaleString('es-CO') + ' COP';
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (!i.es_trabajador_formal) {
+    insightText = 'La licencia de paternidad remunerada solo cubre a **trabajadores formales** con contrato y EPS activa. Sin afiliación vigente la EPS no paga el subsidio.';
+    insightTone = 'warn';
+  } else if (i.dias_adicionales_negociados > 0) {
+    insightText = `Como trabajador formal cobrás **${montoFmt}** por los ${dias_licencia_total} días (14 de ley + ${i.dias_adicionales_negociados} negociados), pagados al 100% por tu **EPS**.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Te corresponden **14 días** de licencia pagados al 100% por tu **EPS**: en total **${montoFmt}**. Es apenas 2 semanas, lejos del promedio OCDE de 11 semanas.`;
+    insightTone = 'good';
+  }
+
   return {
     dias_licencia_legal: DIAS_LICENCIA_LEGAL,
     dias_licencia_total: dias_licencia_total,
@@ -99,6 +115,12 @@ export function compute(i: Inputs): Outputs {
     fecha_fin_total: formatDate(fecha_fin_total_calc),
     comparativa_oecd: comparativa,
     elegibilidad: mensaje_elegibilidad,
-    aviso_reforma: aviso_reforma
+    aviso_reforma: aviso_reforma,
+    _insight: {
+      title: 'Tu licencia de paternidad',
+      text: insightText,
+      tone: insightTone,
+      icon: '👨‍🍼',
+    }
   };
 }

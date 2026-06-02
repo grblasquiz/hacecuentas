@@ -6,6 +6,7 @@ export interface Outputs {
   total: number;
   alicuotaAplicada: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function precioIva(i: Inputs): Outputs {
@@ -34,6 +35,12 @@ export function precioIva(i: Inputs): Outputs {
       total: Math.round(monto + iva),
       alicuotaAplicada: Number((alic * 100).toFixed(2)),
       _chart: chartA,
+      _insight: {
+        title: 'Cuánto se lleva el IVA',
+        text: `Sobre un neto de **$${Math.round(monto).toLocaleString('es-AR')}**, el IVA suma **$${Math.round(iva).toLocaleString('es-AR')}** y el precio final con impuesto queda en **$${Math.round(monto + iva).toLocaleString('es-AR')}**. Ese IVA no es tuyo: lo cobrás pero se lo debés a la AFIP.`,
+        tone: 'warn' as const,
+        icon: '🧾',
+      },
     };
   }
   // discriminar: el monto es total (con IVA) — sacamos el neto y el IVA
@@ -56,5 +63,11 @@ export function precioIva(i: Inputs): Outputs {
     total: Math.round(monto),
     alicuotaAplicada: Number((alic * 100).toFixed(2)),
     _chart: chartD,
+    _insight: {
+      title: 'Cuánto de este precio es IVA',
+      text: `De los **$${Math.round(monto).toLocaleString('es-AR')}** que pagás, **$${Math.round(iva).toLocaleString('es-AR')}** son IVA y solo **$${Math.round(neto).toLocaleString('es-AR')}** corresponden al producto. Si sos responsable inscripto, ese IVA es crédito fiscal que podés computar.`,
+      tone: 'neutral' as const,
+      icon: '🧾',
+    },
   };
 }

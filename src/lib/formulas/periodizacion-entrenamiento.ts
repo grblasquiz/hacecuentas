@@ -11,6 +11,7 @@ export interface Outputs {
   intensidadSemana1: string;
   deloadSemana: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function periodizacionEntrenamiento(i: Inputs): Outputs {
@@ -68,12 +69,21 @@ export function periodizacionEntrenamiento(i: Inputs): Outputs {
   // Titular corto: resumen del mesociclo (el plan semana a semana queda en "planDetalle")
   const planResumen = `${semanas} sem · ${trainingWeeks} de trabajo + deload`;
 
+  const seriesDeload = Math.round(seriesBase * 0.6);
+  const tipoLabel = tipo === 'lineal' ? 'lineal' : tipo === 'ondulante' ? 'ondulante (DUP)' : 'por bloques';
+
   return {
     plan: planResumen,
     planDetalle: plan,
     seriesSemana1,
     intensidadSemana1,
     deloadSemana: `Semana ${semanas}: -40% volumen, -20% intensidad`,
-    mensaje: `Mesociclo de ${semanas} semanas (${tipo}). ${trainingWeeks} semanas de trabajo + 1 deload.`
+    mensaje: `Mesociclo de ${semanas} semanas (${tipo}). ${trainingWeeks} semanas de trabajo + 1 deload.`,
+    _insight: {
+      title: 'Cómo leer tu mesociclo',
+      text: `Arrancás con **${seriesSemana1} series** y subís el volumen ${trainingWeeks} semanas (esquema **${tipoLabel}**). La semana ${semanas} es **deload**: bajás a **${seriesDeload} series** para recuperar antes del próximo bloque.`,
+      tone: 'neutral',
+      icon: '🏋️',
+    }
   };
 }

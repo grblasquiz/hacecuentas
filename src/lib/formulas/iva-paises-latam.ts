@@ -17,6 +17,8 @@ export interface IvaPaisesLatamOutputs {
   formula: string;
   explicacion: string;
   moneda: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface PaisIvaInfo {
@@ -96,13 +98,47 @@ export function ivaPaisesLatam(inputs: IvaPaisesLatamInputs): IvaPaisesLatamOutp
     explicacion = `Al precio de $${monto.toLocaleString('es')} en ${paisCapitalized} se le agrega ${alicuota}% de ${nombreImpuesto}: $${Math.round(ivaAmount).toLocaleString('es')}. El precio final con impuesto es $${Math.round(montoConIva).toLocaleString('es')}.`;
   }
 
+  const conIvaR = Math.round(montoConIva * 100) / 100;
+  const sinIvaR = Math.round(montoSinIva * 100) / 100;
+  const ivaR = Math.round(ivaAmount * 100) / 100;
+  const pctSobreTotal = conIvaR > 0 ? Math.round((ivaR / conIvaR) * 1000) / 10 : 0;
+  const esDiscriminar = modo === 'discriminar iva' || modo === 'discriminar';
+
+  const insight = esDiscriminar
+    ? {
+        title: `${nombreImpuesto} incluido en el precio`,
+        text: `De los $${conIvaR.toLocaleString('es')} que pagás en ${paisCapitalized}, **$${ivaR.toLocaleString('es')} son ${nombreImpuesto}** (${alicuota}%) y solo **$${sinIvaR.toLocaleString('es')} es el precio neto**. El impuesto representa el **${pctSobreTotal}%** del total.`,
+        tone: 'neutral',
+        icon: '🧾',
+      }
+    : {
+        title: `Precio final con ${nombreImpuesto}`,
+        text: `Sobre el neto de $${sinIvaR.toLocaleString('es')} se suman **$${ivaR.toLocaleString('es')} de ${nombreImpuesto}** (${alicuota}% en ${paisCapitalized}), quedando un precio final de **$${conIvaR.toLocaleString('es')}**. El impuesto es el **${pctSobreTotal}%** de lo que cobrás.`,
+        tone: 'neutral',
+        icon: '💵',
+      };
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Precio neto', value: sinIvaR },
+      { label: nombreImpuesto + ' ' + alicuota + '%', value: ivaR },
+    ],
+    prefix: '$',
+    centerValue: '$' + conIvaR.toLocaleString('es'),
+    centerLabel: 'Precio con ' + nombreImpuesto,
+    ariaLabel: `Composición del precio final en ${paisCapitalized}: precio neto más ${nombreImpuesto}`,
+  };
+
   return {
-    montoConIva: Math.round(montoConIva * 100) / 100,
-    montoSinIva: Math.round(montoSinIva * 100) / 100,
-    ivaAmount: Math.round(ivaAmount * 100) / 100,
+    montoConIva: conIvaR,
+    montoSinIva: sinIvaR,
+    ivaAmount: ivaR,
     alicuota,
     formula,
     explicacion,
     moneda,
+    _insight: insight,
+    _chart: chart,
   };
 }

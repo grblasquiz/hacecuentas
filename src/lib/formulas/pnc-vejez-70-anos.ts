@@ -36,6 +36,7 @@ export interface PncVejez70AnosOutputs {
     jubilacionComun: { elegible: boolean; importe: number };
   };
   porcentajeHaberMinimo: number;
+  _insight?: any;
 }
 
 function toBool(v: boolean | string): boolean {
@@ -142,6 +143,21 @@ export function pncVejez70Anos(inputs: PncVejez70AnosInputs): PncVejez70AnosOutp
 
   const porcentajeHaberMinimo = haberMinimo > 0 ? Math.round((importeEstimado / haberMinimo) * 100) : 0;
 
+  const importeEstimadoRed = Math.round(importeEstimado);
+  const insight = importeEstimadoRed > 0
+    ? {
+        title: 'Tu mejor opción hoy',
+        text: `Te conviene tramitar **${beneficioRecomendado}**: cobrarías unos **$${importeEstimadoRed.toLocaleString('es-AR')}** por mes (**${porcentajeHaberMinimo}%** del haber mínimo). Se gestiona en ANSES con turno previo.`,
+        tone: 'good' as const,
+        icon: '👴',
+      }
+    : {
+        title: 'Todavía no alcanzás la edad',
+        text: `Con **${edad} años** aún no calificás: faltan **${Math.max(0, 65 - edad)}** para la PUAM (65) y **${Math.max(0, 70 - edad)}** para la PNC por vejez (70). Mientras tanto, regularizá aportes (moratoria 27.705) para apuntar a una jubilación ordinaria con mejor haber.`,
+        tone: 'warn' as const,
+        icon: '👴',
+      };
+
   return {
     beneficioRecomendado,
     importeEstimado: Math.round(importeEstimado),
@@ -165,5 +181,6 @@ export function pncVejez70Anos(inputs: PncVejez70AnosInputs): PncVejez70AnosOutp
       },
     },
     porcentajeHaberMinimo,
+    _insight: insight,
   };
 }

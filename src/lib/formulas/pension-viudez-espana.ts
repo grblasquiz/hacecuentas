@@ -28,6 +28,8 @@ export interface PensionViudezEsOutputs {
   tipoPorcentaje: string;
   pensionAnualBruta14Pagas: string;
   observaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmtEUR = (n: number) =>
@@ -81,11 +83,47 @@ export function pensionViudezEspana(i: PensionViudezEsInputs): PensionViudezEsOu
       'Se aplica la regla general del 52%. Para subir al 70% necesitás acreditar cargas familiares e ingresos anuales ≤ 1,75 × SMI.';
   }
 
+  const pctNum = Math.round(porcentaje * 100);
+
+  // --- Insight narrativo ---
+  const _insight = {
+    title:
+      porcentaje === 0.7
+        ? 'Pensión mejorada al 70%'
+        : porcentaje === 0.6
+        ? 'Pensión del 60% por edad'
+        : 'Regla general del 52%',
+    text:
+      porcentaje === 0.7
+        ? `Por cargas familiares e ingresos bajos cobrás el **70% de la base reguladora**: **${fmtEUR(pensionMensual)}/mes** (${fmtEUR(anual14)}/año en 14 pagas). Es el porcentaje máximo; se revisa anualmente.`
+        : porcentaje === 0.6
+        ? `Por tener 65+ años e ingresos limitados subís al **60% de la base**: **${fmtEUR(pensionMensual)}/mes** (${fmtEUR(anual14)}/año en 14 pagas).`
+        : `Se aplica el **52% de la base reguladora**: **${fmtEUR(pensionMensual)}/mes** (${fmtEUR(anual14)}/año en 14 pagas). Acreditando cargas familiares e ingresos ≤ 1,75×SMI podrías llegar al 70%.`,
+    tone: porcentaje === 0.7 ? 'good' : porcentaje === 0.6 ? 'neutral' : 'warn',
+    icon: '🕊️',
+  };
+
+  // --- Gráfico: porcentaje aplicado dentro de las franjas legales ---
+  const _chart = {
+    type: 'scale',
+    marker: pctNum,
+    markerLabel: pctNum + '%',
+    min: 0,
+    segments: [
+      { nombre: 'General 52%', max: 52, color: '#fca5a5', colorDark: '#b91c1c' },
+      { nombre: '60% (edad ≥ 65)', max: 60, color: '#fcd34d', colorDark: '#b45309' },
+      { nombre: 'Mejorada 70%', max: 100, color: '#86efac', colorDark: '#15803d' },
+    ],
+    ariaLabel: `Porcentaje aplicado sobre la base reguladora: ${pctNum}%, dentro de las franjas legales 52%, 60% y 70%`,
+  };
+
   return {
     pensionMensualBruta: fmtEUR(pensionMensual) + '/mes',
     porcentajeAplicado: (porcentaje * 100).toFixed(0) + '% de la base reguladora',
     tipoPorcentaje: tipo,
     pensionAnualBruta14Pagas: fmtEUR(anual14) + '/año (14 pagas)',
     observaciones,
+    _insight,
+    _chart,
   };
 }

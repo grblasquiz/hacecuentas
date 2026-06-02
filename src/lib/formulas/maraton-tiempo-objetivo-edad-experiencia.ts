@@ -1,6 +1,6 @@
 /** Tiempo objetivo realista para 42K según edad, género y experiencia. */
 export interface Inputs { edad: number; genero: 'M' | 'F'; experiencia: 'primer' | 'segundo' | 'avanzado'; ritmoActual5kMinKm: number; }
-export interface Outputs { tiempoObjetivoHoras: number; tiempoObjetivoTexto: string; ritmoObjetivoMinKm: number; explicacion: string; }
+export interface Outputs { tiempoObjetivoHoras: number; tiempoObjetivoTexto: string; ritmoObjetivoMinKm: number; explicacion: string; _insight?: any; }
 export function maratonTiempoObjetivoEdadExperiencia(i: Inputs): Outputs {
   const edad = Number(i.edad);
   const r5k = Number(i.ritmoActual5kMinKm);
@@ -21,10 +21,19 @@ export function maratonTiempoObjetivoEdadExperiencia(i: Inputs): Outputs {
   const h = Math.floor(horas);
   const m = Math.floor(tiempoMin - h * 60);
   const s = Math.round((tiempoMin - h * 60 - m) * 60);
+  const segMasLento = Math.round((ritmoObjetivo - r5k) * 60);
+  const tone = i.experiencia === 'primer' ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Tu objetivo realista',
+    text: `Tu tiempo realista en 42K es **${h}h ${m.toString().padStart(2, '0')}m** a **${ritmoObjetivo.toFixed(2)} min/km**, unos **${segMasLento} s/km más lento** que tu ritmo de 5K. ${i.experiencia === 'primer' ? 'Como es tu primer maratón, el modelo te penaliza más: no es tu día de récord, es el día de cruzar la meta entero.' : 'El salto de distancia siempre cuesta ritmo; este número ya ajusta por tu edad y experiencia.'}`,
+    tone,
+    icon: '🏅',
+  };
   return {
     tiempoObjetivoHoras: Number(horas.toFixed(2)),
     tiempoObjetivoTexto: `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`,
     ritmoObjetivoMinKm: Number(ritmoObjetivo.toFixed(2)),
     explicacion: `Con ritmo 5K de ${r5k.toFixed(2)} min/km y experiencia "${i.experiencia}", tu tiempo objetivo realista en 42K es ${h}h ${m}m (ritmo ${ritmoObjetivo.toFixed(2)} min/km). Estimación basada en fórmula de Riegel ajustada por edad y experiencia.`,
+    _insight,
   };
 }

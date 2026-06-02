@@ -15,6 +15,7 @@ export interface Outputs {
   winner: string;
   cold_start_warning: string;
   breakdown: string;
+  _insight?: any;
 }
 
 // Precios vigentes 2026 — fuente: páginas oficiales de cada plataforma
@@ -105,7 +106,18 @@ export function compute(i: Inputs): Outputs {
 
   const sorted = [...costs].sort((a, b) => a.cost - b.cost);
   const cheapest = sorted[0];
+  const runnerUp = sorted[1];
   const winner = `${cheapest.name} — $${cheapest.cost.toFixed(2)}/mes`;
+
+  const ahorroMensual = runnerUp.cost - cheapest.cost;
+  const insight = {
+    title: `Ganador: ${cheapest.name}`,
+    text: ahorroMensual > 0.005
+      ? `Para **${monthlyRequests.toLocaleString('es')} requests/mes**, **${cheapest.name}** sale **$${cheapest.cost.toFixed(2)}/mes** — **$${ahorroMensual.toFixed(2)}/mes** más barato que la siguiente opción (${runnerUp.name}), unos **$${(ahorroMensual * 12).toFixed(0)}/año** de ahorro.`
+      : `Para **${monthlyRequests.toLocaleString('es')} requests/mes**, **${cheapest.name}** ($${cheapest.cost.toFixed(2)}/mes) empata con ${runnerUp.name}: a este volumen el costo casi no decide, mirá cold starts y operación.`,
+    tone: cheapest.cost === 0 ? 'good' : 'neutral',
+    icon: '☁️',
+  };
 
   // ── Advertencia cold starts ────────────────────────────────────
   let coldStartWarning = "";
@@ -142,5 +154,6 @@ export function compute(i: Inputs): Outputs {
     winner,
     cold_start_warning: coldStartWarning,
     breakdown,
+    _insight: insight,
   };
 }

@@ -29,6 +29,8 @@ export interface Outputs {
   roi_anual_promedio: number;
   benchmark_rendimiento_total: number;
   diferencia_vs_benchmark: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -91,6 +93,34 @@ export function compute(i: Inputs): Outputs {
   const benchmarkRendimientoTotal = precioCompraPesos * Math.pow(1 + tasaBenchmark / 100, horizonte);
   const diferenciaVsBenchmark = flujoNetoAcumulado + plusvaliaNeta - benchmarkRendimientoTotal;
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const gananciaTotal = flujoNetoAcumulado + plusvaliaNeta;
+  const ganaAlBenchmark = diferenciaVsBenchmark >= 0;
+
+  const _insight = {
+    title: 'Rentabilidad de tu inversión inmobiliaria',
+    text: `El arriendo rinde un **yield neto de ${yieldNetoPorc.toFixed(1)}%** anual y, sumando la plusvalía, el ROI total a ${horizonte} años es **${roiTotalPorc.toFixed(0)}%** (${roiAnualPromedio.toFixed(1)}%/año). Frente a invertir a ${tasaBenchmark.toFixed(1)}% fijo, ${ganaAlBenchmark ? 'el depto rinde **' + fmt(diferenciaVsBenchmark) + ' más**' : 'el depto rinde **' + fmt(Math.abs(diferenciaVsBenchmark)) + ' menos**'}.`,
+    tone: ganaAlBenchmark ? 'good' : 'warn',
+    icon: '🏢',
+  };
+
+  // Donut: composición de la ganancia total (flujo de arriendo + plusvalía neta).
+  // Solo si ambos componentes son positivos (un slice negativo no se grafica bien).
+  let _chart: any = undefined;
+  if (flujoNetoAcumulado >= 0 && plusvaliaNeta >= 0 && gananciaTotal > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: `Arriendo neto (${horizonte} años)`, value: Math.round(flujoNetoAcumulado) },
+        { label: 'Plusvalía neta', value: Math.round(plusvaliaNeta) },
+      ],
+      prefix: '$',
+      centerValue: fmt(gananciaTotal),
+      centerLabel: 'Ganancia total',
+      ariaLabel: `Composición de la ganancia total: ${fmt(flujoNetoAcumulado)} de arriendo neto acumulado y ${fmt(plusvaliaNeta)} de plusvalía neta.`,
+    };
+  }
+
   return {
     precio_compra_pesos: precioCompraPesos,
     arriendo_anual_uf: arriendoAnualUF,
@@ -107,6 +137,8 @@ export function compute(i: Inputs): Outputs {
     roi_total_porcentaje: roiTotalPorc,
     roi_anual_promedio: roiAnualPromedio,
     benchmark_rendimiento_total: benchmarkRendimientoTotal,
-    diferencia_vs_benchmark: diferenciaVsBenchmark
+    diferencia_vs_benchmark: diferenciaVsBenchmark,
+    _insight,
+    _chart
   };
 }

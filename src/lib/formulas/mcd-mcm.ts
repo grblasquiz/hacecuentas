@@ -5,6 +5,7 @@ export interface Outputs {
   mcm: number;
   numeros: string;
   descomposicion: string;
+  _insight?: any;
 }
 
 function gcd(a: number, b: number): number {
@@ -48,10 +49,26 @@ export function mcdMcm(i: Inputs): Outputs {
     return `${n} = ${partes.join(' × ') || '1'}`;
   }).join('\n');
 
+  const lista = nums.join(', ');
+  const insight = mcd === 1
+    ? {
+        title: 'Números coprimos',
+        text: `El MCD de ${lista} es **1**: no comparten ningún factor primo. Por eso el MCM es grande (**${mcm.toLocaleString()}**), cercano al producto de todos.`,
+        tone: 'neutral',
+        icon: '🔢',
+      }
+    : {
+        title: 'Comparten un factor común',
+        text: `${lista} comparten un factor común de **${mcd.toLocaleString()}** (su MCD). El menor múltiplo que los abarca a todos es **${mcm.toLocaleString()}** (el MCM).`,
+        tone: 'neutral',
+        icon: '🔢',
+      };
+
   return {
     mcd,
     mcm,
-    numeros: nums.join(', '),
+    numeros: lista,
     descomposicion: factores,
+    _insight: insight,
   };
 }

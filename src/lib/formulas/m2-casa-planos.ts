@@ -20,6 +20,8 @@ export interface Outputs {
   m2SemicubiertosPonderados: number;
   m2TotalConstruido: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function m2CasaPlanos(i: Inputs): Outputs {
@@ -43,11 +45,46 @@ export function m2CasaPlanos(i: Inputs): Outputs {
 
   if (cubiertos <= 0 && semiReales <= 0) throw new Error('Ingresá al menos un ambiente');
 
+  const cubR = Number(cubiertos.toFixed(2));
+  const semiPondR = Number(semiPond.toFixed(2));
+  const totalR = Number(total.toFixed(2));
+  const pctSemi = total > 0 ? (semiPond / total) * 100 : 0;
+
+  const insight = semiReales > 0
+    ? {
+        title: 'Cubiertos vs. semicubiertos',
+        text: `De los **${totalR.toFixed(2)} m² construidos**, ${cubR.toFixed(2)} m² son cubiertos y ${semiReales.toFixed(2)} m² semicubiertos que ponderan al ×${coef} (${semiPondR.toFixed(2)} m², el **${pctSemi.toFixed(0)}%** del total). Confirmá el coeficiente con tu municipio: algunos exigen ×0,5 y otros computan la galería al 100%.`,
+        tone: 'neutral',
+        icon: '🏠',
+      }
+    : {
+        title: 'Superficie construida',
+        text: `Sumás **${cubR.toFixed(2)} m² cubiertos** sin semicubiertos. Si tenés galería, patio o balcón, agregalos: suelen computar a la mitad para la superficie construida total.`,
+        tone: 'neutral',
+        icon: '🏠',
+      };
+
+  const chart = semiPondR > 0
+    ? {
+        type: 'doughnut' as const,
+        slices: [
+          { label: 'Cubiertos', value: cubR },
+          { label: `Semicubiertos (×${coef})`, value: semiPondR },
+        ],
+        prefix: '',
+        centerValue: totalR.toFixed(2) + ' m²',
+        centerLabel: 'Total construido',
+        ariaLabel: 'Composición de la superficie construida: metros cubiertos más semicubiertos ponderados.',
+      }
+    : undefined;
+
   return {
-    m2Cubiertos: Number(cubiertos.toFixed(2)),
+    m2Cubiertos: cubR,
     m2SemicubiertosReales: Number(semiReales.toFixed(2)),
-    m2SemicubiertosPonderados: Number(semiPond.toFixed(2)),
-    m2TotalConstruido: Number(total.toFixed(2)),
+    m2SemicubiertosPonderados: semiPondR,
+    m2TotalConstruido: totalR,
     resumen: `Casa con **${cubiertos.toFixed(2)} m² cubiertos** + ${semiReales.toFixed(2)} m² semicubiertos (×${coef} = ${semiPond.toFixed(2)} m²) = **${total.toFixed(2)} m² construidos totales**.`,
+    _insight: insight,
+    _chart: chart,
   };
 }

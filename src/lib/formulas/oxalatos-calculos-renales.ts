@@ -13,6 +13,7 @@ export interface OxalatosCalculosRenalesOutputs {
   recomendacion: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function oxalatosCalculosRenales(inputs: OxalatosCalculosRenalesInputs): OxalatosCalculosRenalesOutputs {
@@ -45,11 +46,19 @@ export function oxalatosCalculosRenales(inputs: OxalatosCalculosRenalesInputs): 
     ],
     ariaLabel: 'Escala de oxalatos por porción: bajo, moderado, alto, muy alto.',
   };
+  const tone = total < 10 ? 'good' : total < 50 ? 'neutral' : 'warn';
+  const insight = {
+    title: 'Qué significan estos oxalatos',
+    text: `Tu porción de **${g} g** aporta **${oxalatosMg} mg** de oxalatos. Como referencia, una dieta baja en oxalatos apunta a **menos de 50 mg/día** en total, así que este alimento ${total < 10 ? 'casi no incide' : total < 50 ? 'ya cubre buena parte del cupo diario' : 'por sí solo supera el límite diario recomendado'}. ${rec}`,
+    tone,
+    icon: total < 50 ? '🥗' : '🪨',
+  };
   return {
     oxalatosMg,
     categoria: cat,
     recomendacion: rec,
     resumen: `${g}g aportan ${total.toFixed(0)} mg oxalatos (${cat}).`,
     _chart: chart,
+    _insight: insight,
   };
 }

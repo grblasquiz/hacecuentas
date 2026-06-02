@@ -1,6 +1,6 @@
 /** Maridaje vino comida */
 export interface Inputs { proteina: string; salsa: string; }
-export interface Outputs { vinoPrincipal: string; alternativa: string; razonamiento: string; evitar: string; }
+export interface Outputs { vinoPrincipal: string; alternativa: string; razonamiento: string; evitar: string; _insight?: any; }
 
 export function maridajeVinoComida(i: Inputs): Outputs {
   const p = String(i.proteina);
@@ -55,5 +55,12 @@ export function maridajeVinoComida(i: Inputs): Outputs {
     evitar = 'Vinos secos';
   }
 
-  return { vinoPrincipal: principal, alternativa: alt, razonamiento: razon, evitar };
+  const _insight = {
+    title: 'Tu maridaje recomendado',
+    text: `Para este plato, la elección segura es **${principal}**${alt ? `, con **${alt}** como alternativa` : ''}. ${razon}${evitar ? ` Mejor evitá: ${evitar}.` : ''}`,
+    tone: 'neutral',
+    icon: '🍷',
+  };
+
+  return { vinoPrincipal: principal, alternativa: alt, razonamiento: razon, evitar, _insight };
 }

@@ -14,6 +14,8 @@ export interface Outputs {
   return_ratio: number;
   effective_rate_label: string;
   yearly_breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Taxas de referência 2026 — Fonte: BACEN / Tesouro Nacional
@@ -156,12 +158,41 @@ export function compute(i: Inputs): Outputs {
     ? `${rateLabel} | Capitalização mensal | Taxa mensal: ${((Math.pow(1 + annualRateDecimal, 1 / 12) - 1) * 100).toFixed(4)}% a.m.`
     : `${rateLabel} | Capitalização anual`;
 
+  const finalRounded = Math.round(finalAmount * 100) / 100;
+  const investedRounded = Math.round(totalInvested * 100) / 100;
+  const interestRounded = Math.round(Math.max(0, totalInterest) * 100) / 100;
+  const ratioRounded = Math.round(returnRatio * 100) / 100;
+
+  // Fatia de juros derivada do total exibido para que as fatias somem o total
+  const interestSlice = Math.round((finalRounded - investedRounded) * 100) / 100;
+
+  const _insight = {
+    title: "O poder dos juros compostos",
+    text: `Investindo **R$ ${formatBRL(investedRounded)}** ao longo de **${years} ano${years > 1 ? "s" : ""}**, você termina com **R$ ${formatBRL(finalRounded)}** — os juros somam **R$ ${formatBRL(interestRounded)}**, um ganho de **${ratioRounded.toFixed(1)}%** sobre o aportado. Quanto mais tempo, maior o efeito bola de neve.`,
+    tone: "good",
+    icon: "📈"
+  };
+
+  const _chart = interestSlice > 0 ? {
+    type: "doughnut",
+    slices: [
+      { label: "Total investido", value: investedRounded },
+      { label: "Juros acumulados", value: interestSlice }
+    ],
+    prefix: "R$ ",
+    centerValue: `R$ ${formatBRL(finalRounded)}`,
+    centerLabel: "Montante final",
+    ariaLabel: `Composição do montante final de R$ ${formatBRL(finalRounded)}: R$ ${formatBRL(investedRounded)} investido e R$ ${formatBRL(interestSlice)} de juros.`
+  } : undefined;
+
   return {
-    final_amount: Math.round(finalAmount * 100) / 100,
-    total_invested: Math.round(totalInvested * 100) / 100,
-    total_interest: Math.round(Math.max(0, totalInterest) * 100) / 100,
-    return_ratio: Math.round(returnRatio * 100) / 100,
+    final_amount: finalRounded,
+    total_invested: investedRounded,
+    total_interest: interestRounded,
+    return_ratio: ratioRounded,
     effective_rate_label: effectiveRateNote,
-    yearly_breakdown: yearlyBreakdown
+    yearly_breakdown: yearlyBreakdown,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

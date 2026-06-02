@@ -25,6 +25,8 @@ export interface Outputs {
   pension_anual: number;
   rango_judicial: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -116,6 +118,58 @@ export function compute(i: Inputs): Outputs {
 
   recomendacion += `✓ Pensión se reajusta automáticamente cada febrero por IPC (~4,5% 2026). Solicite aumento ante juzgado si ingresos suben. Dura hasta 18 años (o 25 si estudia educación superior).`;
 
+  const fmtCOP = (v: number) => '$' + Math.floor(v).toLocaleString('es-CO');
+
+  // Insight dinámico: peso de la pensión sobre la base calculable
+  const pct_sobre_base = base_calculable > 0
+    ? (total_pension_mensual / base_calculable) * 100
+    : 0;
+  let insight_tone: 'good' | 'warn' | 'neutral' = 'neutral';
+  let insight_icon = '👨‍👧';
+  let insight_title = 'Pensión orientativa estimada';
+  let insight_text =
+    `La pensión orientativa es de **${fmtCOP(total_pension_mensual)}/mes** (≈**${pct_sobre_base.toFixed(0)}%** de tu base de **${fmtCOP(base_calculable)}**). El rango que suele fijar el juzgado va de **${fmtCOP(rango_minimo)}** a **${fmtCOP(rango_maximo)}**.`;
+  if (base_calculable < MINIMO_SUBSISTENCIA * 1.2) {
+    insight_tone = 'warn';
+    insight_icon = '⚠️';
+    insight_title = 'Base cercana a la subsistencia';
+    insight_text =
+      `Tu base calculable (**${fmtCOP(base_calculable)}**) está muy cerca del mínimo vital, así que la pensión de **${fmtCOP(total_pension_mensual)}/mes** podría reducirse si demostrás incapacidad de pago ante el juzgado.`;
+  } else if (pct_sobre_base >= 45) {
+    insight_tone = 'warn';
+    insight_icon = '📊';
+    insight_title = 'Pensión en el rango alto';
+    insight_text =
+      `La pensión de **${fmtCOP(total_pension_mensual)}/mes** representa el **${pct_sobre_base.toFixed(0)}%** de tu base, cerca del máximo del 50% que suele aceptar la jurisprudencia. Revisá el desglose antes de acordar.`;
+  } else {
+    insight_tone = 'good';
+    insight_title = 'Pensión dentro del rango habitual';
+  }
+  const _insight = {
+    title: insight_title,
+    text: insight_text,
+    tone: insight_tone,
+    icon: insight_icon,
+  };
+
+  // Donut: pensión básica + aporte a gastos extraordinarios (suman el total)
+  const slice_basica = Math.floor(pension_basica_orientativa);
+  const slice_extra = Math.floor(gastos_extraordinarios_aporte);
+  let _chart: any = undefined;
+  if (total_pension_mensual > 0 && slice_extra > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Manutención básica', value: slice_basica },
+        { label: 'Aporte gastos extraordinarios', value: slice_extra },
+      ],
+      prefix: '$',
+      centerValue: fmtCOP(slice_basica + slice_extra),
+      centerLabel: 'Pensión mensual',
+      ariaLabel: 'Composición de la pensión de alimentos mensual entre manutención básica y aporte a gastos extraordinarios',
+    };
+  }
+
   return {
     ingresos_netos: Math.floor(ingresos_netos),
     base_calculable: Math.floor(base_calculable),
@@ -127,6 +181,8 @@ export function compute(i: Inputs): Outputs {
     total_pension_mensual: Math.floor(total_pension_mensual),
     pension_anual: Math.floor(pension_anual),
     rango_judicial: rango_judicial,
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

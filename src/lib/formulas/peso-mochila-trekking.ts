@@ -9,6 +9,8 @@ export interface PesoMochilaTrekkingOutputs {
   pesoIdealKg: number;
   porcentajePeso: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface DuracionConfig {
@@ -49,10 +51,32 @@ export function pesoMochilaTrekking(inputs: PesoMochilaTrekkingInputs): PesoMoch
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  // Zonas de carga relativas al peso corporal (kg)
+  const zonaLiviana = Number(((peso * Math.max(6, pctIdeal - 4)) / 100).toFixed(1));
+  const segMax = Number((pesoMax * 1.4).toFixed(1));
+
   return {
     pesoMaximoKg: pesoMax,
     pesoIdealKg: pesoIdeal,
     porcentajePeso: pctIdeal,
     detalle: `Persona de ${fmt.format(peso)} kg, trekking ${duracion.replace(/-/g, ' ')}, nivel ${nivel} → peso ideal ${fmt.format(pesoIdeal)} kg (${pctIdeal}%), máximo ${fmt.format(pesoMax)} kg (${pctMax}%).`,
+    _insight: {
+      title: 'Cuánto cargar sin sufrir',
+      text: `Para tus ${fmt.format(peso)} kg y este plan, apuntá a una mochila de **${fmt.format(pesoIdeal)} kg** (${pctIdeal}% de tu peso) y no pases de **${fmt.format(pesoMax)} kg** (${pctMax}%). Cada kilo de más sobre el máximo se siente al doble en una subida larga.`,
+      tone: 'neutral',
+      icon: '🎒',
+    },
+    _chart: {
+      type: 'scale',
+      marker: pesoIdeal,
+      markerLabel: `Ideal ${fmt.format(pesoIdeal)} kg`,
+      min: 0,
+      segments: [
+        { nombre: 'Liviana', max: zonaLiviana, color: '#93c5fd', colorDark: '#3b82f6' },
+        { nombre: 'Óptima', max: pesoMax, color: '#86efac', colorDark: '#22c55e' },
+        { nombre: 'Sobrecarga', max: segMax, color: '#fca5a5', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Carga ideal de ${fmt.format(pesoIdeal)} kg dentro de la zona óptima, con máximo recomendado de ${fmt.format(pesoMax)} kg`,
+    },
   };
 }

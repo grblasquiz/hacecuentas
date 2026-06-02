@@ -1,6 +1,6 @@
 /** Mundial 2026 - Puntaje histórico fase de grupos */
 export interface Inputs { puntos: number; diferenciaGol: number; }
-export interface Outputs { probabilidad: string; posicionEstimada: string; consejo: string; }
+export interface Outputs { probabilidad: string; posicionEstimada: string; consejo: string; _insight?: any; _chart?: any; }
 
 export function mundial2026PuntajeHistorico(i: Inputs): Outputs {
   const p = Number(i.puntos);
@@ -35,9 +35,35 @@ export function mundial2026PuntajeHistorico(i: Inputs): Outputs {
   else if (prob >= 35) consejo = 'Al filo. Depende de cómo terminen los otros grupos y de tu diferencia de gol.';
   else consejo = 'Complicado. Hay que ganar el próximo partido para tener chances reales.';
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (prob >= 65) insightTone = 'good';
+  else if (prob >= 35) insightTone = 'neutral';
+  else insightTone = 'warn';
+
+  const insightText = `Con **${p} punto${p === 1 ? '' : 's'}** y diferencia de gol **${dg >= 0 ? '+' : ''}${dg}**, históricamente clasificaron el **${prob.toFixed(0)}%** de los equipos en esa situación. Posición estimada: ${pos}.`;
+
   return {
     probabilidad: `${prob.toFixed(0)}% histórico (Mundial 2026, con mejores terceros)`,
     posicionEstimada: pos,
     consejo,
+    _insight: {
+      title: 'Lectura de la clasificación',
+      text: insightText,
+      tone: insightTone,
+      icon: '⚽',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(prob.toFixed(0)),
+      markerLabel: `${prob.toFixed(0)}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Complicado', max: 35, color: '#ef4444', colorDark: '#dc2626' },
+        { nombre: 'Al filo', max: 65, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Buenas chances', max: 90, color: '#3b82f6', colorDark: '#2563eb' },
+        { nombre: 'Casi seguro', max: 100.5, color: '#22c55e', colorDark: '#16a34a' },
+      ],
+      ariaLabel: `Probabilidad histórica de clasificar: ${prob.toFixed(0)}% sobre una escala de 0 a 100`,
+    },
   };
 }

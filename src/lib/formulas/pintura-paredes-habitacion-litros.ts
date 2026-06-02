@@ -14,6 +14,7 @@ export interface Outputs {
   superficieTotal: number;
   baldesTotales: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function pinturaParedesHabitacionLitros(i: Inputs): Outputs {
@@ -52,10 +53,18 @@ export function pinturaParedesHabitacionLitros(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const _insight = {
+    title: 'Pintura lista para comprar',
+    text: `Para los **${fmt.format(superficieTotal)} m²**${pintarTecho ? ' (con techo incluido)' : ''} de esta habitación con ${manos} mano${manos === 1 ? '' : 's'}, comprá **${litrosRedondeados} L**. Ya incluye el **+10% de margen** por desperdicio y retoques, así que no necesitás sumar más.`,
+    tone: 'neutral' as const,
+    icon: '🎨',
+  };
+
   return {
     litrosNecesarios: litrosRedondeados,
     superficieTotal: Number(superficieTotal.toFixed(1)),
     baldesTotales: Number(baldes20.toFixed(1)),
     detalle: `Habitación ${largo}×${ancho} m (alto ${alto} m): ${fmt.format(superficieTotal)} m² a pintar${pintarTecho ? ' (incluye techo)' : ''}. Con ${manos} mano(s) y rendimiento ${rendimiento} m²/L: necesitás ${litrosRedondeados} litros (+10% margen).`,
+    _insight,
   };
 }

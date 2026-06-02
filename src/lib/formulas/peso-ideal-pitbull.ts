@@ -15,6 +15,7 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
 }
 
 const RAZA = {
@@ -55,11 +56,29 @@ export function pesoIdealPitbull(inputs: Inputs): Outputs {
 
   const promedio = (min + max) / 2;
 
+  const sexoTxt = sexo === 'macho' ? 'Un macho' : 'Una hembra';
+  let insightText: string;
+  let insightTone = 'neutral';
+  if (edad === 'cachorro') {
+    insightText = `Todavía en crecimiento: el Pitbull termina de formarse cerca de los 18 meses. ${sexoTxt} ${contextura} debería estabilizarse entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** de adulto. Cuidá no acelerar el engorde para “sacar músculo” antes de tiempo.`;
+  } else if (edad === 'senior') {
+    insightText = `${sexoTxt} senior puede perder algo de masa: un rango de **${min.toFixed(1)}-${max.toFixed(1)} kg** es esperable. Si baja de golpe o pierde tono muscular notorio, conviene un control.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `${sexoTxt} ${contextura} en forma debería pesar entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). En el Pitbull lo ideal es músculo definido, no peso de más: el sobrepeso recarga articulaciones y corazón.`;
+  }
+
   return {
     pesoPromedio: Number(promedio.toFixed(1)),
     pesoIdealMin: Number(min.toFixed(1)),
     pesoIdealMax: Number(max.toFixed(1)),
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight: {
+      title: 'Qué significa este rango',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐶',
+    },
   };
 }

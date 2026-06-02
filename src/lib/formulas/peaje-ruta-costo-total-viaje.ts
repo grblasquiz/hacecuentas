@@ -9,6 +9,7 @@ export interface Outputs {
   costoTotalPeajes: number;
   costoPorPersona: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function peajeRutaCostoTotalViaje(i: Inputs): Outputs {
@@ -26,9 +27,21 @@ export function peajeRutaCostoTotalViaje(i: Inputs): Outputs {
 
   const tramo = factor === 2 ? 'ida y vuelta' : 'solo ida';
 
+  const totalR = Math.round(costoTotalPeajes);
+  const porPersR = Math.round(costoPorPersona);
+  const insightText = ocupantes > 1
+    ? `El viaje suma **$${totalR.toLocaleString('es-AR')}** en peajes (${tramo}). Dividido entre ${ocupantes} ocupantes, cada uno pone **$${porPersR.toLocaleString('es-AR')}**.`
+    : `El viaje suma **$${totalR.toLocaleString('es-AR')}** en peajes (${tramo}). Si viajás acompañado podés dividir el gasto y bajar el costo por persona.`;
+
   return {
-    costoTotalPeajes: Math.round(costoTotalPeajes),
-    costoPorPersona: Math.round(costoPorPersona),
-    detalle: `Total peajes (${tramo}): $${Math.round(costoTotalPeajes).toLocaleString('es-AR')} (${cantidad} peajes × $${costo.toLocaleString('es-AR')}${factor === 2 ? ' × 2' : ''}). Por persona (${ocupantes}): $${Math.round(costoPorPersona).toLocaleString('es-AR')}.`,
+    costoTotalPeajes: totalR,
+    costoPorPersona: porPersR,
+    detalle: `Total peajes (${tramo}): $${totalR.toLocaleString('es-AR')} (${cantidad} peajes × $${costo.toLocaleString('es-AR')}${factor === 2 ? ' × 2' : ''}). Por persona (${ocupantes}): $${porPersR.toLocaleString('es-AR')}.`,
+    _insight: {
+      title: 'Costo de peajes del viaje',
+      text: insightText,
+      tone: 'neutral',
+      icon: '🛣️',
+    },
   };
 }

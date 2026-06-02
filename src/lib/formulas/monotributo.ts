@@ -51,6 +51,8 @@ export interface MonotributoOutputs {
   limiteCategoria: number;
   margenHastaLimite: number;
   alerta: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function monotributo(inputs: MonotributoInputs): MonotributoOutputs {
@@ -82,6 +84,26 @@ export function monotributo(inputs: MonotributoInputs): MonotributoOutputs {
     alerta = '✅ Estás holgado en esta categoría.';
   }
 
+  const fmtArs = (n: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
+  const usoPct = Math.round(porcentajeUso);
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightTitle: string;
+  let insightText: string;
+  if (porcentajeUso > 90) {
+    insightTone = 'warn';
+    insightTitle = 'Al borde del tope';
+    insightText = `Usás el **${usoPct}%** del tope de la Categoría ${categoria.letra} (${fmtArs(categoria.limiteAnual)}). Te quedan apenas **${fmtArs(margenHastaLimite)}** de margen: si facturás más, recategorizá o pasá a Responsable Inscripto para no quedar excluido.`;
+  } else if (porcentajeUso > 75) {
+    insightTone = 'warn';
+    insightTitle = 'Vigilá tu facturación';
+    insightText = `Estás en el **${usoPct}%** del tope de la Categoría ${categoria.letra}. La cuota es **${fmtArs(cuotaMensual)}/mes** (${fmtArs(cuotaAnual)}/año) y te restan **${fmtArs(margenHastaLimite)}** antes de tener que recategorizar.`;
+  } else {
+    insightTone = 'good';
+    insightTitle = 'Categoría holgada';
+    insightText = `Quedás en Categoría ${categoria.letra} usando el **${usoPct}%** del tope: pagás **${fmtArs(cuotaMensual)}/mes** (${fmtArs(cuotaAnual)}/año) y tenés **${fmtArs(margenHastaLimite)}** de margen hasta el límite.`;
+  }
+
   return {
     categoria: `Categoría ${categoria.letra}`,
     cuotaMensual,
@@ -89,5 +111,23 @@ export function monotributo(inputs: MonotributoInputs): MonotributoOutputs {
     limiteCategoria: categoria.limiteAnual,
     margenHastaLimite,
     alerta,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: '🧾',
+    },
+    _chart: {
+      type: 'scale',
+      marker: usoPct,
+      markerLabel: `${usoPct}% del tope`,
+      min: 0,
+      segments: [
+        { nombre: 'Holgado', max: 75, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Vigilar', max: 90, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Al límite', max: 105, color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Uso de la categoría: ${usoPct}% del tope de facturación`,
+    },
   };
 }

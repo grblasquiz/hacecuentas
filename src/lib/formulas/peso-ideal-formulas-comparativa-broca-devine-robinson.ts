@@ -12,6 +12,7 @@ export interface Outputs {
   average_weight: number;
   acceptable_range: string;
   imc_comparison: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -72,13 +73,26 @@ export function compute(i: Inputs): Outputs {
 
   // Comparativa IMC si hay peso actual
   let imcComparison = '';
+  let _insight: any = {
+    title: 'Tu peso ideal según 4 fórmulas',
+    text: `Promediando Broca, Devine, Robinson y Hamwi, tu peso ideal ronda los **${averageWeight.toFixed(1)} kg**, con un rango aceptable de **${lowerRange.toFixed(1)} a ${upperRange.toFixed(1)} kg** (±10%). Ingresá tu peso actual para ver en qué punto del rango estás.`,
+    tone: 'neutral',
+    icon: '⚖️',
+  };
   if (currentWeight !== null && currentWeight > 0) {
     const heightM = heightCm / 100;
     const imc = currentWeight / (heightM * heightM);
     const imcCategory = imc < 18.5 ? 'Bajo peso' : imc < 25 ? 'Normal' : imc < 30 ? 'Sobrepeso' : 'Obesidad';
     const diffFromAvg = currentWeight - averageWeight;
     const diffStr = diffFromAvg > 0 ? `+${diffFromAvg.toFixed(1)}` : `${diffFromAvg.toFixed(1)}`;
-    imcComparison = `Tu IMC actual: ${imc.toFixed(1)} (${imcCategory}). Diferencia respecto promedio: ${diffStr} kg. ${currentWeight >= lowerRange && currentWeight <= upperRange ? 'Dentro del rango aceptable.' : 'Fuera del rango aceptable.'}`;
+    const dentro = currentWeight >= lowerRange && currentWeight <= upperRange;
+    imcComparison = `Tu IMC actual: ${imc.toFixed(1)} (${imcCategory}). Diferencia respecto promedio: ${diffStr} kg. ${dentro ? 'Dentro del rango aceptable.' : 'Fuera del rango aceptable.'}`;
+    _insight = {
+      title: dentro ? 'Estás en tu rango ideal' : 'Estás fuera del rango ideal',
+      text: `Con **${currentWeight.toFixed(1)} kg** tu IMC es **${imc.toFixed(1)}** (${imcCategory}). Estás **${diffStr} kg** respecto del peso ideal promedio (${averageWeight.toFixed(1)} kg) y ${dentro ? `**dentro** del rango aceptable de ${lowerRange.toFixed(1)}-${upperRange.toFixed(1)} kg` : `**fuera** del rango de ${lowerRange.toFixed(1)}-${upperRange.toFixed(1)} kg`}.`,
+      tone: dentro ? 'good' : 'warn',
+      icon: dentro ? '✅' : '⚠️',
+    };
   }
 
   return {
@@ -88,6 +102,7 @@ export function compute(i: Inputs): Outputs {
     hamwi_weight: parseFloat(hamwiWeight.toFixed(1)),
     average_weight: parseFloat(averageWeight.toFixed(1)),
     acceptable_range: acceptableRange,
-    imc_comparison: imcComparison
+    imc_comparison: imcComparison,
+    _insight
   };
 }

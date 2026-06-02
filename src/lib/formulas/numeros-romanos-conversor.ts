@@ -2,7 +2,7 @@
  * Conversor de Números Romanos ↔ Decimal
  */
 export interface NumerosRomanosInputs { numeroDecimal: number; numeroRomano: string; }
-export interface NumerosRomanosOutputs { resultado: string; decimal: number; romano: string; }
+export interface NumerosRomanosOutputs { resultado: string; decimal: number; romano: string; _insight?: any; }
 
 function decimalARomano(num: number): string {
   if (num < 1 || num > 3999) return 'Fuera de rango (1-3999)';
@@ -36,14 +36,36 @@ export function numerosRomanosConversor(inputs: NumerosRomanosInputs): NumerosRo
 
   if (numDec && numDec > 0) {
     if (numDec < 1 || numDec > 3999) throw new Error('Ingresá un número entre 1 y 3999');
-    const romano = decimalARomano(Math.floor(numDec));
-    return { resultado: `${Math.floor(numDec)} = ${romano}`, decimal: Math.floor(numDec), romano };
+    const ent = Math.floor(numDec);
+    const romano = decimalARomano(ent);
+    return {
+      resultado: `${ent} = ${romano}`,
+      decimal: ent,
+      romano,
+      _insight: {
+        title: 'De decimal a romano',
+        text: `El número **${ent.toLocaleString('es-AR')}** se escribe **${romano}** en numeración romana, usando ${romano.length} símbolo${romano.length === 1 ? '' : 's'}.`,
+        tone: 'neutral' as const,
+        icon: '🏛️',
+      },
+    };
   }
 
   if (numRom) {
     const decimal = romanoADecimal(numRom);
     if (decimal === 0) throw new Error('Ingresá un número romano válido (ej: XIV, MMXXVI)');
-    return { resultado: `${numRom.toUpperCase()} = ${decimal}`, decimal, romano: numRom.toUpperCase() };
+    const rom = numRom.toUpperCase();
+    return {
+      resultado: `${rom} = ${decimal}`,
+      decimal,
+      romano: rom,
+      _insight: {
+        title: 'De romano a decimal',
+        text: `El número romano **${rom}** equivale a **${decimal.toLocaleString('es-AR')}** en el sistema decimal.`,
+        tone: 'neutral' as const,
+        icon: '🏛️',
+      },
+    };
   }
 
   throw new Error('Ingresá un número decimal o romano para convertir');

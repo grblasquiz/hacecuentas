@@ -16,6 +16,8 @@ export interface NotaFinalUniversidadOutputs {
   formula: string;
   explicacion: string;
   consejo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function notaFinalUniversidad(inputs: NotaFinalUniversidadInputs): NotaFinalUniversidadOutputs {
@@ -65,11 +67,52 @@ export function notaFinalUniversidad(inputs: NotaFinalUniversidadInputs): NotaFi
 
   const explicacion = `Con tu nota actual de ${fmt(notaActual)} (que vale el ${pesoActual}% de la nota final), necesitás sacar ${fmt(Math.max(0, notaNecesaria))} en el examen final (que vale el ${pesoFinal}%) para obtener un promedio de ${fmt(notaDeseada)}. Tus parciales aportan ${fmt(aporteParciales)} puntos al promedio, y el final debe aportar los ${fmt(notaDeseada - aporteParciales)} restantes.`;
 
+  // Insight con tono dinámico según qué tan exigente es el final
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (notaNecesaria > 10) {
+    insightTone = 'warn';
+    insightText = `Necesitarías un **${fmt(notaNecesaria)}** en el final para llegar a ${fmt(notaDeseada)}, y eso supera el máximo de 10: **es imposible** sólo con el final. Vas a tener que recuperar un parcial o sumar puntos extra.`;
+  } else if (notaNecesaria <= 0) {
+    insightTone = 'good';
+    insightText = `Ya tenés el **${fmt(notaDeseada)}** asegurado: incluso con **0 en el final** llegás. Estudiá igual para reforzar tu promedio general.`;
+  } else if (notaNecesaria <= 4) {
+    insightTone = 'good';
+    insightText = `Sólo necesitás un **${fmt(notaNecesaria)}** en el final para tu objetivo de ${fmt(notaDeseada)}: estás muy bien parado, es muy alcanzable.`;
+  } else if (notaNecesaria <= 7) {
+    insightTone = 'neutral';
+    insightText = `Necesitás un **${fmt(notaNecesaria)}** en el final para llegar a ${fmt(notaDeseada)}: alcanzable, pero conviene dedicarle horas de estudio a esta materia.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `El final te exige un **${fmt(notaNecesaria)}** para tu objetivo de ${fmt(notaDeseada)}: es muy alto. Priorizá esta materia y reforzá los temas que más pesan.`;
+  }
+
+  // Gauge: la nota necesaria sobre la escala 0–10 con zonas de dificultad
+  const markerClamped = Math.min(Math.max(notaNecesaria, 0), 9.9);
+
   return {
     notaNecesaria: Number(Math.max(0, notaNecesaria).toFixed(2)),
     esPosible,
     formula,
     explicacion,
     consejo,
+    _insight: {
+      title: 'Qué tan exigente es tu final',
+      text: insightText,
+      tone: insightTone,
+      icon: '🎓',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(markerClamped.toFixed(2)),
+      markerLabel: `Necesitás ${fmt(Math.max(0, notaNecesaria))}`,
+      min: 0,
+      segments: [
+        { nombre: 'Muy alcanzable', max: 4, color: '#86efac', colorDark: '#14532d' },
+        { nombre: 'Con esfuerzo', max: 7, color: '#fde047', colorDark: '#713f12' },
+        { nombre: 'Exigente', max: 10, color: '#fca5a5', colorDark: '#7f1d1d' },
+      ],
+      ariaLabel: `Nota necesaria en el final de ${fmt(Math.max(0, notaNecesaria))} sobre una escala de 0 a 10`,
+    },
   };
 }

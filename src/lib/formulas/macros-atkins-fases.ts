@@ -14,6 +14,8 @@ export interface MacrosAtkinsFasesOutputs {
   carbosGramos: number;
   faseNombre: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function macrosAtkinsFases(inputs: MacrosAtkinsFasesInputs): MacrosAtkinsFasesOutputs {
@@ -28,6 +30,15 @@ export function macrosAtkinsFases(inputs: MacrosAtkinsFasesInputs): MacrosAtkins
       fallbackFase: 'Fase 1',
       resumenTpl: (n: string, carbos: number, prot: string, grasa: string) =>
         `Atkins ${n}: ${carbos}g carbos + ${prot}g prot + ${grasa}g grasa.`,
+      insightTitle: 'Tu reparto Atkins',
+      insightTpl: (n: string, carbos: number, kcal: number) =>
+        `En **${n}** te quedan apenas **${carbos}g de carbos** (${Math.round(carbos * 4)} kcal) sobre ${kcal} kcal: el resto se cubre con proteína y grasa. Subí los carbos sólo al pasar de fase, no antes.`,
+      chartProt: 'Proteína',
+      chartGrasa: 'Grasa',
+      chartCarbos: 'Carbos',
+      chartCenter: 'kcal',
+      chartAria: (carbos: number, prot: string, grasa: string) =>
+        `Reparto de calorías: ${prot}g proteína, ${grasa}g grasa y ${carbos}g carbohidratos`,
     },
     en: {
       errorCalorias: 'Please enter valid calories',
@@ -38,6 +49,15 @@ export function macrosAtkinsFases(inputs: MacrosAtkinsFasesInputs): MacrosAtkins
       fallbackFase: 'Phase 1',
       resumenTpl: (n: string, carbos: number, prot: string, grasa: string) =>
         `Atkins ${n}: ${carbos}g carbs + ${prot}g protein + ${grasa}g fat.`,
+      insightTitle: 'Your Atkins split',
+      insightTpl: (n: string, carbos: number, kcal: number) =>
+        `In **${n}** you only get **${carbos}g of carbs** (${Math.round(carbos * 4)} kcal) out of ${kcal} kcal: the rest comes from protein and fat. Raise carbs only when you move up a phase, not before.`,
+      chartProt: 'Protein',
+      chartGrasa: 'Fat',
+      chartCarbos: 'Carbs',
+      chartCenter: 'kcal',
+      chartAria: (carbos: number, prot: string, grasa: string) =>
+        `Calorie split: ${prot}g protein, ${grasa}g fat and ${carbos}g carbohydrates`,
     },
   } as const)[__lang];
 
@@ -56,11 +76,34 @@ export function macrosAtkinsFases(inputs: MacrosAtkinsFasesInputs): MacrosAtkins
   const prot = (cal * 0.30) / 4;
   const kcalProt = prot * 4;
   const grasa = Math.max(0, (cal - kcalCarbos - kcalProt) / 9);
+  const protG = Number(prot.toFixed(0));
+  const grasaG = Number(grasa.toFixed(0));
+  const faseTxt = nombre[fase] ?? T.fallbackFase;
+  const totalKcal = carbos * 4 + protG * 4 + grasaG * 9;
+  const _insight = {
+    title: T.insightTitle,
+    text: T.insightTpl(faseTxt, carbos, cal),
+    tone: 'neutral' as const,
+    icon: '🥓',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: T.chartProt, value: protG * 4 },
+      { label: T.chartGrasa, value: grasaG * 9 },
+      { label: T.chartCarbos, value: carbos * 4 },
+    ],
+    centerValue: `${totalKcal}`,
+    centerLabel: T.chartCenter,
+    ariaLabel: T.chartAria(carbos, protG.toFixed(0), grasaG.toFixed(0)),
+  };
   return {
-    proteinaGramos: Number(prot.toFixed(0)),
-    grasaGramos: Number(grasa.toFixed(0)),
+    proteinaGramos: protG,
+    grasaGramos: grasaG,
     carbosGramos: carbos,
-    faseNombre: nombre[fase] ?? T.fallbackFase,
-    resumen: T.resumenTpl(nombre[fase] ?? T.fallbackFase, carbos, prot.toFixed(0), grasa.toFixed(0)),
+    faseNombre: faseTxt,
+    resumen: T.resumenTpl(faseTxt, carbos, prot.toFixed(0), grasa.toFixed(0)),
+    _insight,
+    _chart,
   };
 }

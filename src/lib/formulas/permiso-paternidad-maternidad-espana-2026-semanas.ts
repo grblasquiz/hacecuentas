@@ -19,6 +19,8 @@ export interface Outputs {
   fecha_limite_opcionales: string;
   semanas_totales: number;
   aviso: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -216,16 +218,62 @@ export function compute(i: Inputs): Outputs {
     ? avisos.join(' | ')
     : 'Prestación calculada según datos introducidos. Confírmala en la Sede Electrónica de la Seguridad Social (importass.seg-social.es).';
 
+  // --- Insight narrativo ---
+  const brutoRound = Math.round(prestacionTotalBruta * 100) / 100;
+  const netoRound = Math.round(prestacionTotalNetaEstimada * 100) / 100;
+  const retencionRound = Math.round(retencionEstimada * 100) / 100;
+  const eur = (n: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' €';
+  const pctRetencion = brutoRound > 0 ? (retencionRound / brutoRound) * 100 : 0;
+
+  let _insight: any = undefined;
+  if (brutoRound > 0) {
+    _insight = {
+      title: 'Tu prestación durante el permiso',
+      text:
+        `Cobrarás el **100 % de tu base reguladora** durante **${semanasTotales} semanas** (${totalDiasPermiso} días): ` +
+        `**${eur(brutoRound)} brutos**, que tras una retención estimada del **${pctRetencion.toFixed(0)} % de IRPF** ` +
+        `quedan en unos **${eur(netoRound)} netos**. La prestación tributa como rendimiento del trabajo.`,
+      tone: 'good',
+      icon: '👶',
+    };
+  } else {
+    _insight = {
+      title: 'Completá tus datos',
+      text: 'Indicá tu **salario bruto mensual** y la **fecha de parto** para estimar la prestación y las fechas del permiso.',
+      tone: 'neutral',
+      icon: '👶',
+    };
+  }
+
+  // --- Gráfico: reparto bruto = neto + IRPF ---
+  let _chart: any = undefined;
+  if (brutoRound > 0 && retencionRound > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Neto en tu bolsillo', value: Math.round((brutoRound - retencionRound) * 100) / 100 },
+        { label: 'IRPF retenido', value: retencionRound },
+      ],
+      prefix: '€',
+      centerValue: eur(brutoRound),
+      centerLabel: 'Prestación bruta',
+      ariaLabel: `Reparto de la prestación bruta de ${eur(brutoRound)}: ${eur(netoRound)} netos y ${eur(retencionRound)} de IRPF.`,
+    };
+  }
+
   return {
     base_reguladora_diaria: Math.round(baseReguladoraDiaria * 100) / 100,
     prestacion_diaria_bruta: Math.round(prestacionDiariaBruta * 100) / 100,
     total_dias_permiso: totalDiasPermiso,
-    prestacion_total_bruta: Math.round(prestacionTotalBruta * 100) / 100,
-    prestacion_total_neta_estimada: Math.round(prestacionTotalNetaEstimada * 100) / 100,
+    prestacion_total_bruta: brutoRound,
+    prestacion_total_neta_estimada: netoRound,
     fecha_fin_obligatorio: fechaFinObligatorio,
     fecha_fin_permiso_completo: fechaFinPermisoCompleto,
     fecha_limite_opcionales: fechaLimiteOpcionales,
     semanas_totales: semanasTotales,
     aviso: avisoTexto,
+    _insight,
+    _chart,
   };
 }

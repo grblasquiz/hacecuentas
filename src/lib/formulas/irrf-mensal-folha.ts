@@ -10,7 +10,7 @@
  * Base = salário − INSS − dependentes − pensão judicial − (ou desconto simplificado se mais vantajoso).
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 
 const FAIXAS_MENSAIS = [
   { ate: 2428.80, aliq: 0, parcela: 0 },
@@ -58,7 +58,25 @@ export function irrfMensalFolha(i: Inputs): Outputs {
 
   const liquido = salarioBruto - inss - irFinal;
 
-  return {
+  const totalDescontos = inss + irFinal;
+  const pctDescontos = salarioBruto > 0 ? (totalDescontos / salarioBruto) * 100 : 0;
+  const _insight = salarioBruto > 0
+    ? {
+        title: irFinal > 0 ? 'Quanto sobra no bolso' : 'Salário isento de IRRF',
+        text: irFinal > 0
+          ? `Do bruto de ${fmt(salarioBruto)} saem **${fmt(inss)}** de INSS e **${fmt(irFinal)}** de IRRF (pelo método de **${metodoUsado}**, o mais vantajoso), sobrando **${fmt(liquido)}** líquidos — ${pctDescontos.toFixed(1)}% do salário fica retido na fonte.`
+          : `Com bruto de ${fmt(salarioBruto)}, você fica **isento de IRRF**: só **${fmt(inss)}** de INSS são descontados e o líquido é **${fmt(liquido)}**.`,
+        tone: (pctDescontos >= 20 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+        icon: '💰',
+      }
+    : {
+        title: 'Informe o salário',
+        text: `Digite o salário bruto para ver INSS, IRRF retido e o líquido na mão.`,
+        tone: 'neutral' as const,
+        icon: '💰',
+      };
+
+  const out: Outputs = {
     inssDescontado: fmt(inss),
     baseIRRFCompleta: fmt(baseCompleta),
     irrfCompleta: fmt(irCompleta),
@@ -68,5 +86,28 @@ export function irrfMensalFolha(i: Inputs): Outputs {
     metodoAplicado: metodoUsado,
     salarioLiquido: fmt(liquido),
     resumo: `Salário ${fmt(salarioBruto)} − INSS ${fmt(inss)} − IRRF ${fmt(irFinal)} (${metodoUsado}) = líquido ${fmt(liquido)}.`,
+    _insight,
   };
+
+  // Donut: salário bruto = líquido + INSS + IRRF (as partes somam o bruto)
+  if (salarioBruto > 0) {
+    const rLiquido = Math.round(liquido);
+    const rInss = Math.round(inss);
+    const rIr = Math.round(irFinal);
+    const slices = [
+      { label: 'Líquido', value: rLiquido },
+      { label: 'INSS', value: rInss },
+    ];
+    if (rIr > 0) slices.push({ label: 'IRRF', value: rIr });
+    out._chart = {
+      type: 'doughnut' as const,
+      slices,
+      prefix: 'R$ ',
+      centerValue: fmt(rLiquido + rInss + rIr),
+      centerLabel: 'Salário bruto',
+      ariaLabel: 'Composição do salário bruto: líquido, INSS e IRRF retido',
+    };
+  }
+
+  return out;
 }

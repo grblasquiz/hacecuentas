@@ -24,6 +24,12 @@ export interface Outputs {
   impuesto_total_generado: number;
   saldo_a_pagar_o_favor: number;
   tasa_efectiva: number;
+  _insight?: any;
+  _chart?: any;
+}
+
+function fmtCOP(n: number): string {
+  return '$' + Math.round(n).toLocaleString('es-CO');
 }
 
 function calcularImpuestoTramo(rentaLiquida: number, esCedulaGeneral: boolean): number {
@@ -103,7 +109,21 @@ export function compute(i: Inputs): Outputs {
   const ingreso_bruto_total = cedula_general_ingresos + cedula_pensiones_ingresos + cedula_no_laboral_ingresos + cedula_capital_ingresos;
   const tasa_efectiva = ingreso_bruto_total > 0 ? (impuesto_total_generado / ingreso_bruto_total) * 100 : 0;
 
-  return {
+  const saldo = Math.round(saldo_a_pagar_o_favor);
+  const tasaEf = Math.round(tasa_efectiva * 100) / 100;
+
+  const _insight = {
+    title: saldo > 0 ? 'Te queda saldo a pagar' : saldo < 0 ? 'Tenés saldo a favor' : 'Declaración en cero',
+    text: saldo > 0
+      ? `El impuesto generado (**${fmtCOP(impuesto_total_generado)}**) supera tus retenciones por **${fmtCOP(saldo)}**: ese es el saldo a pagar a la DIAN. Tu tasa efectiva sobre el ingreso bruto es **${tasaEf}%**.`
+      : saldo < 0
+      ? `Tus retenciones (**${fmtCOP(retenciones_practicadas)}**) cubrieron de más el impuesto: tenés **${fmtCOP(Math.abs(saldo))}** a favor para solicitar en devolución. Tasa efectiva: **${tasaEf}%**.`
+      : `Tus retenciones igualaron exactamente el impuesto generado: no pagás ni te devuelven. Tasa efectiva: **${tasaEf}%**.`,
+    tone: saldo > 0 ? 'warn' : saldo < 0 ? 'good' : 'neutral',
+    icon: saldo > 0 ? '🇨🇴' : saldo < 0 ? '💸' : '⚖️',
+  };
+
+  const out: Outputs = {
     renta_liquida_cedula_general: Math.round(renta_liquida_cedula_general),
     renta_liquida_cedula_pensiones: Math.round(renta_liquida_cedula_pensiones),
     renta_liquida_cedula_no_laboral: Math.round(renta_liquida_cedula_no_laboral),
@@ -114,7 +134,29 @@ export function compute(i: Inputs): Outputs {
     impuesto_cedula_no_laboral,
     impuesto_cedula_capital,
     impuesto_total_generado,
-    saldo_a_pagar_o_favor: Math.round(saldo_a_pagar_o_favor),
-    tasa_efectiva: Math.round(tasa_efectiva * 100) / 100
+    saldo_a_pagar_o_favor: saldo,
+    tasa_efectiva: tasaEf,
+    _insight,
   };
+
+  // Donut: composición del impuesto total por cédula (las slices suman el total)
+  const slicesImp = [
+    { label: 'Cédula general', value: impuesto_cedula_general },
+    { label: 'Cédula no laboral', value: impuesto_cedula_no_laboral },
+    { label: 'Cédula de capital', value: impuesto_cedula_capital },
+    { label: 'Cédula pensiones', value: impuesto_cedula_pensiones },
+  ].filter(s => s.value > 0);
+
+  if (impuesto_total_generado > 0 && slicesImp.length >= 2) {
+    out._chart = {
+      type: 'doughnut',
+      slices: slicesImp,
+      prefix: '$',
+      centerValue: fmtCOP(impuesto_total_generado),
+      centerLabel: 'Impuesto total',
+      ariaLabel: 'Composición del impuesto de renta generado por cada cédula',
+    };
+  }
+
+  return out;
 }

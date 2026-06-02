@@ -5,7 +5,7 @@
  * Exige declaração completa.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 
 const fmt = (n: number) => 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
@@ -20,11 +20,47 @@ export function irpfDeducaoSaude(i: Inputs): Outputs {
   const total = planoSaude + consultas + exames + hospitais + dentistaPsicologo;
   const economiaIR = total * aliq;
 
-  return {
+  const _insight = total > 0
+    ? {
+        title: 'Saúde abate IR sem teto',
+        text: `Seus **${fmt(total)}** em despesas médicas não têm limite de dedução e reduzem o IR em **${fmt(economiaIR)}** (alíquota de ${(aliq * 100).toFixed(1)}%). Na prática, a Receita banca cerca de **${(aliq * 100).toFixed(0)}%** de cada real gasto em saúde — desde que tudo esteja com recibo e CPF/CNPJ do prestador.`,
+        tone: 'good' as const,
+        icon: '🩺',
+      }
+    : {
+        title: 'Informe seus gastos',
+        text: `Ainda não há despesas lançadas. Plano de saúde, consultas, exames, internações e dentista/psicólogo são **dedutíveis sem teto** e podem render uma boa economia de IR.`,
+        tone: 'neutral' as const,
+        icon: '🩺',
+      };
+
+  const out: Outputs = {
     totalDedutivel: fmt(total),
     economiaIR: fmt(economiaIR),
     aliquotaAplicada: (aliq * 100).toFixed(1) + '%',
     resumo: `Despesas médicas dedutíveis: ${fmt(total)} (sem limite legal). Na alíquota de ${(aliq * 100).toFixed(1)}% você deixa de pagar ${fmt(economiaIR)} em IR. Guarde recibos com CPF/CNPJ por 5 anos.`,
     alerta: total > 0 ? 'Obrigatório informar CPF/CNPJ do prestador no DIRPF. Reembolso de plano deve ser subtraído.' : 'Sem gastos informados.',
+    _insight,
   };
+
+  // Donut: total composto pelas categorias de despesa (só as preenchidas; somam o total)
+  const partes = [
+    { label: 'Plano de saúde', value: Math.round(planoSaude) },
+    { label: 'Consultas', value: Math.round(consultas) },
+    { label: 'Exames', value: Math.round(exames) },
+    { label: 'Hospitais/internações', value: Math.round(hospitais) },
+    { label: 'Dentista/psicólogo', value: Math.round(dentistaPsicologo) },
+  ].filter((p) => p.value > 0);
+  if (partes.length >= 2) {
+    out._chart = {
+      type: 'doughnut' as const,
+      slices: partes,
+      prefix: 'R$ ',
+      centerValue: fmt(total),
+      centerLabel: 'Total dedutível',
+      ariaLabel: 'Composição das despesas médicas dedutíveis por categoria',
+    };
+  }
+
+  return out;
 }

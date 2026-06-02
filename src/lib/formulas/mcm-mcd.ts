@@ -14,6 +14,7 @@ export interface McmMcdOutputs {
   mcd: string;
   factorizacion: string;
   explicacion: string;
+  _insight?: any;
 }
 
 function gcd(a: number, b: number): number {
@@ -83,10 +84,25 @@ export function mcmMcd(inputs: McmMcdInputs): McmMcdOutputs {
     explicacion += `\n\nLos números ${numerosStr} son **coprimos** (su MCD es 1).`;
   }
 
+  let insightText = '';
+  if (operacion === 'mcm') {
+    insightText = `El **MCM de ${numerosStr} es ${mcmResult.toLocaleString()}**: el menor número divisible por todos. Útil para sumar fracciones de distinto denominador o sincronizar ciclos.`;
+  } else if (operacion === 'mcd') {
+    insightText = mcdResult === 1
+      ? `${numerosStr} son **coprimos**: su **MCD es 1**, no comparten ningún factor primo.`
+      : `El **MCD de ${numerosStr} es ${mcdResult.toLocaleString()}**: el mayor número que los divide a todos sin resto. Sirve para simplificar fracciones o repartir en partes iguales.`;
+  } else {
+    insightText = mcdResult === 1
+      ? `${numerosStr} son **coprimos** (MCD = 1), por eso su **MCM es ${mcmResult.toLocaleString()}**, tan grande como el producto entre ellos.`
+      : `Comparten un factor común de **${mcdResult.toLocaleString()}** (MCD) y su menor múltiplo común es **${mcmResult.toLocaleString()}** (MCM).`;
+  }
+  const insight = { title: 'Qué significan estos números', text: insightText, tone: 'neutral', icon: '🔢' };
+
   return {
     mcm: operacion === 'mcd' ? '—' : String(mcmResult),
     mcd: operacion === 'mcm' ? '—' : String(mcdResult),
     factorizacion,
     explicacion,
+    _insight: insight,
   };
 }

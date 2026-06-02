@@ -13,6 +13,7 @@ export interface PlusAntiguedadOutputs {
   plusAntiguedad: number;
   porcentajeTotal: string;
   plusAnual: number;
+  _insight?: any;
 }
 
 export function plusAntiguedad(inputs: PlusAntiguedadInputs): PlusAntiguedadOutputs {
@@ -29,9 +30,21 @@ export function plusAntiguedad(inputs: PlusAntiguedadInputs): PlusAntiguedadOutp
   // Impacto anual: 12 meses + 1 de SAC = 13
   const plusAnual = plusMensual * 13;
 
+  const plusRedondeado = Math.round(plusMensual);
+  const plusAnualRedondeado = Math.round(plusAnual);
+  const insight = {
+    title: 'Cuánto suma tu antigüedad',
+    text: anios <= 0
+      ? `Todavía no acumulás antigüedad: el adicional arranca a partir del primer año cumplido, sumando **${porcPorAnio}% del básico** por cada año.`
+      : `Con **${anios} año${anios === 1 ? '' : 's'}** sumás un **${porcentajeTotal}%** sobre el básico: **$${plusRedondeado.toLocaleString('es-AR')}** por mes y **$${plusAnualRedondeado.toLocaleString('es-AR')}** al año (12 meses + SAC).`,
+    tone: 'good' as const,
+    icon: '📅',
+  };
+
   return {
-    plusAntiguedad: Math.round(plusMensual),
+    plusAntiguedad: plusRedondeado,
     porcentajeTotal: `${porcentajeTotal}%`,
-    plusAnual: Math.round(plusAnual),
+    plusAnual: plusAnualRedondeado,
+    _insight: insight,
   };
 }

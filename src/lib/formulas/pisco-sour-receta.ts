@@ -1,6 +1,6 @@
 /** Pisco Sour */
 export interface Inputs { personas: number; tragosPorPersona: number; mlpiscoPorTrago: number; mljugodelimonPorTrago: number; mljarabesimplePorTrago: number; mlclaradehuevoPorTrago: number; }
-export interface Outputs { totalTragos: number; totalpisco: string; totaljugodelimon: string; totaljarabesimple: string; totalclaradehuevo: string; listaCompras: string; }
+export interface Outputs { totalTragos: number; totalpisco: string; totaljugodelimon: string; totaljarabesimple: string; totalclaradehuevo: string; listaCompras: string; _insight?: any; }
 
 export function piscoSourReceta(i: Inputs): Outputs {
   const p = Number(i.personas);
@@ -18,6 +18,9 @@ export function piscoSourReceta(i: Inputs): Outputs {
   const fmt = (ml: number) => `${ml}ml (${(ml / 1000).toFixed(2)}L)`;
   const lista = `Pisco: ${fmt(Math.ceil(pi * tot * 1.15))} (${Math.ceil(pi * tot * 1.15 / 750)} bot) | Limones: ${limones} | Jarabe: ${fmt(Math.ceil(j * tot * 1.15))} | Huevos: ${huevos} | Amargo angostura: 1 botella 90ml | Hielo: ${(p * 0.5).toFixed(1)}kg`;
 
+  const botellasPisco = Math.ceil(pi * tot * 1.15 / 750);
+  const litrosPisco = (pi * tot / 1000).toFixed(2);
+
   return {
     totalTragos: tot,
     totalpisco: fmt(pi * tot),
@@ -25,5 +28,11 @@ export function piscoSourReceta(i: Inputs): Outputs {
     totaljarabesimple: fmt(j * tot),
     totalclaradehuevo: `${cl * tot}ml (${huevos} huevos)`,
     listaCompras: lista,
+    _insight: {
+      title: 'Lo que no puede faltar',
+      text: `Para **${tot} pisco sours** (${p} personas) necesitás **${botellasPisco} botella${botellasPisco === 1 ? '' : 's'} de pisco** (≈${litrosPisco} L netos), **${limones} limones** y **${huevos} huevo${huevos === 1 ? '' : 's'}** para la clara. La clara levanta la espuma, así que no la saltees: es lo que separa un sour casero de uno de bar.`,
+      tone: 'neutral',
+      icon: '🍋',
+    },
   };
 }

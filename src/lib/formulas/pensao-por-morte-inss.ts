@@ -16,6 +16,8 @@ export interface Outputs {
   valorPorDependente: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -42,6 +44,30 @@ export function pensaoPorMorteInss(i: Inputs): Outputs {
     : `50% + ${deps} × 10% = ${percentual}% × ${fmtBRL(beneficio)} = ${fmtBRL(valorTotal)}`;
   const explicacao = `Pensão por morte pós-EC 103/2019: cota familiar de 50% fixa + 10% por dependente (cônjuge, filhos menores de 21, filhos inválidos). Máximo 100%. Em caso de óbito por acidente de trabalho ou doença profissional, o benefício é sempre 100%. Valor mínimo: salário mínimo (${fmtBRL(salarioMinimo)}). A cota individual não reverte aos outros dependentes quando um deles perde o direito (regra nova).`;
 
+  const noPiso = valorTotal <= salarioMinimo + 0.01 && beneficio * (percentual / 100) < salarioMinimo;
+  const _insight = {
+    title: 'Valor da pensão',
+    text: acidente
+      ? `Por óbito decorrente de acidente de trabalho ou doença profissional, a pensão é de **100%** do benefício: **${fmtBRL(valorTotal)}** por mês, dividida entre ${deps} dependente${deps > 1 ? 's' : ''}.`
+      : noPiso
+        ? `O cálculo (50% + ${deps} × 10% = ${percentual}%) ficaria abaixo do piso, então a pensão é elevada ao **salário mínimo: ${fmtBRL(valorTotal)}** por mês.`
+        : `A cota familiar fixa de 50% mais ${deps} × 10% somam **${percentual}%** do benefício: **${fmtBRL(valorTotal)}** por mês${deps > 1 ? `, ou ${fmtBRL(porDep)} por dependente` : ''}.`,
+    tone: acidente ? 'good' : 'neutral',
+    icon: '🕊️',
+  };
+
+  const _chart = deps > 1 ? {
+    type: 'doughnut',
+    slices: Array.from({ length: deps }, (_, idx) => ({
+      label: `Dependente ${idx + 1}`,
+      value: Number(porDep.toFixed(2)),
+    })),
+    prefix: 'R$ ',
+    centerValue: fmtBRL(valorTotal),
+    centerLabel: 'Total/mês',
+    ariaLabel: `Pensão total de ${fmtBRL(valorTotal)} dividida em ${deps} cotas iguais de ${fmtBRL(porDep)}`,
+  } : undefined;
+
   return {
     percentualTotal: `${percentual}%`,
     cotaCadaDependente: '10% por dependente',
@@ -49,5 +75,7 @@ export function pensaoPorMorteInss(i: Inputs): Outputs {
     valorPorDependente: fmtBRL(porDep),
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

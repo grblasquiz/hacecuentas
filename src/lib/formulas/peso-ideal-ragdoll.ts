@@ -14,6 +14,7 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
 }
 
 const RAZA = {
@@ -50,11 +51,27 @@ export function pesoIdealRagdoll(inputs: Inputs): Outputs {
     resumen += '. Castrado: cuidá no sobrealimentar (metabolismo 20% menor).';
   }
 
+  const sexoTxt = sexo === 'macho' ? 'Un macho' : 'Una hembra';
+  let insightText: string;
+  let insightTone = 'neutral';
+  if (castrado) {
+    insightText = `${sexoTxt} ${contextura} debería pesar entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). Al estar castrado, su metabolismo baja cerca de **20%**: con la misma comida engorda fácil, así que ajustá la ración o usá un alimento para gatos esterilizados.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `${sexoTxt} ${contextura} en su punto debería pesar entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). El Ragdoll es una de las razas de gato más grandes, así que ese peso es normal; lo importante es que sea músculo y no grasa abdominal.`;
+  }
+
   return {
     pesoPromedio: Number(promedio.toFixed(1)),
     pesoIdealMin: Number(min.toFixed(1)),
     pesoIdealMax: Number(max.toFixed(1)),
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight: {
+      title: 'Qué significa este rango',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐱',
+    },
   };
 }

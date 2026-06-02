@@ -14,6 +14,8 @@ export interface Outputs {
   pension_total_estimada: number;
   porcentaje_aplicado: number;
   nota_capacidad_pago: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -61,10 +63,12 @@ export function compute(i: Inputs): Outputs {
   const aportacionSalud = gastoSalAnual / 12;
 
   // Pensión total estimada
-  let pensionTotal = pensionBasica + aportacionEducacion + aportacionSalud;
+  const pensionTotalSinTope = pensionBasica + aportacionEducacion + aportacionSalud;
+  let pensionTotal = pensionTotalSinTope;
 
   // Aplicar límite máximo 50% ingresos (CCDF)
   const pensionMaxima = ingresos * PORCENTAJE_MAXIMO;
+  const fueTopeada = pensionTotal > pensionMaxima;
   if (pensionTotal > pensionMaxima) {
     pensionTotal = pensionMaxima;
   }
@@ -85,12 +89,65 @@ export function compute(i: Inputs): Outputs {
     notaCapacidad = "❌ Ingreso no válido. Ingresa monto > 0.";
   }
 
+  const fmtMXN = (v: number) =>
+    '$' + Math.round(v).toLocaleString('es-MX') + ' MXN';
+
+  // Insight dinámico según capacidad de pago del deudor
+  let insight: any = undefined;
+  if (ingresos > 0) {
+    const pctTotal = ingresos > 0 ? (pensionTotal / ingresos) * 100 : 0;
+    let tone: 'good' | 'warn' | 'neutral' = 'neutral';
+    let title = 'Pensión estimada';
+    let text = '';
+    let icon = '⚖️';
+    if (ingresoNeto < MINIMO_SUBSISTENCIA) {
+      tone = 'warn';
+      icon = '⚠️';
+      title = 'Pensión por encima de tu margen';
+      text = `La pensión de **${fmtMXN(pensionTotal)}** deja un ingreso neto de **${fmtMXN(ingresoNeto)}**, por debajo del mínimo de subsistencia (${fmtMXN(MINIMO_SUBSISTENCIA)}). Conviene pedir revisión judicial del monto.`;
+    } else if (fueTopeada) {
+      tone = 'warn';
+      icon = '🚧';
+      title = 'Pensión topada al 50%';
+      text = `La suma de manutención más gastos superaba el límite legal, así que se ajustó al tope del **50% (${fmtMXN(pensionMaxima)})** que marca el Código Civil de CDMX.`;
+    } else {
+      tone = 'good';
+      icon = '⚖️';
+      title = 'Pensión dentro de lo razonable';
+      text = `Pagarías **${fmtMXN(pensionTotal)}** al mes (**${pctTotal.toFixed(0)}%** de tu ingreso bruto) y te quedan **${fmtMXN(ingresoNeto)}** para tus gastos, por encima del mínimo de subsistencia.`;
+    }
+    insight = { title, text, tone, icon };
+  }
+
+  // Donut: composición de la pensión (sólo cuando hay partes reales y no fue topeada)
+  let chart: any = undefined;
+  if (ingresos > 0 && !fueTopeada && pensionTotal > 0 &&
+      (aportacionEducacion > 0 || aportacionSalud > 0)) {
+    const slices = [
+      { label: 'Manutención básica', value: parseFloat(pensionBasica.toFixed(2)) },
+    ];
+    if (aportacionEducacion > 0)
+      slices.push({ label: 'Educación', value: parseFloat(aportacionEducacion.toFixed(2)) });
+    if (aportacionSalud > 0)
+      slices.push({ label: 'Salud', value: parseFloat(aportacionSalud.toFixed(2)) });
+    chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: fmtMXN(pensionTotal),
+      centerLabel: 'Pensión mensual',
+      ariaLabel: 'Composición de la pensión alimenticia mensual entre manutención, educación y salud',
+    };
+  }
+
   return {
     pension_basica_mensual: parseFloat(pensionBasica.toFixed(2)),
     aportacion_educacion_mensual: parseFloat(aportacionEducacion.toFixed(2)),
     aportacion_salud_mensual: parseFloat(aportacionSalud.toFixed(2)),
     pension_total_estimada: parseFloat(pensionTotal.toFixed(2)),
     porcentaje_aplicado: parseFloat((porcentajeAplicado * 100).toFixed(2)),
-    nota_capacidad_pago: notaCapacidad
+    nota_capacidad_pago: notaCapacidad,
+    ...(insight ? { _insight: insight } : {}),
+    ...(chart ? { _chart: chart } : {})
   };
 }

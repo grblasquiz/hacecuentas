@@ -18,6 +18,7 @@ export interface Outputs {
   faixa: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 const FAIXAS: Record<string, Array<{ rbt12Max: number; aliquota: number; deduzir: number }>> = {
@@ -70,6 +71,13 @@ export function meiMigrarME(i: Inputs): Outputs {
   const formula = `Alíquota efetiva = (RBT12 × ${f.aliquota}% - R$${f.deduzir}) / RBT12 = ${aliquotaEfFinal.toFixed(2)}%. DAS = R$ ${fatMes.toFixed(2)} × ${aliquotaEfFinal.toFixed(2)}% = R$ ${valorDasME.toFixed(2)}`;
   const explicacion = `Migrando MEI → ME Simples Nacional (${tipo}), faixa ${faixaIdx + 1} (RBT12 ≤ R$ ${f.rbt12Max.toLocaleString('pt-BR')}). Alíquota nominal ${f.aliquota}%, efetiva ${aliquotaEfFinal.toFixed(2)}% (após dedução R$ ${f.deduzir.toLocaleString('pt-BR')}). Primeiro DAS como ME: R$ ${valorDasME.toFixed(2)}/mês — um aumento de R$ ${diferencaVsMEI.toFixed(2)} em relação ao DAS MEI (R$ ${DAS_MEI}). Além disso, ME precisa de contador (R$ 300-600/mês) e emite NF-e.`;
 
+  const _insight = {
+    title: 'Quanto pesa virar ME',
+    text: `Como ME (${tipo}, faixa ${faixaIdx + 1}) seu primeiro DAS fica em **R$ ${valorDasME.toFixed(2)}/mês** a uma alíquota efetiva de **${aliquotaEfFinal.toFixed(2)}%** — um salto de **R$ ${diferencaVsMEI.toFixed(2)}/mês** sobre o DAS MEI. Some o contador (R$ 300–600/mês) e a emissão de NF-e ao planejar a transição.`,
+    tone: diferencaVsMEI > 0 ? 'warn' : 'good',
+    icon: '📈',
+  };
+
   return {
     aliquotaNominal: f.aliquota,
     aliquotaEfetiva: Number(aliquotaEfFinal.toFixed(2)),
@@ -78,5 +86,6 @@ export function meiMigrarME(i: Inputs): Outputs {
     faixa: faixaIdx + 1,
     formula,
     explicacion,
+    _insight,
   };
 }

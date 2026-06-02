@@ -12,6 +12,8 @@ export interface Outputs {
   partidosVistos: number;
   prorrogasEstimadas: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Constantes Mundial 2026 (formato 48 equipos = 104 partidos).
@@ -124,6 +126,24 @@ export function mundial2026HorasTvCronogramaFan(i: Inputs): Outputs {
 
   const resumen = `Si ves **${modoLabel}**: total **${partidos} partidos**, ~**${horasFutbol} hs** de fútbol activo${incluirPrev ? ' + previas/post' : ''}, **${horasTotales} hs totales** = **${dias} días pantalla** (24h equivalentes). Prórrogas esperadas: ~${prorrogasInt} partidos. Definiciones por penales esperadas: ~${penalesEst}. ${incluirPrev ? 'Estás sumando ~1 hora de previa/post por partido.' : 'Si sumás previas/post, agregale ~' + Math.round((partidos * MIN_PREVIA_POST) / 60) + ' hs más.'}`;
 
+  // Componentes en horas (1 decimal). Suman el total mostrado en el donut.
+  const hFutbol = Math.round((minFutbol / 60) * 10) / 10;
+  const hDescansos = Math.round((minDescansos / 60) * 10) / 10;
+  const hPrevias = Math.round((minPrevias / 60) * 10) / 10;
+  const totalDonut = Math.round((hFutbol + hDescansos + hPrevias) * 10) / 10;
+  const slices = [
+    { label: 'Fútbol activo', value: hFutbol },
+    { label: 'Entretiempos (15 min/partido)', value: hDescansos },
+  ];
+  if (incluirPrev) slices.push({ label: 'Previa + post', value: hPrevias });
+
+  const insight = {
+    title: dias >= 5 ? 'Esto es una maratón de Mundial' : 'Tu plan de Mundial frente a la tele',
+    text: `Ver **${modoLabel}** te lleva **${horasTotales} hs** de pantalla — unos **${dias} días** seguidos de 24 h. De eso, **${horasFutbol} hs** son fútbol puro${incluirPrev ? ' y el resto entretiempos más previa/post' : ' (el resto son entretiempos)'}. Prepará ~${prorrogasInt} prórroga(s) y ~${penalesEst} tanda(s) de penales para sufrir.`,
+    tone: dias >= 5 ? 'warn' : 'neutral',
+    icon: '📺',
+  };
+
   return {
     horasFutbol,
     horasTotalesConPrevia: horasTotales,
@@ -131,5 +151,14 @@ export function mundial2026HorasTvCronogramaFan(i: Inputs): Outputs {
     partidosVistos: partidos,
     prorrogasEstimadas: prorrogasInt,
     resumen,
+    _insight: insight,
+    _chart: {
+      type: 'doughnut',
+      slices,
+      suffix: ' hs',
+      centerValue: `${totalDonut} hs`,
+      centerLabel: 'frente a la tele',
+      ariaLabel: `Desglose de las ${totalDonut} horas de pantalla: ${hFutbol} hs de fútbol y ${hDescansos} hs de entretiempos${incluirPrev ? ` más ${hPrevias} hs de previa y post` : ''}`,
+    },
   };
 }

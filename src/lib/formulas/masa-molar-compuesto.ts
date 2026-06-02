@@ -1,6 +1,6 @@
 /** Calculadora de Masa Molar — Σ(n × masa atómica) */
 export interface Inputs { elemento1: number; cantidad1: number; elemento2?: number; cantidad2?: number; elemento3?: number; cantidad3?: number; }
-export interface Outputs { masaMolar: number; composicion: string; molesEn100g: number; }
+export interface Outputs { masaMolar: number; composicion: string; molesEn100g: number; _insight?: any; _chart?: any; }
 
 export function masaMolarCompuesto(i: Inputs): Outputs {
   const elems: { masa: number; cant: number }[] = [];
@@ -15,9 +15,37 @@ export function masaMolarCompuesto(i: Inputs): Outputs {
     return `Elem. ${idx + 1}: ${e.cant} × ${e.masa} = ${(e.masa * e.cant).toFixed(3)} g/mol (${pct.toFixed(1)}%)`;
   }).join(' | ');
 
+  const totalR = Number(total.toFixed(4));
+  const dominante = elems.reduce((a, b) => (a.masa * a.cant >= b.masa * b.cant ? a : b));
+  const pctDom = (dominante.masa * dominante.cant / total) * 100;
+  const insightText = elems.length > 1
+    ? `La masa molar del compuesto es **${totalR} g/mol**, sumando ${elems.length} elementos. El de masa atómica ${dominante.masa} aporta el **${pctDom.toFixed(1)}%** del peso total.`
+    : `Con un solo elemento (${dominante.cant} × ${dominante.masa}), la masa molar es **${totalR} g/mol**. En 100 g hay **${Number((100 / total).toFixed(4))} moles**.`;
+
   return {
-    masaMolar: Number(total.toFixed(4)),
+    masaMolar: totalR,
     composicion,
     molesEn100g: Number((100 / total).toFixed(4)),
+    _insight: {
+      title: 'Masa molar del compuesto',
+      text: insightText,
+      tone: 'neutral',
+      icon: '🧪',
+    },
+    ...(elems.length > 1
+      ? {
+          _chart: {
+            type: 'doughnut',
+            slices: elems.map((e, idx) => ({
+              label: `Elem. ${idx + 1}`,
+              value: Number((e.masa * e.cant).toFixed(3)),
+            })),
+            prefix: '',
+            centerValue: `${totalR}`,
+            centerLabel: 'g/mol',
+            ariaLabel: `Masa molar de ${totalR} g/mol distribuida entre ${elems.length} elementos`,
+          },
+        }
+      : {}),
   };
 }

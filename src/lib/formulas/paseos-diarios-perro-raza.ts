@@ -2,7 +2,7 @@
  * Paseos diarios del perro por raza y vivienda.
  */
 export interface Inputs { raza: string; vivienda: string; edad: string; }
-export interface Outputs { paseosDia: number; minutosTotales: number; duracionPromedio: number; horarios: string; }
+export interface Outputs { paseosDia: number; minutosTotales: number; duracionPromedio: number; horarios: string; _insight?: any; }
 
 const RAZAS: Record<string, { ejercicioMin: number; paseos: number }> = {
   'labrador-retriever': { ejercicioMin: 90, paseos: 3 },
@@ -46,5 +46,17 @@ export function paseosDiariosPerroRaza(inputs: Inputs): Outputs {
       ? '7 AM, 14 PM, 20 PM'
       : '7 AM, 20 PM';
 
-  return { paseosDia: paseos, minutosTotales: minutos, duracionPromedio: duracion, horarios };
+  const razaNombre = raza.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const altaDemanda = minutos >= 90;
+  const deptoExigente = altaDemanda && vivienda === 'depto';
+  const insight = {
+    title: 'Plan de paseos a medida',
+    text: deptoExigente
+      ? `Un **${razaNombre}** necesita **${minutos} min/día** de ejercicio, bastante para un departamento: planificá **${paseos} salidas** de ~${duracion} min para que no acumule energía ni estrés.`
+      : `Un **${razaNombre}** ${edad} necesita unos **${minutos} min/día**, repartidos en **${paseos} salidas** de ~${duracion} min cada una. Mantené horarios regulares para crear rutina.`,
+    tone: deptoExigente ? 'warn' : 'neutral',
+    icon: '🐾',
+  };
+
+  return { paseosDia: paseos, minutosTotales: minutos, duracionPromedio: duracion, horarios, _insight: insight };
 }

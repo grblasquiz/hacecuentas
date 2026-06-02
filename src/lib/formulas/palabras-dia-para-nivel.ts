@@ -7,6 +7,8 @@ export interface Outputs {
   tarjetasRepasosDia: number;
   minutosDia: number;
   viabilidad: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function palabrasDiaParaNivel(i: Inputs): Outputs {
@@ -31,11 +33,41 @@ export function palabrasDiaParaNivel(i: Inputs): Outputs {
   else if (palDia > 10) viab = '✅ Normal — sostenible.';
   else viab = '✅ Muy cómodo. Podrías acelerar.';
 
+  const nivelTxt = nivel.toUpperCase();
+  const tone = faltan === 0 ? 'good' : palDia > 30 ? 'warn' : palDia > 20 ? 'warn' : 'good';
+  const _insight = {
+    title: faltan === 0 ? 'Meta ya alcanzada' : 'Tu ritmo diario',
+    text: faltan === 0
+      ? `Con **${act} palabras** ya superás el nivel **${nivelTxt}**. Podés apuntar a un nivel más alto.`
+      : `Para sumar **${faltan} palabras** y llegar a **${nivelTxt}** en **${meses} meses** necesitás aprender **${palDia} palabras/día** (~**${minDia} min** de repaso diario).`,
+    tone: tone as 'good' | 'warn' | 'neutral',
+    icon: '📚',
+  };
+
+  let _chart: any = undefined;
+  if (faltan > 0) {
+    _chart = {
+      type: 'scale',
+      marker: palDia,
+      markerLabel: palDia + ' pal/día',
+      min: 0,
+      segments: [
+        { nombre: 'Cómodo', max: 10, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Sostenible', max: 20, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Agresivo', max: 30, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Insostenible', max: Math.max(40, palDia + 5), color: '#dc2626', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Ritmo de ${palDia} palabras por día sobre una escala de viabilidad: hasta 10 cómodo, 10-20 sostenible, 20-30 agresivo, más de 30 insostenible.`,
+    };
+  }
+
   return {
     palabrasPorDia: palDia,
     tarjetasRepasosDia: repasosDia,
     minutosDia: minDia,
     viabilidad: viab,
+    _insight: _insight,
+    ...(_chart ? { _chart } : {}),
   };
 
 }

@@ -15,6 +15,7 @@ export interface Outputs {
   supplyEfectivo: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function marketCapVsPrecio(i: Inputs): Outputs {
@@ -46,6 +47,15 @@ export function marketCapVsPrecio(i: Inputs): Outputs {
 
   const explicacion = `Market cap actual: ${formatMcap(marketCapActual)}. Para alcanzar ${formatMcap(mcapObj)} de market cap con ${supplyEfectivo.toExponential(2)} tokens en circulación, el precio debería ser $${precioObjetivo.toFixed(6)} (${multiplicador.toFixed(2)}x, o +${gananciaPorc.toFixed(1)}% desde el precio actual de $${precio}).`;
 
+  const _insight = {
+    title: multiplicador >= 1 ? 'Potencial hasta el objetivo' : 'El objetivo implica caída',
+    text: multiplicador >= 1
+      ? `Para que el market cap pase de **${formatMcap(marketCapActual)}** a **${formatMcap(mcapObj)}**, el precio tendría que ir de **$${precio}** a **$${precioObjetivo.toFixed(6)}**: un **${multiplicador.toFixed(2)}x** (**+${gananciaPorc.toFixed(1)}%**). Recordá que un múltiplo alto exige enorme demanda nueva — no es una predicción.`
+      : `Ese market cap objetivo de **${formatMcap(mcapObj)}** está por debajo del actual (**${formatMcap(marketCapActual)}**): implicaría que el precio **baje** de $${precio} a **$${precioObjetivo.toFixed(6)}** (**${gananciaPorc.toFixed(1)}%**).`,
+    tone: multiplicador >= 1 ? 'neutral' : 'warn',
+    icon: '🪙',
+  };
+
   return {
     precioObjetivo: Number(precioObjetivo.toFixed(8)),
     marketCapActual: Math.round(marketCapActual),
@@ -54,5 +64,6 @@ export function marketCapVsPrecio(i: Inputs): Outputs {
     supplyEfectivo,
     formula,
     explicacion,
+    _insight,
   };
 }

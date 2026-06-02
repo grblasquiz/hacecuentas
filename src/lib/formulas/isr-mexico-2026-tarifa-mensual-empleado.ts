@@ -11,6 +11,8 @@ export interface Outputs {
   neto_en_mano: number;
   tramo_aplicado: number;
   tasa_efectiva: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -83,13 +85,54 @@ export function compute(i: Inputs): Outputs {
   // Paso 7: Tasa marginal del tramo aplicado
   const tramo_aplicado = tramos[tramo_idx].tasa * 100;
 
-  return {
-    isr_bruto: Math.round(isr_bruto * 100) / 100,
-    subsidio_empleo: Math.round(subsidio_empleo * 100) / 100,
-    isr_neto: Math.round(isr_neto * 100) / 100,
-    aportacion_imss: Math.round(aportacion_imss * 100) / 100,
-    neto_en_mano: Math.round(neto_en_mano * 100) / 100,
-    tramo_aplicado: Math.round(tramo_aplicado * 100) / 100,
-    tasa_efectiva: Math.round(tasa_efectiva * 100) / 100
+  const isrNetoOut = Math.round(isr_neto * 100) / 100;
+  const imssOut = Math.round(aportacion_imss * 100) / 100;
+  const netoOut = Math.round(neto_en_mano * 100) / 100;
+  const subsidioOut = Math.round(subsidio_empleo * 100) / 100;
+  const tasaEfectivaOut = Math.round(tasa_efectiva * 100) / 100;
+  const fmtMXN = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const pctNeto = salario > 0 ? Math.round((netoOut / salario) * 1000) / 10 : 0;
+
+  const _insight = {
+    title: salario <= 0 ? 'Ingresá tu salario' : 'Tu neto en mano',
+    text: salario <= 0
+      ? 'Cargá tu salario bruto mensual para estimar el ISR, el IMSS y el neto que cobrás.'
+      : subsidioOut > 0
+      ? `De un bruto de **${fmtMXN(salario)}** te descuentan **${fmtMXN(isrNetoOut)}** de ISR (ya con subsidio de ${fmtMXN(subsidioOut)}) y **${fmtMXN(imssOut)}** de IMSS: te quedan **${fmtMXN(netoOut)}** en mano, el **${pctNeto}%**.`
+      : `De un bruto de **${fmtMXN(salario)}** te descuentan **${fmtMXN(isrNetoOut)}** de ISR (tasa marginal ${Math.round(tramo_aplicado * 100) / 100}%) y **${fmtMXN(imssOut)}** de IMSS: cobrás **${fmtMXN(netoOut)}** netos, el **${pctNeto}%**.`,
+    tone: salario <= 0 ? 'neutral' : pctNeto >= 85 ? 'good' : pctNeto < 70 ? 'warn' : 'neutral',
+    icon: '💵',
   };
+
+  const out: Outputs = {
+    isr_bruto: Math.round(isr_bruto * 100) / 100,
+    subsidio_empleo: subsidioOut,
+    isr_neto: isrNetoOut,
+    aportacion_imss: imssOut,
+    neto_en_mano: netoOut,
+    tramo_aplicado: Math.round(tramo_aplicado * 100) / 100,
+    tasa_efectiva: tasaEfectivaOut,
+    _insight,
+  };
+
+  // Donut: el salario bruto se reparte entre neto en mano + ISR + IMSS (suman el bruto)
+  if (salario > 0 && netoOut >= 0) {
+    const slices = [
+      { label: 'Neto en mano', value: netoOut },
+      { label: 'ISR neto', value: isrNetoOut },
+      { label: 'IMSS (empleado)', value: imssOut },
+    ].filter(s => s.value > 0);
+    if (slices.length >= 2) {
+      out._chart = {
+        type: 'doughnut',
+        slices,
+        prefix: '$',
+        centerValue: fmtMXN(salario),
+        centerLabel: 'Salario bruto',
+        ariaLabel: 'Reparto del salario bruto mensual entre neto en mano, ISR e IMSS',
+      };
+    }
+  }
+
+  return out;
 }

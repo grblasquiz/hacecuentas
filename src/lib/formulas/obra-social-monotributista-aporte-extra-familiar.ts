@@ -1,6 +1,6 @@
 /** Aporte extra de obra social del monotributo por adherentes (cónyuge, hijos) */
 export interface Inputs { aporteBaseMensual: number; cantidadAdherentes: number; aporteAdherente: number; mesesAnio: number; }
-export interface Outputs { aporteAdherentesMensual: number; aporteTotalMensual: number; aporteTotalAnual: number; costoAnualPorAdherente: number; explicacion: string; _chart?: any; }
+export interface Outputs { aporteAdherentesMensual: number; aporteTotalMensual: number; aporteTotalAnual: number; costoAnualPorAdherente: number; explicacion: string; _chart?: any; _insight?: any; }
 export function obraSocialMonotributistaAporteExtraFamiliar(i: Inputs): Outputs {
   const base = Number(i.aporteBaseMensual);
   const cant = Number(i.cantidadAdherentes);
@@ -22,6 +22,20 @@ export function obraSocialMonotributistaAporteExtraFamiliar(i: Inputs): Outputs 
     centerLabel: 'Total mensual',
     ariaLabel: 'Composición del aporte mensual total: aporte base del titular más aporte de adherentes',
   };
+  const pctAdh = totalMens > 0 ? Math.round((adhMens / totalMens) * 100) : 0;
+  const _insight = cant > 0
+    ? {
+        title: 'Costo de los adherentes',
+        text: `Sumar **${cant} adherente(s)** agrega **$${Math.round(adhMens).toLocaleString('es-AR')}/mes** ($${Math.round(adhMens * meses).toLocaleString('es-AR')} al año), el **${pctAdh}%** de tu aporte total de obra social. El total anual queda en **$${Math.round(totalAnual).toLocaleString('es-AR')}**.`,
+        tone: 'warn' as const,
+        icon: '🩺',
+      }
+    : {
+        title: 'Aporte sin adherentes',
+        text: `Sin adherentes, solo pagás tu aporte base de **$${Math.round(base).toLocaleString('es-AR')}/mes**, lo que equivale a **$${Math.round(totalAnual).toLocaleString('es-AR')}** al año.`,
+        tone: 'neutral' as const,
+        icon: '🩺',
+      };
   return {
     aporteAdherentesMensual: Number(adhMens.toFixed(2)),
     aporteTotalMensual: Number(totalMens.toFixed(2)),
@@ -29,5 +43,6 @@ export function obraSocialMonotributistaAporteExtraFamiliar(i: Inputs): Outputs 
     costoAnualPorAdherente: Number(costoAnualAdh.toFixed(2)),
     explicacion: `Aporte mensual total: $${totalMens.toLocaleString('es-AR')} (base $${base.toLocaleString('es-AR')} + ${cant} adherente(s) x $${apAdh.toLocaleString('es-AR')}). Anual: $${totalAnual.toLocaleString('es-AR')}.`,
     _chart: chart,
+    _insight,
   };
 }

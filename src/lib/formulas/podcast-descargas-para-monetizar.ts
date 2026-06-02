@@ -1,6 +1,6 @@
 /** Podcast Descargas Monetizar */
 export interface Inputs { metaMensualUSD: number; episodiosPorMes: number; cpm: number; slotsPorEpisodio: string; }
-export interface Outputs { descargasPorEpisodio: string; descargasMensuales: string; ingresoPorEpisodio: string; factibilidad: string; }
+export interface Outputs { descargasPorEpisodio: string; descargasMensuales: string; ingresoPorEpisodio: string; factibilidad: string; _insight?: any; _chart?: any; }
 
 export function podcastDescargasParaMonetizar(i: Inputs): Outputs {
   const meta = Number(i.metaMensualUSD);
@@ -14,14 +14,40 @@ export function podcastDescargasParaMonetizar(i: Inputs): Outputs {
   const descPorEp = descTotales / eps;
   const ingresoEp = descPorEp / 1000 * ingresoPor1K;
   let fact = '';
-  if (descPorEp < 1000) fact = 'Muy factible — meta chica alcanzable en meses';
-  else if (descPorEp < 5000) fact = 'Factible con 6-12 meses de consistencia';
-  else if (descPorEp < 20000) fact = 'Ambicioso — top 10% de podcasts activos';
-  else fact = 'Muy ambicioso — requiere ser top 1% o diversificar ingresos';
+  let tone = 'neutral';
+  if (descPorEp < 1000) { fact = 'Muy factible — meta chica alcanzable en meses'; tone = 'good'; }
+  else if (descPorEp < 5000) { fact = 'Factible con 6-12 meses de consistencia'; tone = 'good'; }
+  else if (descPorEp < 20000) { fact = 'Ambicioso — top 10% de podcasts activos'; tone = 'warn'; }
+  else { fact = 'Muy ambicioso — requiere ser top 1% o diversificar ingresos'; tone = 'warn'; }
+
+  const descEpR = Math.round(descPorEp);
+  const _insight = {
+    title: 'Cuántas descargas necesitás',
+    text: `Para llegar a **$${meta.toLocaleString('es-AR')} USD/mes** con un CPM de **$${cpm}** y ${slots} aviso${slots === 1 ? '' : 's'} por episodio, necesitás **${descEpR.toLocaleString('es-AR')} descargas/episodio** (${Math.round(descTotales).toLocaleString('es-AR')}/mes en ${eps} episodios). ${fact}.`,
+    tone,
+    icon: '🎙️',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: descEpR,
+    markerLabel: `${descEpR.toLocaleString('es-AR')}/ep`,
+    min: 0,
+    segments: [
+      { nombre: 'Muy factible', max: 1000, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Factible', max: 5000, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Ambicioso', max: 20000, color: '#d97706', colorDark: '#f59e0b' },
+      { nombre: 'Top 1%', max: Math.max(40000, Math.ceil(descEpR * 1.15)), color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Descargas por episodio necesarias: ${descEpR.toLocaleString('es-AR')}, en zona de factibilidad`,
+  };
+
   return {
-    descargasPorEpisodio: `${Math.round(descPorEp).toLocaleString('es-AR')} descargas/episodio`,
+    descargasPorEpisodio: `${descEpR.toLocaleString('es-AR')} descargas/episodio`,
     descargasMensuales: `${Math.round(descTotales).toLocaleString('es-AR')} descargas/mes`,
     ingresoPorEpisodio: `$${ingresoEp.toFixed(2)} USD`,
     factibilidad: fact,
+    _insight,
+    _chart,
   };
 }

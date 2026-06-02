@@ -5,7 +5,7 @@
  * Receita Federal — Instrução Normativa RFB (anual) e Lei 9.250/1995
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | undefined; _insight?: any; }
 
 const LIMITE_SIMPLIFICADA = 16754.34;
 const FAIXAS_ANUAIS = [
@@ -40,6 +40,30 @@ export function irpfDeclaracaoComparador(i: Inputs): Outputs {
   const melhor = irSimpl <= irCompleta ? 'simplificada' : 'completa';
   const economia = Math.abs(irSimpl - irCompleta);
 
+  let _insight: any;
+  if (renda <= 0) {
+    _insight = {
+      title: 'Informe sua renda',
+      text: 'Preencha a renda tributável anual para comparar a declaração **simplificada** e a **completa**.',
+      tone: 'neutral',
+      icon: '🧾',
+    };
+  } else if (economia < 0.005) {
+    _insight = {
+      title: 'Dá no mesmo',
+      text: `Com esses dados, simplificada e completa resultam no mesmo imposto (**${fmt(irSimpl)}**). A simplificada costuma ser mais prática por não exigir comprovantes.`,
+      tone: 'neutral',
+      icon: '🧾',
+    };
+  } else {
+    _insight = {
+      title: `Escolha a declaração ${melhor === 'simplificada' ? 'simplificada' : 'completa'}`,
+      text: `A **${melhor}** paga ${fmt(melhor === 'simplificada' ? irSimpl : irCompleta)} contra ${fmt(melhor === 'simplificada' ? irCompleta : irSimpl)} da outra: você economiza **${fmt(economia)}** de IR escolhendo a opção certa.`,
+      tone: 'good',
+      icon: '🧾',
+    };
+  }
+
   return {
     descontoSimplificada: fmt(descontoSimpl),
     baseSimplificada: fmt(baseSimpl),
@@ -49,5 +73,6 @@ export function irpfDeclaracaoComparador(i: Inputs): Outputs {
     melhorOpcao: melhor === 'simplificada' ? 'Simplificada' : 'Completa',
     economia: fmt(economia),
     resumo: `Renda tributável ${fmt(renda)}. Simplificada paga ${fmt(irSimpl)}; completa paga ${fmt(irCompleta)}. Escolha a ${melhor} e economize ${fmt(economia)}.`,
+    _insight,
   };
 }

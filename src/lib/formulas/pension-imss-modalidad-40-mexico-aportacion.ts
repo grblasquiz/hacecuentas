@@ -25,6 +25,7 @@ export interface Outputs {
   valor_presente_pension_20anos: number;
   valor_presente_neto_20anos: number;
   mensaje_recomendacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -56,7 +57,13 @@ export function compute(i: Inputs): Outputs {
       roi_anual_modalidad40: 0,
       valor_presente_pension_20anos: 0,
       valor_presente_neto_20anos: 0,
-      mensaje_recomendacion: 'Error: UMA debe estar entre 1 y 25.'
+      mensaje_recomendacion: 'Error: UMA debe estar entre 1 y 25.',
+      _insight: {
+        title: 'Salario base fuera de rango',
+        text: 'El salario base de cotización en Modalidad 40 debe estar entre **1 y 25 UMA**. Ajustá el valor para ver tu proyección.',
+        tone: 'warn',
+        icon: '⚠️',
+      }
     };
   }
 
@@ -189,6 +196,33 @@ export function compute(i: Inputs): Outputs {
       '➡️ Modalidad 40 y AFORE comparable. Elige según preferencia: seguridad (IMSS) vs. potencial rendimiento (AFORE).';
   }
 
+  // Insight dinámico según conveniencia de Modalidad 40 vs AFORE
+  const fmtMXN = (v: number) =>
+    '$' + Math.round(v).toLocaleString('es-MX') + ' MXN';
+  let insight: any;
+  if (semanas_totales_al_cierre < 500) {
+    insight = {
+      title: 'Aún no calificás para pensión',
+      text: `Con **${Math.round(semanas_totales_al_cierre)} semanas** no llegás al mínimo de 500 para pensionarte por Ley 73. Necesitás cotizar más antes de que Modalidad 40 te rinda.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (valor_presente_neto_20anos > 0) {
+    insight = {
+      title: 'Modalidad 40 te conviene',
+      text: `Invertís **${fmtMXN(aportacion_acumulada)}** en cuotas y proyectás una pensión de **${fmtMXN(pension_mensual_ley73)}/mes**. En 20 años de jubilación el valor presente neto es de **${fmtMXN(valor_presente_neto_20anos)}**, y recuperás lo aportado en ~**${breakeven_meses < 999 ? Math.round(breakeven_meses) + ' meses' : 'el largo plazo'}**.`,
+      tone: 'good',
+      icon: '📈',
+    };
+  } else {
+    insight = {
+      title: 'Revisá si te conviene',
+      text: `La pensión proyectada es de **${fmtMXN(pension_mensual_ley73)}/mes**, pero el valor presente neto de tu inversión a 20 años da **${fmtMXN(valor_presente_neto_20anos)}**. Compará bien Modalidad 40 (más segura) contra tu AFORE antes de decidir.`,
+      tone: 'warn',
+      icon: '🤔',
+    };
+  }
+
   return {
     uma_vigente: UMA_VIGENTE,
     cuota_mensual_inicial: Math.round(cuota_mensual_inicial * 100) / 100,
@@ -211,6 +245,7 @@ export function compute(i: Inputs): Outputs {
       Math.round(valor_presente_pension_20anos * 100) / 100,
     valor_presente_neto_20anos:
       Math.round(valor_presente_neto_20anos * 100) / 100,
-    mensaje_recomendacion: mensaje_recomendacion
+    mensaje_recomendacion: mensaje_recomendacion,
+    _insight: insight
   };
 }

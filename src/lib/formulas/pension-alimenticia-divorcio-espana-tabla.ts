@@ -19,6 +19,8 @@ export interface Outputs {
   pension_compartida_ajustada: string;       // descripción del ajuste aplicado
   nota_foral: string;                        // aviso CCAA foral
   aviso_legal: string;                       // recordatorio orientativo
+  _insight?: any;
+  _chart?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,6 +86,12 @@ export function compute(i: Inputs): Outputs {
       pension_compartida_ajustada: 'Sin ingresos declarados en el progenitor no custodio. El juez valorará la capacidad económica potencial.',
       nota_foral: CCAA_FORALES[ccaa] || '',
       aviso_legal: 'Resultado orientativo basado en la tabla CGPJ. No sustituye al asesoramiento jurídico de un abogado de familia.',
+      _insight: {
+        title: 'Sin ingresos del no custodio',
+        text: 'Sin ingresos declarados en el progenitor no custodio, la tabla del CGPJ no fija un importe: el **juez valorará la capacidad económica potencial** (patrimonio, capacidad de trabajo). Aun así suele establecerse un mínimo vital.',
+        tone: 'neutral',
+        icon: '⚖️',
+      },
     };
   }
 
@@ -140,13 +148,50 @@ export function compute(i: Inputs): Outputs {
   const numHijosReal = Math.max(1, numHijosNum);
   const pensionPorHijo = pensionBase / numHijosReal;
 
+  // --- Insight ---
+  const pensionDisp = parseFloat(pensionBase.toFixed(2));
+  const porHijoDisp = parseFloat(pensionPorHijo.toFixed(2));
+  const gastosDisp = parseFloat(gastosXProgenitorMes.toFixed(2));
+  const fmtEUR = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' €';
+  const pctSobreIngreso = ingresosNC > 0 ? (pensionBase / ingresosNC) * 100 : 0;
+
+  const _insight = pensionBase === 0
+    ? {
+        title: 'Sin pensión periódica',
+        text: `En este escenario de custodia compartida **no se fija pensión periódica**: cada progenitor asume los gastos del menor durante su periodo de convivencia. Los gastos extraordinarios se reparten al 50 % (**${fmtEUR(gastosDisp)}/mes** a cada uno).`,
+        tone: 'good',
+        icon: '⚖️',
+      }
+    : {
+        title: 'Pensión orientativa',
+        text: `Según la tabla CGPJ corresponde una pensión de **${fmtEUR(pensionDisp)}/mes**${numHijosReal > 1 ? ` (**${fmtEUR(porHijoDisp)}** por cada uno de los ${numHijosReal} hijos)` : ''}, equivalente al **${pctSobreIngreso.toFixed(0)}%** de los ingresos del progenitor no custodio. A esto se suman ${fmtEUR(gastosDisp)}/mes de gastos extraordinarios por progenitor.`,
+        tone: 'warn',
+        icon: '⚖️',
+      };
+
+  // Donut: desembolso mensual del no custodio = pensión + su mitad de gastos extraordinarios
+  const desembolso = parseFloat((pensionDisp + gastosDisp).toFixed(2));
+  const _chart = (pensionDisp > 0 && gastosDisp > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Pensión mensual', value: pensionDisp },
+      { label: 'Gastos extraordinarios (50 %)', value: parseFloat((desembolso - pensionDisp).toFixed(2)) },
+    ],
+    prefix: '',
+    centerValue: fmtEUR(desembolso),
+    centerLabel: 'Desembolso/mes',
+    ariaLabel: `Desembolso mensual de ${fmtEUR(desembolso)}: ${fmtEUR(pensionDisp)} de pensión más ${fmtEUR(gastosDisp)} de gastos extraordinarios`,
+  } : undefined;
+
   return {
-    pension_mensual_total: parseFloat(pensionBase.toFixed(2)),
-    pension_por_hijo: parseFloat(pensionPorHijo.toFixed(2)),
+    pension_mensual_total: pensionDisp,
+    pension_por_hijo: porHijoDisp,
     porcentaje_aplicado: parseFloat(porcentajeFinal.toFixed(4)),
-    gastos_extraordinarios_por_progenitor: parseFloat(gastosXProgenitorMes.toFixed(2)),
+    gastos_extraordinarios_por_progenitor: gastosDisp,
     pension_compartida_ajustada: descripcionAjuste,
     nota_foral: notaForal,
     aviso_legal: 'Resultado orientativo basado en la tabla del CGPJ. El juez fija la cuantía definitiva valorando las necesidades del menor, el nivel de vida previo y las circunstancias de cada caso. Esta calculadora no sustituye al asesoramiento de un abogado de familia colegiado.',
+    _insight,
+    _chart,
   };
 }

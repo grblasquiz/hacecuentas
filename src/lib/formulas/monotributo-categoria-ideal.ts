@@ -22,6 +22,7 @@ export interface Outputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 interface Categoria {
@@ -103,6 +104,17 @@ export function monotributoCategoriaIdeal(i: Inputs): Outputs {
     ariaLabel: 'Composición de la cuota mensual: impositivo, jubilatorio y obra social',
   };
 
+  const margenPctNum = (margenDisponible / facMax) * 100;
+  const cerca = margenPctNum < 10;
+  const _insight = {
+    title: cerca ? 'Estás cerca del tope' : 'Tu categoría ideal',
+    text: cerca
+      ? `Te corresponde la categoría **${categoriaIdeal.letra}** ($${Math.round(cuotaMensual).toLocaleString('es-AR')}/mes), pero solo te queda **$${Math.round(margenDisponible).toLocaleString('es-AR')}** de margen (${margenPctNum.toFixed(1)}% del tope). Si seguís facturando vas a tener que recategorizar a la categoría siguiente.`
+      : `Con $${facturacion.toLocaleString('es-AR')} de facturación anual te corresponde la categoría **${categoriaIdeal.letra}**, con una cuota de **$${Math.round(cuotaMensual).toLocaleString('es-AR')}/mes**. Te quedan **$${Math.round(margenDisponible).toLocaleString('es-AR')}** de margen antes de saltar de categoría.`,
+    tone: cerca ? 'warn' : 'good',
+    icon: cerca ? '⚠️' : '✅',
+  };
+
   return {
     categoriaIdeal: categoriaIdeal.letra,
     cuotaMensual,
@@ -114,5 +126,6 @@ export function monotributoCategoriaIdeal(i: Inputs): Outputs {
     formula,
     explicacion,
     _chart: chart,
+    _insight,
   };
 }

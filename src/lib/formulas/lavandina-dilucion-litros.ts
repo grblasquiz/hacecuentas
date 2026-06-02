@@ -1,6 +1,6 @@
 /** Lavandina: dilución por uso */
 export interface Inputs { uso: string; litrosAgua: number; concentracion?: string; }
-export interface Outputs { mlLavandina: number; tapitas: number; tiempoContacto: string; precaucion: string; }
+export interface Outputs { mlLavandina: number; tapitas: number; tiempoContacto: string; precaucion: string; _insight?: any; }
 
 const ML_POR_LITRO: Record<string, number> = {
   superficies: 10, verduras: 5, potabilizar: 0.1, bano: 15, ropa: 20, tanque: 25,
@@ -24,10 +24,25 @@ export function lavandinaDilucionLitros(i: Inputs): Outputs {
   const factor = conc === 'concentrada' ? 0.5 : 1;
   const ml = base * litros * factor;
 
+  const NOMBRES: Record<string, string> = {
+    superficies: 'desinfectar superficies', verduras: 'lavar verduras', potabilizar: 'potabilizar agua',
+    bano: 'limpiar el baño', ropa: 'desinfectar ropa', tanque: 'limpiar el tanque',
+  };
+  const mlR = Number(ml.toFixed(1));
+  const tapitasR = Number((ml / 5).toFixed(1));
+  const usoTxt = NOMBRES[uso] || 'desinfectar';
+  const concTxt = conc === 'concentrada' ? 'concentrada' : 'común (≈25 g/L)';
+
   return {
-    mlLavandina: Number(ml.toFixed(1)),
-    tapitas: Number((ml / 5).toFixed(1)),
+    mlLavandina: mlR,
+    tapitas: tapitasR,
     tiempoContacto: TIEMPOS[uso] || '10 minutos',
     precaucion: 'NUNCA mezclar con amoníaco, vinagre ni otros productos. Usar en lugar ventilado. Mantener fuera del alcance de niños.',
+    _insight: {
+      title: 'Tu dilución',
+      text: `Para ${usoTxt} con **${litros} L** de agua y lavandina ${concTxt} agregá **${mlR} ml** (~${tapitasR} tapitas). Nunca la mezcles con amoníaco ni vinagre: libera gases tóxicos.`,
+      tone: 'warn',
+      icon: '🧴',
+    },
   };
 }

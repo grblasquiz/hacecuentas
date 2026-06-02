@@ -20,6 +20,8 @@ export interface Outputs {
   tasaEfectiva: number;
   tramoAplicado: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const TABLA_ISR_2026 = [
@@ -62,6 +64,30 @@ export function isrSueldoMexico(i: Inputs): Outputs {
   const tasaEfectiva = (isrMensual / sueldo) * 100;
   const tramoAplicado = `Tramo ${tramo.tasa}% (límite inferior $${tramo.limInf.toFixed(2)})`;
 
+  const fmtMxn = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const insightTone: 'good' | 'warn' | 'neutral' =
+    tasaEfectiva >= 20 ? 'warn' : tasaEfectiva < 8 ? 'good' : 'neutral';
+  const _insight = {
+    title: isrMensual <= 0 ? 'Este sueldo no causa ISR' : `Te retienen el ${tasaEfectiva.toFixed(1)}% de ISR`,
+    text: isrMensual <= 0
+      ? `Con un sueldo bruto de **${fmtMxn(sueldo)}**${subsidio > 0 ? ` y subsidio al empleo de **${fmtMxn(subsidio)}**` : ''}, no te retienen ISR: cobrás **${fmtMxn(netoPostIsr)}** limpios.`
+      : `De tu sueldo bruto de **${fmtMxn(sueldo)}**, el ISR se lleva **${fmtMxn(isrMensual)}** (tasa efectiva **${tasaEfectiva.toFixed(1)}%**, marginal **${tramo.tasa}%**) y cobrás **${fmtMxn(netoPostIsr)}** netos.`,
+    tone: insightTone,
+    icon: '🇲🇽',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'ISR retenido', value: Math.round(isrMensual) },
+      { label: 'Neto en mano', value: Math.round(netoPostIsr) },
+    ],
+    prefix: '$',
+    centerValue: fmtMxn(sueldo),
+    centerLabel: 'Sueldo bruto',
+    ariaLabel: 'Reparto del sueldo bruto entre ISR retenido y neto en mano',
+  };
+
   return {
     isrMensual: Number(isrMensual.toFixed(2)),
     subsidioEmpleo: Number(subsidio.toFixed(2)),
@@ -70,5 +96,7 @@ export function isrSueldoMexico(i: Inputs): Outputs {
     tasaEfectiva: Number(tasaEfectiva.toFixed(2)),
     tramoAplicado,
     mensaje: `Con sueldo bruto $${sueldo.toFixed(2)} pagás ISR de $${isrMensual.toFixed(2)} y te quedan $${netoPostIsr.toFixed(2)} netos.`,
+    _insight,
+    _chart,
   };
 }

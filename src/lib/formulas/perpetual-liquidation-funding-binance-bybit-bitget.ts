@@ -17,6 +17,8 @@ export interface Outputs {
   daysToFundingDrain: number;
   initialMarginUSD: number;
   summary: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -38,6 +40,12 @@ export function compute(i: Inputs): Outputs {
       daysToFundingDrain: 0,
       initialMarginUSD: 0,
       summary: "Ingresá un precio de entrada y tamaño de posición válidos.",
+      _insight: {
+        title: "Completá la posición",
+        text: "Ingresá el **precio de entrada** y el **tamaño de la posición** para calcular el precio de liquidación y el costo de funding.",
+        tone: "neutral",
+        icon: "📉",
+      },
     };
   }
 
@@ -127,6 +135,47 @@ export function compute(i: Inputs): Outputs {
   const summary =
     `${sideLabel} ${leverage}x en ${exchangeLabel} | Entrada: $${entryPrice.toFixed(2)} → Liquidación: $${liqFormatted} (${distFormatted}% de distancia) | Funding diario: ${fundingDailyFormatted} USD | ${drainText}.`;
 
+  // --- Insight: riesgo de liquidación según distancia ---
+  const distRound = Math.round(distancePct * 100) / 100;
+  let riesgoTxt: string;
+  let tone: "good" | "warn" | "neutral";
+  if (distRound < 5) {
+    riesgoTxt = "una distancia **muy ajustada**: un movimiento pequeño en contra te liquida";
+    tone = "warn";
+  } else if (distRound < 15) {
+    riesgoTxt = "una distancia **moderada**: aguanta una corrección chica, pero cuidá el apalancamiento";
+    tone = "warn";
+  } else {
+    riesgoTxt = "una distancia **holgada** hasta la liquidación";
+    tone = "good";
+  }
+  const fundingTxt = funding8hUSD > 0
+    ? `Además pagás **${Math.abs(fundingDailyUSD).toFixed(2)} USD/día** de funding, que drenan tu margen en ~${daysToFundingDrain === Infinity ? "∞" : daysToFundingDrain.toFixed(0)} días.`
+    : `El funding juega a tu favor: **cobrás ${Math.abs(fundingDailyUSD).toFixed(2)} USD/día**.`;
+  const _insight = {
+    title: `Liquidación a ${distFormatted}% de tu entrada`,
+    text:
+      `Con **${leverage}x** en ${sideLabel.toLowerCase()}, tu posición tiene ${riesgoTxt} ` +
+      `(liquidación en **$${liqFormatted}**). ${fundingTxt}`,
+    tone,
+    icon: "📉",
+  };
+
+  // --- Gráfico: gauge de distancia a liquidación (margen de seguridad) ---
+  const gaugeMax = Math.max(30, Math.ceil(distRound) + 5);
+  const _chart = {
+    type: "scale",
+    marker: distRound,
+    markerLabel: `Distancia: ${distFormatted}%`,
+    min: 0,
+    segments: [
+      { nombre: "Crítico", max: 5, color: "#fecaca", colorDark: "#b91c1c" },
+      { nombre: "Ajustado", max: 15, color: "#fed7aa", colorDark: "#9a3412" },
+      { nombre: "Holgado", max: gaugeMax, color: "#bbf7d0", colorDark: "#166534" },
+    ],
+    ariaLabel: `Margen hasta la liquidación: ${distFormatted}% de distancia desde el precio de entrada.`,
+  };
+
   return {
     liquidationPrice,
     distancePct,
@@ -136,5 +185,7 @@ export function compute(i: Inputs): Outputs {
     daysToFundingDrain: daysToFundingDrain === Infinity ? 9999 : daysToFundingDrain,
     initialMarginUSD,
     summary,
+    _insight,
+    _chart,
   };
 }

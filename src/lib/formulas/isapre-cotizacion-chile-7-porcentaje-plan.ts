@@ -21,6 +21,8 @@ export interface Outputs {
   comparativa_fonasa_c: number;
   diferencia_isapre_vs_fonasa_b: number;
   resumen_comparativa: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -90,7 +92,23 @@ export function compute(i: Inputs): Outputs {
     resumen_comparativa = `Sueldo $${i.sueldo_bruto.toLocaleString("es-CL")} (potencialmente Fonasa A/Gratuito). Ambas opciones válidas. Si ingresos bajos, Fonasa gratuito puede ser mejor. Consultar elegibilidad en Fonasa.cl.`;
   }
 
-  return {
+  const clp = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const dif = Math.round(diferencia_isapre_vs_fonasa_b);
+  const _insight = dif > 0
+    ? {
+        title: 'La Isapre te cuesta de más',
+        text: `Tu plan suma **${clp(cotizacion_con_cargas)}** al mes, **${clp(dif)} más** que el 7% que pagarías en Fonasa (${clp(comparativa_fonasa_b)}). Estás poniendo plata extra sobre el 7% legal: tiene sentido solo si la cobertura privada y el copago bajo lo justifican.`,
+        tone: 'warn' as const,
+        icon: '🏥',
+      }
+    : {
+        title: 'Plan al nivel del 7% legal',
+        text: `Tu cotización es **${clp(cotizacion_con_cargas)}** al mes, prácticamente igual al 7% de Fonasa (${clp(comparativa_fonasa_b)}). Con costo parejo, la Isapre te suma red privada y elegís según copago y prestadores.`,
+        tone: 'good' as const,
+        icon: '🏥',
+      };
+
+  const out: Outputs = {
     cotizacion_7_legal: Math.round(cotizacion_7_legal),
     costo_plan_uf_clp: Math.round(costo_plan_uf_clp),
     plus_plan: Math.round(plus_plan),
@@ -100,7 +118,28 @@ export function compute(i: Inputs): Outputs {
     costo_total_con_empleador: Math.round(costo_total_con_empleador),
     comparativa_fonasa_b: Math.round(comparativa_fonasa_b),
     comparativa_fonasa_c: Math.round(comparativa_fonasa_c),
-    diferencia_isapre_vs_fonasa_b: Math.round(diferencia_isapre_vs_fonasa_b),
-    resumen_comparativa
+    diferencia_isapre_vs_fonasa_b: dif,
+    resumen_comparativa,
+    _insight,
   };
+
+  // Donut: cotización mensual = cotización base del plan + recargo por cargas familiares
+  const rTotal = Math.round(cotizacion_con_cargas);
+  const rBase = Math.round(cotizacion_total_mensual);
+  const rRecargo = rTotal - rBase;
+  if (rRecargo > 0) {
+    out._chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Cotización base', value: rBase },
+        { label: 'Recargo por cargas', value: rRecargo },
+      ],
+      prefix: '$',
+      centerValue: '$' + rTotal.toLocaleString('es-CL'),
+      centerLabel: 'Cotización/mes',
+      ariaLabel: 'Composición de la cotización mensual de Isapre: base del plan más recargo por cargas familiares',
+    };
+  }
+
+  return out;
 }

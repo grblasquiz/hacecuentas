@@ -1,6 +1,6 @@
 /** Calculadora de Percentil */
 export interface Inputs { datos: string; valor: number; __lang?: string; }
-export interface Outputs { percentil: number; interpretacion: string; cuartil: string; q1q2q3: string; }
+export interface Outputs { percentil: number; interpretacion: string; cuartil: string; q1q2q3: string; _insight?: any; _chart?: any; }
 
 function getPercentile(sorted: number[], p: number): number {
   const n = sorted.length;
@@ -23,6 +23,12 @@ export function percentilDato(i: Inputs): Outputs {
       q3Label: 'Tercer cuartil (Q3, 50-75%)',
       q4Label: 'Cuarto cuartil (Q4, 75-100%)',
       mediana: 'mediana',
+      insightTitle: 'Posición del valor',
+      segLow: 'Bajo (Q1)',
+      segMidLow: 'Medio-bajo (Q2)',
+      segMidHigh: 'Medio-alto (Q3)',
+      segHigh: 'Alto (Q4)',
+      gaugeAria: 'Escala de percentil del valor dentro del conjunto de datos (0 a 100)',
     },
     en: {
       errorMinData: 'Enter at least 2 data points',
@@ -31,6 +37,12 @@ export function percentilDato(i: Inputs): Outputs {
       q3Label: 'Third quartile (Q3, 50-75%)',
       q4Label: 'Fourth quartile (Q4, 75-100%)',
       mediana: 'median',
+      insightTitle: 'Where the value sits',
+      segLow: 'Low (Q1)',
+      segMidLow: 'Mid-low (Q2)',
+      segMidHigh: 'Mid-high (Q3)',
+      segHigh: 'High (Q4)',
+      gaugeAria: 'Scale of the value percentile within the dataset (0 to 100)',
     },
   } as const)[__lang];
 
@@ -54,8 +66,32 @@ export function percentilDato(i: Inputs): Outputs {
   else if (valor <= q3) cuartil = T.q3Label;
   else cuartil = T.q4Label;
 
+  const percentilR = Number(percentil.toFixed(2));
+  const _insight = {
+    title: T.insightTitle,
+    text: __lang === 'en'
+      ? `**${valor}** lands at the **${percentil.toFixed(1)}th percentile** of your ${n} data points, placing it in the **${cuartil}**.`
+      : `**${valor}** se ubica en el **percentil ${percentil.toFixed(1)}** de tus ${n} datos, lo que lo coloca en el **${cuartil}**.`,
+    tone: 'neutral',
+    icon: '📊',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: percentilR,
+    markerLabel: (__lang === 'en' ? 'Percentile: ' : 'Percentil: ') + percentilR,
+    min: 0,
+    segments: [
+      { nombre: T.segLow, max: 25, color: '#bfdbfe', colorDark: '#1e40af' },
+      { nombre: T.segMidLow, max: 50, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: T.segMidHigh, max: 75, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: T.segHigh, max: percentilR >= 100 ? 101 : 100, color: '#fed7aa', colorDark: '#9a3412' },
+    ],
+    ariaLabel: T.gaugeAria,
+  };
+
   return {
-    percentil: Number(percentil.toFixed(2)),
+    percentil: percentilR,
     interpretacion: __lang === 'en'
       ? `Value ${valor} is greater than or equal to ${percentil.toFixed(1)}% of the ${n} data points.`
       : `El valor ${valor} es mayor o igual que el ${percentil.toFixed(1)}% de los ${n} datos.`,
@@ -63,5 +99,7 @@ export function percentilDato(i: Inputs): Outputs {
     q1q2q3: __lang === 'en'
       ? `Q1 = ${q1.toFixed(2)}, Q2 = ${q2.toFixed(2)} (${T.mediana}), Q3 = ${q3.toFixed(2)}`
       : `Q1 = ${q1.toFixed(2)}, Q2 = ${q2.toFixed(2)} (mediana), Q3 = ${q3.toFixed(2)}`,
+    _insight,
+    _chart,
   };
 }

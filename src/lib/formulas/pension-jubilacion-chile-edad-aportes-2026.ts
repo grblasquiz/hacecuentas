@@ -23,6 +23,7 @@ export interface Outputs {
   comparativa_modalidades: string;
   rentabilidad_implícita_renta_vitalicia: number;
   edad_legal_jubilacion: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -134,6 +135,23 @@ export function compute(i: Inputs): Outputs {
     tabla_comparativa += `${ano} | ${edad_en_ano} | $${Math.round(pension_retiro_ano).toLocaleString('es-CL')} | $${Math.round(pension_vitalicia_mensual).toLocaleString('es-CL')} | $${Math.round(pension_mixta).toLocaleString('es-CL')} | $${Math.round(acumulado_retiro).toLocaleString('es-CL')}\n`;
   }
   
+  // === INSIGHT NARRATIVO ===
+  const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const pension_final_redondeada = Math.round(pension_final_mensual);
+  const _insight = pgu_aplica_boolean
+    ? {
+        title: 'La PGU te sostiene el piso',
+        text: `Tu pensión autofinanciada da **${fmtCL(pension_final_redondeada)}/mes**, por debajo del piso, así que la **Pensión Garantizada Universal te lleva a ${fmtCL(pension_con_pgu)}/mes**. El Estado te complementa la diferencia.`,
+        tone: 'warn',
+        icon: '🛟',
+      }
+    : {
+        title: 'Pensión por encima de la PGU',
+        text: `Tu saldo proyectado de **${fmtCL(saldo_jubilacion)}** rinde **${fmtCL(pension_con_pgu)}/mes** a los ${edad_legal} años, por sobre el piso de la PGU (${fmtCL(PGU_MINIMO_2026)}). No accedés al complemento estatal porque tu fondo alcanza solo.`,
+        tone: 'good',
+        icon: '🇨🇱',
+      };
+
   return {
     saldo_proyectado_jubilacion: Math.round(saldo_jubilacion),
     pension_retiro_programado_mensual: Math.round(pension_retiro_mensual),
@@ -145,6 +163,7 @@ export function compute(i: Inputs): Outputs {
     ingreso_bruto_jubilacion_primer_ano: Math.round(ingreso_bruto_anual),
     comparativa_modalidades: tabla_comparativa,
     rentabilidad_implícita_renta_vitalicia: Math.round(rentabilidad_implicita * 100) / 100,
-    edad_legal_jubilacion: edad_legal
+    edad_legal_jubilacion: edad_legal,
+    _insight
   };
 }

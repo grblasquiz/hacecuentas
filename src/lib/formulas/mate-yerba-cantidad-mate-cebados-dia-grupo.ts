@@ -9,6 +9,7 @@ export interface Outputs {
   duracion500g: string;
   duracion1kg: string;
   desglose: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -68,10 +69,19 @@ export function compute(i: Inputs): Outputs {
     `${mateadores} mateador${mateadores !== 1 ? "es" : ""} × ${matesPorPersona} mates/persona × ${gramosPorMate}g/mate (${tipoCebadoLabel}) = ${gramosPorDia.toFixed(1)}g/día. ` +
     `Total mates en la jornada: ${totalMatesDia}.`;
 
+  const gramosDiaFmt = Math.round(gramosPorDia * 10) / 10;
+  const kgPorMes = Math.round((gramosPorDia * 30) / 1000 * 10) / 10;
+
   return {
-    gramosPorDia: Math.round(gramosPorDia * 10) / 10,
+    gramosPorDia: gramosDiaFmt,
     duracion500g: formatearDuracion(diasPaquete500),
     duracion1kg: formatearDuracion(diasPaquete1kg),
     desglose,
+    _insight: {
+      title: 'Tu consumo de yerba',
+      text: `Entre **${mateadores} mateador${mateadores !== 1 ? 'es' : ''}** se toman **${totalMatesDia} mates** por día (${gramosDiaFmt}g de yerba), o sea ~**${kgPorMes} kg al mes**. Un paquete de 1 kg les dura **${formatearDuracion(diasPaquete1kg)}**.`,
+      tone: 'neutral',
+      icon: '🧉',
+    },
   };
 }

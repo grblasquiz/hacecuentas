@@ -14,6 +14,7 @@ export interface Outputs {
   temperaturaAmbiente: number;
   consejo: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function levaduraFermentacion(i: Inputs): Outputs {
@@ -71,6 +72,15 @@ export function levaduraFermentacion(i: Inputs): Outputs {
   else if (temp < 15) consejo = 'Fermentación muy lenta. Buscá lugar más cálido (ej. horno apagado con luz encendida).';
   else consejo = 'Fermentación en rango ideal (22-26°C): dejá a temperatura ambiente.';
 
+  let insTono: 'good' | 'warn' | 'neutral' = 'neutral';
+  if (temp > 28 || temp < 15) insTono = 'warn';
+  else if (temp >= 22 && temp <= 26) insTono = 'good';
+  const _insight = {
+    title: 'Levadura y fermentación',
+    text: `Para **${harina} g** de harina a **${temp}°C**, usá **${gramosFinal.toFixed(2)} g** de levadura ${tipoLev} (**${levPct.toFixed(3)}%** sobre la harina) y dejá fermentar **~${tiempoHumano}**. ${consejo}`,
+    tone: insTono,
+    icon: '🍞',
+  };
   return {
     levaduraGramos: Number(gramosFinal.toFixed(2)),
     tiempoHoras: Number(tiempoHoras.toFixed(2)),
@@ -79,5 +89,6 @@ export function levaduraFermentacion(i: Inputs): Outputs {
     temperaturaAmbiente: temp,
     consejo,
     resumen: `Para ${harina} g de harina a ${temp}°C (${masa}): ${gramosFinal.toFixed(2)} g de levadura ${tipoLev}, fermentación de ~${tiempoHumano}.`,
+    _insight,
   };
 }

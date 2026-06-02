@@ -23,6 +23,8 @@ export interface Outputs {
   detalhe: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const TETO_INSS = 8157.41;
@@ -99,6 +101,29 @@ export function pjVsCltComparador(i: Inputs): Outputs {
   const formula = `PJ líquido - CLT líquido equivalente = R$ ${pjLiquido.toFixed(2)} - R$ ${cltLiquido.toFixed(2)} = R$ ${diferencaMensal.toFixed(2)}/mês`;
   const explicacion = `Comparação CLT R$ ${salClt.toFixed(2)} vs PJ R$ ${fatPj.toFixed(2)} (faturamento bruto). ${detalhe} Diferença mensal: R$ ${diferencaMensal.toFixed(2)} (${vencedor} ganha). Diferença anual: R$ ${diferencaAnual.toFixed(2)}. Lembre-se: PJ NÃO tem FGTS, férias remuneradas, 13º, auxílio-doença INSS completo nem seguro-desemprego — estabilidade financeira é menor. Regra prática: PJ precisa ganhar ~30-40% a mais bruto para empatar em termos reais.`;
 
+  const absMensal = Math.abs(diferencaMensal);
+  const fmt = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const _insight = {
+    title: vencedor === 'PJ' ? 'PJ rende mais por mês' : 'CLT rende mais por mês',
+    text: vencedor === 'PJ'
+      ? `Como **PJ** você fica com **R$ ${fmt(pjLiquido)}/mês** contra **R$ ${fmt(cltLiquido)}** no CLT equivalente: **R$ ${fmt(absMensal)} a mais** (R$ ${fmt(Math.abs(diferencaAnual))}/ano). Mas o CLT já inclui FGTS, 13º e férias — como PJ você precisa reservar isso por conta própria.`
+      : `O **CLT** equivalente rende **R$ ${fmt(cltLiquido)}/mês** contra **R$ ${fmt(pjLiquido)}** como PJ: **R$ ${fmt(absMensal)} a mais** (R$ ${fmt(Math.abs(diferencaAnual))}/ano), já contando FGTS, 13º, férias e benefícios. Aumentar o faturamento PJ ou negociar a alíquota muda o resultado.`,
+    tone: vencedor === 'PJ' ? 'good' : 'warn',
+    icon: '⚖️',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Salário líquido', value: Number(cltLiqBase.toFixed(2)) },
+      { label: 'FGTS + multa 40%', value: Number((fgtsMensal + multaFgtsProv).toFixed(2)) },
+      { label: '13º + férias', value: Number((decimoTerceiro + feriasTerco).toFixed(2)) },
+      { label: 'Plano + VR + VT', value: Number((plano + vr + vt).toFixed(2)) },
+    ],
+    prefix: 'R$ ',
+    centerValue: `R$ ${fmt(cltLiquido)}`,
+    centerLabel: 'CLT total/mês',
+    ariaLabel: `Composição do valor total do CLT por mês: salário líquido, FGTS com multa, 13º e férias, e benefícios, somando R$ ${fmt(cltLiquido)}.`,
+  };
   return {
     cltLiquido: Number(cltLiquido.toFixed(2)),
     cltTotalBeneficios: Number(cltTotalBeneficios.toFixed(2)),
@@ -109,5 +134,7 @@ export function pjVsCltComparador(i: Inputs): Outputs {
     detalhe,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

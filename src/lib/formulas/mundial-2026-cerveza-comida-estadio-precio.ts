@@ -15,6 +15,8 @@ export interface Outputs {
   alertaPresupuesto: string;
   recomendacion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Precios base USD por país.
@@ -126,6 +128,40 @@ export function mundial2026CervezaComidaEstadioPrecio(i: Inputs): Outputs {
     snacks > 0 ? `${snacks} snack(s) USD ${(snacks * precios.snack * factorZona).toFixed(2)}` : '',
   ].filter(Boolean).join(' · ');
 
+  // Insight dinámico según el total por persona.
+  const insightTone = total > 80 ? 'warn' : total > 50 ? 'neutral' : 'good';
+  const cervezaShare = cervezas * precios.cerveza * factorZona;
+  let insightFoco: string;
+  if (cervezas >= 3 && cervezaShare / total > 0.5) {
+    insightFoco = ` Las cervezas se llevan más de la mitad del gasto (USD ${cervezaShare.toFixed(0)}).`;
+  } else if (ahorroAfuera > 5) {
+    insightFoco = ` Comiendo lo mismo afuera del estadio ahorrarías USD ${ahorroAfuera.toFixed(0)}.`;
+  } else {
+    insightFoco = '';
+  }
+  const _insight = {
+    title: 'Tu gasto en el estadio',
+    text: `Llevás **USD ${total.toFixed(0)} por persona** en ${precios.label}${propina > 0 ? ' (propina incluida)' : ''}. Una familia de 4 gastaría **USD ${(total * 4).toFixed(0)}** solo en comida y bebida.${insightFoco}`,
+    tone: insightTone,
+    icon: '🍺',
+  };
+
+  // Donut: cada consumo (con factor zona) + propina, suman el total.
+  const slices: { label: string; value: number }[] = [];
+  if (cervezas > 0) slices.push({ label: 'Cervezas', value: Number((cervezas * precios.cerveza * factorZona).toFixed(2)) });
+  if (hotDogs > 0) slices.push({ label: 'Hot dogs / burgers', value: Number((hotDogs * precios.hotDog * factorZona).toFixed(2)) });
+  if (refrescos > 0) slices.push({ label: 'Refrescos', value: Number((refrescos * precios.refresco * factorZona).toFixed(2)) });
+  if (snacks > 0) slices.push({ label: 'Snacks', value: Number((snacks * precios.snack * factorZona).toFixed(2)) });
+  if (propina > 0) slices.push({ label: 'Propina', value: Number(propina.toFixed(2)) });
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: 'USD ',
+    centerValue: `USD ${total.toFixed(0)}`,
+    centerLabel: 'Por persona',
+    ariaLabel: `Desglose del gasto por persona en el estadio: ${detalle}${propina > 0 ? ` · propina USD ${propina.toFixed(2)}` : ''}.`,
+  };
+
   return {
     totalUSD: `USD ${subtotal.toFixed(0)}`,
     totalConPropina: propinaTxt,
@@ -133,5 +169,7 @@ export function mundial2026CervezaComidaEstadioPrecio(i: Inputs): Outputs {
     alertaPresupuesto: alerta,
     recomendacion: reco,
     resumen: `En un estadio del Mundial 2026 en ${precios.label}, ${cervezas} cerveza(s) + ${hotDogs} hot dog(s) + ${refrescos} refresco(s) + ${snacks} snack(s) en zona ${ZONA_LABEL[zonaKey]} = **USD ${total.toFixed(2)} por persona** (con propina si aplica). Familia de 4: USD ${(total * 4).toFixed(0)}. Desglose: ${detalle}.`,
+    _insight,
+    _chart,
   };
 }

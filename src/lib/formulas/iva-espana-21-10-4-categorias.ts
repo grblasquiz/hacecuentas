@@ -10,6 +10,8 @@ export interface Outputs {
   precio_con_iva: number;
   tipo_aplicado_label: string;
   porcentaje_iva_sobre_total: number;
+  _chart?: any;
+  _insight?: any;
 }
 
 /**
@@ -64,11 +66,39 @@ export function compute(i: Inputs): Outputs {
   // Redondeo a 2 decimales para evitar errores de punto flotante
   const redondear = (n: number): number => Math.round(n * 100) / 100;
 
+  const baseR = redondear(base_imponible);
+  const cuotaR = redondear(cuota_iva);
+  const totalR = redondear(precio_con_iva);
+  const pctR = redondear(porcentaje_iva_sobre_total);
+
+  const chart = baseR > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Base imponible', value: baseR },
+      { label: `IVA ${tipoNumerico}%`, value: cuotaR },
+    ],
+    prefix: '€',
+    centerValue: '€' + totalR.toLocaleString('es-ES'),
+    centerLabel: 'Precio con IVA',
+    ariaLabel: 'Composición del precio: base imponible más cuota de IVA',
+  } : undefined;
+
+  const insight = baseR > 0 ? {
+    title: 'Desglose del precio',
+    text: i.modo === 'inverso'
+      ? `Del precio final de **€${totalR.toLocaleString('es-ES')}**, **€${cuotaR.toLocaleString('es-ES')}** corresponden al IVA (${tipoNumerico}%) y **€${baseR.toLocaleString('es-ES')}** a la base imponible. El IVA representa el **${pctR}%** del total.`
+      : `Aplicando el tipo del **${tipoNumerico}%** sobre €${baseR.toLocaleString('es-ES')}, la cuota de IVA es **€${cuotaR.toLocaleString('es-ES')}** y el precio final queda en **€${totalR.toLocaleString('es-ES')}**.`,
+    tone: 'neutral' as const,
+    icon: '🇪🇸',
+  } : undefined;
+
   return {
-    base_imponible: redondear(base_imponible),
-    cuota_iva: redondear(cuota_iva),
-    precio_con_iva: redondear(precio_con_iva),
+    base_imponible: baseR,
+    cuota_iva: cuotaR,
+    precio_con_iva: totalR,
     tipo_aplicado_label,
-    porcentaje_iva_sobre_total: redondear(porcentaje_iva_sobre_total),
+    porcentaje_iva_sobre_total: pctR,
+    _chart: chart,
+    _insight: insight,
   };
 }

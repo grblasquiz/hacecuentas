@@ -14,6 +14,8 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const RAZA = {
@@ -50,11 +52,39 @@ export function pesoIdealGatoSiames(inputs: Inputs): Outputs {
     resumen += '. Castrado: cuidá no sobrealimentar (metabolismo 20% menor).';
   }
 
+  const minR = Number(min.toFixed(1));
+  const maxR = Number(max.toFixed(1));
+  const promR = Number(promedio.toFixed(1));
+
+  const _insight = {
+    title: 'Tu Siamés en su peso',
+    text: castrado
+      ? `Un Siamés ${sexo === 'macho' ? 'macho' : 'hembra'} de contextura ${contextura} debería pesar entre **${minR} y ${maxR} kg** (promedio **${promR} kg**). El Siamés es de huesos finos: castrado baja ~20% el metabolismo, así que controlá la ración para que no se pase del rango.`
+      : `Un Siamés ${sexo === 'macho' ? 'macho' : 'hembra'} de contextura ${contextura} debería pesar entre **${minR} y ${maxR} kg**, con un promedio de **${promR} kg**. Es una raza esbelta: si lo notás por encima del rango, recortá las porciones.`,
+    tone: castrado ? 'warn' : 'neutral',
+    icon: '🐱',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: promR,
+    markerLabel: `Promedio ${promR} kg`,
+    min: 0,
+    segments: [
+      { nombre: 'Bajo peso', max: minR, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Peso ideal', max: maxR, color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: 'Sobrepeso', max: Number((maxR * 1.4).toFixed(1)), color: '#ef4444', colorDark: '#f87171' },
+    ],
+    ariaLabel: `Escala de peso: la franja ideal del Siamés va de ${minR} a ${maxR} kg, con promedio ${promR} kg`,
+  };
+
   return {
-    pesoPromedio: Number(promedio.toFixed(1)),
-    pesoIdealMin: Number(min.toFixed(1)),
-    pesoIdealMax: Number(max.toFixed(1)),
+    pesoPromedio: promR,
+    pesoIdealMin: minR,
+    pesoIdealMax: maxR,
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight,
+    _chart,
   };
 }

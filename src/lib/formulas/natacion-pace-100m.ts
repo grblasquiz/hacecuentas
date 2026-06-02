@@ -12,6 +12,7 @@ export interface Outputs {
   tiempoMilla: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 function fmtTime(sec: number): string {
@@ -62,6 +63,14 @@ export function natacionPace100m(i: Inputs): Outputs {
     ariaLabel: 'Escala de pace de natación por nivel (segundos por 100m)',
   };
 
+  const insightTone = pace100seg < 100 ? 'good' : pace100seg < 160 ? 'neutral' : 'warn';
+  const insight = {
+    title: 'Tu ritmo de natación',
+    text: `Nadás a **${fmtTime(pace100seg)}/100m** (${velocidad}): ${nivel.toLowerCase()}. A ese paso, los **1500m** te llevan **${tiempo1500}** y una **milla** unos **${tiempoMilla}**.`,
+    tone: insightTone,
+    icon: '🏊',
+  };
+
   return {
     pace100,
     velocidad,
@@ -69,6 +78,7 @@ export function natacionPace100m(i: Inputs): Outputs {
     tiempo1500,
     tiempoMilla,
     mensaje: `Pace: ${fmtTime(pace100seg)}/100m (${velocidad}). ${nivel}.`,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

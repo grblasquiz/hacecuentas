@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: any; }
 export function pañalesPorDiaMesBebeEdad(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const m=Number(i.mes)||0;
@@ -16,5 +16,15 @@ export function pañalesPorDiaMesBebeEdad(i: Inputs): Outputs {
     : __lang === 'pt'
     ? `Com ${m} meses: ${d} fraldas/dia (~${d*30}/mês), tamanho ${t}.`
     : `A los ${m} meses: ${d} pañales/día (~${d*30}/mes), talle ${t}.`;
-  return { diarios, mensuales, tamano:t, resumen };
+  const insight = {
+    title: __lang === 'en' ? 'What to expect at this age' : __lang === 'pt' ? 'O que esperar nesta idade' : 'Qué esperar a esta edad',
+    text: __lang === 'en'
+      ? `At **${m} months** a baby goes through about **${d} diapers a day** (**~${d*30}/month**), size **${t}**. Newborns use the most and the count drops steadily as they grow.`
+      : __lang === 'pt'
+      ? `Aos **${m} meses** um bebê usa cerca de **${d} fraldas por dia** (**~${d*30}/mês**), tamanho **${t}**. Recém-nascidos usam mais e o número cai conforme crescem.`
+      : `A los **${m} meses** un bebé usa unos **${d} pañales por día** (**~${d*30}/mes**), talle **${t}**. Los recién nacidos usan más y el número va bajando a medida que crecen.`,
+    tone: 'neutral',
+    icon: '🍼',
+  };
+  return { diarios, mensuales, tamano:t, resumen, _insight: insight };
 }

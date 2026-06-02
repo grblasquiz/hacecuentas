@@ -14,6 +14,7 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
 }
 
 const RAZA = {
@@ -50,11 +51,26 @@ export function pesoIdealGatoBritanico(inputs: Inputs): Outputs {
     resumen += '. Castrado: cuidá no sobrealimentar (metabolismo 20% menor).';
   }
 
+  const _insight = castrado
+    ? {
+        title: 'Castrado: vigilá las porciones',
+        text: `Un British Shorthair ${sexo === 'macho' ? 'macho' : 'hembra'} ${contextura} debería pesar **${min.toFixed(1)}-${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). Al estar castrado, su metabolismo baja ~20%: con la misma ración tiende a engordar, así que medí la comida y elegí un alimento "light/esterilizado".`,
+        tone: 'warn',
+        icon: '🐈',
+      }
+    : {
+        title: 'Peso ideal de tu British Shorthair',
+        text: `Un ${sexo === 'macho' ? 'macho' : 'hembra'} ${contextura} debería pesar **${min.toFixed(1)}-${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). Es una raza naturalmente robusta y maciza, pero por encima de ${max.toFixed(1)} kg ya hablamos de sobrepeso, no de "porte grande".`,
+        tone: 'neutral',
+        icon: '🐱',
+      };
+
   return {
     pesoPromedio: Number(promedio.toFixed(1)),
     pesoIdealMin: Number(min.toFixed(1)),
     pesoIdealMax: Number(max.toFixed(1)),
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight,
   };
 }

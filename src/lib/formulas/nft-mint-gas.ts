@@ -1,6 +1,6 @@
 /** NFT mint gas cost */
 export interface Inputs { gasPriceGwei: number; gasUnitsMint: number; ethPriceUsd: number; mintPriceEth: number; quantity: number; }
-export interface Outputs { gasCostEth: number; gasCostUsd: number; mintCostEth: number; totalCostEth: number; totalCostUsd: number; gasPerMintUsd: number; explicacion: string; _chart?: any; }
+export interface Outputs { gasCostEth: number; gasCostUsd: number; mintCostEth: number; totalCostEth: number; totalCostUsd: number; gasPerMintUsd: number; explicacion: string; _chart?: any; _insight?: any; }
 export function nftMintGas(i: Inputs): Outputs {
   const gwei = Number(i.gasPriceGwei);
   const units = Number(i.gasUnitsMint);
@@ -16,6 +16,15 @@ export function nftMintGas(i: Inputs): Outputs {
   const totalEth = mintCost + gasEth;
   const totalUsd = totalEth * ethUsd;
   const perMint = gasUsd / qty;
+  const gasShare = totalEth > 0 ? (gasEth / totalEth) * 100 : 0;
+  const insight = {
+    title: 'Peso del gas en tu mint',
+    text: gasShare >= 50
+      ? `El gas representa **${gasShare.toFixed(0)}%** del costo total (**$${gasUsd.toFixed(2)}** de $${totalUsd.toFixed(2)}): estás pagando más en comisiones de red que en el NFT. Conviene mintear cuando el gwei esté más bajo.`
+      : `Vas a pagar **$${gasUsd.toFixed(2)}** de gas (**${gasShare.toFixed(0)}%** del total), o sea **$${perMint.toFixed(2)}** por cada NFT. El costo total del mint es **$${totalUsd.toFixed(2)}**.`,
+    tone: gasShare >= 50 ? 'warn' : 'neutral',
+    icon: '⛽',
+  };
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -36,5 +45,6 @@ export function nftMintGas(i: Inputs): Outputs {
     gasPerMintUsd: Number(perMint.toFixed(2)),
     explicacion: `Mint de ${qty} NFT a ${gwei} gwei × ${units} units: gas ${gasEth.toFixed(4)} ETH ($${gasUsd.toFixed(2)}). Mint price ${mintCost.toFixed(2)} ETH. Total ${totalEth.toFixed(4)} ETH = $${totalUsd.toFixed(2)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

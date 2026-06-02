@@ -21,6 +21,8 @@ export interface Outputs {
   age_median_comparison: string;
   percentile_estimate: string;
   breakdown_note: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Median net worth by age group — Federal Reserve Survey of Consumer Finances 2022
@@ -157,6 +159,36 @@ export function compute(i: Inputs): Outputs {
     `Home Equity: ${formatCurrency(home_equity)} | ` +
     `Debt-to-Asset: ${debtRatioStr}% — ${debtHealthLabel}`;
 
+  // Insight: interpret net worth vs median + debt health
+  const aboveMedian = diff >= 0;
+  let insightTone: string;
+  if (net_worth < 0 || debt_to_asset_ratio > 1.0) insightTone = 'warn';
+  else if (aboveMedian) insightTone = 'good';
+  else insightTone = 'neutral';
+  const insight = {
+    title: 'Your net worth',
+    text: `Your net worth is **${formatCurrency(net_worth)}** — **${formatCurrency(Math.abs(diff))} ${aboveMedian ? 'above' : 'below'}** the US median (${formatCurrency(median)}) for ages ${ageLabel}. ${percentile_estimate} Your debt-to-asset ratio is **${debtRatioStr}%** (${debtHealthLabel.replace(/\.$/, '').toLowerCase()}).`,
+    tone: insightTone,
+    icon: '💰',
+  };
+
+  // Gauge: debt-to-asset ratio against health zones (30% / 50% / 100%)
+  const dtaPct = Math.round(debt_to_asset_ratio * 1000) / 10;
+  const chart = {
+    type: 'scale' as const,
+    marker: dtaPct,
+    markerLabel: `Debt-to-asset: ${debtRatioStr}%`,
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Strong', max: 30, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Manageable', max: 50, color: '#fef9c3', colorDark: '#854d0e' },
+      { nombre: 'High', max: 100, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Critical', max: Math.max(120, dtaPct + 10), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Debt-to-asset ratio against financial-health zones',
+  };
+
   return {
     net_worth,
     total_assets,
@@ -166,5 +198,7 @@ export function compute(i: Inputs): Outputs {
     age_median_comparison,
     percentile_estimate,
     breakdown_note,
+    _insight: insight,
+    _chart: chart,
   };
 }

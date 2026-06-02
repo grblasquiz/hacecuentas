@@ -22,6 +22,8 @@ export interface Outputs {
   rango_maximo: number;
   modalidad_pago: string;
   advertencia: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -105,16 +107,46 @@ export function compute(i: Inputs): Outputs {
   // Redondear a miles (pesos chilenos)
   const redondear = (val: number) => Math.round(val / 1000) * 1000;
 
+  const totalDisp = redondear(pension_total_estimada);
+  const pensionDisp = redondear(pension_ajustada);
+  const gastosDisp = redondear(gastos_extraordinarios);
+  const liquidoDisp = redondear(ingreso_liquido);
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const pctLiquido = liquidoDisp > 0 ? (totalDisp / liquidoDisp) * 100 : 0;
+
+  const _insight = {
+    title: 'Pensión estimada',
+    text: `Sobre un ingreso líquido de **${fmtCLP(liquidoDisp)}**, la pensión estimada es **${fmtCLP(totalDisp)}** al mes (≈${pctLiquido.toFixed(0)}% de tu líquido)${gastosDisp > 0 ? `, incluyendo ${fmtCLP(gastosDisp)} de gastos extraordinarios` : ''}. El rango legal típico va de ${fmtCLP(redondear(rango_minimo))} a ${fmtCLP(redondear(rango_maximo))}. Es una estimación: el tribunal fija el monto final.`,
+    tone: totalDisp > redondear(rango_maximo) ? 'warn' : 'neutral',
+    icon: '⚖️',
+  };
+
+  // Donut solo si hay gastos extraordinarios que sumar a la pensión base
+  const gastosSlice = totalDisp - pensionDisp;
+  const _chart = (gastosDisp > 0 && gastosSlice > 0 && pensionDisp > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Pensión mensual', value: pensionDisp },
+      { label: 'Gastos extraordinarios', value: gastosSlice },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(totalDisp),
+    centerLabel: 'Total/mes',
+    ariaLabel: `Pensión total de ${fmtCLP(totalDisp)}: ${fmtCLP(pensionDisp)} de pensión mensual más ${fmtCLP(gastosSlice)} de gastos extraordinarios`,
+  } : undefined;
+
   return {
-    ingreso_liquido: redondear(ingreso_liquido),
+    ingreso_liquido: liquidoDisp,
     pension_base: redondear(pension_base),
     ajuste_custodia: Math.round(ajuste_custodia_decimal * 100),
-    pension_custodia: redondear(pension_ajustada),
-    gastos_extraordinarios: redondear(gastos_extraordinarios),
-    pension_total_estimada: redondear(pension_total_estimada),
+    pension_custodia: pensionDisp,
+    gastos_extraordinarios: gastosDisp,
+    pension_total_estimada: totalDisp,
     rango_minimo: redondear(rango_minimo),
     rango_maximo: redondear(rango_maximo),
     modalidad_pago: modalidad_pago,
-    advertencia: advertencia
+    advertencia: advertencia,
+    _insight,
+    _chart
   };
 }

@@ -17,6 +17,7 @@ export interface Outputs {
   m2Neto: number;
   porcentajeAberturas: number;
   resumen: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -55,12 +56,30 @@ export function m2ParedAberturas(i: Inputs): Outputs {
         }
       : undefined;
 
+  const netoR = Number(neto.toFixed(2));
+  const pctR = Number(pct.toFixed(1));
+
+  const insight = pctR >= 40
+    ? {
+        title: 'Mucha abertura, poca pared',
+        text: `Las aberturas se comen el **${pctR}%** de la pared: te quedan sólo **${netoR.toFixed(2)} m² netos** para pintar. Comprá pintura por la superficie neta, no por la bruta, o vas a sobrar de más.`,
+        tone: 'warn',
+        icon: '🪟',
+      }
+    : {
+        title: 'Superficie neta a cubrir',
+        text: `Descontando las aberturas (${pctR}% de la pared), tenés **${netoR.toFixed(2)} m² netos** para pintar o revestir. Con un rendimiento típico de 10 m²/L por mano, calculá el material sobre estos m², no sobre los ${bruto.toFixed(2)} m² brutos.`,
+        tone: 'neutral',
+        icon: '🪟',
+      };
+
   return {
     m2Bruto: Number(bruto.toFixed(2)),
     m2Aberturas: Number(m2Abert.toFixed(2)),
-    m2Neto: Number(neto.toFixed(2)),
-    porcentajeAberturas: Number(pct.toFixed(1)),
+    m2Neto: netoR,
+    porcentajeAberturas: pctR,
     resumen: `Pared de ${bruto.toFixed(2)} m² bruto − ${m2Abert.toFixed(2)} m² de aberturas (${pct.toFixed(1)}%) = **${neto.toFixed(2)} m² netos** para pintar o revestir.`,
+    _insight: insight,
     _chart: chart,
   };
 }

@@ -8,6 +8,8 @@ export interface Outputs {
   nivel: string;
   recomendacion: string;
   mensaje: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function nivelEstresPercibido(i: Inputs): Outputs {
@@ -35,10 +37,32 @@ export function nivelEstresPercibido(i: Inputs): Outputs {
     recomendacion = 'Tu nivel de estrés es elevado. Recomendamos consultar con un profesional de salud mental para evaluación y estrategias personalizadas.';
   }
 
+  const tone = puntaje <= 13 ? 'good' : puntaje <= 20 ? 'neutral' : 'warn';
+  const insight = {
+    title: `PSS-10: ${nivel}`,
+    text: `Sumaste **${puntaje}/40** en la escala de estrés percibido, lo que ubica tu estrés del último mes en nivel **${nivel.toLowerCase()}**. ${puntaje <= 13 ? 'Estás dentro del rango saludable.' : puntaje <= 20 ? 'Es un nivel manejable, pero conviene incorporar hábitos que lo bajen.' : 'Vale la pena tomar medidas activas y considerar apoyo profesional.'}`,
+    tone,
+    icon: puntaje <= 13 ? '😌' : puntaje <= 20 ? '😐' : '😰',
+  };
+  const chart = {
+    type: 'scale' as const,
+    marker: puntaje,
+    markerLabel: `${puntaje}/40`,
+    min: 0,
+    segments: [
+      { nombre: 'Bajo', max: 13, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Moderado', max: 20, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Moderado-alto', max: 26, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Alto', max: 40, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Puntaje PSS-10 de ${puntaje} sobre 40 ubicado en la zona de estrés ${nivel.toLowerCase()}`,
+  };
   return {
     puntaje,
     nivel,
     recomendacion,
-    mensaje: `Puntaje PSS-10: ${puntaje}/40 — ${nivel}. ${puntaje > 20 ? 'Se recomienda buscar ayuda profesional.' : ''}`
+    mensaje: `Puntaje PSS-10: ${puntaje}/40 — ${nivel}. ${puntaje > 20 ? 'Se recomienda buscar ayuda profesional.' : ''}`,
+    _chart: chart,
+    _insight: insight,
   };
 }

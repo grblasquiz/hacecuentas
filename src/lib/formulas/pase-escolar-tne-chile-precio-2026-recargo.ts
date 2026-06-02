@@ -15,6 +15,8 @@ export interface Outputs {
   ahorro_anual: number;
   recargo_mensual: number;
   estado_tne_mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tarifas adulto diarias por región 2026 (CLP)
@@ -71,6 +73,33 @@ export function compute(i: Inputs): Outputs {
     estado_tne_mensaje = `✅ TNE ACTIVA. Disfrutas descuento 1/3. Ahorro estimado: $${ahorro_anual.toLocaleString('es-CL')}/año. Vigencia hasta 31-12-2026.`;
   }
 
+  const fmtCLP = (n: number) => '$' + n.toLocaleString('es-CL');
+  const insight = i.tne_estado === 'bloqueada'
+    ? {
+        title: 'Tu TNE está bloqueada',
+        text: `Con la TNE bloqueada pagás tarifa adulto **${fmtCLP(costo_mensual_adulto)}/mes** y arriesgás multas: unos **${fmtCLP(recargo_mensual)} más por mes** que con la TNE al día. Regularizá la acreditación en Junaeb cuanto antes.`,
+        tone: 'warn',
+        icon: '⚠️',
+      }
+    : {
+        title: 'Tu ahorro con la TNE',
+        text: `Con la TNE activa pagás **${fmtCLP(costo_mensual_tne)}/mes** en vez de **${fmtCLP(costo_mensual_adulto)}** de tarifa adulto: ahorrás **${fmtCLP(ahorro_mensual)} al mes** y **${fmtCLP(ahorro_anual)} al año** gracias al descuento de 1/3.`,
+        tone: 'good',
+        icon: '🚌',
+      };
+
+  const chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Pagás con TNE', value: costo_mensual_tne },
+      { label: 'Ahorrás (descuento 1/3)', value: ahorro_mensual },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(costo_mensual_adulto),
+    centerLabel: 'Tarifa adulto/mes',
+    ariaLabel: `De ${fmtCLP(costo_mensual_adulto)} de tarifa adulto mensual, pagás ${fmtCLP(costo_mensual_tne)} con la TNE y ahorrás ${fmtCLP(ahorro_mensual)}.`,
+  };
+
   return {
     tarifa_adulto_diaria: tarifa_adulto,
     tarifa_tne_diaria: tarifa_tne,
@@ -80,6 +109,8 @@ export function compute(i: Inputs): Outputs {
     ahorro_mensual,
     ahorro_anual,
     recargo_mensual,
-    estado_tne_mensaje
+    estado_tne_mensaje,
+    _insight: insight,
+    _chart: chart,
   };
 }

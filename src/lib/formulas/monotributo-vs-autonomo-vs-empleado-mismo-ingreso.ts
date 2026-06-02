@@ -18,6 +18,7 @@ export interface Outputs {
   recomendacion: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // ─── MONOTRIBUTO: cuotas fijas mensuales por categoría (servicios, 2026)
@@ -194,6 +195,15 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del ingreso bruto en el régimen recomendado: neto en mano más cargas e impuestos',
   };
 
+  const pctCargaMejor = ingresoBruto > 0 ? (cargaMejor / ingresoBruto * 100) : 0;
+  const ventaja = netos[0].neto - netos[1].neto;
+  const _insight = {
+    title: 'El régimen que más te conviene',
+    text: `Con un bruto de ${fmt(ingresoBruto)}, **${mejor.label}** es el que más te deja en mano: **${fmt(mejor.neto)}** netos (carga del ${pctCargaMejor.toFixed(1)}%). Te conviene **${fmt(ventaja)}** por mes frente a la opción que le sigue (${netos[1].label}).`,
+    tone: 'good',
+    icon: '🏆',
+  };
+
   return {
     netoMonotributo: Math.round(netoMonotributo),
     cargaMonotributo: Math.round(cargaMonotributo),
@@ -204,5 +214,6 @@ export function compute(i: Inputs): Outputs {
     recomendacion,
     resumen,
     _chart: chart,
+    _insight,
   };
 }

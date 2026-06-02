@@ -11,6 +11,7 @@ export interface Outputs {
   posibleOctavos: string;
   caminoFinal: string;
   resumen: string;
+  _insight?: any;
 }
 
 // Bracket simplificado del Mundial 2026 (48 equipos, 32 clasifican)
@@ -60,6 +61,12 @@ export function mundial2026FixtureOctavos(i: Inputs): Outputs {
       posibleOctavos: 'Ganador 2do de grupo vs 2do de otro grupo',
       caminoFinal: '16avos (vs 1ro) → octavos → cuartos → semi → final. Camino difícil: siempre enfrentás al 1er del grupo en tu primera ronda.',
       resumen: `Como **3er mejor del Grupo ${grupo}**, tu rival en 16avos es **un 1er de grupo** (asignado por ranking FIFA entre los 8 mejores terceros). El cruce exacto se define al terminar la fase de grupos.`,
+      _insight: {
+        title: `Camino del 3ro del Grupo ${grupo}`,
+        text: `Clasificar **3ro** es el peor cruce posible: en 16avos te toca **un 1er de grupo** (asignado por ranking entre los 8 mejores terceros) y el rival exacto recién se sabe al cerrar la fase de grupos.`,
+        tone: 'warn',
+        icon: '⚠️',
+      },
     };
   }
 
@@ -72,6 +79,15 @@ export function mundial2026FixtureOctavos(i: Inputs): Outputs {
     ? '16avos (vs mejor tercero) → octavos → cuartos → semi → final. Camino más favorable en 16avos.'
     : '16avos (vs otro 2do) → octavos → cuartos → semi → final. Cruces de nivel similar en 16avos.';
 
+  const _insight = {
+    title: `Camino del ${posLabel} del Grupo ${grupo}`,
+    text: pos === '1'
+      ? `Salir **1ro** te da el cruce más amable de 16avos: jugás contra **${data.rival}** (lado ${data.lado.toLowerCase()} del bracket). En octavos podría aparecer el ${data.octavos.toLowerCase()}.`
+      : `Como **2do** del Grupo ${grupo} te toca **${data.rival}** en 16avos (lado ${data.lado.toLowerCase()}): un cruce de nivel parejo. En octavos podría aparecer el ${data.octavos.toLowerCase()}.`,
+    tone: pos === '1' ? 'good' : 'neutral',
+    icon: pos === '1' ? '🥇' : '🥈',
+  };
+
   return {
     rivalTipo: pos === '1' ? 'Mejor tercero' : '2do de otro grupo',
     proximoRival: data.rival,
@@ -79,5 +95,6 @@ export function mundial2026FixtureOctavos(i: Inputs): Outputs {
     posibleOctavos: data.octavos,
     caminoFinal: camino,
     resumen: `Como **${posLabel} del Grupo ${grupo}**, en 16avos jugás contra: **${data.rival}**. Lado del bracket: ${data.lado}. En octavos posible rival: ${data.octavos}.`,
+    _insight,
   };
 }

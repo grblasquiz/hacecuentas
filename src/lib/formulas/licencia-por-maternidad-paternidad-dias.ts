@@ -13,6 +13,7 @@ export interface LicenciaPorMaternidadPaternidadDiasOutputs {
   fechaInicio: string;
   fechaFin: string;
   detalle: string;
+  _insight?: any;
 }
 
 function formatDate(d: Date): string {
@@ -75,10 +76,38 @@ export function licenciaPorMaternidadPaternidadDias(
       throw new Error('Seleccioná un tipo de licencia válido');
   }
 
+  const reincorporacion = formatDate(addDays(fechaFin, 1));
+  let insight: any;
+  if (tipo === 'paternidad') {
+    insight = {
+      title: 'Licencia por paternidad',
+      text: `Apenas **2 días corridos** desde el nacimiento (mínimo LCT, el más bajo de la región). Te reincorporás el **${reincorporacion}**. Revisá tu **convenio**: muchos otorgan entre 5 y 15 días.`,
+      tone: 'warn',
+      icon: '👨‍🍼',
+    };
+  } else if (tipo === 'paternidadConvenio') {
+    insight = {
+      title: 'Licencia por paternidad extendida',
+      text: `Tu convenio extiende la licencia a **10 días corridos**, cinco veces el mínimo de la LCT. Te reincorporás el **${reincorporacion}**.`,
+      tone: 'good',
+      icon: '👨‍🍼',
+    };
+  } else {
+    // maternidad 45+45 o 30+60
+    const distrib = tipo === 'maternidad3060' ? '30 días antes + 60 después' : '45 días antes + 45 después';
+    insight = {
+      title: 'Licencia por maternidad',
+      text: `**90 días corridos** (${distrib} del parto), pagados por **ANSES** como asignación equivalente a tu sueldo bruto. Reintegro previsto para el **${reincorporacion}**.`,
+      tone: 'good',
+      icon: '🤰',
+    };
+  }
+
   return {
     diasTotales,
     fechaInicio: formatDate(fechaInicio),
     fechaFin: formatDate(fechaFin),
     detalle: detalleStr,
+    _insight: insight,
   };
 }

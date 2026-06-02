@@ -22,6 +22,8 @@ export interface Outputs {
   neto_anual: number;
   neto_mensual: number;
   ss_trabajador: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ------------------------------------------------------------
@@ -345,6 +347,30 @@ export function compute(i: Inputs): Outputs {
   const netoAnual = Math.max(0, bruto - ss - cuotaTotal);
   const netoMensual = netoAnual / 12;
 
+  // --- Insight + gráfico ---
+  const fmtEur = (n: number) =>
+    '€' + Math.round(n).toLocaleString('es-ES');
+  const _insight = {
+    title: 'Lo que te queda en mano',
+    text: `De un bruto de **${fmtEur(bruto)}** te quedan **${fmtEur(netoAnual)}** netos al año (**${fmtEur(netoMensual)}**/mes), tras IRPF y Seguridad Social. Tu tipo efectivo es **${tipoEfectivo.toFixed(1)}%**, pero cada euro extra tributa al marginal del **${tipoMarginal.toFixed(1)}%**.`,
+    tone: 'neutral',
+    icon: '💶',
+  };
+  const _chart = bruto > 0
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Neto en mano', value: Math.round(netoAnual * 100) / 100 },
+          { label: 'IRPF', value: Math.round(cuotaTotal * 100) / 100 },
+          { label: 'Seguridad Social', value: Math.round(ss * 100) / 100 },
+        ],
+        prefix: '€',
+        centerValue: fmtEur(bruto),
+        centerLabel: 'Salario bruto',
+        ariaLabel: `Reparto del salario bruto de ${fmtEur(bruto)}: ${fmtEur(netoAnual)} netos, ${fmtEur(cuotaTotal)} de IRPF y ${fmtEur(ss)} de Seguridad Social.`,
+      }
+    : undefined;
+
   return {
     base_liquidable: Math.round(baseLiquidable * 100) / 100,
     cuota_irpf_total: Math.round(cuotaTotal * 100) / 100,
@@ -354,5 +380,7 @@ export function compute(i: Inputs): Outputs {
     neto_anual: Math.round(netoAnual * 100) / 100,
     neto_mensual: Math.round(netoMensual * 100) / 100,
     ss_trabajador: Math.round(ss * 100) / 100,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

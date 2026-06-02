@@ -17,6 +17,8 @@ export interface Outputs {
   featuresPortero: string;
   featuresCamara: string;
   desgloseCostos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -124,6 +126,36 @@ export function compute(i: Inputs): Outputs {
     ...detalleAnios,
   ].join("\n");
 
+  const porteroGana = tcoPortero < tcoCamara;
+  const empate = Math.round(tcoPortero) === Math.round(tcoCamara);
+  const ganadorNombre = porteroGana ? 'Portero eléctrico' : 'Cámara IP';
+  const ganadorInicial = porteroGana ? inicialPortero : inicialCamara;
+  const ganadorOpex = porteroGana ? opexTotalPortero : opexTotalCamara;
+  const ganadorTco = porteroGana ? tcoPortero : tcoCamara;
+  const fmtArs = (n: number) => Math.round(n).toLocaleString('es-AR');
+  const difPct = ganadorTco > 0 ? (diferencia / ganadorTco) * 100 : 0;
+
+  const _insight = {
+    title: 'Comparativa a 5 años',
+    text: empate
+      ? `A 5 años ambas opciones cuestan prácticamente lo mismo (**$${fmtArs(tcoPortero)}**). Decidí por las prestaciones: la cámara IP suma acceso remoto y grabación, el portero gana en vida útil y no depende de internet.`
+      : `A 5 años el **${ganadorNombre.toLowerCase()}** sale **$${fmtArs(diferencia)}** más barato (${difPct.toFixed(0)}% menos). ${porteroGana ? 'Ojo: el portero no tiene acceso remoto ni grabación, y exige obra civil.' : 'La suscripción mensual de la cámara es lo que más pesa en el largo plazo: revisá si la necesitás.'}`,
+    tone: empate ? 'neutral' : (porteroGana ? 'good' : 'warn'),
+    icon: '🚪',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Equipo + instalación', value: Math.round(ganadorInicial) },
+      { label: 'Operación 5 años (c/inflación)', value: Math.round(ganadorOpex) },
+    ],
+    prefix: '$',
+    centerValue: '$' + fmtArs(ganadorTco),
+    centerLabel: `TCO ${ganadorNombre}`,
+    ariaLabel: `Costo total a 5 años de la opción más económica (${ganadorNombre}): $${fmtArs(ganadorInicial)} de equipo e instalación más $${fmtArs(ganadorOpex)} de operación.`,
+  };
+
   return {
     tcoPortero: Math.round(tcoPortero),
     tcoCamara: Math.round(tcoCamara),
@@ -132,5 +164,7 @@ export function compute(i: Inputs): Outputs {
     featuresPortero,
     featuresCamara,
     desgloseCostos,
+    _insight,
+    _chart,
   };
 }

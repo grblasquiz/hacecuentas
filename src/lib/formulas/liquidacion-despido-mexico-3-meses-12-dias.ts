@@ -19,6 +19,8 @@ export interface Outputs {
   imss_descuento: number;
   total_neto: number;
   detalle_exenciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -142,6 +144,33 @@ export function compute(i: Inputs): Outputs {
     `Vacaciones exentas: $${monto_exencion_vacaciones} (100%)\n` +
     `Total exento ISR: $${total_exento} | Base gravable: $${base_gravable.toFixed(2)}`;
 
+  const netoF = Math.max(0, total_neto);
+  const isrF = Math.max(0, isr_estimado);
+  const imssF = Math.max(0, imss_descuento);
+  const brutoF = Math.max(0, total_bruto);
+  const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-MX')}`;
+  const descuentos = isrF + imssF;
+  const pctNeto = brutoF > 0 ? (netoF / brutoF) * 100 : 0;
+  const tipoTxt = i.tipo_despido === 'injustificado' ? 'injustificado' : 'justificado';
+  const _insight = {
+    title: `Te corresponden ${fmt(netoF)} netos`,
+    text: `Por un despido **${tipoTxt}** con ${i.antiguedad_anos} año(s) de antigüedad, la liquidación bruta es **${fmt(brutoF)}**. Tras descontar ISR e IMSS (**${fmt(descuentos)}**) recibís **${fmt(netoF)}** netos, el **${pctNeto.toFixed(0)}%** del total. Gran parte está exenta de ISR.`,
+    tone: i.tipo_despido === 'injustificado' ? 'good' : 'warn',
+    icon: '💼',
+  };
+  const brutoChart = netoF + isrF + imssF;
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Neto a cobrar', value: Math.round(netoF) },
+      { label: 'ISR estimado', value: Math.round(isrF) },
+      { label: 'IMSS (3.05%)', value: Math.round(imssF) },
+    ],
+    prefix: '$',
+    centerValue: fmt(brutoChart),
+    centerLabel: 'Liquidación bruta',
+    ariaLabel: `De ${fmt(brutoChart)} brutos, ${fmt(netoF)} son netos, ${fmt(isrF)} se van en ISR y ${fmt(imssF)} en IMSS.`,
+  };
   return {
     indemnizacion_constitucional: Math.max(0, indemnizacion_constitucional),
     prima_antiguedad: Math.max(0, prima_antiguedad),
@@ -152,6 +181,8 @@ export function compute(i: Inputs): Outputs {
     isr_estimado: Math.max(0, isr_estimado),
     imss_descuento: Math.max(0, imss_descuento),
     total_neto: Math.max(0, total_neto),
-    detalle_exenciones
+    detalle_exenciones,
+    _insight,
+    _chart
   };
 }

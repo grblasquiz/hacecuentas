@@ -1,6 +1,6 @@
 /** Costo mensual contratar empleado internacional con Deel/Remote/EOR */
 export interface Inputs { salarioBrutoUsd: number; cargasSocialesPct: number; feeEorMensualUsd: number; beneficiosUsd: number; equipoUsd: number; }
-export interface Outputs { costoMensualUsd: number; cargasUsd: number; costoAnualUsd: number; multiplicadorVsBruto: number; explicacion: string; _chart?: any; }
+export interface Outputs { costoMensualUsd: number; cargasUsd: number; costoAnualUsd: number; multiplicadorVsBruto: number; explicacion: string; _chart?: any; _insight?: any; }
 export function payrollInternacionalDeelRemoteCostoEmpleado(i: Inputs): Outputs {
   const bruto = Number(i.salarioBrutoUsd);
   const cargasPct = Number(i.cargasSocialesPct) / 100;
@@ -27,7 +27,15 @@ export function payrollInternacionalDeelRemoteCostoEmpleado(i: Inputs): Outputs 
     centerLabel: 'Costo mensual',
     ariaLabel: 'Composición del costo mensual: salario bruto, cargas sociales, fee EOR, beneficios y equipo.',
   };
+  const sobreBruto = costo - bruto;
+  const insight = {
+    title: 'Lo que cuesta de verdad ese empleado',
+    text: `Pagar un bruto de **$${Math.round(bruto).toLocaleString('en-US')} USD** te cuesta en realidad **$${Math.round(costo).toLocaleString('en-US')} USD** por mes: un **${mult.toFixed(2)}×** sobre el bruto, o sea **$${Math.round(sobreBruto).toLocaleString('en-US')} USD** extra cada mes. En el año son **$${Math.round(anual).toLocaleString('en-US')} USD** de costo total.`,
+    tone: mult >= 1.4 ? 'warn' : mult <= 1.2 ? 'good' : 'neutral',
+    icon: '🌎',
+  };
   return {
+    _insight: insight,
     costoMensualUsd: Number(costo.toFixed(2)),
     cargasUsd: Number(cargas.toFixed(2)),
     costoAnualUsd: Number(anual.toFixed(2)),

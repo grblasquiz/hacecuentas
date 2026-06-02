@@ -1,6 +1,6 @@
 /** Kombucha tiempos */
 export interface Inputs { temperaturaAmbiente: number; volumenLitros: number; acidezDeseada: string; }
-export interface Outputs { diasF1: number; diasF2: number; tazasTe: number; gramosAzucar: number; consejos: string; }
+export interface Outputs { diasF1: number; diasF2: number; tazasTe: number; gramosAzucar: number; consejos: string; _insight?: any; }
 
 export function kombuchaFermentacionTiempo(i: Inputs): Outputs {
   const t = Number(i.temperaturaAmbiente);
@@ -29,11 +29,25 @@ export function kombuchaFermentacionTiempo(i: Inputs): Outputs {
   else if (t > 28) consejos = 'Clima caluroso — chequeá desde día 5. Riesgo sobre-fermentación.';
   else consejos = 'Temperatura ideal — resultado predecible.';
 
+  const f1d = Number(f1.toFixed(0));
+  const f2d = Number(f2.toFixed(0));
+  const tone = (t < 20 || t > 28) ? 'warn' : 'good';
+  const tempTxt = t < 20
+    ? `Con **${t}°C** la fermentación va lenta: dale unos **${f1d} días** de F1.`
+    : t > 28
+    ? `A **${t}°C** fermenta rápido y hay riesgo de pasarse: probá desde el día 5, calculá ~**${f1d} días** de F1.`
+    : `A **${t}°C** estás en el rango ideal: ~**${f1d} días** de F1.`;
   return {
-    diasF1: Number(f1.toFixed(0)),
-    diasF2: Number(f2.toFixed(0)),
+    diasF1: f1d,
+    diasF2: f2d,
     tazasTe: Number(te.toFixed(1)),
     gramosAzucar: Number(azucar.toFixed(0)),
     consejos,
+    _insight: {
+      title: 'Tu fermentación',
+      text: `${tempTxt} Sumá **${f2d} días** de F2 (saborizado con gas) y arrancá con **${Math.round(azucar)} g** de azúcar para ${v} L.`,
+      tone,
+      icon: '🍵',
+    },
   };
 }

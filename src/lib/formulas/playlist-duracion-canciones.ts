@@ -1,6 +1,6 @@
 /** Calculadora de Duración de Playlist */
 export interface Inputs { canciones: number; duracionPromMin: number; pausaEntreCanciones?: number; __lang?: string; }
-export interface Outputs { duracionTotal: string; horasDecimal: number; cancionesPorHora: number; mensaje: string; }
+export interface Outputs { duracionTotal: string; horasDecimal: number; cancionesPorHora: number; mensaje: string; _insight?: any; }
 
 export function playlistDuracionCanciones(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -12,6 +12,7 @@ export function playlistDuracionCanciones(i: Inputs): Outputs {
       mediana: 'Playlist mediana — buena para una tarde o viaje en auto.',
       larga: 'Playlist larga — te cubre una jornada laboral completa.',
       maratonica: 'Playlist maratónica — suficiente para un viaje largo o fiesta de toda la noche.',
+      insightTitle: 'Cuánto dura tu playlist',
     },
     en: {
       errorCanciones: 'Enter the number of songs',
@@ -20,6 +21,7 @@ export function playlistDuracionCanciones(i: Inputs): Outputs {
       mediana: 'Medium playlist — great for an afternoon or a car ride.',
       larga: 'Long playlist — enough to cover a full workday.',
       maratonica: 'Marathon playlist — enough for a long trip or an all-night party.',
+      insightTitle: 'How long your playlist lasts',
     },
   } as const)[__lang];
 
@@ -42,5 +44,15 @@ export function playlistDuracionCanciones(i: Inputs): Outputs {
   else if (horasDecimal < 8) mensaje = T.larga;
   else mensaje = T.maratonica;
 
-  return { duracionTotal, horasDecimal: Number(horasDecimal.toFixed(1)), cancionesPorHora, mensaje };
+  const insightText = __lang === 'en'
+    ? `**${n}** songs at **${dur} min** each add up to **${duracionTotal}** (~**${cancionesPorHora}** songs per hour). ${mensaje}`
+    : `**${n}** canciones de **${dur} min** suman **${duracionTotal}** (~**${cancionesPorHora}** canciones por hora). ${mensaje}`;
+  const _insight = {
+    title: T.insightTitle,
+    text: insightText,
+    tone: 'neutral',
+    icon: '🎧',
+  };
+
+  return { duracionTotal, horasDecimal: Number(horasDecimal.toFixed(1)), cancionesPorHora, mensaje, _insight };
 }

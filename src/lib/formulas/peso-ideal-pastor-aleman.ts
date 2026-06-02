@@ -15,6 +15,7 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
 }
 
 const RAZA = {
@@ -55,11 +56,29 @@ export function pesoIdealPastorAleman(inputs: Inputs): Outputs {
 
   const promedio = (min + max) / 2;
 
+  const sexoTxt = sexo === 'macho' ? 'Un macho' : 'Una hembra';
+  let insightText: string;
+  let insightTone = 'neutral';
+  if (edad === 'cachorro') {
+    insightText = `Todavía está creciendo: el Pastor Alemán completa su desarrollo recién a los 18-24 meses. ${sexoTxt} ${contextura} debería estabilizarse entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** de adulto. No te guíes por el peso ahora; controlá que coma según su etapa.`;
+  } else if (edad === 'senior') {
+    insightText = `${sexoTxt} senior suele perder algo de masa muscular: un rango de **${min.toFixed(1)}-${max.toFixed(1)} kg** es esperable. Vigilá que la baja sea gradual; una caída brusca amerita control veterinario.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `${sexoTxt} ${contextura} en su punto debería pesar entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). Como raza propensa a displasia de cadera, mantenerlo en ese rango y no por encima protege sus articulaciones.`;
+  }
+
   return {
     pesoPromedio: Number(promedio.toFixed(1)),
     pesoIdealMin: Number(min.toFixed(1)),
     pesoIdealMax: Number(max.toFixed(1)),
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight: {
+      title: 'Qué significa este rango',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐕‍🦺',
+    },
   };
 }

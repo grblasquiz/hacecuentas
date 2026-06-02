@@ -12,6 +12,8 @@ export interface Outputs {
   probFinal: string;
   probCampeon: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Probabilidades estimadas basadas en ranking FIFA abril 2026 + histórico Mundiales
@@ -54,6 +56,19 @@ export function mundial2026ProbabilidadSeed(i: Inputs): Outputs {
   const [pg, po, pc, ps, pf, pcamp] = data.probs;
   const fmt = (n: number) => (n >= 1 ? `${n.toFixed(1)}%` : `${n.toFixed(2)}%`);
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (pcamp >= 5) {
+    insightTone = 'good';
+    insightText = `**${data.nombre}** es candidato fuerte: **${fmt(pcamp)}** de ser campeón y **${fmt(pg)}** de superar la fase de grupos. Desde el Bombo ${data.bombo} parte con ventaja de cruces.`;
+  } else if (pcamp >= 1) {
+    insightTone = 'neutral';
+    insightText = `**${data.nombre}** es un outsider con chance: **${fmt(pcamp)}** de campeón y **${fmt(pg)}** de pasar de grupos. Llegar lejos depende de un cuadro favorable.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `**${data.nombre}** parte como tapado: solo **${fmt(pcamp)}** de ser campeón. El objetivo realista es superar la fase de grupos (**${fmt(pg)}**) y dar el golpe en mata-mata.`;
+  }
+
   return {
     bombo: `Bombo ${data.bombo}`,
     probPasaGrupo: fmt(pg),
@@ -63,5 +78,23 @@ export function mundial2026ProbabilidadSeed(i: Inputs): Outputs {
     probFinal: fmt(pf),
     probCampeon: fmt(pcamp),
     resumen: `**${data.nombre}** (Bombo ${data.bombo}): ${fmt(pg)} pasa fase de grupos, ${fmt(po)} llega a octavos, ${fmt(pc)} a cuartos, ${fmt(ps)} a semis, ${fmt(pf)} a final, ${fmt(pcamp)} es campeón.`,
+    _insight: {
+      title: 'Lectura del camino',
+      text: insightText,
+      tone: insightTone,
+      icon: '⚽',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(pcamp.toFixed(2)),
+      markerLabel: fmt(pcamp),
+      min: 0,
+      segments: [
+        { nombre: 'Tapado', max: 1, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Outsider', max: 5, color: '#3b82f6', colorDark: '#2563eb' },
+        { nombre: 'Candidato', max: 12, color: '#22c55e', colorDark: '#16a34a' },
+      ],
+      ariaLabel: `Probabilidad de ${data.nombre} de ser campeón del Mundial 2026: ${fmt(pcamp)}`,
+    },
   };
 }

@@ -1,6 +1,6 @@
 /** Kefir leche */
 export interface Inputs { gramosGranos: number; temperaturaAmbiente: number; intensidadDeseada: string; }
-export interface Outputs { mlLeche: number; horasFermentacion: number; textura: string; frecuencia: string; consejos: string; }
+export interface Outputs { mlLeche: number; horasFermentacion: number; textura: string; frecuencia: string; consejos: string; _insight?: any; }
 
 export function kefirLecheProporciones(i: Inputs): Outputs {
   const g = Number(i.gramosGranos);
@@ -33,11 +33,20 @@ export function kefirLecheProporciones(i: Inputs): Outputs {
   else if (t > 28) cons = 'Clima cálido: chequeá desde 8h para no pasarte. Considerá menos granos.';
   else cons = 'Temperatura ideal para kefir.';
 
+  const tempOk = t >= 20 && t <= 26;
+  const _insight = {
+    title: 'Tu receta de kefir',
+    text: `Con **${g} g** de granos usá **${Number(ml.toFixed(0))} ml** de leche y dejá fermentar unas **${Number(h.toFixed(0))} h** a ${t}°C. ${tempOk ? 'La temperatura está en el rango ideal.' : t < 20 ? 'Hace frío: la fermentación se alarga, buscá un lugar más cálido.' : 'Hace calor: revisá antes para que no se pase de ácido.'}`,
+    tone: tempOk ? 'good' : 'warn',
+    icon: '🥛',
+  };
+
   return {
     mlLeche: Number(ml.toFixed(0)),
     horasFermentacion: Number(h.toFixed(0)),
     textura,
     frecuencia: 'Los granos crecen 5-15% por batch. Regalá/congelá el excedente cada 2 semanas.',
     consejos: cons,
+    _insight,
   };
 }

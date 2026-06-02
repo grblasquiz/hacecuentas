@@ -10,6 +10,7 @@ export interface PorcelanatoLiquidoOutputs {
   litrosPrimer: number;
   litrosSellador: number;
   detalle: string;
+  _insight?: any;
 }
 
 const RENDIMIENTO_RESINA_L_POR_M2_POR_MM = 1.0;
@@ -34,10 +35,18 @@ export function porcelanatoLiquidoLitrosM2(inputs: PorcelanatoLiquidoInputs): Po
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const _insight = {
+    title: 'Lo que tenés que comprar',
+    text: `Para tus **${fmt.format(superficie)} m²** (${fmt.format(espesor)} mm, ${capas} capas, ${desperdicio}% de desperdicio) necesitás **${fmt.format(litrosResina)} L de resina epoxi**, más **${fmt.format(litrosPrimer)} L de primer** y **${fmt.format(litrosSellador)} L de sellador UV**. Comprá por kits cerrados: redondeá siempre hacia arriba.`,
+    tone: 'neutral',
+    icon: '🪣',
+  };
+
   return {
     litrosResina,
     litrosPrimer,
     litrosSellador,
     detalle: `Para ${fmt.format(superficie)} m² con ${fmt.format(espesor)} mm de espesor en ${capas} capas (${desperdicio}% desperdicio): ${fmt.format(litrosResina)} L de resina epoxi, ${fmt.format(litrosPrimer)} L de primer y ${fmt.format(litrosSellador)} L de sellador UV.`,
+    _insight,
   };
 }

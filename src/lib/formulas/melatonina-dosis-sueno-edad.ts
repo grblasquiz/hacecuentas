@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | any; _insight?: any; }
 export function melatoninaDosisSuenoEdad(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const e=Number(i.edad)||0; const p=String(i.problema||'conciliar');
@@ -12,5 +12,20 @@ export function melatoninaDosisSuenoEdad(i: Inputs): Outputs {
   const advertencia = __lang === 'en'
     ? 'Start with the lowest dose. Consult a doctor if using >2-4 weeks.'
     : 'Empezá con menor dosis. Consulta médica si usás >2-4 semanas.';
-  return { dosis:d, momento:m, advertencia };
+
+  const _insight = __lang === 'en'
+    ? {
+        title: 'Your suggested dose',
+        text: `For this goal, aim for **${d}**, taken **${m.toLowerCase()}**. Begin with the lowest amount in the range and only increase if needed — more melatonin rarely means better sleep.`,
+        tone: p === 'jetlag' ? 'warn' : 'neutral',
+        icon: '🌙',
+      }
+    : {
+        title: 'Tu dosis sugerida',
+        text: `Para este objetivo, apuntá a **${d}**, tomada **${m.toLowerCase()}**. Empezá por la dosis más baja del rango y subí solo si hace falta: más melatonina rara vez significa dormir mejor.`,
+        tone: p === 'jetlag' ? 'warn' : 'neutral',
+        icon: '🌙',
+      };
+
+  return { dosis:d, momento:m, advertencia, _insight };
 }

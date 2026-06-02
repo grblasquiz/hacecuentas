@@ -39,6 +39,7 @@ export interface PHAlimentoAlcalinidadOutputs {
   clasificacion: string;
   impacto: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function pHAlimentoAlcalinidad(inputs: PHAlimentoAlcalinidadInputs): PHAlimentoAlcalinidadOutputs {
@@ -66,6 +67,10 @@ export function pHAlimentoAlcalinidad(inputs: PHAlimentoAlcalinidadInputs): PHAl
       segNeutro: 'Neutro',
       segAlcalino: 'Alcalino',
       ariaLabel: 'Escala de pH del alimento: del muy ácido al alcalino. Umbral de erosión dental en pH 5,5.',
+      insTitle: 'Tu alimento y el esmalte dental',
+      insIcon: '🦷',
+      insBelow: (n: string, ph: number, diff: string) => `${n} tiene un pH de **${ph}**, por debajo del umbral de erosión del esmalte (**pH 5,5**) — unas **${diff} unidades** más ácido. El consumo frecuente puede desmineralizar los dientes: enjuagá con agua y esperá 30 min antes de cepillarte.`,
+      insAbove: (n: string, ph: number) => `${n} tiene un pH de **${ph}**, por encima del umbral de erosión del esmalte (**pH 5,5**), así que no representa riesgo dental. ${ph >= 7.5 ? 'Además aporta poder alcalinizante.' : 'Se tolera bien.'}`,
     },
     en: {
       errorAlimento: 'Please select a valid food',
@@ -89,6 +94,10 @@ export function pHAlimentoAlcalinidad(inputs: PHAlimentoAlcalinidadInputs): PHAl
       segNeutro: 'Neutral',
       segAlcalino: 'Alkaline',
       ariaLabel: 'Food pH scale: from very acidic to alkaline. Enamel erosion threshold at pH 5.5.',
+      insTitle: 'Your food and tooth enamel',
+      insIcon: '🦷',
+      insBelow: (n: string, ph: number, diff: string) => `${n} has a pH of **${ph}**, below the enamel erosion threshold (**pH 5.5**) — about **${diff} units** more acidic. Frequent consumption can demineralize teeth: rinse with water and wait 30 min before brushing.`,
+      insAbove: (n: string, ph: number) => `${n} has a pH of **${ph}**, above the enamel erosion threshold (**pH 5.5**), so it poses no dental risk. ${ph >= 7.5 ? 'It also adds alkalizing power.' : 'It is well tolerated.'}`,
     },
   } as const)[__lang];
 
@@ -132,5 +141,14 @@ export function pHAlimentoAlcalinidad(inputs: PHAlimentoAlcalinidadInputs): PHAl
     ],
     ariaLabel: T.ariaLabel,
   };
-  return { ph: data.ph, clasificacion: clasif, impacto: imp, _chart: chart };
+  const below = data.ph < 5.5;
+  const diffNum = (5.5 - data.ph).toFixed(1);
+  const diffStr = __lang === 'en' ? diffNum : diffNum.replace('.', ',');
+  const insight = {
+    title: T.insTitle,
+    text: below ? T.insBelow(data.nombre, data.ph, diffStr) : T.insAbove(data.nombre, data.ph),
+    tone: below ? 'warn' : data.ph >= 7.5 ? 'good' : 'neutral',
+    icon: T.insIcon,
+  };
+  return { ph: data.ph, clasificacion: clasif, impacto: imp, _chart: chart, _insight: insight };
 }

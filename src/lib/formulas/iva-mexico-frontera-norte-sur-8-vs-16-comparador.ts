@@ -10,6 +10,7 @@ export interface Outputs {
   tax_rate_applied: number;
   info_message: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -73,12 +74,29 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del precio total: precio sin IVA más IVA aplicado',
   };
 
+  const savingsR = parseFloat(savingsVsGeneral.toFixed(2));
+  const isBorder = taxRate === 0.08;
+  const insight = isBorder
+    ? {
+        title: 'Estímulo fronterizo aplicado',
+        text: `Con IVA al **8%** en ${locationName} pagás **$${ivaR.toLocaleString('es-MX')}** de impuesto y ahorrás **$${savingsR.toLocaleString('es-MX')}** frente al 16% general. Recordá que requiere domicilio fiscal registrado en el municipio fronterizo ante el SAT.`,
+        tone: 'good',
+        icon: '🇲🇽',
+      }
+    : {
+        title: 'Tasa general del 16%',
+        text: `Sobre $${baseR.toLocaleString('es-MX')} el IVA es de **$${ivaR.toLocaleString('es-MX')}** (total **$${totalR.toLocaleString('es-MX')}**). No aplica el estímulo fronterizo: si tu domicilio fiscal estuviera en zona frontera ahorrarías **$${(baseR * 0.08).toLocaleString('es-MX')}** con la tasa del 8%.`,
+        tone: 'neutral',
+        icon: '🧾',
+      };
+
   return {
     iva_amount: ivaR,
     total_with_tax: totalR,
-    savings_vs_general: parseFloat(savingsVsGeneral.toFixed(2)),
+    savings_vs_general: savingsR,
     tax_rate_applied: taxRate,
     info_message: infoMsg,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   ln: number;
   log2: number;
   verificacion: string;
+  _insight?: any;
 }
 
 export function logaritmos(i: Inputs): Outputs {
@@ -58,6 +59,14 @@ export function logaritmos(i: Inputs): Outputs {
 
   const verificacion = `${base.toFixed(4)}^${resultado.toFixed(4)} ≈ ${Math.pow(base, resultado).toFixed(4)} (debería ≈ ${n})`;
 
+  const baseTxt = tipo === 'ln' ? 'e (≈2,718)' : String(Number(base.toFixed(4)));
+  const _insight = {
+    title: 'Qué dice este logaritmo',
+    text: `El logaritmo en base **${baseTxt}** de **${n}** es **${resultado.toFixed(4)}**: ese es el exponente al que hay que elevar **${baseTxt}** para obtener **${n}**.`,
+    tone: 'neutral',
+    icon: '🔢',
+  };
+
   return {
     resultado: Number(resultado.toFixed(6)),
     formula,
@@ -65,5 +74,6 @@ export function logaritmos(i: Inputs): Outputs {
     ln: Number(ln.toFixed(6)),
     log2: Number(log2.toFixed(6)),
     verificacion,
+    _insight,
   };
 }

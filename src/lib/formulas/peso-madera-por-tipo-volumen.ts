@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   pesoTotal: string; pesoUnidad: string; volumenM3: string; densidad: string;
+  _insight?: any;
 }
 
 export function pesoMaderaPorTipoVolumen(inputs: Inputs): Outputs {
@@ -36,5 +37,11 @@ export function pesoMaderaPorTipoVolumen(inputs: Inputs): Outputs {
     pesoUnidad: `${pesoUn.toFixed(2)} kg cada una`,
     volumenM3: `${(volM3 * cant).toFixed(4)} m³`,
     densidad: `${md.n}: ${md.d} kg/m³`,
+    _insight: {
+      title: 'Cuánto vas a cargar',
+      text: `${cant} pieza${cant>1?'s':''} de ${md.n.toLowerCase()} (${md.d} kg/m³) suman **${pesoTot.toFixed(1)} kg**, a razón de **${pesoUn.toFixed(2)} kg cada una**. El dato manda al elegir tarugos, bisagras y si lo movés a mano o con ayuda.`,
+      tone: pesoTot > 25 ? 'warn' : 'neutral',
+      icon: '🪵',
+    },
   };
 }

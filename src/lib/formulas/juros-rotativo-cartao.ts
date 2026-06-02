@@ -20,6 +20,8 @@ export interface Outputs {
   totalDevido: string;
   custoEfetivoTotal: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -45,6 +47,29 @@ export function jurosRotativoCartao(i: Inputs): Outputs {
   const taxaAnual = (Math.pow(1 + taxaMes, 12) - 1) * 100;
   const cet = ((total / saldo - 1) / (meses / 12)) * 100;
 
+  const iofTotal = iofAdicValor + iofDiario;
+  const pctJuros = (juros / total) * 100;
+
+  const _insight = {
+    title: 'O custo do rotativo',
+    text: `Uma dívida de **${brl(saldo)}** no rotativo por **${meses} ${meses === 1 ? 'mês' : 'meses'}** vira **${brl(total)}**: são **${brl(juros)}** de juros (${pctJuros.toFixed(0)}% do total) mais **${brl(iofTotal)}** de IOF, com CET de **${cet.toFixed(1)}% ao ano**. Quite o quanto antes ou troque por uma linha mais barata.`,
+    tone: 'warn',
+    icon: '💳',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Saldo original', value: Number(saldo.toFixed(2)) },
+      { label: 'Juros', value: Number(juros.toFixed(2)) },
+      { label: 'IOF', value: Number(iofTotal.toFixed(2)) },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(total),
+    centerLabel: 'Total devido',
+    ariaLabel: `Composição do total devido de ${brl(total)}: saldo ${brl(saldo)}, juros ${brl(juros)} e IOF ${brl(iofTotal)}.`,
+  };
+
   return {
     taxaMensalAplicada: (taxaMes * 100).toFixed(2) + '% am (teto Lei 14.690/2023)',
     taxaAnualEquivalente: taxaAnual.toFixed(2) + '% aa',
@@ -54,5 +79,7 @@ export function jurosRotativoCartao(i: Inputs): Outputs {
     totalDevido: brl(total),
     custoEfetivoTotal: cet.toFixed(2) + '% aa (CET anualizado)',
     resumen: `Saldo ${brl(saldo)} no rotativo por ${meses} meses a 8% am vira ${brl(total)} (juros ${brl(juros)} + IOF ${brl(iofAdicValor + iofDiario)}). CET ${cet.toFixed(1)}% aa.`,
+    _insight,
+    _chart,
   };
 }

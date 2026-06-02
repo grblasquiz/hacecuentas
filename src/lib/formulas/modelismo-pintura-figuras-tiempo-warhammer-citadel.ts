@@ -14,6 +14,7 @@ export interface Outputs {
   semanasMaximas: number;
   costoEstimadoUSD: number;
   resumen: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -107,5 +108,11 @@ export function compute(i: Inputs): Outputs {
     semanasMaximas,
     costoEstimadoUSD,
     resumen,
+    _insight: {
+      title: "Tu proyecto en números",
+      text: `Pintar **${cantidad} ${cantidad === 1 ? "figura" : "figuras"}** a nivel ${nivelStr} te lleva entre **${horasMinimas} y ${horasMaximas} horas** (≈${semanasMinimas}-${semanasMaximas} semanas a ${horasSemana} h/sem), con unos **USD ${costoEstimadoUSD.toFixed(2)}** en pintura. No incluye primer, barniz ni basing.`,
+      tone: "neutral",
+      icon: "🎨",
+    },
   };
 }

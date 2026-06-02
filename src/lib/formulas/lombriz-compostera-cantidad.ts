@@ -1,6 +1,6 @@
 /** Lombrices para compostera */
 export interface Inputs { kgResiduosSemanal: number; personas?: number; }
-export interface Outputs { lombricesTotales: number; kgLombrices: number; humusMensualKg: number; tamanoCompostera: string; }
+export interface Outputs { lombricesTotales: number; kgLombrices: number; humusMensualKg: number; tamanoCompostera: string; _insight?: any; }
 
 export function lombrizComposteraCantidad(i: Inputs): Outputs {
   let kgSem = Number(i.kgResiduosSemanal);
@@ -21,10 +21,17 @@ export function lombrizComposteraCantidad(i: Inputs): Outputs {
   else if (kgSem <= 10) tamano = 'Compostera grande (60×50×50 cm, 3-4 bandejas)';
   else tamano = 'Compostera industrial o múltiples composteras';
 
+  const _insight = {
+    title: 'Tu población de lombrices',
+    text: `Para procesar **${kgSem.toFixed(1)} kg/semana** de residuos necesitás ~**${lombrices.toLocaleString('es-AR')} lombrices** (**${kgLombrices.toFixed(1)} kg**) y producirás unos **${humusMes.toFixed(1)} kg de humus al mes**. Empezá con ${tamano.toLowerCase()}.`,
+    tone: 'good',
+    icon: '🪱',
+  };
   return {
     lombricesTotales: lombrices,
     kgLombrices: Number(kgLombrices.toFixed(1)),
     humusMensualKg: Number(humusMes.toFixed(1)),
     tamanoCompostera: tamano,
+    _insight,
   };
 }

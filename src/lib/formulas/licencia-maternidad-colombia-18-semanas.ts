@@ -15,6 +15,8 @@ export interface Outputs {
   subsidio_total: number;
   subsidio_diario: number;
   cumple_requisitos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -59,6 +61,44 @@ export function compute(i: Inputs): Outputs {
   dateFin.setDate(dateFin.getDate() + dias_totales - 1);
   const fecha_fin = dateFin.toISOString().split('T')[0];
 
+  const subsidioTotalR = Math.round(subsidio_total);
+  const subsidioDiarioR = Math.round(subsidio_diario);
+  const fmt = (n: number) => '$' + n.toLocaleString('es-CO');
+
+  let _insight: any;
+  let _chart: any;
+  if (!cumpleRequisitos) {
+    _insight = {
+      title: 'Sin derecho a subsidio',
+      text: `Con **${i.meses_cotizados} meses cotizados** no llegás al mínimo de **${MESES_COTIZACION_MINIMO} meses** que exige la EPS, así que no hay subsidio en dinero. La licencia de **${SEMANAS_MATERNIDAD} semanas** sigue siendo un derecho laboral, pero el pago corre por cuenta del empleador o queda sin cobertura.`,
+      tone: 'warn',
+      icon: '🤰',
+    };
+  } else {
+    _insight = {
+      title: 'Subsidio de maternidad aprobado',
+      text: `Cumplís el requisito de cotización: la EPS paga el **100% del IBC**, **${fmt(subsidioDiarioR)}/día** durante ${dias_totales} días, **${fmt(subsidioTotalR)}** en total${dias_paternidad > 0 ? ` (incluye los ${dias_paternidad} días de licencia de paternidad)` : ''}. Recordá el descuento del 4% de aporte a pensión durante la licencia.`,
+      tone: 'good',
+      icon: '🤰',
+    };
+    // Donut sólo si hay composición (maternidad + paternidad)
+    if (dias_paternidad > 0) {
+      const slicePaternidad = Math.round(subsidio_diario * dias_paternidad);
+      const sliceMaternidad = subsidioTotalR - slicePaternidad;
+      _chart = {
+        type: 'doughnut',
+        slices: [
+          { label: 'Maternidad (126 días)', value: sliceMaternidad },
+          { label: 'Paternidad (14 días)', value: slicePaternidad },
+        ],
+        prefix: '$',
+        centerValue: fmt(subsidioTotalR),
+        centerLabel: 'Subsidio total',
+        ariaLabel: `Subsidio total de ${fmt(subsidioTotalR)}: ${fmt(sliceMaternidad)} de maternidad más ${fmt(slicePaternidad)} de paternidad`,
+      };
+    }
+  }
+
   return {
     dias_licencia_maternidad: DIAS_MATERNIDAD,
     semanas_licencia: semanas_licencia,
@@ -66,8 +106,10 @@ export function compute(i: Inputs): Outputs {
     dias_totales: dias_totales,
     fecha_inicio: fecha_inicio,
     fecha_fin: fecha_fin,
-    subsidio_total: Math.round(subsidio_total),
-    subsidio_diario: Math.round(subsidio_diario),
-    cumple_requisitos: cumpleRequisitoTexto
+    subsidio_total: subsidioTotalR,
+    subsidio_diario: subsidioDiarioR,
+    cumple_requisitos: cumpleRequisitoTexto,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

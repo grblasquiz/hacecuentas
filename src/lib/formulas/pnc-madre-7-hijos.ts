@@ -33,6 +33,7 @@ export interface PncMadre7HijosOutputs {
   tramiteWeb: string;
   hijosFaltantes: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function pncMadre7Hijos(inputs: PncMadre7HijosInputs): PncMadre7HijosOutputs {
@@ -94,13 +95,32 @@ export function pncMadre7Hijos(inputs: PncMadre7HijosInputs): PncMadre7HijosOutp
     mensaje = `Hay incompatibilidades para acceder a la PNC. Revisá los motivos detallados arriba y consultá en ANSES por alternativas.`;
   }
 
+  const importeMensualRed = Math.round(importeMensual);
+  const importeAnualRed = Math.round(importeAnualConSac);
+  const insight = cumpleRequisitos
+    ? {
+        title: 'Cumplís los requisitos',
+        text: `Podés tramitar la PNC madre de 7 hijos: cobrarías **$${importeMensualRed.toLocaleString('es-AR')}** por mes (100% del haber mínimo) y **$${importeAnualRed.toLocaleString('es-AR')}** al año con aguinaldo. El trámite es **gratuito** en ANSES con turno previo.`,
+        tone: 'good' as const,
+        icon: '👩‍👧‍👦',
+      }
+    : {
+        title: hijos < 7 ? 'Todavía no calificás' : 'Hay una incompatibilidad',
+        text: hijos < 7
+          ? `Te falta${hijosFaltantes === 1 ? '' : 'n'} **${hijosFaltantes} hijo${hijosFaltantes === 1 ? '' : 's'}**: la Ley 23.746 exige **7 o más** nacidos vivos. Mientras tanto mirá la PUAM (65 años), la PNC por vejez (70) o la AUH si tenés hijos menores.`
+          : `No podés acceder por las incompatibilidades detalladas (otro ingreso igual o mayor al haber mínimo). Revisá los motivos y consultá alternativas en ANSES.`,
+        tone: 'warn' as const,
+        icon: '👩‍👧‍👦',
+      };
+
   return {
-    importeMensual: Math.round(importeMensual),
-    importeAnualConSac: Math.round(importeAnualConSac),
+    importeMensual: importeMensualRed,
+    importeAnualConSac: importeAnualRed,
     cumpleRequisitos,
     motivos,
     tramiteWeb: 'https://www.anses.gob.ar/prestaciones/pension-no-contributiva-madre-de-7-o-mas-hijos',
     hijosFaltantes,
     mensaje,
+    _insight: insight,
   };
 }

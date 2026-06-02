@@ -33,6 +33,7 @@ export interface PensionViudezMxOutputs {
   porcentajeAplicado: string;
   requisitoSemanasCumplido: string;
   estimacion13PagasAnuales: string;
+  _insight?: any;
 }
 
 const fmt = (n: number) =>
@@ -94,11 +95,20 @@ export function pensionViudezImssMexico(i: PensionViudezMxInputs): PensionViudez
   // Aguinaldo: 1 mes adicional anual (13 pagas total aprox)
   const total13Pagas = pensionViuda * 13;
 
+  // --- Insight narrativo ---
+  const _insight = {
+    title: 'El 90% de la pensión del asegurado',
+    text: `La viuda cobra el **90% de la pensión del asegurado** (régimen ${regimen}): la base estimada de **${fmt(pensionBase)}/mes** se traduce en **${fmt(pensionViuda)} MXN/mes**, unos **${fmt(total13Pagas)}/año** con aguinaldo. Es una estimación; el IMSS resuelve el monto oficial.`,
+    tone: 'neutral',
+    icon: '🇲🇽',
+  };
+
   return {
     pensionMensualViuda: fmt(pensionViuda) + ' MXN/mes',
     pensionBaseAsegurado: fmt(pensionBase) + ' MXN/mes (estimada)',
     porcentajeAplicado: '90% de la pensión del asegurado fallecido (LSS Art. 131)',
     requisitoSemanasCumplido: `Sí — ${semanas} semanas cotizadas (mínimo ${minSemanas} para régimen ${regimen})`,
     estimacion13PagasAnuales: fmt(total13Pagas) + ' MXN/año (12 mensualidades + aguinaldo)',
+    _insight,
   };
 }

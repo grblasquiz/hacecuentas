@@ -11,6 +11,7 @@ export interface Outputs {
   racionesDia: number;
   aguaMl: number;
   estadoPeso: string;
+  _insight?: any;
 }
 
 export function pesoIdealPerro(i: Inputs): Outputs {
@@ -52,11 +53,26 @@ export function pesoIdealPerro(i: Inputs): Outputs {
   let estado = 'Sin referencia — consultá vet para BCS';
   if (peso < 2) estado = 'Perro muy pequeño / cachorro';
 
+  const gramosTotal = Math.round(gramos);
+  const gramosPorRacion = Math.round(gramos / raciones);
+  let etapaTxt: string;
+  if (edad < 1) etapaTxt = 'cachorro en crecimiento (necesita más energía por kilo que un adulto)';
+  else if (edad > 10) etapaTxt = 'perro senior (metabolismo más lento)';
+  else if (actividad === 'trabajo' || actividad === 'alto') etapaTxt = 'perro muy activo';
+  else etapaTxt = 'adulto con actividad normal';
+  const castradoTxt = castrado ? ' Al estar castrado, ya le restamos un 10% porque su metabolismo es más bajo.' : '';
+
   return {
     calorias: Math.round(calorias),
-    gramosAlimento: Math.round(gramos),
+    gramosAlimento: gramosTotal,
     racionesDia: raciones,
     aguaMl: Math.round(aguaMl),
     estadoPeso: estado,
+    _insight: {
+      title: 'Cuánto darle por día',
+      text: `Para un ${etapaTxt} de **${peso} kg**, el cálculo da **${Math.round(calorias)} kcal/día**, es decir unos **${gramosTotal} g** de alimento seco repartidos en **${raciones} tomas** (~${gramosPorRacion} g cada una).${castradoTxt} Es una estimación: ajustala según la densidad calórica real de tu marca y la condición corporal del perro.`,
+      tone: 'neutral',
+      icon: '🦴',
+    },
   };
 }

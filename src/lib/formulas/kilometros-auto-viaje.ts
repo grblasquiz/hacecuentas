@@ -20,6 +20,8 @@ export interface Outputs {
   costoBusArs: number;
   mejorOpcion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function kilometrosAutoViaje(i: Inputs): Outputs {
@@ -56,7 +58,13 @@ export function kilometrosAutoViaje(i: Inputs): Outputs {
   opciones.sort((a, b) => a.costo - b.costo);
   const mejor = opciones[0].nombre;
 
-  return {
+  const autoEsMejor = mejor === 'Auto';
+  const ahorroVsAuto = Math.round(costoAuto - opciones[0].costo);
+  const insightText = autoEsMejor
+    ? `Manejar te sale **AR$ ${Math.round(costoAuto).toLocaleString('es-AR')}** (${Math.round(porPersona).toLocaleString('es-AR')} por persona entre ${pax}): es la opción más barata del viaje.`
+    : `El **${mejor.toLowerCase()}** gana por costo: el auto cuesta AR$ ${Math.round(costoAuto).toLocaleString('es-AR')} y te ahorrás unos **AR$ ${ahorroVsAuto.toLocaleString('es-AR')}** eligiendo ${mejor.toLowerCase()}.`;
+
+  const out: Outputs = {
     litrosTotales: Number(litros.toFixed(2)),
     costoNaftaArs: Math.round(costoNafta),
     costoTotalAutoArs: Math.round(costoAuto),
@@ -65,5 +73,28 @@ export function kilometrosAutoViaje(i: Inputs): Outputs {
     costoBusArs: Math.round(costoBus),
     mejorOpcion: mejor,
     resumen: `Tu viaje en auto de **${distEfectiva} km** consume ${litros.toFixed(1)} L y cuesta **AR$ ${Math.round(costoAuto).toLocaleString()}** total (${Math.round(porPersona).toLocaleString()} por persona). La mejor opción económica es: **${mejor}**.`,
+    _insight: {
+      title: autoEsMejor ? 'El auto conviene' : 'Conviene otra opción',
+      text: insightText,
+      tone: autoEsMejor ? 'good' : 'warn',
+      icon: '🚗',
+    },
   };
+
+  // Donut del costo del auto sólo cuando hay peajes que sumen al combustible
+  if (peajesTotal > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Nafta', value: Math.round(costoNafta) },
+        { label: 'Peajes', value: Math.round(peajesTotal) },
+      ],
+      prefix: '$',
+      centerValue: `$${Math.round(costoAuto).toLocaleString('es-AR')}`,
+      centerLabel: 'Costo en auto',
+      ariaLabel: `Costo del viaje en auto: nafta más peajes, total AR$ ${Math.round(costoAuto).toLocaleString('es-AR')}`,
+    };
+  }
+
+  return out;
 }

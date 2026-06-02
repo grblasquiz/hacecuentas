@@ -7,7 +7,7 @@
  * Vencimento: último dia útil do mês seguinte. Lei 7.713/1988, art. 8º.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | Record<string, any>; }
 
 const FAIXAS = [
   { ate: 2428.80, aliq: 0, parcela: 0 },
@@ -41,6 +41,37 @@ export function irAluguelCarneLeao(i: Inputs): Outputs {
   const liquido = aluguelBruto - despesasDedutiveis - imposto;
   const aliqEfetiva = aluguelBruto > 0 ? (imposto / aluguelBruto) * 100 : 0;
 
+  const _insight = imposto > 0
+    ? {
+        title: 'Carnê-Leão a recolher este mês',
+        text: `Sobre a base de **${fmt(base)}** o Carnê-Leão devido é **${fmt(imposto)}** (DARF 0190), o que representa uma alíquota efetiva de **${aliqEfetiva.toFixed(2)}%** do aluguel bruto. No bolso ficam **${fmt(liquido)}**.`,
+        tone: 'warn',
+        icon: '🏠',
+      }
+    : {
+        title: 'Sem imposto neste mês',
+        text: base <= 0
+          ? `Após deduzir despesas e abatimentos, a base ficou em **${fmt(base)}**: não há Carnê-Leão a pagar. Você embolsa **${fmt(liquido)}** do aluguel.`
+          : `A base de **${fmt(base)}** está dentro da faixa isenta da tabela mensal (até R$ 2.428,80): **R$ 0,00** de Carnê-Leão. Líquido de **${fmt(liquido)}**.`,
+        tone: 'good',
+        icon: '🏠',
+      };
+
+  const _chart = (aluguelBruto > 0 && liquido >= 0)
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Líquido no bolso', value: Math.round(liquido * 100) / 100 },
+          { label: 'Despesas dedutíveis', value: Math.round(despesasDedutiveis * 100) / 100 },
+          { label: 'Carnê-Leão (IR)', value: Math.round(imposto * 100) / 100 },
+        ],
+        prefix: 'R$ ',
+        centerValue: fmt(aluguelBruto),
+        centerLabel: 'Aluguel bruto',
+        ariaLabel: `Composição do aluguel bruto de ${fmt(aluguelBruto)}: ${fmt(liquido)} líquido, ${fmt(despesasDedutiveis)} de despesas e ${fmt(imposto)} de imposto.`,
+      }
+    : undefined;
+
   return {
     despesasDedutiveis: fmt(despesasDedutiveis),
     baseCalculo: fmt(base),
@@ -50,5 +81,7 @@ export function irAluguelCarneLeao(i: Inputs): Outputs {
     codigoDarf: '0190',
     vencimento: 'Último dia útil do mês seguinte',
     resumo: `Aluguel bruto ${fmt(aluguelBruto)} − despesas ${fmt(despesasDedutiveis)} − deduções familiares = base ${fmt(base)}. Carnê-Leão: ${fmt(imposto)} (DARF 0190). Líquido: ${fmt(liquido)}.`,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

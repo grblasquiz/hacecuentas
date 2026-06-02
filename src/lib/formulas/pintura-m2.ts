@@ -11,6 +11,7 @@ export interface Outputs {
   latas20L: number;
   manosAplicadas: number;
   rendimiento: number;
+  _insight?: any;
 }
 
 const RENDIMIENTO: Record<string, number> = {
@@ -37,12 +38,27 @@ export function pinturaM2(i: Inputs): Outputs {
   const lta10 = Math.ceil(litros / 10);
   const lta20 = Math.ceil(litros / 20);
 
+  const litrosR = Number(litros.toFixed(2));
+  const conMargen = litros * 1.1;
+  let compra: string;
+  if (conMargen >= 18) compra = `un balde de **20 L**`;
+  else if (conMargen >= 8) compra = `un balde de **10 L**`;
+  else compra = `**${Math.ceil(conMargen / 4)} lata${Math.ceil(conMargen / 4) === 1 ? '' : 's'} de 4 L**`;
+
+  const _insight = {
+    title: 'Cuánto y en qué presentación',
+    text: `Necesitás **${litrosR} L** para ${m2} m² con ${manos} mano${manos === 1 ? '' : 's'} (rinde ${rend} m²/L). Con el 10% de margen para retoques (~${conMargen.toFixed(1)} L), te conviene comprar ${compra}.`,
+    tone: 'neutral' as const,
+    icon: '🪣',
+  };
+
   return {
-    litros: Number(litros.toFixed(2)),
+    litros: litrosR,
     latas4L: lta4,
     latas10L: lta10,
     latas20L: lta20,
     manosAplicadas: manos,
     rendimiento: rend,
+    _insight,
   };
 }

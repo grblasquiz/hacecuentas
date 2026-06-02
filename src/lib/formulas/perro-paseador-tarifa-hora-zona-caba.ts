@@ -1,6 +1,6 @@
 /** Tarifa hora paseador de perros CABA según zona, cantidad y duración */
 export interface Inputs { zona: string; cantidadPerros: number; duracionMinutos: number; frecuenciaSemanal: number; }
-export interface Outputs { tarifaPorPaseo: number; tarifaMensual: number; tarifaPorPerroHora: number; ahorroPlanMensualPct: number; explicacion: string; }
+export interface Outputs { tarifaPorPaseo: number; tarifaMensual: number; tarifaPorPerroHora: number; ahorroPlanMensualPct: number; explicacion: string; _insight?: any; }
 export function perroPaseadorTarifaHoraZonaCaba(i: Inputs): Outputs {
   const zona = String(i.zona || '').toLowerCase();
   const perros = Math.max(1, Number(i.cantidadPerros) || 1);
@@ -20,11 +20,23 @@ export function perroPaseadorTarifaHoraZonaCaba(i: Inputs): Outputs {
   const mensualPlan = mensualSpot * 0.82; // 18% descuento por plan
   const ahorro = ((mensualSpot - mensualPlan) / mensualSpot) * 100;
   const porPerroHora = (base * factorPerros) / perros;
+  const ars = (n: number) => '$' + Math.round(n).toLocaleString('es-AR') + ' ARS';
+  const ahorroMensual = mensualSpot - mensualPlan;
+  const zonaLabel = zona ? zona.replace(/-/g, ' ') : 'CABA';
+  const _insight = {
+    title: 'Tu costo de paseos al mes',
+    text:
+      `Cada paseo de **${minutos} min** con **${perros} perro(s)** en ${zonaLabel} sale **${ars(tarifaUnit)}**. ` +
+      `Con un plan de **${freq}×/semana** pagás **${ars(mensualPlan)}/mes**, ahorrando ${ars(ahorroMensual)} (**${ahorro.toFixed(0)}%**) frente a pagar paseo por paseo.`,
+    tone: 'good',
+    icon: '🐕',
+  };
   return {
     tarifaPorPaseo: Number(tarifaUnit.toFixed(0)),
     tarifaMensual: Number(mensualPlan.toFixed(0)),
     tarifaPorPerroHora: Number(porPerroHora.toFixed(0)),
     ahorroPlanMensualPct: Number(ahorro.toFixed(1)),
     explicacion: `Paseo ${minutos}min en ${zona} con ${perros} perro(s): $${tarifaUnit.toFixed(0)} ARS por paseo. Plan mensual ${freq}x/semana: $${mensualPlan.toFixed(0)} ARS.`,
+    _insight,
   };
 }

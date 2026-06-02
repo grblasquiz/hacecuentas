@@ -10,6 +10,8 @@ export interface Outputs {
   tempMaxima: number;
   estado: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const TEMP_MAX: Record<string, number> = {
@@ -64,10 +66,41 @@ export function overclockTemperaturaSegura(i: Inputs): Outputs {
       : ` Nota: tu ambiente está a ${tempAmb}°C (caluroso). En invierno tendrías ~${tempAmb - 20}°C menos.`;
   }
 
+  // Insight: tono dinámico según el margen térmico
+  const tone = margenTermico > 25 ? 'good' : margenTermico > 15 ? 'neutral' : 'warn';
+  const _insight = {
+    title: __lang === 'en' ? 'Thermal headroom' : 'Margen térmico',
+    text: __lang === 'en'
+      ? `At **${tempActual}°C** under load you have **${margenTermico}°C** of headroom before the ${tempMaxima}°C throttling limit (${deltaT}°C above your ${tempAmb}°C ambient).`
+      : `A **${tempActual}°C** bajo carga te quedan **${margenTermico}°C** de margen antes del límite de throttling de ${tempMaxima}°C (${deltaT}°C por encima de tu ambiente de ${tempAmb}°C).`,
+    tone,
+    icon: '\u{1F321}️',
+  };
+
+  // Gauge: dónde cae la temperatura actual respecto del límite
+  const topMax = Math.max(tempMaxima, tempActual) + 5;
+  const _chart = {
+    type: 'scale',
+    marker: tempActual,
+    markerLabel: `${tempActual}°C`,
+    min: Math.min(tempAmb, 30, tempActual - 5),
+    segments: [
+      { nombre: __lang === 'en' ? 'Excellent' : 'Excelente', max: tempMaxima - 25, color: '#a7f3d0', colorDark: '#065f46' },
+      { nombre: __lang === 'en' ? 'Good' : 'Bueno', max: tempMaxima - 15, color: '#86efac', colorDark: '#166534' },
+      { nombre: __lang === 'en' ? 'Tight' : 'Ajustado', max: tempMaxima - 5, color: '#fde68a', colorDark: '#92400e' },
+      { nombre: __lang === 'en' ? 'Critical' : 'Crítico', max: topMax, color: '#fca5a5', colorDark: '#991b1b' },
+    ],
+    ariaLabel: __lang === 'en'
+      ? `Temperature scale: ${tempActual}°C with a ${tempMaxima}°C limit, ${margenTermico}°C of headroom`
+      : `Escala de temperatura: ${tempActual}°C con límite de ${tempMaxima}°C, ${margenTermico}°C de margen`,
+  };
+
   return {
     margenTermico: Number(margenTermico.toFixed(0)),
     tempMaxima,
     estado,
     recomendacion,
+    _insight,
+    _chart,
   };
 }

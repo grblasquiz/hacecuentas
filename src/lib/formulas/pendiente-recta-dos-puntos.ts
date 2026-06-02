@@ -12,6 +12,7 @@ export interface Outputs {
   ordenadaOrigen: number;
   angulo: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function pendienteRectaDosPuntos(i: Inputs): Outputs {
@@ -42,11 +43,25 @@ export function pendienteRectaDosPuntos(i: Inputs): Outputs {
     ecuacion = `y = ${mStr}x ${bStr}`;
   }
 
+  const mRound = Number(m.toFixed(4));
+  const angRound = Number(angulo.toFixed(2));
+  const insightText = m === 0
+    ? `La recta es **horizontal** (m = 0): la ecuación es ${ecuacion} y el ángulo con el eje X es 0°. La altura no cambia entre los dos puntos.`
+    : m > 0
+    ? `La pendiente es **${mRound}** (positiva): la recta es **creciente** y sube a ${angRound}° respecto del eje X. Por cada unidad que avanzás en x, y sube ${Math.abs(mRound)}.`
+    : `La pendiente es **${mRound}** (negativa): la recta es **decreciente** y baja a ${angRound}° respecto del eje X. Por cada unidad que avanzás en x, y cae ${Math.abs(mRound)}.`;
+
   return {
-    result: Number(m.toFixed(4)),
+    result: mRound,
     ecuacion,
     ordenadaOrigen: Number(b.toFixed(4)),
-    angulo: Number(angulo.toFixed(2)),
-    detalle: `**Puntos**: (${x1}, ${y1}) y (${x2}, ${y2})\n**Pendiente**: m = (${y2} − ${y1}) / (${x2} − ${x1}) = ${dy} / ${dx} = **${Number(m.toFixed(4))}**\n**Ecuación**: ${ecuacion}\n**Ordenada al origen**: b = ${Number(b.toFixed(4))}\n**Ángulo**: ${Number(angulo.toFixed(2))}°`,
+    angulo: angRound,
+    detalle: `**Puntos**: (${x1}, ${y1}) y (${x2}, ${y2})\n**Pendiente**: m = (${y2} − ${y1}) / (${x2} − ${x1}) = ${dy} / ${dx} = **${mRound}**\n**Ecuación**: ${ecuacion}\n**Ordenada al origen**: b = ${Number(b.toFixed(4))}\n**Ángulo**: ${angRound}°`,
+    _insight: {
+      title: 'Interpretación de la pendiente',
+      text: insightText,
+      tone: 'neutral',
+      icon: '📈',
+    },
   };
 }

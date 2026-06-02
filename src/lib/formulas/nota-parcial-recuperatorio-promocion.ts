@@ -12,6 +12,8 @@ export interface Outputs {
   condicion: string;
   notaNecesariaPromo: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function notaParcialRecuperatorioPromocion(i: Inputs): Outputs {
@@ -66,10 +68,50 @@ export function notaParcialRecuperatorioPromocion(i: Inputs): Outputs {
     }
   }
 
+  const promedioOut = Math.round(promedio * 100) / 100;
+
+  let tone: 'good' | 'warn' | 'neutral';
+  let icon: string;
+  let insightText: string;
+  if (minimaOk && promedioPromoOk) {
+    tone = 'good';
+    icon = '🎉';
+    insightText = `Con parciales de **${p1}** y **${p2}** (promedio **${promedioOut}**) superás tanto la mínima por parcial (**${notaMin}**) como el promedio de promoción (**${promedioMin}**): promocionás y te ahorrás el final.`;
+  } else if (ambosAprobados && promedio >= 4) {
+    tone = 'neutral';
+    icon = '📝';
+    const motivo = !minimaOk
+      ? `alguno de tus parciales quedó por debajo del mínimo de **${notaMin}** que pide la promoción`
+      : `tu promedio **${promedioOut}** no llega al **${promedioMin}** requerido para promocionar`;
+    insightText = `Aprobaste ambos parciales (**${p1}** y **${p2}**), así que quedás regular y rendís final. ${motivo[0].toUpperCase() + motivo.slice(1)}.`;
+  } else {
+    tone = 'warn';
+    icon = '⚠️';
+    const cuales = p1 < 4 && p2 < 4 ? 'ambos parciales' : (p1 < 4 ? 'el primer parcial' : 'el segundo parcial');
+    insightText = `Quedás libre: ${cuales} por debajo de 4 (tenés ${p1} y ${p2}). Vas a tener que recuperar o recursar la materia.`;
+  }
+
+  const topMax = promedio >= 10 ? 10.5 : 10;
+  const segments: Array<{ nombre: string; max: number; color: string; colorDark: string }> = [];
+  segments.push({ nombre: 'Libre', max: 4, color: '#ef4444', colorDark: '#dc2626' });
+  if (promedioMin > 4) {
+    segments.push({ nombre: 'Regular', max: promedioMin, color: '#eab308', colorDark: '#ca8a04' });
+  }
+  segments.push({ nombre: 'Promoción', max: topMax, color: '#22c55e', colorDark: '#16a34a' });
+
   return {
-    promedioParciales: Math.round(promedio * 100) / 100,
+    promedioParciales: promedioOut,
     condicion,
     notaNecesariaPromo: notaNecesaria,
     detalle: `Parcial 1: ${p1} | Parcial 2: ${p2} | Promedio: ${promedio.toFixed(2)} | Mínima por parcial: ${notaMin} | Promedio mínimo promoción: ${promedioMin}`,
+    _insight: { title: 'Tu condición en la materia', text: insightText, tone, icon },
+    _chart: {
+      type: 'scale',
+      marker: promedioOut,
+      markerLabel: `Promedio ${promedioOut}`,
+      min: 0,
+      segments,
+      ariaLabel: `El promedio de parciales ${promedioOut} sobre una escala de 0 a 10, con zonas de libre, regular y promoción`,
+    },
   };
 }

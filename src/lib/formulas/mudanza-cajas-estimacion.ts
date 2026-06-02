@@ -1,5 +1,5 @@
 export interface Inputs { m2Vivienda: number; ambientes: number; nivelLlenado?: string; }
-export interface Outputs { cajasTotal: number; cajasGrandes: number; cajasMedianas: number; cajasChicas: number; _chart?: any; }
+export interface Outputs { cajasTotal: number; cajasGrandes: number; cajasMedianas: number; cajasChicas: number; _chart?: any; _insight?: any; }
 const FACTOR: Record<string, number> = { poco: 0.6, medio: 1, mucho: 1.5 };
 export function mudanzaCajasEstimacion(i: Inputs): Outputs {
   const m2 = Number(i.m2Vivienda); const amb = Number(i.ambientes);
@@ -23,5 +23,12 @@ export function mudanzaCajasEstimacion(i: Inputs): Outputs {
     centerLabel: 'Cajas',
     ariaLabel: 'Composición de cajas: grandes, medianas y chicas',
   };
-  return { cajasTotal: total, cajasGrandes: grandes, cajasMedianas: medianas, cajasChicas: chicas, _chart: chart };
+  const nivelTxt: Record<string, string> = { poco: 'pocas cosas', medio: 'una carga media', mucho: 'mucha carga' };
+  const insight = {
+    title: 'Tu estimación de cajas',
+    text: `Para **${m2} m²** con **${amb} ambiente${amb === 1 ? '' : 's'}** y ${nivelTxt[nivel] || 'una carga media'}, vas a necesitar unas **${total} cajas**: **${grandes}** grandes, **${medianas}** medianas y **${chicas}** chicas. Sumá un 10-15% extra por imprevistos.`,
+    tone: 'neutral' as const,
+    icon: '📦',
+  };
+  return { cajasTotal: total, cajasGrandes: grandes, cajasMedianas: medianas, cajasChicas: chicas, _chart: chart, _insight: insight };
 }

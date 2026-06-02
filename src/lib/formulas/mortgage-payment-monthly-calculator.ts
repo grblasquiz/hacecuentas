@@ -22,6 +22,8 @@ export interface Outputs {
   total_cost: number;
   payoff_date: string;
   pmi_note: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Default 30-yr fixed rate per Freddie Mac PMMS, 2026
@@ -128,6 +130,33 @@ export function compute(i: Inputs): Outputs {
     pmiNote = `PMI applies (~$${monthlyPMI.toFixed(0)}/mo). Can be removed once loan balance reaches 80% of home value.`;
   }
 
+  const fmtUsd = (n: number) => '$' + new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(n));
+  const interestPctOfLoan = Math.round((totalInterest / loanAmount) * 100);
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightTitle: string;
+  let insightText: string;
+  if (requiresPMI) {
+    insightTone = 'warn';
+    insightTitle = 'PMI is adding to your payment';
+    insightText = `Your ${downPct}% down payment is below 20%, so PMI of about **${fmtUsd(monthlyPMI)}/mo** is baked into your **${fmtUsd(totalMonthly)}** payment. Over the loan you pay **${fmtUsd(totalInterest)}** in interest (${interestPctOfLoan}% of the ${fmtUsd(loanAmount)} borrowed); PMI drops off once you reach 20% equity.`;
+  } else if (interestPctOfLoan >= 80) {
+    insightTone = 'warn';
+    insightTitle = 'Interest nearly doubles the loan';
+    insightText = `Your payment is **${fmtUsd(totalMonthly)}/mo**, but over ${loanTermYears} years you pay **${fmtUsd(totalInterest)}** in interest — about ${interestPctOfLoan}% of the ${fmtUsd(loanAmount)} borrowed. A shorter term or extra principal payments would cut that sharply.`;
+  } else {
+    insightTone = 'neutral';
+    insightTitle = 'Your monthly breakdown';
+    insightText = `Your all-in payment is **${fmtUsd(totalMonthly)}/mo**, of which **${fmtUsd(piPayment)}** is principal & interest. Over ${loanTermYears} years you pay **${fmtUsd(totalInterest)}** in interest on the ${fmtUsd(loanAmount)} loan, paid off by ${payoffDate}.`;
+  }
+
+  const slices = [
+    { label: 'Principal & interest', value: Math.round(piPayment * 100) / 100 },
+  ];
+  if (monthlyTax > 0) slices.push({ label: 'Property tax', value: Math.round(monthlyTax * 100) / 100 });
+  if (monthlyInsurance > 0) slices.push({ label: 'Home insurance', value: Math.round(monthlyInsurance * 100) / 100 });
+  if (monthlyPMI > 0) slices.push({ label: 'PMI', value: Math.round(monthlyPMI * 100) / 100 });
+
   return {
     total_monthly: totalMonthly,
     pi_payment: piPayment,
@@ -139,6 +168,20 @@ export function compute(i: Inputs): Outputs {
     total_interest: totalInterest,
     total_cost: totalPaid,
     payoff_date: payoffDate,
-    pmi_note: pmiNote
+    pmi_note: pmiNote,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: '🏠',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: fmtUsd(totalMonthly),
+      centerLabel: 'Monthly payment',
+      ariaLabel: `Monthly payment breakdown totaling ${fmtUsd(totalMonthly)}`,
+    },
   };
 }

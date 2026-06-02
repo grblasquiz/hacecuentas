@@ -1,6 +1,6 @@
 /** Calculadora de Tiempo de Lectura de Libro */
 export interface Inputs { paginas: number; palabrasPagina: number; velocidadLectura: number; minutosDia: number; }
-export interface Outputs { horasTotal: number; diasCompletar: number; paginasHora: number; librosAnio: number; }
+export interface Outputs { horasTotal: number; diasCompletar: number; paginasHora: number; librosAnio: number; _insight?: any; }
 
 export function lecturaTiempoLibro(i: Inputs): Outputs {
   const pags = Number(i.paginas);
@@ -19,5 +19,16 @@ export function lecturaTiempoLibro(i: Inputs): Outputs {
   const paginasHora = Math.round(60 / (wpp / wpm));
   const librosAnio = Math.floor(365 / diasCompletar);
 
-  return { horasTotal: Number(horasTotal.toFixed(1)), diasCompletar, paginasHora, librosAnio };
+  return {
+    horasTotal: Number(horasTotal.toFixed(1)),
+    diasCompletar,
+    paginasHora,
+    librosAnio,
+    _insight: {
+      title: 'Tu plan de lectura',
+      text: `A **${wpm} palabras por minuto** y **${mpd} min/día**, terminás este libro en **${diasCompletar} días** (unas **${horasTotal.toFixed(1)} horas** de lectura). A ese ritmo leerías **${librosAnio} libros** de este tamaño en un año.`,
+      tone: 'neutral',
+      icon: '📖',
+    },
+  };
 }

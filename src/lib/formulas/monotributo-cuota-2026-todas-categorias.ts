@@ -9,5 +9,23 @@ export function monotributoCuota2026TodasCategorias(i: Inputs): Outputs {
   };
   const [ig,sp,os]=cuotas[c]||cuotas.A;
   const total=ig+sp+os;
-  return { cuota:'$'+total.toLocaleString('es-AR'), integrado:'$'+ig.toLocaleString('es-AR'), sipa:'$'+sp.toLocaleString('es-AR'), resumen:`Categoría ${c}: cuota total $${total.toLocaleString('es-AR')}/mes.` };
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Impuesto integrado', value: ig },
+      { label: 'Aportes SIPA', value: sp },
+      { label: 'Obra social', value: os },
+    ],
+    prefix: '$',
+    centerValue: '$' + total.toLocaleString('es-AR'),
+    centerLabel: 'Cuota/mes',
+    ariaLabel: 'Composición de la cuota mensual: impuesto integrado, aportes SIPA y obra social',
+  };
+  const _insight = {
+    title: 'Cómo se compone tu cuota',
+    text: `La cuota de la categoría **${c}** es de **$${total.toLocaleString('es-AR')}/mes**: $${ig.toLocaleString('es-AR')} de impuesto integrado, $${sp.toLocaleString('es-AR')} de aportes jubilatorios (SIPA) y $${os.toLocaleString('es-AR')} de obra social.`,
+    tone: 'neutral',
+    icon: '🧾',
+  };
+  return { cuota:'$'+total.toLocaleString('es-AR'), integrado:'$'+ig.toLocaleString('es-AR'), sipa:'$'+sp.toLocaleString('es-AR'), resumen:`Categoría ${c}: cuota total $${total.toLocaleString('es-AR')}/mes.`, _chart, _insight };
 }

@@ -14,6 +14,8 @@ export interface Outputs {
   expectedValue: string;
   recomendacion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const SKILL_RATE: Record<string, number> = {
@@ -97,6 +99,18 @@ export function mundial2026QuinielaPoolProbabilidad(i: Inputs): Outputs {
     ? `**EV = ${ev >= 0 ? '+' : ''}USD ${ev.toFixed(2)}** sobre apuesta de USD ${apuesta.toFixed(0)} (bote total USD ${bote.toFixed(0)}).`
     : 'Ingresá una apuesta para calcular Expected Value en USD.';
 
+  // Cuota justa (todos iguales) = 1/N.
+  const fairPct = (100 / N);
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (reco.startsWith('ENTRÁ')) insightTone = 'good';
+  else if (reco.startsWith('PENSALO')) insightTone = 'warn';
+  else insightTone = 'neutral';
+
+  const vsFair = probaGanar * 100 >= fairPct
+    ? `por encima de tu cuota justa de **${fairPct.toFixed(1)}%** (1 entre ${N})`
+    : `por debajo de tu cuota justa de **${fairPct.toFixed(1)}%** (1 entre ${N})`;
+  const insightText = `Tu chance de ganar el pool es **${probaPct}%**, ${vsFair}.${apuesta > 0 ? ` El Expected Value da **${ev >= 0 ? '+' : ''}USD ${ev.toFixed(2)}**.` : ''} ${reco}`;
+
   return {
     probabilidadGanar: `${probaPct}%`,
     aciertosEsperados: `**${aciertosEsp.toFixed(1)} aciertos** esperados de ${P} partidos (${(myRate * 100).toFixed(0)}% acierto). El pool promedio acertaría ${aciertosPoolAvg.toFixed(1)}.`,
@@ -104,5 +118,23 @@ export function mundial2026QuinielaPoolProbabilidad(i: Inputs): Outputs {
     expectedValue: evTxt,
     recomendacion: reco,
     resumen: `Como ${SKILL_LABEL[skillKey]} en pool de ${N} con ${P} partidos: ${probaPct}% chance de ganar, ${aciertosEsp.toFixed(0)} aciertos esperados, ranking ~${rankingEst}.${varianzaMsg} ${reco}`,
+    _insight: {
+      title: 'Lectura de tu chance',
+      text: insightText,
+      tone: insightTone,
+      icon: '🎯',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number((probaGanar * 100).toFixed(1)),
+      markerLabel: `${probaPct}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Baja', max: 5, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Razonable', max: 15, color: '#3b82f6', colorDark: '#2563eb' },
+        { nombre: 'Ventaja real', max: 70.5, color: '#22c55e', colorDark: '#16a34a' },
+      ],
+      ariaLabel: `Probabilidad de ganar el pool: ${probaPct}% frente a una cuota justa de ${fairPct.toFixed(1)}%`,
+    },
   };
 }

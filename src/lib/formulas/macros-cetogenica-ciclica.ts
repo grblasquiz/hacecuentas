@@ -13,6 +13,8 @@ export interface MacrosCetogenicaCiclicaOutputs {
   carbosGramos: number;
   tipoDia: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function macrosCetogenicaCiclica(inputs: MacrosCetogenicaCiclicaInputs): MacrosCetogenicaCiclicaOutputs {
@@ -31,11 +33,36 @@ export function macrosCetogenicaCiclica(inputs: MacrosCetogenicaCiclicaInputs): 
     carbos = (cal * 0.05) / 4;
     nombre = 'Keto (lunes-viernes)';
   }
+  const protG = Number(prot.toFixed(0));
+  const grasaG = Number(grasa.toFixed(0));
+  const carbosG = Number(carbos.toFixed(0));
+  const totalKcal = protG * 4 + grasaG * 9 + carbosG * 4;
+  const _insight = {
+    title: 'Tu día CKD',
+    text: tipo === 'refeed'
+      ? `Día de **recarga**: subís a **${carbosG}g de carbos** (${Math.round(carbosG * 4)} kcal) para rellenar glucógeno, con la grasa baja en **${grasaG}g**. Aprovechá los carbos alrededor del entrenamiento del fin de semana.`
+      : `Día **keto** (lunes a viernes): apenas **${carbosG}g de carbos** y **${grasaG}g de grasa** como combustible principal. Mantené los carbos al mínimo para no salir de cetosis antes de la recarga.`,
+    tone: 'neutral' as const,
+    icon: '🔄',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Proteína', value: protG * 4 },
+      { label: 'Grasa', value: grasaG * 9 },
+      { label: 'Carbos', value: carbosG * 4 },
+    ],
+    centerValue: `${totalKcal}`,
+    centerLabel: 'kcal',
+    ariaLabel: `Reparto de calorías del día ${nombre}: ${protG}g proteína, ${grasaG}g grasa y ${carbosG}g carbohidratos`,
+  };
   return {
-    proteinaGramos: Number(prot.toFixed(0)),
-    grasaGramos: Number(grasa.toFixed(0)),
-    carbosGramos: Number(carbos.toFixed(0)),
+    proteinaGramos: protG,
+    grasaGramos: grasaG,
+    carbosGramos: carbosG,
     tipoDia: nombre,
-    resumen: `CKD ${nombre}: ${prot.toFixed(0)}g prot + ${grasa.toFixed(0)}g grasa + ${carbos.toFixed(0)}g carbos.`,
+    resumen: `CKD ${nombre}: ${protG}g prot + ${grasaG}g grasa + ${carbosG}g carbos.`,
+    _insight,
+    _chart,
   };
 }

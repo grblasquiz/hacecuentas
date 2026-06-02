@@ -13,6 +13,7 @@ export interface Outputs {
   comparativaHistorica: string;
   tipDeAhorro: string;
   resumen: string;
+  _insight?: any;
 }
 
 // Mapa de selecciones a marca.
@@ -142,11 +143,36 @@ export function mundial2026CamisetaPrecioComparador(i: Inputs): Outputs {
   // Resumen.
   const resumen = `Camiseta ${sel.label} ${MARCA_LABEL[sel.marca]} ${MODELO_LABEL[modKey]} en ${pais.label}${personaliza ? ' con personalización' : ''}: **USD ${precioUSD.toFixed(2)}**. ${precioLocalTxt} ${compHist}`;
 
+  // Insight dinámico: tono según sobreprecio del país y suba vs 2022.
+  const sobreprecioPct = Math.round((pais.factor - 1) * 100);
+  let insightTone: string;
+  let insightText: string;
+  if (paisKey === 'argentina') {
+    insightTone = 'warn';
+    insightText = `Comprarla en **Argentina** te cuesta **USD ${precioUSD.toFixed(0)}**, un **+${sobreprecioPct}%** sobre el precio de lista de USA por impuestos y márgenes. Si viajás al Mundial, traerla de USA es lo más conveniente.`;
+  } else if (diff > 5) {
+    insightTone = 'warn';
+    insightText = `A **USD ${precioUSD.toFixed(0)}**, esta camiseta subió **${diff.toFixed(0)}%** respecto de Qatar 2022. ${MARCA_LABEL[sel.marca]} ajustó la lista oficial para el Mundial 2026.`;
+  } else if (sobreprecioPct > 5) {
+    insightTone = 'neutral';
+    insightText = `En **${pais.label}** pagás **USD ${precioUSD.toFixed(0)}**, un **+${sobreprecioPct}%** sobre el precio base de USA. ${modKey === 'jugador' ? 'La versión hincha recorta bastante ese número.' : 'Comprar online directo de la marca suele ser lo más barato.'}`;
+  } else {
+    insightTone = 'good';
+    insightText = `A **USD ${precioUSD.toFixed(0)}** estás muy cerca del mejor precio posible (USA, sin recargo de país)${Math.abs(diff) < 2 ? ' y al mismo valor que en Qatar 2022' : ''}.`;
+  }
+  const _insight = {
+    title: 'Cuánto pagás de más',
+    text: insightText,
+    tone: insightTone,
+    icon: '👕',
+  };
+
   return {
     precioUSD: `USD ${precioUSD.toFixed(0)}`,
     precioLocal: precioLocalTxt,
     comparativaHistorica: compHist,
     tipDeAhorro: tip,
     resumen,
+    _insight,
   };
 }

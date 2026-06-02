@@ -13,6 +13,7 @@ export interface Outputs {
   fecha_fin: string;
   recomendacion: string;
   detalle_serie: string;
+  _insight?: any;
 }
 
 interface SerieData {
@@ -131,11 +132,22 @@ export function compute(i: Inputs): Outputs {
     recomendacion = "⚠️ Más de un mes. Puede que la lista sea demasiado larga para tu disponibilidad actual. Reducí series o aumentá horas diarias.";
   }
 
+  const horasRound = Math.round(horasTotales * 10) / 10;
+  const diasRound = Math.round(diasNecesarios * 10) / 10;
+  const insTone = diasNecesarios <= 14 ? 'good' : diasNecesarios <= 30 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Tu plan de maratón',
+    text: `Son **${horasRound} h** de visionado en total: a **${horasDia} h/día** lo terminás en **${diasRound} días** (alrededor del ${fecha}). ${diasNecesarios <= 3 ? 'Un finde alcanza de sobra.' : diasNecesarios <= 14 ? 'Ritmo cómodo combinable con tu rutina.' : diasNecesarios <= 30 ? 'Te va a llevar varias semanas.' : 'La lista es larga para tu disponibilidad: subí las horas o recortá series.'}`,
+    tone: insTone,
+    icon: '📺',
+  };
+
   return {
-    horas_totales: Math.round(horasTotales * 10) / 10,
-    dias_necesarios: Math.round(diasNecesarios * 10) / 10,
+    horas_totales: horasRound,
+    dias_necesarios: diasRound,
     fecha_fin: fecha,
     recomendacion,
     detalle_serie: detalle,
+    _insight,
   };
 }

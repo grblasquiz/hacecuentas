@@ -19,6 +19,8 @@ export interface Outputs {
   valorFinanciado: string;
   parcelaEstimada: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -69,6 +71,30 @@ export function mcmvFaixaSubsidio(i: Inputs): Outputs {
   const amort = pv / n;
   const parcelaInicial = amort + pv * im;
 
+  const pctSubsidio = valor > 0 ? (subsidio / valor) * 100 : 0;
+  const insight = {
+    title: subsidio > 0 ? 'Quanto o governo banca' : 'Sem subsídio, só juros reduzidos',
+    text: subsidio > 0
+      ? `Você se enquadra na **${faixa.split(' —')[0]}**: o subsídio de **${brl(subsidio)}** cobre **${pctSubsidio.toFixed(0)}%** do imóvel, então você financia **${brl(pv)}** a **${taxa.toFixed(2)}% aa** — parcela inicial SAC de **${brl(parcelaInicial)}**.`
+      : `Você se enquadra na **Faixa 3**: sem subsídio, mas a taxa de **${taxa.toFixed(2)}% aa** é bem abaixo do mercado livre. Financia **${brl(pv)}**, parcela inicial SAC de **${brl(parcelaInicial)}**.`,
+    tone: subsidio > 0 ? 'good' : 'neutral',
+    icon: '🏠',
+  };
+
+  const chart = subsidio > 0
+    ? {
+        type: 'doughnut' as const,
+        slices: [
+          { label: 'Subsídio do governo', value: Math.round(subsidio) },
+          { label: 'Você financia', value: Math.round(valor) - Math.round(subsidio) },
+        ],
+        prefix: 'R$ ',
+        centerValue: brl(valor),
+        centerLabel: 'Valor do imóvel',
+        ariaLabel: `Composição do valor do imóvel: subsídio ${brl(subsidio)} e parte financiada ${brl(pv)}.`,
+      }
+    : undefined;
+
   return {
     faixaEnquadrada: faixa,
     subsidioEstimado: brl(subsidio),
@@ -76,5 +102,7 @@ export function mcmvFaixaSubsidio(i: Inputs): Outputs {
     valorFinanciado: brl(pv),
     parcelaEstimada: brl(parcelaInicial),
     resumen: `Renda ${brl(renda)} → ${faixa}. Imóvel ${brl(valor)}: subsídio ${brl(subsidio)}, financia ${brl(pv)} a ${taxa.toFixed(2)}% aa. Parcela inicial SAC em 360 meses: ${brl(parcelaInicial)}.`,
+    _insight: insight,
+    _chart: chart,
   };
 }

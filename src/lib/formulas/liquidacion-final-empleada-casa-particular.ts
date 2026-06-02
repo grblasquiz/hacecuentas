@@ -38,6 +38,7 @@ export interface LiquidacionEmpleadaOutputs {
   vacacionesProporcionales: number;
   aniosComputables: string;
   mensaje: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -114,6 +115,21 @@ export function liquidacionFinalEmpleadaCasaParticular(
       ' Con jornada superior a 24 hs/semana el régimen previsional y de obra social es pleno, equiparado a LCT en ese aspecto.';
   }
 
+  const pctAntiguedad = total > 0 ? Math.round((antiguedad / total) * 100) : 0;
+  const fraccionSumoAnio = meses > 3 && anios !== aniosComputables;
+  const insight = {
+    title: 'Tu liquidación final',
+    text:
+      `Te corresponden **$${Math.round(total).toLocaleString('es-AR')}** por el cese, de los cuales la **indemnización por antigüedad** (${aniosComputables} ${aniosComputables === 1 ? 'año' : 'años'}) explica el **${pctAntiguedad}%**.` +
+      (fraccionSumoAnio
+        ? ` Ojo: como la fracción supera 3 meses, el Art. 48 te suma **1 año completo** de indemnización.`
+        : antiguedadTotalMeses > 12 * 5
+          ? ` Con más de 5 años, el preaviso es de **2 meses** de sueldo.`
+          : ` Recordá que este monto sólo aplica si el despido fue **sin causa**.`),
+    tone: 'good' as const,
+    icon: '🧹',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -138,6 +154,7 @@ export function liquidacionFinalEmpleadaCasaParticular(
     vacacionesProporcionales: Math.round(vacacionesProporcionales),
     aniosComputables: `${aniosComputables} ${aniosComputables === 1 ? 'año' : 'años'} computables`,
     mensaje,
+    _insight: insight,
     _chart: chart,
   };
 }

@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   cantidadFotos: string; anguloPorFoto: string; anguloNuevo: string; consejo: string;
+  _insight?: any; _chart?: any;
 }
 
 export function panoramaFotoSolapamiento(inputs: Inputs): Outputs {
@@ -35,10 +36,32 @@ export function panoramaFotoSolapamiento(inputs: Inputs): Outputs {
   else if (cant < 10) tip = 'Paisaje típico. Trípode y exposición manual.';
   else if (cant < 20) tip = 'Panorama grande: cabezal nodal ayuda, stitching 5-10 min.';
   else tip = 'Panorama gigante: considerá multi-row, PTGui, 30+ min stitching.';
+  const insightTone = cant < 10 ? 'good' : cant < 20 ? 'neutral' : 'warn';
+  const insight = {
+    title: 'Tu disparo en números',
+    text: `Necesitás **${cant} fotos** con ${ov}% de solapamiento para cubrir los **${at}°** del panorama (cada toma aporta ${anguloUtil.toFixed(1)}° útiles de los ${anguloSensor.toFixed(1)}° del encuadre).`,
+    tone: insightTone,
+    icon: '📷',
+  };
+  const chart = {
+    type: 'scale' as const,
+    marker: cant,
+    markerLabel: `${cant} fotos`,
+    min: 1,
+    segments: [
+      { nombre: 'Rápido', max: 5, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Típico', max: 10, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Grande', max: 20, color: '#d97706', colorDark: '#f59e0b' },
+      { nombre: 'Gigante', max: Math.max(40, cant + 5), color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Cantidad de fotos del panorama (${cant}) ubicada en su zona de dificultad de stitching.`,
+  };
   return {
     cantidadFotos: `${cant} fotos`,
     anguloPorFoto: `${anguloSensor.toFixed(1)}° (efectivo ${anguloUtil.toFixed(1)}°)`,
     anguloNuevo: `${anguloCubierto.toFixed(0)}° cubierto`,
     consejo: tip,
+    _insight: insight,
+    _chart: chart,
   };
 }

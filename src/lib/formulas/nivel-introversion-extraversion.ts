@@ -1,6 +1,6 @@
 /** Test introversión vs extraversión */
 export interface Inputs { p1: string; p2: string; p3: string; p4: string; p5: string; p6: string; p7: string; p8: string; p9: string; p10: string; }
-export interface Outputs { resultado: string; puntaje: number; porcentaje: number; descripcion: string; mensaje: string; }
+export interface Outputs { resultado: string; puntaje: number; porcentaje: number; descripcion: string; mensaje: string; _chart?: any; _insight?: any; }
 
 export function nivelIntroversionExtraversion(i: Inputs): Outputs {
   // Introversion items: p1, p2, p3, p5, p7, p9 (higher = more introverted)
@@ -32,8 +32,31 @@ export function nivelIntroversionExtraversion(i: Inputs): Outputs {
     descripcion = 'Necesitás interacción social para sentirte bien. La soledad prolongada te drena. Sos el alma de la fiesta y hacés amigos en todas partes.';
   }
 
+  const insight = {
+    title: `Resultado: ${resultado}`,
+    text: `Obtuviste **${puntaje}/50** en el eje introversión-extraversión (**${porcentaje}% introversión**), lo que te ubica como **${resultado.toLowerCase()}**. ${porcentaje >= 50 ? 'Recargás más en la calma que en el estímulo social.' : 'Recargás más en el contacto social que en la soledad.'}`,
+    tone: 'neutral',
+    icon: porcentaje >= 50 ? '🧘' : '🎉',
+  };
+  const chart = {
+    type: 'scale' as const,
+    marker: puntaje,
+    markerLabel: `${puntaje}/50`,
+    min: 10,
+    segments: [
+      { nombre: 'Muy extravertido', max: 15, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Extravertido', max: 21, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Ambivertido (extra)', max: 27, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: 'Ambivertido (intro)', max: 33, color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: 'Introvertido', max: 40, color: '#0ea5e9', colorDark: '#38bdf8' },
+      { nombre: 'Muy introvertido', max: Math.max(50, puntaje + 1), color: '#6366f1', colorDark: '#818cf8' },
+    ],
+    ariaLabel: `Puntaje de ${puntaje} sobre 50 en el eje introversión-extraversión, ${porcentaje}% introversión`,
+  };
   return {
     resultado, puntaje, porcentaje, descripcion,
-    mensaje: `${resultado} (${porcentaje}% introversión). ${descripcion}`
+    mensaje: `${resultado} (${porcentaje}% introversión). ${descripcion}`,
+    _chart: chart,
+    _insight: insight,
   };
 }

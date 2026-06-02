@@ -17,6 +17,7 @@ export interface Outputs {
   ytProfit: number;
   breakEvenApy: number;
   verdict: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -36,6 +37,12 @@ export function compute(i: Inputs): Outputs {
       ytProfit: 0,
       breakEvenApy: 0,
       verdict: "Ingresá un capital válido mayor a 0.",
+      _insight: {
+        title: 'Falta el capital',
+        text: 'Ingresá un **capital mayor a 0** para comparar el rendimiento fijo del PT contra el rendimiento apalancado del YT.',
+        tone: 'neutral',
+        icon: '⚖️',
+      },
     };
   }
 
@@ -121,6 +128,50 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // ── Insight ──────────────────────────────────────────────────────
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+
+  if (investIn === 'PT') {
+    insightTitle = 'Rendimiento fijo (PT)';
+    insightText = `El PT te fija un **${ptApyPct}% APY** hasta el vencimiento, con ganancia estimada de **$${ptProfit.toFixed(2)}**. Es la pata segura: no depende del yield variable del subyacente.`;
+    insightTone = 'good';
+    insightIcon = '🔒';
+  } else if (investIn === 'YT') {
+    if (ytProfit > 0) {
+      insightText = `Con el subyacente rindiendo ${(expectedUnderlyingApy * 100).toFixed(2)}%, el YT (${leverageStr}x) da **${ytApyPct}% APY** y **+$${ytProfit.toFixed(2)}**. Pero si el rinde cae bajo **${breakEvenPct}%**, el YT pierde: el capital se va a cero al vencimiento.`;
+      insightTone = 'warn';
+      insightTitle = 'Rendimiento apalancado (YT)';
+      insightIcon = '⚡';
+    } else {
+      insightText = `Con el subyacente en ${(expectedUnderlyingApy * 100).toFixed(2)}%, el YT no cubre el costo del capital: **−$${Math.abs(ytProfit).toFixed(2)}**. Necesitás que el subyacente supere **${breakEvenPct}% APY** para no perder.`;
+      insightTone = 'warn';
+      insightTitle = 'YT en pérdida';
+      insightIcon = '⚠️';
+    }
+  } else {
+    if (ytProfit > ptProfit) {
+      insightText = `Con tu expectativa, el **YT gana**: ${ytApyPct}% vs ${ptApyPct}% fijo, **+$${(ytProfit - ptProfit).toFixed(2)}** sobre el PT. Pero el YT solo conviene mientras el subyacente supere el break-even de **${breakEvenPct}%** — por debajo, el PT es mejor.`;
+      insightTone = 'warn';
+      insightTitle = 'YT supera al PT (con riesgo)';
+      insightIcon = '⚡';
+    } else if (ptProfit > ytProfit) {
+      insightText = `Con tu expectativa, el **PT gana**: ${ptApyPct}% fijo vs ${ytApyPct}% efectivo del YT. El subyacente tendría que superar **${breakEvenPct}% APY** para que el YT valga la pena. El PT es la opción segura acá.`;
+      insightTone = 'good';
+      insightTitle = 'PT supera al YT';
+      insightIcon = '🔒';
+    } else {
+      insightText = `PT y YT empatan en este escenario: APY fijo del PT **${ptApyPct}%**, break-even del subyacente **${breakEvenPct}%**. El PT te lo asegura; el YT depende de que el rinde se sostenga.`;
+      insightTone = 'neutral';
+      insightTitle = 'PT y YT empatan';
+      insightIcon = '⚖️';
+    }
+  }
+
+  const _insight = { title: insightTitle, text: insightText, tone: insightTone, icon: insightIcon };
+
   return {
     ptImpliedApy,
     ptProfit,
@@ -129,5 +180,6 @@ export function compute(i: Inputs): Outputs {
     ytProfit,
     breakEvenApy,
     verdict,
+    _insight,
   };
 }

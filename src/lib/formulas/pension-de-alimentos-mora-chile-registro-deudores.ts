@@ -16,6 +16,8 @@ export interface Outputs {
   esta_en_registro_deudores: boolean;
   prohibicion_salida_pais: boolean;
   resolucion_pago_sugerida: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -95,6 +97,66 @@ export function compute(i: Inputs): Outputs {
     resolucion = "Mora crítica (3+ meses). Prohibición salida país activa. Recomendado: acudir tribunal para acuerdo de cuotas o solicitar remisión condicionada. Retenciones automáticas hasta $" + retenciones.toLocaleString('es-CL', { maximumFractionDigits: 0 }) + ".";
   }
 
+  const fmtCLP = (v: number) =>
+    '$' + Math.round(v).toLocaleString('es-CL', { maximumFractionDigits: 0 });
+  const registro_efectivo = esta_en_registro && tiene_sentencia;
+  const prohibicion_efectiva = tiene_prohibicion && tiene_sentencia;
+
+  // Insight dinámico según gravedad de la mora
+  let _insight: any;
+  if (deuda <= 0) {
+    _insight = {
+      title: 'Sin deuda registrada',
+      text: 'No hay deuda acumulada: tu situación de pensión de alimentos está al día.',
+      tone: 'good',
+      icon: '✅',
+    };
+  } else if (!tiene_sentencia) {
+    _insight = {
+      title: 'Deuda sin sentencia firme',
+      text: `La deuda actualizada es de **${fmtCLP(deuda_con_intereses)}** (intereses: **${fmtCLP(intereses)}**), pero sin sentencia firme aún no aplican el Registro de Deudores ni las sanciones.`,
+      tone: 'warn',
+      icon: '📄',
+    };
+  } else if (prohibicion_efectiva) {
+    _insight = {
+      title: 'Mora crítica con prohibición de salida',
+      text: `Con **${Math.floor(meses)} meses** de atraso la deuda llega a **${fmtCLP(deuda_con_intereses)}**. Ya corresponde Registro de Deudores y **prohibición de salida del país**, más retención de hasta **${fmtCLP(retenciones)}** en tu devolución de impuestos.`,
+      tone: 'warn',
+      icon: '🚫',
+    };
+  } else if (registro_efectivo) {
+    _insight = {
+      title: 'Inscripción en el Registro de Deudores',
+      text: `Con **${Math.floor(meses)} meses** de atraso (deuda **${fmtCLP(deuda_con_intereses)}**) ya estás en el Registro Nacional de Deudores de Alimentos, con retención automática de hasta el 50% de tu devolución de impuestos.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: 'Atraso inicial: aún a tiempo',
+      text: `Llevás **${Math.floor(meses)} mes(es)** de atraso y la deuda con intereses es de **${fmtCLP(deuda_con_intereses)}**. Pagando antes del mes 2 evitás entrar al Registro de Deudores.`,
+      tone: 'warn',
+      icon: '⏰',
+    };
+  }
+
+  // Donut: capital adeudado + intereses (suman la deuda actualizada)
+  let _chart: any = undefined;
+  if (deuda > 0 && intereses > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Capital adeudado', value: Math.round(deuda) },
+        { label: 'Intereses (27% anual)', value: Math.round(intereses) },
+      ],
+      prefix: '$',
+      centerValue: fmtCLP(Math.round(deuda) + Math.round(intereses)),
+      centerLabel: 'Deuda total',
+      ariaLabel: 'Composición de la deuda de pensión de alimentos entre capital e intereses',
+    };
+  }
+
   return {
     deuda_actual_con_intereses: Math.round(deuda_con_intereses),
     intereses_generados: Math.round(intereses),
@@ -102,8 +164,10 @@ export function compute(i: Inputs): Outputs {
     meses_mora_calculados: Math.floor(meses),
     sanciones_aplicables: sanciones_texto,
     retenciones_impuestos: Math.round(retenciones),
-    esta_en_registro_deudores: esta_en_registro && tiene_sentencia,
-    prohibicion_salida_pais: tiene_prohibicion && tiene_sentencia,
-    resolucion_pago_sugerida: resolucion
+    esta_en_registro_deudores: registro_efectivo,
+    prohibicion_salida_pais: prohibicion_efectiva,
+    resolucion_pago_sugerida: resolucion,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

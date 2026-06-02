@@ -18,6 +18,7 @@ export interface Outputs {
   tasaMarginal: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -78,6 +79,17 @@ export function isrRepublicaDominicana(i: Inputs): Outputs {
     ariaLabel: 'Composición de la renta neta gravable: ISR vs lo que te queda',
   };
 
+  const fmtRd = (n: number) => 'RD$' + Math.round(n).toLocaleString('es-DO');
+  const exento = rentaNetaGravable <= EXENCION;
+  const _insight = {
+    title: exento ? 'Estás dentro de la exención' : `Tu ISR efectivo es ${tasaEfectiva.toFixed(1)}%`,
+    text: exento
+      ? `Tu renta neta gravable de **${fmtRd(rentaNetaGravable)}** no supera la exención anual de **${fmtRd(EXENCION)}**, así que no pagás ISR.`
+      : `Sobre una renta gravable de **${fmtRd(rentaNetaGravable)}** el ISR bruto es **${fmtRd(impuestoBruto)}** (tramo marginal **${tasaMarginal}%**).${retenciones > 0 ? ` Tras acreditar **${fmtRd(retencionesAcreditadas)}** retenidos, quedan **${fmtRd(impuestoNeto)}** por pagar` : ` ISR a pagar: **${fmtRd(impuestoNeto)}**`} (tasa efectiva **${tasaEfectiva.toFixed(1)}%**).`,
+    tone: (exento ? 'good' : tasaMarginal >= 25 ? 'warn' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🇩🇴',
+  };
+
   return {
     rentaNetaGravable: Math.round(rentaNetaGravable),
     impuestoBruto: Math.round(impuestoBruto),
@@ -87,6 +99,7 @@ export function isrRepublicaDominicana(i: Inputs): Outputs {
     tasaMarginal,
     formula,
     explicacion,
+    _insight,
     _chart: chart,
   };
 }

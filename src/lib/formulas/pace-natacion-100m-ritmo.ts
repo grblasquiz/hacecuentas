@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; _chart?: any; }
+export interface Outputs { [k: string]: string | number; _chart?: any; _insight?: any; }
 export function paceNatacion100mRitmo(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const T = ({
@@ -8,18 +8,27 @@ export function paceNatacion100mRitmo(i: Inputs): Outputs {
       intermedio: 'Intermedio',
       principiante: 'Principiante',
       ariaLabel: 'Escala de pace de natación por nivel (segundos por 100m)',
+      insTitle: 'Tu ritmo en la pileta',
+      insIcon: '🏊',
+      insText: (pace: string, clas: string, vel: string) => `Nadás a **${pace}**, lo que te ubica en nivel **${clas}** (a una velocidad de **${vel}**). Para bajar el pace, enfocá la técnica de brazada y la patada antes que la fuerza.`,
     },
     en: {
       avanzado: 'Advanced',
       intermedio: 'Intermediate',
       principiante: 'Beginner',
       ariaLabel: 'Swimming pace scale by level (seconds per 100m)',
+      insTitle: 'Your pace in the pool',
+      insIcon: '🏊',
+      insText: (pace: string, clas: string, vel: string) => `You swim at **${pace}**, which puts you at **${clas}** level (a speed of **${vel}**). To lower your pace, focus on stroke and kick technique before raw power.`,
     },
     pt: {
       avanzado: 'Avançado',
       intermedio: 'Intermediário',
       principiante: 'Iniciante',
       ariaLabel: 'Escala de pace de natação por nível (segundos por 100m)',
+      insTitle: 'Seu ritmo na piscina',
+      insIcon: '🏊',
+      insText: (pace: string, clas: string, vel: string) => `Você nada a **${pace}**, o que te coloca no nível **${clas}** (a uma velocidade de **${vel}**). Para baixar o pace, foque na técnica de braçada e pernada antes da força.`,
     },
   } as const)[__lang];
   const d=Number(i.distanciaM)||0; const t=Number(i.tiempoMinutos)||0;
@@ -51,5 +60,13 @@ export function paceNatacion100mRitmo(i: Inputs): Outputs {
     ],
     ariaLabel:T.ariaLabel,
   };
-  return { pace:`${min}:${String(seg).padStart(2,'0')}/100m`, velocidadMs:`${v.toFixed(2)} m/s`, clasificacion:clas, _chart:chart };
+  const paceStr=`${min}:${String(seg).padStart(2,'0')}/100m`;
+  const velStr=`${v.toFixed(2)} m/s`;
+  const insight={
+    title:T.insTitle,
+    text:T.insText(paceStr,clas,velStr),
+    tone: paceSegPor100<90 ? 'good' : 'neutral',
+    icon:T.insIcon,
+  };
+  return { pace:paceStr, velocidadMs:velStr, clasificacion:clas, _chart:chart, _insight:insight };
 }

@@ -19,6 +19,8 @@ export interface Outputs {
   porcentajeMax: number;
   calificacion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Stardust → rango de niveles Pokémon GO
@@ -112,6 +114,37 @@ export function ivPokemonGo(i: Inputs): Outputs {
   else if (pctMed >= 66) calif = 'Bueno';
   else calif = 'Regular / transferir';
 
+  const tone = pctMed >= 82 ? 'good' : pctMed >= 66 ? 'neutral' : 'warn';
+  const accion =
+    pctMed >= 96
+      ? 'Es un candidato a potenciarlo a tope para PvE de incursiones.'
+      : pctMed >= 82
+        ? 'Vale la pena invertirle polvo estelar; revisalo con el appraisal del juego para confirmar.'
+        : pctMed >= 66
+          ? 'Sirve para empezar, pero quizá aparezca uno mejor; no te apures con los Caramelos Raros.'
+          : 'Conviene transferirlo o guardarlo: hay margen para conseguir uno con mejor IV.';
+
+  const _insight = {
+    title: 'Qué tan bueno es este Pokémon',
+    text: `Su IV estimado cae entre **${pctMin}%** y **${pctMax}%** (${ivMin}-${ivMax} de 45) — **${calif}**. ${accion}`,
+    tone,
+    icon: '🎮',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: Math.min(99.9, pctMed),
+    markerLabel: `${pctMin}–${pctMax}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Regular', max: 66, color: '#ef4444', colorDark: '#f87171' },
+      { nombre: 'Bueno', max: 82, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Excelente', max: 96, color: '#10b981', colorDark: '#34d399' },
+      { nombre: 'Casi perfecto', max: 100, color: '#2563eb', colorDark: '#60a5fa' },
+    ],
+    ariaLabel: `Calidad del IV: ${Math.round(pctMed)}% sobre 100, zona ${calif}.`,
+  };
+
   return {
     nivelEstimado: Number(nivelMedio.toFixed(1)),
     ivMinEstimado: ivMin,
@@ -120,5 +153,7 @@ export function ivPokemonGo(i: Inputs): Outputs {
     porcentajeMax: pctMax,
     calificacion: calif,
     resumen: `Nivel ~${nivelMedio.toFixed(1)} — IV estimado entre **${pctMin}%** y **${pctMax}%** (${ivMin}-${ivMax}/45). **${calif}**.`,
+    _insight,
+    _chart,
   };
 }

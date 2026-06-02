@@ -1,5 +1,5 @@
 export interface Inputs { nombre: string; apellido: string; estilo?: string; }
-export interface Outputs { nombreRapero: string; mensaje: string; }
+export interface Outputs { nombreRapero: string; mensaje: string; _insight?: any; }
 function clean(s:string):string{return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,'');}
 function cap(s:string):string{return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();}
 const PRE_TRAP=['Lil','Young','Baby','El','La','Bad'];
@@ -16,5 +16,15 @@ export function nombreRapper(i: Inputs): Outputs {
   const base = bases[(hash*3)%bases.length];
   const nombre = `${pre} ${base}`;
   const estiloDesc = estilo==='old-school'?'Old school, boom bap, flow clásico.':estilo==='freestyle'?'Freestyle, batalla, improvisación pura.':'Trap argentino, urban, flow moderno.';
-  return { nombreRapero: nombre, mensaje: `${nombre} — ${estiloDesc} Listo para romperla en el escenario.` };
+  const estiloNom = estilo==='old-school'?'old school':estilo==='freestyle'?'freestyle':'trap';
+  return {
+    nombreRapero: nombre,
+    mensaje: `${nombre} — ${estiloDesc} Listo para romperla en el escenario.`,
+    _insight: {
+      title: 'Tu nombre arriba del escenario',
+      text: `Tu alias **${estiloNom}** es **${nombre}**. ${estiloDesc} Pegalo en tu bio y armá tu primer tema.`,
+      tone: 'good',
+      icon: '🎤',
+    },
+  };
 }

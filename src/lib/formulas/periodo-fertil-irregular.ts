@@ -1,6 +1,6 @@
 /** Período fértil con ciclos irregulares — Ogino adaptado */
 export interface Inputs { cicloMasCorto: number; cicloMasLargo: number; fumIrreg: string; __lang?: string; }
-export interface Outputs { ventanaFertil: string; inicioVentana: string; finVentana: string; recomendacion: string; }
+export interface Outputs { ventanaFertil: string; inicioVentana: string; finVentana: string; recomendacion: string; _insight?: any; }
 
 export function periodoFertilIrregular(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -10,12 +10,18 @@ export function periodoFertilIrregular(i: Inputs): Outputs {
       cicloCortoRango: 'Ciclo más corto: entre 18 y 40 días',
       cicloLargoRango: 'Ciclo más largo: entre 24 y 50 días',
       cicloLargoMenor: 'El ciclo más largo debe ser mayor que el más corto',
+      insightTitle: 'Tu ventana fértil estimada',
+      insightWide: (amp: number) => `Tu ventana abarca **${amp} días**, más ancha que un ciclo regular porque tus ciclos varían bastante. Tomala como una guía amplia y confirmá la ovulación con tests de LH.`,
+      insightNarrow: (amp: number) => `Tu ventana fértil es de **${amp} días**, un rango acotado. Aun así, un test de ovulación te ayuda a precisar el día exacto.`,
     },
     en: {
       fechaInvalida: 'Enter a valid date',
       cicloCortoRango: 'Shortest cycle: between 18 and 40 days',
       cicloLargoRango: 'Longest cycle: between 24 and 50 days',
       cicloLargoMenor: 'The longest cycle must be greater than the shortest',
+      insightTitle: 'Your estimated fertile window',
+      insightWide: (amp: number) => `Your window spans **${amp} days**, wider than a regular cycle because your cycles vary quite a bit. Treat it as a broad guide and confirm ovulation with LH tests.`,
+      insightNarrow: (amp: number) => `Your fertile window is **${amp} days**, a fairly tight range. Even so, an ovulation test helps you pin down the exact day.`,
     },
   } as const)[__lang];
 
@@ -61,5 +67,11 @@ export function periodoFertilIrregular(i: Inputs): Outputs {
     inicioVentana: fmt(inicio),
     finVentana: fmt(fin),
     recomendacion: rec,
+    _insight: {
+      title: T.insightTitle,
+      text: amplitud > 14 ? T.insightWide(amplitud) : T.insightNarrow(amplitud),
+      tone: amplitud > 14 ? 'warn' : 'good',
+      icon: '🌸',
+    },
   };
 }

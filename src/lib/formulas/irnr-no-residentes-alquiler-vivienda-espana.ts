@@ -17,6 +17,7 @@ export interface Outputs {
   ahorro_gastos: number;                  // Ahorro fiscal por gastos deducidos en €
   plazo_presentacion: string;             // Texto con los 4 plazos
   aviso_regimen: string;                  // Descripción del régimen aplicado
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -81,6 +82,25 @@ export function compute(i: Inputs): Outputs {
   // --- Redondeo a 2 decimales (céntimos de euro) ---
   const round2 = (n: number) => Math.round(n * 100) / 100;
 
+  // --- Insight narrativo ---
+  const fmtEur = (n: number) =>
+    '€' + n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const _insight = esUE
+    ? {
+        title: 'Régimen UE/EEE: tipo reducido y gastos deducibles',
+        text: ahorroGastos > 0
+          ? `Como residente UE/EEE tributás al **19 %**: una cuota anual de **${fmtEur(cuotaAnual)}** (${fmtEur(cuotaTrimestral)} por trimestre). Deducir gastos te ahorra **${fmtEur(ahorroGastos)}** al año frente a no declararlos.`
+          : `Como residente UE/EEE tributás al **19 %** sobre una base de **${fmtEur(baseImponibleAnual)}**: cuota anual de **${fmtEur(cuotaAnual)}** (${fmtEur(cuotaTrimestral)} por trimestre). Recordá que podés deducir IBI, comunidad, intereses y amortización.`,
+        tone: 'warn',
+        icon: '🏘️',
+      }
+    : {
+        title: 'Régimen general: 24 % sin deducir gastos',
+        text: `Al residir fuera de la UE/EEE tributás al **24 %** sobre la renta bruta, **sin deducir ningún gasto**: la cuota anual es de **${fmtEur(cuotaAnual)}** (${fmtEur(cuotaTrimestral)} por trimestre). Revisá si hay convenio de doble imposición con tu país.`,
+        tone: 'warn',
+        icon: '🏘️',
+      };
+
   return {
     tipo_gravamen: tipoGravamen * 100,
     renta_tributable_anual: round2(baseImponibleAnual),
@@ -89,5 +109,6 @@ export function compute(i: Inputs): Outputs {
     ahorro_gastos: round2(ahorroGastos),
     plazo_presentacion: plazoPresentacion,
     aviso_regimen: avisoRegimen,
+    _insight,
   };
 }

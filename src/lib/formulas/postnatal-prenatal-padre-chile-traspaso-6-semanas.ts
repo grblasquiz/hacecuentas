@@ -14,6 +14,7 @@ export interface Outputs {
   fecha_inicio_permiso_padre: string;
   fecha_termino_permiso_padre: string;
   nota_limitaciones: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -95,14 +96,36 @@ export function compute(i: Inputs): Outputs {
   }
   notaLimitaciones += `✓ Cálculo estimado. Tramitar en SII con acuerdo escrito notariado.`;
 
+  const subsidioRedondeado = Math.round(subsidio_total);
+  const topeExcedido = i.salario_padre_mensual > TOPE_IMPONIBLE_2026;
+  let insTone: 'good' | 'warn' | 'neutral';
+  let insText: string;
+  const subFmt = '$' + subsidioRedondeado.toLocaleString('es-CL');
+  if (i.semanas_trasvasadas_padre === 0) {
+    insTone = 'warn';
+    insText = `Con **0 semanas traspasadas** el padre no recibe subsidio. Para acceder al permiso parental, la madre debe ceder hasta **6 de sus 12 semanas** mediante acuerdo notariado.`;
+  } else if (topeExcedido) {
+    insTone = 'warn';
+    insText = `Recibirás **${subFmt}** por las **${i.semanas_trasvasadas_padre} semanas** (${dias_subsidio} días). Tu sueldo supera el tope imponible, así que el subsidio quedó topeado en **$${TOPE_IMPONIBLE_2026.toLocaleString('es-CL')}/mes**.`;
+  } else {
+    insTone = 'good';
+    insText = `Recibirás un subsidio total de **${subFmt}** por las **${i.semanas_trasvasadas_padre} semanas** (${dias_subsidio} días) traspasadas, equivalente al **100% de tu sueldo** dentro del tope SII.`;
+  }
+
   return {
     dias_subsidio_padre: dias_subsidio,
     salario_diario_padre: Math.round(salario_diario_aplicable),
-    subsidio_total_padre: Math.round(subsidio_total),
+    subsidio_total_padre: subsidioRedondeado,
     subsidio_promedio_mensual: Math.round(subsidio_promedio_mensual),
     fecha_inicio_permiso_padre: formatFecha(fechaInicioPermisoPadre),
     fecha_termino_permiso_padre: formatFecha(fechaTerminoPermisoPadre),
-    nota_limitaciones: notaLimitaciones
+    nota_limitaciones: notaLimitaciones,
+    _insight: {
+      title: 'Tu subsidio parental',
+      text: insText,
+      tone: insTone,
+      icon: '👨‍🍼',
+    },
   };
 }
 

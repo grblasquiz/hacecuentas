@@ -11,6 +11,7 @@ export interface PisoFlotanteOutputs {
   m2Totales: number;
   zocaloMl: number;
   detalle: string;
+  _insight?: any;
 }
 
 const DESPERDICIO: Record<string, number> = {
@@ -36,10 +37,19 @@ export function pisoFlotanteM2Tablas(inputs: PisoFlotanteInputs): PisoFlotanteOu
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const m2Cubiertos = Number((cajas * m2Caja).toFixed(2));
+  const sobrante = Number((m2Cubiertos - superficie).toFixed(2));
+
   return {
     cajasNecesarias: cajas,
     m2Totales: Number(m2Totales.toFixed(2)),
     zocaloMl: Number(zocalo.toFixed(2)),
     detalle: `Para ${fmt.format(superficie)} m² con colocación ${tipo} (${desp}% desperdicio) necesitás ${fmt.format(m2Totales)} m² → ${cajas} cajas de ${fmt.format(m2Caja)} m².${zocalo > 0 ? ` Zócalo: ${fmt.format(zocalo)} m lineales.` : ''}`,
+    _insight: {
+      title: 'Cuántas cajas comprar',
+      text: `Para cubrir **${fmt.format(superficie)} m²** con colocación ${tipo} comprá **${cajas} cajas** (${fmt.format(m2Cubiertos)} m²): te quedan **${fmt.format(sobrante)} m² de sobra** que sirven como reserva para cortes y futuros arreglos. Pedí todo del mismo lote para que no cante la diferencia de tono entre cajas.`,
+      tone: 'neutral',
+      icon: '🪵',
+    },
   };
 }

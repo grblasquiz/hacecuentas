@@ -2,7 +2,7 @@
  * Calculadora de Pan por Invitado - Evento.
  */
 export interface PanPorInvitadoEventoInputs { invitados:number; tipoEvento:string; }
-export interface PanPorInvitadoEventoOutputs { panesTotales:number; kgPan:number; mignones:number; flautas:number; }
+export interface PanPorInvitadoEventoOutputs { panesTotales:number; kgPan:number; mignones:number; flautas:number; _insight?:any; }
 export function panPorInvitadoEvento(inputs: PanPorInvitadoEventoInputs): PanPorInvitadoEventoOutputs {
   const inv = Number(inputs.invitados);
   const tipo = inputs.tipoEvento;
@@ -15,5 +15,16 @@ export function panPorInvitadoEvento(inputs: PanPorInvitadoEventoInputs): PanPor
   const kgPan = Number((panesTotales * 0.08).toFixed(2));
   const mignones = panesTotales;
   const flautas = Math.ceil(panesTotales / 3);
-  return { panesTotales, kgPan, mignones, flautas };
+  return {
+    panesTotales,
+    kgPan,
+    mignones,
+    flautas,
+    _insight: {
+      title: 'Cuánto pan comprar',
+      text: `Para **${inv.toLocaleString('es-AR')} invitados** calculá **${panesTotales} panes** (~**${kgPan} kg**), ya con un 15% de margen. Equivale a ${mignones} mignones o ${flautas} flautas; comprá fresco el mismo día del evento.`,
+      tone: 'neutral',
+      icon: '🥖',
+    },
+  };
 }

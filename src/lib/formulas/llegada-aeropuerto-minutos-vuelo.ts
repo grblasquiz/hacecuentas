@@ -11,6 +11,7 @@ export interface LlegadaAeropuertoMinutosVueloOutputs {
   horaAeropuerto: string;
   horaSalidaCasa: string;
   horaGate: string;
+  _insight?: any;
 }
 function fmt(totalMin: number): string {
   const t = ((totalMin % 1440) + 1440) % 1440;
@@ -31,9 +32,30 @@ export function llegadaAeropuertoMinutosVuelo(i: LlegadaAeropuertoMinutosVueloIn
   const totalAero = totalVuelo - anticipo;
   const totalCasa = totalAero - trans;
   const totalGate = totalVuelo - 30;
+
+  const horaCasaNorm = ((totalCasa % 1440) + 1440) % 1440;
+  const hCasa = Math.floor(horaCasaNorm / 60);
+  const cruzaDiaAnterior = totalCasa < 0;
+  const madrugada = hCasa < 6;
+  const anticipoTxt = tipo === 'internacional' ? '3 horas' : '2 horas';
+
+  const insight = {
+    title: 'Tu plan para no perder el vuelo',
+    text:
+      `Para un vuelo **${tipo}** que sale ${fmt(totalVuelo)}, presentate en el aeropuerto a las **${fmt(totalAero)}** (${anticipoTxt} antes) y salí de casa **${fmt(totalCasa)}**${cruzaDiaAnterior ? ' del día anterior' : ''} contando **${trans} min** de traslado. El embarque suele cerrar cerca de las **${fmt(totalGate)}**.` +
+      (cruzaDiaAnterior
+        ? ' Atención: la salida cae el día previo, dejá todo listo la noche anterior.'
+        : madrugada
+          ? ' Es salida de madrugada: agendá alarma y coordiná el transporte con anticipación.'
+          : ''),
+    tone: (cruzaDiaAnterior || madrugada ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '✈️',
+  };
+
   return {
     horaAeropuerto: fmt(totalAero),
     horaSalidaCasa: fmt(totalCasa),
-    horaGate: fmt(totalGate)
+    horaGate: fmt(totalGate),
+    _insight: insight
   };
 }

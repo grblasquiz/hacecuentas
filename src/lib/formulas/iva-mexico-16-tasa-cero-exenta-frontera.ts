@@ -11,6 +11,8 @@ export interface Outputs {
   precio_con_iva: number;
   precio_sin_iva_resultado: number;
   desglose: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -62,11 +64,49 @@ export function compute(i: Inputs): Outputs {
   // Desglose descriptivo
   const desglose = `${tipoIVA} | Ubicación: ${i.ubicacion === 'interior' ? 'Interior' : i.ubicacion === 'frontera_norte' ? 'Frontera norte' : 'Frontera sur'} | Tipo bien: ${i.tipo_bien}`;
 
+  const tasaPct = Math.round(tasaAplicable * 10000) / 100;
+  const fmtMXN = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const chart = (montoIva > 0 && precioSinIvaResultado > 0) ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Precio sin IVA', value: precioSinIvaResultado },
+      { label: `IVA ${tasaPct}%`, value: montoIva },
+    ],
+    prefix: '$',
+    centerValue: fmtMXN(precioConIva),
+    centerLabel: 'Precio con IVA',
+    ariaLabel: 'Composición del precio: precio sin IVA más IVA',
+  } : undefined;
+
+  let insight: any;
+  if (precioSinIvaResultado > 0 || precioConIva > 0) {
+    if (tasaAplicable === 0) {
+      insight = {
+        title: 'Sin IVA por pagar',
+        text: `Este caso es **${tipoIVA}**: no se cobra IVA, por lo que el precio se mantiene en **${fmtMXN(precioConIva)}**.`,
+        tone: 'good' as const,
+        icon: '🇲🇽',
+      };
+    } else {
+      insight = {
+        title: 'Desglose del IVA',
+        text: i.modo_calculo === 'inverso'
+          ? `Del precio de **${fmtMXN(precioConIva)}**, **${fmtMXN(montoIva)}** son IVA al **${tasaPct}%** y **${fmtMXN(precioSinIvaResultado)}** es el precio sin IVA${tasaAplicable === 0.08 ? ' (tasa fronteriza reducida)' : ''}.`
+          : `Sobre **${fmtMXN(precioSinIvaResultado)}** se suma un IVA del **${tasaPct}%** (${fmtMXN(montoIva)})${tasaAplicable === 0.08 ? ', tasa fronteriza reducida,' : ''} dejando el precio final en **${fmtMXN(precioConIva)}**.`,
+        tone: 'neutral' as const,
+        icon: '🇲🇽',
+      };
+    }
+  }
+
   return {
-    tasa_aplicable: Math.round(tasaAplicable * 10000) / 100, // En porcentaje
+    tasa_aplicable: tasaPct, // En porcentaje
     monto_iva: montoIva,
     precio_con_iva: precioConIva,
     precio_sin_iva_resultado: precioSinIvaResultado,
-    desglose: desglose
+    desglose: desglose,
+    _chart: chart,
+    _insight: insight
   };
 }

@@ -12,6 +12,8 @@ export interface Outputs {
   probabilidadClasificar: string;
   escenarios: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function etiquetaProbabilidad(pts: number): string {
@@ -69,11 +71,40 @@ export function mundial2026PuntosOctavos(i: Inputs): Outputs {
 
   const prob = etiquetaProbabilidad(proyectados);
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (proyectados >= 5) insightTone = 'good';
+  else if (proyectados >= 3) insightTone = 'neutral';
+  else insightTone = 'warn';
+
+  const probCorto = prob.split(' (')[0];
+  const insightText = partidosRestantes > 0
+    ? `Hoy sumás **${puntosActuales} pts** y proyectás **${proyectados} pts** en este escenario: ${probCorto}. Quedan ${partidosRestantes} partido${partidosRestantes > 1 ? 's' : ''} por jugar.`
+    : `Cerraste la fase de grupos con **${puntosActuales} pts**: ${probCorto}.`;
+
   return {
     puntosActuales,
     puntosProyectados: proyectadosText,
     probabilidadClasificar: prob,
     escenarios,
     resumen: `Con **${puntosActuales} pts** tras ${partidosJugados} partido${partidosJugados !== 1 ? 's' : ''}: ${prob}. ${partidosRestantes > 0 ? `Queda${partidosRestantes > 1 ? 'n' : ''} ${partidosRestantes} partido${partidosRestantes > 1 ? 's' : ''}.` : 'Fase de grupos terminada.'}`,
+    _insight: {
+      title: 'Lectura de la clasificación',
+      text: insightText,
+      tone: insightTone,
+      icon: '⚽',
+    },
+    _chart: {
+      type: 'scale',
+      marker: proyectados,
+      markerLabel: `${proyectados} pts`,
+      min: 0,
+      segments: [
+        { nombre: 'Improbable', max: 3, color: '#ef4444', colorDark: '#dc2626' },
+        { nombre: 'Al filo', max: 4, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Probable', max: 6, color: '#3b82f6', colorDark: '#2563eb' },
+        { nombre: 'Asegurado', max: 9.5, color: '#22c55e', colorDark: '#16a34a' },
+      ],
+      ariaLabel: `Puntos proyectados ${proyectados} sobre una escala de 0 a 9 para clasificar a octavos`,
+    },
   };
 }

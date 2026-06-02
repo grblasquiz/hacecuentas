@@ -13,6 +13,8 @@ export interface Outputs {
   total_impuestos: number;
   porcentaje_sobre_precio: number;
   nota_reduccion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tipos ITP generales y reducidos por CCAA (2026)
@@ -130,12 +132,44 @@ export function compute(i: Inputs): Outputs {
   const total_impuestos = impuesto_principal + ajd;
   const porcentaje_sobre_precio = precio > 0 ? (total_impuestos / precio) * 100 : 0;
 
-  return {
+  const eur = (n: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' €';
+  const pctTxt = porcentaje_sobre_precio.toFixed(2).replace('.', ',');
+  const impuestoNombre = esNueva ? (ccaa === 'CAN' ? 'IGIC' : 'IVA') : 'ITP';
+
+  const _insight = {
+    title: 'Cuánto suman los impuestos de compra',
+    text: esNueva
+      ? `Por vivienda nueva pagás **${impuestoNombre} ${eur(impuesto_principal)}** más **AJD ${eur(ajd)}**: en total **${eur(total_impuestos)}**, un **${pctTxt}%** sobre el precio. Es dinero que va aparte de la entrada y no se financia con la hipoteca.`
+      : `El ITP de tu vivienda usada es **${eur(impuesto_principal)}** (${pctTxt}% del precio). Presupuestalo aparte de la entrada: junto a notaría, registro y gestoría suele ser el mayor gasto de cierre.`,
+    tone: 'warn',
+    icon: '🏠',
+  };
+
+  const out: Outputs = {
     impuesto_principal: Math.round(impuesto_principal * 100) / 100,
     tipo_itp_aplicado: Math.round(tipo_itp_aplicado * 10000) / 100, // en porcentaje con 2 decimales
     ajd: Math.round(ajd * 100) / 100,
     total_impuestos: Math.round(total_impuestos * 100) / 100,
     porcentaje_sobre_precio: Math.round(porcentaje_sobre_precio * 100) / 100,
     nota_reduccion,
+    _insight,
   };
+
+  // Donut sólo en vivienda nueva: el total se reparte en dos partes (impuesto principal + AJD)
+  if (esNueva && ajd > 0 && total_impuestos > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: impuestoNombre, value: Math.round(impuesto_principal * 100) / 100 },
+        { label: 'AJD', value: Math.round(ajd * 100) / 100 },
+      ],
+      suffix: ' €',
+      centerValue: eur(total_impuestos),
+      centerLabel: 'Impuestos',
+      ariaLabel: `Desglose de impuestos: ${impuestoNombre} ${eur(impuesto_principal)} y AJD ${eur(ajd)}, total ${eur(total_impuestos)}.`,
+    };
+  }
+
+  return out;
 }

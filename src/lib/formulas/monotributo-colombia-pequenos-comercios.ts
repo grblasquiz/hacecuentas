@@ -13,6 +13,8 @@ export interface Outputs {
   efectivo_liquido_anual: number;
   comparativa_ordinario: number;
   recomendacion: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -90,13 +92,57 @@ export function compute(i: Inputs): Outputs {
     recomendacion = `ℹ️ Régimen Simple comparable con ordinario. Valida costos deducibles en ordinario si crecen ingresos.`;
   }
   
+  const impuestoR = Math.round(impuesto_anual);
+  const liquidoR = Math.round(efectivo_liquido_anual);
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Efectivo líquido', value: liquidoR },
+      { label: 'Impuesto Simple', value: impuestoR },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(i.ingresos_brutos_anuales),
+    centerLabel: 'Ingresos brutos',
+    ariaLabel: 'Composición de los ingresos brutos anuales: efectivo líquido más impuesto del Régimen Simple',
+  };
+
+  const excede = i.ingresos_brutos_anuales > LIMITE_REGIMEN_SIMPLE;
+  let _insight;
+  if (excede) {
+    _insight = {
+      title: 'Excedés el Régimen Simple',
+      text: `Con ingresos de **${fmtCOP(i.ingresos_brutos_anuales)}** superás el tope del Régimen Simple ($${(LIMITE_REGIMEN_SIMPLE / 1000000).toFixed(0)}M). Tenés que tributar en el **régimen ordinario**.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (comparativa_ordinario > 0) {
+    const ahorroPct = ((comparativa_ordinario / (i.ingresos_brutos_anuales * 0.18)) * 100).toFixed(1);
+    _insight = {
+      title: 'El Régimen Simple te conviene',
+      text: `Pagás una tarifa del **${(Math.round(tarifa_final * 100) / 100)}%** sobre tus ingresos: **${fmtCOP(impuestoR)}** al año (anticipo de ${fmtCOP(anticipo_bimestral)} cada bimestre). Frente al régimen ordinario ahorrás cerca de **${fmtCOP(comparativa_ordinario)}** (~${ahorroPct}%).`,
+      tone: 'good',
+      icon: '✅',
+    };
+  } else {
+    _insight = {
+      title: 'Régimen Simple vs ordinario',
+      text: `Con tarifa del **${(Math.round(tarifa_final * 100) / 100)}%** pagás **${fmtCOP(impuestoR)}** al año y te quedan **${fmtCOP(liquidoR)}** líquidos. A este nivel de ingresos el ordinario es comparable: revisá tus costos deducibles antes de decidir.`,
+      tone: 'neutral',
+      icon: '📊',
+    };
+  }
+
   return {
     tarifa_aplicable: Math.round(tarifa_final * 100) / 100,
-    impuesto_anual: Math.round(impuesto_anual),
+    impuesto_anual: impuestoR,
     anticipo_bimestral: Math.round(anticipo_bimestral),
     cuotas_bimestrales,
-    efectivo_liquido_anual: Math.round(efectivo_liquido_anual),
+    efectivo_liquido_anual: liquidoR,
     comparativa_ordinario: Math.round(comparativa_ordinario),
-    recomendacion
+    recomendacion,
+    _chart,
+    _insight,
   };
 }

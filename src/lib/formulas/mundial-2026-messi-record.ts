@@ -13,6 +13,8 @@ export interface Outputs {
   golesTotalesCarrera: string;
   comparativaKlose: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Datos históricos Messi en Mundiales (pre-2026)
@@ -51,6 +53,17 @@ export function mundial2026MessiRecord(i: Inputs): Outputs {
     comparativa = `Queda a ${distanciaKlose.toFixed(1)} goles del récord de Klose (16).`;
   }
 
+  const superaKlose = golesTotales > RECORD_KLOSE;
+  const rozaKlose = golesTotales >= RECORD_KLOSE - 0.5;
+  const insight = {
+    title: superaKlose ? '¡Récord histórico de goles!' : rozaKlose ? 'A un gol del récord absoluto' : 'Persiguiendo a Klose',
+    text: superaKlose
+      ? `Con **${goles2026.toFixed(1)}** goles proyectados en 2026, Messi llegaría a **${golesTotales.toFixed(1)}** en Mundiales y **superaría a Klose (16)** como máximo goleador histórico de Copas del Mundo.`
+      : `Messi proyecta **${goles2026.toFixed(1)}** goles en 2026 para un total de **${golesTotales.toFixed(1)}**, a **${distanciaKlose.toFixed(1)}** del récord de Klose (**16**). Más minutos por partido empujan la proyección hacia arriba.`,
+    tone: superaKlose ? 'good' : rozaKlose ? 'neutral' : 'warn',
+    icon: '🐐',
+  };
+
   return {
     totalMundialesJugados: '6 Mundiales',
     detalleMundiales: '2006, 2010, 2014, 2018, 2022 y 2026 — primer jugador en la historia en disputar 6 Copas del Mundo',
@@ -60,5 +73,19 @@ export function mundial2026MessiRecord(i: Inputs): Outputs {
     golesTotalesCarrera: `${golesTotales.toFixed(1)} goles totales en Mundiales`,
     comparativaKlose: comparativa,
     resumen: `**Messi pre-2026**: ${HISTORICO.partidosPrevios} partidos, ${HISTORICO.golesPrevios} goles, ${HISTORICO.asistenciasPrevias} asistencias. **Proyección 2026** (${partidos} partidos, ${minProm} min prom): +${goles2026.toFixed(1)} goles, +${minutos2026} min. **Total carrera**: ${partidosTotales} partidos, ${golesTotales.toFixed(1)} goles. ${comparativa}`,
+    _insight: insight,
+    _chart: {
+      type: 'scale',
+      marker: Number(golesTotales.toFixed(1)),
+      markerLabel: `${golesTotales.toFixed(1)} goles`,
+      min: 0,
+      segments: [
+        { nombre: 'Lejos del récord', max: 13, color: '#94a3b8', colorDark: '#64748b' },
+        { nombre: 'Acercándose', max: 15.5, color: '#0ea5e9', colorDark: '#38bdf8' },
+        { nombre: 'Récord Klose (16)', max: 16, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Nuevo récord', max: 20, color: '#16a34a', colorDark: '#22c55e' },
+      ],
+      ariaLabel: `Goles totales proyectados de Messi en Mundiales: ${golesTotales.toFixed(1)}, frente al récord de Klose de 16`,
+    },
   };
 }

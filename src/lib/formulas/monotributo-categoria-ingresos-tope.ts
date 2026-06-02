@@ -14,6 +14,8 @@ export interface MonotributoCategoriaIngresosTopeOutputs {
   cuotaMensual: number;
   topeCategoria: number;
   detalle: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 interface CatMono {
@@ -60,6 +62,12 @@ export function monotributoCategoriaIngresosTope(
       cuotaMensual: 0,
       topeCategoria: maxCat.tope,
       detalle: `Tus ingresos anuales de $${Math.round(ingresos).toLocaleString('es-AR')} superan el tope máximo del monotributo para ${esServicios ? 'servicios' : 'venta'} (categoría ${maxCat.cat}: $${maxCat.tope.toLocaleString('es-AR')}). Debés inscribirte como Responsable Inscripto.`,
+      _insight: {
+        title: 'Superás el monotributo',
+        text: `Tus ingresos de **$${Math.round(ingresos).toLocaleString('es-AR')}** superan el tope máximo (categoría ${maxCat.cat}: $${maxCat.tope.toLocaleString('es-AR')}) para ${esServicios ? 'servicios' : 'venta'}. Tenés que inscribirte como **Responsable Inscripto**.`,
+        tone: 'warn',
+        icon: '⚠️',
+      },
     };
   }
 
@@ -68,11 +76,37 @@ export function monotributoCategoriaIngresosTope(
 
   const margen = catCorrespondiente.tope - ingresos;
   const margenPct = ((margen / catCorrespondiente.tope) * 100).toFixed(1);
+  const usoPct = (ingresos / catCorrespondiente.tope) * 100;
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: Math.round(usoPct * 10) / 10,
+    markerLabel: usoPct.toFixed(0) + '% del tope',
+    min: 0,
+    segments: [
+      { nombre: 'Holgado', max: 70, color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: 'Atención', max: 90, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Al límite', max: 105, color: '#ef4444', colorDark: '#dc2626' },
+    ],
+    ariaLabel: 'Porcentaje del tope de facturación usado dentro de la categoría',
+  };
+
+  const cerca = usoPct >= 90;
+  const _insight = {
+    title: cerca ? 'Estás al límite de la categoría' : `Te corresponde la categoría ${catCorrespondiente.cat}`,
+    text: cerca
+      ? `Con **$${Math.round(ingresos).toLocaleString('es-AR')}** usás el **${usoPct.toFixed(0)}%** del tope de la categoría ${catCorrespondiente.cat}. Te quedan solo **$${Math.round(margen).toLocaleString('es-AR')}**: si seguís facturando vas a tener que recategorizar.`
+      : `Con **$${Math.round(ingresos).toLocaleString('es-AR')}** te corresponde la categoría **${catCorrespondiente.cat}** (cuota ~$${cuota.toLocaleString('es-AR')}/mes). Usás el **${usoPct.toFixed(0)}%** del tope y te quedan **$${Math.round(margen).toLocaleString('es-AR')}** de margen.`,
+    tone: cerca ? 'warn' : 'good',
+    icon: cerca ? '⚠️' : '✅',
+  };
 
   return {
     categoria: `Categoría ${catCorrespondiente.cat}`,
     cuotaMensual: cuota,
     topeCategoria: catCorrespondiente.tope,
     detalle: `Con ingresos anuales de $${Math.round(ingresos).toLocaleString('es-AR')} en ${esServicios ? 'servicios' : 'venta'}, te corresponde la categoría ${catCorrespondiente.cat} (tope $${catCorrespondiente.tope.toLocaleString('es-AR')}). Cuota mensual estimada: $${cuota.toLocaleString('es-AR')}. Margen disponible: $${Math.round(margen).toLocaleString('es-AR')} (${margenPct}% del tope). Recategorización: enero y julio.`,
+    _chart,
+    _insight,
   };
 }

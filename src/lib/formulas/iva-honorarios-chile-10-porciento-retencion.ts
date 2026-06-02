@@ -14,6 +14,8 @@ export interface Outputs {
   total_costo_empresa: number;
   obligacion_declaracion: string;
   proyeccion_anual_12_meses: number;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -65,14 +67,41 @@ export function compute(i: Inputs): Outputs {
   // Proyección anual (12 meses con mismo monto)
   const proyeccion_anual_12_meses = monto_retencion * 12;
 
+  const brutoR = Math.round(monto_bruto_neto);
+  const retR = Math.round(monto_retencion);
+  const liquidoR = Math.round(monto_liquido_recibir);
+  const tasaPct = Math.round(tasa_retencion * 1000) / 10;
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  const chart = brutoR > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Líquido a recibir', value: liquidoR },
+      { label: 'Retención SII', value: retR },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(brutoR),
+    centerLabel: 'Honorario bruto',
+    ariaLabel: 'Composición del honorario bruto: líquido a recibir más retención',
+  } : undefined;
+
+  const insight = brutoR > 0 ? {
+    title: 'Cuánto te retienen',
+    text: `Sobre **${fmtCLP(brutoR)}** de honorario, el SII retiene el **${tasaPct}%** (${fmtCLP(retR)}): recibís **${fmtCLP(liquidoR)}** líquidos. En 12 meses iguales acumularías **${fmtCLP(proyeccion_anual_12_meses)}** retenidos, recuperables en la declaración de abril.`,
+    tone: 'warn' as const,
+    icon: '🇨🇱',
+  } : undefined;
+
   return {
-    monto_bruto_neto: Math.round(monto_bruto_neto),
+    monto_bruto_neto: brutoR,
     tasa_retencion_aplicada: tasa_retencion * 100,
-    monto_retencion: Math.round(monto_retencion),
-    monto_liquido_recibir: Math.round(monto_liquido_recibir),
+    monto_retencion: retR,
+    monto_liquido_recibir: liquidoR,
     iva_a_pagar: Math.round(iva_incluido),
     total_costo_empresa: Math.round(total_costo_empresa),
     obligacion_declaracion: obligacion_declaracion,
     proyeccion_anual_12_meses: Math.round(proyeccion_anual_12_meses),
+    _chart: chart,
+    _insight: insight,
   };
 }

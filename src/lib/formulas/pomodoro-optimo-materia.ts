@@ -8,6 +8,7 @@ export interface Outputs {
   duracionDescanso: number;
   pausaLargaCada: string;
   horasEfectivas: number;
+  _insight?: any;
 }
 
 export function pomodoroOptimoMateria(i: Inputs): Outputs {
@@ -33,13 +34,36 @@ export function pomodoroOptimoMateria(i: Inputs): Outputs {
   const pomos = Math.floor(totalMin / ciclo);
 
   const horasEfectivas = (pomos * bloqueMin) / 60;
+  const horasEfRound = Math.round(horasEfectivas * 10) / 10;
+
+  const MATERIA_LABEL: Record<string, string> = {
+    matematica: 'matemática',
+    memorizacion: 'memorización',
+    teorica: 'teórica',
+    lectura: 'lectura',
+    programacion: 'programación',
+  };
+  const materiaTxt = MATERIA_LABEL[materia] || 'teórica';
+  const horasEfFmt = horasEfRound.toLocaleString('es-AR', { maximumFractionDigits: 1 });
+  // Tope de foco profundo sostenible ~4 h/día (Ericsson, 1993)
+  const tono = horasEfRound > 4.5 ? 'warn' : 'good';
+  const text = tono === 'warn'
+    ? `Te entran **${pomos} pomodoros** de **${bloqueMin} min** para ${materiaTxt}, pero eso son **${horasEfFmt} h** de foco real: por encima de las ~4 h que el cerebro sostiene bien por día. Repartí la carga o bajá la exigencia.`
+    : `Para ${materiaTxt} te entran **${pomos} pomodoros** de **${bloqueMin} min** con descansos de **${descansoMin} min**: **${horasEfFmt} h** de foco real, un ritmo sostenible.`;
+  const _insight = {
+    title: 'Tu plan de pomodoros',
+    text,
+    tone: tono,
+    icon: '🍅',
+  };
 
   return {
     pomodorosDia: pomos,
     duracionBloque: bloqueMin,
     duracionDescanso: descansoMin,
     pausaLargaCada: '4 pomodoros (pausa 20-30 min)',
-    horasEfectivas: Math.round(horasEfectivas * 10) / 10,
+    horasEfectivas: horasEfRound,
+    _insight,
   };
 
 }

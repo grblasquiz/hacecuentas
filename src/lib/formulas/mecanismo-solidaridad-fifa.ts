@@ -18,6 +18,7 @@ export interface Outputs {
   repartoPorClubPromedio: number;
   moneda: string;
   resumen: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -55,6 +56,21 @@ export function mecanismoSolidaridadFifa(i: Inputs): Outputs {
         }
       : undefined;
 
+  const pctClubes = fee > 0 ? (totalClubes / fee) * 100 : 0;
+  const insight = totalClubes > 0
+    ? {
+        title: 'Lo que se llevan los clubes formadores',
+        text: `Del fee de **US$ ${fee.toLocaleString('en')}**, los clubes formadores reclaman **US$ ${Math.round(totalClubes).toLocaleString('en')}** (**${pctClubes.toFixed(2)}%**) por los ${a12 + a16} años que formaron al jugador. Repartido entre **${clubes}** club${clubes > 1 ? 'es' : ''}, toca **US$ ${Math.round(porClub).toLocaleString('en')}** a cada uno.`,
+        tone: 'good',
+        icon: '⚽',
+      }
+    : {
+        title: 'Sin años formativos cargados',
+        text: `El pool de solidaridad es el 5% del fee (**US$ ${Math.round(pool).toLocaleString('en')}**), pero sin años de formación entre los 12 y 23 cargados, no se asigna nada a clubes formadores. Completá los años para ver el reparto.`,
+        tone: 'warn',
+        icon: '⚽',
+      };
+
   return {
     poolSolidaridad: Math.round(pool),
     pctPool: 5,
@@ -65,6 +81,7 @@ export function mecanismoSolidaridadFifa(i: Inputs): Outputs {
     repartoPorClubPromedio: Math.round(porClub),
     moneda: 'USD',
     resumen: `Sobre fee US$ ${fee.toLocaleString('en')}, pool 5% = **US$ ${Math.round(pool).toLocaleString('en')}**. Clubes formadores reciben **US$ ${Math.round(totalClubes).toLocaleString('en')}** (${a12} años 12-15 + ${a16} años 16-23). Por club (${clubes}): **US$ ${Math.round(porClub).toLocaleString('en')}**.`,
+    _insight: insight,
     _chart: chart,
   };
 }

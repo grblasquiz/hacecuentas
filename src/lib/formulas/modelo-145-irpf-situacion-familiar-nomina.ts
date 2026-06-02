@@ -25,6 +25,7 @@ export interface Outputs {
   neto_mensual_correcto: number;
   fecha_presentar: string;
   alerta_obligacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -232,6 +233,32 @@ export function compute(i: Inputs): Outputs {
     alerta_obligacion = 'ℹ️ Tu retención está ajustada a tu situación. Recuerda actualizar el Modelo 145 ante cualquier cambio familiar.';
   }
 
+  // ── 13. Insight narrativo dinámico ──────────────────────────────────────────
+  const fmtEur = (n: number) => Math.round(n).toLocaleString('es-ES') + '€';
+  let _insight: any;
+  if (diferencia_pct < -1) {
+    _insight = {
+      title: 'Riesgo de pagar en la Renta',
+      text: `Tu situación real exige un **${retencion_final.toFixed(1)}%** de retención, por encima del **${retencion_defecto_pct.toFixed(1)}%** por defecto. Si tu empresa retiene de menos, la declaración te saldría a pagar. Revisá el Modelo 145.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (ahorro_anual_eur > 0) {
+    _insight = {
+      title: 'Estás dejando dinero en la mesa',
+      text: `Con tu situación familiar te corresponde un **${retencion_final.toFixed(1)}%** en vez del **${retencion_defecto_pct.toFixed(1)}%** por defecto. Presentar el Modelo 145 te deja unos **${fmtEur(ahorro_mensual_eur)}/mes** más netos (**${fmtEur(ahorro_anual_eur)}** al año).`,
+      tone: 'good',
+      icon: '💰',
+    };
+  } else {
+    _insight = {
+      title: 'Retención bien ajustada',
+      text: `Tu tipo de retención (**${retencion_final.toFixed(1)}%**) ya está alineado con tu situación. Acordate de actualizar el Modelo 145 ante cualquier cambio familiar (boda, hijo, ascendiente a cargo).`,
+      tone: 'neutral',
+      icon: '✅',
+    };
+  }
+
   return {
     retencion_correcta_pct: Math.round(retencion_final * 100) / 100,
     retencion_defecto_pct: Math.round(retencion_defecto_pct * 100) / 100,
@@ -242,5 +269,6 @@ export function compute(i: Inputs): Outputs {
     neto_mensual_correcto: Math.round(neto_mensual_correcto * 100) / 100,
     fecha_presentar,
     alerta_obligacion,
+    _insight,
   };
 }

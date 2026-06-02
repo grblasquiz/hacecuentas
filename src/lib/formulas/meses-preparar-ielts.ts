@@ -7,6 +7,7 @@ export interface Outputs {
   horasTotales: number;
   intensidad: string;
   alerta: string;
+  _insight?: any;
 }
 
 export function mesesPrepararIelts(i: Inputs): Outputs {
@@ -36,11 +37,21 @@ export function mesesPrepararIelts(i: Inputs): Outputs {
   else if (hsem < 3) alerta = 'Con menos de 3 h/sem no hay progreso real. Subí horas o bajá meta.';
   else alerta = 'Plan viable si sostenés el ritmo.';
 
+  const tone: 'good' | 'warn' | 'neutral' = (gap >= 2 || hsem < 3) ? 'warn' : 'good';
+  const mesesTxt = meses.toString().replace('.', ',');
+  const _insight = {
+    title: 'Tu plan hacia el IELTS',
+    text: `Pasar de **band ${String(actual).replace('.', ',')} a ${String(obj).replace('.', ',')}** requiere unas **${Math.round(horasTot)} horas** de estudio; a ${hsem} h/semana te lleva cerca de **${mesesTxt} meses** (ritmo ${intensidad.toLowerCase()}). ${alerta}`,
+    tone,
+    icon: '🎓',
+  };
+
   return {
     mesesRequeridos: meses,
     horasTotales: Math.round(horasTot),
     intensidad,
     alerta,
+    _insight,
   };
 
 }

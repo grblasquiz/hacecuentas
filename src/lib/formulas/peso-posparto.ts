@@ -1,6 +1,6 @@
 /** Pérdida de peso posparto */
 export interface Inputs { pesoPreEmbarazo: number; pesoActual: number; semanasPosParto: number; amamanta?: string; __lang?: string; }
-export interface Outputs { pesoAPerdPer: string; tiempoEstimado: string; ritmo: string; nota: string; }
+export interface Outputs { pesoAPerdPer: string; tiempoEstimado: string; ritmo: string; nota: string; _insight?: any; }
 
 export function pesoPosparto(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -58,6 +58,14 @@ export function pesoPosparto(i: Inputs): Outputs {
       tiempoEstimado: T.noNecesitas,
       ritmo: T.ritmoCero,
       nota: T.notaOk,
+      _insight: {
+        title: __lang === 'en' ? 'You are already there' : 'Ya llegaste',
+        text: __lang === 'en'
+          ? `At **${pesoAhora} kg** you are already at or below your **${pesoAntes} kg** pre-pregnancy weight. There is nothing to chase — focus on energy, recovery and nourishing meals, not the scale.`
+          : `Con **${pesoAhora} kg** ya estás en tu peso pre-embarazo de **${pesoAntes} kg** o por debajo. No hay nada que perseguir: enfocate en energía, recuperación y comer bien, no en la balanza.`,
+        tone: 'good',
+        icon: '🤱',
+      },
     };
   }
 
@@ -68,5 +76,13 @@ export function pesoPosparto(i: Inputs): Outputs {
       : `~${semanasEstimadas} semanas (~${mesesEstimados} meses) a ritmo saludable`,
     ritmo: T.ritmoNormal,
     nota,
+    _insight: {
+      title: __lang === 'en' ? 'A realistic timeline' : 'Un plazo realista',
+      text: __lang === 'en'
+        ? `You are about **${faltaPerder.toFixed(1)} kg** above your pre-pregnancy weight. At a safe ~0.5 kg/week that is roughly **${mesesEstimados} months** — postpartum recovery is a slow burn, and crash diets backfire on milk supply and energy.`
+        : `Estás unos **${faltaPerder.toFixed(1)} kg** por encima de tu peso pre-embarazo. A un ritmo seguro de ~0,5 kg/semana son cerca de **${mesesEstimados} meses** — la recuperación posparto es lenta y las dietas extremas juegan en contra de la leche y la energía.`,
+      tone: 'neutral',
+      icon: '🤱',
+    },
   };
 }

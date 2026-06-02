@@ -11,6 +11,7 @@ export interface Outputs {
   distanciaKm: number;
   diferenciaAltura: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 interface StadiumData {
@@ -94,6 +95,18 @@ export function mundial2026EstadiosComparador(i: Inputs): Outputs {
     exigente += ` Atención: la distancia entre sedes (${distancia} km) implica cruzar 3+ husos horarios — sumá ~1 día de adaptación por huso.`;
   }
 
+  const mismo = keyA === keyB;
+  const cargaLogistica = distancia > 3500 || difAltura >= 1000;
+  const masExigente = aScore === bScore ? null : aScore > bScore ? a : b;
+  const _insight = {
+    title: 'Comparación de sedes',
+    text: mismo
+      ? `Elegiste **${a.nombre}** dos veces: no hay viaje ni cambio de altura que comparar.`
+      : `Entre **${a.nombre}** y **${b.nombre}** hay **${distancia.toLocaleString('es-AR')} km** y **${difAltura.toLocaleString('es-AR')} m** de diferencia de altura.${masExigente ? ` La sede más exigente es **${masExigente.nombre}** (${masExigente.altura} m, ${masExigente.tempPromedio}°C).` : ' Ambas sedes exigen lo mismo físicamente.'}${cargaLogistica ? ' El traslado pesa: sumá días de aclimatación.' : ''}`,
+    tone: mismo ? 'neutral' : cargaLogistica ? 'warn' : 'neutral',
+    icon: '🏟️',
+  };
+
   return {
     estadioAInfo: formatShort(a),
     estadioADetalle: formatInfo(a),
@@ -101,5 +114,6 @@ export function mundial2026EstadiosComparador(i: Inputs): Outputs {
     distanciaKm: distancia,
     diferenciaAltura: difAltura,
     recomendacion: exigente,
+    _insight,
   };
 }

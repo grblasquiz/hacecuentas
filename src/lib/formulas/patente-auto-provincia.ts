@@ -31,6 +31,7 @@ export interface Outputs {
   alicuotaAplicada: number;
   provinciaNombre: string;
   detalle: string;
+  _insight?: any;
 }
 
 /**
@@ -95,6 +96,8 @@ export function patenteAutoProvincia(i: Inputs): Outputs {
   const patenteCuota = patenteAnual / cuotas;
   const patenteMensual = patenteAnual / 12;
 
+  const pesoMensual = (patenteMensual / valuacion) * 100;
+
   return {
     patenteAnual: Math.round(patenteAnual),
     patenteCuota: Math.round(patenteCuota),
@@ -102,5 +105,11 @@ export function patenteAutoProvincia(i: Inputs): Outputs {
     alicuotaAplicada: alicuota,
     provinciaNombre,
     detalle: `${provinciaNombre} · alícuota ${alicuota}% aplicada sobre valuación fiscal $${Math.round(valuacion).toLocaleString('es-AR')}. Patente anual ≈ $${Math.round(patenteAnual).toLocaleString('es-AR')} (${cuotas} cuotas de $${Math.round(patenteCuota).toLocaleString('es-AR')} ≈ $${Math.round(patenteMensual).toLocaleString('es-AR')}/mes).`,
+    _insight: {
+      title: 'Tu patente estimada',
+      text: `En **${provinciaNombre}** pagás ≈ **$${Math.round(patenteAnual).toLocaleString('es-AR')}/año** (alícuota ${alicuota}%), unos **$${Math.round(patenteMensual).toLocaleString('es-AR')}/mes**. Es un valor orientativo: la escala real varía por tramo de valuación, y muchas provincias dan **~35% de descuento si pagás todo el año por adelantado**.`,
+      tone: 'warn',
+      icon: '🚗',
+    },
   };
 }

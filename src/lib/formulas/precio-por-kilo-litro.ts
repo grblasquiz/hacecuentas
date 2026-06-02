@@ -14,6 +14,7 @@ export interface Outputs {
   precioUnitarioB: string;
   precioUnitarioC: string;
   diferencia: string;
+  _insight?: any;
 }
 
 export function precioPorKiloLitro(i: Inputs): Outputs {

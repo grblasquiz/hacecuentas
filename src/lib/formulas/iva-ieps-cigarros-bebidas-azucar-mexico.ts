@@ -15,6 +15,8 @@ export interface Outputs {
   total_impuestos: number;
   precio_final: number;
   porcentaje_total_impuestos: number;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -133,14 +135,43 @@ export function compute(i: Inputs): Outputs {
   const precio_final = base_gravable + total_impuestos;
   const porcentaje_total_impuestos = base_gravable > 0 ? (total_impuestos / base_gravable) * 100 : 0;
 
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const baseR = r2(base_gravable);
+  const iepsR = r2(ieps_aplicable);
+  const ivaR = r2(iva_sobre_ieps);
+  const precioR = r2(precio_final);
+  const pctR = r2(porcentaje_total_impuestos);
+  const fmtMXN = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const slices = [{ label: 'Precio base', value: baseR }, { label: 'IEPS', value: iepsR }];
+  if (ivaR > 0) slices.push({ label: 'IVA 16%', value: ivaR });
+
+  const chart = baseR > 0 ? {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: fmtMXN(precioR),
+    centerLabel: 'Precio final',
+    ariaLabel: 'Composición del precio final: precio base, IEPS e IVA',
+  } : undefined;
+
+  const insight = baseR > 0 ? {
+    title: 'Carga fiscal del producto',
+    text: `Sobre un precio base de **${fmtMXN(baseR)}** se cargan **${fmtMXN(iepsR)}** de IEPS${ivaR > 0 ? ` más ${fmtMXN(ivaR)} de IVA` : ''}: los impuestos equivalen al **${pctR}%** del precio base y el precio final llega a **${fmtMXN(precioR)}**.`,
+    tone: pctR >= 30 ? ('warn' as const) : ('neutral' as const),
+    icon: '🇲🇽',
+  } : undefined;
+
   return {
-    base_gravable: Math.round(base_gravable * 100) / 100,
-    ieps_aplicable: Math.round(ieps_aplicable * 100) / 100,
-    tasa_ieps: Math.round(tasa_ieps * 100) / 100,
-    base_iva: Math.round(base_iva * 100) / 100,
-    iva_sobre_ieps: Math.round(iva_sobre_ieps * 100) / 100,
-    total_impuestos: Math.round(total_impuestos * 100) / 100,
-    precio_final: Math.round(precio_final * 100) / 100,
-    porcentaje_total_impuestos: Math.round(porcentaje_total_impuestos * 100) / 100
+    base_gravable: baseR,
+    ieps_aplicable: iepsR,
+    tasa_ieps: r2(tasa_ieps),
+    base_iva: r2(base_iva),
+    iva_sobre_ieps: ivaR,
+    total_impuestos: r2(total_impuestos),
+    precio_final: precioR,
+    porcentaje_total_impuestos: pctR,
+    _chart: chart,
+    _insight: insight
   };
 }

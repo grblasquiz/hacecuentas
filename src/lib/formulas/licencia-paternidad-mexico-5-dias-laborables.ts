@@ -10,6 +10,8 @@ export interface Outputs {
   salario_diario_promedio: number; // MXN
   comparativa_ocde: string;
   notas_importantes: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -76,11 +78,46 @@ export function compute(i: Inputs): Outputs {
     `✓ Múltiples hijos: 5 días totales, no acumulativos por hijo.\n` +
     `✓ Protección: No puedes ser despedido por solicitar paternidad. Denuncia ante PROFEDET si hay represalia.`;
   
+  // Donut: bruto = neto + ISR + IMSS (slices enteros que suman el bruto redondeado)
+  const montoRedondeado = Math.round(montoTotal);
+  const isrRedondeado = Math.round(brutoPorISR);
+  const imssRedondeado = Math.round(brutoPorIMSS);
+  const netoRedondeado = montoRedondeado - isrRedondeado - imssRedondeado;
+  let chart: any = undefined;
+  if (montoRedondeado > 0) {
+    chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Neto en mano', value: netoRedondeado },
+        { label: 'ISR (~15%)', value: isrRedondeado },
+        { label: 'IMSS (~7.65%)', value: imssRedondeado },
+      ],
+      prefix: '$',
+      centerValue: '$' + montoRedondeado.toLocaleString('es-MX'),
+      centerLabel: 'Bruto 5 días',
+      ariaLabel: 'Reparto del pago bruto de los 5 días de paternidad entre neto, ISR e IMSS',
+    };
+  }
+
+  // Insight: monto neto estimado + recordatorio del mínimo legal
+  const netoFmt = '$' + Math.round(Math.max(0, netoProbable)).toLocaleString('es-MX');
+  const brutoFmt = '$' + montoRedondeado.toLocaleString('es-MX');
+  const insightText = montoRedondeado > 0
+    ? `Por los **5 días laborables** (mínimo legal de la LFT) cobrás **${brutoFmt} MXN** brutos; tras ISR e IMSS te quedan unos **${netoFmt} MXN**. México empata con Chile en el piso más bajo de la región.`
+    : `La LFT garantiza **5 días laborables** de paternidad pagados. Ingresá tu salario diario para estimar cuánto cobrás. Es el mínimo legal de la región.`;
+
   return {
     dias_totales_licencia: DIAS_PATERNIDAD_MEXICO,
     monto_total_cobrar: Math.round(montoTotal * 100) / 100,
     salario_diario_promedio: Math.round(salarioDiario * 100) / 100,
     comparativa_ocde: comparativaOCDE,
-    notas_importantes: notasImportantes
+    notas_importantes: notasImportantes,
+    _insight: {
+      title: 'Tu licencia de paternidad',
+      text: insightText,
+      tone: 'warn',
+      icon: '👨‍🍼',
+    },
+    ...(chart ? { _chart: chart } : {})
   };
 }

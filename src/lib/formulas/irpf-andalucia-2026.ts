@@ -1,6 +1,6 @@
 /** IRPF España Andalucía 2026 — asalariado (tramos estatales + autonómicos Andalucía) */
 export interface Inputs { salarioBrutoAnual: number; cotizacionSS: number; minimoPersonal: number; }
-export interface Outputs { cuotaEstatal: number; cuotaAutonomica: number; cuotaTotal: number; tipoEfectivo: number; netoAnual: number; netoMensual: number; desglose: string; }
+export interface Outputs { cuotaEstatal: number; cuotaAutonomica: number; cuotaTotal: number; tipoEfectivo: number; netoAnual: number; netoMensual: number; desglose: string; _insight?: any; _chart?: any; }
 
 const TRAMOS_ESTATALES: Array<[number, number]> = [
   [12450, 0.095],
@@ -46,13 +46,41 @@ export function irpfAndalucia2026(i: Inputs): Outputs {
   const cuotaTotal = cuotaEstatal + cuotaAutonomica;
   const tipoEfectivo = salario > 0 ? (cuotaTotal / salario) * 100 : 0;
   const netoAnual = salario - ss - cuotaTotal;
+  const netoMensual = Math.round(netoAnual / 14);
+  const fmtEUR = (n: number) => Math.round(n).toLocaleString('es-ES') + ' €';
+  const tipoEfectivoPct = Number(tipoEfectivo.toFixed(2));
+
+  const tone = tipoEfectivoPct >= 25 ? 'warn' : tipoEfectivoPct <= 12 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'De tu bruto a tu bolsillo',
+    text: `Sobre ${fmtEUR(salario)} brutos pagás **${fmtEUR(cuotaTotal)}** de IRPF (estatal + Andalucía), un tipo efectivo del **${tipoEfectivoPct}%**. Te quedan **${fmtEUR(netoMensual)}/mes** netos en 14 pagas.`,
+    tone,
+    icon: '🪙',
+  };
+
+  // Donut: el bruto se reparte en cotización SS + IRPF + neto. Suman el salario bruto.
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Neto en mano', value: Math.round(netoAnual) },
+      { label: 'IRPF', value: Math.round(cuotaTotal) },
+      { label: 'Seguridad Social', value: Math.round(ss) },
+    ].filter((s) => s.value > 0),
+    prefix: '',
+    centerValue: fmtEUR(salario),
+    centerLabel: 'Bruto anual',
+    ariaLabel: `Reparto del salario bruto de ${fmtEUR(salario)}: neto en mano ${fmtEUR(netoAnual)}, IRPF ${fmtEUR(cuotaTotal)} y cotización a la Seguridad Social ${fmtEUR(ss)}.`,
+  };
+
   return {
     cuotaEstatal: Math.round(cuotaEstatal),
     cuotaAutonomica: Math.round(cuotaAutonomica),
     cuotaTotal: Math.round(cuotaTotal),
-    tipoEfectivo: Number(tipoEfectivo.toFixed(2)),
+    tipoEfectivo: tipoEfectivoPct,
     netoAnual: Math.round(netoAnual),
-    netoMensual: Math.round(netoAnual / 14),
+    netoMensual,
     desglose: `Base imponible: ${baseImponible.toFixed(0)}€ | Estatal: ${cuotaEstatal.toFixed(0)}€ | Andalucía: ${cuotaAutonomica.toFixed(0)}€ | Total IRPF: ${cuotaTotal.toFixed(0)}€`,
+    _insight,
+    _chart,
   };
 }

@@ -12,6 +12,7 @@ export interface CpmOutputs {
   cpm: number;
   costoPorImpresion: number;
   impresionesPorCadaMil: number;
+  _insight?: any;
 }
 
 export function marketingCpm(inputs: CpmInputs): CpmOutputs {
@@ -25,9 +26,17 @@ export function marketingCpm(inputs: CpmInputs): CpmOutputs {
   const costoPorImpresion = inversion / impresiones;
   const impresionesPorCadaMil = 1000 / cpm * 1000;
 
+  const _insight = {
+    title: 'Tu costo por mil impresiones',
+    text: `Por **$${inversion.toLocaleString('es-AR')}** alcanzaste **${impresiones.toLocaleString('es-AR')}** impresiones: un CPM de **$${(Math.round(cpm * 100) / 100).toLocaleString('es-AR')}**. Dicho de otro modo, cada **$1.000** de pauta te compran ~**${Math.round(impresionesPorCadaMil).toLocaleString('es-AR')}** impresiones.`,
+    tone: 'neutral',
+    icon: '📣',
+  };
+
   return {
     cpm: Math.round(cpm * 100) / 100,
     costoPorImpresion: Math.round(costoPorImpresion * 10000) / 10000,
     impresionesPorCadaMil: Math.round(impresionesPorCadaMil),
+    _insight,
   };
 }

@@ -1,7 +1,8 @@
 export interface Inputs { personas: number; forma?: string; espacioExtra?: string; }
-export interface Outputs { largoCm: number; anchoCm: number; espacioMinimo: string; consejo: string; }
+export interface Outputs { largoCm: number; anchoCm: number; espacioMinimo: string; consejo: string; _insight?: any; }
 export function mesaComedorPersonas(i: Inputs): Outputs {
   let pers = Number(i.personas); if (!pers || pers < 2) throw new Error('Mínimo 2 personas');
+  const personasBase = pers;
   const forma = String(i.forma || 'rectangular'); const extra = String(i.espacioExtra || 'no');
   if (extra === 'si') pers += 3;
   let largo = 0, ancho = 0, consejo = '';
@@ -20,5 +21,13 @@ export function mesaComedorPersonas(i: Inputs): Outputs {
     largo = Math.max(90, lado * 60 * 2); ancho = largo;
     consejo = 'Mesa cuadrada: ideal para 4 personas. Para 8+ se hace muy grande.';
   }
-  return { largoCm: largo, anchoCm: ancho, espacioMinimo: '75–90 cm libres entre mesa y pared/mueble para poder sentarse y levantarse', consejo };
+  const formaTxt = forma === 'rectangular' ? 'rectangular' : forma === 'redonda' ? 'redonda' : 'cuadrada';
+  const dimTxt = forma === 'rectangular' ? `**${largo} × ${ancho} cm**` : forma === 'redonda' ? `**${largo} cm de diámetro**` : `**${largo} × ${ancho} cm**`;
+  const _insight = {
+    title: 'Medida recomendada',
+    text: `Para **${personasBase} comensales**${extra === 'si' ? ' (con lugar para 3 invitados extra)' : ''} una mesa ${formaTxt} de ${dimTxt} es lo ideal. Sumá **75–90 cm libres** alrededor para que las sillas se corran sin chocar con paredes o muebles.`,
+    tone: 'neutral',
+    icon: '🍽️',
+  };
+  return { largoCm: largo, anchoCm: ancho, espacioMinimo: '75–90 cm libres entre mesa y pared/mueble para poder sentarse y levantarse', consejo, _insight };
 }

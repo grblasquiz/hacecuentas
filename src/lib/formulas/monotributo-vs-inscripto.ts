@@ -15,6 +15,7 @@ export interface Outputs {
   diferencia: number;
   recomendacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Categorías monotributo 2026 (aproximadas — actualizadas semestralmente)
@@ -92,6 +93,31 @@ export function monotributoVsInscripto(i: Inputs): Outputs {
     ariaLabel: 'Composición de impuestos como Responsable Inscripto: IVA, Ganancias e Ingresos Brutos',
   } : undefined;
 
+  let _insight;
+  const fmtMiles = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString('es-AR');
+  if (!categoria) {
+    _insight = {
+      title: 'Superás el monotributo',
+      text: `Con **${fmtMiles(fact)}** de facturación anual quedás fuera del monotributo: tenés que inscribirte como **Responsable Inscripto** y tributar IVA, Ganancias e Ingresos Brutos.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (diferencia > 0) {
+    _insight = {
+      title: 'Te conviene el Monotributo',
+      text: `Como **Monotributo categoría ${catLetra}** pagás **${fmtMiles(monoAnual)}/año**, contra **${fmtMiles(inscriptoAnual)}** que pagarías como Responsable Inscripto. El monotributo te ahorra **${fmtMiles(diferencia)}** al año.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  } else {
+    _insight = {
+      title: 'Te conviene ser Responsable Inscripto',
+      text: `Aun pudiendo ser **Monotributo ${catLetra}** ($${Math.round(monoAnual).toLocaleString('es-AR')}/año), como Responsable Inscripto pagarías **${fmtMiles(inscriptoAnual)}** y ahorrarías **${fmtMiles(diferencia)}** al año gracias a deducir IVA y gastos.`,
+      tone: 'neutral',
+      icon: '📊',
+    };
+  }
+
   return {
     monotributoAnual: monoAnual,
     cuotaMensualMonotributo: cuotaMens,
@@ -103,5 +129,6 @@ export function monotributoVsInscripto(i: Inputs): Outputs {
     diferencia: Math.round(diferencia),
     recomendacion,
     _chart: chart,
+    _insight,
   };
 }

@@ -7,5 +7,16 @@ export function monotributoSocialBeneficioExencion(i: Inputs): Outputs {
     cuota:'~$12.000/mes (50% categoría A + aportes SIPA + obra social)',
     benef:'Obra social, jubilación mínima, posibilidad facturar legalmente'
   };
-  return { info:info[c]||'', resumen:`Monotributo social ${c}: ${info[c]||'—'}.` };
+  const titulos: Record<string,string> = {
+    req: 'Quiénes pueden adherir',
+    cuota: 'Cuánto se paga',
+    benef: 'Qué beneficios incluye',
+  };
+  const _insight = {
+    title: titulos[c] || 'Monotributo social',
+    text: `**${titulos[c] || 'Monotributo social'}:** ${info[c] || '—'}. Es un régimen con cuota reducida pensado para emprendedores de bajos ingresos.`,
+    tone: 'neutral',
+    icon: 'ℹ️',
+  };
+  return { info:info[c]||'', resumen:`Monotributo social ${c}: ${info[c]||'—'}.`, _insight };
 }

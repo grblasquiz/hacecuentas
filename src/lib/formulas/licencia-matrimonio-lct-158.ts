@@ -35,6 +35,7 @@ export interface LicenciaMatrimonioOutputs {
   convenioMejora: string;
   valorDia: number;
   mensaje: string;
+  _insight?: any;
 }
 
 const DIAS_POR_SECTOR: Record<SectorActividad, { dias: number; nombre: string; cct: string }> = {
@@ -74,6 +75,18 @@ export function licenciaMatrimonioLct158(
 
   const diasLicencia = `${dias} días corridos (${info.nombre})`;
 
+  const montoFmt = '$' + Math.round(montoBruto).toLocaleString('es-AR');
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (dias > diasLctBase) {
+    const diasExtra = dias - diasLctBase;
+    insightText = `Tu convenio (**${info.nombre}**) te suma **${diasExtra} día${diasExtra === 1 ? '' : 's'}** sobre el mínimo de la LCT: **${dias} días corridos** pagos al 100%, equivalente a **${montoFmt}** dentro del sueldo mensual.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Te corresponden los **${dias} días corridos** del mínimo legal (LCT Art. 158), pagos al 100% del salario. Representan **${montoFmt}** ya incluidos en tu sueldo mensual, no se cobran aparte.`;
+    insightTone = 'neutral';
+  }
+
   const mensaje =
     `Tenés derecho a ${dias} días corridos pagos al 100% del salario habitual. ` +
     `Son días corridos (cuentan sábados, domingos y feriados). ` +
@@ -86,5 +99,11 @@ export function licenciaMatrimonioLct158(
     convenioMejora,
     valorDia: Math.round(valorDia),
     mensaje,
+    _insight: {
+      title: 'Tu licencia por matrimonio',
+      text: insightText,
+      tone: insightTone,
+      icon: '💍',
+    },
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   milestone_20w: string;
   milestone_28w: string;
   lmp_equivalent: string;
+  _insight?: any;
 }
 
 // Offsets from transfer date to EDD
@@ -96,8 +97,35 @@ export function compute(i: Inputs): Outputs {
 
   const transferTypeLabel = i.transfer_type === 'frozen' ? 'FET' : 'fresh';
   const embryoDayLabel = embryoDay === 'day3' ? 'Day-3' : 'Day-5';
-  const _ = transferTypeLabel; // used for potential future labeling; suppress unused warning
-  const __ = embryoDayLabel;
+
+  // Build a dynamic insight from the current gestational position
+  const diffDays = Math.floor((todayUTC.getTime() - lmpEquivDate.getTime()) / (1000 * 60 * 60 * 24));
+  const weeksDone = Math.floor(diffDays / 7);
+  let insight: any;
+  if (diffDays < 0) {
+    insight = {
+      title: 'Transfer not yet completed',
+      text: `Based on a **${embryoDayLabel}** ${transferTypeLabel} transfer, your estimated due date will be **${formatDate(eddDate)}**. Counting starts from the transfer date you entered.`,
+      tone: 'neutral',
+      icon: '🗓️',
+    };
+  } else if (weeksDone >= 37) {
+    insight = {
+      title: 'Full term reached',
+      text: `You are at **${weeksDone} weeks** — full term (37+). Your **${embryoDayLabel}** ${transferTypeLabel} transfer points to a due date of **${formatDate(eddDate)}**, but labor any time now is considered normal.`,
+      tone: 'good',
+      icon: '👶',
+    };
+  } else {
+    const trimester = weeksDone < 13 ? 'first trimester' : weeksDone < 27 ? 'second trimester' : 'third trimester';
+    const toGo = Math.max(0, 40 - weeksDone);
+    insight = {
+      title: `You are in the ${trimester}`,
+      text: `At about **${weeksDone} weeks**, roughly **${toGo} weeks** remain until your estimated due date of **${formatDate(eddDate)}** (from a ${embryoDayLabel} ${transferTypeLabel} transfer). This is an estimate — your clinic's dating scan takes precedence.`,
+      tone: 'neutral',
+      icon: '🤰',
+    };
+  }
 
   return {
     due_date: formatDate(eddDate),
@@ -106,5 +134,6 @@ export function compute(i: Inputs): Outputs {
     milestone_20w: formatDate(milestone20w),
     milestone_28w: formatDate(milestone28w),
     lmp_equivalent: formatDate(lmpEquivDate),
+    _insight: insight,
   };
 }

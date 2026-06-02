@@ -1,6 +1,6 @@
 /** Calculadora Magnitud Estelar — m - M = 5·log₁₀(d/10) */
 export interface Inputs { magnitudAparente?: number; magnitudAbsoluta?: number; distanciaPc?: number; }
-export interface Outputs { resultado: string; moduloDistancia: number; distanciaLy: number; formula: string; }
+export interface Outputs { resultado: string; moduloDistancia: number; distanciaLy: number; formula: string; _insight?: any; }
 
 export function magnitudAparenteAbsoluta(i: Inputs): Outputs {
   const m = i.magnitudAparente != null && String(i.magnitudAparente) !== '' ? Number(i.magnitudAparente) : null;
@@ -24,10 +24,22 @@ export function magnitudAparenteAbsoluta(i: Inputs): Outputs {
   const modDist = mOut - MOut;
   const dLy = dOut * 3.26156;
 
+  const lyFmt = dLy.toLocaleString('es-AR', { maximumFractionDigits: dLy < 100 ? 2 : 0 });
+  const visibleAOjo = mOut <= 6;
+  const insightText = visibleAOjo
+    ? `Con magnitud aparente **${mOut.toFixed(2)}** este objeto es **visible a ojo desnudo** (límite ≈ 6). Su luz tardó unos **${lyFmt} años luz** en llegar: lo ves tal como era hace ese tiempo.`
+    : `Con magnitud aparente **${mOut.toFixed(2)}** este objeto es **demasiado tenue para verlo a ojo desnudo** (límite ≈ 6); necesitás binoculares o telescopio. Está a unos **${lyFmt} años luz**.`;
+
   return {
     resultado: `m=${mOut.toFixed(2)} · M=${MOut.toFixed(2)} · d=${dOut.toFixed(2)} pc`,
     moduloDistancia: Number(modDist.toFixed(4)),
     distanciaLy: Number(dLy.toFixed(4)),
     formula: `m - M = 5·log₁₀(${dOut.toFixed(2)}/10) = ${modDist.toFixed(4)}`,
+    _insight: {
+      title: visibleAOjo ? 'Visible a ojo desnudo' : 'Fuera del alcance del ojo',
+      text: insightText,
+      tone: 'neutral',
+      icon: visibleAOjo ? '✨' : '🔭',
+    },
   };
 }

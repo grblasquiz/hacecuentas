@@ -12,6 +12,7 @@ export interface Outputs {
   zDestino: number;
   mundoDestino: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function portalNetherOverworld(i: Inputs): Outputs {
@@ -35,11 +36,21 @@ export function portalNetherOverworld(i: Inputs): Outputs {
     dest = 'Overworld';
   }
 
+  const _insight = {
+    title: 'Coordenadas del portal',
+    text: dir === 'overworld-to-nether'
+      ? `1 bloque en el Nether equivale a 8 en el Overworld, por eso dividís X y Z entre 8: armá el portal en **X=${xd}, Z=${zd}** (Nether) para salir cerca de (${x}, ${z}) arriba. Construí ambos portales en estas coordenadas para que se enlacen.`
+      : `Cada bloque del Nether vale 8 en el Overworld, así que multiplicás X y Z por 8: tu portal del Overworld va en **X=${xd}, Z=${zd}**. Construí ambos portales en estas coordenadas para que se enlacen.`,
+    tone: 'neutral',
+    icon: '🌀',
+  };
+
   return {
     xDestino: xd,
     yDestino: yd,
     zDestino: zd,
     mundoDestino: dest,
     resumen: `Construí el portal en **${dest}** en coordenadas **X=${xd}, Y=${yd}, Z=${zd}** para alinear con (${x}, ${y}, ${z}).`,
+    _insight,
   };
 }

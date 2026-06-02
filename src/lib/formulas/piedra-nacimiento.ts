@@ -1,6 +1,6 @@
 /** Piedra de nacimiento por mes */
 export interface Inputs { mes: string; }
-export interface Outputs { piedra: string; color: string; significado: string; propiedades: string; }
+export interface Outputs { piedra: string; color: string; significado: string; propiedades: string; _insight?: any; }
 
 const PIEDRAS: Record<string, { piedra: string; color: string; sig: string; prop: string }> = {
   '1': { piedra: 'Granate', color: 'Rojo oscuro', sig: 'Protección y amistad', prop: 'Se cree que protege en viajes, fortalece la amistad y equilibra la energía emocional.' },
@@ -17,9 +17,23 @@ const PIEDRAS: Record<string, { piedra: string; color: string; sig: string; prop
   '12': { piedra: 'Tanzanita / Turquesa', color: 'Azul / turquesa', sig: 'Transformación y suerte', prop: 'Favorece la transformación personal, la buena suerte y la comunicación espiritual.' },
 };
 
+const MESES: Record<string, string> = {
+  '1': 'enero', '2': 'febrero', '3': 'marzo', '4': 'abril', '5': 'mayo', '6': 'junio',
+  '7': 'julio', '8': 'agosto', '9': 'septiembre', '10': 'octubre', '11': 'noviembre', '12': 'diciembre',
+};
+
 export function piedraNacimiento(i: Inputs): Outputs {
   const mes = String(i.mes);
   const data = PIEDRAS[mes];
   if (!data) throw new Error('Seleccioná un mes válido');
-  return { piedra: data.piedra, color: data.color, significado: data.sig, propiedades: data.prop };
+
+  const nombreMes = MESES[mes] || '';
+  const _insight = {
+    title: 'Tu piedra de nacimiento',
+    text: `Si naciste en **${nombreMes}**, tu piedra es el **${data.piedra}** (${data.color.toLowerCase()}), asociada a **${data.sig.toLowerCase()}**. ${data.prop}`,
+    tone: 'neutral',
+    icon: '💎',
+  };
+
+  return { piedra: data.piedra, color: data.color, significado: data.sig, propiedades: data.prop, _insight };
 }

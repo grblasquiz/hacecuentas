@@ -17,6 +17,7 @@ export interface IvaIncluidoNetoDiscriminarOutputs {
   total: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function ivaIncluidoNetoDiscriminar(
@@ -34,6 +35,7 @@ export function ivaIncluidoNetoDiscriminar(
       labelNeto: 'Precio neto',
       discriminando: 'Discriminando',
       agregando: 'Agregando',
+      insightTitle: 'Cuánto es IVA',
     },
     en: {
       errorMonto: 'Enter an amount',
@@ -45,6 +47,7 @@ export function ivaIncluidoNetoDiscriminar(
       labelNeto: 'Net price',
       discriminando: 'Breaking down',
       agregando: 'Adding',
+      insightTitle: 'How much is VAT',
     },
   } as const)[__lang];
 
@@ -91,11 +94,24 @@ export function ivaIncluidoNetoDiscriminar(
   const labelTipo = tipo === 'conIva' ? T.labelConIva : T.labelNeto;
   const labelOp = tipo === 'conIva' ? T.discriminando : T.agregando;
 
+  const pctIva = total > 0 ? Math.round((iva / total) * 1000) / 10 : 0;
+  const insightText = __lang === 'en'
+    ? `Of the **$${totalFmt}** total, **$${ivaFmt}** is VAT (**${pctIva}%** of the total) and **$${netoFmt}** is the net price.`
+    : `Del total de **$${totalFmt}**, **$${ivaFmt}** son IVA (el **${pctIva}%** del total) y **$${netoFmt}** es el precio neto.`;
+
+  const insight = {
+    title: T.insightTitle,
+    text: insightText,
+    tone: 'neutral' as const,
+    icon: '🧾',
+  };
+
   return {
     neto: Math.round(neto * 100) / 100,
     iva: Math.round(iva * 100) / 100,
     total: Math.round(total * 100) / 100,
     detalle: `${labelTipo}: $${montoFmt}. ${labelOp} IVA ${alicuota}%: neto $${netoFmt} + IVA $${ivaFmt} = total $${totalFmt}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

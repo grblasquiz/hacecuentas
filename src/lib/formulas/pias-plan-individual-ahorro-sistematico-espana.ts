@@ -19,6 +19,8 @@ export interface Outputs {
   impuesto_fondo_equivalente: number;      // € IRPF si fuera fondo
   ahorro_fiscal_pias: number;              // € ahorro fiscal vs fondo
   advertencia: string;                     // avisos legales
+  _insight?: any;
+  _chart?: any;
 }
 
 // --- Constantes 2026 ---
@@ -193,6 +195,42 @@ export function compute(i: Inputs): Outputs {
 
   const ahorroFiscalPias = Math.max(0, impuestoFondoEquivalente - irpfTotalVidaPias);
 
+  // --- Insight narrativo ---
+  const eur = (n: number) => n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const cumpleExencion = anosAportacion >= PLAZO_MINIMO_ANIOS;
+  let insightObj;
+  if (!cumpleExencion) {
+    insightObj = {
+      title: 'Sin exención fiscal',
+      text: `Aportando ${eur(aportacionMensual)}/mes durante **${anosAportacion} años** acumularías **${eur(capitalFinal)}**, pero con menos de **5 años** de antigüedad perdés la exención: los **${eur(rendimientoGenerado)}** de rendimientos tributarían como capital mobiliario.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    insightObj = {
+      title: 'Plan PIAS con exención',
+      text: `Aportando ${eur(aportacionMensual)}/mes durante **${anosAportacion} años** llegás a **${eur(capitalFinal)}**, de los cuales **${eur(rendimientoGenerado)}** son rendimientos. Constituyendo renta vitalicia a los **${edadRescate}** años cobrarías ~**${eur(rentaVitaliiciaMensualBruta)}/mes** y ahorrarías **${eur(ahorroFiscalPias)}** en impuestos frente a un fondo.`,
+      tone: 'good',
+      icon: '🏦',
+    };
+  }
+
+  // --- Gráfico: composición del capital (aportado + rendimientos = capital final) ---
+  let chartObj;
+  if (capitalFinal > 0) {
+    chartObj = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Aportado', value: Math.round(totalAportado) },
+        { label: 'Rendimientos', value: Math.round(rendimientoGenerado) },
+      ],
+      prefix: '€',
+      centerValue: eur(capitalFinal),
+      centerLabel: 'Capital final',
+      ariaLabel: `Composición del capital final: ${eur(totalAportado)} aportados y ${eur(rendimientoGenerado)} de rendimientos`,
+    };
+  }
+
   // --- Advertencia si no cumple requisitos exención ---
   let advertenciaFinal: string;
   if (anosAportacion < PLAZO_MINIMO_ANIOS) {
@@ -213,6 +251,8 @@ export function compute(i: Inputs): Outputs {
     renta_vitalicia_neta_mensual: Math.round(rentaVitaliciaNeta * 100) / 100,
     impuesto_fondo_equivalente: Math.round(impuestoFondoEquivalente * 100) / 100,
     ahorro_fiscal_pias: Math.round(ahorroFiscalPias * 100) / 100,
-    advertencia: advertenciaFinal
+    advertencia: advertenciaFinal,
+    _insight: insightObj,
+    _chart: chartObj
   };
 }

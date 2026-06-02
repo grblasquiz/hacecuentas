@@ -13,6 +13,8 @@ export interface Outputs {
   rankingCandidatos: string;
   interpretacion: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 /** Aproximación Poisson acumulada: P(X > k) cuando λ = lambda. */
@@ -72,6 +74,31 @@ export function mundial2026BotinOroGoleadorEstimador(i: Inputs): Outputs {
 
   const resumen = `${nombre} con G/90 = ${g90.toFixed(2)}, ${minutos} min esperados, factor ${factor.toFixed(2)}: xG en Mundial = **${xg.toFixed(2)} goles**. Probabilidad de superar 6 goles: ${(probMas6 * 100).toFixed(1)}%. Superar 8 goles: ${(probMas8 * 100).toFixed(1)}%. ${ranking}.`;
 
+  const insightTone = xg >= 7 ? 'good' : xg >= 4 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Lectura del xG',
+    text: `Con un xG de **${xg.toFixed(2)} goles**, ${nombre} tiene **${(probMas6 * 100).toFixed(0)}%** de chance de pasar los 6 goles (la mediana histórica del Botín de Oro). Su ubicación: ${ranking.toLowerCase()}.`,
+    tone: insightTone,
+    icon: '👟',
+  };
+
+  // Gauge sobre el xG, con las mismas zonas que el ranking.
+  const lastMax = Math.max(11, Math.ceil(xg) + 1);
+  const _chart = {
+    type: 'scale',
+    marker: Number(xg.toFixed(2)),
+    markerLabel: `xG ${xg.toFixed(2)}`,
+    min: 0,
+    segments: [
+      { nombre: 'Sin chance', max: 3, color: '#ef4444', colorDark: '#b91c1c' },
+      { nombre: 'Outsider', max: 5, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Con chance', max: 7, color: '#eab308', colorDark: '#a16207' },
+      { nombre: 'Top candidato', max: 9, color: '#84cc16', colorDark: '#4d7c0f' },
+      { nombre: 'Máximo favorito', max: lastMax, color: '#22c55e', colorDark: '#15803d' },
+    ],
+    ariaLabel: `Escala de candidatura al Botín de Oro: un xG de ${xg.toFixed(2)} ubica al jugador en la zona "${ranking}".`,
+  };
+
   return {
     golesEsperados: Number(xg.toFixed(2)),
     probMas6Goles: Number((probMas6 * 100).toFixed(2)),
@@ -79,5 +106,7 @@ export function mundial2026BotinOroGoleadorEstimador(i: Inputs): Outputs {
     rankingCandidatos: ranking,
     interpretacion,
     resumen,
+    _insight,
+    _chart,
   };
 }

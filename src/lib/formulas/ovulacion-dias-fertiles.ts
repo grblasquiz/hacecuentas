@@ -9,6 +9,7 @@ export interface Outputs {
   ventanaFertil: string;
   proximaMenstruacion: string;
   diasHastaOvulacion: number;
+  _insight?: any;
 }
 
 export function ovulacionDiasFertiles(i: Inputs): Outputs {
@@ -17,10 +18,12 @@ export function ovulacionDiasFertiles(i: Inputs): Outputs {
     es: {
       fechaInvalida: 'Ingresá una fecha válida',
       duracionInvalida: 'La duración del ciclo debe estar entre 21 y 45 días',
+      insightTitle: 'Tu ventana fértil',
     },
     en: {
       fechaInvalida: 'Enter a valid date',
       duracionInvalida: 'Cycle length must be between 21 and 45 days',
+      insightTitle: 'Your fertile window',
     },
   } as const)[__lang];
 
@@ -53,10 +56,38 @@ export function ovulacionDiasFertiles(i: Inputs): Outputs {
 
   const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
+  // Insight: tono dinámico según proximidad de la ovulación
+  const enVentana = diasHastaOvulacion >= -1 && diasHastaOvulacion <= 5;
+  const insightTone = enVentana ? 'good' : 'neutral';
+  let insightText: string;
+  if (diasHastaOvulacion === 0) {
+    insightText = __lang === 'en'
+      ? `Today is your estimated **ovulation day** — peak fertility. Your fertile window runs from **${fmt(inicioVentana)}** to **${fmt(fechaOvulacion)}**.`
+      : `Hoy es tu día estimado de **ovulación** — pico de fertilidad. Tu ventana fértil va del **${fmt(inicioVentana)}** al **${fmt(fechaOvulacion)}**.`;
+  } else if (diasHastaOvulacion > 0 && enVentana) {
+    insightText = __lang === 'en'
+      ? `You're in your **fertile window**: ovulation is in **${diasHastaOvulacion} day(s)** (${fmt(fechaOvulacion)}).`
+      : `Estás en tu **ventana fértil**: ovulás en **${diasHastaOvulacion} día(s)** (${fmt(fechaOvulacion)}).`;
+  } else if (diasHastaOvulacion > 0) {
+    insightText = __lang === 'en'
+      ? `Ovulation is **${diasHastaOvulacion} days** away (${fmt(fechaOvulacion)}); your fertile window opens on **${fmt(inicioVentana)}**.`
+      : `Faltan **${diasHastaOvulacion} días** para ovular (${fmt(fechaOvulacion)}); tu ventana fértil abre el **${fmt(inicioVentana)}**.`;
+  } else {
+    insightText = __lang === 'en'
+      ? `Estimated ovulation already passed **${Math.abs(diasHastaOvulacion)} day(s)** ago. Your next period is expected on **${fmt(proximaMenstruacion)}**.`
+      : `La ovulación estimada ya pasó hace **${Math.abs(diasHastaOvulacion)} día(s)**. Tu próxima menstruación se espera el **${fmt(proximaMenstruacion)}**.`;
+  }
+
   return {
     fechaOvulacion: fmt(fechaOvulacion),
     ventanaFertil: __lang === 'en' ? `From ${fmt(inicioVentana)} to ${fmt(fechaOvulacion)}` : `Del ${fmt(inicioVentana)} al ${fmt(fechaOvulacion)}`,
     proximaMenstruacion: fmt(proximaMenstruacion),
     diasHastaOvulacion: Math.max(0, diasHastaOvulacion),
+    _insight: {
+      title: T.insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: '\u{1FA78}',
+    },
   };
 }

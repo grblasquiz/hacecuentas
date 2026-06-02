@@ -1,5 +1,5 @@
 export interface Inputs { nombre: string; apellido: string; apellidoMaterno: string; ciudad: string; }
-export interface Outputs { nombreStarWars: string; titulo: string; mensaje: string; }
+export interface Outputs { nombreStarWars: string; titulo: string; mensaje: string; _insight?: any; }
 function clean(s: string): string { return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z]/g,''); }
 function cap(s: string): string { return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase(); }
 export function nombreEstrellaWars(i: Inputs): Outputs {
@@ -13,5 +13,19 @@ export function nombreEstrellaWars(i: Inputs): Outputs {
   const titulo = titulos[hash % titulos.length];
   const planetas = ['Coruscant','Tatooine','Naboo','Endor','Dagobah','Mandalore','Bespin','Jakku'];
   const planeta = planetas[hash % planetas.length];
-  return { nombreStarWars: `${first} ${last}`, titulo, mensaje: `${first} ${last}, ${titulo} del planeta ${planeta}. Que la Fuerza te acompañe.` };
+  const ladoOscuro = titulo === 'Lord Sith';
+  const cierre = ladoOscuro
+    ? 'El lado oscuro es fuerte en vos. Compartilo y reclutá tu propio ejército.'
+    : 'Que la Fuerza te acompañe. Compartilo y armá tu escuadrón con amigos.';
+  return {
+    nombreStarWars: `${first} ${last}`,
+    titulo,
+    mensaje: `${first} ${last}, ${titulo} del planeta ${planeta}. Que la Fuerza te acompañe.`,
+    _insight: {
+      title: 'Tu alias galáctico',
+      text: `En esta galaxia sos **${first} ${last}**, **${titulo}** del planeta **${planeta}**. ${cierre}`,
+      tone: ladoOscuro ? 'warn' : 'good',
+      icon: ladoOscuro ? '🔴' : '✨',
+    },
+  };
 }

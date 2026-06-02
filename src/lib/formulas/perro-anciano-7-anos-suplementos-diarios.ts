@@ -10,6 +10,7 @@ export interface Outputs {
   omega3_mg: number;
   antioxidante_vit_e: number;
   resumen: string;
+  _insight?: any;
 }
 
 // Dosis base de glucosamina por condición (mg/kg/día)
@@ -58,6 +59,12 @@ export function compute(i: Inputs): Outputs {
       omega3_mg: 0,
       antioxidante_vit_e: 0,
       resumen: "Ingresá un peso válido para obtener las dosis.",
+      _insight: {
+        title: "Ingresá el peso",
+        text: "Indicá el **peso del perro** para calcular las dosis diarias de glucosamina, condroitina, omega-3 y vitamina E.",
+        tone: "neutral",
+        icon: "🐶",
+      },
     };
   }
 
@@ -106,11 +113,32 @@ export function compute(i: Inputs): Outputs {
     `• Vitamina E: ${antioxidante_vit_e} UI/día${factorCognitivo > 1 ? " (+25% por componente cognitivo)" : ""}\n` +
     `Administrar con la comida principal. Consultar al veterinario antes de iniciar si el perro tiene enfermedad renal, hepática o toma anticoagulantes.`;
 
+  // --- Insight narrativo ---
+  const regimenTxt = condicionLabel[condicion] ?? condicion;
+  const _insight = omega3_raw > maxOmega
+    ? {
+        title: "Dosis ajustada al máximo seguro",
+        text:
+          `Para un perro de **${peso} kg** con régimen de ${regimenTxt}, la glucosamina va en **${glucosamina_mg} mg/día**. ` +
+          `El omega-3 se topó en **${maxOmega} mg** (el cálculo daba ${Math.round(omega3_raw)} mg): superar ese límite no aporta más y puede aflojar las heces.`,
+        tone: "warn",
+        icon: "🐶",
+      }
+    : {
+        title: "Plan diario de suplementos",
+        text:
+          `Para un perro de **${peso} kg** con régimen de ${regimenTxt}: **${glucosamina_mg} mg** de glucosamina, ` +
+          `**${condroitina_mg} mg** de condroitina y **${omega3_mg} mg** de omega-3 EPA+DHA al día. Dalos con la comida principal.`,
+        tone: "good",
+        icon: "🐶",
+      };
+
   return {
     glucosamina_mg,
     condroitina_mg,
     omega3_mg,
     antioxidante_vit_e,
     resumen,
+    _insight,
   };
 }

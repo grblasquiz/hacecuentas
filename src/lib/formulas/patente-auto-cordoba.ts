@@ -44,6 +44,8 @@ export interface PatenteCordobaOutputs {
   alicuotaAplicada: string;
   vencimientos: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const ALICUOTAS_2026: Record<RangoValuacion, number> = {
@@ -120,13 +122,52 @@ export function patenteAutoCordoba(
       'rentas.cba.gov.ar — a veces hay errores que conviene reclamar antes del primer vencimiento.';
   }
 
+  const totalR = Math.round(totalAnual);
+  const baseR = Math.round(cuotaAnualBase);
+  const descR = Math.round(descuentoContado);
+  const cuotaR = Math.round(cuotasBimestrales);
+  const ahorroPotencial = Math.round(cuotaAnualBase * 0.15);
+  const fmt = (n: number) => n.toLocaleString('es-AR');
+
+  const _insight = forma === 'anual-contado'
+    ? {
+        title: 'Tu patente de Córdoba',
+        text: `Pagando **contado** abonás **$${fmt(totalR)}** en total y te ahorrás **$${fmt(descR)}** (15% off sobre los $${fmt(baseR)} de base). Mantené el régimen "Buen Contribuyente" para conservar el descuento.`,
+        tone: 'good' as const,
+        icon: '🚗',
+      }
+    : {
+        title: 'Tu patente de Córdoba',
+        text: `En **5 cuotas** pagás **$${fmt(cuotaR)}** por bimestre (**$${fmt(baseR)}** al año). Si podés afrontar el contado, ahorrarías **$${fmt(ahorroPotencial)}** (15%).`,
+        tone: 'warn' as const,
+        icon: '🚗',
+      };
+
+  // Donut sólo para contado: total pagado + descuento = base anual.
+  let _chart: any = undefined;
+  if (forma === 'anual-contado' && descR > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Pagás (contado)', value: totalR },
+        { label: 'Ahorro 15%', value: descR },
+      ],
+      prefix: '$',
+      centerValue: `$${fmt(baseR)}`,
+      centerLabel: 'Base anual',
+      ariaLabel: `Patente base de $${fmt(baseR)}: pagás $${fmt(totalR)} y ahorrás $${fmt(descR)} pagando contado`,
+    };
+  }
+
   return {
-    totalAnual: Math.round(totalAnual),
-    cuotaAnualBase: Math.round(cuotaAnualBase),
-    descuentoContado: Math.round(descuentoContado),
-    cuotasBimestrales: Math.round(cuotasBimestrales),
+    totalAnual: totalR,
+    cuotaAnualBase: baseR,
+    descuentoContado: descR,
+    cuotasBimestrales: cuotaR,
     alicuotaAplicada: ALICUOTAS_LABEL[rango] ?? '2,5%',
     vencimientos,
     mensaje,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

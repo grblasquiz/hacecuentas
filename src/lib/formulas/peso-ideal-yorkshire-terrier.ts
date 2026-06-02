@@ -15,6 +15,7 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
 }
 
 const RAZA = {
@@ -55,11 +56,28 @@ export function pesoIdealYorkshireTerrier(inputs: Inputs): Outputs {
 
   const promedio = (min + max) / 2;
 
+  let insightText: string;
+  let insightTone = 'neutral';
+  if (edad === 'cachorro') {
+    insightText = `Todavía en crecimiento: el Yorkshire alcanza su peso adulto cerca de los 9-10 meses. Debería estabilizarse entre **${min.toFixed(1)} y ${max.toFixed(1)} kg**. Al ser una raza toy, medio kilo de más ya es mucho: pesalo en gramos y ajustá las porciones.`;
+  } else if (edad === 'senior') {
+    insightText = `Un Yorkshire senior puede afinarse levemente: un rango de **${min.toFixed(1)}-${max.toFixed(1)} kg** es esperable. Vigilá que no engorde por el sedentarismo, que castiga sus rótulas.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `En su punto debería pesar entre **${min.toFixed(1)} y ${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). Es una raza toy propensa a luxación de rótula: cada gramo de más recarga unas patitas muy finas, así que mantenerlo ajustado importa.`;
+  }
+
   return {
     pesoPromedio: Number(promedio.toFixed(1)),
     pesoIdealMin: Number(min.toFixed(1)),
     pesoIdealMax: Number(max.toFixed(1)),
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight: {
+      title: 'Qué significa este rango',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐶',
+    },
   };
 }

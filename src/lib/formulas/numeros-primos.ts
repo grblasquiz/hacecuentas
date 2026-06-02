@@ -11,6 +11,7 @@ export interface Outputs {
   cantidadDivisores: number;
   primoAnterior: number | string;
   primoSiguiente: number;
+  _insight?: any;
 }
 
 function esPrimo(n: number): boolean {
@@ -83,6 +84,23 @@ export function numerosPrimos(i: Inputs): Outputs {
   // Divisores: si son muchos, mostrar primeros + ...
   const divStr = div.length <= 30 ? div.join(', ') : div.slice(0, 15).join(', ') + ', ..., ' + div.slice(-3).join(', ');
 
+  const sig = siguientePrimo(n);
+  const ant = anteriorPrimo(n);
+  let insText: string;
+  if (n === 1) {
+    insText = `El **1** no es primo ni compuesto: por convención no cuenta como primo. El primo más chico es el **2**.`;
+  } else if (primo) {
+    insText = `**${n.toLocaleString('es-AR')} es primo**: solo es divisible por 1 y por sí mismo. El primo anterior es **${typeof ant === 'number' ? ant.toLocaleString('es-AR') : ant}** y el siguiente es **${sig.toLocaleString('es-AR')}**.`;
+  } else {
+    insText = `**${n.toLocaleString('es-AR')} es compuesto**: se descompone como **${factorizacion}** y tiene **${div.length} divisores** en total. El primo más cercano por encima es **${sig.toLocaleString('es-AR')}**.`;
+  }
+  const _insight = {
+    title: primo ? 'Número primo' : n === 1 ? 'Caso especial' : 'Número compuesto',
+    text: insText,
+    tone: (primo ? 'good' : 'neutral') as 'good' | 'neutral',
+    icon: '🔢',
+  };
+
   return {
     esPrimo: primo,
     resultado: primo
@@ -94,7 +112,8 @@ export function numerosPrimos(i: Inputs): Outputs {
     factores: factores.join(' × ') || String(n),
     divisores: divStr,
     cantidadDivisores: div.length,
-    primoAnterior: anteriorPrimo(n),
-    primoSiguiente: siguientePrimo(n),
+    primoAnterior: ant,
+    primoSiguiente: sig,
+    _insight,
   };
 }

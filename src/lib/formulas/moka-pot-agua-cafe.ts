@@ -1,6 +1,6 @@
 /** Moka Pot */
 export interface Inputs { tazasMoka: string; }
-export interface Outputs { gramosCafe: number; mlAgua: number; mlFinal: number; molido: string; tiempo: string; }
+export interface Outputs { gramosCafe: number; mlAgua: number; mlFinal: number; molido: string; tiempo: string; _insight?: any; }
 
 export function mokaPotAguaCafe(i: Inputs): Outputs {
   const tazas = Number(i.tazasMoka);
@@ -21,11 +21,19 @@ export function mokaPotAguaCafe(i: Inputs): Outputs {
   if (tazas >= 6) tiempo = '4-5 min a fuego medio';
   if (tazas <= 2) tiempo = '2-3 min a fuego medio';
 
+  const ratio = Math.round(d.agua / d.cafe);
+
   return {
     gramosCafe: d.cafe,
     mlAgua: d.agua,
     mlFinal: d.ml,
     molido: 'Medio-fino (más fino que V60, menos que espresso)',
     tiempo,
+    _insight: {
+      title: 'Tu receta',
+      text: `Cargá **${d.cafe} g de café** y **${d.agua} ml de agua** (ratio ~**1:${ratio}**) para una moka de ${tazas} tazas. Llená el agua hasta justo debajo de la válvula y nivelá el café sin apretar.`,
+      tone: 'neutral',
+      icon: '☕',
+    },
   };
 }

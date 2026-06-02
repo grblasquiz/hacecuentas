@@ -16,6 +16,8 @@ export interface Outputs {
   importe_total_neto: number; // euros
   comparativa_deposito: number; // euros (opcional)
   tir_comparativa: number; // puntos porcentuales (opcional)
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -92,16 +94,56 @@ export function compute(i: Inputs): Outputs {
   }
   
   // REDONDEO A 2 DECIMALES (euros y porcentajes estándar España)
+  const r_precio_adquisicion = Math.round(precio_adquisicion * 100) / 100;
+  const r_valor_nominal = Math.round(valor_nominal * 100) / 100;
+  const r_rentabilidad_bruta = Math.round(rentabilidad_bruta * 100) / 100;
+  const r_rentabilidad_neta = Math.round(rentabilidad_neta * 100) / 100;
+  const r_tir_neta = Math.round(tir_neta * 100) / 100;
+  const r_tir_comparativa = Math.round(tir_comparativa * 100) / 100;
+
+  const eur = (n: number) => `${n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  const hayComparativa = i.comparar_deposito !== undefined && i.comparar_deposito > 0;
+  let insTexto = `Invirtiendo **${eur(r_precio_adquisicion)}** a **${i.plazo_meses} meses** recibís **${eur(r_valor_nominal)}** al vencimiento: **${eur(r_rentabilidad_neta)}** netos tras el IRPF, una **TIR neta del ${r_tir_neta.toFixed(2)}%**.`;
+  let insTono: 'good' | 'warn' | 'neutral' = 'neutral';
+  if (hayComparativa) {
+    if (r_tir_comparativa >= 0) {
+      insTexto += ` Rinde **${r_tir_comparativa.toFixed(2)} puntos más** que el depósito comparado: la Letra gana.`;
+      insTono = 'good';
+    } else {
+      insTexto += ` Rinde **${Math.abs(r_tir_comparativa).toFixed(2)} puntos menos** que el depósito comparado: conviene el depósito.`;
+      insTono = 'warn';
+    }
+  }
+  const _insight = {
+    title: 'Rentabilidad de la Letra',
+    text: insTexto,
+    tone: insTono,
+    icon: '🇪🇸',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Precio de adquisición', value: r_precio_adquisicion },
+      { label: 'Rentabilidad bruta', value: r_rentabilidad_bruta },
+    ],
+    prefix: '€',
+    centerValue: eur(r_valor_nominal),
+    centerLabel: 'Valor nominal',
+    ariaLabel: `El valor nominal de ${eur(r_valor_nominal)} se compone de ${eur(r_precio_adquisicion)} de precio de adquisición más ${eur(r_rentabilidad_bruta)} de rentabilidad bruta.`,
+  };
+
   return {
-    precio_adquisicion: Math.round(precio_adquisicion * 100) / 100,
-    valor_nominal: Math.round(valor_nominal * 100) / 100,
-    rentabilidad_bruta: Math.round(rentabilidad_bruta * 100) / 100,
+    precio_adquisicion: r_precio_adquisicion,
+    valor_nominal: r_valor_nominal,
+    rentabilidad_bruta: r_rentabilidad_bruta,
     irpf_a_pagar: Math.round(irpf_a_pagar * 100) / 100,
-    rentabilidad_neta: Math.round(rentabilidad_neta * 100) / 100,
-    tir_neta: Math.round(tir_neta * 100) / 100,
+    rentabilidad_neta: r_rentabilidad_neta,
+    tir_neta: r_tir_neta,
     importe_total_neto: Math.round(importe_total_neto * 100) / 100,
     comparativa_deposito: Math.round(comparativa_deposito * 100) / 100,
-    tir_comparativa: Math.round(tir_comparativa * 100) / 100
+    tir_comparativa: r_tir_comparativa,
+    _insight,
+    _chart,
   };
 }
 

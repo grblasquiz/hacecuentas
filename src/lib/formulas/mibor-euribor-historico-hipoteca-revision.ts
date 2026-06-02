@@ -16,6 +16,7 @@ export interface Outputs {
   impacto_anual: number;
   impacto_vida_restante: number;
   variacion_euribor: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -56,13 +57,44 @@ export function compute(i: Inputs): Outputs {
   // 6. Impacto vida restante (aproximado, asumiendo cuota constante)
   const impacto_vida_restante = diferencia_cuota * meses_restantes;
   
+  const dif_r = Math.round(diferencia_cuota * 100) / 100;
+  const anual_r = Math.round(impacto_anual * 100) / 100;
+  const var_r = Math.round(variacion_euribor * 100) / 100;
+  const nuevo_r = Math.round(tipo_interes_nuevo * 100) / 100;
+  const eur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  let _insight;
+  if (dif_r > 0.5) {
+    _insight = {
+      title: 'Tu cuota sube',
+      text: `El Euríbor subió **${var_r} puntos** y tu cuota pasa a **${eur(Math.round(cuota_mensual_nueva * 100) / 100)} €** (+${eur(dif_r)} €/mes). Son **${eur(anual_r)} € más** al año hasta la próxima revisión.`,
+      tone: 'warn',
+      icon: '📈',
+    };
+  } else if (dif_r < -0.5) {
+    _insight = {
+      title: 'Tu cuota baja',
+      text: `El Euríbor bajó **${Math.abs(var_r)} puntos** y tu cuota pasa a **${eur(Math.round(cuota_mensual_nueva * 100) / 100)} €** (${eur(dif_r)} €/mes). Te ahorrás **${eur(Math.abs(anual_r))} €** este año.`,
+      tone: 'good',
+      icon: '📉',
+    };
+  } else {
+    _insight = {
+      title: 'Revisión casi neutra',
+      text: `Con el Euríbor en **${i.euribor_actual}%** + diferencial, tu tipo queda en **${nuevo_r}%** y la cuota apenas se mueve (${eur(dif_r)} €/mes). Sin sobresaltos en esta revisión.`,
+      tone: 'neutral',
+      icon: '🏠',
+    };
+  }
+
   return {
-    tipo_interes_nuevo: Math.round(tipo_interes_nuevo * 100) / 100,
+    tipo_interes_nuevo: nuevo_r,
     tipo_interes_anterior: Math.round(tipo_interes_anterior * 100) / 100,
     cuota_mensual_nueva: Math.round(cuota_mensual_nueva * 100) / 100,
-    diferencia_cuota: Math.round(diferencia_cuota * 100) / 100,
-    impacto_anual: Math.round(impacto_anual * 100) / 100,
+    diferencia_cuota: dif_r,
+    impacto_anual: anual_r,
     impacto_vida_restante: Math.round(impacto_vida_restante * 100) / 100,
-    variacion_euribor: Math.round(variacion_euribor * 100) / 100
+    variacion_euribor: var_r,
+    _insight
   };
 }

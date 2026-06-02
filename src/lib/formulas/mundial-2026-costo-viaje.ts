@@ -16,6 +16,8 @@ export interface Outputs {
   costoPorPersona: number;
   costoPesos: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Vuelos ida + vuelta (USD por persona)
@@ -108,6 +110,36 @@ export function mundial2026CostoViaje(i: Inputs): Outputs {
   const origenLabel = origen.charAt(0).toUpperCase() + origen.slice(1);
   const destinoLabel = NOMBRES_CIUDAD[destino];
 
+  // Mayor rubro del presupuesto, para el insight.
+  const rubros: [string, number][] = [
+    ['los vuelos', costoVuelos],
+    ['el hotel', costoHotel],
+    ['las entradas', costoEntradas],
+    ['comida y extras', costoComida],
+  ];
+  const [mayorLabel, mayorValor] = rubros.reduce((a, b) => (b[1] > a[1] ? b : a));
+  const mayorPct = Math.round((mayorValor / costoTotal) * 100);
+  const _insight = {
+    title: 'Tu presupuesto del Mundial',
+    text: `El viaje sale **$${costoTotal.toLocaleString('en-US')} USD** para ${personas} (**$${costoPorPersona.toLocaleString('en-US')} por persona**). El rubro más pesado es **${mayorLabel}**, con el **${mayorPct}%** del total — ahí es donde más conviene buscar alternativas.`,
+    tone: 'neutral',
+    icon: '✈️',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Vuelos', value: costoVuelos },
+      { label: 'Hotel', value: costoHotel },
+      { label: 'Entradas', value: costoEntradas },
+      { label: 'Comida y extras', value: costoComida },
+    ],
+    prefix: '$',
+    centerValue: `$${costoTotal.toLocaleString('en-US')}`,
+    centerLabel: 'Total del viaje',
+    ariaLabel: `Desglose del presupuesto: vuelos $${costoVuelos.toLocaleString('en-US')}, hotel $${costoHotel.toLocaleString('en-US')}, entradas $${costoEntradas.toLocaleString('en-US')} y comida/extras $${costoComida.toLocaleString('en-US')}.`,
+  };
+
   return {
     costoVuelos,
     costoHotel,
@@ -117,5 +149,7 @@ export function mundial2026CostoViaje(i: Inputs): Outputs {
     costoPorPersona,
     costoPesos: `ARS ${Math.round(costoArs).toLocaleString('es-AR')} (blue $${ARS_USD})`,
     resumen: `**${personas} persona${personas > 1 ? 's' : ''} ${origenLabel} → ${destinoLabel}, ${noches} noches, hotel ${nivel}**: vuelos $${costoVuelos.toLocaleString('en-US')} + hotel $${costoHotel.toLocaleString('en-US')} + entradas $${costoEntradas} + comida/extras $${costoComida.toLocaleString('en-US')} = **$${costoTotal.toLocaleString('en-US')} USD** total ($${costoPorPersona.toLocaleString('en-US')} por persona).`,
+    _insight,
+    _chart,
   };
 }

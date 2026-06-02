@@ -13,6 +13,7 @@ export interface Outputs {
   cubo: number;
   raizCuadrada: number | string;
   raizCubica: number;
+  _insight?: any;
 }
 
 export function potenciasRaices(i: Inputs): Outputs {
@@ -54,6 +55,11 @@ export function potenciasRaices(i: Inputs): Outputs {
 
   const raizCuad = base < 0 ? '∅ (no real)' : Number(Math.sqrt(base).toFixed(6));
 
+  const usaCientifica = abs >= 1e15 || (abs > 0 && abs < 1e-4);
+  const insightText = tipo === 'raiz'
+    ? `La raíz **${exp}-ésima** de **${base}** es **${resultadoStr}**${usaCientifica ? ' (expresado en notación científica por su magnitud)' : ''}. Equivale a elevar ${base} a la potencia 1/${exp}.`
+    : `**${base} elevado a ${exp}** da **${resultadoStr}**${usaCientifica ? ', un número tan grande o tan chico que se muestra en notación científica' : ''}. Recordá: exponente negativo invierte (1/xⁿ) y exponente 0 siempre da 1.`;
+
   return {
     resultado: resultadoStr,
     resultadoNum: isFinite(resultado) ? Number(resultado.toFixed(6)) : 0,
@@ -63,5 +69,11 @@ export function potenciasRaices(i: Inputs): Outputs {
     cubo: Number((base * base * base).toFixed(6)),
     raizCuadrada: raizCuad,
     raizCubica: Number(Math.cbrt(base).toFixed(6)),
+    _insight: {
+      title: tipo === 'raiz' ? 'Resultado de la raíz' : 'Resultado de la potencia',
+      text: insightText,
+      tone: 'neutral',
+      icon: tipo === 'raiz' ? '√' : '🔢',
+    },
   };
 }

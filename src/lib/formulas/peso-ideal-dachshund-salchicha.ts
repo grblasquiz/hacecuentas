@@ -15,6 +15,7 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
 }
 
 const RAZA = {
@@ -55,11 +56,33 @@ export function pesoIdealDachshundSalchicha(inputs: Inputs): Outputs {
 
   const promedio = (min + max) / 2;
 
+  const _insight = edad === 'cachorro'
+    ? {
+        title: 'Todavía está creciendo',
+        text: `Como cachorro aún no alcanzó su peso adulto. De adulto, un Dachshund ${contextura} debería pesar entre **${min.toFixed(1)} y ${max.toFixed(1)} kg**. No lo sobrealimentes: el exceso de peso temprano carga su columna alargada.`,
+        tone: 'neutral',
+        icon: '🐶',
+      }
+    : edad === 'senior'
+    ? {
+        title: 'Etapa senior: cuidá la columna',
+        text: `Un Salchicha senior suele perder un 5-10% respecto al adulto. Su rango saludable ahora es **${min.toFixed(1)}-${max.toFixed(1)} kg** (promedio **${promedio.toFixed(1)} kg**). Mantenerlo en peso protege su espalda, el punto débil de la raza.`,
+        tone: 'warn',
+        icon: '🐾',
+      }
+    : {
+        title: 'Peso ideal de tu Dachshund',
+        text: `Para un ejemplar ${contextura} adulto, el peso saludable ronda los **${promedio.toFixed(1)} kg** (rango **${min.toFixed(1)}-${max.toFixed(1)} kg**). Pasar de ${max.toFixed(1)} kg multiplica el riesgo de hernia de disco (IVDD), típica del Salchicha por su cuerpo largo.`,
+        tone: 'neutral',
+        icon: '🌭',
+      };
+
   return {
     pesoPromedio: Number(promedio.toFixed(1)),
     pesoIdealMin: Number(min.toFixed(1)),
     pesoIdealMax: Number(max.toFixed(1)),
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight,
   };
 }

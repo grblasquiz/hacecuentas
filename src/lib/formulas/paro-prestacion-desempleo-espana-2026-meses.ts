@@ -11,6 +11,8 @@ export interface Outputs {
   total_estimado: number;
   tope_aplicado: string;
   nota_irpf: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -61,6 +63,12 @@ export function compute(i: Inputs): Outputs {
       total_estimado: 0,
       tope_aplicado: "No aplica",
       nota_irpf: "Con menos de 360 días cotizados no se genera prestación contributiva. Consulta el subsidio por desempleo en el SEPE.",
+      _insight: {
+        title: "Aún no llegás al mínimo",
+        text: `Con **${diasCotizados} días cotizados** no alcanzás los **360 días** mínimos para el paro contributivo. Te faltan **${360 - diasCotizados} días**; mientras tanto, consultá el subsidio asistencial del SEPE.`,
+        tone: "warn",
+        icon: "🚫",
+      },
     };
   }
 
@@ -127,6 +135,40 @@ export function compute(i: Inputs): Outputs {
   // --- Etiqueta duración ---
   const duracionLabel = `${duracionMeses} meses (${mesesAl70} mes${mesesAl70 !== 1 ? "es" : ""} al 70% + ${mesesAl60} mes${mesesAl60 !== 1 ? "es" : ""} al 60%)`;
 
+  // --- Insight y gráfico ---
+  const fmtE = (n: number) =>
+    n.toLocaleString("es-ES", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const totalPrimeros = Math.round(mesesAl70 * cuantiaPrimeros6 * 100) / 100;
+  const totalResto = Math.round(mesesAl60 * cuantiaResto * 100) / 100;
+  const totalFmt = Math.round(totalEstimado * 100) / 100;
+  const seAplicoMax =
+    primeros6Result.etiqueta === "máximo" || (mesesAl60 > 0 && restoResult.etiqueta === "máximo");
+
+  const insight = {
+    title: "Tu prestación total estimada",
+    text:
+      mesesAl60 > 0
+        ? `Durante **${duracionMeses} meses** cobrarías **${fmtE(cuantiaPrimeros6)}/mes** los primeros 6 (70%) y **${fmtE(cuantiaResto)}/mes** después (60%), que suman **${fmtE(totalFmt)}** brutos.${seAplicoMax ? " Se aplicó el **tope máximo IPREM**." : ""}`
+        : `Durante **${duracionMeses} meses** cobrarías **${fmtE(cuantiaPrimeros6)}/mes** (70% de tu base), que suman **${fmtE(totalFmt)}** brutos.${seAplicoMax ? " Se aplicó el **tope máximo IPREM**." : ""}`,
+    tone: seAplicoMax ? "warn" : "neutral",
+    icon: "💶",
+  };
+
+  const chart =
+    mesesAl60 > 0
+      ? {
+          type: "doughnut",
+          slices: [
+            { label: `Primeros 6 meses (70%)`, value: totalPrimeros },
+            { label: `Resto (${mesesAl60} meses al 60%)`, value: totalResto },
+          ],
+          prefix: "€",
+          centerValue: fmtE(totalFmt),
+          centerLabel: "Total bruto",
+          ariaLabel: `Reparto del total de ${fmtE(totalFmt)}: ${fmtE(totalPrimeros)} en los primeros 6 meses y ${fmtE(totalResto)} en el resto del periodo.`,
+        }
+      : undefined;
+
   return {
     duracion_meses: duracionLabel,
     cuantia_primeros_6: Math.round(cuantiaPrimeros6 * 100) / 100,
@@ -134,5 +176,7 @@ export function compute(i: Inputs): Outputs {
     total_estimado: Math.round(totalEstimado * 100) / 100,
     tope_aplicado: topeAplicadoMsj,
     nota_irpf: notaIRPF,
+    _insight: insight,
+    ...(chart ? { _chart: chart } : {}),
   };
 }

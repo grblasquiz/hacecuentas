@@ -1,5 +1,5 @@
 export interface Inputs { ambiente: string; personas: number; mascotas?: string; }
-export interface Outputs { frecuencia: string; tiempoEstimado: string; tareas: string; consejo: string; }
+export interface Outputs { frecuencia: string; tiempoEstimado: string; tareas: string; consejo: string; _insight?: any; }
 interface LimpData { freq: string; minutos: number; tareas: string; }
 const AMB: Record<string, LimpData> = {
   cocina: { freq: 'Diaria (superficies) + semanal (profunda)', minutos: 20, tareas: 'Mesada, anafe, pisos, rejilla pileta, heladera (semanal), horno (quincenal)' },
@@ -18,5 +18,17 @@ export function limpiezaFrecuenciaAmbiente(i: Inputs): Outputs {
   const factorMasc = mascota === 'si' ? 1.4 : 1;
   const min = Math.round(data.minutos * factorPers * factorMasc);
   const consejo = mascota === 'si' ? 'Con mascotas, aspirá más seguido y limpiá pelos de tapizados 2x/semana.' : 'Ventilá 10-15 min/día cada ambiente para reducir humedad y polvo.';
-  return { frecuencia: data.freq, tiempoEstimado: `~${min} minutos por sesión`, tareas: data.tareas, consejo };
+  const recargos: string[] = [];
+  if (factorPers > 1) recargos.push(`+30% por ser **${pers} personas**`);
+  if (factorMasc > 1) recargos.push('+40% por **mascotas**');
+  const ajuste = recargos.length
+    ? ` Suma ${recargos.join(' y ')} sobre la base de ${data.minutos} min.`
+    : ` Sin recargos: una casa de hasta 3 personas y sin mascotas se mantiene en la base de ${data.minutos} min.`;
+  const _insight = {
+    title: `Limpiar ${amb}: ~${min} min por sesión`,
+    text: `Para mantener tu **${amb}** calculá **~${min} minutos** cada vez, con frecuencia ${data.freq.toLowerCase()}.${ajuste}`,
+    tone: 'neutral',
+    icon: '🧹',
+  };
+  return { frecuencia: data.freq, tiempoEstimado: `~${min} minutos por sesión`, tareas: data.tareas, consejo, _insight };
 }

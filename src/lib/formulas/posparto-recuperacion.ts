@@ -1,6 +1,6 @@
 /** Timeline de recuperación posparto */
 export interface Inputs { fechaParto: string; tipoParto: string; }
-export interface Outputs { semanaPosparto: string; queEsperar: string; ejercicio: string; proximoHito: string; }
+export interface Outputs { semanaPosparto: string; queEsperar: string; ejercicio: string; proximoHito: string; _insight?: any; }
 
 export function pospartoRecuperacion(i: Inputs): Outputs {
   const parts = String(i.fechaParto || '').split('-').map(Number);
@@ -43,8 +43,27 @@ export function pospartoRecuperacion(i: Inputs): Outputs {
     proximoHito = 'Mes 12: la mayoría de las mujeres se sienten "como antes" (o descubren su nueva normalidad).';
   }
 
+  const tipoTxt = esCesarea ? 'cesárea' : 'parto vaginal';
+  let insText: string, insTone: 'good' | 'warn' | 'neutral';
+  if (semanas < 6) {
+    insTone = 'warn';
+    insText = `Estás en la **semana ${semanas}** tras una **${tipoTxt}**: todavía en plena cuarentena. Priorizá el descanso${esCesarea ? ' y cuidá la incisión' : ''} — la próxima señal es **${proximoHito.replace(/\.$/, '')}**.`;
+  } else if (semanas < 12) {
+    insTone = 'neutral';
+    insText = `**Semana ${semanas}** posparto (${tipoTxt}): pasaste el control de las 6 semanas y podés progresar el ejercicio gradualmente. Próximo hito: **${proximoHito.replace(/\.$/, '')}**.`;
+  } else {
+    insTone = 'good';
+    insText = `Ya pasaron **${semanas} semanas** (${dias} días) desde tu ${tipoTxt}: estás en recuperación a largo plazo. El cuerpo sigue ajustándose, con paciencia.`;
+  }
+
   return {
     semanaPosparto: `Semana ${semanas} posparto (${dias} días desde el parto)`,
     queEsperar, ejercicio, proximoHito,
+    _insight: {
+      title: 'En qué etapa estás',
+      text: insText,
+      tone: insTone,
+      icon: '🤱',
+    },
   };
 }

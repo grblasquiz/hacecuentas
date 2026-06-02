@@ -5,7 +5,7 @@
  * Tabela 2026 (ano-base 2025) — Lei 14.663/2023 + MP 2026.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; }
 
 const FAIXAS = [
   { ate: 26963.20, aliq: 0, parcela: 0 },
@@ -36,6 +36,20 @@ export function irpfRestituicaoPagar(i: Inputs): Outputs {
 
   const aliqEfetiva = rendaTributavel > 0 ? (devido / rendaTributavel) * 100 : 0;
 
+  const _insight = diferenca >= 0
+    ? {
+        title: 'Você tem restituição',
+        text: `Você antecipou ${fmt(totalPagoAntecipado)} e devia só ${fmt(devido)}, então a Receita te devolve **${fmt(diferenca)}**. Sua alíquota efetiva ficou em **${aliqEfetiva.toFixed(2)}%**. Quanto antes entregar a declaração, mais cedo cai no lote de restituição.`,
+        tone: 'good' as const,
+        icon: '💸',
+      }
+    : {
+        title: 'Imposto a pagar',
+        text: `O IR devido (${fmt(devido)}) superou o que você antecipou (${fmt(totalPagoAntecipado)}): faltam **${fmt(-diferenca)}** a pagar via **DARF (código 0211)**. Alíquota efetiva de **${aliqEfetiva.toFixed(2)}%**. Acima de R$ 100, dá para parcelar em até 8 vezes.`,
+        tone: 'warn' as const,
+        icon: '⚠️',
+      };
+
   return {
     baseCalculo: fmt(base),
     irDevido: fmt(devido),
@@ -46,5 +60,6 @@ export function irpfRestituicaoPagar(i: Inputs): Outputs {
     resumo: diferenca >= 0
       ? `IR devido ${fmt(devido)} menor que o antecipado ${fmt(totalPagoAntecipado)}. Você tem ${fmt(diferenca)} para restituir. Alíquota efetiva: ${aliqEfetiva.toFixed(2)}%.`
       : `IR devido ${fmt(devido)} maior que o antecipado ${fmt(totalPagoAntecipado)}. Pagar via DARF: ${fmt(-diferenca)} (código 0211). Alíquota efetiva: ${aliqEfetiva.toFixed(2)}%.`,
+    _insight,
   };
 }

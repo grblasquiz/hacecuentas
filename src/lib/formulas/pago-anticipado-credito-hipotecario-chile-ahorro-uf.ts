@@ -16,6 +16,7 @@ export interface Outputs {
   ahorro_intereses_uf: number;
   roi_vs_alternativo_pct: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -83,6 +84,18 @@ export function compute(i: Inputs): Outputs {
     recomendacion = '❌ Mejor invertir. Fondo/depósito rinden más que la tasa hipotecaria.';
   }
 
+  const ahorroRound = Math.round(ahorro_intereses * 100) / 100;
+  const efecto = i.opcion_calculo === 'plazo'
+    ? `acortás el crédito en **${(Math.round(meses_ahorrados * 10) / 10)} meses**`
+    : `bajás la cuota a **${(Math.round(cuota_nueva * 100) / 100)} UF**`;
+  const roiTone = roi_vs_alternativo > 0 ? 'good' : roi_vs_alternativo > -2 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Conviene prepagar o invertir',
+    text: `Abonando **${(Math.round(monto_ant * 100) / 100)} UF** ${efecto} y ahorrás **${ahorroRound} UF** en intereses. Frente a invertir ese monto al ${(tasa_alt * 100).toFixed(1)}%, el prepago rinde **${(Math.round(roi_vs_alternativo * 10) / 10)}% extra**${roi_vs_alternativo <= 0 ? ' — la inversión gana' : ''}.`,
+    tone: roiTone as 'good' | 'warn' | 'neutral',
+    icon: '🏠',
+  };
+
   return {
     cuota_actual_uf: Math.round(cuota_actual * 100) / 100,
     meses_ahorrados: Math.round(meses_ahorrados * 10) / 10,
@@ -91,6 +104,7 @@ export function compute(i: Inputs): Outputs {
     intereses_totales_despues_uf: Math.round(intereses_despues * 100) / 100,
     ahorro_intereses_uf: Math.round(ahorro_intereses * 100) / 100,
     roi_vs_alternativo_pct: Math.round(roi_vs_alternativo * 10) / 10,
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight: _insight
   };
 }

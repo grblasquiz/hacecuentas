@@ -11,6 +11,7 @@ export interface Outputs {
   ingredientesAjustados: string;
   listaAjustada: string;
   advertencia: string;
+  _insight?: any;
 }
 
 export function multiplicarReceta(i: Inputs): Outputs {
@@ -49,6 +50,18 @@ export function multiplicarReceta(i: Inputs): Outputs {
   const n = ajustados.length;
   const resumen = `${n} ingrediente${n === 1 ? '' : 's'} ${factorTxt}`;
 
+  const accion = factor > 1 ? 'multiplicar' : factor < 1 ? 'reducir' : 'mantener';
+  const tone: 'good' | 'warn' | 'neutral' = adv ? 'warn' : 'neutral';
+  const insightText = adv
+    ? `Pasás de **${orig}** a **${des}** porciones (**${factorTxt}**), así que hay que ${accion} cada ingrediente. ${adv}`
+    : `Pasás de **${orig}** a **${des}** porciones: multiplicá **cada** ingrediente por **${factorTxt}**. Ajustamos los **${n}** que cargaste; los huevos y la sal redondealos a mano.`;
+  const insight = {
+    title: 'Receta reescalada',
+    text: insightText,
+    tone,
+    icon: '🍳',
+  };
+
   return {
     factor: Number(factor.toFixed(4)),
     porcionesOriginal: orig,
@@ -56,5 +69,6 @@ export function multiplicarReceta(i: Inputs): Outputs {
     ingredientesAjustados: resumen,
     listaAjustada: ajustados.join('\n'),
     advertencia: adv,
+    _insight: insight,
   };
 }

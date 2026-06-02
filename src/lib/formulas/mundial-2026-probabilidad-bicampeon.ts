@@ -14,6 +14,8 @@ export interface Outputs {
   factoresNegativos: string;
   casosPrevios: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function mundial2026ProbabilidadBicampeon(i: Inputs): Outputs {
@@ -102,6 +104,19 @@ export function mundial2026ProbabilidadBicampeon(i: Inputs): Outputs {
 
   const resumen = `Probabilidad de bicampeón Mundial 2026: **${prob.toFixed(1)}%** (Argentina). Base histórica: 9%. Núcleo ${nucleo}%, edad ${edad.toFixed(1)}, ranking #${ranking}, grupo ${grupo}. ${comparacion}`;
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (prob > 14) {
+    insightTone = 'good';
+    insightText = `Con estos inputs la chance de bicampeonato da **${prob.toFixed(1)}%**, bastante por encima del baseline histórico de **9%**. Es un escenario favorable: ninguna selección lo logró desde Brasil 1962.`;
+  } else if (prob >= 9) {
+    insightTone = 'neutral';
+    insightText = `La chance estimada es **${prob.toFixed(1)}%**, en línea con el baseline histórico de **9%**. Posible pero difícil: en la era moderna ningún campeón vigente revalidó el título.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `La chance cae a **${prob.toFixed(1)}%**, por debajo del baseline histórico de **9%**. Los factores negativos pesan más que los positivos para una defensa del título.`;
+  }
+
   return {
     probBicampeon: Number(prob.toFixed(2)),
     comparacionHistorica: comparacion,
@@ -109,5 +124,23 @@ export function mundial2026ProbabilidadBicampeon(i: Inputs): Outputs {
     factoresNegativos: negativos.join(' '),
     casosPrevios,
     resumen,
+    _insight: {
+      title: 'Lectura de la probabilidad',
+      text: insightText,
+      tone: insightTone,
+      icon: '🏆',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(prob.toFixed(1)),
+      markerLabel: `${prob.toFixed(1)}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Bajo baseline', max: 9, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'En línea (9%)', max: 14, color: '#3b82f6', colorDark: '#2563eb' },
+        { nombre: 'Favorable', max: 22, color: '#22c55e', colorDark: '#16a34a' },
+      ],
+      ariaLabel: `Probabilidad de bicampeonato ${prob.toFixed(1)}% sobre una escala con baseline histórico de 9%`,
+    },
   };
 }

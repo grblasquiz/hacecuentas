@@ -1,6 +1,6 @@
 /** Percentil de peso y talla del bebé — OMS */
 export interface Inputs { edadMeses: number; sexoBebe: string; pesoBebe: number; tallaBebe?: number; }
-export interface Outputs { percentilPeso: string; percentilTalla: string; evaluacion: string; pesoEsperado: string; _chart?: any; }
+export interface Outputs { percentilPeso: string; percentilTalla: string; evaluacion: string; pesoEsperado: string; _chart?: any; _insight?: any; }
 
 // Datos OMS simplificados: [P3, P15, P50, P85, P97] en kg por mes, varones
 const pesoVaron: Record<number, number[]> = {
@@ -82,5 +82,13 @@ export function percentilBebeOms(i: Inputs): Outputs {
     ariaLabel: 'Escala de percentiles de peso OMS para ' + closest + ' meses',
   };
 
-  return { percentilPeso, percentilTalla, evaluacion, pesoEsperado, _chart: chart };
+  const fuera = peso < datos[0] || peso > datos[4];
+  const _insight = {
+    title: 'Peso de tu bebé',
+    text: `Con **${peso} kg** a los **${closest} meses**, tu bebé está en el rango **${percentilPeso}**. El rango normal (P3–P97) para esta edad va de **${datos[0]} a ${datos[4]} kg**.${fuera ? ' Conviene revisarlo con el pediatra.' : ' Lo importante es que siga su propia curva de crecimiento.'}`,
+    tone: fuera ? 'warn' : 'good',
+    icon: '👶',
+  };
+
+  return { percentilPeso, percentilTalla, evaluacion, pesoEsperado, _chart: chart, _insight };
 }

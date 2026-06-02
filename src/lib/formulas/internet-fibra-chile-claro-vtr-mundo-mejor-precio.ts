@@ -13,6 +13,8 @@ export interface Outputs {
   costo_mensual_promedio: number;
   valor_por_mbps: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Precios mensuales por velocidad (CLP, IVA incluido) - abril 2026
@@ -164,14 +166,39 @@ export function compute(inputs: Inputs): Outputs {
   
   // Generar recomendación
   const recomendacion = generarRecomendacion(operador, valorPorMbps, velocidad_mbps, precioMensual);
-  
+
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const mensualidades = precioMensual * meses;
+  const totalRound = Math.round(costoTotalPeriodo);
+
+  const _insight = {
+    title: 'Costo real de tu plan de fibra',
+    text: `A lo largo de ${meses} ${meses === 1 ? 'mes' : 'meses'} pagás **${fmt(totalRound)}** (${fmt(costoMensualPromedio)}/mes con la instalación prorrateada). El valor por velocidad es de **$${(Math.round(valorPorMbps * 100) / 100).toLocaleString('es-CL')}/Mbps**: cuanto más bajo, más conviene.`,
+    tone: valorPorMbps <= 80 ? 'good' : valorPorMbps >= 130 ? 'warn' : 'neutral',
+    icon: '🌐',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: `Mensualidades (${meses} × ${fmt(precioMensual)})`, value: Math.round(mensualidades) },
+      { label: 'Instalación', value: Math.round(costoInstalacion) },
+    ],
+    prefix: '$',
+    centerValue: fmt(totalRound),
+    centerLabel: `Total ${meses} meses`,
+    ariaLabel: `Desglose del costo total del plan: mensualidades por ${fmt(mensualidades)} más instalación por ${fmt(costoInstalacion)}.`,
+  };
+
   return {
     precio_mensual: Math.round(precioMensual),
     costo_instalacion: Math.round(costoInstalacion),
     permanencia_meses: permanencia,
-    costo_total_periodo: Math.round(costoTotalPeriodo),
+    costo_total_periodo: totalRound,
     costo_mensual_promedio: Math.round(costoMensualPromedio),
     valor_por_mbps: Math.round((valorPorMbps * 100)) / 100,
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight,
+    _chart
   };
 }

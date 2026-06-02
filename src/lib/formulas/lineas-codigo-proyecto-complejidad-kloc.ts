@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | any; _insight?: any; }
 export function lineasCodigoProyectoComplejidadKloc(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const T = ({
@@ -9,6 +9,7 @@ export function lineasCodigoProyectoComplejidadKloc(i: Inputs): Outputs {
       enterprise:'Enterprise',
       appMed:    'Aplicación mediana',
       appPeq:    'App pequeña',
+      insightTitle: 'Esfuerzo estimado (COCOMO)',
     },
     en: {
       scriptPeq: 'Small script',
@@ -16,6 +17,7 @@ export function lineasCodigoProyectoComplejidadKloc(i: Inputs): Outputs {
       enterprise:'Enterprise',
       appMed:    'Medium application',
       appPeq:    'Small app',
+      insightTitle: 'Estimated effort (COCOMO)',
     },
   } as const)[__lang];
   const loc=Number(i.loc)||0; const k=loc/1000;
@@ -24,5 +26,10 @@ export function lineasCodigoProyectoComplejidadKloc(i: Inputs): Outputs {
   const resumen = __lang === 'en'
     ? `${k.toFixed(1)} KLOC — ${cat}. COCOMO: ${pm.toFixed(0)} person-months.`
     : `${k.toFixed(1)} KLOC — ${cat}. COCOMO: ${pm.toFixed(0)} persona-mes.`;
-  return { kloc:`${k.toFixed(1)} KLOC`, categoria:cat, esfuerzoMes:`${pm.toFixed(1)} PM`, resumen };
+  const mesesEquipo = pm / 4; // calendario aprox. con un equipo de 4
+  const insightText = __lang === 'en'
+    ? `**${k.toFixed(1)} KLOC** (${cat}) imply **~${pm.toFixed(0)} person-months** by the basic COCOMO model — roughly **${mesesEquipo.toFixed(1)} months** of calendar time for a team of 4.`
+    : `**${k.toFixed(1)} KLOC** (${cat}) implican **~${pm.toFixed(0)} persona-mes** según el modelo COCOMO básico: aprox. **${mesesEquipo.toFixed(1)} meses** de calendario con un equipo de 4.`;
+  const _insight = { title: T.insightTitle, text: insightText, tone: 'neutral', icon: '💻' };
+  return { kloc:`${k.toFixed(1)} KLOC`, categoria:cat, esfuerzoMes:`${pm.toFixed(1)} PM`, resumen, _insight };
 }

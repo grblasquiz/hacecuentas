@@ -17,6 +17,7 @@ export interface IpvaRioOutputs {
   parcela: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 const ALIQUOTAS_RJ: Record<string, number> = {
@@ -43,6 +44,22 @@ export function ipvaRioDeJaneiro(inputs: IpvaRioInputs): IpvaRioOutputs {
   const formula = `IPVA RJ = R$ ${valorFipe.toLocaleString('pt-BR')} × ${aliquota}% = R$ ${ipvaAnual.toFixed(2)}`;
   const explicacion = `Para veículo tipo ${tipo} com valor FIPE R$ ${valorFipe.toLocaleString('pt-BR')}, alíquota RJ é ${aliquota}% (Lei 2.877/1997). IPVA: R$ ${ipvaAnual.toFixed(2)}. Pagamento único com desconto 3%: R$ ${valorComDesconto.toFixed(2)}. Parcelado em 3x de R$ ${parcela.toFixed(2)}.`;
 
+  const economiaUnico = ipvaAnual - valorComDesconto;
+  const fmtBR = (n: number) => 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const _insight = pagamento === 'unico'
+    ? {
+        title: 'Pagando à vista você economiza',
+        text: `O IPVA cheio é **${fmtBR(ipvaAnual)}**, mas à vista com o desconto de 3% cai para **${fmtBR(valorComDesconto)}** — uma economia de **${fmtBR(economiaUnico)}** frente ao parcelamento em 3x.`,
+        tone: 'good',
+        icon: '🚗',
+      }
+    : {
+        title: 'IPVA parcelado em 3x',
+        text: `Para um FIPE de **${fmtBR(valorFipe)}** a ${aliquota}%, o IPVA do ano é **${fmtBR(ipvaAnual)}**, dividido em 3 parcelas de **${fmtBR(parcela)}**. Pagando à vista você abate 3% e desembolsa só ${fmtBR(valorComDesconto)}.`,
+        tone: 'warn',
+        icon: '🚗',
+      };
+
   return {
     aliquota: `${aliquota}%`,
     ipvaAnual: Math.round(ipvaAnual * 100) / 100,
@@ -50,5 +67,6 @@ export function ipvaRioDeJaneiro(inputs: IpvaRioInputs): IpvaRioOutputs {
     parcela: Math.round(parcela * 100) / 100,
     formula,
     explicacion,
+    _insight,
   };
 }

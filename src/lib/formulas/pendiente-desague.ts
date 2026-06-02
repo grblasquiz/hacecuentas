@@ -9,6 +9,7 @@ export interface PendienteDesagueOutputs {
   caida: number;
   alturaDiferencia: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function pendienteDesague(inputs: PendienteDesagueInputs): PendienteDesagueOutputs {
@@ -42,5 +43,11 @@ export function pendienteDesague(inputs: PendienteDesagueInputs): PendienteDesag
     caida,
     alturaDiferencia: alturaDif,
     detalle: `Desagüe ${tipo} de ${fmt.format(longitud)} m con caño de ${fmt.format(diametro)} cm → pendiente mínima ${pendiente}%, caída total ${fmt.format(caida)} cm.`,
+    _insight: {
+      title: 'Pendiente y caída del caño',
+      text: `Para un desagüe ${tipo} con caño de ${fmt.format(diametro)} cm, la pendiente mínima es **${pendiente}%**: en ${fmt.format(longitud)} m el extremo de salida tiene que quedar **${fmt.format(caida)} cm** más bajo que el de entrada. Con menos caída el agua no corre y con mucho más el líquido se adelanta a los sólidos.`,
+      tone: 'neutral',
+      icon: '📐',
+    },
   };
 }

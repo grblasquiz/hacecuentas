@@ -22,6 +22,8 @@ export interface Outputs {
   };
   mejor_opcion: string;
   ahorro_potencial_mensual: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -141,6 +143,28 @@ export function compute(i: Inputs): Outputs {
     ...[comparativa_transbank, comparativa_onepay, comparativa_mach, comparativa_mercadopago]
   );
 
+  const comisionPondRound = Math.round(comision_promedio_ponderada * 100) / 100;
+  const comisionAnualRound = Math.round(comision_anual_estimada);
+  const ahorroRound = Math.round(ahorro_potencial_mensual);
+  const _insight = {
+    title: 'Cuánto te comen las comisiones',
+    text: `Pagás **$${Math.round(comision_total_mensual).toLocaleString('es-CL')}/mes** en comisiones (**${comisionPondRound}%** de tus ventas, ~$${comisionAnualRound.toLocaleString('es-CL')} al año). La opción más barata es **${etiquetas[mejorOpcion]}** y cambiar de pasarela te ahorraría hasta **$${ahorroRound.toLocaleString('es-CL')}/mes**.`,
+    tone: (comisionPondRound > 3 ? 'warn' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '💳',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Comisión débito', value: Math.round(monto_comision_debito_mensual) },
+      { label: 'Comisión crédito', value: Math.round(monto_comision_credito_mensual) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(comision_total_mensual).toLocaleString('es-CL'),
+    centerLabel: 'Comisión mensual',
+    ariaLabel: `Comisión mensual de $${Math.round(comision_total_mensual).toLocaleString('es-CL')}: $${Math.round(monto_comision_debito_mensual).toLocaleString('es-CL')} por débito y $${Math.round(monto_comision_credito_mensual).toLocaleString('es-CL')} por crédito.`,
+  };
+
   return {
     comision_por_transaccion_debito: tasas_actual.debito * 100,
     comision_por_transaccion_credito: (tasas_actual.credito + ajuste_financiamiento) * 100,
@@ -157,5 +181,7 @@ export function compute(i: Inputs): Outputs {
     },
     mejor_opcion: etiquetas[mejorOpcion],
     ahorro_potencial_mensual: Math.round(ahorro_potencial_mensual),
+    _insight: _insight,
+    _chart: _chart,
   };
 }

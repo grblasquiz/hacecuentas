@@ -27,6 +27,7 @@ export interface Outputs {
   intensidad: string;
   resumen: string;
   advertencia: string;
+  _insight?: any;
 }
 
 // Base en minutos/día para adulto sano, según energía × tamaño.
@@ -58,6 +59,10 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
       advCachorro: 'Regla AKC para cachorros: 5 min de ejercicio estructurado × cada mes de edad, repartido en 2-3 sesiones. No correr en superficies duras hasta cerrar placas de crecimiento. ',
       advSenior: 'Senior: priorizá paseos más cortos y frecuentes. Consultá con veterinario si hay artrosis o problemas cardíacos. ',
       sinAdvertencias: 'Sin advertencias específicas — ajustá según el clima y el estado del perro.',
+      insTitle: 'Tu rutina de paseo',
+      insAlta: 'Necesita **{min} min/día** repartidos en **{paseos} salidas** de ~{dur} min: una raza activa que sin descarga suficiente puede volverse destructiva o ansiosa.',
+      insBaja: 'Con **{min} min/día** en **{paseos} salidas** de ~{dur} min alcanza: priorizá paseos tranquilos sobre intensidad. Vigilá el calor y el sobrepeso.',
+      insMedia: 'Apuntá a **{min} min/día** en **{paseos} salidas** de ~{dur} min: ritmo cómodo con algún trote, y dejá que olfatee como parte del ejercicio.',
     },
     en: {
       errEnergia: 'Select a valid energy level',
@@ -70,6 +75,10 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
       advCachorro: 'AKC puppy rule: 5 min of structured exercise × each month of age, split into 2-3 sessions. Avoid running on hard surfaces until growth plates close. ',
       advSenior: 'Senior: prioritize shorter, more frequent walks. Consult a vet if arthritis or heart conditions are present. ',
       sinAdvertencias: 'No specific warnings — adjust based on weather and the dog\'s condition.',
+      insTitle: 'Your walking routine',
+      insAlta: 'Needs **{min} min/day** split into **{paseos} outings** of ~{dur} min: an active breed that can turn destructive or anxious without enough release.',
+      insBaja: '**{min} min/day** across **{paseos} outings** of ~{dur} min is enough: favor calm walks over intensity. Watch for heat and excess weight.',
+      insMedia: 'Aim for **{min} min/day** in **{paseos} outings** of ~{dur} min: a comfortable pace with some trotting, letting sniffing count as exercise.',
     },
     pt: {
       errEnergia: 'Selecione um nível de energia válido',
@@ -82,6 +91,10 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
       advCachorro: 'Regra AKC para filhotes: 5 min de exercício estruturado × cada mês de idade, divididos em 2-3 sessões. Evite corrida em superfícies duras até o fechamento das placas de crescimento. ',
       advSenior: 'Sênior: prefira passeios mais curtos e frequentes. Consulte o veterinário se houver artrose ou problemas cardíacos. ',
       sinAdvertencias: 'Sem advertências específicas — ajuste conforme o clima e o estado do cão.',
+      insTitle: 'Sua rotina de passeio',
+      insAlta: 'Precisa de **{min} min/dia** divididos em **{paseos} saídas** de ~{dur} min: uma raça ativa que sem descarga suficiente pode ficar destrutiva ou ansiosa.',
+      insBaja: 'Com **{min} min/dia** em **{paseos} saídas** de ~{dur} min já basta: priorize passeios tranquilos em vez de intensidade. Cuidado com o calor e o sobrepeso.',
+      insMedia: 'Mire em **{min} min/dia** em **{paseos} saídas** de ~{dur} min: ritmo confortável com algum trote, deixando o farejar contar como exercício.',
     },
   } as const)[__lang];
 
@@ -130,6 +143,22 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
     ? `Seu cão precisa de ~${minutosDia} min/dia de passeio, divididos em ${paseosDia} saídas de ~${duracionPorPaseo} min. ${intensidad}`
     : `Tu perro necesita ~${minutosDia} min/día de paseo, repartidos en ${paseosDia} salidas de ~${duracionPorPaseo} min. ${intensidad}`;
 
+  const insTpl =
+    energia === 'alta' ? T.insAlta : energia === 'baja' ? T.insBaja : T.insMedia;
+  const insText = insTpl
+    .replace('{min}', String(minutosDia))
+    .replace('{paseos}', String(paseosDia))
+    .replace('{dur}', String(duracionPorPaseo));
+  const insTone = braqui ? 'warn' : energia === 'alta' && edad === 'adulto' ? 'good' : 'neutral';
+  const insIcon = braqui ? '🌡️' : energia === 'alta' ? '🐕‍🦺' : '🐾';
+
+  const _insight = {
+    title: T.insTitle,
+    text: insText,
+    tone: insTone,
+    icon: insIcon,
+  };
+
   return {
     minutosDia,
     paseosDia,
@@ -137,5 +166,6 @@ export function paseosPerroMinutosRazaEnergia(i: Inputs): Outputs {
     intensidad,
     resumen,
     advertencia: advertencia.trim() || T.sinAdvertencias,
+    _insight,
   };
 }

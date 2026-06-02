@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   pla: string; petg: string; abs: string; tpu: string; asa: string; ranking: string;
+  _insight?: any;
 }
 
 export function pesoPlaAbsPetgVolumen(inputs: Inputs): Outputs {
@@ -25,6 +26,9 @@ export function pesoPlaAbsPetgVolumen(inputs: Inputs): Outputs {
   ];
   pesos.sort((a, b) => a[1] - b[1]);
   const rk = pesos.map(([n, p]) => `${n} ${p.toFixed(1)} g`).join(' < ');
+  const liviano = pesos[0];
+  const pesado = pesos[pesos.length - 1];
+  const difPct = liviano[1] > 0 ? Math.round(((pesado[1] - liviano[1]) / liviano[1]) * 100) : 0;
   return {
     pla: `${(volEf * dens.pla).toFixed(1)} g`,
     petg: `${(volEf * dens.petg).toFixed(1)} g`,
@@ -32,5 +36,11 @@ export function pesoPlaAbsPetgVolumen(inputs: Inputs): Outputs {
     tpu: `${(volEf * dens.tpu).toFixed(1)} g`,
     asa: `${(volEf * dens.asa).toFixed(1)} g`,
     ranking: rk,
+    _insight: {
+      title: 'Mismo volumen, distinto peso',
+      text: `Para esta pieza, ${liviano[0]} es el más liviano con **${liviano[1].toFixed(1)} g** y ${pesado[0]} el más pesado con **${pesado[1].toFixed(1)} g** — una diferencia de **${difPct}%**. Si calculás cuánto filamento te rinde un rollo, usá el material que vas a imprimir, no un promedio.`,
+      tone: 'neutral',
+      icon: '🧵',
+    },
   };
 }

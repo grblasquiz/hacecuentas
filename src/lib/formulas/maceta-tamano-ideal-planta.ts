@@ -1,6 +1,6 @@
 /** Maceta: tamaño ideal por planta */
 export interface Inputs { planta: string; }
-export interface Outputs { diametroMin: number; profundidadMin: number; litrosMin: number; consejo: string; }
+export interface Outputs { diametroMin: number; profundidadMin: number; litrosMin: number; consejo: string; _insight?: any; }
 
 interface MacetaData { diam: number; prof: number; consejo: string; }
 const PLANTAS: Record<string, MacetaData> = {
@@ -28,10 +28,21 @@ export function macetaTamanoIdealPlanta(i: Inputs): Outputs {
   if (!data) throw new Error('Planta no encontrada');
   const r = data.diam / 2;
   const litros = (Math.PI * (r / 100) * (r / 100) * (data.prof / 100)) * 1000;
+  const litrosR = Number(litros.toFixed(1));
+  const nombre = planta.replace(/_/g, ' ');
+
+  const insight = {
+    title: 'La maceta justa para tu planta',
+    text: `Para ${nombre}, apuntá a una maceta de **${data.diam} cm de diámetro × ${data.prof} cm de profundidad** (unos **${litrosR} L** de sustrato). Quedarte corto ahoga la raíz; pasarte de tamaño retiene humedad de más y pudre. Asegurá agujeros de drenaje.`,
+    tone: 'neutral',
+    icon: '🪴',
+  };
+
   return {
     diametroMin: data.diam,
     profundidadMin: data.prof,
-    litrosMin: Number(litros.toFixed(1)),
+    litrosMin: litrosR,
     consejo: data.consejo,
+    _insight: insight,
   };
 }

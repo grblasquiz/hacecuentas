@@ -13,6 +13,7 @@ export interface Outputs {
   iva_neto_a_pagar: number;
   valor_total_cliente: number;
   tratamiento_fiscal: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -80,6 +81,35 @@ export function compute(i: Inputs): Outputs {
     tratamiento_fiscal = 'Categoría no reconocida. Verificar con DIAN.';
   }
 
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+
+  let _insight: any;
+  if (esExento) {
+    const recupera = iva_descontable > 0;
+    _insight = {
+      title: 'Cómo tributa este bien',
+      text: recupera
+        ? `Como bien **exento**, le cobrás **0% de IVA** al cliente y además recuperás **${cop(iva_descontable)}** del IVA que pagaste en insumos: ese saldo a favor lo pedís como devolución a la DIAN.`
+        : `Como bien **exento**, cobrás **0% de IVA** y tenés derecho a descontar el IVA de tus insumos. Cargá el IVA pagado en compras para ver cuánto podés recuperar de la DIAN.`,
+      tone: 'good',
+      icon: '🧾',
+    };
+  } else if (esExcluido) {
+    _insight = {
+      title: 'Cómo tributa este servicio',
+      text: `Como servicio **excluido**, no cobrás IVA, pero **tampoco podés descontar** el IVA de tus insumos${i.iva_pagado_insumos > 0 ? ` (${cop(i.iva_pagado_insumos)})` : ''}: ese costo lo asumís vos y conviene trasladarlo al precio.`,
+      tone: 'warn',
+      icon: '🧾',
+    };
+  } else {
+    _insight = {
+      title: 'Categoría sin clasificar',
+      text: 'No pudimos clasificar el bien como exento ni excluido. Verificá el tratamiento con la DIAN antes de facturar.',
+      tone: 'neutral',
+      icon: '🧾',
+    };
+  }
+
   return {
     categoria_bien,
     tasa_iva: 0, // Ambos casos 0%
@@ -87,6 +117,7 @@ export function compute(i: Inputs): Outputs {
     iva_descontable: Math.round(iva_descontable),
     iva_neto_a_pagar: Math.round(iva_neto_a_pagar),
     valor_total_cliente: Math.round(valor_total_cliente),
-    tratamiento_fiscal
+    tratamiento_fiscal,
+    _insight
   };
 }

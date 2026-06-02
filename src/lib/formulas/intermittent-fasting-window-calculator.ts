@@ -14,6 +14,8 @@ export interface Outputs {
   ketosis_estimate: string;
   autophagy_estimate: string;
   tips: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Protocol definitions: fasting hours and eating hours
@@ -112,6 +114,15 @@ export function compute(i: Inputs): Outputs {
     tips = "OMAD requires careful attention to nutrition density — hit your full protein, fat, and micronutrient targets in a single 1-hour meal. Consult a dietitian if maintaining this long-term. Not recommended for people with blood sugar regulation issues.";
   }
 
+  // Insight: interpret the chosen protocol's metabolic reach + window
+  const autophagyClause = canReachAutophagy
+    ? `long enough to enter autophagy (the cellular clean-up that kicks in around hour 16)`
+    : `enough for ketosis but short of the ~16 h autophagy threshold`;
+  const insightTone = protocolKey === "omad" ? "warn" : (canReachAutophagy ? "good" : "neutral");
+  const insightText = protocolKey === "omad"
+    ? `On **OMAD** you eat in a single **${formatDuration(proto.eatHours)}** window (around ${formatTime(eatStartMin)}) and fast the other **${proto.fastHours} hours** — deep into ketosis and autophagy, but aggressive: nail your full protein and micronutrients in that one meal.`
+    : `Your **${proto.name}** plan fasts **${proto.fastHours} hours** and feeds within **${formatDuration(proto.eatHours)}** (about ${formatTime(eatStartMin)}–${formatTime(eatEndMin)}). That's ${autophagyClause}.`;
+
   return {
     eating_window_hours: `${formatDuration(proto.eatHours)} (${proto.name} protocol)`,
     eating_start_time:   formatTime(eatStartMin),
@@ -122,5 +133,22 @@ export function compute(i: Inputs): Outputs {
     ketosis_estimate:    ketosisEstimate,
     autophagy_estimate:  autophagyEstimate,
     tips,
+    _insight: {
+      title: "Your fasting day",
+      text: insightText,
+      tone: insightTone,
+      icon: "⏳",
+    },
+    _chart: {
+      type: "doughnut",
+      slices: [
+        { label: "Fasting", value: proto.fastHours },
+        { label: "Eating window", value: proto.eatHours },
+      ],
+      suffix: " h",
+      centerValue: `${proto.fastHours}h`,
+      centerLabel: "Fasting",
+      ariaLabel: `24-hour day split into ${proto.fastHours} hours fasting and ${proto.eatHours} hours eating on the ${proto.name} protocol`,
+    },
   };
 }

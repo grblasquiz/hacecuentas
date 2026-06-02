@@ -15,6 +15,8 @@ export interface Outputs {
   ingresos_anuales_brutos: number;
   cumple_requisitos: boolean;
   mensaje_validacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -73,6 +75,48 @@ export function compute(i: Inputs): Outputs {
   // Ingresos anuales brutos (12 meses + aguinaldo)
   const ingresos_anuales_brutos = pension_total_mensual * 12 + aguinaldo_anual;
 
+  // === INSIGHT NARRATIVO ===
+  const fmtMX = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  let _insight: any;
+  if (!cumple_requisitos) {
+    _insight = {
+      title: 'Faltan requisitos legales',
+      text: `Con los datos cargados **no se cumplen los requisitos** del IMSS para la pensión de viudez (mínimo 150 semanas cotizadas y 1 año de matrimonio o hijos en común). Revisá el detalle antes de tramitar.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (asignacion_familiar_mensual > 0) {
+    _insight = {
+      title: 'Pensión + asignaciones familiares',
+      text: `Cobrás **${fmtMX(pension_mensual_base)}/mes** de pensión base (90%) más **${fmtMX(asignacion_familiar_mensual)}** en asignaciones familiares, total **${fmtMX(pension_total_mensual)}/mes**. Con aguinaldo, suma **${fmtMX(ingresos_anuales_brutos)}/año**.`,
+      tone: 'good',
+      icon: '👪',
+    };
+  } else {
+    _insight = {
+      title: 'Pensión de viudez aprobada',
+      text: `Cumplís los requisitos: la pensión es el **90% del salario regulador = ${fmtMX(pension_total_mensual)}/mes**. Sumando el aguinaldo (1,33 meses), el ingreso anual estimado es **${fmtMX(ingresos_anuales_brutos)}**.`,
+      tone: 'good',
+      icon: '🇲🇽',
+    };
+  }
+
+  // === GRÁFICO: composición de la pensión mensual (solo si hay asignaciones) ===
+  let _chart: any;
+  if (cumple_requisitos && asignacion_familiar_mensual > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Pensión base (90%)', value: Math.round(pension_mensual_base * 100) / 100 },
+        { label: 'Asignaciones familiares', value: Math.round(asignacion_familiar_mensual * 100) / 100 },
+      ],
+      prefix: '$',
+      centerValue: fmtMX(pension_total_mensual),
+      centerLabel: 'Total mensual',
+      ariaLabel: `Composición de la pensión mensual de ${fmtMX(pension_total_mensual)}: ${fmtMX(pension_mensual_base)} de pensión base y ${fmtMX(asignacion_familiar_mensual)} de asignaciones familiares`,
+    };
+  }
+
   return {
     pension_mensual_base: Math.round(pension_mensual_base * 100) / 100,
     asignacion_familiar_mensual: Math.round(asignacion_familiar_mensual * 100) / 100,
@@ -80,6 +124,8 @@ export function compute(i: Inputs): Outputs {
     aguinaldo_anual: Math.round(aguinaldo_anual * 100) / 100,
     ingresos_anuales_brutos: Math.round(ingresos_anuales_brutos * 100) / 100,
     cumple_requisitos,
-    mensaje_validacion
+    mensaje_validacion,
+    _insight,
+    ...(_chart ? { _chart } : {})
   };
 }

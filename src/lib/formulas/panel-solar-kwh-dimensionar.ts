@@ -1,5 +1,5 @@
 export interface PanelSolarKwhDimensionarInputs { consumoMes: number; hps: number; eficiencia?: number; tipoSistema: string; }
-export interface PanelSolarKwhDimensionarOutputs { kwp: string; cantidadPaneles: string; areaEstimada: string; resumen: string; }
+export interface PanelSolarKwhDimensionarOutputs { kwp: string; cantidadPaneles: string; areaEstimada: string; resumen: string; _insight?: any; }
 export function panelSolarKwhDimensionar(i: PanelSolarKwhDimensionarInputs): PanelSolarKwhDimensionarOutputs {
   const kwh = Number(i.consumoMes); const hps = Number(i.hps);
   const effDefault = i.tipoSistema === 'off-grid' ? 70 : (i.tipoSistema === 'hibrido' ? 80 : 85);
@@ -12,6 +12,12 @@ export function panelSolarKwhDimensionar(i: PanelSolarKwhDimensionarInputs): Pan
     kwp: kWp.toFixed(2) + ' kWp',
     cantidadPaneles: `${paneles} paneles de 400W`,
     areaEstimada: area + ' m²',
-    resumen: `Para ${kwh} kWh/mes necesitás ${kWp.toFixed(1)} kWp (${paneles} paneles 400W, ~${area} m²). Sistema ${i.tipoSistema}.`
+    resumen: `Para ${kwh} kWh/mes necesitás ${kWp.toFixed(1)} kWp (${paneles} paneles 400W, ~${area} m²). Sistema ${i.tipoSistema}.`,
+    _insight: {
+      title: 'Dimensionamiento de tu sistema solar',
+      text: `Para cubrir **${kwh} kWh/mes** necesitás **${kWp.toFixed(1)} kWp**: unos **${paneles} paneles de 400W** y ~**${area} m²** de techo libre. Verificá que tengas la superficie y orientación al norte antes de cotizar.`,
+      tone: 'neutral',
+      icon: '🔆',
+    },
   };
 }

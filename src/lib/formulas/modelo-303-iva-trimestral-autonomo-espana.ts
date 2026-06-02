@@ -20,6 +20,8 @@ export interface Outputs {
   tipo_resultado: string;
   fecha_limite: string;
   aviso: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -99,6 +101,56 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // --- Insight narrativo dinámico ---
+  let _insight: any;
+  if (resultado_final > 0) {
+    _insight = {
+      title: 'IVA a ingresar',
+      text: `Repercutiste más IVA del que soportaste: te toca pagar **${formatEur(resultado_final)}** a Hacienda. Reservá ese importe antes del **${fecha_limite}**.`,
+      tone: 'warn',
+      icon: '🧾',
+    };
+  } else if (resultado_final === 0) {
+    _insight = {
+      title: 'Resultado cero',
+      text: `Tu IVA repercutido y el soportado deducible se compensan: la liquidación sale a **0€**. Aun así estás obligado a presentar el Modelo 303.`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  } else if (trimestre === '4' && solicitaDevolucion) {
+    _insight = {
+      title: 'IVA a devolver',
+      text: `Soportaste más IVA del que repercutiste: podés pedir la devolución de **${formatEur(Math.abs(resultado_final))}** (casilla 111). Hacienda tiene hasta 6 meses para resolver.`,
+      tone: 'good',
+      icon: '💸',
+    };
+  } else {
+    _insight = {
+      title: 'Saldo a compensar',
+      text: `Te queda un saldo a favor de **${formatEur(Math.abs(resultado_final))}** que se traslada (casilla 67) al próximo Modelo 303. En T1–T3 no se puede pedir devolución, solo compensar.`,
+      tone: 'neutral',
+      icon: '⏩',
+    };
+  }
+
+  // --- Gráfico: composición del IVA repercutido por tipo (suma = total repercutido) ---
+  let _chart: any;
+  if (total_iva_repercutido > 0) {
+    const slices = [
+      { label: 'Tipo general 21%', value: cuota_repercutida_21 },
+      { label: 'Tipo reducido 10%', value: cuota_repercutida_10 },
+      { label: 'Superreducido 4%', value: cuota_repercutida_4 },
+    ].filter(s => s.value > 0);
+    _chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '€',
+      centerValue: formatEur(total_iva_repercutido),
+      centerLabel: 'IVA repercutido',
+      ariaLabel: 'Desglose del IVA repercutido por tipo impositivo',
+    };
+  }
+
   return {
     cuota_repercutida_21,
     cuota_repercutida_10,
@@ -110,7 +162,9 @@ export function compute(i: Inputs): Outputs {
     resultado_final,
     tipo_resultado,
     fecha_limite,
-    aviso
+    aviso,
+    _insight,
+    _chart
   };
 }
 

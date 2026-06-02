@@ -15,6 +15,8 @@ export interface Outputs {
   pesoIdealMax: number;
   esperanzaAnios: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const RAZA = {
@@ -55,11 +57,42 @@ export function pesoIdealGoldenRetriever(inputs: Inputs): Outputs {
 
   const promedio = (min + max) / 2;
 
+  const minR = Number(min.toFixed(1));
+  const maxR = Number(max.toFixed(1));
+  const promR = Number(promedio.toFixed(1));
+  const sexoTxt = sexo === 'macho' ? 'macho' : 'hembra';
+
+  const _insight = {
+    title: 'Tu Golden Retriever en su peso',
+    text: edad === 'cachorro'
+      ? `Tu Golden ${sexoTxt} todavía está creciendo: el peso que verás de adulto rondará los **${minR} a ${maxR} kg** (promedio **${promR} kg**). No fuerces el ejercicio ni la dieta de adulto hasta que cierre el crecimiento (~18 meses).`
+      : edad === 'senior'
+      ? `Un Golden ${sexoTxt} senior suele pesar entre **${minR} y ${maxR} kg** (promedio **${promR} kg**), algo menos que en su adultez. Vigilá que no baje de golpe y cuidá las articulaciones con paseos suaves.`
+      : `Un Golden ${sexoTxt} de contextura ${contextura} debería pesar entre **${minR} y ${maxR} kg**, con un promedio de **${promR} kg**. Es una raza propensa al sobrepeso: pesalo seguido y mantené las costillas palpables.`,
+    tone: edad === 'senior' ? 'warn' : edad === 'cachorro' ? 'neutral' : 'good',
+    icon: '🐶',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: promR,
+    markerLabel: `Promedio ${promR} kg`,
+    min: 0,
+    segments: [
+      { nombre: 'Bajo peso', max: minR, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Peso ideal', max: maxR, color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: 'Sobrepeso', max: Number((maxR * 1.3).toFixed(1)), color: '#ef4444', colorDark: '#f87171' },
+    ],
+    ariaLabel: `Escala de peso: la franja ideal del Golden Retriever va de ${minR} a ${maxR} kg, con promedio ${promR} kg`,
+  };
+
   return {
-    pesoPromedio: Number(promedio.toFixed(1)),
-    pesoIdealMin: Number(min.toFixed(1)),
-    pesoIdealMax: Number(max.toFixed(1)),
+    pesoPromedio: promR,
+    pesoIdealMin: minR,
+    pesoIdealMax: maxR,
     esperanzaAnios: RAZA.esperanza,
     resumen,
+    _insight,
+    _chart,
   };
 }

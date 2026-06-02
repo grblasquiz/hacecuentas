@@ -18,6 +18,7 @@ export interface Outputs {
   fits_in_200k: string;
   fits_in_1m: string;
   recommendation: string;
+  _insight?: any;
 }
 
 // Prices in USD per 1M tokens — verified mid-2026
@@ -147,6 +148,35 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // ===== INSIGHT =====
+  const tokensK = (totalLcInput / 1000).toFixed(0);
+  const cheaper = ragMonthly < lcMonthly ? 'RAG' : 'long context';
+  const ragWins = ragMonthly < lcMonthly;
+  const absSavings = Math.abs(savingsMonthly).toFixed(2);
+
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (!fitsIn1m) {
+    insightText = `Tu documento (**${tokensK}K tokens**) supera la ventana de **1M**: long context no es viable. Tenés que ir sí o sí por **RAG** o trocear con múltiples llamadas.`;
+    insightTone = 'warn';
+  } else if (exceedsModelContext) {
+    insightText = `Con **${tokensK}K tokens** no entra en ${modelo} (máx ${(maxContext / 1000).toFixed(0)}K). Necesitás un modelo de **1M** como Gemini 2.5 o Claude Sonnet 4 para usar long context.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `Con **${queriesPerMonth} consultas/mes**, long context cuesta **$${lcMonthly.toFixed(2)}/mes** y RAG **$${ragMonthly.toFixed(2)}/mes**: gana **${cheaper}** por **$${absSavings}/mes**.` +
+      (ragWins
+        ? ' Si la calidad de recuperación te alcanza, RAG es más barato a este volumen.'
+        : ' A este volumen el long context one-shot es más simple y sale igual o más barato.');
+    insightTone = ragWins ? 'good' : 'neutral';
+  }
+
+  const insight = {
+    title: 'Long context vs RAG',
+    text: insightText,
+    tone: insightTone,
+    icon: '🧠',
+  };
+
   return {
     long_context_cost_per_request: Math.round(lcCostPerRequest * 1_000_000) / 1_000_000,
     rag_cost_per_request: Math.round(ragCostPerRequest * 1_000_000) / 1_000_000,
@@ -156,5 +186,6 @@ export function compute(i: Inputs): Outputs {
     fits_in_200k: fits200kText,
     fits_in_1m: fits1mText,
     recommendation,
+    _insight: insight,
   };
 }

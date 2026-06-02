@@ -14,6 +14,7 @@ export interface Outputs {
   sancion_minima: number;
   sancion_maxima: number;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -98,6 +99,32 @@ export function compute(i: Inputs): Outputs {
     recomendacion = `ℹ️ No obligado por umbral. Aun así, si tienes dudas sobre qué clientes incluir, consulta con tu gestor/asesor. Mantén registro de operaciones >3.000€ para futuras comprobaciones.`;
   }
   
+  // Insight narrativo dinámico
+  const fmtEur347 = (n: number) => Math.round(n).toLocaleString('es-ES') + '€';
+  let _insight: any;
+  if (obligado && (presentado === "no_presentado" || presentado === "no")) {
+    _insight = {
+      title: presentado === "no_presentado" ? 'Falta presentar el Modelo 347' : 'Presentado fuera de plazo',
+      text: `Estás obligado (operaciones medias de **${fmtEur347(importe_promedio)}** por contraparte, por encima del umbral de ${UMBRAL_AEAT_2026.toFixed(2)}€) y hay incumplimiento. La sanción AEAT va de **${fmtEur347(sancion_minima)}** a **${fmtEur347(sancion_maxima)}**.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (obligado) {
+    _insight = {
+      title: 'Obligado y al día',
+      text: `Tenés que declarar (operaciones medias de **${fmtEur347(importe_promedio)}** por contraparte superan los ${UMBRAL_AEAT_2026.toFixed(2)}€) y lo presentaste en plazo. Sin sanciones: guardá el justificante 4 años.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  } else {
+    _insight = {
+      title: 'No estás obligado',
+      text: `Con **${numero_ops}** ${numero_ops === 1 ? 'contraparte' : 'contrapartes'} y un promedio de **${fmtEur347(importe_promedio)}** por cada una, no llegás al umbral de ${UMBRAL_AEAT_2026.toFixed(2)}€. No hace falta presentar el Modelo 347.`,
+      tone: 'neutral',
+      icon: 'ℹ️',
+    };
+  }
+
   return {
     obligacion_presentacion,
     umbral_aplicable: UMBRAL_AEAT_2026,
@@ -105,6 +132,7 @@ export function compute(i: Inputs): Outputs {
     plazo_presentacion,
     sancion_minima,
     sancion_maxima,
-    recomendacion
+    recomendacion,
+    _insight
   };
 }

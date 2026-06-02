@@ -10,6 +10,7 @@ export interface Outputs {
   vacation_plus_pay: number;
   total_vacation_payment: number;
   vacation_period: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -57,6 +58,13 @@ export function compute(i: Inputs): Outputs {
   // Período válido: 1 octubre - 30 abril
   const vacationPeriod = 'Entre 1 de octubre y 30 de abril (según acuerdo con empleador)';
 
+  // Insight: días según antigüedad + total a cobrar (sueldo vacacional + plus 3%)
+  const totalFmt = '$' + Math.round(totalVacationPayment).toLocaleString('es-AR');
+  const diasTxt = seniorityYears < 1
+    ? `${vacationDays} días (proporcionales por menos de 1 año de antigüedad)`
+    : `${vacationDays} días corridos`;
+  const insightText = `Con tu antigüedad te corresponden **${diasTxt}**. Vas a cobrar **${totalFmt}**: el sueldo vacacional más el **plus del 3%** que exige el CCT 130/75.`;
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -75,6 +83,12 @@ export function compute(i: Inputs): Outputs {
     vacation_plus_pay: Math.round(vacationPlusPay * 100) / 100,
     total_vacation_payment: Math.round(totalVacationPayment * 100) / 100,
     vacation_period: vacationPeriod,
+    _insight: {
+      title: 'Tus vacaciones de comercio',
+      text: insightText,
+      tone: 'good',
+      icon: '🏖️',
+    },
     _chart: chart
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   next_period: string;
   days_until_ovulation: number;
   explanation_text: string;
+  _insight?: any;
 }
 
 // Duração fixa da fase lútea em dias (fonte: OMS / FEBRASGO)
@@ -116,6 +117,26 @@ export function compute(i: Inputs): Outputs {
       ' Ciclo fora do intervalo mais comum (24–35 dias): considere confirmar a ovulação com teste de LH ou ultrassom.';
   }
 
+  // Insight: tom dinâmico conforme a proximidade da ovulação
+  const naJanela = daysUntilOvulation >= -FERTILE_AFTER && daysUntilOvulation <= FERTILE_BEFORE;
+  const insightTone = naJanela ? 'good' : 'neutral';
+  let insightText: string;
+  if (daysUntilOvulation === 0) {
+    insightText = `Hoje é o dia estimado da **ovulação** — auge da fertilidade. A janela fértil vai de **${formatDate(fertileStart)}** a **${formatDate(fertileEnd)}**.`;
+  } else if (daysUntilOvulation > 0 && naJanela) {
+    insightText = `Você está na **janela fértil**: a ovulação é em **${daysUntilOvulation} dia(s)** (${formatDate(ovulationDate)}). Os dias de pico são ${peakStr}.`;
+  } else if (daysUntilOvulation > 0) {
+    insightText = `Faltam **${daysUntilOvulation} dia(s)** para a ovulação (${formatDate(ovulationDate)}); a janela fértil abre em **${formatDate(fertileStart)}**.`;
+  } else {
+    insightText = `A ovulação estimada já passou há **${Math.abs(daysUntilOvulation)} dia(s)**. A próxima menstruação é esperada para **${formatDate(nextPeriod)}**.`;
+  }
+  const _insight = {
+    title: 'Sua janela fértil',
+    text: insightText,
+    tone: insightTone,
+    icon: '\u{1FA78}',
+  };
+
   return {
     ovulation_date: formatDate(ovulationDate),
     fertile_window_start: formatDate(fertileStart),
@@ -123,6 +144,7 @@ export function compute(i: Inputs): Outputs {
     peak_days: peakStr,
     next_period: formatDate(nextPeriod),
     days_until_ovulation: daysUntilOvulation,
-    explanation_text: explanationText
+    explanation_text: explanationText,
+    _insight
   };
 }

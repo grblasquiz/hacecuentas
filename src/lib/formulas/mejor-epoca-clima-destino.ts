@@ -13,6 +13,7 @@ export interface MejorEpocaClimaDestinoOutputs {
   alternativas: string;
   evitar: string;
   detalle: string;
+  _insight?: any;
 }
 
 type MesData = {
@@ -293,10 +294,25 @@ export function mejorEpocaClimaDestino(inputs: MejorEpocaClimaDestinoInputs): Me
 
   const detalle = `${tempProm}°C promedio · ${mejor.data.lluviaMm} mm de lluvia · ${temporadaTxt}`;
 
+  const temporadaFrase =
+    mejor.data.temporada === 'baja'
+      ? 'cae en **temporada baja**, así que vas a encontrar precios más bajos y menos gente'
+      : mejor.data.temporada === 'media'
+        ? 'cae en **temporada media**: buen equilibrio entre clima, precios y multitudes'
+        : 'cae en **temporada alta**, así que reservá con anticipación: precios y multitudes en su pico';
+
+  const _insight = {
+    title: `${mejor.nombre} es tu mejor mes`,
+    text: `Según tus prioridades, **${mejor.nombre}** gana con **${tempProm}°C** de media y **${mejor.data.lluviaMm} mm** de lluvia, y ${temporadaFrase}. Buenas alternativas: ${alternativas}.`,
+    tone: mejor.data.temporada === 'alta' ? 'warn' : 'good',
+    icon: '🗓️',
+  };
+
   return {
     mejorMes: mejor.nombre,
     alternativas,
     evitar,
     detalle,
+    _insight,
   };
 }

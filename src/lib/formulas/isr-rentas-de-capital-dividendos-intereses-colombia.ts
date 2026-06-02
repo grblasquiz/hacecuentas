@@ -21,6 +21,8 @@ export interface Outputs {
   renta_total_anual: number;
   impuesto_estimado_total: number;
   saldo_a_pagar_o_favor: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -115,6 +117,32 @@ export function compute(i: Inputs): Outputs {
   
   const saldo_a_pagar_o_favor = impuesto_estimado_total - retenciones_totales_estimadas;
 
+  const impuesto_final = Math.max(0, impuesto_estimado_total);
+  const fmtCop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const tasaEfectivaTotal = renta_total_anual > 0 ? (impuesto_final / renta_total_anual) * 100 : 0;
+  const aFavor = saldo_a_pagar_o_favor < 0;
+  const _insight = {
+    title: aFavor ? 'Te queda saldo a favor' : 'Quedás con saldo a pagar',
+    text: aFavor
+      ? `Tu impuesto estimado es **${fmtCop(impuesto_final)}** sobre una renta total de **${fmtCop(renta_total_anual)}**, pero las retenciones superan ese monto: tenés un saldo a favor de **${fmtCop(Math.abs(saldo_a_pagar_o_favor))}** para solicitar en la declaración.`
+      : `Sobre una renta total de **${fmtCop(renta_total_anual)}** el impuesto estimado es **${fmtCop(impuesto_final)}** (tasa efectiva **${tasaEfectivaTotal.toFixed(1)}%**). Tras descontar retenciones, te queda un saldo a pagar de **${fmtCop(saldo_a_pagar_o_favor)}**.`,
+    tone: (aFavor ? 'good' : 'warn') as 'good' | 'warn' | 'neutral',
+    icon: '🇨🇴',
+  };
+
+  const renta_despues_impuesto = Math.max(0, renta_total_anual - impuesto_final);
+  const _chart = renta_total_anual > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Impuesto estimado', value: Math.round(impuesto_final) },
+      { label: 'Renta después de impuesto', value: Math.round(renta_despues_impuesto) },
+    ],
+    prefix: '$',
+    centerValue: fmtCop(renta_total_anual),
+    centerLabel: 'Renta total anual',
+    ariaLabel: 'Reparto de la renta total anual entre impuesto estimado y renta después de impuesto',
+  } : undefined;
+
   return {
     renta_cedular_bruta: Math.round(renta_cedular_bruta),
     deducciones_permitidas: Math.round(deducciones_permitidas),
@@ -124,6 +152,8 @@ export function compute(i: Inputs): Outputs {
     impuesto_neto: Math.round(impuesto_neto),
     renta_total_anual: Math.round(renta_total_anual),
     impuesto_estimado_total: Math.round(Math.max(0, impuesto_estimado_total)),
-    saldo_a_pagar_o_favor: Math.round(saldo_a_pagar_o_favor)
+    saldo_a_pagar_o_favor: Math.round(saldo_a_pagar_o_favor),
+    _insight,
+    _chart
   };
 }

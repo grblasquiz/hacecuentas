@@ -1,6 +1,6 @@
 /** Love Calculator clásico */
 export interface Inputs { nombre1: string; nombre2: string; }
-export interface Outputs { porcentaje: number; mensaje: string; }
+export interface Outputs { porcentaje: number; mensaje: string; _insight?: any; _chart?: any; }
 
 function normalize(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
@@ -45,5 +45,27 @@ export function loveCalculator(i: Inputs): Outputs {
   else if (pct >= 25) msg = `${pct}% — Mmm, no es la mejor combinación, pero el amor es impredecible.`;
   else msg = `${pct}% — El algoritmo no los ve juntos, pero el corazón no entiende de matemáticas.`;
 
-  return { porcentaje: pct, mensaje: msg };
+  const nombreA = String(i.nombre1 || '').trim();
+  const nombreB = String(i.nombre2 || '').trim();
+  const _insight = {
+    title: 'El veredicto del amor',
+    text: `Según el algoritmo clásico, **${nombreA}** y **${nombreB}** dan **${pct}%** de compatibilidad. Es un juego de letras, no ciencia: tomalo con humor. 😉`,
+    tone: pct >= 75 ? 'good' : pct >= 50 ? 'neutral' : 'warn',
+    icon: '❤️',
+  };
+  const _chart = {
+    type: 'scale' as const,
+    marker: pct,
+    markerLabel: pct + '%',
+    min: 0,
+    segments: [
+      { nombre: 'Frío', max: 25, color: '#94a3b8', colorDark: '#64748b' },
+      { nombre: 'Tibio', max: 50, color: '#fbbf24', colorDark: '#d97706' },
+      { nombre: 'Hay onda', max: 75, color: '#fb923c', colorDark: '#ea580c' },
+      { nombre: 'Almas gemelas', max: 100, color: '#ef4444', colorDark: '#dc2626' },
+    ],
+    ariaLabel: `Compatibilidad de ${pct}% en la escala del love calculator, de frío a almas gemelas.`,
+  };
+
+  return { porcentaje: pct, mensaje: msg, _insight, _chart };
 }

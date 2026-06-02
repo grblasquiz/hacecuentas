@@ -10,6 +10,8 @@ export interface Outputs {
   gas_mark_out: string;
   convection_note: string;
   description_out: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Gas Mark linear formula: °C = Gas Mark × 14 + 121
@@ -124,11 +126,41 @@ export function compute(i: Inputs): Outputs {
   const gas_mark_out = formatGasMark(gasMark);
   const description_out = getHeatDescription(fahrenheit);
 
+  // Insight: interpret the converted temperature and its heat band
+  const convPart = convection === "yes"
+    ? ` For a fan-forced oven, drop it ~25°F (14°C) to about ${celsiusToFahrenheit(celsius - CONVECTION_ADJUST_C).toFixed(0)}°F.`
+    : "";
+  const _insight = {
+    title: "What this temperature means",
+    text: `**${fahrenheit_out}°F** equals **${celsius_out}°C** (${gas_mark_out}) — a **${description_out.toLowerCase()}** oven.${convPart}`,
+    tone: "neutral",
+    icon: "\u{1F525}",
+  };
+
+  // Gauge: where this temperature sits on the culinary heat scale (°F)
+  const lastMax = Math.max(525, Math.ceil(fahrenheit_out / 25) * 25 + 25);
+  const _chart = {
+    type: "scale",
+    marker: fahrenheit_out,
+    markerLabel: `${fahrenheit_out}°F`,
+    min: 200,
+    segments: [
+      { nombre: "Very low", max: 300, color: "#bfdbfe", colorDark: "#1e3a8a" },
+      { nombre: "Low", max: 350, color: "#a7f3d0", colorDark: "#065f46" },
+      { nombre: "Moderate", max: 400, color: "#86efac", colorDark: "#166534" },
+      { nombre: "Hot", max: 450, color: "#fde68a", colorDark: "#92400e" },
+      { nombre: "Very hot", max: lastMax, color: "#fca5a5", colorDark: "#991b1b" },
+    ],
+    ariaLabel: `Oven heat scale: ${fahrenheit_out}°F falls in the ${description_out.toLowerCase()} range`,
+  };
+
   return {
     fahrenheit_out,
     celsius_out,
     gas_mark_out,
     convection_note: convectionNote,
-    description_out
+    description_out,
+    _insight,
+    _chart,
   };
 }

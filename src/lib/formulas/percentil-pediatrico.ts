@@ -12,6 +12,7 @@ export interface Outputs {
   mensajePeso: string;
   mensajeAltura: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Tablas aproximadas OMS (percentil 50) — para mayor precisión usar tablas reales
@@ -90,6 +91,14 @@ export function percentilPediatrico(i: Inputs): Outputs {
     ariaLabel: 'Escala de percentil de peso pediátrico (OMS): muy bajo, bajo, normal, alto, muy alto.',
   };
 
+  const alerta = pctPeso < 3 || pctPeso > 97 || pctAlt < 3 || pctAlt > 97;
+  const _insight = {
+    title: 'Percentiles del niño',
+    text: `A los **${edad} meses**, el peso cae en el **percentil ${pctPeso}** y la altura en el **percentil ${pctAlt}**, con un IMC de **${Number(imc.toFixed(1))}**. ${alerta ? 'Algún valor está fuera del rango P3–P97; conviene consultarlo con el pediatra.' : 'Ambos valores están dentro del rango habitual (P3–P97).'}`,
+    tone: alerta ? 'warn' : 'good',
+    icon: '🧒',
+  };
+
   return {
     percentilPeso: pctPeso,
     percentilAltura: pctAlt,
@@ -97,5 +106,6 @@ export function percentilPediatrico(i: Inputs): Outputs {
     mensajePeso: catMsg(pctPeso, 'peso'),
     mensajeAltura: catMsg(pctAlt, 'altura'),
     _chart: chart,
+    _insight,
   };
 }

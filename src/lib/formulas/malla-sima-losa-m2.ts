@@ -9,6 +9,7 @@ export interface MallaSimaOutputs {
   panos: number;
   pesoKg: number;
   detalle: string;
+  _insight?: any;
 }
 
 const PANO_LARGO = 6.0; // m
@@ -41,10 +42,17 @@ export function mallaSimaLosaM2(inputs: MallaSimaInputs): MallaSimaOutputs {
   const pesoTotal = Number((panos * t.pesoKg).toFixed(1));
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
+  const kgPorM2 = superficie > 0 ? pesoTotal / superficie : 0;
 
   return {
     panos,
     pesoKg: pesoTotal,
     detalle: `Para ${fmt.format(superficie)} m² con malla ${t.nombre} y ${solapeCm} cm de solape: ${panos} paños (${fmt.format(areaNeta)} m² netos/paño) → ${fmt.format(pesoTotal)} kg totales.`,
+    _insight: {
+      title: 'Cuánto pedir al corralón',
+      text: `Para tu losa necesitás **${panos} paños** de ${t.nombre}, unos **${fmt.format(pesoTotal)} kg** en total (${fmt.format(kgPorM2)} kg/m²). Ya incluye el solape de ${solapeCm} cm y ${desperdicio}% de desperdicio: pedí paños enteros, no se venden cortados.`,
+      tone: 'neutral',
+      icon: '🏗️',
+    },
   };
 }

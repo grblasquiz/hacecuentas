@@ -13,6 +13,7 @@ export interface Outputs {
   tiempoLectura: number;
   tiempoEscritura: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function palabrasPorPagina(i: Inputs): Outputs {
@@ -54,5 +55,11 @@ export function palabrasPorPagina(i: Inputs): Outputs {
     tiempoLectura,
     tiempoEscritura,
     mensaje: `${Math.round(palabras)} palabras = ${paginas.toFixed(1)} páginas (interlineado ${interlineado}, ${tamano}pt). Lectura: ~${tiempoLectura} min. Escritura: ~${tiempoEscritura} min.`,
+    _insight: {
+      title: 'Tu texto en páginas y tiempo',
+      text: `Con interlineado ${interlineado} a ${tamano}pt, **${Math.round(palabras).toLocaleString('es-AR')} palabras** ocupan **${paginas.toFixed(1)} páginas**. Se leen en ~**${tiempoLectura} min** y se escriben en ~**${tiempoEscritura} min**; el interlineado es lo que más mueve el conteo de páginas.`,
+      tone: 'neutral',
+      icon: '📝',
+    },
   };
 }

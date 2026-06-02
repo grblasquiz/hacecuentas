@@ -19,6 +19,8 @@ export interface Outputs {
   tarifa_marginal: number;
   isr_estimado: number;
   flujo_neto_anual: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -66,14 +68,54 @@ export function compute(i: Inputs): Outputs {
   // Flujo neto
   const flujo_neto_anual = canon_anual - total_deducciones - isr_estimado;
 
-  return {
-    canon_anual: Math.round(canon_anual),
-    total_deducciones: Math.round(total_deducciones),
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const canonR = Math.round(canon_anual);
+  const dedR = Math.round(total_deducciones);
+  const isrR = Math.round(isr_estimado);
+  const flujoR = Math.round(flujo_neto_anual);
+  const rentabilidad = canonR > 0 ? Math.round((flujoR / canonR) * 1000) / 10 : 0;
+
+  const _insight = {
+    title: flujoR < 0 ? 'El arriendo no cubre los costos' : 'Flujo neto del arriendo',
+    text: flujoR < 0
+      ? `Tras deducciones (**${fmtCOP(dedR)}**) e ISR, el inmueble te deja un flujo negativo de **${fmtCOP(flujoR)}** al año: los gastos superan el canon recibido.`
+      : `De un canon anual de **${fmtCOP(canonR)}** te quedan **${fmtCOP(flujoR)}** netos tras deducciones e ISR (tarifa marginal **${Math.round(tarifa_marginal * 100)}%**). Conservás el **${rentabilidad}%** del arriendo bruto.`,
+    tone: flujoR < 0 ? 'warn' : rentabilidad >= 70 ? 'good' : 'neutral',
+    icon: '🏠',
+  };
+
+  const out: Outputs = {
+    canon_anual: canonR,
+    total_deducciones: dedR,
     depreciacion_anual: Math.round(depreciacion_anual),
     renta_liquida_cedular: Math.round(renta_liquida_cedular),
     retencion_inquilino: Math.round(retencion_inquilino),
     tarifa_marginal,
-    isr_estimado: Math.round(isr_estimado),
-    flujo_neto_anual: Math.round(flujo_neto_anual),
+    isr_estimado: isrR,
+    flujo_neto_anual: flujoR,
+    _insight,
   };
+
+  // Donut: destino del canon bruto = flujo neto + deducciones + ISR (suman el canon anual)
+  if (canonR > 0 && flujoR >= 0) {
+    // flujo derivado de los componentes redondeados para que las slices sumen EXACTO el canon
+    const flujoSlice = canonR - dedR - isrR;
+    const slices = [
+      { label: 'Flujo neto para vos', value: flujoSlice },
+      { label: 'Deducciones (gastos, predial, etc.)', value: dedR },
+      { label: 'ISR estimado', value: isrR },
+    ].filter(s => s.value > 0);
+    if (slices.length >= 2) {
+      out._chart = {
+        type: 'doughnut',
+        slices,
+        prefix: '$',
+        centerValue: fmtCOP(canonR),
+        centerLabel: 'Canon anual',
+        ariaLabel: 'Destino del canon anual bruto entre flujo neto, deducciones e ISR',
+      };
+    }
+  }
+
+  return out;
 }

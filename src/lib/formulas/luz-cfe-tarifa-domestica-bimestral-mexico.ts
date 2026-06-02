@@ -14,6 +14,8 @@ export interface Outputs {
   total_recibo: number;
   costo_por_kwh: number;
   ahorro_anual_solar_80: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -73,15 +75,52 @@ export function compute(i: Inputs): Outputs {
   const consumoAnual = consumo * 6; // bimestral × 6
   const ahorroConSolar = (consumoAnual * 0.80) * costoPorKwh;
 
+  const fmt = (n: number) => '$' + (Math.round(n * 100) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const totalR = Math.round(totalRecibo * 100) / 100;
+  const energiaR = Math.round(cargoEnergiaNeto * 100) / 100;
+  const dacR = Math.round(cargoDac * 100) / 100;
+  const ivaR = Math.round(iva16 * 100) / 100;
+
+  const insight = aplicaDac
+    ? {
+        title: 'Caíste en tarifa DAC',
+        text: `Con ${consumo} kWh superaste el umbral de ${datos.umbralDAC} kWh de la zona ${zona.toUpperCase()}: perdiste el subsidio y se sumó un cargo DAC de **${fmt(dacR)}**. Tu recibo bimestral queda en **${fmt(totalR)}** (${fmt(costoPorKwh)}/kWh).`,
+        tone: 'warn',
+        icon: '⚡',
+      }
+    : {
+        title: 'Tu recibo CFE, desglosado',
+        text: `Pagás **${fmt(totalR)}** por el bimestre, o sea **${fmt(costoPorKwh)} por kWh**. El subsidio te descuenta ${fmt(Math.round(subsidioAplicado * 100) / 100)} y todavía estás dentro del umbral DAC (${datos.umbralDAC} kWh de la zona ${zona.toUpperCase()}).`,
+        tone: 'neutral',
+        icon: '⚡',
+      };
+
+  const slices = [{ label: 'Energía (neto)', value: energiaR }];
+  if (dacR > 0) slices.push({ label: 'Cargo DAC', value: dacR });
+  slices.push({ label: 'IVA 16%', value: ivaR });
+
+  const chart = totalR > 0
+    ? {
+        type: 'doughnut' as const,
+        slices,
+        prefix: '$',
+        centerValue: fmt(totalR),
+        centerLabel: 'Total bimestral',
+        ariaLabel: 'Composición del recibo CFE: cargo de energía neto, cargo DAC si aplica e IVA.',
+      }
+    : undefined;
+
   return {
     cargo_base: Math.round(cargoBase * 100) / 100,
     subsidio_aplicado: Math.round(subsidioAplicado * 100) / 100,
-    cargo_energia_neto: Math.round(cargoEnergiaNeto * 100) / 100,
-    cargo_dac: Math.round(cargoDac * 100) / 100,
+    cargo_energia_neto: energiaR,
+    cargo_dac: dacR,
     subtotal_antes_iva: Math.round(subtotalAntesIva * 100) / 100,
-    iva_16: Math.round(iva16 * 100) / 100,
-    total_recibo: Math.round(totalRecibo * 100) / 100,
+    iva_16: ivaR,
+    total_recibo: totalR,
     costo_por_kwh: Math.round(costoPorKwh * 100) / 100,
-    ahorro_anual_solar_80: Math.round(ahorroConSolar * 100) / 100
+    ahorro_anual_solar_80: Math.round(ahorroConSolar * 100) / 100,
+    _insight: insight,
+    _chart: chart
   };
 }

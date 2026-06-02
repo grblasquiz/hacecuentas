@@ -12,6 +12,7 @@ export interface Outputs {
   comparativa_ocde: string;
   dias_diferencia_ocde: number;
   monto_equivalente_ocde: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -41,12 +42,23 @@ export function compute(i: Inputs): Outputs {
     comparativa_ocde = `Chile 5 días, ${dias_diferencia_ocde} días por debajo de promedio OCDE (${PROMEDIO_OCDE_DIAS} días)`;
   }
 
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const brechaMonto = Math.round(monto_equivalente_ocde - monto_total_cobrar);
+
+  const _insight = {
+    title: 'Tu permiso vs. el promedio OCDE',
+    text: `Cobrás **${fmtCLP(monto_total_cobrar)}** por los **5 días** de permiso. Con el promedio OCDE (**${PROMEDIO_OCDE_DIAS} días**) recibirías **${fmtCLP(Math.round(monto_equivalente_ocde))}**: una brecha de **${fmtCLP(brechaMonto)}** por los ${dias_diferencia_ocde} días que Chile no contempla.`,
+    tone: 'warn',
+    icon: '👶',
+  };
+
   return {
     dias_permiso: DIAS_PERMISO_PATERNIDAD,
     monto_total_cobrar: Math.round(monto_total_cobrar),
     salario_diario_efectivo: Math.round(salario_diario_efectivo),
     comparativa_ocde,
     dias_diferencia_ocde,
-    monto_equivalente_ocde: Math.round(monto_equivalente_ocde)
+    monto_equivalente_ocde: Math.round(monto_equivalente_ocde),
+    _insight
   };
 }

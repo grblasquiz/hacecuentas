@@ -14,6 +14,8 @@ export interface Outputs {
   carga_fiscal_efectiva: number;
   comparativa_resico_pm: number;
   ahorro_ordinario_vs_resico: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -64,6 +66,32 @@ export function compute(i: Inputs): Outputs {
   // Paso 8: Calcular ahorro/diferencia
   const ahorro_ordinario_vs_resico = comparativa_resico_pm - isr_anual_30;
 
+  const fmtMxn = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const cargaPct = Math.round(carga_fiscal_efectiva * 10000) / 100;
+  const utilidad_despues_isr = Math.max(0, utilidad_neta_gravable - isr_anual_30);
+  const _insight = {
+    title: ahorro_ordinario_vs_resico >= 0
+      ? 'El régimen ordinario te conviene'
+      : 'RESICO PM saldría más barato',
+    text: ahorro_ordinario_vs_resico >= 0
+      ? `Con el régimen ordinario (30%) pagás **${fmtMxn(isr_anual_30)}** de ISR sobre una utilidad gravable de **${fmtMxn(utilidad_neta_gravable)}**, **${fmtMxn(Math.abs(ahorro_ordinario_vs_resico))}** menos que en RESICO PM (**${fmtMxn(comparativa_resico_pm)}**). Carga efectiva: **${cargaPct.toFixed(1)}%** de tus ingresos.`
+      : `En el ordinario (30%) pagarías **${fmtMxn(isr_anual_30)}** de ISR, **${fmtMxn(Math.abs(ahorro_ordinario_vs_resico))}** más que en RESICO PM (**${fmtMxn(comparativa_resico_pm)}**): conviene revisar la elegibilidad al simplificado. Carga efectiva ordinaria: **${cargaPct.toFixed(1)}%**.`,
+    tone: (ahorro_ordinario_vs_resico >= 0 ? 'good' : 'warn') as 'good' | 'warn' | 'neutral',
+    icon: '🏢',
+  };
+
+  const _chart = utilidad_neta_gravable > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'ISR (30%)', value: Math.round(isr_anual_30) },
+      { label: 'Utilidad después de ISR', value: Math.round(utilidad_despues_isr) },
+    ],
+    prefix: '$',
+    centerValue: fmtMxn(utilidad_neta_gravable),
+    centerLabel: 'Utilidad gravable',
+    ariaLabel: 'Reparto de la utilidad neta gravable entre ISR del 30% y utilidad después de impuesto',
+  } : undefined;
+
   return {
     utilidad_fiscal: Math.round(utilidad_fiscal * 100) / 100,
     utilidad_neta_gravable: Math.round(utilidad_neta_gravable * 100) / 100,
@@ -71,6 +99,8 @@ export function compute(i: Inputs): Outputs {
     pago_provisional_mensual: Math.round(pago_provisional_mensual * 100) / 100,
     carga_fiscal_efectiva: Math.round(carga_fiscal_efectiva * 10000) / 100, // En porcentaje
     comparativa_resico_pm: Math.round(comparativa_resico_pm * 100) / 100,
-    ahorro_ordinario_vs_resico: Math.round(ahorro_ordinario_vs_resico * 100) / 100
+    ahorro_ordinario_vs_resico: Math.round(ahorro_ordinario_vs_resico * 100) / 100,
+    _insight,
+    _chart
   };
 }

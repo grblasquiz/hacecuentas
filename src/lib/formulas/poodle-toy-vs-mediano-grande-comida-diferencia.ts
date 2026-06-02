@@ -13,6 +13,7 @@ export interface Outputs {
   gramos_mes: number;
   bolsa_kg_mes: string;
   nota: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -165,6 +166,23 @@ export function compute(i: Inputs): Outputs {
 
   notas.push("Estimación basada en fórmula NRC 2006 y densidad energética promedio de balanceados comerciales. Ajustá según la etiqueta de tu producto y el peso real de tu perro.");
 
+  const fueraDeRango = peso < pesoMin || peso > pesoMax;
+  const VARIEDAD_LABEL: Record<string, string> = {
+    toy: 'Toy',
+    miniatura: 'Miniatura',
+    mediano: 'Mediano',
+    estandar: 'Estándar (grande)',
+  };
+  const variedadTxt = VARIEDAD_LABEL[variedad] ?? variedad;
+  const _insight = {
+    title: 'La ración de tu Caniche',
+    text: fueraDeRango
+      ? `Un Caniche **${variedadTxt}** de **${peso} kg** necesitaría unos **${gramosDiarios} g/día** (${gramosPorComida} g por toma × ${tomasRecomendadas}), pero **${peso} kg está fuera del rango típico** de esta variedad: confirmá que elegiste bien la talla.`
+      : `Un Caniche **${variedadTxt}** de **${peso} kg** necesita unos **${gramosDiarios} g/día** de balanceado: **${gramosPorComida} g** por toma repartidos en **${tomasRecomendadas} comidas**, ≈ **${bolsaKgMes.replace(' aprox.', '')}**.`,
+    tone: fueraDeRango ? 'warn' : 'good',
+    icon: '🐩',
+  };
+
   return {
     gramos_diarios: gramosDiarios,
     gramos_por_comida: gramosPorComida,
@@ -173,5 +191,6 @@ export function compute(i: Inputs): Outputs {
     gramos_mes: gramosMes,
     bolsa_kg_mes: bolsaKgMes,
     nota: notas.join(" | "),
+    _insight,
   };
 }

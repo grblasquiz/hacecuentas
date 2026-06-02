@@ -19,6 +19,8 @@ export interface Outputs {
   macro_summary: string;
   food_examples: string;
   tdee_used: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Factores de actividad — Fuente: FAO/OMS/UNU 2004, Mifflin-St Jeor 1990
@@ -142,6 +144,12 @@ export function compute(i: Inputs): Outputs {
       macro_summary: `Con ${proteinPerKg} g/kg de proteína y ${fatPct}% de grasa, las calorías objetivo de ${targetKcal} kcal no son suficientes. Considera reducir proteína a 1.6 g/kg o el % de grasa a 25%.`,
       food_examples: '',
       tdee_used: tdeeLabel,
+      _insight: {
+        title: 'Los macros no cierran',
+        text: `Con **${proteinPerKg} g/kg de proteína** y **${fatPct}% de grasa**, ya superás las **${targetKcal} kcal** objetivo antes de sumar carbohidratos. Bajá la proteína a ~1.6 g/kg o la grasa a 25% para que entren los carbos.`,
+        tone: 'warn',
+        icon: '⚠️',
+      },
     };
   }
 
@@ -155,6 +163,33 @@ export function compute(i: Inputs): Outputs {
 
   const foodExamples = getFoodExamples(proteinGrams, carbsGrams, fatGrams);
 
+  const goalPhrase: Record<string, string> = {
+    deficit: 'un déficit del 20%',
+    maintenance: 'mantenimiento',
+    surplus: 'un superávit del 10%',
+  };
+  const insightTone = goal === 'deficit' ? 'warn' : goal === 'surplus' ? 'good' : 'neutral';
+  const _insight = {
+    title: `Tus macros de ${(goalLabels[goal] ?? goal).toLowerCase()}`,
+    text: `Para **${targetKcal} kcal/día** (${goalPhrase[goal] ?? 'tu objetivo'} sobre ${Math.round(tdee)} de GET), apuntá a **${Math.round(proteinGrams)} g de proteína** (${proteinPct}%), **${Math.round(fatGrams)} g de grasa** (${fatPctActual}%) y **${Math.round(carbsGrams)} g de carbos** (${carbsPct}%). Recalculá cada 4-6 semanas o tras cambiar 2-3 kg.`,
+    tone: insightTone,
+    icon: '🍽️',
+  };
+  const protKcal = Math.round(proteinKcal);
+  const fKcal = Math.round(fatKcal);
+  const cKcal = Math.round(carbsKcal);
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Proteína', value: protKcal },
+      { label: 'Grasa', value: fKcal },
+      { label: 'Carbohidratos', value: cKcal },
+    ],
+    centerValue: `${protKcal + fKcal + cKcal}`,
+    centerLabel: 'kcal',
+    ariaLabel: `Reparto de calorías: ${Math.round(proteinGrams)}g proteína, ${Math.round(fatGrams)}g grasa y ${Math.round(carbsGrams)}g carbohidratos`,
+  };
+
   return {
     target_kcal: targetKcal,
     protein_g: `${Math.round(proteinGrams)} g  (${proteinPct}% — ${Math.round(proteinKcal)} kcal)`,
@@ -163,5 +198,7 @@ export function compute(i: Inputs): Outputs {
     macro_summary: macroSummary,
     food_examples: foodExamples,
     tdee_used: tdeeLabel,
+    _insight,
+    _chart,
   };
 }

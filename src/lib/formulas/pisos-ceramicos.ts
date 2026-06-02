@@ -14,6 +14,7 @@ export interface Outputs {
   pegamentoKg: number;
   pastinaKg: number;
   m2PorCaja: number;
+  _insight?: any;
 }
 
 export function pisosCeramicos(i: Inputs): Outputs {
@@ -21,9 +22,15 @@ export function pisosCeramicos(i: Inputs): Outputs {
   const T = ({
     es: {
       errorDimensions: 'Ingresá largo y ancho del ambiente',
+      insightTitle: 'Cuántas cajas comprar',
+      insightText: (cajas: number, m2c: number, desp: number, peg: number) =>
+        `Para tu ambiente comprá **${cajas} cajas** de ${m2c} m² (incluye **${desp}% de desperdicio** por cortes). Sumá **${peg} kg de pegamento** y pedí todo del mismo lote para que no varíe el tono. Guardá las piezas que sobren: son tu repuesto si más adelante se raja alguna.`,
     },
     en: {
       errorDimensions: 'Enter the room length and width',
+      insightTitle: 'How many boxes to buy',
+      insightText: (cajas: number, m2c: number, desp: number, peg: number) =>
+        `For your room buy **${cajas} boxes** of ${m2c} m² (includes **${desp}% waste** for cuts). Add **${peg} kg of adhesive** and order everything from the same batch so the shade stays consistent. Keep the leftover tiles: they are your spares if one cracks later.`,
     },
   } as const)[__lang];
   const l = Number(i.largo);
@@ -69,5 +76,11 @@ export function pisosCeramicos(i: Inputs): Outputs {
     pegamentoKg,
     pastinaKg,
     m2PorCaja: m2PorCajaCalc,
+    _insight: {
+      title: T.insightTitle,
+      text: T.insightText(cajas, m2PorCajaCalc, desp, pegamentoKg),
+      tone: 'neutral',
+      icon: '🧱',
+    },
   };
 }

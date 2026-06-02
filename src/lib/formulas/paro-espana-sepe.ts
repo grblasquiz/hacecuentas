@@ -46,6 +46,8 @@ export interface ParoSepeOutputs {
   importeTotal: string;
   topeMensualAplicado: string;
   topesInfo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmtEUR = (n: number) =>
@@ -110,7 +112,36 @@ export function paroEspanaSepe(i: ParoSepeInputs): ParoSepeOutputs {
   // Total: 180 días (6 meses) al 70% o tope + resto al 60%
   const mesesPrim = Math.min(6, meses);
   const mesesResto = Math.max(0, meses - 6);
-  const total = brutoPrimeros180 * mesesPrim + brutoResto * mesesResto;
+  const totalPrim = brutoPrimeros180 * mesesPrim;
+  const totalResto = brutoResto * mesesResto;
+  const total = totalPrim + totalResto;
+
+  const topadoArriba = brutoPrimeros180 >= maximo && baseMensual * 0.7 > maximo;
+  const insight = {
+    title: 'Tu paro contributivo del SEPE',
+    text: topadoArriba
+      ? `Tenés **${meses} meses** de paro y cobrarías **${fmtEUR(brutoPrimeros180)}/mes** (**${fmtEUR(total)}** en total). Tu base reguladora da más, pero el SEPE **te limita al tope máximo** de ${fmtEUR(maximo)}/mes según tus hijos a cargo.`
+      : mesesResto > 0
+        ? `Tenés **${meses} meses** de paro: **${fmtEUR(brutoPrimeros180)}/mes** los primeros 6 (70%) y **${fmtEUR(brutoResto)}/mes** después (60%). En total cobrarías **${fmtEUR(total)}** brutos.`
+        : `Tenés **${meses} meses** de paro a **${fmtEUR(brutoPrimeros180)}/mes** (70% de tu base), que suman **${fmtEUR(total)}** brutos. Al durar ≤ 6 meses, no llegás a la fase del 60%.`,
+    tone: topadoArriba ? 'warn' : 'neutral',
+    icon: '🇪🇸',
+  };
+
+  const chart =
+    mesesResto > 0
+      ? {
+          type: 'doughnut',
+          slices: [
+            { label: `Primeros 6 meses (70%)`, value: Math.round(totalPrim * 100) / 100 },
+            { label: `Resto (${mesesResto} meses al 60%)`, value: Math.round(totalResto * 100) / 100 },
+          ],
+          prefix: '€',
+          centerValue: fmtEUR(total),
+          centerLabel: 'Total bruto',
+          ariaLabel: `Reparto del paro total de ${fmtEUR(total)}: ${fmtEUR(totalPrim)} en los primeros 6 meses y ${fmtEUR(totalResto)} en el resto.`,
+        }
+      : undefined;
 
   return {
     mesesProvision: `${meses} meses`,
@@ -123,5 +154,7 @@ export function paroEspanaSepe(i: ParoSepeInputs): ParoSepeOutputs {
       ? `Sí — se aplicó el tope máximo de ${fmtEUR(maximo)}/mes (IPREM × ${hijos === 0 ? 175 : hijos === 1 ? 200 : 225}% por ${hijos} hijos)`
       : 'No — importe dentro de los topes',
     topesInfo: `Mínimo ${fmtEUR(minimo)}/mes — Máximo ${fmtEUR(maximo)}/mes (IPREM 2026: ${fmtEUR(iprem)}/mes)`,
+    _insight: insight,
+    ...(chart ? { _chart: chart } : {}),
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   desgloseEsquema: string;
   flexibilidadComparada: string;
   resumen: string;
+  _insight?: any;
 }
 
 // Esquemas tácticos: [DEF, MED, DEL]
@@ -73,10 +74,25 @@ export function mundial2026DreamTeam(i: Inputs): Outputs {
 
   const desglose = `**Arqueros**: C(${gk},1) = ${cGk}. **Defensores**: C(${def},${reqDef}) = ${cDef}. **Mediocampistas**: C(${med},${reqMed}) = ${cMed}. **Delanteros**: C(${del},${reqDel}) = ${cDel}. **Total**: ${cGk} × ${cDef} × ${cMed} × ${cDel} = ${fmtNum(total)} onces.`;
 
+  const lineas: Array<{ nombre: string; c: number }> = [
+    { nombre: 'arqueros', c: cGk },
+    { nombre: 'defensores', c: cDef },
+    { nombre: 'mediocampistas', c: cMed },
+    { nombre: 'delanteros', c: cDel },
+  ];
+  const lineaTop = lineas.slice().sort((x, y) => y.c - x.c)[0].nombre;
+  const _insight = {
+    title: `Onces posibles en ${esquema}`,
+    text: `Con **${gk + def + med + del} convocados** y esquema **${esquema}**, hay **${fmtNum(total)} formaciones titulares** matemáticamente distintas. La línea que más opciones abre es la de **${lineaTop}**. En la práctica, solo 50-100 serían tácticamente viables.`,
+    tone: 'neutral',
+    icon: '🧮',
+  };
+
   return {
     combinacionesTotal: `${fmtNum(total)} onces posibles`,
     desgloseEsquema: desglose,
     flexibilidadComparada: comparadas.length > 0 ? comparadas.join(' · ') : 'Otros esquemas no compatibles con el plantel.',
     resumen: `Con **${gk + def + med + del} convocados** (${gk} GK + ${def} DEF + ${med} MED + ${del} DEL) en esquema **${esquema}**: **${fmtNum(total)} onces distintos posibles** matemáticamente. En la práctica, sólo 50-100 serían tácticamente viables.`,
+    _insight,
   };
 }

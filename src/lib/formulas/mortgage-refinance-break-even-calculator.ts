@@ -16,6 +16,7 @@ export interface Outputs {
   total_interest_new: number;
   total_interest_saved: number;
   recommendation: string;
+  _insight?: any;
 }
 
 /**
@@ -117,6 +118,35 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  const fmtUsd = (n: number) => '$' + new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(n));
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightTitle: string;
+  let insightText: string;
+  if (savings <= 0) {
+    if (totalInterestSaved > 0) {
+      insightTone = 'good';
+      insightTitle = 'Higher payment, big interest savings';
+      insightText = `Your payment rises by **${fmtUsd(Math.abs(savings))}/mo**, but you save **${fmtUsd(totalInterestSaved)}** in total interest — worth it if you can carry the higher payment and want to be debt-free sooner.`;
+    } else {
+      insightTone = 'warn';
+      insightTitle = 'This refinance loses on both ends';
+      insightText = `Your payment goes up by **${fmtUsd(Math.abs(savings))}/mo** and total interest rises by **${fmtUsd(Math.abs(totalInterestSaved))}**. As entered, this refinance is not advantageous — revisit the rate and term.`;
+    }
+  } else if (totalInterestSaved < 0) {
+    insightTone = 'warn';
+    insightTitle = 'Lower payment, but you pay more interest';
+    insightText = `You break even on the **${fmtUsd(closingCosts)}** in costs in **${breakEvenMonths} months**, yet stretching the term adds **${fmtUsd(Math.abs(totalInterestSaved))}** in lifetime interest despite saving ${fmtUsd(savings)}/mo. A shorter new term would fix this.`;
+  } else if (breakEvenMonths === 0) {
+    insightTone = 'good';
+    insightTitle = 'No-cost refi pays off immediately';
+    insightText = `With no upfront costs you start saving from month one: **${fmtUsd(savings)}/mo** and **${fmtUsd(totalInterestSaved)}** in total interest over the new term.`;
+  } else {
+    insightTone = 'good';
+    insightTitle = `Break-even in ${breakEvenMonths} months`;
+    insightText = `You recover the **${fmtUsd(closingCosts)}** in costs after **${breakEvenMonths} months** (${(breakEvenMonths / 12).toFixed(1)} yrs). Stay past that and you pocket **${fmtUsd(savings)}/mo** plus **${fmtUsd(totalInterestSaved)}** in total interest.`;
+  }
+
   return {
     current_monthly_payment: Math.round(currentPayment * 100) / 100,
     new_monthly_payment: Math.round(newPayment * 100) / 100,
@@ -126,5 +156,11 @@ export function compute(i: Inputs): Outputs {
     total_interest_new: Math.round(totalInterestNew * 100) / 100,
     total_interest_saved: Math.round(totalInterestSaved * 100) / 100,
     recommendation,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: '🏦',
+    },
   };
 }

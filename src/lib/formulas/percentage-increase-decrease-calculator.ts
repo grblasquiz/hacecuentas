@@ -11,6 +11,7 @@ export interface Outputs {
   absolute_difference: number;
   result_value: number;
   explanation_text: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -73,6 +74,15 @@ export function compute(i: Inputs): Outputs {
       absolute_difference: absDiff,
       result_value: newVal,
       explanation_text: explanationText,
+      _insight: {
+        title: direction === "No change" ? "No change" : direction,
+        text:
+          direction === "No change"
+            ? `Both values are equal, so the percentage change is **0%**.`
+            : `Going from **${original.toFixed(2)}** to **${newVal.toFixed(2)}** is a **${rawChange > 0 ? "+" : ""}${rawChange.toFixed(2)}%** ${direction.toLowerCase()} (an absolute difference of **${absDiff.toFixed(2)}**).`,
+        tone: rawChange > 0 ? "good" : rawChange < 0 ? "warn" : "neutral",
+        icon: rawChange > 0 ? "📈" : rawChange < 0 ? "📉" : "➖",
+      },
     };
   }
 
@@ -120,6 +130,15 @@ export function compute(i: Inputs): Outputs {
       absolute_difference: absDiff,
       result_value: newVal,
       explanation_text: explanationText,
+      _insight: {
+        title: direction === "No change" ? "No change" : direction,
+        text:
+          direction === "No change"
+            ? `A 0% change leaves the value at **${newVal.toFixed(2)}**.`
+            : `Applying a **${pct > 0 ? "+" : ""}${pct.toFixed(2)}%** ${direction.toLowerCase()} to **${original.toFixed(2)}** gives **${newVal.toFixed(2)}** (a change of **${absDiff.toFixed(2)}**).`,
+        tone: pct > 0 ? "good" : pct < 0 ? "warn" : "neutral",
+        icon: pct > 0 ? "📈" : pct < 0 ? "📉" : "➖",
+      },
     };
   }
 

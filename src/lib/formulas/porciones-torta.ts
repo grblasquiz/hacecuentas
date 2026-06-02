@@ -1,6 +1,6 @@
 /** Porciones de torta según tamaño del molde y capas */
 export interface Inputs { diametroMolde: number; capas?: string; }
-export interface Outputs { porcionesEstimadas: number; factorMultiplicador: number; detalle: string; }
+export interface Outputs { porcionesEstimadas: number; factorMultiplicador: number; detalle: string; _insight?: any; }
 
 export function porcionesTorta(i: Inputs): Outputs {
   const diam = Number(i.diametroMolde);
@@ -22,9 +22,17 @@ export function porcionesTorta(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const _insight = {
+    title: 'Porciones estimadas',
+    text: `Un molde de **${diam} cm** con **${capas} capa${capas > 1 ? 's' : ''}** rinde **~${porciones} porciones** estándar (~30 cm² c/u). Para porciones más generosas o de cumpleaños, contá un 20-30% menos.`,
+    tone: 'neutral',
+    icon: '🍰',
+  };
+
   return {
     porcionesEstimadas: porciones,
     factorMultiplicador: Number(factorVs22.toFixed(2)),
     detalle: `Molde de ${diam} cm, ${capas} capa${capas > 1 ? 's' : ''}: ~${porciones} porciones. Si tu receta es para molde de 22 cm, multiplicá los ingredientes por ${fmt.format(factorVs22)}.`,
+    _insight,
   };
 }

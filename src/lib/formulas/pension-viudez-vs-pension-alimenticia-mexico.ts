@@ -18,6 +18,7 @@ export interface Outputs {
   diferencia_mensual: number;
   tramites_requeridos: string;
   notas_especiales: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -157,6 +158,26 @@ export function compute(i: Inputs): Outputs {
 
   notas_especiales = lista_notas.length > 0 ? lista_notas.join('\n') : 'Sin consideraciones especiales.';
 
+  // INSIGHT dinámico según escenario
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  let _insight: any;
+  if (i.situacion === 'viudez' && (i.institucion === 'imss' || i.institucion === 'issste')) {
+    _insight = {
+      title: 'Pensión por viudez',
+      text: `Te corresponde una pensión por viudez de **${fmt(pension_viudez_mensual)}/mes** (${Math.round(porcentaje_viudez * 100)}% del haber base) vía ${i.institucion === 'imss' ? 'IMSS' : 'ISSSTE'}. Esta prestación **absorbe** la obligación alimentaria: no procede demanda de alimenticia en paralelo y se pierde si contraés nuevo matrimonio.`,
+      tone: 'good',
+      icon: '🕊️',
+    };
+  } else {
+    const piso = pension_alimenticia_minima > 0;
+    _insight = {
+      title: 'Pensión alimenticia',
+      text: `Sin pensión por viudez aplicable, la alimenticia por ${i.num_hijos} ${i.num_hijos === 1 ? 'hijo' : 'hijos'} se estimaría entre **${fmt(pension_alimenticia_minima)}** y **${fmt(pension_alimenticia_maxima)}/mes** (10%–30% de ingresos, criterio SCJN)${piso ? ', con piso mínimo de una UMA por hijo' : ''}. Requiere sentencia firme del juzgado familiar para ser exigible.`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  }
+
   return {
     pension_viudez_mensual: Math.round(pension_viudez_mensual * 100) / 100,
     porcentaje_viudez: Math.round(porcentaje_viudez * 10000) / 100,
@@ -165,6 +186,7 @@ export function compute(i: Inputs): Outputs {
     compatibilidad,
     diferencia_mensual: Math.round(diferencia_mensual * 100) / 100,
     tramites_requeridos,
-    notas_especiales
+    notas_especiales,
+    _insight
   };
 }

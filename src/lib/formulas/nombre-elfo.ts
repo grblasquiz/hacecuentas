@@ -1,5 +1,5 @@
 export interface Inputs { nombre: string; genero?: string; }
-export interface Outputs { nombreElfico: string; significado: string; mensaje: string; }
+export interface Outputs { nombreElfico: string; significado: string; mensaje: string; _insight?: any; }
 function clean(s:string):string{return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z]/g,'');}
 const RAICES=['Gal','Eä','Celeb','Anar','Ithil','Nim','Faer','Maer','Elen','Tinu','Laer','Hir'];
 const SUF_M=['thon','ion','dil','nor','las','orn','we','gon'];
@@ -20,5 +20,17 @@ export function nombreElfo(i: Inputs): Outputs {
   const nombre = raiz + suf;
   const sigRaiz = SIGS[raiz]||'noble';
   const sigSuf = sigArr[suf]||'del bosque';
-  return { nombreElfico: nombre.charAt(0).toUpperCase()+nombre.slice(1), significado: `${sigRaiz} + ${sigSuf}`, mensaje: `${nombre.charAt(0).toUpperCase()+nombre.slice(1)} — '${sigSuf} de ${sigRaiz}' en Sindarin. Un nombre digno de la Tierra Media.` };
+  const display = nombre.charAt(0).toUpperCase()+nombre.slice(1);
+  const casa = g==='f' ? 'las doncellas de Lothlórien' : g==='nb' ? 'los guardianes del bosque' : 'los señores de Rivendell';
+  return {
+    nombreElfico: display,
+    significado: `${sigRaiz} + ${sigSuf}`,
+    mensaje: `${display} — '${sigSuf} de ${sigRaiz}' en Sindarin. Un nombre digno de la Tierra Media.`,
+    _insight: {
+      title: 'Tu identidad élfica',
+      text: `**${display}** significa "${sigSuf} de ${sigRaiz}": un nombre que sonaría natural entre **${casa}**. Compartilo y desafiá a tus amigos a sacar el suyo.`,
+      tone: 'good',
+      icon: '🧝',
+    },
+  };
 }

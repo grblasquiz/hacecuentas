@@ -20,6 +20,7 @@ export interface MillasUnitedMileageplusOutputs {
   valorEstimadoUsd: number;
   cabinaAplicada: string;
   tipoViajeAplicado: string;
+  _insight?: any;
 }
 
 interface TarifaMillas {
@@ -59,11 +60,20 @@ export function millasUnitedMileageplus(i: MillasUnitedMileageplusInputs): Milla
 
   const valor = (millas * VALOR_CENTAVOS_POR_MILLA) / 100;
 
+  const cabLabel = cab === 'business' ? 'Business' : 'Economy';
+  const viajeLabel = viaje === 'ida-vuelta' ? 'ida y vuelta' : 'solo ida';
+
   return {
     millasRequeridas: millas,
     impuestos: 'USD 140–300 aprox según ruta (tasas y fees). No se pueden cubrir con millas.',
     valorEstimadoUsd: Number(valor.toFixed(2)),
     cabinaAplicada: cab === 'business' ? 'Business' : 'Economy',
     tipoViajeAplicado: viaje === 'ida-vuelta' ? 'Ida y vuelta' : 'Solo ida',
+    _insight: {
+      title: 'Lo que rinde este canje',
+      text: `Para ${cabLabel} ${viajeLabel} necesitás **${millas.toLocaleString('es-AR')} millas MileagePlus**, un canje valuado en **USD ${valor.toFixed(2)}** (a 1,3¢ por milla, ref. The Points Guy). Las tasas e impuestos (USD 140-300) se pagan en plata, no con millas.`,
+      tone: 'neutral',
+      icon: '✈️'
+    },
   };
 }

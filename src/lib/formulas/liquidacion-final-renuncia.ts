@@ -17,6 +17,7 @@ export interface LiquidacionRenunciaOutputs {
   vacacionesNoGozadas: number;
   sacProporcional: number;
   sacSobreVacaciones: number;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -44,6 +45,16 @@ export function liquidacionFinalRenuncia(inputs: LiquidacionRenunciaInputs): Liq
 
   const totalLiquidacion = diasTrabajados + vacacionesNoGozadas + sacProporcional + sacSobreVacaciones;
 
+  const fmtAR = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Tu liquidación por renuncia',
+    text:
+      `Al renunciar te corresponden **${fmtAR(totalLiquidacion)}**: días trabajados del mes, **${diasVacacionesNGozadas} días** de vacaciones no gozadas y el SAC proporcional del semestre.` +
+      ` Por renuncia **no hay indemnización por antigüedad ni preaviso a tu favor** — sólo lo ya devengado. Avisá con la antelación que marca el Art. 240 para no deberle preaviso al empleador.`,
+    tone: 'neutral' as const,
+    icon: '✍️',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -64,6 +75,7 @@ export function liquidacionFinalRenuncia(inputs: LiquidacionRenunciaInputs): Liq
     vacacionesNoGozadas: Math.round(vacacionesNoGozadas),
     sacProporcional: Math.round(sacProporcional),
     sacSobreVacaciones: Math.round(sacSobreVacaciones),
+    _insight: insight,
     _chart: chart,
   };
 }

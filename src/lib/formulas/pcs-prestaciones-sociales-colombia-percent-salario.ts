@@ -18,6 +18,8 @@ export interface Outputs {
   costo_total_empleado: number;
   porcentaje_adicional: number;
   costo_anual: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -70,7 +72,38 @@ export function compute(i: Inputs): Outputs {
   const porcentaje_adicional = (prestaciones_basicas_total + total_seguridad_social) / salario;
   const costo_anual = costo_total_empleado * 12;
 
+  const pctAdic = Math.round(porcentaje_adicional * 10000) / 100;
+  const sobreCosto = Math.round(prestaciones_basicas_total + total_seguridad_social);
+  const insight = {
+    title: 'Lo que suma sobre el salario',
+    text: `Un salario de **$${Math.round(salario).toLocaleString('es-CO')}** te cuesta en realidad **$${Math.round(costo_total_empleado).toLocaleString('es-CO')}** al mes: prestaciones y seguridad social agregan un **${pctAdic.toFixed(1)}%** (**$${sobreCosto.toLocaleString('es-CO')}** extra). En el año el costo total del empleado es **$${Math.round(costo_anual).toLocaleString('es-CO')}**.`,
+    tone: pctAdic >= 45 ? 'warn' : pctAdic <= 35 ? 'good' : 'neutral',
+    icon: '🇨🇴',
+  };
+
+  const chartSlices = [
+    { label: 'Salario base', value: Math.round(salario) },
+    { label: 'Cesantías', value: Math.round(cesantias_mensual) },
+    { label: 'Int. cesantías', value: Math.round(intereses_cesantias) },
+    { label: 'Prima', value: Math.round(prima_servicio) },
+    { label: 'Vacaciones', value: Math.round(vacaciones_mensual) },
+    { label: 'Salud', value: Math.round(aporte_salud) },
+    { label: 'Pensión', value: Math.round(aporte_pension) },
+    { label: 'ARL', value: Math.round(arl) },
+    { label: 'Parafiscales', value: Math.round(parafiscales) },
+  ].filter((s) => s.value > 0);
+  const chart = {
+    type: 'doughnut' as const,
+    slices: chartSlices,
+    prefix: '$',
+    centerValue: '$' + Math.round(costo_total_empleado).toLocaleString('es-CO'),
+    centerLabel: 'Costo mensual',
+    ariaLabel: 'Composición del costo mensual del empleado: salario base, cesantías, intereses, prima, vacaciones, salud, pensión, ARL y parafiscales.',
+  };
+
   return {
+    _insight: insight,
+    _chart: chart,
     cesantias_mensual: Math.round(cesantias_mensual),
     intereses_cesantias: Math.round(intereses_cesantias),
     prima_servicio: Math.round(prima_servicio),

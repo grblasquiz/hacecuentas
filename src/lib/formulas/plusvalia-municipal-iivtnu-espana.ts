@@ -22,6 +22,7 @@ export interface Outputs {
   cuota_final: number;
   sujeto_pasivo: string;
   aviso: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -165,6 +166,33 @@ export function compute(i: Inputs): Outputs {
     aviso = 'Transmisión con pérdida patrimonial: no se devenga el IIVTNU (no sujeción). Acredítalo ante el ayuntamiento con las escrituras.';
   }
 
+  // ===========================================================
+  // Insight narrativo (dinámico según sujeción y método elegido)
+  // ===========================================================
+  const fmtEur = (n: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (cuotaFinal <= 0) {
+    insightText = gananciaTotalInmueble < 0
+      ? `No se devenga la plusvalía municipal: la transmisión es **con pérdida** (vendiste por menos de lo que compraste), así que **no pagas IIVTNU**. Acredítalo ante el ayuntamiento con las escrituras.`
+      : `Sin ganancia atribuible al suelo: tu cuota de plusvalía municipal es **0 €** (no sujeción). Acredita la ausencia de incremento de valor ante el ayuntamiento.`;
+    insightTone = 'good';
+  } else {
+    const ahorro = Math.abs(cuotaObjetivo - cuotaReal);
+    const ahorroTxt = (gananciaRealSuelo > 0 && ahorro > 0.5)
+      ? ` Optar por el ${metodoFavorable.includes('real') ? 'método real' : 'método objetivo'} te ahorra **${fmtEur(ahorro)} €** frente al otro cálculo.`
+      : '';
+    insightText = `Pagarás unos **${fmtEur(cuotaFinal)} €** de plusvalía municipal aplicando el **${metodoFavorable.toLowerCase()}**.${ahorroTxt} Recuerda que tu ayuntamiento puede usar coeficientes inferiores a los máximos legales.`;
+    insightTone = 'warn';
+  }
+  const insight = {
+    title: 'Tu plusvalía municipal',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏛️',
+  };
+
   return {
     anios_tenencia:           anios,
     coeficiente_objetivo:     coeficienteObjetivo,
@@ -177,5 +205,6 @@ export function compute(i: Inputs): Outputs {
     cuota_final:              Math.round(cuotaFinal * 100) / 100,
     sujeto_pasivo:            sujetoPasivo,
     aviso:                    aviso,
+    _insight:                 insight,
   };
 }

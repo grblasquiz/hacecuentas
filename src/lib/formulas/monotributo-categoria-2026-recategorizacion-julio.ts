@@ -12,6 +12,8 @@ export interface Outputs {
   diferenciaCuota: number;
   parametroLimitante: string;
   alertaExclusion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -285,11 +287,56 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // --- Insight dinámico según dirección del cambio ---
+  const idxActualNum = categoriaActual === "ninguna" ? -1 : indicePorNombre(categoriaActual);
+  const sube = idxActualNum !== -1 && idxFinal > idxActualNum;
+  const baja = idxActualNum !== -1 && idxFinal < idxActualNum;
+
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  if (categoriaActual === "ninguna") {
+    insightText = `Te corresponde la **categoría ${categoriaResultante.nombre}**, con una cuota mensual de **$${cuotaNueva.toLocaleString("es-AR")}**. El parámetro que define tu categoría es **${limitante.toLowerCase()}**.`;
+    insightTone = "neutral";
+  } else if (sube) {
+    insightText = `Tenés que **subir de ${categoriaActual} a ${categoriaResultante.nombre}**: la cuota pasa a **$${cuotaNueva.toLocaleString("es-AR")}** (**+$${Math.abs(diferencia).toLocaleString("es-AR")}/mes**). Recategorizate antes del 20 de julio para no quedar excluido. Te empuja el parámetro **${limitante.toLowerCase()}**.`;
+    insightTone = "warn";
+  } else if (baja) {
+    insightText = `Podés **bajar de ${categoriaActual} a ${categoriaResultante.nombre}** y ahorrar **$${Math.abs(diferencia).toLocaleString("es-AR")}/mes**: tu cuota quedaría en **$${cuotaNueva.toLocaleString("es-AR")}**. No es obligatorio, pero conviene recategorizarte.`;
+    insightTone = "good";
+  } else {
+    insightText = `Tu **categoría ${categoriaActual} es correcta**: seguís pagando **$${cuotaNueva.toLocaleString("es-AR")}/mes** y no necesitás recategorizarte en julio.`;
+    insightTone = "good";
+  }
+
+  // --- Gauge: dónde cae tu facturación en la escala de topes ---
+  const topeDe = (cat: Categoria) =>
+    actividad === "servicios" ? cat.topeIngresosServicios : cat.topeIngresosComercio;
+  const segmentos = categoriasDisponibles.map((cat, idx) => ({
+    nombre: cat.nombre,
+    max: topeDe(cat),
+    color: idx <= idxFinal ? "#22c55e" : "#f59e0b",
+    colorDark: idx <= idxFinal ? "#15803d" : "#b45309",
+  }));
+
   return {
     categoriaNueva: `Categoría ${categoriaResultante.nombre}`,
     cuotaMensual: cuotaNueva,
     diferenciaCuota: diferencia,
     parametroLimitante: detalleParametro,
     alertaExclusion: alerta,
+    _insight: {
+      title: "Tu recategorización",
+      text: insightText,
+      tone: insightTone,
+      icon: "📋",
+    },
+    _chart: {
+      type: "scale" as const,
+      marker: facturacion,
+      markerLabel: `Cat. ${categoriaResultante.nombre}`,
+      min: 0,
+      segments: segmentos,
+      ariaLabel: `Facturación de $${facturacion.toLocaleString("es-AR")} ubicada en la categoría ${categoriaResultante.nombre} de la escala del monotributo`,
+    },
   };
 }

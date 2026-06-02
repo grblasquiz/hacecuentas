@@ -8,6 +8,8 @@ export interface Inputs {
 
 export interface Outputs {
   isoInvariancePoint: string; estrategia: string; dynamicRange: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function isoInvarianceCamaraModelo(inputs: Inputs): Outputs {
@@ -23,9 +25,42 @@ export function isoInvarianceCamaraModelo(inputs: Inputs): Outputs {
     8: { iso: 'Depende modelo', dr: 'Ver DxOMark', note: 'Revisá el modelo en Photons to Photos o DxOMark.' },
   };
   const d = datos[m] || datos[8];
-  return {
+
+  // DR numérico (si está disponible) para insight/gráfico
+  const drNum = parseFloat(d.dr);
+  const tieneDr = Number.isFinite(drNum);
+
+  const _insight = {
+    title: tieneDr ? 'Tu punto invariant' : 'Verificá el modelo',
+    text: tieneDr
+      ? `Punto ISO invariant en **${d.isoInvariancePoint}** con un rango dinámico de **${d.dr}**. ${d.note}`
+      : `No tenemos el dato exacto de este sensor. ${d.note}`,
+    tone: tieneDr ? (drNum >= 14.5 ? 'good' : drNum < 13 ? 'warn' : 'neutral') : 'neutral',
+    icon: '📷',
+  };
+
+  const out: Outputs = {
     isoInvariancePoint: d.iso,
     estrategia: d.note,
     dynamicRange: d.dr,
+    _insight,
   };
+
+  if (tieneDr) {
+    out._chart = {
+      type: 'scale',
+      marker: drNum,
+      markerLabel: `${d.dr}`,
+      min: 10,
+      segments: [
+        { nombre: 'Limitado', max: 12, color: '#f97316', colorDark: '#fb923c' },
+        { nombre: 'Bueno', max: 13.5, color: '#eab308', colorDark: '#facc15' },
+        { nombre: 'Muy bueno', max: 14.5, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Excelente', max: 15.5, color: '#16a34a', colorDark: '#22c55e' },
+      ],
+      ariaLabel: `Rango dinámico de ${d.dr} sobre una escala de calidad de sensor`,
+    };
+  }
+
+  return out;
 }

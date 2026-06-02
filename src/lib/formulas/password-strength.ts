@@ -1,5 +1,5 @@
 export interface Inputs { password: string; }
-export interface Outputs { fuerza: string; puntaje: number; tiempoCrack: string; sugerencias: string; }
+export interface Outputs { fuerza: string; puntaje: number; tiempoCrack: string; sugerencias: string; _insight?: any; _chart?: any; }
 export function passwordStrength(i: Inputs): Outputs {
   const p = String(i.password||'');
   if(!p) throw new Error('Ingresá una contraseña');
@@ -39,5 +39,35 @@ export function passwordStrength(i: Inputs): Outputs {
   else if(seconds<86400*365*1e6) tiempo=`${Math.round(seconds/(86400*365*1000))} mil años`;
   else tiempo='Millones de años o más';
   let fuerza = score>=80?'Fuerte':score>=60?'Moderada':score>=40?'Débil':'Muy débil';
-  return { fuerza, puntaje: score, tiempoCrack: tiempo, sugerencias: tips.length?tips.join(' '):'Tu contraseña es sólida.' };
+
+  const insTone = score >= 80 ? 'good' : score >= 60 ? 'neutral' : 'warn';
+  const insIcon = score >= 80 ? '🔒' : score >= 60 ? '🔑' : '⚠️';
+  const insText = score >= 80
+    ? `Puntaje **${score}/100** (${fuerza.toLowerCase()}): resistiría por fuerza bruta unos **${tiempo.toLowerCase()}**. Sólida — no la reutilices en otros sitios.`
+    : score >= 60
+    ? `Puntaje **${score}/100** (${fuerza.toLowerCase()}): aguanta ~**${tiempo.toLowerCase()}** por fuerza bruta, pero se puede mejorar. ${tips.length ? tips[0] : ''}`
+    : `Puntaje **${score}/100** (${fuerza.toLowerCase()}): se crackea en ~**${tiempo.toLowerCase()}**. ${tips.length ? tips[0] : 'Reforzala antes de usarla.'}`;
+
+  const _insight = {
+    title: 'Diagnóstico de tu contraseña',
+    text: insText.trim(),
+    tone: insTone,
+    icon: insIcon,
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: score,
+    markerLabel: `${score}/100`,
+    min: 0,
+    segments: [
+      { nombre: 'Muy débil', max: 40, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'Débil', max: 60, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Moderada', max: 80, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Fuerte', max: 101, color: '#22c55e', colorDark: '#4ade80' },
+    ],
+    ariaLabel: `Puntaje de seguridad de ${score} sobre 100`,
+  };
+
+  return { fuerza, puntaje: score, tiempoCrack: tiempo, sugerencias: tips.length?tips.join(' '):'Tu contraseña es sólida.', _insight, _chart };
 }

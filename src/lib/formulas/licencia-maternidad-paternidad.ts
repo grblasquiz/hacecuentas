@@ -15,6 +15,7 @@ export interface LicenciaMatPatOutputs {
   fechaInicio: string;
   fechaFin: string;
   quienPaga: string;
+  _insight?: any;
 }
 
 function formatDate(d: Date): string {
@@ -50,6 +51,12 @@ export function licenciaMaternidadPaternidad(inputs: LicenciaMatPatInputs): Lice
       fechaInicio: formatDate(fechaInicio),
       fechaFin: formatDate(fechaFin),
       quienPaga: 'El empleador (son días con goce de sueldo)',
+      _insight: {
+        title: 'Licencia por paternidad',
+        text: 'La LCT te garantiza apenas **2 días corridos** con goce de sueldo, del mínimo más bajo de la región. Revisá tu **convenio colectivo**: muchos (bancarios, sanidad, camioneros) otorgan entre 5 y 15 días.',
+        tone: 'warn',
+        icon: '👨‍🍼',
+      },
     };
   }
 
@@ -74,5 +81,11 @@ export function licenciaMaternidadPaternidad(inputs: LicenciaMatPatInputs): Lice
     fechaInicio: formatDate(fechaInicio),
     fechaFin: formatDate(fechaFin),
     quienPaga: 'ANSES (asignación por maternidad, equivalente al sueldo bruto)',
+    _insight: {
+      title: 'Licencia por maternidad',
+      text: `Te corresponden **90 días corridos** (${diasAntes} antes + ${diasDespues} después del parto), pagados por **ANSES** como asignación equivalente a tu sueldo bruto. El reintegro está previsto para el **${formatDate(addDays(fechaFin, 1))}**.`,
+      tone: 'good',
+      icon: '🤰',
+    },
   };
 }

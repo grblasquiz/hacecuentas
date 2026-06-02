@@ -1,6 +1,6 @@
 /** Mundial 2026 - Presupuesto hincha total */
 export interface Inputs { cantidadPartidos: number; categoriaEntrada: string; diasViaje: number; hotelPorNoche: number; }
-export interface Outputs { total: string; desglose: string; porDia: string; }
+export interface Outputs { total: string; desglose: string; porDia: string; _insight?: any; _chart?: any; }
 
 function precioPromedioEntrada(cat: string, cantidadPartidos: number): number {
   // cat 1-4
@@ -43,9 +43,41 @@ export function mundial2026PresupuestoHincha(i: Inputs): Outputs {
 
   const desglose = `Vuelos USD ${vuelos} | Hotel USD ${alojamiento} (${dias} noches × ${hotel}) | Entradas USD ${entradas} (${partidos} partidos) | Comida USD ${comida} | Transporte interno USD ${transporteInterno} | Extras USD ${extras}`;
 
+  // Rubro más caro del viaje.
+  const rubros: Array<[string, number]> = [
+    ['vuelos', vuelos], ['alojamiento', alojamiento], ['entradas', entradas],
+    ['comida', comida], ['transporte interno', transporteInterno], ['extras', extras],
+  ];
+  const mayor = rubros.reduce((a, b) => (b[1] > a[1] ? b : a));
+  const pctMayor = (mayor[1] / total) * 100;
+  const totalFmt = `USD ${total.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`;
+
+  const insight = {
+    title: 'Lo que te cuesta el Mundial',
+    text: `Ir a **${partidos} partido(s)** durante **${dias} días** te sale **${totalFmt}**, o sea **USD ${porDia.toFixed(0)} por día**. El rubro que más pesa es **${mayor[0]}** con USD ${mayor[1].toLocaleString('es-AR', { maximumFractionDigits: 0 })} (**${pctMayor.toFixed(0)}%** del total).`,
+    tone: total >= 8000 ? 'warn' : 'neutral',
+    icon: '✈️',
+  };
+
   return {
-    total: `USD ${total.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`,
+    total: totalFmt,
     desglose,
     porDia: `USD ${porDia.toFixed(0)} / día promedio`,
+    _insight: insight,
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Vuelos', value: vuelos },
+        { label: 'Alojamiento', value: alojamiento },
+        { label: 'Entradas', value: entradas },
+        { label: 'Comida', value: comida },
+        { label: 'Transporte interno', value: transporteInterno },
+        { label: 'Extras', value: extras },
+      ],
+      prefix: 'USD ',
+      centerValue: totalFmt,
+      centerLabel: 'total del viaje',
+      ariaLabel: `Desglose del presupuesto de ${totalFmt}: vuelos USD ${vuelos}, alojamiento USD ${alojamiento}, entradas USD ${entradas}, comida USD ${comida}, transporte USD ${transporteInterno} y extras USD ${extras}`,
+    },
   };
 }

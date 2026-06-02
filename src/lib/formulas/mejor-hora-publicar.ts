@@ -1,6 +1,6 @@
 /** Calculadora de Mejor Hora para Publicar */
 export interface Inputs { plataforma: string; zonaHoraria: number; tipoContenido: string; }
-export interface Outputs { mejorHora: string; mejorDia: string; peorHora: string; recomendacion: string; }
+export interface Outputs { mejorHora: string; mejorDia: string; peorHora: string; recomendacion: string; _insight?: any; }
 
 const HORAS_UTC: Record<string, { mejor: number[]; peor: number[]; dias: string }> = {
   instagram: { mejor: [11, 13, 19], peor: [2, 3, 4], dias: 'Martes, Miércoles y Jueves' },
@@ -23,10 +23,19 @@ export function mejorHoraPublicar(i: Inputs): Outputs {
   const mejores = data.mejor.map(h => fmt(toLocal(h)));
   const peores = data.peor.map(h => fmt(toLocal(h)));
 
+  const plataformaCap = i.plataforma.charAt(0).toUpperCase() + i.plataforma.slice(1);
+  const _insight = {
+    title: `Tu mejor ventana en ${plataformaCap}`,
+    text: `En tu zona horaria, el mejor momento para postear en ${plataformaCap} es alrededor de las **${mejores[0]}** (y las ${mejores[1]}), idealmente **${data.dias}**. Evitá la franja **${peores[0]}–${peores[2]}**, cuando tu audiencia está dormida o desconectada.`,
+    tone: 'neutral',
+    icon: '⏰',
+  };
+
   return {
     mejorHora: mejores.join(', '),
     mejorDia: data.dias,
     peorHora: peores.join(', '),
     recomendacion: `Para ${i.plataforma}, publicá ${i.tipoContenido} a las ${mejores[0]} o ${mejores[1]} (tu hora local). Los mejores días: ${data.dias}. Evitá ${peores[0]}-${peores[2]}.`,
+    _insight,
   };
 }

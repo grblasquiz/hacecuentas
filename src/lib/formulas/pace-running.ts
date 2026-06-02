@@ -6,6 +6,7 @@ export interface Outputs {
   velocidadKmh: number;
   velocidadMph: number;
   tiempoTotalFormato: string;
+  _insight?: any;
 }
 
 export function paceRunning(i: Inputs): Outputs {
@@ -14,10 +15,16 @@ export function paceRunning(i: Inputs): Outputs {
     es: {
       errDist: 'Ingresá la distancia en km',
       errTiempo: 'Ingresá el tiempo en minutos',
+      insTitle: 'Tu ritmo y velocidad',
+      insIcon: '🏃',
+      insText: (pace: string, kmh: string, dist: string, tt: string) => `Corriste **${dist} km** en ${tt}, lo que da un ritmo de **${pace} min/km** a **${kmh} km/h**. Para proyectar otra distancia, mantené este pace constante y multiplicá por los km del objetivo.`,
     },
     en: {
       errDist: 'Enter the distance in km',
       errTiempo: 'Enter the time in minutes',
+      insTitle: 'Your pace and speed',
+      insIcon: '🏃',
+      insText: (pace: string, kmh: string, dist: string, tt: string) => `You ran **${dist} km** in ${tt}, giving a pace of **${pace} min/km** at **${kmh} km/h**. To project another distance, hold this pace steady and multiply by the target's kilometers.`,
     },
   } as const)[__lang];
 
@@ -44,11 +51,18 @@ export function paceRunning(i: Inputs): Outputs {
     ? `${horas}h ${mins}m ${segs}s`
     : `${mins}m ${segs}s`;
 
+  const insight = {
+    title: T.insTitle,
+    text: T.insText(fmt(minPorKm), kmh.toFixed(2), String(dist), tiempoFmt),
+    tone: 'neutral',
+    icon: T.insIcon,
+  };
   return {
     paceMinPorKm: fmt(minPorKm),
     paceMinPorMilla: fmt(minPorMi),
     velocidadKmh: Number(kmh.toFixed(2)),
     velocidadMph: Number(mph.toFixed(2)),
     tiempoTotalFormato: tiempoFmt,
+    _insight: insight,
   };
 }

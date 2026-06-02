@@ -14,6 +14,7 @@ export interface PiscoPorInvitadoPreviaOutputs {
   botellas750: number;
   tragosTotales: number;
   tragosPorPersona: number;
+  _insight?: any;
 }
 
 export function piscoPorInvitadoPrevia(
@@ -39,5 +40,11 @@ export function piscoPorInvitadoPrevia(
     botellas750,
     tragosTotales,
     tragosPorPersona: Number(tragosPorPersona.toFixed(1)),
+    _insight: {
+      title: 'Cuánto pisco comprar',
+      text: `Para **${invitados}** personas en **${horas} h** salen unos **${tragosTotales} tragos** (≈${litrosPisco.toFixed(2)} L): comprá **${botellas750} botella${botellas750 === 1 ? '' : 's'} de 750 ml**, ya con un 10% de colchón. Si la previa se estira o el grupo es de buen beber, sumá una botella extra.`,
+      tone: 'neutral',
+      icon: '🍸',
+    },
   };
 }

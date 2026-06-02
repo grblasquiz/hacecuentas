@@ -21,6 +21,8 @@ export interface Outputs {
   isr_retenido_total: number;
   diferencia: number;
   tipo_resultado: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -114,7 +116,21 @@ export function compute(i: Inputs): Outputs {
     tipo_resultado = "Tu ISR está pagado correctamente. Saldo $0.00 MXN";
   }
 
-  return {
+  const fmtMXN = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const tasaEfectiva = ingreso_total > 0 ? Math.round((isr_causado / ingreso_total) * 1000) / 10 : 0;
+
+  const _insight = {
+    title: diferencia > 0 ? 'Te falta pagar ISR' : diferencia < 0 ? 'Tenés saldo a favor' : 'ISR al día',
+    text: diferencia > 0
+      ? `Tu ISR causado anual es **${fmtMXN(isr_causado)}** y solo retuviste **${fmtMXN(isr_retenido_total)}**: te queda un saldo a pagar de **${fmtMXN(diferencia)}** en la anual. Tasa efectiva: **${tasaEfectiva}%**.`
+      : diferencia < 0
+      ? `Retuviste **${fmtMXN(isr_retenido_total)}** contra un ISR causado de **${fmtMXN(isr_causado)}**: tenés **${fmtMXN(Math.abs(diferencia))}** a favor para solicitar en devolución. Tasa efectiva: **${tasaEfectiva}%**.`
+      : `Tus retenciones igualaron el ISR causado de **${fmtMXN(isr_causado)}**: no pagás ni te devuelven. Tasa efectiva: **${tasaEfectiva}%**.`,
+    tone: diferencia > 0 ? 'warn' : diferencia < 0 ? 'good' : 'neutral',
+    icon: diferencia > 0 ? '🇲🇽' : diferencia < 0 ? '💸' : '⚖️',
+  };
+
+  const out: Outputs = {
     ingreso_total: Math.round(ingreso_total * 100) / 100,
     ingreso_neto_arrendamiento: Math.round(ingreso_neto_arrendamiento * 100) / 100,
     total_deducciones_personales: Math.round(total_deducciones_personales * 100) / 100,
@@ -122,6 +138,24 @@ export function compute(i: Inputs): Outputs {
     isr_causado: Math.round(isr_causado * 100) / 100,
     isr_retenido_total: Math.round(isr_retenido_total * 100) / 100,
     diferencia: Math.round(diferencia * 100) / 100,
-    tipo_resultado: tipo_resultado
+    tipo_resultado: tipo_resultado,
+    _insight,
   };
+
+  // Donut: cómo se reparte el ingreso total entre base gravable y deducciones (suman el ingreso total)
+  if (ingreso_total > 0 && total_deducciones_personales > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Base gravable', value: Math.round(base_gravable) },
+        { label: 'Deducciones personales', value: Math.round(total_deducciones_personales) },
+      ],
+      prefix: '$',
+      centerValue: fmtMXN(Math.round(ingreso_total)),
+      centerLabel: 'Ingreso total',
+      ariaLabel: 'Reparto del ingreso anual entre base gravable y deducciones personales',
+    };
+  }
+
+  return out;
 }

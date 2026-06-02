@@ -18,6 +18,8 @@ export interface Outputs {
   tipo_marginal_irpf: number;
   cuota_irpf_estimada: number;
   nota_informativa: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -107,6 +109,55 @@ export function compute(i: Inputs): Outputs {
       'consulta tu base imponible y deducciones en AEAT.';
   }
   
+  // --- Insight + gráfico ---
+  const fmtEUR = (n: number) =>
+    Math.round(n).toLocaleString('es-ES') + ' €';
+  const importe_reduccion = Math.max(0, rendimiento_neto_sin_reduccion - rendimiento_neto_final);
+  const tipo_marginal_pct = Math.round(tipo_marginal_irpf * 100);
+
+  let _insight: any;
+  if (rendimiento_neto_sin_reduccion <= 0) {
+    _insight = {
+      title: 'Sin rendimiento que tributar',
+      text: `Tus gastos deducibles (**${fmtEUR(gastos_totales_deducibles)}**) igualan o superan la renta cobrada, así que el rendimiento neto del alquiler es **0 €** y no genera cuota de IRPF este ejercicio.`,
+      tone: 'neutral',
+      icon: '🏠',
+    };
+  } else if (porcentaje_reduccion_aplicado > 0) {
+    _insight = {
+      title: 'La reducción te ahorra impuestos',
+      text: `La reducción del **${porcentaje_reduccion_aplicado}%** rebaja la base de ${fmtEUR(rendimiento_neto_sin_reduccion)} a **${fmtEUR(rendimiento_neto_final)}**, sobre la que pagás unos **${fmtEUR(cuota_irpf_estimada)}** al tipo marginal del ${tipo_marginal_pct}%. Sin la reducción tributarías por el doble de base.`,
+      tone: 'good',
+      icon: '🏠',
+    };
+  } else {
+    _insight = {
+      title: 'Sin reducción: tributás el 100%',
+      text: `Al no aplicar reducción, tributás sobre los **${fmtEUR(rendimiento_neto_final)}** completos de rendimiento neto: una cuota estimada de **${fmtEUR(cuota_irpf_estimada)}** al tipo marginal del ${tipo_marginal_pct}%. Verificá si tu contrato cumple los requisitos del 50% (vivienda habitual, precio dentro de referencia).`,
+      tone: 'warn',
+      icon: '🏠',
+    };
+  }
+
+  // Donut: la renta bruta se reparte en gastos + reducción exenta + neto que tributa.
+  // gastos + importe_reduccion + rendimiento_neto_final === rendimiento_bruto (cuando bruto ≥ gastos)
+  let _chart: any = undefined;
+  if (rendimiento_bruto > 0 && rendimiento_neto_sin_reduccion > 0) {
+    const slices = [
+      { label: 'Gastos deducibles', value: Math.round(gastos_totales_deducibles) },
+      { label: 'Reducción exenta', value: Math.round(importe_reduccion) },
+      { label: 'Neto que tributa', value: Math.round(rendimiento_neto_final) },
+    ].filter((s) => s.value > 0);
+    _chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '',
+      centerValue: fmtEUR(rendimiento_bruto),
+      centerLabel: 'Renta bruta',
+      ariaLabel: `Reparto de la renta bruta de ${fmtEUR(rendimiento_bruto)}: gastos deducibles ${fmtEUR(gastos_totales_deducibles)}, reducción exenta ${fmtEUR(importe_reduccion)} y rendimiento neto que tributa ${fmtEUR(rendimiento_neto_final)}.`,
+    };
+  }
+
   return {
     rendimiento_bruto: Math.round(rendimiento_bruto * 100) / 100,
     gastos_totales_deducibles: Math.round(gastos_totales_deducibles * 100) / 100,
@@ -115,6 +166,8 @@ export function compute(i: Inputs): Outputs {
     rendimiento_neto_final: Math.round(rendimiento_neto_final * 100) / 100,
     tipo_marginal_irpf: Math.round(tipo_marginal_irpf * 10000) / 100, // en porcentaje
     cuota_irpf_estimada: Math.round(cuota_irpf_estimada * 100) / 100,
-    nota_informativa
+    nota_informativa,
+    _insight,
+    _chart,
   };
 }

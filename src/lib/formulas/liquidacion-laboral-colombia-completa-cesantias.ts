@@ -27,6 +27,8 @@ export interface Outputs {
   total_descuentos: number;
   total_neto: number;
   desglose_componentes: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -184,6 +186,39 @@ NOTA: Esta calculadora usa fórmulas simplificadas del Código Sustantivo del Tr
 Para exactitud fiscal y laboral, consulta con contador o abogado laboral especializado.
   `;
 
+  // ===== INSIGHT + GRÁFICO =====
+  const fmtCO = (n: number) => '$' + Math.round(n).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+  const pctDescuentos = totalBrutoBefore > 0 ? Math.round((totalDescuentos / totalBrutoBefore) * 100) : 0;
+  const hayIndemnizacion = indemnizacionDespido > 0;
+
+  const insight = {
+    title: 'Tu liquidación neta',
+    text:
+      `Sobre un bruto de **${fmtCO(totalBrutoBefore)}** te quedan **${fmtCO(totalNeto)}** netos tras descuentos de pensión, salud y retención (**${pctDescuentos}%**).` +
+      (hayIndemnizacion
+        ? ` Incluye **${fmtCO(indemnizacionDespido)}** de indemnización por despido injusto (Art. 64 CST).`
+        : i.tipo_terminacion === 'renuncia'
+          ? ` Como fue **renuncia**, no hay indemnización: sólo cesantías, prima y vacaciones devengadas.`
+          : ` Sin indemnización por despido en este caso; sólo prestaciones sociales causadas.`),
+    tone: (hayIndemnizacion ? 'good' : 'neutral') as 'good' | 'neutral' | 'warn',
+    icon: '🇨🇴',
+  };
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cesantías', value: Math.round(cesantiasBruto) },
+      { label: 'Intereses cesantías', value: Math.round(interesesCesantias) },
+      { label: 'Prima de servicios', value: Math.round(primaServicios) },
+      { label: 'Vacaciones', value: Math.round(vacacionesNoDisfrutadas) },
+      { label: 'Indemnización', value: Math.round(indemnizacionDespido) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: fmtCO(totalBrutoBefore),
+    centerLabel: 'Total bruto',
+    ariaLabel: 'Composición del total bruto de la liquidación: cesantías, intereses, prima de servicios, vacaciones e indemnización.',
+  };
+
   return {
     dias_trabajados: diasTrabajados,
     anos_servicio: Math.round(anosServicio * 100) / 100,
@@ -199,6 +234,8 @@ Para exactitud fiscal y laboral, consulta con contador o abogado laboral especia
     retencion_renta: Math.round(retencionRenta),
     total_descuentos: Math.round(totalDescuentos),
     total_neto: Math.round(totalNeto),
-    desglose_componentes: desglose
+    desglose_componentes: desglose,
+    _insight: insight,
+    _chart: chart
   };
 }

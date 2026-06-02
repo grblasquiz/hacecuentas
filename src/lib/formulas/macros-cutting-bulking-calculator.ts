@@ -21,6 +21,26 @@ export interface Outputs {
   carbs_pct: number;
   tdee_used: number;
   notes: string;
+  _insight?: any;
+  _chart?: any;
+}
+
+// Build the macro doughnut from final gram values (slices sum to the macro kcal total)
+function macroChart(protein_g: number, fat_g: number, carbs_g: number) {
+  const pk = protein_g * KCAL_PER_G_PROTEIN;
+  const fk = fat_g * KCAL_PER_G_FAT;
+  const ck = carbs_g * KCAL_PER_G_CARB;
+  return {
+    type: "doughnut",
+    slices: [
+      { label: "Protein", value: pk },
+      { label: "Fat", value: fk },
+      { label: "Carbs", value: ck },
+    ],
+    centerValue: `${pk + fk + ck}`,
+    centerLabel: "kcal",
+    ariaLabel: `Calorie split: ${protein_g}g protein, ${fat_g}g fat and ${carbs_g}g carbohydrates`,
+  };
 }
 
 // Activity multipliers — Mifflin-St Jeor / Harris-Benedict convention
@@ -181,6 +201,13 @@ export function compute(i: Inputs): Outputs {
       carbs_pct: carbs_pct_out,
       tdee_used: tdee,
       notes: notesArr.join(" "),
+      _insight: {
+        title: "Macros don't fit",
+        text: `At **${target_kcal} kcal** your protein and fat targets leave no room: protein was capped to **${actual_protein_g} g** and carbs to **${carbs_g} g**. Ease the deficit, drop the fat %, or lower the protein multiplier.`,
+        tone: "warn",
+        icon: "⚠️",
+      },
+      _chart: macroChart(actual_protein_g, fat_g, carbs_g),
     };
   }
 
@@ -213,6 +240,20 @@ export function compute(i: Inputs): Outputs {
     );
   }
 
+  const goalPhrase: Record<string, string> = {
+    cut: "a 20% deficit",
+    maintain: "maintenance",
+    bulk: "a 10% surplus",
+  };
+  const lowCal = target_kcal < 1500;
+  const insightTone = lowCal ? "warn" : goalKey === "bulk" ? "good" : "neutral";
+  const _insight = {
+    title: `${goalLabel[goalKey] ?? goalKey} macros`,
+    text: `On **${target_kcal} kcal/day** (${goalPhrase[goalKey] ?? "your goal"} from ${tdee} TDEE), aim for **${protein_g} g protein** (${protein_pct_out}%), **${fat_g} g fat** (${fat_pct_out_val}%) and **${carbs_g} g carbs** (${carbs_pct_out}%).${lowCal ? " That's a low intake — watch energy and recovery." : ""}`,
+    tone: insightTone,
+    icon: "🍽️",
+  };
+
   return {
     target_kcal,
     protein_g,
@@ -223,5 +264,7 @@ export function compute(i: Inputs): Outputs {
     carbs_pct: carbs_pct_out,
     tdee_used: tdee,
     notes: notesArr.join(" "),
+    _insight,
+    _chart: macroChart(protein_g, fat_g, carbs_g),
   };
 }

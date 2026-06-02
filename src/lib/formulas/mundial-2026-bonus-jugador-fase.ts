@@ -11,6 +11,8 @@ export interface Outputs {
   totalEstimado: number;
   comparacionSueldo: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Premio FIFA por fase para el equipo (USD), estimado Mundial 2026 (~USD 1.000 M total).
@@ -82,11 +84,33 @@ export function mundial2026BonusJugadorFase(i: Inputs): Outputs {
 
   const resumen = `Jugador de **${reparto.label}** que llega a **${FASE_LABEL[fase]}** con **${titulares}** partido(s) como titular: cobra aprox **USD ${bonusFifaReparto.toLocaleString('en-US')}** del reparto FIFA + **USD ${bonusFederacion.toLocaleString('en-US')}** de bonus federación = **USD ${totalEstimado.toLocaleString('en-US')}** estimado total. ${comparacionSueldo}`;
 
+  const pctFifa = Math.round((bonusFifaReparto / totalEstimado) * 100);
+  const _insight = {
+    title: 'Cuánto pesa el reparto FIFA',
+    text: `Del total de **USD ${totalEstimado.toLocaleString('en-US')}**, el **${pctFifa}%** viene del reparto FIFA por llegar a ${FASE_LABEL[fase].toLowerCase()}: cuanto más lejos llega el equipo, más sube esta porción. El bonus de federación (USD ${bonusFederacion.toLocaleString('en-US')}) depende casi solo de cuántos partidos jugaste de titular.`,
+    tone: 'good',
+    icon: '⚽',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Reparto FIFA', value: bonusFifaReparto },
+      { label: 'Bonus federación', value: bonusFederacion },
+    ],
+    prefix: 'USD ',
+    centerValue: `USD ${totalEstimado.toLocaleString('en-US')}`,
+    centerLabel: 'Total estimado',
+    ariaLabel: `Composición del bonus: USD ${bonusFifaReparto.toLocaleString('en-US')} del reparto FIFA y USD ${bonusFederacion.toLocaleString('en-US')} de bonus de federación.`,
+  };
+
   return {
     bonusFifaReparto,
     bonusFederacion,
     totalEstimado,
     comparacionSueldo,
     resumen,
+    _insight,
+    _chart,
   };
 }

@@ -18,6 +18,7 @@ export interface Outputs {
   pct_95: number;
   unit_label: string;
   notes: string;
+  _insight?: any;
 }
 
 // Epley (1985): 1RM = w * (1 + r/30)
@@ -97,11 +98,18 @@ export function compute(i: Inputs): Outputs {
   const pct_90 = round1(average_1rm * 0.90);
   const pct_95 = round1(average_1rm * 0.95);
 
+  const avg = round1(average_1rm);
+  const estimates = [round1(epley_1rm), round1(brzycki_1rm), round1(lombardi_1rm)];
+  const spread = round1(Math.max(...estimates) - Math.min(...estimates));
+  const insightText = reps === 1
+    ? `At 1 rep, your **1RM is ${avg} ${unit}** — the weight you actually lifted, no estimation needed. Your working sets typically use 70–85% (${pct_70}–${pct_85} ${unit}).`
+    : `From ${reps} reps at ${weight.toFixed(1)} ${unit}, your estimated **1RM is ~${avg} ${unit}** (averaging Epley, Brzycki and Lombardi, which span ${spread} ${unit}). For hypertrophy work the 70–80% zone is **${pct_70}–${pct_80} ${unit}**.`;
+
   return {
     epley_1rm: round1(epley_1rm),
     brzycki_1rm: round1(brzycki_1rm),
     lombardi_1rm: round1(lombardi_1rm),
-    average_1rm: round1(average_1rm),
+    average_1rm: avg,
     pct_50,
     pct_60,
     pct_70,
@@ -111,5 +119,11 @@ export function compute(i: Inputs): Outputs {
     pct_95,
     unit_label: unit,
     notes,
+    _insight: {
+      title: 'Your estimated 1RM',
+      text: insightText,
+      tone: reps > 10 ? 'warn' : 'neutral',
+      icon: '🏋️',
+    },
   };
 }

@@ -22,6 +22,7 @@ export interface Outputs {
   retenciones_total: number;
   resultado_declaracion: number;
   tipo_efectivo: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -118,6 +119,32 @@ export function compute(i: Inputs): Outputs {
   const base_total = base_general + base_ahorro;
   const tipo_efectivo = base_total > 0 ? (cuota_liquida_antes / base_total) * 100 : 0;
 
+  // Insight narrativo dinámico según resultado de la declaración
+  const fmtEur = (n: number) => Math.abs(Math.round(n)).toLocaleString('es-ES') + '€';
+  let _insight: any;
+  if (resultado > 0) {
+    _insight = {
+      title: 'Te sale a devolver',
+      text: `Pagaste de más vía retenciones: Hacienda te devolvería unos **${fmtEur(resultado)}**, con un tipo efectivo del **${tipo_efectivo.toFixed(1)}%** sobre tu base total.`,
+      tone: 'good',
+      icon: '💸',
+    };
+  } else if (resultado < 0) {
+    _insight = {
+      title: 'Te sale a pagar',
+      text: `Las retenciones del año no cubren tu cuota: tendrías que ingresar unos **${fmtEur(resultado)}** en la Renta, con un tipo efectivo del **${tipo_efectivo.toFixed(1)}%**.`,
+      tone: 'warn',
+      icon: '🧾',
+    };
+  } else {
+    _insight = {
+      title: 'Declaración cuadrada',
+      text: `Tus retenciones coinciden casi exactamente con tu cuota líquida: resultado cercano a **0€** y tipo efectivo del **${tipo_efectivo.toFixed(1)}%**.`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  }
+
   return {
     base_imponible_general: Math.max(0, base_general),
     base_imponible_ahorro: Math.max(0, base_ahorro),
@@ -129,5 +156,6 @@ export function compute(i: Inputs): Outputs {
     retenciones_total,
     resultado_declaracion: resultado,
     tipo_efectivo,
+    _insight,
   };
 }

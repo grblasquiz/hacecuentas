@@ -16,6 +16,7 @@ export interface Outputs {
   itbiDevido: string;
   detalheSfh: string;
   resumen: string;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -45,11 +46,24 @@ export function itbiRioDeJaneiro(i: Inputs): Outputs {
     itbi = base * 0.02;
   }
 
+  const aliqEfetiva = (itbi / base) * 100;
+  const baseVenal = venal > venda;
+
+  const _insight = {
+    title: 'Quanto você vai pagar de ITBI',
+    text: baseVenal
+      ? `A base de cálculo foi o **valor venal cadastral (${brl(venal)})**, maior que a escritura (${brl(venda)}): o ITBI fica em **${brl(itbi)}**. Reserve esse valor além do preço — o cartório exige a guia paga para registrar.`
+      : `Sobre a base de **${brl(base)}** o ITBI devido é **${brl(itbi)}**${sfh ? ` (alíquota efetiva ${aliqEfetiva.toFixed(2).replace('.', ',')}% pela mistura SFH)` : ' (2% flat)'}. Some isso aos custos de cartório e registro antes de fechar o negócio.`,
+    tone: 'warn',
+    icon: '🏠',
+  };
+
   return {
     baseCalculo: brl(base),
     aliquota: sfh ? '0,5% (SFH) / 2% (livre)' : '2,0%',
     itbiDevido: brl(itbi),
     detalheSfh,
     resumen: `ITBI-RJ: ${sfh ? 'alíquota mista SFH' : '2%'} sobre ${brl(base)} (maior entre venda ${brl(venda)} e valor venal ${brl(venal)}) = ${brl(itbi)}.`,
+    _insight,
   };
 }

@@ -34,6 +34,7 @@ export interface Outputs {
   efectivo_porcentaje_ingresos: number;
   /** Extrapolación orientativa del pago total anual al ritmo actual */
   acumulado_anual_estimado: number;
+  _insight?: any;
 }
 
 // Constante oficial 2026 — Art. 110.3 RIRPF (RD 439/2007)
@@ -97,6 +98,39 @@ export function compute(i: Inputs): Outputs {
   const retencionesAnualizadas = r2(retenciones * factorAnualizacion);
   const acumuladoAnualEstimado = Math.max(r2(cuotaIntegraAnualizada - retencionesAnualizadas), 0);
 
+  // --- Insight narrativo dinámico ---
+  const fmtEur = (n: number) => Math.round(n).toLocaleString('es-ES') + '€';
+  let _insight: any;
+  if (resultadoModelo130 > 0) {
+    _insight = {
+      title: `A ingresar en el ${trimestreVal}T`,
+      text: `Tenés que pagar **${fmtEur(resultadoModelo130)}** en este Modelo 130 (20% sobre un rendimiento neto de **${fmtEur(rendimientoNeto)}**, ya descontados pagos y retenciones). Equivale al **${efectivoPorcentajeIngresos.toFixed(1)}%** de tus ingresos acumulados.`,
+      tone: 'warn',
+      icon: '🧾',
+    };
+  } else if (resultadoNegativo > 0) {
+    _insight = {
+      title: 'Sin pago este trimestre',
+      text: `No ingresás nada: tus pagos previos y retenciones (**${fmtEur(aDeducir)}**) ya superan el 20% del rendimiento. El exceso de **${fmtEur(resultadoNegativo)}** se traslada al trimestre siguiente del mismo año.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  } else if (rendimientoNeto <= 0) {
+    _insight = {
+      title: 'Rendimiento no positivo',
+      text: `Tus gastos igualan o superan los ingresos acumulados, así que la cuota del 20% es **0€** y no hay nada que ingresar este trimestre. Igual tenés que presentar el modelo.`,
+      tone: 'neutral',
+      icon: '➖',
+    };
+  } else {
+    _insight = {
+      title: 'Resultado a cero',
+      text: `La cuota íntegra y lo ya deducido se compensan: el Modelo 130 sale a **0€** este trimestre, pero igual hay que presentarlo.`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  }
+
   return {
     rendimiento_neto: rendimientoNeto,
     base_20_pct: base20pct,
@@ -106,5 +140,6 @@ export function compute(i: Inputs): Outputs {
     resultado_negativo: resultadoNegativo,
     efectivo_porcentaje_ingresos: efectivoPorcentajeIngresos,
     acumulado_anual_estimado: acumuladoAnualEstimado,
+    _insight,
   };
 }

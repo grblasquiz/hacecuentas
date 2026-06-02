@@ -13,6 +13,7 @@ export interface Outputs {
   separacionBarrotesMm: string;
   perchasSugeridas: string;
   cumpleMinimo: string;
+  _insight?: any;
 }
 
 export function jaulaIdealPeriquito(i: Inputs): Outputs {
@@ -52,6 +53,19 @@ export function jaulaIdealPeriquito(i: Inputs): Outputs {
       ? '4-5 perchas de madera natural con distintos diámetros. Una de cemento/arena para limar garras.'
       : 'Una percha cada dos aves, mix de diámetros y materiales. Zona alta de descanso y zona baja para comer.';
 
+  const todoOk = cumpleLargo && cumpleAncho && cumpleAlto;
+  const vueloNota = fueraHoras >= 3
+    ? ` Con **${fueraHoras} h/día** de vuelo libre el mínimo baja un 10%.`
+    : '';
+  const _insight = {
+    title: todoOk ? 'La jaula cumple' : 'Jaula chica para esa cantidad',
+    text: todoOk
+      ? `Para **${cant} ${cant === 1 ? 'periquito' : 'periquitos'}** el mínimo es **${largoMin}×${anchoMin}×${altoMin} cm** y tu jaula (${largo}×${ancho}×${alto}) lo cumple. El largo manda: los periquitos vuelan en horizontal, no trepan.${vueloNota}`
+      : `Para **${cant} ${cant === 1 ? 'periquito' : 'periquitos'}** el mínimo es **${largoMin}×${anchoMin}×${altoMin} cm** y tu jaula (${largo}×${ancho}×${alto}) se queda corta. Priorizá el **largo** sobre el alto: el periquito vuela en horizontal.${vueloNota}`,
+    tone: todoOk ? 'good' : 'warn',
+    icon: todoOk ? '🦜' : '📏',
+  };
+
   return {
     largoMinCm: largoMin,
     anchoMinCm: anchoMin,
@@ -59,5 +73,6 @@ export function jaulaIdealPeriquito(i: Inputs): Outputs {
     separacionBarrotesMm: '10-12 mm (menos atrapa patas, más permite escape)',
     perchasSugeridas: perchas,
     cumpleMinimo: cumple,
+    _insight,
   };
 }

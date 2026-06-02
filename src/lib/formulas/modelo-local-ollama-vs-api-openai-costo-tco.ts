@@ -15,6 +15,7 @@ export interface Outputs {
   breakEvenDays: number;
   savingsYear: number;
   recommendation: string;
+  _insight?: any;
 }
 
 // --- OpenAI API pricing per 1M tokens (USD), 2026 ---
@@ -61,6 +62,12 @@ export function compute(i: Inputs): Outputs {
       breakEvenDays: 0,
       savingsYear: 0,
       recommendation: "Ingresá un volumen de tokens mayor a 0 para ver el análisis.",
+      _insight: {
+        title: 'Falta el volumen',
+        text: 'Ingresá un volumen de **tokens/día mayor a 0** para comparar API, hardware propio y cloud GPU.',
+        tone: 'neutral',
+        icon: 'ℹ️',
+      },
     };
   }
 
@@ -129,6 +136,40 @@ export function compute(i: Inputs): Outputs {
     recommendation = `Excelente caso para self-host. Break-even en solo ${breakEvenDays} días. Ahorro neto a 12 meses: USD ${savingsYear.toFixed(0)} frente a la API de OpenAI. El hardware se paga solo y genera rentabilidad en el año.`;
   }
 
+  // --- Insight narrativo dinámico ---
+  // Identifica la opción más barata a 12 meses y el ahorro frente a la API
+  const usd = (n: number) => 'USD ' + Math.round(n).toLocaleString('es');
+  const opciones: Array<{ label: string; cost: number }> = [
+    { label: 'la API de OpenAI', cost: costApiYear },
+    { label: 'el hardware propio', cost: costSelfHostYear },
+    { label: 'el cloud GPU', cost: costCloudGpuYear },
+  ];
+  const ganadora = opciones.reduce((a, b) => (b.cost < a.cost ? b : a));
+  const gapVsApi = costApiYear - ganadora.cost;
+  let _insight: any;
+  if (ganadora.label !== 'la API de OpenAI' && gapVsApi > costApiYear * 0.05) {
+    _insight = {
+      title: 'Conviene salirse de la API',
+      text: `A **${tokensPerDay.toLocaleString('es')} tokens/día**, lo más barato a 12 meses es **${ganadora.label}** (${usd(ganadora.cost)}/año), unos **${usd(gapVsApi)}** menos que la API de OpenAI.`,
+      tone: 'good',
+      icon: '🖥️',
+    };
+  } else if (Math.abs(gapVsApi) <= costApiYear * 0.05) {
+    _insight = {
+      title: 'Costos parejos',
+      text: `Las opciones quedan muy cerca a este volumen (la más barata, ${ganadora.label}, cuesta ${usd(ganadora.cost)}/año vs ${usd(costApiYear)} de la API). Decidí por fricción operativa o privacidad, no por precio.`,
+      tone: 'neutral',
+      icon: '⚖️',
+    };
+  } else {
+    _insight = {
+      title: 'La API gana a este volumen',
+      text: `Con **${tokensPerDay.toLocaleString('es')} tokens/día**, la API de OpenAI (${usd(costApiYear)}/año) es la opción más económica. Autohospedar solo conviene si crece el volumen o necesitás privacidad de datos.`,
+      tone: 'neutral',
+      icon: '☁️',
+    };
+  }
+
   return {
     costApiYear:      Math.round(costApiYear * 100) / 100,
     costSelfHostYear: Math.round(costSelfHostYear * 100) / 100,
@@ -136,5 +177,6 @@ export function compute(i: Inputs): Outputs {
     breakEvenDays:    breakEvenDays < 0 ? -1 : breakEvenDays,
     savingsYear:      Math.round(savingsYear * 100) / 100,
     recommendation,
+    _insight,
   };
 }

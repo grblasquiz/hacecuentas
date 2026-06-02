@@ -14,6 +14,8 @@ export interface Outputs {
   diaVencimento: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function meiDasMensalServicos(i: Inputs): Outputs {
@@ -33,6 +35,26 @@ export function meiDasMensalServicos(i: Inputs): Outputs {
   const formula = `DAS Anual = R$ ${DAS_SERVICOS.toFixed(2)} × ${meses + meses13} meses = R$ ${dasAnual.toFixed(2)}`;
   const explicacion = `MEI prestador de serviços paga DAS mensal de R$ ${DAS_SERVICOS.toFixed(2)} em 2026 (${composicao}). Vencimento dia 20. Total em ${meses} meses: R$ ${dasAnual.toFixed(2)}${incluir13 ? ' (com 13º incluso)' : ''}. Exemplos de atividades: cabeleireiro, manicure, pedreiro, eletricista autônomo, programador MEI.`;
 
+  const _insight = {
+    title: 'Seu DAS de prestador de serviços',
+    text: `Como MEI de serviços você paga **R$ ${DAS_SERVICOS.toFixed(2)}/mês** fixos — dá **R$ ${dasAnual.toFixed(2)}** em ${meses + meses13} parcela(s). Quase tudo (R$ ${INSS.toFixed(2)}) é INSS, que conta como contribuição para sua aposentadoria.`,
+    tone: 'good',
+    icon: '🧾',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'INSS (aposentadoria)', value: Number(INSS.toFixed(2)) },
+      { label: 'ISS (município)', value: Number(ISS.toFixed(2)) },
+      { label: 'Complementar', value: Number(COMPL.toFixed(2)) },
+    ],
+    prefix: 'R$ ',
+    centerValue: `R$ ${DAS_SERVICOS.toFixed(2)}`,
+    centerLabel: 'DAS mensal',
+    ariaLabel: `Composição do DAS mensal de R$ ${DAS_SERVICOS.toFixed(2)}: INSS R$ ${INSS.toFixed(2)}, ISS R$ ${ISS.toFixed(2)} e complementar R$ ${COMPL.toFixed(2)}.`,
+  };
+
   return {
     dasMensal: Number(dasMensal.toFixed(2)),
     dasAnual: Number(dasAnual.toFixed(2)),
@@ -40,5 +62,7 @@ export function meiDasMensalServicos(i: Inputs): Outputs {
     diaVencimento: 20,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

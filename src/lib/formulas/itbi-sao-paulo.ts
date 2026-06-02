@@ -17,6 +17,7 @@ export interface Outputs {
   itbiDevido: string;
   isencaoAplicada: string;
   resumen: string;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -45,11 +46,26 @@ export function itbiSaoPaulo(i: Inputs): Outputs {
     isencaoTexto = 'Primeiro imóvel não tem isenção automática em SP — verificar condições';
   }
 
+  const baseRef = venalRef > venda;
+  const temReducao = isencao === 'mcmv';
+
+  const _insight = {
+    title: 'Quanto você vai pagar de ITBI',
+    text: temReducao
+      ? `Com a redução MCMV de 50%, o ITBI cai para **${brl(itbi)}** (seriam ${brl(base * 0.03)} sem o benefício). Confirme o enquadramento da faixa antes de emitir a guia — sem ele a Prefeitura cobra a alíquota cheia.`
+      : baseRef
+        ? `Atenção: a base foi o **valor venal de referência (${brl(venalRef)})**, acima da escritura (${brl(venda)}), então o ITBI sobe para **${brl(itbi)}**. Em São Paulo é a base que costuma valer — reserve esse valor além do preço.`
+        : `Sobre **${brl(base)}** o ITBI de São Paulo (3%) dá **${brl(itbi)}**. É um custo de fechamento obrigatório: sem a guia paga, o Cartório de Registro de Imóveis não transfere a propriedade.`,
+    tone: 'warn',
+    icon: '🏠',
+  };
+
   return {
     baseCalculo: brl(base),
     aliquota: '3,0%',
     itbiDevido: brl(itbi),
     isencaoAplicada: isencaoTexto,
     resumen: `ITBI-SP: 3% sobre ${brl(base)} (maior entre venda ${brl(venda)} e valor venal de referência ${brl(venalRef)}) = ${brl(itbi)}.`,
+    _insight,
   };
 }

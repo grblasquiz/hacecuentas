@@ -18,6 +18,8 @@ export interface Outputs {
   total_impuestos_clp: number;
   costo_final_clp: number;
   markup_porcentaje: number;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -89,6 +91,8 @@ export function compute(i: Inputs): Outputs {
   
   // Si está exento: solo derechos aduanales
   if (exento_impuestos) {
+    const costoFinalEx = base_imponible_clp + DERECHOS_ADUANALES_CLP;
+    const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
     return {
       precio_fob_clp,
       exento_impuestos: true,
@@ -99,8 +103,25 @@ export function compute(i: Inputs): Outputs {
       iva_19_clp: 0,
       derechos_aduanales_clp: DERECHOS_ADUANALES_CLP,
       total_impuestos_clp: DERECHOS_ADUANALES_CLP,
-      costo_final_clp: base_imponible_clp + DERECHOS_ADUANALES_CLP,
-      markup_porcentaje: (DERECHOS_ADUANALES_CLP / base_imponible_clp) * 100
+      costo_final_clp: costoFinalEx,
+      markup_porcentaje: base_imponible_clp > 0 ? (DERECHOS_ADUANALES_CLP / base_imponible_clp) * 100 : 0,
+      _chart: base_imponible_clp > 0 ? {
+        type: 'doughnut' as const,
+        slices: [
+          { label: 'Valor del producto', value: base_imponible_clp },
+          { label: 'Gestión courier', value: DERECHOS_ADUANALES_CLP },
+        ],
+        prefix: '$',
+        centerValue: fmtCLP(costoFinalEx),
+        centerLabel: 'Costo final',
+        ariaLabel: 'Composición del costo final: valor del producto más gestión del courier',
+      } : undefined,
+      _insight: {
+        title: 'Compra exenta de impuestos',
+        text: `Al ser de **US$${total_usd}** (≤ US$${LIMITE_EXENCION_USD}), tu compra está **exenta de aranceles e IVA**. Solo pagás ${fmtCLP(DERECHOS_ADUANALES_CLP)} de gestión del courier, dejando el costo final en **${fmtCLP(costoFinalEx)}**.`,
+        tone: 'good' as const,
+        icon: '🎉',
+      }
     };
   }
   
@@ -116,7 +137,31 @@ export function compute(i: Inputs): Outputs {
   // Total impuestos
   const total_impuestos_clp = subtotal_impuestos_clp + iva_19_clp + DERECHOS_ADUANALES_CLP;
   const costo_final_clp = base_imponible_clp + total_impuestos_clp;
-  const markup_porcentaje = (total_impuestos_clp / base_imponible_clp) * 100;
+  const markup_porcentaje = base_imponible_clp > 0 ? (total_impuestos_clp / base_imponible_clp) * 100 : 0;
+
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const markupR = Math.round(markup_porcentaje * 10) / 10;
+
+  const chart = base_imponible_clp > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Valor del producto', value: base_imponible_clp },
+      { label: 'Arancel + ad valorem', value: subtotal_impuestos_clp },
+      { label: 'IVA 19%', value: iva_19_clp },
+      { label: 'Gestión courier', value: DERECHOS_ADUANALES_CLP },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(costo_final_clp),
+    centerLabel: 'Costo final',
+    ariaLabel: 'Composición del costo final: producto, aranceles, IVA y gestión del courier',
+  } : undefined;
+
+  const insight = base_imponible_clp > 0 ? {
+    title: 'Impuestos a la importación',
+    text: `Al superar los US$${LIMITE_EXENCION_USD}, tu compra paga aranceles e IVA: sobre un valor de **${fmtCLP(base_imponible_clp)}** se suman **${fmtCLP(total_impuestos_clp)}** de impuestos y gestión (**+${markupR}%**), llevando el costo final a **${fmtCLP(costo_final_clp)}**.`,
+    tone: 'warn' as const,
+    icon: '📦',
+  } : undefined;
   
   return {
     precio_fob_clp,
@@ -129,6 +174,8 @@ export function compute(i: Inputs): Outputs {
     derechos_aduanales_clp: DERECHOS_ADUANALES_CLP,
     total_impuestos_clp,
     costo_final_clp,
-    markup_porcentaje
+    markup_porcentaje,
+    _chart: chart,
+    _insight: insight
   };
 }

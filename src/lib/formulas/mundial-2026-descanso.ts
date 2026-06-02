@@ -1,6 +1,6 @@
 /** Mundial 2026 - Descanso entre partidos */
 export interface Inputs { fechaPartido1: string; fechaPartido2: string; }
-export interface Outputs { horas: string; cumpleReglamento: string; recomendacion: string; }
+export interface Outputs { horas: string; cumpleReglamento: string; recomendacion: string; _insight?: any; _chart?: any; }
 
 function parseFecha(s: string): number {
   const m = String(s || '').trim().replace('T', ' ');
@@ -24,6 +24,31 @@ export function mundial2026Descanso(i: Inputs): Outputs {
   const horas = (t2 - t1) / 3600000;
   const cumple = horas >= 48;
   const ideal = horas >= 72;
+
+  const _insight = {
+    title: 'Descanso entre partidos',
+    text: ideal
+      ? `**${horas.toFixed(1)}hs** (${(horas / 24).toFixed(1)} días) de descanso: por encima de las **72hs** que recomienda la FIFA Medical Network. Recuperación muscular completa.`
+      : cumple
+        ? `**${horas.toFixed(1)}hs** (${(horas / 24).toFixed(1)} días): cumple el mínimo FIFA de **48hs**, pero quedan **${(72 - horas).toFixed(1)}hs** por debajo de las 72hs ideales.`
+        : `Solo **${horas.toFixed(1)}hs** de descanso: faltan **${(48 - horas).toFixed(1)}hs** para el mínimo FIFA de 48hs. Riesgo alto de lesión y bajo rendimiento.`,
+    tone: ideal ? 'good' : cumple ? 'neutral' : 'warn',
+    icon: ideal ? '💪' : cumple ? '😴' : '🚑',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: Math.round(horas * 10) / 10,
+    markerLabel: `${horas.toFixed(1)}hs`,
+    min: 0,
+    segments: [
+      { nombre: 'Insuficiente', max: 48, color: '#ef4444', colorDark: '#dc2626' },
+      { nombre: 'Aceptable', max: 72, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Ideal', max: Math.max(96, Math.ceil(horas) + 1), color: '#22c55e', colorDark: '#16a34a' },
+    ],
+    ariaLabel: `Descanso de ${horas.toFixed(1)} horas. Mínimo FIFA 48hs, ideal 72hs.`,
+  };
+
   return {
     horas: `${horas.toFixed(1)} horas (${(horas / 24).toFixed(1)} días)`,
     cumpleReglamento: cumple ? `Sí cumple (mínimo FIFA 48hs)` : `No cumple (faltan ${(48 - horas).toFixed(1)}h para el mínimo FIFA)`,
@@ -32,5 +57,7 @@ export function mundial2026Descanso(i: Inputs): Outputs {
       : cumple
         ? 'Descanso aceptable pero no ideal. FIFA Medical Network recomienda 72hs.'
         : 'Descanso insuficiente: riesgo alto de lesiones y bajo rendimiento.',
+    _insight,
+    _chart,
   };
 }

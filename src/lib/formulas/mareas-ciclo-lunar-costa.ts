@@ -14,6 +14,7 @@ export interface Outputs {
   alturaBajamarAprox: string;
   tipoMareaHoy: string;
   advertencia: string;
+  _insight?: any;
 }
 
 interface PortData { amplitud: number; offsetHoras: number; descripcion: string; }
@@ -92,6 +93,15 @@ export function mareasCicloLunarCosta(i: Inputs): Outputs {
     advertencia = 'Estimación de bolsillo basada en ciclo semidiurno M2. Para navegación usá tablas oficiales del SHN (shn.gob.ar).';
   }
 
+  const rangoMarea = alturaPlea - alturaBaja;
+  const esViva = dMin < 2.5;
+  const esMuerta = dMin > 5.5;
+  const _insight = {
+    title: 'Lo que viene en la costa',
+    text: `La próxima pleamar es en **${horasHastaPleamar.toFixed(1)} h** (~${alturaPlea.toFixed(2)} m) y la bajamar en **${horasHastaBajamar.toFixed(1)} h** (~${alturaBaja.toFixed(2)} m): el agua sube y baja unos **${rangoMarea.toFixed(2)} m**. ${esViva ? 'Estás en **marea viva** (sicigia, luna nueva/llena): amplitud máxima, ojo con corrientes fuertes.' : esMuerta ? 'Estás en **marea muerta** (cuadratura, cuartos lunares): la amplitud es mínima estos días.' : 'Amplitud intermedia entre marea viva y muerta.'}`,
+    tone: esViva ? 'warn' : 'neutral',
+    icon: '🌊',
+  };
   return {
     proximaPleamar: `${fechaISO(proxPleamar)} (en ${horasHastaPleamar.toFixed(1)} h)`,
     proximaBajamar: `${fechaISO(proxBajamar)} (en ${horasHastaBajamar.toFixed(1)} h)`,
@@ -99,5 +109,6 @@ export function mareasCicloLunarCosta(i: Inputs): Outputs {
     alturaBajamarAprox: `${alturaBaja.toFixed(2)} m`,
     tipoMareaHoy: tipoMarea,
     advertencia,
+    _insight,
   };
 }

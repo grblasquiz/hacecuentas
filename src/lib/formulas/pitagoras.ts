@@ -13,6 +13,7 @@ export interface Outputs {
   perimetro: number;
   anguloA: number;
   anguloB: number;
+  _insight?: any;
 }
 
 export function pitagoras(i: Inputs): Outputs {
@@ -22,11 +23,21 @@ export function pitagoras(i: Inputs): Outputs {
       errAmbos: 'Ingresá los dos catetos',
       errCatetoHipo: 'Ingresá el otro cateto y la hipotenusa',
       errHipoMayor: 'La hipotenusa debe ser mayor al cateto',
+      insightTitle: 'Qué te dice el resultado',
+      ladoHipo: 'la hipotenusa',
+      ladoCateto: 'el cateto que faltaba',
+      insightText: (lado: string, val: string, area: string, ang: string) =>
+        `Resolviendo el triángulo rectángulo, **${lado} mide ${val}**. Con esos lados el triángulo encierra un área de **${area} u²** y su ángulo más chico es de **${ang}°**. Recordá que la fórmula solo vale si el ángulo entre los catetos es de 90°.`,
     },
     en: {
       errAmbos: 'Enter both legs',
       errCatetoHipo: 'Enter the other leg and the hypotenuse',
       errHipoMayor: 'The hypotenuse must be greater than the leg',
+      insightTitle: 'What the result means',
+      ladoHipo: 'the hypotenuse',
+      ladoCateto: 'the missing leg',
+      insightText: (lado: string, val: string, area: string, ang: string) =>
+        `Solving the right triangle, **${lado} measures ${val}**. With those sides the triangle encloses an area of **${area} u²** and its smallest angle is **${ang}°**. Remember the formula only holds if the angle between the legs is 90°.`,
     },
   } as const)[__lang];
 
@@ -66,12 +77,28 @@ export function pitagoras(i: Inputs): Outputs {
   const anguloA = Math.atan(lado_a / lado_b) * (180 / Math.PI);
   const anguloB = Math.atan(lado_b / lado_a) * (180 / Math.PI);
 
+  const resultadoR = Number(resultado.toFixed(4));
+  const areaR = Number(area.toFixed(4));
+  const anguloMin = Math.min(anguloA, anguloB);
+  const ladoLabel = calcular === 'hipotenusa' ? T.ladoHipo : T.ladoCateto;
+
   return {
-    resultado: Number(resultado.toFixed(4)),
+    resultado: resultadoR,
     formula,
-    area: Number(area.toFixed(4)),
+    area: areaR,
     perimetro: Number(perimetro.toFixed(4)),
     anguloA: Number(anguloA.toFixed(2)),
     anguloB: Number(anguloB.toFixed(2)),
+    _insight: {
+      title: T.insightTitle,
+      text: T.insightText(
+        ladoLabel,
+        resultadoR.toLocaleString(__lang === 'en' ? 'en-US' : 'es-AR'),
+        areaR.toLocaleString(__lang === 'en' ? 'en-US' : 'es-AR'),
+        anguloMin.toFixed(1)
+      ),
+      tone: 'neutral',
+      icon: '📐',
+    },
   };
 }

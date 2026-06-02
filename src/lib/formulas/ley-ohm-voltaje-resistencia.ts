@@ -1,6 +1,6 @@
 /** Calculadora Ley de Ohm — V = I × R */
 export interface Inputs { voltaje?: number; corriente?: number; resistencia?: number; }
-export interface Outputs { resultado: string; potencia: number; voltajeV: number; corrienteA: number; resistenciaOhm: number; }
+export interface Outputs { resultado: string; potencia: number; voltajeV: number; corrienteA: number; resistenciaOhm: number; _insight?: any; }
 
 export function leyOhmVoltajeResistencia(i: Inputs): Outputs {
   const v = i.voltaje != null && i.voltaje !== 0 ? Number(i.voltaje) : null;
@@ -17,11 +17,19 @@ export function leyOhmVoltajeResistencia(i: Inputs): Outputs {
 
   const potencia = voltaje * corriente;
 
+  const _insight = {
+    title: 'Resultado del circuito',
+    text: `Con **${voltaje.toFixed(2)} V** y **${corriente.toFixed(2)} A** sobre **${resistencia.toFixed(2)} Ω**, el circuito disipa una potencia de **${potencia.toFixed(2)} W** (P = V × I). Ese es el calor o trabajo que entrega el componente.`,
+    tone: 'neutral',
+    icon: '🔌',
+  };
+
   return {
     resultado: `V = ${voltaje.toFixed(2)} V, I = ${corriente.toFixed(4)} A, R = ${resistencia.toFixed(2)} Ω, P = ${potencia.toFixed(2)} W`,
     potencia: Number(potencia.toFixed(4)),
     voltajeV: Number(voltaje.toFixed(4)),
     corrienteA: Number(corriente.toFixed(6)),
     resistenciaOhm: Number(resistencia.toFixed(4)),
+    _insight,
   };
 }

@@ -15,6 +15,8 @@ export interface Outputs {
   porcentajeOutputReal: number;
   bloquesOptimos: number;
   sugerencia: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -94,14 +96,39 @@ export function compute(i: Inputs): Outputs {
       "Las interrupciones eliminan todo el tiempo de foco disponible. Revisá el costo por interrupción o la cantidad de interrupciones por bloque.";
   }
 
+  const pctRedondeado = Math.round(porcentajeOutputReal * 10) / 10;
+  const distrRedondeada = Math.round(perdidaPorDistracciones);
+  const tono = pctRedondeado >= 80 ? 'good' : pctRedondeado >= 50 ? 'neutral' : 'warn';
+  const horasFmt = focusRealHoras.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+  const _insight = {
+    title: 'Tu foco real vs. el nominal',
+    text: `De los **${tiempoNominalMin} min** que sumás en papel, solo **${focusRealMin} min** (${horasFmt} h) son foco real: un **${pctRedondeado}%**. Las distracciones se llevan **${distrRedondeada} min** y la ineficiencia otros **${perdidaPorIneficiencia} min**.`,
+    tone: tono,
+    icon: '🍅',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Foco real', value: focusRealMin },
+      { label: 'Perdido por distracciones', value: distrRedondeada },
+      { label: 'Perdido por ineficiencia', value: perdidaPorIneficiencia },
+    ],
+    suffix: ' min',
+    centerValue: `${pctRedondeado}%`,
+    centerLabel: 'output real',
+    ariaLabel: `De ${tiempoNominalMin} minutos nominales, ${focusRealMin} son foco real, ${distrRedondeada} se pierden por distracciones y ${perdidaPorIneficiencia} por ineficiencia.`,
+  };
+
   return {
     focusRealMin,
     focusRealHoras,
     tiempoNominalMin,
     perdidaPorDistracciones: Math.round(perdidaPorDistracciones),
     perdidaPorIneficiencia,
-    porcentajeOutputReal: Math.round(porcentajeOutputReal * 10) / 10,
+    porcentajeOutputReal: pctRedondeado,
     bloquesOptimos,
     sugerencia,
+    _insight,
+    _chart,
   };
 }

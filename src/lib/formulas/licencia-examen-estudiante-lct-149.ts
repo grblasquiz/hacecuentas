@@ -33,6 +33,8 @@ export interface LicenciaExamenOutputs {
   montoBrutoPorDia: number;
   totalDisponibleEnPesos: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function licenciaExamenEstudianteLct149(
@@ -94,11 +96,56 @@ export function licenciaExamenEstudianteLct149(
       `No importa si aprobaste o desaprobaste: la licencia es por haber rendido.`;
   }
 
+  const totalPesosR = Math.round(totalDisponibleEnPesos);
+  const fmt = (n: number) => '$' + n.toLocaleString('es-AR');
+
+  // Insight dinámico según cuánto del tope anual queda
+  let _insight: any;
+  if (diasRemanentesTope === 0) {
+    _insight = {
+      title: 'Tope anual agotado',
+      text: `Ya usaste los **10 días** que cubre el Art. 149 LCT (${examenesYaTomados} exámenes). No te quedan días pagos este año calendario: para los próximos exámenes vas a necesitar vacaciones, permiso sin goce o compensar horas. Los días no usados no se acumulan al año siguiente.`,
+      tone: 'warn',
+      icon: '📚',
+    };
+  } else if (diasEfectivosDisponibles < diasNecesarios) {
+    _insight = {
+      title: 'No alcanzan para todos los exámenes',
+      text: `Te quedan **${diasRemanentesTope} días** del tope LCT, pero necesitás ${diasNecesarios} para tus ${examenesPendientes} exámenes pendientes. La licencia paga cubre **${fmt(totalPesosR)}** (${diasEfectivosDisponibles} días); el resto lo tendrás que cubrir con vacaciones o acuerdo con el empleador.`,
+      tone: 'warn',
+      icon: '📚',
+    };
+  } else {
+    _insight = {
+      title: 'Días de examen cubiertos',
+      text: `Tenés **${diasEfectivosDisponibles} días corridos** pagos para tus ${examenesPendientes} exámenes pendientes, equivalentes a **${fmt(totalPesosR)}**. Son 2 días por examen (día previo + día del examen) y se pagan al rendir, apruebes o no. Avisá con 5-7 días y presentá el certificado de examen rendido.`,
+      tone: 'good',
+      icon: '📚',
+    };
+  }
+
+  // Gauge: días usados sobre el tope anual de 10
+  const topeMax = Math.max(MAX_DIAS_ANUALES_LCT, diasYaUsados) + 1;
+  const _chart = {
+    type: 'scale',
+    marker: diasYaUsados,
+    markerLabel: `${diasYaUsados} días usados`,
+    min: 0,
+    segments: [
+      { nombre: 'Con margen', max: 6, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Cerca del tope', max: MAX_DIAS_ANUALES_LCT, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Tope superado', max: topeMax, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Usaste ${diasYaUsados} de los 10 días anuales que cubre el Art. 149 LCT`,
+  };
+
   return {
     diasDisponibles,
     diasUsadosTotalmente,
     montoBrutoPorDia: Math.round(valorDia),
-    totalDisponibleEnPesos: Math.round(totalDisponibleEnPesos),
+    totalDisponibleEnPesos: totalPesosR,
     mensaje,
+    _insight,
+    _chart,
   };
 }

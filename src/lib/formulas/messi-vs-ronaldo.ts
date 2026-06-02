@@ -9,6 +9,7 @@ export interface Outputs {
   lider: 'Messi' | 'Cristiano' | 'Empate';
   diferencia: number;
   mensaje: string;
+  _insight?: any;
 }
 
 // Datos a marzo 2026 (carrera oficial). Fuentes cruzadas: FBref, Transfermarkt, RSSSF.
@@ -30,6 +31,15 @@ export function messiVsRonaldo(i: Inputs): Outputs {
   else if (d.cristiano > d.messi) lider = 'Cristiano';
   else lider = 'Empate';
   const diff = Math.abs(d.messi - d.cristiano);
+  const diffTxt = (Math.round(diff * 1000) / 1000).toString().replace('.', ',');
+  const _insight = {
+    title: 'El cara a cara',
+    text: lider === 'Empate'
+      ? `En **${d.label.toLowerCase()}** están **igualados en ${String(d.messi).replace('.', ',')}**: ni Messi ni Cristiano sacan ventaja en esta métrica.`
+      : `En **${d.label.toLowerCase()}**, **${lider}** lidera con **${String(lider === 'Messi' ? d.messi : d.cristiano).replace('.', ',')}** frente a ${String(lider === 'Messi' ? d.cristiano : d.messi).replace('.', ',')}, una diferencia de **${diffTxt}**.`,
+    tone: 'neutral' as const,
+    icon: '⚽',
+  };
   return {
     metricaLabel: d.label,
     messi: d.messi,
@@ -37,5 +47,6 @@ export function messiVsRonaldo(i: Inputs): Outputs {
     lider,
     diferencia: Math.round(diff * 1000) / 1000,
     mensaje: `${d.label}: Messi ${d.messi} vs Cristiano ${d.cristiano}. Lidera ${lider} por ${diff}.`,
+    _insight,
   };
 }

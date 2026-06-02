@@ -21,6 +21,8 @@ export interface Outputs {
   pension_minima_2026: number;          // referencia mínima contributiva 2026
   anios_cotizados_para_100: number;     // umbral para el 100% en 2026
   aviso: string;                        // mensaje informativo
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -168,6 +170,59 @@ export function compute(i: Inputs): Outputs {
     aviso = `Te faltan ${aniosParaMaximo} años cotizados para alcanzar el 100% de la base reguladora.`;
   }
 
+  // ── INSIGHT ───────────────────────────────────────────────────────────────
+  const fmtEur = (n: number) => `${n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  const sinDerecho = mesesCotizadosTotales < MESES_MINIMOS;
+  const topeAplicado = pensionMensual >= PENSION_MAXIMA_2026 && baseReguladora > 0;
+  const conPenalizacion = i.jubilacion_anticipada && coeficienteAnticipacion > 0;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (sinDerecho) {
+    insightText = `Con **${aniosCotizados.toFixed(1)} años** cotizados no llegás a los **15 años** mínimos para causar derecho a pensión contributiva. Te faltan **${(MESES_MINIMOS / 12 - aniosCotizados).toFixed(1)} años**.`;
+    insightTone = 'warn';
+  } else if (baseReguladora <= 0) {
+    insightText = `Con **${aniosCotizados.toFixed(1)} años** cotizados te corresponde el **${porcentajeBase}%** de la base reguladora. Cargá tu base reguladora para ver el importe en euros.`;
+    insightTone = 'neutral';
+  } else if (conPenalizacion) {
+    insightText = `Tu pensión queda en **${fmtEur(pensionMensual)}/mes** (${porcentajeBase}% de la base menos **${coeficienteAnticipacion.toFixed(2)}%** por adelantar ${mesesAnticipados} mes${mesesAnticipados === 1 ? '' : 'es'}). Ojo: esa penalización es **permanente**, no se recupera.`;
+    insightTone = 'warn';
+  } else if (topeAplicado) {
+    insightText = `Tu cálculo supera el tope legal 2026, así que cobrás el máximo: **${fmtEur(PENSION_MAXIMA_2026)}/mes** (${porcentajeBase}% de la base reguladora).`;
+    insightTone = 'warn';
+  } else if (porcentajeBase >= 100) {
+    insightText = `Llegás al **100%** de la base reguladora: cobrás **${fmtEur(pensionMensual)}/mes** (14 pagas, **${fmtEur(pensionAnual)}/año**). No suma más cotizar.`;
+    insightTone = 'good';
+  } else {
+    const faltan = Math.round(((MESES_COTIZADOS_100_2026 - mesesCotizadosTotales) / 12) * 10) / 10;
+    insightText = `Te corresponde el **${porcentajeBase}%** de la base reguladora: **${fmtEur(pensionMensual)}/mes** (14 pagas, **${fmtEur(pensionAnual)}/año**). Cotizando **${faltan} años** más llegás al 100%.`;
+    insightTone = 'neutral';
+  }
+  const _insight = {
+    title: sinDerecho ? 'No alcanzás el mínimo' : 'Tu pensión estimada',
+    text: insightText,
+    tone: insightTone,
+    icon: '🇪🇸',
+  };
+
+  // ── GRÁFICO: medidor del % de la base reguladora hacia el 100% ────────────
+  // Sólo cuando hay derecho a pensión (porcentaje > 0).
+  let _chart: any = undefined;
+  if (!sinDerecho && porcentajeBase > 0) {
+    _chart = {
+      type: 'scale' as const,
+      marker: porcentajeBase,
+      markerLabel: `${porcentajeBase}% de la base`,
+      min: 50,
+      segments: [
+        { nombre: 'Parcial', max: 70, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Buena', max: 90, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Casi plena', max: 99.99, color: '#22c55e', colorDark: '#4ade80' },
+        { nombre: 'Pensión plena', max: 100.01, color: '#16a34a', colorDark: '#22c55e' },
+      ],
+      ariaLabel: 'Medidor del porcentaje de la base reguladora alcanzado según años cotizados, desde 50% hasta el 100%',
+    };
+  }
+
   return {
     edad_actual: Math.round(edadActual * 10) / 10,
     fecha_jubilacion_ordinaria: fechaJubilacion,
@@ -179,6 +234,8 @@ export function compute(i: Inputs): Outputs {
     pension_maxima_2026: PENSION_MAXIMA_2026,
     pension_minima_2026: PENSION_MINIMA_2026,
     anios_cotizados_para_100: aniosCotizadosPara100,
-    aviso
+    aviso,
+    _insight,
+    _chart,
   };
 }

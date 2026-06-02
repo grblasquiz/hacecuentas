@@ -1,6 +1,6 @@
 /** Poda: frecuencia y época por especie */
 export interface Inputs { especie: string; edadAnios: number; }
-export interface Outputs { frecuencia: string; mejorEpoca: string; tipoPoda: string; consejo: string; }
+export interface Outputs { frecuencia: string; mejorEpoca: string; tipoPoda: string; consejo: string; _insight?: any; }
 
 interface PodaData { freq: string; epoca: string; consejo: string; }
 const ESPECIES: Record<string, PodaData> = {
@@ -24,9 +24,21 @@ export function podaFrecuenciaArbol(i: Inputs): Outputs {
   if (!data) throw new Error('Especie no encontrada');
 
   let tipoPoda = 'Mantenimiento';
-  if (edad <= 3) tipoPoda = 'Formación (dar estructura al árbol joven)';
-  else if (edad > 20) tipoPoda = 'Rejuvenecimiento (renovar ramas productivas)';
-  else tipoPoda = 'Producción/Mantenimiento';
+  let fase = 'mantenimiento';
+  if (edad <= 3) { tipoPoda = 'Formación (dar estructura al árbol joven)'; fase = 'formación'; }
+  else if (edad > 20) { tipoPoda = 'Rejuvenecimiento (renovar ramas productivas)'; fase = 'rejuvenecimiento'; }
+  else { tipoPoda = 'Producción/Mantenimiento'; fase = 'producción'; }
 
-  return { frecuencia: data.freq, mejorEpoca: data.epoca, tipoPoda, consejo: data.consejo };
+  const _insight = {
+    title: 'Tu plan de poda',
+    text: fase === 'formación'
+      ? `Con **${edad} año${edad === 1 ? '' : 's'}** estás en plena **poda de formación**: ahora definís la estructura que el árbol tendrá toda su vida. La mejor ventana es **${data.epoca}**, con cadencia **${data.freq.toLowerCase()}**.`
+      : fase === 'rejuvenecimiento'
+      ? `A los **${edad} años** conviene una **poda de rejuvenecimiento** para renovar ramas productivas y recuperar vigor. Hacela en **${data.epoca}** respetando la frecuencia **${data.freq.toLowerCase()}**.`
+      : `A los **${edad} años** el árbol ya está formado: toca **poda de producción/mantenimiento** en **${data.epoca}**, con cadencia **${data.freq.toLowerCase()}**.`,
+    tone: 'good',
+    icon: '🌳',
+  };
+
+  return { frecuencia: data.freq, mejorEpoca: data.epoca, tipoPoda, consejo: data.consejo, _insight };
 }

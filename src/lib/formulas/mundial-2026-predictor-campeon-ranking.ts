@@ -12,6 +12,8 @@ export interface Outputs {
   probCampeon: number;
   rankingFavoritos: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const SELECCION_LABEL: Record<string, string> = {
@@ -99,14 +101,44 @@ export function mundial2026PredictorCampeonRanking(i: Inputs): Outputs {
   else rankingFavoritos = '+15 (no es candidato real al título)';
 
   const label = SELECCION_LABEL[sel];
-  const resumen = `${label} con ranking FIFA #${ranking} en bombo ${bombo}: ${(probPasarGrupo * 100).toFixed(1)}% pasa grupos, ${(probCuartos * 100).toFixed(1)}% llega a cuartos, ${(probFinal * 100).toFixed(1)}% llega a final, ${(probCampeonCapped * 100).toFixed(1)}% gana Mundial 2026. ${rankingFavoritos}.`;
+  const pctCampeon = probCampeonCapped * 100;
+  const pctGrupo = probPasarGrupo * 100;
+  const resumen = `${label} con ranking FIFA #${ranking} en bombo ${bombo}: ${pctGrupo.toFixed(1)}% pasa grupos, ${(probCuartos * 100).toFixed(1)}% llega a cuartos, ${(probFinal * 100).toFixed(1)}% llega a final, ${pctCampeon.toFixed(1)}% gana Mundial 2026. ${rankingFavoritos}.`;
+
+  const insight = {
+    title: rankingFavoritos,
+    text: `${label} (ranking FIFA **#${ranking}**, bombo **${bombo}**) tiene **${pctCampeon.toFixed(1)}%** de salir campeón y **${pctGrupo.toFixed(1)}%** de superar la fase de grupos. ${
+      pctCampeon >= 15 ? 'Es de la pelea grande por el título.'
+      : pctCampeon >= 10 ? 'Candidato serio, aunque no el máximo favorito.'
+      : pctCampeon >= 5 ? 'Aspira a meterse entre los grandes, pero parte algo por detrás.'
+      : pctCampeon >= 2 ? 'Llega como tapado: necesita un torneo redondo.'
+      : 'Ganar el título sería una sorpresa histórica.'
+    }`,
+    tone: pctCampeon >= 10 ? 'good' : pctCampeon >= 5 ? 'neutral' : 'warn',
+    icon: '🏆',
+  };
 
   return {
     probPasarGrupo: Number((probPasarGrupo * 100).toFixed(2)),
     probCuartos: Number((probCuartos * 100).toFixed(2)),
     probFinal: Number((probFinal * 100).toFixed(2)),
-    probCampeon: Number((probCampeonCapped * 100).toFixed(2)),
+    probCampeon: Number(pctCampeon.toFixed(2)),
     rankingFavoritos,
     resumen,
+    _insight: insight,
+    _chart: {
+      type: 'scale',
+      marker: Number(pctCampeon.toFixed(2)),
+      markerLabel: `${pctCampeon.toFixed(1)}%`,
+      min: 0,
+      segments: [
+        { nombre: 'No candidato', max: 2, color: '#94a3b8', colorDark: '#64748b' },
+        { nombre: 'Outsider (Top 15)', max: 5, color: '#0ea5e9', colorDark: '#38bdf8' },
+        { nombre: 'Top 10', max: 10, color: '#84cc16', colorDark: '#a3e635' },
+        { nombre: 'Top 5', max: 15, color: '#f59e0b', colorDark: '#fbbf24' },
+        { nombre: 'Top 3 favoritos', max: 22, color: '#16a34a', colorDark: '#22c55e' },
+      ],
+      ariaLabel: `Probabilidad de que ${label} gane el Mundial 2026: ${pctCampeon.toFixed(1)}% (${rankingFavoritos})`,
+    },
   };
 }

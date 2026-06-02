@@ -14,6 +14,8 @@ export interface Outputs {
   recomendacion: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function margenSeguridadInversion(i: Inputs): Outputs {
@@ -45,6 +47,31 @@ export function margenSeguridadInversion(i: Inputs): Outputs {
   const formula = `V = $${eps} × (8.5 + 2×${crecimiento}) × 4.4 / ${rendBono} = $${valorIntrinseco.toFixed(2)}`;
   const explicacion = `Fórmula de Graham: valor intrínseco = $${valorIntrinseco.toFixed(2)}. Precio actual: $${precio.toFixed(2)}. Margen de seguridad: ${margenSeguridad.toFixed(1)}%. Precio máximo de compra (con 25% de margen): $${precioMaximoCompra.toFixed(2)}. ${recomendacion}. Nota: esta es una valuación simplificada; complementá con análisis de flujos de caja, deuda y competencia.`;
 
+  const tono = margenSeguridad >= 30 ? 'good' : margenSeguridad >= 15 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Tu margen de seguridad',
+    text: margenSeguridad >= 0
+      ? `El valor intrínseco estimado es **$${valorIntrinseco.toFixed(2)}** y la acción cotiza a **$${precio.toFixed(2)}**: un margen de seguridad del **${margenSeguridad.toFixed(1)}%**. Graham sugería comprar con al menos 25% de descuento, o sea por debajo de **$${precioMaximoCompra.toFixed(2)}**.`
+      : `La acción cotiza a **$${precio.toFixed(2)}**, por encima del valor intrínseco de **$${valorIntrinseco.toFixed(2)}**: margen de seguridad **negativo (${margenSeguridad.toFixed(1)}%)**. Estarías pagando un sobreprecio del ${Math.abs(margenSeguridad).toFixed(1)}% según Graham.`,
+    tone: tono,
+    icon: '🛡️',
+  };
+
+  const topSeg = Math.max(50, Math.ceil(margenSeguridad / 10) * 10 + 10);
+  const _chart = {
+    type: 'scale',
+    marker: Number(margenSeguridad.toFixed(1)),
+    markerLabel: `${margenSeguridad.toFixed(1)}%`,
+    min: Math.min(-50, Math.floor(margenSeguridad / 10) * 10),
+    segments: [
+      { nombre: 'Sin margen', max: 0, color: '#ef4444', colorDark: '#dc2626' },
+      { nombre: 'Bajo', max: 15, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Moderado', max: 30, color: '#84cc16', colorDark: '#65a30d' },
+      { nombre: 'Amplio', max: topSeg, color: '#22c55e', colorDark: '#16a34a' },
+    ],
+    ariaLabel: `Margen de seguridad de ${margenSeguridad.toFixed(1)}% sobre el valor intrínseco`,
+  };
+
   return {
     valorIntrinseco: Number(valorIntrinseco.toFixed(2)),
     margenSeguridad: Number(margenSeguridad.toFixed(2)),
@@ -52,5 +79,7 @@ export function margenSeguridadInversion(i: Inputs): Outputs {
     recomendacion,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

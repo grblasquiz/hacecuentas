@@ -10,6 +10,7 @@ export interface Outputs {
   mantisa: number;
   exponente: number;
   ordenMagnitud: string;
+  _insight?: any;
 }
 
 export function notacionCientifica(i: Inputs): Outputs {
@@ -36,6 +37,12 @@ export function notacionCientifica(i: Inputs): Outputs {
       mantisa: 0,
       exponente: 0,
       ordenMagnitud: '—',
+      _insight: {
+        title: 'El cero es especial',
+        text: 'El **0** no tiene notación científica: no se puede expresar como mantisa × 10^exponente. Cualquier otro número sí.',
+        tone: 'neutral',
+        icon: '🔢',
+      },
     };
   }
 
@@ -65,6 +72,19 @@ export function notacionCientifica(i: Inputs): Outputs {
   };
   const ordenMagnitud = prefijos[expIng] ?? `10^${expIng}`;
 
+  const dir = exponente >= 0
+    ? `desplazás la coma **${exponente}** lugar${Math.abs(exponente) === 1 ? '' : 'es'} a la derecha`
+    : `desplazás la coma **${Math.abs(exponente)}** lugar${Math.abs(exponente) === 1 ? '' : 'es'} a la izquierda`;
+  const prefijoTxt = ordenMagnitud === '—'
+    ? 'cae en el orden de las unidades'
+    : `corresponde al prefijo **${ordenMagnitud}**`;
+  const _insight = {
+    title: 'Cómo leer el resultado',
+    text: `El exponente **${exponente}** indica que, para volver al número original, ${dir}. En notación de ingeniería ${prefijoTxt}.`,
+    tone: 'neutral',
+    icon: '🔬',
+  };
+
   return {
     notacionCientifica: `${Number(mantisa.toFixed(6))} × 10^${exponente}`,
     notacionEstandar: estandar,
@@ -72,5 +92,6 @@ export function notacionCientifica(i: Inputs): Outputs {
     mantisa: Number(mantisa.toFixed(6)),
     exponente,
     ordenMagnitud,
+    _insight,
   };
 }

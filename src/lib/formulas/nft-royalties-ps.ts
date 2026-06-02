@@ -1,6 +1,6 @@
 /** NFT royalties primary + secondary */
 export interface Inputs { primarySales: number; primaryPrice: number; secondaryVolumeEth: number; royaltyPercent: number; marketplaceFeePercent: number; ethPriceUsd: number; }
-export interface Outputs { primaryRevenueEth: number; secondaryRoyaltiesEth: number; totalRevenueEth: number; totalRevenueUsd: number; marketplaceFeePaid: number; explicacion: string; _chart?: any; }
+export interface Outputs { primaryRevenueEth: number; secondaryRoyaltiesEth: number; totalRevenueEth: number; totalRevenueUsd: number; marketplaceFeePaid: number; explicacion: string; _chart?: any; _insight?: any; }
 export function nftRoyaltiesPrimarySecondary(i: Inputs): Outputs {
   const sales = Number(i.primarySales);
   const pp = Number(i.primaryPrice);
@@ -14,6 +14,15 @@ export function nftRoyaltiesPrimarySecondary(i: Inputs): Outputs {
   const netPrimary = primaryRevenue - mktFeePrimary;
   const secondaryRoy = secondVol * roy;
   const total = netPrimary + secondaryRoy;
+  const secShare = total > 0 ? (secondaryRoy / total) * 100 : 0;
+  const insight = {
+    title: 'De dónde viene tu ingreso',
+    text: secShare >= 30
+      ? `Los royalties del mercado secundario aportan **${secShare.toFixed(0)}%** de tu ingreso (**${secondaryRoy.toFixed(2)} ETH** de ${total.toFixed(2)} ETH): tu colección tiene reventa real, no dependés solo del drop inicial.`
+      : `El **${(100 - secShare).toFixed(0)}%** de tus ${total.toFixed(2)} ETH viene de la venta primaria; el secundario suma apenas **${secondaryRoy.toFixed(2)} ETH**. En total embolsás **$${(total * ethUsd).toFixed(2)}**.`,
+    tone: secShare >= 30 ? 'good' : 'neutral',
+    icon: '🎨',
+  };
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -33,5 +42,6 @@ export function nftRoyaltiesPrimarySecondary(i: Inputs): Outputs {
     marketplaceFeePaid: Number(mktFeePrimary.toFixed(4)),
     explicacion: `Primary: ${sales}×${pp}ETH = ${primaryRevenue.toFixed(2)}ETH, fee ${(mktFee*100).toFixed(1)}% → ${netPrimary.toFixed(2)}ETH. Royalties ${(roy*100).toFixed(1)}% de ${secondVol}ETH = ${secondaryRoy.toFixed(2)}ETH. Total ${total.toFixed(2)}ETH = $${(total*ethUsd).toFixed(2)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

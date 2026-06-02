@@ -53,6 +53,8 @@ export interface MonotributoCategoriaOptimaOutputs {
   ahorroAnualSiCambias: number;
   margenHastaSiguienteCat: number;
   vigenciaTabla: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function monotributoVsCategoriaOptima(
@@ -77,6 +79,12 @@ export function monotributoVsCategoriaOptima(
       ahorroAnualSiCambias: 0,
       margenHastaSiguienteCat: TABLA_2026[0].topeFacturacionAnual,
       vigenciaTabla: FECHA_VIGENCIA,
+      _insight: {
+        title: 'Te corresponde la categoría A',
+        text: `Sin facturación registrada te ubicás en la categoría más baja, **A** ($${TABLA_2026[0].cuotaServicios.toLocaleString('es-AR')}/mes), con todo el margen disponible hasta el tope.`,
+        tone: 'neutral',
+        icon: '🧾',
+      },
     };
   }
 
@@ -92,6 +100,12 @@ export function monotributoVsCategoriaOptima(
       ahorroAnualSiCambias: 0,
       margenHastaSiguienteCat: 0,
       vigenciaTabla: FECHA_VIGENCIA,
+      _insight: {
+        title: 'Superás el monotributo',
+        text: `Con **$${Math.round(facturacion).toLocaleString('es-AR')}** de facturación anual superás el tope de la categoría K ($${topeMaximo.toLocaleString('es-AR')}). Tenés que pasar al **Régimen General** (Responsable Inscripto).`,
+        tone: 'warn',
+        icon: '⚠️',
+      },
     };
   }
 
@@ -134,6 +148,51 @@ export function monotributoVsCategoriaOptima(
   }
 
   const margen = correcta.topeFacturacionAnual - facturacion;
+  const usoPct = (facturacion / correcta.topeFacturacionAnual) * 100;
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: Math.round(usoPct * 10) / 10,
+    markerLabel: usoPct.toFixed(0) + '% del tope',
+    min: 0,
+    segments: [
+      { nombre: 'Holgado', max: 70, color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: 'Atención', max: 90, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Al límite', max: 105, color: '#ef4444', colorDark: '#dc2626' },
+    ],
+    ariaLabel: 'Porcentaje del tope de facturación usado dentro de la categoría que corresponde',
+  };
+
+  let _insight;
+  if (ahorroAnual !== null && ahorroAnual > 0) {
+    _insight = {
+      title: 'Estás pagando de más',
+      text: `Por tu facturación te corresponde la categoría **${correcta.letra}** ($${cuotaCorrecta.toLocaleString('es-AR')}/mes), más baja que tu categoría actual. Recategorizando ahorrarías **$${Math.round(ahorroAnual).toLocaleString('es-AR')}** al año.`,
+      tone: 'good',
+      icon: '💸',
+    };
+  } else if (ahorroAnual !== null && ahorroAnual < 0) {
+    _insight = {
+      title: 'Estás subcategorizado',
+      text: `Te corresponde la categoría **${correcta.letra}** ($${cuotaCorrecta.toLocaleString('es-AR')}/mes), más alta que la que tenés. Recategorizá para evitar la exclusión: te costará **$${Math.round(-ahorroAnual).toLocaleString('es-AR')}** más al año.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (usoPct >= 90) {
+    _insight = {
+      title: 'Estás al límite de la categoría',
+      text: `Te corresponde la categoría **${correcta.letra}** ($${cuotaCorrecta.toLocaleString('es-AR')}/mes), pero usás el **${usoPct.toFixed(0)}%** del tope: te quedan apenas **$${Math.round(margen).toLocaleString('es-AR')}** antes de saltar de categoría.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: `Te corresponde la categoría ${correcta.letra}`,
+      text: `Con **$${Math.round(facturacion).toLocaleString('es-AR')}** facturados en 12 meses, la categoría correcta es **${correcta.letra}** ($${cuotaCorrecta.toLocaleString('es-AR')}/mes). Usás el **${usoPct.toFixed(0)}%** del tope, con **$${Math.round(margen).toLocaleString('es-AR')}** de margen.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  }
 
   return {
     categoriaCorrecta: correcta.letra,
@@ -144,5 +203,7 @@ export function monotributoVsCategoriaOptima(
     ahorroAnualSiCambias: ahorroAnual,
     margenHastaSiguienteCat: margen,
     vigenciaTabla: FECHA_VIGENCIA,
+    _chart,
+    _insight,
   };
 }

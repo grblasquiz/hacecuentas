@@ -21,6 +21,7 @@ export interface Outputs {
   superaPMG: string;
   cumpleSemanas: boolean;
   mensaje: string;
+  _insight?: any;
 }
 
 // Pensión Mínima Garantizada IMSS Ley 97 (LSS Art. 170): equivale a 1 SMG mensual
@@ -60,6 +61,34 @@ export function pensionImss1997(i: Inputs): Outputs {
   const pensionAnual = pensionMensual * 12;
   const cumpleSemanas = semanas >= 1000; // Ley 97 reformada 2020: 750 escalando a 1000
 
+  // Insight dinámico según PMG y semanas cotizadas
+  const fmtMXN = (v: number) => '$' + Math.round(v).toLocaleString('es-MX');
+  const superaPMGbool = pensionMensual >= PMG_MENSUAL_2026;
+  let insight: any;
+  if (!cumpleSemanas) {
+    const faltanSemanas = Math.max(0, 1000 - semanas);
+    insight = {
+      title: 'Te faltan semanas para pensionarte',
+      text: `Tu saldo proyectado da una pensión de **${fmtMXN(pensionMensual)}/mes**, pero con **${Math.round(semanas)} semanas** no alcanzás el mínimo de 1.000${faltanSemanas > 0 ? ` (faltan **${Math.round(faltanSemanas)}**)` : ''}. Sin ellas, ni siquiera accedés a la Pensión Mínima Garantizada.`,
+      tone: 'warn',
+      icon: '📉',
+    };
+  } else if (!superaPMGbool) {
+    insight = {
+      title: 'Cobrarías la Pensión Mínima Garantizada',
+      text: `Con un saldo de **${fmtMXN(saldoFinal)}** en tu AFORE, la pensión proyectada (**${fmtMXN(pensionMensual)}/mes**) queda por debajo de la PMG, así que el Estado te garantiza el piso de **${fmtMXN(PMG_MENSUAL_2026)}/mes**.`,
+      tone: 'warn',
+      icon: '🛟',
+    };
+  } else {
+    insight = {
+      title: 'Superás la Pensión Mínima Garantizada',
+      text: `Al jubilarte a los **${edadJubilacion} años** acumularías **${fmtMXN(saldoFinal)}**, para una pensión de **${fmtMXN(pensionMensual)}/mes**, por encima de la PMG (**${fmtMXN(PMG_MENSUAL_2026)}**).`,
+      tone: 'good',
+      icon: '💰',
+    };
+  }
+
   return {
     pensionMensual: Number(pensionMensual.toFixed(2)),
     saldoAcumulado: Number(saldoFinal.toFixed(2)),
@@ -67,5 +96,6 @@ export function pensionImss1997(i: Inputs): Outputs {
     superaPMG: pensionMensual >= PMG_MENSUAL_2026 ? 'Sí, supera la PMG' : 'No, aplicarías PMG',
     cumpleSemanas,
     mensaje: `Al jubilarte a los ${edadJubilacion} años acumulás ~$${Math.round(saldoFinal).toLocaleString('es-MX')} en AFORE. Pensión mensual estimada: $${Math.round(pensionMensual).toLocaleString('es-MX')}.${cumpleSemanas ? '' : ' Te faltan semanas cotizadas para pensión contributiva (mínimo 1000).'}`,
+    _insight: insight,
   };
 }

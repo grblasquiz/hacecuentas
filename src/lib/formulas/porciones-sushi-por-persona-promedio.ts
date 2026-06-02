@@ -27,6 +27,8 @@ export interface Outputs {
   piezasPorNino: number;
   costoEstimado: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const PIEZAS_ADULTO: Record<string, number> = {

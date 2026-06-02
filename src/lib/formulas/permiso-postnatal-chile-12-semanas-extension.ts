@@ -17,6 +17,7 @@ export interface Outputs {
   subsidio_total: number;
   salario_media_jornada: number;
   resumen_modalidad: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -101,6 +102,42 @@ export function compute(i: Inputs): Outputs {
   // Salario en media jornada (si aplica)
   const salarioMediaJornada = modalidad === 'media_18' ? salarioMensual * 0.5 : salarioMensual * 0.5;
   
+  // --- Insight narrativo ---
+  const clp = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const topaSubsidio = salarioDiario > TOPE_SUBSIDIO_DIARIO;
+  let _insight: any;
+  if (salarioMensual > 0) {
+    if (topaSubsidio) {
+      _insight = {
+        title: 'Tu subsidio llega al tope legal',
+        text:
+          `Tu renta supera el tope de subsidio (${TOPE_UF_SUBSIDIO} UF), así que cobrarás el **máximo de ${clp(subsidioMensual)} mensuales** ` +
+          `en lugar del 100 % de tu sueldo. En las **${semanasTotal} semanas** sumás unos **${clp(subsidioTotal)}**.`,
+        tone: 'warn',
+        icon: '👶',
+      };
+    } else {
+      const baseTxt = modalidad === 'media_18'
+        ? `al **50 % de tu sueldo** (media jornada) durante **${semanasTotal} semanas**`
+        : `al **100 % de tu sueldo** durante **${semanasTotal} semanas**`;
+      _insight = {
+        title: 'Tu subsidio postnatal',
+        text:
+          `Recibirás unos **${clp(subsidioMensual)} mensuales** ${baseTxt}, ` +
+          `lo que totaliza cerca de **${clp(subsidioTotal)}** hasta el ${formatearFecha(fechaTermino)}.`,
+        tone: 'good',
+        icon: '👶',
+      };
+    }
+  } else {
+    _insight = {
+      title: 'Completá tu sueldo',
+      text: 'Ingresá tu **sueldo mensual** para estimar el subsidio diario, mensual y total del postnatal.',
+      tone: 'neutral',
+      icon: '👶',
+    };
+  }
+
   return {
     dias_postnatal_total: diasTotales,
     semanas_total: semanasTotal,
@@ -110,6 +147,7 @@ export function compute(i: Inputs): Outputs {
     subsidio_mensual: Math.round(subsidioMensual),
     subsidio_total: Math.round(subsidioTotal),
     salario_media_jornada: Math.round(salarioMediaJornada),
-    resumen_modalidad: resumenModalidad
+    resumen_modalidad: resumenModalidad,
+    _insight
   };
 }

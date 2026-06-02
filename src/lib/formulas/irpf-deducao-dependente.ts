@@ -5,7 +5,7 @@
  * Lei 9.250/1995, art. 8º III
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | undefined; _insight?: any; }
 
 const DEDUCAO_ANUAL = 2275.08;
 const DEDUCAO_MENSAL = 189.59;
@@ -20,6 +20,20 @@ export function irpfDeducaoDependente(i: Inputs): Outputs {
   const deducaoMensal = qtde * DEDUCAO_MENSAL;
   const economiaIR = deducaoAnual * aliq;
 
+  const _insight = qtde <= 0
+    ? {
+        title: 'Informe os dependentes',
+        text: `Cada dependente abate **${fmt(DEDUCAO_ANUAL)}/ano** da base do IR. Informe a quantidade para ver sua economia.`,
+        tone: 'neutral',
+        icon: '👨‍👩‍👧',
+      }
+    : {
+        title: 'Quanto os dependentes abatem',
+        text: `${qtde} dependente(s) deduzem **${fmt(deducaoAnual)}** da base anual e, na alíquota de ${(aliq * 100).toFixed(1)}%, reduzem **${fmt(economiaIR)}** no IR a pagar.`,
+        tone: 'good',
+        icon: '👨‍👩‍👧',
+      };
+
   return {
     qtdeDependentes: qtde,
     deducaoAnual: fmt(deducaoAnual),
@@ -27,5 +41,6 @@ export function irpfDeducaoDependente(i: Inputs): Outputs {
     economiaIR: fmt(economiaIR),
     valorPorDependente: fmt(DEDUCAO_ANUAL),
     resumo: `${qtde} dependente(s) × ${fmt(DEDUCAO_ANUAL)}/ano = ${fmt(deducaoAnual)} dedutível. Na alíquota de ${(aliq * 100).toFixed(1)}% reduz ${fmt(economiaIR)} no IR a pagar (ajuste anual).`,
+    _insight,
   };
 }

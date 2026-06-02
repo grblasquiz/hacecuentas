@@ -12,6 +12,7 @@ export interface Outputs {
   ahorro_fiscal: number;
   regimen_aplicable: string;
   normativa: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -81,12 +82,26 @@ export function compute(i: Inputs): Outputs {
   const valor_total = i.valor_operacion + iva_valor;
   const ahorro_fiscal = Math.round(i.valor_operacion * TASA_IVA_ESTANDAR) - iva_valor;
 
+  const tasaPct = Math.round(tasa_iva_aplicable * 100 * 10) / 10;
+  const ahorroFinal = Math.max(0, ahorro_fiscal);
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+
+  const insight = i.valor_operacion > 0 ? {
+    title: ahorroFinal > 0 ? 'Beneficio fiscal de la zona' : 'Operación gravada con IVA',
+    text: ahorroFinal > 0
+      ? `Esta operación tributa al **${tasaPct}%** en vez del 19% general: ahorrás **${fmtCOP(ahorroFinal)}** de IVA. Régimen: ${regimen}.`
+      : `Aplica el IVA general del **19%** (${fmtCOP(iva_valor)}), sin beneficio por la zona en este caso. El total a pagar es **${fmtCOP(valor_total)}**. Régimen: ${regimen}.`,
+    tone: ahorroFinal > 0 ? ('good' as const) : ('neutral' as const),
+    icon: ahorroFinal > 0 ? '🟢' : '🧾',
+  } : undefined;
+
   return {
-    iva_aplicable: Math.round(tasa_iva_aplicable * 100 * 10) / 10, // porcentaje con 1 decimal
+    iva_aplicable: tasaPct, // porcentaje con 1 decimal
     iva_valor: iva_valor,
     valor_total: valor_total,
-    ahorro_fiscal: Math.max(0, ahorro_fiscal), // no negativo
+    ahorro_fiscal: ahorroFinal, // no negativo
     regimen_aplicable: regimen,
-    normativa: normativa
+    normativa: normativa,
+    _insight: insight
   };
 }

@@ -10,6 +10,8 @@ export interface Outputs {
   precioMinimo: number;
   gananciaPorUnidad: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function precioMinimoVenta(i: Inputs): Outputs {
@@ -34,9 +36,35 @@ export function precioMinimoVenta(i: Inputs): Outputs {
     `Con un margen del ${margen}%, el precio mínimo de venta es $${fmt.format(precioMinimo)}. ` +
     `Ganancia por unidad: $${fmt.format(gananciaPorUnidad)}.`;
 
+  const precioR = Math.round(precioMinimo);
+  const costoR = Math.round(costoTotal);
+  const gananciaR = precioR - costoR; // slices suman exactamente el total redondeado
+  const markup = costoTotal > 0 ? gananciaPorUnidad / costoTotal : 0;
+
+  const _insight = {
+    title: 'Tu piso de precio',
+    text: `Por debajo de **$${fmt.format(precioR)}** vendés a pérdida. Para dejar **${margen}%** de margen tenés que marcar el costo **${markup.toFixed(2)}x**, lo que te deja **$${fmt.format(gananciaR)}** de ganancia por unidad. Ojo: es el mínimo, no el precio de venta ideal.`,
+    tone: 'neutral' as const,
+    icon: '🏷️',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Costo total', value: costoR },
+      { label: 'Ganancia', value: gananciaR },
+    ],
+    prefix: '$',
+    centerValue: '$' + precioR.toLocaleString('es-AR'),
+    centerLabel: 'Precio mínimo',
+    ariaLabel: 'Composición del precio mínimo de venta: costo total más ganancia',
+  };
+
   return {
-    precioMinimo: Math.round(precioMinimo),
+    precioMinimo: precioR,
     gananciaPorUnidad: Math.round(gananciaPorUnidad),
     detalle,
+    _insight,
+    _chart,
   };
 }

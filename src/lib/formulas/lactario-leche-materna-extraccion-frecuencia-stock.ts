@@ -1,6 +1,6 @@
 /** Frecuencia extracción y stock leche materna recomendado para volver al trabajo */
 export interface Inputs { edadBebeMeses: number; horasFueraPorDia: number; tomasPorDiaBebe: number; mlPorTomaPromedio: number; diasStockBuffer: number; }
-export interface Outputs { extraccionesPorDiaTrabajo: number; mlNecesariosPorDia: number; stockTotalRecomendadoMl: number; bolsasFreezer150ml: number; explicacion: string; }
+export interface Outputs { extraccionesPorDiaTrabajo: number; mlNecesariosPorDia: number; stockTotalRecomendadoMl: number; bolsasFreezer150ml: number; explicacion: string; _insight?: any; }
 export function lactarioLecheMaternaExtraccionFrecuenciaStock(i: Inputs): Outputs {
   const edad = Number(i.edadBebeMeses);
   const horasFuera = Number(i.horasFueraPorDia) || 0;
@@ -14,11 +14,21 @@ export function lactarioLecheMaternaExtraccionFrecuenciaStock(i: Inputs): Output
   const mlDia = tomasFuera * mlToma;
   const stockTotal = mlDia * buffer;
   const bolsas = Math.ceil(stockTotal / 150);
+  const tone = extracciones >= 4 ? 'warn' : 'neutral';
+  const insightText = extracciones >= 4
+    ? `Con **${horasFuera}h** fuera vas a necesitar **${extracciones} extracciones** por jornada laboral (cada ~3h): organizá pausas fijas para no perder producción. Dejá **${bolsas} bolsas** de 150 ml como colchón.`
+    : `Con **${horasFuera}h** fuera alcanza con **${extracciones} extracciones** por jornada y **${mlDia} ml/día**. Mantené **${bolsas} bolsas** de 150 ml (${buffer} días) para imprevistos.`;
   return {
     extraccionesPorDiaTrabajo: extracciones,
     mlNecesariosPorDia: Number(mlDia.toFixed(0)),
     stockTotalRecomendadoMl: Number(stockTotal.toFixed(0)),
     bolsasFreezer150ml: bolsas,
     explicacion: `Para ${horasFuera}h fuera: ~${extracciones} extracciones/día, ${mlDia} ml/día. Stock buffer ${buffer} días = ${stockTotal} ml (${bolsas} bolsas de 150 ml).`,
+    _insight: {
+      title: 'Tu rutina de extracción',
+      text: insightText,
+      tone,
+      icon: '🍼',
+    },
   };
 }

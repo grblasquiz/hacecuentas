@@ -1,6 +1,6 @@
 /** Precio del m2 por zona */
 export interface Inputs { zona: string; superficieM2: number; estado?: string; }
-export interface Outputs { valorEstimado: string; precioM2: string; rangoValor: string; }
+export interface Outputs { valorEstimado: string; precioM2: string; rangoValor: string; _insight?: any; }
 
 export function precioM2Zona(i: Inputs): Outputs {
   const zona = i.zona || 'caballito-almagro';
@@ -37,9 +37,27 @@ export function precioM2Zona(i: Inputs): Outputs {
 
   const fmt = (n: number) => `US$${Math.round(n).toLocaleString('es-AR')}`;
 
+  const ajustePct = Math.round((mult - 1) * 100);
+  let efectoEstado: string;
+  if (ajustePct > 0) {
+    efectoEstado = `El estado del inmueble suma **+${ajustePct}%** sobre la base de la zona.`;
+  } else if (ajustePct < 0) {
+    efectoEstado = `El estado castiga el valor en **${ajustePct}%** frente a una propiedad en buen estado.`;
+  } else {
+    efectoEstado = `Tomamos el estado como referencia (buen estado), sin premio ni castigo.`;
+  }
+
+  const _insight = {
+    title: 'Cuánto vale aproximadamente',
+    text: `A **${fmt(precioM2)}/m2** para esa zona y estado, los **${Math.round(m2)} m2** dan un valor estimado de **${fmt(valorEst)}** (rango ${fmt(valorMin)}–${fmt(valorMax)}). ${efectoEstado} Es una referencia de mercado, no una tasación.`,
+    tone: 'neutral' as const,
+    icon: '🏠',
+  };
+
   return {
     valorEstimado: fmt(valorEst),
     precioM2: `US$${Math.round(precioM2).toLocaleString('es-AR')}/m2`,
     rangoValor: `${fmt(valorMin)} — ${fmt(valorMax)}`,
+    _insight,
   };
 }

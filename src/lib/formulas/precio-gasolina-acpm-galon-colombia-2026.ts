@@ -16,6 +16,8 @@ export interface Outputs {
   precio_galon: number;
   gasto_mensual: number;
   desglose_precio: ComponentesPrecio;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -64,6 +66,14 @@ export function compute(i: Inputs): Outputs {
   const precioGalonRedondeado = Math.round(precioFinal / 100) * 100;
   const gastoMensualTotal = precioGalonRedondeado * i.galones_mes;
 
+  const ivaRound = Math.round(iva);
+  const impuestosTotal = impuestoIbgm + sobretasa + ivaRound;
+  const totalComponentes = precioRef + impuestosTotal;
+  const pctImpuestos = totalComponentes > 0 ? (impuestosTotal / totalComponentes) * 100 : 0;
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const galones = Number(i.galones_mes) || 0;
+  const gastoTxt = galones > 0 ? ` Con **${galones} galones/mes** gastás **${fmt(gastoMensualTotal)}**.` : '';
+
   return {
     precio_galon: precioGalonRedondeado,
     gasto_mensual: Math.round(gastoMensualTotal),
@@ -72,7 +82,26 @@ export function compute(i: Inputs): Outputs {
       ibgm: impuestoIbgm,
       sobretasa: sobretasa,
       subtotal: subtotal,
-      iva_19: Math.round(iva)
+      iva_19: ivaRound
+    },
+    _insight: {
+      title: 'Cuánto es impuesto',
+      text: `El galón sale **${fmt(precioGalonRedondeado)}** y de ahí **${pctImpuestos.toFixed(0)}%** (**${fmt(impuestosTotal)}**) son impuestos: IBGM, sobretasa y el IVA del 19%. El precio puro de refinería es apenas **${fmt(precioRef)}**.${gastoTxt}`,
+      tone: 'warn',
+      icon: '⛽',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Refinería', value: precioRef },
+        { label: 'IBGM', value: impuestoIbgm },
+        { label: 'Sobretasa', value: sobretasa },
+        { label: 'IVA 19%', value: ivaRound },
+      ],
+      prefix: '$',
+      centerValue: fmt(totalComponentes),
+      centerLabel: 'Precio por galón',
+      ariaLabel: `El precio del galón se compone de ${fmt(precioRef)} de refinería más ${fmt(impuestosTotal)} en impuestos (IBGM, sobretasa e IVA).`,
     }
   };
 }

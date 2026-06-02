@@ -12,6 +12,7 @@ export interface Outputs {
   incluye_pami: string;
   tope_recursos: number;
   excedente: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -44,7 +45,13 @@ export function compute(i: Inputs): Outputs {
       elegibilidad,
       incluye_pami: "No aplica",
       tope_recursos: TOPE_FAMILIAR,
-      excedente: 0
+      excedente: 0,
+      _insight: {
+        title: 'Fuera del rango de edad',
+        text: `La pensión por invalidez no contributiva cubre de **18 a 64 años**. Con **${edad} años** ${edad > 64 ? 'correspondería evaluar la jubilación o PUAM' : 'aún no aplica'}.`,
+        tone: 'warn',
+        icon: '🎂',
+      }
     };
   }
 
@@ -56,7 +63,13 @@ export function compute(i: Inputs): Outputs {
       elegibilidad,
       incluye_pami: "No aplica",
       tope_recursos: TOPE_FAMILIAR,
-      excedente: 0
+      excedente: 0,
+      _insight: {
+        title: 'No alcanza el grado de invalidez',
+        text: `Se exige una invalidez **≥66%** y tu grado es del **${porcentaje_invalidez}%**. Sin ese mínimo certificado por junta médica, ANSES no otorga la pensión.`,
+        tone: 'warn',
+        icon: '🩺',
+      }
     };
   }
 
@@ -68,7 +81,13 @@ export function compute(i: Inputs): Outputs {
       elegibilidad,
       incluye_pami: "No aplica",
       tope_recursos: TOPE_FAMILIAR,
-      excedente: 0
+      excedente: 0,
+      _insight: {
+        title: 'Ya tenés cobertura de salud',
+        text: 'La pensión no contributiva exige **no tener obra social ni prepaga**. Al contar con cobertura propia, no se cumple este requisito de vulnerabilidad.',
+        tone: 'warn',
+        icon: '🏥',
+      }
     };
   }
 
@@ -85,7 +104,13 @@ export function compute(i: Inputs): Outputs {
       elegibilidad,
       incluye_pami: "No aplica",
       tope_recursos: TOPE_FAMILIAR,
-      excedente
+      excedente,
+      _insight: {
+        title: 'Ingresos por encima del tope',
+        text: `Los ingresos del grupo familiar (**${ingresos_totales.toLocaleString("es-AR", { style: "currency", currency: "ARS" })}**) superan el tope de **${TOPE_FAMILIAR.toLocaleString("es-AR", { style: "currency", currency: "ARS" })}** en **${excedente.toLocaleString("es-AR", { style: "currency", currency: "ARS" })}**, lo que excede el margen de vulnerabilidad y deniega la pensión.`,
+        tone: 'warn',
+        icon: '💸',
+      }
     };
   }
 
@@ -101,11 +126,28 @@ export function compute(i: Inputs): Outputs {
     elegibilidad = `Elegible: cumple todos los requisitos. Cuantía íntegra: ${(CUANTIA_INTEGRAL).toLocaleString("es-AR", { style: "currency", currency: "ARS" })}/mes.`;
   }
 
+  const fmtARS = (v: number) =>
+    v.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+  const insight: any = excedente > 0
+    ? {
+        title: 'Elegible, pero con reducción por ingresos',
+        text: `Cumplís los requisitos, pero los ingresos superan el tope en **${fmtARS(excedente)}**, así que la cuantía baja de ${fmtARS(CUANTIA_INTEGRAL)} a **${fmtARS(monto_mensual)}/mes**. Incluye **PAMI** automáticamente.`,
+        tone: 'warn',
+        icon: '⚖️',
+      }
+    : {
+        title: 'Cumplís todos los requisitos',
+        text: `Accedés a la **cuantía íntegra de ${fmtARS(monto_mensual)}/mes** (70% del haber mínimo) con cobertura de **PAMI** incluida automáticamente.`,
+        tone: 'good',
+        icon: '✅',
+      };
+
   return {
     monto_mensual: Math.round(monto_mensual),
     elegibilidad,
     incluye_pami,
     tope_recursos: TOPE_FAMILIAR,
-    excedente: Math.round(Math.max(0, excedente))
+    excedente: Math.round(Math.max(0, excedente)),
+    _insight: insight
   };
 }
