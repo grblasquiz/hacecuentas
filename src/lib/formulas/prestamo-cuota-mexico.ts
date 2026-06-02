@@ -20,6 +20,7 @@ export interface PrestamoCuotaMexicoOutputs {
   explicacion: string;
   tablaResumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function prestamoCuotaMexico(inputs: PrestamoCuotaMexicoInputs): PrestamoCuotaMexicoOutputs {
@@ -112,6 +113,17 @@ export function prestamoCuotaMexico(inputs: PrestamoCuotaMexicoInputs): Prestamo
     ariaLabel: 'Composición del total pagado: capital más intereses',
   };
 
+  // Insight dinámico: peso de los intereses sobre el capital
+  const interesPct = (totalIntereses / monto) * 100;
+  const insightTone: 'good' | 'warn' | 'neutral' =
+    interesPct >= 60 ? 'warn' : interesPct <= 20 ? 'good' : 'neutral';
+  const insight = {
+    title: 'Cuánto te cuesta el crédito',
+    text: `Tu cuota es de **${fmt(cuota)}/mes** durante ${plazoMeses} meses. Vas a pagar **${fmt(totalIntereses)}** en intereses sobre un capital de ${fmt(monto)}, es decir un **${interesPct.toFixed(0)}%** extra. El CAT aproximado es **${fmtPct(catAprox)}** (sin comisiones ni seguros).`,
+    tone: insightTone,
+    icon: '🇲🇽',
+  };
+
   return {
     cuotaMensual: Math.round(cuota),
     totalPagado: Math.round(totalPagado),
@@ -121,5 +133,6 @@ export function prestamoCuotaMexico(inputs: PrestamoCuotaMexicoInputs): Prestamo
     explicacion,
     tablaResumen,
     _chart: chart,
+    _insight: insight,
   };
 }

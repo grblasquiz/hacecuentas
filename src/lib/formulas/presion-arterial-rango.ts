@@ -8,6 +8,8 @@ export interface Outputs {
   riesgo: string;
   recomendacion: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function presionArterialRango(i: Inputs): Outputs {
@@ -47,10 +49,40 @@ export function presionArterialRango(i: Inputs): Outputs {
     recomendacion = 'Llamá a emergencias o andá a la guardia inmediatamente.';
   }
 
+  // Tono dinámico según la clasificación
+  const tone = clasificacion === 'Normal' ? 'good' : 'warn';
+  const insightText = clasificacion === 'Normal'
+    ? `Tu **${sis}/${dia} mmHg** está en rango **Normal**: riesgo cardiovascular bajo. Mantené hábitos y controlate una vez al año.`
+    : clasificacion === 'Crisis hipertensiva'
+      ? `**${sis}/${dia} mmHg** es una **crisis hipertensiva**. ${recomendacion}`
+      : `Con **${sis}/${dia} mmHg** caés en **${clasificacion}** (riesgo ${riesgo.toLowerCase()}). ${recomendacion}`;
+
   return {
     clasificacion,
     riesgo,
     recomendacion,
     mensaje: `${sis}/${dia} mmHg → ${clasificacion}. Riesgo: ${riesgo}. ${recomendacion}`,
+    _insight: {
+      title: clasificacion,
+      text: insightText,
+      tone,
+      icon: '🩺',
+    },
+    _chart: {
+      type: 'scale' as const,
+      marker: sis,
+      markerLabel: `Tu sistólica: ${sis} mmHg`,
+      min: 70,
+      unit: ' mmHg',
+      segments: [
+        { nombre: 'Hipotensión', max: 90, color: '#bfdbfe', colorDark: '#1e40af' },
+        { nombre: 'Normal', max: 120, color: '#bbf7d0', colorDark: '#166534' },
+        { nombre: 'Elevada', max: 130, color: '#fde68a', colorDark: '#b45309' },
+        { nombre: 'HTA Grado 1', max: 140, color: '#fed7aa', colorDark: '#9a3412' },
+        { nombre: 'HTA Grado 2', max: 180, color: '#fecaca', colorDark: '#b91c1c' },
+        { nombre: 'Crisis', max: Math.max(200, Math.ceil(sis) + 10), color: '#fca5a5', colorDark: '#7f1d1d' },
+      ],
+      ariaLabel: 'Escala de presión arterial sistólica según AHA/ACC',
+    },
   };
 }

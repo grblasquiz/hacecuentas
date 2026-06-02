@@ -8,6 +8,8 @@ export interface Outputs {
   semanasEco: string;
   semanasHoy: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function semanasGestacionEcografia(i: Inputs): Outputs {
@@ -72,9 +74,51 @@ export function semanasGestacionEcografia(i: Inputs): Outputs {
     `Días transcurridos desde la eco: ${diasTranscurridos} | ` +
     `Edad gestacional hoy: ${semanasHoy}.`;
 
+  // FPP = 280 días de gestación; días que faltan según EG de hoy
+  const diasParaParto = 280 - diasGestacionHoy;
+  const triHoy = diasGestacionHoy <= 97 ? 1 : diasGestacionHoy <= 195 ? 2 : 3;
+  const triLabel = triHoy === 1 ? '1.er trimestre' : triHoy === 2 ? '2.° trimestre' : '3.er trimestre';
+
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (diasParaParto <= 0) {
+    insightText = `Según la medida de la eco, hoy estarías en **${semanasHoy}** de gestación, es decir **a término o pasada la fecha probable de parto** (40 semanas).`;
+    insightTone = 'warn';
+  } else {
+    const semParto = Math.floor(diasParaParto / 7);
+    const diaParto = diasParaParto % 7;
+    const faltaTxt = semParto > 0 ? `${semParto} sem${diaParto ? ` y ${diaParto} días` : ''}` : `${diaParto} días`;
+    insightText = `La eco databa **${semanasEco}**; descontando los ${diasTranscurridos} días transcurridos, hoy estarías en **${semanasHoy}** (${triLabel}). Faltarían **~${faltaTxt}** para las 40 semanas.`;
+    insightTone = triHoy === 3 ? 'good' : 'neutral';
+  }
+
+  const _insight = {
+    title: 'Tu edad gestacional hoy',
+    text: insightText,
+    tone: insightTone,
+    icon: '🤰',
+  };
+
+  // Gauge: progreso de las 40 semanas (280 días) por trimestre
+  const markerDias = Math.max(0, Math.min(280, diasGestacionHoy));
+  const _chart = {
+    type: 'scale',
+    marker: markerDias,
+    markerLabel: `${semanasHoyNum} sem`,
+    min: 0,
+    segments: [
+      { nombre: '1.er trim.', max: 97, color: '#bfdbfe', colorDark: '#1e3a8a' },
+      { nombre: '2.° trim.', max: 195, color: '#93c5fd', colorDark: '#1d4ed8' },
+      { nombre: '3.er trim.', max: 280, color: '#60a5fa', colorDark: '#2563eb' },
+    ],
+    ariaLabel: `Progreso del embarazo: ${semanasHoyNum} semanas de 40 (${triLabel})`,
+  };
+
   return {
     semanasEco,
     semanasHoy,
     detalle,
+    _insight,
+    _chart,
   };
 }

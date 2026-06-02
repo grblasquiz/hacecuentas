@@ -21,6 +21,8 @@ export interface Outputs {
   necesitaRebalanceo: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function rebalanceoPortafolio(i: Inputs): Outputs {
@@ -68,14 +70,45 @@ export function rebalanceoPortafolio(i: Inputs): Outputs {
   const formula = `Target - Actual para cada activo`;
   const explicacion = `Portafolio total: $${total.toLocaleString()}. ${detalles.join('. ')}. Desvío máximo: ${desvioMaximo.toFixed(1)}%. ${necesitaRebalanceo}.`;
 
+  const desvioR = Number(desvioMaximo.toFixed(2));
+
+  const tone: 'good' | 'warn' | 'neutral' = desvioMaximo > 5 ? 'warn' : desvioMaximo > 2 ? 'neutral' : 'good';
+  const _insight = {
+    title: 'Estado del portafolio',
+    text: `Tu activo más desalineado se aparta **${desvioR}%** de su target. ${
+      desvioMaximo > 5
+        ? 'Conviene rebalancear para volver a tu asignación objetivo.'
+        : desvioMaximo > 2
+        ? 'El desvío es moderado: rebalancear es opcional.'
+        : 'Tu portafolio sigue alineado con el objetivo.'
+    }`,
+    tone,
+    icon: '⚖️',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: desvioR,
+    markerLabel: `${desvioR}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Alineado', max: 2, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Moderado', max: 5, color: '#ca8a04', colorDark: '#eab308' },
+      { nombre: 'Rebalancear', max: Math.max(15, Math.ceil(desvioR) + 2), color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Desvío máximo de ${desvioR}% respecto al target sobre escala de necesidad de rebalanceo`,
+  };
+
   return {
     activo1Accion: Math.round(resultados[0]),
     activo2Accion: Math.round(resultados[1]),
     activo3Accion: Math.round(resultados[2]),
     activo4Accion: Math.round(resultados[3]),
-    desvioMaximo: Number(desvioMaximo.toFixed(2)),
+    desvioMaximo: desvioR,
     necesitaRebalanceo,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

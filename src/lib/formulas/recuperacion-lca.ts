@@ -15,6 +15,7 @@ export interface Outputs {
   semaforoBiomarcador: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 function parseFecha(s: string): number {
@@ -99,6 +100,19 @@ export function recuperacionLca(i: Inputs): Outputs {
     ariaLabel: 'Escala del índice de simetría de fuerza del cuádriceps vs lado sano: alto riesgo bajo 70%, insuficiente 70-85% y apto desde 85%.',
   } : undefined;
 
+  // Tono dinámico según el biomarcador de fuerza del cuádriceps (criterio de alta JOSPT)
+  let tone: 'good' | 'warn' | 'neutral' = 'neutral';
+  let cuadTxt = ' Cargá la fuerza del cuádriceps (vs lado sano) para evaluar el criterio de alta.';
+  if (cuadPct >= 85) { tone = 'good'; cuadTxt = ` Tu fuerza de cuádriceps es de **${cuadPct}%** vs el lado sano: superás el umbral del 85% para el retorno progresivo.`; }
+  else if (cuadPct >= 70) { tone = 'warn'; cuadTxt = ` Tu fuerza de cuádriceps es de **${cuadPct}%**: todavía por debajo del 85% recomendado, seguí fortaleciendo antes de pivoteos y saltos.`; }
+  else if (cuadPct > 0) { tone = 'warn'; cuadTxt = ` Tu fuerza de cuádriceps es de **${cuadPct}%**: muy por debajo del umbral, no retomes pivoteos ni saltos por el alto riesgo de relesión.`; }
+  const insight = {
+    title: 'Plazo y criterio de alta',
+    text: `Tras la cirugía de LCA (${tipo.replace(/-/g, ' ')}), el retorno a competencia con contacto se estima en **${baseCompeticionMin}-${baseCompeticionMax} meses**, con una tasa de retorno al nivel previo del **${tasaMin}-${tasaMax}%**.${cuadTxt}${infoFecha}`,
+    tone,
+    icon: '🦵',
+  };
+
   return {
     fasesRehab: fases,
     mesesRetornoEntrenamiento: `${baseEntrenoMin}-${baseEntrenoMax} meses (fútbol controlado, sin contacto).`,
@@ -106,6 +120,7 @@ export function recuperacionLca(i: Inputs): Outputs {
     tasaRetornoEsperada: `${tasaMin}-${tasaMax}% de retorno a nivel pre-lesión (6-24 meses post-op).`,
     semaforoBiomarcador: semaforo,
     _chart: chart,
+    _insight: insight,
     mensaje: `${baseCompeticionMin}-${baseCompeticionMax} meses para competir`
   };
 }

@@ -11,6 +11,7 @@ export interface TyramineMigranaAlimentosOutputs {
   riesgoMigrana: string;
   recomendacion: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function tyramineMigranaAlimentos(inputs: TyramineMigranaAlimentosInputs): TyramineMigranaAlimentosOutputs {
@@ -30,10 +31,30 @@ export function tyramineMigranaAlimentos(inputs: TyramineMigranaAlimentosInputs)
     'palta-madura': { cat: 'Moderado', risk: 'Posible', rec: 'Consumir menos madura.' },
   };
   const r = map[a] ?? map['fresco'];
+
+  const isMuyAlto = r.cat.includes('Muy alto');
+  const isAlto = r.cat.includes('Alto') && !isMuyAlto;
+  const isModerado = r.cat.includes('Moderado');
+  const tone = (isMuyAlto || isAlto) ? 'warn' : isModerado ? 'neutral' : 'good';
+  const text = isMuyAlto
+    ? `Este alimento está en la categoría **${r.cat.replace(/[^\wÁÉÍÓÚáéíóúñ ]/g, '').trim()}** de tiramina: es un **trigger fuerte** de migraña. ${r.rec}`
+    : isAlto
+    ? `Nivel de tiramina **${r.cat.replace(/[^\wÁÉÍÓÚáéíóúñ ]/g, '').trim()}**: puede disparar crisis en personas sensibles. ${r.rec}`
+    : isModerado
+    ? `Tiramina **moderada**: ${r.risk.toLowerCase()}. ${r.rec}`
+    : `Tiramina **baja**: ${r.risk.toLowerCase()}. ${r.rec}`;
+  const _insight = {
+    title: 'Riesgo de migraña',
+    text,
+    tone,
+    icon: '🧠',
+  };
+
   return {
     categoria: r.cat,
     riesgoMigrana: r.risk,
     recomendacion: r.rec,
     resumen: `${r.cat} - ${r.risk}. ${r.rec}`,
+    _insight,
   };
 }

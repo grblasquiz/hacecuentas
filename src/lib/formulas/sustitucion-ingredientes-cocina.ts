@@ -7,6 +7,7 @@ export interface Outputs {
   sustitutoPrincipal: string;
   alternativas: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface Sustitucion {
@@ -109,9 +110,18 @@ export function sustitucionIngredientesCocina(i: Inputs): Outputs {
     return `${a.nombre}: ${cant % 1 === 0 ? cant : cant.toFixed(1)} ${a.unidad} (${a.nota})`;
   }).join(' | ');
 
+  const cantPrincipalFmt = cantPrincipal % 1 === 0 ? cantPrincipal : cantPrincipal.toFixed(1);
+  const ingredienteLegible = ingrediente.replace('_', ' ');
+
   return {
     sustitutoPrincipal: principal,
     alternativas: alts,
-    detalle: `Para reemplazar ${cantidad} ${dato.unidadOriginal} de ${ingrediente.replace('_', ' ')}: mejor opción → ${dato.principal.nombre} (${cantPrincipal % 1 === 0 ? cantPrincipal : cantPrincipal.toFixed(1)} ${dato.principal.unidad}). ${dato.principal.nota}.`,
+    detalle: `Para reemplazar ${cantidad} ${dato.unidadOriginal} de ${ingredienteLegible}: mejor opción → ${dato.principal.nombre} (${cantPrincipalFmt} ${dato.principal.unidad}). ${dato.principal.nota}.`,
+    _insight: {
+      title: 'Tu reemplazo ideal',
+      text: `Para tus **${cantidad} ${dato.unidadOriginal} de ${ingredienteLegible}**, la mejor opción es **${dato.principal.nombre}**: usá **${cantPrincipalFmt} ${dato.principal.unidad}**. ${dato.principal.nota}.`,
+      tone: 'neutral',
+      icon: '🍳',
+    },
   };
 }

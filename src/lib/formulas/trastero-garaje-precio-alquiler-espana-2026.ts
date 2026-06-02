@@ -13,6 +13,8 @@ export interface Outputs {
   rango_maximo: number;
   precio_por_m2: number;
   nota_iva: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tarifas base €/m²/mes por zona y tipo — datos de mercado España 2026
@@ -110,6 +112,52 @@ export function compute(i: Inputs): Outputs {
     notaIva = 'Precio sin IVA. Si el arrendador es empresario o profesional deberás añadir el 21% de IVA sobre esta cantidad.';
   }
 
+  // Posición del precio estimado dentro del rango de mercado de la zona
+  const tipoLabel: Record<string, string> = {
+    trastero: 'trastero',
+    garaje_simple: 'plaza de garaje',
+    garaje_doble: 'garaje doble',
+  };
+  const tipoTxt = tipoLabel[tipo] ?? 'plaza';
+  const ivaTxt = conIva ? 'con IVA' : 'sin IVA';
+  const eur = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+
+  let posicion: 'bajo' | 'medio' | 'alto';
+  if (precioMensualFinal < rangoMin) posicion = 'bajo';
+  else if (precioMensualFinal > rangoMax) posicion = 'alto';
+  else posicion = 'medio';
+
+  const insight = {
+    title:
+      posicion === 'bajo'
+        ? 'Por debajo del mercado'
+        : posicion === 'alto'
+          ? 'Por encima del mercado'
+          : 'Dentro del rango de mercado',
+    text:
+      posicion === 'medio'
+        ? `Un ${tipoTxt} de ${metros} m² ronda los **${eur(precioMensualFinal)} €/mes** (${ivaTxt}), dentro del rango habitual de la zona (${eur(rangoMin)}–${eur(rangoMax)} €). Son ~**${eur(precioAnual)} €/año**.`
+        : posicion === 'bajo'
+          ? `Un ${tipoTxt} de ${metros} m² estimado en **${eur(precioMensualFinal)} €/mes** (${ivaTxt}) queda por debajo del rango de la zona (${eur(rangoMin)}–${eur(rangoMax)} €): si sos el arrendador, tenés margen para subir; si alquilás, es buen precio.`
+          : `Un ${tipoTxt} de ${metros} m² estimado en **${eur(precioMensualFinal)} €/mes** (${ivaTxt}) supera el rango de la zona (${eur(rangoMin)}–${eur(rangoMax)} €): conviene comparar anuncios antes de cerrar.`,
+    tone: posicion === 'alto' ? 'warn' : posicion === 'bajo' ? 'good' : 'neutral',
+    icon: tipo === 'trastero' ? '📦' : '🅿️',
+  };
+
+  const topeSegmento = Math.max(rangoMax, precioMensualFinal) * 1.15;
+  const chart = {
+    type: 'scale' as const,
+    marker: precioMensualFinal,
+    markerLabel: `${eur(precioMensualFinal)} €/mes`,
+    min: 0,
+    segments: [
+      { nombre: 'Económico', max: rangoMin, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Rango de mercado', max: rangoMax, color: '#0ea5e9', colorDark: '#38bdf8' },
+      { nombre: 'Caro', max: Math.round(topeSegmento), color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Precio estimado de ${eur(precioMensualFinal)} euros al mes frente al rango de mercado de la zona (${eur(rangoMin)} a ${eur(rangoMax)} euros)`,
+  };
+
   return {
     precio_base_mensual: precioBase,
     precio_con_iva_mensual: precioConIva,
@@ -118,5 +166,7 @@ export function compute(i: Inputs): Outputs {
     rango_maximo: rangoMax,
     precio_por_m2: precioPorM2,
     nota_iva: notaIva,
+    _insight: insight,
+    _chart: chart,
   };
 }

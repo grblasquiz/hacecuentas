@@ -1,6 +1,6 @@
 /** Twitch Subs Meta Dólares */
 export interface Inputs { metaMensualUSD: number; split: string; mixTier: string; }
-export interface Outputs { subsTotales: string; subsT1: number; subsT2: number; subsT3: number; }
+export interface Outputs { subsTotales: string; subsT1: number; subsT2: number; subsT3: number; _insight?: any; _chart?: any; }
 
 export function twitchSubsMetaDolares(i: Inputs): Outputs {
   const meta = Number(i.metaMensualUSD);
@@ -18,10 +18,34 @@ export function twitchSubsMetaDolares(i: Inputs): Outputs {
   const [p1, p2, p3] = mixes[mix] || [1, 0, 0];
   const prom = p1 * netosT1 + p2 * netosT2 + p3 * netosT3;
   const subs = Math.ceil(meta / prom);
+  const sT1 = Math.round(subs * p1);
+  const sT2 = Math.round(subs * p2);
+  const sT3 = Math.round(subs * p3);
+
+  const _insight = {
+    title: 'Subs para tu meta',
+    text: `Para llegar a **$${meta.toLocaleString('en-US')} netos al mes** necesitás **${subs} subs activos**, con un promedio de **$${prom.toFixed(2)} netos por sub** según tu split y mix de tiers.`,
+    tone: 'neutral',
+    icon: '🎯',
+  };
+  const slices = [{ label: 'Tier 1 / Prime', value: sT1 }];
+  if (sT2 > 0) slices.push({ label: 'Tier 2', value: sT2 });
+  if (sT3 > 0) slices.push({ label: 'Tier 3', value: sT3 });
+  const totalSubs = sT1 + sT2 + sT3;
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    centerValue: `${totalSubs}`,
+    centerLabel: 'subs',
+    ariaLabel: `Distribución de los ${totalSubs} subs por tier: ${sT1} Tier 1, ${sT2} Tier 2 y ${sT3} Tier 3`,
+  };
+
   return {
     subsTotales: `${subs} subs (promedio $${prom.toFixed(2)} neto c/u)`,
-    subsT1: Math.round(subs * p1),
-    subsT2: Math.round(subs * p2),
-    subsT3: Math.round(subs * p3),
+    subsT1: sT1,
+    subsT2: sT2,
+    subsT3: sT3,
+    _insight,
+    _chart,
   };
 }

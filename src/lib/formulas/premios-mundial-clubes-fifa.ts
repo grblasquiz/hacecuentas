@@ -29,6 +29,8 @@ export interface PremiosMundialClubesOutputs {
   bonusVictoriasEmpates: number;
   detalle: string;
   rondaLabel: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const PART_POR_CONF: Record<string, number> = {
@@ -89,12 +91,43 @@ export function premiosMundialClubesFifa(
     );
   }
 
+  const premioTotal = premioParticipacion + premioRondas + bonusVictoriasEmpates;
+  const fmtUSD = (n: number) => '$' + n.toLocaleString('es-AR');
+  const rondaTxt = LABELS_MC[ronda] || ronda;
+
+  const slices = [
+    { label: 'Participación', value: premioParticipacion },
+  ];
+  if (premioRondas > 0) slices.push({ label: 'Avance de rondas', value: premioRondas });
+  if (bonusVictoriasEmpates > 0) slices.push({ label: 'Bonus V/E grupos', value: bonusVictoriasEmpates });
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: fmtUSD(premioTotal),
+    centerLabel: 'Premio total',
+    ariaLabel: `Premio total ${fmtUSD(premioTotal)}: participación ${fmtUSD(premioParticipacion)}, rondas ${fmtUSD(premioRondas)}, bonus ${fmtUSD(bonusVictoriasEmpates)}.`,
+  };
+
+  const pctFijo = premioTotal > 0 ? Math.round((premioParticipacion / premioTotal) * 100) : 0;
+  const _insight = {
+    title: 'Cuánto se lleva el club',
+    text: ronda === 'campeon'
+      ? `Llegar a **campeón** desde ${conf.toUpperCase()} embolsa **${fmtUSD(premioTotal)}**, de los cuales **${fmtUSD(premioRondas)}** son solo por avanzar de ronda. El premio fijo por participar pesa apenas el **${pctFijo}%** del total.`
+      : `Quedando en **${rondaTxt.toLowerCase()}**, un club de ${conf.toUpperCase()} junta **${fmtUSD(premioTotal)}**. El fijo por participar (**${fmtUSD(premioParticipacion)}**) es el **${pctFijo}%**; el resto se gana avanzando y sumando puntos en grupos.`,
+    tone: 'good' as const,
+    icon: '🏆',
+  };
+
   return {
-    premioTotal: premioParticipacion + premioRondas + bonusVictoriasEmpates,
+    premioTotal,
     premioParticipacion,
     premioRondas,
     bonusVictoriasEmpates,
     detalle: detalleBuild.join(' + '),
-    rondaLabel: LABELS_MC[ronda] || ronda,
+    rondaLabel: rondaTxt,
+    _chart,
+    _insight,
   };
 }

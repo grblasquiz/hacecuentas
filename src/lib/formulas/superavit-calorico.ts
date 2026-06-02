@@ -14,6 +14,8 @@ export interface Outputs {
   kgPorMes: number;
   proteinaMinG: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function superavitCalorico(i: Inputs): Outputs {
@@ -43,6 +45,30 @@ export function superavitCalorico(i: Inputs): Outputs {
   // Proteína mínima: 1.6-2.2 g/kg para hipertrofia
   const proteinaMinG = peso * 1.8;
 
+  // Insight dinámico según agresividad del superávit
+  const esAgresivo = superavit > 500;
+  const insight = {
+    title: esAgresivo ? 'Superávit agresivo' : 'Volumen limpio',
+    text: esAgresivo
+      ? `Con **+${superavit} kcal/día** ganarías ~**${kgPorMes.toFixed(2)} kg/mes**, pero un superávit tan alto suma más grasa que músculo. Para una recomposición más limpia, bajalo a 250-350 kcal y asegurá los **${Math.round(proteinaMinG)} g de proteína**.`
+      : `Comiendo **${Math.round(caloriasObjetivo)} kcal/día** (TDEE de ${Math.round(tdee)} + ${superavit} de superávit) ganás ~**${kgPorMes.toFixed(2)} kg/mes**, un ritmo limpio que minimiza la grasa. Clave: llegar a los **${Math.round(proteinaMinG)} g de proteína** diarios.`,
+    tone: esAgresivo ? 'warn' : 'good',
+    icon: esAgresivo ? '⚠️' : '💪',
+  };
+
+  // Donut: las calorías objetivo se componen de TDEE de mantenimiento + el superávit
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Mantenimiento (TDEE)', value: Math.round(tdee) },
+      { label: 'Superávit', value: superavit },
+    ],
+    prefix: '',
+    centerValue: Math.round(caloriasObjetivo).toLocaleString('es-AR') + ' kcal',
+    centerLabel: 'Objetivo diario',
+    ariaLabel: `Composición de las ${Math.round(caloriasObjetivo)} kcal objetivo: ${Math.round(tdee)} de mantenimiento más ${superavit} de superávit.`,
+  };
+
   return {
     tdee: Math.round(tdee),
     caloriasObjetivo: Math.round(caloriasObjetivo),
@@ -50,5 +76,7 @@ export function superavitCalorico(i: Inputs): Outputs {
     kgPorMes: Number(kgPorMes.toFixed(2)),
     proteinaMinG: Math.round(proteinaMinG),
     mensaje: `Comé ${Math.round(caloriasObjetivo)} kcal/día (+${superavit} superávit). Ganancia estimada: ~${kgPorMes.toFixed(2)} kg/mes. Proteína mínima: ${Math.round(proteinaMinG)} g/día.`,
+    _insight: insight,
+    _chart: chart,
   };
 }

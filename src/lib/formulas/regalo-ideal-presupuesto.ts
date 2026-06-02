@@ -1,6 +1,6 @@
 /** Sugerencias de regalo según presupuesto */
 export interface Inputs { presupuesto: number; ocasion?: string; persona?: string; }
-export interface Outputs { sugerencias: string; listaSugerencias: string; rangoGasto: string; mensaje: string; }
+export interface Outputs { sugerencias: string; listaSugerencias: string; rangoGasto: string; mensaje: string; _insight?: any; }
 
 const REGALOS: Record<string, Record<string, string[]>> = {
   bajo: {
@@ -56,10 +56,19 @@ export function regaloIdealPresupuesto(i: Inputs): Outputs {
     'sin-motivo': 'Los regalos sin motivo son los más valorados. Sorprendé cuando menos lo espere.'
   };
 
+  const rangoNombre: Record<string,string> = { bajo:'bajo', medio:'medio', alto:'alto', premium:'premium' };
+  const _insight = {
+    title: "Tu presupuesto da para esto",
+    text: `Con **$${p.toLocaleString()}** estás en el rango **${rangoNombre[rango]}** (${rangoLabels[rango]}). Te armamos **${ideas.length} ideas** pensadas para ese monto. ${tips[ocasion] || 'Elegí algo que demuestre que pensaste en la persona.'}`,
+    tone: "neutral" as const,
+    icon: "🎁",
+  };
+
   return {
     sugerencias,
     listaSugerencias,
     rangoGasto: rangoLabels[rango],
-    mensaje: tips[ocasion] || 'Elegí algo que demuestre que pensaste en la persona.'
+    mensaje: tips[ocasion] || 'Elegí algo que demuestre que pensaste en la persona.',
+    _insight
   };
 }

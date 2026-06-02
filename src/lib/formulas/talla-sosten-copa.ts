@@ -12,6 +12,8 @@ export interface Outputs {
   tallaEU: string;
   tallaUK: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tallaSostenCopa(i: Inputs): Outputs {
@@ -54,6 +56,32 @@ export function tallaSostenCopa(i: Inputs): Outputs {
   // UK: similar a US
   const tallaUK = tallaUS;
 
+  const diffFmt = diferencia.toFixed(0);
+  const _insight = {
+    title: 'Tu talla de corpiño',
+    text: `Tu talla es **${tallaCompleta}** (EU): banda **${tallaContorno}** y copa **${copa}**, surgida de **${diffFmt} cm** de diferencia entre pecho y contorno bajo el busto. Si la copa te queda al límite, probá una banda menos con una copa más.`,
+    tone: 'neutral',
+    icon: '👙',
+  };
+  // Gauge: la diferencia pecho-contorno cae en zonas de copa
+  const _chart = {
+    type: 'scale',
+    marker: Number(diferencia.toFixed(1)),
+    markerLabel: `Copa ${copa}`,
+    min: 8,
+    segments: [
+      { nombre: 'AA', max: 11, color: '#bae6fd', colorDark: '#0c4a6e' },
+      { nombre: 'A', max: 13, color: '#7dd3fc', colorDark: '#075985' },
+      { nombre: 'B', max: 15, color: '#38bdf8', colorDark: '#0369a1' },
+      { nombre: 'C', max: 17, color: '#22c55e', colorDark: '#15803d' },
+      { nombre: 'D', max: 19, color: '#84cc16', colorDark: '#4d7c0f' },
+      { nombre: 'E (DD)', max: 21, color: '#facc15', colorDark: '#a16207' },
+      { nombre: 'F', max: 23, color: '#fb923c', colorDark: '#c2410c' },
+      { nombre: 'G+', max: Math.max(30, diferencia + 2), color: '#f87171', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Diferencia de ${diffFmt} cm ubicada en la zona de copa ${copa}`,
+  };
+
   return {
     tallaContorno,
     copa,
@@ -62,5 +90,7 @@ export function tallaSostenCopa(i: Inputs): Outputs {
     tallaEU,
     tallaUK,
     mensaje: `Tu talla es ${tallaCompleta} (EU). US/UK: ${tallaUS}. Contorno: ${tallaContorno}, Copa: ${copa}.`,
+    _insight,
+    _chart,
   };
 }

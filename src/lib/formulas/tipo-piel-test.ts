@@ -12,6 +12,7 @@ export interface Outputs {
   cuidadoRecomendado: string;
   ingredientesClave: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function tipoPielTest(i: Inputs): Outputs {
@@ -77,11 +78,29 @@ export function tipoPielTest(i: Inputs): Outputs {
     normal: 'Vitamina C, retinol (gradual), ácido hialurónico, péptidos.',
   };
 
+  const tipoCap = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+  const insightText: Record<string, string> = {
+    grasa: `Tu piel produce sebo en exceso: priorizá **niacinamida y ácido salicílico (BHA)** y evitá hidratantes oclusivos. El brillo no se combate resecando la piel, se regula.`,
+    seca: `Tu piel pierde hidratación con facilidad: buscá **ceramidas y ácido hialurónico**, evitá el agua caliente y no te saltes el SPF, que reseca aún más.`,
+    mixta: `Tenés zona T grasa y mejillas más secas: la clave es **tratar cada zona distinto** (gel ligero en la T, crema más rica en mejillas) en vez de un solo producto para toda la cara.`,
+    sensible: `Tu piel reacciona fácil: evitá fragancias y alcohol, y **testeá todo en el antebrazo** antes de aplicarlo en la cara. Centella asiática y avena coloidal son tus aliados.`,
+    normal: `Tu piel está equilibrada: con una **rutina básica (limpieza, hidratante, SPF)** alcanza, y podés sumar activos como vitamina C o retinol de forma gradual.`,
+  };
+  const insightTone: Record<string, string> = {
+    grasa: 'warn', seca: 'neutral', mixta: 'neutral', sensible: 'warn', normal: 'good',
+  };
+
   return {
-    tipoPiel: tipo.charAt(0).toUpperCase() + tipo.slice(1),
+    tipoPiel: tipoCap,
     descripcion: descripciones[tipo],
     cuidadoRecomendado: cuidados[tipo],
     ingredientesClave: ingredientes[tipo],
-    mensaje: `Tu tipo de piel es: ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}. ${descripciones[tipo]}`,
+    mensaje: `Tu tipo de piel es: ${tipoCap}. ${descripciones[tipo]}`,
+    _insight: {
+      title: `Tu piel es de tipo ${tipoCap}`,
+      text: insightText[tipo],
+      tone: insightTone[tipo],
+      icon: '🧴',
+    },
   };
 }

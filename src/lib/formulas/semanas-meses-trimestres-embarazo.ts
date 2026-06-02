@@ -13,6 +13,8 @@ export interface Outputs {
   daysRemaining: number;
   weeksRemaining: string;
   totalDaysElapsed: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Duración estándar del embarazo según ACOG/OMS
@@ -98,12 +100,46 @@ export function compute(i: Inputs): Outputs {
   const triNames = ["1.° trimestre (semanas 1–13+6)", "2.° trimestre (semanas 14–27+6)", "3.° trimestre (semanas 28–40)"];
   const trimesterLabel = triNames[triNum - 1];
 
+  const triShort = triNum === 1 ? "1.er trimestre" : triNum === 2 ? "2.° trimestre" : "3.er trimestre";
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  if (daysRemaining === 0) {
+    insightText = `Semana **${weeks}+${days}**: llegaste a las **40 semanas** (100% del embarazo). Estás a término.`;
+    insightTone = "warn";
+  } else {
+    insightText = `Semana **${weeks}+${days}** equivale al **${ORDINALS_ES[monthNum]} mes** y al **${triShort}**. Llevás **${percentComplete}%** del embarazo y faltan **${weeksRemaining}** para la fecha probable de parto.`;
+    insightTone = triNum === 3 ? "good" : "neutral";
+  }
+  const _insight = {
+    title: "Dónde estás en el embarazo",
+    text: insightText,
+    tone: insightTone,
+    icon: "🤰"
+  };
+
+  // Gauge: progreso de las 40 semanas (280 días) por trimestre
+  const markerDias = Math.max(0, Math.min(280, totalDaysElapsed));
+  const _chart = {
+    type: "scale",
+    marker: markerDias,
+    markerLabel: `${weeks} sem`,
+    min: 0,
+    segments: [
+      { nombre: "1.er trim.", max: 97, color: "#fbcfe8", colorDark: "#9d174d" },
+      { nombre: "2.° trim.", max: 195, color: "#f9a8d4", colorDark: "#be185d" },
+      { nombre: "3.er trim.", max: 280, color: "#f472b6", colorDark: "#db2777" }
+    ],
+    ariaLabel: `Progreso del embarazo: semana ${weeks} de 40 (${triShort}), ${percentComplete}% completado`
+  };
+
   return {
     monthLabel,
     trimesterLabel,
     percentComplete,
     daysRemaining,
     weeksRemaining,
-    totalDaysElapsed
+    totalDaysElapsed,
+    _insight,
+    _chart
   };
 }

@@ -20,6 +20,8 @@ export interface Outputs {
   proximaFecha: string;
   vigenciaMeses: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Vigencia por holograma (meses)
@@ -65,6 +67,34 @@ export function verificacionVehicularMx(i: Inputs): Outputs {
   const proxima = new Date(hoy.getFullYear(), hoy.getMonth() + vigencia, 1);
   const proximaFecha = `${String(proxima.getMonth() + 1).padStart(2, '0')}/${proxima.getFullYear()}`;
 
+  const _insight = multa > 0
+    ? {
+        title: 'Verificás fuera de calendario',
+        text: `Por verificar fuera de tu período te suman una multa de **$${multa.toFixed(2)}** sobre el costo base de $${costoBase.toFixed(2)}: pagás **$${costoTotal.toFixed(2)}** en total. Verificar en fecha te ahorra esa penalización.`,
+        tone: 'warn',
+        icon: '⚠️',
+      }
+    : {
+        title: 'Verificación en regla',
+        text: `El trámite cuesta **$${costoTotal.toFixed(2)}** (sin multa) y tu holograma **${tipoRaw}** vence en **${vigencia} meses** (próxima en ${proximaFecha}). Agendá la fecha para no caer en la multa de 20 UMA.`,
+        tone: 'good',
+        icon: '🚙',
+      };
+
+  const _chart = multa > 0
+    ? {
+        type: 'doughnut' as const,
+        slices: [
+          { label: 'Costo base', value: Number(costoBase.toFixed(2)) },
+          { label: 'Multa extemporánea', value: Number(multa.toFixed(2)) },
+        ],
+        prefix: '$',
+        centerValue: '$' + Number(costoTotal.toFixed(2)).toLocaleString('es-MX'),
+        centerLabel: 'Total',
+        ariaLabel: 'Composición del costo de la verificación: base más multa',
+      }
+    : undefined;
+
   return {
     costoTotal: Number(costoTotal.toFixed(2)),
     costoBase: Number(costoBase.toFixed(2)),
@@ -72,5 +102,7 @@ export function verificacionVehicularMx(i: Inputs): Outputs {
     proximaFecha,
     vigenciaMeses: vigencia,
     mensaje: `Verificación (holograma ${tipoRaw}): costo base $${costoBase.toFixed(2)}${multa > 0 ? ` + multa $${multa.toFixed(2)}` : ''} = $${costoTotal.toFixed(2)}. Próxima: ${proximaFecha}.`,
+    _insight,
+    _chart,
   };
 }

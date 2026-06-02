@@ -11,6 +11,7 @@ export interface Outputs {
   percentile: string;
   interpretation: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Fórmula original de Cooper (1968): VO2max = (distancia_m - 504.9) / 44.73
@@ -155,11 +156,21 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: "Escala de VO2max según normas Cooper Institute para tu edad y sexo",
   };
 
+  const tone = (category === "Superior" || category === "Excelente") ? "good"
+    : (category === "Bajo") ? "warn" : "neutral";
+  const insight = {
+    title: "Tu capacidad aeróbica",
+    text: `Recorriste **${Math.round(distanceMeters)} m** en 12 minutos, lo que estima un **VO2max de ${vo2maxRounded.toFixed(1)} ml/kg/min**. Para ${sex === "female" ? "una mujer" : "un hombre"} de ${age} años eso te ubica en la categoría **${category}** (${percentile}).`,
+    tone,
+    icon: "🫁",
+  };
+
   return {
     vo2max: vo2maxRounded,
     category,
     percentile,
     interpretation,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

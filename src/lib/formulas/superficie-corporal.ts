@@ -11,6 +11,7 @@ export interface Outputs {
   promedio: number;
   resumen: string;
   ejemplos: string;
+  _insight?: any;
 }
 
 export function superficieCorporal(i: Inputs): Outputs {
@@ -34,6 +35,17 @@ export function superficieCorporal(i: Inputs): Outputs {
 
   const promedio = (mosteller + duBois + haycock) / 3;
 
+  // Dispersión entre las 3 fórmulas (qué tan de acuerdo están)
+  const spread = Math.max(mosteller, duBois, haycock) - Math.min(mosteller, duBois, haycock);
+  const insight = {
+    title: __lang === 'en' ? 'Body surface area' : 'Superficie corporal',
+    text: __lang === 'en'
+      ? `Your BSA is **${promedio.toFixed(2)} m²** (average of the 3 formulas). They agree within **${spread.toFixed(2)} m²**, so any of them is reliable for dosing. The Mosteller method (**${mosteller.toFixed(2)} m²**) is the most used in clinical practice.`
+      : `Tu superficie corporal es de **${promedio.toFixed(2)} m²** (promedio de las 3 fórmulas). Coinciden dentro de **${spread.toFixed(2)} m²**, así que cualquiera sirve para calcular dosis. El método Mosteller (**${mosteller.toFixed(2)} m²**) es el más usado en la práctica clínica.`,
+    tone: 'neutral',
+    icon: '🧍',
+  };
+
   return {
     mosteller: Number(mosteller.toFixed(3)),
     duBois: Number(duBois.toFixed(3)),
@@ -45,5 +57,6 @@ export function superficieCorporal(i: Inputs): Outputs {
     ejemplos: __lang === 'en'
       ? `Applications: chemotherapy dosing (mg/m²), cardiac index (L/min/m²), renal clearance by body surface.`
       : `Aplicaciones: dosis quimioterapia (mg/m²), índice cardíaco (L/min/m²), aclaramiento renal por superficie.`,
+    _insight: insight,
   };
 }

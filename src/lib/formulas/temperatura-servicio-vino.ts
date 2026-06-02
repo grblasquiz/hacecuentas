@@ -1,6 +1,6 @@
 /** Temperatura servicio vino */
 export interface Inputs { tipoVino: string; temperaturaActual: number; }
-export interface Outputs { tempOptima: string; tiempoHeladera: string; tiempoFreezer: string; recomendacion: string; }
+export interface Outputs { tempOptima: string; tiempoHeladera: string; tiempoFreezer: string; recomendacion: string; _insight?: any; _chart?: any; }
 
 export function temperaturaServicioVino(i: Inputs): Outputs {
   const tipo = String(i.tipoVino || 'tinto_medio');
@@ -43,10 +43,41 @@ export function temperaturaServicioVino(i: Inputs): Outputs {
     rec = 'Listo para servir.';
   }
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (delta > 0) {
+    insightTone = 'warn';
+    insightText = `Está **${delta.toFixed(0)}°C por encima** del rango ideal (${tempOpt}): servido así pierde aromas y se siente más alcohólico. Enfrialo **${hel}** antes de descorchar.`;
+  } else if (delta < -1) {
+    insightTone = 'warn';
+    insightText = `Está **${(-delta).toFixed(0)}°C demasiado frío** (ideal ${tempOpt}): el frío tapa los aromas. Dejalo atemperar **10-15 min** fuera del frío antes de servir.`;
+  } else {
+    insightTone = 'good';
+    insightText = `A **${tAct.toFixed(0)}°C** ya está dentro del rango ideal de **${tempOpt}**: serví sin esperar para disfrutarlo en su punto.`;
+  }
+
   return {
     tempOptima: tempOpt,
     tiempoHeladera: hel,
     tiempoFreezer: fre,
     recomendacion: rec,
+    _insight: {
+      title: 'Tu copa en su punto',
+      text: insightText,
+      tone: insightTone,
+      icon: '🍷',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(tAct.toFixed(1)),
+      markerLabel: `Actual ${tAct.toFixed(0)}°C`,
+      min: 0,
+      segments: [
+        { nombre: 'Muy frío', max: lo, color: '#60a5fa', colorDark: '#3b82f6' },
+        { nombre: 'Ideal', max: hi, color: '#34d399', colorDark: '#10b981' },
+        { nombre: 'Muy cálido', max: Math.max(hi + 6, Math.ceil(tAct) + 2), color: '#f87171', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Temperatura actual ${tAct.toFixed(0)}°C frente al rango ideal de servicio ${tempOpt}`,
+    },
   };
 }

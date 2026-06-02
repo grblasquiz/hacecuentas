@@ -16,6 +16,8 @@ export interface Outputs {
   prestacion_total_estimada: number;
   elegible_prestacion: string;
   requisitos_fondo_solidario: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -97,6 +99,42 @@ export function compute(i: Inputs): Outputs {
     requisitos_fondo_solidario = `Antigüedad ${meses} meses (< 6). Sin prestación de cesantía. Solo indemnización por años de servicio si aplica.`;
   }
 
+  const fmt = (n: number) => Math.round(n).toLocaleString('es-CL');
+  const totalMeses = meses_prestacion_60 + meses_prestacion_solidario;
+  let _insight: any;
+  if (es_elegible) {
+    _insight = {
+      title: 'Tenés derecho a prestación',
+      text: `Con ${meses} meses de antigüedad y término **${i.tipo_termino.replace('_', ' ')}**, accedés a **${totalMeses} meses** de cobertura: ${meses_prestacion_60} al 60% (≈ **$${fmt(prestacion_mensual_60)}/mes**)${meses_prestacion_solidario > 0 ? ` más ${meses_prestacion_solidario} del Fondo Solidario al 30%` : ''}. Total estimado: **$${fmt(prestacion_total_estimada)}**.`,
+      tone: 'good',
+      icon: '🛟',
+    };
+  } else {
+    const motivo = i.tipo_termino === 'renuncia' ? 'la renuncia voluntaria no da derecho al beneficio'
+      : i.tipo_termino === 'con_causa' ? 'el despido con causa no está cubierto'
+      : i.tipo_termino === 'activo' ? 'seguís empleado (sin término de contrato)'
+      : i.aportante_afc !== 'si' ? 'tu afiliación al AFC no está vigente'
+      : `tu antigüedad (${meses} meses) es menor a los 6 meses exigidos`;
+    _insight = {
+      title: 'No accedés a la prestación',
+      text: `En tu caso **no hay prestación de cesantía** porque ${motivo}. Igual seguís acumulando en tu cuenta individual: el aporte total es de **$${fmt(aporte_total_mensual)}/mes**.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  }
+
+  const _chart = salario > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Aporte empleador (2,4%)', value: Math.round(aporte_mensual_empleador) },
+      { label: 'Aporte empleado (0,6%)', value: Math.round(aporte_mensual_empleado) },
+    ],
+    prefix: '$',
+    centerValue: '$' + fmt(aporte_total_mensual),
+    centerLabel: 'Aporte mensual AFC',
+    ariaLabel: `Del aporte mensual total de $${fmt(aporte_total_mensual)} al seguro de cesantía, el empleador pone $${fmt(aporte_mensual_empleador)} y el empleado $${fmt(aporte_mensual_empleado)}.`,
+  } : undefined;
+
   return {
     aporte_mensual_empleador: Math.round(aporte_mensual_empleador),
     aporte_mensual_empleado: Math.round(aporte_mensual_empleado),
@@ -107,6 +145,8 @@ export function compute(i: Inputs): Outputs {
     prestacion_mensual_60: Math.round(prestacion_mensual_60),
     prestacion_total_estimada: Math.round(prestacion_total_estimada),
     elegible_prestacion,
-    requisitos_fondo_solidario
+    requisitos_fondo_solidario,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

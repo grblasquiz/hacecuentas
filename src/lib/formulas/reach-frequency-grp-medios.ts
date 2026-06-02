@@ -11,6 +11,8 @@ export interface Outputs {
   reachPct: number;
   frequency: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function reachFrequencyGrpMedios(i: Inputs): Outputs {
@@ -47,10 +49,38 @@ export function reachFrequencyGrpMedios(i: Inputs): Outputs {
     `Frecuencia promedio: ${frequency.toFixed(1)} impactos/persona. ` +
     `GRP: ${grp.toFixed(0)}. ${nivelPresion}`;
 
+  const grpR = Number(grp.toFixed(0));
+  const reachPctR = Number(reachPct.toFixed(1));
+  const frequencyR = Number(frequency.toFixed(1));
+
+  const tone: 'good' | 'warn' | 'neutral' = grp >= 400 ? 'warn' : grp >= 100 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Presión de tu pauta',
+    text: `Tu plan suma **${grpR} GRP**: alcanzás al **${reachPctR}%** del universo con una frecuencia de **${frequencyR} impactos por persona**. ${nivelPresion}`,
+    tone,
+    icon: '📺',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: grpR,
+    markerLabel: `${grpR} GRP`,
+    min: 0,
+    segments: [
+      { nombre: 'Baja', max: 100, color: '#0284c7', colorDark: '#38bdf8' },
+      { nombre: 'Media', max: 200, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Alta', max: 400, color: '#ca8a04', colorDark: '#eab308' },
+      { nombre: 'Saturación', max: Math.max(600, Math.ceil(grpR) + 50), color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Presión publicitaria de ${grpR} GRP sobre escala de saturación de medios`,
+  };
+
   return {
-    grp: Number(grp.toFixed(0)),
-    reachPct: Number(reachPct.toFixed(1)),
-    frequency: Number(frequency.toFixed(1)),
+    grp: grpR,
+    reachPct: reachPctR,
+    frequency: frequencyR,
     detalle,
+    _insight,
+    _chart,
   };
 }

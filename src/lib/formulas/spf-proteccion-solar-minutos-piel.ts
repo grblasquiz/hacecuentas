@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: any; }
 export function spfProteccionSolarMinutosPiel(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const T = ({
@@ -15,8 +15,17 @@ export function spfProteccionSolarMinutosPiel(i: Inputs): Outputs {
   const p=String(i.tipoPiel||'III'); const spf=Number(i.spf)||30;
   const baseMin={'I':7,'II':10,'III':15,'IV':20,'V':30,'VI':60}[p];
   const min=baseMin*spf;
+  const horas = Math.round(min/60);
   const minutosProteccion = __lang === 'en'
-    ? `${min} theoretical min (${Math.round(min/60)} h)`
-    : `${min} min teóricos (${Math.round(min/60)} h)`;
-  return { minutosProteccion, reaplicar: T.reaplicar, advertencia: T.advertencia };
+    ? `${min} theoretical min (${horas} h)`
+    : `${min} min teóricos (${horas} h)`;
+  const _insight = {
+    title: __lang === 'en' ? 'How long it protects (in theory)' : 'Cuánto protege (en teoría)',
+    text: __lang === 'en'
+      ? `With skin type **${p}** and **SPF ${spf}**, the theoretical limit is **${min} min** (~${horas} h). In practice it's shorter — reapply **every 2 hours**.`
+      : `Con piel tipo **${p}** y **SPF ${spf}**, el límite teórico es de **${min} min** (~${horas} h). En la práctica dura menos: reaplicá **cada 2 horas**.`,
+    tone: 'warn' as const,
+    icon: '☀️',
+  };
+  return { minutosProteccion, reaplicar: T.reaplicar, advertencia: T.advertencia, _insight };
 }

@@ -6,6 +6,8 @@ export interface Outputs {
   velocidadKmh: number;
   caloriasEstimadas: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function ritmoCaminata(i: Inputs): Outputs {
@@ -38,11 +40,42 @@ export function ritmoCaminata(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  // Categoría de ritmo según velocidad (km/h)
+  let ritmoTxt: string; let tone: string;
+  if (velocidad < 4) { ritmoTxt = 'un paseo tranquilo'; tone = 'neutral'; }
+  else if (velocidad < 5) { ritmoTxt = 'un ritmo moderado'; tone = 'neutral'; }
+  else if (velocidad < 6) { ritmoTxt = 'una caminata enérgica (saludable)'; tone = 'good'; }
+  else { ritmoTxt = 'una marcha rápida (casi trote)'; tone = 'good'; }
+
+  const _insight = {
+    title: 'Tu ritmo de caminata',
+    text: `Caminaste **${fmt.format(distanciaKm)} km** a **${fmt.format(velocidad)} km/h**, lo que es ${ritmoTxt}. Quemaste unas **${Math.round(calorias)} kcal** y diste cerca de **${pasosKm} pasos por kilómetro**.`,
+    tone,
+    icon: '🚶',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: Number(velocidad.toFixed(2)),
+    markerLabel: fmt.format(velocidad) + ' km/h',
+    min: 0,
+    unit: ' km/h',
+    segments: [
+      { nombre: 'Tranquilo', max: 4, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Moderado', max: 5, color: '#d9f99d', colorDark: '#4d7c0f' },
+      { nombre: 'Enérgico', max: 6, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Rápido', max: Math.max(8, Math.ceil(velocidad) + 1), color: '#86efac', colorDark: '#15803d' },
+    ],
+    ariaLabel: `Escala de ritmo de caminata: tu velocidad es ${fmt.format(velocidad)} km/h`,
+  };
+
   return {
     distanciaKm: Number(distanciaKm.toFixed(2)),
     pasosporKm: pasosKm,
     velocidadKmh: Number(velocidad.toFixed(2)),
     caloriasEstimadas: Math.round(calorias),
     detalle: `${fmt.format(pasos)} pasos con zancada de ${fmt.format(zancada)} m (altura ${altura} cm) = ${fmt.format(distanciaKm)} km en ${fmt.format(min)} min → ${fmt.format(velocidad)} km/h, ~${pasosKm} pasos/km. Calorías estimadas: ~${Math.round(calorias)} kcal (ref 75 kg).`,
+    _insight,
+    _chart,
   };
 }

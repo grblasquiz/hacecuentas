@@ -11,6 +11,8 @@ export interface Outputs {
   accesorios: number;
   grabacion: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface Dist { instrumento: number; amplificacion: number; accesorios: number; grabacion: number; }
@@ -45,6 +47,11 @@ const T = {
     tipBajo: 'Con este presupuesto, priorizá lo esencial y comprá usado.',
     tipMedio: 'Buen presupuesto para empezar. Podés conseguir equipo de calidad media.',
     tipAlto: 'Excelente presupuesto. Podés armar un setup muy completo.',
+    insightTitle: 'Cómo repartir el presupuesto',
+    insightLow: (b: string, item: string, amt: string, pct: string) => `Con **${b}** te conviene volcar lo grueso al **${item}** (**${amt}**, el **${pct}%**). Presupuesto ajustado: priorizá lo esencial y mirá el mercado de usados.`,
+    insightMid: (b: string, item: string, amt: string, pct: string) => `Con **${b}**, la mayor parte va al **${item}** (**${amt}**, el **${pct}%**). Es un buen punto de partida para conseguir equipo de calidad media.`,
+    insightHigh: (b: string, item: string, amt: string, pct: string) => `Con **${b}** podés armar un setup muy completo: el grueso va al **${item}** (**${amt}**, el **${pct}%**).`,
+    centerLabel: 'Presupuesto',
   },
   en: {
     errorPresupuesto: 'Enter your budget',
@@ -57,6 +64,11 @@ const T = {
     tipBajo: 'With this budget, prioritize the essentials and consider buying used.',
     tipMedio: 'Good budget to get started. You can get mid-quality gear.',
     tipAlto: 'Excellent budget. You can put together a very complete setup.',
+    insightTitle: 'How to split your budget',
+    insightLow: (b: string, item: string, amt: string, pct: string) => `With **${b}**, put the bulk into **${item}** (**${amt}**, **${pct}%**). On a tight budget: cover the essentials first and check the used market.`,
+    insightMid: (b: string, item: string, amt: string, pct: string) => `With **${b}**, most goes to **${item}** (**${amt}**, **${pct}%**). A solid starting point for mid-quality gear.`,
+    insightHigh: (b: string, item: string, amt: string, pct: string) => `With **${b}** you can build a very complete setup: the bulk goes to **${item}** (**${amt}**, **${pct}%**).`,
+    centerLabel: 'Budget',
   },
 } as const;
 
@@ -85,5 +97,32 @@ export function presupuestoEquipoMusica(i: Inputs): Outputs {
   else if (presupuesto < 500000) recomendacion += t.tipMedio;
   else recomendacion += t.tipAlto;
 
-  return { instrumento, amplificacion, accesorios, grabacion, recomendacion };
+  const fmt = new Intl.NumberFormat(__lang === 'en' ? 'en-US' : 'es-AR', { maximumFractionDigits: 0 });
+  const partes = [
+    { label: t.instrumento, value: instrumento, frac: dist.instrumento },
+    { label: t.amplificacion, value: amplificacion, frac: dist.amplificacion },
+    { label: t.accesorios, value: accesorios, frac: dist.accesorios },
+    { label: t.grabacion, value: grabacion, frac: dist.grabacion },
+  ];
+  const top = partes.reduce((a, b) => (b.value > a.value ? b : a), partes[0]);
+  const presupuestoFmt = `$${fmt.format(presupuesto)}`;
+  const topAmtFmt = `$${fmt.format(top.value)}`;
+  const topPct = (top.frac * 100).toFixed(0);
+  const insightFn = presupuesto < 200000 ? t.insightLow : presupuesto < 500000 ? t.insightMid : t.insightHigh;
+  const _insight = {
+    title: t.insightTitle,
+    text: insightFn(presupuestoFmt, top.label, topAmtFmt, topPct),
+    tone: presupuesto < 200000 ? 'warn' : 'good',
+    icon: '🎸',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: partes.map((p) => ({ label: p.label, value: p.value })),
+    prefix: '$',
+    centerValue: presupuestoFmt,
+    centerLabel: t.centerLabel,
+    ariaLabel: `${t.insightTitle}: ${presupuestoFmt}`,
+  };
+
+  return { instrumento, amplificacion, accesorios, grabacion, recomendacion, _insight, _chart };
 }

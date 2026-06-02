@@ -8,6 +8,7 @@ export interface Outputs {
   meses: number;
   clasesSemanales: number;
   tip: string;
+  _insight?: any;
 }
 
 export function speakingHoursNecesarias(i: Inputs): Outputs {
@@ -29,12 +30,20 @@ export function speakingHoursNecesarias(i: Inputs): Outputs {
   else if (hsem < 5) tip = 'Ritmo sostenible. Combiná 1:1 con intercambio gratis.';
   else tip = 'Muy intenso. Considerá un período de inmersión.';
 
+  const _insight = {
+    title: 'Tu camino al próximo nivel',
+    text: `De **${actual.toUpperCase()}** a **${meta.toUpperCase()}** necesitás unas **${horasNec} horas** de speaking. A ${hsem} h por semana son **~${meses} meses** (${sem} semanas).` + (hsem < 2 ? ' Con menos de 2 h semanales el progreso real es lento: sumá práctica.' : ''),
+    tone: (hsem < 2 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '🗣️',
+  };
+
   return {
     horasNecesarias: horasNec,
     semanas: sem,
     meses,
     clasesSemanales: clases,
     tip,
+    _insight,
   };
 
 }

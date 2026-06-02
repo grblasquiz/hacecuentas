@@ -4,7 +4,7 @@
  * Antigüedad: 10% (>=2 años), 15% (>=5), 20% (>=7), 25% (>=10), 30% (>=12), 40% (>=15), 50% (>=18), 60% (>=22), 70% (>=24).
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _chart?: any; _insight?: any; }
 
 const PUNTO_INDICE_2026 = 3200; // ARS por punto índice (valor referencial abril 2026)
 
@@ -57,6 +57,12 @@ export function sueldoDocenteAdemysCaba(i: Inputs): Outputs {
     centerLabel: 'Bruto',
     ariaLabel: 'Composición del sueldo bruto docente: básico, antigüedad, presentismo y material didáctico',
   };
+  const insight = {
+    title: 'Sueldo docente CABA',
+    text: `El bruto da **${fmt(bruto)}** y el neto **${fmt(neto)}** tras **${fmt(aportes)}** de aportes (17%). ${pctAnt > 0 ? `Tus ${antig} años de antigüedad pesan un **${pctAnt}%** y suman **${fmt(antiguedad)}** al básico` : 'Todavía no cobrás adicional por antigüedad (arranca a los 2 años)'} — en CABA la antigüedad escalona hasta 70% a los 24 años.`,
+    tone: 'neutral' as const,
+    icon: '🍎',
+  };
   return {
     sueldoBruto: fmt(bruto),
     sueldoNeto: fmt(neto),
@@ -66,5 +72,6 @@ export function sueldoDocenteAdemysCaba(i: Inputs): Outputs {
     aportes: fmt(aportes),
     cargo,
     _chart: chart,
+    _insight: insight,
   };
 }

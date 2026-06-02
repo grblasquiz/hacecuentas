@@ -13,6 +13,8 @@ export interface ProcesadosNovaClasificacionOutputs {
   grupo: string;
   descripcion: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function procesadosNovaClasificacion(inputs: ProcesadosNovaClasificacionInputs): ProcesadosNovaClasificacionOutputs {
@@ -49,5 +51,32 @@ export function procesadosNovaClasificacion(inputs: ProcesadosNovaClasificacionI
     rec = 'Revisar etiqueta. Si ves E-XXX o >5 ingredientes, limitar consumo.';
   }
 
-  return { grupo, descripcion: desc, recomendacion: rec };
+  const nova = grupo.startsWith('NOVA 4') ? 4 : grupo.startsWith('NOVA 3') ? 3 : grupo.startsWith('NOVA 2') ? 2 : 1;
+  const tone = nova === 4 ? 'warn' : nova === 1 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Grado de procesamiento del alimento',
+    text: nova === 4
+      ? `Cae en **NOVA 4 (ultraprocesado)**: ${desc.toLowerCase()} ${rec}`
+      : nova === 1
+        ? `Es **NOVA 1 (natural)**: ${desc.toLowerCase()} ${rec}`
+        : `Clasifica como **NOVA ${nova}**: ${desc.toLowerCase()} ${rec}`,
+    tone,
+    icon: nova === 4 ? '⚠️' : nova === 1 ? '🥦' : '🍞',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: nova,
+    markerLabel: 'NOVA ' + nova,
+    min: 0,
+    segments: [
+      { nombre: 'NOVA 1 · Natural', max: 1.5, color: '#86efac', colorDark: '#14532d' },
+      { nombre: 'NOVA 2 · Culinario', max: 2.5, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'NOVA 3 · Procesado', max: 3.5, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'NOVA 4 · Ultraprocesado', max: 4.5, color: '#fca5a5', colorDark: '#7f1d1d' },
+    ],
+    ariaLabel: 'Escala de clasificación NOVA del 1 (natural) al 4 (ultraprocesado).',
+  };
+
+  return { grupo, descripcion: desc, recomendacion: rec, _insight, _chart };
 }

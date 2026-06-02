@@ -2,7 +2,7 @@
  * Calculadora de Regalo de Boda Apropiado por Invitado.
  */
 export interface RegaloBodaApropiadoInvitadoInputs { relacionConNovios:string; nivelEvento:string; sueldoInvitado:number; }
-export interface RegaloBodaApropiadoInvitadoOutputs { regaloSugerido:number; porcentajeSueldo:number; ideas:string; consejo:string; }
+export interface RegaloBodaApropiadoInvitadoOutputs { regaloSugerido:number; porcentajeSueldo:number; ideas:string; consejo:string; _insight?:any; }
 export function regaloBodaApropiadoInvitado(inputs: RegaloBodaApropiadoInvitadoInputs): RegaloBodaApropiadoInvitadoOutputs {
   const relacion = (inputs as RegaloBodaApropiadoInvitadoInputs).relacionConNovios;
   const nivel = (inputs as RegaloBodaApropiadoInvitadoInputs).nivelEvento;
@@ -26,5 +26,12 @@ export function regaloBodaApropiadoInvitado(inputs: RegaloBodaApropiadoInvitadoI
   else if (regaloSugerido < 1000) ideas = 'Gift card hotel para luna de miel, electrodoméstico grande, contribución lista bodas';
   else ideas = 'Viaje fin de semana, contribución luna de miel, muebles, joyería';
   const consejo = porcentajeSueldo > 30 ? 'Regalo excede 30% del sueldo: ajustá hacia abajo' : 'Regalo balanceado respecto a tu sueldo';
-  return { regaloSugerido, porcentajeSueldo, ideas, consejo };
+  const excede = porcentajeSueldo > 30;
+  const _insight = {
+    title: "Cuánto regalar en esta boda",
+    text: `Por tu vínculo y el nivel del evento, un regalo de **$${regaloSugerido.toLocaleString()}** está bien: es el **${porcentajeSueldo}%** de tu sueldo. ${excede ? "Es algo alto respecto a lo que ganás; bajalo si te ajusta el presupuesto." : "Queda balanceado, ni quedás corto ni te excedés."}`,
+    tone: (excede ? "warn" : "good") as "good" | "warn" | "neutral",
+    icon: "💍",
+  };
+  return { regaloSugerido, porcentajeSueldo, ideas, consejo, _insight };
 }

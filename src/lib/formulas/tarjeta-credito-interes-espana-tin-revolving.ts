@@ -14,6 +14,8 @@ export interface Outputs {
   alerta_usura: string;
   ahorro_acelerado: number;
   tasa_mensual: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -75,6 +77,45 @@ export function compute(i: Inputs): Outputs {
 
   const ahorroAcelerado = Math.max(0, interesesTotales - interesesAcelerado);
 
+  const fmtEur = (n: number) => '€' + Math.round(n).toLocaleString('es-ES');
+  const noAmortiza = saldo > 0;
+  const anios = (mesesPago / 12).toFixed(1);
+
+  let insightTone: 'good' | 'warn' | 'neutral' = 'neutral';
+  let insightText = '';
+  if (noAmortiza) {
+    insightTone = 'warn';
+    insightText = `Con una cuota de **${fmtEur(cuota)}/mes** la deuda **no se amortiza** en ${maxMeses} meses: los intereses crecen casi tan rápido como pagás. Subí la cuota o el revolving se vuelve perpetuo.`;
+  } else if (tin > 21) {
+    insightTone = 'warn';
+    insightText = `Pagarías **${fmtEur(interesesTotales)}** de intereses sobre **${fmtEur(deuda)}** de deuda (${Math.round(ratioInteres)}% extra) en ${mesesPago} meses. Con un TIN del **${tin}%** estás por encima del umbral de usura: podés reclamar judicialmente.`;
+  } else if (ratioInteres >= 30) {
+    insightTone = 'warn';
+    insightText = `En ${mesesPago} meses (${anios} años) pagarías **${fmtEur(interesesTotales)}** solo de intereses, un **${Math.round(ratioInteres)}%** sobre la deuda. Duplicando la cuota ahorrarías **${fmtEur(ahorroAcelerado)}**.`;
+  } else {
+    insightTone = 'good';
+    insightText = `Saldás la deuda en **${mesesPago} meses** pagando **${fmtEur(interesesTotales)}** de intereses (${Math.round(ratioInteres)}% sobre el capital). Ritmo razonable para un revolving.`;
+  }
+
+  const _insight = {
+    title: 'Qué significa este resultado',
+    text: insightText,
+    tone: insightTone,
+    icon: '💳',
+  };
+
+  const _chart = noAmortiza ? undefined : {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Deuda original', value: Math.round(deuda * 100) / 100 },
+      { label: 'Intereses', value: Math.round(interesesTotales * 100) / 100 },
+    ],
+    prefix: '€',
+    centerValue: fmtEur(totalAPagar),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total a pagar: deuda original más intereses del revolving.',
+  };
+
   return {
     meses_pago: mesesPago,
     cuota_minima_inicial: Math.round(cuotaMinimaInicial * 100) / 100,
@@ -84,5 +125,7 @@ export function compute(i: Inputs): Outputs {
     alerta_usura: alertaUsura,
     ahorro_acelerado: Math.round(ahorroAcelerado * 100) / 100,
     tasa_mensual: Math.round(tasaMensual * 10000) / 100,
+    _insight,
+    _chart,
   };
 }

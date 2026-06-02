@@ -11,6 +11,8 @@ export interface Outputs {
   cantidadMl: number;
   fotoTipoDescripcion: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function protectorSolarSpf(i: Inputs): Outputs {
@@ -67,12 +69,41 @@ export function protectorSolarSpf(i: Inputs): Outputs {
   // Cantidad recomendada: 2mg/cm² ≈ 30-35 ml para cuerpo adulto
   const cantidadMl = actividad === 'playa' ? 35 : 5; // cuerpo vs cara
 
+  const minProteccion = Math.round(tiempoProteccion);
+  const pielVulnerable = fototipo === 'I' || fototipo === 'II';
+  const tone: 'good' | 'warn' | 'neutral' =
+    pielVulnerable || exposicion === 'intensa' || actividad === 'playa' ? 'warn' : 'neutral';
+  const _insight = {
+    title: `SPF ${spf} para fototipo ${fototipo}`,
+    text: pielVulnerable
+      ? `Tu piel se quema fácil (fototipo ${fototipo}): usá **SPF ${spf}+** y reaplicá ${reaplicar.toLowerCase()}. Bien aplicado da ~**${minProteccion} min** de protección, pero igual buscá sombra en el pico de sol.`
+      : `Con fototipo ${fototipo} te corresponde **SPF ${spf}+**: bien aplicado rinde ~**${minProteccion} min** antes de tener que reaplicar (${reaplicar.toLowerCase()}). Usá ~**${cantidadMl} ml** por aplicación.`,
+    tone,
+    icon: '🧴',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: spf,
+    markerLabel: `SPF ${spf}`,
+    min: 0,
+    segments: [
+      { nombre: 'Baja (15)', max: 15, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Media (30)', max: 30, color: '#84cc16', colorDark: '#4d7c0f' },
+      { nombre: 'Alta (50)', max: 50, color: '#22c55e', colorDark: '#15803d' },
+      { nombre: 'Muy alta (50+)', max: 70, color: '#0ea5e9', colorDark: '#0369a1' },
+    ],
+    ariaLabel: `Nivel de protección recomendado: SPF ${spf} para fototipo ${fototipo}`,
+  };
+
   return {
     spfRecomendado: spf,
-    tiempoProteccion: Math.round(tiempoProteccion),
+    tiempoProteccion: minProteccion,
     reaplicarCada: reaplicar,
     cantidadMl,
     fotoTipoDescripcion: descripciones[fototipo] || descripciones['III'],
-    mensaje: `Fototipo ${fototipo}: usá SPF ${spf}+. Reaplicá ${reaplicar.toLowerCase()}. Protección teórica: ~${Math.round(tiempoProteccion)} min.`,
+    mensaje: `Fototipo ${fototipo}: usá SPF ${spf}+. Reaplicá ${reaplicar.toLowerCase()}. Protección teórica: ~${minProteccion} min.`,
+    _insight,
+    _chart,
   };
 }

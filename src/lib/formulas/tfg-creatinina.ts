@@ -10,6 +10,7 @@ export interface Outputs {
   descripcion: string;
   formula: string;
   resumen: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -79,12 +80,25 @@ export function tfgCreatinina(i: Inputs): Outputs {
     min: 0,
   };
 
+  const codigoEstadio = estadio.split('—')[0].trim();
+  const _insight = {
+    title: `Función renal: ${codigoEstadio}`,
+    text: egfr >= 90
+      ? `Tu eGFR de **${egfrRedondeado} mL/min/1.73 m²** indica función renal **normal** (${codigoEstadio}). Mantené hidratación y control de presión; si tenés proteinuria u otros marcadores, igual consultá.`
+      : egfr >= 60
+      ? `Tu eGFR de **${egfrRedondeado} mL/min/1.73 m²** está en **${codigoEstadio}** (disminución leve). Es aceptable sin otros marcadores de daño, pero conviene control anual.`
+      : `Tu eGFR de **${egfrRedondeado} mL/min/1.73 m²** corresponde a **${codigoEstadio}**, por debajo de lo normal. Conviene seguimiento con nefrología y ajustar fármacos que se eliminan por riñón.`,
+    tone: egfr >= 60 ? 'good' : 'warn',
+    icon: '🫘',
+  };
+
   return {
     egfr: Number(egfr.toFixed(1)),
     estadio,
     descripcion,
     formula: `CKD-EPI 2021: 142 × min(${cr}/${k}, 1)^${alpha} × max(${cr}/${k}, 1)^−1.200 × 0.9938^${edad}${sexo !== 'hombre' ? ' × 1.012' : ''}`,
     resumen: `Tu eGFR estimada es ${egfr.toFixed(1)} mL/min/1.73 m² → ${estadio}.`,
+    _insight,
     _chart: chart,
   };
 }

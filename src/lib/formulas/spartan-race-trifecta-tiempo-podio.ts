@@ -1,6 +1,6 @@
 /** Tiempo aproximado de podio en Spartan Sprint/Super/Beast por categoría de edad. */
 export interface Inputs { distancia: 'sprint' | 'super' | 'beast'; categoriaEdad: '18-29' | '30-39' | '40-49' | '50+'; genero: 'M' | 'F'; }
-export interface Outputs { tiempoPodioMinutos: number; tiempoPodioTexto: string; tiempoTop10Minutos: number; explicacion: string; }
+export interface Outputs { tiempoPodioMinutos: number; tiempoPodioTexto: string; tiempoTop10Minutos: number; explicacion: string; _insight?: any; }
 export function spartanRaceTrifectaTiempoPodio(i: Inputs): Outputs {
   // Tiempos podio (top 3) en minutos según data histórica Spartan World 2024-2025
   const podio: Record<string, Record<string, number>> = {
@@ -14,10 +14,18 @@ export function spartanRaceTrifectaTiempoPodio(i: Inputs): Outputs {
   const top10 = base * 1.25;
   const h = Math.floor(base / 60);
   const m = Math.round(base - h * 60);
+  const podioTxt = h > 0 ? `${h}h ${m.toString().padStart(2, '0')}m` : `${m}m`;
+  const _insight = {
+    title: 'Tu objetivo de podio',
+    text: `En Spartan **${i.distancia}** (${i.categoriaEdad}, ${i.genero === 'F' ? 'femenino' : 'masculino'}) necesitás cerrar en **~${podioTxt}** para pelear el podio. Para meterte en el Top 10 alcanza con **~${top10.toFixed(0)} min**.`,
+    tone: 'neutral' as const,
+    icon: '🏅',
+  };
   return {
     tiempoPodioMinutos: Number(base.toFixed(1)),
-    tiempoPodioTexto: h > 0 ? `${h}h ${m.toString().padStart(2, '0')}m` : `${m}m`,
+    tiempoPodioTexto: podioTxt,
     tiempoTop10Minutos: Number(top10.toFixed(1)),
     explicacion: `Para subir al podio en Spartan ${i.distancia} categoría ${i.categoriaEdad} (${i.genero === 'F' ? 'femenino' : 'masculino'}), necesitás ~${base.toFixed(0)} minutos. Top 10 ~${top10.toFixed(0)} minutos.`,
+    _insight,
   };
 }

@@ -1,6 +1,6 @@
 /** Tiempo estimado de descarga de archivo */
 export interface Inputs { tamanoArchivo: number; unidadTamano?: string; velocidadMbps: number; }
-export interface Outputs { tiempoSegundos: number; tiempoFormateado: string; detalle: string; }
+export interface Outputs { tiempoSegundos: number; tiempoFormateado: string; detalle: string; _insight?: any; }
 
 export function tiempoDescarga(i: Inputs): Outputs {
   const tamano = Number(i.tamanoArchivo);
@@ -32,9 +32,20 @@ export function tiempoDescarga(i: Inputs): Outputs {
   const mbps = fmt.format(velocidad);
   const mbs = fmt.format(velocidad / 8);
 
+  const tone = tiempoSeg > 3600 ? 'warn' : 'neutral';
+  const insightText = tiempoSeg > 3600
+    ? `${fmt.format(tamano)} ${unidad} a ${mbps} Mbps son **${tiempoStr}**: dejalo descargando de fondo y evitá cortar la conexión. Una velocidad mayor reduce el tiempo proporcionalmente.`
+    : `A ${mbps} Mbps (${mbs} MB/s) bajás ${fmt.format(tamano)} ${unidad} en **${tiempoStr}**. Si duplicás la velocidad, el tiempo se reduce a la mitad.`;
+
   return {
     tiempoSegundos: Number(tiempoSeg.toFixed(1)),
     tiempoFormateado: tiempoStr,
     detalle: `Un archivo de ${fmt.format(tamano)} ${unidad} a ${mbps} Mbps (${mbs} MB/s) tarda ${tiempoStr} en descargarse.`,
+    _insight: {
+      title: 'Tu tiempo de descarga',
+      text: insightText,
+      tone,
+      icon: '⬇️',
+    },
   };
 }

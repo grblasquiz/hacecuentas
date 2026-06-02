@@ -8,6 +8,7 @@ export interface Inputs {
 export interface Outputs {
   ticketPromedio: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function ticketPromedio(i: Inputs): Outputs {
@@ -31,8 +32,16 @@ export function ticketPromedio(i: Inputs): Outputs {
     `Si subís el ticket un 10% a $${fmt.format(ticket10)}, tu facturación sería $${fmt.format(facturacion10)} ` +
     `(+$${fmt.format(facturacion10 - ventas)}).`;
 
+  const _insight = {
+    title: 'Tu palanca de facturación',
+    text: `Cada venta deja en promedio **$${fmt.format(ticket)}**. Subir el ticket apenas un **10%** suma **+$${fmt.format(facturacion10 - ventas)}** sobre las mismas ${transacciones} ventas, sin conseguir un solo cliente nuevo. Pensá combos, upsell o un piso de compra.`,
+    tone: 'neutral' as const,
+    icon: '🧾',
+  };
+
   return {
     ticketPromedio: Math.round(ticket),
     detalle,
+    _insight,
   };
 }

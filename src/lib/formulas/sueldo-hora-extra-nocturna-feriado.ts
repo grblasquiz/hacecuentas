@@ -16,6 +16,7 @@ export interface SueldoHoraExtraNocturnaFeriadoOutputs {
   totalHorasExtra: number;
   valorHoraNormal: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function sueldoHoraExtraNocturnaFeriado(
@@ -62,10 +63,21 @@ export function sueldoHoraExtraNocturnaFeriado(
   const valorHoraExtra = valorHoraNormal * multiplicador;
   const totalHorasExtra = valorHoraExtra * cantidad;
 
+  const sobreprecio = totalHorasExtra - valorHoraNormal * cantidad;
+  const pctRecargo = Math.round((multiplicador - 1) * 100);
+  const fmt = (n: number) => Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Cuánto ganás de más por el recargo',
+    text: `Cada hora ${tipoStr} se paga **$${fmt(valorHoraExtra)}**, un **${pctRecargo}% más** que una hora normal. Por las ${cantidad} horas embolsás **$${fmt(totalHorasExtra)}** brutos, de los cuales **$${fmt(sobreprecio)}** son recargo puro sobre lo que cobrarías en jornada común.`,
+    tone: 'good',
+    icon: '🌙',
+  };
+
   return {
     valorHoraExtra: Math.round(valorHoraExtra),
     totalHorasExtra: Math.round(totalHorasExtra),
     valorHoraNormal: Math.round(valorHoraNormal),
     detalle: `Valor hora normal: $${Math.round(valorHoraNormal).toLocaleString('es-AR')} ($${Math.round(bruto).toLocaleString('es-AR')} / ${horasMes} hs). Hora ${tipoStr}: $${Math.round(valorHoraExtra).toLocaleString('es-AR')} (×${multiplicador.toFixed(2)}). ${cantidad} horas extra = $${Math.round(totalHorasExtra).toLocaleString('es-AR')} brutos.`,
+    _insight: insight,
   };
 }

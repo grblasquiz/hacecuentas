@@ -10,6 +10,8 @@ export interface Outputs {
   percentComplete: number;
   totalDays: number;
   summary: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Full-term definition: 40 weeks = 280 days (ACOG standard)
@@ -115,6 +117,45 @@ export function compute(i: Inputs): Outputs {
     summaryLine = `You are ${weekLabel} pregnant — ${weeksRemainingStr}. (${trimester})`;
   }
 
+  // Insight: interpret where she is in the pregnancy + countdown
+  let insightTone: 'good' | 'warn' | 'neutral' = 'neutral';
+  let insightText: string;
+  let insightIcon = '🤰';
+  if (daysRemaining < 0) {
+    insightTone = 'warn';
+    insightText = `You're **${weeksRem}w ${daysRem}d past** the 40-week mark. Most providers monitor closely after 41 weeks — check in with yours.`;
+    insightIcon = '⏰';
+  } else if (totalDays >= 259) {
+    // 37w+ = full term
+    insightTone = 'good';
+    insightText = `At **${weekLabel}** you're full-term (${monthEquivalent}). Baby could arrive any day — **${weeksRemainingStr}** until the 40-week estimate.`;
+    insightIcon = '👶';
+  } else {
+    insightText = `At **${weekLabel}** you're **${percentComplete}%** of the way to 40 weeks (${monthEquivalent}, ${trimester}). **${weeksRemainingStr}** to go.`;
+  }
+
+  const _insight = {
+    title: 'Where you are',
+    text: insightText,
+    tone: insightTone,
+    icon: insightIcon,
+  };
+
+  // Gauge: progress through the three trimesters toward 40 weeks
+  const _chart = {
+    type: 'scale' as const,
+    marker: Math.min(percentComplete, 110),
+    markerLabel: `${percentComplete}%`,
+    min: 0,
+    segments: [
+      { nombre: '1st trimester', max: 35, color: '#a7f3d0', colorDark: '#065f46' },
+      { nombre: '2nd trimester', max: 70, color: '#fde68a', colorDark: '#92400e' },
+      { nombre: '3rd trimester', max: 100, color: '#bfdbfe', colorDark: '#1e3a8a' },
+      { nombre: 'Past due', max: 110, color: '#fecaca', colorDark: '#7f1d1d' },
+    ],
+    ariaLabel: 'Pregnancy progress toward the 40-week due date, by trimester',
+  };
+
   return {
     monthEquivalent,
     trimester,
@@ -122,5 +163,7 @@ export function compute(i: Inputs): Outputs {
     percentComplete,
     totalDays,
     summary: summaryLine,
+    _insight,
+    _chart,
   };
 }

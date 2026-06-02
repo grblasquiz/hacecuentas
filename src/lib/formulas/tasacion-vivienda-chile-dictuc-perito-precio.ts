@@ -14,6 +14,8 @@ export interface Outputs {
   iva_tasacion: number;
   costo_total_iva: number;
   recomendacion_tasador: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -93,13 +95,47 @@ export function compute(i: Inputs): Outputs {
     recomendacion = 'Perito independiente: exigir credencial SIR vigente. Costo puede ser superior pero independencia es garantía en litigio.';
   }
 
-  return {
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  const descTxt = descuento_aplicado > 0
+    ? ` Tu condición de cliente hipotecario te ahorra ${fmtCLP(descuento_aplicado)}.`
+    : '';
+  const ivaTxt = iva_tasacion > 0
+    ? ` Sumando el IVA (${fmtCLP(iva_tasacion)}) pagás en total **${fmtCLP(costo_total_iva)}**.`
+    : ' El banco no aplica IVA si lo incluye en el crédito.';
+
+  const _insight = {
+    title: 'Cuánto te cuesta la tasación',
+    text: `La tasación sale **${fmtCLP(costo_tasacion_neto)}** neto y demora unos **${plazo_dias} días**.${descTxt}${ivaTxt}`,
+    tone: 'warn',
+    icon: '🏠',
+  };
+
+  const out: Outputs = {
     costo_tasacion_base: Math.round(costo_base),
     descuento_aplicado,
     costo_tasacion_neto,
     plazo_dias,
     iva_tasacion,
     costo_total_iva,
-    recomendacion_tasador: recomendacion
+    recomendacion_tasador: recomendacion,
+    _insight,
   };
+
+  // Donut sólo cuando el total tiene más de una parte (neto + IVA)
+  if (iva_tasacion > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Costo neto', value: costo_tasacion_neto },
+        { label: 'IVA (19%)', value: iva_tasacion },
+      ],
+      prefix: '$',
+      centerValue: fmtCLP(costo_total_iva),
+      centerLabel: 'Total a pagar',
+      ariaLabel: `Costo total de la tasación ${fmtCLP(costo_total_iva)}: ${fmtCLP(costo_tasacion_neto)} netos más ${fmtCLP(iva_tasacion)} de IVA.`,
+    };
+  }
+
+  return out;
 }

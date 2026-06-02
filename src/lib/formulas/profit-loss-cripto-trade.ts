@@ -17,6 +17,7 @@ export interface Outputs {
   breakEvenPrice: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function profitLossCriptoTrade(i: Inputs): Outputs {
@@ -61,6 +62,16 @@ export function profitLossCriptoTrade(i: Inputs): Outputs {
   const formula = `PnL = (${posicion === 'long' ? `$${salida} - $${entrada}` : `$${entrada} - $${salida}`}) × ${cantidad} - fees = $${pnlNeto.toFixed(2)}`;
   const explicacion = `Trade ${posicion.toUpperCase()}: entrada a $${entrada.toLocaleString()}, salida a $${salida.toLocaleString()}, ${cantidad} tokens. PnL bruto: $${pnlBruto.toFixed(2)}. Fees totales: $${feesTotal.toFixed(2)} (maker ${feeMaker}% + taker ${feeTaker}%). PnL neto: $${pnlNeto.toFixed(2)} (${pnlPorcentaje.toFixed(2)}% ${resultado}). Break-even: $${breakEvenPrice.toFixed(2)}.`;
 
+  const pnlAbs = Math.abs(pnlNeto).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  const _insight = {
+    title: pnlNeto >= 0 ? 'Resultado del trade: ganancia' : 'Resultado del trade: pérdida',
+    text: pnlNeto >= 0
+      ? `Cerrás con **+$${pnlAbs}** netos (**${pnlPorcentaje.toFixed(2)}%**) después de pagar **$${feesTotal.toFixed(2)}** en fees. Para no quedar en rojo, tu salida tenía que superar el break-even de **$${breakEvenPrice.toFixed(2)}**.`
+      : `Cerrás con **-$${pnlAbs}** netos (**${pnlPorcentaje.toFixed(2)}%**): los **$${feesTotal.toFixed(2)}** de fees se comieron parte del movimiento. Necesitabas salir por encima de **$${breakEvenPrice.toFixed(2)}** para no perder.`,
+    tone: pnlNeto >= 0 ? 'good' : 'warn',
+    icon: pnlNeto >= 0 ? '📈' : '📉',
+  };
+
   return {
     pnlBruto: Number(pnlBruto.toFixed(2)),
     feesTotal: Number(feesTotal.toFixed(2)),
@@ -69,5 +80,6 @@ export function profitLossCriptoTrade(i: Inputs): Outputs {
     breakEvenPrice: Number(breakEvenPrice.toFixed(2)),
     formula,
     explicacion,
+    _insight,
   };
 }

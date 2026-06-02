@@ -9,6 +9,8 @@ export interface Outputs {
   deseos: number;
   ahorro: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function regla503020(i: Inputs): Outputs {
@@ -26,10 +28,34 @@ export function regla503020(i: Inputs): Outputs {
     `Deseos (30%): $${fmt.format(deseos)} — salidas, suscripciones, hobbies, ropa. ` +
     `Ahorro (20%): $${fmt.format(ahorro)} — fondo de emergencia, inversiones, metas.`;
 
+  const fmtTotal = `$${fmt.format(Math.round(ingreso))}`;
+
+  const _insight = {
+    title: 'Tu reparto del mes',
+    text: `De $${fmt.format(Math.round(ingreso))} mensuales, **$${fmt.format(Math.round(necesidades))}** van a necesidades, **$${fmt.format(Math.round(deseos))}** a deseos y **$${fmt.format(Math.round(ahorro))}** al ahorro. Si tus gastos fijos superan ese 50% de necesidades, recortá deseos antes de tocar el ahorro.`,
+    tone: 'neutral',
+    icon: '💰',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Necesidades (50%)', value: Math.round(necesidades) },
+      { label: 'Deseos (30%)', value: Math.round(deseos) },
+      { label: 'Ahorro (20%)', value: Math.round(ahorro) },
+    ],
+    prefix: '$',
+    centerValue: fmtTotal,
+    centerLabel: 'Ingreso mensual',
+    ariaLabel: `Reparto del ingreso de ${fmtTotal}: necesidades $${fmt.format(Math.round(necesidades))}, deseos $${fmt.format(Math.round(deseos))} y ahorro $${fmt.format(Math.round(ahorro))}.`,
+  };
+
   return {
     necesidades: Math.round(necesidades),
     deseos: Math.round(deseos),
     ahorro: Math.round(ahorro),
     detalle,
+    _insight,
+    _chart,
   };
 }

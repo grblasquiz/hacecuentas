@@ -20,6 +20,7 @@ export interface SueldoNetoChileOutputs {
   totalDescuentos: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -129,6 +130,14 @@ export function sueldoNetoChile(inputs: SueldoNetoChileInputs): SueldoNetoChileO
 
   const explicacion = `De tu sueldo bruto de $${bruto.toLocaleString('es-CL')} CLP, se descuentan: AFP ${afpInfo.nombre} ${afpPct}% ($${afpMonto.toLocaleString('es-CL')}), ${saludTipo} ${saludPct}% ($${saludMonto.toLocaleString('es-CL')}), Seguro de Cesantía 0.6% ($${cesantiaMonto.toLocaleString('es-CL')})${impuesto > 0 ? ` e Impuesto Único $${impuesto.toLocaleString('es-CL')}` : ''}. Total descuentos: $${totalDescuentos.toLocaleString('es-CL')}. Tu sueldo líquido es $${sueldoLiquido.toLocaleString('es-CL')} CLP.`;
 
+  const pctDesc = bruto > 0 ? Math.round((totalDescuentos / bruto) * 100) : 0;
+  const insight = {
+    title: 'Tu sueldo líquido',
+    text: `De tu bruto de **$${Math.round(bruto).toLocaleString('es-CL')}** te queda líquido **$${Math.round(sueldoLiquido).toLocaleString('es-CL')}** (te descuentan un **${pctDesc}%**). El mayor descuento es ${afpMonto >= saludMonto && afpMonto >= impuesto ? `la AFP ${afpInfo.nombre}` : (impuesto > saludMonto ? 'el Impuesto Único' : (saludIsapre ? 'la Isapre' : 'Fonasa'))}.`,
+    tone: (pctDesc >= 25 ? 'warn' : 'good') as 'good' | 'warn',
+    icon: '🇨🇱',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -153,6 +162,7 @@ export function sueldoNetoChile(inputs: SueldoNetoChileInputs): SueldoNetoChileO
     totalDescuentos,
     formula,
     explicacion,
+    _insight: insight,
     _chart: chart,
   };
 }

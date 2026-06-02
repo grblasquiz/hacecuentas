@@ -11,6 +11,7 @@ export interface Outputs {
   rpmSesion: number;
   ingresoPorPagina: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function valorPaginaVistaRpm(i: Inputs): Outputs {
@@ -37,10 +38,20 @@ export function valorPaginaVistaRpm(i: Inputs): Outputs {
     `Ingreso por pageview: $${fmtDec.format(ingresoPorPagina)}. ` +
     `Páginas/sesión: ${pagesPorSesion.toFixed(2)}.`;
 
+  const insight = {
+    title: 'Cuánto vale tu tráfico',
+    text: ingresos > 0
+      ? `Cada **1.000 páginas vistas** te generan **$${fmtDec.format(rpmPageview)}** y cada visita aporta **$${fmtDec.format(ingresoPorPagina)}**. Con ${pagesPorSesion.toFixed(2)} páginas por sesión, sumar más vistas por visita o subir el RPM mueve directamente tus ingresos.`
+      : `Con $0 de ingresos el RPM da **$0**: registrás ${fmt.format(pageviews)} pageviews pero todavía no monetizan. Cargá ingresos para ver el valor real de cada 1.000 vistas.`,
+    tone: ingresos > 0 ? 'neutral' : 'warn',
+    icon: '💵',
+  };
+
   return {
     rpmPageview: Number(rpmPageview.toFixed(2)),
     rpmSesion: Number(rpmSesion.toFixed(2)),
     ingresoPorPagina: Number(ingresoPorPagina.toFixed(2)),
     detalle,
+    _insight: insight,
   };
 }

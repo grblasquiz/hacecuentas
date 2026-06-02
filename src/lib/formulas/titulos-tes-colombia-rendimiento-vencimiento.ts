@@ -26,6 +26,8 @@ export interface Outputs {
   valor_total_vencimiento: number;
   rentabilidad_total_neta: number;
   detalle_flujos: FlujoCupon[];
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -173,6 +175,19 @@ export function compute(i: Inputs): Outputs {
   const cuponesParaTIRNeta = flujosPorAno.map(f => f.cupon_neto);
   const tirNeta = calcularTIR(cuponesParaTIRNeta, inversionInicial, i.incluir_fiscalidad);
 
+  const fmtCop = (n: number) => Math.round(n).toLocaleString('es-CO');
+  const tirNetaPct = tirNeta.toFixed(2);
+  const rentPct = rentabilidadTotalNeta.toFixed(1);
+  const compradoPrima = i.precio_compra > 100; // pagaste sobre el par → prima
+  const insTone = rentabilidadTotalNeta <= 0
+    ? 'warn'
+    : (compradoPrima || tirNeta < 8 ? 'neutral' : 'good');
+  const precioNota = compradoPrima
+    ? `Lo compraste **sobre el par** (${i.precio_compra}%), así que al vencimiento perdés **$${fmtCop(Math.abs(gananciaPerdidaPrecio))}** por precio.`
+    : i.precio_compra < 100
+      ? `Lo compraste **con descuento** (${i.precio_compra}%): al par sumás **$${fmtCop(gananciaPerdidaPrecio)}** extra de ganancia por precio.`
+      : `Lo compraste a la par (${i.precio_compra}%), sin ganancia ni pérdida por precio.`;
+
   return {
     cupon_anual_bruto: cuponAnualBruto,
     total_cupones_brutos: totalCuponesBrutosFinales,
@@ -183,6 +198,23 @@ export function compute(i: Inputs): Outputs {
     tir_anual_neta: tirNeta,
     valor_total_vencimiento: valorTotalVencimiento,
     rentabilidad_total_neta: rentabilidadTotalNeta,
-    detalle_flujos: flujosPorAno
+    detalle_flujos: flujosPorAno,
+    _insight: {
+      title: `TIR neta del ${tirNetaPct}% anual`,
+      text: `Manteniendo el TES hasta el vencimiento recibís **$${fmtCop(valorTotalVencimiento)}** (${rentPct}% de rentabilidad total neta sobre tu inversión de $${fmtCop(inversionInicial)}). ${precioNota}${i.incluir_fiscalidad ? ` Ya descontamos el **10% DIAN** sobre los cupones ($${fmtCop(totalImpuestosFinales)}).` : ''}`,
+      tone: insTone,
+      icon: '🇨🇴',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Capital (valor nominal)', value: Math.round(VN) },
+        { label: 'Cupones netos', value: Math.round(totalCuponesNetosFinales) },
+      ],
+      prefix: '$',
+      centerValue: '$' + fmtCop(valorTotalVencimiento),
+      centerLabel: 'Total al vencimiento',
+      ariaLabel: `Total al vencimiento de $${fmtCop(valorTotalVencimiento)} dividido en $${fmtCop(VN)} de capital y $${fmtCop(totalCuponesNetosFinales)} de cupones netos`,
+    },
   };
 }

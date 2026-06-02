@@ -10,6 +10,7 @@ export interface Outputs {
   nombreTemperatura: string;
   usoRecomendado: string;
   resumen: string;
+  _insight?: any;
 }
 
 // Tabla de equivalencias gas-mark ↔ °C
@@ -76,6 +77,7 @@ export function temperaturaHornoConversion(i: Inputs): Outputs {
     throw new Error('Unidad no válida');
   }
 
+  const gasTxt = gas === 0 ? 'por debajo del gas 1 (mínimo del horno francés)' : `gas **${gas}**`;
   return {
     celsius: Number(celsius.toFixed(1)),
     fahrenheit: Number(fahrenheit.toFixed(1)),
@@ -83,5 +85,11 @@ export function temperaturaHornoConversion(i: Inputs): Outputs {
     nombreTemperatura: nombreTemp(celsius),
     usoRecomendado: usoRec(celsius),
     resumen: `${celsius.toFixed(0)} °C = ${fahrenheit.toFixed(0)} °F = gas ${gas}. ${nombreTemp(celsius)}.`,
+    _insight: {
+      title: 'Equivalencia y uso',
+      text: `**${celsius.toFixed(0)} °C** equivalen a **${fahrenheit.toFixed(0)} °F** y a ${gasTxt}. Es un horno **${nombreTemp(celsius).toLowerCase()}**, ideal para: ${usoRec(celsius).toLowerCase()}`,
+      tone: 'neutral',
+      icon: '🔥',
+    },
   };
 }

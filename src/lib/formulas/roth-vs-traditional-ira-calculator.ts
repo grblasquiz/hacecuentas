@@ -21,6 +21,7 @@ export interface Outputs {
   recommendation: string;
   years_of_growth: number;
   contribution_used: number;
+  _insight?: any;
 }
 
 // IRS 2026 contribution limits
@@ -123,6 +124,22 @@ export function compute(i: Inputs): Outputs {
       `The Traditional IRA comes out ahead by ${formattedDiff} after tax. Your retirement tax rate (${retirementTaxRate}%) is lower than your current rate (${currentTaxRate}%), so deferring taxes is the better deal. Keep in mind Traditional IRAs require minimum distributions (RMDs) starting at age 73, which may push you into a higher bracket.`;
   }
 
+  const fmtUsd = (x: number) =>
+    x.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
+  const winnerIsRoth = difference > 0;
+  const tie = Math.abs(difference) < 1;
+  const insight = {
+    title: tie ? "It's a tie" : winnerIsRoth ? "Roth comes out ahead" : "Traditional comes out ahead",
+    text: tie
+      ? `With equal tax rates now and at retirement, both end at **${fmtUsd(rothBalance)}** after tax over **${n} years**. Pick Roth for tax-free growth and no RMDs.`
+      : winnerIsRoth
+      ? `After **${n} years** the Roth nets **${fmtUsd(rothBalance)}** tax-free vs **${fmtUsd(traditionalAfterTax)}** from the Traditional — a **${formattedDiff}** edge for paying taxes now at ${currentTaxRate}%.`
+      : `After **${n} years** the Traditional nets **${fmtUsd(traditionalAfterTax)}** vs **${fmtUsd(rothBalance)}** from the Roth — a **${formattedDiff}** edge, plus **${fmtUsd(taxSavingsNow)}** in upfront tax savings. Watch out for RMDs at 73.`,
+    tone: winnerIsRoth || tie ? "good" : "neutral",
+    icon: "🏦",
+  };
+
   return {
     roth_balance: Math.round(rothBalance * 100) / 100,
     traditional_balance_after_tax: Math.round(traditionalAfterTax * 100) / 100,
@@ -132,5 +149,6 @@ export function compute(i: Inputs): Outputs {
     recommendation,
     years_of_growth: n,
     contribution_used: contribution,
+    _insight: insight,
   };
 }

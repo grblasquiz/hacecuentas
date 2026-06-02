@@ -39,6 +39,8 @@ export interface Outputs {
   ingresoNetoUSD: string;
   ingresoNeto: number;
   streamsParaUSD1000: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 function fmtUSD(n: number): string {
@@ -61,6 +63,32 @@ export function regaliasSpotifyPais(i: Inputs): Outputs {
   const neto = gross - comDist - comSello;
   const paraMilUSD = rps > 0 ? Math.ceil(1000 / rps) : 0;
 
+  // Insight: cuánto te queda neto y cuántos streams hacen falta para USD 1.000
+  const _insight = {
+    title: "Lo que te queda por tus streams",
+    text: `Con **${streams.toLocaleString('es-AR')} streams** desde ${pais} (RPS USD ${rps.toFixed(4)}) generás USD ${gross.toFixed(2)} y, tras comisiones, te quedan **USD ${neto.toFixed(2)}** netos. Para llegar a **USD 1.000** necesitarías unos **${paraMilUSD.toLocaleString('es-AR')} streams** a ese mismo RPS.`,
+    tone: "neutral" as const,
+    icon: "🎧",
+  };
+
+  // Donut SOLO si hay comisiones que descontar (si no, neto == gross y no hay nada que dividir)
+  let _chart: any = undefined;
+  const totalComisiones = comDist + comSello;
+  if (gross > 0 && totalComisiones > 0) {
+    _chart = {
+      type: "doughnut" as const,
+      slices: [
+        { label: "Ingreso neto", value: Number(neto.toFixed(2)) },
+        { label: "Comisión distribuidor", value: Number(comDist.toFixed(2)) },
+        { label: "Comisión sello/manager", value: Number(comSello.toFixed(2)) },
+      ].filter((s) => s.value > 0),
+      prefix: "USD ",
+      centerValue: "USD " + gross.toFixed(2),
+      centerLabel: "Bruto",
+      ariaLabel: "Reparto del ingreso bruto de Spotify: parte neta para el artista, comisión del distribuidor y comisión del sello o manager.",
+    };
+  }
+
   return {
     paisCodigo: pais,
     rpsUsado: 'USD ' + rps.toFixed(4),
@@ -70,5 +98,7 @@ export function regaliasSpotifyPais(i: Inputs): Outputs {
     ingresoNetoUSD: fmtUSD(neto),
     ingresoNeto: Number(neto.toFixed(2)),
     streamsParaUSD1000: paraMilUSD,
+    _insight,
+    _chart,
   };
 }

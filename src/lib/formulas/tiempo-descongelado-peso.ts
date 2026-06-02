@@ -1,6 +1,6 @@
 /** Descongelado: tiempo según peso y método */
 export interface Inputs { pesoKg: number; metodo: string; tipoAlimento?: string; }
-export interface Outputs { tiempoTotal: string; horaIniciar: string; seguridad: string; consejo: string; }
+export interface Outputs { tiempoTotal: string; horaIniciar: string; seguridad: string; consejo: string; _insight?: any; }
 
 const HORAS_POR_KG: Record<string, number> = { heladera: 10, agua_fria: 2.5, microondas: 0.15 };
 const FACTOR_ALIM: Record<string, number> = { carne: 1, pollo: 1.2, pescado: 0.7, pan: 0.5, verdura: 0.3 };
@@ -27,7 +27,20 @@ export function tiempoDescongeladoPeso(i: Inputs): Outputs {
     metodo === 'agua_fria' ? 'Mantené en bolsa hermética. Cambiá el agua cada 30 min. Cociná inmediatamente.' :
     'Cociná inmediatamente después. No guardes en heladera sin cocinar.';
 
+  const tone = metodo === 'heladera' ? 'good' : 'warn';
+  const insightText = metodo === 'heladera'
+    ? `En heladera tarda **${tiempo}**, el método más seguro: el alimento nunca sale de los 4 °C, así que no se multiplican bacterias. Planificá con tiempo.`
+    : metodo === 'agua_fria'
+      ? `En agua fría son **${tiempo}**, mucho más rápido que la heladera, pero cambiá el agua cada 30 min y cociná apenas termine: la superficie entra en zona de riesgo bacteriano.`
+      : `En microondas son apenas **${tiempo}**, pero descongela disparejo y empieza a cocinar los bordes: pasá directo a cocinar, nunca lo guardes crudo de nuevo.`;
+
   return { tiempoTotal: tiempo, horaIniciar: `Para cenar a las 20hs: empezá a las ${horaInicio}`, seguridad: seg,
     consejo: tipo === 'pollo' ? 'El pollo entero tarda más por su densidad. Sacá menudos si están adentro.' :
-      tipo === 'pescado' ? 'Pescado es más delicado: descongelá en heladera para preservar textura.' : 'Dejá el alimento en su envase original o bolsa hermética.' };
+      tipo === 'pescado' ? 'Pescado es más delicado: descongelá en heladera para preservar textura.' : 'Dejá el alimento en su envase original o bolsa hermética.',
+    _insight: {
+      title: 'Tiempo y seguridad',
+      text: insightText,
+      tone,
+      icon: '🧊',
+    } };
 }

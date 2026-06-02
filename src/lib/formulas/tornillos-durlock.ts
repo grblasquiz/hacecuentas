@@ -9,6 +9,7 @@ export interface TornillosDurlockOutputs {
   cantidadPlacas: number;
   perfilesMetros: number;
   detalle: string;
+  _insight?: any;
 }
 
 const PLACA_M2 = 2.88; // 1,20 × 2,40 m
@@ -32,10 +33,19 @@ export function tornillosDurlock(inputs: TornillosDurlockInputs): TornillosDurlo
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
+  const cajas = Math.ceil(tornillosTotal / 1000);
+  const _insight = {
+    title: 'Lo que tenés que comprar',
+    text: `Para **${fmt.format(superficie)} m²** vas a necesitar **${fmt.format(tornillosTotal)} tornillos** (alcanzan **${cajas}** caja${cajas > 1 ? 's' : ''} de 1.000), **${placas} placas** de 1,20×2,40 y **${fmt.format(perfiles)} m** de perfiles. Las placas ya incluyen ~5% de desperdicio por cortes; sumá una caja de tornillos extra por las roscas que se pasan.`,
+    tone: 'neutral',
+    icon: '🔩',
+  };
+
   return {
     cantidadTornillos: tornillosTotal,
     cantidadPlacas: placas,
     perfilesMetros: perfiles,
     detalle: `${fmt.format(superficie)} m² con ${capas} capa(s), separación ${separacion} cm → ${fmt.format(tornillosTotal)} tornillos + ${placas} placas (1,20×2,40) + ${fmt.format(perfiles)} m de perfiles.`,
+    _insight,
   };
 }

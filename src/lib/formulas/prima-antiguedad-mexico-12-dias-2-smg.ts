@@ -13,6 +13,8 @@ export interface Outputs {
   tope_legal_diario: number;
   elegible: boolean;
   notas_legales: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -67,6 +69,37 @@ export function compute(i: Inputs): Outputs {
     notas_legales += `\n📌 Tope legal aplicado: Tu salario ($${salario_diario.toFixed(2)}) excede 2 SMG ($${TOPE_LEGAL_DIARIO.toFixed(2)}). Prima calculada sobre tope.`;
   }
 
+  const mxn = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const topeAplicado = elegible && salario_diario > TOPE_LEGAL_DIARIO;
+  let _insight: any;
+  if (!elegible) {
+    _insight = {
+      title: 'No te corresponde prima',
+      text: `Con **renuncia voluntaria** y **${antiguedad_anos} año${antiguedad_anos === 1 ? '' : 's'}** de antigüedad no alcanzás los **${ANTIGUEDAD_MINIMA_RENUNCIA} años** que exige el art. 162 de la LFT. Solo aplica en despido o renuncia con ${ANTIGUEDAD_MINIMA_RENUNCIA}+ años.`,
+      tone: 'warn' as const,
+      icon: '⚖️',
+    };
+  } else {
+    _insight = {
+      title: 'Tu prima de antigüedad',
+      text: `Por **${antiguedad_anos} año${antiguedad_anos === 1 ? '' : 's'}** te corresponden **${dias_pagados} días** y una prima bruta de **${mxn(prima_bruta)}**, pero el ISR del **30%** retiene **${mxn(isr_retenido)}**, así que cobrás **${mxn(prima_neta)}** netos.${topeAplicado ? ` Ojo: tu salario supera el tope de 2 SMG (${mxn(TOPE_LEGAL_DIARIO)}/día), por lo que la prima se calcula sobre ese tope.` : ''}`,
+      tone: 'warn' as const,
+      icon: '⚖️',
+    };
+  }
+
+  const _chart = elegible && prima_bruta > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Prima neta', value: Math.round(prima_neta) },
+      { label: 'ISR retenido (30%)', value: Math.round(isr_retenido) },
+    ],
+    prefix: '$',
+    centerValue: mxn(prima_bruta),
+    centerLabel: 'Prima bruta',
+    ariaLabel: 'Reparto de la prima de antigüedad entre monto neto e ISR retenido',
+  } : undefined;
+
   return {
     prima_bruta: Math.round(prima_bruta * 100) / 100,
     isr_retenido: Math.round(isr_retenido * 100) / 100,
@@ -75,6 +108,8 @@ export function compute(i: Inputs): Outputs {
     smg_diario_2026: SMG_DIARIO_2026,
     tope_legal_diario: Math.round(TOPE_LEGAL_DIARIO * 100) / 100,
     elegible: elegible,
-    notas_legales: notas_legales
+    notas_legales: notas_legales,
+    _insight,
+    _chart
   };
 }

@@ -28,6 +28,8 @@ export interface Outputs {
   nivel_riesgo_aval: string;
   meses_recuperacion_gastos: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 /**
@@ -182,6 +184,46 @@ export function compute(i: Inputs): Outputs {
       'La operación puede tener sentido según tus circunstancias. Compara el TAE (no solo el TIN) y consulta al menos dos entidades financieras antes de firmar.';
   }
 
+  // --- Insight dinámico ---
+  const eur = (n: number) => '€' + Math.round(n).toLocaleString('es-ES');
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightTitle: string;
+  let insightText: string;
+  if (saldo_total <= 0) {
+    insightTone = 'neutral';
+    insightTitle = 'Cargá tus deudas';
+    insightText = 'Introducí al menos una deuda con saldo pendiente para ver cuánto bajaría tu cuota y cuánto te costaría en intereses reunificar.';
+  } else {
+    const favorable = tinMejora && sobrecoste_intereses <= 0;
+    const desfavorable = !tinMejora && sobrecoste_intereses > 0;
+    insightTone = favorable ? 'good' : desfavorable ? 'warn' : 'neutral';
+    insightTitle = desfavorable
+      ? 'Cuidado: te sale más caro'
+      : favorable
+        ? 'Reunificar te conviene'
+        : 'Alivio de cuota, pero a un costo';
+    const ahorroTxt = ahorro_mensual > 0
+      ? `tu cuota baja de **${eur(cuota_actual_total)}** a **${eur(cuota_nueva)}** al mes (ahorrás ${eur(ahorro_mensual)}, ${porcentaje_ahorro_cuota.toFixed(0)}%)`
+      : `tu cuota pasa de ${eur(cuota_actual_total)} a **${eur(cuota_nueva)}** al mes (sin ahorro mensual)`;
+    const sobrecosteTxt = sobrecoste_intereses > 0
+      ? ` Pero al estirar el plazo pagarás **${eur(sobrecoste_intereses)}** más en intereses${gastos > 0 ? ` y ${eur(gastos)} de gastos` : ''}.`
+      : sobrecoste_intereses < 0
+        ? ` Además ahorrás **${eur(-sobrecoste_intereses)}** en intereses totales${gastos > 0 ? ` (descontá ${eur(gastos)} de gastos)` : ''}.`
+        : '';
+    insightText = `Unificás **${eur(saldo_total)}** de deuda: ${ahorroTxt}.${sobrecosteTxt} Tu TIN medio actual es ${tin_medio_ponderado_actual.toFixed(2)}% y el nuevo ${nuevoTin.toFixed(2)}%.${conHipoteca ? ' Ojo: con garantía hipotecaria ponés tu vivienda en riesgo ante un impago.' : ''}`;
+  }
+
+  // --- Donut: composición de lo que devolverás (capital + intereses + gastos) ---
+  const capitalSlice = Math.round(saldo_total);
+  const interesSlice = Math.round(intereses_nuevo_prestamo);
+  const gastosSlice = Math.round(gastos);
+  const totalDevuelto = capitalSlice + interesSlice + gastosSlice;
+  const slices = [
+    { label: 'Capital reunificado', value: capitalSlice },
+    { label: 'Intereses del nuevo préstamo', value: interesSlice },
+  ];
+  if (gastosSlice > 0) slices.push({ label: 'Gastos de formalización', value: gastosSlice });
+
   return {
     saldo_total: Math.round(saldo_total * 100) / 100,
     cuota_actual_total: Math.round(cuota_actual_total * 100) / 100,
@@ -196,5 +238,19 @@ export function compute(i: Inputs): Outputs {
     nivel_riesgo_aval,
     meses_recuperacion_gastos,
     recomendacion,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: insightTone === 'warn' ? '⚠️' : insightTone === 'good' ? '✅' : '🏦'
+    },
+    _chart: saldo_total > 0 ? {
+      type: 'doughnut',
+      slices,
+      prefix: '€',
+      centerValue: eur(totalDevuelto),
+      centerLabel: 'Total a devolver',
+      ariaLabel: `Del préstamo reunificado devolverás ${eur(totalDevuelto)}: ${eur(capitalSlice)} de capital, ${eur(interesSlice)} de intereses${gastosSlice > 0 ? ` y ${eur(gastosSlice)} de gastos` : ''}.`
+    } : undefined
   };
 }

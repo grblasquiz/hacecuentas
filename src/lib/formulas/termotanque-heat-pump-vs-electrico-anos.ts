@@ -1,6 +1,6 @@
 /** Años para amortizar termotanque heat pump vs eléctrico según consumo y tarifa. */
 export interface Inputs { personasHogar: number; tarifaUsdKwh: number; costoHeatPumpUsd: number; costoElectricoUsd: number; }
-export interface Outputs { kwhAnualesElectrico: number; kwhAnualesHeatPump: number; ahorroAnualUsd: number; anosAmortizacion: number; explicacion: string; }
+export interface Outputs { kwhAnualesElectrico: number; kwhAnualesHeatPump: number; ahorroAnualUsd: number; anosAmortizacion: number; explicacion: string; _insight?: any; }
 export function termotanqueHeatPumpVsElectricoAnos(i: Inputs): Outputs {
   const p = Number(i.personasHogar);
   const tarifa = Number(i.tarifaUsdKwh);
@@ -17,11 +17,37 @@ export function termotanqueHeatPumpVsElectricoAnos(i: Inputs): Outputs {
   const ahorroAnual = costoAnualEl - costoAnualHp;
   const sobrecosto = cHp - cEl;
   const anos = sobrecosto / ahorroAnual;
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (sobrecosto <= 0) {
+    insightTone = 'good';
+    insightText = `El heat pump sale **igual o más barato de entrada** y encima ahorra **USD ${ahorroAnual.toFixed(0)}/año** en electricidad: la decisión es inmediata, recuperás todo desde el primer día.`;
+  } else if (ahorroAnual <= 0) {
+    insightTone = 'warn';
+    insightText = `Con esta tarifa el heat pump **no genera ahorro anual**, así que el sobrecosto de USD ${sobrecosto.toFixed(0)} no se amortiza. Conviene revisar la tarifa o el consumo antes de cambiar.`;
+  } else if (anos <= 5) {
+    insightTone = 'good';
+    insightText = `Recuperás el sobrecosto de **USD ${sobrecosto.toFixed(0)}** en solo **${anos.toFixed(1)} años** gracias a un ahorro de **USD ${ahorroAnual.toFixed(0)}/año**: muy buena inversión, dura mucho más que eso.`;
+  } else if (anos <= 10) {
+    insightTone = 'neutral';
+    insightText = `El sobrecosto de **USD ${sobrecosto.toFixed(0)}** se paga solo en **${anos.toFixed(1)} años** con un ahorro de **USD ${ahorroAnual.toFixed(0)}/año**: razonable dentro de la vida útil del equipo.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Tarda **${anos.toFixed(1)} años** en amortizar el sobrecosto de USD ${sobrecosto.toFixed(0)} (ahorro de solo USD ${ahorroAnual.toFixed(0)}/año): puede acercarse a la vida útil del equipo, evaluá con cuidado.`;
+  }
+
   return {
     kwhAnualesElectrico: Number(kwhElectrico.toFixed(0)),
     kwhAnualesHeatPump: Number(kwhHeatPump.toFixed(0)),
     ahorroAnualUsd: Number(ahorroAnual.toFixed(2)),
     anosAmortizacion: Number(anos.toFixed(1)),
     explicacion: `Para ${p} personas: eléctrico consume ${kwhElectrico.toFixed(0)} kWh/año (USD ${costoAnualEl.toFixed(0)}), heat pump ${kwhHeatPump.toFixed(0)} kWh/año (USD ${costoAnualHp.toFixed(0)}). Ahorro: USD ${ahorroAnual.toFixed(0)}/año. Amortización del sobrecosto: ${anos.toFixed(1)} años.`,
+    _insight: {
+      title: 'Cuándo se paga solo',
+      text: insightText,
+      tone: insightTone,
+      icon: '♨️',
+    },
   };
 }

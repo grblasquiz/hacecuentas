@@ -8,6 +8,8 @@ export interface Outputs {
   arancelRegistro: number;
   selladoProvincial: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function transferAutoCostoRegistro(i: Inputs): Outputs {
@@ -35,10 +37,37 @@ export function transferAutoCostoRegistro(i: Inputs): Outputs {
 
   const radicacion = misma === 2 ? ' Incluye gasto extra por cambio de radicación.' : '';
 
+  // Componentes redondeados para el gráfico (suman el total mostrado en el donut).
+  const arancelR = Math.round(arancelRegistro);
+  const selladoR = Math.round(selladoProvincial);
+  const fijos = verificacionPolicial + formularios + informeDominio;
+  const totalRedondeado = Math.round(costoTotal);
+  const slices = [
+    { label: 'Arancel registro', value: arancelR },
+    { label: 'Sellado provincial', value: selladoR },
+    { label: 'Verificación + formularios', value: fijos },
+  ];
+  if (extraRadicacion > 0) slices.push({ label: 'Cambio de radicación', value: extraRadicacion });
+  const totalSlices = slices.reduce((acc, s) => acc + s.value, 0);
+
   return {
-    costoTotal: Math.round(costoTotal),
-    arancelRegistro: Math.round(arancelRegistro),
-    selladoProvincial: Math.round(selladoProvincial),
-    detalle: `Costo estimado de transferencia: $${Math.round(costoTotal).toLocaleString('es-AR')}. Arancel registro: $${Math.round(arancelRegistro).toLocaleString('es-AR')}. Sellado: $${Math.round(selladoProvincial).toLocaleString('es-AR')}. Verificación + formularios: $${(verificacionPolicial + formularios + informeDominio).toLocaleString('es-AR')}.${radicacion}`,
+    costoTotal: totalRedondeado,
+    arancelRegistro: arancelR,
+    selladoProvincial: selladoR,
+    detalle: `Costo estimado de transferencia: $${totalRedondeado.toLocaleString('es-AR')}. Arancel registro: $${arancelR.toLocaleString('es-AR')}. Sellado: $${selladoR.toLocaleString('es-AR')}. Verificación + formularios: $${fijos.toLocaleString('es-AR')}.${radicacion}`,
+    _insight: {
+      title: 'Cuánto cuesta transferir el auto',
+      text: `Transferir un vehículo valuado en **$${valuacion.toLocaleString('es-AR')}** sale unos **$${totalRedondeado.toLocaleString('es-AR')}**. El grueso son los impuestos sobre la valuación: arancel **$${arancelR.toLocaleString('es-AR')}** y sellado **$${selladoR.toLocaleString('es-AR')}**${extraRadicacion > 0 ? `, más **$${extraRadicacion.toLocaleString('es-AR')}** por el cambio de radicación` : ''}.`,
+      tone: 'warn',
+      icon: '🚗',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: `$${totalSlices.toLocaleString('es-AR')}`,
+      centerLabel: 'Costo total',
+      ariaLabel: `Desglose del costo de transferencia: arancel, sellado, verificación y formularios${extraRadicacion > 0 ? ' y cambio de radicación' : ''}, total $${totalSlices.toLocaleString('es-AR')}`,
+    },
   };
 }

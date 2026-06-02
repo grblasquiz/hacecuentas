@@ -13,6 +13,8 @@ export interface Outputs {
   ventana_traslado_proximo: string;
   diferencia_vs_actual: number;
   recomendaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Rendimientos históricos anuales 2022-2026 por RAIS y perfil (Superfinanciera 2026)
@@ -133,6 +135,27 @@ export function compute(i: Inputs): Outputs {
   
   recomendaciones += `📊 Volatilidad histórica ${perfil}: ${VOLATILIDAD[perfil]}%. Prepárate para fluctuaciones de ±20-30% en años bajistas (mayor riesgo).`;
   
+  const rendimiento_acumulado = Math.max(0, proyeccion_10_anos - monto);
+  const perfil_label = `${perfil.charAt(0).toUpperCase()}${perfil.slice(1).replace('_', ' ')}`;
+  const tone = perfil === 'mayor_riesgo' ? 'warn' : perfil === 'conservador' ? 'neutral' : 'good';
+  const insight = {
+    title: 'Proyección a 10 años',
+    text: `Con perfil **${perfil_label}** (rendimiento promedio **${rendimiento_anual_prom.toFixed(2)}%** anual), tu saldo de $${monto.toLocaleString('es-CO')} proyecta a **$${proyeccion_10_anos.toLocaleString('es-CO')}** en 10 años, sumando ~$${rendimiento_acumulado.toLocaleString('es-CO')} de rendimiento. La mejor RAIS para tu perfil es **${mejor_rais_perfil}**.${perfil === 'mayor_riesgo' ? ` Ojo con la volatilidad (${VOLATILIDAD[perfil]}%): puede caer 20-30% en años bajistas.` : ''}`,
+    tone,
+    icon: '🏦',
+  };
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Saldo actual', value: monto },
+      { label: 'Rendimiento 10 años', value: rendimiento_acumulado },
+    ],
+    prefix: '$',
+    centerValue: '$' + proyeccion_10_anos.toLocaleString('es-CO'),
+    centerLabel: 'Proyección',
+    ariaLabel: 'Composición de la proyección a 10 años entre el saldo actual y el rendimiento acumulado.',
+  };
+
   return {
     fondo_recomendado,
     rendimiento_anual_prom: parseFloat(rendimiento_anual_prom.toFixed(2)),
@@ -140,6 +163,8 @@ export function compute(i: Inputs): Outputs {
     proyeccion_10_anos,
     ventana_traslado_proximo,
     diferencia_vs_actual: parseFloat(diferencia_vs_actual.toFixed(2)),
-    recomendaciones: recomendaciones.trim()
+    recomendaciones: recomendaciones.trim(),
+    _insight: insight,
+    _chart: chart
   };
 }

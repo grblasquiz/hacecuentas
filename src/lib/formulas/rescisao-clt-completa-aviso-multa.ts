@@ -22,6 +22,8 @@ export interface Outputs {
   total_bruto: number;
   meses_aviso: number;
   detalhamento: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 // Lei 12.506/2011 — Aviso prévio: 30 dias base + 3 dias por ano completo, máx. 90 dias
@@ -308,6 +310,61 @@ export function compute(i: Inputs): Outputs {
     `Multa FGTS: ${percentualMulta} de R$ ${saldoFgts.toFixed(2)} | ` +
     `⚠️ Valor bruto estimado — descontos de INSS e IR não incluídos.`;
 
+  // ── Gráfico de composição (apenas parcelas > 0, somam o total) ──
+  const slicesDef: { label: string; value: number }[] = [
+    { label: 'Saldo de salário', value: saldoSalario },
+    { label: 'Aviso prévio', value: avisoPrevioValor },
+    { label: '13º proporcional', value: decimoTerceiro },
+    { label: 'Férias prop. + 1/3', value: feriasProp },
+    { label: 'Férias vencidas + 1/3', value: feriasVencidasValor },
+    { label: 'Multa FGTS', value: multaFgts },
+  ];
+  const slices = slicesDef
+    .filter((s) => s.value > 0)
+    .map((s) => ({ label: s.label, value: Math.round(s.value * 100) / 100 }));
+
+  const chart = slices.length >= 2 ? {
+    type: 'doughnut' as const,
+    slices,
+    prefix: 'R$ ',
+    centerValue: 'R$ ' + (Math.round(totalBruto * 100) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    centerLabel: 'Total bruto',
+    ariaLabel: 'Composição das verbas rescisórias por parcela',
+  } : undefined;
+
+  const totalFmt = 'R$ ' + (Math.round(totalBruto * 100) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (tipoRescisao === 'justa_causa') {
+    insightTitle = 'Justa causa: rescisão enxuta';
+    insightText = `Por justa causa você recebe apenas o que já era seu: cerca de **${totalFmt}**. Sem aviso prévio, 13º proporcional, férias proporcionais nem multa de 40% do FGTS — e o saldo do FGTS **não pode ser sacado**.`;
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+  } else if (tipoRescisao === 'pedido_demissao') {
+    insightTitle = 'Pedido de demissão';
+    insightText = `Pedindo demissão você soma cerca de **${totalFmt}** (saldo, 13º e férias proporcionais + 1/3), mas **abre mão da multa de 40% do FGTS** e não pode sacar o saldo.`;
+    insightTone = 'neutral';
+    insightIcon = '✍️';
+  } else if (tipoRescisao === 'acordo_mutuo') {
+    insightTitle = 'Acordo mútuo: meio-termo';
+    insightText = `No acordo (Art. 484-A) o total bruto fica em torno de **${totalFmt}**, com aviso e multa do FGTS pela metade (**20%**). Lembre: acordo mútuo **não dá direito ao seguro-desemprego**.`;
+    insightTone = 'neutral';
+    insightIcon = '🤝';
+  } else {
+    insightTitle = 'Sem justa causa: rescisão completa';
+    insightText = `A demissão sem justa causa rende cerca de **${totalFmt}** bruto, incluindo aviso prévio de **${diasAviso} dias** e a multa de **40%** sobre o FGTS. Você ainda pode sacar o FGTS e pedir seguro-desemprego.`;
+    insightTone = 'good';
+    insightIcon = '💰';
+  }
+  const insight = {
+    title: insightTitle,
+    text: insightText + ' Valor bruto — INSS e IR não incluídos.',
+    tone: insightTone,
+    icon: insightIcon,
+  };
+
   return {
     saldo_salario: Math.round(saldoSalario * 100) / 100,
     aviso_previo_valor: Math.round(avisoPrevioValor * 100) / 100,
@@ -317,6 +374,8 @@ export function compute(i: Inputs): Outputs {
     multa_fgts: Math.round(multaFgts * 100) / 100,
     total_bruto: Math.round(totalBruto * 100) / 100,
     meses_aviso: diasAviso,
-    detalhamento
+    detalhamento,
+    _chart: chart,
+    _insight: insight
   };
 }

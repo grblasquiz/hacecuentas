@@ -18,6 +18,7 @@ export interface PrestamoOutputs {
   tasaMensual: string;
   cae: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
@@ -30,6 +31,9 @@ export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
       caeLabel: 'aprox, sin gastos',
       cuotaLabel: 'Cuota',
       interesLabel: 'Interés',
+      insightTitle: 'Cuánto pagás de más',
+      insightText: (c: string, intereses: string, pct: string, meses: number, cap: string) =>
+        `Tu cuota es de **${c}/mes** durante ${meses} meses. Vas a pagar **${intereses}** en intereses sobre un capital de ${cap}, un **${pct}%** extra.`,
     },
     en: {
       errCapital: 'Enter the loan amount',
@@ -38,6 +42,9 @@ export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
       caeLabel: 'approx, excl. fees',
       cuotaLabel: 'Installment',
       interesLabel: 'Interest',
+      insightTitle: 'How much extra you pay',
+      insightText: (c: string, intereses: string, pct: string, meses: number, cap: string) =>
+        `Your installment is **${c}/mo** for ${meses} months. You will pay **${intereses}** in interest on a principal of ${cap}, a **${pct}%** premium.`,
     },
   } as const)[__lang];
 
@@ -120,6 +127,24 @@ export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
     },
   };
 
+  // Insight dinámico bilingüe: peso de los intereses sobre el capital
+  const interesPct = (totalIntereses / capital) * 100;
+  const fmtMoney = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insightTone: 'good' | 'warn' | 'neutral' =
+    interesPct >= 60 ? 'warn' : interesPct <= 20 ? 'good' : 'neutral';
+  const insight = {
+    title: T.insightTitle,
+    text: T.insightText(
+      fmtMoney(cuota),
+      fmtMoney(totalIntereses),
+      interesPct.toFixed(0),
+      plazoMeses,
+      fmtMoney(capital),
+    ),
+    tone: insightTone,
+    icon: '🏦',
+  };
+
   return {
     cuota: Math.round(cuota),
     totalPagar: Math.round(totalPagar),
@@ -127,5 +152,6 @@ export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
     tasaMensual: `${(i * 100).toFixed(2)}%`,
     cae: `${cae.toFixed(2)}% (${T.caeLabel})`,
     _chart: chart,
+    _insight: insight,
   };
 }

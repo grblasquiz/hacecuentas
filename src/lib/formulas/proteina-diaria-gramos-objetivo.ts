@@ -12,6 +12,7 @@ export interface Outputs {
   protein_max: number;    // g/día máximo
   protein_mid: number;    // g/día objetivo central
   food_examples: string;  // equivalencias en alimentos
+  _insight?: any;
 }
 
 // Factores proteicos (g/kg) por objetivo [min, max]
@@ -82,10 +83,30 @@ export function compute(i: Inputs): Outputs {
 
   const food_examples = buildFoodExamples(protein_mid);
 
+  const GOAL_LABEL: Record<string, string> = {
+    sedentary: "vida sedentaria",
+    active_maintain: "actividad moderada / mantenimiento",
+    muscle_gain: "ganancia muscular",
+    fat_loss_training: "pérdida de grasa con entrenamiento de fuerza",
+  };
+  const goalLabel = GOAL_LABEL[i.goal] ?? GOAL_LABEL["active_maintain"];
+  const midPerKg = (protein_mid / weight).toFixed(1);
+  const seniorNote = isSenior
+    ? ` Sumamos un **+20%** por resistencia anabólica (mayores de 65), así que apuntá a la parte alta del rango.`
+    : ``;
+
+  const _insight = {
+    title: "Tu objetivo proteico diario",
+    text: `Para tu peso y objetivo de **${goalLabel}**, apuntá a unos **${protein_mid} g de proteína al día** (rango **${protein_min}–${protein_max} g**), es decir ~**${midPerKg} g por kg**.${seniorNote} Repartilo en 3-4 comidas para mejorar la síntesis muscular.`,
+    tone: "neutral",
+    icon: "🍗",
+  };
+
   return {
     protein_min,
     protein_max,
     protein_mid,
     food_examples,
+    _insight,
   };
 }

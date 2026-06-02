@@ -9,6 +9,7 @@ export interface Outputs {
   velocidadMs: number;
   velocidadKmh: number;
   formula: string;
+  _insight?: any;
 }
 
 export function velocidadDistanciaTiempoFisica(i: Inputs): Outputs {
@@ -24,23 +25,27 @@ export function velocidadDistanciaTiempoFisica(i: Inputs): Outputs {
   let time: number;
   let resultado: string;
   let formula: string;
+  let incognita = 'velocidad';
 
   if (v === null && d !== null && t !== null) {
     if (t <= 0) throw new Error('El tiempo debe ser mayor a 0');
     velKmh = d / t;
     resultado = `${velKmh.toFixed(2)} km/h`;
     formula = `v = d / t = ${d} / ${t} = ${velKmh.toFixed(2)} km/h`;
+    incognita = 'velocidad';
   } else if (d === null && v !== null && t !== null) {
     dist = v * t;
     velKmh = v;
     resultado = `${dist.toFixed(2)} km`;
     formula = `d = v × t = ${v} × ${t} = ${dist.toFixed(2)} km`;
+    incognita = 'distancia';
   } else if (t === null && d !== null && v !== null) {
     if (v <= 0) throw new Error('La velocidad debe ser mayor a 0');
     time = d / v;
     velKmh = v;
     resultado = `${time.toFixed(2)} h`;
     formula = `t = d / v = ${d} / ${v} = ${time.toFixed(4)} h`;
+    incognita = 'tiempo';
   } else {
     velKmh = v!;
     resultado = `${velKmh.toFixed(2)} km/h`;
@@ -50,5 +55,21 @@ export function velocidadDistanciaTiempoFisica(i: Inputs): Outputs {
   const velocidadMs = Number((velKmh / 3.6).toFixed(4));
   const velocidadKmhOut = Number(velKmh.toFixed(4));
 
-  return { resultado, velocidadMs, velocidadKmh: velocidadKmhOut, formula };
+  const incognitaTxt: Record<string, string> = {
+    velocidad: 'la velocidad',
+    distancia: 'la distancia',
+    tiempo: 'el tiempo',
+  };
+  return {
+    resultado,
+    velocidadMs,
+    velocidadKmh: velocidadKmhOut,
+    formula,
+    _insight: {
+      title: 'Resultado del movimiento uniforme',
+      text: `Despejaste **${incognitaTxt[incognita]}**: el resultado es **${resultado}**. A esa velocidad de ${velKmh.toFixed(2)} km/h equivale a **${velocidadMs.toFixed(2)} m/s**, aplicando la relación v = d / t del movimiento rectilíneo uniforme.`,
+      tone: 'neutral',
+      icon: '📐',
+    },
+  };
 }

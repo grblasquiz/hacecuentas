@@ -1,6 +1,6 @@
 /** Riego automático: programación por zona */
 export interface Inputs { zona: string; estacion?: string; tipoSuelo?: string; }
-export interface Outputs { minutosRiego: number; frecuenciaSemanal: string; mejorHorario: string; consejo: string; }
+export interface Outputs { minutosRiego: number; frecuenciaSemanal: string; mejorHorario: string; consejo: string; _insight?: any; }
 
 interface RiegoData { minutos: number; vecesXsemana: number; }
 const BASE: Record<string, RiegoData> = {
@@ -25,6 +25,20 @@ export function riegoAutomaticoProgramacion(i: Inputs): Outputs {
   const minutos = Math.round(base.minutos * fEst * fSuelo);
   const veces = Math.max(1, Math.round(base.vecesXsemana * fEst));
 
+  const minSemana = minutos * veces;
+  const estTxt = est === 'verano' ? 'verano' : est === 'invierno' ? 'invierno' : 'primavera/otoño';
+  const _insight = {
+    title: 'Tu programación de riego',
+    text: `Programá **${minutos} min** por ciclo, **${veces} ${veces === 1 ? 'vez' : 'veces'} por semana** (${minSemana} min/semana en total) para tu zona en ${estTxt}. ` +
+      (est === 'verano'
+        ? 'En los picos de calor regá siempre de madrugada: a media tarde se evapora gran parte del agua antes de llegar a la raíz.'
+        : est === 'invierno'
+        ? 'En invierno la demanda baja fuerte; regá temprano pero evitá horas de helada para no dañar las raíces.'
+        : 'Ajustá según las lluvias: una semana lluviosa puede reemplazar uno o dos ciclos.'),
+    tone: 'neutral' as const,
+    icon: '💧',
+  };
+
   return {
     minutosRiego: minutos,
     frecuenciaSemanal: `${veces} ${veces === 1 ? 'vez' : 'veces'} por semana`,
@@ -34,5 +48,6 @@ export function riegoAutomaticoProgramacion(i: Inputs): Outputs {
       : suelo === 'arenoso'
       ? 'El agua drena rápido: regá más seguido con menos tiempo.'
       : 'Suelo franco ideal. Controlá la humedad con un destornillador a 15 cm.',
+    _insight,
   };
 }

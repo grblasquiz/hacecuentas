@@ -9,6 +9,7 @@ export interface Outputs {
   horasTotalesRestantes: number;
   desglosePorNivel: string;
   advertencia: string;
+  _insight?: any;
 }
 
 // Horas brutas de instrucción efectiva por tramo CEFR
@@ -104,10 +105,19 @@ export function compute(i: Inputs): Outputs {
     advertencia = "El tiempo estimado supera los 5 años. Aumentar las horas semanales o la calidad del estudio reducirá considerablemente este plazo.";
   }
 
+  const aniosEstimados = Math.round((mesesEstimados / 12) * 10) / 10;
+  const toneInsight = (mesesEstimados > 60 || calidad === "baja") ? 'warn' : (mesesEstimados <= 24 ? 'good' : 'neutral');
+
   return {
     mesesEstimados,
     horasTotalesRestantes,
     desglosePorNivel,
     advertencia,
+    _insight: {
+      title: 'Tu camino al C1',
+      text: `Desde ${nivel} necesitás unas **${horasTotalesRestantes} horas efectivas**: a **${horasSemanales} h/semana** llegás al C1 en aproximadamente **${mesesEstimados} meses (${aniosEstimados} años)**.`,
+      tone: toneInsight,
+      icon: '📚'
+    },
   };
 }

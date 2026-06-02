@@ -1,6 +1,6 @@
 /** Calculadora Tamaño de Muestra — n = z²p(1-p)/e² */
 export interface Inputs { margenError: number; confianza: string; proporcion: number; poblacion?: number; }
-export interface Outputs { tamanoMuestra: number; formulaUsada: string; nota: string; }
+export interface Outputs { tamanoMuestra: number; formulaUsada: string; nota: string; _insight?: any; }
 
 export function tamanoMuestraEncuesta(i: Inputs): Outputs {
   const e = Number(i.margenError) / 100;
@@ -24,9 +24,22 @@ export function tamanoMuestraEncuesta(i: Inputs): Outputs {
     formulaStr = `n = ${z}² × ${p} × ${1 - p} / ${e}² = ${n0}`;
   }
 
+  const aEnviar = Math.ceil(nFinal / 0.6);
+  const conf = i.confianza in zMap ? i.confianza : '95';
+  const corrigio = N > 0 && nFinal < n0;
+  const pctPoblacion = N > 0 ? (nFinal / N) * 100 : 0;
+
   return {
     tamanoMuestra: nFinal,
     formulaUsada: formulaStr,
-    nota: `Necesitás al menos ${nFinal} respuestas válidas. Si la tasa de respuesta es ~60%, enviá a ${Math.ceil(nFinal / 0.6)} personas.`,
+    nota: `Necesitás al menos ${nFinal} respuestas válidas. Si la tasa de respuesta es ~60%, enviá a ${aEnviar} personas.`,
+    _insight: {
+      title: corrigio ? 'La población finita te ayuda' : 'Tu muestra objetivo',
+      text: corrigio
+        ? `Con una población de **${N.toLocaleString('es-AR')}**, la corrección baja la muestra de ${n0.toLocaleString('es-AR')} a **${nFinal.toLocaleString('es-AR')}** respuestas (apenas el **${pctPoblacion.toFixed(0)}%** del total) para ±${Number(i.margenError)}% al ${conf}% de confianza. Apuntá a **${aEnviar.toLocaleString('es-AR')} envíos** si esperás ~60% de respuesta.`
+        : `Para un margen de ±**${Number(i.margenError)}%** al **${conf}%** de confianza necesitás **${nFinal.toLocaleString('es-AR')}** respuestas válidas. Si bajás el margen a la mitad, la muestra se cuadruplica: ajustá la precisión a lo que realmente necesitás decidir.`,
+      tone: 'neutral',
+      icon: '📊',
+    },
   };
 }

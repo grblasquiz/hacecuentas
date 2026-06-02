@@ -11,6 +11,7 @@ export interface Outputs {
   porcentaje_refuerzo: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Parámetros vigentes 2026 — actualizar mensualmente según resoluciones ANSES/decretos PEN
@@ -90,6 +91,20 @@ export function compute(i: Inputs): Outputs {
       }
     : undefined;
 
+  const insight = corresponde
+    ? {
+        title: `Te corresponde un bono de $${bono_mensual.toLocaleString('es-AR')}`,
+        text: `El refuerzo suma **$${bono_mensual.toLocaleString('es-AR')}** mensuales a tu haber (un **+${porcentaje_refuerzo.toFixed(0)}%**), llevándote a **$${Math.round(total_con_bono).toLocaleString('es-AR')}** por mes. Recordá: es no remunerativo, no suma para el aguinaldo ni la movilidad.`,
+        tone: 'good',
+        icon: '💰',
+      }
+    : {
+        title: 'No te correspondería el bono',
+        text: `Tu haber de **$${haber.toLocaleString('es-AR')}** supera el tope de **$${params.tope.toLocaleString('es-AR')}** para ${params.nombre}, así que bajo los criterios vigentes 2026 quedás fuera del refuerzo. Confirmá el decreto del mes en anses.gob.ar.`,
+        tone: 'warn',
+        icon: '⚠️',
+      };
+
   return {
     bono_mensual,
     total_con_bono,
@@ -97,5 +112,6 @@ export function compute(i: Inputs): Outputs {
     porcentaje_refuerzo,
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

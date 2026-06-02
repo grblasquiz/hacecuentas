@@ -10,6 +10,8 @@ export interface Outputs {
   despersonalizacion: string;
   realizacion: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function riesgoBurnoutLaboral(i: Inputs): Outputs {
@@ -32,11 +34,39 @@ export function riesgoBurnoutLaboral(i: Inputs): Outputs {
   else if (riesgoCount === 1) riesgo = '🟡 Riesgo moderado de burnout';
   else riesgo = '🟢 Riesgo bajo de burnout';
 
+  const tone = riesgoCount >= 2 ? 'warn' as const : riesgoCount === 1 ? 'neutral' as const : 'good' as const;
+  const _insight = {
+    title: 'Qué dice tu resultado',
+    text: riesgoCount >= 2
+      ? `Cumplís **${riesgoCount} de las 3 dimensiones** críticas del burnout (agotamiento ${aeNivel.toLowerCase()}, despersonalización ${dpNivel.toLowerCase()}). Es una señal clara de desgaste: no la dejes pasar y buscá apoyo profesional o un cambio de carga laboral.`
+      : riesgoCount === 1
+      ? `Cumplís **1 de las 3 dimensiones** del burnout. Todavía estás a tiempo de frenar: identificá qué subescala se disparó (agotamiento, despersonalización o baja realización) y actuá sobre esa causa antes de que se sumen las otras.`
+      : `No cumplís ninguno de los **3 criterios** de burnout: tu agotamiento, trato hacia el trabajo y sentido de logro están en rangos sanos. Sostené tus límites y hábitos de descanso para que siga así.`,
+    tone,
+    icon: riesgoCount >= 2 ? '🔥' : riesgoCount === 1 ? '⚠️' : '🟢',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: riesgoCount,
+    markerLabel: `${riesgoCount} de 3 dimensiones`,
+    min: 0,
+    unit: '',
+    segments: [
+      { nombre: 'Bajo', max: 1, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Moderado', max: 2, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Alto', max: Math.max(3, riesgoCount + 0.5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Riesgo de burnout: ${riesgoCount} de 3 dimensiones críticas presentes (0 bajo, 1 moderado, 2-3 alto)`,
+  };
+
   return {
     riesgo,
     agotamiento: `${ae}/18 — ${aeNivel}`,
     despersonalizacion: `${dp}/18 — ${dpNivel}`,
     realizacion: `${rp}/18 — ${rpNivel}`,
-    mensaje: `Agotamiento: ${aeNivel}. Despersonalización: ${dpNivel}. Realización: ${rpNivel}. ${riesgoCount >= 2 ? 'Se recomienda buscar ayuda profesional.' : ''}`
+    mensaje: `Agotamiento: ${aeNivel}. Despersonalización: ${dpNivel}. Realización: ${rpNivel}. ${riesgoCount >= 2 ? 'Se recomienda buscar ayuda profesional.' : ''}`,
+    _insight,
+    _chart,
   };
 }

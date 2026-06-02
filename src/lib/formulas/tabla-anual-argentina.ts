@@ -21,6 +21,8 @@ export interface TablaAnualOutputs {
   puntosEsperadosFinal: number; // al ritmo actual, al terminar
   puntosMaxPosibles: number;
   clasificacionEstimada: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tablaAnualArgentina(inputs: TablaAnualInputs): TablaAnualOutputs {
@@ -62,6 +64,13 @@ export function tablaAnualArgentina(inputs: TablaAnualInputs): TablaAnualOutputs
     clasificacionEstimada = '🔴 Peligro: zona de descenso por tabla anual';
   }
 
+  const tone =
+    puntosEsperadosFinal >= 65 ? 'good' : puntosEsperadosFinal >= 45 ? 'neutral' : 'warn';
+  const cierre =
+    rest > 0
+      ? `Quedan **${rest} fecha${rest === 1 ? '' : 's'}** y como máximo podés llegar a **${puntosMaxPosibles} pts**.`
+      : `El torneo ya cerró con **${puntosTotalesAnual} pts**.`;
+
   return {
     puntosTotalesAnual,
     partidosTotalesAnual,
@@ -69,5 +78,26 @@ export function tablaAnualArgentina(inputs: TablaAnualInputs): TablaAnualOutputs
     puntosEsperadosFinal,
     puntosMaxPosibles,
     clasificacionEstimada,
+    _insight: {
+      title: 'Proyección de la tabla anual',
+      text: `Con **${puntosTotalesAnual} pts** en **${partidosTotalesAnual} partidos** (${promedioPorPartido.toFixed(2)} por fecha), al ritmo actual terminás cerca de **${puntosEsperadosFinal} pts**: ${clasificacionEstimada}. ${cierre}`,
+      tone,
+      icon: '⚽',
+    },
+    _chart: {
+      type: 'scale',
+      marker: puntosEsperadosFinal,
+      markerLabel: 'Pts esperados',
+      min: 0,
+      segments: [
+        { nombre: 'Descenso', max: 35, color: '#dc2626', colorDark: '#ef4444' },
+        { nombre: 'Zona baja', max: 45, color: '#d97706', colorDark: '#f59e0b' },
+        { nombre: 'Mitad de tabla', max: 55, color: '#ca8a04', colorDark: '#eab308' },
+        { nombre: 'Sudamericana', max: 65, color: '#65a30d', colorDark: '#84cc16' },
+        { nombre: 'Libertadores', max: 75, color: '#16a34a', colorDark: '#22c55e' },
+        { nombre: 'Campeonato', max: Math.max(85, puntosEsperadosFinal + 3), color: '#0d9488', colorDark: '#14b8a6' },
+      ],
+      ariaLabel: `Proyección de ${puntosEsperadosFinal} puntos en la tabla anual: ${clasificacionEstimada.replace(/[^\wáéíóúñ\s/]/gi, '').trim()}.`,
+    },
   };
 }

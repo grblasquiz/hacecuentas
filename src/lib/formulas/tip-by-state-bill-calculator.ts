@@ -12,6 +12,8 @@ export interface Outputs {
   tip_rate_applied: number;
   auto_grat_notice: string;
   state_norm_info: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // State tipping norms (2026) based on Toast, Square, and Bankrate survey data
@@ -125,12 +127,37 @@ export function compute(i: Inputs): Outputs {
   const serviceLabel = serviceLabels[service] ?? "average";
   const stateNormInfo = `${stateName} norm: ${(stateNorm * 100).toFixed(0)}% | Service (${serviceLabel}): ${serviceAdj >= 0 ? "+" : ""}${(serviceAdj * 100).toFixed(0)}% | Final rate: ${(finalRate * 100).toFixed(0)}%`;
 
+  const tipR = Math.round(tipAmount * 100) / 100;
+  const totalR = Math.round(totalBill * 100) / 100;
+  const perPersonR = Math.round(perPerson * 100) / 100;
+  const ratePct = Math.round(finalRate * 100);
+  const raisedByAutoGrat = isAutoGrat && adjustedRate < AUTO_GRAT_RATE;
+
   return {
-    tip_amount: Math.round(tipAmount * 100) / 100,
-    total_bill: Math.round(totalBill * 100) / 100,
-    per_person: Math.round(perPerson * 100) / 100,
+    tip_amount: tipR,
+    total_bill: totalR,
+    per_person: perPersonR,
     tip_rate_applied: Math.round(finalRate * 10000) / 10000, // e.g. 0.2000 for 20%
     auto_grat_notice: autoGratNotice,
-    state_norm_info: stateNormInfo
+    state_norm_info: stateNormInfo,
+    _insight: {
+      title: 'Your tip breakdown',
+      text: raisedByAutoGrat
+        ? `A **${ratePct}% tip ($${tipR.toLocaleString('en-US')})** brings the total to **$${totalR.toLocaleString('en-US')}** — the 18% auto-gratuity floor for parties of ${partySize} kicked in, so confirm the restaurant hasn't already added it before tipping again.`
+        : `A **${ratePct}% tip** on this bill is **$${tipR.toLocaleString('en-US')}**, for a **$${totalR.toLocaleString('en-US')}** total${partySize > 1 ? ` — about **$${perPersonR.toLocaleString('en-US')}** per person across ${partySize} guests` : ''}.`,
+      tone: raisedByAutoGrat ? 'warn' : 'good',
+      icon: '💵',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Bill', value: Math.round(billAmount * 100) / 100 },
+        { label: 'Tip', value: tipR },
+      ],
+      prefix: '$',
+      centerValue: '$' + totalR.toLocaleString('en-US'),
+      centerLabel: 'Total',
+      ariaLabel: `Total of $${totalR} split into bill of $${Math.round(billAmount * 100) / 100} and tip of $${tipR}`,
+    },
   };
 }

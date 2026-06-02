@@ -13,6 +13,8 @@ export interface Outputs {
   descripcion: string;
   efectosTierra: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const ESCALA: { max: number; num: number; nombre: string; desc: string; tierra: string }[] = [
@@ -50,6 +52,30 @@ export function velocidadVientoBeaufort(i: Inputs): Outputs {
 
   const band = ESCALA.find(b => kmh < b.max) || ESCALA[ESCALA.length - 1];
 
+  // Tono dinámico según peligrosidad de la fuerza Beaufort.
+  const tono: 'good' | 'warn' | 'neutral' = band.num >= 8 ? 'warn' : band.num >= 6 ? 'neutral' : 'good';
+  const _insight = {
+    title: `Fuerza ${band.num}: ${band.nombre}`,
+    text: `**${kmh.toFixed(0)} km/h** equivalen a **Beaufort ${band.num} (${band.nombre})**. ${band.tierra} ${band.num >= 8 ? 'Hay riesgo real: evitá zonas arboladas y asegurá objetos sueltos.' : band.num >= 6 ? 'Ya molesta al aire libre y complica caminar o navegar.' : 'Condiciones tranquilas, sin riesgo.'}`,
+    tone: tono,
+    icon: band.num >= 8 ? '🌪️' : '💨',
+  };
+
+  // Gauge sobre la escala Beaufort (0-12) agrupada en zonas de peligro.
+  const _chart = {
+    type: 'scale' as const,
+    marker: band.num,
+    markerLabel: `Beaufort ${band.num}`,
+    min: 0,
+    segments: [
+      { nombre: 'Brisas', max: 5, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Viento fresco', max: 7, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Temporal', max: 11, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Huracán', max: 12.5, color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Escala Beaufort: viento en fuerza ${band.num} de 12 (${band.nombre})`,
+  };
+
   return {
     kmh: `${kmh.toFixed(1)} km/h`,
     ms: `${ms.toFixed(1)} m/s`,
@@ -60,5 +86,7 @@ export function velocidadVientoBeaufort(i: Inputs): Outputs {
     descripcion: band.desc,
     efectosTierra: band.tierra,
     mensaje: `${kmh.toFixed(1)} km/h = Beaufort ${band.num} (${band.nombre}).`,
+    _insight,
+    _chart,
   };
 }

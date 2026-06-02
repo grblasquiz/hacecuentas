@@ -12,6 +12,7 @@ export interface Outputs {
   primaVacacional: string;
   detalle: string;
   fundamentoLegal: string;
+  _insight?: any;
 }
 
 /**
@@ -84,10 +85,28 @@ export function vacacionesDiasAntiguedadMexico(inputs: Inputs): Outputs {
   const fundamentoLegal =
     "Art. 76 LFT (días de vacaciones por antigüedad) y Art. 80 LFT (prima vacacional mínima del 25%). Reforma publicada en el DOF el 27/12/2022, vigente desde el 1 de enero de 2023.";
 
+  let insight;
+  if (diasVacaciones > 0) {
+    insight = {
+      title: 'Tus días de vacaciones por ley',
+      text: `Con **${anios} año(s)** de antigüedad te corresponden **${diasVacaciones} días** de vacaciones (Art. 76 LFT reformado). Además, la prima vacacional mínima del 25% equivale a **${equivalenteDias} días** de salario extra (Art. 80 LFT) — es un pago obligatorio, no opcional.`,
+      tone: 'good' as const,
+      icon: '🏖️',
+    };
+  } else {
+    insight = {
+      title: 'Todavía no se activa el derecho',
+      text: `Con menos de **1 año** cumplido aún no se genera el derecho a vacaciones (se activa al primer aniversario, Art. 76 LFT). Si la relación termina antes, te corresponde la **parte proporcional** en el finiquito.`,
+      tone: 'neutral' as const,
+      icon: '⏳',
+    };
+  }
+
   return {
     diasVacaciones,
     primaVacacional,
     detalle,
     fundamentoLegal,
+    _insight: insight,
   };
 }

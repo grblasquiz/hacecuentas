@@ -21,6 +21,7 @@ export interface Outputs {
   plazo_break_even_dias: number;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Fee anual por producto (fraccion decimal)
@@ -187,6 +188,31 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
+  // Insight dinámico según conveniencia RWA vs CEX
+  let _insight: any;
+  if (yield_neto_rwa <= 0) {
+    _insight = {
+      title: 'Los costos se comen el rendimiento',
+      text: `Con USD ${fmt(capital)} en ${nombre} a ${plazo_meses} mes(es), entre fee, gas y retenciones el yield neto queda en **-USD ${fmt(Math.abs(yield_neto_rwa))}**. Estirá el plazo o cambiá a una red L2 con gas más barato.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (diferencial_usd > 0) {
+    _insight = {
+      title: 'El RWA le gana al CEX',
+      text: `${nombre} deja **USD ${fmt(yield_neto_rwa)}** netos (TIR **${tir_neta_rwa.toFixed(2)}% anual**), **USD ${fmt(diferencial_usd)}** más que los USD ${fmt(yield_neto_cex)} del CEX en ${plazo_meses} mes(es).`,
+      tone: 'good',
+      icon: '🏛️',
+    };
+  } else {
+    _insight = {
+      title: 'El CEX conviene más acá',
+      text: `${nombre} rinde **USD ${fmt(yield_neto_rwa)}** netos, pero el gas on-chain lo deja **USD ${fmt(Math.abs(diferencial_usd))}** por debajo del CEX en ${plazo_meses} mes(es). Con una red L2 o un plazo más largo se da vuelta.`,
+      tone: 'warn',
+      icon: '⚖️',
+    };
+  }
+
   return {
     yield_bruto_rwa: Math.round(yield_bruto_rwa * 100) / 100,
     costo_plataforma_rwa: Math.round(costo_plataforma_rwa * 100) / 100,
@@ -199,5 +225,6 @@ export function compute(i: Inputs): Outputs {
     plazo_break_even_dias,
     resumen,
     _chart: chart,
+    _insight,
   };
 }

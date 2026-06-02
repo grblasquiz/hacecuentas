@@ -13,6 +13,7 @@ export interface Outputs {
   ahorro_anual: number;
   recomendacion: string;
   punto_equilibrio_m3: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -100,12 +101,25 @@ export function compute(i: Inputs): Outputs {
     recomendacion += ` A tu consumo bajo de ${i.consumo_m3} m³/mes, cilindro es viable (punto equilibrio: ${puntoEquilibrioRedondeado} m³).`;
   }
   
+  // Insight narrativo dinámico según la opción más barata
+  const clp = (n: number) => n.toLocaleString('es-CL');
+  const redMasBarata = costoMensualRed < costoMensualCilindro;
+  const opcionGanadora = redMasBarata ? 'la red domiciliaria' : `el cilindro de ${i.tamaño_cilindro} kg`;
+  const ahorroMensual = Math.abs(diferenciaMensual);
+  const _insight: any = {
+    title: redMasBarata ? 'Te conviene la red' : 'Te conviene el cilindro',
+    text: `A tu consumo de **${i.consumo_m3} m³/mes**, ${opcionGanadora} sale más barata: ahorrás **$${clp(ahorroMensual)}/mes** ($${clp(ahorroAnual)}/año). El punto de equilibrio está en **${puntoEquilibrioRedondeado} m³/mes**.`,
+    tone: 'good',
+    icon: '🔥',
+  };
+
   return {
     costo_mensual_red: costoMensualRed,
     costo_mensual_cilindro: costoMensualCilindro,
     diferencia_mensual: diferenciaMensual,
     ahorro_anual: ahorroAnual,
     recomendacion: recomendacion,
-    punto_equilibrio_m3: puntoEquilibrioRedondeado
+    punto_equilibrio_m3: puntoEquilibrioRedondeado,
+    _insight
   };
 }

@@ -9,6 +9,7 @@ export interface Outputs {
   costoAnual: number;
   porcentajeAnual: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function seguroAutoEstimacionPrecio(i: Inputs): Outputs {
@@ -32,10 +33,18 @@ export function seguroAutoEstimacionPrecio(i: Inputs): Outputs {
   const costoAnual = valor * tasaFinal / 100;
   const cuotaMensual = costoAnual / 12;
 
+  const _insight = {
+    title: 'Tu cuota estimada',
+    text: `Un seguro **${nombresCobertura[tipo]}** en zona **${nombresZona[zona]}** sobre un auto de **$${valor.toLocaleString('es-AR')}** sale unos **$${Math.round(cuotaMensual).toLocaleString('es-AR')}/mes** ($${Math.round(costoAnual).toLocaleString('es-AR')}/año), o sea el **${tasaFinal.toFixed(1)}%** del valor por año. Es orientativo: cotizá con varias compañías porque la prima real varía según tu historial.`,
+    tone: 'neutral',
+    icon: '🚗',
+  };
+
   return {
     cuotaMensual: Math.round(cuotaMensual),
     costoAnual: Math.round(costoAnual),
     porcentajeAnual: Number(tasaFinal.toFixed(1)),
     detalle: `Seguro ${nombresCobertura[tipo]} en zona ${nombresZona[zona]}: ~$${Math.round(cuotaMensual).toLocaleString('es-AR')}/mes ($${Math.round(costoAnual).toLocaleString('es-AR')}/año). Tasa estimada: ${tasaFinal.toFixed(1)}% anual.`,
+    _insight,
   };
 }

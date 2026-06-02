@@ -1,6 +1,6 @@
 /** Temperatura aceite y punto de humo */
 export interface Inputs { aceite: string; alimento?: string; }
-export interface Outputs { puntoHumo: number; tempIdealFritura: string; aptoParaUso: string; consejo: string; }
+export interface Outputs { puntoHumo: number; tempIdealFritura: string; aptoParaUso: string; consejo: string; _insight?: any; }
 
 const PUNTO_HUMO: Record<string, number> = {
   girasol: 227, girasol_ao: 232, oliva_ev: 190, oliva_comun: 240,
@@ -26,10 +26,19 @@ export function temperaturaAceiteFritura(i: Inputs): Outputs {
     aceite === 'oliva_ev' ? 'El extra virgen es mejor para ensaladas y salteados rápidos. Para fritura profunda, usá oliva común.' :
     'Aceite apto. Controlá la temperatura con termómetro para mejores resultados.';
 
+  const margen = ph - tempFrit;
   return {
     puntoHumo: ph,
     tempIdealFritura: `${tempFrit}°C`,
     aptoParaUso: aptoTxt,
     consejo,
+    _insight: {
+      title: apto ? 'Aceite apto' : 'Aceite riesgoso',
+      text: apto
+        ? `El aceite humea a **${ph}°C** y vas a freír a **${tempFrit}°C**: tenés **${margen}°C** de margen, suficiente para freír sin pasar el punto de humo (donde el aceite se degrada y genera acroleína).`
+        : `Cuidado: el punto de humo de este aceite es **${ph}°C** y necesitás freír a **${tempFrit}°C**. El margen es de solo **${margen}°C**, así que el aceite puede humear y volverse tóxico. Elegí uno con punto de humo más alto.`,
+      tone: apto ? 'good' : 'warn',
+      icon: apto ? '🍳' : '🔥',
+    },
   };
 }

@@ -1,6 +1,6 @@
 /** Vino por invitado */
 export interface Inputs { personas: number; horasEvento: number; tipoEvento: string; porcentajeTomadores: number; }
-export interface Outputs { botellasTotal: number; botellasTinto: number; botellasBlanco: number; botellasEspumante: number; copasPorPersona: number; }
+export interface Outputs { botellasTotal: number; botellasTinto: number; botellasBlanco: number; botellasEspumante: number; copasPorPersona: number; _insight?: any; _chart?: any; }
 
 export function vinoPorInvitadoHorasEvento(i: Inputs): Outputs {
   const p = Number(i.personas);
@@ -29,11 +29,34 @@ export function vinoPorInvitadoHorasEvento(i: Inputs): Outputs {
   const blanco = Math.ceil(botellas * d.b);
   const espumante = Math.ceil(botellas * d.e);
 
+  const copasPP = Number((h * ch).toFixed(1));
+  const sumaTipos = tinto + blanco + espumante;
+  const _insight = {
+    title: 'Botellas para tu evento',
+    text: `Para **${p} personas** (${Math.round(pct * 100)}% toma vino) en un evento de **${h} h** tipo ${tipo}, necesitás unas **${botellas} botellas**: **${tinto} tinto**, **${blanco} blanco** y **${espumante} espumante**. Ya incluye un 15% de margen de seguridad.`,
+    tone: 'neutral',
+    icon: '🍷',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Tinto', value: tinto },
+      { label: 'Blanco', value: blanco },
+      { label: 'Espumante', value: espumante },
+    ],
+    centerValue: `${sumaTipos}`,
+    centerLabel: 'botellas',
+    ariaLabel: `Reparto del vino: ${tinto} tinto, ${blanco} blanco y ${espumante} espumante`,
+  };
+
   return {
     botellasTotal: botellas,
     botellasTinto: tinto,
     botellasBlanco: blanco,
     botellasEspumante: espumante,
-    copasPorPersona: Number((h * ch).toFixed(1)),
+    copasPorPersona: copasPP,
+    _insight,
+    _chart,
   };
 }

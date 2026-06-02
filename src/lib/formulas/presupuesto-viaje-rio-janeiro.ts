@@ -11,6 +11,8 @@ export interface PresupuestoViajeRioJaneiroOutputs {
   presupuestoTotalUsd: number;
   desglose: string;
   perDiemPorPersona: number;
+  _insight?: any;
+  _chart?: any;
 }
 const HOTEL: Record<string, number> = { bajo: 50, medio: 120, alto: 280 };
 const FOOD = 40;
@@ -34,9 +36,36 @@ export function presupuestoViajeRioJaneiro(i: PresupuestoViajeRioJaneiroInputs):
   const total = hotelTotal + foodTotal + transTotal + actsTotal + vueloTotal;
   const perDiem = Math.round((total - vueloTotal) / (dias * personas));
   const desglose = `Hotel USD ${hotelTotal.toFixed(0)} | Comida USD ${foodTotal.toFixed(0)} | Transporte USD ${transTotal.toFixed(0)} | Actividades USD ${actsTotal.toFixed(0)}${vuelo ? ` | Vuelos USD ${vueloTotal.toFixed(0)}` : ""}`;
+  const vueloShare = total > 0 ? vueloTotal / total : 0;
+  const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
+  const _insight = {
+    title: 'Tu presupuesto para Río de Janeiro',
+    text: vuelo
+      ? `El viaje completo da **USD ${fmt(total)}** para ${personas} ${personas === 1 ? 'persona' : 'personas'} por ${dias} ${dias === 1 ? 'día' : 'días'}. El vuelo aporta **USD ${fmt(vueloTotal)}** (${Math.round(vueloShare * 100)}%); en destino gastás **USD ${perDiem}** por persona y día.`
+      : `Sin vuelos, gastás **USD ${fmt(total)}** en destino: **USD ${perDiem}** por persona y día. Río es accesible para latinoamericanos; la playa es gratis y comer fuera de las zonas turísticas baja mucho el gasto.`,
+    tone: vueloShare >= 0.4 ? 'warn' : 'neutral',
+    icon: '🇧🇷'
+  };
+  const slices = [
+    { label: 'Hotel', value: Math.round(hotelTotal) },
+    { label: 'Comida', value: Math.round(foodTotal) },
+    { label: 'Transporte', value: Math.round(transTotal) },
+    { label: 'Actividades', value: Math.round(actsTotal) }
+  ];
+  if (vuelo) slices.push({ label: 'Vuelos', value: Math.round(vueloTotal) });
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: `USD ${fmt(total)}`,
+    centerLabel: 'Total',
+    ariaLabel: `Desglose del presupuesto de viaje a Río de Janeiro: total USD ${fmt(total)}`
+  };
   return {
     presupuestoTotalUsd: Number(total.toFixed(0)),
     desglose,
-    perDiemPorPersona: perDiem
+    perDiemPorPersona: perDiem,
+    _insight,
+    _chart
   };
 }

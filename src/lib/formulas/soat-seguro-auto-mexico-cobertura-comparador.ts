@@ -20,6 +20,8 @@ export interface Outputs {
   factor_riesgo: string;
   recargos_aplicados: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -229,6 +231,39 @@ export function compute(i: Inputs): Outputs {
       'Perfil estándar: COBERTURA AMPLIA ofrece protección integral. Para máxima cobertura, TODO RIESGO es opción premium.';
   }
 
+  const mxn = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const coberturaTxt: Record<string, string> = {
+    responsabilidad: 'Responsabilidad civil',
+    limitada: 'Cobertura limitada',
+    amplia: 'Cobertura amplia',
+    todo_riesgo: 'Todo riesgo',
+  };
+  const covTxt = coberturaTxt[i.tipo_cobertura] || 'cobertura';
+  const toneRiesgo = factorRiesgo === 'Bajo' ? 'good' : (factorRiesgo === 'Medio' ? 'neutral' : 'warn');
+
+  const _insight = {
+    title: `Perfil de riesgo: ${factorRiesgo}`,
+    text: `Tu perfil clasifica como riesgo **${factorRiesgo}** (multiplicador **×${multiplicadorTotal.toFixed(2)}** sobre la prima base). Para **${covTxt}** estimamos **${mxn(primaSeleccionada)}/año**, con un rango de mercado de ${rangoTexto.split('(')[0].trim()} entre aseguradoras.`,
+    tone: toneRiesgo,
+    icon: '🚙',
+  };
+
+  // Gauge del multiplicador de riesgo (mismos umbrales que factorRiesgo)
+  const ultimoMax = Math.max(2.0, Math.ceil(multiplicadorTotal * 10) / 10 + 0.1);
+  const _chart = {
+    type: 'scale',
+    marker: Number(multiplicadorTotal.toFixed(2)),
+    markerLabel: `×${multiplicadorTotal.toFixed(2)} (${factorRiesgo})`,
+    min: 0.8,
+    segments: [
+      { nombre: 'Bajo', max: 1.0, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Medio', max: 1.3, color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Medio-Alto', max: 2.0, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Alto', max: ultimoMax, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Multiplicador de riesgo ×${multiplicadorTotal.toFixed(2)}, clasificado como ${factorRiesgo}`,
+  };
+
   return {
     prima_responsabilidad_minima: primaResponsabilidad,
     prima_cobertura_limitada: primaLimitada,
@@ -241,5 +276,7 @@ export function compute(i: Inputs): Outputs {
         ? recargosTexto.join('; ')
         : 'Ningún recargo aplicado (perfil sin siniestros, licencia vigente)',
     recomendacion: recomendacion,
+    _insight,
+    _chart,
   };
 }

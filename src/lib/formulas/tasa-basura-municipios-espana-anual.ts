@@ -16,6 +16,8 @@ export interface Outputs {
   cuota_trimestral: number;
   fecha_pago_habitual: string;
   nota_municipal: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tarifas 2026 por municipio: [tarifa_fija_euros, tarifa_variable_euros_por_m2]
@@ -146,6 +148,39 @@ export function compute(i: Inputs): Outputs {
   const fecha_pago_habitual = FECHAS_PAGO[municipio] ?? "Consulta el calendario fiscal de tu ayuntamiento";
   const nota_municipal      = NOTAS_MUNICIPIO[municipio] ?? "Consulta la ordenanza fiscal de tu ayuntamiento para conocer el importe exacto.";
 
+  const fmtEur = (n: number) => `${n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  const pct_ahorro = cuota_base > 0 ? (total_descuentos / cuota_base) * 100 : 0;
+
+  const _insight = total_descuentos > 0
+    ? {
+        title: 'Tu tasa de basura tras bonificaciones',
+        text: `Pagarías **${fmtEur(cuota_final)}** al año (unos ${fmtEur(cuota_trimestral)} por trimestre). Las bonificaciones aplicadas te ahorran **${fmtEur(total_descuentos)}** sobre la cuota base de ${fmtEur(cuota_base)}, un **${pct_ahorro.toFixed(0)}% menos**.`,
+        tone: 'good',
+        icon: '🗑️',
+      }
+    : {
+        title: 'Tu tasa de basura estimada',
+        text: `La tasa anual estimada es de **${fmtEur(cuota_final)}**, unos ${fmtEur(cuota_trimestral)} por trimestre. ${tipo_uso === 'vivienda' ? 'No aplicaste bonificaciones; revisá si tenés derecho a familia numerosa, compostaje o renta baja.' : 'Las bonificaciones sociales no aplican a este tipo de uso.'}`,
+        tone: 'neutral',
+        icon: '🗑️',
+      };
+
+  const _chart = total_descuentos > 0
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Cuota a pagar', value: cuota_final },
+          ...(descuento_familia_numerosa > 0 ? [{ label: 'Ahorro familia numerosa', value: descuento_familia_numerosa }] : []),
+          ...(descuento_compostaje > 0 ? [{ label: 'Ahorro compostaje', value: descuento_compostaje }] : []),
+          ...(descuento_renta_baja > 0 ? [{ label: 'Ahorro renta baja', value: descuento_renta_baja }] : []),
+        ],
+        prefix: '€',
+        centerValue: fmtEur(cuota_base),
+        centerLabel: 'Cuota base',
+        ariaLabel: `Cuota base de ${fmtEur(cuota_base)} repartida entre la cuota final a pagar y los descuentos aplicados`,
+      }
+    : undefined;
+
   return {
     cuota_base,
     descuento_familia_numerosa,
@@ -155,5 +190,7 @@ export function compute(i: Inputs): Outputs {
     cuota_trimestral,
     fecha_pago_habitual,
     nota_municipal,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

@@ -22,6 +22,8 @@ export interface Outputs {
   gananciaPorHoraArs: string;
   gananciaNeta: number;
   gananciaPorHora: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 function formatArs(n: number): string {
@@ -61,7 +63,16 @@ export function uberConductorArgentina(i: Inputs): Outputs {
   const gananciaNeta = ingresoBruto - comisionUber - iva - iibb - costoNafta - costoMant;
   const gananciaHora = horas > 0 ? gananciaNeta / horas : 0;
 
-  return {
+  const margenPct = ingresoBruto > 0 ? (gananciaNeta / ingresoBruto) * 100 : 0;
+  const tone = gananciaNeta <= 0 ? 'warn' : margenPct < 40 ? 'warn' : 'good';
+  const insText = gananciaNeta <= 0
+    ? `Con estos números **perdés plata**: de **${formatArs(ingresoBruto)}** facturados, comisión, impuestos y costos del auto se llevan más de lo que entra (**${formatArs(gananciaNeta)}** neto).`
+    : horas > 0
+    ? `De **${formatArs(ingresoBruto)}** facturados te quedan **${formatArs(gananciaNeta)}** netos (**${margenPct.toFixed(0)}%**), o sea **${formatArs(gananciaHora)}/hora** tras comisión, impuestos, nafta y mantenimiento.`
+    : `De **${formatArs(ingresoBruto)}** facturados te quedan **${formatArs(gananciaNeta)}** netos (**${margenPct.toFixed(0)}%**) después de comisión, impuestos, nafta y mantenimiento.`;
+  const _insight = { title: 'Tu ganancia real', text: insText, tone, icon: '🚗' };
+
+  const out: Outputs = {
     ingresoBrutoArs: formatArs(ingresoBruto),
     comisionUberArs: formatArs(comisionUber),
     ivaArs: formatArs(iva),
@@ -72,5 +83,28 @@ export function uberConductorArgentina(i: Inputs): Outputs {
     gananciaPorHoraArs: formatArs(gananciaHora),
     gananciaNeta: Math.round(gananciaNeta),
     gananciaPorHora: Math.round(gananciaHora),
+    _insight,
   };
+
+  // Donut: bruto = neto + comisión + IVA + IIBB + nafta + mantenimiento (sólo si neto >= 0)
+  if (gananciaNeta >= 0 && ingresoBruto > 0) {
+    const slices = [
+      { label: 'Ganancia neta', value: Math.round(gananciaNeta) },
+      { label: 'Comisión Uber', value: Math.round(comisionUber) },
+      { label: 'IVA', value: Math.round(iva) },
+      { label: 'IIBB', value: Math.round(iibb) },
+      { label: 'Nafta', value: Math.round(costoNafta) },
+      { label: 'Mantenimiento', value: Math.round(costoMant) },
+    ].filter((s) => s.value > 0);
+    out._chart = {
+      type: 'doughnut',
+      slices,
+      prefix: 'ARS ',
+      centerValue: formatArs(ingresoBruto),
+      centerLabel: 'facturado',
+      ariaLabel: `Cómo se reparte lo facturado: ganancia neta y costos (comisión, impuestos, nafta y mantenimiento)`,
+    };
+  }
+
+  return out;
 }

@@ -43,6 +43,7 @@ export interface SueldoOutputs {
   obraSocial: number;
   pami: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
@@ -56,6 +57,11 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
       ganancias: 'Ganancias',
       centerLabel: 'Bruto',
       ariaLabel: 'Composición del sueldo bruto: neto en mano, jubilación, obra social, PAMI e impuesto a las Ganancias',
+      insTitle: 'Cuánto te queda en mano y cuánto se descuenta',
+      insGan: (neto: string, pct: string, ap: string, gan: string) =>
+        `De tu bruto te queda **${neto}** en mano, un **${pct}%** se va en descuentos: **${ap}** de aportes (jubilación + obra social + PAMI) y **${gan}** de Ganancias.`,
+      insNoGan: (neto: string, pct: string, ap: string) =>
+        `De tu bruto te queda **${neto}** en mano: sólo se descuenta el **${pct}%** de aportes (**${ap}**) y no pagás Ganancias con tu situación familiar.`,
     },
     en: {
       errorBruto: 'Enter a valid gross salary',
@@ -65,6 +71,11 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
       ganancias: 'Income tax',
       centerLabel: 'Gross',
       ariaLabel: 'Gross salary breakdown: take-home pay, retirement, health insurance, PAMI and income tax',
+      insTitle: 'How much you keep and how much is deducted',
+      insGan: (neto: string, pct: string, ap: string, gan: string) =>
+        `You take home **${neto}** from your gross pay; **${pct}%** goes to deductions: **${ap}** in contributions (retirement + health insurance + PAMI) and **${gan}** in income tax.`,
+      insNoGan: (neto: string, pct: string, ap: string) =>
+        `You take home **${neto}** from your gross pay: only **${pct}%** in contributions (**${ap}**) is deducted and you pay no income tax with your family situation.`,
     },
   } as const)[__lang];
 
@@ -127,6 +138,18 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
     ariaLabel: T.ariaLabel,
   };
 
+  const f = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const pctTxt = porcentajeDescuento.toFixed(1);
+  const insight = {
+    title: T.insTitle,
+    text:
+      ganancias > 0
+        ? T.insGan(f(neto), pctTxt, f(aportes), f(ganancias))
+        : T.insNoGan(f(neto), pctTxt, f(aportes)),
+    tone: porcentajeDescuento >= 25 ? 'warn' : 'neutral',
+    icon: '💸',
+  };
+
   return {
     neto: Math.round(neto),
     aportes: Math.round(aportes),
@@ -137,5 +160,6 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
     obraSocial: Math.round(obraSocial),
     pami: Math.round(pami),
     _chart: chart,
+    _insight: insight,
   };
 }

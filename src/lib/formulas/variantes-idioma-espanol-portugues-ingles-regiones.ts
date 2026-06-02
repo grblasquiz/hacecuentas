@@ -30,5 +30,19 @@ export function variantesIdiomaEspanolPortuguesInglesRegiones(i: Inputs): Output
     ? `${id}: ${va}. ${dif}.`
     : `${id}: ${va}. ${dif}.`;
 
-  return { variantes: va, mayorDif: dif, resumen };
+  const insight = __lang === 'en'
+    ? {
+        title: 'Main regional variants',
+        text: `**${id}** breaks down into these variants: **${va}**. The biggest difference to watch is: **${dif}**.`,
+        tone: 'neutral',
+        icon: '🌎'
+      }
+    : {
+        title: 'Variantes regionales principales',
+        text: `El **${id}** se divide en estas variantes: **${va}**. La mayor diferencia a tener en cuenta es: **${dif}**.`,
+        tone: 'neutral',
+        icon: '🌎'
+      };
+
+  return { variantes: va, mayorDif: dif, resumen, _insight: insight };
 }

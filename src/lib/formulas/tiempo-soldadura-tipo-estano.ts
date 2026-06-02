@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   temperatura: string; tiempo: string; punta: string; consejo: string;
+  _insight?: any;
 }
 
 export function tiempoSoldaduraTipoEstano(inputs: Inputs): Outputs {
@@ -38,10 +39,21 @@ export function tiempoSoldaduraTipoEstano(inputs: Inputs): Outputs {
   else if (pot >= 60 && (tc === 3 || tc === 4)) consejo = 'Potencia alta para SMD: reducí temperatura para no dañar componente';
   else if (es === 3) consejo = 'Lead-free requiere flux extra y tiempo levemente mayor. Ventilación importante.';
   else consejo = 'Setup estándar: tinar punta antes, limpiar con brass sponge.';
+  const tiempoStr = tiempoMap[tc] || '2-3 seg';
+  const debil = pot < 40 && (tc === 6 || tc === 2);
+  const _insight = {
+    title: 'Tu setup de soldadura',
+    text: debil
+      ? `Trabajá a **${temp}°C** unos **${tiempoStr}** por punto, pero con **${pot}W** el soldador queda corto para esta pieza: te cuesta mantener temperatura y arriesgás soldaduras frías.`
+      : `Apuntá a **${temp}°C** y soldá durante **${tiempoStr}** por punto con punta **${puntaMap[tc] || 'cónica 1 mm'}**. Tu soldador de **${pot}W** es adecuado: si pasás ese tiempo, recalentás el componente.`,
+    tone: debil ? 'warn' : 'good',
+    icon: '🔧',
+  };
   return {
     temperatura: `${temp}°C`,
-    tiempo: tiempoMap[tc] || '2-3 seg',
+    tiempo: tiempoStr,
     punta: puntaMap[tc] || 'Cónica 1 mm',
     consejo,
+    _insight,
   };
 }

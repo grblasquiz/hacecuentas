@@ -12,6 +12,7 @@ export interface Outputs {
   payback: number;
   totalRecibido: number;
   veredicto: string;
+  _insight?: any;
 }
 
 export function tirVan(i: Inputs): Outputs {
@@ -23,6 +24,7 @@ export function tirVan(i: Inputs): Outputs {
       errAnos: 'Ingresá los años del proyecto',
       errTasa: 'La tasa de descuento no puede ser negativa',
       veredictoNeutro: 'Neutro: VAN cero. La TIR iguala la tasa de descuento.',
+      insTitle: 'Tu inversión en números',
     },
     en: {
       errInv: 'Enter the initial investment',
@@ -30,6 +32,7 @@ export function tirVan(i: Inputs): Outputs {
       errAnos: 'Enter the number of project years',
       errTasa: 'The discount rate cannot be negative',
       veredictoNeutro: 'Neutral: NPV is zero. The IRR equals the discount rate.',
+      insTitle: 'Your investment by the numbers',
     },
   } as const)[__lang];
 
@@ -70,11 +73,33 @@ export function tirVan(i: Inputs): Outputs {
     ? `Project not recommended: negative NPV — the investment yields less than the required ${(tasa * 100).toFixed(1)}% discount rate.`
     : `Proyecto no recomendable: VAN negativo — la inversión rinde menos que el ${(tasa * 100).toFixed(1)}% de descuento exigido.`;
 
+  const vanR = Math.round(van);
+  const tirPct = Number((tir * 100).toFixed(2));
+  const paybackR = Number(payback.toFixed(2));
+  const tasaPct = (tasa * 100).toFixed(1);
+  const paybackFin = isFinite(paybackR);
+  const fmtVan = Math.abs(vanR).toLocaleString(__lang === 'en' ? 'en-US' : 'es-AR');
+
+  const insTone = vanR > 0 ? 'good' : (vanR < 0 ? 'warn' : 'neutral');
+  const insText = __lang === 'en'
+    ? (vanR >= 0
+        ? `The project adds **$${fmtVan}** in present value over your ${tasaPct}% required return, with an IRR of **${tirPct}%**${paybackFin ? ` and a simple payback of **${paybackR} years**` : ''}. It clears your opportunity cost.`
+        : `The project destroys **$${fmtVan}** in present value at your ${tasaPct}% required return: its IRR of **${tirPct}%** falls short of the rate you demand${paybackFin ? `, even though it nominally pays back in **${paybackR} years**` : ''}.`)
+    : (vanR >= 0
+        ? `El proyecto suma **$${fmtVan}** de valor presente por encima de tu tasa exigida del ${tasaPct}%, con una TIR del **${tirPct}%**${paybackFin ? ` y un payback simple de **${paybackR} años**` : ''}. Supera tu costo de oportunidad.`
+        : `El proyecto destruye **$${fmtVan}** de valor presente a tu tasa exigida del ${tasaPct}%: su TIR del **${tirPct}%** queda por debajo de lo que pedís${paybackFin ? `, aunque nominalmente se recupere en **${paybackR} años**` : ''}.`);
+
   return {
-    van: Math.round(van),
-    tir: Number((tir * 100).toFixed(2)),
-    payback: Number(payback.toFixed(2)),
+    van: vanR,
+    tir: tirPct,
+    payback: paybackR,
     totalRecibido: Math.round(total),
     veredicto,
+    _insight: {
+      title: T.insTitle,
+      text: insText,
+      tone: insTone,
+      icon: '📊',
+    },
   };
 }

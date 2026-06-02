@@ -9,6 +9,7 @@ export interface VisaRequisitosOutputs {
   costoEstimado: string;
   tiempoTramite: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface InfoVisa {
@@ -61,10 +62,37 @@ export function visaRequisitosPasaporteArgentino(inputs: VisaRequisitosInputs): 
     necesitaVisa += ' (Para estudio prolongado se requiere visa de estudiante aparte)';
   }
 
+  const NOMBRES: Record<string, string> = {
+    eeuu: 'Estados Unidos', canada: 'Canadá', europa: 'Europa (Schengen)', reinoUnido: 'Reino Unido',
+    brasil: 'Brasil', australia: 'Australia', japon: 'Japón', india: 'India', china: 'China',
+    rusia: 'Rusia', turquia: 'Turquía', tailandia: 'Tailandia',
+  };
+  const nombreDest = NOMBRES[destino] || destino;
+
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  if (excedeDias) {
+    insightText = `Tu estadía de **${dias} días** supera el máximo de **${info.maxDias} días** como turista en ${nombreDest}. Vas a necesitar una visa o permiso especial — no alcanza con el ingreso turístico común.`;
+    insightTone = "warn";
+  } else if (info.necesita) {
+    insightText = `Para entrar a ${nombreDest} sí necesitás visa (${info.tipo}): contá **${info.costo}** y un trámite de **${info.tiempo}**. Tu estadía de **${dias} días** entra dentro del límite de ${info.maxDias} días.`;
+    insightTone = "warn";
+  } else {
+    insightText = `Con pasaporte argentino entrás a ${nombreDest} **sin visa** (${info.tipo}), costo **${info.costo}**. Tu estadía de **${dias} días** está dentro del máximo de ${info.maxDias} días como turista.`;
+    insightTone = "good";
+  }
+  const _insight = {
+    title: `Pasaporte argentino → ${nombreDest}`,
+    text: insightText,
+    tone: insightTone,
+    icon: "🛂",
+  };
+
   return {
     necesitaVisa,
     costoEstimado: info.costo,
     tiempoTramite: info.tiempo,
     detalle: `${info.notas} Máximo ${info.maxDias} días como turista. ${excedeDias ? `Tu estadía de ${dias} días supera el límite — consultá requisitos de visa extendida.` : `Tu estadía de ${dias} días está dentro del límite.`}`,
+    _insight,
   };
 }

@@ -14,6 +14,7 @@ export interface ReglaTresInversaOutputs {
   tipo: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function reglaTresInversa(inputs: ReglaTresInversaInputs): ReglaTresInversaOutputs {
@@ -50,10 +51,20 @@ export function reglaTresInversa(inputs: ReglaTresInversaInputs): ReglaTresInver
     explicacion = `Proporción directa: si A pasa de ${fmt(a)} a ${fmt(c)}, B pasa de ${fmt(b)} a ${fmt(resultado)}. Cuando una magnitud crece, la otra crece proporcionalmente. Verificación: ${fmt(a)} / ${fmt(b)} = ${fmt(a / b)} y ${fmt(c)} / ${fmt(resultado)} = ${fmt(c / resultado)}.`;
   }
 
+  const _insight = {
+    title: tipo,
+    text: modo === 'inversa'
+      ? `Al pasar A de **${fmt(a)}** a **${fmt(c)}**, B baja (o sube) de **${fmt(b)}** a **${fmt(resultado)}**: el producto A×B se mantiene en **${fmt(a * b)}**.`
+      : `Manteniendo la proporción **${fmt(a)} → ${fmt(b)}**, al nuevo valor **${fmt(c)}** le corresponde **${fmt(resultado)}**. Ambas magnitudes varían en el mismo sentido.`,
+    tone: 'neutral',
+    icon: modo === 'inversa' ? '🔁' : '📈',
+  };
+
   return {
     resultado: Number(resultado.toFixed(4)),
     tipo,
     formula,
     explicacion,
+    _insight,
   };
 }

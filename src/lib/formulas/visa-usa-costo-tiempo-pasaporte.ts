@@ -10,6 +10,7 @@ export interface VisaUsaCostoTiempoPasaporteOutputs {
   costoTotalUsd: number;
   tiempoEstimadoSemanas: number;
   pasaporteOk: string;
+  _insight?: any;
 }
 const MRV: Record<string, number> = { b1b2: 185, f1: 185, h1b: 205 };
 const TIEMPO: Record<string, number> = {
@@ -23,5 +24,14 @@ export function visaUsaCostoTiempoPasaporte(i: VisaUsaCostoTiempoPasaporteInputs
   const costo = MRV[tipo] || 185;
   const tiempo = TIEMPO[pais] || 8;
   const ok = meses >= 6 ? "Sí - vigencia suficiente" : "No - renová pasaporte primero (mínimo 6 meses)";
-  return { costoTotalUsd: costo, tiempoEstimadoSemanas: tiempo, pasaporteOk: ok };
+  const pasaporteValido = meses >= 6;
+  const _insight = {
+    title: pasaporteValido ? 'Estás en condiciones de tramitar' : 'Frená: el pasaporte no alcanza',
+    text: pasaporteValido
+      ? `Con **${meses} meses** de vigencia tu pasaporte cumple el mínimo de 6 meses. La tasa es de **USD ${costo}** y la espera de cita ronda las **${tiempo} semanas**; arrancá ya porque ese tiempo varía mucho por consulado.`
+      : `Tu pasaporte vence en **${meses} meses** y el mínimo exigido son **6**. Renovalo primero: pagar la tasa de **USD ${costo}** y esperar ~**${tiempo} semanas** de cita sin pasaporte válido es plata y tiempo tirados.`,
+    tone: pasaporteValido ? 'good' as const : 'warn' as const,
+    icon: pasaporteValido ? '🛂' : '⚠️',
+  };
+  return { costoTotalUsd: costo, tiempoEstimadoSemanas: tiempo, pasaporteOk: ok, _insight };
 }

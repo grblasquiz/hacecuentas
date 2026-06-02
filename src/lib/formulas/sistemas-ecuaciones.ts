@@ -14,6 +14,7 @@ export interface Outputs {
   determinante: number;
   metodo: string;
   tipo: string;
+  _insight?: any;
 }
 
 export function sistemasEcuaciones(i: Inputs): Outputs {
@@ -63,6 +64,30 @@ export function sistemasEcuaciones(i: Inputs): Outputs {
       : `Cramer: x = (c·e − b·f) / det = ${(c * e - b * f).toFixed(2)}/${det}; y = (a·f − c·d) / det = ${(a * f - c * d).toFixed(2)}/${det}.`
   }`;
 
+  let _insight: any;
+  if (tipo === 'compatible determinado') {
+    _insight = {
+      title: 'Solución única',
+      text: `El sistema es **compatible determinado**: las rectas se cruzan en un solo punto, **(${x}, ${y})**. El determinante (**${det}**) es distinto de cero, así que la regla de Cramer da una respuesta exacta.`,
+      tone: 'good',
+      icon: '📐',
+    };
+  } else if (tipo === 'compatible indeterminado') {
+    _insight = {
+      title: 'Infinitas soluciones',
+      text: `Las dos ecuaciones son **equivalentes** (rectas coincidentes) y el determinante es **0**. Hay **infinitas soluciones**: cualquier punto de una recta sirve.`,
+      tone: 'neutral',
+      icon: '♾️',
+    };
+  } else {
+    _insight = {
+      title: 'Sin solución',
+      text: `El determinante es **0** y las ecuaciones no son proporcionales: las rectas son **paralelas** y no se cortan. El sistema es **incompatible**, no hay ningún par (x, y) que cumpla las dos.`,
+      tone: 'warn',
+      icon: '🚫',
+    };
+  }
+
   return {
     x,
     y,
@@ -70,5 +95,6 @@ export function sistemasEcuaciones(i: Inputs): Outputs {
     determinante: det,
     metodo,
     tipo,
+    _insight,
   };
 }

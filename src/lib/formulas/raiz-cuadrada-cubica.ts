@@ -14,6 +14,7 @@ export interface RaizCuadradaCubicaOutputs {
   formula: string;
   explicacion: string;
   esPerfecta: string;
+  _insight?: any;
 }
 
 export function raizCuadradaCubica(inputs: RaizCuadradaCubicaInputs): RaizCuadradaCubicaOutputs {
@@ -25,6 +26,15 @@ export function raizCuadradaCubica(inputs: RaizCuadradaCubicaInputs): RaizCuadra
 
   const fmt = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 6 }).format(n);
 
+  const buildInsight = (raiz: number, esPerfecta: boolean, etiqueta: string) => ({
+    title: esPerfecta ? 'Raíz exacta' : 'Raíz irracional',
+    text: esPerfecta
+      ? `La ${etiqueta} de ${fmt(num)} es exactamente **${fmt(raiz)}**: un número entero, sin decimales infinitos.`
+      : `La ${etiqueta} de ${fmt(num)} da **${fmt(raiz)}**, un número irracional con infinitos decimales. Lo que ves es un redondeo a 6 cifras.`,
+    tone: (esPerfecta ? 'good' : 'neutral') as 'good' | 'neutral',
+    icon: '√',
+  });
+
   switch (modo) {
     case 'cuadrada': {
       if (num < 0) throw new Error('No existe raíz cuadrada de un número negativo en los reales');
@@ -35,6 +45,7 @@ export function raizCuadradaCubica(inputs: RaizCuadradaCubicaInputs): RaizCuadra
         formula: `√${fmt(num)} = ${fmt(num)}^(1/2) = ${fmt(r)}`,
         explicacion: `La raíz cuadrada de ${fmt(num)} es **${fmt(r)}**. ${perfecta ? `Es una raíz perfecta porque ${fmt(r)} × ${fmt(r)} = ${fmt(num)}.` : `No es una raíz perfecta (el resultado es irracional). El cuadrado perfecto más cercano es ${fmt(Math.round(r) ** 2)}.`}`,
         esPerfecta: perfecta ? `Sí — ${fmt(r)}² = ${fmt(num)}` : `No — ${fmt(r)} es un número irracional`,
+        _insight: buildInsight(r, perfecta, 'raíz cuadrada'),
       };
     }
     case 'cubica': {
@@ -45,6 +56,7 @@ export function raizCuadradaCubica(inputs: RaizCuadradaCubicaInputs): RaizCuadra
         formula: `∛${fmt(num)} = ${fmt(num)}^(1/3) = ${fmt(r)}`,
         explicacion: `La raíz cúbica de ${fmt(num)} es **${fmt(r)}**. ${perfecta ? `Es una raíz perfecta porque ${fmt(Math.round(r))} × ${fmt(Math.round(r))} × ${fmt(Math.round(r))} = ${fmt(num)}.` : `No es una raíz cúbica perfecta.`}${num < 0 ? ' La raíz cúbica acepta números negativos porque un número negativo elevado al cubo da negativo.' : ''}`,
         esPerfecta: perfecta ? `Sí — ${fmt(Math.round(r))}³ = ${fmt(num)}` : `No — ${fmt(r)} es un número irracional`,
+        _insight: buildInsight(r, perfecta, 'raíz cúbica'),
       };
     }
     case 'n-esima': {
@@ -67,6 +79,7 @@ export function raizCuadradaCubica(inputs: RaizCuadradaCubicaInputs): RaizCuadra
         formula: `${indice}√${fmt(num)} = ${fmt(num)}^(1/${indice}) = ${fmt(r)}`,
         explicacion: `La raíz ${indice}-ésima de ${fmt(num)} es **${fmt(r)}**. ${perfecta ? `Es perfecta: ${fmt(roundedR)}^${indice} = ${fmt(num)}.` : 'No es una raíz perfecta.'}`,
         esPerfecta: perfecta ? `Sí — ${fmt(roundedR)}^${indice} = ${fmt(num)}` : `No — ${fmt(r)} es un número irracional`,
+        _insight: buildInsight(r, perfecta, `raíz ${indice}-ésima`),
       };
     }
     default:

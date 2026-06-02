@@ -33,6 +33,15 @@ export function sueldoDocenteArgentinaCargoAntiguedad(i: Inputs): Outputs {
     centerLabel: 'Bruto',
     ariaLabel: 'Composición del sueldo bruto: neto, jubilación, obra social, PAMI y Ganancias.',
   };
+  const descTotal = jubilacion + obraSocial + pami + ganancias;
+  const pctDesc = bruto > 0 ? (descTotal / bruto) * 100 : 0;
+  const fmtAr = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Sueldo docente nacional',
+    text: `Partiendo del piso nacional, el bruto da **${fmtAr(bruto)}** y cobrás **${fmtAr(neto)}** netos tras **${fmtAr(descTotal)}** (${pctDesc.toFixed(0)}%) de descuentos. ${ganancias > 0 ? `Pagás **${fmtAr(ganancias)}** de Ganancias por mes.` : 'No pagás Ganancias: tu sueldo queda por debajo del mínimo no imponible.'} Los básicos provinciales suelen ser más altos que este piso.`,
+    tone: 'neutral' as const,
+    icon: '📚',
+  };
   return {
     basico: '$' + basico.toLocaleString('es-AR'),
     bruto: '$' + bruto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.'),
@@ -40,5 +49,6 @@ export function sueldoDocenteArgentinaCargoAntiguedad(i: Inputs): Outputs {
     sac: '$' + sac.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.'),
     resumen: `Básico: $${basico.toLocaleString('es-AR')}. Con antigüedad ${antig} años: neto ~$${neto.toFixed(0)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

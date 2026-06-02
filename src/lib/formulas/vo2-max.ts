@@ -5,6 +5,7 @@ export interface Outputs {
   categoria: string;
   percentilEdad: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function vo2Max(i: Inputs): Outputs {
@@ -64,10 +65,21 @@ export function vo2Max(i: Inputs): Outputs {
     min: 0,
   };
 
+  const vo2r = Math.round(vo2 * 10) / 10;
+  const tone = (cat === 'Muy bueno' || cat.startsWith('Excelente')) ? 'good'
+    : (cat === 'Muy bajo' || cat === 'Bajo') ? 'warn' : 'neutral';
+  const insight = {
+    title: 'Tu capacidad aeróbica',
+    text: `Recorriste **${metros} m** en 12 minutos, lo que estima un **VO2max de ${vo2r} ml/kg/min**: categoría **${cat}** para ${sexo === 'f' ? 'mujeres' : 'hombres'} de ~${row[0]} años (promedio de referencia: ${row[3]} ml/kg/min).`,
+    tone,
+    icon: '🫁',
+  };
+
   return {
-    vo2max: Math.round(vo2 * 10) / 10,
+    vo2max: vo2r,
     categoria: cat,
     percentilEdad: `Referencia para ${sexo === 'f' ? 'mujeres' : 'hombres'} de ~${row[0]} años: promedio ${row[3]} ml/kg/min`,
     _chart: chart,
+    _insight: insight,
   };
 }

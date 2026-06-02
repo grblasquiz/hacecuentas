@@ -11,6 +11,7 @@ export interface Outputs {
   retornoCompeticion: string;
   tasaExito: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function pubalgiaRecuperacion(i: Inputs): Outputs {
@@ -47,11 +48,33 @@ export function pubalgiaRecuperacion(i: Inputs): Outputs {
     'Fase 5: gestos específicos (patada, duelos) y retorno a competencia.'
   ].join(' | ');
 
+  const meses = (maxSem / 4.345).toFixed(1);
+  const esCronica = cronicidad === 'cronica';
+  const labelAbordaje = abordaje === 'conservador'
+    ? 'tratamiento conservador'
+    : abordaje === 'quirurgico-minima-invasion'
+    ? 'cirugía mínimamente invasiva'
+    : 'cirugía abierta';
+  const ajustes: string[] = [];
+  if (esCronica) ajustes.push('cronicidad');
+  if (edad > 32) ajustes.push(`edad (${edad} años)`);
+  const textoAjuste = ajustes.length
+    ? ` El plazo ya está alargado por **${ajustes.join(' y ')}**.`
+    : '';
+
+  const _insight = {
+    title: 'Tu plazo estimado de recuperación',
+    text: `Con **${labelAbordaje}**, el retorno a competencia se estima en **${minSem}-${maxSem} semanas** (hasta ~${meses} meses). ${tasa}${textoAjuste} No fuerces el retorno: una recaída suele costar más que las semanas que ahorrás.`,
+    tone: (esCronica || edad > 32) ? 'warn' : 'neutral',
+    icon: '🩹',
+  };
+
   return {
     fases,
     retornoEntrenamiento: `${Math.round(minSem * 0.7)}-${Math.round(maxSem * 0.75)} semanas (entrenamiento sin contacto).`,
     retornoCompeticion: `${minSem}-${maxSem} semanas para competencia oficial.`,
     tasaExito: tasa,
-    mensaje: `${minSem}-${maxSem} semanas`
+    mensaje: `${minSem}-${maxSem} semanas`,
+    _insight,
   };
 }

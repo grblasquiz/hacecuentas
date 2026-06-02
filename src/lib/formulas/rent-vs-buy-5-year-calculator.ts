@@ -24,6 +24,7 @@ export interface Outputs {
   home_value_5yr: number;
   equity_5yr: number;
   summary: string;
+  _insight?: any;
 }
 
 // Helper: compute outstanding loan balance after `paymentsMade` payments
@@ -127,7 +128,13 @@ export function compute(i: Inputs): Outputs {
       monthly_mortgage_payment: 0,
       home_value_5yr: 0,
       equity_5yr: 0,
-      summary: "Please enter a home price and monthly rent to run the comparison."
+      summary: "Please enter a home price and monthly rent to run the comparison.",
+      _insight: {
+        title: 'Compare buying vs renting',
+        text: 'Enter a **home price** and your **monthly rent** to see which option costs less over a 5-year horizon.',
+        tone: 'neutral' as const,
+        icon: '🏠',
+      },
     };
   }
 
@@ -221,6 +228,25 @@ export function compute(i: Inputs): Outputs {
     `Monthly mortgage (P&I): ${fmt(monthlyPI)}. ` +
     `Home value at year 5: ${fmt(homeValue5yr)} | Equity (net of selling costs): ${fmt(equity5yr)}.`;
 
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (Math.abs(difference) < 500) {
+    insightText = `Over **5 years**, buying and renting come out roughly even (within **${fmt(absDiff)}**). Break-even is at **${breakevenYearStr}**, so the longer you stay, the more buying favors you.`;
+    insightTone = 'neutral';
+  } else if (difference > 0) {
+    insightText = `Over **5 years**, renting is cheaper by **${fmt(absDiff)}**. Break-even is at **${breakevenYearStr}** — buying only pays off if you stay past that point.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `Over **5 years**, buying is cheaper by **${fmt(absDiff)}**, building **${fmt(equity5yr)}** of net equity. Break-even is at **${breakevenYearStr}**.`;
+    insightTone = 'good';
+  }
+  const _insight = {
+    title: 'Buy vs rent: 5-year outlook',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏠',
+  };
+
   return {
     buy_net_cost_5yr: Math.round(buyNetCost5),
     rent_net_cost_5yr: Math.round(rentNetCost5),
@@ -229,6 +255,7 @@ export function compute(i: Inputs): Outputs {
     monthly_mortgage_payment: Math.round(monthlyPI),
     home_value_5yr: Math.round(homeValue5yr),
     equity_5yr: Math.round(equity5yr),
-    summary
+    summary,
+    _insight
   };
 }

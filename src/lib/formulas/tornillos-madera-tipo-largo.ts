@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  largoTornillo: string; diametroTornillo: string; tipoCabeza: string; pretaladrado: string;
+  largoTornillo: string; diametroTornillo: string; tipoCabeza: string; pretaladrado: string; _insight?: any;
 }
 
 export function tornillosMaderaTipoLargo(inputs: Inputs): Outputs {
@@ -33,10 +33,20 @@ export function tornillosMaderaTipoLargo(inputs: Inputs): Outputs {
     'Obligatorio (madera dura)';
   const mechaMap: Record<number, number> = { 3: 2, 3.5: 2.5, 4: 3, 4.5: 3.5, 5: 4, 6: 5 };
   const mecha = mechaMap[diam] || 3;
+  const obligatorio = pretaladroRule.startsWith('Obligatorio');
+  const _insight = {
+    title: 'El tornillo justo para tu unión',
+    text: obligatorio
+      ? `Para tus ${es} mm de espesor usá un tornillo de **${largo} × ${diam} mm**. En esta madera el pretaladro es **obligatorio**: sin la mecha de ${mecha} mm la pieza se abre o el tornillo se traba. El largo agarra unos ${Math.round((2/3) * ei)} mm en la madera de abajo, suficiente para que no afloje.`
+      : `Para tus ${es} mm de espesor el tornillo ideal es de **${largo} × ${diam} mm**, que penetra unos ${Math.round((2/3) * ei)} mm en la pieza inferior. ${diam >= 5 ? 'Conviene pretaladrar con mecha de ' + mecha + ' mm para no rajar la madera.' : 'En pino podés ir directo, aunque una mecha de ' + mecha + ' mm da mejor terminación.'}`,
+    tone: obligatorio ? 'warn' : 'neutral',
+    icon: '🔩',
+  };
   return {
     largoTornillo: `${largo} mm`,
     diametroTornillo: `${diam} mm`,
     tipoCabeza: cabezaMap[tu] || cabezaMap[1],
     pretaladrado: `${pretaladroRule} - Mecha ${mecha} mm`,
+    _insight,
   };
 }

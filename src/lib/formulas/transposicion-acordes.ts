@@ -8,6 +8,7 @@ export interface Outputs {
   intervalo: string;
   notaOriginal: string;
   notaNueva: string;
+  _insight?: any;
 }
 
 const NOTAS_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -53,10 +54,24 @@ export function transposicionAcordes(i: Inputs): Outputs {
   const acordeTranspuesto = nuevaNota + sufijo;
   const intervaloAbs = ((semitonos % 12) + 12) % 12;
 
+  const acordeOriginal = i.acorde.trim();
+  const nSemi = Math.abs(semitonos);
+  const direccion = semitonos > 0 ? 'subiendo' : semitonos < 0 ? 'bajando' : 'sin mover';
+  const intervaloTxt = INTERVALOS[intervaloAbs] || `${nSemi} semitonos`;
+  const insight = {
+    title: `${acordeOriginal} → ${acordeTranspuesto}`,
+    text: semitonos === 0
+      ? `Sin transposición: el acorde queda en **${acordeTranspuesto}**.`
+      : `Transponiendo **${acordeOriginal}** ${nSemi} semitono(s) ${direccion} obtenés **${acordeTranspuesto}** (un intervalo de **${intervaloTxt}**). El sufijo del acorde no cambia, solo la fundamental.`,
+    tone: 'neutral',
+    icon: '🎸',
+  };
+
   return {
     acordeTranspuesto,
-    intervalo: INTERVALOS[intervaloAbs] || `${Math.abs(semitonos)} semitonos`,
+    intervalo: intervaloTxt,
     notaOriginal: nota,
     notaNueva: nuevaNota,
+    _insight: insight,
   };
 }

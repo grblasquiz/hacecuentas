@@ -16,6 +16,8 @@ export interface Outputs {
   porJugador: number;
   detalle: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Referencia AFA 2026 (ARS)
@@ -47,13 +49,45 @@ export function premiosLigaProfesionalAfa(i: Inputs): Outputs {
   const totalBolsa = premiosVictorias + premiosEmpates + premioCampeon;
   const porJugador = totalBolsa / plantel;
 
-  return {
-    premiosVictorias: Math.round(premiosVictorias),
-    premiosEmpates: Math.round(premiosEmpates),
-    premioCampeon: Math.round(premioCampeon),
-    totalBolsa: Math.round(totalBolsa),
-    porJugador: Math.round(porJugador),
+  const rVic = Math.round(premiosVictorias);
+  const rEmp = Math.round(premiosEmpates);
+  const rCamp = Math.round(premioCampeon);
+  const rTotal = Math.round(totalBolsa);
+  const rPorJug = Math.round(porJugador);
+
+  const tituloPremio = i.campeon ? ' como campeón' : i.subcampeon ? ' como subcampeón' : '';
+  const out: Outputs = {
+    premiosVictorias: rVic,
+    premiosEmpates: rEmp,
+    premioCampeon: rCamp,
+    totalBolsa: rTotal,
+    porJugador: rPorJug,
     detalle,
-    mensaje: `Bolsa total: $${Math.round(totalBolsa).toLocaleString('es-AR')}. Por jugador (plantel ${plantel}): $${Math.round(porJugador).toLocaleString('es-AR')}.`,
+    mensaje: `Bolsa total: $${rTotal.toLocaleString('es-AR')}. Por jugador (plantel ${plantel}): $${rPorJug.toLocaleString('es-AR')}.`,
+    _insight: {
+      title: 'Lo que cobra el plantel',
+      text: `Entre premios por resultados${i.campeon || i.subcampeon ? ' y el bono de título' : ''}, la bolsa suma **$${rTotal.toLocaleString('es-AR')}**${tituloPremio}: unos **$${rPorJug.toLocaleString('es-AR')} por jugador** repartiendo entre ${plantel}.`,
+      tone: 'good',
+      icon: '⚽',
+    },
   };
+
+  // Donut sólo si la bolsa se compone de 2+ conceptos
+  const slices = [
+    { label: 'Premios por victorias', value: rVic },
+    { label: 'Premios por empates', value: rEmp },
+    { label: i.campeon ? 'Bono campeón' : 'Bono subcampeón', value: rCamp },
+  ].filter((s) => s.value > 0);
+  if (slices.length >= 2) {
+    out._chart = {
+      type: 'doughnut' as const,
+      slices,
+      prefix: '$',
+      centerValue: '$' + rTotal.toLocaleString('es-AR'),
+      centerLabel: 'Bolsa total',
+      ariaLabel: 'Composición de la bolsa de premios: victorias, empates y bono de título',
+    };
+  }
+
+  return out;
 }

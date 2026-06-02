@@ -12,6 +12,7 @@ export interface Outputs {
   salario_diario: number;
   pago_vacaciones_saldo: number;
   pago_vacaciones_total: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -54,6 +55,30 @@ export function compute(i: Inputs): Outputs {
   // Pago total vacaciones año
   const pagoVacacionesTotal = diasVacacionesTotales * salarioDiario;
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (diasProgresivos > 0) {
+    insightText = `Con **${antiguedad} años** de antigüedad sumás **${diasProgresivos} día(s) progresivo(s)** a los 15 hábiles base: te corresponden **${diasVacacionesTotales} días** por año (Art. 67 y 68 CT). `;
+    insightTone = 'good';
+  } else {
+    const faltan = Math.max(0, 13 - antiguedad);
+    insightText = `Te corresponden los **${diasVacacionesTotales} días hábiles base** (Art. 67 CT). El primer día progresivo se gana recién a los **13 años**` + (faltan > 0 ? `, te faltan **${faltan.toFixed(0)} año(s)**. ` : `. `);
+    insightTone = 'neutral';
+  }
+  if (diasSaldo > 0) {
+    insightText += `Te quedan **${diasSaldo} día(s) de saldo** sin tomar, equivalentes a **${fmt(pagoCacionesSaldo)}** a valor de tu día (sueldo/30).`;
+    insightTone = 'warn';
+  } else {
+    insightText += `Ya tomaste todos tus días: no hay saldo pendiente.`;
+  }
+  const insight = {
+    title: 'Tus días y tu saldo',
+    text: insightText,
+    tone: insightTone,
+    icon: '🌴',
+  };
+
   return {
     dias_vacaciones_base: diasBase,
     dias_progresivos: diasProgresivos,
@@ -61,6 +86,7 @@ export function compute(i: Inputs): Outputs {
     dias_saldo: diasSaldo,
     salario_diario: Math.round(salarioDiario * 100) / 100,
     pago_vacaciones_saldo: Math.round(pagoCacionesSaldo * 100) / 100,
-    pago_vacaciones_total: Math.round(pagoVacacionesTotal * 100) / 100
+    pago_vacaciones_total: Math.round(pagoVacacionesTotal * 100) / 100,
+    _insight: insight
   };
 }

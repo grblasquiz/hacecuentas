@@ -10,6 +10,8 @@ export interface Outputs {
   ingredientesMasa: string;
   rellenoKg: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function rendimientoMasaEmpanadasCantidad(i: Inputs): Outputs {
@@ -54,11 +56,41 @@ export function rendimientoMasaEmpanadasCantidad(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const _insight = {
+    title: 'Tu tanda de empanadas',
+    text: modo === 'empanadas_deseadas'
+      ? `Para **${fmt.format(empanadas)} empanadas** ${tipoNombre} necesitás **${fmt.format(Math.round(harina))} g de harina** y **${relleno.toFixed(1)} kg de relleno** (40 g por unidad).`
+      : `Con **${fmt.format(Math.round(harina))} g de harina** te salen **${fmt.format(empanadas)} empanadas** ${tipoNombre}, que llevan **${relleno.toFixed(1)} kg de relleno** en total.`,
+    tone: 'neutral' as const,
+    icon: '🥟',
+  };
+
+  // Donut solo para masa casera: las partes (harina+grasa+agua+sal) suman el peso total de masa.
+  let _chart: any = undefined;
+  if (tipo !== 'comprada') {
+    const pesoMasa = Math.round(harina) + grasa + agua + sal;
+    _chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Harina', value: Math.round(harina) },
+        { label: 'Grasa', value: grasa },
+        { label: 'Agua', value: agua },
+        { label: 'Sal', value: sal },
+      ],
+      suffix: ' g',
+      centerValue: fmt.format(pesoMasa) + ' g',
+      centerLabel: 'Masa total',
+      ariaLabel: `Composición de la masa: harina ${fmt.format(Math.round(harina))} g, grasa ${grasa} g, agua ${agua} g y sal ${sal} g`,
+    };
+  }
+
   return {
     cantidadEmpanadas: empanadas,
     harinaGramos: Math.round(harina),
     ingredientesMasa: ingredientes,
     rellenoKg: Number(relleno.toFixed(1)),
     detalle: `${empanadas} empanadas ${tipoNombre}: masa → ${ingredientes}. Relleno: ${relleno.toFixed(1)} kg (${fmt.format(rellenoPorEmpanada)} g/unidad).`,
+    _insight,
+    _chart,
   };
 }

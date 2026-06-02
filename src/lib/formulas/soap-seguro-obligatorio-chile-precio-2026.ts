@@ -9,6 +9,7 @@ export interface Outputs {
   cobertura_medicos: number;
   vigencia_desde: string;
   vigencia_hasta: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -36,12 +37,28 @@ export function compute(i: Inputs): Outputs {
   const coberturasInvalidez = Math.round(datosVehiculo.invalidez_uta * uta2026);
   const coberturasMedicos = Math.round(datosVehiculo.medicos_uta * uta2026);
 
+  const nombreVehiculo: Record<string, string> = {
+    'moto': 'moto', 'moto_grande': 'moto de alta cilindrada', 'auto_particular': 'auto particular',
+    'camioneta': 'camioneta', 'camion': 'camión', 'taxi': 'taxi', 'taxi_colectivo': 'taxi colectivo',
+    'bus': 'bus', 'remolque': 'remolque'
+  };
+  const vehTxt = nombreVehiculo[i.tipo_vehiculo] || 'vehículo';
+  const clp = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+
+  const _insight = {
+    title: 'Tu SOAP 2026',
+    text: `El SOAP para tu **${vehTxt}** cuesta **${clp(precioAnual)}** al año (vigente del 1 de abril de 2026 al 31 de marzo de 2027). Cubre hasta **${clp(coberturasMuerte)}** por muerte y **${clp(coberturasMedicos)}** en gastos médicos por persona; es **obligatorio** para circular y renovarlo a tiempo evita multas.`,
+    tone: 'neutral',
+    icon: '🚗',
+  };
+
   return {
     precio_anual: precioAnual,
     cobertura_muerte: coberturasMuerte,
     cobertura_invalidez: coberturasInvalidez,
     cobertura_medicos: coberturasMedicos,
     vigencia_desde: '1 de abril de 2026',
-    vigencia_hasta: '31 de marzo de 2027'
+    vigencia_hasta: '31 de marzo de 2027',
+    _insight
   };
 }

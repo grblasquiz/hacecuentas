@@ -23,6 +23,7 @@ export interface Outputs {
   rendimientoIndiferencia: number;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Alícuotas derechos de exportación vigentes 2026 — Decreto 37/2024 y modificatorias
@@ -152,6 +153,31 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
+  // Insight narrativo según el resultado real de la campaña
+  let insight: any;
+  if (margenBruto < 0) {
+    insight = {
+      title: 'Campaña en pérdida',
+      text: `Con ${rendimiento} qq/ha de ${cultivoLabel.toLowerCase()}, los costos directos superan el ingreso neto: el margen bruto da **USD ${margenBruto.toFixed(2)}/ha**. Necesitás rendir **${rendimientoIndConArr.toFixed(1)} qq/ha** para no perder plata.`,
+      tone: 'warn',
+      icon: '🌾',
+    };
+  } else if (margenNeto < 0) {
+    insight = {
+      title: 'El arrendamiento la hace inviable',
+      text: `El margen bruto es positivo, pero tras el arrendamiento el neto queda en **USD ${margenNeto.toFixed(2)}/ha**. El punto de equilibrio con campo alquilado sube a **${rendimientoIndConArr.toFixed(1)} qq/ha** (rendís ${rendimiento}).`,
+      tone: 'warn',
+      icon: '🌾',
+    };
+  } else {
+    insight = {
+      title: 'Campaña rentable',
+      text: `${cultivoLabel} a ${rendimiento} qq/ha deja **USD ${margenNeto.toFixed(2)}/ha** de margen neto tras una retención del **${(alicuota * 100).toFixed(0)}%** (USD ${retencion.toFixed(2)}/ha). Tu equilibrio está en **${rendimientoIndConArr.toFixed(1)} qq/ha**.`,
+      tone: 'good',
+      icon: '🌾',
+    };
+  }
+
   return {
     ingresoBruto: Math.round(ingresoBruto * 100) / 100,
     retencion: Math.round(retencion * 100) / 100,
@@ -163,5 +189,6 @@ export function compute(i: Inputs): Outputs {
     rendimientoIndiferencia: Math.round(rendimientoIndConArr * 100) / 100,
     resumen,
     _chart: chart,
+    _insight: insight,
   };
 }

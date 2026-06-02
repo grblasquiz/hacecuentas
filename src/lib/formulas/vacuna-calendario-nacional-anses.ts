@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { _insight?: any; [k: string]: string | number | undefined; }
 export function vacunaCalendarioNacionalAnses(i: Inputs): Outputs {
   const m=Number(i.edadMeses)||0;
   const cal: Record<number,string> = {
@@ -14,5 +14,15 @@ export function vacunaCalendarioNacionalAnses(i: Inputs): Outputs {
   };
   const keys=Object.keys(cal).map(Number).sort((a,b)=>a-b);
   let c=keys[0]; for (const k of keys) if (k<=m) c=k;
-  return { vacunas:cal[c]||'Sin vacunas programadas', resumen:`A los ${m} meses: ${cal[c]||'—'}.` };
+  const dosisHito = cal[c] || 'Sin vacunas programadas';
+  const prox = keys.find(k => k > c);
+  const _insight = {
+    title: 'Dosis de este control',
+    text: prox !== undefined
+      ? `A los **${m} meses** el hito vigente es el de **${c} meses**: ${dosisHito}. El próximo control con vacunas del Calendario Nacional es a los **${prox} meses**.`
+      : `A los **${m} meses** corresponde el último hito pediátrico del Calendario Nacional (**${c} meses**): ${dosisHito}. Después siguen los refuerzos de adolescencia y adultos.`,
+    tone: 'neutral' as const,
+    icon: '💉',
+  };
+  return { vacunas:dosisHito, resumen:`A los ${m} meses: ${cal[c]||'—'}.`, _insight };
 }

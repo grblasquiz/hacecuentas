@@ -19,6 +19,8 @@ export interface Outputs {
   alquiler_medio_ccaa: number;         // Alquiler medio de referencia en la CCAA
   salario_minimo_para_vivienda: number;// Salario neto mínimo para cubrir vivienda real al 30%
   ahorro_anual_proyectado: number;     // Ahorro acumulado en 12 meses al 10%
+  _insight?: any;
+  _chart?: any;
 }
 
 // --- Constantes: alquileres medios por comunidad autónoma ---
@@ -121,6 +123,45 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
+  // --- Insight narrativo (tono dinámico según el gasto real en vivienda) ---
+  const eur = (n: number) =>
+    new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(Math.round(n)) + ' €';
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (costeViviendaReal !== null) {
+    if (costeViviendaReal <= maximoVivienda) {
+      insightText = `Con **${eur(rentaMensualEquivalente)}/mes** podés gastar hasta **${eur(maximoVivienda)}** en vivienda (30%). Tu coste real (**${eur(costeViviendaReal)}**) entra dentro del límite, dejándote **${eur(maximoVivienda - costeViviendaReal)}** de margen.`;
+      insightTone = 'good';
+    } else {
+      insightText = `Tu vivienda (**${eur(costeViviendaReal)}**) supera en **${eur(desviacionVivienda)}** el máximo recomendado del 30% (**${eur(maximoVivienda)}**) sobre tus ${eur(rentaMensualEquivalente)}/mes. Necesitarías unos ${eur(salarioMinimoPara)}/mes para que encaje.`;
+      insightTone = 'warn';
+    }
+  } else {
+    insightText = `Con una renta equivalente de **${eur(rentaMensualEquivalente)}/mes**, la regla 30/30/30/10 te asigna **${eur(maximoVivienda)}** a vivienda, **${eur(maximoGastosFijos)}** a gastos fijos, **${eur(maximoOcio)}** a ocio y **${eur(minimoAhorro)}** a ahorro (${eur(ahorroAnualProyectado)} al año).`;
+    insightTone = 'neutral';
+  }
+  const _insight = {
+    title: 'Tu reparto 30/30/30/10',
+    text: insightText,
+    tone: insightTone,
+    icon: '💶',
+  };
+
+  // --- Donut: las 4 partidas suman la renta mensual equivalente ---
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Vivienda (30%)', value: maximoVivienda },
+      { label: 'Gastos fijos (30%)', value: maximoGastosFijos },
+      { label: 'Ocio (30%)', value: maximoOcio },
+      { label: 'Ahorro (10%)', value: minimoAhorro },
+    ],
+    suffix: ' €',
+    centerValue: eur(rentaMensualEquivalente),
+    centerLabel: 'Renta mensual',
+    ariaLabel: `Reparto de ${eur(rentaMensualEquivalente)} mensuales según la regla 30/30/30/10: vivienda ${eur(maximoVivienda)}, gastos fijos ${eur(maximoGastosFijos)}, ocio ${eur(maximoOcio)} y ahorro ${eur(minimoAhorro)}`,
+  };
+
   return {
     renta_mensual_equivalente: rentaMensualEquivalente,
     maximo_vivienda: maximoVivienda,
@@ -132,5 +173,7 @@ export function compute(i: Inputs): Outputs {
     alquiler_medio_ccaa: alquilerMedioCCAA,
     salario_minimo_para_vivienda: salarioMinimoPara,
     ahorro_anual_proyectado: ahorroAnualProyectado,
+    _insight,
+    _chart,
   };
 }

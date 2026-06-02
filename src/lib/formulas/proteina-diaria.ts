@@ -6,6 +6,7 @@ export interface Outputs {
   gramosMaximo: number;
   porcionesCarne: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function proteinaDiaria(i: Inputs): Outputs {
@@ -27,11 +28,28 @@ export function proteinaDiaria(i: Inputs): Outputs {
   // Porciones: 100 g pollo/carne magra tienen ~25 g proteína
   const porciones = gOpt / 25;
 
+  const OBJ_LABEL: Record<string, string> = {
+    sedentario: "vida sedentaria",
+    mantenimiento: "mantenimiento activo",
+    muscular: "ganancia muscular",
+    deficit: "déficit calórico",
+  };
+  const objLabel = OBJ_LABEL[obj] ?? OBJ_LABEL["mantenimiento"];
+  const gkgOpt = (gOpt / peso).toFixed(1);
+
+  const _insight = {
+    title: "Tu proteína diaria recomendada",
+    text: `Para **${objLabel}** con **${peso} kg**, apuntá a **${Math.round(gOpt)} g de proteína al día** (~**${gkgOpt} g/kg**), dentro del rango **${Math.round(gMin)}–${Math.round(gMax)} g**. Son unas **${porciones.toFixed(1)} porciones de 100 g** de pollo o carne magra repartidas en el día.`,
+    tone: "neutral",
+    icon: "🥩",
+  };
+
   return {
     gramosMinimo: Math.round(gMin),
     gramosOptimo: Math.round(gOpt),
     gramosMaximo: Math.round(gMax),
     porcionesCarne: Number(porciones.toFixed(1)),
     mensaje: `Apuntá a ${Math.round(gOpt)} g de proteína al día (rango ${Math.round(gMin)}–${Math.round(gMax)} g).`,
+    _insight,
   };
 }

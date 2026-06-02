@@ -7,6 +7,8 @@ export interface Outputs {
   resultado: string;
   faltaTotal: number;
   pruebaDebil: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function puntajeDelfFrances(i: Inputs): Outputs {
@@ -36,12 +38,38 @@ export function puntajeDelfFrances(i: Inputs): Outputs {
   }
 
   const masDebil = pruebas.reduce((a, b) => a.v < b.v ? a : b);
+  const faltaTotal = Math.max(0, 50 - total);
 
-  return {
+  const tone = apto ? 'good' : 'warn';
+  const insightText = apto
+    ? `Total **${total}/100**: aprobás el DELF. Necesitás **50 puntos** y al menos **5/25 en cada prueba**, y cumplís todo. Tu prueba más floja fue **${masDebil.n} (${masDebil.v}/25)**.`
+    : !aprobaTotal
+    ? `Total **${total}/100**: te faltan **${faltaTotal} puntos** para el mínimo de 50. ${reprueba.length ? `Además quedaste bajo el piso de 5 en: ${reprueba.map(p => p.n).join(', ')}. ` : ''}Tu prueba más floja es **${masDebil.n} (${masDebil.v}/25)** — ahí está el mayor margen de mejora.`
+    : `Total **${total}/100** alcanza, pero no aprobás: hay prueba(s) bajo el piso de 5 (${reprueba.map(p => `${p.n} ${p.v}`).join(', ')}). El DELF elimina si una sola prueba queda por debajo de **5/25**.`;
+
+  const out: Outputs = {
     total,
     resultado: res,
-    faltaTotal: Math.max(0, 50 - total),
+    faltaTotal,
     pruebaDebil: `${masDebil.n} con ${masDebil.v}/25`,
+    _insight: { title: apto ? 'Apto en el DELF' : 'No aprobado', text: insightText, tone, icon: '🇫🇷' },
   };
+
+  if (total > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Comprensión oral', value: co },
+        { label: 'Comprensión escrita', value: ce },
+        { label: 'Producción escrita', value: pe },
+        { label: 'Producción oral', value: po },
+      ],
+      centerValue: `${total}/100`,
+      centerLabel: 'Total DELF',
+      ariaLabel: `Desglose del puntaje DELF por prueba: CO ${co}, CE ${ce}, PE ${pe}, PO ${po}`,
+    };
+  }
+
+  return out;
 
 }

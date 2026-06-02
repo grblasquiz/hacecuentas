@@ -8,6 +8,7 @@ export interface Outputs {
   diferencia_dias: number;
   tramo_actual: string;
   proximo_incremento: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -59,11 +60,22 @@ export function compute(i: Inputs): Outputs {
 
   const diferenciaDias = diasActual - diasAnterior;
 
+  const pctMas = diasAnterior > 0 ? Math.round((diferenciaDias / diasAnterior) * 100) : 0;
+  const insight = {
+    title: 'Lo que ganaste con la reforma',
+    text: diferenciaDias > 0
+      ? `Con la **Reforma de Vacaciones Dignas** te corresponden **${diasActual} días** (tramo ${tramoActual}), contra los **${diasAnterior} días** de la ley anterior: son **${diferenciaDias} días más** por año (**+${pctMas}%**). Próximo incremento: ${proximoIncremento.toLowerCase()}.`
+      : `En tu tramo (${tramoActual}) la reforma mantiene los **${diasActual} días**, sin diferencia frente a la ley previa. Próximo incremento: ${proximoIncremento.toLowerCase()}.`,
+    tone: (diferenciaDias > 0 ? 'good' : 'neutral') as 'good' | 'neutral',
+    icon: '🌴',
+  };
+
   return {
     dias_vacaciones_actual: diasActual,
     dias_vacaciones_anterior: diasAnterior,
     diferencia_dias: diferenciaDias,
     tramo_actual: tramoActual,
-    proximo_incremento: proximoIncremento
+    proximo_incremento: proximoIncremento,
+    _insight: insight
   };
 }

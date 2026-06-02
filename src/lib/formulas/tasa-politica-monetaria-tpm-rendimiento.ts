@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | any; _insight?: any; }
 export function tasaPoliticaMonetariaTpmRendimiento(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const c=Number(i.capital)||0; const t=Number(i.tpmPorcentaje)||0; const d=Number(i.dias)||0;
@@ -7,5 +7,18 @@ export function tasaPoliticaMonetariaTpmRendimiento(i: Inputs): Outputs {
   const interpretacion = __lang === 'en'
     ? `At TPM ${t}% for ${d} days: you earn $${Math.round(r).toLocaleString('es-AR')} (EAR ${tea.toFixed(0)}%).`
     : `A TPM ${t}% durante ${d} días: ganás $${Math.round(r).toLocaleString('es-AR')} (TEA ${tea.toFixed(0)}%).`;
-  return { rendimiento:`$${Math.round(r).toLocaleString('es-AR')}`, tea:`${tea.toFixed(2)}%`, interpretacion };
+  const _insight = __lang === 'en'
+    ? {
+        title: 'What you actually earn',
+        text: `At a **${t}%** policy rate, $${c.toLocaleString('es-AR')} over **${d} days** yields $${Math.round(r).toLocaleString('es-AR')} in interest — an annual effective rate of **${tea.toFixed(1)}%**. Compare it against inflation to see your real return.`,
+        tone: 'good',
+        icon: '🏦',
+      }
+    : {
+        title: 'Cuánto ganás de verdad',
+        text: `Con una tasa de política de **${t}%**, $${c.toLocaleString('es-AR')} a **${d} días** te dan $${Math.round(r).toLocaleString('es-AR')} de interés — una tasa efectiva anual de **${tea.toFixed(1)}%**. Compará contra la inflación para ver tu rendimiento real.`,
+        tone: 'good',
+        icon: '🏦',
+      };
+  return { rendimiento:`$${Math.round(r).toLocaleString('es-AR')}`, tea:`${tea.toFixed(2)}%`, interpretacion, _insight };
 }

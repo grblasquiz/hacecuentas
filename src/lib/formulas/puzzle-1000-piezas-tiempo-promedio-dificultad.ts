@@ -11,6 +11,7 @@ export interface Outputs {
   horas_promedio: number;
   sesiones_estimadas: number;
   detalle: string;
+  _insight?: any;
 }
 
 // Piezas por hora según experiencia (dificultad media como base)
@@ -77,11 +78,20 @@ export function compute(i: Inputs): Outputs {
     `Rango: ${horas_min}–${horas_max} h | ` +
     `Con sesiones de ${sesion_horas} h necesitás aprox. ${sesiones_estimadas} sesiones.`;
 
+  const sesionesRedondeadas = Math.max(1, Math.ceil(sesiones_estimadas));
+  const insight = {
+    title: `Unas ${horas_promedio} horas en total`,
+    text: `Un puzzle de **${piezas} piezas** con imagen ${etiquetaDif[dificultad] ?? dificultad} te llevará en promedio **${horas_promedio} h** (entre **${horas_min}** y **${horas_max} h** según tu día): en sesiones de ${sesion_horas} h son unas **${sesionesRedondeadas} tandas**.`,
+    tone: 'neutral',
+    icon: '🧩',
+  };
+
   return {
     horas_min,
     horas_max,
     horas_promedio,
     sesiones_estimadas,
     detalle,
+    _insight: insight,
   };
 }

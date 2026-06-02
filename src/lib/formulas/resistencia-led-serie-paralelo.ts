@@ -26,6 +26,8 @@ export interface ResistenciaLedOutputs {
   corrienteTotal: number;
   resumen: string;
   advertencia: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Valores E12 base (multiplicados por 10^n para cubrir todo el rango)
@@ -131,6 +133,13 @@ export function resistenciaLedSerieParalelo(i: ResistenciaLedInputs): Resistenci
     )} (comercial ${formatResistance(rE12)}). Corriente total: ${(iTotal * 1000).toFixed(1)} mA.`;
   }
 
+  const pMw = P * 1000;
+  const insightTone = P > 0.25 ? 'warn' : 'good';
+  const insightText = conexion === 'serie'
+    ? `Con la fuente de **${vFuente} V** y ${cantidad} LED${cantidad > 1 ? 's' : ''} en serie necesitás **${formatResistance(rE12)}** (exacto ${formatResistance(R)}). La resistencia disipa **${pMw.toFixed(0)} mW**, así que alcanza una de **${pResistenciaClass.split('—')[0].trim()}**.`
+    : `Cada una de las ${cantidad} rama${cantidad > 1 ? 's' : ''} en paralelo lleva su propia **${formatResistance(rE12)}** (exacto ${formatResistance(R)}). Cada resistencia disipa **${pMw.toFixed(0)} mW** → tamaño **${pResistenciaClass.split('—')[0].trim()}**.`;
+  // Gauge: zonas de tamaño físico de resistencia según potencia disipada (mW)
+  const gaugeMax = Math.max(1100, pMw * 1.25);
   return {
     resistenciaExacta: Number(R.toFixed(1)),
     resistenciaE12: formatResistance(rE12),
@@ -140,5 +149,25 @@ export function resistenciaLedSerieParalelo(i: ResistenciaLedInputs): Resistenci
     corrienteTotal: Number(iTotal.toFixed(3)),
     resumen,
     advertencia: advertencia.trim() || 'Sin advertencias — configuración segura.',
+    _insight: {
+      title: 'Resistencia y potencia',
+      text: insightText,
+      tone: insightTone,
+      icon: '💡',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(pMw.toFixed(1)),
+      markerLabel: `${pMw.toFixed(0)} mW`,
+      min: 0,
+      segments: [
+        { nombre: '1/8 W', max: 125, color: '#22c55e', colorDark: '#16a34a' },
+        { nombre: '1/4 W', max: 250, color: '#84cc16', colorDark: '#65a30d' },
+        { nombre: '1/2 W', max: 500, color: '#eab308', colorDark: '#ca8a04' },
+        { nombre: '1 W', max: 1000, color: '#f97316', colorDark: '#ea580c' },
+        { nombre: '+2 W / driver', max: Number(gaugeMax.toFixed(0)), color: '#ef4444', colorDark: '#dc2626' },
+      ],
+      ariaLabel: `La resistencia disipa ${pMw.toFixed(0)} mW; tamaño recomendado ${pResistenciaClass.split('—')[0].trim()}`,
+    },
   };
 }

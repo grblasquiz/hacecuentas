@@ -16,6 +16,8 @@ export interface Outputs {
   total_descuentos: number;
   sueldo_liquido: number;
   tasa_descuento_efectiva: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -105,6 +107,36 @@ export function compute(i: Inputs): Outputs {
   const sueldoLiquido = sueldoBruto - totalDescuentos;
   const tasaDescuentoEfectiva = sueldoBruto > 0 ? (totalDescuentos / sueldoBruto) * 100 : 0;
   
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const pagaImpuesto = impuestoSegundaCategoria > 0;
+  const tone = tasaDescuentoEfectiva >= 25 ? 'warn' : 'neutral';
+
+  const insight = {
+    title: 'De tu bruto a tu líquido',
+    text: `De un bruto de **${fmt(sueldoBruto)}** te llegan **${fmt(sueldoLiquido)}** a la mano: los descuentos se llevan **${fmt(totalDescuentos)}** (**${tasaDescuentoEfectiva.toFixed(1)}%**). ` +
+      (pagaImpuesto
+        ? `Pagás **${fmt(impuestoSegundaCategoria)}** de impuesto de 2ª categoría (tasa marginal **${(tasaImpuesto * 100).toFixed(1)}%**).`
+        : `Tu renta no llega al tramo exento, así que **no pagás impuesto de 2ª categoría**.`),
+    tone,
+    icon: '🇨🇱',
+  };
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Líquido', value: Math.round(sueldoLiquido) },
+      { label: 'AFP (10%)', value: Math.round(aporteAFP) },
+      { label: 'Comisión AFP', value: Math.round(comisionAFPMonto) },
+      { label: 'Salud', value: Math.round(aporteSalud) },
+      { label: 'Cesantía (0,6%)', value: Math.round(seguroCesantia) },
+      ...(impuestoSegundaCategoria > 0 ? [{ label: 'Impuesto 2ª cat.', value: Math.round(impuestoSegundaCategoria) }] : []),
+    ],
+    prefix: '$',
+    centerValue: fmt(sueldoBruto),
+    centerLabel: 'Bruto',
+    ariaLabel: 'Composición del sueldo bruto: líquido más descuentos de AFP, comisión, salud, cesantía e impuesto.',
+  };
+
   return {
     aporte_afp: Math.round(aporteAFP),
     comision_afp_monto: Math.round(comisionAFPMonto),
@@ -113,6 +145,8 @@ export function compute(i: Inputs): Outputs {
     impuesto_segunda_categoria: Math.round(impuestoSegundaCategoria),
     total_descuentos: Math.round(totalDescuentos),
     sueldo_liquido: Math.round(sueldoLiquido),
-    tasa_descuento_efectiva: Math.round(tasaDescuentoEfectiva * 100) / 100
+    tasa_descuento_efectiva: Math.round(tasaDescuentoEfectiva * 100) / 100,
+    _insight: insight,
+    _chart: chart
   };
 }

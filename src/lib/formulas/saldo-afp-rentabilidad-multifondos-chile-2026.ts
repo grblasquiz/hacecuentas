@@ -12,6 +12,8 @@ export interface Outputs {
   saldo_proyectado_jubilacion: number;
   traslados_permitidos: number;
   observacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -70,6 +72,36 @@ export function compute(i: Inputs): Outputs {
     observacion = `Rentabilidad ${rentHist.diez.toFixed(1)}% moderada. Fondos A/B ofrecen mayor potencial a largo plazo.`;
   }
 
+  const clpFmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const superaMeta = rentHist.diez > ipcPlus2;
+  const _insight = anosHastajubilacion > 0
+    ? {
+        title: `Proyección con Fondo ${fondoRecomendado}`,
+        text: `Con una rentabilidad histórica de **${rentHist.diez.toFixed(1)}% anual** a 10 años, tu saldo podría llegar a **${clpFmt(saldoProyectado)}** al jubilarte (en ${anosHastajubilacion} años). ${superaMeta ? 'Supera la meta SII (IPC+2%).' : 'Está por debajo de la meta IPC+2%; un fondo más agresivo podría rendir más a largo plazo.'}`,
+        tone: superaMeta ? 'good' : 'warn',
+        icon: '🏦',
+      }
+    : {
+        title: `Fondo ${fondoRecomendado}`,
+        text: `Ya estás en edad de jubilación: tu saldo actual de **${clpFmt(saldoProyectado)}** no se proyecta más. La rentabilidad histórica del fondo fue **${rentHist.diez.toFixed(1)}% anual**.`,
+        tone: 'neutral',
+        icon: '🏦',
+      };
+
+  // Gauge: rentabilidad histórica 10 años contra la meta SII (IPC+2%)
+  const _chart = {
+    type: 'scale',
+    marker: rentHist.diez,
+    markerLabel: `${rentHist.diez.toFixed(1)}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Baja', max: 3, color: '#f87171', colorDark: '#b91c1c' },
+      { nombre: `Bajo meta (IPC+2%)`, max: ipcPlus2, color: '#fbbf24', colorDark: '#b45309' },
+      { nombre: 'Supera meta', max: Math.max(8, Math.ceil(rentHist.diez) + 1), color: '#34d399', colorDark: '#047857' },
+    ],
+    ariaLabel: `Rentabilidad histórica a 10 años del Fondo ${fondoRecomendado}: ${rentHist.diez.toFixed(1)}% anual, contra la meta SII de IPC+2% (${ipcPlus2}%).`,
+  };
+
   return {
     fondo_recomendado: `Fondo ${fondoRecomendado}`,
     rentabilidad_historica_5_anos: rentHist.cinco,
@@ -77,5 +109,7 @@ export function compute(i: Inputs): Outputs {
     saldo_proyectado_jubilacion: Math.round(saldoProyectado),
     traslados_permitidos: trasladosPermitidos,
     observacion: observacion,
+    _insight,
+    _chart,
   };
 }

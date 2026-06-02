@@ -10,6 +10,8 @@ export interface Outputs {
   margenOriginal: number;
   margenPsicologico: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function precioPsicologico999(i: Inputs): Outputs {
@@ -87,10 +89,47 @@ export function precioPsicologico999(i: Inputs): Outputs {
     `Margen psicológico: ${margenPsicologico.toFixed(1)}%. ` +
     efecto;
 
+  const precioPsicoR = Math.round(precioPsicologico);
+  const gananciaPsico = Math.max(0, precioPsicoR - costo);
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (diferencia > 0) {
+    insightTone = 'good';
+    insightText = `Bajando a **$${fmt.format(precioPsicoR)}** resignás solo **$${fmt.format(diferencia)}** (${((diferencia / precio) * 100).toFixed(1)}%) de precio, pero el dígito izquierdo cambia y el margen queda en **${margenPsicologico.toFixed(1)}%**. El efecto suele compensar con 8-24% más ventas.`;
+  } else if (diferencia < 0) {
+    insightTone = 'good';
+    insightText = `El precio psicológico de **$${fmt.format(precioPsicoR)}** es $${fmt.format(Math.abs(diferencia))} mayor al base: ganás margen (**${margenPsicologico.toFixed(1)}%** vs ${margenOriginal.toFixed(1)}%) sin saltar de rango de precio percibido.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `Tu precio de **$${fmt.format(precioPsicoR)}** ya tiene terminación psicológica óptima, con un margen del **${margenPsicologico.toFixed(1)}%**.`;
+  }
+
+  const _insight = {
+    title: 'Precio psicológico sugerido',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏷️',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Costo del producto', value: Math.round(costo * 100) / 100 },
+      { label: 'Ganancia', value: Math.round(gananciaPsico * 100) / 100 },
+    ],
+    prefix: '$',
+    centerValue: '$' + precioPsicoR.toLocaleString('es-AR'),
+    centerLabel: 'Precio psicológico',
+    ariaLabel: 'Composición del precio psicológico: costo del producto y ganancia',
+  };
+
   return {
-    precioPsicologico: Math.round(precioPsicologico),
+    precioPsicologico: precioPsicoR,
     margenOriginal: Number(margenOriginal.toFixed(1)),
     margenPsicologico: Number(margenPsicologico.toFixed(1)),
     detalle,
+    _insight,
+    _chart,
   };
 }

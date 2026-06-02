@@ -3,7 +3,7 @@ const MULT: Record<string, number> = { negro: 1, marron: 10, rojo: 100, naranja:
 const TOL: Record<string, number> = { marron: 1, rojo: 2, verde: 0.5, azul: 0.25, violeta: 0.1, dorado: 5, plateado: 10 };
 
 export interface ResistenciaCodigoColoresInputs { tipo: string; banda1: string; banda2: string; banda3: string; banda4: string; banda5?: string; }
-export interface ResistenciaCodigoColoresOutputs { valor: string; tolerancia: string; minimo: string; maximo: string; resumen: string; }
+export interface ResistenciaCodigoColoresOutputs { valor: string; tolerancia: string; minimo: string; maximo: string; resumen: string; _insight?: any; }
 
 function fmt(ohms: number): string {
   if (ohms >= 1e6) return (ohms / 1e6).toFixed(2) + ' MΩ';
@@ -23,11 +23,19 @@ export function resistenciaCodigoColores45Bandas(i: ResistenciaCodigoColoresInpu
   }
   const mn = v * (1 - tol / 100);
   const mx = v * (1 + tol / 100);
+  const tolTone = tol <= 1 ? 'good' : tol >= 10 ? 'warn' : 'neutral';
+  const tolTexto = tol <= 1 ? 'es de precisión' : tol >= 10 ? 'es amplia, no apta para circuitos sensibles' : 'es estándar';
   return {
     valor: fmt(v),
     tolerancia: `±${tol}%`,
     minimo: fmt(mn),
     maximo: fmt(mx),
-    resumen: `Resistencia ${fmt(v)} con tolerancia ±${tol}%. Rango real: ${fmt(mn)} a ${fmt(mx)}.`
+    resumen: `Resistencia ${fmt(v)} con tolerancia ±${tol}%. Rango real: ${fmt(mn)} a ${fmt(mx)}.`,
+    _insight: {
+      title: 'Lectura del código de colores',
+      text: `El valor nominal es **${fmt(v)}** con tolerancia **±${tol}%**, así que la pieza real cae entre **${fmt(mn)}** y **${fmt(mx)}**. Esa tolerancia ${tolTexto}.`,
+      tone: tolTone,
+      icon: '🎨',
+    }
   };
 }

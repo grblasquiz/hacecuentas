@@ -16,6 +16,8 @@ export interface Outputs {
   roi_meses: number;
   cuota_mensual_icetex: number;
   comparativa_texto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -119,6 +121,41 @@ export function compute(i: Inputs): Outputs {
   const beca_desc = i.tiene_beca === 'no' ? 'sin beca' : `con ${i.tiene_beca}`;
   const comparativa_texto = `Carrera ${i.programa} en ${tipo_inst} (${i.duracion_semestres} sem) ${beca_desc}: coste total $${coste_total_carrera.toLocaleString('es-CO')}, neto estudiante $${coste_neto_estudiante.toLocaleString('es-CO')}. Salario egreso: $${salario_egreso_promedio.toLocaleString('es-CO')}/mes. ROI: ${roi_meses} meses (${(roi_meses / 12).toFixed(1)} años). Cuota ICETEX: $${Math.round(cuota_mensual_icetex).toLocaleString('es-CO')}/mes.`;
 
+  // ─── Insight narrativo (interpreta el resultado real)
+  const netoFmt = `$${Math.round(coste_neto_estudiante).toLocaleString('es-CO')}`;
+  const totalFmt = `$${Math.round(coste_total_carrera).toLocaleString('es-CO')}`;
+  const anosRoi = (roi_meses / 12).toFixed(1);
+  const cubrePct = coste_total_carrera > 0 ? Math.round((becas_total / coste_total_carrera) * 100) : 0;
+
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+
+  if (coste_neto_estudiante <= 0) {
+    insightTitle = 'Carrera 100% cubierta';
+    insightText = `Con tu beca, el coste neto para tu familia es **$0**: la ayuda cubre los **${totalFmt}** de la carrera completa. Aprovechá y cumplí los requisitos para no perder la condonación.`;
+    insightTone = 'good';
+    insightIcon = '🎓';
+  } else if (roi_meses >= 999) {
+    insightTitle = 'ROI no favorable';
+    insightText = `El salario de egreso estimado (**$${salario_egreso_promedio.toLocaleString('es-CO')}/mes**) no supera el baseline de un auxiliar, así que la inversión de **${netoFmt}** no se recupera por diferencial salarial. Revisá programa o tipo de universidad.`;
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+  } else if (roi_meses <= 36) {
+    insightTitle = 'Inversión que se paga sola';
+    insightText = `Pagás **${netoFmt}** netos${cubrePct > 0 ? ` (la beca cubre el **${cubrePct}%**)` : ''} y recuperás la inversión en **${anosRoi} años** gracias al diferencial salarial. ROI sólido para ${i.programa}.`;
+    insightTone = 'good';
+    insightIcon = '📈';
+  } else {
+    insightTitle = `Recuperás la inversión en ${anosRoi} años`;
+    insightText = `El coste neto es **${netoFmt}**${cubrePct > 0 ? ` (beca cubre **${cubrePct}%**)` : ''} y tardás **${anosRoi} años** en recuperarlo por mayor salario. La cuota ICETEX rondaría **$${Math.round(cuota_mensual_icetex).toLocaleString('es-CO')}/mes**.`;
+    insightTone = 'neutral';
+    insightIcon = '🏛️';
+  }
+
+  const _insight = { title: insightTitle, text: insightText, tone: insightTone, icon: insightIcon };
+
   return {
     matricula_semestral: Math.round(matricula_semestral),
     coste_total_carrera: Math.round(coste_total_carrera),
@@ -128,5 +165,20 @@ export function compute(i: Inputs): Outputs {
     roi_meses,
     cuota_mensual_icetex: Math.round(cuota_mensual_icetex),
     comparativa_texto,
+    _insight,
+    // Donut: el coste total se reparte entre lo que paga la familia y lo que cubre la beca
+    ...(becas_total > 0 ? {
+      _chart: {
+        type: 'doughnut',
+        slices: [
+          { label: 'Paga la familia', value: Math.round(coste_neto_estudiante) },
+          { label: 'Cubre la beca', value: Math.round(becas_total) },
+        ],
+        prefix: '$',
+        centerValue: totalFmt,
+        centerLabel: 'Coste total',
+        ariaLabel: `Coste total de la carrera ${totalFmt}: ${netoFmt} a cargo de la familia y $${Math.round(becas_total).toLocaleString('es-CO')} cubiertos por beca.`,
+      },
+    } : {}),
   };
 }

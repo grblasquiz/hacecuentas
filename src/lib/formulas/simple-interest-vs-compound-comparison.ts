@@ -13,6 +13,8 @@ export interface Outputs {
   difference: number;
   multiplier: number;
   yearly_table: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Compounding frequency map — periods per year
@@ -140,6 +142,34 @@ export function compute(i: Inputs): Outputs {
 
   const yearly_table = tableLines.join("\n");
 
+  const fmtMoney = (val: number): string =>
+    "$" + Math.round(val).toLocaleString("en-US");
+
+  // Insight: how much extra compounding earns vs simple interest
+  const pctExtra = simple_interest_earned > 0
+    ? (difference / simple_interest_earned) * 100
+    : 0;
+  const _insight = {
+    title: "Compounding edge",
+    text: `After **${years} ${years === 1 ? "year" : "years"}** at **${annual_rate}%** (${freqLabel} compounding), compound interest leaves you with **${fmtMoney(compound_total)}** vs **${fmtMoney(simple_total)}** under simple interest — an extra **${fmtMoney(difference)}**${pctExtra > 0 ? `, about **${Math.round(pctExtra)}% more interest** than the simple method` : ""}.`,
+    tone: difference > 0 ? "good" : "neutral",
+    icon: "📈",
+  };
+
+  // Donut: compound_total = principal + simple interest + extra from compounding
+  const _chart = {
+    type: "doughnut",
+    slices: [
+      { label: "Principal", value: Math.round(principal) },
+      { label: "Simple interest", value: Math.round(simple_interest_earned) },
+      { label: "Compounding bonus", value: Math.round(difference) },
+    ],
+    prefix: "$",
+    centerValue: fmtMoney(compound_total),
+    centerLabel: "Compound total",
+    ariaLabel: `Breakdown of the compound total ${fmtMoney(compound_total)}: principal ${fmtMoney(principal)}, simple interest ${fmtMoney(simple_interest_earned)}, and ${fmtMoney(difference)} extra from compounding.`,
+  };
+
   return {
     simple_total: Math.round(simple_total * 100) / 100,
     simple_interest_earned: Math.round(simple_interest_earned * 100) / 100,
@@ -148,5 +178,7 @@ export function compute(i: Inputs): Outputs {
     difference: Math.round(difference * 100) / 100,
     multiplier: Math.round(multiplier * 10000) / 10000,
     yearly_table,
+    _insight,
+    _chart,
   };
 }

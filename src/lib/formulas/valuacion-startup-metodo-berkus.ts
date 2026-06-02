@@ -13,6 +13,8 @@ export interface Outputs {
   porcentajeMaximo: number;
   diagnostico: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function valuacionStartupMetodoBerkus(i: Inputs): Outputs {
@@ -66,10 +68,36 @@ export function valuacionStartupMetodoBerkus(i: Inputs): Outputs {
     `A mejorar: ${debil.nombre} (USD ${fmt.format(debil.valor)}). ` +
     diagnostico;
 
+  let tone: 'good' | 'warn' | 'neutral';
+  if (porcentajeMaximo >= 60) tone = 'good';
+  else if (porcentajeMaximo >= 40) tone = 'neutral';
+  else tone = 'warn';
+
+  const insight = {
+    title: 'Valuación pre-revenue (Berkus)',
+    text: `Tu startup vale **USD ${fmt.format(Math.round(valuacion))}** según Berkus, un **${porcentajeMaximo.toFixed(0)}%** del techo de USD 2,5M. El factor más fuerte es **${fuerte.nombre}** (USD ${fmt.format(fuerte.valor)}); el más flojo, **${debil.nombre}** (USD ${fmt.format(debil.valor)}) — ahí está tu margen para subir la valuación.`,
+    tone,
+    icon: '🚀'
+  };
+
   return {
     valuacion: Math.round(valuacion),
     porcentajeMaximo: Number(porcentajeMaximo.toFixed(1)),
     diagnostico,
     detalle,
+    _insight: insight,
+    _chart: {
+      type: 'scale',
+      marker: Number(porcentajeMaximo.toFixed(1)),
+      markerLabel: `${porcentajeMaximo.toFixed(0)}% del máximo`,
+      min: 0,
+      segments: [
+        { nombre: 'Etapa muy temprana', max: 40, color: '#f87171', colorDark: '#dc2626' },
+        { nombre: 'Perfil moderado', max: 60, color: '#fbbf24', colorDark: '#d97706' },
+        { nombre: 'Buen perfil', max: 80, color: '#86efac', colorDark: '#16a34a' },
+        { nombre: 'Muy atractiva', max: 101, color: '#22c55e', colorDark: '#15803d' }
+      ],
+      ariaLabel: `La valuación de USD ${fmt.format(Math.round(valuacion))} representa el ${porcentajeMaximo.toFixed(0)}% del máximo de Berkus (USD 2,5M)`
+    }
   };
 }

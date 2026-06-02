@@ -12,6 +12,8 @@ export interface Outputs {
   categoria: string;
   recomendacion: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const BASE: Record<string, number> = {
@@ -72,11 +74,66 @@ export function tiempoSecadoRopaAire(i: Inputs): Outputs {
   else if (horas < 10) { categoria = 'Lento'; rec = 'Evaluá interior con ventilador o deshumidificador si está muy húmedo.'; }
   else { categoria = 'Muy lento'; rec = 'Riesgo de mal olor si pasa >24 h. Mejor secado bajo techo ventilado o secarropa.'; }
 
+  // Identificar el factor dominante (el que más aleja de 1, sea acelerando o frenando).
+  const factores: Array<{nombre: string; valor: number}> = [
+    { nombre: 'la temperatura baja', valor: fT },
+    { nombre: 'la humedad alta', valor: fH },
+    { nombre: 'el poco viento', valor: fV },
+    { nombre: 'la falta de sol', valor: fSol },
+  ];
+  // El que más frena (mayor factor) si seca lento; el que más ayuda (menor factor) si seca rápido.
+  const masFrena = factores.reduce((a, b) => (b.valor > a.valor ? b : a));
+  const masAyuda = factores.reduce((a, b) => (b.valor < a.valor ? b : a));
+
+  let insTone: 'good' | 'warn' | 'neutral';
+  let insText: string;
+  if (horas < 2) {
+    insTone = 'good';
+    insText = `Secado **express**: tu ${i.prenda} estaría lista en **~${horas.toFixed(1)} h**. Las condiciones juegan a favor y suma especialmente la baja humedad y el calor. Tendela ya.`;
+  } else if (horas < 5) {
+    insTone = 'neutral';
+    insText = `Tiempo **normal** de **~${horas.toFixed(1)} h** para una ${i.prenda} con ${H.toFixed(0)}% de humedad y ${v.toFixed(0)} km/h de viento. Colgala separada para que el aire circule.`;
+  } else if (horas < 10) {
+    insTone = 'warn';
+    insText = `Secado **lento** (**~${horas.toFixed(1)} h**): lo que más frena es **${masFrena.nombre}**. Si está muy húmedo, un ventilador o deshumidificador puede ayudar más que esperar afuera.`;
+  } else {
+    insTone = 'warn';
+    insText = `Secado **muy lento** (**~${horas.toFixed(1)} h**): con **${masFrena.nombre}**, hay riesgo de mal olor si pasa más de 24 h. Conviene techo ventilado o secarropa.`;
+  }
+  // Para casos rápidos, mencionar el factor que más ayuda.
+  if (horas < 2 && masAyuda.valor < 0.8) {
+    insText = `Secado **express**: tu ${i.prenda} estaría lista en **~${horas.toFixed(1)} h**, sobre todo gracias a **${masAyuda.nombre.replace('la falta de sol', 'el sol pleno').replace('el poco viento', 'el viento')}**. Tendela ya.`;
+  }
+
+  // Gauge: horas de secado en zonas (Muy rápido / Normal / Lento / Muy lento).
+  const topEscala = Math.max(14, Math.ceil(horas) + 1);
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(horas.toFixed(1)),
+    markerLabel: `~${horas.toFixed(1)} h`,
+    min: 0,
+    unit: 'h',
+    segments: [
+      { nombre: 'Muy rápido', max: 2, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Normal', max: 5, color: '#a7f3d0', colorDark: '#047857' },
+      { nombre: 'Lento', max: 10, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Muy lento', max: topEscala, color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Escala de tiempo de secado al aire: muy rápido hasta 2h, normal hasta 5h, lento hasta 10h y muy lento por encima. Marcador en ~${horas.toFixed(1)} h.`,
+  };
+
   return {
     horas: `${horas.toFixed(1)} h`,
     horasNumero: Number(horas.toFixed(2)),
     categoria,
     recomendacion: rec,
     mensaje: `${i.prenda} a ${T.toFixed(1)} °C, ${H.toFixed(0)}% HR, ${v.toFixed(0)} km/h viento, sol ${i.sol}: ~${horas.toFixed(1)} h (${categoria}).`,
+    _insight: {
+      title: 'Tu tiempo de secado',
+      text: insText,
+      tone: insTone,
+      icon: '👕',
+    },
+    _chart: chart,
   };
 }

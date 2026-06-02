@@ -24,6 +24,7 @@ export interface PremiosCopaArgentinaOutputs {
   detalle: string;
   rondaLabel: string;
   ganoCupoLibertadores: boolean;
+  _insight?: any;
 }
 
 const PREMIOS_CA: Record<string, number> = {

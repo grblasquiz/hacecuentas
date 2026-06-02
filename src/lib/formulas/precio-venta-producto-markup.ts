@@ -1,6 +1,6 @@
 /** Precio venta producto markup */
 export interface Inputs { costoProducto: number; markupPct: number; aplicarIva: string; usarPsicologico: string; }
-export interface Outputs { precioFinal: number; precioSinIva: number; margenPct: number; gananciaNeta: number; }
+export interface Outputs { precioFinal: number; precioSinIva: number; margenPct: number; gananciaNeta: number; _insight?: any; _chart?: any; }
 export function precioVentaProductoMarkup(i: Inputs): Outputs {
   const costo = Number(i.costoProducto);
   const mk = Number(i.markupPct) / 100;

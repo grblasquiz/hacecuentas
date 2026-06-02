@@ -9,6 +9,7 @@ export interface Outputs {
   altoCucha: number;
   tamanoAbertura: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function tamanoCuchaPerro(i: Inputs): Outputs {
@@ -35,5 +36,11 @@ export function tamanoCuchaPerro(i: Inputs): Outputs {
     altoCucha,
     tamanoAbertura: `${fmt.format(anchoAbertura)} × ${fmt.format(altoAbertura)} cm`,
     detalle: `Para un perro de ${fmt.format(largo)} cm de largo y ${fmt.format(altura)} cm de alto: cucha de ${fmt.format(largoCucha)} × ${fmt.format(anchoCucha)} × ${fmt.format(altoCucha)} cm (L×A×H). Abertura: ${fmt.format(anchoAbertura)} × ${fmt.format(altoAbertura)} cm.`,
+    _insight: {
+      title: 'Ni muy chica ni muy grande',
+      text: `La cucha de **${fmt.format(largoCucha)}×${fmt.format(anchoCucha)} cm** deja que tu perro se gire y estire, pero queda lo bastante ajustada para que conserve el calor del cuerpo. La abertura de **${fmt.format(anchoAbertura)}×${fmt.format(altoAbertura)} cm** (más baja que su lomo) frena el viento y la lluvia.`,
+      tone: 'good',
+      icon: '🐶',
+    },
   };
 }

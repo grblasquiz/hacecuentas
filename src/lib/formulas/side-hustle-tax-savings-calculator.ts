@@ -16,6 +16,8 @@ export interface Outputs {
   effective_rate: number;
   quarterly_payment: number;
   breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // 2026 constants — IRS Rev. Proc. 2025-28
@@ -121,6 +123,28 @@ export function compute(i: Inputs): Outputs {
     `Net You Keep: $${netKeep.toFixed(2)}\n` +
     `Quarterly Estimated Payment (Form 1040-ES): $${quarterlyPayment.toFixed(2)}`;
 
+  const effPct = (effectiveRate * 100);
+  const _insight = {
+    title: 'Where your side-hustle profit goes',
+    text: `On **$${netProfit.toLocaleString('en-US', { maximumFractionDigits: 0 })}** of net profit you owe **$${totalTax.toLocaleString('en-US', { maximumFractionDigits: 0 })}** in taxes — an effective rate of **${effPct.toFixed(1)}%** — so you keep **$${netKeep.toLocaleString('en-US', { maximumFractionDigits: 0 })}**. Set aside about **$${quarterlyPayment.toLocaleString('en-US', { maximumFractionDigits: 0 })}** each quarter (Form 1040-ES) to avoid an underpayment penalty.`,
+    tone: effPct >= 30 ? 'warn' : 'neutral',
+    icon: '💸',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'You keep', value: Math.round(netKeep) },
+      { label: 'SE tax', value: Math.round(seTax) },
+      { label: 'Federal', value: Math.round(fedTax) },
+      { label: 'State', value: Math.round(stateTax) },
+    ],
+    prefix: '$',
+    centerValue: `$${Math.round(netProfit).toLocaleString('en-US')}`,
+    centerLabel: 'Net profit',
+    ariaLabel: `Net profit split: kept ${Math.round(netKeep)}, self-employment tax ${Math.round(seTax)}, federal ${Math.round(fedTax)}, state ${Math.round(stateTax)}`,
+  };
+
   return {
     net_profit: parseFloat(netProfit.toFixed(2)),
     se_tax: parseFloat(seTax.toFixed(2)),
@@ -130,6 +154,8 @@ export function compute(i: Inputs): Outputs {
     net_keep: parseFloat(netKeep.toFixed(2)),
     effective_rate: parseFloat((effectiveRate * 100).toFixed(2)),
     quarterly_payment: parseFloat(quarterlyPayment.toFixed(2)),
-    breakdown
+    breakdown,
+    _insight,
+    _chart
   };
 }

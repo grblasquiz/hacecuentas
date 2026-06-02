@@ -9,6 +9,7 @@ export interface Outputs {
   bitrateMax: number;
   uploadNecesario: number;
   preset: string;
+  _insight?: any;
 }
 
 const PLATFORM_MAX: Record<string, number> = {
@@ -53,10 +54,26 @@ export function streamBitrateCalidad(i: Inputs): Outputs {
     preset = `Tu upload limita a ${bitrateIdeal} kbps. Recomendación: bajá a ${resRecomendar} para mejor calidad visual. Encoder: NVENC, Keyframe: 2s, CBR.`;
   }
 
+  const limitante = bitrateIdeal === maxByUpload && maxByUpload < bitrateRec
+    ? 'tu velocidad de subida'
+    : bitrateIdeal === platformMax && platformMax < bitrateRec
+    ? `el tope de ${i.plataforma}`
+    : 'la resolución elegida';
+  const subeOk = bitrateIdeal >= bitrateRec;
+  const _insight = {
+    title: 'Tu bitrate recomendado',
+    text: subeOk
+      ? `Transmití a **${bitrateIdeal} kbps** para ${i.resolucion}: tus ${upload} Mbps de subida cubren la calidad óptima con margen. Necesitás al menos **${uploadNecesario.toFixed(1)} Mbps** estables para ir tranquilo.`
+      : `El bitrate quedó limitado a **${bitrateIdeal} kbps** por ${limitante} (lo ideal para ${i.resolucion} son ${bitrateRec} kbps). Para esa calidad necesitarías ~**${uploadNecesario.toFixed(1)} Mbps** de subida estable.`,
+    tone: subeOk ? 'good' : 'warn',
+    icon: '📡',
+  };
+
   return {
     bitrateIdeal,
     bitrateMax: platformMax,
     uploadNecesario: Number(uploadNecesario.toFixed(1)),
     preset,
+    _insight,
   };
 }

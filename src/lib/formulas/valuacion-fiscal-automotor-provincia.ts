@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number | any; }
 
 type Franja = { hasta: number; alicuota: number };
 type Config = { tipo: 'flat'; alicuota: number } | { tipo: 'franjas'; franjas: Franja[] };
@@ -73,11 +73,22 @@ export function valuacionFiscalAutomotorProvincia(i: Inputs): Outputs {
   const provLabel = provincia.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   const detalle = `${provLabel}: valuación ajustada por antigüedad ${fmt(valuacionDepreciada)} × alícuota ${alicPct} = impuesto anual ${fmt(impuestoAnual)} (${cfg.tipo === 'franjas' ? 'tramo según franjas' : 'alícuota flat'}).`;
 
+  const reduccionPct = valuacionFiscal > 0 ? (1 - factor) * 100 : 0;
+  const insight = {
+    title: `Patente anual en ${provLabel}`,
+    text: antiguedad > 0 && valuacionFiscal > 0
+      ? `Vas a pagar **${fmt(impuestoAnual)} al año** (${fmt(impuestoMensual)} por mes) con una alícuota del ${alicPct}. La antigüedad de ${antiguedad} año${antiguedad === 1 ? '' : 's'} bajó la base imponible un **${reduccionPct.toFixed(0)}%**, así que el impuesto es menor que sobre el valor de 0 km.`
+      : `Vas a pagar **${fmt(impuestoAnual)} al año** (${fmt(impuestoMensual)} por mes) con una alícuota del ${alicPct} sobre la valuación fiscal. A medida que el auto suma años, la base baja y el impuesto también.`,
+    tone: 'warn',
+    icon: '🚗',
+  };
+
   return {
     impuestoAnual: fmt(impuestoAnual),
     impuestoMensual: fmt(impuestoMensual),
     alicuotaAplicada: alicPct,
     valuacionDepreciada: fmt(valuacionDepreciada),
     detalle,
+    _insight: insight,
   };
 }

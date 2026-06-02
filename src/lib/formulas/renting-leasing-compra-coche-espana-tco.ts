@@ -29,6 +29,7 @@ export interface Outputs {
   coste_mes_leasing: number;
   coste_mes_compra: number;
   advertencias: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -219,6 +220,20 @@ export function compute(i: Inputs): Outputs {
 
   const advertenciasTexto = avisos.length > 0 ? avisos.join(' | ') : 'Sin advertencias para los datos introducidos.';
 
+  // Insight: gana la opción con menor coste total de propiedad (TCO) en el período.
+  const fmtEur = (v: number) => Math.round(v).toLocaleString('es-ES');
+  const costeMesMejor = mejorTCO / meses;
+  const hayAvisos = avisos.length > 0;
+  const insight = {
+    title: `${mejorOpcion} es la opción más barata`,
+    text: `En ${anios} año${anios === 1 ? '' : 's'}, **${mejorOpcion}** sale **${fmtEur(mejorTCO)} €** de coste total neto (≈**${fmtEur(costeMesMejor)} €/mes**), **${fmtEur(diferenciaConSegundo)} €** menos que ${tcos[1].nombre}.` +
+      (i.perfil_fiscal === 'particular'
+        ? ' Como particular no deducís IVA ni gastos, así que este TCO es el coste real sin ventaja fiscal.'
+        : ` El cálculo ya descuenta el ahorro fiscal de tu perfil ${i.perfil_fiscal}.`),
+    tone: hayAvisos ? 'warn' as const : 'good' as const,
+    icon: '🚗',
+  };
+
   return {
     tco_renting: Math.round(tcoRenting * 100) / 100,
     tco_leasing: Math.round(tcoLeasing * 100) / 100,
@@ -233,5 +248,6 @@ export function compute(i: Inputs): Outputs {
     coste_mes_leasing: Math.round(costeMesLeasing * 100) / 100,
     coste_mes_compra: Math.round(costeMesCompra * 100) / 100,
     advertencias: advertenciasTexto,
+    _insight: insight,
   };
 }

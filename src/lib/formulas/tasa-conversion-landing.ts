@@ -1,6 +1,6 @@
 /** Calculadora de Tasa de Conversión de Landing */
 export interface Inputs { visitantes: number; conversiones: number; industria: string; }
-export interface Outputs { tasaConversion: number; benchmarkIndustria: number; diferencia: string; recomendacion: string; }
+export interface Outputs { tasaConversion: number; benchmarkIndustria: number; diferencia: string; recomendacion: string; _insight?: any; }
 
 const BENCHMARKS: Record<string, number> = {
   ecommerce: 2.5,
@@ -39,10 +39,18 @@ export function tasaConversionLanding(i: Inputs): Outputs {
     recomendacion = 'Tu landing necesita optimización. Priorizá: 1) Headline más claro, 2) CTA prominente, 3) Menos campos en form, 4) Social proof/testimonios.';
   }
 
+  const _insight = {
+    title: diff >= 0 ? 'Convertís por encima del promedio' : 'Hay margen para mejorar',
+    text: `De **${vis.toLocaleString('es-AR')}** visitantes lograste **${conv.toLocaleString('es-AR')}** conversiones: una tasa del **${tasaConversion.toFixed(2)}%**, frente al **${benchmark}%** promedio de tu industria. ${diff >= 0 ? `Estás **${diff.toFixed(1)} puntos por encima**.` : `Estás **${Math.abs(diff).toFixed(1)} puntos por debajo**.`}`,
+    tone: diff > 0 ? 'good' : diff > -1 ? 'neutral' : 'warn',
+    icon: '🎯',
+  };
+
   return {
     tasaConversion: Number(tasaConversion.toFixed(2)),
     benchmarkIndustria: benchmark,
     diferencia,
     recomendacion,
+    _insight,
   };
 }

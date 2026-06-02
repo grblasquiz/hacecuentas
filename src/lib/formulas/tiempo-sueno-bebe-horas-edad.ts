@@ -8,5 +8,23 @@ export function tiempoSuenoBebeHorasEdad(i: Inputs): Outputs {
   else if (m<24) { tot=13; n=11; s='1-2 siestas'; }
   else if (m<60) { tot=11; n=10; s='1 siesta o sin'; }
   else { tot=10; n=10; s='Sin siesta'; }
-  return { horasTotales:tot+'h', noche:n+'h', siestas:s, resumen:`${m} meses: ${tot}h total, ${n}h noche, ${s}.` };
+  const siestaHoras = Math.max(0, tot - n);
+  const _insight = {
+    title: 'Sueño recomendado',
+    text: `A los **${m} meses** lo ideal son **${tot}h** de sueño al día: **${n}h** de noche y unas **${siestaHoras}h** de siestas (${s}). Dormir mucho menos a esta edad afecta el desarrollo y el humor.`,
+    tone: 'good',
+    icon: '😴',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Sueño nocturno', value: n },
+      { label: 'Siestas', value: siestaHoras },
+    ],
+    centerValue: tot + 'h',
+    centerLabel: 'Total/día',
+    ariaLabel: `Sueño diario recomendado: ${tot} horas, de las cuales ${n} de noche y ${siestaHoras} en siestas`,
+  };
+  const out: any = { horasTotales:tot+'h', noche:n+'h', siestas:s, resumen:`${m} meses: ${tot}h total, ${n}h noche, ${s}.`, _insight, _chart };
+  return out;
 }

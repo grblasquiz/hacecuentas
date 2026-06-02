@@ -17,6 +17,8 @@ export interface Outputs {
   valorTerminal: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function valorIntrinsecoDcf(i: Inputs): Outputs {
@@ -54,6 +56,28 @@ export function valorIntrinsecoDcf(i: Inputs): Outputs {
   const formula = `DCF = Σ FCF/(1+r)^t + Terminal Value = $${valorEmpresa.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
   const explicacion = `FCF actual: $${fcf.toLocaleString()}. Crecimiento 5 años: ${(g5 * 100).toFixed(1)}%. Suma flujos descontados (5 años): $${Math.round(sumFlujosDescontados).toLocaleString()}. Valor terminal (crecimiento ${(gTerminal * 100).toFixed(1)}%): $${Math.round(valorTerminal).toLocaleString()} (${((valorTerminal / valorEmpresa) * 100).toFixed(0)}% del valor total). Valor empresa: $${Math.round(valorEmpresa).toLocaleString()}. Deuda neta: $${deuda.toLocaleString()}. Valor equity: $${Math.round(valorEquity).toLocaleString()}. Valor por acción: $${valorPorAccion.toFixed(2)}.`;
 
+  const fmtUsd = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+  const pctTerminal = (valorTerminal / valorEmpresa) * 100;
+
+  const insight = {
+    title: 'De dónde sale el valor',
+    text: `El valor intrínseco da **${fmtUsd(valorEmpresa)}** de empresa y **$${valorPorAccion.toFixed(2)} por acción**. El **${pctTerminal.toFixed(0)}%** proviene del valor terminal (la perpetuidad después del año 5)${pctTerminal >= 75 ? ', así que el resultado es muy sensible a la tasa de crecimiento terminal y al WACC que asumiste.' : ', un peso razonable de los flujos explícitos.'}`,
+    tone: pctTerminal >= 75 ? 'warn' : 'neutral',
+    icon: '📈',
+  };
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Flujos descontados (5 años)', value: Math.round(sumFlujosDescontados) },
+      { label: 'Valor terminal', value: Math.round(valorTerminal) },
+    ],
+    prefix: '$',
+    centerValue: fmtUsd(valorEmpresa),
+    centerLabel: 'Valor empresa',
+    ariaLabel: 'Composición del valor de empresa entre los flujos descontados de los primeros 5 años y el valor terminal',
+  };
+
   return {
     valorEmpresa: Math.round(valorEmpresa),
     valorEquity: Math.round(valorEquity),
@@ -62,5 +86,7 @@ export function valorIntrinsecoDcf(i: Inputs): Outputs {
     valorTerminal: Math.round(valorTerminal),
     formula,
     explicacion,
+    _insight: insight,
+    _chart: chart,
   };
 }

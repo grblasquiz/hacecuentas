@@ -7,6 +7,8 @@ export interface Outputs {
   longitud: string;
   peso: string;
   desarrollo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Datos basados en OMS / INTERGROWTH-21st
@@ -56,7 +58,7 @@ export function tamanoBebeSemana(i: Inputs): Outputs {
   const semana = Math.round(Number(i.semanaGestacion));
   if (!semana || semana < 4 || semana > 42) throw new Error('Ingresá una semana entre 4 y 42');
 
-  const d = datos[semana];
+  let d = datos[semana];
   if (!d) {
     // Interpolar para semanas sin datos exactos (ej: 15)
     const keys = Object.keys(datos).map(Number).sort((a, b) => a - b);
@@ -65,13 +67,39 @@ export function tamanoBebeSemana(i: Inputs): Outputs {
       if (k <= semana) lower = k;
       if (k >= semana && upper >= semana) { upper = k; break; }
     }
-    return datos[lower] || datos[upper];
+    d = datos[lower] || datos[upper];
   }
+
+  // Trimestre según semana de gestación
+  const trimestre = semana <= 13 ? 'primer' : semana <= 27 ? 'segundo' : 'tercer';
+  const frutaTxt = d.fruta.replace(/^[^\sa-zA-ZáéíóúÁÉÍÓÚñÑ]+\s*/, '');
+  const pesoTxt = d.peso && d.peso !== '–' ? ` y pesa **${d.peso}**` : '';
+  const _insight = {
+    title: `Semana ${semana} — ${trimestre} trimestre`,
+    text: `En la semana **${semana}** tu bebé mide **${d.longitud}**${pesoTxt}, del tamaño de ${frutaTxt}. ${d.desarrollo}`,
+    tone: 'good',
+    icon: '🤰',
+  };
+  // Gauge: avance del embarazo por trimestre
+  const _chart = {
+    type: 'scale',
+    marker: semana,
+    markerLabel: `Semana ${semana}`,
+    min: 4,
+    segments: [
+      { nombre: '1er trim.', max: 13, color: '#fbcfe8', colorDark: '#9d174d' },
+      { nombre: '2do trim.', max: 27, color: '#f9a8d4', colorDark: '#be185d' },
+      { nombre: '3er trim.', max: 42, color: '#ec4899', colorDark: '#9d174d' },
+    ],
+    ariaLabel: `Semana ${semana} de 42, en el ${trimestre} trimestre`,
+  };
 
   return {
     fruta: d.fruta,
     longitud: d.longitud,
     peso: d.peso,
     desarrollo: d.desarrollo,
+    _insight,
+    _chart,
   };
 }

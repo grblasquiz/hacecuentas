@@ -2,7 +2,7 @@
  * Calculadora de Sillas y Mesas por Invitados.
  */
 export interface SillasMesasInvitadosInputs { invitados:number; tipoMesa:string; }
-export interface SillasMesasInvitadosOutputs { mesas:number; sillas:number; costoAlquiler:number; notas:string; }
+export interface SillasMesasInvitadosOutputs { mesas:number; sillas:number; costoAlquiler:number; notas:string; _insight?:any; _chart?:any; }
 export function sillasMesasInvitados(inputs: SillasMesasInvitadosInputs): SillasMesasInvitadosOutputs {
   const inv = Number(inputs.invitados);
   const tipo = inputs.tipoMesa;
@@ -17,10 +17,34 @@ export function sillasMesasInvitados(inputs: SillasMesasInvitadosInputs): Sillas
   const sillas = tipo === 'coctail' ? 0 : Math.ceil(inv * 1.05);
   const costoMesas = mesas * precioMesa;
   const costoSillas = sillas * 3;
+  const costoAlquiler = costoMesas + costoSillas;
+
+  const sillasTxt = sillas > 0 ? ` y **${sillas}** sillas (con 5% de margen para imprevistos)` : ' (formato de pie, sin sillas)';
+  const _insight = {
+    title: 'Tu armado para el evento',
+    text: `Para **${inv}** invitados necesitás **${mesas}** mesas${sillasTxt}. El alquiler ronda los **$${costoAlquiler.toLocaleString('es-AR')}**. Sumá un par de mesas extra para buffet, regalos y torta.`,
+    tone: 'neutral',
+    icon: '🪑',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Mesas', value: costoMesas },
+      { label: 'Sillas', value: costoSillas },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: `$${costoAlquiler.toLocaleString('es-AR')}`,
+    centerLabel: 'Alquiler',
+    ariaLabel: `Costo de alquiler: mesas $${costoMesas}, sillas $${costoSillas}`,
+  };
+
   return {
     mesas,
     sillas,
-    costoAlquiler: costoMesas + costoSillas,
+    costoAlquiler,
     notas,
+    _insight,
+    _chart,
   };
 }

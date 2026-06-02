@@ -2,7 +2,7 @@
  * Conversor de Tamaño de Archivos — KB, MB, GB, TB
  */
 export interface TamanoArchivoInputs { valor: number; unidadOrigen: string; unidadDestino: string; }
-export interface TamanoArchivoOutputs { resultado: string; bytes: number; kb: string; mb: string; gb: string; tb: string; }
+export interface TamanoArchivoOutputs { resultado: string; bytes: number; kb: string; mb: string; gb: string; tb: string; _insight?: any; }
 
 const UNIDADES: Record<string, number> = {
   bytes: 1,
@@ -37,6 +37,12 @@ export function tamanoArchivoConversor(inputs: TamanoArchivoInputs): TamanoArchi
     bytes: 'Bytes', kb: 'KB', mb: 'MB', gb: 'GB', tb: 'TB',
   };
 
+  const _insight = {
+    title: 'Conversión de tamaño',
+    text: `**${formatear(valor)} ${nombreUnidad[origen]}** equivalen a **${formatear(convertido)} ${nombreUnidad[destino]}**. Recordá que en informática 1 ${nombreUnidad.gb} = 1024 ${nombreUnidad.mb} (base binaria), no 1000: por eso un disco de 1 TB muestra menos espacio real.`,
+    tone: 'neutral',
+    icon: '💾',
+  };
   return {
     resultado: `${formatear(valor)} ${nombreUnidad[origen]} = ${formatear(convertido)} ${nombreUnidad[destino]}`,
     bytes: enBytes,
@@ -44,5 +50,6 @@ export function tamanoArchivoConversor(inputs: TamanoArchivoInputs): TamanoArchi
     mb: `${formatear(enBytes / UNIDADES.mb)} MB`,
     gb: `${formatear(enBytes / UNIDADES.gb)} GB`,
     tb: `${formatear(enBytes / UNIDADES.tb)} TB`,
+    _insight,
   };
 }

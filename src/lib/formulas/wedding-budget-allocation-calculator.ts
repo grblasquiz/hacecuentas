@@ -18,6 +18,8 @@ export interface Outputs {
   per_guest_cost: number;
   regional_benchmark: string;
   budget_vs_benchmark: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Allocation percentages — industry standard (The Knot / WeddingWire 2026)
@@ -104,6 +106,32 @@ export function compute(i: Inputs): Outputs {
     budgetVsBenchmark = `Your budget is ${formatCurrency(Math.abs(diff))} below the regional average (${formatCurrency(benchmarkAvg)}) — expect trade-offs in venue or catering.`;
   }
 
+  const tone = diff < -1000 ? 'warn' : diff > 1000 ? 'good' : 'neutral';
+  const insight = {
+    title: includeContingency ? 'Your budget, allocated' : 'Add a contingency buffer',
+    text: `Of your ${formatCurrency(totalBudget)} budget, **${formatCurrency(spendableBudget)}** is spendable${includeContingency ? ` after a ${formatCurrency(contingencyAmount)} contingency reserve` : ' (no contingency set — pros suggest holding back ~10%)'}. The biggest chunks are **venue (${formatCurrency(venue)})** and **catering (${formatCurrency(catering)})**, and you'll spend about **${formatCurrency(perGuestCost)} per guest**. ${budgetVsBenchmark}`,
+    tone,
+    icon: '💍',
+  };
+
+  // Slices sum exactly to spendableBudget (stationery/misc already absorbs rounding drift)
+  const chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Venue', value: venue },
+      { label: 'Catering', value: catering },
+      { label: 'Photo & video', value: photoVideo },
+      { label: 'Flowers & decor', value: flowersDecor },
+      { label: 'Music', value: music },
+      { label: 'Attire', value: attire },
+      { label: 'Stationery & misc', value: stationeryMisc },
+    ],
+    prefix: '$',
+    centerValue: formatCurrency(spendableBudget),
+    centerLabel: 'Spendable',
+    ariaLabel: `Spendable budget of ${formatCurrency(spendableBudget)} split across wedding categories`,
+  };
+
   return {
     spendable_budget: spendableBudget,
     contingency_amount: contingencyAmount,
@@ -117,5 +145,7 @@ export function compute(i: Inputs): Outputs {
     per_guest_cost: perGuestCost,
     regional_benchmark: benchmarkLabel,
     budget_vs_benchmark: budgetVsBenchmark,
+    _insight: insight,
+    _chart: chart,
   };
 }

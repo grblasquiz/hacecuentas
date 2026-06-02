@@ -11,6 +11,8 @@ export interface PresupuestoViajeDubaiOutputs {
   presupuestoTotalUsd: number;
   desglose: string;
   perDiemPorPersona: number;
+  _insight?: any;
+  _chart?: any;
 }
 const HOTEL: Record<string, number> = { bajo: 100, medio: 250, alto: 600 };
 const FOOD = 80;
@@ -34,9 +36,35 @@ export function presupuestoViajeDubai(i: PresupuestoViajeDubaiInputs): Presupues
   const total = hotelTotal + foodTotal + transTotal + actsTotal + vueloTotal;
   const perDiem = Math.round((total - vueloTotal) / (dias * personas));
   const desglose = `Hotel USD ${hotelTotal.toFixed(0)} | Comida USD ${foodTotal.toFixed(0)} | Transporte USD ${transTotal.toFixed(0)} | Actividades USD ${actsTotal.toFixed(0)}${vuelo ? ` | Vuelos USD ${vueloTotal.toFixed(0)}` : ""}`;
+  const tot = Number(total.toFixed(0));
+  const vueloPct = vuelo ? Math.round((vueloTotal / total) * 100) : 0;
+  const esCaro = perDiem >= 250;
+  const slices = [
+    { label: "Hotel", value: hotelTotal },
+    { label: "Comida", value: foodTotal },
+    { label: "Transporte", value: transTotal },
+    { label: "Actividades", value: actsTotal },
+  ];
+  if (vuelo) slices.push({ label: "Vuelos", value: vueloTotal });
   return {
-    presupuestoTotalUsd: Number(total.toFixed(0)),
+    presupuestoTotalUsd: tot,
     desglose,
-    perDiemPorPersona: perDiem
+    perDiemPorPersona: perDiem,
+    _insight: {
+      title: "Tu viaje a Dubái en números",
+      text: esCaro
+        ? `Atención al gasto: **${dias} días** para **${personas} ${personas === 1 ? "persona" : "personas"}** suman unos **USD ${tot.toLocaleString("es-AR")}**${vuelo ? ` (vuelos ${vueloPct}%)` : ""}, con un per-diem alto de **USD ${perDiem}/día por persona**. Dubái es caro: hotel y actividades disparan el presupuesto.`
+        : `Para **${personas} ${personas === 1 ? "persona" : "personas"}** y **${dias} días** vas a necesitar unos **USD ${tot.toLocaleString("es-AR")}**${vuelo ? ` (vuelos ${vueloPct}%)` : ""}, con **USD ${perDiem}/día por persona** en destino. Elegir hotel medio en vez de lujo es lo que más baja la cuenta.`,
+      tone: esCaro ? "warn" : "neutral",
+      icon: "🏙️",
+    },
+    _chart: {
+      type: "doughnut",
+      slices,
+      prefix: "USD ",
+      centerValue: `USD ${tot.toLocaleString("es-AR")}`,
+      centerLabel: "Total estimado",
+      ariaLabel: "Distribución del presupuesto de viaje a Dubái por categoría de gasto",
+    },
   };
 }

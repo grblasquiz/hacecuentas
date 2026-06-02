@@ -19,6 +19,7 @@ export interface Outputs {
   talleUk: string;
   cmPie: string;
   consejo: string;
+  _insight?: any;
 }
 
 // Tablas oficiales redondeadas según fabricantes (Nike, Adidas)
@@ -125,6 +126,12 @@ export function zapatillaUsaEuropaConversion(inputs: Inputs): Outputs {
       talleUk: `UK ${ukAprox.toFixed(1)}`,
       cmPie: `${cmAprox} cm`,
       consejo: 'Estimación por fórmula Paris Point (fuera de tabla estándar).',
+      _insight: {
+        title: 'Equivalencia estimada de talle',
+        text: `Un **US ${us}**${sufijo} equivale aproximadamente a **EU ${euAprox.toFixed(1)}** (UK ${ukAprox.toFixed(1)}, ~${cmAprox} cm de pie). Está fuera de la tabla estándar, así que es una estimación por fórmula Paris Point: confirmá midiendo tu pie en cm antes de comprar.`,
+        tone: 'warn',
+        icon: '👟',
+      },
     };
   }
 
@@ -149,5 +156,11 @@ export function zapatillaUsaEuropaConversion(inputs: Inputs): Outputs {
     talleUk: `UK ${uk}`,
     cmPie: `${cm} cm`,
     consejo,
+    _insight: {
+      title: 'Tu talle USA en Europa',
+      text: `Un **US ${us}**${sufijo} equivale a **EU ${eu}** (UK ${uk}, ${cm} cm de pie). El número EU se basa en la longitud del pie en cm, así que si dudás entre dos, elegí por los centímetros antes que por el número de marca.`,
+      tone: 'neutral',
+      icon: '👟',
+    },
   };
 }

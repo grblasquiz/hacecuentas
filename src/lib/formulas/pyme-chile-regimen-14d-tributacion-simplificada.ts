@@ -19,6 +19,8 @@ export interface Outputs {
   impuesto_total_anual: number;
   tasa_efectiva: number;
   modalidad_recomendada: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -82,6 +84,45 @@ export function compute(i: Inputs): Outputs {
     modalidad_recomendada += ' ⚠️ ADVT: Superas límite 75.000 UF. Consulta SII para cambio de régimen.';
   }
 
+  // Insight: interpreta carga total y modalidad conveniente
+  const modalidadActual = i.modalidad === 'transparente' ? 'Transparente' : 'General';
+  const fmtCL = (n: number) => Math.round(n).toLocaleString('es-CL');
+  let insight: any;
+  if (ingresos <= 0) {
+    insight = {
+      title: 'Ingresá tus ingresos anuales',
+      text: 'Cargá tus **ingresos**, gastos y depreciación para estimar el impuesto del régimen Pyme 14D y comparar modalidades.',
+      tone: 'neutral',
+      icon: '🇨🇱',
+    };
+  } else {
+    const ivaTxt = iva_anual > 0
+      ? ` De ese total, **$${fmtCL(iva_anual)}** son IVA y **$${fmtCL(impuesto_seleccionado)}** impuesto a la renta (25%).`
+      : ` Todo el monto es impuesto a la renta (25%), ya que no estás afecto a IVA.`;
+    insight = {
+      title: `Carga tributaria: ${tasa_efectiva.toFixed(1)}% de tus ingresos`,
+      text: `En modalidad **${modalidadActual}** pagarías **$${fmtCL(impuesto_total_anual)}** al año, una tasa efectiva del **${tasa_efectiva.toFixed(1)}%**.${ivaTxt}`,
+      tone: tasa_efectiva > 20 ? 'warn' : 'neutral',
+      icon: '🇨🇱',
+    };
+  }
+
+  // Donut: composición del impuesto total = renta (25%) + IVA
+  const slices: { label: string; value: number }[] = [];
+  if (impuesto_seleccionado > 0) slices.push({ label: 'Impuesto renta (25%)', value: Math.round(impuesto_seleccionado) });
+  if (iva_anual > 0) slices.push({ label: 'IVA (19%)', value: Math.round(iva_anual) });
+  const sumaSlices = slices.reduce((acc, s) => acc + s.value, 0);
+  const chart = slices.length >= 2
+    ? {
+        type: 'doughnut' as const,
+        slices,
+        prefix: '$',
+        centerValue: '$' + sumaSlices.toLocaleString('es-CL'),
+        centerLabel: 'Impuesto anual',
+        ariaLabel: 'Composición del impuesto anual total: impuesto a la renta más IVA.',
+      }
+    : undefined;
+
   return {
     base_imponible_transparente: Math.round(base_transparente),
     impuesto_transparente: Math.round(impuesto_transparente),
@@ -91,6 +132,8 @@ export function compute(i: Inputs): Outputs {
     iva_anual: Math.round(iva_anual),
     impuesto_total_anual: Math.round(impuesto_total_anual),
     tasa_efectiva: Math.round(tasa_efectiva * 100) / 100,
-    modalidad_recomendada: modalidad_recomendada
+    modalidad_recomendada: modalidad_recomendada,
+    _insight: insight,
+    _chart: chart
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   resumen: string;
   recomendacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function presionArterial(i: Inputs): Outputs {
@@ -72,6 +73,26 @@ export function presionArterial(i: Inputs): Outputs {
     min: 60,
   };
 
+  // Tono dinámico según categoría
+  const esNormal = categoria === 'Normal';
+  const esCrisis = categoria === 'Crisis hipertensiva';
+  const tone = esNormal ? 'good' : (categoria === 'Hipotensión' ? 'neutral' : 'warn');
+  const icon = esCrisis ? '🚨' : (esNormal ? '💚' : '🩺');
+  const insightText = esNormal
+    ? `Tu presión **${s}/${d} mmHg** está en rango **normal** (presión de pulso ${presionPulso} mmHg, media ${presionMedia.toFixed(1)} mmHg). Seguí con tus hábitos saludables y controlate periódicamente.`
+    : esCrisis
+      ? `**${s}/${d} mmHg** es una **crisis hipertensiva**: buscá atención médica de inmediato, sobre todo si tenés síntomas. La presión media estimada es **${presionMedia.toFixed(1)} mmHg**.`
+      : categoria === 'Hipotensión'
+        ? `**${s}/${d} mmHg** entra en **hipotensión**. No siempre es un problema, pero si tenés mareos o fatiga conviene consultarlo. Presión de pulso: **${presionPulso} mmHg**.`
+        : `Tu lectura **${s}/${d} mmHg** cae en **${categoria.toLowerCase()}** (riesgo ${riesgo.toLowerCase()}). La presión de pulso es **${presionPulso} mmHg** y la media **${presionMedia.toFixed(1)} mmHg**; conviene seguir las pautas y consultar a tu médico.`;
+
+  const insight = {
+    title: 'Qué significa tu resultado',
+    text: insightText,
+    tone,
+    icon,
+  };
+
   return {
     categoria,
     riesgo,
@@ -80,5 +101,6 @@ export function presionArterial(i: Inputs): Outputs {
     resumen: `${s}/${d} mmHg → ${categoria}.`,
     recomendacion,
     _chart: chart,
+    _insight: insight,
   };
 }

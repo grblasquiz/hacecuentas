@@ -15,6 +15,7 @@ export interface SueldoPorHoraOutputs {
   valorDia: number;
   valorSemana: number;
   horasMes: number;
+  _insight?: any;
 }
 
 export function sueldoPorHora(inputs: SueldoPorHoraInputs): SueldoPorHoraOutputs {
@@ -31,10 +32,18 @@ export function sueldoPorHora(inputs: SueldoPorHoraInputs): SueldoPorHoraOutputs
   const valorDia = sueldoMensual / diasLaborables;
   const valorSemana = valorDia * 5;
 
+  const insight = {
+    title: 'Tu valor por hora',
+    text: `Con un sueldo de **$${Math.round(sueldoMensual).toLocaleString('es-AR')}** y **${horasMes} h/mes** (${horasDiarias} h × ${diasLaborables} días), cada hora vale **$${Math.round(valorHora).toLocaleString('es-AR')}** y cada día **$${Math.round(valorDia).toLocaleString('es-AR')}**. Usá este número para cotizar horas extra o trabajos por proyecto.`,
+    tone: 'neutral' as const,
+    icon: '⏱️',
+  };
+
   return {
     valorHora: Math.round(valorHora),
     valorDia: Math.round(valorDia),
     valorSemana: Math.round(valorSemana),
     horasMes,
+    _insight: insight,
   };
 }

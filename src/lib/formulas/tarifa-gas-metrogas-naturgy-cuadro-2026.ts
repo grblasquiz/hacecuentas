@@ -12,6 +12,8 @@ export interface Outputs {
   descuentoSubsidio: number;
   total: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Cuadro tarifario de referencia 2026 (valores bimestrales en ARS)
@@ -110,12 +112,43 @@ export function compute(i: Inputs): Outputs {
     `Zona: ${provincia === "litoral" ? "Litoral/Interior (Naturgy)" : "GBA/AMBA (Metrogas)"}. ` +
     `Valores orientativos según cuadro tarifario ENARGAS 2026.`;
 
+  // Componentes netos (ya con el subsidio aplicado) que suman el total exacto
+  const gasNeto = subtotalGas * (1 - pctDescuento);
+  const distNeto = subtotalDistribucion * (1 - pctDescuento);
+  const totalR = Math.round(total);
+  const pctImpuestos = total > 0 ? (subtotalImpuestos / total) * 100 : 0;
+  const tieneSubsidio = pctDescuento > 0;
+
+  const _insight = {
+    title: tieneSubsidio ? 'Tu factura con subsidio aplicado' : 'Cuánto pesan los impuestos en tu boleta',
+    text: tieneSubsidio
+      ? `Por **${m3} m³** bimestrales en categoría **${categoria}** pagás **$${totalR.toLocaleString('es-AR')}**: el subsidio **${subsidio}** te descuenta **$${Math.round(descuentoSubsidio).toLocaleString('es-AR')}**, pero igual cargás **$${Math.round(subtotalImpuestos).toLocaleString('es-AR')}** de IVA y tasas (**${pctImpuestos.toFixed(0)}%** del total).`
+      : `Por **${m3} m³** bimestrales en categoría **${categoria}** sin subsidio pagás **$${totalR.toLocaleString('es-AR')}**, de los cuales **$${Math.round(subtotalImpuestos).toLocaleString('es-AR')}** son IVA (27%) y tasas: el **${pctImpuestos.toFixed(0)}%** de la boleta son impuestos, no gas.`,
+    tone: 'warn',
+    icon: '🔥',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Gas (PIST)', value: Math.round(gasNeto) },
+      { label: 'Distribución', value: Math.round(distNeto) },
+      { label: 'IVA + tasas', value: Math.round(subtotalImpuestos) },
+    ],
+    prefix: '$',
+    centerValue: `$${totalR.toLocaleString('es-AR')}`,
+    centerLabel: 'Total bimestral',
+    ariaLabel: `La factura de $${totalR.toLocaleString('es-AR')} se compone de gas, cargo de distribución e impuestos (IVA más tasas)`,
+  };
+
   return {
     subtotalGas: Math.round(subtotalGas),
     subtotalDistribucion: Math.round(subtotalDistribucion),
     subtotalImpuestos: Math.round(subtotalImpuestos),
     descuentoSubsidio: Math.round(descuentoSubsidio),
-    total: Math.round(total),
+    total: totalR,
     detalle,
+    _insight,
+    _chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Tiempo promedio Ironman 70.3/Full según edad y categoría AG */
 export interface Inputs { distancia: 'half' | 'full'; edad: number; sexo: 'masculino' | 'femenino'; nivel: 'finisher' | 'mid-pack' | 'top-pack' | 'kona-qualifier'; }
-export interface Outputs { tiempoEstimadoHoras: string; ritmoSwimMin100m: string; ritmoBikeKmh: number; ritmoRunMinKm: string; explicacion: string; _chart?: any; }
+export interface Outputs { tiempoEstimadoHoras: string; ritmoSwimMin100m: string; ritmoBikeKmh: number; ritmoRunMinKm: string; explicacion: string; _chart?: any; _insight?: any; }
 export function triatlonIronmanTiempoMedioEdadCategoria(i: Inputs): Outputs {
   const edad = Number(i.edad);
   if (!edad || edad < 18 || edad > 80) throw new Error('Edad debe estar entre 18 y 80 años');
@@ -43,6 +43,19 @@ export function triatlonIronmanTiempoMedioEdadCategoria(i: Inputs): Outputs {
     centerLabel: 'Tiempo total',
     ariaLabel: 'Distribución del tiempo total por disciplina, en minutos',
   };
+  const distLabel = i.distancia === 'half' ? 'Ironman 70.3' : 'Ironman Full';
+  const nivelLabel: Record<string, string> = {
+    finisher: 'finisher',
+    'mid-pack': 'mitad de tabla',
+    'top-pack': 'parte alta de tabla',
+    'kona-qualifier': 'ritmo clasificatorio a Kona',
+  };
+  const insight = {
+    title: `${distLabel}: ~${horasFmt} hs`,
+    text: `Para ${i.sexo === 'femenino' ? 'una mujer' : 'un hombre'} de ${edad} años a nivel ${nivelLabel[i.nivel] ?? i.nivel}, el tiempo estimado es **${horasFmt} hs**. El **ciclismo** se lleva la mitad del reloj (bike a ${bikeKmh.toFixed(1)} km/h); la carrera va a **${fmt(runPace)}/km** y la natación a **${fmt(swimPace)}/100m**. Es un promedio de referencia: el terreno, el clima y tu preparación lo mueven.`,
+    tone: 'neutral',
+    icon: '🏊',
+  };
   return {
     tiempoEstimadoHoras: horasFmt,
     ritmoSwimMin100m: fmt(swimPace),
@@ -50,5 +63,6 @@ export function triatlonIronmanTiempoMedioEdadCategoria(i: Inputs): Outputs {
     ritmoRunMinKm: fmt(runPace),
     explicacion: `Ironman ${i.distancia === 'half' ? '70.3' : 'Full'} ${i.sexo} edad ${edad} nivel ${i.nivel}: tiempo estimado **${horasFmt} hs**. Ritmos: swim ${fmt(swimPace)}/100m, bike ${bikeKmh.toFixed(1)} km/h, run ${fmt(runPace)}/km.`,
     _chart: chart,
+    _insight: insight,
   };
 }

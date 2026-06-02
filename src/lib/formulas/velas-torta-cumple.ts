@@ -2,7 +2,7 @@
  * Calculadora de Velas para Torta - Cumple.
  */
 export interface VelasTortaCumpleInputs { edad:number; tipoVela:string; }
-export interface VelasTortaCumpleOutputs { velasTotales:number; mensaje:string; costoEstimado:number; duracionSegundos:number; }
+export interface VelasTortaCumpleOutputs { velasTotales:number; mensaje:string; costoEstimado:number; duracionSegundos:number; _insight?:any; }
 export function velasTortaCumple(inputs: VelasTortaCumpleInputs): VelasTortaCumpleOutputs {
   const edad = Number(inputs.edad);
   const tipo = inputs.tipoVela;
@@ -29,10 +29,22 @@ export function velasTortaCumple(inputs: VelasTortaCumpleInputs): VelasTortaCump
     costo = 18;
     duracion = 300;
   }
+  const minutos = Math.floor(duracion / 60);
+  const segs = duracion % 60;
+  const duracionTxt = minutos > 0 ? `${minutos} min${segs ? ` ${segs}s` : ''}` : `${duracion}s`;
+
+  const insight = {
+    title: 'Tu torta de cumple',
+    text: `Para los **${edad} años** necesitás **${velasTotales} ${velasTotales === 1 ? 'vela' : 'velas'}** (~USD ${costo}). Encendidas duran unos **${duracionTxt}** antes de derretirse, tiempo de sobra para cantar el feliz cumpleaños y pedir el deseo.`,
+    tone: 'good',
+    icon: '🎂'
+  };
+
   return {
     velasTotales,
     mensaje,
     costoEstimado: costo,
     duracionSegundos: duracion,
+    _insight: insight,
   };
 }

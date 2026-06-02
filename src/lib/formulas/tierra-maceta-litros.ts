@@ -12,6 +12,7 @@ export interface Outputs {
   litrosTotal: number;
   bolsas20L: number;
   bolsas50L: number;
+  _insight?: any;
 }
 
 export function tierraMacetaLitros(i: Inputs): Outputs {
@@ -40,11 +41,23 @@ export function tierraMacetaLitros(i: Inputs): Outputs {
   const litros1 = volumenCm3 / 1000;
   const litrosConExtra = litros1 * 1.1;
   const total = litrosConExtra * cant;
+  const bolsas20 = Math.ceil(total / 20);
+  const bolsas50 = Math.ceil(total / 50);
+
+  const _insight = {
+    title: 'Cuánto sustrato comprar',
+    text: cant > 1
+      ? `Para tus **${cant} macetas** vas a necesitar **${total.toFixed(1)} L** de tierra en total (ya incluye 10% extra), o sea **${bolsas20} bolsas de 20 L** (${bolsas50} de 50 L).`
+      : `Esta maceta lleva **${total.toFixed(1)} L** de tierra (con 10% extra incluido): te alcanza con **${bolsas20} bolsa${bolsas20 === 1 ? '' : 's'} de 20 L**.`,
+    tone: 'neutral',
+    icon: '🪴',
+  };
 
   return {
     litrosPorMaceta: Number(litros1.toFixed(1)),
     litrosTotal: Number(total.toFixed(1)),
-    bolsas20L: Math.ceil(total / 20),
-    bolsas50L: Math.ceil(total / 50),
+    bolsas20L: bolsas20,
+    bolsas50L: bolsas50,
+    _insight,
   };
 }

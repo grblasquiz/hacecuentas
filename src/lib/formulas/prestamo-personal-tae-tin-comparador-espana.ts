@@ -22,6 +22,8 @@ export interface Outputs {
   coste_total_oferta3: number;
   mejor_oferta: string;
   ahorro_vs_peor: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 /**

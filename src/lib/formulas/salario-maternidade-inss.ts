@@ -16,6 +16,7 @@ export interface Outputs {
   valorTotal4Meses: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
 }
 
 const fmtBRL = (n: number) =>
@@ -36,11 +37,36 @@ export function salarioMaternidadeInss(i: Inputs): Outputs {
   const formula = `Salário integral × 4 meses = ${fmtBRL(mensal)} × 4 = ${fmtBRL(total)}`;
   const explicacao = `Salário-maternidade: 120 dias (4 meses) de licença remunerada por nascimento, adoção ou guarda de criança. Base de cálculo: ${baseDesc}, limitada ao teto INSS (${fmtBRL(teto)}). Mínimo: salário mínimo (${fmtBRL(salarioMinimo)}). Carência: contribuinte individual/facultativa precisa 10 contribuições; segurada CLT não tem carência (só precisa ter contribuído ao INSS). Empresas Cidadãs podem estender para 180 dias.`;
 
+  let _insight: any;
+  if (media > teto) {
+    _insight = {
+      title: 'Benefício no teto do INSS',
+      text: `Sua média de ${fmtBRL(media)} passa do teto, então o salário-maternidade fica limitado a **${fmtBRL(mensal)}/mês** — **${fmtBRL(total)}** nos 4 meses. O valor acima do teto não entra no cálculo.`,
+      tone: 'warn',
+      icon: '🤰',
+    };
+  } else if (media < salarioMinimo) {
+    _insight = {
+      title: 'Piso garantido pelo salário mínimo',
+      text: `O benefício não pode ser menor que o salário mínimo, então você recebe **${fmtBRL(mensal)}/mês** — **${fmtBRL(total)}** nos 4 meses (120 dias).`,
+      tone: 'good',
+      icon: '🤰',
+    };
+  } else {
+    _insight = {
+      title: 'Salário integral por 4 meses',
+      text: `Você recebe sua média de **${fmtBRL(mensal)}/mês** durante os 120 dias de licença — **${fmtBRL(total)}** no total. Empresa Cidadã pode estender para 180 dias.`,
+      tone: 'good',
+      icon: '🤰',
+    };
+  }
+
   return {
     duracao: '4 meses (120 dias)',
     valorMensal: fmtBRL(mensal),
     valorTotal4Meses: fmtBRL(total),
     formula,
     explicacao,
+    _insight,
   };
 }

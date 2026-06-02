@@ -1,6 +1,6 @@
 /** Vodka infusión */
 export interface Inputs { tipoIngrediente: string; mlVodka: number; __lang?: string; }
-export interface Outputs { tiempoInfusion: string; cantidadIngrediente: string; metodo: string; almacenamiento: string; tips: string; }
+export interface Outputs { tiempoInfusion: string; cantidadIngrediente: string; metodo: string; almacenamiento: string; tips: string; _insight?: any; }
 
 export function vodkaInfusionFrutasTiempo(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -33,6 +33,26 @@ export function vodkaInfusionFrutasTiempo(i: Inputs): Outputs {
   };
   const p = perfiles[t] ?? perfiles.citricos;
 
+  const labels: Record<string, string> = __lang === 'en' ? {
+    citricos: 'citrus', frutas_blandas: 'soft fruit', frutas_duras: 'hard fruit', vainilla: 'vanilla',
+    cafe_granos: 'coffee beans', especias: 'spices', hierbas: 'herbs', chili: 'chili', te: 'tea', jengibre: 'ginger',
+  } : {
+    citricos: 'cítricos', frutas_blandas: 'frutas blandas', frutas_duras: 'frutas duras', vainilla: 'vainilla',
+    cafe_granos: 'granos de café', especias: 'especias', hierbas: 'hierbas', chili: 'chili', te: 'té', jengibre: 'jengibre',
+  };
+  const slow = ['vainilla', 'especias', 'jengibre'].includes(t);
+  const fast = ['frutas_blandas', 'chili', 'te'].includes(t);
+  const lbl = labels[t] ?? labels.citricos;
+
+  const _insight = {
+    title: __lang === 'en' ? 'Your infusion plan' : 'Tu plan de infusión',
+    text: __lang === 'en'
+      ? `For ${ml} ml of vodka with **${lbl}**, use **${p.cantidad}** and let it rest **${p.tiempo}**${slow ? '. This one is slow: be patient and taste before bottling' : (fast ? '. It infuses fast, so taste-test daily to avoid overpowering it' : '')}.`
+      : `Para ${ml} ml de vodka con **${lbl}**, usá **${p.cantidad}** y dejá reposar **${p.tiempo}**${slow ? '. Esta infusión es lenta: tené paciencia y probá antes de embotellar' : (fast ? '. Infusiona rápido, así que probá a diario para que no se pase' : '')}.`,
+    tone: fast ? 'warn' : 'neutral',
+    icon: '🍸',
+  };
+
   return {
     tiempoInfusion: p.tiempo,
     cantidadIngrediente: p.cantidad,
@@ -43,5 +63,6 @@ export function vodkaInfusionFrutasTiempo(i: Inputs): Outputs {
       ? 'Strain when ready, bottle in dark glass, store in fridge or cool place'
       : 'Filtrar al punto, embotellar en vidrio oscuro, heladera o ambiente fresco',
     tips: p.tips,
+    _insight,
   };
 }

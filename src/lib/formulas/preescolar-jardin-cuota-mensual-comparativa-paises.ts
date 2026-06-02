@@ -1,6 +1,6 @@
 /** Cuota mensual jardín maternal/preescolar comparativa AR/MX/CL/UY/ES */
 export interface Inputs { pais: string; tipoJardin: string; horasDiarias: number; incluyeAlmuerzo: boolean; }
-export interface Outputs { cuotaMensualLocal: number; cuotaMensualUsd: number; matriculaAnualLocal: number; costoAnualTotalUsd: number; explicacion: string; _chart?: any; }
+export interface Outputs { cuotaMensualLocal: number; cuotaMensualUsd: number; matriculaAnualLocal: number; costoAnualTotalUsd: number; explicacion: string; _chart?: any; _insight?: any; }
 export function preescolarJardinCuotaMensualComparativaPaises(i: Inputs): Outputs {
   const pais = String(i.pais || '').toUpperCase();
   const tipo = String(i.tipoJardin || '').toLowerCase();
@@ -36,6 +36,14 @@ export function preescolarJardinCuotaMensualComparativaPaises(i: Inputs): Output
     centerLabel: 'Anual USD',
     ariaLabel: 'Composición del costo anual en USD: 10 cuotas mensuales y matrícula',
   };
+  const insightTone: 'good' | 'warn' | 'neutral' = mt <= 0.5 ? 'good' : (mt >= 1.6 ? 'warn' : 'neutral');
+  const _insight = {
+    title: 'Costo del jardín',
+    text: `Un jardín **${tipo}** de ${horas}h en ${pais}${almuerzo ? ' con almuerzo' : ''} cuesta **$${cuota.toLocaleString('es-AR')} ${d.simbolo}/mes** (~**USD ${usd.toFixed(0)}**). Sumando 10 cuotas y la matrícula, el año son **USD ${anualUsd.toFixed(0)}**.`,
+    tone: insightTone,
+    icon: '🎒',
+  };
+
   return {
     cuotaMensualLocal: Number(cuota.toFixed(0)),
     cuotaMensualUsd: Number(usd.toFixed(2)),
@@ -43,5 +51,6 @@ export function preescolarJardinCuotaMensualComparativaPaises(i: Inputs): Output
     costoAnualTotalUsd: Number(anualUsd.toFixed(2)),
     explicacion: `Jardín ${tipo} ${horas}h en ${pais}: cuota $${cuota.toLocaleString('es-AR')} ${d.simbolo} (~USD ${usd.toFixed(0)}/mes). Anual con matrícula: USD ${anualUsd.toFixed(0)}.`,
     _chart: chart,
+    _insight,
   };
 }

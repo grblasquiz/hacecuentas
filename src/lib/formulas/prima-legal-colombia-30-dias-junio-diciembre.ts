@@ -12,6 +12,8 @@ export interface Outputs {
   prima_total_ano: number;
   prima_proporcional: number;
   dias_por_liquidar: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -45,12 +47,37 @@ export function compute(i: Inputs): Outputs {
   const primaJunio = Math.round(primaTotalAnio / 2);
   const primaDiciembre = Math.round(primaTotalAnio / 2);
 
+  const totalAnio = Math.round(primaTotalAnio);
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const _insight = {
+    title: 'Tu prima legal de servicios',
+    text: esAnnoCompleto
+      ? `Trabajando el **año completo** te corresponde **${cop(totalAnio)}** de prima, equivalente a un mes de salario base. Se paga en dos cuotas: **${cop(primaJunio)}** en junio y **${cop(primaDiciembre)}** en diciembre.`
+      : `Por **${diasTrabajados} días** trabajados (de 360) la prima es proporcional: **${cop(totalAnio)}** en total, repartidos en **${cop(primaJunio)}** en junio y **${cop(primaDiciembre)}** en diciembre. ${incluirAuxilio ? `La base incluye el auxilio de transporte (${cop(AUXILIO_TRANSPORTE_2026)}).` : ''}`,
+    tone: 'good' as const,
+    icon: '🇨🇴',
+  };
+
+  const _chart = totalAnio > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cuota de junio', value: primaJunio },
+      { label: 'Cuota de diciembre', value: primaDiciembre },
+    ],
+    prefix: '$',
+    centerValue: cop(totalAnio),
+    centerLabel: 'Prima del año',
+    ariaLabel: 'Reparto de la prima legal anual entre la cuota de junio y la de diciembre',
+  } : undefined;
+
   return {
     base_prima: Math.round(basePrima),
     prima_junio: primaJunio,
     prima_diciembre: primaDiciembre,
     prima_total_ano: Math.round(primaTotalAnio),
     prima_proporcional: Math.round(primaProporcional),
-    dias_por_liquidar: Math.round(diasPorLiquidar * 10) / 10
+    dias_por_liquidar: Math.round(diasPorLiquidar * 10) / 10,
+    _insight,
+    _chart
   };
 }

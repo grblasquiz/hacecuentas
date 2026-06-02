@@ -1,6 +1,6 @@
 /** Riesgo en embarazo por edad materna */
 export interface Inputs { edadMaterna: number; semanasGestacion?: number; }
-export interface Outputs { riesgoDown: string; riesgoAborto: string; riesgoCromosomico: string; recomendacion: string; }
+export interface Outputs { riesgoDown: string; riesgoAborto: string; riesgoCromosomico: string; recomendacion: string; _insight?: any; }
 
 export function riesgoEmbarazoEdad(i: Inputs): Outputs {
   const edad = Math.round(Number(i.edadMaterna));
@@ -41,5 +41,16 @@ export function riesgoEmbarazoEdad(i: Inputs): Outputs {
     recomendacion = 'Se recomienda NIPT y/o diagnóstico invasivo (amniocentesis o biopsia coriónica). Consultá con tu obstetra sobre la mejor opción.';
   }
 
-  return { riesgoDown, riesgoAborto: aborto, riesgoCromosomico, recomendacion };
+  const downPct = (100 / dRisk).toFixed(2);
+  const _insight = {
+    title: 'Cómo leer estos números',
+    text: `A los **${edad} años**, la probabilidad de síndrome de Down al nacer se estima en **1 en ${dRisk}** (~${downPct}%) y la de aborto espontáneo en **${aborto}**. ` +
+      (edad < 35
+        ? 'Son cifras poblacionales orientativas: a esta edad el riesgo cromosómico es bajo. El screening del primer trimestre alcanza para la mayoría de los casos.'
+        : 'Son estadísticas de población, no un diagnóstico: el riesgo sube de forma gradual con la edad. Hablá con tu obstetra sobre NIPT o estudios diagnósticos para una evaluación precisa de tu embarazo.'),
+    tone: 'neutral' as const,
+    icon: '🤰',
+  };
+
+  return { riesgoDown, riesgoAborto: aborto, riesgoCromosomico, recomendacion, _insight };
 }

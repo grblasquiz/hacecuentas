@@ -22,6 +22,8 @@ export interface Outputs {
   valorLiquido: string;
   juroRealLiquido: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -58,8 +60,19 @@ export function tesouroIpca(i: Inputs): Outputs {
   const valorLiquido = valorBruto - imposto;
   const rentAnualLiq = Math.pow(valorLiquido / aporte, 1 / anos) - 1;
   const juroRealLiq = ((1 + rentAnualLiq) / (1 + ipca / 100) - 1) * 100;
+  const ganhoLiquido = valorLiquido - aporte;
 
-  return {
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (juroRealLiq < 0) {
+    insightTone = 'warn';
+    insightText = `Após custódia e IR (${(aliq * 100).toFixed(1)}%), o ganho real fica em **${juroRealLiq.toFixed(2)}% aa**, ou seja, **abaixo da inflação**: o poder de compra recua. Prazos mais longos reduzem o IR e melhoram o resultado.`;
+  } else {
+    insightTone = 'good';
+    insightText = `Em ${meses} meses você resgata **${brl(valorLiquido)}** líquidos: **${brl(ganhoLiquido)}** de ganho, com **${juroRealLiq.toFixed(2)}% aa reais** acima do IPCA já descontados custódia e IR de ${(aliq * 100).toFixed(1)}%.`;
+  }
+
+  const out: Outputs = {
     taxaNominalAnual: (taxaNominal * 100).toFixed(2) + '% aa',
     valorBruto: brl(valorBruto),
     rendimentoBruto: brl(rendBruto),
@@ -69,5 +82,27 @@ export function tesouroIpca(i: Inputs): Outputs {
     valorLiquido: brl(valorLiquido),
     juroRealLiquido: juroRealLiq.toFixed(2) + '% aa acima do IPCA',
     resumen: `Tesouro IPCA+ ${juroReal}% com IPCA ${ipca}% por ${meses} meses: ${brl(valorLiquido)} líquido (juro real líquido ${juroRealLiq.toFixed(2)}% aa).`,
+    _insight: {
+      title: 'Seu resgate líquido',
+      text: insightText,
+      tone: insightTone,
+      icon: '📈',
+    },
   };
+
+  if (ganhoLiquido > 0 && valorLiquido > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Aporte', value: Number(aporte.toFixed(2)) },
+        { label: 'Ganho líquido', value: Number(ganhoLiquido.toFixed(2)) },
+      ],
+      prefix: 'R$ ',
+      centerValue: brl(valorLiquido),
+      centerLabel: 'Líquido',
+      ariaLabel: `Resgate líquido de ${brl(valorLiquido)}: aporte ${brl(aporte)} mais ganho líquido ${brl(ganhoLiquido)}`,
+    };
+  }
+
+  return out;
 }

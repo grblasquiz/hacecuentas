@@ -15,6 +15,7 @@ export interface Outputs {
   recomendacionFiltro: string;
   deficit: number;
   resumen: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -126,6 +127,33 @@ export function compute(i: Inputs): Outputs {
 
   const resumen = pausasFaltantes + consejo20 + consejoPausaLarga + avisoMedico;
 
+  // --- Insight narrativo dinámico según riesgo y déficit de pausas ---
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  let insightText: string;
+  if (riesgoScore <= 3) {
+    insightTone = 'good';
+    insightIcon = '👁️';
+    insightText = deficit > 0
+      ? `Tu riesgo de fatiga visual es **bajo**, pero con **${horas.toFixed(1)} h/día** de pantalla deberías hacer **${pausasMinimas} pausas** y hoy te faltan **${deficit}**. Sumalas y quedás cubierto.`
+      : `Tu riesgo de fatiga visual es **bajo** y ya cumplís las **${pausasMinimas} pausas** que pide la regla 20-20-20 para **${horas.toFixed(1)} h/día** de pantalla. Seguí así.`;
+  } else if (riesgoScore <= 6) {
+    insightTone = 'warn';
+    insightIcon = '👁️';
+    insightText = `Riesgo **moderado** de síndrome visual informático. Con **${horas.toFixed(1)} h/día** de pantalla necesitás **${pausasMinimas} pausas**${deficit > 0 ? ` y te faltan **${deficit}**` : ''}; ajustar pausas y distancia baja el riesgo rápido.`;
+  } else {
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+    insightText = `Riesgo **${riesgoScore <= 10 ? 'alto' : 'crítico'}** de fatiga visual con **${horas.toFixed(1)} h/día** de pantalla${deficit > 0 ? ` y un déficit de **${deficit} pausas**` : ''}. Aplicá ya la regla 20-20-20 y, si los síntomas persisten, consultá un oftalmólogo.`;
+  }
+
+  const insight = {
+    title: 'Tu riesgo de fatiga visual',
+    text: insightText,
+    tone: insightTone,
+    icon: insightIcon,
+  };
+
   // Gauge: score de riesgo de fatiga visual (síndrome visual informático)
   const chart = {
     type: 'scale' as const,
@@ -150,6 +178,7 @@ export function compute(i: Inputs): Outputs {
     recomendacionFiltro,
     deficit,
     resumen: resumen.trim(),
+    _insight: insight,
     _chart: chart,
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   mas_economico: string;
   propina_sugerida: number;
   ahorro_vs_remis: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -140,6 +141,25 @@ export function compute(i: Inputs): Outputs {
   // Ahorro vs remis
   const ahorro_vs_remis = Math.round((tarifa_remis - valor_mas_economico) * 100) / 100;
 
+  const fmtAR = (n: number) => Math.round(n).toLocaleString('es-AR');
+  const picoTxt = multiplo_pico > 1 ? ' (con tarifa dinámica de hora pico, +65%)' : '';
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (ahorro_vs_remis > 0) {
+    insightTone = 'good';
+    insightText = `La opción más barata es **${app_mas_economica}** a **$${fmtAR(valor_mas_economico)}**${picoTxt}, **$${fmtAR(ahorro_vs_remis)}** menos que el remis ($${fmtAR(tarifa_remis)}). Conviene pedir por app para estos ${distancia} km.`;
+  } else {
+    insightTone = multiplo_pico > 1 ? 'warn' : 'neutral';
+    insightText = `Entre las apps, **${app_mas_economica}** es la más económica a **$${fmtAR(valor_mas_economico)}**${picoTxt}, pero el remis ($${fmtAR(tarifa_remis)}) queda $${fmtAR(Math.abs(ahorro_vs_remis))} más barato${multiplo_pico > 1 ? ' por la tarifa dinámica' : ''}.`;
+  }
+
+  const _insight = {
+    title: 'Comparador de tarifas',
+    text: insightText,
+    tone: insightTone,
+    icon: '🚗',
+  };
+
   return {
     tarifa_uber,
     tarifa_cabify,
@@ -147,6 +167,7 @@ export function compute(i: Inputs): Outputs {
     tarifa_remis,
     mas_economico,
     propina_sugerida,
-    ahorro_vs_remis
+    ahorro_vs_remis,
+    _insight
   };
 }

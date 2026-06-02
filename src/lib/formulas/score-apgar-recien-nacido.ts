@@ -14,6 +14,7 @@ export interface Outputs {
   accionSugerida: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 function fcPts(v: string): number {
@@ -92,6 +93,12 @@ export function scoreApgarRecienNacido(i: Inputs): Outputs {
     ariaLabel: 'Escala del score Apgar: depresión severa, moderada y normal.',
   };
 
+  const tone = score >= 7 ? 'good' : 'warn';
+  const icon = score >= 7 ? '👶' : score >= 4 ? '⚠️' : '🚨';
+  const insightText = score >= 7
+    ? `Un Apgar de **${score}/10** refleja una **adaptación satisfactoria** a la vida extrauterina. ${accion}`
+    : `Un Apgar de **${score}/10** indica **${categoria.toLowerCase()}**: ${interpretacion.toLowerCase()} ${accion}`;
+
   return {
     score,
     categoria,
@@ -100,5 +107,11 @@ export function scoreApgarRecienNacido(i: Inputs): Outputs {
     accionSugerida: accion,
     resumen: `Score Apgar: ${score}/10 — ${categoria}. ${interpretacion}`,
     _chart: chart,
+    _insight: {
+      title: 'Cómo leer este Apgar',
+      text: insightText,
+      tone,
+      icon,
+    },
   };
 }

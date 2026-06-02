@@ -1,6 +1,6 @@
 /** Calculadora de Volatilidad Implícita (IV) en Opciones */
 export interface Inputs { precioOpcion: number; precioSubyacente: number; strike: number; diasVencimiento: number; tasaRiesgo: number; tipo: 'call' | 'put'; }
-export interface Outputs { ivAnualPorcentaje: number; ivDiaria: number; movimientoEsperado1Sigma: number; categoria: string; }
+export interface Outputs { ivAnualPorcentaje: number; ivDiaria: number; movimientoEsperado1Sigma: number; categoria: string; _insight?: any; _chart?: any; }
 function ncdf(x: number): number {
   const a1=0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429, p=0.3275911;
   const sign = x < 0 ? -1 : 1; x = Math.abs(x)/Math.sqrt(2);
@@ -47,10 +47,34 @@ export function volatilidadImplicitaOpciones(i: Inputs): Outputs {
   else if (ivAnual < 60) cat = 'Alta';
   else if (ivAnual < 100) cat = 'Muy alta';
   else cat = 'Extrema';
+  const ivR = Number(ivAnual.toFixed(2));
+  const movR = Number(mov1sigma.toFixed(2));
+  const _insight = {
+    title: 'Lo que dice la IV',
+    text: `La volatilidad implícita es **${ivR}%** anual (${cat.toLowerCase()}). El mercado descuenta un movimiento de ±**${movR}** en el subyacente de acá al vencimiento (1σ, ~68% de probabilidad).`,
+    tone: ivAnual >= 60 ? 'warn' : (ivAnual < 30 ? 'good' : 'neutral'),
+    icon: '📈',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: ivR,
+    markerLabel: `${ivR}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Muy baja', max: 15, color: '#86efac', colorDark: '#166534' },
+      { nombre: 'Media', max: 30, color: '#6ee7b7', colorDark: '#065f46' },
+      { nombre: 'Alta', max: 60, color: '#fcd34d', colorDark: '#78350f' },
+      { nombre: 'Muy alta', max: 100, color: '#fb923c', colorDark: '#7c2d12' },
+      { nombre: 'Extrema', max: Math.max(150, ivR + 20), color: '#f87171', colorDark: '#7f1d1d' },
+    ],
+    ariaLabel: 'Escala de volatilidad implícita anual, de muy baja a extrema',
+  };
   return {
-    ivAnualPorcentaje: Number(ivAnual.toFixed(2)),
+    ivAnualPorcentaje: ivR,
     ivDiaria: Number(ivDiaria.toFixed(3)),
-    movimientoEsperado1Sigma: Number(mov1sigma.toFixed(2)),
+    movimientoEsperado1Sigma: movR,
     categoria: cat,
+    _insight,
+    _chart,
   };
 }

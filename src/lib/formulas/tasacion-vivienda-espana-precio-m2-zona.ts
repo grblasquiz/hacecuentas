@@ -16,6 +16,8 @@ export interface Outputs {
   valor_maximo: number;
   valor_hipoteca_80: number;
   desglose_factores: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -134,14 +136,46 @@ export function compute(i: Inputs): Outputs {
     `Precio ajustado: ${Math.round(precioM2Ajustado).toLocaleString('es-ES')} €/m²`,
   ].join(' | ');
 
+  // --- Insight narrativo sobre la valoración ---
+  const valorCentralR = Math.round(valorCentral);
+  const ajustePct = Math.round((coefTotal - 1) * 100);
+  const fmtEur = (n: number) => Math.round(n).toLocaleString('es-ES');
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let posTxt: string;
+  if (coefTotal >= 1.03) { insightTone = 'good'; posTxt = `un **+${ajustePct}%** por encima del precio base de la zona`; }
+  else if (coefTotal <= 0.92) { insightTone = 'warn'; posTxt = `un **${ajustePct}%** por debajo del precio base de la zona (antigüedad, estado o planta restan valor)`; }
+  else { insightTone = 'neutral'; posTxt = `prácticamente **en línea** con el precio base de la zona`; }
+  const _insight = {
+    title: 'Valoración estimada',
+    text: `La vivienda se valora en torno a **${fmtEur(valorCentral)} €** (${fmtEur(precioM2Ajustado)} €/m²), ${posTxt}. La horquilla de mercado va de ${fmtEur(valorMinimo)} a ${fmtEur(valorMaximo)} €, y un banco financiaría hasta **${fmtEur(valorHipoteca80)} €** (80% Ley 5/2019).`,
+    tone: insightTone,
+    icon: '🏠',
+  };
+
+  // --- Gauge: posición del coeficiente vs precio base de la zona (1.00 = neutral) ---
+  const _chart = {
+    type: 'scale' as const,
+    marker: Math.round(coefTotal * 1000) / 1000,
+    markerLabel: `Coeficiente ×${coefTotal.toFixed(2)}`,
+    min: 0.4,
+    segments: [
+      { nombre: 'Por debajo de mercado', max: 0.92, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'En línea', max: 1.03, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Por encima de mercado', max: Math.max(1.25, Math.round(coefTotal * 100) / 100 + 0.05), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Posición del coeficiente de ajuste de la vivienda respecto al precio base de la zona, de por debajo a por encima de mercado.',
+  };
+
   return {
     precio_m2_base:     Math.round(precioBase),
     coeficiente_total:  Math.round(coefTotal * 1000) / 1000,
     precio_m2_ajustado: Math.round(precioM2Ajustado),
     valor_minimo:       Math.round(valorMinimo),
-    valor_central:      Math.round(valorCentral),
+    valor_central:      valorCentralR,
     valor_maximo:       Math.round(valorMaximo),
     valor_hipoteca_80:  Math.round(valorHipoteca80),
     desglose_factores:  desglose,
+    _insight,
+    _chart,
   };
 }

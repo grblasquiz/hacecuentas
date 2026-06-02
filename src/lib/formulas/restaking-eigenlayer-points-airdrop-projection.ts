@@ -15,6 +15,7 @@ export interface Outputs {
   restaking_premium_usd: number;
   roi_restaking_pct: number;
   summary: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -94,6 +95,13 @@ export function compute(i: Inputs): Outputs {
     `Prima vs. validador solo: +$${restakingPremiumUsd.toFixed(2)} USD ` +
     `(ROI incremental anualizado ${(roiRestakingPct * 100).toFixed(2)}%).`;
 
+  const roiPct = roiRestakingPct * 100;
+  const insight = {
+    title: 'Proyección especulativa de airdrop',
+    text: `Acumulás **${Math.round(totalPoints).toLocaleString('en-US')} points** (~${eigenTokens.toFixed(2)} EIGEN ≈ **$${airdropUsd.toFixed(0)} USD**) en el escenario ${label}, un ROI incremental anualizado de **${roiPct.toFixed(1)}%** sobre el validador solo. Ojo: el airdrop depende del precio de EIGEN y del ratio de conversión asumidos, ambos inciertos.`,
+    tone: 'warn',
+    icon: '🪂',
+  };
   return {
     total_points: Math.round(totalPoints),
     eigen_tokens: eigenTokens,
@@ -102,5 +110,6 @@ export function compute(i: Inputs): Outputs {
     restaking_premium_usd: restakingPremiumUsd,
     roi_restaking_pct: roiRestakingPct,
     summary,
+    _insight: insight,
   };
 }

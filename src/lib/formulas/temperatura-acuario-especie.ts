@@ -10,6 +10,7 @@ export interface Outputs {
   calefactorWatts: number;
   ventiladorNecesario: string;
   notas: string;
+  _insight?: any;
 }
 
 export function temperaturaAcuarioEspecie(i: Inputs): Outputs {
@@ -62,11 +63,28 @@ export function temperaturaAcuarioEspecie(i: Inputs): Outputs {
           ? 'pH alto (7.8-8.5) y dureza alta. Temperatura estable en 26°C.'
           : 'Mantener rango estable con calefactor de termostato y chequeo diario con termómetro separado.';
 
+  let insightText: string, insightTone: string;
+  if (watts === 0) {
+    insightText = `Para esta especie el rango ideal es **${r.min}–${r.max}°C** y con un ambiente de **${tempAmb}°C** no necesitás calefactor. El riesgo acá es el calor: en verano hay que bajar la temperatura, no subirla.`;
+    insightTone = 'good';
+  } else if (tempAmb < r.min - 4) {
+    insightText = `El rango ideal es **${r.min}–${r.max}°C** pero tu ambiente está en **${tempAmb}°C**, bastante por debajo. Vas a depender sí o sí de un calefactor de **${watts} W** con termostato; sin él la temperatura cae a niveles peligrosos.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `Para mantener el rango ideal de **${r.min}–${r.max}°C** con un ambiente de **${tempAmb}°C**, usá un calefactor de **${watts} W** (≈${wattsPorLitro} W/L). Controlá siempre con un termómetro aparte porque los termostatos integrados suelen desviarse.`;
+    insightTone = 'neutral';
+  }
   return {
     tempIdealMin: r.min,
     tempIdealMax: r.max,
     calefactorWatts: watts,
     ventiladorNecesario: ventilador,
     notas,
+    _insight: {
+      title: watts === 0 ? 'Sin calefactor' : 'Calefactor recomendado',
+      text: insightText,
+      tone: insightTone,
+      icon: '🐠',
+    },
   };
 }

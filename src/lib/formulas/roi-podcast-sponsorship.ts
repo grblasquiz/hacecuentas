@@ -13,6 +13,8 @@ export interface Outputs {
   cpmPodcast: number;
   conversionesEstimadas: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function roiPodcastSponsorship(i: Inputs): Outputs {
@@ -56,10 +58,36 @@ export function roiPodcastSponsorship(i: Inputs): Outputs {
     `CPA: $${fmt.format(cpa)}. ROI: ${roi.toFixed(0)}%. ` +
     evaluacion;
 
+  const roiR = Number(roi.toFixed(1));
+  const insight = {
+    title: roiR >= 0 ? 'Sponsorship rentable' : 'Sponsorship en pérdida',
+    text: roiR >= 0
+      ? `${fmt.format(impresiones)} impresiones a ${tasa}% de conversión generan ~${fmt.format(conversionesEstimadas)} conversiones y **$${fmt.format(ingresos)}** de ingreso, contra $${fmt.format(costo)} de costo: ROI **${roiR.toFixed(0)}%** (CPA $${fmt.format(cpa)}). ${roiR > 200 ? 'Margen amplio para renovar o sumar episodios.' : 'Cerrá un código de descuento exclusivo para medir mejor la atribución.'}`
+      : `Con ${tasa}% de conversión las ~${fmt.format(conversionesEstimadas)} ventas estimadas rinden $${fmt.format(ingresos)}, por debajo de los $${fmt.format(costo)} que cuesta: ROI **${roiR.toFixed(0)}%**. Necesitás más conversión o mayor valor por venta para que cierre.`,
+    tone: (roiR < 0 ? 'warn' : roiR > 200 ? 'good' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🎙️',
+  };
+
+  const chart = {
+    type: 'scale' as const,
+    marker: roiR,
+    markerLabel: 'Tu ROI: ' + roiR.toFixed(0) + '%',
+    min: Math.min(-100, Math.floor(roiR)),
+    unit: '%',
+    segments: [
+      { nombre: 'Negativo', max: 0, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Positivo', max: 200, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Excelente', max: Math.max(400, Math.ceil(roiR) + 100), color: '#86efac', colorDark: '#15803d' },
+    ],
+    ariaLabel: 'Escala de ROI del sponsorship de podcast: negativo, positivo, excelente.',
+  };
+
   return {
-    roi: Number(roi.toFixed(1)),
+    roi: roiR,
     cpmPodcast: Math.round(cpmPodcast),
     conversionesEstimadas: Math.round(conversionesEstimadas),
     detalle,
+    _insight: insight,
+    _chart: chart,
   };
 }

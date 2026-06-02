@@ -1,6 +1,6 @@
 /** Substack Suscriptores Meta */
 export interface Inputs { metaMensual: number; precioMensual: number; pctAnual: number; }
-export interface Outputs { suscriptoresNecesarios: string; ingresoBruto: string; comisionFees: string; ingresoNeto: string; _chart?: any; }
+export interface Outputs { suscriptoresNecesarios: string; ingresoBruto: string; comisionFees: string; ingresoNeto: string; _chart?: any; _insight?: any; }
 
 export function substackSuscriptoresMeta(i: Inputs): Outputs {
   const meta = Number(i.metaMensual);
@@ -26,11 +26,19 @@ export function substackSuscriptoresMeta(i: Inputs): Outputs {
     centerLabel: 'Bruto/mes',
     ariaLabel: 'Composición del ingreso bruto mensual: ingreso neto más comisiones de Substack y Stripe',
   };
+  const pctFees = bruto > 0 ? (feesCom / bruto) * 100 : 0;
+  const insight = {
+    title: 'Lo que te comen las comisiones',
+    text: `Para embolsar **$${ingresoNetoNum.toFixed(0)}/mes** necesitás **${subs.toLocaleString('es-AR')} suscriptores pagos** a $${pm}/mes. Facturás **$${bruto.toFixed(0)} bruto**, pero Substack (10%) + Stripe (~3%) se llevan **$${feesCom.toFixed(0)} (${pctFees.toFixed(1)}%)**: presupuestá esa mordida antes de fijar tu meta.`,
+    tone: 'warn',
+    icon: '📨',
+  };
   return {
     suscriptoresNecesarios: `${subs.toLocaleString('es-AR')} subs pagos`,
     ingresoBruto: `$${bruto.toFixed(2)} USD/mes`,
     comisionFees: `$${feesCom.toFixed(2)} USD (Substack 10% + Stripe 3%)`,
     ingresoNeto: `$${(subs * netoSub).toFixed(2)} USD`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -20,6 +20,8 @@ export interface Outputs {
   recomendacao: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const FAIXAS_V = [
@@ -70,6 +72,40 @@ export function simplesAnexoV(i: Inputs): Outputs {
   const formula = `Alíquota efetiva = (${rbt12.toFixed(2)} × ${f.aliquota}% - ${f.deduzir}) / ${rbt12.toFixed(2)} = ${aliqEf.toFixed(3)}%`;
   const explicacion = `${anexoAplicavel} — faixa ${fIdx + 1}: RBT12 R$ ${rbt12.toLocaleString('pt-BR')}, alíquota nominal ${f.aliquota}%, dedução R$ ${f.deduzir.toLocaleString('pt-BR')}. Alíquota efetiva: ${aliqEf.toFixed(3)}%. DAS mensal: R$ ${valorDas.toFixed(2)}. ${recomendacao} Exemplos típicos de Anexo V sem fator R: médicos sem folha, psicólogos autônomos, engenheiros PJ puros.`;
 
+  const _insight = {
+    title: usarAnexoIII ? `Anexo III via fator R — faixa ${fIdx + 1}` : `Anexo V — faixa ${fIdx + 1} de 6`,
+    text: usarAnexoIII
+      ? `Seu **fator R de ${fatorR.toFixed(2)}%** (≥ 28%) levou a atividade ao **Anexo III**, mais barato: alíquota efetiva de **${aliqEf.toFixed(2)}%** e DAS de **R$ ${valorDas.toFixed(2)}** sobre R$ ${fatMes.toLocaleString('pt-BR')} no mês.`
+      : `Com **fator R de ${fatorR.toFixed(2)}%** (< 28%), você fica no **Anexo V**: alíquota efetiva de **${aliqEf.toFixed(2)}%** e DAS de **R$ ${valorDas.toFixed(2)}**. Para migrar ao Anexo III (mais barato) a folha precisaria chegar a **R$ ${(rbt12 * 0.28 / 12).toFixed(2)}/mês**.`,
+    tone: usarAnexoIII ? 'good' : 'warn',
+    icon: '🧮',
+  };
+
+  const segmentsV = [
+    { nombre: 'Faixa 1', max: 15.5, color: '#65a30d', colorDark: '#84cc16' },
+    { nombre: 'Faixa 2', max: 18.0, color: '#ca8a04', colorDark: '#eab308' },
+    { nombre: 'Faixa 3', max: 19.5, color: '#d97706', colorDark: '#f59e0b' },
+    { nombre: 'Faixa 4', max: 20.5, color: '#ea580c', colorDark: '#f97316' },
+    { nombre: 'Faixa 5', max: 23.0, color: '#dc2626', colorDark: '#ef4444' },
+    { nombre: 'Faixa 6', max: 30.5, color: '#b91c1c', colorDark: '#dc2626' },
+  ];
+  const segmentsIII = [
+    { nombre: 'Faixa 1', max: 6.0, color: '#16a34a', colorDark: '#22c55e' },
+    { nombre: 'Faixa 2', max: 11.2, color: '#65a30d', colorDark: '#84cc16' },
+    { nombre: 'Faixa 3', max: 13.5, color: '#ca8a04', colorDark: '#eab308' },
+    { nombre: 'Faixa 4', max: 16.0, color: '#ea580c', colorDark: '#f97316' },
+    { nombre: 'Faixa 5', max: 21.0, color: '#dc2626', colorDark: '#ef4444' },
+    { nombre: 'Faixa 6', max: 33.0, color: '#b91c1c', colorDark: '#dc2626' },
+  ];
+  const _chart = {
+    type: 'scale',
+    marker: Number(aliqEf.toFixed(2)),
+    markerLabel: `${aliqEf.toFixed(2)}% efetiva`,
+    min: 0,
+    segments: usarAnexoIII ? segmentsIII : segmentsV,
+    ariaLabel: `Alíquota efetiva de ${aliqEf.toFixed(2)}% nas seis faixas do ${usarAnexoIII ? 'Anexo III' : 'Anexo V'}.`,
+  };
+
   return {
     faixa: fIdx + 1,
     aliquotaNominal: f.aliquota,
@@ -81,5 +117,7 @@ export function simplesAnexoV(i: Inputs): Outputs {
     recomendacao,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

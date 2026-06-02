@@ -1,6 +1,6 @@
 /** Tamaño ideal de colchón según personas y altura */
 export interface Inputs { cantidadPersonas?: string; alturaMaxima: number; }
-export interface Outputs { anchoRecomendado: number; largoRecomendado: number; tamanoNombre: string; detalle: string; }
+export interface Outputs { anchoRecomendado: number; largoRecomendado: number; tamanoNombre: string; detalle: string; _insight?: any; }
 
 export function tamanoColchon(i: Inputs): Outputs {
   const personas = Number(i.cantidadPersonas || '2');
@@ -43,10 +43,21 @@ export function tamanoColchon(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const holgura = largo - largoMin;
+  const justo = holgura < 5;
+
   return {
     anchoRecomendado: ancho,
     largoRecomendado: largo,
     tamanoNombre: nombre,
     detalle: `Para ${personas} persona${personas > 1 ? 's' : ''} (altura máx ${fmt.format(altura)} cm), el colchón recomendado es **${nombre}** (${ancho}×${largo} cm). Largo mínimo necesario: ${fmt.format(largoMin)} cm.`,
+    _insight: {
+      title: justo ? 'Vas justo de largo' : 'Medida cómoda',
+      text: justo
+        ? `Con ${fmt.format(altura)} cm de altura necesitás al menos **${fmt.format(largoMin)} cm** de largo y el estándar de **${largo} cm** te deja apenas **${fmt.format(holgura)} cm** de margen. Si dormís estirado, conviene buscar un colchón de medida especial o extra-largo.`
+        : `El **${nombre}** te da **${fmt.format(holgura)} cm** de holgura sobre el largo mínimo (${fmt.format(largoMin)} cm para tus ${fmt.format(altura)} cm). Espacio de sobra para no tocar la baranda con los pies.`,
+      tone: justo ? 'warn' : 'good',
+      icon: '🛏️',
+    },
   };
 }

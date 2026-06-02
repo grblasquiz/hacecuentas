@@ -10,6 +10,7 @@ export interface Outputs {
   puntaje: number;
   riesgo: string;
   detalle: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -59,10 +60,22 @@ export function riesgoCaidaAdultoMayorEscala(i: Inputs): Outputs {
     ariaLabel: 'Escala de Downton de riesgo de caída: bajo riesgo (0-2), alto riesgo (3-5)',
   };
 
+  const esAlto = puntaje >= 3;
+  const factoresTxt = factores.length > 0 ? factores.join(', ') : 'ninguno';
+  const _insight = {
+    title: 'Qué significa este puntaje',
+    text: esAlto
+      ? `Con **${puntaje}/5** en la escala de Downton el riesgo de caída es **alto** (corte ≥3). Los factores presentes son: **${factoresTxt}**. Conviene una intervención multifactorial (revisar medicación, adaptar el hogar y trabajar el equilibrio) y consultar al médico.`
+      : `Con **${puntaje}/5** en la escala de Downton el riesgo de caída es **bajo** (corte ≥3)${factores.length > 0 ? `, aunque ya hay un factor a vigilar: **${factoresTxt}**` : ''}. Mantené medidas generales de prevención y reevaluá si aparecen caídas, nuevos fármacos o cambios en la marcha.`,
+    tone: esAlto ? 'warn' as const : 'good' as const,
+    icon: esAlto ? '⚠️' : '🟢',
+  };
+
   return {
     puntaje,
     riesgo: `${riesgo}. ${recomendacion}`,
     detalle,
+    _insight,
     _chart: chart,
   };
 }

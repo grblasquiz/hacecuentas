@@ -18,6 +18,8 @@ export interface Outputs {
   impacto_pension_futura: number;
   ahorro_anual_bruto_reduccion: number;
   explicacion_base_reguladora: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -75,6 +77,29 @@ export function compute(i: Inputs): Outputs {
   // 7. Ahorro anual bruto reducción (empresa + trabajador)
   const ahorroAnualBrutoReduccion = reduccionBrutoEuro * MESES_AÑO;
 
+  // Insight: interpreta la pérdida de neto mensual y el impacto en la pensión
+  const perdidaNetoMes = Math.abs(diferenciaNeto);
+  const _insight = {
+    title: "Cuánto te cuesta reducir jornada",
+    text: `Con un **${porcentajeReduccion}%** menos de jornada cobrás **€${salarioNeto.toFixed(2)}** netos al mes, **€${perdidaNetoMes.toFixed(2)} menos** que a jornada completa. ${mesesReduccion <= DURACION_PROTECCION_BASE_REGULADORA ? `Buena noticia: los ${mesesReduccion} meses quedan dentro de la protección de 24 meses, así que tu base de jubilación se mantiene completa.` : `Ojo: superás los 24 meses protegidos, por lo que la pensión futura baja unos **€${impactoPensionFuturaAnual.toFixed(0)}/año** estimados de cotización perdida.`}`,
+    tone: mesesReduccion <= DURACION_PROTECCION_BASE_REGULADORA ? "neutral" : "warn",
+    icon: "👶",
+  };
+
+  // Donut: composición del salario bruto reducido (neto + SS + IRPF suman el bruto reducido)
+  const _chart = {
+    type: "doughnut" as const,
+    slices: [
+      { label: "Salario neto", value: Math.round(salarioNeto * 100) / 100 },
+      { label: "Cotización SS (6,35%)", value: Math.round(cotizacionSsTrabajador * 100) / 100 },
+      { label: "Retención IRPF", value: Math.round(irpfRetenido * 100) / 100 },
+    ].filter((s) => s.value > 0),
+    prefix: "€",
+    centerValue: "€" + (Math.round(salarioBrutoReducido * 100) / 100).toLocaleString("es-ES"),
+    centerLabel: "Bruto reducido",
+    ariaLabel: "Reparto del salario bruto con jornada reducida: neto en mano, cotización a la Seguridad Social y retención de IRPF.",
+  };
+
   return {
     salario_bruto_reducido: Math.round(salarioBrutoReducido * 100) / 100,
     reduccion_bruto_euro: Math.round(reduccionBrutoEuro * 100) / 100,
@@ -86,6 +111,8 @@ export function compute(i: Inputs): Outputs {
     base_reguladora_jubilacion: Math.round(baseReguladoraJubilacion * 100) / 100,
     impacto_pension_futura: Math.round(impactoPensionFuturaAnual * 100) / 100,
     ahorro_anual_bruto_reduccion: Math.round(ahorroAnualBrutoReduccion * 100) / 100,
-    explicacion_base_reguladora: explicacionBaseReguladora
+    explicacion_base_reguladora: explicacionBaseReguladora,
+    _insight,
+    _chart
   };
 }

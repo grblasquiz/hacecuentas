@@ -25,6 +25,8 @@ export interface Outputs {
   ptuPorSalario: number;
   topeAplicado: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function ptuMexico(i: Inputs): Outputs {
@@ -54,7 +56,22 @@ export function ptuMexico(i: Inputs): Outputs {
   const aplicaTope = ptuBrutaSinTope > topeTresMeses;
   const ptuTotal = aplicaTope ? topeTresMeses : ptuBrutaSinTope;
 
-  return {
+  const fmtMx = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 });
+  const _insight = aplicaTope
+    ? {
+        title: 'Tu PTU con tope aplicado',
+        text: `Te corresponderían **$${fmtMx.format(Math.round(ptuBrutaSinTope))}**, pero la reforma 2021 limita la PTU a 3 meses de salario: cobrás **$${fmtMx.format(Math.round(ptuTotal))}**. El tope te recorta $${fmtMx.format(Math.round(ptuBrutaSinTope - ptuTotal))}.`,
+        tone: 'warn',
+        icon: '💰',
+      }
+    : {
+        title: 'Tu reparto de utilidades',
+        text: `Te corresponde una PTU de **$${fmtMx.format(Math.round(ptuTotal))}**: $${fmtMx.format(Math.round(ptuPorDias))} por días trabajados y $${fmtMx.format(Math.round(ptuPorSalario))} por tu salario. Quedás **por debajo del tope** de 3 meses ($${fmtMx.format(Math.round(topeTresMeses))}), así que cobrás el monto completo.`,
+        tone: 'good',
+        icon: '💰',
+      };
+
+  const out: Outputs = {
     ptuTotal: Number(ptuTotal.toFixed(2)),
     ptuPorDias: Number(ptuPorDias.toFixed(2)),
     ptuPorSalario: Number(ptuPorSalario.toFixed(2)),
@@ -62,5 +79,23 @@ export function ptuMexico(i: Inputs): Outputs {
     mensaje: aplicaTope
       ? `Tu PTU sería $${ptuBrutaSinTope.toFixed(2)} pero se aplica tope de 3 meses de sueldo: $${ptuTotal.toFixed(2)}.`
       : `Te corresponde una PTU de $${ptuTotal.toFixed(2)} (días: $${ptuPorDias.toFixed(2)} + salario: $${ptuPorSalario.toFixed(2)}).`,
+    _insight,
   };
+
+  // Donut sólo cuando NO se aplica el tope: las partes (días + salario) suman exactamente el total.
+  if (!aplicaTope) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Por días trabajados', value: Number(ptuPorDias.toFixed(2)) },
+        { label: 'Por salario', value: Number(ptuPorSalario.toFixed(2)) },
+      ],
+      prefix: '$',
+      centerValue: `$${fmtMx.format(Math.round(ptuTotal))}`,
+      centerLabel: 'PTU total',
+      ariaLabel: `PTU de $${fmtMx.format(Math.round(ptuTotal))} repartida en mitad por días trabajados y mitad por salario`,
+    };
+  }
+
+  return out;
 }

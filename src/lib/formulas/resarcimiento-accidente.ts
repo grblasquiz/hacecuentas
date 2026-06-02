@@ -16,6 +16,7 @@ export interface ResarcimientoAccidenteOutputs {
   danoMoral: number;
   lucroCesante: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function resarcimientoAccidente(inputs: ResarcimientoAccidenteInputs): ResarcimientoAccidenteOutputs {
@@ -61,11 +62,20 @@ export function resarcimientoAccidente(inputs: ResarcimientoAccidenteInputs): Re
     ariaLabel: 'Composición del resarcimiento: daño físico, daño moral y lucro cesante más gastos médicos',
   };
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Qué refleja esta estimación',
+    text: `Con un ingreso de **${fmt(ingreso)}/mes**, **${incapacidad}%** de incapacidad y **${aniosProductivos} años** productivos por delante, el resarcimiento orientativo ronda los **${fmt(resarcimientoTotal)}**, donde el daño físico (**${fmt(danoFisicoSimple)}**) pesa más que el moral y el lucro cesante. Es una cifra de referencia: el monto real lo fija un juez según el caso.`,
+    tone: 'warn' as const,
+    icon: '⚖️',
+  };
+
   return {
     resarcimientoTotal: Math.round(resarcimientoTotal),
     danoFisico: Math.round(danoFisicoSimple),
     danoMoral: Math.round(danoMoral),
     lucroCesante: Math.round(lucroCesante + gastosMedicos),
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -10,6 +10,8 @@ export interface Outputs {
   fitness_category: string;
   distance_meters: number;
   interpretation: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 // Cooper (1968) regression coefficients — JAMA 203(3):201-204
@@ -117,10 +119,46 @@ export function compute(i: Inputs): Outputs {
     CATEGORY_INTERPRETATIONS[category] ||
     CATEGORY_INTERPRETATIONS["N/A"];
 
+  // Gauge chart from the Cooper Institute thresholds for this age/sex band
+  const norms = sex === "female" ? NORMS_FEMALE : NORMS_MALE;
+  const row = norms.find(([ageMin, ageMax]) => age >= ageMin && age <= ageMax);
+  let chart: any = undefined;
+  if (row) {
+    const t = row[2]; // [veryPoorMax, poorMax, fairMax, goodMax, excellentMax]
+    const topChart = Math.max(t[4] + 8, Math.ceil(vo2maxRounded) + 4);
+    chart = {
+      type: "scale",
+      marker: vo2maxRounded,
+      markerLabel: "Your VO2max: " + vo2maxRounded.toFixed(1),
+      min: Math.max(0, Math.min(Math.floor(t[0]) - 5, Math.floor(vo2maxRounded) - 3)),
+      unit: "",
+      segments: [
+        { nombre: "Very Poor", max: t[0], color: "#fecaca", colorDark: "#b91c1c" },
+        { nombre: "Poor", max: t[1], color: "#fed7aa", colorDark: "#9a3412" },
+        { nombre: "Fair", max: t[2], color: "#fde68a", colorDark: "#b45309" },
+        { nombre: "Good", max: t[3], color: "#d9f99d", colorDark: "#3f6212" },
+        { nombre: "Excellent", max: t[4], color: "#bbf7d0", colorDark: "#166534" },
+        { nombre: "Superior", max: topChart, color: "#a7f3d0", colorDark: "#047857" },
+      ],
+      ariaLabel: "VO2max scale based on Cooper Institute norms for your age and sex",
+    };
+  }
+
+  const tone = (category === "Superior" || category === "Excellent") ? "good"
+    : (category === "Very Poor" || category === "Poor") ? "warn" : "neutral";
+  const insight = {
+    title: "Your aerobic capacity",
+    text: `You covered **${Math.round(distMeters)} m** in 12 minutes, which estimates a **VO2max of ${vo2maxRounded.toFixed(1)} ml/kg/min**. For a ${sex === "female" ? "woman" : "man"} aged ${age}, that places you in the **${category}** range.`,
+    tone,
+    icon: "🫁",
+  };
+
   return {
     vo2max: vo2maxRounded,
     fitness_category: category,
     distance_meters: Math.round(distMeters),
     interpretation,
+    _chart: chart,
+    _insight: insight,
   };
 }

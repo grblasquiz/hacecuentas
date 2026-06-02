@@ -22,6 +22,8 @@ export interface Outputs {
   estado_transicion: string;
   cotizacion_mensual: number;
   observaciones: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -217,6 +219,34 @@ export function compute(i: Inputs): Outputs {
 
   observaciones = notas.join(' ');
 
+  // Insight: interpreta la pensión esperada, las semanas faltantes y el efecto de la reforma
+  const pensionTotalRound = Math.round(pension_total_esperada);
+  const diferenciaRound = Math.round(diferencia_reforma);
+  const _insight = {
+    title: semanas_faltantes > 0 ? "Todavía te faltan semanas" : "Tu pensión estimada con la reforma",
+    text: semanas_faltantes > 0
+      ? `Con tu perfil cotizarías una pensión de **$${pensionTotalRound.toLocaleString('es-CO')}/mes**, pero te faltan **${semanas_faltantes} semanas** (~${Math.ceil(semanas_faltantes / 52)} años) para cumplir el mínimo de 1.300. Seguí aportando para no quedar fuera del pilar contributivo.`
+      : `Cumplís el mínimo de semanas y proyectás **$${pensionTotalRound.toLocaleString('es-CO')}/mes** de pensión. ${diferenciaRound >= 0 ? `La reforma 2025 te deja **$${diferenciaRound.toLocaleString('es-CO')}/mes por encima** del sistema anterior.` : `Eso es **$${Math.abs(diferenciaRound).toLocaleString('es-CO')}/mes menos** que el sistema anterior, compensado por el acceso al pilar solidario y el ahorro voluntario.`}`,
+    tone: (semanas_faltantes > 0 || diferencia_reforma < 0 ? "warn" : "good") as "good" | "warn" | "neutral",
+    icon: "👴",
+  };
+
+  // Donut SOLO si la pensión se compone de pilar contributivo + complemento de ahorro voluntario
+  let _chart: any = undefined;
+  if (complemento_pilar_4 > 0 && pension_pilar_1 > 0) {
+    _chart = {
+      type: "doughnut" as const,
+      slices: [
+        { label: "Pensión pilar contributivo", value: Math.round(pension_pilar_1) },
+        { label: "Complemento ahorro voluntario", value: Math.round(complemento_pilar_4) },
+      ],
+      prefix: "$",
+      centerValue: "$" + pensionTotalRound.toLocaleString('es-CO'),
+      centerLabel: "Pensión/mes",
+      ariaLabel: "Composición de la pensión mensual esperada: parte del pilar contributivo y complemento del ahorro voluntario.",
+    };
+  }
+
   return {
     pilar_aplicable,
     edad_pensional_requerida: parseFloat(edad_pensional_requerida.toFixed(1)),
@@ -230,6 +260,8 @@ export function compute(i: Inputs): Outputs {
     diferencia_reforma: Math.round(diferencia_reforma),
     estado_transicion,
     cotizacion_mensual: Math.round(cotizacion_mensual),
-    observaciones
+    observaciones,
+    _insight,
+    _chart
   };
 }

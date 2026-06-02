@@ -10,6 +10,7 @@ export interface Outputs {
   formulaTermino: string;
   formulaSuma: string;
   serie: string;
+  _insight?: any;
 }
 
 export function progresionAritmetica(i: Inputs): Outputs {
@@ -36,11 +37,25 @@ export function progresionAritmetica(i: Inputs): Outputs {
   let serie = seriePrev.join(', ');
   if (n > 10) serie += `, ..., ${an}`;
 
+  const fmt = (x: number) => Number(x.toFixed(4)).toLocaleString('es-AR');
+  const sentido = d > 0
+    ? `sube **+${fmt(d)}** por término hasta llegar a **${fmt(an)}** en a${n}`
+    : d < 0
+      ? `baja **${fmt(d)}** por término hasta caer a **${fmt(an)}** en a${n}`
+      : `se mantiene constante en **${fmt(a1)}** (diferencia 0)`;
+  const _insight = {
+    title: 'Cómo evoluciona la serie',
+    text: `Desde un primer término de ${fmt(a1)}, la progresión ${sentido}. Sumando los **${n}** términos obtenés **${fmt(sn)}**.`,
+    tone: 'neutral',
+    icon: '📈',
+  };
+
   return {
     terminoN: Number(an.toFixed(6)),
     suma: Number(sn.toFixed(6)),
     formulaTermino: `a_${n} = ${a1} + (${n}−1) × ${d} = ${an}`,
     formulaSuma: `S_${n} = ${n} × (${a1} + ${an}) / 2 = ${sn}`,
     serie,
+    _insight,
   };
 }

@@ -9,6 +9,8 @@ export interface Outputs {
   edd_from_lmp: string;
   dating_discrepancy_days: number;
   discrepancy_assessment: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -73,12 +75,68 @@ export function compute(i: Inputs): Outputs {
   
   const edd_ultrasound_str = edd_ultrasound.toISOString().split('T')[0];
   const weeks_days_str = `${ga_weeks} weeks + ${ga_days} days`;
-  
-  return {
+
+  // Insight: interpret gestational age and (if available) dating agreement
+  const hasLmp = !!(i.lmp_date && i.lmp_date.trim() !== "");
+  const absDisc = Math.abs(discrepancy);
+  let insight: any;
+  if (hasLmp) {
+    if (absDisc <= 7) {
+      insight = {
+        title: "Dating confirmed",
+        text: `Ultrasound puts you at **${weeks_days_str}**, only **${absDisc} day${absDisc === 1 ? "" : "s"}** from your LMP estimate. Both methods agree, so your due date of **${edd_ultrasound_str}** stands — no revision needed.`,
+        tone: "good",
+        icon: "🤰",
+      };
+    } else if (absDisc <= 14) {
+      insight = {
+        title: "Consider revising the due date",
+        text: `At **${weeks_days_str}**, the ultrasound differs from your LMP by **${absDisc} days**. That is enough to favor the scan: the recommended due date is **${edd_ultrasound_str}** rather than the LMP-based ${edd_lmp_str}.`,
+        tone: "warn",
+        icon: "📅",
+      };
+    } else {
+      insight = {
+        title: "Large dating discrepancy",
+        text: `The ultrasound (**${weeks_days_str}**) and your LMP disagree by **${absDisc} days** (>14). Use the ultrasound due date of **${edd_ultrasound_str}** and have your provider verify the LMP or check for a growth/dating issue.`,
+        tone: "warn",
+        icon: "⚠️",
+      };
+    }
+  } else {
+    insight = {
+      title: "Ultrasound is your reference",
+      text: `With no LMP entered, this scan dates the pregnancy at **${weeks_days_str}**, giving an estimated due date of **${edd_ultrasound_str}**. First-trimester CRL dating is accurate to about **±3–5 days**.`,
+      tone: "neutral",
+      icon: "🤰",
+    };
+  }
+
+  const out: Outputs = {
     gestational_weeks: weeks_days_str,
     edd_from_ultrasound: edd_ultrasound_str,
     edd_from_lmp: edd_lmp_str,
     dating_discrepancy_days: discrepancy,
-    discrepancy_assessment: assessment
+    discrepancy_assessment: assessment,
+    _insight: insight,
   };
+
+  // Gauge: only meaningful when there is an LMP to compare against
+  if (hasLmp) {
+    out._chart = {
+      type: "scale" as const,
+      marker: absDisc,
+      markerLabel: `Discrepancy: ${absDisc} day${absDisc === 1 ? "" : "s"}`,
+      min: 0,
+      unit: " days",
+      segments: [
+        { nombre: "Concordant", max: 7, color: "#bbf7d0", colorDark: "#166534" },
+        { nombre: "Consider revision", max: 14, color: "#fde68a", colorDark: "#b45309" },
+        { nombre: "Large discrepancy", max: Math.max(21, Math.ceil(absDisc) + 3), color: "#fecaca", colorDark: "#b91c1c" },
+      ],
+      ariaLabel: "Scale of dating discrepancy between ultrasound and LMP in days",
+    };
+  }
+
+  return out;
 }

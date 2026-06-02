@@ -1,6 +1,6 @@
 /** Calculadora Viaje Interestelar — t = d/v */
 export interface Inputs { distanciaLy: number; velocidadKms: number; }
-export interface Outputs { tiempoAnos: string; fraccionC: string; distanciaKm: string; comparacion: string; }
+export interface Outputs { tiempoAnos: string; fraccionC: string; distanciaKm: string; comparacion: string; _insight?: any; }
 
 export function tiempoViajeInterestelar(i: Inputs): Outputs {
   const dLy = Number(i.distanciaLy);
@@ -27,10 +27,17 @@ export function tiempoViajeInterestelar(i: Inputs): Outputs {
   else if (tYears < 100000) comp = 'Más largo que la historia de la civilización';
   else comp = 'Más largo que la existencia del Homo sapiens (~300.000 años)';
 
+  const _insight = {
+    title: 'Tu viaje a las estrellas',
+    text: `Recorrer **${dLy} años luz** a **${vKms.toLocaleString('es-AR')} km/s** (apenas **${(frac * 100).toFixed(4)}% de la velocidad de la luz**) tardaría **${tiempoStr}**. ${comp}.`,
+    tone: tYears < 100 ? 'good' : 'warn',
+    icon: '🚀',
+  };
   return {
     tiempoAnos: tiempoStr,
     fraccionC: `${(frac * 100).toFixed(6)}% de c (${frac.toFixed(8)} c)`,
     distanciaKm: `${dKm.toExponential(4)} km`,
     comparacion: comp,
+    _insight,
   };
 }

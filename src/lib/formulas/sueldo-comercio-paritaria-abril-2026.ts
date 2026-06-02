@@ -5,7 +5,7 @@
  * Antigüedad 1% por año sobre básico.
  */
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _chart?: any; _insight?: any; }
 
 const BASICOS_ABRIL_2026: Record<string, number> = {
   A: 945000,  // Maestranza A
@@ -50,6 +50,13 @@ export function sueldoComercioParitariaAbril2026(i: Inputs): Outputs {
     centerLabel: 'Bruto',
     ariaLabel: 'Composición del sueldo bruto: básico, antigüedad, presentismo y no remunerativo',
   };
+  const pctNoRem = bruto > 0 ? (noRem / bruto) * 100 : 0;
+  const insight = {
+    title: `Empleado de comercio Cat. ${cat}`,
+    text: `Con el básico de paritaria abril 2026 el bruto da **${fmt(bruto)}** y el neto **${fmt(neto)}** tras **${fmt(aportes)}** de aportes (17%). Ojo: **${fmt(noRem)}** (${pctNoRem.toFixed(0)}% del bruto) es no remunerativo, así que no suma para aguinaldo, vacaciones ni indemnización.`,
+    tone: 'neutral' as const,
+    icon: '🛒',
+  };
   return {
     sueldoBruto: fmt(bruto),
     sueldoNeto: fmt(neto),
@@ -60,5 +67,6 @@ export function sueldoComercioParitariaAbril2026(i: Inputs): Outputs {
     aportes: fmt(aportes),
     categoria: `Cat. ${cat} (CCT 130/75)`,
     _chart: chart,
+    _insight: insight,
   };
 }

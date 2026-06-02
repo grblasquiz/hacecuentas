@@ -8,6 +8,7 @@ export interface Outputs {
   accuracy: number;
   categoria: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function teclaPorMinutoTypingTest(i: Inputs): Outputs {
@@ -47,12 +48,30 @@ export function teclaPorMinutoTypingTest(i: Inputs): Outputs {
     ariaLabel: 'Escala de velocidad de tipeo en palabras por minuto, de muy lento a experto.',
   };
 
+  const accuracyR = Math.round(accuracy * 10) / 10;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (wpmNetoR >= 55 && accuracyR >= 95) insightTone = 'good';
+  else if (wpmNetoR < 40 || accuracyR < 92) insightTone = 'warn';
+  else insightTone = 'neutral';
+  const precisionTxt = accuracyR >= 97
+    ? 'una precisión excelente'
+    : accuracyR >= 93
+      ? 'una precisión correcta'
+      : 'una precisión baja: frenar un poco te subiría el neto';
+  const _insight = {
+    title: 'Tu velocidad de tipeo',
+    text: `Escribís a **${wpmNetoR} WPM** netas (${Math.round(wpmBruto)} brutas) con **${accuracyR}%** de aciertos, nivel **${cat}**. Eso es ${precisionTxt}. La media de oficina ronda 40 WPM y un profesional supera las 65.`,
+    tone: insightTone,
+    icon: '⌨️',
+  };
+
   return {
     wpmBruto: Math.round(wpmBruto),
     wpmNeto: wpmNetoR,
-    accuracy: Math.round(accuracy * 10) / 10,
+    accuracy: accuracyR,
     categoria: cat,
     _chart: chart,
+    _insight,
   };
 
 }

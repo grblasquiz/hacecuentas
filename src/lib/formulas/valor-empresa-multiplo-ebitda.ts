@@ -14,6 +14,8 @@ export interface Outputs {
   valuacionMin: number;
   valuacionMax: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function valorEmpresaMultiploEbitda(i: Inputs): Outputs {
@@ -57,6 +59,43 @@ export function valorEmpresaMultiploEbitda(i: Inputs): Outputs {
 
   const resumen = `Enterprise Value: ${Math.round(ev).toLocaleString()}. Deuda neta: ${Math.round(deudaNetaCalc).toLocaleString()}. Equity Value estimado: ${Math.round(equityValue).toLocaleString()} (rango ${Math.round(min).toLocaleString()} - ${Math.round(max).toLocaleString()}).`;
 
+  // Insight: interpreta el equity según la deuda neta
+  let insightTone: string, insightTitle: string, insightText: string, insightIconTmp: string;
+  if (equityValue <= 0) {
+    insightTone = 'warn';
+    insightTitle = 'Equity negativo: la deuda se come el valor';
+    insightText = `Con un EV de **$${Math.round(ev).toLocaleString()}** (${multiplo.toFixed(1)}× EBITDA) y una deuda neta de **$${Math.round(deudaNetaCalc).toLocaleString()}**, el equity value queda en **$${Math.round(equityValue).toLocaleString()}**: la deuda supera lo que vale el negocio. El comprador asumiría ese pasivo.`;
+    insightIconTmp = '⚠️';
+  } else if (deudaNetaCalc > 0 && ratioEquityEv < 60) {
+    insightTone = 'warn';
+    insightTitle = 'Deuda alta reduce el equity';
+    insightText = `El Enterprise Value es **$${Math.round(ev).toLocaleString()}**, pero la deuda neta de **$${Math.round(deudaNetaCalc).toLocaleString()}** deja un equity value de solo **$${Math.round(equityValue).toLocaleString()}** (${ratioEquityEv.toFixed(0)}% del EV). Rango estimado: $${Math.round(min).toLocaleString()} a $${Math.round(max).toLocaleString()}.`;
+    insightIconTmp = '🏢';
+  } else {
+    insightTone = deudaNetaCalc < 0 ? 'good' : 'neutral';
+    insightTitle = 'Valuación estimada';
+    insightText = `A **${multiplo.toFixed(1)}× EBITDA** la empresa vale unos **$${Math.round(ev).toLocaleString()}** de Enterprise Value y **$${Math.round(equityValue).toLocaleString()}** de equity${deudaNetaCalc < 0 ? ' (la caja supera la deuda, suma valor)' : ''}. Rango razonable: **$${Math.round(min).toLocaleString()} a $${Math.round(max).toLocaleString()}**.`;
+    insightIconTmp = deudaNetaCalc < 0 ? '💰' : '📊';
+  }
+  const _insight = { title: insightTitle, text: insightText, tone: insightTone, icon: insightIconTmp };
+
+  // Gauge: posiciona el múltiplo elegido en las zonas de mercado
+  const _chart = {
+    type: 'scale',
+    marker: Number(multiplo.toFixed(1)),
+    markerLabel: `${multiplo.toFixed(1)}× EBITDA`,
+    min: 0,
+    segments: [
+      { nombre: 'Bajo', max: 3, color: '#ef4444', colorDark: '#dc2626' },
+      { nombre: 'Conservador', max: 5, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Estándar PyME', max: 8, color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: 'Premium', max: 12, color: '#3b82f6', colorDark: '#2563eb' },
+      { nombre: 'Alto', max: 18, color: '#8b5cf6', colorDark: '#7c3aed' },
+      { nombre: 'Muy alto', max: 60, color: '#ec4899', colorDark: '#db2777' },
+    ],
+    ariaLabel: `Múltiplo de ${multiplo.toFixed(1)}× EBITDA ubicado en la escala de valuación de mercado.`,
+  };
+
   return {
     enterpriseValue: Math.round(ev),
     equityValue: Math.round(equityValue),
@@ -66,5 +105,7 @@ export function valorEmpresaMultiploEbitda(i: Inputs): Outputs {
     valuacionMin: Math.round(min),
     valuacionMax: Math.round(max),
     resumen,
+    _insight,
+    _chart,
   };
 }

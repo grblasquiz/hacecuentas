@@ -10,6 +10,7 @@ export interface Outputs {
   costo_por_sesion_usd: number;
   detalle: string;
   alternativas: string;
+  _insight?: any;
 }
 
 // Costo por sesión en USD por modalidad (valores de referencia 2026)
@@ -116,11 +117,40 @@ export function compute(i: Inputs): Outputs {
 
   const alternativas = comparativaLineas.join("\n");
 
+  // Costo mensual de cada modalidad para ubicar la elegida en el ranking
+  const costosMensuales = modalidades.map((mod) =>
+    mod === "betterhelp" ? BETTERHELP_MENSUAL_USD : (COSTO_POR_SESION_USD[mod] ?? 55) * sesiones
+  );
+  const minMes = Math.min(...costosMensuales);
+  const maxMes = Math.max(...costosMensuales);
+  const labelMod = LABEL_MODALIDAD[modalidad] ?? modalidad;
+  const arsMes = Math.round(costoMensualArs);
+  const arsFmt = arsMes.toLocaleString("es-AR");
+
+  let insightTone: "good" | "warn" | "neutral";
+  let insightText: string;
+  if (costoMensualUsd <= minMes + 0.5) {
+    insightTone = "good";
+    insightText = `**${labelMod}** es la opción más económica para ${sesiones} sesión${sesiones > 1 ? "es" : ""}/mes: **USD ${costoMensualUsd.toFixed(0)}/mes** (~$${arsFmt} ARS al cambio de $${tipoCambio}).`;
+  } else if (costoMensualUsd >= maxMes - 0.5) {
+    insightTone = "warn";
+    insightText = `**${labelMod}** es la opción más cara del listado: **USD ${costoMensualUsd.toFixed(0)}/mes** (~$${arsFmt} ARS). Hay alternativas desde USD ${minMes.toFixed(0)}/mes si querés recortar.`;
+  } else {
+    insightTone = "neutral";
+    insightText = `Con **${labelMod}** gastás **USD ${costoMensualUsd.toFixed(0)}/mes** (~$${arsFmt} ARS) por ${sesiones} sesión${sesiones > 1 ? "es" : ""}: un punto medio entre USD ${minMes.toFixed(0)} y USD ${maxMes.toFixed(0)} mensuales según modalidad.`;
+  }
+
   return {
     costo_usd_mes: parseFloat(costoMensualUsd.toFixed(2)),
-    costo_ars_mes: Math.round(costoMensualArs),
+    costo_ars_mes: arsMes,
     costo_por_sesion_usd: parseFloat(costoPorSesionUsd.toFixed(2)),
     detalle: detalleCalculo,
     alternativas,
+    _insight: {
+      title: "Tu costo mensual de terapia",
+      text: insightText,
+      tone: insightTone,
+      icon: "🧠",
+    },
   };
 }

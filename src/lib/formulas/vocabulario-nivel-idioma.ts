@@ -8,6 +8,8 @@ export interface Outputs {
   rangoMin: number;
   rangoMax: number;
   consejo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function vocabularioNivelIdioma(i: Inputs): Outputs {
@@ -39,12 +41,42 @@ export function vocabularioNivelIdioma(i: Inputs): Outputs {
   else if (faltan < 2000) consejo = 'Plan factible en 3-6 meses con 15 palabras/día.';
   else consejo = 'Proyecto largo: priorizá frequency lists y word families.';
 
-  return {
+  const yaCubiertas = Math.min(actuales, necesarias);
+  const pct = necesarias > 0 ? Math.round((yaCubiertas / necesarias) * 100) : 0;
+
+  const _insight = {
+    title: 'Cuánto te falta',
+    text: faltan <= 0
+      ? `Ya cubrís el rango de **${nivel.toUpperCase()}** (${necesarias.toLocaleString('es-AR')} palabras). Ahora tocá consolidar con uso activo.`
+      : `Para **${nivel.toUpperCase()}** en ${idioma} apuntás a ~**${necesarias.toLocaleString('es-AR')}** palabras y te faltan **${faltan.toLocaleString('es-AR')}** (${pct}% del camino hecho).`,
+    tone: faltan <= 0 ? 'good' : (faltan < 2000 ? 'neutral' : 'warn'),
+    icon: '🗣️',
+  };
+
+  const out: Outputs = {
     palabrasNecesarias: necesarias,
     palabrasFaltantes: faltan,
     rangoMin: min,
     rangoMax: max,
     consejo,
+    _insight,
   };
+
+  // Donut sólo cuando hay composición (vocabulario actual + faltante = meta)
+  if (faltan > 0 && yaCubiertas > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Ya sabés', value: yaCubiertas },
+        { label: 'Te falta', value: faltan },
+      ],
+      prefix: '',
+      centerValue: necesarias.toLocaleString('es-AR'),
+      centerLabel: `palabras para ${nivel.toUpperCase()}`,
+      ariaLabel: `Vocabulario actual frente a la meta para nivel ${nivel.toUpperCase()}`,
+    };
+  }
+
+  return out;
 
 }

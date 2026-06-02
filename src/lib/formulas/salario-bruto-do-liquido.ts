@@ -16,6 +16,8 @@ export interface Outputs {
   iteracoes: number;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -49,6 +51,29 @@ export function salarioBrutoDoLiquido(i: Inputs): Outputs {
   const formula = `Bruto tal que Bruto − INSS − IRRF = ${fmt(liq)} → ${fmt(bruto)} (bisseção, ${it} iter.)`;
   const explicacao = `Para receber líquido de ${fmt(liq)}, o salário bruto estimado é ${fmt(bruto)}, com INSS ${fmt(inss)} e IRRF ${fmt(irrf)}.`;
 
+  const descontos = inss + irrf;
+  const liquidoReal = bruto - descontos;
+  const pctDesc = bruto > 0 ? (descontos / bruto) * 100 : 0;
+  const _insight = {
+    title: 'Quanto bruto para esse líquido',
+    text: `Para levar **${fmt(liquidoReal)}** na mão, o bruto precisa ser **${fmt(bruto)}**: a empresa retém ${fmt(descontos)} em INSS + IRRF, ou seja **${pctDesc.toFixed(1)}%** já saem antes de cair na conta.`,
+    tone: pctDesc >= 20 ? 'warn' : 'neutral',
+    icon: '🔁',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Líquido', value: Math.round(liquidoReal * 100) / 100 },
+      { label: 'INSS', value: Math.round(inss * 100) / 100 },
+      { label: 'IRRF', value: Math.round(irrf * 100) / 100 },
+    ].filter((s) => s.value > 0),
+    prefix: 'R$',
+    centerValue: fmt(bruto),
+    centerLabel: 'Salário bruto',
+    ariaLabel: `Composição do salário bruto de ${fmt(bruto)}: líquido, INSS e IRRF.`,
+  };
+
   return {
     salarioLiquido: fmt(liq),
     salarioBrutoEstimado: fmt(bruto),
@@ -57,5 +82,7 @@ export function salarioBrutoDoLiquido(i: Inputs): Outputs {
     iteracoes: it,
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

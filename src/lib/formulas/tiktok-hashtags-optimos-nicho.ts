@@ -1,6 +1,6 @@
 /** TikTok Hashtags Óptimos */
 export interface Inputs { nicho: string; tamano: string; }
-export interface Outputs { cantidadOptima: string; mixRecomendado: string; ejemplosNicho: string; evitar: string; }
+export interface Outputs { cantidadOptima: string; mixRecomendado: string; ejemplosNicho: string; evitar: string; _insight?: any; }
 
 export function tiktokHashtagsOptimosNicho(i: Inputs): Outputs {
   const nicho = String(i.nicho);
@@ -24,10 +24,19 @@ export function tiktokHashtagsOptimosNicho(i: Inputs): Outputs {
     'Viajes': '#travelvlog #viajespormundo #destinosocultos',
     'Mascotas': '#perrostiktok #gatostiktok #petlovers',
   };
+  const deNicho = Math.max(1, Math.round(cantidad*0.5));
+  const deTendencia = Math.max(1, Math.round(cantidad*0.33));
+  const _insight = {
+    title: 'Tu mezcla de hashtags',
+    text: `Para tu cuenta apuntá a **${cantidad} hashtags** por video: **${deNicho} de nicho** (donde competís de verdad), **${deTendencia} de tendencia** y 1 branded. Cuanto más chica la cuenta más hashtags ayudan; mientras crecés conviene afinar y bajar la cantidad.`,
+    tone: 'neutral' as const,
+    icon: '#️⃣',
+  };
   return {
     cantidadOptima: `${cantidad} hashtags`,
-    mixRecomendado: `${Math.max(1, Math.round(cantidad*0.5))} de nicho + ${Math.max(1, Math.round(cantidad*0.33))} de tendencia + 1 branded`,
+    mixRecomendado: `${deNicho} de nicho + ${deTendencia} de tendencia + 1 branded`,
     ejemplosNicho: ejemplos[nicho] || '#nicho1 #nicho2 #nicho3',
     evitar: 'Evitá #fyp #foryou #viral #parati: saturados, TikTok los ignora',
+    _insight,
   };
 }

@@ -17,6 +17,7 @@ export interface ViajeCombustibleOutputs {
   costoPorPersona: number;
   costoPorKm: number;
   distanciaEfectiva: number;
+  _insight?: any;
 }
 
 export function viajeCombustible(inputs: ViajeCombustibleInputs): ViajeCombustibleOutputs {
@@ -36,11 +37,24 @@ export function viajeCombustible(inputs: ViajeCombustibleInputs): ViajeCombustib
   const costoPorPersona = costoTotal / pasajeros;
   const costoPorKm = costoTotal / distanciaEfectiva;
 
+  const costoTotalR = Math.round(costoTotal);
+  const costoPorPersonaR = Math.round(costoPorPersona);
+  const litrosR = Math.round(litrosTotales * 100) / 100;
+  const _insight = {
+    title: 'Nafta para el viaje',
+    text: pasajeros > 1
+      ? `Recorrer **${distanciaEfectiva.toLocaleString('es-AR')} km${idaVuelta ? ' (ida y vuelta)' : ''}** consume **${litrosR.toLocaleString('es-AR')} L** y cuesta **$${costoTotalR.toLocaleString('es-AR')}**. Dividido entre ${pasajeros} pasajeros, son **$${costoPorPersonaR.toLocaleString('es-AR')} por persona**.`
+      : `Recorrer **${distanciaEfectiva.toLocaleString('es-AR')} km${idaVuelta ? ' (ida y vuelta)' : ''}** consume **${litrosR.toLocaleString('es-AR')} L** y te cuesta **$${costoTotalR.toLocaleString('es-AR')}** de combustible (≈$${(Math.round(costoPorKm * 100) / 100).toLocaleString('es-AR')} por km).`,
+    tone: 'neutral',
+    icon: '⛽',
+  };
+
   return {
-    litrosTotales: Math.round(litrosTotales * 100) / 100,
-    costoTotal: Math.round(costoTotal),
-    costoPorPersona: Math.round(costoPorPersona),
+    litrosTotales: litrosR,
+    costoTotal: costoTotalR,
+    costoPorPersona: costoPorPersonaR,
     costoPorKm: Math.round(costoPorKm * 100) / 100,
     distanciaEfectiva,
+    _insight,
   };
 }

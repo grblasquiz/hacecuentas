@@ -11,6 +11,8 @@ export interface Outputs {
   velocidadCrucero: number;
   tiempoTaxeo: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const VELOCIDADES: Record<string, number> = {
@@ -37,11 +39,33 @@ export function tiempoVueloEstimado(i: Inputs): Outputs {
   const h = Math.floor(horasTotales);
   const m = Math.round((horasTotales - h) * 60);
 
+  const minTaxeo = Math.round(taxeo * 60); // 30
+  const minTotal = h * 60 + m;
+  const minAire = Math.max(0, minTotal - minTaxeo);
+  const vientoTxt = viento > 0 ? ` El viento de proa de **${viento} km/h** baja la velocidad efectiva a **${velEfectiva} km/h**.` : '';
+  const _insight = {
+    title: 'Duración del vuelo',
+    text: `Tu vuelo de **${km.toLocaleString('es-AR')} km** en avión ${tipo} duraría **${h}h ${String(m).padStart(2, '0')}m** contando taxeo y maniobras.${vientoTxt}`,
+    tone: 'neutral',
+    icon: '✈️',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Vuelo en crucero', value: minAire },
+      { label: 'Taxeo y maniobras', value: minTaxeo },
+    ],
+    centerValue: `${h}h ${String(m).padStart(2, '0')}m`,
+    centerLabel: 'Total',
+    ariaLabel: `Tiempo total de ${h} horas ${m} minutos: ${minAire} minutos en vuelo y ${minTaxeo} de taxeo`,
+  };
   return {
     tiempoHoras: Number(horasTotales.toFixed(2)),
     tiempoFormato: `${h}h ${String(m).padStart(2, '0')}m`,
     velocidadCrucero: vel,
-    tiempoTaxeo: Math.round(taxeo * 60),
+    tiempoTaxeo: minTaxeo,
     resumen: `Tu vuelo de **${km} km** en un avión ${tipo} duraría aproximadamente **${h}h ${m}m** incluyendo taxeo y maniobras (velocidad efectiva ${velEfectiva} km/h).`,
+    _insight,
+    _chart,
   };
 }

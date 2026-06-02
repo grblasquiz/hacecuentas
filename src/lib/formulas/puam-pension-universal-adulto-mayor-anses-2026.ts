@@ -12,6 +12,7 @@ export interface Outputs {
   elegible: string;
   requisitos_detalle: string;
   recomendacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -104,11 +105,47 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // Insight dinámico según elegibilidad
+  const montoFmt = Math.round(monto_puam).toLocaleString("es-AR");
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: string;
+  let insightIcon: string;
+
+  if (es_elegible) {
+    insightTitle = "Cumplís los requisitos de la PUAM";
+    insightText = `Con **${edad} años** y ${anios_cotizacion} años de aportes cumplís las cuatro condiciones. La PUAM te garantiza **$${montoFmt}/mes** (el ${porcentaje}% del haber mínimo). La podés tramitar en ANSES, o incluso te la pueden otorgar de oficio.`;
+    insightTone = "good";
+    insightIcon = "✅";
+  } else if (!elegible_cotizacion) {
+    // No es PUAM, pero es buena noticia: accede a jubilación ordinaria (cobra más)
+    insightTitle = "No necesitás PUAM: accedés a jubilación ordinaria";
+    insightText = `Con **${anios_cotizacion} años de aportes** (≥30) te corresponde la **jubilación ordinaria completa**, que paga más que la PUAM ($${montoFmt}/mes sería sólo el ${porcentaje}% del haber mínimo). Tramitá la jubilación directamente.`;
+    insightTone = "good";
+    insightIcon = "🎉";
+  } else if (!elegible_edad) {
+    insightTitle = "Todavía no llegás a la edad mínima";
+    insightText = `La PUAM exige **65 años** y tenés ${edad}. Te faltan **${EDAD_MINIMA - edad} años** para poder solicitarla. Cuando la cumplas, te garantizaría $${montoFmt}/mes.`;
+    insightTone = "warn";
+    insightIcon = "⏳";
+  } else {
+    insightTitle = "Aún no cumplís todos los requisitos";
+    insightText = `Cumplís la edad pero falta algún requisito (revisá el detalle). Una vez que los completes, la PUAM te garantizaría **$${montoFmt}/mes** (el ${porcentaje}% del haber mínimo).`;
+    insightTone = "warn";
+    insightIcon = "⚠️";
+  }
+
   return {
     monto_puam_mensual: Math.round(monto_puam),
     porcentaje_haber_minimo: porcentaje,
     elegible: texto_elegible,
     requisitos_detalle: requisitos_detalle,
-    recomendacion: recomendacion
+    recomendacion: recomendacion,
+    _insight: {
+      title: insightTitle,
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon,
+    },
   };
 }

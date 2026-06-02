@@ -18,6 +18,8 @@ export interface Outputs {
   cuota_neta_regimen_general: number;
   diferencia_regimenes: number;
   mensaje_resultado: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -112,6 +114,56 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // Insight narrativo dinámico
+  const eur = (n: number) =>
+    n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  let _insight: any = undefined;
+  if (ventasTotal > 0 && recargoTotal > 0) {
+    const difAbs = Math.abs(diferenciaRegimenes);
+    if (diferenciaRegimenes > 0.005) {
+      _insight = {
+        title: 'El recargo te sale más caro',
+        text: `Pagás **${eur(recargoTotal)} €** de recargo de equivalencia, **${eur(difAbs)} € más** que la cuota neta de ${eur(cuotaNetaRegimenGeneral)} € del régimen general. Con estos márgenes el recargo te penaliza, pero es obligatorio si cumplís los requisitos del art. 148.`,
+        tone: 'warn',
+        icon: '🧾',
+      };
+    } else if (diferenciaRegimenes < -0.005) {
+      _insight = {
+        title: 'El recargo te conviene',
+        text: `Pagás **${eur(recargoTotal)} €** de recargo de equivalencia, **${eur(difAbs)} € menos** que la cuota neta de ${eur(cuotaNetaRegimenGeneral)} € del régimen general. Con tus márgenes este régimen te ahorra plata.`,
+        tone: 'good',
+        icon: '🧾',
+      };
+    } else {
+      _insight = {
+        title: 'Casi sin diferencia',
+        text: `Tu recargo de equivalencia (**${eur(recargoTotal)} €**) es prácticamente igual a la cuota neta del régimen general (${eur(cuotaNetaRegimenGeneral)} €). Económicamente da casi lo mismo, pero el recargo es obligatorio si cumplís los requisitos del art. 148.`,
+        tone: 'neutral',
+        icon: '🧾',
+      };
+    }
+  }
+
+  // Gráfico: composición del recargo por tramo de IVA (suma = recargoTotal)
+  let _chart: any = undefined;
+  if (recargoTotal > 0) {
+    const slices = [
+      { label: 'Tipo general (21%)', value: Math.round(recargoGeneral * 100) / 100 },
+      { label: 'Tipo reducido (10%)', value: Math.round(recargoReducido * 100) / 100 },
+      { label: 'Tipo superreducido (4%)', value: Math.round(recargoSuperreducido * 100) / 100 },
+    ].filter((s) => s.value > 0);
+    if (slices.length > 0) {
+      _chart = {
+        type: 'doughnut',
+        slices,
+        prefix: '€',
+        centerValue: eur(recargoTotal) + ' €',
+        centerLabel: 'Recargo total',
+        ariaLabel: 'Composición del recargo de equivalencia por tramo de IVA',
+      };
+    }
+  }
+
   return {
     base_compras_general: Math.round(baseComprasGeneral * 100) / 100,
     base_compras_reducido: Math.round(baseComprasReducido * 100) / 100,
@@ -125,5 +177,7 @@ export function compute(i: Inputs): Outputs {
     cuota_neta_regimen_general: Math.round(cuotaNetaRegimenGeneral * 100) / 100,
     diferencia_regimenes: Math.round(diferenciaRegimenes * 100) / 100,
     mensaje_resultado: mensajeResultado,
+    _insight,
+    _chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Calculadora de Probabilidad de Lotería */
 export interface Inputs { numerosElegir: number; numerosDisponibles: number; jugadasSemana: number; }
-export interface Outputs { probabilidad: string; unaEn: number; anosParas50: number; comparacion: string; }
+export interface Outputs { probabilidad: string; unaEn: number; anosParas50: number; comparacion: string; _insight?: any; }
 
 function combinaciones(n: number, k: number): number {
   if (k > n) return 0;
@@ -39,10 +39,18 @@ export function probabilidadLoteriaPremio(i: Inputs): Outputs {
   else if (total > 100000) comparacion = 'Similar a: adivinar un PIN de 5 dígitos al azar.';
   else comparacion = 'Probabilidad baja pero no imposible con suficientes intentos.';
 
+  const _insight = {
+    title: 'La realidad detrás del pozo',
+    text: `Acertar es **1 en ${total.toLocaleString('es-AR')}**. Jugando **${jpw} vez(ces) por semana**, tardarías cerca de **${anosParas50.toLocaleString('es-AR')} años** en tener apenas 50% de chance de ganar una vez. ${comparacion}`,
+    tone: 'warn',
+    icon: '🎰',
+  };
+
   return {
     probabilidad,
     unaEn: total,
     anosParas50,
     comparacion,
+    _insight,
   };
 }

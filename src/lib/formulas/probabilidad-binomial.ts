@@ -1,6 +1,6 @@
 /** Calculadora Probabilidad Binomial — P(X=k) = C(n,k)·p^k·(1-p)^(n-k) */
 export interface Inputs { n: number; k: number; p: number; }
-export interface Outputs { probabilidad: string; probAcumulada: string; mediaEsperada: number; desviacion: number; }
+export interface Outputs { probabilidad: string; probAcumulada: string; mediaEsperada: number; desviacion: number; _insight?: any; }
 
 function logComb(n: number, k: number): number {
   if (k > n) return -Infinity;
@@ -36,10 +36,19 @@ export function probabilidadBinomial(i: Inputs): Outputs {
   const mu = n * p;
   const sigma = Math.sqrt(n * p * (1 - p));
 
+  // Insight narrativo
+  const _insight = {
+    title: 'Qué dice este resultado',
+    text: `Con **${n} ensayos** y probabilidad **${(p * 100).toFixed(1)}%** por intento, obtener exactamente **${k} éxitos** tiene una probabilidad del **${(prob * 100).toFixed(2)}%**, y hasta **${k} o menos** acumula **${(cumProb * 100).toFixed(2)}%**. El valor más esperable ronda los **${mu.toFixed(1)}** éxitos (± ${sigma.toFixed(1)}).`,
+    tone: 'neutral',
+    icon: '🎲',
+  };
+
   return {
     probabilidad: `${(prob * 100).toFixed(4)}% (${prob.toFixed(8)})`,
     probAcumulada: `${(cumProb * 100).toFixed(4)}% (${cumProb.toFixed(8)})`,
     mediaEsperada: Number(mu.toFixed(4)),
     desviacion: Number(sigma.toFixed(4)),
+    _insight,
   };
 }

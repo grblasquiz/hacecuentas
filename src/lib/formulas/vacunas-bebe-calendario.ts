@@ -1,6 +1,6 @@
 /** Calendario de vacunas del bebé — Argentina */
 export interface Inputs { fechaNacimiento: string; }
-export interface Outputs { proximaVacuna: string; calendario: string; vacunasAlDia: string; nota: string; }
+export interface Outputs { proximaVacuna: string; calendario: string; vacunasAlDia: string; nota: string; _insight?: any; _chart?: any; }
 
 const esquema = [
   { meses: 0, vacunas: 'BCG + Hepatitis B (1° dosis)' },
@@ -52,12 +52,42 @@ export function vacunasBebe(i: Inputs): Outputs {
   }
 
   const completadas = esquema.filter(e => edadMeses >= e.meses).length;
-  vacunasAlDia = `${completadas} de ${esquema.length} etapas completadas (según la edad)`;
+  const total = esquema.length;
+  const pendientes = Math.max(0, total - completadas);
+  vacunasAlDia = `${completadas} de ${total} etapas completadas (según la edad)`;
+
+  const _insight = pendientes === 0
+    ? {
+        title: 'Esquema del primer año y medio completo',
+        text: `Por edad (**${edadMeses} meses**), tu bebé ya pasó las **${total} etapas** del calendario hasta los 18 meses. A partir de acá siguen los refuerzos de los 5 y 11 años.`,
+        tone: 'good' as const,
+        icon: '✅',
+      }
+    : {
+        title: 'Próxima parada del calendario',
+        text: `Tu bebé tiene **${edadMeses} meses** y lleva **${completadas} de ${total}** etapas. Lo que viene: **${proxima}**. Recordá que en Argentina todas son gratuitas y obligatorias.`,
+        tone: 'neutral' as const,
+        icon: '👶',
+      };
+
+  // Donut: etapas completadas vs pendientes (suman el total del esquema 0-18 meses)
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Completadas', value: completadas },
+      { label: 'Pendientes', value: pendientes },
+    ],
+    centerValue: `${completadas}/${total}`,
+    centerLabel: 'etapas',
+    ariaLabel: `${completadas} de ${total} etapas del calendario hasta los 18 meses completadas según la edad, ${pendientes} pendientes.`,
+  };
 
   return {
     proximaVacuna: proxima,
     calendario: calendario.trim(),
     vacunasAlDia,
     nota: 'Las fechas son estimadas. Consultá con tu pediatra para el esquema exacto. Todas las vacunas son gratuitas y obligatorias en Argentina.',
+    _insight,
+    _chart,
   };
 }

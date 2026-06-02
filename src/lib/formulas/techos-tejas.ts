@@ -13,6 +13,8 @@ export interface Outputs {
   listonesMlineales: number;
   tipo: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const TIPOS: Record<string, { nombre: string; porM2: number }> = {
@@ -48,13 +50,42 @@ export function techosTejas(i: Inputs): Outputs {
   // Listones/tirantes: ~3 metros lineales por m² de techo
   const listonesMlineales = Math.ceil(m2Reales * 3);
 
+  const tejasTotal = Math.ceil(conDesp);
+  const tejasBase = Math.round(base);           // tejas netas (sin desperdicio)
+  const tejasDesp = Math.max(0, tejasTotal - tejasBase); // recorte/desperdicio
+  const m2RealesR = Number(m2Reales.toFixed(2));
+  const extraPct = Math.round((factorPendiente - 1) * 100);
+
+  // --- Insight: total a comprar, contando inclinación y desperdicio ---
+  const _insight = {
+    title: 'Tejas a comprar',
+    text: `Comprá **${tejasTotal.toLocaleString('es-AR')} ${t.nombre.toLowerCase()}** para cubrir ${m2} m² en planta. La pendiente del ${pend}% suma **${extraPct}%** de superficie real (${m2RealesR} m²), y ya incluí **${tejasDesp.toLocaleString('es-AR')}** tejas extra (${desp}%) por roturas y recortes. Sumá ${cumbreras} cumbrera(s) y ~${listonesMlineales} m de listones.`,
+    tone: 'neutral',
+    icon: '🏠',
+  };
+
+  // --- Donut: tejas netas + desperdicio = total a comprar ---
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Tejas netas', value: tejasBase },
+      { label: `Desperdicio (${desp}%)`, value: tejasDesp },
+    ],
+    suffix: ' u',
+    centerValue: tejasTotal.toLocaleString('es-AR'),
+    centerLabel: 'tejas',
+    ariaLabel: 'Reparto de la cantidad total de tejas entre las netas para cubrir el techo y el margen por desperdicio.',
+  };
+
   return {
-    tejas: Math.ceil(conDesp),
+    tejas: tejasTotal,
     tejasPorM2: t.porM2,
-    m2Reales: Number(m2Reales.toFixed(2)),
+    m2Reales: m2RealesR,
     cumbreras,
     listonesMlineales,
     tipo: t.nombre,
-    resumen: `Necesitás ${Math.ceil(conDesp)} ${t.nombre.toLowerCase()} para un techo de ${m2} m² (pendiente ${pend}%).`,
+    resumen: `Necesitás ${tejasTotal} ${t.nombre.toLowerCase()} para un techo de ${m2} m² (pendiente ${pend}%).`,
+    _insight,
+    _chart,
   };
 }

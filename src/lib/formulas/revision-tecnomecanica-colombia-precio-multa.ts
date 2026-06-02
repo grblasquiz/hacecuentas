@@ -11,6 +11,7 @@ export interface Outputs {
   costo_revision_estimado: number;
   multa_por_vencimiento: number;
   frecuencia_proxima: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -63,12 +64,39 @@ export function compute(i: Inputs): Outputs {
   const dia = String(proximaFecha.getDate()).padStart(2, '0');
   const proximaFechaStr = `${ano}-${mes}-${dia}`;
 
+  const fmtCo = (n: number) => Math.round(n).toLocaleString('es-CO');
+  let insight: Outputs['_insight'];
+  if (diasParaVencimiento < 0) {
+    const diasVencido = Math.abs(diasParaVencimiento);
+    insight = {
+      title: 'Tecnomecánica vencida',
+      text: `Llevás **${diasVencido} día(s)** con la revisión vencida: circular así expone a una multa de **$${fmtCo(multa)} COP**, casi ${Math.round(multa / costo)}× lo que cuesta la revisión ($${fmtCo(costo)}). Sacá turno en el CDA ya.`,
+      tone: 'warn',
+      icon: '🚫',
+    };
+  } else if (diasParaVencimiento <= 30) {
+    insight = {
+      title: 'Próxima a vencer',
+      text: `Te quedan **${diasParaVencimiento} día(s)** de vigencia. Agendá la revisión antes del **${proximaFechaStr}** para evitar la multa de $${fmtCo(MULTA_SIN_REVISION)} COP; la revisión sale unos **$${fmtCo(costo)}**.`,
+      tone: 'warn',
+      icon: '⏳',
+    };
+  } else {
+    insight = {
+      title: 'Tecnomecánica al día',
+      text: `Tu revisión está **vigente** por **${diasParaVencimiento} día(s)** más, hasta el **${proximaFechaStr}**. La próxima (${frecuencia.toLowerCase()}) costará alrededor de **$${fmtCo(costo)} COP**.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  }
+
   return {
     proxima_fecha_revision: proximaFechaStr,
     dias_para_vencimiento: diasParaVencimiento,
     estado_vigencia: estado,
     costo_revision_estimado: costo,
     multa_por_vencimiento: multa,
-    frecuencia_proxima: frecuencia
+    frecuencia_proxima: frecuencia,
+    _insight: insight
   };
 }

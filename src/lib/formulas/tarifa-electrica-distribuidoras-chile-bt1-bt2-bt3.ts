@@ -17,6 +17,8 @@ export interface Outputs {
   opcion_mas_conveniente: string;
   ahorro_mensual_vs_actual: number;
   plazo_recuperacion_cambio: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -124,16 +126,60 @@ export function compute(i: Inputs): Outputs {
     plazo = 999; // no rentable
   }
   
+  const cargoFijoR  = Math.round(cargo_fijo);
+  const cargoEnergR = Math.round(cargo_energia);
+  const cargoPotR   = Math.round(cargo_potencia);
+  const totalR      = Math.round(total_con_impuestos);
+  const opcionActual = i.opcion_tarifa.toUpperCase();
+  const opcionMejor  = opcion_mas_conveniente.toUpperCase();
+  const esLaMejor    = opcionMejor === opcionActual;
+
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const ahorroPosible = Math.round(costos_opciones[opcion_mas_conveniente] !== undefined
+    ? (costos_opciones[i.opcion_tarifa] - costos_opciones[opcion_mas_conveniente])
+    : 0);
+  const _insight = esLaMejor
+    ? {
+        title: `${opcionActual} es la opción más conveniente`,
+        text: `Con tu consumo, la tarifa **${opcionActual}** te deja un total de **${fmtCLP(totalR)}** al mes y ya es la más barata de las tres opciones. El kWh te sale a **${fmtCLP(costo_kwh_promedio)}** en promedio.`,
+        tone: 'good',
+        icon: '⚡',
+      }
+    : {
+        title: `Conviene cambiar a ${opcionMejor}`,
+        text: `Hoy en **${opcionActual}** pagás **${fmtCLP(totalR)}** al mes, pero con tu consumo la opción **${opcionMejor}** sería más barata y te ahorraría unos **${fmtCLP(ahorroPosible)}** mensuales. Consultá el costo de cambiar de tarifa antes de decidir.`,
+        tone: 'warn',
+        icon: '⚡',
+      };
+
+  const slices = [
+    { label: 'Cargo fijo', value: cargoFijoR },
+    { label: 'Energía', value: cargoEnergR },
+    { label: 'Potencia', value: cargoPotR },
+    { label: 'Impuesto', value: totalR - cargoFijoR - cargoEnergR - cargoPotR },
+  ].filter(s => s.value > 0);
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: fmtCLP(totalR),
+    centerLabel: 'Total mes',
+    ariaLabel: 'Composición de la cuenta de luz: cargo fijo, cargo por energía, cargo por potencia e impuesto a la electricidad.',
+  };
+
   return {
-    cargo_fijo_bt: Math.round(cargo_fijo),
-    cargo_energia: Math.round(cargo_energia),
-    cargo_potencia: Math.round(cargo_potencia),
+    cargo_fijo_bt: cargoFijoR,
+    cargo_energia: cargoEnergR,
+    cargo_potencia: cargoPotR,
     subtotal_sin_impuestos: Math.round(subtotal_sin_impuestos),
     impuesto_electricidad_pct: impuesto_pct,
-    total_con_impuestos: Math.round(total_con_impuestos),
+    total_con_impuestos: totalR,
     costo_kwh_promedio: Math.round(costo_kwh_promedio),
-    opcion_mas_conveniente: opcion_mas_conveniente.toUpperCase(),
+    opcion_mas_conveniente: opcionMejor,
     ahorro_mensual_vs_actual: Math.round(ahorro_vs_bt1),
-    plazo_recuperacion_cambio: plazo > 100 ? 999 : Math.round(plazo * 10) / 10
+    plazo_recuperacion_cambio: plazo > 100 ? 999 : Math.round(plazo * 10) / 10,
+    _insight,
+    _chart,
   };
 }

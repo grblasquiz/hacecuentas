@@ -14,6 +14,8 @@ export interface Outputs {
   servicios_estimado: number;
   costo_total_mes: number;
   aval_requerido: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function obtenerBaseRenta(ciudad: string, recamaras: string): { base: number; minimo: number; maximo: number } {
@@ -114,14 +116,56 @@ export function compute(i: Inputs): Outputs {
   // 8. Requerimiento de aval
   const avalRequerido = requiereAval(ciudad, colonia_nivel);
 
+  const rentaR = Math.round(rentaPromedio);
+  const minR = Math.round(rentaMinima);
+  const maxR = Math.round(rentaMaxima);
+  const serviciosR = Math.round(serviciosEstimado);
+  const costoR = Math.round(costoTotalMes);
+
+  const NOMBRES: Record<string, string> = {
+    cdmx: 'CDMX', guadalajara: 'Guadalajara', monterrey: 'Monterrey',
+    queretaro: 'Querétaro', merida: 'Mérida',
+  };
+  const mxn = (n: number) => '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+  const ciudadNombre = NOMBRES[ciudad] || 'la ciudad';
+
+  const _insight = {
+    title: `Renta estimada en ${ciudadNombre}`,
+    text: incluir_servicios === 'si'
+      ? `Un depa de **${recamaras} recámara(s)** en ${ciudadNombre} (zona ${String(colonia_nivel).replace('_', ' ')}) ronda los **${mxn(rentaR)}/mes**; sumando servicios (**${mxn(serviciosR)}**) el costo total queda en **${mxn(costoR)}/mes**.`
+      : `Un depa de **${recamaras} recámara(s)** en ${ciudadNombre} (zona ${String(colonia_nivel).replace('_', ' ')}) ronda los **${mxn(rentaR)}/mes**, dentro de un rango de ${mxn(minR)} a ${mxn(maxR)}. El depósito de garantía sería de **${mxn(Math.round(depositoGarantia))}**.`,
+    tone: 'neutral' as const,
+    icon: '🏙️',
+  };
+
+  // Gauge: dónde cae la renta estimada dentro del rango local mínimo–máximo.
+  const gMin = Math.min(minR, rentaR);
+  const tope = Math.max(maxR, rentaR + 1);
+  const corte1 = gMin + (tope - gMin) / 3;
+  const corte2 = gMin + (2 * (tope - gMin)) / 3;
+  const _chart = {
+    type: 'scale' as const,
+    marker: rentaR,
+    markerLabel: mxn(rentaR),
+    min: gMin,
+    segments: [
+      { nombre: 'Económico', max: Math.round(corte1), color: '#22c55e', colorDark: '#15803d' },
+      { nombre: 'Medio', max: Math.round(corte2), color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: 'Alto', max: tope, color: '#ef4444', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Renta estimada de ${mxn(rentaR)} dentro del rango de ${mxn(minR)} a ${mxn(maxR)} en ${ciudadNombre}`,
+  };
+
   return {
-    renta_mensual: Math.round(rentaPromedio),
-    renta_minima: Math.round(rentaMinima),
-    renta_maxima: Math.round(rentaMaxima),
+    renta_mensual: rentaR,
+    renta_minima: minR,
+    renta_maxima: maxR,
     deposito_garantia: Math.round(depositoGarantia),
     renta_anual: Math.round(rentaAnual),
-    servicios_estimado: Math.round(serviciosEstimado),
-    costo_total_mes: Math.round(costoTotalMes),
-    aval_requerido: avalRequerido
+    servicios_estimado: serviciosR,
+    costo_total_mes: costoR,
+    aval_requerido: avalRequerido,
+    _insight,
+    _chart,
   };
 }

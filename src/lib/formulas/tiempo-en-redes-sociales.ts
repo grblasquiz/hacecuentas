@@ -14,6 +14,8 @@ export interface Outputs {
   diasAnio: number;
   librosEquivalente: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tiempoEnRedesSociales(i: Inputs): Outputs {
@@ -46,5 +48,54 @@ export function tiempoEnRedesSociales(i: Inputs): Outputs {
 
   const resumen = partes.join('. ') + '.';
 
-  return { horasDia, horasAnio, diasAnio, librosEquivalente, resumen };
+  // Insight dinámico por intensidad de uso diario
+  const diasAnioRedondeado = Math.round(diasAnio);
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+  if (horasDia < 2) {
+    insightTitle = 'Uso controlado';
+    insightText = `Con **${horasDia} h por día** estás muy por debajo del promedio (2,5 h). Aun así son **${diasAnioRedondeado} días completos** al año frente a la pantalla: tiempo de sobra para esos ${librosEquivalente} libros.`;
+    insightTone = 'good';
+    insightIcon = '📱';
+  } else if (horasDia <= 4) {
+    insightTitle = 'En el promedio mundial';
+    insightText = `**${horasDia} h diarias** te dan **${Math.round(horasAnio)} h al año**, equivalentes a **${diasAnioRedondeado} días enteros** scrolleando. Es el promedio global, pero con eso leerías ${librosEquivalente} libros o harías varios cursos.`;
+    insightTone = 'neutral';
+    insightIcon = '⏳';
+  } else {
+    insightTitle = 'Mucho tiempo en pantalla';
+    insightText = `**${horasDia} h por día** se acumulan en **${diasAnioRedondeado} días completos** de 24 h al año. Recortar la mitad te liberaría el equivalente a ${Math.floor(librosEquivalente / 2)} libros o un mes y medio de tu tiempo.`;
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+  }
+
+  // Donut: reparto de minutos diarios por red (suman totalMinDia)
+  const slices = [
+    { label: 'Instagram', value: ig },
+    { label: 'TikTok', value: tiktok },
+    { label: 'Twitter/X', value: twitter },
+    { label: 'YouTube', value: youtube },
+    { label: 'WhatsApp', value: whatsapp },
+  ].filter((s) => s.value > 0);
+
+  const out: Outputs = {
+    horasDia, horasAnio, diasAnio, librosEquivalente, resumen,
+    _insight: { title: insightTitle, text: insightText, tone: insightTone, icon: insightIcon },
+  };
+
+  // Sólo tiene sentido el gráfico si hay más de una red repartiendo el tiempo
+  if (slices.length > 1) {
+    out._chart = {
+      type: 'doughnut',
+      slices,
+      suffix: ' min',
+      centerValue: `${horasDia} h`,
+      centerLabel: 'por día',
+      ariaLabel: `Reparto de los ${totalMinDia} minutos diarios entre las redes usadas`,
+    };
+  }
+
+  return out;
 }

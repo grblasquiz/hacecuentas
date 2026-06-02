@@ -27,6 +27,7 @@ export interface Outputs {
   liquidoVgbl: string;
   recomendacao: string;
   resumen: string;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -83,6 +84,27 @@ export function previdenciaPgblVgbl(i: Inputs): Outputs {
       ? 'VGBL é mais indicado: sem declaração completa, você não aproveita o benefício fiscal do PGBL.'
       : `VGBL vence por ${brl(-diff)} (o aporte excede o teto dedutível).`;
 
+  const vencedor = diff > 0 ? 'PGBL' : 'VGBL';
+  const vantagem = Math.abs(diff);
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (decl !== 'completa') {
+    insightText = `Como você faz declaração **simplificada**, o PGBL não rende benefício fiscal: o **VGBL** entrega **${brl(liquidoVgbl)}** líquidos e paga IR só sobre o rendimento. Migrar para a declaração completa abriria a dedução de até 12% da renda.`;
+    insightTone = 'warn';
+  } else if (diff > 0) {
+    insightText = `Com declaração completa, o **PGBL** vence: **${brl(liquidoPgbl)}** líquidos contra ${brl(liquidoVgbl)} do VGBL, uma vantagem de **${brl(vantagem)}** graças à economia de IR de **${brl(economiaTotal)}** acumulada em ${anos} anos.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Mesmo na declaração completa, o **VGBL** leva vantagem de **${brl(vantagem)}** (**${brl(liquidoVgbl)}** vs ${brl(liquidoPgbl)}): seu aporte ultrapassa o teto dedutível de 12% da renda, então parte dele não gera economia no PGBL.`;
+    insightTone = 'warn';
+  }
+  const _insight = {
+    title: `${vencedor} é a melhor escolha`,
+    text: insightText,
+    tone: insightTone,
+    icon: '🏦',
+  };
+
   return {
     aporteTotal: brl(aporteTotal),
     montanteBrutoPgbl: brl(montante),
@@ -95,5 +117,6 @@ export function previdenciaPgblVgbl(i: Inputs): Outputs {
     liquidoVgbl: brl(liquidoVgbl),
     recomendacao: recom,
     resumen: `Após ${anos} anos aportando ${brl(aporte)}/ano: PGBL líquido ${brl(liquidoPgbl)} vs VGBL líquido ${brl(liquidoVgbl)}. ${recom}`,
+    _insight,
   };
 }

@@ -17,6 +17,7 @@ export interface Outputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function rentabilidadStaking(i: Inputs): Outputs {
@@ -69,6 +70,18 @@ export function rentabilidadStaking(i: Inputs): Outputs {
     ariaLabel: 'Composición del valor final del staking: capital inicial vs ganancia generada',
   };
 
+  // Insight dinámico: el riesgo principal del staking es la volatilidad del token
+  // y los APY muy altos suelen venir de tokens inflacionarios o protocolos riesgosos.
+  const apyAlto = apy >= 20;
+  const insight = {
+    title: apyAlto ? 'APY alto, riesgo alto' : 'Tu ganancia por staking',
+    text: apyAlto
+      ? `Al **${apy}% APY** ganás **${tokensGanados.toFixed(4)} tokens** (≈$${Math.round(gananciaUsd).toLocaleString('es-AR')}) en ${meses} meses, pero un rendimiento tan alto suele venir de tokens inflacionarios: si el **precio cae**, la ganancia en USD se evapora.`
+      : `Stakeando ${cantidad} tokens al **${apy}% APY** sumás **${tokensGanados.toFixed(4)} tokens** en ${meses} meses (≈**$${Math.round(gananciaUsd).toLocaleString('es-AR')}**), un **${rendimientoEfectivo.toFixed(1)}%** efectivo. Ojo: la recompensa es en tokens, así que tu ganancia real depende del precio.`,
+    tone: apyAlto ? 'warn' as const : 'good' as const,
+    icon: apyAlto ? '⚠️' : '🪙',
+  };
+
   return {
     tokensGanados: Number(tokensGanados.toFixed(6)),
     gananciaUsd: Number(gananciaUsd.toFixed(2)),
@@ -78,5 +91,6 @@ export function rentabilidadStaking(i: Inputs): Outputs {
     formula,
     explicacion,
     _chart: chart,
+    _insight: insight,
   };
 }

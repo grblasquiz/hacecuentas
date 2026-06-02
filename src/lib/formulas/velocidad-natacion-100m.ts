@@ -17,6 +17,7 @@ export interface Outputs {
   categoria: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function velocidadNatacion100m(i: Inputs): Outputs {
@@ -69,6 +70,14 @@ export function velocidadNatacion100m(i: Inputs): Outputs {
     ariaLabel: 'Escala de pace en natación por 100m: menor tiempo es mejor',
   };
 
+  const insightTone = segPor100 <= 80 ? 'good' : (segPor100 > 120 ? 'warn' : 'neutral');
+  const insight = {
+    title: 'Tu pace de natación',
+    text: `Vas a **${paceLabel} por 100m** (${vKmh.toFixed(2)} km/h), nivel ${cat.replace(/\s*\(.*\)/, '').toLowerCase()}. A ese ritmo sostenido, los 1500m te llevarían **${tiempoEstimado1500m}**.`,
+    tone: insightTone,
+    icon: '🏊',
+  };
+
   return {
     pacePor100m: paceLabel,
     pace100m: paceLabel,
@@ -81,5 +90,6 @@ export function velocidadNatacion100m(i: Inputs): Outputs {
     categoria: cat,
     resumen: `Nadaste ${dist}m en ${min}:${String(seg).padStart(2, '0')} → pace de **${paceLabel} por 100m** (${vKmh.toFixed(2)} km/h). Nivel: ${cat}. Para 1500m: ${tiempoEstimado1500m}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

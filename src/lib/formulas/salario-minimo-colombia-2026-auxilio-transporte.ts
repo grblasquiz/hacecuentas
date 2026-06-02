@@ -12,6 +12,8 @@ export interface Outputs {
   ingreso_por_dia: number;
   ingreso_por_semana: number;
   nota_tope_auxilio: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -50,6 +52,36 @@ export function compute(i: Inputs): Outputs {
     nota_tope_auxilio = `✗ No aplica auxilio transporte. Tu salario (${salario_minimo_bruto.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 })}) es ≥ 2 SMLMV.`;
   }
   
+  const copFmt = (n: number) => '$' + n.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  const _insight = i.aplica_auxilio_transporte
+    ? {
+        title: 'Ingreso con auxilio de transporte',
+        text: `Sumando el auxilio de transporte (**${copFmt(auxilio_transporte_total)}**), tu ingreso bruto mensual llega a **${copFmt(ingreso_bruto_total_mensual)}**. El auxilio aplica porque ganás menos de 2 SMLMV.`,
+        tone: 'good',
+        icon: '🚌',
+      }
+    : {
+        title: 'Sin auxilio de transporte',
+        text: `Tu ingreso bruto mensual es **${copFmt(ingreso_bruto_total_mensual)}**, todo salario. No recibís auxilio de transporte porque tu salario iguala o supera 2 SMLMV.`,
+        tone: 'neutral',
+        icon: '💼',
+      };
+
+  const _chart = i.aplica_auxilio_transporte
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Salario mínimo', value: salario_minimo_bruto },
+          { label: 'Auxilio transporte', value: auxilio_transporte_total },
+        ],
+        prefix: '$',
+        centerValue: copFmt(ingreso_bruto_total_mensual),
+        centerLabel: 'Ingreso bruto',
+        ariaLabel: `El ingreso bruto mensual de ${copFmt(ingreso_bruto_total_mensual)} se compone de ${copFmt(salario_minimo_bruto)} de salario mínimo más ${copFmt(auxilio_transporte_total)} de auxilio de transporte.`,
+      }
+    : undefined;
+
   return {
     salario_minimo_bruto,
     auxilio_transporte_total,
@@ -57,6 +89,8 @@ export function compute(i: Inputs): Outputs {
     ingreso_por_hora,
     ingreso_por_dia,
     ingreso_por_semana,
-    nota_tope_auxilio
+    nota_tope_auxilio,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

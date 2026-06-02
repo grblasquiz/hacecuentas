@@ -11,6 +11,7 @@ export interface Outputs {
   tiempoHoras: number;
   tiempoMinutosTotal: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function tiempoMetaMaraton(i: Inputs): Outputs {
@@ -45,6 +46,22 @@ export function tiempoMetaMaraton(i: Inputs): Outputs {
 
   const velocidadKmh = distMetaKm / (tiempoEstimadoMin / 60);
 
+  // Insight: la fórmula de Riegel es confiable extrapolando a distancias parecidas;
+  // cuanto más lejos extrapolás (sobre todo hacia distancias más largas), más optimista queda.
+  const factorExtrap = distMetaKm / distConocida;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (factorExtrap >= 2) {
+    insightTone = 'warn';
+    insightText = `Estás proyectando de **${distConocida} km** a **${distMetaKm} km** (×${factorExtrap.toFixed(1)} la distancia). Riegel tiende a quedar **optimista** en saltos tan grandes: el muro y la fatiga acumulada suelen sumar tiempo, así que tomá **${tiempoEstimado}** como piso ideal, no como garantía.`;
+  } else if (factorExtrap <= 0.6) {
+    insightTone = 'good';
+    insightText = `Proyectando hacia una distancia más corta (**${distMetaKm} km**), el modelo es **realista**: deberías poder sostener un ritmo de **${ritmoKm}** o incluso mejorarlo en una distancia tan accesible.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `La referencia (**${distConocida} km**) y la meta (**${distMetaKm} km**) están cerca, así que la estimación de **${tiempoEstimado}** a **${ritmoKm}** es de las más confiables que da el modelo de Riegel.`;
+  }
+
   return {
     tiempoEstimado,
     ritmoKm,
@@ -52,5 +69,11 @@ export function tiempoMetaMaraton(i: Inputs): Outputs {
     tiempoHoras: Number((tiempoEstimadoMin / 60).toFixed(2)),
     tiempoMinutosTotal: Math.round(tiempoEstimadoMin),
     mensaje: `Tiempo estimado para ${distMetaKm} km: ${tiempoEstimado} (ritmo ${ritmoKm}, ${velocidadKmh.toFixed(1)} km/h).`,
+    _insight: {
+      title: 'Qué significa este tiempo',
+      text: insightText,
+      tone: insightTone,
+      icon: '🏃',
+    },
   };
 }

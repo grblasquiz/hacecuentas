@@ -13,6 +13,8 @@ export interface Outputs {
   nivelRiesgo: string;
   tipoHelada: string;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function probabilidadHeladaMatinal(i: Inputs): Outputs {
@@ -81,10 +83,36 @@ export function probabilidadHeladaMatinal(i: Inputs): Outputs {
     recomendacion = 'Tomá medidas máximas: cubrir cultivos, calentadores, proteger cañerías, evitar carreteras con hielo.';
   }
 
+  const probRedondeada = Math.round(prob);
+  const _insight = {
+    title: 'Riesgo de helada para esta madrugada',
+    text: `Con mínima de **${T} °C**, humedad **${H}%**, cielo ${cielo} y viento ${viento}, la probabilidad de helada es **${probRedondeada}%** (riesgo ${nivelRiesgo.toLowerCase()}). ${tipoHelada}.`,
+    tone: probRedondeada >= 60 ? 'warn' : probRedondeada >= 30 ? 'neutral' : 'good',
+    icon: probRedondeada >= 60 ? '❄️' : '🌡️',
+  };
+
+  const _chart = {
+    type: 'scale' as const,
+    marker: probRedondeada,
+    markerLabel: 'Probabilidad: ' + probRedondeada + ' %',
+    min: 0,
+    unit: '%',
+    segments: [
+      { nombre: 'Muy bajo', max: 10, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Bajo', max: 30, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Moderado', max: 60, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Alto', max: 85, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Muy alto', max: 100, color: '#fca5a5', colorDark: '#7f1d1d' },
+    ],
+    ariaLabel: 'Escala de probabilidad de helada matinal, de muy bajo a muy alto.',
+  };
+
   return {
-    probabilidad: `${Math.round(prob)} %`,
+    probabilidad: `${probRedondeada} %`,
     nivelRiesgo,
     tipoHelada,
     recomendacion,
+    _insight,
+    _chart,
   };
 }

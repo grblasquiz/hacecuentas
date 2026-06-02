@@ -13,6 +13,8 @@ export interface Outputs {
   costo_normal_total_12: number;
   ahorro_anual: number;
   mejor_opcion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tabla de precios 2026 Colombia en pesos
@@ -118,6 +120,27 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  const fmtCO = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const _insight = {
+    title: 'Ahorro de la promo',
+    text: `Pagás **${fmtCO(precioPromo)}/mes** los primeros ${i.meses_promo} meses (vs ${fmtCO(precioNormal)} normal) y ahorrás **${fmtCO(ahorroAnual)}** en el primer año.` +
+      (mesesNormales > 0 ? ` Ojo: a partir del mes ${i.meses_promo + 1} la tarifa sube a ${fmtCO(precioNormal)}.` : ''),
+    tone: 'good',
+    icon: '📶',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: `Promo (${i.meses_promo} meses)`, value: costoPromoTotal },
+      { label: `Tarifa normal (${mesesNormales} meses)`, value: costoMesesNormales },
+    ],
+    prefix: '$',
+    centerValue: fmtCO(costoTotalAno1),
+    centerLabel: 'Año 1',
+    ariaLabel: `Costo del primer año: ${i.meses_promo} meses con promo más ${mesesNormales} meses a tarifa normal`,
+  };
+
   return {
     precio_promo_mensual: precioPromo,
     precio_normal_mensual: precioNormal,
@@ -125,6 +148,8 @@ export function compute(i: Inputs): Outputs {
     costo_promo_total: costoPromoTotal,
     costo_normal_total_12: costoNormalTotal12,
     ahorro_anual: ahorroAnual,
+    _insight,
+    _chart,
     mejor_opcion:
       mejorOpcion === i.operadora.toUpperCase()
         ? `${mejorOpcion} ofrece el mejor precio ($${costoTotalAno1.toLocaleString('es-CO')})`

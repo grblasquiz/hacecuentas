@@ -7,6 +7,7 @@ export interface Outputs {
   diaDelAno: number;
   esBisiesto: boolean;
   resumen: string;
+  _insight?: any;
 }
 
 const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -37,6 +38,14 @@ export function queDia(i: Inputs): Outputs {
 
   const resumen = `El ${diaMes} de ${meses[mes]} de ${year} fue/será **${diaStr}**.`;
 
+  const esFinde = diaSem === 0 || diaSem === 6;
+  const insight = {
+    title: `${diaStr} ${diaMes}/${mes + 1}/${year}`,
+    text: `El ${diaMes} de ${meses[mes]} de ${year} cae **${diaStr}**${esFinde ? ' (fin de semana)' : ' (día hábil)'}: es el día **${diaDelAno}** del año, en la **semana ${numeroSemana}**${esBisiesto ? ', un año bisiesto' : ''}.`,
+    tone: 'neutral',
+    icon: '📅',
+  };
+
   return {
     diaSemana: diaStr,
     numeroDia: diaMes,
@@ -44,5 +53,6 @@ export function queDia(i: Inputs): Outputs {
     diaDelAno,
     esBisiesto,
     resumen,
+    _insight: insight,
   };
 }

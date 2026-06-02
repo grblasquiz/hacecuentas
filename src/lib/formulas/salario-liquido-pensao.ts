@@ -19,6 +19,8 @@ export interface Outputs {
   salarioLiquido: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -39,6 +41,28 @@ export function salarioLiquidoPensao(i: Inputs): Outputs {
   const formula = `Líquido = ${fmt(bruto)} − INSS ${fmt(inss)} − Pensão ${fmt(pensao)} − IRRF ${fmt(irrf)} = ${fmt(liquido)}`;
   const explicacao = `Pensão alimentícia ${tipo === 'percentual' ? `${v}% (${fmt(pensao)})` : fmt(pensao)} é dedutível do IRRF (não do INSS). INSS: ${fmt(inss)}. Base IRRF: ${fmt(baseIrrf)}. IRRF: ${fmt(irrf)}. Líquido em mãos: ${fmt(liquido)}.`;
 
+  const pctPensao = bruto > 0 ? (pensao / bruto) * 100 : 0;
+  const _insight = {
+    title: 'O que sobra depois da pensão',
+    text: `De ${fmt(bruto)} brutos saem ${fmt(pensao)} de pensão (**${pctPensao.toFixed(1)}%**), além de INSS ${fmt(inss)} e IRRF ${fmt(irrf)}. Sobram **${fmt(liquido)}** na mão. A pensão abate a base do IRRF, então reduz um pouco o imposto.`,
+    tone: pctPensao >= 30 ? 'warn' : 'neutral',
+    icon: '⚖️',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Líquido', value: Math.round(liquido * 100) / 100 },
+      { label: 'Pensão', value: Math.round(pensao * 100) / 100 },
+      { label: 'INSS', value: Math.round(inss * 100) / 100 },
+      { label: 'IRRF', value: Math.round(irrf * 100) / 100 },
+    ].filter((s) => s.value > 0),
+    prefix: 'R$',
+    centerValue: fmt(bruto),
+    centerLabel: 'Salário bruto',
+    ariaLabel: `Composição do salário bruto de ${fmt(bruto)}: líquido, pensão, INSS e IRRF.`,
+  };
+
   return {
     salarioBruto: fmt(bruto),
     descontoInss: fmt(inss),
@@ -48,5 +72,7 @@ export function salarioLiquidoPensao(i: Inputs): Outputs {
     salarioLiquido: fmt(liquido),
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

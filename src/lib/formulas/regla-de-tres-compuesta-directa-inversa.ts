@@ -17,6 +17,7 @@ export interface Outputs {
   factor2: number;
   factor3: number;
   stepByStep: string;
+  _insight?: any;
 }
 
 /**
@@ -128,11 +129,21 @@ export function compute(i: Inputs): Outputs {
 
   const stepByStep = lines.join("\n");
 
+  const fmt = (n: number) => new Intl.NumberFormat("es-AR", { maximumFractionDigits: 4 }).format(Number(n.toFixed(4)));
+  const nDir = [i.mag1_relation, i.mag2_relation, i.mag3_relation].filter(r => r === "direct").length;
+  const _insight = {
+    title: "Resultado de la regla compuesta",
+    text: `Combinando las 3 magnitudes (${nDir} directa${nDir === 1 ? "" : "s"} y ${3 - nDir} inversa${3 - nDir === 1 ? "" : "s"}), partiendo de **${fmt(xKnown)}** la incógnita queda en **${fmt(result)}**. Se obtiene multiplicando por los factores **${fmt(factor1)}**, **${fmt(factor2)}** y **${fmt(factor3)}**.`,
+    tone: "neutral",
+    icon: "🧮",
+  };
+
   return {
     result: Math.round(result * 1000000) / 1000000,
     factor1: Math.round(factor1 * 1000000) / 1000000,
     factor2: Math.round(factor2 * 1000000) / 1000000,
     factor3: Math.round(factor3 * 1000000) / 1000000,
-    stepByStep
+    stepByStep,
+    _insight
   };
 }

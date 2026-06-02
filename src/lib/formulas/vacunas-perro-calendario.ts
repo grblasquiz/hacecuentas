@@ -10,6 +10,7 @@ export interface Outputs {
   calendario: { edad: string; vacuna: string; descripcion: string }[];
   alerta: string;
   resumen: string;
+  _insight?: any;
 }
 
 export function vacunasPerroCalendario(i: Inputs): Outputs {
@@ -46,11 +47,38 @@ export function vacunasPerroCalendario(i: Inputs): Outputs {
     alerta = 'Tu perro adulto sin vacunas: consultá con veterinario para poner al día. La antirrábica es obligatoria por ley en Argentina.';
   }
 
+  const enEsquemaCachorro = em < 4;
+  const adultoSinVacunas = em > 12 && i.estaVacunado === false;
+  let insightTitle: string, insightText: string, insightTone: string, insightIcon: string;
+  if (enEsquemaCachorro) {
+    insightTitle = 'Etapa cachorro: esquema en curso';
+    insightText = `Con **${em.toFixed(1)} meses** tu perro está completando el esquema inicial. ${proxima} Hasta terminar las **3 dosis** evitá la calle y el contacto con otros perros.`;
+    insightTone = 'warn';
+    insightIcon = '🐶';
+  } else if (adultoSinVacunas) {
+    insightTitle = 'Adulto sin vacunas: ponelo al día';
+    insightText = `Tu perro tiene **${em.toFixed(1)} meses** y figura sin vacunar. La **antirrábica es obligatoria por ley** en Argentina: consultá al veterinario para reiniciar el esquema cuanto antes.`;
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+  } else if (em >= 12) {
+    insightTitle = 'Etapa adulta: refuerzo anual';
+    insightText = `Con **${em.toFixed(1)} meses** tu perro ya está en calendario adulto. ${proxima} Aprovechá para combinarlo con la **desparasitación**.`;
+    insightTone = 'good';
+    insightIcon = '🦴';
+  } else {
+    insightTitle = 'Transición a refuerzos';
+    insightText = `Tu perro tiene **${em.toFixed(1)} meses**: ya pasó el esquema cachorro y entra en la fase de refuerzos. ${proxima}`;
+    insightTone = 'neutral';
+    insightIcon = '💉';
+  }
+  const _insight = { title: insightTitle, text: insightText, tone: insightTone, icon: insightIcon };
+
   return {
     edadMeses: Number(em.toFixed(1)),
     proximaVacuna: proxima,
     calendario,
     alerta,
     resumen: `Tu perro tiene ${em.toFixed(1)} meses. Próxima vacuna: ${proxima}`,
+    _insight,
   };
 }

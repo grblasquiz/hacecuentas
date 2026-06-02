@@ -9,6 +9,8 @@ export interface MochileroCiudadOutputs {
   gastoTotal: number;
   desglose: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface CiudadInfo {
@@ -69,10 +71,33 @@ export function presupuestoDiarioMochileroCiudad(inputs: MochileroCiudadInputs):
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const nivelLabel = nivel === 'ultra' ? 'ultra-austero' : nivel === 'flashpacker' ? 'flashpacker' : 'moderado';
+  const _insight = {
+    title: `${c.nombre} para tu mochila`,
+    text: `Viajando **${nivelLabel}** por **${c.nombre}**, gastás unos **USD ${fmt.format(gastoDiario)} por día**, lo que hace **USD ${fmt.format(gastoTotal)}** en **${dias} ${dias === 1 ? 'día' : 'días'}** (sin contar el pasaje aéreo ni el seguro). El alojamiento es el rubro más pesado del día a día.`,
+    tone: 'neutral',
+    icon: '🎒',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Hostel', value: hostel },
+      { label: 'Comida', value: comida },
+      { label: 'Transporte', value: transporte },
+      { label: 'Actividades', value: actividades },
+    ],
+    prefix: 'USD ',
+    centerValue: `USD ${fmt.format(gastoDiario)}`,
+    centerLabel: 'Gasto por día',
+    ariaLabel: `Distribución del gasto diario de mochilero en ${c.nombre}, total USD ${fmt.format(gastoDiario)} por día`,
+  };
+
   return {
     gastoDiario,
     gastoTotal,
     desglose: `Hostel: USD ${fmt.format(hostel)} | Comida: USD ${fmt.format(comida)} | Transporte: USD ${fmt.format(transporte)} | Actividades: USD ${fmt.format(actividades)}`,
     detalle: `${c.nombre}, ${dias} días, nivel ${nivel}: USD ${fmt.format(gastoDiario)}/día × ${dias} = USD ${fmt.format(gastoTotal)} total (sin pasaje aéreo ni seguro).`,
+    _insight,
+    _chart,
   };
 }

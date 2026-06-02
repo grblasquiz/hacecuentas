@@ -11,6 +11,7 @@ export interface Outputs {
   diasDescanso: number;
   frecuenciaSemanal: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function recuperacionMuscularHoras(i: Inputs): Outputs {
@@ -44,6 +45,21 @@ export function recuperacionMuscularHoras(i: Inputs): Outputs {
   const diasDescanso = Math.ceil(horas / 24);
   const frecuenciaSemanal = Math.floor(7 / (diasDescanso + 1));
 
+  // Tono dinámico: dormir poco alarga la recuperación y es lo más accionable a cuidar
+  const tone = sueno < 6 ? ('warn' as const) : ('good' as const);
+  const insight = {
+    title: __lang === 'en' ? 'Your recovery window' : 'Tu ventana de recuperación',
+    text: __lang === 'en'
+      ? (sueno < 6
+        ? `Your ${grupo} need about **${horas} hours** (${diasDescanso} days) to recover, so train them **${frecuenciaSemanal}x/week** at most. Sleeping under 6h is stretching that window: more sleep would let you recover faster and train more often.`
+        : `Your ${grupo} need about **${horas} hours** (${diasDescanso} days) to recover, so train them **${frecuenciaSemanal}x/week** at most. Respect the rest and the muscle adapts; training it sore just delays progress.`)
+      : (sueno < 6
+        ? `Tus ${grupo} necesitan unas **${horas} horas** (${diasDescanso} días) para recuperarse, así que entrenalos como mucho **${frecuenciaSemanal}x/semana**. Dormir menos de 6 horas está alargando esa ventana: durmiendo más recuperarías antes y podrías entrenar más seguido.`
+        : `Tus ${grupo} necesitan unas **${horas} horas** (${diasDescanso} días) para recuperarse, así que entrenalos como mucho **${frecuenciaSemanal}x/semana**. Respetar el descanso es lo que hace que el músculo se adapte; entrenarlo dolorido solo retrasa el progreso.`),
+    tone,
+    icon: '💪',
+  };
+
   return {
     horasRecuperacion: horas,
     diasDescanso,
@@ -52,6 +68,7 @@ export function recuperacionMuscularHoras(i: Inputs): Outputs {
       : `${frecuenciaSemanal}x por semana como máximo`,
     mensaje: __lang === 'en'
       ? `Rest at least ${horas} hours (${diasDescanso} days) before training ${grupo} again. You can train them ${frecuenciaSemanal}x/week.`
-      : `Descansá al menos ${horas} horas (${diasDescanso} días) antes de volver a entrenar ${grupo}. Podés entrenarlos ${frecuenciaSemanal}x/semana.`
+      : `Descansá al menos ${horas} horas (${diasDescanso} días) antes de volver a entrenar ${grupo}. Podés entrenarlos ${frecuenciaSemanal}x/semana.`,
+    _insight: insight,
   };
 }

@@ -13,6 +13,7 @@ export interface PurinasGotaAlimentoOutputs {
   recomendacion: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function purinasGotaAlimento(inputs: PurinasGotaAlimentoInputs): PurinasGotaAlimentoOutputs {
@@ -46,11 +47,31 @@ export function purinasGotaAlimento(inputs: PurinasGotaAlimentoInputs): PurinasG
     ariaLabel: 'Escala de purinas por porción, de bajo a muy alto para personas con gota.',
   };
 
+  let insightText: string, insightTone: string, insightIcon: string;
+  if (total < 50) {
+    insightText = `Esta porción aporta solo **${purinasRedondeado} mg** de purinas: es de las opciones más seguras y la podés incluir sin culpa aunque tengas gota.`;
+    insightTone = 'good';
+    insightIcon = '✅';
+  } else if (total < 150) {
+    insightText = `Con **${purinasRedondeado} mg** estás en zona moderada: una porción ocasional es aceptable, pero no la conviertas en plato de todos los días si tenés ácido úrico alto.`;
+    insightTone = 'neutral';
+    insightIcon = '🍽️';
+  } else if (total < 400) {
+    insightText = `**${purinasRedondeado} mg** es un aporte alto: si tu gota está activa o tu úrico viene elevado, mejor evitá esta porción o reducila a la mitad.`;
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+  } else {
+    insightText = `**${purinasRedondeado} mg** es una carga muy alta de purinas: este alimento es de los principales gatillantes de ataques de gota y conviene evitarlo por completo.`;
+    insightTone = 'warn';
+    insightIcon = '🚨';
+  }
+
   return {
     purinasMg: purinasRedondeado,
     categoria: cat,
     recomendacion: rec,
     resumen: `${g}g aportan ${total.toFixed(0)} mg purinas (${cat}).`,
     _chart: chart,
+    _insight: { title: 'Carga de purinas: ' + cat.replace(/[^\wáéíóúñ ]/gi, '').trim(), text: insightText, tone: insightTone, icon: insightIcon },
   };
 }

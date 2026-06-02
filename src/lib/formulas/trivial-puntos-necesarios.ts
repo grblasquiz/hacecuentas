@@ -1,6 +1,6 @@
 /** Calculadora de Puntos Necesarios para Ganar Trivia */
 export interface Inputs { rondas: number; preguntasRonda: number; puntosPregunta: number; equipos: number; nivelEquipo: string; }
-export interface Outputs { puntosMaximos: number; puntosParaGanar: number; aciertosNecesarios: number; estrategia: string; }
+export interface Outputs { puntosMaximos: number; puntosParaGanar: number; aciertosNecesarios: number; estrategia: string; _insight?: any; _chart?: any; }
 
 export function trivialPuntosNecesarios(i: Inputs): Outputs {
   const rondas = Number(i.rondas);
@@ -32,5 +32,28 @@ export function trivialPuntosNecesarios(i: Inputs): Outputs {
     estrategia = 'Distribución pareja entre categorías es clave. Cada punto cuenta — no dejes preguntas en blanco, adiviná si no sabés.';
   }
 
-  return { puntosMaximos, puntosParaGanar, aciertosNecesarios: Number(aciertosNecesarios.toFixed(0)), estrategia };
+  const pct = Number(aciertosNecesarios.toFixed(0));
+  const tono = pct >= 80 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Cuánto hay que sumar',
+    text: pct >= 80
+      ? `Con **${eq} equipos**, para ganar apuntá a **${puntosParaGanar} de ${puntosMaximos} puntos**: eso es un **${pct}% de aciertos**, un listón exigente que casi no perdona errores.`
+      : `Con **${eq} equipos**, para ganar alcanza con **${puntosParaGanar} de ${puntosMaximos} puntos**, equivalente a un **${pct}% de aciertos**. Hay margen para fallar algunas y aún así quedar arriba.`,
+    tone: tono as 'warn' | 'neutral',
+    icon: '🧠',
+  };
+  const _chart = {
+    type: 'scale' as const,
+    marker: pct,
+    markerLabel: `${pct}% para ganar`,
+    min: 0,
+    segments: [
+      { nombre: 'Holgado', max: 60, color: '#86efac', colorDark: '#15803d' },
+      { nombre: 'Parejo', max: 80, color: '#fde047', colorDark: '#a16207' },
+      { nombre: 'Exigente', max: 100, color: '#fca5a5', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Se necesita un ${pct}% de aciertos para ganar la trivia`,
+  };
+
+  return { puntosMaximos, puntosParaGanar, aciertosNecesarios: pct, estrategia, _insight, _chart };
 }

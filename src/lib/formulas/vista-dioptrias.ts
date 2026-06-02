@@ -18,6 +18,7 @@ export interface Outputs {
   equivalenteEsfericoDer: number;
   equivalenteEsfericoIzq: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function vistaDioptrias(i: Inputs): Outputs {
@@ -49,6 +50,29 @@ export function vistaDioptrias(i: Inputs): Outputs {
   const tieneAstigmatismo = cilDer !== 0 || cilIzq !== 0;
   const necesitaProgresivos = adicion > 0;
 
+  // Insight: ojo con la graduación más alta manda
+  const absMax = Math.max(Math.abs(esfDer), Math.abs(esfIzq));
+  const ojoPeor = Math.abs(esfDer) >= Math.abs(esfIzq) ? 'derecho' : 'izquierdo';
+  const gravMax = gravedad(absMax === 0 ? 0 : (Math.abs(esfDer) >= Math.abs(esfIzq) ? esfDer : esfIzq));
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (absMax === 0 && !tieneAstigmatismo) {
+    insightText = `Tu esférico es **0** en ambos ojos${necesitaProgresivos ? ', pero la adición indica que necesitás progresivos para ver de cerca' : ' y no hay astigmatismo: visión esférica normal'}.`;
+    insightTone = necesitaProgresivos ? 'neutral' : 'good';
+  } else {
+    const partes: string[] = [`graduación **${gravMax.toLowerCase()}** de hasta **${absMax.toFixed(2)} D** (ojo ${ojoPeor})`];
+    if (tieneAstigmatismo) partes.push('tenés **astigmatismo** (cilíndrico ≠ 0)');
+    if (necesitaProgresivos) partes.push('la adición pide **lentes progresivos**');
+    insightText = `Tu receta marca ${partes.join(', ')}. ${absMax > 6 ? 'Una graduación alta conviene controlarla con tu oftalmólogo de forma anual.' : 'Es una graduación corregible con anteojos o lentes de contacto comunes.'}`;
+    insightTone = absMax > 6 ? 'warn' : 'neutral';
+  }
+  const _insight = {
+    title: 'Cómo leer tu receta',
+    text: insightText,
+    tone: insightTone,
+    icon: '👓',
+  };
+
   return {
     tipoDerecho: clasificar(esfDer),
     tipoIzquierdo: clasificar(esfIzq),
@@ -59,5 +83,6 @@ export function vistaDioptrias(i: Inputs): Outputs {
     equivalenteEsfericoDer: Number(eqDer.toFixed(2)),
     equivalenteEsfericoIzq: Number(eqIzq.toFixed(2)),
     mensaje: `OD: ${clasificar(esfDer)} (${gravedad(esfDer)}) | OI: ${clasificar(esfIzq)} (${gravedad(esfIzq)})${tieneAstigmatismo ? ' + Astigmatismo' : ''}${necesitaProgresivos ? ' + Necesitás progresivos' : ''}.`,
+    _insight,
   };
 }

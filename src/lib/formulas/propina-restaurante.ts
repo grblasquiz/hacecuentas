@@ -10,6 +10,7 @@ export interface Outputs {
   totalConPropina: number;
   porPersona: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function propinaRestaurante(i: Inputs): Outputs {
@@ -44,10 +45,22 @@ export function propinaRestaurante(i: Inputs): Outputs {
     ariaLabel: 'Composición del total: cuenta más propina',
   };
 
+  const fmtAR = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const pctTxt = Number.isInteger(pct) ? `${pct}` : pct.toFixed(1);
+  const _insight = {
+    title: 'Tu propina y el total',
+    text: personas > 1
+      ? `Con **${pctTxt}%** de propina sumás **${fmtAR(montoPropina)}** a la cuenta. El total queda en **${fmtAR(totalConPropina)}**, o **${fmtAR(porPersona)}** por persona entre ${personas}.`
+      : `Con **${pctTxt}%** de propina sumás **${fmtAR(montoPropina)}** a la cuenta, llevando el total a **${fmtAR(totalConPropina)}**.`,
+    tone: (pct >= 18 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '🍽️',
+  };
+
   return {
     montoPropina: Math.round(montoPropina),
     totalConPropina: Math.round(totalConPropina),
     porPersona: Math.round(porPersona),
     _chart: chart,
+    _insight,
   };
 }

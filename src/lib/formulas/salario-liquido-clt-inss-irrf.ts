@@ -13,6 +13,8 @@ export interface Outputs {
   aliquotaEfetiva: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -65,6 +67,27 @@ export function salarioLiquidoCltInssIrrf(i: Inputs): Outputs {
   const formula = `Líquido = ${fmt(bruto)} − INSS ${fmt(inss)} − IRRF ${fmt(irrf)} = ${fmt(liquido)}`;
   const explicacao = `Com salário bruto de ${fmt(bruto)}: INSS progressivo 2026 de ${fmt(inss)}, base de IRRF ${fmt(baseIrrf)}, IRRF retido ${fmt(irrf)}. Salário líquido: ${fmt(liquido)} (alíquota efetiva ${aliqEfetiva.toFixed(2)}%).`;
 
+  const pctLiquido = bruto > 0 ? (liquido / bruto) * 100 : 0;
+  const _insight = {
+    title: 'Quanto sobra do seu salário',
+    text: `De ${fmt(bruto)} brutos você leva **${fmt(liquido)}** (**${pctLiquido.toFixed(1)}%**). INSS + IRRF somam ${fmt(inss + irrf)}, uma alíquota efetiva de **${aliqEfetiva.toFixed(2)}%**.`,
+    tone: aliqEfetiva >= 20 ? 'warn' : aliqEfetiva >= 10 ? 'neutral' : 'good',
+    icon: '💸',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Líquido', value: Math.round(liquido * 100) / 100 },
+      { label: 'INSS', value: Math.round(inss * 100) / 100 },
+      { label: 'IRRF', value: Math.round(irrf * 100) / 100 },
+    ].filter((s) => s.value > 0),
+    prefix: 'R$',
+    centerValue: fmt(bruto),
+    centerLabel: 'Salário bruto',
+    ariaLabel: `Composição do salário bruto de ${fmt(bruto)}: líquido na mão, INSS e IRRF.`,
+  };
+
   return {
     salarioBruto: fmt(bruto),
     descontoInss: fmt(inss),
@@ -74,5 +97,7 @@ export function salarioLiquidoCltInssIrrf(i: Inputs): Outputs {
     aliquotaEfetiva: aliqEfetiva.toFixed(2) + '%',
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

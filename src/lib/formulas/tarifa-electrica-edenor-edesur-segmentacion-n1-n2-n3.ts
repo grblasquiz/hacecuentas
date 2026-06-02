@@ -11,6 +11,7 @@ export interface Outputs {
   impuestos_total: number;
   desglose_texto: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -114,12 +115,23 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición de la factura eléctrica: cargo fijo, cargo variable por consumo e impuestos y tasas.',
   };
 
+  const totalRound   = Math.round(totalFactura);
+  const impRound     = Math.round(impuestosTotal);
+  const pctImpuestos = totalRound > 0 ? Math.round((impRound / totalRound) * 100) : 0;
+  const _insight = {
+    title: `Factura estimada: ${fmt(totalRound)}`,
+    text: `Para **${consumoKwh} kWh** en **${distribuidoraLabel} ${segmentoLabel}**, la factura ronda **${fmt(totalRound)}**, de los cuales **${fmt(impRound)}** (un **${pctImpuestos}%**) son impuestos y tasas: IVA del 27%, alumbrado público e impuesto al débito. El consumo neto pesa el resto.`,
+    tone: 'warn',
+    icon: '🔌',
+  };
+
   return {
-    total_factura:   Math.round(totalFactura),
+    total_factura:   totalRound,
     cargo_fijo:      Math.round(cargoFijo),
     cargo_variable:  Math.round(cargoVariable),
-    impuestos_total: Math.round(impuestosTotal),
+    impuestos_total: impRound,
     desglose_texto:  desglose,
     _chart:          chart,
+    _insight,
   };
 }

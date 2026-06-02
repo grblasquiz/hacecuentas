@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
-export interface Outputs { [k: string]: string | number; }
+export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function satIeltsToeflEquivalenciasPuntajeConvertidor(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const T = ({
@@ -11,6 +11,9 @@ export function satIeltsToeflEquivalenciasPuntajeConvertidor(i: Inputs): Outputs
       upperInt:   'Intermedio alto',
       intermediate: 'Intermedio',
       basic:      'Básico',
+      insightTitle: 'Tu equivalencia',
+      ielts:      'IELTS',
+      toefl:      'TOEFL',
     },
     en: {
       maxLevel:   'Maximum level',
@@ -20,6 +23,9 @@ export function satIeltsToeflEquivalenciasPuntajeConvertidor(i: Inputs): Outputs
       upperInt:   'Upper intermediate',
       intermediate: 'Intermediate',
       basic:      'Basic',
+      insightTitle: 'Your equivalence',
+      ielts:      'IELTS',
+      toefl:      'TOEFL',
     },
   } as const)[__lang];
   const e=String(i.examen||'ielts'); const p=Number(i.puntaje)||0;
@@ -38,5 +44,15 @@ export function satIeltsToeflEquivalenciasPuntajeConvertidor(i: Inputs): Outputs
     else if(p>=35){eq='IELTS 5';cefr='B1';interp=T.intermediate}
     else {eq='IELTS <5';cefr='A2';interp=T.basic}
   }
-  return { equivalenciaOtro:eq, cefr:cefr, interpretacion:interp };
+  const fromName = e==='ielts' ? T.ielts : T.toefl;
+  const isHigh = cefr.includes('C1') || cefr.includes('C2');
+  const _insight = {
+    title: T.insightTitle,
+    text: __lang==='en'
+      ? `A **${fromName} ${p}** maps to **${eq}**, around **CEFR ${cefr}** (${interp.toLowerCase()}). Use this only as a reference — each institution sets its own cutoffs.`
+      : `Un **${fromName} ${p}** equivale a **${eq}**, en torno a **MCER ${cefr}** (${interp.toLowerCase()}). Tomalo solo como referencia: cada institución fija sus propios puntajes de corte.`,
+    tone: isHigh ? 'good' : 'neutral',
+    icon: '🎓',
+  };
+  return { equivalenciaOtro:eq, cefr:cefr, interpretacion:interp, _insight };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   formulaTermino: string;
   formulaSuma: string;
   serie: string;
+  _insight?: any;
 }
 
 export function progresionGeometrica(i: Inputs): Outputs {
@@ -53,6 +54,23 @@ export function progresionGeometrica(i: Inputs): Outputs {
     serie += `, ..., ${lastStr}`;
   }
 
+  const ar = Math.abs(r);
+  const fmt = (x: number) => isFinite(x) ? Number(x.toFixed(4)).toLocaleString('es-AR') : 'overflow';
+  let insTone: string; let insIcon: string; let insText: string;
+  if (ar < 1 && ar > 0) {
+    insTone = 'good'; insIcon = '🎯';
+    insText = `Como |razón| = **${fmt(ar)}** es menor que 1, los términos se achican y la serie **converge**: sumando infinitos términos se estabiliza en **${fmt(Number(sumaInfinita))}**. Los primeros ${n} ya suman ${fmt(sn)}.`;
+  } else if (ar > 1) {
+    insTone = 'warn'; insIcon = '🚀';
+    insText = `Con |razón| = **${fmt(ar)}** mayor que 1, cada término multiplica al anterior y la serie **diverge**: no tiene suma infinita. En ${n} términos ya alcanza a${n} = **${fmt(an)}** y acumula **${fmt(sn)}**.`;
+  } else {
+    insTone = 'neutral'; insIcon = '📊';
+    insText = ar === 1
+      ? `Con razón ±1 la sucesión no se achica, así que **no converge**: los ${n} términos suman **${fmt(sn)}**.`
+      : `Con razón 0 todos los términos tras el primero valen 0; la suma queda en **${fmt(sn)}**.`;
+  }
+  const _insight = { title: '¿Converge o diverge?', text: insText, tone: insTone, icon: insIcon };
+
   return {
     terminoN: isFinite(an) ? Number(an.toFixed(6)) : 0,
     suma: isFinite(sn) ? Number(sn.toFixed(6)) : 0,
@@ -62,5 +80,6 @@ export function progresionGeometrica(i: Inputs): Outputs {
       ? `S_${n} = ${a1} × ${n} = ${sn}`
       : `S_${n} = ${a1} × (1 − ${r}^${n}) / (1 − ${r}) = ${isFinite(sn) ? sn.toExponential(4) : 'overflow'}`,
     serie,
+    _insight,
   };
 }

@@ -16,6 +16,8 @@ export interface Outputs {
   valorDas: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const FAIXAS = [
@@ -47,6 +49,29 @@ export function simplesAnexoIV(i: Inputs): Outputs {
   const formula = `Alíquota efetiva = (${rbt12.toFixed(2)} × ${f.aliquota}% - ${f.deduzir}) / ${rbt12.toFixed(2)} = ${aliqEf.toFixed(3)}%`;
   const explicacion = `Anexo IV (construção civil e advocacia) — faixa ${fIdx + 1}: RBT12 R$ ${rbt12.toLocaleString('pt-BR')}, alíquota nominal ${f.aliquota}%, dedução R$ ${f.deduzir.toLocaleString('pt-BR')}. Alíquota efetiva: ${aliqEf.toFixed(3)}%. DAS mensal: R$ ${valorDas.toFixed(2)}. ATENÇÃO: CPP (20% INSS patronal sobre folha) NÃO está incluída — paga separado via GPS/GFIP. Aplica-se SEMPRE a: advocacia, construção de imóveis, obras de engenharia, limpeza/vigilância/conservação.`;
 
+  const _insight = {
+    title: `Faixa ${fIdx + 1} de 6 — Anexo IV`,
+    text: `Com RBT12 de **R$ ${rbt12.toLocaleString('pt-BR')}**, a alíquota efetiva é **${aliqEf.toFixed(2)}%** e o DAS fica em **R$ ${valorDas.toFixed(2)}**. Atenção: o Anexo IV **não inclui a CPP** — os 20% de INSS patronal sobre a folha são pagos à parte (GPS/GFIP), então o custo real é maior que só o DAS.`,
+    tone: 'warn',
+    icon: '👷',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: Number(aliqEf.toFixed(2)),
+    markerLabel: `${aliqEf.toFixed(2)}% efetiva`,
+    min: 0,
+    segments: [
+      { nombre: 'Faixa 1', max: 4.5, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Faixa 2', max: 9.0, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Faixa 3', max: 10.2, color: '#ca8a04', colorDark: '#eab308' },
+      { nombre: 'Faixa 4', max: 14.0, color: '#ea580c', colorDark: '#f97316' },
+      { nombre: 'Faixa 5', max: 22.0, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'Faixa 6', max: 33.0, color: '#b91c1c', colorDark: '#dc2626' },
+    ],
+    ariaLabel: `Alíquota efetiva de ${aliqEf.toFixed(2)}% dentro das seis faixas do Anexo IV, da menor (4,5%) à maior (33%).`,
+  };
+
   return {
     faixa: fIdx + 1,
     aliquotaNominal: f.aliquota,
@@ -55,5 +80,7 @@ export function simplesAnexoIV(i: Inputs): Outputs {
     valorDas: Number(valorDas.toFixed(2)),
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

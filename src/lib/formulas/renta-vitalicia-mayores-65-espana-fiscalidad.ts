@@ -17,6 +17,8 @@ export interface Outputs {
   renta_neta_anual: number;
   tasa_efectiva_irpf: number;
   nota_fiscalidad: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -66,17 +68,50 @@ export function compute(i: Inputs): Outputs {
     nota_fiscalidad = `Capital parcialmente exento: ${LIMITE_EXENSION_PATRIMONIAL_EUR.toLocaleString('es-ES')}€ exentos, ${Math.round(capital_no_exento).toLocaleString('es-ES')}€ no exentos. Tipo IRPF reducido: ${tipo_irpf_reducido}% (edad ${i.edad_actual} años). Primer año: solo capital no exento tributa.`;
   }
   
-  return {
+  const brutoAnual_r = Math.round(rendimiento_bruto_anual * 100) / 100;
+  const netoMensual_r = Math.round(renta_neta_mensual * 100) / 100;
+  const netoAnual_r = Math.round(renta_neta_anual * 100) / 100;
+  const irpf_r = Math.round(irpf_anual * 100) / 100;
+  const efectiva_r = Math.round(tasa_efectiva_irpf * 100) / 100;
+  const fmtEUR = (n: number) => Math.round(n).toLocaleString('es-ES') + '€';
+
+  // INSIGHT — renta neta de bolsillo y fiscalidad reducida
+  const tone: 'good' | 'warn' | 'neutral' = efectiva_r <= 10 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Tu renta vitalicia, ya neta',
+    text: `Cobrás **${fmtEUR(netoMensual_r)} netos al mes** (${fmtEUR(netoAnual_r)}/año). Por tener ${i.edad_actual} años se te aplica el tipo reducido del **${tipo_irpf_reducido}%** sobre el rendimiento que tributa, lo que deja tu IRPF en ${fmtEUR(irpf_r)}/año y una **tasa efectiva de solo ${efectiva_r}%** sobre la renta bruta.`,
+    tone,
+    icon: '🧓',
+  };
+
+  // CHART — donut: renta bruta anual = renta neta + IRPF (solo si hay impuesto)
+  const _chart = (irpf_r > 0 && netoAnual_r > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Renta neta', value: netoAnual_r },
+      { label: 'IRPF', value: irpf_r },
+    ],
+    prefix: '',
+    suffix: '€',
+    centerValue: fmtEUR(brutoAnual_r),
+    centerLabel: 'Renta bruta/año',
+    ariaLabel: `Reparto de la renta bruta anual de ${fmtEUR(brutoAnual_r)}: renta neta ${fmtEUR(netoAnual_r)} e IRPF ${fmtEUR(irpf_r)}.`,
+  } : undefined;
+
+  const out: Outputs = {
     renta_bruta_mensual: Math.round(renta_bruta_mensual * 100) / 100,
-    renta_bruta_anual: Math.round(rendimiento_bruto_anual * 100) / 100,
+    renta_bruta_anual: brutoAnual_r,
     exension_patrimonial_euros: Math.round(capital_exento * 100) / 100,
     rendimiento_anual_exento: Math.round(rendimiento_exento * 100) / 100,
     rendimiento_anual_tributable: Math.round(rendimiento_tributable * 100) / 100,
     irpf_reducido_por_edad: tipo_irpf_reducido,
-    irpf_pagado_anual: Math.round(irpf_anual * 100) / 100,
-    renta_neta_mensual: Math.round(renta_neta_mensual * 100) / 100,
-    renta_neta_anual: Math.round(renta_neta_anual * 100) / 100,
-    tasa_efectiva_irpf: Math.round(tasa_efectiva_irpf * 100) / 100,
-    nota_fiscalidad: nota_fiscalidad
+    irpf_pagado_anual: irpf_r,
+    renta_neta_mensual: netoMensual_r,
+    renta_neta_anual: netoAnual_r,
+    tasa_efectiva_irpf: efectiva_r,
+    nota_fiscalidad: nota_fiscalidad,
+    _insight,
   };
+  if (_chart) out._chart = _chart;
+  return out;
 }

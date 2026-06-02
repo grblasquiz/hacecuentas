@@ -1,6 +1,6 @@
 /** ¿Cuándo hacerse el test de embarazo? */
 export interface Inputs { fumTest: string; duracionCicloTest: number; __lang?: string; }
-export interface Outputs { testSangre: string; testOrina: string; ovulacionEstimada: string; nota: string; }
+export interface Outputs { testSangre: string; testOrina: string; ovulacionEstimada: string; nota: string; _insight?: any; }
 
 export function testEmbarazoCuando(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -8,10 +8,12 @@ export function testEmbarazoCuando(i: Inputs): Outputs {
     es: {
       fechaInvalida: 'Ingresá una fecha válida',
       nota: 'Para mayor confiabilidad, hacé el test con la primera orina de la mañana. Si da negativo pero no viene la menstruación, repetí en 3-5 días.',
+      insightTitle: 'Cuándo testear',
     },
     en: {
       fechaInvalida: 'Please enter a valid date',
       nota: 'For best accuracy, take the test with your first morning urine. If it comes back negative but your period still hasn\'t arrived, repeat in 3–5 days.',
+      insightTitle: 'When to test',
     },
   } as const)[__lang];
 
@@ -36,10 +38,24 @@ export function testEmbarazoCuando(i: Inputs): Outputs {
 
   const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
+  const fmtCorto = (d: Date) => __lang === 'en'
+    ? d.toLocaleDateString('en-US', { day: 'numeric', month: 'long' })
+    : d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
+
+  const _insight = {
+    title: T.insightTitle,
+    text: __lang === 'en'
+      ? `A blood test (beta-hCG) can already detect pregnancy around **${fmtCorto(sangre)}**. The urine test is reliable from **${fmtCorto(orina)}**, the day your period would be due with a ${ciclo}-day cycle.`
+      : `Un análisis de sangre (beta-hCG) ya puede detectar el embarazo cerca del **${fmtCorto(sangre)}**. El test de orina es confiable desde el **${fmtCorto(orina)}**, el día en que te vendría la menstruación con un ciclo de ${ciclo} días.`,
+    tone: 'neutral' as const,
+    icon: '🤰',
+  };
+
   return {
     testSangre: fmt(sangre),
     testOrina: fmt(orina),
     ovulacionEstimada: fmt(ovulacion),
     nota: T.nota,
+    _insight,
   };
 }

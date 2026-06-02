@@ -1,6 +1,6 @@
 /** Sustrato: mezcla de proporciones */
 export interface Inputs { tipoPlanta: string; litrosTotales: number; }
-export interface Outputs { receta: string; litrosSustrato: number; litrosPerlita: number; litrosCompost: number; litrosExtra: number; }
+export interface Outputs { receta: string; litrosSustrato: number; litrosPerlita: number; litrosCompost: number; litrosExtra: number; _insight?: any; _chart?: any; }
 
 interface Receta { sustrato: number; perlita: number; compost: number; extra: number; nombreExtra: string; desc: string; }
 const RECETAS: Record<string, Receta> = {
@@ -21,11 +21,42 @@ export function sustratoMezclaProporciones(i: Inputs): Outputs {
   const r = RECETAS[tipo];
   if (!r) throw new Error('Tipo de planta no encontrado');
 
+  const litrosSustrato = Number((total * r.sustrato).toFixed(1));
+  const litrosPerlita = Number((total * r.perlita).toFixed(1));
+  const litrosCompost = Number((total * r.compost).toFixed(1));
+  const litrosExtra = Number((total * r.extra).toFixed(1));
+
+  const fmtL = (n: number) => `${n % 1 === 0 ? n : n.toFixed(1)} L`;
+  const slices = [
+    { label: 'Sustrato base', value: litrosSustrato },
+    { label: 'Compost', value: litrosCompost },
+    { label: 'Perlita', value: litrosPerlita },
+    { label: r.nombreExtra, value: litrosExtra },
+  ].filter((s) => s.value > 0);
+
+  // Componente dominante de la mezcla
+  const dominante = slices.reduce((a, b) => (b.value > a.value ? b : a), slices[0]);
+  const pctDom = Math.round((dominante.value / total) * 100);
+
   return {
     receta: r.desc,
-    litrosSustrato: Number((total * r.sustrato).toFixed(1)),
-    litrosPerlita: Number((total * r.perlita).toFixed(1)),
-    litrosCompost: Number((total * r.compost).toFixed(1)),
-    litrosExtra: Number((total * r.extra).toFixed(1)),
+    litrosSustrato,
+    litrosPerlita,
+    litrosCompost,
+    litrosExtra,
+    _insight: {
+      title: 'Cómo armar la mezcla',
+      text: `Para tus **${total % 1 === 0 ? total : total.toFixed(1)} L** de sustrato, el componente que más manda es **${dominante.label.toLowerCase()}** con **${fmtL(dominante.value)}** (${pctDom}% del volumen). Mezclá todo en seco antes de humedecer para que quede parejo.`,
+      tone: 'neutral',
+      icon: '🪴',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices,
+      prefix: '',
+      centerValue: fmtL(total),
+      centerLabel: 'Mezcla total',
+      ariaLabel: `Composición de la mezcla de sustrato: ${slices.map((s) => `${s.label} ${fmtL(s.value)}`).join(', ')}.`,
+    },
   };
 }

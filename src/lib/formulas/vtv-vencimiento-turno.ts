@@ -9,6 +9,7 @@ export interface Outputs {
   frecuenciaVtv: string;
   vencimientoEstimado: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function vtvVencimientoTurno(i: Inputs): Outputs {
@@ -72,10 +73,49 @@ export function vtvVencimientoTurno(i: Inputs): Outputs {
     detalleStr += 'No tenés registro de VTV previa — hacela cuanto antes.';
   }
 
+  let insight;
+  if (mesesEntre === 0) {
+    insight = {
+      title: 'Todavía exento',
+      text: `Con **${antiguedad} año(s)** de antigüedad tu vehículo está **exento de VTV** hasta cumplir 2 años. Aprovechá para tener la documentación al día.`,
+      tone: 'good',
+      icon: '🚗',
+    };
+  } else if (mesUltima === 0 || anoUltima === 0) {
+    insight = {
+      title: 'Hacela cuanto antes',
+      text: `Tu vehículo requiere VTV **${frecuencia.toLowerCase()}** pero no cargaste una revisión previa. **Sacá turno ya** para evitar circular vencido y arriesgar una multa.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else if (vencimiento.includes('YA VENCIÓ')) {
+    insight = {
+      title: 'VTV vencida',
+      text: `La VTV venció en **${vencimiento.replace(' (⚠️ YA VENCIÓ — renová urgente)', '')}**. Circular sin VTV vigente te expone a **multa y retención del vehículo** — renová urgente.`,
+      tone: 'warn',
+      icon: '🚨',
+    };
+  } else if (vencimiento.includes('ESTE MES') || vencimiento.includes('vence pronto')) {
+    insight = {
+      title: 'Vence pronto',
+      text: `Tu próxima VTV cae en **${vencimiento.replace(/ \(.*\)$/, '')}**. Los turnos suelen agotarse, así que **reservá con anticipación** para no quedar sin fecha disponible.`,
+      tone: 'warn',
+      icon: '📅',
+    };
+  } else {
+    insight = {
+      title: 'Al día por ahora',
+      text: `Con frecuencia **${frecuencia.toLowerCase()}**, tu próxima VTV se estima para **${vencimiento}**. Anotá la fecha y sacá turno con unas semanas de margen.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  }
+
   return {
     antiguedadVehiculo: antiguedad,
     frecuenciaVtv: frecuencia,
     vencimientoEstimado: vencimiento,
     detalle: detalleStr,
+    _insight: insight,
   };
 }

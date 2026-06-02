@@ -12,5 +12,11 @@ export function tiempoAprenderIdiomaHorasSemanaNivel(i: Inputs): Outputs {
   const consejo=l==='japones'||l==='mandarin'
     ?(__lang==='en'?'Difficult language: prioritize immersion or apps like Anki.':'Idioma difícil: priorizar inmersión o apps como Anki.')
     :(__lang==='en'?'Consistency > intensity. 1 hour a day > 7 h in a single day.':'Consistencia > intensidad. 1 hora diaria > 7 h un solo día.');
-  return { semanasB2, horasTotales, consejo };
+  const anios=semanas/52;
+  const aniosTxt=anios.toFixed(1);
+  const tone=anios>=4?'warn':anios<=1.5?'good':'neutral';
+  const _insight=__lang==='en'
+    ? { title:'Your road to B2', text:`From your level, reaching **B2** takes about **${restante} more hours**: at **${h} h/week** that is roughly **${semanas} weeks (${aniosTxt} years)**.`, tone, icon:'🗣️' }
+    : { title:'Tu camino al B2', text:`Desde tu nivel, llegar a **B2** requiere unas **${restante} horas más**: a **${h} h/semana** son aproximadamente **${semanas} semanas (${aniosTxt} años)**.`, tone, icon:'🗣️' };
+  return { semanasB2, horasTotales, consejo, _insight };
 }

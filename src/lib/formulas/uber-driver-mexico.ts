@@ -21,6 +21,8 @@ export interface Outputs {
   gananciaPorHoraMxn: string;
   gananciaNeta: number;
   gananciaPorHora: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 function formatMxn(n: number): string {
@@ -55,6 +57,34 @@ export function uberDriverMexico(i: Inputs): Outputs {
   const gananciaNeta = ingresoBruto - comisionUber - retencionIVA - retencionISR - costoGas - costoMant;
   const gananciaHora = horas > 0 ? gananciaNeta / horas : 0;
 
+  const margen = ingresoBruto > 0 ? gananciaNeta / ingresoBruto : 0;
+  const impuestos = retencionIVA + retencionISR;
+  const tone: 'good' | 'warn' | 'neutral' = margen < 0 ? 'warn' : margen >= 0.5 ? 'good' : 'neutral';
+  const insight = {
+    title: 'Tu ganancia neta como conductor',
+    text: margen < 0
+      ? `Estás en rojo: te quedan **${formatMxn(gananciaNeta)}** tras comisión, impuestos y gasolina.${!rfc ? ' Sin RFC, Uber te retiene IVA 16% + ISR 20%, casi el doble que con RFC.' : ''}`
+      : `De **${formatMxn(ingresoBruto)}** facturados te quedan **${formatMxn(gananciaNeta)}** netos (**${Math.round(margen * 100)}%**)${horas > 0 ? `, o sea **${formatMxn(gananciaHora)}/hora**` : ''}. La comisión de Uber se lleva **${formatMxn(comisionUber)}** y las retenciones SAT (IVA + ISR) **${formatMxn(impuestos)}**.${!rfc ? ' Con RFC pagarías mucho menos impuesto.' : ''}`,
+    tone,
+    icon: '🚗',
+  };
+
+  const chart = (ingresoBruto > 0 && gananciaNeta >= 0) ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Ganancia neta', value: Math.round(gananciaNeta) },
+      { label: 'Comisión Uber', value: Math.round(comisionUber) },
+      { label: 'Retención IVA', value: Math.round(retencionIVA) },
+      { label: 'Retención ISR', value: Math.round(retencionISR) },
+      { label: 'Gasolina', value: Math.round(costoGas) },
+      ...(costoMant > 0 ? [{ label: 'Mantenimiento', value: Math.round(costoMant) }] : []),
+    ],
+    prefix: 'MXN ',
+    centerValue: formatMxn(ingresoBruto),
+    centerLabel: 'Ingreso bruto',
+    ariaLabel: 'Reparto del ingreso bruto entre ganancia neta, comisión de Uber, retenciones de IVA e ISR, gasolina y mantenimiento.',
+  } : undefined;
+
   return {
     ingresoBrutoMxn: formatMxn(ingresoBruto),
     comisionUberMxn: formatMxn(comisionUber),
@@ -66,5 +96,7 @@ export function uberDriverMexico(i: Inputs): Outputs {
     gananciaPorHoraMxn: formatMxn(gananciaHora),
     gananciaNeta: Math.round(gananciaNeta),
     gananciaPorHora: Math.round(gananciaHora),
+    _insight: insight,
+    _chart: chart,
   };
 }

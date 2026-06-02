@@ -17,6 +17,8 @@ export interface Outputs {
   pago_vacaciones_pendientes: number;
   pago_total_vacaciones: number;
   advertencia_limite: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -99,6 +101,28 @@ export function compute(i: Inputs): Outputs {
       `✓ Acumulación dentro de límite: ${dias_acumulados_total.toFixed(1)} / ${LIMITE_ACUMULACION_DIAS} días permitidos.`;
   }
 
+  const excede = dias_acumulados_total > LIMITE_ACUMULACION_DIAS;
+  const fmtCop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const insight = {
+    title: excede ? 'Cuidado: superás el tope de acumulación' : 'Tu acumulado y lo que vale',
+    text: excede
+      ? `Tenés **${dias_acumulados_total.toFixed(1)} días** acumulados, por encima del tope legal de **${LIMITE_ACUMULACION_DIAS} días** (CST). El empleador debe ordenar el disfrute o compensar el exceso; el total pendiente equivale a **${fmtCop(pago_vacaciones_pendientes)}** (día = sueldo/30).`
+      : `Te quedan **${dias_vacaciones_pendientes.toFixed(1)} días** pendientes de un acumulado de **${dias_acumulados_total.toFixed(1)} / ${LIMITE_ACUMULACION_DIAS}**, valorados en **${fmtCop(pago_vacaciones_pendientes)}**. Estás dentro del límite, pero recordá que las vacaciones se disfrutan, no se vuelven plata salvo al liquidar.`,
+    tone: (excede ? 'warn' : 'good') as 'warn' | 'good',
+    icon: '🏖️',
+  };
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(dias_acumulados_total.toFixed(1)),
+    markerLabel: `${dias_acumulados_total.toFixed(1)} días`,
+    min: 0,
+    segments: [
+      { nombre: 'Al día', max: 15, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Acumulando', max: LIMITE_ACUMULACION_DIAS, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Excede tope', max: Math.max(LIMITE_ACUMULACION_DIAS + 1, Math.ceil(dias_acumulados_total) + 1), color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Días acumulados ${dias_acumulados_total.toFixed(1)} frente al tope legal de ${LIMITE_ACUMULACION_DIAS} días`,
+  };
   return {
     dias_vacaciones_anuales: Math.round(dias_vacaciones_anuales * 100) / 100,
     dias_vacaciones_proporcional,
@@ -109,6 +133,8 @@ export function compute(i: Inputs): Outputs {
     pago_vacaciones_dias_tomados,
     pago_vacaciones_pendientes,
     pago_total_vacaciones,
-    advertencia_limite
+    advertencia_limite,
+    _insight: insight,
+    _chart: chart
   };
 }

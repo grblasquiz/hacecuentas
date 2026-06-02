@@ -1,6 +1,6 @@
 /** Proporción de agua y sal para cocinar pasta */
 export interface Inputs { gramosPasta: number; }
-export interface Outputs { litrosAgua: number; gramosSal: number; tiempoCoccion: string; detalle: string; }
+export interface Outputs { litrosAgua: number; gramosSal: number; tiempoCoccion: string; detalle: string; _insight?: any; }
 
 export function salAguaPasta(i: Inputs): Outputs {
   const gramos = Number(i.gramosPasta);
@@ -15,10 +15,18 @@ export function salAguaPasta(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const _insight = {
+    title: 'La regla de oro: 1-10-100',
+    text: `Para ${fmt.format(gramos)} g de pasta van **${fmt.format(litros)} L de agua** y **${fmt.format(sal)} g de sal** (~${fmt.format(cucharadas)} cdas soperas). Mucha agua evita que se pegue y la sal se agrega recién cuando hierve, antes de tirar la pasta.`,
+    tone: 'good',
+    icon: '🍝',
+  };
+
   return {
     litrosAgua: Number(litros.toFixed(1)),
     gramosSal: Math.round(sal),
     tiempoCoccion: '8-12 minutos (consultá el paquete, probá 2 min antes)',
     detalle: `Para ${fmt.format(gramos)} g de pasta: ${fmt.format(litros)} L de agua y ${fmt.format(sal)} g de sal (~${fmt.format(cucharadas)} cucharadas soperas). Rinde ~${porciones} porción${porciones > 1 ? 'es' : ''}.`,
+    _insight,
   };
 }

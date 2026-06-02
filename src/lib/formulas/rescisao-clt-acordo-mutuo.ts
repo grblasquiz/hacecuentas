@@ -23,6 +23,8 @@ export interface Outputs {
   fgtsSacavel80: string;
   totalRescisao: string;
   resumen: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -48,6 +50,28 @@ export function rescisaoCltAcordoMutuo(i: Inputs): Outputs {
   const fgtsSacavel = fgts * 0.80;
   const total = saldoSalario + avisoPrevio50 + decimoTerceiro + feriasProp + terco + multa20 + fgtsSacavel;
 
+  const verbasRescisorias = saldoSalario + avisoPrevio50 + decimoTerceiro + feriasProp + terco;
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Verbas rescisórias (saldo, aviso 50%, 13º, férias+1/3)', value: Math.round(verbasRescisorias * 100) / 100 },
+      { label: 'Multa FGTS 20%', value: Math.round(multa20 * 100) / 100 },
+      { label: 'Saque FGTS 80%', value: Math.round(fgtsSacavel * 100) / 100 },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(total),
+    centerLabel: 'Total a receber',
+    ariaLabel: 'Composição do acordo mútuo: verbas rescisórias, multa de 20% do FGTS e saque de 80% do FGTS',
+  };
+
+  const pctFgts = total > 0 ? Math.round(((multa20 + fgtsSacavel) / total) * 100) : 0;
+  const insight = {
+    title: 'Acordo: meio-termo entre as partes',
+    text: `Você recebe cerca de **${brl(total)}**, com aviso prévio e multa do FGTS pela metade (**20%** em vez de 40%) e saque limitado a **80%** do saldo. O FGTS responde por **${pctFgts}%** do total. Atenção: o acordo mútuo **não dá direito ao seguro-desemprego**.`,
+    tone: 'warn' as const,
+    icon: '🤝',
+  };
+
   return {
     saldoSalario: brl(saldoSalario),
     avisoPrevio50: brl(avisoPrevio50),
@@ -58,5 +82,7 @@ export function rescisaoCltAcordoMutuo(i: Inputs): Outputs {
     fgtsSacavel80: brl(fgtsSacavel),
     totalRescisao: brl(total),
     resumen: `Acordo mútuo (Lei 13.467/2017 art. 484-A): total ≈ ${brl(total)}. Aviso 50%, multa FGTS 20%, saque 80% do FGTS. SEM direito a seguro-desemprego.`,
+    _chart: chart,
+    _insight: insight,
   };
 }

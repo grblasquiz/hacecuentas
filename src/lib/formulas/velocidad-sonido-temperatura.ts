@@ -12,6 +12,7 @@ export interface Outputs {
   machReferencia: string;
   tiempoPorKm: string;
   comentario: string;
+  _insight?: any;
 }
 
 export function velocidadSonidoTemperatura(i: Inputs): Outputs {
@@ -39,11 +40,23 @@ export function velocidadSonidoTemperatura(i: Inputs): Outputs {
   else if (T <= 35) comentario = 'Aire cálido: el sonido se propaga más rápido. En días calurosos los truenos se escuchan más cerca de lo que están.';
   else comentario = 'Aire muy cálido: velocidad del sonido elevada, útil para estimar Mach en aviación con ISA+desviación.';
 
+  // Truco del relámpago: si contás N segundos entre el rayo y el trueno,
+  // la tormenta está a ~ c·N metros. A 343 m/s son ~3 s por km.
+  const segPorKmTormenta = 1000 / c;
+  const tono: 'good' | 'warn' | 'neutral' = T <= 0 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Qué significa esta velocidad',
+    text: `A **${T} °C** el sonido viaja a **${c.toFixed(1)} m/s** (${cKmh.toFixed(0)} km/h). Truco práctico: contá los segundos entre el relámpago y el trueno y dividí por **${segPorKmTormenta.toFixed(1)}** — eso te da la distancia a la tormenta en km.`,
+    tone: tono,
+    icon: '🔊',
+  };
+
   return {
     velocidad: `${c.toFixed(2)} m/s`,
     velocidadKmh: `${cKmh.toFixed(1)} km/h`,
     machReferencia: `Mach 1 = ${mach1.toFixed(1)} m/s`,
     tiempoPorKm: `${tiempoKm.toFixed(3)} s por km (eco ida+vuelta ≈ ${(2 * tiempoKm).toFixed(2)} s)`,
     comentario,
+    _insight,
   };
 }

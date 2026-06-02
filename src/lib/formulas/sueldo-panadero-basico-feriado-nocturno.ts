@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; _chart?: any; }
+export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 export function sueldoPanaderoBasicoFeriadoNocturno(i: Inputs): Outputs {
   const cat=String(i.categoria||'oficial'); const ant=Number(i.antiguedad)||0; const hn=Number(i.horasNocturnas)||0;
   const base: Record<string,number> = { ayudante:920000, medio:1050000, oficial:1200000 };
@@ -8,6 +8,15 @@ export function sueldoPanaderoBasicoFeriadoNocturno(i: Inputs): Outputs {
   const bruto=b+nocturno;
   const neto=bruto*0.83;
   const descuentos=bruto-neto;
+  const fmt=(n:number)=>Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Tu sueldo de panadero',
+    text: hn>0
+      ? `Como ${cat} con ${ant} años de antigüedad, tu básico es **$${fmt(b)}** y las **${hn} h/sem** nocturnas suman **$${fmt(nocturno)}** extra. De bolsillo te queda **$${fmt(neto)}** netos.`
+      : `Como ${cat} con ${ant} años de antigüedad, tu básico es **$${fmt(b)}**. Tras el 17% de aportes de ley, de bolsillo te queda **$${fmt(neto)}** netos.`,
+    tone: 'neutral' as const,
+    icon: '🥖',
+  };
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -19,5 +28,5 @@ export function sueldoPanaderoBasicoFeriadoNocturno(i: Inputs): Outputs {
     centerLabel: 'Bruto',
     ariaLabel: 'Composición del sueldo bruto: neto de bolsillo más aportes y descuentos de ley.',
   };
-  return { basico:'$'+b.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), bruto:'$'+bruto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), neto:'$'+neto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), resumen:`${cat} con ${hn}h noche/sem: neto ~$${neto.toFixed(0)}.`, _chart: chart };
+  return { basico:'$'+b.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), bruto:'$'+bruto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), neto:'$'+neto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), resumen:`${cat} con ${hn}h noche/sem: neto ~$${neto.toFixed(0)}.`, _insight: insight, _chart: chart };
 }

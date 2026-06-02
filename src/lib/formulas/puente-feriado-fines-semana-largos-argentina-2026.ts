@@ -8,6 +8,7 @@ export interface Outputs {
   bridgeDetalle: string;
   totalDays: number;
   recommendation: string;
+  _insight?: any;
 }
 
 interface Bridge {
@@ -123,10 +124,27 @@ export function compute(i: Inputs): Outputs {
     ? `${filtered.length} períodos largos`
     : "Sin puentes en el filtro";
 
+  const cantidad = filtered.length;
+  const masLargo = filtered.reduce((best, b) => b.continuousDays > best.continuousDays ? b : best, filtered[0]);
+  const _insight = cantidad > 0
+    ? {
+        title: `${cantidad} ${cantidad === 1 ? 'fin de semana largo' : 'fines de semana largos'} en ${year}`,
+        text: `Sumás **${totalDays} días** de descanso en ${cantidad} ${cantidad === 1 ? 'período' : 'períodos'}. El más largo es **${masLargo.name}** (${masLargo.continuousDays} días, del ${masLargo.startDate} al ${masLargo.endDate}). Reservá vuelos y alojamiento **6-8 semanas antes** para los de julio, diciembre y enero.`,
+        tone: 'good',
+        icon: '🏖️',
+      }
+    : {
+        title: 'Sin puentes en el filtro',
+        text: `No hay fines de semana largos para el filtro seleccionado en ${year}. Probá quitar el filtro para ver todos los períodos del año.`,
+        tone: 'neutral',
+        icon: '📅',
+      };
+
   return {
     bridgeList: resumen,
     bridgeDetalle: detalle || "Sin puentes en el filtro seleccionado.",
     totalDays: totalDays,
-    recommendation: recommendation
+    recommendation: recommendation,
+    _insight,
   };
 }

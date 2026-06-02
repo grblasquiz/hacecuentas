@@ -18,6 +18,8 @@ export interface Outputs {
   }>;
   multa_sin_soat: number; // COP
   validez_soat: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -104,12 +106,53 @@ export function compute(i: Inputs): Outputs {
 
   const validezSoat = 'Anual (se renueva cada año antes de vencer)';
 
-  return {
-    tarifa_base_anual: Math.round(tarifaAseguradora),
-    descuento_pronto_pago: Math.round(montoDescuento),
-    precio_final_soat: Math.round(precioFinal),
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const asegTxt = i.aseguradora.charAt(0).toUpperCase() + i.aseguradora.slice(1);
+  const precioFinalR = Math.round(precioFinal);
+  const descuentoR = Math.round(montoDescuento);
+  const tarifaR = Math.round(tarifaAseguradora);
+
+  let _insight: any;
+  if (i.pago_anticipado && descuentoR > 0) {
+    _insight = {
+      title: 'Precio con descuento por pronto pago',
+      text: `Con **${asegTxt}** pagás **${cop(precioFinalR)}** al año tras un descuento de **${cop(descuentoR)}** (${(descuentoPct * 100).toFixed(0)}%) por pago anticipado. Circular **sin SOAT** vigente puede costarte una multa de **${cop(MULTA_SIN_SOAT)}**, así que renovarlo siempre conviene.`,
+      tone: 'good',
+      icon: '🛡️',
+    };
+  } else {
+    _insight = {
+      title: 'Tu SOAT 2026',
+      text: `Con **${asegTxt}** el SOAT te cuesta **${cop(precioFinalR)}** al año. Pagando de forma anticipada accederías a un descuento por pronto pago. Ojo: circular **sin SOAT** vigente implica una multa de **${cop(MULTA_SIN_SOAT)}**.`,
+      tone: 'warn',
+      icon: '🛡️',
+    };
+  }
+
+  const out: Outputs = {
+    tarifa_base_anual: tarifaR,
+    descuento_pronto_pago: descuentoR,
+    precio_final_soat: precioFinalR,
     comparativa_aseguradoras: comparativa,
     multa_sin_soat: MULTA_SIN_SOAT,
-    validez_soat: validezSoat
+    validez_soat: validezSoat,
+    _insight,
   };
+
+  // Donut sólo cuando hay descuento: precio final + descuento = tarifa
+  if (descuentoR > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Precio final a pagar', value: precioFinalR },
+        { label: 'Descuento pronto pago', value: descuentoR },
+      ],
+      prefix: '$',
+      centerValue: cop(tarifaR),
+      centerLabel: 'Tarifa sin descuento',
+      ariaLabel: `Tarifa de ${cop(tarifaR)} compuesta por ${cop(precioFinalR)} a pagar y ${cop(descuentoR)} de descuento`,
+    };
+  }
+
+  return out;
 }

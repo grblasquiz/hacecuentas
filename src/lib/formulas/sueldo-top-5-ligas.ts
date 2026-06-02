@@ -14,6 +14,7 @@ export interface Outputs {
   ligaLabel: string;
   rolLabel: string;
   mensaje: string;
+  _insight?: any;
 }
 
 // Rango anual en moneda base de la liga (Premier en GBP, resto en EUR) — referencia 2025/26
@@ -54,15 +55,24 @@ export function sueldoTop5Ligas(i: Inputs): Outputs {
   const max = maxBase * factor;
   const prom = promBase * factor;
 
+  const mensual = Math.round(prom / 12);
+  const semanal = Math.round(prom / 52);
+  const insight = {
+    title: 'Lo que significa ese sueldo',
+    text: `Un ${ROL_LABEL[rol].toLowerCase()} de ${fila.label} promedia **${Math.round(prom).toLocaleString('es-AR')} ${salida}/año**, unos **${mensual.toLocaleString('es-AR')} ${salida}/mes** (~${semanal.toLocaleString('es-AR')} ${salida} por semana). El rango va de ${Math.round(min).toLocaleString('es-AR')} a ${Math.round(max).toLocaleString('es-AR')} ${salida} según contrato y bonus.`,
+    tone: 'neutral' as const,
+    icon: '⚽',
+  };
   return {
     salarioAnualMin: Math.round(min),
     salarioAnualMax: Math.round(max),
     salarioAnualPromedio: Math.round(prom),
-    salarioMensualPromedio: Math.round(prom / 12),
+    salarioMensualPromedio: mensual,
     monedaBase: fila.moneda,
     monedaSalida: salida,
     ligaLabel: fila.label,
     rolLabel: ROL_LABEL[rol],
     mensaje: `${fila.label} — ${ROL_LABEL[rol]}: ${Math.round(min).toLocaleString('es-AR')} a ${Math.round(max).toLocaleString('es-AR')} ${salida}/año.`,
+    _insight: insight,
   };
 }

@@ -20,6 +20,7 @@ export interface Outputs {
   total_estimado: number;
   cotiza_jubilacion: string;
   nota_fiscal: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -106,6 +107,21 @@ export function compute(i: Inputs): Outputs {
     "por lo que en la mayoría de los casos la retención aplicada es del 0% " +
     "y no existe obligación de presentar la declaración si es el único ingreso (límite 22.000€).";
 
+  const fmtEur = (x: number) => x.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const _insight = cumple
+    ? {
+        title: "Cumples los requisitos",
+        text: `Cobrarías **${fmtEur(cuantiaMensual)}€/mes** (80% del IPREM) hasta tu jubilación a los ${edadJubilacion}: son **${mesesRestantes} meses** (${anosRestantes} año/s) y **${fmtEur(totalEstimado)}€** en total. Mientras lo cobres, el SEPE te cotiza por jubilación sobre la base mínima.`,
+        tone: "good",
+        icon: "🧾",
+      }
+    : {
+        title: "No cumples todos los requisitos",
+        text: `Con los datos cargados **no accederías** al subsidio: ${motivos.length} motivo(s) lo impiden. Revisá las condiciones de edad (≥52), cotización (≥6 años), agotamiento de la prestación e ingresos por debajo del 75% del SMI (${fmtEur(LIMITE_INGRESOS)}€/mes).`,
+        tone: "warn",
+        icon: "🧾",
+      };
+
   return {
     cumple_requisitos: cumpleTexto,
     motivos_incumplimiento: motivosTexto,
@@ -115,5 +131,6 @@ export function compute(i: Inputs): Outputs {
     total_estimado: parseFloat(totalEstimado.toFixed(2)),
     cotiza_jubilacion: cotizaJubilacion,
     nota_fiscal: notaFiscal,
+    _insight,
   };
 }

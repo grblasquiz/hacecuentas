@@ -1,6 +1,6 @@
 /** Staking AVAX rewards */
 export interface Inputs { amount: number; apy: number; priceUsd: number; months: number; commission: number; }
-export interface Outputs { tokensEarned: number; usdEarned: number; netTokens: number; monthlyTokens: number; effectiveApy: number; totalValue: number; explicacion: string; _chart?: any; }
+export interface Outputs { tokensEarned: number; usdEarned: number; netTokens: number; monthlyTokens: number; effectiveApy: number; totalValue: number; explicacion: string; _chart?: any; _insight?: any; }
 export function stakingAvaxRewards(i: Inputs): Outputs {
   const amt = Number(i.amount);
   const apy = Number(i.apy) / 100;
@@ -27,6 +27,16 @@ export function stakingAvaxRewards(i: Inputs): Outputs {
     centerLabel: 'Valor total',
     ariaLabel: 'Composición del valor final: capital inicial más recompensas netas de staking',
   };
+  const rewardShare = totalValue > 0 ? (usd / totalValue) * 100 : 0;
+  const highFee = commission >= 0.15;
+  const insight = {
+    title: highFee ? 'Comisión alta del validador' : 'Recompensas proyectadas',
+    text: highFee
+      ? `A ${(apy*100).toFixed(2)}% APY ganás **${netTokens.toFixed(2)} AVAX** (~$${usd.toFixed(0)}) en ${months} meses, pero el validador se queda con el **${(commission*100).toFixed(1)}%** de las recompensas. Buscá un pool con comisión más baja para retener más rendimiento.`
+      : `Stakeando ${amt} AVAX a ${(apy*100).toFixed(2)}% APY sumás **${netTokens.toFixed(2)} AVAX netos** (~$${usd.toFixed(0)}) en ${months} meses, el **${rewardShare.toFixed(1)}%** de tu valor final. APY efectivo (con interés compuesto diario): **${effectiveApy.toFixed(2)}%**. Recordá que el valor en USD depende del precio del token.`,
+    tone: highFee ? 'warn' : 'good',
+    icon: highFee ? '✂️' : '🔺',
+  };
   return {
     tokensEarned: Number(grossTokens.toFixed(4)),
     netTokens: Number(netTokens.toFixed(4)),
@@ -36,5 +46,6 @@ export function stakingAvaxRewards(i: Inputs): Outputs {
     totalValue: Number(totalValue.toFixed(2)),
     explicacion: `Stakeando ${amt} AVAX al ${(apy*100).toFixed(2)}% APY durante ${months} meses (comisión ${(commission*100).toFixed(1)}%): ganás ${netTokens.toFixed(2)} AVAX netos = $${usd.toFixed(2)} USD.`,
     _chart: chart,
+    _insight: insight,
   };
 }

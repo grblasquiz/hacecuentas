@@ -12,6 +12,7 @@ export interface RoiInfluencerOutputs {
   costoPorVenta: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function roiInfluencer(inputs: RoiInfluencerInputs): RoiInfluencerOutputs {
@@ -55,6 +56,15 @@ export function roiInfluencer(inputs: RoiInfluencerInputs): RoiInfluencerOutputs
     ariaLabel: 'Escala de ROI de campaña con influencer: negativo, positivo, muy bueno, excelente',
   };
 
+  const insight = {
+    title: roi >= 0 ? 'Campaña rentable' : 'Campaña en pérdida',
+    text: roi >= 0
+      ? `Por cada $1 que le pagaste al influencer recuperaste **$${fmt.format(ratioVenta)}** en ventas, un ROI de **${fmt.format(roi)}%**. ${roi >= 200 ? 'Está muy por encima de la media: vale la pena escalar la colaboración.' : 'Probá negociar más volumen o un código de descuento propio para empujar el ratio.'}`
+      : `La campaña generó $${fmt.format(ventas)} contra un costo de $${fmt.format(costo)}: perdiste **$${fmt.format(costo - ventas)}** (ROI **${fmt.format(roi)}%**). Revisá si el público del influencer matchea con tu producto antes de repetir.`,
+    tone: (roi < 0 ? 'warn' : roi >= 200 ? 'good' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '📣',
+  };
+
   return {
     roi,
     cpm,
@@ -62,5 +72,6 @@ export function roiInfluencer(inputs: RoiInfluencerInputs): RoiInfluencerOutputs
     costoPorVenta: costo,
     detalle: `ROI ${fmt.format(roi)}% (${evaluacion}). Por cada $1 invertido se generaron $${fmt.format(ratioVenta)} en ventas. CPM $${fmt.format(cpm)}, CPC $${fmt.format(cpc)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

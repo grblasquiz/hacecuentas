@@ -20,6 +20,8 @@ export interface Outputs {
   total_descuentos_anual: number;
   desglose_ss: string;
   aviso: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // ─── Constantes SS 2026 (TGSS) ───────────────────────────────────────────────
@@ -220,14 +222,46 @@ export function compute(i: Inputs): Outputs {
       `La base de cotización SS está limitada a ${SS_BASE_MAX_ANUAL.toFixed(0)} €/año. La parte que excede ese límite no cotiza.`;
   }
 
+  const eur = (n: number) =>
+    new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(Math.round(n)) + ' €';
+  const netoRedondeado = Math.round(netoAnual * 100) / 100;
+  const retencionRedondeada = Math.round(retencionPct * 100) / 100;
+
+  // Tono dinámico según la presión fiscal sobre el bruto
+  const presionPct = bruto > 0 ? (totalDescuentos / bruto) * 100 : 0;
+  const tone = presionPct >= 30 ? 'warn' : presionPct >= 22 ? 'neutral' : 'good';
+
+  const _insight = {
+    title: 'De bruto a neto',
+    text: `De **${eur(bruto)}** brutos te quedan **${eur(netoAnual)}** netos al año (**${eur(netoMensual)}** en ${numPagas} pagas). Entre IRPF (**${retencionRedondeada.toFixed(1)}%**) y Seguridad Social se van **${eur(totalDescuentos)}**.`,
+    tone: tone as 'good' | 'neutral' | 'warn',
+    icon: '💶',
+  };
+
+  // Donut: neto + IRPF + SS suman el bruto anual.
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Neto', value: Math.round(netoAnual) },
+      { label: 'IRPF', value: Math.round(cuotaIrpf) },
+      { label: 'Seguridad Social', value: Math.round(cuotaSS) },
+    ],
+    suffix: ' €',
+    centerValue: eur(bruto),
+    centerLabel: 'Bruto anual',
+    ariaLabel: `Reparto del salario bruto de ${eur(bruto)}: neto ${eur(netoAnual)}, IRPF ${eur(cuotaIrpf)} y Seguridad Social ${eur(cuotaSS)}`,
+  };
+
   return {
     neto_mensual:          Math.round(netoMensual * 100) / 100,
-    neto_anual:            Math.round(netoAnual   * 100) / 100,
-    retencion_irpf_pct:    Math.round(retencionPct * 100) / 100,
+    neto_anual:            netoRedondeado,
+    retencion_irpf_pct:    retencionRedondeada,
     cuota_irpf_anual:      Math.round(cuotaIrpf   * 100) / 100,
     cuota_ss_anual:        Math.round(cuotaSS      * 100) / 100,
     total_descuentos_anual: Math.round(totalDescuentos * 100) / 100,
     desglose_ss:           desgloseStr,
     aviso,
+    _insight,
+    _chart,
   };
 }

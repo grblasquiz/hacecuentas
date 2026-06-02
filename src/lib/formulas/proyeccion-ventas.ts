@@ -11,6 +11,7 @@ export interface Outputs {
   crecimientoTotal: number;
   ventasMesAMes: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function proyeccionVentas(i: Inputs): Outputs {
@@ -48,10 +49,24 @@ export function proyeccionVentas(i: Inputs): Outputs {
     `(crecimiento total: ${crecimientoTotal.toFixed(1)}%). ` +
     `Facturación acumulada estimada: $${fmt.format(acumulado)}.`;
 
+  const tono = crecimiento > 0 ? 'good' : crecimiento < 0 ? 'warn' : 'neutral';
+  const multiplo = ventasProyectadas / ventas;
+  const textoInsight = crecimiento > 0
+    ? `Con **${crecimiento}% mensual**, en ${meses} meses tu facturación pasa de $${fmt.format(ventas)} a **$${fmt.format(Math.round(ventasProyectadas))}/mes** (×${multiplo.toFixed(1)}). El interés compuesto del crecimiento acumula **$${fmt.format(Math.round(acumulado))}** de facturación total en el período.`
+    : crecimiento < 0
+    ? `Con una caída de **${Math.abs(crecimiento)}% mensual**, en ${meses} meses la facturación baja de $${fmt.format(ventas)} a **$${fmt.format(Math.round(ventasProyectadas))}/mes** (${crecimientoTotal.toFixed(1)}%). Revisá el funnel: a este ritmo perdés casi la mitad cada ${Math.ceil(70 / Math.abs(crecimiento))} meses.`
+    : `Sin crecimiento (**0% mensual**), la facturación se mantiene en **$${fmt.format(ventas)}/mes** durante los ${meses} meses. Acumularías $${fmt.format(Math.round(acumulado))} sin ganar terreno.`;
+
   return {
     ventasProyectadas: Math.round(ventasProyectadas),
     crecimientoTotal: Number(crecimientoTotal.toFixed(1)),
     ventasMesAMes,
     detalle,
+    _insight: {
+      title: 'Tu proyección de ventas',
+      text: textoInsight,
+      tone: tono,
+      icon: '📈',
+    },
   };
 }

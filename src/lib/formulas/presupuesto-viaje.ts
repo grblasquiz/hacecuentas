@@ -18,6 +18,7 @@ export interface Outputs {
   totalPorPersona: number;
   gastoPorDia: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function presupuestoViaje(i: Inputs): Outputs {
@@ -54,6 +55,23 @@ export function presupuestoViaje(i: Inputs): Outputs {
     ariaLabel: 'Composición del presupuesto de viaje por categoría de gasto',
   };
 
+  const cats = [
+    { label: 'transporte', value: transp },
+    { label: 'hospedaje', value: tHosp },
+    { label: 'comida', value: tComida },
+    { label: 'actividades', value: tActv },
+    { label: 'extras', value: tExtras },
+  ];
+  const mayor = cats.reduce((a, b) => (b.value > a.value ? b : a), cats[0]);
+  const pctMayor = total > 0 ? Math.round((mayor.value / total) * 100) : 0;
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const _insight = {
+    title: 'Tu presupuesto de viaje',
+    text: `El viaje de **${dias} día${dias === 1 ? '' : 's'}** suma **${fmt(total)}** en total${personas > 1 ? `, es decir **${fmt(perPerson)} por persona**` : ''}, con un gasto promedio de **${fmt(porDia)} por día**. El rubro más pesado es **${mayor.label}**, que se lleva cerca del **${pctMayor}%** del presupuesto.`,
+    tone: 'neutral' as const,
+    icon: '🧳',
+  };
+
   return {
     totalTransporte: Math.round(transp),
     totalHospedaje: Math.round(tHosp),
@@ -64,5 +82,6 @@ export function presupuestoViaje(i: Inputs): Outputs {
     totalPorPersona: Math.round(perPerson),
     gastoPorDia: Math.round(porDia),
     _chart: chart,
+    _insight,
   };
 }

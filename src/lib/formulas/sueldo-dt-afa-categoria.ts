@@ -18,6 +18,7 @@ export interface Outputs {
   moneda: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Valores estimados de referencia AFA / Sindicato de Entrenadores abril 2026
@@ -61,6 +62,17 @@ export function sueldoDtAfaCategoria(i: Inputs): Outputs {
     ariaLabel: 'Composición del sueldo mensual del DT: base, adicional por experiencia, adicional por títulos y viáticos.',
   };
 
+  const adicionales = adicExp + adicTit + viaticosM;
+  const pctAdic = totalMensual > 0 ? Math.round((adicionales / totalMensual) * 100) : 0;
+  const insight = {
+    title: 'Cuánto pesan tus adicionales',
+    text: pctAdic >= 25
+      ? `Tu experiencia, títulos y viáticos suman **$${Math.round(adicionales).toLocaleString('es-AR')}/mes**, el **${pctAdic}%** del total — bastante por encima del básico de la categoría.`
+      : `El grueso del sueldo es el básico de ${info.nombre}: los adicionales aportan **$${Math.round(adicionales).toLocaleString('es-AR')}/mes** (**${pctAdic}%**). Sumar títulos y antigüedad es la palanca para subirlo.`,
+    tone: pctAdic >= 25 ? 'good' : 'neutral',
+    icon: '⚽',
+  };
+
   return {
     sueldoMensualBase: Math.round(base),
     adicionalExperiencia: Math.round(adicExp),
@@ -71,6 +83,7 @@ export function sueldoDtAfaCategoria(i: Inputs): Outputs {
     premioObjetivos: Math.round(premios),
     moneda: 'ARS',
     _chart: chart,
+    _insight: insight,
     resumen: `DT ${info.nombre}: **$${Math.round(totalMensual).toLocaleString('es-AR')} /mes** (base $${base.toLocaleString('es-AR')} + exp $${Math.round(adicExp).toLocaleString('es-AR')} + títulos $${Math.round(adicTit).toLocaleString('es-AR')}). Anual: **$${Math.round(anual).toLocaleString('es-AR')}**.`,
   };
 }

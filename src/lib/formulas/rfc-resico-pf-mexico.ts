@@ -12,6 +12,8 @@ export interface Outputs {
   ingresoNeto: number;
   anualizado: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tabla mensual RESICO PF 2026 (Art. 113-E LISR)
@@ -66,11 +68,33 @@ export function rfcResicoPfMexico(inputs: Inputs): Outputs {
     detalle += ` Cuota DEFINITIVA según Art. 113-E LISR.`;
   }
 
+  const fmtMx = (n: number) => Math.round(n).toLocaleString('es-MX');
+  const rebasa = proyeccionAnual > TOPE_ANUAL_RESICO;
+
   return {
     cuotaResico: Math.round(cuotaResico * 100) / 100,
     tasaAplicada: tramo.etiqueta,
     ingresoNeto: Math.round(ingresoNeto * 100) / 100,
     anualizado: Math.round(anualizado * 100) / 100,
     detalle,
+    _insight: {
+      title: rebasa ? 'Cerca del tope RESICO' : 'Carga fiscal muy baja',
+      text: rebasa
+        ? `Tributás solo **${tramo.etiqueta}** (**$${fmtMx(cuotaResico)}** este mes), pero a este ritmo proyectás **$${fmtMx(proyeccionAnual)}** anuales y superás el tope de $3,500,000: vigilá el acumulado para no salir del régimen.`
+        : `Con la tasa de **${tramo.etiqueta}** pagás solo **$${fmtMx(cuotaResico)}** de ISR y te quedan **$${fmtMx(ingresoNeto)}** netos. RESICO es de las cargas más bajas: en el año la cuota suma **$${fmtMx(anualizado)}**.`,
+      tone: rebasa ? 'warn' : 'good',
+      icon: rebasa ? '⚠️' : '🇲🇽',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Ingreso neto', value: Math.round(ingresoNeto * 100) / 100 },
+        { label: 'Cuota ISR (RESICO)', value: Math.round(cuotaResico * 100) / 100 },
+      ],
+      prefix: '$',
+      centerValue: '$' + fmtMx(ingresos),
+      centerLabel: 'Ingreso mensual',
+      ariaLabel: 'Composición del ingreso mensual: ingreso neto más cuota de ISR del régimen RESICO.',
+    },
   };
 }

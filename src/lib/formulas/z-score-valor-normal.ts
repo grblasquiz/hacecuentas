@@ -1,6 +1,6 @@
 /** Calculadora Z-Score — z = (x - μ) / σ */
 export interface Inputs { valor: number; media: number; desviacion: number; }
-export interface Outputs { zScore: number; percentil: number; interpretacion: string; formula: string; _chart?: any; }
+export interface Outputs { zScore: number; percentil: number; interpretacion: string; formula: string; _chart?: any; _insight?: any; }
 
 // Approximation of the standard normal CDF using Abramowitz and Stegun 26.2.17
 function normalCDF(z: number): number {
@@ -50,11 +50,20 @@ export function zScoreValorNormal(i: Inputs): Outputs {
     ariaLabel: 'Escala z-score en desviaciones estándar: normal en el centro, atípico en los extremos',
   };
 
+  const lado = z >= 0 ? 'por encima' : 'por debajo';
+  const _insight = {
+    title: 'Qué tan lejos de la media está tu valor',
+    text: `Tu valor está a **${Math.abs(z).toFixed(2)}σ** ${lado} de la media y supera al **${percentil.toFixed(1)}%** de los casos. ${interp}.`,
+    tone: az < 1 ? 'good' : az < 2 ? 'neutral' : 'warn',
+    icon: '📊',
+  };
+
   return {
     zScore: Number(z.toFixed(4)),
     percentil: Number(percentil.toFixed(2)),
     interpretacion: interp,
     formula: `z = (${x} - ${mu}) / ${sigma} = ${z.toFixed(4)}`,
     _chart: chart,
+    _insight,
   };
 }

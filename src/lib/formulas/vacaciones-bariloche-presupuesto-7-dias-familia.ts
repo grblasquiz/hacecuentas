@@ -1,6 +1,6 @@
 /** Presupuesto 7 días Bariloche familia tipo (4 personas) */
 export interface Inputs { temporada: 'alta' | 'media' | 'baja'; categoriaHotel: '3estrellas' | '4estrellas' | '5estrellas' | 'cabana'; personas: number; dias: number; vueloPorPersonaArs: number; gastosExtraDiariosArs: number; }
-export interface Outputs { hospedajeArs: number; comidasArs: number; vuelosArs: number; excursionesArs: number; totalArs: number; totalPorPersonaArs: number; explicacion: string; _chart?: any; }
+export interface Outputs { hospedajeArs: number; comidasArs: number; vuelosArs: number; excursionesArs: number; totalArs: number; totalPorPersonaArs: number; explicacion: string; _chart?: any; _insight?: any; }
 export function vacacionesBarilochePresupuesto7DiasFamilia(i: Inputs): Outputs {
   const personas = Number(i.personas) || 4;
   const dias = Number(i.dias) || 7;
@@ -33,6 +33,21 @@ export function vacacionesBarilochePresupuesto7DiasFamilia(i: Inputs): Outputs {
     centerLabel: 'Total',
     ariaLabel: 'Composición del presupuesto: hospedaje, comidas, vuelos y excursiones',
   };
+  const partidas = [
+    { nombre: 'hospedaje', valor: hospedaje },
+    { nombre: 'comidas', valor: comidas },
+    { nombre: 'vuelos', valor: vuelos },
+    { nombre: 'excursiones', valor: excursiones },
+  ];
+  const mayor = partidas.reduce((a, b) => (b.valor > a.valor ? b : a));
+  const pctMayor = total > 0 ? Math.round((mayor.valor / total) * 100) : 0;
+  const porPersona = total / personas;
+  const insight = {
+    title: 'Adónde se va el presupuesto',
+    text: `7 días en Bariloche para **${personas} personas** en temporada **${i.temporada}** cuestan **$${Math.round(total).toLocaleString('es-AR')}** (**$${Math.round(porPersona).toLocaleString('es-AR')}** por persona). El mayor gasto es **${mayor.nombre}**, que se lleva el **${pctMayor}%** del total — es la palanca con más impacto si querés ajustar el presupuesto.`,
+    tone: 'neutral' as const,
+    icon: '🏔️',
+  };
   return {
     hospedajeArs: Number(hospedaje.toFixed(2)),
     comidasArs: Number(comidas.toFixed(2)),
@@ -42,5 +57,6 @@ export function vacacionesBarilochePresupuesto7DiasFamilia(i: Inputs): Outputs {
     totalPorPersonaArs: Number((total / personas).toFixed(2)),
     explicacion: `${personas} personas, ${dias} días, ${i.temporada}, ${i.categoriaHotel}: hospedaje $${hospedaje.toLocaleString('es-AR')} + comidas $${comidas.toLocaleString('es-AR')} + vuelos $${vuelos.toLocaleString('es-AR')} + excursiones $${excursiones.toLocaleString('es-AR')} = $${total.toLocaleString('es-AR')}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

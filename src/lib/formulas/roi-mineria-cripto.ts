@@ -19,6 +19,8 @@ export interface Outputs {
   roiAnualPorc: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function roiMineriaCripto(i: Inputs): Outputs {
@@ -66,7 +68,17 @@ export function roiMineriaCripto(i: Inputs): Outputs {
     ? `Con ${hashrate} TH/s consumiendo ${watts}W a $${costoKwh}/kWh, el costo eléctrico ($${costoDiarioElectricidad.toFixed(2)}/día) supera el ingreso ($${ingresoDiario.toFixed(2)}/día). La minería no es rentable con estos parámetros.`
     : `Con ${hashrate} TH/s consumiendo ${watts}W a $${costoKwh}/kWh, ganás $${gananciaDiaria.toFixed(2)}/día neto ($${gananciaMensual.toFixed(0)}/mes). Eficiencia: ${eficiencia} J/GH.${costoEquipo > 0 ? ` ROI del equipo ($${costoEquipo.toLocaleString()}) en ${diasRoi} días (~${Math.round(diasRoi / 30)} meses). Retorno anual: ${roiAnualPorc.toFixed(1)}%.` : ''}${dificultadCambio > 0 ? ` Considerando +${dificultadCambio}% de dificultad mensual, ganancia anual: $${Math.round(gananciaAnual).toLocaleString()}.` : ''}`;
 
-  return {
+  const margen = ingresoDiario > 0 ? (gananciaDiaria / ingresoDiario) * 100 : 0;
+  const insight = {
+    title: gananciaDiaria > 0 ? 'Minería rentable' : 'Minería no rentable',
+    text: gananciaDiaria > 0
+      ? `La electricidad se come **$${costoDiarioElectricidad.toFixed(2)}/día** de tus $${ingresoDiario.toFixed(2)} de recompensa, dejándote **$${gananciaDiaria.toFixed(2)}/día** netos (margen ${margen.toFixed(0)}%).${costoEquipo > 0 ? ` Recuperás el equipo en **${diasRoi} días** (~${Math.round(diasRoi / 30)} meses).` : ''}${dificultadCambio > 0 ? ' Ojo: con la dificultad subiendo cada mes, ese margen se achica con el tiempo.' : ''}`
+      : `A $${costoKwh}/kWh el costo eléctrico (**$${costoDiarioElectricidad.toFixed(2)}/día**) supera la recompensa (**$${ingresoDiario.toFixed(2)}/día**): perdés $${Math.abs(gananciaDiaria).toFixed(2)} por día encendido. Necesitás electricidad más barata o un equipo más eficiente para que cierre.`,
+    tone: (gananciaDiaria > 0 ? 'good' : 'warn') as 'good' | 'warn' | 'neutral',
+    icon: '⛏️',
+  };
+
+  const out: Outputs = {
     ingresoDiario: Number(ingresoDiario.toFixed(2)),
     costoDiarioElectricidad: Number(costoDiarioElectricidad.toFixed(2)),
     gananciaDiaria: Number(gananciaDiaria.toFixed(2)),
@@ -76,5 +88,23 @@ export function roiMineriaCripto(i: Inputs): Outputs {
     roiAnualPorc: Number(roiAnualPorc.toFixed(2)),
     formula,
     explicacion,
+    _insight: insight,
   };
+
+  // Donut sólo si es rentable: la recompensa diaria se reparte en costo eléctrico + ganancia neta
+  if (gananciaDiaria > 0) {
+    out._chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Ganancia neta', value: Number(gananciaDiaria.toFixed(2)) },
+        { label: 'Costo electricidad', value: Number(costoDiarioElectricidad.toFixed(2)) },
+      ],
+      prefix: '$',
+      centerValue: '$' + ingresoDiario.toFixed(2),
+      centerLabel: 'Recompensa/día',
+      ariaLabel: `Recompensa diaria de $${ingresoDiario.toFixed(2)} repartida en ganancia neta de $${gananciaDiaria.toFixed(2)} y costo de electricidad de $${costoDiarioElectricidad.toFixed(2)}.`,
+    };
+  }
+
+  return out;
 }

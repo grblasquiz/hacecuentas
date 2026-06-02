@@ -15,6 +15,7 @@ export interface Outputs {
   tipo_holograma: string;
   restriccion_hoy_no_circula: string;
   estado_circulacion: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -97,15 +98,39 @@ export function compute(i: Inputs): Outputs {
     multaFinal = Math.round(multaEstimada * 0.9); // EdoMex: ~90% de CDMX
   }
 
+  const atrasoFinal = Math.max(0, atraso);
+  const entidadNombre = i.entidad === 'edomex' ? 'EdoMex' : 'CDMX';
+  const _insight = atrasoFinal > 0
+    ? {
+        title: 'Verificación vencida',
+        text: `Acumulás **${atrasoFinal} bimestre${atrasoFinal > 1 ? 's' : ''}** de atraso: la multa estimada en ${entidadNombre} es de **$${multaFinal.toLocaleString('es-MX')} MXN** y arriesgás doble restricción de Hoy No Circula. Regularizá cuanto antes para evitar que siga creciendo.`,
+        tone: 'warn',
+        icon: '🚗',
+      }
+    : i.anio_vehiculo <= 1995
+      ? {
+          title: 'Vehículo restringido en CDMX',
+          text: `Por ser modelo **${i.anio_vehiculo}** te corresponde **${tipoHolograma}**, con prohibición de circular en CDMX. Tu bimestre asignado es el **${bimestreNombres[bimestreNum] || 'I'}** (límite ${fechaBim.limite}).`,
+          tone: 'warn',
+          icon: '🚫',
+        }
+      : {
+          title: 'Al día con la verificación',
+          text: `Estás en regla: te toca el bimestre **${bimestreNombres[bimestreNum] || 'I'}** con fecha límite **${fechaBim.limite}** y te corresponde **${tipoHolograma}**. Verificá antes del cierre para no entrar en multa.`,
+          tone: 'good',
+          icon: '✅',
+        };
+
   return {
     bimestre_asignado: bimestreNombres[bimestreNum] || 'I',
     mes_inicio_bimestre: fechaBim.inicio,
     mes_fin_bimestre: fechaBim.fin,
     fecha_limite_verificacion: fechaBim.limite,
-    bimestres_atraso: Math.max(0, atraso),
+    bimestres_atraso: atrasoFinal,
     multa_estimada: multaFinal,
     tipo_holograma: tipoHolograma,
     restriccion_hoy_no_circula: restriccionHNC,
-    estado_circulacion: estadoCirculacion
+    estado_circulacion: estadoCirculacion,
+    _insight,
   };
 }

@@ -1,6 +1,6 @@
 /** Proporción de café y agua según método */
 export interface Inputs { tazas: number; metodo?: string; }
-export interface Outputs { gramosCafe: number; mlAgua: number; temperaturaAgua: string; tiempoExtraccion: string; detalle: string; }
+export interface Outputs { gramosCafe: number; mlAgua: number; temperaturaAgua: string; tiempoExtraccion: string; detalle: string; _insight?: any; }
 
 export function proporcionCafe(i: Inputs): Outputs {
   const tazas = Number(i.tazas);
@@ -28,11 +28,20 @@ export function proporcionCafe(i: Inputs): Outputs {
     extra = ' El resultado es concentrado; diluir 1:1 con agua o leche al servir.';
   }
 
+  const ratioN = Math.round(1 / m.ratio);
+  const _insight = {
+    title: `Ratio para ${m.nombre}`,
+    text: `Para **${tazas} taza${tazas > 1 ? 's' : ''}** usá **${fmt.format(cafeTotal)} g** de café y **${fmt.format(aguaTotal)} ml** de agua: un ratio de **1:${ratioN}** (1 g de café por cada ${ratioN} ml). Agua a **${m.temp}**, extracción de **${m.tiempo}**.${extra}`,
+    tone: 'neutral' as const,
+    icon: '☕',
+  };
+
   return {
     gramosCafe: cafeTotal,
     mlAgua: aguaTotal,
     temperaturaAgua: m.temp,
     tiempoExtraccion: m.tiempo,
     detalle: `${tazas} taza${tazas > 1 ? 's' : ''} de café ${m.nombre}: ${fmt.format(cafeTotal)} g de café + ${fmt.format(aguaTotal)} ml de agua a ${m.temp}. Tiempo: ${m.tiempo}.${extra}`,
+    _insight,
   };
 }

@@ -13,6 +13,8 @@ export interface Outputs {
   variance: number;
   std_dev: number;
   summary: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 /** Parsea el string de entrada y devuelve un array de números válidos. */
@@ -102,7 +104,30 @@ export function compute(i: Inputs): Outputs {
     `Moda: ${modeStr} | Rango=${round(range, 4)} | ` +
     `s=${round(std_dev, 4)} | s²=${round(variance, 4)}`;
 
-  return {
+  // --- Insight: relación media/mediana (sesgo) + dispersión ---
+  const fmt = (v: number) => round(v, 2).toLocaleString("es-AR");
+  const diff = mean - median;
+  const skewTxt = Math.abs(diff) < 1e-9
+    ? `la **media (${fmt(mean)})** y la **mediana (${fmt(median)})** coinciden, así que los datos están repartidos de forma simétrica`
+    : diff > 0
+      ? `la **media (${fmt(mean)})** queda por encima de la **mediana (${fmt(median)})**: hay valores altos que la estiran hacia arriba (sesgo a la derecha)`
+      : `la **media (${fmt(mean)})** queda por debajo de la **mediana (${fmt(median)})**: hay valores bajos que la tiran hacia abajo (sesgo a la izquierda)`;
+  let insTone = "neutral";
+  let dispTxt = "";
+  if (n > 1 && mean !== 0) {
+    const cv = (std_dev / Math.abs(mean)) * 100;
+    if (cv > 30) { insTone = "warn"; dispTxt = ` La dispersión es alta (desvío de **${fmt(std_dev)}** sobre la media), los datos están bastante esparcidos.`; }
+    else if (cv < 10) { insTone = "good"; dispTxt = ` La dispersión es baja (desvío de **${fmt(std_dev)}**), los datos están muy concentrados cerca del promedio.`; }
+    else { dispTxt = ` El desvío estándar es de **${fmt(std_dev)}** alrededor de la media.`; }
+  }
+  const _insight = {
+    title: "Qué dicen estos números",
+    text: `Sobre ${n} datos, ${skewTxt}.${dispTxt}`,
+    tone: insTone,
+    icon: "📊",
+  };
+
+  const out: Outputs = {
     count: n,
     mean,
     median,
@@ -113,5 +138,26 @@ export function compute(i: Inputs): Outputs {
     variance,
     std_dev,
     summary,
+    _insight,
   };
+
+  // --- Gauge: dónde cae la media dentro del rango [mín, máx] ---
+  if (range > 0) {
+    const t1 = minVal + range / 3;
+    const t2 = minVal + (2 * range) / 3;
+    out._chart = {
+      type: "scale",
+      marker: round(mean, 4),
+      markerLabel: `Media ${fmt(mean)}`,
+      min: round(minVal, 4),
+      segments: [
+        { nombre: "Tercio bajo", max: round(t1, 4), color: "#3b82f6", colorDark: "#60a5fa" },
+        { nombre: "Tercio medio", max: round(t2, 4), color: "#22c55e", colorDark: "#4ade80" },
+        { nombre: "Tercio alto", max: round(maxVal, 4), color: "#f97316", colorDark: "#fb923c" },
+      ],
+      ariaLabel: `La media ${fmt(mean)} dentro del rango ${fmt(minVal)} a ${fmt(maxVal)}.`,
+    };
+  }
+
+  return out;
 }

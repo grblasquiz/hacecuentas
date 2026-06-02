@@ -12,6 +12,7 @@ export interface Outputs {
   evaluacionCardio: string;
   semaforoRetorno: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function retornoFutbolPostCovid(i: Inputs): Outputs {
@@ -60,11 +61,31 @@ export function retornoFutbolPostCovid(i: Inputs): Outputs {
     ? 'Evaluación recomendada: ECG 12 derivaciones, troponinas, ergometría. En casos moderados/graves sumar RMN cardíaca.'
     : 'Evaluación cardio no indicada de rutina si asintomático. Consultá igual ante dudas.';
 
+  const luz = semaforo.startsWith('ROJO') ? 'rojo' : semaforo.startsWith('VERDE') ? 'verde' : 'amarillo';
+  const insightTone = luz === 'verde' ? 'good' : luz === 'rojo' ? 'warn' : 'neutral';
+  const insightIcon = luz === 'verde' ? '🟢' : luz === 'rojo' ? '🔴' : '🟡';
+  let insightText = '';
+  if (luz === 'rojo') {
+    insightText = `**Semáforo ROJO**: no retornes todavía. ${sintCardio === 'si' ? 'Tenés síntomas cardiovasculares activos y necesitás evaluación cardiológica urgente' : 'La miocarditis exige alta cardiológica, RMN y ergometría normales'} antes de pisar la cancha.`;
+  } else if (luz === 'verde') {
+    insightText = `**Semáforo VERDE**: ya cumpliste el mínimo de **${minSem}-${maxSem} semanas** y seguís asintomático. Arrancá por la Etapa 1 y subí de nivel solo si no aparecen síntomas; nunca te saltees etapas.`;
+  } else {
+    insightText = faltanSem > 0
+      ? `**Semáforo AMARILLO**: te faltan ~**${faltanSem} semanas** para completar el reposo mínimo de tu severidad (${sev}). Esperá antes de empezar el retorno gradual.`
+      : `**Semáforo AMARILLO**: cumpliste el reposo, pero por tu cuadro (${sev}${edad > 35 ? ', edad > 35' : ''}) conviene una evaluación cardiológica (ECG, troponinas) antes de competir.`;
+  }
+
   return {
     semanasReposo: `${minSem}-${maxSem} semanas desde el test positivo (mínimo antes de empezar Etapa 2).`,
     etapasRetorno: etapas,
     evaluacionCardio: evalCardio,
     semaforoRetorno: semaforo,
-    mensaje: `${minSem}-${maxSem} semanas de reposo`
+    mensaje: `${minSem}-${maxSem} semanas de reposo`,
+    _insight: {
+      title: 'Tu semáforo de retorno',
+      text: insightText,
+      tone: insightTone,
+      icon: insightIcon
+    }
   };
 }

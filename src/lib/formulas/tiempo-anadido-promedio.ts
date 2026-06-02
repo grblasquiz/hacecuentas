@@ -12,6 +12,8 @@ export interface Outputs {
   tiempoTotalPartido: string;
   referenciaHistorica: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tiempoAnadidoPromedio(i: Inputs): Outputs {
@@ -44,12 +46,31 @@ export function tiempoAnadidoPromedio(i: Inputs): Outputs {
   const t2Est = Math.max(p.t2, Math.round((p.t2 * 0.7 + minExtra * 0.7) * 10) / 10);
 
   const total = 90 + t1Est + t2Est;
+  const totalAnadido = Math.round((t1Est + t2Est) * 10) / 10;
+  const totalFmt = Math.round(total * 10) / 10;
 
   return {
     tiempoAnadidoEstimadoT1: `${t1Est} minutos aprox en el primer tiempo.`,
     tiempoAnadidoEstimadoT2: `${t2Est} minutos aprox en el segundo tiempo.`,
-    tiempoTotalPartido: `${Math.round(total * 10) / 10} minutos de duración total estimada (sin prórroga).`,
+    tiempoTotalPartido: `${totalFmt} minutos de duración total estimada (sin prórroga).`,
     referenciaHistorica: p.base,
-    mensaje: `+${Math.round((t1Est + t2Est) * 10) / 10}' añadidos`
+    mensaje: `+${totalAnadido}' añadidos`,
+    _insight: {
+      title: 'Cuánto se juega de verdad',
+      text: `Con estos incidentes, el árbitro sumaría unos **+${totalAnadido}' de descuento** entre ambos tiempos, llevando el partido a **${totalFmt} minutos** reales de juego (sin prórroga).`,
+      tone: 'neutral',
+      icon: '⏱️'
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Tiempo reglamentario', value: 90 },
+        { label: 'Añadido 1er tiempo', value: t1Est },
+        { label: 'Añadido 2do tiempo', value: t2Est }
+      ],
+      centerValue: `${totalFmt}'`,
+      centerLabel: 'duración total',
+      ariaLabel: `Duración total ${totalFmt} minutos: 90 reglamentarios más ${t1Est} de añadido en el primer tiempo y ${t2Est} en el segundo.`
+    }
   };
 }

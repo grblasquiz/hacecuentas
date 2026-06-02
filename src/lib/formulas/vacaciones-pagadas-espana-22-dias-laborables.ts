@@ -16,6 +16,8 @@ export interface Outputs {
   valor_vacaciones_devengadas_bruto: number;
   valor_pendiente_bruto: number;
   nota_legal: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -130,6 +132,49 @@ export function compute(i: Inputs): Outputs {
       ' € brutos) solo puede abonarse en la liquidación final del contrato, nunca durante su vigencia (art. 38.3 ET).';
   }
 
+  // --- Caja de insight ---
+  const fmtDias = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 1 });
+  const fmtEur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  let _insight: any;
+  if (mesesComputables === 0) {
+    _insight = {
+      title: 'Sin días devengados',
+      text: 'Con **0 meses computables** todavía no devengaste ningún día de vacaciones. Una fracción de mes solo suma si llegás a **16 días o más** trabajados.',
+      tone: 'neutral',
+      icon: '🏖️',
+    };
+  } else if (diasPendientes <= 0) {
+    _insight = {
+      title: 'Vacaciones al día',
+      text: 'Devengaste **' + fmtDias(diasDevengadosLaborables) + ' días laborables** y ya disfrutaste todos. No te queda saldo pendiente de compensar.',
+      tone: 'good',
+      icon: '✅',
+    };
+  } else {
+    _insight = {
+      title: 'Tenés días pendientes',
+      text: 'Devengaste **' + fmtDias(diasDevengadosLaborables) + ' días laborables** y te quedan **' + fmtDias(diasPendientes) + ' por disfrutar** (≈ **' + fmtEur(valorPendienteBruto) + ' brutos**). Ojo: esa compensación en dinero solo se cobra en la liquidación final del contrato, no durante su vigencia (art. 38.3 ET).',
+      tone: 'warn',
+      icon: '⏳',
+    };
+  }
+
+  // --- Gráfico: reparto disfrutados vs pendientes (solo si suman lo devengado) ---
+  let _chart: any;
+  if (diasDevengadosLaborables > 0 && diasDisfrutados <= diasDevengadosLaborables) {
+    const disfrutadosSlice = parseFloat((diasDevengadosLaborables - diasPendientes).toFixed(1));
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Disfrutados', value: disfrutadosSlice },
+        { label: 'Pendientes', value: diasPendientes },
+      ],
+      centerValue: fmtDias(diasDevengadosLaborables),
+      centerLabel: 'días devengados',
+      ariaLabel: 'Reparto de los ' + fmtDias(diasDevengadosLaborables) + ' días laborables devengados: ' + fmtDias(disfrutadosSlice) + ' disfrutados y ' + fmtDias(diasPendientes) + ' pendientes.',
+    };
+  }
+
   return {
     meses_computables: mesesComputables,
     dias_devengados_laborables: diasDevengadosLaborables,
@@ -139,5 +184,7 @@ export function compute(i: Inputs): Outputs {
     valor_vacaciones_devengadas_bruto: valorVacacionesDevengadasBruto,
     valor_pendiente_bruto: valorPendienteBruto,
     nota_legal: notaLegal,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

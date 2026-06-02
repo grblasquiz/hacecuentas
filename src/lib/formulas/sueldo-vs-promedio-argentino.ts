@@ -47,6 +47,8 @@ export interface SueldoVsPromedioOutputs {
   equivalenteHistorico: string;
   posicionamiento: string;
   fuenteFecha: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function sueldoVsPromedioArgentino(
@@ -93,6 +95,34 @@ export function sueldoVsPromedioArgentino(
     posicionamiento = `Tu sueldo está bastante por debajo del promedio (-${Math.abs(vsPromedioPct).toFixed(0)}%)`;
   }
 
+  // Tono dinámico según posición vs promedio
+  const tone = vsPromedioPct >= 5 ? 'good' : vsPromedioPct >= -5 ? 'neutral' : 'warn';
+  const arriba = diferenciaArs >= 0;
+  const insight = {
+    title: 'Tu lugar en la pirámide salarial',
+    text: `Tu bruto está **${Math.abs(Math.round(vsPromedioPct))}% ${arriba ? 'por encima' : 'por debajo'}** del promedio argentino (RIPTE $${Math.round(RIPTE_NOMINAL).toLocaleString('es-AR')}): ${arriba ? 'ganás' : 'te faltan'} **$${Math.abs(Math.round(diferenciaArs)).toLocaleString('es-AR')}** ${arriba ? 'más' : 'para llegar al promedio'}. En dólar blue equivale a **US$${Math.round(tuUsdBlue).toLocaleString('es-AR')}** por mes.`,
+    tone,
+    icon: arriba ? '📈' : '📉',
+  };
+
+  // Gauge: posición relativa al promedio (100% = exactamente el promedio)
+  const pctDelProm = (sueldoBruto / RIPTE_NOMINAL) * 100;
+  const markerPos = Math.round(pctDelProm);
+  const topMax = Math.max(220, markerPos + 20);
+  const chart = {
+    type: 'scale' as const,
+    marker: markerPos,
+    markerLabel: 'Tu sueldo',
+    min: 0,
+    segments: [
+      { nombre: 'Por debajo', max: 70, color: '#ef4444', colorDark: '#dc2626' },
+      { nombre: 'En torno al promedio', max: 130, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Por encima', max: 200, color: '#10b981', colorDark: '#059669' },
+      { nombre: 'Muy por encima', max: topMax, color: '#059669', colorDark: '#047857' },
+    ],
+    ariaLabel: `Tu sueldo es el ${markerPos}% del promedio argentino (100% = promedio).`,
+  };
+
   return {
     vsPromedioPct: Math.round(vsPromedioPct * 10) / 10,
     tuUsdBlue: Math.round(tuUsdBlue),
@@ -100,5 +130,7 @@ export function sueldoVsPromedioArgentino(
     equivalenteHistorico,
     posicionamiento,
     fuenteFecha: `RIPTE ${RIPTE_BASE_MONTH} · ARS ${Math.round(RIPTE_NOMINAL).toLocaleString('es-AR')} · USD blue ${Math.round(RIPTE_USD_BLUE)}`,
+    _insight: insight,
+    _chart: chart,
   };
 }

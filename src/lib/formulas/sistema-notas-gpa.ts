@@ -10,6 +10,8 @@ export interface Outputs {
   notaArgentina: number;
   equivalencia: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function sistemaNotasGpa(i: Inputs): Outputs {
@@ -94,6 +96,28 @@ export function sistemaNotasGpa(i: Inputs): Outputs {
   else if (nota100 >= 40) equivalencia = 'Desaprobado (en Argentina: menos de 4)';
   else equivalencia = 'Insuficiente';
 
+  const _insight = {
+    title: `Equivale a ${gpa4.toFixed(1)} GPA (${letraUS})`,
+    text: `Tu nota equivale a un **GPA de ${gpa4.toFixed(1)} / 4.0** (letra **${letraUS}**), o **${nota100.toFixed(0)}/100** y **${notaArgentina.toFixed(1)}/10** en Argentina. ${nota100 >= 80 ? 'Está en rango sobresaliente para admisiones internacionales.' : nota100 >= 60 ? 'Es una nota aprobatoria; para becas competitivas suelen pedir 3.0+ (≈80/100).' : 'Está por debajo del umbral de aprobación en la mayoría de los sistemas.'}`,
+    tone: nota100 >= 80 ? 'good' : (nota100 >= 60 ? 'neutral' : 'warn'),
+    icon: '🎓',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: Number(nota100.toFixed(1)),
+    markerLabel: `${nota100.toFixed(0)}/100 (${letraUS})`,
+    min: 0,
+    segments: [
+      { nombre: 'F', max: 60, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'D', max: 70, color: '#ea580c', colorDark: '#f97316' },
+      { nombre: 'C', max: 80, color: '#ca8a04', colorDark: '#eab308' },
+      { nombre: 'B', max: 90, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'A', max: 100.01, color: '#16a34a', colorDark: '#22c55e' },
+    ],
+    ariaLabel: `Nota de ${nota100.toFixed(0)} sobre 100 ubicada en la escala de letras estadounidense, de F (reprobado) a A (sobresaliente).`,
+  };
+
   return {
     gpa4,
     gpa100: Number(nota100.toFixed(1)),
@@ -101,5 +125,7 @@ export function sistemaNotasGpa(i: Inputs): Outputs {
     notaArgentina: Number(notaArgentina.toFixed(1)),
     equivalencia,
     mensaje: `GPA 4.0: ${gpa4} (${letraUS}). Escala 100: ${nota100.toFixed(1)}. Argentina (1-10): ${notaArgentina.toFixed(1)}. ${equivalencia}.`,
+    _insight,
+    _chart,
   };
 }

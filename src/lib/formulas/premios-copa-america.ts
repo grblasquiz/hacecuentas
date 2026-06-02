@@ -12,6 +12,8 @@ export interface Outputs {
   premioPlantel: number;
   porJugadorUsd: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Copa América 2024 — USD
@@ -33,6 +35,36 @@ export function premiosCopaAmerica(i: Inputs): Outputs {
   const premioPlantel = fila.usd - premioCt;
   const porJugador = premioPlantel / convocados;
 
+  const fmtUsd = (n: number) => 'USD ' + Math.round(n).toLocaleString('en-US');
+  const tonoCA: 'good' | 'warn' | 'neutral' =
+    i.posicion === 'campeon' ? 'good' : i.posicion === 'grupos' ? 'warn' : 'neutral';
+  let textoCA: string;
+  if (i.posicion === 'campeon') {
+    textoCA = `Salir campeón reparte **${fmtUsd(fila.usd)}** a la selección. Tras el ${Math.round(porcCt * 100)}% del cuerpo técnico, cada uno de los ${convocados} jugadores se lleva **${fmtUsd(porJugador)}**.`;
+  } else if (i.posicion === 'grupos') {
+    textoCA = `Eliminada en grupos, la bolsa es **${fmtUsd(fila.usd)}** — el piso del torneo. Por jugador (${convocados}, CT ${Math.round(porcCt * 100)}%) quedan **${fmtUsd(porJugador)}**.`;
+  } else {
+    textoCA = `Como ${fila.label.toLowerCase()} la selección embolsa **${fmtUsd(fila.usd)}**. Cada uno de los ${convocados} jugadores recibe **${fmtUsd(porJugador)}** tras el ${Math.round(porcCt * 100)}% del CT.`;
+  }
+  const _insight = {
+    title: 'Cómo se reparte',
+    text: textoCA,
+    tone: tonoCA,
+    icon: '🏆',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Para el plantel', value: Math.round(premioPlantel) },
+      { label: 'Cuerpo técnico', value: Math.round(premioCt) },
+    ],
+    prefix: 'USD ',
+    centerValue: fmtUsd(fila.usd),
+    centerLabel: 'Premio total',
+    ariaLabel: 'Reparto del premio entre plantel y cuerpo técnico',
+  };
+
   return {
     premioSeleccionUsd: fila.usd,
     posicionLabel: fila.label,
@@ -40,5 +72,7 @@ export function premiosCopaAmerica(i: Inputs): Outputs {
     premioPlantel: Math.round(premioPlantel),
     porJugadorUsd: Math.round(porJugador),
     mensaje: `${fila.label}: USD ${fila.usd.toLocaleString('en-US')} a la selección. Por jugador (${convocados} convocados, CT ${Math.round(porcCt*100)}%): USD ${Math.round(porJugador).toLocaleString('en-US')}.`,
+    _insight,
+    _chart,
   };
 }

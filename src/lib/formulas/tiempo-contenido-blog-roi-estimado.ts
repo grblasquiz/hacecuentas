@@ -15,6 +15,8 @@ export interface Outputs {
   inversionTotal: number;
   valorTraficoTotal: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tiempoContenidoBlogRoiEstimado(i: Inputs): Outputs {
@@ -65,10 +67,39 @@ export function tiempoContenidoBlogRoiEstimado(i: Inputs): Outputs {
     `CPL orgánico: $${fmt.format(costoPorLead)}. ` +
     `ROI: ${roiContent.toFixed(0)}%. ${evaluacion}`;
 
-  return {
+  const gananciaNeta = valorTotal - inversionTotal;
+  const tone = roiContent > 100 ? 'good' : roiContent > 0 ? 'neutral' : 'warn';
+  const insightText =
+    roiContent > 0
+      ? `Por cada $1 invertido en contenido recuperás **$${(1 + roiContent / 100).toFixed(2)}**: las ${fmt.format(conversionesMensuales * meses)} conversiones en ${meses} meses dejan **$${fmt.format(gananciaNeta)}** netos sobre $${fmt.format(inversionTotal)} de inversión.`
+      : `Con esta tasa de conversión el contenido pierde **$${fmt.format(Math.abs(gananciaNeta))}**: necesitás más tráfico, mejor conversión o más meses para que la inversión de $${fmt.format(inversionTotal)} se pague.`;
+
+  const out: Outputs = {
     roiContent: Number(roiContent.toFixed(1)),
     inversionTotal: Math.round(inversionTotal),
     valorTraficoTotal: Math.round(valorTraficoTotal),
     detalle,
+    _insight: {
+      title: 'Rentabilidad del contenido',
+      text: insightText,
+      tone,
+      icon: '📈',
+    },
   };
+
+  if (roiContent > 0 && valorTotal > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Inversión recuperada', value: Math.round(inversionTotal) },
+        { label: 'Ganancia neta', value: Math.round(gananciaNeta) },
+      ],
+      prefix: '$',
+      centerValue: `$${fmt.format(valorTotal)}`,
+      centerLabel: `Ingreso en ${meses} meses`,
+      ariaLabel: `Ingreso total de ${fmt.format(valorTotal)} pesos compuesto por ${fmt.format(inversionTotal)} de inversión recuperada y ${fmt.format(gananciaNeta)} de ganancia neta.`,
+    };
+  }
+
+  return out;
 }

@@ -11,6 +11,8 @@ export interface Outputs {
   get_kcal: number;
   activity_factor_label: string;
   interpretation: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Factores PAL según FAO/OMS/UNU (2004) y Mifflin-St Jeor (1990)
@@ -79,10 +81,34 @@ export function compute(i: Inputs): Outputs {
     interpretation = `Tu GET es elevado (${get.toFixed(0)} kcal/día), propio de alta actividad física. Prioriza una ingesta adecuada de proteínas e hidratos.`;
   }
 
+  const activityKcal = get - tmb;
+  const tmbShare = (tmb / get) * 100;
+
+  const _insight = {
+    title: "Qué significa tu GET",
+    text: `Tu metabolismo basal quema **${Math.round(tmb)} kcal/día** solo por estar vivo, y con tu actividad tu gasto total llega a **${Math.round(get)} kcal/día**. Para mantener tu peso comé alrededor de ese valor; restá ~500 kcal para bajar o sumá ~300 para ganar masa.`,
+    tone: "neutral",
+    icon: "🔥",
+  };
+
+  const _chart = {
+    type: "doughnut" as const,
+    slices: [
+      { label: "Metabolismo basal (TMB)", value: Math.round(tmb) },
+      { label: "Gasto por actividad", value: Math.round(activityKcal) },
+    ],
+    prefix: "",
+    centerValue: Math.round(get).toLocaleString("es-AR") + " kcal",
+    centerLabel: "GET diario",
+    ariaLabel: `Composición de tu gasto energético total diario de ${Math.round(get)} kcal: ${Math.round(tmb)} kcal del metabolismo basal (${tmbShare.toFixed(0)}%) más ${Math.round(activityKcal)} kcal por actividad física.`,
+  };
+
   return {
     tmb_kcal: Math.round(tmb * 100) / 100,
     get_kcal: Math.round(get * 100) / 100,
     activity_factor_label: activityData.label,
     interpretation,
+    _insight,
+    _chart,
   };
 }

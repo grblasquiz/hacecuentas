@@ -1,6 +1,6 @@
 /** Mejor Hora Publicar TikTok */
 export interface Inputs { audiencia: string; dia: string; }
-export interface Outputs { mejorHora: string; alternativas: string; razon: string; evitar: string; }
+export interface Outputs { mejorHora: string; alternativas: string; razon: string; evitar: string; _insight?: any; }
 
 export function tiktokMejorHoraPublicar(i: Inputs): Outputs {
   const aud = String(i.audiencia);
@@ -21,10 +21,17 @@ export function tiktokMejorHoraPublicar(i: Inputs): Outputs {
   else if (aud.startsWith('Padres')) ajuste = 'Padres: subir antes de las 8 AM o después de las 21 hs';
   else if (aud.startsWith('Profesional')) ajuste = 'Profesionales: commute (7-9), lunch (12-14) y after-work (18-22)';
   else ajuste = 'Audiencia mixta: horarios estándar';
+  const _insight = {
+    title: `Mejor ventana del ${dia.toLowerCase()}`,
+    text: `Para tu audiencia, publicá el **${dia.toLowerCase()}** en la franja **${best} local**; si no te sirve, la alternativa es ${alt}. ${ajuste}. Subí el video 15-30 min antes para que TikTok lo distribuya justo en el pico.`,
+    tone: 'neutral' as const,
+    icon: '⏰',
+  };
   return {
     mejorHora: best + ' local',
     alternativas: alt + ' local',
     razon: ajuste,
     evitar: 'Evitá publicar entre 2 AM y 5 AM: test pool vacío debilita la señal inicial',
+    _insight,
   };
 }

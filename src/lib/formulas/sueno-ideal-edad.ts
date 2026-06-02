@@ -1,5 +1,5 @@
 export interface Inputs { edad: number; }
-export interface Outputs { horasRecomendadas: string; rangoMinMax: string; etapa: string; mensaje: string; }
+export interface Outputs { horasRecomendadas: string; rangoMinMax: string; etapa: string; mensaje: string; _insight?: any; }
 const RANGOS:{max:number;etapa:string;rec:string;rango:string;tip:string}[] = [
   {max:0.25,etapa:'Recién nacido (0-3 meses)',rec:'14-17 horas',rango:'11-19 horas',tip:'Los recién nacidos duermen la mayor parte del día en ciclos de 2-4 horas.'},
   {max:1,etapa:'Bebé (4-11 meses)',rec:'12-15 horas',rango:'10-18 horas',tip:'Incluye siestas. A los 6 meses suelen dormir 6-8 horas seguidas de noche.'},
@@ -15,5 +15,11 @@ export function suenoIdealEdad(i: Inputs): Outputs {
   const edad = Number(i.edad);
   if (isNaN(edad) || edad < 0) throw new Error('Ingresá una edad válida');
   const r = RANGOS.find(r => edad <= r.max) || RANGOS[RANGOS.length-1];
-  return { horasRecomendadas: r.rec, rangoMinMax: r.rango, etapa: r.etapa, mensaje: r.tip };
+  const insight = {
+    title: 'Tu objetivo de sueño',
+    text: `Para la etapa **${r.etapa}** lo recomendado son **${r.rec}** por día (rango saludable: ${r.rango}). ${r.tip}`,
+    tone: 'neutral' as const,
+    icon: '😴',
+  };
+  return { horasRecomendadas: r.rec, rangoMinMax: r.rango, etapa: r.etapa, mensaje: r.tip, _insight: insight };
 }

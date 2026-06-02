@@ -17,6 +17,8 @@ export interface Outputs {
   sumaTotal: number;
   ratioTotal: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const STANDARDS: Record<string, Record<string, { sq: number; dl: number }>> = {
@@ -81,6 +83,35 @@ export function squatDeadliftRelativo(i: Inputs): Outputs {
     puntoDebil = `Balance correcto: deadlift ${Math.round((ratioDeadliftVsSquat - 1) * 100)}% mayor que squat, dentro del rango óptimo (15-25%).`;
   }
 
+  const balanceOk = ratioDeadliftVsSquat >= 1.05 && ratioDeadliftVsSquat <= 1.35;
+  const insight = {
+    title: balanceOk ? 'Tren inferior equilibrado' : 'Hay un desbalance para corregir',
+    text: balanceOk
+      ? `Movés **${ratioTotal.toFixed(2)}x tu peso corporal** entre sentadilla (${catSq}) y peso muerto (${catDl}), con un balance posterior/cuádriceps dentro del rango óptimo. Seguí progresando ambos en paralelo.`
+      : ratioDeadliftVsSquat < 1.05
+        ? `Tu peso muerto (${dl} kg) apenas supera a la sentadilla (${sq} kg): la cadena posterior es tu **punto débil**. Priorizá RDL, hip thrust y good morning para destrabar el total de **${ratioTotal.toFixed(2)}x** tu peso.`
+        : `Tu peso muerto saca **${Math.round((ratioDeadliftVsSquat - 1) * 100)}%** a la sentadilla: los **cuádriceps quedaron atrás**. Sumá front squat y prensa para emparejar el total de **${ratioTotal.toFixed(2)}x** tu peso.`,
+    tone: balanceOk ? 'good' as const : 'warn' as const,
+    icon: '🏋️',
+  };
+
+  const sumStd = Object.entries(stds).map(([k, v]) => [k, v.sq + v.dl] as [string, number]);
+  const eliteSum = sumStd[sumStd.length - 1][1];
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(ratioTotal.toFixed(2)),
+    markerLabel: `${ratioTotal.toFixed(2)}x`,
+    min: 0,
+    segments: [
+      { nombre: 'Principiante', max: sumStd[1][1], color: '#f87171', colorDark: '#dc2626' },
+      { nombre: 'Novato', max: sumStd[2][1], color: '#fbbf24', colorDark: '#d97706' },
+      { nombre: 'Intermedio', max: sumStd[3][1], color: '#a3e635', colorDark: '#65a30d' },
+      { nombre: 'Avanzado', max: sumStd[4][1], color: '#34d399', colorDark: '#059669' },
+      { nombre: 'Elite', max: Math.max(eliteSum, Number(ratioTotal.toFixed(2)) + 0.5), color: '#22d3ee', colorDark: '#0891b2' },
+    ],
+    ariaLabel: 'Escala de fuerza relativa total (sentadilla más peso muerto sobre el peso corporal) por nivel',
+  };
+
   return {
     ratioSquat: Number(rSq.toFixed(2)),
     ratioDeadlift: Number(rDl.toFixed(2)),
@@ -92,5 +123,7 @@ export function squatDeadliftRelativo(i: Inputs): Outputs {
     sumaTotal: Math.round(suma),
     ratioTotal: Number(ratioTotal.toFixed(2)),
     resumen: `Sentadilla **${rSq.toFixed(2)}x** (${catSq}), peso muerto **${rDl.toFixed(2)}x** (${catDl}). Total relativo: ${ratioTotal.toFixed(2)}x tu peso corporal.`,
+    _insight: insight,
+    _chart: chart,
   };
 }

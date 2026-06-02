@@ -11,6 +11,7 @@ export interface Outputs {
   tallaUK: string;
   tallaAR: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function tallaRopaInternacional(i: Inputs): Outputs {
@@ -42,11 +43,19 @@ export function tallaRopaInternacional(i: Inputs): Outputs {
   const normalizada = talla.toUpperCase();
   const resultado = tabla[normalizada] || tabla['M'];
 
+  const sexoTxt = sexo === 'f' ? 'mujer' : 'hombre';
+  const _insight = {
+    title: 'Equivalencia de talla',
+    text: `Tu talla **${normalizada}** (${sexoTxt}) equivale a **EU ${resultado.EU}** y **US ${resultado.US}**. Las tallas EU suelen venir más ajustadas que las AR, así que ante la duda elegí la mayor.`,
+    tone: 'neutral',
+    icon: '👕',
+  };
   return {
     tallaUS: resultado.US,
     tallaEU: resultado.EU,
     tallaUK: resultado.UK,
     tallaAR: resultado.AR,
     mensaje: `Talla ${normalizada}: US ${resultado.US} | EU ${resultado.EU} | UK ${resultado.UK} | AR ${resultado.AR}.`,
+    _insight,
   };
 }

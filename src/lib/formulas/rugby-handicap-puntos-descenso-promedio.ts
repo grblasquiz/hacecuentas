@@ -17,6 +17,8 @@ export function rugbyHandicapPuntosDescensoPromedio(i: Inputs): Outputs {
       segSave: 'Salvación',
       segGold: 'Copa de Oro',
       aria: 'Escala de promedio de puntos por partido: descenso, riesgo, salvación, Copa de Oro',
+      insTitleGood: 'Posición sólida',
+      insTitleWarn: 'Atención al descenso',
     },
     en: {
       clasGold: 'Qualifies Gold Cup',
@@ -32,6 +34,8 @@ export function rugbyHandicapPuntosDescensoPromedio(i: Inputs): Outputs {
       segSave: 'Safety',
       segGold: 'Gold Cup',
       aria: 'Points-per-game scale: relegation, risk, safety, Gold Cup',
+      insTitleGood: 'Solid position',
+      insTitleWarn: 'Relegation watch',
     },
     pt: {
       clasGold: 'Classifica Copa de Ouro',
@@ -47,6 +51,8 @@ export function rugbyHandicapPuntosDescensoPromedio(i: Inputs): Outputs {
       segSave: 'Salvação',
       segGold: 'Copa de Ouro',
       aria: 'Escala de média de pontos por partida: rebaixamento, risco, salvação, Copa de Ouro',
+      insTitleGood: 'Posição sólida',
+      insTitleWarn: 'Atenção ao rebaixamento',
     },
   } as const)[__lang];
   const p=Number(i.puntosGanados)||0; const pj=Number(i.partidosJugados)||1;
@@ -70,5 +76,18 @@ export function rugbyHandicapPuntosDescensoPromedio(i: Inputs): Outputs {
     ],
     ariaLabel: T.aria,
   };
-  return { promedio:`${prom.toFixed(2)}`, clasificacion:clas, riesgoDescenso:riesgo, _chart: chart };
+  const promF = prom.toFixed(2);
+  const safe = prom >= 2.2;
+  const insText = __lang === 'en'
+    ? `Averaging **${promF} pts/game** (${p} pts in ${pj} games) puts you in **${clas.toLowerCase()}**, relegation risk **${riesgo.toLowerCase()}**.${safe ? '' : ` You need ~2.2 pts/game to climb out of the danger zone.`}`
+    : __lang === 'pt'
+    ? `Com média de **${promF} pts/jogo** (${p} pts em ${pj} jogos) você está em **${clas.toLowerCase()}**, risco de rebaixamento **${riesgo.toLowerCase()}**.${safe ? '' : ` Precisa de ~2,2 pts/jogo para sair da zona de perigo.`}`
+    : `Con un promedio de **${promF} pts/partido** (${p} pts en ${pj} partidos) estás en **${clas.toLowerCase()}**, riesgo de descenso **${riesgo.toLowerCase()}**.${safe ? '' : ` Necesitás ~2,2 pts/partido para salir de la zona de peligro.`}`;
+  const insight = {
+    title: safe ? T.insTitleGood : T.insTitleWarn,
+    text: insText,
+    tone: safe ? 'good' : 'warn',
+    icon: '🏉',
+  };
+  return { promedio:`${prom.toFixed(2)}`, clasificacion:clas, riesgoDescenso:riesgo, _insight: insight, _chart: chart };
 }

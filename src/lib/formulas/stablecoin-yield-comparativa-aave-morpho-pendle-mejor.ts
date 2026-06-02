@@ -18,6 +18,7 @@ export interface Outputs {
   nivelRiesgoLabel: string;
   liquidezLabel: string;
   nota: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -181,6 +182,36 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del interés bruto: interés neto más costo de gas',
   } : undefined;
 
+  // Insight dinámico (solo cuando hay yield computable)
+  const protocolNombre = protocol.charAt(0).toUpperCase() + protocol.slice(1);
+  const apyNetoPct = (apyNetoEfectivo * 100).toFixed(2);
+  const gasPct = interessBruto > 0 ? (gasTotal / interessBruto) * 100 : 0;
+  let insight: any = undefined;
+  if (apyBruto > 0) {
+    if (interesNeto < 0) {
+      insight = {
+        title: 'El gas se come el rendimiento',
+        text: `Depositar $${capital.toLocaleString('es-AR')} en ${protocolNombre} por ${dias} días genera **$${interessBruto.toFixed(2)}** de interés, pero el gas (**$${gasTotal.toFixed(2)}**) lo supera y dejás **$${interesNeto.toFixed(2)}** netos. Aumentá el capital/plazo o usá una L2.`,
+        tone: 'warn' as const,
+        icon: '⛽',
+      };
+    } else if (gasPct > 30) {
+      insight = {
+        title: 'El gas pesa demasiado',
+        text: `Ganás **$${interesNeto.toFixed(2)}** netos (**${apyNetoPct}% APY efectivo**), pero el gas se lleva el **${gasPct.toFixed(0)}%** del bruto. En una L2 (Arbitrum, Base) tu rendimiento neto subiría notablemente.`,
+        tone: 'warn' as const,
+        icon: '⛽',
+      };
+    } else {
+      insight = {
+        title: 'Rendimiento neto sólido',
+        text: `En ${protocolNombre} con $${capital.toLocaleString('es-AR')} a ${dias} días ganás **$${interesNeto.toFixed(2)}** netos, un **${apyNetoPct}% APY efectivo** tras gas y ajuste por riesgo. El gas apenas se lleva el ${gasPct.toFixed(0)}% del bruto.`,
+        tone: 'good' as const,
+        icon: '💵',
+      };
+    }
+  }
+
   return {
     apyBruto,
     apyAjustado,
@@ -191,6 +222,7 @@ export function compute(i: Inputs): Outputs {
     nivelRiesgoLabel,
     liquidezLabel,
     nota,
+    _insight: insight,
     _chart: chart,
   };
 }

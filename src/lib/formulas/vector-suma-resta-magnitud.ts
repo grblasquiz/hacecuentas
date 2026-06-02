@@ -12,6 +12,7 @@ export interface Outputs {
   magnitudA: number;
   magnitudB: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function vectorSumaRestaMagnitud(i: Inputs): Outputs {
@@ -50,6 +51,13 @@ export function vectorSumaRestaMagnitud(i: Inputs): Outputs {
   const vecA = is3D ? `(${x1}, ${y1}, ${z1})` : `(${x1}, ${y1})`;
   const vecB = is3D ? `(${x2}, ${y2}, ${z2})` : `(${x2}, ${y2})`;
 
+  const insight = {
+    title: 'Vector resultante',
+    text: `La operación **${opStr}** da el vector **${vecStr}**, con una magnitud de **${magR.toFixed(2)}**${is3D ? '' : ` y un ángulo de **${angulo.toFixed(1)}°**`} respecto al eje X. La magnitud es la "longitud" de ese vector resultante.`,
+    tone: 'neutral',
+    icon: '➗'
+  };
+
   return {
     result: Number(magR.toFixed(4)),
     vectorResultado: vecStr,
@@ -57,5 +65,6 @@ export function vectorSumaRestaMagnitud(i: Inputs): Outputs {
     magnitudA: Number(magA.toFixed(4)),
     magnitudB: Number(magB.toFixed(4)),
     detalle: `**A** = ${vecA} (|A| = ${magA.toFixed(4)})\n**B** = ${vecB} (|B| = ${magB.toFixed(4)})\n**${opStr}** = ${vecStr}\n**Magnitud resultado**: ${magR.toFixed(4)}\n**Ángulo**: ${angulo.toFixed(2)}°`,
+    _insight: insight,
   };
 }

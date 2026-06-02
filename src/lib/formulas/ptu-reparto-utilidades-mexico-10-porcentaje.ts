@@ -15,6 +15,8 @@ export interface Outputs {
   isr_retenido: number;
   ptu_neta: number;
   aportacion_fondo_ahorro: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -57,7 +59,22 @@ export function compute(i: Inputs): Outputs {
   // 8. Aportación Fondo Ahorro (opcional, 2% sobre PTU neta)
   const aportacionFondoAhorro = ptuNeta * TASA_FONDO_AHORRO;
 
-  return {
+  const fmtMx = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 });
+  const topeAplica = ptuBruta > tope3Meses;
+  const hayIsr = isrRetenido > 0;
+
+  const _insight = {
+    title: hayIsr ? 'Tu PTU neta tras el ISR' : 'Tu PTU queda libre de ISR',
+    text: topeAplica
+      ? `Tu PTU bruta sería **$${fmtMx.format(Math.round(ptuBruta))}**, pero el tope de 3 meses de salario la limita a **$${fmtMx.format(Math.round(ptuAplicable))}**. ${hayIsr ? `Tras retener $${fmtMx.format(Math.round(isrRetenido))} de ISR (exentos ${EXENCION_UMA_DIAS} UMA), cobrás **$${fmtMx.format(Math.round(ptuNeta))}**.` : `Como la exención de ${EXENCION_UMA_DIAS} UMA cubre todo, no te retienen ISR: cobrás **$${fmtMx.format(Math.round(ptuNeta))}** completos.`}`
+      : hayIsr
+      ? `De una PTU aplicable de **$${fmtMx.format(Math.round(ptuAplicable))}**, te retienen **$${fmtMx.format(Math.round(isrRetenido))}** de ISR (la exención de ${EXENCION_UMA_DIAS} UMA cubre $${fmtMx.format(Math.round(exencionUma15))}). En mano te quedan **$${fmtMx.format(Math.round(ptuNeta))}**.`
+      : `Tu PTU aplicable de **$${fmtMx.format(Math.round(ptuAplicable))}** queda **por debajo de la exención** de ${EXENCION_UMA_DIAS} UMA ($${fmtMx.format(Math.round(exencionUma15))}), así que no te retienen ISR y cobrás los **$${fmtMx.format(Math.round(ptuNeta))}** completos.`,
+    tone: hayIsr ? 'warn' : 'good',
+    icon: '💰',
+  };
+
+  const out: Outputs = {
     ptu_bruta: Math.round(ptuBruta * 100) / 100,
     tope_3_meses: Math.round(tope3Meses * 100) / 100,
     ptu_aplicable: Math.round(ptuAplicable * 100) / 100,
@@ -66,6 +83,24 @@ export function compute(i: Inputs): Outputs {
     base_gravable_isr: Math.round(baseGravableIsr * 100) / 100,
     isr_retenido: Math.round(isrRetenido * 100) / 100,
     ptu_neta: Math.round(ptuNeta * 100) / 100,
-    aportacion_fondo_ahorro: Math.round(aportacionFondoAhorro * 100) / 100
+    aportacion_fondo_ahorro: Math.round(aportacionFondoAhorro * 100) / 100,
+    _insight,
   };
+
+  // Donut: PTU neta + ISR retenido = PTU aplicable. Sólo si hay ISR (si no, sería una sola slice).
+  if (hayIsr) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'PTU neta (en mano)', value: Math.round(ptuNeta * 100) / 100 },
+        { label: 'ISR retenido', value: Math.round(isrRetenido * 100) / 100 },
+      ],
+      prefix: '$',
+      centerValue: `$${fmtMx.format(Math.round(ptuAplicable))}`,
+      centerLabel: 'PTU aplicable',
+      ariaLabel: `PTU aplicable de $${fmtMx.format(Math.round(ptuAplicable))}: $${fmtMx.format(Math.round(ptuNeta))} netos y $${fmtMx.format(Math.round(isrRetenido))} de ISR retenido`,
+    };
+  }
+
+  return out;
 }

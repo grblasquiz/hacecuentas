@@ -1,6 +1,6 @@
 /** Sparge water volume */
 export interface Inputs { kgGrano: number; ratioMashLkg: number; volumenPrehervor: number; deadSpace?: number; }
-export interface Outputs { aguaMash: number; aguaSparge: number; aguaTotal: number; absorcion: number; _chart?: any; }
+export interface Outputs { aguaMash: number; aguaSparge: number; aguaTotal: number; absorcion: number; _chart?: any; _insight?: any; }
 
 export function spargeWaterVolumen(i: Inputs): Outputs {
   const kg = Number(i.kgGrano);
@@ -29,11 +29,29 @@ export function spargeWaterVolumen(i: Inputs): Outputs {
     ariaLabel: 'Composición del agua total: agua de macerado más agua de sparge',
   };
 
+  const mashR = Number(aguaMash.toFixed(1));
+  const spargeR = Number(aguaSparge.toFixed(1));
+  const totalR = Number(aguaTotal.toFixed(1));
+  const _insight = spargeR <= 0
+    ? {
+        title: 'Sin sparge necesario',
+        text: `Con **${mashR} L** de macerado ya alcanzás el volumen pre-hervor, así que **no necesitás sparge** (0 L). Es típico de métodos full-volume / BIAB.`,
+        tone: 'neutral' as const,
+        icon: '🍺',
+      }
+    : {
+        title: 'Cuánta agua preparar',
+        text: `Vas a usar **${totalR} L** de agua en total: **${mashR} L** para el macerado y **${spargeR} L** para el sparge. El grano absorbe unos **${Number(absorcion.toFixed(1))} L** que no vuelven a la olla.`,
+        tone: 'neutral' as const,
+        icon: '🍺',
+      };
+
   return {
-    aguaMash: Number(aguaMash.toFixed(1)),
-    aguaSparge: Number(aguaSparge.toFixed(1)),
-    aguaTotal: Number(aguaTotal.toFixed(1)),
+    aguaMash: mashR,
+    aguaSparge: spargeR,
+    aguaTotal: totalR,
     absorcion: Number(absorcion.toFixed(1)),
     _chart: chart,
+    _insight,
   };
 }

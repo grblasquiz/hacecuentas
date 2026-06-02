@@ -15,6 +15,7 @@ export interface Outputs {
   gravedad: string;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function superficieQuemaduraReglaNueves(i: Inputs): Outputs {
@@ -63,10 +64,32 @@ export function superficieQuemaduraReglaNueves(i: Inputs): Outputs {
     ariaLabel: 'Escala de superficie corporal quemada: leve <10%, moderada 10-20%, gran quemado >20%.',
   };
 
+  // Insight clínico dinámico según gravedad
+  const volumen24h = peso > 0 ? Math.round(4 * peso * scq) : 0;
+  let insightText: string;
+  let insightTone: string;
+  if (scq < 10) {
+    insightText = `**${scq}% de SCQ** entra en quemadura leve. Si es superficial, suele manejarse de forma ambulatoria con cura local; vigilá signos de infección en las próximas 48-72 hs.`;
+    insightTone = 'neutral';
+  } else if (scq <= 20) {
+    insightText = `**${scq}% de SCQ** es una quemadura moderada que requiere internación.${volumen24h > 0 ? ` Según Parkland, necesita **${volumen24h.toLocaleString('es-AR')} ml** de Ringer lactato en 24 hs.` : ' Ingresá el peso para calcular la reposición de fluidos (Parkland).'}`;
+    insightTone = 'warn';
+  } else {
+    insightText = `**${scq}% de SCQ** clasifica como gran quemado: derivación urgente a centro de quemados.${volumen24h > 0 ? ` Parkland indica **${volumen24h.toLocaleString('es-AR')} ml** de Ringer lactato en 24 hs, la mitad en las primeras 8.` : ' Ingresá el peso para estimar la reposición de fluidos.'}`;
+    insightTone = 'warn';
+  }
+  const insight = {
+    title: scq > 20 ? 'Emergencia: gran quemado' : (scq >= 10 ? 'Requiere internación' : 'Quemadura leve'),
+    text: insightText,
+    tone: insightTone,
+    icon: '🔥',
+  };
+
   return {
     scq,
     gravedad,
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   minutosRiegoDia: number;
   litrosDiaTotalEstimado: number;
   litrosMesEstimado: number;
+  _insight?: any;
 }
 
 const BASE_LITROS_HORA: Record<string, number> = {
@@ -53,10 +54,25 @@ export function riegoGoteoLitros(i: Inputs): Outputs {
   const litrosDiaTotal = litrosDiaPlanta * cant;
   const litrosMes = litrosDiaTotal * 30;
 
+  const litrosMesFmt = litrosMes.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+  const _insight = {
+    title: 'Tu consumo de riego por goteo',
+    text: `Para tus **${cant} ${cant === 1 ? 'planta' : 'plantas'}** necesitás unos **${minutosRiego} min de goteo por día**, ` +
+      `lo que suma **${litrosDiaTotal.toFixed(1)} L diarios** (~${litrosMesFmt} L al mes). ` +
+      (est === 'verano'
+        ? 'Es el pico de la temporada: revisá los goteros tapados, son la causa nº 1 de plantas que se secan con el sistema "andando".'
+        : est === 'invierno'
+        ? 'En invierno el consumo es bajo; un riego muy frecuente puede pudrir raíces, espaciá los ciclos.'
+        : 'Controlá la humedad del sustrato un par de veces por semana y ajustá el tiempo si ves encharcamiento o estrés.'),
+    tone: 'neutral' as const,
+    icon: '🌱',
+  };
+
   return {
     litrosHora: Number(baseLH.toFixed(1)),
     minutosRiegoDia: minutosRiego,
     litrosDiaTotalEstimado: Number(litrosDiaTotal.toFixed(1)),
     litrosMesEstimado: Number(litrosMes.toFixed(0)),
+    _insight,
   };
 }

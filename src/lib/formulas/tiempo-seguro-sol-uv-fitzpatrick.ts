@@ -13,6 +13,7 @@ export interface Outputs {
   recomendacion: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Minutos a UV 10 para cada fototipo (referencia OMS/WHO Global Solar UV Index)
@@ -50,6 +51,25 @@ export function tiempoSeguroSolUvFitzpatrick(i: Inputs): Outputs {
 
   const fmt = (m: number) => m >= 120 ? `${(m / 60).toFixed(1)} h` : `${Math.round(m)} min`;
 
+  // Insight: el tiempo a quemadura cae con el UV y sube con la piel más oscura;
+  // el SPF multiplica ese margen. Tono según riesgo real.
+  let insTone: 'good' | 'warn' | 'neutral';
+  let insText: string;
+  if (uv >= 8) {
+    insTone = 'warn';
+    insText = spf > 0
+      ? `Con UV **${uv}** (${catUV}) y fototipo **${i.fototipo}**, tu piel se quema en apenas **${fmt(minSinSPF)}** sin protección. El SPF ${spf} estira ese margen a **${fmt(minConSPF)}**, pero igual reaplicalo cada 2 h y buscá sombra entre 11 y 16 h.`
+      : `Con UV **${uv}** (${catUV}) y fototipo **${i.fototipo}**, te podés quemar en **${fmt(minSinSPF)}** sin protección. A este nivel el protector solar **no es opcional**: aplicá SPF 30-50 antes de salir.`;
+  } else if (uv >= 3) {
+    insTone = 'neutral';
+    insText = spf > 0
+      ? `Con UV **${uv}** (${catUV}) y fototipo **${i.fototipo}**, el límite sin protección ronda **${fmt(minSinSPF)}**; con SPF ${spf} subís a **${fmt(minConSPF)}**. Suficiente para actividades al aire libre cuidando las horas pico.`
+      : `Con UV **${uv}** (${catUV}) y fototipo **${i.fototipo}**, tenés **${fmt(minSinSPF)}** antes de riesgo de quemadura. Si vas a estar afuera más que eso, sumá SPF 15-30.`;
+  } else {
+    insTone = 'good';
+    insText = `Con UV **${uv}** (${catUV}) y fototipo **${i.fototipo}**, el riesgo es bajo: tolerás **${fmt(minSinSPF)}** al sol antes de pensar en quemadura. Protección mínima salvo exposiciones muy largas.`;
+  }
+
   const chart = {
     type: 'scale' as const,
     marker: uv,
@@ -74,6 +94,12 @@ export function tiempoSeguroSolUvFitzpatrick(i: Inputs): Outputs {
     categoriaUV: `UV ${uv} — ${catUV}`,
     recomendacion: rec,
     _chart: chart,
+    _insight: {
+      title: 'Tu tiempo seguro al sol',
+      text: insText,
+      tone: insTone,
+      icon: '☀️',
+    },
     mensaje: `Fototipo ${i.fototipo} con UV ${uv}: quemadura en ~${fmt(minSinSPF)} sin protección; ${spf > 0 ? `~${fmt(minConSPF)} con SPF ${spf}` : 'usá protector solar'}.`,
   };
 }

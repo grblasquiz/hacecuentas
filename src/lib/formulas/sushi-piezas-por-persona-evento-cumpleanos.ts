@@ -11,6 +11,7 @@ export interface Outputs {
   rolls_estimados: number;
   rango_recomendado: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -80,11 +81,19 @@ export function compute(i: Inputs): Outputs {
     `Extras: ${extrasLabel} (×${factorExtras.toFixed(2)}) | ` +
     `Total: ${piezas_totales} piezas para ${invitados} invitado${invitados !== 1 ? "s" : ""}`;
 
+  const insight = {
+    title: 'Cuánto sushi pedir',
+    text: `Para **${invitados} invitado${invitados !== 1 ? 's' : ''}** vas a necesitar unas **${piezas_totales} piezas** (${piezas_por_persona} por persona), o sea **${rolls_estimados} roll${rolls_estimados !== 1 ? 's' : ''}** de 8. Pedí dentro del rango ${rango_recomendado.split(' (')[0]} para no quedarte corto ni desperdiciar.`,
+    tone: 'neutral',
+    icon: '🍣',
+  };
+
   return {
     piezas_por_persona,
     piezas_totales,
     rolls_estimados,
     rango_recomendado,
     detalle,
+    _insight: insight,
   };
 }

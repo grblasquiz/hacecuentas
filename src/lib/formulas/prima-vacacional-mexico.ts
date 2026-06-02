@@ -16,6 +16,8 @@ export interface Outputs {
   primaVacacionalNeta: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tabla de vacaciones LFT Art. 76 (reforma 2023)
@@ -81,6 +83,41 @@ export function primaVacacionalMexico(i: Inputs): Outputs {
   const formula = `Prima = $${salarioDiario} × ${diasVacaciones} días × ${primaPorc}% = $${primaVacacionalBruta.toFixed(2)}`;
   const explicacion = `Con ${Math.floor(anios)} año(s) de antigüedad te corresponden ${diasVacaciones} días de vacaciones. La prima vacacional (${primaPorc}%) es $${Math.round(primaVacacionalBruta).toLocaleString('es-MX')} MXN brutos. Exento de ISR: $${Math.round(exentoIsr).toLocaleString('es-MX')} (hasta 15 UMA). ISR retenido: $${Math.round(isrRetenido).toLocaleString('es-MX')}. Prima neta: $${Math.round(primaVacacionalNeta).toLocaleString('es-MX')} MXN.`;
 
+  // Insight narrativo
+  const fmtMx = (v: number) => '$' + Math.round(v).toLocaleString('es-MX') + ' MXN';
+  let _insight: any;
+  if (isrRetenido <= 0) {
+    _insight = {
+      title: 'Prima libre de ISR',
+      text: `Tus **${diasVacaciones} días** de vacaciones generan una prima de **${fmtMx(primaVacacionalBruta)}**, toda dentro de la exención de **15 UMA (${fmtMx(exentoIsr)})**: no se retiene ISR y cobrás los **${fmtMx(primaVacacionalNeta)}** completos.`,
+      tone: 'good',
+      icon: '🏖️',
+    };
+  } else {
+    const pctRet = primaVacacionalBruta > 0 ? (isrRetenido / primaVacacionalBruta) * 100 : 0;
+    _insight = {
+      title: 'Retención de ISR sobre el excedente',
+      text: `De los **${fmtMx(primaVacacionalBruta)}** de prima, **${fmtMx(exentoIsr)}** quedan exentos y el resto paga ISR: te retienen **${fmtMx(isrRetenido)}** (**${pctRet.toFixed(1)}%**) y cobrás **${fmtMx(primaVacacionalNeta)}** netos.`,
+      tone: 'warn',
+      icon: '🏖️',
+    };
+  }
+
+  // Gráfico: reparto de la prima bruta (neto + ISR)
+  let _chart: any;
+  if (primaVacacionalBruta > 0) {
+    const slices = [{ label: 'Prima neta', value: Math.round(primaVacacionalNeta) }];
+    if (isrRetenido > 0) slices.push({ label: 'ISR retenido', value: Math.round(isrRetenido) });
+    _chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: fmtMx(primaVacacionalBruta),
+      centerLabel: 'Prima bruta',
+      ariaLabel: `Reparto de la prima vacacional bruta de ${fmtMx(primaVacacionalBruta)} entre neto e ISR retenido`,
+    };
+  }
+
   return {
     diasVacaciones,
     primaVacacionalBruta: Math.round(primaVacacionalBruta),
@@ -90,5 +127,7 @@ export function primaVacacionalMexico(i: Inputs): Outputs {
     primaVacacionalNeta: Math.round(primaVacacionalNeta),
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

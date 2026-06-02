@@ -17,6 +17,8 @@ export interface UpgradeClaseAvionCostoOutputs {
   puntaje: string;
   recomendacion: string;
   benchmark: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // benchmarks USD/hora promedio
@@ -77,10 +79,38 @@ export function upgradeClaseAvionCosto(inputs: UpgradeClaseAvionCostoInputs): Up
 
   const benchmark = `Mercado ${inputs.claseDestino}: USD ${b.barato} (barato) / USD ${b.promedio} (promedio) / USD ${b.caro} (caro) por hora`;
 
+  const tone = score >= 60 ? 'good' : score >= 40 ? 'neutral' : 'warn';
+  const _insight = {
+    title: 'Conviene el upgrade?',
+    text: `Estás pagando **USD ${costoPorHora}/hora** por el upgrade, con un puntaje de **${score}/100**. ${
+      score >= 80 ? 'Es una ganga: por debajo del promedio de mercado, aceptalo.'
+      : score >= 60 ? 'Buen precio, sobre todo si el vuelo es largo: conviene aceptar.'
+      : score >= 40 ? 'Está en la media: depende de tu presupuesto y tus ganas.'
+      : 'Está por encima del mercado o el vuelo es corto: te conviene pasar.'
+    }`,
+    tone,
+    icon: score >= 60 ? '✈️' : '🤔',
+  };
+  const _chart = {
+    type: 'scale',
+    marker: score,
+    markerLabel: `${score}/100`,
+    min: 0,
+    segments: [
+      { nombre: 'Mal deal', max: 40, color: '#ef4444', colorDark: '#f87171' },
+      { nombre: 'Discutible', max: 60, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Buen deal', max: 80, color: '#84cc16', colorDark: '#a3e635' },
+      { nombre: 'Excelente', max: 100, color: '#22c55e', colorDark: '#4ade80' },
+    ],
+    ariaLabel: `Puntaje del upgrade: ${score} de 100`,
+  };
+
   return {
     costoPorHora,
     puntaje,
     recomendacion,
     benchmark,
+    _insight,
+    _chart,
   };
 }

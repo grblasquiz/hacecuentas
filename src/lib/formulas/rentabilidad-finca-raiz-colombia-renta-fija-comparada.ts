@@ -25,6 +25,7 @@ export interface Outputs {
   recomendacion: string;
   impuesto_venta_estimado: number;
   liquidez_score: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -164,7 +165,22 @@ export function compute(i: Inputs): Outputs {
   
   // Liquidez score (1–10)
   let liquidez_score = "4/10 (finca raíz: 2–3 meses venta; renta fija: 1–5 días)";
-  
+
+  // INSIGHT — qué opción rinde más en el horizonte elegido
+  const ganador = diferencia_roi > 0 ? 'finca raíz' : 'renta fija';
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const tone_finca: 'good' | 'warn' | 'neutral' =
+    Math.abs(diferencia_roi) <= 5 ? 'neutral' : diferencia_roi > 5 ? 'good' : 'neutral';
+  const cierre_finca = Math.abs(diferencia_roi) <= 5
+    ? `La diferencia es chica (**${diferencia_roi.toFixed(1)} pp**): a tu horizonte ambas opciones rinden parecido, así que pesá liquidez (${liquidez_score}) y riesgo.`
+    : `A **${i.horizonte_años} años**, **${ganador} rinde ${Math.abs(diferencia_roi).toFixed(1)} pp más** (${fmtCOP(Math.abs(ventaja_absoluta))} de ventaja en plata).`;
+  const _insight = {
+    title: 'Finca raíz vs. renta fija',
+    text: `Tu finca raíz proyecta un **ROI de ${roi_finca_raiz.toFixed(1)}%** (yield anual ${yield_anual_finca.toFixed(1)}%) frente al **${roi_renta_fija.toFixed(1)}%** de la renta fija al ${i.tasa_renta_fija}%. ${cierre_finca}`,
+    tone: tone_finca,
+    icon: '🏘️',
+  };
+
   return {
     cuota_hipotecaria_mensual: isFinite(cuota_hipotecaria_mensual) ? cuota_hipotecaria_mensual : 0,
     yield_anual_finca_raiz: isFinite(yield_anual_finca) ? yield_anual_finca : 0,
@@ -178,6 +194,7 @@ export function compute(i: Inputs): Outputs {
     ventaja_absoluta: isFinite(ventaja_absoluta) ? ventaja_absoluta : 0,
     recomendacion: recomendacion,
     impuesto_venta_estimado: isFinite(impuesto_ganancia_capital + gastos_venta) ? impuesto_ganancia_capital + gastos_venta : 0,
-    liquidez_score: liquidez_score
+    liquidez_score: liquidez_score,
+    _insight
   };
 }

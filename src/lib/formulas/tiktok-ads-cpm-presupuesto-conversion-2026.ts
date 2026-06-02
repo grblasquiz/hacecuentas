@@ -18,6 +18,7 @@ export interface Outputs {
   comparison_meta: number;
   comparison_google: number;
   daily_budget: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -60,15 +61,26 @@ export function compute(i: Inputs): Outputs {
   // Daily budget
   const daily_budget = campaign_days > 0 ? budget / campaign_days : 0;
 
+  const convRound = Math.round(conversions);
+  const _insight = {
+    title: 'Qué esperar de tu campaña',
+    text: convRound > 0
+      ? `Con un presupuesto de **$${budget.toLocaleString('es-AR')}** estimás unas **${convRound.toLocaleString('es-AR')} conversiones** a un costo de **$${cac.toFixed(2)} por adquisición (CAC)**. Para que sea rentable, ese CAC tiene que quedar por debajo de tu margen por venta.`
+      : `Con este presupuesto y un CTR de ${ctr}% / conversión de ${conversion_rate}% no llegás a 1 conversión completa. Subí el presupuesto o ajustá la segmentación: el **CPC estimado es $${cpc.toFixed(2)}** y cada clic todavía es caro para tu volumen.`,
+    tone: convRound > 0 ? 'neutral' : 'warn',
+    icon: '🎯',
+  };
+
   return {
     impressions: Math.round(impressions),
     clicks: Math.round(clicks),
-    conversions: Math.round(conversions),
+    conversions: convRound,
     cpc: parseFloat(cpc.toFixed(2)),
     cac: parseFloat(cac.toFixed(2)),
     cost_per_impression: parseFloat(cost_per_impression.toFixed(4)),
     comparison_meta: parseFloat(comparison_meta.toFixed(2)),
     comparison_google: parseFloat(comparison_google.toFixed(2)),
-    daily_budget: parseFloat(daily_budget.toFixed(2))
+    daily_budget: parseFloat(daily_budget.toFixed(2)),
+    _insight
   };
 }

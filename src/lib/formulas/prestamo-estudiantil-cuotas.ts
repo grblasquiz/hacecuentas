@@ -12,6 +12,7 @@ export interface Outputs {
   totalIntereses: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function prestamoEstudiantilCuotas(i: Inputs): Outputs {
@@ -54,11 +55,21 @@ export function prestamoEstudiantilCuotas(i: Inputs): Outputs {
     ariaLabel: 'Composición del total a pagar: capital más intereses',
   };
 
+  const pctIntereses = monto > 0 ? (totalIntereses / monto) * 100 : 0;
+  const tone = pctIntereses >= 50 ? 'warn' : (pctIntereses >= 20 ? 'neutral' : 'good');
+  const insight = {
+    title: 'Qué significa tu resultado',
+    text: `Pagás **$${Math.round(cuotaMensual).toLocaleString('es-AR')}/mes** durante ${plazo} meses. Sobre tu préstamo de $${monto.toLocaleString('es-AR')}, los intereses suman **$${Math.round(totalIntereses).toLocaleString('es-AR')}** (un **${pctIntereses.toFixed(0)}%** del capital).${pctIntereses >= 50 ? ' Devolvés bastante más de lo prestado: si podés, acortá el plazo o adelantá cuotas.' : ''}`,
+    tone,
+    icon: '🎓',
+  };
+
   return {
     cuotaMensual: Math.round(cuotaMensual),
     totalAPagar: Math.round(totalAPagar),
     totalIntereses: Math.round(totalIntereses),
     detalle: `Préstamo de $${monto.toLocaleString('es-AR')} a ${tasaAnual}% anual en ${plazo} meses. Cuota: $${Math.round(cuotaMensual).toLocaleString('es-AR')}/mes. Total a pagar: $${Math.round(totalAPagar).toLocaleString('es-AR')} (intereses: $${Math.round(totalIntereses).toLocaleString('es-AR')})`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; _chart?: any; }
+export interface Outputs { [k: string]: string | number; _chart?: any; _insight?: any; }
 export function sueldoMunicipalEmpleadoBuenosAiresCategoria(i: Inputs): Outputs {
   const antig=Number(i.antiguedad)||0; const cargas=Number(i.cargas)||0;
   const basico=1050000;
@@ -25,12 +25,22 @@ export function sueldoMunicipalEmpleadoBuenosAiresCategoria(i: Inputs): Outputs 
     centerLabel: 'Bruto',
     ariaLabel: 'Composición del sueldo bruto: neto más aportes (jubilación, obra social, PAMI) y Ganancias.',
   };
+  const fmt=(n:number)=>'$'+Math.round(n).toLocaleString('es-AR');
   return {
     basico: '$'+basico.toLocaleString('es-AR'),
     bruto: '$'+bruto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     neto: '$'+neto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     sac: '$'+sac.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     resumen: `Básico: $${basico.toLocaleString('es-AR')}. Con antigüedad ${antig} años y cargas: neto ~$${neto.toFixed(0)}.`,
+    _insight: {
+      title: 'Tu sueldo municipal en mano',
+      text: `Con **${antig} años** de antigüedad, el plus suma **${fmt(plusAntig)}** y tu bruto llega a **${fmt(bruto)}**. En mano te quedan **${fmt(neto)}** ` +
+        (ganancias > 0
+          ? `tras aportes y **${fmt(ganancias)}** de Ganancias.`
+          : `tras los aportes (no alcanzás el piso de Ganancias).`),
+      tone: ganancias > 0 ? 'warn' : 'neutral',
+      icon: '🏛️',
+    },
     _chart: chart
   };
 }

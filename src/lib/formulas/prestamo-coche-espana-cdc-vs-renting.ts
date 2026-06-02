@@ -33,6 +33,7 @@ export interface Outputs {
   ahorro_iva_leasing_renting: number; // € IVA deducible si autónomo
   ranking_costes: string;            // texto ranking
   recomendacion: string;             // texto recomendación
+  _insight?: any;
 }
 
 /** Cuota mensual sistema francés (amortización constante) */
@@ -258,6 +259,18 @@ export function compute(i: Inputs): Outputs {
       "Al finalizar el préstamo eres propietario del vehículo sin pago adicional.";
   }
 
+  // Insight: opción más barata y ahorro frente a la más cara
+  const masCara = opciones[opciones.length - 1];
+  const ahorroVsPeor = r2(masCara.coste - opciones[0].coste);
+  const fmtEur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' €';
+  const insightTone = costeExcesoKm > 0 ? 'warn' : 'good';
+  const insight = {
+    title: 'Qué significa tu resultado',
+    text: `Por coste total, lo más barato en tu caso es el **${mejorOpcion}** (**${fmtEur(opciones[0].coste)}**), unos **${fmtEur(ahorroVsPeor)}** menos que la opción más cara (${masCara.nombre}).${costeExcesoKm > 0 ? ` Cuidado: el exceso de km sumaría **${fmtEur(costeExcesoKm)}** al renting.` : ''}${esAutonomo && ahorroIvaLeasingRenting > 0 ? ` Como autónomo podrías deducir hasta **${fmtEur(ahorroIvaLeasingRenting)}** de IVA.` : ''}`,
+    tone: insightTone,
+    icon: '🚗',
+  };
+
   return {
     cuota_banco: cuotaBanco,
     tae_banco: taeBanco,
@@ -273,5 +286,6 @@ export function compute(i: Inputs): Outputs {
     ahorro_iva_leasing_renting: ahorroIvaLeasingRenting,
     ranking_costes: rankingCostes,
     recomendacion: recomendacion.trim(),
+    _insight: insight,
   };
 }

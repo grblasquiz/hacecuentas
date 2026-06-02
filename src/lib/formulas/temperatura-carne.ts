@@ -1,6 +1,6 @@
 /** Temperatura interna de carne según tipo y punto de cocción */
 export interface Inputs { tipoCarne?: string; puntoCoccion?: string; }
-export interface Outputs { temperaturaObjetivo: number; tiempoDescanso: string; detalle: string; }
+export interface Outputs { temperaturaObjetivo: number; tiempoDescanso: string; detalle: string; _insight?: any; _chart?: any; }
 
 export function temperaturaCarne(i: Inputs): Outputs {
   const tipo = String(i.tipoCarne || 'vaca');
@@ -41,9 +41,33 @@ export function temperaturaCarne(i: Inputs): Outputs {
     nota = ' IMPORTANTE: el pollo debe llegar siempre a 74°C mínimo por seguridad alimentaria.';
   }
 
+  const esPollo = tipo === 'pollo';
+  // Gauge: zonas de cocción de esta carne, marker en la temperatura objetivo
+  const tJ = temps.jugoso, tM = temps.medio, tC = temps.cocido;
+  const segMax = Math.max(tC + 8, temp + 4);
   return {
     temperaturaObjetivo: temp,
     tiempoDescanso: descanso,
     detalle: `${tipoLabel[tipo] || tipo} ${puntoLabel[punto] || punto}: temperatura objetivo **${temp}°C**. Sacá del fuego a ~${sacarA}°C (sube 3-5°C en reposo). Descanso: ${descanso}.${nota}`,
+    _insight: {
+      title: esPollo ? 'Seguridad primero' : 'Sacala antes del objetivo',
+      text: esPollo
+        ? `El ${(tipoLabel[tipo] || tipo).toLowerCase()} ${puntoLabel[punto] || punto} debe alcanzar **${temp}°C** en el centro: por debajo hay riesgo de salmonela. No bajes de **74°C** aunque la quieras más jugosa.`
+        : `Para ${(tipoLabel[tipo] || tipo).toLowerCase()} ${puntoLabel[punto] || punto} apuntá a **${temp}°C** internos, pero sacala del fuego a **~${sacarA}°C**: durante el reposo de ${descanso.split(' ')[0]} min sigue subiendo 3-5°C por cocción residual.`,
+      tone: esPollo ? 'warn' : 'good',
+      icon: '🥩',
+    },
+    _chart: {
+      type: 'scale',
+      marker: temp,
+      markerLabel: `${puntoLabel[punto] || punto} · ${temp}°C`,
+      min: tJ - 6,
+      segments: [
+        { nombre: 'Jugoso', max: tJ + Math.round((tM - tJ) / 2), color: '#fca5a5', colorDark: '#ef4444' },
+        { nombre: 'A punto', max: tM + Math.round((tC - tM) / 2), color: '#fcd34d', colorDark: '#f59e0b' },
+        { nombre: 'Bien cocido', max: segMax, color: '#86efac', colorDark: '#22c55e' },
+      ],
+      ariaLabel: `Temperatura objetivo ${temp}°C para ${(tipoLabel[tipo] || tipo).toLowerCase()} ${puntoLabel[punto] || punto}.`,
+    },
   };
 }

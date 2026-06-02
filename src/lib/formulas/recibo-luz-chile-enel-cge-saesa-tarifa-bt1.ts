@@ -14,6 +14,8 @@ export interface Outputs {
   ahorro_solar_mensual: number;
   total_con_solar: number;
   tarifa_promedio: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -82,6 +84,44 @@ export function compute(i: Inputs): Outputs {
   // Tarifa promedio consumo (costo energía / kWh consumido, sin cargo fijo)
   const tarifa_promedio = kwh_cons > 0 ? costo_energia / kwh_cons : 0;
 
+  // Insight narrativo dinámico
+  const clp = (n: number) => Math.round(n).toLocaleString('es-CL');
+  let _insight: any = undefined;
+  if (kwh_cons > 0) {
+    if (i.tiene_solar && ahorro_solar_mensual > 0) {
+      _insight = {
+        title: 'Tus paneles bajan la boleta',
+        text: `Tu boleta base es **$${clp(total_recibo)}** por **${kwh_cons} kWh**. Con el autoconsumo solar pagás **$${clp(total_con_solar)}**, un ahorro de **$${clp(ahorro_solar_mensual)}/mes**.`,
+        tone: 'good',
+        icon: '☀️',
+      };
+    } else {
+      _insight = {
+        title: 'Boleta estimada',
+        text: `Tu boleta estimada es **$${clp(total_recibo)}** por **${kwh_cons} kWh** ($${tarifa_promedio.toLocaleString('es-CL')}/kWh de energía). El cargo fijo aporta $${clp(cargo_fijo)} y el IVA 19% suma **$${clp(iva_19)}**.`,
+        tone: 'neutral',
+        icon: '💡',
+      };
+    }
+  }
+
+  // Gráfico: composición de la boleta (cargo fijo + energía + IVA = total)
+  let _chart: any = undefined;
+  if (kwh_cons > 0 && total_recibo > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Cargo fijo', value: Math.round(cargo_fijo) },
+        { label: 'Energía consumida', value: Math.round(costo_energia) },
+        { label: 'IVA 19%', value: Math.round(iva_19) },
+      ].filter((s) => s.value > 0),
+      prefix: '$',
+      centerValue: '$' + clp(total_recibo),
+      centerLabel: 'Total boleta',
+      ariaLabel: 'Composición de la boleta de luz: cargo fijo, energía e IVA',
+    };
+  }
+
   return {
     cargo_fijo: Math.round(cargo_fijo),
     costo_energia: Math.round(costo_energia),
@@ -90,6 +130,8 @@ export function compute(i: Inputs): Outputs {
     total_recibo: Math.round(total_recibo),
     ahorro_solar_mensual: Math.round(ahorro_solar_mensual),
     total_con_solar: Math.round(total_con_solar),
-    tarifa_promedio: parseFloat(tarifa_promedio.toFixed(2))
+    tarifa_promedio: parseFloat(tarifa_promedio.toFixed(2)),
+    _insight,
+    _chart
   };
 }

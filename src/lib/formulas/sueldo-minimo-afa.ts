@@ -55,6 +55,7 @@ export function sueldoMinimoAfa(i: Inputs): Outputs {
     ariaLabel: 'Composición del sueldo bruto: mínimo de convenio, antigüedad y premios.',
   };
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
   return {
     minimoMensual: Math.round(minimo),
     antiguedad: Math.round(antiguedad),
@@ -64,6 +65,13 @@ export function sueldoMinimoAfa(i: Inputs): Outputs {
     neto: Math.round(neto),
     categoriaLabel: fila.label,
     _chart: chart,
+    _insight: {
+      title: 'Piso de convenio AFA',
+      text: `En **${fila.label}** el mínimo de convenio es **${fmt(minimo)}/mes**. Sumando antigüedad (**${fmt(antiguedad)}**) y premios (**${fmt(premios)}**), tu bruto llega a **${fmt(bruto)}** y el neto a **${fmt(neto)}**` +
+        (aportes > 0 ? ` tras ~17% de aportes.` : ` (sin descuento de aportes).`),
+      tone: 'neutral',
+      icon: '⚽',
+    },
     mensaje: `${fila.label}: mínimo $${Math.round(minimo).toLocaleString('es-AR')}/mes. Con antigüedad y premios, bruto $${Math.round(bruto).toLocaleString('es-AR')}.`,
   };
 }

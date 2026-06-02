@@ -1,6 +1,6 @@
 /** Temperatura basal para detectar ovulación */
 export interface Inputs { temperaturaHoy: number; diaCicloTemp: number; duracionCicloTemp?: number; __lang?: string; }
-export interface Outputs { fase: string; interpretacion: string; ovulacionProbable: string; recomendacion: string; }
+export interface Outputs { fase: string; interpretacion: string; ovulacionProbable: string; recomendacion: string; _insight?: any; }
 
 export function temperaturaBasal(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -48,5 +48,34 @@ export function temperaturaBasal(i: Inputs): Outputs {
     }
   }
 
-  return { fase, interpretacion, ovulacionProbable: ovulacion, recomendacion };
+  // Insight: dinámico según fase y temperatura
+  const diasPostOv = dia - diaOvulacion;
+  const enVentana = dia >= diaOvulacion - 2 && dia <= diaOvulacion + 1;
+  const luteaLarga = dia > diaOvulacion + 1 && diasPostOv > 16;
+  let insightText: string, insightTone: string;
+  if (luteaLarga) {
+    insightText = __lang === 'en'
+      ? `You are **${diasPostOv} days past ovulation** and your temperature is still **${temp}°C**. A luteal phase longer than 16 days with sustained temperature often points to **pregnancy** — take a test.`
+      : `Estás a **${diasPostOv} días de la ovulación** y la temperatura sigue en **${temp}°C**. Una fase lútea de más de 16 días con temperatura sostenida suele indicar **embarazo** — hacé un test.`;
+    insightTone = 'good';
+  } else if (enVentana) {
+    insightText = __lang === 'en'
+      ? `On day **${dia}** you are in the **fertile window** (ovulation estimated ~day ${diaOvulacion}). At ${temp}°C, these are the most fertile days of the cycle.`
+      : `En el día **${dia}** estás en la **ventana fértil** (ovulación estimada ~día ${diaOvulacion}). Con ${temp}°C, estos son los días más fértiles del ciclo.`;
+    insightTone = 'good';
+  } else {
+    insightText = __lang === 'en'
+      ? `On day **${dia}** of the cycle, **${temp}°C** is consistent with the **${fase.toLowerCase()}**. One reading isn't enough: the ovulation signal is the sustained rise over several days.`
+      : `En el día **${dia}** del ciclo, **${temp}°C** es consistente con la **${fase.toLowerCase()}**. Un solo registro no alcanza: la señal de ovulación es el alza sostenida durante varios días.`;
+    insightTone = 'neutral';
+  }
+  return {
+    fase, interpretacion, ovulacionProbable: ovulacion, recomendacion,
+    _insight: {
+      title: __lang === 'en' ? (enVentana || luteaLarga ? 'Key moment' : 'Where you are') : (enVentana || luteaLarga ? 'Momento clave' : 'En qué fase estás'),
+      text: insightText,
+      tone: insightTone,
+      icon: '🌡️',
+    },
+  };
 }

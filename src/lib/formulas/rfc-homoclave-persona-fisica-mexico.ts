@@ -21,6 +21,7 @@ export interface Outputs {
     dia: string;
     homoclave: string;
   };
+  _insight?: any;
 }
 
 function normalizarTexto(texto: string): string {
@@ -156,6 +157,12 @@ export function compute(i: Inputs): Outputs {
       mes: mm,
       dia: dd,
       homoclave: homoclave
+    },
+    _insight: {
+      title: 'RFC estimado, no oficial',
+      text: `Las primeras 10 posiciones (**${rfcSinHomoclave}**) siguen la regla del SAT, pero la homoclave **${homoclave}** y el dígito verificador los asigna el SAT con un algoritmo interno: usalo como referencia y confirmá tu RFC real en el portal del SAT o tu Constancia de Situación Fiscal.`,
+      tone: 'warn',
+      icon: '🪪',
     }
   };
 }

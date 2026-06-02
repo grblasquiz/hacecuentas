@@ -18,6 +18,8 @@ export interface Outputs {
   meses_ahorrados: number;
   años_ahorrados: number;
   advertencia: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function calcularDeudaTDC(
@@ -115,18 +117,47 @@ export function compute(i: Inputs): Outputs {
     advertencia = `⚠️ Pagando mínimo tardarás ${resultMinimo.meses} meses (${anosMinimo.toFixed(1)} años). Esto es una trampa. Intenta pagar más cada mes.`;
   }
 
+  // Cuántas veces el saldo inicial terminás pagando solo en intereses (pago mínimo)
+  const ratioIntereses = saldoInicial > 0 ? resultMinimo.interesesTotales / saldoInicial : 0;
+  const anosMinimoR = Math.round(anosMinimo * 10) / 10;
+  const ahorroR = Math.round(ahorroIntereses * 100) / 100;
+
+  const _insight = {
+    title: 'La trampa del pago mínimo',
+    text: `Pagando el mínimo (**$${pagoMinimo.toFixed(0)}/mes**) tardás **${anosMinimoR.toFixed(1)} años** y pagás **$${resultMinimo.interesesTotales.toFixed(0)}** solo de intereses: **${ratioIntereses.toFixed(1)}x** tu deuda original. Subiendo a **$${pagoAlternativo.toFixed(0)}/mes** te ahorrás **$${ahorroR.toFixed(0)}** y salís **${(mesesAhorrados / 12).toFixed(1)} años** antes.`,
+    tone: 'warn',
+    icon: '💳',
+  };
+
+  // Gauge: años para saldar pagando el mínimo (zonas de gravedad)
+  const markerAnos = Math.min(anosMinimoR, 50);
+  const _chart = {
+    type: 'scale',
+    marker: markerAnos,
+    markerLabel: `${anosMinimoR.toFixed(1)} años`,
+    min: 0,
+    segments: [
+      { nombre: 'Manejable', max: 3, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Costoso', max: 7, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Trampa', max: 50, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Pagando el mínimo tardarías ${anosMinimoR.toFixed(1)} años en saldar la deuda`,
+  };
+
   return {
     meses_pago_minimo: resultMinimo.meses,
-    anos_pago_minimo: Math.round(anosMinimo * 10) / 10,
+    anos_pago_minimo: anosMinimoR,
     intereses_totales_minimo: resultMinimo.interesesTotales,
     monto_total_pagado_minimo: resultMinimo.montoPagado,
     meses_pago_alternativo: resultAlternativo.meses,
     anos_pago_alternativo: Math.round(anosAlternativo * 10) / 10,
     intereses_totales_alternativo: resultAlternativo.interesesTotales,
     monto_total_pagado_alternativo: resultAlternativo.montoPagado,
-    ahorro_intereses: Math.round(ahorroIntereses * 100) / 100,
+    ahorro_intereses: ahorroR,
     meses_ahorrados: mesesAhorrados,
     años_ahorrados: Math.round(anosAhorrados * 10) / 10,
     advertencia: advertencia,
+    _insight,
+    _chart,
   };
 }

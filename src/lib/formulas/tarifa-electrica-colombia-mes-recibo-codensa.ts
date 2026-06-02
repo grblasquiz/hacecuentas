@@ -17,6 +17,8 @@ export interface Outputs {
   total_recibo: number;
   promedio_kwh: number;
   anual_estimado: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -100,6 +102,34 @@ export function compute(i: Inputs): Outputs {
   const promedio_kwh = consumo > 0 ? Math.round((total_recibo / consumo) * 100) / 100 : 0;
   const anual_estimado = Math.round(total_recibo * 12);
 
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const subsidiado = factor < 1;
+  const contribuye = factor > 1;
+  const pctAjuste = Math.round(Math.abs(factor - 1) * 100);
+  const _insight = {
+    title: `Recibo estimado: ${fmtCOP(total_recibo)}`,
+    text: subsidiado
+      ? `Por ser **estrato ${estrato}** tu energía recibe un **subsidio del ${pctAjuste}%**, por eso el recibo del mes queda en **${fmtCOP(total_recibo)}** (${fmtCOP(anual_estimado)} al año). El kWh te sale a **${fmtCOP(promedio_kwh)}** en promedio.`
+      : contribuye
+      ? `Por ser **estrato ${estrato}** pagás una **contribución del ${pctAjuste}%** sobre la energía, lo que lleva el recibo a **${fmtCOP(total_recibo)}** al mes (${fmtCOP(anual_estimado)} al año). El kWh promedio queda en **${fmtCOP(promedio_kwh)}**.`
+      : `Como **estrato ${estrato}** pagás la tarifa plena, sin subsidio ni contribución: el recibo del mes es de **${fmtCOP(total_recibo)}** (${fmtCOP(anual_estimado)} al año), a **${fmtCOP(promedio_kwh)}** el kWh.`,
+    tone: subsidiado ? 'good' : contribuye ? 'warn' : 'neutral',
+    icon: '💡',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Energía', value: subtotal_ajustado },
+      { label: 'Alumbrado público', value: alumbrado_publico },
+      { label: 'Aseo', value: aseo_contribucion },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(total_recibo),
+    centerLabel: 'Total mes',
+    ariaLabel: 'Composición del recibo de luz: cargo por energía consumida, alumbrado público y tasa de aseo.',
+  };
+
   return {
     generacion_kwh,
     transmision_kwh,
@@ -112,5 +142,7 @@ export function compute(i: Inputs): Outputs {
     total_recibo,
     promedio_kwh,
     anual_estimado,
+    _insight,
+    _chart,
   };
 }

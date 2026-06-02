@@ -11,6 +11,8 @@ export interface PresupuestoViajeParisOutputs {
   presupuestoTotalUsd: number;
   desglose: string;
   perDiemPorPersona: number;
+  _insight?: any;
+  _chart?: any;
 }
 const HOTEL: Record<string, number> = { bajo: 90, medio: 180, alto: 350 };
 const FOOD = 80;
@@ -34,9 +36,36 @@ export function presupuestoViajeParis(i: PresupuestoViajeParisInputs): Presupues
   const total = hotelTotal + foodTotal + transTotal + actsTotal + vueloTotal;
   const perDiem = Math.round((total - vueloTotal) / (dias * personas));
   const desglose = `Hotel USD ${hotelTotal.toFixed(0)} | Comida USD ${foodTotal.toFixed(0)} | Transporte USD ${transTotal.toFixed(0)} | Actividades USD ${actsTotal.toFixed(0)}${vuelo ? ` | Vuelos USD ${vueloTotal.toFixed(0)}` : ""}`;
+  const vueloShare = total > 0 ? vueloTotal / total : 0;
+  const fmt = (n: number) => Math.round(n).toLocaleString('en-US');
+  const _insight = {
+    title: 'Tu presupuesto para París',
+    text: vuelo
+      ? `El viaje completo da **USD ${fmt(total)}** para ${personas} ${personas === 1 ? 'persona' : 'personas'} por ${dias} ${dias === 1 ? 'día' : 'días'}. El vuelo aporta **USD ${fmt(vueloTotal)}** (${Math.round(vueloShare * 100)}%); en destino gastás **USD ${perDiem}** por persona y día.`
+      : `Sin vuelos, gastás **USD ${fmt(total)}** en destino: **USD ${perDiem}** por persona y día. París es cara en hotel y comida; el grueso del presupuesto se va en alojamiento y restaurantes.`,
+    tone: 'warn',
+    icon: '🗼'
+  };
+  const slices = [
+    { label: 'Hotel', value: Math.round(hotelTotal) },
+    { label: 'Comida', value: Math.round(foodTotal) },
+    { label: 'Transporte', value: Math.round(transTotal) },
+    { label: 'Actividades', value: Math.round(actsTotal) }
+  ];
+  if (vuelo) slices.push({ label: 'Vuelos', value: Math.round(vueloTotal) });
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: `USD ${fmt(total)}`,
+    centerLabel: 'Total',
+    ariaLabel: `Desglose del presupuesto de viaje a París: total USD ${fmt(total)}`
+  };
   return {
     presupuestoTotalUsd: Number(total.toFixed(0)),
     desglose,
-    perDiemPorPersona: perDiem
+    perDiemPorPersona: perDiem,
+    _insight,
+    _chart
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   tiempoPorKm: string;
   wattsPorKg: number;
   categoriaFtp: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -59,12 +60,27 @@ export function ritmoCiclismo(i: Inputs): Outputs {
     ariaLabel: 'Escala de potencia en ciclismo (W/kg): tu valor ' + wKg.toFixed(2),
   } : undefined;
 
+  const _insight = (wKg > 0)
+    ? {
+        title: 'Tu rendimiento sobre la bici',
+        text: `Promediaste **${kmh.toFixed(1)} km/h** (${mm}:${String(ss).padStart(2, '0')} min/km) con **${wKg.toFixed(2)} W/kg**, lo que te ubica en nivel **${catFtp.replace(/\s*\([^)]*\)/, '')}**. El W/kg es el mejor predictor de rendimiento en subida.`,
+        tone: (wKg >= 3 ? 'good' : 'neutral'),
+        icon: '🚴',
+      }
+    : {
+        title: 'Tu velocidad media',
+        text: `Recorriste **${dist} km** en **${tiempo} min**, una media de **${kmh.toFixed(1)} km/h** (${mph.toFixed(1)} mph), o sea **${mm}:${String(ss).padStart(2, '0')} min/km**. Cargá tus watts y peso para ver tu nivel en W/kg.`,
+        tone: 'neutral',
+        icon: '🚴',
+      };
+
   return {
     velocidadKmh: Number(kmh.toFixed(2)),
     velocidadMph: Number(mph.toFixed(2)),
     tiempoPorKm: `${mm}:${String(ss).padStart(2, '0')} min/km`,
     wattsPorKg: Number(wKg.toFixed(2)),
     categoriaFtp: catFtp,
+    _insight,
     _chart: chart,
   };
 }

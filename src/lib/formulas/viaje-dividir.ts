@@ -24,6 +24,7 @@ export interface ViajeDividirOutputs {
   personasActivas: number;
   liquidacion: string; // detalle por persona
   _chart?: any;
+  _insight?: any;
 }
 
 export function viajeDividir(inputs: ViajeDividirInputs): ViajeDividirOutputs {
@@ -37,6 +38,10 @@ export function viajeDividir(inputs: ViajeDividirInputs): ViajeDividirOutputs {
       put:        'puso',
       person:     'Persona',
       ariaLabel:  'Composición del gasto total por persona',
+      insTitleEven:  'Cuentas parejas',
+      insTextEven:   (n: number, fair: string) => `Entre ${n} personas gastaron parejo: a cada uno le tocan **$${fair}** y nadie le debe nada a nadie.`,
+      insTitleSettle:'Cómo saldar',
+      insTextSettle: (fair: string, owesIdx: number, owesAmt: string, owedIdx: number) => `La parte justa es **$${fair}** por persona. La **Persona ${owesIdx}** es la que más debe (**$${owesAmt}**) y la **Persona ${owedIdx}** es la que más tiene a favor.`,
     },
     en: {
       minPersons: 'Enter expenses for at least 2 people',
@@ -46,6 +51,10 @@ export function viajeDividir(inputs: ViajeDividirInputs): ViajeDividirOutputs {
       put:        'paid',
       person:     'Person',
       ariaLabel:  'Breakdown of total expenses by person',
+      insTitleEven:  'Even split',
+      insTextEven:   (n: number, fair: string) => `Across ${n} people the spend is even: each one owes **$${fair}** and nobody owes anybody.`,
+      insTitleSettle:'How to settle up',
+      insTextSettle: (fair: string, owesIdx: number, owesAmt: string, owedIdx: number) => `The fair share is **$${fair}** per person. **Person ${owesIdx}** owes the most (**$${owesAmt}**) and **Person ${owedIdx}** is owed the most.`,
     },
   } as const)[__lang];
 
@@ -95,11 +104,39 @@ export function viajeDividir(inputs: ViajeDividirInputs): ViajeDividirOutputs {
     ariaLabel: T.ariaLabel,
   };
 
+  const activos = balances.filter((b) => b.gasto > 0);
+  const todoParejo = activos.every((b) => Math.abs(b.balance) < 1);
+  const fairStr = Math.round(parteJusta).toLocaleString('es-AR');
+  let _insight: any;
+  if (todoParejo) {
+    _insight = {
+      title: T.insTitleEven,
+      text: T.insTextEven(personasActivas, fairStr),
+      tone: 'good',
+      icon: '🤝',
+    };
+  } else {
+    const masDebe = activos.reduce((a, b) => (b.balance < a.balance ? b : a));
+    const masLeDeben = activos.reduce((a, b) => (b.balance > a.balance ? b : a));
+    _insight = {
+      title: T.insTitleSettle,
+      text: T.insTextSettle(
+        fairStr,
+        masDebe.idx,
+        Math.abs(Math.round(masDebe.balance)).toLocaleString('es-AR'),
+        masLeDeben.idx,
+      ),
+      tone: 'neutral',
+      icon: '💸',
+    };
+  }
+
   return {
     totalGastado: Math.round(totalGastado),
     parteJusta: Math.round(parteJusta),
     personasActivas,
     liquidacion: lineas.join('\n'),
     _chart: chart,
+    _insight,
   };
 }

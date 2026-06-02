@@ -24,6 +24,8 @@ export interface Outputs {
   roi_10_anos: number;
   financiacion_recomendada: string;
   diferencia_publica_privada: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {

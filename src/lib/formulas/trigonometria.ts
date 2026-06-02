@@ -13,6 +13,7 @@ export interface Outputs {
   grados: number;
   radianes: number;
   cuadrante: string;
+  _insight?: any;
 }
 
 export function trigonometria(i: Inputs): Outputs {
@@ -49,6 +50,14 @@ export function trigonometria(i: Inputs): Outputs {
   else if (g < 270) cuadrante = 'Cuadrante III (sin−, cos−)';
   else cuadrante = 'Cuadrante IV (sin−, cos+)';
 
+  const cuadCorto = cuadrante.split(' (')[0];
+  const _insight = {
+    title: 'Lectura del ángulo',
+    text: `Para **${Number(grados.toFixed(2))}°** (${Number(radianes.toFixed(4))} rad), el seno es **${seno}** y el coseno **${coseno}**, lo que ubica al ángulo en **${cuadCorto}**. La tangente vale **${tangente}**.`,
+    tone: 'neutral' as const,
+    icon: '📐',
+  };
+
   return {
     seno,
     coseno,
@@ -59,5 +68,6 @@ export function trigonometria(i: Inputs): Outputs {
     grados: Number(grados.toFixed(4)),
     radianes: Number(radianes.toFixed(6)),
     cuadrante,
+    _insight,
   };
 }

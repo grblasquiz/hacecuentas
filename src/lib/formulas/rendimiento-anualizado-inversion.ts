@@ -13,6 +13,7 @@ export interface Outputs {
   multiplicador: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function rendimientoAnualizadoInversion(i: Inputs): Outputs {
@@ -49,11 +50,27 @@ export function rendimientoAnualizadoInversion(i: Inputs): Outputs {
     ? `Investment of $${inicial.toLocaleString()} grew to $${final2.toLocaleString()} over ${anios} year(s). Total return: ${rendimientoTotal.toFixed(2)}% (${multiplicador.toFixed(2)}x). Compound annual growth rate (CAGR): ${cagr.toFixed(2)}% per year. This means that investing at ${cagr.toFixed(2)}% compounded annually would produce the same result.`
     : `Inversión de $${inicial.toLocaleString()} creció a $${final2.toLocaleString()} en ${anios} año(s). Rendimiento total: ${rendimientoTotal.toFixed(2)}% (${multiplicador.toFixed(2)}x). Rendimiento anualizado compuesto (CAGR): ${cagr.toFixed(2)}% anual. Esto significa que si hubieras invertido al ${cagr.toFixed(2)}% anual compuesto, obtendrías el mismo resultado.`;
 
+  const tone = cagr > 0 ? 'good' : cagr < 0 ? 'warn' : 'neutral';
+  const insight = __lang === 'en'
+    ? {
+        title: 'Annualized return',
+        text: `Your money compounded at **${cagr.toFixed(2)}% per year** over ${anios} year(s), turning $${inicial.toLocaleString()} into $${final2.toLocaleString()} (**${multiplicador.toFixed(2)}x**, ${rendimientoTotal.toFixed(1)}% total).${cagr < 0 ? ' The investment lost value: CAGR is negative.' : ''}`,
+        tone,
+        icon: cagr >= 0 ? '📈' : '📉',
+      }
+    : {
+        title: 'Rendimiento anualizado',
+        text: `Tu plata compuso al **${cagr.toFixed(2)}% anual** durante ${anios} año(s), pasando de $${inicial.toLocaleString()} a $${final2.toLocaleString()} (**${multiplicador.toFixed(2)}x**, ${rendimientoTotal.toFixed(1)}% total).${cagr < 0 ? ' La inversión perdió valor: el CAGR es negativo.' : ''}`,
+        tone,
+        icon: cagr >= 0 ? '📈' : '📉',
+      };
+
   return {
     cagr: Number(cagr.toFixed(4)),
     rendimientoTotal: Number(rendimientoTotal.toFixed(2)),
     multiplicador: Number(multiplicador.toFixed(4)),
     formula,
     explicacion,
+    _insight: insight,
   };
 }

@@ -14,6 +14,7 @@ export interface Outputs {
   treasury_total: number;
   ir_aliquota: number;
   summary: string;
+  _insight?: any;
 }
 
 // Tabela IOF regressiva — art. 1º Decreto 6.306/2007
@@ -119,6 +120,19 @@ export function compute(i: Inputs): Outputs {
       ? `IOF aplicado: ${(iofRate * 100).toFixed(0)}% sobre o lucro (resgate antes de 30 dias).`
       : "Sem IOF (prazo superior a 30 dias).");
 
+  // Insight: quanto a melhor opção rende a mais que a poupança (referência popular)
+  const minNet = Math.min(cdb_net, savings_net, treasury_net);
+  const vantagem = maxNet - minNet;
+  const iofAtivo = days < 30;
+  const insight = {
+    title: iofAtivo ? 'Resgate antes de 30 dias: IOF morde o lucro' : `Vencedor: ${best}`,
+    text: iofAtivo
+      ? `Com resgate em **${days} dias** o IOF leva **${(iofRate * 100).toFixed(0)}%** do lucro e o IR fica em **${irPct}%** (a maior faixa). Segurar por mais de 30 dias já elimina o IOF, e passar de 2 anos derruba o IR para 15%.`
+      : `O **${best}** rende **R$ ${maxNet.toFixed(2)}** líquidos em ${months} meses, **R$ ${vantagem.toFixed(2)}** a mais que a pior opção. O IR de ${irPct}% sobre CDB e Tesouro cai conforme o prazo: acima de 2 anos chega a 15%.`,
+    tone: iofAtivo ? 'warn' as const : 'good' as const,
+    icon: iofAtivo ? '⚠️' : '🏆',
+  };
+
   return {
     cdb_net: parseFloat(cdb_net.toFixed(2)),
     savings_net: parseFloat(savings_net.toFixed(2)),
@@ -127,6 +141,7 @@ export function compute(i: Inputs): Outputs {
     savings_total: parseFloat(savings_total.toFixed(2)),
     treasury_total: parseFloat(treasury_total.toFixed(2)),
     ir_aliquota: parseFloat((irAliquota * 100).toFixed(1)),
-    summary
+    summary,
+    _insight: insight
   };
 }

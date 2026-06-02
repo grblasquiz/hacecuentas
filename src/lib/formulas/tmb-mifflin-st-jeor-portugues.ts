@@ -12,6 +12,8 @@ export interface Outputs {
   deficit_cut: number;
   surplus_bulk: number;
   formula_used: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Fatores de atividade — escala de Harris-Benedict adaptada por Ainsworth et al.
@@ -87,11 +89,35 @@ export function compute(i: Inputs): Outputs {
     `Mifflin-St Jeor | ${sexLabel} | ${weight} kg, ${height} cm, ${age} anos | ` +
     `TMB = ${tmb.toFixed(1)} kcal/dia | Atividade: ${activityLabel}`;
 
+  const activityKcal = get - tmb;
+  const tmbShare = (tmb / get) * 100;
+
+  const _insight = {
+    title: "O que significa o seu GET",
+    text: `Seu metabolismo basal queima **${Math.round(tmb)} kcal/dia** apenas para manter o corpo funcionando, e com sua atividade o gasto total chega a **${Math.round(get)} kcal/dia**. Para emagrecer mire ~${Math.round(deficit_cut)} kcal/dia; para ganhar massa, ~${Math.round(surplus_bulk)} kcal/dia.`,
+    tone: "neutral",
+    icon: "🔥",
+  };
+
+  const _chart = {
+    type: "doughnut" as const,
+    slices: [
+      { label: "Metabolismo basal (TMB)", value: Math.round(tmb) },
+      { label: "Gasto com atividade", value: Math.round(activityKcal) },
+    ],
+    prefix: "",
+    centerValue: Math.round(get).toLocaleString("pt-BR") + " kcal",
+    centerLabel: "GET diário",
+    ariaLabel: `Composição do seu gasto energético total diário de ${Math.round(get)} kcal: ${Math.round(tmb)} kcal do metabolismo basal (${tmbShare.toFixed(0)}%) mais ${Math.round(activityKcal)} kcal pela atividade física.`,
+  };
+
   return {
     tmb: Math.round(tmb * 10) / 10,
     get: Math.round(get * 10) / 10,
     deficit_cut: Math.round(deficit_cut * 10) / 10,
     surplus_bulk: Math.round(surplus_bulk * 10) / 10,
     formula_used,
+    _insight,
+    _chart,
   };
 }

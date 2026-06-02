@@ -11,6 +11,7 @@ export interface Outputs {
   tiempoLibro200pag: number;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function velocidadLecturaWpm(i: Inputs): Outputs {
@@ -59,6 +60,15 @@ export function velocidadLecturaWpm(i: Inputs): Outputs {
     ariaLabel: 'Escala de velocidad de lectura en palabras por minuto: lento, promedio, rápido, speed reader.',
   };
 
+  const horasLibro = tiempoLibro200pag / 60;
+  const insightTone = wpm < 200 ? 'warn' : (wpm >= 350 ? 'good' : 'neutral');
+  const insight = {
+    title: 'Tu velocidad de lectura',
+    text: `Leés **${wpmRound} palabras por minuto** (${nivel.toLowerCase()}, ${percentil.toLowerCase()}), o sea unas **${Math.round(paginasPorHora)} páginas por hora**. Un libro de 200 páginas te llevaría **~${horasLibro >= 1 ? horasLibro.toFixed(1) + ' h' : Math.round(tiempoLibro200pag) + ' min'}** de lectura.`,
+    tone: insightTone,
+    icon: '📖',
+  };
+
   return {
     wpm: wpmRound,
     nivel,
@@ -67,5 +77,6 @@ export function velocidadLecturaWpm(i: Inputs): Outputs {
     tiempoLibro200pag: Math.round(tiempoLibro200pag),
     mensaje: `Velocidad: ${Math.round(wpm)} PPM (${nivel}). Leés ~${Math.round(paginasPorHora)} páginas/hora. Un libro de 200 págs: ~${Math.round(tiempoLibro200pag)} minutos.`,
     _chart: chart,
+    _insight: insight,
   };
 }

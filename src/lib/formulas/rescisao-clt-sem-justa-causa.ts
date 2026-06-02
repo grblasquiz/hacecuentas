@@ -22,6 +22,8 @@ export interface Outputs {
   multaFgts40: string;
   totalRescisao: string;
   resumen: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -47,6 +49,32 @@ export function rescisaoCltSemJustaCausa(i: Inputs): Outputs {
   const multa = fgts * 0.40;
   const total = saldoSalario + avisoPrevio + decimoTerceiro + feriasProp + terco + multa;
 
+  const slicesDef: { label: string; value: number }[] = [
+    { label: 'Saldo de salário', value: saldoSalario },
+    { label: 'Aviso prévio', value: avisoPrevio },
+    { label: '13º proporcional', value: decimoTerceiro },
+    { label: 'Férias prop. + 1/3', value: feriasProp + terco },
+    { label: 'Multa FGTS 40%', value: multa },
+  ];
+  const slices = slicesDef
+    .filter((s) => s.value > 0)
+    .map((s) => ({ label: s.label, value: Math.round(s.value * 100) / 100 }));
+  const chart = slices.length >= 2 ? {
+    type: 'doughnut' as const,
+    slices,
+    prefix: 'R$ ',
+    centerValue: brl(total),
+    centerLabel: 'Total bruto',
+    ariaLabel: 'Composição da rescisão sem justa causa: saldo, aviso prévio, 13º, férias + 1/3 e multa do FGTS',
+  } : undefined;
+
+  const insight = {
+    title: 'Rescisão completa a seu favor',
+    text: `Demitido sem justa causa, você soma cerca de **${brl(total)}** bruto, incluindo aviso prévio de **${diasAviso} dias** e a multa de **40%** sobre o FGTS (**${brl(multa)}**). Ainda pode sacar o FGTS e solicitar o seguro-desemprego. Valor bruto — INSS e IR não incluídos.`,
+    tone: 'good' as const,
+    icon: '💰',
+  };
+
   return {
     saldoSalario: brl(saldoSalario),
     avisoPrevio: brl(avisoPrevio),
@@ -56,5 +84,7 @@ export function rescisaoCltSemJustaCausa(i: Inputs): Outputs {
     multaFgts40: brl(multa),
     totalRescisao: brl(total),
     resumen: `Demissão sem justa causa: total bruto ≈ ${brl(total)}. Inclui aviso prévio de ${diasAviso} dias, 13º e férias proporcionais + 1/3 + multa 40% do FGTS.`,
+    _chart: chart,
+    _insight: insight,
   };
 }

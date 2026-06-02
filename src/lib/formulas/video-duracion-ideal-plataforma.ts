@@ -1,6 +1,6 @@
 /** Calculadora de Duración Ideal de Video */
 export interface Inputs { plataforma: string; objetivo: string; }
-export interface Outputs { duracionIdeal: string; duracionMaxima: string; retencionPromedio: number; tips: string; }
+export interface Outputs { duracionIdeal: string; duracionMaxima: string; retencionPromedio: number; tips: string; _insight?: any; _chart?: any; }
 
 const DATA: Record<string, Record<string, { ideal: string; max: string; retencion: number; tips: string }>> = {
   tiktok: {
@@ -46,5 +46,29 @@ export function videoDuracionIdealPlataforma(i: Inputs): Outputs {
   const obj = String(i.objetivo);
   const d = DATA[plat]?.[obj];
   if (!d) throw new Error('Seleccioná plataforma y objetivo');
-  return { duracionIdeal: d.ideal, duracionMaxima: d.max, retencionPromedio: Number(d.retencion), tips: d.tips };
+  const ret = Number(d.retencion);
+
+  const tone = ret >= 60 ? 'good' : ret >= 45 ? 'neutral' : 'warn';
+  const lectura = ret >= 60 ? 'es una retención alta: el formato corto trabaja a tu favor.' : ret >= 45 ? 'es una retención típica: respetá la duración ideal para no perder audiencia.' : 'es una retención exigente: cada segundo de más penaliza, andá al grano.';
+  const _insight = {
+    title: 'Apuntá a la duración ideal',
+    text: `Para este objetivo en esta plataforma, la duración que mejor funciona es **${d.ideal}** y la retención promedio ronda el **${ret}%** — ${lectura}`,
+    tone,
+    icon: '🎬',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: ret,
+    markerLabel: `${ret}% retención`,
+    min: 0,
+    segments: [
+      { nombre: 'Baja', max: 45, color: '#f87171', colorDark: '#b91c1c' },
+      { nombre: 'Media', max: 60, color: '#fbbf24', colorDark: '#b45309' },
+      { nombre: 'Alta', max: 100, color: '#34d399', colorDark: '#047857' },
+    ],
+    ariaLabel: `Retención promedio de ${ret}% sobre 100`,
+  };
+
+  return { duracionIdeal: d.ideal, duracionMaxima: d.max, retencionPromedio: ret, tips: d.tips, _insight, _chart };
 }

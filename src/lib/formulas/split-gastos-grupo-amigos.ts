@@ -14,6 +14,7 @@ export interface SplitGastosGrupoAmigosOutputs {
   debenAlPagador: number;
   sobrePagoPagador: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function splitGastosGrupoAmigos(
@@ -53,10 +54,38 @@ export function splitGastosGrupoAmigos(
     detalleStr = `Gasto total: $${Math.round(total).toLocaleString('es-AR')} entre ${personas} personas = $${Math.round(parteIgualitaria).toLocaleString('es-AR')} cada uno.`;
   }
 
+  const parteR = Math.round(parteIgualitaria);
+  const debenR = Math.round(Math.max(0, debenAlPagador));
+  const sobreR = Math.round(Math.max(0, sobrePago));
+  const fmt = (n: number) => '$' + n.toLocaleString('es-AR');
+  let _insight;
+  if (pagoPrincipal > 0 && sobrePago > 0) {
+    _insight = {
+      title: 'Quién le debe a quién',
+      text: `A cada uno le toca **${fmt(parteR)}**. Como el pagador puso **${fmt(Math.round(pagoPrincipal))}** (de más), los otros **${personas - 1}** le deben **${fmt(debenR)}** cada uno.`,
+      tone: 'good' as const,
+      icon: '🤝',
+    };
+  } else if (pagoPrincipal > 0) {
+    _insight = {
+      title: 'Cuenta saldada',
+      text: `A cada uno le toca **${fmt(parteR)}**. El pagador puso **${fmt(Math.round(pagoPrincipal))}**, menos o igual a su parte, así que **nadie le debe nada**.`,
+      tone: 'neutral' as const,
+      icon: '🤝',
+    };
+  } else {
+    _insight = {
+      title: 'Cuánto pone cada uno',
+      text: `Dividiendo **${fmt(Math.round(total))}** entre **${personas}** personas, a cada uno le toca poner **${fmt(parteR)}**.`,
+      tone: 'neutral' as const,
+      icon: '🤝',
+    };
+  }
   return {
-    parteIgualitaria: Math.round(parteIgualitaria),
-    debenAlPagador: Math.round(Math.max(0, debenAlPagador)),
-    sobrePagoPagador: Math.round(Math.max(0, sobrePago)),
+    parteIgualitaria: parteR,
+    debenAlPagador: debenR,
+    sobrePagoPagador: sobreR,
     detalle: detalleStr,
+    _insight,
   };
 }

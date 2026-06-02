@@ -1,6 +1,6 @@
 /** Score APGAR neonatal */
 export interface Inputs { apariencia: string; pulso: string; gesticulacion: string; actividad: string; respiracion: string; }
-export interface Outputs { score: number; clasificacion: string; accion: string; mensaje: string; _chart?: any; }
+export interface Outputs { score: number; clasificacion: string; accion: string; mensaje: string; _chart?: any; _insight?: any; }
 
 export function scoreApgarNeonatal(i: Inputs): Outputs {
   const score = Number(i.apariencia) + Number(i.pulso) + Number(i.gesticulacion) + Number(i.actividad) + Number(i.respiracion);
@@ -32,5 +32,24 @@ export function scoreApgarNeonatal(i: Inputs): Outputs {
     ariaLabel: 'Escala APGAR neonatal de 0 a 10: depresión severa, moderada, normal',
   };
 
-  return { score, clasificacion, accion, mensaje: `APGAR: ${score}/10. ${clasificacion}.`, _chart: chart };
+  const tone = score >= 7 ? 'good' : 'warn';
+  const icon = score >= 7 ? '👶' : score >= 4 ? '⚠️' : '🚨';
+  const estado = score >= 7 ? 'normal' : score >= 4 ? 'depresión moderada' : 'depresión severa';
+  const insightText = score >= 7
+    ? `Un APGAR de **${score}/10** indica un recién nacido en buen estado: ${accion.toLowerCase()}`
+    : `Un APGAR de **${score}/10** señala **${estado}**: ${accion.toLowerCase()}`;
+
+  return {
+    score,
+    clasificacion,
+    accion,
+    mensaje: `APGAR: ${score}/10. ${clasificacion}.`,
+    _chart: chart,
+    _insight: {
+      title: 'Qué indica este APGAR',
+      text: insightText,
+      tone,
+      icon,
+    },
+  };
 }

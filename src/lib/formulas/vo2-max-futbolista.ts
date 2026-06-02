@@ -12,6 +12,7 @@ export interface Outputs {
   nivelEsperado: string;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // VO2max esperado por nivel (mL/kg/min)
@@ -63,12 +64,23 @@ export function vo2MaxFutbolista(i: Inputs): Outputs {
     ariaLabel: 'Escala de VO2max para futbolistas: de bajo a excepcional',
   };
 
+  const vo2r = Number(vo2.toFixed(1));
+  const cumpleNivel = vo2r >= rango.min;
+  const tone = (vo2 >= 52) ? 'good' : (vo2 < 38) ? 'warn' : 'neutral';
+  const insight = {
+    title: 'Tu motor aeróbico',
+    text: `Recorriste **${dist} m** en 12 minutos: un **VO2max de ${vo2r} mL/kg/min** (${cat}). ${cumpleNivel ? `Estás dentro del rango esperado para nivel **${rango.nombre}** (${rango.min}-${rango.max}).` : `Quedás por debajo del rango esperado para nivel **${rango.nombre}** (${rango.min}-${rango.max}); te faltan ~${(rango.min - vo2r).toFixed(1)} puntos para llegar.`} Frente a la élite (65) la diferencia es de **${dif > 0 ? '+' : ''}${dif.toFixed(1)}**.`,
+    tone,
+    icon: '⚽',
+  };
+
   return {
-    vo2max: Number(vo2.toFixed(1)),
+    vo2max: vo2r,
     categoria: cat,
     diferenciaElite: Number(dif.toFixed(1)),
     nivelEsperado,
     detalle: `Distancia ${dist} m en 12 min → **VO2max ${vo2.toFixed(1)} mL/kg/min** (${cat}). Esperado para ${rango.nombre}: ${rango.min}-${rango.max}. Diferencia vs élite (65): ${dif > 0 ? '+' : ''}${dif.toFixed(1)}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

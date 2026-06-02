@@ -1,6 +1,6 @@
 /** Calculadora de Presupuesto de Cumpleaños */
 export interface Inputs { invitados: number; tipo: string; comida: string; bebida: string; }
-export interface Outputs { costoTotal: number; costoPorPersona: number; detalleComida: number; detalleBebida: number; }
+export interface Outputs { costoTotal: number; costoPorPersona: number; detalleComida: number; detalleBebida: number; _insight?: any; _chart?: any; }
 
 export function presupuestoCumpleanos(i: Inputs): Outputs {
   const inv = Number(i.invitados);
@@ -21,5 +21,28 @@ export function presupuestoCumpleanos(i: Inputs): Outputs {
   const costoTotal = detalleComida + detalleBebida + lugar + extras;
   const costoPorPersona = Math.round(costoTotal / inv);
 
-  return { costoTotal, costoPorPersona, detalleComida, detalleBebida };
+  const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const pesoComida = costoTotal ? Math.round((detalleComida / costoTotal) * 100) : 0;
+  const _insight = {
+    title: 'Cuánto sale el cumple',
+    text: `Para **${fmt.format(inv)} invitados** te sale unos **$${fmt.format(costoTotal)}** en total, **$${fmt.format(costoPorPersona)} por persona**. La comida es el rubro más pesado (**${pesoComida}%** del gasto)${lugar > 0 ? ', seguido por el lugar' : ' y, al ser en casa, te ahorrás el alquiler del lugar'}.`,
+    tone: 'neutral',
+    icon: '🥳',
+  };
+  const slices = [
+    { label: 'Comida', value: detalleComida },
+    { label: 'Bebida', value: detalleBebida },
+    { label: 'Extras (torta, deco, música)', value: extras },
+  ];
+  if (lugar > 0) slices.splice(2, 0, { label: 'Lugar', value: lugar });
+  const _chart = {
+    type: 'doughnut',
+    slices,
+    prefix: '$',
+    centerValue: `$${fmt.format(costoTotal)}`,
+    centerLabel: 'Costo total',
+    ariaLabel: `Distribución del costo del cumpleaños por rubro, total $${fmt.format(costoTotal)}`,
+  };
+
+  return { costoTotal, costoPorPersona, detalleComida, detalleBebida, _insight, _chart };
 }

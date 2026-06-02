@@ -20,6 +20,8 @@ export interface Outputs {
   totalVectors: number;
   storageGB: number;
   breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -196,6 +198,51 @@ export function compute(i: Inputs): Outputs {
     `TOTAL MENSUAL ESTIMADO: $${totalMonthlyCost.toFixed(2)} USD`,
   ].filter((l) => l !== "");
 
+  // --- Insight: identificar el componente dominante del costo ---
+  const components: { label: string; value: number }[] = [
+    { label: "LLM", value: llmCost },
+    { label: "Vector DB", value: vectorDbCost },
+    { label: "Embeddings", value: embeddingCost },
+  ];
+  const dominant = components.reduce((a, b) => (b.value > a.value ? b : a), components[0]);
+  const dominantPct = totalMonthlyCost > 0 ? (dominant.value / totalMonthlyCost) * 100 : 0;
+  const llmShare = totalMonthlyCost > 0 ? (llmCost / totalMonthlyCost) * 100 : 0;
+  const totalFmt = `$${totalMonthlyCost.toFixed(2)}`;
+
+  let insightText: string;
+  let insightTone: "good" | "warn" | "neutral";
+  if (llmShare >= 60 && llmCost > 0) {
+    insightText = `El **LLM** se lleva el **${llmShare.toFixed(0)}%** del costo (${'$'}${llmCost.toFixed(2)} de ${totalFmt}/mes). Acá es donde más bajás la factura: cachear respuestas, recortar el contexto (menos topK o chunks más cortos) o pasar a un modelo más barato pesa mucho más que optimizar la base vectorial.`;
+    insightTone = "warn";
+  } else if (dominant.label === "Vector DB" && dominantPct >= 50) {
+    insightText = `La **base vectorial** domina con el **${dominantPct.toFixed(0)}%** del costo (${'$'}${vectorDbCost.toFixed(2)} de ${totalFmt}/mes). Con ${totalVectors.toLocaleString()} vectores conviene revisar si el plan/instancia está sobredimensionado o si pgvector self-hosted te sale más barato a este volumen.`;
+    insightTone = "warn";
+  } else {
+    insightText = `Costo estimado de **${totalFmt}/mes** para ${totalVectors.toLocaleString()} vectores y ${queriesPerMonth.toLocaleString()} queries/mes. El mayor peso es **${dominant.label}** (${dominantPct.toFixed(0)}%); el resto se reparte entre los demás componentes.`;
+    insightTone = "neutral";
+  }
+
+  const _insight = {
+    title: "Dónde se va tu presupuesto RAG",
+    text: insightText,
+    tone: insightTone,
+    icon: "🧠",
+  };
+
+  // --- Donut: las tres partes suman el total mensual ---
+  const slices = components
+    .filter((c) => c.value > 0)
+    .map((c) => ({ label: c.label, value: Math.round(c.value * 100) / 100 }));
+
+  const _chart = slices.length >= 2 ? {
+    type: "doughnut",
+    slices,
+    prefix: "$",
+    centerValue: totalFmt,
+    centerLabel: "USD/mes",
+    ariaLabel: `Costo mensual de ${totalFmt} repartido entre Vector DB, embeddings y LLM`,
+  } : undefined;
+
   return {
     totalMonthlyCost: Math.round(totalMonthlyCost * 100) / 100,
     vectorDbCost: Math.round(vectorDbCost * 100) / 100,
@@ -204,5 +251,7 @@ export function compute(i: Inputs): Outputs {
     totalVectors,
     storageGB: Math.round(storageGB * 10000) / 10000,
     breakdown: lines.join("\n"),
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

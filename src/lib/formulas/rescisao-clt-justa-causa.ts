@@ -17,6 +17,8 @@ export interface Outputs {
   tercoFeriasVencidas: string;
   totalRescisao: string;
   resumen: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -35,11 +37,33 @@ export function rescisaoCltJustaCausa(i: Inputs): Outputs {
   const terco = temVencidas ? sal / 3 : 0;
   const total = saldoSalario + ferias + terco;
 
+  const chart = temVencidas ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Saldo de salário', value: Math.round(saldoSalario * 100) / 100 },
+      { label: 'Férias vencidas', value: Math.round(ferias * 100) / 100 },
+      { label: '1/3 das férias', value: Math.round(terco * 100) / 100 },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(total),
+    centerLabel: 'Total a receber',
+    ariaLabel: 'Composição da rescisão por justa causa: saldo de salário, férias vencidas e 1/3',
+  } : undefined;
+
+  const insight = {
+    title: 'Justa causa: o mínimo legal',
+    text: `Por justa causa você recebe apenas **${brl(total)}**: ${temVencidas ? 'saldo de salário mais as férias vencidas + 1/3' : 'somente o saldo de salário dos dias trabalhados'}. Sem aviso prévio, 13º proporcional, férias proporcionais nem multa de 40% — e o FGTS **não pode ser sacado**.`,
+    tone: 'warn' as const,
+    icon: '⚠️',
+  };
+
   return {
     saldoSalario: brl(saldoSalario),
     feriasVencidas: brl(ferias),
     tercoFeriasVencidas: brl(terco),
     totalRescisao: brl(total),
     resumen: `Justa causa: total ≈ ${brl(total)}. Apenas saldo de salário${temVencidas ? ' + férias vencidas + 1/3' : ''}. Sem 13º proporcional, aviso prévio, multa 40% FGTS ou saque do FGTS.`,
+    _chart: chart,
+    _insight: insight,
   };
 }

@@ -10,6 +10,7 @@ export interface VacunasObligatoriasDestinoViajeOutputs {
   vacunasObligatorias: string;
   vacunasRecomendadas: string;
   cuandoAplicar: string;
+  _insight?: any;
 }
 export function vacunasObligatoriasDestinoViaje(i: VacunasObligatoriasDestinoViajeInputs): VacunasObligatoriasDestinoViajeOutputs {
   const region = String(i.region || "");
@@ -33,9 +34,22 @@ export function vacunasObligatoriasDestinoViaje(i: VacunasObligatoriasDestinoVia
   if (rural || larga) {
     recomendadas += ", rabia (zona rural/larga duración)";
   }
+
+  const hayObligatorias = obligatorias !== "Ninguna específica" && !obligatorias.startsWith("Ninguna");
+  const exigeFiebreAmarilla = /fiebre amarilla/i.test(obligatorias);
+  const _insight = {
+    title: hayObligatorias ? "Tu destino exige vacunas" : "Sin vacunas obligatorias",
+    text: hayObligatorias
+      ? `Para tu destino hay vacunas **obligatorias**: ${obligatorias}.${exigeFiebreAmarilla ? " La fiebre amarilla necesita **mínimo 10 días** de anticipación para ser válida en el certificado." : ""} Empezá el esquema **4-6 semanas antes** del viaje.`
+      : `Tu destino no exige vacunas obligatorias, pero se recomienda tener al día: ${recomendadas}. Arrancá **4-6 semanas antes** para dar tiempo a los refuerzos.`,
+    tone: hayObligatorias ? "warn" : "neutral",
+    icon: hayObligatorias ? "💉" : "🧳",
+  };
+
   return {
     vacunasObligatorias: obligatorias,
     vacunasRecomendadas: recomendadas,
-    cuandoAplicar: "Empezar 4-6 semanas antes. Fiebre amarilla MÍNIMO 10 días antes."
+    cuandoAplicar: "Empezar 4-6 semanas antes. Fiebre amarilla MÍNIMO 10 días antes.",
+    _insight,
   };
 }

@@ -16,6 +16,8 @@ export interface Outputs {
   ideal_bmi: string;
   weight_difference: number;
   status: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -88,6 +90,29 @@ export function compute(i: Inputs): Outputs {
     status = "Obese (BMI ≥ 30.0)";
   }
 
+  const isNormal = currentBMI >= 18.5 && currentBMI < 25.0;
+  const diffWord = weightDifference > 0 ? "above" : weightDifference < 0 ? "below" : "right at";
+  const _insight = {
+    title: isNormal ? "You're in a healthy range" : "Worth keeping an eye on",
+    text: `Your ideal weight averages **${averageWeight} lb** (range ${weightRange}) across the Devine, Robinson and Hamwi formulas. At **${currentWeight} lb** you're **${Math.abs(weightDifference)} lb** ${diffWord} that average, with a current BMI of **${currentBMI}** — ${status.toLowerCase()}.`,
+    tone: isNormal ? "good" : "warn",
+    icon: "⚖️",
+  };
+
+  const _chart = {
+    type: "scale" as const,
+    marker: currentBMI,
+    markerLabel: `BMI ${currentBMI}`,
+    min: 14,
+    segments: [
+      { nombre: "Underweight", max: 18.5, color: "#60a5fa", colorDark: "#3b82f6" },
+      { nombre: "Normal", max: 25, color: "#22c55e", colorDark: "#16a34a" },
+      { nombre: "Overweight", max: 30, color: "#f59e0b", colorDark: "#d97706" },
+      { nombre: "Obese", max: Math.max(40, Math.ceil(currentBMI) + 1), color: "#ef4444", colorDark: "#dc2626" },
+    ],
+    ariaLabel: "BMI scale showing your current body mass index across the underweight, normal, overweight and obese zones",
+  };
+
   return {
     divine_weight: devineWeight,
     robinson_weight: robinsonWeight,
@@ -97,6 +122,8 @@ export function compute(i: Inputs): Outputs {
     current_bmi: currentBMI,
     ideal_bmi: idealBMI,
     weight_difference: weightDifference,
-    status: status
+    status: status,
+    _insight,
+    _chart
   };
 }

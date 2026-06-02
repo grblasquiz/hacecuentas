@@ -15,6 +15,7 @@ export interface SucesionCostoOutputs {
   tasaJusticia: number;
   otrosGastos: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function sucesionCosto(inputs: SucesionCostoInputs): SucesionCostoOutputs {
@@ -65,11 +66,21 @@ export function sucesionCosto(inputs: SucesionCostoInputs): SucesionCostoOutputs
     ariaLabel: 'Composición del costo de sucesión: honorarios, tasa de justicia y otros gastos',
   };
 
+  const pctTotal = (costoTotal / acervo) * 100;
+  const f = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Qué porción del acervo se va en tramitar la sucesión',
+    text: `Tramitar esta sucesión cuesta **${f(costoTotal)}**, el **${pctTotal.toFixed(1)}%** del acervo de **${f(acervo)}**. El grueso son los honorarios del abogado (**${f(honorarios)}**), más **${f(tasaJusticia)}** de tasa de justicia y **${f(otrosGastos)}** de aportes y gastos. A los herederos les quedan **${f(acervo - costoTotal)}**.`,
+    tone: pctTotal >= 12 ? 'warn' : 'neutral',
+    icon: '⚖️',
+  };
+
   return {
     costoTotal: Math.round(costoTotal),
     honorarios: Math.round(honorarios),
     tasaJusticia: Math.round(tasaJusticia),
     otrosGastos: Math.round(otrosGastos),
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -8,6 +8,7 @@ export interface Outputs {
   metodoSiembra: string;
   diasGerminacion: string;
   consejo: string;
+  _insight?: any;
 }
 
 interface SemillaData {
@@ -55,11 +56,26 @@ export function profundidadSiembraSemilla(i: Inputs): Outputs {
 
   const factor = FACTOR_SUELO[suelo] || 1;
   const prof = data.profBase * factor;
+  const profCm = Number(prof.toFixed(1));
+
+  const especieNombre = especie.charAt(0).toUpperCase() + especie.slice(1);
+  const ajusteSuelo = factor > 1
+    ? ` En suelo arenoso conviene sembrar algo más profundo (mantiene mejor la humedad).`
+    : factor < 1
+      ? ` En suelo arcilloso se siembra más al ras para que la semilla no se ahogue.`
+      : '';
+  const _insight = {
+    title: `${especieNombre}: a qué profundidad sembrar`,
+    text: `Sembrá a **${profCm} cm** de profundidad por **${data.metodo.toLowerCase()}**. Germina en **${data.diasMin}–${data.diasMax} días**, así que mantené el sustrato húmedo durante ese período.${ajusteSuelo}`,
+    tone: 'neutral',
+    icon: '🌱',
+  };
 
   return {
     profundidadCm: Number(prof.toFixed(1)),
     metodoSiembra: data.metodo,
     diasGerminacion: `${data.diasMin}–${data.diasMax} días`,
     consejo: data.consejo,
+    _insight,
   };
 }

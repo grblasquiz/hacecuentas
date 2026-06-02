@@ -14,6 +14,7 @@ export interface Outputs {
   cfteaStr: string;
   advertencia: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Límite normativo de cuota sobre haber neto (ANSES)
@@ -165,6 +166,36 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del total a pagar: capital prestado e intereses',
   };
 
+  // Insight dinámico: cuota vs tope del 30%, peso de los intereses y si se topeó el monto
+  const cuotaPctHaber = haber > 0 ? (cuotaMensual / haber) * 100 : 0;
+  const interesPctCapital = montoUsado > 0 ? (totalIntereses / montoUsado) * 100 : 0;
+  const fmtAr = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const fueTopeado = montoSolicitadoInput > 0 && montoSolicitadoInput > montoMaximo;
+
+  let insightTitle: string;
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightIcon: string;
+
+  if (fueTopeado) {
+    insightTitle = 'Pediste más del máximo';
+    insightText = `Con un haber de ${fmtAr(haber)}, ANSES no presta más de ${fmtAr(montoMaximo)} porque la cuota no puede superar el 30% del haber. Ajustamos el cálculo a ese tope: cuota de **${fmtAr(cuotaMensual)}/mes** (el límite) y **${fmtAr(totalIntereses)}** en intereses (**${interesPctCapital.toFixed(0)}%** del capital).`;
+    insightTone = 'warn';
+    insightIcon = '⚠️';
+  } else {
+    insightTitle = 'Tu cuota y los intereses';
+    insightText = `Tu cuota de **${fmtAr(cuotaMensual)}/mes** representa el **${cuotaPctHaber.toFixed(0)}%** de tu haber (el tope ANSES es 30%). A lo largo de ${plazo} meses vas a pagar **${fmtAr(totalIntereses)}** de intereses, un **${interesPctCapital.toFixed(0)}%** sobre el capital de ${fmtAr(montoUsado)}.`;
+    insightTone = interesPctCapital >= 100 ? 'warn' : 'neutral';
+    insightIcon = '👵';
+  }
+
+  const insight = {
+    title: insightTitle,
+    text: insightText,
+    tone: insightTone,
+    icon: insightIcon,
+  };
+
   return {
     cuotaMensual: Math.round(cuotaMensual),
     montoMaximo,
@@ -174,5 +205,6 @@ export function compute(i: Inputs): Outputs {
     cfteaStr,
     advertencia,
     _chart: chart,
+    _insight: insight,
   };
 }

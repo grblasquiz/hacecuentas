@@ -11,6 +11,8 @@ export interface Outputs {
   totalConPropina: number;
   porPersona: number;
   regla: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Datos aproximados por país — guías turísticas 2026
@@ -42,11 +44,53 @@ export function propinaViaje(i: Inputs): Outputs {
   const total = monto + propina;
   const porPers = total / personas;
 
+  const servNombre: Record<string, string> = { restaurante: 'restaurante', taxi: 'taxi', hotel: 'hotel' };
+  const sNombre = servNombre[serv] || serv;
+  const fmtAR = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+
+  let tone: 'good' | 'warn' | 'neutral';
+  let icon: string;
+  let text: string;
+  if (pct === 0) {
+    tone = 'good';
+    icon = '🧳';
+    text = `En **${info.nombre}** no se espera propina de ${sNombre}: pagás solo **${fmtAR(monto)}**. ${info.regla}`;
+  } else if (pct >= 15) {
+    tone = 'warn';
+    icon = '✈️';
+    text = `Ojo en **${info.nombre}**: la propina de ${sNombre} (**${pct}%**) suma **${fmtAR(propina)}**, llevando el total a **${fmtAR(total)}**${personas > 1 ? ` (${fmtAR(porPers)} por persona)` : ''}. ${info.regla}`;
+  } else {
+    tone = 'neutral';
+    icon = '✈️';
+    text = `En **${info.nombre}**, la propina de ${sNombre} ronda **${pct}%**: sumá **${fmtAR(propina)}** para un total de **${fmtAR(total)}**${personas > 1 ? ` (${fmtAR(porPers)} por persona)` : ''}. ${info.regla}`;
+  }
+
+  const _insight = {
+    title: `Propina en ${info.nombre}`,
+    text,
+    tone,
+    icon,
+  };
+
+  const _chart = propina > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: sNombre.charAt(0).toUpperCase() + sNombre.slice(1), value: Math.round(monto) },
+      { label: 'Propina', value: Math.round(propina) },
+    ],
+    prefix: '$',
+    centerValue: fmtAR(total),
+    centerLabel: 'Total',
+    ariaLabel: `Composición del total en ${info.nombre}: consumo más propina`,
+  } : undefined;
+
   return {
     porcentajeSugerido: pct,
     propinaSugerida: Math.round(propina),
     totalConPropina: Math.round(total),
     porPersona: Math.round(porPers),
     regla: info.regla,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

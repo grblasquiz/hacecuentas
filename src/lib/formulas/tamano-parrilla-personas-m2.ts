@@ -8,6 +8,8 @@ export interface Outputs {
   medidasSugeridas: string;
   tipoParrilla: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tamanoParrillaPersonasM2(i: Inputs): Outputs {
@@ -56,10 +58,31 @@ export function tamanoParrillaPersonasM2(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const lastMax = Math.max(8000, Math.ceil(superficieTotal / 1000) * 1000 + 1000);
+
   return {
     superficieCm2: superficieTotal,
     medidasSugeridas: medidas,
     tipoParrilla,
     detalle: `Para ${personas} personas (asado ${tipo}): necesitás ${fmt.format(superficieTotal)} cm² de parrilla (${(superficieTotal / 10000).toFixed(2)} m²). Medidas sugeridas: ${medidas}. ${tipoParrilla}.`,
+    _insight: {
+      title: tipoParrilla,
+      text: `Para **${fmt.format(personas)} personas** con asado ${tipo} necesitás **${fmt.format(superficieTotal)} cm²** (${(superficieTotal / 10000).toFixed(2)} m²) de parrilla, equivalente a unas medidas de **${medidas}**. Dejá zona de fuego al costado para regular brasas sin amontonar la carne.`,
+      tone: 'neutral',
+      icon: '🔥',
+    },
+    _chart: {
+      type: 'scale',
+      marker: superficieTotal,
+      markerLabel: `${fmt.format(superficieTotal)} cm²`,
+      min: 0,
+      segments: [
+        { nombre: 'Portátil / balcón', max: 1500, color: '#34d399', colorDark: '#10b981' },
+        { nombre: 'Residencial', max: 3000, color: '#60a5fa', colorDark: '#3b82f6' },
+        { nombre: 'Quincho / evento', max: 6000, color: '#fbbf24', colorDark: '#f59e0b' },
+        { nombre: 'Extra grande / cruz', max: lastMax, color: '#f87171', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Superficie de parrilla de ${fmt.format(superficieTotal)} cm² ubicada en el rango ${tipoParrilla}`,
+    },
   };
 }

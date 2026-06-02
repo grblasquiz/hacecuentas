@@ -28,6 +28,8 @@ export interface PremiosLibertadoresOutputs {
   bonusVictorias: number;
   detalleRondas: string;
   rondaLabel: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const PREMIOS_RONDA: Record<string, number> = {
@@ -104,11 +106,46 @@ export function premiosLibertadoresRonda(
     );
   }
 
-  return {
-    premioTotal: premioBase + bonusVictorias,
+  const premioTotal = premioBase + bonusVictorias;
+  const rondaLabel = RONDA_LABELS[ronda] || ronda;
+
+  const tone = ronda === 'campeon' ? 'good' : 'neutral';
+  const fmt = (n: number) => '$' + n.toLocaleString('es-AR');
+  let insightText: string;
+  if (ronda === 'campeon') {
+    insightText = `Llegar a **${rondaLabel}** deja una bolsa de **US$ ${premioTotal.toLocaleString('es-AR')}** en premios CONMEBOL acumulados${bonusVictorias > 0 ? `, de los cuales ${fmt(bonusVictorias)} son bonus por las ${victorias} victorias en grupos` : ''}.`;
+  } else {
+    insightText = `Como **${rondaLabel}**, el club embolsa **US$ ${premioTotal.toLocaleString('es-AR')}** acumulando los premios de cada fase${bonusVictorias > 0 ? ` más ${fmt(bonusVictorias)} de bonus por ${victorias} victorias en grupos` : ''}. Avanzar de ronda suma fuerte.`;
+  }
+
+  const out: PremiosLibertadoresOutputs = {
+    premioTotal,
     premioBase,
     bonusVictorias,
     detalleRondas: detallePartes.join(' + '),
-    rondaLabel: RONDA_LABELS[ronda] || ronda,
+    rondaLabel,
+    _insight: {
+      title: 'Premio acumulado',
+      text: insightText,
+      tone,
+      icon: '🏆',
+    },
   };
+
+  // Donut sólo si hay bonus por victorias (si no, sería una sola porción)
+  if (bonusVictorias > 0) {
+    out._chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Premios por rondas', value: premioBase },
+        { label: `Bonus victorias (${victorias})`, value: bonusVictorias },
+      ],
+      prefix: '$',
+      centerValue: '$' + premioTotal.toLocaleString('es-AR'),
+      centerLabel: 'Premio total',
+      ariaLabel: 'Composición del premio: premios fijos por ronda más bonus por victorias en fase de grupos',
+    };
+  }
+
+  return out;
 }

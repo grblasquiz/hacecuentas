@@ -26,6 +26,7 @@ export interface Outputs {
   ing4_scaled: string;
   ing5_scaled: string;
   baking_warning: string;
+  _insight?: any;
 }
 
 // Unit conversion constants — fixed physical standards (NIST HB44)
@@ -227,6 +228,34 @@ export function compute(i: Inputs): Outputs {
 
   const baking_warning = warnings.length > 0 ? warnings.join(" | ") : "No special notes.";
 
+  // Narrative insight (calc is English-language, keep insight in English for consistency)
+  const factorStr = formatNumber(scaleFactor);
+  const leaveningCapped = hasLeavening && scaleFactor > 1.5;
+  let _insight: any;
+  if (scaleFactor === 1) {
+    _insight = {
+      title: 'Same batch size',
+      text: `Original and desired servings match, so every ingredient stays **the same** (scale factor **${factorStr}×**). No adjustments needed.`,
+      tone: 'neutral',
+      icon: '🍳',
+    };
+  } else if (leaveningCapped) {
+    _insight = {
+      title: 'Big scale-up — watch the leavening',
+      text: `You are scaling **${originalServings}→${desiredServings}** servings (**${factorStr}×**). Leavening was capped to ~${(LEAVENING_CAP_FACTOR * 100).toFixed(0)}% of linear to avoid a bitter taste or collapse, and larger batches need a longer bake.`,
+      tone: 'warn',
+      icon: '🧁',
+    };
+  } else {
+    const dir = scaleFactor > 1 ? 'up' : 'down';
+    _insight = {
+      title: scaleFactor > 1 ? 'Scaled up' : 'Scaled down',
+      text: `Scaling **${originalServings}→${desiredServings}** servings multiplies every ingredient by **${factorStr}×** (${dir}). ${scaleFactor > 1 ? 'Expect a 10–25% longer cook time.' : 'Measure leavening and spices by weight for accuracy at small volumes.'}`,
+      tone: scaleFactor > 1 ? 'good' : 'neutral',
+      icon: '🍽️',
+    };
+  }
+
   return {
     scale_factor: parseFloat(formatNumber(scaleFactor)),
     ing1_scaled,
@@ -234,6 +263,7 @@ export function compute(i: Inputs): Outputs {
     ing3_scaled,
     ing4_scaled,
     ing5_scaled,
-    baking_warning
+    baking_warning,
+    _insight
   };
 }

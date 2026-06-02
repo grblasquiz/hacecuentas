@@ -12,6 +12,7 @@ export interface Outputs {
   predialAnual: number;
   rangoTabla: string;
   detalle: string;
+  _insight?: any;
 }
 
 // Tabla Art. 130 CFCDMX 2026 (cuota bimestral)
@@ -117,10 +118,25 @@ export function predialCdmxMexico(inputs: Inputs): Outputs {
     lineas.push(`8. Predial anual (× 6 bimestres): ${formatMXN(predialAnual)}.`);
   }
 
+  let insightText: string;
+  if (tipoUso === 'habitacional' && reduccion > 0) {
+    insightText = `Tu predio cae en el **rango ${rango.letra}**: pagás **${formatMXN(predialBimestral)}** por bimestre (**${formatMXN(predialAnual)}** al año). La reducción habitacional del **${(reduccion * 100).toFixed(0)}%** te ahorra ${formatMXN(montoReduccion)} cada bimestre.`;
+  } else {
+    insightText = `Tu predio cae en el **rango ${rango.letra}**: pagás **${formatMXN(predialBimestral)}** por bimestre, equivalente a **${formatMXN(predialAnual)}** al año${tipoUso === 'habitacional' ? ' (sin reducción: el valor catastral supera el tope habitacional)' : ' (uso no habitacional, sin reducción)'}.`;
+  }
+
+  const _insight = {
+    title: 'Predial CDMX estimado',
+    text: insightText,
+    tone: 'neutral' as const,
+    icon: '🏠',
+  };
+
   return {
     predialBimestral: Math.round(predialBimestral * 100) / 100,
     predialAnual: Math.round(predialAnual * 100) / 100,
     rangoTabla,
     detalle: lineas.join('\n'),
+    _insight,
   };
 }

@@ -16,6 +16,8 @@ export interface Outputs {
   streamingTokensMonthly: number;
   batchTokensMonthly: number;
   breakdownText: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -83,6 +85,25 @@ export function compute(i: Inputs): Outputs {
     `Ahorro vs solo streaming: USD ${savingsVsStreaming.toFixed(2)} (${savingsPercent.toFixed(1)}%). ` +
     (latencyNote ? latencyNote : "");
 
+  const _insight = {
+    title: savingsPercent >= 25 ? "Mucho para ganar con el mix" : savingsPercent >= 10 ? "El batch te ahorra plata" : "Margen acotado de ahorro",
+    text: `Tu mix óptimo cuesta **USD ${monthlyCostOptimal.toFixed(2)}/mes** vs **USD ${monthlyCostFullStreaming.toFixed(2)}** si mandaras todo por streaming: ahorrás **USD ${savingsVsStreaming.toFixed(2)} (${savingsPercent.toFixed(1)}%)** moviendo el **${(batchFraction * 100).toFixed(0)}%** del tráfico al batch (latencia hasta 24 h). Cuanto más tolerante a latencia sea tu carga, más caés hacia los USD ${monthlyCostFullBatch.toFixed(2)} del 100% batch.`,
+    tone: savingsPercent >= 10 ? "good" : "neutral",
+    icon: "⚡",
+  };
+
+  const _chart = {
+    type: "doughnut" as const,
+    slices: [
+      { label: `Streaming (${latencySensitivePercent.toFixed(0)}%)`, value: Math.round(costStreaming * 100) / 100 },
+      { label: `Batch (${(batchFraction * 100).toFixed(0)}%)`, value: Math.round(costBatch * 100) / 100 },
+    ],
+    prefix: "$",
+    centerValue: "$" + monthlyCostOptimal.toFixed(2),
+    centerLabel: "Costo/mes",
+    ariaLabel: "Composición del costo mensual óptimo: porción de streaming a precio estándar más porción de batch con descuento",
+  };
+
   return {
     monthlyCostOptimal,
     monthlyCostFullStreaming,
@@ -92,5 +113,7 @@ export function compute(i: Inputs): Outputs {
     streamingTokensMonthly,
     batchTokensMonthly,
     breakdownText,
+    _insight,
+    _chart,
   };
 }

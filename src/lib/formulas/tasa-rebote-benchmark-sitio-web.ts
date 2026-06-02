@@ -11,6 +11,8 @@ export interface Outputs {
   benchmark: string;
   diagnostico: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const benchmarks: Record<string, { min: number; max: number; label: string }> = {
@@ -55,10 +57,49 @@ export function tasaReboteBenchmarkSitioWeb(i: Inputs): Outputs {
     `Benchmark ${bench.label}: ${bench.min}-${bench.max}%. ` +
     `Sesiones con engagement: ${fmt.format(total - rebotes)} (${(100 - tasaRebote).toFixed(1)}%).`;
 
+  const tasaR = Number(tasaRebote.toFixed(1));
+  const engagement = Number((100 - tasaRebote).toFixed(1));
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (tasaRebote < bench.min) {
+    insightTone = 'good';
+    insightText = `Tu **${tasaR}%** de rebote queda por debajo del rango típico de ${bench.label} (${bench.min}-${bench.max}%): el **${engagement}%** de las sesiones interactúa. Excelente, pero un valor tan bajo a veces delata un error de tracking — verificalo.`;
+  } else if (tasaRebote <= bench.max) {
+    insightTone = 'good';
+    insightText = `Tu **${tasaR}%** de rebote cae dentro de lo normal para ${bench.label} (${bench.min}-${bench.max}%): el **${engagement}%** de las sesiones sigue navegando. Sano, con margen para optimizar.`;
+  } else {
+    insightTone = 'warn';
+    insightText = `Tu **${tasaR}%** de rebote supera el benchmark de ${bench.label} (${bench.min}-${bench.max}%): sólo el **${engagement}%** interactúa. Revisá velocidad de carga, relevancia del contenido y experiencia mobile.`;
+  }
+
+  const _insight = {
+    title: 'Tu tasa de rebote vs. el benchmark',
+    text: insightText,
+    tone: insightTone,
+    icon: '📉',
+  };
+
+  const topCap = Math.max(100, Math.ceil(tasaRebote) + 1);
+  const _chart = {
+    type: 'scale',
+    marker: tasaR,
+    markerLabel: `${tasaR}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Bajo el rango', max: bench.min, color: '#3b82f6', colorDark: '#60a5fa' },
+      { nombre: 'Rango normal', max: bench.max, color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: 'Sobre el rango', max: topCap, color: '#ef4444', colorDark: '#f87171' },
+    ],
+    ariaLabel: `Tasa de rebote ${tasaR}% sobre el benchmark de ${bench.label}, ${bench.min} a ${bench.max} por ciento.`,
+  };
+
   return {
-    tasaRebote: Number(tasaRebote.toFixed(1)),
+    tasaRebote: tasaR,
     benchmark,
     diagnostico,
     detalle,
+    _insight,
+    _chart,
   };
 }

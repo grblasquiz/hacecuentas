@@ -9,6 +9,7 @@ export interface Outputs {
   proximaVacuna: string;
   vacunasAtrasadas: string;
   advertencia: string;
+  _insight?: any;
 }
 
 interface VacunaEntry {
@@ -295,11 +296,28 @@ export function compute(i: Inputs): Outputs {
   const advertencia =
     "Esta calculadora es orientativa. Verificá siempre el carnet de vacunación y consultá al pediatra o vacunatorio para confirmar el estado vacunal real de tu hijo/a.";
 
+  // --- Caja de insight (dinámica según atrasos) ---
+  const hayAtrasos = atrasadas.length > 0;
+  const _insight = hayAtrasos
+    ? {
+        title: 'Posibles vacunas atrasadas',
+        text: `Con **${edadActual}**, la calculadora detecta **${atrasadas.length} dosis** que ya debería${atrasadas.length === 1 ? '' : 'n'} estar aplicada${atrasadas.length === 1 ? '' : 's'}. Revisá el carnet: si faltan, el vacunatorio puede armar un **esquema de puesta al día** sin reiniciar las dosis ya dadas.`,
+        tone: 'warn' as const,
+        icon: '⚠️',
+      }
+    : {
+        title: 'Próxima dosis',
+        text: `A los **${edadActual}**, lo que viene en el Calendario Nacional 2026 es: **${proximaVacunaStr}**. No detectamos atrasos evidentes según las fechas teóricas.`,
+        tone: 'neutral' as const,
+        icon: '💉',
+      };
+
   return {
     edadActual,
     tablaVacunas,
     proximaVacuna: proximaVacunaStr,
     vacunasAtrasadas: vacunasAtrasadasStr,
     advertencia,
+    _insight,
   };
 }

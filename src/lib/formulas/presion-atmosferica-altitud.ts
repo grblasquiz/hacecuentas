@@ -12,6 +12,8 @@ export interface Outputs {
   porcentajeVsMar: string;
   temperaturaEstandar: string;
   categoria: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function presionAtmosfericaAltitud(i: Inputs): Outputs {
@@ -41,11 +43,41 @@ export function presionAtmosfericaAltitud(i: Inputs): Outputs {
   const mmHg = P * 0.750062;
   const pct = (P / P0) * 100;
 
+  // Insight: a mayor altitud, menos presión y menos oxígeno disponible
+  const altoRiesgo = h >= 3500;
+  const tone = altoRiesgo ? 'warn' : (h >= 1000 ? 'neutral' : 'good');
+  const icon = h >= 5000 ? '⛰️' : (h >= 2500 ? '🏔️' : (h >= 1000 ? '🗻' : '🌊'));
+  const insight = {
+    title: 'Qué significa tu resultado',
+    text: `A **${h.toLocaleString('es-AR')} m** la presión es de **${P.toFixed(0)} hPa**, un **${pct.toFixed(1)}%** de la del nivel del mar: hay menos oxígeno por respiración. Clasificación: **${categoria}**.${altoRiesgo ? ' Aclimatación gradual y atención a síntomas de mal de altura.' : ''}`,
+    tone,
+    icon,
+  };
+
+  // Gauge sobre la altitud con las zonas fisiológicas
+  const chart = {
+    type: 'scale' as const,
+    marker: h,
+    markerLabel: `${h.toLocaleString('es-AR')} m`,
+    min: Math.min(0, h),
+    segments: [
+      { nombre: 'Baja', max: 1000, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Media', max: 2500, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Altura', max: 3500, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Muy alta', max: 5000, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Extrema', max: Math.max(8849, h + 500), color: '#d4a0a8', colorDark: '#7f1d1d' },
+    ],
+    unit: 'm',
+    ariaLabel: `Altitud de ${h} metros sobre el nivel del mar: zona ${categoria}.`,
+  };
+
   return {
     presion: `${P.toFixed(2)} hPa (mbar)`,
     presionMmHg: `${mmHg.toFixed(1)} mmHg`,
     porcentajeVsMar: `${pct.toFixed(1)} % de la presión al nivel del mar`,
     temperaturaEstandar: `${(T - 273.15).toFixed(1)} °C (atmósfera estándar)`,
     categoria,
+    _insight: insight,
+    _chart: chart,
   };
 }

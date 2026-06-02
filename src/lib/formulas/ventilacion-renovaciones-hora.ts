@@ -1,5 +1,5 @@
 export interface Inputs { ambiente: string; largo: number; ancho: number; alto: number; }
-export interface Outputs { m3h: number; renovaciones: number; volumen: number; extractorRecomendado: string; }
+export interface Outputs { m3h: number; renovaciones: number; volumen: number; extractorRecomendado: string; _insight?: any; }
 const RENOV: Record<string, number> = { cocina: 12, bano: 10, dormitorio: 3, oficina: 6, garaje: 8, comercio: 10 };
 export function ventilacionRenovacionesHora(i: Inputs): Outputs {
   const amb = String(i.ambiente || 'cocina');
@@ -12,5 +12,11 @@ export function ventilacionRenovacionesHora(i: Inputs): Outputs {
   else if (m3h <= 300) extractor = 'Extractor mediano (300 m³/h) — tipo cocina';
   else if (m3h <= 600) extractor = 'Extractor grande (600 m³/h) — tipo campana';
   else extractor = 'Extractor industrial o múltiples extractores';
-  return { m3h, renovaciones: renov, volumen: Number(vol.toFixed(1)), extractorRecomendado: extractor };
+  const _insight = {
+    title: 'Cuánto aire hay que mover',
+    text: `Un ${amb} de **${vol.toFixed(1)} m³** necesita renovar su aire **${renov} veces/h**, así que el extractor tiene que mover **${m3h.toLocaleString('es-AR')} m³/h**. Recomendado: ${extractor.toLowerCase()}.`,
+    tone: 'neutral',
+    icon: '🌀',
+  };
+  return { m3h, renovaciones: renov, volumen: Number(vol.toFixed(1)), extractorRecomendado: extractor, _insight };
 }

@@ -22,6 +22,8 @@ export interface Outputs {
   aniosFaltan: number;
   porcentajeAvance: number;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function requisitoLey97(anio: number): number {
@@ -57,6 +59,41 @@ export function semanasImssFaltantes(i: Inputs): Outputs {
 
   const estaListoBool = semanasFaltan === 0 || anioCompletas <= anioJubilacion;
 
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (semanasFaltan === 0) {
+    insightText = `Ya cumpliste el requisito de **${requisito} semanas** (Ley ${ley}). Tu avance es del **100%**: podés iniciar el trámite de pensión.`;
+    insightTone = 'good';
+  } else if (estaListoBool) {
+    insightText = `Tenés un avance del **${porcentajeAvance}%**: te faltan **${semanasFaltan} semanas** (~${aniosFaltan} años) y las completarías en **${anioCompletas}**, a tiempo para jubilarte en ${anioJubilacion}.`;
+    insightTone = 'good';
+  } else {
+    insightText = `Avance del **${porcentajeAvance}%**: te faltan **${semanasFaltan} semanas** (~${aniosFaltan} años) y recién las completarías en **${anioCompletas}**, después de tu meta de ${anioJubilacion}. Conviene seguir cotizando.`;
+    insightTone = 'warn';
+  }
+
+  const _insight = {
+    title: 'Tu camino a la pensión',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏖️',
+  };
+
+  // Gauge: % de avance hacia las semanas requeridas
+  const _chart = {
+    type: 'scale',
+    marker: porcentajeAvance,
+    markerLabel: `${porcentajeAvance}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Lejos', max: 50, color: '#fecaca', colorDark: '#991b1b' },
+      { nombre: 'En camino', max: 80, color: '#fde68a', colorDark: '#92400e' },
+      { nombre: 'Casi', max: 99.99, color: '#bfdbfe', colorDark: '#1e40af' },
+      { nombre: 'Completo', max: 100.01, color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: `Avance hacia la pensión: ${porcentajeAvance}% de ${requisito} semanas`,
+  };
+
   return {
     semanasFaltantes: semanasFaltan,
     requisitoAplicable: requisito,
@@ -67,5 +104,7 @@ export function semanasImssFaltantes(i: Inputs): Outputs {
     mensaje: semanasFaltan === 0
       ? `Ya tenés las ${requisito} semanas requeridas (Ley ${ley}). Avance: ${porcentajeAvance}%.`
       : `Te faltan ${semanasFaltan} semanas (~${aniosFaltan} años) para Ley ${ley} (requisito ${requisito}). Las completás en ${anioCompletas}.`,
+    _insight,
+    _chart,
   };
 }

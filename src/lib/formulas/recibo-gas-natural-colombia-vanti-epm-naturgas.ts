@@ -13,6 +13,8 @@ export interface Outputs {
   impuesto_consumo: number;
   total_recibo: number;
   costo_promedio_m3: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -64,6 +66,47 @@ export function compute(i: Inputs): Outputs {
   // Costo promedio por m³
   const costoPromedio = m3 > 0 ? totalRecibo / m3 : 0;
 
+  // Insight narrativo dinámico
+  const cop = (n: number) => Math.round(n).toLocaleString('es-CO');
+  let _insight: any = undefined;
+  if (m3 > 0) {
+    if (subsidio > 0) {
+      _insight = {
+        title: 'Tu recibo tiene subsidio',
+        text: `Tu recibo estimado es **$${cop(totalRecibo)}** por **${m3} m³** ($${cop(costoPromedio)}/m³). Como estrato ${estrato} se te descuentan **$${cop(subsidio)}** de subsidio antes del impuesto.`,
+        tone: 'good',
+        icon: '🔥',
+      };
+    } else {
+      _insight = {
+        title: 'Recibo estimado',
+        text: `Tu recibo estimado es **$${cop(totalRecibo)}** por **${m3} m³** ($${cop(costoPromedio)}/m³). El estrato ${estrato} no recibe subsidio y suma **$${cop(impuesto)}** de impuesto al consumo.`,
+        tone: 'neutral',
+        icon: '🔥',
+      };
+    }
+  }
+
+  // Gráfico: composición del total (cargo fijo neto + consumo neto + impuesto = total)
+  let _chart: any = undefined;
+  if (m3 > 0 && totalRecibo > 0) {
+    const factorNeto = 1 - porcentajeSubsidio;
+    const cargoFijoNeto = cargoFijo * factorNeto;
+    const cargoConsumoNeto = cargoConsumo * factorNeto;
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Cargo fijo', value: Math.round(cargoFijoNeto) },
+        { label: 'Consumo', value: Math.round(cargoConsumoNeto) },
+        { label: 'Impuesto al consumo', value: Math.round(impuesto) },
+      ].filter((s) => s.value > 0),
+      prefix: '$',
+      centerValue: '$' + cop(totalRecibo),
+      centerLabel: 'Total recibo',
+      ariaLabel: 'Composición del recibo de gas: cargo fijo, consumo e impuesto',
+    };
+  }
+
   return {
     cargo_fijo_mensual: Math.round(cargoFijo),
     cargo_consumo: Math.round(cargoConsumo),
@@ -71,6 +114,8 @@ export function compute(i: Inputs): Outputs {
     subsidio_aplicado: Math.round(subsidio),
     impuesto_consumo: Math.round(impuesto),
     total_recibo: Math.round(totalRecibo),
-    costo_promedio_m3: Math.round(costoPromedio)
+    costo_promedio_m3: Math.round(costoPromedio),
+    _insight,
+    _chart
   };
 }

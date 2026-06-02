@@ -23,17 +23,44 @@ export function compute(input: CalcInput): CalcResult {
     '1.725': 'Very active',
     '1.9': 'Extra active',
   };
+  const activityLabel = activityLabels[String(actividad)] || `×${actividad}`;
+
+  // --- Insight: interpret maintenance + cut/bulk targets ---
+  const bmrR = Math.round(bmr);
+  const activityCalories = Math.max(0, tdee - bmrR); // calories burned through activity (sums to TDEE)
+  const cut = Math.max(0, tdee - 500);
+  const _insight = {
+    title: 'Your daily calorie needs',
+    text: `To maintain your weight you need about **${tdee.toLocaleString('en-US')} kcal/day** (${activityLabel.toLowerCase()}). Your body burns **${bmrR.toLocaleString('en-US')} kcal** just at rest. For a mild cut aim for **${cut.toLocaleString('en-US')} kcal/day**; to gain, **${(tdee + 500).toLocaleString('en-US')} kcal/day**.`,
+    tone: 'neutral',
+    icon: '🔥',
+  };
+
+  // --- Donut: resting (BMR) + activity calories = TDEE ---
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Resting (BMR)', value: bmrR },
+      { label: 'Activity', value: activityCalories },
+    ],
+    suffix: ' kcal',
+    centerValue: tdee.toLocaleString('en-US'),
+    centerLabel: 'TDEE / day',
+    ariaLabel: 'Breakdown of daily calorie needs into resting metabolism and activity, summing to total daily energy expenditure.',
+  };
 
   return {
     result: tdee,
     resultLabel: 'TDEE (kcal/day)',
     formula: `BMR (Mifflin-St Jeor) × ${actividad} activity factor`,
     breakdown: [
-      { label: 'BMR (resting calories)', value: `${Math.round(bmr)} kcal/day` },
-      { label: 'Activity level', value: activityLabels[String(actividad)] || `×${actividad}` },
+      { label: 'BMR (resting calories)', value: `${bmrR} kcal/day` },
+      { label: 'Activity level', value: activityLabel },
       { label: 'TDEE (maintenance)', value: `${tdee} kcal/day` },
-      { label: 'Mild weight loss (−0.5 kg/wk)', value: `${Math.max(0, tdee - 500)} kcal/day` },
+      { label: 'Mild weight loss (−0.5 kg/wk)', value: `${cut} kcal/day` },
       { label: 'Mild weight gain (+0.5 kg/wk)', value: `${tdee + 500} kcal/day` },
     ],
+    _insight,
+    _chart,
   };
 }

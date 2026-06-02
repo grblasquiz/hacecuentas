@@ -12,6 +12,7 @@ export interface Outputs {
   resultado: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function reglaTresCompuesta(i: Inputs): Outputs {
@@ -39,9 +40,18 @@ export function reglaTresCompuesta(i: Inputs): Outputs {
 
   const explicacion = `Como A es ${relC === 'inversa' ? 'inversamente' : 'directamente'} proporcional a C, y B es ${relB === 'inversa' ? 'inversamente' : 'directamente'} proporcional a C, multiplicamos c1 por los factores correspondientes.`;
 
+  const fmt = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 4 }).format(Number(n.toFixed(4)));
+  const _insight = {
+    title: 'Incógnita despejada',
+    text: `Partiendo de **${fmt(c1)}** y aplicando los factores de A (${relC === 'inversa' ? 'inversa' : 'directa'}) y B (${relB === 'inversa' ? 'inversa' : 'directa'}), el resultado es **${fmt(c2)}**.`,
+    tone: 'neutral',
+    icon: '🧮',
+  };
+
   return {
     resultado: Number(c2.toFixed(6)),
     formula: `c2 = ${c1} × (${relC === 'inversa' ? `${a1}/${a2}` : `${a2}/${a1}`}) × (${relB === 'inversa' ? `${b1}/${b2}` : `${b2}/${b1}`}) = ${Number(c2.toFixed(4))}`,
     explicacion,
+    _insight,
   };
 }

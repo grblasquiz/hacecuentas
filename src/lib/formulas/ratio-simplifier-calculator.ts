@@ -13,6 +13,8 @@ export interface Outputs {
   scaled_ratio: string;
   equivalent_ratios: string;
   gcd_used: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Euclidean algorithm — works on positive integers
@@ -157,6 +159,32 @@ export function compute(i: Inputs): Outputs {
   });
   const equivalent_ratios = equivParts.join('  |  ');
 
+  const _insight = {
+    title: 'What this ratio means',
+    text: divisor > 1
+      ? `Your ratio simplifies to **${simplified}** (divided by a GCD of **${divisor}**). Part A is **${pctA.toFixed(1)}%** of the whole${isThreePart ? `, B is ${pctB.toFixed(1)}% and C is ${pctC.toFixed(1)}%` : ` and B is ${pctB.toFixed(1)}%`}.`
+      : `Your ratio is **${simplified}** — already in lowest terms. Part A is **${pctA.toFixed(1)}%** of the whole${isThreePart ? `, B is ${pctB.toFixed(1)}% and C is ${pctC.toFixed(1)}%` : ` and B is ${pctB.toFixed(1)}%`}.`,
+    tone: 'neutral',
+    icon: '➗',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: isThreePart
+      ? [
+          { label: 'Part A', value: rawA },
+          { label: 'Part B', value: rawB },
+          { label: 'Part C', value: rawC },
+        ]
+      : [
+          { label: 'Part A', value: rawA },
+          { label: 'Part B', value: rawB },
+        ],
+    centerValue: simplified,
+    centerLabel: 'simplified',
+    ariaLabel: `Proportional breakdown of the ratio ${simplified}`,
+  };
+
   return {
     simplified,
     decimal_value,
@@ -164,5 +192,7 @@ export function compute(i: Inputs): Outputs {
     scaled_ratio,
     equivalent_ratios,
     gcd_used: divisor,
+    _insight,
+    _chart,
   };
 }

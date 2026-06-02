@@ -14,6 +14,7 @@ export interface Outputs {
   moneda: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Distribución oficial FIFA CWC 2025 (pool US$ 1.000 M)
@@ -63,13 +64,25 @@ export function premiosMundialClubes2025(i: Inputs): Outputs {
     ariaLabel: 'Composición del premio: participación base, rendimiento y progresión de fase',
   };
 
+  const totalM = (total / 1e6).toFixed(2);
+  const isTop = fase === 'campeon' || fase === 'final';
+  const insightText = fase === 'campeon'
+    ? `Ganar la Copa con un club **${conf.toUpperCase()}** deja **US$ ${totalM} M**: ${(base / 1e6).toFixed(1)} M de participación más ${((rendim + progres) / 1e6).toFixed(1)} M ganados en cancha.`
+    : `Un club **${conf.toUpperCase()}** que llega a **${fase}** se lleva **US$ ${totalM} M**, de los cuales US$ ${(base / 1e6).toFixed(1)} M son fijos por participar${progres > 0 ? ` y US$ ${(progres / 1e6).toFixed(1)} M por avanzar de fase` : ''}.`;
+
   return {
     participacionBase: base,
     premioPorRendimiento: rendim,
     premioProgresion: progres,
     premioTotal: total,
     moneda: 'USD',
-    resumen: `Club ${conf.toUpperCase()} en ${fase}: participación US$ ${(base / 1e6).toFixed(2)} M + rendimiento US$ ${(rendim / 1e6).toFixed(2)} M + progresión US$ ${(progres / 1e6).toFixed(2)} M = **US$ ${(total / 1e6).toFixed(2)} M**.`,
+    resumen: `Club ${conf.toUpperCase()} en ${fase}: participación US$ ${(base / 1e6).toFixed(2)} M + rendimiento US$ ${(rendim / 1e6).toFixed(2)} M + progresión US$ ${(progres / 1e6).toFixed(2)} M = **US$ ${totalM} M**.`,
     _chart: chart,
+    _insight: {
+      title: 'Premio del Mundial de Clubes',
+      text: insightText,
+      tone: isTop ? 'good' : 'neutral',
+      icon: '🏆',
+    },
   };
 }

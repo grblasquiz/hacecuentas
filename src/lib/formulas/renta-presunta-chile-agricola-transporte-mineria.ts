@@ -17,6 +17,8 @@ export interface Outputs {
   cumple_tope_ventas: string;
   comparativa_contabilidad: number;
   recomendacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -103,7 +105,44 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
-  return {
+  const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const supera = i.ventas_anuales > topeVentas;
+
+  // INSIGHT — carga presunta y acceso al régimen
+  const tone: 'good' | 'warn' | 'neutral' = supera ? 'warn' : 'neutral';
+  let cierre: string;
+  if (i.verificar_contabilidad && i.ganancia_estimada_contabilidad !== undefined) {
+    cierre = comparativa_contabilidad < 0
+      ? `Frente a contabilidad completa, la presunta te **ahorra ${fmtCLP(Math.abs(comparativa_contabilidad))}**.`
+      : comparativa_contabilidad > 0
+        ? `Frente a contabilidad completa, la presunta paga **${fmtCLP(comparativa_contabilidad)} de más**.`
+        : `La carga es prácticamente igual a la de contabilidad completa.`;
+  } else if (supera) {
+    cierre = `Pero con ventas de ${fmtCLP(i.ventas_anuales)} **superás el tope de $100M** y no podés usar este régimen: te corresponde contabilidad completa.`;
+  } else {
+    cierre = `Con ventas de ${fmtCLP(i.ventas_anuales)} accedés al régimen (tope $100M). Conviene si tus gastos reales superan el 30% de los ingresos.`;
+  }
+  const _insight = {
+    title: 'Tu carga en renta presunta',
+    text: `Sobre un avalúo presunto al **${(Math.round(tasaPresuntiva * 10000) / 100)}%** (sector ${i.sector_actividad.replace('_', ' ')}), tu base imponible es ${fmtCLP(base_imponible_presunta)} y la carga tributaria total estimada es **${fmtCLP(carga_impositiva_total)}** (Primera Categoría ${fmtCLP(impuesto_primera_categoria)} + Global Complementario ${fmtCLP(impuesto_global_complementario)}). ${cierre}`,
+    tone,
+    icon: '🇨🇱',
+  };
+
+  // CHART — donut: carga total = Primera Categoría + Global Complementario
+  const _chart = (impuesto_primera_categoria > 0 && impuesto_global_complementario > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Primera Categoría', value: impuesto_primera_categoria },
+      { label: 'Global Complementario', value: impuesto_global_complementario },
+    ],
+    prefix: '$',
+    centerValue: fmtCLP(carga_impositiva_total),
+    centerLabel: 'Carga total',
+    ariaLabel: `Composición de la carga tributaria total de ${fmtCLP(carga_impositiva_total)}: Primera Categoría ${fmtCLP(impuesto_primera_categoria)} y Global Complementario ${fmtCLP(impuesto_global_complementario)}.`,
+  } : undefined;
+
+  const out: Outputs = {
     base_imponible_presunta,
     tasa_presuntiva_usada: Math.round(tasaPresuntiva * 10000) / 100, // Porcentaje
     impuesto_primera_categoria,
@@ -111,6 +150,9 @@ export function compute(i: Inputs): Outputs {
     carga_impositiva_total,
     cumple_tope_ventas,
     comparativa_contabilidad,
-    recomendacion
+    recomendacion,
+    _insight,
   };
+  if (_chart) out._chart = _chart;
+  return out;
 }

@@ -20,6 +20,7 @@ export interface Outputs {
   rango_competencia: string;
   ahorro_potencial: number;
   coberturas_recomendadas: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -215,6 +216,29 @@ export function compute(i: Inputs): Outputs {
     coberturasRecomendadas = "Terceros Completos incluye incendio y robo. Agregar: Asistencia en ruta, Protección legal. Si vehículo es financiado, requiere Todo Riesgo obligatorio.";
   }
 
+  // --- Insight narrativo según cobertura elegida y ahorro potencial ---
+  const nombreCobertura = (() => {
+    switch (i.tipo_cobertura) {
+      case "terceros": return "Terceros";
+      case "terceros_completos": return "Terceros Completos";
+      case "todo_riesgo": return "Todo Riesgo";
+      default: return "Todo Riesgo";
+    }
+  })();
+  const ahorroFmt = `$${ahorrroPotencial.toLocaleString("es-CL")}`;
+  const mensualFmt = `$${primaMensual.toLocaleString("es-CL")}`;
+  const anualFmt = `$${primaAnualSeleccionada.toLocaleString("es-CL")}`;
+  const insightTone: 'good' | 'warn' | 'neutral' = ahorrroPotencial >= 50000 ? 'good' : 'neutral';
+  const insightText = ahorrroPotencial >= 50000
+    ? `Con cobertura **${nombreCobertura}** tu prima queda en **${mensualFmt}/mes** (${anualFmt}/año). Frente a un Todo Riesgo con deducible bajo ahorrás unos **${ahorroFmt} al año** — cotizá con 2-3 aseguradoras antes de cerrar.`
+    : `Con cobertura **${nombreCobertura}** la prima estimada es **${mensualFmt}/mes** (${anualFmt}/año). Es de las opciones más completas: pedí 2-3 cotizaciones para asegurarte el mejor precio dentro de ese rango.`;
+  const _insight = {
+    title: 'Tu prima estimada',
+    text: insightText,
+    tone: insightTone,
+    icon: '🚗',
+  };
+
   return {
     prima_terceros: primaTerceros,
     prima_terceros_completos: primaTC,
@@ -224,6 +248,7 @@ export function compute(i: Inputs): Outputs {
     aseguradora_recomendada: aseguradoraRecomendada,
     rango_competencia: rangoCompetencia,
     ahorro_potencial: ahorrroPotencial,
-    coberturas_recomendadas: coberturasRecomendadas
+    coberturas_recomendadas: coberturasRecomendadas,
+    _insight
   };
 }

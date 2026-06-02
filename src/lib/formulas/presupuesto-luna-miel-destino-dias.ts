@@ -2,7 +2,7 @@
  * Calculadora de Presupuesto Luna de Miel por Destino.
  */
 export interface PresupuestoLunaMielDestinoDiasInputs { destino:string; dias:number; nivel:string; }
-export interface PresupuestoLunaMielDestinoDiasOutputs { costoTotal:number; costoPorDia:number; vuelosEstimados:number; hotelEstimado:number; comidaActividades:number; }
+export interface PresupuestoLunaMielDestinoDiasOutputs { costoTotal:number; costoPorDia:number; vuelosEstimados:number; hotelEstimado:number; comidaActividades:number; _insight?: any; _chart?: any; }
 export function presupuestoLunaMielDestinoDias(inputs: PresupuestoLunaMielDestinoDiasInputs): PresupuestoLunaMielDestinoDiasOutputs {
   const destino = inputs.destino;
   const dias = Number(inputs.dias);
@@ -19,11 +19,38 @@ export function presupuestoLunaMielDestinoDias(inputs: PresupuestoLunaMielDestin
   };
   const costoPorDia = perDay[destino]?.[nivel] || 300;
   const costoTotal = costoPorDia * dias;
+  const vuelosEstimados = Math.round(costoTotal * 0.35);
+  const hotelEstimado = Math.round(costoTotal * 0.4);
+  const comidaActividades = costoTotal - vuelosEstimados - hotelEstimado;
+  const destinoLabel: Record<string, string> = {
+    argentina: "Argentina", uruguay: "Uruguay", caribe: "el Caribe", brasil: "Brasil",
+    europa: "Europa", asia: "Asia", usa: "Estados Unidos",
+  };
+  const dLabel = destinoLabel[destino] || "tu destino";
+  const nivelLabel = nivel === 'economico' ? 'económico' : nivel === 'lujo' ? 'de lujo' : 'nivel medio';
   return {
     costoTotal,
     costoPorDia,
-    vuelosEstimados: Math.round(costoTotal * 0.35),
-    hotelEstimado: Math.round(costoTotal * 0.4),
-    comidaActividades: Math.round(costoTotal * 0.25),
+    vuelosEstimados,
+    hotelEstimado,
+    comidaActividades,
+    _insight: {
+      title: "Tu luna de miel en números",
+      text: `**${dias} días** en **${dLabel}** en plan **${nivelLabel}** salen unos **USD ${costoTotal.toLocaleString("es-AR")}** (**USD ${costoPorDia}/día**). Vuelos y hotel se llevan el **75%** del total, así que reservarlos con tiempo es lo que más mueve el presupuesto.`,
+      tone: "neutral",
+      icon: "💍",
+    },
+    _chart: {
+      type: "doughnut",
+      slices: [
+        { label: "Hotel", value: hotelEstimado },
+        { label: "Vuelos", value: vuelosEstimados },
+        { label: "Comida y actividades", value: comidaActividades },
+      ],
+      prefix: "USD ",
+      centerValue: `USD ${costoTotal.toLocaleString("es-AR")}`,
+      centerLabel: "Total estimado",
+      ariaLabel: "Distribución del presupuesto de luna de miel por categoría de gasto",
+    },
   };
 }

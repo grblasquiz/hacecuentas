@@ -20,6 +20,7 @@ export interface Outputs {
   descontoAvisoNaoCumprido: string;
   totalRescisao: string;
   resumen: string;
+  _insight?: any;
 }
 
 function brl(n: number): string {
@@ -41,6 +42,15 @@ export function rescisaoCltPedidoDemissao(i: Inputs): Outputs {
   const descontoAviso = cumpriu ? 0 : sal; // se não cumpre, empregador desconta 1 salário
   const total = saldoSalario + decimoTerceiro + feriasProp + terco - descontoAviso;
 
+  const insight = {
+    title: 'Pedido de demissão',
+    text: cumpriu
+      ? `Pedindo demissão você soma cerca de **${brl(total)}** (saldo, 13º e férias proporcionais + 1/3), mas **abre mão da multa de 40% do FGTS** e não pode sacar o saldo.`
+      : `Como o aviso prévio não foi cumprido, é descontado **${brl(descontoAviso)}** (1 salário), deixando o total em **${brl(total)}**. Você também perde a multa de 40% do FGTS e o direito de sacá-lo.`,
+    tone: (cumpriu ? 'neutral' : 'warn') as 'neutral' | 'warn',
+    icon: '✍️',
+  };
+
   return {
     saldoSalario: brl(saldoSalario),
     decimoTerceiro: brl(decimoTerceiro),
@@ -49,5 +59,6 @@ export function rescisaoCltPedidoDemissao(i: Inputs): Outputs {
     descontoAvisoNaoCumprido: brl(descontoAviso),
     totalRescisao: brl(total),
     resumen: `Pedido de demissão: total líquido ≈ ${brl(total)}. Sem multa 40% FGTS e sem direito a sacar FGTS. ${cumpriu ? '' : 'Desconto de 1 salário por aviso não cumprido.'}`.trim(),
+    _insight: insight,
   };
 }

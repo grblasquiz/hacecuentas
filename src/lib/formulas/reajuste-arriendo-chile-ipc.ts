@@ -1,6 +1,6 @@
 /** Reajuste arriendo Chile por IPC SII/INE — nuevo precio según IPC acumulado */
 export interface Inputs { arriendoBase: number; ipcAcumulado: number; periodoMeses: number; }
-export interface Outputs { arriendoNuevo: number; incrementoClp: number; incrementoPct: number; nota: string; }
+export interface Outputs { arriendoNuevo: number; incrementoClp: number; incrementoPct: number; nota: string; _insight?: any; _chart?: any; }
 
 export function reajusteArriendoChileIpc(i: Inputs): Outputs {
   const base = Number(i.arriendoBase);
@@ -15,10 +15,40 @@ export function reajusteArriendoChileIpc(i: Inputs): Outputs {
   const incrementoClp = arriendoNuevo - base;
   const incrementoPct = ipc;
   const nota = `Reajuste cada ${periodo} meses con IPC acumulado ${ipc.toFixed(2)}%. Fuente: INE Chile / SII.`;
-  return {
-    arriendoNuevo: Math.round(arriendoNuevo),
-    incrementoClp: Math.round(incrementoClp),
+
+  const arriendoNuevoR = Math.round(arriendoNuevo);
+  const incrementoClpR = Math.round(incrementoClp);
+  const baseR = Math.round(base);
+  const fmt = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 });
+
+  const _insight = {
+    title: 'Tu nuevo arriendo',
+    text: `Con un IPC acumulado de **${ipc.toFixed(2)}%**, el arriendo pasa de **$${fmt.format(baseR)}** a **$${fmt.format(arriendoNuevoR)}** (${incrementoClpR >= 0 ? '+' : '-'}$${fmt.format(Math.abs(incrementoClpR))} por mes).`,
+    tone: incrementoClpR > 0 ? 'warn' : 'neutral',
+    icon: '🏠',
+  };
+
+  const out: Outputs = {
+    arriendoNuevo: arriendoNuevoR,
+    incrementoClp: incrementoClpR,
     incrementoPct: Number(incrementoPct.toFixed(2)),
     nota,
+    _insight,
   };
+
+  if (incrementoClpR > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Arriendo base', value: baseR },
+        { label: 'Reajuste IPC', value: incrementoClpR },
+      ],
+      prefix: '$',
+      centerValue: `$${fmt.format(arriendoNuevoR)}`,
+      centerLabel: 'nuevo arriendo',
+      ariaLabel: `Nuevo arriendo de ${fmt.format(arriendoNuevoR)} pesos compuesto por la base y el reajuste por IPC`,
+    };
+  }
+
+  return out;
 }

@@ -9,6 +9,8 @@ export interface PropinaRestauranteOutputs {
   porcentaje: string;
   totalConPropina: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface InfoPropina {
@@ -54,10 +56,59 @@ export function propinaRestaurantePaisPorcentaje(inputs: PropinaRestauranteInput
     ? `${info.pctMin}%`
     : `${info.pctMin}-${info.pctMax}%`;
 
+  const nombresPais: Record<string, string> = {
+    eeuu: 'Estados Unidos', canada: 'Canadá', europa: 'Europa', reinoUnido: 'Reino Unido',
+    espana: 'España', italia: 'Italia', francia: 'Francia', japon: 'Japón', china: 'China',
+    brasil: 'Brasil', mexico: 'México', argentina: 'Argentina', colombia: 'Colombia',
+    australia: 'Australia', tailandia: 'Tailandia', turquia: 'Turquía',
+  };
+  const nombrePais = nombresPais[pais] || pais;
+
+  // Tono: en países donde la propina es alta/obligatoria conviene advertir el peso sobre la cuenta;
+  // donde no se espera (0%), es informativo.
+  let tone: 'good' | 'warn' | 'neutral';
+  let icon: string;
+  let insightText: string;
+  if (info.pctMax === 0) {
+    tone = 'neutral';
+    icon = '🙅';
+    insightText = `En **${nombrePais}** no se deja propina: pagás **${fmt.format(monto)}** y listo. ${info.costumbre}`;
+  } else if (pctPromedio >= 15) {
+    tone = 'warn';
+    icon = '💵';
+    insightText = `En **${nombrePais}** la propina pesa mucho: sumá **${fmt.format(propina)}** (${porcentajeTexto}) a tu cuenta, llevando el total a **${fmt.format(total)}**${comensales > 1 ? ` (${fmt.format(total / comensales)} por persona)` : ''}. ${info.costumbre}`;
+  } else {
+    tone = 'neutral';
+    icon = '🍽️';
+    insightText = `En **${nombrePais}** se sugiere **${fmt.format(propina)}** de propina (${porcentajeTexto}), total **${fmt.format(total)}**${comensales > 1 ? ` (${fmt.format(total / comensales)} por persona)` : ''}. ${info.costumbre}`;
+  }
+
+  const _insight = {
+    title: `Propina en ${nombrePais}`,
+    text: insightText,
+    tone,
+    icon,
+  };
+
+  // Gráfico sólo si hay propina que mostrar como parte del total.
+  const _chart = propina > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cuenta', value: Math.round(monto) },
+      { label: 'Propina', value: Math.round(propina) },
+    ],
+    prefix: '$',
+    centerValue: '$' + Math.round(total).toLocaleString('es-AR'),
+    centerLabel: 'Total',
+    ariaLabel: `Composición del total en ${nombrePais}: cuenta más propina`,
+  } : undefined;
+
   return {
     propinaSugerida: propina,
     porcentaje: porcentajeTexto,
     totalConPropina: total,
     detalle: `Cuenta: ${fmt.format(monto)}. Propina sugerida (${porcentajeTexto}): ${fmt.format(propina)}. Total: ${fmt.format(total)}${comensales > 1 ? ` (${fmt.format(total / comensales)} por persona)` : ''}. ${info.costumbre}`,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

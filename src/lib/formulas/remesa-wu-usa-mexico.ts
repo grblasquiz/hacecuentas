@@ -17,6 +17,8 @@ export interface Outputs {
   costoTotalPct: string;
   tcDiferenciaPct: number;
   costoTotalPctNum: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 function fmtUSD(n: number): string {
@@ -43,6 +45,25 @@ export function remesaWuUsaMexico(i: Inputs): Outputs {
   const costoPct = (costoTotalUSD / monto) * 100;
   const tcDiffPct = ((tcMid - tcWU) / tcMid) * 100;
 
+  const tone = costoPct >= 5 ? 'warn' : costoPct >= 2 ? 'neutral' : 'good';
+  const insight = {
+    title: 'Costo real de la remesa',
+    text: `Enviar **USD ${monto.toFixed(2)}** te cuesta en total **USD ${costoTotalUSD.toFixed(2)}** (**${costoPct.toFixed(1)}%**): USD ${fee.toFixed(2)} de comisión visible más USD ${spreadUSD.toFixed(2)} de spread oculto en el tipo de cambio (${tcDiffPct.toFixed(1)}% peor que el interbancario).${tone === 'warn' ? ' Es un costo alto: compará con otros operadores.' : ''}`,
+    tone,
+    icon: '💸',
+  };
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Comisión visible', value: Number(fee.toFixed(2)) },
+      { label: 'Spread oculto', value: Number(spreadUSD.toFixed(2)) },
+    ],
+    prefix: '$',
+    centerValue: 'USD ' + costoTotalUSD.toFixed(2),
+    centerLabel: 'Costo total',
+    ariaLabel: 'Composición del costo total de la remesa entre comisión visible y spread oculto del tipo de cambio.',
+  };
+
   return {
     montoEnviadoUSD: fmtUSD(monto),
     feeDirectoUSD: fmtUSD(fee),
@@ -54,5 +75,7 @@ export function remesaWuUsaMexico(i: Inputs): Outputs {
     costoTotalPct: costoPct.toFixed(2) + '%',
     tcDiferenciaPct: Number(tcDiffPct.toFixed(2)),
     costoTotalPctNum: Number(costoPct.toFixed(2)),
+    _insight: insight,
+    _chart: chart,
   };
 }

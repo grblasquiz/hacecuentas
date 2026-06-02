@@ -7,6 +7,8 @@ export interface Outputs {
   minutosPorPalabra: number;
   postsPor40h: number;
   desglose: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tiempoArticuloBlogPalabras(i: Inputs): Outputs {
@@ -29,12 +31,31 @@ export function tiempoArticuloBlogPalabras(i: Inputs): Outputs {
   const inv = Math.round(horas * 0.25 * 10) / 10;
   const esc = Math.round(horas * 0.45 * 10) / 10;
   const rev = Math.round(horas * 0.30 * 10) / 10;
+  const horasFmt = Math.round(horas * 10) / 10;
+  const totalDesglose = Math.round((inv + esc + rev) * 10) / 10;
 
   return {
-    horasTotales: Math.round(horas * 10) / 10,
+    horasTotales: horasFmt,
     minutosPorPalabra: Math.round(minPorPal * 100) / 100,
     postsPor40h: postsSem,
     desglose: `Investig ${inv}h / Escritura ${esc}h / Edición+SEO ${rev}h`,
+    _insight: {
+      title: 'Cuánto te lleva el artículo',
+      text: `Un texto de **${pal} palabras** con SEO ${seo} y experiencia ${exp} te toma unas **${horasFmt} horas**. A ese ritmo producís hasta **${postsSem} artículos** en una semana de 40 h.`,
+      tone: 'neutral',
+      icon: '✍️'
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Investigación', value: inv },
+        { label: 'Escritura', value: esc },
+        { label: 'Edición + SEO', value: rev }
+      ],
+      centerValue: `${totalDesglose} h`,
+      centerLabel: 'por artículo',
+      ariaLabel: `Desglose de ${totalDesglose} horas: ${inv} de investigación, ${esc} de escritura y ${rev} de edición y SEO.`
+    }
   };
 
 }

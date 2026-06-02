@@ -1,5 +1,5 @@
 export interface Inputs { producto: string; m2Superficie: number; vecesXsemana: number; }
-export interface Outputs { mlPorUso: number; envasesMes: number; duracionEnvase: string; consejo: string; }
+export interface Outputs { mlPorUso: number; envasesMes: number; duracionEnvase: string; consejo: string; _insight?: any; }
 const ML_POR_M2: Record<string, number> = { limpiador: 5, desengrasante: 8, lavandina: 3, limpiavidrios: 10, cera: 15, detergente: 2 };
 const CONSEJOS: Record<string, string> = {
   limpiador: 'Diluido en agua rinde 3x más. No mezclar con lavandina.', desengrasante: 'Dejá actuar 5 min antes de pasar el trapo.',
@@ -11,5 +11,11 @@ export function productoLimpiezaRendimiento(i: Inputs): Outputs {
   if (!m2 || !veces) throw new Error('Ingresá superficie y frecuencia');
   const mlM2 = ML_POR_M2[prod] || 5; const mlUso = m2 * mlM2; const mlMes = mlUso * veces * 4.3;
   const envases = mlMes / 1000; const dias = Math.round(1000 / (mlUso * veces / 7));
-  return { mlPorUso: Math.round(mlUso), envasesMes: Number(envases.toFixed(1)), duracionEnvase: `~${dias} días`, consejo: CONSEJOS[prod] || 'Usá la dosis recomendada del envase.' };
+  const _insight = {
+    title: 'Cuánto producto vas a gastar',
+    text: `Con **${Math.round(mlUso)} ml por uso** y limpiando **${veces} ${veces === 1 ? 'vez' : 'veces'} por semana**, un envase de 1 litro te dura **~${dias} días** (unos **${Number(envases.toFixed(1))} envases/mes**). Diluir según la etiqueta es lo que más estira el rendimiento.`,
+    tone: 'neutral',
+    icon: '🧼',
+  };
+  return { mlPorUso: Math.round(mlUso), envasesMes: Number(envases.toFixed(1)), duracionEnvase: `~${dias} días`, consejo: CONSEJOS[prod] || 'Usá la dosis recomendada del envase.', _insight };
 }

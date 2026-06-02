@@ -17,6 +17,7 @@ export interface Outputs {
   total_con_propina: number;
   precio_promedio_km: number;
   _chart?: any;
+  _insight?: any;
 }
 
 const CITY_RATES_2026: Record<string, {bandera: number, tarifa_km: number, espera_5min: number}> = {
@@ -105,6 +106,28 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del viaje: bajada de bandera, distancia y espera',
   };
 
+  const fmtAR = (n: number) => Math.round(n).toLocaleString('es-AR');
+  const aplicoMinimo = subtotal === minimo && (bandera + costo_distancia + costo_espera) < minimo;
+  let recargoTxt = '';
+  if (time_slot === 'night') recargoTxt = ' con recargo nocturno del **50%**';
+  else if (time_slot === 'feriado') recargoTxt = ' con recargo de feriado del **25%**';
+
+  let insightText: string;
+  if (aplicoMinimo) {
+    insightText = `El viaje da **$${fmtAR(total_fare)}**${recargoTxt}: como el recorrido es corto se aplicó el mínimo garantizado de $${fmtAR(minimo)}. Pedir un viaje más largo aprovecha mejor la bajada de bandera.`;
+  } else if (distance_km > 0) {
+    insightText = `Un viaje de **${distance_km} km** sale **$${fmtAR(total_fare)}**${recargoTxt}, unos **$${fmtAR(precio_promedio_km)}/km**. La bajada de bandera ($${fmtAR(bandera)}) pesa más en trayectos cortos.`;
+  } else {
+    insightText = `La tarifa mínima es **$${fmtAR(total_fare)}**${recargoTxt}. Ingresá los km del recorrido para estimar el costo total del viaje.`;
+  }
+
+  const _insight = {
+    title: 'Estimación del viaje en remis',
+    text: insightText,
+    tone: (time_slot === 'night' || time_slot === 'feriado') ? 'warn' as const : 'neutral' as const,
+    icon: '🚕',
+  };
+
   return {
     bandera: Math.round(bandera * 100) / 100,
     tarifa_km: Math.round(tarifa_km * 100) / 100,
@@ -115,6 +138,7 @@ export function compute(i: Inputs): Outputs {
     propina_sugerida: propina_sugerida,
     total_con_propina: total_con_propina,
     precio_promedio_km: precio_promedio_km,
-    _chart: chart
+    _chart: chart,
+    _insight
   };
 }

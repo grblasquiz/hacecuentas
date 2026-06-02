@@ -19,6 +19,8 @@ export interface SeguroDesempregoValorOutputs {
   valorParcela: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const FAIXA1 = 2041.40;
@@ -52,13 +54,55 @@ export function seguroDesempregoValor(inputs: SeguroDesempregoValorInputs): Segu
   }
 
   // Valor mínimo = 1 salário mínimo
+  let ajustadoPiso = false;
   if (valor < SALARIO_MINIMO) {
     valor = SALARIO_MINIMO;
+    ajustadoPiso = true;
     faixa += ` (ajustado ao piso: 1 salário mínimo R$ ${SALARIO_MINIMO})`;
   }
+  const bateuTeto = media > FAIXA2;
 
   const formula = `Média 3 salários = (${s1.toFixed(2)} + ${s2.toFixed(2)} + ${s3.toFixed(2)}) / 3 = R$ ${media.toFixed(2)} → Parcela R$ ${valor.toFixed(2)}`;
   const explicacion = `A média dos 3 últimos salários é R$ ${media.toFixed(2)}. Aplicando a tabela 2026 do seguro-desemprego (${faixa}), o valor de cada parcela é R$ ${valor.toFixed(2)}. O benefício tem valor mínimo de 1 salário mínimo (R$ ${SALARIO_MINIMO}) e teto de R$ ${TETO.toFixed(2)}.`;
+
+  const brl = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  let _insight: any;
+  if (bateuTeto) {
+    _insight = {
+      title: 'Parcela no teto',
+      text: `Sua média de **R$ ${brl(media)}** ultrapassa a última faixa, então a parcela fica **limitada ao teto de R$ ${brl(TETO)}**. Mesmo ganhando mais, o seguro-desemprego não paga acima desse valor.`,
+      tone: 'warn',
+      icon: '🧾',
+    };
+  } else if (ajustadoPiso) {
+    _insight = {
+      title: 'Parcela no piso',
+      text: `O cálculo daria menos que o salário mínimo, então a parcela é **ajustada ao piso de R$ ${brl(SALARIO_MINIMO)}**. Nenhuma parcela do seguro-desemprego pode ser inferior a um salário mínimo.`,
+      tone: 'neutral',
+      icon: '🧾',
+    };
+  } else {
+    _insight = {
+      title: 'Valor da parcela',
+      text: `Com média de **R$ ${brl(media)}**, cada parcela do seguro-desemprego é de **R$ ${brl(valor)}** (${faixa}). Isso equivale a cerca de **${Math.round((valor / media) * 100)}%** do seu salário médio.`,
+      tone: 'good',
+      icon: '💰',
+    };
+  }
+
+  const lastMax = Math.max(FAIXA2 * 1.4, media * 1.1);
+  const _chart = {
+    type: 'scale',
+    marker: Math.round(media * 100) / 100,
+    markerLabel: 'Sua média',
+    min: 0,
+    segments: [
+      { nombre: '80% da média', max: Math.round(FAIXA1), color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: 'Faixa intermediária', max: Math.round(FAIXA2), color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Teto', max: Math.round(lastMax), color: '#ef4444', colorDark: '#dc2626' },
+    ],
+    ariaLabel: `Sua média salarial de R$ ${brl(media)} cai na faixa "${bateuTeto ? 'teto' : media <= FAIXA1 ? '80% da média' : 'intermediária'}" da tabela do seguro-desemprego.`,
+  };
 
   return {
     mediaSalarios: Math.round(media * 100) / 100,
@@ -66,5 +110,7 @@ export function seguroDesempregoValor(inputs: SeguroDesempregoValorInputs): Segu
     valorParcela: Math.round(valor * 100) / 100,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

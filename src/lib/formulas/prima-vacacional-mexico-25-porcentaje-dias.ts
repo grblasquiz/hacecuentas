@@ -13,6 +13,8 @@ export interface Outputs {
   isr_calculado: number;
   prima_neta: number;
   nota_fiscal: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -103,6 +105,48 @@ export function compute(i: Inputs): Outputs {
     )} MXN gravable. ISR retención estimada.`;
   }
 
+  // Insight narrativo
+  const fmt = (v: number) => '$' + Math.round(v).toLocaleString('es-MX') + ' MXN';
+  let _insight: any;
+  if (dias_vacaciones === 0) {
+    _insight = {
+      title: 'Todavía sin derecho a prima',
+      text: `Con menos de **1 año** de antigüedad aún no te corresponden vacaciones (LFT), por lo que la prima vacacional es **$0**. Recalculá al cumplir el primer año.`,
+      tone: 'warn',
+      icon: '⏳',
+    };
+  } else if (isr_calculado <= 0) {
+    _insight = {
+      title: 'Prima libre de ISR',
+      text: `Tus **${dias_vacaciones} días** de vacaciones generan una prima de **${fmt(prima_vacacional_bruta)}**, toda dentro de la exención de **15 UMA (${fmt(exencion_isr)})**: no se retiene ISR y cobrás los **${fmt(prima_neta)}** completos.`,
+      tone: 'good',
+      icon: '🏖️',
+    };
+  } else {
+    const pctRet = prima_vacacional_bruta > 0 ? (isr_calculado / prima_vacacional_bruta) * 100 : 0;
+    _insight = {
+      title: 'Retención de ISR sobre el excedente',
+      text: `De los **${fmt(prima_vacacional_bruta)}** de prima, **${fmt(exencion_isr)}** quedan exentos y el resto paga ISR: te retienen **${fmt(isr_calculado)}** (**${pctRet.toFixed(1)}%**) y cobrás **${fmt(prima_neta)}** netos.`,
+      tone: 'warn',
+      icon: '🏖️',
+    };
+  }
+
+  // Gráfico: cómo se reparte la prima bruta (neto + ISR)
+  let _chart: any;
+  if (dias_vacaciones > 0 && prima_vacacional_bruta > 0) {
+    const slices = [{ label: 'Prima neta', value: Math.round(prima_neta * 100) / 100 }];
+    if (isr_calculado > 0) slices.push({ label: 'ISR retenido', value: Math.round(isr_calculado * 100) / 100 });
+    _chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: fmt(prima_vacacional_bruta),
+      centerLabel: 'Prima bruta',
+      ariaLabel: `Reparto de la prima vacacional bruta de ${fmt(prima_vacacional_bruta)} entre neto e ISR retenido`,
+    };
+  }
+
   return {
     dias_vacaciones: Math.round(dias_vacaciones),
     prima_vacacional_bruta: Math.round(prima_vacacional_bruta * 100) / 100,
@@ -111,6 +155,8 @@ export function compute(i: Inputs): Outputs {
     base_gravable: Math.round(base_gravable * 100) / 100,
     isr_calculado: Math.round(isr_calculado * 100) / 100,
     prima_neta: Math.round(prima_neta * 100) / 100,
-    nota_fiscal: nota_fiscal
+    nota_fiscal: nota_fiscal,
+    _insight,
+    _chart
   };
 }

@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   metrosNetos: string; metrosCompra: string; consejo: string;
+  _insight?: any; _chart?: any;
 }
 
 export function telaNecesariaPrendaVestido(inputs: Inputs): Outputs {
@@ -25,6 +26,7 @@ export function telaNecesariaPrendaVestido(inputs: Inputs): Outputs {
   const direcMult = dir === 1 ? 1.20 : 1.0;
   const netos = bm * tm * anchoMult * direcMult;
   const compra = netos * 1.13; // 13% margen extra
+  const margenExtra = compra - netos;
   const notas = [];
   if (dir === 1) notas.push('Estampado direccional: 20% extra');
   if (at < 100) notas.push('Tela angosta: 50% más metros');
@@ -33,5 +35,22 @@ export function telaNecesariaPrendaVestido(inputs: Inputs): Outputs {
     metrosNetos: `${netos.toFixed(2)} m`,
     metrosCompra: `${compra.toFixed(2)} m (con 13% margen)`,
     consejo: notas.length ? notas.join(' · ') : 'Tela lisa estándar, consumo estándar.',
+    _insight: {
+      title: 'Cuánto comprar',
+      text: `Para esta prenda necesitás **${netos.toFixed(2)} m** de tela neta, pero conviene comprar **${compra.toFixed(2)} m** sumando ~13% de margen (${margenExtra.toFixed(2)} m) para fallos de corte, dobladillos y encogimiento.${dir === 1 ? ' El estampado **direccional** ya suma un 20% extra porque hay que orientar todas las piezas en el mismo sentido.' : ''}`,
+      tone: 'neutral',
+      icon: '🧵',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Tela neta', value: Number(netos.toFixed(2)) },
+        { label: 'Margen 13%', value: Number(margenExtra.toFixed(2)) },
+      ],
+      suffix: ' m',
+      centerValue: `${compra.toFixed(2)} m`,
+      centerLabel: 'A comprar',
+      ariaLabel: `Tela a comprar: ${compra.toFixed(2)} metros, de los cuales ${netos.toFixed(2)} son netos y ${margenExtra.toFixed(2)} de margen.`,
+    },
   };
 }

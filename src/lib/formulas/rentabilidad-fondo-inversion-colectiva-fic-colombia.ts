@@ -15,6 +15,8 @@ export interface Outputs {
   valor_final_neto: number; // $
   tasa_rentabilidad_final: number; // %
   comparativa_tipos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tasas de retención en la fuente por tipo FIC (DIAN 2026)
@@ -121,13 +123,45 @@ export function compute(inputs: Inputs): Outputs {
       .join(' | ');
   };
 
-  return {
-    rentabilidad_neta_anual: parseFloat(rentabilidad_neta_anual.toFixed(2)),
-    rendimiento_periodo: Math.round(rendimiento_total),
-    retencion_fuente: Math.round(retencion_fuente),
-    rentabilidad_neta_periodo: Math.round(rentabilidad_neta_periodo),
-    valor_final_neto: Math.round(valor_final_ajustado),
-    tasa_rentabilidad_final: parseFloat(tasa_rentabilidad_final.toFixed(2)),
-    comparativa_tipos: comparativaCalculo()
+  const netaAnual_r = parseFloat(rentabilidad_neta_anual.toFixed(2));
+  const netaPeriodo_r = Math.round(rentabilidad_neta_periodo);
+  const retencion_r = Math.round(retencion_fuente);
+  const final_r = Math.round(valor_final_ajustado);
+  const tasaFinal_r = parseFloat(tasa_rentabilidad_final.toFixed(2));
+  const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+
+  // INSIGHT — rentabilidad neta real, comisión y retención
+  const tone: 'good' | 'warn' | 'neutral' = netaPeriodo_r <= 0 ? 'warn' : tasaFinal_r >= 5 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Lo que te queda del FIC',
+    text: `Tras descontar la comisión de administración (${comision_administracion}%), tu FIC rinde **${netaAnual_r}% neto anual**. En ${plazo_meses} meses${reinvertir_dividendos ? ' (con reinversión)' : ' (sin reinversión)'} ganás **${fmtCOP(netaPeriodo_r)}** netos —ya restada la retención en la fuente de ${fmtCOP(retencion_r)}— y tu inversión termina valiendo ${fmtCOP(final_r)} (${tasaFinal_r}% sobre el capital).${netaPeriodo_r <= 0 ? ' La retención y la comisión se comen casi toda la ganancia: revisá el tipo de fondo.' : ''}`,
+    tone,
+    icon: '📈',
   };
+
+  // CHART — donut: saldo final = capital + ganancia neta (solo si la ganancia es positiva)
+  const _chart = (netaPeriodo_r > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Capital invertido', value: Math.round(monto_inicial) },
+      { label: 'Ganancia neta', value: netaPeriodo_r },
+    ],
+    prefix: '$',
+    centerValue: fmtCOP(final_r),
+    centerLabel: 'Saldo final',
+    ariaLabel: `Composición del saldo final de ${fmtCOP(final_r)}: capital invertido ${fmtCOP(monto_inicial)} y ganancia neta ${fmtCOP(netaPeriodo_r)}.`,
+  } : undefined;
+
+  const out: Outputs = {
+    rentabilidad_neta_anual: netaAnual_r,
+    rendimiento_periodo: Math.round(rendimiento_total),
+    retencion_fuente: retencion_r,
+    rentabilidad_neta_periodo: netaPeriodo_r,
+    valor_final_neto: final_r,
+    tasa_rentabilidad_final: tasaFinal_r,
+    comparativa_tipos: comparativaCalculo(),
+    _insight,
+  };
+  if (_chart) out._chart = _chart;
+  return out;
 }

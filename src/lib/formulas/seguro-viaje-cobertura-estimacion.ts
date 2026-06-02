@@ -11,6 +11,7 @@ export interface SeguroViajeOutputs {
   costoTotalUSD: number;
   costoPorDia: number;
   detalle: string;
+  _insight?: any;
 }
 
 // Costo base por día en USD según destino
@@ -73,10 +74,30 @@ export function seguroViajeCoberturaEstimacion(inputs: SeguroViajeInputs): Segur
     argentina: 'Argentina',
   };
 
+  const totalRef = viajeros > 1 ? costoTotal : costoPersona;
+  let insightText = `Para **${dias} días** a **${destinoNombres[destino]}** con cobertura ${MULT_COB[cobertura].nombre.split(' (')[0].toLowerCase()}, calculá unos **USD ${fmt.format(totalRef)}**${viajeros > 1 ? ` entre ${viajeros} viajeros` : ''} (USD ${fmt.format(costoDia)}/día por persona).`;
+  let insightTone = 'neutral';
+  if (fEdad >= 1.6) {
+    insightText += ` A los **${edad} años** la tarifa se multiplica ×${fEdad}: la edad es el factor que más encarece esta póliza.`;
+    insightTone = 'warn';
+  } else if (descLargo < 1) {
+    insightText += ` Al superar los ${dias > 30 ? 30 : 15} días aplicás un **${Math.round((1 - descLargo) * 100)}% de descuento** por viaje largo.`;
+  } else if (destino === 'eeuu') {
+    insightText += ` EE.UU. es el destino más caro en salud: no viajes con cobertura por debajo de los USD 60.000.`;
+    insightTone = 'warn';
+  }
+  const insight = {
+    title: 'Costo de tu seguro',
+    text: insightText,
+    tone: insightTone,
+    icon: '✈️',
+  };
+
   return {
     costoEstimadoUSD: costoPersona,
     costoTotalUSD: costoTotal,
     costoPorDia: costoDia,
     detalle: `Seguro de viaje a ${destinoNombres[destino]}, ${dias} días, ${edad} años, cobertura ${MULT_COB[cobertura].nombre}: ~USD ${fmt.format(costoDia)}/día × ${dias} días = USD ${fmt.format(costoPersona)}/persona.${viajeros > 1 ? ` Total ${viajeros} viajeros: USD ${fmt.format(costoTotal)}.` : ''} Precio referencial — compará en aseguratuviaje.com.`,
+    _insight: insight,
   };
 }

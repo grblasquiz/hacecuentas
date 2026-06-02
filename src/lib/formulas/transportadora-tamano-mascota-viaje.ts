@@ -13,6 +13,7 @@ export interface Outputs {
   tipoRecomendado: string;
   aptoCabina: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function transportadoraTamanoMascotaViaje(i: Inputs): Outputs {
@@ -61,6 +62,23 @@ export function transportadoraTamanoMascotaViaje(i: Inputs): Outputs {
     aptoCabina = `Límite: las dimensiones son grandes para cabina. Verificá con tu aerolínea. Con bolso blando flexible podría entrar.`;
   }
 
+  const cabinaOk = pesoTotal <= 10 && largoCarrier <= 55 && anchoCarrier <= 40;
+  const cabinaNo = pesoTotal > 10;
+  const insight = {
+    title: cabinaOk
+      ? 'Probablemente apto para cabina'
+      : cabinaNo
+        ? 'Demasiado grande para cabina'
+        : 'Al límite para cabina',
+    text: cabinaOk
+      ? `La transportadora mínima es de **${largoCarrier}×${anchoCarrier}×${altoCarrier} cm** y el peso total (mascota + carrier) ronda los **${pesoTotal.toFixed(1)} kg**: entra en el rango de cabina. Confirmá las medidas exactas con tu aerolínea, cada una tiene su tope.`
+      : cabinaNo
+        ? `Con ${peso} kg de mascota el peso total llega a **${pesoTotal.toFixed(1)} kg**, por encima del límite de cabina (7-10 kg): tu mascota viaja en **bodega** con kennel rígido IATA de al menos **${largoCarrier}×${anchoCarrier}×${altoCarrier} cm**.`
+        : `El peso total (~${pesoTotal.toFixed(1)} kg) entra, pero la transportadora mínima de **${largoCarrier}×${anchoCarrier}×${altoCarrier} cm** queda justa para cabina. Verificá con tu aerolínea; un bolso blando flexible podría comprimirse y entrar.`,
+    tone: cabinaOk ? 'good' : cabinaNo ? 'warn' : 'neutral',
+    icon: cabinaNo ? '🧳' : '🐾',
+  };
+
   return {
     largoCarrier,
     anchoCarrier,
@@ -68,5 +86,6 @@ export function transportadoraTamanoMascotaViaje(i: Inputs): Outputs {
     tipoRecomendado,
     aptoCabina,
     detalle: `Carrier mínimo: ${largoCarrier}×${anchoCarrier}×${altoCarrier} cm (largo×ancho×alto). Peso mascota: ${peso} kg. ${tipoRecomendado} ${aptoCabina}`,
+    _insight: insight,
   };
 }

@@ -11,6 +11,7 @@ export interface Outputs {
   aniosCuadruplicar: number;
   capitalFinal: number;
   resumen: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -56,6 +57,21 @@ export function regla72DuplicarDinero(i: Inputs): Outputs {
     },
   };
 
+  const insightTone = aniosDuplicar <= 10 ? 'good' : 'neutral';
+  const _insight = __lang === 'en'
+    ? {
+        title: 'How fast your money grows',
+        text: `At **${tasa}%** annual compound, your capital doubles in **${aniosDuplicar.toFixed(1)} years** (rule of 72) — the exact figure is **${aniosExacto.toFixed(1)} years**. To quadruple it you'd need about **${aniosCuadruplicar.toFixed(1)} years**. The higher the rate, the more the difference between the shortcut and the exact math.`,
+        tone: insightTone,
+        icon: '📈',
+      }
+    : {
+        title: 'Qué tan rápido crece tu plata',
+        text: `Al **${tasa}%** anual compuesto, tu capital se duplica en **${aniosDuplicar.toFixed(1)} años** (regla del 72); el número exacto es **${aniosExacto.toFixed(1)} años**. Cuadruplicarlo te lleva unos **${aniosCuadruplicar.toFixed(1)} años**. Cuanto más alta la tasa, más se separa el atajo del cálculo exacto.`,
+        tone: insightTone,
+        icon: '📈',
+      };
+
   return {
     aniosDuplicar: Number(aniosDuplicar.toFixed(2)),
     aniosExacto: Number(aniosExacto.toFixed(2)),
@@ -63,6 +79,7 @@ export function regla72DuplicarDinero(i: Inputs): Outputs {
     aniosCuadruplicar: Number(aniosCuadruplicar.toFixed(2)),
     capitalFinal: Math.round(capitalFinal),
     resumen,
+    _insight,
     _chart: chart,
   };
 }

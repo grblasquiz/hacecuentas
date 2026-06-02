@@ -11,6 +11,7 @@ export interface Outputs {
   ventanaDespierto: string;
   etapa: string;
   consejo: string;
+  _insight?: any;
 }
 
 interface SleepStage {
@@ -168,6 +169,13 @@ export function compute(i: Inputs): Outputs {
   const diurnoMin = stage.totalMin - stage.noctMax;
   const diurnoMax = stage.totalMax - stage.noctMin;
 
+  const insight = {
+    title: 'Cuánto sueño necesita',
+    text: `En la etapa **${stage.label}** lo esperable son **${stage.totalMin}-${stage.totalMax} horas** por día: unas **${stage.noctMin}-${stage.noctMax}h de noche** más las siestas. ${stage.consejo}`,
+    tone: 'neutral' as const,
+    icon: '🍼',
+  };
+
   return {
     rangoTotal: `${stage.totalMin}-${stage.totalMax} horas por día`,
     suenoNocturno: `${stage.noctMin}-${stage.noctMax} horas`,
@@ -175,6 +183,7 @@ export function compute(i: Inputs): Outputs {
     cantidadSiestas: stage.siestas,
     ventanaDespierto: stage.ventana,
     etapa: stage.label,
-    consejo: stage.consejo
+    consejo: stage.consejo,
+    _insight: insight
   };
 }

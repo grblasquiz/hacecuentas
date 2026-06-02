@@ -1,6 +1,6 @@
 /** FINDRISC v2 — riesgo diabetes tipo 2 */
 export interface Inputs { edad: string; imc: string; cintura: string; actividad: string; verduras: string; medicacion: string; glucemia: string; antecedentes: string; }
-export interface Outputs { puntaje: number; riesgo: string; clasificacion: string; recomendacion: string; mensaje: string; _chart?: any; }
+export interface Outputs { puntaje: number; riesgo: string; clasificacion: string; recomendacion: string; mensaje: string; _insight?: any; _chart?: any; }
 
 export function riesgoDiabetesFindrisc(i: Inputs): Outputs {
   const puntaje = Number(i.edad) + Number(i.imc) + Number(i.cintura) + Number(i.actividad) + Number(i.verduras) + Number(i.medicacion) + Number(i.glucemia) + Number(i.antecedentes);
@@ -39,5 +39,20 @@ export function riesgoDiabetesFindrisc(i: Inputs): Outputs {
     ariaLabel: 'Escala FINDRISC de riesgo de diabetes tipo 2: tu puntaje ' + puntaje + ' sobre 26',
   };
 
-  return { puntaje, riesgo, clasificacion, recomendacion, mensaje: `FINDRISC: ${puntaje}/26. Riesgo a 10 años: ${riesgo}. ${clasificacion}.`, _chart: chart };
+  const tone = puntaje < 12 ? (puntaje < 7 ? 'good' as const : 'neutral' as const) : 'warn' as const;
+  const _insight = {
+    title: 'Qué significa tu puntaje',
+    text: `Tu FINDRISC es **${puntaje}/26**, que estima un riesgo de desarrollar diabetes tipo 2 en 10 años de **${riesgo}**. ` +
+      (puntaje < 7
+        ? 'Es un riesgo bajo: con sostener buenos hábitos podés repetir el test recién en unos años.'
+        : puntaje < 12
+        ? 'Está ligeramente elevado: pequeños cambios en dieta y actividad física ahora hacen una diferencia grande a futuro.'
+        : puntaje < 15
+        ? 'Es un riesgo moderado: conviene hacerte una glucemia en ayunas y priorizar cambios de estilo de vida.'
+        : 'Es un riesgo alto: pedí una evaluación médica (glucemia + HbA1c) sin demorarlo, hay mucho margen para revertirlo a tiempo.'),
+    tone,
+    icon: puntaje < 7 ? '🟢' : puntaje < 12 ? '🩸' : '⚠️',
+  };
+
+  return { puntaje, riesgo, clasificacion, recomendacion, mensaje: `FINDRISC: ${puntaje}/26. Riesgo a 10 años: ${riesgo}. ${clasificacion}.`, _insight, _chart: chart };
 }

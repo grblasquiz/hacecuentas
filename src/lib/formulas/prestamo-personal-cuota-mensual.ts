@@ -13,6 +13,7 @@ export interface Outputs {
   cft_estimated: number;
   amortization_table: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // IVA aplicado sobre intereses en países LATAM (ej. México, Colombia)
@@ -180,12 +181,21 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Composición del total a pagar: capital, intereses, seguro e IVA sobre intereses.',
   };
 
+  const sobrecostoPct = principal > 0 ? (totalCost / principal) * 100 : 0;
+  const _insight = {
+    title: 'Cuánto te cuesta el crédito',
+    text: `Tu cuota base es de **$${Math.round(basePayment).toLocaleString('es-AR')}** por ${n} meses. Vas a devolver **$${Math.round(totalPayment).toLocaleString('es-AR')}** en total: pagás **$${Math.round(totalCost).toLocaleString('es-AR')}** de más (intereses${totalInsurance > 0 ? ' + seguro' : ''}${totalVAT > 0 ? ' + IVA' : ''}), un **${Math.round(sobrecostoPct)}%** sobre el capital. El CFT estimado es **${cftAnnual.toFixed(1)}%** anual.`,
+    tone: sobrecostoPct > 60 ? 'warn' : 'neutral',
+    icon: '💳',
+  };
+
   return {
     monthly_payment: parseFloat(basePayment.toFixed(2)),
     total_payment: parseFloat(totalPayment.toFixed(2)),
     total_interest: parseFloat(totalCost.toFixed(2)),
     cft_estimated: parseFloat(cftAnnual.toFixed(2)),
     amortization_table: tableNote,
-    _chart: chart
+    _chart: chart,
+    _insight
   };
 }

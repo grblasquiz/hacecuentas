@@ -15,6 +15,7 @@ export interface PropinaOutputs {
   porPersona: number;
   porPersonaSinPropina: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function propina(inputs: PropinaInputs): PropinaOutputs {
@@ -26,6 +27,7 @@ export function propina(inputs: PropinaInputs): PropinaOutputs {
       slicePropina: 'Propina',
       centerLabel: 'Total',
       ariaLabel: 'Composición del total: cuenta más propina',
+      insightTitle: 'Tu propina y el total',
     },
     en: {
       errorCuenta: 'Enter the total bill amount',
@@ -33,6 +35,7 @@ export function propina(inputs: PropinaInputs): PropinaOutputs {
       slicePropina: 'Tip',
       centerLabel: 'Total',
       ariaLabel: 'Breakdown of total: bill plus tip',
+      insightTitle: 'Your tip and total',
     },
   } as const)[__lang];
 
@@ -60,11 +63,29 @@ export function propina(inputs: PropinaInputs): PropinaOutputs {
     ariaLabel: T.ariaLabel,
   };
 
+  const fmtMoney = (n: number) => '$' + Math.round(n).toLocaleString(locale);
+  const pctTxt = Number.isInteger(pct) ? `${pct}` : pct.toFixed(1);
+  const insightText = __lang === 'en'
+    ? (personas > 1
+        ? `A **${pctTxt}%** tip adds **${fmtMoney(propinaMonto)}**. The total is **${fmtMoney(totalConPropina)}**, or **${fmtMoney(porPersona)}** per person split ${personas} ways.`
+        : `A **${pctTxt}%** tip adds **${fmtMoney(propinaMonto)}**, bringing the total to **${fmtMoney(totalConPropina)}**.`)
+    : (personas > 1
+        ? `Con **${pctTxt}%** de propina sumás **${fmtMoney(propinaMonto)}**. El total queda en **${fmtMoney(totalConPropina)}**, o **${fmtMoney(porPersona)}** por persona entre ${personas}.`
+        : `Con **${pctTxt}%** de propina sumás **${fmtMoney(propinaMonto)}**, llevando el total a **${fmtMoney(totalConPropina)}**.`);
+
+  const _insight = {
+    title: T.insightTitle,
+    text: insightText,
+    tone: (pct >= 18 ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: '🍽️',
+  };
+
   return {
     propina: Math.round(propinaMonto),
     totalConPropina: Math.round(totalConPropina),
     porPersona: Math.round(porPersona),
     porPersonaSinPropina: Math.round(porPersonaSinPropina),
     _chart: chart,
+    _insight,
   };
 }

@@ -12,6 +12,7 @@ export interface Outputs {
   pronostico: string;
   recomendacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function probabilidadLluvia24h(i: Inputs): Outputs {
@@ -91,11 +92,26 @@ export function probabilidadLluvia24h(i: Inputs): Outputs {
     ariaLabel: 'Escala de probabilidad de lluvia en 24 horas, de muy bajo a muy alto.',
   };
 
+  const tendLabel: Record<string, string> = {
+    'bajando-rapido': 'bajando rápido',
+    'bajando': 'bajando',
+    'estable': 'estable',
+    'subiendo': 'subiendo',
+    'subiendo-rapido': 'subiendo rápido',
+  };
+  const _insight = {
+    title: 'Chance de lluvia en las próximas 24 h',
+    text: `Con presión de **${P} hPa** ${tendLabel[t] ?? 'estable'} y humedad **${H}%**, la probabilidad de lluvia es **${probRedondeada}%** (riesgo ${nivelRiesgo.toLowerCase()}). ${pronostico}`,
+    tone: probRedondeada >= 60 ? 'warn' : probRedondeada >= 40 ? 'neutral' : 'good',
+    icon: probRedondeada >= 60 ? '🌧️' : probRedondeada >= 40 ? '🌦️' : '☀️',
+  };
+
   return {
     probabilidad: `${probRedondeada} %`,
     nivelRiesgo,
     pronostico,
     recomendacion,
     _chart: chart,
+    _insight,
   };
 }

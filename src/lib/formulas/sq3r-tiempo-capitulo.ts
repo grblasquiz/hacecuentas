@@ -9,6 +9,8 @@ export interface Outputs {
   recite: number;
   review: number;
   totalMin: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function sq3rTiempoCapitulo(i: Inputs): Outputs {
@@ -27,6 +29,30 @@ export function sq3rTiempoCapitulo(i: Inputs): Outputs {
 
   const total = survey + question + read + recite + review;
 
+  const horas = Math.floor(total / 60);
+  const mins = total % 60;
+  const tiempoTxt = horas > 0 ? `${horas} h ${mins} min` : `${total} min`;
+  const pctLectura = total > 0 ? Math.round((read / total) * 100) : 0;
+  const insight = {
+    title: 'Tu plan de estudio SQ3R',
+    text: `Aplicar SQ3R a este capítulo de ${pag} páginas (${comp}) te lleva unos **${tiempoTxt}**. La etapa de lectura (**${read} min**) se lleva el **${pctLectura}%** del tiempo; el resto va a explorar, preguntarte y repasar para fijar lo aprendido.`,
+    tone: 'neutral' as const,
+    icon: '📚',
+  };
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Survey (explorar)', value: survey },
+      { label: 'Question (preguntar)', value: question },
+      { label: 'Read (leer)', value: read },
+      { label: 'Recite (recitar)', value: recite },
+      { label: 'Review (repasar)', value: review },
+    ],
+    centerValue: tiempoTxt,
+    centerLabel: 'Total',
+    ariaLabel: 'Distribución del tiempo de estudio entre las cinco etapas del método SQ3R',
+  };
+
   return {
     survey,
     question,
@@ -34,6 +60,8 @@ export function sq3rTiempoCapitulo(i: Inputs): Outputs {
     recite,
     review,
     totalMin: total,
+    _insight: insight,
+    _chart: chart,
   };
 
 }

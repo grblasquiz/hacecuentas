@@ -11,6 +11,8 @@ export interface Outputs {
   estadoActual: string;
   resetReglas: string;
   mensaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tarjetasAmarillasSuspension(i: Inputs): Outputs {
@@ -41,6 +43,44 @@ export function tarjetasAmarillasSuspension(i: Inputs): Outputs {
 
   const fechasRestantes = Math.max(0, totalFechas - fechaActual);
 
+  // Tono e insight dinámicos según cercanía al umbral
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (faltan === 0) {
+    insightTone = 'warn';
+    insightText = `Con **${amarillas}/${info.umbral} amarillas** el jugador alcanzó el umbral y **se pierde la próxima fecha** por suspensión automática.`;
+  } else if (faltan === 1) {
+    insightTone = 'warn';
+    insightText = `Con **${amarillas}/${info.umbral} amarillas** está **a una sola tarjeta** de la suspensión. Una amonestación más y se pierde un partido.`;
+  } else {
+    insightTone = 'good';
+    insightText = `Con **${amarillas}/${info.umbral} amarillas** todavía hay margen: faltan **${faltan} amarillas** para la suspensión. Quedan **${fechasRestantes} fechas** en el torneo.`;
+  }
+
+  const _insight = {
+    title: 'Qué significa este resultado',
+    text: insightText,
+    tone: insightTone,
+    icon: '🟨',
+  };
+
+  // Gauge: marcador = amarillas actuales sobre el umbral de suspensión
+  const umbral = info.umbral;
+  const cuidadoMax = Math.max(1, umbral - 1); // zona de riesgo: la última antes del umbral
+  const markerCapped = Math.min(amarillas, umbral); // mantener el marcador dentro del último segmento
+  const _chart = {
+    type: 'scale' as const,
+    marker: markerCapped,
+    markerLabel: `${amarillas} amarilla${amarillas === 1 ? '' : 's'}`,
+    min: 0,
+    segments: [
+      { nombre: 'Margen', max: cuidadoMax, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Riesgo', max: umbral, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Suspendido', max: umbral + 1, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Amarillas acumuladas (${amarillas}) frente al umbral de suspensión de ${umbral}.`,
+  };
+
   return {
     umbralSuspension: info.fechas,
     amarillasParaSuspension: faltan === 0 ? 'Ya suspendido.' : `${faltan} amarilla(s) más para ser suspendido.`,
@@ -48,6 +88,8 @@ export function tarjetasAmarillasSuspension(i: Inputs): Outputs {
     resetReglas: info.reset,
     mensaje: faltan === 0
       ? `${amarillas}/${info.umbral}: suspendido`
-      : `Faltan ${faltan} para suspensión`
+      : `Faltan ${faltan} para suspensión`,
+    _insight,
+    _chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Uniswap v3 LP fees estimate */
 export interface Inputs { liquidityUsd: number; poolTvl: number; dailyVolume: number; feeTier: number; inRangePct: number; days: number; }
-export interface Outputs { dailyFees: number; totalFees: number; feeApr: number; poolDailyFees: number; yourShare: number; explicacion: string; }
+export interface Outputs { dailyFees: number; totalFees: number; feeApr: number; poolDailyFees: number; yourShare: number; explicacion: string; _insight?: any; }
 export function uniswapV3Fees(i: Inputs): Outputs {
   const liq = Number(i.liquidityUsd);
   const tvl = Number(i.poolTvl);
@@ -15,6 +15,12 @@ export function uniswapV3Fees(i: Inputs): Outputs {
   const dailyFees = poolDailyFees * yourShare * inRange;
   const totalFees = dailyFees * days;
   const feeApr = (dailyFees * 365 / liq) * 100;
+  const insight = {
+    title: 'Tu APR por fees de liquidez',
+    text: `Con **$${liq.toLocaleString('en-US')}** en un pool de **$${tvl.toLocaleString('en-US')}** (tu participación: **${(yourShare * 100).toFixed(3)}%**) ganás **$${dailyFees.toFixed(2)}/día** en fees, o sea un **${feeApr.toFixed(2)}% APR**${inRange < 1 ? ` (estás in-range el ${(inRange * 100).toFixed(0)}% del tiempo)` : ''}. En ${days} días acumulás **$${totalFees.toFixed(2)}**. Ojo: el APR no descuenta impermanent loss.`,
+    tone: (feeApr >= 20 ? 'good' : feeApr < 5 ? 'warn' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🦄',
+  };
   return {
     dailyFees: Number(dailyFees.toFixed(2)),
     totalFees: Number(totalFees.toFixed(2)),
@@ -22,5 +28,6 @@ export function uniswapV3Fees(i: Inputs): Outputs {
     poolDailyFees: Number(poolDailyFees.toFixed(2)),
     yourShare: Number((yourShare * 100).toFixed(4)),
     explicacion: `Con $${liq} en un pool de $${tvl} (${(yourShare*100).toFixed(3)}%), volumen diario $${vol} y fee tier ${(tier*100).toFixed(2)}%: ganás $${dailyFees.toFixed(2)}/día (${feeApr.toFixed(2)}% APR).`,
+    _insight: insight,
   };
 }

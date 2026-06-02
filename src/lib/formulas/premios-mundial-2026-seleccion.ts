@@ -23,6 +23,8 @@ export interface PremiosMundial2026Outputs {
   bonusPreparacion: number;
   detalle: string;
   faseLabel: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const PREMIOS_M26: Record<string, number> = {
@@ -57,11 +59,35 @@ export function premiosMundial2026Seleccion(
 
   const premioFase = PREMIOS_M26[key];
   const bonusPreparacion = 1500000;
+  const premioTotal = premioFase + bonusPreparacion;
+  const faseLabel = LABELS_M26[key];
+
+  const insightText = key === 'campeon'
+    ? `Salir **${faseLabel}** vale **US$ ${premioTotal.toLocaleString('es-AR')}** de FIFA: ${'$' + premioFase.toLocaleString('es-AR')} por el título más ${'$' + bonusPreparacion.toLocaleString('es-AR')} de preparación.`
+    : `Quedar **${faseLabel.toLowerCase()}** le deja a la selección **US$ ${premioTotal.toLocaleString('es-AR')}**: ${'$' + premioFase.toLocaleString('es-AR')} por la fase más ${'$' + bonusPreparacion.toLocaleString('es-AR')} fijos de preparación. Cada fase extra sube el premio.`;
+
   return {
-    premioTotal: premioFase + bonusPreparacion,
+    premioTotal,
     premioFase,
     bonusPreparacion,
-    detalle: `${LABELS_M26[key]}: $${premioFase.toLocaleString('es-AR')} + preparación $${bonusPreparacion.toLocaleString('es-AR')}`,
-    faseLabel: LABELS_M26[key],
+    detalle: `${faseLabel}: $${premioFase.toLocaleString('es-AR')} + preparación $${bonusPreparacion.toLocaleString('es-AR')}`,
+    faseLabel,
+    _insight: {
+      title: 'Premio FIFA por la selección',
+      text: insightText,
+      tone: key === 'campeon' ? 'good' : 'neutral',
+      icon: '🏆',
+    },
+    _chart: {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Premio por fase', value: premioFase },
+        { label: 'Bono de preparación', value: bonusPreparacion },
+      ],
+      prefix: '$',
+      centerValue: '$' + premioTotal.toLocaleString('es-AR'),
+      centerLabel: 'Premio total',
+      ariaLabel: 'Composición del premio FIFA: monto por fase alcanzada más bono fijo de preparación',
+    },
   };
 }

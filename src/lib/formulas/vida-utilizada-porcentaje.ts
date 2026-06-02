@@ -14,6 +14,8 @@ export interface Outputs {
   semanasRestantes: number;
   finesSemanaRestantes: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Esperanza de vida por país (fuente: Banco Mundial 2024, OMS)
@@ -55,8 +57,29 @@ export function vidaUtilizadaPorcentaje(i: Inputs): Outputs {
   else if (porcentajeVivido < 75) mensaje = 'Ya vivido más de la mitad. Foco en lo importante.';
   else mensaje = 'Cada día vale oro. Disfrutá lo que te queda.';
 
+  const pctV = Number(porcentajeVivido.toFixed(1));
+  const _insight = {
+    title: 'Tu vida en perspectiva',
+    text: `Llevás vivido el **${pctV}%** de una esperanza de vida de **${esperanzaVida.toFixed(1)} años**. Te quedarían ~**${Math.round(anosRestantes)} años** (${finesSemanaRestantes.toLocaleString('es-AR')} fines de semana). ${mensaje}`,
+    tone: 'neutral',
+    icon: '⏳',
+  };
+  const _chart = {
+    type: 'scale' as const,
+    marker: pctV,
+    markerLabel: `${pctV}% vivido`,
+    min: 0,
+    segments: [
+      { nombre: 'Juventud', max: 25, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Etapa productiva', max: 50, color: '#0891b2', colorDark: '#22d3ee' },
+      { nombre: 'Madurez', max: 75, color: '#d97706', colorDark: '#f59e0b' },
+      { nombre: 'Plenitud', max: 101, color: '#7c3aed', colorDark: '#a78bfa' },
+    ],
+    ariaLabel: `Porcentaje de vida vivido: ${pctV}% sobre una esperanza de ${esperanzaVida.toFixed(1)} años`,
+  };
+
   return {
-    porcentajeVivido: Number(porcentajeVivido.toFixed(1)),
+    porcentajeVivido: pctV,
     porcentajeRestante: Number(porcentajeRestante.toFixed(1)),
     esperanzaVida: Number(esperanzaVida.toFixed(1)),
     anosRestantes: Number(anosRestantes.toFixed(1)),
@@ -65,5 +88,7 @@ export function vidaUtilizadaPorcentaje(i: Inputs): Outputs {
     semanasRestantes,
     finesSemanaRestantes,
     resumen: `Llevás vivido el ${porcentajeVivido.toFixed(1)}% de tu vida esperada. Te quedan ~${Math.round(anosRestantes)} años (${finesSemanaRestantes} fines de semana). ${mensaje}`,
+    _insight,
+    _chart,
   };
 }

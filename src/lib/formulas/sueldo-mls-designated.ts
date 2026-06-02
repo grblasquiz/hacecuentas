@@ -12,6 +12,7 @@ export interface Outputs {
   salaryCapTotal: number;
   maxBudgetCharge: number;
   mensaje: string;
+  _insight?: any;
 }
 
 // Cifras MLS 2025 (USD)
@@ -61,6 +62,25 @@ export function sueldoMlsDesignated(i: Inputs): Outputs {
       break;
   }
 
+  const usd = (n: number) => 'USD ' + Math.round(n).toLocaleString('en-US');
+  const sobrante = Math.max(0, salario - capHit);
+  const pctCap = SALARY_CAP > 0 ? (capHit / SALARY_CAP) * 100 : 0;
+  let insightText: string;
+  let tone: 'good' | 'warn' | 'neutral';
+  if (!cuentaParaCap) {
+    insightText = `Con un salario de **${usd(salario)}**, este jugador **no impacta el salary cap**: el club lo suma fuera del presupuesto del roster principal.`;
+    tone = 'good';
+  } else if (esDp && sobrante > 0) {
+    insightText = `Gana **${usd(salario)}** pero al cap sólo le pesa **${usd(capHit)}** (**${pctCap.toFixed(1)}%** del tope de ${usd(SALARY_CAP)}). Los **${usd(sobrante)}** de diferencia los paga el club fuera del cap: por eso existe la figura DP.`;
+    tone = 'good';
+  } else if (salario > MAX_BUDGET_CHARGE) {
+    insightText = `Su salario de **${usd(salario)}** supera el umbral DP (**${usd(MAX_BUDGET_CHARGE)}**): el club **debe designarlo Designated Player** o no entra en el cap.`;
+    tone = 'warn';
+  } else {
+    insightText = `Su cap hit es **${usd(capHit)}**, el **${pctCap.toFixed(1)}%** del tope de ${usd(SALARY_CAP)}. Queda por debajo del umbral DP, así que ocupa un slot normal del roster.`;
+    tone = 'neutral';
+  }
+
   return {
     salaryCapHit: Math.round(capHit),
     cuentaParaCap,
@@ -69,5 +89,11 @@ export function sueldoMlsDesignated(i: Inputs): Outputs {
     salaryCapTotal: SALARY_CAP,
     maxBudgetCharge: MAX_BUDGET_CHARGE,
     mensaje: `Cap hit: USD ${Math.round(capHit).toLocaleString('en-US')}. ${regla}`,
+    _insight: {
+      title: 'Impacto en el salary cap',
+      text: insightText,
+      tone,
+      icon: '⚽',
+    },
   };
 }

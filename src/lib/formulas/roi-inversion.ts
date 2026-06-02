@@ -12,6 +12,7 @@ export interface Outputs {
   veredicto: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function roiInversion(i: Inputs): Outputs {
@@ -68,6 +69,16 @@ export function roiInversion(i: Inputs): Outputs {
     },
   };
 
+  const fmtMoney = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const insight = {
+    title: gananciaNeta >= 0 ? 'Inversión en ganancia' : 'Inversión en pérdida',
+    text: gananciaNeta >= 0
+      ? `Convertiste $${fmtMoney.format(inv)} en $${fmtMoney.format(final)}: una ganancia neta de **$${fmtMoney.format(gananciaNeta)}** (${multiplo.toFixed(2)}×) en ${anios} año${anios === 1 ? '' : 's'}. Eso equivale a **${roiAnualizado.toFixed(2)}% anual**, ${roiAnualizado >= 7 ? 'por encima del histórico del S&P 500 (~7%).' : 'por debajo del histórico del S&P 500 (~7%); compará con un fondo indexado.'}`
+      : `Tu inversión bajó de $${fmtMoney.format(inv)} a $${fmtMoney.format(final)}: una pérdida de **$${fmtMoney.format(Math.abs(gananciaNeta))}** (ROI **${roi.toFixed(2)}%**). Antes de vender, evaluá si la caída es transitoria o estructural.`,
+    tone: (roi < 0 ? 'warn' : roi >= 20 ? 'good' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '📈',
+  };
+
   return {
     gananciaNeta: Math.round(gananciaNeta),
     roi: Number(roi.toFixed(2)),
@@ -76,5 +87,6 @@ export function roiInversion(i: Inputs): Outputs {
     veredicto,
     resumen,
     _chart: chart,
+    _insight: insight,
   };
 }

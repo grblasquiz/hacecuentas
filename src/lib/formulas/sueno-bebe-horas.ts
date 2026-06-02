@@ -1,6 +1,6 @@
 /** Horas de sueño recomendadas por edad del bebé */
 export interface Inputs { edadBebeSueno: string; __lang?: 'es' | 'en'; }
-export interface Outputs { horasTotales: string; siestas: string; ventanaVigilia: string; tips: string; }
+export interface Outputs { horasTotales: string; siestas: string; ventanaVigilia: string; tips: string; _insight?: any; }
 
 const data: Record<string, { horas: string; siestas: string; vigilia: string; tips: string }> = {
   '0': { horas: '16-17 horas totales (8-9 nocturnas + siestas irregulares)', siestas: '4-5 siestas irregulares por día', vigilia: '45-60 minutos', tips: 'No hay rutina posible aún. Dormí cuando duerma el bebé. El caos es normal.' },
@@ -26,9 +26,31 @@ const dataEn: Record<string, { horas: string; siestas: string; vigilia: string; 
   '36': { horas: '11-13 total hours (10-12 nighttime, optional nap)', siestas: '0-1 nap (many drop it between 3 and 5 years)', vigilia: '6+ hours', tips: 'If dropping the nap, an earlier bedtime may help. Limit screens before bed.' },
 };
 
+const edadLabel: Record<string, { es: string; en: string }> = {
+  '0': { es: 'un recién nacido', en: 'a newborn' },
+  '1': { es: 'un bebé de 1 mes', en: 'a 1-month-old' },
+  '3': { es: 'un bebé de 3 meses', en: 'a 3-month-old' },
+  '6': { es: 'un bebé de 6 meses', en: 'a 6-month-old' },
+  '9': { es: 'un bebé de 9 meses', en: 'a 9-month-old' },
+  '12': { es: 'un bebé de 12 meses', en: 'a 12-month-old' },
+  '18': { es: 'un bebé de 18 meses', en: 'an 18-month-old' },
+  '24': { es: 'un niño de 24 meses', en: 'a 24-month-old' },
+  '36': { es: 'un niño de 36 meses', en: 'a 36-month-old' },
+};
+
 export function suenoBebe(i: Inputs): Outputs {
   const edad = String(i.edadBebeSueno || '0');
-  const src = i.__lang === 'en' ? dataEn : data;
+  const en = i.__lang === 'en';
+  const src = en ? dataEn : data;
   const d = src[edad] || src['0'];
-  return { horasTotales: d.horas, siestas: d.siestas, ventanaVigilia: d.vigilia, tips: d.tips };
+  const lbl = (edadLabel[edad] || edadLabel['0'])[en ? 'en' : 'es'];
+  const insight = {
+    title: en ? "Your baby's sleep" : 'El sueño de tu bebé',
+    text: en
+      ? `At this stage ${lbl} needs **${d.horas}**, with ${d.siestas.toLowerCase()}. ${d.tips}`
+      : `A esta edad ${lbl} necesita **${d.horas}**, con ${d.siestas.toLowerCase()}. ${d.tips}`,
+    tone: 'neutral' as const,
+    icon: '👶',
+  };
+  return { horasTotales: d.horas, siestas: d.siestas, ventanaVigilia: d.vigilia, tips: d.tips, _insight: insight };
 }

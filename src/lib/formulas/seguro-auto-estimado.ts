@@ -1,6 +1,6 @@
 /** Estimación costo seguro auto */
 export interface Inputs { categoriaAuto: string; cobertura: string; zona?: string; }
-export interface Outputs { costoMensual: number; costoAnual: number; detalle: string; }
+export interface Outputs { costoMensual: number; costoAnual: number; detalle: string; _insight?: any; }
 
 export function seguroAutoEstimado(i: Inputs): Outputs {
   const cat = i.categoriaAuto || 'mediano';
@@ -22,9 +22,26 @@ export function seguroAutoEstimado(i: Inputs): Outputs {
   const costoMensual = costoBase * mult;
   const costoAnual = costoMensual * 12;
 
+  const mensualFmt = Math.round(costoMensual).toLocaleString('es-AR');
+  const anualFmt = Math.round(costoAnual).toLocaleString('es-AR');
+  const zonaTxt = zona === 'caba' ? 'CABA (+20% por siniestralidad)' : zona === 'interior' ? 'interior (-20% más barato que GBA)' : 'GBA';
+  const esTerceros = cob === 'terceros';
+  const esTodoRiesgo = cob === 'todo-riesgo' || cob === 'todo-riesgo-0';
+  const _insight = {
+    title: esTerceros ? 'Cobertura básica: cuidado' : esTodoRiesgo ? 'Cobertura amplia' : 'Estimación de prima',
+    text: esTerceros
+      ? `Un auto **${cat}** con cobertura **terceros** en ${zonaTxt} ronda los **$${mensualFmt}/mes** ($${anualFmt}/año). Es lo más barato, pero **no cubre daños a tu propio vehículo** (choque, robo total parcial): solo responde frente a terceros.`
+      : esTodoRiesgo
+        ? `Un auto **${cat}** con **${cob.replace('-', ' ')}** en ${zonaTxt} ronda los **$${mensualFmt}/mes** ($${anualFmt}/año). Cubre daños propios además de terceros; es la opción más completa, ideal si el auto tiene valor de mercado alto.`
+        : `Un auto **${cat}** con **terceros completo** en ${zonaTxt} ronda los **$${mensualFmt}/mes** ($${anualFmt}/año). Suma robo, incendio y cristales al RC básico: el punto de equilibrio entre precio y cobertura.`,
+    tone: esTerceros ? 'warn' : esTodoRiesgo ? 'good' : 'neutral',
+    icon: '🚗',
+  };
+
   return {
     costoMensual: Math.round(costoMensual),
     costoAnual: Math.round(costoAnual),
     detalle: `${cat} / ${cob} / ${zona}: $${Math.round(costoMensual).toLocaleString('es-AR')}/mes`,
+    _insight,
   };
 }

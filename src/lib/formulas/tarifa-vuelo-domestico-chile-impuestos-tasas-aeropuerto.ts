@@ -14,6 +14,8 @@ export interface Outputs {
   total_tiquete: number;
   porcentaje_impuestos_tasas: number;
   desglose_texto: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -83,14 +85,42 @@ export function compute(i: Inputs): Outputs {
     `Composición: ${((i.valor_tiquete_base / totalTiquete) * 100).toFixed(1)}% tiquete, ` +
     `${porcentajeImpuestos.toFixed(1)}% impuestos/tasas`;
   
+  const totalR = Math.round(totalTiquete);
+  const ivaR = Math.round(iva);
+  const pctImpuestosR = Math.round(porcentajeImpuestos * 10) / 10;
+  const recargo = tasaEmbarque + cargoTerminalBase + ivaR;
+
+  const _insight = {
+    title: 'Cuánto se va en impuestos y tasas',
+    text: `Sobre un tiquete base de **$${i.valor_tiquete_base.toLocaleString('es-CL')}**, terminás pagando **$${totalR.toLocaleString('es-CL')}**: unos **$${recargo.toLocaleString('es-CL')}** son IVA, tasa de embarque y cargo de terminal, o sea el **${pctImpuestosR.toFixed(1)}%** del total. ${pctImpuestosR >= 30 ? 'Compará la tarifa final, no la base publicitada.' : 'El recargo es moderado para un vuelo doméstico.'}`,
+    tone: pctImpuestosR >= 30 ? 'warn' : 'neutral',
+    icon: '✈️',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Tiquete base', value: i.valor_tiquete_base },
+      { label: 'Tasa embarque', value: tasaEmbarque },
+      { label: 'Cargo terminal', value: cargoTerminalBase },
+      { label: 'IVA 19%', value: ivaR },
+    ],
+    prefix: '$',
+    centerValue: `$${totalR.toLocaleString('es-CL')}`,
+    centerLabel: 'Total a pagar',
+    ariaLabel: `El total de $${totalR.toLocaleString('es-CL')} se compone del tiquete base, la tasa de embarque, el cargo de terminal y el IVA del 19%`,
+  };
+
   return {
     valor_tiquete_base: i.valor_tiquete_base,
     tasa_embarque: tasaEmbarque,
     subtotal_antes_iva: subtotalAntesIva,
-    iva_19_porcent: Math.round(iva),
+    iva_19_porcent: ivaR,
     cargo_servicios_terminal: cargoTerminalBase,
-    total_tiquete: Math.round(totalTiquete),
-    porcentaje_impuestos_tasas: Math.round(porcentajeImpuestos * 10) / 10,
-    desglose_texto: desglose
+    total_tiquete: totalR,
+    porcentaje_impuestos_tasas: pctImpuestosR,
+    desglose_texto: desglose,
+    _insight,
+    _chart
   };
 }

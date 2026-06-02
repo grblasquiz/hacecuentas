@@ -20,6 +20,7 @@ export interface Outputs {
   conviene: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function refinanciarPrestamoAhorro(i: Inputs): Outputs {
@@ -62,6 +63,16 @@ export function refinanciarPrestamoAhorro(i: Inputs): Outputs {
   const formula = `Ahorro = ($${Math.round(cuotaActual)} × ${cuotasRest}) - ($${Math.round(cuotaNueva)} × ${plazoN}) - $${costo.toLocaleString()} = $${Math.round(ahorroTotal).toLocaleString()}`;
   const explicacion = `Préstamo actual: cuota $${Math.round(cuotaActual).toLocaleString()} × ${cuotasRest} cuotas = $${Math.round(interesTotalActual).toLocaleString()} en intereses. Refinanciado: cuota $${Math.round(cuotaNueva).toLocaleString()} × ${plazoN} cuotas = $${Math.round(interesTotalNuevo).toLocaleString()} en intereses. Ahorro en cuota: $${Math.round(ahorroCuota).toLocaleString()}/mes.${costo > 0 ? ` Costo refinanciación: $${costo.toLocaleString()} (se recupera en ${mesesRecuperacion} meses).` : ''} Ahorro neto total: $${Math.round(ahorroTotal).toLocaleString()}. ${conviene}.`;
 
+  const ahorroPositivo = ahorroTotal > 0;
+  const _insight = {
+    title: ahorroPositivo ? "Te conviene refinanciar" : "No te conviene refinanciar",
+    text: ahorroPositivo
+      ? `Refinanciar te baja la cuota **$${Math.round(ahorroCuota).toLocaleString()}/mes** y, descontando el costo, ahorrás **$${Math.round(ahorroTotal).toLocaleString()}** en total.${mesesRecuperacion > 0 ? ` Recuperás el costo de refinanciación en **${mesesRecuperacion} meses**.` : ""}`
+      : `Con la tasa y el plazo nuevos pagarías **$${Math.round(Math.abs(ahorroTotal)).toLocaleString()} más** en intereses${costo > 0 ? " (incluido el costo de refinanciación)" : ""}. Refinanciar así no conviene salvo que necesites bajar la cuota mensual por flujo de caja.`,
+    tone: (ahorroPositivo ? "good" : "warn") as "good" | "warn" | "neutral",
+    icon: "🏦",
+  };
+
   return {
     cuotaActual: Math.round(cuotaActual),
     cuotaNueva: Math.round(cuotaNueva),
@@ -73,5 +84,6 @@ export function refinanciarPrestamoAhorro(i: Inputs): Outputs {
     conviene,
     formula,
     explicacion,
+    _insight,
   };
 }

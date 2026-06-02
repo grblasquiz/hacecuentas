@@ -14,6 +14,8 @@ export interface Outputs {
   viewsPara1000USD: number;
   viewsPara10000USD: number;
   ingresoEstimado: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 function fmtUSD(n: number): string {
@@ -37,6 +39,7 @@ export function youtubeShortsRpmIngreso(i: Inputs): Outputs {
   const viewsPara1k = rpm > 0 ? Math.ceil((1000 / rpm) * 1000) : 0;
   const viewsPara10k = rpm > 0 ? Math.ceil((10000 / rpm) * 1000) : 0;
 
+  const impuesto = ingreso - netPostIva;
   return {
     viewsFormat: views.toLocaleString('es-AR') + ' views',
     rpmUsado: 'USD ' + rpm.toFixed(3) + ' por 1.000 views',
@@ -45,5 +48,22 @@ export function youtubeShortsRpmIngreso(i: Inputs): Outputs {
     viewsPara1000USD: viewsPara1k,
     viewsPara10000USD: viewsPara10k,
     ingresoEstimado: Number(ingreso.toFixed(2)),
+    _insight: {
+      title: 'Tu ingreso por Shorts',
+      text: `Con **${views.toLocaleString('es-AR')}** views y un RPM de **USD ${rpm.toFixed(3)}**, generás **${fmtUSD(ingreso)}** brutos. Tras el ~30% de impuesto a las ganancias quedan **${fmtUSD(netPostIva)}** netos. Para llegar a USD 1.000 brutos necesitás **${viewsPara1k.toLocaleString('es-AR')}** views.`,
+      tone: 'neutral',
+      icon: '📱',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Neto en mano', value: Number(netPostIva.toFixed(2)) },
+        { label: 'Impuesto (~30%)', value: Number(impuesto.toFixed(2)) },
+      ],
+      prefix: 'USD ',
+      centerValue: fmtUSD(ingreso),
+      centerLabel: 'Bruto',
+      ariaLabel: `Ingreso bruto de ${fmtUSD(ingreso)} dividido en neto e impuesto`,
+    },
   };
 }

@@ -19,6 +19,8 @@ export interface Outputs {
   economiaPorDependentes: string;
   formula: string;
   explicacao: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const fmt = (n: number) =>
@@ -43,6 +45,35 @@ export function salarioLiquidoDependentes(i: Inputs): Outputs {
   const formula = `Líquido = ${fmt(bruto)} − INSS ${fmt(inss)} − IRRF(base ${fmt(baseIrrf)}) = ${fmt(liquido)}`;
   const explicacao = `Com ${deps} dependente(s), dedução no IRRF de ${fmt(deducaoDeps)} (${deps} × R$ 189,59). INSS ${fmt(inss)}, IRRF ${fmt(irrf)}. Líquido: ${fmt(liquido)}. Economia vs. sem dependentes: ${fmt(economia)}.`;
 
+  const _insight = economia > 0
+    ? {
+        title: 'Dependentes reduzem seu IRRF',
+        text: `Declarar **${deps} dependente(s)** abate ${fmt(deducaoDeps)} da base do IRRF e te faz economizar **${fmt(economia)}/mês** — cerca de **${fmt(economia * 12)}** por ano no líquido.`,
+        tone: 'good',
+        icon: '👨‍👩‍👧',
+      }
+    : {
+        title: 'Sem economia no IRRF',
+        text: deps > 0
+          ? `Com ${deps} dependente(s) o líquido é **${fmt(liquido)}**, mas a base já não paga IRRF, então a dedução de ${fmt(deducaoDeps)} não muda o desconto.`
+          : `Sem dependentes declarados, o líquido fica em **${fmt(liquido)}** (INSS ${fmt(inss)} + IRRF ${fmt(irrf)}). Cada dependente abate R$ 189,59 da base do IRRF.`,
+        tone: 'neutral',
+        icon: '👨‍👩‍👧',
+      };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Líquido', value: Math.round(liquido * 100) / 100 },
+      { label: 'INSS', value: Math.round(inss * 100) / 100 },
+      { label: 'IRRF', value: Math.round(irrf * 100) / 100 },
+    ].filter((s) => s.value > 0),
+    prefix: 'R$',
+    centerValue: fmt(bruto),
+    centerLabel: 'Salário bruto',
+    ariaLabel: `Composição do salário bruto de ${fmt(bruto)} com ${deps} dependente(s): líquido, INSS e IRRF.`,
+  };
+
   return {
     salarioBruto: fmt(bruto),
     descontoInss: fmt(inss),
@@ -53,5 +84,7 @@ export function salarioLiquidoDependentes(i: Inputs): Outputs {
     economiaPorDependentes: fmt(economia),
     formula,
     explicacao,
+    _insight,
+    _chart,
   };
 }

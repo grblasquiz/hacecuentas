@@ -8,6 +8,8 @@ export interface PropinaPaisOutputs {
   porcentaje: number;
   costumbre: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 interface PaisConfig {
@@ -95,11 +97,46 @@ export function propinaPais(inputs: PropinaPaisInputs): PropinaPaisOutputs {
   const propina = Number(((monto * p.porcentaje) / 100).toFixed(0));
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+  const total = monto + propina;
+
+  // Tono según cuán esperada es la propina en ese país
+  const c = p.costumbre.toLowerCase();
+  const tone: 'good' | 'warn' | 'neutral' =
+    p.porcentaje === 0 ? 'good'
+    : (c.includes('obligatoria') || c.includes('ofensivo')) ? 'warn'
+    : 'neutral';
+  const text = p.porcentaje === 0
+    ? `En **${p.nombre}** no se deja propina: pagás solo la cuenta de ${fmt.format(monto)}. Dejar dinero extra puede incluso resultar incómodo.`
+    : tone === 'warn'
+      ? `En **${p.nombre}** la propina del **${p.porcentaje}%** prácticamente se da por hecho: sumá **${fmt.format(propina)}** y dejá un total de **${fmt.format(total)}**. Dejar menos puede tomarse mal.`
+      : `En **${p.nombre}** se acostumbra un **${p.porcentaje}%**: serían **${fmt.format(propina)}** de propina, para un total de **${fmt.format(total)}**.`;
+
+  const _insight = {
+    title: `Propina en ${p.nombre}`,
+    text,
+    tone,
+    icon: '🌍',
+  };
+
+  // Donut solo si hay propina: cuenta + propina = total (slices suman el centro)
+  const montoRedondeado = Math.round(monto);
+  const _chart = propina > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Cuenta', value: montoRedondeado },
+      { label: 'Propina', value: propina },
+    ],
+    centerValue: fmt.format(montoRedondeado + propina),
+    centerLabel: 'Total',
+    ariaLabel: `Total de ${fmt.format(montoRedondeado + propina)}: cuenta de ${fmt.format(montoRedondeado)} más propina de ${fmt.format(propina)}`,
+  } : undefined;
 
   return {
     propinaRecomendada: propina,
     porcentaje: p.porcentaje,
     costumbre: p.costumbre,
     detalle: `${p.nombre}: propina recomendada ${p.porcentaje}% → ${fmt.format(propina)} sobre una cuenta de ${fmt.format(monto)}. ${p.costumbre}`,
+    _insight,
+    _chart,
   };
 }

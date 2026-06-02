@@ -15,6 +15,8 @@ export interface Outputs {
   costo_efectivo_mensual: number;
   aviso_trampa: string;
   comparacion_cdt: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(inputs: Inputs): Outputs {
@@ -105,13 +107,44 @@ export function compute(inputs: Inputs): Outputs {
   const gananciaCDT = saldoCDT - costoEfectivoMensual * mesesParaPago;
   const comparacionCDT = interesesTotales + gananciaCDT; // Costo de no invertir en CDT
 
+  const multR = Math.round(multiplicadorDeuda * 100) / 100;
+  const interesesR = Math.round(interesesTotales);
+  const noTermina = deudaRestante > deuda * 0.05;
+  const extraPct = (multR * 100 - 100);
+
+  const _insight = {
+    title: noTermina ? 'Con este pago la deuda no se cancela' : 'Cuánto terminás pagando de más',
+    text: noTermina
+      ? `Después de **${mesesMax} meses** todavía debés **$${Math.round(deudaRestante).toLocaleString('es-CO')}**: el pago elegido no alcanza ni para amortizar capital. En la práctica es una deuda perpetua hasta que subas la cuota.`
+      : `Pagás **$${Math.round(totalPagado).toLocaleString('es-CO')}** por una deuda de **$${Math.round(deuda).toLocaleString('es-CO')}**: **$${interesesR.toLocaleString('es-CO')}** son intereses, o sea **${extraPct.toFixed(0)}% de más** sobre lo que debías (${multR.toFixed(2)}x). ${multR > 2.5 ? 'Eso es nivel usura: priorizá cancelar esta deuda.' : 'Aumentar la cuota recorta fuerte ese sobrecosto.'}`,
+    tone: (multR > 1.5 || noTermina) ? 'warn' : 'good',
+    icon: '💳',
+  };
+
+  // Gauge: cuántas veces tu deuda original terminás pagando (zonas)
+  const markerMult = Math.max(1, Math.min(multR, 5));
+  const _chart = {
+    type: 'scale',
+    marker: markerMult,
+    markerLabel: `${multR.toFixed(2)}x`,
+    min: 1,
+    segments: [
+      { nombre: 'Razonable', max: 1.5, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Caro', max: 2.5, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: 'Usura', max: 5, color: '#dc2626', colorDark: '#ef4444' },
+    ],
+    ariaLabel: `Terminás pagando ${multR.toFixed(2)} veces tu deuda original`,
+  };
+
   return {
     meses_pago: meses,
-    intereses_totales: Math.round(interesesTotales),
+    intereses_totales: interesesR,
     total_pagado: Math.round(totalPagado),
-    multiplicador_deuda: Math.round(multiplicadorDeuda * 100) / 100,
+    multiplicador_deuda: multR,
     costo_efectivo_mensual: Math.round(costoEfectivoMensual),
     aviso_trampa: avisoTrampa,
-    comparacion_cdt: Math.round(comparacionCDT)
+    comparacion_cdt: Math.round(comparacionCDT),
+    _insight,
+    _chart
   };
 }

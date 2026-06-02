@@ -17,6 +17,7 @@ export interface Outputs {
   tipo: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 const TIPOS: Record<string, { nombre: string; espesor: number; cementoKg: number; calKg: number; arena: number; agua: number }> = {
@@ -73,5 +74,11 @@ export function revoqueMortero(i: Inputs): Outputs {
     tipo: t.nombre,
     resumen: `Para ${m2} m² de ${t.nombre.toLowerCase()} (${espesor} cm) necesitás ${Math.ceil(cemento / 50)} bolsas de cemento${cal > 0 ? ', ' + Math.ceil(cal / 25) + ' bolsas de cal' : ''} y ${arena.toFixed(2)} m³ de arena.`,
     _chart: chart,
+    _insight: {
+      title: 'Materiales del revoque',
+      text: `Revocar **${m2} m²** (${espesor} cm) consume **${volM3.toFixed(2)} m³** de mortero: **${Math.ceil(cemento / 50)} bolsas** de cemento${cal > 0 ? `, **${Math.ceil(cal / 25)} bolsas** de cal` : ''} y **${arena.toFixed(2)} m³** de arena. La cuenta ya incluye **${desp}% de desperdicio**.`,
+      tone: 'neutral',
+      icon: '🧱',
+    },
   };
 }

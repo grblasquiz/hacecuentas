@@ -12,6 +12,7 @@ export interface Outputs {
   retornoCompeticion: string;
   protocolo: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function recuperacionIsquiotibial(i: Inputs): Outputs {
@@ -52,11 +53,24 @@ export function recuperacionIsquiotibial(i: Inputs): Outputs {
     'Fase 5: gestos específicos (patadas, cambios de dirección, contacto).'
   ].join(' | ');
 
+  // Tono dinámico: G3 (y recidiva) son los cuadros más exigentes; G0/G1 los más benignos
+  const tone = (grado === 'G3' || recidiva === 'si') ? ('warn' as const)
+    : (grado === 'G0' || grado === 'G1') ? ('good' as const)
+    : ('neutral' as const);
+  const recidivaTxt = recidiva === 'si' ? ' Al ser una recidiva, los plazos se extienden y conviene extremar el criterio de alta.' : '';
+  const insight = {
+    title: 'Tu plazo de recuperación',
+    text: `Una lesión **${grado}** (${loc}) estima **${minSem}-${maxSem} semanas** hasta el retorno a competencia con criterios objetivos superados.${recidivaTxt} El alta no se da por tiempo: se confirma cuando se recupera fuerza, rango y se completa el retorno progresivo al sprint.`,
+    tone,
+    icon: '🦵',
+  };
+
   return {
     rangoRecuperacion: rango,
     retornoEntrenamiento: retEntreno,
     retornoCompeticion: retComp,
     protocolo,
-    mensaje: `${minSem}-${maxSem} semanas`
+    mensaje: `${minSem}-${maxSem} semanas`,
+    _insight: insight,
   };
 }

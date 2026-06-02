@@ -19,6 +19,7 @@ export interface Outputs {
   diferencia_pesos: number;
   mejor_opcion: string;
   tasa_efectiva: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -91,6 +92,14 @@ export function compute(i: Inputs): Outputs {
     mejor_opcion_msg += ' - Verifica que sea autorizada por Superintendencia Financiera';
   }
 
+  const fmtCop = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
+  const _insight = {
+    title: `Te conviene: ${mejor.nombre.toLowerCase()}`,
+    text: `Cambiando **USD ${i.monto_usd.toLocaleString('es-CO')}**, la mejor opción es **${mejor.nombre}** (**${fmtCop(mejor.pesos)}**). Frente a **${peor.nombre.toLowerCase()}** hay una diferencia de **${fmtCop(diferencia_pesos)}**: el spread cambiario te puede costar esa plata si elegís mal.`,
+    tone: 'warn',
+    icon: '💵',
+  };
+
   return {
     trm_pesos_totales: Math.round(trm_pesos_totales * 100) / 100,
     banco_pesos_totales: Math.round(banco_pesos_totales * 100) / 100,
@@ -99,6 +108,7 @@ export function compute(i: Inputs): Outputs {
     spread_casa_cambio_pct: Math.round(spread_casa_cambio_pct * 100) / 100,
     diferencia_pesos: Math.round(diferencia_pesos * 100) / 100,
     mejor_opcion: mejor_opcion_msg,
-    tasa_efectiva: Math.round(tasa_efectiva * 100) / 100
+    tasa_efectiva: Math.round(tasa_efectiva * 100) / 100,
+    _insight
   };
 }

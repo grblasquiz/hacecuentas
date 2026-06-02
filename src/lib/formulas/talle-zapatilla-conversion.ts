@@ -1,6 +1,6 @@
 /** Conversión talles de zapatillas */
 export interface Inputs { cmPie: number; genero: string; }
-export interface Outputs { talleAR: number; talleUS: number; talleEU: number; talleUK: number; mensaje: string; }
+export interface Outputs { talleAR: number; talleUS: number; talleEU: number; talleUK: number; mensaje: string; _insight?: any; }
 
 export function talleZapatillaConversion(i: Inputs): Outputs {
   const cm = Number(i.cmPie);
@@ -33,8 +33,15 @@ export function talleZapatillaConversion(i: Inputs): Outputs {
   talleUK = Math.max(0.5, Number(talleUK.toFixed(1)));
   talleAR = Number(talleAR.toFixed(1));
 
+  const _insight = {
+    title: 'Tu talle de zapatilla',
+    text: `Un pie de **${cm} cm** (${genero}) es talle **AR ${talleAR}** / **EU ${talleEU}** / **US ${talleUS}**. Para running o medias gruesas sumá **0,5** de holgura; medí ambos pies y usá el más largo.`,
+    tone: 'neutral',
+    icon: '👟',
+  };
   return {
     talleAR, talleUS, talleEU, talleUK,
-    mensaje: `Pie de ${cm} cm (${genero}): AR ${talleAR} | US ${talleUS} | EU ${talleEU} | UK ${talleUK}. Sumá 0.5 para holgura en running.`
+    mensaje: `Pie de ${cm} cm (${genero}): AR ${talleAR} | US ${talleUS} | EU ${talleEU} | UK ${talleUK}. Sumá 0.5 para holgura en running.`,
+    _insight,
   };
 }

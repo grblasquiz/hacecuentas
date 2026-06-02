@@ -13,6 +13,8 @@ export interface Outputs {
   cae_real: number;
   excede_tasa_maxima: string;
   tasa_mensual: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -55,6 +57,31 @@ export function compute(i: Inputs): Outputs {
     ? `Sí (${cae.toFixed(2)}% > ${TASA_MAXIMA_CONVENCIONAL_CMF}%)`
     : `No (${cae.toFixed(2)}% ≤ ${TASA_MAXIMA_CONVENCIONAL_CMF}%)`;
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
+  const sobrecostoPct = monto > 0 ? (costo_financiero_total / monto) * 100 : 0;
+
+  const _insight = {
+    title: excede ? 'CAE sobre el máximo legal' : 'Costo de tu crédito',
+    text: excede
+      ? `Con una CAE de **${cae.toFixed(2)}%** superás la tasa máxima convencional de la CMF (**${TASA_MAXIMA_CONVENCIONAL_CMF}%**): ningún banco puede prestarte legalmente a esa tasa. Pagás **${fmt(costo_financiero_total)}** de costo total (intereses + comisión), un **${Math.round(sobrecostoPct)}%** sobre el capital.`
+      : `Tu cuota es de **${fmt(cuota_mensual)}** por ${meses} meses. Vas a devolver **${fmt(total_pagado)}** en total: el crédito te cuesta **${fmt(costo_financiero_total)}** extra (intereses + comisión), un **${Math.round(sobrecostoPct)}%** sobre los ${fmt(monto)} que pedís.`,
+    tone: excede ? 'warn' : (sobrecostoPct > 40 ? 'warn' : 'neutral'),
+    icon: excede ? '🚫' : '🏦',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital', value: Math.round(monto) },
+      { label: 'Intereses', value: Math.round(total_interes) },
+      { label: 'Comisión', value: Math.round(monto_comision) },
+    ].filter((s) => s.value > 0),
+    prefix: '$',
+    centerValue: fmt(total_pagado),
+    centerLabel: 'Total a pagar',
+    ariaLabel: 'Composición del total a pagar del crédito: capital, intereses y comisión de originación.',
+  };
+
   return {
     cuota_mensual: Math.round(cuota_mensual),
     total_pagado: Math.round(total_pagado),
@@ -63,5 +90,7 @@ export function compute(i: Inputs): Outputs {
     cae_real: Math.round(cae * 100) / 100,
     excede_tasa_maxima: excede_tasa_maxima,
     tasa_mensual: Math.round(tasa_mensual * 10000) / 10000,
+    _insight,
+    _chart,
   };
 }

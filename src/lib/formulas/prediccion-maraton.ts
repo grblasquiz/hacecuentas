@@ -5,6 +5,7 @@ export interface Outputs {
   tiempoPredichoFormato: string;
   pacePredicho: string;
   pacePredichoKmH: number;
+  _insight?: any;
 }
 
 export function prediccionMaraton(i: Inputs): Outputs {
@@ -30,10 +31,22 @@ export function prediccionMaraton(i: Inputs): Outputs {
   const mm = Math.floor(paceMin);
   const ss = Math.round((paceMin - mm) * 60);
 
+  const esExtrapolacion = dObj > dAct;
+  const _insight = {
+    title: 'Tu tiempo proyectado',
+    text: `Partiendo de ${tAct} min en ${dAct} km, Riegel proyecta **${fmt}** para los ${dObj} km, a un ritmo de **${mm}:${String(ss).padStart(2, '0')} min/km** (${paceKmh.toFixed(2)} km/h).` +
+      (esExtrapolacion
+        ? ` Como el objetivo es más largo que tu referencia, la marca asume que tenés resistencia para esa distancia: entrená el fondo para que se cumpla.`
+        : ` Al ser una distancia más corta que tu referencia, es una marca exigente pero realista con buen ritmo.`),
+    tone: 'neutral' as const,
+    icon: '🏅',
+  };
+
   return {
     tiempoPredichoMin: Number(tPred.toFixed(2)),
     tiempoPredichoFormato: fmt,
     pacePredicho: `${mm}:${String(ss).padStart(2, '0')} min/km`,
     pacePredichoKmH: Number(paceKmh.toFixed(2)),
+    _insight,
   };
 }

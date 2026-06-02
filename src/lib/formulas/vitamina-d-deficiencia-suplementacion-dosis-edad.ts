@@ -14,6 +14,7 @@ export interface Outputs {
   retest: string;
   observaciones: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Umbrales según Endocrine Society Clinical Practice Guideline 2024
@@ -181,6 +182,33 @@ export function compute(i: Inputs): Outputs {
       + (pesoAlto ? " Ajuste por peso corporal ≥100 kg aplicado." : "");
   }
 
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  let insightTitle: string;
+  let insightIcon: string;
+  if (nivelNgMl > UMBRAL_TOXICIDAD) {
+    insightTitle = 'Nivel demasiado alto';
+    insightText = `Tu nivel de **${nivelRedondeado} ng/mL** supera el umbral de toxicidad (100 ng/mL). **Suspendé la suplementación** y consultá al médico para descartar hipercalcemia.`;
+    insightTone = 'warn';
+    insightIcon = '🚨';
+  } else if (nivelNgMl >= UMBRAL_INSUFICIENCIA) {
+    insightTitle = 'Estás en rango óptimo';
+    insightText = `Tu vitamina D está en **${nivelRedondeado} ng/mL**, dentro del rango suficiente (30–100). Con **${dosisDiariaUI} UI/día** de mantenimiento alcanza; controlá una vez al año.`;
+    insightTone = 'good';
+    insightIcon = '☀️';
+  } else {
+    const faltan = (UMBRAL_INSUFICIENCIA - nivelRedondeado).toFixed(1);
+    insightTitle = nivelNgMl < UMBRAL_DEFICIENCIA_SEVERA ? 'Deficiencia severa' : 'Te falta vitamina D';
+    insightText = `Con **${nivelRedondeado} ng/mL** estás **${faltan} ng/mL por debajo** del piso de suficiencia (30). El plan: **${dosisDiariaUI} UI/día** durante **${duracionSemanas} semanas** y retest. Tomala con la comida más grasa del día para absorberla mejor.`;
+    insightTone = 'warn';
+    insightIcon = '🌥️';
+  }
+  const _insight = {
+    title: insightTitle,
+    text: insightText,
+    tone: insightTone,
+    icon: insightIcon,
+  };
   return {
     categoria,
     nivelNgMl: nivelRedondeado,
@@ -189,5 +217,6 @@ export function compute(i: Inputs): Outputs {
     retest,
     observaciones,
     _chart: chart,
+    _insight,
   };
 }

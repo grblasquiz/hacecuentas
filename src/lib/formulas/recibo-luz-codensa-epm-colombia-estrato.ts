@@ -15,6 +15,8 @@ export interface Outputs {
   total_recibo: number;
   tarifa_promedio: number;
   tipo_subsidio: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -93,6 +95,52 @@ export function compute(i: Inputs): Outputs {
     tipoSubsidio = `Contributivo (E${i.estrato}): ${(factorEstrato * 100).toFixed(0)}% sobrecosto`;
   }
 
+  // Insight narrativo dinámico según estrato
+  const cop = (n: number) => Math.round(n).toLocaleString('es-CO');
+  let _insight: any = undefined;
+  if (i.consumo_kwh > 0) {
+    if (i.estrato <= 3) {
+      _insight = {
+        title: 'Estrato subsidiado',
+        text: `Tu recibo estimado es **$${cop(totalRecibo)}** por **${i.consumo_kwh} kWh** ($${tarifaPromedio.toLocaleString('es-CO')}/kWh). El estrato ${i.estrato} recibe **${Math.abs(factorEstrato * 100).toFixed(0)}% de subsidio** sobre la energía.`,
+        tone: 'good',
+        icon: '💡',
+      };
+    } else if (i.estrato >= 5) {
+      _insight = {
+        title: 'Estrato con contribución',
+        text: `Tu recibo estimado es **$${cop(totalRecibo)}** por **${i.consumo_kwh} kWh** ($${tarifaPromedio.toLocaleString('es-CO')}/kWh). El estrato ${i.estrato} paga **${(factorEstrato * 100).toFixed(0)}% de sobrecosto** que financia a los estratos bajos.`,
+        tone: 'warn',
+        icon: '💡',
+      };
+    } else {
+      _insight = {
+        title: 'Estrato neutro',
+        text: `Tu recibo estimado es **$${cop(totalRecibo)}** por **${i.consumo_kwh} kWh** ($${tarifaPromedio.toLocaleString('es-CO')}/kWh). El estrato 4 paga la tarifa plena, sin subsidio ni contribución.`,
+        tone: 'neutral',
+        icon: '💡',
+      };
+    }
+  }
+
+  // Gráfico: composición del total (cargo fijo + variable + otros + impuesto = total)
+  let _chart: any = undefined;
+  if (i.consumo_kwh > 0 && totalRecibo > 0) {
+    _chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Cargo fijo', value: Math.round(cargoFijo) },
+        { label: 'Consumo (con estrato)', value: Math.round(cargoVariable) },
+        { label: 'Otros cargos', value: Math.round(otrosCargos) },
+        { label: 'Impuesto nacional 4%', value: Math.round(impuestoNacional) },
+      ].filter((s) => s.value > 0),
+      prefix: '$',
+      centerValue: '$' + cop(totalRecibo),
+      centerLabel: 'Total recibo',
+      ariaLabel: 'Composición del recibo de luz: cargo fijo, consumo, otros cargos e impuesto',
+    };
+  }
+
   return {
     cargo_fijo: Math.round(cargoFijo),
     cargo_variable: Math.round(cargoVariable),
@@ -104,5 +152,7 @@ export function compute(i: Inputs): Outputs {
     total_recibo: Math.round(totalRecibo),
     tarifa_promedio: Math.round(tarifaPromedio * 100) / 100,
     tipo_subsidio: tipoSubsidio,
+    _insight,
+    _chart,
   };
 }

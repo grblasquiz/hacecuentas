@@ -16,6 +16,7 @@ export interface Outputs {
   diasTrabajados: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function primaServiciosColombia(i: Inputs): Outputs {
@@ -45,6 +46,15 @@ export function primaServiciosColombia(i: Inputs): Outputs {
   const formula = `Prima = ($${baseLiquidacion.toLocaleString()} × ${dias}) / 360 = $${primaRedondeada.toLocaleString()}`;
   const explicacion = `Prima de servicios del ${semestreStr}: con salario base de $${baseLiquidacion.toLocaleString()} COP${incluyeAuxilio && salario <= SMLMV * 2 ? ` (incluye auxilio de transporte $${AUXILIO_TRANSPORTE.toLocaleString()})` : ''} y ${dias} días trabajados en el semestre, tu prima es $${primaRedondeada.toLocaleString()} COP. Se paga en los primeros 15 días de ${semestre === 'junio' ? 'julio' : 'diciembre'}.`;
 
+  const incluyoAuxilio = incluyeAuxilio && salario <= SMLMV * 2;
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const _insight = {
+    title: 'Tu prima de servicios',
+    text: `Por **${dias} días** trabajados en el ${semestre === 'junio' ? 'primer' : 'segundo'} semestre te corresponde una prima de **${cop(primaRedondeada)} COP**, calculada sobre una base de **${cop(baseLiquidacion)}**${incluyoAuxilio ? ` (incluye el auxilio de transporte de ${cop(AUXILIO_TRANSPORTE)})` : ''}. Se paga en los primeros 15 días de ${semestre === 'junio' ? 'julio' : 'diciembre'}.`,
+    tone: 'good' as const,
+    icon: '🇨🇴',
+  };
+
   return {
     baseLiquidacion: Math.round(baseLiquidacion),
     primaBruta: Number(primaBruta.toFixed(2)),
@@ -52,5 +62,6 @@ export function primaServiciosColombia(i: Inputs): Outputs {
     diasTrabajados: dias,
     formula,
     explicacion,
+    _insight,
   };
 }

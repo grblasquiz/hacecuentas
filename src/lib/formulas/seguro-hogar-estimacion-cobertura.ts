@@ -12,6 +12,7 @@ export interface Outputs {
   sumaAseguradaTotal: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function seguroHogarEstimacionCobertura(i: Inputs): Outputs {
@@ -61,11 +62,20 @@ export function seguroHogarEstimacionCobertura(i: Inputs): Outputs {
     ariaLabel: 'Composición de la suma asegurada: valor del edificio y del contenido',
   };
 
+  const pctContenido = sumaTotal > 0 ? (contenido / sumaTotal) * 100 : 0;
+  const insight = {
+    title: 'Tu prima estimada',
+    text: `Asegurar $${fmt.format(sumaTotal)} con cobertura **${cobertura}** en zona **${zona}** cuesta unos **$${fmt.format(Math.round(primaMensual))}/mes** ($${fmt.format(Math.round(primaAnual))}/año). El contenido representa el **${pctContenido.toFixed(0)}%** de la suma asegurada; revisá que ese monto alcance para reponer muebles y electrónica a valor de reposición.`,
+    tone: 'neutral',
+    icon: '🏠',
+  };
+
   return {
     primaMensual: Math.round(primaMensual),
     primaAnual: Math.round(primaAnual),
     sumaAseguradaTotal: Math.round(sumaTotal),
     detalle: `Edificio: ${m2} m² × $${fmt.format(valorM2)} = $${fmt.format(valorEdificio)}. Contenido: $${fmt.format(contenido)}. Suma asegurada: $${fmt.format(sumaTotal)}. Tasa ${(tasa * 100).toFixed(2)}% anual (${cobertura}, zona ${zona}). Prima: $${fmt.format(primaAnual)}/año = $${fmt.format(primaMensual)}/mes.`,
     _chart: chart,
+    _insight: insight,
   };
 }

@@ -16,6 +16,8 @@ export interface Outputs {
   eta: string;
   number_of_breaks: number;
   overnight_recommendation: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Conversion constant: 1 km = 0.621371 mi
@@ -119,12 +121,50 @@ export function compute(i: Inputs): Outputs {
     overnightRec = `Trip length (${formatHoursMinutes(totalTripHours)}) is manageable in a single day with proper breaks.`;
   }
 
+  // Insight: dynamic tone tied to drowsy-driving thresholds
+  const driveMin = Math.round(pureDriveHours * 60);
+  const breakMin = Math.round(totalBreakHours * 60);
+  const tripStr = formatHoursMinutes(totalTripHours);
+  let insTone: 'good' | 'warn' | 'neutral';
+  let insText: string;
+  if (totalTripHours > OVERNIGHT_THRESHOLD_HRS) {
+    insTone = 'warn';
+    insText = `At **${tripStr}** total, this trip exceeds the **${OVERNIGHT_THRESHOLD_HRS}-hour** mark where drowsy-driving risk climbs sharply. Splitting it across two days (~${formatHoursMinutes(totalTripHours / 2)} each) is the safer call.`;
+  } else if (totalTripHours > 8) {
+    insTone = 'warn';
+    insText = `This is a long day at the wheel: **${tripStr}** total, with **${numberOfBreaks} break${numberOfBreaks === 1 ? '' : 's'}** built in. Stick to every break and steer clear of late-night driving.`;
+  } else {
+    insTone = 'good';
+    insText = `Comfortable single-day drive: **${tripStr}** total (${formatHoursMinutes(pureDriveHours)} driving + ${numberOfBreaks} break${numberOfBreaks === 1 ? '' : 's'}). You arrive around **${etaStr}**.`;
+  }
+
+  const _insight = {
+    title: 'Your road-trip plan',
+    text: insText,
+    tone: insTone,
+    icon: '🚗',
+  };
+
+  // Donut only when there is a real break component to split
+  const _chart = numberOfBreaks > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Driving', value: driveMin },
+      { label: 'Breaks', value: breakMin },
+    ],
+    centerValue: tripStr,
+    centerLabel: 'Total trip',
+    ariaLabel: `Total trip time of ${tripStr} split into ${formatHoursMinutes(pureDriveHours)} driving and ${formatHoursMinutes(totalBreakHours)} of breaks.`,
+  } : undefined;
+
   return {
     pure_drive_time: formatHoursMinutes(pureDriveHours),
     total_break_time: numberOfBreaks > 0 ? formatHoursMinutes(totalBreakHours) : '0m (no breaks scheduled)',
-    total_trip_time: formatHoursMinutes(totalTripHours),
+    total_trip_time: tripStr,
     eta: etaStr,
     number_of_breaks: numberOfBreaks,
     overnight_recommendation: overnightRec,
+    _insight,
+    _chart,
   };
 }

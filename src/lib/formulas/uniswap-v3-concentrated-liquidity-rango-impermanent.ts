@@ -21,6 +21,8 @@ export interface Outputs {
   valorLP: number;
   breakeven: number;
   estadoRango: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -160,6 +162,34 @@ export function compute(i: Inputs): Outputs {
   const absILUSD = Math.abs(impermanentLossUSD);
   const breakeven = feesDiarios > 0 && absILUSD > 0 ? Math.ceil(absILUSD / feesDiarios) : 0;
 
+  const enRango = precioFinal >= precioMin && precioFinal <= precioMax;
+  const ilPct = Math.abs(impermanentLoss * 100);
+  const fmtUsd = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+  const fmtPct = (n: number) => n.toFixed(2) + '%';
+
+  const insight = {
+    title: enRango ? 'Posición activa generando fees' : 'Posición fuera de rango',
+    text: enRango
+      ? `Con el precio dentro del rango cobrás **${fmtPct(apyEstimado * 100)} APY** (**${fmtUsd(feesDiarios)}/día**) gracias a un multiplicador de concentración de **${multiplicadorConcentracion.toFixed(1)}x**. El impermanent loss es de **${fmtPct(ilPct)}** (${fmtUsd(impermanentLossUSD)})${breakeven > 0 ? `, que recuperás con **${breakeven} días** de fees` : ''}.`
+      : `El precio final salió del rango: **dejás de cobrar fees** y quedás 100% en un solo activo. El impermanent loss vs HODL es de **${fmtPct(ilPct)}** (${fmtUsd(impermanentLossUSD)}). Rangos más anchos cobran menos pero se desactivan menos seguido.`,
+    tone: (!enRango || ilPct > 5 ? 'warn' : apyEstimado >= 0.15 ? 'good' : 'neutral') as 'good' | 'warn' | 'neutral',
+    icon: '🦄',
+  };
+
+  const span = precioMax - precioMin;
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(precioFinal.toFixed(precioFinal < 10 ? 4 : 2)),
+    markerLabel: 'Precio final: ' + precioFinal.toLocaleString('en-US', { maximumFractionDigits: precioFinal < 10 ? 4 : 2 }),
+    min: Math.max(0, Number((precioMin - span * 0.5).toFixed(precioMin < 10 ? 4 : 2))),
+    segments: [
+      { nombre: 'Bajo rango', max: Number(precioMin.toFixed(precioMin < 10 ? 4 : 2)), color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'En rango (cobra fees)', max: Number(precioMax.toFixed(precioMax < 10 ? 4 : 2)), color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Sobre rango', max: Math.max(Number(precioMax.toFixed(precioMax < 10 ? 4 : 2)), Number((precioFinal + span * 0.01).toFixed(precioFinal < 10 ? 4 : 2)), precioMax + span * 0.5), color: '#fecaca', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: 'Escala que ubica el precio final respecto al rango de liquidez: por debajo, dentro (cobra fees) o por encima del rango.',
+  };
+
   return {
     apyEstimado,
     feesAnuales,
@@ -171,5 +201,7 @@ export function compute(i: Inputs): Outputs {
     valorLP,
     breakeven,
     estadoRango,
+    _insight: insight,
+    _chart: chart,
   };
 }

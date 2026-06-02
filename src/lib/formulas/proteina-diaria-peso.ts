@@ -11,6 +11,7 @@ export interface Outputs {
   pechugas: number;
   huevos: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function proteinaDiariaPeso(i: Inputs): Outputs {
@@ -40,6 +41,21 @@ export function proteinaDiariaPeso(i: Inputs): Outputs {
   const pechugas = proteinaRecomG / 31; // 100g pechuga ≈ 31g proteína
   const huevos = proteinaRecomG / 6.5; // 1 huevo ≈ 6.5g
 
+  const OBJ_LABEL: Record<string, string> = {
+    perder: "perder grasa preservando músculo",
+    ganar: "ganar masa muscular",
+    mantener: "mantenimiento",
+  };
+  const objLabel = OBJ_LABEL[objetivo] ?? OBJ_LABEL["mantener"];
+  const gkgRecom = (proteinaRecomG / peso).toFixed(1);
+
+  const _insight = {
+    title: "Cuánta proteína comer por día",
+    text: `Con objetivo de **${objLabel}**, apuntá a **${Math.round(proteinaRecomG)} g de proteína al día** (~**${gkgRecom} g/kg**), dentro del rango **${Math.round(proteinaMinG)}–${Math.round(proteinaMaxG)} g**. Eso equivale a unas **${pechugas.toFixed(1)} pechugas de pollo** o **${Math.round(huevos)} huevos** repartidos en el día.`,
+    tone: "neutral",
+    icon: "💪",
+  };
+
   return {
     proteinaMinG: Math.round(proteinaMinG),
     proteinaMaxG: Math.round(proteinaMaxG),
@@ -47,5 +63,6 @@ export function proteinaDiariaPeso(i: Inputs): Outputs {
     pechugas: Number(pechugas.toFixed(1)),
     huevos: Math.round(huevos),
     mensaje: `Necesitás entre ${Math.round(proteinaMinG)}g y ${Math.round(proteinaMaxG)}g de proteína/día (~${Math.round(proteinaRecomG)}g recomendados). Equivale a ${pechugas.toFixed(1)} pechugas de pollo o ${Math.round(huevos)} huevos.`,
+    _insight,
   };
 }

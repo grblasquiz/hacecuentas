@@ -11,6 +11,8 @@ export interface PresupuestoViajeBaliIndonesiaOutputs {
   presupuestoTotalUsd: number;
   desglose: string;
   perDiemPorPersona: number;
+  _insight?: any;
+  _chart?: any;
 }
 const HOTEL: Record<string, number> = { bajo: 25, medio: 70, alto: 250 };
 const FOOD = 20;
@@ -34,9 +36,34 @@ export function presupuestoViajeBaliIndonesia(i: PresupuestoViajeBaliIndonesiaIn
   const total = hotelTotal + foodTotal + transTotal + actsTotal + vueloTotal;
   const perDiem = Math.round((total - vueloTotal) / (dias * personas));
   const desglose = `Hotel USD ${hotelTotal.toFixed(0)} | Comida USD ${foodTotal.toFixed(0)} | Transporte USD ${transTotal.toFixed(0)} | Actividades USD ${actsTotal.toFixed(0)}${vuelo ? ` | Vuelos USD ${vueloTotal.toFixed(0)}` : ""}`;
+  const tot = Number(total.toFixed(0));
+  const vueloPct = vuelo ? Math.round((vueloTotal / total) * 100) : 0;
+  const slices = [
+    { label: "Hotel", value: hotelTotal },
+    { label: "Comida", value: foodTotal },
+    { label: "Transporte", value: transTotal },
+    { label: "Actividades", value: actsTotal },
+  ];
+  if (vuelo) slices.push({ label: "Vuelos", value: vueloTotal });
   return {
-    presupuestoTotalUsd: Number(total.toFixed(0)),
+    presupuestoTotalUsd: tot,
     desglose,
-    perDiemPorPersona: perDiem
+    perDiemPorPersona: perDiem,
+    _insight: {
+      title: "Tu viaje a Bali en números",
+      text: vuelo
+        ? `Para **${personas} ${personas === 1 ? "persona" : "personas"}** y **${dias} días** vas a necesitar unos **USD ${tot.toLocaleString("es-AR")}**, con los vuelos pesando un **${vueloPct}%** del total. En destino te alcanza con **USD ${perDiem}/día por persona**, una de las metas más baratas del mundo.`
+        : `Sin vuelos, **${dias} días en Bali** para **${personas} ${personas === 1 ? "persona" : "personas"}** salen unos **USD ${tot.toLocaleString("es-AR")}** (**USD ${perDiem}/día por persona**). Bali es destino económico: el mayor ahorro está en hotel y comida local.`,
+      tone: "good",
+      icon: "🏝️",
+    },
+    _chart: {
+      type: "doughnut",
+      slices,
+      prefix: "USD ",
+      centerValue: `USD ${tot.toLocaleString("es-AR")}`,
+      centerLabel: "Total estimado",
+      ariaLabel: "Distribución del presupuesto de viaje a Bali por categoría de gasto",
+    },
   };
 }

@@ -7,6 +7,8 @@ export interface Outputs {
   trimestre: string;
   fpp: string;
   porcentaje: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function semanasEmbarazo(i: Inputs): Outputs {
@@ -39,10 +41,33 @@ export function semanasEmbarazo(i: Inputs): Outputs {
 
   const porcentaje = Math.min(100, (diasTranscurridos / 280) * 100);
 
+  const semanasRestantes = Math.max(0, Math.round((280 - diasTranscurridos) / 7));
+  const insight = {
+    title: 'Tu embarazo, semana a semana',
+    text: `Estás de **${semanas} semanas y ${dias} días**, en el **${trimestre.split(' (')[0].toLowerCase()}**. Llevás un **${porcentaje.toFixed(0)}%** del camino${semanasRestantes > 0 ? `: faltan unas **${semanasRestantes} semanas** para la fecha probable de parto` : ` y ya llegaste a la fecha estimada de parto`}.`,
+    tone: 'neutral',
+    icon: '🤰',
+  };
+
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(porcentaje.toFixed(1)),
+    markerLabel: `Semana ${semanas} (${porcentaje.toFixed(0)}%)`,
+    min: 0,
+    segments: [
+      { nombre: '1er trimestre', max: 32.5, color: '#bae6fd', colorDark: '#0c4a6e' },
+      { nombre: '2do trimestre', max: 70, color: '#7dd3fc', colorDark: '#075985' },
+      { nombre: '3er trimestre', max: 105, color: '#38bdf8', colorDark: '#0369a1' },
+    ],
+    ariaLabel: `Progreso del embarazo: ${porcentaje.toFixed(0)}% completado, ${trimestre}`,
+  };
+
   return {
     semanasYDias: `${semanas} semanas y ${dias} días`,
     trimestre,
     fpp: `${fpp.getFullYear()}-${String(fpp.getMonth()+1).padStart(2,'0')}-${String(fpp.getDate()).padStart(2,'0')}`,
     porcentaje: `${porcentaje.toFixed(1)}% completado`,
+    _insight: insight,
+    _chart: chart,
   };
 }

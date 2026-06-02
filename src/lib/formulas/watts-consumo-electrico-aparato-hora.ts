@@ -12,6 +12,7 @@ export interface Outputs {
   kwh_per_month: number;
   monthly_cost: number;
   annual_cost: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -46,11 +47,22 @@ export function compute(i: Inputs): Outputs {
   // Cálculo del costo anual (12 meses)
   const annual_cost = monthly_cost * 12;
 
+  const wattsR = Math.round(watts * 100) / 100;
+  const monthlyR = Math.round(monthly_cost * 100) / 100;
+  const annualR = Math.round(annual_cost * 100) / 100;
+  const insight = {
+    title: 'Consumo del aparato',
+    text: `Este aparato consume **${wattsR} W** (V × A) y, usándolo **${hours_per_day} h/día**, gasta unos **$${monthlyR.toLocaleString('es-AR')} por mes** y **$${annualR.toLocaleString('es-AR')} al año** en electricidad. Reducir horas de uso o cambiarlo por un modelo eficiente baja directamente esa factura.`,
+    tone: 'neutral',
+    icon: '🔌',
+  };
+
   return {
-    watts: Math.round(watts * 100) / 100,
+    watts: wattsR,
     kwh_per_day: Math.round(kwh_per_day * 100) / 100,
     kwh_per_month: Math.round(kwh_per_month * 100) / 100,
-    monthly_cost: Math.round(monthly_cost * 100) / 100,
-    annual_cost: Math.round(annual_cost * 100) / 100
+    monthly_cost: monthlyR,
+    annual_cost: annualR,
+    _insight: insight
   };
 }

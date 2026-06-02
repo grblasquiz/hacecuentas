@@ -9,6 +9,7 @@ export interface Outputs {
   ingresoPorHora: number;
   ingresoPorDia: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function productividadHora(i: Inputs): Outputs {
@@ -28,9 +29,17 @@ export function productividadHora(i: Inputs): Outputs {
     `generás $${fmt.format(ingresoPorHora)} por hora y $${fmt.format(ingresoPorDia)} por día (jornada de 8hs). ` +
     `Cualquier tarea que puedas delegar por menos de $${fmt.format(ingresoPorHora)}/hora, te conviene tercerizarla.`;
 
+  const _insight = {
+    title: 'Cuánto vale tu hora',
+    text: `Tu hora de trabajo genera **$${fmt.format(ingresoPorHora)}** (y **$${fmt.format(ingresoPorDia)}** por jornada de 8 hs). Toda tarea que puedas delegar por menos de **$${fmt.format(ingresoPorHora)}/hora** te conviene tercerizarla para liberar tiempo de mayor valor.`,
+    tone: 'neutral',
+    icon: '⏱️',
+  };
+
   return {
     ingresoPorHora: Math.round(ingresoPorHora),
     ingresoPorDia: Math.round(ingresoPorDia),
     detalle,
+    _insight,
   };
 }

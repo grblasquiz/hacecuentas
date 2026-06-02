@@ -14,6 +14,8 @@ export interface Outputs {
   interes_legal_civil: number;
   diferencia_legal: number;
   advertencia_legal: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -78,21 +80,55 @@ export function compute(i: Inputs): Outputs {
     advertenciaLegal = '✅ Mora dentro del plazo de cortesía. Confirmá la fecha de corte exacta con tu banco para evitar ampliación.';
   }
 
+  // Builder de insight + gráfico (reutilizado en ambos caminos de retorno)
+  const fmtCop = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
+  const buildExtras = (tasaPct: number, moraCobrable: number, deudaTotal: number) => {
+    const interesesTotal = moraCobrable + interesOrdinarioVencido;
+    let tono: 'good' | 'warn' | 'neutral';
+    if (i.dias_mora > 60) tono = 'warn';
+    else if (i.dias_mora > 30) tono = 'neutral';
+    else tono = 'good';
+    const _insight = {
+      title: `Mora de ${i.dias_mora} día${i.dias_mora === 1 ? '' : 's'}`,
+      text: `A la tasa de mora máxima legal de **${tasaPct.toFixed(2)}% EA**, tu deuda de **${fmtCop(i.capital_adeudado)}** acumula **${fmtCop(interesesTotal)}** en intereses y llega a **${fmtCop(deudaTotal)}**. Es **${fmtCop(Math.max(0, moraCobrable - interesLegalCivil))}** más que con el interés civil del 6%.`,
+      tone: tono,
+      icon: '💳',
+    };
+    const _chart = interesesTotal > 0 ? {
+      type: 'doughnut',
+      slices: [
+        { label: 'Capital adeudado', value: Math.round(i.capital_adeudado) },
+        { label: 'Interés de mora', value: Math.round(moraCobrable) },
+        ...(interesOrdinarioVencido > 0 ? [{ label: 'Interés ordinario vencido', value: Math.round(interesOrdinarioVencido) }] : []),
+      ],
+      prefix: '$',
+      centerValue: fmtCop(deudaTotal),
+      centerLabel: 'Deuda total',
+      ariaLabel: `Deuda total de ${fmtCop(deudaTotal)} compuesta por capital de ${fmtCop(i.capital_adeudado)} más ${fmtCop(interesesTotal)} de intereses`,
+    } : undefined;
+    return { _insight, _chart };
+  };
+
   // Cálculo especial para hipotecarios: tope 1.2× TBC en lugar de 1.5×
   if (i.tipo_credito === 'hipotecario') {
     tasaMoraMaxima = Math.min(tbc * 1.2, tasaMoraPactada);
     const interesMoraHipotecario = i.capital_adeudado * (tasaMoraMaxima / 365) * i.dias_mora;
+    const deudaHip = i.capital_adeudado + interesMoraHipotecario + interesOrdinarioVencido;
+    const { _insight, _chart } = buildExtras(tasaMoraMaxima * 100, interesMoraHipotecario, deudaHip);
     return {
       tasa_mora_maxima_legal: tasaMoraMaxima * 100,
       interes_mora_cobrable: Math.round(interesMoraHipotecario * 100) / 100,
       interes_ordinario_vencido: Math.round(interesOrdinarioVencido * 100) / 100,
-      deuda_total_con_mora: Math.round((i.capital_adeudado + interesMoraHipotecario + interesOrdinarioVencido) * 100) / 100,
+      deuda_total_con_mora: Math.round(deudaHip * 100) / 100,
       interes_legal_civil: Math.round(interesLegalCivil * 100) / 100,
       diferencia_legal: Math.round((interesMoraHipotecario - interesLegalCivil) * 100) / 100,
       advertencia_legal: advertenciaLegal + ' (Crédito hipotecario: tope 1.2× TBC por Ley 1480/2011)',
+      _insight,
+      ...(_chart ? { _chart } : {}),
     };
   }
 
+  const { _insight, _chart } = buildExtras(Math.round(tasaMoraMaxima * 10000) / 100, interesMoraCalculado, deudaTotalConMora);
   return {
     tasa_mora_maxima_legal: Math.round(tasaMoraMaxima * 10000) / 100,  // % con 2 decimales
     interes_mora_cobrable: Math.round(interesMoraCalculado * 100) / 100,
@@ -101,5 +137,7 @@ export function compute(i: Inputs): Outputs {
     interes_legal_civil: Math.round(interesLegalCivil * 100) / 100,
     diferencia_legal: Math.round(diferenciaLegal * 100) / 100,
     advertencia_legal: advertenciaLegal,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

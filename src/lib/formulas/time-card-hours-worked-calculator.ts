@@ -29,6 +29,8 @@ export interface Outputs {
   ot_hours: number;
   gross_pay: number;
   daily_breakdown: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // FLSA weekly overtime threshold — 29 U.S.C. § 207 (unchanged 2026)
@@ -87,11 +89,48 @@ export function compute(i: Inputs): Outputs {
 
   const daily_breakdown = lines;
 
+  const totalR = Math.round(total_hours * 100) / 100;
+  const regR = Math.round(regular_hours * 100) / 100;
+  const otR = Math.round(ot_hours * 100) / 100;
+  const grossR = Math.round(gross_pay * 100) / 100;
+
+  let insightText: string;
+  let tone: 'good' | 'warn' | 'neutral';
+  if (otR > 0) {
+    insightText = `You logged **${totalR} hrs** this week — **${otR} hrs** are overtime (over the 40-hr FLSA threshold), paid at 1.5×.` +
+      (grossR > 0 ? ` That brings gross pay to **$${grossR.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**.` : '');
+    tone = 'warn';
+  } else {
+    insightText = `You logged **${totalR} hrs** this week, all at regular rate — no overtime since you stayed at or below the 40-hr FLSA threshold.` +
+      (grossR > 0 ? ` Gross pay comes to **$${grossR.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**.` : '');
+    tone = 'good';
+  }
+  const _insight = {
+    title: 'Your week at a glance',
+    text: insightText,
+    tone,
+    icon: '⏱️',
+  };
+
+  const _chart = totalR > 0 ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Regular hours', value: regR },
+      { label: 'Overtime hours', value: otR },
+    ],
+    suffix: ' hrs',
+    centerValue: totalR.toFixed(2) + ' hrs',
+    centerLabel: 'Total',
+    ariaLabel: `Weekly hours split: ${regR} regular and ${otR} overtime, ${totalR} total.`,
+  } : undefined;
+
   return {
-    total_hours: Math.round(total_hours * 100) / 100,
-    regular_hours: Math.round(regular_hours * 100) / 100,
-    ot_hours: Math.round(ot_hours * 100) / 100,
-    gross_pay: Math.round(gross_pay * 100) / 100,
+    total_hours: totalR,
+    regular_hours: regR,
+    ot_hours: otR,
+    gross_pay: grossR,
     daily_breakdown,
+    _insight,
+    _chart,
   };
 }

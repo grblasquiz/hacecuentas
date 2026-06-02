@@ -1,6 +1,6 @@
 /** Duración Óptima TikTok */
 export interface Inputs { objetivo: string; nicho: string; }
-export interface Outputs { duracionRecomendada: string; justificacion: string; rangoAceptable: string; tip: string; }
+export interface Outputs { duracionRecomendada: string; justificacion: string; rangoAceptable: string; tip: string; _insight?: any; }
 
 export function tiktokDuracionOptimaVideo(i: Inputs): Outputs {
   const obj = String(i.objetivo);
@@ -32,10 +32,17 @@ export function tiktokDuracionOptimaVideo(i: Inputs): Outputs {
   else if (obj.startsWith('Monet')) just = 'Objetivo monetización: videos de +60 seg son los únicos que pagan Creator Rewards';
   else if (obj.startsWith('Eng')) just = 'Objetivo engagement: duración media permite storytelling suficiente para generar comentarios';
   else just = 'Mix balanceado: duración intermedia para ganar reach sin perder monetización';
+  const _insight = {
+    title: 'Tu duración ideal',
+    text: `Para **${nicho}** con objetivo de **${obj.toLowerCase()}**, apuntá a **${recom} segundos** (rango sano: ${Math.round(minF)}-${Math.round(maxF)} s). ${just}.`,
+    tone: 'good',
+    icon: '🎬',
+  };
   return {
     duracionRecomendada: `${recom} segundos`,
     justificacion: just,
     rangoAceptable: `${Math.round(minF)}-${Math.round(maxF)} segundos`,
     tip: 'Mantené el hook en los primeros 2-3 segundos: decide si te miran o scrollean',
+    _insight,
   };
 }

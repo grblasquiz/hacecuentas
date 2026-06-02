@@ -63,6 +63,9 @@ export function vo2maxCooper(i: Inputs): Outputs {
       ariaLabel: 'Escala VO2max ACSM por edad y sexo: de muy pobre a superior',
       detalle: (dist: string, vo2: string, cat: string, sexo: string, edad: number) =>
         `Test de Cooper: ${dist} m en 12 min → VO2max = ${vo2} ml/kg/min. Categoría: ${cat} para ${sexo} de ${edad} años.`,
+      insightTitle: 'Tu capacidad aeróbica',
+      insightText: (dist: string, vo2: string, cat: string, sexo: string, edad: number) =>
+        `Recorriste **${dist} m** en 12 minutos, lo que estima un **VO2max de ${vo2} ml/kg/min**. Según las tablas ACSM, eso te ubica en la categoría **${cat}** para ${sexo} de ${edad} años.`,
     },
     en: {
       errorDist: 'Enter the distance in meters',
@@ -77,6 +80,9 @@ export function vo2maxCooper(i: Inputs): Outputs {
       ariaLabel: 'VO2max ACSM scale by age and sex: from very poor to superior',
       detalle: (dist: string, vo2: string, cat: string, sexo: string, edad: number) =>
         `Cooper Test: ${dist} m in 12 min → VO2max = ${vo2} ml/kg/min. Category: ${cat} for ${sexo}, age ${edad}.`,
+      insightTitle: 'Your aerobic capacity',
+      insightText: (dist: string, vo2: string, cat: string, sexo: string, edad: number) =>
+        `You covered **${dist} m** in 12 minutes, which estimates a **VO2max of ${vo2} ml/kg/min**. According to ACSM tables, that places you in the **${cat}** category for ${sexo}, age ${edad}.`,
     },
   } as const)[__lang];
 
@@ -118,10 +124,22 @@ export function vo2maxCooper(i: Inputs): Outputs {
     ariaLabel: T.ariaLabel,
   };
 
+  const tone = (vo2 >= u[3]) ? 'good' : (vo2 < u[1]) ? 'warn' : 'neutral';
+  const sexoLabel = __lang === 'en'
+    ? (sexo === 'mujer' ? 'a woman' : 'a man')
+    : (sexo === 'mujer' ? 'mujeres' : 'hombres');
+  const insight = {
+    title: T.insightTitle,
+    text: T.insightText(fmt.format(dist), fmt.format(vo2), cat, sexoLabel, edad),
+    tone,
+    icon: '🫁',
+  };
+
   return {
     vo2max: Number(vo2.toFixed(1)),
     categoria: cat,
     detalle: T.detalle(fmt.format(dist), fmt.format(vo2), cat, sexo, edad),
     _chart: chart,
+    _insight: insight,
   };
 }

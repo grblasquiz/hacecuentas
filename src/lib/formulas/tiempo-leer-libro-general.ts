@@ -8,6 +8,7 @@ export interface Outputs {
   horasTotales: number;
   semanas: number;
   paginasDia: number;
+  _insight?: any;
 }
 
 export function tiempoLeerLibroGeneral(i: Inputs): Outputs {
@@ -29,12 +30,42 @@ export function tiempoLeerLibroGeneral(i: Inputs): Outputs {
   const dias = Math.ceil(minTotales / min);
   const semanas = Math.round(dias / 7 * 10) / 10;
   const pagDia = Math.round(pag / dias * 10) / 10;
+  const horasR = Math.round(horas * 10) / 10;
+
+  let insightText: string; let insightTone: 'good' | 'warn' | 'neutral';
+  if (__lang === 'en') {
+    if (dias <= 7) {
+      insightText = `Leaning in **${min} min/day** you'd finish in just **${dias} days** (about **${pagDia} pages/day**). Very doable in a week.`;
+      insightTone = 'good';
+    } else if (semanas >= 8) {
+      insightText = `At **${min} min/day** this book stretches to **${semanas} weeks** (${dias} days, ${horasR} h total). Bump your daily time or it'll drag on.`;
+      insightTone = 'warn';
+    } else {
+      insightText = `At **${min} min/day** you'll finish in about **${semanas} weeks** (**${dias} days**, ${pagDia} pages/day). A steady, realistic pace.`;
+      insightTone = 'neutral';
+    }
+  } else {
+    if (dias <= 7) {
+      insightText = `Con **${min} min por día** lo terminás en apenas **${dias} días** (unas **${pagDia} páginas diarias**). Perfectamente factible en una semana.`;
+      insightTone = 'good';
+    } else if (semanas >= 8) {
+      insightText = `A **${min} min por día** el libro se estira a **${semanas} semanas** (${dias} días, ${horasR} h en total). Subí tu tiempo diario o se te va a hacer eterno.`;
+      insightTone = 'warn';
+    } else {
+      insightText = `A **${min} min por día** lo terminás en unas **${semanas} semanas** (**${dias} días**, ${pagDia} páginas diarias). Un ritmo sostenible y realista.`;
+      insightTone = 'neutral';
+    }
+  }
 
   return {
     diasTotales: dias,
-    horasTotales: Math.round(horas * 10) / 10,
+    horasTotales: horasR,
     semanas,
     paginasDia: pagDia,
+    _insight: {
+      title: __lang === 'en' ? 'Your reading plan' : 'Tu plan de lectura',
+      text: insightText, tone: insightTone, icon: '📚',
+    },
   };
 
 }

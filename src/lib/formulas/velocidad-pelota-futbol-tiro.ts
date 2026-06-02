@@ -10,6 +10,7 @@ export interface Outputs {
   tiempoReaccion: string;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function velocidadPelotaFutbolTiro(i: Inputs): Outputs {
@@ -57,11 +58,20 @@ export function velocidadPelotaFutbolTiro(i: Inputs): Outputs {
     ariaLabel: 'Escala de velocidad de disparo en km/h: baja, recreativo, amateur, profesional, élite.',
   };
 
+  const insightTone = kmh >= 100 ? 'good' : (kmh < 50 ? 'warn' : 'neutral');
+  const insight = {
+    title: 'Potencia de tu disparo',
+    text: `Tu remate viaja a **${kmh.toFixed(1)} km/h** (${ms.toFixed(2)} m/s): ${nivel.toLowerCase()}. El arquero tiene **${t}s** para reaccionar — ${reaccion.toLowerCase()}.`,
+    tone: insightTone,
+    icon: '⚽',
+  };
+
   return {
     result: kmhRound,
     velocidadMs: Number(ms.toFixed(2)),
     tiempoReaccion: reaccion,
     detalle: `Disparo a **${kmh.toFixed(1)} km/h** (${ms.toFixed(2)} m/s) desde ${dist}m en ${t}s. ${nivel}. ${reaccion}.`,
     _chart: chart,
+    _insight: insight,
   };
 }

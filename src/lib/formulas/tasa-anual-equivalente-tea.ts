@@ -9,6 +9,7 @@ export interface Outputs {
   capitalizacionesAnio: number;
   diferencia: number;
   resumen: string;
+  _insight?: any;
 }
 
 export function tasaAnualEquivalenteTea(i: Inputs): Outputs {
@@ -40,11 +41,20 @@ export function tasaAnualEquivalenteTea(i: Inputs): Outputs {
 
   const resumen = `Una TNA de ${tna}% con capitalización ${cap} equivale a una TEA de ${tea.toFixed(2)}% (${diferencia.toFixed(2)}% extra por el efecto compuesto).`;
 
+  const capLabel = m === Infinity ? 'continua' : `${m} veces al año`;
+  const _insight = {
+    title: 'Lo que suma el interés compuesto',
+    text: `Con capitalización **${cap}** (${capLabel}), tu TNA de **${tna}%** se convierte en una TEA de **${tea.toFixed(2)}%**: el efecto compuesto agrega **${diferencia.toFixed(2)} puntos** que no aparecen en la tasa nominal. Para comparar productos, mirá siempre la TEA.`,
+    tone: diferencia >= 1 ? 'warn' : 'neutral',
+    icon: '📈',
+  };
+
   return {
     tea: Number(tea.toFixed(4)),
     tasaPeriodo: Number(tasaPeriodo.toFixed(4)),
     capitalizacionesAnio: m === Infinity ? 0 : m,
     diferencia: Number(diferencia.toFixed(4)),
     resumen,
+    _insight,
   };
 }

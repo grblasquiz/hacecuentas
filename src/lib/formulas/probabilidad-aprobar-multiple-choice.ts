@@ -12,6 +12,8 @@ export interface Outputs {
   notaEsperada: number;
   porcentajeEsperado: number;
   analisis: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 /** Logaritmo del coeficiente binomial: log(C(n, k)) */
@@ -91,5 +93,45 @@ export function probabilidadAprobarMultipleChoice(i: Inputs): Outputs {
     analisis = `Imposible aprobar. Necesitás ${paraAprobar} correctas pero solo podés llegar a ${sabidas + preguntasAdivinar} como máximo. Revisá los datos ingresados.`;
   }
 
-  return { probabilidadAprobar, notaEsperada, porcentajeEsperado, analisis };
+  // Insight narrativo dinámico
+  let _insight: any;
+  if (necesitasAdivinar <= 0) {
+    _insight = {
+      title: 'Aprobás sin adivinar',
+      text: `Con **${sabidas} de ${total}** preguntas que ya sabés cubrís el mínimo de **${paraAprobar}** correctas: tu probabilidad de aprobar es del **100%** sin depender del azar.`,
+      tone: 'good',
+      icon: '✅',
+    };
+  } else if (probabilidadAprobar <= 0) {
+    _insight = {
+      title: 'Imposible con estos datos',
+      text: `Necesitás **${paraAprobar}** correctas pero como máximo podés llegar a **${sabidas + preguntasAdivinar}**: aprobar es imposible. Tenés que estudiar más preguntas.`,
+      tone: 'warn',
+      icon: '🚫',
+    };
+  } else {
+    const tone = probabilidadAprobar >= 70 ? 'good' : probabilidadAprobar >= 30 ? 'neutral' : 'warn';
+    _insight = {
+      title: `Probabilidad de aprobar: ${probabilidadAprobar}%`,
+      text: `Sabés **${sabidas} de ${total}** y necesitás adivinar **${necesitasAdivinar}** de las **${preguntasAdivinar}** restantes (cada una con **${Math.round(probAcertar * 100)}%** de acertar): chance de aprobar **${probabilidadAprobar}%**, con una nota esperada de **${notaEsperada}** correctas (${porcentajeEsperado}%).`,
+      tone,
+      icon: '🎲',
+    };
+  }
+
+  // Gráfico gauge: dónde cae tu probabilidad de aprobar
+  const _chart = {
+    type: 'scale',
+    marker: probabilidadAprobar,
+    markerLabel: `${probabilidadAprobar}%`,
+    min: 0,
+    segments: [
+      { nombre: 'Bajas', max: 30, color: '#fca5a5', colorDark: '#ef4444' },
+      { nombre: 'Moderadas', max: 70, color: '#fcd34d', colorDark: '#f59e0b' },
+      { nombre: 'Altas', max: 100.01, color: '#86efac', colorDark: '#22c55e' },
+    ],
+    ariaLabel: `Probabilidad de aprobar de ${probabilidadAprobar}% sobre una escala de 0 a 100`,
+  };
+
+  return { probabilidadAprobar, notaEsperada, porcentajeEsperado, analisis, _insight, _chart };
 }

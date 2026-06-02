@@ -20,6 +20,7 @@ export interface SueldoNetoColombiaOutputs {
   totalDescuentos: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -123,6 +124,17 @@ export function sueldoNetoColombia(inputs: SueldoNetoColombiaInputs): SueldoNeto
   const explicacion = `De tu salario de $${salario.toLocaleString('es-CO')} COP${auxTransporte > 0 ? ` (con auxilio de transporte de $${auxTransporte.toLocaleString('es-CO')})` : ''}, se descuentan: Salud 4% ($${aporteSalud.toLocaleString('es-CO')}), Pensión 4% a ${fondoPension} ($${aportePension.toLocaleString('es-CO')})${fondoSolidaridad > 0 ? `, Fondo de Solidaridad Pensional ($${fondoSolidaridad.toLocaleString('es-CO')})` : ''}${retencionFuente > 0 ? `, y Retención en la fuente ($${retencionFuente.toLocaleString('es-CO')})` : ''}. Total descuentos: $${totalDescuentos.toLocaleString('es-CO')}. Tu sueldo neto es $${sueldoNeto.toLocaleString('es-CO')} COP.`;
 
   const totalBase = salario + auxTransporte;
+
+  const pctDesc = salario > 0 ? Math.round((totalDescuentos / salario) * 100) : 0;
+  const insight = {
+    title: 'Tu sueldo neto',
+    text: retencionFuente > 0
+      ? `De tu salario de **$${Math.round(salario).toLocaleString('es-CO')}** te queda neto **$${Math.round(sueldoNeto).toLocaleString('es-CO')}** (te retienen un **${pctDesc}%**). Aparte del 8% de salud y pensión, este salario paga **$${retencionFuente.toLocaleString('es-CO')}** de retención en la fuente.`
+      : `De tu salario de **$${Math.round(salario).toLocaleString('es-CO')}** te queda neto **$${Math.round(sueldoNeto).toLocaleString('es-CO')}**${auxTransporte > 0 ? ` (incluye **$${auxTransporte.toLocaleString('es-CO')}** de auxilio de transporte)` : ''}. Solo te descuentan el **8%** obligatorio de salud y pensión, sin retención en la fuente.`,
+    tone: (retencionFuente > 0 ? 'warn' : 'good') as 'good' | 'warn',
+    icon: '🇨🇴',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -147,6 +159,7 @@ export function sueldoNetoColombia(inputs: SueldoNetoColombiaInputs): SueldoNeto
     totalDescuentos,
     formula,
     explicacion,
+    _insight: insight,
     _chart: chart,
   };
 }

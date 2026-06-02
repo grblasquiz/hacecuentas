@@ -20,6 +20,8 @@ export interface Outputs {
   rendimentoLiquido: string;
   rentabilidadeAnualLiquida: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function brl(n: number): string {
@@ -56,6 +58,28 @@ export function tesouroPrefixado(i: Inputs): Outputs {
   const rendLiquido = valorLiquido - aporte;
   const rentAnualLiq = (Math.pow(valorLiquido / aporte, 1 / anos) - 1) * 100;
 
+  const custosTotais = imposto + custodiaValor;
+  const drag = rendBruto > 0 ? (custosTotais / rendBruto) * 100 : 0;
+
+  const _insight = {
+    title: 'Quanto sobra no bolso',
+    text: `Investindo ${brl(aporte)} a **${taxa}% aa** por **${meses} meses**, você resgata **${brl(valorLiquido)}** — um ganho líquido de **${brl(rendLiquido)}** (${rentAnualLiq.toFixed(2)}% aa). IR (${(aliq * 100).toFixed(1)}%) + custódia B3 consomem **${brl(custosTotais)}**, cerca de **${drag.toFixed(0)}%** do rendimento bruto.`,
+    tone: drag >= 25 ? 'warn' : 'good',
+    icon: '📈',
+  };
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Capital aplicado', value: Math.round(aporte * 100) / 100 },
+      { label: 'Rendimento líquido', value: Math.round(rendLiquido * 100) / 100 },
+    ],
+    prefix: 'R$ ',
+    centerValue: brl(valorLiquido),
+    centerLabel: 'Resgate líquido',
+    ariaLabel: `Do resgate líquido de ${brl(valorLiquido)}, ${brl(aporte)} é o capital aplicado e ${brl(rendLiquido)} é o rendimento líquido após IR e custódia.`,
+  };
+
   return {
     valorBruto: brl(valorBruto),
     rendimentoBruto: brl(rendBruto),
@@ -66,5 +90,7 @@ export function tesouroPrefixado(i: Inputs): Outputs {
     rendimentoLiquido: brl(rendLiquido),
     rentabilidadeAnualLiquida: rentAnualLiq.toFixed(2) + '% aa',
     resumen: `Tesouro Prefixado ${taxa}% aa por ${meses} meses: ${brl(valorLiquido)} líquido (rentabilidade ${rentAnualLiq.toFixed(2)}% aa após IR e custódia).`,
+    _insight,
+    _chart,
   };
 }

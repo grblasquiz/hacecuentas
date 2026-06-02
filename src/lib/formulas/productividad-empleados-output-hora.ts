@@ -12,6 +12,7 @@ export interface Outputs {
   outputPorEmpleado: number;
   costoPorUnidad: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function productividadEmpleadosOutputHora(i: Inputs): Outputs {
@@ -40,10 +41,20 @@ export function productividadEmpleadosOutputHora(i: Inputs): Outputs {
     `Horas/empleado: ${fmtDec.format(horasPorEmpleado)}. ` +
     `Costo laboral por unidad: $${fmt.format(costoPorUnidad)}.`;
 
+  const _insight = {
+    title: 'Tu productividad laboral',
+    text: costo > 0
+      ? `Cada empleado produce **${fmtDec.format(outputPorEmpleado)} unidades** y el equipo entrega **${fmtDec.format(outputPorHora)} unidades/hora**. El costo laboral por unidad es de **$${fmt.format(costoPorUnidad)}**: usalo como piso para fijar precio y margen.`
+      : `Cada empleado produce **${fmtDec.format(outputPorEmpleado)} unidades** y el equipo entrega **${fmtDec.format(outputPorHora)} unidades/hora** trabajando **${fmtDec.format(horasPorEmpleado)} hs** cada uno. Cargá el costo laboral para conocer el costo por unidad.`,
+    tone: 'neutral',
+    icon: '🏭',
+  };
+
   return {
     outputPorHora: Number(outputPorHora.toFixed(2)),
     outputPorEmpleado: Number(outputPorEmpleado.toFixed(2)),
     costoPorUnidad: Math.round(costoPorUnidad),
     detalle,
+    _insight,
   };
 }

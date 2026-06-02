@@ -12,6 +12,8 @@ export interface Outputs {
   aporteSecundario: number;
   aporteExamen: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function puntajeIngresoUniversidad(i: Inputs): Outputs {
@@ -42,10 +44,30 @@ export function puntajeIngresoUniversidad(i: Inputs): Outputs {
   const aporteExamen = notaEx * (pesoEx / 100);
   const puntajeFinal = aporteSecundario + aporteExamen;
 
+  const finalR = Math.round(puntajeFinal * 100) / 100;
+  const apSecR = Math.round(aporteSecundario * 100) / 100;
+  const apExR = Math.round(aporteExamen * 100) / 100;
+  const dominante = aporteSecundario >= aporteExamen
+    ? `el **secundario** (${apSecR.toFixed(2)} de ${finalR.toFixed(2)})`
+    : `el **examen** (${apExR.toFixed(2)} de ${finalR.toFixed(2)})`;
+  const tone = finalR >= 7 ? 'good' : finalR >= 4 ? 'neutral' : 'warn';
+  const insightText = `Puntaje ponderado **${finalR.toFixed(2)}/10** con peso ${pesoSec}% secundario y ${pesoEx}% examen. El componente que más aporta es ${dominante}, así que ahí está la mayor palanca para subir el resultado.`;
+
   return {
-    puntajeFinal: Math.round(puntajeFinal * 100) / 100,
-    aporteSecundario: Math.round(aporteSecundario * 100) / 100,
-    aporteExamen: Math.round(aporteExamen * 100) / 100,
+    puntajeFinal: finalR,
+    aporteSecundario: apSecR,
+    aporteExamen: apExR,
     detalle: `Secundario: ${promSec} × ${pesoSec}% = ${aporteSecundario.toFixed(2)}. Examen: ${notaEx} × ${pesoEx}% = ${aporteExamen.toFixed(2)}. Puntaje final: ${puntajeFinal.toFixed(2)}/10`,
+    _insight: { title: 'Cómo se compone tu puntaje', text: insightText, tone, icon: '🎓' },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: `Secundario (${pesoSec}%)`, value: apSecR },
+        { label: `Examen (${pesoEx}%)`, value: apExR },
+      ],
+      centerValue: `${finalR.toFixed(2)}`,
+      centerLabel: 'Puntaje /10',
+      ariaLabel: `Composición del puntaje final ${finalR.toFixed(2)} de 10: secundario ${apSecR.toFixed(2)}, examen ${apExR.toFixed(2)}`,
+    },
   };
 }

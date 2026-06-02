@@ -1,6 +1,6 @@
 /** Cálculo de megapíxeles y tamaño estimado de imagen */
 export interface Inputs { anchoPixeles: number; altoPixeles: number; formato?: string; }
-export interface Outputs { megapixeles: number; totalPixeles: number; tamanoEstimadoMb: number; detalle: string; }
+export interface Outputs { megapixeles: number; totalPixeles: number; tamanoEstimadoMb: number; detalle: string; _insight?: any; }
 
 export function tamanoImagenPixelesMegapixeles(i: Inputs): Outputs {
   const ancho = Number(i.anchoPixeles);
@@ -20,10 +20,22 @@ export function tamanoImagenPixelesMegapixeles(i: Inputs): Outputs {
 
   const nombreFormato = formato === 'jpeg' ? 'JPEG' : formato === 'png' ? 'PNG' : 'RAW';
 
+  // Calidad de impresión a 300 DPI (foto nítida)
+  const ladoLargoPx = Math.max(ancho, alto);
+  const pulgadas300 = ladoLargoPx / 300;
+  const cm300 = Math.round(pulgadas300 * 2.54);
+  const pesada = tamanoMb >= 8;
+
   return {
     megapixeles: Number(megapixeles.toFixed(1)),
     totalPixeles,
     tamanoEstimadoMb: Number(tamanoMb.toFixed(1)),
     detalle: `Imagen de ${ancho}×${alto} = ${megapixeles.toFixed(1)} MP (${totalPixeles.toLocaleString()} píxeles). En ${nombreFormato}: ~${tamanoMb.toFixed(1)} MB por foto.`,
+    _insight: {
+      title: pesada ? 'Archivo pesado' : 'Buena resolución de impresión',
+      text: `Con **${megapixeles.toFixed(1)} MP** podés imprimir nítido hasta unos **${cm300} cm** de lado largo a 300 DPI. En ${nombreFormato} cada foto ocupa **~${tamanoMb.toFixed(1)} MB**${pesada ? ', así que cargarlas de a muchas o subirlas a la web va a tardar — conviene comprimir o pasar a JPEG.' : ', un peso cómodo para compartir o subir.'}`,
+      tone: pesada ? 'warn' : 'good',
+      icon: '📷',
+    },
   };
 }

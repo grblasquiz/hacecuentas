@@ -12,6 +12,8 @@ export interface Outputs {
   valor_catastral_aprox: number;
   rango_mercado: string;
   factor_depreciacion: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Fuente: DIAN 2026, IGAC, Superfinanciera
@@ -88,12 +90,47 @@ export function compute(i: Inputs): Outputs {
   const rangoMax = Math.round(valorTasacionTotal * 0.95);
   const rangoMercado = `$${(rangoMin / 1_000_000).toFixed(1)}M - $${(rangoMax / 1_000_000).toFixed(1)}M`;
 
+  const valorTotalR = Math.round(valorTasacionTotal);
+  const hipotecaR = Math.round(valorHipoteca80);
+  const cuotaInicialR = valorTotalR - hipotecaR; // 20% restante, ajustado para cuadrar el total
+  const precioM2R = Math.round(precioM2Final);
+
+  const fmtM = (n: number) => '$' + (n / 1_000_000).toFixed(1) + 'M';
+
+  const deprecPct = Math.round((1 - factorDepreciacion) * 100);
+  const deprecTxt = factorDepreciacion > 1
+    ? `con prima de **+${Math.round((factorDepreciacion - 1) * 100)}%** por ser nueva`
+    : factorDepreciacion < 1
+      ? `tras **−${deprecPct}%** por antigüedad`
+      : 'sin ajuste por antigüedad';
+
+  const _insight = {
+    title: 'Cuánto vale y cuánto financiás',
+    text: `A **$${precioM2R.toLocaleString('es-CO')}/m²** ${deprecTxt}, la tasación da **${fmtM(valorTotalR)}**. Un crédito hipotecario cubriría hasta ${fmtM(hipotecaR)} (80%), dejándote una cuota inicial de ${fmtM(cuotaInicialR)}.`,
+    tone: 'neutral',
+    icon: '🏠',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Crédito hipotecario (80%)', value: hipotecaR },
+      { label: 'Cuota inicial (20%)', value: cuotaInicialR },
+    ],
+    prefix: '$',
+    centerValue: fmtM(valorTotalR),
+    centerLabel: 'Valor tasación',
+    ariaLabel: `Valor de tasación ${fmtM(valorTotalR)}: ${fmtM(hipotecaR)} financiables con hipoteca y ${fmtM(cuotaInicialR)} de cuota inicial.`,
+  };
+
   return {
-    precio_m2_estimado: Math.round(precioM2Final),
-    valor_tasacion_total: Math.round(valorTasacionTotal),
-    valor_hipoteca_80pct: Math.round(valorHipoteca80),
+    precio_m2_estimado: precioM2R,
+    valor_tasacion_total: valorTotalR,
+    valor_hipoteca_80pct: hipotecaR,
     valor_catastral_aprox: Math.round(valorCatastralAprox),
     rango_mercado: rangoMercado,
     factor_depreciacion: Math.round(factorDepreciacion * 10000) / 10000,
+    _insight,
+    _chart,
   };
 }

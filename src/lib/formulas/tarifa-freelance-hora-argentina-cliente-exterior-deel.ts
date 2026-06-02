@@ -13,6 +13,8 @@ export interface Outputs {
   tarifa_bruta_mep_ars: number;
   horas_mes: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -60,12 +62,39 @@ export function compute(i: Inputs): Outputs {
   const signo = sobrecobertura >= 0 ? "+" : "";
   const detalle = `Horas/mes: ${horas_mes.toFixed(1)}h | Ingreso bruto necesario: USD ${ingreso_bruto_necesario.toFixed(2)} | Tarifa bruta: USD ${tarifa_bruta_usd.toFixed(2)}/h | Comisión: ${comision_pct.toFixed(1)}% | Ingreso neto real: USD ${ingreso_mensual_neto_usd.toFixed(2)}/mes (${signo}USD ${sobrecobertura.toFixed(2)} vs objetivo)`;
 
+  const tarifaBrutaR = Math.round(tarifa_bruta_usd * 100) / 100;
+  const tarifaNetaR = Math.round(tarifa_neta_usd * 100) / 100;
+  const comisionPorHora = Math.round((tarifa_bruta_usd - tarifa_neta_usd) * 100) / 100;
+
+  const _insight = {
+    title: 'Tu tarifa real, con la comisión adentro',
+    text: comision_pct > 0
+      ? `Para llevarte **USD ${ingreso_objetivo.toLocaleString('en-US')}** netos y cubrir gastos tenés que facturar **USD ${tarifaBrutaR.toFixed(2)}/h**: la comisión del **${comision_pct.toFixed(1)}%** de la plataforma se come **USD ${comisionPorHora.toFixed(2)}/h** y te deja **USD ${tarifaNetaR.toFixed(2)}/h** limpios.`
+      : `Sin comisión de plataforma, tu tarifa de **USD ${tarifaBrutaR.toFixed(2)}/h** se cobra completa: con **${horas_mes.toFixed(0)}h/mes** facturás los **USD ${ingreso_mensual_neto_usd.toLocaleString('en-US', { maximumFractionDigits: 0 })}** que buscás.`,
+    tone: comision_pct >= 5 ? 'warn' : 'neutral',
+    icon: '🧾',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Neto para vos', value: tarifaNetaR },
+      { label: `Comisión plataforma (${comision_pct.toFixed(1)}%)`, value: comisionPorHora },
+    ],
+    prefix: 'USD ',
+    centerValue: `USD ${tarifaBrutaR.toFixed(2)}`,
+    centerLabel: 'Tarifa bruta/h',
+    ariaLabel: `De la tarifa bruta de USD ${tarifaBrutaR.toFixed(2)} por hora, USD ${tarifaNetaR.toFixed(2)} quedan netos y USD ${comisionPorHora.toFixed(2)} se van en comisión de plataforma`,
+  };
+
   return {
-    tarifa_bruta_usd: Math.round(tarifa_bruta_usd * 100) / 100,
-    tarifa_neta_usd: Math.round(tarifa_neta_usd * 100) / 100,
+    tarifa_bruta_usd: tarifaBrutaR,
+    tarifa_neta_usd: tarifaNetaR,
     ingreso_mensual_neto_usd: Math.round(ingreso_mensual_neto_usd * 100) / 100,
     tarifa_bruta_mep_ars: Math.round(tarifa_bruta_mep_ars * 100) / 100,
     horas_mes: Math.round(horas_mes),
-    detalle: detalle
+    detalle: detalle,
+    _insight,
+    _chart
   };
 }

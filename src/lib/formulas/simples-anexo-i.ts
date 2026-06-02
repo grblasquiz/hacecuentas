@@ -16,6 +16,8 @@ export interface Outputs {
   valorDas: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const FAIXAS = [
@@ -47,6 +49,29 @@ export function simplesAnexoI(i: Inputs): Outputs {
   const formula = `Alíquota efetiva = (${rbt12.toFixed(2)} × ${f.aliquota}% - ${f.deduzir}) / ${rbt12.toFixed(2)} = ${aliqEf.toFixed(3)}%. DAS = ${fatMes.toFixed(2)} × ${aliqEf.toFixed(3)}% = R$ ${valorDas.toFixed(2)}`;
   const explicacion = `Anexo I (comércio) — faixa ${fIdx + 1}: RBT12 R$ ${rbt12.toLocaleString('pt-BR')}, alíquota nominal ${f.aliquota}%, parcela a deduzir R$ ${f.deduzir.toLocaleString('pt-BR')}. Alíquota efetiva: ${aliqEf.toFixed(3)}%. DAS do mês (faturamento R$ ${fatMes.toFixed(2)}): R$ ${valorDas.toFixed(2)}. Aplica-se a lojas, mercados, revendas, e-commerces de produtos físicos.`;
 
+  const _insight = {
+    title: `Faixa ${fIdx + 1} de 6 — Anexo I`,
+    text: `Com RBT12 de **R$ ${rbt12.toLocaleString('pt-BR')}**, sua alíquota efetiva é de **${aliqEf.toFixed(2)}%** e o DAS do mês fica em **R$ ${valorDas.toFixed(2)}** sobre R$ ${fatMes.toLocaleString('pt-BR')} faturados. ${fIdx >= 4 ? 'Você está nas faixas mais altas — vale revisar o RBT12 e o regime.' : 'Comércio costuma ter as menores alíquotas do Simples.'}`,
+    tone: fIdx >= 4 ? 'warn' : (fIdx <= 1 ? 'good' : 'neutral'),
+    icon: '🧾',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: Number(aliqEf.toFixed(2)),
+    markerLabel: `${aliqEf.toFixed(2)}% efetiva`,
+    min: 0,
+    segments: [
+      { nombre: 'Faixa 1', max: 4.0, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Faixa 2', max: 7.3, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Faixa 3', max: 9.5, color: '#ca8a04', colorDark: '#eab308' },
+      { nombre: 'Faixa 4', max: 10.7, color: '#ea580c', colorDark: '#f97316' },
+      { nombre: 'Faixa 5', max: 14.3, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'Faixa 6', max: 20.0, color: '#b91c1c', colorDark: '#dc2626' },
+    ],
+    ariaLabel: `Alíquota efetiva de ${aliqEf.toFixed(2)}% dentro das seis faixas do Anexo I, da menor (4%) à maior (19%).`,
+  };
+
   return {
     faixa: fIdx + 1,
     aliquotaNominal: f.aliquota,
@@ -55,5 +80,7 @@ export function simplesAnexoI(i: Inputs): Outputs {
     valorDas: Number(valorDas.toFixed(2)),
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

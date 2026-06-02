@@ -16,6 +16,8 @@ export interface Outputs {
   rewards_usd: number;
   end_stake_usd: number;
   breakdown: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 // Default gross APRs per token (typical 2025-2026 network estimates)
@@ -115,7 +117,18 @@ export function compute(i: Inputs): Outputs {
     `${endStakeTokens.toLocaleString("en-US", { maximumFractionDigits: 4 })} ${symbol} ` +
     `(+${rewardsTokens.toLocaleString("en-US", { maximumFractionDigits: 4 })} ${symbol} ≈ $${rewardsUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD at $${tokenPriceUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/${symbol}).`;
 
-  return {
+  const fmtTok = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 4 });
+  const fmtUsd0 = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  const highFee = commissionRate >= 0.15;
+  const insight = {
+    title: highFee ? "High validator commission" : "Projected staking rewards",
+    text: highFee
+      ? `Over ${periodLabel} you'd earn **${fmtTok(rewardsTokens)} ${symbol}**${tokenPriceUsd > 0 ? ` (~$${fmtUsd0(rewardsUsd)})` : ""} at a **${(netApr * 100).toFixed(2)}% net APR**, but the validator keeps **${(commissionRate * 100).toFixed(1)}%** of rewards. A lower-commission validator would leave more yield in your pocket.`
+      : `Staking ${fmtTok(amountStaked)} ${symbol} for ${periodLabel} grows your position to **${fmtTok(endStakeTokens)} ${symbol}** — that's **+${fmtTok(rewardsTokens)} ${symbol}**${tokenPriceUsd > 0 ? ` (~$${fmtUsd0(rewardsUsd)})` : ""} at a **${(effectiveApy * 100).toFixed(2)}% effective APY**. Token rewards are fixed, but their USD value moves with the price.`,
+    tone: highFee ? "warn" : "good",
+    icon: highFee ? "✂️" : "🪙",
+  };
+  const out: Outputs = {
     net_apr: netApr,
     effective_apy: effectiveApy,
     rewards_tokens: rewardsTokens,
@@ -123,5 +136,20 @@ export function compute(i: Inputs): Outputs {
     rewards_usd: rewardsUsd,
     end_stake_usd: endStakeUsd,
     breakdown,
+    _insight: insight,
   };
+  if (tokenPriceUsd > 0 && rewardsUsd >= 0) {
+    out._chart = {
+      type: "doughnut" as const,
+      slices: [
+        { label: "Initial stake", value: Number((amountStaked * tokenPriceUsd).toFixed(2)) },
+        { label: "Rewards", value: Number(rewardsUsd.toFixed(2)) },
+      ],
+      prefix: "$",
+      centerValue: "$" + fmtUsd0(endStakeUsd),
+      centerLabel: "Final value",
+      ariaLabel: "Breakdown of final staked value: initial stake plus accrued rewards",
+    };
+  }
+  return out;
 }

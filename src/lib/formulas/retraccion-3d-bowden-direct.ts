@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   distancia: string; velocidad: string; coasting: string; consejo: string;
+  _insight?: any;
 }
 
 export function retraccion3dBowdenDirect(inputs: Inputs): Outputs {
@@ -30,10 +31,18 @@ export function retraccion3dBowdenDirect(inputs: Inputs): Outputs {
   const dist = Math.max(0.3, (base.d + aj.d) * mult);
   const vel = Math.max(15, base.v + aj.v);
   const coast = ext === 1 ? 0.15 : 0.08;
+  const tipoExt = ext === 1 ? 'Bowden' : 'Direct Drive';
+  const matNombre = mat === 2 ? 'PETG' : mat === 3 ? 'ABS' : mat === 4 ? 'TPU' : 'PLA';
   return {
     distancia: `${dist.toFixed(1)} mm`,
     velocidad: `${vel.toFixed(0)} mm/s`,
     coasting: `${coast.toFixed(2)} mm`,
     consejo: aj.note,
+    _insight: {
+      title: 'Tu punto de partida',
+      text: `Para **${matNombre}** en extrusor **${tipoExt}** con nozzle de ${nz} mm, empezá con **${dist.toFixed(1)} mm** de retracción a **${vel.toFixed(0)} mm/s**. ${tipoExt === 'Bowden' ? 'Los Bowden necesitan más distancia por el tubo largo' : 'Los Direct Drive piden poca distancia: el motor está sobre el hotend'}. Ajustá ±0,5 mm haciendo torre de retracción hasta que desaparezcan los hilos.`,
+      tone: 'neutral',
+      icon: '🧵'
+    },
   };
 }

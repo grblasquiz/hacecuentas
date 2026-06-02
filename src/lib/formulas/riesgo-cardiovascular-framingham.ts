@@ -3,7 +3,7 @@ export interface Inputs {
   edad: number; sexo: string; colesterolTotal: number; hdl: number;
   sistolica: number; fumador: string; diabetes: string;
 }
-export interface Outputs { riesgo10: string; clasificacion: string; recomendacion: string; mensaje: string; _chart?: any; }
+export interface Outputs { riesgo10: string; clasificacion: string; recomendacion: string; mensaje: string; _insight?: any; _chart?: any; }
 
 export function riesgoCardiovascularFramingham(i: Inputs): Outputs {
   const edad = Number(i.edad);
@@ -100,11 +100,31 @@ export function riesgoCardiovascularFramingham(i: Inputs): Outputs {
     ariaLabel: 'Escala de riesgo cardiovascular a 10 años: bajo (<10%), moderado (10-20%), alto (>20%)',
   };
 
+  const modificables: string[] = [];
+  if (fumador) modificables.push('dejar de fumar');
+  if (sistolica >= 130) modificables.push('bajar la presión');
+  if (colTotal >= 200) modificables.push('reducir el colesterol');
+  const tone = riskPct < 10 ? 'good' as const : riskPct < 20 ? 'warn' as const : 'warn' as const;
+  const _insight = {
+    title: 'Qué significa tu riesgo',
+    text: (riskPct < 10
+      ? `Tenés un **${riskPct}%** de probabilidad de un evento cardiovascular en los próximos **10 años**: un riesgo **bajo**. `
+      : riskPct < 20
+      ? `Tenés un **${riskPct}%** de probabilidad de un evento cardiovascular en los próximos **10 años**: un riesgo **moderado** que conviene atender. `
+      : `Tenés un **${riskPct}%** de probabilidad de un evento cardiovascular en los próximos **10 años**: un riesgo **alto** que requiere control médico. `) +
+      (modificables.length > 0
+        ? `Trabajando sobre factores modificables (${modificables.join(', ')}) podés bajar bastante este número.`
+        : 'La mayoría de tus factores ya están controlados; sostené los hábitos y el control médico de rutina.'),
+    tone,
+    icon: riskPct < 10 ? '❤️' : '🫀',
+  };
+
   return {
     riesgo10: `${riskPct}%`,
     clasificacion,
     recomendacion,
     mensaje: `Riesgo cardiovascular a 10 años: ${riskPct}%. ${clasificacion}.`,
+    _insight,
     _chart: chart,
   };
 }

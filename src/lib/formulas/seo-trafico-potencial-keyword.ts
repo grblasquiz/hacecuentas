@@ -1,6 +1,6 @@
 /** SEO trafico potencial keyword */
 export interface Inputs { searchVolume: number; posicionObjetivo: number; tipoIntent: string; cvrLanding: number; valorConversion: number; }
-export interface Outputs { traficoMensual: number; ctrEstimado: number; conversionesMes: number; revenueMensual: number; revenueAnual: number; }
+export interface Outputs { traficoMensual: number; ctrEstimado: number; conversionesMes: number; revenueMensual: number; revenueAnual: number; _insight?: any; }
 export function seoTraficoPotencialKeyword(i: Inputs): Outputs {
   const sv = Number(i.searchVolume);
   const pos = Number(i.posicionObjetivo);
@@ -19,11 +19,23 @@ export function seoTraficoPotencialKeyword(i: Inputs): Outputs {
   const trafico = sv * (ctr / 100);
   const conv = trafico * cvr;
   const revenue = conv * val;
+
+  const traficoR = Math.round(trafico);
+  const revAnual = Math.round(revenue * 12);
+  const paginaTxt = pos <= 10 ? 'la 1.ª página' : pos <= 20 ? 'la 2.ª página' : 'la 3.ª página o más allá';
+  const _insight = {
+    title: 'Cuánto vale esta keyword',
+    text: `Rankeando en la posición **${pos}** (${paginaTxt}) captarías un CTR de **${ctr.toFixed(2)}%**, es decir **~${traficoR.toLocaleString('es')} visitas/mes**. Con tu CVR proyectás **${conv.toFixed(1)} conversiones/mes** y **$${revAnual.toLocaleString('es')}/año** de ingresos.`,
+    tone: revenue > 0 ? 'good' : 'neutral',
+    icon: '🔍',
+  };
+
   return {
-    traficoMensual: Math.round(trafico),
+    traficoMensual: traficoR,
     ctrEstimado: Number(ctr.toFixed(2)),
     conversionesMes: Number(conv.toFixed(1)),
     revenueMensual: Math.round(revenue),
-    revenueAnual: Math.round(revenue * 12)
+    revenueAnual: revAnual,
+    _insight
   };
 }

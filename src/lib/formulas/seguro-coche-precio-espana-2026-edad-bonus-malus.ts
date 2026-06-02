@@ -16,6 +16,8 @@ export interface Outputs {
   factor_edad_texto: string;
   recomendacion: string;
   aviso_todo_riesgo: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -204,6 +206,45 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
+  // --- Insight: rango de precio + factor dominante
+  const fmtE = (n: number) => n.toLocaleString('es-ES');
+  const recargoEdad = factorEdadTotal > 1.0;
+  const malusFuerte = factorBM > 1.0;
+  const bonusFuerte = factorBM < 1.0;
+  let factorDominante = '';
+  if (factorBM >= 1.15 && factorBM >= factorEdadTotal) {
+    factorDominante = `tu nivel bonus-malus ${nivelBM} aplica un recargo importante`;
+  } else if (factorEdadTotal >= 1.2) {
+    factorDominante = edad < 25 ? `tu edad (${edad} años) penaliza fuerte la prima` : aniosCarnet < 2 ? 'tu carnet reciente penaliza la prima' : 'tu perfil de edad/experiencia recarga la prima';
+  } else if (factorSegmento >= 1.3) {
+    factorDominante = `el segmento del coche (${i.segmento_coche.replace('_', ' ')}) encarece la prima`;
+  } else if (bonusFuerte) {
+    factorDominante = `tu buen nivel bonus-malus ${nivelBM} abarata la prima`;
+  } else {
+    factorDominante = 'tu perfil es bastante neutro';
+  }
+  const tono = (malusFuerte && factorBM >= 1.15) || factorEdadTotal >= 1.35 ? 'warn' : (bonusFuerte && factorEdadTotal <= 1.0) ? 'good' : 'neutral';
+  const _insight = {
+    title: tono === 'warn' ? 'Prima con recargo' : tono === 'good' ? 'Prima favorable' : 'Estimación de prima',
+    text: `Para un **${i.modalidad.replace(/_/g, ' ')}** con tu perfil, la prima anual ronda entre **${fmtE(precioMinimo)} €** y **${fmtE(precioMaximo)} €** (media ≈ **${fmtE(precioMedio)} €/año**). Pesa sobre todo que ${factorDominante}.`,
+    tone: tono,
+    icon: '🚙',
+  };
+
+  // --- Gauge bonus-malus (1 = máximo malus, 7 neutro, 14 máximo bonus)
+  const _chart = {
+    type: 'scale',
+    marker: nivelBM,
+    markerLabel: `Nivel ${nivelBM}`,
+    min: 1,
+    segments: [
+      { nombre: 'Malus (recargo)', max: 6, color: '#ef4444', colorDark: '#dc2626' },
+      { nombre: 'Neutro', max: 7, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: 'Bonus (descuento)', max: 15, color: '#22c55e', colorDark: '#16a34a' },
+    ],
+    ariaLabel: `En la escala bonus-malus de 1 a 14, estás en el nivel ${nivelBM}: ${factorBM > 1 ? 'zona de recargo' : factorBM < 1 ? 'zona de descuento' : 'nivel neutro'}.`,
+  };
+
   return {
     precio_minimo: precioMinimo,
     precio_maximo: precioMaximo,
@@ -212,5 +253,7 @@ export function compute(i: Inputs): Outputs {
     factor_edad_texto: factorEdadTexto,
     recomendacion,
     aviso_todo_riesgo: avisoTodoRiesgo,
+    _insight,
+    _chart,
   };
 }

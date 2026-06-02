@@ -22,6 +22,8 @@ export interface Outputs {
   precioMasBajo: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function precioPromedioCompraCripto(i: Inputs): Outputs {
@@ -36,6 +38,11 @@ export function precioPromedioCompraCripto(i: Inputs): Outputs {
       totalTokens: 'Total tokens',
       precioPromedioDesc: (precioPromedio: string) => `Tu precio promedio ponderado es $${precioPromedio} por token`,
       rangoPreciosLabel: 'Rango de precios',
+      insightTitle: 'Tu precio promedio',
+      insightText: (avg: string, tokens: string, inv: string) => `Tu costo promedio ponderado es **$${avg}** por token tras invertir **$${inv}** en **${tokens} tokens**. Es el precio al que tenés que vender para no perder.`,
+      chartSliceLabel: (idx: number) => `Compra ${idx + 1}`,
+      chartCenterLabel: 'Invertido',
+      chartAria: 'Distribución del capital invertido por cada compra',
     },
     en: {
       errorNoCompras: 'Enter at least one purchase with quantity and price',
@@ -45,6 +52,11 @@ export function precioPromedioCompraCripto(i: Inputs): Outputs {
       totalTokens: 'Total tokens',
       precioPromedioDesc: (precioPromedio: string) => `Your weighted average price is $${precioPromedio} per token`,
       rangoPreciosLabel: 'Price range',
+      insightTitle: 'Your average price',
+      insightText: (avg: string, tokens: string, inv: string) => `Your weighted average cost is **$${avg}** per token after investing **$${inv}** across **${tokens} tokens**. That's the price you need to sell at to break even.`,
+      chartSliceLabel: (idx: number) => `Purchase ${idx + 1}`,
+      chartCenterLabel: 'Invested',
+      chartAria: 'Breakdown of capital invested per purchase',
     },
   } as const)[__lang];
 

@@ -1,6 +1,6 @@
 /** Trimestre de embarazo según semana */
 export interface Inputs { semanaActual: number; }
-export interface Outputs { trimestre: string; semanasRestantesTrimestre: number; estudios: string; sintomasComunes: string; }
+export interface Outputs { trimestre: string; semanasRestantesTrimestre: number; estudios: string; sintomasComunes: string; _insight?: any; _chart?: any; }
 
 export function trimestreEmbarazo(i: Inputs): Outputs {
   const sem = Math.round(Number(i.semanaActual));
@@ -28,5 +28,28 @@ export function trimestreEmbarazo(i: Inputs): Outputs {
     sintomas = 'Hinchazón, insomnio, Braxton Hicks, ganas frecuentes de orinar, dolor pélvico, cansancio';
   }
 
-  return { trimestre, semanasRestantesTrimestre: restantes, estudios, sintomasComunes: sintomas };
+  const restantesParto = Math.max(0, 40 - sem);
+  const trimCorto = trimestre.split(' (')[0];
+  const _insight = {
+    title: 'En qué etapa estás',
+    text: restantesParto > 0
+      ? `En la **semana ${sem}** estás en el **${trimCorto.toLowerCase()}**, a unas **${restantesParto} semanas** de la fecha probable de parto (semana 40).`
+      : `En la **semana ${sem}** ya alcanzaste o superaste la semana 40: el bebé puede llegar en cualquier momento. Seguí los controles indicados.`,
+    tone: 'neutral' as const,
+    icon: '🤰',
+  };
+  const _chart = {
+    type: 'scale' as const,
+    marker: sem,
+    markerLabel: `Semana ${sem}`,
+    min: 1,
+    segments: [
+      { nombre: '1er trim.', max: 12, color: '#f9a8d4', colorDark: '#be185d' },
+      { nombre: '2do trim.', max: 27, color: '#c4b5fd', colorDark: '#6d28d9' },
+      { nombre: '3er trim.', max: 42, color: '#93c5fd', colorDark: '#1d4ed8' },
+    ],
+    ariaLabel: `Semana ${sem} de embarazo ubicada en el ${trimCorto.toLowerCase()} sobre las 40 semanas de gestación`,
+  };
+
+  return { trimestre, semanasRestantesTrimestre: restantes, estudios, sintomasComunes: sintomas, _insight, _chart };
 }

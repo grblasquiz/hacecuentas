@@ -19,6 +19,8 @@ export interface Outputs {
   recomendacao: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const FAIXAS = [
@@ -61,6 +63,36 @@ export function simplesAnexoIII(i: Inputs): Outputs {
   const formula = `Alíquota efetiva = (${rbt12.toFixed(2)} × ${f.aliquota}% - ${f.deduzir}) / ${rbt12.toFixed(2)} = ${aliqEf.toFixed(3)}%. DAS = R$ ${valorDas.toFixed(2)}`;
   const explicacion = `Anexo III (serviços gerais) — faixa ${fIdx + 1}: RBT12 R$ ${rbt12.toLocaleString('pt-BR')}, alíquota nominal ${f.aliquota}%, dedução R$ ${f.deduzir.toLocaleString('pt-BR')}. Alíquota efetiva: ${aliqEf.toFixed(3)}%. DAS mensal: R$ ${valorDas.toFixed(2)}. Fator R: ${fatorR.toFixed(2)}%. ${recomendacao} Aplica-se a academias, salões, agências, escolas de idiomas e — via fator R — a devs, designers, consultores.`;
 
+  const fatorRisco = folha > 0 && fatorR < 28;
+  const insightTone = fatorRisco ? 'warn' : (folha > 0 && fatorR >= 28 ? 'good' : (fIdx >= 4 ? 'warn' : 'neutral'));
+  const insightText = folha === 0
+    ? `Com RBT12 de **R$ ${rbt12.toLocaleString('pt-BR')}**, a alíquota efetiva no Anexo III é **${aliqEf.toFixed(2)}%** e o DAS do mês fica em **R$ ${valorDas.toFixed(2)}**. Informe a folha de 12 meses para confirmar se você fica no Anexo III ou cai no V (mais caro).`
+    : fatorRisco
+      ? `Seu **fator R é ${fatorR.toFixed(2)}%** (abaixo de 28%): a atividade cai no **Anexo V**, com alíquota a partir de 15,5% — bem acima dos ${aliqEf.toFixed(2)}% do Anexo III. Aumentar pró-labore/folha pode reduzir o DAS de **R$ ${valorDas.toFixed(2)}**.`
+      : `Com **fator R de ${fatorR.toFixed(2)}%** (≥ 28%), você fica no **Anexo III**: alíquota efetiva de **${aliqEf.toFixed(2)}%** e DAS de **R$ ${valorDas.toFixed(2)}** sobre R$ ${fatMes.toLocaleString('pt-BR')} no mês.`;
+  const _insight = {
+    title: `Faixa ${fIdx + 1} de 6 — Anexo III`,
+    text: insightText,
+    tone: insightTone,
+    icon: '💼',
+  };
+
+  const _chart = {
+    type: 'scale',
+    marker: Number(aliqEf.toFixed(2)),
+    markerLabel: `${aliqEf.toFixed(2)}% efetiva`,
+    min: 0,
+    segments: [
+      { nombre: 'Faixa 1', max: 6.0, color: '#16a34a', colorDark: '#22c55e' },
+      { nombre: 'Faixa 2', max: 11.2, color: '#65a30d', colorDark: '#84cc16' },
+      { nombre: 'Faixa 3', max: 13.5, color: '#ca8a04', colorDark: '#eab308' },
+      { nombre: 'Faixa 4', max: 16.0, color: '#ea580c', colorDark: '#f97316' },
+      { nombre: 'Faixa 5', max: 21.0, color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: 'Faixa 6', max: 33.0, color: '#b91c1c', colorDark: '#dc2626' },
+    ],
+    ariaLabel: `Alíquota efetiva de ${aliqEf.toFixed(2)}% dentro das seis faixas do Anexo III, da menor (6%) à maior (33%).`,
+  };
+
   return {
     faixa: fIdx + 1,
     aliquotaNominal: f.aliquota,
@@ -71,5 +103,7 @@ export function simplesAnexoIII(i: Inputs): Outputs {
     recomendacao,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

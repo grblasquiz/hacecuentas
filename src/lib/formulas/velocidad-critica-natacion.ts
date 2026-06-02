@@ -12,6 +12,7 @@ export interface Outputs {
   zonaUmbral: string;
   zonaVo2: string;
   mensaje: string;
+  _insight?: any;
 }
 
 function fmtPace(sec: number): string {
@@ -34,12 +35,24 @@ export function velocidadCriticaNatacion(i: Inputs): Outputs {
   const zonaUmbral = fmtPace(cssPace100 - 3) + ' a ' + fmtPace(cssPace100 + 3) + ' /100m';
   const zonaVo2 = fmtPace(cssPace100 - 8) + ' /100m';
 
+  let nivel: string; let tone: 'good' | 'warn' | 'neutral';
+  if (cssPace100 <= 80) { nivel = 'nivel competitivo'; tone = 'good'; }
+  else if (cssPace100 <= 105) { nivel = 'nadador entrenado'; tone = 'good'; }
+  else if (cssPace100 <= 130) { nivel = 'nivel intermedio'; tone = 'neutral'; }
+  else { nivel = 'en desarrollo'; tone = 'neutral'; }
+
   return {
     cssPace: fmtPace(cssPace100) + ' /100m',
     cssVelocidad: cssMs.toFixed(2) + ' m/s (' + (cssMs * 3.6).toFixed(1) + ' km/h)',
     zonaRecuperacion,
     zonaUmbral,
     zonaVo2,
-    mensaje: `CSS: ${fmtPace(cssPace100)}/100m (${cssMs.toFixed(2)} m/s). Usá este pace para series de umbral.`
+    mensaje: `CSS: ${fmtPace(cssPace100)}/100m (${cssMs.toFixed(2)} m/s). Usá este pace para series de umbral.`,
+    _insight: {
+      title: 'Tu velocidad crítica de nado',
+      text: `Tu CSS es **${fmtPace(cssPace100)}/100m** (${cssMs.toFixed(2)} m/s), un ${nivel}. Es tu umbral sostenible: entrená series largas en la zona **${zonaUmbral}** y dejá la recuperación a **${zonaRecuperacion}**.`,
+      tone,
+      icon: '🏊',
+    }
   };
 }

@@ -16,6 +16,7 @@ export interface Outputs {
   temperatura_basking: string;
   largo_adulto_estimado_cm: number;
   resumen: string;
+  _insight?: any;
 }
 
 // Tamaño adulto típico por especie y sexo (en cm de largo de caparazón)
@@ -117,6 +118,23 @@ export function compute(i: Inputs): Outputs {
     `UVB ${uvbWatts} W. ` +
     `Tamaño adulto estimado: ${largoAdulto} cm.`;
 
+  // Insight: el error clásico es comprar un acuario para el tamaño actual y
+  // quedarse corto cuando la tortuga crece. Avisamos si todavía tiene recorrido.
+  const creceTodavia = largoAdulto > largo + 1;
+  const insight = creceTodavia
+    ? {
+        title: 'Tu tortuga todavía va a crecer',
+        text: `Hoy con ${largo} cm necesita **${litrosTotales} L**, pero esta especie llega a unos **${largoAdulto} cm** de adulta: el acuario definitivo va a ser bastante más grande. Comprá pensando en el tamaño final para no recambiarlo en un año.`,
+        tone: 'warn',
+        icon: '🐢',
+      }
+    : {
+        title: 'Acuario para tu tortuga',
+        text: `Con ${largo} cm, el mínimo es **${litrosTotales} L** (largo ≥ **${largoAcuarioMin} cm**) y un filtro de **${caudalMin}–${caudalMax} L/h**. Ya está cerca de su tamaño adulto (~${largoAdulto} cm), así que este acuario le sirve de por vida.`,
+        tone: 'good',
+        icon: '🐢',
+      };
+
   return {
     litros_minimos: litrosTotales,
     caudal_filtro_min: caudalMin,
@@ -128,5 +146,6 @@ export function compute(i: Inputs): Outputs {
     temperatura_basking: tempBasking,
     largo_adulto_estimado_cm: largoAdulto,
     resumen,
+    _insight: insight,
   };
 }

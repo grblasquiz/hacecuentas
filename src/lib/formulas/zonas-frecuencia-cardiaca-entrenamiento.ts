@@ -14,6 +14,7 @@ export interface Outputs {
   zona4: { min: number; max: number; nombre: string };
   zona5: { min: number; max: number; nombre: string };
   resumen: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -75,6 +76,12 @@ export function zonasFrecuenciaCardiacaEntrenamiento(i: Inputs): Outputs {
     zona4: z4,
     zona5: z5,
     resumen: `Tu FCmax es ${Math.round(fcMax)} bpm y tu reserva cardíaca ${Math.round(reserva)} bpm. Entrená la mayor parte del tiempo en **Z2 (${z2.min}-${z2.max} bpm)** para quemar grasa y fortalecer base aeróbica.`,
+    _insight: {
+      title: 'Dónde entrenar',
+      text: `Con FC máx **${Math.round(fcMax)} bpm** y reserva de **${Math.round(reserva)} bpm**, pasá el 70-80% de tus sesiones en **Z2 (${z2.min}-${z2.max} bpm)** para construir base aeróbica, y reservá la **Z4 (${z4.min}-${z4.max} bpm)** para los días de intensidad. Si pasás todo el tiempo en zonas altas, no recuperás.`,
+      tone: 'neutral' as const,
+      icon: '❤️',
+    },
     _chart: chart,
   };
 }

@@ -1,6 +1,6 @@
 /** Seguro de caución alquiler España — prima anual y mensual vs aval bancario */
 export interface Inputs { alquilerMensual: number; plazoMeses: number; cobertura: string; }
-export interface Outputs { primaAnual: number; primaMensual: number; costoTotal: number; equivalenteMesesRenta: number; avalBancarioEstimado: number; ahorroVsAval: number; }
+export interface Outputs { primaAnual: number; primaMensual: number; costoTotal: number; equivalenteMesesRenta: number; avalBancarioEstimado: number; ahorroVsAval: number; _insight?: any; }
 
 export function seguroCaucionAlquilerEspana(i: Inputs): Outputs {
   const renta = Number(i.alquilerMensual);
@@ -23,6 +23,18 @@ export function seguroCaucionAlquilerEspana(i: Inputs): Outputs {
   const costoOportunidad = renta * 6 * 0.03 * (plazo / 12);
   const avalTotal = avalBancarioEstimado + costoOportunidad;
   const ahorroVsAval = avalTotal - costoTotal;
+
+  const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
+  const ahorroPos = ahorroVsAval >= 0;
+  const _insight = {
+    title: ahorroPos ? 'Más barato que el aval bancario' : 'El aval saldría más a cuenta',
+    text: ahorroPos
+      ? `El seguro de caución cuesta **${fmt(costoTotal)} €** en total (${equivalenteMesesRenta.toFixed(1)} meses de renta). Frente al aval bancario, que inmoviliza 6 meses de renta más comisiones y coste de oportunidad (~${fmt(avalTotal)} €), te **ahorra unos ${fmt(ahorroVsAval)} €** y no congela tu liquidez.`
+      : `El seguro de caución cuesta **${fmt(costoTotal)} €** en total, algo más que el coste estimado del aval bancario (~${fmt(avalTotal)} €). Aun así, el seguro **no inmoviliza** los 6 meses de renta del depósito, lo que puede compensar si necesitás esa liquidez.`,
+    tone: ahorroPos ? 'good' : 'warn',
+    icon: '🔑',
+  };
+
   return {
     primaAnual: Math.round(primaAnual),
     primaMensual: Math.round(primaMensual),
@@ -30,5 +42,6 @@ export function seguroCaucionAlquilerEspana(i: Inputs): Outputs {
     equivalenteMesesRenta: Number(equivalenteMesesRenta.toFixed(2)),
     avalBancarioEstimado: Math.round(avalTotal),
     ahorroVsAval: Math.round(ahorroVsAval),
+    _insight,
   };
 }

@@ -7,7 +7,7 @@ export interface Inputs {
 }
 
 export interface Outputs {
-  totalFotos: string; intervalo: string; aceleracion: number; espacioDisco: string;
+  totalFotos: string; intervalo: string; aceleracion: number; espacioDisco: string; _insight?: any;
 }
 
 export function timeLapseDuracionFotosMaker(inputs: Inputs): Outputs {
@@ -24,10 +24,17 @@ export function timeLapseDuracionFotosMaker(inputs: Inputs): Outputs {
   if (intervalo < 1) intStr = `${(intervalo * 1000).toFixed(0)} ms entre fotos`;
   else if (intervalo < 60) intStr = `${intervalo.toFixed(1)} s`;
   else intStr = `${(intervalo/60).toFixed(1)} min`;
+  const _insight = {
+    title: 'Tu plan de captura',
+    text: `Para un video de ${dv}s a ${fps} fps necesitás **${fotos.toLocaleString('es-AR')} fotos**, una cada **${intStr.replace(' entre fotos', '')}**. La escena se ve **${aceleracion.toFixed(0)}× acelerada** y vas a ocupar ~**${gb.toFixed(2)} GB** de tarjeta.`,
+    tone: 'neutral' as const,
+    icon: '📸',
+  };
   return {
     totalFotos: `${fotos} fotos`,
     intervalo: intStr,
     aceleracion: Number(aceleracion.toFixed(0)),
     espacioDisco: `${gb.toFixed(2)} GB`,
+    _insight,
   };
 }

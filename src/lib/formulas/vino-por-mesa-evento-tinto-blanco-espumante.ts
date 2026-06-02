@@ -17,6 +17,8 @@ export interface Outputs {
   botellasEspumante: number;
   copasPerCapita: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Copas por botella estándar (750 ml / 150 ml por copa)
@@ -86,6 +88,27 @@ export function compute(i: Inputs): Outputs {
     `Tinto: ${botellasTinto} bot. | Blanco: ${botellasBlanco} bot. | Espumante: ${botellasEspumante} bot.` +
     advertenciaProporciones;
 
+  const tone = sumaProporciones !== 100 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Vino total del evento',
+    text: `Con **${totalInvitados} invitados** en **${mesas} mesa(s)**, ${porcentajeBebedores}% tomando vino en un evento de **${duracionHoras} h** (${tipoComida}), necesitás **${botellasTotalEvento} botellas** (~${botellasPorMesa} por mesa).` + (sumaProporciones !== 100 ? ` Ojo: las proporciones suman **${sumaProporciones}%**, no 100%; ajustá tinto/blanco/espumante.` : ` Reparto: **${botellasTinto} tinto**, **${botellasBlanco} blanco**, **${botellasEspumante} espumante**.`),
+    tone,
+    icon: '🍷',
+  };
+
+  const sumaTipos = botellasTinto + botellasBlanco + botellasEspumante;
+  const _chart = sumaTipos > 0 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Tinto', value: botellasTinto },
+      { label: 'Blanco', value: botellasBlanco },
+      { label: 'Espumante', value: botellasEspumante },
+    ],
+    centerValue: `${sumaTipos}`,
+    centerLabel: 'botellas',
+    ariaLabel: `Reparto del vino: ${botellasTinto} tinto, ${botellasBlanco} blanco y ${botellasEspumante} espumante`,
+  } : undefined;
+
   return {
     botellasTotalEvento,
     botellasPorMesa,
@@ -94,5 +117,7 @@ export function compute(i: Inputs): Outputs {
     botellasEspumante,
     copasPerCapita: Math.round(copasPerCapita * 100) / 100,
     detalle,
+    _insight,
+    _chart,
   };
 }

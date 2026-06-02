@@ -13,6 +13,8 @@ export interface Outputs {
   zone3: string;
   zone4: string;
   zone5: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Zone intensity boundaries (Karvonen / HRR method)
@@ -111,6 +113,7 @@ export function compute(i: Inputs): Outputs {
   const heart_rate_reserve = max_hr_used - resting_hr;
 
   // Compute all five zones using Karvonen formula
+  const zoneUppers: number[] = [];
   const results: string[] = ZONES.map((zone) => {
     const { lower, upper } = karvonenBounds(
       zone.low,
@@ -120,8 +123,34 @@ export function compute(i: Inputs): Outputs {
     );
     // For Zone 5, cap upper bound at max_hr_used to avoid exceeding 100%
     const displayUpper = zone.high >= 1.0 ? max_hr_used : upper;
+    zoneUppers.push(displayUpper);
     return `${lower}–${displayUpper} bpm`;
   });
+
+  // Fat-burn (Z2) lower/upper for the insight callout
+  const z2 = karvonenBounds(ZONES[1].low, ZONES[1].high, heart_rate_reserve, resting_hr);
+  const _insight = {
+    title: `Your max HR: ${max_hr_used} bpm`,
+    text: `With a heart-rate reserve of **${heart_rate_reserve} bpm**, your fat-burn zone (Z2) sits at **${z2.lower}–${z2.upper} bpm** and your VO2-max zone (Z5) tops out at **${max_hr_used} bpm**. Keep most easy sessions in Z2 and reserve Z5 for short, hard intervals.`,
+    tone: 'neutral',
+    icon: '❤️',
+  };
+
+  const z1Lower = karvonenBounds(ZONES[0].low, ZONES[0].high, heart_rate_reserve, resting_hr).lower;
+  const _chart = {
+    type: 'scale' as const,
+    marker: max_hr_used,
+    markerLabel: `${max_hr_used} bpm max`,
+    min: z1Lower,
+    segments: [
+      { nombre: 'Z1 Recovery',  max: zoneUppers[0], color: '#3b82f6', colorDark: '#60a5fa' },
+      { nombre: 'Z2 Fat Burn',  max: zoneUppers[1], color: '#22c55e', colorDark: '#4ade80' },
+      { nombre: 'Z3 Aerobic',   max: zoneUppers[2], color: '#eab308', colorDark: '#facc15' },
+      { nombre: 'Z4 Threshold', max: zoneUppers[3], color: '#f97316', colorDark: '#fb923c' },
+      { nombre: 'Z5 VO2 Max',   max: max_hr_used + 1, color: '#ef4444', colorDark: '#f87171' },
+    ],
+    ariaLabel: `Heart-rate training zones from ${z1Lower} to ${max_hr_used} bpm, split into five Karvonen zones: recovery, fat burn, aerobic, threshold and VO2 max.`,
+  };
 
   return {
     max_hr_used,
@@ -131,5 +160,7 @@ export function compute(i: Inputs): Outputs {
     zone3: results[2],
     zone4: results[3],
     zone5: results[4],
+    _insight,
+    _chart,
   };
 }

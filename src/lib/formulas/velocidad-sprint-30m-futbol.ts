@@ -12,6 +12,7 @@ export interface Outputs {
   diferenciaBenchmark: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Tiempo 30m (s) de referencia elite masculino por posición
@@ -62,6 +63,16 @@ export function velocidadSprint30mFutbol(i: Inputs): Outputs {
     ariaLabel: 'Escala de tiempo en sprint 30m: menor tiempo es mejor',
   };
 
+  // Tono según diferencia con el benchmark élite de la posición.
+  const tono: 'good' | 'warn' | 'neutral' = dif <= 0.1 ? 'good' : dif <= 0.6 ? 'neutral' : 'warn';
+  const cmpTxt = dif <= 0 ? `ya estás **${Math.abs(dif).toFixed(2)} s por debajo** del registro élite` : `te faltan **${dif.toFixed(2)} s** para igualar el registro élite`;
+  const _insight = {
+    title: 'Tu velocidad punta',
+    text: `Recorriste 30 m en **${t.toFixed(2)} s** a **${kmh.toFixed(1)} km/h** (${cat}). Como ${bench.nombre.toLowerCase()}, ${cmpTxt} (${bench.t.toFixed(2)} s).`,
+    tone: tono,
+    icon: '⚽',
+  };
+
   return {
     velocidadPromedioKmh: Number(kmh.toFixed(2)),
     velocidadPromedioMs: Number(ms.toFixed(2)),
@@ -70,5 +81,6 @@ export function velocidadSprint30mFutbol(i: Inputs): Outputs {
     diferenciaBenchmark: Number(dif.toFixed(2)),
     detalle: `30 m en **${t.toFixed(2)} s** = ${kmh.toFixed(2)} km/h. Categoría: **${cat}**. Benchmark élite ${bench.nombre}: ${bench.t}s (diferencia: ${dif > 0 ? '+' : ''}${dif.toFixed(2)}s).`,
     _chart: chart,
+    _insight,
   };
 }

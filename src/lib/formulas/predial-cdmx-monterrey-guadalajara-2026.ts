@@ -14,6 +14,8 @@ export interface Outputs {
   predial_mensual: number;
   vencimiento_mensual: string;
   ahorro_anticipado: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -81,6 +83,47 @@ export function compute(i: Inputs): Outputs {
   // 8. Ahorro total por pago anticipado
   const ahorro_anticipado = descuento;
 
+  const ciudadNombre: Record<string, string> = {
+    'cdmx': 'CDMX', 'monterrey': 'Monterrey', 'guadalajara': 'Guadalajara', 'puebla': 'Puebla'
+  };
+  const fmtMX = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const ahorroTotal = subsidio + descuento;
+
+  let insightText: string;
+  let insightTone: 'good' | 'warn' | 'neutral';
+  if (ahorroTotal > 0) {
+    insightTone = 'good';
+    const partes: string[] = [];
+    if (subsidio > 0) partes.push(`subsidio estatal de **${fmtMX(subsidio)}**`);
+    if (descuento > 0) partes.push(`descuento por pago anticipado de **${fmtMX(descuento)}**`);
+    insightText = `En ${ciudadNombre[i.ciudad] || 'tu municipio'} el predial bruto es ${fmtMX(predial_bruto)}, pero con ${partes.join(' y ')} terminás pagando **${fmtMX(predial_final)}** al año (ahorro total de **${fmtMX(ahorroTotal)}**).`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `En ${ciudadNombre[i.ciudad] || 'tu municipio'} el predial anual es **${fmtMX(predial_final)}** (~${fmtMX(predial_mensual)}/mes). Pagando antes del 31 de enero podés acceder a un descuento adicional${i.aplica_subsidio ? '' : ', y si es tu vivienda principal hasta $1.5M aplicás subsidio estatal'}.`;
+  }
+
+  const _insight = {
+    title: 'Predial anual estimado',
+    text: insightText,
+    tone: insightTone,
+    icon: '🏠',
+  };
+
+  const slices = [
+    { label: 'Predial a pagar', value: Math.round(predial_final * 100) / 100 },
+    { label: 'Subsidio estatal', value: Math.round(subsidio * 100) / 100 },
+    { label: 'Descuento anticipado', value: Math.round(descuento * 100) / 100 },
+  ].filter(s => s.value > 0);
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices,
+    prefix: '$',
+    centerValue: fmtMX(predial_bruto),
+    centerLabel: 'Predial bruto',
+    ariaLabel: 'Composición del predial bruto anual: monto a pagar, subsidio estatal y descuento por pago anticipado',
+  };
+
   return {
     predial_bruto_anual: Math.round(predial_bruto * 100) / 100,
     subsidio_estatal: Math.round(subsidio * 100) / 100,
@@ -89,6 +132,8 @@ export function compute(i: Inputs): Outputs {
     predial_final: Math.round(predial_final * 100) / 100,
     predial_mensual: predial_mensual,
     vencimiento_mensual: vencimiento_mensual,
-    ahorro_anticipado: Math.round(ahorro_anticipado * 100) / 100
+    ahorro_anticipado: Math.round(ahorro_anticipado * 100) / 100,
+    _insight,
+    _chart
   };
 }

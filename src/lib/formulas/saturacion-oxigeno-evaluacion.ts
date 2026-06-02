@@ -13,6 +13,7 @@ export interface Outputs {
   recomendacion: string;
   resumen: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function saturacionOxigenoEvaluacion(i: Inputs): Outputs {
@@ -88,6 +89,12 @@ export function saturacionOxigenoEvaluacion(i: Inputs): Outputs {
     ariaLabel: 'Escala de saturación de oxígeno: crítica, severa, moderada, leve y normal.',
   };
 
+  const tone = !requiereAtencion ? 'good' : (spo2 >= 90 ? 'warn' : 'warn');
+  const icon = !requiereAtencion ? '🫁' : (spo2 < 85 ? '🚨' : '⚠️');
+  const insightText = !requiereAtencion
+    ? `Tu SpO2 de **${spo2}%** está dentro del rango esperado (**${rangoEsperado}**). El oxígeno en sangre es adecuado.`
+    : `Tu SpO2 de **${spo2}%** indica **${categoria.replace(/[^\wáéíóúñ\s%-]/g, '').trim()}** (por debajo del rango ${rangoEsperado}). ${recomendacion}`;
+
   return {
     spo2,
     categoria,
@@ -97,5 +104,11 @@ export function saturacionOxigenoEvaluacion(i: Inputs): Outputs {
     recomendacion,
     resumen: `SpO2 ${spo2}% → ${categoria}. ${recomendacion}${obsFC}`,
     _chart: chart,
+    _insight: {
+      title: 'Qué significa tu saturación',
+      text: insightText,
+      tone,
+      icon,
+    },
   };
 }

@@ -1,5 +1,5 @@
 export interface Inputs { [k: string]: number | string; }
-export interface Outputs { [k: string]: string | number; _chart?: any; }
+export interface Outputs { [k: string]: string | number; _chart?: any; _insight?: any; }
 export function sueldoCamioneroFedcamBasicoAdicionales(i: Inputs): Outputs {
   const antig=Number(i.antiguedad)||0; const cargas=Number(i.cargas)||0;
   const basico=1550000;
@@ -25,12 +25,22 @@ export function sueldoCamioneroFedcamBasicoAdicionales(i: Inputs): Outputs {
     centerLabel: 'Bruto',
     ariaLabel: 'Composición del sueldo bruto: neto, jubilación, obra social, PAMI y Ganancias.',
   };
+  const descTotal=jubilacion+obraSocial+pami+ganancias;
+  const pctDesc=bruto>0?(descTotal/bruto)*100:0;
+  const fmtAr=(n:number)=>'$'+Math.round(n).toLocaleString('es-AR');
+  const insight={
+    title:'Lo que cobra el camionero',
+    text:`Con un bruto de **${fmtAr(bruto)}** los descuentos suman **${fmtAr(descTotal)}** (${pctDesc.toFixed(0)}%) y el neto de bolsillo queda en **${fmtAr(neto)}**. La antigüedad de ${antig} año${antig===1?'':'s'} (1,5% anual) aporta **${fmtAr(plusAntig)}** sobre el básico de convenio.`,
+    tone:'neutral' as const,
+    icon:'🚛',
+  };
   return {
     basico: '$'+basico.toLocaleString('es-AR'),
     bruto: '$'+bruto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     neto: '$'+neto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     sac: '$'+sac.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     resumen: `Básico: $${basico.toLocaleString('es-AR')}. Con antigüedad ${antig} años y cargas: neto ~$${neto.toFixed(0)}.`,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

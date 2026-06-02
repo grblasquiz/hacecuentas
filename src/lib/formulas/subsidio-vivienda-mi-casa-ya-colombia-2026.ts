@@ -18,6 +18,8 @@ export interface Outputs {
   ahorro_mensual: number;
   ahorro_total: number;
   cumple_requisitos: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -89,6 +91,40 @@ export function compute(i: Inputs): Outputs {
     ? `Sí cumple: ingresos en rango, vivienda ${i.tipo_vivienda.toUpperCase()}, subsidio $${subsidio.toLocaleString('es-CO')}`
     : `No cumple: ${rango_beneficio}`;
 
+  const cuotaConR = Math.round(cuota_con_subsidio);
+  const cuotaSinR = Math.round(cuota_sin_subsidio);
+  const ahorroMesR = Math.round(ahorro_mensual);
+  const ahorroTotR = Math.round(ahorro_total);
+  const fmtCop = (x: number) => '$' + x.toLocaleString('es-CO');
+
+  const _insight = cumple
+    ? {
+        title: 'Mi Casa Ya te baja la cuota',
+        text: `Calificás al subsidio de **${fmtCop(subsidio)}** a la cuota inicial y a una tasa subsidiada de **${tasa_subsidiada.toFixed(2)}%** (–${descuento_tasa} puntos). Tu cuota mensual baja de **${fmtCop(cuotaSinR)}** a **${fmtCop(cuotaConR)}**: ahorrás **${fmtCop(ahorroMesR)}/mes** y **${fmtCop(ahorroTotR)}** en todo el crédito.`,
+        tone: 'good',
+        icon: '🏠',
+      }
+    : {
+        title: 'No calificás con estos datos',
+        text: `Con los datos cargados **no accederías** al subsidio Mi Casa Ya: ${rango_beneficio}. Revisá que tus ingresos estén dentro de 4 SMMLV y que el valor de la vivienda respete el tope ${i.tipo_vivienda.toUpperCase()} (VIS hasta $188M, VIP $188M–$280M).`,
+        tone: 'warn',
+        icon: '🏠',
+      };
+
+  const _chart = cumple && cuotaSinR > 0 && ahorroMesR > 0
+    ? {
+        type: 'doughnut' as const,
+        slices: [
+          { label: 'Cuota con subsidio', value: cuotaConR },
+          { label: 'Ahorro mensual', value: ahorroMesR },
+        ],
+        prefix: '$',
+        centerValue: fmtCop(cuotaSinR),
+        centerLabel: 'Cuota sin subsidio',
+        ariaLabel: 'Composición de la cuota mensual sin subsidio: lo que efectivamente pagás con subsidio más el ahorro mensual que genera el beneficio',
+      }
+    : undefined;
+
   return {
     smmlv_2026: SMMLV_2026,
     rango_beneficio,
@@ -96,10 +132,12 @@ export function compute(i: Inputs): Outputs {
     cuota_inicial_neta: Math.round(cuota_inicial_neta),
     monto_credito: Math.round(monto_credito),
     tasa_subsidiada: Number(tasa_subsidiada.toFixed(2)),
-    cuota_sin_subsidio: Math.round(cuota_sin_subsidio),
-    cuota_con_subsidio: Math.round(cuota_con_subsidio),
-    ahorro_mensual: Math.round(ahorro_mensual),
-    ahorro_total: Math.round(ahorro_total),
-    cumple_requisitos
+    cuota_sin_subsidio: cuotaSinR,
+    cuota_con_subsidio: cuotaConR,
+    ahorro_mensual: ahorroMesR,
+    ahorro_total: ahorroTotR,
+    cumple_requisitos,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

@@ -19,6 +19,7 @@ export interface Outputs {
   tasaEfectiva: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -85,6 +86,31 @@ export function rentaColombiaPersonaNatural(i: Inputs): Outputs {
     ariaLabel: 'Composición del impuesto bruto: retenciones ya pagadas vs impuesto neto a pagar',
   } : undefined;
 
+  const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  let _insight: any;
+  if (impuestoBruto <= 0) {
+    _insight = {
+      title: 'Sin impuesto de renta',
+      text: `Tu renta gravable (**${rentaGravableUvt.toFixed(0)} UVT**) queda por debajo del mínimo de 1.090 UVT, así que **no pagás impuesto** de renta este año.`,
+      tone: 'good' as const,
+      icon: '🇨🇴',
+    };
+  } else if (impuestoNeto <= 0) {
+    _insight = {
+      title: 'Saldo cubierto por retenciones',
+      text: `Tu impuesto es de **${cop(impuestoBruto)}**, pero las retenciones ya cubren todo: **no te queda saldo por pagar**. Tasa efectiva **${tasaEfectiva.toFixed(2)}%**.`,
+      tone: 'good' as const,
+      icon: '🇨🇴',
+    };
+  } else {
+    _insight = {
+      title: 'Impuesto neto a pagar',
+      text: `Te queda por pagar **${cop(impuestoNeto)}** de renta (impuesto bruto ${cop(impuestoBruto)} menos ${cop(retencionAcreditada)} de retenciones). Tasa efectiva sobre tus ingresos: **${tasaEfectiva.toFixed(2)}%**.`,
+      tone: 'warn' as const,
+      icon: '🇨🇴',
+    };
+  }
+
   return {
     ingresoNeto: Math.round(ingresoNeto),
     rentaGravable: Math.round(rentaGravable),
@@ -95,6 +121,7 @@ export function rentaColombiaPersonaNatural(i: Inputs): Outputs {
     tasaEfectiva: Number(tasaEfectiva.toFixed(2)),
     formula,
     explicacion,
+    _insight,
     _chart: chart,
   };
 }

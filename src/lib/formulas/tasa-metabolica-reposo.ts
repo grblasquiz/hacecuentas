@@ -12,6 +12,7 @@ export interface Outputs {
   tdee_moderado: number;
   tdee_activo: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function tasaMetabolicaReposo(i: Inputs): Outputs {
@@ -32,6 +33,13 @@ export function tasaMetabolicaReposo(i: Inputs): Outputs {
     rmr = 10 * peso + 6.25 * altura - 5 * edad + 5;
   }
 
+  const _insight = {
+    title: 'Qué significa tu RMR',
+    text: `En reposo total quemás **${Math.round(rmr)} kcal/día** (${Math.round(rmr / 24)} kcal por hora). Sumando actividad, tu gasto real va de **${Math.round(rmr * 1.2)} kcal** si sos sedentario a **${Math.round(rmr * 1.725)} kcal** si entrenás fuerte: ese es el rango para ajustar tu dieta.`,
+    tone: 'neutral',
+    icon: '🔥',
+  };
+
   return {
     rmr: Math.round(rmr),
     rmrHora: Math.round(rmr / 24),
@@ -39,5 +47,6 @@ export function tasaMetabolicaReposo(i: Inputs): Outputs {
     tdee_moderado: Math.round(rmr * 1.55),
     tdee_activo: Math.round(rmr * 1.725),
     mensaje: `Tu RMR es ~${Math.round(rmr)} kcal/día (${Math.round(rmr / 24)} kcal/hora). TDEE sedentario: ${Math.round(rmr * 1.2)}, moderado: ${Math.round(rmr * 1.55)}, activo: ${Math.round(rmr * 1.725)}.`,
+    _insight,
   };
 }

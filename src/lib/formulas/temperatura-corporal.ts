@@ -12,6 +12,8 @@ export interface Outputs {
   recomendacion: string;
   cuandoConsultar: string;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function temperaturaCorporal(i: Inputs): Outputs {
@@ -71,13 +73,51 @@ export function temperaturaCorporal(i: Inputs): Outputs {
     cuandoConsultar = 'URGENTE: en menores de 3 meses cualquier fiebre ≥ 38 °C requiere consulta inmediata por riesgo de infección bacteriana severa.';
   }
 
+  const esNormal = oralEquiv >= 36.0 && oralEquiv <= 37.4;
+  const oralR = Number(oralEquiv.toFixed(1));
+  const segUltimoMax = Math.max(41, oralR + 0.5);
+  let insightText: string, insightTone: string;
+  if (oralEquiv < 35.0) {
+    insightText = `**${oralR}°C** (equivalente oral) es **hipotermia**: la temperatura corporal cayó por debajo de lo seguro. Es una urgencia médica, no esperes a ver si sube sola.`;
+    insightTone = 'warn';
+  } else if (esNormal) {
+    insightText = `**${oralR}°C** (equivalente oral) está dentro del rango **normal** (36.0–37.4 °C). No es fiebre. Tomada ${metodo === 'axilar' ? 'en la axila' : metodo === 'oral' ? 'en la boca' : metodo === 'rectal' ? 'por vía rectal' : 'por ese método'}, marcó ${t} °C.`;
+    insightTone = 'good';
+  } else if (oralEquiv < 38.0) {
+    insightText = `**${oralR}°C** (equivalente oral) es **febrícula**: todavía no es fiebre franca, pero está por encima de lo normal. Hidratate y volvé a medir en 1–2 horas.`;
+    insightTone = 'warn';
+  } else {
+    insightText = `**${oralR}°C** (equivalente oral) cae en **${categoria.split(' (')[0].toLowerCase()}**. Tu medición de ${t} °C ${metodo === 'axilar' ? 'en la axila' : 'por ese método'} equivale a ${oralR} °C orales; cuanto más alta, más importa hidratar, bajar la temperatura y vigilar otros síntomas.`;
+    insightTone = 'warn';
+  }
   return {
     categoria,
-    temperaturaCorregida: Number(oralEquiv.toFixed(1)),
+    temperaturaCorregida: oralR,
     temperaturaRectalEquiv: Number(rectalEquiv.toFixed(1)),
     fahrenheit: Number((t * 9 / 5 + 32).toFixed(1)),
     recomendacion,
     cuandoConsultar,
     resumen: `${t} °C ${metodo} → ${categoria} (equivalente oral: ${oralEquiv.toFixed(1)} °C / ${(t * 9 / 5 + 32).toFixed(1)} °F).`,
+    _insight: {
+      title: esNormal ? 'Temperatura normal' : categoria.split(' (')[0],
+      text: insightText,
+      tone: insightTone,
+      icon: esNormal ? '✅' : '🌡️',
+    },
+    _chart: {
+      type: 'scale',
+      marker: oralR,
+      markerLabel: `${oralR}°C oral`,
+      min: 34,
+      segments: [
+        { nombre: 'Hipotermia', max: 35.0, color: '#93c5fd', colorDark: '#3b82f6' },
+        { nombre: 'Subnormal', max: 36.0, color: '#bae6fd', colorDark: '#38bdf8' },
+        { nombre: 'Normal', max: 37.4, color: '#86efac', colorDark: '#22c55e' },
+        { nombre: 'Febrícula', max: 38.0, color: '#fde68a', colorDark: '#f59e0b' },
+        { nombre: 'Fiebre', max: 40.0, color: '#fdba74', colorDark: '#f97316' },
+        { nombre: 'Hiperpirexia', max: segUltimoMax, color: '#fca5a5', colorDark: '#ef4444' },
+      ],
+      ariaLabel: `Temperatura equivalente oral ${oralR} °C, clasificada como ${categoria}.`,
+    },
   };
 }

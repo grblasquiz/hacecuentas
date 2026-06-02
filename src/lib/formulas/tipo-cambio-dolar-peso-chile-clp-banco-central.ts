@@ -32,6 +32,8 @@ export interface Outputs {
   spread_mercado: number;
   comparativa_casas_cambio: ComparativaCasaCambio[];
   diferencia_mejor_peor: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Tipo cambio observado Banco Central 2026 (referencia actualizada cada día)
@@ -123,13 +125,48 @@ export function compute(i: Inputs): Outputs {
   const peor = comparativa_casas_cambio[comparativa_casas_cambio.length - 1]?.monto_final || 0;
   const diferencia_mejor_peor = Math.round((mejor - peor) * 100) / 100;
 
-  return {
+  const montoConvertidoR = Math.round(monto_convertido * 100) / 100;
+  const comisionMontoR = Math.round(comision_monto * 100) / 100;
+  const montoFinalR = Math.round(monto_final * 100) / 100;
+  const esCLP = i.direccion_conversion === 'usd_a_clp';
+  const monedaPrefix = esCLP ? '$' : 'US$';
+  const monedaNom = esCLP ? 'CLP' : 'USD';
+  const fmt = (n: number) => n.toLocaleString('es-CL', { maximumFractionDigits: esCLP ? 0 : 2 });
+
+  const insight = {
+    title: tasa_seleccionada.comision_porcentaje > 0 ? 'Lo que recibís tras la comisión' : 'Conversión al tipo observado',
+    text: tasa_seleccionada.comision_porcentaje > 0
+      ? `En **${tasa_seleccionada.nombre}** la comisión del **${tasa_seleccionada.comision_porcentaje}%** te descuenta **${monedaPrefix}${fmt(comisionMontoR)}**: recibís **${monedaPrefix}${fmt(montoFinalR)} ${monedaNom}**. Comparando casas, la diferencia entre la mejor y la peor opción es de **${monedaPrefix}${fmt(diferencia_mejor_peor)}**.`
+      : `Al tipo observado del Banco Central (**$${tipo_cambio_obs.toLocaleString('es-CL', { maximumFractionDigits: 2 })}**) y sin comisión, recibís **${monedaPrefix}${fmt(montoFinalR)} ${monedaNom}**. Las casas de cambio comerciales suman spread y comisión: la brecha llega a **${monedaPrefix}${fmt(diferencia_mejor_peor)}**.`,
+    tone: tasa_seleccionada.comision_porcentaje >= 1 ? 'warn' : (tasa_seleccionada.comision_porcentaje > 0 ? 'neutral' : 'good'),
+    icon: '💱',
+  };
+
+  const base: Outputs = {
     tipo_cambio_observado: Math.round(tipo_cambio_obs * 100) / 100,
-    monto_convertido: Math.round(monto_convertido * 100) / 100,
+    monto_convertido: montoConvertidoR,
     comision_porcentaje: tasa_seleccionada.comision_porcentaje,
-    monto_final: Math.round(monto_final * 100) / 100,
+    monto_final: montoFinalR,
     spread_mercado: Math.round(spread_mercado * 100) / 100,
     comparativa_casas_cambio: comparativa_casas_cambio,
-    diferencia_mejor_peor: diferencia_mejor_peor
+    diferencia_mejor_peor: diferencia_mejor_peor,
+    _insight: insight,
   };
+
+  // Donut sólo si hay comisión que descomponer (sino el gráfico tendría una porción en cero)
+  if (comisionMontoR > 0) {
+    base._chart = {
+      type: 'doughnut',
+      slices: [
+        { label: 'Recibís', value: montoFinalR },
+        { label: 'Comisión', value: comisionMontoR },
+      ],
+      prefix: monedaPrefix,
+      centerValue: monedaPrefix + fmt(montoConvertidoR),
+      centerLabel: 'Bruto convertido',
+      ariaLabel: `Monto bruto convertido de ${monedaPrefix}${fmt(montoConvertidoR)} dividido en ${monedaPrefix}${fmt(montoFinalR)} que recibís y ${monedaPrefix}${fmt(comisionMontoR)} de comisión`,
+    };
+  }
+
+  return base;
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   paceUmbral: string;
   zonaUmbral: string;
   mensaje: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -55,12 +56,20 @@ export function umbralLactatoEstimado(i: Inputs): Outputs {
     ariaLabel: 'Escala de zonas de frecuencia cardíaca según % de FCmax: recuperación, aeróbico, tempo, umbral y VO2 máx.',
   };
 
+  const insight = {
+    title: 'Tu umbral de lactato (LT2)',
+    text: `Tu umbral está en **${fcUmbral} lpm** (**${porcentajeFcMax}% de tu FCmax**), el ritmo más rápido que podés sostener sin que el lactato se dispare. Entrená en la zona **${zonaUmbral}** para elevarlo${pace5k > 0 ? `; tu pace de umbral ronda los **${paceUmbral}**` : ''}. Es el predictor de rendimiento en carreras de 10K a maratón.`,
+    tone: 'neutral' as const,
+    icon: '🏃',
+  };
+
   return {
     fcUmbral,
     porcentajeFcMax,
     paceUmbral,
     zonaUmbral,
     mensaje: `Umbral estimado: ${fcUmbral} lpm (${porcentajeFcMax}% FCmax). Zona: ${zonaUmbral}.`,
+    _insight: insight,
     _chart: chart,
   };
 }

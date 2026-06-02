@@ -1,6 +1,6 @@
 /** Tabla china de predicción del sexo del bebé */
 export interface Inputs { edadMadre: number; mesConcepciones: string; }
-export interface Outputs { prediccion: string; edadLunar: string; precision: string; metodosCientificos: string; }
+export interface Outputs { prediccion: string; edadLunar: string; precision: string; metodosCientificos: string; _insight?: any; }
 
 // Tabla china: F=femenino, M=masculino
 // Filas: edad lunar 18-45, Columnas: mes 1-12
@@ -52,10 +52,20 @@ export function sexoBebeTablaChina(i: Inputs): Outputs {
     ? '🎀 NENA (femenino) según la tabla china'
     : '💙 NENE (masculino) según la tabla china';
 
+  const sexoTxt = resultado === 'F' ? 'nena' : 'nene';
+
+  const _insight = {
+    title: 'Tomalo como un juego',
+    text: `Con edad lunar **${edadLunar}** y concepción en el mes **${mes}**, la tabla china dice **${sexoTxt}**. Es pura diversión: acierta cerca del **50%**, lo mismo que tirar una moneda. Para saberlo de verdad, la **ecografía** (sem. 16-20) o el **test de ADN fetal** (sem. 9-10) dan más del 95% de certeza.`,
+    tone: 'neutral',
+    icon: '🔮',
+  };
+
   return {
     prediccion,
     edadLunar: `${edadLunar} años (edad occidental ${edad} + 1)`,
     precision: '~50% (igual que adivinar al azar). La tabla china NO tiene base científica.',
     metodosCientificos: 'Ecografía (sem. 16-20, precisión 95-99%) o test ADN fetal (sem. 9-10, precisión >99%).',
+    _insight,
   };
 }

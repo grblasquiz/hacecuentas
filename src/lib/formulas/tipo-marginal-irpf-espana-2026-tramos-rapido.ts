@@ -9,6 +9,8 @@ export interface Outputs {
   cuota_integra: number;
   tipo_efectivo: number;
   renta_neta: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Escala estatal IRPF 2026 — Ley 35/2006 modificada (AEAT 2026)
@@ -114,12 +116,32 @@ export function compute(i: Inputs): Outputs {
   // Renta neta tras IRPF estatal
   const rentaNeta = Math.round((baseLiquidable - cuotaIntegra) * 100) / 100;
 
+  const fmtEur = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+  const tipoMarginalPct = Math.round(tramoActual.tipo * 100);
+
   return {
     tramo_numero: `Tramo ${tramoActual.numero}`,
     rango_tramo: tramoActual.rango,
-    tipo_marginal: Math.round(tramoActual.tipo * 100), // en %
+    tipo_marginal: tipoMarginalPct, // en %
     cuota_integra: cuotaIntegra,
     tipo_efectivo: tipoEfectivo,
     renta_neta: rentaNeta,
+    _insight: {
+      title: `Estás en el Tramo ${tramoActual.numero} (${tipoMarginalPct}% marginal)`,
+      text: `Cada euro extra que ganes tributa al **${tipoMarginalPct}%**, pero tu tipo efectivo real es solo del **${tipoEfectivo.toLocaleString('es-ES', { maximumFractionDigits: 2 })}%**: pagas **${fmtEur(cuotaIntegra)}€** de cuota estatal y te quedan **${fmtEur(rentaNeta)}€** netos. La escala es progresiva, así que no toda tu base tributa al tipo marginal.`,
+      tone: 'warn',
+      icon: '🇪🇸',
+    },
+    _chart: {
+      type: 'doughnut',
+      slices: [
+        { label: 'Renta neta', value: rentaNeta },
+        { label: 'Cuota IRPF estatal', value: cuotaIntegra },
+      ],
+      prefix: '€',
+      centerValue: fmtEur(baseLiquidable) + '€',
+      centerLabel: 'Base liquidable',
+      ariaLabel: `Base liquidable de ${fmtEur(baseLiquidable)}€ dividida en ${fmtEur(rentaNeta)}€ de renta neta y ${fmtEur(cuotaIntegra)}€ de cuota IRPF estatal`,
+    },
   };
 }

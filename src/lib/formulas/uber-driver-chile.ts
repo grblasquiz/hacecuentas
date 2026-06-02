@@ -22,6 +22,8 @@ export interface Outputs {
   gananciaPorHoraClp: string;
   gananciaNeta: number;
   gananciaPorHora: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 function formatClp(n: number): string {
@@ -55,6 +57,33 @@ export function uberDriverChile(i: Inputs): Outputs {
   const gananciaNeta = ingresoBruto - comisionUber - retencion - costoBencina - costoMant - peajes;
   const gananciaHora = horas > 0 ? gananciaNeta / horas : 0;
 
+  const margen = ingresoBruto > 0 ? gananciaNeta / ingresoBruto : 0;
+  const tone: 'good' | 'warn' | 'neutral' = margen < 0 ? 'warn' : margen >= 0.5 ? 'good' : 'neutral';
+  const insight = {
+    title: 'Tu ganancia neta como conductor',
+    text: margen < 0
+      ? `Estás en rojo: te quedan **${formatClp(gananciaNeta)}** tras comisión, combustible y costos. La comisión de Uber (**${formatClp(comisionUber)}**) y la bencina (**${formatClp(costoBencina)}**) se comen todo el ingreso.`
+      : `De **${formatClp(ingresoBruto)}** facturados te quedan **${formatClp(gananciaNeta)}** netos (**${Math.round(margen * 100)}%**)${horas > 0 ? `, o sea **${formatClp(gananciaHora)}/hora**` : ''}. La comisión de Uber se lleva **${formatClp(comisionUber)}** y la bencina **${formatClp(costoBencina)}**.`,
+    tone,
+    icon: '🚗',
+  };
+
+  const chart = (ingresoBruto > 0 && gananciaNeta >= 0) ? {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Ganancia neta', value: Math.round(gananciaNeta) },
+      { label: 'Comisión Uber', value: Math.round(comisionUber) },
+      ...(retencion > 0 ? [{ label: 'Retención boleta', value: Math.round(retencion) }] : []),
+      { label: 'Bencina', value: Math.round(costoBencina) },
+      { label: 'Mantenimiento', value: Math.round(costoMant) },
+      ...(peajes > 0 ? [{ label: 'Peajes', value: Math.round(peajes) }] : []),
+    ],
+    prefix: 'CLP $',
+    centerValue: formatClp(ingresoBruto),
+    centerLabel: 'Ingreso bruto',
+    ariaLabel: 'Reparto del ingreso bruto entre ganancia neta, comisión de Uber, bencina, mantenimiento y peajes.',
+  } : undefined;
+
   return {
     ingresoBrutoClp: formatClp(ingresoBruto),
     comisionUberClp: formatClp(comisionUber),
@@ -66,5 +95,7 @@ export function uberDriverChile(i: Inputs): Outputs {
     gananciaPorHoraClp: formatClp(gananciaHora),
     gananciaNeta: Math.round(gananciaNeta),
     gananciaPorHora: Math.round(gananciaHora),
+    _insight: insight,
+    _chart: chart,
   };
 }

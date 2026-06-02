@@ -12,6 +12,8 @@ export interface Outputs {
   clasificacion: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function sharpeRatioPortafolio(i: Inputs): Outputs {
@@ -37,11 +39,39 @@ export function sharpeRatioPortafolio(i: Inputs): Outputs {
   const formula = `Sharpe = (${rendimiento}% - ${rf}%) / ${desvio}% = ${sharpeRatio.toFixed(4)}`;
   const explicacion = `Rendimiento del portafolio: ${rendimiento}%. Tasa libre de riesgo: ${rf}%. Rendimiento en exceso: ${rendimientoExceso.toFixed(2)}%. Volatilidad (σ): ${desvio}%. Sharpe Ratio: ${sharpeRatio.toFixed(4)}. ${clasificacion}. Por cada 1% de riesgo asumido, el portafolio genera ${sharpeRatio.toFixed(2)}% de exceso de retorno.`;
 
+  const tone: 'good' | 'warn' | 'neutral' = sharpeRatio < 0.5 ? 'warn' : sharpeRatio >= 1 ? 'good' : 'neutral';
+  const _insight = {
+    title: 'Tu retorno ajustado por riesgo',
+    text: `Con un Sharpe de **${sharpeRatio.toFixed(2)}**, el portafolio paga **${sharpeRatio.toFixed(2)}%** de exceso de retorno por cada 1% de volatilidad asumida. Veredicto: ${clasificacion.toLowerCase()}.`,
+    tone,
+    icon: '📊',
+  };
+
+  const minScale = -1;
+  const markerClamped = Math.max(minScale, sharpeRatio);
+  const lastMax = Math.max(3, Math.ceil(sharpeRatio) + 0.5);
+  const _chart = {
+    type: 'scale',
+    marker: Number(markerClamped.toFixed(2)),
+    markerLabel: sharpeRatio.toFixed(2),
+    min: minScale,
+    segments: [
+      { nombre: 'Negativo', max: 0, color: '#fca5a5', colorDark: '#7f1d1d' },
+      { nombre: 'Bajo', max: 0.5, color: '#fdba74', colorDark: '#7c2d12' },
+      { nombre: 'Aceptable', max: 1, color: '#fde047', colorDark: '#713f12' },
+      { nombre: 'Bueno', max: 2, color: '#86efac', colorDark: '#14532d' },
+      { nombre: 'Excepcional', max: lastMax, color: '#4ade80', colorDark: '#166534' },
+    ],
+    ariaLabel: `Sharpe Ratio de ${sharpeRatio.toFixed(2)}, clasificado como ${clasificacion}`,
+  };
+
   return {
     sharpeRatio: Number(sharpeRatio.toFixed(4)),
     rendimientoExceso: Number(rendimientoExceso.toFixed(2)),
     clasificacion,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

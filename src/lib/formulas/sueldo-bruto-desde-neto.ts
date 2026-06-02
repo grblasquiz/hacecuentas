@@ -13,6 +13,7 @@ export interface SueldoBrutoDesdeNetoOutputs {
   aportesMonto: number;
   netoResultado: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function sueldoBrutoDesdeNeto(inputs: SueldoBrutoDesdeNetoInputs): SueldoBrutoDesdeNetoOutputs {
@@ -40,10 +41,19 @@ export function sueldoBrutoDesdeNeto(inputs: SueldoBrutoDesdeNetoInputs): Sueldo
     ariaLabel: 'Composición del sueldo bruto: neto de bolsillo y aportes/descuentos.',
   };
 
+  const fmtAr = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const insight = {
+    title: 'Cuánto pedir en bruto',
+    text: `Para llevarte **${fmtAr(netoDeseado)}** netos tu sueldo bruto tiene que ser de **${fmtAr(sueldoBruto)}**, porque ${aportesPorc}% (**${fmtAr(aportesMonto)}**) se va en aportes y descuentos antes de cobrar. Usá este número como piso al negociar el sueldo.`,
+    tone: 'neutral' as const,
+    icon: '🎯',
+  };
+
   return {
     sueldoBruto: Math.round(sueldoBruto),
     aportesMonto: Math.round(aportesMonto),
     netoResultado: Math.round(netoResultado),
     _chart: chart,
+    _insight: insight,
   };
 }

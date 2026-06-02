@@ -2,7 +2,7 @@
  * Calculadora de Torta - Kg y Porciones.
  */
 export interface TortaPersonasKgPorcionesInputs { invitados:number; tipoEvento:string; }
-export interface TortaPersonasKgPorcionesOutputs { kgTorta:number; porciones:number; pisos:number; diametroCm:number; }
+export interface TortaPersonasKgPorcionesOutputs { kgTorta:number; porciones:number; pisos:number; diametroCm:number; _insight?: any; }
 export function tortaPersonasKgPorciones(inputs: TortaPersonasKgPorcionesInputs): TortaPersonasKgPorcionesOutputs {
   const inv = Number(inputs.invitados);
   const tipo = inputs.tipoEvento;
@@ -22,10 +22,18 @@ export function tortaPersonasKgPorciones(inputs: TortaPersonasKgPorcionesInputs)
   if (kgTorta >= 4) diametroCm = 32;
   if (kgTorta >= 5) diametroCm = 35;
   if (kgTorta >= 6) diametroCm = 38;
+  const porciones = Math.round((kgTorta * 1000) / gramos);
+  const tipoLabel = tipo === 'boda' ? 'boda' : tipo === 'infantil' ? 'cumpleaños infantil' : 'evento';
   return {
     kgTorta,
-    porciones: Math.round((kgTorta * 1000) / gramos),
+    porciones,
     pisos,
     diametroCm,
+    _insight: {
+      title: 'Cuánta torta encargar',
+      text: `Para ${inv} invitados en un ${tipoLabel} necesitás unos **${kgTorta} kg** de torta, que rinden **${porciones} porciones** (${gramos} g c/u). Pedila de **${diametroCm} cm** de diámetro${pisos > 1 ? ` en **${pisos} pisos**` : ' en **1 piso**'}.`,
+      tone: 'neutral',
+      icon: '🎂',
+    },
   };
 }

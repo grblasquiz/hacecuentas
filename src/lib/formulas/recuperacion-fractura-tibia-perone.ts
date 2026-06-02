@@ -12,6 +12,7 @@ export interface Outputs {
   retornoCompeticion: string;
   protocolo: string;
   mensaje: string;
+  _insight?: any;
 }
 
 export function recuperacionFracturaTibiaPerone(i: Inputs): Outputs {
@@ -56,11 +57,23 @@ export function recuperacionFracturaTibiaPerone(i: Inputs): Outputs {
     'Fase 5 (6-9 meses): pivoteos, saltos, contacto progresivo hasta competencia.'
   ].join(' | ');
 
+  const huesoLabel = hueso === 'perone-aislado' ? 'peroné aislado'
+    : hueso === 'tibia-y-perone' ? 'tibia y peroné' : 'tibia';
+  // Tono dinámico: peroné aislado se recupera relativamente rápido; tibia es la más exigente
+  const tone = hueso === 'perone-aislado' ? ('neutral' as const) : ('warn' as const);
+  const insight = {
+    title: 'Qué esperar de la recuperación',
+    text: `Una fractura de **${huesoLabel}** (${tipo}, tratamiento ${trat.replace(/-/g, ' ')}) consolida en **${consMin}-${consMax} semanas** y el retorno a competencia con contacto se estima en **${compMin}-${compMax} meses**. Los plazos son orientativos: el alta la define el control radiológico y los criterios funcionales, no el calendario.`,
+    tone,
+    icon: '🦴',
+  };
+
   return {
     consolidacionOsea: `${consMin}-${consMax} semanas para consolidación ósea radiológica.`,
     retornoCarrera: retCarrera,
     retornoCompeticion: `${compMin}-${compMax} meses para competencia oficial con contacto.`,
     protocolo,
-    mensaje: `${compMin}-${compMax} meses para competir`
+    mensaje: `${compMin}-${compMax} meses para competir`,
+    _insight: insight,
   };
 }

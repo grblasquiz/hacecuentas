@@ -12,6 +12,8 @@ export interface Outputs {
   horasEscritura: number;
   horasTotales: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tiempoTesisMonografia(i: Inputs): Outputs {
@@ -35,11 +37,33 @@ export function tiempoTesisMonografia(i: Inputs): Outputs {
   const semanas = horasTotales / horasSem;
   const meses = semanas / 4.33;
 
+  const hEscR = Math.round(horasEscritura);
+  const hTotR = Math.round(horasTotales);
+  const hInvR = Math.max(0, hTotR - hEscR);
+  const semR = Math.round(semanas);
+  const _insight = {
+    title: 'Tu plan de trabajo',
+    text: `Escribir **${paginas} páginas** te llevaría **${hEscR}hs**, pero contando investigación y revisión son **${hTotR}hs** reales. A **${horasSem}hs por semana** terminás en unas **${semR} semanas** (~${meses.toFixed(1)} meses).`,
+    tone: meses > 9 ? 'warn' : 'neutral',
+    icon: '🎓',
+  };
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Escritura', value: hEscR },
+      { label: 'Investigación y revisión', value: hInvR },
+    ],
+    centerValue: hTotR + 'hs',
+    centerLabel: 'Total',
+    ariaLabel: `Carga total de ${hTotR} horas: ${hEscR} de escritura y ${hInvR} de investigación y revisión`,
+  };
   return {
-    semanasTotal: Math.round(semanas),
+    semanasTotal: semR,
     mesesEstimados: Math.round(meses * 10) / 10,
-    horasEscritura: Math.round(horasEscritura),
-    horasTotales: Math.round(horasTotales),
-    detalle: `${paginas} páginas a ${pph} pág/hora = ${Math.round(horasEscritura)}hs escritura. Total con investigación y revisión (×2,5): ${Math.round(horasTotales)}hs. A ${horasSem}hs/semana: ${Math.round(semanas)} semanas (~${meses.toFixed(1)} meses)`,
+    horasEscritura: hEscR,
+    horasTotales: hTotR,
+    detalle: `${paginas} páginas a ${pph} pág/hora = ${hEscR}hs escritura. Total con investigación y revisión (×2,5): ${hTotR}hs. A ${horasSem}hs/semana: ${semR} semanas (~${meses.toFixed(1)} meses)`,
+    _insight,
+    _chart,
   };
 }

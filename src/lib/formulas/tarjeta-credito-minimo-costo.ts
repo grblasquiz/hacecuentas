@@ -16,6 +16,7 @@ export interface Outputs {
   formula: string;
   explicacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function tarjetaCreditoMinimoCosto(i: Inputs): Outputs {
@@ -65,6 +66,28 @@ export function tarjetaCreditoMinimoCosto(i: Inputs): Outputs {
     ariaLabel: 'Composición del total pagado: saldo original más intereses.',
   };
 
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const anios = (meses / 12).toFixed(1);
+  const noLiquida = meses >= MAX_MESES && saldoRestante > 1;
+
+  let insightTone: 'good' | 'warn' | 'neutral' = 'warn';
+  let insightText = '';
+  if (noLiquida) {
+    insightText = `Pagando solo el mínimo (${porcMinimo}%) la deuda **no se termina de pagar nunca**: el interés del ${tna}% TNA supera lo que abonás cada mes. Pagá por encima del mínimo o el saldo es perpetuo.`;
+  } else if (multiplicadorCosto >= 2) {
+    insightText = `Pagando solo el mínimo tardás **${meses} meses** (${anios} años) y terminás pagando **${multiplicadorCosto.toFixed(1)}× el saldo**: **${fmt(interesTotal)}** solo de intereses. El mínimo está diseñado para que la deuda dure, no para saldarla.`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `Pagando el mínimo liquidás en **${meses} meses** y pagás **${fmt(interesTotal)}** de intereses (${multiplicadorCosto.toFixed(1)}× el saldo). Subir el pago mensual recorta los intereses de forma marcada.`;
+  }
+
+  const _insight = {
+    title: 'Qué significa este resultado',
+    text: insightText,
+    tone: insightTone,
+    icon: '💳',
+  };
+
   return {
     pagoMinimoActual: Math.round(pagoMinimoActual),
     mesesLiquidar: meses,
@@ -74,5 +97,6 @@ export function tarjetaCreditoMinimoCosto(i: Inputs): Outputs {
     formula,
     explicacion,
     _chart: chart,
+    _insight,
   };
 }

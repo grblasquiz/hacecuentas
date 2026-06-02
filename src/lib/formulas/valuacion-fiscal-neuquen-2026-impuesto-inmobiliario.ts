@@ -14,6 +14,8 @@ export interface Outputs {
   final_tax: number;
   due_date: string;
   depreciation_note: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 function getZoneValue(zone: string): number {
@@ -90,13 +92,38 @@ export function compute(i: Inputs): Outputs {
   const finalTax = annualTax - earlyPaymentDiscount;
   const depreciationPercent = (1 - depreciationFactor) * 100;
 
+  const fmtAr = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const ratePct = Math.round(aliquot * 10000) / 100;
+  const age = 2026 - Number(i.construction_year);
+
+  const insight = {
+    title: 'Tu impuesto inmobiliario',
+    text: earlyPaymentDiscount > 0
+      ? `Pagás **$${fmtAr.format(Math.round(finalTax))}** anuales tras el **15% de descuento** por pago contado (ahorrás $${fmtAr.format(Math.round(earlyPaymentDiscount))}). La alícuota es del **${ratePct}%** sobre una valuación fiscal de $${fmtAr.format(Math.round(fiscalValuation))}.`
+      : `El impuesto anual es de **$${fmtAr.format(Math.round(annualTax))}** (alícuota **${ratePct}%** sobre $${fmtAr.format(Math.round(fiscalValuation))} de valuación). Pagando al contado ahorrarías un **15%** ($${fmtAr.format(Math.round(annualTax * 0.15))}).`,
+    tone: earlyPaymentDiscount > 0 ? 'good' : 'neutral',
+    icon: '🏠'
+  };
+
   return {
     fiscal_valuation: Math.round(fiscalValuation * 100) / 100,
     annual_tax: Math.round(annualTax * 100) / 100,
-    applicable_rate: Math.round(aliquot * 10000) / 100,
+    applicable_rate: ratePct,
     early_payment_discount: Math.round(earlyPaymentDiscount * 100) / 100,
     final_tax: Math.round(finalTax * 100) / 100,
     due_date: "31 de marzo de 2026 (1ª cuota)",
-    depreciation_note: Math.round(depreciationPercent * 100) / 100
+    depreciation_note: Math.round(depreciationPercent * 100) / 100,
+    _insight: insight,
+    _chart: earlyPaymentDiscount > 0 ? {
+      type: 'doughnut',
+      slices: [
+        { label: 'Impuesto a pagar', value: Math.round(finalTax * 100) / 100 },
+        { label: 'Descuento contado (15%)', value: Math.round(earlyPaymentDiscount * 100) / 100 }
+      ],
+      prefix: '$',
+      centerValue: '$' + fmtAr.format(Math.round(annualTax)),
+      centerLabel: 'Impuesto anual',
+      ariaLabel: `Del impuesto anual de $${fmtAr.format(Math.round(annualTax))}, pagás $${fmtAr.format(Math.round(finalTax))} y ahorrás $${fmtAr.format(Math.round(earlyPaymentDiscount))} por pago contado`
+    } : undefined
   };
 }

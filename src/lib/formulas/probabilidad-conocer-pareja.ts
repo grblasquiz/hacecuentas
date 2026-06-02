@@ -1,6 +1,6 @@
 /** Ecuación de Drake aplicada al amor */
 export interface Inputs { poblacion: number; rangoEdad?: number; generoPreferido?: number; solteros?: number; atraccion?: number; atraccionMutua?: number; compatibilidad?: number; }
-export interface Outputs { personasCompatibles: number; probabilidad: string; mensaje: string; }
+export interface Outputs { personasCompatibles: number; probabilidad: string; mensaje: string; _insight?: any; }
 
 export function probabilidadConocerPareja(i: Inputs): Outputs {
   const pop = Number(i.poblacion);
@@ -25,5 +25,16 @@ export function probabilidadConocerPareja(i: Inputs): Outputs {
   else if (personas >= 20) msg = `${personas} personas compatibles. Pool chico pero real — cada encuentro social cuenta.`;
   else msg = `${personas} persona(s) compatible(s). Pool muy reducido — considerá ampliar tu radio geográfico o flexibilizar algún filtro.`;
 
-  return { personasCompatibles: personas, probabilidad: prob, mensaje: msg };
+  const _insight = {
+    title: 'Tu pool de personas compatibles',
+    text: personas >= 100
+      ? `De ${pop.toLocaleString('es-AR')} habitantes, unas **${personas.toLocaleString('es-AR')} personas** encajan con tus filtros: **1 de cada ${ratio.toLocaleString('es-AR')}**. Es un pool sólido, las chances juegan a tu favor.`
+      : personas >= 20
+        ? `Filtrando ${pop.toLocaleString('es-AR')} habitantes quedan **${personas.toLocaleString('es-AR')} personas** compatibles (**1 de cada ${ratio.toLocaleString('es-AR')}**). Existe, pero cada encuentro social cuenta de verdad.`
+        : `Tus filtros reducen ${pop.toLocaleString('es-AR')} habitantes a solo **${personas.toLocaleString('es-AR')} persona(s)** (**1 de cada ${ratio.toLocaleString('es-AR')}**). Pool muy chico: ampliar el radio o flexibilizar un filtro multiplica tus chances.`,
+    tone: personas >= 100 ? 'good' : personas >= 20 ? 'neutral' : 'warn',
+    icon: '💘',
+  };
+
+  return { personasCompatibles: personas, probabilidad: prob, mensaje: msg, _insight };
 }

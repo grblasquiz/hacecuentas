@@ -10,6 +10,7 @@ export interface Outputs {
   tempInterna: number;
   metodo: string;
   notas: string;
+  _insight?: any;
 }
 
 type Carne = {
@@ -114,12 +115,25 @@ export function tiempoCoccion(i: Inputs): Outputs {
   const c = CARNES[carne];
   const min = (c.minPorKg[coccion] || c.minPorKg['medio'] || 40) * peso;
   const tempInt = c.tempInterna[coccion] || c.tempInterna['medio'] || 63;
+  const minTotal = Math.round(min);
+  const esAve = ['pollo_entero', 'pollo_pechuga', 'pavita'].includes(carne);
+  const horas = Math.floor(minTotal / 60);
+  const resto = minTotal % 60;
+  const tiempoTxt = horas > 0 ? `${horas} h ${resto} min` : `${minTotal} min`;
 
   return {
-    tiempoTotalMin: Math.round(min),
+    tiempoTotalMin: minTotal,
     tempHorno: c.tempHorno,
     tempInterna: tempInt,
     metodo: c.metodo,
     notas: c.notas,
+    _insight: {
+      title: esAve ? 'Cocción segura' : 'Punto de cocción',
+      text: esAve
+        ? `**${c.nombre}** de ${peso} kg necesita unos **${tiempoTxt}** a ${c.tempHorno} °C. Clave de seguridad: llegar a **${tempInt} °C internos** para eliminar el riesgo de salmonella.`
+        : `**${c.nombre}** de ${peso} kg a punto ${coccion}: unos **${tiempoTxt}** de horno a ${c.tempHorno} °C, retirando a **${tempInt} °C internos**. Dejá reposar antes de cortar.`,
+      tone: esAve ? 'warn' : 'neutral',
+      icon: esAve ? '🍗' : '🥩'
+    },
   };
 }

@@ -10,6 +10,7 @@ export interface Outputs {
   semanasTotal: number;
   horasReales: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function tiempoCompletarJuegoHoras(i: Inputs): Outputs {
@@ -28,10 +29,24 @@ export function tiempoCompletarJuegoHoras(i: Inputs): Outputs {
   const semanasTotal = horasReales / horasSemanales;
   const diasTotales = Math.ceil(semanasTotal * 7);
 
+  const tone = semanasTotal > 12 ? 'warn' : semanasTotal < 2 ? 'good' : 'neutral';
+  const insightText =
+    semanasTotal > 12
+      ? `Son **${semanasTotal.toFixed(1)} semanas** (${diasTotales} días) a tu ritmo actual: un compromiso largo. Subir a más horas por día acorta bastante la meta.`
+      : semanasTotal < 2
+        ? `Lo terminás rápido: **${horasReales.toFixed(0)} horas** que a ${horasSemanales} hs/semana se van en menos de 2 semanas.`
+        : `A ${hpd} hs/día y ${dpw} días/semana sumás **${horasSemanales} hs/semana**, así que las ${horasReales.toFixed(0)} horas te llevan **${semanasTotal.toFixed(1)} semanas**.`;
+
   return {
     diasTotales,
     semanasTotal: Number(semanasTotal.toFixed(1)),
     horasReales: Number(horasReales.toFixed(1)),
     mensaje: `Necesitás ${horasReales.toFixed(0)} horas de juego. A ${hpd} hs/día, ${dpw} días/semana, terminás en ~${semanasTotal.toFixed(1)} semanas (${diasTotales} días corridos).`,
+    _insight: {
+      title: 'Tu plan de juego',
+      text: insightText,
+      tone,
+      icon: '🎮',
+    },
   };
 }

@@ -1,6 +1,6 @@
 /** SRM Morey 1993 */
 export interface Inputs { kgMaltaBase: number; lMaltaBase: number; kgMaltaCristal?: number; lMaltaCristal?: number; kgMaltaTostada?: number; lMaltaTostada?: number; volumenFinal: number; __lang?: string; }
-export interface Outputs { srm: number; ebc: number; colorDescripcion: string; estiloCompatible: string; }
+export interface Outputs { srm: number; ebc: number; colorDescripcion: string; estiloCompatible: string; _insight?: any; _chart?: any; }
 
 export function srmColorCervezaMorey(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
@@ -16,6 +16,14 @@ export function srmColorCervezaMorey(i: Inputs): Outputs {
       c5: 'Marrón cobrizo',
       c6: 'Marrón oscuro',
       c7: 'Negro opaco',
+      insTitle: 'El color de tu cerveza',
+      segPaja: 'Paja',
+      segDorado: 'Dorado',
+      segAmbar: 'Ámbar',
+      segCobre: 'Cobre',
+      segMarron: 'Marrón',
+      segNegro: 'Negro',
+      aria: 'Escala de color SRM de la cerveza, del paja claro al negro opaco',
     },
     en: {
       errMalta: 'Enter base malt',
@@ -28,6 +36,14 @@ export function srmColorCervezaMorey(i: Inputs): Outputs {
       c5: 'Copper brown',
       c6: 'Dark brown',
       c7: 'Opaque black',
+      insTitle: 'Your beer color',
+      segPaja: 'Straw',
+      segDorado: 'Golden',
+      segAmbar: 'Amber',
+      segCobre: 'Copper',
+      segMarron: 'Brown',
+      segNegro: 'Black',
+      aria: 'Beer SRM color scale, from pale straw to opaque black',
     },
   } as const)[__lang];
 
@@ -63,10 +79,37 @@ export function srmColorCervezaMorey(i: Inputs): Outputs {
   else if (srm < 30) estilo = 'Brown Ale, Porter';
   else estilo = 'Stout, Imperial Stout';
 
+  const srmR = Number(srm.toFixed(1));
+  const ebcR = Number(ebc.toFixed(1));
+  const insight = {
+    title: T.insTitle,
+    text: __lang === 'en'
+      ? `Your recipe lands at **${srmR} SRM** (${ebcR} EBC): **${desc.toLowerCase()}**, right in line with styles like ${estilo}. Add darker malts to deepen the color, or hold back to keep it lighter.`
+      : `Tu receta da **${srmR} SRM** (${ebcR} EBC): **${desc.toLowerCase()}**, en línea con estilos como ${estilo}. Sumá maltas más oscuras para profundizar el color, o reducílas para dejarla más clara.`,
+    tone: 'neutral' as const,
+    icon: '🍺',
+  };
+  const chart = {
+    type: 'scale' as const,
+    marker: srmR,
+    markerLabel: `${srmR} SRM`,
+    min: 0,
+    segments: [
+      { nombre: T.segPaja, max: 6, color: '#fde68a', colorDark: '#facc15' },
+      { nombre: T.segDorado, max: 10, color: '#fbbf24', colorDark: '#d97706' },
+      { nombre: T.segAmbar, max: 17, color: '#f59e0b', colorDark: '#b45309' },
+      { nombre: T.segCobre, max: 25, color: '#c2410c', colorDark: '#9a3412' },
+      { nombre: T.segMarron, max: 35, color: '#7c2d12', colorDark: '#5c1d0c' },
+      { nombre: T.segNegro, max: Math.max(40, srmR + 2), color: '#292524', colorDark: '#1c1917' },
+    ],
+    ariaLabel: T.aria,
+  };
   return {
-    srm: Number(srm.toFixed(1)),
-    ebc: Number(ebc.toFixed(1)),
+    srm: srmR,
+    ebc: ebcR,
     colorDescripcion: desc,
     estiloCompatible: estilo,
+    _insight: insight,
+    _chart: chart,
   };
 }

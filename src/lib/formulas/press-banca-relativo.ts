@@ -14,6 +14,8 @@ export interface Outputs {
   rmEsperadoParaTuNivel: number;
   diferencia: number;
   resumen: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Estándares relativos (1RM / peso corporal) - Strength Level / Symmetric Strength
@@ -82,6 +84,37 @@ export function pressBancaRelativo(i: Inputs): Outputs {
   const rmEsperado = esperado * peso;
   const dif = rm - rmEsperado;
 
+  // Insight dinámico según nivel alcanzado
+  const tone = currentTierIdx >= 2 ? 'good' : 'neutral';
+  const icon = currentTierIdx >= 3 ? '🏆' : '🏋️';
+  const insightText = currentTierIdx >= TIER_ORDER.length - 1
+    ? `Levantás **${ratio.toFixed(2)}x tu peso corporal** (${rm} kg con ${peso} kg): estás en el tope **Elite** de los estándares. A mantener o apuntar a competición.`
+    : `Levantás **${ratio.toFixed(2)}x tu peso corporal** (${rm} kg con ${peso} kg), nivel **${cat}**. Para alcanzar ${siguienteCategoria} te faltan **${kgFaltantes} kg**.`;
+  const insight = {
+    title: 'Qué significa tu resultado',
+    text: insightText,
+    tone,
+    icon,
+  };
+
+  // Gauge sobre el ratio (1RM / peso corporal) con los estándares de tu sexo
+  const topMax = standards.elite * 1.15;
+  const chart = {
+    type: 'scale' as const,
+    marker: Number(ratio.toFixed(2)),
+    markerLabel: `${ratio.toFixed(2)}x`,
+    min: 0,
+    segments: [
+      { nombre: 'Principiante', max: standards.novato, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Novato', max: standards.intermedio, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Intermedio', max: standards.avanzado, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Avanzado', max: standards.elite, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: 'Elite', max: Number(Math.max(topMax, ratio + 0.2).toFixed(2)), color: '#86efac', colorDark: '#14532d' },
+    ],
+    unit: 'x',
+    ariaLabel: `Ratio de press de banca ${ratio.toFixed(2)} veces el peso corporal: nivel ${cat}.`,
+  };
+
   return {
     ratio: Number(ratio.toFixed(2)),
     categoria: cat,
@@ -90,5 +123,7 @@ export function pressBancaRelativo(i: Inputs): Outputs {
     rmEsperadoParaTuNivel: Math.round(rmEsperado),
     diferencia: Math.round(dif),
     resumen: `Tu ratio press banca es **${ratio.toFixed(2)}x tu peso corporal** → nivel **${cat}**. ${kgFaltantes > 0 ? `Para subir a ${siguienteCategoria}, sumá ${kgFaltantes} kg.` : 'Ya estás en el tope de los estándares.'}`,
+    _insight: insight,
+    _chart: chart,
   };
 }

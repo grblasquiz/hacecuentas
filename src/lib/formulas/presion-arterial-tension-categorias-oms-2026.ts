@@ -10,6 +10,7 @@ export interface Outputs {
   riesgo_descripcion: string;
   recomendacion: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -81,11 +82,24 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: 'Escala de presión arterial sistólica según OMS/AHA',
   };
 
+  const tone = categoria === 'Normal' ? 'good' : 'warn';
+  const insightText = categoria === 'Normal'
+    ? `Tu **${sistolica}/${diastolica} mmHg** entra en **Normal**: presión óptima y riesgo cardiovascular bajo. Sostené el estilo de vida y medí periódicamente.`
+    : categoria === 'Crisis Hipertensiva'
+      ? `**${sistolica}/${diastolica} mmHg** es una **crisis hipertensiva**. ${riesgo_descripcion} Buscá atención médica de inmediato.`
+      : `Con **${sistolica}/${diastolica} mmHg** quedás en **${categoria}** según OMS/AHA 2026. ${riesgo_descripcion}`;
+
   return {
     categoria,
     clasificacion_numerica,
     riesgo_descripcion,
     recomendacion,
-    _chart: chart
+    _chart: chart,
+    _insight: {
+      title: categoria,
+      text: insightText,
+      tone,
+      icon: '🩺',
+    },
   };
 }

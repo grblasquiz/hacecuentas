@@ -29,6 +29,7 @@ export interface VacacionesEmpleadaOutputs {
   valorTotal: number;
   valorDia: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function vacacionesEmpleadaCasaParticular(
@@ -75,10 +76,21 @@ export function vacacionesEmpleadaCasaParticular(
   const mensaje =
     `${detalleProporcion} Pueden fraccionarse en períodos, con un mínimo de 7 días corridos por fracción (Art. 30 Ley 26.844).`;
 
+  const proporcional = mesesAno < 6;
+  const insight = {
+    title: proporcional ? 'Vacaciones proporcionales' : 'Tus vacaciones del año',
+    text: proporcional
+      ? `Por trabajar **${mesesAno} mes(es)** del año (menos de 6) corresponden **${diasVacaciones} días** proporcionales, no los ${diasAnuales} de un año completo. A valor de día (**$${Math.round(valorDia).toLocaleString('es-AR')}** = sueldo/25), el total a pagar es **$${Math.round(valorTotal).toLocaleString('es-AR')}** (Art. 30 Ley 26.844).`
+      : `Con **${anios} año(s)** de antigüedad te corresponden **${diasVacaciones} días corridos** de licencia (Art. 30 Ley 26.844). A **$${Math.round(valorDia).toLocaleString('es-AR')}** por día (sueldo/25), el período se paga **$${Math.round(valorTotal).toLocaleString('es-AR')}** — recordá que el sueldo vacacional se abona antes de iniciar la licencia.`,
+    tone: 'neutral' as const,
+    icon: '🧹',
+  };
+
   return {
     diasVacaciones,
     valorTotal: Math.round(valorTotal),
     valorDia: Math.round(valorDia),
     mensaje,
+    _insight: insight,
   };
 }

@@ -9,6 +9,7 @@ export interface Outputs {
   presupuestoAnualUSD: number;
   precioPorDiscoUSD: number;
   desglose: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -20,6 +21,12 @@ export function compute(i: Inputs): Outputs {
       presupuestoAnualUSD: 0,
       precioPorDiscoUSD: 0,
       desglose: "Ingresá al menos 1 disco por mes para calcular el presupuesto.",
+      _insight: {
+        title: 'Falta un dato',
+        text: 'Ingresá al menos **1 disco por mes** para estimar cuánto te lleva la colección al mes y al año.',
+        tone: 'neutral',
+        icon: '💿',
+      },
     };
   }
 
@@ -61,10 +68,21 @@ export function compute(i: Inputs): Outputs {
     `Precio ajustado por disco: USD ${precioPorDiscoUSD.toFixed(2)} · ` +
     `${discosMes} disco${discosMes !== 1 ? "s" : ""}/mes`;
 
+  const mensualFmt = Math.round(presupuestoMensualUSD * 100) / 100;
+  const anualFmt = Math.round(presupuestoAnualUSD * 100) / 100;
+  const tone = mensualFmt >= 150 ? 'warn' : 'neutral';
+  const _insight = {
+    title: 'Lo que te lleva el hobby',
+    text: `Sumando **${discosMes} disco${discosMes !== 1 ? 's' : ''}/mes** a USD ${precioPorDiscoUSD.toFixed(2)} cada uno (${tipoData.label}, ${generoData.label}), gastás **USD ${mensualFmt.toLocaleString('es-AR')}/mes** y **USD ${anualFmt.toLocaleString('es-AR')}/año**. ${tone === 'warn' ? 'Es un gasto considerable: mezclar segunda mano baja bastante el ticket.' : 'Comprar usado o reediciones locales mantiene el presupuesto a raya.'}`,
+    tone,
+    icon: '💿',
+  };
+
   return {
-    presupuestoMensualUSD: Math.round(presupuestoMensualUSD * 100) / 100,
-    presupuestoAnualUSD: Math.round(presupuestoAnualUSD * 100) / 100,
+    presupuestoMensualUSD: mensualFmt,
+    presupuestoAnualUSD: anualFmt,
     precioPorDiscoUSD: Math.round(precioPorDiscoUSD * 100) / 100,
     desglose,
+    _insight,
   };
 }

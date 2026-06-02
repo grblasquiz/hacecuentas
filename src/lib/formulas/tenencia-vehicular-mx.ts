@@ -19,6 +19,7 @@ export interface Outputs {
   tasaAplicada: number;
   factorDepreciacion: number;
   mensaje: string;
+  _insight?: any;
 }
 
 function factorDepreciacion(anios: number): number {
@@ -92,6 +93,21 @@ export function tenenciaVehicularMx(i: Inputs): Outputs {
 
   const tenencia = exento ? 0 : valorDepreciado * tasa / 100;
 
+  const mxn = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const insight = exento
+    ? {
+        title: 'Sin tenencia que pagar',
+        text: `Tu vehículo queda **exento**: ${subsidio.replace(/^Sí\s*\(?/, '').replace(/\)$/, '') || 'tu estado no cobra tenencia'}. No pagás tenencia anual ${anios > 0 ? `(valor depreciado **${mxn(valorDepreciado)}** tras ${anios} año${anios > 1 ? 's' : ''})` : ''}.`.replace(/\s+\./g, '.'),
+        tone: 'good',
+        icon: '🚗',
+      }
+    : {
+        title: 'Tu tenencia anual',
+        text: `Pagás **${mxn(tenencia)}** al año: tasa del **${tasa}%** sobre un valor depreciado de **${mxn(valorDepreciado)}**${anios > 0 ? ` (factor ${(factor * 100).toFixed(0)}% por ${anios} año${anios > 1 ? 's' : ''} de antigüedad)` : ''}.`,
+        tone: 'warn',
+        icon: '🚗',
+      };
+
   return {
     tenencia: Number(tenencia.toFixed(2)),
     valorDepreciado: Number(valorDepreciado.toFixed(2)),
@@ -100,5 +116,6 @@ export function tenenciaVehicularMx(i: Inputs): Outputs {
     tasaAplicada: tasa,
     factorDepreciacion: factor,
     mensaje: `${msg} Tenencia anual: $${tenencia.toFixed(2)}.`,
+    _insight: insight,
   };
 }

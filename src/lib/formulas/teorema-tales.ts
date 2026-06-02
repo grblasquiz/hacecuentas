@@ -4,6 +4,7 @@ export interface Outputs {
   segmentoD: number;
   proporcion: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function teoremaTales(i: Inputs): Outputs {
@@ -24,5 +25,11 @@ export function teoremaTales(i: Inputs): Outputs {
     segmentoD: Number(d.toFixed(4)),
     proporcion: `${fmt.format(a)} / ${fmt.format(b)} = ${fmt.format(c)} / ${fmt.format(d)} (razón: ${fmt.format(razon)})`,
     detalle: `Teorema de Tales: a/b = c/d → ${fmt.format(a)}/${fmt.format(b)} = ${fmt.format(c)}/d → d = ${fmt.format(b)} × ${fmt.format(c)} / ${fmt.format(a)} = ${fmt.format(d)}.`,
+    _insight: {
+      title: 'El cuarto segmento',
+      text: `Por proporcionalidad, el segmento buscado vale **${fmt.format(Number(d.toFixed(4)))}**: las rectas paralelas mantienen la razón **${fmt.format(razon)}** entre los segmentos correspondientes.`,
+      tone: 'neutral',
+      icon: '📐',
+    },
   };
 }

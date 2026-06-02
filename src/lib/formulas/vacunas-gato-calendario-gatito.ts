@@ -12,6 +12,7 @@ export interface Outputs {
   alerta: string;
   necesitaFeLV: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function vacunasGatoCalendarioGatito(i: Inputs): Outputs {
@@ -65,6 +66,25 @@ export function vacunasGatoCalendarioGatito(i: Inputs): Outputs {
     ? 'Sí — tu gato sale afuera o tiene contacto con otros gatos. Necesita vacuna FeLV (2 dosis + refuerzo anual). Hacer test FeLV/FIV antes de vacunar.'
     : 'No — tu gato es 100% indoor sin contacto con gatos externos. La vacuna FeLV no es necesaria.';
 
+  const edadFmt = em.toFixed(1).replace('.0', '');
+  const _insight = alerta
+    ? {
+        title: em < 2 ? 'Todavía muy chico para vacunar' : 'Gato sin vacunar',
+        text: em < 2
+          ? `Con **${edadFmt} meses** tu gatito aún no llega a la edad de la 1ª Triple Felina (8-9 semanas). Mantenelo **indoor** y sin contacto con gatos de origen desconocido hasta entonces.`
+          : `Con **${edadFmt} meses** sin esquema, tu gato está expuesto a panleucopenia y rabia. Pedí un **esquema acelerado** al veterinario; lo próximo sería: **${proxima}**.`,
+        tone: 'warn' as const,
+        icon: '🐱',
+      }
+    : {
+        title: 'Próxima dosis del gato',
+        text: `Tu gato tiene **${edadFmt} meses**; lo que viene es **${proxima}**.` + (saleAfuera
+          ? ' Como **sale afuera**, sumá la FeLV (leucemia felina) al esquema tras el test FeLV/FIV.'
+          : ' Al ser **indoor** sin contacto externo, la FeLV no es necesaria.'),
+        tone: 'good' as const,
+        icon: '🐾',
+      };
+
   return {
     edadMeses: Number(em.toFixed(1)),
     proximaVacuna: proxima,
@@ -72,5 +92,6 @@ export function vacunasGatoCalendarioGatito(i: Inputs): Outputs {
     alerta,
     necesitaFeLV,
     detalle: `Tu gato tiene ${em.toFixed(1)} meses. Próxima vacuna: ${proximaLarga}${alerta ? ' ' + alerta : ''}`,
+    _insight,
   };
 }

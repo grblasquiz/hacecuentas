@@ -8,6 +8,8 @@ export interface Outputs {
   almacigo: string;
   trasplante: string;
   cantidadEspecies: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 type CalendarioZona = Record<number, { directa: string[]; almacigo: string[]; trasplante: string[] }>;
@@ -56,12 +58,44 @@ export function siembraCalendarioArgentina(i: Inputs): Outputs {
   const cal = ZONAS[zona] || ZONAS.pampeana;
   const data = cal[mes] || { directa: [], almacigo: [], trasplante: [] };
 
-  const total = data.directa.length + data.almacigo.length + data.trasplante.length;
+  const dir = data.directa.length, alm = data.almacigo.length, tra = data.trasplante.length;
+  const total = dir + alm + tra;
+
+  const MESES = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const mesNombre = MESES[mes] || `mes ${mes}`;
+
+  const _insight = total > 0 ? {
+    title: `Qué sembrar en ${mesNombre}`,
+    text: `Este mes tenés **${total} especie${total === 1 ? '' : 's'}** para trabajar: **${dir}** por siembra directa, **${alm}** en almácigo y **${tra}** para trasplantar. Aprovechá la ventana antes de que cambie la temporada.`,
+    tone: 'good',
+    icon: '🌱',
+  } : {
+    title: `Mes de pausa en ${mesNombre}`,
+    text: `Para esta zona no hay especies recomendadas en **${mesNombre}**. Es buen momento para preparar la tierra, abonar y planificar la próxima siembra.`,
+    tone: 'neutral',
+    icon: '🌱',
+  };
+
+  // donut sólo si hay variedad real (≥2 técnicas con especies)
+  const tecnicasActivas = [dir, alm, tra].filter((n) => n > 0).length;
+  const _chart = tecnicasActivas >= 2 ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Siembra directa', value: dir },
+      { label: 'Almácigo', value: alm },
+      { label: 'Trasplante', value: tra },
+    ].filter((s) => s.value > 0),
+    centerValue: String(total),
+    centerLabel: 'especies',
+    ariaLabel: `Especies de ${mesNombre} por técnica: directa ${dir}, almácigo ${alm}, trasplante ${tra}`,
+  } : undefined;
 
   return {
     siembraDirecta: data.directa.length > 0 ? data.directa.join(', ') : 'No hay siembra directa recomendada este mes',
     almacigo: data.almacigo.length > 0 ? data.almacigo.join(', ') : 'No hay almácigos recomendados este mes',
     trasplante: data.trasplante.length > 0 ? data.trasplante.join(', ') : 'No hay trasplantes recomendados este mes',
     cantidadEspecies: total,
+    _insight,
+    _chart,
   };
 }

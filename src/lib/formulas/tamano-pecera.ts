@@ -8,6 +8,7 @@ export interface Outputs {
   litrosMinimos: number;
   tamanoRecomendado: string;
   detalle: string;
+  _insight?: any;
 }
 
 export function tamanoPecera(i: Inputs): Outputs {
@@ -44,5 +45,11 @@ export function tamanoPecera(i: Inputs): Outputs {
     litrosMinimos: litros,
     tamanoRecomendado: `Mínimo ${fmt.format(recomendado)} L, ideal ${fmt.format(ideal)} L`,
     detalle: `${fmt.format(cantidad)} peces ${nombreTamano} (~${cmPromedio} cm c/u) en agua ${tipoAgua === 'tropical' ? 'tropical' : 'fría'}: mínimo ${fmt.format(litros)} L. Recomendado: acuario de ${fmt.format(recomendado)}-${fmt.format(ideal)} L.`,
+    _insight: {
+      title: 'Mejor agua de sobra',
+      text: `Para **${fmt.format(cantidad)} peces ${nombreTamano}** necesitás como mínimo **${fmt.format(litros)} L**, pero apuntá a un acuario de **${fmt.format(ideal)} L**: más volumen diluye mejor el amoníaco y mantiene la temperatura estable. La regla de 1 L por cm de pez es un piso, no un objetivo.`,
+      tone: 'neutral',
+      icon: '🐠',
+    },
   };
 }

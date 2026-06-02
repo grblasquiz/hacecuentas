@@ -16,6 +16,7 @@ export interface VueloEmisionesCo2PasajeroOutputs {
   arbolesCompensar: number;
   creditoUSD: string;
   comparacion: string;
+  _insight?: any;
 }
 
 const FACTORES: Record<string, Record<string, number>> = {
@@ -71,11 +72,20 @@ export function vueloEmisionesCo2Pasajero(
     comparacion = `Equivale a ~${(co2Kg / 2300).toFixed(1)} años de manejar un auto nafta promedio. O ~${arbolesCompensar} árboles nuevos absorbiendo 1 año.`;
   }
 
+  const ivTxt = multiplicadorIV === 2 ? 'ida y vuelta' : 'solo ida';
+  const insight = {
+    title: co2Kg < 300 ? 'Huella moderada' : co2Kg < 1500 ? 'Huella considerable' : 'Huella alta',
+    text: `Este vuelo (${ivTxt}, clase ${inputs.clase}) emite **${co2Kg.toLocaleString('es-AR')} kg de CO₂** por pasajero. ${comparacion} Compensarlo cuesta **${creditoUSD}** o equivale a **${arbolesCompensar} árbol(es)** absorbiendo un año.`,
+    tone: co2Kg < 300 ? 'good' : 'warn',
+    icon: co2Kg < 300 ? '🌱' : '✈️',
+  };
+
   return {
     co2Kg,
     co2PorKm,
     arbolesCompensar,
     creditoUSD,
     comparacion,
+    _insight: insight,
   };
 }

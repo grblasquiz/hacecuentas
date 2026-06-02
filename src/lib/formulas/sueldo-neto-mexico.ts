@@ -22,6 +22,7 @@ export interface Outputs {
   subsidioEmpleo: number;
   totalDescuentos: number;
   detalle: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -155,6 +156,17 @@ export function sueldoNetoMexico(inputs: Inputs): Outputs {
     `Neto: $${neto.toFixed(2)} (${porcentaje}% del bruto)`;
 
   const centerTotal = Math.round(neto + isrEfectivo + imss + infonavit);
+
+  const pctDesc = bruto > 0 ? Math.round((totalDesc / bruto) * 100) : 0;
+  const insight = {
+    title: 'Tu sueldo neto',
+    text: speEntregado > 0
+      ? `De tu bruto de **$${Math.round(bruto).toLocaleString('es-MX')}** te queda neto **$${Math.round(neto).toLocaleString('es-MX')}**. Por tu nivel de ingreso el subsidio al empleo cubre el ISR y hasta te suma **$${Math.round(speEntregado).toLocaleString('es-MX')}** extra al bolsillo.`
+      : `De tu bruto de **$${Math.round(bruto).toLocaleString('es-MX')}** te queda neto **$${Math.round(neto).toLocaleString('es-MX')}** (te descuentan un **${pctDesc}%**). El ISR es **$${Math.round(isrEfectivo).toLocaleString('es-MX')}** y el IMSS obrero **$${Math.round(imss).toLocaleString('es-MX')}**.`,
+    tone: (pctDesc >= 18 ? 'warn' : 'good') as 'good' | 'warn',
+    icon: '🇲🇽',
+  };
+
   const chart = {
     type: 'doughnut' as const,
     slices: [
@@ -180,6 +192,7 @@ export function sueldoNetoMexico(inputs: Inputs): Outputs {
     subsidioEmpleo: Math.round(speEntregado * 100) / 100,
     totalDescuentos: totalDesc,
     detalle,
+    _insight: insight,
     _chart: chart,
   };
 }

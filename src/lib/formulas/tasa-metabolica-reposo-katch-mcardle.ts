@@ -7,6 +7,7 @@ export interface Outputs {
   tmr: number;
   masaMagra: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function tasaMetabolicaReposoKatchMcardle(i: Inputs): Outputs {
@@ -29,9 +30,17 @@ export function tasaMetabolicaReposoKatchMcardle(i: Inputs): Outputs {
     `moderado ${Math.round(tmr * 1.55)} kcal, ` +
     `activo ${Math.round(tmr * 1.725)} kcal.`;
 
+  const _insight = {
+    title: 'Qué significa tu TMR',
+    text: `Tu cuerpo quema **${Math.round(tmr)} kcal/día** sólo para mantenerse vivo en reposo, calculado sobre tus **${masaMagra.toFixed(1)} kg de masa magra**. Para perder grasa comé por debajo de tu TDEE; para ganar músculo, por encima.`,
+    tone: 'neutral',
+    icon: '🔥',
+  };
+
   return {
     tmr: Math.round(tmr),
     masaMagra: Number(masaMagra.toFixed(1)),
     detalle,
+    _insight,
   };
 }

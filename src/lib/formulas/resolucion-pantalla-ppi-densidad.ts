@@ -1,6 +1,6 @@
 /** Cálculo de PPI (densidad de píxeles) de una pantalla */
 export interface Inputs { anchoPixeles: number; altoPixeles: number; diagonalPulgadas: number; }
-export interface Outputs { ppi: number; clasificacion: string; totalPixeles: number; detalle: string; }
+export interface Outputs { ppi: number; clasificacion: string; totalPixeles: number; detalle: string; _insight?: any; _chart?: any; }
 
 export function resolucionPantallaPpiDensidad(i: Inputs): Outputs {
   const ancho = Number(i.anchoPixeles);
@@ -24,10 +24,33 @@ export function resolucionPantallaPpiDensidad(i: Inputs): Outputs {
 
   const megapixeles = (totalPixeles / 1e6).toFixed(1);
 
+  const tone = ppi >= 200 ? 'good' : ppi >= 90 ? 'neutral' : 'warn';
+  const corta = clasificacion.split('—')[0].trim();
+  const gaugeMax = Math.max(400, Math.ceil(ppi * 1.1));
   return {
     ppi: Number(ppi.toFixed(1)),
     clasificacion,
     totalPixeles,
     detalle: `Pantalla de ${diagonal}" a ${ancho}×${alto} (${megapixeles} MP) = ${ppi.toFixed(1)} PPI. ${clasificacion}.`,
+    _insight: {
+      title: 'Densidad de tu pantalla',
+      text: `Una pantalla de **${diagonal}"** a **${ancho}×${alto}** (${megapixeles} MP) tiene **${ppi.toFixed(0)} PPI**. Eso la ubica como **${corta}**.`,
+      tone,
+      icon: '📱',
+    },
+    _chart: {
+      type: 'scale',
+      marker: Number(ppi.toFixed(1)),
+      markerLabel: `${ppi.toFixed(0)} PPI`,
+      min: 0,
+      segments: [
+        { nombre: 'Básico', max: 90, color: '#ef4444', colorDark: '#dc2626' },
+        { nombre: 'Bueno', max: 130, color: '#f97316', colorDark: '#ea580c' },
+        { nombre: 'Monitor', max: 200, color: '#eab308', colorDark: '#ca8a04' },
+        { nombre: 'Premium', max: 300, color: '#84cc16', colorDark: '#65a30d' },
+        { nombre: 'Retina', max: gaugeMax, color: '#22c55e', colorDark: '#16a34a' },
+      ],
+      ariaLabel: `Densidad ${ppi.toFixed(0)} PPI, clasificación ${corta}`,
+    },
   };
 }

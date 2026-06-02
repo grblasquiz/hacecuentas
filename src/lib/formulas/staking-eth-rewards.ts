@@ -1,6 +1,6 @@
 /** Staking ETH anual rewards */
 export interface Inputs { ethStaked: number; apr: number; ethPriceUsd: number; months: number; feeValidator: number; }
-export interface Outputs { ethEarned: number; usdEarned: number; netEthAfterFee: number; monthlyEth: number; effectiveApy: number; explicacion: string; _chart?: any; }
+export interface Outputs { ethEarned: number; usdEarned: number; netEthAfterFee: number; monthlyEth: number; effectiveApy: number; explicacion: string; _chart?: any; _insight?: any; }
 export function stakingEthRewards(i: Inputs): Outputs {
   const staked = Number(i.ethStaked);
   const apr = Number(i.apr) / 100;
@@ -26,6 +26,17 @@ export function stakingEthRewards(i: Inputs): Outputs {
     centerLabel: 'Valor final',
     ariaLabel: 'Composición del valor final: capital inicial más recompensas de staking de ETH',
   };
+  const finalValue = (staked + netEth) * price;
+  const rewardShare = finalValue > 0 ? (usd / finalValue) * 100 : 0;
+  const highFee = fee >= 0.15;
+  const insight = {
+    title: highFee ? 'Fee de validador alto' : 'Recompensas proyectadas',
+    text: highFee
+      ? `A ${(apr*100).toFixed(2)}% APR ganás **${netEth.toFixed(4)} ETH** (~$${usd.toFixed(0)}) en ${months} meses, pero el validador retiene el **${(fee*100).toFixed(1)}%** de las recompensas. Un fee tan alto recorta tu rendimiento neto: comparalo con staking líquido o solo-staking.`
+      : `Stakeando ${staked} ETH a ${(apr*100).toFixed(2)}% APR sumás **${netEth.toFixed(4)} ETH netos** (~$${usd.toFixed(0)}) en ${months} meses, el **${rewardShare.toFixed(1)}%** de tu valor final. APY efectivo (interés compuesto diario): **${effectiveApy.toFixed(2)}%**. El valor en USD varía con el precio de ETH.`,
+    tone: highFee ? 'warn' : 'good',
+    icon: highFee ? '✂️' : 'Ξ',
+  };
   return {
     ethEarned: Number(grossEth.toFixed(6)),
     usdEarned: Number(usd.toFixed(2)),
@@ -34,5 +45,6 @@ export function stakingEthRewards(i: Inputs): Outputs {
     effectiveApy: Number(effectiveApy.toFixed(3)),
     _chart: chart,
     explicacion: `Stakeando ${staked} ETH al ${(apr*100).toFixed(2)}% APR durante ${months} meses (fee validador ${(fee*100).toFixed(1)}%): ganás ${netEth.toFixed(4)} ETH netos = $${usd.toFixed(2)} USD. APY efectivo ${effectiveApy.toFixed(2)}%.`,
+    _insight: insight,
   };
 }

@@ -18,6 +18,7 @@ export interface SeguroDesempregoParcelasOutputs {
   regraAplicada: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
 }
 
 export function seguroDesempregoParcelas(inputs: SeguroDesempregoParcelasInputs): SeguroDesempregoParcelasOutputs {
@@ -55,11 +56,29 @@ export function seguroDesempregoParcelas(inputs: SeguroDesempregoParcelasInputs)
   const formula = `Meses trabalhados: ${meses} → Parcelas: ${numParcelas}`;
   const explicacion = `Com ${meses} meses trabalhados em carteira, na ${solicitacao} solicitação do seguro-desemprego 2026, você tem direito a ${numParcelas} parcelas (regra: ${regra}). ${elegivel}.`;
 
+  let _insight: any;
+  if (numParcelas === 0) {
+    _insight = {
+      title: 'Ainda não dá direito ao benefício',
+      text: `Com **${meses} meses** trabalhados você **não atinge o mínimo** de ${minimoExigido} meses exigido para a ${solicitacao} solicitação. Faltam **${minimoExigido - meses} meses** de carteira assinada para ter direito ao seguro-desemprego.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    _insight = {
+      title: `Você tem direito a ${numParcelas} parcelas`,
+      text: `Com **${meses} meses** trabalhados na ${solicitacao} solicitação, você recebe **${numParcelas} parcelas** (${regra}).${numParcelas < 5 ? ` Chegando a ${numParcelas === 3 ? 12 : 24} meses, passaria a ${numParcelas + 1} parcelas.` : ' É o máximo previsto pela regra.'}`,
+      tone: numParcelas >= 4 ? 'good' : 'neutral',
+      icon: '💸',
+    };
+  }
+
   return {
     numParcelas,
     elegivel,
     regraAplicada: regra,
     formula,
     explicacion,
+    _insight,
   };
 }

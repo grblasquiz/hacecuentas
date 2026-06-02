@@ -12,6 +12,7 @@ export interface Outputs {
   porcentaje_sobre_compra: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Tasas de IVA estándar por país (2026)
@@ -48,6 +49,12 @@ export function compute(i: Inputs): Outputs {
       reembolso_neto: 0,
       porcentaje_sobre_compra: 0,
       detalle: "Ingresá un monto de compra válido mayor a 0.",
+      _insight: {
+        title: "Falta el monto",
+        text: "Ingresá el **monto de compra** para estimar cuánto IVA podés recuperar como turista.",
+        tone: "neutral" as const,
+        icon: "🧳",
+      },
     };
   }
 
@@ -83,6 +90,15 @@ export function compute(i: Inputs): Outputs {
     `Reembolso neto estimado: ${reembolso_neto.toFixed(2)} ${moneda} (${porcentajeFmt}% del precio pagado).\n` +
     `Nota: estimación orientativa. El importe exacto depende del contrato tienda-operadora y la forma de cobro.`;
 
+  // Insight: cuánto recuperás realmente y cuánto se queda la operadora
+  const comisionPctSobreIva = reembolso_bruto > 0 ? (comision_operadora / reembolso_bruto) * 100 : 0;
+  const _insight = {
+    title: "Cuánto recuperás de IVA",
+    text: `De los ${monto.toFixed(2)} ${moneda} que pagaste, te devuelven **${reembolso_neto.toFixed(2)} ${moneda}** (un **${porcentajeFmt}%** de la compra). ${nombreOp} se queda con ${comision_operadora.toFixed(2)} ${moneda}, el **${comisionPctSobreIva.toFixed(0)}%** del IVA${factor >= 1 ? "; al ser devolución directa no hay comisión y recuperás el IVA completo" : ""}.`,
+    tone: (factor >= 1 ? "good" : comisionPctSobreIva > 15 ? "warn" : "neutral") as "good" | "warn" | "neutral",
+    icon: "🧳",
+  };
+
   const precioSinIva = monto - iva_incluido;
   const chartSlices = [
     { label: "Precio sin IVA", value: precioSinIva },
@@ -107,5 +123,6 @@ export function compute(i: Inputs): Outputs {
     porcentaje_sobre_compra: Math.round(porcentaje_sobre_compra * 100) / 100,
     detalle,
     _chart: chart,
+    _insight,
   };
 }

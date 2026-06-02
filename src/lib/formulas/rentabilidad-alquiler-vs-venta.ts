@@ -16,6 +16,8 @@ export interface Outputs {
   aniosRecuperacion: number;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function rentabilidadAlquilerVsVenta(i: Inputs): Outputs {
@@ -42,13 +44,52 @@ export function rentabilidadAlquilerVsVenta(i: Inputs): Outputs {
   const formula = `Cap Rate = $${ingresoBrutoAnual.toLocaleString()} / $${valor.toLocaleString()} = ${capRate.toFixed(2)}%`;
   const explicacion = `Propiedad: $${valor.toLocaleString()}. Alquiler: $${alquiler.toLocaleString()}/mes ($${ingresoBrutoAnual.toLocaleString()}/año bruto).${vacancia > 0 ? ` Vacancia ${vacancia}%: -$${Math.round(vacanciaMonto).toLocaleString()}.` : ''}${gastos > 0 ? ` Gastos: -$${gastosAnuales.toLocaleString()}/año.` : ''} Ingreso neto: $${Math.round(ingresoNetoAnual).toLocaleString()}/año. Cap rate bruto: ${capRate.toFixed(2)}%. Cap rate neto: ${capRateNeto.toFixed(2)}%.${apreciacion > 0 ? ` Con apreciación del ${apreciacion}%, retorno total: ${retornoTotal.toFixed(2)}%.` : ''} Recuperás la inversión en ${aniosRecuperacion.toFixed(1)} años.`;
 
-  return {
+  const capNetoR = Number(capRateNeto.toFixed(2));
+  const retornoR = Number(retornoTotal.toFixed(2));
+  const aniosR = Number(aniosRecuperacion.toFixed(1));
+
+  // INSIGHT — interpreta el cap rate neto y el retorno total
+  const tone: 'good' | 'warn' | 'neutral' = capNetoR >= 5 ? 'good' : capNetoR >= 3 ? 'neutral' : 'warn';
+  const lectura = capNetoR >= 5
+    ? 'Es un cap rate alto: la propiedad genera buen flujo respecto a su precio.'
+    : capNetoR >= 3
+      ? 'Es un cap rate dentro del rango habitual del mercado.'
+      : capNetoR < 0
+        ? 'El cap rate neto es negativo: vacancia y gastos superan al alquiler.'
+        : 'Es un cap rate bajo: el alquiler rinde poco frente al valor de venta.';
+  const _insight = {
+    title: 'Cap rate de la propiedad',
+    text: `La propiedad rinde un **cap rate neto de ${capNetoR.toFixed(2)}%** anual (genera $${Math.round(ingresoNetoAnual).toLocaleString()}/año netos)${apreciacion > 0 ? `, que con una apreciación del ${apreciacion}% sube a un **retorno total de ${retornoR.toFixed(2)}%**` : ''}. Recuperás el precio de compra en **${aniosR} años** solo con renta. ${lectura}`,
+    tone,
+    icon: '🏢',
+  };
+
+  const out: Outputs = {
     ingresoNetoAnual: Math.round(ingresoNetoAnual),
     capRate: Number(capRate.toFixed(2)),
-    capRateNeto: Number(capRateNeto.toFixed(2)),
-    retornoTotal: Number(retornoTotal.toFixed(2)),
-    aniosRecuperacion: Number(aniosRecuperacion.toFixed(1)),
+    capRateNeto: capNetoR,
+    retornoTotal: retornoR,
+    aniosRecuperacion: aniosR,
     formula,
     explicacion,
+    _insight,
   };
+
+  // CHART — gauge: zonas de cap rate neto anual (solo si es positivo)
+  if (isFinite(capNetoR) && capNetoR >= 0) {
+    out._chart = {
+      type: 'scale',
+      marker: capNetoR,
+      markerLabel: `${capNetoR.toFixed(1)}%`,
+      min: 0,
+      segments: [
+        { nombre: 'Bajo', max: 3, color: '#dc2626', colorDark: '#ef4444' },
+        { nombre: 'Medio', max: 5, color: '#ca8a04', colorDark: '#eab308' },
+        { nombre: 'Bueno', max: 8, color: '#65a30d', colorDark: '#84cc16' },
+        { nombre: 'Alto', max: Math.max(10, Math.ceil(capNetoR) + 1), color: '#16a34a', colorDark: '#22c55e' },
+      ],
+      ariaLabel: `Cap rate neto de ${capNetoR.toFixed(1)}% sobre una escala de 0% a 10%.`,
+    };
+  }
+  return out;
 }

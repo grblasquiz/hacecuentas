@@ -1,6 +1,6 @@
 /** Rango FC zona 2 según edad y método (Karvonen vs simple) */
 export interface Inputs { edad: number; fcReposo: number; metodo: 'karvonen' | 'simple'; }
-export interface Outputs { fcMax: number; zona2Min: number; zona2Max: number; explicacion: string; }
+export interface Outputs { fcMax: number; zona2Min: number; zona2Max: number; explicacion: string; _insight?: any; }
 export function zona2CardioFrecuenciaEdadVo2max(i: Inputs): Outputs {
   const edad = Number(i.edad);
   const fcRep = Number(i.fcReposo);
@@ -21,5 +21,11 @@ export function zona2CardioFrecuenciaEdadVo2max(i: Inputs): Outputs {
     zona2Min: Math.round(zMin),
     zona2Max: Math.round(zMax),
     explicacion: `Zona 2 (60-70% intensidad) con método ${i.metodo === 'karvonen' ? 'Karvonen (reserva FC)' : 'simple (% FC máx)'}: ${Math.round(zMin)}-${Math.round(zMax)} bpm. FC máxima estimada: ${Math.round(fcMax)} bpm.`,
+    _insight: {
+      title: 'Tu ritmo de base aeróbica',
+      text: `Tu Zona 2 va de **${Math.round(zMin)} a ${Math.round(zMax)} bpm** (FC máx estimada **${Math.round(fcMax)} bpm**). Es el ritmo conversacional donde quemás grasa y construís resistencia: deberías poder hablar sin quedarte sin aire. ${i.metodo === 'karvonen' ? 'El método Karvonen usa tu FC de reposo, así que es más personalizado que el simple.' : 'Para mayor precisión, usá el método Karvonen con tu FC de reposo.'}`,
+      tone: 'neutral' as const,
+      icon: '🏃',
+    },
   };
 }

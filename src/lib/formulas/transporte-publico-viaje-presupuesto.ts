@@ -15,6 +15,7 @@ export interface TransportePublicoViajePresupuestoOutputs {
   costoPase: number;
   recomendacion: string;
   ahorro: string;
+  _insight?: any;
 }
 
 type CiudadData = {
@@ -84,6 +85,12 @@ export function transportePublicoViajePresupuesto(
       costoPase: costoSuelto,
       recomendacion,
       ahorro,
+      _insight: {
+        title: `Sin pase turístico en ${c.nombre}`,
+        text: `${vpd} viaje(s)/día durante ${dias} día(s) para ${personas} persona(s) suman **USD ${costoSuelto.toFixed(2)}**. En ${c.nombre} no hay abono ilimitado conveniente: cargá una tarjeta recargable y pagá por viaje.`,
+        tone: 'neutral',
+        icon: '🚇',
+      },
     };
   }
 
@@ -98,10 +105,36 @@ export function transportePublicoViajePresupuesto(
     ahorro = 'Diferencia mínima.';
   }
 
+  let insight;
+  if (ahorroNum > 1) {
+    const pct = Math.round((ahorroNum / costoSuelto) * 100);
+    insight = {
+      title: `Conviene el pase ${tipoPase}`,
+      text: `En ${c.nombre}, pagar sueltos costaría **USD ${costoSuelto.toFixed(2)}**, pero con el pase ${tipoPase} bajás a **USD ${costoPase.toFixed(2)}**: ahorrás **USD ${ahorroNum.toFixed(2)}** (~${pct}%).`,
+      tone: 'good',
+      icon: '🎟️',
+    };
+  } else if (ahorroNum < -1) {
+    insight = {
+      title: 'Mejor pagar por viaje',
+      text: `Con ${vpd} viaje(s)/día en ${c.nombre}, los sueltos suman **USD ${costoSuelto.toFixed(2)}** — el pase ${tipoPase} te saldría **USD ${Math.abs(ahorroNum).toFixed(2)}** más caro. No amortizás el abono con tan pocos viajes.`,
+      tone: 'warn',
+      icon: '🚇',
+    };
+  } else {
+    insight = {
+      title: 'Casi indistinto',
+      text: `En ${c.nombre} la diferencia entre sueltos (**USD ${costoSuelto.toFixed(2)}**) y el pase ${tipoPase} (**USD ${costoPase.toFixed(2)}**) es mínima. Elegí por comodidad: el pase evita recargar, los sueltos dan flexibilidad.`,
+      tone: 'neutral',
+      icon: '🚇',
+    };
+  }
+
   return {
     costoSuelto,
     costoPase,
     recomendacion,
     ahorro,
+    _insight: insight,
   };
 }

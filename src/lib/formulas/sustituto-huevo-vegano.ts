@@ -61,6 +61,7 @@ export interface Outputs {
   mejorPara: string;
   recomendacion: string;
   resumen: string;
+  _insight?: any;
 }
 
 function parseCantidad(porHuevo: string, n: number): string {
@@ -118,5 +119,11 @@ export function sustitutoHuevoVegano(i: Inputs): Outputs {
     mejorPara: s.mejorPara,
     recomendacion,
     resumen: `Reemplazar ${n} huevo(s) con ${s.nombre}: ${escalado}. ${s.mejorPara}.`,
+    _insight: {
+      title: 'Tu sustituto vegano',
+      text: `Para reemplazar **${n} huevo${n === 1 ? '' : 's'}** usá **${escaladoCorto}** de ${s.nombre.toLowerCase()}. ${recomendacion}`,
+      tone: 'neutral',
+      icon: '🥚',
+    },
   };
 }

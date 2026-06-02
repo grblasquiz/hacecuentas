@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   altura: string; velocidad: string; bed: string; adherente: string; widthFirst: string;
+  _insight?: any;
 }
 
 export function primerLayerAdherenciaBed(inputs: Inputs): Outputs {
@@ -34,11 +35,24 @@ export function primerLayerAdherenciaBed(inputs: Inputs): Outputs {
     4: '',
   };
   const width = nz * 1.30;
+
+  // Insight: settings recomendados + advertencia según material/adherente
+  const warpProne = mat === 3 || mat === 5; // ABS / ASA
+  const _insight = {
+    title: `Primera capa para ${m.name}`,
+    text: warpProne
+      ? `El **${m.name}** es propenso al warping: imprimí la primera capa a **${m.alt.toFixed(2)} mm** y solo **${m.vel} mm/s** sobre cama a **${m.bed} °C**, con **${adherente.toLowerCase()}** y, si podés, cámara cerrada. El ancho de **${width.toFixed(2)} mm** (130% del nozzle de ${nz} mm) aplasta el filamento contra la cama para que pegue mejor.`
+      : `Para **${m.name}**, primera capa a **${m.alt.toFixed(2)} mm** y **${m.vel} mm/s** con cama a **${m.bed} °C** y **${adherente.toLowerCase()}**. El ancho extra de **${width.toFixed(2)} mm** (130% del nozzle de ${nz} mm) mejora la adherencia aplastando bien el cordón inicial.`,
+    tone: warpProne ? 'warn' : 'neutral',
+    icon: '🖨️',
+  };
+
   return {
     altura: `${m.alt.toFixed(2)} mm`,
     velocidad: `${m.vel} mm/s`,
     bed: `${m.bed} °C${supExtra[sup] || ''}`,
     adherente: adherente,
     widthFirst: `${width.toFixed(2)} mm (130% nozzle)`,
+    _insight,
   };
 }

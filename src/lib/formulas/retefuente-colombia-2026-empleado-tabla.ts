@@ -16,6 +16,8 @@ export interface Outputs {
   retefuente_anual: number;
   salario_neto_mensual: number;
   tasa_efectiva: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -90,7 +92,24 @@ export function compute(i: Inputs): Outputs {
   const tasaEfectiva =
     salarioAnualBruto > 0 ? (retefuenteAnual / salarioAnualBruto) * 100 : 0;
 
-  return {
+  const fmtCop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+  const hayRetencion = retefuenteMensual > 0;
+  const insight = {
+    title: hayRetencion ? `Te retienen ${tasaEfectiva.toFixed(1)}% del sueldo` : 'Salario exento de retención',
+    text: hayRetencion
+      ? `Tu renta cae en el tramo **${tramoAplicable}**, así que la retención en la fuente es de **${fmtCop(retefuenteMensual)}/mes** (tasa efectiva **${tasaEfectiva.toFixed(1)}%**). En la mano te quedan **${fmtCop(salarioNetoMensual)}** tras retención y aportes a salud y pensión.`
+      : `Con tu salario depurado de **${rentaEnUvt.toFixed(0)} UVT** quedás en el tramo exento (**0-95 UVT**): **no te retienen** en la fuente. Recibís **${fmtCop(salarioNetoMensual)}/mes** tras los aportes obligatorios a salud y pensión.`,
+    tone: hayRetencion ? 'warn' : 'good',
+    icon: hayRetencion ? '🇨🇴' : '✅',
+  };
+  // Donut: salario bruto mensual = neto + retefuente + aportes salud/pensión + AFC
+  const slices: { label: string; value: number }[] = [
+    { label: 'Neto en mano', value: Math.round(salarioNetoMensual) },
+  ];
+  if (retefuenteMensual > 0) slices.push({ label: 'Retención en la fuente', value: Math.round(retefuenteMensual) });
+  if (cotizacionMontoMensual > 0) slices.push({ label: 'Salud y pensión', value: Math.round(cotizacionMontoMensual) });
+  if (aporteAfc > 0) slices.push({ label: 'Aporte AFC', value: Math.round(aporteAfc) });
+  const out: Outputs = {
     salario_anual_bruto: Math.round(salarioAnualBruto),
     renta_anual_depurada: Math.round(rentaAnualDepurada),
     uvt_2026: UVT_2026,
@@ -101,5 +120,17 @@ export function compute(i: Inputs): Outputs {
     retefuente_anual: Math.round(retefuenteAnual),
     salario_neto_mensual: Math.round(salarioNetoMensual),
     tasa_efectiva: Math.round(tasaEfectiva * 100) / 100,
+    _insight: insight,
   };
+  if (salarioMensual > 0 && slices.length > 1) {
+    out._chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: fmtCop(salarioMensual),
+      centerLabel: 'Salario bruto/mes',
+      ariaLabel: `Reparto del salario bruto mensual de ${fmtCop(salarioMensual)} entre neto, retención y aportes`,
+    };
+  }
+  return out;
 }

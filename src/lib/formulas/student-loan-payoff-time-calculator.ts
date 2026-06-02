@@ -14,6 +14,8 @@ export interface Outputs {
   interest_saved: number;
   payoff_date_without_extra: string;
   payoff_date_with_extra: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 // Federal undergraduate Direct Loan rate 2025-2026 per studentaid.gov
@@ -119,14 +121,45 @@ export function compute(i: Inputs): Outputs {
   const months_saved = Math.max(n - nExtra, 0);
   const interest_saved = Math.max(interest_without_extra - interest_with_extra, 0);
 
+  const roundedInterestWith = Math.round(interest_with_extra * 100) / 100;
+  const roundedInterestSaved = Math.round(interest_saved * 100) / 100;
+
+  const _insight = extra_payment > 0
+    ? {
+        title: months_saved > 0 ? "Extra payments pay off" : "Extra makes little difference here",
+        text: `Adding **$${extra_payment.toLocaleString("en-US")}/mo** clears your loan in **${nExtra} months** instead of ${n} — that's **${months_saved} months** sooner and **$${roundedInterestSaved.toLocaleString("en-US")}** less interest. You'll still pay about **$${roundedInterestWith.toLocaleString("en-US")}** in interest over the life of the loan at ${apr}% APR.`,
+        tone: roundedInterestSaved > 0 ? "good" : "neutral",
+        icon: "🎓",
+      }
+    : {
+        title: "Where your payments go",
+        text: `At **$${monthly_payment.toLocaleString("en-US")}/mo** and **${apr}% APR**, you'll be debt-free in **${n} months** (${formatPayoffDate(n)}), paying **$${(Math.round(interest_without_extra * 100) / 100).toLocaleString("en-US")}** in total interest on your **$${balance.toLocaleString("en-US")}** balance. Adding an extra payment would shrink both the timeline and the interest.`,
+        tone: "neutral",
+        icon: "🎓",
+      };
+
+  const _chart = {
+    type: "doughnut" as const,
+    slices: [
+      { label: "Principal", value: Math.round(balance * 100) / 100 },
+      { label: "Interest", value: extra_payment > 0 ? roundedInterestWith : Math.round(interest_without_extra * 100) / 100 },
+    ],
+    prefix: "$",
+    centerValue: "$" + (balance + (extra_payment > 0 ? roundedInterestWith : Math.round(interest_without_extra * 100) / 100)).toLocaleString("en-US"),
+    centerLabel: "Total paid",
+    ariaLabel: "Breakdown of total amount paid over the loan: original principal plus total interest",
+  };
+
   return {
     months_without_extra: n,
     months_with_extra: nExtra,
     months_saved,
     interest_without_extra: Math.round(interest_without_extra * 100) / 100,
-    interest_with_extra: Math.round(interest_with_extra * 100) / 100,
-    interest_saved: Math.round(interest_saved * 100) / 100,
+    interest_with_extra: roundedInterestWith,
+    interest_saved: roundedInterestSaved,
     payoff_date_without_extra: formatPayoffDate(n),
     payoff_date_with_extra: isFinite(nExtraRaw) ? formatPayoffDate(nExtra) : "N/A",
+    _insight,
+    _chart,
   };
 }

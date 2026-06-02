@@ -11,6 +11,7 @@ export interface Outputs {
   percentil: string;
   mensaje: string;
   _chart?: any;
+  _insight?: any;
 }
 
 export function vo2maxEstimadoSinTest(i: Inputs): Outputs {
@@ -63,11 +64,21 @@ export function vo2maxEstimadoSinTest(i: Inputs): Outputs {
     ariaLabel: 'Escala VO2max ACSM por sexo: de bajo a superior',
   };
 
+  const tone = (clasificacion === 'Superior' || clasificacion === 'Excelente') ? 'good'
+    : (clasificacion === 'Bajo' || clasificacion === 'Por debajo del promedio') ? 'warn' : 'neutral';
+  const insight = {
+    title: 'Tu VO2max estimado',
+    text: `Con una FC máxima de **${fcMaxima} ppm** y una FC en reposo de **${fcReposo} ppm** (fórmula de Uth), tu VO2max estimado es de **${vo2max} ml/kg/min**: clasificación **${clasificacion}** (${percentil}) para tu sexo. Una FC en reposo más baja suele reflejar mejor condición cardiovascular.`,
+    tone,
+    icon: '❤️',
+  };
+
   return {
     vo2max,
     clasificacion,
     percentil,
     mensaje: `VO2max estimado: ${vo2max} ml/kg/min (${clasificacion}). ${percentil} para tu edad y sexo.`,
-    _chart: chart
+    _chart: chart,
+    _insight: insight
   };
 }

@@ -22,6 +22,7 @@ export interface Outputs {
   smvmDia: number;
   smvmProporcionalMensual: number;
   fechaVigencia: string;
+  _insight?: any;
 }
 
 // Valores oficiales abril 2026 — Res 9/2025 CNEPySMVyM
@@ -46,11 +47,27 @@ export function salarioMinimo(i: Inputs): Outputs {
       ? SMVM_MENSUAL
       : Math.round(SMVM_HORA * horasMesUsuario);
 
+  const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+  const _insight = horasSemana >= 48
+    ? {
+        title: 'Jornada completa',
+        text: `Con **${horasSemana} h/semana** te corresponde el SMVM íntegro: **$${fmt.format(SMVM_MENSUAL)}/mes** (valor hora $${fmt.format(SMVM_HORA)}). Es el piso legal — ningún empleador puede pagarte menos por jornada completa.`,
+        tone: 'neutral',
+        icon: '💵',
+      }
+    : {
+        title: 'Jornada reducida — proporcional',
+        text: `Por **${horasSemana} h/semana** (menos de la jornada legal de 48 h), el mínimo proporcional es **$${fmt.format(smvmProporcionalMensual)}/mes**, calculado sobre el valor hora de $${fmt.format(SMVM_HORA)}.`,
+        tone: 'neutral',
+        icon: '⏱️',
+      };
+
   return {
     smvmMensual: SMVM_MENSUAL,
     smvmHora: SMVM_HORA,
     smvmDia,
     smvmProporcionalMensual,
     fechaVigencia: FECHA,
+    _insight,
   };
 }

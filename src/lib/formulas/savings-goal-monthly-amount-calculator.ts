@@ -11,6 +11,8 @@ export interface Outputs {
   interest_earned: number;
   interest_percent: number;
   explanation_note: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -109,11 +111,40 @@ export function compute(i: Inputs): Outputs {
     `You contribute $${total_contributed.toFixed(2)} out of pocket; ` +
     `interest covers $${interest_earned.toFixed(2)} (${interest_percent.toFixed(1)}% of goal).`;
 
+  const fmtUSD = (v: number) =>
+    '$' + v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  const chart = {
+    type: 'doughnut' as const,
+    slices: [
+      { label: 'Your contributions', value: Math.round(total_contributed) },
+      { label: 'Interest earned', value: Math.round(interest_earned) },
+    ],
+    prefix: '$',
+    centerValue: fmtUSD(fv),
+    centerLabel: 'Savings goal',
+    ariaLabel: `Savings goal of ${fmtUSD(fv)} split into contributions and interest earned.`,
+  };
+
+  const tone = interest_percent >= 20 ? 'good' : 'neutral';
+  const insightText =
+    `To hit your **${fmtUSD(fv)}** goal in ${horizon_str}, save **${'$' + monthly_payment.toFixed(2)}/month**. ` +
+    (interest_percent >= 1
+      ? `Compounding at ${apy.toFixed(2)}% APY does **${interest_percent.toFixed(0)}%** of the work — you only put in ${fmtUSD(total_contributed)} of your own money.`
+      : `At ${apy.toFixed(2)}% APY interest is negligible, so nearly the full ${fmtUSD(fv)} comes from your own deposits.`);
+
   return {
     monthly_payment,
     total_contributed,
     interest_earned,
     interest_percent,
-    explanation_note
+    explanation_note,
+    _chart: chart,
+    _insight: {
+      title: 'How to reach your goal',
+      text: insightText,
+      tone,
+      icon: '🎯',
+    },
   };
 }

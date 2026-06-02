@@ -13,6 +13,7 @@ export interface RopaMaletaOutputs {
   abrigos: number;
   lavados: number;
   detalle: string;
+  _insight?: any;
 }
 
 export function ropaMaletaDiasViaje(inputs: RopaMaletaInputs): RopaMaletaOutputs {
@@ -79,6 +80,17 @@ export function ropaMaletaDiasViaje(inputs: RopaMaletaInputs): RopaMaletaOutputs
   if (clima === 'calido') prendas.push('2 trajes de baño');
   if (clima === 'frio') prendas.push('Gorro, guantes y bufanda');
 
+  const totalPrendas = remeras + pantalones + interior + medias + abrigos;
+
+  const insight = {
+    title: lavar ? 'Equipaje liviano gracias al lavado' : 'Equipaje sin lavado',
+    text: lavar
+      ? `Para **${dias} días** llevás unas **${totalPrendas} prendas** porque lavás ~**${lavados || 0} vez/veces**: empacás solo ${diasRopa} días de ropa y rotás. Cabe holgado en un equipaje de mano.`
+      : `Para **${dias} días** sin lavar necesitás unas **${totalPrendas} prendas**${dias > 14 ? ' (tope a 14 días de ropa: igual vas a tener que lavar)' : ''}. Sin acceso a lavadero el bulto crece rápido; valorá llevar una bolsa para lavar a mano.`,
+    tone: (lavar || dias <= 7) ? 'good' : 'warn',
+    icon: '🧳',
+  };
+
   return {
     remeras,
     pantalones,
@@ -87,5 +99,6 @@ export function ropaMaletaDiasViaje(inputs: RopaMaletaInputs): RopaMaletaOutputs
     abrigos,
     lavados,
     detalle: `Para ${dias} días en clima ${climaLabel[clima] || clima}${lavar ? ' (con lavado)' : ' (sin lavado)'}: ${prendas.join(', ')}.${lavados > 0 ? ` Lavarás ~${lavados} vez/veces durante el viaje.` : ''}`,
+    _insight: insight,
   };
 }

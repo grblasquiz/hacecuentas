@@ -23,6 +23,7 @@ export interface ViajePresupuestoOutputs {
   transporteTotal: number;
   actividadesTotal: number;
   _chart?: any;
+  _insight?: any;
 }
 
 export function viajePresupuesto(inputs: ViajePresupuestoInputs): ViajePresupuestoOutputs {
@@ -62,8 +63,27 @@ export function viajePresupuesto(inputs: ViajePresupuestoInputs): ViajePresupues
     ariaLabel: 'Composición del presupuesto del viaje por rubro',
   };
 
+  const rubros = [
+    { label: 'alojamiento', value: alojamientoTotal },
+    { label: 'comida', value: comidaTotal },
+    { label: 'transporte', value: transporteTotal },
+    { label: 'actividades', value: actividadesTotal },
+    { label: 'extras fijos', value: extra },
+  ];
+  const mayor = rubros.reduce((a, b) => (b.value > a.value ? b : a));
+  const pctMayor = presupuestoTotal > 0 ? Math.round((mayor.value / presupuestoTotal) * 100) : 0;
+  const totalR = Math.round(presupuestoTotal);
+  const _insight = {
+    title: 'Presupuesto del viaje',
+    text: personas > 1
+      ? `Para **${dias} días** y **${personas} personas** el presupuesto es de **$${totalR.toLocaleString('es-AR')}** (≈$${Math.round(porPersona).toLocaleString('es-AR')} por persona). El rubro más pesado es **${mayor.label}**, con el ${pctMayor}% del total.`
+      : `Para **${dias} días** el presupuesto es de **$${totalR.toLocaleString('es-AR')}** (≈$${Math.round(porDia).toLocaleString('es-AR')} por día). El rubro más pesado es **${mayor.label}**, con el ${pctMayor}% del total.`,
+    tone: 'neutral',
+    icon: '🧳',
+  };
+
   return {
-    presupuestoTotal: Math.round(presupuestoTotal),
+    presupuestoTotal: totalR,
     porPersona: Math.round(porPersona),
     porDia: Math.round(porDia),
     noches,
@@ -72,5 +92,6 @@ export function viajePresupuesto(inputs: ViajePresupuestoInputs): ViajePresupues
     transporteTotal: Math.round(transporteTotal),
     actividadesTotal: Math.round(actividadesTotal),
     _chart: chart,
+    _insight,
   };
 }

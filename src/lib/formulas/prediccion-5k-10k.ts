@@ -6,6 +6,7 @@ export interface Outputs {
   tiempo21k: string;
   tiempo42k: string;
   detalle: string;
+  _insight?: any;
 }
 
 const DISTANCIAS_KM: Record<string, number> = {
@@ -40,11 +41,24 @@ export function prediccion5k10k(i: Inputs): Outputs {
   const t21k = riegel(tiempo, d1, 21.0975);
   const t42k = riegel(tiempo, d1, 42.195);
 
+  const pace10k = t10k / 10;
+  const pm = Math.floor(pace10k);
+  const ps = Math.round((pace10k - pm) * 60);
+  const paceTxt = `${pm}:${ps.toString().padStart(2, '0')} min/km`;
+
+  const _insight = {
+    title: 'Tu predicción de tiempos',
+    text: `Con ${formatTiempo(tiempo)} en ${d1} km, Riegel proyecta un **10K en ${formatTiempo(t10k)}** (ritmo de **${paceTxt}**) y una **maratón en ${formatTiempo(t42k)}**. Ojo: cuanto más larga la distancia objetivo, más optimista es la estimación si no entrenaste el fondo.`,
+    tone: 'neutral' as const,
+    icon: '🏃',
+  };
+
   return {
     tiempo5k: formatTiempo(t5k),
     tiempo10k: formatTiempo(t10k),
     tiempo21k: formatTiempo(t21k),
     tiempo42k: formatTiempo(t42k),
     detalle: `Con ${formatTiempo(tiempo)} en ${d1} km (Riegel, exp 1.06): 5K → ${formatTiempo(t5k)}, 10K → ${formatTiempo(t10k)}, 21K → ${formatTiempo(t21k)}, 42K → ${formatTiempo(t42k)}.`,
+    _insight,
   };
 }

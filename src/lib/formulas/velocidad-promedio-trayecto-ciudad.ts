@@ -7,6 +7,8 @@ export interface Outputs {
   velocidadPromedio: number;
   tiempoPorKm: string;
   detalle: string;
+  _chart?: any;
+  _insight?: any;
 }
 
 export function velocidadPromedioTrayectoCiudad(i: Inputs): Outputs {
@@ -34,9 +36,35 @@ export function velocidadPromedioTrayectoCiudad(i: Inputs): Outputs {
     comparacion = 'Velocidad de ruta o autopista libre.';
   }
 
+  const velRound = Number(velocidad.toFixed(1));
+  const chart = {
+    type: 'scale' as const,
+    marker: velRound,
+    markerLabel: 'Tu promedio: ' + velRound + ' km/h',
+    min: 0,
+    unit: ' km/h',
+    segments: [
+      { nombre: 'Muy lento', max: 10, color: '#fecaca', colorDark: '#b91c1c' },
+      { nombre: 'Hora pico', max: 18, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: 'Moderado', max: 30, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: 'Fluido', max: 50, color: '#d9f99d', colorDark: '#3f6212' },
+      { nombre: 'Ruta', max: Math.max(80, Math.ceil(velRound) + 20), color: '#bbf7d0', colorDark: '#166534' },
+    ],
+    ariaLabel: 'Escala de velocidad promedio en ciudad en km/h: de muy lento a velocidad de ruta.',
+  };
+
+  const insight = {
+    title: 'Tu velocidad promedio',
+    text: `Recorriste **${km} km en ${min} minutos**: un promedio de **${velRound} km/h** (${minPorKm.toFixed(1)} min por km). ${comparacion}`,
+    tone: velocidad < 10 ? 'warn' : (velocidad >= 30 ? 'good' : 'neutral'),
+    icon: '🚗',
+  };
+
   return {
-    velocidadPromedio: Number(velocidad.toFixed(1)),
+    velocidadPromedio: velRound,
     tiempoPorKm: `${minPorKm.toFixed(1)} min/km`,
     detalle: `${km} km en ${min} minutos = ${velocidad.toFixed(1)} km/h promedio (${minPorKm.toFixed(1)} min por km). ${comparacion}`,
+    _chart: chart,
+    _insight: insight,
   };
 }

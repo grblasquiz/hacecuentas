@@ -10,6 +10,7 @@ export interface YesoCielorrasoOutputs {
   masillaKg: number;
   cintaMl: number;
   detalle: string;
+  _insight?: any;
 }
 
 const M2_POR_PLACA = 2.88; // 1,20 × 2,40 m
@@ -36,6 +37,8 @@ export function yesoCielorrasoPlacasM2(inputs: YesoCielorrasoInputs): YesoCielor
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
 
+  const placasJustas = superficie / M2_POR_PLACA;
+  const extra = placas - Math.ceil(placasJustas);
   return {
     placas,
     perfilesOmegaMl: perfiles,
@@ -43,5 +46,11 @@ export function yesoCielorrasoPlacasM2(inputs: YesoCielorrasoInputs): YesoCielor
     masillaKg: masilla,
     cintaMl: cinta,
     detalle: `Para ${fmt.format(superficie)} m² de cielorraso (${desperdicio}% desperdicio): ${placas} placas de 1,20×2,40 m, ${fmt.format(perfiles)} ml de perfil omega, ${tornillos} tornillos, ${fmt.format(masilla)} kg de masilla y ${fmt.format(cinta)} m de cinta.`,
+    _insight: {
+      title: 'Tu lista de materiales',
+      text: `Para **${fmt.format(superficie)} m²** comprá **${placas} placas** de 1,20×2,40 m (cada una cubre 2,88 m²), más ${fmt.format(perfiles)} m de perfil omega, ${tornillos} tornillos, ${fmt.format(masilla)} kg de masilla y ${fmt.format(cinta)} m de cinta. El **${desperdicio}% de desperdicio** ya está incluido en las placas${extra > 0 ? `, así que llevás ${extra} placa(s) de más para cortes y roturas` : ''}.`,
+      tone: 'neutral',
+      icon: '🪵',
+    },
   };
 }

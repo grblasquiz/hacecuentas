@@ -1,6 +1,6 @@
 /** Calculadora Velocidad de Lectura — WPM */
 export interface Inputs { palabras: number; minutos: number; palabrasTexto?: number; }
-export interface Outputs { wpm: number; nivel: string; tiempoEstimado: string; comparacion: string; }
+export interface Outputs { wpm: number; nivel: string; tiempoEstimado: string; comparacion: string; _insight?: any; _chart?: any; }
 
 export function velocidadLecturaComprension(i: Inputs): Outputs {
   const pal = Number(i.palabras);
@@ -28,11 +28,37 @@ export function velocidadLecturaComprension(i: Inputs): Outputs {
 
   const promedioAdulto = 230;
   const diff = ((wpm / promedioAdulto) * 100 - 100);
+  const wpmR = Math.round(wpm);
+
+  const tone: 'good' | 'warn' | 'neutral' = wpm < 150 ? 'warn' : wpm < 250 ? 'neutral' : 'good';
+  const comparaTxt = diff >= 0
+    ? `un **${diff.toFixed(0)}% más rápido** que el promedio adulto (230 WPM)`
+    : `un **${Math.abs(diff).toFixed(0)}% por debajo** del promedio adulto (230 WPM)`;
 
   return {
-    wpm: Number(wpm.toFixed(0)),
+    wpm: wpmR,
     nivel,
     tiempoEstimado: tiempoEst,
     comparacion: `${diff >= 0 ? '+' : ''}${diff.toFixed(0)}% vs promedio adulto (230 WPM)`,
+    _insight: {
+      title: 'Tu velocidad de lectura',
+      text: `Leés a **${wpmR} WPM** (${nivel.toLowerCase()}), ${comparaTxt}. Con práctica de lectura activa podés ganar entre 50 y 100 WPM sin perder comprensión.`,
+      tone,
+      icon: '📖',
+    },
+    _chart: {
+      type: 'scale',
+      marker: wpmR,
+      markerLabel: `${wpmR} WPM`,
+      min: 0,
+      segments: [
+        { nombre: 'Bajo', max: 150, color: '#fca5a5', colorDark: '#ef4444' },
+        { nombre: 'Promedio', max: 250, color: '#fde047', colorDark: '#eab308' },
+        { nombre: 'Sobre la media', max: 400, color: '#86efac', colorDark: '#22c55e' },
+        { nombre: 'Rápido', max: 600, color: '#7dd3fc', colorDark: '#0ea5e9' },
+        { nombre: 'Speed reader', max: Math.max(800, Math.ceil(wpmR + 50)), color: '#c4b5fd', colorDark: '#8b5cf6' },
+      ],
+      ariaLabel: `Velocidad de lectura de ${wpmR} palabras por minuto: ${nivel}`,
+    },
   };
 }

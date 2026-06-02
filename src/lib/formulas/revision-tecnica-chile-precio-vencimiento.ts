@@ -17,6 +17,7 @@ export interface Outputs {
   precio_detran: number;
   multa_estimada: number;
   advertencia_legal: string;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -82,7 +83,40 @@ export function compute(i: Inputs): Outputs {
   }
   
   const multaEstimada = Math.round(multaUtm * utmValor);
-  
+
+  const fmtCl = (n: number) => Math.round(n).toLocaleString('es-CL');
+  const precioMin = Math.min(precio3cv, precioCesmec, precioDetran);
+  let insight: Outputs['_insight'];
+  if (!esObligatoria) {
+    insight = {
+      title: 'Revisión técnica',
+      text: `Por tipo y antigüedad, tu vehículo **aún no está obligado** a revisión técnica. Cuando lo esté, la planta más económica te saldría unos **$${fmtCl(precioMin)} CLP**.`,
+      tone: 'neutral',
+      icon: '🚗',
+    };
+  } else if (i.meses_atraso >= 6) {
+    insight = {
+      title: 'Bloqueo circulatorio',
+      text: `Con **${i.meses_atraso} meses** de atraso ya corre bloqueo de circulación y riesgo de decomiso temporal: la multa estimada trepa a **$${fmtCl(multaEstimada)} CLP**. Renová cuanto antes (planta más barata desde $${fmtCl(precioMin)}).`,
+      tone: 'warn',
+      icon: '🚫',
+    };
+  } else if (i.meses_atraso > 0) {
+    insight = {
+      title: 'Revisión vencida',
+      text: `Circular con **${i.meses_atraso} mes(es)** de atraso expone a una multa estimada de **$${fmtCl(multaEstimada)} CLP**, varias veces el costo de la revisión (desde $${fmtCl(precioMin)}). Conviene ponerte al día ya.`,
+      tone: 'warn',
+      icon: '⚠️',
+    };
+  } else {
+    insight = {
+      title: 'Revisión vigente',
+      text: `Tu revisión figura **vigente** y sin multas. La próxima la podés hacer desde **$${fmtCl(precioMin)} CLP** en la planta más económica (${frecuenciaMeses.toLowerCase()}).`,
+      tone: 'good',
+      icon: '✅',
+    };
+  }
+
   return {
     es_obligatoria: esObligatoria,
     frecuencia_meses: frecuenciaMeses,
@@ -91,6 +125,7 @@ export function compute(i: Inputs): Outputs {
     precio_cesmec: precioCesmec,
     precio_detran: precioDetran,
     multa_estimada: multaEstimada,
-    advertencia_legal: estadoLegal
+    advertencia_legal: estadoLegal,
+    _insight: insight
   };
 }

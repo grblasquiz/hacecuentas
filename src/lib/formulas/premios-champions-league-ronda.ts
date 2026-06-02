@@ -33,6 +33,8 @@ export interface PremiosChampionsOutputs {
   bonusPosicion: number;
   detalle: string;
   rondaLabel: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 const PREMIOS_CL: Record<string, number> = {
@@ -115,6 +117,44 @@ export function premiosChampionsLeagueRonda(
   const premioTotal =
     premioParticipacion + premioRonda + bonusVictoriasEmpates + bonusPosicion;
 
+  const fmtEur = (n: number) => '€' + n.toLocaleString('es-AR');
+  const esCampeon = ronda === 'campeon';
+  const tonoCL: 'good' | 'warn' | 'neutral' =
+    idx >= 4 ? 'good' : idx <= 0 ? 'warn' : 'neutral';
+  const partePct = Math.round((premioParticipacion / premioTotal) * 100);
+  let textoCL: string;
+  if (esCampeon) {
+    textoCL = `Ganar la Orejona deja **${fmtEur(premioTotal)}** en premios deportivos UEFA. A eso se suma el *market pool* (TV) por país, que para clubes de ligas grandes puede casi duplicar la cifra.`;
+  } else if (idx <= 0) {
+    textoCL = `Quedando en fase de liga el premio es **${fmtEur(premioTotal)}**: la participación fija (${fmtEur(premioParticipacion)}) es **${partePct}%** del total. Avanzar en el KO es donde está la plata grande.`;
+  } else {
+    textoCL = `Llegar a ${LABELS_CL[ronda]} suma **${fmtEur(premioTotal)}** en premios UEFA. Falta sumar el *market pool* (TV) por país, que esta cuenta no estima.`;
+  }
+  const _insight = {
+    title: 'Cuánto embolsa el club',
+    text: textoCL,
+    tone: tonoCL,
+    icon: '🏆',
+  };
+
+  const slicesCL: Array<{ label: string; value: number }> = [
+    { label: 'Participación fase de liga', value: premioParticipacion },
+  ];
+  if (premioRonda > 0) slicesCL.push({ label: 'Premios por ronda KO', value: premioRonda });
+  if (bonusVictoriasEmpates > 0)
+    slicesCL.push({ label: 'Bonus victorias/empates', value: bonusVictoriasEmpates });
+  if (bonusPosicion > 0)
+    slicesCL.push({ label: 'Bonus posición en liga', value: bonusPosicion });
+
+  const _chart = {
+    type: 'doughnut' as const,
+    slices: slicesCL,
+    prefix: '€',
+    centerValue: fmtEur(premioTotal),
+    centerLabel: 'Premio UEFA',
+    ariaLabel: 'Composición del premio de Champions: participación, rondas y bonus',
+  };
+
   return {
     premioTotal,
     premioParticipacion,
@@ -123,5 +163,7 @@ export function premiosChampionsLeagueRonda(
     bonusPosicion,
     detalle: detalleBuild.join(' + '),
     rondaLabel: LABELS_CL[ronda] || ronda,
+    _insight,
+    _chart,
   };
 }

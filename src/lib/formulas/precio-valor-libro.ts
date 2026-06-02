@@ -16,6 +16,8 @@ export interface Outputs {
   valuacion: string;
   formula: string;
   explicacion: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function precioValorLibro(i: Inputs): Outputs {
@@ -30,6 +32,12 @@ export function precioValorLibro(i: Inputs): Outputs {
       valUnder: 'Subvaluada respecto al sector',
       valOver: 'Sobrevaluada respecto al sector',
       valFair: 'Valuación en rango del sector',
+      insTitle: 'Cómo cotiza vs su valor en libros',
+      segCheap: 'Bajo libro',
+      segUnder: 'Subvaluada',
+      segFair: 'En rango',
+      segOver: 'Sobrevaluada',
+      gaugeAria: 'P/B ubicado en zonas de valuación respecto al sector',
     },
     en: {
       errPrecio: 'Enter the share price',
@@ -39,6 +47,12 @@ export function precioValorLibro(i: Inputs): Outputs {
       valUnder: 'Undervalued relative to the sector',
       valOver: 'Overvalued relative to the sector',
       valFair: 'Valuation within sector range',
+      insTitle: 'How it trades vs its book value',
+      segCheap: 'Below book',
+      segUnder: 'Undervalued',
+      segFair: 'In range',
+      segOver: 'Overvalued',
+      gaugeAria: 'P/B placed across valuation zones relative to the sector',
     },
   } as const)[__lang];
 
@@ -67,6 +81,38 @@ export function precioValorLibro(i: Inputs): Outputs {
     ? `Book value per share: $${valorLibro.toFixed(2)} (equity $${patrimonio.toLocaleString()} / ${acciones.toLocaleString()} shares). P/B ratio: ${pbRatio.toFixed(2)} (sector: ${pbSector}). ${valuacion}. Fair price based on sector P/B: $${precioJusto.toFixed(2)}.`
     : `Valor en libros por acción: $${valorLibro.toFixed(2)} (patrimonio $${patrimonio.toLocaleString()} / ${acciones.toLocaleString()} acciones). P/B ratio: ${pbRatio.toFixed(2)} (sector: ${pbSector}). ${valuacion}. Precio justo según P/B del sector: $${precioJusto.toFixed(2)}.`;
 
+  const tone = pbRatio < 1 ? 'warn' : (pbRatio > pbSector * 1.3 ? 'warn' : (pbRatio < pbSector * 0.8 ? 'good' : 'neutral'));
+  const absDif = Math.abs(diferencia).toFixed(1);
+  const insText = __lang === 'en'
+    ? `P/B ratio of **${pbRatio.toFixed(2)}** vs the sector's **${pbSector}**: ${valuacion.toLowerCase()}. The share trades **${diferencia >= 0 ? absDif + '% above' : absDif + '% below'}** its fair price of **$${precioJusto.toFixed(2)}**.`
+    : `P/B de **${pbRatio.toFixed(2)}** contra **${pbSector}** del sector: ${valuacion.toLowerCase()}. La acción cotiza **${diferencia >= 0 ? absDif + '% por encima' : absDif + '% por debajo'}** de su precio justo de **$${precioJusto.toFixed(2)}**.`;
+  const _insight = {
+    title: T.insTitle,
+    text: insText,
+    tone,
+    icon: '📊',
+  };
+
+  // Gauge: zonas de valuación construidas sobre los umbrales dinámicos del sector.
+  // Se fuerza orden ascendente estricto por si pbSector es muy bajo (segUnder podría caer bajo 1).
+  const b1 = 1;
+  const b2 = Math.max(pbSector * 0.8, b1 + 0.05);
+  const b3 = Math.max(pbSector * 1.3, b2 + 0.05);
+  const b4 = Math.max(b3 * 1.25, pbRatio * 1.1, b3 + 0.05);
+  const _chart = {
+    type: 'scale' as const,
+    marker: Number(pbRatio.toFixed(2)),
+    markerLabel: `P/B ${pbRatio.toFixed(2)}`,
+    min: 0,
+    segments: [
+      { nombre: T.segCheap, max: Number(b1.toFixed(2)), color: '#fca5a5', colorDark: '#b91c1c' },
+      { nombre: T.segUnder, max: Number(b2.toFixed(2)), color: '#86efac', colorDark: '#15803d' },
+      { nombre: T.segFair, max: Number(b3.toFixed(2)), color: '#93c5fd', colorDark: '#1d4ed8' },
+      { nombre: T.segOver, max: Number(b4.toFixed(2)), color: '#fdba74', colorDark: '#c2410c' },
+    ],
+    ariaLabel: T.gaugeAria,
+  };
+
   return {
     valorLibro: Number(valorLibro.toFixed(2)),
     pbRatio: Number(pbRatio.toFixed(2)),
@@ -75,5 +121,7 @@ export function precioValorLibro(i: Inputs): Outputs {
     valuacion,
     formula,
     explicacion,
+    _insight,
+    _chart,
   };
 }

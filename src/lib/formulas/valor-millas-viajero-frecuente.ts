@@ -14,6 +14,7 @@ export interface Outputs {
   valorBaseMillaCent: number; // centavos USD que vale una milla típicamente
   esBuenCanje: string;
   resumen: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -52,6 +53,15 @@ export function valorMillasViajeroFrecuente(i: Inputs): Outputs {
   else esBuenCanje = 'Malo — guardá las millas para otro canje';
 
   const valorCent = Number(valorCentavos.toFixed(2));
+  const ratioVsBase = base > 0 ? valorCentavos / base : 1;
+  const esMalo = valorCentavos < base * 0.7;
+  const esBueno = valorCentavos >= base;
+  const insight = {
+    title: 'Tu canje contra el promedio del programa',
+    text: `Cada milla te rinde **${valorCent.toFixed(2)}¢**, ${ratioVsBase >= 1 ? `**${((ratioVsBase - 1) * 100).toFixed(0)}% por encima**` : `**${((1 - ratioVsBase) * 100).toFixed(0)}% por debajo**`} del promedio de ${base}¢ en ${programa}. ${esBueno ? 'Es un buen uso de tus millas: canjealas para este vuelo.' : esMalo ? 'Rinde poco: te conviene pagar en efectivo y guardar las millas para un canje mejor.' : 'Está cerca del promedio; mirá si hay un canje más jugoso antes de quemarlas.'}`,
+    tone: esBueno ? 'good' : (esMalo ? 'warn' : 'neutral'),
+    icon: '✈️',
+  };
   const chart = {
     type: 'scale' as const,
     marker: valorCent,
@@ -74,6 +84,7 @@ export function valorMillasViajeroFrecuente(i: Inputs): Outputs {
     valorBaseMillaCent: base,
     esBuenCanje,
     resumen: `Tu canje vale **US$ ${valorPorMillaUsd.toFixed(3)} por milla** (${valorCentavos.toFixed(2)}¢). El valor promedio en ${programa} es ${base}¢. Resultado: ${esBuenCanje.toLowerCase()}.`,
+    _insight: insight,
     _chart: chart,
   };
 }

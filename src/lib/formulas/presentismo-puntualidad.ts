@@ -15,6 +15,8 @@ export interface PresentismoOutputs {
   presentismoCompleto: number;
   descuento: number;
   porcentajeDescuento: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function presentismoPuntualidad(inputs: PresentismoInputs): PresentismoOutputs {
@@ -45,10 +47,49 @@ export function presentismoPuntualidad(inputs: PresentismoInputs): PresentismoOu
   const descuento = presentismoCompleto * (porcDescuento / 100);
   const presentismoTotal = presentismoCompleto - descuento;
 
+  const totalR = Math.round(presentismoTotal);
+  const completoR = Math.round(presentismoCompleto);
+  const descuentoR = Math.round(descuento);
+  const fmt = (n: number) => '$' + n.toLocaleString('es-AR');
+
+  let _insight: any;
+  if (descuentoR <= 0) {
+    _insight = {
+      title: 'Presentismo completo',
+      text: `Sin ausencias ni tardanzas, cobrás el adicional íntegro: **${fmt(completoR)}** (el **${porcentaje}%** del básico). No perdés un peso.`,
+      tone: 'good' as const,
+      icon: '✅',
+    };
+  } else {
+    _insight = {
+      title: 'Perdés parte del presentismo',
+      text: `Por ${diasAusencia > 0 ? `**${diasAusencia}** ${diasAusencia === 1 ? 'falta' : 'faltas'}` : ''}${diasAusencia > 0 && llegadasTarde > 0 ? ' y ' : ''}${llegadasTarde > 0 ? `**${llegadasTarde}** ${llegadasTarde === 1 ? 'llegada tarde' : 'llegadas tarde'}` : ''} se te descuenta el **${porcDescuento}%** del adicional: perdés **${fmt(descuentoR)}** y cobrás **${fmt(totalR)}** en vez de ${fmt(completoR)}.`,
+      tone: 'warn' as const,
+      icon: '⏰',
+    };
+  }
+
+  let _chart: any;
+  if (descuentoR > 0) {
+    _chart = {
+      type: 'doughnut' as const,
+      slices: [
+        { label: 'Cobrás', value: totalR },
+        { label: 'Descuento', value: descuentoR },
+      ],
+      prefix: '$',
+      centerValue: fmt(completoR),
+      centerLabel: 'Presentismo pleno',
+      ariaLabel: `Presentismo completo ${fmt(completoR)}: cobrás ${fmt(totalR)}, se descuenta ${fmt(descuentoR)}.`,
+    };
+  }
+
   return {
-    presentismoTotal: Math.round(presentismoTotal),
-    presentismoCompleto: Math.round(presentismoCompleto),
-    descuento: Math.round(descuento),
+    presentismoTotal: totalR,
+    presentismoCompleto: completoR,
+    descuento: descuentoR,
     porcentajeDescuento: `${porcDescuento}%`,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

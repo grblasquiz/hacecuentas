@@ -9,6 +9,7 @@ export interface Outputs {
   largo: number;
   volumen: number;
   frecModo: number;
+  _insight?: any;
 }
 
 const PROPORCIONES: Record<string, [number, number, number]> = {
@@ -32,11 +33,25 @@ export function tamanoSalaAcustica(i: Inputs): Outputs {
   // First axial mode of longest dimension: f = c / (2 * L) where c = 343 m/s
   const frecModo = 343 / (2 * largo);
 
+  const nombreProp: Record<string, string> = {
+    bolt: 'Bolt',
+    iec: 'IEC (EBU)',
+    sepmeyer: 'Sepmeyer',
+  };
+  const propLabel = nombreProp[i.proporcion] || i.proporcion;
+  const fmt1 = (n: number) => n.toFixed(1).replace('.', ',');
+
   return {
     altura: Number(altura.toFixed(2)),
     ancho: Number(ancho.toFixed(2)),
     largo: Number(largo.toFixed(2)),
     volumen: Number(volumen.toFixed(1)),
     frecModo: Number(frecModo.toFixed(1)),
+    _insight: {
+      title: `Proporción ${propLabel}`,
+      text: `Una sala de **${fmt1(largo)} × ${fmt1(ancho)} × ${fmt1(altura)} m** (${fmt1(volumen)} m³) reparte los modos de resonancia sin apilarlos, que es la clave de la proporción ${propLabel}. Su primer modo axial cae en **${fmt1(frecModo)} Hz**: por debajo de esa frecuencia los graves se vuelven irregulares y conviene tratarlos con bass traps en las esquinas.`,
+      tone: 'neutral',
+      icon: '🔊',
+    },
   };
 }

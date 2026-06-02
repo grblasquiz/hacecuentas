@@ -8,6 +8,7 @@ export interface Inputs {
 
 export interface Outputs {
   focalEquivalente: string; aperturaEquivalente: string; angulo: string; resumen: string;
+  _insight?: any;
 }
 
 export function tamanoSensorCropFactor(inputs: Inputs): Outputs {
@@ -22,10 +23,24 @@ export function tamanoSensorCropFactor(inputs: Inputs): Outputs {
   // Angulo de visión horizontal full frame ref
   const sensorW = 36 / c; // mm horizontal
   const ang = 2 * Math.atan((sensorW / 2) / f) * (180 / Math.PI);
+  const _insight = c === 1
+    ? {
+        title: 'Sensor full frame',
+        text: `Con sensor full frame no hay recorte: tu lente de **${f}mm** encuadra como **${fEq.toFixed(0)}mm** y el ángulo de **${ang.toFixed(1)}°** es el real. La apertura **f/${a.toFixed(1)}** vale tanto para exposición como para profundidad de campo.`,
+        tone: 'neutral',
+        icon: '📷',
+      }
+    : {
+        title: `Crop ${c}× recorta el encuadre`,
+        text: `El factor de recorte **${c}×** hace que tu lente de **${f}mm** encuadre como un **${fEq.toFixed(0)}mm** en full frame (ángulo de **${ang.toFixed(1)}°**). Ojo: el f/${a.toFixed(1)} sigue exponiendo como f/${a.toFixed(1)}, pero la profundidad de campo equivale a **f/${aEq.toFixed(1)}**.`,
+        tone: 'warn',
+        icon: '🔍',
+      };
   return {
     focalEquivalente: `${fEq.toFixed(0)} mm FF`,
     aperturaEquivalente: `f/${aEq.toFixed(1)} (solo para DoF, exposición sigue f/${a.toFixed(1)})`,
     angulo: `${ang.toFixed(1)}° horizontal`,
     resumen: `Crop ${c}× → ${f}mm actúa como ${fEq.toFixed(0)}mm FF`,
+    _insight,
   };
 }

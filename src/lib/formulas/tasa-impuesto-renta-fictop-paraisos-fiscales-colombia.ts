@@ -15,6 +15,8 @@ export interface Outputs {
   obligacion_declarativa: string;
   formulario_requerido: string;
   plazo_retencion_dias: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -68,6 +70,30 @@ export function compute(i: Inputs): Outputs {
     ? 'Formulario 1780 + Justificación Residencia Permanente'
     : 'Formulario 1780 + Anexo Renta Exterior + Form W-8BEN o Certificado AIU';
   
+  const fmtCop = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
+  const pctRet = tarifaAplicable * 100;
+
+  const _insight = {
+    title: `Retención del ${pctRet.toFixed(0)}% en origen`,
+    text: tarifaAplicable === 0
+      ? `Por tratado, el pago a **${i.pais_beneficiario}** queda **exento de retención**: el beneficiario recibe los **${fmtCop(valorNeto)}** completos. Conservá el certificado de residencia fiscal que respalda la exención.`
+      : `Sobre el pago de **${fmtCop(i.valor_pago_cop)}** a **${i.pais_beneficiario}** se retiene un **${pctRet.toFixed(0)}%** (**${fmtCop(valorRetencion)}**), y el beneficiario recibe **${fmtCop(valorNeto)}** netos. Clasificación: ${clasificacionRiesgo.toLowerCase()}.`,
+    tone: pctRet >= 35 ? 'warn' : pctRet > 0 ? 'neutral' : 'good',
+    icon: '🏝️',
+  };
+
+  const _chart = (i.valor_pago_cop > 0 && valorRetencion > 0) ? {
+    type: 'doughnut',
+    slices: [
+      { label: 'Neto al beneficiario', value: Math.round(valorNeto) },
+      { label: 'Retención DIAN', value: Math.round(valorRetencion) },
+    ],
+    prefix: '$',
+    centerValue: fmtCop(i.valor_pago_cop),
+    centerLabel: 'Pago bruto',
+    ariaLabel: `Pago bruto de ${fmtCop(i.valor_pago_cop)} repartido en ${fmtCop(valorNeto)} netos y ${fmtCop(valorRetencion)} de retención`,
+  } : undefined;
+
   return {
     tarifa_retencion_aplicable: tarifaAplicable * 100, // como %
     valor_retencion_cop: Math.round(valorRetencion),
@@ -75,6 +101,8 @@ export function compute(i: Inputs): Outputs {
     clasificacion_riesgo: clasificacionRiesgo,
     obligacion_declarativa: obligacion,
     formulario_requerido: formularioRequerido,
-    plazo_retencion_dias: PLAZO_GIRO_DIAS
+    plazo_retencion_dias: PLAZO_GIRO_DIAS,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
 }

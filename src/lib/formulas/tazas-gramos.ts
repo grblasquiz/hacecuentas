@@ -10,6 +10,7 @@ export interface Outputs {
   densidad: number;
   ingrediente: string;
   resumen: string;
+  _insight?: any;
 }
 
 // Gramos por taza (taza estándar 240 ml)
@@ -89,12 +90,22 @@ export function tazasGramos(i: Inputs): Outputs {
     resultado = ml / ML[ud];
   } else throw new Error('Unidad destino no válida');
 
-  const resumen = `${c} ${uo} de ${ing.replace(/_/g, ' ')} = ${resultado.toFixed(2)} ${ud}`;
+  const nombre = ing.replace(/_/g, ' ');
+  const resumen = `${c} ${uo} de ${nombre} = ${resultado.toFixed(2)} ${ud}`;
+
+  // --- Insight: equivalencia de referencia según densidad ---
+  const _insight = {
+    title: 'Equivalencia en cocina',
+    text: `Para **${nombre}**, 1 taza (240 ml) pesa **${densidad} g**. Por eso tu conversión da **${resultado.toFixed(2)} ${ud}**. Usá pesos en gramos para mayor precisión: las tazas varían según cómo compactes el ingrediente.`,
+    tone: 'neutral',
+    icon: '🥄',
+  };
 
   return {
     resultado: Number(resultado.toFixed(2)),
     densidad,
-    ingrediente: ing.replace(/_/g, ' '),
+    ingrediente: nombre,
     resumen,
+    _insight,
   };
 }

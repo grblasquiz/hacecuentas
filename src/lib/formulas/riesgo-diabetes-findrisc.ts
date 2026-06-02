@@ -13,6 +13,7 @@ export interface Outputs {
   puntaje: number;
   riesgo: string;
   detalle: string;
+  _insight?: any;
   _chart?: any;
 }
 
@@ -75,10 +76,26 @@ export function riesgoDiabetesFindrisc(i: Inputs): Outputs {
     ariaLabel: 'Escala FINDRISC de riesgo de diabetes tipo 2: tu puntaje ' + puntaje + ' sobre 26',
   };
 
+  const tone = puntaje < 12 ? (puntaje < 7 ? 'good' as const : 'neutral' as const) : 'warn' as const;
+  const _insight = {
+    title: 'Qué significa tu puntaje',
+    text: `Tu FINDRISC es **${puntaje}/26**, lo que ubica tu riesgo de diabetes tipo 2 a 10 años como **${riesgo.toLowerCase()}** (~**${probabilidad}** de probabilidad). ` +
+      (puntaje < 7
+        ? 'Un riesgo bajo: sostené tus hábitos y alcanzá con un control de rutina.'
+        : puntaje <= 11
+        ? 'Levemente elevado: mejorar la alimentación y sumar actividad física ahora reduce mucho el riesgo a futuro.'
+        : puntaje <= 14
+        ? 'Moderado: conviene una glucemia en ayunas y poner foco en dieta y movimiento.'
+        : 'Es momento de una evaluación médica (glucemia y HbA1c); cuanto antes actúes, más fácil es revertirlo.'),
+    tone,
+    icon: puntaje < 7 ? '🟢' : puntaje <= 11 ? '🩸' : '⚠️',
+  };
+
   return {
     puntaje,
     riesgo: `${riesgo} — Probabilidad a 10 años: ${probabilidad}. ${recomendacion}`,
     detalle,
+    _insight,
     _chart: chart,
   };
 }

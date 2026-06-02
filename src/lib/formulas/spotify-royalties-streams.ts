@@ -1,6 +1,6 @@
 /** Spotify Royalties Streams */
 export interface Inputs { streamsAnuales: number; tier: string; comisionDistribuidor: number; }
-export interface Outputs { rate: string; ingresoBruto: string; comision: string; neto: string; _chart?: any; }
+export interface Outputs { rate: string; ingresoBruto: string; comision: string; neto: string; _insight?: any; _chart?: any; }
 
 export function spotifyRoyaltiesStreams(i: Inputs): Outputs {
   const s = Number(i.streamsAnuales);
@@ -28,11 +28,21 @@ export function spotifyRoyaltiesStreams(i: Inputs): Outputs {
     centerLabel: 'Bruto',
     ariaLabel: 'Composición del ingreso bruto: neto para el artista más comisión del distribuidor',
   } : undefined;
+  const streamsParaUnDolar = neto > 0 ? Math.round(s / neto) : 0;
+  const insight = s > 0 ? {
+    title: 'Lo que dejan tus streams',
+    text: com > 0
+      ? `Con **${s.toLocaleString('es-AR')} streams/año** te quedan **$${neto.toFixed(2)} USD netos** tras la comisión del ${com}%. A $${rate.toFixed(4)} por reproducción, necesitás unos **${streamsParaUnDolar.toLocaleString('es-AR')} streams para juntar 1 dólar** neto.`
+      : `Con **${s.toLocaleString('es-AR')} streams/año** ganás **$${neto.toFixed(2)} USD**. A $${rate.toFixed(4)} por reproducción, hacen falta unos **${streamsParaUnDolar.toLocaleString('es-AR')} streams por cada dólar**.`,
+    tone: 'warn' as const,
+    icon: '🎧',
+  } : undefined;
   return {
     rate: `$${rate.toFixed(4)} USD por stream`,
     ingresoBruto: `$${bruto.toFixed(2)} USD/año`,
     comision: `$${comUSD.toFixed(2)} USD (${com}% del distribuidor)`,
     neto: `$${neto.toFixed(2)} USD/año`,
+    _insight: insight,
     _chart: chart,
   };
 }

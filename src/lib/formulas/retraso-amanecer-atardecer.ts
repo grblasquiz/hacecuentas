@@ -13,6 +13,8 @@ export interface Outputs {
   cambioAtardecer: string;
   categoria: string;
   comentario: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 function dayOfYear(fecha: string): number {
@@ -61,11 +63,41 @@ export function retrasoAmanecerAtardecer(i: Inputs): Outputs {
 
   const fmt = (m: number) => (m >= 0 ? '+' : '') + m.toFixed(2) + ' min';
 
+  const insightTone = abs < 0.3 ? 'neutral' : 'good';
+  const insightText =
+    `Hoy el día se está **${signoDia} ${abs.toFixed(2)} min**: el sol sale ${amanecerMin >= 0 ? 'más tarde' : 'más temprano'} (${fmt(amanecerMin)}) y anochece ${atardecerMin >= 0 ? 'más tarde' : 'más temprano'} (${fmt(atardecerMin)}). ` +
+    (abs < 0.3
+      ? `Estás cerca de un solsticio: la duración del día casi no se mueve.`
+      : abs < 1.2
+        ? `Ritmo intermedio entre solsticio y equinoccio.`
+        : `Estás cerca de un equinoccio: es cuando el día cambia más rápido en el año.`);
+
+  // Gauge sobre la MAGNITUD del cambio (independiente del signo): cerca de solsticio → equinoccio
+  const mag = Math.round(abs * 100) / 100;
+  const segMax = Math.max(2.5, Math.ceil(mag * 10) / 10 + 0.2);
   return {
     cambioDuracionDia: `${fmt(deltaMin)} (el día se está ${signoDia})`,
     cambioAmanecer: `${fmt(amanecerMin)} (${amanecerMin >= 0 ? 'sale más tarde' : 'sale más temprano'})`,
     cambioAtardecer: `${fmt(atardecerMin)} (${atardecerMin >= 0 ? 'anochece más tarde' : 'anochece más temprano'})`,
     categoria,
     comentario,
+    _insight: {
+      title: signoDia === 'alargando' ? 'El día se alarga' : 'El día se acorta',
+      text: insightText,
+      tone: insightTone,
+      icon: signoDia === 'alargando' ? '🌅' : '🌇'
+    },
+    _chart: {
+      type: 'scale',
+      marker: mag,
+      markerLabel: `${mag.toFixed(2)} min/día`,
+      min: 0,
+      segments: [
+        { nombre: 'Cerca de solsticio', max: 0.3, color: '#6366f1', colorDark: '#4f46e5' },
+        { nombre: 'Transición', max: 1.2, color: '#f59e0b', colorDark: '#d97706' },
+        { nombre: 'Cerca de equinoccio', max: segMax, color: '#f97316', colorDark: '#ea580c' }
+      ],
+      ariaLabel: `El día cambia ${mag.toFixed(2)} minutos por día, sobre una escala que va de mínimo (solsticio) a máximo (equinoccio).`
+    }
   };
 }

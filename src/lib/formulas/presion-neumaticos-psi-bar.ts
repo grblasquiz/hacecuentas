@@ -8,6 +8,8 @@ export interface Outputs {
   bar: number;
   kpa: number;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function presionNeumaticosPsiBar(i: Inputs): Outputs {

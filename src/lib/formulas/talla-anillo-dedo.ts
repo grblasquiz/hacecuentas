@@ -11,6 +11,7 @@ export interface Outputs {
   tallaUK: string;
   diametro: number;
   mensaje: string;
+  _insight?: any;
 }
 
 export function tallaAnilloDedo(i: Inputs): Outputs {
@@ -40,6 +41,15 @@ export function tallaAnilloDedo(i: Inputs): Outputs {
   const tallaUK = ukIndex >= 0 && ukIndex < ukSizes.length ? ukSizes[ukIndex] : '—';
 
   const usVal = Math.max(0, tallaUS);
+  const diaFmt = diametro.toFixed(1);
+  const _insight = {
+    title: __lang === 'en' ? 'Your ring size' : 'Tu talla de anillo',
+    text: __lang === 'en'
+      ? `A circumference of **${circ} mm** means a diameter of **${diaFmt} mm** → size **${tallaAR}** (AR/EU). Measure at the end of the day, when fingers are slightly larger.`
+      : `Una circunferencia de **${circ} mm** equivale a un diámetro de **${diaFmt} mm** → talla **${tallaAR}** (AR/EU). Medí al final del día, cuando el dedo está un poco más hinchado.`,
+    tone: 'neutral',
+    icon: '💍',
+  };
   return {
     tallaAR,
     tallaUS: usVal,
@@ -49,5 +59,6 @@ export function tallaAnilloDedo(i: Inputs): Outputs {
     mensaje: __lang === 'en'
       ? `Circumference ${circ}mm → Diameter ${diametro.toFixed(1)}mm. Size AR/EU: ${tallaAR} | US: ${usVal} | UK: ${tallaUK}.`
       : `Circunferencia ${circ}mm → Diámetro ${diametro.toFixed(1)}mm. Talla AR/EU: ${tallaAR} | US: ${usVal} | UK: ${tallaUK}.`,
+    _insight,
   };
 }

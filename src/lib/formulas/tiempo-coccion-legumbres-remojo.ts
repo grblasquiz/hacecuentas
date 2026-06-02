@@ -10,6 +10,7 @@ export interface Outputs {
   aguaLitros: string;
   rendimiento: string;
   detalle: string;
+  _insight?: any;
 }
 
 interface DatoLegumbre {
@@ -49,11 +50,18 @@ export function tiempoCoccionLegumbresRemojo(i: Inputs): Outputs {
 
   const metodoNombre = metodo === 'olla_presion' ? 'olla a presión' : 'olla común';
 
+  const [presMin, presMax] = dato.presionMin;
+  const ahorraMin = dato.coccionMin[1] - presMax;
+  const insightText = metodo === 'olla_presion'
+    ? `**${dato.nombre}** en olla a presión: **${minC}-${maxC} min** de cocción y rinde ~**${rendimiento} g** cocidos. Ganás hasta ${ahorraMin} min frente a la olla común.`
+    : `**${dato.nombre}** en olla común: **${minC}-${maxC} min** de cocción. Pasándote a olla a presión bajarías a ${presMin}-${presMax} min (hasta ${ahorraMin} min menos).`;
+
   return {
     tiempoRemojo: dato.remojoHs,
     tiempoCoccion: `${minC}-${maxC} minutos (${metodoNombre})`,
     aguaLitros: `${litros.toFixed(1)} litros (${aguaMl} ml)`,
     rendimiento: `${gramos} g secos → ~${rendimiento} g cocidos (×${dato.factorRendimiento})`,
     detalle: `${dato.nombre}: remojo ${dato.remojoHs}, cocción ${minC}-${maxC} min en ${metodoNombre}. Para ${gramos} g: usar ${litros.toFixed(1)} L de agua. Rinde ~${rendimiento} g cocidos.`,
+    _insight: { title: 'Cocción y rendimiento', text: insightText, tone: 'neutral', icon: '🫘' },
   };
 }

@@ -14,6 +14,7 @@ export interface Outputs {
   tipo_unidad: string;
   fecha_vigencia: string;
   reajuste_ipc: number;
+  _insight?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -105,11 +106,26 @@ export function compute(i: Inputs): Outputs {
       };
   }
 
+  const resultadoRedondeado = Math.round(resultado_conversion * 100) / 100;
+  const valorRedondeado = Math.round(valor_unitario * 100) / 100;
+  const haciaPesos = tipo_unidad === 'Pesos CLP';
+  const fmtCl = (n: number) => n.toLocaleString('es-CL', { maximumFractionDigits: 2 });
+  const unidadOrigen = i.tipo_conversion.split('_')[0].toUpperCase();
+  const insight = {
+    title: haciaPesos ? `Cuánto valen tus ${unidadOrigen}` : `Cuántas ${tipo_unidad} son`,
+    text: haciaPesos
+      ? `**${fmtCl(Number(i.monto) || 0)} ${unidadOrigen}** equivalen a **$${fmtCl(resultadoRedondeado)} CLP**, con la ${unidadOrigen} valuada en **$${fmtCl(valorRedondeado)}**. El reajuste IPC de los últimos 12 meses fue de **${IPC_REAJUSTE_12M}%**.`
+      : `**$${fmtCl(Number(i.monto) || 0)} CLP** equivalen a **${fmtCl(resultadoRedondeado)} ${tipo_unidad}**, tomando cada ${tipo_unidad} a **$${fmtCl(valorRedondeado)}**. La UF se reajusta a diario por inflación; UTM y UTA, mensual y anualmente.`,
+    tone: 'neutral' as const,
+    icon: '🇨🇱',
+  };
+
   return {
-    resultado_conversion: Math.round(resultado_conversion * 100) / 100,
-    valor_unitario: Math.round(valor_unitario * 100) / 100,
+    resultado_conversion: resultadoRedondeado,
+    valor_unitario: valorRedondeado,
     tipo_unidad,
     fecha_vigencia,
-    reajuste_ipc: IPC_REAJUSTE_12M
+    reajuste_ipc: IPC_REAJUSTE_12M,
+    _insight: insight
   };
 }

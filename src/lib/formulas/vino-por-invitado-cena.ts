@@ -15,6 +15,8 @@ export interface VinoPorInvitadoCenaOutputs {
   litrosTotales: number;
   botellasTinto: number;
   botellasBlanco: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function vinoPorInvitadoCena(
@@ -40,11 +42,32 @@ export function vinoPorInvitadoCena(
   const botellasTinto = Math.ceil(botellas * 0.6);
   const botellasBlanco = botellas - botellasTinto;
 
+  const copasRound = Number(copasPorPersona.toFixed(1));
+  const _insight = {
+    title: 'Cuánto vino comprar',
+    text: `Para **${invitados} invitados** en una cena de **${horas} h**, calculá unas **${botellas} botellas** (≈ ${copasRound} copas por persona), repartidas en **${botellasTinto} de tinto** y **${botellasBlanco} de blanco**. Incluye un 10% de margen para no quedarte corto.`,
+    tone: 'neutral',
+    icon: '🍷',
+  };
+
+  const _chart = {
+    type: 'doughnut',
+    slices: [
+      { label: 'Tinto', value: botellasTinto },
+      { label: 'Blanco', value: botellasBlanco },
+    ],
+    centerValue: `${botellas}`,
+    centerLabel: 'botellas',
+    ariaLabel: `${botellas} botellas: ${botellasTinto} de tinto y ${botellasBlanco} de blanco`,
+  };
+
   return {
     botellas,
-    copasPorPersona: Number(copasPorPersona.toFixed(1)),
+    copasPorPersona: copasRound,
     litrosTotales: Number(litrosTotales.toFixed(2)),
     botellasTinto,
     botellasBlanco,
+    _insight,
+    _chart,
   };
 }

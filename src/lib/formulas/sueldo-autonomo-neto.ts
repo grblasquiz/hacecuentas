@@ -13,6 +13,7 @@ export interface Outputs {
   otrosGastos: number;
   detalle: string;
   _chart?: any;
+  _insight?: any;
 }
 
 // Pagos mensuales estimados monotributo 2026 (actualización enero 2026)
@@ -67,6 +68,22 @@ export function sueldoAutonomoNeto(i: Inputs): Outputs {
     ariaLabel: 'Composición de la facturación mensual: neto estimado, monotributo, IIBB y otros gastos',
   };
 
+  const totalCostos = monotributo + iibb + otrosGastos;
+  const insight = {
+    title:
+      netoEstimado < 0
+        ? 'Tus costos superan lo que facturás'
+        : porcentajeNeto < 70
+        ? 'Buena parte se va en cargas y gastos'
+        : 'Te queda la mayor parte de lo que facturás',
+    text:
+      netoEstimado < 0
+        ? `Facturando **$${fmt.format(facturacion)}** no alcanzás a cubrir los **$${fmt.format(totalCostos)}** de monotributo (cat. ${categoria}), IIBB y gastos: quedás **$${fmt.format(Math.abs(netoEstimado))}** en rojo. Revisá tu categoría o el % de IIBB.`
+        : `De los **$${fmt.format(facturacion)}** que facturás te queda un neto de **$${fmt.format(Math.round(netoEstimado))}** (**${porcentajeNeto.toFixed(1)}%**), tras **$${fmt.format(totalCostos)}** entre monotributo (cat. ${categoria}), IIBB y otros gastos.`,
+    tone: netoEstimado < 0 ? 'warn' : porcentajeNeto < 70 ? 'warn' : 'good',
+    icon: '🧾',
+  };
+
   return {
     netoEstimado: Math.round(Math.max(0, netoEstimado)),
     monotributo,
@@ -74,5 +91,6 @@ export function sueldoAutonomoNeto(i: Inputs): Outputs {
     otrosGastos,
     detalle,
     _chart: chart,
+    _insight: insight,
   };
 }

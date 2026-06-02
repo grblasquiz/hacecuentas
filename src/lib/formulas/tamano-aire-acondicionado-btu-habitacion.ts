@@ -11,6 +11,8 @@ export interface Outputs {
   frigoriasNecesarias: number;
   equipoSugerido: string;
   detalle: string;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function tamanoAireAcondicionadoBtuHabitacion(i: Inputs): Outputs {
@@ -64,10 +66,36 @@ export function tamanoAireAcondicionadoBtuHabitacion(i: Inputs): Outputs {
 
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+  const esGrande = equipoRedondeado >= 24000;
+  const _insight = {
+    title: 'Equipo recomendado',
+    text: esGrande
+      ? `Para ${m2} m² necesitás un equipo de **${fmt.format(equipoRedondeado)} BTU** (${fmt.format(frigorias)} frigorías). Es un equipo grande: verificá que tengas instalación de **220V** y que el espacio justifique el consumo.`
+      : `Para ${m2} m² alcanza un equipo de **${fmt.format(equipoRedondeado)} BTU** (${fmt.format(frigorias)} frigorías). Sobredimensionar enfría rápido pero deshumidifica peor y gasta de más: este tamaño está bien.`,
+    tone: esGrande ? 'warn' : 'good',
+    icon: '❄️',
+  };
+  // Gauge: el equipo recomendado dentro de las franjas comerciales de tamaño
+  const _chart = {
+    type: 'scale',
+    marker: equipoRedondeado,
+    markerLabel: `${fmt.format(equipoRedondeado)} BTU`,
+    min: 6000,
+    segments: [
+      { nombre: 'Chico', max: 9000, color: '#bae6fd', colorDark: '#0c4a6e' },
+      { nombre: 'Estándar', max: 18000, color: '#22c55e', colorDark: '#15803d' },
+      { nombre: 'Grande', max: 36000, color: '#facc15', colorDark: '#a16207' },
+      { nombre: 'Comercial', max: 60000, color: '#f87171', colorDark: '#b91c1c' },
+    ],
+    ariaLabel: `Equipo de ${fmt.format(equipoRedondeado)} BTU recomendado para ${m2} metros cuadrados`,
+  };
+
   return {
     btuNecesarios: equipoRedondeado,
     frigoriasNecesarias: frigorias,
     equipoSugerido: equipoNombre,
     detalle: `Para ${m2} m² con techo de ${altura} m, orientación ${orientacion} y aislación ${aislacion}: necesitás ${fmt.format(Math.round(btu))} BTU (cálculo exacto). Equipo comercial recomendado: ${fmt.format(equipoRedondeado)} BTU = ${fmt.format(frigorias)} frigorías.`,
+    _insight,
+    _chart,
   };
 }

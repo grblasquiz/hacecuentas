@@ -1,6 +1,6 @@
 /** Talla de zapato del bebé por medida del pie o edad */
 export interface Inputs { medidasPie?: number; edadBebeMeses?: number; __lang?: string; }
-export interface Outputs { tallaArgentina: string; tallaEuropea: string; tallaUSA: string; recomendacion: string; }
+export interface Outputs { tallaArgentina: string; tallaEuropea: string; tallaUSA: string; recomendacion: string; _insight?: any; }
 
 const tablaPie: { cm: number; ar: number; eu: number; us: number }[] = [
   { cm: 8, ar: 15, eu: 15, us: 0.5 }, { cm: 8.5, ar: 15, eu: 15, us: 0.5 },
@@ -43,6 +43,14 @@ export function tallaZapatoBebe(i: Inputs): Outputs {
   let best = tablaPie[0];
   for (const t of tablaPie) { if (t.cm <= cm) best = t; }
 
+  const _insight = {
+    title: __lang === 'en' ? "Baby's shoe size" : 'Talla de zapato del bebé',
+    text: __lang === 'en'
+      ? `A **${cm} cm** foot is size **${best.ar}** (AR/EU). Babies' feet grow fast — re-measure every 2-3 months and leave **1-1.5 cm** of room so toes can move.`
+      : `Un pie de **${cm} cm** es talla **${best.ar}** (AR/EU). El pie del bebé crece rápido: volvé a medir cada 2-3 meses y dejá **1-1,5 cm** de holgura para que mueva los dedos.`,
+    tone: 'neutral',
+    icon: '👟',
+  };
   return {
     tallaArgentina: `${best.ar}`,
     tallaEuropea: `${best.eu}`,
@@ -50,5 +58,6 @@ export function tallaZapatoBebe(i: Inputs): Outputs {
     recomendacion: __lang === 'en'
       ? `For a ${cm} cm foot: size ${best.ar} (AR/EU). Remember to leave 1-1.5 cm of extra room between the toe and the tip of the shoe.`
       : `Para pie de ${cm} cm: talla ${best.ar} (AR/EU). Recordá dejar 1-1,5 cm extra entre el dedo y la punta del zapato.`,
+    _insight,
   };
 }

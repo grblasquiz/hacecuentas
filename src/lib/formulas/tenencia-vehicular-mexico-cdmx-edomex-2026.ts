@@ -13,6 +13,8 @@ export interface Outputs {
   total_a_pagar: number;
   antigüedad_años: number;
   tasa_tenencia: number;
+  _insight?: any;
+  _chart?: any;
 }
 
 export function compute(i: Inputs): Outputs {
@@ -98,14 +100,60 @@ export function compute(i: Inputs): Outputs {
   refrendo = Math.ceil(refrendo);
 
   const total_a_pagar = tenencia_federal + tenencia_estatal + refrendo - descuento_cdmx;
+  const total = Math.max(0, total_a_pagar);
 
-  return {
+  const mxn = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
+  const estadoLabel: Record<string, string> = {
+    cdmx: 'CDMX', edomex: 'Estado de México', jalisco: 'Jalisco', queretaro: 'Querétaro', otros: 'tu estado',
+  };
+  const eLabel = estadoLabel[i.estado] ?? 'tu estado';
+  const tenenciaTotal = tenencia_federal + tenencia_estatal;
+
+  let insightTone: 'good' | 'warn' | 'neutral';
+  let insightText: string;
+  if (i.estado === 'cdmx' && i.valor_factura < 250000) {
+    insightTone = 'good';
+    insightText = `En **CDMX** un auto facturado en **${mxn(i.valor_factura)}** queda **subsidiado al 100%**: solo pagás el refrendo de **${mxn(refrendo)}**. Ese es tu total anual.`;
+  } else if (tenenciaTotal > 0) {
+    insightTone = 'warn';
+    insightText = `La tenencia ${i.es_motocicleta ? 'de tu moto ' : ''}en **${eLabel}** suma **${mxn(tenenciaTotal)}** más **${mxn(refrendo)}** de refrendo: total **${mxn(total)}** al año (tasa ${(Math.round(tasa_tenencia * 10000) / 100).toFixed(2)}%${antigüedad_años >= 4 ? `, con descuento por ${antigüedad_años} años de antigüedad` : ''}).`;
+  } else {
+    insightTone = 'neutral';
+    insightText = `En **${eLabel}** pagás **${mxn(total)}** al año por este vehículo.`;
+  }
+
+  const slices = [
+    { label: 'Tenencia federal', value: tenencia_federal },
+    { label: 'Tenencia estatal', value: tenencia_estatal },
+    { label: 'Refrendo', value: refrendo },
+  ].filter((s) => s.value > 0);
+
+  const out: Outputs = {
     tenencia_federal,
     tenencia_estatal,
     descuento_cdmx,
     refrendo,
-    total_a_pagar: Math.max(0, total_a_pagar),
+    total_a_pagar: total,
     antigüedad_años,
-    tasa_tenencia: Math.round(tasa_tenencia * 10000) / 100 // En porcentaje
+    tasa_tenencia: Math.round(tasa_tenencia * 10000) / 100, // En porcentaje
+    _insight: {
+      title: 'Tu pago anual',
+      text: insightText,
+      tone: insightTone,
+      icon: '🚗',
+    },
   };
+
+  if (slices.length >= 2 && total > 0) {
+    out._chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: mxn(total),
+      centerLabel: 'Total anual',
+      ariaLabel: `Desglose del pago anual de ${mxn(total)} en ${eLabel}`,
+    };
+  }
+
+  return out;
 }
