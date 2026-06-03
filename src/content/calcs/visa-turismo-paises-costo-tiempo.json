@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-visa-turismo-paises-costo-tiempo",
-  "lastReviewed": "2026-04-24",
+  "lastReviewed": "2026-06-02",
   "title": "Calculadora Visa turismo paises costos 2026 | Hacé Cuentas",
   "h1": "Visa turismo paises costos",
   "description": "✈️ Los trámites oficiales en Argentina tienen costos variables por jurisdicción, tiempos de entrega y documentación requerida.",
@@ -19,40 +19,96 @@
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Input 1",
+      "id": "tasaConsular",
+      "label": "Tasa consular",
       "type": "number",
+      "suffix": "USD",
+      "placeholder": "80",
+      "min": 0,
+      "max": 1000,
+      "step": 1,
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "help": "Tasa oficial del país de destino (ej.: Schengen 80, EE.UU. 185, India 25). Convertila a USD si está en otra divisa."
     },
     {
-      "id": "v2",
-      "label": "Input 2",
+      "id": "cargoCentro",
+      "label": "Cargo del centro de visas (opcional)",
       "type": "number",
-      "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "suffix": "USD",
+      "placeholder": "30",
+      "min": 0,
+      "max": 500,
+      "step": 1,
+      "advanced": true,
+      "help": "Servicio de VFS Global, BLS o CVASC. Es un pago aparte de la tasa consular. Si el trámite es 100% online, dejá 0."
+    },
+    {
+      "id": "diasEstadia",
+      "label": "Días de viaje (para el seguro)",
+      "type": "number",
+      "suffix": "días",
+      "placeholder": "15",
+      "min": 0,
+      "max": 365,
+      "step": 1,
+      "advanced": true,
+      "help": "Cantidad de días que vas a viajar. Se usa para estimar el seguro médico. Si no llevás seguro, dejá 0."
+    },
+    {
+      "id": "costoSeguroDia",
+      "label": "Costo del seguro por día (opcional)",
+      "type": "number",
+      "suffix": "USD/día",
+      "placeholder": "2",
+      "min": 0,
+      "max": 50,
+      "step": 0.5,
+      "advanced": true,
+      "help": "Valor diario del seguro de viaje. Por defecto usamos ~USD 2/día. Para Schengen es obligatorio (cobertura mín. EUR 30.000)."
+    },
+    {
+      "id": "extras",
+      "label": "Fotos, copias, courier (opcional)",
+      "type": "number",
+      "suffix": "USD",
+      "placeholder": "10",
+      "min": 0,
+      "max": 500,
+      "step": 1,
+      "advanced": true,
+      "help": "Fotos reglamentarias, fotocopias, traducción certificada y/o courier del pasaporte."
     }
   ],
   "outputs": [
     {
-      "id": "resultado",
-      "label": "Resultado",
+      "id": "costoTotal",
+      "label": "Costo total estimado (USD)",
+      "format": "number",
       "primary": true
     },
     {
+      "id": "seguroTotal",
+      "label": "Seguro de viaje (USD)",
+      "format": "number"
+    },
+    {
+      "id": "desglose",
+      "label": "Desglose",
+      "format": "text"
+    },
+    {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Interpretación",
+      "format": "text"
     }
   ],
   "example": {
     "title": "Ejemplo de cálculo",
     "steps": [
-      "Ejemplo",
-      "Resultado"
+      "Schengen: tasa USD 80 + centro VFS USD 30 + seguro 15 días × USD 2 = USD 30",
+      "80 + 30 + 30 = USD 140"
     ],
-    "result": "Resultado"
+    "result": "Costo total estimado: USD 140"
   },
   "explanation": "## Cómo se calcula\n\nEl costo total de una visa de turismo se obtiene sumando todos los componentes obligatorios:\n\n```\nCosto Total (USD) =\n  Tasa Consular\n  + Cargo Centro de Visas (VFS Global / BLS / CVASC)\n  + Seguro de Viaje (costo diario × días de estadía)\n  + Fotos reglamentarias + fotocopias\n  + Traducción certificada (si aplica)\n  + Courier de pasaporte (opcional, ~USD 20–35)\n```\n\nEl **tiempo de tramitación** sigue esta lógica:\n\n```\nDías hábiles estimados =\n  Días de procesamiento consular\n  + Días de espera de turno (varía por demanda)\n  + Días de courier (si no se retira personalmente)\n```\n\n> ⚠️ Las tasas consulares se pagan en la divisa del país emisor y NO se reembolsan ante un rechazo. Siempre convertí al tipo de cambio del BCRA o del día de pago.\n\n---\n\n## Tabla de referencia\n\n| Destino | Tasa consular | Cargo centro visas | Seguro mínimo | Plazo estimado | Entrevista |\n|---|---|---|---|---|---|\n| 🇺🇸 Estados Unidos (B1/B2) | USD 185 | USD 0 (incluido) | No obligatorio por visa | 2–30 días hábiles | Sí, obligatoria |\n| 🇪🇺 Schengen (Alemania/Francia/España) | EUR 80 | EUR 27–35 (VFS) | EUR 30.000 mín. / viaje | 5–15 días hábiles | Solo si la requieren |\n| 🇨🇳 China (visa L turismo) | USD 50–80 | USD 30 (CVASC) | No exigido por visa | 4–15 días hábiles | No |\n| 🇨🇦 Canadá (TRV) | CAD 100 (~USD 74) | CAD 0 (online) | No obligatorio por visa | 14–60 días hábiles | No (biométricos sí) |\n| 🇮🇳 India (e-Tourist Visa) | USD 25–80 (según estadía) | USD 0 (online) | No obligatorio | 3–5 días hábiles | No |\n| 🇦🇺 Australia (Visitor Visa 600) | AUD 190 (~USD 125) | AUD 0 (online) | No obligatorio | 14–29 días hábiles | No |\n| 🇷🇺 Rusia (turismo) | USD 50 | USD 20–30 | No obligatorio | 3–20 días hábiles | No |\n| 🇬🇧 Reino Unido (Standard Visitor) | GBP 115 (~USD 145) | GBP 0 (online) | No obligatorio | 15 días hábiles | No |\n\n> Datos orientativos 2025–2026. Las tasas pueden actualizarse sin previo aviso.\n\n---\n\n## Casos típicos\n\n### Caso 1 – Visa Schengen alemana desde Buenos Aires\nUna familia de 2 adultos viaja 15 días a Europa.\n\n- Tasa consular: EUR 80 × 2 = **EUR 160**\n- Cargo VFS Global: EUR 27 × 2 = **EUR 54**\n- Seguro de viaje (EUR 30.000 cobertura, 15 días, 2 personas): ~**USD 60**\n- Fotos reglamentarias (3,5 × 4,5 cm, fondo blanco): ~**$4.000 ARS**\n- Fotocopias de documentación: ~**$2.000 ARS**\n- **Costo total estimado**: EUR 214 + USD 60 + ~$6.000 ARS\n- **Plazo recomendado de inicio**: 6–8 semanas antes del viaje\n\n### Caso 2 – Visa B1/B2 para Estados Unidos\nUna persona solicita visa de turismo a EEUU por primera vez.\n\n- Tasa MRV (Machine Readable Visa): **USD 185** (pago obligatorio antes del turno)\n- Cargo de servicio: **incluido** en la tasa MRV\n- Seguro de viaje: no exigido por el consulado, pero recomendado (~USD 2/día)\n- Biométricos: se toman en la entrevista, sin cargo extra\n- **Plazo de espera de turno en Buenos Aires**: 2 a 30 días hábiles según temporada\n- **Vigencia de la visa si se aprueba**: hasta 10 años (entradas múltiples, estancias ≤6 meses)\n\n### Caso 3 – e-Visa India desde Argentina\nViaje individual de 30 días a India.\n\n- e-Tourist Visa 30 días: **USD 25**\n- e-Tourist Visa 1 año: **USD 40**\n- Proceso 100% online, sin centro de visas\n- Aprobación en 3–5 días hábiles (correo electrónico)\n- **Costo total**: USD 25–40 (más el costo del seguro de viaje si lo contratás)\n\n---\n\n## Errores comunes\n\n1. **No calcular el seguro de viaje obligatorio para Schengen**: Para la visa Schengen, el seguro de viaje con cobertura mínima de EUR 30.000 para gastos médicos y repatriación es un **requisito legal** (Reglamento CE 810/2009). Sin él, el consulado rechaza la solicitud sin reembolso de tasa.\n\n2. **Confundir tasa consular con cargo del centro de visas**: La tasa consular va al país de destino y no se reembolsa. El cargo del centro de visas (VFS, BLS, CVASC) es un servicio administrativo independiente. Son dos pagos distintos que sumás al presupuesto.\n\n3. **No verificar la vigencia mínima del pasaporte**: La mayoría de los países exige que el pasaporte tenga al menos 6 meses de vigencia **desde la fecha de regreso**, no de salida. Un pasaporte con 5 meses de vigencia puede generar el rechazo automático de la visa o el embarque.\n\n4. **Pedir el turno con poca anticipación**: En temporada alta (diciembre–febrero y julio–agosto), los turnos en VFS Global para Schengen y en el Consulado de EEUU pueden demorar 3 a 6 semanas. Iniciar el trámite con menos de 4 semanas de antelación es el error más frecuente que hace perder vuelos ya comprados.\n\n5. **Asumir que el pasaporte argentino no necesita visa**: Argentina tiene acceso sin visa a más de 170 países, pero destinos como EEUU, Canadá, China, India, Australia y Reino Unido requieren visa o autorización electrónica previa (ESTA/eTA). Siempre verificá antes de comprar el pasaje.\n\n6. **No considerar el tipo de cambio al presupuestar**: Las tasas consulares se cobran en divisa extranjera. Con la variación del tipo de cambio en Argentina, el costo en pesos puede diferir significativamente entre el momento de planificar y el de pagar.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora Visa USA – Costo y tiempo B1/B2](/calculadora-visa-usa-costo-tiempo-pasaporte)\n- [Calculadora Visa China – Turista, costo y requisitos](/calculadora-visa-china-turista-costo)\n- [Calculadora Visa USA EE.UU. – B1/B2 detallada](/calculadora-visa-turismo-usa-ee-uu-costo-b1-b2)\n- [Calculadora Visa Schengen – Europa y requisitos](/calculadora-visa-schengen-europa-requisitos)\n",
   "faq": [

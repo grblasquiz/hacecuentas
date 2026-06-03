@@ -1,15 +1,15 @@
 {
   "slug": "calculadora-tecnica-pomodoro-bloques-descanso-optimo",
-  "lastReviewed": "2026-04-24",
-  "title": "Calculadora Pomodoro 25/5 adapatado 2026 | Hacé Cuentas",
-  "h1": "Pomodoro 25/5 adapatado",
-  "description": "Calculá pomodoro 25/5 adapatado. Obtené resultado al instante. Cálculo al instante, sin registro. Ideal para consulta rápida. Categoría: educacion.",
+  "lastReviewed": "2026-06-02",
+  "title": "Calculadora Pomodoro 25/5 adaptado 2026 | Hacé Cuentas",
+  "h1": "Pomodoro 25/5 adaptado",
+  "description": "Calculá pomodoro 25/5 adaptado. Obtené resultado al instante. Cálculo al instante, sin registro. Ideal para consulta rápida. Categoría: educacion.",
   "category": "educacion",
   "audience": "global",
   "icon": "🍅",
   "formulaId": "tecnica-pomodoro-bloques-descanso-optimo",
-  "intro": "La técnica Pomodoro, creada por Francesco Cirillo a fines de los '80, estructura el trabajo en bloques de 25 minutos de concentración total (llamados \"pomodoros\") separados por descansos cortos de 5 minutos. Después de completar 4 pomodoros consecutivos, corresponde un descanso largo de 15 a 30 minutos. Esta calculadora toma tus parámetros reales —cantidad de bloques que necesitás trabajar, duración preferida de cada bloque y del descanso— y calcula el tiempo total de sesión, la cantidad óptima de ciclos completos, cuándo hacer el descanso largo y cuántos minutos efectivos de trabajo real obtenés. Es ideal para estudiantes universitarios, profesionales y cualquier persona que quiera maximizar su productividad sin quemarse.",
-  "keyTakeaway": "**Tiempo total de sesión = (Bloques × Duración bloque) + ((Bloques − 1) × Descanso corto) + (Descansos largos × Duración descanso largo)**, donde por cada 4 bloques se suma 1 descanso largo de 20 min. Ejemplo: 8 bloques de 25 min con descansos de 5 min y 1 descanso largo = 8×25 + 7×5 + 1×20 = 255 min totales con 200 min de trabajo real.",
+  "intro": "La técnica Pomodoro, creada por Francesco Cirillo a fines de los '80, estructura el trabajo en bloques de 25 minutos de concentración total (llamados \"pomodoros\") separados por descansos cortos de 5 minutos. Después de completar 4 pomodoros consecutivos, corresponde un descanso largo de 15 a 30 minutos. Esta calculadora toma tus parámetros reales —los minutos que tenés disponibles, la duración de cada bloque y de los descansos— y calcula cuántos Pomodoros entran, cuándo hacer el descanso largo, el tiempo total de sesión y cuántos minutos efectivos de foco real obtenés. Es ideal para estudiantes universitarios, profesionales y cualquier persona que quiera maximizar su productividad sin quemarse.",
+  "keyTakeaway": "Le pasás los **minutos que tenés** y la calculadora mete tantos Pomodoros como entren. Para N Pomodoros: **sesión total = N × bloque + descansos cortos × corto + descansos largos × largo**, con un descanso largo después de cada 4.º Pomodoro (nunca después del último). Ejemplo: en **180 min** con el esquema 25/5/20 entran **5 Pomodoros** = 125 min de foco + 3 descansos cortos (15 min) + 1 largo (20 min) = **160 min de sesión**, y te sobran 20 min.",
   "useCases": [
     "Estudiante universitario que tiene que preparar un parcial en 3 horas y quiere saber exactamente cuántos pomodoros puede meter, cuándo descansar y a qué hora termina la sesión.",
     "Freelancer que trabaja por proyectos y necesita calcular cuántos bloques efectivos de concentración puede completar en una jornada de 6 horas para presupuestar su tiempo correctamente.",
@@ -19,42 +19,120 @@
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Input 1",
+      "id": "minutos",
+      "label": "Minutos disponibles para la sesión",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "180",
+      "min": 5,
+      "max": 1440,
+      "step": 5,
+      "suffix": "min",
+      "format": "plain",
+      "help": "Tiempo total que tenés para trabajar o estudiar, en minutos."
     },
     {
-      "id": "v2",
-      "label": "Input 2",
+      "id": "duracionBloque",
+      "label": "Duración de cada Pomodoro",
       "type": "number",
-      "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "required": false,
+      "placeholder": "25",
+      "default": 25,
+      "min": 5,
+      "max": 120,
+      "step": 5,
+      "suffix": "min",
+      "help": "Largo de cada bloque de foco. Clásico: 25 min."
+    },
+    {
+      "id": "descansoCorto",
+      "label": "Descanso corto",
+      "type": "number",
+      "required": false,
+      "placeholder": "5",
+      "default": 5,
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "suffix": "min",
+      "help": "Pausa entre Pomodoros. Clásico: 5 min."
+    },
+    {
+      "id": "descansoLargo",
+      "label": "Descanso largo",
+      "type": "number",
+      "required": false,
+      "placeholder": "20",
+      "default": 20,
+      "min": 5,
+      "max": 60,
+      "step": 5,
+      "suffix": "min",
+      "help": "Pausa larga cada varios bloques. Clásico: 15 a 30 min."
+    },
+    {
+      "id": "cadaCuantos",
+      "label": "Descanso largo cada",
+      "type": "number",
+      "required": false,
+      "placeholder": "4",
+      "default": 4,
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "suffix": "pomodoros",
+      "help": "Cantidad de Pomodoros antes de cada descanso largo. Clásico: 4."
     }
   ],
   "outputs": [
     {
-      "id": "resultado",
-      "label": "Resultado",
+      "id": "pomodoros",
+      "label": "Pomodoros que entran",
+      "format": "number",
       "primary": true
     },
     {
+      "id": "tiempoFoco",
+      "label": "Foco real (min)",
+      "format": "number"
+    },
+    {
+      "id": "tiempoTotal",
+      "label": "Sesión total (min)",
+      "format": "number"
+    },
+    {
+      "id": "descansosCortos",
+      "label": "Descansos cortos",
+      "format": "number"
+    },
+    {
+      "id": "descansosLargos",
+      "label": "Descansos largos",
+      "format": "number"
+    },
+    {
+      "id": "tiempoLibre",
+      "label": "Tiempo sobrante (min)",
+      "format": "number"
+    },
+    {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Interpretación",
+      "format": "text"
     }
   ],
   "example": {
     "title": "Ejemplo de cálculo",
     "steps": [
-      "Ejemplo",
-      "Resultado"
+      "Tenés 180 minutos y usás el esquema clásico: bloques de 25 min, descanso corto de 5 min y descanso largo de 20 min cada 4 Pomodoros.",
+      "Entran 5 Pomodoros: 5 × 25 = 125 min de foco real.",
+      "Entre ellos van 3 descansos cortos (15 min) y 1 descanso largo después del 4.º (20 min) = 35 min de pausas.",
+      "Sesión total = 125 + 35 = 160 min, y te sobran 20 min."
     ],
-    "result": "Resultado"
+    "result": "5 Pomodoros · 125 min de foco · 160 min de sesión"
   },
-  "explanation": "## Cómo se calcula\n\nLa técnica Pomodoro adaptada 2026 permite personalizar la duración de cada bloque y descanso. La fórmula general es:\n\n```\n# Variables\nB  = cantidad de bloques de trabajo\nTb = duración de cada bloque (min)\nTc = duración de cada descanso corto (min)\nTl = duración del descanso largo (min)\nDL = cantidad de descansos largos = floor(B / 4)\n\n# Fórmulas principales\nTiempo_trabajo_real   = B × Tb\nCantidad_descansos_cortos = B - 1 - DL   # entre bloques, sin contar después del largo\nTiempo_total_sesión   = Tiempo_trabajo_real + (B - 1 - DL) × Tc + DL × Tl\n\n# Eficiencia de la sesión (%)\nEficiencia = (Tiempo_trabajo_real / Tiempo_total_sesión) × 100\n```\n\n> **Nota sobre descanso largo:** el descanso largo ocurre *después* del 4.° bloque de cada ciclo, *en lugar de* un descanso corto. Por eso se resta del conteo de descansos cortos.\n\n---\n\n## Tabla de referencia\n\n| Configuración | Bloques | Trabajo real | Descansos cortos | Descansos largos | Tiempo total | Eficiencia |\n|---|---|---|---|---|---|---|\n| Clásica 25/5/20 | 4 | 100 min | 3 × 5 = 15 min | 1 × 20 = 20 min | 135 min | 74 % |\n| Clásica 25/5/20 | 8 | 200 min | 6 × 5 = 30 min | 2 × 20 = 40 min | 270 min | 74 % |\n| Intensiva 50/10/30 | 4 | 200 min | 3 × 10 = 30 min | 1 × 30 = 30 min | 260 min | 77 % |\n| Suave 15/3/15 | 4 | 60 min | 3 × 3 = 9 min | 1 × 15 = 15 min | 84 min | 71 % |\n| Suave 15/3/15 | 8 | 120 min | 6 × 3 = 18 min | 2 × 15 = 30 min | 168 min | 71 % |\n| Universitaria 45/10/25 | 4 | 180 min | 3 × 10 = 30 min | 1 × 25 = 25 min | 235 min | 77 % |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Parcial universitario (3 horas disponibles, configuración clásica)\nUn estudiante tiene 180 minutos antes de rendir. Usa bloques de 25 min, descansos de 5 min y descanso largo de 20 min. ¿Cuántos bloques completos entran?\n\n- 4 bloques = 135 min → quedan 45 min → puede meter 1 bloque más de 25 min + 5 min descanso = 30 min.\n- **Total: 5 bloques = 125 min de estudio real en 165 min de sesión.**\n- Recomendación: usar el tiempo restante (15 min) para repasar apuntes sin cronómetro.\n\n### Caso 2 — Jornada de trabajo remoto (6 horas, configuración intensiva)\nUn freelancer dispone de 360 minutos. Usa bloques de 50 min, descansos de 10 min y descanso largo de 30 min.\n\n- Ciclo completo (4 bloques): 260 min → quedan 100 min → caben 1 bloque de 50 min + 10 min descanso = 60 min.\n- **Total: 5 bloques = 250 min de trabajo real en 320 min de sesión (78 % eficiencia).**\n\n### Caso 3 — Sesión corta con bloques reducidos (TDAH / baja concentración)\nAlguien que no puede sostener 25 min usa bloques de 15 min, descansos de 3 min y descanso largo de 15 min en 90 minutos disponibles.\n\n- 4 bloques completos = 84 min → quedan 6 min (insuficientes para otro bloque).\n- **Total: 4 bloques = 60 min de trabajo real en 84 min (71 % eficiencia).**\n\n---\n\n## Errores comunes\n\n1. **Contar el descanso largo como descanso corto adicional.** El descanso largo *reemplaza* al descanso corto que iría después del 4.° bloque; no se suma encima. Hacer las dos cosas eleva el tiempo total calculado y desfasa el plan.\n\n2. **No incluir el descanso largo en el tiempo total.** Mucha gente suma solo `B × Tb + (B−1) × Tc` y se olvida del descanso largo. En 8 bloques clásicos eso significa 40 minutos sin contabilizar: llegás tarde a la próxima reunión.\n\n3. **Asumir que interrumpir un bloque lo \"pausa\".** Según la metodología original, si interrumpís un pomodoro (llamada, WhatsApp, etc.) el bloque se invalida y hay que reiniciarlo desde cero. Saltarse esta regla hace que los minutos registrados no reflejen concentración real.\n\n4. **Usar siempre 25/5 sin adaptar al tipo de tarea.** Tareas creativas o de lectura profunda se benefician de bloques más largos (45-50 min). Tareas mecánicas o de repaso funcionan mejor con bloques cortos (15-20 min). Aplicar siempre 25 min puede reducir la eficiencia hasta un 15 % según estudios de gestión del tiempo cognitivo.\n\n5. **No respetar el descanso largo.** Muchos usuarios saltean el descanso de 20-30 min para \"aprovechar el momentum\". La neurociencia del aprendizaje indica que la consolidación de memoria ocurre en parte durante el reposo; saltear el descanso largo puede reducir la retención hasta un 20 % en sesiones de estudio.\n\n---\n\n## Calculadoras relacionadas\n\n- [Pomodoro óptimo por materia](/calculadora-pomodoro-optimo-materia) — calculá cuántos bloques necesitás según la dificultad y cantidad de temas de cada materia.\n- [Repaso óptimo para examen](/calculadora-repaso-optimo-examen) — planificá cuántas sesiones de repaso espaciado necesitás antes de una fecha de examen.\n- [Sesiones Pomodoro efectivas por día](/calculadora-productividad-pomodoro-sesiones-dia-efectivas) — descubrí cuántos pomodoros podés completar de forma sostenible según tus horas disponibles y nivel de energía.\n- [Calculadora de XP Duolingo por objetivo](/calculadora-duolingo-xp-objetivo) — si estudiás idiomas, calculá cuántas sesiones Duolingo necesitás para alcanzar tu meta de XP semanal.",
+  "explanation": "## Cómo se calcula\n\nLe decís a la calculadora **cuánto tiempo tenés** y ella mete tantos Pomodoros como entren, intercalando los descansos. Variables:\n\n```\n# Lo que ingresás\nT  = minutos disponibles para la sesión\nTb = duración de cada Pomodoro (bloque), default 25 min\nTc = descanso corto, default 5 min\nTl = descanso largo, default 20 min\nK  = cada cuántos Pomodoros va el descanso largo, default 4\n\n# Cómo se arma la sesión\n# - antes de cada bloque (salvo el 1.º) se suma un descanso\n# - el descanso es largo si el bloque anterior cerró un grupo de K; corto si no\n# - no hay descanso después del último bloque (la sesión termina ahí)\n\n# Para los N Pomodoros que entran en T\nDescansos_largos = floor((N - 1) / K)\nDescansos_cortos = (N - 1) - Descansos_largos\nFoco_real        = N × Tb\nTiempo_total     = Foco_real + Descansos_cortos × Tc + Descansos_largos × Tl\nTiempo_sobrante  = T - Tiempo_total\nEficiencia (%)   = Foco_real / Tiempo_total × 100\n```\n\n> **Nota sobre el descanso largo:** ocurre *después* del K.º bloque de cada grupo, *en lugar de* un descanso corto, y **nunca después del último Pomodoro** (ya terminaste). Por eso, si hacés exactamente K bloques, no hay descanso largo.\n\n---\n\n## Tabla de referencia\n\nTiempo total de la sesión según cuántos Pomodoros completes (sin descanso después del último):\n\n| Configuración | Pomodoros | Foco real | Descansos cortos | Descansos largos | Sesión total | Eficiencia |\n|---|---|---|---|---|---|---|\n| Clásica 25/5/20 | 4 | 100 min | 3 × 5 = 15 min | 0 | 115 min | 87 % |\n| Clásica 25/5/20 | 8 | 200 min | 6 × 5 = 30 min | 1 × 20 = 20 min | 250 min | 80 % |\n| Intensiva 50/10/30 | 4 | 200 min | 3 × 10 = 30 min | 0 | 230 min | 87 % |\n| Suave 15/3/15 | 4 | 60 min | 3 × 3 = 9 min | 0 | 69 min | 87 % |\n| Suave 15/3/15 | 8 | 120 min | 6 × 3 = 18 min | 1 × 15 = 15 min | 153 min | 78 % |\n| Universitaria 45/10/25 | 4 | 180 min | 3 × 10 = 30 min | 0 | 210 min | 86 % |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Parcial universitario (3 horas disponibles, configuración clásica)\nUn estudiante tiene 180 minutos antes de rendir. Usa bloques de 25 min, descansos cortos de 5 min y descanso largo de 20 min cada 4 Pomodoros.\n\n- Entran **5 Pomodoros** = 5 × 25 = **125 min de foco real**.\n- Pausas: 3 descansos cortos (15 min) + 1 descanso largo después del 4.º (20 min) = 35 min.\n- **Sesión total: 160 min**, y le sobran **20 min** para repasar apuntes sin cronómetro.\n\n### Caso 2 — Jornada de trabajo remoto (6 horas, configuración intensiva)\nUn freelancer dispone de 360 minutos. Usa bloques de 50 min, descansos cortos de 10 min y descanso largo de 30 min.\n\n- Entran **5 Pomodoros** = **250 min de trabajo real** (4 h 10 min).\n- Pausas: 3 descansos cortos (30 min) + 1 descanso largo (30 min) = 60 min.\n- **Sesión total: 310 min** (5 h 10 min, **81 % de eficiencia**), y le sobran **50 min**.\n\n### Caso 3 — Sesión corta con bloques reducidos (TDAH / baja concentración)\nAlguien que no puede sostener 25 min usa bloques de 15 min, descansos cortos de 3 min y descanso largo de 15 min en 90 minutos disponibles.\n\n- Entran **4 Pomodoros** = **60 min de foco real** con 3 descansos cortos (9 min).\n- **Sesión total: 69 min**, y le sobran **21 min**.\n- No entra un 5.º Pomodoro: después del 4.º corresponde el descanso largo, y 15 + 15 = 30 min > 21 min disponibles.\n\n---\n\n## Errores comunes\n\n1. **Contar el descanso largo como descanso corto adicional.** El descanso largo *reemplaza* al descanso corto que iría después del 4.° bloque; no se suma encima. Hacer las dos cosas eleva el tiempo total calculado y desfasa el plan.\n\n2. **No incluir el descanso largo en el tiempo total.** Mucha gente cuenta los bloques y los descansos cortos pero se olvida del descanso largo. En una sesión de 8 Pomodoros clásicos ese descanso largo son 20 minutos sin contabilizar: si no los sumás, llegás tarde a lo que sigue.\n\n3. **Asumir que interrumpir un bloque lo \"pausa\".** Según la metodología original, si interrumpís un pomodoro (llamada, WhatsApp, etc.) el bloque se invalida y hay que reiniciarlo desde cero. Saltarse esta regla hace que los minutos registrados no reflejen concentración real.\n\n4. **Usar siempre 25/5 sin adaptar al tipo de tarea.** Tareas creativas o de lectura profunda se benefician de bloques más largos (45-50 min). Tareas mecánicas o de repaso funcionan mejor con bloques cortos (15-20 min). Aplicar siempre 25 min puede reducir la eficiencia hasta un 15 % según estudios de gestión del tiempo cognitivo.\n\n5. **No respetar el descanso largo.** Muchos usuarios saltean el descanso de 20-30 min para \"aprovechar el momentum\". La neurociencia del aprendizaje indica que la consolidación de memoria ocurre en parte durante el reposo; saltear el descanso largo puede reducir la retención hasta un 20 % en sesiones de estudio.\n\n---\n\n## Calculadoras relacionadas\n\n- [Pomodoro óptimo por materia](/calculadora-pomodoro-optimo-materia) — calculá cuántos bloques necesitás según la dificultad y cantidad de temas de cada materia.\n- [Repaso óptimo para examen](/calculadora-repaso-optimo-examen) — planificá cuántas sesiones de repaso espaciado necesitás antes de una fecha de examen.\n- [Sesiones Pomodoro efectivas por día](/calculadora-productividad-pomodoro-sesiones-dia-efectivas) — descubrí cuántos pomodoros podés completar de forma sostenible según tus horas disponibles y nivel de energía.\n- [Calculadora de XP Duolingo por objetivo](/calculadora-duolingo-xp-objetivo) — si estudiás idiomas, calculá cuántas sesiones Duolingo necesitás para alcanzar tu meta de XP semanal.",
   "faq": [
     {
       "q": "¿Por qué 25 minutos y no otro número?",
@@ -110,7 +188,7 @@
   },
   "seoKeywords": [
     "tecnica pomodoro bloques descanso optimo",
-    "pomodoro 25/5 adapatado",
-    "calculadora pomodoro 25/5 adapatado 2026"
+    "pomodoro 25/5 adaptado",
+    "calculadora pomodoro 25/5 adaptado 2026"
   ]
 }

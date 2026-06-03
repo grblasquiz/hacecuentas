@@ -350,6 +350,7 @@ const schema = {
         'https://x.com/Hacecuentas',
         'https://www.instagram.com/hacecuentas',
         'https://www.linkedin.com/company/122324467/',
+        'https://www.facebook.com/profile.php?id=61590473465354',
         'https://www.wikidata.org/wiki/Q139824747',
         'https://hacecuentas.com/sobre-nosotros',
       ],
@@ -509,7 +510,6 @@ const schema = {
               {top.map((c: any) => (
                 <li>
                   <a href={`/${c.slug}`} class="cat-item">
-                    <span class="cat-item-icon">{c.icon}</span>
                     <span class="cat-item-name">
                       {c.h1}
                       {c.audience === 'AR' && (
@@ -560,6 +560,13 @@ const schema = {
         <h3>100 conversores nuevos</h3>
         <p>Pies a metros, Celsius a Fahrenheit, libras a kilos, galones a litros y 96 más. Factores exactos y ejemplos reales.</p>
         <span class="feature-cta">Ver todos los conversores →</span>
+      </a>
+      <a href="/calculadora-cientifica" class="feature-card feature-sci">
+        <div class="feature-badge">Nuevo</div>
+        <div class="feature-icon">🧮</div>
+        <h3>Calculadora científica</h3>
+        <p>Seno, coseno, tangente, logaritmos, raíces, potencias, factorial, π y e. Modo grados/radianes y teclado.</p>
+        <span class="feature-cta">Abrir calculadora →</span>
       </a>
     </div>
   </section>
@@ -640,6 +647,9 @@ const schema = {
       <a href="/guia/matematicas-ciencias" class="pilar-card"><span class="pilar-icon">➗</span><div><strong>Matemáticas y ciencias</strong><span>Álgebra, geometría, física</span></div></a>
       <a href="/guia/construccion-diy-hogar" class="pilar-card"><span class="pilar-icon">🔨</span><div><strong>Construcción y hogar</strong><span>Materiales, m², pintura, electricidad</span></div></a>
       <a href="/guia/cocina-medidas-recetas" class="pilar-card"><span class="pilar-icon">🍳</span><div><strong>Cocina, medidas y recetas</strong><span>Conversión, porciones, tiempos</span></div></a>
+      <a href="/guia/vida-cotidiana" class="pilar-card"><span class="pilar-icon">🏠</span><div><strong>Vida cotidiana y hogar</strong><span>Ahorro, servicios, fiestas, ocio</span></div></a>
+      <a href="/guia/mascotas" class="pilar-card"><span class="pilar-icon">🐾</span><div><strong>Mascotas</strong><span>Perros, gatos, peces, costos y cuidado</span></div></a>
+      <a href="/guia/viajes" class="pilar-card"><span class="pilar-icon">✈️</span><div><strong>Viajes y auto</strong><span>Nafta, peajes, equipaje, vuelos</span></div></a>
     </div>
   </section>
 
@@ -1485,6 +1495,12 @@ const schema = {
   }
   .feature-conv .feature-badge { background: #0d9488; }
   .feature-conv .feature-cta { color: #0d9488; }
+  .feature-sci {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(124, 58, 237, 0.03));
+    border-color: rgba(124, 58, 237, 0.25);
+  }
+  .feature-sci .feature-badge { background: #7c3aed; }
+  .feature-sci .feature-cta { color: #7c3aed; }
 
   /* Shimmer effect — subtle border glow, not overlay */
   .feature-card::after {
@@ -1855,24 +1871,10 @@ const schema = {
     overflow: hidden;
     will-change: transform;
   }
-  .cat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--cat-color, var(--accent)), color-mix(in srgb, var(--cat-color, var(--accent)) 40%, #a78bfa));
-    border-radius: var(--radius) var(--radius) 0 0;
-    transition: height 0.2s ease-out;
-  }
   .cat-card:hover {
     box-shadow: var(--shadow-lg);
     transform: translateY(-3px) scale(1.01);
     border-color: color-mix(in srgb, var(--cat-color, var(--accent)) 50%, var(--border));
-  }
-  .cat-card:hover::before {
-    height: 5px;
   }
   .cat-card:active {
     transform: translateY(-1px) scale(1);
@@ -1961,18 +1963,25 @@ const schema = {
     color: var(--text);
     text-decoration: none;
   }
-  .cat-item-icon {
-    font-size: 0.9375rem;
-    width: 18px;
-    text-align: center;
+  .cat-item::before {
+    content: '›';
     flex-shrink: 0;
+    width: 9px;
+    color: color-mix(in srgb, var(--cat-color) 65%, var(--text-subtle));
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1;
+    transition: transform 0.12s ease-out;
+  }
+  .cat-item:hover::before {
+    transform: translateX(2px);
+    color: var(--cat-color);
   }
   .cat-item-name {
     overflow: hidden;
     text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    white-space: nowrap;
+    min-width: 0;
     line-height: 1.35;
   }
 

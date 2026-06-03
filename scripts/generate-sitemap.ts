@@ -488,8 +488,9 @@ const priorityUrls: Url[] = [
   prio('/presupuesto-familiar',              '0.95', 'weekly'),
   prio('/simulador-jubilacion-anses',        '0.95', 'weekly'),
   prio('/comparador-plazo-fijo',             '0.9',  'daily',  true),
+  prio('/calculadora-cientifica',            '0.9',  'weekly'),
   prio('/valores-bcra',                      '0.9',  'daily',  true),
-  // 10 guías pilares (estables)
+  // 13 guías pilares (estables)
   prio('/guia/finanzas-personales',          '0.9',  'weekly'),
   prio('/guia/sueldos-argentina-2026',       '0.9',  'weekly'),
   prio('/guia/impuestos-argentina-2026',     '0.9',  'weekly'),
@@ -500,6 +501,9 @@ const priorityUrls: Url[] = [
   prio('/guia/matematicas-ciencias',         '0.9',  'weekly'),
   prio('/guia/productividad-aprendizaje',    '0.9',  'weekly'),
   prio('/guia/cocina-medidas-recetas',       '0.9',  'weekly'),
+  prio('/guia/vida-cotidiana',               '0.9',  'weekly'),
+  prio('/guia/mascotas',                     '0.9',  'weekly'),
+  prio('/guia/viajes',                       '0.9',  'weekly'),
 ];
 // Top categorías (las más grandes) — estable salvo deploys del template de categoría
 for (const cat of ['finanzas', 'vida', 'salud', 'educacion', 'mascotas', 'matematica', 'cocina', 'deportes', 'tecnologia', 'viajes', 'construccion', 'marketing', 'negocios', 'ciencia', 'automotor', 'familia', 'idiomas', 'jardineria', 'electronica', 'entretenimiento']) {
@@ -681,6 +685,7 @@ sitemaps.push({
   urls: [
     core('/',                                    '1.0',  'daily',   true),
     core('/comparador-plazo-fijo',               '0.85', 'daily',   true),
+    core('/calculadora-cientifica',              '0.85', 'weekly'),
     core('/valores-bcra',                        '0.85', 'daily',   true),
     core('/cambio-de-monedas',                   '0.95', 'hourly',  true),
     core('/cotizacion-cripto',                   '0.95', 'hourly',  true),
@@ -700,6 +705,9 @@ sitemaps.push({
     core('/guia/matematicas-ciencias',           '0.85', 'weekly'),
     core('/guia/productividad-aprendizaje',      '0.85', 'weekly'),
     core('/guia/cocina-medidas-recetas',         '0.85', 'weekly'),
+    core('/guia/vida-cotidiana',                 '0.85', 'weekly'),
+    core('/guia/mascotas',                       '0.85', 'weekly'),
+    core('/guia/viajes',                         '0.85', 'weekly'),
     core('/global',                              '0.9',  'weekly',  true),
     core('/es',                                  '0.85', 'weekly',  true),
     core('/mx',                                  '0.85', 'weekly',  true),
@@ -1053,6 +1061,19 @@ for (const c of calcs) {
     caption,
     title: h1.slice(0, 100),
   });
+  // Infografía propia de la calc (campo `infographic`): imagen rica con datos
+  // reales → entrada extra para Bing/Google Images. El nombre de archivo y el
+  // alt llevan keywords. La imagen vive en /img (no /og), por eso no la captura
+  // el chequeo de existsSync de arriba.
+  const info = (c as any).infographic;
+  if (info && info.src) {
+    imageEntries.push({
+      loc: `${site}/${c.slug}`,
+      image: info.src.startsWith('http') ? info.src : `${site}${info.src}`,
+      caption: ((info.caption || info.alt || caption) as string).slice(0, 300),
+      title: ((info.alt || h1) as string).slice(0, 100),
+    });
+  }
 }
 if (imageEntries.length > 0) {
   writeFileSync(join(PUBLIC_DIR, 'sitemap-images.xml'), imagesetXml(imageEntries), 'utf8');

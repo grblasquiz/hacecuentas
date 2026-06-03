@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-calorias-quemadas-bicicleta-distancia-pendiente",
-  "lastReviewed": "2026-05-27",
+  "lastReviewed": "2026-06-01",
   "title": "Calculadora Calorías bicicleta 2026 — Gratis | Hacé Cuentas",
   "h1": "Calorías bicicleta",
   "description": "20km bicicleta moderado: 400-600kcal según peso.",
@@ -18,40 +18,101 @@
   ],
   "fields": [
     {
-      "id": "valor1",
-      "label": "Input 1",
+      "id": "peso",
+      "label": "Peso corporal (kg)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "75",
+      "min": 30,
+      "max": 200,
+      "step": 0.5,
+      "help": "Tu peso en kg."
     },
     {
-      "id": "valor2",
-      "label": "Input 2",
+      "id": "distancia",
+      "label": "Distancia (km)",
       "type": "number",
       "required": true,
+      "placeholder": "20",
+      "min": 0.1,
+      "step": 0.1,
+      "help": "Kilómetros recorridos."
+    },
+    {
+      "id": "ritmo",
+      "label": "Ritmo / intensidad",
+      "type": "select",
+      "default": "moderado",
+      "options": [
+        {
+          "value": "recreativo",
+          "label": "Recreativo (≤15 km/h)"
+        },
+        {
+          "value": "moderado",
+          "label": "Moderado (16-19 km/h)"
+        },
+        {
+          "value": "intenso",
+          "label": "Intenso (20-25 km/h)"
+        },
+        {
+          "value": "competicion",
+          "label": "Competición (>25 km/h)"
+        }
+      ]
+    },
+    {
+      "id": "pendiente",
+      "label": "Pendiente media (%)",
+      "type": "number",
+      "required": false,
       "placeholder": "0",
-      "step": 0.01
+      "min": -20,
+      "max": 20,
+      "step": 0.5,
+      "help": "Pendiente media del recorrido. 0 = llano, valor negativo = bajada."
     }
   ],
   "outputs": [
     {
-      "id": "resultado",
-      "label": "Resultado",
-      "primary": true
+      "id": "caloriasTotal",
+      "label": "Calorías quemadas",
+      "format": "number",
+      "primary": true,
+      "suffix": " kcal"
+    },
+    {
+      "id": "caloriasPorKm",
+      "label": "Calorías por km",
+      "format": "number",
+      "suffix": " kcal/km"
+    },
+    {
+      "id": "desnivelAcumulado",
+      "label": "Desnivel",
+      "format": "text"
+    },
+    {
+      "id": "tiempoEstimado",
+      "label": "Tiempo estimado",
+      "format": "text"
     },
     {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Resumen",
+      "format": "text"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: 70 kg, 20 km a ritmo moderado en llano",
     "steps": [
-      "Valor típico",
-      "Resultado"
+      "**Ritmo moderado**: 18 km/h, MET 8.0.",
+      "**Tiempo**: 20 ÷ 18 = 1,11 h (~67 min).",
+      "**Cálculo**: 8.0 × 70 × 1,11 = **~622 kcal**.",
+      "**Por km**: ~31 kcal/km en terreno llano."
     ],
-    "result": "Resultado"
+    "result": "20 km a ritmo moderado en llano para 70 kg queman ~**622 kcal** (~31 kcal/km)."
   },
   "explanation": "Andar en **bicicleta** es uno de los ejercicios cardiovasculares más populares en Argentina: bicisendas en CABA y Rosario, cicloturismo en Mendoza y la Patagonia, MTB en sierras cordobesas y bonaerenses, ciclismo de ruta y, cada vez más, commuting urbano como alternativa al transporte público. Calcular cuántas calorías quemás depende de tres variables principales: **peso corporal**, **distancia recorrida** y **pendiente del terreno** (terreno llano vs subidas marcadas vs descensos prolongados).\n\nLa metodología estándar científica para estimar gasto calórico en ciclismo se basa en el concepto de **MET (Equivalente Metabólico de la Tarea)** del *Compendium of Physical Activities* (Ainsworth et al.). El MET del ciclismo varía según intensidad: **ciclismo recreativo lento (15 km/h o menos)** MET ~6; **ciclismo moderado (16-19 km/h)** MET ~8; **ciclismo intenso (20-25 km/h)** MET ~10-12; **ciclismo de competencia (>25 km/h)** MET puede superar 14. La fórmula es: **Calorías = MET × peso (kg) × tiempo (horas)**.\n\nLa **pendiente** modifica significativamente el gasto: una subida del 5% puede aumentar el costo metabólico 15-20% comparado con llano, y subidas del 10% (típicas de algunos circuitos serranos) pueden duplicar el gasto por hora. El **viento en contra** funciona como pendiente virtual y suma trabajo aerodinámico. En **descenso pronunciado** el gasto cae mucho — el cuerpo aprovecha la gravedad, aunque la musculatura excéntrica para frenar y mantener postura sigue trabajando.\n\nEsta calculadora estima las **calorías totales quemadas** según distancia, peso, ritmo y pendiente declarada. Útil para planificar nutrición de salidas largas, controlar déficit/superávit en plan de peso, o comparar el gasto frente a otras actividades.\n\n## Cómo se calcula\n\n```\nCalorías = MET × peso_kg × tiempo_horas\n\nMET típico según ritmo (terreno llano):\n  Recreativo lento (≤15 km/h):    ~6\n  Moderado (16-19 km/h):           ~8\n  Intenso (20-25 km/h):            ~10-12\n  Competición (>25 km/h):          ~13-16\n\nAjuste por pendiente:\n  Llano:                multiplicador 1,0\n  Subida 3-5%:          multiplicador 1,15-1,25\n  Subida 6-9%:          multiplicador 1,35-1,55\n  Subida >10%:          multiplicador 1,8-2,0\n  Descenso prolongado: multiplicador 0,5-0,7\n```\n\n## Gasto calórico orientativo por km (terreno llano)\n\n| Peso | Recreativo 15 km/h | Moderado 18 km/h | Intenso 22 km/h |\n|---|---|---|---|\n| 60 kg | ~24 kcal/km | ~32 kcal/km | ~40 kcal/km |\n| 70 kg | ~28 kcal/km | ~37 kcal/km | ~47 kcal/km |\n| 80 kg | ~32 kcal/km | ~42 kcal/km | ~54 kcal/km |\n| 90 kg | ~36 kcal/km | ~48 kcal/km | ~60 kcal/km |\n\nPara una salida típica de **20 km a ritmo moderado** en llano: una persona de 70 kg quema aproximadamente 500-600 kcal; una de 90 kg, 700-800 kcal.\n\n## Recomendaciones prácticas\n\n- **Hidratación**: 500-750 ml de agua por hora en clima templado; más en calor o salidas largas.\n- **Recarga energética en salidas >90 min**: 30-60 g de hidratos por hora (geles, frutas secas, banana).\n- **Recuperación post-ride**: ventana de 30-60 min ideal para combinar hidratos + proteína (~20-40 g).\n- **Casco siempre** — obligatorio por **Ley Nacional de Tránsito 24.449** en rutas y autovías.\n- **Luces y reflectivos** en uso nocturno o crepuscular.\n\n## Fuentes y referencias\n\n- **Ainsworth BE et al.** — *2011 Compendium of Physical Activities* (referencia MET).\n- **American College of Sports Medicine (ACSM)** — Guidelines for Exercise Testing and Prescription.\n- **OMS** — Recomendaciones globales sobre actividad física (2020).\n- **Ministerio de Salud de Argentina** — Guías de Práctica Clínica sobre actividad física.\n- **Ley Nacional de Tránsito 24.449** y **Ley de Bicicletas Eléctricas 26.473**.\n\n## Cuándo NO se aplica\n\n- **Niños y adolescentes**: el MET aplica con mayor margen de error y el enfoque pediátrico es disfrute más que conteo calórico.\n- Personas con cardiopatías o hipertensión no controlada: la intensidad y duración requieren prescripción médica con prueba ergométrica previa.\n- Pacientes en rehabilitación post-traumatológica: gasto y carga deben definirlas el kinesiólogo.\n- Ciclistas de competición con potenciómetro: la medición directa en watts es más precisa que la estimación MET.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido se contrasta contra el Compendium of Physical Activities (Ainsworth et al.), ACSM, OMS, Ministerio de Salud de Argentina y normativa vial nacional.\n\n**Disclaimer:** Esta calculadora es informativa y no reemplaza la consulta con un profesional de la salud matriculado. Para planes de entrenamiento personalizados consultá con un médico del deporte o licenciado en educación física.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
   "faq": [

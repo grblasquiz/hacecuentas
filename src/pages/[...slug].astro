@@ -26,7 +26,10 @@ import ScrollToTop from '../components/ScrollToTop.astro';
 import { findClusterForSlug } from '../lib/clusters';
 import { findHubForSlug } from '../lib/category-hubs';
 import { md, mdInline } from '../lib/markdown';
-import { CATEGORY_TO_GUIDE, GUIDE_TITLES } from '../lib/category-guide-map';
+import { resolveGuideSlug, GUIDE_TITLES } from '../lib/category-guide-map';
+import NextStep from '../components/NextStep.astro';
+import { getJourneySteps, NEXT_STEP_EXCLUDED } from '../lib/journeys';
+import { getComparatorForCalc } from '../lib/comparators';
 import { findMentions, findPrimaryAbout } from '../lib/wikidata-entities';
 import { datasetSchemasForCalc } from '../lib/calc-datasets';
 import { filterByIncremental } from '../lib/incremental';
@@ -890,9 +893,9 @@ const answerSnippet: string = calc.answerSnippet || '';
 const relatedSlugs: string[] = calc.relatedSlugs || [];
 const downloads: Array<{ label: string; href: string; description?: string }> = calc.downloads || [];
 
-// Guía pilar del tema (para link contextual de SEO)
-// Se puede override con `calc.guideSlug`, si no, se deduce por categoría.
-const pillarGuideSlug: string | null = calc.guideSlug || CATEGORY_TO_GUIDE[calc.category] || null;
+// Guía pilar del tema (para link contextual de SEO).
+// resolveGuideSlug: override manual → patrón de slug (guías AR) → categoría.
+const pillarGuideSlug: string | null = resolveGuideSlug(calc);
 const pillarGuideTitle: string | null = pillarGuideSlug ? GUIDE_TITLES[pillarGuideSlug] : null;
 
 // Cluster al que pertenece esta calc (embarazo, dólar, etc.)
@@ -907,6 +910,20 @@ const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
 const relatedContextual = relatedSlugs
   .map((s) => allCalcs.find((c) => c.slug === s))
   .filter(Boolean);
+
+// Journey (propuestas #1 y #2): próximos pasos del recorrido real (cluster +
+// sección de guía), no calcs "parecidas". Misma fuente para related y NextStep.
+const journeySlugs: string[] = getJourneySteps(calc.slug, relatedSlugs, 6);
+const journeyRelated: string[] = journeySlugs.length ? journeySlugs : relatedSlugs;
+// #1 "Tu próximo paso" post-resultado — excluye YMYL (salud/finanzas).
+const nextStepItems = journeySlugs
+  .map((s) => allCalcs.find((c) => c.slug === s))
+  .filter(Boolean)
+  .slice(0, 3)
+  .map((c: any) => ({ slug: c.slug, h1: c.h1, icon: c.icon, description: c.description }));
+const showNextStep = !NEXT_STEP_EXCLUDED.has(calc.category) && nextStepItems.length >= 2;
+// #5 comparador "vs" relevante (conecta los comparadores existentes, antes huérfanos).
+const comparator = getComparatorForCalc(calc.slug);
 
 // TOC: secciones top-level renderizadas (en orden de aparición)
 const tocSections: Array<{ id: string; label: string }> = [
@@ -1080,6 +1097,10 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             <InteractiveBmiTable />
             <ImcUnitsHook />
           </>
+        )}
+
+        {showNextStep && (
+          <NextStep steps={nextStepItems} />
         )}
 
         {calc.slug === 'dias-entre-dos-fechas' && (
@@ -1284,6 +1305,23 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           </section>
         )}
 
+        {calc.infographic && calc.infographic.src && (
+          <figure class="calc-infographic" style="margin:1.5rem 0;text-align:center;">
+            <img
+              src={calc.infographic.src}
+              alt={calc.infographic.alt || calc.h1}
+              width="1000"
+              height="1500"
+              loading="lazy"
+              decoding="async"
+              style="max-width:min(440px,100%);height:auto;border:1px solid var(--border,#e2e8f0);border-radius:14px;"
+            />
+            {calc.infographic.caption && (
+              <figcaption style="font-size:0.85rem;color:var(--text-muted,#64748b);margin-top:0.6rem;max-width:520px;margin-left:auto;margin-right:auto;">{calc.infographic.caption}</figcaption>
+            )}
+          </figure>
+        )}
+
         {showYmylDisclaimer && _disc && (
           <aside class="ymyl-disclaimer" role="note" aria-label="Aviso profesional">
             <p>
@@ -1386,7 +1424,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           </section>
         )}
 
-        <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={relatedSlugs} />
+        <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={journeyRelated} />
 
         {pillarGuideSlug && pillarGuideTitle && (
           <aside class="guide-link-cta">
@@ -1397,6 +1435,18 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
               <span class="guide-link-desc">Contexto, conceptos y cómo combinar calculadoras del tema.</span>
             </div>
             <a href={`/guia/${pillarGuideSlug}`} class="guide-link-btn">Abrir guía →</a>
+          </aside>
+        )}
+
+        {comparator && (
+          <aside class="guide-link-cta">
+            <span class="guide-link-icon" aria-hidden="true">{comparator.heroEmoji || '⚖️'}</span>
+            <div class="guide-link-body">
+              <span class="guide-link-eyebrow">¿Dudás entre opciones?</span>
+              <strong>Compará: {comparator.title}</strong>
+              <span class="guide-link-desc">Tabla lado a lado, veredicto y cuándo conviene cada una.</span>
+            </div>
+            <a href={`/comparar/${comparator.slug}`} class="guide-link-btn">Ver comparación →</a>
           </aside>
         )}
 

@@ -3248,7 +3248,6 @@ import { vacunasBebe } from './vacunas-bebe-calendario';
 import { compute as compute__vacunas_bebe_calendario_2026_argentina_edad } from './vacunas-bebe-calendario-2026-argentina-edad';
 import { vacunasFaltantesBebeEdadMeses } from './vacunas-faltantes-bebe-edad-meses';
 import { vacunasGatoCalendarioGatito } from './vacunas-gato-calendario-gatito';
-import { vacunasGatoTripleLeucemiaRabia } from './vacunas-gato-triple-leucemia-rabia';
 import { vacunasObligatoriasDestinoViaje } from './vacunas-obligatorias-destino-viaje';
 import { vacunasPerroCachorroAdultoCalendario } from './vacunas-perro-cachorro-adulto-calendario';
 import { vacunasPerroCalendario } from './vacunas-perro-calendario';
@@ -6649,7 +6648,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'vacunas-bebe-calendario-2026-argentina-edad': compute__vacunas_bebe_calendario_2026_argentina_edad,
   'vacunas-faltantes-bebe-edad-meses': vacunasFaltantesBebeEdadMeses,
   'vacunas-gato-calendario-gatito': vacunasGatoCalendarioGatito,
-  'vacunas-gato-triple-leucemia-rabia': vacunasGatoTripleLeucemiaRabia,
   'vacunas-obligatorias-destino-viaje': vacunasObligatoriasDestinoViaje,
   'vacunas-perro-cachorro-adulto-calendario': vacunasPerroCachorroAdultoCalendario,
   'vacunas-perro-calendario': vacunasPerroCalendario,

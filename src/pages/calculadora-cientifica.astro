@@ -1,0 +1,974 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Calculadora Científica Online Gratis 2026 | Hacé Cuentas';
+const description =
+  'Calculadora científica online gratis: seno, coseno, tangente, logaritmos (ln, log), raíces, potencias, factorial, π y e. Modo grados/radianes, soporte de teclado. Sin instalar nada.';
+
+// Teclado. Cada tecla: append (texto a insertar) o act (acción).
+// li/ai = etiqueta y append cuando INV está activo (funciones inversas).
+const keys = [
+  { l: 'Rad', cls: 'k-ctrl k-mode', act: 'mode', id: 'kMode', title: 'Cambiar entre radianes y grados' },
+  { l: 'INV', cls: 'k-ctrl k-inv', act: 'inv', id: 'kInv', title: 'Funciones inversas (sin⁻¹, eˣ…)' },
+  { l: '(', cls: 'k-fn', ap: '(' },
+  { l: ')', cls: 'k-fn', ap: ')' },
+  { l: 'AC', cls: 'k-ctrl k-clear', act: 'clear', title: 'Borrar todo' },
+
+  { l: 'sin', cls: 'k-fn', ap: 'sin(', li: 'sin⁻¹', ai: 'asin(' },
+  { l: 'cos', cls: 'k-fn', ap: 'cos(', li: 'cos⁻¹', ai: 'acos(' },
+  { l: 'tan', cls: 'k-fn', ap: 'tan(', li: 'tan⁻¹', ai: 'atan(' },
+  { l: 'π', cls: 'k-fn', ap: 'π' },
+  { l: '⌫', cls: 'k-ctrl', act: 'back', title: 'Borrar el último carácter' },
+
+  { l: 'ln', cls: 'k-fn', ap: 'ln(', li: 'eˣ', ai: 'exp(' },
+  { l: 'log', cls: 'k-fn', ap: 'log(', li: '10ˣ', ai: '10^(' },
+  { l: '√', cls: 'k-fn', ap: '√(' },
+  { l: 'x²', cls: 'k-fn', ap: '^2' },
+  { l: 'xʸ', cls: 'k-op', ap: '^' },
+
+  { l: '7', cls: 'k-num', ap: '7' },
+  { l: '8', cls: 'k-num', ap: '8' },
+  { l: '9', cls: 'k-num', ap: '9' },
+  { l: '÷', cls: 'k-op', ap: '÷' },
+  { l: 'n!', cls: 'k-fn', ap: '!' },
+
+  { l: '4', cls: 'k-num', ap: '4' },
+  { l: '5', cls: 'k-num', ap: '5' },
+  { l: '6', cls: 'k-num', ap: '6' },
+  { l: '×', cls: 'k-op', ap: '×' },
+  { l: '%', cls: 'k-fn', ap: '%' },
+
+  { l: '1', cls: 'k-num', ap: '1' },
+  { l: '2', cls: 'k-num', ap: '2' },
+  { l: '3', cls: 'k-num', ap: '3' },
+  { l: '−', cls: 'k-op', ap: '−' },
+  { l: 'e', cls: 'k-fn', ap: 'e' },
+
+  { l: '0', cls: 'k-num', ap: '0' },
+  { l: '.', cls: 'k-num', ap: '.' },
+  { l: 'EXP', cls: 'k-fn', ap: '×10^', title: 'Notación científica (×10ⁿ)' },
+  { l: '+', cls: 'k-op', ap: '+' },
+  { l: '=', cls: 'k-eq', act: 'equals', title: 'Calcular' },
+];
+
+const funcTable = [
+  ['sin, cos, tan', 'Funciones trigonométricas. Respetan el modo DEG/RAD elegido.'],
+  ['sin⁻¹, cos⁻¹, tan⁻¹', 'Funciones inversas (arcoseno, arcocoseno, arcotangente). Activá INV.'],
+  ['ln', 'Logaritmo natural (base e).'],
+  ['log', 'Logaritmo en base 10. Con INV se vuelve 10ˣ.'],
+  ['√', 'Raíz cuadrada. Escribí √(número).'],
+  ['x²  /  xʸ', 'Elevar al cuadrado (^2) o a cualquier potencia (^).'],
+  ['n!', 'Factorial de un entero ≥ 0 (5! = 120).'],
+  ['%', 'Porcentaje: convierte a decimal (50% = 0,5). Para "el 15% de 200" escribí 200×15%.'],
+  ['π, e', 'Constantes pi (3,14159…) y número de Euler (2,71828…).'],
+  ['EXP', 'Notación científica: 3 EXP 8 = 3×10⁸.'],
+];
+
+const faqs = [
+  {
+    q: '¿Cómo se usa esta calculadora científica online?',
+    a: 'Escribí la expresión tocando los botones (o usando el teclado de tu compu) y presioná <strong>=</strong> para ver el resultado. Podés encadenar funciones, paréntesis y operaciones como en una calculadora física: por ejemplo <code>2×sin(30)+√(16)</code>. Si vas a usar trigonometría, fijate antes si el modo está en <strong>Rad</strong> o <strong>Deg</strong>.',
+  },
+  {
+    q: '¿Cuál es la diferencia entre grados (DEG) y radianes (RAD)?',
+    a: 'Son dos formas de medir ángulos. Una vuelta completa son <strong>360 grados</strong> o <strong>2π radianes</strong>. En modo <strong>Deg</strong>, <code>sin(30)</code> da 0,5; en modo <strong>Rad</strong>, <code>sin(30)</code> interpreta 30 radianes y da otro valor. Tocá el botón <strong>Rad/Deg</strong> arriba a la izquierda para cambiar. La mayoría de los ejercicios escolares usan grados.',
+  },
+  {
+    q: '¿Cómo calculo seno, coseno y tangente?',
+    a: 'Tocá <code>sin</code>, <code>cos</code> o <code>tan</code>, escribí el ángulo y cerrá el paréntesis: <code>cos(60)</code>. Para las inversas (arcoseno, etc.) activá el botón <strong>INV</strong> y los botones pasan a <code>sin⁻¹</code>, <code>cos⁻¹</code>, <code>tan⁻¹</code>. Si necesitás solo trigonometría, también tenés nuestra calculadora dedicada de seno, coseno y tangente enlazada abajo.',
+  },
+  {
+    q: '¿Cómo escribo una potencia o una raíz?',
+    a: 'Para una potencia usá <code>xʸ</code> (el símbolo ^): <code>2^10</code> = 1024. Para elevar al cuadrado está el atajo <code>x²</code>. Para raíz cuadrada usá <code>√</code>: <code>√(144)</code> = 12. Una raíz cúbica la hacés como potencia fraccionaria: <code>27^(1÷3)</code> = 3.',
+  },
+  {
+    q: '¿Qué hace el botón INV?',
+    a: 'El botón <strong>INV</strong> (inverso) cambia las funciones por sus inversas: <code>sin</code> pasa a <code>sin⁻¹</code>, <code>ln</code> a <code>eˣ</code> y <code>log</code> a <code>10ˣ</code>. Es el equivalente a la tecla "Shift" o "2nd" de una calculadora física. Volvé a tocarlo para desactivarlo.',
+  },
+  {
+    q: '¿Cómo calculo un factorial (n!)?',
+    a: 'Escribí el número y tocá <code>n!</code>: por ejemplo <code>6!</code> = 720. El factorial solo funciona con enteros mayores o iguales a 0. Para 5! la cuenta es 5×4×3×2×1 = 120.',
+  },
+  {
+    q: '¿Por qué −3² me da −9 y no 9?',
+    a: 'Porque la potencia tiene <strong>prioridad sobre el signo menos</strong>: <code>−3²</code> se interpreta como <code>−(3²) = −9</code>, igual que en matemática formal, Python o Google. Si querés el cuadrado de −3, escribilo con paréntesis: <code>(−3)² = 9</code>.',
+  },
+  {
+    q: '¿Puedo usar el teclado de la computadora?',
+    a: 'Sí. Los números, <code>+ − * /</code>, paréntesis, <code>^</code>, <code>%</code> y <code>!</code> funcionan directo. <strong>Enter</strong> calcula, <strong>Backspace</strong> borra el último carácter y <strong>Escape</strong> limpia todo. En el celular se usa el teclado en pantalla de la propia calculadora.',
+  },
+  {
+    q: '¿Los cálculos se guardan o se mandan a algún servidor?',
+    a: 'No. Todo se calcula <strong>100% en tu navegador</strong>; ninguna operación viaja a internet. El historial se guarda solo en tu dispositivo (almacenamiento local del navegador) y lo podés borrar cuando quieras con el botón "Limpiar historial".',
+  },
+  {
+    q: '¿Es gratis?',
+    a: 'Sí, la calculadora científica de Hacé Cuentas es <strong>gratis</strong>, sin registro y sin límite de uso. Tampoco hace falta instalar ninguna app: funciona en el navegador de la compu o del celular.',
+  },
+];
+
+const related = [
+  { href: '/calculadora-trigonometria-seno-coseno-tangente', t: 'Trigonometría: seno, coseno y tangente', i: '📐' },
+  { href: '/calculadora-logaritmos-base-10-natural-cualquier-base', t: 'Logaritmos (log, ln, log₂)', i: '📊' },
+  { href: '/calculadora-raiz-cuadrada-cubica', t: 'Raíz cuadrada, cúbica y n-ésima', i: '√' },
+  { href: '/calculadora-factorial-numero-n', t: 'Factorial (n!)', i: '❗' },
+  { href: '/calculadora-ecuacion-cuadratica-raices-discriminante', t: 'Ecuación cuadrática', i: '🧮' },
+  { href: '/calculadora-regla-de-tres-simple-directa-inversa', t: 'Regla de 3 simple', i: '➗' },
+  { href: '/calculadora-conversion-porcentaje-fraccion-decimal', t: 'Porcentaje ↔ fracción ↔ decimal', i: '％' },
+  { href: '/calculadora-area-perimetro-circulo-sector-circular', t: 'Área y perímetro del círculo', i: '⭕' },
+];
+
+const howToSteps = [
+  { name: 'Escribí la expresión', text: 'Tocá los botones o usá el teclado para armar la cuenta, por ejemplo 2×sin(45)+3.' },
+  { name: 'Elegí grados o radianes', text: 'Si usás funciones trigonométricas, fijate el modo Rad/Deg arriba a la izquierda.' },
+  { name: 'Usá las funciones científicas', text: 'Sumá funciones (sin, cos, ln, √, x², n!), constantes (π, e) y paréntesis según necesites.' },
+  { name: 'Presioná igual', text: 'Tocá el botón = (o Enter) para obtener el resultado al instante. Queda guardado en el historial.' },
+];
+
+const site = 'https://hacecuentas.com';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Calculadora científica',
+  url: `${site}/calculadora-cientifica`,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es',
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+  featureList: [
+    'Funciones trigonométricas y sus inversas',
+    'Logaritmo natural y base 10',
+    'Raíces y potencias',
+    'Factorial',
+    'Constantes π y e',
+    'Modo grados / radianes',
+    'Soporte de teclado',
+  ],
+};
+
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+    { '@type': 'ListItem', position: 2, name: 'Matemática', item: `${site}/categoria/matematica` },
+    { '@type': 'ListItem', position: 3, name: 'Calculadora científica', item: `${site}/calculadora-cientifica` },
+  ],
+};
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo usar la calculadora científica',
+  step: howToSteps.map((s, idx) => ({
+    '@type': 'HowToStep',
+    position: idx + 1,
+    name: s.name,
+    text: s.text,
+  })),
+};
+---
+
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="sci-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/matematica">Matemática</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Calculadora científica</span>
+    </nav>
+
+    <h1>Calculadora científica online</h1>
+    <p class="lead">
+      Calculadora científica <strong>gratis</strong> con funciones trigonométricas, logaritmos, raíces, potencias,
+      factorial y constantes π y e. Cambiá entre <strong>grados y radianes</strong>, escribí con los botones o con el
+      teclado, y presioná <strong>=</strong> para ver el resultado. Todo corre en tu navegador, sin instalar nada.
+    </p>
+
+    <div class="sci-card">
+      <div class="sci-display" id="sciDisplay">
+        <span class="sci-mode-ind" id="sciModeInd" aria-label="Modo de ángulo">RAD</span>
+        <div class="sci-expr" id="sciExpr" aria-hidden="true"></div>
+        <output class="sci-out" id="sciOut" aria-live="polite" aria-label="Resultado">0</output>
+      </div>
+
+      <div class="sci-pad" id="sciPad" role="group" aria-label="Teclado de la calculadora científica">
+        {keys.map((k) => (
+          <button
+            type="button"
+            class={`sci-key ${k.cls}`}
+            id={k.id}
+            data-action={k.act}
+            data-append={k.ap}
+            data-append-base={k.ap}
+            data-ai={k.ai}
+            data-li={k.li}
+            data-label-base={k.l}
+            title={k.title}
+            aria-pressed={k.act === 'mode' || k.act === 'inv' ? 'false' : undefined}
+          >{k.l}</button>
+        ))}
+      </div>
+
+      <p class="sci-hint">
+        Atajos de teclado: <kbd>Enter</kbd> calcula · <kbd>⌫</kbd> borra · <kbd>Esc</kbd> limpia ·
+        <kbd>^</kbd> potencia · <kbd>(</kbd> <kbd>)</kbd> paréntesis.
+      </p>
+
+      <div class="sci-history" id="sciHistory" hidden>
+        <div class="sci-history-head">
+          <span>Historial</span>
+          <button type="button" id="sciClearHist" class="sci-clear-hist">Limpiar historial</button>
+        </div>
+        <div class="sci-history-list" id="sciHistoryList"></div>
+      </div>
+    </div>
+
+    <section class="sci-section">
+      <h2>Cómo usar la calculadora científica</h2>
+      <ol class="sci-steps">
+        {howToSteps.map((s) => (
+          <li><strong>{s.name}.</strong> {s.text}</li>
+        ))}
+      </ol>
+      <p>
+        Funciona como una calculadora física: respeta la <strong>jerarquía de operaciones</strong> (primero
+        potencias y raíces, después multiplicación y división, por último suma y resta) y los paréntesis. Si dejás un
+        paréntesis abierto, al tocar <strong>=</strong> la calculadora lo cierra sola.
+      </p>
+    </section>
+
+    <section class="sci-section">
+      <h2>Qué hace cada función</h2>
+      <div class="sci-table-wrap">
+        <table class="sci-table">
+          <thead><tr><th>Botón</th><th>Para qué sirve</th></tr></thead>
+          <tbody>
+            {funcTable.map(([b, d]) => (
+              <tr><td class="sci-td-key">{b}</td><td>{d}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="sci-section">
+      <h2>Grados vs. radianes: cuál elegir</h2>
+      <p>
+        El botón <strong>Rad/Deg</strong> define cómo se interpretan los ángulos en las funciones trigonométricas.
+        Una vuelta completa equivale a <strong>360°</strong> o <strong>2π radianes</strong> (≈ 6,2832). En la escuela
+        secundaria casi todo se trabaja en <strong>grados</strong>; en cálculo, física y programación se usan
+        <strong>radianes</strong>. Un error clásico es calcular <code>sin(30)</code> esperando 0,5 pero tener el modo
+        en radianes: el resultado sería −0,988. Mirá siempre el indicador <strong>RAD/DEG</strong> de la pantalla
+        antes de calcular.
+      </p>
+    </section>
+
+    <section class="sci-section">
+      <h2>Ejemplos resueltos</h2>
+      <div class="sci-examples">
+        <div class="sci-ex">
+          <code>2 × sin(45) + √(16)</code>
+          <span>En modo Deg: sin(45) ≈ 0,7071, por dos = 1,4142, más √16 = 4 → <strong>5,4142</strong>.</span>
+        </div>
+        <div class="sci-ex">
+          <code>log(1000) + ln(e)</code>
+          <span>log(1000) = 3 (porque 10³ = 1000) y ln(e) = 1 → <strong>4</strong>.</span>
+        </div>
+        <div class="sci-ex">
+          <code>5! ÷ (2! × 3!)</code>
+          <span>Combinaciones de 5 en 2: 120 ÷ (2 × 6) = 120 ÷ 12 → <strong>10</strong>.</span>
+        </div>
+        <div class="sci-ex">
+          <code>2^10 − 24</code>
+          <span>2 elevado a la 10 es 1024, menos 24 → <strong>1000</strong>.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="sci-section sci-related">
+      <h2>Calculadoras matemáticas relacionadas</h2>
+      <p>¿Buscás algo más específico? Estas calculadoras resuelven un tema puntual con explicación paso a paso:</p>
+      <div class="sci-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="sci-related-card">
+            <span class="sci-related-icon" aria-hidden="true">{r.i}</span>
+            <span>{r.t}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="sci-section">
+      <h2>Preguntas frecuentes</h2>
+      <div class="sci-faq">
+        {faqs.map((f) => (
+          <details class="sci-faq-item">
+            <summary>{f.q}</summary>
+            <div class="sci-faq-a" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="sci-section sci-editorial">
+      <p>
+        <strong>Revisado por el equipo editorial de Hacé Cuentas.</strong> El motor de cálculo se prueba contra
+        decenas de casos de referencia (precedencia de operaciones, funciones trigonométricas en grados y radianes,
+        factoriales y notación científica). Más sobre cómo trabajamos en nuestra
+        <a href="/politica-editorial">política editorial</a> y <a href="/metodologia">metodología</a>.
+      </p>
+      <p class="sci-disclaimer">
+        Los resultados son orientativos. Para trabajos académicos o profesionales, verificá siempre con tu
+        herramienta de referencia.
+      </p>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  // ── Motor de cálculo (inline, sin eval() por la CSP) ──────────────────────
+  // tokenizer → shunting-yard (RPN) → evaluación. Probado con 49 casos.
+  // Convenciones: −3^2 = −9 (la potencia liga más que el menos unario); x% = x/100;
+  // n! = factorial (entero ≥ 0). Va inline (no import) para igualar el patrón de
+  // las demás páginas interactivas del sitio y garantizar el bundle en producción.
+  type AngleMode = 'deg' | 'rad';
+
+  const FUNCS = new Set([
+    'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
+    'sinh', 'cosh', 'tanh', 'ln', 'log', 'log2',
+    'sqrt', 'cbrt', 'abs', 'exp',
+  ]);
+  const CONSTS: Record<string, number> = { pi: Math.PI, e: Math.E };
+  const PREC: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2, neg: 3, '^': 4 };
+  const RIGHT = new Set(['^', 'neg']);
+
+  type TokType = 'num' | 'op' | 'u' | 'func' | 'lp' | 'rp' | 'post';
+  interface Tok { t: TokType; v: string | number; }
+
+  function normalize(s: string): string {
+    return s
+      .replace(/×/g, '*')
+      .replace(/÷/g, '/')
+      .replace(/[−–—]/g, '-')
+      .replace(/,/g, '.')
+      .replace(/√/g, 'sqrt')
+      .replace(/∛/g, 'cbrt')
+      .replace(/π/g, 'pi')
+      .replace(/\s+/g, '');
+  }
+
+  function maybeImplicitMul(toks: Tok[]): void {
+    const p = toks[toks.length - 1];
+    if (p && (p.t === 'num' || p.t === 'rp' || p.t === 'post')) toks.push({ t: 'op', v: '*' });
+  }
+
+  function tokenize(src: string): Tok[] {
+    const s = normalize(src);
+    const toks: Tok[] = [];
+    let i = 0;
+    const isDigit = (c: string) => c >= '0' && c <= '9';
+    const expectOperand = () => {
+      const p = toks[toks.length - 1];
+      return !p || p.t === 'op' || p.t === 'u' || p.t === 'lp' || p.t === 'func';
+    };
+    while (i < s.length) {
+      const c = s[i];
+      if (isDigit(c) || c === '.') {
+        let j = i;
+        while (j < s.length && (isDigit(s[j]) || s[j] === '.')) j++;
+        const numStr = s.slice(i, j);
+        if ((numStr.match(/\./g) || []).length > 1) throw new Error('Número inválido');
+        maybeImplicitMul(toks);
+        toks.push({ t: 'num', v: parseFloat(numStr) });
+        i = j;
+        continue;
+      }
+      if (/[a-z]/.test(c)) {
+        let j = i;
+        while (j < s.length && /[a-z0-9]/.test(s[j])) j++;
+        const name = s.slice(i, j);
+        if (FUNCS.has(name)) { maybeImplicitMul(toks); toks.push({ t: 'func', v: name }); }
+        else if (name in CONSTS) { maybeImplicitMul(toks); toks.push({ t: 'num', v: CONSTS[name] }); }
+        else throw new Error(`Símbolo desconocido: "${name}"`);
+        i = j;
+        continue;
+      }
+      if (c === '(') { maybeImplicitMul(toks); toks.push({ t: 'lp', v: c }); i++; continue; }
+      if (c === ')') { toks.push({ t: 'rp', v: c }); i++; continue; }
+      if (c === '!' || c === '%') { toks.push({ t: 'post', v: c }); i++; continue; }
+      if (c === '+' || c === '-' || c === '*' || c === '/' || c === '^') {
+        if ((c === '-' || c === '+') && expectOperand()) {
+          if (c === '-') toks.push({ t: 'u', v: 'neg' });
+        } else {
+          toks.push({ t: 'op', v: c });
+        }
+        i++;
+        continue;
+      }
+      throw new Error(`Carácter inválido: "${c}"`);
+    }
+    return toks;
+  }
+
+  function toRPN(toks: Tok[]): Tok[] {
+    const out: Tok[] = [];
+    const stack: Tok[] = [];
+    for (const tk of toks) {
+      if (tk.t === 'num') out.push(tk);
+      else if (tk.t === 'func') stack.push(tk);
+      else if (tk.t === 'post') out.push(tk);
+      else if (tk.t === 'u') stack.push(tk);
+      else if (tk.t === 'op') {
+        const o1 = tk.v as string;
+        while (stack.length) {
+          const top = stack[stack.length - 1];
+          if (top.t === 'lp') break;
+          if (top.t === 'func') { out.push(stack.pop()!); continue; }
+          if (top.t === 'op' || top.t === 'u') {
+            const p1 = PREC[o1];
+            const p2 = PREC[top.v as string];
+            if (p2 > p1 || (p2 === p1 && !RIGHT.has(o1))) { out.push(stack.pop()!); continue; }
+          }
+          break;
+        }
+        stack.push(tk);
+      } else if (tk.t === 'lp') stack.push(tk);
+      else if (tk.t === 'rp') {
+        while (stack.length && stack[stack.length - 1].t !== 'lp') out.push(stack.pop()!);
+        if (!stack.length) throw new Error('Paréntesis desbalanceado');
+        stack.pop();
+        if (stack.length && stack[stack.length - 1].t === 'func') out.push(stack.pop()!);
+      }
+    }
+    while (stack.length) {
+      const top = stack.pop()!;
+      if (top.t === 'lp') throw new Error('Paréntesis desbalanceado');
+      out.push(top);
+    }
+    return out;
+  }
+
+  function factorial(n: number): number {
+    if (n < 0 || !Number.isInteger(n)) throw new Error('El factorial requiere un entero ≥ 0');
+    if (n > 170) return Infinity;
+    let r = 1;
+    for (let k = 2; k <= n; k++) r *= k;
+    return r;
+  }
+
+  function applyFunc(name: string, x: number, mode: AngleMode): number {
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const fromRad = (r: number) => (r * 180) / Math.PI;
+    switch (name) {
+      case 'sin': return Math.sin(mode === 'deg' ? toRad(x) : x);
+      case 'cos': return Math.cos(mode === 'deg' ? toRad(x) : x);
+      case 'tan': return Math.tan(mode === 'deg' ? toRad(x) : x);
+      case 'asin': { const r = Math.asin(x); return mode === 'deg' ? fromRad(r) : r; }
+      case 'acos': { const r = Math.acos(x); return mode === 'deg' ? fromRad(r) : r; }
+      case 'atan': { const r = Math.atan(x); return mode === 'deg' ? fromRad(r) : r; }
+      case 'sinh': return Math.sinh(x);
+      case 'cosh': return Math.cosh(x);
+      case 'tanh': return Math.tanh(x);
+      case 'ln': return Math.log(x);
+      case 'log': return Math.log10(x);
+      case 'log2': return Math.log2(x);
+      case 'sqrt': return Math.sqrt(x);
+      case 'cbrt': return Math.cbrt(x);
+      case 'abs': return Math.abs(x);
+      case 'exp': return Math.exp(x);
+      default: throw new Error(`Función desconocida: ${name}`);
+    }
+  }
+
+  function evalRPN(rpn: Tok[], mode: AngleMode): number {
+    const st: number[] = [];
+    const pop = () => {
+      const v = st.pop();
+      if (v === undefined) throw new Error('Expresión incompleta');
+      return v;
+    };
+    for (const tk of rpn) {
+      if (tk.t === 'num') st.push(tk.v as number);
+      else if (tk.t === 'u') st.push(-pop());
+      else if (tk.t === 'func') st.push(applyFunc(tk.v as string, pop(), mode));
+      else if (tk.t === 'post') { const a = pop(); st.push(tk.v === '!' ? factorial(a) : a / 100); }
+      else if (tk.t === 'op') {
+        const b = pop();
+        const a = pop();
+        switch (tk.v) {
+          case '+': st.push(a + b); break;
+          case '-': st.push(a - b); break;
+          case '*': st.push(a * b); break;
+          case '/': if (b === 0) throw new Error('No se puede dividir por cero'); st.push(a / b); break;
+          case '^': st.push(Math.pow(a, b)); break;
+        }
+      }
+    }
+    if (st.length !== 1) throw new Error('Expresión inválida');
+    const r = st[0];
+    if (Number.isNaN(r)) throw new Error('Resultado indefinido');
+    if (!Number.isFinite(r)) throw new Error('Resultado fuera de rango');
+    return r;
+  }
+
+  function evaluate(expr: string, mode: AngleMode = 'rad'): number {
+    const src = (expr ?? '').trim();
+    if (!src) throw new Error('Ingresá una expresión');
+    return evalRPN(toRPN(tokenize(src)), mode);
+  }
+
+  function autoCloseParens(expr: string): string {
+    let depth = 0;
+    for (const c of expr) {
+      if (c === '(') depth++;
+      else if (c === ')') depth = Math.max(0, depth - 1);
+    }
+    return expr + ')'.repeat(depth);
+  }
+  // ── Fin del motor ─────────────────────────────────────────────────────────
+
+  let sciKeydownHandler: ((ev: KeyboardEvent) => void) | null = null;
+
+  // View Transitions (ClientRouter): los <script> bundleados NO se re-ejecutan al
+  // navegar por SPA (ej. clic en la card del home). Inicializamos en initial load
+  // + astro:page-load, idempotente vía dataset.sciReady. Patrón de Calculator.astro.
+  function setupSciCalc() {
+    const pad = document.getElementById('sciPad') as HTMLElement | null;
+    if (!pad || pad.dataset.sciReady) return;
+    pad.dataset.sciReady = '1';
+
+    const exprEl = document.getElementById('sciExpr')!;
+    const outEl = document.getElementById('sciOut')!;
+    const modeInd = document.getElementById('sciModeInd')!;
+    const modeBtn = document.getElementById('kMode')!;
+    const invBtn = document.getElementById('kInv')!;
+  const histWrap = document.getElementById('sciHistory') as HTMLElement;
+  const histList = document.getElementById('sciHistoryList')!;
+  const clearHistBtn = document.getElementById('sciClearHist')!;
+
+  type Mode = 'rad' | 'deg';
+  let expr = '';
+  let mode: Mode = 'rad';
+  let inv = false;
+  let justEval = false;
+  let ans = 0;
+
+  const MODE_KEY = 'hc-sci-mode';
+  const HIST_KEY = 'hc-sci-history';
+  const OP_STARTS = new Set(['+', '−', '×', '÷', '^', '!', '%']);
+
+  try {
+    const saved = localStorage.getItem(MODE_KEY);
+    if (saved === 'deg' || saved === 'rad') mode = saved;
+  } catch {}
+
+  let history: Array<{ e: string; r: string }> = [];
+  try {
+    history = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+  } catch {}
+
+  function fmt(n: number): string {
+    if (!isFinite(n)) return String(n);
+    // 12 cifras significativas, sin ceros sobrantes ni notación científica innecesaria
+    const s = Number(n.toPrecision(12)).toString();
+    return s;
+  }
+
+  function escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string
+    ));
+  }
+
+  function showExpr() {
+    outEl.textContent = expr || '0';
+    outEl.classList.remove('is-result', 'is-error');
+  }
+
+  function append(s: string) {
+    if (justEval) {
+      justEval = false;
+      if (OP_STARTS.has(s[0]) || s.startsWith('^') || s.startsWith('×10')) {
+        expr = fmt(ans) + s; // continuar la cuenta desde el último resultado
+      } else {
+        expr = s; // empezar una cuenta nueva
+      }
+      exprEl.textContent = '';
+    } else {
+      expr += s;
+    }
+    showExpr();
+  }
+
+  function backspace() {
+    justEval = false;
+    expr = expr.slice(0, -1);
+    showExpr();
+  }
+
+  function clearAll() {
+    expr = '';
+    justEval = false;
+    exprEl.textContent = '';
+    outEl.textContent = '0';
+    outEl.classList.remove('is-result', 'is-error');
+  }
+
+  function equals() {
+    if (justEval || !expr.trim()) return;
+    const toEval = autoCloseParens(expr);
+    try {
+      const r = evaluate(toEval, mode);
+      ans = r;
+      const rStr = fmt(r);
+      exprEl.textContent = toEval + ' =';
+      outEl.textContent = rStr;
+      outEl.classList.add('is-result');
+      outEl.classList.remove('is-error');
+      pushHistory(toEval, rStr);
+      justEval = true;
+    } catch (err) {
+      exprEl.textContent = expr;
+      outEl.textContent = (err as Error).message || 'Error';
+      outEl.classList.add('is-error');
+      outEl.classList.remove('is-result');
+    }
+  }
+
+  function applyMode() {
+    const label = mode === 'deg' ? 'Deg' : 'Rad';
+    modeBtn.textContent = label;
+    modeBtn.setAttribute('aria-pressed', mode === 'deg' ? 'true' : 'false');
+    modeInd.textContent = mode.toUpperCase();
+  }
+
+  function toggleMode() {
+    mode = mode === 'deg' ? 'rad' : 'deg';
+    try { localStorage.setItem(MODE_KEY, mode); } catch {}
+    applyMode();
+  }
+
+  function applyInv() {
+    invBtn.classList.toggle('active', inv);
+    invBtn.setAttribute('aria-pressed', inv ? 'true' : 'false');
+    pad.querySelectorAll<HTMLButtonElement>('[data-li]').forEach((b) => {
+      const base = b.getAttribute('data-label-base') || '';
+      const li = b.getAttribute('data-li') || '';
+      const ab = b.getAttribute('data-append-base') || '';
+      const ai = b.getAttribute('data-ai') || '';
+      b.textContent = inv ? li : base;
+      b.setAttribute('data-append', inv ? ai : ab);
+    });
+  }
+
+  function renderHistory() {
+    if (!history.length) { histWrap.hidden = true; return; }
+    histWrap.hidden = false;
+    histList.innerHTML = '';
+    history.forEach((h) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'sci-hist-item';
+      item.innerHTML = `<span class="hist-expr">${escapeHtml(h.e)}</span><span class="hist-res">= ${escapeHtml(h.r)}</span>`;
+      item.addEventListener('click', () => {
+        expr = h.e.replace(/\s*=\s*$/, '');
+        justEval = false;
+        exprEl.textContent = '';
+        showExpr();
+        outEl.scrollIntoView({ block: 'nearest' });
+      });
+      histList.appendChild(item);
+    });
+  }
+
+  function pushHistory(e: string, r: string) {
+    history.unshift({ e, r });
+    history = history.slice(0, 8);
+    try { localStorage.setItem(HIST_KEY, JSON.stringify(history)); } catch {}
+    renderHistory();
+  }
+
+  pad.addEventListener('click', (ev) => {
+    const btn = (ev.target as HTMLElement).closest('button.sci-key') as HTMLButtonElement | null;
+    if (!btn) return;
+    const action = btn.getAttribute('data-action');
+    if (action === 'clear') return clearAll();
+    if (action === 'back') return backspace();
+    if (action === 'equals') return equals();
+    if (action === 'mode') return toggleMode();
+    if (action === 'inv') { inv = !inv; return applyInv(); }
+    const ap = btn.getAttribute('data-append');
+    if (ap != null) append(ap);
+  });
+
+  clearHistBtn.addEventListener('click', () => {
+    history = [];
+    try { localStorage.removeItem(HIST_KEY); } catch {}
+    renderHistory();
+  });
+
+  const onKeydown = (ev: KeyboardEvent) => {
+    const target = ev.target as HTMLElement;
+    if (target && target.matches('input, textarea, [contenteditable]')) return;
+    const k = ev.key;
+    if (/^[0-9.]$/.test(k)) { append(k); ev.preventDefault(); return; }
+    if (k === '+') { append('+'); ev.preventDefault(); return; }
+    if (k === '-') { append('−'); ev.preventDefault(); return; }
+    if (k === '*') { append('×'); ev.preventDefault(); return; }
+    if (k === '/') { append('÷'); ev.preventDefault(); return; }
+    if (k === '^') { append('^'); ev.preventDefault(); return; }
+    if (k === '(' || k === ')') { append(k); ev.preventDefault(); return; }
+    if (k === '%') { append('%'); ev.preventDefault(); return; }
+    if (k === '!') { append('!'); ev.preventDefault(); return; }
+    if (k === 'Enter' || k === '=') { equals(); ev.preventDefault(); return; }
+    if (k === 'Backspace') { backspace(); ev.preventDefault(); return; }
+    if (k === 'Escape') { clearAll(); ev.preventDefault(); return; }
+  };
+  if (sciKeydownHandler) window.removeEventListener('keydown', sciKeydownHandler);
+  sciKeydownHandler = onKeydown;
+  window.addEventListener('keydown', onKeydown);
+
+  applyMode();
+  applyInv();
+  renderHistory();
+  }
+
+  setupSciCalc();
+  document.addEventListener('astro:page-load', setupSciCalc);
+</script>
+
+<style>
+  .sci-page { max-width: 760px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  h1 { margin-bottom: 0.75rem; }
+  .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1.75rem; }
+
+  .sci-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 2.5rem;
+  }
+
+  .sci-display {
+    position: relative;
+    background: var(--bg-soft);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1rem 0.75rem;
+    margin-bottom: 1rem;
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .sci-mode-ind {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+  }
+  .sci-expr {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    color: var(--text-subtle);
+    min-height: 1.3em;
+    text-align: right;
+    overflow-x: auto;
+    white-space: nowrap;
+    word-break: keep-all;
+  }
+  .sci-out {
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-feature-settings: 'tnum';
+    line-height: 1.2;
+  }
+  .sci-out.is-result { color: var(--accent-strong); }
+  .sci-out.is-error { color: var(--danger, #dc2626); font-size: 1.0625rem; font-weight: 500; }
+
+  .sci-pad {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+  }
+  .sci-key {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 0.25rem;
+    font-size: 1.0625rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.04s, border-color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .sci-key:hover { background: var(--bg-soft); }
+  .sci-key:active { transform: translateY(1px); }
+  .sci-key:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .sci-key.k-num { font-weight: 600; }
+  .sci-key.k-fn { font-size: 0.9375rem; color: var(--text-muted); }
+  .sci-key.k-op {
+    background: var(--accent-soft);
+    border-color: transparent;
+    color: var(--accent-strong);
+    font-weight: 600;
+  }
+  .sci-key.k-op:hover { background: var(--accent); color: #fff; }
+  .sci-key.k-ctrl { font-size: 0.875rem; color: var(--text-muted); }
+  .sci-key.k-clear { color: var(--danger, #dc2626); font-weight: 600; }
+  .sci-key.k-inv.active { background: var(--accent); color: #fff; border-color: transparent; }
+  .sci-key.k-eq {
+    background: var(--accent);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.25rem;
+  }
+  .sci-key.k-eq:hover { background: var(--accent-strong); }
+
+  .sci-hint {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin: 0.875rem 0 0;
+    line-height: 1.6;
+  }
+  .sci-hint kbd {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.05rem 0.35rem;
+  }
+
+  .sci-history { margin-top: 1.25rem; border-top: 1px solid var(--border); padding-top: 0.875rem; }
+  .sci-history-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.5rem;
+  }
+  .sci-clear-hist {
+    background: none; border: none; color: var(--accent-strong);
+    font-size: 0.75rem; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500;
+  }
+  .sci-history-list { display: flex; flex-direction: column; gap: 0.25rem; }
+  .sci-hist-item {
+    display: flex; justify-content: space-between; gap: 1rem;
+    width: 100%; text-align: left; background: var(--bg-soft);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 0.5rem 0.75rem; cursor: pointer; font-family: var(--font-mono); font-size: 0.875rem;
+  }
+  .sci-hist-item:hover { border-color: var(--accent); }
+  .sci-hist-item .hist-expr { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sci-hist-item .hist-res { color: var(--text); font-weight: 600; flex-shrink: 0; }
+
+  .sci-section { margin: 2.25rem 0; }
+  .sci-section h2 { font-size: 1.375rem; margin-bottom: 0.875rem; }
+  .sci-section p { color: var(--text-muted); margin-bottom: 0.875rem; line-height: 1.7; }
+  .sci-section code {
+    background: var(--bg-soft); padding: 0.1rem 0.4rem; border-radius: 4px;
+    font-family: var(--font-mono); font-size: 0.875rem; color: var(--text);
+  }
+  .sci-steps { color: var(--text-muted); line-height: 1.7; padding-left: 1.25rem; margin-bottom: 0.875rem; }
+  .sci-steps li { margin-bottom: 0.4rem; }
+
+  .sci-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .sci-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+  .sci-table th, .sci-table td { text-align: left; padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); }
+  .sci-table thead th { background: var(--bg-soft); font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+  .sci-table tr:last-child td { border-bottom: none; }
+  .sci-table .sci-td-key { font-family: var(--font-mono); font-weight: 600; color: var(--accent-strong); white-space: nowrap; }
+  .sci-table td { color: var(--text-muted); }
+
+  .sci-examples { display: grid; gap: 0.75rem; }
+  .sci-ex {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.875rem 1rem;
+  }
+  .sci-ex code { display: inline-block; margin-bottom: 0.35rem; font-size: 0.9375rem; }
+  .sci-ex span { display: block; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6; }
+
+  .sci-related-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.625rem; }
+  .sci-related-card {
+    display: flex; align-items: center; gap: 0.625rem;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.75rem 0.875rem;
+    font-size: 0.9375rem; font-weight: 500; color: var(--text); transition: border-color 0.12s, background 0.12s;
+  }
+  .sci-related-card:hover { border-color: var(--accent); background: var(--bg-soft); }
+  .sci-related-icon { font-size: 1.25rem; flex-shrink: 0; width: 1.5rem; text-align: center; }
+
+  .sci-faq { display: flex; flex-direction: column; gap: 0.5rem; }
+  .sci-faq-item {
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg-card); padding: 0 1rem;
+  }
+  .sci-faq-item summary {
+    cursor: pointer; padding: 0.875rem 0; font-weight: 600; list-style: none; font-size: 0.9875rem;
+  }
+  .sci-faq-item summary::-webkit-details-marker { display: none; }
+  .sci-faq-item summary::after { content: '+'; float: right; color: var(--accent-strong); font-weight: 700; }
+  .sci-faq-item[open] summary::after { content: '−'; }
+  .sci-faq-a { color: var(--text-muted); padding-bottom: 0.875rem; line-height: 1.7; }
+  .sci-faq-a :global(code) { background: var(--bg-soft); padding: 0.1rem 0.35rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; }
+
+  .sci-editorial p { font-size: 0.875rem; color: var(--text-subtle); line-height: 1.7; }
+  .sci-disclaimer { font-style: italic; }
+
+  @media (max-width: 520px) {
+    .sci-card { padding: 0.875rem; }
+    .sci-pad { gap: 0.375rem; }
+    .sci-key { padding: 0.75rem 0.15rem; font-size: 1rem; }
+    .sci-out { font-size: 1.75rem; }
+    .sci-related-grid { grid-template-columns: 1fr; }
+  }
+</style>
