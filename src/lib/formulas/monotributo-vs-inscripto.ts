@@ -19,18 +19,20 @@ export interface Outputs {
 }
 
 // Categorías monotributo 2026 (aproximadas — actualizadas semestralmente)
+// Categorías monotributo — escala ARCA vigente junio 2026 (+14,3%), validada x2 fuentes.
+// Servicios topea en H; I-J-K son exclusivas de venta de bienes.
 const CATEGORIAS = [
-  { letra: 'A', topeFactServ: 7_800_000, topeFactCom: 7_800_000, cuota: 60_000 },
-  { letra: 'B', topeFactServ: 11_400_000, topeFactCom: 11_400_000, cuota: 70_000 },
-  { letra: 'C', topeFactServ: 16_200_000, topeFactCom: 16_200_000, cuota: 85_000 },
-  { letra: 'D', topeFactServ: 20_000_000, topeFactCom: 20_000_000, cuota: 100_000 },
-  { letra: 'E', topeFactServ: 23_500_000, topeFactCom: 23_500_000, cuota: 130_000 },
-  { letra: 'F', topeFactServ: 30_000_000, topeFactCom: 30_000_000, cuota: 170_000 },
-  { letra: 'G', topeFactServ: 37_000_000, topeFactCom: 37_000_000, cuota: 210_000 },
-  { letra: 'H', topeFactServ: 56_000_000, topeFactCom: 56_000_000, cuota: 400_000 },
-  { letra: 'I', topeFactServ: 68_000_000, topeFactCom: 82_000_000, cuota: 600_000 },
-  { letra: 'J', topeFactServ: 0, topeFactCom: 94_000_000, cuota: 750_000 },
-  { letra: 'K', topeFactServ: 82_000_000, topeFactCom: 113_000_000, cuota: 1_000_000 },
+  { letra: 'A', topeFactServ: 10_277_988, topeFactCom: 10_277_988, cuota: 42_387 },
+  { letra: 'B', topeFactServ: 15_058_448, topeFactCom: 15_058_448, cuota: 48_251 },
+  { letra: 'C', topeFactServ: 21_113_697, topeFactCom: 21_113_697, cuota: 56_502 },
+  { letra: 'D', topeFactServ: 26_212_853, topeFactCom: 26_212_853, cuota: 72_414 },
+  { letra: 'E', topeFactServ: 30_833_964, topeFactCom: 30_833_964, cuota: 102_538 },
+  { letra: 'F', topeFactServ: 38_642_048, topeFactCom: 38_642_048, cuota: 129_045 },
+  { letra: 'G', topeFactServ: 46_211_109, topeFactCom: 46_211_109, cuota: 197_108 },
+  { letra: 'H', topeFactServ: 70_113_407, topeFactCom: 70_113_407, cuota: 447_347 },
+  { letra: 'I', topeFactServ: 0, topeFactCom: 78_479_212, cuota: 406_512 },
+  { letra: 'J', topeFactServ: 0, topeFactCom: 89_872_640, cuota: 497_059 },
+  { letra: 'K', topeFactServ: 0, topeFactCom: 108_357_084, cuota: 600_880 },
 ];
 
 export function monotributoVsInscripto(i: Inputs): Outputs {

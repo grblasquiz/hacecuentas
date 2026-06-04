@@ -29,104 +29,21 @@ interface Categoria {
   cuotaMensual: number;     // impuesto + obra social + jubilacion
 }
 
+// Escala ARCA vigente junio 2026 (+14,3%) — topes de ingresos y cuota validados
+// x2 fuentes (Estudio Brady + Ámbito). Superficie/energía: parámetros físicos oficiales.
+// Servicios topea en H; I-J-K son exclusivas de venta de cosas muebles.
 const CATEGORIAS: Categoria[] = [
-  // Categoría A
-  {
-    nombre: "A",
-    topeIngresosServicios: 2109726,
-    topeIngresosComercio: 2109726,
-    topeSuperficie: 20,
-    topeEnergia: 2000,
-    cuotaMensual: 16780,
-  },
-  // Categoría B
-  {
-    nombre: "B",
-    topeIngresosServicios: 3133369,
-    topeIngresosComercio: 3133369,
-    topeSuperficie: 30,
-    topeEnergia: 3300,
-    cuotaMensual: 17990,
-  },
-  // Categoría C
-  {
-    nombre: "C",
-    topeIngresosServicios: 4368771,
-    topeIngresosComercio: 4368771,
-    topeSuperficie: 45,
-    topeEnergia: 5000,
-    cuotaMensual: 20220,
-  },
-  // Categoría D
-  {
-    nombre: "D",
-    topeIngresosServicios: 5403344,
-    topeIngresosComercio: 5403344,
-    topeSuperficie: 60,
-    topeEnergia: 6700,
-    cuotaMensual: 22440,
-  },
-  // Categoría E
-  {
-    nombre: "E",
-    topeIngresosServicios: 6437918,
-    topeIngresosComercio: 6437918,
-    topeSuperficie: 85,
-    topeEnergia: 10000,
-    cuotaMensual: 25990,
-  },
-  // Categoría F
-  {
-    nombre: "F",
-    topeIngresosServicios: 8064985,
-    topeIngresosComercio: 8064985,
-    topeSuperficie: 110,
-    topeEnergia: 13000,
-    cuotaMensual: 31560,
-  },
-  // Categoría G
-  {
-    nombre: "G",
-    topeIngresosServicios: 9888819,
-    topeIngresosComercio: 9888819,
-    topeSuperficie: 150,
-    topeEnergia: 16500,
-    cuotaMensual: 37130,
-  },
-  // Categoría H — tope final para servicios
-  {
-    nombre: "H",
-    topeIngresosServicios: 14016760,
-    topeIngresosComercio: 14016760,
-    topeSuperficie: 200,
-    topeEnergia: 20000,
-    cuotaMensual: 48380,
-  },
-  // Categorías I, J, K — solo venta de cosas muebles
-  {
-    nombre: "I",
-    topeIngresosServicios: 0, // no aplica a servicios
-    topeIngresosComercio: 21025140,
-    topeSuperficie: 200,
-    topeEnergia: 20000,
-    cuotaMensual: 70820,
-  },
-  {
-    nombre: "J",
-    topeIngresosServicios: 0,
-    topeIngresosComercio: 25230168,
-    topeSuperficie: 200,
-    topeEnergia: 20000,
-    cuotaMensual: 82060,
-  },
-  {
-    nombre: "K",
-    topeIngresosServicios: 0,
-    topeIngresosComercio: 87498044,
-    topeSuperficie: 200,
-    topeEnergia: 20000,
-    cuotaMensual: 93290,
-  },
+  { nombre: "A", topeIngresosServicios: 10277988, topeIngresosComercio: 10277988, topeSuperficie: 30, topeEnergia: 3330, cuotaMensual: 42387 },
+  { nombre: "B", topeIngresosServicios: 15058448, topeIngresosComercio: 15058448, topeSuperficie: 45, topeEnergia: 5000, cuotaMensual: 48251 },
+  { nombre: "C", topeIngresosServicios: 21113697, topeIngresosComercio: 21113697, topeSuperficie: 60, topeEnergia: 6700, cuotaMensual: 56502 },
+  { nombre: "D", topeIngresosServicios: 26212853, topeIngresosComercio: 26212853, topeSuperficie: 85, topeEnergia: 10000, cuotaMensual: 72414 },
+  { nombre: "E", topeIngresosServicios: 30833964, topeIngresosComercio: 30833964, topeSuperficie: 110, topeEnergia: 13000, cuotaMensual: 102538 },
+  { nombre: "F", topeIngresosServicios: 38642048, topeIngresosComercio: 38642048, topeSuperficie: 150, topeEnergia: 16500, cuotaMensual: 129045 },
+  { nombre: "G", topeIngresosServicios: 46211109, topeIngresosComercio: 46211109, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 197108 },
+  { nombre: "H", topeIngresosServicios: 70113407, topeIngresosComercio: 70113407, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 447347 },
+  { nombre: "I", topeIngresosServicios: 0, topeIngresosComercio: 78479212, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 406512 },
+  { nombre: "J", topeIngresosServicios: 0, topeIngresosComercio: 89872640, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 497059 },
+  { nombre: "K", topeIngresosServicios: 0, topeIngresosComercio: 108357084, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 600880 },
 ];
 
 // Cuota por nombre de categoría (para lookup de categoría actual)
@@ -212,8 +129,8 @@ export function compute(i: Inputs): Outputs {
   if (idxPorIngresos === -1) {
     const topeMax =
       actividad === "servicios"
-        ? "$14.016.760 (Categoría H — tope servicios)"
-        : "$87.498.044 (Categoría K)";
+        ? "$70.113.407 (Categoría H — tope servicios)"
+        : "$108.357.084 (Categoría K)";
     return {
       categoriaNueva: "EXCLUIDO",
       cuotaMensual: 0,

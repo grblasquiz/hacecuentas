@@ -41,7 +41,7 @@ const categoriasBienes: Categoria[] = [
   { letra: 'H', limiteAnual: 70113407, cuota: 272063 },
   { letra: 'I', limiteAnual: 78479212, cuota: 406512 },
   { letra: 'J', limiteAnual: 89872640, cuota: 497059 },
-  { letra: 'K', limiteAnual: 108357084, cuota: 1381688 },
+  { letra: 'K', limiteAnual: 108357084, cuota: 600880 },
 ];
 
 export interface MonotributoOutputs {

@@ -26,7 +26,7 @@ import ScrollToTop from '../components/ScrollToTop.astro';
 import { findClusterForSlug } from '../lib/clusters';
 import { findHubForSlug } from '../lib/category-hubs';
 import { md, mdInline } from '../lib/markdown';
-import { resolveGuideSlug, GUIDE_TITLES } from '../lib/category-guide-map';
+import { resolveGuideSlug, GUIDE_TITLES, CATEGORY_TO_GUIDE } from '../lib/category-guide-map';
 import NextStep from '../components/NextStep.astro';
 import { getJourneySteps, NEXT_STEP_EXCLUDED } from '../lib/journeys';
 import { getComparatorForCalc } from '../lib/comparators';
@@ -310,28 +310,46 @@ const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   })),
 } : null;
 
+// Guía pilar del tema (hub) para link contextual de SEO.
+// resolveGuideSlug: override manual → patrón de slug (guías AR) → categoría.
+// Insertamos el crumb de guía SÓLO cuando difiere del default de la categoría:
+// evita "Salud / Salud y fitness" redundante, pero enriquece monotributo→Impuestos,
+// aguinaldo/indemnización→Sueldos, jubilación→ANSES (las páginas de plata cross-category).
+const pillarGuideSlug: string | null = resolveGuideSlug(calc);
+const pillarGuideTitle: string | null = pillarGuideSlug ? GUIDE_TITLES[pillarGuideSlug] : null;
+const includeGuideCrumb: boolean = !!pillarGuideSlug && !!pillarGuideTitle && pillarGuideSlug !== CATEGORY_TO_GUIDE[calc.category];
+
+const breadcrumbCrumbs: Array<{ name: string; item?: string; description?: string }> = [
+  {
+    name: 'Inicio',
+    item: 'https://hacecuentas.com/',
+    description: 'Calculadoras gratuitas para Argentina',
+  },
+  {
+    name: categoryLabels[calc.category] || calc.category,
+    item: `https://hacecuentas.com/categoria/${calc.category}`,
+    description: `Calculadoras de ${categoryLabels[calc.category] || calc.category}`,
+  },
+  ...(includeGuideCrumb ? [{
+    name: pillarGuideTitle as string,
+    item: `https://hacecuentas.com/guia/${pillarGuideSlug}`,
+    description: `Guía completa: ${pillarGuideTitle}`,
+  }] : []),
+  {
+    name: calc.h1,
+    description: (calc.description || '').slice(0, 160),
+  },
+];
+
 const schemaBreadcrumb = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
-  itemListElement: [
-    {
-      '@type': 'ListItem', position: 1,
-      name: 'Inicio',
-      item: 'https://hacecuentas.com/',
-      description: 'Calculadoras gratuitas para Argentina',
-    },
-    {
-      '@type': 'ListItem', position: 2,
-      name: categoryLabels[calc.category] || calc.category,
-      item: `https://hacecuentas.com/categoria/${calc.category}`,
-      description: `Calculadoras de ${categoryLabels[calc.category] || calc.category}`,
-    },
-    {
-      '@type': 'ListItem', position: 3,
-      name: calc.h1,
-      description: (calc.description || '').slice(0, 160),
-    },
-  ],
+  itemListElement: breadcrumbCrumbs.map((c, i) => {
+    const li: any = { '@type': 'ListItem', position: i + 1, name: c.name };
+    if (c.item) li.item = c.item;
+    if (c.description) li.description = c.description;
+    return li;
+  }),
 };
 
 // Mapeo categoría → schema.org applicationCategory. Google usa esto para
@@ -893,10 +911,8 @@ const answerSnippet: string = calc.answerSnippet || '';
 const relatedSlugs: string[] = calc.relatedSlugs || [];
 const downloads: Array<{ label: string; href: string; description?: string }> = calc.downloads || [];
 
-// Guía pilar del tema (para link contextual de SEO).
-// resolveGuideSlug: override manual → patrón de slug (guías AR) → categoría.
-const pillarGuideSlug: string | null = resolveGuideSlug(calc);
-const pillarGuideTitle: string | null = pillarGuideSlug ? GUIDE_TITLES[pillarGuideSlug] : null;
+// (pillarGuideSlug / pillarGuideTitle / includeGuideCrumb se computan arriba,
+// junto al schema BreadcrumbList, para poder enriquecer el breadcrumb con el hub.)
 
 // Cluster al que pertenece esta calc (embarazo, dólar, etc.)
 const cluster = findClusterForSlug(calc.slug);
@@ -1019,6 +1035,12 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
       <span class="sep" aria-hidden="true">/</span>
       <a href={`/categoria/${calc.category}`}>{categoryLabels[calc.category] || calc.category}</a>
       <span class="sep" aria-hidden="true">/</span>
+      {includeGuideCrumb && (
+        <>
+          <a href={`/guia/${pillarGuideSlug}`}>{pillarGuideTitle}</a>
+          <span class="sep" aria-hidden="true">/</span>
+        </>
+      )}
       <span class="current">{calc.h1}</span>
     </nav>
 

@@ -26,19 +26,19 @@ interface CatMono {
   soloVenta?: boolean;
 }
 
-// Valores estimados 2026 — actualizar semestralmente
+// Escala ARCA vigente junio 2026 (+14,3%) — validada x2 fuentes (Estudio Brady + Ámbito).
 const CATEGORIAS: CatMono[] = [
-  { cat: 'A', tope: 3500000, cuotaServicios: 15000, cuotaVenta: 15000 },
-  { cat: 'B', tope: 5200000, cuotaServicios: 18000, cuotaVenta: 18000 },
-  { cat: 'C', tope: 7300000, cuotaServicios: 22000, cuotaVenta: 22000 },
-  { cat: 'D', tope: 14000000, cuotaServicios: 35000, cuotaVenta: 35000 },
-  { cat: 'E', tope: 16500000, cuotaServicios: 55000, cuotaVenta: 55000 },
-  { cat: 'F', tope: 20600000, cuotaServicios: 70000, cuotaVenta: 70000 },
-  { cat: 'G', tope: 24800000, cuotaServicios: 85000, cuotaVenta: 85000 },
-  { cat: 'H', tope: 34000000, cuotaServicios: 150000, cuotaVenta: 150000 },
-  { cat: 'I', tope: 40000000, cuotaServicios: 0, cuotaVenta: 200000, soloVenta: true },
-  { cat: 'J', tope: 44000000, cuotaServicios: 0, cuotaVenta: 230000, soloVenta: true },
-  { cat: 'K', tope: 48000000, cuotaServicios: 0, cuotaVenta: 260000, soloVenta: true },
+  { cat: 'A', tope: 10277988, cuotaServicios: 42387, cuotaVenta: 42387 },
+  { cat: 'B', tope: 15058448, cuotaServicios: 48251, cuotaVenta: 48251 },
+  { cat: 'C', tope: 21113697, cuotaServicios: 56502, cuotaVenta: 56502 },
+  { cat: 'D', tope: 26212853, cuotaServicios: 72414, cuotaVenta: 72414 },
+  { cat: 'E', tope: 30833964, cuotaServicios: 102538, cuotaVenta: 102538 },
+  { cat: 'F', tope: 38642048, cuotaServicios: 129045, cuotaVenta: 129045 },
+  { cat: 'G', tope: 46211109, cuotaServicios: 197108, cuotaVenta: 197108 },
+  { cat: 'H', tope: 70113407, cuotaServicios: 447347, cuotaVenta: 447347 },
+  { cat: 'I', tope: 78479212, cuotaServicios: 0, cuotaVenta: 406512, soloVenta: true },
+  { cat: 'J', tope: 89872640, cuotaServicios: 0, cuotaVenta: 497059, soloVenta: true },
+  { cat: 'K', tope: 108357084, cuotaServicios: 0, cuotaVenta: 600880, soloVenta: true },
 ];
 
 export function monotributoCategoriaIngresosTope(
