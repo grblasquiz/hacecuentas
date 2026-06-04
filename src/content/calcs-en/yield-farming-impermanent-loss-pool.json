@@ -1,9 +1,9 @@
 {
   "slug": "yield-farming-impermanent-loss-pool",
   "esSlug": "calculadora-yield-farming-impermanent-loss-pool",
-  "title": "Impermanent Loss Calculator 2026 | Hacé Cuentas",
+  "title": "Impermanent Loss Calculator 2026 | Yield Farming",
   "h1": "Impermanent Loss Calculator for Yield Farming",
-  "description": "Calculate impermanent loss when providing liquidity to DeFi pools. Free calculator for yield farming analysis.",
+  "description": "Calculate impermanent loss for any token price change when providing liquidity to DeFi pools. Understand how much you lose vs holding and whether trading fees compensate the risk.",
   "category": "finanzas",
   "icon": "🌊",
   "audience": "global",
@@ -12,35 +12,36 @@
     "impermanent loss",
     "impermanent loss calculator",
     "yield farming calculator",
-    "liquidity provider",
-    "DeFi calculator",
+    "liquidity provider loss",
+    "DeFi AMM calculator",
     "Uniswap impermanent loss",
-    "crypto pool calculator",
-    "AMM calculator",
-    "concentrated liquidity",
-    "LP fees",
-    "price divergence",
-    "trading pair"
+    "LP pool loss vs holding",
+    "crypto liquidity pool",
+    "AMM x*y=k formula",
+    "concentrated liquidity IL",
+    "LP fees vs impermanent loss",
+    "price divergence loss"
   ],
-  "intro": "Personal finance follows universal principles: compound interest, diversification, long-term horizon, low costs. Tools that work in any global market. When you provide liquidity to DeFi pools, you face impermanent loss—the difference between hodling tokens separately versus pooling them. Our values are current as of 2026 and reviewed regularly to keep you informed.",
-  "keyTakeaway": "Formula: **function of % price change**. Direct application with your input values. Impermanent loss occurs when providing liquidity to trading pairs.",
+  "intro": "When you deposit two tokens into an AMM liquidity pool (like Uniswap, Curve, or PancakeSwap), arbitrageurs rebalance your position as prices move — and you end up with fewer of the gaining token than if you had simply held both. This difference is **impermanent loss (IL)**. Enter the percentage price change of one token relative to the other and this calculator tells you exactly how much IL you absorb, so you can judge whether the trading fees and yield rewards actually compensate the risk.",
+  "keyTakeaway": "Impermanent loss formula: **IL = 2√r/(1+r) − 1**, where *r* is the new price ratio. A 2× price move causes ~5.7% IL; a 5× move causes ~25.5% IL. IL only becomes permanent when you withdraw — if prices converge again before you exit, the loss partly or fully reverses.",
   "useCases": [
-    "Technical calculations related to impermanent loss",
-    "Students and professionals in cryptocurrency and DeFi",
-    "Validate theoretical results before applying",
-    "Teaching and learning yield farming concepts",
-    "Quick reference for liquidity provider projects"
+    "Evaluating whether a new ETH/USDC pool position is worth it given current fee APR and expected volatility",
+    "Stress-testing an existing LP position — if ETH drops 50%, how much IL do you absorb relative to just holding?",
+    "Comparing stablecoin-pair pools (near-zero IL) vs volatile pairs (high IL) to decide where to deploy capital",
+    "Teaching DeFi concepts: showing students the exact IL curve and how it steepens at large price moves"
   ],
   "fields": [
     {
       "id": "cambioPrecio",
-      "label": "Token Price Change %",
+      "label": "Token A Price Change vs Token B (%)",
       "type": "number",
       "required": true,
-      "placeholder": "50",
-      "default": 50,
-      "step": 0.01,
-      "help": "Enter the percentage value."
+      "placeholder": "100",
+      "default": 100,
+      "min": -99,
+      "max": 10000,
+      "step": 1,
+      "help": "Enter how much one token has changed in price relative to the other. Example: if ETH goes from $2,000 to $4,000 while USDC stays at $1, enter 100 (= +100%). For a drop from $2,000 to $1,000, enter -50."
     }
   ],
   "outputs": [
@@ -55,60 +56,72 @@
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "ETH doubles in price: +100% move",
     "steps": [
-      "Token rises 50%",
-      "IL at 2%"
+      "You provide 1 ETH + $2,000 USDC to a Uniswap V2 pool when ETH = $2,000 (total: $4,000)",
+      "ETH price rises to $4,000 (+100%). Arbitrageurs buy ETH from the pool, rebalancing it.",
+      "Your pool share is now worth ~0.707 ETH + $2,828 USDC ≈ $5,657",
+      "If you had held: 1 ETH × $4,000 + $2,000 = $6,000",
+      "Impermanent loss = $5,657 / $6,000 − 1 ≈ −5.72%",
+      "Enter 100 in the calculator → IL = −5.72%"
     ],
-    "result": "Loss vs HODL"
+    "result": "5.72% impermanent loss. To break even, the pool must earn more than 5.72% in trading fees and incentive rewards during the same period."
   },
-  "explanation": "Personal finance and investment use universal mathematical principles (compound interest, time value of money, risk-return optimization). This calculator applies standard formulas from the financial industry.\n\n## How It's Calculated\n\nImpermanent loss when providing liquidity to decentralized exchanges.\n\nThis calculator applies the formula with the values you enter, checking typical ranges and alerting you to unreasonable values.\n\n## Typical Benchmarks by Time Horizon\n\n| Horizon | S&P 500 | 10Y Bonds | Cash |\n|---|---|---|---|\n| 1 year | Highly variable | 4-5% | 3-5% |\n| 5 years | ~8% avg | ~4% | Inflation |\n| 10 years | ~9-10% | ~4% | <inflation |\n| 20+ years | ~10% nominal | ~5% | N/A |\n\n## Investment Principles\n\n- **Don't abandon the plan** during crises. Emotion is the worst advisor.\n- **Diversify**: don't concentrate in a single asset, sector, or country.\n- **Keep costs low**: fees >1% annually consume 30% of returns over 30 years.\n- **Long time horizon**: equities work over 10+ years, not 1 year.\n- **Rebalance annually**: once a year, no more frequently.\n\n## Final Notes\n\nThis calculation is for reference only. For critical decisions (financial, medical, legal), consult a specialist. Values are current as of 2026 and reviewed regularly.",
+  "explanation": "## What Is Impermanent Loss?\n\nAMMs like Uniswap use the **constant product formula**: `x × y = k`. When Token A's price rises, arbitrageurs buy it from the pool (selling Token B) until the pool's implied price matches the market price. You end up holding *less* of the appreciated token and *more* of the depreciated one — compared to simply holding both tokens in your wallet.\n\nThe loss is called *impermanent* because if prices revert to their original ratio before you withdraw, the loss disappears. It becomes permanent the moment you exit the position.\n\n## How It's Calculated\n\nThe standard AMM impermanent loss formula for a 50/50 pool is:\n\n```\nIL = 2 × √r / (1 + r) − 1\n```\n\nWhere **r** is the new price ratio of Token A relative to Token B, expressed as a multiple:\n\n```\nr = (1 + price_change_%) / 100 + 1\n```\n\nFor example, a +100% move means r = 2. Substituting:\n\n```\nIL = 2 × √2 / (1 + 2) − 1\n   = 2 × 1.4142 / 3 − 1\n   = 0.9428 − 1\n   = −0.0572 = −5.72%\n```\n\n## IL Reference Table (50/50 Pool)\n\n| Price Change | Price Ratio (r) | Impermanent Loss |\n|---|---|---|\n| ±25% | 1.25× or 0.8× | −0.62% |\n| ±50% | 1.5× or 0.67× | −2.02% |\n| ±100% (2×) | 2× or 0.5× | −5.72% |\n| ±200% (3×) | 3× or 0.33× | −13.40% |\n| ±400% (5×) | 5× or 0.2× | −25.46% |\n| ±900% (10×) | 10× or 0.1× | −42.50% |\n\nNote: IL is symmetric — a +100% rise and a −50% drop produce the same IL (~5.72%) because both result in a 2× relative price change.\n\n## How to Decide If a Pool Is Worth It\n\n1. **Estimate expected IL** using this calculator with your worst-case price scenario.\n2. **Find the pool's current fee APR** (visible on Uniswap/DeFiLlama analytics).\n3. **Add any incentive/yield APR** (liquidity mining rewards).\n4. **Net APR = Fee APR + Incentive APR − IL** (annualised estimate).\n\nIf net APR > 0 comfortably, the pool may be attractive. Stablecoin pairs (USDC/USDT) have near-zero IL and are the safest starting point.\n\n## Concentrated Liquidity (Uniswap V3 / V4)\n\nIn Uniswap V3, you set a price range. Capital efficiency increases (you earn more fees per dollar), but if the price moves *outside* your range, you stop earning fees entirely and your position converts 100% into the depreciating token — effectively magnifying IL. This calculator covers the standard 50/50 constant-product model; concentrated liquidity IL requires a separate calculation.\n\n## Disclaimer\n\nThis calculator is for educational and planning purposes. DeFi protocols carry smart-contract risk, liquidity risk, and regulatory risk beyond impermanent loss. Do not invest funds you cannot afford to lose.",
   "faq": [
     {
-      "q": "What is impermanent loss?",
-      "a": "Impermanent loss is the difference between hodling tokens separately versus providing them as liquidity in a pool."
+      "q": "What exactly is impermanent loss in a liquidity pool?",
+      "a": "Impermanent loss is the difference in value between (a) keeping your tokens in a DeFi liquidity pool and (b) simply holding those same tokens in your wallet. It arises because the AMM's rebalancing mechanism sells your winning token and buys your losing token as market prices diverge — you miss out on the full upside of the gainer."
     },
     {
-      "q": "When is impermanent loss zero?",
-      "a": "When the prices of both tokens in the trading pair move proportionally together."
+      "q": "Why is the loss called 'impermanent'?",
+      "a": "Because it only materialises when you withdraw. If the two tokens' prices return to the same ratio they had when you deposited, the loss reverses to zero. The loss becomes permanent the moment you exit the pool with prices diverged."
     },
     {
-      "q": "What's the maximum impermanent loss?",
-      "a": "Theoretically unlimited if one token drops to zero while the other gains value."
+      "q": "Does a token price going down cause the same IL as a token going up?",
+      "a": "Yes — IL depends on the *ratio* of price change, not the direction. ETH rising 100% (r = 2) and ETH dropping 50% (r = 0.5) both produce roughly the same ~5.72% IL, because in both cases one token is worth 2× the other relative to the starting ratio."
     },
     {
-      "q": "What's the impermanent loss formula?",
-      "a": "IL% = 2×√(r)/(1+r) - 1, where r is the ratio of price change."
+      "q": "How much IL would I have if I provide liquidity to an ETH/USDC pool and ETH triples?",
+      "a": "A 200% increase (r = 3) gives IL = 2×√3/(1+3) − 1 ≈ −13.4%. That means your LP position is worth about 13.4% less than if you had held 50% ETH + 50% USDC outside the pool. Trading fees and liquidity incentives need to exceed 13.4% to put you ahead."
     },
     {
-      "q": "Do I earn trading fees to offset impermanent loss?",
-      "a": "Yes, that's the main incentive to provide liquidity. Compare your fee earnings against potential IL losses."
+      "q": "Do trading fees always offset impermanent loss?",
+      "a": "Not always. It depends on: (1) the fee tier of the pool (e.g., 0.05%, 0.3%, 1%), (2) the trading volume and thus fee income generated, and (3) how much prices move. High-volatility pairs generate more fees but also more IL. Stablecoin pools have low IL and moderate fees — generally a safer choice for conservative LPs."
     },
     {
-      "q": "Are stablecoin pairs different?",
-      "a": "Yes, IL is minimal with stablecoin pairs since both maintain ~$1 value."
+      "q": "Is impermanent loss different on Uniswap V3 compared to V2?",
+      "a": "Yes. In Uniswap V2 (and most standard AMMs), you provide liquidity across the full price range — IL follows the standard formula. In Uniswap V3, you concentrate liquidity in a price band, earning more fees within that band but risking 100% conversion to the losing token if the price exits your range, which can amplify total losses significantly."
     },
     {
-      "q": "How does concentrated liquidity affect impermanent loss?",
-      "a": "Uniswap V3 concentrated liquidity increases capital efficiency but can amplify IL if prices move outside your specified range."
+      "q": "What pool types have the lowest impermanent loss?",
+      "a": "Stablecoin-to-stablecoin pools (e.g., USDC/USDT) have near-zero IL because both tokens track $1. Curve Finance uses a different invariant (StableSwap) that further minimises IL for pegged assets. Pools with correlated volatile assets (e.g., stETH/ETH) also have low IL. Uncorrelated volatile pairs (ETH/MEME token) have the highest IL."
     },
     {
-      "q": "What return should I expect from markets?",
-      "a": "S&P 500 historical average is ~10% nominal annually (7% real after inflation). Past performance doesn't predict future results."
+      "q": "Can I reduce impermanent loss without leaving the pool?",
+      "a": "Partially. Some protocols offer IL protection (e.g., Bancor historically, though it was discontinued). Single-sided liquidity options reduce exposure. Rebalancing your range on Uniswap V3 can help but incurs gas costs and creates taxable events. The most reliable hedge is choosing pools whose tokens you believe will move together, or stablecoin pairs."
+    },
+    {
+      "q": "Where can I track my actual impermanent loss on a live position?",
+      "a": "Tools like DeFiLlama Portfolio, APY.vision, Revert Finance, and the Uniswap app's analytics tab show real-time IL for connected wallets, broken down by pool and time period."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "Uniswap Docs — Understanding Returns",
+      "url": "https://docs.uniswap.org/contracts/v2/concepts/advanced-topics/understanding-returns"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://www.khanacademy.org"
+      "name": "Pintail — Uniswap: A Good Deal for Liquidity Providers? (original IL derivation)",
+      "url": "https://pintail.medium.com/uniswap-a-good-deal-for-liquidity-providers-104c0b6816f2"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "DeFiLlama — Pool Analytics & APY Tracking",
+      "url": "https://defillama.com/yields"
+    },
+    {
+      "name": "Uniswap V3 Whitepaper — Concentrated Liquidity",
+      "url": "https://uniswap.org/whitepaper-v3.pdf"
     }
   ],
   "relatedSlugs": [],
@@ -116,7 +129,8 @@
     "frequency": "never",
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data update required"
+    "notes": "Fixed mathematical formula — no external data feeds required"
   },
+  "lastReviewed": "2026-06-04",
   "noindex": false
 }

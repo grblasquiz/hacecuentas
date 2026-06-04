@@ -8,14 +8,13 @@
   "icon": "☕",
   "audience": "global",
   "formulaId": "cafeina-dosis-segura-diaria-peso",
-  "intro": "Health reference values come from large population studies (NHANES, WHO, CDC). They provide a framework for interpreting your results, but your personal context matters most. Maximum daily caffeine based on body weight. Values are updated to 2026 and reviewed regularly to keep you informed.",
-  "keyTakeaway": "Formula: **FDA 400 mg maximum, or 6 mg per kg of body weight**. Direct calculation with your weight. Your personalized safe daily caffeine intake.",
+  "intro": "The FDA sets a safe ceiling of 400 mg of caffeine per day for healthy adults — roughly four 8-oz cups of drip coffee. But that flat limit doesn't account for body size. The per-weight guideline of 6 mg per kilogram gives lighter individuals a more appropriate, lower ceiling. This calculator applies both rules and returns whichever limit is lower, and automatically drops the limit to 200 mg for pregnancy (the threshold endorsed by ACOG and WHO).",
+  "keyTakeaway": "Your personalized safe daily caffeine limit is **min(body weight kg × 6 mg, 400 mg)** — or 200 mg if you are pregnant. Enter your weight to get your specific number and the equivalent in cups of coffee.",
   "useCases": [
-    "Technical calculations for safe caffeine intake",
-    "Students and health professionals",
-    "Validate theoretical results before applying",
-    "Teaching and learning caffeine safety concepts",
-    "Quick reference for health projects"
+    "An 58 kg woman wants to know whether her current 3 espresso shots (about 180 mg) is within her personal limit — the calculator tells her her ceiling is 348 mg, so she's well under.",
+    "A 110 kg athlete checks whether a 600 mg pre-workout dose is safe — the result shows 400 mg is the hard FDA cap regardless of weight, flagging the supplement as potentially excessive.",
+    "A pregnant woman (any weight) confirms her limit is 200 mg so she can decide whether a latte and a green tea still keep her under.",
+    "A coffee-curious person wants to understand how many Red Bulls, espressos, or teas they can have before crossing their personal threshold."
   ],
   "seoKeywords": [
     "caffeine dosage calculator",
@@ -39,12 +38,14 @@
       "required": true,
       "placeholder": "70",
       "default": 70,
-      "step": 0.01,
-      "help": "Your weight in kilograms. Weigh yourself without clothes on an empty stomach for accuracy."
+      "min": 30,
+      "max": 200,
+      "step": 0.5,
+      "help": "Enter your weight in kilograms. If you only know your weight in pounds, divide by 2.205."
     },
     {
       "id": "embarazada",
-      "label": "Pregnancy Status",
+      "label": "Are you pregnant?",
       "type": "select",
       "required": true,
       "options": [
@@ -57,7 +58,8 @@
           "label": "Yes"
         }
       ],
-      "default": "no"
+      "default": "no",
+      "help": "Pregnancy lowers the safe caffeine threshold from 400 mg to 200 mg (WHO/ACOG guideline)."
     }
   ],
   "outputs": [
@@ -76,68 +78,87 @@
     }
   ],
   "example": {
-    "title": "Example Calculation",
+    "title": "Example: 68 kg adult, not pregnant",
     "steps": [
-      "70 kg (non-pregnant)",
-      "400 mg"
+      "Weight-based limit: 68 kg × 6 mg/kg = 408 mg",
+      "FDA hard cap: 400 mg",
+      "Apply the lower of the two: 400 mg",
+      "Coffee equivalent: 400 ÷ 95 mg/cup ≈ 4 cups"
     ],
-    "result": "4 cups of coffee"
+    "result": "Daily maximum: 400 mg (~4 cups of drip coffee)"
   },
-  "explanation": "**Normal health values** come from large population studies (NHANES, WHO, CDC). They vary by age, sex, ethnicity, and region. They're guidelines; your personal medical history always takes priority.\n\n## How It's Calculated\n\nMaximum daily caffeine based on body weight.\n\nThis calculator applies the formula with your weight, checks for typical ranges, and alerts you to unusual values.\n\n## Normal Reference Values\n\n| Parameter | Normal Range (Adults) |\n|---|---|\n| Blood Pressure | <120/80 mmHg |\n| Resting Heart Rate | 60–100 bpm |\n| Body Temperature | 36.1–37.2°C |\n| Blood Oxygen (SpO2) | 95–100% |\n| Fasting Blood Glucose | 70–100 mg/dL |\n| HbA1c | <5.7% |\n| Total Cholesterol | <200 mg/dL |\n| LDL Cholesterol | <100 mg/dL |\n| HDL Cholesterol | >40 mg/dL (M) / >50 mg/dL (F) |\n\n## Final Notes\n\nThis calculation is a guideline only. For critical decisions (financial, medical, legal), consult a qualified specialist. Values are current as of 2026 and reviewed periodically.",
+  "explanation": "## How It's Calculated\n\nThis calculator uses two rules and always returns the more conservative result:\n\n**Rule 1 — Weight-based guideline:**\n```\nLimit = Body weight (kg) × 6 mg/kg\n```\nThis comes from sports science research and is used by dietitians when the standard flat limit doesn't fit lighter or heavier individuals.\n\n**Rule 2 — FDA hard cap:**\n```\nLimit = 400 mg (healthy non-pregnant adults)\n```\nRegardless of body weight, the FDA considers 400 mg the upper safe boundary for healthy adults. A 120 kg person theoretically clears 720 mg by the weight formula, but the calculator caps the result at 400 mg because the evidence for safety above 400 mg is thin.\n\n**Combined formula:**\n```\nDaily Max = min(weight_kg × 6, 400)\n```\n\n**For pregnancy:**\n```\nDaily Max = 200 mg (fixed, regardless of weight)\n```\nThe 200 mg limit for pregnancy is the threshold set by the American College of Obstetricians and Gynecologists (ACOG) and echoed by WHO. Some research suggests even lower (100 mg) to be extra cautious.\n\n## Caffeine Content Reference\n\n| Source | Caffeine (approx.) |\n|---|---|\n| Drip coffee 8 oz (240 mL) | ~95 mg |\n| Espresso single shot | ~63 mg |\n| Cappuccino / latte (1 shot) | ~63 mg |\n| Green tea 8 oz | ~30 mg |\n| Black tea 8 oz | ~47 mg |\n| Energy drink (250 mL) | 80–100 mg |\n| Cola 12 oz | ~34 mg |\n| Dark chocolate 30 g | ~20 mg |\n\n## Important Notes\n\n- Individual tolerance varies. Genetics (CYP1A2 enzyme variants), body composition, medication interactions, and health conditions all affect sensitivity.\n- The 400 mg guideline is for *healthy adults*. People with heart conditions, anxiety disorders, hypertension, or who take certain medications may need to stay lower.\n- Caffeine has a half-life of roughly 5–6 hours, so an afternoon coffee can still be affecting your sleep at midnight.\n- This calculator is an educational tool. For personalized medical advice, consult a healthcare provider.",
   "faq": [
     {
-      "q": "How much caffeine is safe for adults?",
-      "a": "The FDA recommends 400 mg per day (about 4 cups of coffee) for healthy adults."
+      "q": "Why does this calculator use 6 mg per kg instead of just the flat 400 mg limit?",
+      "a": "A flat 400 mg limit makes sense for an average-sized adult but can be proportionally high for a lighter person. A 50 kg individual at 400 mg is consuming 8 mg/kg — well above the 6 mg/kg athletic guideline. Using the weight-based formula gives a more physiologically proportionate limit, especially for people under ~67 kg where 6 mg/kg would be lower than 400 mg."
     },
     {
-      "q": "Is caffeine safe during pregnancy?",
-      "a": "During pregnancy, limit caffeine to less than 200 mg per day (about 1 cup of coffee)."
+      "q": "I weigh 100 kg — does that mean I can drink more than 400 mg safely?",
+      "a": "No. Even though 100 kg × 6 mg/kg = 600 mg, the calculator caps the result at 400 mg. The FDA has reviewed the evidence and found that 400 mg is the practical upper safe limit for healthy adults regardless of size. The weight formula is mostly relevant below 67 kg."
     },
     {
-      "q": "Can children and teens consume caffeine?",
-      "a": "Children should avoid caffeine. Adolescents should limit intake to under 100 mg per day."
+      "q": "What is the safe caffeine limit during pregnancy?",
+      "a": "200 mg per day, which is roughly one cup of drip coffee or two espresso shots. This is the threshold set by ACOG (American College of Obstetricians and Gynecologists) and WHO. Some studies, including a 2020 BMJ review, suggest any caffeine in pregnancy carries some risk (associated with lower birth weight), so many OBs recommend staying closer to 100 mg or less."
     },
     {
-      "q": "What does 6 mg per kg mean?",
-      "a": "This is an alternative guideline for athletes—multiply your body weight in kg by 6 to find your safe dose."
+      "q": "Is caffeine safe while breastfeeding?",
+      "a": "Moderate caffeine (up to 300 mg/day) is generally considered compatible with breastfeeding according to the Academy of Breastfeeding Medicine. A small fraction of caffeine passes into breast milk, peaking 1–2 hours after intake. Timing feeds before your coffee can minimize baby's exposure."
     },
     {
-      "q": "What are the signs of too much caffeine?",
-      "a": "Excessive caffeine can cause rapid heartbeat, anxiety, insomnia, and headaches."
+      "q": "How much caffeine is in common drinks?",
+      "a": "Drip coffee (~95 mg per 8 oz cup), espresso (~63 mg per shot), green tea (~30 mg per cup), black tea (~47 mg), Red Bull 250 mL (~80 mg), Monster 500 mL (~160 mg), Coke 12 oz (~34 mg). Pre-workout supplements often contain 150–300 mg per serving — check labels carefully."
     },
     {
-      "q": "Does caffeine improve exercise performance?",
-      "a": "Yes—taking 3–6 mg per kg of body weight 30–60 minutes before exercise can boost performance."
+      "q": "What happens if you exceed your daily caffeine limit?",
+      "a": "Mild excess (above your limit but under ~600 mg): restlessness, increased heart rate, jitteriness, insomnia, and headaches. Acute toxic doses start around 10 mg/kg — a 70 kg adult would need to consume roughly 700 mg in a short window to reach dangerous territory. True caffeine poisoning (>1,200 mg) is rare from beverages but has occurred with concentrated caffeine powders and pills."
     },
     {
-      "q": "What foods have hidden caffeine?",
-      "a": "Green tea (~30 mg per cup), dark chocolate (10–30 mg), some medications, and energy drinks all contain caffeine."
+      "q": "Does caffeine tolerance affect the safe limit?",
+      "a": "Regular caffeine consumers develop tolerance to many subjective effects (jitteriness, anxiety) but the cardiovascular effects don't fully habituate. The 400 mg guideline is set for regular consumers. If you're caffeine-naive and starting to consume, start lower — 100–200 mg — and see how your body responds."
     },
     {
-      "q": "When should I see a doctor about caffeine intake?",
-      "a": "Consult a doctor if your values fall outside normal ranges, you have associated symptoms, or you have a family history of heart or metabolic disease."
+      "q": "Can caffeine improve athletic performance?",
+      "a": "Yes — this is one of the most well-studied ergogenic aids. Research shows 3–6 mg/kg taken 30–60 minutes before exercise improves endurance, power output, and reaction time. This is why many athletes use the weight-based formula: a 70 kg runner aiming for a 3–4 mg/kg dose would take 210–280 mg before a long run."
+    },
+    {
+      "q": "Should children and teenagers consume caffeine?",
+      "a": "Health Canada and the American Academy of Pediatrics recommend that children under 12 avoid caffeine entirely. For teenagers (12–18), Health Canada suggests no more than 2.5 mg/kg per day — about 85 mg for a 34 kg twelve-year-old. This calculator is designed for adults."
+    },
+    {
+      "q": "What if I take medication — does that change my safe limit?",
+      "a": "Some medications interact significantly with caffeine. Antibiotics like ciprofloxacin slow caffeine metabolism (doubling its effects). Stimulant medications for ADHD can compound cardiovascular effects. Certain antidepressants and birth control pills also affect caffeine clearance. If you take any regular medication, check with a pharmacist or doctor about caffeine interactions before relying on a general limit."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "U.S. FDA — How Much Caffeine Is Too Much?",
+      "url": "https://www.fda.gov/consumers/consumer-updates/spilling-beans-how-much-caffeine-too-much"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "ACOG — Moderate Caffeine Consumption During Pregnancy (Committee Opinion 462)",
+      "url": "https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2010/08/moderate-caffeine-consumption-during-pregnancy"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "WHO — Maternal and Newborn Health: Caffeine intake during pregnancy",
+      "url": "https://www.who.int/tools/elena/interventions/caffeine-pregnancy"
+    },
+    {
+      "name": "NIH — Caffeine (MedlinePlus)",
+      "url": "https://medlineplus.gov/caffeine.html"
+    },
+    {
+      "name": "EFSA — Scientific Opinion on the safety of caffeine (2015)",
+      "url": "https://efsa.onlinelibrary.wiley.com/doi/10.2903/j.efsa.2015.4102"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed formula based on FDA 400 mg guideline and 6 mg/kg weight-based rule. No external data updates required."
   },
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [],
   "noindex": false
 }

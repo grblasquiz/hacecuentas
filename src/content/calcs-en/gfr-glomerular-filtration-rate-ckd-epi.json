@@ -1,22 +1,21 @@
 {
   "slug": "gfr-glomerular-filtration-rate-ckd-epi",
-  "lastReviewed": "2026-05-19",
+  "lastReviewed": "2026-06-04",
   "esSlug": "calculadora-gfr-filtrado-glomerular-ckd-epi",
-  "title": "GFR Calculator: Glomerular Filtration Rate 2026 | Hacé Cuentas",
+  "title": "GFR Calculator — CKD-EPI 2021 Kidney Function Estimator",
   "h1": "Calculate Your GFR: Glomerular Filtration Rate",
-  "description": "Calculate your GFR with CKD-EPI 2021 formula. Assess kidney function from serum creatinine, age & sex. Clinical reference calculator.",
+  "description": "Estimate your eGFR with the CKD-EPI 2021 equation (no race variable). Enter serum creatinine, age, and sex to get your kidney function stage (G1–G5) and a clinical recommendation.",
   "category": "salud",
   "icon": "🩸",
   "audience": "global",
   "formulaId": "gfr-filtrado-glomerular-ckd-epi",
-  "intro": "Reference values in health come from large population studies (NHANES, WHO). They provide a framework to interpret your results, but your personal context always comes first. GFR (CKD-EPI) is the gold standard for evaluating kidney function. These values are updated to 2026 and reviewed periodically to keep you current.",
-  "keyTakeaway": "Formula: **CKD-EPI 2021**. Direct application with your input values. GFR (CKD-EPI) is the reference standard for assessing kidney function.",
+  "intro": "Estimated GFR (eGFR) is the primary measure clinicians use to assess how well your kidneys filter waste from the blood. This calculator uses the **CKD-EPI 2021** equation — the current gold-standard recommended by KDIGO and the NKF — which removed the race coefficient that was present in earlier versions. You only need your serum creatinine result (from a standard blood panel), your age, and your biological sex.",
+  "keyTakeaway": "CKD-EPI 2021 is the reference equation for eGFR in adults. A result ≥ 90 mL/min/1.73m² with no kidney damage markers is considered normal (Stage G1). Below 60 for more than 3 months indicates Chronic Kidney Disease. Always interpret results with a nephrologist or primary care physician.",
   "useCases": [
-    "Technical calculations related to GFR and kidney function",
-    "Healthcare students and professionals",
-    "Validate theoretical results before clinical application",
-    "Teaching and learning kidney function concepts",
-    "Quick reference for patient care and health projects"
+    "Reviewing a lab report — your blood panel lists serum creatinine and you want to understand what it means for kidney function before your next appointment.",
+    "Monitoring CKD progression — you have a known diagnosis and want to track how your eGFR changes over time as you adjust diet, medications, or blood pressure control.",
+    "Pre-procedure risk assessment — surgeons and anesthesiologists use eGFR to gauge safe dosing of contrast agents and anesthetics that are renally cleared.",
+    "Medication dose adjustment — many drugs (metformin, NSAIDs, certain antibiotics) require dose reduction or are contraindicated below specific eGFR thresholds."
   ],
   "fields": [
     {
@@ -24,42 +23,42 @@
       "label": "Serum Creatinine (mg/dL)",
       "type": "number",
       "required": true,
-      "placeholder": "1",
+      "placeholder": "e.g. 0.95",
       "default": 1,
-      "step": 0.01
+      "min": 0.1,
+      "max": 20,
+      "step": 0.01,
+      "help": "Found on your blood test report (BMP or CMP). Typical adult range: 0.6–1.2 mg/dL (male), 0.5–1.1 mg/dL (female)."
     },
     {
       "id": "edad",
-      "label": "Age",
+      "label": "Age (years)",
       "type": "number",
       "required": true,
-      "placeholder": "45",
+      "placeholder": "e.g. 52",
       "default": 45,
-      "step": 0.01,
-      "help": "Your current age in years."
+      "min": 18,
+      "max": 110,
+      "step": 1,
+      "help": "CKD-EPI is validated for adults ≥ 18 years old."
     },
     {
       "id": "sexo",
-      "label": "Sex",
+      "label": "Biological Sex",
       "type": "select",
       "required": true,
       "options": [
-        {
-          "value": "hombre",
-          "label": "Male"
-        },
-        {
-          "value": "mujer",
-          "label": "Female"
-        }
+        { "value": "hombre", "label": "Male" },
+        { "value": "mujer", "label": "Female" }
       ],
-      "default": "hombre"
+      "default": "hombre",
+      "help": "Use the sex assigned at birth (biological sex), as creatinine norms differ between sexes due to muscle mass differences."
     }
   ],
   "outputs": [
     {
       "id": "gfr",
-      "label": "GFR (mL/min/1.73m²)",
+      "label": "eGFR (mL/min/1.73m²)",
       "primary": true
     },
     {
@@ -68,78 +67,94 @@
     },
     {
       "id": "recomendacion",
-      "label": "Recommendation"
+      "label": "Clinical Recommendation"
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Worked Example: 52-year-old female, creatinine 1.1 mg/dL",
     "steps": [
-      "1 mg/dL, age 45 Male",
-      "~90"
+      "Inputs: creatinine = 1.1 mg/dL | age = 52 | sex = Female",
+      "Sex-specific constants: κ = 0.7, α = −0.241",
+      "Ratio = 1.1 / 0.7 = 1.571  →  min(ratio, 1) = 1, max(ratio, 1) = 1.571",
+      "eGFR = 142 × (1)^(−0.241) × (1.571)^(−1.200) × (0.9938)^52 × 1.012",
+      "eGFR = 142 × 1 × 0.5985 × 0.7261 × 1.012 ≈ 62.4 → rounded to 62 mL/min/1.73m²",
+      "Stage: G2 Mild — GFR 60–89 with mildly reduced function"
     ],
-    "result": "Normal"
+    "result": "eGFR ≈ 62 mL/min/1.73m² · Stage G2 Mild · Recommendation: Identify cause, monitor"
   },
-  "explanation": "**Normal health reference values** come from large population studies (NHANES, WHO, CDC). They vary by age, sex, ethnicity, and region. They're informational; your personal medical history always takes precedence.\n\n## How It's Calculated\n\nGFR (CKD-EPI) is the gold standard for evaluating kidney function.\n\nThis calculator applies the formula with your input values, checking typical ranges and alerting you to any unreasonable values.\n\n## Normal Reference Ranges\n\n| Parameter | Normal Adult Range |\n|---|---|\n| Blood Pressure | <120/80 mmHg |\n| Resting Heart Rate | 60-100 bpm |\n| Temperature | 36.1-37.2°C |\n| SpO2 | 95-100% |\n| Fasting Glucose | 70-100 mg/dL |\n| HbA1c | <5.7% |\n| Total Cholesterol | <200 mg/dL |\n| LDL | <100 mg/dL |\n| HDL | >40 (M) / >50 (F) |\n\n## Final Notes\n\nThis calculation is an informational reference. For critical decisions (financial, medical, legal), consult a specialized healthcare professional. Values are updated to 2026 and reviewed periodically.",
+  "explanation": "## What Is GFR?\n\nGlomerular Filtration Rate measures how many millilitres of blood the kidneys' glomeruli filter per minute, normalized to a standard body surface area of 1.73 m². Because direct measurement requires injecting special tracers (inulin clearance), clinicians estimate it — hence the \"e\" in **eGFR** — using serum creatinine, age, and sex.\n\n## The CKD-EPI 2021 Equation\n\nPublished by the Chronic Kidney Disease Epidemiology Collaboration (KDIGO / NKF 2021 task force), this is the equation this calculator uses:\n\n```\neGFR = 142 × min(Scr/κ, 1)^α × max(Scr/κ, 1)^(−1.200)\n       × 0.9938^Age × (1.012 if Female)\n```\n\nWhere:\n- **Scr** = serum creatinine in mg/dL\n- **κ** = 0.7 for females, 0.9 for males\n- **α** = −0.241 for females, −0.302 for males\n- **Age** in years\n- **1.012 multiplier** applies to females only\n\nThe 2021 revision removed the separate race coefficient that was in the 2009 CKD-EPI and MDRD formulas, following a NKF/ASN task force review finding the race variable introduced inequities without improving individual accuracy.\n\n## CKD Stages (KDIGO 2024)\n\n| Stage | eGFR (mL/min/1.73m²) | Description |\n|---|---|---|\n| G1 | ≥ 90 | Normal or high |\n| G2 | 60–89 | Mildly decreased |\n| G3a | 45–59 | Mild-to-moderately decreased |\n| G3b | 30–44 | Moderately-to-severely decreased |\n| G4 | 15–29 | Severely decreased |\n| G5 | < 15 | Kidney failure |\n\n> **Important:** A single low eGFR does not diagnose CKD. The definition of CKD requires *abnormalities of kidney structure or function lasting > 3 months*. Acute illness, dehydration, and high-protein meals can temporarily raise creatinine and lower apparent eGFR.\n\n## Why Serum Creatinine?\n\nCreatinine is a muscle waste product filtered almost entirely by the glomeruli with minimal secretion or reabsorption. Its blood level rises predictably as filtration falls, making it a practical proxy. Caveats: very muscular individuals may have higher baseline creatinine; sarcopenic or malnourished patients may have falsely low creatinine masking moderate CKD.\n\n## Limitations\n\n- **Not validated below 18 years** — use Bedside Schwartz for children.\n- **Accuracy decreases at extremes** of body composition (amputees, bodybuilders, severe malnutrition).\n- **Cystatin C-based eGFR** is more accurate when creatinine is unreliable (e.g., after high-protein meal, in pregnancy).\n- This tool is informational. Clinical management requires lab confirmation, urinalysis, imaging, and a physician's judgment.",
   "faq": [
     {
-      "q": "What is GFR?",
-      "a": "Glomerular Filtration Rate—the best marker of kidney function."
+      "q": "What is a normal eGFR for an adult?",
+      "a": "An eGFR of 90 mL/min/1.73m² or higher (Stage G1) is considered normal in adults with no other signs of kidney damage. eGFR naturally declines about 0.7–1 mL/min/1.73m² per year after age 40, so a 75-year-old may have an eGFR of 65–70 and still have no kidney disease."
     },
     {
-      "q": "What's a normal GFR?",
-      "a": ">90 mL/min/1.73m². GFR (CKD-EPI) is the gold standard for evaluating kidney function."
+      "q": "What is the CKD-EPI 2021 formula, and how does it differ from the 2009 version?",
+      "a": "The 2021 update by the NKF/ASN task force removed the race coefficient that was in the 2009 CKD-EPI formula. The 2009 equation applied a 1.159 multiplier for Black patients, which studies showed introduced systematic inequities. The 2021 version uses only creatinine, age, and biological sex, and is now the standard recommended by KDIGO and NIDDK."
     },
     {
-      "q": "What are the CKD stages?",
-      "a": "G1:≥90, G2:60-89, G3a:45-59, G3b:30-44, G4:15-29, G5:<15"
+      "q": "My lab report already shows an eGFR — why use this calculator?",
+      "a": "Many labs still report eGFR calculated with the 2009 equation or the MDRD formula. If you want to confirm your value under CKD-EPI 2021 (without a race coefficient), or if your lab used a different formula, this calculator lets you recalculate using the current standard. It also gives you the KDIGO stage and a clear clinical recommendation."
     },
     {
-      "q": "Why does GFR decline?",
-      "a": "Age, diabetes, hypertension, medications, and kidney disease."
+      "q": "Can a single eGFR reading diagnose chronic kidney disease?",
+      "a": "No. KDIGO defines CKD as kidney abnormalities present for more than 3 months. A one-off low eGFR could reflect dehydration, acute illness, high protein intake before the blood draw, or lab variability. Your doctor will typically confirm with repeat testing (at least two values 3 months apart) plus urinalysis (looking for proteinuria) and possibly imaging."
     },
     {
-      "q": "What is CKD-EPI 2021?",
-      "a": "Updated formula without racial variables, published 2021."
+      "q": "How does biological sex affect the eGFR calculation?",
+      "a": "Women typically have lower muscle mass than men, so they produce less creatinine at baseline. At the same serum creatinine level, a woman will have a higher eGFR than a man. CKD-EPI accounts for this with sex-specific constants (κ = 0.7 for females vs 0.9 for males, and α = −0.241 vs −0.302), plus a 1.012 multiplier for females."
     },
     {
-      "q": "How often should I test my GFR?",
-      "a": "Every 3-6 months if you have risk factors for kidney disease."
+      "q": "What factors can temporarily lower my eGFR without true kidney disease?",
+      "a": "Dehydration (reduces kidney blood flow), heavy exercise before the blood draw, a high-protein meal, NSAIDs (ibuprofen, naproxen) taken in the 24–48 hours before the test, and ACE inhibitors/ARBs (which cause a functional, usually benign, drop in eGFR). Always tell your doctor about medications before a kidney function test."
     },
     {
-      "q": "What diet helps low GFR?",
-      "a": "Monitor protein, sodium, and potassium based on your CKD stage."
+      "q": "At what eGFR should I see a nephrologist?",
+      "a": "Most guidelines recommend referral to a nephrologist when eGFR falls below 45 mL/min/1.73m² (Stage G3a/G3b boundary) or earlier if there is rapid decline (>5 mL/min/1.73m² per year), significant proteinuria (urine albumin > 300 mg/g), difficult-to-control hypertension, or suspected rare kidney disease. Stage G4 (eGFR 15–29) requires active preparation for renal replacement therapy."
     },
     {
-      "q": "When should I see my doctor about GFR?",
-      "a": "If results are abnormal, you have symptoms, or have a family history of cardiovascular or metabolic disease."
+      "q": "Does diet or exercise affect eGFR long-term?",
+      "a": "Yes. Chronic high-protein diets increase creatinine production and glomerular pressure, which can hasten CKD progression. In CKD patients, dietary protein restriction (typically 0.6–0.8 g/kg/day under dietitian guidance) is shown to slow decline. Regular moderate aerobic exercise improves cardiovascular risk — a key driver of CKD progression — without acutely harming the kidneys, though it may raise creatinine transiently."
+    },
+    {
+      "q": "What medications must be dose-adjusted or avoided when eGFR is low?",
+      "a": "Common ones: **Metformin** should be used cautiously below eGFR 45 and is contraindicated below 30. **NSAIDs** (ibuprofen, naproxen) are generally avoided below eGFR 60 in CKD. **Gadolinium** contrast for MRI carries nephrogenic systemic fibrosis risk below eGFR 30. **Iodinated contrast** (CT scans) should be preceded by hydration and careful benefit-risk assessment below eGFR 45. Always tell any prescriber your current eGFR."
+    },
+    {
+      "q": "Is eGFR from creatinine accurate in all patients?",
+      "a": "Not always. Serum creatinine reflects muscle mass, so results can be misleading in amputees, bodybuilders, individuals with severe malnutrition, and in pregnancy. For these cases, cystatin C — a protein filtered independently of muscle mass — offers a more accurate eGFR. Some labs now report cystatin-C-based eGFR alongside the creatinine-based value."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "NKF/ASN Task Force — New Creatinine- and Cystatin C–Based Equations (CKD-EPI 2021), NEJM 2021",
+      "url": "https://www.nejm.org/doi/10.1056/NEJMoa2102953"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://www.khanacademy.org"
+      "name": "KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of CKD",
+      "url": "https://kdigo.org/guidelines/ckd-evaluation-and-management/"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "NIDDK — Estimating Kidney Function (eGFR)",
+      "url": "https://www.niddk.nih.gov/health-information/professionals/clinical-tools-patient-education-outreach/ckd-drug-dosing-providers"
+    },
+    {
+      "name": "National Kidney Foundation — eGFR calculator and staging",
+      "url": "https://www.kidney.org/professionals/kdoqi/gfr"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
-    "notes": "Fixed formula, does not require external data updates"
+    "notes": "Fixed formula (CKD-EPI 2021). CKD staging thresholds are stable per KDIGO guidelines and do not require external data updates."
   },
   "relatedSlugs": [],
   "seoKeywords": [
-    "calculate your gfr: glomerular filtration rate",
-    "calculate your gfr: glomerular filtration rate calculator",
-    "free calculate your gfr: glomerular filtration rate calculator",
-    "calculate your gfr: glomerular filtration rate online",
-    "calculate calculate your gfr: glomerular filtration rate"
+    "CKD-EPI 2021 GFR calculator",
+    "eGFR calculator creatinine age sex",
+    "glomerular filtration rate estimator",
+    "kidney function test calculator",
+    "chronic kidney disease stage calculator"
   ]
 }

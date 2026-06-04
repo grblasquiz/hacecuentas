@@ -7,57 +7,63 @@
   "category": "salud",
   "icon": "🌡️",
   "formulaId": "hidratacion-clima-caluroso-actividad-diaria",
-  "intro": "Reference values in health come from large population studies (NHANES, WHO). They provide a framework for interpreting your results, but your personal context comes first. Daily water needs vary with climate and activity level. Values are current as of 2026 and reviewed regularly to keep you up to date.",
-  "keyTakeaway": "Formula: **35 mL/kg plus adjustments**. Direct calculation based on your inputs. Your daily hydration needs vary with temperature and exercise.",
+  "intro": "Your daily fluid needs climb significantly in hot weather and with physical activity. This calculator starts from the established baseline of 35 mL per kilogram of body weight and adds scientifically grounded adjustments: 15% more for every 5°C above 25°C, plus 17 mL for every minute of exercise. The result is a personalized daily target — not a one-size-fits-all \"8 glasses\" recommendation.",
+  "keyTakeaway": "A 70 kg person exercising 45 minutes in 35°C heat needs roughly **4.1 L/day** — nearly twice the standard \"8 glasses\" recommendation. Heat and exercise stack multiplicatively on your baseline.",
   "audience": "global",
   "seoKeywords": [
     "hydration calculator",
-    "daily water intake",
-    "hot climate water needs",
-    "exercise water requirements",
+    "daily water intake hot weather",
+    "how much water to drink in heat",
+    "exercise hydration calculator",
     "water intake by body weight",
-    "dehydration signs",
-    "how much water to drink",
-    "heat hydration needs",
-    "fluid intake calculator",
-    "temperature water needs"
+    "dehydration prevention",
+    "fluid needs hot climate",
+    "heat hydration formula",
+    "water intake exercise temperature",
+    "daily fluid requirement calculator"
   ],
   "useCases": [
-    "Technical calculations for hydration in hot climates",
-    "Students and health professionals",
-    "Validate theoretical results before applying",
-    "Teaching and learning hydration concepts",
-    "Quick reference for health projects"
+    "A runner training outdoors in summer at 34°C wants to know exactly how many liters to carry and drink throughout the day.",
+    "A construction worker spending 8 hours on-site in a tropical climate needs a reliable daily fluid target to avoid heat exhaustion.",
+    "A parent planning a beach day with kids wants to estimate how much water the whole family should bring.",
+    "A hiker preparing for a multi-day trek in a desert environment needs to calculate per-day water requirements for resupply planning."
   ],
   "fields": [
     {
       "id": "pesoKg",
-      "label": "Weight (kg)",
+      "label": "Body weight (kg)",
       "type": "number",
       "required": true,
       "placeholder": "70",
       "default": 70,
-      "step": 0.01,
-      "help": "Your weight in kilograms. Weigh yourself without clothes, fasted."
+      "min": 30,
+      "max": 200,
+      "step": 0.5,
+      "help": "Your body weight in kilograms. Weigh yourself without clothes, ideally in the morning."
     },
     {
       "id": "temperaturaC",
-      "label": "Temperature (°C)",
+      "label": "Ambient temperature (°C)",
       "type": "number",
       "required": true,
-      "placeholder": "30",
-      "default": 30,
-      "step": 0.01
+      "placeholder": "32",
+      "default": 32,
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "help": "The outdoor or indoor temperature you'll be exposed to for most of the day."
     },
     {
       "id": "actividadMin",
-      "label": "Exercise minutes/day",
+      "label": "Exercise duration (minutes/day)",
       "type": "number",
       "required": true,
-      "placeholder": "30",
-      "default": 30,
-      "step": 0.01,
-      "help": "Duration in minutes of moderate to intense activity."
+      "placeholder": "45",
+      "default": 45,
+      "min": 0,
+      "max": 300,
+      "step": 5,
+      "help": "Total minutes of moderate-to-vigorous physical activity (running, cycling, gym, manual labor, etc.)."
     }
   ],
   "outputs": [
@@ -72,64 +78,79 @@
     },
     {
       "id": "recordatorio",
-      "label": "Hydration tips"
+      "label": "Hydration schedule"
     }
   ],
   "example": {
-    "title": "Example calculation",
+    "title": "Worked example: runner on a hot day",
     "steps": [
-      "70 kg 30°C 30 min",
-      "3.2 L"
+      "Inputs: 75 kg body weight, 36°C temperature, 60 minutes of running",
+      "Base intake: 75 × 35 = 2,625 mL",
+      "Heat adjustment (36°C is 11°C above 25°C): 2,625 × (1 + 11/5 × 0.15) = 2,625 × 1.33 = 3,491 mL",
+      "Exercise addition: 60 × 17 = 1,020 mL",
+      "Total: 3,491 + 1,020 = 4,511 mL ≈ 4.5 L"
     ],
-    "result": "13 glasses"
+    "result": "4.5 L/day — about 18 glasses of 250 mL"
   },
-  "explanation": "**Reference values in health** come from large population studies (NHANES, WHO, CDC). They vary by age, sex, ethnicity, and region. These are guidelines; your personal medical history always takes priority.\n\n## How it's calculated\n\nDaily water intake depends on your body weight, environmental temperature, and exercise duration.\n\nThis calculator applies the formula with your inputs, checking for typical ranges and alerting if values seem unusual.\n\n## Normal reference ranges\n\n| Parameter | Normal adult range |\n|---|---|\n| Blood pressure | <120/80 mmHg |\n| Resting heart rate | 60-100 bpm |\n| Temperature | 36.1-37.2°C |\n| SpO2 | 95-100% |\n| Fasting glucose | 70-100 mg/dL |\n| HbA1c | <5.7% |\n| Total cholesterol | <200 mg/dL |\n| LDL | <100 mg/dL |\n| HDL | >40 (M) / >50 (F) |\n\n## Final notes\n\nThis calculation is a reference guide only. For critical decisions (medical, financial, legal), consult a qualified professional. Values are current as of 2026 and reviewed periodically.",
+  "explanation": "## How it's calculated\n\nThis calculator uses a three-component formula based on recommendations from sports medicine and nutrition literature:\n\n### 1. Baseline water requirement\n\n```\nBase (mL) = body weight (kg) × 35\n```\n\nThe 35 mL/kg baseline is widely cited in clinical nutrition and represents the average daily water requirement for a sedentary adult in a temperate environment. The EFSA (European Food Safety Authority) and ACSM both anchor adult recommendations near this figure.\n\n### 2. Heat adjustment (temperatures above 25°C)\n\n```\nAdjusted base = Base × (1 + (T − 25) / 5 × 0.15)\n```\n\nFor every 5°C above 25°C, fluid needs increase by approximately 15%. This reflects increased sweat rate at higher temperatures. At 35°C (10°C above threshold), the multiplier is 1.30 — a 30% increase over baseline.\n\n| Temperature | Multiplier | Example (70 kg) |\n|---|---|---|\n| 25°C | 1.00 | 2.45 L |\n| 30°C | 1.15 | 2.82 L |\n| 35°C | 1.30 | 3.19 L |\n| 40°C | 1.45 | 3.55 L |\n\n### 3. Exercise addition\n\n```\nExercise (mL) = exercise minutes × 17\n```\n\nThe ACSM recommends approximately 500 mL per 30 minutes of moderate exercise — equivalent to ~17 mL/min. This is added on top of the heat-adjusted baseline.\n\n### Full formula\n\n```\nTotal (mL) = [weight × 35 × (1 + max(0, T−25)/5 × 0.15)] + [minutes × 17]\nLiters = Total / 1000\nGlasses = round(Total / 250)\n```\n\n## Important notes\n\nThis formula gives a **daily target for fluid intake from all sources**, including water, drinks, and the water content of food (which typically accounts for 20–30% of total intake). If you eat little solid food (e.g. fasting), increase your drinking water target accordingly.\n\nThis calculator is a planning tool. For medical conditions affecting fluid balance (kidney disease, heart failure, hyponatremia risk), consult a healthcare professional.\n\n## Hydration schedule tip\n\nDo not rely on thirst alone in hot conditions — by the time you feel thirsty you may already be 1–2% dehydrated, which is enough to reduce physical and cognitive performance. Space your intake across the day: 500 mL in the morning on waking, then roughly equal portions each hour.",
   "faq": [
     {
-      "q": "How much water should I drink daily?",
-      "a": "A common baseline is 35 mL per kilogram of body weight. For a 70 kg person, that's about 2.5 liters, adjusted for heat and exercise."
+      "q": "Why does this calculator give more than the standard '8 glasses a day'?",
+      "a": "The '8 glasses' (about 2 L) rule is a rough guideline for sedentary adults in mild climates. It doesn't account for body weight, heat, or exercise. A larger person exercising in hot weather can need 4–5 L or more. This calculator applies adjustments for all three factors."
     },
     {
-      "q": "How does temperature affect water needs?",
-      "a": "In hot climates, add about 15% more water for every 5°C above 25°C. Heat increases sweat loss and fluid needs."
+      "q": "How does high temperature increase my water needs?",
+      "a": "In hot conditions your body sweats more to regulate core temperature. Sweat rates in the heat can reach 0.5–2.5 L/hour depending on intensity and humidity. The formula adds 15% more fluid for every 5°C above 25°C to compensate for this loss."
     },
     {
-      "q": "How much extra water do I need during exercise?",
-      "a": "Add roughly 500 mL for every 30 minutes of moderate-to-intense activity, depending on intensity and heat conditions."
+      "q": "How much extra water do I need per hour of exercise?",
+      "a": "The formula uses 17 mL per minute of exercise, which equals about 500 mL per 30 minutes — consistent with ACSM guidelines for moderate activity. For high-intensity or prolonged sessions, consider weighing yourself before and after: every kilogram lost equals roughly 1 L of fluid to replace."
     },
     {
-      "q": "What are signs of dehydration?",
-      "a": "Early signs include thirst, dark urine, fatigue, and reduced performance. Losing 2% of body weight as fluid noticeably impacts athletic performance."
+      "q": "Should I drink the entire amount as plain water?",
+      "a": "No. About 20–30% of daily fluid intake typically comes from food, especially fruits and vegetables with high water content. You can subtract roughly 0.5 L from your target if your diet is rich in water-containing foods. Juices, herbal teas, and milk also count toward your total."
     },
     {
-      "q": "How do I know if I'm properly hydrated?",
-      "a": "Pale yellow or clear urine is a good sign. Dark yellow or amber-colored urine suggests dehydration."
+      "q": "What urine color indicates good hydration?",
+      "a": "Light straw yellow (similar to pale lemonade) is the target. Colorless urine may indicate slight overhydration; dark yellow or amber suggests dehydration and means you need to drink more. Certain vitamins (like B2) can temporarily color urine bright yellow regardless of hydration status."
     },
     {
-      "q": "Does caffeine count toward my daily hydration?",
-      "a": "Yes. While caffeine has a mild diuretic effect, coffee and tea still contribute to overall fluid intake."
+      "q": "Do sports drinks replace plain water in hot weather?",
+      "a": "For sessions under 60 minutes, water is sufficient for most people. For longer exercise or extreme heat where you are sweating heavily, electrolyte drinks help replace sodium and potassium lost in sweat and prevent hyponatremia (dangerously low blood sodium from drinking too much plain water)."
     },
     {
-      "q": "How much water do children need?",
-      "a": "Children need roughly 1 liter per day plus about 10 mL per kilogram of body weight, increasing toward adult levels by age 14."
+      "q": "Can drinking too much water be dangerous?",
+      "a": "Yes, though rare. Hyponatremia (low blood sodium caused by excessive water intake) can occur in endurance events if you drink far more than you sweat. The risk is highest for slow marathon/ultramarathon runners who drink aggressively. For daily activity and normal exercise, drink to meet your calculated target — not far beyond it."
     },
     {
-      "q": "Can you drink too much water?",
-      "a": "Hyponatremia from excessive water intake is rare in daily life, but possible with extreme intake during endurance events. Drink to thirst in most situations."
+      "q": "How do children's hydration needs compare to adults?",
+      "a": "Children have a higher body-surface-area-to-weight ratio and can overheat faster than adults. General guidelines suggest about 1 L/day for toddlers up to roughly 1.6–2 L/day by early teenage years. Use adult values cautiously for teens over 14; below that, consult pediatric guidelines or a physician."
+    },
+    {
+      "q": "Does humidity affect hydration needs beyond temperature?",
+      "a": "Yes. High humidity reduces your body's ability to cool through evaporation, so you sweat more for the same cooling effect. This calculator uses air temperature as a proxy; on humid days (above 70% relative humidity) add 10–15% extra to the calculator's result."
+    },
+    {
+      "q": "Should I adjust this if I'm at high altitude?",
+      "a": "Yes. At altitudes above 2,500 m, breathing rate increases and respiratory water loss goes up significantly. Many trekkers and mountaineers add 0.5–1 L/day above their standard target when acclimatizing. The formula does not include an altitude variable, so apply this as a manual add-on."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "American College of Sports Medicine (ACSM) — Exercise and Fluid Replacement Position Stand",
+      "url": "https://journals.lww.com/acsm-msse/Fulltext/2007/02000/Exercise_and_Fluid_Replacement.22.aspx"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "European Food Safety Authority (EFSA) — Dietary Reference Values for Water",
+      "url": "https://efsa.onlinelibrary.wiley.com/doi/10.2903/j.efsa.2010.1459"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "National Academies of Sciences — Dietary Reference Intakes for Water and Electrolytes",
+      "url": "https://www.nationalacademies.org/our-work/dietary-reference-intakes-for-electrolytes-and-water"
+    },
+    {
+      "name": "Centers for Disease Control and Prevention (CDC) — Water and Healthier Drinks",
+      "url": "https://www.cdc.gov/healthy-weight-growth/water-drinks/"
     }
   ],
   "dataUpdate": {
@@ -138,6 +159,7 @@
     "updateType": "manual",
     "notes": "Fixed formula, no external data updates required"
   },
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [],
   "noindex": false
 }

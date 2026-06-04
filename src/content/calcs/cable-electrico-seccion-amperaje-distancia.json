@@ -1,118 +1,170 @@
 {
   "slug": "calculadora-cable-electrico-seccion-amperaje-distancia",
-  "lastReviewed": "2026-04-24",
-  "title": "Calculadora Cable eléctrico sección amp 2026 | Hacé Cuentas",
-  "h1": "Cable eléctrico sección amp",
-  "description": "🔨 Calculá cable eléctrico sección amp. Obtené resultado al instante. Cálculo al instante, sin registro. Ideal para consulta rápida. Categoría: construccion.",
+  "lastReviewed": "2026-06-04",
+  "title": "Calculadora Sección de Cable Eléctrico por Amperaje y Distancia 2026",
+  "h1": "Calculadora de sección de cable eléctrico por amperaje y distancia",
+  "description": "Calculá la sección de cable de cobre (mm²) según corriente (A), distancia (m) y tensión. Criterio caída de tensión AEA 90364 + criterio térmico. Resultado al instante.",
   "category": "construccion",
   "audience": "global",
   "icon": "⚡",
   "formulaId": "cable-electrico-seccion-amperaje-distancia",
-  "intro": "El DIY para el hogar y construcción se basa en rendimientos conocidos (m² por unidad, kg por m², etc.). Calcular bien al principio evita viajes extras al corralón y sobrantes. Cable: sección según amperaje + distancia. Evitar caída tensión · Gratis y rápido. Los valores están actualizados a 2026 y se revisan periódicamente para mantenerte al día.",
-  "keyTakeaway": "Esta calculadora te devuelve resultado con un cálculo directo, sin registro.",
+  "intro": "Elegir la sección incorrecta de cable eléctrico tiene dos consecuencias posibles: si el cable es **demasiado delgado** para la corriente que transporta, se calienta en exceso, funde el aislante y puede provocar un incendio; si es **demasiado delgado para la distancia**, la caída de tensión al final del circuito es mayor al 3% permitido por la **AEA 90364** (Reglamentación argentina vigente), y los equipos reciben menos voltaje del nominal, funcionan mal o se queman. Esta calculadora evalúa **ambos criterios** — el **térmico** (capacidad de corriente del cable) y el de **caída de tensión** (pérdida por la resistencia del conductor) — y te devuelve la sección comercial de cobre más pequeña que los cumple en simultáneo, más la térmica (llave automática) apropiada.",
+  "keyTakeaway": "La sección mínima surge del mayor entre dos criterios: **caída de tensión** (S = 2·L·I / γ·ΔU para 220 V) y **ampacidad térmica**. A mayor distancia o corriente, mayor sección necesaria. Caída máxima admisible: 3% residencial, 5% industrial (AEA 90364).",
   "useCases": [
-    "Resolver rápido una duda sobre cable eléctrico sección amp sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Instalar un aire acondicionado split en un ambiente alejado del tablero y determinar si alcanza con cable 2,5 mm² o hay que usar 4 mm².",
+    "Dimensionar el cableado de una ampliación de vivienda: cuál cable usar para cada circuito según la carga y la distancia al tablero.",
+    "Conectar un termotanque eléctrico, horno o lavarropas en zonas donde el tablero queda lejos del punto de instalación.",
+    "Verificar si un cable existente es adecuado para una carga nueva antes de llamar al electricista."
   ],
   "fields": [
     {
       "id": "v1",
-      "label": "Input 1",
+      "label": "Corriente del circuito (A)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "16",
+      "min": 0.5,
+      "max": 200,
+      "step": 0.5,
+      "unit": "A",
+      "helpText": "Amperaje del equipo o circuito. En la etiqueta del equipo figura como 'A' o se calcula como Watts ÷ Voltaje."
     },
     {
       "id": "v2",
-      "label": "Input 2",
+      "label": "Longitud del cable (m)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "20",
+      "min": 1,
+      "max": 500,
+      "step": 1,
+      "unit": "m",
+      "helpText": "Distancia en un solo sentido desde el tablero hasta el punto de consumo. El factor 2 (ida+vuelta) se aplica automáticamente."
+    },
+    {
+      "id": "v3",
+      "label": "Tensión nominal",
+      "type": "select",
+      "required": false,
+      "options": [
+        { "value": "220", "label": "220 V — Monofásico (residencial)" },
+        { "value": "380", "label": "380 V — Trifásico (industrial)" }
+      ],
+      "default": "220"
+    },
+    {
+      "id": "v4",
+      "label": "Caída de tensión máxima admisible (%)",
+      "type": "select",
+      "required": false,
+      "options": [
+        { "value": "3", "label": "3% — Residencial (AEA 90364)" },
+        { "value": "5", "label": "5% — Industrial / ramal (AEA 90364)" }
+      ],
+      "default": "3"
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Resultado",
+      "label": "Sección recomendada",
       "primary": true
     },
     {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Detalle del cálculo"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: aire acondicionado 3000 fg a 25 m del tablero",
     "steps": [
-      "Ejemplo",
-      "Resultado"
+      "Dato de entrada: el split consume 12 A (figura en la etiqueta). Distancia al tablero: 25 m. Tensión: 220 V monofásico. Caída máxima admisible: 3% = 6,6 V.",
+      "Cálculo por caída de tensión: S = (2 × 25 × 12) / (56 × 6,6) = 600 / 369,6 = 1,62 mm² → sección comercial inmediata superior: 2,5 mm².",
+      "Verificación térmica: cable 2,5 mm² aguanta 21 A; 12 A < 21 A → criterio térmico OK.",
+      "Caída real con 2,5 mm²: ΔV = (2 × 25 × 12) / (56 × 2,5) = 4,29 V → 1,9% ✓ dentro del 3%.",
+      "Resultado: cable de cobre 2,5 mm² + térmica de 16 A."
     ],
-    "result": "Resultado"
+    "result": "2,5 mm² — Caída de tensión real: 4,29 V (1,9%) ✓"
   },
-  "explanation": "El **cálculo DIY para hogar y construcción** se basa en rendimientos conocidos de materiales (m² por litro de pintura, ladrillos por m² de pared, etc.). Normas IRAM y buenas prácticas de la industria.\n\n## Cómo se calcula\n\nCable: sección según amperaje + distancia. Evitar caída tensión · Gratis y rápido.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.\n\n## Tabla de referencia\n\n### Sección de cable de cobre por corriente (220V monofásico, AR)\n\n| Corriente | Sección mínima | Uso típico | Tramo máx (caída 3%) |\n|---|---|---|---|\n| 6 A | 1,0 mm² | Iluminación general | 15 m |\n| 10 A | 1,5 mm² | Tomas comunes, TV | 20 m |\n| 16 A | 2,5 mm² | Cocina, heladera, lavarropas | 25 m |\n| 20 A | 4,0 mm² | Termotanque eléctrico, microondas | 30 m |\n| 25 A | 6,0 mm² | Split 3.000 fg, horno eléctrico | 35 m |\n| 32 A | 10,0 mm² | Aire central, bomba de agua | 45 m |\n| 40 A | 16,0 mm² | Tablero secundario, taller | 55 m |\n\nValores orientativos para cable unipolar de cobre en cañería no embutida, temperatura ambiente 30°C. Fuente: Reglamentación AEA 90364 — instalaciones eléctricas en inmuebles (circuito final monofásico).\n",
+  "explanation": "## Cómo se calcula la sección de un cable eléctrico\n\nEl dimensionado de un conductor de cobre se rige por **dos criterios independientes**. La sección definitiva es la **mayor** entre ambos.\n\n### Criterio 1 — Caída de tensión (AEA 90364 / IEC 60364)\n\nPara **circuito monofásico** (220 V):\n\n```\nS = (2 × L × I) / (γ × ΔU)\n```\n\nPara **circuito trifásico** (380 V):\n\n```\nS = (√3 × L × I) / (γ × ΔU)\n```\n\nDonde:\n- **S** = sección del conductor en mm²\n- **L** = longitud unidireccional en metros (solo ida; el factor 2 o √3 contempla el retorno)\n- **I** = corriente en amperios\n- **γ** = conductividad del cobre = **56 m/(Ω·mm²)** a 20 °C (valor IEC 60228)\n- **ΔU** = caída de tensión máxima admisible en voltios = tensión nominal × (% máx / 100)\n\nEjemplo: 220 V × 3% = 6,6 V máximo.\n\n### Criterio 2 — Ampacidad térmica (capacidad de conducción)\n\nCada sección comercial tiene un límite de corriente máxima antes de calentarse en exceso. Los valores típicos para cable unipolar de cobre en cañería, temperatura ambiente 30 °C (AEA 90364):\n\n| Sección (mm²) | Capacidad (A) | Uso típico |\n|---|---|---|\n| 1,0 | 10 A | Iluminación |\n| 1,5 | 14 A | Tomas comunes, TV |\n| 2,5 | 21 A | Heladera, lavarropas, A/C pequeño |\n| 4,0 | 28 A | Termotanque, horno eléctrico |\n| 6,0 | 36 A | Aire acondicionado, split 3000 fg |\n| 10,0 | 50 A | Tablero secundario, bomba trifásica |\n| 16,0 | 68 A | Taller, máquinas industriales |\n| 25,0 | 89 A | Acometida residencial grande |\n\n### Secciones comerciales normalizadas\n\nUna vez obtenido el valor teórico, siempre se sube al comercial inmediato superior: 1,0 – 1,5 – 2,5 – 4 – 6 – 10 – 16 – 25 – 35 – 50 – 70 mm².\n\n### Térmica (llave automática) recomendada\n\nSe elige el valor comercial de térmica igual o inmediatamente superior a la corriente del circuito. Valores estándar: 6 – 10 – 13 – 16 – 20 – 25 – 32 – 40 – 50 – 63 A.\n\n### Límites normativos de caída de tensión (AEA 90364)\n\n- **3%** para circuitos de uso final (tomas, iluminación, electrodomésticos).\n- **5%** para circuito ramal o instalaciones industriales.\n- Estos valores aplican al tramo medido, no a la acometida total de la empresa distribuidora.\n\n### Notas de aplicación\n\n- Esta calculadora asume **cable de cobre**. Para aluminio, la conductividad es ~34 m/(Ω·mm²) y los valores de ampacidad son menores.\n- En instalaciones enterradas o agrupadas con otros cables, la capacidad de conducción se reduce (factores de corrección de AEA 90364).\n- Siempre verificar con un electricista matriculado antes de ejecutar una instalación.",
   "faq": [
     {
-      "q": "¿Cómo se calcula?",
-      "a": "La calculadora aplica la fórmula estándar del tema (Cable eléctrico sección amp) y los valores los ingresás vos. El resultado es orientativo; para decisiones importantes consultá con un profesional del área."
+      "q": "¿Por qué la sección del cable depende de la distancia y no solo del amperaje?",
+      "a": "Porque el cable tiene resistencia eléctrica, y esa resistencia multiplica la corriente y la distancia para generar una caída de tensión (ΔV = R × I). A más longitud, más resistencia, más caída. Si la caída supera el 3% en residencial, los equipos reciben menos voltaje del nominal: los motores se recalientan, las lámparas pierden luminosidad y los equipos electrónicos se comportan de forma errática. Por eso, el mismo amperaje puede requerir secciones distintas según la distancia al tablero."
     },
     {
-      "q": "¿Precisión?",
-      "a": "Resultado práctico ±5-10% según productos/variables."
+      "q": "¿Cuál es la diferencia entre el criterio térmico y el criterio de caída de tensión?",
+      "a": "El criterio térmico define cuánta corriente puede conducir el cable sin calentarse en exceso y fundir el aislante (ampacidad). El criterio de caída de tensión define cuánta sección necesitás para que la pérdida de voltaje a lo largo de ese cable no supere el límite normativo (3% o 5%). La sección definitiva es siempre la mayor entre ambas: un cable que cumple la térmica puede igualmente tener caída de tensión excesiva si el circuito es largo."
     },
     {
-      "q": "¿Referencias?",
-      "a": "Recetas clásicas, manuales DIY internacionales."
+      "q": "¿Por qué en monofásico uso el factor 2 y en trifásico √3?",
+      "a": "En un circuito monofásico (220 V), la corriente va por el conductor vivo y regresa por el neutro, recorriendo el doble de la distancia física, de ahí el factor 2. En un circuito trifásico (380 V), el retorno de corriente se distribuye entre las tres fases desfasadas 120°, lo que geométricamente resulta en un factor multiplicador de √3 ≈ 1,732 (menor que 2), razón por la que el trifásico es más eficiente para transportar potencia a distancia."
     },
     {
-      "q": "¿Hispanohablante?",
-      "a": "Aplicable a México, España, Argentina, Chile, Colombia y todos los países hispanos."
+      "q": "¿Qué conductividad del cobre usa esta calculadora y por qué 56?",
+      "a": "La conductividad usada es γ = 56 m/(Ω·mm²) a 20 °C, el valor estándar del IEC 60228 y AEA 90364 para conductores de cobre recocido de uso general. Algunos calculadores usan 57 o 58, que corresponden a cobre de pureza ligeramente mayor (cable de alta conductividad). La diferencia en el resultado final es menor al 4% y queda cubierta por el margen de la sección comercial elegida."
     },
     {
-      "q": "¿Actualizado?",
-      "a": "2026."
+      "q": "¿Cómo calculo la corriente si solo sé la potencia del equipo en watts?",
+      "a": "Para 220 V monofásico: I (A) = W ÷ 220. Para 380 V trifásico con factor de potencia cosφ = 0,9: I = W ÷ (380 × √3 × 0,9). Ejemplo: un aire acondicionado de 3000 W a 220 V consume 3000 ÷ 220 = 13,6 A. Si la potencia figura en HP (caballos de vapor): 1 HP = 746 W."
     },
     {
-      "q": "¿Es gratis?",
-      "a": "Sí, todas nuestras calculadoras son gratuitas y sin registro."
+      "q": "¿La longitud que ingreso es de ida o de ida y vuelta?",
+      "a": "Solo la longitud en un sentido (desde el tablero hasta el punto de consumo). La calculadora aplica internamente el factor 2 para 220 V monofásico (o √3 para trifásico) que contempla la vuelta de la corriente por el neutro. Si tenés un galpón a 30 m del tablero, ingresás 30, no 60."
     },
     {
-      "q": "¿Los resultados son precisos?",
-      "a": "Son orientativos. Usamos fórmulas estándar validadas internacionalmente. Para casos críticos consultá con un profesional."
+      "q": "¿Qué térmica (llave automática) me recomienda la calculadora?",
+      "a": "La calculadora sugiere el valor comercial de térmica inmediatamente igual o superior a la corriente del circuito. Es una guía orientativa: la norma AEA 90364 establece que la corriente nominal de la térmica no debe exceder la ampacidad del cable elegido. En la práctica, también se considera la corriente de arranque del equipo (especialmente en motores) para evitar falsos disparos."
     },
     {
-      "q": "¿Guardan mis datos?",
-      "a": "No. Los cálculos se hacen en tu navegador. No enviamos datos a ningún servidor."
+      "q": "¿Sirve para cables de aluminio o solo para cobre?",
+      "a": "Esta calculadora está diseñada exclusivamente para conductores de cobre, que son los exigidos por AEA 90364 en instalaciones interiores de inmuebles en Argentina. El aluminio (con conductividad ~34 m/(Ω·mm²), menor que el cobre) se usa en líneas aéreas externas y acometidas; en ese caso se requiere una sección mayor para el mismo amperaje y distancia, y se deben usar terminales bimetálicas en las conexiones."
+    },
+    {
+      "q": "¿Qué pasa si el cable que tengo instalado no cumple con el resultado de la calculadora?",
+      "a": "Depende de cuánto lo supera y qué criterio incumple. Si incumple la ampacidad (el cable es muy chico para la corriente), el riesgo es real: calentamiento, fusión del aislante e incendio. Si incumple la caída de tensión por un margen pequeño (ej.: 3,5% vs 3% máximo), el efecto más probable es degradación del rendimiento de los equipos. En cualquier caso, lo correcto es reemplazar el cable o reducir la carga del circuito. Consultá con un electricista matriculado."
     }
   ],
   "sources": [
     {
-      "name": "INTI — Instituto Nacional de Tecnología Industrial",
-      "url": "https://www.inti.gob.ar"
+      "name": "AEA 90364 — Reglamentación para la Ejecución de Instalaciones Eléctricas en Inmuebles (Asociación Electrotécnica Argentina)",
+      "url": "https://servidos.ar/referencia-electrica-argentina"
     },
     {
-      "name": "CIRSOC — Reglamento argentino de construcción",
-      "url": "https://www.inti.gob.ar/cirsoc"
+      "name": "IEC 60228 — Conductors of insulated cables (International Electrotechnical Commission)",
+      "url": "https://www.iec.ch/dyn/www/f?p=103:38:0::::FSP_ORG_ID,FSP_APEX_PAGE,FSP_PROJECT_ID:1282,23,5624"
+    },
+    {
+      "name": "IEC 60364-5-52 — Selección e instalación de equipos eléctricos: cableado",
+      "url": "https://www.iec.ch/dyn/www/f?p=103:23:0::::FSP_ORG_ID:1282"
+    },
+    {
+      "name": "Selección de cables por caída de tensión — Profe Tolocka (UTN)",
+      "url": "https://www.profetolocka.com.ar/2024/03/17/determinacion-de-la-seccion-de-conductores-para-instalaciones-electricas-parte-3-caida-de-tension/"
     }
   ],
   "relatedSlugs": [
-    "calculadora-electricidad-cable-amperaje-seccion"
+    "calculadora-electricidad-cable-amperaje-seccion",
+    "caida-tension-cable-distancia",
+    "fusible-amperaje-cable-seccion",
+    "cable-awg-amperaje-seccion"
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "INTI — Instituto Nacional de Tecnología Industrial",
-    "sourceUrl": "https://www.inti.gob.ar"
+    "notes": "Fórmula física determinística basada en conductividad del cobre (IEC 60228) y norma AEA 90364. No requiere actualización de datos externos.",
+    "source": "AEA 90364 / IEC 60228 / IEC 60364",
+    "sourceUrl": "https://servidos.ar/referencia-electrica-argentina"
   },
   "seoKeywords": [
-    "calculadora cable eléctrico sección amp 2026",
-    "cable eléctrico sección amp",
-    "cable electrico seccion amperaje distancia"
-  ],
-  "noindex": true
+    "calculadora seccion cable electrico",
+    "sección cable por amperaje y distancia",
+    "calcular cable electrico mm2",
+    "caida de tension cable electrico",
+    "que cable usar para 16 amperios",
+    "cable 2 5 mm2 cuantos metros",
+    "seccion cable 220v",
+    "AEA 90364 seccion cable"
+  ]
 }

@@ -1,22 +1,21 @@
 {
   "slug": "chess-elo-rating-change",
-  "lastReviewed": "2026-04-21",
+  "lastReviewed": "2026-06-04",
   "esSlug": "calculadora-elo-ajedrez-ganado-perdido-variacion",
-  "title": "Chess ELO Rating Change Calculator 2026 | Hacé Cuentas",
+  "title": "Chess Elo Rating Change Calculator 2026 | Hacé Cuentas",
   "h1": "Chess ELO rating change calculator",
-  "description": "Calculate your chess ELO rating change after any game. See how wins, draws, and losses affect your rating instantly.",
+  "description": "Calculate your new chess Elo rating after a game. Enter both ratings, the result and the K-factor to see your exact rating change and win expectancy.",
   "category": "educacion",
   "icon": "♟️",
   "formulaId": "elo-ajedrez-ganado-perdido-variacion",
   "audience": "global",
-  "intro": "The ELO rating system is the international standard for chess rankings, used by FIDE and online platforms worldwide. After every game, your rating changes based on the formula **ΔELO = K × (result − expected outcome)**. Calculate your new rating instantly with our 2026-updated calculator.",
-  "keyTakeaway": "Formula: **ΔELO = K × (result − expected outcome)**. Direct application with your inputs. Understand your chess rating change after each game.",
+  "intro": "The Elo rating system, invented by physicist Arpad Elo, is the international standard for ranking chess players and is used by FIDE, the US Chess Federation and most online platforms. After every rated game your number moves by **R' = R + K × (S − E)**, where **S** is your score (1 win, 0.5 draw, 0 loss) and **E** is your expected score against that opponent. This calculator applies the exact formula so you can see your new rating, the points gained or lost, and your win probability before or after a game.",
+  "keyTakeaway": "Your rating change is **K × (S − E)**: the K-factor times the gap between how you actually scored and how the rating difference said you *should* score. Beat a stronger opponent and E is small, so you gain a lot; lose to a weaker one and you give back a lot.",
   "useCases": [
-    "Calculate ELO rating changes for chess games",
-    "Chess players analyzing their performance and progress",
-    "Coaches and instructors tracking student ratings",
-    "Validate rating predictions before tournaments",
-    "Understanding chess strength and competitive improvement"
+    "A 1500-rated club player wants to know how many points beating a 1700 would earn before entering a weekend Swiss tournament",
+    "A coach projects a junior's rating after a 7-round event to decide whether they will cross 1800 and lose their higher beginner K-factor",
+    "A FIDE-rated player checks whether a draw against a 2300 GM as Black is a net gain or loss for their published rating",
+    "An online player estimates the rating they need to reach a target win probability against a specific opponent"
   ],
   "fields": [
     {
@@ -26,16 +25,22 @@
       "required": true,
       "placeholder": "1500",
       "default": 1500,
-      "step": 0.01
+      "min": 100,
+      "max": 3000,
+      "step": 1,
+      "unit": "Elo"
     },
     {
       "id": "eloOponente",
       "label": "Opponent's rating",
       "type": "number",
       "required": true,
-      "placeholder": "1600",
-      "default": 1600,
-      "step": 0.01
+      "placeholder": "1700",
+      "default": 1700,
+      "min": 100,
+      "max": 3000,
+      "step": 1,
+      "unit": "Elo"
     },
     {
       "id": "resultado",
@@ -45,15 +50,15 @@
       "options": [
         {
           "value": "gane",
-          "label": "Win"
+          "label": "Win (you scored 1)"
         },
         {
           "value": "tabla",
-          "label": "Draw"
+          "label": "Draw (you scored ½)"
         },
         {
           "value": "perdi",
-          "label": "Loss"
+          "label": "Loss (you scored 0)"
         }
       ],
       "default": "gane"
@@ -63,9 +68,12 @@
       "label": "K-factor",
       "type": "number",
       "required": true,
-      "placeholder": "20",
-      "default": 20,
-      "step": 0.01
+      "placeholder": "32",
+      "default": 32,
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "unit": "points"
     }
   ],
   "outputs": [
@@ -84,60 +92,75 @@
     }
   ],
   "example": {
-    "title": "Example calculation",
+    "title": "Worked example: 1500 beats 1700 (K = 32)",
     "steps": [
-      "1500 vs 1600: won",
-      "+16"
+      "Rating gap: 1700 − 1500 = 200 points in the opponent's favor",
+      "Expected score E = 1 / (1 + 10^(200/400)) = 1 / (1 + 3.162) ≈ 0.240",
+      "You won, so your score S = 1",
+      "Rating change = K × (S − E) = 32 × (1 − 0.240) = 32 × 0.760 ≈ +24",
+      "New rating = 1500 + 24 = 1524"
     ],
-    "result": "New rating: 1516"
+    "result": "New rating: 1524 (+24 points, win expectancy 24%)"
   },
-  "explanation": "## How Chess ELO Ratings Work\n\nThe **ELO rating system**, created by Arpad Elo, is the international standard for chess ratings. Your rating changes after each game based on your result and your opponent's strength.\n\n## How It's Calculated\n\nThe formula **ΔELO = K × (result − expected outcome)** determines your rating change:\n\n- **K-factor**: Controls rating volatility (40 for beginners, 20 for standard players, 10 for titled players)\n- **Expected outcome**: Probability of winning based on the ELO difference\n- **Result**: 1 for a win, 0.5 for a draw, 0 for a loss\n\nBeating a stronger opponent earns you more points than defeating someone weaker, reflecting the lower expected probability of winning.\n\n## Important Notes\n\nThis calculator is a reference tool. For official rating updates, check FIDE (International Chess Federation) records or your platform (Chess.com, Lichess). Values are current as of 2026 and reviewed regularly.",
+  "explanation": "## How chess Elo ratings work\n\nThe **Elo rating system**, devised by physicist and chess master Arpad Elo in the 1960s, replaced the older Harkness system as the way to measure relative skill in chess. Each player has a single number; the *difference* between two players' numbers predicts the result, and every rated game nudges both numbers toward reality.\n\n## How it works\n\nThe update happens in two steps.\n\n**1. Expected score.** Before the game, your rating difference with the opponent gives your expected score (your win probability, counting a draw as half a win):\n\n`E = 1 / (1 + 10^((Rb − Ra) / 400))`\n\nwhere `Ra` is your rating and `Rb` is your opponent's. The 400 means that every 400 points of rating difference change the odds by a factor of 10. Equal ratings give `E = 0.5`; being 200 points lower gives `E ≈ 0.24`; being 400 points higher gives `E ≈ 0.91`.\n\n**2. New rating.** After the game you compare what you actually scored (`S` = 1 for a win, 0.5 for a draw, 0 for a loss) with what you were expected to score, and move by the K-factor times that gap:\n\n`R' = R + K × (S − E)`\n\nBecause the two players' expected scores always add up to 1, the points one player gains the other loses — Elo is a zero-sum system within a single game.\n\n## Why upsets pay more\n\nIf you are the underdog, `E` is small, so winning (`S = 1`) leaves a large `S − E` gap and you gain a lot of points; the favorite who was expected to win gains little and loses a lot if they slip. This self-correcting design is why ratings converge on true strength over many games.\n\n## Reading the result\n\nThis calculator gives a single-game update for reference. Your official number is the one published by your federation (FIDE, US Chess) or platform (Chess.com, Lichess), which may batch a whole tournament, apply rating floors, or use a Glicko-based variant. Use this tool to understand and anticipate the math, not as the system of record.",
   "faq": [
     {
-      "q": "What is the ELO chess rating system?",
-      "a": "The ELO system, created by Arpad Elo, is the international standard for rating chess players. Your rating changes after each game based on your result and opponent strength."
+      "q": "What is the expected-score formula in Elo?",
+      "a": "Your expected score against an opponent is E = 1 / (1 + 10^((Rb − Ra) / 400)), where Ra is your rating and Rb is the opponent's. It ranges from 0 to 1 and is read as your win probability (a draw counts as 0.5). Equal ratings give 0.50; a 200-point deficit gives about 0.24; a 200-point lead gives about 0.76."
     },
     {
-      "q": "How does the K-factor work?",
-      "a": "K-factor controls rating volatility: 40 for new players, 20 for standard players, 10 for titled players (GM, IM, FM, CM). Beginners' ratings fluctuate more."
+      "q": "How is my new rating calculated after one game?",
+      "a": "New rating R' = R + K × (S − E). S is your actual score (1 for a win, 0.5 for a draw, 0 for a loss), E is your expected score from the formula above, and K is the K-factor. The term K × (S − E) is the points you gain or lose."
     },
     {
-      "q": "Why do I gain more points beating a stronger opponent?",
-      "a": "You gain points proportional to the probability of winning. Beating a stronger opponent (lower expected probability) earns more points than defeating someone weaker."
+      "q": "Why do I gain more points for beating a higher-rated player?",
+      "a": "Because your expected score E against a stronger player is low, the gap S − E when you win (S = 1) is large, and your gain is K times that gap. Beating a much stronger opponent can be worth nearly the full K, while beating a much weaker one is worth only a point or two. The same logic means a favorite who loses gives back a large chunk of points."
     },
     {
-      "q": "What ELO rating makes you a master?",
-      "a": "GM (Grandmaster) 2500+, IM (International Master) 2400+, FM (FIDE Master) 2300+, CM (Candidate Master) 2200+."
+      "q": "What K-factor should I use?",
+      "a": "It depends on the federation and your level. FIDE uses K = 40 for new players in their first 30 rated games and for players under 18 rated below 2300, K = 20 for most established players, and K = 10 once you have reached 2400. The default here is 32, a common all-purpose value (it is what Chess.com and the older USCF formula use for most players). Lower K = a more stable rating; higher K = faster adjustment."
     },
     {
-      "q": "Do online chess platforms use ELO?",
-      "a": "Chess.com and Lichess use Glicko-2, a modern variation similar to ELO that accounts for rating consistency and reliability over time."
+      "q": "How is the FIDE rating system different from US Chess?",
+      "a": "Both share the same core Elo formula, but the parameters differ. FIDE uses K = 40/20/10 tiers and rates games down to a 400-point cap on the difference. US Chess (USCF) uses its own bonus and rating-floor rules and a K-factor that scales with rating and number of games played, so the same result can produce slightly different point changes in each system."
     },
     {
-      "q": "What does FIDE do?",
-      "a": "FIDE (International Chess Federation) maintains official chess ratings worldwide and organizes major tournaments and championships."
+      "q": "Do Chess.com and Lichess use Elo?",
+      "a": "Not pure Elo. Chess.com uses a Glicko-based rating, and Lichess uses Glicko-2. These systems add a 'rating deviation' (how certain the system is about your number) and, in Glicko-2, a volatility term, so inactive or new accounts move faster. The single-game intuition is similar, but the exact point change depends on those extra parameters, which this calculator does not model."
     },
     {
-      "q": "How can I improve my ELO rating?",
-      "a": "Play regularly against stronger opponents, study openings and tactical patterns, analyze your games, and practice endgames consistently."
+      "q": "What is a provisional rating?",
+      "a": "When you have played only a few rated games, your rating is provisional and far less reliable. Federations handle this with a high K-factor (FIDE uses 40 for the first 30 games) or, in Glicko systems, a large rating deviation, so your number swings widely until enough games pin it down. After that the rating stabilizes and K drops."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, our chess ELO calculator is completely free with no registration or login required."
+      "q": "Why does the formula use 400 and base 10?",
+      "a": "They are scaling choices Arpad Elo made so that a difference of 400 rating points corresponds to a 10-to-1 odds ratio (about a 91% expected score). A 200-point gap is roughly 3-to-1 (about 76%). Different games tune this constant — some use 480 or natural-log forms — but 400 with base 10 is the chess standard."
+    },
+    {
+      "q": "Can I lose rating points even if I win?",
+      "a": "Not in standard single-game Elo: a win always means S = 1, which is the maximum, so S − E is non-negative and your change is zero or positive. The smallest case is beating someone far weaker, where E is near 1 and you gain only a fraction of a point. (You can finish a whole tournament with a net loss if you also lost or drew other games.)"
+    },
+    {
+      "q": "What ratings correspond to chess titles?",
+      "a": "FIDE titles are awarded on norms plus a rating floor: Candidate Master (CM) around 2200, FIDE Master (FM) around 2300, International Master (IM) around 2400, and Grandmaster (GM) 2500 and above. The current world's elite sit above 2800. These thresholds are FIDE-specific and do not map one-to-one to online ratings."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "FIDE Handbook — Rating Regulations (B.02)",
+      "url": "https://handbook.fide.com/chapter/B022024"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://www.khanacademy.org"
+      "name": "US Chess — The US Chess Rating System (Glickman & Doan, official description)",
+      "url": "https://new.uschess.org/sites/default/files/media/documents/the-us-chess-rating-system-revised-september-2020.pdf"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Arpad E. Elo, 'The Rating of Chessplayers, Past and Present' (1978)",
+      "url": "https://archive.org/details/ratingofchesspla0000eloa"
+    },
+    {
+      "name": "Lichess — Rating systems and Glicko-2 (FAQ)",
+      "url": "https://lichess.org/faq#rating-systems"
     }
   ],
   "dataUpdate": {
@@ -149,9 +172,9 @@
   "relatedSlugs": [],
   "seoKeywords": [
     "chess elo rating change calculator",
-    "chess elo rating change calculator calculator",
-    "free chess elo rating change calculator calculator",
-    "chess elo rating change calculator online",
-    "calculate chess elo rating change calculator"
+    "elo rating calculator chess",
+    "new chess rating after a game",
+    "chess k-factor calculator",
+    "chess win expectancy formula"
   ]
 }

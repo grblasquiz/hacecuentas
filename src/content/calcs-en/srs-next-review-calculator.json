@@ -1,46 +1,54 @@
 {
   "slug": "srs-next-review-calculator",
-  "lastReviewed": "2026-04-21",
+  "lastReviewed": "2026-06-04",
   "esSlug": "calculadora-repaso-srs-dias-proximo-card",
-  "title": "Free SRS Next Review Calculator | Hacé Cuentas",
+  "title": "SRS Next Review Calculator — SM-2 Spaced Repetition | Hacé Cuentas",
   "h1": "SRS Next Review Calculator",
-  "description": "Calculate when to review flashcards using the SM-2 spaced repetition algorithm. Free SRS calculator for language learners.",
+  "description": "Calculate your next flashcard review interval using the SuperMemo SM-2 spaced repetition algorithm. Enter your current interval and ease factor to get the exact number of days until your next review.",
   "category": "idiomas",
   "icon": "🔁",
   "formulaId": "repaso-srs-dias-proximo-card",
-  "intro": "Learning a language requires sustained hours of targeted exposure. According to FSI research, Spanish speakers need: Italian/Portuguese ~600h, English/French ~900h, German ~1100h, Arabic/Chinese ~2200h. The key: consistency beats intensity. Use this free SRS calculator to determine when to review each flashcard using the proven SM-2 algorithm. Data updated to 2026 and checked regularly.",
-  "keyTakeaway": "Formula: **SuperMemo SM-2**. Calculate your next review date by entering your last review interval, E-Factor, and current interval. Get your next SRS review date instantly.",
+  "intro": "Spaced repetition is one of the most evidence-backed techniques in learning science. The SM-2 algorithm, developed by Piotr Woźniak at SuperMemo in 1987, schedules flashcard reviews at precisely the right moment — just before you forget. The core mechanic is simple: each time you recall a card correctly, the next review is pushed further into the future by multiplying your current interval by your ease factor (E-Factor). This calculator implements that exact formula so you can plan or verify your review schedule without needing a full SRS app.",
+  "keyTakeaway": "Formula: **Next interval = Current interval × E-Factor** (rounded to whole days). A card you review every 10 days with an E-Factor of 2.5 will next appear in **25 days**.",
   "useCases": [
-    "Spaced repetition and SRS calculations",
-    "Language learners and educators",
-    "Validating scheduling theory before implementation",
-    "Teaching and learning the SM-2 algorithm",
-    "Quick reference for study planning"
+    "Language learners using Anki, Mnemosyne, or custom SM-2 decks who want to verify or predict future review dates",
+    "Developers building or testing an SRS application who need to confirm their interval calculation logic matches the SM-2 spec",
+    "Students learning about the SM-2 algorithm in courses on cognitive science or educational technology",
+    "Teachers designing paper-based spaced repetition systems and calculating manual review schedules"
   ],
   "fields": [
     {
-      "id": "lastReview",
-      "label": "Days Since Last Review",
+      "id": "intervalo",
+      "label": "Current Interval (days)",
       "type": "number",
       "required": true,
-      "placeholder": "days",
-      "step": 0.01
+      "placeholder": "e.g. 10",
+      "min": 1,
+      "max": 3650,
+      "step": 1,
+      "format": "plain"
     },
     {
       "id": "eFactor",
-      "label": "E-Factor",
+      "label": "Ease Factor (E-Factor)",
       "type": "number",
       "required": true,
-      "placeholder": "1.3–2.5",
-      "step": 0.01
+      "placeholder": "1.3 – 2.5",
+      "min": 1.3,
+      "max": 2.5,
+      "step": 0.01,
+      "format": "plain"
     },
     {
-      "id": "intervalo",
-      "label": "Current Interval",
+      "id": "lastReview",
+      "label": "Days Since Last Review (optional, for context)",
       "type": "number",
-      "required": true,
-      "placeholder": "days",
-      "step": 0.01
+      "required": false,
+      "placeholder": "e.g. 10",
+      "min": 0,
+      "max": 3650,
+      "step": 1,
+      "format": "plain"
     }
   ],
   "outputs": [
@@ -59,81 +67,87 @@
     }
   ],
   "example": {
-    "title": "Example Calculation",
+    "title": "Worked Example: A Spanish vocabulary card",
     "steps": [
-      "3 days, E-Factor 2.5, interval 1",
-      "3 days"
+      "You last reviewed a card 10 days ago (current interval = 10 days).",
+      "Your ease factor for that card is 2.5 (you find it easy to recall).",
+      "Apply the SM-2 formula: Next interval = 10 × 2.5 = 25 days.",
+      "Enter: Current Interval = 10, E-Factor = 2.5."
     ],
-    "result": "3 days"
+    "result": "Next review in 25 days (new interval: 25d)"
   },
-  "explanation": "## Spaced Repetition and the SM-2 Algorithm\n\nLanguage learning is a marathon requiring hundreds of hours. Cognitive science (Ebbinghaus, spaced repetition) combined with immersion and active practice form the evidence-based foundation proven by FSI and Cambridge.\n\n## How It Works\n\nThis calculator applies the SuperMemo SM-2 formula with your values, checking for reasonable ranges and alerting you if inputs fall outside typical parameters.\n\nThe SM-2 algorithm schedules reviews at increasing intervals. Your E-Factor (ease/difficulty) adjusts after each review based on performance:\n- **New interval = Current interval × E-Factor**\n- E-Factor ranges typically 1.3 (hard) to 2.5+ (easy)\n- Reviewing at the right moment combats the forgetting curve\n\n## Final Notes\n\nThis calculator is a planning tool. For critical decisions (financial, medical, legal), consult a qualified professional. Data updated to 2026 and reviewed regularly.",
+  "explanation": "## Spaced Repetition and the SM-2 Algorithm\n\nThe SM-2 algorithm was published by Piotr Woźniak in 1987 and underlies apps like Anki and Mnemosyne. Its key insight is the **forgetting curve**: memory decays exponentially after learning, but each successful review pushes the forgetting curve out further.\n\n## Cómo se calcula (How it is calculated)\n\nThe formula this calculator uses:\n\n```\nNext interval = round(Current interval × E-Factor)\n```\n\nWhere:\n- **Current interval**: the number of days between the previous two reviews of this card.\n- **E-Factor (Ease Factor)**: a per-card multiplier, ranging from **1.3** (difficult) to **2.5** (easy). In a full SM-2 implementation, the E-Factor is updated after each review based on your quality score (0–5).\n\n### Standard SM-2 E-Factor update formula (for reference)\n\nAfter a review where you scored quality *q* (0–5):\n```\nNew E-Factor = E-Factor + (0.1 − (5 − q) × (0.08 + (5 − q) × 0.02))\n```\nE-Factor is never allowed to drop below 1.3.\n\n### First-time review schedule\n\nSM-2 prescribes fixed intervals for the first two reviews:\n- **1st review**: 1 day after learning\n- **2nd review**: 6 days after first review\n- **3rd review onwards**: previous interval × E-Factor\n\nThis calculator handles the 3rd-review-and-beyond case.\n\n## Why the E-Factor matters\n\n| E-Factor | After 10-day interval | After 30-day interval |\n|---|---|---|\n| 1.3 (hard) | 13 days | 39 days |\n| 1.8 (average) | 18 days | 54 days |\n| 2.5 (easy) | 25 days | 75 days |\n\nCards with a high E-Factor grow into very long intervals quickly. Cards that are genuinely difficult stay on short cycles until your recall improves.",
   "faq": [
     {
-      "q": "What is the SM-2 algorithm?",
-      "a": "SuperMemo's spaced repetition algorithm, used in most modern flashcard apps to optimize review timing."
+      "q": "What does the E-Factor (Ease Factor) represent?",
+      "a": "The E-Factor is a per-card multiplier that reflects how easy the card is to recall. It ranges from 1.3 (very hard) to 2.5 (very easy). In Anki and other SM-2 apps, the E-Factor adjusts automatically after each review: answering 'Easy' raises it, answering 'Hard' or 'Again' lowers it. A card starting with the default E-Factor of 2.5 will space out quickly; one that keeps being answered as 'Hard' stabilizes around 1.3."
     },
     {
-      "q": "What is an E-Factor?",
-      "a": "Ease factor: a measure of how difficult you find a card, typically ranging 1.3–2.5. Higher E-Factors mean longer gaps between reviews."
+      "q": "How is the next interval calculated in SM-2?",
+      "a": "For reviews after the first two, SM-2 uses: Next interval = round(Current interval × E-Factor). For example, if your current interval is 15 days and your E-Factor is 2.0, the next interval is round(15 × 2.0) = 30 days."
     },
     {
-      "q": "How do review intervals work?",
-      "a": "SM-2 schedules increasingly longer gaps: 1 day, 6 days, then 6×E-Factor days, and so on. Longer gaps reduce review sessions once cards are memorized."
+      "q": "What are typical starting intervals in SM-2?",
+      "a": "SM-2 prescribes 1 day for the first review and 6 days for the second. From the third review onwards, the formula applies. Anki slightly modifies this: it uses 1 day and 4 days by default, and many users adjust these in the deck settings."
     },
     {
-      "q": "Does this work with Anki?",
-      "a": "Yes. Anki uses a modified SM-2 algorithm, so this calculator applies to Anki decks."
+      "q": "What happens if I forget a card (rate it 'Again' in Anki)?",
+      "a": "When a card is failed, SM-2 resets its interval to 1 day (you review it again the next day), and the E-Factor is penalized by roughly 0.2 (down to a minimum of 1.3). The card essentially restarts the learning cycle. This calculator computes the 'success' case — it assumes you recalled the card correctly."
     },
     {
-      "q": "What if I fail a card?",
-      "a": "The interval resets (you review sooner), but your E-Factor is preserved and adjusted based on performance."
+      "q": "Does Anki use exactly the SM-2 algorithm?",
+      "a": "Anki uses a modified SM-2. The core interval formula (interval × ease factor) is the same, but Anki adds extra modifiers: an Interval Modifier per deck, a Hard interval multiplier, and an 'Easy bonus' multiplier. The default settings produce results close to pure SM-2. Anki 23+ also introduced FSRS, a newer algorithm that can replace SM-2 entirely."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all Hacé Cuentas calculators are completely free and require no account."
+      "q": "What is a good E-Factor to aim for?",
+      "a": "A well-known rule of thumb in the SRS community is to keep your E-Factor above 2.0 for most cards. If a card's E-Factor keeps dropping toward 1.3, it usually means the card is too complex and should be broken into smaller, simpler cards ('card splitting' or 'atomic notes')."
     },
     {
-      "q": "Are the results accurate?",
-      "a": "Results are guidelines based on internationally validated formulas. For critical decisions, consult a professional."
+      "q": "Can I use this calculator for languages other than flashcards?",
+      "a": "Yes. The SM-2 algorithm is content-agnostic — it schedules anything you want to memorize: vocabulary, formulas, historical dates, music theory, anatomy. As long as you can rate your recall on a card, SM-2 applies."
     },
     {
-      "q": "Do you save my data?",
-      "a": "No. All calculations happen in your browser. We never send data to any server."
+      "q": "What is the difference between SM-2 and FSRS?",
+      "a": "SM-2 uses a fixed ease-factor-based multiplication. FSRS (Free Spaced Repetition Scheduler), introduced in Anki 23.10, uses a machine-learning model trained on real review data to predict the optimal next review date, taking into account estimated memory stability and retrievability. FSRS generally outperforms SM-2 on retention efficiency, but SM-2 is simpler to understand and implement manually."
+    },
+    {
+      "q": "Why does this calculator not ask for my performance score (0–5)?",
+      "a": "This calculator computes the next interval assuming a successful recall (score ≥ 3). The E-Factor update formula requires a quality rating, which changes the E-Factor for the next cycle. If you want to simulate a score-adjusted E-Factor, recalculate your updated E-Factor first (New EF = EF + 0.1 − (5 − q) × (0.08 + (5 − q) × 0.02)), then enter that into the calculator."
     }
   ],
   "seoKeywords": [
-    "SRS calculator",
-    "spaced repetition calculator",
-    "SM-2 algorithm",
-    "next review date",
-    "flashcard scheduler",
-    "Anki spacing calculator",
-    "e-factor calculator",
-    "learning interval",
-    "SuperMemo calculator",
+    "SRS next review calculator",
+    "SM-2 algorithm calculator",
+    "spaced repetition interval calculator",
+    "SuperMemo SM-2 formula",
+    "Anki ease factor calculator",
+    "flashcard review interval",
+    "next review date calculator",
     "spaced repetition schedule",
-    "flashcard spacing",
-    "study interval calculator"
+    "e-factor SRS",
+    "SuperMemo interval calculator",
+    "FSRS vs SM-2",
+    "forgetting curve calculator"
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "Wozniak, P. — Optimization of Learning (original SM-2 paper, 1990, SuperMemo.com)",
+      "url": "https://www.supermemo.com/en/blog/application-of-a-computer-to-improve-the-results-obtained-in-working-with-the-supermemo-method"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Anki Manual — Algorithm (SM-2 implementation details)",
+      "url": "https://docs.ankiweb.net/deck-options.html#algorithm"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Farhan Alam — Open-source SM-2 specification (GitHub)",
+      "url": "https://github.com/nicowillis/SM-2"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data required"
+    "notes": "Fixed algorithm formula — no external data required"
   },
   "audience": "global",
   "relatedSlugs": []
