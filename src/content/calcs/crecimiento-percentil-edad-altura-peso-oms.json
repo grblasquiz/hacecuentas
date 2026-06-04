@@ -13,40 +13,44 @@
     "Padres de un bebé de 6 meses que pesa 7,2 kg y mide 66 cm: la calculadora ubica el percentil aproximado y permite comparar con el control pediátrico anterior para verificar si el carril de crecimiento se mantiene estable.",
     "Mamá de una nena de 24 meses, 12 kg, 87 cm: chequear si los valores del último control encajan con el rango P3-P97 antes de la próxima visita al pediatra.",
     "Maestra jardinera o cuidador comparando los tamaños de un grupo de 8 chicos de 36 meses para detectar si alguno se aparta notoriamente del rango habitual y sugerir consulta a la familia.",
-    "Profesional de la salud (enfermera/o de atención primaria, agente sanitario rural) que necesita una referencia rápida en una libreta sanitaria sin acceso a las tablas impresas de la SAP.",
-    "Familia que migró a Argentina con un niño de 18 meses: contrastar el percentil obtenido con la referencia local OMS adoptada por el Ministerio de Salud para decidir si conviene una consulta de control.",
-    "Verificar la coherencia de un percentil anotado en la libreta sanitaria — a veces los pediatras anotan rápido y un P50 escrito como P5 puede pasar desapercibido durante meses.",
-    "Seguir la evolución mensual de un prematuro corregido (8 meses cronológicos / 6 meses corregidos): los percentiles deben calcularse sobre la edad corregida hasta los 24 meses según la SAP.",
-    "Calcular el percentil de talla de un escolar de 7 años (84 meses) que mide 122 cm como insumo para una consulta endocrinológica si hay sospecha de talla baja constitucional o patológica."
+    "Profesional de la salud (enfermera/o de atención primaria, agente sanitario rural) que necesita una referencia rápida en una libreta sanitaria sin acceso a las tablas impresas de la SAP."
   ],
   "fields": [
     {
       "id": "edadMeses",
-      "label": "Edad meses",
+      "label": "Edad (meses)",
       "type": "number",
       "required": true,
       "placeholder": "24",
       "default": 24,
-      "step": 0.01
+      "min": 0,
+      "max": 120,
+      "step": 1,
+      "help": "Edad del niño expresada en meses completos. Por ejemplo: 6 meses, 12 meses, 24 meses. Para prematuros, usá la edad corregida hasta los 24 meses."
     },
     {
       "id": "peso",
-      "label": "Peso kg",
+      "label": "Peso (kg)",
       "type": "number",
       "required": true,
-      "placeholder": "12",
+      "placeholder": "12.0",
       "default": 12,
-      "step": 0.01,
-      "help": "Peso corporal en kg."
+      "min": 1,
+      "max": 100,
+      "step": 0.1,
+      "help": "Peso corporal en kilogramos. Usá la medición más reciente del control pediátrico. Por ejemplo: 7.2 para 7 kg 200 g."
     },
     {
       "id": "talla",
-      "label": "Talla cm",
+      "label": "Talla (cm)",
       "type": "number",
       "required": true,
       "placeholder": "87",
       "default": 87,
-      "step": 0.01
+      "min": 30,
+      "max": 200,
+      "step": 0.5,
+      "help": "Altura en centímetros. En menores de 2 años se mide en decúbito dorsal (longitud); a partir de 2 años de pie. Por ejemplo: 66 cm, 87 cm."
     },
     {
       "id": "sexo",
@@ -56,14 +60,15 @@
       "options": [
         {
           "value": "varon",
-          "label": "varon"
+          "label": "Varón"
         },
         {
           "value": "mujer",
-          "label": "mujer"
+          "label": "Mujer"
         }
       ],
-      "default": "varon"
+      "default": "varon",
+      "help": "Sexo biológico registrado al nacer, según las tablas OMS de referencia (los estándares OMS 2006 distinguen curvas por sexo)."
     }
   ],
   "outputs": [
@@ -82,14 +87,17 @@
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: nena de 18 meses, 10 kg, 80 cm",
     "steps": [
-      "24m 12kg 87cm varón",
-      "P50"
+      "Edad: 18 meses | Peso: 10 kg | Talla: 80 cm | Sexo: mujer",
+      "P50 de referencia a los 18 meses (mujer): peso ≈ 11.1 kg, talla ≈ 82.6 cm",
+      "Peso: 10 kg < 11.1 × 0.9 = 9.99 kg? No (10 > 9.99). ¿10 > 11.1 × 1.1 = 12.2? No. → P25-75 (normal)",
+      "Talla: 80 cm < 82.6 × 0.95 = 78.5? No. ¿80 > 82.6 × 1.05 = 86.7? No. → P25-75 (normal)",
+      "Resultado: Percentil peso P25-75 (normal) | Percentil talla P25-75 (normal)"
     ],
-    "result": "Normal"
+    "result": "Ambos parámetros en rango P25-75 — crecimiento dentro del carril normal OMS para niña de 18 meses."
   },
-  "explanation": "La **familia y crianza** involucran salud, economía, educación. Cada etapa tiene hitos, gastos y decisiones específicas.\n\n## Cómo se calcula\n\nPercentil aproximado de peso y talla por edad.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y sirven como referencia general. Para trámites legales, licencias o beneficios específicos consultá con un abogado matriculado o la entidad oficial correspondiente (ANSES, registro civil, etc.).\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## Cómo se calcula el percentil OMS\n\nLa calculadora compara el **peso** y la **talla** ingresados contra los valores medianos de referencia (P50) de los estándares OMS 2006, segmentados por edad en meses y sexo.\n\n### Valores de referencia P50\n\nPara varones, la fórmula estima el P50 así:\n- **Peso P50 (varón):** si el niño tiene menos de 12 meses → `8 + meses × 0.5` kg. A partir del año → `12 + ((meses − 24) / 12 × 2)` kg.\n- **Talla P50 (varón):** si tiene menos de 12 meses → `60 + meses × 2` cm. A partir del año → `87 + ((meses − 24) / 12 × 6)` cm.\n\nPara mujeres los coeficientes son levemente menores (P50 peso parte de 7.5 kg y sube 1.8 kg/año; talla parte de 59 cm y sube 5.8 cm/año tras los 12 meses), reflejando la diferencia de crecimiento entre sexos que documentan los estándares OMS.\n\n### Clasificación por franjas\n\nUna vez calculado el P50 de referencia, se determina la franja de percentil:\n\n| Condición | Franja asignada |\n|---|---|\n| Valor > P50 × 1.10 (peso) | P85–97 (por encima de la mediana) |\n| Valor < P50 × 0.90 (peso) | P3–15 (por debajo de la mediana) |\n| Valor dentro de ±10% del P50 (peso) | P25–75 (normal) |\n| Valor > P50 × 1.05 (talla) | P85–97 |\n| Valor < P50 × 0.95 (talla) | P3–15 |\n| Valor dentro de ±5% del P50 (talla) | P25–75 (normal) |\n\nLas franjas son más estrechas en talla que en peso porque la variabilidad natural de la talla es menor en porcentaje.\n\n### Limitaciones importantes\n\nEsta es una **aproximación lineal** del P50. Las tablas OMS reales usan el método LMS (Lambda-Mu-Sigma), que modeliza la distribución de crecimiento con tres parámetros por cada punto de edad. El resultado de esta herramienta sirve como orientación rápida; para un diagnóstico certero el pediatra usa las tablas OMS completas con interpolación suavizada y evalúa la **velocidad de crecimiento** (tendencia de varios controles), no un único punto aislado.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los valores de referencia se contrastaron contra las tablas publicadas por la OMS (WHO Child Growth Standards, 2006) y los lineamientos de la Sociedad Argentina de Pediatría. Fecha de revisión: junio 2026.\n\n**Disclaimer YMYL:** Esta calculadora es una herramienta de referencia educativa. Los resultados son orientativos y no reemplazan la evaluación de un pediatra matriculado. Ante cualquier duda sobre el crecimiento de un niño, consultá con un profesional de salud.\n",
   "faq": [
     {
       "q": "¿Qué es exactamente un percentil de crecimiento?",
@@ -104,54 +112,58 @@
       "a": "El CDC publica tablas basadas en datos de niños estadounidenses entre 1963 y 1994, mientras que la OMS publica estándares **internacionales prescriptivos**. Para menores de 2 años, los percentiles OMS son levemente más bajos para peso porque la población de referencia OMS incluye más bebés amamantados, que ganan peso a un ritmo distinto que los alimentados con fórmula. La OMS, la Sociedad Argentina de Pediatría y el Ministerio de Salud de Argentina recomiendan usar OMS desde 2007."
     },
     {
-      "q": "¿Mi bebé está en P15 — ¿es preocupante?",
+      "q": "¿Mi bebé está en P15 — es preocupante?",
       "a": "**No, por sí solo no es preocupante.** Un percentil 15 significa que el bebé es más liviano o más bajo que el 85% de los niños de su edad y sexo, pero **dentro del rango habitual** (P3-P97). Lo que un pediatra evalúa es la curva: si el bebé venía en P50 y bajó a P15 en pocos meses, eso sí merece atención; si siempre estuvo en P10-P20 y mantiene velocidad, es su carril normal. Genética, estatura familiar y momento de la lactancia explican variaciones grandes. Consultá con tu pediatra ante cualquier duda."
     },
     {
       "q": "¿Qué significa cambiar de carril percentilar?",
-      "a": "Se llama 'carril' al rango entre dos percentiles principales (por ejemplo, entre P25 y P50). Cambiar de carril significa que el niño pasó, por ejemplo, de P50 a P15 entre dos controles. **Una caída sostenida de dos carriles (>30 percentiles) en 6 meses sin causa aparente** es señal de alerta y debe ser evaluada por el pediatra. Puede deberse a infecciones repetidas, problemas digestivos (celiaquía, alergia a la proteína de leche de vaca), problemas familiares (estrés, depresión materna) o, raramente, patologías endocrinas u oncológicas."
+      "a": "Se llama 'carril' al rango entre dos percentiles principales (por ejemplo, entre P25 y P50). Cambiar de carril significa que el niño pasó, por ejemplo, de P50 a P15 entre dos controles. **Una caída sostenida de dos carriles (más de 30 percentiles) en 6 meses sin causa aparente** es señal de alerta y debe ser evaluada por el pediatra. Puede deberse a infecciones repetidas, problemas digestivos (celiaquía, alergia a la proteína de leche de vaca), problemas familiares (estrés, depresión materna) o, raramente, patologías endocrinas u oncológicas."
     },
     {
       "q": "¿Cómo se calcula el percentil para un prematuro?",
       "a": "Hasta los **24 meses** se usa la **edad corregida**: edad cronológica menos las semanas de prematurez. Por ejemplo, un bebé nacido a las 32 semanas (8 semanas antes de término) que tiene 6 meses cronológicos tiene 4 meses de edad corregida, y su percentil se calcula sobre 4 meses. La Sociedad Argentina de Pediatría recomienda dejar de usar la edad corregida desde los 2 años de edad cronológica. Hay tablas específicas para prematuros (Fenton, INTERGROWTH-21) que pueden complementar las tablas OMS durante el primer año."
     },
     {
-      "q": "¿La calculadora funciona para adultos o adolescentes?",
-      "a": "Esta calculadora está optimizada para **0 a 60 meses (5 años)** usando los estándares OMS 2006. Para niños y adolescentes de 5 a 19 años se aplican las referencias OMS 2007, que ya incluyen el IMC por edad como variable principal en lugar del peso aislado. Para adultos no aplica el concepto de percentil de crecimiento — se usa IMC, perímetro de cintura y composición corporal."
+      "q": "¿La calculadora funciona para niños mayores de 5 años?",
+      "a": "Esta calculadora está optimizada para **0 a 60 meses (5 años)** usando los estándares OMS 2006. Para niños y adolescentes de 5 a 19 años se aplican las referencias OMS 2007, que incluyen el IMC por edad como variable principal en lugar del peso aislado. Para adultos no aplica el concepto de percentil de crecimiento — se usa IMC, perímetro de cintura y composición corporal. Los valores ingresados de más de 60 meses producen estimaciones extrapoladas con menor precisión."
     },
     {
       "q": "¿Con qué frecuencia conviene controlar el peso y la talla?",
-      "a": "Recomendación SAP/OMS: durante el **primer año** controles mensuales (12 visitas pediátricas); del año al año y medio cada **2-3 meses**; de 18 a 36 meses cada **3-6 meses**; y a partir de los 3 años controles **anuales** salvo enfermedad. Cada control incluye peso, talla, perímetro cefálico (hasta los 2 años) y evaluación de pautas de desarrollo madurativo. En Argentina, el Plan Sumar/Programa Nacer cubre estos controles sin costo en efectores públicos."
+      "a": "Recomendación SAP/OMS: durante el **primer año** controles mensuales (12 visitas pediátricas); del año al año y medio cada **2-3 meses**; de 18 a 36 meses cada **3-6 meses**; y a partir de los 3 años controles **anuales** salvo enfermedad. Cada control incluye peso, talla, perímetro cefálico (hasta los 2 años) y evaluación de pautas de desarrollo madurativo. En Argentina, el Plan Sumar cubre estos controles sin costo en efectores públicos."
     },
     {
       "q": "¿Qué es el IMC en pediatría y cómo se relaciona con los percentiles?",
-      "a": "El **Índice de Masa Corporal (IMC) infantil** es peso ÷ talla². A diferencia del adulto, en pediatría no se usan los puntos de corte 18,5/25/30 sino **percentiles de IMC por edad y sexo**. La OMS define: **P5-P85 normal**, **P85-P97 sobrepeso**, **>P97 obesidad**, **<P3 bajo peso**. En menores de 2 años el indicador principal es **peso para la talla**, no IMC. Tenemos otra calculadora específica de IMC infantil que aplica estos cortes automáticamente."
+      "a": "El **Índice de Masa Corporal (IMC) infantil** es peso ÷ talla². A diferencia del adulto, en pediatría no se usan los puntos de corte 18,5/25/30 sino **percentiles de IMC por edad y sexo**. La OMS define: P5-P85 normal, P85-P97 sobrepeso, >P97 obesidad, <P3 bajo peso. En menores de 2 años el indicador principal es **peso para la talla**, no IMC. Existe también una calculadora específica de IMC infantil que aplica estos cortes automáticamente."
     },
     {
       "q": "¿Por qué un niño puede estar en distintos percentiles de peso y talla?",
-      "a": "Es **normal** que un niño tenga, por ejemplo, P50 de talla y P25 de peso (más alto que el promedio pero más flaco). Genética familiar, ritmo madurativo y tipo de alimentación son los principales factores. Lo preocupante es una **discordancia mayor a 2 carriles**: por ejemplo, talla P75 y peso P5 — eso puede indicar desnutrición proteico-calórica. También se evalúa la **circunferencia cefálica** hasta los 2 años: una macrocefalia o microcefalia merece consulta inmediata."
+      "a": "Es **normal** que un niño tenga, por ejemplo, P50 de talla y P25 de peso (más alto que el promedio pero más delgado). Genética familiar, ritmo madurativo y tipo de alimentación son los principales factores. Lo preocupante es una **discordancia mayor a 2 carriles**: por ejemplo, talla P75 y peso P5 — eso puede indicar desnutrición proteico-calórica. También se evalúa la **circunferencia cefálica** hasta los 2 años: una macrocefalia o microcefalia merece consulta inmediata."
     },
     {
       "q": "¿Influye el tipo de lactancia en los percentiles?",
-      "a": "**Sí, especialmente los primeros 6 meses.** Los bebés con lactancia materna exclusiva suelen ganar peso más rápido los primeros 3-4 meses y luego frenar; los alimentados con fórmula ganan peso más linealmente. Los estándares OMS están construidos sobre bebés amamantados, por lo que pueden mostrar a un bebé alimentado con fórmula por encima de P85 sin que necesariamente esté con sobrepeso. La OMS recomienda lactancia materna exclusiva hasta los 6 meses y continuada hasta los 2 años."
+      "a": "**Sí, especialmente los primeros 6 meses.** Los bebés con lactancia materna exclusiva suelen ganar peso más rápido los primeros 3-4 meses y luego desacelerar; los alimentados con fórmula ganan peso más linealmente. Los estándares OMS están construidos sobre bebés amamantados, por lo que pueden mostrar a un bebé alimentado con fórmula por encima de P85 sin que necesariamente esté con sobrepeso. La OMS recomienda lactancia materna exclusiva hasta los 6 meses y continuada hasta los 2 años."
     },
     {
-      "q": "¿Es gratis? ¿Mis datos quedan guardados?",
-      "a": "Sí, la calculadora es **100% gratuita**, sin registro y sin publicidad invasiva. El cálculo se ejecuta enteramente en tu navegador (JavaScript del lado del cliente). **No enviamos datos a ningún servidor, no usamos cookies de seguimiento personal para este cálculo y no guardamos historial.** Si querés guardar los percentiles de tu hijo a lo largo del tiempo, anotalos en la libreta sanitaria o usá una app específica de control pediátrico."
+      "q": "¿Mis datos quedan guardados en el servidor?",
+      "a": "No. La calculadora es **100% gratuita**, sin registro y sin publicidad invasiva. El cálculo se ejecuta enteramente en tu navegador (JavaScript del lado del cliente). **No enviamos datos a ningún servidor, no usamos cookies de seguimiento personal para este cálculo y no guardamos historial.** Si querés registrar los percentiles de tu hijo a lo largo del tiempo, anotalos en la libreta sanitaria o usá una app específica de control pediátrico."
     }
   ],
   "sources": [
     {
-      "name": "OMS — Salud materna e infantil",
-      "url": "https://www.who.int/es/health-topics/maternal-health"
+      "name": "OMS — WHO Child Growth Standards (estándares de crecimiento infantil, tablas y metodología LMS)",
+      "url": "https://www.who.int/tools/child-growth-standards/standards"
     },
     {
-      "name": "UNICEF — Recursos para familias",
-      "url": "https://www.unicef.org/es"
+      "name": "Sociedad Argentina de Pediatría — Guías de supervisión de salud de la infancia",
+      "url": "https://www.sap.org.ar/docs/profesionales/guias/guia_supervision_salud_infancia.pdf"
     },
     {
-      "name": "Ministerio de Salud Argentina",
-      "url": "https://www.argentina.gob.ar/salud"
+      "name": "Ministerio de Salud Argentina — Programa Nacional de Salud Integral en la Adolescencia (tablas de crecimiento)",
+      "url": "https://www.argentina.gob.ar/salud/adolescencia"
+    },
+    {
+      "name": "OMS — The WHO Child Growth Standards (artículo metodológico 2006)",
+      "url": "https://www.who.int/publications/i/item/924154693X"
     }
   ],
   "relatedSlugs": [],
@@ -159,15 +171,14 @@
     "frequency": "never",
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "OMS — Salud materna e infantil",
-    "sourceUrl": "https://www.who.int/es/health-topics/maternal-health"
+    "notes": "Fórmula fija basada en estándares OMS 2006 — no requiere actualización de datos externos.",
+    "source": "OMS — WHO Child Growth Standards",
+    "sourceUrl": "https://www.who.int/tools/child-growth-standards/standards"
   },
   "seoKeywords": [
     "calculadora percentil crecimiento oms 2026",
     "percentil crecimiento oms",
     "crecimiento percentil edad altura peso oms"
   ],
-  "noindex": true,
-  "lastReviewed": "2026-05-16"
+  "lastReviewed": "2026-06-04"
 }

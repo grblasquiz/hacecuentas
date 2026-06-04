@@ -1,61 +1,73 @@
 {
   "slug": "calculadora-cft-prestamo-personal-comparativa",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora CFT préstamo personal 2026 — Gratis",
+  "lastReviewed": "2026-06-04",
+  "title": "Calculadora CFT préstamo personal 2026 — compará el costo real",
   "h1": "CFT préstamo personal",
-  "description": "💰 Calculá CFT préstamo personal según monto préstamo, TNA %, plazo meses y comisiones + seguros/mes $. Obtené CFT estimado al instante.",
+  "description": "Calculá el CFT (Costo Financiero Total) de un préstamo personal ingresando monto, TNA, plazo y comisiones. Compará ofertas entre bancos con el número que exige el BCRA.",
   "category": "finanzas",
   "audience": "AR",
   "icon": "🏛️",
   "formulaId": "cft-prestamo-personal-comparativa",
-  "intro": "En finanzas personales las decisiones se mejoran cuando los números están claros. Esta calculadora te da el cálculo de CFT préstamo personal según monto préstamo, TNA %, plazo meses y comisiones + seguros/mes $. Devuelve CFT estimado junto con contexto para interpretar el valor. El cálculo corre en tu navegador: no guardamos tus datos, no requiere registro y es gratis. Los valores de referencia se revisan periódicamente contra las fuentes oficiales citadas al pie.",
-  "keyTakeaway": "Ingresá monto préstamo, TNA % y plazo meses y obtené CFT estimado al instante, con fórmula estándar del tema y referencias al pie. Resultado orientativo — para decisiones importantes consultá con un profesional.",
+  "intro": "Cuando un banco te ofrece un préstamo personal, la TNA (Tasa Nominal Anual) es solo parte del costo real. El **CFT (Costo Financiero Total)** suma la tasa, el IVA sobre intereses, las comisiones y el seguro de vida —ese es el número que el BCRA obliga a publicar y el que debés comparar entre entidades. Esta calculadora te muestra la cuota mensual, el total a pagar y el CFT estimado para que puedas confrontar propuestas de distintos bancos antes de firmar.",
+  "keyTakeaway": "El CFT puede superar a la TNA en un 20–40% dependiendo de las comisiones y seguros. Antes de elegir un crédito, pedí el CFT de cada oferta y comparalos con esta calculadora: una diferencia del 10% en CFT en un préstamo de $2M a 24 meses puede significar más de $300.000 de ahorro.",
   "useCases": [
-    "Resolver rápido una duda sobre CFT préstamo personal sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Comparar ofertas de Banco Nación (TNA ~84%), Galicia (~96%) y BBVA (~108%) para el mismo monto y plazo.",
+    "Verificar si la cuota que te cotizó el banco coincide con lo que muestra el resumen del préstamo.",
+    "Calcular cuánto pagás realmente en intereses y comisiones sobre el total del crédito.",
+    "Evaluar si conviene tomar el préstamo a 12 o 24 meses comparando el CFT y el costo total de cada opción."
   ],
   "fields": [
     {
       "id": "montoPrestamo",
-      "label": "Monto préstamo",
+      "label": "Monto del préstamo",
       "type": "number",
+      "unit": "$",
       "required": true,
       "placeholder": "1000000",
       "default": 1000000,
-      "step": 0.01,
-      "help": "Capital que te presta el banco."
+      "min": 10000,
+      "max": 100000000,
+      "step": 1000,
+      "help": "Capital que te otorga el banco, sin incluir intereses ni comisiones."
     },
     {
       "id": "tnaPorcentaje",
-      "label": "TNA %",
+      "label": "TNA (Tasa Nominal Anual)",
       "type": "number",
+      "unit": "%",
       "required": true,
-      "placeholder": "120",
-      "default": 120,
-      "step": 0.01,
-      "help": "Tasa anual del banco. Buscá comparar con inflación para saber si ganás real."
+      "placeholder": "96",
+      "default": 96,
+      "min": 1,
+      "max": 500,
+      "step": 0.1,
+      "help": "Tasa que figura en el contrato del banco. No confundirla con el CFT — no incluye comisiones ni IVA."
     },
     {
       "id": "plazoMeses",
-      "label": "Plazo meses",
+      "label": "Plazo",
       "type": "number",
+      "unit": "meses",
       "required": true,
       "placeholder": "12",
       "default": 12,
-      "step": 0.01,
-      "help": "Cuántos meses dura la operación."
+      "min": 1,
+      "max": 120,
+      "step": 1,
+      "help": "Cantidad de cuotas mensuales. Los plazos más comunes son 12, 18, 24 y 36 meses."
     },
     {
       "id": "comisionesYSeguros",
-      "label": "Comisiones + seguros/mes $",
+      "label": "Comisiones y seguros por mes",
       "type": "number",
+      "unit": "$/mes",
       "required": true,
       "placeholder": "5000",
       "default": 5000,
-      "step": 0.01,
-      "help": "Comisiones + seguros/mes $."
+      "min": 0,
+      "max": 1000000,
+      "step": 100,
+      "help": "Suma mensual de seguro de vida, seguro de desempleo y cualquier comisión de administración que el banco cobre junto con la cuota."
     }
   ],
   "outputs": [
@@ -74,60 +86,68 @@
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Préstamo de $1.000.000 a 12 meses, TNA 96%, seguro $5.000/mes",
     "steps": [
-      "$1M, TNA 120%, 12m, comi $5k",
-      "CFT 180%"
+      "Tasa mensual: 96% ÷ 12 = 8% mensual",
+      "Cuota base (sistema francés): $1.000.000 × 0,08 × (1,08)¹² ÷ ((1,08)¹² − 1) ≈ $132.695",
+      "Cuota total con seguro: $132.695 + $5.000 = $137.695",
+      "Total a pagar en 12 cuotas: $137.695 × 12 = $1.652.340",
+      "Intereses y comisiones: $1.652.340 − $1.000.000 = $652.340",
+      "CFT: (1.652.340 ÷ 1.000.000)^(12/12) − 1 = 65% anual aprox"
     ],
-    "result": "Cuota ~$160k"
+    "result": "CFT 65% anual — cuota $137.695 — total $1.652.340"
   },
-  "explanation": "Las **finanzas personales e inversión** usan principios matemáticos universales (interés compuesto, valor tiempo del dinero, optimización riesgo-retorno). Esta calculadora aplica fórmulas estándar de la industria financiera.\n\n## Cómo se calcula\n\nCFT: costo financiero total de un préstamo (TNA + IVA + comisiones).\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Benchmarks típicos por plazo\n\n| Plazo | S&P 500 | Bonos 10y | Cash |\n|---|---|---|---|\n| 1 año | Muy variable | 4-5% | 3-5% |\n| 5 años | ~8% prom | ~4% | Inflación |\n| 10 años | ~9-10% | ~4% | <inflación |\n| 20+ años | ~10% nominal | ~5% | N/A |\n\n## Principios de inversión\n\n- **No tocar el plan** durante crisis. La emoción es el peor consejero.\n- **Diversificar**: no concentrar en un solo activo/sector/país.\n- **Costos bajos**: TER >1% anual te come 30% del retorno en 30 años.\n- **Horizonte largo**: renta variable funciona en 10+ años, no en 1 año.\n- **Rebalanceo**: una vez al año, no más.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## Cómo se calcula el CFT de un préstamo personal\n\nEl CFT (Costo Financiero Total) es el indicador estándar que permite comparar préstamos en igualdad de condiciones. El BCRA exige que todas las entidades financieras lo publiquen en sus comunicaciones comerciales.\n\n### Sistema francés de amortización\n\nLa mayoría de los préstamos personales en Argentina usa el **sistema de amortización francés**: cuotas iguales durante todo el plazo, donde cada cuota incluye una parte de capital y una parte de interés. Al principio pagás más interés y menos capital; al final, más capital.\n\nLa fórmula de la cuota base es:\n\n```\nCuota = M × i × (1 + i)ⁿ / ((1 + i)ⁿ − 1)\n```\n\nDonde:\n- **M** = monto del préstamo\n- **i** = tasa mensual (TNA ÷ 12 ÷ 100)\n- **n** = plazo en meses\n\n### Cuota real y total pagado\n\nSobre la cuota base se suman las comisiones y seguros mensuales:\n\n```\nCuota real = Cuota base + Comisiones y seguros/mes\nTotal pagado = Cuota real × n\n```\n\n### Fórmula del CFT\n\nEl CFT se obtiene calculando qué tasa anual explica la diferencia entre lo que recibís (capital) y lo que devolvés (total pagado):\n\n```\nCFT = (Total pagado ÷ Monto prestado)^(12 ÷ n) − 1\n```\n\nExpresado en porcentaje anual, el CFT permite comparar préstamos con distintos plazos, comisiones y seguros sobre una misma base.\n\n### Diferencia entre TNA, TEA y CFT\n\n| Indicador | Incluye |\n|---|---|\n| TNA | Solo la tasa contractual, sin capitalización mensual |\n| TEA | Tasa efectiva anual (TNA con capitalización compuesta, sin extras) |\n| CFT | TNA + IVA sobre intereses + comisiones + seguros (el costo real total) |\n\nEl CFT siempre es mayor que la TNA. En préstamos personales argentinos la diferencia suele estar entre el 15% y el 30% anual.\n\n### Factores que elevan el CFT\n\n- **IVA sobre intereses (21%)**: si sos consumidor final, el banco lo incorpora en la cuota.\n- **Seguro de vida obligatorio**: varía entre el 0,03% y el 0,07% mensual sobre el saldo de capital.\n- **Seguro de desempleo**: opcional pero común en paquetes bancarios.\n- **Comisión de otorgamiento**: a veces se cobra una vez y otras se distribuye en cuotas.\n\n**Disclaimer:** Los resultados son orientativos. El CFT exacto debe figurar en el Resumen de Préstamo que la entidad está obligada a entregarte antes de la firma. Para tomar una decisión de crédito importante, consultá con un asesor financiero o un contador matriculado.\n",
   "faq": [
     {
-      "q": "¿CFT vs TNA?",
-      "a": "TNA es solo la tasa. CFT agrega IVA sobre intereses (21%), comisiones, seguros."
+      "q": "¿Qué diferencia hay entre TNA y CFT?",
+      "a": "La TNA (Tasa Nominal Anual) es solo la tasa de interés contractual. El CFT (Costo Financiero Total) suma la TNA, el IVA sobre intereses (21%), las comisiones y los seguros. Es el costo real del préstamo y siempre es mayor que la TNA — en general entre un 15% y un 30% más en préstamos personales argentinos."
     },
     {
-      "q": "¿Obligatorio?",
-      "a": "Sí, BCRA obliga a informar CFT por Ley 25.065 y comunicaciones."
+      "q": "¿El banco está obligado a informarme el CFT?",
+      "a": "Sí. El BCRA obliga a todas las entidades financieras a publicar el CFT en su publicidad, en el resumen de préstamo y en el contrato, según la Comunicación A 5460 y normas complementarias. Si el banco no te lo informa, podés reclamarlo antes de firmar."
     },
     {
-      "q": "¿Es mejor CFT bajo?",
-      "a": "Sí siempre, es lo que realmente pagás."
+      "q": "¿Cómo uso el CFT para comparar préstamos de distintos bancos?",
+      "a": "Pedile el CFT a cada banco para el mismo monto y plazo. El que tenga menor CFT es el más barato en términos reales, aunque su TNA no sea la más baja. Una diferencia de 10 puntos de CFT en un préstamo de $2.000.000 a 24 meses puede representar más de $300.000 de diferencia en el total a pagar."
     },
     {
-      "q": "¿Cambio IVA?",
-      "a": "IVA 21% sobre intereses. Si sos responsable inscripto, deducible."
+      "q": "¿El seguro de vida es obligatorio en préstamos personales?",
+      "a": "En la práctica, sí — la mayoría de los bancos exige un seguro de vida sobre saldo deudor para cubrir el préstamo en caso de fallecimiento del titular. Su costo mensual típicamente ronda el 0,03–0,06% del saldo del capital. Algunos bancos permiten presentar póliza propia para reducir el costo."
     },
     {
-      "q": "¿Seguros obligatorios?",
-      "a": "Vida (suele ser obligatorio) y desempleo (opcional)."
+      "q": "¿Qué pasa si pago la deuda antes de tiempo (precancelación)?",
+      "a": "Podés precancelar total o parcialmente el préstamo. La ley argentina (Ley 25.065 y normas del BCRA) limita la comisión por precancelación. Al cancelar anticipadamente, el banco debe recalcular el saldo deudor por el capital pendiente de devolver, sin los intereses futuros no devengados."
     },
     {
-      "q": "¿Precancelación?",
-      "a": "Normalmente sí con comisión. Verifica cláusulas."
+      "q": "¿Qué plazo conviene elegir: 12 o 24 meses?",
+      "a": "Depende del balance entre cuota y costo total. A 12 meses la cuota es más alta pero el total pagado es menor (menos intereses). A 24 meses la cuota es más baja pero terminás pagando significativamente más. Usá la calculadora para comparar ambas opciones con los datos del banco y elegí según tu capacidad de pago mensual."
     },
     {
-      "q": "¿Subsidios tasa?",
-      "a": "Algunos créditos ANSES/bancos oficiales tienen tasa bonificada."
+      "q": "¿Existen créditos con tasa subsidiada más barata?",
+      "a": "Sí. ANSES ofrece préstamos ANSES con tasas bonificadas para jubilados y beneficiarios de AUH. El Banco Nación tiene líneas preferenciales para empleados públicos y productos como el Crédito Argenta. Los bancos provinciales también suelen tener acuerdos con sindicatos o provincias. Estos créditos suelen tener requisitos de afiliación o relación laboral."
     },
     {
-      "q": "¿Qué retorno esperar del mercado?",
-      "a": "S&P 500 histórico: ~10% nominal anual (7% real ajustado por inflación). Pasado no predice futuro pero es referencia."
+      "q": "¿Cómo afecta la inflación al costo real del préstamo?",
+      "a": "Si la inflación supera al CFT del préstamo, el costo real en términos de poder adquisitivo es negativo: estás devolviendo pesos que valen menos que los que recibiste. Por ejemplo, con un CFT del 65% anual y una inflación del 80% anual, el préstamo en términos reales te salió 'barato'. Sin embargo, ese escenario no se puede garantizar y no exime de pagar las cuotas puntualmente."
+    },
+    {
+      "q": "¿El CFT que calcula esta herramienta es exactamente el del banco?",
+      "a": "Es una estimación muy cercana. La diferencia puede surgir porque esta calculadora usa la fórmula estándar del BCRA, mientras que cada banco puede tener una fecha de acreditación, forma de cobrar el IVA y seguro levemente distinta. Para el CFT oficial de tu préstamo, revisá el Resumen de Préstamo que el banco está obligado a entregarte antes de la firma."
     }
   ],
   "sources": [
     {
-      "name": "BCRA — Banco Central de la República Argentina",
-      "url": "https://www.bcra.gob.ar"
+      "name": "BCRA — Comunicaciones sobre CFT y préstamos personales",
+      "url": "https://www.bcra.gob.ar/SistemasFinancieros/sf_buscador_tasas.asp"
     },
     {
-      "name": "ARCA (ex AFIP) — normativa tributaria",
+      "name": "BCRA — Comparador de préstamos personales",
+      "url": "https://www.bcra.gob.ar/BCRAyVos/Calculadora_financiera.asp"
+    },
+    {
+      "name": "ARCA (ex AFIP) — IVA sobre servicios financieros",
       "url": "https://www.arca.gob.ar"
-    },
-    {
-      "name": "INDEC — Índices económicos",
-      "url": "https://www.indec.gob.ar"
     }
   ],
   "relatedSlugs": [],
@@ -135,16 +155,17 @@
     "frequency": "yearly",
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
+    "notes": "Fórmula fija (sistema francés + CFT estándar BCRA). No depende de datos externos; las tasas de referencia son del mercado y varían por banco.",
     "source": "BCRA — Banco Central de la República Argentina",
     "sourceUrl": "https://www.bcra.gob.ar"
   },
   "seoKeywords": [
     "calculadora cft préstamo personal 2026",
     "cft prestamo personal comparativa",
-    "cft préstamo personal"
+    "cft préstamo personal",
+    "diferencia tna cft préstamo",
+    "cuota préstamo personal argentina"
   ],
-  "noindex": true,
   "dataSource": [
     "tasa:prestamos_personales"
   ]

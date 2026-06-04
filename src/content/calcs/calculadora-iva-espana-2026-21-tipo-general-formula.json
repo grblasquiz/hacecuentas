@@ -16,25 +16,25 @@
   "audience": "ES",
   "icon": "🧾",
   "formulaId": "iva-espana-2026-21-tipo-general-formula",
-  "intro": "El Impuesto sobre el Valor Añadido (IVA) en España grava la mayoría de productos y servicios con una **tasa general del 21%**. Esta calculadora te permite sumar o extraer el IVA rápidamente: ingresa un precio (con o sin IVA) y obtendrás el desglose completo. Útil para facturas, presupuestos y comparativas comerciales.",
-  "keyTakeaway": "España aplica IVA general 21% a productos/servicios. Calcula el impuesto en segundos: suma a precio neto o extrae de precio bruto.",
+  "intro": "El Impuesto sobre el Valor Añadido (IVA) en España grava la mayoría de productos y servicios con una **tasa general del 21%**. Esta calculadora te permite sumar o extraer el IVA rápidamente: ingresa un precio (con o sin IVA) y obtendrás el desglose completo con base imponible, cuota de IVA y total. Útil para facturas, presupuestos, verificación de precios y control contable.",
+  "keyTakeaway": "España aplica IVA general 21% a la mayoría de bienes y servicios. Sumá IVA a un precio neto multiplicando por 1,21. Extraé IVA de un precio bruto dividiendo por 1,21.",
   "useCases": [
-    "Emitir facturas con desglose de IVA correcto",
-    "Verificar precios finales al comprar productos",
-    "Comparar ofertas entre precio neto y total con impuesto",
-    "Deducir IVA de facturas recibidas",
-    "Presupuestos de servicios profesionales",
-    "Control contable y reportes fiscales"
+    "Freelance que emite facturas con IVA al 21% a clientes empresas y necesita calcular el total a cobrar.",
+    "Comprador que quiere saber cuánto IVA incluye el ticket de un artículo electrónico de 484 €.",
+    "Autónomo que recibe una factura con IVA incluido y necesita separar la base imponible para la deducción trimestral.",
+    "Empresa que prepara presupuesto de servicios profesionales y necesita mostrar precio neto + IVA desglosado."
   ],
   "fields": [
     {
       "id": "amount",
-      "label": "Monto (precio base)",
+      "label": "Importe",
       "type": "number",
       "placeholder": "100.00",
       "default": 100,
+      "min": 0.01,
       "step": 0.01,
-      "required": true
+      "required": true,
+      "help": "Precio sin IVA (si vas a sumar) o precio con IVA incluido (si vas a extraer)."
     },
     {
       "id": "mode",
@@ -60,15 +60,15 @@
       "options": [
         {
           "value": "21",
-          "label": "21% - Tipo general (productos y servicios)"
+          "label": "21% — Tipo general (electrónica, ropa, servicios profesionales)"
         },
         {
           "value": "10",
-          "label": "10% - Tipo reducido (alimentos no básicos, hostelería, transporte)"
+          "label": "10% — Tipo reducido (hostelería, transporte, alimentos no básicos)"
         },
         {
           "value": "4",
-          "label": "4% - Tipo súper reducido (pan, leche, libros, medicamentos)"
+          "label": "4% — Tipo superreducido (pan, leche, libros, medicamentos)"
         }
       ],
       "default": "21",
@@ -78,89 +78,104 @@
   "outputs": [
     {
       "id": "iva_amount",
-      "label": "IVA",
+      "label": "Cuota de IVA",
       "primary": false,
       "format": "currency",
       "suffix": "EUR"
     },
     {
       "id": "base_price",
-      "label": "Precio sin IVA (base imponible)",
+      "label": "Base imponible (sin IVA)",
       "primary": false,
       "format": "currency",
       "suffix": "EUR"
     },
     {
       "id": "total_price",
-      "label": "Precio final (con IVA)",
+      "label": "Total con IVA",
       "primary": true,
       "format": "currency",
       "suffix": "EUR"
     },
     {
       "id": "calculation_mode",
-      "label": "Modo de cálculo aplicado",
+      "label": "Operación aplicada",
       "primary": false,
       "format": "text"
     }
   ],
-  "explanation": "## ¿Qué es el IVA en España?\n\nEl IVA es un impuesto indirecto que grava el consumo de bienes y servicios en España con una tasa general del 21%. Se calcula sobre el precio neto del producto: si algo cuesta 100 euros, se suma 21 euros de IVA, llegando a 121 euros finales. Es obligatorio en facturas y transacciones comerciales.\n\n## Cómo funciona el IVA en España\n\nEl IVA es un **impuesto indirecto sobre el consumo** aplicado en cada etapa de la cadena de distribución. En España, la Agencia Tributaria (AEAT) establece tres tipos principales:\n\n- **21% (tipo general)**: aplicable a la mayoría de productos y servicios (electrónica, ropa, combustible, servicios profesionales, etc.).\n- **10% (tipo reducido)**: alimentos no básicos, bebidas, hostelería, transporte, entrada a cines y museos.\n- **4% (tipo súper reducido)**: pan y cereales sin procesar, leche, quesos, frutas y verduras, libros, periódicos, medicamentos, equipos médicos.\n\n## Fórmula\n\n### Sumar IVA (precio neto → precio bruto)\n\n```\nPrecio con IVA = Precio sin IVA × (1 + tasa/100)\nIVA = Precio sin IVA × (tasa/100)\n```\n\n**Ejemplo**: precio sin IVA €100, tasa 21%:\n- IVA = 100 × 0.21 = €21\n- Total = 100 + 21 = €121\n\n### Extraer IVA (precio bruto → precio neto)\n\n```\nPrecio sin IVA = Precio con IVA ÷ (1 + tasa/100)\nIVA = Precio con IVA − Precio sin IVA\n```\n\n**Ejemplo**: precio con IVA €121, tasa 21%:\n- Base = 121 ÷ 1.21 = €100\n- IVA = 121 − 100 = €21\n\n## Ejemplo práctico\n\n| Concepto | Suma (neto→bruto) | Extrae (bruto→neto) |\n|---|---|---|\n| Entrada | €100 | €121 |\n| Tasa | 21% | 21% |\n| Base imponible | €100 | €100 |\n| IVA | €21 | €21 |\n| Total | €121 | €121 |\n\n## Limitaciones y casos especiales\n\n- **Operaciones intracomunitarias**: bienes y servicios entre empresas de la UE pueden estar sujetos a regímenes especiales.\n- **Exportaciones**: generalmente están exentas de IVA (0%).\n- **Servicios digitales**: desde 2015, plataformas digitales con clientes particulares aplican IVA en el país del cliente.\n- **Recargo de equivalencia**: autónomos y pequeñas empresas que no pueden deducir IVA pueden aplicar un recargo del 4.75% sobre el IVA devengado.\n- **Actividades exentas**: seguros, educación, sanidad privada, ciertos servicios financieros no generan IVA.\n\nEsta calculadora aplica la fórmula estándar para los tres tipos principales. Para situaciones especiales, consulta el Catálogo de Impuestos de AEAT.",
+  "example": {
+    "title": "Ejemplo: factura de diseño web por €850 sin IVA",
+    "steps": [
+      "**Importe**: €850 (precio neto, sin IVA).",
+      "**Tipo de IVA**: 21% (tipo general, servicios profesionales).",
+      "**Cuota de IVA**: 850 × 0,21 = **€178,50**.",
+      "**Total a cobrar al cliente**: 850 + 178,50 = **€1.028,50**.",
+      "En la factura: Base imponible €850,00 | IVA 21% €178,50 | Total €1.028,50."
+    ],
+    "result": "Una factura de €850 netos lleva €178,50 de IVA: el cliente paga €1.028,50 en total."
+  },
+  "explanation": "## Cómo se calcula el IVA en España\n\nEl IVA (Impuesto sobre el Valor Añadido) es un impuesto indirecto que grava el consumo. En España se aplican tres tipos establecidos por la Ley 37/1992:\n\n| Tipo | % | Ejemplos |\n|---|---|---|\n| General | **21%** | Electrónica, ropa, combustible, servicios profesionales, telefonía |\n| Reducido | **10%** | Hostelería, transporte, alimentos no básicos, cine, flores |\n| Superreducido | **4%** | Pan, leche, queso, frutas, verduras, libros, periódicos, medicamentos |\n\n### Sumar IVA: precio neto → precio total\n\nCuando tienes el precio sin IVA (base imponible) y necesitas calcular el precio final:\n\n```\nCuota IVA  = Base imponible × (tipo / 100)\nTotal      = Base imponible + Cuota IVA\n           = Base imponible × (1 + tipo / 100)\n```\n\n**Ejemplo**: Base €850, tipo 21%\n- Cuota IVA = 850 × 0,21 = **€178,50**\n- Total = 850 + 178,50 = **€1.028,50**\n\n### Extraer IVA: precio total → base imponible\n\nCuando tienes el precio final con IVA incluido y necesitas separar la base:\n\n```\nBase imponible = Precio total ÷ (1 + tipo / 100)\nCuota IVA      = Precio total − Base imponible\n```\n\n**Ejemplo**: Total €242, tipo 21%\n- Base = 242 ÷ 1,21 = **€200,00**\n- Cuota IVA = 242 − 200 = **€42,00**\n\n### Por qué no se divide por 0,21 al extraer\n\nEl error más frecuente es calcular el IVA extraído como `total × 0,21`. Eso da un resultado incorrecto porque el 21% se aplica sobre la base, no sobre el total. La fórmula correcta divide entre `1 + tipo`, no multiplica por el tipo.\n\n## Obligaciones formales\n\nLa Agencia Tributaria (AEAT) exige que toda factura incluya:\n- NIF del emisor y receptor\n- Fecha de expedición y número correlativo\n- Descripción de la operación\n- **Base imponible** desglosada\n- **Tipo aplicado** (21%, 10% o 4%)\n- **Cuota de IVA** resultante\n\n## Casos especiales\n\n- **Exportaciones fuera de la UE**: exentas de IVA (0%).\n- **Operaciones intracomunitarias B2B**: el receptor aplica autoliquidación (inversión del sujeto pasivo).\n- **Recargo de equivalencia**: minoristas en régimen especial añaden un recargo del 5,2% (sobre el 21%) o 1,4% (sobre el 10%).\n- **Actividades exentas**: seguros, educación reglada, sanidad, servicios financieros no generan IVA ni dan derecho a deducción.\n\n> **Aviso**: Esta calculadora aplica la fórmula estándar para los tres tipos principales. Para operaciones con regímenes especiales (módulos, recargo de equivalencia, grupos de empresas), consulta con un asesor fiscal o la sede electrónica de la AEAT.",
   "faq": [
     {
-      "q": "¿Cuál es la diferencia entre 'base imponible' y 'precio final'?",
-      "a": "La **base imponible** (o base) es el precio sin IVA: es la cantidad sobre la que se calcula el impuesto. El **precio final** es lo que paga el cliente: base + IVA. En facturación, ambos deben aparecer desglosados."
+      "q": "¿Cuál es la diferencia entre base imponible y precio total con IVA?",
+      "a": "La **base imponible** es el precio del bien o servicio antes de aplicar el impuesto: es la cantidad sobre la que se calcula el IVA. El **precio total** es lo que paga el cliente: base imponible más la cuota de IVA. En una factura legal deben aparecer los tres datos: base, tipo y cuota."
     },
     {
-      "q": "¿Puedo deducir el IVA que pago como empresa?",
-      "a": "Sí, si eres autónomo o empresa registrada en el régimen general, puedes deducir el IVA soportado (pagado en compras) contra el IVA repercutido (cobrado a clientes). No aplica si estás en régimen de estimación objetiva o en actividades exentas."
+      "q": "¿Por qué no puedo simplemente multiplicar el precio por 0,21 para extraer el IVA incluido?",
+      "a": "Porque el 21% se calcula sobre la base imponible, no sobre el total. Si pagas 121 €, la base es 100 € y el IVA es 21 €. Multiplicar 121 × 0,21 da 25,41 €, que es incorrecto. La fórmula correcta es: base = total ÷ 1,21; IVA = total − base."
     },
     {
-      "q": "¿Qué pasa si vendo a otro país de la UE?",
-      "a": "Si vendes bienes a empresas de otro país UE con número de identificación IVA válido, aplica tasa 0% (operación intracomunitaria exenta). Si vendes a particulares, aplica el IVA del país del cliente desde 2021."
+      "q": "¿Qué tipo de IVA aplica a los servicios de un freelance o autónomo?",
+      "a": "Los servicios profesionales (diseño, consultoría, programación, asesoría, etc.) tributan al **21% tipo general**. Excepciones: servicios médicos o sanitarios (exentos), clases particulares (exentos), algunos servicios educativos (exentos)."
     },
     {
-      "q": "¿Cómo reporto el IVA a Hacienda?",
-      "a": "Debes presentar la **Declaración Mensual o Trimestral del IVA** según tu actividad. Incluyes el IVA repercutido (cobrado), el IVA soportado deducible (pagado), y la diferencia a ingresar o compensar."
+      "q": "¿Puedo deducir el IVA soportado como autónomo o empresa?",
+      "a": "Sí, si estás en el régimen general de IVA. Compensás el IVA repercutido (cobrado a clientes) con el IVA soportado (pagado en compras y gastos afectos). La diferencia positiva se ingresa a Hacienda; la negativa se solicita devolución o compensa en el trimestre siguiente. Esto se hace con el **Modelo 303** trimestral."
     },
     {
-      "q": "¿El IVA de 4% aplica a todos los libros?",
-      "a": "Sí, a libros en papel, eBooks y audiolibros educativos o de literatura. No aplica a material escolar, periódicos ni revistas especializadas. Verifica con tu editorial."
+      "q": "¿Qué bienes y servicios tienen IVA al 10%?",
+      "a": "Al **10% tipo reducido**: servicios de hostelería y restauración, transporte de viajeros, espectáculos (cine, teatro, conciertos), flores y plantas ornamentales, alimentos no incluidos en el superreducido (zumos, refrescos, carne procesada), aguas envasadas, y viviendas en primera transmisión."
     },
     {
-      "q": "¿Qué es el recargo de equivalencia?",
-      "a": "Un recargo adicional (4.75%) sobre el IVA, permitido a autónomos y pymes que opten por no deducir el IVA soportado. Simplifica la gestión pero puede ser más caro si compran mucho. Requiere comunicación a AEAT."
+      "q": "¿Qué bienes tienen IVA al 4% (superreducido)?",
+      "a": "Al **4% superreducido**: pan y harinas panificables, leche, queso, huevos, frutas, verduras y legumbres, cereales, libros (incluidos eBooks), periódicos y revistas, medicamentos de uso humano, y material escolar. También ciertos equipos para personas con discapacidad."
     },
     {
-      "q": "¿Cambió el IVA en 2026?",
-      "a": "Los tipos vigentes en 2026 se mantienen: 21% general, 10% reducido, 4% súper reducido. Consulta aeat.es para actualizaciones oficiales si hablamos de ejercicios posteriores."
+      "q": "¿Cuándo y cómo declaro el IVA a Hacienda?",
+      "a": "Con el **Modelo 303** (autoliquidación trimestral): en abril, julio, octubre y enero de cada año. Si tu facturación supera ciertos umbrales, puedes estar en el régimen de devolución mensual (REDEME) y presentar el Modelo 303 mensualmente junto al Modelo 340."
     },
     {
-      "q": "¿Puedo usar esta calculadora para facturas?",
-      "a": "Sí, es perfecta para desglosar y verificar. Asegúrate de que la factura legal incluya número de serie, datos del emisor/receptor, descripción de servicios/productos, base, tasa y IVA. Esta herramienta calcula el impuesto, no genera documentos legales."
+      "q": "¿El IVA aplica a ventas online entre países de la UE?",
+      "a": "Desde julio de 2021 rige el OSS (One Stop Shop): si vendés a consumidores finales de otros países de la UE y superás 10.000 € anuales, aplicás el IVA del país del comprador. Podés declararlo centralizadamente en España a través de la ventanilla única de la AEAT."
+    },
+    {
+      "q": "¿Cambiaron los tipos de IVA en España en 2025-2026?",
+      "a": "Los tipos generales permanecen estables: 21%, 10% y 4%. En 2023-2024 hubo medidas temporales que redujeron el IVA del aceite de oliva al 0% y de algunos alimentos básicos al 0% o 5%; en 2025 estas medidas se normalizaron progresivamente. Para el aceite de oliva, el tipo volvió al 5% desde enero 2025. Verificá siempre en aeat.es para actualizaciones vigentes."
     }
   ],
   "sources": [
     {
-      "name": "Agencia Tributaria Española (AEAT) - IVA",
-      "url": "https://www.agenciatributaria.es/AEAT.internet/Inicio.shtml",
-      "publisher": "Ministerio de Hacienda y Función Pública",
+      "name": "Agencia Tributaria Española (AEAT) — IVA",
+      "url": "https://www.agenciatributaria.es/AEAT.internet/Inicio/_Segmentos_/Empresas_y_profesionales/Empresas_y_profesionales/IVA/IVA.shtml",
+      "publisher": "Ministerio de Hacienda",
       "date": "2026"
     },
     {
-      "name": "Catálogo de Impuestos - AEAT",
-      "url": "https://www.agenciatributaria.es/AEAT.internet/impuestos/IVA.shtml",
-      "publisher": "AEAT",
+      "name": "Ley 37/1992, de 28 de diciembre, del IVA — BOE",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740",
+      "publisher": "Boletín Oficial del Estado",
       "date": "2026"
     },
     {
-      "name": "Tipos de IVA en la Unión Europea 2026",
+      "name": "Tipos impositivos del IVA en la Unión Europea — Comisión Europea",
       "url": "https://taxation-customs.ec.europa.eu/taxation-1/vat_en",
-      "publisher": "Comisión Europea",
+      "publisher": "Comisión Europea — DG Taxation",
       "date": "2026"
     },
     {
-      "name": "Declaración del IVA - Modelo 303",
-      "url": "https://www.agenciatributaria.es/AEAT.internet/Inicio.shtml",
+      "name": "Modelo 303 — Autoliquidación trimestral del IVA",
+      "url": "https://sede.agenciatributaria.gob.es/Sede/iva/presentar-declaraciones/modelo-303.html",
       "publisher": "AEAT",
       "date": "2026"
     }
@@ -169,11 +184,11 @@
     "frequency": "yearly",
     "lastUpdated": "2026-01-15",
     "updateType": "manual",
-    "notes": "Tipos de IVA general (21%), reducido (10%) y súper reducido (4%) conforme a la normativa española vigente en 2026. Se actualiza anualmente si AEAT modifica las alícuotas.",
-    "source": "Agencia Tributaria Española (AEAT) - IVA",
-    "sourceUrl": "https://www.agenciatributaria.es/AEAT.internet/Inicio.shtml"
+    "notes": "Tipos de IVA general (21%), reducido (10%) y superreducido (4%) conforme a la Ley 37/1992 y normativa española vigente en 2026. Se actualiza si la AEAT modifica las alícuotas o se aprueban medidas temporales de reducción.",
+    "source": "Agencia Tributaria Española (AEAT) — IVA",
+    "sourceUrl": "https://www.agenciatributaria.es/AEAT.internet/Inicio/_Segmentos_/Empresas_y_profesionales/Empresas_y_profesionales/IVA/IVA.shtml"
   },
-  "lastReviewed": "2026-05-26",
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [
     "calculadora-impatriado-beckham-espana-impuesto-relocacion",
     "calculadora-honorarios-abogado-espana-turno-oficio"

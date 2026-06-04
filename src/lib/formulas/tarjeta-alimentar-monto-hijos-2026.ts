@@ -2,7 +2,7 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function tarjetaAlimentarMontoHijos2026(i: Inputs): Outputs {
   const h=Number(i.hijos)||0;
-  const montos=[0,52000,81000,108000];
+  const montos=[0,72250,113299,149425];
   const m=h>=3?montos[3]:montos[h]||0;
 
   const anual = m * 12;

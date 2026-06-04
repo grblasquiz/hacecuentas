@@ -8,7 +8,7 @@
   "icon": "🌊",
   "formulaId": "yield-farming-impermanent-loss-pool",
   "intro": "Cuando proveés liquidez en un pool de DeFi —Uniswap, Balancer, Curve o cualquier AMM (Automated Market Maker)— tu capital no se queda quieto: el protocolo rebalancea automáticamente la proporción de los tokens a medida que sus precios se mueven. Ese rebalanceo constante genera lo que se conoce como impermanent loss (IL): la diferencia entre lo que tenés en el pool y lo que hubieses tenido si simplemente hubieses guardado los tokens en tu billetera sin hacer nada. La palabra \"impermanente\" es engañosa: el loss solo es temporal si el precio vuelve exactamente al punto de entrada. Si retirás liquidez con el precio desplazado, la pérdida se cristaliza.\n\nEn Argentina el yield farming creció junto con el interés en activos digitales como alternativa de cobertura frente a la inflación y las restricciones cambiarias. Muchos inversores locales exploraron protocolos sobre redes como Polygon, Arbitrum o BNB Chain buscando rendimientos en dólares. Pero pocos calcularon con precisión cuánto IL estaban asumiendo frente a los fees que cobraban, y terminaron con menos dólares de los que habrían tenido simplemente comprando y guardando.\n\nEsta calculadora resuelve esa cuenta en segundos. Ingresás el cambio porcentual del precio de uno de los tokens del par respecto al momento en que entraste al pool, y obtenés el impermanent loss expresado como porcentaje de pérdida relativa contra la estrategia de hold. La fórmula utilizada es la estándar de AMMs con peso 50/50: IL = 2√r/(1+r) − 1, donde r es el ratio de cambio de precio. El cálculo corre íntegramente en tu navegador: no enviamos datos a ningún servidor, no requiere cuenta ni registro.\n\nEl resultado es orientativo y no contempla los fees acumulados, los tokens de recompensa del protocolo, ni las particularidades de pools con liquidez concentrada (como Uniswap V3) o pesos distintos al 50/50 (como algunos pools de Balancer). Para decisiones de capital significativo, complementá este cálculo con análisis de APR real, riesgo de smart contract y, si corresponde, consultá con un profesional en activos digitales. Los mercados de criptomonedas son altamente volátiles y no están regulados por la CNV ni el BCRA en Argentina al momento de esta publicación.",
-  "keyTakeaway": "Ingresá cambio % del token y obtené impermanent loss al instante, con fórmula estándar del tema y referencias al pie. Resultado orientativo — para decisiones importantes consultá con un profesional.",
+  "keyTakeaway": "Ingresá el cambio porcentual del token respecto a tu precio de entrada y obtené el impermanent loss instantáneo. Resultado orientativo basado en la fórmula estándar de AMM 50/50 — para decisiones importantes consultá con un profesional.",
   "useCases": [
     {
       "title": "Par ETH/USDC con ETH subiendo 50%",
@@ -33,26 +33,21 @@
     {
       "title": "Comparar dos pools con distinto par",
       "description": "Estás eligiendo entre un pool MATIC/USDC y un pool LINK/ETH. Estimás que MATIC puede subir 25% y LINK puede moverse un 60% relativo a ETH. Calculás IL para cada escenario: MATIC/USDC da −0,60% de IL; LINK/ETH da −3,44%. El par más volátil tiene IL casi 6 veces mayor, lo que te permite ponderar mejor qué APR de fees necesitaría cada pool para que valga la pena."
-    },
-    {
-      "title": "Verificar el dato que te pasó un amigo",
-      "description": "Un conocido te dice que entró a un pool, el token bajó 20% y tuvo un IL de casi 5%. Con la calculadora verificás: para −20% de cambio, el IL real es aproximadamente −0,55%. La discrepancia sugiere que el amigo puede estar confundiendo IL con pérdida total del portafolio o incluyendo otros factores. Tener el número preciso evita decisiones basadas en información incorrecta."
-    },
-    {
-      "title": "Estrategia de reentrada al pool tras corrección",
-      "description": "Retiraste liquidez cuando el token bajó 40% (IL ~−3,88% cristalizado). Ahora evaluás si volver a entrar al pool con el precio más bajo. Calculás que si el token vuelve a su precio original desde acá, subiría un 67%, generando un nuevo IL potencial de ~−6,2%. Esto te ayuda a dimensionar el riesgo de la reentrada y decidir si preferís esperar más estabilidad de precios antes de volver a proveer liquidez."
     }
   ],
   "fields": [
     {
       "id": "cambioPrecio",
-      "label": "Cambio % del token",
+      "label": "Cambio de precio del token",
       "type": "number",
       "required": true,
       "placeholder": "50",
       "default": 50,
+      "min": -99,
+      "max": 10000,
       "step": 0.01,
-      "help": "Valor en porcentaje."
+      "unit": "%",
+      "help": "Ingresá cuánto varió el precio del token desde que entraste al pool. Positivo si subió, negativo si bajó. Por ejemplo: 50 si el token subió 50%, o -30 si bajó 30%."
     }
   ],
   "outputs": [
@@ -67,14 +62,16 @@
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "ETH sube 50% después de que entraste al pool ETH/USDC",
     "steps": [
-      "Token sube 50%",
-      "IL 2%"
+      "Cambio de precio del token: +50% → r = 1 + 50/100 = 1,50",
+      "Aplicamos la fórmula: IL = 2 × √1,50 / (1 + 1,50) − 1",
+      "IL = 2 × 1,22474 / 2,50 − 1 = 0,97980 − 1 = −0,02020",
+      "IL = −2,02% frente a la estrategia de hold"
     ],
-    "result": "Pérdida vs HODL"
+    "result": "−2,02% de pérdida relativa vs HODL. Si invertiste 1.000 USD en el pool y ETH subió 50%, tu posición vale ~979,8 USD mientras que hodlear habría dado ~1.250 USD. Los fees del pool deben superar esa diferencia para que la estrategia LP valga la pena."
   },
-  "explanation": "Las **finanzas personales e inversión** usan principios matemáticos universales (interés compuesto, valor tiempo del dinero, optimización riesgo-retorno). Esta calculadora aplica fórmulas estándar de la industria financiera.\n\n## Cómo se calcula\n\nPérdida impermanente al proveer liquidez.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Benchmarks típicos por plazo\n\n| Plazo | S&P 500 | Bonos 10y | Cash |\n|---|---|---|---|\n| 1 año | Muy variable | 4-5% | 3-5% |\n| 5 años | ~8% prom | ~4% | Inflación |\n| 10 años | ~9-10% | ~4% | <inflación |\n| 20+ años | ~10% nominal | ~5% | N/A |\n\n## Principios de inversión\n\n- **No tocar el plan** durante crisis. La emoción es el peor consejero.\n- **Diversificar**: no concentrar en un solo activo/sector/país.\n- **Costos bajos**: TER >1% anual te come 30% del retorno en 30 años.\n- **Horizonte largo**: renta variable funciona en 10+ años, no en 1 año.\n- **Rebalanceo**: una vez al año, no más.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## Cómo se calcula el impermanent loss\n\nLa fórmula que usa esta calculadora es la derivada matemática del comportamiento de un AMM (Automated Market Maker) de producto constante con pesos iguales:\n\n```\nIL = 2 × √r / (1 + r) − 1\n```\n\nDonde **r** es el ratio entre el precio actual del token y su precio en el momento de entrar al pool:\n\n```\nr = 1 + (cambioPrecio / 100)\n```\n\nEste modelo asume una pool 50/50 con la invariante **x × y = k** (modelo Uniswap V2). Cuando el precio de un token sube respecto al otro, el protocolo rebalancea automáticamente: vende el token que subió y compra el que bajó, manteniendo el valor relativo equitativamente. Esa mecánica de arbitraje continuo es lo que genera el IL.\n\n### Ejemplo verificado paso a paso\n\n| Cambio de precio | r | IL calculado |\n|---|---|---|\n| +10% | 1,10 | −0,23% |\n| +25% | 1,25 | −0,60% |\n| +50% | 1,50 | −2,02% |\n| +100% | 2,00 | −5,72% |\n| +200% | 3,00 | −13,40% |\n| −25% | 0,75 | −0,60% |\n| −50% | 0,50 | −5,72% |\n\nNota: el IL es **simétrico en magnitud** para subidas y bajadas de igual porcentaje del ratio (−50% da el mismo IL que +100% porque ambos representan un cambio de ratio 2x).\n\n### Lo que el IL no incluye\n\n- **Fees ganados**: el AMM distribuye los fees de trading entre los LPs en proporción a su liquidez. Fees altos pueden compensar o superar el IL.\n- **Tokens de recompensa (incentivos)**: muchos protocolos pagan tokens nativos adicionales como incentivo a LPs.\n- **Liquidez concentrada (Uniswap V3)**: si elegís un rango de precios específico, el IL puede ser mayor cuando el precio sale del rango.\n- **Pools con pesos distintos al 50/50**: en Balancer, pools 80/20 tienen IL menor para el token de mayor peso.\n- **Gas y comisiones de red**: costos de entrada y salida del pool que afectan el rendimiento neto.\n\n## Cómo usar el resultado\n\nEl IL calculado es un porcentaje relativo al valor que tendrías si hubieses guardado los tokens. Para decidir si conviene proveer liquidez:\n\n1. Calculá el APR de fees del pool (disponible en DefiLlama, el DEX, o DeFi trackers).\n2. Estimá el IL para el movimiento de precio que creés probable en tu horizonte.\n3. Si APR de fees > IL esperado, la estrategia LP tiene rentabilidad positiva frente a hold.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero ni de inversión. Las criptomonedas son activos de alto riesgo y alta volatilidad. Los contratos inteligentes pueden tener vulnerabilidades. Para decisiones relevantes, consultá con un asesor financiero o profesional en activos digitales.\n",
   "faq": [
     {
       "q": "¿Qué es exactamente el impermanent loss y por qué se llama 'impermanente'?",
@@ -101,12 +98,8 @@
       "a": "En Uniswap V2 y AMMs similares, tu liquidez está distribuida en todo el rango de precios posible (de cero a infinito), lo que genera menor IL pero también menor eficiencia de capital. En Uniswap V3, podés concentrar tu liquidez en un rango específico de precios, lo que aumenta tu participación en los fees cuando el precio está dentro de ese rango. El problema es que si el precio sale de tu rango, dejás de cobrar fees completamente y tu posición queda 100% en uno de los dos tokens, maximizando el IL. Esta calculadora usa la fórmula de V2 (pool estándar); para V3 el cálculo es significativamente más complejo y depende del rango elegido."
     },
     {
-      "q": "¿Hay alguna regulación argentina sobre yield farming o DeFi que deba conocer?",
-      "a": "Al momento de esta publicación, la AFIP (ahora ARCA bajo la Resolución General 4614 y sus actualizaciones) considera a las criptomonedas como activos sujetos a declaración patrimonial en el Impuesto sobre los Bienes Personales, y las ganancias por su compraventa tributan bajo el Impuesto a las Ganancias. Los rendimientos de yield farming —fees cobrados, tokens de recompensa— podrían encuadrarse como ganancias de fuente extranjera para residentes argentinos. El BCRA regula las transferencias internacionales pero no tiene regulación específica sobre operaciones DeFi en wallets no custodiales. Dado que el marco regulatorio evoluciona rápidamente, es muy recomendable consultar con un contador especializado en activos digitales antes de declarar o escalar posiciones significativas."
-    },
-    {
-      "q": "¿Qué son los pools de liquidez y quiénes los usan en Argentina?",
-      "a": "Un pool de liquidez es un contrato inteligente que contiene reservas de dos o más tokens, permitiendo que cualquier usuario intercambie esos tokens sin necesidad de una contraparte directa. Los proveedores de liquidez (LPs) depositan pares de tokens y reciben una porción de los fees que pagan los traders a cambio. En Argentina, el uso de DeFi creció entre 2020 y 2024 principalmente como alternativa para dolarizarse y obtener rendimientos en dólares o stablecoins, dado el contexto de cepo cambiario y alta inflación. Protocolos sobre redes como Polygon y Arbitrum, con comisiones bajas, fueron especialmente populares entre usuarios argentinos por ser más accesibles económicamente que operar sobre Ethereum mainnet."
+      "q": "¿Hay alguna consideración fiscal argentina sobre yield farming o DeFi que deba conocer?",
+      "a": "Al momento de esta publicación, ARCA (ex AFIP, bajo Resolución General 4614 y actualizaciones) considera a las criptomonedas como activos sujetos a declaración patrimonial en Bienes Personales, y las ganancias por su compraventa tributan bajo Impuesto a las Ganancias. Los rendimientos de yield farming —fees cobrados, tokens de recompensa— podrían encuadrarse como ganancias de fuente extranjera para residentes argentinos. Dado que el marco regulatorio evoluciona rápidamente, es muy recomendable consultar con un contador especializado en activos digitales antes de declarar o escalar posiciones significativas."
     },
     {
       "q": "¿Qué pasa con el impermanent loss si uno de los tokens del par llega a cero?",
@@ -117,26 +110,30 @@
       "a": "El tiempo no entra directamente en la fórmula del IL: este depende únicamente de la divergencia de precios, no de cuánto tiempo llevás en el pool. Sin embargo, el tiempo sí importa indirectamente por dos razones. Primero, más tiempo en el pool significa más fees acumulados, lo que puede compensar o superar el IL. Segundo, a mayor tiempo, mayor es la probabilidad de que el precio se haya desplazado significativamente del punto de entrada, aumentando el IL potencial. Por eso la estrategia temporal importa: entrar y salir rápido en períodos de alta volatilidad puede ser más perjudicial que mantener una posición en un par relativamente estable durante meses acumulando fees."
     },
     {
-      "q": "¿Qué herramientas complementan esta calculadora para gestionar posiciones DeFi?",
-      "a": "Para una gestión completa de posiciones en pools de liquidez podés combinar esta calculadora con: DefiLlama (defilllama.com) para ver APRs reales de pools y TVL; Revert Finance para trackear posiciones en Uniswap V3 con métricas de IL y fees en tiempo real; APY.vision para análisis histórico de rendimiento de pools; y el portfolio tracker de Zapper o DeBank para ver tus posiciones DeFi consolidadas. Para el contexto macroeconómico local, el INDEC publica el IPC mensual que permite comparar el rendimiento real en pesos de cualquier inversión. Ninguna herramienta reemplaza el análisis propio y la consulta con profesionales para posiciones significativas."
-    },
-    {
       "q": "¿El impermanent loss aplica igual en pools con más de dos tokens?",
       "a": "No exactamente. La fórmula estándar que usa esta calculadora aplica a pools de dos tokens con pesos iguales (50/50), que es el modelo más común. En pools multitoken como los de Balancer —que pueden tener tres, cuatro o más activos con pesos distintos, por ejemplo 80/20 o 33/33/34— el cálculo del IL es diferente y generalmente menor para el token con mayor peso. Un pool 80/20 BTC/ETH, por ejemplo, tendrá menos IL que un pool 50/50 porque el rebalanceo es proporcionalmente menor. Del mismo modo, los pools de stablecoins de Curve usan una fórmula híbrida (stableswap) que minimiza el IL manteniendo los precios dentro de rangos estrechos. Para estos casos más complejos, buscá calculadoras específicas del protocolo."
+    },
+    {
+      "q": "¿Qué herramientas complementan esta calculadora para gestionar posiciones DeFi?",
+      "a": "Para una gestión completa de posiciones en pools de liquidez podés combinar esta calculadora con: DefiLlama (defillama.com) para ver APRs reales de pools y TVL; Revert Finance para trackear posiciones en Uniswap V3 con métricas de IL y fees en tiempo real; APY.vision para análisis histórico de rendimiento de pools; y Zapper o DeBank para ver tus posiciones DeFi consolidadas. Ninguna herramienta reemplaza el análisis propio y la consulta con profesionales para posiciones significativas."
     }
   ],
   "sources": [
     {
-      "name": "BCRA — Banco Central de la República Argentina",
-      "url": "https://www.bcra.gob.ar"
+      "name": "Uniswap — Conceptual overview of impermanent loss",
+      "url": "https://docs.uniswap.org/concepts/protocol/fees"
     },
     {
-      "name": "ARCA (ex AFIP) — normativa tributaria",
+      "name": "Pintail — Uniswap: A Good Deal for Liquidity Providers? (análisis original de la fórmula IL)",
+      "url": "https://pintail.medium.com/uniswap-a-good-deal-for-liquidity-providers-104c0b6816f2"
+    },
+    {
+      "name": "DefiLlama — Pools de liquidez y APRs en tiempo real",
+      "url": "https://defillama.com/yields"
+    },
+    {
+      "name": "ARCA (ex AFIP) — Normativa tributaria activos digitales",
       "url": "https://www.arca.gob.ar"
-    },
-    {
-      "name": "INDEC — Índices económicos",
-      "url": "https://www.indec.gob.ar"
     }
   ],
   "relatedSlugs": [
@@ -148,15 +145,14 @@
     "frequency": "yearly",
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "BCRA — Banco Central de la República Argentina",
-    "sourceUrl": "https://www.bcra.gob.ar"
+    "notes": "Fórmula matemática fija derivada del modelo AMM x*y=k; no requiere actualización de datos externos. Las consideraciones fiscales se revisan anualmente.",
+    "source": "Uniswap Protocol Documentation",
+    "sourceUrl": "https://docs.uniswap.org/concepts/protocol/fees"
   },
   "seoKeywords": [
     "calculadora impermanent loss 2026",
     "yield farming impermanent loss pool",
     "impermanent loss"
   ],
-  "noindex": true,
-  "lastReviewed": "2026-05-15"
+  "lastReviewed": "2026-06-04"
 }

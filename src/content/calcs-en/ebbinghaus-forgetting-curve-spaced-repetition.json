@@ -1,44 +1,50 @@
 {
   "slug": "ebbinghaus-forgetting-curve-spaced-repetition",
   "esSlug": "calculadora-curva-olvido-ebbinghaus-repasos-programados",
+  "lastReviewed": "2026-06-04",
   "title": "Ebbinghaus Forgetting Curve Calculator | Hacé Cuentas",
   "h1": "Ebbinghaus Forgetting Curve",
-  "description": "Calculate optimal review intervals using the Ebbinghaus forgetting curve: 1, 7, 30 days. Free spaced repetition scheduling tool.",
+  "description": "Calculate the Ebbinghaus forgetting curve exponent (t/S): enter days elapsed and memory stability to determine whether it's time to review — and estimate your current retention.",
   "category": "educacion",
   "icon": "🧠",
   "audience": "global",
   "formulaId": "curva-olvido-ebbinghaus-repasos-programados",
-  "intro": "The Ebbinghaus Forgetting Curve models how memory retention decays over time without reinforcement. Discovered by Hermann Ebbinghaus in 1885, the curve shows that humans forget roughly 50% of new information within 1 hour, 70% within 24 hours, and up to 90% within a week — unless spaced repetition is applied. The core retention formula is **R = e^(−t/S)**, where R is memory retention (0–1), t is elapsed time since learning, and S is the \"stability\" of the memory (how strongly it was encoded). This calculator helps learners, students, and educators determine when to schedule review sessions to maintain retention above a target threshold — the foundation of spaced repetition systems (SRS) like Anki, SuperMemo, and Duolingo.",
-  "keyTakeaway": "**R = e^(−t/S)** — Without review, retention drops to ~50% at 1 hour and ~10% at 1 week. Each successful review multiplies memory stability S by a factor of ~2.5×, so 4 reviews can extend retention from 1 day to over 3 weeks.",
+  "intro": "In 1885, Hermann Ebbinghaus became the first scientist to measure memory decay experimentally. His finding is uncomfortable: without reinforcement, the brain loses roughly 50% of new information within 1 hour, 70% within 24 hours, and more than 90% within a week. The forgetting curve is exponential and predictable.\n\nThe central formula is **R = e^(−t/S)**, where R is retention (0 to 1), t is days elapsed since the last study session, and S is **memory stability** in days. The ratio **t/S** is the **forgetting exponent**: the larger it is, the lower the retention. At t/S = 0 retention is 100%; at t/S = 0.22 retention has fallen to 80% (the standard review trigger); at t/S = 1 retention is only 37%.\n\nThis calculator computes that exponent directly. Enter how many days have passed since you last studied (t) and the current memory stability of that item (S). The result tells you how \"loaded\" the forgetting curve is and whether it's time to review. To get the exact retention percentage, apply **R = e^(−result)**.\n\nUseful for students, language learners, certification candidates (AWS, CFA, PMP), and anyone who wants to know whether a memory is still intact or already in the danger zone.",
+  "keyTakeaway": "The ratio t/S (days elapsed ÷ memory stability) is the exponent of the Ebbinghaus forgetting curve. If the result exceeds 0.22 (= −ln 0.80), retention has already dropped below 80% and it is time to review.",
   "useCases": [
-    "A medical student studying pharmacology who needs to retain 500+ drug names before a board exam and wants to schedule reviews only when retention drops below 85%.",
-    "A language learner using a spaced repetition system to maintain vocabulary in Spanish, scheduling each word's next review based on how well it was recalled last time.",
-    "A corporate trainer designing a 90-day onboarding program who needs to know how many review sessions employees require to retain compliance procedures above 80% retention.",
-    "A high school teacher building a semester-long review schedule for standardized test prep, spacing quizzes at optimal intervals so students retain material from September through May.",
-    "A pilot or military trainee who must maintain procedural memory for emergency protocols, calculating re-training intervals to stay above regulatory minimum retention thresholds."
+    "A medical student reviewed a pharmacology fact three times, reaching memory stability S = 15 days. She wants to know if she can wait another 10 days. She enters t = 10, S = 15; the result is 0.67, implying R = e^(−0.67) ≈ 51%. She should review sooner than 10 days.",
+    "An AWS Solutions Architect candidate studied a new service concept today for the first time (active flashcard review), establishing S = 2 days. She enters t = 1, S = 2; the result is 0.50, implying R ≈ 61%. Tomorrow morning is the ideal first review, not in 3 days.",
+    "A language learner wants to know when vocabulary from today's lesson (S = 1, passive reading) will drop below 80% retention. She calculates: t = S × 0.22 = 1 × 0.22 ≈ 5 hours. She schedules a quick review before bedtime.",
+    "A high school teacher checks how much students retain from a lesson taught 14 days ago without any review (S = 1). She enters t = 14, S = 1; the result is 14.0, implying R ≈ 0%. She plans to restart that unit from scratch."
   ],
   "fields": [
     {
       "id": "v1",
-      "label": "Input 1",
+      "label": "Days elapsed since last study session (t)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "e.g. 3",
+      "unit": "days",
+      "min": 0,
+      "max": 3650,
+      "step": 0.5
     },
     {
       "id": "v2",
-      "label": "Input 2",
+      "label": "Current memory stability (S)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "e.g. 7",
+      "unit": "days",
+      "min": 0.1,
+      "max": 3650,
+      "step": 0.5
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Result",
+      "label": "Forgetting exponent (t ÷ S)",
       "primary": true
     },
     {
@@ -47,14 +53,86 @@
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Example: English vocabulary after 2 reviews",
     "steps": [
-      "Example",
-      "Result"
+      "You learned 30 new words 5 days ago. After two successful reviews, your memory stability S has reached 10 days. What is the current forgetting exponent?",
+      "Exponent t/S = 5 ÷ 10 = 0.50. Estimated retention: R = e^(−0.50) ≈ 61%. You are already below the 80% threshold (reached at t/S = 0.22). Time to review."
     ],
-    "result": "Result"
+    "result": "0.50"
   },
-  "explanation": "## How It's Calculated\n\nThe Ebbinghaus Forgetting Curve uses an exponential decay function to model memory retention over time:\n\n```\nR = e^(−t / S)\n\nWhere:\n  R = Retention rate (0.0 to 1.0, i.e., 0% to 100%)\n  t = Time elapsed since learning (in days)\n  S = Memory stability — the \"strength\" of the memory trace\n      (S = 1 for a brand-new memory; increases with each review)\n  e = Euler's number (≈ 2.71828)\n```\n\n**To find the next review time** given a target retention threshold (e.g., 80%):\n\n```\nt_next = −S × ln(R_target)\n\nExample: S = 1, R_target = 0.80\nt_next = −1 × ln(0.80) = −1 × (−0.2231) ≈ 0.22 days ≈ 5.3 hours\n```\n\n**After each successful review**, memory stability S increases multiplicatively. Using the SuperMemo SM-2 approximation:\n\n```\nS_new = S_old × 2.5   (for a perfect recall response)\nS_new = S_old × 1.5   (for a hesitant but correct recall)\nS_new = S_old × 0.5   (for a failed recall — memory resets partially)\n```\n\n---\n\n## Reference Table\n\nThe table below shows **retention % by day** for a new memory (S = 1) and the effect of cumulative reviews (each multiplying S by 2.5×):\n\n| Day | No Review (S=1) | After 1 Review (S=2.5) | After 2 Reviews (S=6.25) | After 3 Reviews (S=15.6) | After 4 Reviews (S=39) |\n|-----|-----------------|------------------------|--------------------------|--------------------------|------------------------|\n| 0   | 100%            | 100%                   | 100%                     | 100%                     | 100%                   |\n| 1   | 37%             | 67%                    | 85%                      | 94%                      | 97%                    |\n| 3   | 5%              | 30%                    | 62%                      | 83%                      | 93%                    |\n| 7   | 0.1%            | 6%                     | 33%                      | 64%                      | 84%                    |\n| 14  | ~0%             | 0.4%                   | 11%                      | 41%                      | 70%                    |\n| 30  | ~0%             | ~0%                    | 0.8%                     | 14%                      | 46%                    |\n| 60  | ~0%             | ~0%                    | ~0%                      | 2%                       | 21%                    |\n\n*Retention % = R × 100 = e^(−t/S) × 100*\n\n---\n\n## Typical Cases\n\n### Case 1: Vocabulary Word — First Encounter\nA student learns the Spanish word *\"efímero\"* for the first time. Initial stability S = 1.\n- After **20 minutes**: R = e^(−0.014/1) ≈ 98.6% ✅\n- After **1 hour**: R = e^(−0.042/1) ≈ 95.9%\n- After **1 day**: R = e^(−1/1) ≈ 36.8% ⚠️ — Review needed!\n- **Next review scheduled at**: t = −1 × ln(0.80) ≈ **0.22 days (5.3 hours)**\n\n### Case 2: After 2 Reviews (S = 6.25)\nSame word, now reviewed twice successfully. S = 6.25.\n- After **7 days**: R = e^(−7/6.25) ≈ 32.6% ⚠️\n- After **3 days**: R = e^(−3/6.25) ≈ 61.9%\n- **Target 80% review trigger at**: t = −6.25 × ln(0.80) ≈ **1.4 days**\n\n### Case 3: Medical Board Exam Prep (S = 15.6, after 3 reviews)\nA student reviewed a pharmacology fact 3 times. S ≈ 15.6.\n- **80% retention lasts**: t = −15.6 × ln(0.80) ≈ **3.5 days**\n- **90% retention lasts**: t = −15.6 × ln(0.90) ≈ **1.65 days**\n- After **one week (7 days)**: R = e^(−7/15.6) ≈ **64%** — still above passing threshold for most licensing exams\n\n---\n\n## Common Mistakes\n\n1. **Treating all material as equally stable (S = 1 always)**: Memory stability S is not fixed — it grows with each review. Scheduling every review at 24-hour intervals ignores the compounding effect and causes unnecessary over-reviewing of well-known material.\n\n2. **Ignoring the encoding quality at first learning**: Ebbinghaus showed that deeper initial encoding (more repetitions at first exposure, active recall vs. passive reading) produces a higher initial S. Passive highlighting gives S ≈ 0.5–0.8, while active testing gives S ≈ 1.5–2.0 from day one.\n\n3. **Confusing retention rate with recall success probability**: R = 0.70 means the memory trace retains 70% of its strength — it does NOT mean you have a 70% chance of answering a flashcard correctly. Actual recall also depends on retrieval cues, context, and interference from similar memories.\n\n4. **Assuming the forgetting curve is the same for all memory types**: Ebbinghaus's original experiments used nonsense syllables. Meaningful content (stories, concepts, emotional memories) has significantly higher stability — real-world S values for meaningful material can be 2–5× higher than for arbitrary facts.\n\n5. **Skipping failed-recall penalties**: When a review results in failed recall, many learners simply re-read and move on. However, SRS algorithms require resetting S (multiplying by 0.5 or lower) and rescheduling for the very next day, or the forgetting curve resets to near-zero.\n\n6. **Not accounting for the spacing effect at the first review**: Research consistently shows the first review should happen within 24 hours of learning — ideally at the 5–10 hour mark. Waiting 3 days for the first review after a new item can drop retention below 10% (S=1), making the review nearly as hard as relearning from scratch.\n\n---\n\n## Related Calculators\n\nSince no related slugs were provided, explore other learning and productivity tools on [Hacé Cuentas](/) to complement your spaced repetition planning.\n",
+  "explanation": "## How It's Calculated\n\nThe Ebbinghaus Forgetting Curve models memory retention as an exponential decay:\n\n```\nR(t) = e^(−t / S)\n```\n\nWhere:\n- **R** = current retention (0 to 1; multiply × 100 for a percentage)\n- **t** = days elapsed since the last study session or review\n- **S** = memory stability in days (how many days before retention decays to 1/e ≈ 37%)\n- **e** = Euler's number ≈ 2.71828\n\nThis calculator computes the **exponent** t/S. Once you have the exponent, apply R = e^(−exponent) to find the current retention.\n\n## What Is Memory Stability S?\n\nS is the key parameter that grows with each successful review. Reference values:\n\n| Situation | Estimated S |\n|---|---|\n| First passive exposure (reading) | 0.5 – 1 day |\n| First active recall (flashcards, practice test) | 1.5 – 2 days |\n| After 1st successful review | 3 – 5 days |\n| After 2nd successful review | 7 – 12 days |\n| After 3rd successful review | 15 – 25 days |\n| After 4th successful review | 35 – 60 days |\n| After 5th successful review | 90 – 150 days |\n\nEach successful review multiplies S by approximately 2.5× (SuperMemo SM-2 algorithm). Anki uses the FSRS algorithm (2022) which adjusts that multiplier per item based on your actual recall responses.\n\n## Reference Table: Exponent → Retention\n\n| Exponent t/S | Retention R | Status |\n|---|---|---|\n| 0.00 | 100% | Just studied |\n| 0.11 | 90% | Excellent |\n| 0.22 | 80% | Recommended review threshold |\n| 0.36 | 70% | Review soon |\n| 0.51 | 60% | Urgent review |\n| 1.00 | 37% | Critical zone |\n| 2.00 | 14% | Nearly forgotten |\n| 3.00 | 5% | Almost the same as relearning from scratch |\n\n## How to Use the Result to Plan Reviews\n\nTo schedule a review at exactly X% retention, solve for t:\n\n```\nt_review = S × (−ln(X))\n\nExample for 80% retention:\nt_review = S × 0.2231\n\nExample for 90% retention:\nt_review = S × 0.1054\n```\n\nThis gives you the exact number of days from the last review until the next one.\n\n## Common Mistakes\n\n1. **Using S = 1 always**: S grows with each review. After 3 reviews S can be 15–25 days; scheduling every 24 hours is unnecessary and counterproductive.\n2. **Passive review (re-reading) instead of active recall**: Active recall (flashcards, questions, practice problems) produces a higher S than passive rereading.\n3. **Skipping a review without resetting S**: If you go past double the scheduled interval without reviewing, the effective S has dropped. Treat that material nearly as new.\n4. **Cramming large batches in a single session**: Working memory is limited (~7 items without chunking). Reviewing 200 items in one session is less effective than 4 sessions of 50 items each.",
+  "faq": [
+    {
+      "q": "What exactly is the Ebbinghaus Forgetting Curve?",
+      "a": "It is a mathematical function describing how memory retention decays over time without reinforcement. Ebbinghaus formulated it as <strong>R = e^(−t/S)</strong>, where R is retention (0 to 1), t is time elapsed, and S is the 'stability' of the memory. The key finding: without review, retention falls to 37% after just 1 day (when S = 1), and to under 5% after 3 days. Ebbinghaus documented this using nonsense syllables; meaningful content decays more slowly (higher initial S), but the exponential shape still holds."
+    },
+    {
+      "q": "What does this calculator actually compute?",
+      "a": "It computes the <strong>forgetting exponent t ÷ S</strong> — the number that goes into the Ebbinghaus formula R = e^(−t/S). Once you have the exponent, the retention is R = e^(−exponent). If the result exceeds 0.22 (= −ln 0.80), retention has already dropped below 80% and a review is overdue. If it exceeds 1.0, retention is below 37% — the material is nearly forgotten."
+    },
+    {
+      "q": "How do I estimate my memory stability S?",
+      "a": "For a first passive exposure (reading once), S ≈ 0.5–1 day. For a first active recall exposure (flashcard, practice test), S ≈ 1.5–2 days. After each successful review, multiply S by approximately 2.5: after the 1st review S ≈ 3–5 days; after the 2nd ≈ 7–12 days; after the 3rd ≈ 15–25 days. If you use Anki, you can see each card's current stability in the card info panel."
+    },
+    {
+      "q": "When should I schedule my first review after learning something?",
+      "a": "For a first learning session with S = 1, the review at 80% retention should happen at t = S × 0.22 = 0.22 days ≈ <strong>5–6 hours</strong> after initial study. At 24 hours, retention has already fallen to ~37%. In practice, the first review is best done the same evening or the next morning — never skipped for 3 or more days if the material is new."
+    },
+    {
+      "q": "What happens if I miss a scheduled review?",
+      "a": "It depends on how much time passed. If you miss the Day 3 review and do it on Day 5, retention has fallen further but the review is still beneficial — just proceed from that point. If you went past double the scheduled interval (e.g., should have reviewed on Day 7 with S = 7, but reviewed on Day 20), the exponent t/S ≈ 2.86 implies under 6% retention. Treat the material as essentially new and reset S."
+    },
+    {
+      "q": "Is spaced repetition backed by science?",
+      "a": "Yes, by a century of research. Ebbinghaus's original 1885 experiments have been replicated many times. Cepeda et al. (2006, Psychological Bulletin) meta-analyzed 254 studies confirming that spaced practice consistently outperforms massed practice. Piotr Wozniak's 2008 analysis of millions of SuperMemo reviews confirmed the exponential decay model in real-world conditions. Robert Bjork at UCLA documented the 'desirable difficulty' mechanism explaining why spaced retrieval outperforms rereading."
+    },
+    {
+      "q": "What retention threshold should I target for scheduling reviews?",
+      "a": "Most spaced repetition systems (Anki, SuperMemo) default to an <strong>80–90% retention target</strong>, meaning you review just before the memory decays to 80–90%. Targeting higher (95%) means more reviews but less forgetting per session; targeting lower (70%) means fewer reviews but stronger retrieval effort, which can actually reinforce learning — the 'desirable difficulty' effect (Bjork, UCLA). For high-stakes material (exams, safety procedures) stick to 85–90%."
+    },
+    {
+      "q": "How many reviews does it take to remember something for a year?",
+      "a": "Using S × 2.5 per review, starting at S = 1: Review 1 → S = 2.5, Review 2 → S = 6.25, Review 3 → S = 15.6, Review 4 → S = 39, Review 5 → S = 97.5, Review 6 → S = 244, Review 7 → S = 610 days. <strong>About 7 well-spaced reviews</strong> are enough to maintain 80% retention for a full year. The total time investment is far less than re-reading or cramming."
+    },
+    {
+      "q": "Does sleep affect the forgetting curve?",
+      "a": "Yes, significantly. During slow-wave and REM sleep the hippocampus transfers memories to the cortex, effectively increasing S. Walker et al. (UC Berkeley) found sleeping within 12 hours of learning can boost next-day retention by 20–40%. Practically: review briefly before sleep, then test yourself after waking. Skimping on sleep the night after a study session noticeably increases the forgetting rate — the equivalent of a lower S for the material learned that day."
+    },
+    {
+      "q": "Can I use the forgetting curve formula for physical skills, not just facts?",
+      "a": "Yes, but procedural (motor) memories decay much more slowly than declarative (factual) ones. A well-practiced physical skill can have S in the hundreds or thousands of days. However, precision skills (surgical procedures, emergency protocols, instrument flying) do show measurable decay and benefit from periodic spaced practice. The FAA mandates instrument proficiency checks every 6 months for pilots (14 CFR § 61.57) — a real-world acknowledgment of procedural memory decay."
+    },
+    {
+      "q": "What apps implement spaced repetition automatically?",
+      "a": "<strong>Anki</strong> is the most recommended free option (desktop/Android free; iOS paid). It uses the FSRS algorithm (2022), the most evidence-based implementation available. <strong>SuperMemo</strong> (Piotr Wozniak, 1987) is the original system. <strong>Quizlet</strong> offers spaced repetition with some limitations on the free tier. <strong>RemNote</strong> and <strong>Mochi Cards</strong> are solid alternatives. The advantage of this calculator is that it works without loading individual cards — useful for planning whole study blocks or material not easily converted to flashcard format."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Wikipedia – Forgetting Curve (Ebbinghaus, 1885)",
+      "url": "https://en.wikipedia.org/wiki/Forgetting_curve"
+    },
+    {
+      "name": "Wikipedia – Spaced Repetition",
+      "url": "https://en.wikipedia.org/wiki/Spaced_repetition"
+    },
+    {
+      "name": "SuperMemo – SM-2 Algorithm (Piotr Wozniak, 1987)",
+      "url": "https://www.supermemo.com/en/blog/application-of-a-computer-to-improve-the-results-obtained-in-working-with-the-supermemorization-program"
+    },
+    {
+      "name": "Anki – FSRS open-source algorithm (2022)",
+      "url": "https://github.com/open-spaced-repetition/fsrs4anki"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-06-04",
+    "updateType": "manual",
+    "notes": "Fixed mathematical formula based on Ebbinghaus (1885) model; no external data updates required."
+  },
+  "relatedSlugs": [],
+  "noindex": false,
   "seoKeywords": [
     "spaced repetition",
     "Ebbinghaus forgetting curve",
@@ -70,65 +148,5 @@
     "study optimization",
     "memory techniques",
     "effective studying"
-  ],
-  "faq": [
-    {
-      "q": "What is the Ebbinghaus Forgetting Curve formula?",
-      "a": "The formula is **R = e^(−t/S)**, where R is retention (0–1), t is time elapsed in days since learning, S is memory stability, and e is Euler's number (~2.71828). For a brand-new memory with S = 1, retention drops to 37% after just 1 day and below 5% after 3 days without any review."
-    },
-    {
-      "q": "How does spaced repetition counteract the forgetting curve?",
-      "a": "Each successful review multiplies memory stability S by approximately 2.5× (per the SuperMemo SM-2 algorithm). After 4 reviews, S ≈ 39, meaning 80% retention now lasts ~8.7 days instead of just 5 hours. This exponential growth in stability is why reviewing 4 times can make a memory last months rather than days."
-    },
-    {
-      "q": "When should I schedule my first review after learning something new?",
-      "a": "Research based on Ebbinghaus's original 1885 experiments and modern replications (Cepeda et al., 2006, Psychological Bulletin) shows the optimal first review occurs when retention has dropped to around 80–90% — typically **5–10 hours after initial learning** for a new memory. Waiting a full 24 hours allows retention to fall below 40%, making the review nearly equivalent to relearning."
-    },
-    {
-      "q": "What is 'memory stability' (S) and how do I estimate it?",
-      "a": "Memory stability S represents how long (in days) a memory naturally persists before decaying to 37% retention (1/e ≈ 36.8%). S = 1 for a first-time, passively read item; S ≈ 1.5–2.0 for a first-time actively recalled item (tested via flashcard or practice problem). Each subsequent perfect recall review multiplies S by ~2.5. So after 3 perfect reviews: S = 1 × 2.5 × 2.5 × 2.5 = 15.6 days."
-    },
-    {
-      "q": "Is the forgetting curve the same for everyone?",
-      "a": "No. Ebbinghaus's original data came from self-experiments with nonsense syllables under controlled conditions. Individual forgetting rates vary based on age (older learners may have lower initial stability), sleep quality (sleep consolidates memories, effectively increasing S), stress levels, and the meaningfulness of the material. Emotional or highly contextualized memories can have S values 3–10× higher than abstract facts."
-    },
-    {
-      "q": "What retention percentage should I target for triggering a review?",
-      "a": "Most spaced repetition systems (Anki, SuperMemo) default to an **85–90% retention target**, meaning you review just before the memory decays to 85%. Targeting higher (95%) results in more reviews with less forgetting; targeting lower (70%) means fewer reviews but more retrieval difficulty — which can actually strengthen memories more (the 'desirable difficulty' effect documented by Robert Bjork, UCLA)."
-    },
-    {
-      "q": "How many total reviews does it take to remember something for 1 year?",
-      "a": "Using S doubling from ~2.5× per review starting at S = 1: Review 1 → S = 2.5 (next review in ~2 days), Review 2 → S = 6.25 (~5 days), Review 3 → S = 15.6 (~11 days), Review 4 → S = 39 (~28 days), Review 5 → S = 97.5 (~70 days), Review 6 → S = 244 (~178 days), Review 7 → S = 610 (>1 year). **Approximately 7 well-timed reviews** are sufficient to maintain 80% retention for a full year."
-    },
-    {
-      "q": "Does sleep affect the forgetting curve?",
-      "a": "Yes, significantly. The NIH's National Institute of Neurological Disorders and Stroke confirms that sleep — especially slow-wave and REM sleep — is critical for memory consolidation. Studies show that sleeping within 12 hours of learning can increase effective memory stability S by 20–40%, essentially giving a free bonus review. Reviewing material before sleep and testing yourself after waking is one of the most evidence-backed study strategies."
-    },
-    {
-      "q": "Can the forgetting curve apply to physical skills, not just facts?",
-      "a": "Yes, though procedural (motor) memories decay much more slowly than declarative (factual) memories. A skill like typing or riding a bike can have an effective S of hundreds to thousands of days after sufficient practice. However, precision skills (surgical procedures, musical performance, emergency protocols) do show measurable decay and benefit from periodic spaced practice — which is why the FAA mandates recurrent pilot training at fixed intervals (e.g., instrument proficiency checks every 6 months per 14 CFR § 61.57)."
-    }
-  ],
-  "sources": [
-    {
-      "name": "Wikipedia – Forgetting Curve (Hermann Ebbinghaus, 1885)",
-      "url": "https://en.wikipedia.org/wiki/Forgetting_curve"
-    },
-    {
-      "name": "NIH – National Institute of Neurological Disorders and Stroke: Brain Basics – Understanding Sleep",
-      "url": "https://www.ninds.nih.gov/health-information/public-education/brain-basics/brain-basics-understanding-sleep"
-    },
-    {
-      "name": "Wikipedia – Spaced Repetition",
-      "url": "https://en.wikipedia.org/wiki/Spaced_repetition"
-    }
-  ],
-  "dataUpdate": {
-    "frequency": "never",
-    "lastUpdated": "2026-04-19",
-    "updateType": "manual",
-    "notes": "Fixed formula, does not require external data updates"
-  },
-  "relatedSlugs": [],
-  "noindex": false
+  ]
 }

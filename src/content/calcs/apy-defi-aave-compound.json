@@ -1,62 +1,68 @@
 {
   "slug": "calculadora-apy-defi-aave-compound",
-  "lastReviewed": "2026-05-19",
+  "lastReviewed": "2026-06-04",
   "title": "Calculadora APY DeFi Aave/Compound 2026 — Gratis",
   "h1": "APY DeFi Aave/Compound",
-  "description": "💰 Calculá aPY DeFi Aave/Compound según monto USD a prestar, aPY % y plazo días. Obtené ganancia en plazo al instante. Gratis, sin registro.",
+  "description": "Calculá cuánto ganás prestando stablecoins o cripto en Aave v3 o Compound. Ingresá capital en USD, APY y días: obtenés ganancia y valor final al instante.",
   "category": "finanzas",
   "audience": "AR",
   "icon": "💰",
   "formulaId": "apy-defi-aave-compound",
-  "intro": "En finanzas personales las decisiones se mejoran cuando los números están claros. Esta calculadora te da el cálculo de APY DeFi Aave/Compound según monto usd a prestar, APY % y plazo días. Devuelve ganancia en plazo junto con contexto para interpretar el valor. El cálculo corre en tu navegador: no guardamos tus datos, no requiere registro y es gratis. Los valores de referencia se revisan periódicamente contra las fuentes oficiales citadas al pie.",
-  "keyTakeaway": "Ingresá monto usd a prestar, APY % y plazo días y obtené ganancia en plazo al instante, con fórmula estándar del tema y referencias al pie. Resultado orientativo — para decisiones importantes consultá con un profesional.",
+  "intro": "Aave v3 y Compound son los dos protocolos de lending DeFi más usados: prestás stablecoins (USDC, USDT, DAI) o cripto (ETH, WBTC) y cobrás interés automáticamente, sin intermediarios. Esta calculadora estima cuánto ganás en un plazo dado, usando el APY supply actual del protocolo. El cálculo es orientativo —el APY fluctúa cada bloque según oferta y demanda— pero te da un número concreto para comparar opciones antes de depositar. Todo corre en tu navegador: no guardamos ningún dato.",
+  "keyTakeaway": "Con USD 5.000 al 4,5% APY durante 90 días ganás USD 55,48 en intereses —equivalente a un 1,11% sobre el capital en ese período. Si el APY sube o baja, el retorno cambia proporcionalmente. Chequeá el APY en tiempo real en app.aave.com antes de depositar.",
   "useCases": [
-    "Resolver rápido una duda sobre APY DeFi Aave/Compound sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Comparar el rendimiento de prestar USDC en Aave v3 Mainnet vs. Arbitrum para el mismo capital y plazo.",
+    "Estimar si el yield de 30 días cubre las gas fees de entrada y salida en Ethereum mainnet.",
+    "Calcular cuántos días necesitás para generar USD 100 de interés con tu capital disponible.",
+    "Decidir si conviene migrar liquidez de una CEX (Binance Earn, Coinbase) a DeFi con los APY actuales."
   ],
   "fields": [
     {
       "id": "montoUsd",
-      "label": "Monto USD a prestar",
+      "label": "Capital a depositar (USD)",
       "type": "number",
       "required": true,
-      "placeholder": "1000",
-      "default": 1000,
-      "step": 0.01,
-      "help": "Valor del depósito en USD (equivalente al supply). Tip: para <$5.000 USD operá en L2 (Arbitrum/Base/Optimism) — gas en mainnet se come el yield."
+      "placeholder": "5000",
+      "default": 5000,
+      "min": 1,
+      "max": 10000000,
+      "step": 1,
+      "help": "Monto en USD que vas a depositar como supply en Aave/Compound. Para montos menores a USD 1.000 en Ethereum mainnet, las gas fees pueden superar el yield: considerá Arbitrum, Base u Optimism donde el gas es mínimo."
     },
     {
       "id": "apy",
-      "label": "APY %",
+      "label": "APY supply (%)",
       "type": "number",
       "required": true,
-      "placeholder": "6",
-      "default": 6,
+      "placeholder": "4.5",
+      "default": 4.5,
+      "min": 0.01,
+      "max": 200,
       "step": 0.01,
-      "help": "APY supply actual. Rangos típicos Aave v3: USDC/USDT 3-6%, DAI 2-5%, ETH 1-3%, WBTC 0.5-2%. Chequealo en app.aave.com/markets antes de calcular."
+      "help": "APY supply actual del protocolo para el activo elegido. Rangos típicos en Aave v3 (junio 2026): USDC/USDT 3–7%, DAI 2–5%, ETH 1–3%, WBTC 0,5–2%. Si el APY supera el 20%, verificá que no sea un incentivo temporal o que no exista riesgo de impermanent loss. Chequeá en app.aave.com/markets o compound.finance."
     },
     {
       "id": "plazoDias",
-      "label": "Plazo días",
+      "label": "Plazo (días)",
       "type": "number",
       "required": true,
-      "placeholder": "365",
-      "default": 365,
-      "step": 0.01,
-      "help": "Cuántos días vas a dejar el capital depositado. 30/90/365 son los más usados para comparar."
+      "placeholder": "90",
+      "default": 90,
+      "min": 1,
+      "max": 3650,
+      "step": 1,
+      "help": "Cantidad de días que vas a mantener el depósito. Podés retirar en cualquier momento (no hay lockup en Aave/Compound salvo que el pool esté al 100% de utilización). Valores de referencia: 30 días (1 mes), 90 días (1 trimestre), 365 días (1 año)."
     }
   ],
   "outputs": [
     {
       "id": "ganancia",
-      "label": "Ganancia en plazo",
+      "label": "Ganancia en el plazo",
       "primary": true
     },
     {
       "id": "valorFinal",
-      "label": "Valor final"
+      "label": "Valor final (capital + interés)"
     },
     {
       "id": "interpretacion",
@@ -64,60 +70,75 @@
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: USD 5.000 en USDC a 4,5% APY por 90 días",
     "steps": [
-      "USD 1000 al 6% 365d",
-      "USD 60"
+      "Capital: USD 5.000",
+      "APY supply USDC: 4,5%",
+      "Plazo: 90 días",
+      "Ganancia = 5.000 × (4,5 ÷ 100) × (90 ÷ 365) = 5.000 × 0,045 × 0,24657 = USD 55,48",
+      "Valor final = 5.000 + 55,48 = USD 5.055,48"
     ],
-    "result": "Final USD 1060"
+    "result": "Ganancia: USD 55,48 — Valor final: USD 5.055,48"
   },
-  "explanation": "Las **finanzas personales e inversión** usan principios matemáticos universales (interés compuesto, valor tiempo del dinero, optimización riesgo-retorno). Esta calculadora aplica fórmulas estándar de la industria financiera.\n\n## Cómo se calcula\n\nRendimiento estimado de prestar stablecoins en DeFi.\n\nEsta calculadora aplica la fórmula con los valores que ingreses, verificando rangos típicos y alertando ante valores fuera de lo razonable.\n\n## Benchmarks típicos por plazo\n\n| Plazo | S&P 500 | Bonos 10y | Cash |\n|---|---|---|---|\n| 1 año | Muy variable | 4-5% | 3-5% |\n| 5 años | ~8% prom | ~4% | Inflación |\n| 10 años | ~9-10% | ~4% | <inflación |\n| 20+ años | ~10% nominal | ~5% | N/A |\n\n## Principios de inversión\n\n- **No tocar el plan** durante crisis. La emoción es el peor consejero.\n- **Diversificar**: no concentrar en un solo activo/sector/país.\n- **Costos bajos**: TER >1% anual te come 30% del retorno en 30 años.\n- **Horizonte largo**: renta variable funciona en 10+ años, no en 1 año.\n- **Rebalanceo**: una vez al año, no más.\n\n## Notas finales\n\nEste cálculo es una referencia orientativa. Para decisiones críticas (financieras, médicas, legales), consultá con un profesional especializado. Los valores están actualizados a 2026 y se revisan periódicamente.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n\n\n## Tabla de referencia — APY supply típicos en Aave v3 (abril 2026)\n\n| Asset | Mainnet APY | Arbitrum APY | Utilización típica |\n|---|---|---|---|\n| USDC | 3,2 – 5,5 % | 4,1 – 6,8 % | 70 – 85 % |\n| USDT | 3,0 – 5,0 % | 3,8 – 6,2 % | 75 – 88 % |\n| DAI | 2,5 – 4,5 % | 3,0 – 5,5 % | 60 – 75 % |\n| ETH | 1,2 – 2,8 % | 1,8 – 3,5 % | 40 – 60 % |\n| WBTC | 0,4 – 1,5 % | 0,6 – 2,0 % | 30 – 45 % |\n\nEl APY de Aave es variable: sube con mayor utilización del pool. Consultá valores en tiempo real en [app.aave.com/markets](https://app.aave.com/markets).",
+  "explanation": "## Cómo se calcula\n\nEsta calculadora aplica **interés simple anualizado**, que es la forma estándar de extrapolar un APY a un plazo menor a un año:\n\n```\nGanancia = Capital × (APY / 100) × (Días / 365)\nValor final = Capital + Ganancia\n```\n\nEn la práctica, Aave y Compound acumulan interés **por bloque** (aproximadamente cada 12 segundos en Ethereum). El efecto de compounding es real pero pequeño en plazos menores a 90 días cuando el APY es de un dígito: la diferencia entre interés simple y compuesto para un 5% APY a 90 días es de apenas USD 0,19 por cada USD 1.000 depositados. Para plazos de 1 año o más la diferencia se vuelve apreciable.\n\n## APY supply típicos en Aave v3 (referencia junio 2026)\n\n| Activo | Ethereum Mainnet | Arbitrum | Base |\n|--------|-----------------|----------|------|\n| USDC | 3,5 – 6,5 % | 4,0 – 7,0 % | 3,8 – 6,8 % |\n| USDT | 3,0 – 6,0 % | 3,5 – 6,5 % | 3,2 – 6,2 % |\n| DAI | 2,5 – 5,0 % | 3,0 – 5,5 % | 2,8 – 5,2 % |\n| ETH | 1,0 – 3,0 % | 1,5 – 3,5 % | 1,2 – 3,2 % |\n| WBTC | 0,3 – 1,5 % | 0,5 – 2,0 % | — |\n\nEl APY varía continuamente: sube cuando la utilización del pool aumenta (más pedidos de préstamo) y baja cuando hay exceso de liquidez. Antes de depositar, verificá el valor en tiempo real en [app.aave.com/markets](https://app.aave.com/markets).\n\n## Gas fees y rentabilidad real\n\nEn Ethereum mainnet, depositar y retirar puede costar USD 10–80 por transacción (dependiendo del gas). Para que la operación sea rentable:\n\n- **30 días con 5% APY**: necesitás al menos USD 5.000 para cubrir USD 20 de gas round-trip.\n- **En L2 (Arbitrum/Base)**: el gas es menor a USD 0,10 por tx; cualquier monto es viable.\n\n## Riesgos a considerar\n\n- **Smart contract risk**: aunque Aave tiene auditorías y bug bounties, un exploit puede drenar los pools.\n- **Riesgo de liquidez**: si el pool supera el 100% de utilización, no podés retirar de inmediato hasta que se devuelvan préstamos.\n- **APY variable**: el rendimiento que calculás hoy puede ser muy diferente en 30 días.\n- **Riesgo de oráculo**: ataques de manipulación de precios pueden afectar la valorización de colaterales.\n\n**Disclaimer:** Este cálculo es orientativo y no constituye asesoramiento financiero. DeFi implica riesgos técnicos y de mercado significativos. Para decisiones de inversión relevantes, consultá con un asesor financiero registrado ante la CNV.",
   "faq": [
     {
-      "q": "¿Qué es DeFi lending?",
-      "a": "Prestás cripto (USDC, USDT, DAI) en protocolos automáticos y cobrás interés."
+      "q": "¿Por qué la calculadora usa interés simple y no compuesto si Aave acumula por bloque?",
+      "a": "Aave y Compound sí componen el interés por bloque, pero la diferencia vs. interés simple es mínima para plazos cortos con APY de un dígito. Ejemplo: USD 5.000 al 5% durante 90 días → interés simple: USD 61,64; interés compuesto diario: USD 61,88. La diferencia es USD 0,24. Para plazos de 1 año o APY superiores al 15%, la brecha crece y conviene usar la fórmula compuesta."
     },
     {
-      "q": "¿Riesgos?",
-      "a": "Smart contract bug, despegue stablecoin, hack del protocolo."
+      "q": "¿Cuál es la diferencia entre Aave v3 y Compound?",
+      "a": "Aave v3 (lanzado en 2022) opera en múltiples chains (Ethereum, Arbitrum, Base, Optimism, Polygon, Avalanche) y permite eficiencia de capital cross-chain. Compound (v3, también llamado Comet) es más simple: solo permite USDC como activo base en sus mercados principales. Aave suele tener más liquidez y más mercados disponibles. Ambos son auditados y tienen track record de años sin hacks al protocolo principal."
     },
     {
-      "q": "¿Aave vs Compound?",
-      "a": "Aave tiene más mercados/chains. Compound más antigo y simple."
+      "q": "¿El APY que veo en app.aave.com incluye los incentivos en tokens?",
+      "a": "Depende del pool. En Aave v3, algunos mercados tienen incentivos adicionales en tokens (como ARB en Arbitrum o OP en Optimism), que se muestran separados del APY base. La calculadora debe usarse con el APY base (en stablecoins), no el APY total con incentivos en tokens, que son más volátiles y pueden dejar de emitirse."
     },
     {
-      "q": "¿Variable?",
-      "a": "Sí, APY fluctúa según oferta/demanda cada bloque."
+      "q": "¿Puedo retirar mis fondos en cualquier momento?",
+      "a": "Sí, en condiciones normales. Aave y Compound no tienen lockup: retirás cuando querés. La única restricción es cuando la utilización del pool llega al 100% (todo el depósito está prestado): en ese caso, el retiro espera hasta que los deudores devuelvan fondos. Esto es raro pero ocurrió durante períodos de alta demanda de DAI en 2022."
     },
     {
-      "q": "¿Comisiones?",
-      "a": "Gas fees ETH (mainnet caro), L2 más barato (Arbitrum, Optimism)."
+      "q": "¿Qué stablecoin conviene depositar: USDC, USDT o DAI?",
+      "a": "Depende del riesgo que aceptás. USDC (Circle) y USDT (Tether) son las de mayor liquidez; USDC tiene respaldo auditado más transparente. DAI (MakerDAO, ahora rebrandeada como USDS) es descentralizada pero con colateral mixto. En términos de APY, las diferencias suelen ser pequeñas (0,5–1 punto). Diversificar entre USDC y USDT es la práctica más común para reducir riesgo de contraparte."
     },
     {
-      "q": "¿Impuesto?",
-      "a": "Intereses en USDC se convierten a USD gravados."
+      "q": "¿Cuánto cuesta en gas depositar en Aave en Ethereum mainnet?",
+      "a": "En Ethereum mainnet, una transacción de supply en Aave cuesta entre USD 8 y USD 60 dependiendo del precio del gas. El retiro cuesta otro monto similar. En Arbitrum o Base, el mismo depósito cuesta menos de USD 0,10. Si tu capital es menor a USD 2.000 y pensás en plazos de 30–60 días, las L2 son mucho más eficientes."
     },
     {
-      "q": "¿Principiantes?",
-      "a": "Mejor usar Binance Earn, Nexo, o exchanges antes de ir a DeFi puro."
+      "q": "¿El rendimiento en DeFi se declara como ingreso en Argentina?",
+      "a": "Sí. Los intereses generados por prestar activos en protocolos DeFi son considerados renta de fuente extranjera por la AFIP/ARCA y están alcanzados por el Impuesto a las Ganancias. La alícuota varía según el régimen (persona humana: escala progresiva o la alícuota fija según reforma vigente). Además, si el activo se liquida en USD o pesos, puede haber implicancias cambiarias. Consultá con un contador especializado en cripto antes de declarar."
     },
     {
-      "q": "¿Qué retorno esperar del mercado?",
-      "a": "S&P 500 histórico: ~10% nominal anual (7% real ajustado por inflación). Pasado no predice futuro pero es referencia."
+      "q": "¿Qué pasa si el APY cae después de que deposité?",
+      "a": "El cálculo de esta calculadora usa el APY actual como referencia fija para estimar. En la realidad, el APY de Aave varía cada bloque. Si depositás con un APY del 6% y en 15 días baja al 3%, tus ganancias acumuladas reflejan el promedio real de ese período. Para plazos largos (6–12 meses), asumir el APY promedio histórico del pool da una estimación más realista que el valor del momento."
+    },
+    {
+      "q": "¿Cuáles son los principales riesgos de prestar en Aave o Compound?",
+      "a": "Los riesgos principales son: (1) **Bug en el smart contract**: aunque auditados, un exploit puede drenar fondos. (2) **Riesgo de la stablecoin**: si USDC o USDT pierde el peg, el valor de tu depósito cae. (3) **Riesgo de oráculo**: manipulación de precios puede afectar liquidaciones. (4) **Riesgo regulatorio**: restricciones a protocolos DeFi en algunas jurisdicciones. Aave y Compound tienen seguros disponibles en Nexus Mutual o InsurAce para cubrir parcialmente el riesgo de smart contract."
     }
   ],
   "sources": [
     {
-      "name": "BCRA — Banco Central de la República Argentina",
-      "url": "https://www.bcra.gob.ar"
+      "name": "Aave v3 — Documentación oficial del protocolo",
+      "url": "https://docs.aave.com/developers/getting-started/readme"
     },
     {
-      "name": "ARCA (ex AFIP) — normativa tributaria",
+      "name": "Compound Finance — Documentación y mercados",
+      "url": "https://compound.finance"
+    },
+    {
+      "name": "Aave — App de mercados en tiempo real",
+      "url": "https://app.aave.com/markets"
+    },
+    {
+      "name": "DeFi Llama — Métricas de protocolos DeFi",
+      "url": "https://defillama.com"
+    },
+    {
+      "name": "ARCA (ex-AFIP) — Normativa tributaria sobre criptoactivos",
       "url": "https://www.arca.gob.ar"
-    },
-    {
-      "name": "INDEC — Índices económicos",
-      "url": "https://www.indec.gob.ar"
     }
   ],
   "relatedSlugs": [
@@ -127,17 +148,19 @@
     "calculadora-staking-sol-solana-apy"
   ],
   "dataUpdate": {
-    "frequency": "yearly",
-    "lastUpdated": "2026-04-20",
+    "frequency": "monthly",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "BCRA — Banco Central de la República Argentina",
-    "sourceUrl": "https://www.bcra.gob.ar"
+    "notes": "APY de referencia actualizados a junio 2026. La fórmula es fija; la tabla de APY típicos se revisa mensualmente contra app.aave.com/markets.",
+    "source": "Aave v3 — app.aave.com/markets",
+    "sourceUrl": "https://app.aave.com/markets"
   },
   "seoKeywords": [
     "apy defi aave compound",
     "apy defi aave/compound",
-    "calculadora apy defi aave/compound 2026"
-  ],
-  "noindex": true
+    "calculadora apy defi aave/compound 2026",
+    "calculadora defi lending",
+    "rendimiento stablecoins defi",
+    "cuanto gano prestando usdc aave"
+  ]
 }

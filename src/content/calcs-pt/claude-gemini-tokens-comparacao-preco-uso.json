@@ -1,33 +1,21 @@
 {
   "slug": "claude-gemini-tokens-comparacao-preco-uso",
   "esSlug": "calculadora-claude-gemini-tokens-comparativa-precio-uso",
-  "title": "Claude vs Gemini 2026 — Grátis | Hacé Cuentas",
-  "h1": "Claude vs Gemini",
-  "description": "Comparação de preço e uso entre Claude, Gemini e OpenAI em 2026.",
+  "title": "Calculadora Claude vs Gemini: Preço por Token 2026 | Hacé Cuentas",
+  "h1": "Comparação de Preço: Claude vs Gemini vs GPT-4o",
+  "description": "Calcule o custo mensal de uso de APIs de IA com base nos seus tokens de entrada e saída. Compare Claude Sonnet, Claude Opus, Gemini Pro, Gemini Ultra e GPT-4o em segundos.",
   "category": "tecnologia",
   "icon": "🧠",
+  "audience": "global",
   "formulaId": "claude-gemini-tokens-comparativa-precio-uso",
-  "intro": "Compare os custos reais de Claude (Anthropic) e Gemini (Google) calculando o valor mensal em USD com base nos tokens de entrada e saída consumidos. A fórmula base é: **Custo = (Tokens de Entrada × Preço/M entrada) + (Tokens de Saída × Preço/M saída)**. Usada por times de engenharia, startups e empresas que integram LLMs via API para controlar gastos antes de escalar em produção. Os preços variam entre modelos: Claude 3.5 Haiku custa USD 0,80/M entrada vs Claude Sonnet 4 a USD 3,00/M — uma diferença de 3,75×. Escolher o modelo errado pode multiplicar a fatura mensal por 10 ou mais.",
-  "keyTakeaway": "**Custo (USD) = (Tokens Entrada em M × Preço entrada) + (Tokens Saída em M × Preço saída)** — ex: 10M entrada + 5M saída no Claude Sonnet 4 = (10×3,00)+(5×15,00) = USD 105/mês",
+  "lastReviewed": "2026-06-04",
+  "intro": "Compare os custos reais de usar Claude (Anthropic), Gemini (Google) e GPT-4o (OpenAI) com base no seu volume mensal de tokens. A fórmula é direta mas os resultados surpreendem: **Custo mensal (USD) = (Tokens de entrada em milhões × Preço entrada por MTok) + (Tokens de saída em milhões × Preço saída por MTok)**. Tokens de saída custam sempre mais do que os de entrada — Claude Sonnet cobra $3/MTok de entrada mas $15/MTok de saída (proporção 5:1). Um pipeline com mais resposta do que prompt pode custar até 5× mais do que a estimativa inicial. Use esta calculadora antes de escolher um modelo para produção, para comparar alternativas com o seu ratio real de tokens, ou para montar o modelo financeiro de um produto de IA.",
+  "keyTakeaway": "**Custo = (Entrada_M × $/MTok_entrada) + (Saída_M × $/MTok_saída)** — exemplo com Claude Sonnet: (10 × $3,00) + (5 × $15,00) = **$105,00/mês**. O mesmo volume no Gemini Pro = (10 × $3,50) + (5 × $10,50) = **$87,50/mês**. O modelo mais barato depende do seu ratio input/output.",
   "useCases": [
-    "Startup de SaaS avaliando qual modelo usar no chatbot de suporte ao cliente antes de assinar um contrato de volume com Anthropic ou Google",
-    "Engenheiro de ML comparando custo-benefício entre Claude Opus 4 e Gemini 2.5 Pro para pipeline de sumarização de documentos jurídicos longos (>100k tokens)",
-    "CFO de empresa de tecnologia calculando o impacto orçamentário de migrar 50 milhões de tokens/mês de Gemini 1.5 Flash para Claude 3.5 Haiku",
-    "Desenvolvedor indie estimando quanto vai gastar por mês integrando uma API de LLM no seu app de produtividade com ~2M tokens de entrada e 1M de saída"
-  ],
-  "seoKeywords": [
-    "calculadora Claude Gemini preço",
-    "custo tokens Claude Sonnet",
-    "quanto custa usar Claude",
-    "Gemini Pro preço 2026",
-    "comparação Claude vs Gemini",
-    "limite contexto IA",
-    "IA mais barata",
-    "calculadora tokens entrada saída",
-    "preço API Claude",
-    "Claude Opus vs Sonnet",
-    "custo mensal IA",
-    "calculadora tokens IA"
+    "Estimar o gasto mensal em API para um chatbot de suporte que processa ~10M tokens de entrada e ~3M de saída antes de comprometer com um modelo em produção.",
+    "Comparar o custo por consulta entre Claude Sonnet e Gemini Pro para um pipeline de classificação de documentos com 500M tokens/mês.",
+    "Avaliar se a janela de contexto de 2M tokens do Gemini Pro justifica o preço em comparação ao Claude Sonnet (200k tokens, tarifa fixa) para tarefas de resumo de documentos longos.",
+    "Calcular o impacto orçamentário de migrar um volume existente de um provedor para outro, ou de combinar modelos baratos para tarefas simples com modelos caros para casos complexos."
   ],
   "fields": [
     {
@@ -38,43 +26,49 @@
       "options": [
         {
           "value": "claude_sonnet",
-          "label": "Claude Sonnet"
+          "label": "Claude Sonnet — $3,00/$15,00 por MTok"
         },
         {
           "value": "claude_opus",
-          "label": "Claude Opus"
+          "label": "Claude Opus — $15,00/$75,00 por MTok"
         },
         {
           "value": "gemini_pro",
-          "label": "Gemini Pro"
+          "label": "Gemini Pro — $3,50/$10,50 por MTok"
         },
         {
           "value": "gemini_ultra",
-          "label": "Gemini Ultra"
+          "label": "Gemini Ultra — $7,00/$21,00 por MTok"
         },
         {
           "value": "gpt_4o",
-          "label": "GPT-4o"
+          "label": "GPT-4o — $5,00/$15,00 por MTok"
         }
       ],
       "default": "claude_sonnet"
     },
     {
       "id": "tokensEntrada",
-      "label": "Tokens de entrada M",
+      "label": "Tokens de entrada",
+      "unit": "milhões (MTok)",
       "type": "number",
       "required": true,
-      "placeholder": "10",
+      "placeholder": "ex. 10 (= 10 milhões de tokens)",
       "default": 10,
+      "min": 0.01,
+      "max": 10000,
       "step": 0.01
     },
     {
       "id": "tokensSalida",
-      "label": "Tokens de saída M",
+      "label": "Tokens de saída",
+      "unit": "milhões (MTok)",
       "type": "number",
       "required": true,
-      "placeholder": "5",
+      "placeholder": "ex. 5 (= 5 milhões de tokens)",
       "default": 5,
+      "min": 0.01,
+      "max": 10000,
       "step": 0.01
     }
   ],
@@ -86,7 +80,7 @@
     },
     {
       "id": "contexto",
-      "label": "Contexto máx"
+      "label": "Contexto máx."
     },
     {
       "id": "recomendacion",
@@ -94,60 +88,89 @@
     }
   ],
   "example": {
-    "title": "Exemplo de cálculo",
+    "title": "Exemplo real: Claude Sonnet com 10M tokens entrada + 5M tokens saída",
     "steps": [
-      "Claude Sonnet 10+5",
-      "USD 150"
+      "Custo de entrada: 10M tokens × $3,00/MTok = $30,00",
+      "Custo de saída: 5M tokens × $15,00/MTok = $75,00",
+      "Custo mensal total: $30,00 + $75,00 = $105,00"
     ],
-    "result": "200k context"
+    "result": "Custo mensal: $105,00 USD — 71% do gasto vem dos tokens de saída. Janela de contexto: 200k tokens."
   },
-  "explanation": "## Como se calcula\n\nO custo de uso de APIs de LLMs como Claude e Gemini é cobrado **por milhão de tokens** (M), separado em tokens de entrada (*input*) e tokens de saída (*output*). O output é sistematicamente mais caro — geralmente de 3× a 5× o preço do input.\n\n```\nCusto Mensal (USD) =\n  (Tokens_Entrada_M × Preço_Entrada_por_M)\n  + (Tokens_Saída_M × Preço_Saída_por_M)\n\nExemplo — Claude Sonnet 4 com 10M entrada + 5M saída:\n  = (10 × 3,00) + (5 × 15,00)\n  = 30,00 + 75,00\n  = USD 105,00 / mês\n```\n\n> **1 token ≈ 0,75 palavras em inglês** (ou ~0,6 palavras em português). Um documento de 1.000 palavras ≈ 1.333 tokens. Para contextos maiores, use a contagem exata via tokenizador oficial de cada provedor.\n\n---\n\n## Tabela de referência\n\nPreços vigentes em **julho de 2025** (USD por milhão de tokens):\n\n| Modelo | Contexto Máx | Entrada (USD/M) | Saída (USD/M) | Melhor para |\n|---|---|---|---|---|\n| **Claude 3.5 Haiku** | 200k | 0,80 | 4,00 | Volume alto, baixo custo |\n| **Claude Sonnet 4** | 200k | 3,00 | 15,00 | Equilíbrio qualidade/preço |\n| **Claude Opus 4** | 200k | 15,00 | 75,00 | Tarefas complexas críticas |\n| **Gemini 2.0 Flash** | 1M | 0,10 | 0,40 | Contexto gigante, custo mínimo |\n| **Gemini 2.5 Flash** | 1M | 0,30 | 2,50 | Uso geral econômico |\n| **Gemini 2.5 Pro** | 2M | 1,25 | 10,00 | Raciocínio avançado |\n| **Gemini 1.5 Flash** | 1M | 0,075 | 0,30 | Legado, custo baixíssimo |\n\n> Preços podem variar conforme volume contratado, região e acordos corporativos. Consulte sempre a página oficial de pricing de cada provedor.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Chatbot de suporte com volume médio\nUma startup usa 8M tokens de entrada e 3M de saída por mês.\n\n| Modelo | Custo Entrada | Custo Saída | **Total** |\n|---|---|---|---|\n| Gemini 2.0 Flash | USD 0,80 | USD 1,20 | **USD 2,00** |\n| Claude 3.5 Haiku | USD 6,40 | USD 12,00 | **USD 18,40** |\n| Claude Sonnet 4 | USD 24,00 | USD 45,00 | **USD 69,00** |\n\n→ Para este volume, Gemini 2.0 Flash é **34× mais barato** que Claude Sonnet 4.\n\n### Caso 2 — Análise de documentos longos (100k tokens por chamada)\nUm escritório de advocacia faz 500 análises/mês. Cada uma: 80k tokens entrada + 10k tokens saída = 40M entrada + 5M saída/mês.\n\n- **Gemini 2.5 Pro** (contexto 2M): (40×1,25) + (5×10,00) = USD 50 + 50 = **USD 100/mês** ✅\n- **Claude Opus 4** (contexto 200k): (40×15) + (5×75) = USD 600 + 375 = **USD 975/mês** ❌\n- Gemini ganha por contexto nativo e preço, sem chunking.\n\n### Caso 3 — App indie com tráfego leve\nDesenvolvedor solo: 2M entrada + 1M saída/mês.\n\n- **Gemini 1.5 Flash**: (2×0,075) + (1×0,30) = USD 0,15 + 0,30 = **USD 0,45/mês**\n- **Claude 3.5 Haiku**: (2×0,80) + (1×4,00) = USD 1,60 + 4,00 = **USD 5,60/mês**\n- Diferença de 12×, mas ambos são irrelevantes em volume baixo.\n\n---\n\n## Erros comuns\n\n1. **Ignorar a diferença de preço entre entrada e saída**: Muitos somam os tokens e multiplicam por um preço médio. O output custa de 3× a 5× mais — subestimar o volume de saída distorce completamente o orçamento.\n\n2. **Não considerar o contexto acumulado nas conversas**: Em chatbots, cada turno de conversa reenvia o histórico completo. Com 10 turnos de 1k tokens cada, o último turno já envia 10k tokens de entrada — o custo cresce quadraticamente, não linearmente.\n\n3. **Comparar modelos sem ajustar pela qualidade da saída**: Claude Opus 4 pode precisar de 1 chamada onde Haiku precisaria de 3 tentativas + validação. O custo real deve incluir a taxa de retrabalho.\n\n4. **Esquecer os tokens do system prompt**: Um system prompt de 2.000 tokens enviado em cada uma das 100.000 requisições mensais equivale a 200M tokens extras de entrada — podendo dobrar a fatura.\n\n5. **Confundir tier gratuito com API gratuita**: Gemini e Claude oferecem planos gratuitos com limites de RPM (requisições por minuto) e cotas diárias. Em produção, esses limites são atingidos rapidamente e o custo passa a ser integralmente cobrado.\n\n---\n\n## Calculadoras relacionadas\n\nNenhuma calculadora relacionada disponível no momento.",
+  "explanation": "## Como se calcula\n\nTodos os provedores principais faturam por tokens com duas tarifas separadas: entrada (*input*) e saída (*output*). A saída é sempre mais cara porque exige geração sequencial token a token, enquanto a entrada é processada em paralelo. A fórmula usada nesta calculadora:\n\n```\nCusto Mensal (USD) =\n  (Tokens_Entrada_M × Preço_Entrada_por_MTok)\n  + (Tokens_Saída_M × Preço_Saída_por_MTok)\n\nExemplo — Claude Sonnet com 10M entrada + 5M saída:\n  Entrada: 10M × $3,00/MTok  = $30,00\n  Saída:    5M × $15,00/MTok = $75,00\n  Total:                      $105,00/mês\n```\n\n**O mesmo volume no Gemini Pro:**\n```\n  Entrada: 10M × $3,50/MTok  = $35,00\n  Saída:    5M × $10,50/MTok = $52,50\n  Total:                      $87,50/mês\n```\n\nAinda que o Gemini Pro cobre mais por token de entrada ($3,50 vs. $3,00), seu menor preço de saída ($10,50 vs. $15,00) o torna mais barato para workloads onde a saída supera a entrada. O ponto de equilíbrio depende do seu ratio input/output.\n\n---\n\n## Tabela de preços de referência\n\nPreços utilizados nesta calculadora (USD por milhão de tokens):\n\n| Modelo | Entrada $/MTok | Saída $/MTok | Contexto máx. |\n|---|---|---|---|\n| Claude Sonnet | $3,00 | $15,00 | 200k tokens |\n| Claude Opus | $15,00 | $75,00 | 200k tokens |\n| Gemini Pro | $3,50 | $10,50 | 2M tokens |\n| Gemini Ultra | $7,00 | $21,00 | 1M tokens |\n| GPT-4o | $5,00 | $15,00 | 128k tokens |\n\n*Os preços podem mudar. Verifique sempre nas páginas oficiais de cada provedor antes de fechar um orçamento de produção.*\n\n---\n\n## Por que os tokens de saída custam 3–5× mais?\n\nTokens de entrada são processados em paralelo pelo mecanismo de atenção — o modelo lê o prompt inteiro de uma vez. Tokens de saída exigem decodificação autorregressiva sequencial: o modelo gera um token por vez, e cada passo depende de todos os anteriores. Este processo é fundamentalmente mais intensivo em computação, o que justifica que Claude Sonnet cobre $3/MTok de entrada mas $15/MTok de saída (proporção 5:1).\n\n---\n\n## Erros comuns ao estimar custos de LLMs\n\n1. **Assumir preço único por token.** Calcule sempre entrada e saída separadamente — em uma relação 1:1 input/output, a saída domina a fatura.\n\n2. **Não contabilizar o system prompt em cada chamada.** Um system prompt de 1.500 tokens enviado em cada request soma 1,5M tokens de entrada por cada milhão de chamadas.\n\n3. **Ignorar o acúmulo do histórico em chatbots.** Cada turno reenvia o histórico completo. Na 10ª mensagem de um chat de 500 tokens por turno, você já envia 5.000 tokens de entrada só de contexto — o custo cresce quadraticamente, não linearmente.\n\n4. **Não ativar Batch API para workloads offline.** A Anthropic oferece 50% de desconto na Batch API (respostas em até 24h). Claude Sonnet cai de $3,00/$15,00 para $1,50/$7,50 por MTok sem nenhuma mudança na qualidade de saída.\n\n5. **Comparar janelas de contexto sem checar tiers de preço.** A janela de 2M tokens do Gemini Pro pode parecer melhor que os 200k do Claude, mas os preços variam por faixa de uso — verifique sempre em ai.google.dev/pricing.",
   "faq": [
     {
-      "q": "Qual é a diferença entre tokens de entrada e tokens de saída?",
-      "a": "Tokens de entrada são todo o texto enviado ao modelo: system prompt, histórico da conversa e a mensagem atual do usuário. Tokens de saída são os gerados pelo modelo como resposta. O output é cobrado separadamente e custa de 3× a 5× mais — no Claude Sonnet 4, por exemplo, entrada custa USD 3,00/M e saída USD 15,00/M (5× mais caro)."
+      "q": "Qual modelo é mais barato: Claude, Gemini ou GPT-4o?",
+      "a": "Depende do seu ratio de tokens entrada/saída. Para workloads com muita saída (respostas longas), Gemini Pro ($10,50/MTok saída) supera Claude Sonnet ($15,00/MTok saída). Para workloads com pouca saída e muita entrada, Claude Sonnet ($3,00/MTok entrada) e Gemini Pro ($3,50/MTok entrada) são comparáveis. GPT-4o ($5,00/$15,00) raramente é a opção mais barata em escala — sua vantagem está no ecossistema OpenAI e em capacidades multimodais específicas."
     },
     {
-      "q": "Claude ou Gemini é mais barato para uso geral?",
-      "a": "Depende do volume e do modelo escolhido. Para uso de alto volume e baixo custo, Gemini 2.0 Flash (USD 0,10/M entrada, USD 0,40/M saída) é o mais econômico do mercado em 2025. Para qualidade equivalente a Claude Sonnet 4 (USD 3,00/M), o comparável seria Gemini 2.5 Pro (USD 1,25/M) — Gemini ~2,4× mais barato. Para tarefas críticas de raciocínio, compare Claude Opus 4 com Gemini 2.5 Pro caso a caso."
+      "q": "O que conta como token de entrada e token de saída?",
+      "a": "Tokens de entrada são tudo que você envia ao modelo em cada chamada: o system prompt, o histórico da conversa, documentos recuperados em pipelines RAG e a mensagem atual do usuário. Tokens de saída são apenas a resposta gerada pelo modelo. Ambos são faturados separadamente, e a saída custa tipicamente 3–5× mais por token."
     },
     {
-      "q": "O que é contexto máximo e por que importa no custo?",
-      "a": "Contexto máximo é o limite de tokens que o modelo processa numa única chamada (entrada + saída combinadas). Claude suporta até 200k tokens; Gemini 2.5 Pro alcança 2 milhões de tokens. Para documentos longos, um contexto maior evita dividir o texto em chunks — reduz chamadas à API, simplifica o código e pode baixar o custo total. Gemini tem vantagem clara aqui."
+      "q": "Como estimo o volume mensal de tokens antes de desenvolver?",
+      "a": "Use esta fórmula: Tokens/mês = (tokens médios por request) × (requests por dia) × 30. Para estimar tokens a partir de texto: 1 milhão de tokens ≈ 750.000 palavras em inglês. Use o tokenizador da Anthropic em console.anthropic.com ou o método countTokens da API do Gemini para contar tokens exatos dos seus prompts reais antes de extrapolar para volume mensal."
     },
     {
-      "q": "Como estimar quantos tokens meu app vai consumir por mês?",
-      "a": "Use a fórmula: **Tokens/mês = (Tokens por requisição) × (Requisições/dia) × 30**. Para estimar tokens por texto: 1 token ≈ 4 caracteres em inglês, ou ~3,5 caracteres em português. Anthropic disponibiliza um tokenizador online; Google oferece a função `countTokens` na API do Gemini. Em chatbots, some o histórico acumulado a cada turno — isso pode multiplicar o consumo por 3× a 5× na média da conversa."
+      "q": "Quando vale a pena usar Claude Opus em vez de Claude Sonnet, mesmo custando 5× mais?",
+      "a": "Claude Opus ($15/$75 por MTok) se justifica quando a complexidade da tarefa é genuinamente alta e erros são caros: análise jurídica de múltiplas etapas, arquitetura de código complexa, cadeias de raciocínio onde Sonnet comete erros detectáveis. Para classificação, resumo ou extração de dados estruturados em alto volume, Claude Sonnet entrega 95%+ da qualidade do Opus a uma fração do custo. Faça benchmark com suas tarefas reais antes de assumir que precisa do Opus."
+    },
+    {
+      "q": "Como a janela de contexto de 200k tokens do Claude se compara à janela de 2M do Gemini Pro?",
+      "a": "Gemini Pro tem uma janela de contexto maior (2M tokens vs. 200k do Claude Sonnet), o que é vantajoso para análise de documentos muito longos sem necessidade de dividir o texto em partes. Porém, Claude Sonnet tem preço fixo de $3,00/MTok independente do tamanho do prompt, enquanto os preços do Gemini variam por faixa — verifique sempre em ai.google.dev/pricing. Para a maioria dos casos reais (documentos jurídicos, repositórios de código, chats longos), 200k tokens é suficiente."
     },
     {
       "q": "Existe camada gratuita nas APIs do Claude e do Gemini?",
-      "a": "Sim. O Gemini oferece uma camada gratuita via Google AI Studio com limites de 15 RPM e 1.500 requisições/dia para Gemini 1.5 Flash (dados de 2025). Claude (Anthropic) oferece créditos iniciais de USD 5,00 ao criar conta, sem plano gratuito contínuo na API. Ambos têm planos gratuitos nos apps de chat (claude.ai e gemini.google.com) com restrições de uso e sem acesso aos modelos mais avançados."
+      "a": "O Google oferece camada gratuita para Gemini 1.5 Flash e Gemini 2.0 Flash via Google AI Studio, com limites de velocidade (15 requests/minuto, 1.500 requests/dia em 2025). A Anthropic não tem camada gratuita permanente na API — contas novas recebem um crédito inicial de teste (geralmente $5), após o qual todo uso é cobrado. Ambos oferecem apps de consumidor gratuitos (claude.ai e gemini.google.com) com cotas limitadas."
     },
     {
-      "q": "Vale a pena usar o modelo mais caro se a qualidade for melhor?",
-      "a": "Depende do caso de uso. Para classificação, extração de dados estruturados ou respostas simples, modelos baratos como Gemini 2.0 Flash ou Claude 3.5 Haiku entregam 95%+ da qualidade do modelo topo por 1/50 do preço. Para raciocínio complexo, código avançado ou análise jurídica/médica, Claude Opus 4 ou Gemini 2.5 Pro podem reduzir erros e retrabalho — o custo maior se justifica. Sempre faça benchmark com seu caso de uso real antes de decidir."
+      "q": "O que é a Batch API da Anthropic e quanto economiza?",
+      "a": "A Batch API da Anthropic processa requests de forma assíncrona — resultados são devolvidos em até 24 horas — a exatamente 50% do preço padrão. Claude Sonnet cai de $3,00/$15,00 para $1,50/$7,50 por MTok. Para qualquer workload que não exige resposta em tempo real (enriquecimento noturno, processamento de documentos, classificação em massa), a Batch API reduz pela metade a fatura do Claude sem nenhuma mudança na qualidade de saída."
     },
     {
-      "q": "O preço por token varia conforme o volume contratado?",
-      "a": "Sim. Anthropic e Google oferecem descontos para alto volume via contratos empresariais negociados diretamente — geralmente a partir de gastos acima de USD 5.000–10.000/mês. Além disso, o Gemini oferece 50% de desconto para chamadas fora do horário de pico ('off-peak pricing') em alguns modelos. Para grandes volumes, compare sempre o preço público com cotações customizadas via o setor comercial de cada provedor."
+      "q": "O tokenizador do Claude e do Gemini é o mesmo?",
+      "a": "Não. Claude usa um tokenizador byte-pair encoding (BPE) similar ao do GPT-4. Gemini usa SentencePiece unigram. Para o mesmo texto em inglês, a contagem de tokens pode diferir entre 5% e 15%. Código, scripts não latinos e conteúdo com muito markdown mostram maiores diferenças. Sempre faça benchmark com seus prompts/respostas reais usando a ferramenta de tokenização de cada provedor antes de fechar projeções de orçamento."
     },
     {
-      "q": "Como o cache de prompt afeta o custo final?",
-      "a": "Tanto Anthropic quanto Google oferecem 'prompt caching': partes repetidas do prompt (como system prompts longos) são armazenadas em cache e cobradas a um preço reduzido nas chamadas subsequentes. No Claude, o cache custa ~10% do preço normal de entrada após a primeira leitura. No Gemini, o cache é cobrado por token armazenado por hora. Para apps com system prompts grandes e muitas requisições, o cache pode reduzir o custo de entrada em 70–90%."
+      "q": "Como calculo o custo por consulta em vez do custo mensal?",
+      "a": "Divida o custo mensal pela quantidade de chamadas. Se você envia 100.000 chamadas/mês com média de 1.000 tokens de entrada e 500 de saída: total = 100M entrada + 50M saída. No Claude Sonnet: (100 × $3,00) + (50 × $15,00) = $300 + $750 = $1.050/mês ÷ 100.000 chamadas = **$0,0105 por consulta**. Este custo por consulta é o que você precisa para precificar um produto de usuário final com modelo por consulta ou assinatura."
+    },
+    {
+      "q": "GPT-4o é competitivo em preço contra Claude e Gemini?",
+      "a": "Em geral, não para workloads de alto volume. GPT-4o custa $5,00/MTok de entrada e $15,00/MTok de saída — mais caro que Claude Sonnet na entrada e igual na saída, com janela de contexto máxima de 128k (menor que as outras opções). Sua vantagem real está na integração com o ecossistema OpenAI (Assistants API, plugins, Azure) e em capacidades multimodais específicas. Para workloads puramente de texto em escala, Claude Sonnet ou Gemini Pro costumam ser mais econômicos."
     }
   ],
   "sources": [
     {
-      "name": "Wikipedia PT — Processamento de linguagem natural e tokenização",
-      "url": "https://pt.wikipedia.org/wiki/Processamento_de_linguagem_natural"
+      "name": "Anthropic — Claude API Pricing",
+      "url": "https://www.anthropic.com/pricing"
+    },
+    {
+      "name": "Google AI — Gemini API Pricing",
+      "url": "https://ai.google.dev/pricing"
+    },
+    {
+      "name": "OpenAI — API Pricing",
+      "url": "https://openai.com/api/pricing/"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-20",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fixa, não requer atualização de dados externos"
+    "notes": "Fórmula fixa com tarifas hardcodeadas de meados de 2025. Verifique nas páginas oficiais de cada provedor antes de usar para orçamentos de produção."
   },
   "audience": "global",
-  "relatedSlugs": []
+  "relatedSlugs": [],
+  "seoKeywords": [
+    "calculadora claude gemini preço tokens",
+    "custo mensal api llm",
+    "tokens claude sonnet preço",
+    "gemini pro custo mensal",
+    "claude opus vs sonnet preço",
+    "api ia preço por milhão tokens",
+    "calculadora custo ia",
+    "comparação preços ia 2026",
+    "gpt-4o vs claude vs gemini preço",
+    "calculadora tokens ia grátis"
+  ]
 }
