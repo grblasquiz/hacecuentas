@@ -8,8 +8,8 @@
   "audience": "global",
   "icon": "📐",
   "formulaId": "perimetro-abdominal-riesgo-cardiovascular",
-  "intro": "El **perímetro abdominal** (también llamado circunferencia de cintura) es uno de los indicadores más sencillos y efectivos para evaluar el riesgo de enfermedades cardiovasculares, diabetes tipo 2 y síndrome metabólico. A diferencia del peso o el IMC, el perímetro abdominal refleja directamente la **grasa visceral** (la que rodea los órganos internos), que es metabólicamente activa y proinflamatoria. La OMS, la Federación Internacional de Diabetes (IDF) y las guías europeas de cardiología establecen umbrales diferenciados por sexo: **≥94 cm en hombres** (≥80 cm en mujeres) indica riesgo aumentado; **≥102 cm en hombres** (≥88 cm en mujeres) indica riesgo sustancialmente elevado.",
-  "keyTakeaway": "Un perímetro abdominal alto es predictor independiente de síndrome metabólico, diabetes tipo 2 e infarto. Hombres: riesgo aumentado ≥94 cm, riesgo alto ≥102 cm. Mujeres: riesgo aumentado ≥80 cm, riesgo alto ≥88 cm. Medilo siempre a la altura del ombligo, en espiración, sin ropa ajustada.",
+  "intro": "El **perímetro abdominal** (también llamado circunferencia de cintura) es uno de los indicadores más sencillos y efectivos para evaluar el riesgo de enfermedades cardiovasculares, diabetes tipo 2 y síndrome metabólico. A diferencia del peso o el IMC, el perímetro abdominal refleja directamente la **grasa visceral** (la que rodea los órganos internos), que es metabólicamente activa y proinflamatoria. La OMS, la Federación Internacional de Diabetes (IDF) y las guías de cardiología establecen umbrales diferenciados por sexo: **≥94 cm en hombres** (≥80 cm en mujeres) indica riesgo aumentado; **≥102 cm en hombres** (≥88 cm en mujeres) indica riesgo sustancialmente elevado. Para latinoamericanos, la IDF usa 90 cm en hombres.",
+  "keyTakeaway": "Un perímetro abdominal alto es predictor independiente de síndrome metabólico, diabetes tipo 2 e infarto. Hombres (OMS): riesgo aumentado ≥94 cm, riesgo alto ≥102 cm. Mujeres (OMS): riesgo aumentado ≥80 cm, riesgo alto ≥88 cm. Hombres latinoamericanos (IDF): riesgo metabólico ≥90 cm. Medilo siempre a la altura del ombligo, en espiración, sin ropa ajustada.",
   "useCases": [
     "Screening domiciliario de riesgo metabólico y cardiovascular en adultos sanos.",
     "Seguimiento de la distribución de grasa durante un plan de alimentación o ejercicio.",
@@ -18,7 +18,7 @@
   ],
   "fields": [
     {
-      "id": "valor1",
+      "id": "cintura",
       "label": "Perímetro abdominal",
       "type": "number",
       "required": true,
@@ -30,76 +30,80 @@
       "hint": "Medilo a la altura del ombligo, en espiración normal, sin ropa ajustada."
     },
     {
-      "id": "valor2",
-      "label": "Factor de referencia (100 = medición directa)",
-      "type": "number",
+      "id": "sexo",
+      "label": "Sexo biológico",
+      "type": "select",
       "required": true,
-      "placeholder": "100",
-      "min": 1,
-      "max": 100,
-      "step": 1,
-      "hint": "Dejá en 100 para obtener tu medición directa en centímetros como resultado base.",
-      "defaultValue": 100
+      "options": [
+        { "value": "M", "label": "Hombre" },
+        { "value": "F", "label": "Mujer" }
+      ],
+      "hint": "Los umbrales de riesgo difieren entre hombres y mujeres según criterios OMS e IDF."
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Resultado"
+      "label": "Clasificación OMS"
     },
     {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Interpretación completa"
     }
   ],
   "example": {
     "title": "Ejemplo: hombre de 45 años con perímetro abdominal de 97 cm",
     "steps": [
       "Medición del perímetro abdominal a la altura del ombligo: 97 cm",
-      "El umbral OMS para riesgo aumentado en hombres es 94 cm → este valor lo supera",
-      "El umbral para riesgo sustancialmente elevado en hombres es 102 cm → este valor está por debajo",
-      "Interpretación: **riesgo cardiovascular y metabólico aumentado** (entre 94 y 102 cm)",
-      "Se recomienda evaluación clínica con glucemia en ayunas, triglicéridos y presión arterial"
+      "Sexo: Hombre (M)",
+      "Umbral OMS para riesgo aumentado en hombres: 94 cm → 97 cm lo supera",
+      "Umbral OMS para riesgo sustancialmente elevado en hombres: 102 cm → 97 cm está por debajo",
+      "Umbral IDF para latinoamericanos: 90 cm → 97 cm lo supera (riesgo metabólico IDF presente)",
+      "Resultado: Riesgo cardiovascular y metabólico AUMENTADO (entre 94 y 101 cm según OMS)"
     ],
-    "result": "Perímetro: 97 cm → Riesgo aumentado (hombres: 94–101 cm). Se recomienda consulta médica y ajuste de hábitos."
+    "result": "Clasificación OMS: Riesgo aumentado. IDF Latinoamérica: Riesgo metabólico presente. Se recomienda evaluación clínica con glucemia, triglicéridos y presión arterial."
   },
-  "explanation": "## Qué mide el perímetro abdominal\n\nEl perímetro abdominal es la circunferencia de la cintura medida horizontalmente a la altura del ombligo. Refleja la cantidad de **grasa visceral**, que es el depósito de tejido adiposo dentro de la cavidad abdominal (alrededor del hígado, páncreas, intestinos y vasos sanguíneos).\n\nLa grasa visceral libera ácidos grasos libres y adipocinas proinflamatorias directamente al sistema porta, lo que genera:\n- Resistencia a la insulina\n- Dislipidemia aterogénica (triglicéridos altos, HDL bajo)\n- Hipertensión arterial\n- Estado inflamatorio crónico de bajo grado\n\n## Cómo se calcula\n\nNo hay una fórmula matemática compleja: la clasificación de riesgo se hace **comparando la medición directa contra umbrales de corte validados clínicamente**.\n\n**Umbrales OMS (europeos/globales):**\n\n| Nivel de riesgo | Hombres | Mujeres |\n|---|---|---|\n| Normal | < 94 cm | < 80 cm |\n| Riesgo aumentado | 94–101 cm | 80–87 cm |\n| Riesgo sustancialmente elevado | ≥ 102 cm | ≥ 88 cm |\n\n**Umbrales IDF para latinoamérica (origen étnico latinoamericano):**\n\n| Nivel de riesgo | Hombres | Mujeres |\n|---|---|---|\n| Riesgo metabólico | ≥ 90 cm | ≥ 80 cm |\n\nLa IDF usa umbrales ligeramente más bajos para latinoamericanos y asiáticos dado que la acumulación de grasa visceral ocurre a menor circunferencia en comparación con europeos.\n\n## Cómo medirlo correctamente\n\n1. Estar de pie, erguido, con el abdomen relajado\n2. Colocar la cinta métrica horizontalmente a la altura del ombligo (o en el punto medio entre la última costilla y la cresta ilíaca)\n3. Medir al final de una **espiración normal** (no retener el abdomen)\n4. La cinta debe estar ajustada pero sin comprimir la piel\n5. Registrar en centímetros con un decimal\n\n## Limitaciones\n\n- No distingue entre grasa subcutánea y visceral (para eso se necesita tomografía o DEXA)\n- Los umbrales fueron derivados mayormente de estudios en población europea; para latinoamericanos los umbrales IDF son más apropiados\n- En embarazo, ascitis o hernias abdominales la medición no es válida\n- No aplica a menores de 18 años (se usan percentiles pediátricos)\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los umbrales de referencia provienen de la OMS (Technical Report Series 894, 2000) y la IDF (Consensus Definition of the Metabolic Syndrome, 2006). Los valores están vigentes a 2026.\n\n**Disclaimer:** Los resultados son orientativos. No reemplazan la evaluación médica. Si tu perímetro abdominal supera los umbrales de riesgo, consultá con tu médico para una evaluación integral del síndrome metabólico (glucemia, lípidos, presión arterial).\n",
+  "explanation": "## Qué mide el perímetro abdominal\n\nEl perímetro abdominal es la circunferencia de la cintura medida horizontalmente a la altura del ombligo. Refleja la cantidad de **grasa visceral**, que es el depósito de tejido adiposo dentro de la cavidad abdominal (alrededor del hígado, páncreas, intestinos y vasos sanguíneos).\n\nLa grasa visceral libera ácidos grasos libres y adipocinas proinflamatorias directamente al sistema porta, lo que genera:\n- Resistencia a la insulina\n- Dislipidemia aterogénica (triglicéridos altos, HDL bajo)\n- Hipertensión arterial\n- Estado inflamatorio crónico de bajo grado\n\n## Cómo se calcula\n\nNo hay una fórmula aritmética: la clasificación de riesgo se realiza **comparando la medición directa contra umbrales de corte validados clínicamente**.\n\n**Umbrales OMS (europeos/globales) — WHO Technical Report 894, 2000:**\n\n| Nivel de riesgo | Hombres | Mujeres |\n|---|---|---|\n| Normal | < 94 cm | < 80 cm |\n| Riesgo aumentado | 94–101 cm | 80–87 cm |\n| Riesgo sustancialmente elevado | ≥ 102 cm | ≥ 88 cm |\n\n**Umbrales IDF para latinoamérica (IDF Metabolic Syndrome Consensus, 2006):**\n\n| Nivel de riesgo | Hombres latinoamericanos | Mujeres latinoamericanas |\n|---|---|---|\n| Riesgo metabólico | ≥ 90 cm | ≥ 80 cm |\n\nLa IDF usa umbrales más bajos para latinoamericanos (y asiáticos) dado que la acumulación de grasa visceral ocurre a menor circunferencia en comparación con europeos.\n\n## Cómo medirlo correctamente\n\n1. Estar de pie, erguido, con el abdomen relajado\n2. Colocar la cinta métrica horizontalmente a la altura del ombligo\n3. Medir al final de una **espiración normal** (no retener el abdomen)\n4. La cinta debe estar ajustada pero sin comprimir la piel\n5. Registrar en centímetros con un decimal\n\n## Limitaciones\n\n- No distingue entre grasa subcutánea y visceral (para eso se necesita tomografía o DEXA)\n- Los umbrales OMS fueron derivados mayormente de estudios en población europea; para latinoamericanos los umbrales IDF son más apropiados\n- En embarazo, ascitis o hernias abdominales la medición no es válida\n- No aplica a menores de 18 años (se usan percentiles pediátricos)\n\n## Disclaimer\n\nLos resultados son orientativos. No reemplazan la evaluación médica. Si tu perímetro abdominal supera los umbrales de riesgo, consultá con tu médico para una evaluación integral del síndrome metabólico (glucemia, lípidos, presión arterial).\n",
   "faq": [
     {
-      "q": "¿Cuál es el perímetro abdominal normal para hombres y mujeres?",
-      "a": "Según la OMS, el perímetro abdominal normal (sin riesgo cardiovascular aumentado) es **menor de 94 cm en hombres** y **menor de 80 cm en mujeres**. Para latinoamericanos, la IDF usa el umbral de 90 cm en hombres y 80 cm en mujeres. Superados estos valores, el riesgo de síndrome metabólico, diabetes tipo 2 y enfermedad cardiovascular aumenta significativamente."
+      "q": "¿Cuál es el perímetro abdominal normal para hombres y mujeres según la OMS?",
+      "a": "Según la OMS (WHO Technical Report 894), el perímetro abdominal sin riesgo cardiovascular aumentado es **menor de 94 cm en hombres** y **menor de 80 cm en mujeres**. Entre 94 y 101 cm en hombres (80 y 87 cm en mujeres) el riesgo es aumentado; en 102 cm o más en hombres (88 cm o más en mujeres) el riesgo es sustancialmente elevado."
+    },
+    {
+      "q": "¿Los umbrales son diferentes para latinoamericanos?",
+      "a": "Sí. La **Federación Internacional de Diabetes (IDF)** establece umbrales más bajos para latinoamericanos: **≥90 cm en hombres** y **≥80 cm en mujeres**. Esto se debe a que la población latinoamericana acumula más grasa visceral a menor circunferencia de cintura en comparación con la población europea. Si sos de origen latinoamericano, el umbral de 90 cm (hombres) es el más relevante para vos."
     },
     {
       "q": "¿Por qué el perímetro abdominal importa más que el peso o el IMC?",
-      "a": "El IMC mide el peso relativo a la estatura pero no distingue entre grasa y músculo, ni entre grasa subcutánea (debajo de la piel, menos dañina) y **grasa visceral** (alrededor de los órganos internos). La grasa visceral es metabólicamente activa: libera ácidos grasos e inflamación directamente al hígado, promoviendo resistencia a la insulina, dislipidemia e hipertensión. Una persona con IMC normal puede tener exceso de grasa visceral (llamado 'obeso metabólicamente normal' o TOFI: 'thin outside, fat inside')."
+      "a": "El IMC mide el peso relativo a la estatura pero no distingue entre grasa subcutánea (debajo de la piel, relativamente benigna) y **grasa visceral** (alrededor de los órganos internos). La grasa visceral es metabólicamente activa: libera ácidos grasos e inflamación directamente al hígado, promoviendo resistencia a la insulina, dislipidemia e hipertensión. Una persona con IMC normal puede tener exceso de grasa visceral (fenotipo TOFI: 'thin outside, fat inside')."
     },
     {
       "q": "¿Dónde exactamente mido el perímetro abdominal?",
-      "a": "Medilo **a la altura del ombligo**, con la cinta métrica horizontal, al final de una espiración normal (no metas la panza). Estás de pie y erguido. Otra referencia válida es el **punto medio entre la última costilla y la cresta ilíaca** (hueso de la cadera). La posición más usada clínicamente en Argentina y Latinoamérica es a nivel del ombligo."
-    },
-    {
-      "q": "¿Los umbrales son iguales para todos los grupos étnicos?",
-      "a": "No. Los umbrales OMS (94/102 cm en hombres; 80/88 cm en mujeres) fueron derivados de estudios en población europea. La **Federación Internacional de Diabetes (IDF)** establece umbrales más bajos para latinoamericanos y asiáticos (90 cm en hombres latinoamericanos, 80 cm en mujeres), ya que estas poblaciones acumulan más grasa visceral con menor circunferencia de cintura. Si sos de origen latinoamericano, usá el umbral de 90 cm para hombres."
+      "a": "Medilo **a la altura del ombligo**, con la cinta métrica horizontal, al final de una espiración normal (no metás la panza). Estás de pie y erguido. Otra referencia válida es el **punto medio entre la última costilla y la cresta ilíaca** (hueso de la cadera). La posición más usada clínicamente en Argentina es a nivel del ombligo."
     },
     {
       "q": "¿El perímetro abdominal alto significa que tengo síndrome metabólico?",
-      "a": "El perímetro abdominal elevado es uno de los **cinco criterios diagnósticos** del síndrome metabólico, pero no es suficiente por sí solo. Para diagnosticar síndrome metabólico se necesita perímetro abdominal aumentado **más al menos dos** de estos cuatro: triglicéridos ≥150 mg/dL, HDL bajo (<40 mg/dL en hombres, <50 mg/dL en mujeres), presión arterial ≥130/85 mmHg o glucemia en ayunas ≥100 mg/dL (o tratamiento para cualquiera de ellos). Consultá con tu médico para el diagnóstico formal."
+      "a": "El perímetro abdominal elevado es uno de los **cinco criterios** del síndrome metabólico (definición IDF/AHA/NHLBI 2009), pero no es suficiente por sí solo. Para el diagnóstico se necesita también al menos dos de: triglicéridos ≥150 mg/dL, HDL bajo (<40 mg/dL en hombres, <50 mg/dL en mujeres), presión arterial ≥130/85 mmHg, y glucemia en ayunas ≥100 mg/dL. Consultá con tu médico para el diagnóstico formal."
     },
     {
       "q": "¿Puedo reducir el perímetro abdominal con dieta y ejercicio?",
-      "a": "Sí, y es uno de los objetivos terapéuticos más eficaces para reducir el riesgo cardiovascular. El ejercicio aeróbico moderado a intenso (≥150 minutos por semana) y la dieta hipocalórica rica en fibra y baja en azúcares refinados reducen preferentemente la grasa visceral. Estudios muestran que se puede reducir 3–5 cm de perímetro abdominal con pérdidas de peso del 5–10% del peso corporal. El entrenamiento de fuerza también contribuye al aumentar la masa muscular y la tasa metabólica basal."
+      "a": "Sí. El ejercicio aeróbico moderado a intenso (≥150 minutos por semana) y la dieta hipocalórica rica en fibra y baja en azúcares refinados reducen preferentemente la grasa visceral. Estudios muestran que una reducción del 5–10% del peso corporal suele traducirse en una disminución de 3–5 cm de perímetro abdominal. El entrenamiento de fuerza también contribuye al aumentar la masa muscular y la tasa metabólica basal."
     },
     {
       "q": "¿Por qué las mujeres tienen un umbral más bajo (80 cm vs 94 cm en hombres)?",
-      "a": "Biológicamente, las mujeres en edad fértil acumulan grasa preferentemente en caderas y glúteos (distribución ginoide), que es metabólicamente menos peligrosa. Sin embargo, las mujeres posmenopáusicas tienden a redistribuir la grasa hacia el abdomen. Los estudios epidemiológicos mostraron que en mujeres el riesgo cardiovascular y metabólico aumenta ya desde los 80 cm de circunferencia abdominal, a una medida menor que en hombres."
+      "a": "Biológicamente, las mujeres en edad fértil acumulan grasa preferentemente en caderas y glúteos (distribución ginoide), que es metabólicamente menos peligrosa. Sin embargo, las mujeres posmenopáusicas tienden a redistribuir la grasa hacia el abdomen. Los estudios epidemiológicos mostraron que en mujeres el riesgo cardiovascular aumenta ya desde los 80 cm de circunferencia abdominal, a una medida menor que en hombres."
     },
     {
       "q": "¿Esta medición es válida durante el embarazo?",
-      "a": "No. Durante el embarazo el perímetro abdominal aumenta naturalmente por el útero grávido y no refleja adiposidad visceral. Los umbrales de riesgo no aplican a mujeres embarazadas. También se debe tener precaución en personas con ascitis (acumulación de líquido en el abdomen) o hernias abdominales importantes, donde la medición no es representativa de la adiposidad visceral."
+      "a": "No. Durante el embarazo el perímetro abdominal aumenta naturalmente por el útero grávido y no refleja adiposidad visceral. Los umbrales de riesgo no aplican a mujeres embarazadas. También se debe tener precaución en personas con ascitis o hernias abdominales importantes, donde la medición no es representativa de la adiposidad visceral."
     },
     {
       "q": "¿Cada cuánto debería medir mi perímetro abdominal?",
       "a": "En adultos sanos, medir el perímetro abdominal **una vez al año** es suficiente para el seguimiento preventivo. Si estás siguiendo un plan de alimentación o ejercicio para reducir grasa abdominal, podés medirlo cada 4–6 semanas para evaluar el progreso. Evitá mediciones diarias ya que fluctúa por hidratación, digestión y ciclo menstrual (en mujeres)."
+    },
+    {
+      "q": "¿Este resultado reemplaza una evaluación médica?",
+      "a": "No. Esta calculadora es una herramienta de screening orientativa basada en umbrales internacionales. Si tu perímetro supera los umbrales de riesgo, el paso siguiente es consultar con tu médico para una evaluación integral que incluya glucemia en ayunas, perfil lipídico y presión arterial, que son los parámetros necesarios para diagnosticar síndrome metabólico."
     }
   ],
   "sources": [
@@ -108,7 +112,7 @@
       "url": "https://www.who.int/publications/i/item/obesity-preventing-and-managing-the-global-epidemic"
     },
     {
-      "name": "IDF — International Diabetes Federation: The IDF consensus worldwide definition of the metabolic syndrome",
+      "name": "IDF — The IDF consensus worldwide definition of the metabolic syndrome (2006)",
       "url": "https://www.idf.org/our-activities/advocacy-awareness/resources-and-tools/60:idfconsensus-worldwide-definitionof-the-metabolic-syndrome.html"
     },
     {
@@ -130,7 +134,7 @@
     "lastUpdated": "2026-04-19",
     "updateType": "manual",
     "notes": "Umbrales de corte OMS/IDF para riesgo cardiovascular por perímetro abdominal. Valores de referencia internacionales fijos, no requieren actualización de data externa.",
-    "source": "OMS Technical Report 894 + IDF Metabolic Syndrome Consensus 2006",
+    "source": "OMS Technical Report 894 + IDF Metabolic Syndrome Consensus 2006 + Alberti et al. Circulation 2009",
     "sourceUrl": "https://www.who.int/publications/i/item/obesity-preventing-and-managing-the-global-epidemic"
   },
   "seoKeywords": [

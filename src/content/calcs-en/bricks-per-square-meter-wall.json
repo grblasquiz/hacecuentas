@@ -3,18 +3,18 @@
   "esSlug": "calculadora-cantidad-ladrillos-metro-cuadrado-pared",
   "title": "Brick Calculator per m² 2026 | Hacé Cuentas",
   "h1": "Bricks Per Square Meter: Wall Calculator",
-  "description": "Calculate bricks needed per m² of wall. Standard 6×12×24 brick = 67 units/m² with common bond. Free and instant.",
+  "description": "Calculate how many bricks you need per m² of wall. Select brick type, wall area, and waste factor. Covers US modular, UK standard, and hollow ceramic bricks.",
   "category": "construccion",
+  "audience": "global",
   "icon": "🧱",
   "formulaId": "cantidad-ladrillos-metro-cuadrado-pared",
-  "intro": "This calculator tells you exactly how many bricks you need to cover a wall of any size. It uses the standard formula: divide the total wall area (width × height in m²) by the face area of a single brick, then add a waste factor. For a standard US modular brick (190 mm × 57 mm face, laid in running bond with a 10 mm mortar joint), there are approximately **48–50 bricks per m²**. The exact count shifts with brick size, bond pattern, and mortar joint thickness. Use this tool before ordering materials to avoid costly shortfalls or expensive overstock on your masonry project.",
-  "keyTakeaway": "**Bricks per m² = 1 m² ÷ [(brick length + joint) × (brick height + joint)]** — for a standard US modular brick (190×57 mm) with a 10 mm joint: 1 ÷ (0.200 × 0.067) ≈ **74.6 → round up to 75 bricks/m²** before waste.",
+  "intro": "This calculator tells you exactly how many bricks to order for any wall, accounting for brick type, net wall area, and waste. The core formula divides 1 m² by the apparent face area of a single brick (including the mortar joint): Bricks/m² = 1 ÷ [(length + joint) × (height + joint)]. For a US modular brick (194 × 57 mm) with a standard 10 mm joint, that works out to about 75 bricks/m². A UK standard metric brick (215 × 65 mm, 10 mm joint) gives 60 bricks/m².\n\nBefore entering your area, subtract any doors or windows from the total wall rectangle. Then choose your waste factor: 5% is industry-standard for straight single-wythe walls; 7–10% when you have corners and openings; 15% for decorative bond patterns such as herringbone or diagonal where angled cuts increase off-cuts significantly. Running out mid-job means an extra delivery and potentially a batch with a slightly different colour — always order with margin.\n\nThe calculator covers solid clay bricks, hollow ceramic bricks, concrete blocks, and the most common face-brick types used in the US and UK. Each option embeds the verified bricks-per-m² constant so you get a single, reliable number to hand to your supplier.",
+  "keyTakeaway": "**Bricks/m² = 1 ÷ [(brick length + joint) × (brick height + joint)]** — US modular brick (194×57 mm, 10 mm joint): ~75/m²; UK standard (215×65 mm, 10 mm joint): ~60/m². Always add a 5–15% waste factor before ordering.",
   "useCases": [
-    "Estimating total brick quantity and material cost before starting a new residential garden wall or privacy fence.",
-    "Planning brick orders for a house facade or exterior cladding project to avoid mid-build supply delays.",
-    "Comparing how many bricks are needed when switching between standard modular, queen, or jumbo brick sizes.",
-    "Calculating leftover bricks after a renovation to decide whether to order a full extra pallet or source loose bricks.",
-    "Checking contractor quotes by independently verifying the brick count stated in a masonry bid."
+    "Estimating total bricks and material cost before starting a residential garden wall or privacy fence, using the actual net wall area after subtracting any gate opening.",
+    "Planning a house facade or exterior cladding project to avoid mid-build supply delays — calculate per panel or elevation and sum the results.",
+    "Comparing how brick count changes when switching from US modular to US Norman or UK standard brick, so you can weigh cost vs. laying speed.",
+    "Independently verifying a contractor's brick quantity in a masonry bid: enter the same net area and brick type and check their number."
   ],
   "seoKeywords": [
     "bricks per square meter",
@@ -32,74 +32,112 @@
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Wall Width (m)",
+      "id": "areaM2",
+      "label": "Net wall area (m²)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "e.g. 12",
+      "min": 0.1,
+      "max": 5000,
+      "step": 0.1,
+      "unit": "m²",
+      "helpText": "Measure width × height and subtract openings (doors, windows)."
     },
     {
-      "id": "v2",
-      "label": "Wall Height (m)",
-      "type": "number",
+      "id": "tipoBrick",
+      "label": "Brick type",
+      "type": "select",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "options": [
+        { "value": "modular_us",    "label": "US Modular brick 194×57 mm, 10 mm joint — ASTM C216 (~75/m²)" },
+        { "value": "standard_uk",  "label": "UK Standard metric brick 215×65 mm, 10 mm joint (~60/m²)" },
+        { "value": "hueco8",       "label": "Hollow ceramic brick 8×18×33 cm (~17/m²)" },
+        { "value": "hueco12",      "label": "Hollow ceramic brick 12×18×33 cm (~17/m²)" },
+        { "value": "hueco18",      "label": "Hollow ceramic brick 18×18×33 cm (~16/m²)" },
+        { "value": "portante12",   "label": "Structural ceramic brick 12×19×33 cm, IRAM (~16/m²)" },
+        { "value": "portante18",   "label": "Structural ceramic brick 18×19×33 cm, IRAM (~16/m²)" },
+        { "value": "comun_12",     "label": "Argentine solid clay brick — 12 cm wall (67/m²)" },
+        { "value": "comun_24",     "label": "Argentine solid clay brick — 24 cm wall (134/m²)" },
+        { "value": "bloque_h",     "label": "Concrete block 19×19×39 cm (~13/m²)" },
+        { "value": "cara_vista",   "label": "Face/exposed brick 5×10×24 cm (~75/m²)" }
+      ]
+    },
+    {
+      "id": "mermaPct",
+      "label": "Waste allowance (%)",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "5",  "label": "5% — large project, straight single-wythe wall (BIA standard)" },
+        { "value": "7",  "label": "7% — medium project with windows and doors" },
+        { "value": "10", "label": "10% — small job, many corners" },
+        { "value": "15", "label": "15% — decorative bond (herringbone, diagonal, complex cuts)" }
+      ]
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Number of Bricks",
+      "label": "Bricks to order (with waste)",
       "primary": true
     },
     {
+      "id": "base",
+      "label": "Base count (no waste)"
+    },
+    {
       "id": "resumen",
-      "label": "Breakdown"
+      "label": "Calculation breakdown"
     }
   ],
   "example": {
-    "title": "Example Calculation",
+    "title": "Example: 10 m² garden wall with US modular bricks",
     "steps": [
-      "Example",
-      "Result"
+      "Net wall area: 10 m² (5 m wide × 2 m tall, no openings)",
+      "Brick type: US Modular → 75 bricks/m²",
+      "Base count: 10 × 75 = 750 bricks",
+      "Waste 5%: 750 × 1.05 = 788 bricks",
+      "Result: order 788 bricks (round up to the nearest full pallet)"
     ],
-    "result": "Result"
+    "result": "788 bricks to order"
   },
-  "explanation": "## How It Is Calculated\n\nThe core formula counts how many brick faces fit into one square meter, accounting for the mortar joint around each brick:\n\n```\nBricks per m² = 1 / [(L + J) × (H + J)]\n\nWhere:\n  L = brick length (m)\n  H = brick height / course height (m)\n  J = mortar joint thickness (m)\n\nTotal bricks = Wall Area × Bricks per m² × Waste Factor\nWall Area    = Wall Width (m) × Wall Height (m)\nWaste Factor = 1.05  (5% standard) to 1.10 (10% for complex patterns)\n```\n\n**Example — standard US modular brick, 10 mm joint, single-wythe wall:**\n- L = 0.190 m, H = 0.057 m, J = 0.010 m\n- Bricks per m² = 1 ÷ (0.200 × 0.067) = 1 ÷ 0.01340 ≈ **74.6 → 75 bricks/m²**\n- Wall = 4 m wide × 2.5 m tall = 10 m²\n- Total = 10 × 75 × 1.05 = **788 bricks** (order 800 to round to full packs)\n\n> **Note on wythe thickness:** The formula above gives bricks for a *single-wythe* (one brick thick) wall. For a double-wythe wall, multiply by 2; for a full-brick wall (one brick deep ≈ 90 mm), multiply by 2 as well.\n\n---\n\n## Reference Table\n\n| Brick Type | Nominal Size (L × H × W) | Joint (mm) | Bricks per m² (single wythe) |\n|---|---|---|---|\n| US Modular | 194 × 57 × 92 mm | 10 | **75** |\n| US Standard (non-modular) | 203 × 54 × 95 mm | 10 | **72** |\n| US Queen | 203 × 70 × 76 mm | 10 | **58** |\n| US Jumbo Modular | 194 × 70 × 92 mm | 10 | **59** |\n| US Norman | 286 × 57 × 92 mm | 10 | **51** |\n| US Roman | 286 × 44 × 92 mm | 10 | **65** |\n| UK Standard (metric) | 215 × 65 × 102.5 mm | 10 | **60** |\n| Australian Standard | 230 × 76 × 110 mm | 10 | **50** |\n\n*Sources: Brick Industry Association (BIA) Technical Notes; ASTM C216 standard dimensions.*\n\n---\n\n## Typical Cases\n\n### Case 1 — Garden privacy wall (US modular brick)\n- Dimensions: 6 m wide × 1.8 m tall = **10.8 m²**\n- Brick: US Modular → 75 bricks/m²\n- Gross count: 10.8 × 75 = 810\n- With 5% waste: 810 × 1.05 = **851 bricks** → order **900** (nearest full pack of 50)\n\n### Case 2 — House facade cladding (US Norman brick, running bond)\n- Dimensions: 12 m wide × 3 m tall, minus 2 windows (1.2 × 1.4 m each) = 36 − 3.36 = **32.64 m²**\n- Brick: US Norman → 51 bricks/m²\n- Gross count: 32.64 × 51 = 1,665\n- With 7% waste (complex cuts around windows): 1,665 × 1.07 = **1,782 bricks**\n\n### Case 3 — Double-wythe retaining wall (US Standard brick)\n- Dimensions: 3 m wide × 0.9 m tall, double-wythe = 2.7 m² × 2 wythes = **5.4 m² equivalent**\n- Brick: US Standard → 72 bricks/m²\n- Gross: 5.4 × 72 = 389\n- With 10% waste (corners + cuts): 389 × 1.10 = **428 bricks**\n\n---\n\n## Common Errors\n\n1. **Forgetting mortar joints** — Calculating 1 ÷ (L × H) without adding the joint gives counts 15–20% too high (you'd order far too few bricks). Always add the joint width to both dimensions.\n\n2. **Skipping the waste factor** — Even straight walls produce breakage and miscuts. A minimum 5% waste allowance is industry standard; corners, arches, and window reveals need 7–10%.\n\n3. **Ignoring openings (doors & windows)** — Measuring the full wall rectangle and forgetting to subtract door and window areas inflates brick count and cost unnecessarily. Deduct each opening area before multiplying.\n\n4. **Mixing nominal and actual dimensions** — ASTM nominal sizes *include* the mortar joint. If you apply a joint on top of the nominal size you double-count the joint and underestimate bricks per m² by ~5–8%.\n\n5. **Assuming a single wythe for all walls** — Structural exterior walls in the US are commonly double-wythe or cavity wall construction, doubling the brick count. Confirm the wall specification before ordering.\n\n6. **Not accounting for bond pattern** — Stack bond vs. running bond uses the same brick count per m², but herringbone or diagonal patterns generate 15–20% more waste due to angled cuts at edges.\n\n---\n\n## Related Calculators\n\n- Area Calculator (m²)\n- Concrete Volume Calculator\n- Mortar Mix Calculator\n- Construction Cost Estimator\n",
+  "explanation": "## How It Is Calculated\n\nThe fundamental formula counts how many brick faces fit into one square meter of wall, including the mortar joint around each brick:\n\n```\nBricks per m² = 1 / [(L + J) × (H + J)]\n\nWhere:\n  L = brick face length (m)\n  H = brick face height (m)\n  J = mortar joint thickness (m)\n\nTotal to order = Net wall area (m²) × Bricks/m² × (1 + waste %/100)\n```\n\n**Example — US Modular brick, 10 mm joint, single-wythe:**\n- L = 0.194 m, H = 0.057 m, J = 0.010 m\n- Bricks/m² = 1 ÷ (0.204 × 0.067) = 1 ÷ 0.01367 ≈ **73.2 → rounded to 75/m²** (BIA standard)\n- Wall = 10 m² · 75 bricks/m² · 1.05 = **788 bricks to order**\n\n## Reference Table\n\n| Brick Type | Face Dimensions | Joint | Bricks/m² |\n|---|---|---|---|\n| US Modular (ASTM C216) | 194 × 57 mm | 10 mm | **75** |\n| UK Standard metric | 215 × 65 mm | 10 mm | **60** |\n| Argentine solid clay (soga, 12 cm wall) | 240 × 60 mm face | 15 mm | **67** |\n| Argentine solid clay (double, 24 cm) | 240 × 60 mm face | 15 mm | **134** |\n| Hollow ceramic 8×18×33 cm | 330 × 180 mm | 15 mm | **17** |\n| Hollow ceramic 18×18×33 cm | 330 × 180 mm | 15 mm | **16** |\n| Structural ceramic IRAM 12×19×33 cm | 330 × 190 mm | 15 mm | **16** |\n| Concrete block 19×19×39 cm | 390 × 190 mm | 10 mm | **13** |\n| Face brick 5×10×24 cm | 240 × 50 mm | 15 mm | **75** |\n\n*Source: BIA Technical Notes; ASTM C216; IRAM 12568; IRAM 12586.*\n\n## Subtracting Openings\n\nAlways subtract doors and windows before entering the area:\n\n```\nNet area = (Wall width × height) − Σ (opening width × height)\n\nExample: 4 m × 3 m wall = 12 m²\n  − window 1.20 × 1.10 m = 1.32 m²\n  − door 0.90 × 2.10 m   = 1.89 m²\n  Net area = 12 − 1.32 − 1.89 = 8.79 m²\n  Base count (US Modular): 8.79 × 75 = 659 bricks\n  With 7% waste: 659 × 1.07 = 705 bricks to order\n```\n\n## Common Errors\n\n1. **Forgetting the mortar joint** — Using only the brick face dimensions (without adding the joint) overstates bricks/m² and leads to ordering too few. Always add J to both L and H.\n2. **Skipping the waste factor** — Breakage during transport and cutting is unavoidable. The BIA minimum is 5% for straight walls.\n3. **Not subtracting openings** — Including door and window areas in the total inflates brick count and material cost unnecessarily.\n4. **Mixing nominal and actual dimensions** — ASTM nominal sizes already include the mortar joint. If you add another joint on top of the nominal size, you double-count the joint and underestimate bricks/m² by ~5–8%.\n5. **Single-wythe vs double-wythe** — Structural exterior walls are often double-wythe (~200 mm deep), which doubles the brick count versus a single-wythe cladding or garden wall.",
   "faq": [
     {
-      "q": "How many bricks do I need per square meter for a standard US modular brick?",
-      "a": "For a US modular brick (nominal 194 × 57 mm face) with a standard 10 mm mortar joint, you need approximately **75 bricks per m²** (single wythe). This is derived from 1 ÷ (0.204 × 0.067) ≈ 73.1, rounded up with a 5% waste factor to ~75–79 bricks ordered per m²."
+      "q": "How many bricks do I need per square meter for a US modular brick?",
+      "a": "For a US modular brick (nominal 194 × 57 mm face) with a standard 10 mm mortar joint, the Brick Industry Association (BIA) standard is approximately **75 bricks per m²** for a single-wythe wall. The precise formula gives 1 ÷ (0.204 × 0.067) ≈ 73, rounded up to 75 to account for minor dimensional variation. Before ordering, add your chosen waste factor on top of this figure."
     },
     {
-      "q": "What waste factor should I add to my brick estimate?",
-      "a": "The Brick Industry Association (BIA) recommends a **5% waste allowance** for straightforward walls with few cuts, **7–8%** for walls with window and door openings, and **10–15%** for complex bond patterns like herringbone or diagonal. Never order the exact calculated amount — brick breakage during transport and cutting is unavoidable."
+      "q": "How many bricks per m² for a UK standard metric brick?",
+      "a": "A UK standard metric brick (215 × 65 × 102.5 mm) with a 10 mm mortar joint gives **60 bricks per m²** for a half-brick (single-leaf) wall. For a full-brick (one-brick deep, ~215 mm) wall, double this to 120 bricks/m². These values match the UK industry standard cited by the Brick Development Association (BDA) and NHBC guidance."
     },
     {
-      "q": "Does the bond pattern (running bond vs. stack bond) change the number of bricks needed?",
-      "a": "The *theoretical* bricks per m² is the same for running bond and stack bond since each brick occupies the same face area. However, patterns like herringbone or 45° diagonal require significantly more cutting at wall edges and corners, increasing effective waste to **15–20%** above a straight running bond. Always increase your waste factor for decorative patterns."
+      "q": "What waste factor should I use?",
+      "a": "The Brick Industry Association (BIA) recommends **5% for straight walls with few cuts**, **7–8% for walls with window and door openings**, and **10–15% for decorative bond patterns** like herringbone or 45° diagonal. Never order the exact calculated amount — brick breakage during transport and cutting is unavoidable."
     },
     {
       "q": "How do I account for doors and windows in my brick count?",
-      "a": "Calculate the total wall area (width × height), then **subtract the area of each opening** (door width × height, window width × height) before multiplying by bricks per m². For example, a 10 m² wall with two 1.2 × 1.0 m windows has a net masonry area of 10 − 2.4 = 7.6 m². Still apply a 7–8% waste factor for the extra cuts around opening edges."
+      "a": "Measure the full wall rectangle (width × height), then **subtract each opening's area** (door width × height, window width × height). Enter the resulting net masonry area into the calculator. Still apply a 7–8% waste factor for the extra cuts at opening edges. For example, a 10 m² wall with two 1.2 × 1.0 m windows has a net area of 10 − 2.4 = 7.6 m²."
     },
     {
-      "q": "What is the difference between a single-wythe and double-wythe wall, and how does it affect brick count?",
-      "a": "A **single-wythe** wall is one brick thick (roughly 90–100 mm deep) — common for garden walls, fences, and cladding. A **double-wythe** wall is two bricks thick (~200 mm) and is used for structural exterior walls in residential construction. Simply multiply the single-wythe count by 2 for a double-wythe wall, as both faces require a full layer of bricks."
+      "q": "Does the bond pattern affect the number of bricks I need?",
+      "a": "The theoretical bricks/m² is the same for running bond and stack bond — each brick covers the same face area. However, patterns like herringbone or 45° diagonal generate **15–20% more waste** due to angled cuts at wall edges and corners. Always increase your waste factor to 15% for decorative patterns."
+    },
+    {
+      "q": "What is the difference between a single-wythe and double-wythe wall?",
+      "a": "A **single-wythe** wall is one brick thick (roughly 90–110 mm deep) — common for garden walls, fences, and cladding. A **double-wythe** wall is two bricks thick (~200 mm) and is standard for structural exterior walls in residential construction. Simply multiply the single-wythe count by 2 for a double-wythe wall."
     },
     {
       "q": "What ASTM standard governs brick dimensions in the United States?",
-      "a": "**ASTM C216** (Standard Specification for Facing Brick) and **ASTM C62** (Building Brick) govern the dimensional and physical requirements for clay brick in the US. Nominal modular brick dimensions are also codified in ASTM C652. These standards define the basis for the standard brick sizes used in this calculator."
+      "a": "**ASTM C216** (Standard Specification for Facing Brick) and **ASTM C62** (Standard Specification for Building Brick) govern the dimensional and physical requirements for clay brick in the US. Nominal modular brick dimensions are additionally referenced in ASTM C652. These standards define the 194 × 57 mm modular brick face dimensions used in this calculator."
     },
     {
-      "q": "How many bricks come on a standard pallet, and how does that help my order?",
-      "a": "A standard US pallet holds approximately **500–525 modular bricks**, though this varies by manufacturer and brick size. Once you calculate your total brick need (with waste), **round up to the nearest full pallet** to simplify delivery and reduce per-brick cost. Ordering partial pallets typically costs 10–20% more per unit from most suppliers."
+      "q": "How many bricks come on a standard pallet, and how should I round up my order?",
+      "a": "A standard US pallet holds approximately **500–525 modular bricks**, though this varies by manufacturer and brick size. Once you calculate your total (with waste), **round up to the nearest full pallet** to simplify delivery and reduce per-brick cost. Ordering partial pallets typically costs 10–20% more per unit from most suppliers. In the UK, a standard pallet typically holds 400–500 metric bricks."
     },
     {
-      "q": "Does mortar joint thickness really matter? What if I use a thinner joint?",
-      "a": "Yes — mortar joint thickness has a measurable impact. A **6 mm joint** instead of a 10 mm joint increases bricks per m² from ~75 to ~83 for US modular brick (an 11% increase). Conversely, a **12 mm joint** drops the count to ~72. Always confirm the specified joint thickness with your mason before placing a material order."
+      "q": "Does mortar joint thickness significantly change the brick count?",
+      "a": "Yes. For a US modular brick: a **6 mm joint** increases bricks/m² from ~75 to ~83 (an 11% increase); a **12 mm joint** drops the count to ~72. For Argentine clay bricks with a standard 15 mm joint, switching to a 10 mm joint raises the count from 67 to ~75 per m². Always confirm the specified joint thickness with your mason before placing a material order."
     }
   ],
   "sources": [
@@ -112,21 +150,22 @@
       "url": "https://www.astm.org/c0216-23.html"
     },
     {
-      "name": "Wikipedia – Brick (sizes and bond patterns)",
-      "url": "https://en.wikipedia.org/wiki/Brick"
+      "name": "IRAM 12586 – Ladrillos cerámicos huecos portantes (Argentina)",
+      "url": "https://www.iram.org.ar"
     },
     {
-      "name": "NIST – Metric System and Construction Units Reference",
-      "url": "https://www.nist.gov/pml/owm/metric-si/si-units"
+      "name": "CIRSOC 501 – Reglamento Argentino para la Construcción de Mamposterías",
+      "url": "https://www.inti.gob.ar/cirsoc"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed formula based on standardized brick dimensions (ASTM C216, IRAM 12568, IRAM 12586). No external data updates required."
   },
   "audience": "global",
   "relatedSlugs": [],
-  "noindex": false
+  "noindex": false,
+  "lastReviewed": "2026-06-04"
 }

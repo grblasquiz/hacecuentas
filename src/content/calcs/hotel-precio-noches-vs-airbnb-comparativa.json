@@ -1,97 +1,208 @@
 {
   "slug": "calculadora-hotel-precio-noches-vs-airbnb-comparativa",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora Hotel vs Airbnb costo 2026 — Gratis",
-  "h1": "Hotel vs Airbnb costo",
-  "description": "✈️ Planificar viajes bien te ahorra tiempo, dinero y dolores de cabeza. Visas, equipaje, presupuesto y seguros son los 4 ejes críticos.",
+  "lastReviewed": "2026-06-04",
+  "title": "Calculadora Hotel vs Airbnb costo total 2026 — Gratis",
+  "h1": "Hotel vs Airbnb: costo total comparativo",
+  "description": "Calculá el costo real de hotel versus Airbnb sumando tarifa de limpieza, cargo por servicio (14–16%), impuesto turístico, desayuno y resort fee. Descubrí cuál te conviene antes de reservar.",
   "category": "viajes",
   "audience": "global",
   "icon": "🏨",
   "formulaId": "hotel-precio-noches-vs-airbnb-comparativa",
-  "intro": "Compará el costo real de hospedarte en un hotel tradicional versus un Airbnb sumando todos los gastos: precio por noche, tasas de limpieza, cargos de servicio, impuestos turísticos y extras. La fórmula base es Costo Total Hotel = (Tarifa/noche × Noches) + Impuestos + Estacionamiento + Desayuno; mientras que Costo Total Airbnb = (Tarifa/noche × Noches) + Tarifa de limpieza + Cargo por servicio Airbnb (~14–16%) + Impuestos. Usá esta calculadora antes de reservar cualquier estadía para evitar sorpresas en el checkout.",
-  "keyTakeaway": "**Costo Total Airbnb = (Precio/noche × Noches) + Limpieza + (Precio/noche × Noches × 0,15) + Impuestos** — En estadías cortas (1–2 noches) el hotel suele ser hasta un 30% más barato por los cargos fijos del Airbnb (limpieza promedio: USD 60–120); en estadías largas (+7 noches) el Airbnb puede ahorrar un 20–40%.",
+  "intro": "La tarifa por noche que ves en el buscador es solo una parte del costo real. Un Airbnb de USD 70/noche puede terminar costando USD 126 efectivos si sumás la tarifa de limpieza (cobro único), el cargo por servicio de Airbnb (~14–16% del subtotal) e impuestos locales. Un hotel de USD 90/noche puede ser más barato para 1–3 noches, pero perder frente al Airbnb en estadías de una semana o más. Esta calculadora suma **todos** los cargos de cada opción para que compares costos reales, no precios publicados.",
+  "keyTakeaway": "**Costo Total Airbnb = (Precio/noche × Noches + Limpieza) × (1 + Fee de servicio%) + Impuestos/noche × Noches** — Para estadías de 1–3 noches el hotel suele ganar porque la tarifa fija de limpieza se reparte en pocas noches. A partir de la 4.ª–5.ª noche el Airbnb empieza a ser competitivo. Para grupos de 4+ personas el Airbnb casi siempre gana porque el alojamiento entero no se multiplica por cantidad de huéspedes.",
   "useCases": [
-    "Planeás un viaje de fin de semana largo (3 noches) a Bariloche y querés saber si te conviene más un hotel 3 estrellas o un Airbnb con tarifa de limpieza de $15.000.",
-    "Viaje de trabajo de 10 días a Ciudad de México: comparar hotel corporativo con desayuno incluido vs. departamento Airbnb con cocina para ahorrar en comidas.",
-    "Luna de miel en Europa (7 noches): evaluar si un hotel boutique con todas las comodidades sale menos que un Airbnb aparentemente más barato pero con cargo de limpieza de EUR 120 y fee de servicio.",
-    "Familia de 4 personas viajando a Miami por 5 noches: calcular si dos habitaciones de hotel o un Airbnb entero es más económico incluyendo estacionamiento y cocina propia."
+    "Fin de semana en Buenos Aires (2 noches, 2 personas): comparar hotel 3★ con desayuno incluido vs Airbnb con tarifa de limpieza de USD 40 y fee de servicio 15%.",
+    "Semana de trabajo en Ciudad de México (5 noches, 1 persona): hotel corporativo con desayuno sin resort fee vs Airbnb más barato por noche pero con limpieza USD 70.",
+    "Luna de miel en Europa (7 noches, 2 personas): hotel boutique con impuesto turístico EUR 5/noche vs Airbnb con tarifa de limpieza EUR 100 y fee 15%.",
+    "Familia de 4 en Miami (5 noches): 2 habitaciones de hotel (USD 150/hab) más resort fee USD 35/noche vs Airbnb entero USD 200/noche con limpieza USD 130."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Input 1",
+      "id": "noches",
+      "label": "Cantidad de noches",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "min": 1,
+      "max": 365,
+      "step": 1,
+      "placeholder": "3",
+      "unit": "noches"
     },
     {
-      "id": "v2",
-      "label": "Input 2",
+      "id": "hotel_tarifa",
+      "label": "Hotel — Tarifa por noche",
       "type": "number",
       "required": true,
+      "min": 0,
+      "max": 100000,
+      "step": 1,
+      "placeholder": "90",
+      "unit": "moneda/noche"
+    },
+    {
+      "id": "hotel_personas",
+      "label": "Hotel — Cantidad de personas",
+      "type": "number",
+      "required": false,
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "placeholder": "2",
+      "unit": "personas"
+    },
+    {
+      "id": "hotel_desayuno",
+      "label": "Hotel — Desayuno por persona/noche (0 si está incluido)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 200,
+      "step": 1,
       "placeholder": "0",
-      "step": 0.01
+      "unit": "moneda/persona/noche"
+    },
+    {
+      "id": "hotel_impuesto",
+      "label": "Hotel — Tasa turística o impuesto por noche",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 1000,
+      "step": 0.5,
+      "placeholder": "0",
+      "unit": "moneda/noche"
+    },
+    {
+      "id": "hotel_resort_fee",
+      "label": "Hotel — Resort fee por noche (común en EE.UU.)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 500,
+      "step": 1,
+      "placeholder": "0",
+      "unit": "moneda/noche"
+    },
+    {
+      "id": "airbnb_tarifa",
+      "label": "Airbnb — Tarifa por noche",
+      "type": "number",
+      "required": true,
+      "min": 0,
+      "max": 100000,
+      "step": 1,
+      "placeholder": "70",
+      "unit": "moneda/noche"
+    },
+    {
+      "id": "airbnb_limpieza",
+      "label": "Airbnb — Tarifa de limpieza (cobro único)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 5000,
+      "step": 1,
+      "placeholder": "80",
+      "unit": "moneda (total)"
+    },
+    {
+      "id": "airbnb_fee_porc",
+      "label": "Airbnb — Cargo por servicio al huésped (%)",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 50,
+      "step": 0.5,
+      "placeholder": "15",
+      "unit": "%"
+    },
+    {
+      "id": "airbnb_impuesto",
+      "label": "Airbnb — Impuesto turístico por noche",
+      "type": "number",
+      "required": false,
+      "min": 0,
+      "max": 1000,
+      "step": 0.5,
+      "placeholder": "0",
+      "unit": "moneda/noche"
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Resultado",
+      "label": "¿Cuál conviene más?",
       "primary": true
     },
     {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Desglose completo"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Semana en Madrid: hotel vs Airbnb (7 noches, 2 personas)",
     "steps": [
-      "Ejemplo",
-      "Resultado"
+      "**Hotel 3★ en Madrid:** tarifa EUR 110/noche × 7 noches = EUR 770. Desayuno: EUR 10/persona × 2 × 7 noches = EUR 140. Tasa turística Madrid: EUR 3,25/noche × 7 = EUR 22,75. Total Hotel: EUR 932,75.",
+      "**Airbnb en Madrid:** tarifa EUR 80/noche × 7 noches = EUR 560. Limpieza: EUR 90 (cobro único). Fee de servicio Airbnb 15%: (EUR 560 + EUR 90) × 0,15 = EUR 97,50. Total Airbnb: EUR 747,50.",
+      "**Diferencia:** El Airbnb ahorra EUR 185,25 (20%) en 7 noches — equivale a EUR 26,46 por noche efectivos vs EUR 133,25 del hotel. El ahorro en desayunos (cocina disponible en el Airbnb) amplía aún más la ventaja."
     ],
-    "result": "Resultado"
+    "result": "Airbnb ahorra 20% en 7 noches (EUR 185,25)"
   },
-  "explanation": "## Cómo se calcula\n\nLa comparativa real entre hotel y Airbnb requiere sumar **todos** los costos, no solo la tarifa por noche que aparece en el buscador.\n\n```\n// HOTEL\nCosto_Hotel = (Tarifa_noche × Noches)\n            + Impuesto_turístico           // varía por ciudad: EUR 1–7/noche en Europa\n            + Estacionamiento              // USD 15–40/noche en ciudades grandes\n            + Desayuno (si no incluido)    // USD 10–25/persona/día\n            + Resort fee (EE.UU.)          // USD 20–50/noche en algunos hoteles\n\n// AIRBNB\nCosto_Airbnb = (Tarifa_noche × Noches)\n             + Tarifa_limpieza             // cargo único, promedio USD 60–120\n             + Fee_servicio_Airbnb         // ~14–16% sobre (tarifa × noches)\n             + Impuestos locales           // según país/ciudad, 6–18%\n\n// COMPARATIVA\nDiferencia = Costo_Hotel - Costo_Airbnb\nAhorro_%   = (Diferencia / Costo_Hotel) × 100\n```\n\n> **Punto de quiebre típico:** con una tarifa de limpieza de USD 80 y fee de servicio del 15%, el Airbnb recién empieza a ser más barato que un hotel equivalente a partir de la **4.ª noche**.\n\n---\n\n## Tabla de referencia\n\n| Ciudad | Hotel 3★ (USD/noche) | Airbnb típico (USD/noche) | Limpieza Airbnb | Fee servicio | Punto de quiebre |\n|---|---|---|---|---|---|\n| Buenos Aires | 60–120 | 40–90 | USD 20–50 | 14–16% | 2–3 noches |\n| Ciudad de México | 70–130 | 45–100 | USD 30–70 | 14–16% | 3–4 noches |\n| Madrid | 90–180 | 60–130 | EUR 50–100 | 14–16% | 3–5 noches |\n| Miami | 150–250 | 100–200 | USD 80–150 | 14–16% | 4–6 noches |\n| París | 130–250 | 90–180 | EUR 60–120 | 14–16% | 4–6 noches |\n| Bariloche (ARG) | ARS 80.000–180.000 | ARS 60.000–150.000 | ARS 15.000–40.000 | 14–16% | 2–4 noches |\n\n*Valores orientativos 2025–2026. El \"punto de quiebre\" indica desde cuántas noches el Airbnb resulta más económico.*\n\n---\n\n## Casos típicos\n\n### Caso 1 — Fin de semana en Buenos Aires (2 noches)\n- **Hotel 3★:** USD 90/noche × 2 = USD 180 + USD 20 impuesto city tax = **USD 200**\n- **Airbnb:** USD 70/noche × 2 = USD 140 + USD 35 limpieza + USD 21 fee servicio (15%) + USD 15 impuestos = **USD 211**\n- 👉 **Gana el hotel** por USD 11. El cargo fijo de limpieza pesa mucho en estadías cortas.\n\n### Caso 2 — Semana en Madrid (7 noches), pareja\n- **Hotel 3★:** EUR 120/noche × 7 = EUR 840 + EUR 35 impuesto turístico (EUR 5/noche) + EUR 140 desayunos (EUR 10/persona/día × 2 × 7) = **EUR 1.015**\n- **Airbnb:** EUR 85/noche × 7 = EUR 595 + EUR 80 limpieza + EUR 89 fee servicio (15%) + EUR 60 impuestos = **EUR 824**\n- 👉 **Gana el Airbnb** por EUR 191 (19% de ahorro). La cocina evita gastar en desayunos.\n\n### Caso 3 — Familia de 4 en Miami (5 noches)\n- **Hotel (2 habitaciones):** USD 180/hab × 2 × 5 = USD 1.800 + USD 250 resort fee + USD 120 estacionamiento = **USD 2.170**\n- **Airbnb (depto entero):** USD 220/noche × 5 = USD 1.100 + USD 130 limpieza + USD 165 fee servicio + USD 88 impuestos + USD 60 estacionamiento = **USD 1.543**\n- 👉 **Gana el Airbnb** por USD 627 (29% de ahorro). Para familias/grupos, el alquiler entero escala mejor.\n\n---\n\n## Errores comunes\n\n1. **Comparar solo la tarifa base:** La tarifa visible en Airbnb no incluye limpieza ni fee de servicio; el precio final puede ser 30–50% mayor. Siempre revisá el desglose antes de reservar.\n\n2. **Ignorar el desayuno del hotel:** Un hotel con desayuno incluido puede parecer más caro pero ahorrar USD 15–30 por persona por día; para una familia de 4 en 7 noches eso son hasta USD 840 menos.\n\n3. **No considerar el resort fee en EE.UU.:** Muchos hoteles americanos cobran entre USD 20 y USD 50 por noche como \"resort fee\" obligatorio que NO aparece en el precio inicial de la búsqueda.\n\n4. **Subestimar el impuesto turístico en Europa:** Ciudades como Amsterdam (EUR 7/persona/noche), París (EUR 5–8) o Barcelona (EUR 4–6) aplican tasas que suman significativamente en estadías de más de 4 personas.\n\n5. **No comparar en la misma moneda con tipo de cambio actualizado:** En destinos con alta inflación como Argentina, la diferencia entre reservar en USD vs. ARS puede cambiar completamente el resultado en semanas.\n\n6. **Asumir que Airbnb siempre incluye wifi y utensilios:** Los costos ocultos como lavandería, compra de artículos básicos o traslados más largos desde zonas no céntricas pueden sumar USD 20–50 extra por estadía.\n\n---\n\n## Calculadoras relacionadas\n\n- [Comparativa Hotel vs Airbnb vs Hostel por noche](/calculadora-hotel-vs-airbnb-vs-hostel-noche-comparativa)\n- [Costo de estacionamiento en aeropuerto por días](/calculadora-costo-estacionamiento-aeropuerto-dias)\n- [Equipaje extra: cuánto cobra la aerolínea](/calculadora-equipaje-extra-costo-aerolinea)\n- [Costo de roaming y datos en el exterior](/calculadora-costo-roaming-datos-exterior)\n",
+  "explanation": "## Cómo se calcula\n\nLa comparativa real requiere sumar **todos** los costos, no solo la tarifa base que aparece en el buscador.\n\n```\n// ── HOTEL ─────────────────────────────────────────────────────────\nCosto_Hotel = (Tarifa_noche × Noches)\n            + (Desayuno × Personas × Noches)   // 0 si incluido\n            + (Impuesto_turístico × Noches)     // EUR 1–8 en Europa, varía por ciudad\n            + (Resort_fee × Noches)             // USD 20–50 en hoteles de EE.UU.\n\n// ── AIRBNB ────────────────────────────────────────────────────────\nSubtotal_Airbnb  = (Tarifa_noche × Noches) + Limpieza\nFee_servicio     = Subtotal_Airbnb × Fee%     // ~14–16% sobre tarifa+limpieza\nCosto_Airbnb     = Subtotal_Airbnb + Fee_servicio + (Impuesto × Noches)\n\n// ── COMPARATIVA ───────────────────────────────────────────────────\nDiferencia = Costo_Hotel - Costo_Airbnb\nAhorro_%   = |Diferencia| / Costo_Hotel × 100\nCosto_noche_efectivo = Costo_Total / Noches   // para comparar manzanas con manzanas\n```\n\n### Fee de servicio de Airbnb (2026)\n\nAirbnb opera con dos modelos:\n\n| Modelo | El huésped paga | El anfitrión paga |\n|---|---|---|\n| **Split fee** (modelo clásico) | 14–16% sobre subtotal | 3% sobre subtotal |\n| **Host-only fee** (desde Q4 2025) | 0% (precio ya todo incluido) | 15,5% sobre subtotal |\n\nSi al hacer la reserva ves un subtotal y luego un recargo separado, estás en modelo split. Si el precio final coincide exactamente con el publicado, el anfitrión optó por el modelo host-only. Usá 0% en esa situación.\n\n### Punto de quiebre típico\n\nCon tarifa de limpieza de USD 80 y fee de servicio del 15%, el Airbnb supera al hotel equivalente a partir de la **4.ª noche**. Con limpieza más baja (USD 30–40), el quiebre cae a la 2.ª–3.ª noche.\n\n---\n\n## Tabla de referencia orientativa (2025–2026)\n\n| Ciudad | Hotel 3★ (USD/noche) | Airbnb típico (USD/noche) | Limpieza Airbnb | Punto de quiebre |\n|---|---|---|---|---|\n| Buenos Aires | 60–120 | 40–90 | USD 20–50 | 2–3 noches |\n| Ciudad de México | 70–130 | 45–100 | USD 30–70 | 3–4 noches |\n| Madrid | 90–180 | 60–130 | EUR 50–100 | 3–5 noches |\n| Miami | 150–250 | 100–200 | USD 80–150 | 4–6 noches |\n| París | 130–250 | 90–180 | EUR 60–120 | 4–6 noches |\n\n---\n\n## Errores comunes al comparar\n\n1. **Ver solo la tarifa base:** El total del Airbnb puede ser 25–40% mayor al agregar limpieza, fee y taxes.\n2. **No considerar el resort fee (EE.UU.):** USD 20–50/noche que no aparece en el precio inicial del hotel; suma hasta USD 250 en 5 noches.\n3. **Olvidar el desayuno del hotel:** Para una familia de 4 con desayuno a USD 15/persona son USD 420 adicionales en una semana.\n4. **Asumir que el Airbnb siempre es más barato:** Para 1–2 noches, el hotel casi siempre gana porque la tarifa fija de limpieza del Airbnb no se diluye.\n5. **Ignorar el impuesto turístico en Europa:** Ámsterdam (EUR 7/persona/noche), París (EUR 5–8), Barcelona (EUR 4–6) suman de forma significativa para grupos.\n",
   "faq": [
     {
       "q": "¿Desde cuántas noches conviene más el Airbnb que el hotel?",
-      "a": "Depende de los cargos fijos del Airbnb. Con una tarifa de limpieza de USD 80 y fee de servicio del 15%, el punto de quiebre suele ser la 4.ª o 5.ª noche para destinos internacionales. En Buenos Aires, donde las tarifas de limpieza son menores (USD 20–50), el Airbnb puede ganar desde la 2.ª o 3.ª noche."
+      "a": "Depende principalmente de la tarifa de limpieza. Con una limpieza de USD 80 y fee de servicio del 15%, el punto de quiebre suele ser la 4.ª–5.ª noche. Con tarifas de limpieza bajas (USD 20–40, comunes en Argentina), el Airbnb puede ganar desde la 2.ª noche. Usá esta calculadora con los valores reales de tu reserva para saberlo con exactitud."
     },
     {
-      "q": "¿Cuánto cobra Airbnb de fee de servicio al huésped?",
-      "a": "Airbnb aplica un cargo por servicio al huésped de entre el 14% y el 16% sobre el subtotal de la estadía (tarifa × noches), sin incluir la tarifa de limpieza. Este porcentaje varía según el total de la reserva y el país. Para reservas de menos de USD 700, el fee tiende a acercarse al 16%; para reservas mayores puede reducirse levemente."
+      "q": "¿Cuánto cobra Airbnb de fee de servicio al huésped en 2026?",
+      "a": "En el modelo split-fee (clásico), Airbnb cobra al huésped entre el 14% y el 16% sobre el subtotal (tarifa × noches + limpieza), sin incluir impuestos. Desde Q4 2025, Airbnb migró muchos anfitriones al modelo host-only, donde el huésped NO paga fee adicional (el anfitrión paga 15,5% y lo absorbe en el precio publicado). Si en el checkout ves un cargo extra de Airbnb, estás en modelo split; si el precio final es igual al publicado, es host-only y debés usar 0% en esta calculadora."
     },
     {
-      "q": "¿El hotel o el Airbnb cobra más impuestos?",
-      "a": "Ambos deben cobrar impuestos locales, pero históricamente los hoteles los aplicaban con mayor consistencia. Desde 2018–2020, la mayoría de las ciudades exigen que Airbnb recaude y remita impuestos turísticos automáticamente. En Argentina, las plataformas de alojamiento deben incluir IVA (21%) y, en algunos municipios, tasas turísticas adicionales de hasta el 5%."
+      "q": "¿Qué es el resort fee de los hoteles y cómo afecta la comparativa?",
+      "a": "El resort fee es un cargo obligatorio diario que cobran principalmente hoteles en EE.UU. (Las Vegas, Miami, Hawaii, Orlando) por servicios como wifi, gimnasio o piscina, aunque no los uses. Oscila entre USD 20 y USD 50 por noche y NO aparece en el precio inicial del buscador. En una estadía de 5 noches en Miami puede sumar USD 250 adicionales, lo que cambia completamente la comparativa con el Airbnb."
     },
     {
-      "q": "¿Cuándo conviene más el hotel aunque salga más caro?",
-      "a": "El hotel conviene cuando valorás servicio de limpieza diario, recepción 24 h, check-in flexible, seguro de viaje con cobertura hotelera, puntos de programas de fidelidad (útiles para viajeros frecuentes) o cuando viajás solo por 1–2 noches y los cargos fijos del Airbnb superan el ahorro en tarifa base."
+      "q": "¿El hotel o el Airbnb cobra más impuestos turísticos?",
+      "a": "Históricamente los hoteles aplicaban impuestos turísticos con mayor consistencia, pero desde 2018–2020 la mayoría de las ciudades exigen que Airbnb recaude y remita automáticamente. En ciudades europeas el impuesto turístico es idéntico para hotel y Airbnb (EUR 3–8/persona/noche según ciudad). En Argentina, ambos deben aplicar IVA (21%) y tasas municipales variables."
     },
     {
-      "q": "¿Los precios en Airbnb en Argentina se cobran en pesos o en dólares?",
-      "a": "En Argentina, Airbnb permite a los anfitriones publicar en USD. El cobro al huésped local se hace en ARS al tipo de cambio que aplica Airbnb en el momento del pago, que generalmente refleja el tipo de cambio oficial/tarjeta. Esto puede diferir del tipo de cambio paralelo, afectando significativamente la comparativa real para residentes argentinos."
+      "q": "¿Cuándo conviene el hotel aunque salga más caro?",
+      "a": "El hotel conviene cuando valorás: limpieza diaria, recepción 24 h, check-in/out flexible sin coordinación con el anfitrión, seguro de viaje con cobertura hotelera (muchas pólizas cubren solo hoteles), puntos de programas de fidelidad (valiosos para viajeros frecuentes), o cuando el Airbnb está lejos del centro y los traslados adicionales superan el ahorro."
     },
     {
-      "q": "¿Qué es el 'resort fee' y en qué hoteles se cobra?",
-      "a": "El resort fee es un cargo obligatorio que cobran principalmente hoteles de EE.UU. (Las Vegas, Miami, Hawaii) por servicios como wifi, gimnasio o pileta, aunque no los uses. Oscila entre USD 20 y USD 50 por noche y NO aparece en el precio inicial del buscador. En una estadía de 5 noches en Miami puede sumar hasta USD 250 adicionales al costo final."
-    },
-    {
-      "q": "¿Cómo afecta el tamaño del grupo a la comparativa hotel vs Airbnb?",
-      "a": "A mayor cantidad de personas, el Airbnb escala mejor porque el precio base se divide entre más huéspedes. Un hotel necesita habitaciones adicionales (costo multiplicado), mientras que un Airbnb con capacidad para 6 personas tiene un solo cargo de limpieza y un solo fee de servicio. Para grupos de 4+ personas en 3+ noches, el Airbnb suele ser entre un 25% y un 45% más económico."
+      "q": "¿Cómo afecta la cantidad de personas a la comparativa?",
+      "a": "El Airbnb escala mucho mejor con más personas. Un hotel necesita habitaciones adicionales (el precio se multiplica), mientras que un Airbnb entero para 6 personas tiene un solo cargo de limpieza y un solo fee de servicio. Para grupos de 4+ personas en 3+ noches, el Airbnb suele ser entre 25% y 45% más económico. Ingresá la cantidad de personas al calcular el costo de desayuno del hotel para ver la diferencia real."
     },
     {
       "q": "¿Se puede negociar el precio en Airbnb para estadías largas?",
-      "a": "Sí. Airbnb permite a los anfitriones ofrecer descuentos automáticos por semana (típicamente 10–20%) y por mes (20–40%). Además, podés escribir al anfitrión directamente para negociar. Para estadías de 28+ días, muchos anfitriones ofrecen descuentos de hasta el 50%, lo que hace al Airbnb claramente superior al hotel en esos casos."
+      "a": "Sí. Airbnb permite a los anfitriones ofrecer descuentos automáticos por semana (típicamente 10–20%) y por mes (20–40%). Para estadías de 28+ días, muchos anfitriones ofrecen hasta un 50% de descuento, lo que hace que el Airbnb sea claramente superior al hotel en esos casos. Los descuentos ya están aplicados en la tarifa publicada antes de calcular el fee de servicio."
+    },
+    {
+      "q": "¿Los precios en Airbnb Argentina se cobran en pesos o dólares?",
+      "a": "En Argentina, Airbnb permite publicar en USD. El cobro al huésped local se hace en ARS al tipo de cambio que aplica Airbnb en el momento del pago, que generalmente refleja el tipo de cambio oficial/tarjeta (no el paralelo). Esto puede ser relevante para la comparativa: un hotel que cobra en ARS puede resultar diferente en términos de tipo de cambio efectivo. Usá la misma moneda para ambas opciones al ingresar los datos."
+    },
+    {
+      "q": "¿La tarifa de limpieza del Airbnb se devuelve si cancelo?",
+      "a": "Depende de la política de cancelación del anfitrión. En políticas flexibles o moderadas, la tarifa de limpieza se devuelve si cancelás antes del check-in (o dentro del plazo estipulado). En políticas estrictas o no reembolsables, la limpieza no se devuelve aunque canceles con mucha anticipación. Verificá siempre la política antes de reservar, especialmente si hay riesgo de cambio de planes."
     }
   ],
   "sources": [
     {
-      "name": "INDEC — Encuesta de Ocupación Hotelera (EOH)",
-      "url": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-13-56"
+      "name": "Airbnb — How service fees work (official resource)",
+      "url": "https://www.airbnb.com/resources/hosting-homes/a/simplifying-airbnb-service-fees-746"
+    },
+    {
+      "name": "Awning — How Much Does Airbnb Take? Host & Guest Fees Explained (2026)",
+      "url": "https://awning.com/post/how-much-airbnb-takes"
+    },
+    {
+      "name": "NerdWallet — Airbnb Prices: Here's What They Actually Are",
+      "url": "https://www.nerdwallet.com/travel/news/airbnb-prices-how-much-is-an-airbnb"
+    },
+    {
+      "name": "Travelry — Airbnb vs Hotel 2026: True Costs & Cheapest Stays",
+      "url": "https://travelry.ai/blog/airbnb-vs-vrbo-vs-hotels-2026"
     }
   ],
   "relatedSlugs": [
@@ -99,15 +210,17 @@
   ],
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "INDEC — Encuesta de Ocupación Hotelera (EOH)",
-    "sourceUrl": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-13-56"
+    "notes": "Fórmula fija basada en estructura de fees de Airbnb 2026. Actualizar si Airbnb cambia porcentajes de fee de servicio.",
+    "source": "Airbnb — How service fees work",
+    "sourceUrl": "https://www.airbnb.com/resources/hosting-homes/a/simplifying-airbnb-service-fees-746"
   },
   "seoKeywords": [
-    "hotel vs airbnb costo",
-    "calculadora hotel vs airbnb costo 2026",
-    "hotel precio noches vs airbnb comparativa"
+    "hotel vs airbnb costo total",
+    "calculadora hotel vs airbnb 2026",
+    "hotel precio noches vs airbnb comparativa",
+    "airbnb fee servicio calculo",
+    "comparar hotel airbnb precio real"
   ]
 }

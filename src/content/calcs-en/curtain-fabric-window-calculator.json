@@ -1,20 +1,20 @@
 {
   "slug": "curtain-fabric-window-calculator",
   "esSlug": "calculadora-cortinas-medir-tela-ventana-anchotelaje",
-  "title": "Window Curtain Fabric Calculator 2026 | Hacé Cuentas",
-  "h1": "How Much Curtain Fabric Do You Need?",
-  "description": "Calculate how much fabric you need for curtains. 2x window width + length + 10cm hem. Free, fast & instant results.",
+  "title": "Curtain Fabric Calculator — How Much Fabric Per Window | Hacé Cuentas",
+  "h1": "Curtain Fabric Calculator: How Much Fabric Do You Need?",
+  "description": "Calculate exactly how much curtain fabric to buy. Window width × fullness multiplier + side seams + hem allowances. Instant result in cm and linear meters.",
   "category": "construccion",
   "icon": "🪟",
   "formulaId": "cortinas-medir-tela-ventana-anchotelaje",
   "audience": "global",
-  "intro": "This calculator tells you exactly how many centimeters of fabric you need to sew or order curtains for a single window. It uses the industry-standard fullness-and-hem formula: **Total Fabric = (Window Width × Fullness Multiplier) + Curtain Length + Hem/Header Allowance**. For a standard pair of panels with 2× fullness and a 10 cm combined allowance for top header and bottom hem, the formula collapses to **(Width × 2) + Length + 10 cm**. Use it whenever you're buying fabric by the meter, planning a DIY sewing project, or quoting materials for a client window-treatment job.",
-  "keyTakeaway": "**Total Fabric (cm) = (Window Width cm × 2) + Curtain Length cm + 10 cm** — e.g., a 150 cm wide × 250 cm long window needs (150×2)+250+10 = **560 cm** of fabric.",
+  "intro": "This calculator tells you exactly how much fabric to buy for curtains on a single window, using the professional sewing formula: **Fabric Width = Window Width × Fullness Multiplier + 20 cm** (side seam allowances), and **Fabric Length = Drop + Top Header Allowance + 20 cm** (double bottom hem). The fullness multiplier varies by heading style: 2× for standard gathered curtains, 2.5× for pencil-pleat tape or voile, 1.5× for eyelet/grommet panels, up to 3× for ultra-full sheer voile.",
+  "keyTakeaway": "**Fabric Width (cm) = Window Width × Fullness + 20 cm.** **Fabric Length (cm) = Drop + Header Allowance + 20 cm.** From a 140 cm wide roll: divide fabric width by 140, round up for number of panels, multiply by fabric length to get linear meters to buy.",
   "useCases": [
-    "Buying fabric at a store for a DIY sewing project — knowing the exact centimeters prevents buying too little or wasting money on excess yardage.",
+    "Buying fabric at a store for a DIY sewing project — knowing the exact centimeters and panels prevents buying too little or wasting money on excess yardage.",
     "Quoting material costs for a home-renovation or interior-design client who needs curtains on multiple windows with different widths and drop lengths.",
-    "Planning blackout or thermal curtains where fabric is expensive ($15–$40/yd) and precise measurement directly controls project budget.",
-    "Ordering patterned fabric online where pattern repeat adds extra length requirements — using the base formula first, then adding repeat length per panel."
+    "Planning blackout or thermal curtains where heavy fabric is expensive and precise measurement directly controls project budget.",
+    "Ordering patterned fabric online where pattern repeat adds extra length — use the base calculator first, then add one full repeat per panel."
   ],
   "seoKeywords": [
     "curtain fabric calculator",
@@ -32,88 +32,150 @@
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Window Width (cm)",
+      "id": "anchoVentana",
+      "label": "Rod / Track Width",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "150",
+      "unit": "cm",
+      "min": 30,
+      "max": 600,
+      "step": 1,
+      "help": "Measure the rod or track end to end — NOT the window glass. Rods are typically 15–20 cm wider than the frame on each side."
     },
     {
-      "id": "v2",
-      "label": "Curtain Length (cm)",
+      "id": "largoCaida",
+      "label": "Drop (Curtain Length)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "250",
+      "unit": "cm",
+      "min": 50,
+      "max": 400,
+      "step": 1,
+      "help": "Measure from the bottom of the rod/ring down to your desired finish point (floor, sill, or below sill). Do NOT measure from the window frame."
+    },
+    {
+      "id": "telaje",
+      "label": "Fullness Multiplier",
+      "type": "select",
+      "required": true,
+      "default": "2",
+      "options": [
+        { "value": "1.5", "label": "1.5× — Eyelet / grommet / flat panel (light gather)" },
+        { "value": "2",   "label": "2× — Standard gathered curtains (recommended)" },
+        { "value": "2.5", "label": "2.5× — Pencil-pleat tape or voile" },
+        { "value": "3",   "label": "3× — Extra-full sheer voile" }
+      ]
+    },
+    {
+      "id": "tipoCabecilla",
+      "label": "Heading Style",
+      "type": "select",
+      "required": true,
+      "default": "estandar",
+      "options": [
+        { "value": "estandar",   "label": "Rod pocket / standard (8 cm allowance)" },
+        { "value": "fruncidora", "label": "Pencil-pleat tape (10 cm allowance)" },
+        { "value": "ojalillos",  "label": "Eyelet / grommets (5 cm allowance)" },
+        { "value": "pliegues",   "label": "Pinch-pleat hooks (12 cm allowance)" }
+      ]
     }
   ],
   "outputs": [
     {
-      "id": "resultado",
-      "label": "Fabric Needed (cm)",
-      "primary": true
+      "id": "anchoTela",
+      "label": "Fabric Width Needed",
+      "primary": true,
+      "unit": "cm"
+    },
+    {
+      "id": "largoTela",
+      "label": "Fabric Length (drop + allowances)",
+      "unit": "cm"
+    },
+    {
+      "id": "metrosLineales140",
+      "label": "Linear Meters to Buy (from 140 cm roll)",
+      "unit": "m"
     },
     {
       "id": "resumen",
-      "label": "Summary"
+      "label": "Full Breakdown"
     }
   ],
   "example": {
-    "title": "Sample Calculation",
+    "title": "Living room: 150 cm wide rod × 250 cm drop, 2× fullness",
     "steps": [
-      "Window Width: 150 cm, Curtain Length: 250 cm",
-      "Formula: (150 × 2) + 250 + 10 = 560 cm"
+      "Fabric width: 150 × 2 + 20 = **320 cm** needed.",
+      "Fabric length: 250 + 8 (rod pocket) + 20 = **278 cm** needed.",
+      "From a 140 cm roll: ⌈320 ÷ 140⌉ = **3 panels** × 278 cm = **834 cm = 8.4 m** to buy."
     ],
-    "result": "560 cm of fabric needed"
+    "result": "Buy 8.4 linear meters of 140 cm wide fabric (3 panels of 278 cm each)"
   },
-  "explanation": "## How It Is Calculated\n\nThe calculator applies the standard curtain-fabric formula used by professional seamstresses and window-treatment retailers:\n\n```\nTotal Fabric (cm) = (Window Width × Fullness) + Drop Length + Allowances\n```\n\nWith default settings (2× fullness, 10 cm header + hem allowance):\n\n```\nTotal Fabric (cm) = (Window Width cm × 2) + Curtain Length cm + 10\n```\n\n**Term definitions:**\n- **Window Width** — the measured width of the window frame or rod, in cm.\n- **Fullness Multiplier (×2)** — industry standard for a \"gathered\" look. Sheer fabrics often use ×2.5–×3; flat panel/pinch-pleat styles use ×1.5–×2.\n- **Curtain Length (Drop)** — measured from the rod to where the curtain should fall (sill, below sill, or floor).\n- **Allowances (+10 cm)** — covers a 4 cm double-fold bottom hem and a 2–3 cm top header pocket, combined.\n\n**Worked example — calculator default:**\n- Window Width = 150 cm, Curtain Length = 250 cm\n- Total = (150 × 2) + 250 + 10 = **560 cm**\n- Converting: 560 cm ÷ 100 = **5.6 meters** of fabric\n\n---\n\n## Reference Table\n\n| Window Width (cm) | Curtain Length (cm) | Fullness | Allowance (cm) | **Total Fabric (cm)** |\n|---|---|---|---|---|\n| 90 | 150 | ×2 | 10 | 340 |\n| 120 | 200 | ×2 | 10 | 450 |\n| 150 | 250 | ×2 | 10 | **560** |\n| 180 | 250 | ×2 | 10 | 620 |\n| 200 | 270 | ×2 | 10 | 680 |\n| 150 | 250 | ×2.5 | 10 | 635 |\n| 150 | 250 | ×3 | 10 | 710 |\n| 120 | 200 | ×1.5 | 10 | 390 |\n\n> **Tip:** For patterned fabric, add one full **pattern repeat** (typically 25–64 cm) per panel cut to ensure motifs align across panels.\n\n---\n\n## Typical Cases\n\n### Case 1 — Standard Living Room Window (150 × 250 cm)\nRod width: 150 cm | Floor-length drop: 250 cm | Standard ×2 fullness | 10 cm allowance.\n`(150 × 2) + 250 + 10 = 560 cm → 5.6 m`\nAt $8/meter for mid-range cotton-blend fabric, material cost = **~$44.80**.\n\n### Case 2 — Narrow Bedroom Window with Sheer Fabric (90 × 200 cm, ×2.5 fullness)\n`(90 × 2.5) + 200 + 10 = 435 cm → 4.35 m`\nSheer voile typically costs $4–$6/meter → material cost = **~$17–$26**.\n\n### Case 3 — Wide Picture Window (200 × 270 cm, ×2 fullness, patterned fabric with 30 cm repeat)\nBase fabric: `(200 × 2) + 270 + 10 = 680 cm`\nPattern repeat addition (2 panels × 30 cm): `680 + 60 = 740 cm → 7.4 m`\nPatterned upholstery-weight fabric at $18/m → material cost = **~$133**.\n\n---\n\n## Common Mistakes\n\n1. **Measuring the glass pane instead of the rod or track** — The rod is almost always wider than the glass (by 15–30 cm per side), so measuring only the glass can leave you 30–60 cm short of fabric.\n2. **Forgetting the fullness multiplier** — Buying fabric equal to the window width produces flat, skimpy-looking curtains. The ×2 minimum is universally recommended for a gathered appearance.\n3. **Ignoring pattern repeat** — Patterned fabrics require extra yardage per panel (one full repeat per cut) so that horizontal motifs line up. Skipping this causes mismatched panels.\n4. **Confusing \"curtain length\" with \"window height\"** — Curtain drop is measured from the **rod**, which is typically 10–15 cm above the window frame, not from the frame itself. Using window height instead of drop underestimates length.\n5. **Not accounting for lining fabric** — If curtains are to be lined (blackout or thermal lining), the lining requires its own fabric calculation — typically the same length but slightly narrower (rod width × 1.5 instead of × 2).\n6. **Rounding down instead of up** — Always round fabric quantities **up** to the nearest 10 cm or half-meter when ordering, since fabric stores cut to fixed increments and running short mid-project means buying a new dye lot that may not match.\n\n---\n\n## Related Calculators\n\nFor other home-improvement measurement needs, explore these tools on Hacé Cuentas:\n- Paint Coverage Calculator\n- [Room Area Calculator](/area-habitacion)\n- Flooring Material Calculator",
+  "explanation": "## How It Is Calculated\n\nThe calculator applies the standard curtain-fabric formula used by professional seamstresses and window-treatment workrooms worldwide:\n\n### Fabric Width Needed\n\n```\nFabric Width (cm) = Window Rod Width × Fullness Multiplier + 20\n```\n\n- **Rod/Track Width** — the width of the curtain rod or track, end to end. Rods are typically 15–30 cm wider than the window frame so the open curtain doesn't block light.\n- **Fullness Multiplier** — the ratio that creates gathers. 2× is the professional standard for a classic gathered look. Sheer voile uses 2.5×–3×. Flat eyelet panels use 1.5×.\n- **+20 cm** — 10 cm double-fold side hem on each side (left and right), the standard side-seam allowance.\n\n### Fabric Length Needed\n\n```\nFabric Length (cm) = Drop + Header Allowance + 20\n```\n\n- **Drop** — from the bottom of the rod or ring down to the desired finish (floor level, sill, or below sill). Measure from the rod, not from the window frame.\n- **Header Allowance** — fabric needed for the top heading (varies by style, see table below).\n- **+20 cm** — a double 10 cm bottom hem, folded twice to add weight and give a crisp professional finish.\n\n### Converting to Linear Meters\n\nFabric is sold on rolls (bolts). The most common width in Argentina is 140 cm; blackout and wide voile often come on 280 cm rolls.\n\n```\nPanels needed  = ⌈ Fabric Width ÷ Roll Width ⌉   (always round UP)\nLinear meters  = Panels × Fabric Length ÷ 100\n```\n\n## Header Allowance Reference\n\n| Heading Style | Top Allowance |\n|---|---|\n| Rod pocket (standard) | 8 cm |\n| Pencil-pleat tape | 10 cm |\n| Eyelet / grommet | 5 cm |\n| Pinch-pleat hooks | 12 cm |\n\n## Fullness Multiplier Reference\n\n| Style | Multiplier | Visual effect |\n|---|---|---|\n| Flat panel / eyelet | 1.5× | Minimal gather, modern look |\n| Standard gathered | 2× | Classic soft folds (recommended) |\n| Pencil pleat / voile | 2.5× | Fuller, more voluminous |\n| Extra-full sheer | 3× | Maximum fullness, very light fabric |\n\n## Worked Examples\n\n**Case 1 — Standard living room (150 × 250 cm, 2× fullness, rod pocket)**\nFabric width = 150 × 2 + 20 = 320 cm. Fabric length = 250 + 8 + 20 = 278 cm.\nFrom a 140 cm roll: ⌈320 ÷ 140⌉ = 3 panels × 278 cm = 8.34 m → **buy 8.5 m**.\n\n**Case 2 — Narrow bedroom with sheer voile (90 cm wide, 200 cm drop, 2.5× fullness, pencil pleat)**\nFabric width = 90 × 2.5 + 20 = 245 cm. Fabric length = 200 + 10 + 20 = 230 cm.\nFrom a 140 cm roll: ⌈245 ÷ 140⌉ = 2 panels × 230 cm = 4.6 m → **buy 4.6 m**.\n\n**Case 3 — Wide picture window with patterned fabric (220 cm wide, 270 cm drop, 2× fullness, 30 cm pattern repeat)**\nFabric width = 220 × 2 + 20 = 460 cm. Fabric length = 270 + 8 + 20 = 298 cm.\nFrom a 140 cm roll: ⌈460 ÷ 140⌉ = 4 panels. Add one pattern repeat per panel: 4 × 30 = 120 cm extra length.\nLinear meters = 4 × (298 + 30) = 4 × 328 = 13.12 m → **buy 13.5 m** (patterned).\n\n## Common Mistakes\n\n1. **Measuring the glass pane instead of the rod** — the rod is almost always 30–60 cm wider than the glass; using glass width leaves you badly short of fabric.\n2. **Forgetting the fullness multiplier** — fabric bought equal to window width produces flat, skimpy curtains. 2× is the universally recommended minimum for a gathered look.\n3. **Confusing roll width with curtain width** — the 140 cm roll width is used as the curtain LENGTH (drop direction). The curtain WIDTH is calculated from your fullness formula, and you cut multiple panels from the roll.\n4. **Ignoring pattern repeat** — patterned fabrics need one extra full repeat per panel (25–64 cm typical) so motifs align between panels when sewn together.\n5. **Not pre-washing natural fabrics** — cotton shrinks 3–5%, linen up to 8% on first wash. Pre-wash before cutting or add that margin to the length calculation.\n6. **Rounding down** — always round fabric quantities UP to the nearest panel or half-meter. Fabric stores cut to set increments and running short mid-project means a new dye lot that may not match.",
   "faq": [
     {
-      "q": "Why does the formula multiply window width by 2?",
-      "a": "The ×2 multiplier is the industry-standard 'fullness ratio' for a gathered curtain look. A single flat panel equal to the window width would look stiff and sparse; doubling the width creates the classic soft folds. Professional window-treatment guides recommend ×1.5 for minimal gather, ×2 for standard pleats, and ×2.5–×3 for full, luxurious sheers."
+      "q": "Why multiply window width by a fullness factor?",
+      "a": "A curtain panel equal in width to the window would lie completely flat against the wall with no folds — it would look like a bedsheet. The fullness multiplier creates the extra fabric that forms gathers, pleats, or soft folds. 2× is the professional standard: half the fabric is 'used up' in gathers and the other half creates the visual fullness."
     },
     {
-      "q": "What does the +10 cm allowance cover?",
-      "a": "The 10 cm covers two structural elements: a 4–5 cm double-fold hem at the bottom (folded twice to hide raw edges and add weight) and a 3–4 cm rod-pocket or header at the top through which the curtain rod passes. Some styles with decorative pleated headers may need 15–20 cm instead of 10 cm."
+      "q": "Where exactly do I measure window width?",
+      "a": "Measure the curtain rod or track end to end — NOT the window glass. Rods are typically installed 15–20 cm wider than the window frame on each side so that when the curtains are open they don't cover the glass and block daylight. If you haven't installed the rod yet, add 15–20 cm to each side of the window frame as a planning estimate."
     },
     {
-      "q": "How do I measure curtain drop (length) correctly?",
-      "a": "Measure from the bottom of the curtain rod (or the clip/ring bottom if using rings) down to your desired finish point — window sill, 10–15 cm below the sill, or floor. Do NOT measure from the window frame. Rod placement is typically 10–15 cm above the frame, and this 'high hang' technique is widely recommended by interior designers to make windows appear taller."
+      "q": "How do I measure drop (curtain length) correctly?",
+      "a": "Measure from the bottom of the rod (or from the bottom of the clip/ring if using rings) down to your desired finish point — floor level, 1–2 cm above floor, window sill, or 10–15 cm below the sill. Do NOT measure from the window frame. Rods are usually hung 10–15 cm above the frame, and that 'high hang' technique visually makes windows look taller."
+    },
+    {
+      "q": "What does the +20 cm at the bottom cover?",
+      "a": "It accounts for a double-fold bottom hem: the fabric is folded up 10 cm and folded again another 10 cm, creating a double hem 10 cm deep. This professional finish hides the raw edge, adds weight to help the curtain hang straight, and gives a crisp, clean bottom line. If you prefer a single 5 cm hem, subtract 10 cm from this allowance."
+    },
+    {
+      "q": "How do I convert fabric width to linear meters to buy?",
+      "a": "Fabric is sold by the linear meter from a roll (bolt) of fixed width — usually 140 cm. Divide the fabric width you need (in cm) by the roll width (140 cm) and round UP to the nearest whole number: that's the number of panels. Then multiply panels × fabric length (in cm) ÷ 100 to get linear meters. The calculator does this automatically for 140 cm rolls."
     },
     {
       "q": "Does patterned fabric need extra yardage?",
-      "a": "Yes. For patterned fabric, add one full pattern repeat length per cut panel. Common repeat sizes range from 25 cm (small prints) to 64 cm (large medallion or floral prints). For example, if your base calculation gives 560 cm across 2 panels, and the repeat is 30 cm, add 2 × 30 = 60 cm, making your order 620 cm (6.2 m). Always ask the retailer for the repeat measurement before purchasing."
+      "a": "Yes. For patterned fabric, add one full pattern repeat length per panel. Common repeats range from 25 cm (small prints) to 64 cm (large medallion or floral motifs). For example, if you need 4 panels and the repeat is 30 cm, add 4 × 30 = 120 cm to your total fabric length before calculating linear meters. Always ask the retailer for the exact repeat measurement before purchasing."
     },
     {
-      "q": "Does lining require a separate fabric calculation?",
-      "a": "Yes. Lining fabric is calculated separately. A standard lining typically uses 1.5× window width (less gather than the face fabric) and the same drop length plus hem allowance. For a 150 cm wide window with 250 cm drop, lining fabric would be approximately (150 × 1.5) + 250 + 10 = 485 cm (4.85 m). Blackout lining adds $3–$8 per meter over standard cotton lining."
+      "q": "Should I calculate lining fabric separately?",
+      "a": "Yes. Lining is calculated independently. A standard lining typically uses 1.5× the rod width (less fullness than face fabric) plus the same drop length and hem allowance. For a 150 cm rod with 250 cm drop: lining width = 150 × 1.5 + 20 = 245 cm; lining length = 250 + 5 + 15 = 270 cm. Blackout lining usually costs more per meter than standard cotton lining."
     },
     {
-      "q": "How does fullness affect the look and fabric cost?",
-      "a": "Higher fullness multipliers create richer folds but significantly increase fabric use and cost. For a 150 cm × 250 cm window: ×1.5 fullness = 485 cm; ×2 = 560 cm; ×2.5 = 635 cm; ×3 = 710 cm. At $10/m, the difference between ×1.5 and ×3 is 225 cm = 2.25 m = $22.50 more — per window. Multiply that across an entire home and fullness choice becomes a significant budget decision."
-    },
-    {
-      "q": "Should I measure in centimeters or inches, and does it matter?",
-      "a": "This calculator uses centimeters, the standard unit for fabric measurement in most of the world, including among US fabric retailers who sell by the yard (1 yard = 91.44 cm). To convert your result to yards, divide total cm by 91.44. For example, 560 cm ÷ 91.44 = 6.12 yards. Always confirm which unit your supplier uses before placing an order to avoid costly conversion errors."
+      "q": "Does fabric type (cotton vs. sheer vs. blackout) change the formula?",
+      "a": "The formula stays the same, but the recommended fullness multiplier changes. Heavy blackout fabric: 1.8×–2× (the weight creates natural fall with less fullness). Medium cotton/linen blend: 2×. Sheer voile: 2.5×–3× (you need more fabric because sheers are translucent and sparse fullness shows immediately). Also, heavy fabrics may need a slightly wider side hem to carry the weight — the 10 cm side seam still applies."
     },
     {
       "q": "Can I use this calculator for tab-top or eyelet curtains?",
-      "a": "Yes, with a slight adjustment. Tab-top and eyelet (grommet) styles are usually designed with ×1.5–×2 fullness and have minimal header allowance (the tabs or grommets are part of the panel itself). Use ×1.5 as the fullness multiplier and reduce the header allowance to 5 cm for the top fold-over. The rest of the formula remains identical."
+      "a": "Yes. For eyelet (grommet) or tab-top styles, choose 1.5× fullness and 'Eyelet / grommet' as the heading style (5 cm allowance). These styles have less gather by design — the fixed spacing of eyelets or tabs doesn't allow the same fabric compression as gathered headings. The rest of the formula is identical."
     }
   ],
   "sources": [
     {
-      "name": "NIST – Units of Measurement (SI & Imperial Conversions)",
-      "url": "https://www.nist.gov/pml/owm/metric-si/si-units"
+      "name": "Cotswold Sewing School — Calculating Fabric for Curtains (2022)",
+      "url": "https://www.thecotswoldsewingschool.co.uk/2022/05/30/calculating-fabric/"
+    },
+    {
+      "name": "Textile Calculator — Curtain Fabric Calculator",
+      "url": "https://textilecalculator.com/curtain-fabric-calculator/"
+    },
+    {
+      "name": "Mattermind — Curtain Yardage Calculator",
+      "url": "https://mattermind.blog/curtain-yardage-calculator"
+    },
+    {
+      "name": "Direct Fabrics — Curtain Fabric Calculator Guide",
+      "url": "https://www.direct-fabrics.co.uk/curtain-calculator"
     }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed textile formula — no external data updates required"
   },
   "noindex": false
 }

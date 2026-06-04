@@ -1,130 +1,171 @@
 {
   "slug": "caldera-potencia-kw-ambiente-metros",
+  "lastReviewed": "2026-06-04",
   "esSlug": "calculadora-caldera-potencia-kw-ambiente-metros",
-  "title": "Boiler Power Calculator kW by Room Size | Hacé Cuentas",
-  "h1": "Boiler Heating Power Calculator by Room Size",
-  "description": "Calculate boiler power (kW) needed for your room. Standard 100W/m² heating rule. Free, fast & accurate.",
+  "title": "Boiler Power Calculator – kW per Room by Area | Hacé Cuentas",
+  "h1": "Boiler Heating Power Calculator by Room (kW)",
+  "description": "Calculate the boiler power (kW) needed for any room using the S × O × A × Z × 85 W/m² heating load formula. Enter area, orientation, insulation level and climate zone. Instant result.",
   "category": "construccion",
   "icon": "🔥",
   "formulaId": "caldera-potencia-kw-ambiente-metros",
   "audience": "global",
-  "intro": "This calculator estimates the required boiler heating power (in kilowatts) based on your room's floor area in square meters and a climate/insulation adjustment factor. The core formula applies a heating load density — typically **0.1 kW per m²** under standard North American residential conditions — then scales it by an adjustment factor that accounts for insulation quality, climate zone, ceiling height, and window area. Use this tool when sizing a new boiler, upgrading an existing system, or verifying that your current boiler can handle an extension or renovation. Accurate sizing prevents both underpowered systems (cold rooms, constant cycling) and oversized boilers (short-cycling, wasted energy, higher upfront cost).",
-  "keyTakeaway": "**Boiler Power (kW) = Room Area (m²) × 0.1 kW/m² × Adjustment Factor** — e.g., a 50 m² room with an adjustment factor of 1.0 needs **5 kW**; a poorly insulated 80 m² room in a cold climate (factor 1.5) needs **12 kW**.",
+  "intro": "This calculator uses the **S × O × A × Z × 85 W/m² formula** — the standard residential heating load method used by certified HVAC installers in Spain and widely applicable across Europe and Latin America. It accounts for four real-world variables that go beyond the simplistic \"100 W per m²\" rule: room orientation (north-facing rooms lose more heat), insulation quality (double-glazing vs single-pane), climate severity zone, and ceiling height correction for rooms taller than 2.5 m. The result gives you the minimum boiler output for a single room, plus a recommended boiler size that includes a 20% safety margin for cold starts and extreme weather days.",
+  "keyTakeaway": "**Power (W) = Area (m²) × Orientation factor × Insulation factor × Climate zone factor × 85**. A 25 m² north-facing living room with no insulation in a cold climate: 25 × 1.12 × 1.10 × 1.12 × 85 = **2,930 W → select a boiler of at least 3.5 kW for this room**.",
   "useCases": [
-    "Sizing a new residential gas or oil boiler for a home addition of 65 m² in a northern US climate zone to ensure adequate heat on sub-freezing days.",
-    "Verifying whether an existing 8 kW boiler is sufficient after converting a 70 m² basement into a living space with minimal insulation.",
-    "Comparing heating load requirements between a well-insulated modern home (factor 0.9) and an older, drafty Victorian house (factor 1.5) of the same floor area.",
-    "Calculating boiler capacity for a commercial office space of 200 m² with large south-facing windows and variable occupancy patterns."
+    "Sizing a new gas boiler for a home addition: calculate each room individually and sum the results for total boiler output.",
+    "Checking whether your existing boiler can handle the load of a newly insulated loft conversion (70 m², north-facing, good insulation, Zone D).",
+    "Comparing the heating cost impact of upgrading from single-pane windows (factor 1.10) to double-glazing (factor 0.93) in your main living space.",
+    "Verifying that an installer's boiler recommendation matches your own independent calculation before committing to a purchase."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Room Area (m²)",
+      "id": "area",
+      "label": "Room floor area (m²)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "25",
+      "min": 1,
+      "max": 500,
+      "step": 0.5,
+      "unit": "m²"
     },
     {
-      "id": "v2",
-      "label": "Adjustment Factor",
-      "type": "number",
+      "id": "orientation",
+      "label": "Main exterior wall orientation",
+      "type": "select",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "options": [
+        { "value": "north", "label": "North (least sunny, coldest)" },
+        { "value": "east",  "label": "East / West (neutral)" },
+        { "value": "south", "label": "South (most sunny, warmest)" }
+      ]
+    },
+    {
+      "id": "insulation",
+      "label": "Insulation level",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "good",     "label": "Good insulation (double glazing + double-leaf wall)" },
+        { "value": "standard", "label": "Standard insulation (one insulated element)" },
+        { "value": "none",     "label": "No insulation (single glazing + single-leaf wall)" }
+      ]
+    },
+    {
+      "id": "zone",
+      "label": "Climate zone",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "mild",      "label": "Very mild (Zone A equiv. — e.g. southern Spain, coastal Mediterranean)" },
+        { "value": "moderate",  "label": "Mild (Zone B equiv. — e.g. Valencia, southern UK coast)" },
+        { "value": "average",   "label": "Average (Zone C equiv. — e.g. Barcelona, central France)" },
+        { "value": "cold",      "label": "Cold (Zone D equiv. — e.g. Madrid, central Europe)" },
+        { "value": "very-cold", "label": "Very cold (Zone E equiv. — e.g. Ávila, northern Scandinavia)" }
+      ]
+    },
+    {
+      "id": "altura",
+      "label": "Ceiling height (m)",
+      "type": "number",
+      "required": false,
+      "placeholder": "2.5",
+      "min": 2.0,
+      "max": 6.0,
+      "step": 0.1,
+      "unit": "m",
+      "format": "plain"
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Boiler Power Required (kW)",
+      "label": "Heating power required",
       "primary": true
     },
     {
       "id": "resumen",
-      "label": "Sizing Recommendation"
+      "label": "Interpretation and recommended boiler size"
     }
   ],
   "example": {
-    "title": "Example Calculation",
+    "title": "Example: 30 m² living room, north-facing, standard insulation, cold climate (Zone D)",
     "steps": [
-      "50 m² room, standard conditions",
-      "5 kW boiler power needed"
+      "Room area: 30 m²",
+      "Orientation factor (north): × 1.12",
+      "Insulation factor (standard): × 1.00",
+      "Climate zone factor (cold, Zone D): × 1.12",
+      "Base constant: × 85 W/m²",
+      "Base power: 30 × 1.12 × 1.00 × 1.12 × 85 = 3,207 W = 3.2 kW",
+      "With 20% safety margin: 3.9 kW → select a boiler rated at least 4 kW for this room"
     ],
-    "result": "5 kW"
+    "result": "4 kW (recommended boiler output for this room)"
   },
-  "explanation": "## How It Is Calculated\n\nThe fundamental heat loss model used in residential and light-commercial boiler sizing derives from steady-state heat transfer principles. The simplified formula used by this calculator is:\n\n```\nBoiler Power (kW) = Area (m²) × Base Load Density (kW/m²) × Adjustment Factor\n\nWhere:\n  Base Load Density = 0.10 kW/m²  (standard US residential, 2.4 m ceiling, avg insulation)\n  Adjustment Factor = user-supplied multiplier (see table below)\n```\n\nThe base density of **0.10 kW/m²** (100 W/m²) is the widely accepted rule-of-thumb for average US residential construction with 8-ft ceilings, double-pane windows, and R-13 wall insulation. For greater precision, a full Manual J calculation (ACCA Manual J, referenced by ENERGY STAR and ASHRAE 62.2) accounts for local design temperatures, envelope U-values, internal gains, and infiltration rates — but for quick boiler pre-sizing, the adjusted area method is reliable within ±15%.\n\n---\n\n## Reference Table\n\n| Condition | Adjustment Factor | Example Scenario |\n|---|---|---|\n| Excellent insulation, mild climate (IECC Zone 1–2) | 0.75 | Florida, southern Texas; new construction, R-20+ walls |\n| Good insulation, moderate climate (IECC Zone 3) | 0.90 | Virginia, Tennessee; post-2000 construction |\n| Standard insulation, mixed climate (IECC Zone 4) | 1.00 | Missouri, Pennsylvania; average 1990s home |\n| Average insulation, cold climate (IECC Zone 5) | 1.20 | Ohio, New York; pre-1990 construction |\n| Poor insulation, very cold climate (IECC Zone 6) | 1.40 | Minnesota, Wisconsin; older home, single-pane windows |\n| Minimal insulation, subarctic (IECC Zone 7–8) | 1.60 | Alaska, northern Montana; uninsulated walls |\n| High ceilings (>3 m), large windows (+15%) | ×1.15 | Loft spaces, industrial conversions |\n| South-facing glass wall (>25% of floor area) | ×0.90 | Passive solar design (partial offset) |\n\nIECC climate zones are defined by the US Department of Energy / International Energy Conservation Code.\n\n---\n\n## Typical Case Examples\n\n**Example 1 — Standard 50 m² living room, Zone 4 (Pennsylvania)**\n- Area = 50 m²\n- Adjustment Factor = 1.00 (standard insulation, mixed climate)\n- Power = 50 × 0.10 × 1.00 = **5.0 kW**\n- Recommendation: A 6–7 kW boiler module provides the required output plus a 20–30% safety margin, standard industry practice.\n\n**Example 2 — 80 m² open-plan apartment, Zone 6 (Minnesota), poor insulation**\n- Area = 80 m²\n- Adjustment Factor = 1.40\n- Power = 80 × 0.10 × 1.40 = **11.2 kW**\n- Recommendation: Select a 12–14 kW boiler. At −20 °F (Minnesota design temperature per ASHRAE), a correctly sized system will maintain 70 °F indoors without continuous full-load operation.\n\n**Example 3 — 200 m² commercial office, Zone 5 (Ohio), good modern insulation**\n- Area = 200 m²\n- Adjustment Factor = 1.20 × 0.90 (south-facing glass offset) = 1.08\n- Power = 200 × 0.10 × 1.08 = **21.6 kW**\n- Recommendation: A 24 kW commercial boiler with modulating burner covers peak load and reduces short-cycling during mild days.\n\n---\n\n## Common Errors\n\n1. **Ignoring ceiling height:** The 0.10 kW/m² base assumes a 2.4 m (8 ft) ceiling. Rooms with 3 m or higher ceilings hold ~25% more air volume and require a proportional increase. Failing to apply the ×1.15–1.25 ceiling factor leads to chronic underpowering.\n\n2. **Using gross building area instead of heated floor area:** Garages, unheated basements, and attic spaces should not be included in the area input. Including them inflates the estimate by 20–40% and results in an oversized, inefficient boiler.\n\n3. **Choosing factor 1.0 for old homes:** Many users default to the standard factor regardless of construction era. Homes built before 1980 in Zones 5–6 typically have R-7 or lower wall insulation and single-pane windows; factor 1.4–1.6 is correct for these cases.\n\n4. **Forgetting domestic hot water (DHW) load:** This calculator sizes the boiler for space heating only. If the same boiler supplies DHW, add 3–6 kW for a typical residential load (or up to 15 kW for large families). Omitting this causes hot water shortfalls during peak demand.\n\n5. **Treating the result as exact without a safety margin:** Always add 15–25% to the calculated value when selecting the actual boiler model. This covers extreme weather events, heat loss through thermal bridges, and future room extensions.\n\n---\n\n## Related Calculators\n\n- [BTU to kW Converter](/btu-a-kw)\n- [Watts to kWh Calculator](/watts-a-kwh)\n- [Air Conditioner Sizing by Room (BTU)](/aire-acondicionado-btu-ambiente)\n- [Electricity Cost per kWh Calculator](/costo-electricidad-kwh)",
+  "explanation": "## How It Is Calculated\n\nThe formula used is the **S × O × A × Z × 85** heating load method, standard in residential HVAC sizing across Spain and widely used in Europe:\n\n```\nPower (W) = S × O × A × Z × 85\n\nWhere:\n  S = Room floor area in m²\n  O = Orientation factor (main exterior wall)\n  A = Insulation factor\n  Z = Climate zone factor\n  85 = Base specific heating load in W/m² (valid for ceiling height ≤ 2.5 m)\n```\n\n### Orientation Factors (O)\n\n| Orientation | Factor O | Reason |\n|---|---|---|\n| North | 1.12 | No direct winter sun, maximum heat loss |\n| East / West | 1.00 | Partial sun, neutral baseline |\n| South | 0.92 | Direct winter sun provides free solar gain |\n\n### Insulation Factors (A)\n\n| Insulation Level | Description | Factor A |\n|---|---|---|\n| Good | Double-pane glazing + double-leaf or cavity wall | 0.93 |\n| Standard | One insulated element (e.g. double pane only) | 1.00 |\n| None | Single-pane glazing + single-leaf uninsulated wall | 1.10 |\n\n### Climate Zone Factors (Z)\n\n| Zone | Factor Z | Equivalent Locations |\n|---|---|---|\n| Very mild (A) | 0.88 | Southern Spain, coastal Morocco, UAE |\n| Mild (B) | 0.95 | Valencia, southern UK coast, Portugal |\n| Average (C) | 1.04 | Barcelona, Paris, central France |\n| Cold (D) | 1.12 | Madrid, Brussels, northern Germany |\n| Very cold (E) | 1.19 | Ávila, Oslo, northern Scandinavia |\n\n### Ceiling Height Correction\n\nThe base formula assumes a 2.5 m ceiling height. For taller ceilings, multiply the result by `actual height / 2.5`. Example: 3.2 m ceiling → multiply by 1.28 (+28% extra power).\n\n### Total Home Boiler Sizing\n\nCalculate each room separately, then sum all room kW values. Add a **20% safety margin** to the total (never per room, then again to the total — that double-counts). The result is the minimum boiler output needed for the whole home.\n\n## Worked Example: 3-room apartment\n\n| Room | m² | O | A | Z | kW base |\n|---|---|---|---|---|---|\n| Living / dining | 35 | 1.00 | 1.00 | 1.04 | 3.1 kW |\n| Master bedroom | 16 | 1.12 | 0.93 | 1.04 | 1.4 kW |\n| Bathroom | 5 | 1.00 | 1.00 | 1.04 | 0.4 kW |\n| **Total** | | | | | **4.9 kW** |\n| **With 20% margin** | | | | | **5.9 kW → select 6 kW boiler** |",
   "faq": [
     {
-      "q": "What does the adjustment factor represent and how do I choose the right one?",
-      "a": "The adjustment factor is a dimensionless multiplier that corrects the base heating density (0.10 kW/m²) for your specific conditions. It bundles together climate severity (IECC zone), insulation quality (wall/attic R-values), window type, and ceiling height. Use the reference table above: factor 1.0 is the neutral baseline for Zone 4 / average 1990s construction. Go higher (1.2–1.6) for cold climates or poor insulation; go lower (0.75–0.90) for mild climates or highly insulated new builds."
+      "q": "Why does a north-facing room need more boiler power than a south-facing one?",
+      "a": "North-facing exterior walls in the Northern Hemisphere receive no direct sunlight during winter. This means two things: the wall loses heat faster by conduction (greater temperature differential), and there is no free solar gain through windows to offset the demand. The orientation factor O = 1.12 adds 12% to the calculated load versus an east/west room. A south-facing room benefits from winter solar radiation and gets a 0.92 factor — 8% less power needed for the same area."
     },
     {
-      "q": "Is 0.10 kW per m² always the right base heating load density?",
-      "a": "It is the industry standard rule-of-thumb for North American residential buildings with 8-ft ceilings, double-pane windows, and R-13 wall / R-38 attic insulation. ASHRAE's Handbook of Fundamentals and ACCA Manual J both validate values in the 70–120 W/m² range for residential use depending on the envelope. For high-performance Passive House buildings, the load can drop to 10–15 W/m²; for uninsulated structures in subarctic zones, it can exceed 150 W/m²."
+      "q": "What exactly does 'standard insulation' (factor 1.00) mean?",
+      "a": "Standard insulation in this formula means the room has **one properly insulated element** — for example, double-pane windows but a standard single-leaf external wall, or a well-insulated wall but single glazing. 'Good insulation' (factor 0.93) requires both: double-pane glazing AND a double-leaf or cavity wall with insulation. 'No insulation' (factor 1.10) means single-pane glass and an uninsulated masonry wall — common in pre-1980 construction in many countries."
     },
     {
-      "q": "How does my US climate zone affect boiler sizing?",
-      "a": "The US Department of Energy defines 8 IECC climate zones based on heating degree days and design temperatures. Zone 1 (Miami, FL) has a 99% design temperature above 40 °F, while Zone 7 (Fairbanks, AK) drops to −47 °F. Moving from Zone 4 to Zone 6 increases your heating load by roughly 40%, which is why the adjustment factor climbs from 1.0 to 1.4. You can look up your city's climate zone for free at the DOE's Building Energy Codes Program website."
+      "q": "How do I find the climate zone for my location?",
+      "a": "The zone classification in this calculator is based on Spain's CTE (Código Técnico de la Edificación) which defines 5 zones (A to E). For other countries, match by winter severity: **very mild** = annual heating degree-days < 500; **mild** = 500–1,000; **average** = 1,000–2,000 (most of central Europe); **cold** = 2,000–3,000 (northern France, Germany, inland UK); **very cold** = > 3,000 (Scandinavia, alpine regions, northern Canada). When in doubt, go one zone colder — oversizing slightly is safer than undersizing."
     },
     {
-      "q": "Should I add extra capacity for domestic hot water?",
-      "a": "Yes — this calculator covers space heating only. A typical US household uses 40–80 gallons of hot water per day, requiring 3–6 kW of additional boiler capacity on a combi (combination) unit. Large families or homes with multiple bathrooms may need 10–15 kW extra. Always clarify with your plumber or HVAC engineer whether the boiler you select is rated for combined space-heating and DHW duty, and check its simultaneous output rating."
+      "q": "Why does the formula use 85 W/m² as the base value?",
+      "a": "The constant 85 W/m² represents the baseline specific heating load for a standard European room (2.5 m ceiling, average construction quality, neutral orientation, mixed climate). It is the geometric mean of the range commonly cited by HVAC engineers: 64–125 W/m² depending on conditions. The O, A and Z multipliers then shift the result within that range. Using 100 W/m² flat (the popular rule of thumb) skips those corrections and can mis-size your boiler by 10–20%."
     },
     {
-      "q": "What is the difference between boiler output (kW) and boiler input (kW)?",
-      "a": "Boiler input is the total fuel energy consumed; output (net heat delivered to the system) is always less due to combustion and flue losses. Efficiency — expressed as Annual Fuel Utilization Efficiency (AFUE) — ranges from about 80% for older atmospheric burners to 97–98% for modern condensing boilers (per DOE AFUE standards). If your calculated heating need is 10 kW and your boiler has 90% AFUE, you need an input rating of at least 11.1 kW (10 ÷ 0.90). Always check the output (net) kW rating on the boiler's data plate, not just the input."
+      "q": "What is the 20% safety margin for and should I always apply it?",
+      "a": "Yes — always apply the 20% margin when selecting a physical boiler model. The calculated kW is the thermal output needed under design conditions (standard cold day, no wind correction). The margin covers: **cold start recovery** (the boiler must heat a cold building from scratch each morning, which requires peak output), **infiltration losses** not captured in the simplified formula, **extreme weather** beyond the design temperature, and **thermal bridges** at structural joints. Without the margin, a correctly sized boiler runs at 100% capacity on design days and fails to recover temperature on colder days."
     },
     {
-      "q": "Can this calculator be used for radiant floor heating systems?",
-      "a": "Yes, with a caveat: radiant floor systems operate at lower water temperatures (typically 85–120 °F supply vs. 140–180 °F for baseboard systems) and have higher thermal inertia. The heating load calculation (kW required) is the same regardless of distribution system. However, the boiler type matters — a condensing boiler is especially efficient with low-temperature radiant loops because it operates in condensing mode (AFUE >90%) at those supply temperatures. The calculated kW figure remains your target output."
+      "q": "How does a condensing boiler affect the kW figure I need?",
+      "a": "It does not change the required kW — the heat demand of your room is fixed by physics. What condensing boilers change is **efficiency**: they extract 95–109% of fuel energy as useful heat (vs. 80–88% for conventional boilers) by recovering latent heat from flue gases. This means you burn less gas to deliver the same kW output. When buying, confirm the boiler's **net output kW** (not input), which is what the data plate should show and what matches your calculated requirement."
     },
     {
-      "q": "How accurate is this simplified area-based method compared to a Manual J calculation?",
-      "a": "The area-based method with adjustment factors is accurate within approximately ±15–20% for typical residential buildings. A full ACCA Manual J calculation — the ANSI/ACCA 2016 standard mandated by most US building codes for new construction — accounts for individual window U-values, infiltration blower door test results, local 99% design temperatures, and internal heat gains from appliances and occupants. For critical installations (>50 kW commercial systems, passive house design, or unusual geometry), always commission a Manual J from a certified HVAC engineer."
+      "q": "Can I use this calculator for underfloor heating instead of radiators?",
+      "a": "Yes — the heating load calculation (kW required) is identical regardless of the distribution system. Underfloor heating runs at lower water temperatures (35–45 °C vs. 70–80 °C for radiators), which makes condensing boilers especially efficient in combination with it. One practical difference: underfloor systems have high thermal mass and heat up slowly, so the 20% safety margin is less about peak demand and more about ensuring the system can reach setpoint within a reasonable time from cold."
     },
     {
-      "q": "What boiler efficiency (AFUE) should I target for a new installation in the US?",
-      "a": "The US Department of Energy's minimum federal standard for gas-fired hot-water boilers is 82% AFUE (as of 2012 regulations). ENERGY STAR certification requires ≥87% AFUE for boilers. Modern condensing boilers reach 95–98% AFUE and are strongly recommended in Zones 5–8 where heating seasons are long. The payback period vs. an 82% unit is typically 4–8 years based on average US natural gas prices (~$12/MMBtu as of 2024 EIA data), after which the efficiency savings are net positive annually."
+      "q": "My room has a 3.5 m vaulted ceiling — how do I apply the ceiling correction?",
+      "a": "Enter 3.5 in the ceiling height field. The calculator will multiply the base result by 3.5 / 2.5 = 1.40, adding 40% to the calculated power. This reflects the larger air volume that must be heated and the proportionally greater roof loss area. For double-height spaces (lofts, industrial conversions with 5–6 m ceilings), the correction becomes 2.0–2.4× the base — always verify with a qualified engineer for these extreme cases, as air stratification also reduces efficiency."
     }
   ],
   "seoKeywords": [
-    "boiler size calculator",
-    "boiler power kw",
-    "heating boiler capacity",
-    "central heating calculator",
-    "boiler kw by room size",
-    "calculate boiler power",
-    "heating system sizing",
-    "boiler wattage calculator",
-    "how much boiler power needed",
-    "central heating sizing guide",
-    "home heating power calculator",
-    "boiler sizing formula"
+    "boiler size calculator kw",
+    "boiler power per room formula",
+    "heating load calculator watts per square meter",
+    "boiler kw room size",
+    "residential boiler sizing calculator"
   ],
   "sources": [
     {
-      "name": "US Department of Energy — Furnaces and Boilers (Energy Saver)",
-      "url": "https://www.energy.gov/energysaver/furnaces-and-boilers"
+      "name": "Caloryfrio — How to Calculate Heating Power for a Room (S×O×A×Z×85 formula)",
+      "url": "https://www.caloryfrio.com/calefaccion/calefaccion-instalaciones-componentes/calcular-la-potencia-calorifica-para-una-casa-o-habitacion.html"
     },
     {
-      "name": "ENERGY STAR — Boilers Product Specifications",
-      "url": "https://www.energystar.gov/products/heating_cooling/boilers"
+      "name": "Calefacción y Gas Sáiz — Caloric Power Calculation Method",
+      "url": "https://calefaccionygassaiz.com/calculo-de-la-potencia-calorifica/"
     },
     {
-      "name": "US DOE Building Energy Codes Program — IECC Climate Zone Map",
-      "url": "https://www.energycodes.gov/development/residential/iecc_analysis"
+      "name": "Spain CTE — Código Técnico de la Edificación, DB HE (Energy Savings)",
+      "url": "https://www.codigotecnico.org/pdf/Documentos/HE/DBHE.pdf"
     },
     {
-      "name": "US Energy Information Administration — Natural Gas Prices",
-      "url": "https://www.eia.gov/dnav/ng/ng_pri_sum_dcu_nus_m.htm"
+      "name": "OmniCalculator — Boiler Size Calculator",
+      "url": "https://www.omnicalculator.com/construction/boiler-size"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed formula S × O × A × Z × 85. All factors are constants from CTE Spain building code."
   },
   "relatedSlugs": [],
   "noindex": false

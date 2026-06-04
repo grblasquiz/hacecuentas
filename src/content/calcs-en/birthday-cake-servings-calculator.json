@@ -1,58 +1,94 @@
 {
   "slug": "birthday-cake-servings-calculator",
   "esSlug": "calculadora-porciones-torta-cumpleanos-invitados-tamano",
-  "title": "Birthday Cake Servings by Size Calculator 2026 | Hacé Cuentas",
-  "h1": "Birthday Cake Servings by Size",
-  "description": "🎂 Calculate cake servings by diameter: 20cm → 10–12, 25cm → 15–18, 30cm → 25–30. Plan your party cake instantly. Free.",
+  "lastReviewed": "2026-06-04",
+  "title": "Birthday Cake Servings Calculator by Pan Size 2026 | Hacé Cuentas",
+  "h1": "Birthday Cake Servings Calculator by Pan Size",
+  "description": "🎂 Calculate exactly how many servings your cake yields based on pan diameter or dimensions. Round, square, rectangular. Based on Wilton industry standard. Free.",
   "category": "cocina",
+  "audience": "global",
   "icon": "🎂",
   "formulaId": "porciones-torta-cumpleanos-invitados-tamano",
-  "audience": "global",
-  "seoKeywords": [
-    "birthday cake servings calculator",
-    "cake portions by diameter",
-    "how many servings in a cake",
-    "party cake size guide",
-    "serving sizes for cakes",
-    "birthday cake portions",
-    "20cm cake servings",
-    "25cm cake servings",
-    "30cm cake servings",
-    "cake serving chart",
-    "how big a cake for party",
-    "standard cake slice size"
-  ],
-  "intro": "Baking combines science (chemistry and physics) with tradition. When planning a birthday party, getting the cake size right keeps guests happy. A standard slice weighs about 50g, but portion sizes vary by cake type (light sponge vs. rich chocolate). Learn how many servings each cake diameter provides: 20cm → 10–12 servings, 25cm → 15–18, 30cm → 25–30. This calculator is free, fast, and helps you avoid over- or under-ordering.",
-  "keyTakeaway": "**Birthday Cake Servings Guide**: 20cm cake serves 10–12 people, 25cm serves 15–18, 30cm serves 25–30. Match your guest count to the right cake size with this free calculator.",
+  "intro": "How many people does your birthday cake serve? The answer depends on your pan's **surface area** and the size of each slice — not on the cake's height. A 10-inch (25 cm) round cake has a surface area of about 491 cm²; divided into party-size servings (≈19.4 cm² footprint, Wilton standard) it yields roughly **25 servings**. This calculator applies the industry method: the surface area determines servings, no matter how many layers the cake has. Works for round, square, and rectangular pans.",
+  "keyTakeaway": "**Servings = Surface area (cm²) ÷ Slice footprint (cm²).** Party slice = 1.5\" × 2\" ≈ 19.4 cm² | Wedding slice = 1\" × 2\" ≈ 12.9 cm² | Kids' party = 1\" × 1.5\" ≈ 9.7 cm². Example: 26 cm round cake → area 531 cm² ÷ 19.4 = **27 party servings**.",
   "useCases": [
-    "Planning the right cake size for your birthday party",
-    "Catering and bakery professionals",
-    "Event planners sizing desserts",
-    "Home bakers serving guests",
-    "Estimating portions before ordering"
+    "Planning how many cakes to bake for a 50-person birthday party with 24 cm pans.",
+    "Deciding between a 28×28 cm square pan or two 22 cm round pans to get more servings.",
+    "Sizing a wedding cake order for 80 guests using the formal wedding portion standard.",
+    "Calculating the minimum pan size for 15 kids at a children's birthday party with smaller portions."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Cake Diameter (cm)",
-      "type": "number",
+      "id": "shape",
+      "label": "Pan shape",
+      "type": "select",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "options": [
+        { "value": "round",  "label": "Round (circular)" },
+        { "value": "square", "label": "Square" },
+        { "value": "rect",   "label": "Rectangular" }
+      ]
     },
     {
-      "id": "v2",
-      "label": "Party Guests",
+      "id": "diametro",
+      "label": "Pan diameter (cm)",
       "type": "number",
+      "required": false,
+      "placeholder": "24",
+      "min": 10,
+      "max": 80,
+      "step": 1,
+      "showWhen": { "field": "shape", "value": "round" }
+    },
+    {
+      "id": "lado",
+      "label": "Pan side length (cm)",
+      "type": "number",
+      "required": false,
+      "placeholder": "24",
+      "min": 10,
+      "max": 80,
+      "step": 1,
+      "showWhen": { "field": "shape", "value": "square" }
+    },
+    {
+      "id": "largo",
+      "label": "Pan length (cm)",
+      "type": "number",
+      "required": false,
+      "placeholder": "35",
+      "min": 10,
+      "max": 80,
+      "step": 1,
+      "showWhen": { "field": "shape", "value": "rect" }
+    },
+    {
+      "id": "ancho",
+      "label": "Pan width (cm)",
+      "type": "number",
+      "required": false,
+      "placeholder": "25",
+      "min": 10,
+      "max": 80,
+      "step": 1,
+      "showWhen": { "field": "shape", "value": "rect" }
+    },
+    {
+      "id": "portion",
+      "label": "Portion size",
+      "type": "select",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "options": [
+        { "value": "party",   "label": "Party/birthday (1.5\" × 2\" ≈ 19.4 cm²)" },
+        { "value": "wedding", "label": "Wedding/formal event (1\" × 2\" ≈ 12.9 cm²)" },
+        { "value": "child",   "label": "Kids' party (1\" × 1.5\" ≈ 9.7 cm²)" }
+      ]
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Servings",
+      "label": "Estimated servings",
       "primary": true
     },
     {
@@ -61,72 +97,80 @@
     }
   ],
   "example": {
-    "title": "Example Calculation",
+    "title": "26 cm round cake — adult birthday party",
     "steps": [
-      "Sample: 25cm cake",
-      "Result: 15–18 servings"
+      "Pan shape: Round | Diameter: 26 cm | Portion size: Party (19.4 cm²)",
+      "Surface area = π × (26/2)² = π × 169 = 530.9 cm²",
+      "Servings = 530.9 ÷ 19.4 = 27.4 → rounded up = 28 servings"
     ],
-    "result": "A 25cm cake provides 15–18 standard slices"
+    "result": "28 party servings — perfect for 24–28 adult guests"
   },
-  "explanation": "Planning a birthday party means getting the details right—including dessert. Cake sizes are typically measured by diameter, and portion counts depend on slice thickness and cake density.\n\n## How We Calculate\n\nOur calculator uses standard bakery portion sizes:\n- **20cm cake**: 10–12 slices\n- **25cm cake**: 15–18 slices\n- **30cm cake**: 25–30 slices\n\nThese are based on standard slice weight (~50g per slice) and typical cake recipes. Adjust up if your guests prefer smaller slices, or down if they prefer generous portions.\n\n## Portion Factors\n\nDifferent cake types and serving styles affect portions:\n- **Light sponge cakes** can be sliced thinner → more servings\n- **Dense chocolate cakes** are richer → fewer servings needed\n- **Sheet cakes** (rectangular) yield more slices than round cakes of the same weight\n- **Formal events** often call for smaller slices; **casual parties** allow larger ones\n\n## Important Notes\n\nThis calculator provides general guidance based on standard portion sizes. Actual servings may vary depending on cake recipe, density, and your guests' appetites. For special dietary needs or unusual requests, consult a professional baker.",
+  "explanation": "## How it works\n\nThe baking industry (Wilton, Webstaurantstore) uses the **surface area method** to count servings: each cut produces a slice whose base has a standard footprint area. The cake's height does **not** affect serving count — it only determines how tall each individual slice is.\n\n### Formula by pan shape\n\n```\n# ROUND\nArea (cm²) = π × (diameter / 2)²\n\n# SQUARE\nArea (cm²) = side × side\n\n# RECTANGULAR\nArea (cm²) = length × width\n\n# SERVINGS (any shape)\nServings = Area ÷ Slice_footprint\n```\n\n### Standard slice footprints (Wilton)\n\n| Occasion | Slice size | Area (cm²) |\n|----------|-----------|------------|\n| Party/birthday | 1.5\" × 2\" (3.8 × 5 cm) | 19.4 cm² |\n| Wedding/formal | 1\" × 2\" (2.5 × 5 cm) | 12.9 cm² |\n| Kids' party | 1\" × 1.5\" (2.5 × 3.8 cm) | 9.7 cm² |\n\n### Reference table — ROUND pans (party serving ≈ 19.4 cm²)\n\n| Diameter | Area (cm²) | Party servings | Wedding servings |\n|:---:|---:|:---:|:---:|\n| 18 cm | 254 | **13** | 20 |\n| 20 cm | 314 | **17** | 25 |\n| 22 cm | 380 | **20** | 30 |\n| 24 cm | 452 | **24** | 36 |\n| 26 cm | 531 | **28** | 42 |\n| 28 cm | 616 | **32** | 48 |\n| 30 cm | 707 | **37** | 55 |\n| 35 cm | 962 | **50** | 75 |\n\n### Reference table — SQUARE pans (party serving ≈ 19.4 cm²)\n\n| Side | Area (cm²) | Party servings | Wedding servings |\n|:---:|---:|:---:|:---:|\n| 20 cm | 400 | **21** | 31 |\n| 24 cm | 576 | **30** | 45 |\n| 28 cm | 784 | **41** | 61 |\n| 30 cm | 900 | **47** | 70 |\n\n> **Tip:** Square pans yield up to **27% more servings** than round pans of the same labeled size, because there is no curved-edge waste when cutting.\n\n---\n\n## Common mistakes\n\n1. **Thinking a taller cake gives more servings.** The number of cuts on the surface doesn't change. A 4-layer and a 2-layer 24 cm cake both yield 24 party servings — the layers just make each slice taller.\n\n2. **Using the outside pan diameter instead of the inside.** Metal edges can reduce usable diameter by 1–2 cm. Always measure the inside of the pan.\n\n3. **Mixing up party and wedding portion sizes.** Wedding portions (1\" × 2\") are 33% smaller than party portions (1.5\" × 2\"). Using the wrong size can leave guests without cake at a formal event.\n\n4. **Not adding tiered cakes separately.** For a two-tier cake with different diameters, calculate each tier's area independently and add them.\n\n5. **Forgetting the safety margin.** Always plan 10–15% extra: the first few slices tend to be uneven, and some guests may ask for seconds.",
   "faq": [
     {
-      "q": "How many people does a 20cm cake serve?",
-      "a": "A 20cm (8-inch) round cake typically serves 10–12 people with standard slices."
+      "q": "How many servings does a 24 cm (9.5-inch) round cake yield?",
+      "a": "A 24 cm round cake has a surface area of π × 12² ≈ 452 cm². Divided into party servings (19.4 cm²) that gives **24 servings**. Using wedding portions (12.9 cm²) it reaches **35 servings**. The height of the cake does not change this number — it only affects how tall each slice is."
     },
     {
-      "q": "How many servings does a 25cm cake provide?",
-      "a": "A 25cm (10-inch) cake serves approximately 15–18 people at standard slice size."
+      "q": "Does a taller cake yield more servings?",
+      "a": "No. Servings are determined by the **surface area** (the top-down view), not by height. A 24 cm cake that is 8 cm high and one that is 12 cm high both yield exactly 24 party servings. What changes is how tall each individual slice is."
     },
     {
-      "q": "What size cake do I need for 25 guests?",
-      "a": "For 25 guests, a 30cm (12-inch) cake is ideal. For a more generous event with larger slices, consider two 25cm cakes."
+      "q": "What cake size do I need for 30 people?",
+      "a": "For 30 adults with party portions you need at least 30 × 19.4 = 582 cm². That equals a **27 cm diameter round** (area ≈ 572 cm²) or a **25×25 cm square pan** (625 cm²). With a 10% safety margin (plan for 33 servings): a 28 cm round or 26 cm square works perfectly."
     },
     {
-      "q": "Why do different cakes have different serving counts?",
-      "a": "Cake density affects servings. Lighter sponge cakes can be sliced thinner, while dense chocolate cakes yield fewer slices. The recipe and type matter as much as size."
+      "q": "What is the difference between party and wedding portions?",
+      "a": "A party serving (1.5\" × 2\" ≈ 19.4 cm²) is the larger slice used at informal birthday parties and family gatherings. A wedding serving (1\" × 2\" ≈ 12.9 cm²) is 33% smaller and corresponds to formal catering service where other desserts are also served. The same cake yields one-third more servings when cut to wedding size."
     },
     {
-      "q": "Can I use this for sheet cakes or specialty shapes?",
-      "a": "This calculator is optimized for round cakes. Sheet cakes and specialty shapes often yield more servings due to their shape and typically lighter texture."
+      "q": "Does a square pan yield more servings than a round pan of the same size?",
+      "a": "Yes, always. A 24 cm square pan has an area of 576 cm²; a 24 cm round has 452 cm². The square yields **27% more** (30 vs. 24 party servings) because there is no curved-edge area wasted when cutting. For large parties, choosing a square pan is more cost-efficient per serving."
     },
     {
-      "q": "How accurate is this calculator?",
-      "a": "Our estimates are based on standard bakery practices and portion sizes. Actual results may vary ±10% depending on recipe, density, and slice preference."
+      "q": "How do I calculate servings for a tiered cake?",
+      "a": "Calculate each tier's area separately and add them. For example: bottom tier round 28 cm (area 616 cm²) + top tier round 18 cm (area 254 cm²) = 870 cm² total. Party servings: 870 ÷ 19.4 = **45 servings**. Never use the largest tier's diameter with the combined height."
     },
     {
-      "q": "What if I want larger or smaller slices?",
-      "a": "Standard slices are about 50g each. Larger slices mean fewer servings; smaller slices mean more. Adjust based on your guests' appetites."
+      "q": "How small should kids' birthday cake portions be?",
+      "a": "The standard kids' portion footprint is 1\" × 1.5\" ≈ 9.7 cm². For 20 children you need at least 20 × 9.7 = 194 cm², equivalent to a **16 cm round pan** (area 201 cm²). Always add a 15% buffer (plan for 23 portions): a 17 cm or larger pan works well."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all Hacé Cuentas calculators are completely free and require no registration."
+      "q": "Does this calculator match professional bakery serving charts?",
+      "a": "Yes. The surface area method is the industry standard according to Wilton (the world's leading cake decorating supply company) and is identical to the charts published by webstaurantstore.com and other professional references. Minor differences of ±1 serving versus published tables are due to rounding."
     },
     {
-      "q": "Do you save my data?",
-      "a": "No. All calculations are performed in your browser. We do not store or transmit your information."
+      "q": "Should I add a safety margin to my serving count?",
+      "a": "Always. In practice: (1) the first 2–3 slices tend to be uneven, (2) some guests ask for seconds, and (3) the baker may work with a pan that is 1–2 cm smaller than labeled. A **10–15% safety buffer** is recommended: if the calculation gives 20 servings, prepare for 22–23."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "Wilton – Ultimate Cake Serving Chart (world baking industry standard)",
+      "url": "https://wilton.com/baking-inspiration/cake-baking-serving-guide/"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Webstaurantstore – Cake Size & Servings Guide for Round & Square Cakes",
+      "url": "https://www.webstaurantstore.com/article/1115/cake-serving-sizes.html"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "BakeProfit – How Big of a Cake to Make? Serving Chart (2026)",
+      "url": "https://bakeprofit.com/blog/how-big-of-a-cake-to-make"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed formula based on Wilton industry standard (surface area method). No external data updates required."
   },
   "relatedSlugs": [],
-  "noindex": false
+  "noindex": false,
+  "seoKeywords": [
+    "birthday cake servings calculator",
+    "cake portions by diameter",
+    "how many servings in a cake",
+    "party cake size guide",
+    "cake serving chart by size"
+  ]
 }

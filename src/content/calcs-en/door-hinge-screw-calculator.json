@@ -1,43 +1,99 @@
 {
   "slug": "door-hinge-screw-calculator",
+  "lastReviewed": "2026-06-04",
   "title": "Door Hinge & Screw Calculator 2026 | Hacé Cuentas",
   "h1": "Door Hinge and Screw Calculator",
-  "description": "Calculate hinges and screws needed for interior and exterior doors. 3 hinges per door, 6-8 screws per hinge. Free DIY hardware estimator.",
+  "description": "Calculate exactly how many hinges and screws you need for any door. Enter height, weight, and door count — get hinges per door, total screws, and a purchase buffer. Free, instant.",
   "category": "construccion",
   "icon": "🔩",
   "formulaId": "bisagras-tornillos-puerta-ventana-cantidad",
-  "intro": "The Door Hinge & Screw Calculator determines the **total number of screws required** to install door hinges across one or more doors. Each standard residential door uses **3 hinges**, and each hinge typically seats **4 screws** (2 per leaf × 2 leaves), meaning a single door needs a minimum of 12 screws. The formula is simple but critical: over- or under-ordering screws causes costly project delays. Use this calculator when ordering hardware for new construction, remodeling, or replacing worn hinges on interior and exterior doors.",
-  "keyTakeaway": "**Total Screws = Number of Doors × Hinges per Door × Screws per Hinge** — e.g., 5 doors × 3 hinges × 4 screws = **60 screws minimum** (add 10–15% waste buffer for stripped or dropped screws).",
+  "intro": "The Door Hinge & Screw Calculator uses the **industry-standard rule of 1 hinge per 30 inches (≈75 cm) of door height**, combined with a **weight-based minimum** (2 for lightweight, 3 for standard, 4 for heavy, 5 for security doors). Each hinge leaf has 2–4 holes, so **screws per hinge = holes per leaf × 2 leaves**. A typical residential door at 80″ (2.05 m) with standard 2-hole hinges needs 3 hinges and 12 screws. The calculator also adds a configurable waste buffer (10–15%) so you never run out mid-job.",
+  "keyTakeaway": "**Hinges/door = max(weight_minimum, ⌈height_m / 0.75⌉)** · **Screws = hinges × holes_per_leaf × 2**. A standard 2.05 m interior door: 3 hinges + 12 screws + 10% buffer = **14 screws to buy**. A heavy 2.10 m exterior door: 4 hinges + 24 screws.",
   "useCases": [
-    "New home construction: calculating total screw count across 20+ interior doors before placing a bulk hardware order to avoid mid-project shortages.",
-    "Bathroom or bedroom door replacement: confirming you need exactly 12 screws (3 hinges × 4 screws) before a weekend DIY install.",
-    "Commercial renovation: specifying screw quantities for heavy-duty 3-leaf hinges on 15 office doors, where each hinge uses 6 screws (90 screws total per door set).",
-    "Exterior door upgrade: accounting for 4 hinges on a 200-lb solid-wood entry door at 4 screws each — 16 screws per door — to ensure structural load compliance.",
-    "Bulk hardware purchasing: adding a 15% waste factor to a 30-door apartment buildout order to cover stripped screws, pilot-hole errors, and on-site attrition."
+    "New construction: calculating total hinges and screws across 12+ interior doors before placing a bulk order — avoids mid-project hardware runs.",
+    "Weekend door replacement: confirming exactly how many screws you need (3 hinges × 4 screws = 12) before heading to the hardware store.",
+    "Heavy entry door upgrade: accounting for 4–5 hinges on a 180 lb solid-mahogany exterior door, with 3 holes per leaf for load distribution.",
+    "Full house renovation: entering 8 doors at once to get a single consolidated shopping list with waste buffer included."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Number of Doors",
+      "id": "altura_m",
+      "label": "Door height (m)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "2.05",
+      "min": 0.5,
+      "max": 4.0,
+      "step": 0.05,
+      "unit": "m"
     },
     {
-      "id": "v2",
-      "label": "Screws Per Hinge",
+      "id": "peso_categoria",
+      "label": "Door weight / type",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "liviana",    "label": "Lightweight — hollow-core, MDF, <15 kg (<33 lb)" },
+        { "value": "media",      "label": "Medium — solid-core wood, 15-40 kg (33-88 lb)" },
+        { "value": "pesada",     "label": "Heavy — solid exterior, 40-80 kg (88-176 lb)" },
+        { "value": "muy_pesada", "label": "Very heavy — steel/security door, >80 kg (>176 lb)" }
+      ]
+    },
+    {
+      "id": "cantidad_puertas",
+      "label": "Number of doors",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "1",
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "unit": "doors"
+    },
+    {
+      "id": "agujeros_por_ala",
+      "label": "Holes per hinge leaf",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "2", "label": "2 holes/leaf — standard residential hinge (4 screws/hinge)" },
+        { "value": "3", "label": "3 holes/leaf — heavy-duty / ball-bearing hinge (6 screws/hinge)" },
+        { "value": "4", "label": "4 holes/leaf — commercial / security hinge (8 screws/hinge)" }
+      ]
+    },
+    {
+      "id": "buffer_pct",
+      "label": "Waste buffer (%)",
+      "type": "number",
+      "required": false,
+      "placeholder": "10",
+      "min": 0,
+      "max": 30,
+      "step": 5,
+      "unit": "%",
+      "format": "plain"
     }
   ],
   "outputs": [
     {
-      "id": "resultado",
-      "label": "Total Screws Needed",
-      "primary": true
+      "id": "bisagras_total",
+      "label": "Total Hinges",
+      "primary": true,
+      "unit": "hinges"
+    },
+    {
+      "id": "bisagras_por_puerta",
+      "label": "Hinges per Door"
+    },
+    {
+      "id": "tornillos_sin_buffer",
+      "label": "Screws (no buffer)",
+      "unit": "screws"
+    },
+    {
+      "id": "tornillos_con_buffer",
+      "label": "Screws to Buy (with buffer)",
+      "unit": "screws"
     },
     {
       "id": "resumen",
@@ -45,69 +101,88 @@
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Example: 3 solid-core interior doors, 80″ (2.05 m) tall",
     "steps": [
-      "Example",
-      "Result"
+      "**Height rule**: ⌈2.05 / 0.75⌉ = ⌈2.73⌉ = **3 hinges** by height.",
+      "**Weight**: solid-core ≈ 25 kg → medium category → minimum 3 hinges. Result: **3 hinges/door**.",
+      "**Hinge type**: standard 2-hole-per-leaf → 2 × 2 leaves = **4 screws/hinge**.",
+      "**Total hinges**: 3 doors × 3 = **9 hinges**.",
+      "**Total screws (no buffer)**: 9 hinges × 4 screws = **36 screws**.",
+      "**With 10% waste buffer**: ⌈36 × 1.10⌉ = **40 screws to buy** (recommended: #8 × 1¼″ flat-head wood screw)."
     ],
-    "result": "Result"
+    "result": "Buy **9 standard 3″ butt hinges + 40 × #8 × 1¼″ flat-head wood screws**. Split across 3 doors: 3 hinges + 14 screws each (rounding for the buffer)."
   },
-  "explanation": "## How It's Calculated\n\nThe core formula used by this calculator is:\n\n```\nTotal Screws = Number of Doors × Screws per Hinge\n\n(where Screws per Hinge already accounts for all hinges per door)\n```\n\nOr, expanded to show every variable:\n\n```\nTotal Screws = Doors × Hinges per Door × Screws per Hinge Leaf × 2 Leaves\n\nExample (standard interior door):\n= 1 door × 3 hinges × 2 screws × 2 leaves\n= 12 screws per door\n\nFor 8 doors:\n= 8 × 12 = 96 screws\n```\n\n**With waste buffer (recommended):**\n```\nScrews with Buffer = Total Screws × 1.10   ← 10% buffer\nScrews with Buffer = Total Screws × 1.15   ← 15% buffer (rough carpentry)\n```\n\n---\n\n## Reference Table\n\n| Door Type | Recommended Hinges | Screws per Hinge (both leaves) | Total Screws per Door |\n|---|---|---|---|\n| Interior hollow-core (≤60 lb) | 2 hinges | 4 screws | 8 screws |\n| Interior solid-core (60–80 lb) | 3 hinges | 4 screws | 12 screws |\n| Interior solid-core (80–100 lb) | 3 hinges | 4 screws | 12 screws |\n| Exterior door (100–150 lb) | 3–4 hinges | 4 screws | 12–16 screws |\n| Heavy exterior / security door (150–200 lb) | 4 hinges | 6 screws | 24 screws |\n| Commercial / institutional door | 3 hinges (heavy-duty) | 8 screws | 24 screws |\n| Cabinet door (overlay) | 1–2 hinges | 2–4 screws | 2–8 screws |\n\n> *Hinge counts follow general carpentry conventions widely referenced in trade literature (e.g., National Wood Door Association guidelines). Screw counts per leaf vary by manufacturer — always verify with the hinge spec sheet.*\n\n---\n\n## Typical Cases\n\n### Case 1 — Standard Interior Door Package (3 doors)\nA homeowner is replacing hinges on 3 interior solid-core bedroom doors.\n- 3 doors × 3 hinges × 4 screws = **36 screws**\n- With 10% buffer: 36 × 1.10 = **40 screws** → buy a box of 50 (#8 × 1\" wood screws)\n\n### Case 2 — New Construction (12 interior doors)\nA contractor is hanging 12 hollow-core interior doors in a new build.\n- 12 doors × 2 hinges × 4 screws = **96 screws** (minimum)\n- With 15% buffer: 96 × 1.15 = **111 screws** → order 2 boxes of 60 screws (120 total)\n- Screw spec: #8 × 1¼\" coarse-thread, zinc-plated — appropriate for wood door frames\n\n### Case 3 — Heavy Exterior Entry Doors (2 doors)\nA contractor installs two 180-lb solid mahogany entry doors with 4 heavy-duty hinges each.\n- 2 doors × 4 hinges × 6 screws (3 per leaf) = **48 screws**\n- Recommended: #12 × 2\" structural wood screws into solid framing; at least one screw per hinge leaf must reach the structural framing (stud), not just the door casing\n\n---\n\n## Common Errors\n\n1. **Using the wrong screw length** — Standard hinge screws (¾\"–1\") only grip the door casing, not the stud. For exterior doors, at least one screw per hinge leaf should be 2.5\"–3\" to reach the structural stud and prevent kick-in failure. Short screws are the #1 cause of hinge pull-out.\n\n2. **Forgetting to count both leaves** — Each hinge has a door-side leaf and a frame-side leaf. A hinge with 2 holes per leaf needs 4 screws total, not 2. Forgetting to double-count the frame side is an extremely common rookie mistake.\n\n3. **Assuming all hinges are 4-hole** — Heavy-duty ball-bearing hinges often have 3 holes per leaf (6 screws per hinge), and some commercial hinges have 4 holes per leaf (8 screws). Always check the hinge manufacturer's spec sheet before calculating.\n\n4. **Not adding a waste/attrition buffer** — On any job with drilling and driving, expect 8–15% screw loss from stripped heads, pilot-hole misalignments, and dropped fasteners. Ordering the exact count guarantees a mid-job hardware store run.\n\n5. **Mixing screw gauges mid-project** — Hinge holes are typically sized for #8 or #10 screws. Using a mismatched gauge (e.g., #6) in a pre-drilled #10 hole leaves the hinge loose and the connection structurally unreliable.\n\n6. **Ignoring door weight for hinge count** — IRC (International Residential Code) and NWDA guidelines specify hinge count by door weight and height, not just by convention. A door over 100 lb on only 2 hinges concentrates stress and accelerates wear.\n\n---\n\n## Related Calculators\n\nExplore other construction and hardware calculators on Hacé Cuentas:\n\n- Since no internal related slugs are specified, check out other calculators in the **Construcción** category at [hacecuentas.com](/)",
+  "explanation": "## How It Works\n\n### Core Formula\n\n```\nHinges_per_door  = max(weight_minimum, ⌈height_m / 0.75⌉)\nScrews_per_hinge = holes_per_leaf × 2\nTotal_hinges     = hinges_per_door × number_of_doors\nTotal_screws     = total_hinges × screws_per_hinge\nBuy_screws       = ⌈total_screws × (1 + buffer/100)⌉\n```\n\nThe **1 hinge per 30 inches (≈75 cm)** rule is the widely-cited industry standard referenced by Hager Companies, Royde & Tucker, VK Hardware, and the National Wood Door Association (NWDA). Weight-based minimums act as a safety floor:\n\n| Weight category | Approximate weight | Minimum hinges |\n|---|---|---|\n| Lightweight | < 15 kg (< 33 lb) | 2 |\n| Medium | 15–40 kg (33–88 lb) | 3 |\n| Heavy | 40–80 kg (88–176 lb) | 4 |\n| Very heavy (security) | > 80 kg (> 176 lb) | 5 |\n\n### Screws per Hinge\n\nEach hinge has **2 leaves** (one on the door, one on the frame). Each leaf has 2, 3, or 4 holes depending on the hinge model:\n\n| Hinge type | Holes per leaf | Screws per hinge |\n|---|---|---|\n| Standard residential (2½″–3″ butt) | 2 | 4 |\n| Heavy-duty / ball-bearing (3½″–4″) | 3 | 6 |\n| Commercial / security | 4 | 8 |\n\n### Standard Hinge Placement\n\n- **Top hinge**: 7 inches (≈18 cm) from the top of the door.\n- **Bottom hinge**: 11 inches (≈28 cm) from the bottom.\n- **Middle hinge(s)**: evenly spaced between top and bottom hinges.\n\n### Waste Buffer\n\nAdd **10% for precision carpentry** and **15% for rough construction** to cover stripped screw heads, dropped fasteners, and pilot-hole corrections.\n\n## Quick Reference Table\n\n| Door type | Height | Weight | Hinges | Screws (4/hinge) |\n|---|---|---|---|---|\n| Hollow-core interior | 80″ / 2.03 m | ~20 lb / ~9 kg | 2–3 | 8–12 |\n| Solid-core interior | 80″ / 2.03 m | ~60 lb / ~27 kg | 3 | 12 |\n| Solid exterior (wood/fiberglass) | 82″ / 2.08 m | ~100 lb / ~45 kg | 4 | 16 |\n| Heavy steel / security door | 84″ / 2.13 m | >180 lb / >80 kg | 5 | 20–40 |\n| Cabinet / closet door | 60″ / 1.52 m | ~15 lb / ~7 kg | 2 | 8 |",
   "faq": [
     {
       "q": "How many hinges does a standard interior door need?",
-      "a": "A standard interior hollow-core door (under 60 lb) typically uses 2 hinges. Solid-core doors between 60–100 lb require 3 hinges. This is consistent with widely accepted carpentry guidelines and the National Wood Door Association (NWDA) recommendations. Taller doors (over 90 inches) may need a 4th hinge regardless of weight."
+      "a": "A standard interior solid-core door (about 2.05 m / 80″ tall, 60–80 lb) needs **3 hinges**. The rule is 1 hinge per 30 inches (≈75 cm) of height: ⌈80/30⌉ = 3. Lightweight hollow-core doors under 60 lb on 2-hinge setups are common in older construction but most modern building codes and trade guidelines recommend 3 hinges for solid-core doors."
     },
     {
-      "q": "What size screws are used for door hinges?",
-      "a": "Most residential door hinges use #8 × 1\" or #8 × 1¼\" flat-head wood screws for interior hollow-core doors. For solid-core or exterior doors, #8 × 2\" or #10 × 2½\" screws are preferred to reach into the door frame stud. Security upgrades call for 3\" screws that anchor into the structural framing."
+      "q": "How many screws go on a standard door hinge?",
+      "a": "A standard residential butt hinge has **2 holes per leaf × 2 leaves = 4 screws per hinge**. Heavy-duty or ball-bearing hinges (4″ / 100 mm) often have **3 holes per leaf × 2 = 6 screws**. Commercial-grade hinges can use **4 holes per leaf × 2 = 8 screws**. Always fill every hole — omitting screws concentrates load on fewer points and causes premature wear."
     },
     {
-      "q": "How many screws are on a standard door hinge?",
-      "a": "A standard residential butt hinge has 2 holes per leaf × 2 leaves = **4 screws total**. Heavy-duty hinges (e.g., 4\" ball-bearing hinges for exterior doors) often have 3 holes per leaf = **6 screws total**. Commercial-grade hinges can have 4 holes per leaf = **8 screws total**. Always check the hinge packaging before calculating your order."
+      "q": "What size screws should I use for door hinges?",
+      "a": "For standard residential interior doors: **#8 × 1¼″ flat-head wood screws** (coarse thread). For exterior or solid doors: **#8 × 2\" or #10 × 2½\"** to reach the structural framing. Security/exterior doors: at least one screw per leaf should be **3\" long** to reach the stud behind the casing — this dramatically increases kick-in resistance. Do not use drywall screws; they are brittle and fail under shear loads."
     },
     {
-      "q": "Should I add extra screws to my order?",
-      "a": "Yes — industry practice recommends adding a **10–15% buffer** to your calculated total. On a typical 10-door job, that's 10–15 extra screws. Reasons include: stripped screw heads during driving (especially in hardwood), dropped fasteners, pilot-hole drift, and screws that split the wood and must be repositioned. Buying a slightly larger box is always cheaper than a second hardware store trip."
+      "q": "Should I add a waste buffer to my screw count?",
+      "a": "Yes. Industry practice is **10% for precision work, 15% for rough construction**. On a 10-door job you'd add 10–15 extra screws — small cost that prevents a trip back to the hardware store. Common losses: stripped heads in hardwood, dropped fasteners, pilot-hole drift, and screws that split the wood and must be relocated."
     },
     {
-      "q": "What is the difference between a 2-hole and a 3-hole hinge leaf?",
-      "a": "A **2-hole leaf** uses 2 screws per side = 4 screws per hinge, standard for lightweight residential doors. A **3-hole leaf** uses 3 screws per side = 6 screws per hinge, common on 4\" heavy-duty or ball-bearing hinges rated for doors 100 lb and above. The extra screw point distributes load across a larger bearing area, reducing stress concentration and preventing leaf deformation over time."
+      "q": "How many hinges does a heavy exterior door need?",
+      "a": "Exterior solid-wood or steel doors typically weigh 100–200 lb (45–90 kg) and require **4–5 hinges**. A 2.10 m (83″) door: height rule gives ⌈83/30⌉ = 3, but the weight-based minimum overrides to **4**. For doors over 200 lb (90 kg), use 5 heavy-duty hinges with 3-hole leaves (6 screws each) and 3\" structural screws reaching the stud."
     },
     {
-      "q": "Can I use drywall screws for door hinges?",
-      "a": "No — drywall screws are **not recommended** for door hinges. They are made of hardened but brittle steel, prone to snapping under shear loads (which hinges experience every time a door is opened or closed). The correct fastener is a **coarse-thread flat-head wood screw** (#8 or #10), which provides the lateral shear resistance and wood-gripping torque needed for a reliable hinge mount."
+      "q": "Where are hinges placed on a door?",
+      "a": "Standard placement: **top hinge 7\" (18 cm) from the top edge**, **bottom hinge 11\" (28 cm) from the bottom**, and **middle hinges evenly spaced between**. Example for a 2.05 m (80.7\") door with 3 hinges: at 7″, 40.35″, and 69.7\" from the top (or equivalently at 69.7\", 40.35\", and 11\" from the bottom). This distribution minimizes stress concentration and door sag."
     },
     {
-      "q": "How do I calculate screws for a full house remodel?",
-      "a": "Multiply: (Number of doors) × (Hinges per door) × (Screws per hinge). For a typical 15-door residential remodel with standard 3-hinge interior doors and 4-screw hinges: 15 × 3 × 4 = **180 screws**. Add 15% buffer = 207 screws. Buy 3 boxes of 75 or 2 boxes of 100 + 1 box of 50 for coverage. Keep exterior doors separate — they use heavier hardware and a different screw spec."
+      "q": "Can I use the same formula for cabinet or closet doors?",
+      "a": "The height/weight formula works, but cabinet and closet doors typically use **cup hinges (European concealed hinges)** rather than butt hinges. Cup hinges mount with a 35 mm Forstner hole and 2–4 screws per hinge, adjustable in 3 axes. For standard overlay cabinet doors: 2 cup hinges for doors under 60 cm, 3 for doors 60–120 cm. Brands: Blum, Hettich, Salice."
     },
     {
-      "q": "Do exterior doors need more hinges or screws than interior doors?",
-      "a": "Yes. Exterior doors are typically heavier (100–200 lb), taller, and subject to wind load and security stresses. Standard practice calls for **3–4 hinges** depending on weight, and screws should be **at least 2.5\"–3\" long** to penetrate through the door casing and into the structural stud. One long screw per hinge leaf reaching the stud can dramatically increase kick-resistance and hinge pull-out strength compared to using all short screws in the casing only."
+      "q": "How do I calculate hinges for a door that is both tall and wide?",
+      "a": "For extra-wide doors (over 37–48 inches / 94–122 cm wide), add one extra hinge to the standard height-based count. A wide door moves the center of gravity further from the hinge barrel, increasing the bending moment on the top hinge. For doors wider than 48\", consult the hinge manufacturer's load table — the rated capacity per hinge changes significantly with door width."
+    },
+    {
+      "q": "How do I fix a hinge whose screw hole is stripped?",
+      "a": "Three options in order of severity: (1) **Toothpick-and-glue method** — push wooden toothpicks or matchsticks with wood glue into the hole, let dry 24 h, then re-drive the original screw; (2) **Larger screw** — move up one gauge (#8 → #10) or length (1¼\" → 2\") to catch fresh wood; (3) **Hinge relocation** — shift the hinge 1\" up or down to reach undamaged wood (requires patching and re-mortising the old location)."
     }
   ],
   "sources": [
     {
-      "name": "NIST – Fastener Standards & Hardware References (NIST Handbook 130)",
-      "url": "https://www.nist.gov/standards-coordination-office"
+      "name": "Royde & Tucker — Door size, weight & intended use (hinge selection guide)",
+      "url": "https://www.ratman.co.uk/technical/door-size-weight-intended-use/"
+    },
+    {
+      "name": "VK Hardware — How many hinges does a door need? Size and quantity explained",
+      "url": "https://www.vk-hardware.ca/journal/how-many-hinges-does-a-door-need"
+    },
+    {
+      "name": "Hager Companies — Determine the size of hinge",
+      "url": "https://hagerco.freshdesk.com/support/solutions/articles/73000552399-determine-the-size-of-hinge"
+    },
+    {
+      "name": "Grupo Kefren — ¿Cuántas bisagras debe tener una puerta? (Spanish trade reference)",
+      "url": "https://grupokefren.com/consejos/cuantas-bisagras-debe-tener-realmente-una-puerta/"
     }
   ],
-  "dataUpdate": {
-    "frequency": "never",
-    "lastUpdated": "2026-04-19",
-    "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
-  },
   "esSlug": "calculadora-bisagras-tornillos-puerta-ventana-cantidad",
   "audience": "global",
   "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-06-04",
+    "updateType": "manual",
+    "notes": "Fixed formula based on industry standard (1 hinge per 30 inches / 75 cm); no external data updates required"
+  },
   "seoKeywords": [
-    "door hinge and screw calculator",
-    "door hinge and screw calculator calculator",
-    "free door hinge and screw calculator calculator",
-    "door hinge and screw calculator online",
-    "calculate door hinge and screw calculator"
+    "door hinge screw calculator",
+    "how many hinges does a door need",
+    "door hinge quantity calculator",
+    "door hinge installation guide"
   ],
   "noindex": false
 }

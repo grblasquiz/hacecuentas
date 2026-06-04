@@ -1,102 +1,141 @@
 {
   "slug": "calculadora-cantidad-pizzas-por-invitados-pizzeria",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora Pizzas por cantidad invitados 2026",
-  "h1": "Pizzas por cantidad invitados",
-  "description": "🍳 Calculá pizzas por cantidad invitados. Obtené resultado al instante. Cálculo al instante, sin registro. Ideal para consulta rápida. Categoría: cocina.",
+  "lastReviewed": "2026-06-04",
+  "title": "Calculadora Pizzas por Invitados 2026 — ¿Cuántas pizzas pedir?",
+  "h1": "Pizzas por cantidad de invitados",
+  "description": "Calculá cuántas pizzas grandes pedir para tu evento según adultos, niños y tipo de ocasión. Fórmula 3/8 con margen del 10%. Cocina argentina.",
   "category": "cocina",
   "audience": "global",
   "icon": "🍕",
   "formulaId": "cantidad-pizzas-por-invitados-pizzeria",
-  "intro": "Una pizza grande argentina (32-34 cm, 8 porciones) rinde para 2.5-3 personas adultas cuando es el plato principal. En el estándar de pizzerías de Argentina se calculan **3 porciones por persona** (≈ ⅜ de pizza grande) para adultos, y **2 porciones** por niño. En eventos con entrada previa o picada, 2 porciones por persona alcanzan. Esta calculadora toma cantidad de adultos/niños y rol (principal, complementario) y devuelve cuántas pizzas grandes encargar, con 10% de margen de seguridad.",
-  "keyTakeaway": "**1 pizza grande (8 porciones) / 2.5-3 adultos**. Para 15 adultos: 15/2.7 ≈ **6 pizzas grandes**. Niños cuentan como 0.7 adulto.",
+  "intro": "La regla de las pizzerías argentinas es sencilla: **3 porciones por adulto y 2 por niño** cuando la pizza es el plato principal, sobre 8 porciones por pizza grande (32-34 cm). Si hay picada o entrada previa, bajá a 2 porciones por adulto; si es el único plato en un evento largo, subí a 4. Esta calculadora aplica esa fórmula con un margen de seguridad del 10% y te dice cuántas pizzas grandes encargar para que no falte ni sobre demasiado.",
+  "keyTakeaway": "**Fórmula:** Pizzas = ⌈(adultos × porciones + niños × porciones) × 1,10 ÷ 8⌉. Para 12 adultos con pizza como plato principal: ⌈(36 × 1,10) ÷ 8⌉ = ⌈4,95⌉ = **5 pizzas grandes**.",
   "useCases": [
-    "Noche de pizza en casa con 8 amigos adultos.",
-    "Cumpleaños infantil con 15 chicos y 10 padres donde la pizza es el plato principal.",
-    "Evento de oficina con 20 personas al mediodía (pizzas como almuerzo).",
-    "Reunión familiar donde hay además empanadas y ensalada, necesitás menos pizza.",
-    "Calculás costo total para pedir en una pizzería (6 grandes + dos fainás + bebidas)."
+    "Previa de 10 amigos adultos en casa: solo pizza + birra como cena.",
+    "Cumpleaños infantil con 15 chicos y 10 padres, pizza como plato único.",
+    "Evento de oficina con 20 personas al mediodía con pizza como almuerzo.",
+    "Reunión familiar donde ya hay empanadas y ensalada, la pizza es complemento."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Input 1",
+      "id": "adultos",
+      "label": "Adultos / adolescentes",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "Ej: 10",
+      "min": 0,
+      "max": 500,
+      "step": 1,
+      "format": "plain"
     },
     {
-      "id": "v2",
-      "label": "Input 2",
+      "id": "ninos",
+      "label": "Niños (hasta 12 años)",
       "type": "number",
+      "required": false,
+      "placeholder": "Ej: 5 (0 si no hay)",
+      "min": 0,
+      "max": 200,
+      "step": 1,
+      "format": "plain"
+    },
+    {
+      "id": "ocasion",
+      "label": "Tipo de ocasión",
+      "type": "select",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "options": [
+        { "value": "principal", "label": "Plato principal (3 porc/adulto)" },
+        { "value": "aperitivo", "label": "Con picada o entrada previa (2 porc/adulto)" },
+        { "value": "unico",     "label": "Único plato / evento largo (4 porc/adulto)" }
+      ]
+    },
+    {
+      "id": "tamano_pizza",
+      "label": "Porciones por pizza",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "6",  "label": "Pizza mediana — 6 porciones (25-28 cm)" },
+        { "value": "8",  "label": "Pizza grande — 8 porciones (32-34 cm) ✓ estándar" },
+        { "value": "10", "label": "Pizza extra grande — 10 porciones (40 cm)" },
+        { "value": "12", "label": "Pizza familiar — 12 porciones (45 cm)" }
+      ]
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Resultado",
+      "label": "Pizzas a encargar",
       "primary": true
     },
     {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Desglose del cálculo"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Cumpleaños de 15 adultos + 8 chicos, pizza como plato principal",
     "steps": [
-      "Ejemplo",
-      "Resultado"
+      "Adultos: 15 × 3 porciones = 45 porciones",
+      "Niños: 8 × 2 porciones = 16 porciones",
+      "Total: 45 + 16 = 61 porciones",
+      "Con margen 10%: 61 × 1,10 = 67,1 porciones",
+      "Pizzas grandes (8 porc): ⌈67,1 ÷ 8⌉ = ⌈8,4⌉ = 9 pizzas grandes"
     ],
-    "result": "Resultado"
+    "result": "9 pizzas grandes — pedí al menos 5 sabores distintos"
   },
-  "explanation": "## Cómo se calcula\n\nUna pizza grande argentina estándar (32-34 cm) se corta en 8 porciones. La regla de pizzerías (Banchero, Kentucky, Ugi's) asigna 3 porciones por persona cuando es el plato principal:\n\n```\nPizzas grandes necesarias = (adultos × 3 + niños × 2) / 8 + 10% margen\n\nAjustes:\n  Si hay picada/entrada previa:   usar 2 porciones/adulto\n  Si es el único plato de cena:   usar 4 porciones/adulto\n  Adolescentes:                   contar igual que adultos\n  Niños <8 años:                  contar como 0.5-0.7 adulto\n  Hombres jóvenes 18-35 años:     +1 porción c/u\n```\n\n## Tabla de referencia: pizzas grandes por personas\n\n| Invitados | Solo pizza (3 porc/pers) | Con picada previa (2 porc/pers) | Único plato (4 porc/pers) |\n|---|---|---|---|\n| 5 | 2 pizzas | 2 pizzas | 3 pizzas |\n| 10 | 4 pizzas | 3 pizzas | 5 pizzas |\n| 15 | 6 pizzas | 4 pizzas | 8 pizzas |\n| 20 | 8 pizzas | 5 pizzas | 10 pizzas |\n| 30 | 12 pizzas | 8 pizzas | 15 pizzas |\n| 50 | 19 pizzas | 13 pizzas | 25 pizzas |\n| 80 | 30 pizzas | 20 pizzas | 40 pizzas |\n\n## Variedad de sabores\n\nRegla clásica: **minimo 3-4 sabores distintos** para evitar quedarse solo con uno. Distribución típica de pedido:\n\n- 30% muzzarella (clásica, todos comen)\n- 20% fugazzeta o especial\n- 20% napolitana o calabresa\n- 15% jamón y morrones\n- 15% variedad (roquefort, palmitos, cuatro quesos)\n\n## Casos típicos\n\n**Previa casera de 12 amigos, solo pizza + birra**: 12 × 3 / 8 = 4.5 ≈ **5 pizzas grandes**. Combinar: 2 muzza, 1 fugazzeta, 1 napolitana, 1 especial.\n\n**Cumple infantil 12 nenes + 10 padres, único plato**: (10 × 3 + 12 × 2) / 8 = 6.75 ≈ **7 pizzas grandes** + 1 pizza dulce.\n\n**Evento oficina 25 personas a la 1 PM (almuerzo)**: 25 × 2.5 / 8 = 7.8 ≈ **8 pizzas grandes**. Variar: 3 muzza, 2 jamón-morrón, 2 napolitana, 1 veggie.\n\n## Errores comunes\n\n- **Calcular exactamente sin margen**: siempre pedir **10% extra**. Que sobre una pizza es mejor que quedarse corto.\n- **Solo muzzarella**: todos comen muzza al principio, después buscan variedad. Pedir mínimo 3 sabores distintos.\n- **No pedir fainá**: en Argentina, 1 fainá por cada 2-3 pizzas es tradicional. Rinde mucho y es barato.\n- **Olvidar opciones sin carne**: siempre incluir 1 pizza **vegetariana** (muzza, napolitana, rúcula-tomate). 15-20% de la gente no come jamón o pepperoni.\n\n## Calculadoras relacionadas\n\n- [Empanadas por invitado](/calculadora-cantidad-empanadas-por-invitado-evento)\n- [Cerveza por invitado](/calculadora-cerveza-invitado-evento)\n- [Vino por invitado y horas](/calculadora-vino-por-invitado-horas-evento)\n- Asado kg por persona",
+  "explanation": "## Cómo se calcula\n\nLa fórmula estándar del sector (aplicada por pizzerías y caterers en Argentina):\n\n```\nPorciones totales = (adultos × porciones_adulto) + (niños × porciones_niño)\nPizzas = ⌈ Porciones totales × 1,10 ÷ porciones_por_pizza ⌉\n```\n\n**Porciones recomendadas según ocasión:**\n\n| Ocasión | Adulto | Niño (<12 años) |\n|---|---|---|\n| Con picada o entrada previa | 2 porciones | 1 porción |\n| Plato principal (estándar) | 3 porciones | 2 porciones |\n| Único plato / evento largo | 4 porciones | 2 porciones |\n\n**El 10% de margen de seguridad** evita quedarse corto si algún invitado come más de lo esperado. \"Que sobre una pizza\" es mucho mejor que pasar vergüenza.\n\n## Tabla de referencia rápida: pizzas grandes por personas\n\n| Invitados (adultos) | Con picada (2 porc) | Plato principal (3 porc) | Único plato (4 porc) |\n|---|---|---|---|\n| 5 | 2 pizzas | 3 pizzas | 3 pizzas |\n| 10 | 3 pizzas | 5 pizzas | 6 pizzas |\n| 15 | 5 pizzas | 7 pizzas | 9 pizzas |\n| 20 | 6 pizzas | 9 pizzas | 11 pizzas |\n| 30 | 9 pizzas | 13 pizzas | 17 pizzas |\n| 50 | 14 pizzas | 21 pizzas | 28 pizzas |\n\n*Todos los valores incluyen 10% de margen. Pizzas grandes = 8 porciones.*\n\n## Variedad de sabores\n\nLa regla de caterers argentinos: **1 sabor cada 2 pizzas**, mínimo 3. Distribución clásica:\n\n- 35% muzzarella (todos comen)\n- 20% fugazzeta o especial de la casa\n- 20% napolitana o calabresa\n- 15% jamón y morrones\n- 10% variedad (cuatro quesos, roquefort, rúcula con jamón crudo)\n\nSiempre incluí **1 pizza vegetariana** (muzza, napolitana, rúcula-tomate seco). El 15-20% de los argentinos evita el jamón o el pepperoni por dieta o preferencia.\n\n## Ejemplos típicos\n\n**Previa de 12 amigos adultos, solo pizza:** 12 × 3 = 36 × 1,10 = 39,6 ÷ 8 = ⌈4,95⌉ = **5 pizzas grandes**. Combinar: 2 muzza, 1 fugazzeta, 1 napolitana, 1 especial.\n\n**Cumple infantil 12 nenes + 10 padres:** (10×3 + 12×2) × 1,10 ÷ 8 = 74,8 ÷ 8 = ⌈9,35⌉ = **10 pizzas grandes**. Sumar 1 pizza dulce para los chicos.\n\n**Evento de oficina 25 personas al mediodía:** 25 × 3 × 1,10 ÷ 8 = 82,5 ÷ 8 = ⌈10,3⌉ = **11 pizzas grandes**.\n\n## Errores frecuentes\n\n- **Sin margen de seguridad**: siempre sumar 10%. Que sobre una pizza no arruina el bolsillo; quedarse corto arruina el evento.\n- **Solo muzzarella**: diversificar con al menos 3 sabores, incluyendo uno vegetariano.\n- **Olvidar la fainá**: en Argentina, 1 fainá cada 3 pizzas es tradición. Extiende el menú a muy bajo costo.\n- **Calcular el mismo valor para adultos y niños**: los chicos comen 1/3 menos; usar 2 porciones por niño.\n",
   "faq": [
     {
-      "q": "¿Cuántas pizzas grandes para 10 personas?",
-      "a": "Como plato principal: **4 pizzas grandes** (3 porciones por persona × 10 = 30 / 8 = 3.75, redondear). Con picada previa: 3. Único plato en evento largo: 5."
+      "q": "¿Cuántas pizzas grandes para 10 personas adultas?",
+      "a": "Como plato principal (3 porciones/adulto): ⌈(10 × 3 × 1,10) ÷ 8⌉ = ⌈4,125⌉ = **5 pizzas grandes**. Si hay picada previa: 3 pizzas. Si es el único plato en evento largo: 6 pizzas."
     },
     {
-      "q": "¿Y para cumple infantil con 20 chicos?",
-      "a": "Los niños comen menos pizza que los adultos: **2 porciones por chico**. Con 20 nenes: 40 porciones = **5 pizzas grandes**. Si hay padres (~15), sumar 6 pizzas adicionales."
+      "q": "¿Cuántas porciones rinde una pizza grande argentina?",
+      "a": "La pizza grande estándar de pizzería argentina mide 32-34 cm y se corta en **8 porciones** triangulares. Algunas pizzerías la cortan en 10 porciones más chicas. La pizza familiar (45 cm) rinde 12 porciones."
     },
     {
-      "q": "¿Qué sabores conviene pedir?",
-      "a": "Mínimo **3 sabores**. Clásicos seguros: muzzarella (40%), fugazzeta (20%), jamón y morrones (20%), napolitana (20%). Agregar 1 veggie obligatoria para vegetarianos."
+      "q": "¿Cuántas pizzas para un cumpleaños infantil con 20 chicos?",
+      "a": "Los niños (hasta 12 años) comen **2 porciones** en promedio. Con 20 chicos: 20 × 2 × 1,10 ÷ 8 = ⌈5,5⌉ = **6 pizzas grandes**. Si hay adultos, calcularlos aparte y sumar."
     },
     {
-      "q": "¿Pizza grande o mitad-mitad con dos gustos?",
-      "a": "La **mitad-mitad** es ideal cuando son pocos invitados y querés variedad sin sobrante. Hasta 10 personas conviene mitad-mitad (ej: 3 pizzas = 6 gustos). Más de 10 personas, pizzas enteras por gusto es más práctico."
+      "q": "¿La regla 3/8 es confiable?",
+      "a": "Sí. La regla 3/8 (3 porciones por adulto dividido 8 por pizza) es el estándar de pizzerías y caterers en Argentina y el mundo. Funciona bien para grupos mixtos de adultos. Para eventos con solo hombres jóvenes o deportistas, subir a 4 porciones por persona."
     },
     {
-      "q": "¿Cuánto sale una pizza grande en 2026?",
-      "a": "Pizzería de barrio en Argentina: **$8.000-15.000** (muzza) hasta **$18.000-25.000** (especiales como fugazzeta rellena o rúcula y jamón crudo). Pedir docena suele tener descuento 10%."
+      "q": "¿Qué sabores pedir para un grupo grande?",
+      "a": "Mínimo **3-4 sabores** distintos. Clásico seguro: muzzarella (35%), fugazzeta (20%), jamón y morrones (20%), napolitana (15%), y un especial a gusto (10%). Siempre incluir al menos 1 opción vegetariana."
     },
     {
-      "q": "¿Qué diámetro tiene una pizza grande estándar?",
-      "a": "**32-34 cm de diámetro**, cortada en 8 porciones. Porción individual (2 por persona mínimo): ~50-60 g masa + 30-40 g topping = 100 g. Pizza pequeña (25 cm): 6 porciones; familiar (40 cm): 12 porciones."
+      "q": "¿Conviene pedir pizza chica o grande?",
+      "a": "La **pizza grande (8 porciones)** es más económica por porción y la que mejor rinde en grupos. La pizza mediana (6 porciones) conviene cuando se quiere más variedad de sabores en pocos invitados. La extra grande (10-12 porciones) baja aún más el costo por porción para eventos masivos."
     },
     {
-      "q": "¿Hago las pizzas en casa o las encargo?",
-      "a": "**Caseras**: mejor sabor, 50-60% más baratas, 2 h trabajo para 6 pizzas. **Encargadas**: prácticas para +15 personas, calidad consistente, entrega caliente. Para grupos chicos (<10) casero conviene; para +20, encargar."
+      "q": "¿Cuánto sale alimentar a 20 personas con pizza en 2026?",
+      "a": "Con la fórmula: ⌈(20 × 3 × 1,10) ÷ 8⌉ = **9 pizzas grandes**. A un precio promedio de $12.000-$18.000 por pizza grande (pizzería de barrio, Buenos Aires), el costo total ronda **$108.000-$162.000**, es decir, $5.400-$8.100 por persona. Pedir docena suele tener descuento del 10%."
     },
     {
-      "q": "¿Y la fainá?",
-      "a": "Tradición argentina: **1 fainá por cada 2-3 pizzas grandes**. Rinde mucho (30-40 porciones por unidad), barata ($2.000-3.500), buena para estirar el menú cuando sobrestimás la cantidad de gente."
+      "q": "¿Y si hay también empanadas o asado?",
+      "a": "Si la pizza es complemento (hay otro plato principal), usar la opción **\"Con picada o entrada previa\"** (2 porciones por adulto). Eso baja el cálculo aproximadamente un 33% respecto al plato principal estándar."
+    },
+    {
+      "q": "¿Qué pasa si sobra pizza?",
+      "a": "La pizza puede guardarse en la heladera hasta **3-4 días** envuelta en film o en un recipiente hermético. Para recalentar: horno a 180°C por 8 minutos (queda crocante) o microondas con papel de cocina encima (queda suave). Que sobre 1-2 pizzas es perfectamente normal y mejor que quedarse corto."
     }
   ],
   "sources": [
     {
-      "name": "Asociación Pizzerías Argentinas (APYCE) — Estándares del oficio",
+      "name": "APYCE – Asociación Propietarios de Pizzerías y Casas de Empanadas",
       "url": "https://www.apyce.com.ar"
     },
     {
-      "name": "USDA FoodData Central — Pizza nutritional data",
-      "url": "https://fdc.nal.usda.gov"
+      "name": "Omnicalculator – Pizza Party Calculator (método 3/8)",
+      "url": "https://www.omnicalculator.com/food/pizza-party"
+    },
+    {
+      "name": "Catering.com.ar – Cuántas pizzas para eventos",
+      "url": "https://www.catering.com.ar/preguntas/cuantas-pizzas-se-deberian-pedir-para-repartir-entre-35-personas"
     }
   ],
   "relatedSlugs": [
@@ -107,15 +146,17 @@
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "Asociación Pizzerías Argentinas (APYCE) — Estándares del oficio",
+    "notes": "Fórmula fija basada en estándar de pizzerías argentinas (3 porc/adulto, 2 porc/niño, margen 10%). No requiere actualización de datos externos.",
+    "source": "APYCE – Asociación Propietarios de Pizzerías y Casas de Empanadas",
     "sourceUrl": "https://www.apyce.com.ar"
   },
   "seoKeywords": [
-    "calculadora pizzas por cantidad invitados 2026",
-    "cantidad pizzas por invitados pizzeria",
-    "pizzas por cantidad invitados"
+    "calculadora pizzas por invitados",
+    "cuántas pizzas para una fiesta",
+    "pizzas por persona argentina",
+    "calculadora pizzas evento",
+    "cuántas pizzas para 10 personas"
   ]
 }

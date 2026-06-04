@@ -1,131 +1,181 @@
 {
   "slug": "solar-panel-kw-home-calculator",
   "esSlug": "calculadora-panel-solar-kw-consumo-hogar-autoconsumo",
+  "lastReviewed": "2026-06-04",
   "title": "Solar Panel kW Calculator Home 2026 | Hacé Cuentas",
   "h1": "Solar Panel kW System for Your Home",
-  "description": "Calculate the right solar panel system (kW) for your home based on monthly energy consumption. Free, accurate sizing tool.",
+  "description": "Calculate how many solar panels and how many kW you need to cover your home's electricity bill. Real formula: monthly kWh ÷ (panel kWp × Peak Sun Hours × efficiency). Free, instant result.",
   "category": "construccion",
   "icon": "☀️",
   "formulaId": "panel-solar-kw-consumo-hogar-autoconsumo",
   "audience": "global",
-  "intro": "This calculator determines the solar panel system size (in kilowatts, kW) you need to offset your home's electricity consumption. It uses your monthly energy usage in kilowatt-hours (kWh) and the average daily Peak Sun Hours (PSH) at your location to compute the minimum DC capacity required. The core formula is: **Required kW = (Monthly kWh ÷ 30) ÷ Peak Sun Hours × Efficiency Correction (÷ 0.80)**. Use it when comparing installer quotes, applying for federal tax credits (IRS Form 5695), or sizing battery backup systems. According to the U.S. Energy Information Administration, the average American household consumes about 899 kWh/month, requiring roughly a 6–7 kW system in a location with 5 PSH/day.",
-  "keyTakeaway": "**Required Solar kW = (Monthly kWh ÷ 30 days ÷ Peak Sun Hours) ÷ 0.80** — e.g., 900 kWh/month ÷ 30 ÷ 5 PSH ÷ 0.80 = **7.5 kW system needed** to fully cover average U.S. household demand.",
+  "intro": "This calculator sizes a residential solar photovoltaic (PV) system using the standard IEC 61724 / NREL PVWatts methodology: **Panels = Monthly kWh ÷ (Panel kWp × Peak Sun Hours × System Efficiency)**. Enter your monthly electricity consumption from your utility bill, the wattage of the panels you plan to install, the average daily Peak Sun Hours (PSH) at your location, and the system efficiency to get the number of panels needed and the total installed peak power (kWp). According to the U.S. EIA, the average American home uses ~899 kWh/month, requiring roughly 7–8 kW in a location with 5 PSH/day and 80% system efficiency.",
+  "keyTakeaway": "**Panels = Monthly kWh ÷ (Panel kWp × PSH × 30 × Efficiency)**. Example: 900 kWh/month ÷ (0.40 kWp × 5.0 PSH × 30 × 0.80) = 18.75 → **19 panels** (400 W each) = **7.60 kWp** — generating ~912 kWh/month.",
   "useCases": [
-    "Homeowner comparing two installer proposals to verify the quoted system size actually covers their 1,100 kWh/month bill in Phoenix, AZ (6.5 PSH/day), before signing a 25-year lease.",
+    "Homeowner comparing installer proposals to verify the quoted system size actually covers their 1,100 kWh/month bill in Phoenix, AZ (6.5 PSH/day), before signing a 25-year lease.",
     "Recent mover sizing a rooftop array for a new home in Seattle, WA (3.5 PSH/day) where winter energy use spikes to 1,400 kWh/month due to electric heating.",
-    "Applicant calculating the qualifying system size before filing IRS Form 5695 to claim the 30% federal Residential Clean Energy Credit for tax year 2025.",
-    "Off-grid cabin owner determining whether a 4 kW array is sufficient to power a 400 kWh/month load in a high-sun rural Nevada location (6.0 PSH/day) without utility backup."
-  ],
-  "seoKeywords": [
-    "solar panel calculator",
-    "solar panel size home",
-    "kW solar system calculator",
-    "residential solar sizing",
-    "solar capacity calculator",
-    "how much solar do I need",
-    "home solar panel system",
-    "solar installation sizing",
-    "solar power calculator",
-    "solar panel kW calculator",
-    "residential solar calculator",
-    "solar system sizing tool"
+    "Off-grid cabin owner determining whether a 3 kW array is sufficient to power a 400 kWh/month load in rural Nevada (6.0 PSH/day) without utility backup.",
+    "Applicant calculating the qualifying system size before filing IRS Form 5695 to claim the 30% federal Residential Clean Energy Credit for tax year 2025."
   ],
   "fields": [
     {
-      "id": "v1",
+      "id": "consumo_kwh",
       "label": "Monthly Electricity Consumption (kWh)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "900",
+      "min": 1,
+      "max": 10000,
+      "step": 1,
+      "unit": "kWh/month",
+      "helpText": "Find this on your utility bill. U.S. average is ~899 kWh/month (EIA 2024). Summer peaks can be 1,200–1,500 kWh for homes with central A/C."
     },
     {
-      "id": "v2",
-      "label": "Peak Sun Hours per Day",
+      "id": "potencia_wp",
+      "label": "Panel Wattage (Wp per panel)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "400",
+      "min": 100,
+      "max": 700,
+      "step": 5,
+      "unit": "Wp",
+      "helpText": "Most residential panels today are 380–450 W monocrystalline PERC or TOPCon. Common sizes: 380, 400, 420, 440, 450, 480 Wp."
+    },
+    {
+      "id": "hsp",
+      "label": "Peak Sun Hours (PSH) at your location",
+      "type": "number",
+      "required": true,
+      "placeholder": "5.0",
+      "min": 1.5,
+      "max": 9,
+      "step": 0.1,
+      "unit": "h/day",
+      "helpText": "Look up your ZIP code on pvwatts.nrel.gov. Typical U.S. ranges: Pacific NW (Seattle) ~3.5; Southeast ~4.7; Midwest ~4.5; Southwest (Phoenix) ~6.5."
+    },
+    {
+      "id": "eficiencia",
+      "label": "System Efficiency (%)",
+      "type": "number",
+      "required": true,
+      "placeholder": "80",
+      "min": 60,
+      "max": 95,
+      "step": 1,
+      "unit": "%",
+      "helpText": "Accounts for inverter loss (~5%), wiring resistance (~3%), temperature derating (~5–10%), soiling (~3%). NREL PVWatts default is ~83%; use 80% for a conservative residential estimate."
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Required Solar Capacity (kW)",
+      "label": "Panels Required",
       "primary": true
     },
     {
+      "id": "potencia_kwp",
+      "label": "Total Installed Capacity (kWp)"
+    },
+    {
       "id": "resumen",
-      "label": "System Sizing Interpretation"
+      "label": "System Sizing Summary"
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Example: average U.S. home in a sunny climate",
     "steps": [
-      "Example",
-      "Result"
+      "Monthly consumption: 900 kWh (U.S. average, EIA 2024)",
+      "Panel: 400 Wp monocrystalline (0.40 kWp each)",
+      "Location: Houston, TX — Peak Sun Hours: 5.3 h/day (NREL PVWatts)",
+      "System efficiency: 80% (inverter + wiring + soiling losses)",
+      "Panels = 900 ÷ (0.40 × 5.3 × 30 × 0.80) = 900 ÷ 50.88 = 17.69 → 18 panels",
+      "Total capacity = 18 × 0.40 = 7.20 kWp",
+      "Estimated monthly generation = 7.20 × 5.3 × 30 × 0.80 = 916 kWh"
     ],
-    "result": "Result"
+    "result": "18 panels × 400 W = 7.20 kWp → generates ~916 kWh/month, covering 100% of the 900 kWh bill"
   },
-  "explanation": "## How It's Calculated\n\nThe two-step formula converts monthly consumption into a real-world DC system size, accounting for inevitable energy losses in wiring, inverters, and temperature derating (collectively modeled as an 80% system efficiency factor):\n\n```\nStep 1 – Daily energy needed:\n  Daily kWh = Monthly kWh ÷ 30\n\nStep 2 – Required DC capacity:\n  System kW = Daily kWh ÷ Peak Sun Hours (PSH) ÷ 0.80\n\nFull formula:\n  System kW = (Monthly kWh ÷ 30 ÷ PSH) ÷ 0.80\n```\n\n**Why 0.80?** The National Renewable Energy Laboratory (NREL) PVWatts model uses a default DC-to-AC derate factor of ~0.83, but real installations typically land at 0.75–0.82 due to soiling, shading, wiring losses, and inverter inefficiency. Using 0.80 is a widely accepted conservative standard for residential sizing.\n\n**Peak Sun Hours ≠ daylight hours.** PSH is the number of equivalent hours per day when solar irradiance averages 1,000 W/m² (1 kW/m²). A city with 5 PSH receives the same daily solar energy as 5 hours of perfect noon-intensity sun, regardless of whether it's actually sunny for 10 hours.\n\n---\n\n## Reference Table\n\nAverage monthly residential electricity consumption and peak sun hours by U.S. state/city (EIA 2023 data + NREL solar resource data):\n\n| State / City | Avg. Monthly kWh | Avg. PSH/Day | Calculated System kW* |\n|---|---|---|---|\n| Louisiana (Baton Rouge) | 1,273 | 4.9 | 10.8 kW |\n| Texas (Houston) | 1,176 | 5.3 | 9.3 kW |\n| Florida (Miami) | 1,142 | 5.6 | 8.5 kW |\n| Arizona (Phoenix) | 1,114 | 6.5 | 7.2 kW |\n| Georgia (Atlanta) | 1,040 | 4.7 | 9.2 kW |\n| National Average | 899 | 5.0 | 7.5 kW |\n| California (Los Angeles) | 689 | 5.8 | 5.0 kW |\n| New York (New York City) | 614 | 4.1 | 6.3 kW |\n| Washington (Seattle) | 981 | 3.5 | 11.7 kW |\n| Colorado (Denver) | 696 | 5.5 | 5.3 kW |\n\n*Calculated using: Monthly kWh ÷ 30 ÷ PSH ÷ 0.80, rounded to one decimal.\n\n---\n\n## Typical Case Examples\n\n**Example 1 — Average U.S. Home (Phoenix, AZ)**\n- Monthly bill: 900 kWh/month\n- Phoenix PSH: 6.5 hours/day\n- Daily need: 900 ÷ 30 = 30 kWh/day\n- Raw capacity: 30 ÷ 6.5 = 4.62 kW\n- With efficiency factor: 4.62 ÷ 0.80 = **5.77 kW → round up to 6.0 kW**\n- At ~400W panels, that's 15 panels. A 6 kW system in Phoenix costs roughly $12,000–$16,000 before the 30% IRS tax credit, netting ~$8,400–$11,200.\n\n**Example 2 — High-Consumption Home (Seattle, WA)**\n- Monthly bill: 1,400 kWh/month (winter electric heating)\n- Seattle PSH: 3.5 hours/day\n- Daily need: 1,400 ÷ 30 = 46.7 kWh/day\n- Raw capacity: 46.7 ÷ 3.5 = 13.3 kW\n- With efficiency factor: 13.3 ÷ 0.80 = **16.7 kW**\n- This is a large commercial-grade installation; most Seattle homeowners instead size for their summer baseline (~600 kWh) and retain grid tie-in for winter, yielding a more practical 7–8 kW system.\n\n**Example 3 — Off-Grid Cabin (Rural Nevada)**\n- Monthly load: 400 kWh/month\n- Nevada PSH: 6.0 hours/day\n- Daily need: 400 ÷ 30 = 13.3 kWh/day\n- Raw capacity: 13.3 ÷ 6.0 = 2.22 kW\n- With efficiency factor: 2.22 ÷ 0.80 = **2.78 kW → round up to 3.0 kW**\n- A 3 kW off-grid system would typically pair with 15–20 kWh of battery storage (e.g., two Tesla Powerwall 2 units at 13.5 kWh each) to cover nighttime demand.\n\n---\n\n## Common Errors\n\n1. **Using daylight hours instead of Peak Sun Hours.** Phoenix gets ~14 hours of daylight in summer but only 6.5 PSH. Confusing these two values can undersize your system by 50% or more, leaving you with an unexpected utility bill.\n\n2. **Ignoring the efficiency/derate factor (÷ 0.80).** Skipping this step produces an \"ideal\" DC figure that assumes perfect panels operating at lab conditions. Real-world soiling, heat, and inverter losses reduce actual output by 15–25%. Always apply the derate.\n\n3. **Sizing to a low-consumption month.** Many homeowners calculate based on their spring electric bill (the lowest of the year) and end up with a system that can't handle summer A/C loads. Use your highest monthly consumption — or average all 12 months — for a balanced design.\n\n4. **Forgetting to account for future load growth.** Adding an electric vehicle (EV) charger adds ~300–500 kWh/month. Adding a heat pump water heater adds ~50–100 kWh/month. NREL recommends over-sizing the array by 10–20% if major electric appliances are anticipated within 5 years.\n\n5. **Using panel wattage instead of system kW.** A single 400 W panel produces 0.4 kW at STC. A \"6 kW system\" means 15 × 400 W panels, not 6 panels of any size. Always convert your system kW result: **Number of panels = System kW × 1,000 ÷ Panel wattage (W)**.\n\n---\n\n## Related Calculators\n\nSolar sizing connects to several other home energy calculations. While no direct related calculators are currently linked for this tool, useful companion calculations include energy cost savings estimators, battery backup sizing tools, and federal tax credit (IRS Form 5695) benefit calculators — all available on Hacé Cuentas.",
+  "explanation": "## How It's Calculated\n\nThe standard residential PV sizing formula (per IEC 61724-1 and NREL PVWatts methodology) is:\n\n```\nPanels required = Monthly kWh ÷ (Panel kWp × PSH × 30 days × System Efficiency)\n\nWhere:\n  - Monthly kWh   = from your utility bill\n  - Panel kWp     = panel wattage ÷ 1,000 (e.g., 400 W → 0.40 kWp)\n  - PSH           = Peak Sun Hours at your location (h/day)\n  - 30 days       = monthly average\n  - Efficiency    = system derate factor (typically 0.75–0.85)\n\nTotal installed capacity (kWp) = Panels (rounded up) × Panel kWp\nEstimated generation (kWh/month) = Total kWp × PSH × 30 × Efficiency\n```\n\n**Step-by-step example — Houston, TX:**\n- Consumption: 900 kWh/month\n- Panel: 400 Wp = 0.40 kWp\n- PSH Houston: 5.3 h/day (NREL PVWatts)\n- Efficiency: 0.80\n\n```\nPanels = 900 ÷ (0.40 × 5.3 × 30 × 0.80)\nPanels = 900 ÷ 50.88 = 17.69 → round up to 18 panels\nTotal kWp = 18 × 0.40 = 7.20 kWp\nGeneration = 7.20 × 5.3 × 30 × 0.80 = 916.8 kWh/month\n```\n\n---\n\n## What Are Peak Sun Hours?\n\nPeak Sun Hours (PSH) are **not** the same as daylight hours. PSH represents the number of equivalent hours per day when solar irradiance averages exactly 1,000 W/m² (1 kW/m²). A city with 5 PSH receives the same daily solar energy as 5 hours of perfect noon-intensity sun, even if it's daylight for 12+ hours. PSH values come from satellite irradiance databases like NREL's National Solar Radiation Database (NSRDB) and NASA POWER.\n\n### Average PSH by U.S. State/City (NREL NSRDB)\n\n| City / State | PSH (h/day) | Avg. Monthly kWh | Sized System kW* |\n|---|---|---|---|\n| Phoenix, AZ | 6.5 | 1,114 | 7.2 kW |\n| Las Vegas, NV | 6.4 | 931 | 6.1 kW |\n| Miami, FL | 5.6 | 1,142 | 8.5 kW |\n| Houston, TX | 5.3 | 1,176 | 9.3 kW |\n| Denver, CO | 5.5 | 696 | 5.3 kW |\n| Atlanta, GA | 4.7 | 1,040 | 9.2 kW |\n| Chicago, IL | 4.4 | 736 | 6.9 kW |\n| New York City, NY | 4.1 | 614 | 6.3 kW |\n| Portland, OR | 3.9 | 862 | 9.2 kW |\n| Seattle, WA | 3.5 | 981 | 11.7 kW |\n\n*Calculated at 80% efficiency, 400 W panels, rounded up.\n\n---\n\n## Why Divide by System Efficiency?\n\nNo solar system converts 100% of irradiance into usable AC electricity. Typical losses:\n\n| Loss Source | Typical Range |\n|---|---|\n| Inverter (DC→AC conversion) | 3 – 6% |\n| Wiring / connector resistance | 1 – 3% |\n| Temperature derating (>25°C) | 5 – 12% |\n| Soiling / dust accumulation | 2 – 5% |\n| Partial shading | 0 – 10% |\n| Module mismatch / degradation | 1 – 3% |\n| **Total system efficiency** | **75 – 85%** |\n\nNREL PVWatts uses a default derate of ~0.83 for grid-tied systems. Using **0.80 is a practical conservative estimate** that prevents undersizing.\n\n---\n\n## Common Sizing Errors\n\n1. **Using daylight hours instead of PSH.** Phoenix gets ~14 hours of daylight in summer but only 6.5 PSH. Confusing these can undersize your system by 50% or more.\n2. **Skipping the efficiency factor.** Dividing by 1.0 (100%) produces a figure that assumes lab-condition output — real systems generate 15–25% less.\n3. **Sizing to your lowest-consumption month.** Spring bills are often the lowest of the year. Size for your annual average or your highest month if you want full offset year-round.\n4. **Not accounting for planned load growth.** Adding an EV charger adds ~300–500 kWh/month; a heat-pump water heater adds ~50–100 kWh/month. NREL recommends over-sizing by 10–20% if major electric loads are anticipated.\n5. **Confusing panel W with system kW.** A 400 W panel produces 0.4 kW at STC. A 7 kW system needs 7,000 ÷ 400 = **17.5 → 18 panels** of that size.\n",
   "faq": [
     {
       "q": "What are Peak Sun Hours and how do I find mine?",
-      "a": "Peak Sun Hours (PSH) represent the equivalent daily hours of solar irradiance at exactly 1,000 W/m². They are NOT the same as daylight hours. The NREL PVWatts Calculator (pvwatts.nrel.gov) lets you enter any U.S. ZIP code and retrieve average annual and monthly PSH values. Typical U.S. ranges: 3.0–4.0 PSH (Pacific Northwest), 4.5–5.5 PSH (Southeast/Midwest), 5.5–7.0 PSH (Southwest/Desert states)."
+      "a": "Peak Sun Hours (PSH) represent the equivalent daily hours of solar irradiance at exactly 1,000 W/m². They are NOT the same as daylight hours. Use the NREL PVWatts Calculator (pvwatts.nrel.gov) — enter any U.S. ZIP code to get average annual and monthly PSH values. Typical U.S. ranges: 3.0–4.0 PSH (Pacific Northwest), 4.5–5.5 PSH (Southeast/Midwest), 5.5–7.0 PSH (Southwest/Desert states)."
     },
     {
-      "q": "Why does the formula divide by 0.80?",
-      "a": "The 0.80 factor represents system efficiency — accounting for real-world losses including inverter conversion loss (~4–6%), wiring resistance (~2–3%), panel soiling and shading (~3–5%), temperature derating (~5–10%), and module mismatch (~2%). NREL's PVWatts uses a similar composite derate of 0.83 for typical grid-tied residential systems. Using 0.80 gives a conservative, safe sizing estimate that avoids under-producing."
+      "q": "Why does the formula use a system efficiency of 80% (dividing by 0.80)?",
+      "a": "The 0.80 factor (80% efficiency) represents the composite real-world derate from ideal STC conditions. It accounts for inverter loss (~4–6%), wiring resistance (~2–3%), panel soiling (~3–5%), temperature derating (~5–10%), and module mismatch (~2%). NREL PVWatts uses a default derate of ~0.83 for grid-tied systems. Using 0.80 gives a conservative, safe sizing estimate that avoids under-generating."
+    },
+    {
+      "q": "How many solar panels does my calculated kW translate to?",
+      "a": "The formula gives you the panel count directly. To double-check: **Number of panels = System kWp × 1,000 ÷ Panel wattage (W)**. Using common 400 W panels: a 4 kWp system needs 10 panels; a 6 kWp system needs 15 panels; a 8 kWp system needs 20 panels. Higher-efficiency 440 W panels reduce the count by 1–2 for the same output."
     },
     {
       "q": "What is the 30% federal solar tax credit and how does system size affect it?",
-      "a": "The Residential Clean Energy Credit (Section 25D of the Internal Revenue Code) allows homeowners to deduct 30% of total solar installation costs from their federal tax liability through 2032, stepping down to 26% in 2033 and 22% in 2034. A larger system costs more and therefore generates a larger credit. For example, a 7.5 kW system costing $22,500 yields a $6,750 credit (filed on IRS Form 5695). There is no cap on system size for this credit."
+      "a": "The Residential Clean Energy Credit (IRS Section 25D) allows homeowners to deduct **30%** of total solar installation costs from their federal tax liability through 2032, stepping down to 26% in 2033 and 22% in 2034. A larger system costs more and generates a proportionally larger credit. For example, an 8 kW system costing $24,000 yields a $7,200 credit (filed on IRS Form 5695). There is no cap on system size for this credit."
     },
     {
-      "q": "How many solar panels do I actually need for a calculated system size?",
-      "a": "Divide your required system kW by individual panel wattage: **Number of panels = (System kW × 1,000) ÷ Panel wattage**. Using today's common 400 W residential panels: a 6 kW system needs 15 panels; an 8 kW system needs 20 panels; a 10 kW system needs 25 panels. Higher-efficiency panels (420–440 W) can reduce panel count by 1–2 units for the same system output."
+      "q": "Should I size my solar system for summer peak or annual average consumption?",
+      "a": "If you have net metering (most U.S. states), size for your **annual average** — excess summer generation banks credits that offset winter bills. If you lack net metering or are going off-grid, size for your **highest monthly consumption** (typically July–August for A/C-heavy homes, or January for electric-heat homes). Adding 10–15% over-sizing is recommended when net metering policies are uncertain or could change."
     },
     {
-      "q": "Should I size my system for summer peak or annual average consumption?",
-      "a": "It depends on your utility's billing structure. If you have net metering (most U.S. states), size for your annual average consumption — excess summer production banks credits that offset winter bills. If you lack net metering or are going off-grid, size for your highest monthly consumption (typically July or August for A/C-heavy households, or January for electric-heat homes). Over-sizing by 10–15% is generally recommended when net metering policies are uncertain."
-    },
-    {
-      "q": "Does roof orientation and tilt angle affect how many kW I need?",
-      "a": "Yes. This calculator assumes an ideally south-facing roof at the optimal tilt angle for your latitude (roughly equal to your latitude in degrees — e.g., 33° for Atlanta, GA). East or west-facing roofs produce approximately 15–20% less energy than a true south orientation. If your roof is east- or west-facing, increase your calculated system kW by 15–20% to compensate. North-facing roofs in the U.S. are generally not viable for solar generation."
+      "q": "Does roof orientation and tilt affect the sizing calculation?",
+      "a": "Yes. This calculator assumes an ideally south-facing roof at the optimal tilt angle for your latitude (roughly equal to your latitude in degrees — e.g., 33° for Atlanta, GA). East or west-facing roofs produce approximately 15–20% less energy than a true south orientation. If your roof faces east or west, increase your calculated system kWp by 15–20% to compensate. North-facing roofs in the Northern Hemisphere are generally not viable."
     },
     {
       "q": "Can I use this calculator for a battery backup or off-grid system?",
-      "a": "Yes, but with an important addition. This calculator sizes the solar array only. For off-grid or battery backup, you also need to size battery storage using: **Battery kWh = Daily kWh × Backup Days ÷ Depth of Discharge (DoD)**. Most lithium iron phosphate (LiFePO4) batteries allow 80–90% DoD; lead-acid batteries should not exceed 50% DoD. For example, 30 kWh/day × 1.5 backup days ÷ 0.85 DoD ≈ 53 kWh of battery capacity needed (roughly 4 Tesla Powerwall 3 units at 13.5 kWh each)."
+      "a": "Yes, for the solar array size. For off-grid or battery backup, you also need to size battery storage separately: **Battery kWh = Daily kWh needed × Backup days ÷ Depth of Discharge (DoD)**. Lithium iron phosphate (LiFePO4) batteries allow 80–90% DoD; lead-acid should not exceed 50% DoD. Example: 30 kWh/day × 1.5 days ÷ 0.85 DoD ≈ 53 kWh of battery capacity (roughly 4 Tesla Powerwall 3 units)."
     },
     {
-      "q": "What is the average cost per kW of solar in the U.S. in 2025?",
-      "a": "According to Lawrence Berkeley National Laboratory's Tracking the Sun report, the median installed cost for residential solar in the U.S. was approximately $3.00–$3.50 per DC watt in 2024–2025, before the 30% IRS federal tax credit. That translates to $21,000–$24,500 for a 7 kW system gross, or $14,700–$17,150 net of the credit. Costs vary by state: California and New York average higher (~$3.50–$4.00/W), while Texas and Florida tend to run lower (~$2.50–$3.00/W)."
+      "q": "What is the average cost per kW of solar in the U.S. in 2025–2026?",
+      "a": "According to Lawrence Berkeley National Laboratory's Tracking the Sun report, the median installed cost for residential solar was approximately $3.00–$3.50 per DC watt in 2024–2025, before the 30% federal tax credit. That is $21,000–$24,500 gross for a 7 kW system, or $14,700–$17,150 net of the credit. Costs vary significantly: California and New York average $3.50–$4.00/W, while Texas and Florida tend to run $2.50–$3.00/W."
+    },
+    {
+      "q": "How do solar panels perform on cloudy days?",
+      "a": "Solar panels still generate electricity on cloudy days, but at reduced output. Under heavy cloud cover, panels typically produce 10–25% of their rated capacity. Under partial cloud cover, 40–70% is typical. The PSH values used in this calculator already incorporate cloudy days statistically — they are annual averages of global horizontal irradiance (GHI) measured by satellites (NREL NSRDB, NASA POWER), not theoretical clear-sky values."
+    },
+    {
+      "q": "How does temperature affect solar panel output?",
+      "a": "Solar panels are rated at 25°C (77°F). Above that temperature, output drops approximately 0.35–0.45% per additional °C (the temperature coefficient of maximum power, Pmax). On a hot summer day in Phoenix or Houston, panels can reach 60–75°C, causing 12–20% power loss from the rated value. Proper mounting with at least 4 inches (10 cm) of airspace between panel and roof surface reduces operating temperature by 5–10°C and is included in good installation practice."
     }
   ],
   "sources": [
     {
-      "name": "NREL PVWatts Calculator – National Renewable Energy Laboratory",
+      "name": "NREL PVWatts Calculator — National Renewable Energy Laboratory",
       "url": "https://pvwatts.nrel.gov/"
     },
     {
-      "name": "IRS Form 5695 – Residential Energy Credits (2024)",
+      "name": "IRS Form 5695 — Residential Energy Credits (2024)",
       "url": "https://www.irs.gov/forms-pubs/about-form-5695"
     },
     {
-      "name": "U.S. EIA – Average Monthly Residential Electricity Consumption by State (2023)",
+      "name": "U.S. EIA — Average Monthly Residential Electricity Consumption by State (2024)",
       "url": "https://www.eia.gov/electricity/sales_revenue_price/"
     },
     {
-      "name": "NIST – Photovoltaic System Performance Monitoring Guidelines",
-      "url": "https://www.nist.gov/"
+      "name": "Lawrence Berkeley National Lab — Tracking the Sun 2024",
+      "url": "https://emp.lbl.gov/tracking-the-sun"
+    },
+    {
+      "name": "NASA POWER — Solar Resource Data",
+      "url": "https://power.larc.nasa.gov/"
     }
   ],
   "dataUpdate": {
-    "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "frequency": "yearly",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed IEC 61724 / NREL PVWatts sizing formula. Review annually to update typical system costs and EIA consumption figures."
   },
   "relatedSlugs": [],
-  "noindex": false
+  "noindex": false,
+  "seoKeywords": [
+    "solar panel calculator",
+    "solar panel size home",
+    "kW solar system calculator",
+    "residential solar sizing",
+    "how much solar do I need",
+    "home solar panel system kW",
+    "solar installation sizing tool",
+    "peak sun hours calculator"
+  ]
 }

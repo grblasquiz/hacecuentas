@@ -1,60 +1,86 @@
 {
   "slug": "bread-rising-time-yeast-calculator",
-  "lastReviewed": "2026-04-25",
+  "lastReviewed": "2026-06-04",
   "esSlug": "calculadora-leudado-pan-levadura-tiempo-temperatura",
-  "title": "Bread Rising Time Yeast Calculator | Hacé Cuentas",
-  "h1": "How Long Does Bread Rise with Yeast?",
-  "description": "Bread dough rising calculator. Fresh yeast: ~1 hour at 75°F to double. Dried yeast slower. Free, instant results. Plan your baking times accurately.",
+  "title": "Bread Rising Time Calculator — Yeast & Temperature 2026 | Hacé Cuentas",
+  "h1": "Bread Rising Time Calculator — Yeast Type, Dose & Temperature",
+  "description": "Calculate how long bread dough takes to rise based on dough temperature, yeast type (fresh, active dry, instant), and yeast percentage. Real Q10 formula for Saccharomyces cerevisiae. Instant result, no sign-up.",
   "category": "cocina",
   "icon": "🍞",
   "formulaId": "leudado-pan-levadura-tiempo-temperatura",
   "audience": "global",
-  "intro": "Bread rising time depends on yeast activity, dough temperature, hydration, and sugar content. This calculator estimates how long your dough needs to proof (first rise) or proof (second rise/final proof) based on temperature and yeast type. The core relationship follows an Arrhenius-type rate: yeast activity roughly doubles for every 15–17 °F (8–9 °C) increase in temperature within the optimal range of 75–95 °F (24–35 °C). Whether you're using active dry yeast, instant yeast, or fresh cake yeast, knowing your dough temperature is the single most important variable for predicting a reliable, consistent rise.",
-  "keyTakeaway": "**Estimated Rise Time (min) = Base Time × 2^((Reference Temp − Actual Temp) / 15)** — e.g., at 70 °F a dough that rises in 60 min at 80 °F takes ≈114 min; at 95 °F it takes ≈35 min.",
+  "intro": "Bread rising time depends on three key factors: dough temperature, yeast type, and yeast quantity. This calculator applies the Q10 temperature coefficient — a well-established principle in fermentation science — to estimate how long your dough needs for bulk fermentation (first rise). Baker's yeast (Saccharomyces cerevisiae) roughly doubles its activity for every 10 °C (18 °F) rise in temperature. Yeast quantity also matters: halving the dose doubles the rise time. Whether you're using fresh yeast, active dry yeast, or instant yeast, this calculator converts to a common scale and gives you an accurate time estimate.",
+  "keyTakeaway": "**Rise Time (min) = Base Time × 2^((25 − T_°C) / 10) × (2% / yeast_fresh_equiv%)** — At 15 °C a 60 min reference rises in ~120 min. At 4 °C with 1% fresh yeast, it can take over 8 hours.",
   "seoKeywords": [
-    "bread rising time",
-    "yeast rising calculator",
-    "bread dough rise",
-    "yeast fermentation time",
+    "bread rising time calculator",
+    "yeast proofing time temperature",
+    "bulk fermentation time formula",
+    "how long does bread dough rise",
+    "fresh yeast vs instant yeast rising time",
     "bread proofing calculator",
-    "bulk fermentation temperature",
-    "how long to proof bread",
-    "dough doubling time",
-    "fresh yeast vs dry yeast",
-    "bread baking time",
-    "sourdough rising time",
-    "baker's calculator"
+    "dough fermentation temperature",
+    "Q10 yeast fermentation",
+    "bread baking time calculator",
+    "sourdough rise time temperature"
   ],
   "useCases": [
-    "Adjusting bulk fermentation time when your kitchen is colder than 70 °F in winter",
-    "Planning a same-day bake schedule by knowing the dough will double in size within a specific time window",
-    "Converting a room-temperature recipe to a cold overnight proof in the refrigerator (38–40 °F)",
-    "Determining whether your active dry yeast is still viable before committing it to a full dough batch",
-    "Scaling a bakery production schedule so multiple loaves finish proofing at the same time",
-    "Troubleshooting a dough that didn't rise adequately by checking whether temperature or yeast quantity was the limiting factor"
+    "Adjusting bulk fermentation time when your kitchen is colder than 65 °F (18 °C) in winter.",
+    "Planning a same-day bake schedule by knowing precisely when the dough will be ready.",
+    "Converting a room-temperature recipe to a cold overnight proof in the refrigerator (38–40 °F / 3–4 °C).",
+    "Adapting a recipe written for 75 °F to a tropical kitchen running at 90 °F where dough can over-proof in under 40 minutes."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Input 1",
+      "id": "temperatura",
+      "label": "Dough / room temperature (°C)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "25",
+      "min": -5,
+      "max": 50,
+      "step": 0.5,
+      "unit": "°C"
     },
     {
-      "id": "v2",
-      "label": "Input 2",
+      "id": "tiempo_base",
+      "label": "Reference rise time at 25 °C (min)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "60",
+      "min": 10,
+      "max": 600,
+      "step": 5,
+      "unit": "min",
+      "helpText": "The rise time your recipe specifies at ~25 °C (77 °F) with 2% fresh yeast. Typical standard recipes: 60–90 min."
+    },
+    {
+      "id": "levadura_tipo",
+      "label": "Yeast type",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "fresca", "label": "Fresh yeast (cake yeast)" },
+        { "value": "seca_activa", "label": "Active dry yeast" },
+        { "value": "instantanea", "label": "Instant yeast (rapid-rise)" }
+      ]
+    },
+    {
+      "id": "levadura_pct",
+      "label": "Yeast dose (% of flour weight)",
+      "type": "number",
+      "required": true,
+      "placeholder": "2",
+      "min": 0.1,
+      "max": 10,
+      "step": 0.1,
+      "unit": "%",
+      "helpText": "Baker's percentage: grams of yeast per 100 g of flour. Standard: 2% fresh (20 g/kg), 0.9% active dry, 0.7% instant."
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Result",
+      "label": "Estimated rise time",
       "primary": true
     },
     {
@@ -63,75 +89,88 @@
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Whole-wheat sandwich loaf at 68 °F (20 °C)",
     "steps": [
-      "Example",
-      "Result"
+      "Dough temperature: 20 °C (68 °F)",
+      "Recipe reference time at 25 °C: 60 min",
+      "Yeast type: instant yeast, dose 0.7%",
+      "Convert to fresh-yeast equivalent: 0.7% × 3 = 2.1% fresh equiv",
+      "Temperature factor: 2^((25−20)/10) = 2^0.5 ≈ 1.41×",
+      "Yeast dose factor: 2% / 2.1% ≈ 0.95×",
+      "Estimated time: 60 × 1.41 × 0.95 ≈ 80 min"
     ],
-    "result": "Result"
+    "result": "80 min"
   },
-  "explanation": "## How It Is Calculated\n\nYeast fermentation rate follows an exponential relationship with temperature, modeled after the **Arrhenius equation** simplified for baking:\n\n```\nEstimated Rise Time (min) = Base Time × 2^((T_ref − T_actual) / Q10_halving)\n\nWhere:\n  Base Time   = published rise time at the reference temperature (e.g., 60 min at 80 °F)\n  T_ref       = reference dough temperature (°F) — typically 80 °F (27 °C)\n  T_actual    = your actual dough temperature (°F)\n  Q10_halving = temperature interval (°F) at which yeast activity halves ≈ 15 °F (8 °C)\n\nExample:\n  T_actual = 70 °F, T_ref = 80 °F, Base Time = 60 min\n  Rise Time = 60 × 2^((80 − 70) / 15)\n            = 60 × 2^(0.667)\n            = 60 × 1.587\n            ≈ 95 minutes\n```\n\n> **Yeast quantity adjustment:** Halving the amount of instant yeast roughly doubles the fermentation time. Doubling yeast cuts it roughly in half — useful for scheduling overnight cold proofs.\n\n---\n\n## Reference Table\n\n| Dough Temperature | Relative Yeast Activity | Estimated Bulk Rise (1× to 2× volume, standard recipe) |\n|---|---|---|\n| 32–34 °F (0–1 °C) | Near zero | Yeast dormant; not recommended |\n| 38–40 °F (3–4 °C) | ~5% of peak | 8–12 hours (cold retard / fridge proof) |\n| 50 °F (10 °C) | ~25% of peak | 4–6 hours |\n| 65 °F (18 °C) | ~60% of peak | 90–120 minutes |\n| 75 °F (24 °C) | ~85% of peak | 75–90 minutes |\n| 80 °F (27 °C) | 100% (reference) | 60 minutes |\n| 85 °F (29 °C) | ~115% of peak | 45–55 minutes |\n| 95 °F (35 °C) | ~130% of peak | 30–40 minutes |\n| 104–115 °F (40–46 °C) | Rapid decline | Yeast begins to die; off-flavors |\n| ≥138 °F (59 °C) | 0% | Yeast fully killed |\n\n*Based on standard active dry or instant yeast (Saccharomyces cerevisiae) at 2–2.25 tsp per 3 cups flour.*\n\n---\n\n## Typical Cases\n\n### Case 1 — Cold Winter Kitchen (65 °F)\nA recipe calls for a 60-minute first rise at 80 °F. Your kitchen is 65 °F.\n```\nRise Time = 60 × 2^((80 − 65) / 15) = 60 × 2^1.0 = 60 × 2 = 120 minutes\n```\n**Plan for 2 hours** instead of 1 hour. Covering the bowl with plastic wrap and placing it over a warm (not hot) bowl of water can bring the environment closer to 80 °F.\n\n### Case 2 — Overnight Refrigerator Proof (39 °F)\nYou want a slow cold proof. At 39 °F, yeast activity is roughly 5% of its 80 °F rate:\n```\nRise Time ≈ 60 × 2^((80 − 39) / 15) = 60 × 2^2.73 ≈ 60 × 6.65 ≈ 399 minutes ≈ 6.6 hours\n```\nPractical bakers typically allow **8–16 hours in the fridge** to account for the ramp-down and ramp-up time as dough cools and then warms before baking. Cold proofing also develops more complex flavors via organic acid byproducts.\n\n### Case 3 — Warm Proofing Box at 85 °F\nUsing an oven with just the light on (≈85 °F):\n```\nRise Time = 60 × 2^((80 − 85) / 15) = 60 × 2^(−0.333) = 60 × 0.794 ≈ 48 minutes\n```\nAt 85 °F the dough doubles **about 20% faster** than at 80 °F — useful when short on time but watch closely to avoid over-proofing.\n\n---\n\n## Common Errors\n\n1. **Using water that is too hot to activate dry yeast.** Active dry yeast should be proofed in water between **105–115 °F (40–46 °C)**. Water above 120 °F (49 °C) begins killing yeast cells, resulting in a flat loaf with no second rise.\n\n2. **Measuring rise by time instead of volume.** Rise time estimates assume a standard dough formula. A high-sugar dough (>10% sugar by flour weight) will ferment 20–30% slower because osmotic pressure inhibits yeast metabolism. Always aim for **1.5× to 2× volume**, not a fixed clock time.\n\n3. **Ignoring bulk dough temperature vs. room temperature.** Kneading generates friction heat — hand-kneading can raise dough temperature by 2–4 °F; stand-mixer kneading can raise it by 4–8 °F. Always measure **dough temperature with an instant-read thermometer**, not air temperature.\n\n4. **Conflating instant yeast and active dry yeast quantities.** Instant yeast (also called rapid-rise or bread machine yeast) is about **25% more potent** by weight than active dry yeast. Substituting 1:1 will shorten rise time significantly and may lead to over-proofing.\n\n5. **Over-proofing because \"more is better.\"** A dough risen beyond 2.5× volume has exhausted much of its fermentable sugars. The resulting bread will have a coarse, gummy crumb, little oven spring, and a weak crust. The poke test (indentation springs back slowly but does spring back) is a reliable real-time check.\n\n---\n\n## Related Calculators\n\nExplore these tools on Hacé Cuentas to complement your baking calculations:\n\n- Since no internal related slugs were specified, check the full **Cocina** category for converters covering weight-to-volume flour substitutions, hydration percentages, and oven temperature conversions between Fahrenheit and Celsius.\n",
+  "explanation": "## How It Works\n\nThe calculator uses the **Q10 temperature coefficient**, a standard tool in fermentation science describing how baker's yeast (*Saccharomyces cerevisiae*) activity changes with temperature:\n\n```\nRise Time (min) = Base Time × 2^((T_ref − T_actual) / 10) × (L_ref / L_equiv)\n\nWhere:\n  Base Time = recipe's stated rise time at T_ref (minutes)\n  T_ref     = 25 °C (77 °F) reference temperature\n  T_actual  = actual dough/room temperature in °C\n  L_ref     = 2.0% fresh-yeast equivalent (reference dose)\n  L_equiv   = actual dose converted to fresh-yeast equivalent\n\nYeast type conversion to fresh-yeast equivalent:\n  Fresh yeast (cake):  1×   (e.g., 20 g per kg flour = 2%)\n  Active dry yeast:    2.25× (e.g., 9 g active dry ≈ 20 g fresh)\n  Instant yeast:       3×   (e.g., 7 g instant ≈ 21 g fresh)\n```\n\n### Step-by-step example\n\nCountry loaf at 65 °F (18 °C) with 1.5% active dry yeast, base time 90 min:\n1. Convert to fresh equivalent: 1.5% × 2.25 = 3.375% fresh-equiv\n2. Temperature factor: 2^((25 − 18) / 10) = 2^0.7 ≈ 1.62×\n3. Yeast dose factor: 2% / 3.375% ≈ 0.59×\n4. Rise time: 90 × 1.62 × 0.59 ≈ 86 minutes\n\n---\n\n## Quick Reference Table\n\nEstimated **first rise** times with **2% fresh yeast** (20 g per kg of flour):\n\n| Temperature | Approx. Rise Time | Typical setting |\n|---|---|---|\n| 39 °F / 4 °C | 8 – 12 h | Cold overnight proof (fridge) |\n| 50 °F / 10 °C | 4 – 6 h | Cold garage / no heat |\n| 59 °F / 15 °C | 2 h – 2 h 30 min | Cool winter kitchen |\n| 65 °F / 18 °C | 1 h 40 min – 2 h | Comfortable cool room |\n| 72 °F / 22 °C | 1 h 15 min – 1 h 30 min | Standard room temp |\n| 77 °F / 25 °C | 60 – 90 min | Reference temperature |\n| 86 °F / 30 °C | 35 – 50 min | Warm summer kitchen |\n| 95 °F / 35 °C | 20 – 30 min | Near oven / hot day |\n| 104 °F / 40 °C | 12 – 18 min | Upper limit (stress zone) |\n\n> **Note:** Active dry yeast has 2.25× the potency by weight vs. fresh yeast; instant yeast has 3×.\n\n---\n\n## Common Mistakes\n\n1. **Water too hot to activate dry yeast.** Active dry yeast should be proofed in water at 105–115 °F (40–46 °C). Water above 120 °F (49 °C) begins killing yeast cells.\n2. **Measuring rise by time only, not volume.** A high-sugar dough (>10% sugar by flour weight) ferments 20–40% slower due to osmotic pressure on yeast cells. Always aim for 1.5–2× volume increase, not a fixed clock time.\n3. **Ignoring dough temperature vs. room temperature.** Hand kneading can raise dough temperature by 3–5 °F; machine kneading by 5–10 °F. Measure dough temperature with an instant-read thermometer for accurate results.\n4. **Using the same gram weight for different yeast types.** Using 7 g of instant yeast when a recipe calls for 7 g of active dry will cut rise time by ~25%, likely causing over-proofing.\n5. **Over-proofing.** A dough risen beyond 2.5× volume has exhausted fermentable sugars. The bread will have no oven spring, a gummy crumb, and a pale crust. The poke test (indentation springs back slowly) is the most reliable real-time check.",
   "faq": [
     {
       "q": "What is the ideal dough temperature for yeast bread?",
-      "a": "The sweet spot for *Saccharomyces cerevisiae* (baker's yeast) is **75–80 °F (24–27 °C)** for the dough itself. At this range, yeast is highly active, produces CO₂ and ethanol steadily, and organic acid byproducts (lactic and acetic acid) develop at a pace that balances flavor without sourness. Dough above 90 °F starts producing excess acetic acid and risks over-fermentation within 30–40 minutes."
+      "a": "The sweet spot for baker's yeast (*Saccharomyces cerevisiae*) is 75–80 °F (24–27 °C) for the dough itself. At this range, yeast produces CO₂ and ethanol steadily, and organic acid byproducts develop at a pace that builds flavor without excess sourness. Dough above 90 °F (32 °C) risks over-fermentation within 30–40 minutes."
     },
     {
-      "q": "How does sugar affect rising time?",
-      "a": "Sugar at low levels (1–5% of flour weight) *feeds* yeast and can speed fermentation slightly. At higher levels (8–15%, typical in brioche or sweet rolls), osmotic pressure draws water away from yeast cells, slowing their metabolism by **20–40%**. Recipes with >10% sugar often call for osmotolerant yeast strains or an increased yeast quantity to compensate."
+      "q": "How does temperature affect how fast bread rises?",
+      "a": "Yeast activity roughly doubles for every 10 °C (18 °F) increase in temperature — this is the Q10 coefficient. A dough that takes 60 minutes at 77 °F (25 °C) will take about 120 minutes at 59 °F (15 °C), and only about 37 minutes at 90 °F (32 °C). This exponential relationship is why summer and winter kitchens require very different timing."
     },
     {
-      "q": "Can I use this calculator for sourdough starter?",
-      "a": "The temperature-vs-time relationship applies similarly to sourdough, but the microorganism mix is different — wild yeast (*S. cerevisiae* and *Kazachstania humilis*) plus lactic acid bacteria (LAB). Sourdough bulk fermentation typically takes **4–12 hours at 76–78 °F** depending on starter vigor (usually 20–25% inoculation rate). The Arrhenius multiplier still holds: expect bulk ferment to roughly double in time for every 15 °F drop."
+      "q": "What is the difference between instant yeast, active dry yeast, and fresh yeast for rising time?",
+      "a": "Instant yeast (rapid-rise) is about 3× more concentrated by weight than fresh yeast, and about 1.33× more potent than active dry. Using 7 g of instant yeast is roughly equivalent to 21 g of fresh yeast or 9.3 g of active dry yeast. Substituting 1:1 by weight between types can dramatically change rise time — always convert using baker's percentages."
+    },
+    {
+      "q": "Can I use this calculator for cold overnight fridge proofing?",
+      "a": "Yes. Set the temperature to 3–4 °C (38–40 °F) and enter your yeast dose. The formula will give the theoretical time, which will typically be 8–12 hours for a standard dose at fridge temperature. A practical tip: reduce yeast to 0.5–1% fresh equivalent for an 8–10 hour overnight cold proof to avoid over-fermentation."
+    },
+    {
+      "q": "Does sugar speed up or slow down bread rising?",
+      "a": "At low levels (1–5% of flour weight), sugar feeds yeast and may slightly accelerate fermentation. At high levels (8–15%, typical in brioche or sweet rolls), osmotic pressure slows yeast metabolism by 20–40%. Recipes with more than 10% sugar often call for osmotolerant yeast strains or increased yeast quantity."
+    },
+    {
+      "q": "How do I know if my yeast is still alive?",
+      "a": "Proof your active dry yeast: dissolve 1 tsp sugar in ½ cup water at 110 °F (43 °C), sprinkle 1 packet (2.25 tsp / 7 g) of yeast, and wait 10 minutes. A healthy yeast culture produces a foamy, bubbly layer at least ½ inch (1.25 cm) thick. Instant yeast can be tested the same way. Yeast stored in the freezer stays viable for 1–2 years; pantry-stored packets last until the printed expiration."
+    },
+    {
+      "q": "What happens if dough over-proofs?",
+      "a": "Over-proofed dough has exhausted most fermentable sugars and the gluten structure has been compromised by excess CO₂ and organic acids. The bread will have no oven spring, a dense gummy crumb, and a pale crust. Minor over-proofing can sometimes be rescued by gently degassing and reshaping, then allowing a short 20–30 minute second rise before baking."
+    },
+    {
+      "q": "Why does cold fermentation improve bread flavor?",
+      "a": "At 38–40 °F (3–4 °C), yeast CO₂ production nearly halts, but enzymatic activity (amylases, proteases) and lactic acid bacteria continue working slowly over 8–24 hours. The result is higher concentrations of lactic acid, acetic acid, and complex esters — contributing to better flavor, a more extensible gluten network, and slightly increased mineral bioavailability in whole-grain doughs."
     },
     {
       "q": "Does altitude affect bread rising time?",
-      "a": "Yes. At high altitude (e.g., Denver at 5,280 ft / 1,609 m), lower atmospheric pressure allows CO₂ bubbles to expand more easily, so dough rises **faster by roughly 25–50%** compared to sea level. The King Arthur Baking Company and USDA Extension resources recommend reducing yeast by up to 25% and cutting rising time by 15–25% above 3,500 ft to prevent over-proofing."
+      "a": "Yes. At high altitude (e.g., Denver at 5,280 ft / 1,609 m, or Bogotá at 8,660 ft / 2,640 m), lower atmospheric pressure lets CO₂ bubbles expand more easily, so dough rises 25–50% faster than at sea level. Reduce yeast by 15–25% or shorten rising time by 20–30% when baking above 3,500 ft (1,070 m) to prevent over-proofing."
     },
     {
-      "q": "What is the difference between active dry yeast and instant yeast in terms of rising time?",
-      "a": "Instant yeast (rapid-rise) has smaller, more porous granules that hydrate directly in dough without pre-proofing, and it is approximately **25% more active** by weight. A recipe calling for 2.25 tsp active dry yeast needs only about 1.75 tsp of instant yeast for the same rise time. Using the same amount of instant as active dry will cut the rise time by ~15–20%."
-    },
-    {
-      "q": "How do I know if my yeast is still alive before using it?",
-      "a": "Proof your yeast: dissolve 1 tsp of sugar in ½ cup of water at **110 °F (43 °C)**, sprinkle 1 packet (2.25 tsp / 7 g) of active dry yeast, and wait 10 minutes. A healthy yeast culture will produce a **foamy, bubbly layer at least ½ inch (1.25 cm) thick**. Little or no foam means the yeast is expired or was killed by heat. Yeast stored in the freezer remains viable for up to 1–2 years; shelf-stable packets in a cool pantry last until the printed expiration date."
-    },
-    {
-      "q": "What happens if I let dough over-proof?",
-      "a": "Over-proofed dough has exhausted most fermentable sugars and gluten integrity is compromised by excess CO₂ and organic acids. The bread will collapse during baking (no oven spring), produce a **dense, gummy crumb**, and have a pale, weakly-colored crust due to depleted Maillard reaction sugars. Minor over-proofing can sometimes be rescued by gently degassing and reshaping the dough, allowing a short 20–30 minute second rise before baking."
-    },
-    {
-      "q": "Why does refrigerator proofing improve flavor?",
-      "a": "Cold fermentation (38–40 °F / 3–4 °C) slows yeast CO₂ production but allows enzymatic activity (amylases, proteases) and LAB acids to continue developing over 8–24 hours. The result is higher concentrations of **lactic acid, acetic acid, and complex esters** — contributing to a more complex, slightly tangy flavor and a more extensible gluten network. The USDA notes that slow fermentation also slightly increases the bioavailability of minerals in whole-grain doughs due to phytate breakdown."
+      "q": "Can I use this calculator for sourdough starter timing?",
+      "a": "Partially. The Q10 temperature relationship applies equally to sourdough, but the baseline rise times are very different — sourdough bulk fermentation typically takes 4–8 hours at 77 °F (25 °C) vs. 60–90 min with commercial yeast. Use this calculator to adjust relative rise time by temperature, but use sourdough-specific resources for the absolute reference times."
     },
     {
       "q": "How much yeast should I use per cup of flour?",
-      "a": "A general rule for standard bread recipes: use **¼ tsp to ½ tsp of instant yeast per cup (120 g) of bread flour** for a room-temperature bulk fermentation of 1–2 hours. For an overnight cold proof, reduce to **⅛ tsp per cup** to avoid over-fermentation in the fridge. Using a full packet (2.25 tsp) for 3 cups of flour is the standard American recipe quantity, targeting a ~60-minute rise at 80 °F."
+      "a": "For a standard 1–2 hour room-temperature first rise: use ¼–½ tsp instant yeast per cup (120 g) of bread flour. For an overnight cold proof (8–12 hours in fridge): reduce to ⅛ tsp per cup. The full American standard packet (2.25 tsp / 7 g) is sized for 3 cups of flour targeting a ~60 minute rise at 80 °F (27 °C)."
     }
   ],
   "sources": [
+    {
+      "name": "Weekend Bakery — The Temperature Equation: Timing Your Fermentation",
+      "url": "https://www.weekendbakery.com/posts/the-temperature-equation-timing-your-fermentation/"
+    },
+    {
+      "name": "King Arthur Baking — Baker's Percentage and Dough Temperature",
+      "url": "https://www.kingarthurbaking.com/blog/2019/01/15/baker-math"
+    },
     {
       "name": "USDA Agricultural Research Service — Yeast Fermentation & Food Science",
       "url": "https://www.ars.usda.gov/research/project/?accnNo=444795"
     },
     {
-      "name": "NIH — Saccharomyces cerevisiae Fermentation Kinetics (PubMed Central)",
+      "name": "NIH PubMed Central — Saccharomyces cerevisiae Fermentation Kinetics",
       "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6261502/"
-    },
-    {
-      "name": "NIST — Arrhenius Equation & Temperature Dependence of Reaction Rates",
-      "url": "https://webbook.nist.gov/chemistry/fluid/"
-    },
-    {
-      "name": "Wikipedia — Baker's yeast (Saccharomyces cerevisiae)",
-      "url": "https://en.wikipedia.org/wiki/Baker%27s_yeast"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-19",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed formula based on the Q10 temperature coefficient for Saccharomyces cerevisiae fermentation. No external data updates required."
   },
   "relatedSlugs": []
 }

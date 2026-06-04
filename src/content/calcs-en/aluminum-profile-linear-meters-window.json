@@ -1,131 +1,185 @@
 {
   "slug": "aluminum-profile-linear-meters-window",
   "esSlug": "calculadora-perfil-aluminio-metros-lineales-ventana",
-  "title": "Aluminum Profile Linear Meters | Hacé Cuentas",
-  "h1": "Calculate aluminum profile linear meters for windows and doors",
-  "description": "Calculate linear meters of aluminum profile for windows and doors. Free calculator for DIY and construction projects.",
+  "title": "Aluminum Profile Linear Meters for Windows Calculator",
+  "h1": "Calculate aluminum profile linear meters for windows",
+  "description": "Calculate exactly how many linear meters of aluminum profile you need for a sliding or fixed window, including frame, sliding panels, contraframe, and cutting waste. Free construction calculator.",
   "category": "construccion",
   "icon": "🏢",
   "audience": "global",
   "formulaId": "perfil-aluminio-metros-lineales-ventana",
-  "intro": "This calculator computes the total linear meters of aluminum profile needed to frame a single window or door opening. The core formula is the perimeter: **L = 2 × (Height + Width)**. For a standard window measuring 1.20 m × 1.00 m, that yields 4.40 linear meters of frame profile — before accounting for corner joints, mullions, or waste. Used by contractors, DIYers, and estimators to plan material orders, avoid shortfalls, and reduce offcut waste on residential and commercial glazing projects.",
-  "keyTakeaway": "**L = 2 × (H + W)** — a 0.90 m × 1.20 m window requires **4.20 linear meters** of aluminum profile; add 10–15% waste factor for cuts and joints.",
+  "intro": "This calculator estimates the total linear meters of aluminum profile needed to build or replace a window, accounting for the outer frame, each sliding panel (which carries its own perimeter of profile), an optional contraframe embedded in the masonry, any intermediate horizontal transoms, and a cutting waste factor. The formula is **ML_total = [P_frame + Σ P_panels + P_contraframe + transoms] × (1 + waste/100)**, converted to the number of standard 6-meter commercial bars to purchase.",
+  "keyTakeaway": "A standard 2-panel sliding window (1.20 m × 1.00 m) needs ≈ **12.01 linear meters** of aluminum profile (3 bars of 6 m with 10% waste). A fixed-pane window of the same size requires only ≈ **4.84 m** (1 bar of 6 m) — the sliding panels typically account for 60–70% of the total material.",
   "useCases": [
-    "Estimating aluminum extrusion for a new residential window before placing a material order with a supplier.",
-    "Calculating total profile length across multiple openings in a renovation project to get a bulk price quote.",
-    "Verifying that a 6-meter standard commercial aluminum bar covers a specific door frame without additional joints.",
-    "Planning the layout of sliding door tracks and side jambs for a patio door to minimize waste cuts.",
-    "Cross-checking a contractor's material quote against your own perimeter calculation to detect over-billing."
+    "Estimating aluminum profile for all the sliding windows in a new apartment before placing a bulk order with a supplier.",
+    "Calculating total bars of 6-meter extrusion needed when replacing windows of different sizes in a home renovation, to buy everything in a single trip.",
+    "Planning the profile for balcony enclosures with fixed panes and projected panels, including the contraframe embedded in the concrete slab.",
+    "Cross-checking a contractor's material quote against your own calculation to detect over-billing on a commercial glazing project."
   ],
   "seoKeywords": [
+    "aluminum profile linear meters window calculator",
+    "calculate aluminum profile for window",
+    "linear meters aluminum sliding window",
+    "how much aluminum profile for a window",
+    "aluminum window frame bars calculator",
     "aluminum profile calculator",
-    "linear meters window",
-    "aluminum frame dimensions",
-    "window profile calculator",
-    "how much aluminum profile needed",
-    "aluminum window frame calculator",
-    "calculate linear meters aluminum",
-    "aluminum construction calculator",
-    "door frame aluminum profile",
-    "aluminum profile meters",
-    "window frame calculator",
-    "aluminum profile for windows"
+    "window frame linear meters"
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Height (m)",
+      "id": "ancho",
+      "label": "Window width (m)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "e.g. 1.20",
+      "min": 0.3,
+      "max": 6,
+      "step": 0.01,
+      "unit": "m"
     },
     {
-      "id": "v2",
-      "label": "Width (m)",
+      "id": "alto",
+      "label": "Window height (m)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "e.g. 1.00",
+      "min": 0.3,
+      "max": 4,
+      "step": 0.01,
+      "unit": "m"
+    },
+    {
+      "id": "nhojas",
+      "label": "Opening type",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "0", "label": "Fixed pane (no sliding panels)" },
+        { "value": "1", "label": "1 sliding panel (single-track slider)" },
+        { "value": "2", "label": "2 sliding panels (standard double slider)" },
+        { "value": "3", "label": "3 sliding panels (triple slider)" }
+      ]
+    },
+    {
+      "id": "contramarco",
+      "label": "Include contraframe?",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "no", "label": "No (finished frame only)" },
+        { "value": "yes", "label": "Yes (add embedded masonry contraframe)" }
+      ]
+    },
+    {
+      "id": "travesano",
+      "label": "Include intermediate horizontal transom?",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "no", "label": "No (single-lite window)" },
+        { "value": "yes", "label": "Yes (1 horizontal transom)" }
+      ]
+    },
+    {
+      "id": "desperdicio",
+      "label": "Cutting waste allowance",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "10", "label": "10% — standard square cuts" },
+        { "value": "15", "label": "15% — mitered 45° corners or complex shapes" }
+      ]
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Result",
-      "primary": true
+      "label": "Total linear meters (with waste)",
+      "primary": true,
+      "unit": "m"
+    },
+    {
+      "id": "barras",
+      "label": "6-meter bars to purchase"
     },
     {
       "id": "resumen",
-      "label": "Interpretation"
+      "label": "Calculation breakdown"
     }
   ],
   "example": {
-    "title": "Example calculation",
+    "title": "Standard 2-panel sliding window 1.20 m × 1.00 m — no contraframe, 10% waste",
     "steps": [
-      "Example",
-      "Result"
+      "**Outer frame:** 2 × (1.20 + 1.00) = **4.40 m**",
+      "**Panel 1:** width ≈ 0.63 m; P_panel = 2 × (0.63 + 1.00) = 3.26 m",
+      "**Panel 2:** same as panel 1 = 3.26 m → panels total: **6.52 m**",
+      "**Net total:** 4.40 + 6.52 = **10.92 m**",
+      "**10% waste:** 10.92 × 1.10 = **12.01 m** → **3 bars of 6 m**"
     ],
-    "result": "Result"
+    "result": "12.01 linear meters — 3 bars of 6 m"
   },
-  "explanation": "## How It Is Calculated\n\nThe fundamental quantity is the **perimeter** of the rectangular opening, which equals the total run of frame profile required for one continuous frame:\n\n```\nL = 2 × (H + W)\n\nWhere:\n  L = total linear meters of aluminum profile\n  H = clear opening height (meters)\n  W = clear opening width (meters)\n```\n\nFor projects with **multiple openings**, multiply the single-frame result by the number of identical units, or sum individual perimeters:\n\n```\nL_total = Σ [2 × (Hᵢ + Wᵢ)]  for i = 1 … n openings\n```\n\n**Waste factor** — industry practice adds 10–15% to account for miter cuts at corners, splice joints, and offcuts:\n\n```\nL_order = L × 1.10   (10 % waste, clean square cuts)\nL_order = L × 1.15   (15 % waste, mitered 45° corners or complex frames)\n```\n\n**Commercial bar length** — aluminum extrusions are typically sold in **6.0 m or 6.5 m stock lengths** (NIST Handbook 44 references standard mill lengths). Divide L_order by the bar length to get the number of bars to purchase, rounding up to the nearest whole bar.\n\n---\n\n## Reference Table\n\nStandard residential and light-commercial window/door sizes and their bare aluminum profile requirements (no waste factor):\n\n| Opening Type | Width (m) | Height (m) | Perimeter — Linear Meters |\n|---|---|---|---|\n| Small bathroom window | 0.60 | 0.60 | 2.40 |\n| Standard single casement | 0.90 | 1.10 | 4.00 |\n| Double casement window | 1.20 | 1.20 | 4.80 |\n| Large picture window | 1.50 | 1.50 | 6.00 |\n| Standard interior door | 0.90 | 2.10 | 6.00 |\n| Standard exterior door | 1.00 | 2.20 | 6.40 |\n| Sliding patio door (double) | 2.40 | 2.20 | 9.20 |\n| Curtain-wall panel (commercial) | 1.50 | 3.00 | 9.00 |\n\n> Note: sliding doors also require **bottom track** equal to the full width (W) as a separate profile run.\n\n---\n\n## Typical Cases\n\n**Case 1 — Single residential window**\nA 1.00 m wide × 1.20 m tall casement window:\n`L = 2 × (1.20 + 1.00) = 4.40 m`\nWith 10% waste: `4.40 × 1.10 = 4.84 m` → purchase **1 bar of 6.0 m** (1.16 m offcut reusable).\n\n**Case 2 — Three identical bathroom windows**\nEach window is 0.60 m × 0.80 m:\n`L per window = 2 × (0.80 + 0.60) = 2.80 m`\n`L total (bare) = 2.80 × 3 = 8.40 m`\nWith 10% waste: `8.40 × 1.10 = 9.24 m` → purchase **2 bars of 6.0 m = 12.0 m** (2.76 m surplus).\n\n**Case 3 — Sliding patio door**\nOpening 2.40 m wide × 2.10 m tall, plus a separate bottom track:\n`Frame perimeter = 2 × (2.10 + 2.40) = 9.00 m`\n`Bottom track = 2.40 m (separate extrusion)`\n`Total bare = 9.00 + 2.40 = 11.40 m`\nWith 15% waste: `11.40 × 1.15 = 13.11 m` → purchase **3 bars of 6.0 m = 18.0 m** (4.89 m surplus for future use or other openings).\n\n---\n\n## Common Mistakes\n\n1. **Forgetting to double the sum** — writing `L = H + W` instead of `L = 2 × (H + W)` underestimates material by 50%, the single most frequent error in hand calculations.\n2. **Using rough-opening dimensions instead of frame dimensions** — the rough opening (structural framing) is typically 10–25 mm larger per side than the finished frame; always use the actual aluminum frame size.\n3. **Ignoring the waste factor** — ordering exactly the calculated perimeter leaves no room for miter cuts (which waste ~30 mm per cut) or damaged extrusion ends; a 10% buffer is the recognized industry minimum.\n4. **Treating sliding doors as a simple perimeter** — sliding doors require a double bottom track (two parallel rails), an intermediate vertical divider, and sometimes a fixed lite frame, all of which add linear meters beyond the basic perimeter.\n5. **Not converting units consistently** — mixing centimeters and meters in the same calculation (e.g., H = 120 cm, W = 1.00 m) without converting first produces a result that is 100× too large or too small.\n6. **Ignoring mullions in multi-lite windows** — a 3-lite horizontal window has two internal vertical mullions, each adding `H` meters of additional profile to the total.\n\n---\n\n## Related Calculators\n\nExplore other construction and materials calculators on Hacé Cuentas:\n\n- [Area Calculator](/area-calculator)\n- [Perimeter Calculator](/perimeter-calculator)\n- [Construction Materials Estimator](/construction-materials-estimator)\n- [Paint Coverage Calculator](/paint-coverage-calculator)\n",
+  "explanation": "## How It Is Calculated\n\nThe calculator adds up the linear meters of aluminum profile that form each component of the window:\n\n```\n1. Outer frame (always present):\n   P_frame = 2 × (width + height)\n\n2. Each sliding panel (if any):\n   panel_width ≈ (window_width / number_of_panels) + 0.03 m  ← 3 cm overlap between panels\n   P_panel = 2 × (panel_width + height)\n   Panel subtotal = P_panel × number_of_panels\n\n3. Contraframe (if selected):\n   P_contraframe = 2 × (width + height)   ← same perimeter as outer frame\n\n4. Intermediate horizontal transom (if selected):\n   T = window_width\n\n5. Net total:\n   ML_net = P_frame + panel_subtotal + P_contraframe + T\n\n6. Total with waste factor:\n   ML_total = ML_net × (1 + waste_pct / 100)\n\n7. Commercial bars to purchase (6 m standard length):\n   Bars = CEILING(ML_total / 6)\n```\n\n---\n\n## Reference Table\n\n| Window type | Typical size (m) | Net ML est. | 6-m bars |\n|---|---|---|---|\n| Small fixed pane | 0.60 × 0.60 | 2.40 m | 1 bar |\n| Medium fixed pane | 1.00 × 1.20 | 4.40 m | 1 bar |\n| Single-panel slider (bathroom) | 0.60 × 0.80 | 5.72 m | 1 bar |\n| 2-panel slider (bedroom) | 1.20 × 1.00 | 10.92 m | 2 bars |\n| 2-panel slider (living room) | 1.80 × 1.20 | 15.72 m | 3 bars |\n| 2-panel patio door | 2.00 × 2.10 | 20.52 m | 4 bars |\n| 3-panel balcony enclosure | 2.40 × 2.20 | 26.84 m | 5 bars |\n\n*Net totals before waste allowance. Add 10–15% for actual purchase.*\n\n---\n\n## Common Mistakes\n\n1. **Forgetting the sliding panel perimeters** — the outer frame is only part of the material; each sliding panel carries its own complete frame of profile (60–70% of the total in a 2-panel window).\n2. **Ignoring the 3 cm overlap between panels** — sliding panels overlap each other by ~3 cm so the track seals properly. Omitting this means each panel is ~3 cm short of profile.\n3. **Not adding the contraframe** — in new construction the contraframe is embedded in the masonry before plastering and represents a full additional perimeter per opening.\n4. **Skipping the waste factor** — miter cuts at corners, end-trims, and damaged extrusion tips all produce offcuts; a 10% buffer is the recognized industry minimum.\n5. **Mixing millimeters and meters** — always convert all dimensions to the same unit before calculating; using 1200 mm for width and 1.00 for height gives a result 1000× too large.\n",
   "faq": [
     {
-      "q": "What is the basic formula for aluminum profile linear meters for a window?",
-      "a": "The formula is L = 2 × (Height + Width), which calculates the full perimeter of the rectangular opening. For example, a 1.00 m × 1.20 m window gives L = 2 × (1.20 + 1.00) = 4.40 linear meters. This is the minimum profile needed before any waste allowance."
+      "q": "What is the correct formula for aluminum profile linear meters in a window?",
+      "a": "ML_total = [P_frame + (P_per_panel × number_of_panels) + P_contraframe + transoms] × (1 + waste%). For a frame: P = 2×(width+height). For each sliding panel: P = 2×(panel_width+height), where panel_width ≈ window_width/panels + 3 cm overlap. Add 10% waste for straight cuts, 15% for mitered joints."
     },
     {
-      "q": "How much extra aluminum profile should I order for waste and cuts?",
-      "a": "Industry standard is 10% extra for straight square-cut frames and 15% for mitered (45°) corners or complex assemblies. If your calculated perimeter is 6.00 m, order at least 6.60 m (10% buffer) or 6.90 m (15% buffer). Always round up to the next full commercial bar length (usually 6.0 m or 6.5 m)."
+      "q": "Why do the sliding panels add so many extra meters of profile?",
+      "a": "Each sliding panel has its own complete rectangular frame of profile: two vertical stiles (height × 2) and two horizontal rails (panel width × 2). In a standard 2-panel slider, the panels alone can account for 60–70% of the total linear meters. Calculating only the outer perimeter is the single most common mistake when estimating aluminum for windows."
     },
     {
-      "q": "What are standard commercial lengths for aluminum extrusion bars?",
-      "a": "Aluminum extrusion bars for window and door applications are most commonly sold in 6.0 m lengths in the US and international markets, with 6.5 m available from some suppliers. NIST Handbook 44 and ASTM B221 govern dimensional tolerances for these extrusions. Buying in standard lengths minimizes splicing and structural weak points."
+      "q": "What waste percentage should I use?",
+      "a": "Use 10% for windows with straight 90° cuts (the most common case). Use 15% if the frames use mitered 45° corners, or if the opening is non-rectangular (arched, trapezoidal). Leftover profile is never wasted — it serves as spare material for future repairs without needing to buy a full 6-meter bar."
     },
     {
-      "q": "Does this formula work for sliding doors too?",
-      "a": "Partially. The perimeter formula covers the outer frame, but sliding doors also require a double bottom track (two parallel rails each equal to the door width W), plus a center vertical divider. For a 2.40 m wide sliding door, add at least 2 × 2.40 = 4.80 m of track profile on top of the standard perimeter result."
+      "q": "What is the standard commercial length of aluminum extrusion bars?",
+      "a": "6.0 meters is the universal standard in Argentina, Chile, Mexico, and most of Latin America. Some specialized suppliers offer 3-meter bars at a roughly 15–20% price premium per linear meter. In the United States, 12-foot (3.66 m) and 20-foot (6.10 m) stock lengths are common per ASTM B221."
     },
     {
-      "q": "What aluminum alloy is typically used for window and door frames?",
-      "a": "The most common alloy is 6063-T5 or 6063-T6, an aluminum-magnesium-silicon alloy known for excellent extrudability, corrosion resistance, and surface finish. According to ASTM B221, 6063 alloy offers a tensile strength of approximately 150–205 MPa depending on temper, making it ideal for architectural profiles. Anodized or powder-coated finishes are then applied for weather resistance."
+      "q": "What is a contraframe and do I need one?",
+      "a": "A contraframe (contramarco in Spanish) is a profile perimeter embedded in the masonry before plastering; it acts as the anchor for the main window frame. In new construction it is almost always required. In window replacements where the original contraframe is already in place, you typically only buy the new inner frame and panels. If in doubt, check with your installer — an omitted contraframe can mean the window frame has nothing structural to fix to."
     },
     {
-      "q": "How do I calculate linear meters for a window with internal mullions?",
-      "a": "For each vertical mullion (internal divider), add the full Height (H) of the opening to your total. For each horizontal rail, add the full Width (W). Example: a 3-lite window (two vertical mullions, 1.20 m × 1.20 m) gives L = 4.80 m (perimeter) + 2 × 1.20 m (mullions) = 7.20 m of profile before waste factor."
+      "q": "Does this formula work for casement (side-hinged) windows too?",
+      "a": "Yes. For a casement window, treat each hinged leaf exactly like a sliding panel in this calculator: it has its own perimeter of profile. The only structural difference is that casement leaves are wider (full window width for a single casement) and use different hardware. The linear-meter calculation method is identical."
     },
     {
-      "q": "Should I use rough opening or finished frame dimensions?",
-      "a": "Always use the finished frame dimensions — the actual outer size of the aluminum frame, not the rough structural opening. Rough openings are typically 10–25 mm larger per side to allow for shimming and leveling. Using rough dimensions would cause you to over-order material by up to ~100 mm per side (200 mm per axis on the perimeter calculation)."
+      "q": "How do I calculate the profile for several windows of different sizes in a renovation?",
+      "a": "Run the calculator separately for each window, note the total ML with waste for each one, sum all of them, then divide by 6 and round up. For example, three windows at 12.01 m, 8.40 m, and 5.28 m: total = 25.69 m → ⌈25.69/6⌉ = 5 bars (30 m, ~4.31 m surplus for future use)."
     },
     {
-      "q": "How many 6-meter bars do I need for a project with multiple windows?",
-      "a": "Sum the perimeters of all openings (including waste factor), then divide by 6.0 m and round up. For example, five 1.00 m × 1.20 m windows: L_bare = 5 × 4.40 = 22.0 m; with 10% waste = 24.2 m; bars needed = ⌈24.2 ÷ 6.0⌉ = 5 bars (30.0 m total, ~5.8 m surplus for future repairs)."
+      "q": "What aluminum alloy is used for window frames, and does it affect the calculation?",
+      "a": "The most common alloy for architectural profiles is 6063-T5 or 6063-T6 (aluminum–magnesium–silicon), which combines excellent extrudability with corrosion resistance per ASTM B221. The alloy does not change the linear-meter calculation — it only affects weight (≈0.8–1.5 kg/m depending on profile series) and unit cost. A thermally broken (RPT) profile is measured exactly the same way but typically costs 30–50% more per linear meter."
     },
     {
-      "q": "Does thermal break aluminum require a different linear meters calculation?",
-      "a": "No — the linear meter calculation method is identical. Thermally broken profiles (which incorporate a polyamide or polyurethane barrier between inner and outer aluminum shells) are simply a different profile type but are measured and ordered the same way: by linear meter. They are typically 20–40% more expensive per linear meter than standard non-broken profiles, so accurate measurement is especially important."
+      "q": "Does the calculation change for windows with an intermediate horizontal transom?",
+      "a": "Yes — this calculator adds one full window-width of profile for a horizontal transom. A transom divides the window opening into an upper and lower lite (e.g., a fixed pane above a ventilation sash). If your window has two transoms, calculate one window and manually add an extra 'width' of profile to the result before computing bars."
     }
   ],
   "sources": [
     {
-      "name": "ASTM B221 – Standard Specification for Aluminum and Aluminum-Alloy Extruded Bars, Rods, Wire, Profiles, and Tubes (ASTM International)",
+      "name": "ASTM B221 – Standard Specification for Aluminum and Aluminum-Alloy Extruded Bars, Rods, Wire, Profiles, and Tubes",
       "url": "https://www.astm.org/b0221-14.html"
     },
     {
-      "name": "NIST Handbook 44 – Specifications, Tolerances, and Other Technical Requirements for Weighing and Measuring Devices",
-      "url": "https://www.nist.gov/system/files/documents/2022/09/12/2023-hb44-final.pdf"
+      "name": "Aluminio Fácilito — Tutorial: How to make a 2-panel aluminum sliding window (profile cutting formulas)",
+      "url": "https://aluminiofacilito.wordpress.com/2017/11/16/como-hacer-una-ventana-corrediza-de-aluminio-de-2/"
     },
     {
-      "name": "Wikipedia – Aluminium alloy 6063",
+      "name": "EXA Aluminio — Catálogo Técnico Corredizas A40 (profiles and tolerances)",
+      "url": "https://www.exaaluminio.com.ar/exa/catalogos/Catalogo_tecnico_A40_Corredizas.pdf"
+    },
+    {
+      "name": "Wikipedia — Aluminium alloy 6063 (material properties and architectural use)",
       "url": "https://en.wikipedia.org/wiki/Aluminium_alloy_6063"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, does not require external data updates"
+    "notes": "Fixed geometric formula, no external data updates required"
   },
   "relatedSlugs": [],
   "noindex": false

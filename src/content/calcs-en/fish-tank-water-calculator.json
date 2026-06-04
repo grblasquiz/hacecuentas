@@ -1,9 +1,10 @@
 {
   "slug": "fish-tank-water-calculator",
+  "lastReviewed": "2026-06-04",
   "esSlug": "calculadora-pecera-litros-peces-cantidad-m2",
-  "title": "Fish Tank Water Calculator 2026 | Hacé Cuentas",
+  "title": "Fish Tank Water Calculator 2026 — Liters per Fish | Hacé Cuentas",
   "h1": "Fish Tank Water Calculator",
-  "description": "Calculate tank size for your fish. Rule: 1cm adult fish needs 1L water (cichlids more). Free, fast & accurate.",
+  "description": "Calculate the minimum aquarium volume in liters for your fish. Accounts for species type: 1 L/cm for slim tropicals, 2 L/cm for cichlids, 3 L/cm for goldfish, 5 L/cm for marine fish.",
   "category": "mascotas",
   "icon": "🐠",
   "formulaId": "pecera-litros-peces-cantidad-m2",
@@ -12,116 +13,157 @@
     "fish tank calculator",
     "aquarium liters calculator",
     "how much water do fish need",
-    "1 inch per gallon rule",
     "fish tank size calculator",
     "aquarium water calculator",
     "liters per fish",
     "fish tank volume",
     "cichlid tank size",
-    "aquarium calculator",
-    "fish tank water requirements",
-    "how many fish per gallon"
+    "goldfish tank size liters",
+    "how many liters per fish",
+    "aquarium stocking calculator"
   ],
-  "intro": "The Fish Tank Water Calculator estimates the minimum aquarium volume (in liters) needed to house your fish comfortably and safely. It applies the classic **1 inch of fish per gallon** rule — converted to metric — which translates to roughly **1 cm of fish body length requiring ~2.7 L of water**. Enter the average body length of your fish (in cm) and the number of fish you plan to keep, and the calculator returns the minimum recommended tank size. This guideline is widely cited by fishkeeping organizations and veterinary resources as a starting point for stocking density, helping prevent oxygen depletion, ammonia spikes, and stress-related disease in aquarium fish.",
-  "keyTakeaway": "**Minimum Tank Volume (L) = Average Fish Length (cm) × Number of Fish × 2.7 L/cm** — e.g., 10 fish averaging 5 cm each require at least 135 L (≈35 gallons).",
+  "intro": "The Fish Tank Water Calculator gives you the minimum aquarium volume in liters based on your fish's adult body length, number of fish, and species type. Unlike the outdated \"1 inch per gallon\" rule that treats all fish equally, this calculator applies species-specific factors: slim-bodied tropical fish (tetras, guppies, danios) need 1 L per cm of adult body length; heavy-bodied fish (cichlids, discus, angelfish) need 2 L/cm; cold-water fish like goldfish need 3 L/cm because of their disproportionately high ammonia output; marine/reef fish require 5 L/cm. Bettas have a hard minimum of 15 L regardless of body length.\n\nThe result is the minimum water volume needed — always add 10–20 % on top to account for substrate, rocks, decor, and equipment that displace water in any real aquarium.",
+  "keyTakeaway": "**Minimum tank volume (L) = Average adult fish length (cm) × Number of fish × Species factor (1–5 L/cm).** Always add at least 15 % to the result to compensate for substrate and decor displacement.",
   "useCases": [
-    "Setting up a new freshwater community aquarium and determining the correct tank size before purchasing fish or equipment.",
-    "Evaluating whether an existing tank is overstocked — e.g., checking if a 60 L tank can safely hold 8 goldfish averaging 7 cm each (it cannot: 8 × 7 × 2.7 = 151.2 L needed).",
-    "Planning a saltwater reef tank where stocking density rules are stricter and proper volume calculations help maintain stable water chemistry (salinity, pH, alkalinity).",
-    "Advising children or first-time fish keepers on the minimum tank size for common starter fish like bettas (min. 19 L / 5 gal), guppies, or neon tetras before an impulse purchase at a pet store."
+    "Setting up a new freshwater community aquarium — enter your planned fish type and count before buying a tank to avoid the most common beginner mistake of undersizing.",
+    "Checking if your existing tank is overstocked — e.g., 6 goldfish averaging 15 cm each: 6 × 15 × 3 = 270 L required. A 60 L tank cannot safely house them.",
+    "Choosing the right tank for a single betta — the calculator returns the 15 L minimum, helping you reject the deceptive 3 L 'betta cups' sold in pet stores.",
+    "Planning a marine aquarium — the 5 L/cm factor immediately shows why a 100 L tank can only hold 20 cm worth of marine fish body length (e.g., 2 clownfish)."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Average Fish Length (cm)",
+      "id": "fishLength",
+      "label": "Average adult fish length (cm)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "e.g. 5",
+      "min": 1,
+      "max": 100,
+      "step": 0.5,
+      "format": "plain",
+      "helpText": "Body length in cm (excluding tail fin) at adult size. If you have mixed sizes, enter the average."
     },
     {
-      "id": "v2",
-      "label": "Number of Fish",
+      "id": "fishCount",
+      "label": "Number of fish",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "e.g. 6",
+      "min": 1,
+      "max": 500,
+      "step": 1,
+      "format": "plain"
+    },
+    {
+      "id": "fishType",
+      "label": "Fish type",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "tropical_slim", "label": "Slim-bodied tropical (tetra, guppy, corydoras, danio)" },
+        { "value": "tropical_heavy", "label": "Heavy-bodied tropical (cichlid, discus, angelfish)" },
+        { "value": "coldwater", "label": "Cold-water (goldfish, comet, koi)" },
+        { "value": "betta", "label": "Betta (Siamese fighting fish)" },
+        { "value": "marine", "label": "Marine / reef fish" }
+      ]
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Tank Volume (L)",
+      "label": "Minimum tank volume",
       "primary": true
     },
     {
       "id": "resumen",
-      "label": "Interpretation"
+      "label": "Calculation detail"
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Example: 10 neon tetras in a new community tank",
     "steps": [
-      "Example",
-      "Result"
+      "Average adult length: 3.5 cm · Fish count: 10 · Type: slim-bodied tropical",
+      "Minimum volume = 3.5 cm × 10 fish × 1 L/cm = 35 liters",
+      "Minimum water surface = 3.5 × 10 × 30 cm² = 1,050 cm² ≈ 0.11 m²",
+      "Adding 15 % for substrate and decor: 35 × 1.15 ≈ 40 liters → a standard 40 L aquarium is the minimum recommended."
     ],
-    "result": "Result"
+    "result": "35 L minimum (40 L with substrate margin)"
   },
-  "explanation": "## How It's Calculated\n\nThe calculator uses the metric conversion of the classic **\"1 inch of fish per gallon\"** rule, one of the most widely cited stocking guidelines in hobby fishkeeping:\n\n```\nMinimum Tank Volume (L) = Average Fish Length (cm) × Number of Fish × 2.7\n```\n\n**Where:**\n- `Average Fish Length (cm)` = the adult body length of your fish (excluding tail fin)\n- `Number of Fish` = total fish to be housed in the tank\n- `2.7 L/cm` = the metric equivalent of 1 US gallon per inch (1 inch ≈ 2.54 cm; 1 US gallon ≈ 3.785 L → 3.785 / 2.54 ≈ **1.49 L/cm**, but the rule is typically rounded up to ~2.7 L/cm to apply a safety margin and account for displacement by substrate, rocks, and decorations)\n\n> ⚠️ **Important:** This formula gives a *minimum* baseline. Species-specific needs, swimming behavior, aggression, and filtration capacity must also be factored in.\n\n---\n\n## Reference Table\n\n| Fish Species | Adult Length (cm) | Min. Tank (1 fish) | Notes |\n|---|---|---|---|\n| Betta splendens | 6–7 cm | ~19 L (5 gal) | Solitary; needs surface air access |\n| Neon Tetra | 3–4 cm | ~11 L (3 gal) | Schooling; keep 6+ minimum |\n| Common Goldfish | 15–30 cm | ~75 L (20 gal) | Produces heavy waste; needs strong filtration |\n| Guppy | 3–6 cm | ~38 L (10 gal) | Fast breeders; overcrowding risk |\n| Oscar Cichlid | 30–35 cm | ~208 L (55 gal) | Aggressive; needs large territory |\n| Clownfish | 8–11 cm | ~75 L (20 gal) | Saltwater; needs anemone space |\n| Plecostomus | 30–50 cm | ~208 L+ | Often undersized by beginners |\n| Zebra Danio | 4–5 cm | ~40 L (10 gal) | Active swimmers; need horizontal space |\n\n*Sources: widely referenced aquarium husbandry guides and university extension publications.*\n\n---\n\n## Typical Case Examples\n\n### Example 1 — Beginner Community Tank\nA beginner wants to keep **10 neon tetras** (avg. 3.5 cm each):\n- Required volume = 3.5 cm × 10 × 2.7 = **94.5 L (≈25 gallons)**\n- A standard 100 L tank is the minimum; a 120 L tank is recommended to account for decor and substrate displacement.\n\n### Example 2 — Single Betta Tank\nA single betta fish averaging **6 cm**:\n- Required volume = 6 × 1 × 2.7 = **16.2 L**\n- The fishkeeping community widely recommends a **19 L (5-gallon) minimum** as the practical floor, slightly above the formula output.\n\n### Example 3 — Mixed Goldfish Tank\n**3 common goldfish** averaging **20 cm** (adult size):\n- Required volume = 20 × 3 × 2.7 = **162 L (≈43 gallons)**\n- Most beginners underestimate this, purchasing 30–40 L bowls — a critical error that leads to stunted growth and disease.\n\n---\n\n## Common Mistakes\n\n1. **Using current size instead of adult size:** Fish grow. A 3 cm juvenile oscar will reach 30+ cm. Always use the *adult* body length in your calculation, not the size at purchase.\n2. **Counting the bowl/tank's labeled volume as usable volume:** A \"100 L tank\" loses 10–20% of effective water volume to substrate, rocks, filters, and decorations. Always size up by at least 15%.\n3. **Applying the rule to goldfish or messy species without adjustment:** Goldfish produce disproportionate ammonia relative to their body size. Many experts recommend **20 gallons for the first goldfish + 10 gallons per additional fish**, far exceeding the basic formula.\n4. **Ignoring swimming space vs. water volume:** A tall, narrow column tank may hold the calculated liters but deny active horizontal swimmers (danios, barbs) the linear space they need. Tank *footprint* matters as much as volume.\n5. **Assuming the rule applies equally to saltwater tanks:** Marine aquariums require stricter stocking — generally 1 inch of fish per 5 gallons (≈13.5 L/cm) is recommended due to the complexity of reef ecosystems and lower biological filtration tolerance.\n\n---\n\n## Related Calculators\n\nExplore other useful tools on Hacé Cuentas:\n- [Liters to Gallons Converter](/litros-a-galones) — quickly convert your tank volume between metric and US customary units\n- Square Meters Calculator — useful for calculating aquarium footprint area when planning tank placement\n- [Unit Converter](/conversor-de-unidades) — convert fish lengths between inches and centimeters for use in this calculator\n",
+  "explanation": "## How It's Calculated\n\nThe calculator applies a species-adjusted stocking formula:\n\n```\nMinimum Volume (L) = Average Adult Fish Length (cm) × Number of Fish × Species Factor\n```\n\n**Species factors (L per cm of adult body length):**\n\n| Fish Type | Factor (L/cm) | Examples |\n|-----------|--------------|----------|\n| Slim-bodied tropical | 1.0 | Neon tetra, guppy, corydoras, danio, molly, platy |\n| Heavy-bodied tropical | 2.0 | Medium cichlids, discus, angelfish |\n| Cold-water | 3.0 | Goldfish, comets, shubunkins, small koi |\n| Betta | 15 L minimum | Siamese fighting fish (one male per tank) |\n| Marine / reef | 5.0 | Clownfish, surgeon fish, gobies |\n\n**Water surface area (cross-check for oxygen exchange):**\n```\nMinimum surface (cm²) = Total fish length (cm) × 30 (slim) or × 50 (heavy/cold-water)\n```\nThis guideline, established in the 1960s, ensures enough gas exchange at the water surface. Modern filters that agitate the water surface make this less critical, but it remains a useful indicator that your tank's *footprint* (length × width) is adequate — a tall, narrow tank can have the right volume but insufficient surface area.\n\n**Usable water volume vs. nominal tank volume:**  \nThe calculated volume is the water needed. Real aquariums lose 10–20 % of their nominal volume to substrate, rocks, filters, heaters, and air gap at the top. Always choose a tank with a nominal capacity at least 15 % larger than the calculated minimum.\n\n**Reference: minimum tank sizes for common fish species**\n\n| Species | Adult length | Min. tank (1 fish) | Notes |\n|---------|-------------|-------------------|-------|\n| Neon tetra | 3.5 cm | 4 L | School of 6+ minimum |\n| Guppy | 4–5 cm | 5 L | Fast breeders, easy to overstock |\n| Common goldfish | 20–30 cm | 60–90 L | Very high ammonia producer |\n| Fancy goldfish | 15–20 cm | 45–60 L | Shorter body, similar waste |\n| Betta | 6–7 cm | 15 L (hard min.) | One male only |\n| Medium cichlid | 15 cm | 30 L | Territorial, add extra volume |\n| Oscar | 30–35 cm | 200+ L | Massive waste, needs huge tank |\n| Clownfish | 8–10 cm | 40–50 L | Marine, needs anemone habitat |\n| Discus | 15–20 cm | 30–40 L | Sensitive to water quality |\n| Corydoras | 5–7 cm | 6–8 L | Bottom dweller, school of 6+ |\n\n*Species lengths: FishBase global database (Froese & Pauly, eds.)*\n\n## Common Mistakes\n\n1. **Using the fish's current size instead of adult size.** A 3 cm juvenile oscar will reach 30–35 cm. Always use the adult body length in your calculation.\n2. **Treating the tank's labeled volume as usable water volume.** Substrate, decor, filters and heaters displace 10–20 % of the listed capacity. Size up by at least 15 %.\n3. **Applying the same rule to all species.** The basic 1 cm/L rule severely underestimates needs for goldfish, cichlids, and marine fish. Use the species-specific factors in this calculator.\n4. **Confusing volume with tank footprint.** Tall, narrow tanks may hold the right volume but deny active horizontal swimmers (danios, barbs) adequate swimming lanes — and may have insufficient surface area for gas exchange.\n5. **Adding all fish at once to a new tank.** A new aquarium needs 4–8 weeks to develop biological filtration (nitrogen cycle). Add fish gradually and quarantine new arrivals for 2 weeks.\n",
   "faq": [
     {
-      "q": "Is the '1 inch per gallon' rule accurate enough to rely on?",
-      "a": "It is a widely accepted *minimum baseline*, not a precise scientific standard. It works reasonably well for small, non-aggressive community fish (tetras, guppies, danios) but significantly underestimates needs for large, waste-heavy species like goldfish or cichlids. Use it as a starting point, then adjust for species-specific requirements, filtration capacity, and tank footprint."
+      "q": "Is the '1 inch per gallon' rule accurate enough to use?",
+      "a": "It is a rough starting point but significantly underestimates needs for large, waste-heavy species like goldfish and cichlids. In metric terms, the 1 inch/gallon rule translates to approximately 1 cm per 2.65 L — but this calculator uses the more precise 1 cm/L (slim tropicals) to 3 cm/L (cold-water) factors to give you a more accurate minimum. For marine fish, the standard is 5 L per cm, roughly 5× stricter than for slim tropical freshwater fish."
     },
     {
-      "q": "How much water does a fish actually need in liters?",
-      "a": "The metric equivalent of the classic rule gives approximately **2.7 L per centimeter of adult fish body length**. So a 10 cm fish needs at minimum ~27 L of water. Goldfish are a notable exception — they require far more due to high ammonia output, with most experts recommending 75–110 L for a single adult common goldfish."
-    },
-    {
-      "q": "Does the formula work for saltwater (marine) aquariums?",
-      "a": "No — marine tanks require stricter stocking rules. The commonly recommended guideline for saltwater fish is **1 inch of fish per 5 gallons (~13.5 L per cm)**, roughly five times the freshwater formula. Reef tanks with corals are even more sensitive to bioload, as biological filtration is more fragile. Always consult species-specific marine husbandry resources."
+      "q": "How many liters does a goldfish actually need?",
+      "a": "Far more than most beginners expect. Using the 3 L/cm factor for cold-water fish: a common goldfish at 20 cm adult length needs <strong>60 liters minimum for a single fish</strong>. Two goldfish at 20 cm: 120 liters. Fancy/round-bodied goldfish at 15 cm: 45 liters each. The small round bowls sold in many pet stores cause chronic stress and early death. Well-cared-for goldfish can live 15–20 years."
     },
     {
       "q": "What is the minimum tank size for a betta fish?",
-      "a": "The fishkeeping community and most veterinary references recommend a **minimum of 19 L (5 US gallons)** for a single betta. The formula gives ~16 L for a 6 cm betta, which is close but the 5-gallon floor is the practical standard. Smaller 'betta cups' sold in stores are holding vessels, not homes — they cause chronic stress and shortened lifespan."
+      "a": "The fishkeeping community and welfare organizations consistently recommend a <strong>minimum of 15 L (4 US gallons)</strong> for a single betta male. Smaller 'betta cups' sold in stores are temporary holding vessels, not homes — they cause ammonia spikes within days and chronic stress. Bettas are also tropical fish that need a stable 24–28 °C, which requires a heater. A proper 20 L tank with a gentle filter and a heater is the practical minimum for a healthy betta."
+    },
+    {
+      "q": "Does the formula work for saltwater (marine) aquariums?",
+      "a": "Yes, using the marine factor of 5 L per cm of adult fish. Marine tanks require far stricter stocking than freshwater because biological filtration is more fragile and water chemistry (salinity, pH, alkalinity) destabilizes quickly with excess bioload. A 100 L marine tank can safely hold only 20 cm of total fish body length — equivalent to 2 adult clownfish at 10 cm each. Reef tanks with corals are even more sensitive."
     },
     {
       "q": "How do decorations and substrate affect the usable tank volume?",
-      "a": "Substrate, rocks, driftwood, filters, and heaters typically displace **10–20% of the labeled tank volume**. A tank sold as 100 L may have only 80–90 L of actual water. Always calculate your stocking needs based on labeled volume and then purchase a tank **at least 15% larger** than the minimum volume the formula returns."
+      "a": "Substrate, rocks, driftwood, filters, and heaters typically displace <strong>10–20 % of the labeled tank volume</strong>. A tank sold as 100 L may have only 80–90 L of actual water. Always use a tank with a nominal volume at least 15 % larger than the minimum returned by this calculator. If you're not sure, you can measure your tank's usable volume by counting how many liters of water it takes to fill it to the normal water level."
     },
     {
-      "q": "How many fish can I keep in a 100-liter (26-gallon) tank?",
-      "a": "Using the formula in reverse: 100 L ÷ 2.7 L/cm ≈ 37 cm total fish length. For neon tetras averaging 3.5 cm, that's roughly **10–11 fish**. For goldfish averaging 20 cm, that's just **1–2 fish** — far fewer than most beginners expect. Species selection dramatically changes stocking capacity."
+      "q": "How many fish can I keep in a 100-liter tank?",
+      "a": "It depends on species. For slim tropical fish (1 L/cm): 100 cm of total body length — about 28 neon tetras at 3.5 cm each, or 20 guppies at 5 cm each. For goldfish (3 L/cm): only 33 cm of total body length — that's one standard goldfish, not five. Most beginners dramatically overstock goldfish tanks, which is why the fish die within months."
     },
     {
       "q": "Does tank shape matter, or just the volume?",
-      "a": "Tank shape matters significantly. Tall, narrow tanks may hold the calculated liters but offer limited horizontal swimming space, which stresses active species like danios, barbs, and livebearers. Wide, rectangular tanks are preferred because they maximize **surface area** (critical for oxygen exchange) and swimming lanes. The surface area rule of thumb is **12 cm² of surface per 1 cm of fish** for adequate oxygenation."
+      "a": "Tank shape matters significantly. Tall, narrow tanks may hold the calculated liters but offer limited horizontal swimming space, stressing active species like danios, barbs, and livebearers. Wide, rectangular tanks are preferred because they maximize <strong>water surface area</strong> — critical for oxygen exchange — and provide adequate swimming lanes. A good rule of thumb: the tank's length should be at least 3× the tank height for most community fish."
     },
     {
       "q": "What happens if a fish tank is overstocked?",
-      "a": "Overstocking leads to: (1) **ammonia and nitrite spikes** as the biological filter is overwhelmed, causing chemical burns to fish gills; (2) **oxygen depletion**, especially at night when plants consume O₂; (3) increased disease transmission due to physical proximity and stress-suppressed immune systems; and (4) stunted growth in fish like goldfish, which release growth-inhibiting hormones that accumulate in small volumes. These outcomes are well-documented in aquatic veterinary literature."
+      "a": "Overstocking causes: (1) <strong>ammonia and nitrite spikes</strong> as the biological filter is overwhelmed, burning fish gills; (2) <strong>oxygen depletion</strong>, visible when fish gasp at the surface; (3) increased disease transmission due to proximity and stress-suppressed immunity; (4) stunted growth, particularly in goldfish, which release growth-inhibiting hormones that accumulate in small volumes. These effects are well-documented in aquatic veterinary literature (Aquarium Science, INJAF, Practical Fishkeeping)."
+    },
+    {
+      "q": "Can I keep different fish species together in the same tank?",
+      "a": "Yes, for compatible species — but add each group's volume requirements together. For a mixed tank, identify the most demanding species category and use its factor for that group's fish. Example: 4 angelfish (10 cm, heavy tropical, 2 L/cm) + 8 neon tetras (3.5 cm, slim tropical, 1 L/cm) = (4 × 10 × 2) + (8 × 3.5 × 1) = 80 + 28 = 108 L minimum. Never mix cold-water and tropical fish — their temperature requirements (goldfish: 15–22 °C; tropicals: 24–28 °C) are incompatible."
+    },
+    {
+      "q": "When can I add new fish to an established aquarium?",
+      "a": "Only after confirming the nitrogen cycle is stable (ammonia and nitrite at 0 ppm, nitrate under 20 ppm). A new aquarium takes 4–8 weeks to establish the bacterial colonies needed for biological filtration. Add fish in small batches 2–3 weeks apart. Always quarantine new fish in a separate tank for at least 2 weeks before introducing them to an established aquarium to prevent introducing disease."
+    },
+    {
+      "q": "Why does the betta have a hard minimum rather than using the per-cm formula?",
+      "a": "Bettas are labyrinth fish — they breathe atmospheric air directly from the surface in addition to breathing through gills. Even though a betta's body is relatively small (6–7 cm), a tiny tank creates rapid ammonia and temperature fluctuations that are lethal. The 15 L minimum reflects the real-world threshold recommended by welfare organizations (INJAF, etc.) below which water parameters cannot be kept stable without multiple daily interventions. Also: male bettas are highly territorial and should never be housed together regardless of tank volume."
     }
   ],
   "sources": [
     {
-      "name": "Wikipedia – Fishkeeping: Stocking Levels",
-      "url": "https://en.wikipedia.org/wiki/Fishkeeping#Stocking_levels"
+      "name": "INJAF — Independent Network of Responsible Aquarium Fishkeepers: Understanding fish stocking guides",
+      "url": "https://injaf.org/articles-guides/general-guides/understanding-fish-stocking-guides/"
     },
     {
-      "name": "NIH – Aquatic Animal Care Guidelines (Office of Research Infrastructure Programs)",
-      "url": "https://orip.nih.gov/construction-and-instruments/office-policies-and-guidelines/animal-facility-resources/zebrafish"
+      "name": "Practical Fishkeeping UK — FAQ on stocking densities",
+      "url": "https://www.practicalfishkeeping.co.uk/features/frequently-asked-questions-on-stocking-densities/"
     },
     {
-      "name": "USDA Animal Care – Fish and Aquatic Species Policies",
-      "url": "https://www.aphis.usda.gov/aphis/ourfocus/animalwelfare"
+      "name": "Aquarium Science (David Hurd) — Calculating Stocking Ratio",
+      "url": "https://aquariumscience.org/index.php/13-2-calculating-stocking-ratio/"
+    },
+    {
+      "name": "ThinkFish UK — Stocking levels for tropical aquarium fish",
+      "url": "https://www.thinkfish.co.uk/article/stocking-levels-for-tropical-aquarium-fish"
+    },
+    {
+      "name": "FishBase — Global database of fish biology (Froese & Pauly, eds.)",
+      "url": "https://www.fishbase.se/search.php"
     }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, does not require external data updates"
+    "notes": "Fixed formula based on established aquarium husbandry guidelines (INJAF, Practical Fishkeeping, Aquarium Science). No external data updates required."
   },
   "noindex": false
 }

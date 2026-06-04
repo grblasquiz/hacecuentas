@@ -1,99 +1,169 @@
 {
   "slug": "calculadora-presupuesto-mochilero-backpacker-dia-pais",
-  "lastReviewed": "2026-05-19",
+  "lastReviewed": "2026-06-04",
   "title": "Calculadora Presupuesto backpacker 2026 — Gratis",
   "h1": "Presupuesto backpacker",
-  "description": "✈️ Planificar viajes bien te ahorra tiempo, dinero y dolores de cabeza. Visas, equipaje, presupuesto y seguros son los 4 ejes críticos.",
+  "description": "✈️ Calculá tu gasto diario como mochilero por destino: alojamiento, comida, transporte y actividades más margen de imprevistos. Comparador por región y perfil de viaje.",
   "category": "viajes",
   "audience": "global",
   "icon": "🎒",
   "formulaId": "presupuesto-mochilero-backpacker-dia-pais",
-  "intro": "Calculá cuánto dinero necesitás por día y por destino viajando como mochilero (backpacker). Esta herramienta estima tu presupuesto diario sumando las categorías clave: alojamiento (hostel dorm o camping), comida (mercado + algún restorán económico), transporte interno, actividades y un margen de imprevistos del 15%. La fórmula base es: **Gasto diario = Alojamiento + Alimentación + Transporte + Actividades + (Subtotal × 0,15)**. Se usa cuando planeás un viaje de mochilero, querés comparar destinos por costo de vida o necesitás justificar un presupuesto ante una visa de turismo.",
-  "keyTakeaway": "**Gasto diario backpacker = Alojamiento + Comida + Transporte + Actividades + 15% imprevistos.** Ejemplo real: Europa del Este ~35 USD/día; Sudeste Asiático ~25 USD/día; Europa Occidental ~65 USD/día.",
+  "intro": "Calculá cuánto dinero necesitás por día viajando como mochilero (backpacker). Esta herramienta estima tu presupuesto diario sumando las cuatro categorías clave — alojamiento (hostel dorm o camping), comida (mercado + algún restorán económico), transporte interno y actividades — y le agrega un margen de imprevistos configurable (15% por defecto). La fórmula base es: **Gasto diario = (Alojamiento + Comida + Transporte + Actividades) × (1 + % imprevistos)**. Se usa cuando planeás un viaje de mochilero, querés comparar destinos por costo de vida o necesitás justificar un presupuesto ante una visa de turismo.",
+  "keyTakeaway": "**Gasto diario backpacker = (Alojamiento + Comida + Transporte + Actividades) × 1,15.** Rangos de referencia 2026: Europa del Este ~40–50 USD/día; Sudeste Asiático ~25–35 USD/día; Europa Occidental ~65–90 USD/día; América del Sur ~25–40 USD/día.",
   "useCases": [
     "Planificar un viaje de 3 meses por Sudeste Asiático (Tailandia, Vietnam, Indonesia) y saber cuántos dólares ahorrar antes de salir.",
     "Comparar si te alcanza el presupuesto para recorrer Europa Occidental vs. Europa del Este con el mismo dinero.",
     "Estimar el monto mínimo de fondos disponibles que exigen en frontera o para una visa de turista Schengen.",
-    "Calcular cuántos días podés viajar en América del Sur (Colombia, Perú, Bolivia) con un presupuesto fijo de 2.000 USD.",
-    "Armar un desglose por categorías (alojamiento, comida, transporte) para presentar ante un banco o agencia de viajes al solicitar un crédito de viaje."
+    "Calcular cuántos días podés viajar en América del Sur (Colombia, Perú, Bolivia) con un presupuesto fijo de 2.000 USD."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Input 1",
+      "id": "alojamiento",
+      "label": "Alojamiento por noche (USD)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "12",
+      "min": 0,
+      "max": 500,
+      "step": 1,
+      "helpText": "Cama en dorm de hostel, camping o pensión económica. Ej: Vietnam ~8, España ~22, Argentina ~10."
     },
     {
-      "id": "v2",
-      "label": "Input 2",
+      "id": "comida",
+      "label": "Comida por día (USD)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "15",
+      "min": 0,
+      "max": 300,
+      "step": 1,
+      "helpText": "Incluye desayuno, almuerzo y cena. Mercado + un restorán barato. Ej: Vietnam ~10, Colombia ~12, Alemania ~25."
+    },
+    {
+      "id": "transporte",
+      "label": "Transporte local por día (USD)",
+      "type": "number",
+      "required": true,
+      "placeholder": "5",
+      "min": 0,
+      "max": 200,
+      "step": 1,
+      "helpText": "Colectivos, metro, moto de alquiler. No incluye vuelos internacionales. Ej: Tailandia ~5, Polonia ~4, Australia ~15."
+    },
+    {
+      "id": "actividades",
+      "label": "Actividades por día (USD)",
+      "type": "number",
+      "required": true,
+      "placeholder": "8",
+      "min": 0,
+      "max": 300,
+      "step": 1,
+      "helpText": "Entradas a sitios, tours de día, museos. Si visitás muchos sitios gratuitos podés poner 0–5."
+    },
+    {
+      "id": "contingencia",
+      "label": "Margen de imprevistos (%)",
+      "type": "number",
+      "required": false,
+      "placeholder": "15",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "helpText": "Propinas, comisiones de cajero, remedios, cargos inesperados. 15% es el estándar recomendado para viajes internacionales."
+    },
+    {
+      "id": "dias",
+      "label": "Cantidad de días del viaje",
+      "type": "number",
+      "required": false,
+      "placeholder": "30",
+      "min": 1,
+      "max": 730,
+      "step": 1,
+      "helpText": "Opcional: calculá también el costo total del viaje."
     }
   ],
   "outputs": [
     {
-      "id": "resultado",
-      "label": "Resultado",
+      "id": "gasto_diario",
+      "label": "Gasto estimado por día",
       "primary": true
     },
     {
+      "id": "gasto_total",
+      "label": "Gasto total en destino"
+    },
+    {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Desglose"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: 30 días en Vietnam",
     "steps": [
-      "Ejemplo",
-      "Resultado"
+      "Alojamiento: 8 USD/noche (dorm hostel en Hanói o Ho Chi Minh City)",
+      "Comida: 10 USD/día (mercado de calle + una comida en restorán local)",
+      "Transporte local: 4 USD/día (autobuses urbanos + motos de alquiler cortas)",
+      "Actividades: 5 USD/día (entradas a templos, crucero de medio día en Bahía de Ha Long prorrateada)",
+      "Subtotal diario: 8 + 10 + 4 + 5 = 27 USD",
+      "Con 15% de imprevistos: 27 × 1,15 = 31,05 USD/día",
+      "Para 30 días: 31,05 × 30 = 931,50 USD en destino (vuelos y seguro aparte)"
     ],
-    "result": "Resultado"
+    "result": "Gasto diario: $31,05 USD — Gasto total 30 días: $931,50 USD. Perfil: mochilero clásico (bajo)."
   },
-  "explanation": "## Cómo se calcula\n\nEl presupuesto diario mochilero se obtiene sumando los cuatro rubros principales y aplicando un margen de imprevistos:\n\n```\nGasto_diario = Alojamiento + Comida + Transporte_interno + Actividades\n\nPresupuesto_total = Gasto_diario × (1 + 0.15) × Cantidad_de_días\n```\n\n- **Alojamiento**: cama en dorm de hostel o camping. Representa típicamente el 35–40% del gasto diario.\n- **Comida**: mercado/feria + una comida en restorán económico. Aprox. 25–30% del gasto.\n- **Transporte interno**: colectivos, trenes regionales, motos de alquiler. 15–20%.\n- **Actividades**: entradas a sitios, tours de día, etc. 10–15%.\n- **Imprevistos (15%)**: cubre propinas, comisiones de cajero, remedios, etc.\n\n---\n\n## Tabla de referencia\n\nCostos diarios promedio para mochileros en 2025–2026 (en USD, perfil low-cost):\n\n| Destino / Región | Alojamiento (dorm) | Comida | Transporte | Actividades | **Total estimado/día** |\n|---|---|---|---|---|---|\n| Bolivia | 6 | 8 | 3 | 4 | **24** |\n| Colombia | 8 | 10 | 4 | 5 | **31** |\n| Perú | 8 | 10 | 5 | 6 | **33** |\n| Vietnam | 6 | 8 | 4 | 5 | **27** |\n| Tailandia | 8 | 10 | 5 | 8 | **36** |\n| Indonesia (Bali) | 10 | 10 | 6 | 8 | **39** |\n| Portugal | 18 | 20 | 8 | 8 | **62** |\n| España | 22 | 22 | 10 | 10 | **74** |\n| Alemania | 25 | 25 | 12 | 10 | **83** |\n| Polonia | 12 | 14 | 6 | 6 | **44** |\n| Marruecos | 8 | 8 | 4 | 5 | **29** |\n| Australia | 28 | 30 | 15 | 15 | **101** |\n\n> Todos los valores incluyen el margen de imprevistos del 15% aplicado al subtotal.\n\n---\n\n## Casos típicos\n\n### Caso 1 — 30 días en Perú y Bolivia\n\nUn mochilero argentino planea 15 días en Perú y 15 días en Bolivia.\n\n- Perú: 33 USD/día × 15 días = **495 USD**\n- Bolivia: 24 USD/día × 15 días = **360 USD**\n- Vuelos internacionales (Lima–La Paz ida): ~80 USD\n- **Total estimado: 935 USD** (~870.000 ARS al tipo de cambio blue de referencia de mediados 2025)\n\n### Caso 2 — 45 días en Sudeste Asiático\n\nTailandia (20 días) + Vietnam (15 días) + Indonesia (10 días):\n\n- Tailandia: 36 × 20 = 720 USD\n- Vietnam: 27 × 15 = 405 USD\n- Indonesia: 39 × 10 = 390 USD\n- Vuelos interregionales estimados: ~250 USD\n- **Total: ~1.765 USD** para 45 días de viaje activo\n\n### Caso 3 — 21 días en Europa del Este (Polonia + República Checa)\n\n- Polonia (12 días): 44 × 12 = 528 USD\n- República Checa (9 días): ~48 × 9 = 432 USD\n- Transporte entre ciudades (bus/tren): 60 USD\n- **Total: ~1.020 USD** — muy inferior a un itinerario equivalente en Europa Occidental (~1.700 USD)\n\n---\n\n## Errores comunes\n\n1. **No incluir los vuelos internacionales en el presupuesto total**: el costo diario cubre gastos *en destino*, pero el vuelo de cabotaje o intercontinental puede representar el 30–50% del gasto total del viaje. Siempre sumalo aparte.\n\n2. **Ignorar las comisiones de cajero automático en el exterior**: cada extracción puede costar entre 3 y 7 USD de comisión fija más un porcentaje del monto. En un mes de viaje, esto suma fácilmente 50–80 USD si no usás tarjetas sin comisión internacional.\n\n3. **Subestimar el alojamiento en temporada alta**: los precios de hostel en Praga, Barcelona o Tailandia en julio-agosto pueden duplicar los valores de temporada baja. La tabla de referencia refleja precios promedio anual; en pico turístico sumá 30–50%.\n\n4. **No contemplar el seguro de viajero**: no es opcional en destinos como Europa (Schengen exige cobertura mínima de 30.000 EUR). El costo ronda 2–4 USD/día según cobertura, y va *por encima* del presupuesto diario calculado.\n\n5. **Confundir tipo de cambio oficial con el real disponible**: los argentinos que viajan necesitan calcular en dólares o en la moneda del destino, no en pesos al tipo oficial. Usá siempre el valor del dólar al que efectivamente accedás (tarjeta, efectivo, cripto, etc.).\n\n6. **Olvidar los gastos previos al viaje**: visas (Schengen ~90 EUR para no UE), vacunas obligatorias (fiebre amarilla para ingresar a algunos países de África y Sudamérica), adaptadores de enchufe y botiquín básico pueden sumar 100–300 USD antes de salir.\n\n---\n\n## Calculadoras relacionadas\n\n- [Presupuesto de viaje general](/calculadora-presupuesto-viaje)\n- [Presupuesto mochilero en Barcelona](/calculadora-presupuesto-viaje-barcelona)\n- [Presupuesto mochilero en Londres](/calculadora-presupuesto-viaje-londres)\n- [Presupuesto mochilero en Madrid](/calculadora-presupuesto-viaje-madrid)\n",
+  "explanation": "## Cómo se calcula\n\nEl presupuesto diario mochilero se obtiene sumando los cuatro rubros principales y aplicando un margen de imprevistos:\n\n```\nsubtotal = Alojamiento + Comida + Transporte_local + Actividades\n\ngasto_diario = subtotal × (1 + contingencia / 100)\n\ngasto_total  = gasto_diario × días\n```\n\n- **Alojamiento**: cama en dorm de hostel o camping. Representa típicamente el 35–40% del gasto diario.\n- **Comida**: mercado/feria + una comida en restorán económico. Aprox. 25–30% del gasto.\n- **Transporte local**: colectivos, trenes regionales, motos de alquiler. 15–20%.\n- **Actividades**: entradas a sitios, tours de día, etc. 10–15%.\n- **Imprevistos (15% por defecto)**: cubre propinas, comisiones de cajero, remedios, cargos inesperados.\n\n> El gasto en destino no incluye vuelos internacionales ni seguro de viajero, que van como ítems fijos separados.\n\n---\n\n## Tabla de referencia (Brokepackr Cost Index 2026)\n\nCostos diarios promedio para mochileros perfil low-cost (USD, incluye 15% imprevistos):\n\n| Destino / Región | Alojamiento | Comida | Transporte | Actividades | **Total/día** |\n|---|---|---|---|---|---|\n| Bolivia | 6 | 8 | 3 | 4 | **24** |\n| Nepal | 7 | 8 | 3 | 5 | **26** |\n| Vietnam | 8 | 10 | 4 | 5 | **31** |\n| Colombia | 8 | 10 | 4 | 5 | **31** |\n| Perú | 9 | 10 | 5 | 6 | **35** |\n| Tailandia | 9 | 11 | 5 | 8 | **38** |\n| Indonesia (Bali) | 11 | 11 | 6 | 8 | **41** |\n| Marruecos | 9 | 9 | 4 | 5 | **31** |\n| Polonia | 13 | 14 | 6 | 6 | **45** |\n| Portugal | 19 | 20 | 8 | 8 | **63** |\n| España | 23 | 23 | 10 | 10 | **76** |\n| Alemania | 26 | 26 | 12 | 10 | **85** |\n| Australia | 29 | 31 | 15 | 15 | **103** |\n\n> Fuente: Brokepackr Backpacker Cost Index 2026 + Hostelz Budget Planner 2026.\n\n---\n\n## Perfiles de gasto\n\n| Perfil | Gasto diario | Descripción |\n|---|---|---|\n| Ultra-bajo | < 30 USD/día | Destinos baratos (Nepal, Bolivia, India). Cocinar en hostel, transporte local. |\n| Mochilero clásico | 30–55 USD/día | Dorm hostel, comida de mercado, buses públicos. El 90% del backpacking. |\n| Flashpacker | 55–100 USD/día | Mezcla de hostels y hoteles económicos, algún tour privado. |\n| Viajero cómodo | > 100 USD/día | Hoteles mid-range, restaurantes, tours organizados. |\n\n---\n\n## Errores comunes\n\n1. **No incluir los vuelos**: el costo diario cubre gastos *en destino*; el vuelo puede representar el 30–50% del total.\n2. **Ignorar comisiones de cajero**: cada extracción en el exterior puede costar 3–7 USD fijos. En un mes suman 50–80 USD.\n3. **No contemplar temporada alta**: los precios en Tailandia o Barcelona en julio-agosto pueden duplicar los valores de temporada baja.\n4. **Olvidar el seguro de viajero**: es obligatorio para Schengen (mínimo 30.000 EUR de cobertura médica) y altamente recomendable en cualquier destino.\n",
   "faq": [
     {
       "q": "¿Cuánta plata necesito para viajar de mochilero 3 meses por Sudeste Asiático?",
-      "a": "Con un perfil low-cost, el promedio regional es de 27–36 USD por día. Para 90 días necesitás entre 2.430 y 3.240 USD de gasto en destino, más vuelos internacionales (700–1.200 USD desde Argentina con escala) y seguro de viajero (~180 USD por 3 meses). El total realista ronda los 3.500–4.800 USD dependiendo del ritmo de viaje y los países elegidos."
+      "a": "Con un perfil low-cost, el promedio regional (Tailandia, Vietnam, Indonesia, Camboya) es de 28–38 USD por día incluido el margen de imprevistos. Para 90 días necesitás entre 2.520 y 3.420 USD de gasto en destino, más vuelos internacionales (700–1.200 USD desde Buenos Aires con escala) y seguro de viajero (~180 USD por 3 meses). El total realista ronda los 3.500–5.000 USD según el ritmo de viaje y los países elegidos."
     },
     {
       "q": "¿Cuánto dinero piden en frontera o para una visa Schengen?",
-      "a": "Para la visa Schengen, los consulados suelen pedir demostrar fondos suficientes: la referencia más usada es 100 EUR por día de estadía (con alojamiento no incluido en reserva) o 50 EUR/día si tenés alojamiento confirmado. Para ingresar a países sin visa como Colombia o Perú, no hay monto mínimo legal pero en práctica migraciones puede pedir demostrar solvencia; se recomienda tener al menos 30–50 USD/día de estadía planeada disponibles en cuenta o efectivo."
+      "a": "Para la visa Schengen, los consulados suelen pedir demostrar fondos suficientes: la referencia más usada es 100 EUR por día de estadía (con alojamiento no incluido en reserva) o 50 EUR/día si tenés alojamiento confirmado. Para ingresar a países sin visa como Colombia, Perú o Vietnam, no hay monto mínimo legal, pero en práctica migraciones puede pedir demostrar solvencia; tener al menos 30–50 USD/día de estadía disponibles en cuenta o efectivo es la recomendación práctica."
     },
     {
-      "q": "¿Es más barato pagar en efectivo o con tarjeta de débito/crédito en el exterior?",
-      "a": "Depende del banco y el destino. Las tarjetas con recargo cero en el exterior (como algunas del ecosistema Cuenta DNI, Naranja X o Ualá) son más convenientes porque evitan comisiones de cajero (3–7 USD por extracción). Sin embargo, en mercados, alojamientos rurales y transporte local de países en desarrollo el efectivo sigue siendo indispensable. La estrategia recomendada: tarjeta sin comisión para gastos grandes + algo de efectivo local para el día a día."
+      "q": "¿Es más barato pagar en efectivo o con tarjeta en el exterior?",
+      "a": "Las tarjetas con recargo cero en el exterior (Wise, Revolut, Cuenta DNI, Ualá) son más convenientes porque evitan comisiones de cajero (3–7 USD por extracción). Sin embargo, en mercados, alojamientos rurales y transporte local el efectivo sigue siendo indispensable. La estrategia recomendada: tarjeta sin comisión para gastos grandes + algo de efectivo local para el día a día."
     },
     {
-      "q": "¿Qué diferencia hay entre viajar en temporada alta y baja para el presupuesto?",
-      "a": "En destinos como Tailandia, Europa del Sur o Patagonia, los precios de hostel y tours pueden aumentar entre 40% y 100% en temporada alta (diciembre–enero y julio–agosto). Por ejemplo, una cama en dorm en Barcelona cuesta ~20 EUR en mayo pero puede llegar a 35–40 EUR en agosto. Viajar en temporada media o baja es la palanca más efectiva para reducir el presupuesto total sin sacrificar experiencia."
+      "q": "¿Qué diferencia hay entre viajar en temporada alta y baja?",
+      "a": "En destinos como Tailandia, Europa del Sur o Patagonia, los precios de hostel y tours pueden aumentar entre 40% y 100% en temporada alta (diciembre–enero y julio–agosto). Por ejemplo, una cama en dorm en Barcelona cuesta ~22 EUR en mayo pero puede llegar a 38–45 EUR en agosto. Viajar en temporada media o baja es la palanca más efectiva para reducir el presupuesto sin sacrificar experiencia."
     },
     {
       "q": "¿El seguro de viajero va incluido en el presupuesto diario?",
-      "a": "No, el seguro de viajero es un gasto fijo adicional que se calcula aparte del costo diario en destino. El costo promedio es de 1,5 a 4 USD por día según cobertura y compañía. Para Europa (zona Schengen), el seguro con cobertura médica mínima de 30.000 EUR es obligatorio para la visa. Para el resto del mundo no es obligatorio, pero es altamente recomendable: una hospitalización en EE.UU. o Australia puede superar los 10.000 USD."
+      "a": "No, el seguro de viajero es un gasto fijo que se calcula aparte del costo diario en destino. El costo promedio es de 1,5 a 4 USD por día según cobertura y compañía. Para Europa (zona Schengen), el seguro con cobertura médica mínima de 30.000 EUR es obligatorio para la visa. Una hospitalización en EE.UU. o Australia puede superar los 10.000 USD, por lo que el seguro nunca es prescindible."
     },
     {
-      "q": "¿Cómo impacta el tipo de cambio en el presupuesto de un mochilero argentino?",
-      "a": "Los argentinos deben calcular su presupuesto en dólares (o en la moneda del destino) al tipo de cambio al que efectivamente acceden: dólar tarjeta, dólar blue, cripto o MEP. En 2025, el tipo de cambio oficial y el paralelo tienen brechas variables; siempre usá el valor real de acceso para no subestimar el costo en pesos. Una forma práctica: calculá todo en USD y multiplicá al final por el tipo de cambio vigente al momento de comprar los dólares."
+      "q": "¿Para qué sirve el margen de imprevistos del 15%?",
+      "a": "El 15% cubre gastos difíciles de presupuestar con precisión: propinas donde es costumbre, comisiones de cajero automático en el exterior (3–7 USD por extracción), remedios y visita médica, cargos de servicio en restoranes, transporte de emergencia, objetos perdidos o rotos, y actividades espontáneas. Para destinos con mayor incertidumbre (India, África subsahariana, Latinoamérica rural) puede ser conveniente subir al 20%."
     },
     {
       "q": "¿Cuál es el destino más barato del mundo para mochilear en 2026?",
-      "a": "Según índices de costo de viajero (Numbeo, Backpacker Index), los destinos más económicos en 2025–2026 son: Bolivia (~22–25 USD/día), Vietnam (~25–28 USD/día), Nepal (~20–24 USD/día), India (~18–22 USD/día) y Marruecos (~25–30 USD/día). Bolivia lidera en América del Sur con hostel dorm a 5–7 USD y menú del día a 2–3 USD. Nepal es el más barato de Asia si te alejás del circuito turístico principal."
+      "a": "Según el Brokepackr Backpacker Cost Index 2026, los destinos más económicos son: Nepal (~24 USD/día), India (~22 USD/día), Bolivia (~24 USD/día), Camboya (~22 USD/día) y Bangladesh (~18 USD/día). Bolivia lidera en América del Sur con hostel dorm a 5–7 USD y menú del día a 2–3 USD. Nepal es el más accesible de Asia si te alejás del circuito Annapurna/Everest organizado."
     },
     {
       "q": "¿Cuánto se gasta en transporte entre países durante un viaje largo?",
-      "a": "El transporte interpaís (buses internacionales, vuelos de bajo costo regionales, ferries) es uno de los mayores gastos imprevistos. En Sudamérica, un bus internacional (ej. Cusco–La Paz) cuesta 20–35 USD. En Sudeste Asiático, un vuelo bajo costo entre capitales (ej. Bangkok–Hanói con AirAsia) puede salir entre 30 y 80 USD con anticipación. Para un viaje de 3 meses con 5–8 movimientos entre países, presupuestar entre 150 y 400 USD solo en transporte interregional es razonable."
+      "a": "El transporte interpaís (buses internacionales, vuelos de bajo costo regionales, ferries) es uno de los mayores gastos imprevistos no incluidos en el costo diario. En Sudamérica, un bus internacional (Cusco–La Paz) cuesta 20–35 USD. En Sudeste Asiático, un vuelo regional entre capitales (Bangkok–Hanói con AirAsia) puede salir 30–80 USD con anticipación. Para un viaje de 3 meses con 5–8 movimientos entre países, presupuestá 150–400 USD solo en transporte interregional."
     },
     {
-      "q": "¿Qué pasa si me quedo sin plata viajando? ¿Hay opciones de emergencia?",
-      "a": "Las opciones más usadas son: 1) transferencia de emergencia vía Western Union o Wise desde Argentina (disponible en minutos en efectivo local); 2) trabajo de wwoofer o voluntariado en hostels a cambio de alojamiento y comida; 3) work & travel si tenés visa de trabajo en el destino (muy común en Australia y Nueva Zelanda). Lo más importante es mantener siempre una reserva de emergencia de al menos 200–300 USD separada del presupuesto diario, idealmente en una cuenta distinta."
+      "q": "¿Qué pasa si me quedo sin plata viajando?",
+      "a": "Las opciones más usadas son: 1) transferencia de emergencia vía Wise o Western Union (disponible en minutos en efectivo local); 2) trabajo de wwoofer o voluntariado en hostels a cambio de alojamiento y comida; 3) work & travel si tenés visa de trabajo en destino (común en Australia y Nueva Zelanda). Lo más importante es mantener siempre una reserva de emergencia de 200–300 USD separada del presupuesto diario, idealmente en una cuenta o billetera diferente."
     }
   ],
   "sources": [
+    {
+      "name": "Brokepackr — Backpacker Cost Index 2026 (222 ciudades, datos de alojamiento + comida + transporte)",
+      "url": "https://brokepackr.com/blog/backpacker-cost-index-2026"
+    },
+    {
+      "name": "Hostelz — Backpacker Budget Planner 2026",
+      "url": "https://www.hostelz.com/backpacker-budget/budget-planner"
+    },
+    {
+      "name": "Indie Traveller — Southeast Asia Cost of Travel 2026",
+      "url": "https://www.indietraveller.co/southeast-asia-cost-of-travel/"
+    },
     {
       "name": "Wikipedia ES — Mochilero (turismo): características y perfil del viajero",
       "url": "https://es.wikipedia.org/wiki/Mochilero_(turismo)"
@@ -106,15 +176,17 @@
   ],
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "Wikipedia ES — Mochilero (turismo): características y perfil del viajero",
-    "sourceUrl": "https://es.wikipedia.org/wiki/Mochilero_(turismo)"
+    "notes": "Costos de referencia por destino actualizados según Brokepackr Cost Index 2026 y Hostelz Budget Planner 2026. Revisar anualmente antes de temporada alta de viajes (noviembre).",
+    "source": "Brokepackr Backpacker Cost Index 2026",
+    "sourceUrl": "https://brokepackr.com/blog/backpacker-cost-index-2026"
   },
   "seoKeywords": [
     "presupuesto backpacker",
     "calculadora presupuesto backpacker 2026",
-    "presupuesto mochilero backpacker dia pais"
+    "presupuesto mochilero backpacker dia pais",
+    "cuanto cuesta viajar de mochilero",
+    "gasto diario mochilero por pais"
   ]
 }

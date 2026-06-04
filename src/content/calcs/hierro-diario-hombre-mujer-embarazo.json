@@ -8,42 +8,48 @@
   "audience": "global",
   "icon": "🩸",
   "formulaId": "hierro-diario-hombre-mujer-embarazo",
-  "intro": "El **hierro** es esencial para fabricar hemoglobina, la proteína que transporta oxígeno en la sangre. La recomendación diaria (RDA) varía mucho según sexo y etapa de vida: los **hombres** y mujeres posmenopáusicas necesitan **8 mg/día**; las **mujeres en edad fértil**, 18 mg/día por las pérdidas menstruales; y las **embarazadas**, 27 mg/día para cubrir el aumento de volumen sanguíneo y el hierro fetal. Esta calculadora te ayuda a estimar cuántos miligramos de hierro cubrís con tu dieta actual en función de tu requerimiento diario, para saber si hay un déficit que atender.",
-  "keyTakeaway": "Hombre adulto: **8 mg/día** · Mujer 19-50: **18 mg/día** · Embarazo: **27 mg/día** (IOM/NIH). Déficit frecuente en mujeres en edad fértil y vegetarianos.",
+  "intro": "El **hierro** es esencial para fabricar hemoglobina, la proteína que transporta oxígeno en la sangre. La recomendación diaria (RDA) varía mucho según sexo y etapa de vida: los **hombres** y mujeres posmenopáusicas necesitan **8 mg/día**; las **mujeres en edad fértil**, 18 mg/día por las pérdidas menstruales; y las **embarazadas**, 27 mg/día para cubrir el aumento de volumen sanguíneo y el hierro fetal. Seleccioná tu grupo y anotá cuántos miligramos de hierro consumís por día para ver si tu ingesta cubre tu requerimiento.",
+  "keyTakeaway": "Hombre adulto: **8 mg/día** · Mujer 19-50: **18 mg/día** · Embarazo: **27 mg/día** (IOM/NIH). Déficit frecuente en mujeres en edad fértil, embarazadas y vegetarianos.",
   "useCases": [
     "Mujer con menstruaciones abundantes que sospecha déficit de hierro y quiere saber cuánto mg le falta completar con alimentos o suplemento.",
-    "Embarazada que quiere verificar si su dieta actual cubre los 27 mg/día recomendados o necesita hierro medicamentoso.",
+    "Embarazada que quiere verificar si su dieta actual cubre los 27 mg/día recomendados o necesita hierro medicamentoso indicado por el obstetra.",
     "Hombre con fatiga crónica o deportista que quiere chequear si su ingesta de hierro está dentro del rango recomendado.",
-    "Persona que cambia a dieta vegetariana y necesita recalcular su objetivo de hierro (la RDA sube ~80% por menor absorción del hierro no-hem)."
+    "Persona que cambia a dieta vegetariana y necesita recalcular su objetivo de hierro (el IOM recomienda multiplicar la RDA × 1,8 por la menor absorción del no-hem)."
   ],
   "fields": [
     {
-      "id": "valor1",
-      "label": "Tu requerimiento diario de hierro (mg/día)",
-      "type": "number",
+      "id": "grupo",
+      "label": "Sexo y etapa vital",
+      "type": "select",
       "required": true,
-      "placeholder": "Ej: 18 para mujer adulta, 27 para embarazo",
-      "min": 1,
-      "max": 50,
-      "step": 1,
-      "helpText": "Hombre adulto: 8 mg · Mujer 19-50: 18 mg · Embarazo: 27 mg · Lactancia: 9 mg · Mujer >50: 8 mg"
+      "options": [
+        { "value": "hombre-adulto",     "label": "Hombre adulto (19–50 años)" },
+        { "value": "hombre-mayor",      "label": "Hombre mayor de 50 años" },
+        { "value": "mujer-adulta",      "label": "Mujer adulta (19–50 años)" },
+        { "value": "mujer-mayor",       "label": "Mujer mayor de 50 (postmenopausia)" },
+        { "value": "embarazo",          "label": "Embarazo (cualquier edad)" },
+        { "value": "lactancia",         "label": "Lactancia (19+ años)" },
+        { "value": "adolescente-varon", "label": "Adolescente varón (14–18 años)" },
+        { "value": "adolescente-mujer", "label": "Adolescente mujer (14–18 años)" }
+      ],
+      "helpText": "Elegí el grupo que mejor te representa. La RDA correspondiente se usa para evaluar tu ingesta."
     },
     {
-      "id": "valor2",
-      "label": "Porcentaje que cubrís con la dieta (%)",
+      "id": "ingesta_mg",
+      "label": "Hierro consumido con la dieta (mg/día)",
       "type": "number",
       "required": true,
-      "placeholder": "Ej: 60",
+      "placeholder": "Ej: 12",
       "min": 0,
-      "max": 200,
-      "step": 5,
-      "helpText": "Estimación de cuánto de tu requerimiento diario aportás con lo que comés. Podés calcularlo sumando los mg de tus alimentos habituales."
+      "max": 100,
+      "step": 0.5,
+      "helpText": "Sumá el hierro de tus alimentos habituales. Referencias: hígado 6 mg/100g, lentejas 3,3 mg/100g, espinaca cocida 3,6 mg/100g, carne bovina 2,7 mg/100g."
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Hierro que cubrís (mg/día)",
+      "label": "Ingesta vs. RDA",
       "primary": true
     },
     {
@@ -52,16 +58,16 @@
     }
   ],
   "example": {
-    "title": "Ejemplo: Mujer embarazada que cubre el 65% de su RDA",
+    "title": "Ejemplo: Mujer embarazada con dieta mixta",
     "steps": [
-      "**RDA de embarazo**: 27 mg/día (IOM/NIH).",
-      "**Dieta estimada**: 65% del requerimiento cubierto.",
-      "**Cálculo**: 27 mg × 65 / 100 = **17,55 mg/día** con la dieta.",
-      "**Déficit**: 27 − 17,55 = **9,45 mg/día** que deberían cubrirse con suplemento prescripto por el médico."
+      "**Grupo**: Embarazo → RDA = **27 mg/día** (IOM/NIH).",
+      "**Dieta diaria estimada**: 100g de lomo (2,7 mg) + 150g de lentejas cocidas (4,9 mg) + 80g de espinaca cocida (2,9 mg) + 30g de semillas de calabaza (2,6 mg) + resto de la dieta (~4 mg) = **~17 mg/día**.",
+      "**Cálculo**: 17 mg recibidos / 27 mg RDA = **63% de cobertura**.",
+      "**Déficit**: 27 − 17 = **10 mg/día** que normalmente se cubren con el suplemento de hierro prescripto por el obstetra."
     ],
-    "result": "Con tu dieta aportás **17,6 mg/día**, pero el embarazo requiere 27 mg. El déficit de ~9,4 mg/día normalmente se cubre con hierro medicamentoso indicado por el obstetra."
+    "result": "Con una dieta mixta típica de embarazada, la ingesta dietaria cubre el 63% de la RDA (17 de 27 mg). El déficit de 10 mg/día se cubre habitualmente con hierro medicamentoso indicado por el médico."
   },
-  "explanation": "## Por qué el hierro es tan importante\n\nEl hierro es componente central de la **hemoglobina** (glóbulo rojo) y la **mioglobina** (músculo). Sin hierro suficiente, la capacidad de transporte de oxígeno cae, generando fatiga, palidez, caída de pelo, uñas frágiles y menor rendimiento cognitivo — la llamada **anemia ferropénica**, la carencia nutricional más frecuente en el mundo según la OMS.\n\n## Cómo se calcula\n\nEsta calculadora usa una fórmula directa:\n\n```\nMg cubiertos = RDA (mg/día) × % cubierto / 100\n```\n\nSi ingresás tu requerimiento diario según sexo/etapa vital (campo 1) y el porcentaje que estimás cubrir con tu alimentación habitual (campo 2), el resultado te muestra los miligramos concretos que estás obteniendo. La diferencia respecto a tu RDA es el déficit a cubrir.\n\n## Requerimientos diarios de hierro (RDA — IOM/NIH)\n\n| Grupo | mg/día |\n|---|---|\n| Hombre 19–50 | 8 |\n| Hombre >50 | 8 |\n| Mujer 19–50 | 18 |\n| Mujer >50 (postmenopausia) | 8 |\n| Embarazo (cualquier edad) | 27 |\n| Lactancia 14–18 años | 10 |\n| Lactancia 19+ | 9 |\n| Adolescentes M 14–18 | 11 |\n| Adolescentes F 14–18 | 15 |\n\n**Vegetarianos:** el IOM recomienda multiplicar la RDA × 1,8 por la menor biodisponibilidad del hierro no-hem (absorción 2–20% vs 15–35% del hem).\n\n## Tipos de hierro y absorción\n\n| Tipo | Fuentes | Absorción promedio |\n|---|---|---|\n| Hierro hem | Carne roja, hígado, pollo, pescado | 15–35% |\n| Hierro no-hem | Legumbres, espinaca, tofu, frutos secos | 2–20% |\n\n**Vitamina C concomitante** puede aumentar la absorción del no-hem hasta 300%. Té, café y lácteos la reducen significativamente.\n\n## Alimentos ricos en hierro (mg por 100g)\n\n| Alimento | Hierro (mg) |\n|---|---|\n| Hígado de ternera | 6,2 |\n| Mejillones cocidos | 6,7 |\n| Semillas de calabaza | 8,8 |\n| Lentejas cocidas | 3,3 |\n| Espinaca cocida | 3,6 |\n| Tofu | 2,7 |\n| Carne vacuna (bife) | 2,7 |\n| Quinoa cocida | 1,5 |\n\n## Señales de deficiencia de hierro\n\n- Fatiga persistente sin causa aparente.\n- Palidez de piel y conjuntivas.\n- Caída de cabello difusa.\n- Uñas quebradizas o en cuchara (coiloniquia).\n- Dificultad para concentrarse.\n- Ferritina sérica < 30 ng/mL (indicador más sensible).\n\n## Suplementación\n\n- **Sulfato ferroso**: económico, eficaz, puede causar constipación y náuseas.\n- **Hierro bisglicinato (quelado)**: mejor tolerado, absorción similar o superior. Marcas comunes en Argentina: Ferro Aminosal, Bioferrina.\n- **Día por medio**: evidencia reciente (Moretti 2020) sugiere que tomar hierro en días alternos puede ser más efectivo que la dosis diaria por reducir hepcidina.\n\n**Límite superior tolerable (UL):** 45 mg/día en adultos. No superar sin indicación médica.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido se contrasta contra las fuentes oficiales citadas al pie. Los valores de referencia son los de la DRI del IOM vigentes a 2026.\n\n**Disclaimer:** Los resultados son orientativos, no reemplazan la consulta médica. La ferritina baja o la anemia requieren diagnóstico profesional. No modificar medicación ni iniciar suplementación prolongada sin indicación del médico tratante.\n",
+  "explanation": "## Por qué el hierro es tan importante\n\nEl hierro es componente central de la **hemoglobina** (glóbulo rojo) y la **mioglobina** (músculo). Sin hierro suficiente, la capacidad de transporte de oxígeno cae, generando fatiga, palidez, caída de pelo, uñas frágiles y menor rendimiento cognitivo — la llamada **anemia ferropénica**, la carencia nutricional más frecuente en el mundo según la OMS.\n\n## Cómo se calcula\n\nEsta calculadora usa las RDA del **Instituto de Medicina (IOM)** de EE.UU., vigentes y adoptadas como referencia internacional:\n\n```\nCobertura (%) = ingesta_diaria_mg / RDA_del_grupo × 100\nDéficit (mg)  = RDA_del_grupo − ingesta_diaria_mg\n```\n\nSi la cobertura está entre 90% y 120% de la RDA, la ingesta se considera adecuada. Por debajo del 90% existe déficit; por encima del 120% conviene vigilar no superar el límite tolerable (UL = 45 mg/día).\n\n## Requerimientos diarios de hierro (RDA — IOM/NIH)\n\n| Grupo | mg/día |\n|---|---|\n| Hombre 19–50 | 8 |\n| Hombre >50 | 8 |\n| Mujer 19–50 | 18 |\n| Mujer >50 (postmenopausia) | 8 |\n| Embarazo (cualquier edad) | 27 |\n| Lactancia 19+ | 9 |\n| Adolescentes varón (14–18) | 11 |\n| Adolescentes mujer (14–18) | 15 |\n\n**Vegetarianos:** el IOM recomienda multiplicar la RDA × 1,8 por la menor biodisponibilidad del hierro no-hem (absorción 2–20% vs 15–35% del hem).\n\n## Tipos de hierro y absorción\n\n| Tipo | Fuentes | Absorción promedio |\n|---|---|---|\n| Hierro hem | Carne roja, hígado, pollo, pescado | 15–35% |\n| Hierro no-hem | Legumbres, espinaca, tofu, frutos secos | 2–20% |\n\n**Vitamina C concomitante** puede aumentar la absorción del no-hem hasta 300%. Té, café y lácteos la reducen significativamente.\n\n## Alimentos ricos en hierro (mg por 100g)\n\n| Alimento | Hierro (mg) |\n|---|---|\n| Hígado de ternera | 6,2 |\n| Mejillones cocidos | 6,7 |\n| Semillas de calabaza | 8,8 |\n| Lentejas cocidas | 3,3 |\n| Espinaca cocida | 3,6 |\n| Tofu | 2,7 |\n| Carne vacuna (bife) | 2,7 |\n| Quinoa cocida | 1,5 |\n\n## Señales de deficiencia de hierro\n\n- Fatiga persistente sin causa aparente.\n- Palidez de piel y conjuntivas.\n- Caída de cabello difusa.\n- Uñas quebradizas o en cuchara (coiloniquia).\n- Dificultad para concentrarse.\n- Ferritina sérica < 30 ng/mL (indicador más sensible).\n\n## Suplementación\n\n- **Sulfato ferroso**: económico, eficaz, puede causar constipación y náuseas.\n- **Hierro bisglicinato (quelado)**: mejor tolerado, absorción similar o superior. Marcas comunes en Argentina: Ferro Aminosal, Bioferrina.\n- **Día por medio**: evidencia reciente (Moretti 2020, PLOS ONE) sugiere que tomar hierro en días alternos puede ser más efectivo por reducir la hepcidina.\n\n**Límite superior tolerable (UL):** 45 mg/día en adultos. No superar sin indicación médica.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los valores de referencia son los de la DRI del IOM vigentes a 2026, contrastados contra la NIH Office of Dietary Supplements.\n\n**Disclaimer:** Los resultados son orientativos y no reemplazan la consulta médica. La ferritina baja o la anemia requieren diagnóstico profesional. No modificar medicación ni iniciar suplementación prolongada sin indicación del médico tratante.\n",
   "faq": [
     {
       "q": "¿Cuánto hierro necesito por día si soy mujer adulta?",
@@ -76,12 +82,12 @@
       "a": "Los síntomas más frecuentes son fatiga persistente, palidez, caída difusa de cabello, uñas frágiles, palpitaciones al esfuerzo leve y dificultad para concentrarse. Sin embargo, **el análisis es imprescindible** para confirmar: pedir hemograma + **ferritina sérica** (el indicador más temprano; valores < 30 ng/mL indican reservas bajas incluso con hemoglobina normal)."
     },
     {
-      "q": "¿Vegetarianos necesitan más hierro?",
-      "a": "Sí. El Instituto de Medicina recomienda **multiplicar la RDA por 1,8** para vegetarianos y veganos. El hierro no-hem de plantas tiene una absorción del 2–20%, mientras que el hem de carnes llega al 15–35%. Un hombre vegetariano debería apuntar a unos **14 mg/día** en vez de 8 mg."
+      "q": "¿Cómo estimo cuántos mg de hierro como por día?",
+      "a": "Sumá el hierro de tus alimentos habituales usando tablas de composición. Referencias prácticas: 100g de carne vacuna aportan ~2,7 mg; 100g de lentejas cocidas ~3,3 mg; 100g de espinaca cocida ~3,6 mg; 1 huevo entero ~1 mg; 40g de cereal fortif. ~4–8 mg. Las apps de nutrición como Cronometer o FatSecret hacen el cálculo automático."
     },
     {
-      "q": "¿Qué alimentos tienen más hierro?",
-      "a": "Las mejores fuentes hem (más absorbible) son el **hígado** (6 mg/100g), los **mejillones** (6,7 mg) y la **carne vacuna** (2,7 mg). En fuentes vegetales destacan las **semillas de calabaza** (8,8 mg/100g), las **lentejas cocidas** (3,3 mg) y la **espinaca cocida** (3,6 mg). Siempre combinalas con vitamina C para mejorar la absorción."
+      "q": "¿Vegetarianos necesitan más hierro?",
+      "a": "Sí. El Instituto de Medicina recomienda **multiplicar la RDA por 1,8** para vegetarianos y veganos. El hierro no-hem de plantas tiene una absorción del 2–20%, mientras que el hem de carnes llega al 15–35%. Un hombre vegetariano debería apuntar a unos **14 mg/día** en vez de 8 mg."
     },
     {
       "q": "¿El té y el café afectan la absorción de hierro?",
@@ -98,6 +104,10 @@
     {
       "q": "¿Por qué la ferritina es mejor indicador que la hemoglobina?",
       "a": "La hemoglobina baja es el **último signo** de anemia establecida. La ferritina cae mucho antes — cuando las reservas se agotan pero el cuerpo todavía compensa la producción de glóbulos rojos. Una ferritina < 30 ng/mL con hemoglobina normal se llama **\"deficiencia de hierro sin anemia\"** y ya genera fatiga, caída de cabello y menor rendimiento cognitivo. Pedir ferritina es siempre más informativo que solo hemoglobina."
+    },
+    {
+      "q": "¿Cuánto hierro necesita una adolescente?",
+      "a": "Las adolescentes mujeres (14–18 años) necesitan **15 mg/día**, más que los varones de la misma edad (11 mg/día), porque ya tienen pérdidas menstruales y además tienen necesidades de crecimiento activo. Es el segundo requerimiento más alto después del embarazo, por eso la anemia ferropénica es muy frecuente en esta etapa."
     }
   ],
   "sources": [
@@ -106,7 +116,7 @@
       "url": "https://ods.od.nih.gov/factsheets/Iron-HealthProfessional/"
     },
     {
-      "name": "IOM — Dietary Reference Intakes for Vitamin A, Vitamin K, Arsenic, Boron, Chromium, Copper, Iodine, Iron... (2001)",
+      "name": "IOM — Dietary Reference Intakes for Iron (2001) — NCBI Bookshelf",
       "url": "https://www.ncbi.nlm.nih.gov/books/NBK222309/"
     },
     {
@@ -130,16 +140,16 @@
   ],
   "howToSteps": [
     {
-      "name": "Identificá tu RDA",
-      "text": "Consultá la tabla según tu sexo y etapa vital: hombre 8 mg, mujer 19-50 18 mg, embarazo 27 mg, postmenopausia 8 mg."
+      "name": "Elegí tu grupo",
+      "text": "Seleccioná el grupo que corresponde a tu sexo y etapa de vida. Cada grupo tiene una RDA distinta según el IOM."
     },
     {
-      "name": "Estimá tu cobertura dietaria",
-      "text": "Sumá el hierro de tus alimentos habituales o estimá de forma porcentual cuánto de la RDA cubrís con lo que comés."
+      "name": "Estimá tu ingesta diaria",
+      "text": "Sumá el hierro de tus alimentos habituales en mg/día usando tablas de composición o apps como Cronometer."
     },
     {
       "name": "Calculá el resultado",
-      "text": "La calculadora te dice cuántos mg concretos estás obteniendo y qué déficit existe respecto a tu requerimiento."
+      "text": "La calculadora te muestra cuántos mg consumís respecto a tu RDA y si hay déficit, adecuación o exceso."
     },
     {
       "name": "Consultá al médico si hay déficit",
@@ -159,6 +169,9 @@
     "cuánto hierro necesito por día",
     "hierro diario recomendado",
     "rda hierro embarazo",
-    "deficiencia hierro síntomas"
+    "deficiencia hierro síntomas",
+    "calculadora hierro diario",
+    "hierro diario vegetariano",
+    "requerimiento hierro adolescente"
   ]
 }

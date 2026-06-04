@@ -1,97 +1,168 @@
 {
   "slug": "calculadora-tablero-melamina-cortes-aprovechamiento",
-  "lastReviewed": "2026-04-24",
+  "lastReviewed": "2026-06-04",
   "title": "Calculadora Tablero melamina cortes 2026 | Hacé Cuentas",
   "h1": "Tablero melamina cortes",
-  "description": "🔨 Calculá tablero melamina cortes. Obtené resultado al instante. Gratis, sin registro, resultado inmediato. Categoría: construccion.",
+  "description": "📐 Calculá cuántas piezas salen de un tablero de melamina, el porcentaje de aprovechamiento y cuántos tableros necesitás. Gratis, sin registro, resultado inmediato.",
   "category": "construccion",
   "audience": "global",
   "icon": "📐",
   "formulaId": "tablero-melamina-cortes-aprovechamiento",
-  "intro": "La calculadora de tablero de melamina y cortes te permite determinar cuántas piezas receptás de un tablero estándar, qué porcentaje de aprovechamiento lográs y cuánto material se desperdicia en los cortes. Los tableros de melamina en Argentina se comercializan mayoritariamente en medidas de 2440 × 1220 mm (plancha entera) o 1830 × 2600 mm según el fabricante. La fórmula central es: Área útil de piezas / Área total del tablero × 100 = % de aprovechamiento. Se usa en carpintería, mueblería y obra seca para optimizar compras y reducir el scrap.",
-  "keyTakeaway": "**% Aprovechamiento = (Suma de áreas de piezas cortadas ÷ Área total del tablero) × 100** — Un tablero de 2440×1220 mm tiene 2,977 m²; si cortás piezas que suman 2,5 m², el aprovechamiento es del 83,9 % y el desperdicio es de 0,477 m².",
+  "intro": "La calculadora de tablero de melamina y cortes te permite determinar cuántas piezas obtenés de un tablero estándar, qué porcentaje de aprovechamiento lográs y cuánto material se desperdicia en los cortes. Los tableros de melamina en Argentina se comercializan mayoritariamente en medidas de 2440 × 1220 mm (plancha entera) o 2600 × 1830 mm según el fabricante. La fórmula central es el corte guillotina optimizado: **Piezas por tablero = piso(Largo tablero ÷ (Largo pieza + kerf)) × piso(Ancho tablero ÷ (Ancho pieza + kerf))**, probando también la pieza rotada 90° y eligiendo la disposición que más piezas produce. El kerf (pérdida de material por el espesor del disco de sierra) ronda los 3–4 mm por corte en una sierra circular de hoja fina para melamina.",
+  "keyTakeaway": "**Piezas por tablero = piso(Largo_tablero ÷ (Largo_pieza + kerf)) × piso(Ancho_tablero ÷ (Ancho_pieza + kerf))** — Ejemplo: estante de 900 × 300 mm en tablero 2440 × 1220 mm con kerf de 3 mm = piso(2440/903) × piso(1220/303) = 2 × 4 = **8 piezas**, con un aprovechamiento del **72,6 %**.",
   "useCases": [
-    "Planificar los cortes de un placard de 2,40 m de alto con 4 módulos de 0,60 m para minimizar la cantidad de tableros a comprar.",
-    "Calcular cuántos tableros de melamina de 18 mm necesitás para fabricar una cocina completa con bajomesada y alacena, optimizando el número de compras.",
-    "Estimar el desperdicio en m² y en pesos antes de encargar el material a la maderera, para comparar presupuestos con distintas medidas de tablero.",
-    "Determinar si conviene comprar tableros enteros (2440×1220 mm) o medios tableros (1220×1220 mm) según el tamaño de las piezas que necesitás cortar."
+    "Planificar cuántos tableros de melamina de 18 mm comprar para fabricar los estantes de un placard de 2,40 m con módulos de 0,60 m de ancho.",
+    "Calcular el desperdicio en m² y en pesos antes de encargar el material a la maderera, para comparar presupuestos con distintos formatos de tablero.",
+    "Determinar si conviene comprar tableros enteros (2440×1220 mm) o medios tableros (1220×1220 mm) según el tamaño de las piezas que necesitás cortar.",
+    "Optimizar el corte de paneles para una cocina completa con bajomesada y alacena, minimizando el scrap y el costo total de material."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Input 1",
+      "id": "board_length",
+      "label": "Largo del tablero (mm)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "2440",
+      "min": 500,
+      "max": 6000,
+      "step": 1,
+      "unit": "mm"
     },
     {
-      "id": "v2",
-      "label": "Input 2",
+      "id": "board_width",
+      "label": "Ancho del tablero (mm)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "1220",
+      "min": 300,
+      "max": 3000,
+      "step": 1,
+      "unit": "mm"
+    },
+    {
+      "id": "piece_length",
+      "label": "Largo de la pieza (mm)",
+      "type": "number",
+      "required": true,
+      "placeholder": "600",
+      "min": 10,
+      "max": 5990,
+      "step": 1,
+      "unit": "mm"
+    },
+    {
+      "id": "piece_width",
+      "label": "Ancho de la pieza (mm)",
+      "type": "number",
+      "required": true,
+      "placeholder": "300",
+      "min": 10,
+      "max": 2990,
+      "step": 1,
+      "unit": "mm"
+    },
+    {
+      "id": "kerf",
+      "label": "Kerf - espesor del corte de sierra (mm)",
+      "type": "number",
+      "required": false,
+      "placeholder": "3",
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "unit": "mm"
+    },
+    {
+      "id": "total_pieces",
+      "label": "Piezas totales necesarias",
+      "type": "number",
+      "required": false,
+      "placeholder": "12",
+      "min": 1,
+      "max": 10000,
+      "step": 1,
+      "unit": "unidades",
+      "format": "plain"
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Resultado",
+      "label": "Piezas por tablero",
       "primary": true
     },
     {
+      "id": "aprovechamiento",
+      "label": "Aprovechamiento"
+    },
+    {
+      "id": "desperdicio_m2",
+      "label": "Desperdicio por tablero (m²)"
+    },
+    {
+      "id": "tableros_necesarios",
+      "label": "Tableros necesarios"
+    },
+    {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Detalle del cálculo"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: estantes de cocina 900 × 300 mm en tablero 2440 × 1220 mm",
     "steps": [
-      "Ejemplo",
-      "Resultado"
+      "Tablero: 2440 × 1220 mm (área = 2,977 m²). Pieza: 900 × 300 mm. Kerf: 3 mm. Piezas necesarias: 24.",
+      "Columnas: piso(2440 ÷ (900 + 3)) = piso(2440 ÷ 903) = **2 columnas**",
+      "Filas: piso(1220 ÷ (300 + 3)) = piso(1220 ÷ 303) = **4 filas**",
+      "Piezas por tablero (orientación A): 2 × 4 = **8 piezas**",
+      "Área usada: 8 × 0,90 × 0,30 = 2,160 m² → Aprovechamiento: 2,160 / 2,977 × 100 = **72,6 %** · Desperdicio: 0,817 m²",
+      "Tableros necesarios para 24 piezas: techo(24 ÷ 8) = **3 tableros**"
     ],
-    "result": "Resultado"
+    "result": "8 piezas por tablero · 72,6 % de aprovechamiento · 3 tableros para 24 piezas"
   },
-  "explanation": "## Cómo se calcula\n\nEl cálculo de aprovechamiento de un tablero de melamina se basa en comparar el área útil de las piezas que necesitás con el área bruta del tablero. También se descuenta el kerf (pérdida de material por el espesor del disco de sierra), que en una sierra circular con hoja de 3,2 mm ronda los **3 a 4 mm por corte**.\n\n```\n// Área del tablero (m²)\nÁrea_tablero = Ancho_tablero(mm) × Alto_tablero(mm) / 1.000.000\n\n// Área de cada pieza (m²)\nÁrea_pieza = Ancho_pieza(mm) × Alto_pieza(mm) / 1.000.000\n\n// Suma total de áreas de piezas\nÁrea_total_piezas = Σ (Área_pieza_i × Cantidad_i)\n\n// Porcentaje de aprovechamiento\n% Aprovechamiento = (Área_total_piezas / Área_tablero) × 100\n\n// Material desperdiciado\nDesperdicio_m² = Área_tablero - Área_total_piezas\n\n// Cantidad mínima de tableros (sin optimización de despiece)\nTableros_necesarios = REDONDEAR_ARRIBA(Área_total_piezas / (Área_tablero × Factor_eficiencia))\n// Factor de eficiencia recomendado: 0,85 (contempla cortes y scrap)\n```\n\n---\n\n## Tabla de referencia\n\nMedidas estándar de tableros de melamina comercializados en Argentina (18 mm de espesor, los más usados en mueblería):\n\n| Formato | Dimensiones (mm) | Área bruta (m²) | Uso típico |\n|---|---|---|---|\n| Plancha entera | 2440 × 1220 | 2,977 | Muebles grandes, placares |\n| Plancha extra | 2600 × 1830 | 4,758 | Cocinas, frentes largos |\n| Medio tablero | 1220 × 1220 | 1,488 | Módulos pequeños, estantes |\n| Plancha angosta | 2440 × 610 | 1,488 | Laterales, zócalos |\n| Formato europeo | 2800 × 2070 | 5,796 | Industria, grandes series |\n\n**Espesores disponibles en el mercado argentino:**\n\n| Espesor (mm) | Aplicación recomendada | Observación |\n|---|---|---|\n| 9 | Fondos de cajones, espaldares | No apto para estantes >60 cm |\n| 15 | Estantes livianos, módulos chicos | Uso moderado |\n| 18 | **Estándar mueblería** | El más usado |\n| 25 | Mesadas, zonas de carga | Mayor peso y costo |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Placard de 2 puertas (módulo de 1,20 m)\nPiezas necesarias: 2 laterales de 2400×580 mm, 3 estantes de 1160×580 mm, 1 techo y 1 piso de 1160×580 mm (= 5 estantes), 1 fondo de 9 mm (no se cuenta aquí).\n\n- Área piezas 18 mm = (2 × 2400×580) + (5 × 1160×580) = 2.784.000 + 3.364.000 = 6.148.000 mm² = **6,148 m²**\n- Tableros necesarios = 6,148 / (2,977 × 0,85) = 6,148 / 2,530 = **2,43 → 3 tableros**\n- Con 3 tableros (8,931 m²) el aprovechamiento real es del 68,8 % → queda scrap reutilizable para cajones.\n\n### Caso 2 — Estante flotante de 1,80 m\n1 tapa de 1800×300 mm + 2 laterales de 300×300 mm = 540.000 + 180.000 = **0,720 m²**\n\n- 1 tablero de 2440×1220 mm cubre ampliamente (24,2 % usado).\n- Conviene comprar **medio tablero** (1220×1220 mm = 1,488 m²) → aprovechamiento del 48,4 %, ahorrás casi la mitad del costo.\n\n### Caso 3 — Cocina con bajomesada + alacena\nÁrea total de piezas relevada = 18,5 m² en melamina 18 mm.\n\n- Sin optimización: 18,5 / 2,977 = 6,2 → **7 tableros** (desperdicio estimado 23%)\n- Con software de despiece (ej. CutList Plus): posible bajar a **6 tableros** si se orientan piezas correctamente → ahorro de ~$35.000 ARS (precio de referencia 2025: $35.000–$55.000 por tablero según calidad y marca).\n\n---\n\n## Errores comunes\n\n1. **No descontar el kerf (corte de sierra):** Cada pasada de disco consume 3,2–4 mm de material. En un tablero con 10 cortes podés perder hasta 40 mm lineales, lo que en piezas chicas puede arruinar medidas exactas.\n\n2. **Confundir m² de piezas con m² de tablero necesario:** El área de las piezas nunca equivale directamente a tableros porque los recortes tienen formas irregulares. Siempre aplicá un factor de eficiencia de al menos 0,85.\n\n3. **Ignorar la dirección de veta:** La melamina con veta tiene orientación. Si cortás piezas transversales a la veta para \"aprovechar más\", el resultado estético es malo. Esto puede forzar a comprar más tableros aunque matemáticamente \"entre\" todo en menos.\n\n4. **Mezclar espesores en el mismo cálculo:** Un tablero de 15 mm y uno de 18 mm tienen distinto peso, costo y resistencia. Calculá por separado cada espesor para no confundir cantidades en la lista de materiales.\n\n5. **No considerar el canto:** La melamina expone el canto del aglomerado. Para terminaciones prolijas hay que sumar canto de PVC o ABS (0,4–2 mm de espesor), lo que modifica levemente las medidas finales de las piezas interiores.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de impermeabilizante para techo](/calculadora-impermeabilizante-techo-kg-m2)\n- [Calculadora de acero por m² de losa](/calculadora-acero-kg-m2-losa)\n- [Calculadora de arena para relleno de terreno](/calculadora-arena-relleno-terreno-m3)\n- [Calculadora de barniz y aceite para madera](/calculadora-barniz-aceite-m2-madera)\n",
+  "explanation": "## Cómo se calcula\n\nEl método estándar para estimar cortes de tablero es el **corte guillotina** (también llamado corte en tiras), que es lo que hace cualquier escuadradora o sierra panel manual. La calculadora prueba las dos orientaciones posibles de la pieza y elige la que produce más piezas:\n\n```\n// Orientación A: largo de pieza a lo largo del tablero\nColumnas_A = piso(Largo_tablero ÷ (Largo_pieza + Kerf))\nFilas_A    = piso(Ancho_tablero ÷ (Ancho_pieza  + Kerf))\nPiezas_A   = Columnas_A × Filas_A\n\n// Orientación B: pieza rotada 90°\nColumnas_B = piso(Largo_tablero ÷ (Ancho_pieza  + Kerf))\nFilas_B    = piso(Ancho_tablero ÷ (Largo_pieza  + Kerf))\nPiezas_B   = Columnas_B × Filas_B\n\n// Mejor disposición\nPiezas_por_tablero = max(Piezas_A, Piezas_B)\n\n// Área y aprovechamiento\nÁrea_pieza   = Largo_pieza × Ancho_pieza / 1.000.000  (en m²)\nÁrea_tablero = Largo_tablero × Ancho_tablero / 1.000.000 (en m²)\nÁrea_usada   = Piezas_por_tablero × Área_pieza\nAprovechamiento_% = (Área_usada / Área_tablero) × 100\nDesperdicio_m²    = Área_tablero − Área_usada\n\n// Tableros necesarios para el proyecto completo\nTableros_necesarios = TECHO(Piezas_totales / Piezas_por_tablero)\n```\n\n### ¿Qué es el kerf?\n\nEl kerf es el material que consume el disco de sierra en cada corte. Una hoja estándar para melamina (TCT de 60–80 dientes) tiene un kerf de **3,2 mm**; hojas más delgadas de industria bajan a **2,5 mm**. Para una sierra circular manual con hoja de uso general puede llegar a **4 mm**. Si no descontás el kerf, en tableros con muchos cortes podés encontrarte con que la última pieza de cada fila no entra o sale con medida incorrecta.\n\n---\n\n## Tabla de medidas estándar de tableros de melamina\n\nMedidas más comercializadas en Argentina (espesor 18 mm, el más usado en mueblería):\n\n| Formato | Dimensiones (mm) | Área (m²) | Uso típico |\n|---|---|---|---|\n| Plancha entera | 2440 × 1220 | 2,977 | Muebles, placares, cocinas |\n| Plancha extra | 2600 × 1830 | 4,758 | Cocinas, frentes largos |\n| Medio tablero | 1220 × 1220 | 1,488 | Módulos pequeños, estantes |\n| Formato europeo | 2800 × 2070 | 5,796 | Industria, grandes series |\n\n**Rendimiento de aprovechamiento de referencia por tipo de pieza (tablero 2440 × 1220 mm, kerf 3 mm):**\n\n| Tamaño de pieza | Col × Fil | Piezas | Aprovechamiento |\n|---|---|---|---|\n| 600 × 300 mm | 4 × 4 | 16 | 76,8 % |\n| 900 × 300 mm | 2 × 4 | 8 | 72,6 % |\n| 600 × 600 mm | 4 × 2 | 8 | 77,4 % |\n| 2400 × 580 mm | 1 × 2 | 2 | 93,7 % |\n| 400 × 250 mm | 6 × 4 | 24 | 64,8 % |\n\n---\n\n## Errores comunes\n\n1. **Olvidar el kerf:** Cada pasada de disco consume 3–4 mm. Con 8 cortes paralelos perdés hasta 32 mm lineales; en piezas de 300 mm eso es más del 10 % de la pieza.\n\n2. **Ignorar la dirección de veta:** La melamina con veta tiene orientación. Girar piezas 90° para mejorar el aprovechamiento puede invertir la dirección de la veta, lo que es inaceptable estéticamente en muebles con puertas o frentes visibles. Esto puede reducir el aprovechamiento en un 5–15 %.\n\n3. **Confundir m² de piezas con m² de tablero necesario:** El área suma de las piezas no equivale al tablero real porque los recortes tienen formas irregulares. Usá siempre la fórmula de piezas por tablero.\n\n4. **No considerar el canto (ABS/PVC):** La melamina expone el canto del aglomerado. Para terminaciones prolijas hay que sumar canto de PVC o ABS (0,4–2 mm), lo que modifica levemente las medidas finales de las piezas interiores en cajones o módulos embutidos.\n",
   "faq": [
     {
       "q": "¿Cuál es la medida estándar de un tablero de melamina en Argentina?",
-      "a": "El formato más comercializado es **2440 × 1220 mm** (equivalente al estándar internacional 8×4 pies), con un área de 2,977 m². También se consigue fácilmente el formato **2600 × 1830 mm** (4,758 m²) en grandes madereras y distribuidores mayoristas. El espesor más usado en mueblería es 18 mm, aunque hay opciones de 9, 12, 15 y 25 mm."
+      "a": "El formato más comercializado es **2440 × 1220 mm** (equivalente al estándar internacional 8×4 pies), con un área de 2,977 m². También se consigue el formato **2600 × 1830 mm** (4,758 m²) en grandes madereras. El espesor más usado en mueblería es 18 mm, aunque hay opciones de 9, 12, 15 y 25 mm según la aplicación."
     },
     {
       "q": "¿Qué porcentaje de aprovechamiento es aceptable al cortar melamina?",
-      "a": "En carpintería artesanal sin software de optimización, un aprovechamiento del **75–85 %** se considera normal. Con software de despiece (CutList, PartKam) se puede llegar al **88–93 %**. Por debajo del 70 % el proyecto tiene un scrap excesivo y conviene revisar el despiece antes de comprar material."
+      "a": "En carpintería artesanal sin software de optimización, un aprovechamiento del **75–85 %** se considera normal para corte guillotina. Con software de despiece (CutList, OptiCutter, PartKam) se puede llegar al **88–93 %**. Por debajo del 70 % el proyecto tiene scrap excesivo y conviene revisar la disposición de las piezas antes de comprar el material."
     },
     {
-      "q": "¿Cómo afecta el espesor del disco de sierra al cálculo?",
-      "a": "Cada corte con sierra circular o escuadradora consume entre **3,2 y 4 mm** de material (kerf). En un tablero con 8 cortes paralelos perdés hasta 32 mm lineales, lo que en piezas de 300 mm de ancho representa más del 10 % de la pieza. Para piezas de precisión, restá siempre el kerf antes de calcular cuántas entran en un tablero."
+      "q": "¿Qué es el kerf y cómo afecta el cálculo?",
+      "a": "El kerf es el ancho de material que consume el disco de sierra en cada corte. Una hoja TCT de 60–80 dientes para melamina tiene un kerf de **3,2 mm**; hojas industriales más delgadas bajan a 2,5 mm; una hoja de uso general puede llegar a 4 mm. En un tablero con 8 cortes paralelos perdés hasta 32 mm lineales — suficiente para arruinar la última pieza de la fila si no lo contás. Siempre restá el kerf antes de calcular cuántas piezas entran."
+    },
+    {
+      "q": "¿Por qué la calculadora prueba dos orientaciones de la pieza?",
+      "a": "Rotar la pieza 90° puede cambiar significativamente cuántas piezas entran en el tablero. Por ejemplo, una pieza de 700 × 300 mm orientada de forma estándar en un tablero 2440 × 1220 puede dar menos piezas que si la rotás (300 × 700). La calculadora prueba ambas orientaciones y elige automáticamente la que produce **más piezas**. Sin embargo, si la pieza tiene veta de madera con dirección, la rotación puede no ser válida estéticamente."
     },
     {
       "q": "¿Cuánto pesa un tablero de melamina de 18 mm?",
-      "a": "Un tablero de melamina de **2440 × 1220 × 18 mm** pesa aproximadamente **42–46 kg** (densidad del aglomerado: ~650–700 kg/m³). Este dato es relevante para calcular la carga sobre estructuras flotantes, cajoneras o cuando se transporta material en vehículo propio con límite de carga."
+      "a": "Un tablero de **2440 × 1220 × 18 mm** pesa aproximadamente **42–46 kg** (densidad del aglomerado: 650–700 kg/m³). Este dato es relevante para calcular la carga sobre estructuras flotantes, cajoneras, o cuando se transporta el material en vehículo propio con límite de carga."
     },
     {
       "q": "¿Conviene comprar tablero entero o medio tablero según las piezas que necesito?",
-      "a": "Si la pieza más larga que necesitás supera los **1220 mm**, necesitás tablero entero sí o sí. Si todas las piezas entran en 1220 × 1220 mm, el medio tablero (que cuesta aproximadamente la mitad) es la opción más económica. Compará siempre el **precio por m²** de cada formato en tu maderera, porque a veces el tablero entero tiene mejor relación precio/m²."
+      "a": "Si la pieza más larga supera los **1220 mm**, necesitás tablero entero sí o sí. Si todas las piezas entran en 1220 × 1220 mm, el medio tablero (que cuesta aproximadamente la mitad) puede ser más económico. Compará siempre el **precio por m²** de cada formato en tu maderera, porque a veces el tablero entero tiene mejor relación precio/m² aunque compres más del necesario."
     },
     {
-      "q": "¿Qué es el 'scrap' y puedo reutilizarlo?",
-      "a": "El scrap (o recorte) son los fragmentos sobrantes después de hacer los cortes. Sí se puede reutilizar: retazos de más de **400 × 400 mm** sirven para fondos de cajones, zócalos, separadores o pequeños módulos. Guardá todos los recortes ordenados por espesor y medida; en obras o proyectos futuros pueden ahorrarte tableros completos."
+      "q": "¿El scrap (recorte) se puede reutilizar?",
+      "a": "Sí. Retazos de más de **400 × 400 mm** sirven para fondos de cajones, zócalos, separadores o pequeños módulos. Guardá los recortes ordenados por espesor y medida; en obras o proyectos futuros pueden ahorrarte tableros completos. Para proyectos con muchas piezas pequeñas y grandes a la vez, planificá cortar primero las piezas grandes y aprovechar los retazos para las chicas."
     },
     {
-      "q": "¿La orientación de las piezas en el tablero cambia el aprovechamiento?",
-      "a": "Sí, y de manera significativa. Girar una pieza 90° puede permitir que entre una pieza extra que antes no cabía. Además, la **veta decorativa** de la melamina tiene una dirección: en muebles con puertas o frentes visibles, todas las piezas deben ir en la misma orientación de veta, lo que restringe la libertad de rotación y generalmente reduce el aprovechamiento en un **5–10 %** respecto a una melamina lisa."
-    },
-    {
-      "q": "¿Cómo calculo cuántos tableros necesito para un proyecto completo?",
-      "a": "1) Listá todas las piezas con sus medidas en mm. 2) Calculá el área de cada pieza y sumalas (= área neta). 3) Dividí por el área del tablero (2,977 m² para el estándar). 4) Dividí ese resultado por **0,85** (factor de eficiencia) y redondeá hacia arriba. Ejemplo: 15 m² de piezas → 15 / 2,977 = 5,04 → 5,04 / 0,85 = 5,93 → **6 tableros**."
+      "q": "¿Cómo calculo cuántos tableros necesito para un proyecto completo con múltiples medidas de piezas?",
+      "a": "Para proyectos con varias medidas diferentes (por ejemplo, una cocina con laterales, estantes y fondos) la calculadora se usa por separado para cada tipo de pieza. Luego sumás los tableros necesarios de cada tipo. Para optimización avanzada con múltiples tamaños en la misma plancha, usá software especializado como **OptiCutter** o **CutList Plus**, que puede reducir el total de tableros en un 10–20 % respecto al cálculo simple."
     }
   ],
   "sources": [
     {
       "name": "INTI – Instituto Nacional de Tecnología Industrial (normas y materiales de construcción)",
       "url": "https://www.inti.gob.ar"
+    },
+    {
+      "name": "OptiCutter – Cutlist Optimizer (referencia de método de corte guillotina)",
+      "url": "https://www.opticutter.com/cut-list-optimizer"
     }
   ],
   "relatedSlugs": [
@@ -103,12 +174,14 @@
     "lastUpdated": "2026-04-19",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "INTI – Instituto Nacional de Tecnología Industrial (normas y materiales de construcción)",
+    "source": "INTI – Instituto Nacional de Tecnología Industrial",
     "sourceUrl": "https://www.inti.gob.ar"
   },
   "seoKeywords": [
     "tablero melamina cortes",
     "calculadora tablero melamina cortes 2026",
-    "tablero melamina cortes aprovechamiento"
+    "tablero melamina cortes aprovechamiento",
+    "piezas por tablero melamina",
+    "aprovechamiento melamina calculadora"
   ]
 }

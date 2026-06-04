@@ -1,101 +1,155 @@
 {
   "slug": "calculadora-porciones-carne-asado-parrilla-persona",
-  "lastReviewed": "2026-04-24",
+  "lastReviewed": "2026-06-04",
   "title": "Calculadora Carne asado por persona 2026 | Hacé Cuentas",
   "h1": "Carne asado por persona",
-  "description": "🍳 Calculá carne asado por persona. Obtené resultado al instante. Gratis, sin registro, resultado inmediato. Categoría: cocina.",
+  "description": "Calculá cuántos kilos de carne comprar para tu asado según la cantidad de personas, el tipo de corte, el apetito y las guarniciones. Fórmula real con factores de merma. Gratis, sin registro.",
   "category": "cocina",
   "audience": "global",
   "icon": "🥩",
   "formulaId": "porciones-carne-asado-parrilla-persona",
-  "intro": "Esta calculadora te dice exactamente cuántos gramos de carne necesitás por persona para un asado argentino, según el tipo de corte, el hambre estimado y si hay guarniciones. La porción estándar en Argentina ronda los 300–400 g de carne con hueso o 250–300 g de carne sin hueso por comensal adulto en una comida principal. La fórmula base es: **Total carne (kg) = personas × porción por persona (kg)**. Se usa para planificar compras antes de una parrillada, calcular presupuesto por cabeza o estimar cantidades para eventos con muchos comensales.",
-  "keyTakeaway": "**Porción estándar argentina: 300–400 g/persona con hueso (asado de tira, costillar) o 250–300 g sin hueso (vacío, entraña, lomo). Con guarnición abundante, bajá un 20% la carne.**",
+  "intro": "Esta calculadora te dice exactamente cuántos kilos de carne cruda tenés que comprar para tu asado, según la cantidad de adultos y niños, el tipo de corte elegido, el apetito del grupo y si habrá guarniciones. La fórmula base calcula la porción neta cocida necesaria por persona y luego aplica el factor de merma (pérdida por cocción y hueso) para darte el peso crudo real que tenés que llevar de la carnicería. La porción estándar de referencia es de 350 g cocidos por adulto en cortes con hueso (asado de tira, costillar) o 280 g en cortes sin hueso (vacío, entraña, bife), ajustada por apetito y guarnición. Siempre se recomienda agregar un margen del 10 % para segundas porciones e imprevistos.",
+  "keyTakeaway": "**Porción estándar de referencia:** 350 g cocidos por adulto con hueso (asado de tira, costillar) o 280 g sin hueso (vacío, entraña). La calculadora aplica la merma de cocción y hueso automáticamente y te da el peso crudo a comprar.",
   "useCases": [
-    "Organizar un asado familiar de fin de semana para 8 personas y saber cuántos kilos de asado de tira y vacío comprar en la carnicería.",
-    "Presupuestar la carne para un evento de empresa de 50 comensales combinando cortes con y sin hueso.",
-    "Calcular porciones diferenciadas para un asado con adultos, adolescentes y niños para no comprar de más ni quedarse corto.",
-    "Planificar un asado con picada previa y guarniciones (ensaladas, pan) donde la carne no es el único componente del menú."
+    "Organizar un asado familiar de fin de semana para 8 adultos y 4 niños y saber exactamente cuántos kilos de asado de tira comprar en la carnicería.",
+    "Presupuestar la carne para un evento de empresa de 50 adultos eligiendo entre cortes con hueso (costillar) o sin hueso (vacío y entraña).",
+    "Calcular porciones diferenciadas cuando el grupo tiene adultos con mucho apetito y pocas guarniciones, para no quedarse corto ni gastar de más.",
+    "Planificar un asado con picada previa y ensaladas donde la carne no es el único componente, aplicando el factor de guarnición abundante para reducir la compra."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Input 1",
+      "id": "personas",
+      "label": "Adultos",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "8",
+      "min": 0,
+      "max": 500,
+      "step": 1,
+      "unit": "personas"
     },
     {
-      "id": "v2",
-      "label": "Input 2",
+      "id": "ninos",
+      "label": "Niños (menores de 12 años)",
       "type": "number",
-      "required": true,
+      "required": false,
       "placeholder": "0",
-      "step": 0.01
+      "min": 0,
+      "max": 200,
+      "step": 1,
+      "unit": "niños"
+    },
+    {
+      "id": "tipoCorte",
+      "label": "Tipo de corte",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "conHueso",  "label": "Con hueso (asado de tira, costillar, costillas)" },
+        { "value": "sinHueso",  "label": "Sin hueso (vacío, entraña, bife de chorizo, lomo)" },
+        { "value": "embutidos", "label": "Embutidos (chorizos, morcillas, salchichas)" }
+      ]
+    },
+    {
+      "id": "apetito",
+      "label": "Apetito del grupo",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "liviano", "label": "Liviano (dieta, clima de calor, picada previa)" },
+        { "value": "normal",  "label": "Normal (grupo mixto estándar)" },
+        { "value": "hambre",  "label": "Mucho apetito (jóvenes, deportistas, fútbol)" }
+      ]
+    },
+    {
+      "id": "guarnicion",
+      "label": "Guarniciones",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "abundante", "label": "Abundante (ensaladas, papas, pan, postre)" },
+        { "value": "moderada",  "label": "Moderada (una o dos guarniciones simples)" },
+        { "value": "poca",      "label": "Poca o ninguna (la carne es el plato principal)" }
+      ]
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Resultado",
+      "label": "Carne cruda a comprar",
       "primary": true
     },
     {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Desglose"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Asado familiar de 8 adultos y 4 niños",
     "steps": [
-      "Ejemplo",
-      "Resultado"
+      "Adultos: 8 · Niños: 4 · Corte con hueso (asado de tira) · Apetito normal · Guarnición moderada",
+      "Porción base adulto: 350 g cocidos · Factor apetito: 1.00 · Factor guarnición: 1.00 · Adultos: 8 × 350 g = 2.800 g cocidos",
+      "Niños (50 % porción adulto): 4 × 175 g = 700 g cocidos · Total cocido necesario: 3.500 g",
+      "Factor merma corte con hueso (hueso 30 % + cocción 25 %): × 1.45 → 3.500 × 1.45 = 5.075 g crudo",
+      "Resultado: 5.08 kg crudos a comprar · Con margen 10 %: 5.58 kg · Rinde aprox. 3.50 kg cocidos"
     ],
-    "result": "Resultado"
+    "result": "5.08 kg crudos (5.58 kg con margen del 10 %)"
   },
-  "explanation": "## Cómo se calcula\n\nLa fórmula general para calcular la carne total de un asado es:\n\n```\nTotal carne (kg) = Σ (personas_por_grupo × porción_estándar_kg × factor_ajuste)\n\nDonde:\n- personas_por_grupo     → adultos, adolescentes o niños\n- porción_estándar_kg   → según tipo de corte (ver tabla)\n- factor_ajuste          → 1.0 sin guarnición | 0.80 con guarnición abundante | 1.20 si es el único plato y hay mucho apetito\n```\n\nPor ejemplo, para 10 adultos con asado de tira (corte con hueso) y ensaladas como guarnición:\n\n```\nTotal = 10 × 0.380 kg × 0.80 = 3.04 kg ≈ 3 kg de asado de tira\n```\n\n---\n\n## Tabla de referencia\n\n| Corte | Tipo | Porción adulto (sin guarnición) | Porción adulto (con guarnición) | Merma en parrilla |\n|---|---|---|---|---|\n| Asado de tira | Con hueso | 380–420 g | 300–350 g | 25–30% |\n| Costillar entero | Con hueso | 400–450 g | 320–380 g | 28–32% |\n| Vacío | Sin hueso | 280–320 g | 230–270 g | 18–22% |\n| Entraña | Sin hueso | 250–280 g | 200–240 g | 15–20% |\n| Lomo / bife de chorizo | Sin hueso | 250–300 g | 200–250 g | 15–18% |\n| Chorizo criollo | Embutido | 1–2 unidades (100–180 g) | 1 unidad (100 g) | 10–12% |\n| Morcilla | Embutido | 1 unidad (~100 g) | ½–1 unidad | 8–10% |\n| Adulto hombre (promedio) | — | 350–400 g | 280–320 g | — |\n| Adulto mujer (promedio) | — | 250–300 g | 200–250 g | — |\n| Adolescente (13–17 años) | — | 250–300 g | 200–250 g | — |\n| Niño (6–12 años) | — | 120–150 g | 100–130 g | — |\n| Niño (< 6 años) | — | 80–100 g | 60–80 g | — |\n\n> **Nota sobre merma:** la carne pierde peso por deshidratación en la parrilla. Un costillar crudo de 4 kg rinde aprox. 2.8–3 kg cocido. Siempre comprá considerando la merma.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Asado familiar clásico (8 adultos, sin guarnición especial)\n- Cortes: asado de tira + chorizo criollo\n- Asado de tira: 8 × 400 g = 3.200 kg. Con merma del 28%: comprá **4.4 kg**\n- Chorizos: 8 × 1.5 unidades = 12 chorizos\n- **Compra total sugerida: ~4.5 kg asado de tira + 12 chorizos**\n\n### Caso 2 — Evento con 40 personas (mix de adultos y adolescentes, con guarnición)\n- 30 adultos × 300 g (con guarnición) = 9.000 g\n- 10 adolescentes × 230 g = 2.300 g\n- Total carne neta cocida: 11.300 g ≈ 11.3 kg\n- Con merma promedio del 22%: **comprá ~14.5 kg entre vacío y entraña**\n\n### Caso 3 — Asado mixto con picada previa (10 adultos)\n- La picada reduce el hambre: aplicar factor 0.75\n- 10 × 350 g × 0.75 = 2.625 kg netos\n- Con merma del 25%: **comprá ~3.5 kg de asado de tira o costillar**\n\n---\n\n## Errores comunes\n\n1. **No considerar la merma del hueso:** el asado de tira tiene un 30–35% de hueso incomible. Si comprás 4 kg de asado de tira, solo ~2.6–2.8 kg es carne aprovechable. Muchos creen que compraron suficiente y la gente queda con hambre.\n\n2. **Ignorar la merma de cocción:** toda carne pierde líquido en la parrilla. Un vacío crudo de 1 kg pesa aprox. 780–820 g cocido. No calcules las porciones sobre el peso crudo sin ajustar.\n\n3. **Calcular igual para todos los comensales:** un niño de 8 años no come lo mismo que un adulto. Usar la misma porción para toda la mesa puede hacerte comprar hasta un 40% de más si hay muchos chicos.\n\n4. **Olvidar los embutidos en el total:** los chorizos y morcillas también suman proteína y saciedad. Si ponés 2 chorizos por persona (≈ 200 g), podés reducir la porción de carne principal en un 15–20%.\n\n5. **No contemplar el contexto del menú:** un asado que arranca con picada de fiambres y quesos, y termina con postre, requiere hasta un 25% menos de carne principal que uno donde la carne es el único plato fuerte.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de kg de carne por persona para asado](/calculadora-carne-asado-kg-por-persona)\n- [Calculadora de porciones de sushi por persona](/calculadora-porciones-sushi-por-persona-promedio)\n- [Calculadora de porciones de arroz por persona (guarnición)](/calculadora-porciones-arroz-por-persona-guarnicion)\n- [Calculadora de porciones de pasta seca por persona](/calculadora-porciones-pasta-seca-persona-hambre)\n",
+  "explanation": "## Cómo se calcula\n\nLa fórmula combina cuatro factores para darte el peso crudo real a comprar:\n\n```\nTotal crudo (kg) = [ (adultos × porción_base_adulto + niños × porción_base_niño)\n                     × factor_apetito × factor_guarnición\n                     × factor_merma ] / 1000\n```\n\n### Porciones base (gramos cocidos netos por persona)\n\n| Tipo de corte | Adulto | Niño (< 12 años) |\n|---|---|---|\n| Con hueso (asado de tira, costillar, costillas) | 350 g | 175 g |\n| Sin hueso (vacío, entraña, bife, lomo) | 280 g | 140 g |\n| Embutidos (chorizo, morcilla, salchicha) | 180 g | 90 g |\n\n### Factores de ajuste\n\n| Factor | Liviano | Normal | Mucho apetito |\n|---|---|---|---|\n| Apetito | × 0.80 | × 1.00 | × 1.25 |\n\n| Guarnición | Abundante | Moderada | Poca/ninguna |\n|---|---|---|---|\n| Factor | × 0.80 | × 1.00 | × 1.20 |\n\n### Factor de merma (crudo a cocido)\n\nToda la carne pierde peso al cocinarse. Los cortes con hueso pierden además el peso del hueso incomible:\n\n| Tipo de corte | Factor merma | Motivo |\n|---|---|---|\n| Con hueso | × 1.45 | ~30 % hueso incomible + ~25 % merma de cocción |\n| Sin hueso | × 1.28 | ~22 % merma de cocción |\n| Embutidos | × 1.12 | ~12 % merma de cocción |\n\n### Margen de seguridad\n\nSe recomienda siempre comprar un **10 % adicional** sobre el total calculado para cubrir segundas porciones, invitados de último momento o pérdidas imprevistas.\n\n### Ejemplo paso a paso\n\nAsado familiar: 8 adultos + 4 niños, asado de tira (con hueso), apetito normal, guarnición moderada:\n\n```\nCocido necesario = (8 × 350 g + 4 × 175 g) × 1.00 × 1.00\n                 = (2.800 + 700) g = 3.500 g\nCrudo a comprar  = 3.500 × 1.45 = 5.075 g ≈ 5.08 kg\nCon margen 10 %  = 5.08 × 1.10 = 5.58 kg\n```\n\n---\n\n## Tabla de referencia rápida: cortes populares argentinos\n\n| Corte | Tipo | Merma total (hueso + cocción) | Compra cruda por adulto (normal, sin guar.) |\n|---|---|---|---|\n| Asado de tira | Con hueso | ~45 % | ≈ 508 g |\n| Costillar entero | Con hueso | ~45 % | ≈ 508 g |\n| Vacío | Sin hueso | ~22 % | ≈ 358 g |\n| Entraña | Sin hueso | ~20 % | ≈ 350 g |\n| Bife de chorizo | Sin hueso | ~22 % | ≈ 358 g |\n| Chorizo criollo | Embutido | ~12 % | ≈ 202 g (≈ 2 unidades) |\n\n## Errores comunes\n\n1. **No considerar la merma del hueso:** el asado de tira tiene un 30–35 % de hueso incomible. Si comprás 4 kg, solo ~2.6–2.8 kg es carne aprovechable cocida.\n2. **Ignorar la merma de cocción:** un vacío crudo de 1 kg pesa aprox. 780–820 g cocido.\n3. **Calcular igual para todos los comensales:** un niño de 8 años no come lo mismo que un adulto; usar la misma porción puede hacerte comprar hasta un 40 % de más si hay muchos chicos.\n4. **Olvidar los embutidos en el total:** chorizos y morcillas también suman proteína y saciedad; con 2 chorizos por persona podés reducir la carne principal un 15–20 %.\n5. **No contemplar el contexto del menú:** un asado con picada de fiambres y postre requiere hasta un 25 % menos de carne principal.\n",
   "faq": [
     {
       "q": "¿Cuántos gramos de carne por persona se calculan para un asado argentino estándar?",
-      "a": "La referencia clásica en Argentina es de 300 a 400 g de carne con hueso por adulto (como asado de tira o costillar) o 250 a 300 g de cortes sin hueso (vacío, entraña, lomo). Si hay guarniciones como ensaladas, pan y papas, podés reducir esa cifra un 20%. Para eventos formales o con picada previa, con 250–280 g por persona alcanza y sobra."
+      "a": "La referencia más extendida en Argentina es 350 g de carne cocida por adulto en cortes con hueso (asado de tira, costillar) o 280 g en cortes sin hueso (vacío, entraña). Eso equivale a comprar crudo aproximadamente 508 g por adulto de asado de tira o 358 g de vacío, considerando la merma de hueso y cocción. Con guarniciones abundantes (ensaladas, pan, papas), esas cifras bajan un 20 %."
     },
     {
       "q": "¿Cuánto rinde un kilo de asado de tira una vez cocinado?",
-      "a": "El asado de tira tiene aproximadamente un 30–35% de hueso incomible y una merma de cocción del 20–25% sobre la carne magra. En la práctica, de 1 kg de asado de tira crudo obtenés alrededor de 500–600 g de carne aprovechable cocida. Por eso, si calculás porciones, siempre sumá la merma total antes de ir a la carnicería."
+      "a": "El asado de tira tiene aproximadamente un 30–35 % de hueso incomible y una merma de cocción del 20–25 % sobre la carne magra. En la práctica, de 1 kg de asado de tira crudo obtenés alrededor de 550–650 g de carne aprovechable cocida. Por eso, si querés 350 g cocidos por persona, necesitás comprar unos 508 g crudos por adulto."
     },
     {
       "q": "¿Cuántos chorizos se calculan por persona en un asado?",
-      "a": "La regla habitual en Argentina es 1 a 2 chorizos criollos por persona como entrada o acompañamiento. Un chorizo criollo pesa entre 100 y 120 g. Si los chorizos van como 'el arranque' antes de los cortes principales, con 1 unidad por persona es suficiente. Si no hay otra picada y la gente tiene hambre, calculá 2 por cabeza."
+      "a": "La regla habitual en Argentina es 1 a 2 chorizos criollos por persona. Un chorizo criollo pesa entre 100 y 120 g crudos. Si los chorizos son el arranque antes de los cortes principales, con 1 unidad por persona es suficiente. Si no hay otra picada, calculá 2 por cabeza. Esta calculadora usa 180 g de embutido cocido por adulto como base, equivalente a 1–2 chorizos según el tamaño."
     },
     {
-      "q": "¿Cómo cambio la porción si hay niños entre los comensales?",
-      "a": "Los niños de 6 a 12 años comen aproximadamente un tercio de la porción adulta, es decir, entre 120 y 150 g de carne. Los menores de 6 años, 80–100 g. Un grupo de 10 adultos y 5 niños de 8 años no equivale a 15 adultos: la carne para los chicos es casi la mitad. Segmentar por edad evita comprar de más y tirar comida."
+      "q": "¿Cómo ajusto la porción si hay niños entre los comensales?",
+      "a": "Los niños de 6 a 12 años comen aproximadamente el 50 % de la porción adulta: unos 175 g cocidos en cortes con hueso y 140 g en cortes sin hueso. Esta calculadora aplica ese factor automáticamente cuando ingresás la cantidad de niños. Los menores de 6 años comen aún menos (un tercio del adulto), pero por seguridad se usan los mismos valores de la calculadora para ese rango."
     },
     {
       "q": "¿Cuánta carne necesito para 20 personas en un asado?",
-      "a": "Para 20 adultos sin guarnición especial, calculá unos 400 g por persona de corte con hueso: 20 × 0.40 kg = 8 kg de carne neta cocida. Agregando la merma de cocción y hueso (aprox. 30%), necesitás comprar alrededor de 11–12 kg de asado de tira o costillar crudo. Si combinás con vacío (menor merma), podés llegar con 10–10.5 kg en total."
+      "a": "Para 20 adultos, apetito normal, asado de tira (con hueso) y guarnición moderada, la fórmula da: 20 × 350 g = 7.000 g de carne cocida necesaria. Aplicando el factor de merma (× 1.45 por hueso + cocción): 7.000 × 1.45 = 10.150 g ≈ 10.15 kg crudos. Con el margen del 10 %: comprar alrededor de **11.2 kg de asado de tira crudo**. Si el apetito es mayor o no hay guarnición, subís a 12–13 kg."
     },
     {
       "q": "¿Qué diferencia hay entre calcular para un asado de mediodía versus uno de noche?",
-      "a": "En los asados del mediodía, especialmente los de verano, la gente suele comer menos que en las cenas. Además, si hay piscina, calor intenso o alcohol de por medio, el apetito puede bajar un 10–15%. Para cenas de noche con temperatura fresca, las porciones tienden a ser más generosas. Una buena práctica es aplicar un factor 0.90 para almuerzos de verano y mantener la porción estándar para cenas."
+      "a": "En asados de mediodía de verano la gente suele comer menos, especialmente si hay calor, piscina o alcohol. Aplicar el factor de apetito 'liviano' (× 0.80) es razonable en esos casos. Para cenas con temperatura fresca o asados de invierno, la gente come más: usá el factor 'normal' o 'mucho apetito'. La diferencia puede ser de hasta un 25 % en el total de carne comprada."
     },
     {
       "q": "¿Es correcto calcular la misma porción para hombres y mujeres?",
-      "a": "No necesariamente. En promedio, los hombres adultos consumen entre 350 y 400 g de carne en un asado, mientras que las mujeres adultas rondan los 250 a 300 g. Si tu grupo es mayormente femenino, podés reducir la compra total un 15–20% versus un grupo mixto. Para grupos desconocidos o eventos corporativos, lo más seguro es usar 320–350 g como promedio neutro por adulto."
+      "a": "En promedio, los hombres adultos consumen entre 350 y 420 g de carne cocida en un asado, y las mujeres adultas entre 250 y 300 g. Si tu grupo es mayormente femenino, podés usar el factor de apetito 'liviano' para reducir la compra un 20 %. Para grupos mixtos desconocidos o eventos corporativos, el factor 'normal' es el más representativo."
+    },
+    {
+      "q": "¿Por qué la calculadora muestra un peso crudo mayor al que esperaba?",
+      "a": "Porque toda la carne pierde peso al cocinarse (merma de cocción) y los cortes con hueso tienen una parte que no se come (el hueso). Por ejemplo, para 8 adultos con asado de tira, la calculadora muestra ~5.08 kg crudos, pero eso se convierte en solo ~3.5 kg de carne cocida aprovechable en el plato. Sin considerar estas mermas, la gente compra de menos y el asado no alcanza."
     },
     {
       "q": "¿Qué pasa si sobra carne del asado? ¿Cuánto tiempo dura en la heladera?",
-      "a": "La carne cocida de asado se conserva en heladera hasta 3–4 días en recipiente hermético, según las recomendaciones generales de seguridad alimentaria. Para recalentar, la temperatura interna debe superar los 75°C para eliminar posibles bacterias. La carne cruda sin cocinar, si se compró el mismo día, se puede congelar hasta 3–4 meses sin perder calidad significativa."
+      "a": "La carne cocida de asado se conserva en heladera hasta 3–4 días en recipiente hermético. Para recalentar, la temperatura interna debe superar los 75°C. La carne cruda que compraste y no usaste se puede congelar el mismo día hasta 3–4 meses sin perder calidad significativa. Por eso la recomendación de agregar un margen del 10 % no genera desperdicio real: lo que sobra cocido sirve para empanadas, sándwiches o locro."
     }
   ],
   "sources": [
     {
-      "name": "INTA – Consumo de carne vacuna en Argentina y cortes populares",
-      "url": "https://www.argentina.gob.ar/inta"
+      "name": "Frigorífico Sada — Guía del asador: cómo calcular la carne",
+      "url": "https://www.frigorificosada.com.ar/blog/guia-para-calcular-un-asado/"
     },
     {
-      "name": "Wikipedia ES – Asado (plato)",
-      "url": "https://es.wikipedia.org/wiki/Asado_(plato)"
+      "name": "Gran Criollo — Cuánta carne se necesita para un asado perfecto",
+      "url": "https://grancriollo.com.ar/blog/posts/carneparaasado-47735b733c00/"
+    },
+    {
+      "name": "Smokey D's BBQ — How much meat per person when catering",
+      "url": "https://smokeydsbbq.com/blogs/news/how-much-meat-per-person-when-catering"
+    },
+    {
+      "name": "BBQ Hero — How much BBQ per person: serving size guide",
+      "url": "https://bbqhero.com/how-much-bbq-per-person/"
     }
   ],
   "relatedSlugs": [],
@@ -103,13 +157,15 @@
     "frequency": "never",
     "lastUpdated": "2026-04-19",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "INTA – Consumo de carne vacuna en Argentina y cortes populares",
-    "sourceUrl": "https://www.argentina.gob.ar/inta"
+    "notes": "Fórmula fija basada en porciones estándar de asado argentino y factores de merma. No requiere actualización de datos externos.",
+    "source": "Frigorífico Sada — Guía del asador: cómo calcular la carne",
+    "sourceUrl": "https://www.frigorificosada.com.ar/blog/guia-para-calcular-un-asado/"
   },
   "seoKeywords": [
     "porciones carne asado parrilla persona",
     "calculadora carne asado por persona 2026",
-    "carne asado por persona"
+    "carne asado por persona",
+    "cuanta carne por persona asado",
+    "kilogramos carne asado argentino"
   ]
 }

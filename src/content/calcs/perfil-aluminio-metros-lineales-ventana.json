@@ -1,112 +1,181 @@
 {
   "slug": "calculadora-perfil-aluminio-metros-lineales-ventana",
-  "lastReviewed": "2026-04-24",
-  "title": "Calculadora Aluminio perfil m lineales 2026 | Hacé Cuentas",
-  "h1": "Aluminio perfil m lineales",
-  "description": "🔨 Aluminio perfil m lineales: Calcula materiales, costos y medidas de obra online gratis, con valores reales 2026 y resultado inmediato.",
+  "lastReviewed": "2026-06-04",
+  "title": "Calculadora de Metros Lineales de Perfil de Aluminio para Ventanas 2026",
+  "h1": "Calculadora de metros lineales de perfil de aluminio para ventanas",
+  "description": "Calculá cuántos metros lineales de perfil de aluminio necesitás para fabricar o reemplazar ventanas corredizas, batientes y paños fijos. Incluye marco, hojas, contramarco y porcentaje de desperdicio.",
   "category": "construccion",
   "audience": "global",
   "icon": "🏢",
   "formulaId": "perfil-aluminio-metros-lineales-ventana",
-  "intro": "La calculadora de metros lineales de perfil de aluminio para ventanas te permite estimar con precisión cuántos metros de perfil necesitás para fabricar o reemplazar marcos, hojas y contramarcos de ventanas de aluminio. La fórmula base es: **Perímetro = 2 × (ancho + alto)**, pero en la práctica hay que sumar las hojas deslizantes, travesaños intermedios, juntas y un porcentaje de desperdicio del 10–15 %. Se usa tanto en obra nueva como en remodelaciones, aberturas de PVC laminado aluminio y cerramientos industriales. Conocer los metros lineales exactos evita sobrestock o faltantes en mitad de la instalación.",
-  "keyTakeaway": "**ML total = [2 × (ancho + alto) × N° hojas] + travesaños intermedios + 10 % desperdicio** — por ejemplo, una ventana corrediza 1,20 m × 1,00 m de 2 hojas requiere ≈ 5,28 m de perfil solo en perímetros, más refuerzos.",
+  "intro": "Esta calculadora te da los metros lineales exactos de perfil de aluminio que necesitás para fabricar o reemplazar una ventana, considerando el marco exterior, las hojas deslizantes, el contramarco (si la obra lo requiere), travesaños intermedios y el porcentaje de desperdicio por cortes. La fórmula base es **ML_total = [P_marco + Σ P_hojas + P_contramarco + travesaños] × (1 + desperdicio/100)**, donde cada componente suma los metros del perfil que lo forma. El resultado final se convierte en barras comerciales de 6 m para que puedas ir directo al corralón.",
+  "keyTakeaway": "Una ventana corrediza estándar de 1,20 m × 1,00 m con 2 hojas y sin contramarco requiere ≈ **12,01 m lineales** de perfil (3 barras de 6 m con 10 % de desperdicio). Un paño fijo del mismo tamaño necesita solo ≈ **4,84 m** (1 barra de 6 m).",
   "useCases": [
-    "Presupuestar la cantidad de perfil de aluminio serie 25 o serie 30 para ventanas corredizas de un departamento en construcción.",
-    "Calcular el material necesario para cambiar todas las ventanas de una casa chorizo con aberturas de distintos tamaños.",
-    "Estimar el perfil requerido para cerramientos de balcones y galerías con paños fijos y hojas proyectantes.",
-    "Determinar cuántas barras de 6 m de perfil hay que comprar en el corralón para no generar sobrante excesivo ni parar la obra por faltante."
+    "Presupuestar la cantidad de perfil de aluminio serie 25 o serie 30 para todas las ventanas corredizas de un departamento en construcción antes de ir al corralón.",
+    "Calcular el material necesario para cambiar las ventanas de una casa con aberturas de distintos tamaños, sumando los ML de cada una para pedir en un solo viaje.",
+    "Estimar el perfil requerido para cerramientos de balcones y galerías con paños fijos y hojas proyectantes, incluyendo el contramarco que se empotra en la losa.",
+    "Determinar cuántas barras de 6 m comprar para no generar sobrante excesivo ni parar la obra por faltante."
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Input 1",
+      "id": "ancho",
+      "label": "Ancho de la ventana (m)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "ej. 1.20",
+      "min": 0.3,
+      "max": 6,
+      "step": 0.01,
+      "unit": "m"
     },
     {
-      "id": "v2",
-      "label": "Input 2",
+      "id": "alto",
+      "label": "Alto de la ventana (m)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "ej. 1.00",
+      "min": 0.3,
+      "max": 4,
+      "step": 0.01,
+      "unit": "m"
+    },
+    {
+      "id": "nhojas",
+      "label": "Tipo de abertura",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "0", "label": "Paño fijo (sin hojas deslizantes)" },
+        { "value": "1", "label": "1 hoja deslizante (corrediza 1 hoja)" },
+        { "value": "2", "label": "2 hojas deslizantes (corrediza estándar)" },
+        { "value": "3", "label": "3 hojas deslizantes (corrediza triple)" }
+      ]
+    },
+    {
+      "id": "contramarco",
+      "label": "¿Incluir contramarco?",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "no", "label": "No (sin contramarco)" },
+        { "value": "si", "label": "Sí (incluir contramarco de obra gruesa)" }
+      ]
+    },
+    {
+      "id": "travesano",
+      "label": "¿Incluir travesaño horizontal intermedio?",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "no", "label": "No (ventana simple sin travesaño)" },
+        { "value": "si", "label": "Sí (1 travesaño horizontal)" }
+      ]
+    },
+    {
+      "id": "desperdicio",
+      "label": "Desperdicio por cortes",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "10", "label": "10 % — cortes rectos estándar" },
+        { "value": "15", "label": "15 % — cortes en inglete o formas complejas" }
+      ]
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Resultado",
-      "primary": true
+      "label": "Metros lineales totales (con desperdicio)",
+      "primary": true,
+      "unit": "m"
+    },
+    {
+      "id": "barras",
+      "label": "Barras de 6 m a comprar"
     },
     {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Desglose del cálculo"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ventana corrediza 1,20 × 1,00 m — 2 hojas, sin contramarco, 10 % desperdicio",
     "steps": [
-      "Ejemplo",
-      "Resultado"
+      "**Marco exterior:** 2 × (1,20 + 1,00) = **4,40 m**",
+      "**Hoja 1:** ancho_hoja ≈ 0,63 m; P_hoja = 2 × (0,63 + 1,00) = 3,26 m",
+      "**Hoja 2:** igual que hoja 1 = 3,26 m → total hojas: **6,52 m**",
+      "**ML netos:** 4,40 + 6,52 = **10,92 m**",
+      "**Desperdicio 10 %:** 10,92 × 1,10 = **12,01 m** → **3 barras de 6 m**"
     ],
-    "result": "Resultado"
+    "result": "12,01 m lineales — 3 barras de 6 m"
   },
-  "explanation": "## Cómo se calcula\n\nEl cálculo de metros lineales de perfil de aluminio para una ventana sigue esta lógica:\n\n```\n1. Perímetro del marco (contramarco):\n   P_marco = 2 × (ancho + alto)\n\n2. Perímetro de cada hoja deslizante:\n   P_hoja = 2 × (ancho_hoja + alto_hoja)\n   donde ancho_hoja ≈ ancho_ventana / N° hojas + solape (≈ 3 cm c/u)\n\n3. Travesaños intermedios (si aplica):\n   T = ancho_ventana × N° divisiones_horizontales\n\n4. Total neto:\n   ML_neto = P_marco + (P_hoja × N° hojas) + T\n\n5. Total con desperdicio:\n   ML_total = ML_neto × 1,10   ← 10 % estándar de corte\n   (usar 1,15 en ventanas con muchos ángulos o molduras)\n```\n\n> **Barras comerciales:** el perfil de aluminio se vende en barras de **6 m** (largo estándar en corralones argentinos). Para saber cuántas barras comprás: `Barras = REDONDEAR_ARRIBA(ML_total / 6)`.\n\n---\n\n## Tabla de referencia\n\n| Tipo de ventana | Medida típica (m) | ML neto estimado | Barras de 6 m |\n|---|---|---|---|\n| Ventana baño (1 hoja batiente) | 0,60 × 0,60 | 2,40 m | 1 barra |\n| Ventana dormitorio (2 hojas corredizas) | 1,20 × 1,00 | 7,20 m | 2 barras |\n| Ventana living (2 hojas corredizas) | 1,80 × 1,20 | 9,60 m | 2 barras |\n| Puerta ventana (2 hojas corredizas) | 2,00 × 2,10 | 14,40 m | 3 barras |\n| Paño fijo mediano | 1,00 × 1,20 | 4,40 m | 1 barra |\n| Cerramiento balcón (3 hojas) | 2,40 × 2,20 | 19,20 m | 4 barras |\n\n*ML neto sin desperdicio. Sumar 10–15 % para compra real.*\n\n---\n\n## Casos típicos\n\n### Caso 1 – Ventana dormitorio corrediza 1,20 × 1,00 m (2 hojas)\n- Marco: 2 × (1,20 + 1,00) = **4,40 m**\n- Hoja A: ancho ≈ 0,63 m; P_hoja = 2 × (0,63 + 1,00) = 3,26 m\n- Hoja B: igual = 3,26 m\n- ML neto = 4,40 + 3,26 + 3,26 = **10,92 m**\n- Con 10 % desperdicio = **12,01 m → 2 barras de 6 m**\n\n### Caso 2 – Puerta ventana corrediza 2,00 × 2,10 m (2 hojas)\n- Marco: 2 × (2,00 + 2,10) = **8,20 m**\n- Hoja: 2 × (1,03 + 2,10) = 6,26 m × 2 = 12,52 m\n- Travesaño intermedio horizontal: 2,00 m\n- ML neto = 8,20 + 12,52 + 2,00 = **22,72 m**\n- Con 10 % = **24,99 m → 5 barras de 6 m**\n\n### Caso 3 – Paño fijo 1,00 × 1,20 m (sin hojas)\n- Solo marco: 2 × (1,00 + 1,20) = **4,40 m**\n- Con 10 % = **4,84 m → 1 barra de 6 m**\n\n---\n\n## Errores comunes\n\n1. **No sumar el perfil de las hojas deslizantes:** Muchos calculan solo el perímetro del marco y olvidan que cada hoja lleva su propio marco de perfil, lo que puede representar el 60–70 % del material total.\n\n2. **Ignorar el solape entre hojas:** En ventanas corredizas, cada hoja solapa ≈ 3 cm con la otra. Si no se suma ese margen al ancho de cada hoja, el perfil queda corto y la hoja no desliza correctamente.\n\n3. **No considerar el desperdicio de corte:** Los cortes a 45° (ingletes) y los rebajes para herrajes generan recortes inevitables. Sin el 10 % de margen, casi siempre falta material y hay que hacer una compra extra urgente.\n\n4. **Confundir serie de perfil:** La serie 25, serie 30 y serie 40 tienen distintas longitudes de perfil visible y distintos pesos por metro lineal (aprox. 0,8 kg/ml, 1,1 kg/ml y 1,5 kg/ml respectivamente). Calcular metros lineales con la serie equivocada lleva a errores de presupuesto de hasta el 40 %.\n\n5. **Olvidar el contramarco:** En obra gruesa, el contramarco (perfil exterior que queda empotrado en la pared) suma tanto material como el marco propio. Es un perímetro adicional completo por ventana.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de zócalo en metros lineales](/calculadora-zocalo-metros-lineal) — para terminar los pisos con el mismo criterio de compra por barras.\n- [Calculadora de pared de ladrillos en m²](/calculadora-pared-ladrillos-metros-m2) — dimensioná la pared donde van las aberturas antes de pedir el perfil.\n- [Calculadora de alambre para cerco perimetral](/calculadora-alambre-cerco-perimetral-metros) — otro cálculo de metros lineales de material metálico con lógica similar.\n- [Calculadora de potencia de caldera por ambiente](/calculadora-caldera-potencia-kw-ambiente-metros) — complemento ideal para climatizar el espacio una vez cerradas las aberturas.\n",
+  "explanation": "## Cómo se calcula\n\nLa calculadora suma los metros lineales de perfil que forma cada componente de la ventana:\n\n```\n1. Marco exterior (siempre presente):\n   P_marco = 2 × (ancho + alto)\n\n2. Cada hoja deslizante (si aplica):\n   ancho_hoja ≈ (ancho_ventana / N° hojas) + 0,03 m  ← solape de 3 cm entre hojas\n   P_hoja = 2 × (ancho_hoja + alto)\n   Subtotal hojas = P_hoja × N° hojas\n\n3. Contramarco (si se elige):\n   P_contramarco = 2 × (ancho + alto)   ← mismo perímetro que el marco\n\n4. Travesaño horizontal intermedio (si se elige):\n   T = ancho_ventana\n\n5. Total neto:\n   ML_neto = P_marco + subtotal_hojas + P_contramarco + T\n\n6. Total con desperdicio (porcentaje de corte):\n   ML_total = ML_neto × (1 + desperdicio / 100)\n\n7. Barras de 6 m a comprar:\n   Barras = REDONDEAR.ARRIBA(ML_total / 6)\n```\n\n---\n\n## Tabla de referencia rápida\n\n| Tipo de ventana | Medida típica (m) | ML neto est. | Barras de 6 m |\n|---|---|---|---|\n| Paño fijo pequeño | 0,60 × 0,60 | 2,40 m | 1 barra |\n| Paño fijo mediano | 1,00 × 1,20 | 4,40 m | 1 barra |\n| Corrediza 1 hoja baño | 0,60 × 0,80 | 5,72 m | 1 barra |\n| Corrediza 2 hojas dormitorio | 1,20 × 1,00 | 10,92 m | 2 barras |\n| Corrediza 2 hojas living | 1,80 × 1,20 | 15,72 m | 3 barras |\n| Puerta-ventana 2 hojas | 2,00 × 2,10 | 20,52 m | 4 barras |\n| Cerramiento balcón 3 hojas | 2,40 × 2,20 | 26,84 m | 5 barras |\n\n*Netos sin desperdicio. Sumar 10–15 % para la compra real.*\n\n---\n\n## Errores comunes\n\n1. **No sumar el perfil de las hojas:** el marco exterior es solo la mitad del material; cada hoja lleva su propio marco de perfil.\n2. **Ignorar el solape entre hojas:** en corredizas, cada hoja superpone ≈ 3 cm con la siguiente; sin ese margen el perfil queda corto.\n3. **Olvidar el contramarco:** en obra nueva, el contramarco se empotra en la mampostería antes del revoque y suma otro perímetro completo.\n4. **No agregar desperdicio:** los cortes a 45° (ingletes) siempre generan recortes; sin el 10 % de margen casi siempre falta material al final.\n5. **Confundir serie de perfil:** la serie 25, 30 y 40 tienen distintos pesos por metro lineal (≈ 0,8 / 1,1 / 1,5 kg/ml). Los metros lineales son iguales, pero el costo total varía hasta un 40 %.\n",
   "faq": [
     {
-      "q": "¿Por qué el perfil de aluminio se vende en barras de 6 metros y no por metro suelto?",
-      "a": "La barra de 6 m es el largo estándar de extrusión que manejan los corralones y distribuidores en Argentina, ya que optimiza el transporte y minimiza las uniones en obra. Algunos proveedores ofrecen barras de 3 m para proyectos chicos, pero el precio por metro lineal suele ser un 15–20 % mayor que comprando la barra entera."
+      "q": "¿Por qué el perfil de aluminio se vende en barras de 6 metros?",
+      "a": "La barra de 6 m es el largo estándar de extrusión que manejan los corralones y distribuidores en Argentina y gran parte de Latinoamérica; optimiza el transporte y minimiza las uniones en obra. Algunos proveedores ofrecen barras de 3 m para proyectos chicos, pero el precio por metro suele ser 15–20 % mayor que comprando la barra entera de 6 m."
+    },
+    {
+      "q": "¿Qué porcentaje de desperdicio debo agregar?",
+      "a": "El estándar es 10 % para ventanas con cortes rectos (a escuadra). Si los marcos llevan ingletes a 45° o la abertura tiene formas no rectangulares (arcos, trapezoidales), usá 15 %. El sobrante siempre conviene tenerlo: sirve para repuestos o reparaciones futuras sin tener que comprar una barra completa."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre el marco y el contramarco?",
+      "a": "El marco es la estructura visible que sostiene las hojas y el vidrio; el contramarco es el perfil exterior que se empotra en la mampostería antes del revoque y sirve de guía de nivelación. En obra nueva siempre se coloca primero el contramarco. Ambos suman metros lineales al pedido: el contramarco equivale a un perímetro adicional completo por abertura."
     },
     {
       "q": "¿Cuánto pesa un metro lineal de perfil de aluminio para ventanas?",
-      "a": "Depende de la serie: el perfil serie 25 pesa aproximadamente 0,8 kg/ml, el serie 30 unos 1,1 kg/ml y el serie 40 alrededor de 1,5 kg/ml. Este dato es clave para calcular la carga estructural en cerramientos grandes o para verificar si el dintel soporta el peso del conjunto."
+      "a": "Depende de la serie: el perfil serie 25 pesa aproximadamente 0,8 kg/ml, el serie 30 unos 1,1 kg/ml y el serie 40 alrededor de 1,5 kg/ml. Este dato es importante para calcular la carga estructural en cerramientos grandes o para verificar si el dintel soporta el peso total del conjunto."
     },
     {
-      "q": "¿Qué porcentaje de desperdicio debo agregar al calcular los metros lineales?",
-      "a": "El estándar de la industria es un 10 % para ventanas rectangulares simples. Si la abertura tiene formas especiales (arcos, trapezoidales) o muchos ingletes a 45°, el desperdicio puede llegar al 15–20 %. Es preferible sobreestimar: el sobrante sirve para reparaciones futuras."
+      "q": "¿Qué diferencia hay entre el perfil serie 25 y el serie 30?",
+      "a": "La serie indica la profundidad del perfil en milímetros. Serie 25 (25 mm de profundidad) es apto para ventanas de hasta ≈1,50 m de ancho y zonas sin viento fuerte. Serie 30 (30 mm) se recomienda para aberturas más grandes, pisos altos o zonas costeras donde la presión de viento exige mayor rigidez y mejor sellado. El serie 40 se usa en cerramientos industriales y fachadas."
     },
     {
-      "q": "¿Cuál es la diferencia entre el marco y el contramarco en una ventana de aluminio?",
-      "a": "El marco es la estructura que sostiene las hojas y el vidrio; el contramarco es el perfil exterior que se empotra en la mampostería antes del revoque y sirve de guía de nivelación. En obra nueva siempre se coloca primero el contramarco. Ambos suman metros lineales al pedido: el contramarco equivale a un perímetro adicional completo por abertura."
+      "q": "¿Cómo calculo cuántas barras de 6 m necesito para varias ventanas de distintos tamaños?",
+      "a": "Calculá los metros lineales totales con desperdicio de cada ventana, sumá todos los totales y recién ahí dividís por 6 y redondeás hacia arriba. Por ejemplo: 3 ventanas con 12 m, 8 m y 5 m netos = 25 m × 1,10 = 27,5 m → ⌈27,5 / 6⌉ = 5 barras. Así podés aprovechar los recortes de una ventana para la siguiente."
     },
     {
-      "q": "¿Cuántos metros lineales de perfil necesito para una ventana tipo 'paño fijo' de 1,00 × 1,20 m?",
-      "a": "Solo el marco perimetral: 2 × (1,00 + 1,20) = 4,40 m netos. Con 10 % de desperdicio son 4,84 m, lo que entra en 1 barra de 6 m. Si también instalás contramarco, sumá otros 4,40 m netos → total ≈ 9,70 m con desperdicio, es decir, 2 barras de 6 m."
+      "q": "¿Por qué cada hoja deslizante suma tantos metros lineales como el marco?",
+      "a": "Porque cada hoja lleva su propio marco completo de perfil: dos jambas verticales (altura × 2) y dos rieles horizontales (ancho de la hoja × 2). En una ventana corrediza estándar de 2 hojas, las hojas pueden aportar el 60–70 % del total de metros lineales. Calcular solo el perímetro exterior es el error más frecuente al presupuestar perfiles."
     },
     {
-      "q": "¿Las ventanas de aluminio necesitan mantenimiento que afecte el perfil con el tiempo?",
-      "a": "El aluminio anodizado o pintado al horno no requiere pintura periódica, pero sí conviene limpiar los canales de drenaje cada 6 meses para evitar acumulación de humedad y óxido en los herrajes de acero. El perfil en sí tiene una vida útil superior a 30 años en condiciones normales según los fabricantes del rubro."
+      "q": "¿Las ventanas de aluminio necesitan mantenimiento que afecte el perfil?",
+      "a": "El aluminio anodizado o pintado al horno no requiere pintura periódica, pero conviene limpiar los canales de drenaje cada 6 meses para evitar acumulación de humedad y oxidación en los herrajes de acero inoxidable. El perfil de aluminio propiamente dicho tiene una vida útil superior a 30 años en condiciones normales de uso residencial."
     },
     {
-      "q": "¿Qué diferencia hay entre el perfil de aluminio serie 25 y serie 30 para elegir cuál usar?",
-      "a": "La serie indica el ancho del perfil en mm: serie 25 = 25 mm de profundidad, apta para ventanas de hasta 1,50 m de ancho y zonas sin viento fuerte. Serie 30 = 30 mm, recomendada para aberturas más grandes o exposición al viento. En zonas costeras o pisos altos conviene serie 30 o 40 por mayor rigidez y mejor sellado."
-    },
-    {
-      "q": "¿Cómo calculo cuántas barras de 6 m comprar si tengo varias ventanas de distintos tamaños?",
-      "a": "Calculá los metros lineales totales con desperdicio de cada ventana, sumalos todos y recién ahí dividís por 6 y redondeás hacia arriba. Por ejemplo: 3 ventanas con 12 m, 8 m y 5 m netos = 25 m × 1,10 = 27,5 m → 27,5 / 6 = 4,58 → **5 barras**. Así aprovechás los recortes de una ventana para la siguiente."
+      "q": "¿El cálculo cambia para ventanas de aluminio con rotura de puente térmico (RPT)?",
+      "a": "No, el cálculo de metros lineales es idéntico. Los perfiles con RPT (que incorporan una barrera de poliamida entre las dos caras de aluminio) se miden y presupuestan igual: por metro lineal. Lo que cambia es el costo unitario por metro, que suele ser 30–50 % mayor que el perfil convencional, por lo que la precisión del cálculo es aún más importante."
     }
   ],
   "sources": [
     {
       "name": "INTI – Instituto Nacional de Tecnología Industrial (normas para perfiles de aluminio en Argentina)",
       "url": "https://www.inti.gob.ar"
+    },
+    {
+      "name": "Aluminio Fácilito — Tutorial: Cómo hacer una ventana corrediza de aluminio de 2 hojas",
+      "url": "https://aluminiofacilito.wordpress.com/2017/11/16/como-hacer-una-ventana-corrediza-de-aluminio-de-2/"
+    },
+    {
+      "name": "EXA Aluminio — Catálogo Técnico Corredizas A40 (perfiles y tolerancias)",
+      "url": "https://www.exaaluminio.com.ar/exa/catalogos/Catalogo_tecnico_A40_Corredizas.pdf"
     }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "INTI – Instituto Nacional de Tecnología Industrial (normas para perfiles de aluminio en Argentina)",
+    "notes": "Fórmula geométrica fija, no requiere actualización de datos externos",
+    "source": "INTI – Instituto Nacional de Tecnología Industrial",
     "sourceUrl": "https://www.inti.gob.ar"
   },
   "seoKeywords": [
     "perfil aluminio metros lineales ventana",
-    "aluminio perfil m lineales",
-    "calculadora aluminio perfil m lineales 2026"
-  ],
-  "noindex": true
+    "calculadora perfil aluminio ventana",
+    "metros lineales aluminio corrediza",
+    "cuanto perfil aluminio necesito para una ventana",
+    "calcular barras aluminio ventana"
+  ]
 }

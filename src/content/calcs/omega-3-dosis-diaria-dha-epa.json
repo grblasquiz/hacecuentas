@@ -8,17 +8,17 @@
   "audience": "global",
   "icon": "🐟",
   "formulaId": "omega-3-dosis-diaria-dha-epa",
-  "intro": "Las etiquetas de suplementos de aceite de pescado pueden confundir: dicen \"1000 mg de aceite de pescado\" pero no todos esos miligramos son DHA o EPA. Lo que realmente importa es la concentración de DHA+EPA combinados, que es lo que tienen efecto documentado sobre salud cardiovascular, cerebro e inflamación. Esta calculadora te dice cuántos mg de DHA+EPA reales obtenés de tu cápsula según el contenido total y el porcentaje de concentración indicado en la etiqueta. Referencia de la AHA: 250-500 mg DHA+EPA/día para adultos sanos.",
-  "keyTakeaway": "La AHA recomienda **250-500 mg de DHA+EPA combinados/día** para adultos sanos. Para cardiopatía documentada, el cardiólogo puede indicar hasta 1 g/día. Lo que importa en la etiqueta no es el peso total del aceite sino los mg de EPA y DHA.",
+  "intro": "Las etiquetas de suplementos de aceite de pescado pueden confundir: dicen \"1000 mg de aceite de pescado\" pero no todos esos miligramos son DHA o EPA. Lo que realmente importa es la concentración de DHA+EPA combinados, que es lo que tiene efecto documentado sobre salud cardiovascular, cerebro e inflamación. Esta calculadora te dice cuántos mg de DHA+EPA reales obtenés por día según el contenido total del aceite, el porcentaje de concentración indicado en la etiqueta y la cantidad de cápsulas que tomás. Referencia: 250-500 mg DHA+EPA/día para adultos sanos (AHA/OMS).",
+  "keyTakeaway": "La AHA recomienda **250-500 mg de DHA+EPA combinados/día** para adultos sanos. Para cardiopatía documentada, el cardiólogo puede indicar hasta 1 g/día. Lo que importa en la etiqueta no es el peso total del aceite sino los mg de EPA y DHA por cápsula.",
   "useCases": [
-    "Verificar si la cápsula de aceite de pescado que tomás aporta suficiente DHA+EPA o es \"puro relleno\".",
-    "Comparar diferentes marcas de omega-3 para saber cuál aporta más DHA+EPA por cápsula.",
-    "Calcular cuántas cápsulas por día necesitás para alcanzar la dosis recomendada de 500 mg DHA+EPA.",
-    "Entender la diferencia entre \"1000 mg de aceite de pescado\" y los mg reales de ácidos grasos activos."
+    "Verificar si la cápsula de aceite de pescado que tomás aporta suficiente DHA+EPA o es mayormente aceite de relleno.",
+    "Comparar diferentes marcas de omega-3 para saber cuál aporta más DHA+EPA por cápsula al mismo precio.",
+    "Calcular cuántas cápsulas por día necesitás para alcanzar la dosis recomendada de 250-500 mg DHA+EPA.",
+    "Evaluar si vale la pena pagar más por un concentrado de alta potencia (60-90%) versus el aceite de pescado estándar (18-30%)."
   ],
   "fields": [
     {
-      "id": "valor1",
+      "id": "aceite_mg",
       "label": "Aceite de pescado total por cápsula",
       "type": "number",
       "suffix": "mg",
@@ -27,10 +27,10 @@
       "min": 100,
       "max": 5000,
       "step": 50,
-      "help": "El número grande en la etiqueta: por ejemplo, '1000 mg' o '1200 mg de aceite de pescado'."
+      "help": "El número grande en la etiqueta: por ejemplo, '1000 mg de aceite de pescado' o '1200 mg'. Es el peso total del aceite, no el DHA+EPA."
     },
     {
-      "id": "valor2",
+      "id": "concentracion_pct",
       "label": "Concentración de DHA+EPA en el aceite",
       "type": "number",
       "suffix": "%",
@@ -39,67 +39,87 @@
       "min": 5,
       "max": 95,
       "step": 1,
-      "help": "Si la etiqueta dice '300 mg EPA+DHA en 1000 mg de aceite', la concentración es 30%. Aceite de pescado estándar: 18-30%. Concentrado de alta potencia: 60-90%."
+      "help": "Si la etiqueta dice '300 mg EPA+DHA en 1000 mg de aceite', la concentración es 30%. Aceite estándar: 18-30%. Concentrado de alta potencia: 60-90%. Si la etiqueta lista los mg de EPA y DHA, sumalos y dividí por el total de aceite."
+    },
+    {
+      "id": "capsulas_dia",
+      "label": "Cápsulas que tomás por día",
+      "type": "number",
+      "required": true,
+      "placeholder": "1",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "help": "La mayoría de los suplementos indican 1-2 cápsulas por día. Ajustá según la dosis que seguís."
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "DHA+EPA por cápsula (mg)",
+      "label": "DHA+EPA total por día (mg)",
       "primary": true
+    },
+    {
+      "id": "por_capsula",
+      "label": "DHA+EPA por cápsula (mg)"
     },
     {
       "id": "resumen",
       "label": "Interpretación"
+    },
+    {
+      "id": "calidad",
+      "label": "Calidad de concentración"
     }
   ],
   "example": {
-    "title": "Ejemplo: cápsula estándar de 1000 mg con 30% de concentración",
+    "title": "Ejemplo: cápsula estándar de 1000 mg, 30% de concentración, 1 cápsula/día",
     "steps": [
-      "**Datos**: cápsula de 1000 mg de aceite de pescado, etiqueta indica 30% de EPA+DHA.",
-      "**Cálculo**: 1000 mg × 30 / 100 = **300 mg de DHA+EPA** por cápsula.",
-      "**Comparación**: la AHA recomienda 250-500 mg/día → una cápsula alcanza la dosis mínima.",
-      "**Si querés 500 mg/día**: necesitás tomar 2 cápsulas de esta marca, o buscar una de mayor concentración (≥50%)."
+      "**Datos**: cápsula de 1000 mg de aceite de pescado, etiqueta indica 300 mg de EPA+DHA (30% de concentración). Se toma 1 cápsula por día.",
+      "**DHA+EPA por cápsula**: 1000 mg × 30 ÷ 100 = **300 mg de DHA+EPA** por cápsula.",
+      "**Total diario**: 300 mg × 1 cápsula = **300 mg/día**.",
+      "**Comparación con la referencia AHA (250-500 mg/día)**: 300 mg/día está dentro del rango recomendado para adultos sanos.",
+      "**Si querés 500 mg/día**: necesitás 2 cápsulas de esta marca (600 mg) o buscar un concentrado ≥50% para llegar con 1 cápsula."
     ],
-    "result": "Con una cápsula de 1000 mg al 30%, obtenés **300 mg de DHA+EPA** — dentro del rango recomendado por la AHA para adultos sanos sin cardiopatía."
+    "result": "Con una cápsula de 1000 mg al 30%, obtenés **300 mg de DHA+EPA/día** — dentro del rango recomendado por la AHA para adultos sanos sin cardiopatía."
   },
-  "explanation": "## Qué dice la etiqueta y qué significa realmente\n\nUn suplemento puede poner \"1000 mg de aceite de pescado\" en letras grandes, pero eso es el peso total del aceite —no la cantidad de EPA y DHA activos. El aceite de pescado estándar tiene típicamente un **18-30% de EPA+DHA**; los concentrados de alta pureza (aceite de krill, omega-3 rTG) pueden llegar al 60-90%.\n\n## Cómo se calcula\n\n**DHA+EPA (mg) = Aceite total (mg) × Concentración (%) ÷ 100**\n\nEjemplo:\n- 1000 mg × 30% = 300 mg EPA+DHA\n- 1200 mg × 50% = 600 mg EPA+DHA\n- 500 mg × 80% = 400 mg EPA+DHA\n\n## Valores de referencia DHA+EPA\n\n| Población / condición | Dosis DHA+EPA recomendada |\n|---|---|\n| Adultos sanos | 250-500 mg/día (AHA) |\n| Embarazo / lactancia | ≥200 mg DHA/día (EFSA) |\n| Cardiopatía documentada | 1.000 mg/día (indicación médica) |\n| Hipertrigliceridemia | 2.000-4.000 mg/día (bajo control médico) |\n| Niños 2-4 años | 100-150 mg DHA/día |\n| Niños 4-6 años | 150-200 mg DHA/día |\n\n## Diferencias entre EPA y DHA\n\n- **EPA (ácido eicosapentaenoico)**: efecto antiinflamatorio, triglicéridos, salud cardiovascular.\n- **DHA (ácido docosahexaenoico)**: cerebro, retina, desarrollo fetal.\n- Los suplementos estándar tienen ratios típicos de **EPA:DHA = 3:2** (ej: 180 mg EPA + 120 mg DHA en 300 mg totales).\n\n## Fuentes alimentarias de DHA+EPA\n\n| Alimento | DHA+EPA (mg/100g) |\n|---|---|\n| Caballa / Macarela | 2.500 |\n| Salmón atlántico | 2.260 |\n| Sardina enlatada | 1.480 |\n| Trucha de mar | 1.150 |\n| Atún (aleta azul) | 1.050 |\n| Mejillones | 670 |\n\n2-3 porciones semanales de pescado graso equivalen a unos 200-400 mg/día promedio.\n\n## Qué revisar en la etiqueta antes de comprar\n\n1. Buscá \"EPA\" y \"DHA\" por separado (en mg), no sólo \"omega-3 totales\".\n2. Multiplicá por el número de cápsulas recomendadas por toma.\n3. Preferí aceites con certificación de pureza: IFOS 5 estrellas, GOED, NSF.\n4. Formas más absorbibles: rTG (triglicérido re-esterificado) > TG natural > EE (éster etílico).\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los valores de referencia surgen de la AHA, EFSA y NIH Dietary Supplements Office. Ver fuentes al pie.\n\n**Disclaimer:** Los resultados son orientativos. Las dosis terapéuticas (>1 g/día) deben indicarse bajo supervisión médica. Los omega-3 en dosis altas pueden interactuar con anticoagulantes. Ante cardiopatía, hipertrigliceridemia o embarazo, consultá con tu médico.\n",
+  "explanation": "## Qué dice la etiqueta y qué significa realmente\n\nUn suplemento puede poner \"1000 mg de aceite de pescado\" en letras grandes, pero eso es el peso total del aceite —no la cantidad de EPA y DHA activos. El aceite de pescado estándar tiene típicamente un **18-30% de EPA+DHA**; los concentrados de alta pureza (aceite rTG) pueden llegar al 60-90%.\n\n## Cómo se calcula\n\n**DHA+EPA por cápsula (mg) = Aceite total por cápsula (mg) × Concentración (%) ÷ 100**\n\n**DHA+EPA diario (mg) = DHA+EPA por cápsula (mg) × Cápsulas por día**\n\nEjemplos:\n- 1000 mg × 30% = 300 mg por cápsula × 1 cápsula = **300 mg/día**\n- 1000 mg × 30% = 300 mg por cápsula × 2 cápsulas = **600 mg/día**\n- 1200 mg × 50% = 600 mg por cápsula × 1 cápsula = **600 mg/día**\n- 500 mg × 80% = 400 mg por cápsula × 1 cápsula = **400 mg/día**\n\n## Valores de referencia DHA+EPA\n\n| Población / condición | Dosis DHA+EPA recomendada | Fuente |\n|---|---|---|\n| Adultos sanos | 250-500 mg/día | AHA / OMS |\n| Embarazo / lactancia | ≥200 mg DHA adicional/día | EFSA / OPS |\n| Cardiopatía documentada | 1.000 mg/día | AHA (indicación médica) |\n| Hipertrigliceridemia | 2.000-4.000 mg/día | AHA (bajo control médico) |\n\n## Cómo leer la concentración en la etiqueta\n\nSi la etiqueta lista mg de EPA y DHA por separado (por ejemplo, 180 mg EPA + 120 mg DHA), sumá los dos y dividí por el peso total del aceite:\n\n**Concentración (%) = (mg EPA + mg DHA) ÷ mg totales de aceite × 100**\n\nEjemplo: (180 + 120) ÷ 1000 = 0,30 = **30%**\n\n## Diferencias entre EPA y DHA\n\n- **EPA (ácido eicosapentaenoico)**: efecto antiinflamatorio, reduce triglicéridos, salud cardiovascular.\n- **DHA (ácido docosahexaenoico)**: componente estructural del cerebro y la retina; crítico en el desarrollo fetal.\n- Los suplementos estándar tienen ratios típicos de **EPA:DHA = 3:2** (ej: 180 mg EPA + 120 mg DHA en 300 mg totales).\n\n## Calidad del aceite por nivel de concentración\n\n| Concentración DHA+EPA | Tipo de aceite |\n|---|---|\n| 18-30% | Aceite de pescado estándar |\n| 30-60% | Concentrado intermedio |\n| 60-90% | Alta potencia (rTG, krill) |\n\n## Fuentes alimentarias de DHA+EPA\n\n| Alimento | DHA+EPA (mg/100g) |\n|---|---|\n| Caballa / Macarela | 2.500 |\n| Salmón atlántico | 2.260 |\n| Sardina enlatada | 1.480 |\n| Atún (aleta azul) | 1.050 |\n\n2-3 porciones semanales de pescado graso equivalen a aproximadamente 200-400 mg/día promedio.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los valores de referencia surgen de la AHA, EFSA y NIH Dietary Supplements Office. Ver fuentes al pie.\n\n**Disclaimer:** Los resultados son orientativos. Las dosis terapéuticas (>1 g/día) deben indicarse bajo supervisión médica. Los omega-3 en dosis altas pueden interactuar con anticoagulantes. Ante cardiopatía, hipertrigliceridemia o embarazo, consultá con tu médico.\n",
   "faq": [
     {
       "q": "¿Cuántos mg de DHA+EPA necesito por día?",
-      "a": "La **American Heart Association** recomienda 250-500 mg/día de DHA+EPA combinados para adultos sanos. Para personas con enfermedad cardiovascular documentada, la dosis sube a **1.000 mg/día** bajo supervisión médica. Para hipertrigliceridemia severa, los cardiólogos pueden indicar 2.000-4.000 mg/día con productos farmacéuticos concentrados."
+      "a": "La **American Heart Association** y la **OMS** coinciden en 250-500 mg/día de DHA+EPA combinados para adultos sanos sin cardiopatía. Para personas con enfermedad cardiovascular documentada, la dosis sube a **1.000 mg/día** bajo supervisión médica. Para hipertrigliceridemia severa, los cardiólogos pueden indicar 2.000-4.000 mg/día con productos farmacéuticos concentrados."
     },
     {
       "q": "¿Por qué la etiqueta dice 1000 mg pero sólo obtengo 300 mg de EPA+DHA?",
       "a": "Porque el aceite de pescado contiene muchos tipos de lípidos además de EPA y DHA: ácido palmítico, oleico, otros omega-3 menores, vitamina D, etc. El aceite de pescado estándar concentra sólo un **18-30%** de EPA+DHA activos. Los suplementos 'concentrados' o 'alta potencia' elevan esa fracción al 50-90%."
     },
     {
-      "q": "¿Es mejor el aceite de krill que el aceite de pescado?",
-      "a": "Depende del objetivo y del presupuesto. El aceite de krill tiene EPA+DHA en forma de fosfolípidos, que algunos estudios asocian a mejor absorción; pero tiene concentraciones menores (20-30%). Para la misma dosis de EPA+DHA, el aceite de pescado concentrado (≥50%) suele ser más económico. No hay consenso clínico definitivo que haga al krill superior para la mayoría de los adultos sanos."
+      "q": "¿Cómo calculo la concentración si la etiqueta lista EPA y DHA por separado?",
+      "a": "Simple: sumá los mg de EPA y de DHA, y dividí por el peso total del aceite. Ejemplo: si una cápsula de 1000 mg tiene 180 mg EPA y 120 mg DHA, la concentración es (180+120)/1000 = 30%. Eso lo podés ingresar directamente en la calculadora."
     },
     {
       "q": "¿Puedo tomar omega-3 si estoy con anticoagulantes como la warfarina?",
-      "a": "Dosis >2 g/día de EPA+DHA pueden tener efecto anticoagulante aditivo y aumentar el riesgo de sangrado en pacientes con warfarina, heparina o antiagregantes (aspirina, clopidogrel). Informá siempre a tu médico o hematólogo antes de suplementar por encima de 1 g/día."
+      "a": "Dosis >2 g/día de EPA+DHA pueden tener efecto anticoagulante aditivo y aumentar el riesgo de sangrado en pacientes con warfarina, heparina o antiagregantes (aspirina, clopidogrel). Informá siempre a tu médico antes de suplementar por encima de 1 g/día."
     },
     {
       "q": "¿El omega-3 de chía o lino reemplaza al del pescado?",
-      "a": "No de forma equivalente. La chía y el lino aportan ALA (alfa-linolénico), un precursor vegetal. El cuerpo convierte ALA a EPA/DHA con una eficiencia muy baja: **<5-10% en adultos típicos**, menos aún en personas mayores o con alto consumo de omega-6. Para efectos cardiovasculares y cerebrales documentados, el EPA+DHA preformado (pescado, suplementos) es mucho más eficaz."
+      "a": "No de forma equivalente. La chía y el lino aportan ALA (alfa-linolénico), un precursor vegetal que el cuerpo convierte a EPA/DHA con una eficiencia muy baja: **<5-10% en adultos típicos**. Para efectos cardiovasculares y cerebrales documentados, el EPA+DHA preformado (pescado, suplementos) es mucho más eficaz."
     },
     {
       "q": "¿A qué hora conviene tomar el suplemento de omega-3?",
-      "a": "Con las comidas que contengan grasa, preferentemente al almuerzo o cena. Los ácidos grasos omega-3 se absorben mejor en presencia de grasa dietaria (elevan la biodisponibilidad hasta un 50% vs. tomarlo en ayunas). Evitar el estómago vacío también reduce el efecto 'regüeldo de pescado'."
+      "a": "Con las comidas que contengan grasa, preferentemente al almuerzo o cena. Los ácidos grasos omega-3 se absorben mejor en presencia de grasa dietaria (la biodisponibilidad puede subir hasta un 50% versus tomarlo en ayunas). Evitar el estómago vacío también reduce el efecto 'regüeldo a pescado'."
     },
     {
-      "q": "¿Qué diferencia hay entre EPA y DHA?",
-      "a": "**EPA** (eicosapentaenoico): principal efecto antiinflamatorio; reduce triglicéridos y beneficia la salud cardiovascular. **DHA** (docosahexaenoico): componente estructural del cerebro y la retina; crítico en el desarrollo fetal y la primera infancia. Para adultos sanos, suplementos con ratio EPA:DHA de 3:2 o 2:1 son los más estudiados. En depresión y salud mental, los ensayos con EPA dominante (≥60% EPA) muestran mejores resultados."
+      "q": "¿Qué diferencia hay entre EPA y DHA, y cuál es más importante?",
+      "a": "**EPA** (eicosapentaenoico): principal efecto antiinflamatorio, reduce triglicéridos y es el componente clave en salud cardiovascular. **DHA** (docosahexaenoico): componente estructural del cerebro y la retina; crítico en el desarrollo fetal y la primera infancia. Para adultos sanos, suplementos con ratio EPA:DHA de 3:2 o 2:1 son los más estudiados. Para depresión, los ensayos con EPA dominante (≥60% EPA) muestran mejores resultados."
     },
     {
       "q": "¿Cómo sé si el suplemento que compré es de buena calidad?",
-      "a": "Buscá certificaciones de terceros: **IFOS 5 estrellas** (analiza rancidez, metales pesados y PCBs), **GOED Member** (Organización Global para EPA y DHA), **NSF Certified for Sport** o **USP Verified**. El aceite rancio (olor fuerte a pescado al abrir la cápsula) tiene menor eficacia y puede ser prooxidante. Guardá el frasco en la heladera después de abrirlo."
+      "a": "Buscá certificaciones de terceros: **IFOS 5 estrellas** (analiza rancidez, metales pesados y PCBs), **GOED Member** (Organización Global para EPA y DHA), **NSF Certified for Sport** o **USP Verified**. El aceite rancio (olor fuerte a pescado al abrir la cápsula) tiene menor eficacia. Guardá el frasco en la heladera después de abrirlo."
     },
     {
       "q": "¿Las embarazadas necesitan más DHA?",
-      "a": "Sí. La **EFSA** recomienda ≥200 mg/día de DHA adicional durante el embarazo y la lactancia, además de la ingesta habitual. El DHA es esencial para el desarrollo del cerebro y la retina fetal en el tercer trimestre. La mayoría de los suplementos prenatales incluyen DHA, pero verificá que aporten al menos 200 mg."
+      "a": "Sí. La **EFSA** y la **OPS** recomiendan al menos 200 mg/día de DHA adicional durante el embarazo y la lactancia, sobre la ingesta habitual de 250 mg/día. El DHA es esencial para el desarrollo del cerebro y la retina fetal en el tercer trimestre. La mayoría de los suplementos prenatales incluyen DHA, pero verificá que aporten al menos 200 mg de DHA."
     }
   ],
   "sources": [
@@ -126,9 +146,9 @@
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fija (mg × concentración% / 100). Valores de referencia AHA/EFSA/NIH estables.",
+    "notes": "Fórmula fija (mg × concentración% / 100 × cápsulas/día). Valores de referencia AHA/EFSA/NIH estables.",
     "source": "American Heart Association",
     "sourceUrl": "https://www.heart.org/en/healthy-living/healthy-eating/eat-smart/fats/fish-and-omega-3-fatty-acids"
   },

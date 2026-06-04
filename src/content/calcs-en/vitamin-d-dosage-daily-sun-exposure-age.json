@@ -1,126 +1,200 @@
 {
   "slug": "vitamin-d-dosage-daily-sun-exposure-age",
   "esSlug": "calculadora-vitamina-d-dosis-sol-diaria-edad",
-  "title": "Vitamin D Dosage Calculator: IU & Sun | Hacé Cuentas",
+  "title": "Vitamin D Calculator: Sun Minutes & IU by Age 2026 | Hacé Cuentas",
   "h1": "Vitamin D Daily Dosage & Sun Exposure Calculator",
-  "description": "Calculate your daily vitamin D needs: 600-800 IU by age. Get your optimal sun exposure time. Free, instant results.",
+  "description": "Calculate how many minutes of sun you need for vitamin D synthesis and the recommended IU supplement dose by age, skin type, latitude zone, and season.",
   "category": "salud",
+  "audience": "global",
   "icon": "☀️",
   "formulaId": "vitamina-d-dosis-sol-diaria-edad",
-  "intro": "Reference values in health come from large population studies (NHANES, WHO). They give you a framework to interpret your results, but your personal context matters most. 600-800 IU/day depending on age. 15-20 minutes of midday sun. Values are updated to 2026 and reviewed regularly to keep you current.",
-  "keyTakeaway": "Formula: **Vitamin D: Daily Dosage & Sun Time Calculation**. Direct application with your input values. 600-800 IU/day by age. 15-20 minutes of midday sun.",
+  "lastReviewed": "2026-06-04",
+  "intro": "Vitamin D deficiency affects about 1 billion people worldwide — yet for most people it is one of the most correctable nutritional gaps. The catch is that how much sun you actually need depends on at least five variables simultaneously: your skin phototype (Fitzpatrick scale I to VI), your latitude, the season, time of day, and your age.\n\nThe Institute of Medicine (IOM/NASEM 2011) sets the Recommended Dietary Allowance at 600 IU/day for adults aged 1–70 and 800 IU/day for adults over 70. The 2024 Endocrine Society Clinical Practice Guideline confirmed these figures for healthy adults under 75, and added that adults 75 and older benefit from active supplementation to reduce mortality risk.\n\nThis calculator gives you two concrete answers: how many minutes of midday sun you need given your profile, and what IU range of supplement corresponds to your age group. It does not replace a 25(OH)D blood test — which is the only way to know your actual level — but it gives you the framework to understand your situation and arrive at your next doctor's appointment with real numbers.",
+  "keyTakeaway": "Minutes of midday sun needed to synthesise ~1,000 IU range from 5 min (very fair skin, summer, tropical zone) to over 180 min (very dark skin, winter, high latitude). Recommended supplement dose per IOM/NASEM ranges from 400 IU (infants) to 800 IU (adults over 70). Results are estimates — consult your doctor for individual decisions.",
   "useCases": [
-    "Technical calculations related to vitamin D: daily dosage and IU",
-    "Students and professionals in health sciences",
-    "Validate theoretical results before applying them",
-    "Teaching and learning the concept",
-    "Quick reference for health projects"
+    "A 42-year-old woman with Fitzpatrick type II (fair skin) in a temperate city (e.g., Madrid or Buenos Aires) in summer: the calculator returns ~8 minutes of midday sun (arms and face uncovered) to synthesise ~1,000 IU — well within her 15 min daily walk.",
+    "A 72-year-old man with phototype IV (olive skin) in a high-latitude city (e.g., London, Ushuaia) in winter: the calculator flags that solar synthesis is not feasible in that season and latitude combination, and recommends supplementing 800–1,000 IU/day.",
+    "A 16-year-old with phototype V (brown skin) who trains indoors: the calculator shows ~39 minutes of midday sun would be needed in temperate spring, and that the IOM RDA for adolescents is 600 IU/day.",
+    "A clinician explaining sun exposure to a 55-year-old patient before ordering a 25(OH)D test: uses the calculator to illustrate that in a subtropical zone in autumn, 20 minutes of sun produces roughly 700–900 IU depending on phototype — helping frame the conversation."
   ],
   "fields": [
     {
-      "id": "valor1",
-      "label": "Your Age (years)",
+      "id": "edad",
+      "label": "Age (years)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "e.g. 35",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "years",
+      "format": "plain"
     },
     {
-      "id": "valor2",
-      "label": "Daily Sun Exposure (minutes)",
-      "type": "number",
+      "id": "fototipo",
+      "label": "Skin Phototype (Fitzpatrick Scale)",
+      "type": "select",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "options": [
+        { "value": "1", "label": "I — Very fair (always burns, never tans)" },
+        { "value": "2", "label": "II — Fair (usually burns, tans minimally)" },
+        { "value": "3", "label": "III — Medium (sometimes burns, tans gradually)" },
+        { "value": "4", "label": "IV — Olive (rarely burns, tans well)" },
+        { "value": "5", "label": "V — Brown/dark (very rarely burns)" },
+        { "value": "6", "label": "VI — Very dark/black (never burns)" }
+      ]
+    },
+    {
+      "id": "zona_latitud",
+      "label": "Geographic Zone (Latitude)",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "tropical", "label": "Tropical (≤ 23°, e.g. Ecuador, Colombia, Lagos)" },
+        { "value": "subtropical", "label": "Subtropical (23–35°, e.g. Miami, Sydney, Cairo)" },
+        { "value": "templada", "label": "Temperate (35–50°, e.g. New York, Buenos Aires, Madrid)" },
+        { "value": "alta", "label": "High latitude (> 50°, e.g. London, Oslo, Ushuaia)" }
+      ]
+    },
+    {
+      "id": "estacion",
+      "label": "Season",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "verano", "label": "Summer (Jun–Aug northern / Dec–Feb southern hemisphere)" },
+        { "value": "primavera", "label": "Spring (Mar–May northern / Sep–Nov southern)" },
+        { "value": "otono", "label": "Autumn (Sep–Nov northern / Mar–May southern)" },
+        { "value": "invierno", "label": "Winter (Dec–Feb northern / Jun–Aug southern)" }
+      ]
+    },
+    {
+      "id": "minutos_sol",
+      "label": "Actual daily sun exposure (minutes)",
+      "type": "number",
+      "required": false,
+      "placeholder": "e.g. 20",
+      "min": 0,
+      "max": 180,
+      "step": 5,
+      "unit": "min",
+      "format": "plain"
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Daily Vitamin D Dosage",
+      "label": "Estimated minutes of sun for ~1,000 IU",
       "primary": true
     },
     {
       "id": "resumen",
-      "label": "Interpretation & Recommendations"
+      "label": "Recommended supplement dose (IOM/NASEM)"
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Example: 42-year-old woman, fair skin, temperate zone, summer",
+    "inputs": {
+      "edad": 42,
+      "fototipo": "2",
+      "zona_latitud": "templada",
+      "estacion": "verano",
+      "minutos_sol": 15
+    },
     "steps": [
-      "Typical Values",
-      "Result"
+      "Phototype II in temperate zone in summer: base 8 min × latitude 1.0 × season 1.0 × age factor (18-50 → 1.0) = ~8 min to synthesise ~1,000 IU",
+      "With 15 minutes of daily midday sun she produces ~1,875 IU from sunlight — exceeding the IOM RDA of 600 IU/day for adults",
+      "Recommended supplement for her age group: 600–800 IU/day (relevant if sun exposure is irregular or in winter)"
     ],
-    "result": "Result"
+    "result": "~8 min of midday sun (arms & face uncovered) ≈ 1,000 IU. Adult (19–70 yr): 600–800 IU/day (IOM RDA). With 15 min/day she gets ~1,875 IU from sun."
   },
-  "explanation": "**Normal health values** come from large population studies (NHANES, WHO, CDC). They vary by age, sex, ethnicity, and region. They are guidelines; your personal medical history always takes precedence.\n\n## How it's calculated\n\n600-800 IU/day depending on age. 15-20 minutes of midday sun.\n\nThis calculator applies the formula with the values you enter, checking typical ranges and alerting you to unusual values.\n\n## Normal reference values\n\n| Parameter | Normal Adult Range |\n|---|---|\n| Blood Pressure | <120/80 mmHg |\n| Resting Heart Rate | 60-100 bpm |\n| Body Temperature | 36.1-37.2°C |\n| SpO2 (Blood Oxygen) | 95-100% |\n| Fasting Blood Glucose | 70-100 mg/dL |\n| HbA1c | <5.7% |\n| Total Cholesterol | <200 mg/dL |\n| LDL Cholesterol | <100 mg/dL |\n| HDL Cholesterol | >40 (M) / >50 (F) |\n\n## Final Notes\n\nThis calculation is a guidance reference only. For critical decisions (financial, medical, legal), consult with a qualified professional. Values are current as of 2026 and are reviewed regularly.",
+  "explanation": "Vitamin D is a fat-soluble vitamin with hormonal function: it regulates intestinal absorption of calcium and phosphorus, maintains bone health, modulates the immune system, and is involved in cardiovascular and muscular processes. Unlike most vitamins, the body can synthesise it in the skin from solar UVB radiation.\n\n## How it's calculated\n\nThe estimate follows the Holick (2004) model updated by the MDPI Nutrients (2024) global UVB exposure study, which quantifies exposure time in minutes to produce ~1,000 IU of pre-vitamin D3 by Fitzpatrick phototype under reference conditions (midday, clear sky, temperate zone ~35–40°, summer):\n\n| Phototype | Description | Base (min for ~1,000 IU) |\n|---|---|---|\n| I | Very fair, always burns | 5 min |\n| II | Fair, usually burns | 8 min |\n| III | Medium, sometimes burns | 13 min |\n| IV | Olive, rarely burns | 20 min |\n| V | Brown/dark skin | 28 min |\n| VI | Very dark/black skin | 45 min |\n\nMultipliers are then applied:\n\n```\nMinutes = Base(phototype) × Factor(latitude) × Factor(season) × Factor(age)\n\nLatitude factor:\n  Tropical (≤23°)        → 0.5×\n  Subtropical (23–35°)   → 0.75×\n  Temperate (35–50°)     → 1.0× (reference)\n  High latitude (>50°)   → 1.8×\n\nSeason factor:\n  Summer  → 1.0×\n  Spring  → 1.4×\n  Autumn  → 1.6×\n  Winter  → 3.5×\n\nAge factor:\n  < 5 years   → 0.85× (efficient synthesis)\n  5–49 years  → 1.0×  (reference)\n  50–69 years → 1.15× (moderate decline)\n  ≥ 70 years  → 1.35× (25–30% reduction — Webb & Engelsen 2006)\n```\n\nIf the result exceeds 180 minutes, solar synthesis is not practical and supplementation is the recommended path.\n\n## Recommended supplement dose by age group\n\nBased on **IOM/NASEM Dietary Reference Intakes (2011)** confirmed by the **2024 Endocrine Society Clinical Practice Guideline**:\n\n| Age group | RDA (IU/day) | Upper tolerable limit |\n|---|---|---|\n| 0–12 months | 400 (AI) | 1,000–1,500 IU |\n| 1–13 years | 600 | 2,500–3,000 IU |\n| 14–18 years | 600 | 4,000 IU |\n| 19–70 years | 600 | 4,000 IU |\n| > 70 years | 800 | 4,000 IU |\n| Pregnancy / lactation | 600 | 4,000 IU |\n\nAI = Adequate Intake; RDA = Recommended Dietary Allowance. The 2024 Endocrine Society guideline additionally recommends active supplementation for adults over 75 to reduce mortality risk.\n\n## 25(OH)D blood level interpretation\n\n| Serum level (ng/mL) | Serum level (nmol/L) | Interpretation |\n|---|---|---|\n| < 12 | < 30 | Severe deficiency (rickets, osteomalacia) |\n| 12–19 | 30–49 | Deficiency |\n| 20–29 | 50–74 | Insufficiency |\n| 30–100 | 75–250 | Sufficiency |\n| > 100 | > 250 | Over-supplementation, monitor |\n| > 150 | > 375 | Potential toxicity (hypercalcemia) |\n\n**Disclaimer:** This calculator is informational and does not replace consultation with a licensed healthcare professional. The only way to know your actual vitamin D level is a 25-hydroxyvitamin D blood test.\n",
   "faq": [
     {
-      "q": "How much vitamin D should I take daily?",
-      "a": "The recommended daily intake is 600-800 IU, though individual needs vary by age, sun exposure, and skin type. Consult your healthcare provider for personalized recommendations."
+      "q": "How does the calculator estimate the minutes of sun I need?",
+      "a": "The estimate is based on the Holick (2004) model and the 2024 global MDPI Nutrients study, which quantified midday sun exposure times to produce ~1,000 IU of pre-vitamin D3 by <strong>Fitzpatrick skin phototype</strong>. Starting from the phototype base time, three multipliers are applied: latitude zone (tropical = 0.5×, high latitude = 1.8×), season (summer = 1×, winter = 3.5×), and age (70+ = 1.35× because skin synthesis efficiency drops ~25–30%). The result is an estimate for midday sun with arms and face uncovered on a clear day."
     },
     {
-      "q": "How long should I spend in the sun for vitamin D?",
-      "a": "About 15-20 minutes of midday sun exposure several times per week is generally enough for most people to produce adequate vitamin D. Fair-skinned individuals need less time than those with darker skin."
+      "q": "How much vitamin D does an adult actually need per day?",
+      "a": "According to the <strong>IOM/NASEM (2011)</strong>: 600 IU/day for adults aged 19–70, and 800 IU/day for adults over 70. The <strong>2024 Endocrine Society Guideline</strong> confirmed these figures for healthy adults under 75, while recommending that adults 75 and older actively supplement to reduce mortality risk. The tolerable upper limit for adults without medical supervision is 4,000 IU/day — megadoses above this level require blood monitoring."
     },
     {
-      "q": "Is this calculator medically accurate?",
-      "a": "This is a guidance tool based on standard formulas. For medical diagnosis or treatment, consult a healthcare professional who can assess your individual health status."
+      "q": "Why does darker skin need more sun for vitamin D?",
+      "a": "Melanin acts as a natural UVB filter — the same radiation that drives vitamin D synthesis in the skin. People with Fitzpatrick type VI skin (very dark) have up to 6–9× more melanin than type I (very fair), meaning they need significantly longer sun exposure to produce the same amount of vitamin D. This is a biological reality that has important implications for populations with darker skin living at temperate or high latitudes, where supplementation becomes especially relevant in winter."
     },
     {
-      "q": "What are normal vitamin D levels?",
-      "a": "Vitamin D blood levels are typically measured as 25-hydroxyvitamin D. Normal levels range from 20-100 ng/mL, though some experts recommend levels above 30 ng/mL."
+      "q": "Can I get enough vitamin D from the sun alone without supplements?",
+      "a": "It depends on your phototype, location, season, and how much of your skin is exposed. In temperate zones in summer, many fair-skinned people can synthesise sufficient vitamin D with 10–15 minutes of midday sun on arms and face several times a week. However, in winter at latitudes above 35°, the solar angle is insufficient for meaningful UVB, making supplementation necessary. For older adults (70+), people with darker skin in high-latitude locations, and those who work indoors, supplementation is generally recommended year-round."
     },
     {
-      "q": "Can I get enough vitamin D from the sun alone?",
-      "a": "For many people, yes—but it depends on geography, season, skin tone, age, and sun exposure habits. Sun protection and winter months may require supplementation."
+      "q": "Does sunscreen block vitamin D synthesis?",
+      "a": "In theory, SPF 15 correctly applied blocks 93% of UVB; SPF 30 blocks 97%. In practice, most people apply less than the recommended 2 mg/cm² and don't reapply every two hours, so actual protection is considerably lower. Observational studies show that routine sunscreen use in daily life does not cause vitamin D deficiency in most people because incidental exposure (hands, face, forearms during normal activities) remains significant. Sunscreen is still essential for skin cancer prevention — but if you apply it over your entire body all day, supplementation becomes more important."
     },
     {
-      "q": "Do medications affect vitamin D levels?",
-      "a": "Yes, many medications including some statins, corticosteroids, and anticonvulsants can lower vitamin D levels. Always inform your doctor about your medications when discussing vitamin D."
+      "q": "How do I know if I'm deficient in vitamin D?",
+      "a": "The only reliable way is a <strong>25-hydroxyvitamin D (25(OH)D) blood test</strong>. Interpretation: <strong>severe deficiency</strong> < 12 ng/mL; <strong>deficiency</strong> 12–19 ng/mL; <strong>insufficiency</strong> 20–29 ng/mL; <strong>sufficiency</strong> 30–100 ng/mL; potential toxicity above 150 ng/mL. Non-specific symptoms of deficiency include fatigue, muscle aches, and low mood, but these require laboratory confirmation. Ask your doctor or GP to include it in your next routine blood panel."
     },
     {
-      "q": "Should I take a vitamin D supplement?",
-      "a": "If you have limited sun exposure, darker skin, live in northern climates, or have certain health conditions, supplementation may be recommended. Consult your healthcare provider."
+      "q": "Is vitamin D toxic if I take too much?",
+      "a": "Yes. Vitamin D is fat-soluble and accumulates in adipose tissue. The IOM sets the <strong>tolerable upper limit at 4,000 IU/day for adults</strong>; clinical toxicity (hypervitaminosis D) generally appears with sustained doses above 10,000 IU/day for months. Symptoms of vitamin D toxicity include hypercalcemia (excess blood calcium), nausea, weakness, kidney stones, and in severe cases, kidney damage. Do not self-medicate with megadoses without a blood test — if your 25(OH)D is already in the normal range (30–100 ng/mL), adding 5,000–10,000 IU/day unsupervised is unnecessary and potentially harmful."
     },
     {
-      "q": "How do age, sex, and ethnicity affect vitamin D needs?",
-      "a": "Vitamin D requirements and skin's ability to produce it vary significantly by age, sex, and ethnicity. Older adults may need more, and darker skin requires longer sun exposure for the same vitamin D production."
+      "q": "Why do older adults (over 70) need more vitamin D?",
+      "a": "Multiple physiological reasons converge. With age, skin progressively loses its vitamin D synthesis efficiency: at 70 the cutaneous synthesis is approximately <strong>25–30% less efficient</strong> than at age 25 under identical sun exposure (Webb & Engelsen 2006). Older adults also tend to have less sun exposure due to reduced mobility or institutionalisation, and kidneys become less efficient at converting calcidiol to calcitriol (the active form). This is why the IOM raises the RDA to <strong>800 IU/day for adults over 70</strong>, and the 2024 Endocrine Society guideline explicitly recommends active supplementation for those over 75."
+    },
+    {
+      "q": "Does pregnancy increase vitamin D needs?",
+      "a": "Yes. During pregnancy and lactation, demand increases because the fetus and newborn depend entirely on the mother's supply. The <strong>IOM recommends 600 IU/day during pregnancy</strong>, but the Endocrine Society and multiple obstetric societies suggest that many pregnant women need 1,000–2,000 IU/day to maintain adequate serum levels, especially in high-latitude regions or with limited sun exposure. Vitamin D deficiency in pregnancy is associated with higher risk of pre-eclampsia and gestational diabetes. Always consult your OB/GYN before adjusting the dose."
+    },
+    {
+      "q": "What foods are good sources of vitamin D?",
+      "a": "Food sources of vitamin D are limited compared to skin synthesis or supplements. The best sources are: <strong>fatty fish</strong> (salmon ~400–600 IU per 85g serving; sardines ~300 IU; canned tuna ~150 IU), <strong>cod liver oil</strong> (~1,300 IU per tablespoon), <strong>egg yolk</strong> (~40 IU per yolk), and <strong>fortified foods</strong> (milk, orange juice, and cereals in countries with mandatory fortification). In practice, meeting the 600–800 IU/day RDA through diet alone without regular fatty fish consumption is very difficult, making sunlight and/or supplementation the primary sources."
+    },
+    {
+      "q": "Do any common medications interact with vitamin D?",
+      "a": "Yes, several clinically relevant interactions exist. <strong>Corticosteroids</strong> (prednisone) reduce intestinal calcium absorption and increase vitamin D excretion, raising deficiency risk with prolonged use. <strong>Anticonvulsants</strong> (phenytoin, phenobarbital) accelerate hepatic vitamin D metabolism. <strong>Weight-loss drugs</strong> that block fat absorption (orlistat) reduce absorption of fat-soluble vitamin D. <strong>Cholestyramine</strong> (for cholesterol) also reduces intestinal absorption. If you take chronic medication, always inform your doctor you're considering vitamin D supplementation so they can evaluate the appropriate dose and potential interactions."
+    },
+    {
+      "q": "What is the difference between vitamin D2 and D3 supplements?",
+      "a": "Two main forms exist: <strong>D2 (ergocalciferol)</strong>, plant-derived, and <strong>D3 (cholecalciferol)</strong>, animal-derived (wool lanolin, or lichen for vegan versions). Current evidence consistently shows that D3 is more effective at raising and sustaining serum 25(OH)D levels than D2 at equivalent doses. Most over-the-counter supplements contain D3. The most important practical point: take it with a fat-containing meal, since vitamin D is fat-soluble and absorption improves significantly with dietary lipids present."
     }
   ],
   "sources": [
     {
-      "name": "NIST — National Institute of Standards and Technology",
-      "url": "https://www.nist.gov"
+      "name": "IOM/NASEM — Dietary Reference Intakes for Calcium and Vitamin D (2011)",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK56070/"
     },
     {
-      "name": "Khan Academy",
-      "url": "https://es.khanacademy.org"
+      "name": "Endocrine Society — Vitamin D for the Prevention of Disease: 2024 Clinical Practice Guideline",
+      "url": "https://www.endocrine.org/clinical-practice-guidelines/vitamin-d-for-prevention-of-disease"
     },
     {
-      "name": "Wolfram MathWorld",
-      "url": "https://mathworld.wolfram.com"
+      "name": "Holick MF — Vitamin D Deficiency. N Engl J Med. 2007",
+      "url": "https://www.nejm.org/doi/full/10.1056/NEJMra070553"
+    },
+    {
+      "name": "MDPI Nutrients — Globally Estimated UVB Exposure Times for Vitamin D Sufficiency (2024)",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11124381/"
+    },
+    {
+      "name": "NIH Office of Dietary Supplements — Vitamin D Health Professional Fact Sheet",
+      "url": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/"
     }
   ],
   "seoKeywords": [
-    "vitamin D calculator",
-    "daily vitamin D dosage",
-    "vitamin D by age",
-    "vitamin D IU calculator",
-    "how much vitamin D daily",
-    "vitamin D requirements",
-    "sun exposure vitamin D",
-    "vitamin D intake by age",
-    "vitamin D dosage recommendations",
     "vitamin D calculator by age",
-    "IU vitamin D daily",
-    "vitamin D sun time"
+    "how many minutes of sun for vitamin D",
+    "vitamin D IU daily dose",
+    "vitamin D sun exposure skin type",
+    "vitamin D supplement dosage",
+    "vitamin D Fitzpatrick skin phototype",
+    "vitamin D latitude season calculator"
   ],
   "dataUpdate": {
-    "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "frequency": "yearly",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, does not require external data updates"
+    "notes": "Fixed formula based on IOM/NASEM 2011 and 2024 Endocrine Society guideline. Latitude/season/age multipliers validated against 2024 global MDPI Nutrients model."
   },
   "audience": "global",
   "relatedSlugs": [],
