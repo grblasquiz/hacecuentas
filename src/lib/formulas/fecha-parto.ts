@@ -1,23 +1,56 @@
-/** Fecha probable de parto (FPP) — regla de Naegele */
-export interface Inputs { fechaUltimaMenstruacion: string; }
+/** Fecha probable de parto (FPP) — regla de Naegele (FUM) o datación por ecografía */
+export interface Inputs {
+  fechaUltimaMenstruacion?: string;
+  fechaEcografia?: string;
+  semanasEco?: number | string;
+  diasEco?: number | string;
+}
 export interface Outputs {
   fechaProbableParto: string;
   semanasEmbarazo: number;
   diasEmbarazo: number;
   trimestre: number;
   fechaControl: string;
+  metodo: string;
   _insight?: any;
   _chart?: any;
 }
 
-export function fechaParto(i: Inputs): Outputs {
-  const fum = i.fechaUltimaMenstruacion;
-  if (!fum) throw new Error('Ingresá la fecha de última menstruación');
-  const parts = String(fum || '').split('-').map(Number);
+function parseFecha(s: string): Date {
+  const parts = String(s || '').split('-').map(Number);
   if (parts.length !== 3 || parts.some(isNaN)) throw new Error('Fecha inválida');
   const [yy, mm, dd] = parts;
-  const fecha = new Date(yy, mm - 1, dd);
-  if (isNaN(fecha.getTime())) throw new Error('Fecha inválida');
+  const d = new Date(yy, mm - 1, dd);
+  if (isNaN(d.getTime())) throw new Error('Fecha inválida');
+  return d;
+}
+
+export function fechaParto(i: Inputs): Outputs {
+  // Campos opcionales: el form manda '' (no la clave ausente). Tratamos
+  // ''/null/undefined como "no provisto" para no confundir Number('')=0.
+  const ecoRaw = i.fechaEcografia && String(i.fechaEcografia).trim() ? String(i.fechaEcografia).trim() : null;
+  const semEco = i.semanasEco === '' || i.semanasEco == null ? null : Number(i.semanasEco);
+  const diasEcoNum = i.diasEco === '' || i.diasEco == null ? 0 : Number(i.diasEco);
+
+  // `fecha` = FUM efectiva: la FUM real, o la derivada de la ecografía.
+  let fecha: Date;
+  let metodo: string;
+  if (ecoRaw && semEco != null && Number.isFinite(semEco)) {
+    // La ecografía informa la edad gestacional directa (semanas+días a esa fecha).
+    // FUM efectiva = fecha de la eco − edad gestacional. Es el estándar obstétrico
+    // (no requiere convertir CRL→semanas: la eco ya entrega las semanas).
+    if (semEco < 0 || semEco > 42) throw new Error('Las semanas de la ecografía deben estar entre 0 y 42');
+    const ega = semEco * 7 + (Number.isFinite(diasEcoNum) ? diasEcoNum : 0);
+    const ecoDate = parseFecha(ecoRaw);
+    fecha = new Date(ecoDate.getTime());
+    fecha.setDate(fecha.getDate() - ega);
+    metodo = 'ecografía';
+  } else {
+    const fum = i.fechaUltimaMenstruacion;
+    if (!fum) throw new Error('Ingresá la fecha de última menstruación (FUM) o los datos de tu ecografía');
+    fecha = parseFecha(fum);
+    metodo = 'FUM';
+  }
 
   // Naegele: FUM + 280 días (40 semanas). Clonamos sin +'T' (bug NaN en Date).
   const fpp = new Date(fecha.getTime());
@@ -43,27 +76,28 @@ export function fechaParto(i: Inputs): Outputs {
 
   const fppStr = fmt(fpp);
   const trimNombre = trim === 1 ? '1.er trimestre' : trim === 2 ? '2.º trimestre' : '3.er trimestre';
+  const datadoPor = metodo === 'ecografía' ? 'datado por ecografía (±5 días)' : 'datado por FUM (regla de Naegele)';
 
   // Insight dinámico según etapa del embarazo
   let insight;
   if (semanas >= 37) {
     insight = {
       title: 'Embarazo a término',
-      text: `Con **${semanas} semanas y ${dias} ${dias === 1 ? 'día' : 'días'}** ya estás en zona de término: el parto puede ocurrir en cualquier momento. Fecha probable de parto: **${fppStr}**.`,
+      text: `Con **${semanas} semanas y ${dias} ${dias === 1 ? 'día' : 'días'}** ya estás en zona de término: el parto puede ocurrir en cualquier momento. Fecha probable de parto: **${fppStr}** (${datadoPor}).`,
       tone: 'good',
       icon: '👶',
     };
   } else if (semanas >= 0) {
     insight = {
       title: 'Embarazo en curso',
-      text: `Llevás **${semanas} semanas y ${dias} ${dias === 1 ? 'día' : 'días'}** de gestación (**${trimNombre}**). Tu fecha probable de parto es el **${fppStr}** y tu próximo control sugerido, el **${fmt(proxControl)}**.`,
+      text: `Llevás **${semanas} semanas y ${dias} ${dias === 1 ? 'día' : 'días'}** de gestación (**${trimNombre}**, ${datadoPor}). Tu fecha probable de parto es el **${fppStr}** y tu próximo control sugerido, el **${fmt(proxControl)}**.`,
       tone: 'neutral',
       icon: '🤰',
     };
   } else {
     insight = {
       title: 'Fecha de parto estimada',
-      text: `Según la FUM ingresada, tu fecha probable de parto sería el **${fppStr}** (regla de Naegele: FUM + 280 días).`,
+      text: `Tu fecha probable de parto sería el **${fppStr}** (${datadoPor}).`,
       tone: 'neutral',
       icon: '🗓️',
     };
@@ -92,6 +126,7 @@ export function fechaParto(i: Inputs): Outputs {
     diasEmbarazo: dias,
     trimestre: trim,
     fechaControl: fmt(proxControl),
+    metodo,
     _insight: insight,
     _chart: chart,
   };

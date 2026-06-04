@@ -2,7 +2,7 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; }
 export function asignacionNacimientoMatrimonioAdopcion(i: Inputs): Outputs {
   const t=String(i.tipo||'nac');
-  const m: Record<string,number> = { nac:80000, ado:480000, pren:65000 };
+  const m: Record<string,number> = { nac:84478, ado:505070, pren:72474 };
   const req: Record<string,string> = { nac:'Hijo inscripto ANSES + partida', ado:'Sentencia judicial + inscripción', pren:'Desde 3er mes hasta nacimiento' };
   const nombre: Record<string,string> = { nac:'por nacimiento', ado:'por adopción', pren:'prenatal' };
   const monto = m[t]||0;

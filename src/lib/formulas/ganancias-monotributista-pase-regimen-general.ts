@@ -1,4 +1,5 @@
 /** Pase de Monotributo a Régimen General: comparativa de carga fiscal */
+import { cuota as cuotaMono, type Cat } from '../data/monotributo-2026';
 export interface Inputs { facturacionAnual: number; gastosDeducibles: number; categoriaActual: string; ingresosBrutosPct: number; }
 export interface Outputs { impuestoMonotributo: number; impuestoRgEstimado: number; ivaCredito: number; cargaTotalMonotributo: number; cargaTotalRg: number; conviene: string; explicacion: string; _insight?: any; }
 export function gananciasMonotributistaPaseRegimenGeneral(i: Inputs): Outputs {
@@ -6,12 +7,8 @@ export function gananciasMonotributistaPaseRegimenGeneral(i: Inputs): Outputs {
   const gastos = Number(i.gastosDeducibles);
   const ibPct = Number(i.ingresosBrutosPct) / 100;
   if (!fact || fact <= 0) throw new Error('Ingresá la facturación anual');
-  // Cuota mensual estimada por categoría (valores 2026 aproximados)
-  const cuotasMonotributo: Record<string, number> = {
-    'A': 35000, 'B': 42000, 'C': 50000, 'D': 65000, 'E': 85000,
-    'F': 110000, 'G': 145000, 'H': 220000, 'I': 320000, 'J': 380000, 'K': 450000,
-  };
-  const cuotaMens = cuotasMonotributo[String(i.categoriaActual).toUpperCase()] ?? 100000;
+  // Cuota mensual de monotributo (servicios) — escala ARCA 2026, fuente única.
+  const cuotaMens = cuotaMono(String(i.categoriaActual || 'H').toUpperCase() as Cat, 'servicios');
   const monotrib = cuotaMens * 12;
   const ibMonotrib = fact * ibPct;
   // RG: IVA débito 21% - IVA crédito (asumimos 21% sobre gastos), Ganancias 35% sobre utilidad

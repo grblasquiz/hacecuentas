@@ -3,7 +3,7 @@ export interface Outputs { [k: string]: string | number; }
 export function jubilacionPuaPrestacionUniversalAdultoMayor(i: Inputs): Outputs {
   const e=Number(i.edad)||0; const a=String(i.aportes||'no')==='si';
   const accede=e>=65 && !a;
-  const monto=accede?232000:0;
+  const monto=accede?322654:0;
   let insightText: string;
   let insightTone: 'good' | 'warn' | 'neutral';
   if (accede) {

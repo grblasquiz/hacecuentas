@@ -1,40 +1,34 @@
-/** Impuestos monotributo Argentina */
+/** Impuestos monotributo Argentina — categoría y cuota según facturación (escala ARCA 2026). */
+import { TOPES, CATEGORIAS, cuota, fmtARS, type Cat, type Actividad } from '../data/monotributo-2026';
 export interface Inputs { facturacionAnual: number; categoriaActividad: string; }
 export interface Outputs { categoria: string; cuotaMensual: number; cuotaAnual: number; excedido: string; _insight?: any; }
 export function impuestosMonotributoFreelance(i: Inputs): Outputs {
   const fact = Number(i.facturacionAnual);
-  const tipo = String(i.categoriaActividad || 'servicios');
+  const act: Actividad = String(i.categoriaActividad || 'servicios') === 'servicios' ? 'servicios' : 'bienes';
   if (fact < 0) throw new Error('Facturación inválida');
-  const topes = tipo === 'servicios'
-    ? [[11000000,'A',20000],[15000000,'B',25000],[22000000,'C',35000],[27000000,'D',45000],[34000000,'E',55000],[42000000,'F',70000],[49000000,'G',90000],[70000000,'H',140000]]
-    : [[11000000,'A',20000],[15000000,'B',25000],[22000000,'C',35000],[27000000,'D',45000],[40000000,'E',55000],[50000000,'F',70000],[60000000,'G',90000],[82000000,'H',140000],[110000000,'I',200000],[140000000,'J',280000],[160000000,'K',360000]];
-  let cat = 'A', cuota = 20000, excedido = 'No';
-  for (const [tope, nombre, c] of topes) {
-    if (fact <= (tope as number)) { cat = String(nombre); cuota = c as number; break; }
-  }
-  if (fact > (topes[topes.length-1][0] as number)) { cat = 'Excede'; cuota = 0; excedido = 'Sí, pasar a RI'; }
-
-  const excede = cat === 'Excede';
-  const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
-  const insight = excede
-    ? {
+  // En 2026 servicios y venta de bienes comparten los topes A-K; difiere la cuota.
+  let cat: Cat | null = null;
+  for (const c of CATEGORIAS) { if (fact <= TOPES[c]) { cat = c; break; } }
+  if (!cat) {
+    return {
+      categoria: 'Excede', cuotaMensual: 0, cuotaAnual: 0, excedido: 'Sí, pasar a RI',
+      _insight: {
         title: 'Te pasaste del Monotributo',
-        text: `Con **${fmt(fact)}** anuales superás el tope de la categoría más alta (H${tipo !== 'servicios' ? '/K' : ''}). Tenés que pasar a **Responsable Inscripto** (IVA + Ganancias): la carga deja de ser una cuota fija y pasa a depender de tu rentabilidad.`,
-        tone: 'warn' as const,
-        icon: '⚠️',
-      }
-    : {
-        title: `Categoría ${cat} de Monotributo`,
-        text: `Facturando **${fmt(fact)}/año** te ubicás en la categoría **${cat}**: pagás **${fmt(cuota)}/mes** (**${fmt(cuota * 12)}** al año), un monto fijo que ya incluye impuesto, jubilación y obra social.`,
-        tone: 'good' as const,
-        icon: '🧾',
-      };
-
+        text: `Con **${fmtARS(fact)}** anuales superás el tope de la categoría K (${fmtARS(TOPES.K)}). Tenés que pasar a **Responsable Inscripto** (IVA + Ganancias): la carga deja de ser una cuota fija y pasa a depender de tu rentabilidad.`,
+        tone: 'warn' as const, icon: '⚠️',
+      },
+    };
+  }
+  const cuotaMens = cuota(cat, act);
   return {
     categoria: cat,
-    cuotaMensual: cuota,
-    cuotaAnual: cuota * 12,
-    excedido: excedido,
-    _insight: insight
+    cuotaMensual: Math.round(cuotaMens),
+    cuotaAnual: Math.round(cuotaMens * 12),
+    excedido: 'No',
+    _insight: {
+      title: `Categoría ${cat} de Monotributo`,
+      text: `Facturando **${fmtARS(fact)}/año** (${act === 'bienes' ? 'venta de bienes' : 'servicios'}) te ubicás en la categoría **${cat}**: pagás **${fmtARS(cuotaMens)}/mes** (**${fmtARS(cuotaMens * 12)}** al año), un monto fijo que ya incluye impuesto, jubilación y obra social.`,
+      tone: 'good' as const, icon: '🧾',
+    },
   };
 }

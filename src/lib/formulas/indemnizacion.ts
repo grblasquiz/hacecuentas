@@ -19,8 +19,10 @@ export interface IndemnizacionInputs {
   sueldoBruto: number; // mejor remuneración mensual normal y habitual del último año
   antiguedadAnios: number;
   antiguedadMeses: number; // 0-11, meses extra más allá de los años completos
-  topeConvenio: number; // 3 × promedio convencional; 0 = sin tope
+  convenio?: number | string; // tope de referencia del CCT elegido en el dropdown (aprox); lo pisa topeConvenio manual
+  topeConvenio: number; // 3 × promedio convencional; 0 = sin tope (override manual)
   diaDespido: number; // 1-31, día del mes del despido
+  mesDespido?: number | string; // 1-12, mes del despido. Define SAC proporcional y vacaciones exactas; opcional (compat links viejos)
   __lang?: string;
 }
 
@@ -89,8 +91,18 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
   const sueldo = Number(inputs.sueldoBruto);
   const anios = Math.max(0, Number(inputs.antiguedadAnios) || 0);
   const meses = Math.max(0, Math.min(11, Number(inputs.antiguedadMeses) || 0));
-  const tope = Math.max(0, Number(inputs.topeConvenio) || 0);
+  // Tope del Art. 245. Prioridad al override manual; si está en 0, uso el tope
+  // de referencia del convenio elegido en el dropdown (valor aproximado 2026).
+  // Si el tope reduce la base más del 33%, igual gana Vizzoti (67% del sueldo).
+  const topeManual = Math.max(0, Number(inputs.topeConvenio) || 0);
+  const topeConvenioSel = Math.max(0, Number(inputs.convenio) || 0);
+  const tope = topeManual > 0 ? topeManual : topeConvenioSel;
   const diaDespido = Math.max(1, Math.min(31, Number(inputs.diaDespido) || 15));
+  // Mes del despido (1-12). Opcional: sin mes (links viejos / embeds) caemos a la
+  // aproximación de medio período para no romper compatibilidad.
+  const mesRaw = Number(inputs.mesDespido);
+  const tieneMes = Number.isFinite(mesRaw) && mesRaw >= 1 && mesRaw <= 12;
+  const mesDespido = tieneMes ? Math.round(mesRaw) : 0;
 
   if (!sueldo || sueldo <= 0) {
     throw new Error(T.errSueldo);
@@ -135,23 +147,34 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
   const integracionMes = (sueldo / diasMes) * diasFaltantes;
   const sacIntegracion = integracionMes / 12;
 
-  // SAC proporcional al semestre en curso (días trabajados del semestre / 181)
-  // Simplificación: mes del despido en el semestre (1-6), proporcional
-  // Asumimos media histórica: 3 meses del semestre × 0.5 = 1.5 meses de sueldo medio
-  // Fórmula real: (sueldo / 2) × (meses trabajados en semestre / 6)
-  // Aquí usamos aproximación 3 meses promedio para simplicidad
-  const sacProporcional = (sueldo / 2) * (3 / 6); // ~ medio SAC
+  // SAC proporcional al semestre en curso (Art. 123): (mejor sueldo / 2) × (días trabajados
+  // del semestre / 180), con meses de 30 días para ser consistente con la integración.
+  // Sin mes de despido (links viejos / embeds) caemos a la aproximación de medio semestre.
+  let sacProporcional: number;
+  if (tieneMes) {
+    const mesEnSemestre = ((mesDespido - 1) % 6) + 1; // 1-6 dentro del semestre en curso
+    const diasSemestre = Math.min(180, (mesEnSemestre - 1) * 30 + diaDespido);
+    sacProporcional = (sueldo / 2) * (diasSemestre / 180);
+  } else {
+    sacProporcional = (sueldo / 2) * (3 / 6); // aprox medio semestre (compat sin mes)
+  }
 
   // Vacaciones no gozadas proporcionales: días según antigüedad × (meses trabajados / 12)
   // Simplificación: asumimos que tiene derecho a las vacaciones del año en curso
+  // Días de vacaciones según antigüedad TOTAL (Art. 150 LCT): hasta 5 años = 14, más de 5
+  // y hasta 10 = 21, más de 10 y hasta 20 = 28, más de 20 = 35. Se usa la antigüedad en
+  // meses para clavar los bordes (5 años exactos = 14; 5 años y 1 mes = 21).
   let diasVacAnual: number;
-  if (anios < 5) diasVacAnual = 14;
-  else if (anios < 10) diasVacAnual = 21;
-  else if (anios < 20) diasVacAnual = 28;
+  if (antiguedadTotalMeses <= 60) diasVacAnual = 14;
+  else if (antiguedadTotalMeses <= 120) diasVacAnual = 21;
+  else if (antiguedadTotalMeses <= 240) diasVacAnual = 28;
   else diasVacAnual = 35;
 
-  // Proporcional al año: suponemos ~6 meses trabajados del año en curso promedio
-  const diasVacProp = (diasVacAnual * 6) / 12;
+  // Proporcional al tiempo trabajado del año en curso (Art. 156). Con mes de despido es
+  // exacto (días del año / 360, meses de 30); sin mes, aprox medio año (compat).
+  const diasVacProp = tieneMes
+    ? (diasVacAnual * Math.min(360, (mesDespido - 1) * 30 + diaDespido)) / 360
+    : (diasVacAnual * 6) / 12;
   const valorDia = sueldo / 25; // Art. 155: jornal vacacional = sueldo / 25
   const vacacionesProporcionales = valorDia * diasVacProp;
   const sacVacaciones = vacacionesProporcionales / 12;

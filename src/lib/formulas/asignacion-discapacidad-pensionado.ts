@@ -12,7 +12,7 @@ export function asignacionDiscapacidadPensionado(i: Inputs): Outputs {
   const c = String(i.cdu || 'no') === 'si';
   const g = Number(i.gradoDeps) || 0;
   const acceso = c && g >= 76;
-  const monto = acceso ? 222511 : 0;
+  const monto = acceso ? 282323 : 0;
   const faltaCud = !c;
   const faltaGrado = c && g < 76;
   const _insight = acceso

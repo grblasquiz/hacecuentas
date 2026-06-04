@@ -2,7 +2,7 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: any; }
 export function jubilacionAnsesMontoMinimoMaxima2026(i: Inputs): Outputs {
   const t=String(i.tipo||'minima');
-  const h: Record<string,[number,number]> = { minima:[290000,70000], media:[550000,70000], maxima:[1950000,0], pnc:[200000,50000] };
+  const h: Record<string,[number,number]> = { minima:[403318,70000], media:[765000,70000], maxima:[2713948,0], pnc:[282323,70000] };
   const [haber,bono]=h[t]||h.minima;
   const total = haber + bono;
   const fmt = (n: number) => '$' + n.toLocaleString('es-AR');

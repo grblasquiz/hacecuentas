@@ -1,9 +1,9 @@
+import { cuota as cuotaMono, type Cat } from '../data/monotributo-2026';
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; }
 export function monotributoAltaAfipTramiteZero(i: Inputs): Outputs {
-  const c=String(i.categoria||'A');
-  const cuotas: Record<string,number> = { A:43000, B:51400, C:63400, D:80800 };
-  const cuota = cuotas[c]||43000;
+  const c=String(i.categoria||'A').toUpperCase() as Cat;
+  const cuota = Math.round(cuotaMono(c, 'servicios')); // escala ARCA 2026 (fuente única)
   return {
     costoAlta:'Gratuito',
     primeraPaga:'$'+cuota.toLocaleString('es-AR'),

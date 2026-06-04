@@ -75,8 +75,43 @@
       "help": "Se usa para calcular la integración del mes hasta fin de mes."
     },
     {
+      "id": "mesDespido",
+      "label": "Mes del despido",
+      "type": "select",
+      "default": "6",
+      "options": [
+        { "value": "1", "label": "Enero" },
+        { "value": "2", "label": "Febrero" },
+        { "value": "3", "label": "Marzo" },
+        { "value": "4", "label": "Abril" },
+        { "value": "5", "label": "Mayo" },
+        { "value": "6", "label": "Junio" },
+        { "value": "7", "label": "Julio" },
+        { "value": "8", "label": "Agosto" },
+        { "value": "9", "label": "Septiembre" },
+        { "value": "10", "label": "Octubre" },
+        { "value": "11", "label": "Noviembre" },
+        { "value": "12", "label": "Diciembre" }
+      ],
+      "help": "Define el SAC proporcional del semestre en curso y las vacaciones proporcionales del año. Junto con el día arma la fecha del despido."
+    },
+    {
+      "id": "convenio",
+      "label": "Convenio (CCT)",
+      "type": "select",
+      "default": "0",
+      "options": [
+        { "value": "0", "label": "Sin tope / no sé mi convenio" },
+        { "value": "1950000", "label": "Comercio · CCT 130/75 (ref. ~$1,95M)" },
+        { "value": "2150000", "label": "Metalúrgicos · UOM 260/75 (ref. ~$2,15M)" },
+        { "value": "1750000", "label": "Construcción · UOCRA 76/75 (ref. ~$1,75M)" },
+        { "value": "1850000", "label": "Sanidad · CCT 122/75 (ref. ~$1,85M)" }
+      ],
+      "help": "Topes de referencia aproximados 2026 (3× promedio del CCT). El tope vigente lo fija la última Disposición/Resolución de tu convenio: verificalo en argentina.gob.ar/trabajo/topes y, si difiere, cargalo en el campo de abajo. Importante: si el tope reduce tu base más del 33%, igual se aplica Vizzoti (67% de tu sueldo real)."
+    },
+    {
       "id": "topeConvenio",
-      "label": "Tope del convenio (opcional)",
+      "label": "Tope exacto (override manual)",
       "type": "number",
       "prefix": "$",
       "placeholder": "0",
@@ -84,7 +119,7 @@
       "min": 0,
       "step": 1000,
       "default": 0,
-      "help": "3 × promedio del convenio. Si no lo sabés, dejá en 0 (sin tope)."
+      "help": "Opcional. Si elegiste un convenio arriba ya queda cargado el valor de referencia; usá este campo solo para sobrescribirlo con el tope exacto vigente de tu CCT. Dejá en 0 para no aplicar tope."
     }
   ],
   "dataUpdate": {
@@ -93,7 +128,7 @@
     "source": "LCT Art. 245 (Ley 20.744) + fallo Vizzoti CSJN",
     "sourceUrl": "https://www.argentina.gob.ar/normativa/nacional/ley-20744-25552",
     "updateType": "manual",
-    "notes": "Fórmula math-pura sobre inputs del usuario: antigüedad, preaviso, integración mes, SAC proporcional, vacaciones. Los topes de CCT los ingresa el usuario como input — no hardcodeamos tabla."
+    "notes": "Fórmula math-pura sobre inputs del usuario: antigüedad, preaviso, integración mes, SAC proporcional, vacaciones. El selector de convenio ofrece topes de REFERENCIA aproximados 2026 (Comercio/UOM/UOCRA/Sanidad) que el usuario puede sobrescribir con el tope exacto vigente; el tope real lo fija la Disposición/Resolución más reciente del Ministerio (argentina.gob.ar/trabajo/topes)."
   },
   "outputs": [
     {
@@ -155,11 +190,11 @@
       "**Antigüedad**: 7 años y 5 meses → **8 años computables** (la fracción de 5 meses > 3 meses suma 1 año).",
       "**Antigüedad (Art. 245)**: `2.000.000 × 8` = **$16.000.000**.",
       "**Preaviso** (>5 años = 2 meses): `2.000.000 × 2` = $4.000.000. + **SAC preaviso**: `4.000.000 / 12` = $333.333.",
-      "**Integración mes** (despido el día 10, faltan 20 días): `2.000.000 × 20/30` = $1.333.333. + **SAC integración** = $111.111.",
-      "**SAC proporcional** (4 meses del semestre): `2.000.000 / 2 × 4/6` = $666.667.",
-      "**Vacaciones no gozadas** (5 meses = 6 días): `2.000.000 / 25 × 6` = $480.000. + SAC vacaciones = $40.000."
+      "**Integración mes** (despido el 10 de octubre, faltan 20 días): `2.000.000 × 20/30` = $1.333.333. + **SAC integración** = $111.111.",
+      "**SAC proporcional** (al 10 de octubre van 100 días del semestre en curso): `2.000.000 / 2 × 100/180` = $555.556.",
+      "**Vacaciones no gozadas** (7 años → 21 días, proporcional a 280 días del año = 16,33 días): `2.000.000 / 25 × 16,33` = $1.306.667. + SAC vacaciones = $108.889."
     ],
-    "result": "**Total bruto**: ≈ **$22.964.444**. Del preaviso e integración se descuentan aportes (17%) y eventualmente Ganancias. La indemnización del Art. 245 está exenta."
+    "result": "**Total bruto**: ≈ **$23.748.889** (despido el 10 de octubre). Del preaviso e integración se descuentan aportes (17%) y eventualmente Ganancias. La indemnización del Art. 245 está exenta."
   },
   "explanation": "## ¿Qué es la indemnización por despido sin causa?\n\nEs la compensación obligatoria que debe pagar el empleador al despedir sin justa causa, regulada por el artículo 245 de la LCT. Se compone de: 1 mes de sueldo por cada año de antigüedad, preaviso, integración del mes, SAC proporcional y vacaciones no gozadas. El fallo Vizzoti garantiza un piso del 67% de la remuneración real cuando el convenio reduce la base.\n\n## Cómo se calcula una indemnización por despido sin causa\n\nCuando un empleador despide sin causa, debe pagar una **liquidación final** compuesta por varios rubros que están regulados por la Ley de Contrato de Trabajo (LCT 20.744).\n\n### 1. Indemnización por antigüedad (Art. 245 LCT)\n\nLa columna vertebral: **un mes de sueldo por cada año trabajado** (o fracción mayor a 3 meses = 1 año adicional). La base es la **mejor remuneración mensual, normal y habitual del último año**.\n\n```\nIndemnización Art. 245 = mejor_sueldo × años_computables\n```\n\n**Ejemplo:** 4 años y 5 meses → 5 años computables (porque 5 > 3). 4 años y 2 meses → 4 años computables.\n\n### 2. Tope de convenio y fallo Vizzoti\n\nEl Art. 245 original aplica un tope de **3 veces el promedio de las remuneraciones del convenio colectivo**. Pero el fallo **\"Vizzoti c/ AMSA\"** de la Corte Suprema (14/09/2004) estableció que si ese tope reduce la base en más del **33%**, es inconstitucional. Por lo tanto, se usa el **67% de tu mejor remuneración** como piso.\n\n| Situación | Base a aplicar |\n|---|---|\n| Tu sueldo ≤ tope del convenio | Tu sueldo completo |\n| Tu sueldo > tope pero tope > 67% de sueldo | Tope del convenio |\n| Tu sueldo > tope y tope < 67% de sueldo | **67% de tu sueldo** (Vizzoti) |\n\n### 3. Preaviso (Arts. 231-232 LCT)\n\nSi el empleador no te avisa con anticipación, debe pagarte:\n\n| Antigüedad | Preaviso |\n|---|---|\n| Menos de 3 meses | 15 días |\n| 3 meses – 5 años | 1 mes |\n| Más de 5 años | 2 meses |\n\nAl preaviso se le suma **SAC sobre preaviso** (1/12 del monto).\n\n### 4. Integración del mes de despido (Art. 233 LCT)\n\nTe corresponden los días del mes que no trabajaste (desde el día del despido hasta fin de mes), más SAC sobre ese monto. Si te despiden el día 1° ya no hay integración.\n\n### 5. [SAC proporcional](/calculadora-aguinaldo-sac)\n\n[Aguinaldo proporcional](/calculadora-aguinaldo-sac) al semestre en curso: `(sueldo/2) × (meses trabajados del semestre / 6)`.\n\n### 6. [Vacaciones](/calculadora-dias-vacaciones-ley) no gozadas + SAC\n\nDías que te correspondían del año en curso, pagados al valor **sueldo/25** (jornal vacacional, Art. 155 LCT). Se suma SAC sobre vacaciones (1/12).\n\n### Días de vacaciones según antigüedad\n\n| Antigüedad | Días de vacaciones |\n|---|---|\n| Hasta 5 años | 14 días corridos |\n| 5 – 10 años | 21 días corridos |\n| 10 – 20 años | 28 días corridos |\n| Más de 20 años | 35 días corridos |\n\n## Tratamiento impositivo de la indemnización\n\n- **Art. 245 (antigüedad)**: EXENTA de [Ganancias](/calculadora-ganancias-tramos-empleado-mensual-2026) (fallos CSJN \"Negri\" y \"De Lorenzo\"). Sin aportes.\n- **Preaviso**: tributa Ganancias y aportes si superás el [MNI](/calculadora-impuesto-ganancias-sueldo).\n- **Integración del mes**: tributa Ganancias y aportes igual que el sueldo.\n- **SAC proporcional y vacaciones**: tributan Ganancias y aportes.\n\n## Qué NO incluye esta calculadora\n\n- **Daño moral o despido discriminatorio**: Arts. 178, 182 (embarazo, matrimonio) multiplican por 13 el Art. 245.\n- **Multa Art. 80 LCT**: si no te entregan certificado de trabajo (3 sueldos adicionales).\n- **Multa Ley 25.323 Art. 1°**: trabajo no registrado (duplica la indemnización).\n- **Multa Ley 25.323 Art. 2°**: si tenés que ir a juicio para cobrar (50% más).\n- **Juicio laboral**: gastos, honorarios y tasas se calculan aparte.\n\n## Errores comunes\n\n1. **Usar el sueldo neto**: Art. 245 siempre es sobre el BRUTO de la mejor remuneración.\n2. **No contar la fracción mayor a 3 meses**: si tenés 4 años y 4 meses, son 5 años, no 4.\n3. **Aplicar el tope de convenio sin verificar Vizzoti**: casi siempre Vizzoti te da un número mayor.\n4. **Olvidarse del SAC sobre preaviso, integración y vacaciones**: son rubros separados en el recibo.\n5. **No reclamar la entrega del certificado de trabajo**: si no te lo dan, te deben 3 sueldos adicionales (Art. 80).\n\n## Calculadoras relacionadas\n\n- [Sueldo bruto a neto](/sueldo-en-mano-argentina) — si querés estimar el neto del preaviso y la integración.\n- [Aguinaldo (SAC)](/calculadora-aguinaldo-sac) — cálculo del SAC proporcional.\n- [Vacaciones Argentina](/calculadora-vacaciones-argentina) — días que te corresponden según antigüedad.\n- [Ganancias sobre sueldo](/calculadora-impuesto-ganancias-sueldo) — cómo impacta Ganancias sobre preaviso e integración.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
   "faq": [
@@ -205,7 +240,7 @@
     },
     {
       "q": "¿Cuánto cobro de indemnización si tengo 10 años de antigüedad y sueldo bruto $2.500.000?",
-      "a": "Con **10 años exactos** y bruto **$2.500.000**: <strong>Art. 245</strong>: `2.500.000 × 10` = **$25.000.000**. <strong>Preaviso (>5 años = 2 meses)</strong>: `2.500.000 × 2` = $5.000.000 + SAC s/preaviso `5.000.000/12` = $416.667 → **$5.416.667**. <strong>Integración mes</strong> (despido día 15 → 15 días): `2.500.000/2` = $1.250.000 + SAC `1.250.000/12` = $104.167 → **$1.354.167**. <strong>SAC proporcional</strong> (asumiendo despido en marzo, 3 meses del semestre): `2.500.000/2 × 3/6` = **$625.000**. <strong>Vacaciones no gozadas</strong> (10 años → 21 días, 3 meses año en curso = 5,25 días): `2.500.000/25 × 5,25` = $525.000 + SAC = $43.750 → **$568.750**. <strong>TOTAL BRUTO</strong>: `25.000.000 + 5.416.667 + 1.354.167 + 625.000 + 568.750` = **$32.964.584**. **Tratamiento impositivo**: el Art. 245 ($25M) está EXENTO de Ganancias y aportes. Los otros rubros (~$8M) tributan según tu situación. Neto estimado: **~$30M** si no pagás Ganancias o **~$27M** si estás en la escala más alta."
+      "a": "Con **10 años exactos** y bruto **$2.500.000** (despido el 15 de marzo): <strong>Art. 245</strong>: `2.500.000 × 10` = **$25.000.000**. <strong>Preaviso (>5 años = 2 meses)</strong>: `2.500.000 × 2` = $5.000.000 + SAC s/preaviso `5.000.000/12` = $416.667 → **$5.416.667**. <strong>Integración mes</strong> (despido día 15 → 15 días): `2.500.000/2` = $1.250.000 + SAC `1.250.000/12` = $104.167 → **$1.354.167**. <strong>SAC proporcional</strong> (al 15 de marzo van 75 días del semestre): `2.500.000/2 × 75/180` = **$520.833**. <strong>Vacaciones no gozadas</strong> (10 años → 21 días, proporcional a 75 días del año = 4,375 días): `2.500.000/25 × 4,375` = $437.500 + SAC = $36.458 → **$473.958**. <strong>TOTAL BRUTO</strong>: `25.000.000 + 5.416.667 + 1.354.167 + 520.833 + 473.958` = **$32.765.625**. **Tratamiento impositivo**: el Art. 245 ($25M) está EXENTO de Ganancias y aportes. Los otros rubros (~$7,8M) tributan según tu situación. Neto estimado: **~$30M** si no pagás Ganancias o **~$27M** si estás en la escala más alta."
     },
     {
       "q": "¿Conviene aceptar la oferta de retiro voluntario o esperar el despido sin causa?",
@@ -258,7 +293,8 @@
       "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
     }
   ],
-  "lastReviewed": "2026-05-28",
+  "datePublished": "2024-05-14",
+  "lastReviewed": "2026-06-03",
   "solvedExamples": [
     {
       "title": "Despido sin causa — 5 años de antigüedad",

@@ -21,15 +21,15 @@ const PARAMETROS_2026: Record<
 > = {
   jubilacion: {
     nombre: "Jubilación / Pensión contributiva",
-    haberMinimo: 326000,
-    tope: 326000, // hasta 1 haber mínimo
+    haberMinimo: 403318,
+    tope: 403318, // hasta 1 haber mínimo
     bono: 70000,
   },
   puam: {
     nombre: "PUAM (Pensión Universal Adulto Mayor)",
-    haberMinimo: 228000,
-    tope: 228000,
-    bono: 50000,
+    haberMinimo: 322654,
+    tope: 322654,
+    bono: 70000,
   },
   auh: {
     nombre: "AUH (Asignación Universal por Hijo)",

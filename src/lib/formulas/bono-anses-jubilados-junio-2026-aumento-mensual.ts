@@ -20,15 +20,15 @@ export function compute(i: Inputs): Outputs {
   const tipoPrestacion = String(i.tipo_prestacion || 'jubilacion_aportante');
 
   // Límite de haber para elegibilidad (aproximadamente 2 SMVM 2026)
-  const LIMITE_HABER_2026 = 240000;
+  const LIMITE_HABER_2026 = 403318;
 
   // Montos de bono según tipo de prestación (junio 2026)
   const MONTOS_BONO: { [key: string]: number } = {
-    jubilacion_aportante: 25000,
-    jubilacion_no_contributiva: 18000,
-    auh: 12000,
-    pension_viudez: 22000,
-    pension_invalidez: 21000
+    jubilacion_aportante: 70000,
+    jubilacion_no_contributiva: 70000,
+    auh: 0,
+    pension_viudez: 70000,
+    pension_invalidez: 70000
   };
 
   // Determinar elegibilidad
