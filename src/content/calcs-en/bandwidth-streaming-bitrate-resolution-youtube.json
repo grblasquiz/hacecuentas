@@ -1,22 +1,23 @@
 {
   "slug": "bandwidth-streaming-bitrate-resolution-youtube",
-  "lastReviewed": "2026-04-28",
+  "lastReviewed": "2026-06-05",
   "esSlug": "calculadora-bandwidth-streaming-bitrate-resolucion-youtube",
-  "title": "Streaming Bitrate Calculator 2026 | Hacé Cuentas",
-  "h1": "Streaming Bitrate Calculator",
-  "description": "Calculate recommended bitrate for streaming in HD, 4K, and more. Find optimal upload speeds for YouTube, Twitch, and Kick.",
+  "title": "Streaming Bitrate Calculator: YouTube, Twitch & Kick + Table | Hacé Cuentas",
+  "h1": "Streaming Bitrate Calculator — YouTube, Twitch & Kick",
+  "description": "Find the right bitrate for your stream in seconds. Enter your resolution and platform to get the exact Mbps recommendation and minimum upload speed needed — with a full reference table.",
+  "answerSnippet": "For 1080p 60fps on YouTube Live, use 4,500–9,000 kbps (target: 8 Mbps). You need at least 9.7 Mbps stable upload. For Twitch 1080p 60fps the hard cap is 6,000 kbps and you need ~7.6 Mbps upload. Formula: Required Upload = (Video Bitrate + 0.32 Mbps audio) × 1.2.",
   "category": "tecnologia",
   "icon": "📺",
   "formulaId": "bandwidth-streaming-bitrate-resolucion-youtube",
   "audience": "global",
-  "intro": "This calculator determines the recommended video bitrate, minimum upload speed, and optimal codec for live or uploaded streaming based on your chosen resolution and platform. Bitrate is measured in megabits per second (Mbps) and directly controls video quality and file size. The core relationship is: **Required Upload Speed = Target Bitrate + Audio Bitrate + 20% overhead buffer**. Use this tool when setting up OBS, Streamlabs, or any encoder before going live on YouTube, Twitch, Facebook, or TikTok Live — wrong bitrate settings are the #1 cause of pixelated, buffering, or dropped-frame streams.",
-  "keyTakeaway": "**For 1080p 60fps on YouTube, use 6–9 Mbps video (H.264) + 320 kbps audio = ~9.5 Mbps minimum stable upload speed required.**",
+  "intro": "Pick your resolution and platform — this calculator returns the exact recommended bitrate (Mbps) and the minimum stable upload speed you need. Bitrate is the single biggest factor in stream quality: too low = pixelation, too high = dropped frames and buffering. The formula is: **Required Upload (Mbps) = (Video Bitrate + 0.32 Mbps audio) × 1.20**. Optimized for OBS, Streamlabs, and vMix configurations.",
+  "keyTakeaway": "**Twitch hard cap: 6 Mbps. YouTube Live 1080p 60fps: 8 Mbps. 4K YouTube: 40 Mbps. Always measure upload speed before going live — your download speed is irrelevant.**",
   "useCases": [
-    "A gamer setting up OBS for the first time who needs to know whether their 15 Mbps home upload connection can handle 1080p 60fps on Twitch without dropping frames.",
-    "A content creator uploading pre-recorded 4K 30fps tutorials to YouTube who wants to match YouTube's recommended 35–45 Mbps bitrate to avoid re-encoding quality loss.",
-    "A business running a live corporate webinar at 720p 30fps on Facebook Live and needs to confirm their office Wi-Fi upload (10 Mbps) is sufficient.",
-    "A musician streaming a live concert in 1080p 60fps on YouTube who must budget their encoder settings across H.264 vs. H.265 to maximize quality within a 50 Mbps upload cap.",
-    "An esports tournament organizer broadcasting at 1080p 60fps on multiple platforms simultaneously (multistream) who needs to calculate total combined upload bandwidth required."
+    "A gamer configuring OBS for 1080p 60fps Twitch who needs to know if their 15 Mbps home upload is enough (it is — cap is 6 Mbps, needs ~7.6 Mbps upload).",
+    "A content creator uploading pre-recorded 4K tutorials to YouTube who wants to match the 35–45 Mbps recommended bitrate to prevent re-encoding quality loss.",
+    "A business running a live 720p 30fps webinar on YouTube who needs to confirm their 10 Mbps office connection is sufficient (~6.4 Mbps needed).",
+    "A musician streaming a live concert at 1080p 60fps on Kick and needs to know the maximum allowed bitrate is 8 Mbps.",
+    "A developer comparing platform requirements: Twitch 6 Mbps cap vs. YouTube 8 Mbps recommendation vs. Kick 8 Mbps for 1080p 60fps."
   ],
   "fields": [
     {
@@ -27,7 +28,7 @@
       "options": [
         {
           "value": "720p",
-          "label": "720p"
+          "label": "720p 30fps"
         },
         {
           "value": "1080p_30",
@@ -39,14 +40,14 @@
         },
         {
           "value": "1440p",
-          "label": "1440p"
+          "label": "1440p 60fps"
         },
         {
           "value": "4k",
-          "label": "4K"
+          "label": "4K (2160p)"
         }
       ],
-      "default": "720p"
+      "default": "1080p_60"
     },
     {
       "id": "plataforma",
@@ -56,7 +57,7 @@
       "options": [
         {
           "value": "youtube",
-          "label": "YouTube"
+          "label": "YouTube Live"
         },
         {
           "value": "twitch",
@@ -87,83 +88,91 @@
     }
   ],
   "example": {
-    "title": "Example calculation",
+    "title": "Example: 1080p 60fps on YouTube Live",
     "steps": [
-      "1080p 60fps YouTube",
-      "6 Mbps"
+      "Resolution: 1080p 60fps",
+      "Platform: YouTube Live",
+      "Recommended video bitrate: 8 Mbps",
+      "Audio (AAC 320 kbps): + 0.32 Mbps",
+      "20% overhead buffer: + 1.66 Mbps",
+      "Total minimum upload needed: 9.7 Mbps"
     ],
-    "result": "H.264/H.265"
+    "result": "Use 8,000 kbps in OBS with CBR and keyframe interval 2s. Your upload must stay above 9.7 Mbps stable."
   },
-  "explanation": "## How It's Calculated\n\nBitrate recommendations are not arbitrary — they come from platform engineering guidelines and the mathematics of digital video compression. The fundamental formula for **uncompressed** video bitrate is:\n\n```\nUncompressed Bitrate (Mbps) = Width × Height × Frame Rate × Bit Depth × Color Channels / 1,000,000\n\nExample (1080p 30fps, 8-bit, 4:2:0):\n1920 × 1080 × 30 × 8 × 1.5 / 1,000,000 = 746 Mbps\n```\n\nModern codecs like H.264 (AVC) and H.265 (HEVC) compress this dramatically using inter-frame prediction. The compression ratio for H.264 at 1080p 30fps is roughly **100:1**, yielding ~6–8 Mbps for broadcast-quality output.\n\nThe **required upload speed** accounts for video bitrate, audio bitrate, and a safety buffer:\n\n```\nRequired Upload (Mbps) = Video Bitrate + Audio Bitrate + (Video Bitrate × 0.20)\n\nExample (1080p 60fps YouTube, H.264):\n= 6 Mbps + 0.32 Mbps + (6 × 0.20) Mbps\n= 6 Mbps + 0.32 Mbps + 1.2 Mbps\n= 7.52 Mbps minimum stable upload\n```\n\n---\n\n## Reference Table\n\nPlatform-official bitrate recommendations (2024–2025 encoder guidelines):\n\n| Platform | Resolution | FPS | Codec | Video Bitrate | Audio Bitrate | Min. Upload |\n|---|---|---|---|---|---|---|\n| YouTube Live | 1080p | 30 | H.264 | 3–6 Mbps | 128 kbps | 4.5 Mbps |\n| YouTube Live | 1080p | 60 | H.264 | 4.5–9 Mbps | 320 kbps | 6.5 Mbps |\n| YouTube Live | 1440p | 60 | H.264 | 9–18 Mbps | 320 kbps | 13 Mbps |\n| YouTube Live | 4K (2160p) | 30 | H.264 | 20–51 Mbps | 320 kbps | 26 Mbps |\n| YouTube Live | 4K (2160p) | 60 | H.264 | 51–68 Mbps | 320 kbps | 62 Mbps |\n| Twitch | 1080p | 60 | H.264 | 6 Mbps (max) | 320 kbps | 8.5 Mbps |\n| Twitch | 720p | 60 | H.264 | 4.5 Mbps | 160 kbps | 6 Mbps |\n| Facebook Live | 1080p | 30 | H.264 | 4 Mbps | 128 kbps | 5.5 Mbps |\n| TikTok Live | 720p | 30 | H.264 | 2–4 Mbps | 128 kbps | 5 Mbps |\n\n> **H.265 (HEVC) advantage:** Achieves equivalent quality at ~50% of the H.264 bitrate. A 1080p 60fps stream that needs 6 Mbps in H.264 only needs ~3 Mbps in H.265 — but requires hardware encoder support (NVENC, VCE, or Apple VideoToolbox) and platform compatibility.\n\n---\n\n## Typical Cases\n\n### Case 1 — Standard Gaming Stream (Twitch, 1080p 60fps)\nA streamer with a 25 Mbps upload connection wants to stream on Twitch. Twitch's hard cap is **6 Mbps** for video. Adding 320 kbps audio and 20% overhead:\n`6 + 0.32 + 1.2 = 7.52 Mbps required`\nWith 25 Mbps upload, this is well within limits. Recommended OBS settings: x264 encoder, CBR, 6000 kbps, keyframe interval 2s.\n\n### Case 2 — YouTube 4K Upload (Pre-recorded)\nA creator uploading a 4K 30fps edited video to YouTube. YouTube's recommended bitrate for uploaded 4K SDR content is **35–45 Mbps** using H.264, or **15–20 Mbps** using H.265/VP9. Uploading at the recommended bitrate prevents YouTube's transcoding pipeline from introducing additional quality loss before distribution.\n\n### Case 3 — Low-Bandwidth Situation (Mobile Hotspot, 720p 30fps)\nA creator using a 4G hotspot with only 8 Mbps stable upload. Target: Facebook Live 720p 30fps.\n`Video: 2.5 Mbps + Audio: 0.128 Mbps + Buffer: 0.5 Mbps = 3.1 Mbps` — comfortably fits within 8 Mbps, leaving headroom for connection fluctuations.\n\n---\n\n## Common Errors\n\n1. **Setting bitrate higher than upload speed allows.** Many streamers set 8–10 Mbps bitrate on a 10 Mbps upload plan, forgetting that ISP-rated speeds include overhead, and real-world stable throughput is typically 75–85% of the advertised rate. Always test actual upload speed at [fast.com](https://fast.com) before configuring.\n\n2. **Using VBR (Variable Bitrate) for live streaming.** VBR is ideal for file uploads but causes network spikes during live streams. Platforms like Twitch and YouTube Live explicitly recommend **CBR (Constant Bitrate)** to maintain a stable data rate the ingest server can handle.\n\n3. **Ignoring keyframe interval.** Most platforms require a keyframe (I-frame) every **2 seconds**. Setting it to \"auto\" or longer intervals (e.g., 10s) causes pixelation and buffering on the viewer side, because their player cannot recover mid-stream without a keyframe.\n\n4. **Confusing Mbps and MBps.** Internet speeds are measured in **megabits per second (Mbps)**; file sizes in **megabytes (MB)**. 1 byte = 8 bits. A 6 Mbps stream uses 0.75 MB/s of data — roughly 2.7 GB per hour. Miscalculating this leads to either throttling or unexpectedly large file sizes.\n\n5. **Not accounting for encoder CPU overhead.** Software encoders (x264) on slower CPUs cannot maintain target bitrate under load, causing dropped frames even when upload bandwidth is sufficient. In such cases, switch to a hardware encoder (NVENC for NVIDIA GPUs, QSV for Intel) which offloads encoding from the CPU entirely.\n\n---\n\n## Related Calculators\n\n- Data Usage Calculator\n- File Size Calculator\n- Internet Speed Test Guide\n",
+  "explanation": "## Bitrate Reference Table by Platform (2026)\n\nThese values come directly from official platform encoder guidelines:\n\n| Resolution | FPS | YouTube Live | Twitch | Kick | Min. Upload (YouTube) |\n|---|---|---|---|---|---|\n| 720p | 30 | 5 Mbps | 4.5 Mbps | 4.5 Mbps | 6.4 Mbps |\n| 1080p | 30 | 6 Mbps | 4.5 Mbps | 5 Mbps | 7.6 Mbps |\n| 1080p | 60 | **8 Mbps** | **6 Mbps (cap)** | 8 Mbps | **9.7 Mbps** |\n| 1440p | 60 | 13 Mbps | 6 Mbps (cap) | 8 Mbps | 15.9 Mbps |\n| 4K (2160p) | 30+ | 40 Mbps | 6 Mbps (cap) | 8 Mbps | 48.4 Mbps |\n\n> Twitch enforces a **hard 6,000 kbps cap** on all live ingest streams regardless of resolution. Partners and Affiliates are both subject to this limit.\n\n---\n\n## The Upload Speed Formula\n\n```\nRequired Upload (Mbps) = (Video Bitrate + Audio Bitrate) × 1.20\n\nExample — 1080p 60fps on YouTube:\n= (8.0 Mbps + 0.32 Mbps) × 1.20\n= 8.32 × 1.20\n= 9.98 Mbps → round up to 10 Mbps for safety\n```\n\nThe 20% buffer is critical: internet connections fluctuate. Streaming exactly at your measured upload speed will cause dropped frames the moment your ISP has a brief congestion event.\n\n---\n\n## H.264 vs H.265 — Which Codec to Use\n\nH.265 (HEVC) achieves the same perceived quality as H.264 at **~50% of the bitrate**:\n- 1080p 60fps H.264 at 8 Mbps ≈ 1080p 60fps H.265 at **4 Mbps**\n- But H.265 requires a hardware encoder (NVIDIA NVENC, AMD VCE, Apple VideoToolbox)\n- Twitch live ingest only accepts H.264 as of 2026; YouTube and Kick support both\n\n**Recommendation:** Use H.264 by default for compatibility. Switch to H.265 only if you have a capable GPU and are uploading pre-recorded videos to YouTube.\n\n---\n\n## OBS Settings Checklist (1080p 60fps Twitch or YouTube)\n\n1. **Encoder:** NVENC H.264 (GPU) or x264 (CPU, slower but widely compatible)\n2. **Rate Control:** CBR (Constant Bitrate) — never VBR for live streaming\n3. **Bitrate:** 6,000 kbps for Twitch; 8,000 kbps for YouTube\n4. **Keyframe Interval:** 2 seconds (120 frames at 60fps)\n5. **Profile:** High\n6. **Preset:** Quality (GPU) or medium (CPU)\n7. **Audio:** AAC, 320 kbps, 48 kHz\n\n---\n\n## Why Twitch Has a 6 Mbps Cap\n\nTwitch enforces this limit because non-Partner streamers do not have transcoding (the automatic conversion to lower quality options). If a viewer on a slow connection watches a 6+ Mbps source stream, it buffers. The 6 Mbps cap ensures the source stream is watchable without transcoding. YouTube has transcoding for all live streams, allowing higher recommended bitrates.\n\n---\n\n## How Much Data Does Streaming Use?\n\n```\nData (GB/hour) = Bitrate (Mbps) × 3600 seconds / 8 bits / 1000\n\nAt 6 Mbps:  6 × 3600 / 8 / 1000 = 2.7 GB/hour\nAt 8 Mbps:  8 × 3600 / 8 / 1000 = 3.6 GB/hour\nAt 40 Mbps: 40 × 3600 / 8 / 1000 = 18 GB/hour (4K)\n```\n\nA 4-hour gaming session at 6 Mbps generates ~10.8 GB of outgoing data.\n",
   "faq": [
     {
       "q": "What bitrate should I use for 1080p 60fps on YouTube Live?",
-      "a": "YouTube officially recommends **4,500–9,000 kbps (4.5–9 Mbps)** for 1080p 60fps using H.264. For best results, target 6,000 kbps (6 Mbps) as a balanced setting that works across most viewer connection speeds. Pair this with a 320 kbps AAC audio bitrate and ensure your upload speed is at least 8–9 Mbps stable before going live."
+      "a": "YouTube officially recommends **4,500–9,000 kbps** for 1080p 60fps. Target 8,000 kbps (8 Mbps) as a balanced setting. Pair it with 320 kbps AAC audio and make sure your upload speed stays above 9.7 Mbps during the stream. You can set this in OBS under Settings → Output → Streaming → Bitrate."
+    },
+    {
+      "q": "What is the Twitch bitrate limit in 2026?",
+      "a": "Twitch enforces a **hard 6,000 kbps (6 Mbps) cap** on all live streams for both Partners and Affiliates. Setting a higher bitrate in OBS will not work — Twitch's ingest servers reject streams above this threshold. Kick allows up to 8,000 kbps for 1080p 60fps, making it a better option for high-bitrate streams."
+    },
+    {
+      "q": "How do I calculate the minimum upload speed I need to stream?",
+      "a": "Use the formula: **Minimum Upload = (Video Bitrate + 0.32 Mbps) × 1.20**. For example, streaming at 6 Mbps on Twitch needs (6 + 0.32) × 1.20 = 7.58 Mbps stable upload. Never stream at your maximum measured upload speed — always leave at least 20% headroom for connection fluctuations. Measure upload with fast.com or speedtest.net before going live."
+    },
+    {
+      "q": "Should I use CBR or VBR for live streaming?",
+      "a": "Always use **CBR (Constant Bitrate)** for live streaming. YouTube, Twitch, and Kick all recommend CBR because it sends a steady data rate the ingest server can handle without buffering. VBR is great for pre-recorded file exports where the encoder can optimize each scene, but during a live stream it creates unpredictable bitrate spikes that overwhelm ingest buffers and cause dropped frames."
+    },
+    {
+      "q": "What keyframe interval should I set in OBS?",
+      "a": "Set keyframe interval to **2 seconds** (equals FPS × 2 in frames: 60fps → every 120 frames). All major platforms — YouTube, Twitch, Kick — require this. A keyframe is a complete reference frame that allows viewers to sync when joining mid-stream. Longer intervals (e.g., 10s) save minimal bandwidth but cause visible quality degradation and slow recovery from buffering."
+    },
+    {
+      "q": "What bitrate do I need for 4K streaming on YouTube?",
+      "a": "For **4K (2160p) live streaming**, YouTube recommends **35–51 Mbps** for 30fps and **51–68 Mbps** for 60fps using H.264. This requires a fiber connection with at least 60–80 Mbps stable upload. Most home connections cannot handle 4K live streaming reliably. A more practical high-quality alternative is 1440p 60fps at 13 Mbps (needs ~15.9 Mbps upload)."
     },
     {
       "q": "What is the difference between H.264 and H.265 for streaming?",
-      "a": "H.265 (HEVC) achieves the same perceived quality as H.264 at approximately **50% of the bitrate** — a 6 Mbps H.264 stream is visually equivalent to a 3 Mbps H.265 stream. However, H.265 requires more processing power to encode in real time and is not universally supported as an ingest format: YouTube supports it for uploads, but Twitch's live ingest only accepts H.264 as of 2025. Always verify platform support before switching codecs."
+      "a": "H.265 (HEVC) delivers the same visual quality as H.264 at **~50% of the bitrate** — 8 Mbps in H.264 equals roughly 4 Mbps in H.265. However, H.265 requires hardware encoder support (NVIDIA NVENC, AMD AMF, or Apple VideoToolbox) and is not supported as a live ingest format by Twitch (as of 2026). Use H.264 for live streaming; H.265 is best for uploading pre-recorded 4K content to YouTube."
     },
     {
-      "q": "Why does Twitch have a 6 Mbps bitrate cap for live streams?",
-      "a": "Twitch enforces a **6,000 kbps (6 Mbps) hard cap** on its standard ingest servers to ensure consistent playback for viewers on varying connection speeds globally. Twitch Partners get access to transcoding options (720p, 480p auto-quality), but Affiliates may serve only the source stream — making lower bitrates (4–5 Mbps) sometimes a better choice for broader audience compatibility. This cap is documented in Twitch's official broadcast requirements."
+      "q": "Why is my stream pixelated or blurry even at 6 Mbps?",
+      "a": "Common causes: (1) **Wrong keyframe interval** — set it to exactly 2 seconds. (2) **Using VBR instead of CBR** — switch to CBR in OBS. (3) **Encoder overload** — if using a software encoder (x264) on a slow CPU, switch to hardware encoding (NVENC for NVIDIA, AMF for AMD). (4) **Bitrate too low for motion-heavy content** — fast-paced games or concerts need higher bitrates than static screens. Try adding 1–2 Mbps above the baseline recommendation."
     },
     {
-      "q": "How much upload speed do I actually need to stream without buffering?",
-      "a": "The safe rule is: **your stable upload speed should be at least 1.5× your target stream bitrate**. For a 6 Mbps stream, you need ~9 Mbps of stable upload. 'Stable' means your upload speed doesn't dip below the threshold during the stream — ISP connections can fluctuate 20–30%, so never stream at your maximum measured upload speed. Use tools like speedtest.net or fast.com and test at the same time of day you plan to stream."
-    },
-    {
-      "q": "What bitrate should I use for 4K streaming or uploads on YouTube?",
-      "a": "For **4K (2160p) 30fps uploads**, YouTube recommends 35–45 Mbps in H.264 or 15–20 Mbps in H.265/VP9. For **4K 60fps live streaming**, the recommendation jumps to 51–68 Mbps in H.264 — requiring a fiber or very high-speed cable connection with at least 80 Mbps stable upload. Most home connections cannot sustain 4K live streaming reliably; 1440p 60fps at 9–18 Mbps is a more practical high-quality alternative."
-    },
-    {
-      "q": "Should I use CBR or VBR when streaming live?",
-      "a": "Always use **CBR (Constant Bitrate)** for live streaming. YouTube, Twitch, and Facebook Live all recommend CBR because it sends a predictable, constant data rate to the ingest server, reducing the chance of buffering or stream instability. VBR is better for file exports and uploads where the encoder can take time to optimize each scene, but it creates unpredictable spikes during live output that overwhelm ingest buffers."
-    },
-    {
-      "q": "What keyframe interval should I set in OBS for live streaming?",
-      "a": "Set your keyframe interval to **2 seconds** (which equals your FPS × 2 in frames: 60fps = keyframe every 120 frames). YouTube, Twitch, and virtually all major platforms require this setting. A keyframe is a full reference frame that allows viewers' players to sync correctly when joining mid-stream or recovering from a brief buffer. Longer intervals save minor bandwidth but cause visible quality degradation and recovery delays for viewers."
-    },
-    {
-      "q": "How do I calculate how much data a stream consumes per hour?",
-      "a": "Use the formula: **Data (GB/hr) = Bitrate (Mbps) × 3600 / 8 / 1000**. A 6 Mbps stream uses 6 × 3600 / 8 / 1000 = **2.7 GB per hour**. A 4-hour gaming session at 6 Mbps generates ~10.8 GB of outgoing data. This matters for streamers on metered or capped internet plans — a typical 1.2 TB monthly data cap (common with US cable ISPs) can handle ~444 hours of streaming at 6 Mbps before overage charges apply."
+      "q": "Does streaming quality differ between Twitch, YouTube, and Kick?",
+      "a": "Yes, significantly. **YouTube** offers the highest quality ceiling for live streaming (up to 4K, 40+ Mbps). **Kick** allows up to 8 Mbps for 1080p 60fps — identical to YouTube's recommendation. **Twitch** has the strictest limit at 6 Mbps, and most non-Partner Affiliates do not have transcoding, meaning slower viewers see the source bitrate. For high-quality 1080p 60fps streaming, YouTube or Kick offer a better bitrate allowance than Twitch."
     }
   ],
   "seoKeywords": [
     "streaming bitrate calculator",
     "bitrate for streaming",
-    "1080p bitrate",
-    "4k bitrate",
-    "streaming upload speed",
-    "youtube streaming bitrate",
-    "twitch bitrate",
-    "recommended bitrate",
-    "720p bitrate",
-    "1440p bitrate",
-    "video bitrate calculator",
-    "h.264 h.265 streaming",
+    "1080p 60fps bitrate youtube",
+    "twitch bitrate 2026",
+    "recommended bitrate for streaming",
     "minimum upload speed streaming",
-    "bitrate requirements"
+    "obs bitrate settings",
+    "what bitrate for 1080p streaming",
+    "youtube live bitrate",
+    "kick bitrate limit",
+    "4k streaming bitrate",
+    "streaming bitrate table",
+    "h264 h265 streaming",
+    "video bitrate calculator"
   ],
   "sources": [
     {
-      "name": "YouTube Help – Live encoder settings, bitrates, and resolutions (Google Support)",
+      "name": "YouTube Help — Live encoder settings, bitrates, and resolutions",
       "url": "https://support.google.com/youtube/answer/2853702"
     },
     {
-      "name": "Twitch – Broadcasting Guidelines (Twitch Help Center)",
+      "name": "Twitch — Broadcasting Guidelines (Twitch Help Center)",
       "url": "https://help.twitch.tv/s/article/broadcasting-guidelines"
     },
     {
-      "name": "Wikipedia – H.265 / High Efficiency Video Coding (HEVC)",
-      "url": "https://en.wikipedia.org/wiki/High_Efficiency_Video_Coding"
+      "name": "OBS Project — Encoding and bitrate overview",
+      "url": "https://obsproject.com/wiki/Encoding-and-bitrate-overview"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-20",
+    "lastUpdated": "2026-06-05",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Platform bitrates updated to 2026 official guidelines; Twitch 6 Mbps cap verified, YouTube 8 Mbps for 1080p60 confirmed"
   },
   "relatedSlugs": []
 }

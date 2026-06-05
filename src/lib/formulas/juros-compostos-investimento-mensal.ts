@@ -20,9 +20,9 @@ export interface Outputs {
 
 // Taxas de referência 2026 — Fonte: BACEN / Tesouro Nacional
 const PRESET_RATES: Record<string, number> = {
-  selic: 11.0,       // Selic meta jan/2026 — BACEN
-  cdb110: 12.1,      // 110% CDI, CDI ≈ Selic − 0.10% → 10.9% × 1.10 = 11.99% ≈ 12.10%
-  poupanca: 6.17,    // 70% Selic quando Selic > 8.5% — Lei 12.703/2012
+  selic: 11.0,        // Selic meta jan/2026 — BACEN
+  cdb110: 12.1,       // 110% CDI, CDI ≈ Selic − 0.10% → 10.9% × 1.10 = 11.99% ≈ 12.10%
+  poupanca: 7.70,     // 70% × Selic (11%) quando Selic > 8,5% — Lei 12.703/2012; TR ≈ 0
   tesouro_ipca: 11.28 // IPCA 4.78% projetado + taxa real 6.50% — Tesouro Nacional 2026
 };
 

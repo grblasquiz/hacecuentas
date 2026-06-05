@@ -1,29 +1,32 @@
 {
   "slug": "calculadora-embedding-vector-pinecone-weaviate-costo-mes",
-  "lastReviewed": "2026-04-28",
-  "title": "Calculadora vector DB: Pinecone, Weaviate, Qdrant costo mes 2026",
-  "h1": "Vector database — costo mensual según vectores, dimensión y QPS",
-  "description": "📦 Calculá el costo mensual de Pinecone, Weaviate Cloud, Qdrant o pgvector según cantidad de vectores (M), dimensión del embedding (768/1536/3072) y QPS de…",
+  "lastReviewed": "2026-06-04",
+  "title": "Costo vector database: Pinecone vs Qdrant vs Weaviate + tabla 2026 | Hacé Cuentas",
+  "h1": "Costo vector database: Pinecone, Qdrant, Weaviate — calculadora + tabla comparativa",
+  "description": "Calculá el costo mensual de tu vector database según cantidad de vectores, dimensión del embedding y QPS. Compará Pinecone Serverless, Qdrant Cloud, Weaviate Cloud y pgvector con precios reales 2026.",
   "category": "negocios",
   "audience": "global",
   "icon": "📦",
   "formulaId": "embedding-vector-pinecone-weaviate-costo-mes",
+  "answerSnippet": "Para 5M vectores de 1536 dimensiones (text-embedding-3-small) y 10 QPS, Pinecone Serverless cuesta ~USD 224/mes, Qdrant Cloud ~USD 80-100/mes y pgvector en Postgres existente prácticamente gratis. La diferencia principal: Pinecone cobra USD 0,33/GB-mes de storage + USD 8,25/M reads; Qdrant cobra por compute y suele ser 2-3× más barato para menos de 50M vectores.",
   "seoKeywords": [
-    "pinecone precio mensual",
+    "pinecone precio mensual 2026",
+    "costo vector database",
+    "pinecone vs qdrant precio",
     "weaviate cloud costo",
     "qdrant cloud pricing",
-    "vector database comparativa",
     "pgvector vs pinecone costo",
+    "cuanto cuesta pinecone serverless",
     "rag vector store precio"
   ],
-  "intro": "Una **vector database** guarda **embeddings** (vectores de 768 a 3072 dimensiones) y devuelve los más similares a una consulta — el corazón de cualquier sistema **RAG**, recomendación o búsqueda semántica. Las opciones más usadas en 2026: **Pinecone** (managed, fácil), **Weaviate Cloud** (open-source + managed), **Qdrant Cloud** (Rust, muy rápido), **Milvus / Zilliz** (alta escala) y **pgvector** (Postgres, más barato si ya tenés Postgres). El costo se compone de: **storage** (USD/GB-mes) + **queries** (USD/millón) + a veces compute base. Esta calculadora estima storage en GB asumiendo float32 (4 bytes × dim) y multiplica QPS por 30 días para queries/mes. Útil para presupuestar un RAG productivo, decidir entre managed vs self-hosted, o entender cómo escala el costo al subir vectores o dimensión del embedding.",
-  "keyTakeaway": "Para **<5M vectores y <100 QPS**, **pgvector en Postgres existente** sale prácticamente gratis. Entre **5M-50M vectores**, **Qdrant Cloud o Weaviate** suelen ser 30-50% más baratos que Pinecone. Para **>100M vectores y alta QPS**, Pinecone Serverless o Milvus ganan en operación.",
+  "intro": "Una **vector database** guarda **embeddings** (vectores de 768 a 3072 dimensiones) y devuelve los más similares a una consulta — el corazón de cualquier sistema **RAG**, recomendación o búsqueda semántica.\n\nLas opciones más usadas en 2026: **Pinecone Serverless** (managed, fácil de arrancar), **Qdrant Cloud** (Rust, muy rápido, mejor precio), **Weaviate Cloud** (open-source + managed, feature-rich), **Milvus / Zilliz** (alta escala) y **pgvector** (Postgres, gratis si ya lo tenés).\n\nEl costo mensual se compone de: **storage** (USD/GB-mes, calculado como dim × 4 bytes × cantidad de vectores) + **queries** (USD/millón, donde 10 QPS = 25,9M queries/mes). Esta calculadora hace exactamente eso: estimá storage en GB con float32 y queries/mes a partir del QPS.",
+  "keyTakeaway": "Para **menos de 5M vectores y menos de 100 QPS**, **pgvector en un Postgres existente** es la opción más barata (casi gratis). Entre **5M y 50M vectores**, **Qdrant Cloud** suele ser 2-3× más barato que Pinecone. Para **más de 100M vectores y alto QPS**, Pinecone Serverless o Milvus justifican su precio por operabilidad.",
   "useCases": [
-    "Estimar costo mensual de un RAG con N documentos chunked.",
-    "Comparar Pinecone vs Weaviate vs Qdrant Cloud para tu volumen.",
-    "Decidir si conviene pgvector self-hosted o managed.",
-    "Calcular impacto de subir de 768 a 1536 dims (text-embedding-3-large).",
-    "Presupuestar pico de QPS en lanzamiento de producto."
+    "Estimar el costo mensual de un RAG con N documentos chunkeados.",
+    "Comparar Pinecone vs Qdrant vs Weaviate Cloud para tu volumen exacto.",
+    "Decidir si conviene pgvector self-hosted o pasar a managed.",
+    "Calcular el impacto de subir de 768 a 1536 dimensiones (text-embedding-3-large).",
+    "Presupuestar el pico de QPS para el lanzamiento de un producto."
   ],
   "fields": [
     {
@@ -35,7 +38,7 @@
       "min": 0,
       "step": 0.1,
       "required": true,
-      "help": "En millones. 1 documento se suele chunkear en ~5-20 vectores. 1M docs = 5-20M vectores."
+      "help": "En millones. 1 documento se suele chunkear en 5-20 vectores. 1M docs = 5-20M vectores."
     },
     {
       "id": "dimension",
@@ -57,7 +60,7 @@
       "min": 0,
       "step": 0.1,
       "required": true,
-      "help": "Queries por segundo promedio. 10 QPS = 25,9M queries/mes. Estimá pico × 0,3 para promedio."
+      "help": "Queries por segundo promedio. 10 QPS = 25,9M queries/mes. Estimá pico × 0,3 para el promedio real."
     },
     {
       "id": "precioGbMesUsd",
@@ -68,7 +71,7 @@
       "min": 0,
       "step": 0.01,
       "required": true,
-      "help": "Pinecone Serverless ~USD 0,33/GB-mes. Weaviate Cloud ~USD 0,12-0,25/GB-mes. Qdrant Cloud ~USD 0,15/GB-mes. pgvector: depende de tu Postgres."
+      "help": "Pinecone Serverless: USD 0,33/GB-mes. Weaviate Cloud: USD 0,12-0,25. Qdrant Cloud: USD 0,15. pgvector: precio de tu Postgres."
     },
     {
       "id": "precioPorMillonQueriesUsd",
@@ -79,13 +82,13 @@
       "min": 0,
       "step": 0.01,
       "required": true,
-      "help": "Pinecone Serverless ~USD 8,25/M reads. Weaviate ~USD 4-6/M. Qdrant Cloud incluye queries en plan compute."
+      "help": "Pinecone Serverless: USD 8,25/M reads. Weaviate Cloud: USD 4-6/M. Qdrant Cloud: incluido en el plan de compute."
     }
   ],
   "dataUpdate": {
     "frequency": "monthly",
-    "lastUpdated": "2026-04-26",
-    "source": "Pinecone / Weaviate / Qdrant pricing pages",
+    "lastUpdated": "2026-06-04",
+    "source": "Pinecone / Weaviate / Qdrant pricing pages (junio 2026)",
     "sourceUrl": "https://www.pinecone.io/pricing/",
     "updateType": "manual"
   },
@@ -123,54 +126,59 @@
     }
   ],
   "example": {
-    "title": "Ejemplo: 5M vectores 1536 dim, 10 QPS",
+    "title": "Ejemplo: 5M vectores de 1536 dim, 10 QPS en Pinecone Serverless",
     "steps": [
-      "**Storage**: 5M × 1536 × 4 bytes = 30,72 GB.",
-      "**Pinecone Serverless**: 30,72 × USD 0,33 = USD 10,14 storage.",
-      "**Queries**: 10 × 86.400 × 30 = 25,92M queries/mes.",
-      "**Pinecone reads**: 25,92 × USD 8,25 = USD 213,84 queries.",
-      "**Total Pinecone**: ~USD 224/mes."
+      "**Storage**: 5.000.000 × 1536 × 4 bytes = 30,72 GB.",
+      "**Costo storage Pinecone**: 30,72 GB × USD 0,33/GB-mes = USD 10,14.",
+      "**Queries/mes**: 10 QPS × 86.400 seg/día × 30 días = 25.920.000 queries = 25,92M.",
+      "**Costo queries Pinecone**: 25,92M × USD 8,25/M = USD 213,84.",
+      "**Total Pinecone Serverless**: USD 10,14 + USD 213,84 = ~USD 224/mes.",
+      "**El mismo workload en Qdrant Cloud**: ~USD 80-100/mes (compute-based, queries incluidas)."
     ],
-    "result": "El mismo workload en Qdrant Cloud sale ~USD 80-120/mes."
+    "result": "Pinecone ~USD 224/mes · Qdrant Cloud ~USD 80-100/mes · pgvector en Postgres existente: ~USD 0-10/mes extra."
   },
-  "explanation": "## Cómo se compone el costo\n\n```\nStorage (GB) = vectores × dimensión × 4 bytes / 1024³\nCosto storage = GB × USD/GB-mes\nCosto queries = (QPS × 86.400 × 30 / 1.000.000) × USD/M reads\nTotal mensual = storage + queries + compute base\n```\n\n## Comparativa proveedores (abril 2026)\n\n| Proveedor | Modelo | Storage | Queries | Mejor para |\n|---|---|---|---|---|\n| **Pinecone Serverless** | pay-per-use | ~USD 0,33/GB-mes | ~USD 8,25/M reads + USD 4,12/M writes | medio-alto QPS, simple |\n| **Pinecone Pod** | provisioned | depende pod (s1, p1, p2) | incluido | super alto QPS estable |\n| **Weaviate Cloud Serverless** | pay-per-use | ~USD 0,12-0,25/GB-mes | ~USD 4-6/M | balance precio/features |\n| **Qdrant Cloud** | compute-based | incluido en compute | incluido | mejor relación precio/QPS |\n| **Milvus / Zilliz Cloud** | tiered | varía | varía | super alta escala (>100M) |\n| **pgvector** | Postgres existente | precio Postgres | gratis | <5M vectores, bajo QPS |\n| **Chroma** | self-host gratis | infra propia | gratis | dev / single-user |\n\n## Tamaño en bytes según dimensión y precisión\n\n| Modelo | Dim | float32 (default) | float16 | int8 |\n|---|---|---|---|---|\n| MiniLM-L6 | 384 | 1.5 KB | 0.75 KB | 0.4 KB |\n| OpenAI 3-small | 1536 | 6 KB | 3 KB | 1.5 KB |\n| OpenAI 3-large | 3072 | 12 KB | 6 KB | 3 KB |\n| Cohere v3 | 1024 | 4 KB | 2 KB | 1 KB |\n\n**Consejo**: si Pinecone soporta cuantización a int8, podés bajar 4× el storage con pérdida marginal de calidad (~1-3% recall@10).\n\n## Pinecone Serverless vs Pod (abril 2026)\n\n| Aspecto | Serverless | Pod (legacy) |\n|---|---|---|\n| **Pricing** | pay-per-use storage + reads | mensual fijo por pod |\n| **Cold start** | sí (primer query lento si pasa tiempo) | no |\n| **Mejor para** | <50 QPS, traffic variable | >50 QPS, latencia consistente |\n| **Migración** | recomendado por Pinecone | descontinuado en algunos planes |\n\n## Cuándo conviene pgvector\n\n| Caso | pgvector |\n|---|---|\n| <5M vectores | sí, casi siempre |\n| Ya tenés Postgres | sí |\n| <50 QPS | sí |\n| Necesitás filtros SQL complejos | sí (JOIN nativo) |\n| >100M vectores | no, va a sufrir |\n| Latencia <50ms a alta QPS | usá managed |\n\n## Errores que escalan el costo\n\n1. **Dimensión innecesariamente alta**: text-embedding-3-large (3072) cuesta 2× storage que small (1536) y muchas veces no agrega calidad significativa.\n2. **No filtrar metadata**: hacer search sobre 100M vectores cuando podrías pre-filtrar por `tenant_id` baja 10× el costo.\n3. **No usar caching**: los queries más frecuentes pueden cachearse en Redis/Memcached. Ahorro 30-50% en proyectos con queries repetidas.\n4. **Re-embeddear todo** en cambios menores: incrementá solo lo nuevo.\n\n## Latencia esperada\n\n| Vector DB | <1M vec, p99 | 100M vec, p99 |\n|---|---|---|\n| Pinecone Serverless | 30-80 ms | 50-150 ms |\n| Qdrant Cloud | 15-40 ms | 40-100 ms |\n| Weaviate Cloud | 20-50 ms | 50-120 ms |\n| pgvector (HNSW) | 10-50 ms | sufre |\n\n> **Aviso legal**: Calculadora educativa. Precios tomados de las páginas oficiales en abril 2026 — verificá antes de comprometer presupuesto. **No constituye recomendación de proveedor.**\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Cifras cotejadas contra Pinecone, Weaviate, Qdrant y pgvector docs a abril 2026.\n",
+  "explanation": "## Fórmulas utilizadas\n\n```\nStorage (GB) = vectores_M × 1.000.000 × dimensión × 4 bytes ÷ 1.073.741.824\nCosto storage = GB × USD/GB-mes\nQueries/mes = QPS × 86.400 seg/día × 30 días\nCosto queries = (queries_mes ÷ 1.000.000) × USD/M_reads\nTotal mensual = costo_storage + costo_queries\n```\n\nLa fórmula usa float32 (4 bytes por componente), que es el formato default de casi todos los providers. Si tu proveedor soporta **cuantización int8**, dividí el storage por 4.\n\n## Tabla comparativa de precios (junio 2026)\n\n| Proveedor | Storage | Queries | Plan free | Mejor para |\n|---|---|---|---|---|\n| **Pinecone Serverless** | USD 0,33/GB-mes | USD 8,25/M reads | sí (1M vecs) | <50M vecs, fácil setup |\n| **Pinecone Pod** | fijo por pod | incluido | no | >200 QPS sostenido |\n| **Qdrant Cloud** | incluido en compute | incluido | sí (1 nodo free) | mejor precio/QPS |\n| **Weaviate Cloud Serverless** | USD 0,12-0,25/GB | USD 4-6/M | sí (sandbox) | multi-tenant, GraphQL |\n| **Milvus / Zilliz Cloud** | variable | variable | sí | >100M vectores |\n| **pgvector** | precio Postgres | USD 0 | N/A | <5M vecs + Postgres existente |\n| **Chroma** | infra propia | USD 0 | N/A | dev / single-user |\n\n## Tabla de storage según dimensión y volumen\n\n| Vectores | dim 384 | dim 768 | dim 1536 | dim 3072 |\n|---|---|---|---|---|\n| 1M | 1,4 GB | 2,9 GB | 5,7 GB | 11,4 GB |\n| 5M | 7,2 GB | 14,3 GB | 28,6 GB | 57,2 GB |\n| 10M | 14,3 GB | 28,6 GB | 57,2 GB | 114,4 GB |\n| 50M | 71,5 GB | 143 GB | 286 GB | 572 GB |\n| 100M | 143 GB | 286 GB | 572 GB | 1.144 GB |\n\n**Consejo**: pasar de dim 1536 a 3072 duplica el storage y suele mejorar recall menos de 3% en tareas típicas de RAG. Empezá con 1536.\n\n## Costo estimado mensual por escenario (Pinecone Serverless, 10 QPS)\n\n| Vectores | dim 1536 | dim 3072 | dim 384 |\n|---|---|---|---|\n| 1M | ~USD 218 | ~USD 221 | ~USD 215 |\n| 5M | ~USD 224 | ~USD 232 | ~USD 216 |\n| 20M | ~USD 240 | ~USD 274 | ~USD 218 |\n| 50M | ~USD 308 | ~USD 395 | ~USD 237 |\n\n*Nota: a 10 QPS el costo de queries domina (≈USD 214/mes). Storage entra a pesar a partir de >20M vectores dim 1536.*\n\n## Tamaño en bytes según dimensión y precisión\n\n| Modelo | Dim | float32 (default) | float16 | int8 |\n|---|---|---|---|---|\n| all-MiniLM-L6-v2 | 384 | 1,5 KB | 0,75 KB | 0,4 KB |\n| OpenAI text-embedding-3-small | 1536 | 6 KB | 3 KB | 1,5 KB |\n| OpenAI text-embedding-3-large | 3072 | 12 KB | 6 KB | 3 KB |\n| Cohere embed-v3 | 1024 | 4 KB | 2 KB | 1 KB |\n\n## ¿Cuándo conviene cada opción?\n\n### pgvector — la más barata para proyectos pequeños\n\n| Condición | ¿Usar pgvector? |\n|---|---|\n| Menos de 5M vectores | Sí, casi siempre |\n| Ya tenés Postgres activo | Sí |\n| Menos de 50 QPS | Sí |\n| Necesitás JOINs con tablas SQL | Sí (ventaja única) |\n| Más de 100M vectores | No |\n| Latencia <50ms a alto QPS | No, usá managed |\n\n### Pinecone Serverless vs Pod\n\n| Aspecto | Serverless | Pod |\n|---|---|---|\n| **Modelo de precio** | pay-per-use storage + reads | mensual fijo por pod |\n| **Cold start** | sí (primer query lento) | no |\n| **Mejor para** | <100 QPS, traffic variable | >200 QPS sostenido |\n| **Tendencia 2026** | empujado por Pinecone | modo legacy en descontinuación |\n\n## Errores que inflan el costo\n\n1. **Dimensión innecesariamente alta**: dim 3072 cuesta 2× storage que 1536 con mejora marginal de calidad (<3% recall).\n2. **No filtrar por metadata**: buscar sobre 100M vectores cuando podrías pre-filtrar por `tenant_id` baja 10× el costo de queries.\n3. **No cachear queries repetidas**: Redis/Memcached puede ahorrar 30-50% en apps con consultas frecuentes similares.\n4. **Re-embeddear todo** ante cambios menores: procesá solo los chunks nuevos o modificados.\n5. **No explorar cuantización**: int8 reduce 4× el storage con pérdida típica de <2% en recall@10.\n\n## Latencia esperada (p99)\n\n| Proveedor | <1M vectores | 10M vectores | 100M vectores |\n|---|---|---|---|\n| Pinecone Serverless | 30-80 ms | 40-100 ms | 50-150 ms |\n| Qdrant Cloud | 15-40 ms | 25-60 ms | 40-100 ms |\n| Weaviate Cloud | 20-50 ms | 30-70 ms | 50-120 ms |\n| pgvector (HNSW) | 10-50 ms | 30-80 ms | suele sufrir |\n\n> **Aviso**: Calculadora educativa. Los precios corresponden a las páginas oficiales de cada proveedor a junio 2026 — verificá antes de comprometer presupuesto. **No constituye recomendación de proveedor.**\n",
   "faq": [
     {
-      "q": "¿Cuál es la vector DB más barata para 5M vectores?",
-      "a": "Si ya tenés Postgres, **pgvector** (con índice HNSW) sale prácticamente gratis — solo pagás el upgrade de instancia. Si necesitás managed, **Qdrant Cloud** suele ser el más barato a esa escala (~USD 60-100/mes), seguido por **Weaviate Cloud** (~USD 80-130) y **Pinecone Serverless** (~USD 200+)."
+      "q": "¿Cuánto cuesta Pinecone Serverless por mes en 2026?",
+      "a": "Pinecone Serverless cobra aproximadamente **USD 0,33 por GB-mes de storage** y **USD 8,25 por millón de reads**. Para un workload típico de RAG con 5M vectores de 1536 dim y 10 QPS, el costo es ~USD 224/mes: USD 10 de storage y USD 214 de queries. El plan gratuito incluye hasta 1M vectores."
     },
     {
-      "q": "¿Cuánto pesa 1 vector?",
-      "a": "**Float32 (default)**: dim × 4 bytes. Embedding OpenAI 1536 = 6 KB. Embedding OpenAI 3-large 3072 = 12 KB. Cuantizando a **int8** se baja a 1.5-3 KB con pérdida marginal de calidad."
+      "q": "¿Es Qdrant más barato que Pinecone?",
+      "a": "Sí, generalmente **2-3× más barato** para workloads medianos (5-50M vectores, <100 QPS). Qdrant Cloud usa un modelo compute-based donde las queries están incluidas en el plan, sin cargo por millón de reads. Para el mismo workload de 5M vectores y 10 QPS, Qdrant suele salir entre USD 80-100/mes frente a ~USD 224/mes de Pinecone Serverless."
     },
     {
-      "q": "¿Conviene 768, 1536 o 3072 dimensiones?",
-      "a": "**1536 (OpenAI 3-small)** es el sweet spot calidad/costo en 2026. **3072 (3-large)** mejora 1-3% el recall pero duplica storage y latencia. **768 (MiniLM, BGE)** es 4× más barato y para muchos casos retail/soporte funciona casi igual. Empezá con 1536 y bajá si el costo escala feo."
+      "q": "¿Cuál es la vector database más barata para 5M vectores?",
+      "a": "Si ya tenés Postgres, **pgvector** (con índice HNSW) sale prácticamente gratis: solo un upgrade de instancia. En managed, **Qdrant Cloud** suele ser el más barato a esa escala (~USD 60-100/mes), seguido por **Weaviate Cloud** (~USD 80-130) y **Pinecone Serverless** (~USD 200+). La calculadora arriba calcula exactamente tu escenario."
     },
     {
-      "q": "¿Pinecone Serverless o Pod?",
-      "a": "**Serverless** para 90% de casos: traffic variable, <100 QPS, MVP. **Pod** solo si tenés QPS muy alto y consistente (>200 QPS sostenido) y querés latencia predecible. Pinecone está empujando a todos a Serverless desde 2024."
+      "q": "¿Cuánto pesa 1 vector? ¿Cómo se calcula el storage?",
+      "a": "En float32 (el default): **dim × 4 bytes**. Un embedding de OpenAI text-embedding-3-small (1536 dim) pesa **6 KB por vector**. 1M vectores = 5,7 GB. 5M vectores = 28,6 GB. Si cuantizás a **int8**, se divide por 4 con pérdida de calidad inferior al 2% en la mayoría de casos."
     },
     {
-      "q": "¿pgvector escala bien?",
-      "a": "**Hasta ~5-20M vectores** funciona bien con índice HNSW en Postgres 16+. **Más allá**, las queries empiezan a ser lentas (>100ms p99) y la memoria del servidor sufre. Para >50M vectores, mejor usar Qdrant, Weaviate o Pinecone."
+      "q": "¿Conviene 384, 768, 1536 o 3072 dimensiones para RAG?",
+      "a": "**1536 dims (OpenAI text-embedding-3-small)** es el sweet spot calidad/costo en 2026 para la mayoría de aplicaciones RAG en español e inglés. **3072 dims (3-large)** mejora el recall entre 1-3% pero duplica el storage y la latencia. **384 dims (MiniLM)** es 4× más barato y funciona bien para casos de soporte o e-commerce. Empezá con 1536 y bajá si el costo escala."
     },
     {
-      "q": "¿Cuántas queries hace un RAG promedio?",
-      "a": "Un chatbot con **1.000 usuarios diarios y 5 mensajes/usuario** = **5.000 queries/día = 0,058 QPS** = ~150k queries/mes. Para casos de uso enterprise con miles de usuarios, fácilmente 10-100 QPS sostenidos."
+      "q": "¿Pinecone Serverless o Pod en 2026?",
+      "a": "**Serverless para el 90% de los casos**: traffic variable, menos de 100 QPS, MVP o producto en crecimiento. **Pod solo si tenés más de 200 QPS sostenido** y necesitás latencia predecible sin cold starts. Pinecone está empujando a todos hacia Serverless desde 2024 y los pods están en modo legacy."
     },
     {
-      "q": "¿Cómo bajo el costo de mi vector DB?",
-      "a": "1) **Pre-filtrá por metadata** (tenant_id, fecha) antes del search. 2) **Cuantizá a int8** si tu DB lo soporta (4× menos storage). 3) **Cacheá queries repetidas** en Redis. 4) **Usá modelo de embedding más chico** (MiniLM 384 si la calidad alcanza). 5) **Consolidá deployments** (un solo cluster para múltiples apps)."
+      "q": "¿pgvector escala bien a millones de vectores?",
+      "a": "**Hasta 5-20M vectores con índice HNSW en Postgres 16+**, funciona bien (p99 < 80ms). **Más allá de 20M**, las queries se vuelven lentas y el RAM del servidor sufre. Para más de 50M vectores o más de 50 QPS sostenidos, es mejor migrar a Qdrant, Weaviate o Pinecone. Ventaja única de pgvector: podés hacer JOINs SQL nativos con tus otras tablas."
     },
     {
-      "q": "¿Weaviate vs Qdrant vs Milvus?",
-      "a": "**Weaviate**: feature-rich (multi-tenant, classification, GraphQL), más caro. **Qdrant**: rápido (Rust), simple, mejor precio. **Milvus / Zilliz**: pensado para escala enterprise (>100M vectores), más complejo de operar. Para startups, **Qdrant Cloud** suele ser el ganador costo/feature."
+      "q": "¿Cuántas queries hace un RAG típico por mes?",
+      "a": "Un chatbot con **1.000 usuarios diarios y 5 mensajes/usuario** hace 5.000 queries/día = **0,058 QPS promedio** = ~150.000 queries/mes. Un producto enterprise con 10.000 usuarios activos puede llegar a **10-100 QPS sostenidos**. Estimá: usuarios_día × mensajes_usuario ÷ 86.400 = QPS promedio."
+    },
+    {
+      "q": "¿Cómo puedo reducir el costo de mi vector database?",
+      "a": "Las 5 palancas más efectivas: 1) **Pre-filtrá por metadata** (tenant_id, fecha) antes del similarity search — puede reducir 10× el costo de queries. 2) **Cuantizá a int8** si tu DB lo soporta (4× menos storage). 3) **Cacheá queries frecuentes** en Redis (ahorro 30-50% en apps con consultas repetidas). 4) **Usá modelo de embedding más chico** (MiniLM 384 si la calidad alcanza). 5) **Procesá solo chunks nuevos** al actualizar documentos."
     }
   ],
   "sources": [
     {
-      "name": "Pinecone — Pricing",
+      "name": "Pinecone — Pricing 2026",
       "url": "https://www.pinecone.io/pricing/"
     },
     {
@@ -184,33 +192,37 @@
     {
       "name": "pgvector — GitHub",
       "url": "https://github.com/pgvector/pgvector"
+    },
+    {
+      "name": "Milvus / Zilliz Cloud — Pricing",
+      "url": "https://zilliz.com/pricing"
     }
   ],
   "relatedSlugs": [
-    "calculadora-fine-tuning-llama-costo-dataset-tokens",
-    "calculadora-agente-ia-mcp-servidor-costo-mensual",
-    "calculadora-traspaso-libre-bosman-costo-cero"
+    "calculadora-fine-tuning-openai-vs-rag-cuando-conviene",
+    "calculadora-tokens-openai-gpt-costo-uso-mensual",
+    "calculadora-agente-ia-mcp-servidor-costo-mensual"
   ],
   "howToSteps": [
     {
-      "name": "Cargá cantidad de vectores",
-      "text": "En millones. Estimá: docs × chunks por doc."
+      "name": "Ingresá la cantidad de vectores en millones",
+      "text": "Estimá: documentos × chunks por documento. 1M docs con 10 chunks cada uno = 10M vectores."
     },
     {
-      "name": "Cargá dimensión",
-      "text": "1536 OpenAI default, 3072 large, 1024 Cohere, 384 MiniLM."
+      "name": "Elegí la dimensión del embedding",
+      "text": "OpenAI text-embedding-3-small: 1536. text-embedding-3-large: 3072. Cohere embed-v3: 1024. MiniLM-L6: 384."
     },
     {
-      "name": "Cargá QPS",
-      "text": "Queries por segundo promedio (no pico)."
+      "name": "Estimá el QPS promedio",
+      "text": "Usuarios diarios × mensajes/usuario ÷ 86.400 = QPS. Para pico, multiplicá por 3-5."
     },
     {
-      "name": "Cargá precios del proveedor",
-      "text": "USD por GB-mes y USD por millón de queries (mirá página oficial)."
+      "name": "Cargá el precio de tu proveedor",
+      "text": "Copiá USD/GB-mes y USD/M reads de la página de precios oficial. Ver tabla comparativa abajo."
     },
     {
-      "name": "Calculá",
-      "text": "Storage + queries + total mensual estimado."
+      "name": "Calculá y comparás",
+      "text": "La calculadora muestra storage estimado, queries/mes, costo desglosado y total. Repetí con distintos precios para comparar proveedores."
     }
   ]
 }

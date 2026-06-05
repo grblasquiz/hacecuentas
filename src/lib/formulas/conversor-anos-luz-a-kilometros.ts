@@ -6,7 +6,7 @@ export function conversorAnosLuzAKilometros(i: Inputs): Outputs {
   const v = Number(i.valor);
   if (isNaN(v)) return { resultado: '—', resumen: 'Ingresá un valor numérico.' };
   const d = String(i.direccion || 'ida');
-  const factor = 9461000000000.0;
+  const factor = 9460730472580.8;
   let r: number;
   let fromLabel: string, toLabel: string;
   if (d === 'ida') {

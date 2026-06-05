@@ -16,13 +16,22 @@ export interface Outputs {
 }
 
 const MET: Record<string, { met: number; nombre: string }> = {
+  // tenis
   'tenis-singles': { met: 8.0, nombre: 'Tenis singles (1 vs 1)' },
   'tenis-dobles': { met: 6.0, nombre: 'Tenis dobles' },
+  'tenis-competicion': { met: 10.0, nombre: 'Tenis competición / intenso' },
   'tenis-competitivo': { met: 10.0, nombre: 'Tenis competitivo' },
   'tenis-recreativo': { met: 6.5, nombre: 'Tenis recreativo' },
-  'padel-recreativo': { met: 6.0, nombre: 'Pádel recreativo' },
-  'padel-competitivo': { met: 8.5, nombre: 'Pádel competitivo' },
+  // padel
+  'padel-recreativo': { met: 6.5, nombre: 'Pádel recreativo' },
+  'padel-intermedio': { met: 7.5, nombre: 'Pádel intermedio' },
+  'padel-competicion': { met: 8.5, nombre: 'Pádel competición' },
+  'padel-competitivo': { met: 8.5, nombre: 'Pádel competición' },
   'padel-dobles': { met: 7.0, nombre: 'Pádel dobles amateur' },
+  // otros deportes de raqueta
+  'squash': { met: 12.0, nombre: 'Squash' },
+  'badminton': { met: 5.5, nombre: 'Bádminton recreativo' },
+  'badminton-competicion': { met: 7.0, nombre: 'Bádminton competición' },
 };
 
 export function caloriasTenisPadel(i: Inputs): Outputs {

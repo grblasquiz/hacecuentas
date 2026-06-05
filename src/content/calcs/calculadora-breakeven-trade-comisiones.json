@@ -1,28 +1,30 @@
 {
   "slug": "calculadora-breakeven-trade-comisiones",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora de Breakeven por Comisiones y Spread 2026",
-  "h1": "Calculadora de Breakeven por Comisiones y Spread",
-  "description": "💰 Breakeven trade: precio mínimo de salida para cubrir comisión de entrada, salida y spread. Cripto, forex, stocks. BE long = Entrada × (1 + feesTotal%).",
+  "lastReviewed": "2026-06-05",
+  "title": "Calcular precio breakeven en trading: comisiones + spread | Hacé Cuentas",
+  "h1": "Calculadora de precio breakeven en trading (comisiones + spread)",
+  "description": "Calculá el precio exacto al que tu trade cubre comisiones de entrada, salida y spread. Fórmula: BE = Entrada × (1 + fees%). Para long y short. Cripto, forex y acciones.",
   "category": "finanzas",
   "icon": "📊",
   "formulaId": "breakeven-trade-comisiones",
   "audience": "global",
+  "answerSnippet": "El precio de breakeven en un trade long es: **Entrada × (1 + comisiónEntrada% + comisiónSalida% + spread%)**. Por ejemplo, con precio de entrada $40.000 y fees totales del 0,25% (0,1% + 0,1% + 0,05%), el breakeven es **$40.100**. Hasta ese precio, el trade pierde dinero aunque parezca en verde.",
   "seoKeywords": [
-    "breakeven trade",
-    "comisiones trading",
-    "spread forex",
-    "fees cripto",
-    "punto equilibrio trading"
+    "precio breakeven trading",
+    "calcular breakeven trade",
+    "comisiones trading punto equilibrio",
+    "breakeven cripto fees",
+    "punto de equilibrio trading comisiones"
   ],
-  "intro": "Cada trade tiene un **costo invisible**: comisiones de entrada + comisiones de salida + spread bid/ask. Hasta que el precio no supera esos costos, **no ganaste nada** aunque parezca que sí. Esta calculadora te da el **precio exacto de breakeven**: a qué valor tu trade pasa de perder a empezar a ganar. Soporta fees porcentuales (típico cripto/stocks) o fixed (forex, futuros). En cripto con fees de 0.1% + 0.1% + 0.05% spread, un long debe subir ~0.25% sólo para no perder. Multiplicado por cientos de trades al año, es la diferencia entre rentable y ruina. También calcula la pérdida si cerrás en breakeven nominal sin considerar fees.",
-  "keyTakeaway": "**BE long = Entrada × (1 + feesTotal%)**. Ej: 0.25% de fees = precio debe subir 0.25% sólo para empatar.",
+  "intro": "Cada trade tiene un **costo invisible**: comisión de entrada + comisión de salida + spread bid/ask. Hasta que el precio no supera esos costos, **no ganaste nada** aunque el número parezca positivo. Esta calculadora te da el **precio exacto de breakeven**: el valor al que tu trade pasa de perder a empezar a ganar. Soporta fees porcentuales (típico cripto/acciones) o cualquier combinación. En cripto con fees 0,1% + 0,1% + 0,05% spread, un long debe subir ~0,25% solo para no perder. Multiplicado por cientos de trades al año, es la diferencia entre rentabilidad y ruina.",
+  "keyTakeaway": "**BE long = Entrada × (1 + feesTotal%)**. Con 0,25% de fees totales, el precio debe subir 0,25% para empatar — antes de ese punto, cualquier cierre es pérdida.",
   "useCases": [
-    "Saber si cerrar un trade en verde realmente es ganancia.",
-    "Comparar brokers por impacto real de comisiones.",
-    "Decidir si scalping con baja comisión vale la pena.",
-    "Calcular impacto en estrategias de alta frecuencia.",
-    "Auditar trades cerrados que parecían breakeven."
+    "Saber si cerrar un trade en verde es realmente ganancia o sigue siendo pérdida neta.",
+    "Comparar brokers por el impacto real de sus comisiones en cada operación.",
+    "Decidir si una estrategia de scalping es viable dado el nivel de comisiones.",
+    "Calcular el impacto de fees en estrategias de alta frecuencia (HFT).",
+    "Auditar trades cerrados que parecían breakeven pero resultaron en pérdida.",
+    "Establecer un stop-loss mínimo por encima del precio de breakeven real."
   ],
   "fields": [
     {
@@ -33,7 +35,7 @@
       "required": true,
       "min": 0.01,
       "step": 0.01,
-      "help": "Precio de ejecución de tu orden (no el precio que viste cuando pusiste la orden). En mercados ilíquidos puede haber slippage de 0.1-1%."
+      "help": "Precio de ejecución real de tu orden. En mercados ilíquidos puede haber slippage de 0,1–1% respecto al precio que viste al colocar la orden."
     },
     {
       "id": "tamanoPosicion",
@@ -43,7 +45,7 @@
       "required": true,
       "min": 0.0001,
       "step": 0.0001,
-      "help": "Unidades/contratos que vas a operar. En acciones, nominal. En futuros, contratos. En cripto, cantidad de tokens."
+      "help": "Unidades a operar. En acciones: cantidad de papeles. En futuros: contratos. En cripto: cantidad de tokens."
     },
     {
       "id": "comisionEntradaPorc",
@@ -54,7 +56,7 @@
       "min": 0,
       "max": 10,
       "step": 0.001,
-      "help": "Fee del broker al abrir. Broker argentino acciones: 0.5-1%. Binance spot: 0.1% (0.075% con BNB). Bybit perp: 0.02% maker / 0.055% taker. IBKR USA: 0.005-0.01%."
+      "help": "Fee del broker al abrir. Binance spot: 0,10% (0,075% con BNB). Bybit perpetuo: 0,02% maker / 0,055% taker. Brokers AR acciones: 0,5–1%. IBKR USA: 0,005–0,01%."
     },
     {
       "id": "comisionSalidaPorc",
@@ -65,7 +67,7 @@
       "min": 0,
       "max": 10,
       "step": 0.001,
-      "help": "Mismo fee al cerrar. Normalmente igual a la comisión de entrada. Si hacés maker (orden limit no agresiva), algunos exchanges cobran menos o incluso reembolsan."
+      "help": "Fee al cerrar la posición. Normalmente igual a la comisión de entrada. Algunos exchanges cobran menos o dan rebate si hacés maker (limit order que no se ejecuta de inmediato)."
     },
     {
       "id": "spreadPorcentaje",
@@ -76,7 +78,7 @@
       "min": 0,
       "max": 10,
       "step": 0.001,
-      "help": "Diferencia bid-ask. BTC/ETH: 0.01-0.05%. Altcoins líquidas: 0.1-0.5%. Acciones AR líquidas: 0.2-0.5%. Panel general BYMA: 1-3%. Medilo justo antes de operar."
+      "help": "Diferencia entre precio de compra y venta. BTC/ETH grandes exchanges: 0,01–0,05%. Altcoins líquidas: 0,1–0,5%. Acciones AR líquidas: 0,2–0,5%. Panel general BYMA: 1–3%. Medilo justo antes de operar."
     },
     {
       "id": "direccion",
@@ -86,23 +88,23 @@
       "options": [
         {
           "value": "long",
-          "label": "Long"
+          "label": "Long (comprás, esperás suba)"
         },
         {
           "value": "short",
-          "label": "Short"
+          "label": "Short (vendés, esperás baja)"
         }
       ],
-      "help": "Long: comprás esperando suba. Short: vendés en descubierto o abrís short en futuros esperando baja. El breakeven suma comisiones ida+vuelta más el spread."
+      "help": "Long: comprás esperando que el precio suba. Short: vendés en descubierto o abrís short en futuros esperando que baje. El breakeven suma comisiones ida+vuelta más el spread."
     }
   ],
   "dataUpdate": {
     "frequency": "yearly",
     "lastUpdated": "2026-04-16",
-    "source": "Binance Fees",
+    "source": "Binance Fee Schedule",
     "sourceUrl": "https://www.binance.com/en/fee/schedule",
     "updateType": "manual",
-    "notes": "Fórmulas estándar de la industria."
+    "notes": "Fórmulas estándar de la industria. Los fee rates de referencia se actualizan anualmente."
   },
   "outputs": [
     {
@@ -128,58 +130,66 @@
     }
   ],
   "example": {
-    "title": "Long BTC 40.000, 1 unidad, fees 0.1+0.1+0.05%",
+    "title": "Long BTC a $40.000, 1 unidad, fees 0,1% + 0,1% + 0,05% spread",
     "steps": [
-      "Total fees = 0.25%.",
-      "BE long = 40.000 × 1.0025 = **40.100 USD**.",
-      "Costo total = 40.000 × 0.0025 = **100 USD**.",
-      "Si cerrás a 40.050 creés que ganaste 50, pero perdiste 50 (fee)."
+      "Fees totales = 0,1% + 0,1% + 0,05% = **0,25%**.",
+      "BE long = 40.000 × (1 + 0,0025) = **40.100 USD**.",
+      "Costo total en fees = 40.000 × 0,0025 = **100 USD**.",
+      "Si cerrás a $40.050 creés que ganaste $50, pero perdiste $50 en fees. El trade es negativo hasta que el precio supere los $40.100."
     ],
-    "result": "BE a **40.100**. Costo total **100 USD**. Subir <0.25% = pérdida neta."
+    "result": "Precio de breakeven: **$40.100**. Movimiento necesario: **0,25%**. Costo total fees: **$100 USD**."
   },
-  "explanation": "## Fórmula de breakeven\n\nPara una posición **long**:\n\n```\nCosto total % = feeEntrada + feeSalida + spread\nBE long = Entrada × (1 + costoTotal/100)\nBE short = Entrada × (1 − costoTotal/100)\n```\n\nPara fees fijos (futuros, forex con comisión por lote):\n```\nBE = Entrada + (FeeTotal / TamañoPosición)\n```\n\n## Tabla: costos típicos por mercado\n\n| Mercado | Fee típico | Spread |\n|---|---|---|\n| Binance spot | 0.1% (0.075% con BNB) | 0.01-0.05% |\n| Coinbase Pro | 0.5% (retail) | 0.02-0.1% |\n| Kraken | 0.16-0.26% | 0.02-0.1% |\n| IBKR stocks | 0.005/share (min 1 USD) | 0.01% |\n| Forex ECN | 0.3-0.7 pips | incluido |\n| Brokers retail | 0-0.1% | 1-3 pips |\n| MELI/IOL (ARG) | 0.5-0.7% | 0.1-0.5% |\n\n## Impacto en estrategias\n\nScalper 100 trades/día × 0.25% = **25% al día** sólo en fees. Imposible rentable.\n\nSwing trader 20 trades/mes × 0.25% = 5% al mes. Si tu edge es 10%, fees se comen la mitad.\n\nPor eso HFT/market makers negocian **rebate**: cobran por dar liquidez en lugar de pagar.\n\n## Cómo reducir costos\n\n1. **Limit orders** en lugar de market (evitás spread).\n2. **Maker fees** menores (Binance 0.02% vs taker 0.05% con alto volumen).\n3. **Brokers ECN** con fee fija en vez de spread variable.\n4. **Reducir frecuencia** — cada trade cuenta.\n\nComplementos: [R:R](/calculadora-risk-reward-ratio-trade) · [PnL](/calculadora-pnl-trade-stock-cripto)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## Fórmula de precio breakeven en trading\n\nPara una posición **long** (comprás esperando suba):\n\n```\nCosto total % = comisiónEntrada + comisiónSalida + spread\nBE long = Precio entrada × (1 + costoTotal/100)\n```\n\nPara una posición **short** (vendés esperando baja):\n\n```\nBE short = Precio entrada × (1 − costoTotal/100)\n```\n\n## Tabla de breakeven según fees totales\n\n| Fees totales | BE long a $1.000 | BE long a $10.000 | BE long a $50.000 |\n|---|---|---|---|\n| 0,10% | $1.001 | $10.010 | $50.050 |\n| 0,25% | $1.002,50 | $10.025 | $50.125 |\n| 0,50% | $1.005 | $10.050 | $50.250 |\n| 1,00% | $1.010 | $10.100 | $50.500 |\n| 2,00% | $1.020 | $10.200 | $51.000 |\n| 3,00% | $1.030 | $10.300 | $51.500 |\n\n## Fees reales por mercado en 2026\n\n| Mercado / Broker | Fee entrada | Fee salida | Spread típico | BE total |\n|---|---|---|---|---|\n| Binance spot (VIP0) | 0,10% | 0,10% | 0,02–0,05% | ~0,25% |\n| Binance spot (con BNB) | 0,075% | 0,075% | 0,02–0,05% | ~0,19% |\n| Bybit perpetuo (taker) | 0,055% | 0,055% | 0,01–0,03% | ~0,13% |\n| Bybit perpetuo (maker) | 0,02% | 0,02% | 0% | ~0,04% |\n| Coinbase Advanced | 0,40% | 0,40% | 0,05–0,10% | ~0,85% |\n| IBKR acciones USA | 0,01% | 0,01% | 0,01% | ~0,03% |\n| OKX spot (VIP0) | 0,10% | 0,10% | 0,02–0,05% | ~0,25% |\n| Brokers AR acciones | 0,60% | 0,60% | 0,20–0,50% | ~1,70% |\n| Lemon/Buenbit cripto | 0,50% | 0,50% | 0,50–1,0% | ~2,00% |\n\n## Impacto en distintas estrategias\n\n**Scalping (>5 trades/día):** Con 0,25% de fees, hacer 100 trades = costo del 25% del capital en un día. Matemáticamente imposible de rentabilizar salvo con fees <0,05% y altísima tasa de acierto.\n\n**Day trading (1–5 trades/día):** Con 0,25% fees y target de 1%, el costo se lleva el 25% de la ganancia potencial. Necesitás win rate alto y RR ≥ 2:1.\n\n**Swing trading (días/semanas):** Fees amortizados en movimientos grandes (5–20%). Impacto menor, pero sigue restando al edge de la estrategia.\n\n**Position trading (meses):** Fees casi irrelevantes en movimientos de 50–200%. El foco es el stop-loss y el análisis fundamental.\n\n## Cómo reducir el costo de fees\n\n1. **Usá limit orders** (maker) en lugar de market (taker) — ahorrás 0,03–0,08% por lado.\n2. **Acumulá volumen** para bajar de tier — en Binance, VIP3 ($15M/mes) baja a 0,05% maker.\n3. **Pagá con token del exchange** — Binance BNB descuenta 25% sobre las fees.\n4. **Buscá exchanges con maker rebate** — algunos pagan por proveer liquidez.\n5. **Reducí la frecuencia de trading** — cada ida y vuelta cuesta.\n\nComplementos: [R:R ratio](/calculadora-risk-reward-ratio-trade) · [PnL trade](/calculadora-pnl-trade-stock-cripto)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Fuentes: Binance Fee Schedule, IBKR Commissions, documentación oficial de cada exchange.",
   "faq": [
     {
-      "q": "¿Spread cuenta como costo?",
-      "a": "Sí — siempre. En forex el spread ES el costo principal. En cripto/stocks es secundario pero real."
+      "q": "¿Cómo se calcula el precio de breakeven en un trade?",
+      "a": "**BE long = Precio de entrada × (1 + fees totales%)**. Los fees totales son la suma de comisión de entrada + comisión de salida + spread bid/ask. Por ejemplo, entrada $10.000 con 0,25% de fees totales: BE = $10.000 × 1,0025 = **$10.025**. Para un short: BE short = Entrada × (1 − fees%)."
     },
     {
-      "q": "¿Cómo negocio mejores fees?",
-      "a": "Aumentando volumen mensual. Binance VIP 0: 0.1%, VIP 9: 0.012% maker. Cuentas institucionales: fees casi 0."
+      "q": "¿El spread bid/ask cuenta como costo al calcular el breakeven?",
+      "a": "Sí, siempre. El spread es el costo implícito por operar: comprás al precio ask (más alto) y vendés al precio bid (más bajo). En forex el spread ES el costo principal. En cripto spot de exchanges grandes el spread es bajo (0,01–0,05%), pero en altcoins o en exchanges de baja liquidez puede ser del 0,5% o más — lo que destruye el edge en scalping."
     },
     {
-      "q": "¿Break-even incluye impuestos?",
-      "a": "No — este cálculo es pre-impuestos. Para impuestos sumalos como costo adicional (depende de tu jurisdicción)."
+      "q": "¿Cuál es la diferencia entre fee maker y fee taker?",
+      "a": "**Taker** (ejecutás una orden que ya está en el libro, típicamente market order) paga la comisión más alta. **Maker** (ponés una limit order que queda en el libro esperando ejecución) paga menos o incluso recibe rebate. En Binance VIP0: taker 0,10%, maker 0,10% (igual). En Bybit perpetuo: taker 0,055%, maker 0,02% — con maker podés reducir el breakeven a la mitad."
     },
     {
-      "q": "¿Diferencia entre maker y taker?",
-      "a": "**Maker** (colocás limit que queda en el libro) paga menos o cobra rebate. **Taker** (ejecutás contra orden existente) paga más."
+      "q": "¿El cálculo de breakeven incluye impuestos sobre ganancias?",
+      "a": "No. Esta calculadora cubre solo comisiones de broker/exchange y spread. Para incluir impuestos (en Argentina: el 15% sobre ganancias en cripto o la alícuota de bienes personales/ganancias para acciones), sumá el costo impositivo estimado como un porcentaje adicional en el campo de comisión de salida."
     },
     {
-      "q": "¿Impacta en scalping?",
-      "a": "Brutal. Con fees de 0.1% total y stops de 0.3%, tu R:R real se reduce en 33%. Por eso pros scalping buscan fees <0.02%."
+      "q": "¿Para qué mercados funciona la fórmula de breakeven?",
+      "a": "Funciona para cualquier mercado con fees porcentuales: **cripto spot y futuros**, **acciones**, **ETFs**, **opciones** (en parte). También para **forex** cuando el broker cobra comisión porcentual (en lugar de solo spread fijo en pips). Para futuros con fees fijas por contrato, convertí el fee fijo a porcentaje: Fee% = FeeUSD / (Precio × Contratos)."
     },
     {
-      "q": "¿Vale para swing trading?",
-      "a": "Menos impacto (fees amortizados en movimientos grandes), pero sigue restando al edge. Siempre calculalos."
+      "q": "¿Con qué nivel de fees es rentable hacer scalping?",
+      "a": "Para que el scalping sea matemáticamente viable necesitás fees totales (entrada + salida + spread) **por debajo del 0,1%** por operación. En Binance esto requiere mínimo nivel VIP1 ($1M volumen/30 días) para llegar a maker 0,09%/taker 0,10%, o usar Bybit con maker orders (0,02% cada lado = 0,04% total). Con 0,25% de fees y stops de 0,5%, tu win rate mínimo requerido para breakeven es del 67% — difícil de sostener."
     },
     {
-      "q": "¿Qué exchange cripto tiene menos fees para daily trading?",
-      "a": "Ranking 2026 para spot: **Binance 0.10% maker/taker** (VIP0, baja a 0.075% con BNB). **Bybit 0.10%** (0.055% maker con USDC). **Kraken Pro 0.16% taker, 0.26% maker**. **MercadoPago crypto: 3-4% spread oculto** (bad). Desde Argentina: **Lemon/Buenbit 0.5-1% spread** ambos lados → breakeven solo alcanzable con swing >2%. Para scalping (>5 trades/día) necesitás Binance/Bybit nivel VIP1 (30d volumen $1M USD) → fees 0.075%."
+      "q": "¿Cómo negocio fees más bajas con mi broker o exchange?",
+      "a": "Los principales caminos: (1) aumentar el volumen mensual para subir de tier (en todos los grandes exchanges); (2) mantener tokens del exchange para descuento (BNB en Binance, OKB en OKX); (3) negociar directamente con brokers institucionales si operás más de $100K/mes; (4) usar market makers o prime brokers si operás $1M+/mes. Para cuentas retail en Argentina, comparar IOL (0,50%) vs Cocos Capital vs Balanz."
+    },
+    {
+      "q": "¿Cuál es el breakeven promedio en trading de cripto en Argentina?",
+      "a": "Depende del exchange. Usando Binance desde Argentina (vía USDT P2P): fees 0,1% + 0,1% + spread ~0,03% = ~0,23% total. Usando Lemon o Buenbit directamente: spread oculto de 0,5–1% cada lado → breakeven de 1,5–3% por operación — solo viable para swing trading con targets grandes. Recomendado para day trading: Binance/Bybit con nivel VIP1+, operando pares USDT de alta liquidez."
     }
   ],
   "sources": [
     {
-      "name": "Binance Fees",
+      "name": "Binance Fee Schedule",
       "url": "https://www.binance.com/en/fee/schedule"
     },
     {
-      "name": "IBKR Commissions",
+      "name": "Bybit Fee Structure",
+      "url": "https://www.bybit.com/en/help-center/article/Transaction-Fee-Rates"
+    },
+    {
+      "name": "Interactive Brokers Commissions - Stocks",
       "url": "https://www.interactivebrokers.com/en/pricing/commissions-stocks.php"
     },
     {
-      "name": "Investopedia - Trading Costs",
-      "url": "https://www.investopedia.com/"
+      "name": "Investopedia - Trading Costs Explained",
+      "url": "https://www.investopedia.com/terms/t/transactioncosts.asp"
     }
   ],
   "relatedSlugs": [
@@ -190,16 +200,24 @@
   ],
   "howToSteps": [
     {
-      "name": "Ingresá los datos",
-      "text": "Completá los campos del formulario con tus valores."
+      "name": "Ingresá el precio de entrada y tamaño",
+      "text": "Escribí el precio real de ejecución de tu orden (no el precio de pantalla, el de ejecución efectiva) y la cantidad de unidades/contratos que operás."
     },
     {
-      "name": "Hacé click en Calcular",
-      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
+      "name": "Completá comisiones de entrada y salida",
+      "text": "Ingresá el fee porcentual de tu broker o exchange para abrir y para cerrar la posición. Si no sabés el porcentaje exacto, buscá en la sección 'Fees' o 'Comisiones' de tu plataforma."
     },
     {
-      "name": "Revisá los resultados",
-      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+      "name": "Agregá el spread bid/ask",
+      "text": "Para cripto en exchanges grandes (BTC/ETH), usá 0,02–0,05%. Para altcoins o mercados menos líquidos, mirá la diferencia entre el precio de compra y de venta en el libro de órdenes y calculalo como porcentaje."
+    },
+    {
+      "name": "Seleccioná la dirección del trade",
+      "text": "Elegí 'Long' si compraste esperando que el precio suba, o 'Short' si vendiste en descubierto o abriste un contrato de futuros corto."
+    },
+    {
+      "name": "Hacé clic en Calcular",
+      "text": "La calculadora te muestra el precio exacto de breakeven, el porcentaje de movimiento necesario para cubrir fees, y el costo total en dinero de las comisiones."
     }
   ]
 }

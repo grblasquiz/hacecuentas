@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-05-31
+// Generated: 2026-06-05
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -1003,6 +1003,7 @@ import { cuposSudamericanaPais } from './cupos-sudamericana-pais';
 import { cupsToGramsConverter } from './cups-to-grams-converter';
 import { compute as compute__curp_colombia_cedula_ciudadania_extranjeria_validez } from './curp-colombia-cedula-ciudadania-extranjeria-validez';
 import { compute as compute__curp_validacion_estructura_mexico } from './curp-validacion-estructura-mexico';
+import { currencyConverter } from './currency-converter';
 import { compute as compute__cursor_vs_copilot_vs_claude_code_precio_mensual } from './cursor-vs-copilot-vs-claude-code-precio-mensual';
 import { curvaOlvidoEbbinghausRepasosProgramados } from './curva-olvido-ebbinghaus-repasos-programados';
 import { curveStablePoolApy } from './curve-stable-pool';
@@ -1117,6 +1118,7 @@ import { dilucionSolucionC1v1 } from './dilucion-solucion-c1v1';
 import { dilucionWhiskyAbvObjetivo } from './dilucion-whisky-abv-objetivo';
 import { dineroSuegraSuegroCuantoFamiliaAyuda } from './dinero-suegra-suegro-cuanto-familia-ayuda';
 import { discordServerBoostNitro } from './discord-server-boost-nitro';
+import { discountCalculator } from './discount-calculator';
 import { distanciaBarreraTiroLibre } from './distancia-barrera-tiro-libre';
 import { distanciaCaidaLibreAltura } from './distancia-caida-libre-altura';
 import { distanciaDosPuntosPlanoCartesiano } from './distancia-dos-puntos-plano-cartesiano';
@@ -1403,6 +1405,7 @@ import { filamentoSoldadorMm2 } from './filamento-soldador-mm2';
 import { filtroAguaCambioFrecuencia } from './filtro-agua-cambio-frecuencia';
 import { filtroNdPasosExposicion } from './filtro-nd-pasos-exposicion';
 import { filtroNdStopsTiempo } from './filtro-nd-stops-tiempo';
+import { finalGradeCalculator } from './final-grade-calculator';
 import { finalVolumeCervezaFermentador } from './final-volume-cerveza-fermentador';
 import { financiacionAutoCuotaPrendario } from './financiacion-auto-cuota-prendario';
 import { financialFairPlayUefa } from './financial-fair-play-uefa';
@@ -2235,6 +2238,7 @@ import { ordenKondoTiempoEstimado } from './orden-kondo-tiempo-estimado';
 import { organizadorPlacardEspacios } from './organizador-placard-espacios';
 import { compute as compute__oven_temperature_conversion_calculator } from './oven-temperature-conversion-calculator';
 import { overclockTemperaturaSegura } from './overclock-temperatura-segura';
+import { overtimePayCalculator } from './overtime-pay-calculator';
 import { compute as compute__ovulacao_periodo_fertil_ciclo } from './ovulacao-periodo-fertil-ciclo';
 import { ovulacion } from './ovulacion';
 import { ovulacionDiaFertilCicloRegular } from './ovulacion-dia-fertil-ciclo-regular';
@@ -2812,6 +2816,7 @@ import { rm } from './rm';
 import { compute as compute__road_trip_time_distance_calculator } from './road-trip-time-distance-calculator';
 import { roiAdSpendAmazonPpc } from './roi-ad-spend-amazon-ppc';
 import { roiAdSpendFacebookMeta } from './roi-ad-spend-facebook-meta';
+import { roiCalculator } from './roi-calculator';
 import { roiCapacitacionEmpleados } from './roi-capacitacion-empleados';
 import { roiCoaching1On1Venta } from './roi-coaching-1-on-1-venta';
 import { roiCursoOnlineUdemy } from './roi-curso-online-udemy';
@@ -2847,6 +2852,7 @@ import { salarioRealInflacion } from './salario-real-inflacion';
 import { compute as compute__saldo_afp_rentabilidad_multifondos_chile_2026 } from './saldo-afp-rentabilidad-multifondos-chile-2026';
 import { saldoCriptoValorMonedaLocalMulti } from './saldo-cripto-valor-moneda-local-multi';
 import { saldoSalarioRescisao } from './saldo-salario-rescisao';
+import { salesTaxCalculator } from './sales-tax-calculator';
 import { satIeltsToeflEquivalenciasPuntajeConvertidor } from './sat-ielts-toefl-equivalencias-puntaje-convertidor';
 import { saturacionOxigenoEvaluacion } from './saturacion-oxigeno-evaluacion';
 import { saturacionOxigenoSpo2AltitudNormal } from './saturacion-oxigeno-spo2-altitud-normal';
@@ -3224,6 +3230,7 @@ import { umaConversion } from './uma-conversion';
 import { umbralLactatoEstimado } from './umbral-lactato-estimado';
 import { compute as compute__uniswap_v3_concentrated_liquidity_rango_impermanent } from './uniswap-v3-concentrated-liquidity-rango-impermanent';
 import { uniswapV3Fees } from './uniswap-v3-fees';
+import { unitConverter } from './unit-converter';
 import { compute as compute__universidad_publica_vs_privada_colombia_coste_2026 } from './universidad-publica-vs-privada-colombia-coste-2026';
 import { compute as compute__universidad_publica_vs_privada_coste_grado_espana } from './universidad-publica-vs-privada-coste-grado-espana';
 import { upgradeClaseAvionCosto } from './upgrade-clase-avion-costo';
@@ -3266,6 +3273,7 @@ import { valuacionFiscalAutomotorProvincia } from './valuacion-fiscal-automotor-
 import { compute as compute__valuacion_fiscal_neuquen_2026_impuesto_inmobiliario } from './valuacion-fiscal-neuquen-2026-impuesto-inmobiliario';
 import { valuacionStartupMetodoBerkus } from './valuacion-startup-metodo-berkus';
 import { variantesIdiomaEspanolPortuguesInglesRegiones } from './variantes-idioma-espanol-portugues-ingles-regiones';
+import { vatCalculator } from './vat-calculator';
 import { vectorSumaRestaMagnitud } from './vector-suma-resta-magnitud';
 import { veganaProteinaCompletaCombinacionAminoacidos } from './vegana-proteina-completa-combinacion-aminoacidos';
 import { velasTortaCumple } from './velas-torta-cumple';
@@ -3399,24 +3407,8 @@ import { zona2CardioFrecuenciaEdadVo2max } from './zona2-cardio-frecuencia-edad-
 import { zonasEntrenamientoFcMax } from './zonas-entrenamiento-fc-max';
 import { zonasFrecuenciaCardiacaEntrenamiento } from './zonas-frecuencia-cardiaca-entrenamiento';
 import { zonasPotenciaCiclismoWattsKg } from './zonas-potencia-ciclismo-watts-kg';
-import { salesTaxCalculator } from './sales-tax-calculator';
-import { discountCalculator } from './discount-calculator';
-import { overtimePayCalculator } from './overtime-pay-calculator';
-import { finalGradeCalculator } from './final-grade-calculator';
-import { roiCalculator } from './roi-calculator';
-import { vatCalculator } from './vat-calculator';
-import { unitConverter } from './unit-converter';
-import { currencyConverter } from './currency-converter';
 
 export const formulas: Record<string, (inputs: any) => any> = {
-  'sales-tax-calculator': salesTaxCalculator,
-  'discount-calculator': discountCalculator,
-  'overtime-pay-calculator': overtimePayCalculator,
-  'final-grade-calculator': finalGradeCalculator,
-  'roi-calculator': roiCalculator,
-  'vat-calculator': vatCalculator,
-  'unit-converter': unitConverter,
-  'currency-converter': currencyConverter,
   '13-salario-liquido-bruto-clt': compute__13_salario_liquido_bruto_clt,
   '1rm-estimacion-fuerza-maxima': compute__1rm_estimacion_fuerza_maxima,
   '1rm-peso-maximo': rmPesoMaximo,
@@ -4419,6 +4411,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cups-to-grams-converter': cupsToGramsConverter,
   'curp-colombia-cedula-ciudadania-extranjeria-validez': compute__curp_colombia_cedula_ciudadania_extranjeria_validez,
   'curp-validacion-estructura-mexico': compute__curp_validacion_estructura_mexico,
+  'currency-converter': currencyConverter,
   'cursor-vs-copilot-vs-claude-code-precio-mensual': compute__cursor_vs_copilot_vs_claude_code_precio_mensual,
   'curva-olvido-ebbinghaus-repasos-programados': curvaOlvidoEbbinghausRepasosProgramados,
   'curve-stable-pool': curveStablePoolApy,
@@ -4533,6 +4526,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'dilucion-whisky-abv-objetivo': dilucionWhiskyAbvObjetivo,
   'dinero-suegra-suegro-cuanto-familia-ayuda': dineroSuegraSuegroCuantoFamiliaAyuda,
   'discord-server-boost-nitro': discordServerBoostNitro,
+  'discount-calculator': discountCalculator,
   'distancia-barrera-tiro-libre': distanciaBarreraTiroLibre,
   'distancia-caida-libre-altura': distanciaCaidaLibreAltura,
   'distancia-dos-puntos-plano-cartesiano': distanciaDosPuntosPlanoCartesiano,
@@ -4819,6 +4813,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'filtro-agua-cambio-frecuencia': filtroAguaCambioFrecuencia,
   'filtro-nd-pasos-exposicion': filtroNdPasosExposicion,
   'filtro-nd-stops-tiempo': filtroNdStopsTiempo,
+  'final-grade-calculator': finalGradeCalculator,
   'final-volume-cerveza-fermentador': finalVolumeCervezaFermentador,
   'financiacion-auto-cuota-prendario': financiacionAutoCuotaPrendario,
   'financial-fair-play-uefa': financialFairPlayUefa,
@@ -5651,6 +5646,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'organizador-placard-espacios': organizadorPlacardEspacios,
   'oven-temperature-conversion-calculator': compute__oven_temperature_conversion_calculator,
   'overclock-temperatura-segura': overclockTemperaturaSegura,
+  'overtime-pay-calculator': overtimePayCalculator,
   'ovulacao-periodo-fertil-ciclo': compute__ovulacao_periodo_fertil_ciclo,
   'ovulacion': ovulacion,
   'ovulacion-dia-fertil-ciclo-regular': ovulacionDiaFertilCicloRegular,
@@ -6228,6 +6224,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'road-trip-time-distance-calculator': compute__road_trip_time_distance_calculator,
   'roi-ad-spend-amazon-ppc': roiAdSpendAmazonPpc,
   'roi-ad-spend-facebook-meta': roiAdSpendFacebookMeta,
+  'roi-calculator': roiCalculator,
   'roi-capacitacion-empleados': roiCapacitacionEmpleados,
   'roi-coaching-1-on-1-venta': roiCoaching1On1Venta,
   'roi-curso-online-udemy': roiCursoOnlineUdemy,
@@ -6263,6 +6260,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'saldo-afp-rentabilidad-multifondos-chile-2026': compute__saldo_afp_rentabilidad_multifondos_chile_2026,
   'saldo-cripto-valor-moneda-local-multi': saldoCriptoValorMonedaLocalMulti,
   'saldo-salario-rescisao': saldoSalarioRescisao,
+  'sales-tax-calculator': salesTaxCalculator,
   'sat-ielts-toefl-equivalencias-puntaje-convertidor': satIeltsToeflEquivalenciasPuntajeConvertidor,
   'saturacion-oxigeno-evaluacion': saturacionOxigenoEvaluacion,
   'saturacion-oxigeno-spo2-altitud-normal': saturacionOxigenoSpo2AltitudNormal,
@@ -6640,6 +6638,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'umbral-lactato-estimado': umbralLactatoEstimado,
   'uniswap-v3-concentrated-liquidity-rango-impermanent': compute__uniswap_v3_concentrated_liquidity_rango_impermanent,
   'uniswap-v3-fees': uniswapV3Fees,
+  'unit-converter': unitConverter,
   'universidad-publica-vs-privada-colombia-coste-2026': compute__universidad_publica_vs_privada_colombia_coste_2026,
   'universidad-publica-vs-privada-coste-grado-espana': compute__universidad_publica_vs_privada_coste_grado_espana,
   'upgrade-clase-avion-costo': upgradeClaseAvionCosto,
@@ -6682,6 +6681,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'valuacion-fiscal-neuquen-2026-impuesto-inmobiliario': compute__valuacion_fiscal_neuquen_2026_impuesto_inmobiliario,
   'valuacion-startup-metodo-berkus': valuacionStartupMetodoBerkus,
   'variantes-idioma-espanol-portugues-ingles-regiones': variantesIdiomaEspanolPortuguesInglesRegiones,
+  'vat-calculator': vatCalculator,
   'vector-suma-resta-magnitud': vectorSumaRestaMagnitud,
   'vegana-proteina-completa-combinacion-aminoacidos': veganaProteinaCompletaCombinacionAminoacidos,
   'velas-torta-cumple': velasTortaCumple,

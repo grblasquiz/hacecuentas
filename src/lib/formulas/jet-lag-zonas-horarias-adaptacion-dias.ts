@@ -2,7 +2,8 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: any; }
 export function jetLagZonasHorariasAdaptacionDias(i: Inputs): Outputs {
   const h=Math.abs(Number(i.diferenciaHoras)||0); const d=String(i.direccion||'este');
-  const dias=d==='este'?Math.ceil(h/1.25):Math.ceil(h/2);
+  // Standard clinical rule: 1 day/hour east (harder), 1.5 hours/day west (easier)
+  const dias=d==='este'?Math.ceil(h/1):Math.ceil(h/1.5);
   const severidad=h<=3?'Leve':h<=6?'Medio':h<=9?'Alto':'Muy alto';
   const _insight = {
     title: `~${dias} ${dias === 1 ? 'día' : 'días'} para adaptarte`,

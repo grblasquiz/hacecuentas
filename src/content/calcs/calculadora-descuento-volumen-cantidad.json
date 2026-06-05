@@ -1,37 +1,38 @@
 {
   "slug": "calculadora-descuento-volumen-cantidad",
-  "lastReviewed": "2026-04-27",
-  "title": "Descuento por Volumen (Bulk Discount) 2026 | Hacé Cuentas",
-  "h1": "Descuento por Volumen (Bulk Discount)",
-  "description": "📊 Descuento volumen: calculá el descuento por cantidad (bulk discount) en compras al mayoreo. Precio unitario con descuento, ahorro total y break-even del st...",
+  "lastReviewed": "2026-06-04",
+  "title": "Descuento por Volumen: calculadora + tabla de ahorro | Hacé Cuentas",
+  "h1": "Calculadora de Descuento por Volumen (Bulk Discount)",
+  "description": "Calculá el descuento por cantidad en segundos: precio unitario con descuento, ahorro total y meses de stock. Tabla de referencia incluida.",
   "category": "negocios",
   "icon": "📦",
   "formulaId": "descuento-volumen-cantidad",
   "seoKeywords": [
-    "descuento volumen",
+    "descuento por volumen",
     "descuento por cantidad",
-    "bulk discount",
+    "bulk discount calculadora",
     "compra al mayoreo",
     "tiered pricing",
-    "escalonado precio",
     "volume pricing",
     "descuento escalonado",
-    "precio mayorista",
+    "precio mayorista calculadora",
+    "calculadora bulk discount",
     "break even stock"
   ],
-  "intro": "El **descuento por volumen** es el clásico mecanismo comercial donde **pagás menos por unidad cuanto más comprás**. Es universal: desde supermercados (tamaño familiar vs chico) hasta B2B (software con tiers por seats, steel por toneladas). Pero antes de 'aprovechar la oferta', hay que hacer la cuenta: **¿cuánto ahorrás realmente?** y **¿vale la pena el capital atado en stock?** Esta calculadora te da: **precio unitario con descuento**, **ahorro total vs comprar al precio base**, **punto de equilibrio** (cuántas unidades tenés que consumir para que valga la pena) y un análisis de **costo de oportunidad del inventario**. Útil para ecommerce, compras corporativas, resellers y cualquier negocio que compra por mayor.",
+  "answerSnippet": "El descuento por volumen reduce el precio unitario en función de la cantidad comprada. Fórmula: **Precio unitario con descuento = Precio base × (1 − descuento%)**. Ejemplo: precio $10, descuento 15% → precio unitario $8,50. Comprando 500 unidades, el ahorro total es $750 (15% del total). En B2B, descuentos de 10-25% son habituales para volúmenes entre 50 y 500 unidades.",
+  "intro": "El **descuento por volumen** es el mecanismo comercial donde **pagás menos por unidad cuanto más comprás**. Es universal: desde supermercados (tamaño familiar vs individual) hasta B2B (SaaS con tiers por seats, acero por toneladas). Pero antes de 'aprovechar la oferta', hay que hacer la cuenta: **¿cuánto ahorrás realmente?** y **¿vale la pena el capital atado en stock?** Esta calculadora te da: **precio unitario con descuento**, **ahorro total vs comprar al precio base**, **punto de equilibrio** (cuántas unidades tenés que consumir para que valga la pena) y un análisis de **costo de oportunidad del inventario**. Útil para ecommerce, compras corporativas, resellers y cualquier negocio que compra por mayor.",
   "keyTakeaway": "**Precio unitario con descuento = Precio base × (1 − descuento%)**. El ahorro solo cuenta si **consumís todo el volumen** antes de que caduque o quede obsoleto. Regla: descuento <10% = marginal, 10-25% = bueno, >25% = excelente pero verificá calidad.",
   "useCases": [
-    "Decidir si comprás en mayoreo para tu ecommerce/tienda retail.",
+    "Decidir si comprás en mayoreo para tu ecommerce o tienda retail.",
     "Evaluar tiered pricing de SaaS (más seats = menor precio por asiento).",
     "Comparar proveedores: cuál ofrece mejor precio por volumen.",
     "Calcular ahorro real en compras corporativas (papel, café, suministros).",
-    "Justificar financieramente un pedido grande vs varios chicos."
+    "Justificar financieramente un pedido grande vs varios pedidos chicos."
   ],
   "fields": [
     {
       "id": "precioUnitario",
-      "label": "Precio unitario base (USD)",
+      "label": "Precio unitario base",
       "type": "number",
       "placeholder": "10",
       "default": 10,
@@ -41,7 +42,7 @@
     },
     {
       "id": "cantidad",
-      "label": "Cantidad comprada",
+      "label": "Cantidad a comprar (unidades)",
       "type": "number",
       "placeholder": "500",
       "default": 500,
@@ -58,11 +59,11 @@
       "max": 99,
       "step": 0.1,
       "required": true,
-      "help": "Valor en porcentaje."
+      "help": "Porcentaje de descuento que ofrece el proveedor por esta cantidad."
     },
     {
       "id": "consumoMensualEstimado",
-      "label": "Consumo/uso mensual estimado (opcional)",
+      "label": "Consumo mensual estimado (unidades, opcional)",
       "type": "number",
       "placeholder": "50",
       "min": 0,
@@ -72,15 +73,15 @@
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-15",
-    "source": "Fuente",
+    "source": "Investopedia — Quantity Discount",
     "sourceUrl": "https://www.investopedia.com/terms/q/quantity-discount.asp",
     "updateType": "manual",
-    "notes": "Precio unitario × (1 - dto). Aritmética."
+    "notes": "Precio unitario × (1 - dto). Aritmética pura, no depende de datos externos."
   },
   "outputs": [
     {
       "id": "precioUnitarioDescuento",
-      "label": "Precio unitario con descuento (USD)",
+      "label": "Precio unitario con descuento",
       "format": "number",
       "primary": true
     },
@@ -96,7 +97,7 @@
     },
     {
       "id": "ahorroTotal",
-      "label": "Ahorro total (USD)",
+      "label": "Ahorro total",
       "format": "number"
     },
     {
@@ -116,52 +117,56 @@
     }
   ],
   "example": {
-    "title": "Ejemplo: comprar 500 unidades con 15% de descuento vs 100 sin descuento",
+    "title": "Ejemplo: 500 unidades con 15% de descuento vs precio de lista",
     "steps": [
-      "**Precio unitario base**: 10 USD.",
+      "**Precio unitario base**: $10.",
       "**Cantidad comprada**: 500 unidades.",
       "**Descuento por volumen**: 15%.",
-      "**Precio unitario con descuento**: `10 × (1 − 0.15) = 8.50 USD`.",
-      "**Costo total sin descuento**: `500 × 10 = 5.000 USD`.",
-      "**Costo total con descuento**: `500 × 8.50 = 4.250 USD`.",
-      "**Ahorro total**: `5.000 − 4.250 = 750 USD (15%)`.",
-      "**Consumo mensual**: 50 unidades → **stock para 10 meses**."
+      "**Precio unitario con descuento**: `10 × (1 − 0,15) = $8,50`.",
+      "**Costo total sin descuento**: `500 × $10 = $5.000`.",
+      "**Costo total con descuento**: `500 × $8,50 = $4.250`.",
+      "**Ahorro total**: `$5.000 − $4.250 = $750 (15%)`.",
+      "**Consumo mensual**: 50 unidades → stock para **10 meses**."
     ],
-    "result": "Comprando **500 unidades** con 15% de descuento, ahorrás **750 USD** en total. El precio unitario baja a **8.50 USD**. Con consumo de 50/mes, el stock te dura **10 meses** — capital atado pero significativo ahorro."
+    "result": "Comprando **500 unidades** con 15% de descuento, ahorrás **$750** en total. El precio unitario baja de $10 a **$8,50**. Con consumo de 50 unidades/mes, el stock cubre **10 meses** — capital atado significativo pero ahorro real."
   },
-  "explanation": "## Qué es el descuento por volumen\n\nEl **descuento por volumen (bulk discount / volume pricing)** es un **mecanismo comercial** donde el proveedor reduce el precio por unidad **cuando comprás más cantidad**. Es universal en:\n\n- **Retail**: tamaños grandes (yogurt 1kg vs 150g).\n- **B2B**: materias primas (toneladas de acero, metros cuadrados de tela).\n- **SaaS**: planes con más seats/usuarios (ej: Slack Pro a 7.25 USD/user, Business+ a 12.50 USD/user).\n- **Publicidad**: más impresiones, menos CPM.\n- **Ecommerce al mayoreo**: Alibaba, Costco, mayoristas locales.\n\n## Fórmula\n\n```\nPrecio unitario con descuento = Precio base × (1 − Descuento%)\nCosto total = Cantidad × Precio unitario con descuento\nAhorro = (Precio base − Precio con descuento) × Cantidad\n```\n\n## Tipos de descuento por volumen\n\n### 1. Descuento plano (flat)\nUn solo umbral: '+100 unidades = 10% off'. El más simple, usado en retail.\n\n### 2. Descuento escalonado (tiered)\nPrecio baja por tramos:\n- 1-49 unidades: 10 USD/u\n- 50-99 unidades: 9 USD/u\n- 100-499 unidades: 8 USD/u\n- 500+ unidades: 7 USD/u\n\nMuy común en SaaS y B2B.\n\n### 3. Descuento incremental\nCada tramo aplica a las **unidades adicionales**, no al total. Ejemplo: primeras 50 a 10 USD, las siguientes 50 a 9 USD. Más justo pero más complicado de entender.\n\n### 4. Descuento acumulativo\nBasado en **compras totales del año**. Ejemplo: Amazon Business da mejor precio si comprás >50K/año.\n\n### 5. Descuento por paquete (bundle)\n'Comprá 3, llevá 1 gratis' = 25% descuento implícito.\n\n## Cuándo conviene (análisis de decisión)\n\n### Factores a favor\n- **Consumo garantizado**: sabés que vas a usar todo.\n- **Producto no perecedero**: no caduca ni se desactualiza.\n- **Capital disponible**: podés pagar upfront sin afectar cash flow.\n- **Espacio de almacenamiento** gratuito o barato.\n- **Descuento significativo** (>10-15%).\n- **Precios subiendo** (inflación): congelás el precio hoy.\n\n### Factores en contra\n- **Producto perecedero** (alimentos, maquillaje).\n- **Obsolescencia rápida** (electrónica, moda).\n- **Costo de almacenamiento** alto (alquiler de depósito).\n- **Capital atado con costo de oportunidad** (podrías invertirlo al 10%).\n- **Cambio de preferencias del consumidor** difícil de predecir.\n- **Daño/robo/deterioro** del stock.\n\n## El costo de oportunidad del inventario\n\nSi comprás 10.000 USD en stock para ahorrar 1.500 USD (15%), **pero ese dinero podrías invertirlo al 10% anual**, el cálculo real es:\n\n- **Ahorro bruto**: 1.500 USD.\n- **Costo de oportunidad del capital** (1 año): 10.000 × 10% = 1.000 USD.\n- **Ahorro neto**: 500 USD.\n- Si el stock te dura 6 meses: costo = 500 USD, ahorro neto = 1.000 USD.\n- Si dura 18 meses: costo = 1.500 USD, **ahorro neto = 0**.\n\n**Regla**: el descuento debe compensar el costo de oportunidad del capital **por el tiempo que tarde en consumirse**.\n\n## EOQ (Economic Order Quantity)\n\nLa cantidad óptima a pedir considerando:\n- Costo de pedido (administración, envío).\n- Costo de mantener stock (almacenamiento, capital).\n- Costo de ruptura (quedarse sin stock).\n\n**Fórmula Wilson (1913)**:\n```\nEOQ = √(2 × Demanda anual × Costo pedido / Costo mantener unidad año)\n```\n\nBalancea: pedidos grandes (aprovechás descuento, pero más capital) vs pedidos chicos (menos capital, pero más costo administrativo).\n\n## Benchmarks de descuento por volumen\n\n| Volumen | Descuento típico B2B |\n|---|---|\n| +10% sobre MOQ | 2-5% |\n| +50% sobre MOQ | 5-10% |\n| +100% (doble) | 10-15% |\n| +500% (5×) | 15-25% |\n| +1.000% (10×) | 25-40% |\n| Contenedor completo | 30-50% |\n\n## Casos específicos\n\n### SaaS pricing\nSlack:\n- Pro: 7.25 USD/user.\n- Business+: 12.50 USD/user (más features).\n- Enterprise Grid: **negociado**, típicamente 30-50% descuento para +500 seats.\n\n### Amazon Business\nHasta 15% descuento con pedidos grandes y Business Prime.\n\n### Costco Wholesale\nDescuentos de 15-30% vs retail tradicional en envases grandes. Rentable si consumís alto volumen (familias grandes, restaurantes).\n\n### AWS reserved instances\n1 año = 30-40% off.\n3 años = 50-60% off.\nCompromiso = descuento.\n\n## Errores comunes\n\n1. **No considerar fecha de vencimiento**: comprar 500 kg de arroz con descuento → 200 kg vencidos = pérdida, no ahorro.\n2. **Ignorar costo de almacenamiento**: 100 USD de descuento vs 150 USD de alquiler adicional de depósito = pérdida.\n3. **No comparar proveedores**: descuento del 20% vs precio base inflado = sin ahorro real.\n4. **Capital atado por meses**: afecta tu cash flow para otras oportunidades.\n5. **Cambios de mercado**: gadgets caen 30% de precio en 6 meses. Stock viejo = pérdida.\n\n## Calculadoras relacionadas\n\n- [Margen ganancia](/calculadora-margen-ganancia-markup).\n- [Break even](/calculadora-punto-equilibrio-break-even).\n- [Costo oportunidad](/calculadora-costo-oportunidad-decision).\n- [Valor futuro](/calculadora-interes-compuesto).\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento contable, legal o fiscal. Para decisiones que afecten tu negocio consultá con un contador público, abogado o asesor fiscal matriculado.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## Qué es el descuento por volumen\n\nEl **descuento por volumen (bulk discount / volume pricing)** es un mecanismo comercial donde el precio por unidad baja cuando comprás más cantidad. Es prácticamente universal en todos los sectores.\n\n## Fórmula\n\n```\nPrecio unitario con descuento = Precio base × (1 − Descuento%)\nCosto total = Cantidad × Precio unitario con descuento\nAhorro = Cantidad × (Precio base − Precio con descuento)\n```\n\n## Tabla de referencia: ejemplo a $10 de precio base\n\n| Cantidad | Descuento | Precio/u | Ahorro/u | Ahorro total |\n|----------|-----------|----------|----------|--------------|\n| 10 u | 5% | $9,50 | $0,50 | $5 |\n| 50 u | 10% | $9,00 | $1,00 | $50 |\n| 100 u | 15% | $8,50 | $1,50 | $150 |\n| 500 u | 20% | $8,00 | $2,00 | $1.000 |\n| 1.000 u | 25% | $7,50 | $2,50 | $2.500 |\n| 5.000 u | 35% | $6,50 | $3,50 | $17.500 |\n\n## Tipos de descuento por volumen\n\n### 1. Descuento plano (flat)\nUn solo umbral: '+100 unidades = 10% off'. El más simple, usado en retail.\n\n### 2. Descuento escalonado (tiered)\nPrecio baja por tramos:\n- 1-49 unidades: $10/u\n- 50-99 unidades: $9/u\n- 100-499 unidades: $8/u\n- 500+ unidades: $7/u\n\nMuy común en SaaS y B2B.\n\n### 3. Descuento incremental\nCada tramo aplica a las unidades adicionales, no al total. Las primeras 50 a $10, las siguientes 50 a $9. Más justo pero más complejo.\n\n### 4. Descuento acumulativo\nBasado en compras totales del año. Ejemplo: Amazon Business da mejor precio si comprás más de $50K/año.\n\n### 5. Descuento por paquete (bundle)\n'Comprá 3, llevá 1 gratis' = 25% descuento implícito.\n\n## Cuándo conviene comprar por volumen\n\n### Factores a favor\n- **Consumo garantizado**: sabés que vas a usar todo.\n- **Producto no perecedero**: no caduca ni se desactualiza.\n- **Capital disponible**: podés pagar upfront sin afectar cash flow.\n- **Espacio de almacenamiento** gratuito o barato.\n- **Descuento significativo** (>10-15%).\n- **Precios subiendo** (inflación): congelás el precio hoy.\n\n### Factores en contra\n- **Producto perecedero** (alimentos, maquillaje).\n- **Obsolescencia rápida** (electrónica, moda).\n- **Costo de almacenamiento** alto (alquiler de depósito).\n- **Capital atado con costo de oportunidad** (podrías invertirlo al 10%).\n- **Cambio de preferencias** difícil de predecir.\n\n## El costo de oportunidad del inventario\n\nSi comprás $10.000 en stock para ahorrar $1.500 (15%), pero ese dinero podrías invertirlo al 10% anual:\n\n- **Ahorro bruto**: $1.500.\n- **Costo de oportunidad** (1 año): $10.000 × 10% = $1.000.\n- **Ahorro neto**: $500.\n- Si el stock te dura 6 meses: costo = $500, ahorro neto = $1.000.\n- Si dura 18 meses: costo = $1.500, **ahorro neto = $0**.\n\n**Regla**: el descuento debe compensar el costo de oportunidad del capital por el tiempo que tarde en consumirse.\n\n## EOQ (Economic Order Quantity)\n\nLa cantidad óptima a pedir considerando todos los costos:\n\n**Fórmula Wilson (1913)**:\n```\nEOQ = √(2 × Demanda anual × Costo pedido / Costo mantener unidad/año)\n```\n\nEjemplo: demanda 1.200/año, costo pedido $50, costo mantener $2/u/año → EOQ = √(2×1.200×50/2) = **245 unidades por pedido**.\n\n## Benchmarks de descuento por volumen en B2B\n\n| Volumen vs MOQ | Descuento típico B2B |\n|---|---|\n| +10% sobre mínimo | 2-5% |\n| +50% sobre mínimo | 5-10% |\n| +100% (doble) | 10-15% |\n| +500% (5×) | 15-25% |\n| +1.000% (10×) | 25-40% |\n| Contenedor completo | 30-50% |\n\n## Errores comunes\n\n1. **No considerar fecha de vencimiento**: 500 kg de arroz con descuento pero 200 kg vencidos = pérdida neta.\n2. **Ignorar costo de almacenamiento**: $100 de descuento vs $150 de alquiler adicional = pérdida.\n3. **No comparar proveedores**: descuento del 20% vs precio base inflado = sin ahorro real.\n4. **Capital atado por meses**: afecta el cash flow para otras oportunidades.\n5. **Cambios de mercado**: gadgets caen 30% en 6 meses. Stock viejo = pérdida.\n",
   "faq": [
     {
       "q": "¿Cómo se calcula el descuento por volumen?",
-      "a": "**Fórmula**: `Precio unitario con descuento = Precio base × (1 − descuento%)`. Ejemplo: 100 unidades a 10 USD sin descuento = 1.000 USD. Con 15% de descuento por volumen = 100 × 10 × 0.85 = **850 USD** (ahorrás 150 USD). El ahorro porcentual es directo: si el descuento es 15%, el ahorro sobre el total es 15%."
+      "a": "**Fórmula**: `Precio unitario con descuento = Precio base × (1 − descuento%)`. Ejemplo: 100 unidades a $10 sin descuento = $1.000. Con 15% de descuento por volumen: 100 × $10 × 0,85 = **$850** (ahorrás $150). El ahorro porcentual es directo: si el descuento es 15%, el ahorro sobre el total también es 15%."
     },
     {
       "q": "¿Cuándo conviene comprar por mayor?",
-      "a": "Cuando cumple **las 3 condiciones**: **(1) consumís todo** antes de que caduque u obsolezca, **(2) descuento significativo** (>10-15% típicamente), **(3) costo de oportunidad del capital** bajo (no necesitás esa plata para algo con mayor retorno). Si comprás 10.000 USD para ahorrar 15% (1.500 USD) pero tardás 2 años en consumirlo y podrías invertir al 10% → perdés (2.000 vs 1.500)."
+      "a": "Cuando cumple las 3 condiciones: **(1) consumís todo** antes de que caduque u obsolezca, **(2) descuento significativo** (>10-15%), **(3) costo de oportunidad del capital bajo** (no necesitás esa plata para algo con mayor retorno). Si comprás $10.000 para ahorrar 15% ($1.500) pero tardás 2 años en consumirlo y podrías invertir al 10% → perdés ($2.000 costo vs $1.500 ahorro)."
     },
     {
       "q": "¿Qué es EOQ (Economic Order Quantity)?",
-      "a": "Es la **cantidad óptima a pedir** que minimiza el costo total (pedido + stock + ruptura). **Fórmula Wilson**: `EOQ = √(2 × Demanda × Costo pedido / Costo mantener)`. Ejemplo: demanda 1.200/año, costo pedido 50 USD, costo mantener 2 USD/unidad/año → EOQ = √(2×1.200×50/2) = **245 unidades por pedido**. Balance óptimo entre pedidos grandes (aprovechan descuento) y chicos (menos capital atado)."
+      "a": "Es la **cantidad óptima a pedir** que minimiza el costo total. **Fórmula Wilson**: `EOQ = √(2 × Demanda × Costo pedido / Costo mantener)`. Ejemplo: demanda 1.200/año, costo pedido $50, costo mantener $2/u/año → EOQ = **245 unidades por pedido**. Balancea pedidos grandes (aprovechan descuento) con pedidos chicos (menos capital inmovilizado)."
     },
     {
-      "q": "¿Cómo calculo el costo de oportunidad del inventario?",
-      "a": "**Costo de oportunidad = Capital invertido × Tasa de retorno alternativa × Tiempo**. Si invertís 10.000 USD en stock durante 6 meses y podrías ganar 10% anual invirtiéndolo → costo = 10.000 × 10% × 0.5 = **500 USD**. Tu descuento debe ser mayor al costo de oportunidad para que el ahorro sea real."
+      "q": "¿Cuánto ahorra un descuento del 15% en 500 unidades?",
+      "a": "Con precio base de $10 y 500 unidades, el ahorro es: 500 × $10 × 0,15 = **$750**. El precio unitario baja de $10 a $8,50 (−$1,50/u). El total a pagar es $4.250 en vez de $5.000. Si el consumo mensual es 50 unidades, el stock cubre 10 meses."
     },
     {
       "q": "¿Qué es un tiered pricing o descuento escalonado?",
-      "a": "Es un esquema de precios donde **el precio unitario baja por tramos** según cantidad. Ejemplo SaaS: 1-10 users a 15 USD/u, 11-50 a 12 USD/u, 51+ a 9 USD/u. Muy común en B2B porque incentiva a comprar más. Variante: **incremental tiered** donde cada tramo aplica solo a las unidades adicionales (más justo pero más complejo)."
+      "a": "Un esquema donde **el precio unitario baja por tramos** según cantidad. Ejemplo SaaS: 1-10 usuarios a $15/u, 11-50 a $12/u, 51+ a $9/u. Muy común en B2B porque incentiva comprar más. Variante incremental: cada tramo aplica solo a las unidades adicionales (más justo, más complejo de calcular)."
     },
     {
       "q": "¿Un descuento del 10% es bueno?",
-      "a": "Depende del contexto. **10% es marginal** en B2B (proveedores suelen ofrecer 15-30%). Es **bueno en retail** (supermercados, ecommerce de consumo). Es **malo en compras grandes corporativas** (AWS reserved instances ofrecen 50-70%). Regla: descuento **<10% = marginal**, 10-25% = bueno, >25% = excelente (pero verificá calidad y términos)."
+      "a": "Depende. **10% es marginal en B2B** (proveedores suelen ofrecer 15-30% para volúmenes significativos). Es **bueno en retail** (supermercados, ecommerce). Es **insuficiente en compras cloud** (AWS reserved instances ofrecen 50-70%). Regla práctica: <10% = marginal, 10-25% = bueno, >25% = excelente (verificá calidad y términos)."
     },
     {
       "q": "¿Cómo negocio un descuento por volumen con un proveedor?",
-      "a": "**Tácticas efectivas**: **(1) pedí MOQ más alto** que el estándar ('si compro 5x, ¿qué descuento?'). **(2) compromiso anual** a cambio de mejor precio (Amazon Business, AWS). **(3) comparar proveedores** con cotizaciones escritas para leverage. **(4) pagar upfront** vs crédito (10-15% extra descuento posible). **(5) early payment**: ofrecé pagar en 7 días en lugar de 60 a cambio de 2-3%. **(6) condiciones exclusivas**: comprarle solo a ese proveedor."
+      "a": "**Tácticas efectivas**: (1) pedí volumen mayor al estándar ('si compro 5×, ¿qué descuento dás?'). (2) ofrecé compromiso anual a cambio de mejor precio. (3) solicitá cotizaciones de competidores para tener leverage. (4) ofrecé pagar upfront (10-15% extra posible). (5) early payment: pagar en 7 días en lugar de 30-60 a cambio de 2-3%. (6) exclusividad con ese proveedor por un período."
     },
     {
       "q": "¿Es lo mismo descuento por volumen que descuento por pronto pago?",
-      "a": "**No**. **Volumen** = basado en cantidad comprada. **Pronto pago (early payment discount)** = descuento por pagar antes (típicamente '2/10 net 30' = 2% off si pagás en 10 días vs 30). Son **complementarios**: un buen deal combina ambos. El 2/10 net 30 equivale a una tasa anual del **36.5%**, así que siempre conviene aceptarlo si tenés caja disponible."
+      "a": "**No**. El descuento por volumen depende de la **cantidad** comprada. El descuento por pronto pago ('2/10 net 30' = 2% off si pagás en 10 días en lugar de 30) depende del **plazo de pago**. Son complementarios: un buen acuerdo puede combinar ambos. El '2/10 net 30' equivale a una tasa anual del 36,5%, así que casi siempre conviene si tenés caja."
+    },
+    {
+      "q": "¿Qué diferencia hay entre bulk discount y volume discount?",
+      "a": "En la práctica se usan como sinónimos en inglés y en español. 'Bulk discount' suele referirse a una compra puntual grande (un solo pedido). 'Volume discount' puede implicar también acuerdos anuales acumulativos. Ambos aplican la misma fórmula: precio base × (1 − descuento%)."
     }
   ],
   "sources": [
@@ -176,7 +181,7 @@
       "publisher": "Wikipedia"
     },
     {
-      "title": "Volume Pricing Strategies — Harvard Business Review",
+      "title": "Volume Pricing and Tiered Pricing Explained — Harvard Business Review",
       "url": "https://hbr.org/2018/09/a-quick-guide-to-value-based-pricing",
       "publisher": "Harvard Business Review"
     }
@@ -188,28 +193,28 @@
   ],
   "howToSteps": [
     {
-      "name": "Ingresá precio unitario base",
-      "text": "Ingresá precio unitario base (USD) (ej: 10). Es el valor de precio unitario base (usd)."
+      "name": "Ingresá el precio unitario base",
+      "text": "Escribí el precio por unidad sin descuento (por ejemplo, $10 por unidad)."
     },
     {
-      "name": "Ingresá cantidad comprada",
-      "text": "Ingresá cantidad comprada (ej: 500). Es el valor de cantidad comprada."
+      "name": "Ingresá la cantidad a comprar",
+      "text": "Escribí cuántas unidades querés comprar (por ejemplo, 500 unidades)."
     },
     {
-      "name": "Ingresá descuento por volumen",
-      "text": "Ingresá descuento por volumen (%) (ej: 15). Es el valor de descuento por volumen (%)."
+      "name": "Ingresá el descuento por volumen",
+      "text": "Ingresá el porcentaje de descuento que ofrece el proveedor por esa cantidad (por ejemplo, 15%)."
     },
     {
-      "name": "Completá los datos restantes",
-      "text": "Completá los campos adicionales: consumo/uso mensual estimado (opcional). Estos valores complementan el cálculo principal."
+      "name": "Opcional: ingresá el consumo mensual",
+      "text": "Si querés saber cuántos meses te dura el stock, ingresá tu consumo mensual estimado en unidades."
     },
     {
       "name": "Hacé click en Calcular",
-      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+      "text": "Presioná el botón 'Calcular' para obtener el precio unitario con descuento, el ahorro total y los meses de stock."
     },
     {
       "name": "Revisá los resultados",
-      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+      "text": "Verificá el precio unitario efectivo, el ahorro total y comparalo con el costo de oportunidad del capital para decidir si el volumen conviene."
     }
   ],
   "audience": "global"

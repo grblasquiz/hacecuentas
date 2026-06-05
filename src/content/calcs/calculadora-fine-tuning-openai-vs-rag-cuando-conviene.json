@@ -1,20 +1,21 @@
 {
   "slug": "calculadora-fine-tuning-openai-vs-rag-cuando-conviene",
-  "title": "Fine-tune vs RAG: cuál conviene 2026 | Hacé Cuentas",
-  "h1": "Fine-tune vs RAG: ¿cuál conviene para tu caso?",
-  "description": "Compará costos y adecuación de fine-tuning OpenAI vs RAG según tu dataset, frecuencia de actualización y volumen de requests. Estimá gastos reales en USD.",
+  "title": "Fine-tuning vs RAG: ¿cuál conviene? Calculadora de costos | Hacé Cuentas",
+  "h1": "Fine-tuning vs RAG: calculadora de costos y recomendación",
+  "description": "¿Fine-tuning o RAG? Ingresá tu dataset, frecuencia de actualización y volumen de requests para saber cuál opción es más barata y adecuada para tu caso. Basado en precios OpenAI 2026.",
   "seoKeywords": [
-    "fine tuning openai rag",
-    "fine-tune vs rag ¿cuál conviene para tu caso",
-    "calculadora fine",
-    "como calcular fine",
-    "fine tuning"
+    "fine tuning vs rag cuál conviene",
+    "diferencia fine tuning rag",
+    "cuando usar fine tuning openai",
+    "fine tuning openai costo",
+    "rag vs fine tuning llm"
   ],
   "category": "tecnologia",
   "audience": "global",
   "icon": "⚖️",
   "formulaId": "fine-tuning-openai-vs-rag-cuando-conviene",
-  "intro": "¿Conviene hacer fine-tuning o implementar RAG para tu aplicación con LLMs? La decisión depende de cuánto cambian tus datos, el volumen de uso y el tipo de tarea. Esta calculadora estima el **costo mensual real** de cada enfoque y te da una recomendación basada en tu situación concreta.",
+  "answerSnippet": "RAG conviene cuando tus datos cambian frecuentemente (semanal o diariamente) o necesitás citar fuentes; puede ser 3–5× más económico que fine-tuning en esos casos. Fine-tuning conviene cuando el dataset es estable, el volumen supera 50.000 requests/mes y necesitás cambiar el estilo o formato del modelo; a ese volumen puede costar 60–80% menos que RAG. En la mayoría de casos empresariales (base de conocimiento actualizable, documentos internos), RAG es la respuesta correcta.",
+  "intro": "¿Conviene hacer fine-tuning o implementar RAG para tu aplicación con LLMs? La decisión depende de cuánto cambian tus datos, el volumen de uso y el tipo de tarea. Esta calculadora estima el **costo mensual real** de cada enfoque (gpt-4o-mini, OpenAI 2026) y te da una recomendación basada en tu situación concreta.",
   "keyTakeaway": "Con datasets estáticos y tareas de clasificación, el fine-tuning puede costar 60–80% menos que RAG a alto volumen; con datos que cambian semanalmente, RAG suele ser 3–5× más económico a largo plazo.",
   "useCases": [
     "Startup que quiere adaptar GPT-4o a su dominio sin reentrenar cada semana",
@@ -205,59 +206,59 @@
       "format": "text"
     }
   ],
-  "explanation": "## Cómo se calcula\n\nLa calculadora modela tres componentes de costo para cada estrategia y añade una puntuación cualitativa basada en cuatro factores de decisión.\n\n---\n\n### Fine-tuning — componentes de costo\n\n**1. Costo de entrenamiento (amortizado mensualmente)**\n\nOpenAI cobra el entrenamiento por token procesado durante el training run. La tarifa vigente 2026 para gpt-4o-mini fine-tuning es **$25 USD por millón de tokens de entrenamiento**.\n\n```\ntokens_training = datasetSizeKB × 1000 / 4   // ~4 bytes por token\ncosto_training_unico = tokens_training / 1_000_000 × 25\n```\n\nEste costo se amortiza según la frecuencia de reentrenamiento:\n- Nunca/rara vez → amortizado a 12 meses\n- Mensual → cada mes (costo full mensual)\n- Semanal → 4 veces por mes\n- Diaria → 30 veces por mes\n\n**2. Costo de inference fine-tuned**\n\nLa tarifa de inference para modelos fine-tuned de gpt-4o-mini es **$0.30/M tokens input y $1.20/M tokens output** (2026). El fine-tuned no necesita contexto adicional de RAG.\n\n```\ntokens_input_ft  = requestsPerMonth × avgInputTokens\ntokens_output_ft = requestsPerMonth × avgOutputTokens\ncosto_inf_ft = (tokens_input_ft / 1e6 × 0.30) + (tokens_output_ft / 1e6 × 1.20)\n```\n\n---\n\n### RAG — componentes de costo\n\n**1. Embeddings de consulta**\n\nCada request genera una consulta embedida con text-embedding-3-small: **$0.02/M tokens**.\n\n```\ncosto_emb = requestsPerMonth × avgInputTokens / 1e6 × 0.02\n```\n\n**2. Inference del LLM base (gpt-4o-mini)**\n\nRAG suma al prompt original los chunks de contexto recuperados.\n\n```\ntokens_input_rag  = requestsPerMonth × (avgInputTokens + ragChunks × avgChunkTokens)\ntokens_output_rag = requestsPerMonth × avgOutputTokens\ncosto_inf_rag = (tokens_input_rag / 1e6 × 0.15) + (tokens_output_rag / 1e6 × 0.60)\n```\n\nTarifa gpt-4o-mini base 2026: $0.15/M input, $0.60/M output.\n\n**3. Vector database**\n\nCosto estimado de alojamiento de vector DB (Pinecone Serverless, Qdrant Cloud o similar):\n- Hasta 1 GB: $0 – $10/mes (tier gratuito + extras)\n- Por GB adicional: ~$10/mes\n\n```\ncosto_vectordb = max(0, vectorDbSizeGB - 1) × 10 + base_vectordb_fee\n// base_vectordb_fee = 10 USD/mes para prod mínimo\n```\n\n---\n\n### Matriz de decisión (scoring)\n\nAdemás del costo, se evalúan 4 factores cualitativos con puntaje 0–2 a favor de Fine-tune:\n\n| Factor | Favorece Fine-tune (2 pts) | Neutro (1 pt) | Favorece RAG (0 pts) |\n|---|---|---|---|\n| Frecuencia actualización | Nunca | Mensual | Semanal/Diaria |\n| Tipo de tarea | Clasificación | Generación | Q&A sobre docs |\n| Tamaño dataset | > 1 MB | 200 KB – 1 MB | < 200 KB |\n| Volumen requests | > 50 000/mes | 10 000–50 000 | < 10 000 |\n\nScore ≥ 6 → Fine-tune recomendado. Score ≤ 3 → RAG recomendado. Intermedio → híbrido o evaluar ambos.\n\n---\n\n### Ejemplo numérico\n\nDataset 500 KB, mensual, generación, 10 000 req/mes, 500 tokens input, 200 output, 5 chunks × 300 tokens, 1 GB vector DB:\n\n- FT training amortizado: (500×1000/4)/1e6 × 25 = **$3.13/mes**\n- FT inference: (10000×500/1e6×0.30)+(10000×200/1e6×1.20) = $1.50+$2.40 = **$3.90/mes**\n- FT total: **~$7.03/mes**\n- RAG embeddings: 10000×500/1e6×0.02 = **$0.10/mes**\n- RAG inference: (10000×(500+1500)/1e6×0.15)+(10000×200/1e6×0.60) = $3.00+$1.20 = **$4.20/mes**\n- RAG vector DB: **$10/mes**\n- RAG total: **~$14.30/mes**\n→ Fine-tune conviene en este escenario (~51% más barato).\n\n---\n\n### Cuándo NO aplica esta estimación\n\n- Si usás modelos distintos a gpt-4o-mini (GPT-4o, Claude, Gemini tienen tarifas diferentes).\n- Si la infraestructura de vector DB es self-hosted (costo variable por servidor).\n- Si el fine-tuning requiere múltiples épocas o datasets muy grandes (el training cost puede ser mayor).\n- Esta calculadora no modela latencia, complejidad operativa ni costos de desarrollo.\n\nFuentes: OpenAI Pricing Page (2026), Pinecone Pricing (2026).",
+  "explanation": "## Fine-tuning vs RAG: cómo se decide y cómo se calcula el costo\n\nLa calculadora modela tres componentes de costo para cada estrategia y añade una puntuación cualitativa basada en cuatro factores de decisión.\n\n---\n\n### Tabla comparativa rápida: Fine-tuning vs RAG\n\n| Criterio | Fine-tuning | RAG |\n|---|---|---|\n| Datos estáticos | ✅ Ideal | ✅ Funciona |\n| Datos que cambian | ❌ Caro (reentrenar) | ✅ Solo re-indexar |\n| Necesitás citar fuentes | ❌ Difícil | ✅ Nativo |\n| Cambiar estilo/tono | ✅ Ideal | ❌ Requiere prompt |\n| Volumen > 50K req/mes | ✅ Más barato | ⚠️ Inference suma |\n| Base de conocimiento privada | ⚠️ Posible | ✅ Ideal |\n| Tiempo de setup | ⏱️ Horas (training) | ⚡ Rápido |\n\n---\n\n### Fine-tuning — componentes de costo\n\n**1. Costo de entrenamiento (amortizado mensualmente)**\n\nOpenAI cobra el entrenamiento por token procesado durante el training run. La tarifa vigente 2026 para gpt-4o-mini fine-tuning es **$25 USD por millón de tokens de entrenamiento**.\n\n```\ntokens_training = datasetSizeKB × 1000 / 4   // ~4 bytes por token\ncosto_training_unico = tokens_training / 1_000_000 × 25\n```\n\nEste costo se amortiza según la frecuencia de reentrenamiento:\n- Nunca/rara vez → amortizado a 12 meses\n- Mensual → cada mes (costo full mensual)\n- Semanal → 4 veces por mes\n- Diaria → 30 veces por mes\n\n**2. Costo de inference fine-tuned**\n\nLa tarifa de inference para modelos fine-tuned de gpt-4o-mini es **$0.30/M tokens input y $1.20/M tokens output** (2026). El fine-tuned no necesita contexto adicional de RAG.\n\n```\ntokens_input_ft  = requestsPerMonth × avgInputTokens\ntokens_output_ft = requestsPerMonth × avgOutputTokens\ncosto_inf_ft = (tokens_input_ft / 1e6 × 0.30) + (tokens_output_ft / 1e6 × 1.20)\n```\n\n---\n\n### RAG — componentes de costo\n\n**1. Embeddings de consulta**\n\nCada request genera una consulta embedida con text-embedding-3-small: **$0.02/M tokens**.\n\n```\ncosto_emb = requestsPerMonth × avgInputTokens / 1e6 × 0.02\n```\n\n**2. Inference del LLM base (gpt-4o-mini)**\n\nRAG suma al prompt original los chunks de contexto recuperados.\n\n```\ntokens_input_rag  = requestsPerMonth × (avgInputTokens + ragChunks × avgChunkTokens)\ntokens_output_rag = requestsPerMonth × avgOutputTokens\ncosto_inf_rag = (tokens_input_rag / 1e6 × 0.15) + (tokens_output_rag / 1e6 × 0.60)\n```\n\nTarifa gpt-4o-mini base 2026: $0.15/M input, $0.60/M output.\n\n**3. Vector database**\n\nCosto estimado de alojamiento de vector DB (Pinecone Serverless, Qdrant Cloud o similar):\n- Hasta 1 GB: $0 – $10/mes (tier gratuito + extras)\n- Por GB adicional: ~$10/mes\n\n```\ncosto_vectordb = max(0, vectorDbSizeGB - 1) × 10 + base_vectordb_fee\n// base_vectordb_fee = 10 USD/mes para prod mínimo\n```\n\n---\n\n### Escenarios típicos: cuánto cuesta cada opción\n\n| Escenario | Fine-tuning/mes | RAG/mes | Ganador |\n|---|---|---|---|\n| 5K req, datos dinámicos, 1 GB vectorDB | ~$2 inference + $3 training = $5 | ~$0.05 emb + $2.25 inf + $10 DB = $12.30 | Fine-tune |\n| 10K req, datos mensuales, 1 GB vectorDB | ~$7 | ~$14 | Fine-tune |\n| 50K req, datos semanales, 5 GB vectorDB | ~$100 training + $35 inf = $135 | ~$3 emb + $52 inf + $50 DB = $105 | RAG |\n| 100K req, datos diarios, 10 GB vectorDB | ~$900 (30 trainings) | ~$5 emb + $104 inf + $100 DB = $209 | RAG |\n\n---\n\n### Matriz de decisión (scoring)\n\nAdemás del costo, se evalúan 4 factores cualitativos con puntaje 0–2 a favor de Fine-tune:\n\n| Factor | Favorece Fine-tune (2 pts) | Neutro (1 pt) | Favorece RAG (0 pts) |\n|---|---|---|---|\n| Frecuencia actualización | Nunca | Mensual | Semanal/Diaria |\n| Tipo de tarea | Clasificación | Generación | Q&A sobre docs |\n| Tamaño dataset | > 1 MB | 200 KB – 1 MB | < 200 KB |\n| Volumen requests | > 50 000/mes | 10 000–50 000 | < 10 000 |\n\nScore ≥ 6 → Fine-tune recomendado. Score ≤ 3 → RAG recomendado. Intermedio → híbrido o evaluar ambos.\n\n---\n\n### Ejemplo numérico\n\nDataset 500 KB, mensual, generación, 10 000 req/mes, 500 tokens input, 200 output, 5 chunks × 300 tokens, 1 GB vector DB:\n\n- FT training amortizado: (500×1000/4)/1e6 × 25 = **$3.13/mes**\n- FT inference: (10000×500/1e6×0.30)+(10000×200/1e6×1.20) = $1.50+$2.40 = **$3.90/mes**\n- FT total: **~$7.03/mes**\n- RAG embeddings: 10000×500/1e6×0.02 = **$0.10/mes**\n- RAG inference: (10000×(500+1500)/1e6×0.15)+(10000×200/1e6×0.60) = $3.00+$1.20 = **$4.20/mes**\n- RAG vector DB: **$10/mes**\n- RAG total: **~$14.30/mes**\n→ Fine-tune conviene en este escenario (~51% más barato).\n\n---\n\n### Cuándo NO aplica esta estimación\n\n- Si usás modelos distintos a gpt-4o-mini (GPT-4o, Claude, Gemini tienen tarifas diferentes).\n- Si la infraestructura de vector DB es self-hosted (costo variable por servidor).\n- Si el fine-tuning requiere múltiples épocas o datasets muy grandes (el training cost puede ser mayor).\n- Esta calculadora no modela latencia, complejidad operativa ni costos de desarrollo.\n\nFuentes: OpenAI Pricing Page (2026), Pinecone Pricing (2026).",
   "faq": [
     {
+      "q": "¿Cuándo conviene fine-tuning vs RAG?",
+      "a": "Fine-tuning conviene cuando: (1) necesitás cambiar el ESTILO del modelo (tono, formato, lenguaje técnico específico), (2) el dataset es estable y no cambia frecuentemente, y (3) el volumen supera 50.000 requests/mes. RAG conviene cuando: (1) el conocimiento se actualiza frecuentemente, (2) necesitás citar fuentes específicas, o (3) tenés documentos privados que no querés incluir en training data. En 80% de los casos empresariales con base de conocimiento actualizable, RAG es la opción correcta."
+    },
+    {
       "q": "¿Qué es fine-tuning y en qué se diferencia de RAG?",
-      "a": "Fine-tuning adapta los pesos del modelo con ejemplos propios: el conocimiento queda internalizado. RAG (Retrieval-Augmented Generation) recupera documentos relevantes en tiempo real y los inyecta en el prompt. Fine-tune es mejor para estilo/formato; RAG es mejor para conocimiento actualizable."
+      "a": "Fine-tuning adapta los pesos del modelo con ejemplos propios: el conocimiento queda internalizado en los parámetros del modelo. RAG (Retrieval-Augmented Generation) recupera documentos relevantes en tiempo real y los inyecta en el prompt. Fine-tune es mejor para estilo/formato constante; RAG es mejor para conocimiento actualizable y citas de fuentes."
+    },
+    {
+      "q": "¿Cuánto cuesta hacer fine-tuning de un modelo de OpenAI en 2026?",
+      "a": "GPT-4o-mini fine-tuning cuesta $25 USD por millón de tokens de entrenamiento. Para un dataset típico de 500 KB (~125.000 tokens), el costo de entrenamiento es ~$3.13 por run. Después pagás más por inferencia: GPT-4o-mini fine-tuned cuesta $0.30/1M input tokens vs $0.15 del modelo base. Si el dataset no cambia, ese costo de training se amortiza indefinidamente."
+    },
+    {
+      "q": "¿Cuánto cuesta un sistema RAG en producción con OpenAI?",
+      "a": "Costo típico para 10.000 consultas/mes con 5 chunks de contexto (300 tokens c/u), 500 tokens input, 200 tokens output y 1 GB vector DB: embeddings $0.10, inference $4.20, vector DB $10 = ~$14.30/mes. Los costos escalan con volumen y tamaño de la base vectorial. Pinecone serverless, Qdrant Cloud y pgvector son las opciones más populares."
     },
     {
       "q": "¿Por qué RAG puede ser más caro a bajo volumen?",
-      "a": "RAG tiene un costo fijo de vector DB (~$10/mes mínimo en producción) que es independiente del volumen. Con pocos requests, ese fijo domina el costo total. A partir de ~5.000–10.000 requests/mes el costo variable de inference suele superar el fijo."
+      "a": "RAG tiene un costo fijo de vector DB (~$10/mes mínimo en producción) que es independiente del volumen de requests. Con pocos requests, ese costo fijo domina el total. A partir de ~5.000–10.000 requests/mes el costo variable de inference suele superar el fijo y la comparación se vuelve más justa."
     },
     {
-      "q": "¿Cuándo conviene hacer fine-tuning sí o sí?",
-      "a": "Cuando el comportamiento del modelo (tono, formato, estructura de respuesta) debe cambiar sistemáticamente y el dataset de entrenamiento es estable. También cuando querés reducir el prompt al mínimo y bajar costos de inference a alto volumen."
+      "q": "¿Qué pasa si mis datos cambian todos los días?",
+      "a": "Con actualizaciones diarias, el fine-tuning se vuelve muy caro: tendrías que pagar el costo de entrenamiento 30 veces por mes. Con un dataset de 500 KB, eso es $93.75/mes solo en training. RAG es claramente superior en ese escenario: solo necesitás re-indexar los documentos nuevos, que cuesta ~$0.02/1M tokens con text-embedding-3-small."
     },
     {
       "q": "¿Puedo combinar fine-tuning y RAG?",
-      "a": "Sí. Un modelo fine-tuned puede usarse como LLM base de un pipeline RAG. Esto combina personalización de comportamiento (fine-tune) con conocimiento actualizable (RAG). El costo se suma, pero puede justificarse para casos enterprise."
+      "a": "Sí, y suele ser la mejor estrategia para casos complejos. Fine-tunés para estilo/formato (ej: respuestas siempre en JSON estructurado, lenguaje técnico específico) y usás RAG para inyectar conocimiento actualizado. El fine-tuning puede reducir el tamaño del system prompt (más barato por consulta) mientras RAG mantiene la información al día sin reentrenar."
     },
     {
-      "q": "¿Qué modelo asume esta calculadora?",
-      "a": "La calculadora usa tarifas de gpt-4o-mini 2026: $25/M tokens de entrenamiento, $0.30/M input y $1.20/M output para fine-tuned; $0.15/M input y $0.60/M output para el modelo base en RAG. Para otros modelos los costos varían significativamente."
-    },
-    {
-      "q": "¿Qué pasa si mi dataset cambia todos los días?",
-      "a": "Con actualizaciones diarias, el fine-tuning se vuelve muy caro: tendrías que pagar el costo de entrenamiento 30 veces por mes. RAG es claramente superior en ese escenario porque solo necesitás re-indexar los documentos nuevos, lo cual es mucho más barato."
+      "q": "¿Cuánto tiempo lleva hacer fine-tuning con OpenAI?",
+      "a": "Un training job en OpenAI tarda típicamente entre 10 minutos y 2 horas, dependiendo del tamaño del dataset y la carga de la plataforma. Un dataset de 500 KB (miles de ejemplos) suele completarse en 30–60 minutos. El modelo fine-tuned está disponible en la API inmediatamente después del entrenamiento, sin deployment adicional."
     },
     {
       "q": "¿Cómo estimo el tamaño de mi dataset en KB?",
-      "a": "Exportá tus pares (prompt, completion) a un archivo .jsonl. El tamaño del archivo en KB es una buena aproximación. Como referencia: 100 ejemplos de Q&A de longitud media ocupan aproximadamente 50–150 KB."
+      "a": "Exportá tus pares (prompt, completion) a un archivo .jsonl. El tamaño del archivo en KB es una buena aproximación. Como referencia: 100 ejemplos de Q&A de longitud media ocupan aproximadamente 50–150 KB. Para clasificación, los datasets suelen ser menores (menos texto por ejemplo). OpenAI requiere un mínimo de 10 ejemplos, pero recomienda 50–100 para resultados consistentes."
     },
     {
-      "q": "¿El costo de entrenamiento es único o recurrente?",
-      "a": "Es único por run de entrenamiento. Si tus datos no cambian, solo pagás una vez y amortizás ese costo indefinidamente. Si reentrenás mensualmente, el costo de training se suma al invoice de cada mes."
+      "q": "¿Qué modelo asume esta calculadora?",
+      "a": "La calculadora usa tarifas de gpt-4o-mini 2026: $25/M tokens de entrenamiento, $0.30/M input y $1.20/M output para el modelo fine-tuned; $0.15/M input y $0.60/M output para el modelo base en RAG; $0.02/M tokens para embeddings (text-embedding-3-small). Para otros modelos (GPT-4o, Claude, Gemini) los costos varían significativamente."
     },
     {
-      "q": "¿Qué es el vector DB y cuánto cuesta realmente?",
-      "a": "Es la base de datos que almacena embeddings de tus documentos para recuperación semántica (Pinecone, Qdrant, Weaviate, pgvector). Planes cloud de producción parten de $0 (tier gratuito limitado) a ~$70+/mes según volumen. Esta calc asume ~$10/mes mínimo productivo."
+      "q": "¿Cuál es el vector DB más barato para RAG en producción?",
+      "a": "Las opciones más económicas para producción son: pgvector (self-hosted, ~$0 si ya tenés PostgreSQL), Qdrant Cloud (tier gratuito hasta 1 GB, luego desde $25/mes), Pinecone Serverless (pago por uso, ~$0.033/GB/mes), y Weaviate Cloud (tier gratuito + planes desde $25/mes). Self-hosted (Docker) puede costar $0 en infra propia pero agrega complejidad operativa."
     },
     {
-      "q": "¿Cuándo conviene fine-tuning vs RAG?",
-      "a": "Fine-tuning: cuando necesitás cambiar el ESTILO del modelo (tono, formato de respuesta, lenguaje técnico específico) o reducir tokens del prompt repetitivo. RAG: cuando necesitás respuestas basadas en CONOCIMIENTO actualizado o privado (docs, base de datos, FAQs). En 80% de los casos empresariales, RAG es la opción correcta porque el conocimiento cambia y los datos son confidenciales."
+      "q": "¿Fine-tuning reduce las alucinaciones del modelo?",
+      "a": "No necesariamente. El fine-tuning mejora el formato y estilo de las respuestas, pero no reduce alucinaciones sobre hechos que el modelo no conoce. Para minimizar alucinaciones sobre conocimiento propio, RAG es la solución correcta: el modelo solo puede responder basándose en los documentos recuperados, lo que limita las invenciones factuales."
     },
     {
-      "q": "¿Cuánto cuesta hacer fine-tuning de un modelo de OpenAI?",
-      "a": "GPT-4o-mini fine-tuning: USD 3 por 1M tokens de entrenamiento (input + output). Para un dataset típico de 500 ejemplos de ~500 tokens cada uno (~250K tokens × 3 epochs = 750K tokens), el costo es ~USD 2-3. Después pagás más por inferencia: GPT-4o-mini ft cuesta USD 0,30/1M input vs USD 0,15 del base. Hosting incluido."
-    },
-    {
-      "q": "¿Cuánto cuesta un sistema RAG en producción?",
-      "a": "Depende de volumen y embedding model. Costo típico para un asistente con 10K consultas/mes y base de conocimiento de 100MB: ~USD 50-150/mes. Componentes: embeddings (USD 0,02/1M tokens con text-embedding-3-small), vector DB (Pinecone/Weaviate ~USD 30/mes en plan starter), llamadas a LLM (GPT-4o-mini USD 0,15/1M input, USD 0,60/1M output)."
-    },
-    {
-      "q": "¿Se pueden combinar fine-tuning y RAG?",
-      "a": "Sí, y suele ser la mejor estrategia para casos complejos. Fine-tunés para el estilo/formato (ej: respuestas siempre en JSON estructurado, lenguaje legal formal) y usás RAG para inyectar el conocimiento actualizado. El fine-tuning baja tokens del system prompt (más barato por consulta) y mejora consistencia, mientras que RAG mantiene la información al día sin reentrenar."
+      "q": "¿Es posible hacer fine-tuning de Claude o Gemini como alternativa a OpenAI?",
+      "a": "Sí. Anthropic ofrece fine-tuning de Claude a través de la API (precios distintos). Google ofrece fine-tuning de Gemini via Vertex AI. Sin embargo, esta calculadora está modelada específicamente para gpt-4o-mini de OpenAI. Los principios de decisión (frecuencia de actualización, volumen, tipo de tarea) aplican para cualquier proveedor, pero los costos varían considerablemente."
     }
   ],
   "sources": [
@@ -294,7 +295,7 @@
     "source": "OpenAI API Pricing",
     "sourceUrl": "https://openai.com/api/pricing/"
   },
-  "lastReviewed": "2026-06-01",
+  "lastReviewed": "2026-06-05",
   "relatedSlugs": [
     "calculadora-llm-context-window-200k-vs-1m-cuando-conviene",
     "calculadora-batch-api-openai-anthropic-50-descuento-cuando",

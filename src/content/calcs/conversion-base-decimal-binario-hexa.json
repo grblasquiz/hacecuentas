@@ -1,71 +1,55 @@
 {
   "slug": "calculadora-conversion-base-decimal-binario-hexa",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora Conversión de bases (2/10/16) 2026",
-  "h1": "Conversión de bases (2/10/16)",
-  "description": "Conversión de bases (2/10/16): Calculadora online gratis con fórmula estándar, explicación paso a paso y resultado inmediato.",
+  "lastReviewed": "2026-06-05",
+  "title": "Convertir Decimal, Binario y Hexadecimal: calculadora + tabla | Hacé Cuentas",
+  "h1": "Convertir Decimal, Binario y Hexadecimal",
+  "description": "Convertí en segundos entre decimal, binario y hexadecimal. Ingresá el número, elegí la base de origen y de destino, y obtenés el resultado al instante. Incluye tabla de referencia y explicación paso a paso.",
   "category": "matematica",
   "audience": "global",
   "icon": "🔢",
   "formulaId": "conversion-base-decimal-binario-hexa",
-  "intro": "El sistema decimal (base 10) usa los dígitos 0-9 y es el que usamos todos los días. El binario (base 2) usa solo 0 y 1 y es el lenguaje interno de toda computadora. El hexadecimal (base 16) usa 0-9 más A-F (A=10, B=11, ... F=15) y es la forma compacta en que programadores leen valores binarios (cada dígito hex = 4 bits). Esta calculadora convierte entre las tres bases usando divisiones sucesivas (dec→otra) o suma de potencias (otra→dec), útil para programación bajo, redes (subnetting), electrónica y universidad.",
-  "keyTakeaway": "**Dec→Bin/Hex**: divisiones sucesivas por 2 o 16, leer restos de abajo arriba. **Bin/Hex→Dec**: sumar cada dígito × base^posición. Ejemplo: 255 dec = 11111111 bin = FF hex.",
+  "answerSnippet": "Para convertir entre bases: **Decimal a Binario** → dividir por 2 y leer restos de abajo arriba (255 dec = 11111111 bin). **Decimal a Hex** → dividir por 16 (255 dec = FF hex). **Binario a Hex** → agrupar de a 4 bits (1111 1111 = FF). Un byte (8 bits) va de 0 a 255 en decimal, de 0 a 11111111 en binario, y de 00 a FF en hexadecimal.",
+  "intro": "El sistema decimal (base 10) usa los dígitos 0–9 y es el que usamos a diario. El binario (base 2) usa solo 0 y 1 y es el lenguaje interno de toda computadora. El hexadecimal (base 16) usa 0–9 más A–F (A=10, B=11, … F=15) y es la forma compacta en que programadores leen valores binarios: cada dígito hex equivale exactamente a 4 bits. Esta calculadora convierte entre las tres bases con el algoritmo de divisiones sucesivas (dec → otra) o suma de potencias (otra → dec), ideal para programación de bajo nivel, redes (subnetting), electrónica digital y materias universitarias.",
+  "keyTakeaway": "**Dec → Bin/Hex**: divisiones sucesivas por 2 o 16, leer restos de abajo hacia arriba. **Bin/Hex → Dec**: sumar cada dígito × base^posición. Regla rápida: 255 dec = 11111111 bin = FF hex.",
   "useCases": [
-    "Ejercicio de universidad: convertir 1010 1100 bin a hex y decimal.",
-    "Estás configurando máscaras de red y necesitás pasar 255.255.255.0 a binario.",
-    "Programás en C y viste un valor 0x1F3A en el debugger: necesitás el decimal equivalente.",
-    "Trabajás con colores en CSS (#FF00AA) y querés el RGB decimal (255, 0, 170)."
+    "Ejercicio de universidad: convertir 1010 1100 bin a hexadecimal y decimal.",
+    "Configurar máscaras de subred: 255.255.255.0 a binario (11111111.11111111.11111111.00000000 = /24).",
+    "Depurar en C o Python: el debugger muestra 0x1F3A y necesitás el decimal equivalente (7994).",
+    "Trabajar con colores CSS: #FF00AA en RGB decimal → R=255, G=0, B=170.",
+    "Electrónica digital: mapear registros de microcontrolador de hex a binario para ver cada bit."
   ],
   "fields": [
     {
       "id": "n",
-      "label": "Número",
-      "type": "number",
+      "label": "Número a convertir",
+      "type": "text",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "Ej: 255, FF, 11111111",
+      "format": "plain"
     },
     {
       "id": "desde",
-      "label": "Desde",
+      "label": "Base de origen",
       "type": "select",
       "required": true,
       "options": [
-        {
-          "value": "10",
-          "label": "Decimal"
-        },
-        {
-          "value": "2",
-          "label": "Binario"
-        },
-        {
-          "value": "16",
-          "label": "Hexa"
-        }
+        { "value": "10", "label": "Decimal (base 10)" },
+        { "value": "2",  "label": "Binario (base 2)" },
+        { "value": "16", "label": "Hexadecimal (base 16)" }
       ],
       "default": "10"
     },
     {
       "id": "a",
-      "label": "A",
+      "label": "Base de destino",
       "type": "select",
       "required": true,
       "options": [
-        {
-          "value": "10",
-          "label": "Decimal"
-        },
-        {
-          "value": "2",
-          "label": "Binario"
-        },
-        {
-          "value": "16",
-          "label": "Hexa"
-        }
+        { "value": "10", "label": "Decimal (base 10)" },
+        { "value": "2",  "label": "Binario (base 2)" },
+        { "value": "16", "label": "Hexadecimal (base 16)" }
       ],
-      "default": "10"
+      "default": "2"
     }
   ],
   "outputs": [
@@ -80,60 +64,66 @@
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: 255 decimal a hexadecimal",
     "steps": [
-      "255 dec → hex",
-      "FF"
+      "Número: 255 | Origen: Decimal | Destino: Hexadecimal",
+      "255 ÷ 16 = 15 resto 15 (F)",
+      "15 ÷ 16 = 0 resto 15 (F)",
+      "Leer restos de abajo arriba: FF"
     ],
     "result": "FF"
   },
-  "explanation": "## Cómo se calcula\n\n**Decimal → Binario/Hexadecimal** (divisiones sucesivas):\n1. Dividir número por base (2 o 16).\n2. Anotar resto (0-1 para bin; 0-F para hex).\n3. Repetir con el cociente hasta que sea 0.\n4. Leer restos de abajo hacia arriba.\n\nEjemplo 255 → hex: 255/16 = 15 resto F; 15/16 = 0 resto F → **FF**.\n\n**Binario/Hexadecimal → Decimal** (suma de potencias):\n- Cada dígito × base elevada a su posición (empezando en 0 por la derecha).\n\nEjemplo 11111111 bin → dec: 128+64+32+16+8+4+2+1 = **255**.\n\n**Binario ↔ Hexadecimal** (atajo):\n- Agrupar binario en 4 bits desde la derecha; cada grupo = 1 dígito hex. 1010 1100 = **AC**.\n\n## Tabla de referencia\n\n| Dec | Bin | Hex |\n|---|---|---|\n| 0 | 0000 | 0 |\n| 1 | 0001 | 1 |\n| 9 | 1001 | 9 |\n| 10 | 1010 | A |\n| 15 | 1111 | F |\n| 16 | 10000 | 10 |\n| 127 | 1111111 | 7F |\n| 255 | 11111111 | FF |\n| 1024 | 10000000000 | 400 |\n| 65535 | 1111111111111111 | FFFF |\n\n## Casos típicos\n\n- **Máscara de subred 255.255.255.0 en binario**: 11111111.11111111.11111111.00000000 (24 bits de red, notación /24).\n- **Color CSS #1E90FF (DodgerBlue)**: R=30, G=144, B=255 en decimal.\n- **Dirección MAC 00:1A:2B:3C:4D:5E**: 6 pares hexa, cada uno de 0-255 en decimal. 256^6 = ~281 billones de direcciones posibles.\n- **Carácter 'A' ASCII**: decimal 65, binario 01000001, hex 0x41.\n\n## Errores comunes\n\n- **Confundir letras hex con variables**: en 'FF', F no es variable sino dígito hex (15). Usar 0x FF explícitamente en código para evitar ambigüedad.\n- **Olvidar ceros a la izquierda en binario**: en máscaras de red y formatos de 8 bits (bytes), siempre escribir 8 dígitos. El decimal 5 como byte es 00000101, no solo 101.\n- **Números negativos sin contexto**: en computación se usa 'complemento a 2'. -1 en 8 bits = 11111111, el mismo patrón que 255 unsigned. Depende del signed/unsigned.\n- **Flotantes binarios**: los decimales no siempre tienen representación exacta en binario (0,1 dec = infinito en bin). Usar IEEE 754 y aceptar errores de precisión.\n\n## Calculadoras relacionadas\n\n- [Conversión bytes KB MB GB TB](/calculadora-conversion-bytes-kb-mb-gb-tb)\n- [Grados a radianes](/calculadora-conversion-radianes-grados-angulo)\n- [Porcentaje fracción decimal](/calculadora-conversion-porcentaje-fraccion-decimal)",
+  "explanation": "## Cómo convertir entre bases\n\n### Decimal → Binario o Hexadecimal (divisiones sucesivas)\n1. Dividir el número por la base destino (2 para bin, 16 para hex).\n2. Anotar el resto (0–1 para bin; 0–F para hex).\n3. Repetir con el cociente hasta llegar a 0.\n4. Leer los restos de abajo hacia arriba.\n\n**Ejemplo: 42 decimal → binario**\n- 42 ÷ 2 = 21 resto **0**\n- 21 ÷ 2 = 10 resto **1**\n- 10 ÷ 2 = 5 resto **0**\n- 5 ÷ 2 = 2 resto **1**\n- 2 ÷ 2 = 1 resto **0**\n- 1 ÷ 2 = 0 resto **1**\n- Resultado: **101010**\n\n### Binario o Hexadecimal → Decimal (suma de potencias)\nCada dígito × base^posición (posición empieza en 0 por la derecha).\n\n**Ejemplo: 101010 bin → decimal**\n- 1×2⁵ + 0×2⁴ + 1×2³ + 0×2² + 1×2¹ + 0×2⁰\n- 32 + 0 + 8 + 0 + 2 + 0 = **42**\n\n### Binario ↔ Hexadecimal (atajo directo)\nAgrupar binario de a 4 bits desde la derecha; cada grupo equivale a 1 dígito hex.\n- 1010 1100 → 1010 (=A) 1100 (=C) → **AC**\n\n## Tabla de conversión rápida\n\n| Decimal | Binario (8 bits) | Hexadecimal |\n|--------:|:----------------:|:-----------:|\n| 0 | 0000 0000 | 00 |\n| 1 | 0000 0001 | 01 |\n| 9 | 0000 1001 | 09 |\n| 10 | 0000 1010 | 0A |\n| 15 | 0000 1111 | 0F |\n| 16 | 0001 0000 | 10 |\n| 42 | 0010 1010 | 2A |\n| 127 | 0111 1111 | 7F |\n| 128 | 1000 0000 | 80 |\n| 170 | 1010 1010 | AA |\n| 200 | 1100 1000 | C8 |\n| 255 | 1111 1111 | FF |\n| 256 | 0001 0000 0000 | 100 |\n| 1023 | 0011 1111 1111 | 3FF |\n| 1024 | 0100 0000 0000 | 400 |\n| 65535 | 1111 1111 1111 1111 | FFFF |\n\n## Casos de uso reales\n\n- **Máscara de subred 255.255.255.0**: cada octeto en binario = 11111111.11111111.11111111.00000000, los 24 unos = notación /24.\n- **Color CSS #1E90FF** (DodgerBlue): R=1E=30, G=90=144, B=FF=255 → rgb(30, 144, 255).\n- **Dirección MAC 00:1A:2B:3C:4D:5E**: 6 pares hex; espacio total de 256⁶ ≈ 281 billones de direcciones.\n- **ASCII 'A'**: decimal 65, binario 0100 0001, hex 41.\n- **Puerto TCP 443** (HTTPS): hex 0x01BB = 443 decimal.\n\n## Errores comunes\n\n- **Letra hex como variable**: en `0xFF`, la F no es una variable sino el dígito hexadecimal 15. Usar siempre el prefijo `0x` en código para evitar ambigüedades.\n- **Omitir ceros a la izquierda**: en formatos de 8 bits (un byte) siempre escribir los 8 dígitos. El decimal 5 como byte = 0000 0101, no solo 101.\n- **Números negativos**: en sistemas reales se usa complemento a 2. −1 en 8 bits = 1111 1111, el mismo patrón que 255 unsigned.\n- **Decimales (floats)**: 0,1 no tiene representación exacta en binario; sigue el estándar IEEE 754 con la precisión correspondiente.\n\n## Calculadoras relacionadas\n\n- [Convertir bytes a KB, MB, GB, TB](/calculadora-conversion-bytes-kb-mb-gb-tb)\n- [Grados a radianes](/calculadora-conversion-radianes-grados-angulo)\n- [Porcentaje, fracción y decimal](/calculadora-conversion-porcentaje-fraccion-decimal)",
   "faq": [
     {
       "q": "¿Por qué se usa hexadecimal en programación?",
-      "a": "Porque cada dígito hex representa exactamente 4 bits (1 nibble). Un byte (8 bits) son 2 dígitos hex (00 a FF = 0 a 255). Es más legible que binario largo y natural para direcciones de memoria, colores y registros de CPU."
+      "a": "Porque cada dígito hex representa exactamente 4 bits (1 nibble). Un byte de 8 bits se escribe con solo 2 dígitos hex (00 a FF = 0 a 255). Es mucho más legible que una cadena larga de ceros y unos, y es la forma natural de ver direcciones de memoria, colores y registros de CPU."
     },
     {
-      "q": "¿Cómo convierto binario a hexadecimal rápido?",
-      "a": "Agrupá los bits de a 4 desde la derecha. Cada grupo = 1 dígito hex. Ejemplo: 1010 1100 → 1010 (=A) 1100 (=C) → AC. Si los bits no son múltiplo de 4, agregá ceros a la izquierda."
+      "q": "¿Cómo convierto binario a hexadecimal rápido sin calculadora?",
+      "a": "Agrupá los bits de a 4 desde la derecha. Cada grupo de 4 bits equivale a 1 dígito hex. Ejemplo: 1010 1100 → 1010 (A) 1100 (C) → AC. Si los bits no son múltiplo de 4, agregá ceros a la izquierda."
     },
     {
-      "q": "¿Qué significan los prefijos 0x y 0b?",
-      "a": "'0x' indica hexadecimal (0x1F = 31 decimal). '0b' indica binario (0b101 = 5 decimal). '0' sin letra indica octal en C/Java (077 = 63). Son convenciones para que el compilador interprete la base correctamente."
+      "q": "¿Qué significan los prefijos 0x, 0b y 0o?",
+      "a": "'0x' indica hexadecimal (0xFF = 255). '0b' indica binario (0b1010 = 10). '0o' o solo '0' (en C) indica octal (0o77 = 63). Son convenciones del compilador para identificar la base del literal."
     },
     {
       "q": "¿Cómo se representan números negativos en binario?",
-      "a": "El estándar es 'complemento a 2': invertir todos los bits y sumar 1. En 8 bits: +5 = 00000101, -5 = 11111011. Así la suma 5 + (-5) = 00000000 con el bit de overflow descartado. Permite sumar/restar con el mismo circuito."
+      "a": "El estándar más común es el complemento a 2: invertir todos los bits y sumar 1. En 8 bits: +5 = 0000 0101, −5 = 1111 1011. Así 5 + (−5) = 0000 0000 con el bit de desbordamiento descartado. Es el método que usan casi todos los procesadores modernos."
     },
     {
-      "q": "¿Cómo se guardan los decimales (floats)?",
-      "a": "Con IEEE 754: signo (1 bit) + exponente (8 o 11 bits) + mantisa (23 o 52 bits). 0,1 dec no tiene representación exacta en binario (decimal periódico), por eso 0,1 + 0,2 = 0.30000000000000004 en casi todos los lenguajes."
+      "q": "¿Por qué un byte va de 0 a 255?",
+      "a": "Un byte son 8 bits; cada bit puede ser 0 o 1. Combinaciones posibles: 2⁸ = 256. Empezando en 0, el máximo es 255. Para 16 bits: 2¹⁶ = 65.536 (0–65.535). Para 32 bits: 4.294.967.296 (~4 millones de millones)."
     },
     {
-      "q": "¿Por qué hasta 255 en 1 byte?",
-      "a": "Un byte son 8 bits. Cada bit tiene 2 estados (0 o 1). Total combinaciones: 2^8 = 256. Si el rango empieza en 0, el máximo es 255. Para 16 bits: 2^16 = 65.536 (rango 0-65.535). Para 32 bits: 4.294.967.296."
+      "q": "¿Cómo convierto un color CSS hex a RGB decimal?",
+      "a": "Separar el código en 3 pares (RR GG BB) y convertir cada par a decimal. Ejemplo: #FF6347 (Tomato) → FF=255, 63=99, 47=71 → rgb(255, 99, 71). En Chrome DevTools podés hacer clic en el cuadrado de color para ver los formatos automáticamente."
     },
     {
-      "q": "¿Cómo convierto un color CSS hex a RGB?",
-      "a": "Divide el hex en 3 pares (RR GG BB) y convertí cada par a decimal. #FF6347 (Tomato): FF=255, 63=99, 47=71 → rgb(255, 99, 71). Las apps Chrome DevTools lo muestran automáticamente en el color picker."
+      "q": "¿Cuánto vale A1 en hexadecimal en decimal?",
+      "a": "A×16¹ + 1×16⁰ = 10×16 + 1 = 161 decimal. En binario son 8 bits: 1010 0001. Tabla hex rápida: A=10, B=11, C=12, D=13, E=14, F=15."
     },
     {
-      "q": "¿Cuánto vale 'A1' en hexa?",
-      "a": "A×16 + 1 = 10×16 + 1 = 161 decimal. En binario son 8 bits: 10100001. Cada letra hex tiene su equivalente: A=10, B=11, C=12, D=13, E=14, F=15."
+      "q": "¿Cómo se guardan los números con decimales (floats)?",
+      "a": "Mediante el estándar IEEE 754: 1 bit de signo + exponente (8 o 11 bits) + mantisa (23 o 52 bits para simple o doble precisión). El decimal 0,1 no tiene representación binaria exacta (es periódico en base 2), por eso 0,1 + 0,2 da 0,30000000000000004 en casi todos los lenguajes modernos."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre octal y hexadecimal?",
+      "a": "El octal (base 8) usa dígitos 0–7 y agrupa bits de a 3. El hexadecimal (base 16) usa 0–9 y A–F, agrupa de a 4 bits. El hex es mucho más usado en la práctica moderna porque se alinea perfectamente con bytes (8 bits = 2 dígitos hex). El octal aún aparece en permisos de archivos Unix (chmod 755)."
     }
   ],
   "sources": [
     {
-      "name": "IEEE 754 — Standard for Floating-Point Arithmetic",
+      "name": "IEEE 754-2019 — Standard for Floating-Point Arithmetic",
       "url": "https://standards.ieee.org/ieee/754/6210/"
     },
     {
-      "name": "NIST — Computer Arithmetic",
-      "url": "https://www.nist.gov"
+      "name": "Wolfram MathWorld — Base (Number)",
+      "url": "https://mathworld.wolfram.com/Base.html"
     },
     {
-      "name": "Wolfram MathWorld — Number Base",
-      "url": "https://mathworld.wolfram.com/Base.html"
+      "name": "NIST FIPS 140-3 — Cryptographic Standards (referencia numeral digital)",
+      "url": "https://csrc.nist.gov/publications/detail/fips/140/3/final"
     }
   ],
   "relatedSlugs": [],
@@ -146,8 +136,12 @@
     "sourceUrl": "https://standards.ieee.org/ieee/754/6210/"
   },
   "seoKeywords": [
-    "calculadora conversión de bases 2026",
-    "conversión de bases (2/10/16)",
-    "conversion base decimal binario hexa"
+    "convertir decimal a binario",
+    "convertir decimal a hexadecimal",
+    "calculadora conversion de bases",
+    "convertir binario a decimal",
+    "convertir hex a decimal",
+    "base 2 base 10 base 16",
+    "conversion binario hexadecimal decimal"
   ]
 }

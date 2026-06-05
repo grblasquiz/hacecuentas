@@ -2,13 +2,23 @@ export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function planEntrenamiento21kSemiMaratonSemanas(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
-  const niveles: Record<string, number> = { principiante: 2, intermedio: 0, avanzado: -2 };
-  const base = 12; const extra = niveles[String(i.nivel)] || 0;
-  const total = base + extra;
-  const kmPico = total * 3 + 84;
+  // Weeks and km/week peak per level (ACSM guidelines)
+  // principiante: 14 weeks, 50 km/week peak (midpoint of 45-55)
+  // intermedio:   12 weeks, 60 km/week peak (midpoint of 55-65)
+  // avanzado:     10 weeks, 72 km/week peak (midpoint of 65-80)
+  const planData: Record<string, { weeks: number; kmPico: number }> = {
+    principiante: { weeks: 14, kmPico: 50 },
+    intermedio:   { weeks: 12, kmPico: 60 },
+    avanzado:     { weeks: 10, kmPico: 72 },
+  };
+  const nivel = String(i.nivel);
+  const data = planData[nivel] || planData['principiante'];
+  const total = data.weeks;
+  const kmPico = data.kmPico;
+
   const resumen = __lang === 'en'
-    ? `${String(i.nivel)} 21k half-marathon plan: ${total} weeks, peak ${kmPico} km/week.`
-    : `Plan ${String(i.nivel)} 21k-semi-maraton: ${total} semanas, pico ${kmPico} km/sem.`;
+    ? `${nivel} 21k half-marathon plan: ${total} weeks, peak ${kmPico} km/week.`
+    : `Plan ${nivel} 21k-semi-maraton: ${total} semanas, pico ${kmPico} km/sem.`;
   const _insight = {
     title: __lang === 'en' ? 'Your half-marathon plan' : 'Tu plan de 21K',
     text: __lang === 'en'

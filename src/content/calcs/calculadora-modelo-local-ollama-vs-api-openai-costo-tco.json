@@ -1,21 +1,23 @@
 {
   "slug": "calculadora-modelo-local-ollama-vs-api-openai-costo-tco",
-  "title": "Self-host LLM vs API OpenAI: TCO 12 meses | Hacé Cuentas",
-  "h1": "Self-host LLM vs API por volumen: TCO 12 meses",
-  "description": "Calculá si conviene correr Llama 3.1 70B o Mixtral en tu propio servidor (RTX 4090) o cloud GPU frente a la API de OpenAI. Punto de equilibrio en días.",
+  "title": "Ollama vs API de OpenAI: ¿cuándo conviene el modelo local? + tabla | Hacé Cuentas",
+  "h1": "Ollama vs API de OpenAI: calculadora de costo real a 12 meses",
+  "description": "Calculá si conviene correr Llama 3.1 70B o Mixtral con Ollama/vLLM (RTX 4090) o pagar la API de OpenAI. Punto de equilibrio en días, ahorro anual y recomendación automática.",
   "seoKeywords": [
-    "modelo local ollama api",
-    "self-host llm vs api por volumen tco 12 meses",
-    "calculadora modelo",
-    "como calcular modelo",
-    "modelo local"
+    "ollama vs api openai costo",
+    "self-host llm vs api conviene",
+    "modelo local vs api inferencia costo",
+    "llama local vs gpt costo mensual",
+    "tco modelo local openai",
+    "cuando conviene ollama vs api"
   ],
   "category": "tecnologia",
   "audience": "global",
   "icon": "🏠",
   "formulaId": "modelo-local-ollama-vs-api-openai-costo-tco",
-  "intro": "¿Vale la pena invertir en hardware propio o pagar por tokens? Esta calculadora estima el **costo total a 12 meses** comparando tres opciones: servidor local con GPU (RTX 4090), cloud GPU bajo demanda (Vast.ai / RunPod) y la API de OpenAI (GPT-4o o GPT-3.5 Turbo). Ingresá tu volumen diario de tokens y el modelo objetivo para ver el punto de equilibrio.",
-  "keyTakeaway": "Con 10 millones de tokens/día, un servidor local con RTX 4090 amortiza la inversión inicial (~USD 2.800) en menos de 60 días frente a la API de OpenAI GPT-4o.",
+  "answerSnippet": "Con 1 millón de tokens/día usando GPT-4o, la API cuesta ~USD 3.500/año. Con un servidor local (RTX 4090 + Llama 70B cuantizado) el costo baja a ~USD 2.150/año y el hardware se amortiza en ~90 días. Para volúmenes menores a 500 000 tokens/día, GPT-4o mini suele ser más barato que el self-host.",
+  "intro": "¿Cuándo deja de convenir pagar la API de OpenAI y vale la pena correr Llama 3.1 o Mixtral con Ollama en tu propio hardware? Esta calculadora estima el **costo total a 12 meses** comparando tres opciones: servidor local con GPU (RTX 4090), cloud GPU bajo demanda (Vast.ai / RunPod) y la API de OpenAI (GPT-4o, GPT-4o mini o GPT-3.5 Turbo). Ingresá tu volumen diario de tokens y el modelo objetivo para ver el punto de equilibrio exacto.",
+  "keyTakeaway": "Con 5 millones de tokens/día, un servidor local con RTX 4090 se amortiza en ~77 días frente a la API GPT-4o, generando un ahorro neto de ~USD 6.800 en el primer año.",
   "useCases": [
     "Startup que usa la API de OpenAI y quiere saber cuándo conviene migrar a infraestructura propia",
     "Empresa con carga variable que evalúa cloud GPU vs comprar hardware",
@@ -35,7 +37,7 @@
     },
     {
       "id": "modelo",
-      "label": "Modelo objetivo (self-host)",
+      "label": "Modelo objetivo (self-host con Ollama/vLLM)",
       "type": "select",
       "options": [
         {
@@ -167,27 +169,27 @@
       "format": "text"
     }
   ],
-  "explanation": "## Cómo se calcula el TCO\n\nEl **Costo Total de Propiedad (TCO)** a 12 meses considera tres componentes según la opción:\n\n### API OpenAI\n\n```\ncostoAPIDia = (tokensInput/1M × precioInput) + (tokensOutput/1M × precioOutput)\ncostoAPIAnual = costoAPIDia × 365\n```\n\nDonde `tokensInput = tokensPerDay × (inputRatio/100)` y `tokensOutput = tokensPerDay × (1 - inputRatio/100)`.\n\n### Self-host (hardware propio)\n\n```\nCAPEX = precio_GPU(s)\nopexElectricidadDia = consumoGPU_kW × horasUso × costoKwh\nopexOtrosDia = (servidor_base_anual) / 365   // ~USD 200/año en mantenimiento estimado\ncostoSelfHostAnual = CAPEX + (opexElectricidadDia + opexOtrosDia) × 365\n```\n\nConsumos de referencia 2025-2026:\n\n| GPU | TDP (W) | VRAM | Modelos viables |\n|---|---|---|---|\n| RTX 4090 | 450 W | 24 GB | Llama 8B, Mixtral 8x7B (Q4), Llama 70B (Q4, 2× GPU) |\n| 2× RTX 4090 | 900 W | 48 GB | Llama 70B FP16 |\n\n### Cloud GPU (Vast.ai / RunPod)\n\n```\ncostoCloudDia = tarifaHoraria × horasUso\ncostoCloudAnual = costoCloudDia × 365\n```\n\nTarifas de referencia 2026 (varían por disponibilidad):\n\n| Configuración | USD/hora aprox. |\n|---|---|\n| 1× RTX 4090 (24 GB) | USD 0.35 – 0.55 |\n| 2× RTX 4090 / A100 40 GB | USD 0.90 – 1.40 |\n\nEsta calculadora usa valores medios conservadores.\n\n### Punto de equilibrio\n\n```\nbreakEvenDays = CAPEX / (costoAPIDia - opexSelfHostDia)\n```\n\nSolo aplica si `costoAPIDia > opexSelfHostDia`. Si el self-host es más caro por día (volumen muy bajo), el punto de equilibrio no existe en el horizonte de 12 meses.\n\n### Ejemplo numérico\n\n- Tokens/día: 5.000.000 (70% input, 30% output)\n- Modelo API: GPT-4o\n- Hardware: 1× RTX 4090, 8 h/día, USD 0.12/kWh\n\nCosto API/día: (3,5M/1M × 2,50) + (1,5M/1M × 10,00) = USD 8,75 + USD 15,00 = **USD 23,75/día**\nOpex self-host/día: 0,45 kW × 8 h × 0,12 = **USD 0,43/día**\nCAPEX: USD 1.800\nBreak-even: 1.800 / (23,75 − 0,43) ≈ **77 días**\nAhorro neto 12 meses: 23,75 × 365 − (1.800 + 0,43 × 365) ≈ **USD 6.800**\n\n### Limitaciones\n\n- No incluye tiempo de ingeniería (setup, mantenimiento Ollama/vLLM), estimado en 10-20 h iniciales.\n- La calidad de Llama 70B cuantizado (Q4_K_M) puede ser inferior a GPT-4o para ciertas tareas.\n- Los precios de cloud GPU fluctúan con la demanda.\n- El cálculo asume uso constante; cargas variables pueden favorecer la API.\n- No contempla redundancia ni SLA: el self-host tiene downtime potencial.\n\nFuentes: precios OpenAI API (platform.openai.com/pricing), tarifas RunPod/Vast.ai (2026), especificaciones NVIDIA RTX 4090.",
+  "explanation": "## Ollama vs API de OpenAI: cómo se calcula el TCO\n\nEl **Costo Total de Propiedad (TCO)** a 12 meses considera tres componentes según la opción elegida.\n\n### Tabla de referencia rápida (70% input / 30% output, 8 h/día, USD 0.12/kWh)\n\n| Tokens/día | API GPT-4o/año | API GPT-4o mini/año | Self-host RTX 4090/año | Break-even |\n|---|---|---|---|---|\n| 100 000 | USD 352 | USD 21 | USD 2.157 | No se amortiza |\n| 500 000 | USD 1.752 | USD 105 | USD 2.157 | No se amortiza |\n| 1 000 000 | USD 3.504 | USD 210 | USD 2.157 | ~90 días |\n| 5 000 000 | USD 17.519 | USD 1.051 | USD 2.514 | ~12 días |\n| 10 000 000 | USD 35.038 | USD 2.101 | USD 2.870 | ~7 días |\n\n### API OpenAI\n\n```\ncostoAPIDia = (tokensInput/1M × precioInput) + (tokensOutput/1M × precioOutput)\ncostoAPIAnual = costoAPIDia × 365\n```\n\nDonde `tokensInput = tokensPerDay × (inputRatio/100)` y `tokensOutput = tokensPerDay × (1 - inputRatio/100)`.\n\n### Self-host (hardware propio con Ollama/vLLM)\n\n```\nCAPEX = precio_GPU(s)\nopexElectricidadDia = consumoGPU_kW × horasUso × costoKwh\nopexOtrosDia = USD 200 / 365   // mantenimiento anual estimado\ncostoSelfHostAnual = CAPEX + (opexElectricidadDia + opexOtrosDia) × 365\n```\n\nConsumos de referencia 2025-2026:\n\n| GPU | TDP (W) | VRAM | Modelos viables con Ollama |\n|---|---|---|---|\n| RTX 4090 | 450 W | 24 GB | Llama 3.1 8B, Mixtral 8x7B (Q4), Llama 3.1 70B (Q4, 2× GPU) |\n| 2× RTX 4090 | 900 W | 48 GB | Llama 3.1 70B FP16 |\n\n### Cloud GPU (Vast.ai / RunPod)\n\n```\ncostoCloudDia = tarifaHoraria × horasUso\ncostoCloudAnual = costoCloudDia × 365\n```\n\nTarifas de referencia 2026:\n\n| Configuración | USD/hora aprox. |\n|---|---|\n| 1× RTX 4090 (24 GB) | USD 0.35 – 0.55 |\n| 2× RTX 4090 / A100 40 GB | USD 0.90 – 1.40 |\n\n### Punto de equilibrio (break-even)\n\n```\nbreakEvenDays = CAPEX / (costoAPIDia - opexSelfHostDia)\n```\n\nSolo aplica si `costoAPIDia > opexSelfHostDia`. Si el self-host es más caro por día (volumen muy bajo), el punto de equilibrio no existe en 12 meses.\n\n### Ejemplo numérico\n\n- Tokens/día: 5.000.000 (70% input, 30% output)\n- Modelo API: GPT-4o\n- Hardware: 1× RTX 4090, 8 h/día, USD 0.12/kWh\n\nCosto API/día: (3,5M/1M × 2,50) + (1,5M/1M × 10,00) = USD 8,75 + USD 15,00 = **USD 23,75/día**\nOpex self-host/día: 0,45 kW × 8 h × 0,12 = **USD 0,43/día**\nCAPEX: USD 1.800\nBreak-even: 1.800 / (23,75 − 0,43) ≈ **77 días**\nAhorro neto 12 meses: 23,75 × 365 − (1.800 + 0,43 × 365) ≈ **USD 6.800**\n\n### Limitaciones\n\n- No incluye tiempo de ingeniería (setup, mantenimiento Ollama/vLLM), estimado en 10-20 h iniciales.\n- La calidad de Llama 70B cuantizado (Q4_K_M) puede ser inferior a GPT-4o para ciertas tareas.\n- Los precios de cloud GPU fluctúan con la demanda.\n- El cálculo asume uso constante; cargas variables pueden favorecer la API.\n- No contempla redundancia ni SLA: el self-host tiene downtime potencial.\n\nFuentes: precios OpenAI API (platform.openai.com/pricing), tarifas RunPod/Vast.ai (2026), especificaciones NVIDIA RTX 4090.",
   "faq": [
     {
+      "q": "¿Cuándo conviene Ollama (modelo local) en vez de la API de OpenAI?",
+      "a": "Depende del volumen de tokens. Como regla general: con GPT-4o, el self-host (RTX 4090) conviene a partir de ~500.000–1.000.000 tokens/día. Con GPT-4o mini, que cuesta ~17× menos, el self-host casi nunca se amortiza a bajos volúmenes. Usá esta calculadora para ver tu caso exacto."
+    },
+    {
       "q": "¿Puedo correr Llama 3.1 70B en una sola RTX 4090?",
-      "a": "Sí, pero solo en versión cuantizada (Q4_K_M o Q5_K_M) usando Ollama o llama.cpp. Eso reduce el consumo de VRAM a ~22-23 GB. La calidad es buena pero inferior al modelo en FP16. Para FP16 completo necesitás 2× RTX 4090 o una A100 80 GB."
+      "a": "Sí, pero solo en versión cuantizada (Q4_K_M o Q5_K_M) usando Ollama o llama.cpp. El modelo ocupa ~22-23 GB de VRAM. La calidad es buena pero inferior al modelo en FP16. Para FP16 completo necesitás 2× RTX 4090 o una A100 80 GB."
     },
     {
       "q": "¿Qué velocidad de inferencia puedo esperar con Llama 70B Q4 en una RTX 4090?",
       "a": "Aproximadamente 15-25 tokens/segundo en generación (output). Para uso interactivo es suficiente; para batch processing intensivo podría ser un cuello de botella. Con 2× RTX 4090 se sube a 30-45 t/s."
     },
     {
-      "q": "¿El costo de electricidad impacta mucho?",
-      "a": "Depende del precio local. A USD 0.12/kWh y 8 h/día, una RTX 4090 cuesta ~USD 0.43/día (~USD 157/año). En países con electricidad cara (USD 0.30/kWh) sube a USD 392/año, lo que retrasa el break-even unos 30-60 días extra según el volumen."
-    },
-    {
       "q": "¿Vast.ai y RunPod son confiables para producción?",
-      "a": "Son adecuados para desarrollo, batch jobs y cargas tolerantes a interrupciones. Para producción crítica con SLA, preferí RunPod Secure Cloud o proveedores como Lambda Labs. Vast.ai usa hardware de terceros sin garantía de uptime."
+      "a": "Son adecuados para desarrollo, batch jobs y cargas tolerantes a interrupciones. Para producción crítica con SLA, preferí RunPod Secure Cloud o Lambda Labs. Vast.ai usa hardware de terceros sin garantía de uptime."
     },
     {
       "q": "¿GPT-4o mini es siempre más barato que correr Llama local?",
-      "a": "A volúmenes bajos (< 500.000 tokens/día), sí. GPT-4o mini cuesta ~USD 0.37/día a 1M tokens, menos que el opex eléctrico de un servidor dedicado. El self-host conviene a partir de varios millones de tokens/día o cuando se combina con uso 24/7."
+      "a": "A volúmenes bajos (< 500.000 tokens/día), sí. GPT-4o mini cuesta ~USD 0.04/día a 500k tokens, mucho menos que el opex eléctrico de un servidor dedicado. El self-host conviene a partir de varios millones de tokens/día o cuando el volumen es constante 24/7."
     },
     {
       "q": "¿La calculadora incluye el costo del servidor base (CPU, RAM, motherboard)?",
@@ -203,7 +205,11 @@
     },
     {
       "q": "¿Qué frameworks de inferencia se recomiendan para self-host?",
-      "a": "Ollama es el más fácil de instalar. Para mayor rendimiento en producción, vLLM (mejor throughput) o llama.cpp (máxima compatibilidad). Todos son open source y corren modelos GGUF/GGML en GPU NVIDIA con soporte CUDA."
+      "a": "Ollama es el más fácil de instalar y el más popular. Para mayor rendimiento en producción, vLLM (mejor throughput y soporte OpenAI-compatible) o llama.cpp (máxima compatibilidad con CPU). Todos son open source y corren modelos GGUF/GGML en GPU NVIDIA con soporte CUDA."
+    },
+    {
+      "q": "¿Cambia algo si el servidor está encendido 24/7 en vez de 8 horas?",
+      "a": "Sí, el opex eléctrico se triplica. A 24 h/día una RTX 4090 consume 0,45 kW × 24 h × 0,12 USD/kWh = USD 1,30/día (~USD 472/año). Igual, si el volumen de tokens es alto, la API sigue siendo mucho más cara y el break-even sigue siendo conveniente."
     }
   ],
   "sources": [
@@ -236,6 +242,12 @@
       "url": "https://huggingface.co/meta-llama/Meta-Llama-3.1-70B",
       "publisher": "Meta AI / Hugging Face",
       "date": "2026"
+    },
+    {
+      "name": "Ollama — Run Large Language Models Locally",
+      "url": "https://ollama.com",
+      "publisher": "Ollama",
+      "date": "2026"
     }
   ],
   "dataUpdate": {
@@ -246,7 +258,7 @@
     "source": "OpenAI API Pricing",
     "sourceUrl": "https://platform.openai.com/pricing"
   },
-  "lastReviewed": "2026-04-27",
+  "lastReviewed": "2026-06-05",
   "relatedSlugs": [
     "calculadora-streaming-vs-batch-llm-latencia-costo-tradeoff",
     "calculadora-rag-vector-db-pinecone-pgvector-costo-mensual"

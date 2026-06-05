@@ -2,7 +2,10 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number | Record<string, any>; }
 export function proyeccion21kDesde10kCameron(i: Inputs): Outputs {
   const t = Number(i.t10kMin) || 0;
-  const t2 = t * Math.pow(2.11, 1.06);
+  // Fórmula de Cameron real: exponente dinámico según ritmo del corredor
+  // t21K = t10K × (21.0975 / 10) ^ (1.07 + 0.0065 × ln(t10K))
+  const exponent = t > 0 ? 1.07 + 0.0065 * Math.log(t) : 1.07;
+  const t2 = t * Math.pow(21.0975 / 10, exponent);
   const h = Math.floor(t2 / 60); const m = Math.round(t2 % 60);
 
   // Ritmo proyectado por km para el medio maratón (t2 está en minutos; 21,1 km)

@@ -2,15 +2,15 @@
 export interface Inputs { personas: number; tipo?: string; ninos?: string; __lang?: string; }
 export interface Outputs { gramosCrudo: number; tazasArroz: number; tazasAgua: number; porPersona: number; _insight?: any; }
 
-const GRAMOS_PERSONA: Record<string, number> = { guarnicion: 70, principal: 110, sushi: 120, ensalada: 80 };
-const RATIO_AGUA: Record<string, number> = { guarnicion: 2, principal: 2, sushi: 1.2, ensalada: 2 };
+const GRAMOS_PERSONA: Record<string, number> = { guarnicion: 60, principal: 80, sushi: 75, ensalada: 60 };
+const RATIO_AGUA: Record<string, number> = { guarnicion: 2, principal: 2, sushi: 1.5, ensalada: 2 };
 
 export function porcionArrozPersonas(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const pers = Number(i.personas); if (!pers || pers <= 0) throw new Error(__lang === 'en' ? 'Enter the number of people' : 'Ingresá la cantidad de personas');
   const tipo = String(i.tipo || 'guarnicion');
   const ninos = String(i.ninos || 'no');
-  const gBase = GRAMOS_PERSONA[tipo] || 70;
+  const gBase = GRAMOS_PERSONA[tipo] || 60;
   const persEfectivas = ninos === 'si' ? pers * 0.75 : pers;
   const totalG = Math.round(gBase * persEfectivas);
   const tazas = Number((totalG / 185).toFixed(1)); // 185g por taza

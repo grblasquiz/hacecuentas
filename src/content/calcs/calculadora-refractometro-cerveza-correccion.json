@@ -1,27 +1,29 @@
 {
   "slug": "calculadora-refractometro-cerveza-correccion",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora Refractómetro Cerveza Corrección 2026",
-  "h1": "Corrección del refractómetro post-fermentación",
-  "description": "🍳 Corregí la lectura del refractómetro después de fermentar. El alcohol altera la refracción y sin corrección la FG queda falsa · Gratis y rápido.",
+  "lastReviewed": "2026-06-04",
+  "title": "Corregir refractómetro post-fermentación: FG real + ABV | Hacé Cuentas",
+  "h1": "Corrección de refractómetro post-fermentación (Terrill)",
+  "description": "Corregí la lectura del refractómetro después de fermentar. El alcohol infla la lectura Brix hasta 6-10 puntos — esta calculadora usa la fórmula de Sean Terrill para darte la FG real en SG y el ABV verdadero.",
   "category": "cocina",
   "icon": "🍺",
   "audience": "global",
   "formulaId": "refractometro-cerveza-correccion",
+  "answerSnippet": "Para corregir el refractómetro post-fermentación usá la fórmula de Sean Terrill: FG_real = 1.0000 − 0.0044993 × OG_Brix + 0.011774 × FG_Brix + 0.00027581 × OG_Brix² − 0.0012717 × FG_Brix². El alcohol altera la refracción y sin corregir la FG aparece 6-10 puntos más alta de la real.",
   "seoKeywords": [
-    "refractometro cerveza",
-    "correccion brix alcohol",
-    "fg refractometro",
-    "refractometer correction"
+    "refractometro cerveza correccion",
+    "corregir brix fermentado",
+    "fg real refractometro",
+    "fórmula terrill refractómetro",
+    "refractometer beer correction"
   ],
-  "intro": "El **refractómetro** mide azúcares por refracción de luz. Funciona perfecto pre-fermentación pero **post-fermentación el alcohol altera la lectura**: la FG parece más alta de lo real. Esta calculadora usa la fórmula de **Sean Terrill** para corregir tu Brix refractométrico en FG a su valor real de densidad específica (SG). Clave si solo tenés refractómetro y no hidrómetro.",
-  "keyTakeaway": "**FG_real = 1.0000 − 0.0044993 × OG_brix + 0.011774 × FG_brix + 0.00027581 × OG_brix² − 0.0012717 × FG_brix²** (fórmula Terrill). Sin corregir, sobrestimás FG por 6-10 puntos.",
+  "intro": "El **refractómetro** mide azúcares por refracción de luz — funciona perfecto para medir la OG antes de fermentar. Pero **post-fermentación el alcohol altera la lectura**: tu FG parece 1.025 cuando en realidad es 1.012. Esta calculadora aplica la **fórmula de Sean Terrill (2011)**, la más precisa disponible, para convertir tu lectura Brix refractométrica en la FG real en densidad específica (SG) y calcular el ABV correcto. Útil si solo tenés refractómetro y no hidrómetro.",
+  "keyTakeaway": "**Terrill:** FG_real = 1.0000 − 0.0044993×OG_Bx + 0.011774×FG_Bx + 0.00027581×OG_Bx² − 0.0012717×FG_Bx² + 0.00000728×FG_Bx³. Sin corregir, el refractómetro sobreestima la FG 6-10 puntos y subestima el ABV hasta 1,5%.",
   "useCases": [
-    "Solo tenés refractómetro y necesitás FG precisa.",
+    "Solo tenés refractómetro y necesitás la FG real en SG.",
     "Tu FG refractométrica da 1.025 cuando esperabas 1.012.",
-    "Querés validar el ABV sin comprar hidrómetro extra.",
-    "Estás checkeando fermentación a mitad de proceso.",
-    "Querés comparar refractómetro vs hidrómetro."
+    "Querés calcular el ABV sin comprar un hidrómetro extra.",
+    "Chequeás la fermentación a mitad del proceso y querés saber si terminó.",
+    "Querés comparar la lectura del refractómetro contra el hidrómetro."
   ],
   "fields": [
     {
@@ -37,7 +39,7 @@
     },
     {
       "id": "fgBrix",
-      "label": "FG refractométrica en Brix",
+      "label": "FG refractométrica en Brix (sin corregir)",
       "type": "number",
       "suffix": "Bx",
       "placeholder": "7.5",
@@ -48,14 +50,14 @@
     },
     {
       "id": "factorRefractometro",
-      "label": "Factor WCF refractómetro",
+      "label": "Factor WCF del refractómetro",
       "type": "number",
       "placeholder": "1.04",
       "min": 0.9,
       "max": 1.1,
       "step": 0.01,
       "required": false,
-      "help": "Factor WCF (Wort Correction Factor) típico **1.00-1.04**. Default 1.04 sirve para la mayoría de refractómetros chinos. Si calibraste con solución estándar, usá el tuyo exacto."
+      "help": "Wort Correction Factor (WCF): típico **1.00-1.04** para la mayoría de refractómetros. Default 1.04 sirve para los modelos chinos estándar. Si calibraste con hidrómetro, usá tu valor exacto (WCF = Brix_hidrómetro / Brix_refractómetro)."
     }
   ],
   "outputs": [
@@ -82,57 +84,67 @@
     }
   ],
   "example": {
-    "title": "Ejemplo: IPA con refractómetro",
+    "title": "Ejemplo: IPA con OG 14.5°Brix y FG 7.5°Brix",
     "steps": [
-      "**Datos**: OG 14.5 Brix, FG 7.5 Brix (sin corregir).",
-      "**OG en SG**: 1.0586.",
-      "**FG_real (Terrill)** = 1.000 − 0.0044993×14.5 + 0.011774×7.5 + 0.00027581×14.5² − 0.0012717×7.5² = **1.014**.",
-      "**ABV** = (1.0586 − 1.014) × 131.25 = 5.85%."
+      "**Datos**: OG 14.5 Brix pre-fermentación, FG aparente 7.5 Brix en el refractómetro post-fermentación. WCF = 1.04 (default).",
+      "**OG corregida** = 14.5 / 1.04 = 13.94°Brix. **OG en SG** ≈ 1.0585.",
+      "**Aplicá Terrill**: FG_real = 1.0000 − 0.0044993×14.5 + 0.011774×7.5 + 0.00027581×14.5² − 0.0012717×7.5² + 0.00000728×7.5³ ≈ **1.0141**.",
+      "Sin corregir, la lectura cruda de 7.5°Brix equivaldría a ~1.030 SG (falso). La FG real es 1.0141.",
+      "**ABV** = (1.0585 − 1.0141) × 131.25 = **5.83%**."
     ],
-    "result": "La FG real es 1.014, no 1.030 (que era la lectura Brix cruda). ABV real: 5.85%."
+    "result": "FG real = 1.0141, no 1.030 (que sería la lectura Brix cruda sin corregir). ABV real: 5.83%. Sin corrección el ABV aparente sería solo 3.7%."
   },
-  "explanation": "## Por qué falla el refractómetro post-fermentación\n\nEl refractómetro mide **índice de refracción**, calibrado para azúcares (sacarosa). Cuando hay alcohol, el alcohol también refracta luz pero en otra relación, desviando la lectura hacia arriba. Una FG real de 1.010 puede leer 4-8°Brix en el refractómetro (equivalente aparente a 1.015-1.030).\n\n## Fórmula de Sean Terrill (2011)\n\n```\nFG_real = 1.0000 − 0.0044993 × OG_brix + 0.011774 × FG_brix\n          + 0.00027581 × OG_brix² − 0.0012717 × FG_brix²\n          + 0.00000728 × FG_brix³\n```\n\nEs más precisa que la vieja fórmula de Novotný. Funciona para ABV hasta ~12%.\n\n## Factor de corrección WCF\n\nLos refractómetros no son perfectos para mosto (están calibrados para jugo de uva). El **Wort Correction Factor (WCF)** es un divisor. Típico: **1.03-1.05**. Medí OG con refractómetro e hidrómetro (calibrado): WCF = Brix_hidrómetro / Brix_refractómetro.\n\n## Tabla de conversión aproximada\n\n| Brix aparente (post-ferment) | SG real típica |\n|---|---|\n| 5.0 | 1.005 |\n| 6.0 | 1.008 |\n| 7.0 | 1.011 |\n| **8.0** | **1.015** |\n| 9.0 | 1.019 |\n| 10.0 | 1.024 |\n\n## Conversión Brix ↔ SG\n\n```\nSG ≈ 1 + 0.00390625 × Brix + 0.000018375 × Brix²\nBrix ≈ (SG − 1) × 258.6 / (SG − 0.88 × 1.378)\n```\n\n## Cuándo usar refractómetro vs hidrómetro\n\n| Situación | Mejor herramienta |\n|---|---|\n| Medición rápida durante mash | Refractómetro |\n| OG post-hervor | Refractómetro |\n| FG final | Hidrómetro (o refract + corrección) |\n| Checkear fermentación (SG) | Hidrómetro |\n| Muestra <5ml | Refractómetro |\n\n## Errores comunes\n\n1. **Olvidar corregir**: tu ABV calculado sale 30% más bajo.\n2. **WCF asumido**: verificá con hidrómetro.\n3. **Refractómetro sin ATC**: calibralo a 20°C si no tiene compensación.\n4. **Mosto sucio**: limpiá el prisma, sin espuma ni levadura.\n\nVer [ABV cerveza](/calculadora-abv-cerveza-og-fg) para usar el resultado.",
+  "explanation": "## Por qué falla el refractómetro post-fermentación\n\nEl refractómetro mide **índice de refracción**, calibrado para sacarosa en agua. Antes de fermentar funciona bien. Una vez que hay alcohol en la mezcla, el etanol tiene un índice de refracción diferente y eleva artificialmente la lectura. Una FG real de **1.010** puede leer **4-8°Brix** en el refractómetro (equivalente aparente a 1.015-1.030 SG), haciendo que tu cerveza parezca sin terminar cuando ya terminó.\n\n## Fórmula de Sean Terrill (2011) — la más precisa\n\n```\nFG_real = 1.0000 − 0.0044993 × OG_brix\n        + 0.011774 × FG_brix\n        + 0.00027581 × OG_brix²\n        − 0.0012717 × FG_brix²\n        + 0.00000728 × FG_brix³\n```\n\nEs más precisa que la fórmula clásica de Novotný y funciona con precisión de ±0.002 SG para ABV hasta ~12%.\n\n## Tabla de corrección típica (OG 12°Brix, WCF 1.04)\n\n| FG aparente (Brix) | FG real estimada (SG) | ABV aprox. |\n|---|---|---|\n| 4.0 | 1.004 | 7.3% |\n| 5.0 | 1.007 | 6.5% |\n| 6.0 | 1.010 | 5.6% |\n| **7.0** | **1.013** | **4.7%** |\n| 8.0 | 1.017 | 3.8% |\n| 9.0 | 1.021 | 2.7% |\n| 10.0 | 1.025 | 1.5% |\n\n*Valores orientativos. Usá la calculadora con tu OG real.*\n\n## Tabla de conversión Brix ↔ SG (pre-fermentación)\n\n| Brix | SG equivalente |\n|---|---|\n| 8 | 1.032 |\n| 10 | 1.040 |\n| 12 | 1.049 |\n| 14 | 1.057 |\n| 16 | 1.065 |\n| 18 | 1.073 |\n| 20 | 1.083 |\n\n## Factor WCF — cuándo y cómo calcularlo\n\nLos refractómetros están calibrados para jugo de uva (o sacarosa) pero el mosto de cerveza contiene maltosa y dextrinas, que refractan diferente. El **Wort Correction Factor** es un divisor que compensa esto:\n\n```\nWCF = Brix_hidrómetro / Brix_refractómetro\n```\n\nMedí OG con ambos instrumentos el mismo día: si el hidrómetro dice 13.5°Brix y el refractómetro dice 14.0°Brix, tu WCF = 13.5 / 14.0 = 0.964. Típico para mostos de cerveza: 1.00-1.05.\n\n## Refractómetro vs hidrómetro — cuándo usar cada uno\n\n| Situación | Mejor herramienta |\n|---|---|\n| Medición rápida durante el mash | Refractómetro |\n| OG post-hervor (muestra < 5 ml) | Refractómetro |\n| FG final definitiva | Hidrómetro (más preciso) |\n| FG si solo tenés refractómetro | Refractómetro + esta corrección |\n| Seguimiento de fermentación en curso | Cualquiera + corrección |\n| ABV > 12% | Hidrómetro (Terrill pierde precisión) |\n\n## Errores comunes\n\n1. **No corregir**: tu ABV calculado sale 30-40% más bajo del real.\n2. **WCF asumido**: verificá el tuyo con hidrómetro antes de confiar en el default.\n3. **Temperatura**: sin ATC (Auto Temperature Compensation), calibrá a 20°C exactos — 1°C de diferencia puede mover 0.2°Brix.\n4. **Mosto sucio**: limpiá el prisma antes de cada lectura; la espuma y los sedimentos distorsionan.\n5. **Cerveza carbonatada**: el CO₂ interfiere con la refracción; desgasificá agitando 30 segundos.\n\nUná los resultados con [ABV por OG/FG](/calculadora-abv-cerveza-og-fg) para validación cruzada.",
   "faq": [
     {
-      "q": "¿Refractómetro o hidrómetro para FG?",
-      "a": "Hidrómetro es más preciso post-fermentación. Refractómetro requiere corrección matemática obligatoria."
+      "q": "¿Por qué el refractómetro me da una FG falsa post-fermentación?",
+      "a": "El alcohol tiene un índice de refracción diferente al agua. Como el refractómetro está calibrado para soluciones de azúcar (sin alcohol), cuando hay etanol la lectura queda inflada 6-10 puntos de Brix respecto a la realidad. La corrección matemática (Terrill) ajusta esa distorsión usando la OG original como referencia."
     },
     {
-      "q": "¿Cómo calibro el WCF?",
-      "a": "Medí la OG con refractómetro e hidrómetro calibrado en el mismo mosto. WCF = Brix_hidro / Brix_refracto. Típico 1.03-1.05."
+      "q": "¿Qué es la fórmula de Sean Terrill para refractómetros?",
+      "a": "Es la ecuación de corrección más precisa publicada en 2011: FG_real = 1.0000 − 0.0044993×OG_Bx + 0.011774×FG_Bx + 0.00027581×OG_Bx² − 0.0012717×FG_Bx² + 0.00000728×FG_Bx³. Supera la fórmula clásica de Novotný en precisión, especialmente a ABV > 6%."
     },
     {
-      "q": "¿Funciona en cervezas muy fuertes?",
-      "a": "Hasta ~12% ABV la fórmula Terrill es precisa (±0.002). Por encima perdés precisión."
+      "q": "¿Refractómetro o hidrómetro para medir la FG?",
+      "a": "Hidrómetro es más preciso para FG post-fermentación porque no se ve afectado por el alcohol. El refractómetro es válido si aplicás la corrección de Terrill — la precisión baja a ±0.002 SG (aceptable para homebrew). Para fermentaciones de más de 12% ABV, usá hidrómetro siempre."
     },
     {
-      "q": "¿ATC importa?",
-      "a": "Sí. Los refractómetros con ATC compensan por temperatura automáticamente. Sin ATC, dejá que la muestra llegue a 20°C."
+      "q": "¿Cómo calculo mi WCF (Wort Correction Factor)?",
+      "a": "Medí la misma muestra de OG con refractómetro e hidrómetro (ambos calibrados, misma temperatura): WCF = Brix_hidrómetro / Brix_refractómetro. Típicamente 1.00-1.05. Si el refractómetro marca 14°Brix y el hidrómetro equivale a 13.5°Brix, WCF = 0.964."
     },
     {
-      "q": "¿Por qué mi Brix no coincide con SG del hidrómetro?",
-      "a": "Los refractómetros están calibrados para sacarosa. El mosto tiene maltosa y dextrinas que refractan distinto — de ahí el WCF."
+      "q": "¿Puedo usar esta calculadora durante la fermentación activa?",
+      "a": "Sí, con limitaciones. La fórmula de Terrill funciona mejor con la fermentación terminada o casi terminada (> 80% atenuada). En fermentación activa el CO₂ disuelto interfiere — desgasificá bien la muestra antes de medir."
     },
     {
-      "q": "¿Puedo medir cerveza carbonatada?",
-      "a": "No — el CO₂ interfiere. Desgasificá agitando en un vaso 30 segundos antes de medir."
+      "q": "¿ATC del refractómetro importa?",
+      "a": "Sí. Los modelos con ATC (Auto Temperature Compensation) compensan automáticamente entre 10-30°C. Sin ATC, dejá que la muestra llegue exactamente a 20°C — 5°C de diferencia puede mover ±0.5°Brix en la lectura."
     },
     {
-      "q": "¿Qué refractómetro compro para cerveza casera?",
-      "a": "Recomendado: **ATC 0-32% Brix con corrección de temperatura automática** — $15-25 USD en AliExpress o $30-50k ARS en casas de homebrew locales (Antares, Lupulus, Mr Malt). Vienen con calibración 20°C. **NO compres los de 0-80% Brix** (usados para miel) — precisión insuficiente en el rango 5-20°Brix del mosto. Para cerveza cotidiana: Hanna Instruments HI96811 digital si tenés $200 USD — termina el tema de interpretar líneas borrosas."
+      "q": "¿Puedo medir cerveza carbonatada con el refractómetro?",
+      "a": "No directamente. El CO₂ disuelto altera la refracción. Antes de medir, vertí una pequeña muestra en un vaso y agitá 30 segundos hasta que deje de burbujear. Recién ahí tomá la lectura."
+    },
+    {
+      "q": "¿Qué refractómetro comprar para cerveza casera?",
+      "a": "Para homebrewing: cualquier modelo ATC 0-32% Brix (no los de 0-80° que son para miel — muy poca precisión en el rango 5-20°Brix del mosto). Los modelos chinos ATC de $15-25 USD funcionan bien. Si querés evitar el problema de las líneas borrosas, el Hanna Instruments HI96811 digital a ~$200 USD es el gold standard."
     }
   ],
   "sources": [
     {
-      "name": "How to Brew - John Palmer",
-      "url": "http://howtobrew.com/"
+      "name": "Sean Terrill — Refractometer Correction Formula (2011)",
+      "url": "http://seanterrill.com/2011/04/07/refractometer-fg-results/"
+    },
+    {
+      "name": "How to Brew — John Palmer (howtobrew.com)",
+      "url": "https://www.howtobrew.com/section1/chapter2-2.html"
     },
     {
       "name": "Brewer's Friend Calculators",
-      "url": "https://www.brewersfriend.com/"
+      "url": "https://www.brewersfriend.com/refractometer-calculator/"
     },
     {
-      "name": "BJCP Style Guidelines 2021"
+      "name": "BJCP Style Guidelines 2021",
+      "url": "https://www.bjcp.org/bjcp-style-guidelines/"
     }
   ],
   "relatedSlugs": [
@@ -143,31 +155,31 @@
   ],
   "howToSteps": [
     {
-      "name": "Ingresá og original en brix",
-      "text": "Ingresá og original en brix (ej: 14.5). Es el valor de og original en brix."
+      "name": "Ingresá la OG en Brix",
+      "text": "Ingresá la densidad original (OG) que mediste pre-fermentación con el refractómetro, en grados Brix (ej: 14.5). Este es tu punto de partida."
     },
     {
-      "name": "Ingresá fg refractométrica en brix",
-      "text": "Ingresá fg refractométrica en brix (ej: 7.5). Es el valor de fg refractométrica en brix."
+      "name": "Ingresá la FG aparente en Brix",
+      "text": "Ingresá la lectura actual del refractómetro post-fermentación, en Brix (ej: 7.5). Esta lectura está inflada por el alcohol — la calculadora la corrige."
     },
     {
-      "name": "Ingresá factor wcf refractómetro",
-      "text": "Ingresá factor wcf refractómetro (ej: 1.04). Es el valor de factor wcf refractómetro."
+      "name": "Ajustá el factor WCF (opcional)",
+      "text": "Si calibraste tu refractómetro con hidrómetro, ingresá tu WCF exacto. De lo contrario dejá el default 1.04 que funciona para la mayoría de refractómetros estándar."
     },
     {
-      "name": "Hacé click en Calcular",
-      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+      "name": "Presioná Calcular",
+      "text": "Hacé click en Calcular para obtener la FG real en SG, la OG convertida, el ABV corregido y la atenuación aparente."
     },
     {
-      "name": "Revisá los resultados",
-      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+      "name": "Interpretá los resultados",
+      "text": "La FG real (SG) es el valor correcto a comparar con tu receta. El ABV resultante es el alcohol real de tu cerveza. Si la atenuación supera el 75-80% la fermentación probablemente terminó."
     }
   ],
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-17",
-    "source": "How to Brew - John Palmer",
-    "sourceUrl": "http://howtobrew.com/",
+    "source": "Sean Terrill Refractometer Correction Formula (2011)",
+    "sourceUrl": "http://seanterrill.com/2011/04/07/refractometer-fg-results/",
     "updateType": "manual"
   }
 }

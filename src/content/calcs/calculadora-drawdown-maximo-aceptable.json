@@ -1,40 +1,42 @@
 {
   "slug": "calculadora-drawdown-maximo-aceptable",
-  "lastReviewed": "2026-04-22",
-  "title": "Calculadora Drawdown Máximo 2026 — Trading | Hacé Cuentas",
-  "h1": "Calculadora de Drawdown Máximo Aceptable",
-  "description": "💰 Drawdown trading: cuánto podés perder antes de que sea matemáticamente difícil recuperar. % recovery necesario por drawdown · Gratis y rápido.",
+  "lastReviewed": "2026-06-05",
+  "title": "Drawdown: calculadora de recovery + tabla | Hacé Cuentas",
+  "h1": "Calculadora de Drawdown: recovery necesario y tiempo estimado",
+  "description": "Calculá tu drawdown actual y cuánto % de ganancia necesitás para recuperar. Tabla de recovery por nivel de pérdida, límites FTMO/prop firms incluidos.",
+  "answerSnippet": "Para recuperar un drawdown de −10% necesitás ganar +11.1%; para −20% necesitás +25%; para −30% necesitás +43%; y para −50% necesitás exactamente +100%. Fórmula: recovery% = DD / (1 − DD). A mayor pérdida, el recovery crece de forma exponencial.",
   "category": "finanzas",
   "icon": "📊",
   "formulaId": "drawdown-maximo-aceptable",
   "audience": "global",
   "seoKeywords": [
     "drawdown trading",
+    "drawdown recovery calculator",
     "maximum drawdown",
-    "recovery drawdown",
+    "calculadora drawdown",
     "prop firm drawdown",
-    "dd maximo",
-    "trading equity curve"
+    "dd maximo trading",
+    "cuanto necesito recuperar drawdown"
   ],
-  "intro": "El **drawdown** es la caída porcentual desde el pico máximo del equity hasta el valle más bajo antes de volver a nuevos máximos. Es **la métrica más honesta** de una estrategia: describe el peor dolor que el trader tuvo que soportar en vida real. Lo que hace al drawdown traicionero es la **matemática asimétrica de recovery**: para recuperar un −50% necesitás un +100%. Esta calculadora toma tu capital inicial, capital actual y devuelve: drawdown actual, ganancia necesaria para recuperar, meses estimados de recovery (según tu retorno mensual promedio) y si estás dentro de los límites de prop firms (FTMO: 10%, MFF: 5% daily). Es la herramienta para saber cuándo parar.",
-  "keyTakeaway": "**Recovery = DD / (1 − DD)**. −10% necesita +11%, −20% necesita +25%, **−50% necesita +100%**.",
+  "intro": "El **drawdown** es la caída porcentual desde el pico máximo de tu cuenta hasta el punto más bajo antes de nuevos máximos. Es **la métrica más honesta** de una estrategia: describe el peor dolor real que soportó el trader. Lo que hace al drawdown traicionero es la **matemática asimétrica**: para recuperar −50% necesitás +100%. Esta calculadora toma tu capital máximo, capital actual y retorno mensual promedio, y devuelve el drawdown actual, el % de ganancia necesario para recuperar y los meses estimados de recovery. Incluye comparación con límites de prop firms (FTMO 10%, The5ers 8%, TopStep 6%).",
+  "keyTakeaway": "**Recovery = DD / (1 − DD)**. Un drawdown de −20% necesita +25%. Uno de −50% necesita +100%. La asimetría crece exponencialmente.",
   "useCases": [
     "Saber si tu drawdown sigue dentro de lo tolerable.",
     "Calcular cuánto % de ganancia necesitás para recuperar.",
-    "Ver si podés cumplir reglas de FTMO/MFF.",
+    "Ver si podés cumplir reglas de FTMO/MFF/The5ers.",
     "Decidir si cambiar de estrategia tras drawdown profundo.",
-    "Proyectar tiempo de recovery con tu retorno promedio."
+    "Proyectar tiempo de recovery con tu retorno promedio mensual."
   ],
   "fields": [
     {
       "id": "capitalInicial",
-      "label": "Capital máximo alcanzado (USD)",
+      "label": "Capital máximo alcanzado (pico, USD)",
       "type": "number",
       "placeholder": "10000",
       "required": true,
       "min": 1,
       "step": 1,
-      "help": "Lo que ya tenés ahorrado al empezar. Podés dejar en 0 si arrancás desde cero."
+      "help": "El valor más alto que llegó tu cuenta. Es el punto desde donde medir el drawdown."
     },
     {
       "id": "capitalActual",
@@ -43,7 +45,8 @@
       "placeholder": "7500",
       "required": true,
       "min": 1,
-      "step": 1
+      "step": 1,
+      "help": "El valor actual de tu cuenta, menor al pico."
     },
     {
       "id": "retornoMensualPromedio",
@@ -54,7 +57,7 @@
       "min": 0.01,
       "max": 100,
       "step": 0.1,
-      "help": "Valor en porcentaje."
+      "help": "Tu ganancia mensual típica, en porcentaje. Ejemplo: 3 para 3%."
     }
   ],
   "dataUpdate": {
@@ -63,7 +66,7 @@
     "source": "Investopedia - Drawdown",
     "sourceUrl": "https://www.investopedia.com/terms/d/drawdown.asp",
     "updateType": "manual",
-    "notes": "Fórmulas estándar de la industria."
+    "notes": "Fórmulas estándar de la industria financiera."
   },
   "outputs": [
     {
@@ -94,56 +97,65 @@
     }
   ],
   "example": {
-    "title": "Capital max 10.000, actual 7.500, retorno mensual 3%",
+    "title": "Capital máximo 10.000, actual 7.500, retorno mensual 3%",
     "steps": [
       "DD = (10.000 − 7.500) / 10.000 = **25%**.",
-      "Recovery = 25% / (1−0.25) = **33.3%** de ganancia.",
-      "Con 3% mensual: log(1.333)/log(1.03) ≈ **10 meses**."
+      "Recovery = 25% / (1 − 0.25) = **33.3%** de ganancia necesaria.",
+      "Con 3% mensual: log(1.333) / log(1.03) ≈ **10 meses** para recuperar."
     ],
-    "result": "Drawdown **25%** — nivel crítico. Necesitás **+33%** y **~10 meses** para recuperar."
+    "result": "Drawdown **25%** — nivel grave. Necesitás **+33.3%** y **~10 meses** a 3% mensual."
   },
-  "explanation": "## La matemática brutal del drawdown\n\nLa primera lección dura del trading: **una pérdida de X% requiere una ganancia mayor para recuperar**.\n\n## Tabla: recovery por drawdown\n\n| Drawdown | Recovery necesario | Severidad |\n|---|---|---|\n| -5% | +5.3% | ✅ normal |\n| -10% | +11.1% | ✅ aceptable |\n| -20% | +25% | ⚠️ preocupante |\n| -30% | +43% | ⚠️ difícil |\n| -40% | +67% | ❌ grave |\n| -50% | +100% | ❌ crítico |\n| -70% | +233% | ☠️ casi irrecuperable |\n| -90% | +900% | ☠️ game over |\n\n## Fórmula\n\n```\nRecovery% = DD / (1 − DD)\nMeses recovery = log(1 + Recovery) / log(1 + retornoMensual)\n```\n\n## Límites de prop firms\n\n| Prop | DD diario | DD total |\n|---|---|---|\n| FTMO | 5% | 10% |\n| MyForexFunds | 5% | 12% |\n| The5ers | 4% | 8% |\n| TopStep | 3% (futures) | 6% |\n\nExceder uno = cuenta bloqueada, sin apelación.\n\n## Qué hacer en drawdown\n\n1. **Reducir size** a la mitad o menos hasta recuperar 50% del DD.\n2. **Auditar últimos 20 trades**: ¿seguiste el plan?\n3. **Pausa obligatoria** si pasaste el doble de tu DD esperado.\n4. **No revenge trade**: es la causa #1 de blow-ups.\n\nComplementos: [Position size](/calculadora-position-size-forex-pips-riesgo) · [Kelly](/calculadora-kelly-criterion-apuesta-optima)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## La matemática asimétrica del drawdown\n\nEl problema central del drawdown es que **una pérdida de X% requiere una ganancia mayor de X% para recuperar**. La fórmula exacta es:\n\n```\nRecovery% = DD / (1 − DD)\nMeses recovery = log(1 + Recovery) / log(1 + retornoMensual)\n```\n\n## Tabla completa: drawdown vs. recovery necesario\n\n| Drawdown | Recovery necesario | Meses (3%/mes) | Severidad |\n|---|---|---|---|\n| −5% | +5.3% | ~2 meses | ✅ Saludable |\n| −10% | +11.1% | ~4 meses | ✅ Normal |\n| −15% | +17.6% | ~6 meses | ⚠️ Atención |\n| −20% | +25% | ~8 meses | ⚠️ Preocupante |\n| −25% | +33.3% | ~10 meses | ⚠️ Preocupante |\n| −30% | +42.9% | ~12 meses | ⚠️ Difícil |\n| −40% | +66.7% | ~18 meses | ❌ Grave |\n| −50% | +100% | ~24 meses | ❌ Crítico |\n| −60% | +150% | ~33 meses | ❌ Muy crítico |\n| −70% | +233% | ~46 meses | ☠️ Casi irrecuperable |\n| −90% | +900% | ~82 meses | ☠️ Game over |\n\n*Tiempo estimado con retorno del 3% mensual sostenido.*\n\n## Límites de prop firms (drawdown máximo permitido)\n\n| Prop Firm | DD diario máx | DD total máx |\n|---|---|---|\n| FTMO | 5% | 10% |\n| MyForexFunds | 5% | 12% |\n| The5ers | 4% | 8% |\n| TopStep (futuros) | 3% | 6% |\n| E8 Funding | 5% | 8% |\n\nSuperarlo = cuenta cancelada sin apelación.\n\n## Cómo actuar según nivel de drawdown\n\n1. **−5% a −10%:** Normal. No tocar el plan. Revisar si se siguió el setup.\n2. **−10% a −20%:** Reducir el tamaño de posición al 50% hasta recuperar la mitad del DD.\n3. **−20% a −30%:** Pausa de 24–48hs. Auditar los últimos 20 trades. Evaluar si el edge sigue vigente.\n4. **Más de −30%:** Parar. El recovery matemático es difícil; el psicológico aún más. Volvé al paper trading antes de operar real.\n\nNo hagas *revenge trading* — es la causa #1 de blow-ups.\n\nComplementos: [Position size](/calculadora-position-size-forex-pips-riesgo) · [Kelly](/calculadora-kelly-criterion-apuesta-optima) · [Risk/Reward](/calculadora-risk-reward-ratio-trade)\n\n> Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido se contrasta contra las fuentes citadas al pie y se revisa periódicamente. Ver [política editorial](/politica-editorial).\n\n**Disclaimer:** Los resultados son orientativos. Para decisiones de inversión, consultá con un asesor financiero registrado ante la CNV.\n",
   "faq": [
     {
-      "q": "¿Drawdown absoluto o relativo al pico?",
-      "a": "Siempre **relativo al pico máximo**. Un drawdown de -20% desde 10k (→8k) es igual de grave que desde 100k (→80k)."
+      "q": "¿Qué es el drawdown en trading?",
+      "a": "El drawdown es la caída porcentual desde el pico máximo de una cuenta hasta el punto más bajo antes de recuperar nuevos máximos. Se expresa como porcentaje negativo respecto al pico. Ejemplo: una cuenta que pasó de 10.000 a 8.000 tiene un drawdown de -20%."
     },
     {
-      "q": "¿Cuál es el drawdown normal de estrategias?",
-      "a": "Trend-following: 20–30% es normal. Mean-reversion: 10–15%. HFT/market-making: 3–8%. Todo lo que sea >40% indica sizing excesivo."
+      "q": "¿Por qué necesito más del doble para recuperar -50%?",
+      "a": "Porque perdiste la mitad de tu base. Si tenías 10.000 y bajaste a 5.000, para volver a 10.000 necesitás ganar 5.000 sobre 5.000, es decir +100%. La fórmula exacta es: recovery = DD / (1 − DD). Un −50% da 0.50 / 0.50 = 1 = **+100%**."
     },
     {
-      "q": "¿Por qué no puedo recuperarme de -50%?",
-      "a": "Matemáticamente sí podés, pero necesitás **+100%** — lo cual es ~3 años al 3% mensual. Y el tiempo psicológico (tilt, pérdida de edge) suele acabar la cuenta antes."
+      "q": "¿Cuánto tiempo tarda recuperar un drawdown del 20%?",
+      "a": "Con un retorno del 3% mensual sostenido, un drawdown de −20% (que requiere +25% de recovery) tarda aproximadamente 8 meses. Con 5% mensual, unos 5 meses. Con 1% mensual, cerca de 23 meses."
     },
     {
-      "q": "¿Drawdown se mide antes o después de impuestos?",
-      "a": "Antes. Es métrica de estrategia pura. Los impuestos son un golpe adicional sobre ganancias netas."
+      "q": "¿Cuál es el drawdown máximo aceptable?",
+      "a": "Depende de la estrategia: **trend-following**: 20–30% es normal. **Mean-reversion**: 10–15%. **HFT/market-making**: 3–8%. Para prop firms el límite suele ser 8–12%. Para trading personal, lo que te permita dormir tranquilo y no revenge-tradear."
     },
     {
-      "q": "¿Cuánto tarda recuperarse?",
-      "a": "Depende de tu retorno. Con 3% mensual: DD 20% = 8 meses, DD 30% = 13 meses, DD 50% = 24 meses."
+      "q": "¿Drawdown relativo o absoluto?",
+      "a": "Siempre **relativo al pico máximo**. Un −20% desde 10.000 (→8.000) es igual de grave que −20% desde 100.000 (→80.000). El porcentaje es la métrica universal porque normaliza el tamaño de la cuenta."
     },
     {
-      "q": "¿Y el drawdown máximo histórico de hedge funds?",
-      "a": "Renaissance Medallion: ~15% en peor racha. Bridgewater Pure Alpha: ~22%. LTCM: -91% antes de colapsar. La frontera de eficiencia clava DD razonable entre 10–25%."
+      "q": "¿Se mide antes o después de impuestos?",
+      "a": "Antes. El drawdown es una métrica pura de la estrategia. Los impuestos son un costo adicional sobre las ganancias netas y se calculan por separado."
     },
     {
-      "q": "¿Existe rolling drawdown?",
-      "a": "Sí — es el drawdown máximo en ventanas móviles (30d, 90d, 1y). Lo miden los institucionales para evaluar severidad reciente vs histórica."
+      "q": "¿Cuál fue el drawdown máximo de los mejores fondos?",
+      "a": "Renaissance Medallion (el mejor hedge fund del mundo): ~15% en su peor racha. Bridgewater Pure Alpha: ~22%. Warren Buffett (Berkshire): ~50% en 2009. LTCM: −91% antes de colapsar. La mayoría de estrategias institucionales apuntan a un DD máximo histórico de 10–25%."
+    },
+    {
+      "q": "¿Qué es el rolling drawdown?",
+      "a": "Es el drawdown máximo calculado en ventanas móviles de tiempo (30 días, 90 días, 1 año). Los fondos institucionales lo usan para evaluar la severidad reciente versus el historial, y para detectar deterioro en el edge de la estrategia antes de que el drawdown total sea irreversible."
     }
   ],
   "sources": [
     {
-      "name": "Investopedia - Drawdown",
+      "name": "Investopedia — Drawdown Definition",
       "url": "https://www.investopedia.com/terms/d/drawdown.asp"
     },
     {
-      "name": "FTMO Rules",
-      "url": "https://ftmo.com"
+      "name": "FTMO Trading Rules",
+      "url": "https://ftmo.com/en/trading-rules/"
     },
     {
-      "name": "QuantStart - Backtest Drawdown"
+      "name": "QuantStart — Calculating Drawdown",
+      "url": "https://www.quantstart.com/articles/Calculating-the-Maximum-Drawdown-of-a-Strategy/"
+    },
+    {
+      "name": "The5ers Challenge Rules",
+      "url": "https://the5ers.com/forex-trading-challenge/"
     }
   ],
   "relatedSlugs": [
@@ -154,16 +166,20 @@
   ],
   "howToSteps": [
     {
-      "name": "Ingresá los datos",
-      "text": "Completá los campos del formulario con tus valores."
+      "name": "Ingresá el capital máximo alcanzado",
+      "text": "Escribí el pico más alto que llegó tu cuenta en cualquier momento (el punto desde el cual se mide el drawdown)."
+    },
+    {
+      "name": "Ingresá el capital actual",
+      "text": "Escribí el valor actual de tu cuenta, que debe ser menor al pico."
+    },
+    {
+      "name": "Ingresá tu retorno mensual promedio",
+      "text": "Ingresá el porcentaje de ganancia mensual que lográs históricamente (ejemplo: 3 para 3%)."
     },
     {
       "name": "Hacé click en Calcular",
-      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
-    },
-    {
-      "name": "Revisá los resultados",
-      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+      "text": "Presioná Calcular para ver el drawdown actual, el recovery necesario y los meses estimados."
     }
   ]
 }
