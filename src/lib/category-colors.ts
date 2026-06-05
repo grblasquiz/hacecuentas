@@ -5,12 +5,12 @@
  * además tiene label/desc/icon). Si cambiás un color, cambialo en ambos lados
  * (o, mejor, refactorizá index.astro para importar de acá).
  *
- * Uso: el color de marca global es teal (--accent). En las páginas de cada
+ * Uso: el color de marca global es azul (--accent). En las páginas de cada
  * calculadora seteamos `--cat` = color de su categoría para teñir la zona de
- * identidad (eyebrow + ícono + TOC activo), manteniendo el teal para el CTA
- * y el resultado (consistencia + contraste garantizado).
+ * identidad (eyebrow + ícono + TOC activo), manteniendo el azul de marca para
+ * el CTA y el resultado (consistencia + contraste garantizado).
  */
-export const BRAND_TEAL = '#0d9488';
+export const BRAND_DEFAULT = '#2563eb';
 
 export const CATEGORY_COLORS: Record<string, string> = {
   finanzas: '#2563eb',
@@ -43,6 +43,6 @@ export const CATEGORY_COLORS: Record<string, string> = {
 
 /** Color de la categoría, con fallback al teal de marca. */
 export function categoryColor(cat: string | undefined | null): string {
-  if (!cat) return BRAND_TEAL;
-  return CATEGORY_COLORS[cat] || BRAND_TEAL;
+  if (!cat) return BRAND_DEFAULT;
+  return CATEGORY_COLORS[cat] || BRAND_DEFAULT;
 }
