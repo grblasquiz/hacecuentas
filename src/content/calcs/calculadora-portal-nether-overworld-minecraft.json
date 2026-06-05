@@ -1,23 +1,24 @@
 {
   "slug": "calculadora-portal-nether-overworld-minecraft",
-  "lastReviewed": "2026-05-19",
-  "title": "Portal Nether Overworld Minecraft — Calculadora 2026",
-  "h1": "Portal Nether ↔ Overworld — alineación de coordenadas Minecraft",
-  "description": "🎮 Calculá coordenadas Nether desde Overworld (dividí por 8) o al revés (multiplicá por 8) para alinear portales perfectos en Minecraft.",
+  "lastReviewed": "2026-06-04",
+  "title": "Coordenadas Portal Nether Minecraft: conversor + tabla | Hacé Cuentas",
+  "h1": "Calculadora de coordenadas Nether ↔ Overworld — Minecraft",
+  "description": "Convertí coordenadas Overworld → Nether (÷8) o Nether → Overworld (×8) para alinear portales en Minecraft. Ingresá X, Y, Z y obtenés el punto exacto donde construir el portal destino.",
   "category": "juegos",
   "icon": "🎮",
   "formulaId": "portal-nether-overworld",
   "audience": "global",
+  "answerSnippet": "Para alinear portales en Minecraft: **Overworld → Nether**, dividí X y Z por 8 (la Y se mantiene). **Nether → Overworld**, multiplicá X y Z por 8. Ejemplo: si tu base está en Overworld X=1600, Z=800, el portal del Nether va en X=200, Z=100. La proporción 1:8 significa que 1 bloque en el Nether equivale a 8 en el Overworld.",
   "seoKeywords": [
-    "portal nether minecraft",
-    "coordenadas nether overworld",
-    "alinear portal minecraft",
-    "conversion nether 1 a 8",
-    "minecraft portal matematica",
-    "travel nether fast",
+    "coordenadas portal nether minecraft",
+    "calculadora nether overworld",
+    "portal nether dividir por 8",
+    "alinear portal minecraft nether",
+    "conversion coordenadas nether",
+    "minecraft nether coordinates calculator",
+    "hub nether minecraft coordenadas",
     "portal linking minecraft",
-    "hub nether",
-    "minecraft coordenadas",
+    "minecraft portal matematica",
     "portal nether calculator"
   ],
   "intro": "En **Minecraft**, el Nether funciona a **8 veces la velocidad del Overworld**: cada bloque caminado en el Nether equivale a 8 bloques en el Overworld. Por eso los **hubs del Nether** son la forma más eficiente de viajar largas distancias. El problema es que **si no alineás bien las coordenadas, el portal te deja en cualquier lado** al volver — o peor, crea un portal nuevo que rompe tu hub. Esta calculadora convierte coordenadas en ambos sentidos: **Overworld → Nether (dividís X y Z por 8)** y **Nether → Overworld (multiplicás por 8)**. La Y (altura) se mantiene igual, aunque en el Nether conviene construir entre Y=70 y Y=120 para evitar caer en lava o ser atacado por ghasts.",
@@ -51,7 +52,8 @@
       "label": "Coordenada X",
       "type": "number",
       "placeholder": "1500",
-      "step": 1
+      "step": 1,
+      "format": "plain"
     },
     {
       "id": "y",
@@ -59,6 +61,7 @@
       "type": "number",
       "placeholder": "64",
       "step": 1,
+      "format": "plain",
       "help": "En el Nether conviene Y=70-120 para estar sobre la lava."
     },
     {
@@ -66,7 +69,8 @@
       "label": "Coordenada Z",
       "type": "number",
       "placeholder": "-800",
-      "step": 1
+      "step": 1,
+      "format": "plain"
     }
   ],
   "outputs": [
@@ -100,89 +104,94 @@
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-22",
-    "source": "Mecánica fija del juego Minecraft",
-    "sourceUrl": "https://minecraft.fandom.com/wiki/The_Nether",
+    "source": "Mecánica fija del juego Minecraft (sin cambios desde Java 1.3)",
+    "sourceUrl": "https://minecraft.wiki/w/Nether_portal",
     "updateType": "manual"
   },
   "example": {
-    "title": "Ejemplo: alinear portal para base en Overworld (1500, 64, -800)",
+    "title": "Ejemplo: base del Overworld en (1600, 64, 800)",
     "steps": [
-      "**Overworld**: X=1500, Y=64, Z=-800.",
-      "**Dividí X y Z por 8**: X=1500/8 = **187**, Z=-800/8 = **-100**.",
-      "**Y**: la mantenés igual o la elevás al rango 70-120 del Nether para seguridad.",
-      "**Portal Nether**: construir en **X=187, Y=100, Z=-100**."
+      "**Overworld**: X=1600, Y=64, Z=800 (las ves con F3 en Java o /tp @s ~ ~ ~ en Bedrock).",
+      "**Dividí X y Z por 8**: X=1600÷8 = **200**, Z=800÷8 = **100**.",
+      "**Y**: podés mantener Y=64 o elevarla a 100 para evitar la lava del Nether.",
+      "**Portal Nether**: construir en **X=200, Y=100, Z=100**.",
+      "**Verificación**: al cruzar desde Overworld te teleporta a (200, 100, 100) en el Nether — exactamente ahí construiste el portal."
     ],
-    "result": "Construí el portal del lado Nether en **(187, 100, -100)**. Al cruzar desde Overworld te va a teleportar exactamente ahí (tolerancia ±16 bloques). Así podés hacer un hub central que conecte a otras bases del Overworld sin ambigüedad."
+    "result": "Construí el portal del Nether en **(200, 100, 100)**. Al cruzar desde Overworld vas a llegar exactamente ahí (tolerancia ±128 bloques en Java, ±16 en Bedrock). Si después cruzás desde el Nether en esas coordenadas, el juego encuentra tu portal del Overworld en (1600, 64, 800) y te lleva de vuelta sin crear un portal duplicado."
   },
-  "explanation": "## Cómo se calcula\n\n```\nOverworld → Nether:  X_nether = floor(X_ow / 8),  Z_nether = floor(Z_ow / 8),  Y = mismo\nNether → Overworld:  X_ow = X_nether × 8,          Z_ow = Z_nether × 8,          Y = mismo\n```\n\nLa **Y** técnicamente se mantiene, pero en la práctica: si el portal Overworld está a Y=64 (nivel del mar) y el Nether a Y=80 (sobre lava), el juego te teleporta al Nether a **Y=80 igual**, porque busca aire más cercano al mismo Y.\n\n## Cómo Minecraft linkea portales\n\nCuando cruzás un portal, el juego:\n1. Calcula la coordenada destino con la fórmula de arriba.\n2. Busca un **portal existente en un radio de 128 bloques (Java) o 16 bloques (Bedrock)** alrededor de esa coordenada destino.\n3. Si encuentra uno, te teleporta a ese portal.\n4. Si **no encuentra ninguno**, crea uno nuevo en la ubicación más cercana posible (lo que puede ser en medio de la lava, dentro de una piedra, o en cualquier lado).\n\n## Tabla de conversiones rápidas\n\n| Overworld | Nether |\n|---|---|\n| X=0, Z=0 | X=0, Z=0 |\n| X=80, Z=80 | X=10, Z=10 |\n| X=800, Z=800 | X=100, Z=100 |\n| X=8000, Z=8000 | X=1000, Z=1000 |\n| X=-1600, Z=2400 | X=-200, Z=300 |\n\n## Altura Y recomendada en el Nether\n\n| Altura Y | Descripción |\n|---|---|\n| 0-31 | **Zona de lava**: muerte casi segura al spawnear. Evitar. |\n| 32-69 | **Zona abierta con Ghasts y Hoglins**. Riesgoso. |\n| **70-120** | **Zona segura** para portales y hubs. Recomendado. |\n| 121-128 | **Techo del Nether**: accesible con bug, popular para caminos rápidos. |\n| 256 (techo absoluto) | Solo accesible glitcheando portales. |\n\n## Casos especiales\n\n### Portal que no linkea bien\nSi construís 2 portales y el Overworld-Nether no son consistentes con la fórmula ÷8, Minecraft creará un portal tercero o te meterá en cualquier lado. **Solución**: destruir todos los portales del área y reconstruir con coordenadas precisas.\n\n### Radio de búsqueda Bedrock vs Java\n- **Java Edition**: radio 128 bloques (muy generoso). Podés tener cierto margen de error.\n- **Bedrock Edition**: radio 16 bloques (muy estricto). Hay que ser exacto.\n\n### Hub del Nether\nConstruir una red de portales al mismo Y (ej: Y=110) en el Nether, conectados por pasillos, con cada portal alineado exacto al Overworld. Ejemplo típico:\n- Base principal: Overworld (0,0,0) → Nether (0, 110, 0)\n- Mina: Overworld (800, 40, 800) → Nether (100, 110, 100)\n- Aldea: Overworld (-1600, 80, 400) → Nether (-200, 110, 50)\n\nDesde el hub central del Nether podés caminar 300 bloques para recorrer los 2.400 del Overworld.\n\n### El techo del Nether\nA través de glitches podés colocar portales sobre la bedrock del techo (Y=128), lo que te da un **plano sin obstáculos** para autopistas de minecart o elytra. No hay mobs. Bastante usado en servidores competitivos y SMP.\n\n## Fuentes\n\n- Minecraft Wiki — The Nether (oficial)\n- Mojang — Java Edition documentation",
+  "explanation": "## Fórmula exacta\n\n```\nOverworld → Nether:  X_nether = floor(X_ow ÷ 8),  Z_nether = floor(Z_ow ÷ 8),  Y = mismo\nNether → Overworld:  X_ow = X_nether × 8,          Z_ow = Z_nether × 8,          Y = mismo\n```\n\nLa **Y** técnicamente se mantiene, pero en la práctica: si el portal Overworld está a Y=64 y el Nether a Y=100, el juego te teleporta al Nether a Y=100 — busca el portal que construiste en ese Y.\n\n## Tabla de conversiones rápidas Overworld → Nether\n\n| Overworld X | Overworld Z | Nether X | Nether Z |\n|---:|---:|---:|---:|\n| 80 | 80 | 10 | 10 |\n| 400 | 400 | 50 | 50 |\n| 800 | 800 | 100 | 100 |\n| 1600 | 800 | 200 | 100 |\n| 4000 | -2400 | 500 | -300 |\n| 8000 | 8000 | 1000 | 1000 |\n| -1600 | 2400 | -200 | 300 |\n| -3200 | -1600 | -400 | -200 |\n\n## Altura Y recomendada en el Nether\n\n| Altura Y | Descripción |\n|---:|---|\n| 0–31 | **Zona de lava**: muerte casi segura al spawnear. Evitar. |\n| 32–69 | **Zona abierta con Ghasts y Hoglins**. Riesgoso. |\n| **70–120** | **Zona segura** para portales y hubs. Recomendado. |\n| 121–127 | **Techo del Nether**: accesible con glitch, popular para autopistas. |\n\n## Cómo Minecraft linkea portales\n\nCuando cruzás un portal, el juego:\n1. Calcula la coordenada destino con la fórmula de arriba.\n2. Busca un **portal existente en radio de 128 bloques (Java) o 16 bloques (Bedrock)** alrededor de esa coordenada.\n3. Si encuentra uno, te teleporta ahí.\n4. Si **no encuentra ninguno**, crea uno nuevo (puede quedar en lava, piedra, o en cualquier lado).\n\n## Casos especiales\n\n### Portal duplicado\nSi construís 2 portales con coordenadas inconsistentes con la fórmula ÷8, Minecraft crea un portal tercero al cruzar. **Solución**: destruir todos los portales del área y reconstruir con coordenadas precisas calculadas aquí.\n\n### Java vs Bedrock\n- **Java Edition**: radio de búsqueda 128 bloques — margen generoso.\n- **Bedrock Edition**: radio de búsqueda 16 bloques — hay que ser exacto al bloque.\n\n### Hub del Nether — ejemplo de red\n\n| Base (Overworld) | Portal Nether |\n|---|---|\n| (0, 64, 0) — Spawn | (0, 110, 0) |\n| (800, 40, 800) — Mina | (100, 110, 100) |\n| (-1600, 80, 400) — Aldea | (-200, 110, 50) |\n| (4000, 60, 2400) — Bioma nieve | (500, 110, 300) |\n\nDesde el hub central del Nether caminás 500 bloques para recorrer 4.000 del Overworld.\n\n## Fuentes\n\n- Minecraft Wiki — The Nether (oficial)\n- Mojang — Java Edition documentation",
   "faq": [
     {
-      "q": "¿Por qué dividir por 8?",
-      "a": "Porque **el Nether tiene una compresión espacial de 8:1** respecto al Overworld. Un bloque recorrido en Nether equivale a 8 del Overworld. Es una decisión de diseño de Mojang para que el Nether sirva como sistema de viaje rápido. 8 es un número no arbitrario (potencia de 2, matemáticamente conveniente para el engine)."
+      "q": "¿Por qué se divide por 8 para ir al Nether?",
+      "a": "Porque el Nether tiene una **compresión espacial 8:1** respecto al Overworld. Un bloque caminado en el Nether equivale a 8 en el Overworld. Es una mecánica de diseño de Mojang (presente desde Java 1.3) para que el Nether funcione como sistema de viaje rápido. El número 8 es una potencia de 2, conveniente para el engine del juego."
     },
     {
-      "q": "¿La Y también se divide por 8?",
-      "a": "**No — la Y se mantiene igual**. Solo X y Z se dividen por 8. El Nether tiene límite de altura 128 (o 256 tras update 1.18), y la Y ayuda a determinar a qué altura spawnea el portal destino."
+      "q": "¿La Y (altura) también se divide por 8?",
+      "a": "**No — la Y se mantiene igual**. Solo X y Z se dividen por 8. La Y determina a qué altura aparece el portal destino. En el Nether conviene construir entre Y=70 y Y=120 para estar seguro (evitar lava y ghasts)."
     },
     {
-      "q": "¿Qué pasa si mi portal está en números decimales?",
-      "a": "Minecraft redondea al bloque más cercano (floor). Si vas desde Overworld (10, 64, 3) al Nether, te lleva a (1, 64, 0) — perdés los decimales. Por eso cuando construís hubs conviene elegir coordenadas Overworld que sean **múltiplos de 8** para evitar ambigüedad."
+      "q": "¿Por qué mi portal crea uno nuevo en vez de linkear al que construí?",
+      "a": "Porque las coordenadas no están alineadas con la fórmula ÷8. Al cruzar, Minecraft busca un portal en radio 128 bloques (Java) o 16 bloques (Bedrock) desde la coordenada calculada. Si no lo encuentra, crea uno nuevo. **Solución**: destruir todos los portales del área y reconstruir con esta calculadora."
     },
     {
-      "q": "¿Por qué a veces se crea un portal duplicado?",
-      "a": "Porque al cruzar, el juego busca un portal existente en un **radio de 128 bloques (Java)** o 16 (Bedrock) alrededor del destino calculado. Si **no encuentra ninguno**, crea uno nuevo. Esto pasa si: (a) no alineaste bien, (b) tu portal destino fue destruido por lava/explosión, (c) no activaste obsidiana todavía del lado destino."
+      "q": "¿Qué pasa si las coordenadas no son múltiplo de 8?",
+      "a": "Minecraft aplica **floor** (redondeo hacia abajo). Si tu base está en X=1502, Z=13, el portal Nether va en X=floor(1502/8)=**187**, Z=floor(13/8)=**1**. Para simplificar, elegí coordenadas de base que sean múltiplos de 8 (ej: 1600, 800) y evitás decimales."
     },
     {
-      "q": "¿Cuánto tiempo ahorro usando el Nether?",
-      "a": "**7/8 del tiempo de caminata**. Si tu base está a 8.000 bloques, caminar en el Overworld te lleva ~22 min de sprint. En el Nether son solo 1.000 bloques = ~2,5 min. El Nether es el sistema de viaje más eficiente del juego (solo superado por comando /tp, que no está en survival)."
+      "q": "¿Diferencia entre Java y Bedrock para portales?",
+      "a": "**La fórmula ÷8 es idéntica** en ambas ediciones. La diferencia es el **radio de búsqueda**: Java tiene 128 bloques (margen amplio), Bedrock solo 16 bloques (hay que ser exacto al bloque). En Bedrock, si el portal destino está a más de 16 bloques de la coordenada calculada, Minecraft crea uno nuevo."
     },
     {
-      "q": "¿Funciona igual en Bedrock y Java?",
-      "a": "**Sí la fórmula ÷8 es idéntica**. La única diferencia es el **radio de búsqueda**: Java 128 bloques, Bedrock 16 bloques. En Bedrock tenés que ser más preciso con la ubicación del portal destino — o crear un portal nuevo con precisión de bloque. En Java tenés margen generoso."
+      "q": "¿Cuánto viaje ahorro usando el Nether?",
+      "a": "**Un 87.5% del tiempo**. Si tu base está a 8.000 bloques, sprint en Overworld tarda ~22 min. En el Nether son solo 1.000 bloques ≈ 2.7 min. El Nether es el sistema de viaje más eficiente en survival (solo superado por /tp en modo creativo o con elytra+firework)."
     },
     {
-      "q": "¿Qué pasa con el End?",
-      "a": "**El End no tiene compresión espacial**. No hay fórmula de conversión — solo se accede por portal de End o por el End Gateway (al saltar en elytra). El End tiene sus propias mecánicas y no vale para viaje rápido en el Overworld."
+      "q": "¿Cómo armo un hub del Nether?",
+      "a": "Elegí un Y fijo en el Nether (ej: Y=110). Para cada base del Overworld, calculá sus coordenadas Nether con esta calculadora. Construí un portal en cada punto calculado, todos a Y=110. Conectalos con pasillos en el Nether. El hub te permite saltar entre bases en segundos."
     },
     {
-      "q": "¿Puedo usar esto en servidores modeados?",
-      "a": "**Sí, salvo que el mod cambie la ratio**. Mods populares como Biomes O' Plenty, Twilight Forest, etc., mantienen la ratio 1:8 del Nether. Mods como Better End o dimensiones custom pueden usar otra ratio. Consultá la documentación del mod si el portal no funciona como esperás."
+      "q": "¿Puedo usar esto en servidores con mods?",
+      "a": "**Sí, salvo que el mod cambie la ratio**. Mods como Biomes O' Plenty o Twilight Forest mantienen la ratio 1:8 del Nether vanilla. Mods de dimensiones personalizadas pueden usar otra ratio. Consultá la documentación del mod si los portales no linkean correctamente."
+    },
+    {
+      "q": "¿Qué pasa con el End? ¿Tiene compresión espacial?",
+      "a": "**No — el End no tiene compresión espacial**. No hay fórmula de conversión para el End. Solo se accede por portal de End o End Gateway (al matar el dragón). El End tiene sus propias coordenadas independientes y no sirve para viaje rápido en el Overworld."
     }
   ],
   "sources": [
     {
-      "name": "Minecraft Wiki — The Nether",
-      "url": "https://minecraft.fandom.com/wiki/The_Nether",
-      "publisher": "Fandom Minecraft Wiki"
-    },
-    {
       "name": "Minecraft Wiki — Nether portal",
-      "url": "https://minecraft.fandom.com/wiki/Nether_portal",
-      "publisher": "Fandom"
+      "url": "https://minecraft.wiki/w/Nether_portal",
+      "publisher": "Minecraft Wiki (oficial)"
     },
     {
-      "name": "Minecraft.net — Official documentation",
+      "name": "Minecraft Wiki — The Nether",
+      "url": "https://minecraft.wiki/w/The_Nether",
+      "publisher": "Minecraft Wiki (oficial)"
+    },
+    {
+      "name": "Mojang — Minecraft.net",
       "url": "https://www.minecraft.net/",
-      "publisher": "Mojang"
+      "publisher": "Mojang Studios"
     }
   ],
   "relatedSlugs": [],
   "howToSteps": [
     {
       "name": "Elegí la dirección",
-      "text": "Seleccioná si querés convertir Overworld → Nether o Nether → Overworld."
+      "text": "Seleccioná Overworld → Nether si tenés coordenadas del Overworld y querés saber dónde construir en el Nether, o Nether → Overworld para el proceso inverso."
     },
     {
       "name": "Ingresá X, Y y Z",
-      "text": "Ingresá las coordenadas del portal de origen (las ves con F3 en Java o /tp @s ~ ~ ~ en Bedrock)."
+      "text": "Ingresá las coordenadas del portal de origen. En Java las ves con F3; en Bedrock usá el indicador de posición o /tp @s ~ ~ ~."
     },
     {
       "name": "Hacé click en Calcular",
-      "text": "Presioná Calcular para obtener las coordenadas del portal destino."
+      "text": "Presioná Calcular para obtener las coordenadas exactas donde construir el portal destino."
     },
     {
       "name": "Construí el portal alineado",
-      "text": "Construí el portal destino en esas coordenadas (±16 bloques de tolerancia en Java)."
+      "text": "Construí el portal de obsidiana en las coordenadas destino. En Java tenés tolerancia de ±128 bloques; en Bedrock sé exacto (±16 bloques)."
     }
   ]
 }

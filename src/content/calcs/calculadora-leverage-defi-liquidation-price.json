@@ -1,23 +1,25 @@
 {
   "slug": "calculadora-leverage-defi-liquidation-price",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora Liquidation Price DeFi (Leverage) 2026",
-  "h1": "Calculadora Liquidation Price DeFi (Leverage)",
-  "description": "Calculá el liquidation price exacto, health factor y buffer de seguridad para posiciones apalancadas en Aave, Compound, Morpho y Spark.",
+  "lastReviewed": "2026-06-04",
+  "title": "Liquidation Price DeFi: calculadora de health factor | Hacé Cuentas",
+  "h1": "Calculadora de Liquidation Price y Health Factor DeFi",
+  "description": "Calculá el liquidation price exacto y el health factor de tu posición en Aave, Compound, Morpho o Spark en segundos. Ingresá collateral, precio y deuda para saber a qué precio te liquidan.",
+  "answerSnippet": "El liquidation price en DeFi se calcula con la fórmula: **Liq. Price = Deuda (USD) ÷ (Tokens de colateral × Liquidation Threshold)**. Ejemplo: 10 ETH de colateral, USD 18.000 de deuda, LT 83% → liq. price = 18.000 ÷ (10 × 0,83) = **USD 2.168**. El health factor = (colateral USD × LT) ÷ deuda. Por debajo de HF 1 la posición es liquidable; se recomienda mantener HF ≥ 1,5 como mínimo. Thresholds vigentes en Aave v3 Ethereum: WETH 83%, wstETH 86%, WBTC 75%.",
   "category": "finanzas",
   "audience": "global",
   "icon": "📉",
   "formulaId": "leverage-defi-liquidation",
   "seoKeywords": [
-    "liquidation price defi",
-    "health factor aave",
-    "leverage defi calculadora",
-    "ltv defi",
-    "liquidation threshold",
-    "posicion apalancada defi"
+    "liquidation price calculator defi",
+    "calcular liquidation price aave",
+    "health factor calculadora",
+    "precio liquidacion defi",
+    "ltv defi health factor",
+    "liquidation threshold aave compound morpho",
+    "calculadora apalancamiento defi"
   ],
   "intro": "En DeFi lending, el reloj no para: mientras tu posición duerme, bots liquidadores rastrean cada bloque buscando health factors por debajo de 1. Cuando el precio de tu colateral cae lo suficiente, un bot externo paga tu deuda, se queda con tu colateral más una penalty de entre el 4.5% y el 13%, y vos te enterás segundos después con el saldo reducido. No hay margen de negociación, no hay llamada del banco, no hay gracia de 48 horas.\n\nEl problema central es que la mayoría de los usuarios que operan con leverage en protocolos como Aave v3, Compound v3, Morpho Blue o Spark no saben con precisión a qué precio exacto de mercado su posición se vuelve liquidable. Saben que «están bien» porque el health factor aparece verde, pero no saben si ese verde aguanta una corrección del 15% o del 40%. Esa diferencia es la que separa a alguien que sobrevive un flash crash de alguien que pierde el 10% de su colateral en una sola transacción.\n\nEsta calculadora resuelve exactamente eso. Ingresás el valor de tu colateral en USD, el precio actual del token colateral, tu deuda total en USD y el liquidation threshold del par (parámetro publicado en la documentación de cada protocolo: 83% para WETH en Aave v3, 86% para wstETH, 75% para WBTC). Con esos cuatro datos, obtenés: el <strong>liquidation price exacto</strong> del colateral, el <strong>health factor actual</strong>, el <strong>LTV actual vs máximo</strong>, el <strong>margen adicional de borrow disponible</strong> y el <strong>buffer porcentual</strong> que te separa de la liquidación.\n\nLo que hace útil esta herramienta no es solo el cálculo en sí —que podés hacer a mano si tenés paciencia— sino tenerlo en segundos cuando el mercado se mueve rápido y necesitás decidir en minutos si repagás deuda, agregás colateral o cerrás la posición. La calculadora es agnóstica de protocolo: sirve para cualquier plataforma que use el modelo collateral/liquidation threshold estándar del ecosistema EVM.",
-  "keyTakeaway": "**Health Factor (HF)** debe estar **>1.5** para dormir tranquilo. HF = (collateral × LT) / debt. Buffer típico seguro: **30-50% vs liquidation price**. Con <20% buffer, cualquier flash crash te liquida.",
+  "keyTakeaway": "**Fórmula: Liq. Price = Deuda ÷ (Tokens × LT)**. Con 10 ETH (USD 3.000), USD 18.000 de deuda y LT 83%, el liquidation price es USD 2.168 (buffer 27,7%). **Health Factor = (collateral × LT) / debt**. Mantené HF ≥ 1,5 como mínimo; para posiciones sin monitoreo constante, apuntá a HF 2,0 (buffer ~50%).",
   "useCases": [
     "Tenés 10 ETH como colateral (USD 35.000 a USD 3.500 por ETH), pediste prestados USD 20.000 en USDC en Aave v3 con LT de 83%. La calc te muestra que tu liquidation price es USD 2.409 por ETH y tu buffer es 31%: un crash del 30% no te toca, pero uno del 35% sí.",
     "Armaste un loop stETH/ETH en Morpho Blue con colateral de USD 50.000 y deuda de USD 38.000 (LT 86%). El health factor sale 1.13, peligrosamente cerca de 1. La calc te avisa que cualquier depeg del stETH mayor a 6% te liquida y necesitás repagar al menos USD 5.000 para volver a HF 1.3.",
@@ -73,9 +75,9 @@
   ],
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-17",
-    "source": "Aave v3 Risk Params",
-    "sourceUrl": "https://docs.aave.com",
+    "lastUpdated": "2026-06-04",
+    "source": "Aave v3 Risk Parameters — Ethereum Mainnet",
+    "sourceUrl": "https://docs.aave.com/risk/asset-risk/risk-parameters",
     "updateType": "manual"
   },
   "outputs": [
@@ -123,7 +125,7 @@
     ],
     "result": "ETH debe caer 39.4% para liquidación. HF 1.65 es aceptable."
   },
-  "explanation": "## Conceptos clave\n\n### Liquidation threshold (LT)\nEl **máximo LTV antes de liquidación**. Varía por activo:\n\n| Activo | LT Aave v3 | LT Morpho | LT Compound v3 |\n|---|---|---|---|\n| WETH | 82.5% | 86% | 82.5% |\n| wstETH | 79% | 86% | 75% |\n| WBTC | 75% | 80% | 75% |\n| stables estables | 87% | 94.5% | 85% |\n\n### Health Factor\n```\nHF = (collateral_USD × LT) / debt_USD\n```\n- HF > 1: posición segura\n- HF < 1: liquidable\n- HF = 2: podés perder 50% de collateral y seguir viva\n\n### Liquidation price\n```\nliq_price = debt / (tokens_colateral × LT)\n```\n\n### Penalty de liquidación\nAave v3: 5-8.5% según activo. Compound v3: 5-10%. Morpho Blue: 4-7%.\n\n## Estrategias de gestión\n\n1. **Target HF 2+**: para buffer de crash 30-40%.\n2. **Monitoreo continuo**: Aave y Morpho tienen notificaciones via DeBank, Zerion, Revert.\n3. **Partial repay**: pagar parcial cuando HF baja a 1.5.\n4. **Add collateral**: depositar más colateral en lugar de repay (tax efficient).\n\n## Casos históricos\n\n- **Mayo 2021**: ETH cayó 50% en horas. $2B liquidados en Aave/Compound.\n- **Nov 2022 (FTX)**: stETH se depeg 7% → loops stETH/ETH liquidados masivamente.\n- **Agosto 2023 (Curve hack)**: CRV cayó 30% → Michael Egorov casi liquidado en $100M de préstamos.\n\n## Cascada de liquidación\n\nGrandes posiciones (>$10M) liquidándose mueven el precio y desencadenan más liquidaciones. Por eso, **quedate lejos del liq_price** en tiempos de alta volatilidad.\n\nPara calcular leverage de trading (no lending), usá nuestra [calculadora de apalancamiento liquidación](/calculadora-apalancamiento-liquidacion).\n\n> **Aviso legal**: Esta calculadora es una herramienta educativa. **No constituye consejo de inversión, ni asesoramiento financiero, fiscal o legal.** Los rendimientos pasados no garantizan resultados futuros. Las [criptomonedas](/cotizacion-cripto) son activos volátiles y de alto riesgo. Consultá siempre con un profesional calificado antes de tomar decisiones.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## Fórmulas clave\n\n### Liquidation price\n```\nLiq. Price = Deuda (USD) ÷ (Tokens de colateral × Liquidation Threshold)\n```\n\n### Health Factor\n```\nHF = (Colateral USD × LT) ÷ Deuda USD\n```\n\n### Buffer de seguridad\n```\nBuffer % = (Precio actual − Liq. Price) ÷ Precio actual × 100\n```\n\n## Tabla de referencia: liquidation thresholds por protocolo\n\n| Activo | Aave v3 Ethereum | Morpho Blue | Compound v3 |\n|---|---|---|---|\n| WETH | 83% | 86% | 82.5% |\n| wstETH | 86% | 86% | 75% |\n| WBTC | 75% | 80% | 75% |\n| USDC / USDT | 87% | 94.5% | 85% |\n| cbETH | 83% | — | — |\n| LINK | 68% | — | — |\n| UNI | 65% | — | — |\n\n## Tabla de ejemplo: liquidation price para 10 ETH según deuda y LT\n\nColateral: **10 ETH** a **USD 3.000** = USD 30.000\n\n| Deuda (USD) | LT | Liq. Price | HF | Buffer |\n|---|---|---|---|---|\n| 5.000 | 83% | USD 602 | 4,98 | 79,9% |\n| 10.000 | 83% | USD 1.205 | 2,49 | 59,8% |\n| 15.000 | 83% | USD 1.807 | 1,66 | 39,8% |\n| 18.000 | 83% | USD 2.169 | 1,38 | 27,7% |\n| 20.000 | 83% | USD 2.410 | 1,25 | 19,7% |\n| 23.000 | 83% | USD 2.771 | 1,09 | 7,6% |\n\n## Liquidation thresholds: modo E-mode Aave v3\n\nE-mode (colateral y deuda correlacionados, ej. ETH + stETH):\n- **E-mode ETH**: LT hasta **93%**, LTV máximo 90%\n- Margen efectivo: solo 3 puntos porcentuales\n- Mayor eficiencia de capital, mayor riesgo en depeg\n\n## Penalidades de liquidación por protocolo\n\n| Protocolo | Activo | Penalty | Tipo |\n|---|---|---|---|\n| Aave v3 | WETH | 5% | Parcial (50% deuda) |\n| Aave v3 | wstETH | 7% | Parcial (50% deuda) |\n| Aave v3 | WBTC | 6.5% | Parcial (50% deuda) |\n| Compound v3 | Todos | 5-8% | Total |\n| Morpho Blue | Configurable | 4-8% | Total |\n| Spark | ETH/stETH | 10-13% | Total + fee |\n\n## Estrategias de gestión del riesgo\n\n1. **Target HF 2+**: buffer de crash del 50%+, adecuado para posiciones sin monitoreo constante.\n2. **Monitoreo automático**: DeBank (app móvil), Hal.xyz (Telegram), Zerion.\n3. **Repago parcial**: cuando HF baja a 1.5, devolvé parte de la deuda para volver a 1.8+.\n4. **Agregar colateral**: sube el numerador del HF sin pagar impuestos (más eficiente en algunos casos).\n5. **Auto-deleverage**: DeFi Saver e Instadapp ofrecen triggers automáticos por ~0.1% de comisión.\n\n## Casos históricos de liquidación masiva\n\n- **Mayo 2021**: ETH cayó 50% en horas. USD 2B liquidados en Aave/Compound.\n- **Nov 2022 (FTX)**: stETH se depeg 7% → loops stETH/ETH liquidados masivamente.\n- **Agosto 2023 (Curve hack)**: CRV cayó 30% → Michael Egorov con USD 100M en préstamos al borde de liquidación.\n\n## Efecto cascada\n\nGrandes posiciones (>USD 10M) liquidándose mueven el precio y desencadenan más liquidaciones. En alta volatilidad, mantenete con buffer >40%.\n\nPara calcular leverage de trading (no lending), usá nuestra [calculadora de apalancamiento liquidación](/calculadora-apalancamiento-liquidacion).\n\n> **Aviso legal**: Esta calculadora es una herramienta educativa. **No constituye consejo de inversión, ni asesoramiento financiero, fiscal o legal.** Los rendimientos pasados no garantizan resultados futuros. Las [criptomonedas](/cotizacion-cripto) son activos volátiles y de alto riesgo. Consultá siempre con un profesional calificado antes de tomar decisiones.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n",
   "faq": [
     {
       "q": "¿Cómo se calcula exactamente el liquidation price?",
@@ -176,12 +178,16 @@
   ],
   "sources": [
     {
-      "name": "Aave v3 Risk Params",
-      "url": "https://docs.aave.com"
+      "name": "Aave v3 Risk Parameters — Ethereum Mainnet",
+      "url": "https://docs.aave.com/risk/asset-risk/risk-parameters"
     },
     {
-      "name": "Morpho Blue",
-      "url": "https://docs.morpho.org"
+      "name": "Morpho Blue — Liquidations & LLTV",
+      "url": "https://docs.morpho.org/morpho/concepts/liquidations"
+    },
+    {
+      "name": "Compound v3 — Collateral & Liquidation",
+      "url": "https://docs.compound.finance/collateral-and-liquidations/"
     }
   ],
   "relatedSlugs": [

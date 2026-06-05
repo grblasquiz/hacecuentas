@@ -11,20 +11,20 @@ export function conversionGradosRadianesGradianes(i: Inputs): Outputs {
   const turns = deg / 360;
   let geo: string;
   const absDeg = Math.abs(deg) % 360;
-  if (absDeg === 0) geo = 'una vuelta exacta (o ángulo nulo)';
-  else if (Math.abs(absDeg - 90) < 0.01) geo = 'un ángulo recto';
-  else if (Math.abs(absDeg - 180) < 0.01) geo = 'un ángulo llano (media vuelta)';
-  else if (absDeg < 90) geo = 'un ángulo agudo';
-  else if (absDeg < 180) geo = 'un ángulo obtuso';
-  else geo = 'un ángulo mayor a 180°';
-  const turnTxt = Math.abs(turns) >= 0.01 ? `equivale a **${turns.toFixed(2)} vueltas** completas y ` : '';
+  if (absDeg === 0) geo = 'a full rotation (or zero angle)';
+  else if (Math.abs(absDeg - 90) < 0.01) geo = 'a right angle';
+  else if (Math.abs(absDeg - 180) < 0.01) geo = 'a straight angle (half rotation)';
+  else if (absDeg < 90) geo = 'an acute angle';
+  else if (absDeg < 180) geo = 'an obtuse angle';
+  else geo = 'an angle greater than 180°';
+  const turnTxt = Math.abs(turns) >= 0.01 ? `equals **${turns.toFixed(2)} full rotations** and ` : '';
 
   return {
-    resultado:`${res.toFixed(4)} ${a}`,
-    resumen:`${v} ${de} = ${res.toFixed(4)} ${a}.`,
+    resultado:`${res.toFixed(6)} ${a}`,
+    resumen:`${v} ${de} = ${res.toFixed(6)} ${a}.`,
     _insight: {
-      title: 'Qué tan grande es el ángulo',
-      text: `**${v} ${de}** = **${res.toFixed(4)} ${a}** (${deg.toFixed(2)}°). ${turnTxt}es ${geo}.`,
+      title: 'Angle size',
+      text: `**${v} ${de}** = **${res.toFixed(6)} ${a}** (${deg.toFixed(4)}°). ${turnTxt}That is ${geo}.`,
       tone: 'neutral',
       icon: '📐'
     }

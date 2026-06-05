@@ -42,14 +42,16 @@ export function compute(i: Inputs): Outputs {
 
   const totalInches = heightFeet * 12 + heightInches;
 
-  // Devine formula: 100 + 5 * (height_inches - 60)
+  // Devine formula for women: 100 lb + 5 lb per inch over 5'
   let devineBase = 100 + 5 * (totalInches - 60);
 
-  // Robinson formula: 49 + 1.7 * (height_inches - 60)
-  let robinsonBase = 49 + 1.7 * (totalInches - 60);
+  // Robinson formula for women: 49 kg + 1.7 kg/in over 5' → converted to lb
+  // 49 kg = 108.03 lb; 1.7 kg = 3.748 lb
+  let robinsonBase = 108.03 + 3.748 * (totalInches - 60);
 
-  // Hamwi formula: 45.5 + 2.2 * (height_inches - 60)
-  let hamwiBase = 45.5 + 2.2 * (totalInches - 60);
+  // Hamwi formula for women: 45.5 kg + 2.2 kg/in over 5' → converted to lb
+  // 45.5 kg = 100.31 lb; 2.2 kg = 4.850 lb
+  let hamwiBase = 100.31 + 4.850 * (totalInches - 60);
 
   // Frame size adjustments: ±10%
   const frameAdjustment = frameSize === "small" ? 0.9 : frameSize === "large" ? 1.1 : 1.0;

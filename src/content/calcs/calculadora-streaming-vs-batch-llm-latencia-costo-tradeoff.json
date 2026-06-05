@@ -1,22 +1,25 @@
 {
   "slug": "calculadora-streaming-vs-batch-llm-latencia-costo-tradeoff",
-  "title": "Streaming vs Batch LLM: Costo y Latencia 2026 | Hacé Cuentas",
-  "h1": "Calculadora Streaming vs Batch LLM: Tradeoff de Costo y Latencia",
-  "description": "Calculá el costo mensual óptimo de tu API LLM combinando streaming (precio estándar, baja latencia) y batch (50% descuento, hasta 24h). Encontrá el mix ideal.",
+  "title": "Batch API vs Streaming LLM: calculadora de ahorro + tabla | Hacé Cuentas",
+  "h1": "Calculadora de ahorro: Batch API vs Streaming LLM",
+  "description": "Calculá cuánto ahorrás mezclando Batch API (50% off) y streaming en OpenAI, Anthropic o Gemini. Ingresá tus tokens diarios y el % sensible a latencia y obtenés el costo mensual óptimo al instante.",
+  "answerSnippet": "El Batch API de OpenAI y Anthropic ofrece un 50% de descuento respecto al precio estándar, a cambio de latencias de hasta 24 horas. Si el 60% de tus requests no necesitan respuesta inmediata y pagás USD 3,00/M tokens, el mix óptimo reduce tu factura mensual de USD 90 a USD 63 (−30%) por cada millón de tokens diarios.",
   "seoKeywords": [
-    "streaming batch llm latencia",
-    "streaming vs batch llm tradeoff de costo y latencia",
-    "calculadora streaming",
-    "como calcular streaming",
-    "tecnologia",
-    "streaming batch"
+    "batch api llm descuento",
+    "streaming vs batch openai costo",
+    "batch api openai 50 off",
+    "ahorro batch api anthropic",
+    "calculadora costo api llm",
+    "batch inference vs streaming latencia",
+    "openai batch api precio",
+    "streaming vs batch llm tradeoff"
   ],
   "category": "tecnologia",
   "audience": "global",
   "icon": "⚡",
   "formulaId": "streaming-vs-batch-llm-latencia-costo-tradeoff",
-  "intro": "Si usás APIs de LLM a escala, elegir entre **streaming** y **batch** impacta directamente tu factura mensual. El modo batch ofrece hasta un 50% de descuento, pero con latencias de hasta 24 horas. Esta calculadora te ayuda a encontrar el mix óptimo según qué fracción de tus requests realmente necesita respuesta inmediata.",
-  "keyTakeaway": "Con un 40% de requests sensibles a latencia y 1M de tokens diarios, el mix óptimo puede reducir tu costo mensual en hasta un 30% respecto a usar solo streaming.",
+  "intro": "Si usás APIs de LLM a escala, elegir entre **streaming** y **batch** impacta directamente tu factura mensual. OpenAI Batch API y Anthropic Message Batches ofrecen un **50% de descuento** sobre el precio estándar, a cambio de latencias de hasta 24 horas. Esta calculadora te ayuda a encontrar el mix óptimo según qué fracción de tus requests realmente necesita respuesta inmediata — y te muestra exactamente cuánto ahorrás.",
+  "keyTakeaway": "Con un 40% de requests sensibles a latencia y 1M de tokens diarios a USD 3,00/M, el mix óptimo cuesta USD 63/mes vs USD 90 de solo streaming: un ahorro del 30% sin degradar la experiencia del usuario.",
   "useCases": [
     "Startups SaaS que procesan resúmenes nocturnos y chats en tiempo real",
     "Equipos de data science que corren evaluaciones masivas de modelos en batch",
@@ -134,43 +137,47 @@
       "format": "text"
     }
   ],
-  "explanation": "## Cómo se calcula\n\nEl cálculo parte de separar el volumen total de tokens en dos segmentos: los que requieren respuesta inmediata (streaming) y los que toleran espera (batch). El precio de batch aplica un descuento fijo sobre el precio estándar.\n\n### Fórmula\n\n```\nTokens diarios streaming = totalTokensPerDay × (latencySensitivePercent / 100)\nTokens diarios batch     = totalTokensPerDay × (1 - latencySensitivePercent / 100)\n\nTokens mensuales streaming = Tokens diarios streaming × daysPerMonth\nTokens mensuales batch     = Tokens diarios batch     × daysPerMonth\n\nPrecio batch por M tokens  = pricePerMillionTokens × (1 - batchDiscountPercent / 100)\n\nCosto streaming = (Tokens mensuales streaming / 1,000,000) × pricePerMillionTokens\nCosto batch     = (Tokens mensuales batch     / 1,000,000) × precioBatchPorM\n\nCosto óptimo    = Costo streaming + Costo batch\nCosto full streaming = (totalTokensPerDay × daysPerMonth / 1,000,000) × pricePerMillionTokens\nCosto full batch     = (totalTokensPerDay × daysPerMonth / 1,000,000) × precioBatchPorM\n\nAhorro = Costo full streaming − Costo óptimo\nReducción % = Ahorro / Costo full streaming × 100\n```\n\n### Ejemplo numérico\n\nSupongamos:\n- 1.000.000 tokens/día\n- 40% sensibles a latencia\n- USD 3,00 por millón de tokens (estándar)\n- 50% de descuento batch → USD 1,50 por millón\n- 30 días operativos\n\n| Segmento | Tokens/mes | Precio/M | Costo |\n|---|---|---|---|\n| Streaming (40%) | 12.000.000 | USD 3,00 | USD 36,00 |\n| Batch (60%) | 18.000.000 | USD 1,50 | USD 27,00 |\n| **Mix óptimo** | 30.000.000 | — | **USD 63,00** |\n| Solo streaming | 30.000.000 | USD 3,00 | USD 90,00 |\n| Solo batch | 30.000.000 | USD 1,50 | USD 45,00 |\n\nEl mix óptimo ahorra USD 27,00 (30%) versus usar solo streaming.\n\n### Consideraciones sobre latencia\n\nEl campo TTFT (Time To First Token) en streaming típicamente oscila entre 200 ms y 800 ms según el proveedor y el tamaño del modelo. El batch puede demorar entre 1 hora y 24 horas, dependiendo de la cola del proveedor. Este campo es informativo: no afecta el costo, pero sirve para documentar el SLA asumido.\n\n### Cuándo NO aplica / Limitaciones\n\n- **No todos los proveedores ofrecen batch API**: OpenAI Batch API, Anthropic Batches y Google Vertex Batch Predictions tienen disponibilidad y límites distintos.\n- **El descuento real varía**: OpenAI ofrece 50% en Batch API; Anthropic también. Ajustá el porcentaje si tu proveedor difiere.\n- **Tokens de input vs output**: muchos proveedores tienen precios asimétricos. Esta calculadora asume un precio unificado; si tu caso es asimétrico, usá un precio promedio ponderado.\n- **Latencia de batch no garantizada**: en períodos de alta demanda, la ventana de 24 h puede estirarse.\n- **Costos de orquestación**: mantener dos pipelines (streaming + batch) agrega complejidad operativa no reflejada en el costo de tokens.",
+  "explanation": "## Cómo se calcula el ahorro\n\nEl cálculo separa el volumen total de tokens en dos segmentos según la tolerancia a latencia. El precio batch aplica un descuento fijo sobre el precio estándar.\n\n### Fórmula\n\n```\nTokens diarios streaming = totalTokensPerDay × (latencySensitivePercent / 100)\nTokens diarios batch     = totalTokensPerDay × (1 − latencySensitivePercent / 100)\n\nTokens mensuales streaming = Tokens diarios streaming × daysPerMonth\nTokens mensuales batch     = Tokens diarios batch     × daysPerMonth\n\nPrecio batch por M tokens  = pricePerMillionTokens × (1 − batchDiscountPercent / 100)\n\nCosto streaming = (Tokens mensuales streaming / 1.000.000) × pricePerMillionTokens\nCosto batch     = (Tokens mensuales batch     / 1.000.000) × precioBatchPorM\n\nCosto óptimo        = Costo streaming + Costo batch\nCosto full streaming = (totalTokensPerDay × daysPerMonth / 1.000.000) × pricePerMillionTokens\nCosto full batch     = (totalTokensPerDay × daysPerMonth / 1.000.000) × precioBatchPorM\n\nAhorro = Costo full streaming − Costo óptimo\nReducción % = Ahorro / Costo full streaming × 100\n```\n\n### Ejemplo numérico\n\n1.000.000 tokens/día · 40% sensibles a latencia · USD 3,00/M · 50% descuento batch · 30 días:\n\n| Segmento | Tokens/mes | Precio/M | Costo |\n|---|---|---|---|\n| Streaming (40%) | 12.000.000 | USD 3,00 | USD 36,00 |\n| Batch (60%) | 18.000.000 | USD 1,50 | USD 27,00 |\n| **Mix óptimo** | 30.000.000 | — | **USD 63,00** |\n| Solo streaming | 30.000.000 | USD 3,00 | USD 90,00 |\n| Solo batch | 30.000.000 | USD 1,50 | USD 45,00 |\n\nEl mix óptimo ahorra **USD 27 (30%)** versus usar solo streaming.\n\n### Tabla de escenarios comunes (USD 3,00/M tokens, 50% batch off, 30 días)\n\n| Tokens/día | 20% latencia | 40% latencia | 60% latencia | 80% latencia |\n|---|---|---|---|---|\n| 100.000 | USD 5,10 | USD 6,30 | USD 7,50 | USD 8,70 |\n| 500.000 | USD 25,50 | USD 31,50 | USD 37,50 | USD 43,50 |\n| 1.000.000 | USD 51,00 | USD 63,00 | USD 75,00 | USD 87,00 |\n| 5.000.000 | USD 255,00 | USD 315,00 | USD 375,00 | USD 435,00 |\n| 10.000.000 | USD 510,00 | USD 630,00 | USD 750,00 | USD 870,00 |\n\n*Vs solo streaming (100% latencia): USD 9 · USD 45 · USD 90 · USD 450 · USD 900 respectivamente.*\n\n### Descuentos batch por proveedor (referencia 2026)\n\n| Proveedor | Descuento batch | Ventana máxima | Notas |\n|---|---|---|---|\n| OpenAI Batch API | 50% | 24 h | GPT-4o, GPT-4o mini, o1-mini |\n| Anthropic Message Batches | 50% | 24 h | Claude 3.5/3 Haiku/Sonnet |\n| Google Vertex Batch | Variable | 24 h | Gemini Flash/Pro |\n| AWS Bedrock Batch | Variable | 24 h | Llama, Titan, Claude |\n\n### Consideraciones sobre latencia\n\nEl **TTFT (Time To First Token)** en streaming típicamente oscila entre 200 ms y 800 ms. El batch puede demorar entre 1 y 24 horas. Este campo es informativo y no afecta el costo, pero documenta el SLA asumido.\n\n### Limitaciones\n\n- **Precios asimétricos input/output**: muchos proveedores cobran diferente por tokens de entrada y salida. Usá un precio promedio ponderado según tu ratio típico (habitualmente 3:1 input/output).\n- **Disponibilidad por modelo**: no todos los modelos están en Batch API. Verificá la tabla de precios de tu proveedor.\n- **Complejidad operativa**: mantener dos pipelines agrega overhead de orquestación no reflejado en el costo de tokens.\n- **Límites de batch**: OpenAI admite hasta 100M tokens por lote; volúmenes mayores requieren múltiples lotes.",
   "faq": [
     {
-      "q": "¿Qué es la Batch API de los proveedores LLM?",
-      "a": "Es un modo de inferencia asincrónica donde enviás un lote de requests y el proveedor las procesa en ventanas de baja demanda. OpenAI y Anthropic ofrecen ~50% de descuento versus el precio estándar, con tiempo de respuesta de hasta 24 horas."
+      "q": "¿Qué descuento ofrece la Batch API de OpenAI y Anthropic?",
+      "a": "Ambos ofrecen un 50% de descuento respecto al precio estándar. GPT-4o cuesta USD 2,50/M tokens en input estándar y USD 1,25/M en batch. Claude 3.5 Haiku cuesta USD 0,80/M input estándar y USD 0,40/M en batch (Message Batches)."
+    },
+    {
+      "q": "¿Cuánto puedo ahorrar en la práctica con Batch API?",
+      "a": "Depende de qué porcentaje de tu tráfico tolera latencia. Con el 60% en batch y precio USD 3/M, el ahorro es del 30% mensual. Con el 80% en batch, el ahorro sube al 40%. Solo el tráfico interactivo (chat en tiempo real, autocompletado) justifica pagar precio estándar."
     },
     {
       "q": "¿Cuándo conviene usar solo batch?",
-      "a": "Cuando ninguno de tus casos de uso requiere respuesta inmediata: pipelines de evaluación de modelos, generación masiva de contenido, enriquecimiento de datasets, clasificación offline. Si el usuario no espera la respuesta en tiempo real, batch es casi siempre mejor financieramente."
+      "a": "Cuando ningún caso de uso requiere respuesta inmediata: evaluaciones de modelos, generación masiva de contenido, enriquecimiento de datasets, clasificación offline, análisis nocturno de logs. Si el usuario no espera la respuesta en tiempo real, batch es casi siempre mejor financieramente."
     },
     {
-      "q": "¿El streaming tiene un costo adicional?",
-      "a": "No directamente. Streaming es el modo estándar de la API: el precio es el mismo que una llamada síncrona normal. Lo que cambia es que recibís tokens a medida que se generan, reduciendo el TTFT percibido por el usuario."
+      "q": "¿El streaming tiene un costo adicional sobre el precio estándar?",
+      "a": "No. Streaming es el modo por defecto de la API: el precio es idéntico al de una llamada síncrona normal. La diferencia es que recibís tokens a medida que se generan, reduciendo la latencia percibida. El costo extra es cero; solo pagás más si comparás con el modo batch."
     },
     {
-      "q": "¿Qué significa TTFT (Time To First Token)?",
-      "a": "Es el tiempo entre que enviás el request y recibís el primer token de la respuesta. En streaming, TTFT suele ser 200–800 ms. En batch, puede ser horas. Es el indicador clave de latencia percibida en interfaces conversacionales."
+      "q": "¿Qué significa TTFT y por qué importa?",
+      "a": "TTFT (Time To First Token) es el tiempo entre que enviás el request y recibís el primer token. En streaming, suele ser 200–800 ms según el modelo y proveedor. En batch, puede ser de 1 a 24 horas. Para interfaces conversacionales, un TTFT alto destruye la experiencia del usuario."
     },
     {
       "q": "¿Cómo determino qué porcentaje de mis requests es sensible a latencia?",
-      "a": "Analizá tus logs: separá requests que son parte de una sesión interactiva (chat, autocompletado, asistentes en tiempo real) de los que corren en background (resúmenes nocturnos, análisis de documentos, enriquecimiento de CRM). El porcentaje interactivo es tu sensible a latencia."
+      "a": "Analizá tus logs y separá: (1) requests de sesiones interactivas del usuario (chat, autocompletado, asistente en tiempo real) → sensibles a latencia; (2) requests en background o programados (resúmenes nocturnos, enriquecimiento de CRM, análisis de documentos) → toleran batch. El porcentaje interactivo es tu % sensible a latencia."
     },
     {
       "q": "¿El precio por millón de tokens es igual para input y output?",
-      "a": "No en la mayoría de los proveedores. GPT-4o, por ejemplo, cobra diferente por tokens de input y output. Para esta calculadora, ingresá un precio promedio ponderado según tu ratio típico de input/output (habitualmente 3:1 o 4:1)."
+      "a": "No en la mayoría de los proveedores. GPT-4o cobra USD 2,50/M en input y USD 10/M en output (estándar). Para esta calculadora, ingresá un precio promedio ponderado según tu ratio típico. Con ratio 3:1 input/output y precios de GPT-4o estándar: precio promedio ≈ (3×2,50 + 1×10) / 4 = USD 4,375/M."
     },
     {
       "q": "¿Puedo mezclar proveedores para optimizar aún más?",
-      "a": "Sí. Una estrategia avanzada es usar un proveedor premium para streaming y uno más económico (o el mismo en modo batch) para las tareas diferibles. Esta calculadora asume un único proveedor con dos modos de precios."
+      "a": "Sí. Una estrategia avanzada es usar un proveedor premium para streaming (baja latencia garantizada) y uno más económico en modo batch para tareas diferibles. Esta calculadora asume un único proveedor con dos modos; para multi-proveedor, calculá cada uno por separado y sumá."
     },
     {
-      "q": "¿El descuento batch aplica a todos los modelos?",
-      "a": "No siempre. Los modelos más nuevos o con capacidades específicas (visión, herramientas) pueden no estar disponibles en Batch API al mismo precio. Verificá la tabla de precios de tu proveedor antes de asumir el 50% estándar."
+      "q": "¿El descuento batch aplica a todos los modelos del proveedor?",
+      "a": "No siempre. Los modelos más nuevos o con capacidades específicas (visión, function calling avanzado, contextos largos) pueden no estar disponibles en Batch API o tener descuentos distintos. Verificá la tabla de precios de tu proveedor antes de asumir el 50% estándar."
     },
     {
-      "q": "¿Qué pasa si supero los límites de tokens en batch?",
-      "a": "Los proveedores imponen ventanas máximas de tokens por lote (ej. OpenAI: 100M tokens por batch). Si tu volumen los supera, necesitás dividir en múltiples lotes, lo que no cambia el costo pero sí la complejidad de la orquestación."
+      "q": "¿Qué pasa si supero los límites de tokens por lote?",
+      "a": "OpenAI admite hasta 100M tokens por batch y hasta 200M en cola simultánea. Anthropic tiene límites similares. Si tu volumen los supera, dividí en múltiples lotes. Esto no cambia el costo por token, pero sí agrega complejidad de orquestación (manejo de IDs de lote, polling de estado, reintentos)."
     }
   ],
   "sources": [
@@ -191,17 +198,23 @@
       "url": "https://openai.com/api/pricing",
       "publisher": "OpenAI",
       "date": "2026"
+    },
+    {
+      "name": "Anthropic API Pricing",
+      "url": "https://www.anthropic.com/pricing",
+      "publisher": "Anthropic",
+      "date": "2026"
     }
   ],
   "dataUpdate": {
-    "frequency": "never",
-    "lastUpdated": "2026-04-27",
+    "frequency": "monthly",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Actualizar si los proveedores modifican el porcentaje de descuento batch o introducen nuevos niveles de precios. Verificar disponibilidad de Batch API para modelos nuevos.",
+    "notes": "Verificar descuentos batch si los proveedores actualizan precios. Revisar disponibilidad de Batch API para modelos nuevos.",
     "source": "OpenAI Batch API Documentation",
     "sourceUrl": "https://platform.openai.com/docs/guides/batch"
   },
-  "lastReviewed": "2026-04-27",
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [
     "calculadora-rag-vector-db-pinecone-pgvector-costo-mensual",
     "calculadora-modelo-local-ollama-vs-api-openai-costo-tco"

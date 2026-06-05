@@ -1,48 +1,53 @@
 {
   "slug": "calculadora-dividend-yield-rendimiento-dividendo",
-  "lastReviewed": "2026-05-19",
-  "title": "Rendimiento por Dividendo (Dividend Yield) 2026",
-  "h1": "Rendimiento por Dividendo (Dividend Yield)",
-  "description": "💰 Calculá el dividend yield de una acción y proyectá tu ingreso por dividendos. Con yield-on-cost a 10 años. Yield = dividendo anual / precio acción × 100.",
+  "lastReviewed": "2026-06-04",
+  "title": "Calcular Dividend Yield: calculadora + tabla por sector | Hacé Cuentas",
+  "h1": "Calculadora de Dividend Yield (Rendimiento por Dividendo)",
+  "description": "Calculá el dividend yield de cualquier acción y proyectá tu ingreso por dividendos. Yield = dividendo anual / precio × 100. Incluye tabla de yields típicos por sector y proyección yield-on-cost a 10 años.",
   "category": "finanzas",
   "icon": "💵",
   "formulaId": "dividend-yield-accion",
   "seoKeywords": [
     "dividend yield calculadora",
-    "rendimiento dividendo accion",
-    "ingreso dividendos",
-    "yield on cost",
-    "dividendos acciones"
+    "calcular dividend yield",
+    "rendimiento por dividendo accion",
+    "dividend yield formula",
+    "ingreso dividendos pasivos",
+    "yield on cost calculadora",
+    "como calcular dividendo accion"
   ],
-  "intro": "El **Dividend Yield** mide cuánto rinde una acción en dividendos respecto a su precio. Un yield del 5% significa que recibís $5 por cada $100 invertidos. Esta calculadora incluye la proyección de yield-on-cost si los dividendos crecen cada año.",
-  "keyTakeaway": "**Yield = dividendo anual / precio acción × 100**. Un yield del 3-5% es típico para acciones de dividendo. Mayor yield puede indicar riesgo.",
+  "answerSnippet": "El Dividend Yield se calcula dividiendo el dividendo anual por acción entre el precio actual de la acción, multiplicado por 100: Yield = (dividendo anual / precio acción) × 100. Ejemplo: una acción que paga USD 3,50 anuales y cotiza a USD 70 tiene un yield de 5%. Un yield entre 3% y 6% es típico para acciones de dividendo estables; por encima del 8% puede ser una trampa de dividendos.",
+  "intro": "El **Dividend Yield** mide cuánto rinde una acción en dividendos respecto a su precio. Un yield del 5% significa que recibís USD 5 por cada USD 100 invertidos al año en efectivo. Esta calculadora incluye la proyección de **yield-on-cost** si los dividendos crecen año a año, y el ingreso anual por cada USD 10.000 invertidos.",
+  "keyTakeaway": "**Yield = dividendo anual / precio acción × 100**. Un yield del 3-6% es típico para acciones de dividendo consolidadas (utilities, consumer staples). Por encima del 8% revisá si el dividendo es sostenible.",
   "useCases": [
-    "Evaluás acciones por su ingreso de dividendos.",
-    "Querés proyectar tu ingreso pasivo.",
-    "Comparás yield entre acciones.",
-    "Calculás el yield-on-cost futuro.",
-    "Armás un portafolio de ingreso."
+    "Evaluás qué acción ofrece mejor ingreso por dividendos.",
+    "Proyectás tu ingreso pasivo a 5 o 10 años.",
+    "Comparás el yield entre dos acciones del mismo sector.",
+    "Calculás el yield-on-cost sobre tu precio de compra original.",
+    "Armás un portafolio de ingreso con diferentes frecuencias de pago."
   ],
   "fields": [
     {
       "id": "dividendoAnual",
-      "label": "Dividendo anual (por acción)",
+      "label": "Dividendo anual por acción (USD)",
       "type": "number",
       "prefix": "$",
-      "placeholder": "3.50",
+      "placeholder": "1.88",
       "min": 0,
-      "step": 0.1,
-      "required": true
+      "step": 0.01,
+      "required": true,
+      "help": "Suma de todos los dividendos pagados en el último año. Lo encontrás en el sitio del broker o en Yahoo Finance → Summary → Forward Dividend."
     },
     {
       "id": "precioAccion",
-      "label": "Precio de la acción",
+      "label": "Precio actual de la acción (USD)",
       "type": "number",
       "prefix": "$",
-      "placeholder": "100",
-      "min": 0,
-      "step": 1,
-      "required": true
+      "placeholder": "65",
+      "min": 0.01,
+      "step": 0.01,
+      "required": true,
+      "help": "Precio de mercado actual o precio al que compraste si querés calcular tu yield-on-cost."
     },
     {
       "id": "frecuenciaPago",
@@ -54,17 +59,19 @@
         "semestral",
         "anual"
       ],
-      "default": "trimestral"
+      "default": "trimestral",
+      "help": "La mayoría de empresas USA pagan trimestralmente. REITs suelen pagar mensual."
     },
     {
       "id": "tasaCrecimientoDividendo",
-      "label": "Crecimiento anual dividendo (%)",
+      "label": "Crecimiento anual del dividendo (%)",
       "type": "number",
       "suffix": "%",
       "placeholder": "5",
       "min": 0,
-      "step": 1,
-      "help": "Interés expresado en porcentaje anual."
+      "step": 0.5,
+      "help": "Tasa anual de crecimiento histórica. Coca-Cola: ~5%. S&P 500 promedio: ~6%. Dejá en 0 si no hay crecimiento.",
+      "format": "plain"
     },
     {
       "id": "aniosProyeccion",
@@ -74,13 +81,14 @@
       "min": 1,
       "max": 30,
       "step": 1,
-      "help": "Años de proyección."
+      "help": "Horizonte de inversión para calcular el yield-on-cost futuro.",
+      "format": "plain"
     }
   ],
   "outputs": [
     {
       "id": "dividendYield",
-      "label": "Dividend Yield",
+      "label": "Dividend Yield actual",
       "format": "percent",
       "primary": true
     },
@@ -96,7 +104,7 @@
     },
     {
       "id": "ingresoAnualPor10k",
-      "label": "Ingreso anual por $10K invertidos",
+      "label": "Ingreso anual por USD 10.000 invertidos",
       "format": "currency"
     }
   ],
@@ -109,69 +117,88 @@
   },
   "faq": [
     {
+      "q": "¿Cómo se calcula el dividend yield?",
+      "a": "Dividend Yield = (Dividendo anual por acción / Precio de la acción) × 100. Ejemplo: una acción que paga USD 2 anuales y cotiza a USD 50 tiene yield = 2/50 × 100 = 4%. Si la acción paga dividendos trimestrales de USD 0.50, el dividendo anual es USD 2 (0.50 × 4)."
+    },
+    {
       "q": "¿Qué es un buen dividend yield?",
-      "a": "Depende del sector. Utilities: 3-5%. REITs: 4-7%. Tech: 0.5-1.5%. Un yield muy alto (>8%) puede indicar que la acción cayó o que el dividendo es insostenible."
+      "a": "Depende del sector. Utilities: 3-5%. REITs: 4-7%. Consumer staples (Coca-Cola, P&G): 2.5-4%. Tech: 0.5-2%. Un yield entre 3% y 6% es generalmente sostenible. Por encima del 8-10% conviene verificar el payout ratio — puede ser una trampa de dividendos."
+    },
+    {
+      "q": "¿Qué es el yield-on-cost?",
+      "a": "Es el yield calculado sobre tu precio de compra original, no el precio actual. Si compraste KO a USD 40 en 2015 y hoy paga USD 1.88 anuales, tu YOC = 1.88/40 = 4.7%. Alguien que compra hoy a USD 65 tiene yield de 2.9%. El YOC premia a los inversores de largo plazo que reinvierten."
+    },
+    {
+      "q": "¿Cuándo un yield alto es mala señal?",
+      "a": "Cuando el yield supera el doble del promedio de su sector suele indicar: (1) el precio cayó por problemas fundamentales, elevando el yield mecánicamente; (2) el dividendo es insostenible (payout >100%); (3) la empresa está en declive estructural. Revisá el payout ratio y el historial de dividendos antes de comprar solo por yield alto."
     },
     {
       "q": "¿Los dividendos pagan impuestos?",
-      "a": "En Argentina, los dividendos pagan 7% (Art. 97 LIG). En USA, los qualified dividends pagan 0-20% según tu bracket."
+      "a": "En Argentina, los dividendos pagan el 7% retención en fuente (Art. 97 LIG) sin integrarse al Impuesto a las Ganancias. En USA, los qualified dividends pagan 0%, 15% o 20% según tu bracket; los ordinary dividends pagan como ingreso ordinario (10-37%)."
     },
     {
-      "q": "¿Qué es yield-on-cost?",
-      "a": "Es el yield calculado sobre tu precio de compra original, no el precio actual. Si compraste a $50 y hoy paga $5 de dividendo, tu YOC es 10%."
+      "q": "¿Qué son los CEDEARs y cómo cobran dividendos?",
+      "a": "Los CEDEARs son certificados que replican acciones extranjeras en la bolsa argentina. Pagan dividendos en pesos al tipo de cambio del día (CCL), proporcionales al ratio de conversión del CEDEAR. El importe llega automáticamente en tu cuenta comitente."
     },
     {
-      "q": "¿Los dividendos son garantizados?",
-      "a": "No. La empresa puede reducir o eliminar el dividendo. Buscá empresas con historial de dividendos crecientes (Dividend Aristocrats)."
+      "q": "¿Mejor reinvertir dividendos (DRIP) o cobrarlos?",
+      "a": "Si no necesitás el ingreso, reinvertir con DRIP (Dividend Reinvestment Plan) aprovecha el interés compuesto: las acciones compradas con dividendos también generan dividendos futuros. En 20 años, reinvertir puede duplicar o triplicar el capital final respecto a cobrar en efectivo."
     },
     {
-      "q": "¿Mejor reinvertir o cobrar dividendos?",
-      "a": "Si no necesitás el ingreso, reinvertir (DRIP) aprovecha el interés compuesto. Si buscás ingreso, cobralos."
+      "q": "¿Con qué frecuencia pagan dividendos las acciones?",
+      "a": "La mayoría de empresas del S&P 500 pagan trimestralmente. Los REITs y ETFs de dividendos (como Realty Income) suelen pagar mensualmente. Empresas europeas y argentinas pagan semestral o anualmente. La frecuencia no afecta el yield anual, pero sí el flujo de caja mensual."
     },
     {
-      "q": "¿CEDEARs pagan dividendos?",
-      "a": "Sí. Los CEDEARs pagan dividendos en pesos al tipo de cambio del día, proporcional al ratio de conversión."
-    },
-    {
-      "q": "¿Cada cuánto pagan dividendos?",
-      "a": "La mayoría de empresas USA pagan trimestralmente. Algunas pagan mensual (REITs) o semestral/anual (empresas argentinas)."
+      "q": "¿Cómo afecta la inflación al rendimiento real de dividendos?",
+      "a": "El rendimiento real = Dividend Yield − Inflación. Con yield 4% e inflación 3%, el rendimiento real es 1%. Por eso es clave elegir empresas que crecen su dividendo por encima de la inflación (Dividend Aristocrats). En Argentina, los dividendos de CEDEARs actúan parcialmente como cobertura cambiaria."
     }
   ],
   "howToSteps": [
     {
-      "name": "Ingresá los datos principales",
-      "text": "Completá los campos obligatorios con tu información."
+      "name": "Ingresá el dividendo anual",
+      "text": "Buscá el 'Forward Annual Dividend' en Yahoo Finance (pestaña Summary) o multiplicá el dividendo trimestral × 4. Ingresá ese valor en el primer campo."
     },
     {
-      "name": "Ajustá parámetros opcionales",
-      "text": "Agregá datos complementarios para mayor precisión."
+      "name": "Ingresá el precio de la acción",
+      "text": "Para calcular el yield actual, usá el precio de mercado de hoy. Para calcular tu yield-on-cost, usá el precio al que compraste."
     },
     {
-      "name": "Revisá el resultado",
-      "text": "El resultado principal aparece destacado, con desglose debajo."
+      "name": "Seleccioná la frecuencia de pago",
+      "text": "Elegí con qué frecuencia paga la empresa: trimestral (la más común en USA), mensual (REITs), semestral o anual."
     },
     {
-      "name": "Compará escenarios",
-      "text": "Modificá los datos y recalculá para comparar opciones."
+      "name": "Agregá crecimiento del dividendo (opcional)",
+      "text": "Si la empresa históricamente crece el dividendo, ingresá ese porcentaje anual. El estimado histórico de los Dividend Aristocrats es ~6% anual."
+    },
+    {
+      "name": "Interpretá el resultado",
+      "text": "El yield actual te dice cuánto rinde la acción hoy. El yield-on-cost proyectado te muestra cuánto rendirá en el futuro sobre el precio que pagaste. El ingreso por USD 10.000 te da una referencia concreta de flujo de caja."
     }
   ],
-  "explanation": "## Qué es el dividend yield\n\nEs el **rendimiento por dividendo** de una acción, calculado como:\n\n```\nDividend Yield = (Dividendo anual por acción / Precio de la acción) × 100\n```\n\nUn yield del 5% significa que por cada $100 invertidos en la acción, recibís $5 al año en dividendos en efectivo. Es una métrica central para inversores de **income** (buscan ingreso recurrente) y jubilados.\n\n## Yields típicos por sector (USA 2026)\n\n| Sector | Yield promedio | Ejemplo |\n|---|---|---|\n| Tech growth | 0-0.5% | Alphabet, Meta, Tesla |\n| Tech madura | 0.5-1.5% | Apple, Microsoft |\n| Industrial | 1.5-3% | Caterpillar, Honeywell |\n| Consumo defensivo | 2.5-4% | Coca-Cola, PepsiCo, P&G |\n| Bancos | 3-5% | JP Morgan, Bank of America |\n| Utilities | 3.5-5% | Duke Energy, Southern Co |\n| REITs | 4-7% | Realty Income, Simon PG |\n| Telecom | 5-7% | Verizon, AT&T |\n| Tobacco / High-yield | 7-10% | Altria, British American |\n| **Yield trap** (peligro) | **>10%** | Acciones en crisis |\n\n## Yield on Cost (YOC): la métrica del inversor de largo plazo\n\nMás importante que el yield actual es el **Yield on Cost**: tu dividendo actual dividido por el precio al que compraste (no el precio de mercado actual).\n\n```\nYOC = Dividendo actual / Precio de compra original\n```\n\nEjemplo: compraste Coca-Cola a $20 en 2010 con yield 3% ($0.60/año). En 2026 paga $1.88. Tu YOC = 1.88 / 20 = **9.4%**. Mientras alguien que compra hoy a $65 obtiene yield de 2.9%, vos ganás 9.4% sobre tu inversión original. **El tiempo premia a los que acumulan dividendos crecientes**.\n\n## Dividend Aristocrats y Kings\n\n- **Dividend Aristocrats**: 25+ años consecutivos aumentando dividendos. Ejemplos: Coca-Cola, Procter & Gamble, Johnson & Johnson, Colgate, 3M.\n- **Dividend Kings**: 50+ años. Ejemplos: PepsiCo, Kimberly-Clark, Stanley Black & Decker.\n\nInvertir en estos con reinversión automática (DRIP) durante 20-30 años convierte yields modestos del 3% en YOC del 15-25%.\n\n## Cuándo un yield alto es mala señal (yield trap)\n\nSi un yield supera el **doble del promedio de su sector**, puede ser:\n\n1. **El precio se derrumbó** (yield = dividendo/precio, si precio baja, yield sube).\n2. **El dividendo es insostenible** y la empresa va a recortarlo.\n3. **La industria está en decadencia** (telecom, tobacco).\n4. **Payout ratio >100%**: la empresa paga más dividendos que [ganancias](/calculadora-ganancias-tramos-empleado-mensual-2026) (miralo en yfinance o Seeking Alpha).\n\nUn yield del 15% puede convertirse en 0% de un día para otro (recorte) + caída del 30% (pánico). Always check the payout ratio.\n\n## Cuándo usar / Errores comunes\n\n- **No mirar solo el yield**: CVR Partners con yield 15% puede parecer mejor que Coca-Cola con 3%, pero Coca-Cola creció el dividendo 62 años seguidos mientras CVR lo cortó 4 veces en 10 años.\n- **Ignorar impuestos**: en Argentina los dividendos pagan 7% adicional (Art. 97 LIG) y no suman al quantum del Ganancias. En USA, qualified dividends pagan 0-20% según bracket.\n- **No considerar el crecimiento del dividendo**: una acción con yield 2% y crecimiento 10% anual en 10 años está al 5%. Una con 5% y crecimiento 0% sigue al 5% (o menos si la empresa sufre).\n- **Reinvertir manualmente**: perdés 8-12 meses de [interés compuesto](/categoria/finanzas). Configurá DRIP en tu broker.\n\nPara proyectar el efecto del interés compuesto a largo plazo, usá la [calculadora de interés compuesto](/calculadora-interes-compuesto). Para ver la diversificación óptima de un portafolio de income, la [calculadora de diversificación por correlación](/calculadora-diversificacion-portafolio-correlacion).\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## Cómo calcular el dividend yield\n\nLa fórmula es simple y directa:\n\n```\nDividend Yield = (Dividendo anual por acción / Precio de la acción) × 100\n```\n\nUn yield del 5% significa que por cada USD 100 invertidos recibís USD 5 al año en dividendos en efectivo, independientemente de si el precio sube o baja.\n\n## Tabla de dividend yields típicos por sector (2026)\n\n| Sector | Yield promedio | Ejemplos típicos |\n|---|---|---|\n| Tech de alto crecimiento | 0–0.5% | Alphabet, Meta, Tesla |\n| Tech madura | 0.5–1.5% | Apple, Microsoft |\n| Industrial / Defensa | 1.5–3% | Caterpillar, Honeywell |\n| Consumer staples | 2.5–4% | Coca-Cola, PepsiCo, Procter & Gamble |\n| Bancos grandes | 3–5% | JPMorgan, Bank of America |\n| Utilities / Energía | 3.5–5.5% | Duke Energy, NextEra Energy |\n| REITs | 4–7% | Realty Income, Simon Property |\n| Telecom | 5–7% | Verizon, AT&T |\n| Tabaco / High-yield | 7–10% | Altria, British American Tobacco |\n| **Yield trap (peligro)** | **>10%** | Empresas en crisis de dividendo |\n\nUn yield muy alto respecto a los pares del sector casi siempre indica que el precio cayó por algún problema, o que el dividendo va a ser recortado.\n\n## Yield on Cost: la métrica que diferencia al inversor de largo plazo\n\nEl Yield on Cost (YOC) es tu dividendo actual dividido por el precio al que compraste originalmente:\n\n```\nYOC = Dividendo actual por acción / Precio de compra original × 100\n```\n\nEjemplo práctico: compraste Coca-Cola en 2010 a USD 25. Hoy paga USD 1.88 anuales. Tu YOC = 1.88 / 25 = **7.5%**, mientras quien compra hoy a USD 65 obtiene solo 2.9%. El tiempo premia la paciencia si la empresa sigue creciendo su dividendo.\n\n## Cuándo un yield alto es trampa (yield trap)\n\nSi un yield supera el doble del promedio de su sector, investigá antes de comprar:\n\n1. **Caída del precio**: el yield sube mecánicamente cuando el precio cae. ¿Por qué cayó?\n2. **Payout ratio >100%**: la empresa paga más dividendos que ganancias. Insostenible.\n3. **Dividendo suspendido**: ya anunciaron el recorte pero aún no cotiza ese efecto.\n4. **Sector en declive estructural**: telecom tradicional, tabaco, carbón.\n\nSiempre mirá el payout ratio y el historial de dividendos antes de comprar solo por yield alto. Un yield del 15% puede convertirse en 0% de un trimestre al otro.\n\n## Dividend Aristocrats y Kings: el estándar de calidad\n\n- **Dividend Aristocrats**: 25+ años consecutivos aumentando el dividendo. Incluye Coca-Cola (62 años), Procter & Gamble (68 años), Johnson & Johnson, Colgate-Palmolive, 3M.\n- **Dividend Kings**: 50+ años sin reducción. PepsiCo, Kimberly-Clark, Stanley Black & Decker.\n\nEstas empresas tienen yields aparentemente bajos (2-4%) pero crecen el dividendo ~5-7% anual. Invertir con reinversión automática (DRIP) durante 20-30 años convierte ese 3% inicial en un YOC de 12-20% sobre tu inversión original.\n\n## Errores frecuentes al evaluar dividend yield\n\n- **Mirar solo el yield actual**: un 3% con crecimiento del 8% anual supera a un 6% estático en 7 años.\n- **Ignorar impuestos**: en Argentina los dividendos tienen retención del 7%. En USA, los qualified dividends pagan 0-20% según bracket.\n- **No reinvertir**: DRIP (Dividend Reinvestment Plan) automatiza la reinversión y elimina la fricciones de 8-12 meses sin comprar.\n- **No revisar el payout ratio**: disponible en Yahoo Finance, Seeking Alpha o cualquier screener de acciones.\n\nPara proyectar el efecto del interés compuesto con reinversión de dividendos, usá la [calculadora de interés compuesto](/calculadora-interes-compuesto). Para construir un portafolio diversificado de ingresos, revisá la [calculadora de diversificación por correlación](/calculadora-diversificacion-portafolio-correlacion).\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** Los valores de referencia se contrastan con los índices S&P Dividend Aristocrats y datos públicos de Yahoo Finance. Para decisiones de inversión reales, consultá con un asesor financiero registrado ante la CNV (Argentina) o un RIA (USA).\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero.\n",
   "example": {
-    "title": "Ejemplo real: Coca-Cola (KO) a largo plazo",
+    "title": "Ejemplo real: Coca-Cola (KO) con proyección a 10 años",
     "steps": [
-      "**Datos**: precio KO = $65, dividendo anual = $1.88, frecuencia = trimestral, crecimiento histórico dividendo = 5%/año, horizonte = 10 años.",
-      "**Dividend Yield actual**: 1.88 / 65 × 100 = **2.89%**.",
-      "**Dividendo por pago**: 1.88 / 4 = **$0.47 trimestral**.",
-      "**Yield-on-cost a 10 años**: 1.88 × (1.05)^10 / 65 = 3.063 / 65 = **4.71%** sobre tu precio original de $65.",
-      "**Ingreso anual por USD 10.000 invertidos**: 10.000 × 2.89% = **USD 289/año** (y crecerá 5% anual).",
-      "**Interpretación**: invertir $10.000 en KO te da $289 el primer año. En el año 10, serán $471. En 20 años, $767 (gracias al crecimiento compuesto del dividendo)."
+      "**Datos de entrada**: Precio KO = USD 65, dividendo anual = USD 1.88 (pagos trimestrales de USD 0.47), crecimiento histórico del dividendo = 5% anual, horizonte = 10 años.",
+      "**Dividend Yield actual**: 1.88 / 65 × 100 = **2.89%**. Por cada USD 10.000 invertidos, recibís USD 289 el primer año.",
+      "**Dividendo por pago trimestral**: 1.88 / 4 = **USD 0.47 por acción** cada 3 meses.",
+      "**Yield-on-cost a 10 años**: dividendo futuro = 1.88 × (1.05)^10 = USD 3.06. YOC = 3.06 / 65 = **4.71%** sobre tu precio de compra de USD 65.",
+      "**Ingreso anual a 10 años**: USD 10.000 × 4.71% = **USD 471/año** (vs. USD 289 hoy). El dividendo creció un 63% en términos de flujo de caja."
     ],
-    "result": "Coca-Cola da yield bajo pero crecimiento consistente. En 20 años, tu yield on cost sería 7.6% sobre el precio original. Si reinvertís cada dividendo (DRIP), tu ingreso futuro se acelera porque también crecen las acciones que tenés."
+    "result": "Con yield inicial bajo pero crecimiento consistente del 5% anual, KO convierte un ingreso de USD 289/año en USD 471 a los 10 años y USD 767 a los 20 años — sin contar la apreciación del precio ni el efecto del DRIP. Los inversores que compraron KO en los 90s tienen YOC de 15-20% sobre su inversión original."
   },
   "sources": [
     {
-      "name": "S&P Dividend Aristocrats Index",
+      "name": "S&P Dividend Aristocrats Index — S&P Global",
       "url": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-dividend-aristocrats/"
+    },
+    {
+      "name": "Dividend Data — Yahoo Finance (KO ejemplo)",
+      "url": "https://finance.yahoo.com/quote/KO/"
+    },
+    {
+      "name": "Dividend Investing — Investopedia",
+      "url": "https://www.investopedia.com/terms/d/dividendyield.asp"
     }
   ],
   "relatedSlugs": [

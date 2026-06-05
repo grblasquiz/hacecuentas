@@ -19,8 +19,10 @@ export function horasAprenderRusoB2(i: Inputs): Outputs {
   if (horasDiarias <= 0) throw new Error('Horas diarias inválidas');
   if (diasSemana <= 0 || diasSemana > 7) throw new Error('Días/semana entre 1 y 7');
 
-  const totalBase = 900;
-  const yaHechas: Record<string, number> = { a0: 0, a1: 80, a2: 200, b1: 400, b2: 650 };
+  // FSI Categoria IV: ~1100 horas para hispanohablantes (Russian Cat IV, junto con polaco, checo)
+  // Roadmap acumulado: Cirílico 30h, A1 200h, A2 450h, B1 750h, B2 1100h
+  const totalBase = 1100;
+  const yaHechas: Record<string, number> = { a0: 0, a1: 200, a2: 450, b1: 750, b2: 1050 };
   let restante = totalBase - (yaHechas[nivelActual] || 0);
   if (restante < 50) restante = 50;
 
@@ -41,7 +43,7 @@ export function horasAprenderRusoB2(i: Inputs): Outputs {
   const tono = anos >= 2 ? 'warn' : anos >= 1 ? 'neutral' : 'good';
   const insight = {
     title: 'Tu ruta al ruso B2',
-    text: `A **${horasDiarias}h/día** y **${diasSemana} días/semana** te faltan **${Math.round(restante)}h** netas: unos **${mesesR} meses** (${Math.round(anos * 10) / 10} años) para alcanzar el B2.${inmersionTxt} El ruso es Categoría III del FSI, de los idiomas más exigentes para un hispanohablante.`,
+    text: `A **${horasDiarias}h/día** y **${diasSemana} días/semana** te faltan **${Math.round(restante)}h** netas: unos **${mesesR} meses** (${Math.round(anos * 10) / 10} años) para alcanzar el B2.${inmersionTxt} El ruso es Categoría IV del FSI, uno de los idiomas más exigentes para un hispanohablante.`,
     tone: tono,
     icon: '🇷🇺',
   };
@@ -51,7 +53,7 @@ export function horasAprenderRusoB2(i: Inputs): Outputs {
     semanas: Math.round(semanas),
     meses: mesesR,
     anos: Math.round(anos * 10) / 10,
-    categoriaFsi: 'Cat III FSI (difícil)',
+    categoriaFsi: 'Cat IV FSI (muy difícil)',
     _insight: insight,
   };
 
