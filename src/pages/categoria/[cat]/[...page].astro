@@ -6,6 +6,7 @@ import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import { CATEGORY_TO_GUIDE, GUIDE_TITLES, SIBLING_CATEGORIES, CATEGORY_TITLES, CATEGORY_ICONS } from '../../../lib/category-guide-map';
 import { shouldBuildCategory } from '../../../lib/incremental';
+import { groupCalcs, featuredCalcs, cleanDesc } from '../../../lib/category-layout';
 
 const PAGE_SIZE = 60;
 
@@ -28,6 +29,7 @@ export async function getStaticPaths() {
           currentPage: i,
           totalPages,
           totalCalcs: filtered.length,
+          featured: i === 1 ? featuredCalcs(cat, filtered) : [],
         },
       });
     }
@@ -35,7 +37,7 @@ export async function getStaticPaths() {
   return paths;
 }
 
-const { cat, calcs, currentPage, totalPages, totalCalcs } = Astro.props;
+const { cat, calcs, currentPage, totalPages, totalCalcs, featured = [] } = Astro.props;
 const isFirstPage = currentPage === 1;
 
 interface CatMeta {
@@ -52,7 +54,7 @@ interface CatMeta {
 const meta: Record<string, CatMeta> = {
   finanzas: {
     label: 'Finanzas',
-    title: 'Calculadoras de Finanzas 2026 — Sueldo, Préstamos, Impuestos | Hacé Cuentas',
+    title: 'Calculadoras de Finanzas 2026 | Hacé Cuentas',
     desc: 'Calculadoras financieras para Argentina: sueldo en mano, aguinaldo, indemnización, préstamos, monotributo, plazo fijo y más. Fórmulas oficiales actualizadas.',
     intro: 'Todo lo que necesitás calcular para manejar tu plata y tu trabajo: sueldos, aguinaldo, indemnización, préstamos, impuestos e inversiones. Fórmulas adaptadas a la legislación argentina y actualizadas a 2026.',
     color: '#2563eb',
@@ -102,7 +104,7 @@ Si acabás de cobrar el primer sueldo o cambiaste de trabajo, usá la calculador
   },
   salud: {
     label: 'Salud',
-    title: 'Calculadoras de Salud 2026 — IMC, Calorías, Embarazo | Hacé Cuentas',
+    title: 'Calculadoras de Salud 2026 | Hacé Cuentas',
     desc: 'Calculadoras de salud: IMC, calorías diarias (TDEE), semanas de embarazo, ovulación, BMR, frecuencia cardíaca. Basadas en fórmulas OMS y ACOG.',
     intro: 'Herramientas para monitorear tu salud: IMC, necesidades calóricas, embarazo y ciclo menstrual. Basadas en fórmulas validadas por OMS y ACOG.',
     color: '#16a34a',
@@ -162,7 +164,7 @@ Las calculadoras de salud se apoyan en **fórmulas médicas validadas**: **IMC**
   },
   vida: {
     label: 'Vida cotidiana',
-    title: 'Calculadoras de Vida Cotidiana 2026 — Edad, Fechas, Porcentajes | Hacé Cuentas',
+    title: 'Calculadoras de Vida Cotidiana 2026 | Hacé Cuentas',
     desc: 'Calculadoras para el día a día: edad exacta, días entre fechas, porcentajes, propinas y más. Gratis y sin registro.',
     intro: 'Las cuentas chicas que hacés todos los días: tu edad, cuántos días faltan, calcular porcentajes, dividir una cuenta con amigos.',
     color: '#d97706',
@@ -220,7 +222,7 @@ Las cuentas "chicas" son las que más hacemos y las que más errores generan por
   },
   marketing: {
     label: 'Marketing',
-    title: 'Calculadoras de Marketing Digital 2026 — CTR, CPC, CPM, ROAS, CAC | Hacé Cuentas',
+    title: 'Calculadoras de Marketing Digital 2026 | Hacé Cuentas',
     desc: 'Calculadoras para marketing digital: CTR, CPC, CPM, ROAS, tasa de conversión, CAC y LTV. Benchmarks por canal e industria 2026.',
     intro: 'Las métricas clave del marketing digital: CTR, CPC, CPM, ROAS, tasa de conversión y CAC/LTV. Para decidir si tus campañas de Google Ads, Meta o TikTok están rindiendo.',
     color: '#e11d48',
@@ -282,7 +284,7 @@ Desde abril 2021, **iOS 14+** requiere opt-in explícito para tracking. Solo ~25
   },
   viajes: {
     label: 'Viajes',
-    title: 'Calculadoras de Viajes 2026 — Combustible y Presupuesto | Hacé Cuentas',
+    title: 'Calculadoras de Viajes 2026 | Hacé Cuentas',
     desc: 'Calculadoras para planificar tus viajes: combustible, presupuesto total, división de gastos entre amigos. Argentina y exterior.',
     intro: 'Calculadoras para antes, durante y después del viaje: combustible, presupuesto completo, división de gastos con amigos. Pensadas para viajes en Argentina y al exterior.',
     color: '#0891b2',
@@ -343,7 +345,7 @@ Las calculadoras de viajes resuelven los 3 cálculos más frecuentes: **cuánto 
   },
   deportes: {
     label: 'Deportes',
-    title: 'Calculadoras de Deportes 2026 — Descenso Fútbol, Running, Fitness | Hacé Cuentas',
+    title: 'Calculadoras de Deportes 2026 | Hacé Cuentas',
     desc: 'Calculadoras deportivas: descenso del fútbol argentino por promedios, pace y predicción de maratón, 1RM, VO2 max, frecuencia cardíaca.',
     intro: 'Calculadoras para los fanáticos del deporte: descenso del fútbol argentino, pace de running, predicción de maratón, 1RM de fuerza y VO2 max.',
     color: '#65a30d',
@@ -399,7 +401,7 @@ La **AFA** aplica dos tablas para descensos: **tabla de promedios** (puntos últ
   },
   negocios: {
     label: 'Negocios',
-    title: 'Calculadoras para Negocios 2026 — Margen, Precio, Break-even | Hacé Cuentas',
+    title: 'Calculadoras para Negocios 2026 | Hacé Cuentas',
     desc: 'Calculadoras para pymes y emprendedores: margen de ganancia, precio con IVA, punto de equilibrio, facturación mínima monotributo, rotación de inventario, DSO, comisiones, churn, MRR, NPS.',
     intro: 'Herramientas para tomar decisiones comerciales con números: márgenes, precios de venta con IVA, punto de equilibrio (break-even), costo laboral, comisiones y gestión de cobros. Para pymes, autónomos y emprendedores en Argentina.',
     color: '#7c3aed',
@@ -460,7 +462,7 @@ Si tenés un negocio (comercio, servicios, SaaS, e-commerce) hay **métricas que
   },
   mascotas: {
     label: 'Mascotas',
-    title: 'Calculadoras para Mascotas 2026 — Edad Perro/Gato, Alimento, Dosis | Hacé Cuentas',
+    title: 'Calculadoras para Mascotas 2026 | Hacé Cuentas',
     desc: 'Calculadoras para el cuidado de tu mascota: edad en años humanos (Cornell/UCSD 2019), alimento diario (NRC 2006), peso ideal por raza, dosis de medicamentos según peso.',
     intro: 'Herramientas para cuidar mejor a tu perro o gato: edad en años humanos (escala UCSD 2019 y Cornell), cuánto alimento necesita por día (NRC 2006), peso ideal por raza y dosis de medicamentos.',
     color: '#db2777',
@@ -523,7 +525,7 @@ Un perro de 1 año = 31 años humanos. De 4 años = 53 años humanos. De 12 año
   },
   matematica: {
     label: 'Matemática',
-    title: 'Calculadoras de Matemática 2026 — Pitágoras, Factorial, MCD/MCM | Hacé Cuentas',
+    title: 'Calculadoras de Matemática 2026 | Hacé Cuentas',
     desc: 'Calculadoras de matemática: teorema de Pitágoras, ecuación cuadrática, factorial, combinatoria, MCD, MCM, promedio, mediana, moda, interés simple, regla de tres.',
     intro: 'Cálculos matemáticos del cole y la facultad: Pitágoras, fórmula resolvente, factorial y combinatoria, MCD/MCM, estadística básica e interés simple. Con fórmulas y pasos explicados.',
     color: '#0d9488',
@@ -587,7 +589,7 @@ Esta categoría está pensada para **estudiantes** (secundaria, CBC, ingeniería
   },
   construccion: {
     label: 'Construcción',
-    title: 'Calculadoras de Construcción 2026 — Ladrillos, Cemento, Pintura | Hacé Cuentas',
+    title: 'Calculadoras de Construcción 2026 | Hacé Cuentas',
     desc: 'Calculadoras para construcción y refacción: ladrillos por m² (52/m² común), cemento/arena/piedra por m³ (CIRSOC 201), pintura por m², pisos cerámicos y costo por m² de obra.',
     intro: 'Cuántos ladrillos, bolsas de cemento, litros de pintura y cajas de cerámicos necesitás. Dosificaciones según CIRSOC 201 y costos actualizados por zona. Para obras, refacciones y albañilería en Argentina.',
     color: '#b45309',
@@ -651,7 +653,7 @@ Si estás por **construir, refaccionar o pintar**, estas calculadoras te ayudan 
   },
   cocina: {
     label: 'Cocina',
-    title: 'Calculadoras de Cocina 2026 — Tazas a Gramos, Escalar Receta, Cocción | Hacé Cuentas',
+    title: 'Calculadoras de Cocina 2026 | Hacé Cuentas',
     desc: 'Calculadoras para la cocina: convertir tazas a gramos, escalar recetas a más o menos porciones, tiempo y temperatura de cocción por carne y peso.',
     intro: 'Todo lo que necesitás en la cocina: convertir tazas y cucharadas a gramos, multiplicar o dividir recetas, y tiempos de cocción por carne y peso. Con densidades por ingrediente y temperaturas internas seguras.',
     color: '#ea580c',
@@ -719,7 +721,7 @@ La mayoría de las recetas vienen en **tazas, cucharadas y cucharaditas** (espec
   },
   educacion: {
     label: 'Educación',
-    title: 'Calculadoras de Educación 2026 — Notas, Promedios, Créditos, Becas | Hacé Cuentas',
+    title: 'Calculadoras de Educación 2026 | Hacé Cuentas',
     desc: 'Calculadoras educativas: promedio de notas, créditos universitarios, GPA, becas, tiempo de estudio, porcentaje de asistencia. Para estudiantes argentinos.',
     intro: 'Herramientas para organizar tu vida académica: promediar notas, calcular créditos aprobados, estimar tiempo de estudio y evaluar si llegás a la beca. Pensadas para secundaria y universidad en Argentina.',
     color: '#4f46e5',
@@ -777,7 +779,7 @@ Una regla práctica: por cada hora de clase, planificá **2-3 horas de estudio a
   },
   automotor: {
     label: 'Automotor',
-    title: 'Calculadoras Automotor 2026 — Combustible, Patente, Seguro, Nafta vs GNC | Hacé Cuentas',
+    title: 'Calculadoras Automotor 2026 | Hacé Cuentas',
     desc: 'Calculadoras para tu auto: consumo de combustible, costo de patente, seguro, VTV, comparación nafta vs GNC vs diésel. Valores actualizados Argentina 2026.',
     intro: 'Todo lo que necesitás calcular para tu auto: cuánto gastás en nafta por viaje, costo de patente y seguro, cuándo conviene convertir a GNC, y el costo real por kilómetro. Con precios actualizados a Argentina 2026.',
     color: '#dc2626',
@@ -838,7 +840,7 @@ La patente se calcula sobre la **valuación fiscal** del vehículo (no el precio
   },
   tecnologia: {
     label: 'Tecnología',
-    title: 'Calculadoras de Tecnología 2026 — Almacenamiento, Internet, Batería, Cloud | Hacé Cuentas',
+    title: 'Calculadoras de Tecnología 2026 | Hacé Cuentas',
     desc: 'Calculadoras de tecnología: conversión de almacenamiento (GB/TB), velocidad de internet (Mbps), duración de batería, FPS, costo de cloud computing.',
     intro: 'Calculadoras para entender los números de la tecnología: cuánto almacenamiento necesitás, qué velocidad de internet te conviene, cuánto dura tu batería y cuánto cuesta la nube. Sin tecnicismos innecesarios.',
     color: '#6366f1',
@@ -896,7 +898,7 @@ La duración de la batería depende de la **capacidad (mAh)** pero también del 
   },
   electronica: {
     label: 'Electrónica',
-    title: 'Calculadoras de Electrónica 2026 — Ley de Ohm, Resistencias, kWh, Circuitos | Hacé Cuentas',
+    title: 'Calculadoras de Electrónica 2026 | Hacé Cuentas',
     desc: 'Calculadoras de electrónica: ley de Ohm, código de colores de resistencias, consumo en kWh, potencia, divisor de tensión, capacitores, LEDs.',
     intro: 'Herramientas para electrónica y electricidad: ley de Ohm, decodificar resistencias por colores, calcular consumo eléctrico en kWh y pesos, potencia de circuitos y dimensionar componentes. Para estudiantes, técnicos y hobbyistas.',
     color: '#ca8a04',
@@ -958,7 +960,7 @@ El consumo se mide en **kilovatios-hora (kWh)**: potencia del aparato (en watts)
   },
   entretenimiento: {
     label: 'Entretenimiento',
-    title: 'Calculadoras de Entretenimiento 2026 — Gaming, Música, Foto, Redes | Hacé Cuentas',
+    title: 'Calculadoras de Entretenimiento 2026 | Hacé Cuentas',
     desc: 'Calculadoras de entretenimiento: sensibilidad DPI gaming, BPM música, profundidad de campo fotografía, engagement redes sociales, streaming.',
     intro: 'Calculadoras para gamers, músicos, fotógrafos y creadores de contenido. Convertí sensibilidad entre juegos, calculá BPM, profundidad de campo, engagement rate y más.',
     color: '#ec4899',
@@ -994,7 +996,7 @@ El **engagement rate** se calcula como (likes + comentarios + guardados) / segui
   },
   ciencia: {
     label: 'Ciencia',
-    title: 'Calculadoras de Ciencia 2026 — Física, Química, Astronomía | Hacé Cuentas',
+    title: 'Calculadoras de Ciencia 2026 | Hacé Cuentas',
     desc: 'Calculadoras de ciencia: fórmulas de física (Newton, energía, ondas), química (moles, pH, gases), astronomía (órbitas, planetas, estrellas).',
     intro: 'Calculadoras científicas para estudiantes y curiosos. Resolvé problemas de física clásica, reacciones químicas, leyes de gases y astronomía con fórmulas reales.',
     color: '#6366f1',
@@ -1040,7 +1042,7 @@ Estas calculadoras están pensadas para verificar resultados de ejercicios, hace
   },
   jardineria: {
     label: 'Jardinería',
-    title: 'Calculadoras de Jardinería 2026 — Riego, Tierra, Siembra, Huerta | Hacé Cuentas',
+    title: 'Calculadoras de Jardinería 2026 | Hacé Cuentas',
     desc: 'Calculadoras de jardinería: riego por goteo, tierra para macetas, fertilizante NPK, calendario siembra, compost, huerta urbana en Argentina.',
     intro: 'Calculadoras para tu jardín y huerta. Calculá litros de riego, tierra para macetas, dosis de fertilizante, calendario de siembra por zona argentina y más.',
     color: '#15803d',
@@ -1076,7 +1078,7 @@ Una **familia de 4 personas** genera entre 800 g y 1,2 kg diarios de residuos or
   },
   familia: {
     label: 'Familia',
-    title: 'Calculadoras de Familia 2026 — Hijos, Embarazo, Bebés, Crianza | Hacé Cuentas',
+    title: 'Calculadoras de Familia 2026 | Hacé Cuentas',
     desc: 'Calculadoras familiares: embarazo, fertilidad, percentiles de bebés, lactancia, vacunas, mesada para hijos, costo de crianza.',
     intro: 'Herramientas prácticas para la familia: planificación del embarazo, seguimiento del crecimiento de tu bebé, lactancia, costos de crianza y economía doméstica.',
     color: '#ec4899',
@@ -1116,7 +1118,7 @@ Estudios económicos locales (UCA, IIEP-UBA) estiman que **criar un hijo en Arge
   },
   idiomas: {
     label: 'Idiomas',
-    title: 'Calculadoras de Idiomas 2026 — Aprender Inglés, MCER, CEFR, Estudio | Hacé Cuentas',
+    title: 'Calculadoras de Idiomas 2026 | Hacé Cuentas',
     desc: 'Calculadoras para aprendizaje de idiomas: horas hasta fluidez, nivel MCER/CEFR, vocabulario necesario, tiempo de estudio diario.',
     intro: 'Herramientas para planificar y acelerar tu aprendizaje de idiomas: horas necesarias según dificultad, nivel MCER (A1-C2), vocabulario por nivel, plan de estudio y test de idioma (TOEFL/IELTS).',
     color: '#0ea5e9',
@@ -1167,7 +1169,7 @@ La consistencia gana siempre a las maratones: 30-60 minutos diarios producen mej
   },
   'astronomia': {
     label: 'Astronomía',
-    title: 'Calculadoras de Astronomía 2026 — Planetas y Eclipses | Hacé Cuentas',
+    title: 'Calculadoras de Astronomía 2026 | Hacé Cuentas',
     desc: 'Calculá distancias estelares, fases lunares, eclipses y órbitas planetarias. Herramientas astronómicas precisas con fórmulas reales para curiosos y estudiantes.',
     intro: '¿Querés saber a cuántos años luz está una estrella, cuándo es la próxima luna llena o cómo calcular la distancia entre planetas? Llegaste al lugar indicado. Esta sección reúne calculadoras astronómicas pensadas tanto para estudiantes secundarios y universitarios como para aficionados que miran el cielo desde el patio de su casa.\n\nAcá vas a encontrar herramientas para trabajar con la Ley de Hubble, la Tercera Ley de Kepler, el parsec y el año luz, las fases lunares según el ciclo sinódico de 29,5 días, y mucho más. Todo con explicaciones claras, sin tecnicismos innecesarios, pero sin esquivarle a los números cuando hace falta.\n\nLa astronomía no es solo para telescopios caros ni institutos especializados. Con las fórmulas correctas y una buena calculadora, podés entender el universo desde cualquier punto de la Argentina.',
     color: '#6366f1',
@@ -1206,7 +1208,7 @@ Si bien estas herramientas no reemplazan un software de planetario profesional c
   },
   'clima': {
     label: 'Clima',
-    title: 'Calculadoras de Clima 2026 — Temperatura, Viento y UV | Hacé Cuentas',
+    title: 'Calculadoras de Clima 2026 | Hacé Cuentas',
     desc: 'Calculá sensación térmica, índice UV, punto de rocío, humedad relativa y más. Herramientas de clima precisas y gratuitas en español.',
     intro: 'Si alguna vez te preguntaste por qué 30°C con humedad se sienten como 40°C, o a qué temperatura el viento te hace sentir que son 10°C menos, llegaste al lugar correcto. En esta sección encontrás todas las calculadoras de clima que necesitás: desde la sensación térmica por calor o frío, hasta el índice UV, el punto de rocío, la humedad relativa y la velocidad del viento en distintas unidades.\n\nTodas las herramientas usan fórmulas estándar reconocidas a nivel meteorológico —como la escala de Wind Chill de la NOAA o el Heat Index de la NWS— así que los resultados son confiables y comparables con lo que ves en cualquier pronóstico serio. No importa si sos docente, deportista, agricultor, o simplemente alguien que quiere saber si salir a correr es buena idea: acá vas a encontrar la calculadora que necesitás, explicada en términos simples y sin vueltas.',
     color: '#0ea5e9',
@@ -1248,7 +1250,7 @@ Todas las calculadoras funcionan con unidades métricas e imperiales, y los resu
   },
   'hogar': {
     label: 'Hogar',
-    title: 'Calculadoras de Hogar 2026 — Consumo, Gastos y Ahorro | Hacé Cuentas',
+    title: 'Calculadoras de Hogar 2026 | Hacé Cuentas',
     desc: 'Calculá consumo eléctrico, agua, gas y calefacción en tu hogar. Estimá gastos mensuales y encontrá oportunidades de ahorro energético con datos reales.',
     intro: 'En esta sección encontrás todas las herramientas para tener el control total de los gastos de tu casa. Desde calcular cuánto consume tu aire acondicionado hasta estimar la factura de gas antes de que llegue, las calculadoras de Hogar de Hacé Cuentas están pensadas para la realidad argentina: tarifas que cambian, ingresos que no siempre acompañan y la necesidad de saber exactamente adónde va la plata.\n\nPodés estimar el costo mensual de cada electrodoméstico, comparar qué tan eficiente es tu calefacción, proyectar el consumo de agua potable o simplemente entender por qué la factura de luz te pegó tan fuerte este mes. Todo con valores actualizados y fórmulas claras, sin vueltas.\n\nSea que estás armando el presupuesto familiar, evaluando si conviene cambiar una heladera vieja o querés reducir el impacto de las tarifas, acá tenés los números que necesitás para tomar decisiones concretas.',
     color: '#f59e0b',
@@ -1288,7 +1290,7 @@ Para sacarle el máximo provecho a estas calculadoras, conviene tener claros alg
   },
   'impuestos': {
     label: 'Impuestos',
-    title: 'Calculadoras de Impuestos 2026 — Ganancias, IVA, Monotributo | Hacé Cuentas',
+    title: 'Calculadoras de Impuestos 2026 | Hacé Cuentas',
     desc: 'Calculá Ganancias 4ta categoría, Monotributo, IVA, IIBB, Bienes Personales, sellos e impuesto al cheque. Herramientas actualizadas para Argentina 2026.',
     intro: 'Si trabajás en relación de dependencia, sos monotributista, tenés un negocio o simplemente querés entender cuánto le pagás al Estado, llegaste al lugar correcto. En esta sección reunimos todas las calculadoras de impuestos argentinos actualizadas para 2026: desde Ganancias de 4ta categoría y las retenciones que te descuentan en el sueldo, hasta las cuotas del Monotributo según tu categoría, el IVA que sumás o restás en cada operación, Ingresos Brutos por provincia, Bienes Personales, el impuesto de sellos en contratos y el famoso impuesto al cheque. Nada de fórmulas crípticas ni planillas enredadas: ingresás tus datos, apretás calcular y en segundos tenés el número. Ideal para autónomos, empleados, contadores y cualquiera que quiera saber exactamente cuánto paga antes de que lo sorprendan. Todo con la normativa de AFIP y los valores vigentes al día.',
     color: '#dc2626',
@@ -1319,7 +1321,7 @@ Usá las calculadoras de cada impuesto para conocer tu carga tributaria real y p
   },
   'juegos': {
     label: 'Juegos',
-    title: 'Calculadoras de Juegos 2026 — Probabilidades, ELO y Más | Hacé Cuentas',
+    title: 'Calculadoras de Juegos 2026 | Hacé Cuentas',
     desc: 'Calculá probabilidades en póker, loterías, dados y cartas. Ranking ELO para ajedrez y más. Herramientas gratis para jugadores argentinos.',
     intro: 'Si jugás en serio, las matemáticas son tu mejor aliada. Esta sección reúne calculadoras para todo lo que tiene que ver con juegos de azar, estrategia y competencia: desde las chances reales de ganar en el Quini 6 o la Lotería Nacional hasta las probabilidades exactas en una mano de póker, pasando por el sistema de ranking ELO que usan los ajedrecistas de todo el mundo.\n\nAcá no hay supersticiones ni sistemas mágicos: solo números concretos. Podés calcular cuánto cambia tu ELO después de una partida, qué tan probable es sacar un full en el poker con tus cartas actuales, cuántas combinaciones posibles tiene un dado de seis caras o cuánto tarda estadísticamente en salir tu número favorito en la lotería.\n\nTanto si sos jugador casual, fanático del ajedrez, organizás torneos o simplemente querés entender mejor los juegos que jugás, estas herramientas te dan el contexto matemático que la mayoría ignora. Porque saber las probabilidades no arruina la diversión: la hace más inteligente.',
     color: '#ec4899',
@@ -1352,7 +1354,7 @@ Hoy el sistema ELO se usa más allá del ajedrez: plataformas de videojuegos com
   },
   'medio-ambiente': {
     label: 'Medio Ambiente',
-    title: 'Calculadoras de Medio Ambiente 2026 — Huella de Carbono, Energía Solar | Hacé Cuentas',
+    title: 'Calculadoras de Medio Ambiente 2026 | Hacé Cuentas',
     desc: 'Calculá tu huella de carbono, ahorro con paneles solares, consumo de agua y más. Herramientas ambientales gratis en español para Argentina.',
     intro: 'Si querés saber cuánto CO₂ emitís, cuánto podés ahorrar con energía solar o si tu consumo de agua está por las nubes, llegaste al lugar indicado. Esta sección reúne calculadoras ambientales pensadas para la realidad argentina: tarifas eléctricas locales, clima regional, hábitos cotidianos y normativa vigente.\n\nAcá podés estimar tu huella de carbono personal o del hogar, proyectar el retorno de inversión de paneles solares, medir el impacto de reciclar distintos materiales, calcular cuántos litros de agua usás por mes y detectar dónde podés ajustar para bajar tanto la factura como el impacto ambiental.\n\nNo necesitás ser ingeniero ni ambientalista para usarlas. Cada herramienta tiene campos simples, resultados claros y comparativas para que entiendas qué significa el número que te da. Porque cuidar el ambiente también es una decisión económica, y acá te ayudamos a tomar las dos al mismo tiempo.',
     color: '#16a34a',
@@ -1397,6 +1399,12 @@ En cuanto al reciclaje, reciclar **1 tonelada de papel** ahorra aproximadamente 
 };
 
 const m = meta[cat] || meta.finanzas;
+
+// Agrupación por sub-tema de los calcs de ESTA página (null = grilla plana).
+const groups = groupCalcs(cat, calcs);
+// Para no duplicar el markup de card: si no hay grupos, un único pseudo-grupo
+// sin título que contiene todos los calcs de la página.
+const renderGroups = groups || [{ id: null, title: null, icon: null, calcs }];
 
 // Interlinking: guía pilar del tema + categorías hermanas
 const pillarSlug = CATEGORY_TO_GUIDE[cat];
@@ -1480,9 +1488,34 @@ const graph: any[] = [schemaCollection, schemaItemList, schemaBreadcrumb];
 if (schemaFAQ) graph.push(schemaFAQ);
 const schema = { '@context': 'https://schema.org', '@graph': graph };
 
-// Markdown → HTML (simple, igual que [...slug].astro)
+// Markdown → HTML. Maneja tablas GFM de verdad: detecta el bloque
+// (fila header + fila separadora |---| + filas body), lo convierte a
+// <table> con <thead>/<th>, saltea la fila separadora y lo envuelve en
+// .tbl-wrap (scroll-x en mobile). Antes: los <tr> salían sin <table> y la
+// fila |---| quedaba como texto crudo → la tabla se veía como un string.
 function md(text: string): string {
-  return text
+  const tables: string[] = [];
+  const lines = text.split('\n');
+  const out: string[] = [];
+  const isRow = (l: string) => /^\s*\|.*\|\s*$/.test(l);
+  const isSep = (l: string) => isRow(l) && l.replace(/[\s|:\-]/g, '') === '';
+  const cells = (l: string) => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+  for (let i = 0; i < lines.length; i++) {
+    if (isRow(lines[i]) && i + 1 < lines.length && isSep(lines[i + 1])) {
+      const head = cells(lines[i]);
+      i += 2;
+      const body: string[][] = [];
+      while (i < lines.length && isRow(lines[i]) && !isSep(lines[i])) { body.push(cells(lines[i])); i++; }
+      i--; // compensar el i++ del for
+      const thead = '<thead><tr>' + head.map((c) => `<th>${c}</th>`).join('') + '</tr></thead>';
+      const tbody = '<tbody>' + body.map((r) => '<tr>' + r.map((c) => `<td>${c}</td>`).join('') + '</tr>').join('') + '</tbody>';
+      tables.push(`<div class="tbl-wrap"><table>${thead}${tbody}</table></div>`);
+      out.push(`@@TBL${tables.length - 1}@@`);
+    } else {
+      out.push(lines[i]);
+    }
+  }
+  let html = out.join('\n')
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -1490,12 +1523,12 @@ function md(text: string): string {
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" rel="noopener">$1</a>')
     .replace(/^\- (.+)$/gm, '<li>$1</li>')
-    .replace(/^\| (.+) \|$/gm, (match) => {
-      const cells = match.slice(2, -2).split(' | ');
-      return '<tr>' + cells.map((c) => `<td>${c}</td>`).join('') + '</tr>';
-    })
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
+  // Restaurar tablas como bloque: cerrar el <p> actual, insertar y reabrir,
+  // comiendo los <br> colgantes alrededor del placeholder.
+  html = html.replace(/(?:<br>\s*)*@@TBL(\d+)@@(?:\s*<br>)*/g, (_m, n) => '</p>' + tables[+n] + '<p>');
+  return html;
 }
 ---
 
@@ -1568,6 +1601,35 @@ function md(text: string): string {
     </p>
   )}
 
+  {isFirstPage && featured.length > 0 && (
+    <section class="featured" style={`--cat-color: ${m.color}`} aria-labelledby="featured-h">
+      <h2 class="featured-h" id="featured-h"><span class="featured-star" aria-hidden="true">⭐</span> Más usadas</h2>
+      <div class="featured-grid">
+        {featured.map((c: any) => (
+          <a href={`/${c.slug}`} class="feat-card">
+            <span class="feat-icon" aria-hidden="true">{c.icon}</span>
+            <span class="feat-body">
+              <span class="feat-title">{c.h1}</span>
+              <span class="feat-desc">{cleanDesc(c.description)}</span>
+            </span>
+            <span class="feat-arrow" aria-hidden="true"><svg width="16" height="16"><use href="#cat-arrow"/></svg></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {groups && (
+    <nav class="chips" aria-label="Saltar a un sub-tema">
+      {renderGroups.map((g: any) => (
+        <a href={`#g-${g.id}`} class="chip">
+          <span class="chip-icon" aria-hidden="true">{g.icon}</span>{g.title}
+          <span class="chip-n">{g.calcs.length}</span>
+        </a>
+      ))}
+    </nav>
+  )}
+
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <symbol id="cat-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="5" y1="12" x2="19" y2="12"/>
@@ -1575,23 +1637,36 @@ function md(text: string): string {
     </symbol>
   </svg>
 
-  <div class="grid" id="cat-grid">
-    {calcs.map((c: any) => (
-      <a href={`/${c.slug}`} class="card">
-        <div class="card-icon">{c.icon}</div>
-        <div class="card-body">
-          <div class="card-title">
-            {c.h1}
-            {c.audience === 'AR' && (
-              <span class="ar-badge" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>
-            )}
-          </div>
-          <div class="card-desc">{c.description}</div>
+  <div id="cat-grid" style={`--cat-color: ${m.color}`}>
+    {renderGroups.map((g: any) => (
+      <section class="cat-group" id={g.id ? `g-${g.id}` : undefined} data-group>
+        {g.title && (
+          <h2 class="group-h">
+            <span class="group-icon" aria-hidden="true">{g.icon}</span>
+            {g.title}
+            <span class="group-n">{g.calcs.length}</span>
+          </h2>
+        )}
+        <div class="grid">
+          {g.calcs.map((c: any) => (
+            <a href={`/${c.slug}`} class="card">
+              <div class="card-icon">{c.icon}</div>
+              <div class="card-body">
+                <div class="card-title">
+                  {c.h1}
+                  {c.audience === 'AR' && (
+                    <span class="ar-badge" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>
+                  )}
+                </div>
+                <div class="card-desc">{cleanDesc(c.description)}</div>
+              </div>
+              <div class="card-arrow" aria-hidden="true">
+                <svg width="18" height="18"><use href="#cat-arrow"/></svg>
+              </div>
+            </a>
+          ))}
         </div>
-        <div class="card-arrow" aria-hidden="true">
-          <svg width="18" height="18"><use href="#cat-arrow"/></svg>
-        </div>
-      </a>
+      </section>
     ))}
   </div>
 
@@ -1637,13 +1712,13 @@ function md(text: string): string {
       var grid = document.getElementById('cat-grid');
       var counter = document.querySelector('.cat-filter-count');
       var empty = document.getElementById('cat-empty');
+      var featured = document.querySelector('.featured');
+      var chips = document.querySelector('.chips');
       if (!input || !grid || !counter) return;
       function norm(s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 
-      // Pre-computamos el texto buscable leyendo del DOM existente (title + desc)
-      // \u2014 antes esto viv\u00eda duplicado en data-name lowercased, que sumaba ~80-150
-      // bytes por card al HTML servido. La normalizaci\u00f3n se hace una sola vez al
-      // cargar; el filtro per-keystroke solo hace string.includes() contra el cache.
+      // Texto buscable pre-computado del DOM (title + desc). La normalizaci\u00f3n
+      // corre una sola vez al cargar; el filtro per-keystroke s\u00f3lo hace includes().
       var cards = Array.from(grid.querySelectorAll('.card')).map(function (el) {
         var t = el.querySelector('.card-title');
         var d = el.querySelector('.card-desc');
@@ -1652,12 +1727,22 @@ function md(text: string): string {
           text: norm(((t && t.textContent) || '') + ' ' + ((d && d.textContent) || '')),
         };
       });
+      // Secciones de sub-tema: se ocultan cuando ninguna card matchea.
+      var groupEls = Array.from(grid.querySelectorAll('[data-group]'));
       var total = cards.length;
 
       function filter() {
         var q = norm(input.value.trim());
+        // Mientras se filtra, escondemos "M\u00e1s usadas" y los chips: el resultado
+        // plano es m\u00e1s claro y evita cards duplicadas entre destacadas y grilla.
+        // La clase cat-filtering oculta los headers de grupo (cuyo contador es el
+        // total del grupo, no el filtrado) \u2192 queda una lista plana de matches.
+        if (featured) featured.hidden = !!q;
+        if (chips) chips.hidden = !!q;
+        grid.classList.toggle('cat-filtering', !!q);
         if (!q) {
           cards.forEach(function (c) { c.el.hidden = false; });
+          groupEls.forEach(function (g) { g.hidden = false; });
           counter.textContent = total + ' resultados';
           if (empty) empty.hidden = true;
           return;
@@ -1668,6 +1753,8 @@ function md(text: string): string {
           c.el.hidden = !match;
           if (match) visible++;
         });
+        // Ocultar el encabezado de un grupo si no le quedaron cards visibles.
+        groupEls.forEach(function (g) { g.hidden = !g.querySelector('.card:not([hidden])'); });
         counter.textContent = visible + ' / ' + total + ' resultados';
         if (empty) empty.hidden = visible > 0;
       }
@@ -1755,8 +1842,8 @@ function md(text: string): string {
     flex-shrink: 0;
     width: 60px;
     height: 60px;
-    background: var(--bg);
-    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--cat-color) 14%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--cat-color) 32%, var(--border));
     border-radius: var(--radius);
     display: flex;
     align-items: center;
@@ -1864,23 +1951,24 @@ function md(text: string): string {
     transition: all 0.15s;
   }
   .card:hover {
-    border-color: var(--accent);
+    border-color: color-mix(in srgb, var(--cat-color, var(--accent)) 55%, var(--border));
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
   }
-  .card:hover .card-arrow { color: var(--accent); transform: translateX(2px); }
+  .card:hover .card-arrow { color: var(--cat-color, var(--accent)); transform: translateX(2px); }
 
   .card-icon {
     flex-shrink: 0;
     width: 40px;
     height: 40px;
-    background: var(--accent-soft);
+    background: color-mix(in srgb, var(--cat-color, var(--accent)) 12%, var(--bg-soft));
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.25rem;
   }
+  .card:hover .card-icon { background: color-mix(in srgb, var(--cat-color, var(--accent)) 22%, var(--bg-soft)); }
   .card-body { flex: 1; min-width: 0; }
   .card-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.25rem; line-height: 1.35; }
   .ar-badge {
@@ -2191,11 +2279,135 @@ function md(text: string): string {
     cursor: default;
   }
 
+  /* ===== Header: quick-stats como pills ===== */
+  .qs-item {
+    display: inline-block;
+    padding: 0.18rem 0.6rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+  .qs-dot { display: none; }
+
+  /* ===== Más usadas (featured) ===== */
+  .featured { margin: 0 0 1.5rem; }
+  .featured-h {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.8125rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text-muted); margin: 0 0 0.7rem;
+  }
+  .featured-star { font-size: 0.95rem; }
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.7rem;
+  }
+  .feat-card {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.8rem 0.9rem;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--cat-color) 9%, var(--bg-card)), var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--cat-color) 28%, var(--border));
+    border-radius: var(--radius);
+    text-decoration: none; color: var(--text);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .feat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: color-mix(in srgb, var(--cat-color) 55%, var(--border));
+  }
+  .feat-icon {
+    flex-shrink: 0; width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+    background: color-mix(in srgb, var(--cat-color) 17%, var(--bg));
+    border-radius: var(--radius-sm);
+  }
+  .feat-body { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .feat-title {
+    font-weight: 650; font-size: 0.9rem; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .feat-desc {
+    font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; margin-top: 0.1rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .feat-arrow { flex-shrink: 0; color: color-mix(in srgb, var(--cat-color) 70%, var(--text-subtle)); }
+
+  /* ===== Chips de sub-tema ===== */
+  .chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0 0 1.5rem; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.4rem 0.7rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.82rem; font-weight: 600; color: var(--text-muted);
+    text-decoration: none;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+  }
+  .chip:hover {
+    border-color: color-mix(in srgb, var(--cat-color, var(--accent)) 50%, var(--border));
+    color: var(--text);
+    background: color-mix(in srgb, var(--cat-color, var(--accent)) 7%, var(--bg-card));
+  }
+  .chip-icon { font-size: 0.95rem; line-height: 1; }
+  .chip-n {
+    font-size: 0.72rem; font-weight: 700; color: var(--text-subtle);
+    background: var(--bg-soft); border-radius: 999px; padding: 0.04rem 0.4rem;
+  }
+
+  /* ===== Grupos de la grilla ===== */
+  .cat-group { margin-bottom: 1.75rem; scroll-margin-top: 84px; }
+  .cat-group:last-child { margin-bottom: 0; }
+  .group-h {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 1.0625rem; font-weight: 700; color: var(--text);
+    margin: 0 0 0.85rem; padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .group-icon {
+    flex-shrink: 0; width: 30px; height: 30px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1.05rem; line-height: 1;
+    background: color-mix(in srgb, var(--cat-color) 14%, var(--bg-soft));
+    border-radius: var(--radius-sm);
+  }
+  .group-n {
+    font-size: 0.75rem; font-weight: 700; color: var(--text-subtle);
+    background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: 999px; padding: 0.08rem 0.5rem;
+  }
+
+  /* ===== Tablas del bloque SEO (ahora sí renderizan) ===== */
+  .seo-content :global(.tbl-wrap) { overflow-x: auto; margin: 1rem 0; -webkit-overflow-scrolling: touch; }
+  .seo-content :global(.tbl-wrap table) { margin: 0; min-width: 440px; }
+  .seo-content :global(th) {
+    padding: 0.6rem 0.875rem; text-align: left;
+    background: var(--bg-soft);
+    border-bottom: 2px solid var(--border-strong);
+    font-size: 0.875rem; font-weight: 700; color: var(--text);
+    white-space: nowrap;
+  }
+  .seo-content :global(tbody tr:nth-child(even)) { background: color-mix(in srgb, var(--bg-soft) 55%, transparent); }
+
+  /* Hidden robusto: .card/.featured/.chips tienen display propio que pisa [hidden] */
+  .card[hidden], .cat-group[hidden], .featured[hidden], .chips[hidden] { display: none !important; }
+
+  /* Filtrando: ocultar headers de grupo → lista plana de resultados */
+  #cat-grid.cat-filtering .group-h { display: none; }
+  #cat-grid.cat-filtering .cat-group { margin-bottom: 0.875rem; }
+
   @media (max-width: 640px) {
     .seo-content { padding: 1.5rem 1.25rem; }
     .pillar-cta { padding: 0.875rem 1rem; }
     .pillar-cta-btn { width: 100%; text-align: center; }
     .pager { padding: 1rem 0.75rem; }
     .pager-pages a, .pager-current { min-width: 1.875rem; height: 1.875rem; padding: 0 0.375rem; }
+    /* chips en una sola fila scrolleable */
+    .chips { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.25rem; }
+    .chip { white-space: nowrap; flex-shrink: 0; }
+    .group-h { font-size: 1rem; }
   }
 </style>
