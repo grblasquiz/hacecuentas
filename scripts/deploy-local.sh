@@ -86,6 +86,23 @@ done
 CURRENT_SHA=$(git rev-parse HEAD)
 ok "validación OK | branch=$BRANCH | commit=${CURRENT_SHA:0:8}"
 
+# ─── 1b. Auto-commit PRE-build ─────────────────────────────────────────────
+# detect-changes (abajo) diffea last-deploy-sha...HEAD → SOLO commits, no el
+# working tree. Si el laburo queda sin commitear, HEAD==last-deploy-sha → fuerza
+# FULL build siempre (lento + OOM) y la pila de "cambios sin commitear" se
+# acumula y reaparece en cada deploy. Commiteando ANTES del detect, el trabajo
+# entra como diff → incremental funciona y el árbol no acumula nada.
+if [ -n "$(git status --porcelain)" ]; then
+  log "auto-commit pre-build de cambios sin commitear..."
+  git add -A
+  if git commit -q --no-verify -m "chore(deploy): cambios pre-build [auto]"; then
+    CURRENT_SHA=$(git rev-parse HEAD)
+    ok "commiteado pre-build (auto) → ${CURRENT_SHA:0:8} | detect puede ir incremental"
+  else
+    warn "auto-commit pre-build no hizo nada"
+  fi
+fi
+
 # ─── 2. Detect changes ────────────────────────────────────────────────────
 MODE=full
 INCREMENTAL_CHANGES=""
@@ -237,8 +254,21 @@ else
   warn "purge skip (--no-purge)"
 fi
 
-# ─── 8. Guardar SHA actual para próximo incremental ───────────────────────
-echo "$CURRENT_SHA" > .last-deploy-sha
+# ─── 8. Auto-commit POST-build + guardar SHA ───────────────────────────────
+# El build regenera artefactos (sitemaps, sw.js, search-index, índices...).
+# Acá ya pasaron el smoke + purge → es exactamente lo que está live. Lo
+# commiteamos para que el working tree quede SIEMPRE limpio post-deploy: nunca
+# más se acumula la pila de "cambios sin commitear". Solo corre si el deploy
+# fue sano (si el smoke falla, el script ya salió arriba → no commiteamos roto).
+if [ -n "$(git status --porcelain)" ]; then
+  git add -A
+  if git commit -q --no-verify -m "chore(deploy): artefactos build [auto]"; then
+    ok "artefactos commiteados (auto) — working tree limpio"
+  else
+    warn "auto-commit post-build no hizo nada"
+  fi
+fi
+echo "$(git rev-parse HEAD)" > .last-deploy-sha
 
 # ─── Resumen ──────────────────────────────────────────────────────────────
 T_TOTAL=$(($(date +%s) - T_START))
