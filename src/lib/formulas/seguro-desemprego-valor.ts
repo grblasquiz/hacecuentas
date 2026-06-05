@@ -1,11 +1,12 @@
 /**
  * Seguro-desemprego 2026 — Valor das parcelas.
- * Base: média dos 3 últimos salários.
- *   Até R$ 2.041,40 → 80% da média
- *   Entre R$ 2.041,40 e R$ 3.402,65 → R$ 1.633,12 + 50% do excedente a R$ 2.041,40
- *   Acima R$ 3.402,65 → teto R$ 2.313,74
- * Valor mínimo: 1 salário mínimo (R$ 1.518).
+ * Base: média dos 3 últimos salários (tabela MTE 2026, vigência 11/01/2026).
+ *   Até R$ 2.222,17 → 80% da média
+ *   Entre R$ 2.222,17 e R$ 3.703,99 → R$ 1.777,74 + 50% do excedente a R$ 2.222,17
+ *   Acima R$ 3.703,99 → teto R$ 2.518,65
+ * Valor mínimo: 1 salário mínimo (R$ 1.621). Valores em src/lib/data/brasil-2026.ts.
  */
+import { SEGURO_DESEMPREGO, SALARIO_MINIMO } from '../data/brasil-2026';
 
 export interface SeguroDesempregoValorInputs {
   salario1: number;
@@ -23,11 +24,10 @@ export interface SeguroDesempregoValorOutputs {
   _chart?: any;
 }
 
-const FAIXA1 = 2041.40;
-const FAIXA2 = 3402.65;
-const PARCELA_FAIXA1_FIXA = 1633.12;
-const TETO = 2313.74;
-const SALARIO_MINIMO = 1518;
+const FAIXA1 = SEGURO_DESEMPREGO.faixa1;
+const FAIXA2 = SEGURO_DESEMPREGO.faixa2;
+const PARCELA_FAIXA1_FIXA = SEGURO_DESEMPREGO.parcelaFixa;
+const TETO = SEGURO_DESEMPREGO.teto;
 
 export function seguroDesempregoValor(inputs: SeguroDesempregoValorInputs): SeguroDesempregoValorOutputs {
   const s1 = Number(inputs.salario1) || 0;

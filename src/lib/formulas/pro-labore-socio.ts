@@ -1,7 +1,9 @@
-/** Pró-labore sócio administrador — Mínimo salário mínimo R$ 1.518 (2026)
+/** Pró-labore sócio administrador — Mínimo 1 salário mínimo R$ 1.621 (2026)
  *  INSS 11% (retido, com teto) + IRRF progressivo mensal.
- *  Teto INSS 2026: R$ 8.157,41 → contribuição máx R$ 897,32.
+ *  Teto INSS 2026: R$ 8.475,55 → contribuição máx R$ 932,31.
+ *  Valores em src/lib/data/brasil-2026.ts.
  */
+import { SALARIO_MINIMO, INSS_TETO, IRRF_DEDUCAO_DEPENDENTE } from '../data/brasil-2026';
 
 export interface Inputs {
   proLaboreBruto: number;
@@ -22,9 +24,9 @@ export interface Outputs {
   _chart?: any;
 }
 
-const SALARIO_MIN = 1518.00;
-const TETO_INSS = 8157.41;
-const DEDUCAO_DEP = 189.59;
+const SALARIO_MIN = SALARIO_MINIMO;
+const TETO_INSS = INSS_TETO;
+const DEDUCAO_DEP = IRRF_DEDUCAO_DEPENDENTE;
 
 // IRRF 2026 (tabela progressiva mensal)
 const IRRF = [
