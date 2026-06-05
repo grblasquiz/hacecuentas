@@ -186,7 +186,15 @@ function computeRelated(opts: {
     }
   }
 
-  let calcs: Calc[] = files.map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')));
+  // Resiliente a JSONs malformados (p.ej. otra sesión editando mid-build): skip + warn.
+  let calcs: Calc[] = files.map((f) => {
+    try {
+      return JSON.parse(readFileSync(join(dir, f), 'utf8')) as Calc;
+    } catch (e) {
+      console.warn(`[related-auto:${label}] skip JSON malformado ${f}: ${(e as Error).message}`);
+      return null;
+    }
+  }).filter((c): c is Calc => c !== null);
   if (excludeNoindex) calcs = calcs.filter((c) => !c.noindex);
 
   // Tokenizar cada una

@@ -3400,9 +3400,23 @@ import { zonasEntrenamientoFcMax } from './zonas-entrenamiento-fc-max';
 import { zonasFrecuenciaCardiacaEntrenamiento } from './zonas-frecuencia-cardiaca-entrenamiento';
 import { zonasPotenciaCiclismoWattsKg } from './zonas-potencia-ciclismo-watts-kg';
 import { salesTaxCalculator } from './sales-tax-calculator';
+import { discountCalculator } from './discount-calculator';
+import { overtimePayCalculator } from './overtime-pay-calculator';
+import { finalGradeCalculator } from './final-grade-calculator';
+import { roiCalculator } from './roi-calculator';
+import { vatCalculator } from './vat-calculator';
+import { unitConverter } from './unit-converter';
+import { currencyConverter } from './currency-converter';
 
 export const formulas: Record<string, (inputs: any) => any> = {
   'sales-tax-calculator': salesTaxCalculator,
+  'discount-calculator': discountCalculator,
+  'overtime-pay-calculator': overtimePayCalculator,
+  'final-grade-calculator': finalGradeCalculator,
+  'roi-calculator': roiCalculator,
+  'vat-calculator': vatCalculator,
+  'unit-converter': unitConverter,
+  'currency-converter': currencyConverter,
   '13-salario-liquido-bruto-clt': compute__13_salario_liquido_bruto_clt,
   '1rm-estimacion-fuerza-maxima': compute__1rm_estimacion_fuerza_maxima,
   '1rm-peso-maximo': rmPesoMaximo,
