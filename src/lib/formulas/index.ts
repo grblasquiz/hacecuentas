@@ -3399,8 +3399,10 @@ import { zona2CardioFrecuenciaEdadVo2max } from './zona2-cardio-frecuencia-edad-
 import { zonasEntrenamientoFcMax } from './zonas-entrenamiento-fc-max';
 import { zonasFrecuenciaCardiacaEntrenamiento } from './zonas-frecuencia-cardiaca-entrenamiento';
 import { zonasPotenciaCiclismoWattsKg } from './zonas-potencia-ciclismo-watts-kg';
+import { salesTaxCalculator } from './sales-tax-calculator';
 
 export const formulas: Record<string, (inputs: any) => any> = {
+  'sales-tax-calculator': salesTaxCalculator,
   '13-salario-liquido-bruto-clt': compute__13_salario_liquido_bruto_clt,
   '1rm-estimacion-fuerza-maxima': compute__1rm_estimacion_fuerza_maxima,
   '1rm-peso-maximo': rmPesoMaximo,

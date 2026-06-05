@@ -1,0 +1,123 @@
+{
+  "slug": "sales-tax-calculator",
+  "title": "Sales Tax Calculator 2026 — Add or Reverse Tax | Hacé Cuentas",
+  "h1": "Sales Tax Calculator",
+  "description": "Free sales tax calculator. Add sales tax to a price or back the tax out of a tax-inclusive total. Enter amount and rate to get tax, subtotal, and total instantly.",
+  "category": "finanzas",
+  "audience": "global",
+  "icon": "🧾",
+  "formulaId": "sales-tax-calculator",
+  "intro": "Sales tax in the United States is set at the **state and local level**, so the rate on the same purchase can swing from **0%** (Delaware, Oregon, Montana, New Hampshire) to over **10%** in parts of Louisiana, Tennessee, and California. This calculator works both ways: enter a pre-tax price to **add** tax, or enter a receipt total to **reverse-engineer** the tax already baked in.",
+  "keyTakeaway": "A $100 purchase at an 8.25% rate costs $108.25 ($8.25 tax). Working backward, a $108.25 tax-inclusive total at 8.25% means $100.00 pre-tax and $8.25 tax.",
+  "useCases": [
+    "Adding state and local sales tax to a price before checkout",
+    "Reverse-calculating the tax already included in a receipt total",
+    "Comparing the out-the-door cost of a purchase across states with different rates",
+    "Separating pre-tax revenue from collected tax for bookkeeping",
+    "Estimating tax on a big-ticket item (appliance, furniture, electronics)",
+    "Checking whether a quoted 'tax included' price matches the advertised rate"
+  ],
+  "fields": [
+    {
+      "id": "amount",
+      "label": "Amount",
+      "type": "number",
+      "placeholder": "100.00",
+      "default": 100,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "tax_rate",
+      "label": "Sales Tax Rate (%)",
+      "type": "number",
+      "placeholder": "8.25",
+      "default": 8.25,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "mode",
+      "label": "Calculation",
+      "type": "select",
+      "options": [
+        { "value": "add", "label": "Add tax to a pre-tax amount" },
+        { "value": "extract", "label": "Reverse: back tax out of a tax-inclusive total" }
+      ],
+      "default": "add",
+      "required": true
+    }
+  ],
+  "outputs": [
+    { "id": "tax_amount", "label": "Sales Tax", "primary": true, "format": "currency", "suffix": "USD" },
+    { "id": "total", "label": "Total (with tax)", "primary": false, "format": "currency", "suffix": "USD" },
+    { "id": "net", "label": "Pre-tax Subtotal", "primary": false, "format": "currency", "suffix": "USD" },
+    { "id": "effective_rate", "label": "Rate Applied", "primary": false, "format": "text" }
+  ],
+  "explanation": "## What is a sales tax calculator?\n\nA sales tax calculator computes the tax owed on a purchase from a price and a tax rate. It runs in two directions: **forward** (add tax to a pre-tax price to get the total) or **reverse** (extract the tax portion from a tax-inclusive total). In the US, sales tax is a combined **state + county + city + special-district** rate, which is why two stores a few miles apart can charge different amounts.\n\n## How It Works\n\nYou provide an **amount** and a **rate**, then choose whether the amount is pre-tax (add mode) or tax-inclusive (reverse mode). In add mode the tax is a simple percentage of the price. In reverse mode the calculator divides the total by `1 + rate` to recover the original pre-tax price, then takes the difference as tax.\n\n## Formula\n\n```\nr = rate / 100\n\n// Add mode (amount is pre-tax)\ntax   = amount * r\ntotal = amount + tax\nnet   = amount\n\n// Reverse mode (amount is tax-inclusive total)\nnet   = amount / (1 + r)\ntax   = amount - net\ntotal = amount\n```\n\n## Worked Example\n\n**Add mode:** $100.00 at 8.25%.\n\n| Step | Value |\n|---|---|\n| Rate as decimal | 0.0825 |\n| Tax = 100 × 0.0825 | **$8.25** |\n| Total = 100 + 8.25 | **$108.25** |\n\n**Reverse mode:** a receipt total of $108.25 at 8.25%.\n\n| Step | Value |\n|---|---|\n| Pre-tax = 108.25 ÷ 1.0825 | **$100.00** |\n| Tax = 108.25 − 100.00 | **$8.25** |\n\n## Example Combined Rates (2026)\n\n| State | Typical combined rate |\n|---|---|\n| Oregon, Delaware, Montana, New Hampshire | 0% (no state sales tax) |\n| California | 7.25%–10.75% |\n| Texas | 6.25%–8.25% |\n| New York | 4%–8.875% |\n| Louisiana | up to ~11.45% |\n\n## Limitations\n\n- US sales tax rates combine state, county, city, and special-district levies; always confirm the exact rate for the delivery or store ZIP code.\n- Some categories (groceries, prescription drugs, clothing in certain states) are tax-exempt or taxed at a reduced rate — this calculator applies a single flat rate.\n- This tool is for US-style sales tax. For VAT/GST (a tax applied at each production stage), use a dedicated VAT calculator.\n- Rates change; verify against your state's Department of Revenue before filing or pricing.",
+  "faq": [
+    {
+      "q": "How do I calculate sales tax on a price?",
+      "a": "Multiply the pre-tax price by the tax rate expressed as a decimal. For an 8.25% rate, multiply by 0.0825. Example: $100 × 0.0825 = $8.25 tax, for a total of $108.25. This calculator does it automatically in 'add' mode."
+    },
+    {
+      "q": "How do I reverse sales tax out of a total?",
+      "a": "Divide the tax-inclusive total by (1 + rate). For a $108.25 total at 8.25%: $108.25 ÷ 1.0825 = $100.00 pre-tax, so the tax was $8.25. Use the 'reverse' mode to do this automatically — it's the correct method (subtracting 8.25% from the total would be wrong)."
+    },
+    {
+      "q": "Which US states have no sales tax?",
+      "a": "Five states have no statewide sales tax: Oregon, Delaware, Montana, New Hampshire, and Alaska (though Alaska allows local sales taxes). In these states, the listed price is the price you pay, aside from any local levies."
+    },
+    {
+      "q": "What is the difference between sales tax and VAT?",
+      "a": "Sales tax (US) is charged once, at the final retail sale, and is added on top of the price. VAT/GST (most of the world) is collected at each stage of production and is usually already included in the displayed price. The math differs — use a VAT calculator for value-added tax."
+    },
+    {
+      "q": "Is sales tax based on where I buy or where I live?",
+      "a": "Generally it's based on the point of sale or the delivery destination (destination-based sourcing) for most states. For online purchases, the rate is typically the buyer's shipping address. Origin-based states (like Texas for in-state sellers) use the seller's location."
+    },
+    {
+      "q": "Why is the combined rate higher than the state rate?",
+      "a": "Most states let counties, cities, and special districts add their own local sales taxes on top of the state rate. So a 6.25% state rate can become 8.25% or more once city and county taxes are layered in. Always check the combined rate for the specific location."
+    },
+    {
+      "q": "Are groceries and medicine taxed?",
+      "a": "It varies by state. Many states exempt groceries and prescription drugs entirely or tax them at a reduced rate. Some tax prepared food differently from raw groceries. This calculator applies one flat rate, so adjust the rate if your category is exempt or reduced."
+    },
+    {
+      "q": "Do I charge sales tax as a small business?",
+      "a": "If you have nexus (a physical or economic presence) in a state that levies sales tax and sell taxable goods or services there, you generally must collect and remit it. Economic nexus thresholds (e.g., $100,000 in sales) apply to remote sellers after the 2018 Wayfair ruling. Consult your state's Department of Revenue."
+    },
+    {
+      "q": "Does this calculator include local and city taxes?",
+      "a": "It applies whatever single rate you enter. To include local and city taxes, enter the full combined rate for the location (state + county + city + district). You can look this up by ZIP code on your state's revenue website or a rate-lookup tool."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Tax Foundation — State and Local Sales Tax Rates 2026",
+      "url": "https://taxfoundation.org/data/all/state/2024-sales-taxes/",
+      "publisher": "Tax Foundation",
+      "date": "2026"
+    },
+    {
+      "name": "South Dakota v. Wayfair, Inc. (economic nexus)",
+      "url": "https://www.supremecourt.gov/opinions/17pdf/17-494_j4el.pdf",
+      "publisher": "U.S. Supreme Court",
+      "date": "2018"
+    },
+    {
+      "name": "Streamlined Sales Tax Governing Board — Rate and Boundary Databases",
+      "url": "https://www.streamlinedsalestax.org/",
+      "publisher": "Streamlined Sales Tax Governing Board",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-06-05",
+    "updateType": "manual",
+    "notes": "Example combined state rates reviewed annually against Tax Foundation data. The calculator itself is rate-agnostic — the user enters the current combined rate for their location."
+  },
+  "lastReviewed": "2026-06-05"
+}
