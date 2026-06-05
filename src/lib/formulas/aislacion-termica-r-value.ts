@@ -12,7 +12,7 @@ export function aislacionTermicaRValue(i: Inputs): Outputs {
   const zona = String(i.zona || 'IIIb'); const elem = String(i.elemento || 'muro');
   const zd = R_VALUES[zona]; if (!zd) throw new Error('Zona no encontrada');
   const r = zd[elem] || 1.6;
-  const espEps = r / 0.025 * 1; // EPS: k=0.035, R=e/k -> e=R*0.035*100 cm
+  // EPS (poliestireno expandido): conductividad k=0.035 W/m·K → e=R×k×100 cm
   const espLana = r * 0.04 * 100;
   const reco = elem === 'ventana' ? 'Usá DVH (doble vidriado hermético) para alcanzar el R-value mínimo.' :
     r >= 2 ? 'Zona fría: necesitás aislación doble o material de alta performance.' :

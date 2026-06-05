@@ -1,19 +1,24 @@
 {
   "slug": "trail-running-desnivel-ritmo-ajustado",
   "esSlug": "calculadora-trail-running-desnivel-ritmo-ajustado",
-  "title": "Calculadora Trail Running Desnível 2026 | Hacé Cuentas",
-  "h1": "Ajuste de ritmo por desnível em trail running",
-  "description": "🏃 Calcule o tempo ajustado e ritmo efetivo em trail running por desnível. Fórmula para correr em montanha com precisão.",
+  "lastReviewed": "2026-06-04",
+  "title": "Calculadora trail running com desnível: tempo e ritmo ajustado + tabela | Hacé Cuentas",
+  "h1": "Calculadora trail running com desnível: tempo e ritmo ajustado",
+  "description": "Calcule o tempo estimado e ritmo efetivo em trail running com desnível pela Regra de Naismith: cada 100 m de ganho = 1 km extra. Gratuito e instantâneo.",
   "category": "deportes",
+  "audience": "global",
   "icon": "⛰️",
   "formulaId": "trail-running-desnivel-ritmo-ajustado",
-  "intro": "A calculadora de ajuste de ritmo por desnível em trail running transforma seu pace base (min/km) em um ritmo efetivo que leva em conta o esforço real exigido pelas subidas. Diferente do asfalto, no trail cada metro de desnível positivo custa energia extra: regra prática consagrada é que **cada 100 m de desnível positivo equivalem a aproximadamente 1 km adicional** de distância plana. Assim, uma prova de 20 km com +1000 m de desnível exige esforço equivalente a 30 km planos. Usada por atletas amadores e competidores de provas como UTMB, Ultra Floripa e Supertrail Cipó, esta ferramenta entrega o tempo estimado de conclusão e o ritmo efetivo por km real percorrido, permitindo planejamento de pace, nutrição e estratégia de prova.",
-  "keyTakeaway": "**Distância equivalente = Distância real (km) + Desnível positivo (m) ÷ 100 → Tempo ajustado = Distância equivalente × Pace base (min/km).** Exemplo: 20 km + 1000 m ÷ 100 = 30 km equivalentes × 6 min/km = **180 min (3h00)** — com ritmo efetivo de **9:00 min/km** sobre os 20 km reais.",
+  "answerSnippet": "Regra de Naismith: cada 100 m de desnível positivo equivalem a 1 km adicional de distância plana equivalente. Para calcular o tempo ajustado em trail running: Distância equivalente (km) = Distância real + Desnível (m) ÷ 100 → Tempo ajustado = Distância equivalente × Ritmo base. Exemplo: 20 km + 1.000 m de desnível a ritmo 6:00/km → 30 km equivalentes × 6 min = 3h00 com ritmo efetivo de 9:00/km.",
+  "intro": "A calculadora de trail running com desnível aplica a **Regra de Naismith** (1892), o padrão universal em planejamento de corridas de montanha: **cada 100 m de desnível positivo equivalem a 1 km adicional de distância plana** em termos de tempo e esforço. Uma prova de 20 km com +1.000 m de desnível exige o mesmo esforço de correr 30 km em terreno plano. Insira a distância real, o desnível acumulado e seu ritmo base em asfalto para obter o tempo estimado de chegada e o ritmo efetivo que aparecerá no GPS ao terminar.",
+  "keyTakeaway": "**Tempo ajustado = (Distância_km + Desnível_m ÷ 100) × Ritmo_base_min/km** — Exemplo: 20 km + 1.000 m a ritmo 6:00/km → 30 km equiv. × 6 = 180 min = **3h00**; ritmo efetivo **9:00 min/km**.",
   "useCases": [
-    "Planejar estratégia de pace em provas de trail como Ultra Floripa (55 km / +3200 m), evitando largar rápido demais e 'explodir' nas subidas.",
-    "Comparar desempenho entre dois treinos de trail com perfis diferentes — por exemplo, 15 km / +800 m vs. 18 km / +300 m — identificando qual gerou maior carga real.",
-    "Estimar tempo de conclusão para solicitar vaga de acompanhamento de equipe de apoio (crew) em ultramaratonas com pontos fixos de abastecimento.",
-    "Calcular o pace de treino adequado em dias de subida para manter zona de frequência cardíaca alvo, sem se basear apenas no cronômetro ou no GPS."
+    "Planejar o tempo estimado de chegada em uma corrida de trail de 30 km com 1.500 m de desnível antes de se inscrever.",
+    "Ajustar intervalos de treino em serras quando o GPS mostra um ritmo distorcido pela inclinação.",
+    "Comparar o esforço real de duas rotas: 18 km planos versus 14 km com 900 m de desnível (a rota de montanha equivale a 5 km a mais de esforço).",
+    "Calcular o ritmo efetivo para manter zonas de frequência cardíaca alvo em treinos de fundo na montanha.",
+    "Estimar se um atleta amador consegue terminar uma ultratrail dentro do tempo limite oficial usando seu ritmo de treino conhecido.",
+    "Planejar estratégia de nutrição em corrida com base no tempo total ajustado (consumir 30–60 g de carboidratos por hora de esforço)."
   ],
   "fields": [
     {
@@ -23,7 +28,7 @@
       "required": true,
       "placeholder": "20",
       "default": 20,
-      "step": 0.01,
+      "step": 0.1,
       "help": "Distância total do percurso em quilômetros."
     },
     {
@@ -33,8 +38,8 @@
       "required": true,
       "placeholder": "1000",
       "default": 1000,
-      "step": 0.01,
-      "help": "Ganho total de elevação em metros."
+      "step": 10,
+      "help": "Ganho total de elevação acumulado (D+) em metros — soma de todas as subidas, não a diferença entre o ponto mais alto e mais baixo."
     },
     {
       "id": "paceBaseKm",
@@ -43,8 +48,8 @@
       "required": true,
       "placeholder": "6",
       "default": 6,
-      "step": 0.01,
-      "help": "Seu ritmo em minutos por quilômetro em terreno plano."
+      "step": 0.1,
+      "help": "Seu ritmo habitual em terreno plano, em minutos por quilômetro."
     }
   ],
   "outputs": [
@@ -63,79 +68,83 @@
     }
   ],
   "example": {
-    "title": "Exemplo de cálculo",
+    "title": "Exemplo: 20 km com +1.000 m a ritmo 6:00/km",
     "steps": [
-      "20 km +1000m ritmo 6 min/km",
-      "~2:40"
+      "Distância equivalente: 20 + (1.000 ÷ 100) = 30 km",
+      "Tempo ajustado: 30 × 6:00 = 180 min = 3:00 h",
+      "Ritmo efetivo: 180 ÷ 20 km = 9:00 min/km"
     ],
-    "result": "Ritmo 8:00/km efetivo"
+    "result": "Tempo: 3h00 · Ritmo efetivo: 9:00 min/km"
   },
-  "explanation": "## Como se calcula\n\nO método mais utilizado no trail running mundial é a **regra de Naismith** (1892), refinada posteriormente pelo modelo de **distância equivalente**:\n\n```\nDistância Equivalente (km) = Distância Real (km) + (Desnível Positivo (m) ÷ 100)\n\nTempo Ajustado (min) = Distância Equivalente (km) × Pace Base (min/km)\n\nRitmo Efetivo (min/km) = Tempo Ajustado (min) ÷ Distância Real (km)\n```\n\n> **Premissa:** cada 100 m de ganho de altitude equivalem a 1 km de esforço adicional em terreno plano — proporção validada por estudos de fisiologia do exercício e amplamente adotada por sistemas de cálculo de provas como o ITRA (International Trail Running Association) em seu índice de esforço.\n\n---\n\n## Tabela de referência\n\n| Distância real | Desnível positivo | Distância equivalente | Pace base | Tempo ajustado | Ritmo efetivo |\n|---|---|---|---|---|---|\n| 10 km | +300 m | 13 km | 6:00 min/km | 1h18 | 7:48 min/km |\n| 20 km | +1000 m | 30 km | 6:00 min/km | 3h00 | 9:00 min/km |\n| 42 km | +2000 m | 62 km | 7:00 min/km | 7h14 | 10:19 min/km |\n| 55 km | +3200 m | 87 km | 7:30 min/km | 10h52 | 11:51 min/km |\n| 100 km | +6000 m | 160 km | 9:00 min/km | 24h00 | 14:24 min/km |\n\n*Valores aproximados. Desnível negativo acentuado (>15% de inclinação) também pode ser adicionado a ~50% da taxa do positivo para maior precisão.*\n\n---\n\n## Casos típicos\n\n### Caso 1 — Prova de montanha regional (20 km / +1000 m / pace 6:00 min/km)\n- Distância equivalente: 20 + (1000 ÷ 100) = **30 km**\n- Tempo ajustado: 30 × 6:00 = **180 min → 3h00**\n- Ritmo efetivo: 180 ÷ 20 = **9:00 min/km**\n- Conclusão: O atleta que corre plano em 6:00 min/km deve esperar chegar em ~3h00 e ver no GPS um pace médio de 9:00 min/km — perfeitamente normal.\n\n### Caso 2 — Treino de subida curto (8 km / +500 m / pace 5:30 min/km)\n- Distância equivalente: 8 + (500 ÷ 100) = **13 km**\n- Tempo ajustado: 13 × 5:30 = **71,5 min → ~1h11**\n- Ritmo efetivo: 71,5 ÷ 8 = **8:56 min/km**\n- Conclusão: Um treino de 8 km aparentemente \"curto\" com 500 m de desnível equivale a um longão de 13 km planos.\n\n### Caso 3 — Ultra (100 km / +6000 m / pace 9:00 min/km)\n- Distância equivalente: 100 + (6000 ÷ 100) = **160 km**\n- Tempo ajustado: 160 × 9:00 = **1440 min → 24h00**\n- Ritmo efetivo: 1440 ÷ 100 = **14:24 min/km**\n- Conclusão: Provas como a Ultra Serra Gaúcha (100 km / ~6000 m D+) com pace de 9 min/km em plano exigem aproximadamente 24 horas — o que justifica o limite de tempo estendido dessas provas.\n\n---\n\n## Erros comuns\n\n1. **Ignorar o desnível e usar apenas o pace de asfalto:** Atletas que treinam a 5:00 min/km no plano e assumem o mesmo ritmo no trail chegam exaustos ou fora do tempo limite. O esforço cardiovascular sobe drasticamente nas rampas de 15–25%.\n\n2. **Não considerar o desnível negativo:** Descidas longas e íngremes (>10% de inclinação) também custam energia muscular (trabalho excêntrico de quadríceps). Para percursos com muito desnível negativo, adicione ~50 m de negativo a cada 100 m como custo adicional para maior precisão.\n\n3. **Usar pace de corrida em trechos de caminhada técnica:** Em inclinações acima de 20–25%, a maioria dos corredores caminha. O pace de referência deve ser ajustado para caminhada (~12–15 min/km) nesses trechos, não o pace de corrida.\n\n4. **Desconsiderar altitude elevada:** Acima de 2500 m, o VO₂máx cai ~3% por cada 300 m adicionais. Provas em altitudes como as da Serra da Mantiqueira (2700 m+) ou Andes exigem multiplicador adicional de 5–15% no tempo estimado.\n\n5. **Confundir desnível acumulado com desnível máximo:** O campo relevante é sempre o **desnível positivo acumulado** (soma de todas as subidas), não a diferença entre o ponto mais alto e mais baixo do percurso.\n\n---\n\n## Calculadoras relacionadas\n\nNenhuma calculadora relacionada configurada para este tema no momento. Explore outras ferramentas esportivas em [Hacé Cuentas](/).",
+  "explanation": "## Como se calcula\n\nO método mais utilizado no trail running mundial é a **Regra de Naismith** (W. W. Naismith, 1892), padrão universal em montanhismo e corrida de trilha:\n\n> **100 m de desnível positivo = 1 km adicional de distância equivalente plana**\n\n```\nDistância equivalente (km) = Distância real (km) + (Desnível positivo (m) ÷ 100)\n\nTempo ajustado (min) = Distância equivalente (km) × Ritmo base (min/km)\n\nRitmo efetivo (min/km) = Tempo ajustado (min) ÷ Distância real (km)\n```\n\n**Exemplo completo:**\n```\nDistância real    = 20 km\nDesnível positivo = 1.000 m\nRitmo base        = 6:00 min/km\n\nDistância equivalente = 20 + (1.000 ÷ 100) = 30 km\nTempo ajustado        = 30 × 6:00 = 180 min = 3h00\nRitmo efetivo         = 180 ÷ 20 = 9:00 min/km\n```\n\n---\n\n## Tabela de referência: desnível → distância extra e tempo\n\n| Desnível positivo | Distância equiv. extra | Tempo extra a 6:00/km | Tempo extra a 8:00/km |\n|---|---|---|---|\n| 200 m | +2 km | +12 min | +16 min |\n| 500 m | +5 km | +30 min | +40 min |\n| 1.000 m | +10 km | +60 min | +80 min |\n| 1.500 m | +15 km | +90 min | +120 min |\n| 2.000 m | +20 km | +120 min | +160 min |\n| 3.000 m | +30 km | +180 min | +240 min |\n\n## Tabela de tempos típicos em provas de trail\n\n| Distância real | Desnível+ | Distância equiv. | Ritmo base | Tempo estimado | Ritmo efetivo |\n|---|---|---|---|---|---|\n| 10 km | 300 m | 13 km | 7:00/km | 1h31 | 9:06/km |\n| 21 km | 800 m | 29 km | 6:30/km | 3h09 | 8:59/km |\n| 30 km | 1.500 m | 45 km | 6:00/km | 4h30 | 9:00/km |\n| 42 km | 2.200 m | 64 km | 5:30/km | 5h52 | 8:23/km |\n| 55 km | 3.200 m | 87 km | 7:30/km | 10h52 | 11:51/km |\n| 100 km | 6.000 m | 160 km | 9:00/km | 24h00 | 14:24/km |\n\n---\n\n## Classificação de provas de trail por desnível (referência ITRA)\n\n| Categoria | Distância típica | Desnível+ típico |\n|---|---|---|\n| Trail curto (XS) | 10–20 km | 300–700 m |\n| Trail médio (S) | 20–40 km | 700–2.000 m |\n| Trail longo (M) | 40–60 km | 2.000–4.000 m |\n| Ultra trail (L/XL) | 60–100+ km | 4.000–9.000 m |\n\n---\n\n## Casos de uso detalhados\n\n### Caso 1 — Prova de montanha regional (20 km / +1.000 m / ritmo 6:00/km)\n- Distância equivalente: 20 + (1.000 ÷ 100) = **30 km**\n- Tempo ajustado: 30 × 6:00 = **180 min → 3h00**\n- Ritmo efetivo: 180 ÷ 20 = **9:00 min/km**\n- Conclusão: O atleta que corre 6:00/km no plano deve esperar chegar em ~3h00 e ver no GPS um pace médio de 9:00/km — completamente normal.\n\n### Caso 2 — Treino de subida curto (8 km / +500 m / ritmo 5:30/km)\n- Distância equivalente: 8 + (500 ÷ 100) = **13 km**\n- Tempo ajustado: 13 × 5:30 = **71,5 min → ~1h11**\n- Ritmo efetivo: 71,5 ÷ 8 = **8:56 min/km**\n- Conclusão: Um treino aparentemente \"curto\" de 8 km com 500 m de desnível equivale a um longão de 13 km planos.\n\n### Caso 3 — Ultra trail (100 km / +6.000 m / ritmo 9:00/km)\n- Distância equivalente: 100 + (6.000 ÷ 100) = **160 km**\n- Tempo ajustado: 160 × 9:00 = **1.440 min → 24h00**\n- Ritmo efetivo: 1.440 ÷ 100 = **14:24 min/km**\n- Conclusão: Provas como a Ultra Serra Gaúcha (100 km / ~6.000 m D+) com ritmo de 9 min/km em plano exigem aproximadamente 24 horas.\n\n---\n\n## Erros comuns\n\n1. **Confundir desnível acumulado com altitude máxima:** o D+ é a soma de todas as subidas, não a diferença entre o ponto mais alto e mais baixo.\n2. **Usar o ritmo de asfalto sem ajuste:** em trilhas técnicas com raízes ou pedras, o ritmo base real costuma ser 15–30% mais lento.\n3. **Ignorar o desnível negativo em descidas técnicas:** descidas íngremes (>15% de inclinação) também custam energia; o modelo de Scarf adiciona ~1 min por cada 150 m de descida técnica.\n4. **Não ajustar para altitude elevada:** acima de 2.500 m, o VO₂máx cai ~7–10% por cada 1.000 m adicional; adicione ao menos 30 seg/km por cada 1.000 m acima de 2.500 m.\n5. **Aplicar o mesmo ritmo de corrida curta em ultras:** para distâncias acima de 40 km, use seu ritmo de zona 2 (60–70% FC máx), que é 60–90 seg/km mais lento.",
   "faq": [
     {
-      "q": "O que é desnível positivo acumulado e por que ele importa mais que a altitude máxima?",
-      "a": "Desnível positivo acumulado é a soma de todos os metros ganhos em altitude ao longo do percurso (subidas totais). Uma prova que começa e termina no mesmo ponto pode ter +3000 m D+ mesmo sem atingir grandes altitudes. A altitude máxima por si só não determina o esforço — é o acumulado de subidas que esgota músculos e reservas de glicogênio."
+      "q": "O que é a Regra de Naismith e por que é o padrão no trail running?",
+      "a": "A Regra de Naismith foi formulada pelo alpinista escocês W. W. Naismith em 1892: cada 100 m de desnível positivo equivalem a 1 km adicional de distância plana em tempo e esforço. É o padrão mais usado no trail running porque é simples, verificável e suficientemente preciso para inclinações moderadas (até ~25%). A ITRA (International Trail Running Association) baseia seus índices de dificuldade em equivalências similares."
     },
     {
-      "q": "A regra dos 100 m = 1 km é válida para qualquer atleta?",
-      "a": "É uma média amplamente utilizada pelo ITRA (International Trail Running Association) e pelos sistemas de pontuação de provas mundiais. Atletas mais lentos (pace >8 min/km) tendem a caminhar subidas, o que aproxima ainda mais os valores. Atletas muito rápidos (pace <5 min/km) podem sentir custo ligeiramente maior. A regra tem margem de ±10% dependendo da inclinação média das rampas."
+      "q": "Qual a diferença entre desnível acumulado (D+) e altitude máxima?",
+      "a": "O desnível positivo acumulado (D+) é a soma de todos os metros ganhos em altitude ao longo do percurso. A altitude máxima é simplesmente a diferença entre o ponto mais alto e o mais baixo. Uma rota que sobe 500 m, desce 300 m e sobe 400 m tem D+ de 900 m, mas desnível líquido de apenas 600 m. No trail running, sempre use o D+ para calcular o esforço real."
     },
     {
-      "q": "Como o tempo limite de provas de trail é calculado?",
-      "a": "Organizações como UTMB e provas brasileiras credenciadas no ITRA definem o tempo limite com base na distância equivalente multiplicada por um pace de referência (geralmente 15–20 min/km efetivo). Por exemplo, uma prova de 42 km / +2500 m tem distância equivalente de ~67 km; com pace de 15 min/km, o tempo limite seria ~16h45. Cada prova pode ajustar esse fator conforme dificuldade técnica do terreno."
+      "q": "O desnível negativo (descidas) também adiciona tempo?",
+      "a": "Em terreno técnico de descida, sim. O modelo de Scarf (1998) adiciona ~1 minuto por cada 150 m de desnível negativo em inclinações íngremes e solo instável. A Regra de Naismith clássica ignora as descidas, assumindo que são rápidas — válido em trilhas limpas, mas não em descidas com pedras, raízes ou neve. Para rotas muito técnicas, corredores experientes adicionam 10–20% de margem ao tempo calculado."
     },
     {
-      "q": "Qual é o impacto da altitude acima de 2500 m no ritmo?",
-      "a": "A pressão parcial de oxigênio cai progressivamente com a altitude. Estudos de fisiologia do exercício indicam redução de ~3% no VO₂máx por cada 300 m acima de 1500 m. Em 3000 m de altitude, atletas não aclimatados podem ter queda de 10–15% na capacidade aeróbica, exigindo pace 1–2 min/km mais lento que o habitual, independente do desnível do percurso."
+      "q": "Quantos metros de desnível por quilômetro são considerados exigentes?",
+      "a": "Referência geral: até 30 m/km é terreno suave ou ondulado; 30–60 m/km é moderado; 60–100 m/km é exigente; mais de 100 m/km (ex.: 1.000 m em 10 km) é terreno alpino ou de alta montanha. Uma prova de 20 km com +1.000 m tem 50 m/km — classificada como moderada-exigente."
     },
     {
-      "q": "Devo ajustar o cálculo para desnível negativo também?",
-      "a": "Sim, para percursos com grande desnível negativo (>1000 m D-), especialmente em descidas íngremes (>20% de inclinação), é recomendável adicionar cerca de 50% do D- negativo como custo adicional. Exemplo: 1000 m de descida íngreme ≈ 0,5 km extra equivalente. Isso é opcional e mais relevante para ultramaratonas onde a fadiga muscular excêntrica é fator limitante."
+      "q": "Como a altitude acima do nível do mar afeta o ritmo ajustado?",
+      "a": "Acima de 2.500 m, o VO₂máx diminui ~7–10% por cada 1.000 m adicional, segundo o ACSM (American College of Sports Medicine). Isso se traduz em um ritmo entre 20 e 45 seg/km mais lento para o mesmo esforço percebido. Esta calculadora não inclui ajuste de altitude; para corridas acima de 2.500 m, adicione manualmente ao menos 30 seg/km por cada 1.000 m acima desse patamar."
     },
     {
-      "q": "Como usar este cálculo para definir zonas de treino no trail?",
-      "a": "Converta o treino planejado em distância equivalente e use esse valor para calcular o volume real de carga. Um treino de 12 km / +800 m equivale a 20 km planos — e deve ser tratado como tal no plano de periodização. Para frequência cardíaca alvo, ignore o pace no GPS em subidas e monitore a FC diretamente, mantendo-a na zona 2 (60–70% FCmáx) para treinos regenerativos."
+      "q": "Que ritmo base devo inserir se misturo tramos de corrida e caminhada?",
+      "a": "Insira um ritmo médio ponderado: (% correndo × ritmo corrida) + (% caminhando × ritmo caminhada). Exemplo: corre 60% a 6:00/km e caminha 40% a 12:00/km → (0,6 × 6) + (0,4 × 12) = 3,6 + 4,8 = 8:24 min/km. Use esse valor como ritmo base."
     },
     {
-      "q": "Qual a diferença entre o índice ITRA e esta calculadora?",
-      "a": "O ITRA (International Trail Running Association) usa um índice de esforço próprio que combina distância equivalente com dificuldade técnica do terreno (rocha, trilha, altitude). A fórmula desta calculadora usa exclusivamente o modelo distância + desnível/100, que é o núcleo do índice ITRA sem os fatores técnicos adicionais. Para planejamento de pace, a fórmula simplificada é suficiente e amplamente usada por treinadores brasileiros."
+      "q": "A fórmula é confiável para prever tempos de chegada em provas oficiais?",
+      "a": "A Regra de Naismith fornece uma estimativa base confiável, mas os tempos reais dependem também da tecnicidade do terreno, clima, altitude e fadiga acumulada. A margem de erro típica é ±10–15%. Para uma estimativa conservadora em sua primeira trail, adicione 15% ao tempo calculado. Os limites de tempo em provas credenciadas pela ITRA costumam ser 1,5 a 2 vezes o tempo do vencedor."
     },
     {
-      "q": "Como converter o resultado em estratégia de alimentação na prova?",
-      "a": "Regra geral de nutrição esportiva: consuma 30–60 g de carboidratos por hora de esforço (até 8h) ou 60–90 g/h em esforços acima de 2,5h com treino intestinal. Com o tempo ajustado calculado, divida por postos de abastecimento para estimar janelas de ingestão. Exemplo: prova de 3h00 → ~90–180 g de carboidratos totais, distribuídos a cada 30–45 min."
+      "q": "Como usar o tempo ajustado para planejar a nutrição em prova?",
+      "a": "Regra geral de nutrição esportiva: consuma 30–60 g de carboidratos por hora de esforço (ou 60–90 g/h para esforços acima de 2,5h com intestino treinado). Com o tempo calculado, divida pelo número de postos de abastecimento para estimar as janelas de ingestão. Exemplo: prova de 3h00 com 3 postos → ~30–60 g a cada 60 min = 90–180 g totais."
+    },
+    {
+      "q": "Qual é a diferença entre a Regra de Naismith e outros modelos de ajuste por desnível?",
+      "a": "Naismith (1892): 100 m D+ = 1 km equivalente (mais usado no trail). Scarf (1998): adiciona correções para inclinações >25% e descidas técnicas. Tobler (1993): fórmula exponencial para velocidade de caminhada em função da inclinação, usada em análise GIS. Para planejamento prático de provas, a Regra de Naismith fornece resultados confiáveis com menos de 15% de erro em terrenos de inclinação moderada."
     }
-  ],
-  "seoKeywords": [
-    "trail running desnível",
-    "calculadora trail running",
-    "ajuste ritmo desnível",
-    "ganho elevação trail",
-    "tempo trail running",
-    "calcular ritmo montanha",
-    "pace trail running",
-    "corrida trilha desnível",
-    "formula trail running",
-    "treino trail desnível",
-    "elevação trail running",
-    "ritmo efetivo trilha"
   ],
   "sources": [
     {
-      "name": "ITRA – International Trail Running Association: Índice de Esforço e Distância Equivalente",
+      "name": "ITRA — International Trail Running Association: Índice de Esforço e Distância Equivalente",
       "url": "https://itra.run/page/mountainIndex.html"
     },
     {
-      "name": "Wikipedia PT – Regra de Naismith (fórmula base de cálculo de tempo em montanha)",
+      "name": "Regra de Naismith — Wikipedia (formulação original de 1892 e aplicações modernas)",
       "url": "https://pt.wikipedia.org/wiki/Regra_de_Naismith"
+    },
+    {
+      "name": "American College of Sports Medicine (ACSM) — Diretrizes para Exercício em Altitude",
+      "url": "https://www.acsm.org/education-resources/books/acsms-guidelines-for-exercise-testing-and-prescription"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-20",
     "updateType": "manual",
-    "notes": "Fórmula fixa, não requer atualização de dados externos"
+    "notes": "Fórmula fixa (Regra de Naismith) — não requer atualização de dados externos"
   },
   "audience": "global",
   "relatedSlugs": [],
-  "noindex": false
+  "noindex": false,
+  "seoKeywords": [
+    "calculadora trail running desnível",
+    "tempo trail running com desnível",
+    "regra naismith trail running",
+    "ritmo ajustado desnível",
+    "pace efetivo trail running",
+    "calculadora pace trail running",
+    "ganho elevação trail running"
+  ]
 }

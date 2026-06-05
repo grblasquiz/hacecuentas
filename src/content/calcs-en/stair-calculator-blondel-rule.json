@@ -1,17 +1,18 @@
 {
   "slug": "stair-calculator-blondel-rule",
   "esSlug": "calculadora-escalera-huella-contrahuella-ley-blondel",
-  "title": "Stair Calculator — Blondel Rule 2026 | Hacé Cuentas",
-  "h1": "Stairs — Blondel's Rule",
-  "description": "Calculate optimal stair dimensions using Blondel's Rule (62-64 cm). Find perfect tread and riser measurements free.",
+  "title": "Stair Calculator: Blondel Rule + Riser & Tread Table | Hacé Cuentas",
+  "h1": "Stair Calculator — Blondel's Rule (2R + T = 63–65 cm)",
+  "description": "Calculate stair riser height and tread depth using Blondel's Rule (2R + T = 63–65 cm). Get step count, tread, and riser instantly — with reference table and code compliance check.",
   "category": "construccion",
   "icon": "🪜",
   "formulaId": "escalera-huella-contrahuella-ley-blondel",
   "audience": "global",
+  "answerSnippet": "Blondel's Rule states that a comfortable staircase must satisfy: **2R + T = 63–65 cm**, where R is the riser height (vertical) and T is the tread depth (horizontal). The ideal residential combination is R = 17 cm and T = 30 cm, giving 2(17) + 30 = 64 cm. Risers should be 15–19 cm and treads 25–35 cm per IRC R311.7.",
   "intro": "Blondel's Rule is the foundational ergonomic formula for designing comfortable and safe staircases. It determines the ideal relationship between **tread depth (T)** and **riser height (R)** based on average human stride: **2R + T = 63–65 cm** (24.8–25.6 in). Enter your total floor-to-floor height and available horizontal run, and this calculator instantly outputs the number of steps, riser height, and tread depth — telling you whether the staircase meets Blondel's comfort zone, building code minimums, or is dangerously steep.",
-  "keyTakeaway": "**Blondel's Rule: 2R + T = 63–65 cm.** A staircase with R = 17 cm and T = 29 cm gives 2(17)+29 = 63 ✓. Riser must stay between 15–19 cm; tread between 25–35 cm per IRC R311.7.",
+  "keyTakeaway": "**Blondel's Rule: 2R + T = 63–65 cm.** A staircase with R = 17 cm and T = 30 cm gives 2(17)+30 = 64 ✓. Riser must stay between 15–19 cm; tread between 25–35 cm per IRC R311.7.",
   "useCases": [
-    "Designing a residential staircase from scratch: given a 280 cm floor-to-floor height and 300 cm horizontal run, find the step count and dimensions that satisfy Blondel + IRC code.",
+    "Designing a residential staircase from scratch: given a 280 cm floor-to-floor height and 350 cm horizontal run, find the step count and dimensions that satisfy Blondel + IRC code.",
     "Checking an existing staircase for code compliance before a home sale or renovation permit — input measured total rise and run to see if 2R+T falls in the 63–65 cm comfort band.",
     "Planning a deck or outdoor stair addition where the grade change is fixed (e.g., 120 cm drop over 180 cm horizontal) and you need to know if a compliant stair fits the space.",
     "Comparing two staircase layout options (steeper with fewer steps vs. shallower with more steps) to find which configuration meets both Blondel's ergonomic rule and minimum headroom clearance."
@@ -19,22 +20,23 @@
   "fields": [
     {
       "id": "altura",
-      "label": "Total Height (cm)",
+      "label": "Total Floor-to-Floor Height (cm)",
       "type": "number",
       "required": true,
       "placeholder": "270",
       "default": 270,
-      "step": 0.01,
-      "help": "Height in centimeters"
+      "step": 0.1,
+      "help": "Measure from finished floor to finished floor, in centimeters."
     },
     {
       "id": "profundidad",
-      "label": "Available Horizontal Depth (cm)",
+      "label": "Available Horizontal Run (cm)",
       "type": "number",
       "required": true,
-      "placeholder": "240",
-      "default": 240,
-      "step": 0.01
+      "placeholder": "360",
+      "default": 360,
+      "step": 0.1,
+      "help": "Total horizontal space available for the staircase (not including the landing)."
     }
   ],
   "outputs": [
@@ -45,65 +47,72 @@
     },
     {
       "id": "huella",
-      "label": "Tread Width (cm)"
+      "label": "Tread Depth T (cm)"
     },
     {
       "id": "contrahuella",
-      "label": "Riser Height (cm)"
+      "label": "Riser Height R (cm)"
     },
     {
       "id": "resumen",
-      "label": "Analysis"
+      "label": "Blondel Analysis"
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Worked Example — 270 cm height, 360 cm run",
     "steps": [
-      "270 cm height, 240 cm depth",
-      "15 steps",
-      "tread=18 cm, riser=16 cm",
-      "T+2R = 18+2(16)=50 ✗ (tight)"
+      "Total height H = 270 cm, available run = 360 cm",
+      "Target riser ≈ 18 cm → steps n = ceil(270 / 18) = 15",
+      "Actual riser R = 270 / 15 = 18.0 cm",
+      "Tread T = 360 / 15 = 24.0 cm",
+      "Blondel check: 2R + T = 2(18) + 24 = 60 cm — below 63 (too steep)",
+      "Try deeper run: with 390 cm run → T = 390/15 = 26 cm → 2(18)+26 = 62 cm — borderline",
+      "Best: increase run to 420 cm → T = 28 cm → 2(18)+28 = 64 ✓ — ideal"
     ],
-    "result": "15 steps, tread=18, riser=16"
+    "result": "15 steps, R = 18.0 cm, T = 28.0 cm, Blondel = 64 cm ✓"
   },
-  "explanation": "## How It's Calculated\n\nBlondel's Rule was formulated by French architect François Blondel in 1675. It models the average human stride (≈63–65 cm) as a combination of vertical lift and horizontal travel on a stair:\n\n```\nBlondel's Formula:\n  63 ≤ 2R + T ≤ 65   (cm)\n\nWhere:\n  R = Riser height (cm)   — vertical face of each step\n  T = Tread depth (cm)    — horizontal surface you step on (nosing to nosing)\n\nStep 1 – Number of risers:\n  n = round( TotalHeight / R_target )\n  R_target ≈ 17 cm (start here; iterate until Blondel is satisfied)\n\nStep 2 – Actual riser:\n  R_actual = TotalHeight / n\n\nStep 3 – Tread from Blondel:\n  T = 64 - 2 × R_actual   (targeting midpoint 64 cm)\n\nStep 4 – Check horizontal fit:\n  Run_required = (n - 1) × T   ← n-1 because the top step lands on the floor\n  If Run_required ≤ AvailableDepth → fits ✓\n\nStep 5 – Verify code bounds:\n  15 cm ≤ R ≤ 19 cm\n  25 cm ≤ T ≤ 35 cm\n  2R + T must be 63–65 cm\n```\n\n> **Note:** The IRC (International Residential Code) R311.7.5 sets minimum tread at **10 in (25.4 cm)** and maximum riser at **7¾ in (19.7 cm)** for residential stairs in the US.\n\n---\n\n## Reference Table\n\nTypical Blondel-compliant combinations (2R + T = 63–65 cm):\n\n| Riser R (cm) | Riser R (in) | Tread T (cm) | Tread T (in) | 2R+T | Use Case |\n|:---:|:---:|:---:|:---:|:---:|:---|\n| 15.0 | 5.9 | 34.0 | 13.4 | 64 | Gentle / elderly-friendly |\n| 16.0 | 6.3 | 32.0 | 12.6 | 64 | Comfortable residential |\n| 17.0 | 6.7 | 30.0 | 11.8 | 64 ✓ | **Ideal residential** |\n| 17.5 | 6.9 | 29.0 | 11.4 | 64 ✓ | Common residential |\n| 18.0 | 7.1 | 27.0 | 10.6 | 63 | Acceptable, slightly steep |\n| 18.5 | 7.3 | 26.0 | 10.2 | 63 | Minimum comfort zone |\n| 19.0 | 7.5 | 25.0 | 9.8 | 63 | IRC max riser / min tread |\n| 20.0 | 7.9 | 24.0 | 9.4 | 64 | ⚠ Exceeds IRC max riser |\n| 22.0 | 8.7 | 21.0 | 8.3 | 65 | ⚠ Steep — code violation |\n\n---\n\n## Typical Cases\n\n### Case 1 — Standard 9-ft ceiling home (from the calculator example)\n- Total height: **270 cm** | Available depth: **240 cm**\n- Target R ≈ 17 cm → n = round(270/17) = **16 steps**\n- R_actual = 270/16 = **16.9 cm**\n- T = 64 − 2(16.9) = **30.2 cm**\n- Run required = 15 × 30.2 = **453 cm** → **exceeds 240 cm available ✗**\n- Solution: use R = 18 cm → n = 15, T = 64−36 = **28 cm**, run = 14×28 = **392 cm** → still exceeds 240 cm\n- With T = 18 cm, R = 16 cm (as in the example): 2(16)+18 = **50 — fails Blondel** (too tight/steep stair design for a very shallow space). An L-shaped or switchback layout is needed.\n\n### Case 2 — Split-level addition (120 cm rise, 200 cm run)\n- n = round(120/17) = **7 steps**\n- R_actual = 120/7 = **17.1 cm**\n- T = 64 − 2(17.1) = **29.8 cm** ≈ 30 cm\n- Run required = 6 × 30 = **180 cm ≤ 200 cm ✓**\n- 2R+T = 2(17.1)+30 = **64.2 ✓** — perfect Blondel compliance\n\n### Case 3 — Deck stair (90 cm drop, 160 cm run)\n- n = round(90/17) = **5 steps**\n- R_actual = 90/5 = **18.0 cm**\n- T = 64 − 2(18) = **28 cm**\n- Run required = 4 × 28 = **112 cm ≤ 160 cm ✓**\n- 2R+T = 36+28 = **64 ✓** — compliant and fits\n\n---\n\n## Common Errors\n\n1. **Confusing \"risers\" with \"treads\" (n vs. n−1):** A stair with 10 risers has only 9 tread surfaces — the top landing is the floor itself. Using n treads overestimates the horizontal run by one full tread depth.\n\n2. **Measuring total height to the finish floor, not the subfloor:** If finish flooring (hardwood, tile) adds 1.5–2 cm, riser heights become unequal. Always design to finished floor height; an unequal first or last riser is a leading trip-hazard cause per CPSC data.\n\n3. **Ignoring the nosing:** IRC R311.7.5.3 requires a nosing projection of ¾ in to 1¼ in (1.9–3.2 cm) for treads less than 11 in. The tread depth T is measured nosing-to-nosing, so the structural tread board must be T + nosing depth. Forgetting this makes treads feel short.\n\n4. **Using Blondel alone without checking headroom:** IRC R311.7.2 requires minimum **6 ft 8 in (203 cm)** headroom measured vertically from the stair nosing line. A staircase can pass Blondel perfectly and still fail headroom clearance in a low-ceiling basement.\n\n5. **Rounding riser count down instead of finding the nearest integer:** Always round to the nearest whole number, then back-calculate R_actual. Rounding always down can produce risers > 19 cm (IRC violation); rounding always up can produce risers < 15 cm (excessively gentle and wastes space).\n\n---\n\n## Related Calculators\n\nSince no related slugs were provided for this calculator, explore other construction tools on Hacé Cuentas for concrete volume, roof pitch, and room area calculations to complement your staircase design project.\n",
+  "explanation": "## How Blondel's Rule Works\n\nFrançois Blondel (1618–1686) observed that the average adult stride on flat ground is about 63–65 cm. On stairs, each step forces a vertical lift (R) that costs roughly twice the energy of horizontal travel (T), so the ergonomic formula is:\n\n```\nBlondel's Rule:\n  63 ≤ 2R + T ≤ 65   (cm)\n\nWhere:\n  R = Riser height (cm)  — vertical face of each step\n  T = Tread depth (cm)   — horizontal surface (nosing to nosing)\n```\n\n**Step-by-step calculation:**\n\n1. **Number of risers:** n = ⌈TotalHeight / 18⌉ (using 18 cm as the starting riser target)\n2. **Actual riser:** R = TotalHeight / n\n3. **Tread depth:** T = AvailableRun / n\n4. **Blondel check:** compute 2R + T and verify it falls between 63–65 cm\n5. **Code bounds:** 15 cm ≤ R ≤ 19 cm, 25 cm ≤ T ≤ 35 cm (IRC R311.7)\n\n---\n\n## Blondel Reference Table\n\nCommon Blondel-compliant riser + tread combinations (2R + T = 63–65 cm):\n\n| Riser R (cm) | Riser R (in) | Tread T (cm) | Tread T (in) | 2R + T | Comfort |\n|:---:|:---:|:---:|:---:|:---:|:---|\n| 15.0 | 5.9\" | 34.0 | 13.4\" | 64 | Very gentle / elderly-friendly |\n| 16.0 | 6.3\" | 32.0 | 12.6\" | 64 ✓ | Comfortable residential |\n| 17.0 | 6.7\" | 30.0 | 11.8\" | 64 ✓ | **Ideal residential** |\n| 17.5 | 6.9\" | 29.0 | 11.4\" | 64 ✓ | Standard residential |\n| 18.0 | 7.1\" | 27.0 | 10.6\" | 63 ✓ | Acceptable, slightly steep |\n| 18.5 | 7.3\" | 26.0 | 10.2\" | 63 ✓ | Minimum comfort zone |\n| 19.0 | 7.5\" | 25.0 | 9.8\" | 63 ✓ | IRC max riser / min tread |\n| 20.0 | 7.9\" | 24.0 | 9.4\" | 64 | ⚠ Exceeds IRC max riser |\n| 22.0 | 8.7\" | 21.0 | 8.3\" | 65 | ⚠ Steep — code violation |\n\n---\n\n## Step Count by Floor Height\n\nQuick reference for typical residential heights using R ≈ 17–18 cm:\n\n| Floor-to-Floor Height | Steps (n) | Riser R (cm) | Best Run Depth |\n|:---:|:---:|:---:|:---:|\n| 240 cm (8 ft) | 14 | 17.1 | ≥ 392 cm |\n| 260 cm (8.5 ft) | 15 | 17.3 | ≥ 420 cm |\n| 270 cm (9 ft) | 15 | 18.0 | ≥ 405 cm |\n| 280 cm (9.2 ft) | 16 | 17.5 | ≥ 448 cm |\n| 300 cm (9.8 ft) | 17 | 17.6 | ≥ 476 cm |\n| 320 cm (10.5 ft) | 18 | 17.8 | ≥ 486 cm |\n\n---\n\n## Common Errors to Avoid\n\n1. **Confusing risers with treads (n vs. n−1):** A stair with 15 risers has 14 tread surfaces — the top \"step\" lands on the upper floor itself. Using n treads overestimates the horizontal run by one full tread depth.\n\n2. **Measuring to subfloor instead of finished floor:** If tile or hardwood adds 1–2 cm, riser heights become unequal. Design to finished floor height; unequal risers are the #1 trip hazard on stairs (CPSC data).\n\n3. **Ignoring nosing:** IRC R311.7.5.3 requires a nosing projection of ¾\"–1¼\" (1.9–3.2 cm) for treads under 11\". The structural tread board must be T + nosing depth.\n\n4. **Skipping headroom check:** IRC R311.7.2 requires minimum **6 ft 8 in (203 cm)** measured vertically from the stair nosing line. A Blondel-compliant stair can still fail headroom in a low-ceiling basement.\n\n5. **Rounding step count the wrong way:** Always round to the nearest whole number, then back-calculate R_actual. Rounding down can produce risers > 19 cm (IRC violation); rounding up can produce wastefully short risers.\n",
   "faq": [
     {
-      "q": "What exactly is Blondel's Rule and where does the 63–65 cm range come from?",
-      "a": "François Blondel (1618–1686) observed that the average adult stride on flat ground is about 63–65 cm. On stairs, each step forces a vertical lift (R) that costs roughly twice the energy of horizontal travel (T), so the ergonomic relationship is 2R + T = 63–65 cm. The midpoint target of 64 cm is most commonly used in modern residential design."
+      "q": "What is Blondel's Rule and what does 2R + T = 63–65 cm mean?",
+      "a": "Blondel's Rule (formulated by French architect François Blondel in 1675) states that the sum of twice the riser height (R) plus the tread depth (T) should equal 63–65 cm: **2R + T = 63–65 cm**. This mirrors the average adult stride (~64 cm) — on stairs, each step requires two vertical lifts (R) for every one horizontal step (T). The midpoint of 64 cm is the most widely used design target."
     },
     {
-      "q": "What are the US building code limits for riser height and tread depth?",
-      "a": "The International Residential Code (IRC) R311.7.5 sets the maximum riser at **7¾ in (19.7 cm)** and minimum tread depth at **10 in (25.4 cm)** for residential occupancies. Commercial stairs under IBC 1011.5 are stricter: max riser 7 in (17.8 cm), min tread 11 in (27.9 cm). All risers in a single flight must be within ⅜ in (0.95 cm) of each other."
+      "q": "What are the ideal riser height and tread depth for a residential staircase?",
+      "a": "The ideal combination for a comfortable home staircase is **R = 17 cm (6.7\") and T = 30 cm (11.8\")**, giving 2(17)+30 = 64 cm — perfectly centered in Blondel's range. IRC R311.7 sets the hard limits: max riser = 7¾\" (19.7 cm), min tread = 10\" (25.4 cm). In practice, R between 16–18 cm and T between 27–32 cm covers most comfortable residential designs."
     },
     {
-      "q": "Why does the calculator use n−1 treads for the horizontal run, not n?",
-      "a": "A staircase with n risers has exactly n−1 tread surfaces in the flight, because the final 'step' lands on the upper floor slab — which is not a stair tread. Using n treads would overestimate the required horizontal run by one full tread depth (typically 28–30 cm), potentially causing the staircase to exceed your available space calculation."
+      "q": "How do I calculate the number of stairs for a given height?",
+      "a": "Divide the total floor-to-floor height by your target riser height (typically 17–18 cm) and round to the nearest whole number. Example: for a 270 cm height, n = round(270 / 17) = 16 steps, giving R_actual = 270/16 = 16.9 cm. Then compute tread T = 64 − 2(16.9) = 30.2 cm. Check that the total run (n−1) × T fits your available space."
     },
     {
-      "q": "My Blondel result gives 2R+T = 50 (like the example). What does that mean?",
-      "a": "A value of 2R+T below 63 cm means the staircase is **too steep and the treads are too narrow** for comfortable, safe walking — it approaches ladder-like geometry. This typically happens when the available horizontal depth is very shallow relative to the height. Solutions include an L-shaped layout, a switchback (U-shaped) design, or alternating-tread stairs (which require a special code variance for primary access)."
+      "q": "What happens if my Blondel value is below 63 cm?",
+      "a": "A 2R + T value below 63 cm means the staircase is **too steep** — the treads are narrow and each step requires a high leg lift, causing fatigue and increasing fall risk. This typically happens when the available horizontal space is very limited. Solutions include an L-shaped layout, a switchback (U-turn) design, a spiral stair, or alternating-tread stairs (requires a permit variance for primary access)."
     },
     {
-      "q": "Does Blondel's Rule apply to outdoor and deck stairs?",
-      "a": "Yes, Blondel's Rule applies to any walking stair. IRC R507.4 (deck stairs) references the same R311.7 riser/tread limits. For outdoor stairs, additionally ensure a cross-slope of ≤2% on tread surfaces for drainage, and use open-riser or non-slip tread designs to prevent water accumulation and ice buildup."
+      "q": "Does Blondel's Rule apply to outdoor deck stairs?",
+      "a": "Yes. Blondel's Rule applies to any walking stair, indoors or out. IRC R507.4 (deck stairs) references the same R311.7 riser/tread limits. For outdoor stairs, also ensure a cross-slope of ≤2% on tread surfaces for drainage, and use open-riser or non-slip tread materials to prevent ice and water accumulation."
     },
     {
-      "q": "What minimum headroom must I maintain above a staircase?",
-      "a": "IRC R311.7.2 requires a minimum vertical headroom of **6 ft 8 in (203.2 cm)** measured plumb from the stair nosing line to the soffit or ceiling above. This measurement must be maintained throughout the entire stair flight. Basement stairs are a frequent violation point — always verify before framing the header above the stair opening."
+      "q": "Why does the calculator show n risers but only n−1 treads in the horizontal run?",
+      "a": "A staircase with n risers has exactly n−1 tread surfaces within the flight, because the final \"step\" lands on the upper floor slab — which is not a separate stair tread. Using n treads would overestimate the required horizontal run by one full tread depth (typically 27–30 cm), making the stair appear to require more space than it actually does."
     },
     {
-      "q": "How much does riser height affect fall risk on stairs?",
-      "a": "The CPSC estimates that approximately **1 million stair-related injuries** requiring emergency room visits occur annually in the US. Studies cited in the literature show that non-uniform riser heights (variation > ⅜ in / 0.95 cm between risers in a flight) significantly increase trip-and-fall risk. This is why IRC R311.7.5.1 strictly limits riser variation within a single flight to ⅜ in maximum."
+      "q": "What is the minimum headroom clearance above stairs?",
+      "a": "IRC R311.7.2 requires a minimum of **6 ft 8 in (203.2 cm)** of vertical headroom, measured plumb from the stair nosing line to the soffit, ceiling, or other obstruction above. This must be maintained throughout the entire stair flight. Basement stairs are a common violation point — always verify before framing the header above the stair opening."
     },
     {
-      "q": "Can I use a riser height of 20 cm to save horizontal space?",
-      "a": "A 20 cm (7.87 in) riser exceeds the IRC residential maximum of 7¾ in (19.7 cm), so it would fail code inspection and could void homeowner's insurance coverage for stair-related injuries. Practically, it also produces a 2R+T ≈ 64 cm only if T = 24 cm — below the 25.4 cm IRC tread minimum. To save space legally, consider a spiral stair (IRC R311.7.10) or alternating-tread device with a building permit variance."
+      "q": "How does riser height affect injury risk on stairs?",
+      "a": "The U.S. CPSC estimates approximately **1 million stair-related ER visits annually**. Research shows that **non-uniform risers** (variation > ⅜\" / 0.95 cm between risers in a single flight) significantly increase trip-and-fall risk, because people's legs adapt to the first few steps and lose sync with irregular changes. IRC R311.7.5.1 strictly limits riser variation within one flight to ⅜\" maximum."
+    },
+    {
+      "q": "Can I use a 20 cm riser to save space?",
+      "a": "A 20 cm (7.87\") riser exceeds the IRC residential maximum of 7¾\" (19.7 cm) and would fail a code inspection — potentially voiding homeowner's insurance for stair-related injuries. At R = 20 cm, a Blondel-compliant tread of T = 64 − 40 = 24 cm also falls below the IRC minimum of 25.4 cm. To legally save space, consider a spiral stair (IRC R311.7.10.1) with a permit variance."
     }
   ],
   "sources": [
     {
-      "name": "IRC R311.7 – Stairways (International Residential Code, via ICC Digital Codes)",
+      "name": "IRC R311.7 – Stairways (International Residential Code, ICC Digital Codes)",
       "url": "https://codes.iccsafe.org/content/IRC2021/chapter-3-building-planning"
     },
     {
@@ -111,30 +120,35 @@
       "url": "https://www.cpsc.gov/Safety-Education/Safety-Education-Centers/Seniors-Safety"
     },
     {
-      "name": "Wikipedia – Blondel's Formula (Stairs)",
+      "name": "Wikipedia – Stair risers and treads (Blondel's Formula)",
       "url": "https://en.wikipedia.org/wiki/Stair_risers_and_treads"
+    },
+    {
+      "name": "IBC 1011.5 – Stairway dimensions (International Building Code, commercial)",
+      "url": "https://codes.iccsafe.org/content/IBC2021/section-1011-stairways"
     }
   ],
   "seoKeywords": [
     "stair calculator",
     "blondel rule",
-    "stair dimensions",
-    "tread and riser",
-    "staircase design",
-    "how to calculate stairs",
+    "blondel formula stairs",
     "stair riser height",
     "stair tread depth",
-    "building stairs",
-    "staircase dimensions calculator",
-    "stair building guide",
-    "optimal stair design"
+    "2R + T formula",
+    "how to calculate stairs",
+    "stair dimensions calculator",
+    "tread and riser calculator",
+    "staircase design formula",
+    "residential stair code",
+    "IRC stair requirements"
   ],
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Building code values (IRC) are stable; no external data updates required."
   },
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [],
   "noindex": false
 }

@@ -24,8 +24,9 @@ export function padelHandicapPuntajeRankingAft(i: Inputs): Outputs {
     else if (dif > 200) mult = 0.5; // rival muy inferior
     else mult = 1;
   } else {
-    if (dif > 100) mult = 0.3; // perdiste con peor: igual algo sumás
-    else mult = 0.1;
+    // Perdiste: si el rival era claramente mejor (dif negativo grande), más consuelo
+    if (dif < -100) mult = 0.3; // perdiste con alguien mucho mejor: algo de consuelo
+    else mult = 0.1; // perdiste con similar o peor: casi nada
   }
   const total = Math.round(base * mult);
   const gano = i.resultado === 'ganaste';

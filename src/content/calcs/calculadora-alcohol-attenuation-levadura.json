@@ -1,52 +1,57 @@
 {
   "slug": "calculadora-alcohol-attenuation-levadura",
-  "lastReviewed": "2026-05-28",
-  "title": "Calculadora Atenuación Levadura Cerveza 2026 | Hacé Cuentas",
-  "h1": "Atenuación aparente y real de la levadura",
-  "description": "🍳 Calculá la atenuación aparente y real de tu fermentación. Comparalo con el rango esperado de tu cepa. Atenuación aparente = (OG−FG)/(OG−1) × 100.",
+  "lastReviewed": "2026-06-04",
+  "title": "Calcular atenuación levadura cerveza: aparente y real + tabla cepas | Hacé Cuentas",
+  "h1": "Calculadora de atenuación de levadura (aparente y real)",
+  "description": "Calculá la atenuación aparente y real de tu fermentación con OG y FG. Compará contra el rango de tu cepa y diagnosticá fermentación incompleta. Fórmula: (OG−FG)/(OG−1) × 100.",
   "category": "cocina",
   "icon": "🍺",
   "audience": "global",
   "formulaId": "alcohol-attenuation-levadura",
+  "answerSnippet": "La atenuación aparente de la levadura se calcula como: (OG − FG) / (OG − 1) × 100. Por ejemplo, OG 1.055 y FG 1.012 dan (0.043 / 0.055) × 100 = 78,2%. La atenuación real es aproximadamente el 81% de la aparente. Ales típicas atenúan 72-82%; por debajo del 70% indica fermentación incompleta.",
   "seoKeywords": [
-    "atenuacion levadura",
-    "attenuation yeast",
-    "atenuacion cerveza",
-    "fermentacion incompleta"
+    "atenuacion levadura cerveza",
+    "calcular atenuacion aparente",
+    "atenuacion real cerveza",
+    "fermentacion incompleta diagnóstico",
+    "attenuation yeast calculator"
   ],
-  "intro": "La **atenuación** de la levadura es el % de azúcares que consumió durante la fermentación. Se calcula con OG y FG: **atenuación aparente** (usando lectura directa) o **real** (corrigiendo por densidad del alcohol). Cada cepa tiene un **rango esperado**: US-05 75%, S-04 72%, Nottingham 79%. Si tu atenuación está muy por debajo del rango, la fermentación está incompleta.",
-  "keyTakeaway": "**Atenuación aparente = (OG−FG)/(OG−1) × 100**. Ales típicas 72-82%. Real es ~80% de la aparente (por corrección alcohólica).",
+  "intro": "La **atenuación** mide qué porcentaje de azúcares consumió la levadura durante la fermentación. Se calcula con la gravedad original (OG) y la gravedad final (FG). Existen dos variantes: **atenuación aparente** (la que leen el hidrómetro o refractómetro directamente) y **atenuación real** (corregida por la densidad del alcohol, ≈81% de la aparente). Cada cepa tiene un rango esperado: US-05 atenúa 75-82%, S-04 72-78%, Nottingham 77-83%. Si tu atenuación cae más de 5 puntos por debajo del mínimo del fabricante, la fermentación está incompleta.",
+  "keyTakeaway": "**Atenuación aparente = (OG − FG) / (OG − 1) × 100**. Ales típicas: 72-82%. Atenuación real ≈ aparente × 0,81. Por debajo de 70%: fermentación incompleta.",
   "useCases": [
     "Tu FG quedó alta y querés saber si es fermentación incompleta.",
-    "Probaste una nueva cepa y querés comparar con el datasheet.",
+    "Probaste una nueva cepa y querés comparar con el datasheet del fabricante.",
     "Tenés dos batches y querés saber cuál atenuó más.",
-    "Vas a reusar levadura y querés datos de la generación anterior.",
-    "Hacés cervezas dry (Saison, Pilsner) y necesitás maximizar atenuación."
+    "Vas a reusar levadura y querés registrar el desempeño de la generación anterior.",
+    "Hacés cervezas dry (Saison, Pilsner) y necesitás maximizar atenuación.",
+    "Querés saber si podés embotellar sin riesgo de sobre-carbonatación."
   ],
   "fields": [
     {
       "id": "og",
-      "label": "OG original",
+      "label": "OG — Gravedad original",
       "type": "number",
       "placeholder": "1.055",
       "min": 1,
       "max": 1.2,
       "step": 0.001,
-      "required": true
+      "required": true,
+      "help": "Medida con hidrómetro o refractómetro antes de pitchear la levadura."
     },
     {
       "id": "fg",
-      "label": "FG final",
+      "label": "FG — Gravedad final",
       "type": "number",
       "placeholder": "1.012",
       "min": 0.98,
       "max": 1.1,
       "step": 0.001,
-      "required": true
+      "required": true,
+      "help": "Medida con hidrómetro cuando la densidad es estable 2 días seguidos."
     },
     {
       "id": "atenuacionEsperada",
-      "label": "Atenuación esperada cepa (%)",
+      "label": "Atenuación esperada de la cepa (%)",
       "type": "number",
       "suffix": "%",
       "placeholder": "75",
@@ -54,7 +59,7 @@
       "max": 95,
       "step": 1,
       "required": false,
-      "help": "Valor en porcentaje."
+      "help": "Consultá el datasheet del fabricante (Fermentis, Wyeast, White Labs). Opcional: sin este dato igual calculás aparente y real."
     }
   ],
   "outputs": [
@@ -71,7 +76,7 @@
     },
     {
       "id": "estado",
-      "label": "Estado fermentación",
+      "label": "Estado de fermentación",
       "format": "text"
     },
     {
@@ -81,86 +86,92 @@
     }
   ],
   "example": {
-    "title": "Ejemplo: US-05 en Pale Ale",
+    "title": "Ejemplo: US-05 en Pale Ale americana (OG 1.055 / FG 1.012)",
     "steps": [
-      "**Datos**: OG 1.055, FG 1.011. US-05 atenúa 75-82%.",
-      "**Aparente** = (1.055 − 1.011) / (1.055 − 1) = 44/55 = **80%**.",
-      "**Real** ≈ 80% × 0.81 = **64.8%**.",
-      "**Estado**: fermentación completa y en rango esperado."
+      "**Datos de entrada**: OG 1.055, FG 1.012. Cepa US-05 con atenuación esperada 75-82% (usamos 75% como mínimo).",
+      "**Atenuación aparente** = (1.055 − 1.012) / (1.055 − 1) × 100 = (0.043 / 0.055) × 100 = **78,2%**.",
+      "**Atenuación real** ≈ 78,2% × 0,81 = **63,3%** (corregida por densidad del alcohol).",
+      "**Diagnóstico**: 78,2% está dentro del rango esperado de US-05 (75-82%). Fermentación completa.",
+      "**Conclusión**: apta para embotellar; no hay riesgo de sobre-carbonatación."
     ],
-    "result": "80% aparente — fermentación exitosa, lista para embotellar."
+    "result": "78,2% aparente / 63,3% real — fermentación normal, lista para embotellar."
   },
-  "explanation": "## Qué es la atenuación\n\nEs el % de azúcares fermentables que la levadura consumió. Dos formas:\n\n- **Aparente**: usando OG y FG directos. Más fácil de calcular.\n- **Real**: corrigiendo por la densidad del alcohol producido. Más precisa pero requiere medición extra.\n\n## Fórmula\n\n```\nAtenuación_aparente = (OG − FG) / (OG − 1) × 100\nAtenuación_real = atenuación_aparente × 0.81 (aprox)\n```\n\n## Rangos por cepa (seca)\n\n| Levadura | Atenuación | Perfil |\n|---|---|---|\n| **Fermentis US-05** | 75-82% | Ale americana neutra |\n| **Fermentis S-04** | 72-78% | English ale, malty |\n| **Nottingham** | 77-83% | UK ale, muy atenuante |\n| **Windsor** | 66-72% | UK ale, baja atenuación, cuerpo |\n| **Saflager W-34/70** | 79-84% | Lager alemana |\n| **Saison T-58** | 84-89% | Seco, especiado |\n| **Belle Saison** | 85-95% | Muy seca |\n| **Hefeweizen WB-06** | 84-88% | Trigo, plátano |\n\n## Cepas líquidas comunes\n\n| Wyeast/White Labs | Atenuación |\n|---|---|\n| 1056 / WLP001 Cal Ale | 73-77% |\n| 1084 / WLP004 Irish | 71-75% |\n| 3068 / WLP380 Hefe | 73-77% |\n| 3711 / WLP565 Saison | 77-95% |\n| 2112 / WLP810 Cal Lager | 65-70% |\n\n## Qué hacer si atenúa poco\n\n1. **Subir temperatura**: 2°C más (máx 24°C en ales).\n2. **Rousing**: mover suavemente para resuspender levadura.\n3. **Agregar amilasa**: enzima que rompe dextrinas (Brewer's CHOICE Glucoamylase).\n4. **Pitch de levadura fresca**: más células nuevas.\n5. **Esperar**: algunas cepas tardan 3+ semanas.\n\n## Por qué atenúa mucho (>90%)\n\n- Contaminación por Brettanomyces (le da brett funk).\n- Cepa muy atenuante mal elegida para el estilo.\n- Too warm ferm temp.\n\n## Real vs aparente\n\nLa **atenuación real** es más baja porque el etanol tiene densidad <1. Una FG de 1.010 con OG 1.050 parece 80% atenuación pero realmente la levadura consumió solo ~65% del extracto. Ambas son útiles en contextos distintos.\n\nVer [ABV cerveza](/calculadora-abv-cerveza-og-fg).",
+  "explanation": "## Qué es la atenuación de levadura\n\nEs el porcentaje de azúcares fermentables que la levadura convirtió en alcohol y CO₂. A mayor atenuación, más seca y menos dulce queda la cerveza.\n\n## Fórmula exacta\n\n```\nAtenuación aparente (%) = (OG − FG) / (OG − 1) × 100\nAtenuación real (%)     = atenuación aparente × 0,81\n```\n\n**Por qué el factor 0,81**: el alcohol etílico tiene densidad ≈0,789 g/mL, menor que el agua. Esto hace que la FG leída por hidrómetro sea más baja de lo que realmente sería si solo contara los sólidos disueltos; la corrección estándar es ×0,81.\n\n## Tabla de valores con OG 1.055\n\n| FG | Atenuación aparente | Atenuación real | Estado |\n|---|---|---|---|\n| 1.020 | 63,6% | 51,5% | Fermentación incompleta |\n| 1.016 | 70,9% | 57,4% | Baja / stuck |\n| 1.012 | 78,2% | 63,3% | Normal ale |\n| 1.010 | 81,8% | 66,3% | Alta (lager/saison) |\n| 1.008 | 85,5% | 69,2% | Muy alta |\n| 1.004 | 92,7% | 75,1% | Brett/enzimas |\n\n## Rangos típicos de atenuación por cepa\n\n| Levadura | Tipo | Atenuación aparente | Perfil |\n|---|---|---|---|\n| **Fermentis US-05** | Ale seca | 75-82% | Americana neutra, limpia |\n| **Fermentis S-04** | English ale | 72-78% | Maltosa, cuerpo |\n| **Nottingham** | UK ale | 77-83% | Versátil, muy atenuante |\n| **Windsor** | UK ale | 66-72% | Cuerpo alto, dulzor residual |\n| **Saflager W-34/70** | Lager | 79-84% | Lager alemana clásica |\n| **Saison T-58** | Saison | 84-89% | Seco, especiado |\n| **Belle Saison** | Saison | 85-95% | Muy seca |\n| **Hefeweizen WB-06** | Trigo | 84-88% | Plátano/clavo |\n| **Wyeast 1056 / WLP001** | Cal Ale | 73-77% | Americana neutra |\n| **Wyeast 1084 / WLP004** | Irish | 71-75% | Stout/Porter |\n| **Wyeast 3711 / WLP565** | Saison | 77-95% | Muy variable |\n| **Wyeast 2112 / WLP810** | Cal Lager | 65-70% | Cuerpo, servida caliente |\n\n## Qué hacer si la atenuación es baja\n\n1. **Subir temperatura 2°C** (máx 24°C en ales) para reactivar la levadura.\n2. **Rousing**: mover suavemente el fermentador para resuspender células sedimentadas.\n3. **Pitch de levadura fresca**: ½ sobre de levadura seca en 100 mL de mosto frotado antes de agregar.\n4. **Agregar amilasa**: Glucoamylase rompe dextrinas que Saccharomyces no puede fermentar.\n5. **Esperar**: algunas cepas, especialmente líquidas, toman 3+ semanas.\n\n## Atenuación muy alta (>90%)\n\n- Contaminación por Brettanomyces (produce sabores leather/barnyard característicos).\n- Adición de enzimas (glucoamylase, AMG) en el mosto.\n- Cepa altamente atenuante mal elegida para el estilo (Belle Saison en una Stout = desastre).\n\n## Aparente vs real: cuándo usar cada una\n\n| Contexto | Cuál usar | Por qué |\n|---|---|---|\n| Comparar con datasheet del fabricante | **Aparente** | El fabricante reporta aparente |\n| Calcular rendimiento extractivo | **Real** | Más precisa para el extracto real |\n| Homebrewing diario | **Aparente** | Suficiente y más fácil |\n| Laboratorio / producción industrial | **Real** | Precisión de proceso |\n\nVer también: [calculadora de ABV cerveza](/calculadora-abv-cerveza-og-fg), [yeast pitch rate](/calculadora-yeast-pitch-rate-cerveza).",
   "faq": [
     {
-      "q": "¿Aparente o real?",
-      "a": "Homebrewers usan aparente (fácil). Industriales usan real (más precisa). Los datasheets de levadura usan aparente."
+      "q": "¿Cuál es la fórmula para calcular la atenuación aparente?",
+      "a": "Atenuación aparente (%) = (OG − FG) / (OG − 1) × 100. Por ejemplo OG 1.055 y FG 1.012: (0.043 / 0.055) × 100 = 78,2%. Es la fórmula estándar que usan todos los calculadores de homebrewing."
     },
     {
-      "q": "¿Por qué mi atenuación es baja?",
-      "a": "Causas: temperatura baja, levadura muerta, mash a 68°C+ (más dextrinas), maltas cristal excesivas, pitch insuficiente, oxigenación inicial pobre."
+      "q": "¿Cuál es la diferencia entre atenuación aparente y real?",
+      "a": "La aparente usa la FG directamente del hidrómetro; la real corrige por la densidad del alcohol (factor 0,81). Si la aparente es 78%, la real es ≈63%. Los datasheets de levadura siempre declaran atenuación aparente — usá esa para comparar."
     },
     {
-      "q": "¿Atenuación 100% es posible?",
-      "a": "No con levadura de cerveza normal. Saccharomyces deja siempre 5-15% de dextrinas. Para llegar más bajo: amilasa o Brett."
+      "q": "¿Por qué mi atenuación es baja (fermentación incompleta)?",
+      "a": "Las causas más comunes son: temperatura de mash alta (68-70°C → más dextrinas no fermentables), pitch insuficiente de levadura, falta de oxigenación inicial, temperatura de fermentación baja, o levadura vieja/muerta. Subir la temperatura 2°C y hacer rousing suele resolver el 70% de los casos."
     },
     {
-      "q": "¿Cepas brett atenúan más?",
-      "a": "Sí. Brett come dextrinas que Saccharomyces no toca. Cervezas 100% Brett llegan a 95-100% atenuación."
+      "q": "¿Cuándo puedo embotellar? ¿Qué atenuación es segura?",
+      "a": "Embotellá cuando la FG esté estable 2 días consecutivos (misma lectura) Y la atenuación esté dentro del rango esperado de la cepa. Si embotellás con fermentación incompleta, el CO₂ residual puede partir botellas (bottle bombs). Nunca embotelles solo por tiempo."
     },
     {
-      "q": "¿Temperatura afecta atenuación?",
-      "a": "Sí. Ales a 16°C: 70%. A 22°C: 78%. Pero arriba de 24°C genera ésteres off."
+      "q": "¿Qué atenuación esperada usar para US-05?",
+      "a": "Fermentis declara 75-82% para US-05. Usá 75% como mínimo en la calculadora. Si tu resultado cae por debajo de 70% con US-05, hay un problema: revisá temperatura de mash (objetivo 64-66°C para una IPA seca), pitch rate y oxigenación inicial."
     },
     {
-      "q": "¿Cómo aumentar atenuación?",
-      "a": "Mash más bajo (63-65°C), agregar simple sugar (dextrosa 5-10%), usar cepa más atenuante, o suplementar amilasa."
+      "q": "¿La temperatura de mash afecta la atenuación?",
+      "a": "Sí, es el factor más importante después de la cepa. Mash 62-65°C: beta-amilasa dominante → azúcares fermentables → atenuación 80-90% (cerveza seca). Mash 68-72°C: alfa-amilasa → más dextrinas → atenuación 65-72% (cuerpo alto). Un mismo grist con S-04 puede atenuar 64% (mash 70°C) o 80% (mash 63°C)."
     },
     {
-      "q": "¿Cómo comparo atenuación real vs la que declara el fabricante?",
-      "a": "Fabricantes tipo **Fermentis (S-04, US-05) o Wyeast** declaran un rango (ej. S-04: 70-80%). Para comparar, usá **atenuación aparente** (la del hidrómetro) — que es la que el fabricante reporta. Si cae **5+ puntos por debajo del mínimo** (ej. 65% vs 70% mínimo): **problema real**. Causas: OG demasiado alta (>1.075 estresa la célula), mosto sin oxígeno inicial, falta de nutrientes (zinc), o temperatura fuera de rango (S-04 pide 18-22°C; a 15°C atenúa 60%)."
+      "q": "¿Atenuación del 100% es posible?",
+      "a": "No con Saccharomyces normal. Las cepas de cerveza siempre dejan 5-15% de dextrinas no fermentables. Para llegar a >90%: Brettanomyces (brett), adición de glucoamylase, o una cepa saison muy atenuante como Belle Saison con azúcar simple en el mosto."
     },
     {
-      "q": "¿Cómo afecta la curva de mash a la atenuación final?",
-      "a": "**Mash bajo (62-65°C)**: favorece beta-amilasa → más azúcares simples → **atenuación 80-90%**, cerveza seca, body bajo. Ideal para Saison, Pilsner, IPA. **Mash medio (66-68°C)**: balance → **atenuación 72-78%**, body medio. Ideal Pale Ale, Bitter. **Mash alto (68-72°C)**: favorece alfa-amilasa → más dextrinas no fermentables → **atenuación 65-72%**, body alto. Ideal Sweet Stout, Milk Stout, Scottish Ale. Un mismo grist con S-04 puede atenuar 64% (mash 70°C) o 80% (mash 63°C)."
+      "q": "¿Por qué dos batches con la misma receta atenúan distinto?",
+      "a": "Las 6 variables más comunes: (1) viabilidad de la levadura — seca vieja puede atenuar 60% vs fresca 80%; (2) pitch rate — under-pitch genera estrés; (3) oxigenación inicial — sin O₂ la levadura no se multiplica bien; (4) temperatura real vs termómetro descalibrado; (5) pH de mash fuera de 5.2-5.6; (6) falta de zinc en el agua (<0,1 ppm causa stuck fermentation)."
     },
     {
-      "q": "¿La atenuación cambia entre fermentación primaria y secundaria?",
-      "a": "**Sí**: la mayoría del trabajo (85-95%) se hace en primaria (3-7 días). En secundaria/madurez (1-4 semanas más), la levadura termina de consumir maltosa residual y maltotriosa, sumando 2-8% de atenuación. **No saltees secundaria** en cervezas de alta gravedad o lagers, vas a quedar con FG alta. **Tip**: nunca trasvases a secundaria antes de 7 días post-pitch o cuando la densidad está bajando >1 punto/día — necesitás que la fermentación primaria complete primero."
+      "q": "¿Cómo comparo mi atenuación con el datasheet del fabricante (Wyeast, White Labs)?",
+      "a": "Usá siempre atenuación aparente para la comparación, porque es la que el fabricante reporta. Si tu aparente cae 5+ puntos por debajo del mínimo (ej: 65% vs 70% mínimo declarado), hay un problema real. Las causas más frecuentes: OG muy alta (>1.075 estresa la levadura), temperatura fuera del rango óptimo, o falta de nutrientes."
     },
     {
-      "q": "¿Por qué dos batches con misma receta atenúan distinto?",
-      "a": "**Variables comunes**: **(1) viabilidad de la levadura** (sobre seca vieja atenúa 60% vs fresca 80%). **(2) Cantidad pitcheada** (under-pitch genera stress, fermentación lenta). **(3) Oxigenación inicial** (sin O₂ la levadura no se multiplica bien). **(4) Temperatura real vs medida** (termómetro mal calibrado). **(5) pH del mash** (fuera de 5.2-5.6 inhibe enzimas). **(6) Mineralización del agua** (zinc <0.1 ppm causa stuck fermentation). Hacé checklist de estas 6 variables cuando 2 batches difieren >5% en atenuación."
+      "q": "¿La fermentación secundaria o lagering suma atenuación?",
+      "a": "Sí, pero poco. La primaria aporta 85-95% del trabajo total (3-7 días). La secundaria suma 2-8% de atenuación extra al terminar maltosa residual y maltotriosa, y es especialmente importante en cervezas de alta gravedad (>1.070) y lagers. No trasvases a secundaria si la densidad todavía está bajando más de 1 punto/día."
     }
   ],
   "solvedExamples": [
     {
-      "title": "American IPA con US-05 quedó dulce: diagnóstico de atenuación",
-      "context": "Homebrewer hizo American IPA con OG 1.062, pitched 1 sobre de Fermentis US-05 fresco a 20°C, mash 67°C 60 min, fermentación 7 días a 20°C. FG quedó en 1.020 (esperaba 1.012-1.015). La cerveza está dulce y con poco cuerpo seco característico del estilo.",
+      "title": "American IPA con US-05 quedó dulce: diagnóstico de fermentación incompleta",
+      "context": "Homebrewer hizo American IPA con OG 1.062, pitcheó 1 sobre de US-05 fresco a 20°C, mash 67°C por 60 min, fermentación 7 días a 20°C. FG final: 1.020. Esperaba 1.012-1.015. La cerveza quedó dulce.",
       "steps": [
-        "Atenuación aparente actual: (1,062 − 1,020) / (1,062 − 1) × 100 = 42 / 62 × 100 = **67,7%**",
-        "Atenuación esperada US-05 según Fermentis: 75-82%",
-        "Diagnóstico: atenuación **8 puntos por debajo del mínimo esperado** → fermentación incompleta",
-        "Posibles causas analizadas: (1) Temperatura mash 67°C alta (favorece dextrinas), (2) FG aún descendiendo, (3) levadura agotada por estrés inicial",
-        "Plan de acción inmediato: **(a)** Subir temperatura a 22°C × 2-3 días para reactivar levadura, **(b)** rousing suave para resuspender células sedimentadas, **(c)** verificar FG cada 24h",
-        "Si después de 5 días no baja: pitchear ½ sobre adicional de US-05 + agitar suave",
-        "Si tampoco baja: agregar 0,5 ml/L de Glucoamylase (enzima que rompe dextrinas) + esperar 5-7 días",
-        "Plan para próximo batch: bajar mash a 64-65°C, oxigenar más al inicio (2 min con paleta sanitizada), pitch a 22°C en lugar de 20°C"
+        "Atenuación aparente actual: (1.062 − 1.020) / (1.062 − 1) × 100 = 42 / 62 × 100 = **67,7%**",
+        "Rango esperado US-05 según Fermentis: 75-82%. Déficit: 7,3 puntos por debajo del mínimo.",
+        "Diagnóstico: **fermentación incompleta** — la levadura dejó de trabajar prematuramente.",
+        "Causas probables: mash a 67°C dejó muchas dextrinas; posible under-pitch o mala oxigenación.",
+        "Acción inmediata: subir temperatura a 22°C × 2-3 días + rousing suave para resuspender levadura.",
+        "Si en 5 días no baja: pitchear ½ sobre adicional de US-05 rehidratado.",
+        "Si tampoco baja: 0,5 ml/L de glucoamylase + esperar 5-7 días adicionales.",
+        "Corrección para el próximo batch: mash 64-65°C × 75 min, oxigenar bien (3 min con paleta sanitizada), pitch a 22°C."
       ],
-      "result": "Atenuación 67,7% indica claramente fermentación incompleta. Probabilidad alta de recuperar con calentamiento + rousing → FG objetivo 1,014-1,016, ABV final 5,5-6,0%. **Lección clave**: mash 67°C dejó muchas dextrinas no fermentables; con US-05 (atenuante alta) lo correcto era mash 64-65°C para una IPA seca tradicional. Para próximas IPAs americanas: mash 64°C × 75 min + US-05 fresco oxigenado = atenuación 80%+ consistente."
+      "result": "Atenuación 67,7% confirma fermentación incompleta. Con calentamiento + rousing hay buena probabilidad de recuperar hasta 1.014-1.016 (ABV final ~6%). Lección: mash 67°C + IPA seca = conflicto; US-05 necesita mash ≤65°C para expresar su atenuación completa."
     }
   ],
   "sources": [
     {
-      "name": "How to Brew - John Palmer",
-      "url": "http://howtobrew.com/"
+      "name": "How to Brew (John Palmer) — fórmulas de densidad y atenuación",
+      "url": "http://howtobrew.com/book/section-1/hops/hop-character"
     },
     {
-      "name": "Brewer's Friend Calculators",
-      "url": "https://www.brewersfriend.com/"
+      "name": "Fermentis — datasheets de cepas (US-05, S-04, W-34/70)",
+      "url": "https://fermentis.com/en/fermentation-solutions/you-make-beer/"
     },
     {
-      "name": "BJCP Style Guidelines 2021"
+      "name": "BJCP Style Guidelines 2021 — rangos por estilo",
+      "url": "https://www.bjcp.org/style/2021/bjcp-style-guidelines/"
+    },
+    {
+      "name": "Brewer's Friend — herramientas de cálculo para homebrewing",
+      "url": "https://www.brewersfriend.com/yeast-pitch-rate-and-starter-calculator/"
     }
   ],
   "relatedSlugs": [
@@ -171,31 +182,31 @@
   ],
   "howToSteps": [
     {
-      "name": "Ingresá og original",
-      "text": "Ingresá og original (ej: 1.055). Es el valor de og original."
+      "name": "Medí la OG antes de fermentar",
+      "text": "Tomá la lectura de gravedad original (OG) con hidrómetro o refractómetro antes de pitchear la levadura. Ejemplo: 1.055 para una Pale Ale."
     },
     {
-      "name": "Ingresá fg final",
-      "text": "Ingresá fg final (ej: 1.012). Es el valor de fg final."
+      "name": "Medí la FG cuando la fermentación terminó",
+      "text": "Medí la gravedad final (FG) con hidrómetro cuando la lectura sea estable 2 días seguidos. Ejemplo: 1.012."
     },
     {
-      "name": "Ingresá atenuación esperada cepa (%)",
-      "text": "Ingresá atenuación esperada cepa (%) (ej: 75). Es el valor de atenuación esperada cepa (%)."
+      "name": "Ingresá la atenuación esperada de tu cepa (opcional)",
+      "text": "Consultá el datasheet del fabricante (Fermentis, Wyeast, White Labs) e ingresá el porcentaje mínimo o promedio de atenuación esperada. Ejemplo: 75% para US-05."
     },
     {
       "name": "Hacé click en Calcular",
-      "text": "Presioná el botón \"Calcular\" para obtener el resultado. La calculadora procesa los datos al instante."
+      "text": "Presioná el botón Calcular. La calculadora computa al instante la atenuación aparente, la atenuación real y el diagnóstico comparado con tu cepa."
     },
     {
-      "name": "Revisá los resultados",
-      "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
+      "name": "Interpretá los resultados",
+      "text": "Si la atenuación aparente está dentro del rango esperado, la fermentación fue exitosa. Si está 5+ puntos por debajo del mínimo, revisá temperatura, pitch rate y oxigenación antes de embotellar."
     }
   ],
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-17",
-    "source": "How to Brew - John Palmer",
-    "sourceUrl": "http://howtobrew.com/",
+    "source": "Fermentis datasheets + How to Brew (John Palmer)",
+    "sourceUrl": "https://fermentis.com/en/fermentation-solutions/you-make-beer/",
     "updateType": "manual"
   }
 }
