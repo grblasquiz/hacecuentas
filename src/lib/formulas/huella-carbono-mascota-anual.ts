@@ -3,7 +3,7 @@ export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function huellaCarbonoMascotaAnual(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const p = Number(i.peso) || 10;
-  const factor = i.tipo === 'perro' ? 120 : 40;
+  const factor = i.tipo === 'perro' ? 120 : 90;
   const kg = p * factor;
   const t = (kg / 1000).toFixed(1);
   const arb = Math.ceil(kg / 22);

@@ -20,17 +20,18 @@ export interface Outputs {
 
 // Pricing per 1,000,000 tokens (USD) — OpenAI public rates 2026
 // Source: https://openai.com/api/pricing
+// Last verified: June 2026
 const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {
-  gpt4o:      { input: 5.00,  output: 15.00, label: "GPT-4o" },
+  gpt4o:      { input: 2.50,  output: 10.00, label: "GPT-4o" },
   gpt4o_mini: { input: 0.15,  output: 0.60,  label: "GPT-4o mini" },
-  o3:         { input: 15.00, output: 60.00, label: "o3" },
+  o3:         { input: 2.00,  output: 8.00,  label: "o3" },
 };
 
 // Comparison model pricing per 1,000,000 tokens (USD) — 2026
-// Claude 3.5 Sonnet: https://www.anthropic.com/pricing
-// Gemini 1.5 Pro (≤128K): https://ai.google.dev/pricing
-const CLAUDE_SONNET_35 = { input: 3.00,  output: 15.00, label: "Claude 3.5 Sonnet" };
-const GEMINI_15_PRO    = { input: 1.25,  output: 5.00,  label: "Gemini 1.5 Pro" };
+// Claude Sonnet (latest): https://www.anthropic.com/pricing
+// Gemini 2.5 Pro (≤200K context): https://ai.google.dev/pricing
+const CLAUDE_SONNET_35 = { input: 3.00,  output: 15.00, label: "Claude Sonnet" };
+const GEMINI_15_PRO    = { input: 1.25,  output: 10.00, label: "Gemini 2.5 Pro" };
 
 // Batch API discount factor — OpenAI 2026
 // Source: https://platform.openai.com/docs/guides/batch
@@ -141,7 +142,7 @@ export function compute(i: Inputs): Outputs {
     `Same workload, standard pricing (no Batch API):`,
     `• ${selectedLabel}: ${fmt(totalMonth)}/mo`,
     `• ${CLAUDE_SONNET_35.label}: ${fmt(claudeMonth)}/mo`,
-    `• ${GEMINI_15_PRO.label}: ${fmt(geminiMonth)}/mo`,
+    `• ${GEMINI_15_PRO.label} (≤200K context): ${fmt(geminiMonth)}/mo`,
   ];
 
   const cheapest = [

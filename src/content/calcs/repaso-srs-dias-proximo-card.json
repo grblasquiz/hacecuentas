@@ -1,46 +1,45 @@
 {
   "slug": "calculadora-repaso-srs-dias-proximo-card",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora SRS: próxima revisión 2026 — Gratis",
-  "h1": "SRS: próxima revisión",
-  "description": "Calculá sRS: próxima revisión según última, e-Factor y intervalo actual. Obtené próximo repaso al instante. Gratis, sin registro.",
+  "lastReviewed": "2026-06-05",
+  "title": "Calculadora SM-2: próxima revisión de tarjeta + tabla de intervalos | Hacé Cuentas",
+  "h1": "Calculadora SM-2: próxima revisión SRS",
+  "description": "Calculá el próximo intervalo de repaso según el algoritmo SM-2 (Anki, SuperMemo). Ingresá el intervalo actual y el E-Factor y obtené exactamente cuántos días falta para tu próxima revisión.",
   "category": "idiomas",
   "audience": "global",
   "icon": "🔁",
   "formulaId": "repaso-srs-dias-proximo-card",
-  "intro": "La calculadora de SRS (Spaced Repetition System) te permite saber exactamente cuándo tenés que repasar una tarjeta (flashcard) según el algoritmo SM-2, el sistema detrás de Anki, SuperMemo y la mayoría de las apps de memorización espaciada. Ingresás la fecha del último repaso, el E-Factor (factor de facilidad, entre 1.3 y 2.5) y el intervalo actual en días, y obtenés la fecha exacta del próximo repaso junto con el nuevo intervalo calculado. Se usa para planificar el estudio de vocabulario de idiomas, fórmulas, fechas históricas o cualquier dato que necesite retención a largo plazo.",
-  "keyTakeaway": "**Próximo intervalo = Intervalo actual × E-Factor** (SM-2). Con EF=2.5 e intervalo de 6 días, el siguiente repaso es en **15 días**. El EF mínimo es **1.3** y el máximo **2.5**.",
+  "answerSnippet": "En SM-2, el próximo intervalo se calcula así: **Próximo intervalo = round(Intervalo actual × E-Factor)**. Con intervalo de 10 días y E-Factor 2.5, el próximo repaso es en **25 días**. El E-Factor va de 1.3 (muy difícil) a 2.5 (muy fácil); el valor por defecto en Anki es 2.5.",
+  "intro": "La calculadora SM-2 te permite saber exactamente cuántos días faltan para el próximo repaso de una tarjeta (flashcard) según el algoritmo SM-2 — el sistema detrás de Anki, SuperMemo y prácticamente toda app de repetición espaciada. Ingresás el intervalo actual en días y el E-Factor (factor de facilidad) de la tarjeta, y obtenés el nuevo intervalo calculado al instante. Es útil para verificar fechas de repaso, planificar el estudio sin la app o entender cómo funciona el algoritmo internamente.",
+  "keyTakeaway": "**Próximo intervalo = round(Intervalo actual × E-Factor)** (SM-2 clásico, desde la 3ra repetición). Con EF=2.5 e intervalo de 10 días: próximo repaso en **25 días**. El EF mínimo posible es **1.3** (tarjeta muy difícil); el máximo es **2.5** (tarjeta fácil).",
   "useCases": [
-    "Estudiante de inglés que usa Anki quiere saber en cuántos días debe revisar una tarjeta de vocabulario con E-Factor 2.1 e intervalo actual de 10 días.",
-    "Persona preparando el DELE o el Cambridge que necesita planificar sus repasos de semanas antes del examen sin depender de la app.",
-    "Usuario de Duolingo o Babbel que lleva su propio sistema manual de tarjetas y quiere calcular el próximo repaso sin instalar Anki.",
-    "Docente de idiomas que diseña un calendario de repasos para sus alumnos basado en el algoritmo SM-2 con intervalos progresivos."
+    "Estudiante de inglés que usa Anki y quiere verificar cuándo aparecerá una tarjeta con E-Factor 2.1 e intervalo actual de 15 días.",
+    "Estudiante preparando el DELE o el Cambridge que planifica sus repasos sin depender de la app.",
+    "Desarrollador que implementa un sistema SRS propio y necesita confirmar que su fórmula coincide con el estándar SM-2.",
+    "Docente de idiomas que diseña un calendario de repasos manual basado en SM-2 con intervalos progresivos."
   ],
   "fields": [
     {
-      "id": "lastReview",
-      "label": "Última",
+      "id": "intervalo",
+      "label": "Intervalo actual (días)",
       "type": "number",
       "required": true,
-      "placeholder": "días",
-      "step": 0.01
+      "placeholder": "Ej: 10",
+      "min": 1,
+      "max": 3650,
+      "step": 1,
+      "format": "plain"
     },
     {
       "id": "eFactor",
-      "label": "E-Factor",
+      "label": "E-Factor (factor de facilidad)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
+      "placeholder": "1.3 – 2.5",
+      "min": 1.3,
+      "max": 2.5,
       "step": 0.01,
-      "help": "E-Factor SM-2 (Anki default) = **2.5**. Difícil baja a 1.3-2.0. Fácil sube a 2.7-3.0. Se ajusta automático según tus Again/Hard/Good/Easy en cada repaso."
-    },
-    {
-      "id": "intervalo",
-      "label": "Intervalo actual",
-      "type": "number",
-      "required": true,
-      "placeholder": "días",
-      "step": 0.01
+      "format": "plain",
+      "help": "E-Factor por defecto en Anki = **2.5**. Tarjeta difícil: 1.3–2.0. Tarjeta fácil: 2.1–2.5. Se ajusta automáticamente según tus respuestas Again/Hard/Good/Easy."
     }
   ],
   "outputs": [
@@ -55,55 +54,69 @@
     },
     {
       "id": "resumen",
-      "label": "Info"
+      "label": "Detalle del cálculo"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: vocabulario de inglés (EF=2.5, intervalo=10 días)",
     "steps": [
-      "3d, EF 2.5, int 1",
-      "3 días"
+      "Intervalo actual = 10 días (hace 10 días fue el último repaso).",
+      "E-Factor = 2.5 (tarjeta fácil, Anki la calificó como Easy varias veces).",
+      "Aplicar SM-2: Próximo intervalo = round(10 × 2.5) = **25 días**.",
+      "El próximo repaso aparecerá en 25 días."
     ],
-    "result": "3 días"
+    "result": "Próximo repaso en 25 días (nuevo intervalo: 25d)"
   },
-  "explanation": "## Cómo se calcula\n\nEl algoritmo **SM-2** (SuperMemo 2), desarrollado por Piotr Woźniak en 1987, es el núcleo de prácticamente todos los sistemas de repetición espaciada modernos. La fórmula para calcular el próximo intervalo es:\n\n```\n// Intervalo según SM-2\nSi repetición == 1:  nuevo_intervalo = 1\nSi repetición == 2:  nuevo_intervalo = 6\nSi repetición >= 3:  nuevo_intervalo = round(intervalo_actual × EF)\n\n// Actualización del E-Factor después de cada respuesta\nnuevo_EF = EF + (0.1 − (5 − calidad) × (0.08 + (5 − calidad) × 0.02))\n\n// Restricción: EF nunca puede bajar de 1.3\nnuevo_EF = max(1.3, nuevo_EF)\n\n// Fecha del próximo repaso\nproximo_repaso = fecha_ultimo_repaso + nuevo_intervalo (en días)\n```\n\nDonde **calidad** es la nota que le das a tu respuesta (0 a 5): 0 = fallo total, 3 = correcto con esfuerzo, 5 = perfecto sin dudar.\n\n---\n\n## Tabla de referencia\n\nLa siguiente tabla muestra cómo crece el intervalo a lo largo de las repeticiones con un E-Factor estable de **2.5** (el máximo, para una tarjeta \"fácil\"):\n\n| Repetición | Intervalo (días) | Fecha aprox. desde inicio |\n|-----------|-----------------|--------------------------|\n| 1         | 1               | Día 1                    |\n| 2         | 6               | Día 7                    |\n| 3         | 15              | Día 22                   |\n| 4         | 38              | Día 60                   |\n| 5         | 94              | Día 154                  |\n| 6         | 235             | Día 389 (~13 meses)      |\n| 7         | 588             | Día 977 (~2.7 años)      |\n\nCon un E-Factor de **1.3** (tarjeta muy difícil), los intervalos crecen mucho más lento: 1 → 6 → 8 → 10 → 13 → 17 días...\n\n---\n\n## Casos típicos\n\n**Caso 1 – Vocabulario nuevo en inglés (EF=2.5, intervalo=1)**\nUna tarjeta recién aprendida empieza con intervalo 1 (primer repaso al día siguiente). En el segundo repaso, el intervalo es fijo: 6 días. Desde el tercer repaso en adelante: `6 × 2.5 = 15 días`. Si la última revisión fue el 1 de enero, el próximo repaso es el **16 de enero**.\n\n**Caso 2 – Tarjeta difícil de kanji (EF=1.4, intervalo=10)**\nUn estudiante de japonés tiene una tarjeta con EF bajo porque la falla seguido. Nuevo intervalo: `round(10 × 1.4) = 14 días`. Si la vio el 5 de marzo, el próximo repaso es el **19 de marzo**. Sin SRS, probablemente la repasaría a diario sin necesidad.\n\n**Caso 3 – Repaso mensual de vocabulario avanzado (EF=2.3, intervalo=30)**\nUn estudiante de francés en nivel B2 tiene palabras bien consolidadas. Nuevo intervalo: `round(30 × 2.3) = 69 días`. Casi **2 meses y medio** sin necesidad de repasar esa palabra, liberando tiempo para vocabulario nuevo.\n\n---\n\n## Errores comunes\n\n1. **Confundir EF con dificultad subjetiva**: El EF no lo ponés vos a mano; lo calcula el algoritmo según tus calificaciones (0-5). Muchos usuarios lo editan manualmente y rompen el sistema.\n\n2. **Calificar siempre con 5 para \"avanzar más rápido\"**: Si calificás todo como perfecto aunque dudes, el EF sube a 2.5 y los intervalos se vuelven tan largos que empezás a olvidar. El sistema funciona solo si calificás honestamente.\n\n3. **Usar el intervalo en semanas o meses en vez de días**: La fórmula SM-2 trabaja exclusivamente en **días enteros**. Convertir a semanas antes de multiplicar genera fechas incorrectas.\n\n4. **Reiniciar el intervalo a 1 cuando se falla una tarjeta sin actualizar el EF**: Al fallar (calidad < 3), SM-2 reinicia el intervalo a 1 día, pero también **baja el EF**. Si solo reiniciás el intervalo sin actualizar el EF, la tarjeta nunca se marca como difícil y vuelve a aparecer con intervalos muy largos demasiado pronto.\n\n5. **Mezclar el algoritmo SM-2 con SM-18**: Anki usa una variante del SM-2 con modificaciones propias (FSRS en versiones recientes). Los intervalos calculados acá siguen el SM-2 clásico, que puede diferir levemente de lo que muestra Anki moderno.\n\n---\n\n## Calculadoras relacionadas\n\n- [Días de preparación para examen oficial de idioma](/calculadora-dias-preparacion-examen-oficial-idioma)\n- [Vocabulario por nivel MCER (A1–C2)](/calculadora-vocabulario-nivel-mcer-a1-c2-palabras)\n- [Comparación de efectividad de apps de idioma](/calculadora-apps-idioma-efectividad-comparacion-nivel)\n- [Clases semanales en iTalki: frecuencia óptima](/calculadora-clases-semanales-italki-online-frecuencia)\n",
+  "explanation": "## Cómo se calcula\n\nEl algoritmo **SM-2** (SuperMemo 2), desarrollado por Piotr Woźniak en 1987, es el núcleo de prácticamente todos los sistemas de repetición espaciada modernos. La fórmula principal es:\n\n```\n// Desde la 3ra repetición en adelante:\nNuevo intervalo = round(Intervalo actual × E-Factor)\n\n// Primeras dos repeticiones (fijas por el estándar SM-2):\n1ra repetición: 1 día\n2da repetición: 6 días\n\n// Actualización del E-Factor tras cada respuesta (calidad q de 0 a 5):\nNuevo EF = EF + (0.1 − (5 − q) × (0.08 + (5 − q) × 0.02))\nEF mínimo: 1.3  //  nunca puede bajar de este valor\n```\n\n---\n\n## Tabla de intervalos SM-2 según E-Factor\n\nCómo crece el intervalo a lo largo de las repeticiones con distintos E-Factors:\n\n| Repetición | EF = 1.3 (difícil) | EF = 1.8 (normal) | EF = 2.5 (fácil) |\n|-----------|-------------------|-------------------|------------------|\n| 1         | 1 día             | 1 día             | 1 día            |\n| 2         | 6 días            | 6 días            | 6 días           |\n| 3         | 8 días            | 11 días           | 15 días          |\n| 4         | 10 días           | 20 días           | 38 días          |\n| 5         | 13 días           | 36 días           | 94 días          |\n| 6         | 17 días           | 65 días           | 235 días         |\n| 7         | 22 días           | 117 días          | 588 días (~1.6 años) |\n\n**Lectura:** con EF=2.5 una tarjeta llega a intervalos de meses en pocas repeticiones. Con EF=1.3 los intervalos crecen muy despacio — señal de que la tarjeta es muy difícil o está mal formulada.\n\n---\n\n## Tabla de conversión rápida (intervalo actual × E-Factor → próximo repaso)\n\n| Intervalo actual | EF 1.3 | EF 1.8 | EF 2.1 | EF 2.5 |\n|-----------------|--------|--------|--------|--------|\n| 1 día           | 1 día  | 2 días | 2 días | 3 días |\n| 6 días          | 8 días | 11 días| 13 días| 15 días|\n| 10 días         | 13 días| 18 días| 21 días| 25 días|\n| 21 días         | 27 días| 38 días| 44 días| 53 días|\n| 30 días         | 39 días| 54 días| 63 días| 75 días|\n| 60 días         | 78 días| 108 días|126 días|150 días|\n| 90 días         | 117 días|162 días|189 días|225 días|\n\n---\n\n## Casos típicos\n\n**Caso 1 – Vocabulario nuevo en inglés (EF=2.5, intervalo=6 días)**  \nDesde la 3ra repetición: `round(6 × 2.5) = 15 días`. Si la viste el 1 de junio, el próximo repaso es el **16 de junio**.\n\n**Caso 2 – Kanji difícil (EF=1.4, intervalo=10 días)**  \nEF bajo porque la fallás seguido. Nuevo intervalo: `round(10 × 1.4) = 14 días`. La tarjeta tarda más en espaciarse — señal de que conviene simplificarla.\n\n**Caso 3 – Vocabulario avanzado de francés (EF=2.3, intervalo=30 días)**  \nNuevo intervalo: `round(30 × 2.3) = 69 días`. Casi **2 meses y medio** sin necesitar repasar esa palabra.\n\n---\n\n## Errores comunes\n\n1. **Editar el EF a mano**: el E-Factor lo calcula el algoritmo según tus calificaciones. Modificarlo manualmente rompe el sistema.\n\n2. **Calificar siempre con \"Easy\" o \"5\"**: los intervalos se vuelven tan largos que empezás a olvidar. Calificá honestamente.\n\n3. **Usar el intervalo en semanas en vez de días**: SM-2 trabaja exclusivamente en **días enteros**.\n\n4. **No actualizar el EF al fallar**: al fallar (calidad < 3), SM-2 reinicia el intervalo a 1 día Y baja el EF. Si solo reiniciás el intervalo, la tarjeta vuelve con intervalos largos demasiado pronto.\n\n5. **Confundir SM-2 con FSRS**: Anki moderno (desde 2023) usa FSRS por defecto. Los intervalos de FSRS pueden diferir del SM-2 clásico que calcula esta herramienta.\n\n---\n\n## Calculadoras relacionadas\n\n- [Días de preparación para examen oficial de idioma](/calculadora-dias-preparacion-examen-oficial-idioma)\n- [Vocabulario por nivel MCER (A1–C2)](/calculadora-vocabulario-nivel-mcer-a1-c2-palabras)\n- [Comparación de efectividad de apps de idioma](/calculadora-apps-idioma-efectividad-comparacion-nivel)\n",
   "faq": [
     {
-      "q": "¿Qué es el E-Factor y cuál es su rango válido?",
-      "a": "El E-Factor (factor de facilidad) es un número entre **1.3 y 2.5** que representa qué tan fácil es recordar una tarjeta. Empieza en 2.5 para todas las tarjetas nuevas y baja cada vez que la respondés mal o con dificultad. El mínimo es 1.3: aunque falles muchas veces, el algoritmo no deja que baje más para evitar intervalos de 0 días."
+      "q": "¿Qué es el E-Factor y cuál es su rango válido en SM-2?",
+      "a": "El E-Factor (factor de facilidad) es un número entre **1.3 y 2.5** que representa qué tan fácil es recordar una tarjeta. Empieza en 2.5 para todas las tarjetas nuevas en Anki y baja cada vez que la respondés mal o con dificultad. El mínimo es 1.3: aunque falles muchas veces, el algoritmo no permite que baje más para evitar intervalos de 0 días."
     },
     {
-      "q": "¿Qué pasa si fallo una tarjeta? ¿Vuelve a cero?",
-      "a": "Sí, pero solo parcialmente. Si calificás con menos de 3 (fallo), el intervalo vuelve a **1 día** y tenés que reaprender la tarjeta. Sin embargo, el EF también se actualiza a la baja: con calidad 0, el EF baja aproximadamente **0.34 puntos**. Una tarjeta con EF=2.5 fallada tres veces seguidas quedaría cerca de EF=1.7, mostrándose con mucha más frecuencia."
+      "q": "¿Cómo funciona la fórmula SM-2 paso a paso?",
+      "a": "Para la 3ra repetición en adelante: **Próximo intervalo = round(Intervalo actual × E-Factor)**. Las primeras dos repeticiones son fijas: 1 día (1ra) y 6 días (2da). El E-Factor se actualiza tras cada respuesta según tu calificación (0–5): `Nuevo EF = EF + (0.1 − (5 − q) × (0.08 + (5 − q) × 0.02))`. El EF nunca puede bajar de 1.3."
     },
     {
-      "q": "¿Cuántas tarjetas nuevas por día es razonable para no colapsar la cola de repasos?",
-      "a": "La recomendación general de la comunidad de Anki es entre **10 y 20 tarjetas nuevas por día**. Con 20 tarjetas nuevas diarias y un EF promedio de 2.1, en 3 meses podés acumular una cola de repasos de entre 100 y 150 tarjetas por día. Para idiomas, estudios del ámbito SRS sugieren que aprender las **2.000 palabras más frecuentes** de un idioma cubre aproximadamente el 80% del vocabulario cotidiano."
+      "q": "¿Qué pasa si fallo una tarjeta en Anki?",
+      "a": "Si calificás con 'Again' (calidad < 3), el intervalo vuelve a **1 día** y el EF se reduce. Con calidad 0, el EF baja aproximadamente **0.34 puntos**. Una tarjeta con EF=2.5 fallada tres veces consecutivas quedaría cerca de EF=1.7 y aparecería con mucha mayor frecuencia."
     },
     {
       "q": "¿El algoritmo SM-2 es el mismo que usa Anki?",
-      "a": "Anki históricamente usó una variante modificada del SM-2, pero desde 2022 incorporó el algoritmo **FSRS (Free Spaced Repetition Scheduler)**, que usa machine learning para predecir el olvido de forma más precisa. Esta calculadora implementa el **SM-2 clásico**, que sigue siendo válido y es el estándar de referencia para entender cómo funciona cualquier sistema SRS."
+      "a": "Anki históricamente usó una variante modificada del SM-2, pero desde 2023 incorporó el algoritmo **FSRS (Free Spaced Repetition Scheduler)**, que usa machine learning para predecir el olvido de forma más precisa. Esta calculadora implementa el **SM-2 clásico**, que sigue siendo el estándar de referencia para entender cómo funciona cualquier sistema SRS."
     },
     {
-      "q": "¿Con qué calidad debo calificar mis respuestas para un aprendizaje óptimo?",
-      "a": "La escala SM-2 va de 0 a 5: **0-1** = fallo total o casi total, **2** = fallo con pista, **3** = correcto con mucho esfuerzo, **4** = correcto con pequeña duda, **5** = perfecto e instantáneo. Para mantener el EF estable alrededor de 2.1–2.3 (el rango óptimo), necesitás calificar la mayoría de tus respuestas con **4**. Calificar siempre con 5 infla los intervalos y aumenta el olvido."
+      "q": "¿Cuántas tarjetas nuevas por día es razonable para no colapsar la cola de repasos en Anki?",
+      "a": "La recomendación general de la comunidad Anki es entre **10 y 20 tarjetas nuevas por día**. Con 20 tarjetas nuevas y EF promedio de 2.1, en 3 meses podés acumular una cola de 100–150 repasos diarios. Para idiomas, aprender las **2.000 palabras más frecuentes** de un idioma cubre el 80% del vocabulario cotidiano."
     },
     {
-      "q": "¿Cuánto vocabulario necesito para hablar fluidamente un idioma y cómo me ayuda SRS a llegar?",
-      "a": "Según estudios de lingüística aplicada citados por el Marco Común Europeo de Referencia (MCER), el nivel B2 requiere aproximadamente **4.000 a 5.000 palabras** en uso activo. Con SRS y 15 tarjetas nuevas por día, alcanzás esa cantidad en **267 a 334 días** de estudio continuo. La ventaja del SRS es que no repasás lo que ya sabés: solo lo que estás por olvidar."
+      "q": "¿Con qué calificación (0–5) debo responder para un aprendizaje óptimo?",
+      "a": "La escala SM-2: **0–1** = fallo total, **2** = fallo con pista, **3** = correcto con mucho esfuerzo, **4** = correcto con pequeña duda, **5** = perfecto e instantáneo. Para mantener el EF estable en el rango óptimo (2.1–2.3), necesitás calificar la mayoría de tus respuestas con **4**. Calificar siempre con 5 infla los intervalos y aumenta el olvido."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre SM-2 y FSRS?",
+      "a": "SM-2 usa una multiplicación fija (intervalo × EF). FSRS, introducido en Anki 23.10, usa un modelo de machine learning entrenado con datos reales de revisión para predecir la fecha óptima de repaso, considerando estabilidad de memoria y recuperabilidad estimada. FSRS generalmente supera a SM-2 en eficiencia de retención, pero SM-2 es más simple de entender e implementar manualmente."
     },
     {
       "q": "¿Puedo usar esta calculadora para materias que no son idiomas?",
-      "a": "Totalmente. El algoritmo SM-2 es universal: se usa para medicina (memorizar fármacos, síntomas), derecho (artículos del código), historia, geografía y cualquier disciplina que requiera retención de datos. La única condición es que la unidad de conocimiento sea **discreta y verificable** (saber o no saber), que es exactamente lo que modelan las flashcards."
+      "a": "Totalmente. El algoritmo SM-2 es universal: se usa para medicina (fármacos, síntomas), derecho (artículos del código), historia, geografía y cualquier disciplina que requiera retención de datos. La única condición es que la unidad de conocimiento sea **discreta y verificable** (saber o no saber), que es exactamente lo que modelan las flashcards."
     },
     {
-      "q": "¿Qué diferencia hay entre intervalo 0 e intervalo 1 en SM-2?",
-      "a": "En SM-2 el intervalo mínimo es **1 día**: eso significa que el próximo repaso es al día siguiente. El intervalo 0 no existe en el modelo clásico; si una tarjeta se falla repetidamente en la misma sesión, se repite dentro de esa sesión (intervalo intra-sesión), pero para el cálculo del próximo día siempre se usa mínimo 1. Algunas implementaciones como Anki permiten configurar un intervalo de reaprendizaje de horas, que es una extensión del estándar."
+      "q": "¿Qué significa que el intervalo mínimo de SM-2 es 1 día?",
+      "a": "En SM-2 el intervalo mínimo es **1 día**: el próximo repaso es al día siguiente como mínimo. El intervalo 0 no existe en el modelo clásico. Si una tarjeta se falla repetidamente en la misma sesión, se repite dentro de esa sesión (intervalo intra-sesión), pero para el cálculo del próximo día siempre se usa mínimo 1."
     }
   ],
   "sources": [
     {
-      "name": "Wikipedia ES – Repetición espaciada",
+      "name": "Woźniak, P. — Optimization of Learning: SM-2 Algorithm (SuperMemo.com, 1990)",
+      "url": "https://www.supermemo.com/en/blog/application-of-a-computer-to-improve-the-results-obtained-in-working-with-the-supermemo-method"
+    },
+    {
+      "name": "Anki Manual — Scheduling & Algorithm",
+      "url": "https://docs.ankiweb.net/deck-options.html#algorithm"
+    },
+    {
+      "name": "Wikipedia ES — Repetición espaciada",
       "url": "https://es.wikipedia.org/wiki/Repetici%C3%B3n_espaciada"
     }
   ],
@@ -112,13 +125,18 @@
     "frequency": "never",
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "Wikipedia ES – Repetición espaciada",
-    "sourceUrl": "https://es.wikipedia.org/wiki/Repetici%C3%B3n_espaciada"
+    "notes": "Fórmula fija SM-2, no requiere actualización de datos externos.",
+    "source": "Woźniak, P. — SM-2 Algorithm (SuperMemo.com)",
+    "sourceUrl": "https://www.supermemo.com/en/blog/application-of-a-computer-to-improve-the-results-obtained-in-working-with-the-supermemo-method"
   },
   "seoKeywords": [
-    "repaso srs dias proximo card",
-    "calculadora srs: próxima revisión 2026",
-    "srs: próxima revisión"
+    "calculadora SM-2 próxima revisión",
+    "calculadora repetición espaciada",
+    "calcular intervalo Anki SM-2",
+    "próxima revisión tarjeta flashcard",
+    "E-Factor Anki calculadora",
+    "algoritmo SM-2 fórmula",
+    "repaso espaciado días",
+    "SuperMemo SM-2 calculadora"
   ]
 }

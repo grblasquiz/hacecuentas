@@ -1,9 +1,10 @@
 {
   "slug": "calculadora-complejidad-algoritmica-big-o-iteraciones",
-  "lastReviewed": "2026-05-15",
-  "title": "Calculadora Big O: tiempo aprox 2026 — Gratis | Hacé Cuentas",
-  "h1": "Big O: tiempo aprox",
-  "description": "Calculá operaciones y tiempo real según Big O y tamaño de entrada n. Compará O(n²) vs O(n log n) con números concretos.",
+  "lastReviewed": "2026-06-04",
+  "title": "Calculadora Big O: complejidad y tiempo + tabla | Hacé Cuentas",
+  "h1": "Calculadora de complejidad Big O: operaciones y tiempo estimado",
+  "description": "Calculá cuántas operaciones ejecuta tu algoritmo y cuánto tarda según su complejidad Big O y el tamaño de entrada n. Compará O(n²) vs O(n log n) con números reales.",
+  "answerSnippet": "La complejidad Big O describe cuántas operaciones ejecuta un algoritmo según el tamaño de entrada n. A 10⁹ ops/s (CPU moderna): O(n) con n=1.000.000 tarda 1 ms; O(n log n) tarda ~20 ms; O(n²) tarda ~16 minutos; O(2^n) es inviable desde n≈50. Para convertir operaciones en tiempo: dividí f(n) por 10⁹.",
   "category": "tecnologia",
   "audience": "global",
   "icon": "📊",
@@ -13,54 +14,55 @@
   "useCases": [
     "Tenés que procesar 500.000 registros de ventas mensuales: con O(n log n) tardás ~9,5 ms, con O(n²) tardás ~250 segundos. La diferencia justifica reescribir el ordenamiento.",
     "Un junior mandó un PR con dos loops anidados sobre una tabla de 80.000 productos. Calculás: O(n²) con n=80k son 6.400 millones de ops, unos 6,4 segundos en cada request. El code review tiene argumento concreto.",
-    "Estás en entrevista en una empresa de e-commerce argentina y te piden comparar bubble sort vs quicksort para un catálogo de 200.000 ítems: O(n²) = 40.000M ops (40 s), O(n log n) = 3,4M ops (3,4 ms). La diferencia es de cuatro órdenes de magnitud.",
-    "Una startup de fintech local está evaluando si su algoritmo de matching O(n³) es viable para n=1.000 usuarios activos: 10⁹ operaciones, exactamente en el límite del segundo. Con n=5.000 ya son 125 segundos. Necesita rediseño.",
+    "Estás en entrevista en una empresa de e-commerce y te piden comparar bubble sort vs quicksort para un catálogo de 200.000 ítems: O(n²) = 40.000M ops (40 s), O(n log n) = 3,4M ops (3,4 ms). La diferencia es de cuatro órdenes de magnitud.",
+    "Una startup de fintech está evaluando si su algoritmo de matching O(n³) es viable para n=1.000 usuarios activos: 10⁹ operaciones, exactamente en el límite del segundo. Con n=5.000 ya son 125 segundos. Necesita rediseño.",
     "Implementás un sistema de autocompletado sobre 2 millones de palabras usando búsqueda binaria O(log n): solo 21 comparaciones por consulta. Frente a una búsqueda lineal O(n): 2 millones. La calc muestra por qué el índice vale la pena.",
     "Querés saber hasta qué n es factible un algoritmo de fuerza bruta O(2^n) para un problema de optimización: n=20 tarda ~1 ms, n=30 ya es ~1 segundo, n=40 son ~18 minutos, n=50 es inviable (años). Fijás el corte en n=25 para casos de prueba.",
     "Tenés una API que actualmente recibe payloads de 1.000 ítems pero el cliente quiere escalar a 100.000. Calculás el impacto: si el algoritmo es O(n), el tiempo se multiplica por 100 (aceptable); si es O(n²), por 10.000 (catástrofe). La decisión de refactorizar antes del escalado tiene sustento.",
-    "En una clase de algoritmos de la UBA o la UTN explicás complejidad: mostrás que n=1.000 en O(n²) son 1 millón de ops (1 ms) pero en O(2^n) son 10³⁰¹ ops, una cantidad que no existe en el universo observable. El contraste hace que el concepto quede."
+    "En una clase de algoritmos explicás complejidad: mostrás que n=1.000 en O(n²) son 1 millón de ops (1 ms) pero en O(2^n) son 10³⁰¹ ops, una cantidad que no existe en el universo observable. El contraste hace que el concepto quede."
   ],
   "fields": [
     {
       "id": "n",
-      "label": "n",
+      "label": "Tamaño de entrada (n)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "Ej: 1000",
+      "step": 1,
+      "format": "plain"
     },
     {
       "id": "tipo",
-      "label": "Tipo",
+      "label": "Complejidad Big O",
       "type": "select",
       "required": true,
       "options": [
         {
           "value": "1",
-          "label": "O(1)"
+          "label": "O(1) — constante"
         },
         {
           "value": "logn",
-          "label": "O(log n)"
+          "label": "O(log n) — logarítmico"
         },
         {
           "value": "n",
-          "label": "O(n)"
+          "label": "O(n) — lineal"
         },
         {
           "value": "nlogn",
-          "label": "O(n log n)"
+          "label": "O(n log n) — lineal-logarítmico"
         },
         {
           "value": "n2",
-          "label": "O(n²)"
+          "label": "O(n²) — cuadrático"
         },
         {
           "value": "2n",
-          "label": "O(2^n)"
+          "label": "O(2^n) — exponencial"
         }
       ],
-      "default": "1"
+      "default": "n"
     }
   ],
   "outputs": [
@@ -79,14 +81,15 @@
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: ordenar 100.000 registros",
     "steps": [
-      "n=1000, O(n²)",
-      "10^6"
+      "n = 100.000, complejidad = O(n log n) → 1.660.964 operaciones ≈ 1,7 ms",
+      "n = 100.000, complejidad = O(n²) → 10.000.000.000 operaciones ≈ 10 segundos",
+      "Conclusión: mergesort/quicksort (O(n log n)) es ~5.800× más rápido que bubble sort (O(n²)) para este tamaño"
     ],
-    "result": "1 ms"
+    "result": "Diferencia de 10 s vs 1,7 ms"
   },
-  "explanation": "## Cómo se calcula\n\nCada complejidad tiene su fórmula f(n):\n\n- **O(1)**: operaciones = 1 (constante)\n- **O(log n)**: operaciones = log₂(n)\n- **O(n)**: operaciones = n\n- **O(n log n)**: operaciones = n × log₂(n)\n- **O(n²)**: operaciones = n²\n- **O(2^n)**: operaciones = 2^n\n\nEl tiempo estimado asume una CPU que ejecuta 10⁹ operaciones básicas por segundo (orden de magnitud típico en C/Rust; en Python/Ruby es 10⁷-10⁸):\n\n**Tiempo = operaciones / 10⁹** segundos.\n\n## Tabla de referencia\n\n| n | O(1) | O(log n) | O(n) | O(n log n) | O(n²) | O(2^n) |\n|---|---|---|---|---|---|---|\n| 10 | 1 | 3 | 10 | 33 | 100 | 1.024 |\n| 100 | 1 | 7 | 100 | 664 | 10.000 | 10³⁰ (inviable) |\n| 1.000 | 1 | 10 | 1.000 | 9.966 | 10⁶ (1 ms) | ∞ |\n| 10.000 | 1 | 13 | 10.000 | 132.877 | 10⁸ (0,1 s) | ∞ |\n| 1.000.000 | 1 | 20 | 10⁶ (1 ms) | 2×10⁷ (20 ms) | 10¹² (16 min) | ∞ |\n\n## Casos típicos\n\n- **Búsqueda binaria en 1M items (O(log n))**: 20 comparaciones → nanosegundos. Por eso los índices B-tree en DBs son tan rápidos.\n- **Quicksort de 100k items (O(n log n))**: ~1,7M operaciones → ~2 ms en C++.\n- **Matrix multiplication 1000x1000 (O(n³))**: 10⁹ operaciones → ~1 segundo. Por eso GPUs aceleran deep learning.\n- **Travelling salesman por fuerza bruta con 15 ciudades (O(n!))**: 1,3×10¹² operaciones → 22 min. Con 20 ciudades: 77 años.\n\n## Errores comunes\n\n- **Confundir Big O con tiempo real**: Big O describe crecimiento asintótico, no velocidad absoluta. Un O(n²) con n=100 puede ser más rápido que un O(n) con constante alta.\n- **Ignorar el caso promedio vs peor caso**: Quicksort es O(n log n) promedio pero O(n²) en peor caso (array ya ordenado con mal pivot).\n- **Usar recursión ingenua en Fibonacci**: fib(n) con recursión pura es O(2^n); con memoización baja a O(n).\n- **Olvidar la complejidad espacial**: O(1) en tiempo no implica O(1) en memoria. Un hash table puede ser O(1) lookup pero O(n) espacio.\n\n## Calculadoras relacionadas\n\n- [Tiempo de descarga según ancho de banda](/calculadora-ancho-banda-descarga-tiempo)\n- [Conexiones DB pool máximo concurrentes](/calculadora-conexiones-db-pool-max-concurrentes)\n- [Conversión de bytes KB MB GB TB](/calculadora-conversion-bytes-kb-mb-gb-tb)",
+  "explanation": "## Cómo funciona la notación Big O\n\nCada complejidad tiene su fórmula f(n) de operaciones:\n\n| Complejidad | Fórmula | Ejemplo de algoritmo |\n|---|---|---|\n| **O(1)** | 1 | Acceso a array por índice, hash lookup |\n| **O(log n)** | log₂(n) | Búsqueda binaria, árbol AVL |\n| **O(n)** | n | Recorrido de lista, búsqueda lineal |\n| **O(n log n)** | n × log₂(n) | Mergesort, Quicksort (promedio), Heapsort |\n| **O(n²)** | n² | Bubble sort, Insertion sort, dos loops anidados |\n| **O(2^n)** | 2^n | Fuerza bruta TSP, subconjuntos, backtracking ingenuo |\n\nEl **tiempo estimado** asume una CPU ejecutando 10⁹ operaciones básicas por segundo:\n\n> **Tiempo (seg) = f(n) / 10⁹**\n\n## Tabla de referencia: operaciones y tiempo\n\n| n | O(log n) | O(n) | O(n log n) | O(n²) | O(2^n) |\n|---|---|---|---|---|---|\n| 10 | 3 ops / <1 ns | 10 / <1 ns | 33 / <1 ns | 100 / <1 ns | 1.024 / <1 ns |\n| 1.000 | 10 / <1 ns | 1.000 / 1 µs | 9.966 / 10 µs | 1.000.000 / 1 ms | ∞ |\n| 10.000 | 13 / <1 ns | 10.000 / 10 µs | 132.877 / 0,1 ms | 100.000.000 / 0,1 s | ∞ |\n| 100.000 | 17 / <1 ns | 100.000 / 0,1 ms | 1.660.964 / 1,7 ms | 10¹⁰ / 10 s | ∞ |\n| 1.000.000 | 20 / <1 ns | 1.000.000 / 1 ms | 19.931.568 / 20 ms | 10¹² / 16 min | ∞ |\n\n## Casos prácticos reales\n\n- **Búsqueda binaria en 1M ítems (O(log n))**: 20 comparaciones → nanosegundos. Por eso los índices B-tree en bases de datos son tan rápidos.\n- **Quicksort de 100k ítems (O(n log n))**: ~1,7M operaciones → ~2 ms en C++.\n- **Matrix multiplication 1000×1000 (O(n³))**: 10⁹ operaciones → ~1 segundo en código optimizado.\n- **Travelling salesman con 50 ciudades por fuerza bruta (O(2^n))**: inviable en cualquier hardware.\n\n## Errores comunes al aplicar Big O\n\n- **Confundir Big O con tiempo real**: O(n²) con n=100 puede ser más rápido que O(n) con constante alta. Big O describe crecimiento, no velocidad absoluta.\n- **Ignorar el caso promedio**: Quicksort es O(n log n) promedio pero O(n²) en el peor caso.\n- **Olvidar la complejidad espacial**: un O(1) en tiempo puede ser O(n) en memoria.\n- **Python es ~100× más lento**: multiplicá el tiempo estimado por 100 para código Python puro.\n\n## Calculadoras relacionadas\n\n- [Conversión de bytes KB MB GB TB](/calculadora-conversion-bytes-kb-mb-gb-tb)\n- [Tiempo de descarga según ancho de banda](/calculadora-ancho-banda-descarga-tiempo)",
   "faq": [
     {
       "q": "¿Cómo calcula exactamente esta herramienta el tiempo estimado?",
@@ -94,47 +97,47 @@
     },
     {
       "q": "¿Qué significa O(1) en la práctica y cuándo aplica?",
-      "a": "<strong>O(1) significa que la operación tarda lo mismo sin importar el tamaño de los datos.</strong> Ejemplos clásicos: acceder a un elemento de array por índice (arr[42]), buscar en un hash map o diccionario, hacer push o pop en un stack, leer o escribir una variable. En CPU moderna son operaciones de nanosegundos constantes. El error común es pensar que O(1) es siempre 'instantáneo': una operación O(1) con una constante enorme puede ser más lenta que O(n) con n pequeño. Big O solo describe cómo escala, no la velocidad absoluta. Una función de hash criptográfica es O(1) pero más lenta que un simple incremento de contador."
+      "a": "<strong>O(1) significa que la operación tarda lo mismo sin importar el tamaño de los datos.</strong> Ejemplos clásicos: acceder a un elemento de array por índice (arr[42]), buscar en un hash map o diccionario, hacer push o pop en un stack, leer o escribir una variable. En CPU moderna son operaciones de nanosegundos constantes. El error común es pensar que O(1) es siempre 'instantáneo': una operación O(1) con una constante enorme puede ser más lenta que O(n) con n pequeño. Big O solo describe cómo escala, no la velocidad absoluta."
     },
     {
       "q": "¿Por qué O(log n) es tan eficiente y cómo se produce en código?",
-      "a": "<strong>O(log n) aparece cuando cada paso del algoritmo descarta la mitad del problema restante.</strong> El ejemplo canónico es la búsqueda binaria: en un array de 1.000.000 de elementos ordenados, necesitás como máximo 20 comparaciones (log₂ de 1M ≈ 20). Si duplicás el array a 2M, solo agregás 1 comparación más. En código, se produce en: búsqueda binaria, árboles binarios balanceados (AVL, Red-Black), estructuras de datos tipo heap, y búsquedas en índices B-tree de bases de datos relacionales (PostgreSQL, MySQL usan esto para sus índices). Para n=1M: O(n) son 1 millón de ops; O(log n) son 20 ops. La diferencia es de cinco órdenes de magnitud."
+      "a": "<strong>O(log n) aparece cuando cada paso del algoritmo descarta la mitad del problema restante.</strong> El ejemplo canónico es la búsqueda binaria: en un array de 1.000.000 de elementos ordenados, necesitás como máximo 20 comparaciones (log₂ de 1M ≈ 20). Si duplicás el array a 2M, solo agregás 1 comparación más. En código se produce en: búsqueda binaria, árboles binarios balanceados (AVL, Red-Black), estructuras heap, e índices B-tree en bases de datos relacionales. Para n=1M: O(n) son 1M ops; O(log n) son 20 ops. La diferencia es de cinco órdenes de magnitud."
     },
     {
-      "q": "¿Cuándo un O(n²) empieza a ser un problema real?",
+      "q": "¿Cuándo un O(n²) empieza a ser un problema real en producción?",
       "a": "Depende del contexto, pero como referencia general con CPU a 10⁹ ops/s: <strong>n=1.000 → 1 ms</strong> (imperceptible), <strong>n=10.000 → 100 ms</strong> (notable para el usuario), <strong>n=100.000 → 10 segundos</strong> (inaceptable en un endpoint web), <strong>n=1.000.000 → casi 17 minutos</strong> (inviable). El problema es que muchos sistemas arrancan con datasets pequeños donde O(n²) funciona, y el cuello de botella aparece seis meses después cuando el cliente tiene 10× más datos. Si el dominio puede crecer a 10.000 ítems o más, vale la pena buscar una solución O(n log n). En Python puro el límite práctico de O(n²) baja a n=1.000–3.000 por el overhead del intérprete."
     },
     {
-      "q": "¿Qué diferencia hay entre O, Ω y Θ, y cuál importa en entrevistas?",
-      "a": "<strong>O (Big O) es la cota superior: el peor caso posible.</strong> Ω (Omega) es la cota inferior: el mejor caso. Θ (Theta) es cota ajustada: el algoritmo crece exactamente así en todos los casos. Ejemplo con quicksort: su peor caso es O(n²) cuando el pivote siempre elige el extremo (array ya ordenado sin shuffle), su mejor y promedio son Θ(n log n). En entrevistas técnicas en Argentina y globalmente, cuando alguien dice 'la complejidad es...', casi siempre se refiere a O (peor caso). Si el entrevistador pregunta especificamente por el mejor caso, es cuando mencionás Ω. Mergesort es Θ(n log n) en todos los casos, por eso es preferido cuando la consistencia importa más que la velocidad promedio."
+      "q": "¿Qué diferencia hay entre O, Ω y Θ, y cuál importa en entrevistas técnicas?",
+      "a": "<strong>O (Big O) es la cota superior: el peor caso posible.</strong> Ω (Omega) es la cota inferior: el mejor caso. Θ (Theta) es cota ajustada: el algoritmo crece exactamente así en todos los casos. Ejemplo con quicksort: su peor caso es O(n²) cuando el pivote siempre elige el extremo; su promedio es Θ(n log n). En entrevistas técnicas, cuando alguien dice 'la complejidad es...', casi siempre se refiere a O (peor caso). Mergesort es Θ(n log n) en todos los casos, por eso es preferido cuando la consistencia importa más que la velocidad promedio."
     },
     {
       "q": "¿Cómo determino el Big O de mi propio código sin memorizar nada?",
-      "a": "Seguí estas reglas prácticas: <strong>un loop simple sobre n elementos → O(n)</strong>. <strong>Dos loops anidados sobre n → O(n²)</strong>. <strong>Tres loops anidados → O(n³)</strong>. <strong>Un loop que en cada iteración divide n a la mitad → O(log n)</strong>. <strong>Una función recursiva que se llama a sí misma dos veces sin memoización → O(2^n)</strong>. <strong>Recursión que divide y combina (mergesort) → O(n log n)</strong>. Las constantes y términos de menor orden se ignoran: O(3n + 5) se simplifica a O(n). Si tenés un loop O(n) seguido de otro O(n), el resultado sigue siendo O(n), no O(2n). El caso de acceso a hash tables se asume O(1) amortizado, aunque en el peor caso con colisiones puede ser O(n)."
+      "a": "Seguí estas reglas prácticas: <strong>un loop simple sobre n elementos → O(n)</strong>. <strong>Dos loops anidados sobre n → O(n²)</strong>. <strong>Tres loops anidados → O(n³)</strong>. <strong>Un loop que en cada iteración divide n a la mitad → O(log n)</strong>. <strong>Una función recursiva que se llama a sí misma dos veces sin memoización → O(2^n)</strong>. <strong>Recursión que divide y combina (mergesort) → O(n log n)</strong>. Las constantes y términos de menor orden se ignoran: O(3n + 5) se simplifica a O(n). Si tenés un loop O(n) seguido de otro O(n), el resultado sigue siendo O(n), no O(2n)."
     },
     {
-      "q": "¿Por qué el tiempo real en Python es mucho mayor al estimado?",
-      "a": "La calculadora asume 10⁹ operaciones/segundo, que es la referencia estándar para CPU modernas ejecutando código compilado (C, C++, Rust, Java JIT). <strong>Python interpretado ejecuta aproximadamente 10⁷ operaciones simples por segundo, unas 100 veces más lento.</strong> Entonces para Python puro, multiplicá el tiempo estimado por 100. Un O(n²) con n=10.000 que la calculadora muestra como 0,1 s, en Python tarda ~10 s. Por eso NumPy, Pandas y PyTorch delegan los loops pesados a extensiones escritas en C o Fortran: recuperan los 10⁹ ops/s para las operaciones críticas. Si usás Go o Java con JIT, estás más cerca de 5×10⁸ a 10⁹. En JavaScript en V8, similar a Java. La calc te da el piso teórico."
+      "q": "¿Por qué el tiempo real en Python es mucho mayor al que muestra la calculadora?",
+      "a": "La calculadora asume 10⁹ operaciones/segundo, que es la referencia estándar para código compilado (C, C++, Rust, Java JIT). <strong>Python interpretado ejecuta aproximadamente 10⁷ operaciones simples por segundo, unas 100 veces más lento.</strong> Entonces para Python puro, multiplicá el tiempo estimado por 100. Un O(n²) con n=10.000 que la calculadora muestra como 0,1 s, en Python tarda ~10 s. Por eso NumPy, Pandas y PyTorch delegan los loops pesados a extensiones en C: recuperan los 10⁹ ops/s para las operaciones críticas."
     },
     {
       "q": "¿Qué es la complejidad espacial y cómo se relaciona con Big O?",
-      "a": "<strong>Big O también se usa para medir memoria, no solo tiempo.</strong> Un algoritmo puede ser rápido pero insostenible en RAM. Merge sort es O(n log n) en tiempo pero O(n) en espacio extra porque necesita arrays auxiliares. Quicksort in-place es O(log n) en espacio (solo el stack de recursión). Cuando construís una tabla de hash para resolver un problema en O(n) tiempo, normalmente estás usando O(n) espacio adicional. En sistemas embebidos, móviles, o funciones Lambda con límites de memoria (AWS Lambda permite hasta 10 GB pero se factura por MB-segundo), el trade-off tiempo-espacio importa. La calculadora estima tiempo; para analizar memoria aplicá la misma lógica de conteo de loops pero en términos de estructuras de datos creadas."
+      "a": "<strong>Big O también se usa para medir memoria, no solo tiempo.</strong> Merge sort es O(n log n) en tiempo pero O(n) en espacio extra porque necesita arrays auxiliares. Quicksort in-place es O(log n) en espacio (solo el stack de recursión). Cuando construís una tabla de hash para resolver un problema en O(n) tiempo, normalmente usás O(n) espacio adicional. En sistemas embebidos, funciones Lambda con límites de RAM, o móviles con poca memoria, el trade-off tiempo-espacio importa tanto como el tiempo de ejecución."
     },
     {
       "q": "¿Por qué O(2^n) hace imposibles ciertos problemas aunque la CPU sea rápida?",
-      "a": "<strong>Porque el crecimiento exponencial supera cualquier mejora de hardware.</strong> Con n=50, tenés 2^50 ≈ 10¹⁵ operaciones. A 10⁹ ops/s son ~11,6 días. Con una CPU 1000 veces más rápida serían ~16 minutos, lo que sigue siendo inviable en producción. Con n=100, son 2^100 ≈ 10³⁰ operaciones: ninguna computadora existente puede con eso. Problemas como encontrar el subconjunto de suma cero, el viajante (TSP) exacto, o verificar satisfacibilidad de fórmulas booleanas (SAT) son O(2^n) o peores por fuerza bruta. La solución no es hardware más rápido sino algoritmos con poda (branch and bound), heurísticas, programación dinámica, o aproximaciones. Para n ≤ 20–25, O(2^n) sigue siendo manejable en muchos contextos."
-    },
-    {
-      "q": "¿Qué es la 'notación amortizada' y por qué no aparece en esta calculadora?",
-      "a": "<strong>El análisis amortizado describe el costo promedio de una operación a lo largo de una secuencia de operaciones, no el costo individual en el peor caso.</strong> El ejemplo clásico es el array dinámico (ArrayList en Java, vector en C++, list en Python): insertar al final es O(1) amortizado aunque ocasionalmente sea O(n) cuando hay que redimensionar. Si analizás el peor caso de una sola inserción, parece O(n); si analizás n inserciones consecutivas, el total es O(n), entonces el promedio es O(1) por operación. Esta calculadora trabaja con el análisis de peor caso estándar (Big O clásico), que es lo más relevante para comparar algoritmos. Para estructuras como heaps de Fibonacci o conjuntos disjuntos (Union-Find), el análisis amortizado es donde realmente se muestran sus ventajas."
-    },
-    {
-      "q": "¿Cómo usar esta calculadora para tomar decisiones de arquitectura reales?",
-      "a": "<strong>La estrategia más útil es calcular los dos o tres algoritmos candidatos con el n máximo esperado en producción.</strong> Primero estimá el volumen: si tenés 50.000 registros hoy y el negocio crece 3× por año, en dos años estarás en 450.000. Calculá el tiempo para n=450.000 con cada alternativa. Si la diferencia es de milisegundos vs minutos, tenés un argumento sólido para priorizar el refactor. Si la diferencia es de 2 ms vs 40 ms y el endpoint se llama 10 veces por día, quizás no vale el esfuerzo. También considerá que n a veces no es el número total de registros sino el tamaño de un batch, el número de nodos en un grafo, o la longitud de un string. Identificar correctamente qué es n en tu problema específico es la mitad del análisis."
+      "a": "<strong>Porque el crecimiento exponencial supera cualquier mejora de hardware.</strong> Con n=50, tenés 2^50 ≈ 10¹⁵ operaciones. A 10⁹ ops/s son ~11,6 días. Con una CPU 1000 veces más rápida serían ~16 minutos, lo que sigue siendo inviable en producción. Con n=100, son 2^100 ≈ 10³⁰ operaciones: ninguna computadora puede con eso. La solución no es hardware más rápido sino algoritmos con poda (branch and bound), programación dinámica, o aproximaciones. Para n ≤ 20–25, O(2^n) sigue siendo manejable en muchos contextos."
     },
     {
       "q": "¿Hay casos donde un algoritmo con peor Big O es mejor opción en la práctica?",
-      "a": "<strong>Sí, y es uno de los errores más comunes optimizar prematuramente basándose solo en Big O.</strong> Las constantes ocultas importan cuando n es pequeño: insertion sort O(n²) es más rápido que merge sort O(n log n) para n < 10–20 elementos porque tiene menos overhead. De hecho, muchas implementaciones de sort en lenguajes como Python (Timsort) y Java usan insertion sort internamente para subarrays pequeños. Un O(n) con constante enorme puede ser más lento que O(n log n) con constante pequeña para los n relevantes de tu problema. También influyen la localidad de caché, el branch prediction del procesador y si el algoritmo es paralelizable. Big O te da el mapa general; el profiling en producción con datos reales te da el territorio exacto."
+      "a": "<strong>Sí, y es uno de los errores más comunes optimizar prematuramente basándose solo en Big O.</strong> Las constantes ocultas importan cuando n es pequeño: insertion sort O(n²) es más rápido que merge sort O(n log n) para n < 10–20 elementos porque tiene menos overhead. De hecho, muchas implementaciones de sort en Python (Timsort) y Java usan insertion sort internamente para subarrays pequeños. Big O te da el mapa general; el profiling en producción con datos reales te da el territorio exacto."
+    },
+    {
+      "q": "¿Cómo usar esta calculadora para tomar decisiones de arquitectura reales?",
+      "a": "<strong>La estrategia más útil es calcular los dos o tres algoritmos candidatos con el n máximo esperado en producción.</strong> Primero estimá el volumen: si tenés 50.000 registros hoy y el negocio crece 3× por año, en dos años estarás en 450.000. Calculá el tiempo para n=450.000 con cada alternativa. Si la diferencia es de milisegundos vs minutos, tenés un argumento sólido para priorizar el refactor. También identificá correctamente qué es n en tu problema: puede ser el número de nodos en un grafo, la longitud de un string, o el tamaño de un batch, no necesariamente el total de registros."
+    },
+    {
+      "q": "¿Qué es la notación amortizada y por qué no aparece en esta calculadora?",
+      "a": "<strong>El análisis amortizado describe el costo promedio de una operación a lo largo de una secuencia, no el costo individual en el peor caso.</strong> El ejemplo clásico es el array dinámico (ArrayList en Java, vector en C++, list en Python): insertar al final es O(1) amortizado aunque ocasionalmente sea O(n) cuando hay que redimensionar. Si analizás n inserciones consecutivas, el total es O(n), entonces el promedio es O(1) por operación. Esta calculadora trabaja con el análisis de peor caso estándar (Big O clásico), que es lo más relevante para comparar algoritmos entre sí."
     }
   ],
   "sources": [
@@ -143,18 +146,18 @@
       "url": "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/"
     },
     {
-      "name": "Big-O Cheat Sheet",
+      "name": "Big-O Cheat Sheet — Complexity of Common Algorithms",
       "url": "https://www.bigocheatsheet.com/"
     },
     {
-      "name": "IEEE — Computer Science Resources",
-      "url": "https://www.computer.org"
+      "name": "Khan Academy — Asymptotic notation",
+      "url": "https://www.khanacademy.org/computing/computer-science/algorithms/asymptotic-notation/a/asymptotic-notation"
     }
   ],
   "relatedSlugs": [
-    "calculadora-carga-bateria-tiempo-amp",
-    "calculadora-stop-motion-fps-tiempo",
-    "calculadora-tiempo-exposicion-panning"
+    "calculadora-conversion-bytes-kb-mb-gb-tb",
+    "calculadora-ancho-banda-descarga-tiempo",
+    "calculadora-carga-bateria-tiempo-amp"
   ],
   "dataUpdate": {
     "frequency": "never",
@@ -165,8 +168,10 @@
     "sourceUrl": "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/"
   },
   "seoKeywords": [
-    "big o: tiempo aprox",
-    "complejidad algoritmica big o iteraciones",
-    "calculadora big o: tiempo aprox 2026"
+    "calculadora big o complejidad",
+    "big o notation calculator",
+    "complejidad algoritmica calculadora",
+    "tiempo algoritmo big o",
+    "big o tiempo estimado"
   ]
 }

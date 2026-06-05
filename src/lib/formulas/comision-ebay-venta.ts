@@ -12,7 +12,8 @@ export function comisionEbayVenta(i: Inputs): Outputs {
   const fvf = (precio + envio) * pct;
   const payment = (precio + envio) * 0.029 + 0.30;
   const totalFees = fvf + payment;
-  const neto = precio - totalFees;
+  // Neto = lo que eBay deposita: precio cobrado + envío cobrado − todas las fees
+  const neto = (precio + envio) - totalFees;
   const ganancia = neto - costo;
   const chart = {
     type: 'doughnut' as const,
@@ -21,8 +22,8 @@ export function comisionEbayVenta(i: Inputs): Outputs {
       { label: 'Comisiones eBay', value: Math.max(0, Number(totalFees.toFixed(2))) },
     ],
     prefix: '$',
-    centerValue: '$' + Math.round(precio).toLocaleString('es-AR'),
-    centerLabel: 'Precio venta',
+    centerValue: '$' + Math.round(precio + envio).toLocaleString('es-AR'),
+    centerLabel: 'Total cobrado',
     ariaLabel: 'Composición del precio de venta: neto para el vendedor y comisiones de eBay.',
   };
   const margen = Number(((ganancia / precio) * 100).toFixed(2));

@@ -4,8 +4,9 @@ export function embarazadaAumentoPesoSemanaImcPrevio(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const imc=Number(i.imcPrevio)||22; const s=Number(i.semanasEmbarazo)||0;
   let min=0,max=0;
+  // IOM 2009 guidelines (adopted by WHO and Argentina MOH)
   if(imc<18.5){min=12.5;max=18}
-  else if(imc<25){min=11;max=16}
+  else if(imc<25){min=11.5;max=16}
   else if(imc<30){min=7;max=11.5}
   else {min=5;max=9}
   const prog=s/40;
