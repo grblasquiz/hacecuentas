@@ -1,13 +1,14 @@
 {
   "slug": "calculadora-raid-capacidad-discos-redundancia",
-  "lastReviewed": "2026-04-24",
-  "title": "Calculadora Capacidad RAID 2026 — Gratis | Hacé Cuentas",
-  "h1": "Capacidad RAID",
-  "description": "Los cálculos técnicos en IT y desarrollo son fundamentales: latencia, ancho de banda, uptime SLA, costos de cloud, complejidad algorítmica.",
+  "lastReviewed": "2026-06-04",
+  "title": "Calculadora RAID: capacidad útil y redundancia + tabla | Hacé Cuentas",
+  "h1": "Calculadora RAID: capacidad útil, discos y redundancia",
+  "description": "Calculá la capacidad útil real de tu arreglo RAID (0, 1, 5, 6, 10) según la cantidad de discos y su tamaño en TB. Incluye tabla de referencia, fórmulas y comparación de niveles.",
   "category": "tecnologia",
   "audience": "global",
   "icon": "💽",
   "formulaId": "raid-capacidad-discos-redundancia",
+  "answerSnippet": "RAID 5 con 4 discos de 2 TB = 6 TB útiles — fórmula: (N−1) × TB. RAID 6 = (N−2) × TB; RAID 10 = (N/2) × TB; RAID 1 = 1 × TB; RAID 0 = N × TB (sin redundancia). La capacidad real siempre es menor que la suma bruta.",
   "intro": "Una configuración RAID (Redundant Array of Independent Disks) combina múltiples discos físicos para mejorar el rendimiento, la redundancia o ambos. Esta calculadora determina la **capacidad útil real** de tu arreglo según el tipo de RAID elegido, la cantidad de discos y su tamaño individual en TB. Por ejemplo, en RAID 5 con 4 discos de 2 TB cada uno, la capacidad útil es 6 TB (se \"sacrifica\" el equivalente a 1 disco para paridad). Conocer esto antes de armar un servidor o NAS es fundamental para no llevarse sorpresas al formatear.",
   "keyTakeaway": "**RAID 5: Útil = (N − 1) × TB_por_disco** — con 4 discos de 2 TB obtenés 6 TB útiles y tolerás la falla de 1 disco simultáneo.",
   "useCases": [
@@ -20,49 +21,50 @@
   "fields": [
     {
       "id": "tipo",
-      "label": "RAID",
+      "label": "Tipo de RAID",
       "type": "select",
       "required": true,
       "options": [
         {
           "value": "0",
-          "label": "RAID 0"
+          "label": "RAID 0 (striping, sin redundancia)"
         },
         {
           "value": "1",
-          "label": "RAID 1"
+          "label": "RAID 1 (espejo, 2 discos)"
         },
         {
           "value": "5",
-          "label": "RAID 5"
+          "label": "RAID 5 (paridad distribuida, mín. 3 discos)"
         },
         {
           "value": "6",
-          "label": "RAID 6"
+          "label": "RAID 6 (doble paridad, mín. 4 discos)"
         },
         {
           "value": "10",
-          "label": "RAID 10"
+          "label": "RAID 10 (espejo + stripe, mín. 4 discos)"
         }
       ],
-      "default": "0"
+      "default": "5"
     },
     {
       "id": "n",
-      "label": "# discos",
+      "label": "Cantidad de discos",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01,
-      "help": "# discos."
+      "placeholder": "4",
+      "step": 1,
+      "help": "Número total de discos físicos en el arreglo."
     },
     {
       "id": "tb",
-      "label": "TB c/u",
+      "label": "Capacidad por disco (TB)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "2",
+      "step": 0.5,
+      "help": "Capacidad nominal de cada disco en terabytes (TB decimales, como figura en el rótulo)."
     }
   ],
   "outputs": [
@@ -73,64 +75,76 @@
     },
     {
       "id": "tolerancia",
-      "label": "Tolerancia fallo"
+      "label": "Discos que pueden fallar"
     },
     {
       "id": "resumen",
-      "label": "Interpretación"
+      "label": "Resumen"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: NAS con RAID 5 y 4 discos de 2 TB",
     "steps": [
-      "RAID 5, 4×2TB",
-      "6 TB util"
+      "Tipo: RAID 5",
+      "Cantidad de discos: 4",
+      "Capacidad por disco: 2 TB",
+      "Fórmula: (4 − 1) × 2 TB = 6 TB útiles",
+      "Eficiencia: 6 / 8 = 75 %",
+      "Redundancia: tolera la falla de 1 disco sin perder datos"
     ],
-    "result": "6 TB"
+    "result": "6 TB útiles"
   },
-  "explanation": "## Cómo se calcula\n\nCada tipo de RAID tiene su propia fórmula. A continuación, las más usadas:\n\n```\nRAID 0  → Útil = N × TB          (sin redundancia)\nRAID 1  → Útil = TB              (espejo, solo 2 discos)\nRAID 5  → Útil = (N − 1) × TB   (paridad distribuida, mín. 3 discos)\nRAID 6  → Útil = (N − 2) × TB   (doble paridad, mín. 4 discos)\nRAID 10 → Útil = (N / 2) × TB   (espejo + stripe, mín. 4 discos, N par)\nRAID 50 → Útil = (N − G) × TB   (G = cantidad de subgrupos RAID 5)\nRAID 60 → Útil = (N − 2G) × TB  (G = cantidad de subgrupos RAID 6)\n\nDonde:\n  N  = cantidad total de discos físicos\n  TB = capacidad de cada disco (todos iguales; si no, se usa el más chico)\n  G  = número de grupos de paridad (para RAID 50/60)\n```\n\n> **Importante:** los fabricantes de discos usan TB decimales (1 TB = 1.000 GB), mientras que los sistemas operativos reportan en TiB binarios (1 TiB = 1.099 GB). Por eso un disco \"de 2 TB\" aparece como ~1,82 TiB en Windows. Esta calculadora trabaja con TB decimales, como indica el rótulo del disco.\n\n---\n\n## Tabla de referencia\n\n| Tipo RAID | Mín. discos | Falla tolerada | Capacidad útil (4 × 2 TB) | Eficiencia (%) | Uso típico |\n|-----------|:-----------:|:--------------:|:-------------------------:|:--------------:|------------|\n| RAID 0    | 2           | 0 discos       | 8 TB                      | 100 %          | Edición de video, scratch disk |\n| RAID 1    | 2           | 1 disco        | 2 TB                      | 50 %           | Sistema operativo, boot drive |\n| RAID 5    | 3           | 1 disco        | 6 TB                      | 75 %           | NAS, servidores de archivos |\n| RAID 6    | 4           | 2 discos       | 4 TB                      | 50 %           | Backups, almacenamiento crítico |\n| RAID 10   | 4           | 1 por espejo   | 4 TB                      | 50 %           | Bases de datos, alto I/O |\n| RAID 50   | 6           | 1 por grupo    | 8 TB (6 × 2 TB)           | 66 %           | Grandes arreglos empresariales |\n| RAID 60   | 8           | 2 por grupo    | 8 TB (8 × 2 TB)           | 50 %           | Archivos de máxima disponibilidad |\n\n---\n\n## Casos típicos\n\n### Caso 1 — NAS hogareño con RAID 5 (el ejemplo de la calculadora)\n**Configuración:** 4 discos × 2 TB en RAID 5  \n**Cálculo:** (4 − 1) × 2 TB = **6 TB útiles**  \n**Tolerancia:** soporta la rotura de 1 disco sin perder datos.  \n**Eficiencia:** 6 / 8 = 75 %. Buen balance para fotos, series y documentos.\n\n### Caso 2 — Servidor de base de datos con RAID 10\n**Configuración:** 6 discos × 4 TB en RAID 10  \n**Cálculo:** (6 / 2) × 4 TB = **12 TB útiles**  \n**Tolerancia:** puede fallar 1 disco por cada par espejo (hasta 3 discos simultáneos si son del par correcto).  \n**Eficiencia:** 12 / 24 = 50 %. Se paga con espacio pero se gana en IOPS y recuperación rápida.\n\n### Caso 3 — Backup crítico con RAID 6\n**Configuración:** 8 discos × 6 TB en RAID 6  \n**Cálculo:** (8 − 2) × 6 TB = **36 TB útiles**  \n**Tolerancia:** sobrevive la falla simultánea de 2 discos, ideal para repositorios de largo plazo.  \n**Eficiencia:** 36 / 48 = 75 %. Con discos grandes, RAID 6 es más atractivo que RAID 5 porque el riesgo de falla durante la reconstrucción crece con la capacidad.\n\n---\n\n## Errores comunes\n\n1. **Mezclar discos de distintos tamaños:** RAID usa la capacidad del disco más pequeño para todos. Si ponés 3 discos de 4 TB y 1 de 6 TB en RAID 5, la útil es (4−1) × 4 TB = 12 TB, no 14 TB. Los 2 TB extra del disco grande quedan inutilizados.\n\n2. **Confundir TB con TiB:** un disco rotulado \"4 TB\" tiene 3,64 TiB reales. Si planificás 12 TB útiles en RAID 5 con 4 × 4 TB, en el sistema operativo verás ~10,9 TiB. Siempre verificá en qué unidad reporta tu OS.\n\n3. **Creer que RAID reemplaza al backup:** RAID protege contra falla de hardware, no contra borrado accidental, ransomware o incendio. La regla 3-2-1 (3 copias, 2 medios distintos, 1 offsite) sigue siendo obligatoria.\n\n4. **Ignorar el tiempo de reconstrucción:** un RAID 5 con discos de 8 TB puede tardar 24–48 h en reconstruirse. Durante ese tiempo, una segunda falla destruye todos los datos. Por eso en discos grandes se prefiere RAID 6.\n\n5. **Usar RAID 0 para datos importantes:** RAID 0 duplica la probabilidad de pérdida total porque si falla cualquiera de los N discos, se pierden todos los datos. Solo usarlo en datos prescindibles o con backup completo.\n\n6. **No contar el hot spare como disco útil:** si tu controladora reserva 1 disco como spare automático, el arreglo real tiene N−1 discos activos. La capacidad útil se calcula sobre ese N−1.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de almacenamiento útil en discos RAID](/calculadora-raid-almacenamiento-util-discos) — profundiza en eficiencia y costo por TB.\n- [Calculadora de ganancia de amplificador operacional](/calculadora-amplificador-operacional-ganancia) — para proyectos de electrónica y hardware embebido.\n- [Calculadora de distancia hiperfocal de lente](/calculadora-distancia-hiperfocal-lente) — útil si almacenás RAW fotográfico y necesitás dimensionar el NAS.\n- [Calculadora de filamento 3D necesario para un modelo](/calculadora-filamento-3d-necesario-modelo) — para makers que gestionan almacenamiento de proyectos en un servidor local.\n",
+  "explanation": "## Cómo se calcula la capacidad útil de un RAID\n\nCada nivel de RAID tiene su propia fórmula. Las más comunes:\n\n```\nRAID 0  → Útil = N × TB          (sin redundancia, máximo espacio)\nRAID 1  → Útil = TB              (espejo de 2 discos, 50 % eficiencia)\nRAID 5  → Útil = (N − 1) × TB   (paridad distribuida, mín. 3 discos)\nRAID 6  → Útil = (N − 2) × TB   (doble paridad, mín. 4 discos)\nRAID 10 → Útil = (N / 2) × TB   (espejo + stripe, N par, mín. 4 discos)\n\nDonde:\n  N  = cantidad total de discos físicos\n  TB = capacidad de cada disco en TB (si los discos no son iguales, se usa el más chico)\n```\n\n> **TB vs TiB:** los fabricantes usan TB decimales (1 TB = 1.000 GB), pero Windows reporta en TiB binarios (1 TiB ≈ 1,099 GB). Un disco \"de 2 TB\" aparece como ~1,82 TiB en Windows. Esta calculadora trabaja con TB decimales, igual que el rótulo del disco.\n\n---\n\n## Tabla de referencia rápida: RAID con 4 discos de 2 TB\n\n| Nivel RAID | Fórmula       | Útil (4×2TB) | Discos que fallan | Eficiencia | Uso típico |\n|:----------:|:-------------:|:------------:|:-----------------:|:----------:|:-----------|\n| RAID 0     | N × TB        | **8 TB**     | 0                 | 100 %      | Scratch disk, edición de video |\n| RAID 1     | TB            | **2 TB**     | 1                 | 25 %       | Boot drive, datos críticos (solo 2 discos) |\n| RAID 5     | (N−1) × TB    | **6 TB**     | 1                 | 75 %       | NAS doméstico, servidores de archivos |\n| RAID 6     | (N−2) × TB    | **4 TB**     | 2                 | 50 %       | Backup crítico, discos ≥4 TB |\n| RAID 10    | (N/2) × TB    | **4 TB**     | 1 por espejo      | 50 %       | Bases de datos, alto I/O |\n\n---\n\n## Tabla ampliada: capacidad útil según N y TB\n\n### RAID 5 — capacidad útil en TB\n\n| Discos / TB por disco | 1 TB | 2 TB | 4 TB | 6 TB | 8 TB | 10 TB |\n|:---------------------:|:----:|:----:|:----:|:----:|:----:|:-----:|\n| 3 discos              | 2    | 4    | 8    | 12   | 16   | 20    |\n| 4 discos              | 3    | 6    | 12   | 18   | 24   | 30    |\n| 6 discos              | 5    | 10   | 20   | 30   | 40   | 50    |\n| 8 discos              | 7    | 14   | 28   | 42   | 56   | 70    |\n| 12 discos             | 11   | 22   | 44   | 66   | 88   | 110   |\n\n### RAID 6 — capacidad útil en TB\n\n| Discos / TB por disco | 1 TB | 2 TB | 4 TB | 6 TB | 8 TB | 10 TB |\n|:---------------------:|:----:|:----:|:----:|:----:|:----:|:-----:|\n| 4 discos              | 2    | 4    | 8    | 12   | 16   | 20    |\n| 6 discos              | 4    | 8    | 16   | 24   | 32   | 40    |\n| 8 discos              | 6    | 12   | 24   | 36   | 48   | 60    |\n| 12 discos             | 10   | 20   | 40   | 60   | 80   | 100   |\n\n### RAID 10 — capacidad útil en TB\n\n| Discos / TB por disco | 1 TB | 2 TB | 4 TB | 6 TB | 8 TB | 10 TB |\n|:---------------------:|:----:|:----:|:----:|:----:|:----:|:-----:|\n| 4 discos              | 2    | 4    | 8    | 12   | 16   | 20    |\n| 6 discos              | 3    | 6    | 12   | 18   | 24   | 30    |\n| 8 discos              | 4    | 8    | 16   | 24   | 32   | 40    |\n| 12 discos             | 6    | 12   | 24   | 36   | 48   | 60    |\n\n---\n\n## Casos de uso con cálculo detallado\n\n### Caso 1 — NAS hogareño con RAID 5\n**Configuración:** 4 discos × 2 TB en RAID 5  \n**Cálculo:** (4 − 1) × 2 TB = **6 TB útiles**  \n**Tolerancia:** soporta la rotura de 1 disco sin perder datos.  \n**Eficiencia:** 6 / 8 = **75 %**. Buen balance para fotos, series y documentos.\n\n### Caso 2 — Servidor de base de datos con RAID 10\n**Configuración:** 6 discos × 4 TB en RAID 10  \n**Cálculo:** (6 / 2) × 4 TB = **12 TB útiles**  \n**Tolerancia:** puede fallar 1 disco por cada par espejo (hasta 3 discos si son del par correcto).  \n**Eficiencia:** 12 / 24 = **50 %**. Se sacrifica espacio pero se gana en IOPS y recuperación rápida.\n\n### Caso 3 — Backup crítico con RAID 6\n**Configuración:** 8 discos × 6 TB en RAID 6  \n**Cálculo:** (8 − 2) × 6 TB = **36 TB útiles**  \n**Tolerancia:** sobrevive la falla simultánea de 2 discos.  \n**Eficiencia:** 36 / 48 = **75 %**. Con discos grandes, RAID 6 es preferido porque la reconstrucción de RAID 5 puede durar >24 h.\n\n---\n\n## Errores comunes\n\n1. **Mezclar discos de distintos tamaños:** RAID usa la capacidad del disco más pequeño para todos. 3 discos de 4 TB + 1 de 6 TB en RAID 5 = (4−1) × 4 TB = 12 TB, no 14 TB. Los 2 TB extra del disco grande quedan inutilizados.\n\n2. **Confundir TB con TiB:** un disco \"4 TB\" tiene 3,64 TiB reales. Si planificás 12 TB útiles en RAID 5 con 4 × 4 TB, en el sistema operativo verás ~10,9 TiB.\n\n3. **Creer que RAID reemplaza al backup:** RAID protege contra falla de hardware, no contra borrado accidental, ransomware o incendio. La regla 3-2-1 sigue siendo obligatoria.\n\n4. **Ignorar el tiempo de reconstrucción:** un RAID 5 con discos de 8 TB puede tardar 24–48 h en reconstruirse. Durante ese tiempo, una segunda falla destruye todos los datos. Por eso en discos grandes se prefiere RAID 6.\n\n5. **Usar RAID 0 para datos importantes:** si falla cualquiera de los N discos, se pierden todos los datos. Solo usarlo en datos prescindibles o con backup completo.\n\n6. **No contar el hot spare:** si tu controladora reserva 1 disco como spare automático, el arreglo real tiene N−1 discos activos. La capacidad útil se calcula sobre ese N−1.\n",
   "faq": [
     {
-      "q": "¿Cuál es el RAID más conveniente para un NAS hogareño con 4 discos?",
-      "a": "RAID 5 es la opción más equilibrada para uso doméstico con 4 discos: obtenés el 75 % de la capacidad total y tolerás la falla de 1 disco. RAID 10 también funciona bien si hacés muchas escrituras simultáneas (p. ej. grabación de seguridad 24/7), aunque la eficiencia cae al 50 %. RAID 6 vale la pena si los discos son de 6 TB o más, donde la reconstrucción lleva más de 24 h y el riesgo de segunda falla aumenta."
+      "q": "¿Cuál es la fórmula de capacidad útil en RAID 5?",
+      "a": "RAID 5: Útil = (N − 1) × TB_por_disco. Con 4 discos de 2 TB: (4−1) × 2 = 6 TB útiles. Se reserva el equivalente a 1 disco para paridad distribuida. La eficiencia es siempre (N−1)/N, por ejemplo 75 % con 4 discos."
     },
     {
-      "q": "¿Por qué mi sistema operativo muestra menos espacio del que calculé?",
-      "a": "Los fabricantes miden 1 TB = 1.000.000.000.000 bytes (decimal), pero Windows reporta en GiB/TiB donde 1 TiB = 2⁴⁰ bytes = 1.099.511.627.776 bytes. Un disco de 2 TB aparece como ~1,82 TiB en Windows. Para convertir: TiB = TB × (1000³ / 1024³) ≈ TB × 0,9095. Además, el sistema de archivos (NTFS, ext4, XFS) consume entre 1 % y 5 % adicional para metadatos y journaling."
+      "q": "¿Cuántos TB útiles da RAID 6 con 6 discos de 4 TB?",
+      "a": "RAID 6: Útil = (N − 2) × TB = (6 − 2) × 4 = 16 TB útiles. RAID 6 reserva 2 discos para doble paridad, tolerando la falla simultánea de 2 discos. La eficiencia con 6 discos es (6−2)/6 = 67 %."
     },
     {
-      "q": "¿Puedo mezclar discos de distintas marcas o RPM en un RAID?",
-      "a": "Técnicamente sí, pero no es recomendable. Los discos de distintas RPM (5400 vs 7200) hacen que el más lento limite al conjunto. Discos de distintas marcas pueden tener comportamientos diferentes ante errores recuperables (URE), lo que complica la reconstrucción. Lo más crítico: todos deben tener la misma capacidad o el RAID usará el tamaño del más pequeño, desperdiciando el espacio restante de los discos más grandes."
+      "q": "¿Qué RAID conviene para un NAS hogareño con 4 discos?",
+      "a": "RAID 5 es la opción más equilibrada: 75 % de eficiencia y tolerancia a 1 falla. RAID 10 es mejor si hacés muchas escrituras simultáneas (grabación de seguridad 24/7), aunque cae al 50 %. RAID 6 vale la pena si los discos son de 6 TB o más, donde la reconstrucción lleva más de 24 h."
     },
     {
-      "q": "¿Qué es la tasa de error no recuperable (URE) y por qué importa en RAID?",
-      "a": "La URE (Unrecoverable Read Error) es la probabilidad de que un disco no pueda leer un sector. Los discos SATA estándar tienen una URE de 1 en 10¹⁴ bits leídos. Un disco de 4 TB tiene ~3,2 × 10¹³ bits; al reconstruir un RAID 5 de 4 × 4 TB se leen ~9,6 × 10¹³ bits —probabilidad de error >90 %—. Por eso los discos NAS (Seagate IronWolf, WD Red) tienen URE de 1 en 10¹⁵, y en arreglos grandes se prefiere RAID 6 o discos Enterprise con URE de 1 en 10¹⁶."
+      "q": "¿Por qué Windows muestra menos espacio del que calculé?",
+      "a": "Los fabricantes miden en TB decimales (1 TB = 1.000 GB) pero Windows reporta en GiB/TiB donde 1 TiB ≈ 1,099 GB. Un disco de 2 TB aparece como ~1,82 TiB en Windows. Para convertir: TiB = TB × 0,9095. Además el sistema de archivos consume entre 1 % y 5 % para metadatos."
     },
     {
-      "q": "¿RAID 5 con 3 discos es igual de seguro que con 6 discos?",
-      "a": "Ambos toleran 1 falla simultánea, pero el riesgo real es mayor con más discos: más discos = más probabilidad de que uno falle, y durante la reconstrucción todos los discos restantes se estresan al máximo. Con 6 discos de 4 TB la reconstrucción puede llevar 30–40 h. En ese lapso, con una URE estándar, hay >60 % de probabilidad de un segundo error. Con 3 discos de 2 TB la reconstrucción dura ~4 h y el riesgo es mucho menor. Para 6 o más discos grandes, usá RAID 6."
+      "q": "¿Cuánto dura la reconstrucción de un RAID 5?",
+      "a": "Fórmula aproximada: Tiempo (h) = (Capacidad_disco_GB × (N−1)) / (Velocidad_MB/s × 3600). Con discos de 4 TB a 150 MB/s y 4 discos: (4000 × 3) / (150 × 3600) ≈ 22 h. Durante ese tiempo el RAID está degradado; una segunda falla destruye todo. Con discos de 8 TB puede superar las 48 h — se recomienda RAID 6 en ese caso."
+    },
+    {
+      "q": "¿Puedo mezclar discos de distintas marcas o tamaños en un RAID?",
+      "a": "De distintas marcas: técnicamente sí, pero no es recomendable (distintos tiempos de recuperación ante errores). De distintos tamaños: el RAID usa la capacidad del disco más pequeño para todos; el espacio extra de los discos más grandes queda inutilizado. Siempre usá discos del mismo tamaño y, preferentemente, de la misma serie."
+    },
+    {
+      "q": "¿Qué es la URE y por qué importa al elegir RAID?",
+      "a": "URE (Unrecoverable Read Error) es la tasa de error de lectura de un disco. Los discos SATA estándar tienen 1 error por cada 10¹⁴ bits leídos. Al reconstruir un RAID 5 con 4 × 4 TB se leen ~9,6 × 10¹³ bits — probabilidad de error >90 %. Los discos NAS (IronWolf, WD Red) tienen URE de 10¹⁵, y los enterprise de 10¹⁶. Por eso en discos grandes o arreglos de muchos discos se prefiere RAID 6."
+    },
+    {
+      "q": "¿RAID reemplaza al backup?",
+      "a": "No. RAID protege contra falla de hardware (un disco muerto), pero si borrás un archivo por error, el borrado se replica instantáneamente en todos los discos. Lo mismo con ransomware o corrupción lógica. Regla 3-2-1: 3 copias de los datos, en 2 medios distintos, con 1 copia offsite o air-gapped. RAID y backup son complementarios, no sustitutos."
     },
     {
       "q": "¿Qué diferencia hay entre RAID por software y RAID por hardware?",
-      "a": "El RAID por hardware usa una controladora dedicada (p. ej. LSI MegaRAID, Adaptec) con su propio procesador y caché con batería, lo que lo hace más rápido y no consume CPU del servidor. El RAID por software (mdadm en Linux, Storage Spaces en Windows, ZFS) corre en la CPU principal; es más flexible, portable y gratuito, pero agrega carga al sistema. Para uso doméstico o entornos con poca carga, el RAID por software es perfectamente viable. ZFS en particular agrega checksums por bloque, que detectan corrupción silenciosa que el RAID tradicional no ve."
-    },
-    {
-      "q": "¿Cuánto tiempo tarda en reconstruirse un RAID 5 roto?",
-      "a": "Depende de la capacidad del disco y la velocidad de lectura sostenida. Fórmula aproximada: **Tiempo (h) = (Capacidad_disco_GB × (N−1)) / (Velocidad_MB/s × 3600)**. Con discos de 4 TB a 150 MB/s en un arreglo de 4 discos: (4000 × 3) / (150 × 3600) ≈ 22 h. Durante ese tiempo el RAID está degradado y vulnerable. Los NAS modernos permiten limitar la velocidad de reconstrucción para no impactar el rendimiento en producción."
-    },
-    {
-      "q": "¿El RAID cuenta como backup? ¿Qué pasa si se borra un archivo por error?",
-      "a": "No. RAID protege contra falla de hardware (un disco que muere), pero si borrás un archivo por error, el borrado se replica instantáneamente en todos los discos del arreglo. Lo mismo ocurre con ransomware, corrupción lógica o un controlador defectuoso que escribe basura. La regla de backup 3-2-1 es independiente del RAID: 3 copias de los datos, en 2 medios distintos (p. ej. disco externo + nube), con 1 copia offsite o air-gapped."
+      "a": "RAID por hardware: controladora dedicada (LSI MegaRAID, Adaptec) con procesador y caché propio — más rápido, no consume CPU, pero caro. RAID por software (mdadm en Linux, Storage Spaces en Windows, ZFS): corre en la CPU principal, flexible y gratuito. ZFS además agrega checksums por bloque que detectan corrupción silenciosa que el RAID tradicional no ve. Para uso doméstico o con poca carga, el software es perfectamente viable."
     }
   ],
   "sources": [
     {
-      "name": "Wikipedia ES — RAID (informática)",
+      "name": "Wikipedia — RAID (informática)",
       "url": "https://es.wikipedia.org/wiki/RAID"
     },
     {
       "name": "NIST SP 800-209 — Security Guidelines for Storage Infrastructure",
       "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-209.pdf"
+    },
+    {
+      "name": "Seagate — RAID Levels Explained",
+      "url": "https://www.seagate.com/es/es/manuals/network-storage/business-storage-nas-os/raid-modes/"
     }
   ],
   "relatedSlugs": [
@@ -147,8 +161,12 @@
     "sourceUrl": "https://es.wikipedia.org/wiki/RAID"
   },
   "seoKeywords": [
-    "calculadora capacidad raid 2026",
-    "capacidad raid",
-    "raid capacidad discos redundancia"
+    "calculadora raid",
+    "capacidad útil raid",
+    "raid 5 capacidad",
+    "cuanto espacio raid",
+    "raid 5 formula capacidad",
+    "raid 6 capacidad",
+    "raid 10 capacidad"
   ]
 }

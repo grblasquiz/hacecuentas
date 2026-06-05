@@ -26,7 +26,7 @@ export function conversorGbATb(i: Inputs): Outputs {
     icon: '🗄️'
   };
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'TB'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'TB' : 'GB'),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: insight
   };

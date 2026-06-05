@@ -26,8 +26,9 @@ export function conversorKwAHp(i: Inputs): Outputs {
     tone: 'neutral',
     icon: '🐎'
   };
+  const unit = d === 'ida' ? 'HP' : 'kW';
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'HP'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + unit,
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight
   };

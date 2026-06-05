@@ -1,29 +1,32 @@
 {
   "slug": "calculadora-stop-loss-atr-volatilidad",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora Stop Loss con ATR 2026 — Volatilidad",
-  "h1": "Calculadora de Stop Loss por ATR (volatilidad)",
-  "description": "💰 Stop loss ATR: dónde poner tu stop según la volatilidad (Average True Range). Método de Chuck LeBeau y Van Tharp. Stop = Entrada − (Multiplicador × ATR).",
+  "lastReviewed": "2026-06-04",
+  "title": "Stop Loss por ATR: calculadora + tabla de multiplicadores | Hacé Cuentas",
+  "h1": "Stop Loss por ATR (volatilidad): calculá tu precio exacto de salida",
+  "description": "Calculá tu stop loss con ATR en segundos. Ingresá precio de entrada, ATR y multiplicador → obtenés el precio exacto del stop y la distancia en %. Incluye tabla de multiplicadores por estilo de trading.",
   "category": "finanzas",
   "icon": "📊",
   "formulaId": "stop-loss-atr-volatilidad",
   "audience": "global",
+  "answerSnippet": "Para calcular el stop loss con ATR: **Stop Long = Entrada − (Multiplicador × ATR)**; **Stop Short = Entrada + (Multiplicador × ATR)**. El multiplicador estándar es 2× para swing trading y 1–2× para day trading. Ejemplo: entrada $100, ATR 2.5, multiplicador 2 → Stop = 100 − (2 × 2.5) = **$95** (5% de distancia).",
   "seoKeywords": [
     "stop loss atr",
     "atr stop loss",
-    "volatility stop",
+    "calcular stop loss con atr",
     "chandelier exit",
+    "volatility stop loss",
+    "stop loss por volatilidad",
     "trailing stop atr",
-    "average true range"
+    "average true range stop"
   ],
-  "intro": "El **ATR (Average True Range)**, creado por J. Welles Wilder en 1978, mide la volatilidad promedio de un activo en los últimos N periodos. Esta calculadora aplica el método del **Chandelier Exit** de Chuck LeBeau: stop = precio − (multiplicador × ATR). El multiplicador estándar es **2× a 3×** para swing trading y **1× a 2×** para day trading. La ventaja de usar ATR en lugar de % fijo: tu stop se adapta automáticamente a la volatilidad del activo. En mercados laterales el stop se ajusta; en mercados volátiles se amplía. Es el método favorito de **turtle traders** y sistemas trend-following como los de Ed Seykota.",
-  "keyTakeaway": "**Stop = Entrada − (Multiplicador × ATR)**. Swing: 2–3×. Day trading: 1–2×. Scalping: 0.5–1×.",
+  "intro": "El **ATR (Average True Range)**, creado por J. Welles Wilder en 1978, mide cuánto se mueve en promedio un activo por vela. Esta calculadora aplica el método del **Chandelier Exit** de Chuck LeBeau: el stop se fija a N veces el ATR del precio de entrada. La ventaja clave sobre el stop fijo en porcentaje: **el stop se adapta a la volatilidad real del activo**. En mercados tranquilos el stop se ajusta; en mercados volátiles se amplía. Es el método favorito de Turtle Traders y sistemas trend-following como los de Ed Seykota y Van Tharp.",
+  "keyTakeaway": "**Stop Long = Entrada − (Mult × ATR) | Stop Short = Entrada + (Mult × ATR)**. Multiplicador recomendado: 2–3× swing · 1–2× day trading · 0.5–1× scalping.",
   "useCases": [
-    "Colocar stops técnicos en swing trading BTC.",
-    "Trailing stop que se ajuste a la volatilidad.",
-    "Evitar que ruido de mercado te active SL.",
-    "Sistemas trend-following estilo Turtle.",
-    "Ajustar stops a régimen alto vs bajo de volatilidad."
+    "Calcular stop loss técnico en acciones, forex, crypto y futuros.",
+    "Implementar Chandelier Exit en sistemas trend-following.",
+    "Usar trailing stop que se ajuste a la volatilidad del mercado.",
+    "Evitar que ruido normal del mercado active el stop loss.",
+    "Calibrar posición combinando ATR con % de riesgo por trade."
   ],
   "fields": [
     {
@@ -56,7 +59,7 @@
     },
     {
       "id": "direccion",
-      "label": "Dirección",
+      "label": "Dirección del trade",
       "type": "select",
       "required": true,
       "options": [
@@ -77,7 +80,7 @@
     "source": "J. Welles Wilder - New Concepts in Technical Trading Systems (1978)",
     "sourceUrl": null,
     "updateType": "manual",
-    "notes": "Fórmulas estándar de la industria."
+    "notes": "Fórmulas estándar de la industria. Sin cambios necesarios."
   },
   "outputs": [
     {
@@ -98,61 +101,72 @@
     },
     {
       "id": "resumen",
-      "label": "Resumen",
+      "label": "Resumen del stop",
       "format": "text"
     }
   ],
   "example": {
-    "title": "Long en BTC a 100, ATR 2.5, multiplicador 2",
+    "title": "Swing long en BTC: entrada $62.000, ATR $1.800, multiplicador 2×",
     "steps": [
-      "Entrada: 100 USD.",
-      "ATR(14) = 2.5.",
-      "Multiplicador = 2 (swing).",
-      "Stop = 100 − (2 × 2.5) = **95**.",
-      "Distancia: 5 USD = 5%."
+      "Precio de entrada: $62.000.",
+      "ATR(14) = $1.800 (volatilidad promedio de las últimas 14 velas).",
+      "Multiplicador = 2× (swing trading estándar).",
+      "Distancia al stop = 2 × $1.800 = $3.600.",
+      "Stop Loss = $62.000 − $3.600 = **$58.400**.",
+      "Distancia porcentual = $3.600 / $62.000 = **5,8%**."
     ],
-    "result": "SL = **95 USD**. Da 2×ATR de espacio al trade."
+    "result": "Stop Loss = **$58.400** (2×ATR por debajo de la entrada, margen de 5,8%)."
   },
-  "explanation": "## Qué es el ATR\n\nEl **Average True Range** mide la volatilidad promedio **en puntos absolutos**. Fue creado por Welles Wilder (padre del RSI) en *New Concepts in Technical Trading Systems* (1978).\n\nPara cada vela, True Range = máx de:\n1. `High − Low`\n2. `|High − Close_anterior|`\n3. `|Low − Close_anterior|`\n\nATR = media móvil exponencial del TR en 14 periodos (default).\n\n## Fórmula del stop por ATR\n\n```\nStop Long = Entrada − (Multiplicador × ATR)\nStop Short = Entrada + (Multiplicador × ATR)\n```\n\n## Tabla: multiplicador por estilo\n\n| Estilo | Multiplicador | Timeframe |\n|---|---|---|\n| Scalping | 0.5× – 1× | 1m–5m |\n| Day trading | 1× – 2× | 5m–1h |\n| Swing | 2× – 3× | 1h–1D |\n| Position | 3× – 5× | 1D–1W |\n\n## Por qué ATR > stop fijo en %\n\n- **Adaptación automática**: ATR se expande con volatilidad.\n- **Consistencia**: todos los trades tienen mismo riesgo estadístico.\n- **Mejor exit en trends**: no te saca ruido intradiario.\n\nTurtle Traders (Richard Dennis, Bill Eckhardt) usaban **2N** (donde N = ATR 20) como stop y **0.5N** para piramidar.\n\nComplementos: [Position size](/calculadora-position-size-forex-pips-riesgo) · [Risk/Reward](/calculadora-risk-reward-ratio-trade)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## Qué es el ATR y cómo se calcula\n\nEl **Average True Range** mide la volatilidad de un activo en puntos absolutos, calculando el promedio del True Range de los últimos N periodos. Para cada vela, el True Range es el mayor de estos tres valores:\n\n1. `High − Low` (rango de la vela)\n2. `|High − Cierre anterior|`\n3. `|Low − Cierre anterior|`\n\nATR = media móvil exponencial del TR en **14 periodos** (default de Wilder).\n\n## Fórmula del stop loss por ATR\n\n```\nStop Long  = Precio de entrada − (Multiplicador × ATR)\nStop Short = Precio de entrada + (Multiplicador × ATR)\n```\n\n## Tabla de multiplicadores por estilo de trading\n\n| Estilo de trading | Multiplicador recomendado | Timeframe típico | Winrate necesario |\n|---|---|---|---|\n| Scalping | 0.5× – 1× | 1m – 5m | >60% |\n| Day trading | 1× – 2× | 5m – 1h | ~50% |\n| Swing trading | 2× – 3× | 1h – 1D | ~40–50% |\n| Position trading | 3× – 5× | 1D – 1W | ~35–40% |\n\n## Tabla de ejemplos con precio $100 y ATR 2.5\n\n| Multiplicador | Stop Long | Distancia | Distancia % |\n|---|---|---|---|\n| 0.5× | $98.75 | $1.25 | 1.25% |\n| 1× | $97.50 | $2.50 | 2.50% |\n| 1.5× | $96.25 | $3.75 | 3.75% |\n| 2× | $95.00 | $5.00 | 5.00% |\n| 2.5× | $93.75 | $6.25 | 6.25% |\n| 3× | $92.50 | $7.50 | 7.50% |\n\n## ATR vs. stop fijo en porcentaje: diferencias clave\n\n- **Adaptación automática**: ATR se expande cuando el mercado es volátil y se contrae en rangos laterales.\n- **Consistencia estadística**: todos los trades tienen el mismo riesgo relativo medido en volatilidad.\n- **Menos barridos falsos**: el stop respeta el ruido normal del activo.\n- **Turtle Traders**: Richard Dennis y Bill Eckhardt usaban **2N** (donde N = ATR 20) como stop y **0.5N** para añadir posición.\n\n## Chandelier Exit (trailing ATR)\n\nEl **Chandelier Exit** de Chuck LeBeau es la versión trailing del método: el stop se mueve al máximo alcanzado desde la entrada menos N×ATR. Se ajusta sólo a favor del trade, nunca en contra.\n\n```\nChandelier Stop (long) = Máximo desde entrada − (Mult × ATR)\n```\n\nComplementos: [Position size](/calculadora-position-size-forex-pips-riesgo) · [Risk/Reward](/calculadora-risk-reward-ratio-trade) · [Drawdown máximo](/calculadora-drawdown-maximo-aceptable)\n\n> ⚠️ Calculadora **educativa**. No es consejo financiero. Los mercados conllevan riesgo de pérdida total. Consultá con un asesor certificado antes de operar.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes, consultá con un asesor financiero registrado.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
   "faq": [
     {
-      "q": "¿Qué periodo de ATR usar?",
-      "a": "**14** es el estándar (Wilder). Para scalping **7** o **10** reacciona más rápido. Para swing/position **21** o **50** suaviza ruido."
+      "q": "¿Cuál es la fórmula exacta del stop loss con ATR?",
+      "a": "**Stop Long = Precio de entrada − (Multiplicador × ATR)**; **Stop Short = Precio de entrada + (Multiplicador × ATR)**. La distancia al stop es siempre igual a Multiplicador × ATR, independientemente del precio del activo."
     },
     {
-      "q": "¿ATR se mide en puntos o %?",
-      "a": "En puntos del activo. BTC con ATR 1000 significa que en promedio se mueve ±1000 USD por vela. Para comparar activos, dividí ATR/Precio para obtener %."
+      "q": "¿Qué período de ATR usar para el stop?",
+      "a": "**ATR(14)** es el estándar que usó Wilder. Para scalping se usa **ATR(7)** o **ATR(10)** para mayor sensibilidad. Para swing y position trading, **ATR(21)** o **ATR(50)** suaviza el ruido y da stops más estables."
     },
     {
-      "q": "¿Qué multiplicador elijo?",
-      "a": "Depende del winrate objetivo. **2×**: winrate ~50%. **3×**: winrate ~35% pero mejores R:R. Backtest antes."
+      "q": "¿Qué multiplicador elegir: 2× o 3×?",
+      "a": "Depende del winrate objetivo y el R:R. Con **2×ATR** necesitás ganar al menos el 50% de los trades para ser rentable con R:R 1:1. Con **3×ATR** bajás el winrate necesario al ~35% pero necesitás mejores R:R. Backtestear sobre el activo específico es la única forma de saber qué funciona mejor."
     },
     {
-      "q": "¿Sirve de trailing stop?",
-      "a": "Sí — es el **Chandelier Exit**: stop = máx desde entrada − (mult × ATR). Se ajusta sólo en la dirección del trade."
+      "q": "¿El ATR se mide en puntos o en porcentaje?",
+      "a": "En **puntos absolutos** del activo. BTC con ATR 1.800 significa que en promedio se mueve ±$1.800 por vela. Para comparar activos distintos o usar %ATR, dividí ATR / Precio de cierre × 100."
     },
     {
-      "q": "¿Y en mercados range-bound?",
-      "a": "ATR baja y el stop se apreta mucho. En rangos, considerá stops fijos en soporte/resistencia."
+      "q": "¿Cómo usar el ATR como trailing stop (Chandelier Exit)?",
+      "a": "El **Chandelier Exit** fija el stop en: **Máximo desde la entrada − (Mult × ATR)**. Cada vela nueva actualizás el máximo; el stop sube (en long) automáticamente. En TradingView podés activar el indicador «Chandelier Exit» directamente."
     },
     {
-      "q": "¿Dónde veo el ATR?",
-      "a": "TradingView, MT4/5, ThinkOrSwim — todos lo traen como indicador nativo. Seteá periodo 14 por default."
+      "q": "¿Sirve el stop ATR en mercados laterales?",
+      "a": "No es el más eficiente. En rangos, el ATR baja y el stop queda muy cerca del precio, generando barridos frecuentes. En mercados sin tendencia clara es mejor usar stops en soporte/resistencia o banda de Bollinger."
     },
     {
-      "q": "¿Se puede combinar con % riesgo?",
-      "a": "Sí — primero definís stop ATR, después calculás position size para que ese stop = 1% capital."
+      "q": "¿Cómo combino el stop ATR con el position sizing?",
+      "a": "Primero calculás el stop ATR (distancia en $ por unidad). Después dividís el riesgo máximo por trade ($) entre esa distancia para obtener las unidades a comprar. Ejemplo: riesgo $500, distancia ATR $3.600 → posición = 500/3.600 = **0,14 BTC**."
+    },
+    {
+      "q": "¿Dónde puedo ver el ATR de un activo?",
+      "a": "En **TradingView** (indicador nativo ATR, gratis), **MetaTrader 4/5**, **ThinkOrSwim** y la mayoría de plataformas profesionales. Seteá período 14 por defecto y ajustá según tu timeframe de trading."
+    },
+    {
+      "q": "¿El stop loss por ATR funciona para acciones, forex y crypto?",
+      "a": "Sí, es **universal**. El ATR se calcula igual en cualquier activo con datos OHLC. En forex ajustá el stop en pips; en acciones en puntos; en crypto en la moneda de cotización. La lógica no cambia."
     }
   ],
   "sources": [
     {
-      "name": "J. Welles Wilder - New Concepts in Technical Trading Systems (1978)"
+      "name": "J. Welles Wilder - New Concepts in Technical Trading Systems (1978)",
+      "url": "https://www.investopedia.com/terms/a/atr.asp"
     },
     {
-      "name": "Chuck LeBeau - Chandelier Exit"
+      "name": "Chandelier Exit - Chuck LeBeau",
+      "url": "https://school.stockcharts.com/doku.php?id=technical_indicators:chandelier_exit"
     },
     {
-      "name": "Investopedia - ATR",
+      "name": "Investopedia - Average True Range (ATR)",
       "url": "https://www.investopedia.com/terms/a/atr.asp"
     }
   ],
@@ -163,16 +177,20 @@
   ],
   "howToSteps": [
     {
-      "name": "Ingresá los datos",
-      "text": "Completá los campos del formulario con tus valores."
+      "name": "Ingresá el precio de entrada",
+      "text": "El precio al que abriste o abrirás el trade (en la moneda del activo)."
+    },
+    {
+      "name": "Ingresá el ATR",
+      "text": "El valor ATR(14) del activo en tu timeframe. Lo ves en TradingView o MT4/5 con el indicador ATR."
+    },
+    {
+      "name": "Elegí el multiplicador y la dirección",
+      "text": "2× para swing, 1× para day trading. Seleccioná Long (compra) o Short (venta)."
     },
     {
       "name": "Hacé click en Calcular",
-      "text": "Presioná el botón \"Calcular\" para obtener el resultado."
-    },
-    {
-      "name": "Revisá los resultados",
-      "text": "Los resultados aparecen debajo. Podés modificar cualquier dato y recalcular."
+      "text": "Obtenés el precio exacto del stop, la distancia en puntos y en porcentaje."
     }
   ]
 }

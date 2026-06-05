@@ -3,16 +3,19 @@ export interface Outputs { [k: string]: string | number; _insight?: any; _chart?
 export function calendarioEcografiasEmbarazoSemanas(i: Inputs): Outputs {
   const s=Number(i.semanaActual)||0;
   let prox='', que='';
-  if (s<=6) { prox='6-8 sem'; que='Confirmar embarazo + posición'; }
-  else if (s<=14) { prox='11-14 sem'; que='Scan nucal + aneuploidías'; }
-  else if (s<=22) { prox='20-22 sem'; que='ECO morfológica (órganos)'; }
-  else if (s<=34) { prox='32-34 sem'; que='Crecimiento + placenta'; }
-  else { prox='Parto'; que='Monitoreo fetal'; }
+  // Windows: temprana 6-8, nucal 11-14, morfológica 20-22, 3er trim 32-34, pre-parto 36-38
+  if (s < 6)         { prox='6-8 sem';   que='ECO temprana — confirmar embarazo + latido'; }
+  else if (s <= 8)   { prox='6-8 sem';   que='ECO temprana — confirmar embarazo + latido'; }
+  else if (s <= 14)  { prox='11-14 sem'; que='Scan nucal + marcadores aneuploidías (Down)'; }
+  else if (s <= 22)  { prox='20-22 sem'; que='ECO morfológica — anatomía fetal completa'; }
+  else if (s <= 34)  { prox='32-34 sem'; que='ECO 3.er trimestre — crecimiento + placenta'; }
+  else if (s <= 38)  { prox='36-38 sem'; que='ECO pre-parto — posición + peso estimado'; }
+  else               { prox='Parto'; que='Monitoreo fetal anteparto'; }
 
   const trimestre = s <= 13 ? 'primer' : s <= 27 ? 'segundo' : 'tercer';
-  const insText = s >= 35
+  const insText = s >= 39
     ? `Estás en la **semana ${s}** (${trimestre} trimestre): a término. El foco ya es el **monitoreo fetal** previo al parto.`
-    : `Estás en la **semana ${s}**, dentro del ${trimestre} trimestre. Tu próximo control es la ECO de **${prox}**: ${que.toLowerCase()}.`;
+    : `Estás en la **semana ${s}**, dentro del ${trimestre} trimestre. Tu próximo control es la **${prox}**: ${que.toLowerCase()}.`;
   const lastMax = Math.max(42, Math.ceil(s) + 1);
 
   return {

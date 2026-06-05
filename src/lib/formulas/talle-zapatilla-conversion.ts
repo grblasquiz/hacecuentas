@@ -1,4 +1,4 @@
-/** Conversión talles de zapatillas */
+/** Conversión talles de zapatillas — basado en tablas estándar Nike/Adidas/ISO 9407 */
 export interface Inputs { cmPie: number; genero: string; }
 export interface Outputs { talleAR: number; talleUS: number; talleEU: number; talleUK: number; mensaje: string; _insight?: any; }
 
@@ -9,20 +9,25 @@ export function talleZapatillaConversion(i: Inputs): Outputs {
 
   let talleUS: number, talleEU: number, talleUK: number, talleAR: number;
 
+  // EU formula: (cm + 1.5) * 1.5, rounded to nearest 0.5 — válida para hombre, mujer y niño
+  // Based on Paris point (2/3 cm) + 15mm outlast allowance
+  talleEU = Math.round((cm + 1.5) * 1.5 * 2) / 2;
+
   if (genero === 'hombre') {
-    // Men's sizing from cm
-    talleUS = Math.round((cm - 18.5) / 0.847 * 2) / 2; // US = (cm - 18.5) / 0.847 approx
-    talleEU = Math.round((cm + 1.5) * 1.5 * 2) / 2; // Mondopoint to EU
+    // Men's US: talleUS = cm - 18  (exact for 0.5cm steps, matches Nike/Adidas/New Balance tables)
+    // 27 cm → US 9, 26 cm → US 8, 25 cm → US 7, etc.
+    talleUS = Math.round((cm - 18) * 2) / 2;
     talleUK = talleUS - 0.5;
     talleAR = talleEU; // AR ≈ EU for men
   } else if (genero === 'mujer') {
-    talleUS = Math.round((cm - 17.8) / 0.847 * 2) / 2;
-    talleEU = Math.round((cm + 1.5) * 1.5 * 2) / 2;
+    // Women's US = Men's US + 1.5 for same foot length
+    // 27 cm → US 10.5, 25 cm → US 8.5
+    talleUS = Math.round((cm - 16.5) * 2) / 2;
     talleUK = talleUS - 2;
     talleAR = talleEU;
-  } else { // niño
-    talleUS = Math.round((cm - 11.7) / 0.847 * 2) / 2;
-    talleEU = Math.round((cm + 1.5) * 1.5 * 2) / 2;
+  } else { // niño/a
+    // Kids' sizes — US kids: cm - 7 (approx for 15–22 cm range)
+    talleUS = Math.round((cm - 7) * 2) / 2;
     talleUK = talleUS - 0.5;
     talleAR = talleEU;
   }

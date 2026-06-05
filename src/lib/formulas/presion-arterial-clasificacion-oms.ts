@@ -4,65 +4,91 @@ export function presionArterialClasificacionOms(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const T = ({
     es: {
-      crisis: 'Crisis hipertensiva',
-      emergencia: 'EMERGENCIA',
-      consultaUrgente: 'Consulta urgente',
-      hta2: 'Hipertensión estadio 2',
-      alto: 'Alto',
-      farmaco: 'Tratamiento farmacológico probable',
-      hta1: 'Hipertensión estadio 1',
-      medioAlto: 'Medio-Alto',
-      estiloSeguimiento: 'Cambios de estilo + seguimiento',
-      elevada: 'Presión elevada',
-      medio: 'Medio',
-      dieta: 'Dieta, ejercicio, reducir sodio',
+      optima: 'Óptima',
       normal: 'Normal',
-      bajo: 'Bajo',
-      habitos: 'Mantener hábitos saludables',
+      normalAlta: 'Normal alta',
+      hta1: 'Hipertensión grado 1',
+      hta2: 'Hipertensión grado 2',
+      hta3: 'Hipertensión grado 3 / Crisis',
+      crisis: 'Crisis hipertensiva',
+      rBajo: 'Bajo',
+      rNormal: 'Normal',
+      rMedio: 'Moderado',
+      rAlto: 'Alto',
+      rMuyAlto: 'Muy alto',
+      rEmergencia: 'EMERGENCIA',
+      recOptima: 'Control cada 5 años',
+      recNormal: 'Control cada 3 años',
+      recNormalAlta: 'Cambios de estilo de vida + control anual',
+      recHta1: 'Tratamiento + cambios de estilo de vida',
+      recHta2: 'Tratamiento farmacológico inmediato',
+      recHta3: 'Tratamiento urgente',
+      recCrisis: 'Consulta urgente en guardia',
       insTitle: 'Qué dice tu presión',
       insSys: 'Tu sistólica',
       markerLbl: 'Tu sistólica',
-      ariaLbl: 'Escala de presión arterial sistólica según OMS',
+      ariaLbl: 'Escala de presión arterial sistólica según OMS/ISH 2020',
+      segOptima: 'Óptima',
       segNormal: 'Normal',
-      segElevada: 'Elevada',
+      segNormAlta: 'N. Alta',
       segHta1: 'HTA 1',
       segHta2: 'HTA 2',
       segCrisis: 'Crisis',
     },
     en: {
-      crisis: 'Hypertensive crisis',
-      emergencia: 'EMERGENCY',
-      consultaUrgente: 'Seek urgent medical care',
-      hta2: 'Hypertension stage 2',
-      alto: 'High',
-      farmaco: 'Drug treatment likely needed',
-      hta1: 'Hypertension stage 1',
-      medioAlto: 'Medium-High',
-      estiloSeguimiento: 'Lifestyle changes + monitoring',
-      elevada: 'Elevated blood pressure',
-      medio: 'Medium',
-      dieta: 'Diet, exercise, reduce sodium',
+      optima: 'Optimal',
       normal: 'Normal',
-      bajo: 'Low',
-      habitos: 'Maintain healthy habits',
+      normalAlta: 'High-normal',
+      hta1: 'Hypertension grade 1',
+      hta2: 'Hypertension grade 2',
+      hta3: 'Hypertension grade 3 / Crisis',
+      crisis: 'Hypertensive crisis',
+      rBajo: 'Low',
+      rNormal: 'Normal',
+      rMedio: 'Moderate',
+      rAlto: 'High',
+      rMuyAlto: 'Very high',
+      rEmergencia: 'EMERGENCY',
+      recOptima: 'Check every 5 years',
+      recNormal: 'Check every 3 years',
+      recNormalAlta: 'Lifestyle changes + annual check',
+      recHta1: 'Treatment + lifestyle changes',
+      recHta2: 'Immediate drug treatment',
+      recHta3: 'Urgent treatment',
+      recCrisis: 'Seek urgent medical care',
       insTitle: 'What your reading means',
       insSys: 'Your systolic',
       markerLbl: 'Your systolic',
-      ariaLbl: 'Systolic blood pressure scale per WHO',
+      ariaLbl: 'Systolic blood pressure scale per WHO/ISH 2020',
+      segOptima: 'Optimal',
       segNormal: 'Normal',
-      segElevada: 'Elevated',
+      segNormAlta: 'High-N.',
       segHta1: 'Stage 1',
       segHta2: 'Stage 2',
       segCrisis: 'Crisis',
     },
   } as const)[__lang];
-  const s=Number(i.sistolica)||0; const d=Number(i.diastolica)||0;
-  let clas='', riesgo='', rec='', tone: 'good'|'warn'|'neutral' = 'neutral', icon = '🩺';
-  if(s>=180||d>=120){clas=T.crisis;riesgo=T.emergencia;rec=T.consultaUrgente;tone='warn';icon='🚨'}
-  else if(s>=140||d>=90){clas=T.hta2;riesgo=T.alto;rec=T.farmaco;tone='warn';icon='⚠️'}
-  else if(s>=130||d>=80){clas=T.hta1;riesgo=T.medioAlto;rec=T.estiloSeguimiento;tone='warn';icon='🩺'}
-  else if(s>=120){clas=T.elevada;riesgo=T.medio;rec=T.dieta;tone='neutral';icon='🩺'}
-  else {clas=T.normal;riesgo=T.bajo;rec=T.habitos;tone='good';icon='💚'}
+
+  const s = Number(i.sistolica) || 0;
+  const d = Number(i.diastolica) || 0;
+
+  // WHO/ISH 2020 classification (https://www.who.int/publications/i/item/9789240012110)
+  // If systolic and diastolic fall in different categories, the HIGHER category prevails.
+  let clas = '', riesgo = '', rec = '', tone: 'good' | 'warn' | 'neutral' = 'neutral', icon = '🩺';
+
+  if (s >= 180 || d >= 120) {
+    clas = T.crisis; riesgo = T.rEmergencia; rec = T.recCrisis; tone = 'warn'; icon = '🚨';
+  } else if (s >= 160 || d >= 100) {
+    clas = T.hta2; riesgo = T.rMuyAlto; rec = T.recHta2; tone = 'warn'; icon = '⚠️';
+  } else if (s >= 140 || d >= 90) {
+    clas = T.hta1; riesgo = T.rAlto; rec = T.recHta1; tone = 'warn'; icon = '⚠️';
+  } else if (s >= 130 || d >= 85) {
+    clas = T.normalAlta; riesgo = T.rMedio; rec = T.recNormalAlta; tone = 'neutral'; icon = '🩺';
+  } else if (s >= 120 || d >= 80) {
+    clas = T.normal; riesgo = T.rNormal; rec = T.recNormal; tone = 'neutral'; icon = '🩺';
+  } else {
+    clas = T.optima; riesgo = T.rBajo; rec = T.recOptima; tone = 'good'; icon = '💚';
+  }
 
   const _insight = {
     title: T.insTitle,
@@ -80,14 +106,15 @@ export function presionArterialClasificacionOms(i: Inputs): Outputs {
     min: 90,
     unit: ' mmHg',
     segments: [
-      { nombre: T.segNormal, max: 120, color: '#bbf7d0', colorDark: '#166534' },
-      { nombre: T.segElevada, max: 130, color: '#fde68a', colorDark: '#b45309' },
-      { nombre: T.segHta1, max: 140, color: '#fed7aa', colorDark: '#9a3412' },
+      { nombre: T.segOptima, max: 120, color: '#bbf7d0', colorDark: '#166534' },
+      { nombre: T.segNormal, max: 130, color: '#d1fae5', colorDark: '#065f46' },
+      { nombre: T.segNormAlta, max: 140, color: '#fde68a', colorDark: '#b45309' },
+      { nombre: T.segHta1, max: 160, color: '#fed7aa', colorDark: '#9a3412' },
       { nombre: T.segHta2, max: 180, color: '#fecaca', colorDark: '#b91c1c' },
-      { nombre: T.segCrisis, max: Math.max(200, Math.ceil(s) + 10), color: '#fca5a5', colorDark: '#7f1d1d' },
+      { nombre: T.segCrisis, max: Math.max(210, Math.ceil(s) + 10), color: '#fca5a5', colorDark: '#7f1d1d' },
     ],
     ariaLabel: T.ariaLbl,
   };
 
-  return { clasificacion:clas, riesgo:riesgo, recomendacion:rec, _insight, _chart };
+  return { clasificacion: clas, riesgo: riesgo, recomendacion: rec, _insight, _chart };
 }
