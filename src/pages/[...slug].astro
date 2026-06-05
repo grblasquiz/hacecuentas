@@ -27,6 +27,8 @@ import { findClusterForSlug } from '../lib/clusters';
 import { findHubForSlug } from '../lib/category-hubs';
 import { md, mdInline } from '../lib/markdown';
 import { resolveGuideSlug, GUIDE_TITLES, CATEGORY_TO_GUIDE } from '../lib/category-guide-map';
+import { categoryColor } from '../lib/category-colors';
+import CategoryIcon from '../components/CategoryIcon.astro';
 import NextStep from '../components/NextStep.astro';
 import { getJourneySteps, NEXT_STEP_EXCLUDED } from '../lib/journeys';
 import { getComparatorForCalc } from '../lib/comparators';
@@ -135,6 +137,9 @@ const _badgeMonthYear = new Date(dateModified).toLocaleDateString('es-AR', {
   year: 'numeric',
 });
 const updatedBadgeLabel = `Actualizado ${_badgeMonthYear}`;
+// Color de categoría (B): tiñe la zona de identidad del header (eyebrow + ícono).
+// El teal de marca (--accent) se mantiene para el CTA y el resultado.
+const catColor = categoryColor(calc.category);
 // datePublished opcional: viene de calc.datePublished si está declarada (YYYY-MM-DD o ISO).
 // Si no, omitimos el campo del schema (JSON.stringify ignora undefined).
 // Fechas uniformes hardcodeadas son señal de scaled content para Google.
@@ -1044,9 +1049,9 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
       <span class="current">{calc.h1}</span>
     </nav>
 
-    <header class="calc-header">
+    <header class="calc-header" style={`--cat: ${catColor}`}>
       <div class="header-left">
-        <span class="icon-wrap" aria-hidden="true">{calc.icon}</span>
+        <span class="icon-wrap" aria-hidden="true"><CategoryIcon cat={calc.category} fallback={calc.icon} size={34} /></span>
         <div>
           <div class="eyebrow">{categoryLabels[calc.category] || calc.category}</div>
           <h1>{calc.h1}<span class="ar-badge-h1" title={countryBadge.tooltip} aria-label={countryBadge.tooltip}>{countryBadge.flag}</span></h1>
@@ -1675,17 +1680,18 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     flex-shrink: 0;
     width: 72px;
     height: 72px;
+    color: var(--cat, var(--accent));
     background:
-      radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%),
-      linear-gradient(135deg, var(--accent-soft) 0%, color-mix(in srgb, #a78bfa 20%, var(--accent-soft)) 100%);
+      radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--cat, var(--accent)) 24%, transparent) 0%, transparent 70%),
+      linear-gradient(135deg, color-mix(in srgb, var(--cat, var(--accent)) 10%, var(--bg-card)) 0%, color-mix(in srgb, var(--cat, var(--accent)) 22%, var(--bg-card)) 100%);
     border-radius: var(--radius);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 2.25rem;
     box-shadow:
-      0 1px 2px color-mix(in srgb, var(--accent) 15%, transparent),
-      0 6px 18px -6px color-mix(in srgb, var(--accent) 35%, transparent),
+      0 1px 2px color-mix(in srgb, var(--cat, var(--accent)) 15%, transparent),
+      0 6px 18px -6px color-mix(in srgb, var(--cat, var(--accent)) 35%, transparent),
       inset 0 1px 0 rgba(255,255,255,0.5);
     position: relative;
   }
@@ -1694,7 +1700,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border: 1px solid color-mix(in srgb, var(--cat, var(--accent)) 25%, transparent);
     pointer-events: none;
   }
 
@@ -1703,12 +1709,12 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     align-items: center;
     font-size: 0.6875rem;
     font-weight: 700;
-    color: var(--accent);
+    color: var(--cat, var(--accent));
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 0.375rem;
     padding: 0.25rem 0.625rem;
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: color-mix(in srgb, var(--cat, var(--accent)) 12%, transparent);
     border-radius: 999px;
   }
 

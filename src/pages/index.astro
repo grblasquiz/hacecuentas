@@ -6,6 +6,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
 import Newsletter from '../components/Newsletter.astro';
+import CategoryIcon from '../components/CategoryIcon.astro';
 import { TOTAL_DISPLAY, PT_DISPLAY } from '../lib/calc-counts';
 import { GONE_410_URLS } from '../lib/gone-410';
 
@@ -439,7 +440,7 @@ const schema = {
          Reduce el bounce del hero (5s → objetivo 30s+) dando opciones inmediatas. -->
     <div class="hero-quick-actions" aria-label="Herramientas destacadas">
       <a href="/tracker-embarazo-semana-a-semana" class="qa-tile qa-tile-pink">
-        <span class="qa-icon" aria-hidden="true">🤰</span>
+        <span class="qa-icon" aria-hidden="true"><CategoryIcon cat="baby" fallback="🤰" size={30} /></span>
         <span class="qa-body">
           <span class="qa-title">Embarazo y bebé</span>
           <span class="qa-desc">Tracker semanal, fecha parto, peso bebé</span>
@@ -447,7 +448,7 @@ const schema = {
         <span class="qa-arrow" aria-hidden="true">→</span>
       </a>
       <a href="/valores-bcra" class="qa-tile qa-tile-green">
-        <span class="qa-icon" aria-hidden="true">💵</span>
+        <span class="qa-icon" aria-hidden="true"><CategoryIcon cat="finanzas" fallback="💵" size={30} /></span>
         <span class="qa-body">
           <span class="qa-title">Dólar y economía AR</span>
           <span class="qa-desc">Cotización, inflación, plazo fijo</span>
@@ -455,7 +456,7 @@ const schema = {
         <span class="qa-arrow" aria-hidden="true">→</span>
       </a>
       <a href="/calculadora-feriados-argentina-2026-calendario" class="qa-tile qa-tile-blue">
-        <span class="qa-icon" aria-hidden="true">📅</span>
+        <span class="qa-icon" aria-hidden="true"><CategoryIcon cat="vida" fallback="📅" size={30} /></span>
         <span class="qa-body">
           <span class="qa-title">Feriados 2026</span>
           <span class="qa-desc" id="proxi-feriado">Próximo feriado: cargando…</span>
@@ -519,7 +520,7 @@ const schema = {
         return (
           <div class="feat-card" style={`--cat-color: ${meta.color}`}>
             <a href={`/categoria/${cat}`} class="feat-head">
-              <div class="feat-icon" aria-hidden="true">{meta.icon}</div>
+              <div class="feat-icon" aria-hidden="true"><CategoryIcon cat={cat} fallback={meta.icon} size={24} /></div>
               <div class="feat-titles">
                 <div class="feat-name">{meta.label}</div>
                 <div class="feat-count">{count} calculadoras</div>
@@ -556,7 +557,7 @@ const schema = {
         return (
           <a href={`/categoria/${cat}`} class="cat-tile" style={`--cat-color: ${meta.color}`}>
             {isNew && <span class="tile-new">Nuevo</span>}
-            <div class="tile-icon" aria-hidden="true">{meta.icon}</div>
+            <div class="tile-icon" aria-hidden="true"><CategoryIcon cat={cat} fallback={meta.icon} size={20} /></div>
             <div class="tile-meta">
               <div class="tile-name">{meta.label}</div>
               <div class="tile-count">{count} calcs</div>
@@ -1255,7 +1256,7 @@ const schema = {
   }
 
   .hero-title .accent {
-    background: linear-gradient(135deg, var(--accent), #0ea5e9);
+    background: linear-gradient(135deg, var(--accent), #2dd4bf);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1920,8 +1921,12 @@ const schema = {
     font-size: 2rem;
     line-height: 1;
     flex-shrink: 0;
+    display: inline-flex;
     transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
   }
+  .qa-tile-pink .qa-icon { color: #ec4899; }
+  .qa-tile-green .qa-icon { color: #10b981; }
+  .qa-tile-blue .qa-icon { color: #3b82f6; }
   .qa-body {
     flex: 1;
     display: flex;
@@ -2044,6 +2049,7 @@ const schema = {
     flex-shrink: 0;
     border-radius: 11px;
     background: color-mix(in srgb, var(--cat-color) 14%, transparent);
+    color: var(--cat-color);
     display: flex; align-items: center; justify-content: center;
     font-size: 1.35rem;
     transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -2147,6 +2153,7 @@ const schema = {
     flex-shrink: 0;
     border-radius: 8px;
     background: color-mix(in srgb, var(--cat-color) 13%, transparent);
+    color: var(--cat-color);
     display: flex; align-items: center; justify-content: center;
     font-size: 1.05rem;
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
