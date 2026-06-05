@@ -17,20 +17,8 @@
  * Generated: 2026-05-27 (1182 URLs total — 521 previas + 661 batch hoy)
  */
 export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
-  "/calculadora-a1c-hemoglobina-glicosilada-diabetes",
-  "/calculadora-agua-cafe-te-hidratacion-real-mitos",
-  "/calculadora-agua-ingesta-diaria-peso-actividad",
-  "/calculadora-aire-acondicionado-btu-split",
-  "/calculadora-aire-acondicionado-frigorias-btu-habitacion",
   "/calculadora-aire-acondicionado-frigorias-m2-ambiente",
-  "/calculadora-alcohol-calorias-cerveza-vino-fernet",
-  "/calculadora-ayuno-intermitente-16-8-calorias",
   "/calculadora-ayuno-intermitente-16-8-ventana-horario",
-  "/calculadora-ayuno-intermitente-beneficios-calorias-20-4",
-  "/calculadora-azucares-anadidos-diarios-oms-mg-gramos",
-  "/calculadora-burnout-indice-carga-laboral-test-mbi",
-  "/calculadora-cafeina-dosis-segura-diaria-peso",
-  "/calculadora-calcio-dieta-diaria-osteoporosis-mujer",
   "/calculadora-calorias-cerveza-vino-fernet-whiskey",
   "/calculadora-conversor-kmh-a-mph",
   "/calculadora-conversor-kmh-a-ms",
@@ -45,7 +33,6 @@ export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
   "/calculadora-costo-total-criar-hijo-18-anios",
   "/calculadora-distancia-entre-plantas-huerto",
   "/calculadora-edad-gestacional-corregida-prematuro",
-  "/calculadora-fecha-probable-parto",
   "/calculadora-frecuencia-cardiaca-maxima-edad",
   "/calculadora-frecuencia-cardiaca-zonas-entrenamiento",
   "/calculadora-frecuencia-cardiaca-zonas-entrenamiento-karvonen",

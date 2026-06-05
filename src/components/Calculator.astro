@@ -395,6 +395,8 @@ const formatFreshnessDate = (iso: string): string => {
     <div class="history-list" data-history-list></div>
   </div>
 
+  {((showFreshness && dataUpdate) || showReviewerBlock) && (
+  <div class="trust-strip">
   {showFreshness && dataUpdate && (
     <div class="data-freshness" title={dataUpdate.notes}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -446,6 +448,8 @@ const formatFreshnessDate = (iso: string): string => {
         )}
       </span>
     </div>
+  )}
+  </div>
   )}
 
   {changelog.length > 0 && (
@@ -873,10 +877,12 @@ const formatFreshnessDate = (iso: string): string => {
     border-radius: var(--radius-lg);
     padding: 0;
     margin-bottom: 2rem;
+    /* Caja protagonista pero sin "glow" ruidoso: la jerarquía la dan el borde
+       accent + la barra de gradiente superior (::before), no una sombra azul
+       de 3 capas. Dejamos un anillo accent tenue + una elevación suave. */
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent),
-      0 4px 24px -4px color-mix(in srgb, var(--accent) 12%, transparent),
-      0 8px 32px -8px rgba(0, 0, 0, 0.18);
+      0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent),
+      0 4px 16px -6px rgba(15, 23, 42, 0.12);
     position: relative;
     overflow: hidden;
   }
@@ -924,8 +930,7 @@ const formatFreshnessDate = (iso: string): string => {
     padding-right: 1.75rem;
   }
   .calc-container > .calc-history { padding-top: 1rem; }
-  .calc-container > .data-freshness { margin-left: 1.75rem; margin-top: 1.25rem; }
-  .calc-container > .reviewer-block { margin-left: 1.75rem; margin-top: 0.5rem; }
+  .calc-container > .trust-strip { margin-top: 1.25rem; }
   .calc-container > .calc-changelog { margin-left: 1.75rem; margin-right: 1.75rem; margin-top: 0.5rem; }
   .calc-container > .presets { padding-top: 1.25rem; margin-left: 1.75rem; margin-right: 1.75rem; padding-left: 0; padding-right: 0; }
   .calc-container > .calc-form { padding: 1.5rem 1.75rem; }
@@ -978,6 +983,21 @@ const formatFreshnessDate = (iso: string): string => {
   .reviewer-block a { color: var(--accent); text-decoration: none; font-weight: 500; }
   .reviewer-block a:hover { text-decoration: underline; }
   .reviewer-block .reviewer-role { color: var(--text-subtle); font-style: italic; }
+
+  /* Trust strip — agrupa frescura de datos + revisor en UNA banda coherente
+     (antes: 2 chips grises sueltos apilados). Desktop: lado a lado; mobile:
+     apilan. Refuerza E-E-A-T concentrando las señales de confianza. */
+  .trust-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .trust-strip .data-freshness,
+  .trust-strip .reviewer-block {
+    margin: 0;
+    flex: 1 1 240px;
+  }
 
   .calc-changelog {
     margin-bottom: 1rem;
@@ -1038,12 +1058,23 @@ const formatFreshnessDate = (iso: string): string => {
     color: #fff;
     border-color: var(--accent);
   }
+  /* Hit-target táctil: en pantallas touch los pills suben al mínimo de 44px
+     de alto recomendado para área tappable cómoda con el dedo. */
+  @media (pointer: coarse) {
+    .preset-btn { min-height: 44px; }
+  }
 
   .fields-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem 1.25rem;
     margin-bottom: 1.5rem;
+  }
+  /* Calcs de un solo campo: el auto-fit estiraría el único input a todo el
+     ancho del card (se ve un campo gigante y solitario). Lo acotamos para que
+     respire y mantenga proporción de formulario real. */
+  .fields-grid:has(> .field:only-child):not(.advanced-grid) {
+    max-width: 460px;
   }
 
   /* Smart Input Groups — fieldset con header visual cuando los fields tienen `group` */
@@ -1460,11 +1491,11 @@ const formatFreshnessDate = (iso: string): string => {
   }
 
   .result.primary .result-value {
-    background: linear-gradient(135deg, var(--accent-strong) 0%, color-mix(in srgb, var(--accent-strong) 60%, #7c3aed) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: var(--accent-strong); /* fallback */
+    /* Base SIEMPRE con color sólido. El gradiente con background-clip:text se
+       aplica sólo bajo @supports para evitar el número "invisible" en WebViews
+       Android que aceptan -webkit-text-fill-color:transparent pero no pintan
+       el clip (el resultado más importante quedaba en blanco). */
+    color: var(--accent-strong);
     font-size: clamp(1.875rem, 8vw, 4rem);
     font-weight: 800;
     letter-spacing: -0.035em;
@@ -1475,6 +1506,14 @@ const formatFreshnessDate = (iso: string): string => {
     overflow-wrap: anywhere;
     word-break: break-word;
     max-width: 100%;
+  }
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .result.primary .result-value {
+      background: linear-gradient(135deg, var(--accent-strong) 0%, color-mix(in srgb, var(--accent-strong) 60%, #7c3aed) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
   }
   @media (max-width: 480px) {
     .result.primary .result-value {
@@ -3505,6 +3544,7 @@ const formatFreshnessDate = (iso: string): string => {
     const chartDownloadBtn = container.querySelector<HTMLButtonElement>('[data-chart-download]');
     let chartInstance: any = null;
     let lastChartSpec: any = null;
+    let _compareAnimated = false;
 
     // ── Tabla de resultado dinámica (output._table) ──────────────
     // La fórmula devuelve { headers, rows, align?, collapseAfter?, emphasisEvery?, footer?, title?, note? }.
@@ -3843,10 +3883,83 @@ const formatFreshnessDate = (iso: string): string => {
       }
     }
 
+    // ── Validación inline por campo ───────────────────────────────────
+    // El form es novalidate (los bubbles nativos chocan con step=0.1 y con el
+    // formato de miles), así que validamos a mano y marcamos el campo culpable
+    // en lugar de mostrar sólo el banner genérico. Mensajes por idioma.
+    const _vmsgAll: Record<string, any> = {
+      es: { req: 'Completá este campo', num: 'Ingresá un número válido', min: (m: string) => `El mínimo es ${m}`, max: (m: string) => `El máximo es ${m}` },
+      en: { req: 'Please fill in this field', num: 'Enter a valid number', min: (m: string) => `Minimum is ${m}`, max: (m: string) => `Maximum is ${m}` },
+      pt: { req: 'Preencha este campo', num: 'Digite um número válido', min: (m: string) => `O mínimo é ${m}`, max: (m: string) => `O máximo é ${m}` },
+    };
+    const VMSG = _vmsgAll[CALC_LANG] || _vmsgAll.es;
+    function clearFieldError(el: any) {
+      const wrap = el.closest('.input-wrap');
+      if (wrap) wrap.classList.remove('is-invalid');
+      el.removeAttribute('aria-invalid');
+      const field = el.closest('.field');
+      const msg = field ? field.querySelector('.field-error') : null;
+      if (msg) { (msg as HTMLElement).hidden = true; msg.textContent = ''; }
+    }
+    function setFieldError(el: any, text: string) {
+      const wrap = el.closest('.input-wrap');
+      if (wrap) wrap.classList.add('is-invalid');
+      el.setAttribute('aria-invalid', 'true');
+      const field = el.closest('.field');
+      const msg = field ? field.querySelector('.field-error') : null;
+      if (msg) { msg.textContent = text; (msg as HTMLElement).hidden = false; }
+    }
+    function validateForm(): boolean {
+      let firstInvalid: any = null;
+      const els = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[required]'));
+      els.forEach((el: any) => {
+        clearFieldError(el);
+        const raw = (el.value || '').trim();
+        let err = '';
+        if (raw === '') {
+          err = VMSG.req;
+        } else if (el.dataset.type === 'number' || el.type === 'number') {
+          const num = el.dataset.format === 'thousands' ? parseThousands(raw) : Number(raw);
+          if (!isFinite(num)) {
+            err = VMSG.num;
+          } else {
+            const min = el.getAttribute('min');
+            const max = el.getAttribute('max');
+            if (min !== null && min !== '' && num < Number(min)) err = VMSG.min(min);
+            else if (max !== null && max !== '' && num > Number(max)) err = VMSG.max(max);
+          }
+        }
+        if (err) {
+          setFieldError(el, err);
+          if (!firstInvalid) firstInvalid = el;
+        }
+      });
+      if (firstInvalid) {
+        // Si el campo inválido vive dentro de "Opciones avanzadas", abrirlas.
+        const adv = firstInvalid.closest('.advanced-toggle');
+        if (adv && !adv.open) adv.open = true;
+        try { firstInvalid.focus(); } catch {}
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+      return true;
+    }
+    // Limpiar el error apenas el usuario corrige el campo.
+    form.addEventListener('input', (e) => {
+      const el = e.target as any;
+      if (el && typeof el.matches === 'function' && el.matches('input, select, textarea')) {
+        clearFieldError(el);
+      }
+    });
+
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       errorBox.hidden = true;
       errorBox.textContent = '';
+
+      // Validación inline: si algo falla, marcamos el campo y NO seguimos
+      // (no mostramos spinner ni corremos la fórmula).
+      if (!validateForm()) return;
 
       // Loading state
       submitBtn.classList.add('loading');
@@ -3890,6 +4003,22 @@ const formatFreshnessDate = (iso: string): string => {
             }
           });
           results.hidden = false;
+          // Animar las barras de comparación al revelar: venían con su width
+          // final desde SSR, así que el `transition` CSS nunca disparaba. Las
+          // mandamos a 0 y, en el frame siguiente, a su valor → "crecen" al
+          // aparecer el resultado. Solo la primera vez y si no hay reduced-motion.
+          if (!_compareAnimated) {
+            _compareAnimated = true;
+            const _reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!_reduce) {
+              container.querySelectorAll<HTMLElement>('.result-compare-fill').forEach((fill) => {
+                const target = fill.style.width;
+                if (!target) return;
+                fill.style.width = '0%';
+                requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = target; }));
+              });
+            }
+          }
           results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
           // Evento para listeners externos (ResultContext, ScenarioComparator dinámico, etc).

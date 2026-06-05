@@ -67,10 +67,25 @@ const categoryMeta: Record<string, { label: string; desc: string; color: string;
   entretenimiento: { label: 'Entretenimiento', desc: 'Gaming, música, fotografía, redes sociales, streaming.', color: '#ec4899', icon: '🎮' },
   ciencia: { label: 'Ciencia', desc: 'Física, química, astronomía, leyes y fórmulas.', color: '#6366f1', icon: '🔬' },
   jardineria: { label: 'Jardinería', desc: 'Riego, tierra, siembra, compost, huerta urbana.', color: '#15803d', icon: '🌿' },
+  familia: { label: 'Familia', desc: 'Cumpleaños, percentiles, mesada, herencia.', color: '#f43f5e', icon: '👨‍👩‍👧‍👦' },
+  idiomas: { label: 'Idiomas', desc: 'Niveles, vocabulario, tiempo de estudio.', color: '#14b8a6', icon: '🗣️' },
+  impuestos: { label: 'Impuestos', desc: 'Ganancias, bienes personales, retenciones, sellos.', color: '#0ea5e9', icon: '🧾' },
+  hogar: { label: 'Hogar', desc: 'Servicios, consumo, mudanza, metros.', color: '#a855f7', icon: '🏠' },
+  clima: { label: 'Clima', desc: 'Sensación térmica, lluvia, punto de rocío, UV.', color: '#38bdf8', icon: '☀️' },
+  juegos: { label: 'Juegos', desc: 'Probabilidades, dados, apuestas, sorteos.', color: '#f97316', icon: '🎮' },
+  astronomia: { label: 'Astronomía', desc: 'Peso en planetas, distancias, órbitas.', color: '#4f46e5', icon: '🔭' },
 };
 
-// Orden deseado de categorías
-const categoryOrder = ['finanzas', 'salud', 'negocios', 'marketing', 'vida', 'deportes', 'viajes', 'construccion', 'cocina', 'mascotas', 'matematica', 'educacion', 'automotor', 'tecnologia', 'medio-ambiente', 'electronica', 'entretenimiento', 'ciencia', 'jardineria'];
+// Categorías destacadas (las más usadas en AR) → cards ricas con sus calcs estrella.
+const featuredCats = ['finanzas', 'salud', 'vida', 'negocios'];
+// Categorías recuperadas que antes no aparecían en la home → badge "Nuevo".
+const newlyAddedCats = new Set(['familia', 'idiomas', 'impuestos', 'hogar', 'clima', 'juegos', 'astronomia']);
+// Mosaico: el resto de las categorías con calcs, ordenadas por volumen desc.
+const mosaicCats = Object.keys(byCategory)
+  .filter((c) => categoryMeta[c] && !featuredCats.includes(c))
+  .sort((a, b) => byCategory[b].length - byCategory[a].length);
+// Orden completo (alimenta los contadores "N categorías" de la home).
+const categoryOrder = [...featuredCats, ...mosaicCats];
 
 // Top 3 calcs por categoría (curadas para destacar las más útiles)
 const topPerCategory: Record<string, string[]> = {
@@ -400,31 +415,25 @@ const schema = {
       Tu vida <span class="accent">más fácil</span>.
     </h1>
     <p class="hero-lead">
-      <strong>{calcs.length.toLocaleString('es-AR')} calculadoras gratis</strong> en español: salud, finanzas,
-      negocios, deportes y más. Fórmulas oficiales con explicación paso a paso,
-      fuentes verificadas y resultados al instante. Incluye cobertura
-      específica para Argentina <span aria-hidden="true">🇦🇷</span>.
+      <strong>{calcs.length.toLocaleString('es-AR')} calculadoras gratis</strong> en español, con fórmulas oficiales y resultado al instante.
     </p>
-    <div class="hero-country-picker" aria-label="Elegí tu país o región">
-      <span class="hcp-label">¿De qué país sos?</span>
-      <a href="/" class="hcp-pill hcp-current" title="Estás aquí">🇦🇷 Argentina</a>
-      <a href="/global" class="hcp-pill">🌎 Global</a>
-      <a href="/es" class="hcp-pill">🇪🇸 España</a>
-      <a href="/mx" class="hcp-pill">🇲🇽 México</a>
-      <a href="/co" class="hcp-pill">🇨🇴 Colombia</a>
-      <a href="/cl" class="hcp-pill">🇨🇱 Chile</a>
-      <a href="/pt" class="hcp-pill">🇧🇷 Brasil</a>
-      <a href="/en" class="hcp-pill">🇺🇸 English</a>
-    </div>
-
     <button type="button" class="hero-search" id="hero-search-btn" aria-label={`Buscar entre ${calcs.length.toLocaleString('es-AR')} calculadoras`}>
-      <svg class="hs-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg class="hs-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="11" cy="11" r="8"/>
         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
       <span class="hs-placeholder" id="hs-placeholder">Buscar entre {calcs.length.toLocaleString('es-AR')} calculadoras…</span>
       <kbd class="hs-kbd">⌘K</kbd>
     </button>
+    <div class="hero-pop" aria-label="Búsquedas populares">
+      <span class="hero-pop-label">Populares:</span>
+      <a href="/buscar?q=aguinaldo" class="hero-pop-chip">Aguinaldo</a>
+      <a href="/buscar?q=sueldo%20en%20mano" class="hero-pop-chip">Sueldo en mano</a>
+      <a href="/buscar?q=imc" class="hero-pop-chip">IMC</a>
+      <a href="/buscar?q=dolar" class="hero-pop-chip">Dólar</a>
+      <a href="/buscar?q=interes%20compuesto" class="hero-pop-chip">Interés compuesto</a>
+      <a href="/buscar?q=embarazo" class="hero-pop-chip">Embarazo</a>
+    </div>
 
     <!-- Quick Actions: tiles de las 3 verticales que concentran el 70% del tráfico según GA.
          Reduce el bounce del hero (5s → objetivo 30s+) dando opciones inmediatas. -->
@@ -453,6 +462,18 @@ const schema = {
         </span>
         <span class="qa-arrow" aria-hidden="true">→</span>
       </a>
+    </div>
+
+    <div class="hero-country-picker" aria-label="Elegí tu país o región">
+      <span class="hcp-label">¿De qué país sos?</span>
+      <a href="/" class="hcp-pill hcp-current" title="Estás aquí">🇦🇷 Argentina</a>
+      <a href="/global" class="hcp-pill">🌎 Global</a>
+      <a href="/es" class="hcp-pill">🇪🇸 España</a>
+      <a href="/mx" class="hcp-pill">🇲🇽 México</a>
+      <a href="/co" class="hcp-pill">🇨🇴 Colombia</a>
+      <a href="/cl" class="hcp-pill">🇨🇱 Chile</a>
+      <a href="/pt" class="hcp-pill">🇧🇷 Brasil</a>
+      <a href="/en" class="hcp-pill">🇺🇸 English</a>
     </div>
 
     <div class="hero-meta-row">
@@ -488,29 +509,28 @@ const schema = {
       </div>
       <a href="/buscar" class="see-all">Ver todas →</a>
     </div>
-    <div class="cat-grid">
-      {categoryOrder.filter(cat => byCategory[cat]?.length).map((cat) => {
+    {/* Destacadas: las más usadas en AR, con sus calcs estrella */}
+    <div class="row-label"><span class="row-star" aria-hidden="true">★</span>Las más usadas<span class="row-line"></span></div>
+    <div class="feat-grid">
+      {featuredCats.filter(cat => byCategory[cat]?.length).map((cat) => {
         const meta = categoryMeta[cat];
         const top = getTopCalcs(cat);
         const count = byCategory[cat].length;
         return (
-          <div class="cat-card" style={`--cat-color: ${meta.color}`}>
-            <a href={`/categoria/${cat}`} class="cat-head">
-              <div class="cat-icon" aria-hidden="true">{meta.icon}</div>
-              <div class="cat-titles">
-                <div class="cat-name">{meta.label}</div>
-                <div class="cat-count">{count} calculadoras</div>
+          <div class="feat-card" style={`--cat-color: ${meta.color}`}>
+            <a href={`/categoria/${cat}`} class="feat-head">
+              <div class="feat-icon" aria-hidden="true">{meta.icon}</div>
+              <div class="feat-titles">
+                <div class="feat-name">{meta.label}</div>
+                <div class="feat-count">{count} calculadoras</div>
               </div>
-              <svg class="cat-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-              </svg>
             </a>
-            <p class="cat-desc">{meta.desc}</p>
-            <ul class="cat-list">
+            <ul class="feat-list">
               {top.map((c: any) => (
                 <li>
-                  <a href={`/${c.slug}`} class="cat-item">
-                    <span class="cat-item-name">
+                  <a href={`/${c.slug}`} class="feat-item">
+                    <span class="feat-dot" aria-hidden="true"></span>
+                    <span class="feat-item-name">
                       {c.h1}
                       {c.audience === 'AR' && (
                         <span class="ar-badge" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>
@@ -520,8 +540,28 @@ const schema = {
                 </li>
               ))}
             </ul>
-            <a href={`/categoria/${cat}`} class="cat-see-all">Ver las {count} →</a>
+            <a href={`/categoria/${cat}`} class="feat-all">Ver las {count} →</a>
           </div>
+        );
+      })}
+    </div>
+
+    {/* El resto del catálogo, en mosaico compacto y escaneable */}
+    <div class="row-label">Todas las demás<span class="row-line"></span></div>
+    <div class="cat-mosaic">
+      {mosaicCats.filter(cat => byCategory[cat]?.length).map((cat) => {
+        const meta = categoryMeta[cat];
+        const count = byCategory[cat].length;
+        const isNew = newlyAddedCats.has(cat);
+        return (
+          <a href={`/categoria/${cat}`} class="cat-tile" style={`--cat-color: ${meta.color}`}>
+            {isNew && <span class="tile-new">Nuevo</span>}
+            <div class="tile-icon" aria-hidden="true">{meta.icon}</div>
+            <div class="tile-meta">
+              <div class="tile-name">{meta.label}</div>
+              <div class="tile-count">{count} calcs</div>
+            </div>
+          </a>
         );
       })}
     </div>
@@ -1014,64 +1054,88 @@ const schema = {
 </Layout>
 
 <script is:inline>
-  // Wrapper: defer non-critical scripts a idle callback para reducir TBT
-  (window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); })(function () {
-
-  // Hero search button → abre el modal de search del header
-  document.getElementById('hero-search-btn')?.addEventListener('click', function () {
-    var openBtn = document.getElementById('open-search');
-    if (openBtn) openBtn.click();
-  });
-
-  // [2] Live counter — incrementa +1 cada 2-8s para dar feel de actividad real.
-  // Los valores base vienen renderizados en el HTML (SSR) así no hay flash 0→target.
-  // Antes había animación 0→target que causaba ver "0 categorías / 27 calculadoras"
-  // mid-animation en conexiones lentas — se removió.
+  // Home: buscador hero (delegación) + contador vivo + placeholder rotativo.
+  //
+  // Astro ClientRouter swappea el body en cada navegación SPA. El bug original:
+  // el script corría 1 sola vez → al VOLVER al home el #hero-search-btn nuevo
+  // quedaba sin handler ("clickeo y no hace nada").
+  //
+  // OJO (verificado en prod 2026-06-04, browser real): requestIdleCallback queda
+  // STARVED tras una navegación ClientRouter y NUNCA corre. Un primer intento que
+  // re-ataba el botón en astro:page-load PERO vía requestIdleCallback no funcionó
+  // por eso. astro:page-load SÍ dispara confiable; lo que no corre es el RIC.
+  //
+  // Solución robusta:
+  //   [1] Buscador → DELEGACIÓN de click en `document` (persiste a todos los
+  //       swaps; no depende de re-wire ni de requestIdleCallback).
+  //   [2] Contador/placeholder → init DIRECTO (sin RIC) en astro:page-load.
   (function () {
-    var fmt = typeof Intl !== 'undefined'
-      ? new Intl.NumberFormat('es-AR').format
-      : function (n) { return String(n); };
-    var liveEls = document.querySelectorAll('[data-live-counter]');
-    if (!liveEls.length) return;
-    liveEls.forEach(function (el) {
-      var current = parseInt(el.getAttribute('data-initial'), 10) || 0;
-      function bump() {
-        current += 1;
-        el.textContent = fmt(current);
-        var next = 2000 + Math.random() * 6000; // 2-8s
-        setTimeout(bump, next);
-      }
-      setTimeout(bump, 2000 + Math.random() * 6000);
-    });
-  })();
+    // [1] Buscador hero → modal del header (#open-search). Un solo listener en
+    //     document capta el click sin importar cuántas veces ClientRouter
+    //     reemplace el botón.
+    if (!window.__hcHeroDeleg) {
+      window.__hcHeroDeleg = true;
+      document.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest && e.target.closest('#hero-search-btn');
+        if (btn) {
+          var openBtn = document.getElementById('open-search');
+          if (openBtn) openBtn.click();
+        }
+      });
+    }
 
-  // [3] Rotating placeholder in search bar
-  (function () {
-    var phrases = [
-      'Calcular sueldo en mano...',
-      '¿Cuántas calorías quemo?...',
-      'Cuota de préstamo...',
-      'Calcular aguinaldo...',
-      'Convertir tazas a gramos...',
-      'Calcular IMC...',
-      'Margen de ganancia...',
-    ];
-    var el = document.getElementById('hs-placeholder');
-    if (!el) return;
-    var idx = 0;
-    var interval = setInterval(function () {
-      idx = (idx + 1) % phrases.length;
-      el.style.opacity = '0';
-      setTimeout(function () {
-        el.textContent = phrases[idx];
-        el.style.opacity = '1';
-      }, 200);
-    }, 3000);
-    // Cleanup if navigated away (SPA)
-    document.addEventListener('astro:before-swap', function () { clearInterval(interval); });
-  })();
+    // [2] Contador vivo + placeholder rotativo: se reinician en cada vista del
+    //     home (carga inicial + retorno SPA). clearTimers evita acumular intervals.
+    var timers = [];
+    function clearTimers() { timers.forEach(function (t) { clearTimeout(t); }); timers = []; }
+    function startHome() {
+      if (!document.getElementById('hs-placeholder')) return; // sólo en el home
+      clearTimers();
 
-  }); // end requestIdleCallback
+      // Contador vivo (+1 cada 2-8s). Base SSR → sin flash 0→target.
+      var fmt = typeof Intl !== 'undefined'
+        ? new Intl.NumberFormat('es-AR').format
+        : function (n) { return String(n); };
+      document.querySelectorAll('[data-live-counter]').forEach(function (el) {
+        var current = parseInt(el.getAttribute('data-initial'), 10) || 0;
+        function bump() {
+          current += 1;
+          el.textContent = fmt(current);
+          timers.push(setTimeout(bump, 2000 + Math.random() * 6000)); // 2-8s
+        }
+        timers.push(setTimeout(bump, 2000 + Math.random() * 6000));
+      });
+
+      // Placeholder rotativo del buscador.
+      var ph = document.getElementById('hs-placeholder');
+      var phrases = [
+        'Calcular sueldo en mano...',
+        '¿Cuántas calorías quemo?...',
+        'Cuota de préstamo...',
+        'Calcular aguinaldo...',
+        'Convertir tazas a gramos...',
+        'Calcular IMC...',
+        'Margen de ganancia...',
+      ];
+      var idx = 0;
+      timers.push(setInterval(function () {
+        idx = (idx + 1) % phrases.length;
+        ph.style.opacity = '0';
+        setTimeout(function () {
+          ph.textContent = phrases[idx];
+          ph.style.opacity = '1';
+        }, 200);
+      }, 3000));
+    }
+
+    // astro:page-load corre en carga inicial Y tras cada navegación SPA (RIC no).
+    if (!window.__hcHomeLifecycle) {
+      window.__hcHomeLifecycle = true;
+      document.addEventListener('astro:before-swap', clearTimers);
+      document.addEventListener('astro:page-load', startHome);
+    }
+    startHome();
+  })();
 </script>
 
 <script define:vars={{ countryCalcData }}>
@@ -1212,7 +1276,7 @@ const schema = {
     justify-content: center;
     gap: 0.375rem;
     max-width: 720px;
-    margin: 0 auto 1.5rem;
+    margin: 1.75rem auto 1.25rem;
     padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;
   }
@@ -1243,6 +1307,21 @@ const schema = {
     border-color: var(--accent);
     cursor: default;
   }
+  /* Mobile: en vez de wrappear en 3 líneas, scroll horizontal con snap. (#17) */
+  @media (max-width: 600px) {
+    .hero-country-picker {
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      max-width: none;
+    }
+    .hero-country-picker::-webkit-scrollbar { display: none; }
+    .hcp-label { flex-shrink: 0; }
+    .hcp-pill { flex-shrink: 0; scroll-snap-align: start; }
+  }
 
   .hero-ctas {
     display: inline-flex;
@@ -1252,19 +1331,19 @@ const schema = {
     margin-bottom: 2rem;
   }
 
-  /* Hero search input grande */
+  /* Hero search input — protagonista del home */
   .hero-search {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     width: 100%;
-    max-width: 560px;
-    margin: 0 auto 1.25rem;
-    padding: 0.875rem 1rem;
+    max-width: 600px;
+    margin: 0 auto 0.875rem;
+    padding: 1.0625rem 1.25rem;
     background: var(--bg-card);
-    border: 1.5px solid var(--border);
+    border: 1.5px solid var(--border-strong);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-md);
     cursor: pointer;
     transition: all 0.18s;
     font-family: inherit;
@@ -1272,16 +1351,66 @@ const schema = {
   }
   .hero-search:hover {
     border-color: var(--accent);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-lg);
     transform: translateY(-1px);
   }
   .hs-icon { color: var(--accent); flex-shrink: 0; }
   .hs-placeholder {
     flex: 1;
     color: var(--text-subtle);
-    font-size: 1rem;
+    font-size: 1.0625rem;
     font-weight: 400;
     transition: opacity 0.2s;
+  }
+
+  /* Chips de búsquedas populares — debajo del buscador */
+  .hero-pop {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    max-width: 640px;
+    margin: 0 auto 1.75rem;
+  }
+  .hero-pop-label {
+    color: var(--text-subtle);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  .hero-pop-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.7rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .hero-pop-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  /* Mobile: chips populares en una sola fila scrolleable (no wrappear en 3 líneas) */
+  @media (max-width: 600px) {
+    .hero-pop {
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      max-width: none;
+      padding: 0 1rem;
+    }
+    .hero-pop::-webkit-scrollbar { display: none; }
+    .hero-pop-label { flex-shrink: 0; }
+    .hero-pop-chip { flex-shrink: 0; scroll-snap-align: start; }
   }
   .hs-kbd {
     display: inline-flex;
@@ -1848,154 +1977,204 @@ const schema = {
 
   /* [6] Categorías — top-border gradient instead of left border */
   .categorias { margin: 2rem 0 3rem; }
-  .cat-grid {
-    display: grid;
-    /* minmax más chico → más cols cuando hay espacio. Con 19 categorías a
-       1080px container caben 4 cols (deja 3 huecos en última fila, mejor que
-       1 card sola con 2 huecos). Colapsa a 3 cols a ~900px y 1 col en mobile. */
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 0.875rem;
-  }
 
-  .cat-card {
+  /* Rótulo de fila ("Las más usadas" / "Todas las demás") — da jerarquía
+     editorial sin tapar nada (reemplaza el badge TOP que iba sobre las cards). */
+  .row-label {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin: 0.25rem 0 0.85rem;
+  }
+  .row-label .row-star { color: #d97706; }
+  .row-label .row-line { height: 1px; background: var(--border); flex: 1; }
+  .feat-grid + .row-label { margin-top: 1.75rem; }
+
+  /* ---- Destacadas: 4 cards ricas con sus calcs estrella ---- */
+  .feat-grid {
+    display: grid;
+    /* auto-fit con sólo 4 items → 4 cols en desktop, colapsa solo en pantallas
+       chicas sin necesidad de media queries extra. */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.9rem;
+  }
+  .feat-card {
     position: relative;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 1rem 1.125rem 1.125rem;
+    padding: 1rem 1.05rem 0.95rem;
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.2s ease-out,
-                border-color 0.2s ease-out;
     overflow: hidden;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.2s ease-out, border-color 0.2s ease-out;
     will-change: transform;
   }
-  .cat-card:hover {
+  /* Franja superior sólida en el color de la categoría (nítida, sin degradado). */
+  .feat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--cat-color, var(--accent));
+  }
+  .feat-card:hover {
     box-shadow: var(--shadow-lg);
-    transform: translateY(-3px) scale(1.01);
+    transform: translateY(-3px);
     border-color: color-mix(in srgb, var(--cat-color, var(--accent)) 50%, var(--border));
   }
-  .cat-card:active {
-    transform: translateY(-1px) scale(1);
-    transition-duration: 0.05s;
-  }
-  .cat-card:hover .cat-icon {
-    transform: scale(1.1) rotate(-3deg);
-  }
-  .cat-icon {
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .cat-head {
+  .feat-head {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding-bottom: 0.625rem;
+    gap: 0.7rem;
+    margin-bottom: 0.8rem;
     text-decoration: none;
     color: var(--text);
   }
-  .cat-head:hover { text-decoration: none; }
-  .cat-head:hover .cat-name { color: var(--cat-color); }
-  .cat-head:hover .cat-arrow { transform: translateX(4px); color: var(--cat-color); }
-  .cat-arrow {
-    transition: transform 0.2s ease-out, color 0.15s;
-  }
-
-  .cat-icon {
-    width: 36px;
-    height: 36px;
+  .feat-head:hover { text-decoration: none; }
+  .feat-head:hover .feat-name { color: var(--cat-color); }
+  .feat-icon {
+    width: 44px; height: 44px;
     flex-shrink: 0;
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--cat-color) 12%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.125rem;
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--cat-color) 14%, transparent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.35rem;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .cat-titles { flex: 1; min-width: 0; }
-  .cat-name {
-    font-weight: 700;
-    font-size: 1rem;
-    line-height: 1.2;
-    margin-bottom: 0.125rem;
+  .feat-card:hover .feat-icon { transform: scale(1.08) rotate(-3deg); }
+  .feat-titles { min-width: 0; }
+  .feat-name {
+    font-weight: 800;
+    font-size: 1.02rem;
+    line-height: 1.15;
     transition: color 0.15s;
   }
-  .cat-count {
-    font-size: 0.75rem;
+  .feat-count {
+    font-size: 0.74rem;
     color: var(--text-subtle);
-    font-weight: 500;
+    font-weight: 600;
+    margin-top: 0.15rem;
   }
-  .cat-arrow {
-    flex-shrink: 0;
-    color: var(--text-subtle);
-    transition: all 0.15s;
-  }
-
-  .cat-desc {
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-    margin: 0 0 0.625rem;
-    line-height: 1.45;
-  }
-
-  .cat-list {
+  .feat-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 0.5rem;
+    margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.125rem;
+    gap: 0.4rem;
   }
-  .cat-item {
+  .feat-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.375rem 0.5rem;
+    padding: 0.5rem 0.6rem;
     border-radius: var(--radius-sm);
     text-decoration: none;
     color: var(--text-muted);
-    font-size: 0.8125rem;
-    transition: all 0.1s;
-  }
-  .cat-item:hover {
+    font-size: 0.8rem;
+    font-weight: 600;
     background: var(--bg-soft);
+    border: 1px solid var(--border);
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .feat-item:hover {
     color: var(--text);
     text-decoration: none;
+    border-color: color-mix(in srgb, var(--cat-color) 45%, var(--border));
   }
-  .cat-item::before {
-    content: '›';
+  .feat-dot {
+    width: 6px; height: 6px;
     flex-shrink: 0;
-    width: 9px;
-    color: color-mix(in srgb, var(--cat-color) 65%, var(--text-subtle));
-    font-weight: 700;
-    font-size: 1rem;
-    line-height: 1;
-    transition: transform 0.12s ease-out;
+    border-radius: 50%;
+    background: var(--cat-color, var(--accent));
   }
-  .cat-item:hover::before {
-    transform: translateX(2px);
-    color: var(--cat-color);
-  }
-  .cat-item-name {
+  .feat-item-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
-    line-height: 1.35;
+    line-height: 1.3;
   }
-
-  .cat-see-all {
-    margin-top: auto;
+  .feat-all {
+    margin-top: 0.75rem;
     align-self: flex-start;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.74rem;
+    font-weight: 800;
     color: var(--cat-color, var(--accent));
     text-decoration: none;
-    padding: 0.25rem 0;
     letter-spacing: 0.01em;
   }
-  .cat-see-all:hover { text-decoration: underline; }
+  .feat-all:hover { text-decoration: underline; }
+
+  /* ---- Mosaico compacto: el resto del catálogo, escaneable ---- */
+  .cat-mosaic {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 0.7rem;
+  }
+  .cat-tile {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 62px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cat-color, var(--accent));
+    border-radius: 11px;
+    padding: 0.7rem 0.75rem;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, border-color 0.15s;
+  }
+  .cat-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+    border-color: color-mix(in srgb, var(--cat-color) 55%, var(--border));
+    border-left-color: var(--cat-color);
+  }
+  .tile-icon {
+    width: 34px; height: 34px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--cat-color) 13%, transparent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.05rem;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .cat-tile:hover .tile-icon { transform: scale(1.1); }
+  .tile-meta { min-width: 0; }
+  .tile-name { font-weight: 700; font-size: 0.84rem; line-height: 1.15; }
+  .tile-count {
+    font-size: 0.7rem;
+    color: var(--text-subtle);
+    font-weight: 600;
+    margin-top: 0.15rem;
+  }
+  /* Badge "Nuevo" anclado a la esquina; el overflow:hidden del tile evita
+     que se salga del encuadre aunque el nombre sea largo. */
+  .tile-new {
+    position: absolute;
+    top: 6px; right: 7px;
+    font-size: 0.52rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #15803d;
+    background: #dcfce7;
+    border-radius: 5px;
+    padding: 2px 5px;
+    line-height: 1;
+  }
 
   /* [7] Stats with icons */
   .stats {
@@ -2427,7 +2606,9 @@ const schema = {
     .section-header h2 { font-size: 1.25rem; }
     .feature-card { padding: 1.25rem; }
     .feature-card h3 { font-size: 1.125rem; }
-    .cat-card { padding: 0.875rem 1rem; }
+    .feat-card { padding: 0.875rem 1rem; }
+    .feat-grid { grid-template-columns: 1fr; }
+    .cat-mosaic { grid-template-columns: repeat(2, 1fr); }
     .final-cta { padding: 1.75rem 1.25rem; }
     .editorial-intro,
     .editorial-method,
@@ -2443,7 +2624,10 @@ const schema = {
   /* focus-visible accesible en todas las cards clickables */
   .pop-card:focus-visible,
   .pilar-card:focus-visible,
-  .cat-card:focus-visible,
+  .cat-tile:focus-visible,
+  .feat-head:focus-visible,
+  .feat-item:focus-visible,
+  .feat-all:focus-visible,
   .feature-card:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
@@ -2455,17 +2639,18 @@ const schema = {
     .feature-card::after { animation: none; }
     .dot-live { animation: none; }
     .hs-placeholder { transition: none; }
-    .pop-card, .pilar-card, .cat-card, .feature-card,
-    .pop-icon, .pilar-icon, .cat-icon, .cat-arrow,
-    .cat-card::before {
+    .pop-card, .pilar-card, .feat-card, .cat-tile, .feature-card,
+    .pop-icon, .pilar-icon, .feat-icon, .tile-icon,
+    .feat-card::before {
       transition: none !important;
     }
-    .pop-card:hover, .pilar-card:hover, .cat-card:hover {
+    .pop-card:hover, .pilar-card:hover, .feat-card:hover, .cat-tile:hover {
       transform: none !important;
     }
     .pop-card:hover .pop-icon,
     .pilar-card:hover .pilar-icon,
-    .cat-card:hover .cat-icon {
+    .feat-card:hover .feat-icon,
+    .cat-tile:hover .tile-icon {
       transform: none !important;
     }
   }

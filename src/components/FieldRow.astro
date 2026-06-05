@@ -114,12 +114,15 @@ const groupedDefault = (() => {
         required={field.required}
         inputmode={field.type === "number" ? "decimal" : undefined}
         autocomplete="off"
+        enterkeyhint="go"
+        aria-describedby={`err-${field.id}`}
         data-format={useThousands ? "thousands" : field.format}
         data-type={field.type}
       />
     )}
     {field.suffix && <span class="suffix">{field.suffix}</span>}
   </div>
+  <p class="field-error" id={`err-${field.id}`} hidden></p>
 </div>
 
 <style>
@@ -209,6 +212,21 @@ const groupedDefault = (() => {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-soft);
   }
+  /* Estado inválido (#5): el JS de Calculator agrega .is-invalid + llena el
+     .field-error cuando falta un campo o el número está fuera de rango. */
+  .input-wrap.is-invalid {
+    border-color: var(--danger);
+  }
+  .input-wrap.is-invalid:focus-within {
+    box-shadow: 0 0 0 3px var(--danger-soft);
+  }
+  .field-error {
+    font-size: 0.75rem;
+    color: var(--danger);
+    line-height: 1.35;
+    font-weight: 500;
+  }
+  .field-error[hidden] { display: none; }
   .field input,
   .field select {
     flex: 1;
@@ -253,6 +271,10 @@ const groupedDefault = (() => {
       padding: 0.875rem 0.875rem;
       font-size: 1rem;
     }
+  }
+  /* Hit-target táctil del "?" de ayuda (#16): 16px es chico para tocar. */
+  @media (pointer: coarse) {
+    .help { width: 22px; height: 22px; font-size: 0.8125rem; }
   }
 </style>
 

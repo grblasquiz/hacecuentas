@@ -26,6 +26,12 @@
     <div class="sticky-result-pill-value" data-pill-value>—</div>
   </div>
   <div class="sticky-result-pill-actions">
+    <button type="button" class="sticky-result-pill-btn" data-pill-copy aria-label="Copiar resultado">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+    </button>
     <button type="button" class="sticky-result-pill-btn" data-pill-scroll aria-label="Volver al resultado">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <polyline points="18 15 12 9 6 15"/>
@@ -123,6 +129,11 @@
     border-color: var(--accent);
     color: var(--accent);
   }
+  .sticky-result-pill-btn.is-copied {
+    background: var(--success-soft);
+    border-color: var(--success);
+    color: var(--success);
+  }
   /* Solo en mobile */
   @media (min-width: 768px) {
     .sticky-result-pill {
@@ -153,6 +164,7 @@
       var valueOutEl = pill.querySelector('[data-pill-value]');
       var labelOutEl = pill.querySelector('[data-pill-label]');
       var scrollBtn = pill.querySelector('[data-pill-scroll]');
+      var copyBtn = pill.querySelector('[data-pill-copy]');
 
       function setPillValue() {
         if (!valueEl || !valueOutEl) return;
@@ -212,6 +224,40 @@
       if (scrollBtn) {
         scrollBtn.addEventListener('click', function () {
           primary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+
+      // Copiar resultado (convierte la pill en mini action-bar). Self-contained:
+      // copia el valor visible + feedback de check ~1.3s, sin depender del
+      // delegation del Calculator.
+      if (copyBtn) {
+        var copyIconHTML = copyBtn.innerHTML;
+        copyBtn.addEventListener('click', function () {
+          var txt = ((valueOutEl && valueOutEl.textContent) || '').trim();
+          if (!txt) return;
+          var done = function () {
+            copyBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+            copyBtn.classList.add('is-copied');
+            setTimeout(function () {
+              copyBtn.innerHTML = copyIconHTML;
+              copyBtn.classList.remove('is-copied');
+            }, 1300);
+          };
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(txt).then(done).catch(function () {});
+            } else {
+              var ta = document.createElement('textarea');
+              ta.value = txt;
+              ta.style.position = 'fixed';
+              ta.style.opacity = '0';
+              document.body.appendChild(ta);
+              ta.select();
+              try { document.execCommand('copy'); } catch (e) {}
+              document.body.removeChild(ta);
+              done();
+            }
+          } catch (e) {}
         });
       }
 

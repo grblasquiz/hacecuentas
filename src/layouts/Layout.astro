@@ -866,6 +866,33 @@ const globalSchema = {
         padding: 0 1.25rem;
       }
 
+      /* Skeleton shimmer — placeholder de carga reusable para datos client-side
+         (dólar, cripto, FX). Reemplaza el texto "Cargando…" → cero CLS y se
+         percibe más rápido. El bloque prefers-reduced-motion de abajo lo apaga
+         vía `* { animation-duration: 0.01ms }`. */
+      .hc-skeleton {
+        position: relative;
+        overflow: hidden;
+        background: var(--bg-muted);
+        border-radius: var(--radius-sm);
+      }
+      .hc-skeleton::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bg-card) 70%, transparent), transparent);
+        animation: hc-shimmer 1.3s ease-in-out infinite;
+      }
+      @keyframes hc-shimmer { 100% { transform: translateX(100%); } }
+      .hc-skeleton-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem 0;
+      }
+      .hc-skeleton-row { height: 2.5rem; }
+
       /* Respect prefers-reduced-motion */
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {
