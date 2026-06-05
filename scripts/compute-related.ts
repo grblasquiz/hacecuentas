@@ -164,8 +164,9 @@ function computeRelated(opts: {
   cacheHashFile: string;
   excludeNoindex: boolean;
   label: string;
+  topK?: number; // vecinos a guardar. Default 6; EN usa 12 para densificar el grafo de crawl interno.
 }): void {
-  const { dir, stopwords, outputFile, cacheHashFile, excludeNoindex, label } = opts;
+  const { dir, stopwords, outputFile, cacheHashFile, excludeNoindex, label, topK = TOP_K } = opts;
   const started = Date.now();
 
   if (!existsSync(dir)) {
@@ -235,7 +236,7 @@ function computeRelated(opts: {
       const bBoost = b.score + (b.sameCategory ? 0.1 : 0);
       return bBoost - aBoost;
     });
-    related[c.slug] = scores.slice(0, TOP_K).map((s) => s.slug);
+    related[c.slug] = scores.slice(0, topK).map((s) => s.slug);
   }
 
   writeFileSync(outputFile, JSON.stringify(related, null, 2));
@@ -261,6 +262,7 @@ function main() {
     cacheHashFile: join(ROOT, 'src/lib/related-auto-en.hash'),
     excludeNoindex: true,
     label: 'en',
+    topK: 12, // densificar grafo de crawl interno EN (crawl starvation: solo 24% crawleadas por Bing)
   });
   // PT — solo indexables.
   computeRelated({
