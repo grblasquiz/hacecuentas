@@ -1,0 +1,462 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import {
+  CATEGORIAS,
+  TOPES,
+  CUOTA_SERVICIOS,
+  CUOTA_BIENES,
+  META,
+  fmtARS,
+  componentes,
+} from '../lib/data/monotributo-2026';
+
+// Página-dato enlazable: tabla de referencia citable del monotributo 2026.
+// Toda la data viene de la fuente única src/lib/data/monotributo-2026.ts → nunca queda stale.
+// Patrón espejado de /datasets: schema Dataset + licencia CC-BY 4.0 + bloque "Cómo citar"
+// → cuando un medio o blog cita la tabla, atribuye con link = backlink editorial.
+
+const ULTIMA_REVISION = '2026-06-06';
+
+// Filas de la tabla maestra (computadas desde la fuente única).
+const filas = CATEGORIAS.map((cat) => ({
+  cat,
+  topeAnual: TOPES[cat],
+  topeMensual: TOPES[cat] / 12,
+  cuotaServicios: CUOTA_SERVICIOS[cat],
+  cuotaBienes: CUOTA_BIENES[cat],
+  cuotaAnualServicios: CUOTA_SERVICIOS[cat] * 12,
+  desglose: componentes(cat, 'servicios'),
+}));
+
+// Datos destacados (los números que un periodista cita / screenshotea).
+const topeMin = TOPES.A;
+const topeMax = TOPES.K;
+const cuotaMin = CUOTA_SERVICIOS.A;
+const cuotaMaxServ = CUOTA_SERVICIOS.K;
+const cuotaMaxBienes = CUOTA_BIENES.K;
+const ratioServBienesK = CUOTA_SERVICIOS.K / CUOTA_BIENES.K;
+const facturacionMensualMaxA = TOPES.A / 12;
+
+const title =
+  'Datos Monotributo 2026: tabla de categorías, topes y cuotas (A a K) | Hacé Cuentas';
+const description =
+  'Tabla completa del monotributo 2026: las 11 categorías (A a K), tope de facturación anual y mensual, cuota de servicios y de venta de bienes, y desglose impositivo. Datos oficiales ARCA, vigentes desde febrero 2026. Uso libre con atribución (CC-BY 4.0).';
+
+const PAGE_URL = 'https://hacecuentas.com/datos-monotributo-2026';
+
+const faq = [
+  {
+    q: '¿Cuántas categorías de monotributo hay en 2026?',
+    a: `Hay 11 categorías, de la A a la K. La A es la más baja (tope de facturación de ${fmtARS(topeMin)} anuales) y la K la más alta (${fmtARS(topeMax)} anuales).`,
+  },
+  {
+    q: '¿Cuál es el tope de facturación más alto del monotributo 2026?',
+    a: `La categoría K, con ${fmtARS(topeMax)} de ingresos brutos anuales. Superado ese límite hay que pasar al Régimen General (responsable inscripto).`,
+  },
+  {
+    q: '¿Cuánto se paga de monotributo por mes en 2026?',
+    a: `La cuota total mensual va desde ${fmtARS(cuotaMin)} en la categoría A hasta ${fmtARS(cuotaMaxServ)} en la K para servicios (${fmtARS(cuotaMaxBienes)} para venta de bienes). Incluye impuesto integrado, aporte jubilatorio (SIPA) y obra social.`,
+  },
+  {
+    q: '¿Por qué en las categorías altas servicios paga más que venta de bienes?',
+    a: `Por la reforma 2026: las categorías I, J y K dejaron de toparse en H y ahora aplican también a servicios, pero con cuota distinta. En la categoría K, servicios paga ${ratioServBienesK.toFixed(1)}× lo que paga venta de bienes (${fmtARS(cuotaMaxServ)} vs ${fmtARS(cuotaMaxBienes)}). Los topes de facturación son iguales para ambas actividades.`,
+  },
+  {
+    q: '¿Cuándo es la recategorización del monotributo 2026?',
+    a: `La recategorización es semestral (enero y julio). La de julio 2026 cierra el 5 de agosto de 2026. Se revisa la facturación de los últimos 12 meses para ubicarte en la categoría correcta.`,
+  },
+  {
+    q: '¿Desde cuándo rigen estos valores?',
+    a: `Desde el ${new Date(META.vigencia).toLocaleDateString('es-AR')}. Son los valores oficiales publicados por ARCA (ex AFIP).`,
+  },
+  {
+    q: '¿Qué incluye la cuota mensual del monotributo?',
+    a: `Tres componentes: el impuesto integrado (el "impuesto" propiamente dicho), el aporte al SIPA (jubilación) y el aporte a la obra social. En la tabla de desglose de abajo está el detalle por categoría.`,
+  },
+  {
+    q: '¿De dónde salen estos datos?',
+    a: `De ARCA (Administración Federal, ex AFIP), fuente oficial del régimen. Los topes están validados además contra C5N y el Estudio Bertora Brown. La fuente está enlazada al final de la página.`,
+  },
+  {
+    q: '¿Puedo usar esta tabla en mi web, nota o trabajo?',
+    a: `Sí. Los datos se publican bajo licencia Creative Commons CC-BY 4.0: podés reproducirlos libremente citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".`,
+  },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset',
+  '@id': `${PAGE_URL}#dataset`,
+  name: 'Monotributo Argentina 2026 — categorías, topes y cuotas',
+  description:
+    'Tabla de las 11 categorías del monotributo argentino vigentes en 2026 (A a K): tope de facturación anual, cuota mensual de servicios y de venta de bienes, y desglose en impuesto integrado, SIPA y obra social. Fuente: ARCA.',
+  url: PAGE_URL,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  isAccessibleForFree: true,
+  inLanguage: 'es-AR',
+  dateModified: ULTIMA_REVISION,
+  temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Country', name: 'Argentina' },
+  creator: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: 'https://hacecuentas.com',
+  },
+  sourceOrganization: {
+    '@type': 'GovernmentOrganization',
+    name: 'ARCA (Administración Federal de Ingresos Públicos)',
+    url: META.fuenteUrl,
+  },
+  keywords: ['Monotributo', 'ARCA', 'Categorías monotributo', 'Topes monotributo', '2026', 'Argentina'],
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${PAGE_URL}#webpage`,
+      name: title,
+      description,
+      url: PAGE_URL,
+      inLanguage: 'es-AR',
+      dateModified: ULTIMA_REVISION,
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      publisher: { '@id': 'https://hacecuentas.com/#organization' },
+      mainEntity: { '@id': `${PAGE_URL}#dataset` },
+    },
+    datasetSchema,
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Datos', item: 'https://hacecuentas.com/datos-monotributo-2026' },
+        { '@type': 'ListItem', position: 3, name: 'Monotributo 2026', item: PAGE_URL },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical="/datos-monotributo-2026"
+  audience="AR"
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <main class="article-main">
+    <article class="page-content datos-page">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan">
+          <a href="/">Inicio</a> <span>›</span> <span>Datos Monotributo 2026</span>
+        </nav>
+        <h1>Monotributo 2026: tabla de categorías, topes y cuotas</h1>
+        <p class="lede">
+          Tabla de referencia con las <strong>11 categorías del monotributo</strong> (A a K)
+          vigentes en 2026: tope de facturación, cuota mensual de servicios y de venta de
+          bienes, y desglose impositivo. Datos oficiales de <strong>ARCA</strong>, vigentes
+          desde el {new Date(META.vigencia).toLocaleDateString('es-AR')}.
+          Recategorización {META.recategorizacion}.
+        </p>
+        <p class="updated">
+          Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</time> ·
+          Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)
+        </p>
+      </header>
+
+      <section class="stats-callout" aria-label="Datos destacados">
+        <div class="stat">
+          <span class="stat-num">11</span>
+          <span class="stat-label">categorías (A&nbsp;a&nbsp;K)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">{fmtARS(cuotaMin)}</span>
+          <span class="stat-label">cuota más baja (cat.&nbsp;A)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">{fmtARS(topeMax)}</span>
+          <span class="stat-label">tope anual más alto (cat.&nbsp;K)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">{fmtARS(facturacionMensualMaxA)}</span>
+          <span class="stat-label">facturación mensual máx. cat.&nbsp;A</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Tabla de categorías del monotributo 2026</h2>
+        <p>
+          Tope de ingresos brutos anuales (igual para servicios y para venta de bienes) y cuota
+          total mensual de cada categoría. La cuota de venta de bienes coincide con la de servicios
+          hasta la categoría D y es menor a partir de la E.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cat.</th>
+                <th>Tope anual</th>
+                <th>Tope mensual (prom.)</th>
+                <th>Cuota servicios</th>
+                <th>Cuota venta de bienes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filas.map((f) => (
+                <tr>
+                  <td data-label="Categoría"><strong>{f.cat}</strong></td>
+                  <td data-label="Tope anual">{fmtARS(f.topeAnual)}</td>
+                  <td data-label="Tope mensual">{fmtARS(f.topeMensual)}</td>
+                  <td data-label="Cuota servicios">{fmtARS(f.cuotaServicios)}</td>
+                  <td data-label="Cuota bienes">{fmtARS(f.cuotaBienes)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          Cuotas totales mensuales (impuesto integrado + SIPA + obra social). Tope mensual promedio =
+          tope anual ÷ 12 (referencia; el control real es sobre los ingresos de los últimos 12 meses).
+        </p>
+      </section>
+
+      <section>
+        <h2>Qué cambió en el monotributo 2026</h2>
+        <ul class="cambios">
+          <li>
+            <strong>Servicios ya no topea en H.</strong> Con la reforma 2026, las categorías
+            I, J y K aplican también a locaciones y prestaciones de servicios, no sólo a venta
+            de bienes. Antes, quien daba servicios no podía pasar de la H.
+          </li>
+          <li>
+            <strong>Cuota distinta según actividad en las categorías altas.</strong> En I, J y K,
+            servicios paga más que venta de bienes. En la K la diferencia es de {ratioServBienesK.toFixed(1)}×:
+            {' '}{fmtARS(cuotaMaxServ)} (servicios) contra {fmtARS(cuotaMaxBienes)} (bienes).
+          </li>
+          <li>
+            <strong>Topes de facturación iguales para ambas actividades.</strong> Lo que cambia
+            entre servicios y bienes es la cuota, no el límite de ingresos de cada categoría.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Desglose de la cuota: impuesto, jubilación y obra social</h2>
+        <p>
+          Cada cuota mensual (acá, la de servicios) se compone de tres partes: el impuesto integrado,
+          el aporte jubilatorio al SIPA y el aporte a la obra social.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cat.</th>
+                <th>Impuesto integrado</th>
+                <th>SIPA (jubilación)</th>
+                <th>Obra social</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filas.map((f) => (
+                <tr>
+                  <td data-label="Categoría"><strong>{f.cat}</strong></td>
+                  <td data-label="Integrado">{fmtARS(f.desglose.integrado)}</td>
+                  <td data-label="SIPA">{fmtARS(f.desglose.sipa)}</td>
+                  <td data-label="Obra social">{fmtARS(f.desglose.obraSocial)}</td>
+                  <td data-label="Total">{fmtARS(f.desglose.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          Desglose ilustrativo: el dato exacto y oficial es el total de cada cuota; la proporción
+          integrado/SIPA/obra social es aproximada.
+        </p>
+      </section>
+
+      <section>
+        <h2>Calculá tu caso</h2>
+        <p>
+          Esta página es la tabla de referencia. Para saber en qué categoría caés según tu facturación,
+          o cuánto te conviene cada régimen, usá las calculadoras:
+        </p>
+        <ul class="calc-links">
+          <li><a href="/calculadora-monotributo-categoria-2026-recategorizacion-julio">Calculadora de recategorización de monotributo (julio 2026)</a></li>
+          <li><a href="/monotributo-cuota-2026-todas-categorias">Cuota de monotributo 2026 — todas las categorías</a></li>
+          <li><a href="/monotributo-mejor-categoria-2026">Mejor categoría de monotributo para tu facturación</a></li>
+          <li><a href="/monotributo-vs-inscripto">Monotributo vs. responsable inscripto</a></li>
+          <li><a href="/monotributo">Calculadora de monotributo</a></li>
+        </ul>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Cómo citar esta tabla</h2>
+        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
+        <pre><code>Fuente: Hacé Cuentas — https://hacecuentas.com/datos-monotributo-2026
+Datos oficiales ARCA · Licencia CC-BY 4.0</code></pre>
+        <p>
+          Si publicás online, te agradecemos el enlace a
+          <a href="https://hacecuentas.com/datos-monotributo-2026">hacecuentas.com/datos-monotributo-2026</a>.
+        </p>
+      </section>
+
+      <section class="faq">
+        <h2>Preguntas frecuentes</h2>
+        {faq.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </section>
+
+      <section class="fuentes">
+        <h2>Fuentes</h2>
+        <ul>
+          <li>
+            <a href={META.fuenteUrl} rel="nofollow noopener" target="_blank">ARCA — Categorías del monotributo</a>
+            (fuente oficial, vigencia {new Date(META.vigencia).toLocaleDateString('es-AR')})
+          </li>
+          <li>Topes validados contra C5N y Estudio Bertora Brown.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem 1rem 4rem;
+  }
+  .crumbs {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-bottom: 0.75rem;
+  }
+  .crumbs a { color: var(--accent, #2563eb); text-decoration: none; }
+  .datos-page h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .lede {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text, #222);
+  }
+  .updated {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.5rem;
+  }
+  .datos-page h2 {
+    font-size: 1.4rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .stats-callout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin: 1.75rem 0;
+  }
+  .stat {
+    background: var(--bg-soft, #f4f6f9);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 0.6rem;
+    padding: 0.9rem 1rem;
+    text-align: center;
+  }
+  .stat-num {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--accent, #2563eb);
+    line-height: 1.2;
+  }
+  .stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.25rem;
+  }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  .datos-page table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    min-width: 540px;
+  }
+  .datos-page th {
+    background: var(--bg-soft, #f1f5f9);
+    padding: 0.6rem 0.7rem;
+    text-align: right;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border, #e5e7eb);
+    white-space: nowrap;
+  }
+  .datos-page th:first-child { text-align: left; }
+  .datos-page td {
+    padding: 0.55rem 0.7rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border, #eee);
+    white-space: nowrap;
+  }
+  .datos-page td:first-child { text-align: left; }
+  .datos-page tbody tr:nth-child(odd) { background: var(--bg-card, #fafafa); }
+  .note {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.5rem;
+  }
+  .cambios li, .calc-links li, .fuentes li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .cambios, .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent, #2563eb); }
+  .cite-instructions {
+    margin-top: 2.5rem;
+    padding: 1.1rem;
+    background: var(--bg-soft, #f4f6f9);
+    border-radius: 0.6rem;
+  }
+  .cite-instructions pre {
+    background: var(--code-bg, #eaeef3);
+    padding: 0.75rem;
+    border-radius: 0.4rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+  }
+  .faq details {
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    padding: 0.75rem 0;
+  }
+  .faq summary {
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text, #222);
+  }
+  .faq details p {
+    margin-top: 0.5rem;
+    color: var(--text-muted, #555);
+    line-height: 1.6;
+  }
+</style>
