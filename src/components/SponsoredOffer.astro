@@ -1,0 +1,108 @@
+---
+/**
+ * SponsoredOffer — bloque de oferta contextual post-resultado.
+ *
+ * Se revela DESPUÉS de que el usuario aprieta Calcular (evento `hc-calc-result`),
+ * en el momento caliente. Mismo mecanismo que NextStep.astro.
+ *
+ * SEO-safe y honesto (ver src/lib/offers.ts):
+ * - rel="sponsored nofollow noopener" + target="_blank".
+ * - Etiqueta visible "Publicidad" (transparencia + Better Ads Standards).
+ * - NO es popup/interstitial/popunder. Es un bloque inline, descartable.
+ * - El wiring (qué calc muestra qué oferta) vive en offers.ts + [...slug].astro.
+ *
+ * Tracking: cada click dispara gtag('event','offer_click', {calc_slug, offer_id,
+ * vertical}) → RPM por calc medible en GA4.
+ */
+import type { Offer } from '../lib/offers';
+interface Props { offer: Offer; slug: string; }
+const { offer, slug } = Astro.props;
+---
+
+<section class="sp-offer" data-sp-offer hidden aria-labelledby={`sp-offer-h-${offer.id}`}>
+  <span class="sp-offer-tag">Publicidad</span>
+  <div class="sp-offer-body">
+    <strong id={`sp-offer-h-${offer.id}`}>{offer.label}</strong>
+    <p>{offer.body}</p>
+  </div>
+  <a
+    class="sp-offer-cta"
+    href={offer.href}
+    target="_blank"
+    rel="sponsored nofollow noopener"
+    data-sp-offer-link
+    data-offer-id={offer.id}
+    data-offer-vertical={offer.vertical}
+    data-calc-slug={slug}
+  >{offer.cta} →</a>
+</section>
+
+<script is:inline>
+  (function () {
+    var host = document.querySelector('[data-sp-offer]');
+    if (!host) return;
+    var containers = document.querySelectorAll('.calc-container');
+    if (containers.length) {
+      containers.forEach(function (c) {
+        c.addEventListener('hc-calc-result', function (ev) {
+          var d = ev && ev.detail ? ev.detail : null;
+          if (!d || !d.output) return;
+          host.hidden = false;
+        });
+      });
+    }
+    var link = host.querySelector('[data-sp-offer-link]');
+    if (link) {
+      link.addEventListener('click', function () {
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'offer_click', {
+            calc_slug: link.getAttribute('data-calc-slug'),
+            offer_id: link.getAttribute('data-offer-id'),
+            vertical: link.getAttribute('data-offer-vertical'),
+          });
+        }
+      });
+    }
+  })();
+</script>
+
+<style>
+  .sp-offer {
+    position: relative;
+    margin: 1rem 0 0;
+    padding: 1rem 1.125rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e5e5e5);
+    border-radius: var(--radius-sm, 8px);
+  }
+  .sp-offer[hidden] { display: none; }
+  .sp-offer-tag {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.6rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-2, #999);
+  }
+  .sp-offer-body { flex: 1 1 220px; }
+  .sp-offer-body strong { display: block; font-size: 1rem; line-height: 1.3; }
+  .sp-offer-body p { margin: 0.2rem 0 0; font-size: 0.875rem; color: var(--text-2, #555); }
+  .sp-offer-cta {
+    flex: 0 0 auto;
+    display: inline-block;
+    padding: 0.6rem 1.05rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: #fff;
+    background: var(--accent, #2563eb);
+    border-radius: var(--radius-sm, 8px);
+    transition: filter 0.15s ease, transform 0.15s ease;
+  }
+  .sp-offer-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
+</style>

@@ -31,6 +31,8 @@ import { categoryColor } from '../lib/category-colors';
 import CategoryIcon from '../components/CategoryIcon.astro';
 import NextStep from '../components/NextStep.astro';
 import { getJourneySteps, NEXT_STEP_EXCLUDED } from '../lib/journeys';
+import SponsoredOffer from '../components/SponsoredOffer.astro';
+import { getOfferForCalc } from '../lib/offers';
 import { getComparatorForCalc } from '../lib/comparators';
 import { findMentions, findPrimaryAbout } from '../lib/wikidata-entities';
 import { datasetSchemasForCalc } from '../lib/calc-datasets';
@@ -943,6 +945,9 @@ const nextStepItems = journeySlugs
   .slice(0, 3)
   .map((c: any) => ({ slug: c.slug, h1: c.h1, icon: c.icon, description: c.description }));
 const showNextStep = !NEXT_STEP_EXCLUDED.has(calc.category) && nextStepItems.length >= 2;
+// Monetización contextual (propuesta jun-2026): oferta por-calc, SEO-safe, se
+// revela post-resultado. Wiring en src/lib/offers.ts. Sólo calcs de alto intento.
+const contextualOffer = getOfferForCalc(calc.slug);
 // #5 comparador "vs" relevante (conecta los comparadores existentes, antes huérfanos).
 const comparator = getComparatorForCalc(calc.slug);
 
@@ -1128,6 +1133,10 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             <InteractiveBmiTable />
             <ImcUnitsHook />
           </>
+        )}
+
+        {contextualOffer && (
+          <SponsoredOffer offer={contextualOffer} slug={calc.slug} />
         )}
 
         {showNextStep && (
