@@ -726,6 +726,7 @@ sitemaps.push({
     core('/sugerencias',                         '0.7',  'daily',   true),
     core('/glosario',                            '0.5',  'monthly'),
     core('/blog',                                '0.7',  'weekly'),
+    core('/datos-monotributo-2026',              '0.7',  'monthly'),
   ],
 });
 
