@@ -2,23 +2,25 @@ export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function horasPractica10000MaestriaGladwell(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
-  const v1=Number(i.v1)||0; const v2=Number(i.v2)||1;
-  const r=v1/v2;
+  const hoursPerWeek = Math.max(Number(i.v1) || 0, 0.1);
+  const weeksPerYear = Math.max(Number(i.v2) || 50, 1);
+  const annualHours = hoursPerWeek * weeksPerYear;
+  const yearsToMastery = 10000 / annualHours;
   const resumen = __lang === 'en'
-    ? `Calculation: ${v1} / ${v2} = ${r.toFixed(2)}.`
-    : `Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`;
+    ? `At ${hoursPerWeek} hrs/week × ${weeksPerYear} weeks/year = ${annualHours.toFixed(0)} hrs/year → ${yearsToMastery.toFixed(1)} years to reach 10,000 hours.`
+    : `A ${hoursPerWeek} hrs/semana × ${weeksPerYear} semanas/año = ${annualHours.toFixed(0)} hrs/año → ${yearsToMastery.toFixed(1)} años para llegar a 10.000 horas.`;
   const _insight = __lang === 'en'
     ? {
-        title: 'Your result',
-        text: `The calculation gives **${r.toFixed(2)}** (${v1} ÷ ${v2}). Remember the "10,000-hour rule" is a popularized rule of thumb: what really moves the needle is **deliberate practice** (focused, with feedback), not just clocking hours.`,
+        title: 'Your mastery timeline',
+        text: `At your pace you reach **10,000 hours in ${yearsToMastery.toFixed(1)} years** (${annualHours.toFixed(0)} deliberate hours/year). Remember: Ericsson's research emphasizes **deliberate practice** — focused, goal-directed, with immediate feedback — not just passive repetition.`,
         tone: 'neutral' as const,
         icon: '🎯',
       }
     : {
-        title: 'Tu resultado',
-        text: `El cálculo da **${r.toFixed(2)}** (${v1} ÷ ${v2}). Acordate que la "regla de las 10.000 horas" es una aproximación divulgativa: lo que mueve la aguja es la **práctica deliberada** (enfocada y con feedback), no sólo acumular horas.`,
+        title: 'Tu cronograma hacia la maestría',
+        text: `A tu ritmo llegás a **10.000 horas en ${yearsToMastery.toFixed(1)} años** (${annualHours.toFixed(0)} horas deliberadas/año). Recordá: la investigación de Ericsson enfatiza la **práctica deliberada** — enfocada, con objetivos claros y feedback inmediato.`,
         tone: 'neutral' as const,
         icon: '🎯',
       };
-  return { resultado:r.toFixed(2), resumen, _insight };
+  return { resultado: yearsToMastery.toFixed(1), resumen, _insight };
 }

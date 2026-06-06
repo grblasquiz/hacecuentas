@@ -1,14 +1,15 @@
 {
   "slug": "pomodoro-25-5-timer",
   "esSlug": "calculadora-tecnica-pomodoro-bloques-descanso-optimo",
-  "title": "Pomodoro 25/5 Timer Calculator | How Many Pomodoros Fit?",
-  "h1": "Optimize Your Study Sessions with the Pomodoro Technique",
-  "description": "Enter your available time and Pomodoro settings to instantly see how many work blocks, short breaks, and long breaks fit — with real focus time and a session breakdown chart.",
+  "title": "Pomodoro Timer Calculator: Blocks & Breaks that Fit + Table | Hacé Cuentas",
+  "h1": "Pomodoro Timer Calculator — How Many Pomodoros Fit Your Session?",
+  "description": "Enter your available time and get the exact number of Pomodoro blocks, short breaks, and long breaks that fit — with real focus time, session duration, and a visual breakdown. Works for 25/5, 50/10, and any custom variant.",
   "category": "educacion",
   "icon": "🍅",
   "formulaId": "tecnica-pomodoro-bloques-descanso-optimo",
-  "intro": "The **Pomodoro 25/5 Timer Calculator** tells you exactly how many focused work blocks fit into your available time — accounting for short breaks, long breaks, and the standard rule of a long break every 4 Pomodoros. Enter your session length and block preferences (classic 25/5, deep-work 50/10, or any custom variant) and get an instant breakdown of real focus time, total session duration, and leftover minutes. Based on Francesco Cirillo's original method and adapted to fit how modern knowledge workers actually plan their days.",
-  "keyTakeaway": "**Pomodoro block calculator**: enter your available minutes, work block length (default 25), short break (default 5), long break (default 20), and how often you take a long break (default every 4 blocks). Get the exact number of Pomodoros, breaks, real focus time, and session duration — in seconds.",
+  "answerSnippet": "With the classic 25/5 Pomodoro setting: a 1-hour session fits **2 Pomodoros** (50 min focus, 5 min break, 5 min free); a 2-hour session fits **4 Pomodoros** (100 min focus, 3 short breaks, 115 min total); a 4-hour session fits **8 Pomodoros** with 1 long break (200 min focus, 235 min total). The formula: place blocks greedily — each block costs [work + break before it], and a long break replaces the short break every 4 completed blocks. No break is placed after the final block.",
+  "intro": "The **Pomodoro Timer Calculator** tells you exactly how many focused work blocks fit into your available time — accounting for short breaks, long breaks, and the standard rule of a long break every 4 Pomodoros. Enter your session length and block preferences (classic 25/5, deep-work 50/10, or any custom variant) and get an instant breakdown of real focus time, total session duration, and leftover minutes. Based on Francesco Cirillo's original method and adapted to fit how modern knowledge workers actually plan their days.",
+  "keyTakeaway": "**Pomodoro block calculator**: enter your available minutes, work block length (default 25), short break (default 5), long break (default 20), and how often you take a long break (default every 4 blocks). Get the exact number of Pomodoros, breaks, real focus time, and session duration — instantly.",
   "useCases": [
     "A university student with 3 hours before an exam who wants to know if they can fit 6 Pomodoros of revision plus a long break.",
     "A remote developer planning a morning deep-work session using 50/10 blocks instead of the standard 25/5, wanting to know how many fit in 4 hours.",
@@ -109,23 +110,27 @@
     ],
     "result": "4 Pomodoros · 100 min focus · 115 min session"
   },
-  "explanation": "## How It's Calculated\n\nThe calculator uses a **greedy block-fitting algorithm**: it places as many Pomodoro blocks as possible into your available time, respecting the rule that a long break replaces the short break every N completed blocks.\n\n### The algorithm step by step\n\n```\nused = 0, blocks = 0, short_breaks = 0, long_breaks = 0\n\nFor each candidate block:\n  break = 0 if blocks == 0\n         else long_break if blocks % N == 0\n         else short_break\n  if used + break + work_block > available → stop\n  used += break + work_block\n  blocks += 1\n  count the break type\n```\n\n**No break is placed after the last block** — the session ends when work ends.\n\n### Classic 25/5 example (120 min)\n\n| Block | Break before | Cumulative time |\n|:-----:|:------------:|:---------------:|\n| 1 | 0 min | 25 min |\n| 2 | 5 min (short) | 55 min |\n| 3 | 5 min (short) | 85 min |\n| 4 | 5 min (short) | 115 min |\n| 5 | 20 min (long, replaces short) | 160 min → **exceeds 120 min — stop** |\n\n→ **4 Pomodoros**, 100 min focus, 3 short breaks, 0 long breaks, 115 min session, 5 min free.\n\n### Deep work 50/10 example (240 min)\n\n| Block | Break before | Cumulative time |\n|:-----:|:------------:|:---------------:|\n| 1 | 0 | 50 min |\n| 2 | 10 min | 110 min |\n| 3 | 10 min | 170 min |\n| 4 | 10 min | 230 min |\n| 5 | 20 min (long) | 300 min → **exceeds 240 min — stop** |\n\n→ **4 blocks**, 200 min focus, 3 short breaks, 0 long breaks, 230 min session, 10 min free.\n\n## Why the long break is placed *before* block N+1, not *after* block N\n\nThe break sequence in Cirillo's method is: work → rest → work → rest. The long break replaces the short break that *precedes* the first block of the next group. This means a long break never fires after your final block — the session simply ends, which maximizes actual focus time.\n\n## Cognitive science behind the intervals\n\nSustained attention research (Ariga & Lleras, *Cognition*, 2011) shows that brief mental breaks prevent the attention system from habituating to a continuous task, preserving performance on later segments. The 25-minute default aligns with the typical plateau of prefrontal cortex sustained output before cognitive fatigue measurably degrades accuracy. Long breaks (15–30 min) allow the default mode network to consolidate recent learning — critical for memory encoding during study sessions.\n\n## Tips for choosing your block length\n\n- **25/5**: best for reading, flashcard review, writing drafts, email triage\n- **50/10**: best for deep coding, essay writing, complex problem sets\n- **45/15**: a popular middle ground for graduate-level study\n- **Keep long breaks ≥ 15 min**: shorter \"long\" breaks don't give the default mode network enough time to consolidate learning",
+  "explanation": "## How It's Calculated\n\nThe calculator uses a **greedy block-fitting algorithm**: it places as many Pomodoro blocks as possible into your available time, respecting the rule that a long break replaces the short break every N completed blocks.\n\n### Quick reference: Pomodoros that fit by session length (25/5 classic)\n\n| Session | Pomodoros | Real focus | Short breaks | Long breaks | Total used |\n|:-------:|:---------:|:----------:|:------------:|:-----------:|:----------:|\n| 30 min | 1 | 25 min | 0 | 0 | 25 min |\n| 1 h | 2 | 50 min | 1 | 0 | 55 min |\n| 1.5 h | 3 | 75 min | 2 | 0 | 85 min |\n| 2 h | 4 | 100 min | 3 | 0 | 115 min |\n| 2.5 h | 4 | 100 min | 3 | 0 | 115 min |\n| 3 h | 5 | 125 min | 3 | 1 | 165 min |\n| 4 h | 8 | 200 min | 6 | 1 | 235 min |\n| 5 h | 10 | 250 min | 8 | 1 | 295 min |\n| 8 h | 16 | 400 min | 12 | 3 | 475 min |\n\n*Long break = 20 min, every 4 blocks. No break after the last block.*\n\n### Quick reference: 50/10 deep-work variant\n\n| Session | Pomodoros | Real focus | Short breaks | Long breaks | Total used |\n|:-------:|:---------:|:----------:|:------------:|:-----------:|:----------:|\n| 1 h | 1 | 50 min | 0 | 0 | 50 min |\n| 2 h | 2 | 100 min | 1 | 0 | 110 min |\n| 3 h | 3 | 150 min | 2 | 0 | 170 min |\n| 4 h | 4 | 200 min | 3 | 0 | 230 min |\n| 6 h | 5 | 250 min | 3 | 1 | 300 min |\n| 8 h | 8 | 400 min | 6 | 1 | 470 min |\n\n*Long break = 20 min, every 4 blocks.*\n\n### The algorithm step by step\n\n```\nused = 0, blocks = 0, short_breaks = 0, long_breaks = 0\n\nFor each candidate block:\n  break = 0 if blocks == 0\n         else long_break if blocks % N == 0\n         else short_break\n  if used + break + work_block > available → stop\n  used += break + work_block\n  blocks += 1\n  count the break type\n```\n\n**No break is placed after the last block** — the session ends when work ends.\n\n### Classic 25/5 example (120 min)\n\n| Block | Break before | Cumulative time |\n|:-----:|:------------:|:---------------:|\n| 1 | 0 min | 25 min |\n| 2 | 5 min (short) | 55 min |\n| 3 | 5 min (short) | 85 min |\n| 4 | 5 min (short) | 115 min |\n| 5 | 20 min (long) | 160 min → **exceeds 120 min — stop** |\n\n→ **4 Pomodoros**, 100 min focus, 3 short breaks, 0 long breaks, 115 min session, 5 min free.\n\n### Deep work 50/10 example (240 min)\n\n| Block | Break before | Cumulative time |\n|:-----:|:------------:|:---------------:|\n| 1 | 0 | 50 min |\n| 2 | 10 min | 110 min |\n| 3 | 10 min | 170 min |\n| 4 | 10 min | 230 min |\n| 5 | 20 min (long) | 300 min → **exceeds 240 min — stop** |\n\n→ **4 blocks**, 200 min focus, 3 short breaks, 0 long breaks, 230 min session, 10 min free.\n\n## Why the long break is placed *before* block N+1, not *after* block N\n\nThe break sequence in Cirillo's method is: work → rest → work → rest. The long break replaces the short break that *precedes* the first block of the next group. This means a long break never fires after your final block — the session simply ends, which maximizes actual focus time.\n\n## Cognitive science behind the intervals\n\nSustained attention research (Ariga & Lleras, *Cognition*, 2011) shows that brief mental breaks prevent the attention system from habituating to a continuous task, preserving performance on later segments. The 25-minute default aligns with the typical plateau of prefrontal cortex sustained output before cognitive fatigue measurably degrades accuracy. Long breaks (15–30 min) allow the default mode network to consolidate recent learning — critical for memory encoding during study sessions.\n\n## Tips for choosing your block length\n\n- **25/5**: best for reading, flashcard review, writing drafts, email triage\n- **50/10**: best for deep coding, essay writing, complex problem sets\n- **45/15**: a popular middle ground for graduate-level study\n- **Keep long breaks ≥ 15 min**: shorter \"long\" breaks don't give the default mode network enough time to consolidate learning",
   "faq": [
+    {
+      "q": "How many Pomodoros fit in a 2-hour session?",
+      "a": "With 120 minutes available, 25-minute blocks, 5-minute short breaks, and a 20-minute long break every 4 blocks, you get exactly **4 Pomodoros**. The sequence is: Block 1 (25 min) → short break (5 min) → Block 2 (25 min) → short break (5 min) → Block 3 (25 min) → short break (5 min) → Block 4 (25 min) = 115 minutes used, 5 minutes free. Block 5 would need a 20-min long break first (total 160 min), which exceeds the available 120 min, so the session ends at 4 blocks."
+    },
+    {
+      "q": "How many Pomodoros fit in a 1-hour session?",
+      "a": "With the classic 25/5 setting in 60 minutes: **2 Pomodoros**. Block 1 takes 25 min, then a 5-min short break (30 min total), then Block 2 takes 25 min (55 min total). 5 minutes remain but aren't enough for another block. Total: 50 min real focus, 1 short break, 55 min session, 5 min free."
+    },
+    {
+      "q": "How many Pomodoros fit in a 3-hour session?",
+      "a": "With the classic 25/5 setting in 180 minutes: **5 Pomodoros**. Blocks 1–4 take 115 min (4×25 work + 3×5 short breaks). Block 5 needs a 20-min long break first (since the 4th block completes a group of 4), costing 45 more minutes — total 160 min. Block 5 runs at 160–185 min... but 185 > 180, so it would be cut off. Actually with 180 min available: blocks 1–4 use 115 min, then a 20-min long break (135 min) + block 5 (25 min) = 160 min total. That fits. Result: 5 Pomodoros, 125 min focus, 3 short breaks, 1 long break."
+    },
     {
       "q": "What is the Pomodoro Technique and who invented it?",
       "a": "The Pomodoro Technique is a time management method created by Francesco Cirillo in the late 1980s while he was a university student in Rome. He used a tomato-shaped kitchen timer ('pomodoro' is Italian for tomato) to structure work into 25-minute focused intervals followed by 5-minute breaks. Every 4 intervals, a longer 15–30 minute break replaces the short one. The method has since become one of the most studied productivity frameworks, with documented benefits for sustained attention, task completion rates, and study retention."
     },
     {
-      "q": "How many Pomodoros fit in a 2-hour session with standard 25/5 settings?",
-      "a": "With 120 minutes available, 25-minute blocks, 5-minute short breaks, and a 20-minute long break every 4 blocks, you get exactly **4 Pomodoros**. The sequence is: Block 1 (25 min) → short break (5 min) → Block 2 (25 min) → short break (5 min) → Block 3 (25 min) → short break (5 min) → Block 4 (25 min) = 115 minutes used, 5 minutes free. Block 5 would need a 20-min long break first (total 160 min), which exceeds the available 120 min, so the session ends at 4 blocks."
-    },
-    {
       "q": "What's the difference between 25/5 and 50/10 Pomodoros?",
       "a": "The 25/5 variant (Cirillo's original) uses 25-minute work blocks with 5-minute short breaks, best for tasks that involve switching between sources or short deliverables. The 50/10 variant uses 50-minute blocks with 10-minute short breaks, which works better for deep coding, long-form writing, or complex problem sets where entering and re-entering flow state is costly. Both follow the same structure: a long break replaces a short break every N completed blocks. With 50/10 blocks, you get roughly half as many sessions but more sustained flow per session."
-    },
-    {
-      "q": "Why does the long break only appear after every 4th block, not before?",
-      "a": "The long break is triggered *before* the first block of the next group — it replaces the short break that would otherwise precede blocks 5, 9, 13, etc. Critically, no break is placed after the last block of your session: the session simply ends when the final work interval finishes. This is intentional — it means you never 'waste' time sitting in a break when there are no more blocks to complete, and your real focus time is maximized."
     },
     {
       "q": "Can I use this calculator for a custom variant like 45/15 or 90/20?",
@@ -146,17 +151,22 @@
     {
       "q": "How many Pomodoros per day is realistic for a knowledge worker?",
       "a": "Research on deep work capacity (Cal Newport, citing Ericsson's deliberate practice data) consistently shows that 4–6 hours of genuinely focused output per day is the realistic ceiling for most knowledge workers, with elite performers occasionally sustaining 6–8 hours over short periods. With 25-minute blocks, 4 hours of focus = 9–10 Pomodoros in a day. The BLS American Time Use Survey found that the average U.S. worker engages in only about 3 hours of genuinely productive focused work per day — meaning a consistent 8-Pomodoro day (200 min focus) already puts you well above the average."
+    },
+    {
+      "q": "Why does the long break only appear after every 4th block?",
+      "a": "The long break is triggered *before* the first block of the next group — it replaces the short break that would otherwise precede blocks 5, 9, 13, etc. Critically, no break is placed after the last block of your session: the session simply ends when the final work interval finishes. This is intentional — it means you never 'waste' time sitting in a break when there are no more blocks to complete, and your real focus time is maximized."
     }
   ],
   "seoKeywords": [
+    "pomodoro timer calculator",
+    "how many pomodoros fit",
     "pomodoro 25 5 timer",
     "pomodoro technique calculator",
-    "how many pomodoros fit",
-    "pomodoro session planner",
+    "pomodoro blocks per hour",
     "study timer calculator",
     "pomodoro work break calculator",
     "50 10 pomodoro timer",
-    "pomodoro blocks per hour",
+    "pomodoro session planner",
     "deep focus timer",
     "productivity session planner",
     "time management calculator",

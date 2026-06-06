@@ -4,7 +4,9 @@ export function inglesNivelesCambridgeDuolingoTiempoConversion(i: Inputs): Outpu
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const n=String(i.nivelActual||'b1'); const h=Number(i.horasSemana)||5;
   const niveles=['cero','a1','a2','b1','b2','c1','c2'];
-  const horasAcum={'cero':0,'a1':100,'a2':200,'b1':400,'b2':700,'c1':1000,'c2':1500};
+  // Cambridge English cumulative guided hours per CEFR level (from research, cambridge.org)
+  // cero→A1: ~100h, A1→A2: ~150h, A2→B1: ~200h, B1→B2: ~300h, B2→C1: ~400h, C1→C2: ~200h
+  const horasAcum={'cero':0,'a1':100,'a2':250,'b1':450,'b2':750,'c1':1150,'c2':1350};
   const idx=niveles.indexOf(n);
   const siguiente=niveles[idx+1];
   if(!siguiente) return {

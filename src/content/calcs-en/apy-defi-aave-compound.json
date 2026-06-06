@@ -1,29 +1,28 @@
 {
   "slug": "apy-defi-aave-compound",
   "esSlug": "calculadora-apy-defi-aave-compound",
-  "title": "DeFi APY Calculator Aave/Compound 2026 | Hacé Cuentas",
-  "h1": "Calculate Your DeFi Stablecoin Lending APY",
-  "description": "Calculate estimated APY returns from stablecoin lending on Aave and Compound DeFi protocols. Free calculator updated 2026.",
+  "title": "DeFi APY Calculator: Aave & Compound Yield Estimator | Hacé Cuentas",
+  "h1": "DeFi APY Calculator — Aave & Compound Stablecoin Yield",
+  "description": "Calculate your stablecoin lending yield on Aave V3 and Compound V3 with daily compounding. Enter amount, APY %, and days — see earnings and final value instantly.",
   "category": "finanzas",
   "icon": "💰",
   "formulaId": "apy-defi-aave-compound",
   "audience": "global",
+  "answerSnippet": "DeFi APY yield uses daily compounding: earnings = principal × ((1 + APY/365)^days − 1). Example: $1,000 at 6% APY for 365 days earns $61.83 (not $60 — the extra $1.83 comes from daily compounding). Aave V3 USDC APY ranges 4.8–6.2% in mid-2026; Compound V3 USDC sits 4.5–5.8%.",
   "seoKeywords": [
     "DeFi APY calculator",
+    "Aave APY calculator",
+    "Compound APY calculator",
     "stablecoin lending yield",
-    "Aave APY",
-    "Compound APY",
-    "cryptocurrency yield calculator",
-    "USDC lending rate",
-    "USDT APY",
-    "DeFi returns calculator",
-    "Aave vs Compound",
-    "stablecoin interest rates",
+    "USDC Aave interest",
+    "DeFi stablecoin returns",
     "crypto lending calculator",
-    "DeFi lending rewards"
+    "Aave vs Compound yield",
+    "USDC supply rate 2026",
+    "DeFi interest calculator"
   ],
   "intro": "DeFi APY (Annual Percentage Yield) is the compounded annual return you earn when supplying stablecoins like USDC, USDT, or DAI to permissionless lending protocols such as Aave V3, Compound V3, Morpho Blue, or Sky Protocol's sDAI vault. Unlike a CD or a high-yield savings account (HYSA) from Marcus by Goldman Sachs, Wealthfront Cash, or SoFi (capped near 4.0–4.5% in mid-2026, FDIC-insured up to $250K), DeFi rates float in real time as borrowers compete for liquidity. As of late May 2026, USDC supply rates on Aave V3 Ethereum hover around 4.8–6.2%, Compound V3 USDC sits near 4.5–5.8%, and Morpho Blue curated vaults can push 6–8% on stablecoins by routing through optimized markets. APY differs from APR (which Aave displays alongside it) because APY assumes per-block compounding of accrued interest, while APR is the simple non-compounded rate. The trade-off is real: no FDIC, smart contract risk (Euler $197M in 2023, Cream Finance $130M in 2021), oracle failures, stablecoin depeg events (USDC briefly hit $0.87 during the SVB collapse in March 2023), and US tax treatment as ordinary income with no 1099-INT issued by the protocol. This calculator helps you model net returns before gas, slippage, and federal/state income tax — useful whether you are parking idle treasury cash, comparing against a HYSA, or sizing a position on Base or Arbitrum to escape Ethereum L1 gas.",
-  "keyTakeaway": "Formula: **principal × ((1 + APY/365)^days − 1)**. DeFi yield is taxed as ordinary income by the IRS — track every accrual.",
+  "keyTakeaway": "Formula: **principal × ((1 + APY/365)^days − 1)**. At 6% APY, $1,000 earns $61.83/year (daily compounding). DeFi yield is taxed as ordinary income by the IRS — track every accrual.",
   "useCases": [
     "Estimate USDC supply yield on Aave V3 (Ethereum mainnet, Base, Arbitrum, Optimism) before depositing",
     "Compare Compound V3 USDC market APY vs a Marcus or Wealthfront HYSA for idle cash allocation",
@@ -41,7 +40,8 @@
       "required": true,
       "placeholder": "1000",
       "default": 1000,
-      "step": 0.01
+      "step": 0.01,
+      "format": "plain"
     },
     {
       "id": "apy",
@@ -51,7 +51,8 @@
       "placeholder": "6",
       "default": 6,
       "step": 0.01,
-      "help": "Enter as percentage (e.g., 5 for 5%)"
+      "help": "Enter as percentage (e.g., 6 for 6%). Aave V3 USDC was 4.8–6.2% in mid-2026.",
+      "format": "plain"
     },
     {
       "id": "plazoDias",
@@ -60,7 +61,8 @@
       "required": true,
       "placeholder": "365",
       "default": 365,
-      "step": 0.01
+      "step": 1,
+      "format": "plain"
     }
   ],
   "outputs": [
@@ -79,50 +81,54 @@
     }
   ],
   "example": {
-    "title": "Example Calculation",
+    "title": "Worked Example: $1,000 at 6% APY for 365 Days",
     "steps": [
-      "$1,000 USD at 6% for 365 days",
-      "$60 earnings"
+      "Principal: $1,000 USD",
+      "APY: 6% (daily compounding, as in Aave/Compound)",
+      "Formula: $1,000 × ((1 + 0.06/365)^365 − 1)",
+      "= $1,000 × (1.00016438...^365 − 1)",
+      "= $1,000 × 0.06183...",
+      "Earnings: $61.83 USD"
     ],
-    "result": "Final value: $1,060 USD"
+    "result": "Final value: $1,061.83 USD (vs $1,060 with simple interest — daily compounding adds $1.83)"
   },
-  "explanation": "## The APY Formula (and Why It Beats APR)\n\nThe canonical compounding formula is **APY = (1 + r/n)^n − 1**, where `r` is the nominal annual rate and `n` is the number of compounding periods per year. Aave and Compound effectively compound *per block* (roughly every 12 seconds on Ethereum post-Merge), so `n` is on the order of 2.6M — close enough to continuous compounding that the APY ≈ e^r − 1. In practice, the Aave UI shows both the supply APR and the supply APY directly; the gap between them grows with the rate. At 5% APR you get ~5.13% APY; at 10% APR you get ~10.52% APY.\n\n## How Aave and Compound Set Rates: The Kinked Interest Rate Model\n\nBoth protocols use a **utilization-based kinked model**. Utilization = total borrowed / total supplied. Below an optimal utilization (typically 80–90% for stablecoins), the borrow rate climbs gently. Above the kink, the rate jumps steeply to penalize over-borrowing and protect lender liquidity. The supply APY is the borrow APY times utilization, minus a reserve factor (Aave keeps 10–20%, Compound 7–15%). This is why USDC rates spike during volatile weeks — leveraged traders borrow stables to short ETH, utilization climbs past the kink, and suppliers earn the spike. Morpho Blue improves on this by isolating markets and letting curators (Gauntlet, Steakhouse, MEV Capital) optimize the curve per asset.\n\n## Supply vs Borrow: You're the Bank\n\nWhen you deposit USDC on Aave V3, you receive aUSDC (a rebasing token whose balance grows). On Compound V3, you receive cUSDCv3 (non-rebasing; the underlying balance grows via exchange rate). Borrowers post collateral (ETH, wBTC, wstETH) and pay the borrow APY. The protocol takes a cut into the reserve; the rest flows to suppliers. Your supply APY = borrow APY × utilization × (1 − reserve factor). No counterparty risk in the traditional sense — the smart contract enforces over-collateralization (typically 75–82.5% LTV for ETH).\n\n## Gas Reality: L1 vs L2\n\nAn Aave supply transaction on Ethereum mainnet runs $15–40 in gas at 20–40 gwei. A withdrawal is similar. On a $1,000 position earning 6% APY, that's $60/year minus $30–80 round-trip — your effective yield collapses. **Use L2s for positions under ~$10K**: Aave V3 is deployed on Arbitrum, Base, Optimism, Polygon, and Avalanche. Gas on Base or Arbitrum is typically $0.10–0.50 per transaction. Compound V3 lives on Ethereum, Polygon, Arbitrum, Base, and Optimism. Bridging USDC via Circle's CCTP (native USDC bridge) is the cleanest way to move funds — avoid wrapped USDC variants.\n\n## The Risks Nobody Caps for You\n\n- **Smart contract exploits.** Euler Finance lost $197M in March 2023 (donation attack); Cream Finance lost $130M in October 2021 (flash loan + oracle); Multichain lost $125M+ in 2023 (key compromise). Even audited code (Trail of Bits, OpenZeppelin, Spearbit) ships bugs.\n- **Oracle failure.** If Chainlink misprices collateral, liquidations cascade. Aave uses Chainlink + sanity checks; Compound V3 uses Chainlink + UniV3 TWAP.\n- **Stablecoin depeg.** USDC dropped to $0.87 in March 2023 during the SVB crisis. DAI briefly followed because of its USDC backing. USDT has never broken peg materially but is the highest-risk by reserve transparency.\n- **Regulatory.** The SEC has not declared aTokens or cTokens securities, but the regulatory perimeter is unsettled post-Coinbase suit. Tornado Cash sanctions show the OFAC tail risk for any address you interact with.\n\n## US Tax Treatment (IRS)\n\nThe IRS has not issued DeFi-specific guidance beyond Notice 2014-21 (treats crypto as property). In practice, CPAs and tax software (CoinTracker, Koinly, TokenTax) treat **interest accrued on supplied stablecoins as ordinary income** at fair market value when earned, reported on Schedule 1 (Other Income) or Schedule B. Each rebase or claim is a taxable event. **There is no 1099-INT** — the burden is on you to track. If you later sell the underlying USDC for USD, that's a separate capital gains calculation (usually zero gain for stablecoins). At a 24% federal + 6% state marginal rate, a 6% APY nets ~4.2% after-tax — still beating a 4.5% HYSA after-tax (~3.15%), but not by the headline gap.\n\n## Tools You Actually Need\n\n- **DeFi Llama** (defillama.com/yields) — real-time APYs across 1,000+ pools, filter by chain and asset.\n- **DeBank** (debank.com) — portfolio tracker across all EVM chains.\n- **Aave dashboard** (app.aave.com) — official rates, utilization, reserve factor per market.\n- **Compound finance** (app.compound.finance) — V3 markets with native rewards in COMP.\n- **CoinTracker / Koinly** — IRS-ready tax reports including DeFi accruals.\n\nThis calculator is an estimate. Always read the protocol docs (docs.aave.com, docs.compound.finance) before depositing, verify the contract address against the official site, and never sign a transaction you don't understand.",
+  "explanation": "## The APY Formula: Compound vs Simple Interest\n\nThe canonical compounding formula is **APY = (1 + r/n)^n − 1**, where `r` is the nominal annual rate and `n` is the number of compounding periods per year. Aave and Compound effectively compound *per block* (roughly every 12 seconds on Ethereum post-Merge), so `n` is on the order of 2.6M — close enough to continuous compounding that the APY ≈ e^r − 1. This calculator models daily compounding (n=365), which is standard for APY comparisons.\n\n**Why APY beats APR:** At 5% APR you get ~5.13% APY; at 10% APR you get ~10.52% APY. Always compare APY to APY.\n\n## Common APY Reference Table: $1,000 Principal over 1 Year\n\n| APY | 30 days | 90 days | 180 days | 365 days |\n|-----|---------|---------|----------|----------|\n| 3% | $2.47 | $7.40 | $14.89 | $30.45 |\n| 5% | $4.11 | $12.33 | $24.83 | $51.27 |\n| 6% | $4.93 | $14.82 | $29.84 | $61.83 |\n| 8% | $6.56 | $19.74 | $39.77 | $83.00 |\n| 10% | $8.22 | $24.69 | $49.80 | $105.17 |\n| 15% | $12.33 | $37.18 | $75.28 | $161.80 |\n| 20% | $16.44 | $49.70 | $100.93 | $221.40 |\n\n*All values in USD for a $1,000 principal, using daily compounding.*\n\n## How Aave and Compound Set Rates: The Kinked Interest Rate Model\n\nBoth protocols use a **utilization-based kinked model**. Utilization = total borrowed / total supplied. Below an optimal utilization (typically 80–90% for stablecoins), the borrow rate climbs gently. Above the kink, the rate jumps steeply to penalize over-borrowing and protect lender liquidity. The supply APY is the borrow APY times utilization, minus a reserve factor (Aave keeps 10–20%, Compound 7–15%). This is why USDC rates spike during volatile weeks — leveraged traders borrow stables to short ETH, utilization climbs past the kink, and suppliers earn the spike. Morpho Blue improves on this by isolating markets and letting curators (Gauntlet, Steakhouse, MEV Capital) optimize the curve per asset.\n\n## Supply vs Borrow: You're the Bank\n\nWhen you deposit USDC on Aave V3, you receive aUSDC (a rebasing token whose balance grows). On Compound V3, you receive cUSDCv3 (non-rebasing; the underlying balance grows via exchange rate). Borrowers post collateral (ETH, wBTC, wstETH) and pay the borrow APY. The protocol takes a cut into the reserve; the rest flows to suppliers. Your supply APY = borrow APY × utilization × (1 − reserve factor). No counterparty risk in the traditional sense — the smart contract enforces over-collateralization (typically 75–82.5% LTV for ETH).\n\n## Gas Reality: L1 vs L2\n\nAn Aave supply transaction on Ethereum mainnet runs $15–40 in gas at 20–40 gwei. A withdrawal is similar. On a $1,000 position earning 6% APY, that's $60/year minus $30–80 round-trip — your effective yield collapses. **Use L2s for positions under ~$10K**: Aave V3 is deployed on Arbitrum, Base, Optimism, Polygon, and Avalanche. Gas on Base or Arbitrum is typically $0.10–0.50 per transaction. Compound V3 lives on Ethereum, Polygon, Arbitrum, Base, and Optimism. Bridging USDC via Circle's CCTP (native USDC bridge) is the cleanest way to move funds — avoid wrapped USDC variants.\n\n## The Risks Nobody Caps for You\n\n- **Smart contract exploits.** Euler Finance lost $197M in March 2023 (donation attack); Cream Finance lost $130M in October 2021 (flash loan + oracle); Multichain lost $125M+ in 2023 (key compromise). Even audited code (Trail of Bits, OpenZeppelin, Spearbit) ships bugs.\n- **Oracle failure.** If Chainlink misprices collateral, liquidations cascade. Aave uses Chainlink + sanity checks; Compound V3 uses Chainlink + UniV3 TWAP.\n- **Stablecoin depeg.** USDC dropped to $0.87 in March 2023 during the SVB crisis. DAI briefly followed because of its USDC backing. USDT has never broken peg materially but is the highest-risk by reserve transparency.\n- **Regulatory.** The SEC has not declared aTokens or cTokens securities, but the regulatory perimeter is unsettled post-Coinbase suit. Tornado Cash sanctions show the OFAC tail risk for any address you interact with.\n\n## US Tax Treatment (IRS)\n\nThe IRS has not issued DeFi-specific guidance beyond Notice 2014-21 (treats crypto as property). In practice, CPAs and tax software (CoinTracker, Koinly, TokenTax) treat **interest accrued on supplied stablecoins as ordinary income** at fair market value when earned, reported on Schedule 1 (Other Income) or Schedule B. Each rebase or claim is a taxable event. **There is no 1099-INT** — the burden is on you to track. If you later sell the underlying USDC for USD, that's a separate capital gains calculation (usually zero gain for stablecoins). At a 24% federal + 6% state marginal rate, a 6% APY nets ~4.2% after-tax — still beating a 4.5% HYSA after-tax (~3.15%), but not by the headline gap.\n\n## Tools You Actually Need\n\n- **DeFi Llama** (defillama.com/yields) — real-time APYs across 1,000+ pools, filter by chain and asset.\n- **DeBank** (debank.com) — portfolio tracker across all EVM chains.\n- **Aave dashboard** (app.aave.com) — official rates, utilization, reserve factor per market.\n- **Compound finance** (app.compound.finance) — V3 markets with native rewards in COMP.\n- **CoinTracker / Koinly** — IRS-ready tax reports including DeFi accruals.\n\nThis calculator is an estimate. Always read the protocol docs (docs.aave.com, docs.compound.finance) before depositing, verify the contract address against the official site, and never sign a transaction you don't understand.",
   "faq": [
     {
-      "q": "Is DeFi stablecoin yield taxable in the US?",
-      "a": "Yes. The IRS treats it as ordinary income at fair market value when earned (per Notice 2014-21 framework, applied by analogy). Each accrual or claim is a taxable event reported on Schedule 1 or Schedule B. DeFi protocols do not issue Form 1099-INT — you are responsible for tracking. Tools like CoinTracker, Koinly, and TokenTax pull on-chain history. State income tax applies on top (CA 9.3%, NY 6.85%, TX/FL/WA 0%). Consult a crypto-savvy CPA — generalist preparers often misclassify rebasing tokens."
+      "q": "What is the formula to calculate DeFi APY earnings?",
+      "a": "Use daily compounding: **Earnings = Principal × ((1 + APY/365)^days − 1)**. For $1,000 at 6% APY over 365 days: $1,000 × ((1 + 0.06/365)^365 − 1) = $61.83. Simple interest would give $60.00 — the extra $1.83 is the compound effect. For periods under 30 days the difference is negligible; for 2+ years it compounds significantly. Aave's UI shows both APR and APY so you can verify: at 5.8% APR the APY shown should be ~5.97%."
     },
     {
-      "q": "Aave V3 vs Compound V3 — which is safer?",
-      "a": "Both are blue-chip, multi-audited, and battle-tested with over $10B TVL combined. Aave has a longer track record (live since 2020), larger TVL (~$15B in May 2026), more chains (Ethereum, Base, Arbitrum, Optimism, Polygon, Avalanche, Scroll, Metis), and a richer collateral set including isolated markets and eMode. Compound V3 is a deliberate simplification: each deployment is a single borrowable asset (USDC, USDT, ETH, or wETH) with multiple collaterals. Simpler surface area, smaller attack surface, smaller TVL (~$3B). For pure stablecoin supply, both are reasonable; Aave gives you more market choice, Compound V3 gives you a tighter design."
-    },
-    {
-      "q": "What is the USDC supply rate on Aave today?",
+      "q": "What is the current Aave USDC APY in 2026?",
       "a": "As of late May 2026, USDC on Aave V3 Ethereum mainnet supply APY is hovering 4.8–6.2%, with spikes to 8–10% during high utilization periods. Base and Arbitrum deployments typically trail Ethereum mainnet by 0.5–1.5 percentage points but cost pennies in gas. Check app.aave.com or defillama.com/yields for live rates — they change every block. Compound V3 USDC sits 4.5–5.8% in the same window. Morpho Blue curated vaults (Gauntlet, Steakhouse) often push 6–8% by stacking incentives."
     },
     {
-      "q": "DeFi vs HYSA — which actually earns more after tax?",
-      "a": "At face value DeFi wins: 6% APY vs 4.5% on Marcus, Wealthfront, or SoFi (May 2026). After a 24% federal + 6% state marginal rate, DeFi nets ~4.2% and HYSA nets ~3.15% — DeFi still ahead, but tighter than the headline. The real question is risk-adjusted: HYSA is FDIC-insured to $250K per bank, instant, with a 1099-INT auto-filed. DeFi has smart contract risk, no insurance, manual tax tracking, and gas friction. A reasonable split for US treasury cash: keep 3–6 months of expenses in a HYSA, deploy excess incrementally to Aave or Compound on an L2 once you've understood the risks."
+      "q": "APY vs APR on Aave — what's the difference?",
+      "a": "APR (Annual Percentage Rate) is the simple non-compounded rate. APY (Annual Percentage Yield) includes per-block compounding, so it's always slightly higher. At 5% APR → 5.13% APY; at 10% APR → 10.52% APY. Aave displays both in its UI. When comparing DeFi yields to bank savings accounts, always compare APY to APY — banks advertise APY too (Federal Truth in Savings Act). The gap matters most for high-rate vaults above 15%."
+    },
+    {
+      "q": "Aave V3 vs Compound V3 — which gives better yield?",
+      "a": "Both are blue-chip, multi-audited, and battle-tested with over $10B TVL combined. Aave typically shows slightly higher USDC supply APY on Ethereum mainnet (4.8–6.2% vs Compound's 4.5–5.8% in mid-2026) due to higher utilization from its broader collateral set. Compound V3 is a deliberate simplification: each deployment is a single borrowable asset (USDC, USDT, ETH) with multiple collaterals — smaller attack surface. Morpho Blue vaults (Gauntlet, Steakhouse curators) often beat both by 1–2 percentage points by optimizing utilization dynamically."
+    },
+    {
+      "q": "Is DeFi stablecoin yield taxable in the US?",
+      "a": "Yes. The IRS treats it as ordinary income at fair market value when earned (per Notice 2014-21 framework). Each accrual or claim is a taxable event reported on Schedule 1 or Schedule B. DeFi protocols do not issue Form 1099-INT — you are responsible for tracking. Tools like CoinTracker, Koinly, and TokenTax pull on-chain history. State income tax applies on top (CA 9.3%, NY 6.85%, TX/FL/WA 0%). Consult a crypto-savvy CPA — generalist preparers often misclassify rebasing tokens."
+    },
+    {
+      "q": "DeFi APY vs high-yield savings account (HYSA) — which earns more after tax?",
+      "a": "At face value DeFi wins: 6% APY vs 4.5% on Marcus, Wealthfront, or SoFi (May 2026). After a 24% federal + 6% state marginal rate, DeFi nets ~4.2% and HYSA nets ~3.15% — DeFi still ahead, but tighter than the headline. The real question is risk-adjusted: HYSA is FDIC-insured to $250K, instant, with a 1099-INT auto-filed. DeFi has smart contract risk, no insurance, manual tax tracking, and gas friction. A reasonable split for US treasury cash: keep 3–6 months in a HYSA, deploy excess incrementally to Aave/Compound on an L2 once you've understood the risks."
+    },
+    {
+      "q": "Will gas costs eat my DeFi yield?",
+      "a": "On Ethereum L1, yes — for small positions. A supply + withdrawal round-trip costs $30–80 at typical gas (20–40 gwei). On a $1,000 position at 6% APY ($61.83/year), gas eats 50–130% of your yield. Break-even on L1 is roughly $5,000–10,000 deposit held 12+ months. On L2s (Base, Arbitrum, Optimism, Scroll), the same round-trip is $0.20–1.00. Use Circle's CCTP to bridge USDC natively. For under $10K, always go L2."
     },
     {
       "q": "What happens if Aave gets hacked?",
-      "a": "Aave's Safety Module holds ~$400M+ in staked AAVE that can be slashed up to 30% to cover a shortfall (the protocol's native backstop). Beyond that, supplier losses are realized pro-rata — there is no FDIC, no SIPC, no government backstop. Nexus Mutual and Sherlock sell smart contract cover for Aave (typically 2–3% of notional per year), which makes sense for large positions. The 2024 honeypot bug in v3 was patched without supplier losses; the 2023 GHO peg issue was handled via parameter tuning. Track record is strong, but tail risk is real — never deposit more than you can fully lose."
+      "a": "Aave's Safety Module holds ~$400M+ in staked AAVE that can be slashed up to 30% to cover a shortfall. Beyond that, supplier losses are realized pro-rata — there is no FDIC, no SIPC, no government backstop. Nexus Mutual and Sherlock sell smart contract cover for Aave (typically 2–3% of notional per year), which makes sense for large positions. Track record is strong (no material supplier losses to date), but tail risk is real — never deposit more than you can fully lose."
     },
     {
-      "q": "Will gas costs eat my yield?",
-      "a": "On Ethereum L1, yes — for small positions. A supply + later withdrawal round-trip costs $30–80 at typical gas (20–40 gwei). On a $1,000 position at 6% APY ($60/year), gas eats 50–130% of your yield. Break-even on L1 is roughly $5,000–10,000 deposit held 12+ months. On L2s (Base, Arbitrum, Optimism, Scroll), the same round-trip is $0.20–1.00. Use Circle's CCTP to bridge USDC natively (no wrapped variants). For under $10K, always go L2."
-    },
-    {
-      "q": "What about Morpho Blue and Sky (formerly MakerDAO) sDAI?",
-      "a": "Both are credible Aave/Compound alternatives in 2026. Morpho Blue is an immutable, primitive lending protocol with isolated markets — curators (Gauntlet, Steakhouse, MEV Capital, Block Analitica) build vaults on top. APYs on stablecoin vaults often clip 6–9% with comparable or better risk profiles. Sky Protocol's sDAI is the DAI Savings Rate wrapper: deposit DAI, get sDAI, earn the DSR (5–8% range in 2026 depending on Sky's monetary policy). sDAI is one contract, no liquidations, no utilization risk — simpler than Aave but yield is governance-set rather than market-driven."
-    },
-    {
-      "q": "Can I withdraw anytime, or am I locked in?",
-      "a": "No lockup on Aave or Compound — withdrawal is instant if the protocol has liquidity. Utilization above ~95% means some funds are out as loans; you can still withdraw what's available immediately, the rest as borrowers repay or new suppliers deposit. In practice this is rarely a constraint for USDC (liquidity is deep). Sky sDAI is also instant. Morpho Blue vaults may have queued withdrawals depending on curator config — check the vault page."
-    },
-    {
-      "q": "Do I need a US LLC to lend stablecoins in DeFi?",
-      "a": "No — you can lend from a personal self-custody wallet (MetaMask, Rabby, Frame, Ledger). An LLC adds liability protection and lets you write off gas fees as business expenses, but it also adds bookkeeping overhead and a separate tax return. For under $50K total DeFi exposure, most US users stay personal. Above that, talk to a crypto-savvy CPA about Wyoming or Delaware LLC structures. None of this is legal or tax advice."
+      "q": "Can I withdraw from Aave or Compound at any time?",
+      "a": "No lockup — withdrawal is instant if the protocol has liquidity. Utilization above ~95% means some funds are out as loans; you can still withdraw what's available immediately. In practice this is rarely a constraint for USDC (liquidity is deep). Sky sDAI is also instant. Morpho Blue vaults may have queued withdrawals depending on curator config — check the vault page."
     },
     {
       "q": "What about COMP and AAVE token rewards on top of the base APY?",
@@ -155,9 +161,9 @@
     "frequency": "never",
     "lastUpdated": "2026-05-28",
     "updateType": "manual",
-    "notes": "Fixed formula; APY rate ranges and tax framing reviewed manually"
+    "notes": "Fixed formula to daily compounding (was simple interest); added APY reference table; optimized title/h1/answerSnippet for click capture"
   },
-  "lastReviewed": "2026-05-28",
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [],
   "noindex": false
 }

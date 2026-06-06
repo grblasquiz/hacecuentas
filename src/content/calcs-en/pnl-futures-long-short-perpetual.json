@@ -1,35 +1,37 @@
 {
   "slug": "pnl-futures-long-short-perpetual",
   "esSlug": "calculadora-pnl-futuros-long-short-perpetual",
-  "title": "Futures P&L Calculator 2026 | Hacé Cuentas",
-  "h1": "Perpetual Futures P&L Calculator",
-  "description": "Calculate profit and loss on perpetual futures positions with leverage. Free crypto P&L calculator for traders.",
+  "title": "Futures P&L Calculator: Long, Short & Perpetual + ROE | Hacé Cuentas",
+  "h1": "Perpetual Futures P&L Calculator — Long & Short with Leverage",
+  "description": "Calculate your exact profit or loss on perpetual futures positions. Enter entry price, exit price, notional size, leverage and direction (long/short). Instant P&L + ROE.",
   "category": "finanzas",
   "icon": "📈",
   "formulaId": "pnl-futuros-long-short-perpetual",
   "audience": "global",
-  "intro": "Perpetual futures let you go long or short with leverage, and your profit or loss scales with both the price move and your position size. This calculator computes P&L on a perpetual position from entry price, exit price, size, and direction — before funding and fees — so you can see the outcome of a trade at a glance.",
-  "keyTakeaway": "Formula: **(closing price - entry price) × position size**. Direct application with your input values. Calculate P&L on perpetual futures positions with any leverage multiple.",
+  "lastReviewed": "2026-06-04",
+  "intro": "Perpetual futures let you go long or short with leverage, and your P&L scales with the price move, position size, and direction. This calculator gives you exact profit or loss in USD and ROE (return on margin) — before funding and fees — so you can size your trade and plan your stop before you enter.",
+  "keyTakeaway": "**Long P&L = (Exit Price − Entry Price) × (Notional / Entry Price)**. Short P&L = (Entry Price − Exit Price) × (Notional / Entry Price). ROE = P&L / Margin × 100%, where Margin = Notional / Leverage.",
+  "answerSnippet": "To calculate perpetual futures P&L: subtract entry price from exit price (or reverse for short), multiply by quantity (notional ÷ entry price). For example, a $10,000 long on BTC at $60,000 closing at $64,000 earns (64,000−60,000) × (10,000/60,000) = $666.67 P&L. With 10x leverage, the margin is $1,000 and ROE is 66.7%.",
   "useCases": [
-    "Technical calculations for perpetual futures P&L",
-    "Students and professionals in trading and finance",
-    "Validate theoretical results before trading",
-    "Learning and understanding the concept",
-    "Quick reference for trading projects"
+    "Calculate profit or loss before entering a trade",
+    "Stress-test different leverage levels and exit prices",
+    "Compare long vs short outcomes for the same price move",
+    "Verify P&L matches your exchange's trade history",
+    "Understand ROE vs absolute P&L with leverage"
   ],
   "seoKeywords": [
     "futures P&L calculator",
     "perpetual futures calculator",
     "crypto P&L calculator",
-    "leverage calculator",
-    "profit and loss calculator",
-    "trading calculator",
-    "perpetual futures profit",
-    "long short calculator",
-    "crypto trading P&L",
-    "futures profit loss",
-    "ROE calculator",
-    "P&L calculation"
+    "long short P&L",
+    "futures profit loss calculator",
+    "leveraged trading P&L",
+    "ROE futures",
+    "perpetual swap calculator",
+    "Binance futures calculator",
+    "Bybit P&L calculator",
+    "futures profit calculator",
+    "crypto leverage calculator"
   ],
   "fields": [
     {
@@ -39,53 +41,56 @@
       "required": true,
       "placeholder": "60000",
       "default": 60000,
-      "step": 0.01
+      "step": 0.01,
+      "help": "The price at which you opened the position."
     },
     {
       "id": "precioCierre",
-      "label": "Closing Price",
+      "label": "Exit Price (USD)",
       "type": "number",
       "required": true,
       "placeholder": "64000",
       "default": 64000,
-      "step": 0.01
+      "step": 0.01,
+      "help": "The price at which you closed (or plan to close) the position."
     },
     {
       "id": "tamanoPosicion",
-      "label": "Position Size (USD)",
+      "label": "Notional Position Size (USD)",
       "type": "number",
       "required": true,
-      "placeholder": "1000",
-      "default": 1000,
+      "placeholder": "10000",
+      "default": 10000,
       "step": 0.01,
-      "help": "Your margin contribution (typically 3% of notional value with 10x leverage)."
+      "help": "Total contract value in USD (notional). Your actual margin = Notional ÷ Leverage."
     },
     {
       "id": "posicion",
-      "label": "Position Type",
+      "label": "Direction",
       "type": "select",
       "required": true,
       "options": [
         {
           "value": "long",
-          "label": "Long"
+          "label": "Long (buy / up)"
         },
         {
           "value": "short",
-          "label": "Short"
+          "label": "Short (sell / down)"
         }
       ],
       "default": "long",
-      "help": "Long: profit if price rises. Short: profit if price falls."
+      "help": "Long: you profit if price rises. Short: you profit if price falls."
     },
     {
       "id": "apalancamiento",
-      "label": "Leverage",
+      "label": "Leverage (×)",
       "type": "number",
       "required": true,
       "placeholder": "10",
       "default": 10,
-      "step": 0.01
+      "step": 1,
+      "help": "Your exchange leverage multiple (e.g. 10 = 10×). Higher leverage lowers margin but amplifies P&L and liquidation risk."
     }
   ],
   "outputs": [
@@ -96,75 +101,83 @@
     },
     {
       "id": "roe",
-      "label": "ROE %"
+      "label": "ROE on Margin"
     },
     {
       "id": "interpretacion",
-      "label": "Interpretation"
+      "label": "Result"
     }
   ],
   "example": {
-    "title": "Example Calculation",
+    "title": "Worked Example",
     "steps": [
-      "Long 60k→64k $1k 10x",
-      "+$666"
+      "Long BTC at $60,000 → exit at $64,000",
+      "Notional size: $10,000 | Leverage: 10×",
+      "Quantity = 10,000 / 60,000 = 0.1667 BTC",
+      "P&L = (64,000 − 60,000) × 0.1667 = $666.67",
+      "Margin = $10,000 / 10 = $1,000",
+      "ROE = $666.67 / $1,000 = 66.7%"
     ],
-    "result": "ROE +66%"
+    "result": "+$666.67 P&L | ROE +66.7%"
   },
-  "explanation": "**Personal finance and investing** use universal mathematical principles (compound interest, time value of money, risk-return optimization). This calculator applies industry-standard formulas used in financial markets worldwide.\n\n## How It's Calculated\n\nProfit and loss on perpetual futures positions.\n\nThis calculator applies the formula with your input values, checking typical ranges and alerting you to unreasonable values.\n\n## Typical Benchmarks by Timeframe\n\n| Timeframe | S&P 500 | 10y Bonds | Cash |\n|---|---|---|---|\n| 1 year | Highly variable | 4-5% | 3-5% |\n| 5 years | ~8% avg | ~4% | Inflation |\n| 10 years | ~9-10% | ~4% | <Inflation |\n| 20+ years | ~10% nominal | ~5% | N/A |\n\n## Investment Principles\n\n- **Stick to the plan** during crises. Emotions are your worst advisor.\n- **Diversify**: don't concentrate in a single asset, sector, or country.\n- **Keep costs low**: expense ratios >1% annually eat 30% of your returns over 30 years.\n- **Long horizon**: equities work over 10+ years, not 1 year.\n- **Rebalance**: once per year, no more.\n\n## Final Notes\n\nThis calculation is a reference tool only. For critical decisions (financial, medical, legal), consult with a specialist. Values are current as of 2026 and reviewed periodically.",
+  "explanation": "## How Perpetual Futures P&L Is Calculated\n\nPerpetual futures (also called perpetual swaps) are leveraged derivative contracts with no expiry date. Your profit or loss depends on the direction you trade, how far price moves, and the notional size of your position.\n\n### Core Formulas\n\n**Long position P&L:**\n```\nQuantity = Notional / Entry Price\nP&L = (Exit Price − Entry Price) × Quantity\n```\n\n**Short position P&L:**\n```\nQuantity = Notional / Entry Price\nP&L = (Entry Price − Exit Price) × Quantity\n```\n\n**Margin and ROE:**\n```\nMargin = Notional / Leverage\nROE = P&L / Margin × 100%\n```\n\n> **Note:** This calculator shows gross P&L before trading fees and funding rates. On Binance/Bybit, taker fees of 0.04–0.05% and funding rates (typically ±0.01% every 8 hours) will reduce your net result.\n\n## P&L Table — Long BTC at $60,000 with $10,000 Notional (10× leverage)\n\n| Exit Price | Price Move | P&L (USD) | ROE (on $1,000 margin) |\n|---|---|---|---|\n| $54,000 | −10% | −$1,000 | −100% (liquidation risk) |\n| $57,000 | −5% | −$500 | −50% |\n| $60,000 | 0% | $0 | 0% |\n| $63,000 | +5% | +$500 | +50% |\n| $66,000 | +10% | +$1,000 | +100% |\n| $72,000 | +20% | +$2,000 | +200% |\n\n## P&L Table — Short BTC at $60,000 with $10,000 Notional (10× leverage)\n\n| Exit Price | Price Move | P&L (USD) | ROE |\n|---|---|---|---|\n| $54,000 | −10% | +$1,000 | +100% |\n| $57,000 | −5% | +$500 | +50% |\n| $60,000 | 0% | $0 | 0% |\n| $63,000 | +5% | −$500 | −50% |\n| $66,000 | +10% | −$1,000 | −100% (liquidation risk) |\n\n## Key Concepts\n\n- **Notional vs Margin:** The notional is the full contract value; your margin is the collateral you actually deposit. With 10× leverage on $10,000 notional, your margin is $1,000.\n- **ROE vs Absolute P&L:** ROE (return on equity/margin) is the relevant metric for comparing trades of different sizes. It tells you how efficiently you used your margin.\n- **Liquidation price:** With 10× leverage, a 10% adverse move wipes out 100% of your margin. Most exchanges apply a maintenance margin of ~0.5%, so liquidation happens slightly before a full 10% move.\n- **Funding rate:** Every 8 hours, longs pay shorts (or vice versa) a small rate based on market premium. Holding positions for days can add meaningful cost.\n- **Fees:** Always subtract taker fees (0.04–0.05%) on both entry and exit from your calculated P&L to get net profit.",
   "faq": [
     {
-      "q": "What is P&L in futures trading?",
-      "a": "P&L (Profit & Loss) is your gain or loss on a futures position, calculated as (closing price - entry price) × position size."
+      "q": "What is perpetual futures P&L?",
+      "a": "P&L (Profit & Loss) is your net gain or loss on a futures position. For a long: P&L = (Exit Price − Entry Price) × (Notional / Entry Price). For a short: P&L = (Entry Price − Exit Price) × (Notional / Entry Price)."
     },
     {
-      "q": "How do perpetual futures work?",
-      "a": "Perpetual futures are derivative contracts that track an underlying asset (like Bitcoin) with leverage, allowing you to go long or short. They have no expiration date."
+      "q": "What is the difference between notional size and margin in futures?",
+      "a": "Notional size is the total contract value in USD — the amount you're controlling. Margin is the collateral you deposit to open that position (Margin = Notional / Leverage). With $10,000 notional at 10× leverage, you only deposit $1,000 in margin."
     },
     {
-      "q": "What is leverage in futures?",
-      "a": "Leverage lets you control a larger position with less capital. 10x leverage means you control 10x your margin. Higher leverage = higher risk and reward."
+      "q": "What does ROE mean in crypto futures?",
+      "a": "ROE (Return on Equity) measures your profit or loss as a percentage of the margin you deposited. A $500 gain on $1,000 margin = 50% ROE. It's the correct metric to compare trade efficiency, since the same price move produces very different ROEs at different leverage levels."
     },
     {
-      "q": "What's the difference between long and short?",
-      "a": "Long: you profit if the price goes up. Short: you profit if the price goes down."
+      "q": "How does leverage affect futures P&L?",
+      "a": "Leverage amplifies both gains and losses relative to your deposited margin. A 5% price move with 10× leverage produces 50% ROE — positive or negative. The absolute P&L in USD is the same regardless of leverage; it's your margin requirement (and thus ROE) that changes."
     },
     {
-      "q": "What is ROE in trading?",
-      "a": "ROE (Return on Equity) is your profit/loss percentage relative to your margin, not the notional position value."
+      "q": "When does liquidation happen in perpetual futures?",
+      "a": "Liquidation occurs when losses consume your margin. With 10× leverage, a ~10% adverse price move (minus the maintenance margin buffer) triggers liquidation. Most exchanges liquidate at roughly Entry Price × (1 − 1/Leverage + Maintenance Margin Rate) for longs."
     },
     {
-      "q": "What is a funding rate?",
-      "a": "Funding rates are paid every 8 hours between long and short traders to keep perpetual futures prices aligned with spot prices. They can be positive or negative."
+      "q": "What are funding rates in perpetual swaps?",
+      "a": "Funding rates are periodic payments (every 8 hours on Binance/Bybit) between long and short traders, keeping perpetual prices close to spot. When funding is positive, longs pay shorts; when negative, shorts pay longs. Typical rate is ±0.01% per 8-hour interval, but spikes to ±0.1% or more during high volatility."
     },
     {
-      "q": "What's unrealized vs realized P&L?",
-      "a": "Unrealized P&L is your current gain/loss while the position is open. Realized P&L is locked in only after you close the position."
+      "q": "What fees do I pay on perpetual futures?",
+      "a": "Exchanges charge maker fees (limit orders, ~0.01–0.02%) and taker fees (market orders, 0.04–0.05%) per side. On a $10,000 notional round-trip trade with taker fees of 0.05%, you pay $10 in fees — subtract this from gross P&L for net profit."
     },
     {
-      "q": "What trading fees do I pay?",
-      "a": "Maker fees (limit orders) are cheaper than taker fees (market orders). Typical rates are 0.02%-0.1% per trade depending on the exchange."
+      "q": "What is the difference between unrealized and realized P&L?",
+      "a": "Unrealized P&L is your mark-to-market gain or loss while the position is still open — it fluctuates with price. Realized P&L is locked in only when you close the position. Exchanges may partially realize P&L if you partially close."
     },
     {
-      "q": "What returns should I expect from crypto markets?",
-      "a": "S&P 500 historical average: ~10% nominal annually (7% adjusted for inflation). Crypto is far more volatile—past performance doesn't predict future results."
+      "q": "Does this calculator work for Bitcoin, Ethereum, and altcoin futures?",
+      "a": "Yes. The formula is identical for any USD-margined or USDT-margined perpetual: P&L = price change × quantity. Enter any asset's entry and exit prices, notional size, and leverage."
     }
   ],
   "sources": [
     {
-      "name": "U.S. SEC — Investor.gov",
-      "url": "https://www.investor.gov/"
+      "name": "Binance Futures — How to Calculate P&L",
+      "url": "https://www.binance.com/en/support/faq/introduction-to-binance-futures-360033525031"
     },
     {
-      "name": "Consumer Financial Protection Bureau (CFPB)",
-      "url": "https://www.consumerfinance.gov/"
+      "name": "Bybit — Perpetual Contract P&L Calculation",
+      "url": "https://www.bybit.com/en/help-center/article/Perpetual-Contract-P-L-Calculations"
+    },
+    {
+      "name": "CME Group — Understanding Futures Profit & Loss",
+      "url": "https://www.cmegroup.com/education/courses/introduction-to-futures/understanding-the-profit-and-loss-of-futures.html"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-20",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed formula — no external data updates required. P&L formulas are static."
   },
   "relatedSlugs": [],
   "noindex": false

@@ -25,7 +25,9 @@ export function reunionesCostoTiempoPersonasEmpresa(i: Inputs): Outputs {
   const sHora=s/176;
   const horas=d/60;
   const costo=p*horas*sHora;
-  const esCaro = costo > 50000;
+  // Threshold: ARS ~50,000 / USD ~500 (typical monthly ARS salary ~1.5M → hourly ~8,500)
+  const caroThreshold = __lang === 'en' ? 500 : 50000;
+  const esCaro = costo > caroThreshold;
   const costoFmt = Math.round(costo).toLocaleString(locale);
   return {
     costoReunion:`$${costoFmt}`,

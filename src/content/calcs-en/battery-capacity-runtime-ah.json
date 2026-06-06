@@ -1,18 +1,19 @@
 {
-  "title": "Battery Runtime Calculator (Ah / Hours) | Hacé Cuentas",
-  "h1": "Battery Runtime Calculator",
-  "description": "Calculate battery runtime in hours based on amp-hour capacity and power consumption. Account for discharge efficiency and safe depth-of-discharge (DoD).",
+  "title": "Battery Runtime Calculator: Ah to Hours + Reference Table | Hacé Cuentas",
+  "h1": "Battery Runtime Calculator (Ah → Hours)",
+  "description": "Calculate exactly how many hours your battery will last based on capacity (Ah), voltage, load (W), and depth of discharge. Includes DoD table for lead-acid, LiFePO4, and lithium.",
   "category": "electronica",
   "icon": "⚡",
   "formulaId": "bateria-capacidad-runtime-ah",
-  "intro": "Battery runtime calculators help you design reliable power systems. Whether sizing solar backup, RV electrical systems, UPS installations, or IoT devices, accurate runtime estimates prevent undersizing, unexpected downtime, and costly over-engineering. Calculate how many hours your battery will power a specific load based on capacity (Ah), voltage, and safe discharge limits. Values updated to 2026 and reviewed regularly.",
-  "keyTakeaway": "**t = (Ah × V × η × DoD) / P_consumption**. For a 100Ah/12V battery at 80% DoD with 100W load → 9.6 hours. Lead-acid: DoD ≤ 50%. LiFePO4: DoD ≤ 80%.",
+  "intro": "Enter your battery's amp-hour rating, voltage, and the watt load you're running — this calculator gives you the real runtime, not the optimistic figure on the label. It applies the standard formula used by solar installers, UPS engineers, and RV builders: **Runtime (h) = (Ah × V × DoD × η) / W**. Depth of discharge (DoD) and inverter efficiency are the two factors most often ignored, and ignoring them leads to undersized systems and unexpected outages.",
+  "answerSnippet": "Battery runtime (hours) = (Ah × V × DoD × η) ÷ W. Example: a 100 Ah / 12 V battery with 80% DoD, 95% efficiency, powering a 100 W load lasts **9.1 hours**. Lead-acid batteries: use DoD ≤ 50%. LiFePO4 batteries: use DoD ≤ 80–90%.",
+  "keyTakeaway": "**Runtime (h) = (Ah × V × DoD × η) / W**. For a 100 Ah / 12 V battery: at 80% DoD + 95% efficiency → 912 Wh usable. At 100 W load → **9.1 h**. At 50 W → **18.2 h**.",
   "useCases": [
-    "Circuit design and analysis for battery runtime estimation",
-    "Validate theoretical calculations before building circuits",
-    "Teaching basic and advanced electronics",
-    "Estimate parameters for microcontroller projects (Arduino, ESP32, STM32)",
-    "Troubleshooting existing circuits"
+    "Sizing a solar battery bank to survive the night without recharging",
+    "Calculating UPS runtime for servers during a power outage",
+    "Planning RV or boat electrical systems with realistic autonomy",
+    "Estimating e-bike range from battery pack specs",
+    "Verifying that a lithium vs lead-acid swap improves backup time"
   ],
   "fields": [
     {
@@ -39,23 +40,23 @@
     },
     {
       "id": "dod",
-      "label": "Maximum Depth of Discharge (%)",
+      "label": "Depth of Discharge — DoD (%)",
       "type": "number",
       "required": true,
       "placeholder": "80",
       "default": 80,
       "min": 10,
       "max": 100,
-      "help": "Enter as a percentage."
+      "help": "50% for lead-acid, 80–90% for LiFePO4. Do not use 100%."
     },
     {
       "id": "eficiencia",
-      "label": "Efficiency (%)",
+      "label": "Inverter / System Efficiency (%)",
       "type": "number",
       "required": false,
       "placeholder": "95",
       "default": 95,
-      "help": "Enter as a percentage."
+      "help": "Pure sine inverter: 90–96%. No inverter (DC load): 99–100%."
     }
   ],
   "outputs": [
@@ -66,96 +67,102 @@
     },
     {
       "id": "wh",
-      "label": "Usable Energy"
+      "label": "Usable Energy (Wh)"
     },
     {
       "id": "resumen",
-      "label": "Interpretation"
+      "label": "Summary"
     }
   ],
   "example": {
-    "title": "Example",
+    "title": "Worked Example: 100 Ah / 12 V battery, 100 W load",
     "steps": [
-      "Ah=100, V=12, W=100, DoD=80%, η=95%",
-      "Usable energy = 100 × 12 × 0.8 × 0.95 = 912 Wh",
-      "Runtime = 912 / 100 = 9.12 hours"
+      "Capacity: 100 Ah × 12 V = 1,200 Wh nominal",
+      "Apply DoD 80%: 1,200 × 0.80 = 960 Wh",
+      "Apply efficiency 95%: 960 × 0.95 = 912 Wh usable",
+      "Runtime: 912 Wh ÷ 100 W = 9.12 hours"
     ],
-    "result": "A 100Ah 12V battery powers a 100W load for 9.1 hours"
+    "result": "A 100 Ah / 12 V battery powers a 100 W load for 9.1 hours (LiFePO4 at 80% DoD)"
   },
-  "explanation": "Battery runtime calculators are essential for designing reliable power systems. Whether planning solar backup, RV electrical systems, UPS sizing, or IoT device power budgets, knowing your battery runtime prevents undersizing, unexpected downtime, and costly over-engineering.\n\n## How It's Calculated\n\nBattery runtime depends on four key factors: amp-hour capacity (Ah), voltage (V), power consumption in watts, and depth of discharge (DoD). This calculator applies the standard formula:\n\n**Runtime (hours) = (Capacity in Ah × Voltage × Efficiency × DoD%) / Power in Watts**\n\nThe calculator validates your inputs against typical ranges and alerts you to values that might indicate an error.\n\n## Final Notes\n\nThis calculation is a reference only. For critical decisions (financial, safety-critical systems, or specialized applications), consult a qualified specialist. Values are current as of 2026 and reviewed regularly.",
+  "explanation": "## How Battery Runtime Is Calculated\n\nBattery runtime depends on four factors: amp-hour capacity (Ah), voltage (V), depth of discharge (DoD), and system efficiency (η). The formula:\n\n**Runtime (h) = (Ah × V × DoD × η) ÷ W**\n\nMultiplying Ah × V converts amp-hours to watt-hours (Wh) — the true measure of energy stored. Dividing by watts gives hours.\n\n---\n\n## DoD by Battery Technology\n\n| Technology | Recommended Max DoD | Typical Cycles (at that DoD) | Common Use |\n|---|---|---|---|\n| Sealed lead-acid (AGM/VRLA) | 50% | 300–500 | UPS, alarms |\n| Flooded lead-acid | 50–60% | 500–800 | Basic solar off-grid |\n| Lithium iron phosphate (LiFePO4) | 80–90% | 2,000–6,000 | Solar, EVs, storage |\n| Lithium-ion (NMC/NCA) | 80% | 500–1,500 | Portable, e-bikes |\n| Gel (VRLA Gel) | 60–70% | 400–700 | Telecom, critical UPS |\n| NiMH | 70–80% | 500–1,000 | Portable electronics |\n\n---\n\n## Common Battery Runtime Examples\n\n| Battery | Load | DoD | η | Runtime |\n|---|---|---|---|---|\n| 100 Ah / 12 V (LiFePO4) | 50 W | 80% | 95% | 18.2 h |\n| 100 Ah / 12 V (LiFePO4) | 100 W | 80% | 95% | 9.1 h |\n| 100 Ah / 12 V (LiFePO4) | 200 W | 80% | 95% | 4.6 h |\n| 100 Ah / 12 V (AGM) | 100 W | 50% | 93% | 5.6 h |\n| 200 Ah / 24 V (LiFePO4) | 300 W | 85% | 93% | 11.9 h |\n| 150 Ah / 48 V (LiFePO4) | 1,500 W | 85% | 95% | 3.6 h |\n\n---\n\n## Inverter Efficiency Reference\n\n| Inverter Type | Typical Efficiency (η) |\n|---|---|\n| Pure sine inverter (quality) | 90–96% |\n| Modified wave inverter | 85–92% |\n| DC-DC converter (buck/boost) | 88–97% |\n| Direct DC load (no inverter) | 99–100% |\n\n---\n\n## Common Mistakes\n\n1. **Using 100% DoD on lead-acid**: destroys it in a few dozen cycles. Always limit to 50%.\n2. **Ignoring inverter efficiency**: overestimates runtime by 5–15%.\n3. **Confusing Ah with Wh**: 100 Ah at 12 V = 1,200 Wh. The same 100 Ah at 48 V = 4,800 Wh — four times the energy.\n4. **Peukert effect on fast discharge**: lead-acid batteries deliver less capacity when discharged quickly (under 5 hours). The nominal rating assumes a 20-hour discharge rate.",
   "faq": [
     {
+      "q": "What is the formula for battery runtime?",
+      "a": "Runtime (hours) = (Ah × V × DoD × η) ÷ W. Multiply amp-hours by voltage to get watt-hours (Wh), apply the depth of discharge percentage and inverter efficiency, then divide by your load in watts. Example: 100 Ah × 12 V × 0.80 × 0.95 ÷ 100 W = 9.12 hours."
+    },
+    {
+      "q": "How long will a 100Ah 12V battery last?",
+      "a": "It depends on your load. With an 80% DoD LiFePO4 and 95% efficiency: at 50 W → 18.2 h, at 100 W → 9.1 h, at 200 W → 4.6 h. With a 50% DoD AGM lead-acid at 93% efficiency and 100 W load → 5.6 h. Enter your exact values in the calculator above for a precise answer."
+    },
+    {
+      "q": "What DoD should I use for lead-acid batteries?",
+      "a": "50% for AGM and VRLA sealed batteries, 50–60% for flooded lead-acid. Discharging a lead-acid battery beyond 50% causes sulfation on the plates and drastically reduces cycle life — from 500 cycles to under 100 at 80% DoD."
+    },
+    {
+      "q": "What DoD can I use for LiFePO4 batteries?",
+      "a": "80–90% is safe for LiFePO4 (lithium iron phosphate). This is why LiFePO4 stores much more usable energy than lead-acid for the same Ah rating: a 100 Ah LiFePO4 at 85% DoD gives 85 Ah usable vs. only 50 Ah for an equivalent AGM. Combined with 2,000–6,000 cycle life, the cost per kWh cycled is 2–3× lower."
+    },
+    {
       "q": "Why can't I use 100% depth of discharge?",
-      "a": "Fully discharging a battery severely reduces its lifespan. Lead-acid batteries sulfate if completely discharged, losing capacity permanently. Always respect the recommended DoD limits for your battery type."
+      "a": "Fully discharging a battery permanently damages it. Lead-acid batteries sulfate if fully discharged, losing capacity in a few cycles. Even LiFePO4 degrades faster below 10% state of charge. Manufacturers rate cycle life at recommended DoD — exceeding it voids warranties and shortens the battery life dramatically."
     },
     {
-      "q": "Should I switch from lead-acid to lithium?",
-      "a": "LiFePO4 costs 2–3× more upfront but lasts 5–10× longer and weighs 40% less. Solar, RV, and marine installations increasingly choose lithium for lower lifetime cost despite higher initial investment."
+      "q": "How do I calculate runtime for multiple batteries in series or parallel?",
+      "a": "Batteries in series add voltages, keeping Ah the same: 2 × 12 V / 100 Ah = 24 V / 100 Ah (2,400 Wh). In parallel they add Ah, keeping voltage: 2 × 12 V / 100 Ah = 12 V / 200 Ah (2,400 Wh). Either way, total energy (Wh) is the same — use the resulting bank voltage and Ah in the calculator."
     },
     {
-      "q": "How do I calculate runtime with varying loads?",
-      "a": "Sum the watt-hours (W × hours) for each device, then divide by your battery's total usable energy (Wh). For complex variable loads, simulate hour-by-hour or use a power management system."
+      "q": "What is the Peukert effect and does it matter?",
+      "a": "The Peukert effect describes how lead-acid batteries deliver less capacity when discharged quickly. The nominal Ah rating assumes a 20-hour discharge (C/20 rate). At 5-hour discharge (C/5), actual capacity can drop 20–30%. For runtimes above 10 hours, the effect is minimal. LiFePO4 and lithium-ion are largely unaffected."
     },
     {
-      "q": "Do batteries lose capacity over time?",
-      "a": "Yes. Li-ion loses ~2–3% per year plus degradation per cycle. LiFePO4 loses 1–2% per year. Lead-acid loses 5–10% per year depending on usage and maintenance."
+      "q": "How does temperature affect battery runtime?",
+      "a": "Lead-acid loses ~1% capacity per °C below 25°C, reaching -50% at 0°C. LiFePO4 is more stable but loses ~10–20% at -10°C. In hot climates (above 40°C), heat accelerates internal degradation and can reduce cycle life by 30–50% without adequate ventilation."
     },
     {
-      "q": "What is the Peukert effect?",
-      "a": "Fast discharge reduces effective capacity. It matters if you drain your battery in under 10 hours. For longer discharge times, the effect is minimal."
+      "q": "How do I measure real power consumption (W) for the calculator?",
+      "a": "Use a plug-in watt meter (kill-a-watt type, available for $10–30). The label on appliances shows maximum power, but average real consumption is often 30–60% lower — a refrigerator rated at 150 W typically averages 60–70 W because the compressor cycles. Use measured average wattage for realistic runtime estimates."
     },
     {
-      "q": "Are these calculators free?",
-      "a": "Yes, all our calculators are free and require no registration."
-    },
-    {
-      "q": "How accurate are these results?",
-      "a": "Results are indicative, using internationally validated formulas. For mission-critical applications, consult a professional engineer or battery specialist."
-    },
-    {
-      "q": "Do you store my data?",
-      "a": "No. All calculations happen in your browser. We never send data to any external server."
-    },
-    {
-      "q": "How do I convert amperage to watts?",
-      "a": "Use P (watts) = A (amperes) × V (voltage). For example, a 10A draw at 12V = 120W. Convert to watts before entering into the calculator."
+      "q": "What efficiency should I use for a solar inverter?",
+      "a": "Quality pure sine inverters (Victron, SMA, Growatt, Deye): 93–97%. Standard pure sine inverters: 90–93%. Modified wave inverters: 85–88%. If your load runs directly from DC (e.g., 12 V LED lighting without an inverter), use 99% — there's no conversion loss."
     }
   ],
   "seoKeywords": [
     "battery runtime calculator",
-    "amp-hour to hours",
     "how long will battery last",
-    "battery capacity Ah Wh",
+    "amp-hour to hours calculator",
+    "battery life calculator Ah",
     "depth of discharge DoD",
-    "battery life calculator",
-    "backup power calculator",
+    "battery capacity watt-hours",
     "UPS runtime calculator",
     "solar battery sizing",
+    "LiFePO4 vs lead-acid runtime",
     "RV battery calculator",
-    "lithium vs lead-acid",
-    "off-grid power system"
+    "how long does 100Ah battery last",
+    "battery hours from Ah and watts"
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "Battery University — Discharge Methods (Cadex Electronics)",
+      "url": "https://batteryuniversity.com/article/bu-501-basics-about-discharging"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
+      "name": "All About Circuits — Battery Capacity and Discharge Rate",
+      "url": "https://www.allaboutcircuits.com/textbook/direct-current/chpt-11/battery-ratings/"
     },
     {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "IEEE Std 485 — Recommended Practice for Sizing Lead-Acid Batteries",
+      "url": "https://standards.ieee.org/ieee/485/3879/"
     }
   ],
   "slug": "battery-capacity-runtime-ah",
   "esSlug": "calculadora-bateria-capacidad-runtime-ah",
   "audience": "global",
   "relatedSlugs": [],
+  "lastReviewed": "2026-06-04",
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-18",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
     "notes": "Fixed formula, no external data updates required"
   },

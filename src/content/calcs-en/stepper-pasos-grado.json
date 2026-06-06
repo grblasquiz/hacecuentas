@@ -1,30 +1,30 @@
 {
-  "title": "Stepper Motor Steps Calculator | Hacé Cuentas",
-  "h1": "Stepper Motor Steps & Microsteps Calculator",
-  "description": "Calculate steps per degree and revolution of a stepper motor with step angle and microstepping. Free tool.",
+  "title": "Stepper Motor Steps Calculator: Steps/Rev + Microstepping Table | Hacé Cuentas",
+  "h1": "Stepper Motor Steps per Revolution Calculator",
+  "description": "Calculate steps per revolution and steps per degree for any stepper motor. Enter step angle (1.8° or 0.9°) and microstepping (1/16, 1/32…) — instant result with reference table.",
   "category": "electronica",
   "icon": "⚡",
   "formulaId": "stepper-pasos-grado",
   "seoKeywords": [
-    "stepper motor steps calculator",
-    "steps per revolution stepper",
-    "microstepping calculator",
-    "step angle to steps",
-    "stepper motor microsteps",
-    "NEMA 17 steps per revolution",
-    "how many steps stepper motor",
-    "stepper motor step size",
-    "motor step angle calculator",
-    "microstep calculator"
+    "stepper motor steps per revolution calculator",
+    "stepper motor microstepping calculator",
+    "NEMA 17 steps calculator",
+    "steps per revolution 1.8 degree stepper",
+    "how many steps stepper motor full revolution",
+    "microstepping steps per degree",
+    "stepper motor step angle calculator",
+    "NEMA 23 steps per revolution",
+    "3D printer steps per mm calculator",
+    "stepper motor resolution calculator"
   ],
-  "intro": "Electronics fundamentals are governed by Ohm's law, Kirchhoff's laws, and semiconductor principles. Resistance, power, voltage, and current calculations form the foundation for designing and maintaining circuits. Calculate the steps per degree and steps per revolution of a stepper motor based on step angle with microstepping support. Free and fast.",
-  "keyTakeaway": "**Steps/rev = 360° / step_angle**. Typical 1.8° = 200 steps/rev. With 1/16 microstepping = 3200 microsteps/rev.",
+  "intro": "A standard 1.8° stepper motor (NEMA 17/23) produces **200 steps per revolution** in full-step mode. With 1/16 microstepping it becomes **3,200 microsteps/rev** — and with 1/32 microstepping, 6,400. Enter your step angle and microstepping factor below to get the exact number instantly, plus see the complete reference table for all common configurations.",
+  "keyTakeaway": "**Steps/rev = (360° ÷ step_angle) × microstep_factor**. A 1.8° motor at full step = 200 steps/rev. With 1/16 microstepping = 3,200 steps/rev (8.89 steps per degree).",
   "useCases": [
-    "Design and analysis of circuits using stepper motors",
-    "Validate theoretical calculations before building your circuit",
-    "Teaching basic and advanced electronics",
-    "Estimate parameters for microcontroller projects (Arduino, ESP32, STM32)",
-    "Troubleshoot existing stepper motor circuits"
+    "Set steps/mm (or steps/mm) in Marlin or Klipper firmware for a 3D printer",
+    "Configure a CNC router or laser engraver axis with correct step count",
+    "Design a robotics joint that needs a specific angular resolution",
+    "Verify pulse frequency requirements for your microcontroller (Arduino, ESP32, STM32)",
+    "Compare 1.8° vs 0.9° motors for a given microstepping mode"
   ],
   "fields": [
     {
@@ -67,7 +67,7 @@
           "label": "1/32"
         }
       ],
-      "help": "The driver divides each step into electronic sub-steps by modulating current."
+      "help": "The driver subdivides each full step by modulating coil current. Common drivers: A4988 (up to 1/16), DRV8825 (up to 1/32), TMC2209 (up to 1/256)."
     }
   ],
   "outputs": [
@@ -86,71 +86,77 @@
     }
   ],
   "example": {
-    "title": "Example",
+    "title": "Worked Example — NEMA 17, 1/16 Microstepping",
     "steps": [
-      "1.8° per step with 1/16 microstepping",
-      "Steps/rev = 360 / 1.8 = 200 × 16 = 3200",
-      "Steps/° = 3200 / 360 = 8.89"
+      "Step angle = 1.8° (standard NEMA 17)",
+      "Microstepping factor = 16 (1/16 mode)",
+      "Steps/rev = (360 ÷ 1.8) × 16 = 200 × 16 = 3,200",
+      "Steps/° = 3,200 ÷ 360 = 8.89"
     ],
-    "result": "3200 microsteps/rev, 8.89 steps/degree"
+    "result": "3,200 microsteps/rev — 8.89 steps per degree"
   },
-  "explanation": "**Electronics** is governed by Ohm's law, Kirchhoff's laws, and Faraday's law. Applying formulas prevents costly errors and electrical failures.\n\n## How It Works\n\nA stepper motor advances one discrete step per electrical pulse. The step angle defines how many degrees the shaft rotates per step. By knowing the step angle, you can calculate:\n- Total steps needed for a full 360° revolution\n- Steps required for any angle\n- The effect of microstepping on resolution\n\nMicrostepping allows the motor to make intermediate stops between full steps by varying the current to the coils, providing smoother motion and finer control at the cost of reduced torque.\n\n## How to Calculate\n\nThe formula is simple: **Steps per Revolution = 360° ÷ Step Angle**\n\nFor example, with a common 1.8° stepper:\n- Steps/rev = 360 ÷ 1.8 = 200 steps\n- With 1/16 microstepping: 200 × 16 = 3200 microsteps per revolution\n- Steps per degree = 3200 ÷ 360 = 8.89 steps/degree\n\nThis calculator applies the formula with your inputs and checks for typical ranges.\n\n## Final Notes\n\nThis calculation is for reference. For critical decisions, consult a specialist. The data is current as of 2026 and reviewed periodically.",
+  "explanation": "## The Formula\n\n```\nSteps per revolution = (360° ÷ step_angle) × microstep_factor\nSteps per degree     = steps_per_revolution ÷ 360\nDegrees per step     = 360 ÷ steps_per_revolution\n```\n\nA stepper motor advances one discrete step per electrical pulse. The **step angle** (printed on the motor nameplate) defines how many degrees the shaft rotates per pulse. **Microstepping** subdivides each full step into smaller fractions by electronically modulating the current in the two motor coils — giving smoother motion at the cost of lower torque per microstep.\n\n---\n\n## Reference Table — Steps per Revolution\n\n| Step angle | Full step | 1/2 | 1/4 | 1/8 | 1/16 | 1/32 |\n|---|---|---|---|---|---|---|\n| **0.9°** (high-res) | 400 | 800 | 1,600 | 3,200 | 6,400 | 12,800 |\n| **1.8°** (NEMA 17/23 standard) | 200 | 400 | 800 | 1,600 | 3,200 | 6,400 |\n| **3.6°** (economy motor) | 100 | 200 | 400 | 800 | 1,600 | 3,200 |\n| **7.5°** (reluctance motor) | 48 | 96 | 192 | 384 | 768 | 1,536 |\n| **15°** (simple unipolar) | 24 | 48 | 96 | 192 | 384 | 768 |\n\n> Common drivers: **A4988** (max 1/16), **DRV8825** (max 1/32), **TMC2208/TMC2209** (max 1/256), **TMC5160** (max 1/256).\n\n---\n\n## Practical Use Cases\n\n### 3D Printer — steps/mm on Z axis with T8 leadscrew\n- Motor: NEMA 17, 1.8°/step → 200 steps/rev (full step)\n- Driver: TMC2209 at 1/16 → 3,200 steps/rev\n- Leadscrew T8 Lead 8mm: 8 mm advance per revolution\n- **steps/mm = 3,200 ÷ 8 = 400 steps/mm**\n- Theoretical resolution: 1 ÷ 400 = **0.0025 mm per microstep**\n\n### CNC Router — X/Y axis with GT2 belt and 20-tooth pulley\n- Belt pitch 2 mm × 20 teeth = 40 mm per revolution\n- Motor: 1.8°/step, driver at 1/16 → 3,200 steps/rev\n- **steps/mm = 3,200 ÷ 40 = 80 steps/mm**\n- With 16-tooth pulley (32 mm/rev): 3,200 ÷ 32 = **100 steps/mm** (standard for Voron, HyperCube)\n\n### Rotary Table — angular resolution\n- Motor: NEMA 23, 0.9°/step → 400 steps/rev (full step)\n- Driver: DRV8825 at 1/32 → 12,800 steps/rev\n- Angular resolution: 360 ÷ 12,800 = **0.028°/step** (~1.69 arcminutes)\n- To rotate exactly 90°: 12,800 × (90 ÷ 360) = **3,200 steps**\n\n---\n\n## Common Mistakes\n\n1. **Confusing steps/rev with step angle**: The motor nameplate shows steps/rev (200) OR step angle (1.8°). Do not enter 200 in the step angle field — that would give a nonsense result.\n2. **Ignoring driver microstepping pin wiring**: A4988 pins MS1/MS2/MS3 must match your firmware setting. If the firmware assumes 1/16 but pins are set to 1/8, every movement will be 2× off.\n3. **Expecting microstepping to double positioning accuracy**: Microstepping improves motion smoothness and reduces resonance, but intermediate microstep positions have up to ±5% positioning error under load. For true precision, use a closed-loop encoder.\n4. **Using 1.8° formula for 5-phase motors**: Vexta/Oriental 5-phase motors use **0.72°/step** (500 steps/rev) — using 1.8° gives 2.5× calibration error.",
   "faq": [
     {
-      "q": "What is a stepper motor?",
-      "a": "A stepper motor is an electric motor that moves in discrete steps. Each electrical pulse rotates the shaft by a fixed angle (the step angle), typically 1.8° or 0.9°."
+      "q": "How many steps per revolution does a NEMA 17 stepper motor have?",
+      "a": "A standard NEMA 17 with 1.8° step angle has **200 steps per revolution** in full-step mode. With microstepping: 400 at 1/2, 800 at 1/4, 1,600 at 1/8, 3,200 at 1/16, and 6,400 at 1/32."
     },
     {
-      "q": "What is microstepping?",
-      "a": "Microstepping divides each full step into smaller sub-steps by modulating the current to the motor coils. A 1/16 microstepping driver creates 16 microsteps per physical step."
+      "q": "What is the formula for stepper motor steps per revolution?",
+      "a": "**Steps/rev = (360° ÷ step_angle) × microstep_factor**. For a 1.8° motor at 1/16 microstepping: (360 ÷ 1.8) × 16 = 200 × 16 = **3,200 steps/rev**."
     },
     {
-      "q": "How many steps does a stepper motor need for one full revolution?",
-      "a": "It depends on the step angle. The formula is 360° ÷ step angle. A common 1.8° stepper needs 200 steps. A 0.9° stepper needs 400 steps."
+      "q": "What step angle do most stepper motors use?",
+      "a": "The dominant standard is **1.8° per step** (200 steps/rev), present in nearly all NEMA 17 and NEMA 23 motors used in 3D printers, CNCs and automation. High-resolution motors use **0.9°/step** (400 steps/rev). Specialty motors can be 7.5° or 15°."
+    },
+    {
+      "q": "Does microstepping actually improve positioning accuracy?",
+      "a": "Microstepping mainly improves **motion smoothness** and reduces mechanical resonance. True positioning accuracy improvement is limited — under load, intermediate microstep positions can have up to **±5% error** relative to a full step. For real precision, pair with a closed-loop encoder."
+    },
+    {
+      "q": "How do I calculate steps/mm for a 3D printer with a GT2 belt?",
+      "a": "Formula: **steps/mm = steps_per_rev ÷ (pulley_teeth × belt_pitch_mm)**. With 1.8° motor at 1/16 (3,200 steps/rev), 20-tooth pulley, GT2 belt (2 mm pitch): 3,200 ÷ (20 × 2) = 3,200 ÷ 40 = **80 steps/mm**."
     },
     {
       "q": "Does microstepping reduce torque?",
-      "a": "Yes. Torque drops approximately 30% with 1/16 microstepping compared to full step. For high-torque applications, consider half-step (1/2) as a compromise."
+      "a": "Yes. At 1/2 step torque drops to ~70.7% (√2/2 factor). At 1/16 it can fall to ~19–30% of rated holding torque at some microstep positions. For high-torque loads, use full step or half step and reserve fine microstepping for lighter-duty axes."
     },
     {
-      "q": "What's the difference between stepper and servo motors?",
-      "a": "Stepper: open-loop, simpler, precise positioning. Servo: closed-loop with encoder feedback, faster, more expensive, better for dynamic control."
+      "q": "What is the highest microstepping available?",
+      "a": "Trinamic TMC drivers (TMC2209, TMC5160, TMC2130) support up to **1/256 microstepping** — producing 51,200 steps/rev with a 1.8° motor. The A4988 caps at 1/16 and DRV8825 at 1/32."
     },
     {
-      "q": "What is NEMA 17 vs NEMA 23?",
-      "a": "NEMA 17 (1.7\") is compact with 30–70 oz·in torque, good for 3D printers. NEMA 23 (2.3\") is larger with 180–420 oz·in, better for CNC mills."
+      "q": "Is a 0.9° motor worth the extra cost over 1.8°?",
+      "a": "It depends on the application. A 0.9°/step motor costs roughly 30–50% more but offers double the base resolution (400 vs 200 steps/rev) and lower resonance in the 300–800 RPM range — a notoriously rough zone for 1.8° motors. High-quality 3D printers (Prusa, Bambu Lab) increasingly use them on extruder axes for better flow control."
     },
     {
-      "q": "Can a stepper motor lose steps?",
-      "a": "Yes, if the load exceeds available torque. The motor will skip steps silently without feedback. CNC machines typically use 40%+ torque margin for safety."
-    },
-    {
-      "q": "How do I choose a stepper motor size?",
-      "a": "Calculate required torque from your load, add a 40% safety margin, and select the smallest NEMA size that meets it. Common choices: NEMA 17 for light work, NEMA 23 for heavy."
+      "q": "What is the difference between full step, half step, and microstepping?",
+      "a": "**Full step**: both coils energized at full current — maximum torque, maximum step size. **Half step**: alternates between one and two coils — doubles resolution, ~70% torque. **Microstepping (1/4 to 1/256)**: uses sinusoidal current waveforms to create intermediate positions — smoothest motion, lowest torque per microstep."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "All About Circuits — Stepper Motor Fundamentals",
+      "url": "https://www.allaboutcircuits.com/technical-articles/stepper-motors-part-i-types/"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
+      "name": "Trinamic TMC2209 Datasheet — Microstepping Technical Specs",
+      "url": "https://www.trinamic.com/products/integrated-circuits/tmc2209/"
     },
     {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Marlin Firmware Docs — steps_per_mm",
+      "url": "https://marlinfw.org/docs/configuration/configuration.html"
     }
   ],
   "slug": "stepper-pasos-grado",
-  "lastReviewed": "2026-04-21",
+  "lastReviewed": "2026-06-04",
   "esSlug": "calculadora-stepper-pasos-grado",
   "audience": "global",
   "relatedSlugs": [],
+  "answerSnippet": "A 1.8° stepper motor (NEMA 17 standard) has 200 steps per revolution in full-step mode. Formula: steps/rev = (360 ÷ step_angle) × microstep_factor. With 1/16 microstepping: 200 × 16 = 3,200 steps/rev (8.89 steps per degree).",
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-18",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
     "notes": "Fixed formula, no external data updates required"
   }

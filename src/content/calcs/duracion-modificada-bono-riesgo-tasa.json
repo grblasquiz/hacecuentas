@@ -9,7 +9,7 @@
   "icon": "📉",
   "formulaId": "duracion-modificada-bono-riesgo-tasa",
   "intro": "La **duración modificada** es la métrica clave para entender cuánto cae (o sube) el precio de un bono si la tasa de mercado se mueve 1 punto porcentual. Si tenés bonos en cartera — AL30, GD35, Treasuries o cualquier instrumento de renta fija — esta calculadora te dice de inmediato cuán sensible es tu posición ante cambios en las tasas. Ingresá la [TIR](/glosario/tir) del bono y sus años al vencimiento, y obtenés la duración modificada con su interpretación práctica. El cálculo corre enteramente en tu navegador: no guardamos datos, no requiere registro y es gratis. **Disclaimer:** los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones de inversión relevantes consultá con un asesor financiero matriculado ante la CNV.",
-  "keyTakeaway": "Un bono a 10 años con TIR del 10% tiene una duración modificada de aproximadamente 7,73: si la tasa sube 1 punto, el precio cae ~7,73%. A mayor plazo y menor TIR, mayor sensibilidad. Usá este dato para comparar el riesgo de tasa entre distintos bonos antes de armar o rebalancear tu cartera.",
+  "keyTakeaway": "Un bono a 10 años con TIR del 10% y cupones semestrales tiene una duración modificada de aproximadamente 6,23: si la tasa sube 1 punto, el precio cae ~6,23%. A mayor plazo y menor TIR, mayor sensibilidad. Usá este dato para comparar el riesgo de tasa entre distintos bonos antes de armar o rebalancear tu cartera.",
   "useCases": [
     "Comparar el riesgo de tasa de dos bonos soberanos (por ejemplo AL30 vs AL35) antes de decidir cuál incluir en cartera.",
     "Estimar la pérdida esperada en precio si el BCRA sube tasas o si la Reserva Federal modifica su política monetaria.",
@@ -72,16 +72,17 @@
     }
   ],
   "example": {
-    "title": "Bono a 10 años con TIR 10%",
+    "title": "Bono a 10 años con TIR 10%, cupones semestrales",
     "steps": [
-      "TIR anual = 10%",
-      "Años al vencimiento = 10",
-      "Duración aproximada (Macaulay) = 10 × 0,85 = 8,50 años",
-      "Duración modificada = 8,50 / (1 + 10/100) = 8,50 / 1,10 = 7,73"
+      "TIR anual = 10%, cupones semestrales (m = 2)",
+      "Rendimiento por período r = 10% / 2 = 5%",
+      "Períodos totales N = 10 × 2 = 20",
+      "Duración Macaulay = [(1,05/0,05) × (1 − 1/1,05²⁰)] / 2 = 6,54 años",
+      "Duración modificada = 6,54 / 1,05 = 6,23"
     ],
-    "result": "Duración modificada = 7,73. Si la TIR sube de 10% a 11%, el precio del bono cae aproximadamente 7,73%. Para una posición de $100.000, la pérdida estimada sería de $7.730 por marcación a mercado."
+    "result": "Duración modificada = 6,23. Si la TIR sube de 10% a 11%, el precio del bono cae aproximadamente 6,23%. Para una posición de $100.000, la pérdida estimada sería de $6.230 por marcación a mercado."
   },
-  "explanation": "La **duración modificada** (Modified Duration, DM) es la métrica estándar para medir la **sensibilidad del precio de un bono ante cambios en la tasa de interés**. Una DM de 7,73 significa que si la TIR del mercado sube 1 punto porcentual, el precio del bono cae aproximadamente 7,73%; y si la tasa baja 1 punto, el precio sube 7,73%. Esta relación es aproximadamente lineal para movimientos pequeños de tasa (hasta ~1%).\n\nEl concepto fue formalizado por **Frederick Macaulay (1938)** como «tiempo promedio ponderado en que el inversor recupera sus flujos de caja», y luego derivado como sensibilidad precio-tasa por Hicks (1939) y Samuelson (1945). Hoy es un estándar del CFA Institute y se usa en todos los mercados globales de renta fija.\n\n## Cómo se calcula\n\nEsta calculadora usa una **aproximación práctica** de duración para bonos de cupón regular:\n\n```\nDuración_Macaulay ≈ Años_al_vencimiento × 0,85\nDuración_Modificada = Duración_Macaulay / (1 + TIR / 100)\n\nCambio % precio ≈ −DM × Δtasa\n```\n\nEl factor 0,85 es una aproximación conservadora que reconoce que los flujos de cupón se cobran antes del vencimiento, reduciendo la duración efectiva respecto al plazo nominal. Para la fórmula exacta (basada en el descuento de cada flujo individual), se recomienda una hoja de cálculo o Bloomberg.\n\n**Ejemplo verificado:** TIR = 10%, 10 años → Macaulay ≈ 10 × 0,85 = 8,50 → DM = 8,50 / 1,10 = **7,73**.\n\n## Niveles de duración modificada y volatilidad esperada\n\n| Instrumento | DM típica | Cambio precio ante +1pp tasa |\n|---|---|---|\n| Letra del Tesoro / LECAP 3-6 meses | < 0,5 | < 0,5% |\n| Bono 2 años | ~1,6 | ~1,6% |\n| Bono 5 años (cupón semestral) | ~3,8 | ~3,8% |\n| Bono 10 años (TIR ~10%) | ~7,7 | ~7,7% |\n| Bono 30 años | ~14–18 | ~14–18% |\n| Bono cupón cero 30 años | ~27–30 | ~27–30% |\n\n## Cuándo la duración modificada NO es suficiente\n\n- **Movimientos de tasa > 1–2%:** la relación precio-tasa es convexa, no lineal. Para variaciones grandes, sumá el término de convexidad: Δprecio ≈ −DM × Δy + ½ × Convexidad × (Δy)².\n- **Bonos con opciones embebidas** (callable, putable, convertibles): requieren *effective duration*, no Macaulay modificada.\n- **Bonos en default o distressed:** el precio responde más a la probabilidad de recupero que a la tasa libre de riesgo.\n- **Bonos CER/UVA (atados a inflación):** usar duración real; los flujos nominales crecen con la inflación y el cálculo cambia.\n\n## Disclaimer editorial\n\nLos resultados son orientativos y usan una aproximación estándar de la industria. Para análisis de portfolios reales o decisiones de inversión, verificá con datos de pantalla actualizados y consultá con un asesor financiero registrado ante la CNV.\n",
+  "explanation": "La **duración modificada** (Modified Duration, DM) es la métrica estándar para medir la **sensibilidad del precio de un bono ante cambios en la tasa de interés**. Una DM de 6,23 significa que si la TIR del mercado sube 1 punto porcentual, el precio del bono cae aproximadamente 6,23%; y si la tasa baja 1 punto, el precio sube 6,23%. Esta relación es aproximadamente lineal para movimientos pequeños de tasa (hasta ~1%).\n\nEl concepto fue formalizado por **Frederick Macaulay (1938)** como «tiempo promedio ponderado en que el inversor recupera sus flujos de caja», y luego derivado como sensibilidad precio-tasa por Hicks (1939) y Samuelson (1945). Hoy es un estándar del CFA Institute y se usa en todos los mercados globales de renta fija.\n\n## Cómo se calcula\n\nEsta calculadora usa la **fórmula exacta de duración de Macaulay para un bono a la par** (cupón = TIR), el estándar del CFA Institute:\n\n```\nr = TIR / m                         (rendimiento por período)\nN = Años × m                        (períodos totales)\nDuración_Macaulay = [(1+r)/r × (1 − 1/(1+r)^N)] / m\nDuración_Modificada = Duración_Macaulay / (1 + r)\n\nCambio % precio ≈ −DM × Δtasa\n```\n\nDonde **m** = cupones por año (2 = semestral, 1 = anual).\n\n**Ejemplo verificado:** TIR = 10%, 10 años, semestral → r = 5%, N = 20 → Macaulay = 6,54 años → DM = 6,54 / 1,05 = **6,23**.\n\n## Tabla de referencia: duración modificada por tipo de bono\n\n| Instrumento | TIR | Plazo | Frecuencia | DM típica |\n|---|---|---|---|---|\n| LECAP / Letra 6 meses | 5% | 0,5 años | 2 | ~0,49 |\n| Bono corto 2 años | 5% | 2 años | 2 | ~1,89 |\n| Bono 5 años | 5% | 5 años | 2 | ~4,38 |\n| Bono 10 años | 5% | 10 años | 2 | ~7,99 |\n| Bono 10 años | 10% | 10 años | 2 | **6,23** |\n| Bono 30 años | 5% | 30 años | 2 | ~15,37 |\n| Cupón cero 10 años | 5% | 10 años | 1 | ~9,52 |\n| Cupón cero 30 años | 5% | 30 años | 1 | ~28,57 |\n\n## Cuándo la duración modificada NO es suficiente\n\n- **Movimientos de tasa > 1–2%:** la relación precio-tasa es convexa, no lineal. Para variaciones grandes, sumá el término de convexidad: Δprecio ≈ −DM × Δy + ½ × Convexidad × (Δy)².\n- **Bonos con opciones embebidas** (callable, putable, convertibles): requieren *effective duration*, no Macaulay modificada.\n- **Bonos en default o distressed:** el precio responde más a la probabilidad de recupero que a la tasa libre de riesgo.\n- **Bonos CER/UVA (atados a inflación):** usar duración real; los flujos nominales crecen con la inflación y el cálculo cambia.\n\n## Disclaimer editorial\n\nLos resultados son orientativos. Para análisis de portfolios reales o decisiones de inversión, verificá con datos de pantalla actualizados y consultá con un asesor financiero registrado ante la CNV.\n",
   "faq": [
     {
       "q": "¿Qué es la duración modificada de un bono?",
@@ -105,7 +106,7 @@
     },
     {
       "q": "¿Qué DM tienen los bonos soberanos argentinos típicos?",
-      "a": "Aproximaciones orientativas (pueden variar según precios y TIR de mercado): AL30 (USD ley local) ~3,5–4,5; GD30 (USD ley NY) ~3,5–4,5; AL35 / GD35 ~5–6,5; AE38 / GD38 ~6–7; GD41 ~6,5–7,5. Los bonos duales 2026/2027 y los CER tienen DM real más baja (~0,8–1,5). Siempre verificá con datos actualizados de BYMA o IAMC."
+      "a": "Aproximaciones orientativas (pueden variar según precios y TIR de mercado): AL30 (USD ley local) ~3–4; GD30 (USD ley NY) ~3–4; AL35 / GD35 ~4,5–6; AE38 / GD38 ~5,5–6,5; GD41 ~6–7. Los bonos duales 2026/2027 y los CER tienen DM real más baja (~0,8–1,5). Siempre verificá con datos actualizados de BYMA o IAMC."
     },
     {
       "q": "¿Cuándo debo usar convexidad además de la duración modificada?",
@@ -120,8 +121,8 @@
       "a": "Es una estrategia para neutralizar el riesgo de tasa: si igualás la duración de tus activos de renta fija con el horizonte de tu obligación o pasivo, los efectos de las variaciones de tasa sobre el precio del bono y sobre el rendimiento de reinversión de los cupones se compensan mutuamente. Se usa en fondos de pensión, compañías de seguros y carteras conservadoras."
     },
     {
-      "q": "¿Cuál es la aproximación que usa esta calculadora?",
-      "a": "Esta calculadora estima la duración de Macaulay como Años × 0,85 (factor que reconoce que los cupones reducen la duración efectiva respecto al plazo nominal) y luego la divide por (1 + TIR/100) para obtener la duración modificada. Es una aproximación práctica útil para comparaciones rápidas. Para análisis de precisión sobre flujos reales, usar el descuento flujo a flujo es preferible."
+      "q": "¿Qué fórmula usa esta calculadora?",
+      "a": "Esta calculadora usa la fórmula exacta de Macaulay para un bono a la par (cupón = TIR): Macaulay = [(1+r)/r × (1 − 1/(1+r)^N)] / m, donde r = TIR/m y N = años × m. Luego divide por (1+r) para obtener la duración modificada. Es el estándar del CFA Institute, exacto para bonos a la par y muy preciso para bonos cercanos al par."
     }
   ],
   "sources": [
@@ -167,16 +168,16 @@
   ],
   "solvedExamples": [
     {
-      "title": "Bono soberano 10 años, TIR 10%",
-      "scenario": "Un inversor evalúa comprar un bono soberano a 10 años cuya TIR actual es del 10% anual. Quiere estimar cuánto perdería en precio de mercado si la tasa sube 1 punto porcentual.",
-      "calculation": "Duración Macaulay ≈ 10 × 0,85 = 8,50 años. Duración modificada = 8,50 / (1 + 10/100) = 8,50 / 1,10 = 7,73. Cambio de precio ≈ −7,73 × 1% = −7,73%.",
-      "result": "Si la TIR sube de 10% a 11%, el bono cae aproximadamente 7,73% en precio. Para una tenencia de $1.000.000, la pérdida estimada por marcación a mercado sería de $77.300. La convexidad atenuaría levemente esa pérdida en la práctica."
+      "title": "Bono soberano 10 años, TIR 10%, semestral",
+      "scenario": "Un inversor evalúa comprar un bono soberano a 10 años cuya TIR actual es del 10% anual y paga cupones semestrales. Quiere estimar cuánto perdería en precio de mercado si la tasa sube 1 punto porcentual.",
+      "calculation": "r = 10%/2 = 5% por período. N = 10 × 2 = 20 períodos. Duración Macaulay = [(1,05/0,05) × (1 − 1/1,05²⁰)] / 2 = 6,54 años. Duración modificada = 6,54 / 1,05 = 6,23. Cambio de precio ≈ −6,23%.",
+      "result": "Si la TIR sube de 10% a 11%, el bono cae aproximadamente 6,23% en precio. Para una tenencia de $1.000.000, la pérdida estimada por marcación a mercado sería de $62.300. La convexidad atenuaría levemente esa pérdida en la práctica."
     },
     {
-      "title": "Bono corto 2 años, TIR 8%",
-      "scenario": "El mismo inversor analiza un bono alternativo a 2 años con TIR del 8%. Compara el riesgo de tasa frente al bono largo anterior.",
-      "calculation": "Duración Macaulay ≈ 2 × 0,85 = 1,70 años. Duración modificada = 1,70 / (1 + 8/100) = 1,70 / 1,08 = 1,57. Cambio de precio ≈ −1,57%.",
-      "result": "El bono corto tiene una DM de 1,57, mucho menor que 7,73. Ante la misma suba de tasa de 1%, el precio caería solo ~1,57%. El inversor conservador prefiere el bono corto si espera subas de tasa; el agresivo prefiere el largo si espera bajas."
+      "title": "Bono corto 2 años, TIR 8%, semestral",
+      "scenario": "El mismo inversor analiza un bono alternativo a 2 años con TIR del 8% y cupones semestrales. Compara el riesgo de tasa frente al bono largo anterior.",
+      "calculation": "r = 8%/2 = 4% por período. N = 2 × 2 = 4 períodos. Duración Macaulay = [(1,04/0,04) × (1 − 1/1,04⁴)] / 2 = 1,89 años. Duración modificada = 1,89 / 1,04 = 1,81. Cambio de precio ≈ −1,81%.",
+      "result": "El bono corto tiene una DM de 1,81, mucho menor que 6,23. Ante la misma suba de tasa de 1%, el precio caería solo ~1,81%. El inversor conservador prefiere el bono corto si espera subas de tasa; el agresivo prefiere el largo si espera bajas."
     }
   ]
 }

@@ -1,11 +1,12 @@
 {
-  "title": "Calculadora de dB SPL por distancia (inverse square)",
-  "h1": "Calculadora de dB SPL por distancia (inverse square)",
-  "description": "Calculá el nivel sonoro (dB SPL) a cualquier distancia por ley del cuadrado inverso. −6 dB por duplicación · Campo libre · Gratis.",
+  "title": "dB SPL por distancia: calculadora + tabla de atenuación | Hacé Cuentas",
+  "h1": "Calculadora de dB SPL por distancia (ley del cuadrado inverso)",
+  "description": "Calculá el nivel sonoro (dB SPL) a cualquier distancia en campo libre. Regla clave: cada vez que duplicás la distancia perdés −6 dB. Fórmula, tabla y ejemplos prácticos.",
   "category": "electronica",
   "audience": "global",
   "icon": "⚡",
   "formulaId": "db-spl-distancia",
+  "answerSnippet": "Para calcular el dB SPL a otra distancia usá: **L2 = L1 − 20·log₁₀(d2 / d1)**. La regla práctica: cada vez que duplicás la distancia perdés **−6 dB** (la intensidad cae con el cuadrado de la distancia). Ejemplo: 100 dB a 1 m → 80 dB a 10 m → 74 dB a 20 m → 60 dB a 100 m.",
   "intro": "Cuando un parlante, un motor o cualquier fuente sonora puntual emite energía acústica en campo libre, esa energía se dispersa en forma esférica: a medida que te alejás, la misma cantidad de potencia tiene que cubrir una superficie cada vez mayor. El resultado matemático es que la intensidad cae con el cuadrado de la distancia —la famosa **ley del cuadrado inverso**— y eso se traduce en una regla práctica que todo técnico de sonido, ingeniero de ruido y operario expuesto en planta debería conocer de memoria: **cada vez que duplicás la distancia perdés exactamente 6 dB SPL**.\n\nLa fórmula que usa esta calculadora es **L2 = L1 − 20·log₁₀(d2/d1)**, donde L1 es el nivel conocido a la distancia d1, y L2 es el nivel que querés encontrar a la distancia d2. El 20 (en lugar de 10) aparece porque el SPL es proporcional a la presión sonora, que a su vez es la raíz cuadrada de la intensidad: log(raíz) = ½·log, y 10·2 = 20.\n\nEn la práctica esta herramienta resuelve situaciones muy concretas: un técnico de PA que mide 105 dB a 1 metro del woofer y necesita saber qué llega a la fila 30 del festival (a 35 metros); un vecino que quiere demostrar que la música del boliche a 20 metros supera los límites permitidos por la ordenanza municipal; un responsable de Higiene y Seguridad que evalúa si el trabajador que opera a 8 metros de una prensa de 98 dB necesita protección auditiva (según la **Resolución SRT 295/2003**, que adopta los criterios de la NIOSH para exposición a ruido ocupacional en Argentina); o un ingeniero de RF que necesita estimar pérdida de propagación en espacio libre para señales de audio inalámbrico.\n\nTres advertencias fundamentales para usar bien los resultados: primero, la fórmula vale solo para **campo libre** (exterior abierto o cámara anecoica); en interiores, las reflexiones generan un campo reverberante que reduce la atenuación a 3-4 dB por duplicación. Segundo, no aplica a **line arrays** en su zona de proyección directa, donde el frente de onda es cilíndrico y la caída es de solo 3 dB. Tercero, la fórmula asume una fuente puntual omnidireccional; cualquier directividad real del parlante modifica los resultados y requiere el dato de sensibilidad en el eje específico.\n\nIngresá el SPL conocido, la distancia de referencia y la distancia objetivo. En menos de un segundo tenés el nivel estimado con su diferencia en dB.",
   "keyTakeaway": "**L2 = L1 − 20·log₁₀(d2/d1)**. Cada duplicación de distancia: **−6 dB**. Ejemplo: 100 dB a 1m → 94 dB a 2m → 88 dB a 4m → 82 dB a 8m → 76 dB a 16m.",
   "useCases": [
@@ -45,25 +46,28 @@
   "fields": [
     {
       "id": "dbOrigen",
-      "label": "dB SPL origen",
+      "label": "dB SPL en el punto de origen",
       "type": "number",
       "required": true,
-      "placeholder": "100"
+      "placeholder": "100",
+      "format": "plain"
     },
     {
       "id": "distanciaOrigen",
-      "label": "Distancia origen (m)",
+      "label": "Distancia de origen (metros)",
       "type": "number",
       "required": true,
       "placeholder": "1",
-      "default": 1
+      "default": 1,
+      "format": "plain"
     },
     {
       "id": "distanciaDestino",
-      "label": "Distancia destino (m)",
+      "label": "Distancia de destino (metros)",
       "type": "number",
       "required": true,
-      "placeholder": "10"
+      "placeholder": "10",
+      "format": "plain"
     }
   ],
   "outputs": [
@@ -82,93 +86,95 @@
     }
   ],
   "example": {
-    "title": "Ejemplo",
+    "title": "Ejemplo: parlante a 1 m → ¿cuánto llega a 10 m?",
     "steps": [
-      "100 dB a 1m → distancia 10m",
-      "Atenuación = 20·log(10/1) = 20 dB",
-      "100 − 20 = 80 dB"
+      "SPL de origen: 100 dB a 1 m de distancia",
+      "Atenuación = 20 · log₁₀(10 / 1) = 20 · 1 = 20 dB",
+      "SPL destino = 100 − 20 = **80 dB SPL a 10 metros**"
     ],
-    "result": "80 dB a 10m de distancia"
+    "result": "80 dB SPL a 10 m de distancia (atenuación de 20 dB)"
   },
-  "explanation": "El sonido se propaga como onda esférica en campo libre: la energía emitida se reparte sobre el área de una esfera que crece con r². Como la intensidad (W/m²) cae con 1/r², y el SPL es 10·log de la relación de intensidades, se obtiene una atenuación de 6 dB cada vez que se duplica la distancia.\n\n## Cómo se calcula\n\n**L2 = L1 − 20 · log₁₀(d2 / d1)**\n\nDonde:\n- **L1** = SPL medido en dB a la distancia de referencia d1 (típicamente 1 metro)\n- **L2** = SPL a la nueva distancia d2\n- **d1** y **d2** = distancias desde la fuente en metros\n\nEquivalencia rápida:\n- Duplicar distancia: **−6 dB** (20·log(2) ≈ 6,02)\n- Multiplicar por 10 la distancia: **−20 dB**\n- Multiplicar por 100: **−40 dB**\n\n## Tabla de referencia (atenuación por distancia)\n\n| Distancia (m) | Atenuación vs 1m | Ejemplo desde 120 dB @1m |\n|---|---|---|\n| 1 | 0 dB | 120 dB |\n| 2 | −6 dB | 114 dB |\n| 4 | −12 dB | 108 dB |\n| 10 | −20 dB | 100 dB |\n| 20 | −26 dB | 94 dB |\n| 50 | −34 dB | 86 dB |\n| 100 | −40 dB | 80 dB |\n| 500 | −54 dB | 66 dB |\n| 1.000 | −60 dB | 60 dB |\n\n## Casos típicos\n\n**Caso 1: Recital al aire libre.** Parlante principal 130 dB @1m. A 30m del escenario: L2 = 130 − 20·log(30) = 130 − 29,5 = **100,5 dB SPL** (nivel de concierto fuerte, debés usar protección).\n\n**Caso 2: Ruido vecinal.** Generador de electricidad mide 90 dB a 1m. ¿Cuánto llega al vecino a 15m con pared? L2 campo libre = 90 − 20·log(15) = 90 − 23,5 = **66,5 dB**, más atenuación de la pared (~25-30 dB) = ~40 dB efectivos (conversación normal).\n\n**Caso 3: Medición de monitor en estudio.** Monitor de estudio 95 dB @1m. A la posición del ingeniero (1,2m): L2 = 95 − 20·log(1,2) = 95 − 1,58 = **93,4 dB** (exposición profesional aceptable <1h según NIOSH).\n\n## Errores comunes\n\n- **Asumir ley del cuadrado inverso en interiores:** en una sala con paredes reflectantes se forma campo difuso y la atenuación cae a ~3-4 dB por duplicación. La fórmula aplica solo en campo libre (exterior) o cámara anecoica.\n- **No usar distancia de referencia correcta:** la especificación del fabricante casi siempre es dB @1m. Si un parlante dice \"110 dB de sensibilidad\" sin unidad de distancia, revisá ficha técnica.\n- **Confundir dB SPL con dB eléctrico:** los dB en audio pueden ser dBu, dBV, dBFS (electrónicos) o dB SPL (acústico). Esta fórmula sirve SOLO para dB SPL.\n- **Line arrays no siguen ley clásica:** los arrays de PA profesional atenúan ~3 dB por duplicación en zona lineal (no 6 dB), porque mantienen frente de onda cilíndrico. Usar fórmula de cuadrado inverso sub-estima el alcance.\n- **Olvidar absorción del aire:** en distancias largas (>100m) y altas frecuencias (>2 kHz), el aire absorbe energía extra (0,1-0,4 dB/100m según humedad). Para cálculos precisos sumar esa atenuación.\n- **Ignorar las reflexiones del piso:** parlantes al aire libre suelen ganar 3-6 dB por reflexión del piso en bajas frecuencias. El cálculo ideal da valores por debajo de lo real en graves.\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm](/calculadora-ley-ohm-voltaje-corriente-resistencia) para potencia eléctrica del amplificador.\n- [Potencia eléctrica P=V·I](/calculadora-potencia-electrica-p-vi) para convertir watts a SPL.\n- [Resistencia de LED en serie/paralelo](/calculadora-resistencia-led-serie-paralelo) para indicadores de consola.\n- [Divisor de voltaje](/calculadora-divisor-voltaje-resistencias) para atenuadores de línea.",
+  "explanation": "El sonido se propaga como onda esférica en campo libre: la energía emitida se reparte sobre el área de una esfera que crece con r². Como la intensidad (W/m²) cae con 1/r², y el SPL es 10·log de la relación de intensidades, se obtiene una atenuación de 6 dB cada vez que se duplica la distancia.\n\n## Cómo se calcula\n\n**L2 = L1 − 20 · log₁₀(d2 / d1)**\n\nDonde:\n- **L1** = SPL medido en dB a la distancia de referencia d1 (típicamente 1 metro)\n- **L2** = SPL a la nueva distancia d2\n- **d1** y **d2** = distancias desde la fuente en metros\n\nEquivalencia rápida:\n- Duplicar distancia: **−6 dB** (20·log(2) ≈ 6,02)\n- Multiplicar por 10 la distancia: **−20 dB**\n- Multiplicar por 100: **−40 dB**\n\n## Tabla de atenuación por distancia (SPL en campo libre)\n\n| Distancia | Atenuación vs 1 m | Ejemplo: fuente 120 dB @ 1 m | Ejemplo: fuente 100 dB @ 1 m |\n|---|---|---|---|\n| 1 m | 0 dB | 120 dB | 100 dB |\n| 2 m | −6 dB | 114 dB | 94 dB |\n| 4 m | −12 dB | 108 dB | 88 dB |\n| 10 m | −20 dB | 100 dB | 80 dB |\n| 20 m | −26 dB | 94 dB | 74 dB |\n| 50 m | −34 dB | 86 dB | 66 dB |\n| 100 m | −40 dB | 80 dB | 60 dB |\n| 500 m | −54 dB | 66 dB | 46 dB |\n| 1.000 m | −60 dB | 60 dB | 40 dB |\n\n## Casos típicos\n\n**Caso 1: Recital al aire libre.** Parlante principal 130 dB @1m. A 30m del escenario: L2 = 130 − 20·log(30) = 130 − 29,5 = **100,5 dB SPL** (nivel de concierto fuerte, debés usar protección).\n\n**Caso 2: Ruido vecinal.** Generador de electricidad mide 90 dB a 1m. ¿Cuánto llega al vecino a 15m con pared? L2 campo libre = 90 − 20·log(15) = 90 − 23,5 = **66,5 dB**, más atenuación de la pared (~25-30 dB) = ~40 dB efectivos (conversación normal).\n\n**Caso 3: Medición de monitor en estudio.** Monitor de estudio 95 dB @1m. A la posición del ingeniero (1,2m): L2 = 95 − 20·log(1,2) = 95 − 1,58 = **93,4 dB** (exposición profesional aceptable <1h según NIOSH).\n\n## Errores comunes\n\n- **Asumir ley del cuadrado inverso en interiores:** en una sala con paredes reflectantes se forma campo difuso y la atenuación cae a ~3-4 dB por duplicación. La fórmula aplica solo en campo libre (exterior) o cámara anecoica.\n- **No usar distancia de referencia correcta:** la especificación del fabricante casi siempre es dB @1m. Si un parlante dice \"110 dB de sensibilidad\" sin unidad de distancia, revisá ficha técnica.\n- **Confundir dB SPL con dB eléctrico:** los dB en audio pueden ser dBu, dBV, dBFS (electrónicos) o dB SPL (acústico). Esta fórmula sirve SOLO para dB SPL.\n- **Line arrays no siguen ley clásica:** los arrays de PA profesional atenúan ~3 dB por duplicación en zona lineal (no 6 dB), porque mantienen frente de onda cilíndrico. Usar fórmula de cuadrado inverso sub-estima el alcance.\n- **Olvidar absorción del aire:** en distancias largas (>100m) y altas frecuencias (>2 kHz), el aire absorbe energía extra (0,1-0,4 dB/100m según humedad). Para cálculos precisos sumar esa atenuación.\n- **Ignorar las reflexiones del piso:** parlantes al aire libre suelen ganar 3-6 dB por reflexión del piso en bajas frecuencias. El cálculo ideal da valores por debajo de lo real en graves.\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm](/calculadora-ley-ohm-voltaje-corriente-resistencia) para potencia eléctrica del amplificador.\n- [Potencia eléctrica P=V·I](/calculadora-potencia-electrica-p-vi) para convertir watts a SPL.\n- [Resistencia de LED en serie/paralelo](/calculadora-resistencia-led-serie-paralelo) para indicadores de consola.\n- [Divisor de voltaje](/calculadora-divisor-voltaje-resistencias) para atenuadores de línea.",
   "faq": [
     {
+      "q": "¿Cuántos dB se pierden al duplicar la distancia de una fuente sonora?",
+      "a": "Se pierden exactamente **6 dB** cada vez que duplicás la distancia en campo libre. Esto se debe a la ley del cuadrado inverso: la energía sonora cubre el área de una esfera que crece con r², por lo que la intensidad (W/m²) se divide entre 4 al duplicar la distancia. En escala logarítmica: 10·log₁₀(1/4) = −6,02 dB. Esta regla vale solo en campo libre (exterior abierto o cámara anecoica); en interiores con reflexiones la atenuación real puede ser de solo 3-4 dB por duplicación."
+    },
+    {
+      "q": "¿Cuál es la fórmula para calcular dB SPL a otra distancia?",
+      "a": "La fórmula exacta es **L2 = L1 − 20 · log₁₀(d2 / d1)**, donde L1 es el SPL conocido a la distancia d1, y L2 es el SPL que querés calcular a la distancia d2. El factor 20 (no 10) aparece porque el SPL es proporcional a la presión sonora, que es la raíz cuadrada de la intensidad. Ejemplos rápidos: a 10 veces la distancia se pierden 20 dB; a 100 veces la distancia, 40 dB."
+    },
+    {
       "q": "¿Por qué la atenuación es exactamente 6 dB cada vez que duplicás la distancia?",
-      "a": "La explicación está en la geometría. Una fuente sonora puntual en campo libre irradia energía en todas direcciones: esa energía tiene que cubrir la superficie de una esfera cuyo radio es la distancia. La superficie de una esfera crece con r², así que si duplicás la distancia (2r), la superficie se cuadruplica (4r²) y la intensidad —potencia por unidad de área, medida en W/m²— se divide entre 4. En escala logarítmica: 10·log₁₀(1/4) = −6,02 dB. Dado que el SPL se define en función de la presión sonora (que es proporcional a la raíz de la intensidad), el factor en la fórmula es 20 en lugar de 10, y el resultado sigue siendo −6 dB. Esta regla se cumple estrictamente solo en campo libre sin reflexiones: exterior abierto, sobre superficie absorbente o en cámara anecoica."
+      "a": "La explicación está en la geometría. Una fuente sonora puntual en campo libre irradia energía en todas direcciones: esa energía tiene que cubrir la superficie de una esfera cuyo radio es la distancia. La superficie de una esfera crece con r², así que si duplicás la distancia (2r), la superficie se cuadruplica (4r²) y la intensidad —potencia por unidad de área, medida en W/m²— se divide entre 4. En escala logarítmica: 10·log₁₀(1/4) = −6,02 dB. Dado que el SPL se define en función de la presión sonora (que es proporcional a la raíz de la intensidad), el factor en la fórmula es 20 en lugar de 10, y el resultado sigue siendo −6 dB."
     },
     {
       "q": "¿En interiores la fórmula sigue siendo válida?",
-      "a": "Solo de forma aproximada y solo en el **campo directo**, es decir, muy cerca de la fuente antes de que las reflexiones de paredes, techo y piso se vuelvan significativas. Una vez que el campo reverberante domina —lo que ocurre a partir de la **distancia crítica** o distancia de reverberación, que en una habitación típica de 4x5 metros con paredes duras puede ser apenas 1-2 metros— la atenuación por duplicación cae a 3-4 dB o incluso menos. En espacios muy reverberantes como iglesias de piedra o piscinas cubiertas, el nivel puede mantenerse casi constante con la distancia porque la energía reflejada repone lo que se pierde por divergencia. Para aplicaciones en interiores se usa el modelo de Sabine o simulaciones de acústica de sala."
+      "a": "Solo de forma aproximada y solo en el **campo directo**, es decir, muy cerca de la fuente antes de que las reflexiones de paredes, techo y piso se vuelvan significativas. Una vez que el campo reverberante domina —lo que ocurre a partir de la **distancia crítica** o distancia de reverberación, que en una habitación típica de 4x5 metros con paredes duras puede ser apenas 1-2 metros— la atenuación por duplicación cae a 3-4 dB o incluso menos. En espacios muy reverberantes como iglesias de piedra o piscinas cubiertas, el nivel puede mantenerse casi constante con la distancia porque la energía reflejada repone lo que se pierde por divergencia."
     },
     {
       "q": "¿Los line arrays de PA profesional también pierden 6 dB por duplicación?",
-      "a": "No en su zona de proyección directa. Un line array correctamente configurado mantiene un **frente de onda cilíndrico** (en lugar de esférico) dentro de su zona lineal, que se extiende aproximadamente hasta una distancia igual al doble del largo físico del array. En esa zona la atenuación es solo **3 dB por duplicación** porque la energía se dispersa en un semicilindro, no en una esfera. Más allá de la zona lineal el comportamiento se aproxima al de una fuente puntual y vuelven los 6 dB. Esto es lo que permite a los line arrays grandes cubrir estadios de 150 metros con niveles más uniformes que un gabinete point-source equivalente: básicamente 'ahorran' 3 dB por cada duplicación de distancia en toda la zona lineal."
+      "a": "No en su zona de proyección directa. Un line array correctamente configurado mantiene un **frente de onda cilíndrico** (en lugar de esférico) dentro de su zona lineal, que se extiende aproximadamente hasta una distancia igual al doble del largo físico del array. En esa zona la atenuación es solo **3 dB por duplicación** porque la energía se dispersa en un semicilindro, no en una esfera. Más allá de la zona lineal el comportamiento se aproxima al de una fuente puntual y vuelven los 6 dB."
     },
     {
       "q": "¿Qué niveles de SPL son seguros para el oído humano según la normativa argentina?",
-      "a": "En Argentina, la normativa de referencia para exposición ocupacional a ruido es la **Resolución SRT 295/2003** de la Superintendencia de Riesgos del Trabajo, que adopta los criterios de la NIOSH. El valor de referencia es **85 dB(A) para 8 horas continuas de exposición**. A partir de allí, cada 3 dB adicionales el tiempo máximo permitido se reduce a la mitad: 88 dB → 4 horas, 91 dB → 2 horas, 94 dB → 1 hora, 97 dB → 30 minutos, 100 dB → 15 minutos. Por encima de 115 dB(A) no se permite exposición sin protección auditiva, y por encima de 140 dB SPL peak hay riesgo de daño inmediato e irreversible (trauma acústico agudo). Para eventos de música amplificada, muchas jurisdicciones adoptan además los límites de la OMS para locales nocturnos: máximo 100 dB(A) promedio y 110 dB peak."
+      "a": "En Argentina, la normativa de referencia para exposición ocupacional a ruido es la **Resolución SRT 295/2003** de la Superintendencia de Riesgos del Trabajo, que adopta los criterios de la NIOSH. El valor de referencia es **85 dB(A) para 8 horas continuas de exposición**. A partir de allí, cada 3 dB adicionales el tiempo máximo permitido se reduce a la mitad: 88 dB → 4 horas, 91 dB → 2 horas, 94 dB → 1 hora, 97 dB → 30 minutos, 100 dB → 15 minutos. Por encima de 115 dB(A) no se permite exposición sin protección auditiva, y por encima de 140 dB SPL peak hay riesgo de daño inmediato e irreversible (trauma acústico agudo)."
     },
     {
       "q": "¿Cuál es la diferencia entre dB SPL y dB(A), y cuál corresponde usar?",
-      "a": "El **dB SPL** es una medida física 'plana' que pondera todas las frecuencias por igual, referenciada a 20 μPa (el umbral de audición humano promedio a 1 kHz). El **dB(A)** es dB SPL con una curva de ponderación que imita la sensibilidad del oído humano: atenúa fuertemente los graves (por debajo de 200 Hz), reduce moderadamente los agudos extremos y respeta la zona de mayor sensibilidad del oído (2-5 kHz). En sonido de banda ancha y contenido predominantemente de medios, la diferencia suele ser 2-5 dB. Si la fuente tiene mucho contenido grave (subwoofers, maquinaria pesada, generadores), el dB(A) puede ser hasta 15-20 dB menor que el dB SPL sin ponderar. Para **normativas de ruido laboral, ordenanzas municipales y evaluación ambiental** se usa dB(A). Para **diseño de PA y mediciones electroacústicas** se usa dB SPL. Esta calculadora opera en dB SPL plano."
+      "a": "El **dB SPL** es una medida física 'plana' que pondera todas las frecuencias por igual, referenciada a 20 μPa (el umbral de audición humano promedio a 1 kHz). El **dB(A)** es dB SPL con una curva de ponderación que imita la sensibilidad del oído humano: atenúa fuertemente los graves (por debajo de 200 Hz), reduce moderadamente los agudos extremos y respeta la zona de mayor sensibilidad del oído (2-5 kHz). Para **normativas de ruido laboral, ordenanzas municipales y evaluación ambiental** se usa dB(A). Para **diseño de PA y mediciones electroacústicas** se usa dB SPL."
     },
     {
       "q": "¿Cómo sumo los niveles de dos fuentes sonoras en el mismo punto?",
-      "a": "Los decibeles no se suman aritméticamente. La regla básica es que **dos fuentes iguales en el mismo punto suman solo 3 dB** porque doblan la energía (potencia acústica), y 10·log₁₀(2) = 3,01 dB. Dos parlantes de 90 dB SPL = 93 dB, no 180. La fórmula exacta para N fuentes es: L_total = 10·log₁₀(10^(L1/10) + 10^(L2/10) + ... + 10^(LN/10)). Caso especial importante: si las dos fuentes tienen diferencia de nivel mayor a 10 dB, la fuente más débil contribuye menos de 0,4 dB al total y puede ignorarse. Esto explica por qué agregar un subwoofer de 85 dB en un sistema que ya tiene 105 dB no aporta prácticamente nada al nivel global."
-    },
-    {
-      "q": "¿Qué atenuación típica proveen las paredes y materiales de construcción comunes en Argentina?",
-      "a": "Los valores de **aislación sonora** (pérdida de transmisión) de los materiales más comunes son aproximados y varían con la frecuencia: muro de ladrillo macizo de 0,30 m con revoque doble: **48-52 dB**; muro de ladrillo hueco de 0,18 m revocado: **40-45 dB**; tabique de durlock simple (dos placas + lana de vidrio): **38-42 dB** bien ejecutado; tabique de durlock sin relleno: **25-28 dB**; ventana de vidrio simple de 4 mm: **24-28 dB**; ventana DVH (doble vidrio hermético) de 4-12-4: **32-38 dB**; puerta de madera maciza bien sellada: **28-32 dB**; puerta hueca de interior: **15-18 dB**. Para losas de hormigón armado de 15 cm: **50-55 dB**. El punto débil siempre es la sellación: una ranura de 1 cm bajo una puerta puede reducir la aislación efectiva en 10-15 dB."
-    },
-    {
-      "q": "¿Por qué se dice que 10 dB se percibe como 'el doble de volumen' si la energía real se duplica cada 3 dB?",
-      "a": "Son dos escalas diferentes que miden cosas distintas. La escala **física** mide energía acústica (potencia o intensidad en W/m²): la energía se duplica cada 3 dB (10·log₁₀(2) ≈ 3). La escala **perceptual** mide la sensación subjetiva de volumen que experimenta el oído humano, medida en **sones** (psicoacústica). Investigaciones clásicas de Stevens en los años 50 establecieron que para sonidos de banda ancha, el oído percibe el doble de 'sonoridad' con aproximadamente 10 dB más de SPL. Dicho de otro modo: para que algo 'suene el doble de fuerte' hace falta 10 veces más potencia eléctrica en el amplificador, lo que representa un aumento real de energía acústica de 10 veces (10 dB). Esta asimetría entre lo físico y lo perceptual es la razón por la que los decibeles resultan tan útiles: comprimen un rango de presiones que va de 1 a 10 millones en una escala de 0 a 140 dB manejable."
-    },
-    {
-      "q": "¿Cómo se aplica esta calculadora para cumplir con los límites de ruido de ordenanzas municipales?",
-      "a": "El procedimiento básico es: 1) Medís (o estimás desde hoja de datos) el SPL de la fuente a 1 metro de distancia. 2) Determinás la distancia entre la fuente y el receptor (ventana del vecino, línea de predio, etc.). 3) Calculás el SPL esperado en el receptor con esta herramienta. 4) Comparás con el límite de la ordenanza aplicable. En Argentina no hay una ley nacional única de ruido ambiental; cada municipio tiene su ordenanza. CABA regula por la **Ordenanza N° 11.872** y sus modificatorias, con valores que van de 45 dB(A) nocturno residencial a 65 dB(A) diurno comercial. La Provincia de Buenos Aires tiene la **Ley 11.459** de radicación industrial con criterios acústicos. Recordá que los límites son en dB(A) en el receptor, no en SPL plano en la fuente, así que debés agregar la corrección de ponderación A para tu tipo de ruido."
-    },
-    {
-      "q": "¿La fórmula aplica también para sonido bajo el agua?",
-      "a": "La **ley del cuadrado inverso aplica** en agua del mismo modo que en aire para propagación esférica en campo libre, pero hay diferencias importantes de referencia. En aire, el SPL se referencia a **20 μPa** (umbral de audición humano). En agua, la convención internacional establece la referencia en **1 μPa** (40 dB más baja). Un mismo sonido físico mide 61,5 dB más en la escala submarina que en la aérea. Además, en agua el sonido viaja a ~1.500 m/s (vs. 343 m/s en aire) y la atenuación atmosférica es mucho menor, lo que permite propagación a distancias enormes (cetáceos se comunican a miles de kilómetros). La herramienta está optimizada para uso en aire y medición en dB SPL con referencia a 20 μPa."
+      "a": "Los decibeles no se suman aritméticamente. La regla básica es que **dos fuentes iguales en el mismo punto suman solo 3 dB** porque doblan la energía (potencia acústica), y 10·log₁₀(2) = 3,01 dB. Dos parlantes de 90 dB SPL = 93 dB, no 180. La fórmula exacta para N fuentes es: L_total = 10·log₁₀(10^(L1/10) + 10^(L2/10) + ... + 10^(LN/10)). Si las dos fuentes tienen diferencia de nivel mayor a 10 dB, la fuente más débil contribuye menos de 0,4 dB al total y puede ignorarse."
     },
     {
       "q": "¿Puedo usar esta calculadora al revés para encontrar la distancia conociendo los dos niveles?",
-      "a": "Sí, aunque la interfaz está orientada a ingresar dos distancias y obtener el nivel destino, podés despejar la distancia algebraicamente de la misma fórmula. Si sabés L1 a d1 y querés encontrar d2 para un L2 objetivo: **d2 = d1 · 10^((L1 − L2) / 20)**. Ejemplo: parlante que entrega 104 dB a 1 metro, y querés saber a qué distancia llega a 80 dB (umbral de conversación cómoda sin gritar): d2 = 1 · 10^((104−80)/20) = 10^1,2 = **15,85 metros**. Esa distancia es útil para diseñar zonas de 'buffer' acústico en eventos, determinar el radio de cobertura de un sistema de sonido, o planificar la ubicación de puestos de trabajo respecto a maquinaria ruidosa."
+      "a": "Sí. Podés despejar la distancia algebraicamente: **d2 = d1 · 10^((L1 − L2) / 20)**. Ejemplo: parlante que entrega 104 dB a 1 metro, y querés saber a qué distancia llega a 80 dB: d2 = 1 · 10^((104−80)/20) = 10^1,2 = **15,85 metros**. Esa distancia es útil para diseñar zonas de buffer acústico en eventos, determinar el radio de cobertura de un sistema de sonido, o planificar la ubicación de puestos de trabajo respecto a maquinaria ruidosa."
     },
     {
-      "q": "¿Qué pasa con la atenuación atmosférica a grandes distancias, como en conciertos al aire libre de gran escala?",
-      "a": "A distancias mayores de 50-100 metros, la **atenuación atmosférica** —absorción del sonido por el aire— empieza a ser significativa además de la atenuación geométrica. Este efecto afecta especialmente las frecuencias altas: el aire absorbe mucho más a 8 kHz que a 125 Hz. La atenuación típica en condiciones normales (20°C, 50% humedad relativa) es aproximadamente 0,1 dB/100m a 1 kHz, 0,4 dB/100m a 2 kHz y 2-4 dB/100m a 8 kHz. Para un concierto a 200 metros, esto significa que los agudos pueden atenuarse 4-8 dB adicionales a lo que predice la ley del cuadrado inverso, resultando en un sonido percibido más 'apagado' en la lejanía. Los técnicos de PA de gran formato compensan esto con EQ de largo alcance (más altas frecuencias para las torres de delay traseras). Esta calculadora no incluye corrección de atenuación atmosférica; es pertinente solo para distancias de hasta ~50 metros sin error relevante."
+      "q": "¿Qué atenuación típica proveen las paredes y materiales de construcción comunes?",
+      "a": "Los valores de **aislación sonora** (pérdida de transmisión) más comunes son: muro de ladrillo macizo de 30 cm con revoque doble: **48-52 dB**; muro de ladrillo hueco de 18 cm revocado: **40-45 dB**; tabique de durlock simple con lana de vidrio: **38-42 dB**; ventana de vidrio simple de 4 mm: **24-28 dB**; ventana DVH (4-12-4): **32-38 dB**; puerta de madera maciza bien sellada: **28-32 dB**. El punto débil siempre es la sellación: una ranura de 1 cm bajo una puerta puede reducir la aislación efectiva en 10-15 dB."
+    },
+    {
+      "q": "¿Qué pasa con la atenuación atmosférica a grandes distancias, como en conciertos al aire libre?",
+      "a": "A distancias mayores de 50-100 metros, la **atenuación atmosférica** —absorción del sonido por el aire— empieza a ser significativa. Este efecto afecta especialmente las frecuencias altas: el aire absorbe mucho más a 8 kHz que a 125 Hz. La atenuación típica en condiciones normales (20°C, 50% humedad relativa) es aproximadamente 0,1 dB/100m a 1 kHz, 0,4 dB/100m a 2 kHz y 2-4 dB/100m a 8 kHz. Esta calculadora no incluye corrección de atenuación atmosférica; es pertinente solo para distancias de hasta ~50 metros sin error relevante."
+    },
+    {
+      "q": "¿Cómo se aplica esta calculadora para cumplir con los límites de ruido de ordenanzas municipales?",
+      "a": "El procedimiento básico es: 1) Medís (o estimás desde hoja de datos) el SPL de la fuente a 1 metro de distancia. 2) Determinás la distancia entre la fuente y el receptor (ventana del vecino, línea de predio, etc.). 3) Calculás el SPL esperado en el receptor con esta herramienta. 4) Comparás con el límite de la ordenanza aplicable. En CABA rige la **Ordenanza N° 11.872**, con valores que van de 45 dB(A) nocturno residencial a 65 dB(A) diurno comercial. Recordá que los límites son en dB(A) en el receptor, así que debés agregar la corrección de ponderación A para tu tipo de ruido."
     }
   ],
   "sources": [
     {
-      "name": "All About Circuits — Electronics Textbook",
-      "url": "https://www.allaboutcircuits.com"
+      "name": "ISO 9613-1: Acoustics — Attenuation of sound during propagation outdoors",
+      "url": "https://www.iso.org/standard/17393.html"
     },
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org"
+      "name": "NIOSH — Criteria for a Recommended Standard: Occupational Noise Exposure",
+      "url": "https://www.cdc.gov/niosh/docs/98-126/default.html"
     },
     {
-      "name": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws"
+      "name": "Resolución SRT 295/2003 — Superintendencia de Riesgos del Trabajo (Argentina)",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/resolución-295-2003-87375"
     }
   ],
   "relatedSlugs": [],
   "slug": "calculadora-db-spl-distancia",
   "dataUpdate": {
-    "frequency": "yearly",
-    "lastUpdated": "2026-04-18",
+    "frequency": "never",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fija, no requiere actualización de data externa",
-    "source": "All About Circuits — Electronics Textbook",
-    "sourceUrl": "https://www.allaboutcircuits.com"
+    "notes": "Fórmula física fija (ley del cuadrado inverso), no requiere actualización de datos externos",
+    "source": "ISO 9613-1: Acoustics — Attenuation of sound during propagation outdoors",
+    "sourceUrl": "https://www.iso.org/standard/17393.html"
   },
   "seoKeywords": [
-    "db spl distancia",
-    "calculadora calculadora de db spl por distancia (inverse squ…",
-    "calculadora de db spl por distancia (inverse square)"
+    "db spl distancia calculadora",
+    "ley cuadrado inverso sonido",
+    "calcular db a distancia",
+    "atenuacion sonido distancia",
+    "inversa cuadrado sonido db"
   ],
-  "lastReviewed": "2026-05-19"
+  "lastReviewed": "2026-06-04"
 }

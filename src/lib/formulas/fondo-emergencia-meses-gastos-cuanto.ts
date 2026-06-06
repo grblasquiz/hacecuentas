@@ -2,29 +2,68 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number | any; }
 export function fondoEmergenciaMesesGastosCuanto(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
-  const m=Number(i.monto)||0; const p=Number(i.plazo)||12; const t=(Number(i.tasa)||0)/100/12;
-  const r=t===0?m/p:m*t*Math.pow(1+t,p)/(Math.pow(1+t,p)-1);
-  const aporteFmt = __lang === 'en'
-    ? r.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')
-    : r.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-  const resultado = '$'+aporteFmt;
-  const resumen = __lang === 'en'
-    ? `Amount $${m.toLocaleString('en-US')} × ${p} months: $${r.toFixed(0)}/mo.`
-    : `Monto $${m.toLocaleString('es-AR')} × ${p} meses: $${r.toFixed(0)}/mes.`;
-  const totalAportado = r * p;
-  const interes = Math.max(0, totalAportado - m);
-  const _insight = __lang === 'en'
-    ? {
-        title: 'Your monthly target',
-        text: `Set aside **$${aporteFmt}/mo** for **${p} months** to reach $${m.toLocaleString('en-US')}.${t > 0 ? ` Interest earns you about $${Math.round(interes).toLocaleString('en-US')}, so you put in less out of pocket.` : ''}`,
-        tone: 'neutral',
-        icon: '🐷',
-      }
-    : {
-        title: 'Tu cuota mensual',
-        text: `Apartá **$${aporteFmt}/mes** durante **${p} meses** para llegar a $${m.toLocaleString('es-AR')}.${t > 0 ? ` El interés aporta unos $${Math.round(interes).toLocaleString('es-AR')}, así que ponés menos de tu bolsillo.` : ''}`,
-        tone: 'neutral',
-        icon: '🐷',
-      };
-  return { resultado, resumen, _insight };
+  const val = Number(i.monto) || 0;
+  const plazo = Number(i.plazo) || 6;
+  const annualRate = (Number(i.tasa) || 0) / 100;
+  const monthlyRate = annualRate / 12;
+
+  const fmt = (n: number) =>
+    __lang === 'en'
+      ? n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+      : n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  if (__lang === 'en') {
+    // EN: val = monthly expenses, plazo = months to cover
+    // Target = monthly expenses × months to cover
+    const target = val * plazo;
+    const annualInterestEarned = target * annualRate;
+    const monthlyInterestEarned = annualInterestEarned / 12;
+
+    const cushionLabel =
+      plazo <= 1 ? 'minimal (1 month)'
+      : plazo <= 2 ? 'small (2 months)'
+      : plazo <= 3 ? 'starter (3 months)'
+      : plazo <= 6 ? 'recommended (3–6 months)'
+      : 'extra cushion (6+ months)';
+
+    const resultado = '$' + fmt(target);
+    const resumen =
+      `$${fmt(val)}/mo × ${plazo} months = $${fmt(target)} target` +
+      (annualRate > 0 ? ` | Earns ~$${fmt(annualInterestEarned)}/yr in a ${(Number(i.tasa) || 0).toFixed(2)}% HYSA` : '');
+
+    const _insight = {
+      title: 'Your emergency fund target',
+      text: `Save **$${fmt(target)}** — that's ${plazo} months of expenses at $${fmt(val)}/mo. This is a ${cushionLabel} cushion.` +
+        (annualRate > 0 ? ` Kept in a ${(Number(i.tasa) || 0).toFixed(2)}% HYSA, it earns ~$${fmt(monthlyInterestEarned)}/mo in interest once fully funded.` : ''),
+      tone: 'positive',
+      icon: '🏦',
+    };
+
+    return { resultado, resumen, _insight };
+
+  } else {
+    // ES: val = objetivo del fondo (target amount), plazo = meses para armarlo
+    // Monthly savings needed (PMT formula) to reach the target in plazo months
+    const r = monthlyRate === 0
+      ? val / plazo
+      : val * monthlyRate * Math.pow(1 + monthlyRate, plazo) / (Math.pow(1 + monthlyRate, plazo) - 1);
+
+    const resultado = '$' + fmt(r);
+    const totalAportado = r * plazo;
+    const interes = Math.max(0, val - totalAportado);
+
+    const resumen =
+      `Monto $${fmt(val)} × ${plazo} meses: $${fmt(r)}/mes.` +
+      (monthlyRate > 0 ? ` El interés aporta unos $${fmt(interes)}, así que ponés menos de tu bolsillo.` : '');
+
+    const _insight = {
+      title: 'Tu cuota mensual',
+      text: `Apartá **$${fmt(r)}/mes** durante **${plazo} meses** para llegar a $${fmt(val)}.` +
+        (monthlyRate > 0 ? ` El interés acumulado aporta unos $${fmt(interes)}, así que ponés menos de tu bolsillo.` : ''),
+      tone: 'neutral',
+      icon: '🐷',
+    };
+
+    return { resultado, resumen, _insight };
+  }
 }

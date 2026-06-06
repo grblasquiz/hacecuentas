@@ -2,16 +2,20 @@ export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 export function gpaPromedioAmericanoEscala40(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
-  const v1=Number(i.v1)||0; const v2=Number(i.v2)||1;
-  const r=v1/v2;
+  const v1 = Number(i.v1) || 0; // your grade or average
+  const v2 = Number(i.v2) || 100; // maximum scale (default 100)
+
+  // Standard conversion: GPA = (grade / max_scale) × 4.0
+  const ratio = v2 > 0 ? v1 / v2 : 0;
+  const gpa = Math.max(0, Math.min(4, ratio * 4));
+
   const resumen = __lang === 'en'
-    ? `Calculation: ${v1} / ${v2} = ${r.toFixed(2)}.`
-    : `Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`;
+    ? `(${v1} ÷ ${v2}) × 4.0 = ${gpa.toFixed(2)} GPA`
+    : `(${v1} ÷ ${v2}) × 4.0 = ${gpa.toFixed(2)} GPA`;
 
   // GPA en escala 4.0 (estándar EE.UU.): zonas académicas
-  const gpa = Math.max(0, Math.min(4, r));
   let banda: string, tone: 'good'|'warn'|'neutral';
-  if (gpa >= 3.7) { banda = __lang === 'en' ? 'A (excellent / honors)' : 'A (sobresaliente / honors)'; tone = 'good'; }
+  if (gpa >= 3.7) { banda = __lang === 'en' ? 'A (excellent / honors eligible)' : 'A (sobresaliente / honors)'; tone = 'good'; }
   else if (gpa >= 3.0) { banda = __lang === 'en' ? 'B (good standing)' : 'B (buen promedio)'; tone = 'good'; }
   else if (gpa >= 2.0) { banda = __lang === 'en' ? 'C (passing)' : 'C (aprobado)'; tone = 'neutral'; }
   else { banda = __lang === 'en' ? 'D/F (academic risk)' : 'D/F (riesgo académico)'; tone = 'warn'; }
@@ -19,7 +23,7 @@ export function gpaPromedioAmericanoEscala40(i: Inputs): Outputs {
   const _insight = {
     title: __lang === 'en' ? 'Your GPA on the 4.0 scale' : 'Tu GPA en escala 4.0',
     text: __lang === 'en'
-      ? `A GPA of **${gpa.toFixed(2)}** falls in the **${banda}** band. On the U.S. 4.0 scale, 3.0+ is solid and 3.7+ opens honors and scholarship eligibility.`
+      ? `A GPA of **${gpa.toFixed(2)}** falls in the **${banda}** band. On the U.S. 4.0 scale, 3.0+ is good standing and 3.7+ qualifies for honors and many scholarships.`
       : `Un GPA de **${gpa.toFixed(2)}** cae en la banda **${banda}**. En la escala 4.0 de EE.UU., 3.0+ es sólido y 3.7+ habilita honores y becas.`,
     tone,
     icon: '🎓',
@@ -39,5 +43,5 @@ export function gpaPromedioAmericanoEscala40(i: Inputs): Outputs {
     ariaLabel: __lang === 'en' ? 'GPA scale 0 to 4.0 with letter-grade zones.' : 'Escala de GPA de 0 a 4.0 con zonas por letra.',
   };
 
-  return { resultado:r.toFixed(2), resumen, _insight, _chart };
+  return { resultado: gpa.toFixed(2), resumen, _insight, _chart };
 }

@@ -1,24 +1,25 @@
 {
   "slug": "discount-calculator",
-  "title": "Discount Calculator 2026 — Percent Off & Stacked Deals | Hacé Cuentas",
-  "h1": "Discount Calculator",
-  "description": "Free discount calculator. Find the final price and savings for any percent-off deal, and see the real rate when you stack two discounts (it's never the sum).",
+  "title": "Discount Calculator: Final Price + Savings — Percent Off | Hacé Cuentas",
+  "h1": "Discount Calculator — Percent Off & Stacked Deals",
+  "description": "Enter any original price and one or two discount percentages. Get the exact final price, how much you save, and the real combined rate when two discounts stack (it's never the simple sum).",
   "category": "finanzas",
   "audience": "global",
   "icon": "🏷️",
   "formulaId": "discount-calculator",
-  "intro": "A **20% + 10%** sticker doesn't mean 30% off — the second discount applies to the already-reduced price, so the real saving is **28%**. This calculator gives you the exact final price and dollar savings for a single discount, and correctly **stacks** two discounts so you know the true deal before you reach the register.",
-  "keyTakeaway": "A $100 item at 20% off costs $80 (you save $20). Stack a further 10% and you pay $72 — a real 28% discount, not 30%.",
+  "answerSnippet": "To calculate a discount: multiply the original price by (1 − discount/100). Example: $150 at 30% off → $150 × 0.70 = **$105** (you save $45). For stacked discounts (e.g. 20% + 10%), the real combined rate is 28%, not 30% — because the second discount applies to the already-reduced price: (1 − 0.20) × (1 − 0.10) = 0.72, so you pay 72% of the original.",
+  "intro": "A **20% + 10%** sticker doesn't mean 30% off — the second discount applies to the already-reduced price, so the real saving is **28%**. Enter your price and one or two percentages; this calculator gives the exact final price, dollar savings, and the true combined rate instantly.",
+  "keyTakeaway": "A $100 item at 20% off costs $80 (save $20). Stack an extra 10% and you pay $72 — a real **28% discount**, not 30%. The combined rate is always less than the sum of the parts.",
   "useCases": [
-    "Finding the final price of a single percent-off sale",
+    "Finding the final price after a single percent-off sale",
     "Calculating the real rate when a coupon stacks on top of a sale price",
-    "Comparing a '30% off' deal against a '20% then extra 10%' deal",
-    "Working out how much you actually save before checkout",
-    "Checking a Black Friday or clearance markdown",
-    "Setting a sale price as a retailer to hit a target margin"
+    "Comparing '30% off' vs '20% + extra 10%' deals at checkout",
+    "Checking how much you save before buying on Black Friday or Cyber Monday",
+    "Setting a sale price as a retailer to protect your margin",
+    "Verifying a clearance rack tag price against the original ticket"
   ],
   "fields": [
-    { "id": "original_price", "label": "Original Price", "type": "number", "placeholder": "100.00", "default": 100, "step": 0.01, "required": true },
+    { "id": "original_price", "label": "Original Price ($)", "type": "number", "placeholder": "100.00", "default": 100, "step": 0.01, "required": true },
     { "id": "discount_1", "label": "Discount (%)", "type": "number", "placeholder": "20", "default": 20, "step": 0.1, "required": true },
     { "id": "discount_2", "label": "Second Discount (%) — optional, stacks", "type": "number", "placeholder": "0", "default": 0, "step": 0.1, "required": false }
   ],
@@ -27,21 +28,24 @@
     { "id": "savings", "label": "You Save", "primary": false, "format": "currency" },
     { "id": "total_discount", "label": "Real Discount", "primary": false, "format": "text" }
   ],
-  "explanation": "## What is a discount calculator?\n\nA discount calculator finds the final price after a percentage is taken off, and the amount saved. With a single discount it's a straight percentage; with **two stacked discounts** the order and base matter, because the second percentage applies to the price that already has the first discount baked in.\n\n## How It Works\n\nEnter the original price and one or two discount percentages. Each discount is converted to a multiplier (1 − rate). The price is multiplied by each, so stacked discounts compound rather than add.\n\n## Formula\n\n```\nfactor      = (1 - d1/100) * (1 - d2/100)\nfinalPrice  = originalPrice * factor\nsavings     = originalPrice - finalPrice\nrealPercent = savings / originalPrice * 100\n```\n\n## Worked Example\n\n**$100 with 20% then an extra 10%:**\n\n| Step | Value |\n|---|---|\n| After 20% off | $100 × 0.80 = $80.00 |\n| After extra 10% | $80 × 0.90 = **$72.00** |\n| Savings | $100 − $72 = **$28.00** |\n| Real discount | **28%** (not 30%) |\n\n## Why Stacked Discounts Aren't Additive\n\nTwo discounts of d1 and d2 give a combined rate of `d1 + d2 − (d1×d2)/100`, always **less** than d1 + d2. For 20% and 10%: 20 + 10 − 2 = 28%. The bigger each discount, the larger the gap from the naive sum.\n\n## Limitations\n\n- Order doesn't change the final price for percentage discounts (multiplication is commutative), but it does for a mix of percentage and fixed-dollar coupons — this tool handles percentages only.\n- Sales tax is applied after discounts at checkout; this calculator shows the pre-tax price.\n- Some 'buy one get one' or tiered deals don't map to a simple percentage — use the effective percentage if you can derive it.",
+  "explanation": "## How to Calculate a Percent Discount\n\nThe formula is: **Final Price = Original Price × (1 − discount / 100)**. Savings = Original Price − Final Price.\n\n| Original Price | Discount | Final Price | You Save |\n|---|---|---|---|\n| $50 | 10% | $45.00 | $5.00 |\n| $100 | 20% | $80.00 | $20.00 |\n| $100 | 25% | $75.00 | $25.00 |\n| $200 | 30% | $140.00 | $60.00 |\n| $300 | 40% | $180.00 | $120.00 |\n| $500 | 50% | $250.00 | $250.00 |\n| $80 | 15% | $68.00 | $12.00 |\n| $120 | 33% | $80.40 | $39.60 |\n\n## How Stacked Discounts Work\n\nWhen two discounts apply one after the other, each is computed on the new lower base — they do **not** simply add:\n\n```\nfactor      = (1 - d1/100) × (1 - d2/100)\nfinalPrice  = originalPrice × factor\nsavings     = originalPrice - finalPrice\nrealPercent = savings / originalPrice × 100\n```\n\n**Combined rate shortcut:** `d1 + d2 − (d1 × d2) / 100`\nFor 20% and 10%: 20 + 10 − (20 × 10)/100 = 30 − 2 = **28%**.\n\n## Common Stacked Discount Examples\n\n| First Discount | Second Discount | Combined Real Rate |\n|---|---|---|\n| 10% | 10% | 19% |\n| 20% | 10% | 28% |\n| 25% | 15% | 36.25% |\n| 30% | 20% | 44% |\n| 50% | 50% | 75% |\n| 20% | 20% | 36% |\n| 15% | 5% | 19.25% |\n\n## Worked Example — Stacked Discounts\n\n**$120 item: 25% sale, then extra 15% coupon**\n\n| Step | Calculation | Result |\n|---|---|---|\n| After 25% off | $120 × 0.75 | $90.00 |\n| After 15% coupon | $90 × 0.85 | **$76.50** |\n| Savings | $120 − $76.50 | **$43.50** |\n| Real discount | 43.50 / 120 × 100 | **36.25%** (not 40%) |\n\n## Does Order Matter?\n\nFor two **percentage** discounts: no. 20% then 10% gives the same final price as 10% then 20% (multiplication is commutative). Order only matters when mixing a percentage discount with a fixed-dollar coupon.\n\n## What This Calculator Does Not Cover\n\n- **Sales tax** — applied after discounts at checkout; this shows the pre-tax final price.\n- **Buy One Get One (BOGO)** — treat as 50% off one item's price if needed.\n- **Fixed-dollar coupons** — subtract the coupon first, then apply the percentage discount.",
   "faq": [
-    { "q": "How do I calculate a percentage discount?", "a": "Multiply the price by (1 − discount/100). For 20% off $100: $100 × 0.80 = $80. The savings is the difference: $20. This calculator does it instantly and also handles a second stacked discount." },
-    { "q": "Is 20% + 10% the same as 30% off?", "a": "No. The second discount applies to the already-reduced price, so 20% then 10% equals 28% off, not 30%. The combined rate is always less than the sum. The formula is d1 + d2 − (d1×d2)/100." },
-    { "q": "Does the order of two discounts matter?", "a": "For two percentage discounts, no — multiplication is commutative, so 20% then 10% gives the same final price as 10% then 20%. Order only matters when mixing a percentage discount with a fixed-dollar coupon." },
-    { "q": "How do I find the original price from a sale price?", "a": "Divide the sale price by (1 − discount/100). If an item is $72 after 28% off, the original was $72 ÷ 0.72 = $100. To reverse a single 20% discount on an $80 item: $80 ÷ 0.80 = $100." },
-    { "q": "How much do I save with a discount?", "a": "Savings = original price − final price, which also equals original price × discount/100 for a single discount. On a $100 item at 20% off, you save $20." },
-    { "q": "What is the combined rate of stacking three discounts?", "a": "Multiply all the (1 − rate) factors. For 20%, 10%, and 5%: 0.80 × 0.90 × 0.95 = 0.684, so the real discount is 31.6%. This calculator supports two discounts; chain a third by running the output through again." },
-    { "q": "Should I apply the discount before or after tax?", "a": "Discounts are applied to the pre-tax price; sales tax is then calculated on the discounted amount. So a discount also slightly reduces the tax you pay. This calculator shows the pre-tax final price." },
-    { "q": "How do retailers use discount math to set sale prices?", "a": "To hit a target final price from a target margin, retailers solve for the discount: discount = (1 − targetPrice/originalPrice) × 100. Knowing stacked discounts compound helps avoid accidentally giving away more margin than intended." }
+    { "q": "How do I calculate percent off?", "a": "Multiply the original price by (1 − discount/100). For 25% off $80: $80 × 0.75 = $60. Savings = $80 − $60 = $20. This calculator handles it instantly." },
+    { "q": "Is 20% + 10% the same as 30% off?", "a": "No. The second discount applies to the price already reduced by the first. The real combined rate is 28%, not 30%. The formula: d1 + d2 − (d1×d2)/100 = 20 + 10 − 2 = 28%." },
+    { "q": "What is 30% off $100?", "a": "$100 × (1 − 0.30) = $70. You save $30. For other amounts at 30% off: $50 → $35; $200 → $140; $250 → $175; $500 → $350." },
+    { "q": "How do I find the original price from the sale price?", "a": "Divide the sale price by (1 − discount/100). If an item sells for $63 after a 30% discount, the original was $63 ÷ 0.70 = $90." },
+    { "q": "Does the order of two stacked discounts change the final price?", "a": "Not for two percentage discounts — multiplication is commutative, so 20% then 10% gives the same result as 10% then 20%. Order does matter if one coupon is a fixed dollar amount." },
+    { "q": "What is a 50% discount on $120?", "a": "$120 × 0.50 = $60. You pay $60 and save $60. Stack an additional 10% and you pay $54 (a real 55% combined discount)." },
+    { "q": "How do I calculate three stacked discounts?", "a": "Multiply all (1 − rate) factors together. For 20%, 10%, and 5%: 0.80 × 0.90 × 0.95 = 0.684, so you pay 68.4% of the original — a real 31.6% combined discount. Run the calculator twice to chain three." },
+    { "q": "Should the discount be applied before or after tax?", "a": "Discounts apply to the pre-tax price; sales tax is then calculated on the discounted amount. A bigger discount slightly lowers the tax too. This calculator shows the pre-tax final price." },
+    { "q": "What is 15% off $200?", "a": "$200 × 0.85 = $170. You save $30. Common reference: 10% of any price is just move the decimal (10% of $200 = $20), then 15% = $20 + $10 = $30 off." },
+    { "q": "How do retailers use discount math?", "a": "To hit a target final price: discount % = (1 − targetPrice/originalPrice) × 100. Knowing stacked discounts compound helps avoid giving away more margin than intended when combining a sale with a promo code." }
   ],
   "sources": [
-    { "name": "Federal Trade Commission — Guides Against Deceptive Pricing", "url": "https://www.ecfr.gov/current/title-16/chapter-I/subchapter-B/part-233", "publisher": "U.S. Federal Trade Commission", "date": "2026" },
-    { "name": "Khan Academy — Percent word problems", "url": "https://www.khanacademy.org/math/pre-algebra/pre-algebra-ratios-rates/pre-algebra-percent-problems/", "publisher": "Khan Academy", "date": "2026" }
+    { "name": "Federal Trade Commission — Guides Against Deceptive Pricing (16 CFR Part 233)", "url": "https://www.ecfr.gov/current/title-16/chapter-I/subchapter-B/part-233", "publisher": "U.S. Federal Trade Commission", "date": "2026" },
+    { "name": "Khan Academy — Percent word problems", "url": "https://www.khanacademy.org/math/pre-algebra/pre-algebra-ratios-rates/pre-algebra-percent-problems/v/finding-a-percent", "publisher": "Khan Academy", "date": "2026" },
+    { "name": "National Institute of Standards and Technology — Handbook 130: Uniform Pricing", "url": "https://www.nist.gov/system/files/documents/2021/01/08/hb130-2021-final.pdf", "publisher": "NIST", "date": "2021" }
   ],
-  "dataUpdate": { "frequency": "never", "lastUpdated": "2026-06-05", "updateType": "manual", "notes": "Pure arithmetic — no external data. Reviewed for correctness of the stacked-discount formula." },
-  "lastReviewed": "2026-06-05"
+  "dataUpdate": { "frequency": "never", "lastUpdated": "2026-06-04", "updateType": "manual", "notes": "Pure arithmetic — no external data. Stacked-discount formula verified correct." },
+  "lastReviewed": "2026-06-04"
 }

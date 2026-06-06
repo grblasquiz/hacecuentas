@@ -3,7 +3,7 @@ export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function semillasPorM2Huerta(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const m = Number(i.m2) || 0;
-  const dens: Record<string, number> = { lechuga: 20, tomate: 4, zanahoria: 200, rabano: 100, espinaca: 30 };
+  const dens: Record<string, number> = { lechuga: 60, tomate: 10, zanahoria: 200, rabano: 110, espinaca: 100 };
   const especie = String(i.especie);
   const d = dens[especie] || 10;
   const total = m * d;

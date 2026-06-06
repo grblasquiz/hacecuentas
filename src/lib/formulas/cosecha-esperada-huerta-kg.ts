@@ -2,7 +2,8 @@ export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function cosechaEsperadaHuertaKg(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
-  const yield_: Record<string, number> = { tomate: 3, lechuga: 2, zanahoria: 2.5, papa: 3.5, calabaza: 4.5 };
+  // Yields in kg/m²/cycle for typical home garden conditions (Embrapa/FAO reference values)
+  const yield_: Record<string, number> = { tomate: 3.0, lechuga: 1.5, zanahoria: 2.0, papa: 3.5, calabaza: 4.0 };
   const m = Number(i.m2) || 0; const kg = (yield_[String(i.especie)] || 2) * m;
   const rendimiento = m > 0 ? kg / m : 0;
   const resumen = __lang === 'en'

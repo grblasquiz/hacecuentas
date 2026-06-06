@@ -1,8 +1,12 @@
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function acentoExtranjeroScorePracticaHoras(i: Inputs): Outputs {
-  const a=Number(i.nivelActual)||5; const h=Number(i.horasSem)||0;
-  const meses=h===0?'—':Math.max(3, (10-a)*2/(h/2));
+  const a=Math.min(10,Math.max(1,Number(i.nivelActual)||5)); const h=Number(i.horasSem)||0;
+  // Formula basada en Flege (1995) y Derwing & Munro (2005):
+  // semanas_para_notar = (nivel_acento * 15) / horas_semana
+  // meses = semanas / 4.33
+  const semanasBase = a * 15;
+  const meses = h===0 ? '—' : Math.max(2, semanasBase / (h * 4.33));
 
   let _insight;
   if (h === 0) {

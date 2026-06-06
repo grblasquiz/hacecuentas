@@ -17,8 +17,9 @@ export function libretaSanitariaCostoHueriaFood(i: Inputs): Outputs {
     },
   } as const)[__lang];
   const m=String(i.municipio||'caba');
-  const c: Record<string,number> = { caba:15000, 'la-plata':12000, cba:13000, rosario:11000 };
-  const val = (c[m]||15000).toLocaleString('es-AR');
+  // 2026 estimated base permit fees in ARS (midpoint of municipal range)
+  const c: Record<string,number> = { caba:30000, 'la-plata':24000, cba:23000, rosario:20000 };
+  const val = (c[m]||30000).toLocaleString('es-AR');
   const _insight = {
     title: T.insightTitle,
     text: T.insightTpl(m, val),

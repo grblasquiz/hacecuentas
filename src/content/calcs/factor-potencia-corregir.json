@@ -1,13 +1,14 @@
 {
-  "title": "Calculadora de factor de potencia y capacitor corrector",
-  "h1": "Calculadora de factor de potencia y capacitor corrector",
-  "description": "Calculá el factor de potencia cos(φ) y el capacitor necesario para corregirlo. P (W), S (VA), Q (VAR) y kVAR de compensación · Gratis y rápido.",
+  "title": "Corrección de factor de potencia: calculadora de kVAR y capacitor | Hacé Cuentas",
+  "h1": "Calculadora de corrección de factor de potencia y capacitor",
+  "description": "Calculá el banco de capacitores para corregir el factor de potencia cos(φ). Ingresá P (W), cos φ actual y objetivo, tensión y frecuencia → obtenés kVAR a compensar y µF necesarios.",
   "category": "electronica",
   "audience": "global",
   "icon": "⚡",
   "formulaId": "factor-potencia-corregir",
-  "lastReviewed": "2026-05-19",
-  "intro": "El factor de potencia (cos φ) mide qué tan eficientemente un circuito eléctrico convierte la potencia aparente (kVA) en potencia activa útil (kW). Vale entre 0 y 1: cuanto más cerca de 1, mayor eficiencia. Se usa en instalaciones industriales y comerciales con cargas inductivas (motores, transformadores, balastos) que generan potencia reactiva. La corrección se hace instalando capacitores en paralelo que compensan esa reactividad. Sin corregirlo, pagás demanda de kVA extra en la factura eléctrica y sufrís caídas de tensión innecesarias.",
+  "lastReviewed": "2026-06-04",
+  "answerSnippet": "Para corregir el factor de potencia se instala un banco de capacitores. La potencia reactiva a compensar es Qc = P × (tan φ₁ − tan φ₂) en VAR, y el capacitor necesario C = Qc / (2π × f × V²) en faradios. Ejemplo: corregir de cos φ 0,70 a 0,95 en un motor de 1000 W a 220 V y 50 Hz requiere aproximadamente 0,69 kVAR y un capacitor de 45 µF.",
+  "intro": "La **corrección del factor de potencia** consiste en instalar capacitores en paralelo para compensar la potencia reactiva inductiva que consumen motores, transformadores y balastos. Cuando el cos φ es bajo (por ejemplo 0,65), la distribuidora suministra más corriente para la misma potencia útil, lo que eleva la factura eléctrica. En Argentina, la Resolución ENRE 184/2000 penaliza a los usuarios de media tensión y grandes usuarios cuando el cos φ medido es inferior a 0,85. Esta calculadora aplica la fórmula estándar del triángulo de potencias para determinar la capacidad del banco de capacitores necesario.",
   "keyTakeaway": "La capacidad del banco de capacitores se calcula con **C = Qc / (2π × f × V²)**, donde Qc = P × (tan φ₁ − tan φ₂). Para P=1000 W, cos φ₁=0.70, cos φ₂=0.95 y V=220 V a 50 Hz → C ≈ 45 µF.",
   "useCases": [
     "Instalación industrial con motores trifásicos que tienen cos φ de 0.65 y la empresa distribuidora penaliza por estar por debajo de 0.85 en la factura eléctrica.",
@@ -34,7 +35,7 @@
       "min": 0.1,
       "max": 1,
       "step": 0.01,
-      "help": "cos(φ) actual."
+      "help": "Factor de potencia actual de la instalación (entre 0.1 y 1)."
     },
     {
       "id": "cosFi2",
@@ -45,14 +46,15 @@
       "min": 0.5,
       "max": 1,
       "step": 0.01,
-      "help": "cos(φ) objetivo."
+      "help": "Factor de potencia objetivo (siempre mayor al actual; 0.95 es el estándar industrial)."
     },
     {
       "id": "v",
-      "label": "Voltaje (V)",
+      "label": "Tensión de red (V)",
       "type": "number",
       "required": true,
-      "placeholder": "220"
+      "placeholder": "220",
+      "help": "220 V (monofásico) o 380 V (trifásico fase-fase) para Argentina."
     },
     {
       "id": "f",
@@ -60,7 +62,8 @@
       "type": "number",
       "required": true,
       "placeholder": "50",
-      "default": 50
+      "default": 50,
+      "help": "50 Hz en Argentina, España y la mayoría de América Latina. 60 Hz en EE.UU., parte de Brasil y algunos países de América Central."
     }
   ],
   "outputs": [
@@ -87,20 +90,20 @@
     }
   ],
   "example": {
-    "title": "Ejemplo",
+    "title": "Ejemplo: motor de 1000 W, cos φ 0,70 → 0,95 a 220 V/50 Hz",
     "steps": [
-      "P=1000W, cos1=0.7, cos2=0.95, V=220, f=50",
-      "Q1 = 1000 × tan(45.6°) = 1020 VAR",
-      "Q2 = 1000 × tan(18.2°) = 329 VAR",
-      "Qc = 691 VAR ≈ 0.69 kVAR"
+      "P = 1000 W, cos φ₁ = 0,70 → φ₁ = 45,57° → tan φ₁ = 1,0202",
+      "cos φ₂ = 0,95 → φ₂ = 18,19° → tan φ₂ = 0,3287",
+      "Qc = 1000 × (1,0202 − 0,3287) = 691 VAR ≈ 0,69 kVAR",
+      "C = 691 / (2π × 50 × 220²) = 691 / 15 197 440 ≈ 45 µF"
     ],
-    "result": "Capacitor de 45 µF mejora cos(φ) de 0.7 a 0.95"
+    "result": "Se necesita un capacitor de 45 µF para mejorar el cos φ de 0,70 a 0,95"
   },
-  "explanation": "## Cómo se calcula\n\nEl proceso de corrección de factor de potencia parte del **triángulo de potencias**: la potencia activa P (W), la potencia reactiva Q (VAR) y la potencia aparente S (VA) se relacionan mediante:\n\n```\nS = P / cos(φ)          → Potencia aparente [VA]\nQ = P × tan(φ)          → Potencia reactiva [VAR]\ntan(φ) = sin(φ) / cos(φ)\n\nPotencia reactiva a compensar:\nQc = P × (tan φ₁ − tan φ₂)     [VAR]\n\nCapacitor necesario (monofásico):\nC = Qc / (2π × f × V²)          [Faradios]\n  = Qc / (ω × V²)\n\nDonde:\n  P   = Potencia activa [W]\n  φ₁  = ángulo actual   = acos(cos φ₁)\n  φ₂  = ángulo objetivo = acos(cos φ₂)\n  f   = frecuencia de red [Hz]  (50 Hz en Argentina)\n  V   = tensión de línea [V]\n  ω   = 2π × f ≈ 314.16 rad/s a 50 Hz\n```\n\n**Ejemplo paso a paso** (igual al de la calculadora):\n- P = 1000 W, cos φ₁ = 0.70, cos φ₂ = 0.95, V = 220 V, f = 50 Hz\n- φ₁ = acos(0.70) = 45.57° → tan φ₁ = 1.0202\n- φ₂ = acos(0.95) = 18.19° → tan φ₂ = 0.3287\n- Q₁ = 1000 × 1.0202 = **1020 VAR**\n- Q₂ = 1000 × 0.3287 = **329 VAR**\n- Qc = 1020 − 329 = **691 VAR ≈ 0.69 kVAR**\n- C = 691 / (314.16 × 220²) = 691 / 15 197 440 ≈ **45.5 µF**\n\n---\n\n## Tabla de referencia\n\nValores típicos de factor de potencia por tipo de carga:\n\n| Tipo de carga                     | cos φ típico | Penalizable (< 0.85) |\n|-----------------------------------|:------------:|:--------------------:|\n| Motor asincrónico en vacío        | 0.17 – 0.40  | Sí                   |\n| Motor asincrónico a plena carga   | 0.75 – 0.90  | Parcial              |\n| Soldadora de arco                 | 0.35 – 0.60  | Sí                   |\n| Balasto electromagnético (HID)    | 0.40 – 0.60  | Sí                   |\n| Balasto electrónico (HID)         | 0.90 – 0.95  | No                   |\n| Resistencia pura (horno, caldera) | 1.00         | No                   |\n| Computadoras / UPS sin PFC        | 0.60 – 0.70  | Sí                   |\n| Variador de frecuencia con filtro | 0.95 – 0.99  | No                   |\n| Transformador en vacío            | 0.10 – 0.30  | Sí                   |\n\nTensiones de red en Argentina (ENRE): **220 V** (fase-neutro) y **380 V** (fase-fase) a **50 Hz**.\n\nLímite mínimo exigido por distribuidoras en GBA: **cos φ ≥ 0.85** (Resolución ENRE 184/2000).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Motor de 5.5 kW en taller\nUn motor trifásico de 5.5 kW trabaja a cos φ = 0.72 y se quiere llevar a 0.95 con tensión de 380 V a 50 Hz.\n- Q₁ = 5500 × tan(43.95°) = 5500 × 0.9638 ≈ 5301 VAR\n- Q₂ = 5500 × tan(18.19°) = 5500 × 0.3287 ≈ 1808 VAR\n- Qc = 5301 − 1808 = **3493 VAR ≈ 3.5 kVAR**\n- C = 3493 / (314.16 × 380²) = 3493 / 45 369 376 ≈ **77 µF**\n\nSe instala un banco de capacitores de 3.5 kVAR en paralelo al motor.\n\n### Caso 2 — Luminarias HID de 250 W con balasto electromagnético\nLocal comercial con 20 luminarias de descarga de 250 W cada una (total 5000 W), cos φ = 0.50, V = 220 V.\n- Qc = 5000 × (tan 60° − tan 18.19°) = 5000 × (1.7321 − 0.3287) ≈ **7017 VAR ≈ 7 kVAR**\n- C total = 7017 / (314.16 × 48 400) ≈ **461 µF** (banco distribuido o colectivo)\n\nReemplazar por balastos electrónicos (cos φ ≥ 0.93) elimina la necesidad del banco.\n\n### Caso 3 — Instalación residencial con aire acondicionado\nEquipo de 2200 W, cos φ = 0.80, objetivo 0.95, V = 220 V:\n- Qc = 2200 × (tan 36.87° − tan 18.19°) = 2200 × (0.75 − 0.3287) ≈ **927 VAR**\n- C = 927 / (314.16 × 48 400) ≈ **61 µF**\n\n---\n\n## Errores comunes\n\n1. **Usar la tensión incorrecta en sistemas trifásicos**: En trifásico la fórmula del capacitor usa la tensión de fase (V_fase = V_línea / √3). Usar 380 V en lugar de 220 V sobreestima C por un factor de 3.\n\n2. **No considerar la variación de carga**: Instalar un banco fijo cuando la carga varía de 20% a 100% puede sobrecompensar en horas valle, generando un cos φ capacitivo (leading) que también penaliza la distribuidora.\n\n3. **Confundir kW con kVA**: La potencia activa P para el cálculo de Qc siempre va en **watts (kW)**, no en kVA. Usar la potencia aparente sobredimensiona el banco necesario.\n\n4. **Ignorar las armónicas**: En instalaciones con variadores de frecuencia o rectificadores, las armónicas distorsionan la forma de onda. Los capacitores pueden entrar en resonancia con las armónicas de 5° y 7° orden y destruirse. Se requieren filtros de sintonía o reactores de desintonía.\n\n5. **Temperatura de operación del capacitor**: Los capacitores de corrección tienen temperatura nominal (generalmente −25 °C a +55 °C). Instalados en tableros sin ventilación a más de 40 °C pierden vida útil y capacitancia real.\n\n6. **No respetar la tensión nominal del capacitor**: En redes con tensión fluctuante, usar capacitores nominados exactamente a 220 V puede exponerlos a sobretensiones. Lo correcto es usar capacitores nominados al menos un 10% por encima de la tensión máxima de la red.\n\n---\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm — Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia)\n- [Potencia eléctrica P = V × I](/calculadora-potencia-electrica-p-vi)\n- [Resistencia de LED en serie y paralelo](/calculadora-resistencia-led-serie-paralelo)\n- [Divisor de voltaje con resistencias](/calculadora-divisor-voltaje-resistencias)\n",
+  "explanation": "## Cómo se calcula la corrección del factor de potencia\n\nEl proceso parte del **triángulo de potencias**: P (W), Q (VAR) y S (VA) se relacionan mediante:\n\n```\nS = P / cos(φ)           → Potencia aparente [VA]\nQ = P × tan(φ)           → Potencia reactiva [VAR]\n\nPotencia reactiva a compensar:\nQc = P × (tan φ₁ − tan φ₂)    [VAR]\n\nCapacitor necesario (monofásico):\nC = Qc / (2π × f × V²)        [Faradios]\n\nDonde:\n  P   = Potencia activa [W]\n  φ₁  = acos(cos φ₁)  — ángulo actual\n  φ₂  = acos(cos φ₂)  — ángulo objetivo\n  f   = frecuencia de red [Hz]\n  V   = tensión de red [V]\n```\n\n---\n\n## Tabla de corrección rápida (motor 1000 W, 220 V, 50 Hz)\n\n| cos φ actual | cos φ objetivo | Qc (kVAR) | Capacitor (µF) | Reducción kVA |\n|:---:|:---:|:---:|:---:|:---:|\n| 0,50 | 0,95 | 1,40 | 92 | 0,95 kVA |\n| 0,60 | 0,95 | 1,00 | 66 | 0,61 kVA |\n| 0,70 | 0,95 | 0,69 | 45 | 0,36 kVA |\n| 0,75 | 0,95 | 0,55 | 36 | 0,25 kVA |\n| 0,80 | 0,95 | 0,40 | 26 | 0,15 kVA |\n| 0,85 | 0,95 | 0,25 | 16 | 0,07 kVA |\n| 0,90 | 0,95 | 0,09 | 6  | 0,02 kVA |\n\n---\n\n## Tabla de cos φ típico por tipo de carga\n\n| Tipo de carga | cos φ típico | Penalizable (< 0,85) |\n|---|:---:|:---:|\n| Motor asincrónico en vacío | 0,17 – 0,40 | Sí |\n| Motor asincrónico a plena carga | 0,75 – 0,90 | Parcial |\n| Soldadora de arco | 0,35 – 0,60 | Sí |\n| Balasto electromagnético (HID) | 0,40 – 0,60 | Sí |\n| Balasto electrónico (HID) | 0,90 – 0,95 | No |\n| Resistencia pura (horno, caldera) | 1,00 | No |\n| Computadoras / UPS sin PFC | 0,60 – 0,70 | Sí |\n| Variador de frecuencia con filtro | 0,95 – 0,99 | No |\n| Transformador en vacío | 0,10 – 0,30 | Sí |\n\nTensiones de red en Argentina (ENRE): **220 V** (fase-neutro) y **380 V** (fase-fase) a **50 Hz**.\n\nLímite mínimo exigido por distribuidoras en GBA: **cos φ ≥ 0,85** (Resolución ENRE 184/2000).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Motor de 5,5 kW en taller\nUn motor trifásico de 5,5 kW trabaja a cos φ = 0,72 y se quiere llevar a 0,95 con tensión de 380 V a 50 Hz.\n- Qc = 5500 × (tan 43,95° − tan 18,19°) = 5500 × (0,9638 − 0,3287) ≈ **3493 VAR ≈ 3,5 kVAR**\n- C = 3493 / (314,16 × 380²) ≈ **77 µF** (o banco de 3,5 kVAR en paralelo)\n\n### Caso 2 — Local con luminarias HID de 250 W\n20 luminarias × 250 W = 5000 W total, cos φ = 0,50, V = 220 V.\n- Qc = 5000 × (tan 60° − tan 18,19°) ≈ **7017 VAR ≈ 7 kVAR**\n\n### Caso 3 — Diferencia 50 Hz vs 60 Hz\nEl mismo Qc a 60 Hz requiere un 17% menos de µF que a 50 Hz, porque la reactancia capacitiva es Xc = 1/(2π×f×C). Siempre ingresá la frecuencia real de tu red.\n\n---\n\n## Errores comunes\n\n1. **Usar tensión incorrecta en trifásico**: En trifásico la fórmula usa tensión de fase (V_fase = V_línea / √3). Usar 380 V en lugar de 220 V sobreestima C por un factor de 3.\n2. **No considerar variación de carga**: Un banco fijo puede sobrecompensar en horas valle, generando cos φ capacitivo (leading) que también penaliza.\n3. **Confundir kW con kVA**: El cálculo de Qc siempre usa potencia activa en W, no aparente en VA.\n4. **Ignorar armónicas**: Inversores y variadores generan armónicas que pueden crear resonancia con los capacitores. Se requieren reactores de desintonía al 7% o 14%.\n5. **Temperatura del capacitor**: Operar a más de 40 °C reduce vida útil y capacitancia real.\n\n---\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm — Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia)\n- [Potencia eléctrica P = V × I](/calculadora-potencia-electrica-p-vi)\n- [Divisor de voltaje con resistencias](/calculadora-divisor-voltaje-resistencias)\n",
   "faq": [
     {
       "q": "¿Qué es el factor de potencia y por qué me lo cobran en la factura eléctrica?",
-      "a": "El factor de potencia (cos φ) indica qué porción de la energía que consume una instalación realiza trabajo útil. Cuando es bajo (por ejemplo 0.65), la distribuidora debe suministrar más corriente para entregar la misma potencia activa, cargando las redes innecesariamente. La Resolución ENRE 184/2000 permite a las distribuidoras del AMBA cobrar un recargo cuando el cos φ medido en el medidor es inferior a 0.85. Ese recargo puede representar entre el 5% y el 30% adicional sobre la factura de energía."
+      "a": "El factor de potencia (cos φ) indica qué porción de la energía que consume una instalación realiza trabajo útil. Cuando es bajo (por ejemplo 0,65), la distribuidora debe suministrar más corriente para entregar la misma potencia activa, cargando las redes innecesariamente. La Resolución ENRE 184/2000 permite a las distribuidoras del AMBA cobrar un recargo cuando el cos φ medido en el medidor es inferior a 0,85. Ese recargo puede representar entre el 5% y el 30% adicional sobre la factura de energía."
     },
     {
       "q": "¿Cuál es la diferencia entre potencia activa, reactiva y aparente?",
@@ -108,7 +111,7 @@
     },
     {
       "q": "¿Por qué se usan capacitores para corregir el factor de potencia y no inductores?",
-      "a": "Las cargas más comunes (motores, transformadores, balastos) son **inductivas**: consumen potencia reactiva positiva (Q > 0) y generan un ángulo de retraso de corriente respecto a la tensión. Los capacitores generan potencia reactiva negativa (Q < 0), es decir, actúan como fuente de reactiva capacitiva que se compensa directamente con la reactiva inductiva del circuito. El resultado es una reducción del Q neto y un cos φ más cercano a 1. Usar inductores empeoraría la situación en cargas inductivas."
+      "a": "Las cargas más comunes (motores, transformadores, balastos) son **inductivas**: consumen potencia reactiva positiva (Q > 0) y generan un ángulo de retraso de corriente respecto a la tensión. Los capacitores generan potencia reactiva negativa (Q < 0), que se compensa directamente con la reactiva inductiva del circuito. El resultado es una reducción del Q neto y un cos φ más cercano a 1. Usar inductores empeoraría la situación en cargas inductivas."
     },
     {
       "q": "¿Qué pasa si sobrecompensamos y el factor de potencia se vuelve capacitivo (leading)?",
@@ -116,23 +119,27 @@
     },
     {
       "q": "¿La frecuencia de 50 Hz de Argentina afecta el cálculo respecto a países con 60 Hz?",
-      "a": "Sí, y de manera directa. La reactancia capacitiva es Xc = 1 / (2π × f × C). A 60 Hz el mismo capacitor entrega un 20% más de potencia reactiva que a 50 Hz. En consecuencia, para un mismo Qc requerido, en un sistema de 60 Hz (como EE.UU. o parte de Brasil) necesitás aproximadamente un 17% menos de µF que en Argentina (50 Hz). La fórmula C = Qc / (2π × f × V²) ya incorpora este factor: siempre usá f = 50 Hz para instalaciones argentinas."
+      "a": "Sí, de manera directa. La reactancia capacitiva es Xc = 1 / (2π × f × C). A 60 Hz el mismo capacitor entrega un 20% más de potencia reactiva que a 50 Hz. En consecuencia, para un mismo Qc requerido, en un sistema de 60 Hz necesitás aproximadamente un 17% menos de µF que en Argentina (50 Hz). La fórmula C = Qc / (2π × f × V²) ya incorpora este factor: siempre usá f = 50 Hz para instalaciones argentinas."
     },
     {
       "q": "¿Cómo sé si el capacitor calculado está disponible comercialmente en Argentina?",
-      "a": "Los capacitores de corrección se comercializan en valores normalizados de kVAR, no en µF directamente. Los bancos típicos van desde 2.5, 5, 7.5, 10, 12.5, 15, 20 y 25 kVAR por escalón. Para uso monofásico doméstico, los capacitores de motor se consiguen en valores estándar de 2, 4, 6, 8, 10, 12, 14, 16, 20, 25, 30, 40, 50 y 60 µF. Si tu cálculo da un valor intermedio (por ejemplo 45 µF), lo más práctico es combinar un capacitor de 40 µF + uno de 6 µF en paralelo, o usar el valor comercial inmediato superior."
+      "a": "Los capacitores de corrección se comercializan en valores normalizados de kVAR, no en µF directamente. Los bancos típicos van desde 2,5, 5, 7,5, 10, 12,5, 15, 20 y 25 kVAR por escalón. Para uso monofásico doméstico, los capacitores de motor se consiguen en valores estándar de 2, 4, 6, 8, 10, 12, 14, 16, 20, 25, 30, 40, 50 y 60 µF. Si tu cálculo da un valor intermedio (por ejemplo 45 µF), lo más práctico es combinar un capacitor de 40 µF + uno de 6 µF en paralelo, o usar el valor comercial inmediato superior."
     },
     {
       "q": "¿Funciona la corrección de factor de potencia en instalaciones con inversores o variadores de frecuencia?",
-      "a": "Con precaución. Los inversores y variadores de frecuencia generan **armónicas** (componentes de frecuencia múltiplos de 50 Hz: 150, 250, 350 Hz…). Los capacitores tienen baja impedancia para altas frecuencias y pueden sufrir sobrecorriente por resonancia paralela con la inductancia de la red. La solución es usar **reactores de desintonía** (tipicamente al 7% o 14%) en serie con el banco capacitivo para que la frecuencia de resonancia quede por debajo de la 5° armónica (250 Hz), protegiendo los capacitores y evitando amplificación de armónicas."
+      "a": "Con precaución. Los inversores y variadores generan **armónicas** (componentes de 150, 250, 350 Hz…). Los capacitores tienen baja impedancia para altas frecuencias y pueden sufrir sobrecorriente por resonancia paralela con la inductancia de la red. La solución es usar **reactores de desintonía** (típicamente al 7% o 14%) en serie con el banco capacitivo para que la frecuencia de resonancia quede por debajo de la 5° armónica (250 Hz)."
     },
     {
       "q": "¿Puedo instalar el banco de capacitores directamente en el tablero general o debo hacerlo por motor?",
-      "a": "Existen dos estrategias: **compensación centralizada** (banco único en el tablero general) y **compensación individual** (capacitor en cada motor). La compensación individual es más eficiente porque reduce la corriente reactiva en todo el cableado aguas abajo del punto de instalación, ahorrando también en pérdidas en cables y protecciones. Sin embargo, tiene mayor costo inicial. La compensación centralizada es más económica y apropiada cuando hay muchos motores pequeños o carga variable. En la práctica, se combina: banco automático central + compensación fija en motores grandes (> 5.5 kW)."
+      "a": "Existen dos estrategias: **compensación centralizada** (banco único en el tablero general) y **compensación individual** (capacitor en cada motor). La compensación individual es más eficiente porque reduce la corriente reactiva en todo el cableado aguas abajo. Sin embargo, tiene mayor costo inicial. La compensación centralizada es más económica y apropiada cuando hay muchos motores pequeños o carga variable. En la práctica, se combina: banco automático central + compensación fija en motores grandes (> 5,5 kW)."
     },
     {
       "q": "¿Qué tensión nominal debo elegir para el capacitor en una red de 220 V?",
       "a": "La norma IRAM y las recomendaciones del fabricante indican seleccionar capacitores con tensión nominal al menos **10% superior** a la tensión máxima de la red. En Argentina, la tensión de 220 V puede tener variaciones de ±8% (ENRE), lo que implica picos de hasta ~238 V. Lo correcto es usar capacitores nominados a **250 V AC** o superiores (400 V AC para mayor seguridad y vida útil). Para sistemas trifásicos de 380 V, usar capacitores de 440 V o 480 V AC."
+    },
+    {
+      "q": "¿Cómo afecta la temperatura de operación a los capacitores de corrección?",
+      "a": "Los capacitores de corrección tienen temperatura nominal generalmente entre −25 °C y +55 °C. Instalados en tableros sin ventilación a más de 40 °C pierden vida útil y capacitancia real. Además, a mayor temperatura aumenta la corriente de fuga y el riesgo de falla dieléctrica. Es fundamental instalarlos en tableros con ventilación adecuada o elegir capacitores con clase de temperatura superior (por ejemplo 70 °C) para ambientes calurosos."
     }
   ],
   "sources": [
@@ -145,6 +152,10 @@
       "url": "https://es.wikipedia.org/wiki/Factor_de_potencia"
     },
     {
+      "name": "IEEE 1459-2010: Standard Definitions for the Measurement of Electric Power Quantities",
+      "url": "https://standards.ieee.org/ieee/1459/4779/"
+    },
+    {
       "name": "IRAM – Normas eléctricas (portal oficial IRAM Argentina)",
       "url": "https://www.iram.org.ar"
     }
@@ -153,15 +164,18 @@
   "slug": "calculadora-factor-potencia-corregir",
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-18",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
     "notes": "Fórmula fija, no requiere actualización de data externa",
     "source": "ENRE – Resolución 184/2000: Calidad del Servicio Eléctrico (factor de potencia y penalizaciones)",
     "sourceUrl": "https://www.enre.gov.ar/web/bibliotd.nsf/($All)/7E4E9E45E2A7F0F203256B3E006F7FEB"
   },
   "seoKeywords": [
-    "calculadora calculadora de factor de potencia y capacitor co…",
-    "calculadora de factor de potencia y capacitor corrector",
+    "corrección factor de potencia calculadora",
+    "calculadora factor de potencia capacitor",
+    "kVAR compensacion factor potencia",
+    "banco capacitores factor de potencia",
+    "cos phi calculadora",
     "factor potencia corregir"
   ]
 }

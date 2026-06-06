@@ -3,7 +3,9 @@ export interface Outputs { [k: string]: string | number; _insight?: any; _chart?
 export function apyDefiAaveCompound(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const m=Number(i.montoUsd)||0; const a=Number(i.apy)||0; const d=Number(i.plazoDias)||0;
-  const g=m*a/100*d/365; const f=m+g;
+  // APY already factors in compounding; apply daily compounding: principal × ((1 + APY/365)^days − 1)
+  const f=m>0&&d>0 ? m*Math.pow(1+a/100/365,d) : m;
+  const g=f-m;
   const interpretacion = __lang === 'en'
     ? `With ${a}% APY over ${d} days: you earn USD ${g.toFixed(2)}.`
     : `Con ${a}% APY durante ${d} días: ganás USD ${g.toFixed(2)}.`;
