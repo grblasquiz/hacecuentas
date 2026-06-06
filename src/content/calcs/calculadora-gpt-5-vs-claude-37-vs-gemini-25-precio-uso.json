@@ -1,28 +1,29 @@
 {
   "slug": "calculadora-gpt-5-vs-claude-37-vs-gemini-25-precio-uso",
-  "title": "Comparador LLMs GPT-5 vs Claude 3.7 vs Gemini 2.5 2026",
-  "h1": "Comparador de costos LLMs: GPT-5, Claude 3.7 y Gemini 2.5",
-  "description": "Calculá y compará el costo mensual real de GPT-5, Claude 3.7 Sonnet y Gemini 2.5 Pro según tus tokens de entrada, salida, caché y batch. Resultado en USD/mes.",
+  "title": "GPT-5 vs Claude vs Gemini: precio API + tabla | Hacé Cuentas",
+  "h1": "GPT-5 vs Claude 3.7 vs Gemini 2.5: comparador de precio por tokens",
+  "description": "Compará el costo real por millón de tokens de GPT-5, Claude 3.7 Sonnet y Gemini 2.5 Pro. Calculadora + tabla de precios 2026 (input, output, caché y batch) para saber cuál te sale más barato.",
+  "answerSnippet": "Con precios 2026, GPT-5 cuesta USD 1,25 por millón de tokens de entrada y USD 10 de salida; Claude 3.7 Sonnet, USD 3 y USD 15; Gemini 2.5 Pro, USD 1,25 y USD 10. Para uso normal GPT-5 y Gemini 2.5 Pro empatan como los más baratos, y Claude sale ~60% más caro en input. El caché baja el input ~90% y el batch un 50%.",
   "seoKeywords": [
-    "gpt 5 claude 37",
-    "comparador de costos llms gpt-5 claude 3 7 y gemini 2 5",
-    "calculadora gpt",
-    "como calcular gpt",
-    "tecnologia",
-    "gpt 5"
+    "gpt 5 vs claude vs gemini",
+    "precio api gpt 5 claude gemini",
+    "costo por millon de tokens",
+    "comparar precio llm 2026",
+    "calculadora costo api openai anthropic google",
+    "cual es mas barato gpt claude gemini"
   ],
   "category": "tecnologia",
   "audience": "global",
   "icon": "🔀",
   "formulaId": "gpt-5-vs-claude-37-vs-gemini-25-precio-uso",
-  "intro": "El costo real de usar un LLM depende de cuántos tokens procesás por mes, qué proporción es entrada vs salida, y si usás features como **caché de prompts** o **batch processing**. Esta calculadora compara GPT-5, Claude 3.7 Sonnet y Gemini 2.5 Pro con tus datos reales de uso y te dice cuál es más barato para tu caso.",
-  "keyTakeaway": "Con 10M tokens/mes (80% input, 20% output) sin optimizaciones, la diferencia entre el modelo más caro y el más barato puede superar los 50 USD mensuales; el caché y el batch pueden reducir costos hasta un 90%.",
+  "intro": "¿Cuál es más barato: GPT-5, Claude 3.7 Sonnet o Gemini 2.5 Pro? El costo real depende de cuántos tokens procesás por mes, qué proporción es entrada vs salida y si aprovechás **caché de prompts** o **batch processing**. Esta calculadora compara los tres modelos con tus números reales y te dice cuál te conviene, en USD por mes. (En abril de 2026 OpenAI re-tarificó GPT-5 a USD 1,25/10 por millón de tokens al lanzar GPT-5.5; usamos esa tarifa.)",
+  "keyTakeaway": "Con la tarifa 2026, GPT-5 (USD 1,25 input / 10 output) y Gemini 2.5 Pro (USD 1,25 / 10) son los más baratos y casi empatan; Claude 3.7 Sonnet (USD 3 / 15) cuesta ~60% más en input. El caché de prompts reduce el input hasta ~90% y el batch un 50% extra.",
   "useCases": [
-    "Comparar costos antes de migrar tu app de un proveedor a otro",
+    "Saber cuál es más barato antes de elegir proveedor de LLM para tu app",
     "Estimar el gasto mensual de un chatbot con volumen conocido de mensajes",
-    "Evaluar si el caché de prompts justifica cambiar de modelo",
-    "Calcular el ahorro de usar batch processing para tareas offline",
-    "Decidir qué modelo usar para un contexto largo (RAG, análisis de documentos)"
+    "Evaluar si activar caché de prompts justifica quedarte en tu modelo actual",
+    "Calcular el ahorro de mover tareas offline al batch API (50% off)",
+    "Comparar costo de contexto largo (RAG, análisis de documentos) entre los tres modelos"
   ],
   "fields": [
     {
@@ -129,67 +130,63 @@
       "format": "text"
     }
   ],
-  "explanation": "## Cómo se calcula el costo mensual de cada LLM\n\nCada proveedor cobra por separado los tokens de entrada (input) y los de salida (output), expresados en USD por millón de tokens (MTok). Además, ofrecen descuentos mediante **caché de prompts** (prompt caching) y **batch processing**.\n\n### Precios de referencia 2026 (USD por millón de tokens)\n\n| Modelo | Input estándar | Input cacheado | Output estándar | Batch input | Batch output |\n|---|---|---|---|---|---|\n| GPT-5 | 15.00 | 3.75 | 60.00 | 7.50 | 30.00 |\n| Claude 3.7 Sonnet | 3.00 | 0.30 | 15.00 | 1.50 | 7.50 |\n| Gemini 2.5 Pro | 1.25 | 0.31 | 10.00 | — | — |\n\n> **Nota:** GPT-5 se refiere al modelo gpt-5 lanzado por OpenAI en 2025. Gemini 2.5 Pro tiene precios escalonados; esta calculadora usa la tarifa estándar (prompts ≤200K tokens). El batch no está disponible de forma nativa en Gemini 2.5 Pro vía API pública al momento de esta versión.\n\n### Fórmula general\n\n```\ntokens_input_std  = tokens_input × (1 - pct_cache) × (1 - pct_batch)\ntokens_input_cache = tokens_input × pct_cache\ntokens_input_batch = tokens_input × (1 - pct_cache) × pct_batch\ntokens_output_std  = tokens_output × (1 - pct_batch)\ntokens_output_batch= tokens_output × pct_batch\n\ncosto = tokens_input_std   × precio_input_std\n      + tokens_input_cache × precio_input_cache\n      + tokens_input_batch × precio_batch_input\n      + tokens_output_std  × precio_output_std\n      + tokens_output_batch× precio_batch_output\n```\n\nTodos los volúmenes se expresan en millones de tokens para que coincidan con las unidades de precio.\n\n### Ejemplo numérico\n\nSupongamos **10M tokens input** y **2M tokens output** por mes, con **30% de caché** y **0% batch**:\n\n- **GPT-5:** (7M × 15) + (3M × 3.75) + (2M × 60) = 105 + 11.25 + 120 = **236.25 USD**\n- **Claude 3.7:** (7M × 3) + (3M × 0.30) + (2M × 15) = 21 + 0.90 + 30 = **51.90 USD**\n- **Gemini 2.5 Pro:** (7M × 1.25) + (3M × 0.31) + (2M × 10) = 8.75 + 0.93 + 20 = **29.68 USD**\n\nEn este caso Gemini 2.5 Pro es ~8× más barato que GPT-5.\n\n### Cuándo NO aplica o limitaciones\n\n- Los precios cambian frecuentemente; verificá siempre las páginas de pricing oficiales de OpenAI, Anthropic y Google antes de presupuestar.\n- El caché de prompts solo aplica si el prefijo del prompt supera el mínimo requerido por cada proveedor (1024 tokens en OpenAI, 1024 en Anthropic).\n- Esta calculadora no considera latencia, límites de rate, calidad de respuesta ni acuerdos de volumen (enterprise pricing).\n- Gemini 2.5 Pro tiene precios escalonados por longitud de contexto; para prompts >200K tokens el precio de input aumenta.",
+  "explanation": "## GPT-5 vs Claude 3.7 vs Gemini 2.5 Pro: ¿cuál es más barato?\n\nCada proveedor cobra por separado los tokens de **entrada** (input) y los de **salida** (output), en USD por millón de tokens (MTok). Además ofrecen descuentos con **caché de prompts** (prompt caching) y **batch processing**. Con la tarifa vigente en 2026, GPT-5 y Gemini 2.5 Pro empatan como los más baratos, y Claude 3.7 Sonnet sale más caro en input pero suele ganar en calidad de razonamiento.\n\n### Tabla de precios 2026 (USD por millón de tokens)\n\n| Modelo | Input estándar | Input cacheado | Output estándar | Batch input | Batch output |\n|---|---|---|---|---|---|\n| GPT-5 | 1,25 | 0,125 | 10,00 | 0,625 | 5,00 |\n| Claude 3.7 Sonnet | 3,00 | 0,30 | 15,00 | 1,50 | 7,50 |\n| Gemini 2.5 Pro | 1,25 | 0,31 | 10,00 | 0,625 | 5,00 |\n\n> **Nota:** GPT-5 se re-tarificó a USD 1,25 input / 10 output cuando OpenAI lanzó GPT-5.5 (abril 2026); los valores de lanzamiento (15/60) ya no aplican. Gemini 2.5 Pro usa la tarifa estándar para prompts ≤200K tokens; por encima sube a ~USD 2,50/MTok input. El input cacheado es ~10% del input estándar en GPT-5 y Claude (cache read), y context caching en Gemini.\n\n### Costo mensual aproximado por volumen (input + output, sin caché ni batch, ratio 80/20)\n\n| Tokens/mes | GPT-5 | Claude 3.7 | Gemini 2.5 Pro |\n|---|---|---|---|\n| 1M (0,8M in / 0,2M out) | USD 3,00 | USD 5,40 | USD 3,00 |\n| 10M (8M in / 2M out) | USD 30,00 | USD 54,00 | USD 30,00 |\n| 50M (40M in / 10M out) | USD 150,00 | USD 270,00 | USD 150,00 |\n| 100M (80M in / 20M out) | USD 300,00 | USD 540,00 | USD 300,00 |\n\n### Fórmula general\n\n```\ntokens_input_std   = tokens_input × (1 - pct_cache) × (1 - pct_batch)\ntokens_input_cache = tokens_input × pct_cache\ntokens_input_batch = tokens_input × (1 - pct_cache) × pct_batch\ntokens_output_std  = tokens_output × (1 - pct_batch)\ntokens_output_batch= tokens_output × pct_batch\n\ncosto = tokens_input_std   × precio_input_std\n      + tokens_input_cache × precio_input_cache\n      + tokens_input_batch × precio_batch_input\n      + tokens_output_std  × precio_output_std\n      + tokens_output_batch× precio_batch_output\n```\n\nTodos los volúmenes se expresan en millones de tokens para que coincidan con las unidades de precio.\n\n### Ejemplo numérico\n\nSupongamos **10M tokens input** y **2M tokens output** por mes, con **30% de caché** y **0% batch**:\n\n- **GPT-5:** (7M × 1,25) + (3M × 0,125) + (2M × 10) = 8,75 + 0,38 + 20 = **USD 29,13**\n- **Claude 3.7:** (7M × 3) + (3M × 0,30) + (2M × 15) = 21 + 0,90 + 30 = **USD 51,90**\n- **Gemini 2.5 Pro:** (7M × 1,25) + (3M × 0,31) + (2M × 10) = 8,75 + 0,94 + 20 = **USD 29,69**\n\nEn este escenario GPT-5 y Gemini 2.5 Pro casi empatan (~USD 29) y Claude 3.7 sale ~78% más caro. La elección final depende de la calidad que necesites, no solo del precio.\n\n### Cuándo NO aplica o limitaciones\n\n- Los precios cambian seguido; verificá siempre las páginas oficiales de OpenAI, Anthropic y Google antes de presupuestar (OpenAI ya repreció GPT-5 dos veces en 2026).\n- El caché solo aplica si el prefijo del prompt supera el mínimo del proveedor (≥1024 tokens en OpenAI y Anthropic).\n- No considera latencia, límites de rate, calidad de respuesta ni acuerdos enterprise.\n- Gemini 2.5 Pro tiene precios escalonados por longitud de contexto; para prompts >200K tokens el input sube a ~USD 2,50/MTok.",
   "faq": [
     {
+      "q": "¿Cuál es más barato hoy: GPT-5, Claude 3.7 o Gemini 2.5 Pro?",
+      "a": "Con la tarifa 2026, GPT-5 (USD 1,25 input / 10 output por millón) y Gemini 2.5 Pro (USD 1,25 / 10) son los más baratos y casi empatan. Claude 3.7 Sonnet (USD 3 / 15) cuesta el doble en input y un 50% más en output. Para uso intensivo de output, la diferencia con Claude se nota; para input pesado (RAG, documentos), GPT-5 y Gemini son claramente más económicos."
+    },
+    {
+      "q": "¿Por qué GPT-5 figura a USD 1,25 si antes costaba USD 15 por millón?",
+      "a": "El precio de lanzamiento de GPT-5 en 2025 fue USD 15 input / 60 output. En abril de 2026, al lanzar GPT-5.5, OpenAI reordenó la familia y dejó el modelo gpt-5 base en USD 1,25 input / 10 output. GPT-5.4 quedó en USD 2,50 / 15 y el flagship GPT-5.5 en USD 5 / 30. Esta calculadora usa el gpt-5 base; si comparás contra GPT-5.5 multiplicá los precios de GPT-5 por ~4."
+    },
+    {
       "q": "¿Qué es un token y cuántos hay en una palabra en español?",
-      "a": "Un token es la unidad mínima de texto que procesa el modelo. En español, una palabra suele equivaler a 1.3–1.8 tokens debido a morfología compleja. Un prompt de 1000 palabras son aproximadamente 1300–1800 tokens. Podés estimar tu volumen multiplicando palabras × 1.5."
+      "a": "Un token es la unidad mínima de texto que procesa el modelo. En español, una palabra suele equivaler a 1,3–1,8 tokens por su morfología. Un prompt de 1000 palabras son ~1300–1800 tokens. Estimá tu volumen multiplicando palabras × 1,5."
     },
     {
-      "q": "¿El caché de prompts funciona igual en todos los modelos?",
-      "a": "No exactamente. OpenAI aplica caché automático para prompts ≥1024 tokens con un descuento del 75% en input. Anthropic requiere marcar explícitamente las secciones a cachear (cache_control). Google Gemini ofrece 'context caching' con una tarifa de almacenamiento adicional por hora que esta calculadora no incluye."
+      "q": "¿El caché de prompts funciona igual en los tres modelos?",
+      "a": "No exactamente. OpenAI aplica caché automático para prompts ≥1024 tokens con un cache read a ~10% del input. Anthropic requiere marcar explícitamente las secciones a cachear (cache_control) y la lectura cuesta ~10% del input. Google Gemini ofrece 'context caching' con una tarifa de almacenamiento por hora que esta calculadora no incluye."
     },
     {
-      "q": "¿Qué es el batch processing y para qué sirve?",
-      "a": "El batch API procesa solicitudes de forma asíncrona (típicamente en hasta 24 horas) a un costo 50% menor. Es ideal para tareas offline: clasificación masiva, generación de embeddings, análisis de documentos donde la latencia no es crítica. No disponible para aplicaciones conversacionales en tiempo real."
+      "q": "¿Qué es el batch processing y cuánto ahorra?",
+      "a": "El Batch API procesa solicitudes de forma asíncrona (hasta 24 horas) con un 50% de descuento en input y output. Ideal para tareas offline: clasificación masiva, embeddings, análisis de documentos donde la latencia no importa. En 2026 los tres proveedores (OpenAI, Anthropic y Google) ofrecen Batch API. No sirve para chat en tiempo real."
     },
     {
-      "q": "¿GPT-5 realmente cuesta 15 USD por millón de tokens de input?",
-      "a": "Sí, GPT-5 (lanzado en 2025) tiene un precio de lista de USD 15/MTok input y USD 60/MTok output en su versión estándar vía API de OpenAI. Con caché automático baja a USD 3.75/MTok input. Verificá la página oficial de OpenAI Pricing para actualizaciones."
+      "q": "¿Cuándo conviene pagar Claude pese a ser más caro en API?",
+      "a": "Claude 3.7 Sonnet suele justificarse cuando la calidad en código, instrucciones largas o razonamiento agéntico reduce reintentos y revisión humana. Si tu tarea es extracción o resumen simple, GPT-5 o Gemini 2.5 Pro hacen el trabajo por bastante menos. La regla: el modelo más barato gana salvo que su tasa de error te haga re-ejecutar."
     },
     {
-      "q": "¿Cuándo conviene usar GPT-5 pese a ser más caro?",
-      "a": "GPT-5 puede justificarse cuando la calidad de respuesta en razonamiento complejo, codificación avanzada o instrucciones multimodales es crítica y el costo se compensa con menor necesidad de revisión humana o re-ejecución. Para tareas estándar de extracción o resumen, modelos más baratos suelen ser suficientes."
+      "q": "¿Gemini 2.5 Pro cambia de precio según el contexto?",
+      "a": "Sí. Gemini 2.5 Pro soporta hasta 1 millón de tokens de contexto, pero el pricing estándar (USD 1,25 input / 10 output) aplica hasta 200K tokens por request; por encima el input sube a ~USD 2,50/MTok. Esta calculadora usa la tarifa estándar; ajustá si tus prompts superan ese umbral."
     },
     {
-      "q": "¿Gemini 2.5 Pro tiene límite de contexto diferente?",
-      "a": "Gemini 2.5 Pro soporta hasta 1 millón de tokens de contexto. Sin embargo, el pricing estándar aplica hasta 200K tokens de contexto por request; por encima de eso el costo de input sube a USD 2.50/MTok. Esta calculadora usa la tarifa estándar; ajustá si tus prompts superan ese umbral."
+      "q": "¿Cómo estimo mis tokens de salida si todavía no tengo histórico?",
+      "a": "Regla práctica: el output suele ser 10–30% del input en extracción/resumen, y puede igualar o superar al input en generación creativa o de código. Empezá con un ratio output/input de 0,2 y ajustá con tus primeras semanas de logs."
     },
     {
-      "q": "¿Cómo estimo mis tokens de salida si aún no tengo histórico?",
-      "a": "Una regla práctica: los tokens de output suelen ser entre 10% y 30% del volumen de input en casos de uso de extracción/resumen, y pueden igualar o superar al input en generación creativa o de código. Empezá con un ratio output/input de 0.2 y ajustá con tus primeras semanas de logs."
+      "q": "¿Incluye el costo de embeddings, fine-tuning o function calling?",
+      "a": "No para embeddings ni fine-tuning: esta calculadora cubre solo inferencia estándar (completions). El function calling sí impacta el cálculo indirectamente: la definición de herramientas se cobra como input en cada llamada y las respuestas de herramientas también, así que sumalas a tu volumen de tokens de entrada."
     },
     {
-      "q": "¿Esta calculadora incluye el costo de embeddings o fine-tuning?",
-      "a": "No. Esta calculadora solo cubre inferencia estándar (completions) de los tres modelos. Los costos de embeddings, fine-tuning, almacenamiento de vectores, o llamadas a herramientas (tool calls / function calling) se cobran de forma separada y no están incluidos."
+      "q": "¿Cómo afecta el razonamiento extendido (reasoning) al costo?",
+      "a": "Los modos de razonamiento (Claude con extended thinking, GPT-5 high reasoning) generan tokens de razonamiento interno que se facturan como output aunque no se devuelvan. Una respuesta corta puede gastar 5.000–30.000 tokens internos, multiplicando el costo 5x–20x. Activalo solo cuando la tarea lo amerita (matemática, código difícil, planificación multi-paso)."
     },
     {
-      "q": "¿Con qué frecuencia se actualizan los precios en esta calculadora?",
-      "a": "Los precios se revisan manualmente cuando alguno de los tres proveedores anuncia cambios tarifarios. La fecha de última revisión se indica al pie de la calculadora. Para decisiones de presupuesto importantes, siempre verificá los precios oficiales en las páginas de cada proveedor."
-    },
-    {
-      "q": "¿Conviene usar la API directa o un agregador como OpenRouter o Portkey?",
-      "a": "Para volúmenes bajos a medianos, la **API directa** es más barata (sin markup). Para volúmenes altos o si necesitás failover entre modelos, **OpenRouter** o **Portkey** agregan ~5-10% sobre el precio base pero ofrecen: unificación de API, ruteo automático ante caídas de un proveedor, fallback entre modelos, logs centralizados. Para apps en producción con SLAs estrictos, el costo extra suele compensar. Para experimentos o batch interno, API directa es la opción óptima."
-    },
-    {
-      "q": "¿Cómo impacta el modo de razonamiento extendido (Claude/GPT-o1) en el costo?",
-      "a": "Los modelos de razonamiento (Claude 3.7 con extended thinking, GPT-o1, o1-mini, o3) usan **tokens de razonamiento internos** que se facturan como output aunque no se devuelvan al usuario. Una respuesta corta puede generar 5.000-30.000 tokens de razonamiento interno. Esto multiplica el costo real 5x-20x respecto al modo estándar. Conviene activar razonamiento extendido solo cuando la calidad lo requiere (matemáticas complejas, código difícil, planificación multi-paso). Para tareas simples, el modelo base es mucho más barato."
-    },
-    {
-      "q": "¿Los precios incluyen el costo de las llamadas a herramientas (tool use / function calling)?",
-      "a": "Sí, pero hay matices. El **prompt que define las herramientas** (descripción de funciones, parámetros, ejemplos) se cobra como tokens de entrada en cada llamada — esto puede inflar significativamente el costo si tenés 20+ funciones definidas. Las **llamadas a herramientas devueltas por el modelo** se cobran como tokens de salida. La **respuesta de la herramienta** que vos devolvés al modelo se cobra como entrada en la próxima llamada. En workflows agénticos con muchas iteraciones, el costo real puede ser 2-3x el de un chat simple equivalente. Optimizá descripciones de herramientas para que sean concisas."
+      "q": "¿Conviene la API directa o un agregador como OpenRouter/Portkey?",
+      "a": "Para volúmenes bajos-medianos, la API directa es más barata (sin markup). Para alto volumen o si necesitás failover entre modelos, OpenRouter o Portkey suman ~5–10% sobre el precio base pero te dan API unificada, ruteo ante caídas y logs centralizados. En producción con SLAs, el extra suele compensar; para experimentos, API directa."
     }
   ],
   "solvedExamples": [
     {
-      "title": "Startup con chatbot RAG calcula costo mensual con caché agresivo",
-      "context": "Una startup tiene un chatbot RAG con **15M tokens input/mes** y **3M tokens output/mes**. El sistema usa contexto repetitivo (system prompt + chunks comunes), logrando **50% de caché en input**. No usa batch (chat en vivo). ¿Cuánto cuesta al mes con cada modelo y cuál conviene?",
+      "title": "Startup con chatbot RAG calcula su costo mensual con caché agresivo",
+      "context": "Una startup tiene un chatbot RAG con **15M tokens input/mes** y **3M tokens output/mes**. Usa contexto repetitivo (system prompt + chunks comunes), logrando **50% de caché en input**. No usa batch (chat en vivo). ¿Cuánto cuesta al mes con cada modelo y cuál conviene?",
       "steps": [
-        "**GPT-5**: input std = 7,5M × $15 = $112,50; input cache = 7,5M × $3,75 = $28,13; output = 3M × $60 = $180 → **Total $320,63/mes**",
+        "**GPT-5**: input std = 7,5M × $1,25 = $9,38; input cache = 7,5M × $0,125 = $0,94; output = 3M × $10 = $30 → **Total $40,31/mes**",
         "**Claude 3.7 Sonnet**: input std = 7,5M × $3 = $22,50; input cache = 7,5M × $0,30 = $2,25; output = 3M × $15 = $45 → **Total $69,75/mes**",
-        "**Gemini 2.5 Pro**: input std = 7,5M × $1,25 = $9,38; input cache = 7,5M × $0,31 = $2,33; output = 3M × $10 = $30 → **Total $41,71/mes**"
+        "**Gemini 2.5 Pro**: input std = 7,5M × $1,25 = $9,38; input cache = 7,5M × $0,31 = $2,34; output = 3M × $10 = $30 → **Total $41,72/mes**"
       ],
-      "result": "**Gemini 2.5 Pro es el más económico ($41,71/mes)**, ~8x más barato que GPT-5 ($320,63) y ~40% más barato que Claude 3.7 ($69,75). Para un chatbot RAG con caché agresivo y volumen moderado, Gemini ofrece la mejor relación costo/performance. Sin embargo, validá con benchmarks propios la calidad de las respuestas en tu dominio: el ahorro no compensa si la tasa de respuesta correcta cae más del 10-15%."
+      "result": "**GPT-5 es el más económico ($40,31/mes)**, seguido muy de cerca por Gemini 2.5 Pro ($41,72) y ~42% más barato que Claude 3.7 ($69,75). Para un chatbot RAG con caché agresivo y volumen moderado, GPT-5 y Gemini empatan en la mejor relación costo/performance. Validá con benchmarks propios la calidad en tu dominio: el ahorro no compensa si la tasa de respuesta correcta cae más de 10–15%."
     }
   ],
   "sources": [
@@ -214,13 +211,13 @@
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-27",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Actualizar las constantes de precios (PRICE_*) en el archivo TS cuando OpenAI, Anthropic o Google modifiquen sus tarifas de API. Verificar también cambios en la política de caché y disponibilidad de batch por proveedor.",
+    "notes": "Actualizar las constantes de precios (PRICE_*) en el archivo TS cuando OpenAI, Anthropic o Google modifiquen sus tarifas de API. OpenAI repreció GPT-5 a 1,25/10 en abr-2026 al lanzar GPT-5.5. Verificar también cambios en caché y batch por proveedor.",
     "source": "OpenAI API Pricing",
     "sourceUrl": "https://openai.com/api/pricing/"
   },
-  "lastReviewed": "2026-06-01",
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [
     "calculadora-cursor-vs-copilot-vs-claude-code-precio-mensual",
     "calculadora-precio-hora-servicio-3d"

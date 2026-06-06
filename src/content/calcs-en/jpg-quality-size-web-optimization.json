@@ -1,38 +1,40 @@
 {
   "slug": "jpg-quality-size-web-optimization",
-  "lastReviewed": "2026-04-25",
+  "lastReviewed": "2026-06-04",
   "esSlug": "calculadora-jpg-calidad-tamano-web-optimizacion",
-  "title": "JPG Quality vs File Size 2026 | Hacé Cuentas",
-  "h1": "JPG Quality vs File Size Calculator",
-  "description": "Estimate JPG file size by quality percentage. Optimize images for web instantly—free tool.",
+  "title": "JPEG File Size Calculator: quality vs KB + table | Hacé Cuentas",
+  "h1": "JPEG File Size Calculator: Quality vs File Size",
+  "description": "Estimate JPG file size from megapixels and quality (1–100). See the KB at Q60, Q75, Q85, Q90 and Q100 with a full compression table. Free, instant.",
   "category": "tecnologia",
   "icon": "🖼️",
   "formulaId": "jpg-calidad-tamano-web-optimizacion",
   "audience": "global",
-  "intro": "The JPG Quality vs File Size Calculator estimates the resulting file size of a JPEG image based on its resolution (in megapixels) and the chosen quality setting (1–100). JPEG compression uses a Discrete Cosine Transform (DCT) algorithm that discards high-frequency visual data — the lower the quality, the more data is thrown away and the smaller the file. A 2 MP image at 85% quality produces roughly 300 KB, while the same image at 100% quality can reach 2–3 MB. Use this tool when optimizing images for web performance, email attachments, app assets, or storage budgets.",
-  "keyTakeaway": "**Estimated KB ≈ (Megapixels × 1,000,000 × 3) / (Compression Ratio at Quality Q)** — at Q=85, ratio ≈ 15:1, so a 2 MP image ≈ (2M × 3) / 15 / 1024 ≈ 390 KB raw → ~300 KB output.",
+  "intro": "This JPEG File Size Calculator estimates how many KB (or MB) a JPG image will weigh based on its resolution in megapixels and the quality setting you choose (1–100). JPEG uses Discrete Cosine Transform (DCT) compression that discards high-frequency detail — the lower the quality, the more data is thrown away and the smaller the file. A 2 MP photo weighs roughly 390 KB at Q=85 but jumps to about 1.9 MB at Q=100, even though the difference is invisible on screen. Use it to hit a web-performance budget, fit photos on an SD card, or stay under an email attachment limit.",
+  "keyTakeaway": "**File size ≈ (Megapixels × 3,000,000 bytes) ÷ compression ratio ÷ 1024.** At Q=85 the ratio is about 15:1, so a 2 MP photo ≈ 390 KB; at Q=100 the ratio drops to ~3:1, so the same photo balloons to ~1.9 MB. For web, Q=75–85 is the sweet spot.",
   "useCases": [
-    "Choosing the optimal JPEG quality setting before uploading product photos to an e-commerce site so pages load under Google's 200 KB per-image recommendation.",
-    "Estimating how many vacation photos (each ~12 MP) will fit on a 32 GB SD card at different quality levels before a trip.",
-    "Deciding whether to export a 24 MP DSLR portrait at Q=75 or Q=90 to stay within a 1 MB email attachment limit.",
-    "Benchmarking file-size trade-offs for a news website's hero images to hit Core Web Vitals LCP targets under 2.5 seconds on a 4G connection."
+    "Choosing the JPEG quality before uploading product photos so each one lands under Google's recommended ~200 KB per hero image.",
+    "Estimating how many 12 MP vacation photos fit on a 32 GB SD card at Q=75 vs Q=90 before a trip.",
+    "Deciding whether to export a 24 MP DSLR portrait at Q=75 or Q=90 to stay under a 1 MB email attachment cap.",
+    "Sizing a news site's hero images to meet a Core Web Vitals LCP target under 2.5 s on 4G."
   ],
   "fields": [
     {
       "id": "mpx",
-      "label": "Megapixels",
+      "label": "Resolution (megapixels)",
       "type": "number",
       "required": true,
-      "placeholder": "MP",
-      "step": 0.01
+      "placeholder": "e.g. 12",
+      "step": 0.01,
+      "unit": "MP"
     },
     {
       "id": "calidad",
-      "label": "Quality",
+      "label": "JPEG quality (1–100)",
       "type": "number",
       "required": true,
-      "placeholder": "%",
-      "step": 0.01
+      "placeholder": "e.g. 85",
+      "step": 1,
+      "unit": "%"
     }
   ],
   "outputs": [
@@ -51,70 +53,85 @@
     }
   ],
   "example": {
-    "title": "Example Calculation",
+    "title": "Worked Example: 12 MP photo at Q=85",
     "steps": [
-      "2MP, 85%",
-      "~300 KB"
+      "Raw RGB data = 12 MP × 1,000,000 × 3 bytes = 36,000,000 bytes",
+      "Compression ratio at Q=85 ≈ 15:1",
+      "JPEG bytes = 36,000,000 ÷ 15 = 2,400,000 bytes",
+      "KB = 2,400,000 ÷ 1024 = 2,344 KB ≈ 2.29 MB"
     ],
-    "result": "~300 KB"
+    "result": "≈ 2.29 MB (a typical 12 MP phone photo at high web quality)"
   },
-  "explanation": "## How It's Calculated\n\nJPEG file size depends on three factors: pixel count, color depth, and the DCT quantization table selected by the quality setting. The practical estimation formula is:\n\n```\nRaw Bytes  = Megapixels × 1,000,000 × 3        (3 bytes/pixel for 8-bit RGB)\nJPEG Bytes = Raw Bytes / Compression_Ratio(Q)\nKB         = JPEG Bytes / 1024\n```\n\nTypical compression ratios by quality level (empirically measured across thousands of natural photos):\n\n| Quality (Q) | Compression Ratio | Relative Visual Loss | Typical Use Case              |\n|-------------|-------------------|----------------------|-------------------------------|\n| 95–100      | 2:1 – 4:1         | Imperceptible        | Archival, print pre-press     |\n| 85–94       | 10:1 – 15:1       | None to very slight  | High-quality web, portfolios  |\n| 75–84       | 15:1 – 25:1       | Slight on close-up   | General web, blog images      |\n| 60–74       | 25:1 – 40:1       | Noticeable artifacts | Thumbnails, social previews   |\n| 40–59       | 40:1 – 60:1       | Visible blocking     | Low-bandwidth delivery        |\n| 1–39        | 60:1+             | Severe degradation   | Placeholder / blur previews   |\n\n> **Note:** Compression ratio varies with image content — sky and flat areas compress far better than complex textures (foliage, fabric). The ratios above assume natural photographic content.\n\n---\n\n## Reference Table\n\nFile size estimates for common resolutions (natural-photo content):\n\n| Megapixels | Resolution Example | Q=100  | Q=90  | Q=85  | Q=75  | Q=60  |\n|------------|--------------------|--------|-------|-------|-------|-------|\n| 0.3 MP     | 640 × 480          | ~270 KB| ~60 KB| ~45 KB| ~30 KB| ~18 KB|\n| 2 MP       | 1920 × 1080 (FHD)  | ~1.8 MB| ~400 KB| ~300 KB| ~180 KB| ~110 KB|\n| 8 MP       | 3264 × 2448        | ~7 MB  | ~1.6 MB| ~1.2 MB| ~700 KB| ~420 KB|\n| 12 MP      | 4000 × 3000        | ~10 MB | ~2.4 MB| ~1.8 MB| ~1.1 MB| ~650 KB|\n| 24 MP      | 6000 × 4000        | ~20 MB | ~4.8 MB| ~3.6 MB| ~2.1 MB| ~1.3 MB|\n| 50 MP      | 8688 × 5792        | ~42 MB | ~10 MB | ~7.5 MB| ~4.4 MB| ~2.6 MB|\n\n---\n\n## Typical Cases\n\n**Case 1 — E-commerce product photo (2 MP, Q=85)**\nA 1920×1080 image has 2,073,600 pixels × 3 bytes = ~5.9 MB raw. At Q=85 (ratio ~15:1): 5.9 MB / 15 ≈ **393 KB**, real-world output is ~300–400 KB after encoder overhead. This is within Google PageSpeed's recommended budget per image for hero assets.\n\n**Case 2 — Smartphone photo for Instagram (12 MP, Q=75)**\nA 12 MP phone shot at Q=75 (ratio ~20:1): 12M × 3 bytes / 20 / 1024 / 1024 ≈ **1.7 MB**. Instagram recompresses uploads to ~85 KB–500 KB internally, so uploading at Q=75 saves bandwidth without double-compression penalty.\n\n**Case 3 — Archival scan of a document (8 MP, Q=95)**\nAt Q=95 (ratio ~4:1): 8M × 3 / 4 / 1024 / 1024 ≈ **5.7 MB**. For archival or OCR purposes, Q=90–95 is the industry standard to preserve fine text details.\n\n---\n\n## Common Mistakes\n\n1. **Using Q=100 for all web images.** Q=100 produces files 5–10× larger than Q=85 with differences imperceptible at screen resolution (72–96 PPI). Browsers can't display the extra fidelity.\n2. **Confusing \"quality\" scales across software.** Photoshop's Q=8 (0–12 scale) ≈ Lightroom's 80% ≈ libjpeg's Q=80. Always check what scale your tool uses before comparing sizes.\n3. **Ignoring image content type.** The JPEG algorithm performs poorly on flat-color graphics, text, and illustrations — PNG or WebP will be 60–80% smaller for those. JPEG excels on continuous-tone photography.\n4. **Re-saving JPEGs multiple times.** Each save at any quality below 100 applies lossy compression again. A Q=80 image saved again at Q=80 is NOT the same as one save — artifacts accumulate multiplicatively.\n5. **Assuming megapixels = file size linearly.** A 24 MP photo in a solid blue room compresses to under 500 KB at Q=85, while a 12 MP shot of a forest at the same quality may be 2 MB — content entropy is the dominant variable.\n\n---\n\n## Related Calculators\n\n- [Aspect Ratio Calculator](/aspect-ratio-calculator)\n- [Screen Resolution Calculator](/screen-resolution-calculator)\n- [Data Storage Unit Converter](/data-storage-unit-converter)\n- [Internet Speed & Download Time Calculator](/internet-speed-download-time)\n",
+  "answerSnippet": "A 2 MP JPEG weighs about 390 KB at quality 85 and about 1.9 MB at quality 100. To estimate any JPG: multiply megapixels by 3,000,000 bytes (raw RGB), divide by the compression ratio for that quality (≈3:1 at Q100, 15:1 at Q85, 22:1 at Q75, 35:1 at Q60), then divide by 1024 for KB. For web, Q75–85 is the sweet spot — it cuts file size 30–50% versus Q100 with no visible loss.",
+  "explanation": "## How JPEG File Size Is Calculated\n\nJPEG file size depends on three things: the pixel count, the color depth, and the quantization aggressiveness set by the quality slider. The practical estimate is:\n\n```\nRaw Bytes  = Megapixels × 1,000,000 × 3        (3 bytes/pixel, 8-bit RGB)\nJPEG Bytes = Raw Bytes ÷ Compression_Ratio(Q)\nKB         = JPEG Bytes ÷ 1024\n```\n\nThe whole game is the compression ratio, and it changes dramatically with the quality setting.\n\n## Compression Ratio by Quality\n\n| Quality (Q) | Compression Ratio | Visual Loss          | Typical Use Case              |\n|-------------|-------------------|----------------------|-------------------------------|\n| 100         | ~3:1              | Imperceptible        | Archival, print pre-press     |\n| 95          | ~5:1              | Imperceptible        | Photography masters           |\n| 90          | ~10:1             | None to very slight  | High-quality web, portfolios  |\n| 85          | ~15:1             | None on screen       | The web sweet spot            |\n| 75          | ~22:1             | Slight on close-up   | General web, blog images      |\n| 60          | ~35:1             | Noticeable artifacts | Thumbnails, social previews   |\n| 40          | ~50:1             | Visible blocking     | Low-bandwidth delivery        |\n| 20          | ~80:1             | Severe degradation   | Placeholder / blur previews   |\n\n> **Why it matters:** going from Q=100 to Q=85 multiplies the compression ratio 5× (3:1 → 15:1), so the file shrinks ~80% while the difference is invisible at screen resolution. That single change is the highest-leverage image optimization on the web.\n\n---\n\n## JPEG Size Reference Table (by megapixels & quality)\n\nEstimated file size for natural-photo content, matching the calculator's model:\n\n| Megapixels | Resolution Example | Q=100   | Q=90    | Q=85    | Q=75    | Q=60    |\n|------------|--------------------|---------|---------|---------|---------|---------|\n| 0.3 MP     | 640 × 480          | ~293 KB | ~88 KB  | ~59 KB  | ~40 KB  | ~25 KB  |\n| 2 MP       | 1920 × 1080 (FHD)  | ~1.91 MB| ~586 KB | ~391 KB | ~266 KB | ~167 KB |\n| 8 MP       | 3264 × 2448        | ~7.6 MB | ~2.29 MB| ~1.53 MB| ~1.04 MB| ~668 KB |\n| 12 MP      | 4000 × 3000        | ~11.4 MB| ~3.4 MB | ~2.29 MB| ~1.56 MB| ~1.0 MB |\n| 24 MP      | 6000 × 4000        | ~22.9 MB| ~6.9 MB | ~4.58 MB| ~3.1 MB | ~2.0 MB |\n| 50 MP      | 8688 × 5792        | ~47.7 MB| ~14.3 MB| ~9.5 MB | ~6.5 MB | ~4.2 MB |\n\nThese are estimates for typical photographic content. A 24 MP photo of a clear sky can compress to under 1 MB at Q=85, while the same 24 MP shot of dense foliage may exceed 6 MB — content entropy is the dominant variable.\n\n---\n\n## Worked Cases\n\n**Case 1 — E-commerce product photo (2 MP, Q=85).** Raw = 2,073,600 px × 3 ≈ 6 MB. At ~15:1: ≈ **390 KB** output. Within most PageSpeed budgets for a hero image; convert to WebP to drop another 25–35%.\n\n**Case 2 — Smartphone photo for Instagram (12 MP, Q=75).** 12 M × 3 ÷ 22 ÷ 1024 ÷ 1024 ≈ **1.56 MB**. Instagram recompresses uploads to ~85–500 KB and caps the long edge at 1080 px, so pre-shrinking avoids a double-compression penalty.\n\n**Case 3 — Archival document scan (8 MP, Q=95).** 8 M × 3 ÷ 5 ÷ 1024 ÷ 1024 ≈ **4.6 MB**. For archival or OCR, Q=90–95 preserves fine text edges.\n\n---\n\n## Common Mistakes\n\n1. **Using Q=100 for web.** Q=100 produces files 5–8× larger than Q=85 with differences invisible at 96 PPI. The browser can't display the extra fidelity.\n2. **Mixing up quality scales.** Photoshop's 0–12 scale ≠ libjpeg's 0–100. Photoshop \"10\" ≈ libjpeg Q=85; Photoshop \"12\" ≈ Q=97. Compare output bytes, not the slider number.\n3. **Ignoring content type.** JPEG is bad at flat color, text, and line art — PNG or WebP can be 60–80% smaller for those. JPEG shines on continuous-tone photos.\n4. **Re-saving repeatedly.** Every save below Q=100 re-applies lossy compression; artifacts and file size creep up 5–15% per cycle. Always edit from a lossless master (RAW/PNG).\n5. **Assuming size scales only with megapixels.** Content entropy matters as much as resolution — a smooth scene at 24 MP can beat a textured scene at 12 MP.\n\n---\n\n## Related Calculators\n\n- [Aspect Ratio Calculator](/aspect-ratio-calculator)\n- [Screen Resolution Calculator](/screen-resolution-calculator)\n- [Data Storage Unit Converter](/data-storage-unit-converter)\n- [Internet Speed & Download Time Calculator](/internet-speed-download-time)\n",
   "faq": [
     {
       "q": "What JPEG quality should I use for website images?",
-      "a": "For most web use cases, Q=75–85 (on a 0–100 scale) is the industry sweet spot. Google's WebP benchmarks and Mozilla's SSIM studies both show that quality below 85 saves 30–50% in file size with no perceptible visual degradation at typical screen resolutions (96 PPI). For hero images, target under 200 KB; for thumbnails, under 30 KB."
+      "a": "For most web use, Q=75–85 (on a 0–100 scale) is the sweet spot. Mozilla's SSIM studies and Google's WebP benchmarks both show that quality below 85 saves 30–50% in file size with no perceptible loss at typical screen resolution (96 PPI). Aim for under 200 KB for hero images and under 30 KB for thumbnails."
+    },
+    {
+      "q": "How big is a 12 MP photo as a JPEG?",
+      "a": "At Q=85 (≈15:1 compression) a 12 MP photo is about 2.3 MB; at Q=75 about 1.6 MB; at Q=60 about 1.0 MB; and at Q=100 about 11 MB. The exact size varies with content — smooth scenes compress far better than detailed textures like foliage or hair."
     },
     {
       "q": "How does megapixel count affect JPEG file size?",
-      "a": "File size scales roughly linearly with pixel count. Doubling resolution (e.g., 2 MP → 4 MP) doubles raw data and doubles the compressed output at the same quality setting. A 12 MP photo at Q=85 is approximately 6× larger than a 2 MP photo at the same quality, because 12/2 = 6× the pixels."
+      "a": "File size scales roughly linearly with pixel count at a fixed quality. Doubling resolution (2 MP → 4 MP) doubles the raw data and roughly doubles the compressed output. A 12 MP photo at Q=85 is about 6× larger than a 2 MP photo at the same quality, because 12 ÷ 2 = 6× the pixels."
+    },
+    {
+      "q": "Why does Q=100 produce such a huge file?",
+      "a": "At Q=100 the quantization tables barely discard any DCT coefficients, so the compression ratio falls to about 3:1 — roughly 5× worse than Q=85's 15:1. That's why a 2 MP image jumps from ~390 KB at Q=85 to ~1.9 MB at Q=100, with no visible benefit on screen."
     },
     {
       "q": "Is JPEG compression lossy? Can I recover the original?",
-      "a": "Yes — JPEG is inherently lossy. Once compressed, the discarded DCT coefficients cannot be reconstructed. NIST and image forensics literature confirm that any quality setting below 100 permanently removes data. For lossless storage use PNG, TIFF, or WebP Lossless. JPEG at Q=100 is still technically lossy, just minimally so."
+      "a": "Yes, JPEG is inherently lossy. Once compressed, the discarded DCT coefficients can't be reconstructed — any quality below 100 permanently removes data, and even Q=100 is minimally lossy. For lossless storage use PNG, TIFF, or WebP Lossless and keep a master copy."
     },
     {
-      "q": "What is the difference between Q=85 in Photoshop vs. libjpeg?",
-      "a": "Photoshop uses a proprietary quality scale (0–12) mapped internally to quantization tables, while libjpeg (used in most open-source tools) uses a 0–100 scale. Photoshop's 'Quality 10' (0–12) roughly corresponds to libjpeg Q=85, and Photoshop's 'Quality 12' is approximately libjpeg Q=97. Always verify output file size directly; quality numbers are not interoperable."
+      "q": "What is the difference between Q=85 in Photoshop and libjpeg?",
+      "a": "Photoshop uses a 0–12 quality scale mapped internally to quantization tables; libjpeg (most open-source tools) uses 0–100. Photoshop 'Quality 10' ≈ libjpeg Q=85, and Photoshop 'Quality 12' ≈ libjpeg Q=97. The numbers aren't interoperable — verify by output file size."
     },
     {
       "q": "Why is my JPEG sometimes larger after re-saving at the same quality?",
-      "a": "Re-saving a JPEG decodes it to raw pixels, then re-encodes. Decoder rounding errors introduce tiny pixel-value changes that the encoder treats as new high-frequency data. Studies show a 5–15% size increase per re-save cycle even at identical quality settings, plus cumulative visual artifact buildup. Always edit from a lossless master (RAW or PNG)."
+      "a": "Re-saving decodes the JPEG to raw pixels and re-encodes it. Decoder rounding introduces tiny pixel changes the encoder treats as new high-frequency data, so files can grow 5–15% per re-save cycle even at identical settings, while artifacts accumulate. Always edit from a lossless master."
     },
     {
       "q": "Does JPEG quality affect color accuracy?",
-      "a": "Yes. JPEG compression typically works in YCbCr color space and often applies 4:2:0 chroma subsampling (halving color resolution) at quality settings below ~90 in most encoders. This can cause color fringing on red text or saturated edges. At Q≥90, most encoders switch to 4:4:4 chroma, preserving full color data. For accurate color reproduction, use Q≥90 or PNG."
+      "a": "Yes. JPEG works in YCbCr and usually applies 4:2:0 chroma subsampling (halving color resolution) below about Q=90, which can cause fringing on red text or saturated edges. At Q≥90 most encoders switch to 4:4:4 and keep full color. For critical color, use Q≥90 or PNG."
     },
     {
-      "q": "How does WebP compare to JPEG in file size at equivalent quality?",
-      "a": "According to Google's own 2010 WebP study (updated in subsequent releases), WebP achieves 25–34% smaller file sizes than JPEG at equivalent SSIM quality scores. For a 2 MP image that produces 300 KB at JPEG Q=85, a WebP equivalent would be approximately 200–225 KB. All major browsers as of 2024 support WebP natively."
+      "q": "How much smaller is WebP than JPEG at the same quality?",
+      "a": "Google's WebP studies show 25–34% smaller files than JPEG at equivalent SSIM. A 2 MP image that's 390 KB at JPEG Q=85 would be roughly 260–290 KB as WebP. All major browsers support WebP, and AVIF goes even smaller — usually worth the switch for the web."
     },
     {
-      "q": "What quality level is used by default in smartphones and social media?",
-      "a": "Most Android and iOS cameras capture JPEGs at Q=92–96. Instagram re-encodes uploads to approximately Q=85 and caps resolution at 1080px on the long edge. Twitter/X compresses to approximately Q=85 at up to 2048px. Facebook uses Q=85 with progressive encoding. Understanding these pipelines helps you pre-optimize uploads to avoid double-compression quality loss."
+      "q": "What quality do smartphones and social networks use?",
+      "a": "Most Android and iOS cameras shoot JPEG at Q=92–96. Instagram re-encodes uploads to about Q=85 and caps the long edge at 1080 px; Twitter/X compresses to about Q=85 up to 2048 px; Facebook uses Q=85 with progressive encoding. Pre-optimizing avoids double-compression loss."
     }
   ],
   "sources": [
     {
-      "name": "Wikipedia – JPEG (Compression artifacts & quality settings)",
+      "name": "Wikipedia – JPEG (compression, quantization & quality)",
       "url": "https://en.wikipedia.org/wiki/JPEG"
     },
     {
-      "name": "NIST – Image Quality Assessment Methods",
-      "url": "https://www.nist.gov/programs-projects/image-quality"
+      "name": "Mozilla – mozjpeg encoder (quality/size tuning)",
+      "url": "https://github.com/mozilla/mozjpeg"
+    },
+    {
+      "name": "Google – WebP compression study vs JPEG",
+      "url": "https://developers.google.com/speed/webp/docs/webp_study"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-18",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed compression model, no external data updates required"
   },
   "relatedSlugs": [],
   "seoKeywords": [
-    "jpg quality vs file size calculator",
-    "jpg quality vs file size calculator calculator",
-    "free jpg quality vs file size calculator calculator",
-    "jpg quality vs file size calculator online",
-    "calculate jpg quality vs file size calculator"
+    "jpeg file size calculator",
+    "jpg quality vs file size",
+    "how big is a jpeg at quality 85",
+    "jpeg compression ratio by quality",
+    "estimate jpg file size megapixels"
   ]
 }

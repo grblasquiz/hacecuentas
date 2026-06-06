@@ -168,9 +168,9 @@ export function dietaMediterraneaPlanSemanalKcal(i: Inputs): Outputs {
   const frutosSecW = kcalAdj < 2000 ? 7 : 14;
   const frutosSecD = kcalAdj < 2000 ? 1 : 2;
 
-  // Olive oil: min 3 tbsp/day; scale with fat kcal / 45 kcal per tbsp
-  const aceiteTbsp = Math.min(6, Math.max(3, Math.round(fatG * 0.40 / 11)));
-  // (40 % of fat from olive oil, 1 tbsp = ~11 g fat)
+  // Olive oil: min 4 tbsp/day (Mediterranean Pyramid 2020 / PREDIMED minimum);
+  // scales up with fat kcal. 1 tbsp ≈ 11 g fat, ~40 % of daily fat from EVOO.
+  const aceiteTbsp = Math.min(6, Math.max(4, Math.round(fatG * 0.40 / 11)));
 
   // ── Format outputs ────────────────────────────────────────────────────────────
   const resultado = `${kcalAdj} ${T.kcalDay}`;

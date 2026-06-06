@@ -1,9 +1,9 @@
 {
   "slug": "git-repo-size-calculator",
   "esSlug": "calculadora-tamano-repo-git-commits-branches",
-  "title": "Git Repo Size Calculator 2026 | Hacé Cuentas",
-  "h1": "Calculate Git Repository Size",
-  "description": "Estimate repository size from commits and files. Free & instant.",
+  "title": "Git Repo Size Calculator: estimate .git + tree | Hacé Cuentas",
+  "h1": "Git Repo Size Calculator",
+  "description": "Estimate your Git repository size from commits, files, and average file size. See the working tree, the .git/ store, the total in MB, and a reference table.",
   "category": "tecnologia",
   "icon": "🌿",
   "formulaId": "tamano-repo-git-commits-branches",
@@ -19,105 +19,114 @@
     "git LFS",
     "optimize git repository",
     "git history size",
-    "git storage optimization",
-    "clone time calculator"
+    ".git folder size",
+    "clone time"
   ],
-  "intro": "A Git repository's disk footprint is determined by three compounding factors: the number of commits in history, the number of tracked files, and the average size of those files. Git stores every version of every file as a compressed object in its object database (`.git/objects/`), so size grows with both file count and history depth. The rough working formula is: **Estimated Size ≈ (Files × Avg KB/file) + (Commits × Avg KB/file × delta_ratio)**. For a repository with 1,000 commits, 500 files averaging 120 KB each, you can expect a working tree of ~60 MB and a `.git/` folder of 15–80 MB depending on binary content and pack efficiency. This calculator helps developers, DevOps engineers, and team leads forecast storage costs, optimize CI/CD pipelines, and decide when to use Git LFS or shallow clones.",
-  "keyTakeaway": "**Estimated Repo Size (MB) = (Files × Avg_KB) / 1024 + (Commits × Avg_KB × 0.10) / 1024** — e.g., 500 files × 120 KB + 1,000 commits × 12 KB delta ≈ 70 MB total on disk.",
+  "answerSnippet": "Estimate a Git repo's size as: Working tree = Files × Avg_KB, plus a .git/ store ≈ 60% of the working tree + ~2 KB per commit. Total ≈ Working tree + .git/. Example: 500 files × 120 KB + 1,000 commits ≈ 59 MB working tree + 37 MB .git/ ≈ 96 MB on disk. Check the real numbers with `git count-objects -vH` and `du -sh .git/`.",
+  "intro": "A Git repository's footprint on disk has two parts: the **working tree** (your checked-out files) and the **`.git/` object store** (the full compressed history). Working-tree size is simply your file count times the average file size. The `.git/` store is roughly the working tree compressed (about 60% of it for typical source code, thanks to Git's delta + zlib packing) plus a small per-commit overhead (~2 KB each for refs, trees, and metadata). This calculator turns three numbers you already know — **commits, tracked files, and average KB per file** — into an estimate of your total repo size, so you can forecast clone times, size CI/CD runner disks, and decide when it's time for **Git LFS** or a shallow clone.",
+  "keyTakeaway": "**Total repo size ≈ (Files × Avg_KB) + (Files × Avg_KB × 0.6 + Commits × 2 KB)**, then divide KB by 1,024 for MB. The working tree is your current files; the `.git/` store is the compressed history. For binary-heavy repos, the 0.6 compression factor is closer to 1.0 — Git cannot delta-compress already-compressed formats.",
   "useCases": [
-    "Estimating GitHub/GitLab storage costs before migrating a large monorepo with 10,000+ commits to a paid tier",
-    "Deciding whether to enable Git LFS when average file sizes exceed 50 MB (e.g., game assets, ML model weights)",
-    "Configuring CI/CD pipeline disk provisioning: knowing a repo will clone to ~2 GB helps right-size runner instances and avoid out-of-disk failures",
-    "Planning a `git filter-repo` or `BFG Repo Cleaner` cleanup by quantifying how much history depth and large blobs contribute to total `.git/` folder bloat",
-    "Evaluating shallow clone depth (`git clone --depth=1`) trade-offs for build systems where only the latest snapshot is needed, not full history"
+    "Forecasting GitHub/GitLab storage before migrating a large monorepo to a paid tier, so you know if you'll cross the 1 GB soft limit",
+    "Right-sizing CI/CD runner disks: knowing a repo clones to ~2 GB lets you provision instances and avoid out-of-disk build failures",
+    "Deciding when to move binaries (game assets, ML weights, design files) to Git LFS instead of bloating the history",
+    "Estimating clone and fetch times for new team members or ephemeral build agents on slow connections",
+    "Planning a `git filter-repo` or BFG cleanup by quantifying how much history depth and large blobs add to the `.git/` folder"
   ],
   "fields": [
     {
       "id": "commits",
-      "label": "Commits",
+      "label": "Number of commits",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "1000",
+      "step": 1,
+      "help": "Total commits in history (git rev-list --count HEAD)."
     },
     {
       "id": "archivos",
-      "label": "Files",
+      "label": "Tracked files",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01,
-      "help": "Health insurance contribution (typically 3%)."
+      "placeholder": "500",
+      "step": 1,
+      "help": "Files currently tracked (git ls-files | wc -l)."
     },
     {
       "id": "kbProm",
-      "label": "Average KB per file",
+      "label": "Average file size (KB)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "120",
+      "step": 1,
+      "help": "Typical source file is 5–30 KB; images/binaries 200 KB+."
     }
   ],
   "outputs": [
     {
       "id": "estimado",
-      "label": "Estimated size",
+      "label": "Estimated total size",
       "primary": true
     },
     {
       "id": "consejo",
-      "label": "Recommendations"
+      "label": "Recommendation"
     },
     {
       "id": "resumen",
-      "label": "Interpretation"
+      "label": "Breakdown"
     }
   ],
   "example": {
-    "title": "Example calculation",
+    "title": "Worked example: a mid-size web app",
     "steps": [
-      "1000 commits, 500 files",
-      "~60 MB"
+      "Inputs: 1,000 commits, 500 files, 120 KB average file size",
+      "Working tree = 500 × 120 = 60,000 KB ≈ 58.6 MB",
+      ".git/ store = 60,000 × 0.6 + 1,000 × 2 = 38,000 KB ≈ 37.1 MB",
+      "Total = 60,000 + 38,000 = 98,000 KB ≈ 95.7 MB"
     ],
-    "result": "~60 MB"
+    "result": "≈ 96 MB on disk (well under GitHub's 1 GB soft limit)"
   },
-  "explanation": "## How It's Calculated\n\nGit's size model has two distinct components: the **working tree** (checked-out files) and the **`.git/` object store** (compressed history).\n\n```\nWorking Tree Size (MB) = (Files × Avg_KB_per_File) / 1024\n\nObject Store Size (MB) = (Commits × Avg_KB_per_File × delta_ratio) / 1024\n\nTotal Estimated Size (MB) = Working Tree Size + Object Store Size\n```\n\n**Key constants:**\n- `delta_ratio` ≈ **0.08–0.15** for text-heavy repos (Git's delta compression is very effective on source code)\n- `delta_ratio` ≈ **0.50–1.00** for binary-heavy repos (images, PDFs, compiled artifacts — Git cannot delta-compress these efficiently)\n- Pack efficiency adds another ~30–60% compression on top of delta encoding for text files\n\nThe `.git/pack/` files are the dominant storage cost once a repo has more than a few hundred commits. Git periodically runs `git gc` (garbage collection) to repack loose objects into pack files, which dramatically reduces size.\n\n---\n\n## Reference Table\n\n| Repo Profile | Commits | Files | Avg File Size | Working Tree | `.git/` Store | Total |\n|---|---|---|---|---|---|---|\n| Small hobby project | 200 | 80 | 15 KB | 1.2 MB | 0.3 MB | **~1.5 MB** |\n| Mid-size web app | 1,000 | 500 | 120 KB | 58.6 MB | 12 MB | **~70 MB** |\n| Large OSS project (e.g., Node.js-scale) | 50,000 | 3,500 | 40 KB | 136 MB | 500 MB | **~636 MB** |\n| Monorepo with binaries | 5,000 | 10,000 | 500 KB | 4,883 MB | 2,500 MB | **~7.3 GB** |\n| ML repo with model weights | 300 | 200 | 800 MB | 156 GB | 80 GB | **~236 GB** ⚠️ |\n| Shallow clone (`--depth=1`) of large repo | 1 | 3,500 | 40 KB | 136 MB | 5 MB | **~141 MB** |\n\n> ⚠️ Repositories exceeding 1 GB are strongly discouraged by GitHub's guidelines; files over 100 MB are blocked without Git LFS.\n\n---\n\n## Typical Cases\n\n### Case 1: Standard SaaS Web Application\nA team has 1,000 commits, 500 TypeScript/CSS/HTML files averaging 120 KB each.\n\n```\nWorking Tree = (500 × 120) / 1024 = 58.6 MB\nObject Store = (1,000 × 120 × 0.10) / 1024 = 11.7 MB\nTotal ≈ 70 MB\n```\nThis is well within GitHub's free tier limits. A full clone takes ~5 seconds on a standard broadband connection.\n\n### Case 2: Game Development Repo with PNG Assets\n300 commits, 2,000 files, average 2,048 KB (2 MB) per file (mostly PNG textures).\n\n```\nWorking Tree = (2,000 × 2,048) / 1024 = 4,000 MB (≈ 4 GB)\nObject Store = (300 × 2,048 × 0.80) / 1024 = 480 MB  ← high delta_ratio for binaries\nTotal ≈ 4.5 GB\n```\n**Recommendation:** Migrate all binary assets to **Git LFS** immediately. Without LFS, every developer clones 4.5 GB unnecessarily.\n\n### Case 3: Long-lived Enterprise Monorepo\n50,000 commits, 8,000 mixed files averaging 50 KB each.\n\n```\nWorking Tree = (8,000 × 50) / 1024 = 390 MB\nObject Store = (50,000 × 50 × 0.12) / 1024 = 2,929 MB ≈ 2.9 GB\nTotal ≈ 3.3 GB\n```\n**Recommendation:** Use `git clone --filter=blob:none` (partial clone) for CI, reducing clone size by up to 80%. Consider `git filter-repo` to remove obsolete history older than 3 years.\n\n---\n\n## Common Mistakes\n\n1. **Ignoring the `.git/` directory entirely** — Many developers only measure their working tree with `du -sh .` and forget that `.git/` can be 2–10× larger than the checked-out code in long-lived repos. Always run `du -sh .git/` separately.\n\n2. **Assuming binary files compress like text** — Git's delta compression achieves 85–92% size reduction on source code but near 0% on already-compressed formats like PNG, JPEG, ZIP, or `.pt` (PyTorch) model files. Using `delta_ratio = 0.10` for a PNG-heavy repo will underestimate size by 5–10×.\n\n3. **Not accounting for `git gc` / repacking state** — A repo that has never been garbage-collected can be 3–5× larger than one that has. Run `git gc --aggressive --prune=now` before measuring to get the true minimum size. CI runners cloning fresh repos always get the packed size, not the loose-object size.\n\n4. **Confusing commit count with snapshot count** — Git stores snapshots, not diffs. Every file touched in a commit gets a new blob object stored. A 50,000-commit repo where 10 files change per commit stores up to 500,000 blob objects before packing, which is very different from a repo where all 8,000 files are modified on every commit.\n\n5. **Forgetting tags and stashes add objects** — Annotated tags, stashed changes, and GitHub's pull-request refs (stored under `refs/pull/`) all add objects to the store and can inflate `.git/` by hundreds of MB in high-traffic open-source repos.\n\n---\n\n## Related Calculators\n\n- [Unit Converter (KB, MB, GB, TB)](/conversor-unidades-almacenamiento)\n- Bandwidth & Download Time Calculator\n- Cloud Storage Cost Estimator\n",
+  "explanation": "## How It's Calculated\n\nGit's size model has two distinct components: the **working tree** (your checked-out files) and the **`.git/` object store** (the compressed history). This calculator estimates both:\n\n```\nWorking Tree (KB)   = Files × Avg_KB_per_File\n\n.git/ Store (KB)    = Working Tree × 0.6  +  Commits × 2 KB\n                      └─ packed snapshot ─┘   └─ per-commit overhead ┘\n\nTotal (KB)          = Working Tree + .git/ Store\nTotal (MB)          = Total (KB) / 1024\n```\n\n**Why 0.6?** Git stores objects with **zlib deflate** compression and **delta encoding** between similar blobs. On plain-text source code this typically lands the packed history at roughly 50–65% of the raw working-tree size, so 0.6 is a good default for code-heavy repos. The **+2 KB per commit** term accounts for the commit object, its tree objects, and ref/metadata overhead.\n\n**When to adjust the factor (mentally):**\n- **Text-heavy repos** (TypeScript, Python, Markdown): the real `.git/` factor can be even lower, 0.3–0.5, because delta compression is extremely effective.\n- **Binary-heavy repos** (PNG, JPEG, ZIP, MP4, `.pt`/`.safetensors` model files): Git cannot delta-compress already-compressed formats, so the factor approaches **1.0** and the history balloons. If your average file size is large, treat this estimate as a floor and plan for Git LFS.\n\n---\n\n## Reference Table\n\nAll rows use the calculator's formula (Working tree = Files × Avg_KB; `.git/` ≈ 0.6 × working tree + 2 KB × commits):\n\n| Repo profile | Commits | Files | Avg file | Working tree | `.git/` store | **Total** |\n|---|---|---|---|---|---|---|\n| Small hobby project | 200 | 80 | 15 KB | 1.2 MB | 1.1 MB | **~2.3 MB** |\n| Mid-size web app | 1,000 | 500 | 120 KB | 58.6 MB | 37.1 MB | **~96 MB** |\n| Documentation / Markdown site | 3,000 | 1,200 | 8 KB | 9.4 MB | 11.4 MB | **~21 MB** |\n| Large OSS project | 50,000 | 3,500 | 40 KB | 136.7 MB | 179.7 MB | **~316 MB** |\n| Monorepo with binaries | 5,000 | 10,000 | 500 KB | 4,883 MB | 2,939 MB | **~7.6 GB** ⚠️ |\n| ML repo with model weights | 300 | 200 | 80,000 KB | 15.3 GB | 9.2 GB | **~24 GB** ⚠️ |\n\n> ⚠️ GitHub recommends keeping repositories under **1 GB**, strongly recommends under **5 GB**, warns on files over **50 MB**, and blocks any single file over **100 MiB** unless it's tracked with Git LFS.\n\n---\n\n## Worked Cases\n\n### Case 1 — Standard SaaS web app\n1,000 commits, 500 files (TypeScript/CSS/HTML), 120 KB average.\n\n```\nWorking tree = 500 × 120            = 60,000 KB ≈ 58.6 MB\n.git/ store  = 60,000 × 0.6 + 1,000×2 = 38,000 KB ≈ 37.1 MB\nTotal ≈ 96 MB\n```\nWell within the free tier. A full clone takes a few seconds on broadband.\n\n### Case 2 — Game repo with PNG assets\n300 commits, 2,000 files, 2,048 KB (2 MB) average — mostly textures.\n\n```\nWorking tree = 2,000 × 2,048         = 4,096,000 KB ≈ 4.0 GB\n.git/ store  = 4,096,000 × 0.6 + 600  = 2,458,200 KB ≈ 2.3 GB (real value higher — binaries don't compress)\nTotal ≈ 6.3 GB (estimate); in practice often worse\n```\n**Action:** move binary assets to **Git LFS** now. Without it, every contributor clones gigabytes of un-deltifiable data.\n\n### Case 3 — Long-lived enterprise monorepo\n50,000 commits, 8,000 mixed files, 50 KB average.\n\n```\nWorking tree = 8,000 × 50             = 400,000 KB ≈ 390.6 MB\n.git/ store  = 400,000 × 0.6 + 100,000 = 340,000 KB ≈ 332 MB\nTotal ≈ 723 MB\n```\n**Action:** use `git clone --filter=blob:none` (partial clone) for CI to skip historical blobs, and run `git filter-repo --analyze` to find the biggest size contributors.\n\n---\n\n## How to Measure the Real Size\n\nThe calculator gives an estimate; these commands give the truth:\n\n```bash\ngit count-objects -vH          # loose + packed object sizes\ndu -sh .git/                   # actual .git/ on disk\ndu -sh --exclude=.git .        # working tree only\ngit gc --aggressive            # repack first for the true minimum\n```\nOn the GitHub API, `GET /repos/{owner}/{repo}` returns a `size` field in KB. On GitLab, see Settings → Usage Quotas → Storage.\n\n---\n\n## Common Mistakes\n\n1. **Measuring only the working tree.** `du -sh .` excludes nothing, but many devs forget that `.git/` can be larger than the checked-out code. Always run `du -sh .git/` separately.\n2. **Assuming binaries compress like text.** Git deltas source code 85–92%, but near 0% on PNG/JPEG/ZIP/`.pt`. Using a 0.6 factor on a binary-heavy repo underestimates `.git/` by several times.\n3. **Ignoring `git gc` state.** A repo that has never been packed can be 3–5× larger than one that has. Repack before measuring.\n4. **Confusing commits with snapshots.** Git stores a new blob for every changed file in every commit; a repo touching 200 files per commit grows far faster than one touching 5.\n5. **Forgetting tags, stashes, and PR refs.** Annotated tags, stashes, and `refs/pull/` refs all add objects and can inflate `.git/` in busy repos.\n\n---\n\n## Related Calculators\n\n- [Storage Unit Converter (KB, MB, GB, TB)](/conversor-unidades-almacenamiento)\n",
   "faq": [
     {
-      "q": "What is the average size of a Git repository?",
-      "a": "According to GitHub's own engineering blog analysis, the median repository size on GitHub is approximately 10–20 MB (including the `.git/` directory). However, the mean is pulled much higher — to over 200 MB — by large repos with binaries or long histories. Most active professional projects with 1,000–5,000 commits and no binary assets fall in the 50–300 MB range."
+      "q": "How do I estimate my Git repository size?",
+      "a": "Use two terms. Working tree = number of tracked files × average file size in KB. The `.git/` store ≈ 0.6 × working tree (compressed history for code) + ~2 KB per commit. Add them and divide by 1,024 for MB. Example: 500 files × 120 KB = 58.6 MB working tree; `.git/` = 60,000 × 0.6 + 1,000 × 2 = 37.1 MB; total ≈ 96 MB. For binary-heavy repos, raise the 0.6 factor toward 1.0."
     },
     {
-      "q": "Does the number of branches significantly affect repo size?",
-      "a": "Branches themselves are nearly free — a branch is just a 41-byte file containing a SHA-1 hash pointer. What matters is whether each branch contains unique commits not reachable from other branches. If a feature branch has 20 unique commits with 50 changed files, those 1,000 new blob objects do add to `.git/` size. However, once a branch is merged, the objects are already shared with the main history, so merged branches add zero additional storage."
+      "q": "What is the average size of a Git repository?",
+      "a": "The median repository (including `.git/`) is roughly 10–20 MB, but the average is pulled well above 200 MB by repos with binaries or long histories. Most active professional projects with 1,000–5,000 commits and no binary assets land in the 50–300 MB range."
+    },
+    {
+      "q": "Does the number of branches affect repo size?",
+      "a": "Barely. A branch is just a 41-byte file pointing to a commit hash. What costs storage is the unique commits and blobs on a branch that aren't reachable elsewhere. Once a branch is merged, its objects are already shared with main, so merged branches add essentially zero extra storage."
+    },
+    {
+      "q": "How does Git LFS change the size calculation?",
+      "a": "With Git LFS, each large file becomes a ~130-byte pointer in the object store, and the real content lives on an LFS server. A 500 MB file then adds ~130 bytes per version to `.git/` instead of 500 MB, so clone and fetch get dramatically faster. The working tree still receives the full file on checkout. In the formula, treat LFS-tracked files as near-zero in the `.git/` term."
     },
     {
       "q": "Why does GitHub warn about repositories over 1 GB?",
-      "a": "GitHub's documentation (docs.github.com) sets a soft limit of 1 GB per repository and blocks pushes of individual files over 100 MB without Git LFS. Repos over 5 GB may be disabled. Large repos degrade clone performance for all contributors, increase CI costs (every runner must download the full history), and consume quota on shared infrastructure. GitHub recommends keeping repos under 1 GB for optimal performance."
+      "a": "GitHub recommends repositories stay under 1 GB and strongly recommends under 5 GB; it warns on files over 50 MB and blocks any single file over 100 MiB unless tracked with Git LFS. Large repos slow clones for everyone, raise CI costs (every runner downloads full history), and consume shared-infrastructure quota."
     },
     {
-      "q": "How does Git LFS (Large File Storage) change the size calculation?",
-      "a": "With Git LFS, large binary files are replaced by 133-byte text pointer files in the Git object store. The actual file content is stored on an LFS server (GitHub's or self-hosted). This means a 500 MB PSD file contributes only ~133 bytes to `.git/` per version instead of 500 MB. The working tree still gets the full file on checkout, but clone/fetch operations are vastly faster because history only transfers pointers."
-    },
-    {
-      "q": "What is a shallow clone and when should I use it?",
-      "a": "A shallow clone (`git clone --depth=N`) fetches only the last N commits, truncating history. With `--depth=1`, only the latest snapshot is downloaded, reducing `.git/` size by up to 99% for repos with long histories. This is ideal for CI/CD pipelines where you only need to build the current HEAD. The trade-off: you cannot run `git log`, `git blame`, or `git bisect` across full history without fetching more commits."
+      "q": "What is a shallow clone and how much does it save?",
+      "a": "`git clone --depth=1` fetches only the latest snapshot instead of full history, cutting `.git/` size by up to ~99% on long-lived repos. It's ideal for CI/CD that only builds HEAD. The trade-off: you can't run `git log`, `git blame`, or `git bisect` across history without fetching more commits."
     },
     {
       "q": "How do I check my actual repo size right now?",
-      "a": "Run these commands in your repo root: `du -sh .git/` for the object store size, `du -sh --exclude=.git .` for the working tree, and `git count-objects -vH` for a detailed breakdown of loose objects vs. packed objects. On GitHub, the API endpoint `GET /repos/{owner}/{repo}` returns a `size` field in kilobytes. On GitLab, you can see repository storage under Settings → General → Advanced."
+      "a": "Run `git count-objects -vH` for a loose-vs-packed breakdown, `du -sh .git/` for the object store, and `du -sh --exclude=.git .` for the working tree. On GitHub, `GET /repos/{owner}/{repo}` returns a `size` field in KB; on GitLab see Settings → Usage Quotas → Storage."
     },
     {
-      "q": "Does `git gc` actually reduce repository size, and by how much?",
-      "a": "`git gc` (garbage collection) repacks loose objects into pack files using delta compression and zlib. For a repo that has never been compacted, running `git gc --aggressive` can reduce `.git/` size by 40–70% for text-heavy repos. For binary repos the savings are lower (10–30%) since delta compression is ineffective. Git automatically triggers a lightweight `git gc --auto` when loose object count exceeds 6,700 objects."
+      "q": "Does `git gc` reduce repository size, and by how much?",
+      "a": "`git gc` repacks loose objects into pack files with delta + zlib compression. On a repo that was never packed, `git gc --aggressive` can shrink `.git/` by 40–70% for text-heavy code and 10–30% for binaries. Git auto-runs a light `git gc --auto` once loose objects exceed about 6,700."
     },
     {
-      "q": "How does the formula change for a monorepo vs. a standard repo?",
-      "a": "Monorepos often have high file counts (tens of thousands) but lower average commit size per file (since most commits only touch a small subsection). The key adjustment is applying a **change_ratio** — typically 0.5–5% of total files modified per commit in a well-structured monorepo. So Object Store ≈ Commits × (Files × change_ratio) × Avg_KB × delta_ratio. Tools like `git filter-repo --analyze` generate a detailed report of the top contributors to size, which is essential for monorepo audits."
+      "q": "Why is my .git/ folder bigger than my actual code?",
+      "a": "Because `.git/` stores every version of every changed file, not just the current snapshot. A long history with many edits, plus large binaries that were committed once and later deleted (they stay in history forever), can make `.git/` several times larger than the working tree. Use `git filter-repo --analyze` to find the biggest historical blobs."
     },
     {
-      "q": "What compression algorithm does Git use internally?",
-      "a": "Git uses **zlib deflate** (the same algorithm as ZIP/gzip) for compressing individual objects, achieving roughly 60–75% compression on plain text source code. For pack files, Git additionally applies **delta encoding** (binary diffs between similar blobs) before zlib compression. Since Git 2.38+ (released October 2022), Git also supports **SHA-256** as an alternative hashing algorithm, though SHA-1 remains the default for compatibility. The combination of delta + zlib is why text repos shrink so dramatically compared to binary repos."
+      "q": "What compression does Git use internally?",
+      "a": "Git compresses individual objects with **zlib deflate** (the ZIP/gzip algorithm), reaching roughly 60–75% reduction on plain-text source. For pack files it additionally applies **delta encoding** (binary diffs between similar blobs) before zlib. That delta + zlib combination is why text repos shrink dramatically while already-compressed binaries barely shrink at all."
     }
   ],
   "sources": [
@@ -126,16 +135,16 @@
       "url": "https://git-scm.com/book/en/v2/Git-Internals-Packfiles"
     },
     {
+      "name": "GitHub Docs – Repository limits",
+      "url": "https://docs.github.com/en/repositories/creating-and-managing-repositories/repository-limits"
+    },
+    {
       "name": "GitHub Docs – About large files on GitHub",
       "url": "https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github"
     },
     {
-      "name": "Wikipedia – Git (version control system)",
-      "url": "https://en.wikipedia.org/wiki/Git"
-    },
-    {
-      "name": "NIST – Digital Object Identifier System / Data Integrity (NIST SP 800-208)",
-      "url": "https://csrc.nist.gov/publications/detail/sp/800-208/final"
+      "name": "Git SCM – git-count-objects documentation",
+      "url": "https://git-scm.com/docs/git-count-objects"
     }
   ],
   "dataUpdate": {
@@ -144,6 +153,7 @@
     "updateType": "manual",
     "notes": "Fixed formula, no external data update required"
   },
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [],
   "noindex": false
 }

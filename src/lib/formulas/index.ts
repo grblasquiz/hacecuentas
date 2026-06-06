@@ -1280,6 +1280,7 @@ import { equipajeVuelo } from './equipaje-vuelo';
 import { equityStartupRsuIsoImpuestoEjercicioAr } from './equity-startup-rsu-iso-impuesto-ejercicio-ar';
 import { equivalenciaHuevosTamanoGramosClaras } from './equivalencia-huevos-tamano-gramos-claras';
 import { equivalenciaToeflIeltsCambridgeMcer } from './equivalencia-toefl-ielts-cambridge-mcer';
+import { epinefrinaDosisPesoAnafilaxia } from './epinefrina-dosis-peso-anafilaxia';
 import { ergonomiaEscritorioMedidas } from './ergonomia-escritorio-medidas';
 import { compute as compute__erizo_africano_temperatura_jaula_alimentacion } from './erizo-africano-temperatura-jaula-alimentacion';
 import { compute as compute__erte_vs_ere_diferencias_cuantia_espana } from './erte-vs-ere-diferencias-cuantia-espana';
@@ -4688,6 +4689,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'equity-startup-rsu-iso-impuesto-ejercicio-ar': equityStartupRsuIsoImpuestoEjercicioAr,
   'equivalencia-huevos-tamano-gramos-claras': equivalenciaHuevosTamanoGramosClaras,
   'equivalencia-toefl-ielts-cambridge-mcer': equivalenciaToeflIeltsCambridgeMcer,
+  'epinefrina-dosis-peso-anafilaxia': epinefrinaDosisPesoAnafilaxia,
   'ergonomia-escritorio-medidas': ergonomiaEscritorioMedidas,
   'erizo-africano-temperatura-jaula-alimentacion': compute__erizo_africano_temperatura_jaula_alimentacion,
   'erte-vs-ere-diferencias-cuantia-espana': compute__erte_vs_ere_diferencias_cuantia_espana,

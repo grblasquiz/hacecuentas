@@ -32,12 +32,12 @@ export function visaSchengenEuropaRequisitos(i: VisaSchengenEuropaRequisitosInpu
   }
   if (SIN_VISA.includes(nac)) {
     return {
-      requiereVisa: "No - solo ETIAS desde 2026",
-      costoEstimadoEur: 7,
+      requiereVisa: "No - solo ETIAS desde fines de 2026",
+      costoEstimadoEur: 20,
       documentacion: "Pasaporte + ETIAS online + seguro recomendado.",
       _insight: {
         title: "Schengen sin visa para vos",
-        text: `Con tu nacionalidad (${nac}) viajás a Europa **sin visa** por tus **${dias} días** (límite 90 cada 180). Desde 2026 solo necesitás la **ETIAS**, una autorización online de **EUR 7** que se aprueba en minutos.`,
+        text: `Con tu nacionalidad (${nac}) viajás a Europa **sin visa** por tus **${dias} días** (límite 90 cada 180). Desde el último trimestre de 2026 vas a necesitar la **ETIAS**, una autorización online de **EUR 20** que se aprueba en minutos (gratis para menores de 18 y mayores de 70).`,
         tone: "good" as const,
         icon: "🇪🇺",
       },

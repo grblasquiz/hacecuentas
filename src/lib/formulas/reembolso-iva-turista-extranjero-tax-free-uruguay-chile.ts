@@ -15,13 +15,16 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Tasas de IVA estándar por país (2026)
-const IVA_RATES: Record<string, { tasa: number; moneda: string; nombre: string }> = {
+// Tasas de IVA estándar por país (2026).
+// statutory: factor de devolución fijado por ley (no por operadora). Si está
+// definido, manda sobre el factor de la operadora (caso Uruguay 80%, Chile 100%).
+const IVA_RATES: Record<string, { tasa: number; moneda: string; nombre: string; statutory?: number }> = {
+  uruguay:      { tasa: 0.22,  moneda: "UYU", nombre: "Uruguay", statutory: 0.80 },
+  chile:        { tasa: 0.19,  moneda: "CLP", nombre: "Chile",   statutory: 1.00 },
   espana:       { tasa: 0.21,  moneda: "EUR", nombre: "España" },
   francia:      { tasa: 0.20,  moneda: "EUR", nombre: "Francia" },
   alemania:     { tasa: 0.19,  moneda: "EUR", nombre: "Alemania" },
   italia:       { tasa: 0.22,  moneda: "EUR", nombre: "Italia" },
-  uruguay:      { tasa: 0.22,  moneda: "UYU", nombre: "Uruguay" },
   uk:           { tasa: 0.20,  moneda: "GBP", nombre: "Reino Unido" },
   portugal:     { tasa: 0.23,  moneda: "EUR", nombre: "Portugal" },
   paises_bajos: { tasa: 0.21,  moneda: "EUR", nombre: "Países Bajos" },
@@ -29,8 +32,8 @@ const IVA_RATES: Record<string, { tasa: number; moneda: string; nombre: string }
   suiza:        { tasa: 0.081, moneda: "CHF", nombre: "Suiza" },
 };
 
-// Factor de retención de las operadoras (porcentaje del IVA que SÍ devuelven)
-// Fuente: tarifas orientativas publicadas por Global Blue y Planet (2026)
+// Factor de retención de las operadoras (porcentaje del IVA que SÍ devuelven).
+// Fuente: tarifas orientativas publicadas por Global Blue y Planet (2026).
 const OPERADORA_FACTOR: Record<string, { factor: number; nombre: string }> = {
   global_blue: { factor: 0.87, nombre: "Global Blue" },
   planet:      { factor: 0.85, nombre: "Planet / Premier Tax Free" },
@@ -58,19 +61,26 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
-  const paisData = IVA_RATES[i.pais] ?? IVA_RATES["espana"];
+  const paisData = IVA_RATES[i.pais] ?? IVA_RATES["uruguay"];
   const operadoraData = OPERADORA_FACTOR[i.operadora] ?? OPERADORA_FACTOR["global_blue"];
 
-  const { tasa, moneda, nombre: nombrePais } = paisData;
-  const { factor, nombre: nombreOp } = operadoraData;
+  const { tasa, moneda, nombre: nombrePais, statutory } = paisData;
+
+  // Si el país fija por ley el % de devolución (Uruguay 80%, Chile 100%),
+  // ese factor manda; si no, se usa el de la operadora elegida.
+  const usaStatutory = typeof statutory === "number";
+  const factor = usaStatutory ? (statutory as number) : operadoraData.factor;
+  const nombreOp = usaStatutory
+    ? (factor >= 1 ? "devolución estatal directa" : `devolución estatal (${(factor * 100).toFixed(0)}% del IVA)`)
+    : operadoraData.nombre;
 
   // IVA incluido en el precio: monto × (tasa / (1 + tasa))
   const iva_incluido = monto * (tasa / (1 + tasa));
 
-  // Reembolso bruto = IVA incluido (antes de comisión)
+  // Reembolso bruto = IVA incluido (antes de comisión/retención)
   const reembolso_bruto = iva_incluido;
 
-  // Comisión de la operadora
+  // Comisión/retención (parte del IVA que NO vuelve)
   const comision_operadora = reembolso_bruto * (1 - factor);
 
   // Reembolso neto
@@ -84,17 +94,17 @@ export function compute(i: Inputs): Outputs {
   const porcentajeFmt = porcentaje_sobre_compra.toFixed(2);
 
   const detalle =
-    `País: ${nombrePais} | IVA: ${tasaPct}% | Operadora: ${nombreOp} (devuelve ${factorPct}% del IVA).\n` +
+    `País: ${nombrePais} | IVA: ${tasaPct}% | ${usaStatutory ? "Régimen" : "Operadora"}: ${nombreOp}${usaStatutory ? "" : ` (devuelve ${factorPct}% del IVA)`}.\n` +
     `Sobre ${monto.toFixed(2)} ${moneda} pagados, el IVA incluido es ${iva_incluido.toFixed(2)} ${moneda}.\n` +
-    `Comisión operadora: ${comision_operadora.toFixed(2)} ${moneda}.\n` +
+    `${usaStatutory && factor >= 1 ? "No hay retención" : "Retención/comisión"}: ${comision_operadora.toFixed(2)} ${moneda}.\n` +
     `Reembolso neto estimado: ${reembolso_neto.toFixed(2)} ${moneda} (${porcentajeFmt}% del precio pagado).\n` +
-    `Nota: estimación orientativa. El importe exacto depende del contrato tienda-operadora y la forma de cobro.`;
+    `Nota: estimación orientativa. El importe exacto depende del régimen del país y la forma de cobro.`;
 
-  // Insight: cuánto recuperás realmente y cuánto se queda la operadora
+  // Insight: cuánto recuperás realmente y cuánto se queda la retención
   const comisionPctSobreIva = reembolso_bruto > 0 ? (comision_operadora / reembolso_bruto) * 100 : 0;
   const _insight = {
     title: "Cuánto recuperás de IVA",
-    text: `De los ${monto.toFixed(2)} ${moneda} que pagaste, te devuelven **${reembolso_neto.toFixed(2)} ${moneda}** (un **${porcentajeFmt}%** de la compra). ${nombreOp} se queda con ${comision_operadora.toFixed(2)} ${moneda}, el **${comisionPctSobreIva.toFixed(0)}%** del IVA${factor >= 1 ? "; al ser devolución directa no hay comisión y recuperás el IVA completo" : ""}.`,
+    text: `De los ${monto.toFixed(2)} ${moneda} que pagaste, te devuelven **${reembolso_neto.toFixed(2)} ${moneda}** (un **${porcentajeFmt}%** de la compra). ${factor >= 1 ? "Recuperás el IVA completo, sin comisión." : `${nombreOp} se queda con ${comision_operadora.toFixed(2)} ${moneda}, el **${comisionPctSobreIva.toFixed(0)}%** del IVA.`}`,
     tone: (factor >= 1 ? "good" : comisionPctSobreIva > 15 ? "warn" : "neutral") as "good" | "warn" | "neutral",
     icon: "🧳",
   };
@@ -103,7 +113,7 @@ export function compute(i: Inputs): Outputs {
   const chartSlices = [
     { label: "Precio sin IVA", value: precioSinIva },
     { label: "Reembolso neto", value: reembolso_neto },
-    { label: "Comisión operadora", value: comision_operadora },
+    { label: "Retención / comisión", value: comision_operadora },
   ].filter((s) => s.value > 0);
 
   const chart = {
@@ -112,7 +122,7 @@ export function compute(i: Inputs): Outputs {
     prefix: '',
     centerValue: Math.round(monto).toLocaleString('es-AR') + ' ' + moneda,
     centerLabel: 'Compra',
-    ariaLabel: 'Composición del precio pagado: base sin IVA, reembolso neto recuperado y comisión de la operadora.',
+    ariaLabel: 'Composición del precio pagado: base sin IVA, reembolso neto recuperado y retención de la operadora.',
   };
 
   return {

@@ -1,27 +1,29 @@
 {
   "slug": "calculadora-agent-tokens-loop-recursion-presupuesto-mensual",
-  "title": "Agente IA en Loop: Presupuesto de Tokens 2026 | Hacé Cuentas",
-  "h1": "Agente IA en Loop: Estimá tu Presupuesto de Tokens",
-  "description": "Calculá tokens por run de agente autónomo: tool calls, context window growth, loop iterations y retries. Estimá costo mensual en USD con modelos GPT-4o,…",
+  "title": "Cuánto cuesta un agente de IA: calculadora de tokens | Hacé Cuentas",
+  "h1": "Cuánto cuesta un agente de IA en tokens (calculadora de presupuesto mensual)",
+  "description": "Calculá cuántos tokens consume y cuánto cuesta por mes un agente de IA autónomo: tool calls, contexto que crece en cada loop y retries. Costo en USD con GPT-4o, Claude y Gemini + tabla de referencia.",
+  "answerSnippet": "Un agente de IA típico (50 tool calls, 3 iteraciones de loop, contexto de 2.000 tokens) consume unos 47.000 tokens por run. A 500 runs/mes con GPT-4o eso son ~23,5M tokens y cuesta unos USD 112/mes. La regla práctica: costo mensual = tokens_por_run × runs_por_mes × precio_del_modelo, donde el contexto que se acumula en cada vuelta del loop suele ser el mayor driver de gasto.",
   "seoKeywords": [
+    "cuanto cuesta un agente de ia",
+    "costo agente ia tokens",
+    "calcular tokens agente llm",
+    "presupuesto tokens agente autonomo",
     "agent tokens loop recursion",
-    "agente ia en loop estimá tu presupuesto de tokens",
-    "calculadora agent",
-    "como calcular agent",
-    "tecnologia",
-    "agent tokens"
+    "cuanto consume un agente ia",
+    "costo mensual agente ia gpt-4o claude"
   ],
   "category": "tecnologia",
   "audience": "global",
   "icon": "♾️",
   "formulaId": "agent-tokens-loop-recursion-presupuesto-mensual",
-  "intro": "Cuando un agente autónomo entra en loop, el costo en tokens se dispara de forma no lineal: cada iteración acumula contexto, cada tool call agrega tokens de resultado, y los retries por error multiplican el consumo. Esta calculadora te da una estimación realista del presupuesto mensual antes de que la factura te sorprenda.",
-  "keyTakeaway": "Un agente con 50 tool calls, contexto de 5K tokens por paso y 3 iteraciones de loop puede consumir 250K–800K tokens por run, equivalente a USD 0.25–8.00 por ejecución según el modelo.",
+  "intro": "Cuando un agente de IA autónomo entra en loop, el costo en tokens no crece de forma lineal: cada iteración acumula contexto, cada tool call agrega tokens de resultado y los retries por error multiplican el consumo. Esta calculadora estima cuántos tokens consume tu agente por run y cuánto vas a pagar por mes en USD —con GPT-4o, Claude o Gemini— antes de que la factura te sorprenda.",
+  "keyTakeaway": "Un agente con 50 tool calls, contexto de 2.000 tokens por paso y 3 iteraciones de loop consume ~47.000 tokens por run. A 500 runs/mes con GPT-4o son ~23,5M tokens ≈ USD 112/mes. El contexto que se acumula en cada vuelta suele ser el mayor driver de gasto, seguido por los retries.",
   "useCases": [
-    "Estimar costo mensual de un agente de investigación que hace múltiples búsquedas web por consulta",
+    "Saber cuánto cuesta por mes un agente de investigación que hace múltiples búsquedas web por consulta",
     "Presupuestar un agente de coding que itera sobre tests y correcciones en CI/CD",
-    "Calcular el impacto de retries automáticos en un agente de scraping con alta tasa de errores",
-    "Comparar costos entre modelos (GPT-4o vs Claude 3.5 vs Gemini 1.5 Pro) para el mismo agente",
+    "Calcular el impacto en costo de los retries automáticos en un agente de scraping con alta tasa de errores",
+    "Comparar el costo del mismo agente entre modelos (GPT-4o vs Claude 3.5 Sonnet vs Gemini 1.5 Pro)",
     "Dimensionar límites de rate y budget alerts antes de un despliegue en producción",
     "Detectar si un agente en loop infinito puede agotar el crédito mensual en horas"
   ],
@@ -37,7 +39,7 @@
     },
     {
       "id": "tokens_per_tool_call",
-      "label": "Tokens por tool call (input + output)",
+      "label": "Tokens por tool call (resultado inyectado al contexto)",
       "type": "number",
       "placeholder": "500",
       "default": 500,
@@ -64,12 +66,13 @@
     },
     {
       "id": "context_growth_factor",
-      "label": "Factor de crecimiento de contexto por iteración",
+      "label": "Factor de crecimiento de contexto por iteración (×)",
       "type": "number",
       "placeholder": "1.5",
       "default": 1.5,
       "step": 0.1,
-      "required": true
+      "required": true,
+      "format": "plain"
     },
     {
       "id": "error_rate",
@@ -78,7 +81,8 @@
       "placeholder": "10",
       "default": 10,
       "step": 1,
-      "required": true
+      "required": true,
+      "format": "plain"
     },
     {
       "id": "retries_per_error",
@@ -142,7 +146,8 @@
       "placeholder": "2.50",
       "default": 2.5,
       "step": 0.01,
-      "required": false
+      "required": false,
+      "format": "plain"
     },
     {
       "id": "custom_output_price",
@@ -151,16 +156,18 @@
       "placeholder": "10.00",
       "default": 10.0,
       "step": 0.01,
-      "required": false
+      "required": false,
+      "format": "plain"
     },
     {
       "id": "input_output_ratio",
-      "label": "Proporción tokens de input (%) vs output total",
+      "label": "Proporción de tokens de input (%) sobre el total",
       "type": "number",
       "placeholder": "70",
       "default": 70,
       "step": 5,
-      "required": true
+      "required": true,
+      "format": "plain"
     }
   ],
   "outputs": [
@@ -213,76 +220,79 @@
       "format": "text"
     }
   ],
-  "explanation": "## Cómo se calcula\n\nUn agente autónomo en loop no consume tokens de forma lineal: el contexto crece en cada iteración porque acumula historial de acciones y resultados previos. El modelo recibe en cada paso el contexto completo (o una versión resumida), lo que multiplica el consumo real.\n\n### Variables principales\n\n- **Tool calls por run**: cuántas veces el agente llama a una herramienta (búsqueda, código, API, DB).\n- **Tokens por tool call**: tokens del resultado de la herramienta que se inyectan al contexto.\n- **Contexto base**: system prompt + descripción de la tarea original.\n- **Iteraciones de loop**: cuántas veces el agente evalúa su progreso y decide continuar.\n- **Factor de crecimiento**: en cada iteración el contexto acumulado se multiplica por este factor (1.0 = sin crecimiento, 1.5 = crece 50% por iteración).\n- **Error rate + retries**: porcentaje de tool calls que fallan y cuántas veces se reintentan.\n\n### Fórmula\n\n```\n// Contexto acumulado en iteración k (crecimiento geométrico):\nctx_k = context_base × growth_factor^k\n\n// Tokens tool calls en iteración k (distribuidas uniformemente):\ntool_tokens_k = (tool_calls_per_run / loop_iterations) × tokens_per_tool_call\n\n// Tokens totales por run (suma sobre todas las iteraciones):\ntokens_run = Σ(k=1..N) [ ctx_k + tool_tokens_k ]\n\n// Tokens extra por retries:\nretry_tokens = tokens_run × error_rate × retries_per_error\n\n// Tokens por run con errores:\ntokens_run_total = tokens_run + retry_tokens\n\n// Tokens por mes:\ntokens_month = tokens_run_total × runs_per_month\n\n// Costo (separando input/output por ratio):\ninput_tokens = tokens_month × input_ratio\noutput_tokens = tokens_month × (1 - input_ratio)\ncosto_mensual = (input_tokens × price_input + output_tokens × price_output) / 1_000_000\n```\n\n### Ejemplo numérico\n\nAgente de investigación con:\n- 50 tool calls, 500 tokens/call, contexto base 2000 tokens\n- 3 iteraciones, factor de crecimiento 1.5\n- 10% error rate, 2 retries, 500 runs/mes, GPT-4o\n\n| Iteración | Contexto (tokens) | Tool tokens | Subtotal |\n|-----------|-------------------|-------------|----------|\n| 1         | 3 000             | 8 333       | 11 333   |\n| 2         | 4 500             | 8 333       | 12 833   |\n| 3         | 6 750             | 8 334       | 15 084   |\n| **Total run** | —             | —           | **39 250** |\n\nRetry tokens: 39 250 × 0.10 × 2 = 7 850 → **total 47 100 tokens/run**\n\nMensual: 47 100 × 500 = 23 550 000 tokens ≈ **USD 84** con GPT-4o (70% input / 30% output).\n\n### Limitaciones\n\n- El factor de crecimiento de contexto es una aproximación geométrica. En la práctica los agentes con sliding window o resumen automático tienen crecimiento más lento.\n- Los precios de modelos cambian frecuentemente; verificar en la consola del proveedor antes de presupuestar.\n- No incluye costos de infraestructura (servidor de orquestación, herramientas externas con APIs pagas).\n- La tasa de errores varía mucho según la confiabilidad de las herramientas externas.",
+  "explanation": "## Cuánto cuesta un agente de IA: la cuenta rápida\n\nEl costo mensual de un agente autónomo se reduce a una fórmula simple:\n\n```\ncosto_mensual (USD) = tokens_por_run × runs_por_mes × precio_del_modelo\n```\n\nLo que la hace traicionera es **tokens_por_run**: en un agente en loop el contexto no es fijo, crece en cada vuelta porque acumula el historial de acciones y resultados previos. Por eso un agente que parece barato por llamada puede costar cientos de dólares al mes.\n\n### Tabla de referencia: tokens y costo mensual\n\nEjemplos con un agente estándar (50 tool calls de 500 tokens, contexto base 2.000, 3 iteraciones, factor 1,5, 10% error rate, 2 retries → **~47.100 tokens/run**), 70% input / 30% output:\n\n| Runs/mes | Tokens/mes | GPT-4o | GPT-4o mini | Claude 3.5 Sonnet | Claude 3 Haiku | Gemini 1.5 Flash |\n|---------:|-----------:|-------:|------------:|------------------:|---------------:|-----------------:|\n| 100      | 4,7M       | ~$22   | ~$1,3       | ~$31              | ~$2,6          | ~$0,7            |\n| 500      | 23,5M      | ~$112  | ~$6,7       | ~$155             | ~$13           | ~$3,4            |\n| 1.000    | 47,1M      | ~$224  | ~$13        | ~$311             | ~$26           | ~$6,7            |\n| 5.000    | 235M       | ~$1.119| ~$67        | ~$1.554           | ~$130          | ~$34             |\n| 10.000   | 471M       | ~$2.237| ~$134       | ~$3.109           | ~$259          | ~$67             |\n\nEl salto de modelo premium a small (Haiku, mini, Flash) baja el costo **10-40×**. El salto de 1 a 5 iteraciones de loop, en cambio, puede triplicar los tokens por el contexto acumulado.\n\n### Cómo se calcula (la fórmula completa)\n\nUn agente en loop no consume tokens de forma lineal: el contexto crece en cada iteración porque se concatena el historial de acciones y resultados.\n\n- **Tool calls por run**: cuántas veces el agente llama a una herramienta (búsqueda, código, API, DB).\n- **Tokens por tool call**: tokens del resultado de la herramienta que se inyectan al contexto.\n- **Contexto base**: system prompt + descripción de la tarea original.\n- **Iteraciones de loop**: cuántas veces el agente evalúa su progreso y decide continuar.\n- **Factor de crecimiento**: en cada iteración el contexto acumulado se multiplica por este factor (1,0 = sin crecimiento, 1,5 = crece 50% por vuelta).\n- **Error rate + retries**: porcentaje de tool calls que fallan y cuántas veces se reintentan.\n\n```\n// Contexto acumulado en la iteración k (crecimiento geométrico):\nctx_k = context_base × growth_factor^k\n\n// Tokens de tool calls por iteración (distribuidas uniformemente):\ntool_tokens_k = (tool_calls_per_run / loop_iterations) × tokens_per_tool_call\n\n// Tokens totales por run (suma sobre todas las iteraciones):\ntokens_run = Σ(k=1..N) [ ctx_k + tool_tokens_k ]\n\n// Tokens extra por retries:\nretry_tokens ≈ tokens_run × error_rate × retries_per_error\n\n// Tokens por run con errores:\ntokens_run_total = tokens_run + retry_tokens\n\n// Tokens por mes y costo:\ntokens_month  = tokens_run_total × runs_per_month\ninput_tokens  = tokens_month × input_ratio\noutput_tokens = tokens_month × (1 - input_ratio)\ncosto_mensual = (input_tokens × price_input + output_tokens × price_output) / 1.000.000\n```\n\n### Ejemplo numérico (paso a paso)\n\nAgente de investigación con: 50 tool calls, 500 tokens/call, contexto base 2.000 tokens, 3 iteraciones, factor 1,5, 10% error rate, 2 retries, 500 runs/mes, GPT-4o.\n\n| Iteración | Contexto (tokens) | Tool tokens | Subtotal |\n|-----------|-------------------:|------------:|---------:|\n| 1         | 3.000             | 8.333       | 11.333   |\n| 2         | 4.500             | 8.333       | 12.833   |\n| 3         | 6.750             | 8.334       | 15.084   |\n| **Total run base** | —        | —           | **39.250** |\n\nRetry overhead: 39.250 × 0,10 × 2 ≈ 7.850 → **~47.100 tokens/run**.\n\nMensual: 47.100 × 500 = **23,55M tokens** → con GPT-4o (70% input a $2,50/1M, 30% output a $10/1M) = **~USD 112/mes**.\n\n### Precios por 1M de tokens (referencia 2025-2026)\n\n| Modelo | Input | Output |\n|--------|------:|-------:|\n| GPT-4o | $2,50 | $10,00 |\n| GPT-4o mini | $0,15 | $0,60 |\n| Claude 3.5 Sonnet | $3,00 | $15,00 |\n| Claude 3 Haiku | $0,25 | $1,25 |\n| Gemini 1.5 Pro | $1,25 | $5,00 |\n| Gemini 1.5 Flash | $0,075 | $0,30 |\n\n### Limitaciones\n\n- El factor de crecimiento de contexto es una aproximación geométrica. Los agentes con sliding window o resumen automático crecen más lento.\n- Los precios de los modelos cambian con frecuencia; verificá la pricing page oficial del proveedor antes de presupuestar.\n- No incluye costos de infraestructura (servidor de orquestación, APIs externas pagas).\n- La tasa de errores depende mucho de la confiabilidad de las herramientas externas.",
   "faq": [
     {
-      "q": "¿Qué es el factor de crecimiento de contexto?",
-      "a": "Representa cuánto crece el contexto acumulado en cada iteración del loop. Un factor de 1.5 significa que en cada vuelta el contexto es 50% mayor al de la vuelta anterior, porque el agente agrega el historial de acciones y resultados previos al prompt."
+      "q": "¿Cuánto cuesta correr un agente de IA por mes?",
+      "a": "Depende de tokens por run × runs por mes × precio del modelo. Un agente estándar (50 tool calls, 3 iteraciones, contexto base 2.000) consume ~47.000 tokens por run; a 500 runs/mes son ~23,5M tokens, lo que cuesta ~USD 112/mes con GPT-4o, ~USD 155 con Claude 3.5 Sonnet o apenas ~USD 3,4 con Gemini 1.5 Flash. Usá la calculadora con tus números reales para una estimación exacta."
     },
     {
       "q": "¿Por qué los tokens no crecen de forma lineal en un agente en loop?",
-      "a": "Porque la mayoría de los frameworks de agentes (LangChain, AutoGen, CrewAI) concatenan el historial completo de mensajes en cada llamada al LLM. Así, la iteración 3 incluye los resultados de las iteraciones 1 y 2, generando un crecimiento geométrico del contexto."
+      "a": "Porque la mayoría de los frameworks de agentes (LangChain, AutoGen, CrewAI) concatenan el historial completo de mensajes en cada llamada al LLM. Así, la iteración 3 incluye los resultados de las iteraciones 1 y 2, generando un crecimiento geométrico del contexto. Por eso duplicar las iteraciones puede más que duplicar el costo."
     },
     {
-      "q": "¿Cómo puedo reducir el consumo de tokens en un agente con muchas iteraciones?",
-      "a": "Las estrategias principales son: (1) resumir el historial de acciones pasadas en lugar de concatenarlo completo, (2) usar modelos más baratos para pasos intermedios y reservar el modelo premium para la decisión final, (3) limitar el número máximo de iteraciones con un budget check explícito."
+      "q": "¿Qué es el factor de crecimiento de contexto y qué valor uso?",
+      "a": "Representa cuánto crece el contexto acumulado en cada iteración del loop. Un factor de 1,5 significa que en cada vuelta el contexto es 50% mayor al de la anterior. Usá 1,0 si tu agente resume o reemplaza el contexto en cada paso; 1,3-1,5 si concatena con resumen parcial; 1,8-2,0 si concatena todo el historial sin compresión."
     },
     {
-      "q": "¿Qué proporción input/output debo usar?",
-      "a": "Para agentes con tool calls, lo típico es 65-75% input y 25-35% output, porque la mayor parte del volumen son los prompts con historial y resultados de herramientas. Si el agente genera documentos largos, la proporción de output sube."
+      "q": "¿Cómo reduzco el consumo de tokens en un agente con muchas iteraciones?",
+      "a": "Tres palancas: (1) resumir el historial de acciones pasadas en lugar de concatenarlo entero; (2) usar un modelo barato para los pasos intermedios y reservar el premium para la decisión final; (3) limitar el máximo de iteraciones con un budget check explícito. Juntas pueden bajar el costo 50-80%."
     },
     {
-      "q": "¿Los precios de los modelos son los actuales?",
-      "a": "Los precios cargados corresponden a la estructura de precios publicada por OpenAI, Anthropic y Google en 2025-2026. Los precios de LLMs cambian con frecuencia; siempre verificar en la consola o pricing page oficial del proveedor antes de tomar decisiones de presupuesto."
+      "q": "¿Qué proporción input/output conviene asumir?",
+      "a": "Para agentes con tool calls lo típico es 65-75% input y 25-35% output, porque la mayor parte del volumen son los prompts con historial y resultados de herramientas. Si el agente genera documentos o código largo, la proporción de output sube y el costo crece (el output suele costar 3-5× más que el input)."
     },
     {
-      "q": "¿Qué ocurre si el agente entra en loop infinito?",
-      "a": "Con un factor de crecimiento de 1.5 y sin límite de iteraciones, el contexto puede superar la context window del modelo (128K-1M tokens según el modelo) en pocas iteraciones, generando errores de truncado o costos extremos. Se recomienda siempre implementar un máximo de iteraciones y un budget cap en USD."
+      "q": "¿Qué pasa si el agente entra en loop infinito?",
+      "a": "Con un factor de crecimiento de 1,5 y sin límite de iteraciones, el contexto puede superar la context window del modelo (128K-1M tokens según el modelo) en pocas vueltas, generando errores de truncado o costos extremos. Siempre implementá un máximo de iteraciones y un budget cap en USD que corte la ejecución."
     },
     {
-      "q": "¿Cómo afectan los retries al costo total?",
-      "a": "Con un 10% de error rate y 2 retries, el overhead es del 20% sobre el costo base. Pero si la tasa de errores sube al 30% con 3 retries, el overhead llega al 90%. En agentes con herramientas externas poco confiables (scraping, APIs de terceros), los retries pueden ser el mayor driver de costo."
+      "q": "¿Cuánto suman los retries al costo total?",
+      "a": "Con 10% de error rate y 2 retries, el overhead es ~20% sobre el costo base. Si la tasa sube al 30% con 3 retries, el overhead llega al ~90%. En agentes con herramientas externas poco confiables (scraping, APIs de terceros), los retries pueden ser el mayor driver de costo; bajar la tasa de error es la palanca más barata."
     },
     {
-      "q": "¿Esta calculadora sirve para agentes multi-agente (orquestador + subagentes)?",
-      "a": "Sirve para estimar cada agente de forma individual. Para un sistema multi-agente, calculá cada nodo por separado y sumá los costos. El orquestador suele tener más iteraciones y contexto, mientras que los subagentes tienen runs más cortos pero en mayor volumen."
+      "q": "¿Sirve para sistemas multi-agente (orquestador + subagentes)?",
+      "a": "Sirve para estimar cada agente por separado. Para un sistema multi-agente, calculá cada nodo de forma individual y sumá los costos. El orquestador suele tener más iteraciones y contexto; los subagentes tienen runs más cortos pero en mayor volumen. CrewAI y AutoGen suelen consumir 2-3× más que un single-agent equivalente por el overhead de comunicación."
+    },
+    {
+      "q": "¿Cómo bajo el costo con prompt caching?",
+      "a": "Anthropic Claude ofrece prompt caching que ahorra hasta 90% en los tokens repetidos del contexto. Si tu agente reusa el mismo system prompt + tools schema en cada iteración (lo habitual), activá el cache y el costo input baja a ~$0,30/1M (vs $3,00 base en Sonnet). OpenAI aplica cached input automático (50% off) para prompts >1024 tokens repetidos. Con context base grande (5K-20K tokens), el ahorro puede ser 40-60% del costo mensual total."
+    },
+    {
+      "q": "¿Cuándo conviene un modelo small (mini/Haiku/Flash) vs uno premium?",
+      "a": "Modelo small (Haiku, GPT-4o mini, Flash): routing, clasificación, extracción de entidades, formato JSON, dispatching de tool calls, retries. Cuesta 10-40× menos. Modelo premium (Sonnet, GPT-4o, Pro): razonamiento multi-step, planning, código complejo, decisiones finales. Una arquitectura híbrida (small para 80% de los pasos, premium para el 20% crítico) suele bajar el costo 60-80% sin perder calidad."
+    },
+    {
+      "q": "¿Cuántos tokens consume una sola tool call?",
+      "a": "Varía según la herramienta: una búsqueda web puede inyectar 300-1.500 tokens de resultados; una consulta a una base de datos 100-500; el resultado de ejecutar código o un scrape de página completa 1.000-5.000. La calculadora usa un promedio por tool call: medí los tuyos reales en los logs del proveedor para afinar la estimación."
+    },
+    {
+      "q": "¿Los precios cargados son los actuales?",
+      "a": "Corresponden a la estructura de precios publicada por OpenAI, Anthropic y Google en 2025-2026 (GPT-4o $2,50/$10, Claude 3.5 Sonnet $3/$15, Gemini 1.5 Pro $1,25/$5 por 1M tokens input/output). Los precios de LLMs cambian seguido; verificá siempre en la pricing page oficial antes de decisiones de presupuesto. Para modelos nuevos usá la opción 'Modelo personalizado'."
     },
     {
       "q": "¿Cómo interpreto 'tool calls distribuidas uniformemente entre iteraciones'?",
-      "a": "La calculadora asume que las tool calls se reparten por igual entre las iteraciones de loop. En la práctica, las primeras iteraciones suelen tener más tool calls (fase de exploración). Para una estimación más conservadora, podés aumentar el factor de crecimiento de contexto."
-    },
-    {
-      "q": "¿Cómo aprovecho prompt caching para bajar el costo?",
-      "a": "**Anthropic Claude** ofrece prompt caching (ahorra 90% en tokens repetidos del contexto). Si tu agente reusa el mismo system prompt + tools schema en cada iteración (típico), activá el cache y bajás el costo input a USD 0.30/1M (vs USD 3.00 base). **OpenAI** implementó cached input desde GPT-4o (50% off automático para prompts >1024 tokens repetidos). Para agentes de alto volumen con context base grande (5K-20K tokens), el ahorro puede ser del **40-60% del costo mensual total**."
-    },
-    {
-      "q": "¿Qué frameworks de agentes son los más eficientes en tokens?",
-      "a": "**Anthropic Claude Agent SDK** y **OpenAI Assistants API** son los más eficientes porque manejan contexto nativamente con caching automático. **LangChain** y **LlamaIndex** son flexibles pero tienden a duplicar contexto si no configurás bien el memory manager. **CrewAI** y **AutoGen** para multi-agent suelen consumir 2-3x más tokens que single-agent equivalente por el overhead de comunicación entre agentes. Para producción a escala, mediremos cost-per-task end-to-end, no por framework."
-    },
-    {
-      "q": "¿Cuándo conviene un modelo small (mini/haiku/flash) vs uno premium?",
-      "a": "**Modelo small (Haiku, GPT-4o mini, Flash)**: routing, clasificación, extracción de entidades, formato JSON, tool call dispatching, retries. Cuesta 10-40x menos. **Modelo premium (Sonnet, GPT-4o, Pro)**: razonamiento multi-step, planning, código complejo, decisiones finales. Una arquitectura híbrida (small para 80% de los pasos, premium para 20% críticos) suele bajar el costo **60-80%** sin perder calidad. Tested en agentes de Anthropic: Sonnet + Haiku como router = 35% del costo vs Sonnet puro."
+      "a": "La calculadora asume que las tool calls se reparten por igual entre las iteraciones del loop. En la práctica, las primeras iteraciones suelen tener más tool calls (fase de exploración). Para una estimación más conservadora, subí el factor de crecimiento de contexto o el número de tool calls por run."
     }
   ],
   "solvedExamples": [
     {
       "title": "Agente de research diario con 200 runs/mes en Claude 3.5 Sonnet",
-      "context": "Equipo de growth marketing despliega agente autónomo que cada mañana scrapea 5 fuentes, sintetiza tendencias y manda Slack al CMO. 200 runs/mes (40/día laboral × 5 días/semana × 4 semanas).",
+      "context": "Equipo de growth marketing despliega un agente autónomo que cada mañana scrapea 5 fuentes, sintetiza tendencias y manda un Slack al CMO. 200 runs/mes (10/día laboral × 5 días × 4 semanas).",
       "steps": [
-        "Tool calls por run: 25 (5 fuentes × 5 acciones promedio = scrape, parse, extract, validate, summarize)",
+        "Tool calls por run: 25 (5 fuentes × 5 acciones promedio: scrape, parse, extract, validate, summarize)",
         "Tokens por tool call: 800 (resultados de scrape + parsing)",
-        "Context base: 4000 tokens (system prompt + schema de tools + descripción tarea)",
+        "Contexto base: 4.000 tokens (system prompt + schema de tools + descripción de la tarea)",
         "Iteraciones de loop: 4 (explore → analyze → cross-check → synthesize)",
         "Factor de crecimiento: 1,4 (Claude resume parcialmente con XML tags)",
-        "Error rate: 15% (scraping a sitios externos)",
-        "Retries: 2",
-        "Tokens por run sin errores: 4000 × (1,4¹+1,4²+1,4³+1,4⁴) + (25 × 800) = 4000 × 11,2 + 20.000 = **64.800 tokens**",
-        "Con retries (15% × 2 = 30% overhead): 64.800 × 1,3 = **84.240 tokens/run**",
-        "Tokens mensuales: 84.240 × 200 = **16,8M tokens/mes**",
-        "Costo Claude 3.5 Sonnet (70% input, 30% output): (11,8M × $3 + 5,0M × $15) / 1M = **$110/mes**",
-        "Con prompt caching activado en system prompt: $110 × 0,55 = **~$60/mes** (ahorro 45%)"
+        "Error rate: 15% (scraping a sitios externos), 2 retries",
+        "Tokens por run sin errores: 4.000 × (1,4¹+1,4²+1,4³+1,4⁴) + (25 × 800) ≈ 4.000 × 11,2 + 20.000 ≈ 64.800 tokens",
+        "Con retries (15% × 2 = 30% overhead): 64.800 × 1,3 ≈ 84.240 tokens/run",
+        "Tokens mensuales: 84.240 × 200 ≈ 16,8M tokens/mes",
+        "Costo Claude 3.5 Sonnet (70% input a $3/1M, 30% output a $15/1M): (11,8M × $3 + 5,0M × $15) / 1M ≈ $110/mes",
+        "Con prompt caching activado en el system prompt: $110 × 0,55 ≈ ~$60/mes (ahorro 45%)"
       ],
-      "result": "El agente operativo a $60-110/mes USD según uso de prompt caching, con presupuesto seguro de **USD 150/mes** considerando picos. Si moviera retries a Haiku (10x más barato), bajaría a **$40-50/mes**. Si lo escalara a 1000 runs/mes para 5 equipos distintos, mantendría ratio lineal: **$300-550/mes**, perfectamente sustentable con un budget alert a $400."
+      "result": "El agente queda operativo a USD 60-110/mes según uso de prompt caching, con un presupuesto seguro de USD 150/mes considerando picos. Si moviera los retries a Haiku (10× más barato), bajaría a $40-50/mes. Escalado a 1.000 runs/mes para 5 equipos distintos, mantiene ratio lineal: $300-550/mes, sustentable con un budget alert a $400."
     }
   ],
   "sources": [
@@ -305,21 +315,21 @@
       "date": "2026"
     },
     {
-      "name": "LLM Agent Token Consumption Patterns — LangChain Docs",
-      "url": "https://python.langchain.com/docs/concepts/agents/",
-      "publisher": "LangChain",
-      "date": "2026"
+      "name": "Build effective agents — patrones de agentes y consumo de contexto",
+      "url": "https://www.anthropic.com/research/building-effective-agents",
+      "publisher": "Anthropic",
+      "date": "2025"
     }
   ],
   "dataUpdate": {
     "frequency": "monthly",
-    "lastUpdated": "2026-04-27",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
     "notes": "Actualizar precios por modelo cuando los proveedores publiquen cambios en su pricing page. Revisar nuevos modelos disponibles (GPT-5, Claude 4, Gemini 2.x) para agregar opciones al selector.",
     "source": "OpenAI API Pricing",
     "sourceUrl": "https://openai.com/api/pricing/"
   },
-  "lastReviewed": "2026-05-28",
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [
     "calculadora-claude-37-tokens-costo-cache-prompt-mensual"
   ]

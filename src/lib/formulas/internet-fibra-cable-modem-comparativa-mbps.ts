@@ -2,10 +2,10 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 export function internetFibraCableModemComparativaMbps(i: Inputs): Outputs {
   const m=Number(i.mbps)||100; const h=Number(i.hogarHabitantes)||1; const g=String(i.gamingStreaming||'no');
-  const minimo=h*50+(g==='si'?100:0);
+  const minimo=h*25+(g==='si'?50:0);
   const cubre=m>=minimo;
-  const rec=cubre?'Fibra óptica (mejor upload y latencia)':'Necesitás más Mbps: considerá 500-1000';
-  const gamingTxt=g==='si'?' (incluye +100 Mbps por gaming/streaming pesado)':'';
+  const rec=cubre?'Fibra óptica (mejor upload y latencia)':'Necesitás más Mbps: considerá 300-500';
+  const gamingTxt=g==='si'?' (incluye +50 Mbps por gaming/streaming 4K)':'';
   return {
     recomendacion:rec,
     mbpsMinimos:`${minimo} Mbps`,

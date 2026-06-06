@@ -16,19 +16,21 @@ export interface Outputs {
   _insight?: any;
 }
 
-// ─── Precios por millón de tokens (USD/MTok) — revisados 2026-04-27 ───
+// ─── Precios por millón de tokens (USD/MTok) — revisados 2026-06-04 ───
 // Fuente: openai.com/api/pricing, anthropic.com/pricing, ai.google.dev/pricing
+// GPT-5 base = 1.25/10 (la línea GPT-5 se reprecio tras el lanzamiento;
+// GPT-5.4 es 2.50/15 y el flagship GPT-5.5 es 5/30). Acá usamos el modelo gpt-5 base.
 
 const PRICE_GPT5 = {
-  input_std: 15.00,    // USD/MTok input estándar
-  input_cache: 3.75,   // USD/MTok input cacheado (descuento 75%)
-  output_std: 60.00,   // USD/MTok output estándar
-  batch_input: 7.50,   // USD/MTok input batch (descuento 50%)
-  batch_output: 30.00, // USD/MTok output batch (descuento 50%)
+  input_std: 1.25,     // USD/MTok input estándar — gpt-5 base
+  input_cache: 0.125,  // USD/MTok input cacheado (10% del input, automático)
+  output_std: 10.00,   // USD/MTok output estándar
+  batch_input: 0.625, // USD/MTok input batch (descuento 50%)
+  batch_output: 5.00, // USD/MTok output batch (descuento 50%)
 };
 
 const PRICE_CLAUDE = {
-  input_std: 3.00,     // USD/MTok input estándar — Claude 3.7 Sonnet
+  input_std: 3.00,     // USD/MTok input estándar — Claude Sonnet (3.7 / 4.x mismo tier)
   input_cache: 0.30,   // USD/MTok input cacheado (descuento 90%)
   output_std: 15.00,   // USD/MTok output estándar
   batch_input: 1.50,   // USD/MTok input batch (descuento 50%)
@@ -37,10 +39,10 @@ const PRICE_CLAUDE = {
 
 const PRICE_GEMINI = {
   input_std: 1.25,     // USD/MTok input estándar — Gemini 2.5 Pro (<=200K ctx)
-  input_cache: 0.3125, // USD/MTok input cacheado (~75% desc aprox)
+  input_cache: 0.3125, // USD/MTok input cacheado (descuento 75%)
   output_std: 10.00,   // USD/MTok output estándar
-  batch_input: 1.25,   // Gemini no tiene batch oficial; mismo precio estándar
-  batch_output: 10.00, // idem
+  batch_input: 0.625,  // USD/MTok input batch (descuento 50%)
+  batch_output: 5.00,  // USD/MTok output batch (descuento 50%)
 };
 
 type PriceTable = typeof PRICE_GPT5;

@@ -1,22 +1,25 @@
 {
   "slug": "calculadora-panorama-foto-solapamiento",
-  "title": "Calculadora de panorama por fotos y solapamiento 2026",
-  "h1": "Calculadora de panorama por fotos y solapamiento",
-  "description": "Calculá cuántas fotos necesitás para tu panorama según ángulo, focal, sensor y solapamiento. Ejemplo: 180° con 50 mm FF = 10 fotos.",
+  "title": "Cuántas fotos para un panorama: calculadora + tabla",
+  "h1": "Cuántas fotos necesito para un panorama (con solapamiento)",
+  "description": "Calculá cuántas fotos necesitás para tu panorámica según ángulo, focal, sensor, orientación y solapamiento. Tabla de ángulos por lente + fórmula exacta. Ejemplo: 180° con 50 mm FF vertical = 11 fotos.",
+  "answerSnippet": "Para saber cuántas fotos necesitás en una panorámica, dividí el ángulo total a cubrir por el ángulo útil de cada toma y sumá una de margen. El ángulo de campo se calcula con 2 × arctan(d / (2 × f)), donde d es el lado del sensor y f la focal; el ángulo útil es ese ángulo × (1 − solapamiento). Con 50 mm en full frame vertical, 180° y 30 % de solapamiento, salen 11 fotos.",
   "category": "tecnologia",
   "audience": "global",
   "icon": "📸",
   "formulaId": "panorama-foto-solapamiento",
   "seoKeywords": [
-    "panorama fotos",
-    "cuantas fotos panoramica",
-    "solapamiento panorama",
-    "stitch lightroom",
-    "panoramica 180 360",
-    "fotografia panoramica"
+    "cuantas fotos para un panorama",
+    "cuantas fotos necesito para una panoramica",
+    "solapamiento panorama porcentaje",
+    "calculadora panorama fotos",
+    "overlap panorama lightroom",
+    "fotos panoramica 180 360 grados",
+    "angulo de campo focal sensor",
+    "stitch ptgui hugin"
   ],
   "intro": "Hacer una fotografía panorámica de calidad no es simplemente girar la cámara y disparar: hay una lógica matemática detrás que determina exactamente cuántas tomas necesitás para cubrir un ángulo dado sin dejar huecos ni perder la capacidad del software de unir las imágenes correctamente. Cuando el solapamiento es insuficiente, programas como PTGui, Hugin, Lightroom o Photoshop no pueden encontrar suficientes puntos de coincidencia entre fotogramas y el resultado es un panorama con costuras visibles, deformaciones o directamente errores de stitching. Cuando el solapamiento es excesivo, generás más trabajo de procesamiento, archivos más pesados y mayor riesgo de exposición despareja entre tomas.\n\nEl solapamiento óptimo para la mayoría de las situaciones se ubica entre el 30% y el 40%. Ese rango no es arbitrario: los algoritmos de correlación de puntos que usan los mejores programas de panoramas necesitan al menos un 25-30% de área compartida para triangular posiciones con precisión. En escenas con foreground complejo, parallax o elementos repetitivos como árboles o ladrillos, conviene subir al 40-50% para darle más datos al software.\n\nEl ángulo de campo de tu lente varía según la distancia focal y el tamaño del sensor. Una focal de 50 mm en full frame cubre aproximadamente 40° horizontal y 27° vertical. Ese mismo 50 mm en una APS-C (factor de recorte 1.5×, como Nikon o Sony) equivale a un campo visual de unos 27° horizontal y 18° vertical. En Micro Cuatro Tercios (factor 2×), el recorte es aún mayor. Por eso, elegir bien la focal y el sensor determina directamente cuántas fotos vas a necesitar tomar.\n\nLa orientación de la cámara también importa muchísimo: disparar en vertical (retrato) captura más altura por fotograma y reduce la cantidad total de tomas necesarias para cubrir el ancho del panorama, además de entregar una imagen final con mayor resolución vertical, ideal para paisajes con cielo y primer plano. Disparar en horizontal (paisaje) conviene cuando el sujeto es un skyline angosto o una escena con muy poca variación vertical.\n\nEsta calculadora tomá el ángulo total que querés cubrir (desde 90° hasta 360°), la focal que vas a usar, el tipo de sensor de tu cámara, la orientación de disparo y el porcentaje de solapamiento deseado, y te devuelve la cantidad exacta de fotos a tomar, redondeada hacia arriba para garantizar cobertura completa. Antes de salir a fotografiar, acordate de configurar exposición manual, balance de blancos fijo y foco manual: cualquier variación automática entre tomas genera inconsistencias que ni el mejor software puede corregir del todo.",
-  "keyTakeaway": "**180° con 50 mm FF vertical y 30% overlap** = **10 fotos**. **360° con 24 mm** = 15-18 fotos. **Panorámica de paisaje clásica** = 4-8 fotos con 35 mm horizontal.",
+  "keyTakeaway": "**180° con 50 mm FF vertical y 30 % de solapamiento** = **11 fotos**. **360° con 24 mm FF vertical** = ~11 fotos por fila. **Panorámica de paisaje clásica** = 5-8 fotos con 35 mm. Fórmula: fotos = ceil(ángulo total / [ángulo del encuadre × (1 − solapamiento)]) + 1.",
   "useCases": [
     {
       "title": "Panorama de montañas con 35 mm en full frame",
@@ -76,23 +79,27 @@
     },
     {
       "id": "sensor",
-      "label": "Sensor (1=FF, 2=APS-C 1.5×, 3=APS-C 1.6×, 4=M4/3)",
-      "type": "number",
-      "placeholder": "1",
-      "min": 1,
-      "max": 4,
-      "step": 1,
-      "required": true
+      "label": "Tamaño de sensor",
+      "type": "select",
+      "default": "1",
+      "required": true,
+      "options": [
+        { "value": "1", "label": "Full Frame (36 × 24 mm)" },
+        { "value": "2", "label": "APS-C Nikon/Sony (1.5×)" },
+        { "value": "3", "label": "APS-C Canon (1.6×)" },
+        { "value": "4", "label": "Micro Cuatro Tercios (2×)" }
+      ]
     },
     {
       "id": "orientacion",
-      "label": "Orientación (1=horizontal, 2=vertical)",
-      "type": "number",
-      "placeholder": "2",
-      "min": 1,
-      "max": 2,
-      "step": 1,
-      "required": true
+      "label": "Orientación de disparo",
+      "type": "select",
+      "default": "2",
+      "required": true,
+      "options": [
+        { "value": "2", "label": "Vertical / retrato (menos fotos, más alto)" },
+        { "value": "1", "label": "Horizontal / paisaje" }
+      ]
     },
     {
       "id": "overlap",
@@ -138,15 +145,15 @@
     }
   ],
   "example": {
-    "title": "180° con 50 mm FF vertical, overlap 33%",
+    "title": "180° con 50 mm full frame en vertical, 30 % de solapamiento",
     "steps": [
-      "**Ángulo vertical 50 mm FF**: 2×atan(36/100) ≈ 27°.",
-      "**Overlap 33%**: ángulo útil = 27 × 0.67 = 18°.",
-      "**Fotos**: 180 / 18 = **10 fotos**."
+      "**Ángulo del encuadre (50 mm FF, lado vertical 24 mm)**: 2 × arctan(24 / (2 × 50)) ≈ 27°.",
+      "**Solapamiento 30 %**: ángulo útil = 27° × (1 − 0,30) ≈ 19°.",
+      "**Fotos**: ceil(180° / 19°) + 1 = 10 + 1 = **11 fotos** (la +1 deja margen para que la primera y la última queden completas)."
     ],
-    "result": "Tomá **10 fotos verticales** con 50 mm, rotando ~18° entre cada una. Trípode y cabezal nodal ideal."
+    "result": "Tomá **11 fotos verticales** con 50 mm, rotando ~19° entre cada una. Trípode nivelado y cabezal panorámico con marcas de grados para clavar el giro exacto."
   },
-  "explanation": "## Fórmula\n\n```\nangulo_sensor = depende de orientación y sensor\nangulo_util = angulo_sensor × (1 - overlap)\ncantidad_fotos = ceil(angulo_total / angulo_util) + 1\n```\n\n## Ángulos sensor por focal (FF)\n\n| Focal | Horizontal | Vertical |\n|---|---|---|\n| 14 mm | 114° | 81° |\n| 24 mm | 74° | 53° |\n| 35 mm | 54° | 38° |\n| 50 mm ✅ | 40° | 27° |\n| 85 mm | 24° | 16° |\n| 135 mm | 15° | 10° |\n\n## Panoramas típicos\n\n| Objetivo | Ángulo | Focal recomendada | Fotos |\n|---|---|---|---|\n| Paisaje ancho | 120° | 50 mm vertical | 7-9 |\n| Cityscape | 180° | 35 mm vertical | 7-9 |\n| Skyline | 180° | 50 mm vertical | 9-11 |\n| Landscape epic | 270° | 35 mm vertical | 12-15 |\n| 360° completo | 360° | 50 mm vertical + filas | 15-25 |\n| Vía Láctea | 180° | 24 mm vertical | 5-7 |\n\n## Orientación\n\n**Vertical**: mejor relación altura/ancho, ángulo vertical del sensor es mayor que horizontal en la misma focal. Más alto menos fotos.\n\n**Horizontal**: más rápido, menos fotos numéricamente, pero panorama más bajito.\n\n## Solapamiento\n\n| Overlap | Calidad stitch | Tiempo |\n|---|---|---|\n| 20% | Justo, puede fallar | Rápido |\n| 30% ✅ | Estándar, casi siempre ok | Normal |\n| 40% | Muy seguro, más fotos | 20% más largo |\n| 50% | Solapamiento masivo | Lento, innecesario |\n\n## Técnica paso a paso\n\n1. **Trípode con cabezal nodal** (ideal) o cabezal pano: evita paralaje.\n2. **Exposición manual fija**: usar medición central y bloquear.\n3. **Foco manual fijo**: no autofoco entre fotos.\n4. **Balance blanco fijo**: nunca auto.\n5. **RAW siempre**: permite correcciones.\n6. **Overlap visual**: 1/3 - 1/2 de la foto anterior.\n7. **Primera y última foto de referencia**: vacíos o mano tapando para saber dónde arranca la secuencia.\n\n## Software de stitching\n\n| Software | Precio | Calidad | Uso |\n|---|---|---|---|\n| Lightroom pano | Incluido | Muy buena | Paisaje común |\n| Photoshop Photomerge | Incluido | Muy buena | Flexible |\n| PTGui | USD 200 | Élite | Pro, 360° |\n| Hugin | Gratis | Muy buena | Open source |\n| Autopano | Descontinuado | Excelente | Legacy |\n| ICE (Microsoft) | Gratis | Buena | Básico |\n\n## Errores comunes\n\n1. **Sin trípode nodal**: paralaje en objetos cercanos.\n2. **Cambio de exposición entre fotos**: bordes visibles.\n3. **Overlap bajo**: stitching falla.\n4. **Auto focus**: cada foto enfoca distinto, pierde consistencia.\n5. **Ignorar distorsión**: gran angular multiplica problemas de stitching.\n\n## Panorama vertical (vertorama)\n\nPara montañas altas o edificios: rotá la cámara 90° y hacé columnas verticales. Mismo concepto pero eje inverso.\n\n## Multi-row para 360°\n\n360° completo = 1 fila de 12 fotos + 1 fila cenit (6) + 1 fila nadir (6) = 24 fotos. PTGui/Hugin unen todo.\n\nCombiná con [crop factor](/calculadora-tamano-sensor-crop-factor), [ancho angular](/calculadora-ancho-angulo-lente-distancia) y [tarjeta SD](/calculadora-tarjeta-sd-necesaria-sesion).",
+  "explanation": "## Cuántas fotos necesitás (referencia rápida)\n\nValores con sensor full frame, disparo vertical y 30 % de solapamiento. Para APS-C multiplicá por ~1,5; para Micro 4/3 por ~2.\n\n| Ángulo a cubrir | 24 mm | 35 mm | 50 mm | 85 mm |\n|---|---|---|---|---|\n| 90° | 4 | 5 | 6 | 10 |\n| 120° | 5 | 6 | 8 | 12 |\n| 180° | 6 | 8 | 11 | 18 |\n| 270° | 9 | 12 | 16 | 26 |\n| 360° | 11 | 15 | 21 | 34 |\n\n## Fórmula\n\n```\nangulo_encuadre = 2 × arctan(d / (2 × f))   (d = lado del sensor en el eje del barrido)\nangulo_util     = angulo_encuadre × (1 − overlap)\ncantidad_fotos  = ceil(angulo_total / angulo_util) + 1\n```\n\nLa `+1` garantiza que el primer y el último fotograma queden completos dentro del ángulo objetivo, sin recortar los bordes del panorama.\n\n## Ángulos sensor por focal (FF)\n\n| Focal | Horizontal | Vertical |\n|---|---|---|\n| 14 mm | 114° | 81° |\n| 24 mm | 74° | 53° |\n| 35 mm | 54° | 38° |\n| 50 mm ✅ | 40° | 27° |\n| 85 mm | 24° | 16° |\n| 135 mm | 15° | 10° |\n\n## Panoramas típicos\n\n| Objetivo | Ángulo | Focal recomendada | Fotos |\n|---|---|---|---|\n| Paisaje ancho | 120° | 50 mm vertical | 7-9 |\n| Cityscape | 180° | 35 mm vertical | 7-9 |\n| Skyline | 180° | 50 mm vertical | 9-11 |\n| Landscape epic | 270° | 35 mm vertical | 12-15 |\n| 360° completo | 360° | 50 mm vertical + filas | 15-25 |\n| Vía Láctea | 180° | 24 mm vertical | 5-7 |\n\n## Orientación\n\n**Vertical**: mejor relación altura/ancho, ángulo vertical del sensor es mayor que horizontal en la misma focal. Más alto menos fotos.\n\n**Horizontal**: más rápido, menos fotos numéricamente, pero panorama más bajito.\n\n## Solapamiento\n\n| Overlap | Calidad stitch | Tiempo |\n|---|---|---|\n| 20% | Justo, puede fallar | Rápido |\n| 30% ✅ | Estándar, casi siempre ok | Normal |\n| 40% | Muy seguro, más fotos | 20% más largo |\n| 50% | Solapamiento masivo | Lento, innecesario |\n\n## Técnica paso a paso\n\n1. **Trípode con cabezal nodal** (ideal) o cabezal pano: evita paralaje.\n2. **Exposición manual fija**: usar medición central y bloquear.\n3. **Foco manual fijo**: no autofoco entre fotos.\n4. **Balance blanco fijo**: nunca auto.\n5. **RAW siempre**: permite correcciones.\n6. **Overlap visual**: 1/3 - 1/2 de la foto anterior.\n7. **Primera y última foto de referencia**: vacíos o mano tapando para saber dónde arranca la secuencia.\n\n## Software de stitching\n\n| Software | Precio | Calidad | Uso |\n|---|---|---|---|\n| Lightroom pano | Incluido | Muy buena | Paisaje común |\n| Photoshop Photomerge | Incluido | Muy buena | Flexible |\n| PTGui | USD 200 | Élite | Pro, 360° |\n| Hugin | Gratis | Muy buena | Open source |\n| Autopano | Descontinuado | Excelente | Legacy |\n| ICE (Microsoft) | Gratis | Buena | Básico |\n\n## Errores comunes\n\n1. **Sin trípode nodal**: paralaje en objetos cercanos.\n2. **Cambio de exposición entre fotos**: bordes visibles.\n3. **Overlap bajo**: stitching falla.\n4. **Auto focus**: cada foto enfoca distinto, pierde consistencia.\n5. **Ignorar distorsión**: gran angular multiplica problemas de stitching.\n\n## Panorama vertical (vertorama)\n\nPara montañas altas o edificios: rotá la cámara 90° y hacé columnas verticales. Mismo concepto pero eje inverso.\n\n## Multi-row para 360°\n\n360° completo = 1 fila de 12 fotos + 1 fila cenit (6) + 1 fila nadir (6) = 24 fotos. PTGui/Hugin unen todo.\n\nCombiná con [crop factor](/calculadora-tamano-sensor-crop-factor), [ancho angular](/calculadora-ancho-angulo-lente-distancia) y [tarjeta SD](/calculadora-tarjeta-sd-necesaria-sesion).",
   "faq": [
     {
       "q": "¿Por qué necesito solapamiento entre fotos y cuánto es suficiente?",
@@ -227,5 +234,5 @@
       "text": "Los resultados aparecen debajo del formulario. Podés modificar cualquier dato y recalcular."
     }
   ],
-  "lastReviewed": "2026-05-19"
+  "lastReviewed": "2026-06-04"
 }

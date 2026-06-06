@@ -1,35 +1,36 @@
 {
   "slug": "raid-capacity-calculator",
-  "title": "RAID Capacity Calculator 2026 | Hacé Cuentas",
-  "h1": "RAID Storage Capacity Calculator",
-  "description": "Calculate usable capacity and fault tolerance by RAID level. Free RAID calculator for IT professionals and students.",
+  "title": "RAID Capacity Calculator: usable space + table | Hacé Cuentas",
+  "h1": "RAID Capacity Calculator (RAID 0, 1, 5, 6, 10)",
+  "description": "Calculate usable capacity and fault tolerance for RAID 0, 1, 5, 6 and 10. Enter disk count and size per drive — get usable TB instantly, with a full comparison table.",
   "category": "tecnologia",
   "icon": "💽",
   "formulaId": "raid-capacidad-discos-redundancia",
   "esSlug": "calculadora-raid-capacidad-discos-redundancia",
   "audience": "global",
+  "answerSnippet": "Usable RAID capacity depends on the level: RAID 0 = N × disk size (no redundancy); RAID 1 = size of one disk; RAID 5 = (N − 1) × disk size (tolerates 1 failure); RAID 6 = (N − 2) × disk size (tolerates 2 failures); RAID 10 = (N ÷ 2) × disk size (mirror + stripe). Example: 4 × 4 TB in RAID 5 = (4 − 1) × 4 = 12 TB usable.",
   "seoKeywords": [
     "RAID capacity calculator",
     "RAID usable capacity",
     "RAID fault tolerance",
-    "RAID 5 capacity",
+    "RAID 5 capacity calculator",
     "RAID 6 capacity",
     "storage redundancy calculator",
     "RAID 0 capacity",
     "RAID 1 capacity",
-    "RAID storage planning",
+    "RAID 10 usable capacity",
     "how to calculate RAID capacity",
-    "disk array redundancy",
+    "RAID usable space formula",
     "RAID calculator free"
   ],
-  "intro": "Technical calculations are critical in IT and software development: latency, bandwidth, SLA uptime, cloud costs, and algorithm complexity. Accurate RAID capacity planning prevents over-provisioning and helps you choose the right redundancy level. This free calculator shows usable capacity and fault tolerance for RAID 0, 1, 5, 6, and 10. Values are current to 2026 and reviewed regularly to keep you up-to-date.",
-  "keyTakeaway": "Formula depends on RAID type (0, 1, 5, 6, 10). Direct calculation with your inputs to determine usable capacity and fault tolerance for each RAID level.",
+  "intro": "How much usable storage do you actually get from a RAID array? It depends on the level. RAID 0 keeps 100% of the raw space but tolerates zero failures, RAID 5 loses one disk to parity, RAID 6 loses two, and RAID 1 / RAID 10 cut your space in half for mirroring. Enter your number of disks and the capacity per drive below to get the usable TB and the number of disk failures you can survive — for RAID 0, 1, 5, 6 and 10. Free, no signup, runs entirely in your browser.",
+  "keyTakeaway": "Usable capacity formula by RAID level: RAID 0 = N × size, RAID 1 = 1 × size, RAID 5 = (N−1) × size, RAID 6 = (N−2) × size, RAID 10 = (N÷2) × size. Higher redundancy means less usable space.",
   "useCases": [
-    "Calculate usable capacity for different RAID configurations",
-    "IT students and professionals planning storage infrastructure",
-    "Validate theoretical results before implementation",
-    "Compare storage efficiency across RAID levels",
-    "Quick reference for production storage planning"
+    "Size a NAS or server array before buying drives",
+    "Compare usable capacity across RAID 0, 1, 5, 6 and 10",
+    "Plan parity overhead and storage efficiency for a budget",
+    "Check how many disk failures a configuration can survive",
+    "Quick reference for IT students and sysadmins"
   ],
   "fields": [
     {
@@ -59,24 +60,25 @@
           "label": "RAID 10 (Mirror + Stripe)"
         }
       ],
-      "default": "0"
+      "default": "5"
     },
     {
       "id": "n",
       "label": "Number of Disks",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01,
-      "help": "Total number of physical drives in your RAID array."
+      "placeholder": "4",
+      "step": 1,
+      "help": "Total number of physical drives in the array (use an even number for RAID 10)."
     },
     {
       "id": "tb",
       "label": "Capacity per Disk (TB)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "4",
+      "step": 0.5,
+      "help": "Size of each drive in terabytes. Use identical drives for predictable results."
     }
   ],
   "outputs": [
@@ -87,7 +89,7 @@
     },
     {
       "id": "tolerancia",
-      "label": "Fault Tolerance"
+      "label": "Disk Failures Tolerated"
     },
     {
       "id": "resumen",
@@ -95,68 +97,75 @@
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Worked Example: 4 × 4 TB in RAID 5",
     "steps": [
-      "RAID 5, 4 × 2TB",
-      "6 TB usable"
+      "RAID 5 formula: usable = (N − 1) × disk size",
+      "N = 4 disks, disk size = 4 TB",
+      "usable = (4 − 1) × 4 = 3 × 4 = 12 TB",
+      "Parity overhead = 4 TB (one disk's worth), tolerates 1 failure"
     ],
-    "result": "6 TB"
+    "result": "12 TB usable, tolerates 1 disk failure"
   },
-  "explanation": "**RAID capacity calculators** help you plan storage infrastructure: drives, redundancy, uptime SLA, cloud costs. The right decision scales your business.\n\n## How This Works\n\nThis calculator computes usable capacity and fault tolerance based on your RAID level and drive configuration. Enter the number of disks and capacity per disk to see how much storage is available after accounting for redundancy overhead.\n\n## Key RAID Levels\n\nEach RAID configuration trades off capacity for redundancy:\n- **RAID 0**: Maximum capacity, zero fault tolerance (striping only)\n- **RAID 1**: 50% usable capacity, mirrors data across drives\n- **RAID 5**: (N-1) usable capacity, tolerates one drive failure\n- **RAID 6**: (N-2) usable capacity, tolerates two drive failures\n- **RAID 10**: 50% usable capacity, combines mirroring and striping\n\n## Final Notes\n\nThis calculator is a reference tool. For critical infrastructure decisions, consult with an IT professional. Values are current to 2026 and reviewed regularly.",
+  "explanation": "A **RAID capacity calculator** tells you how much usable storage you keep after redundancy overhead. The raw total is always *number of disks × capacity per disk*, but each RAID level reserves part of that for parity or mirroring.\n\n## Usable capacity formula by RAID level\n\n| RAID level | Usable capacity | Disk failures tolerated | Min. disks |\n|---|---|---|---|\n| RAID 0 | N × size | 0 | 2 |\n| RAID 1 | 1 × size | N − 1 | 2 |\n| RAID 5 | (N − 1) × size | 1 | 3 |\n| RAID 6 | (N − 2) × size | 2 | 4 |\n| RAID 10 | (N ÷ 2) × size | 1 per mirror | 4 |\n\n*(N = number of disks, size = capacity of one disk. Assumes identical drives.)*\n\n## Common configurations (usable capacity)\n\n| Configuration | Raw total | RAID 0 | RAID 1 | RAID 5 | RAID 6 | RAID 10 |\n|---|---|---|---|---|---|---|\n| 2 × 4 TB | 8 TB | 8 TB | 4 TB | — | — | — |\n| 4 × 4 TB | 16 TB | 16 TB | 4 TB | 12 TB | 8 TB | 8 TB |\n| 4 × 8 TB | 32 TB | 32 TB | 8 TB | 24 TB | 16 TB | 16 TB |\n| 6 × 4 TB | 24 TB | 24 TB | 4 TB | 20 TB | 16 TB | 12 TB |\n| 8 × 8 TB | 64 TB | 64 TB | 8 TB | 56 TB | 48 TB | 32 TB |\n\n## How efficiency scales\n\nStorage efficiency = usable ÷ raw. RAID 0 is 100% efficient but has no protection. RAID 1 and RAID 10 are always 50% efficient. RAID 5 and RAID 6 get *more* efficient as you add disks: RAID 5 with 4 disks is 75% efficient (3/4), but with 8 disks it reaches 87.5% (7/8). RAID 6 with 4 disks is 50% (2/4), rising to 75% (6/8) at 8 disks — which is why wide RAID 6 arrays are popular for large NAS builds.\n\n## Choosing a level\n\n- **RAID 0** — maximum speed and capacity, zero redundancy. Scratch space, caches, non-critical data only.\n- **RAID 1** — simplest redundancy, two-drive mirror. Boot drives, small critical volumes.\n- **RAID 5** — best capacity/protection balance with 3+ drives, survives one failure. Avoid with very large drives (long rebuild = second-failure risk).\n- **RAID 6** — survives two simultaneous failures; the standard for large arrays with high-capacity drives.\n- **RAID 10** — fastest rebuilds and great random-write performance, at 50% efficiency. Databases and VMs.\n\n## Important caveats\n\nReal usable space is slightly lower than these figures: filesystem overhead, the decimal-vs-binary TB/TiB difference (a \"4 TB\" drive is ~3.64 TiB), and reserved blocks all reduce it. These formulas give the array-level usable capacity before the filesystem.",
   "faq": [
     {
-      "q": "What is RAID 0?",
-      "a": "RAID 0 (striping) maximizes capacity by distributing data across all drives with no redundancy. One drive failure loses everything. Use only for non-critical data like caches."
+      "q": "How do I calculate RAID 5 usable capacity?",
+      "a": "RAID 5 usable capacity = (N − 1) × capacity per disk, where N is the number of drives. One disk's worth of space is reserved for distributed parity. Example: 4 × 4 TB in RAID 5 gives (4 − 1) × 4 = 12 TB usable, and the array survives one disk failure."
     },
     {
-      "q": "What is RAID 1?",
-      "a": "RAID 1 (mirroring) duplicates data across two drives, giving 50% usable capacity but perfect redundancy. If one drive fails, the other has an identical copy."
+      "q": "How much usable space does RAID 6 give?",
+      "a": "RAID 6 usable capacity = (N − 2) × capacity per disk, because two disks' worth of space is reserved for dual parity. With 8 × 8 TB drives you get (8 − 2) × 8 = 48 TB usable and can survive two simultaneous failures."
     },
     {
-      "q": "What is RAID 5?",
-      "a": "RAID 5 distributes data and parity across N drives. You get (N-1) usable capacity and can survive one drive failure. Common for balanced storage with redundancy."
+      "q": "Why does RAID 1 only give 50% capacity?",
+      "a": "RAID 1 mirrors the same data onto every drive, so usable capacity equals the size of a single disk regardless of how many drives you add. Two 4 TB drives give 4 TB usable, not 8 TB — the second copy is the redundancy."
     },
     {
-      "q": "What is RAID 6?",
-      "a": "RAID 6 extends RAID 5 with dual parity across N drives. You get (N-2) usable capacity and can survive up to two simultaneous drive failures."
+      "q": "What is the usable capacity of RAID 10?",
+      "a": "RAID 10 usable capacity = (N ÷ 2) × capacity per disk, since data is mirrored and then striped. It requires an even number of at least 4 drives. Four 4 TB drives give (4 ÷ 2) × 4 = 8 TB usable."
     },
     {
-      "q": "What is RAID 10?",
-      "a": "RAID 10 (1+0) mirrors your data and then stripes across mirrors. You get 50% usable capacity with excellent performance and can tolerate multiple drive failures."
+      "q": "Does RAID 0 lose any capacity?",
+      "a": "No. RAID 0 uses 100% of the raw space (N × disk size) by striping data across all drives. The trade-off is zero redundancy: if any single drive fails, the entire array's data is lost."
     },
     {
-      "q": "Is this calculator free?",
-      "a": "Yes, all our calculators are free and require no account or registration. No ads, no paywalls."
+      "q": "How many disk failures can each RAID level survive?",
+      "a": "RAID 0 tolerates zero failures. RAID 5 tolerates one. RAID 6 tolerates two. RAID 1 tolerates N − 1 (any but the last mirror copy). RAID 10 tolerates one failure per mirror pair, so it can survive multiple failures as long as no full pair is lost."
     },
     {
-      "q": "Are the results accurate?",
-      "a": "These use industry-standard RAID formulas and are reference calculations. For critical enterprise deployments, consult with storage professionals."
+      "q": "Why is my real usable space lower than the calculator shows?",
+      "a": "Three reasons: filesystem overhead and reserved blocks, the binary-vs-decimal unit gap (a \"4 TB\" drive is about 3.64 TiB as reported by your OS), and metadata. These formulas give array-level capacity before the filesystem, so expect roughly 5–10% less after formatting."
     },
     {
-      "q": "Do you store my data?",
-      "a": "No. All calculations run in your browser. We never send your inputs to any server or store anything."
+      "q": "Do the drives have to be the same size?",
+      "a": "For predictable results, yes. If you mix sizes, most RAID levels treat every disk as if it were the size of the smallest one, so the extra space on larger drives is wasted. This calculator assumes identical drives."
     },
     {
-      "q": "How do I choose a RAID level?",
-      "a": "Choose based on your priority: RAID 0 for speed and capacity with no redundancy, RAID 1 for simplicity, RAID 5 for balanced performance and protection, RAID 6 for high reliability, RAID 10 for performance and protection combined."
+      "q": "Is RAID a substitute for backups?",
+      "a": "No. RAID protects against drive hardware failure, not against accidental deletion, ransomware, fire, or controller failure. Always keep separate backups — RAID is for uptime and availability, not for backup."
+    },
+    {
+      "q": "Which RAID level is best for a NAS?",
+      "a": "For most home and small-business NAS builds, RAID 5 (3–5 drives) or RAID 6 (6+ drives, or any array with large drives) gives the best balance of usable capacity and protection. RAID 10 is preferred when write performance and fast rebuilds matter more than capacity."
     }
   ],
   "sources": [
     {
-      "name": "IEEE Standards Association",
-      "url": "https://standards.ieee.org/"
+      "name": "Storage Networking Industry Association (SNIA) — Common RAID Disk Data Format",
+      "url": "https://www.snia.org/tech_activities/standards/curr_standards/ddf"
     },
     {
-      "name": "National Institute of Standards and Technology (NIST)",
-      "url": "https://www.nist.gov/"
+      "name": "Red Hat — Managing RAID (Storage Administration Guide)",
+      "url": "https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/managing_storage_devices/managing-raid_managing-storage-devices"
     }
   ],
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-18",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Standard RAID capacity formulas — no external data updates required"
   },
+  "lastReviewed": "2026-06-04",
   "relatedSlugs": [],
   "noindex": false
 }

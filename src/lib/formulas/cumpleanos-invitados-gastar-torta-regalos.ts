@@ -45,8 +45,6 @@ export function cumpleanosInvitadosGastarTortaRegalos(i: Inputs): Outputs {
     };
   }
 
-  // Catering total incluye un 30% extra por acompañantes de niños (factor estándar de mercado AR)
-  // Para cumples infantiles es común que por cada niño venga al menos 1 adulto
   const cateringTotal = cateringPorPersona * invitados;
   const souvenirTotal = souvenirPorPersona * invitados;
 

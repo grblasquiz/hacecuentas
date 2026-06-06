@@ -1,9 +1,9 @@
 {
   "slug": "calculadora-overclock-temperatura-segura",
-  "lastReviewed": "2026-05-19",
-  "title": "Calculadora de Temperatura Segura para Overclock 2026",
-  "h1": "Calculadora de Temperatura Segura para Overclock",
-  "description": "Verificá si la temperatura de tu CPU o GPU está en rango seguro para overclock. Calculá el margen térmico disponible según tu componente y cooler.",
+  "lastReviewed": "2026-06-04",
+  "title": "Temperatura segura CPU/GPU para overclock + tabla",
+  "h1": "Temperatura segura para overclock: ¿cuánto margen térmico tenés?",
+  "description": "¿Tu CPU o GPU está caliente para hacer overclock? Ingresá tu temperatura bajo carga y mirá cuánto margen térmico te queda antes del throttling. Tabla de Tjmax por componente.",
   "category": "tecnologia",
   "icon": "🌡️",
   "formulaId": "overclock-temperatura-segura",
@@ -12,16 +12,20 @@
     "overclock temperatura maxima",
     "temp gpu segura",
     "thermal throttling",
-    "temperatura maxima procesador"
+    "temperatura maxima procesador",
+    "cuantos grados aguanta un cpu",
+    "margen termico overclock",
+    "temperatura cpu overclock"
   ],
-  "intro": "Cada procesador y GPU tiene una **temperatura máxima (Tjunction/Tmax)** antes de hacer thermal throttling. Para overclock estable necesitás mantener al menos **10-15°C de margen** bajo ese límite. Esta calculadora toma tu temperatura actual bajo carga, la temperatura máxima de tu componente, y te dice cuánto margen térmico tenés para overclock seguro.",
-  "keyTakeaway": "**Intel: Tmax ~100°C, AMD Ryzen: Tmax ~95°C, GPUs: ~90-93°C.** Para overclock estable, mantenete al menos 10°C debajo del máximo.",
+  "answerSnippet": "Para hacer overclock estable necesitás al menos 10-15°C de margen por debajo de la temperatura máxima (Tjmax) de tu componente. Tjmax típico: Intel Core ~100°C, AMD Ryzen ~95°C, GPU NVIDIA ~90-93°C, GPU AMD Radeon ~110°C. Margen térmico = Tjmax − tu temperatura bajo carga. Ejemplo: un Ryzen a 78°C (Tjmax 95°C) tiene 17°C de margen, suficiente para overclock moderado.",
+  "intro": "Cada procesador y GPU tiene una **temperatura máxima (Tjunction/Tjmax)** a la que empieza el **thermal throttling** (baja la frecuencia para protegerse). Para overclock estable querés mantenerte al menos **10-15°C por debajo** de ese límite bajo carga sostenida. Esta calculadora toma tu temperatura actual bajo carga y la ambiente, y te dice exactamente cuánto **margen térmico** te queda para hacer overclock seguro.",
+  "keyTakeaway": "**Intel Core: Tjmax ~100°C · AMD Ryzen: ~95°C · GPU NVIDIA: ~90-93°C · GPU AMD Radeon: ~110°C.** Margen térmico = Tjmax − tu temperatura bajo carga. Querés ≥15°C de margen para OC estable.",
   "useCases": [
     "Querés hacer overclock y necesitás saber si tu cooler aguanta.",
-    "Tu CPU llega a 90°C y querés saber si es peligroso.",
+    "Tu CPU llega a 90°C bajo carga y querés saber si es peligroso.",
     "Estás eligiendo entre cooler de aire y AIO líquido.",
-    "Querés saber si el thermal throttling explica tu bajo rendimiento.",
-    "Evaluás si cambiar pasta térmica mejora las temperaturas."
+    "Querés saber si el thermal throttling explica tu bajo rendimiento o caídas de FPS.",
+    "Evaluás si cambiar la pasta térmica vale la pena."
   ],
   "fields": [
     {
@@ -31,19 +35,19 @@
       "options": [
         {
           "value": "cpu_intel",
-          "label": "CPU Intel (Core i5/i7/i9)"
+          "label": "CPU Intel (Core i5/i7/i9) — Tjmax 100°C"
         },
         {
           "value": "cpu_amd",
-          "label": "CPU AMD Ryzen"
+          "label": "CPU AMD Ryzen — Tjmax 95°C"
         },
         {
           "value": "gpu_nvidia",
-          "label": "GPU NVIDIA GeForce"
+          "label": "GPU NVIDIA GeForce — Tjmax 93°C"
         },
         {
           "value": "gpu_amd",
-          "label": "GPU AMD Radeon"
+          "label": "GPU AMD Radeon — Tjmax 110°C"
         }
       ],
       "required": true
@@ -99,87 +103,100 @@
   "dataUpdate": {
     "frequency": "never",
     "lastUpdated": "2026-04-16",
-    "source": "W3C — World Wide Web Consortium",
-    "sourceUrl": "https://www.w3.org",
+    "source": "Intel — Especificaciones Tjunction",
+    "sourceUrl": "https://www.intel.com/content/www/us/en/support/articles/000088127/processors.html",
     "updateType": "manual"
   },
   "faq": [
     {
       "q": "¿A qué temperatura hace throttling mi CPU?",
-      "a": "**Intel Core**: 100°C (Tjunction). **AMD Ryzen**: 95°C. Cuando llegan a esa temperatura, bajan frecuencia automáticamente para protegerse."
+      "a": "**Intel Core**: ~100°C (Tjunction). **AMD Ryzen 7000/9000**: 95°C. Al llegar a esa temperatura bajan la frecuencia automáticamente para protegerse. En GPUs el throttling arranca alrededor de 90-93°C en NVIDIA y hasta 110°C en AMD Radeon."
     },
     {
-      "q": "¿80°C en CPU es mucho?",
-      "a": "Para uso normal, 80°C bajo carga pesada es **aceptable**. Para overclock querés estar debajo de 85°C idealmente. Si la temperatura ambiente es 25°C, 80°C es normal."
+      "q": "¿80°C en el CPU es mucho para overclock?",
+      "a": "Para uso normal, 80°C bajo carga pesada es **aceptable**. Para overclock estable querés estar debajo de 85°C idealmente: con un Ryzen (Tjmax 95°C) a 80°C tenés 15°C de margen, justo en el límite del OC moderado. Con un Intel (Tjmax 100°C) a 80°C tenés 20°C, más cómodo."
     },
     {
-      "q": "¿Cooler de aire o AIO líquido?",
-      "a": "Para CPU sin OC, un buen cooler de aire (Noctua NH-D15) es suficiente. Para OC agresivo, un AIO de **280mm o 360mm** da 5-10°C menos."
+      "q": "¿Cuánto margen térmico necesito para overclockear?",
+      "a": "Al menos **10-15°C por debajo del Tjmax** bajo carga sostenida. Margen >20°C: podés subir voltaje/frecuencia. 15-20°C: OC moderado estable. 10-15°C: seguro en uso normal pero no para OC. Menos de 10°C: peligro de throttling, mejorá el cooling antes de tocar nada."
     },
     {
-      "q": "¿Cada cuánto cambiar pasta térmica?",
-      "a": "Cada **2-3 años** o cuando notes temperaturas 5°C+ más altas que antes. Pasta premium (Thermal Grizzly, Noctua NT-H1) dura más."
+      "q": "¿Cooler de aire o AIO líquido para overclock?",
+      "a": "Para CPU sin OC, un buen cooler de aire (Noctua NH-D15, be quiet! Dark Rock) alcanza. Para OC moderado, un AIO de **240-280mm**. Para OC agresivo en un i9/Ryzen 9, un **360mm** da 5-10°C menos que el aire."
+    },
+    {
+      "q": "¿Cada cuánto hay que cambiar la pasta térmica?",
+      "a": "Cada **2-3 años**, o cuando notes temperaturas 5°C+ más altas que antes con la misma carga. Una pasta premium (Thermal Grizzly Kryonaut, Noctua NT-H1) dura más y baja 2-4°C frente a la pasta genérica."
     },
     {
       "q": "¿La temperatura ambiente afecta mucho?",
-      "a": "Sí, 1°C más de ambiente ≈ 1°C más de CPU/GPU. En verano argentino (35°C) tu PC puede correr **10°C más caliente** que en invierno."
+      "a": "Sí: aproximadamente **1°C más de ambiente = 1°C más de CPU/GPU**. En verano argentino sin aire (35°C) tu PC puede correr hasta 10°C más caliente que en invierno. Por eso conviene medir y dejar margen para el peor caso."
     },
     {
-      "q": "¿Qué es el delta T?",
-      "a": "Es la diferencia entre temperatura del componente y temperatura ambiente. Un delta T de 50°C con 25°C de ambiente = 75°C de componente."
+      "q": "¿Qué es el delta T y para qué sirve?",
+      "a": "El delta T es la diferencia entre la temperatura del componente y la ambiente. Un delta T de 53°C con 25°C de ambiente = 78°C de componente. Sirve para comparar coolers de forma justa: el mismo cooler dará el mismo delta T sin importar el clima."
     },
     {
       "q": "¿El overclock puede dañar el componente?",
-      "a": "Las temperaturas altas sostenidas reducen la vida útil. El voltage excesivo puede dañar. Pero con temperaturas seguras y voltage moderado, el OC es seguro."
+      "a": "Las temperaturas altas sostenidas y el voltaje excesivo **reducen la vida útil** y pueden degradar el chip. Con temperaturas seguras (margen ≥15°C) y voltaje moderado (Intel <1,45V, Ryzen 7000 <1,35V), el overclock es seguro."
     },
     {
-      "q": "¿Cuándo usar y errores comunes?",
-      "a": "- **Medí con carga sostenida** (Cinebench R23, AIDA64, 10+ minutos), no con benchmarks de 30 segundos. - **Temperatura ambiente importa**: 10 °C más de ambiente = ~7 °C más de CPU. - **No ignores el VRM** de la placa: puede termalizar antes que el CPU. - Para cálculos de consumo eléctrico, mirá nuestra calculadora de watts de fuente."
+      "q": "¿Cómo mido bien la temperatura bajo carga?",
+      "a": "Con **HWiNFO64, Core Temp o GPU-Z**, corriendo carga sostenida 10+ minutos: Cinebench R23 o AIDA64 para CPU, FurMark o un juego exigente para GPU. No mires picos de 30 segundos: lo que importa es la temperatura estable."
+    },
+    {
+      "q": "¿Qué temperatura es ideal para gaming?",
+      "a": "Durante juegos, **70-80°C** es ideal en la mayoría de CPUs y GPUs. Si tocás 90°C+ de forma sostenida, mejorá el flujo de aire del gabinete, limpiá el polvo o considerá undervolting para bajar 5-10°C sin perder rendimiento."
     }
   ],
   "howToSteps": [
     {
       "name": "Seleccioná tu componente",
-      "text": "Elegí si es CPU Intel, AMD, GPU NVIDIA o AMD."
+      "text": "Elegí si es CPU Intel, AMD Ryzen, GPU NVIDIA o AMD Radeon. La calculadora carga su Tjmax automáticamente."
     },
     {
       "name": "Medí la temperatura bajo carga",
-      "text": "Usá HWiNFO64, CoreTemp o GPU-Z para medir la temp máxima bajo estrés (Prime95, Furmark)."
+      "text": "Usá HWiNFO64, Core Temp o GPU-Z para medir la temp máxima bajo estrés sostenido (Cinebench R23, AIDA64, FurMark, 10+ minutos)."
     },
     {
       "name": "Ingresá la temperatura ambiente",
-      "text": "Medí o estimá la temperatura de la habitación."
+      "text": "Medí o estimá la temperatura de la habitación (un termómetro o el clima del día sirve)."
     },
     {
-      "name": "Evaluá el margen",
-      "text": "Revisá cuánto margen térmico tenés para hacer overclock de forma segura."
+      "name": "Apretá Calcular y evaluá el margen",
+      "text": "Revisá el margen térmico y el estado para saber si podés overclockear de forma segura."
     }
   ],
-  "explanation": "## Temperatura segura para overclock\n\nCada CPU/GPU tiene una **temperatura máxima (Tjunction/Tjmax)** antes de hacer **thermal throttling** (bajar frecuencia para protegerse). Para overclock estable hay que mantenerse con **margen térmico ≥ 15 °C por debajo** del máximo bajo carga sostenida.\n\n## Tjmax típicos por componente\n\n| Componente | Tjmax | Sweet spot carga |\n|---|---|---|\n| Intel Core 12-14 gen | 100 °C | < 85 °C |\n| AMD Ryzen 7000/9000 | 95 °C | < 80 °C |\n| NVIDIA RTX 40 series | 90 °C | < 78 °C |\n| AMD Radeon RX 7000 | 95 °C | < 80 °C |\n| NVMe SSD | 70 °C | < 60 °C |\n\n## Interpretación del margen\n\n- **Margen > 20 °C**: podés intentar subir voltaje/frecuencia.\n- **Margen 15-20 °C**: OC moderado estable.\n- **Margen 10-15 °C**: seguro en uso normal, no para OC.\n- **Margen < 10 °C**: peligro de throttling; mejorar cooling antes de tocar nada.\n\n## Cuándo usar y errores comunes\n\n- **Medí con carga sostenida** (Cinebench R23, AIDA64, 10+ minutos), no con benchmarks de 30 segundos.\n- **Temperatura ambiente importa**: 10 °C más de ambiente = ~7 °C más de CPU.\n- **No ignores el VRM** de la placa: puede termalizar antes que el CPU.\n- Para cálculos de consumo eléctrico, mirá nuestra calculadora de watts de fuente.",
+  "explanation": "## Temperatura segura para overclock\n\nCada CPU/GPU tiene una **temperatura máxima (Tjunction/Tjmax)** a la que empieza el **thermal throttling**: el chip baja su frecuencia para no quemarse. Para overclock estable hay que mantenerse con **margen térmico ≥ 15 °C por debajo** de ese límite bajo carga sostenida.\n\nLa fórmula es simple:\n\n> **Margen térmico = Tjmax − temperatura bajo carga**\n\n## Tabla de Tjmax y temperatura segura por componente\n\n| Componente | Tjmax (throttling) | Sweet spot bajo carga | Margen ideal para OC |\n|---|---|---|---|\n| Intel Core 12-14 gen | 100 °C | < 85 °C | ≥ 15 °C |\n| AMD Ryzen 7000/9000 | 95 °C | < 80 °C | ≥ 15 °C |\n| GPU NVIDIA GeForce RTX 40/50 | 90-93 °C | < 78 °C | ≥ 15 °C |\n| GPU AMD Radeon RX 7000 | 110 °C (hotspot) | < 90 °C | ≥ 15 °C |\n| NVMe SSD | 70 °C | < 60 °C | — |\n\n## Cómo interpretar tu margen térmico\n\n| Margen térmico | Qué significa | Acción |\n|---|---|---|\n| **> 25 °C** | Excelente, cooler de sobra | OC moderado a agresivo |\n| **15-25 °C** | Bueno | OC moderado estable |\n| **5-15 °C** | Ajustado | OC muy limitado, mejorá cooling primero |\n| **< 5 °C** | Crítico | NO overclockear, riesgo de throttling |\n\n## Cuándo usar y errores comunes\n\n- **Medí con carga sostenida** (Cinebench R23, AIDA64, FurMark, 10+ minutos), no con benchmarks de 30 segundos: lo que importa es la temperatura estable, no el pico.\n- **La temperatura ambiente importa**: ~1 °C más de ambiente = ~1 °C más de CPU. Dejá margen para el verano.\n- **No ignores el VRM** de la placa madre: puede termalizar antes que el CPU y limitar el OC.\n- **Undervolting** suele ser mejor que el OC bruto: baja 5-10 °C y a veces mantiene el rendimiento.\n- Para dimensionar la fuente antes de subir el consumo, mirá la [calculadora de watts de fuente de PC](/calculadora-watts-fuente-alimentacion-pc).",
   "example": {
     "title": "Ejemplo real: Ryzen 7 7700X bajo carga",
     "steps": [
-      "**Datos**: componente = CPU Ryzen, Tjmax = 95 °C, temp actual bajo carga = 78 °C, ambiente = 25 °C.",
-      "**Fórmula**: margen térmico = Tjmax - tempActual = 95 - 78 = **17 °C**.",
+      "**Datos**: componente = CPU AMD Ryzen, Tjmax = 95 °C, temp actual bajo carga = 78 °C, ambiente = 25 °C.",
+      "**Fórmula**: margen térmico = Tjmax − tempActual = 95 − 78 = **17 °C**.",
+      "**Delta T**: 78 − 25 = 53 °C sobre la ambiente (cooler de gama media correcto).",
       "**Clasificación**: margen 15-20 °C — OC moderado viable.",
-      "**Recomendación**: podés subir PBO +100 MHz o PPT/TDC +5%. Revisar cada cambio con Cinebench sostenido."
+      "**Recomendación**: podés subir PBO +100 MHz o PPT/TDC +5%. Revisá cada cambio con Cinebench sostenido."
     ],
     "result": "Margen de 17 °C: seguro para overclock moderado con margen de error térmico razonable."
   },
   "relatedSlugs": [
-    "calculadora-amplificador-operacional-ganancia",
-    "calculadora-filamento-3d-necesario-modelo",
-    "calculadora-costo-impresion-3d-pieza",
-    "calculadora-distancia-hiperfocal-lente"
+    "calculadora-watts-fuente-alimentacion-pc",
+    "calculadora-cooling-fan-3d-material",
+    "densidad-pixeles-pantalla-ppi-retina",
+    "calculadora-costo-impresion-3d-pieza"
   ],
   "sources": [
     {
-      "name": "W3C — World Wide Web Consortium",
-      "url": "https://www.w3.org"
+      "name": "Intel — Temperatura máxima del procesador (Tjunction)",
+      "url": "https://www.intel.com/content/www/us/en/support/articles/000088127/processors.html"
     },
     {
-      "name": "IEEE — Institute of Electrical and Electronics Engineers",
-      "url": "https://www.ieee.org"
+      "name": "AMD — Operating temperatures of Ryzen processors",
+      "url": "https://www.amd.com/en/support/kb/faq/cpu-pb-1700"
+    },
+    {
+      "name": "NVIDIA — GPU temperature and thermal throttling",
+      "url": "https://www.nvidia.com/en-us/geforce/news/"
     }
   ],
   "audience": "global"

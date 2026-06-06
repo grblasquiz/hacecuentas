@@ -27,23 +27,26 @@ interface ModelPricing {
 }
 
 const PRICING: Record<string, ModelPricing> = {
-  "claude-37-sonnet": {
+  // Claude Opus 4.8 — input $5/M, output $25/M
+  "claude-opus-4-8": {
+    inputNormal: 5.00,
+    cacheWrite: 6.25, // 1.25x input
+    cacheRead: 0.50,  // 0.10x input
+    output: 25.00,
+  },
+  // Claude Sonnet 4.6 — input $3/M, output $15/M
+  "claude-sonnet-4-6": {
     inputNormal: 3.00,
-    cacheWrite: 3.75,
-    cacheRead: 0.30,
+    cacheWrite: 3.75, // 1.25x input
+    cacheRead: 0.30,  // 0.10x input
     output: 15.00,
   },
-  "claude-35-sonnet": {
-    inputNormal: 3.00,
-    cacheWrite: 3.75,
-    cacheRead: 0.30,
-    output: 15.00,
-  },
-  "claude-3-haiku": {
-    inputNormal: 0.80,
-    cacheWrite: 1.00,
-    cacheRead: 0.08,
-    output: 4.00,
+  // Claude Haiku 4.5 — input $1/M, output $5/M
+  "claude-haiku-4-5": {
+    inputNormal: 1.00,
+    cacheWrite: 1.25, // 1.25x input
+    cacheRead: 0.10,  // 0.10x input
+    output: 5.00,
   },
 };
 
@@ -58,7 +61,7 @@ export function compute(i: Inputs): Outputs {
   // Cache hit rate: clamp between 0 and 100
   const cacheHitRatePct = Math.min(100, Math.max(0, Number(i.cacheHitRate) || 0));
   const cacheHitRate = cacheHitRatePct / 100;
-  const model = i.model || "claude-37-sonnet";
+  const model = i.model || "claude-sonnet-4-6";
 
   if (requestsPerDay <= 0 || (basePromptTokens <= 0 && variableTokensPerRequest <= 0)) {
     return {
@@ -70,7 +73,7 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
-  const pricing = PRICING[model] ?? PRICING["claude-37-sonnet"];
+  const pricing = PRICING[model] ?? PRICING["claude-sonnet-4-6"];
 
   const requestsPerMonth = requestsPerDay * DAYS_PER_MONTH;
 
@@ -109,11 +112,11 @@ export function compute(i: Inputs): Outputs {
   // --- Breakdown text ---
   const fmt = (n: number) => n.toFixed(4);
   const modelLabel =
-    model === "claude-37-sonnet"
-      ? "Claude 3.7 Sonnet"
-      : model === "claude-35-sonnet"
-      ? "Claude 3.5 Sonnet"
-      : "Claude 3.5 Haiku";
+    model === "claude-opus-4-8"
+      ? "Claude Opus 4.8"
+      : model === "claude-sonnet-4-6"
+      ? "Claude Sonnet 4.6"
+      : "Claude Haiku 4.5";
 
   const breakdown =
     `Modelo: ${modelLabel} | ${requestsPerMonth.toLocaleString()} req/mes\n` +

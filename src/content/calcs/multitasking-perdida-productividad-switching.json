@@ -1,15 +1,16 @@
 {
   "slug": "calculadora-multitasking-perdida-productividad-switching",
   "lastReviewed": "2026-06-04",
-  "title": "Calculadora de pérdida de productividad por multitasking 2026",
-  "h1": "Calculadora de pérdida de productividad por multitasking",
-  "description": "Calculá qué porcentaje de tu jornada perdés por cambiar de tarea constantemente (task switching). Basado en investigaciones de la APA y Gloria Mark (UC Irvine).",
+  "title": "Cuánto tiempo pierde el multitasking: calculadora + tabla | Hacé Cuentas",
+  "h1": "Calculadora: cuánto tiempo perdés por multitasking (switching cost)",
+  "description": "Ingresá tus cambios de tarea por día y descubrí cuántos minutos y qué % de tu jornada perdés en re-enfoque. Tabla de costos por interrupción según APA, Gloria Mark y Sophie Leroy.",
   "category": "vida",
   "audience": "global",
   "icon": "🔀",
   "formulaId": "multitasking-perdida-productividad-switching",
-  "intro": "El multitasking no hace que trabajes más: hace que trabajes peor. Cada vez que cambiás de tarea, tu cerebro necesita tiempo para «recargar» el contexto anterior —ese costo invisible se llama **switching cost**. Esta calculadora toma el tiempo que perdés por interrupciones y lo divide por tu jornada total para mostrarte qué fracción real de tu día se evapora en re-enfoques. La American Psychological Association estima que el task switching puede destruir hasta el 40 % de la productividad en tareas cognitivas complejas.",
-  "keyTakeaway": "**Ratio de tiempo perdido = Minutos perdidos en switching ÷ Minutos de jornada total.** Si en una jornada de 480 min perdés 96 min cambiando de tarea, tu ratio es 0,20 — es decir, el 20 % de tu día se va en overhead cognitivo.",
+  "answerSnippet": "Cada cambio de tarea cuesta entre 4 y 17 minutos de re-enfoque cognitivo (≈6,5 min en tareas de oficina típicas; recuperar la concentración plena tras una interrupción tarda en promedio 23 min según Gloria Mark, UC Irvine). Con 10 cambios al día perdés ~65 min, el ~13,5 % de una jornada de 8 horas. Fórmula: minutos perdidos = cambios de tarea × costo por transición; % de jornada perdida = minutos perdidos ÷ minutos de jornada × 100. El multitasking no acelera el trabajo: lo encarece en tiempo de recarga.",
+  "intro": "El multitasking no hace que trabajes más: hace que trabajes peor. Cada vez que cambiás de tarea, tu cerebro necesita tiempo para «recargar» el contexto anterior —ese costo invisible se llama **switching cost**. Esta calculadora toma tu cantidad de cambios de tarea por día y el tipo de trabajo que hacés, estima los minutos que se evaporan en re-enfoque y te dice qué porcentaje real de tu jornada perdiste. La American Psychological Association estima que el task switching puede destruir hasta el 40 % de la productividad en tareas cognitivas complejas, y Gloria Mark (UC Irvine) midió que recuperar la concentración tras una interrupción toma en promedio **23 minutos y 15 segundos**.",
+  "keyTakeaway": "**Minutos perdidos = cambios de tarea × costo por transición. % de jornada perdida = minutos perdidos ÷ minutos de jornada × 100.** El costo por transición es ~4 min (tarea simple), ~6,5 min (media), ~11 min (compleja) o ~17 min (creativa profunda). Con 10 cambios diarios en tareas medias perdés ~65 min: el 13,5 % de una jornada de 8 horas.",
   "useCases": [
     "Profesional de oficina que atiende Slack, mails y reuniones simultáneamente y quiere saber qué fracción de su jornada dedica realmente a trabajo de valor.",
     "Estudiante universitario que estudia con notificaciones activas y necesita ver cuánto tiempo real de estudio pierde respecto al tiempo total sentado.",
@@ -18,33 +19,52 @@
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Tiempo perdido en switching",
-      "unit": "minutos",
+      "id": "switches",
+      "label": "Cambios de tarea por día",
+      "unit": "interrupciones",
       "type": "number",
       "required": true,
-      "placeholder": "ej: 90",
+      "placeholder": "ej: 10",
       "min": 0,
-      "max": 480,
-      "step": 1
+      "max": 200,
+      "step": 1,
+      "help": "Cuántas veces por día abandonás una tarea para atender otra (mail, mensaje, reunión, notificación)."
     },
     {
-      "id": "v2",
+      "id": "tipoTarea",
+      "label": "Tipo de tarea dominante",
+      "type": "select",
+      "required": true,
+      "default": "media",
+      "options": [
+        { "value": "simple", "label": "Simple / rutinaria (~4 min/cambio)" },
+        { "value": "media", "label": "Cognitiva media (~6,5 min/cambio)" },
+        { "value": "compleja", "label": "Cognitiva compleja (~11 min/cambio)" },
+        { "value": "creativa", "label": "Creativa profunda (~17 min/cambio)" }
+      ]
+    },
+    {
+      "id": "jornada",
       "label": "Duración total de la jornada",
       "unit": "minutos",
       "type": "number",
-      "required": true,
+      "required": false,
       "placeholder": "ej: 480",
       "min": 1,
       "max": 960,
-      "step": 1
+      "step": 1,
+      "help": "480 min = 8 horas. Dejalo en 480 si no estás seguro."
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Ratio de tiempo perdido",
+      "label": "% de jornada perdida",
       "primary": true
+    },
+    {
+      "id": "minutosPerdidos",
+      "label": "Minutos perdidos por switching"
     },
     {
       "id": "resumen",
@@ -52,51 +72,56 @@
     }
   ],
   "example": {
-    "title": "Ejemplo real: empleado administrativo con 8 interrupciones diarias",
+    "title": "Ejemplo real: empleado administrativo con 10 interrupciones diarias",
     "steps": [
-      "Una empleada administrativa hace 8 cambios de contexto por día. Cada cambio involucra tareas de complejidad media (redacción de informes, análisis de datos). Según el modelo de Sophie Leroy y los estudios de la APA, cada transición consume aproximadamente 6 minutos de recarga cognitiva: 8 × 6 = **48 minutos perdidos en switching**.",
+      "Una empleada administrativa hace **10 cambios de tarea por día** entre redacción de informes y análisis de datos (tareas de complejidad media).",
+      "Según el modelo de Sophie Leroy (attention residue) y los estudios de la APA, cada transición de complejidad media consume ~6,5 minutos de recarga cognitiva: 10 × 6,5 = **65 minutos perdidos en switching**.",
       "Su jornada laboral es de **8 horas = 480 minutos**.",
-      "Ratio = 48 ÷ 480 = **0,10** → el 10 % de su jornada se pierde en overhead de switching. En una semana laboral de 5 días, eso equivale a 240 minutos = **4 horas perdidas sin producir nada**."
+      "% perdido = 65 ÷ 480 × 100 = **13,5 %** → casi 1 de cada 7 minutos se pierde en overhead. En una semana de 5 días eso son 325 minutos = **5,4 horas perdidas** sin producir nada."
     ],
-    "result": "0.10 (10 % de la jornada perdida en task switching)"
+    "result": "13,5 % de la jornada perdida (65 min/día) — quedan ~6,9 h productivas"
   },
-  "explanation": "## Cómo se calcula\n\nEsta calculadora divide el **tiempo total perdido en switching** por la **duración total de la jornada**, devolviendo un ratio entre 0 y 1:\n\n```\nRatio de pérdida = Tiempo perdido en switching (min) ÷ Jornada total (min)\n```\n\nUn ratio de **0,15** significa que el 15 % de tu jornada se consume en overhead cognitivo. Para convertirlo a porcentaje, multiplicá el resultado por 100.\n\n### ¿Cómo calcular el tiempo perdido en switching?\n\nEl tiempo perdido en switching surge de multiplicar el número de cambios de tarea por el costo promedio de cada transición. Los estudios de Sophie Leroy (Universidad de Minnesota) sobre *Attention Residue* y los de Gloria Mark (UC Irvine) ofrecen los coeficientes más citados:\n\n| Tipo de tarea | Costo por transición | Ejemplos |\n|---|---|---|\n| Tarea simple o rutinaria | 4–5 min | Responder mails, cargar datos |\n| Tarea cognitiva media | 6–7 min | Redactar informes, análisis básico |\n| Tarea cognitiva compleja | 10–12 min | Programar, diseñar, investigar |\n| Tarea creativa profunda | 15–20 min | Escritura, estrategia, investigación académica |\n\nEstos rangos derivan del efecto *attention residue*: parte de tu atención queda «adherida» a la tarea anterior y tarda varios minutos en liberarse completamente.\n\n### Tabla de referencia: interrupciones vs. pérdida\n\n| Interrupciones/día | Tipo de tarea | Tiempo perdido | % jornada (8 h) |\n|---|---|---|---|\n| 5 cambios | Simple | ~25 min | ~5 % |\n| 10 cambios | Media | ~65 min | ~13,5 % |\n| 15 cambios | Media | ~100 min | ~20,8 % |\n| 10 cambios | Compleja | ~110 min | ~22,9 % |\n| 20 cambios | Compleja | ~220 min | ~45,8 % |\n\n### El error del «multitasking productivo»\n\nEl cerebro humano no procesa tareas cognitivas en paralelo: realiza *task switching* rápido, que crea un overhead acumulativo. Las personas que más se autodefinen como «multitaskers eficientes» presentan en realidad peor rendimiento en pruebas de concentración (Ophir, Nass y Wagner, Stanford 2009). El 97,5 % de la población no tiene capacidad de multitasking real; solo el 2,5 % son llamados *supertaskers*.\n\n### Estrategias para reducir el ratio\n\n1. **Time blocking**: bloques de 45–90 min dedicados a una sola tarea, sin excepciones.\n2. **Batching de mails/mensajes**: revisar en ventanas fijas (ej: 9 h, 13 h, 17 h) en lugar de continuamente.\n3. **Técnica Pomodoro**: bloques de 25 min de trabajo puro + 5 de descanso, lo que limita los cambios no planificados.\n4. **Notificaciones en Do Not Disturb** durante bloques de trabajo profundo.\n5. **Lista de captura rápida**: anotar ideas o pendientes sin abandonar la tarea actual.",
+  "explanation": "## Cómo se calcula\n\nLa calculadora estima primero los **minutos perdidos en switching** y luego qué porcentaje de tu jornada representan:\n\n```\nMinutos perdidos = cambios de tarea × costo por transición\n% de jornada perdida = minutos perdidos ÷ minutos de jornada × 100\n```\n\nEl **costo por transición** depende del tipo de tarea, porque cuanto más cognitiva es la tarea, más «residuo de atención» queda adherido a ella tras cada corte.\n\n### Costo por transición según el tipo de tarea\n\n| Tipo de tarea | Costo por transición | Ejemplos |\n|---|---|---|\n| Simple / rutinaria | ~4 min | Responder mails, cargar datos |\n| Cognitiva media | ~6,5 min | Redactar informes, análisis básico |\n| Cognitiva compleja | ~11 min | Programar, diseñar, investigar |\n| Creativa profunda | ~17 min | Escritura, estrategia, investigación académica |\n\nEstos coeficientes derivan del efecto *attention residue* descrito por Sophie Leroy (University of Minnesota): parte de tu atención queda «adherida» a la tarea anterior y tarda varios minutos en liberarse completamente.\n\n### Tabla de referencia: cambios por día vs. pérdida (jornada de 8 h)\n\n| Cambios/día | Tipo de tarea | Minutos perdidos | % de la jornada |\n|---|---|---|---|\n| 5 | Simple | 20 min | 4,2 % |\n| 10 | Simple | 40 min | 8,3 % |\n| 10 | Media | 65 min | 13,5 % |\n| 15 | Media | 98 min | 20,3 % |\n| 10 | Compleja | 110 min | 22,9 % |\n| 20 | Compleja | 220 min | 45,8 % |\n| 8 | Creativa | 136 min | 28,3 % |\n\n### El error del «multitasking productivo»\n\nEl cerebro humano no procesa tareas cognitivas en paralelo: realiza *task switching* rápido, que crea un overhead acumulativo. Las personas que más se autodefinen como «multitaskers eficientes» presentan en realidad peor rendimiento en pruebas de concentración (Ophir, Nass y Wagner, Stanford 2009). Se estima que solo alrededor del 2,5 % de la población —los llamados *supertaskers*— tiene capacidad de multitasking cognitivo real sin pérdida de rendimiento.\n\n### El dato clave: 23 minutos para reenfocarse\n\nGloria Mark (UC Irvine) midió que recuperar el nivel de concentración previo a una interrupción toma en promedio **23 minutos y 15 segundos**, y que los trabajadores de oficina cambian de tarea cada **3 minutos**. Si cambiás de tarea más rápido de lo que tardás en reenfocarte, nunca alcanzás concentración plena: por eso el switching cost se acumula tan rápido.\n\n### Estrategias para reducir el % de pérdida\n\n1. **Time blocking**: bloques de 45–90 min dedicados a una sola tarea, sin excepciones.\n2. **Batching de mails/mensajes**: revisar en ventanas fijas (ej: 9 h, 13 h, 17 h) en lugar de continuamente.\n3. **Técnica Pomodoro**: bloques de 25 min de trabajo puro + 5 de descanso, lo que limita los cambios no planificados.\n4. **Notificaciones en Do Not Disturb** durante bloques de trabajo profundo.\n5. **Lista de captura rápida**: anotar ideas o pendientes sin abandonar la tarea actual.",
   "faq": [
     {
-      "q": "¿Qué significa exactamente el resultado de la calculadora?",
-      "a": "El resultado es un ratio decimal entre 0 y 1 que indica qué proporción de tu jornada perdiste en switching cognitivo. Por ejemplo, 0,15 significa que el 15 % de tu tiempo de trabajo —72 minutos en una jornada de 8 horas— se fue en recargas de contexto, sin producir trabajo real. Cuanto más cercano a 0, más eficiente fue tu gestión de la atención."
+      "q": "¿Cuántos minutos pierdo por cada cambio de tarea?",
+      "a": "Depende del tipo de tarea: ~4 minutos para tareas simples o rutinarias (mails, carga de datos), ~6,5 minutos para tareas cognitivas medias (redactar informes, análisis básico), ~11 minutos para tareas complejas (programar, diseñar) y hasta ~17 minutos para trabajo creativo profundo (escritura, estrategia). Si no estás seguro del tipo, usá 6,5 minutos como promedio conservador para trabajadores del conocimiento."
     },
     {
-      "q": "¿Cómo sé cuántos minutos pierdo en switching si no los cronometré?",
-      "a": "Una estimación práctica: multiplicá el número de cambios de tarea completos que hiciste en el día por el costo típico según el tipo de tarea (4–5 min para tareas simples, 6–7 min para tareas medias, 10–12 min para tareas complejas). Si no estás seguro del tipo, usá 7 minutos como promedio conservador para trabajadores del conocimiento. Los estudios de Gloria Mark (UC Irvine, 2008) midieron que los trabajadores de oficina cambian de tarea cada 3 minutos en promedio."
+      "q": "¿Cómo se calcula el porcentaje de jornada perdida por multitasking?",
+      "a": "Primero estimás los minutos perdidos: cambios de tarea por día × costo por transición. Después lo dividís por los minutos totales de tu jornada y lo multiplicás por 100. Por ejemplo: 10 cambios × 6,5 min = 65 minutos perdidos; 65 ÷ 480 × 100 = 13,5 % de una jornada de 8 horas."
+    },
+    {
+      "q": "¿Cuánto tiempo tarda el cerebro en reenfocarse después de una interrupción?",
+      "a": "Gloria Mark, investigadora de la UC Irvine, midió que recuperar el nivel de concentración previo a una interrupción toma en promedio 23 minutos y 15 segundos. Para micro-interrupciones breves (una notificación, un mensaje de texto) el costo relevante es menor, de 4 a 5 minutos. Sophie Leroy llama a este fenómeno attention residue: la atención queda parcialmente 'adherida' a la tarea interrumpida."
     },
     {
       "q": "¿El 40 % de pérdida de productividad que menciona la APA es real?",
-      "a": "Es un límite superior documentado, no un promedio. La American Psychological Association cita este dato a partir de los experimentos de Rubinstein, Meyer y Evans (2001) para tareas cognitivas complejas con cambios muy frecuentes. Para tareas simples y rutinarias el impacto es menor, entre 15 % y 20 %. Para un trabajador de oficina típico con 10–15 cambios diarios en tareas medias, la pérdida real suele estar entre el 13 % y el 22 % de la jornada."
-    },
-    {
-      "q": "¿Cuánto tiempo tarda el cerebro en reenfocarse completamente después de una interrupción?",
-      "a": "Gloria Mark, investigadora de la UC Irvine, midió que recuperar el nivel de concentración previo a una interrupción toma en promedio **23 minutos y 15 segundos**. Para micro-interrupciones breves (notificación visual, mensaje de texto) el mínimo relevante es de 4 a 5 minutos. Sophie Leroy llama a este fenómeno *attention residue*: la atención queda parcialmente 'adherida' a la tarea interrumpida."
+      "a": "Es un límite superior documentado, no un promedio. La American Psychological Association cita ese dato a partir de los experimentos de Rubinstein, Meyer y Evans (2001) para tareas cognitivas complejas con cambios muy frecuentes. Para tareas simples y rutinarias el impacto es menor, entre 15 % y 20 %. Para un trabajador de oficina típico con 10–15 cambios diarios en tareas medias, la pérdida real suele estar entre el 13 % y el 22 % de la jornada."
     },
     {
       "q": "¿Las personas que más hacen multitasking son más hábiles en él?",
-      "a": "No: es al revés. Ophir, Nass y Wagner (Stanford, 2009) demostraron que quienes se identifican como multitaskers frecuentes tienen peor desempeño en pruebas de filtrado de distractores y memoria de trabajo. La práctica del multitasking no entrena al cerebro a hacerlo mejor; refuerza el hábito de la distracción. Solo el 2,5 % de la población —los llamados *supertaskers*— muestra capacidad de multitasking cognitivo real sin pérdida de rendimiento."
+      "a": "No: es al revés. Ophir, Nass y Wagner (Stanford, 2009) demostraron que quienes se identifican como multitaskers frecuentes tienen peor desempeño en pruebas de filtrado de distractores y memoria de trabajo. La práctica del multitasking no entrena al cerebro a hacerlo mejor; refuerza el hábito de la distracción. Solo alrededor del 2,5 % de la población —los llamados supertaskers— muestra capacidad de multitasking cognitivo real sin pérdida de rendimiento."
     },
     {
       "q": "¿El trabajo remoto aumenta o reduce el switching cost?",
-      "a": "Depende de la organización del trabajo. Estudios post-pandemia de Nicholas Bloom (Stanford, 2022) muestran que el trabajo remoto bien estructurado reduce el switching cost en ~13 % al eliminar interrupciones presenciales de colegas. Sin embargo, el home office mal organizado puede incrementarlo hasta un 20 % por las interrupciones autogeneradas (redes sociales, tareas domésticas, falta de límites horarios). La variable clave no es el lugar sino el control sobre las interrupciones."
+      "a": "Depende de la organización del trabajo. Estudios post-pandemia de Nicholas Bloom (Stanford, 2022) muestran que el trabajo remoto bien estructurado reduce el switching cost al eliminar interrupciones presenciales de colegas. Sin embargo, el home office mal organizado puede incrementarlo por interrupciones autogeneradas (redes sociales, tareas domésticas, falta de límites horarios). La variable clave no es el lugar sino el control sobre las interrupciones."
     },
     {
       "q": "¿Escuchar música mientras trabajás cuenta como multitasking?",
-      "a": "Solo si la música compite por los mismos recursos cognitivos que la tarea principal. Música sin letra durante tareas mecánicas o repetitivas no genera switching relevante (coeficiente ~0). Pero podcasts, radio hablada o música con letra durante tareas de escritura, programación o análisis sí activan competencia en el canal de procesamiento verbal, con un costo estimado de 0,10 a 0,20 según la complejidad de ambas tareas."
+      "a": "Solo si la música compite por los mismos recursos cognitivos que la tarea principal. Música sin letra durante tareas mecánicas o repetitivas no genera switching relevante. Pero podcasts, radio hablada o música con letra durante tareas de escritura, programación o análisis sí activan competencia en el canal de procesamiento verbal y agregan costo cognitivo, porque tu atención se reparte entre dos flujos de lenguaje a la vez."
     },
     {
-      "q": "¿Qué estrategia reduce más el ratio de pérdida en el corto plazo?",
-      "a": "El **time blocking** combinado con notificaciones en modo Do Not Disturb es la intervención con mayor impacto documentado. Un estudio de implementación de Gloria Mark mostró que eliminar el acceso al correo durante 5 días redujo el estrés medido (frecuencia cardíaca) y la frecuencia de cambio de tarea a la mitad. La técnica Pomodoro (bloques de 25 min) es la más fácil de adoptar sin cambios organizacionales y muestra mejoras de 15–25 % en productividad en las primeras 3 semanas."
+      "q": "¿Qué estrategia reduce más el porcentaje de pérdida en el corto plazo?",
+      "a": "El time blocking combinado con notificaciones en modo Do Not Disturb es la intervención con mayor impacto documentado. Un estudio de Gloria Mark mostró que eliminar el acceso al correo durante 5 días redujo el estrés medido (frecuencia cardíaca) y la frecuencia de cambio de tarea a la mitad. La técnica Pomodoro (bloques de 25 min) es la más fácil de adoptar sin cambios organizacionales y suele mostrar mejoras de 15–25 % en las primeras semanas."
     },
     {
       "q": "¿Este cálculo aplica también a estudiantes, no solo a trabajadores?",
-      "a": "Sí. El mecanismo es idéntico: cada vez que un estudiante revisa el celular, cambia de pestaña o atiende una notificación mientras estudia, incurre en un switching cost de 4–12 minutos según la complejidad del material. Una sesión de estudio de 4 horas con 15 revisiones al celular puede rendir efectivamente menos de 3 horas de retención real. El ratio calculado te dice qué porcentaje de tu tiempo de estudio fue trabajo cognitivo real versus overhead de reenfoque."
+      "a": "Sí. El mecanismo es idéntico: cada vez que un estudiante revisa el celular, cambia de pestaña o atiende una notificación mientras estudia, incurre en un switching cost de 4 a 12 minutos según la complejidad del material. Una sesión de estudio de 4 horas con 15 revisiones al celular puede rendir efectivamente menos de 3 horas de retención real."
+    },
+    {
+      "q": "¿Por qué el resultado se 'tope' cuando pongo muchísimos cambios?",
+      "a": "Porque los minutos perdidos no pueden superar la duración total de tu jornada: si los cambios × el costo por transición dan más que tu jornada completa, la calculadora limita el resultado al 100 %. En la práctica, un día entero perdido en switching significa que prácticamente no produjiste trabajo de valor —el indicador de que necesitás reorganizar radicalmente tus bloques de foco."
     }
   ],
   "sources": [
@@ -120,16 +145,17 @@
   "relatedSlugs": [],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-04",
     "updateType": "manual",
-    "notes": "Fórmula fija basada en ratio. No requiere actualización de datos externos.",
+    "notes": "Coeficientes de switching cost basados en literatura científica (APA, Gloria Mark, Sophie Leroy). No requieren actualización periódica.",
     "source": "American Psychological Association — Multitasking: Switching costs",
     "sourceUrl": "https://www.apa.org/topics/research/multitasking"
   },
   "seoKeywords": [
-    "calculadora multitasking pérdida productividad",
-    "switching cost calculadora",
+    "cuánto tiempo pierde el multitasking",
+    "calculadora switching cost",
     "task switching pérdida productividad",
+    "costo de cambiar de tarea minutos",
     "multitasking perdida productividad switching"
   ]
 }
