@@ -366,7 +366,7 @@ const formatFreshnessDate = (iso: string): string => {
 };
 ---
 
-<div class="calc-container" data-slug={config.slug} data-formula={config.formulaId} data-auto-calculate={(config as any).autoCalculate ? 'true' : 'false'} data-lang={lang} data-translations={JSON.stringify(outputTranslations)}>
+<div class="calc-container" data-slug={config.slug} data-name={config.h1} data-formula={config.formulaId} data-auto-calculate={(config as any).autoCalculate ? 'true' : 'false'} data-lang={lang} data-translations={JSON.stringify(outputTranslations)}>
   <div class="calc-card-header">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <rect x="4" y="2" width="16" height="20" rx="2"/>
@@ -3447,8 +3447,15 @@ const formatFreshnessDate = (iso: string): string => {
   function openEmbedModal(slug: string) {
     const origin = 'https://hacecuentas.com';
     const embedUrl = `${origin}/embed/${slug}`;
-    const iframeSnippet = `<iframe src="${embedUrl}" width="100%" height="560" style="border:1px solid #e2e8f0;border-radius:12px;max-width:720px" loading="lazy" title="Calculadora de Hac\u00e9 Cuentas"></iframe>`;
-    const scriptSnippet = `<div data-hc-embed="${slug}"></div>\n<script async src="${origin}/embed.js"><\/script>`;
+    const calcUrl = `${origin}/${slug}`;
+    const calcName = (((document.querySelector('.calc-container') as HTMLElement | null)?.dataset?.name)
+      || document.querySelector('h1')?.textContent
+      || 'esta calculadora').replace(/\s+/g, ' ').trim();
+    // Cr\u00e9dito con backlink REAL en la p\u00e1gina anfitriona (fuera del iframe, followable).
+    // Marca \u2192 home + nombre de la calc (keyword) \u2192 la p\u00e1gina de ESA calc.
+    const credit = `\n<p style="font-size:13px;text-align:center;margin:8px 0">Powered by <a href="${origin}" target="_blank" rel="noopener">Hac\u00e9 Cuentas</a> \u2014 <a href="${calcUrl}" target="_blank" rel="noopener">${calcName}</a></p>`;
+    const iframeSnippet = `<iframe src="${embedUrl}" width="100%" height="560" style="border:1px solid #e2e8f0;border-radius:12px;max-width:720px" loading="lazy" title="${calcName}"></iframe>${credit}`;
+    const scriptSnippet = `<div data-hc-embed="${slug}"></div>\n<script async src="${origin}/embed.js"><\/script>${credit}`;
 
     const overlay = document.createElement('div');
     overlay.className = 'hc-embed-overlay';

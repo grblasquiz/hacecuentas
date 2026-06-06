@@ -16,11 +16,22 @@ const js = `(function(){
     ifr.setAttribute('allow', 'clipboard-write');
     mount.innerHTML = '';
     mount.appendChild(ifr);
-    // Auto-resize por postMessage (el embed página postea su height)
+    // Crédito con backlink REAL en la página anfitriona (fuera del iframe = link followable para SEO).
+    // Marca → home + nombre de la calc (keyword) → la página de ESA calc.
+    var credit = document.createElement('p');
+    credit.style.cssText = 'font-size:13px;text-align:center;margin:8px auto 0;max-width:720px;font-family:system-ui,-apple-system,sans-serif;color:#475569';
+    credit.innerHTML = 'Powered by <a href="' + ORIGIN + '" target="_blank" rel="noopener">Hacé Cuentas</a> — <a href="' + ORIGIN + '/' + slug + '" target="_blank" rel="noopener" data-hc-deep>' + slug.replace(/-/g, ' ') + '</a>';
+    mount.appendChild(credit);
+    // Auto-resize + nombre real de la calc por postMessage (el embed página los postea).
     window.addEventListener('message', function(e) {
       if (e.origin !== ORIGIN) return;
-      if (e.data && e.data.type === 'hc-embed-height' && e.data.slug === slug && typeof e.data.height === 'number') {
+      if (!e.data || e.data.slug !== slug) return;
+      if (e.data.type === 'hc-embed-height' && typeof e.data.height === 'number') {
         ifr.style.height = Math.max(400, e.data.height + 20) + 'px';
+      }
+      if (e.data.type === 'hc-embed-meta' && e.data.name) {
+        var d = credit.querySelector('[data-hc-deep]');
+        if (d) d.textContent = e.data.name;
       }
     });
   }

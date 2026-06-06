@@ -38,7 +38,7 @@ const { calc } = Astro.props;
       <Calculator config={calc} />
     </div>
 
-    <script is:inline define:vars={{ slug: calc.slug }}>
+    <script is:inline define:vars={{ slug: calc.slug, name: calc.h1 }}>
       // Auto-resize: posta su height al parent iframe
       function postHeight() {
         var h = document.documentElement.scrollHeight;
@@ -46,9 +46,15 @@ const { calc } = Astro.props;
           window.parent.postMessage({ type: 'hc-embed-height', slug: slug, height: h }, '*');
         }
       }
+      // Posta el nombre real de la calc para que el loader arme el anchor del backlink.
+      function postMeta() {
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'hc-embed-meta', slug: slug, name: name }, '*');
+        }
+      }
       var ro = new ResizeObserver(postHeight);
       ro.observe(document.body);
-      window.addEventListener('load', postHeight);
+      window.addEventListener('load', function () { postHeight(); postMeta(); });
     </script>
 
     <style is:global>
