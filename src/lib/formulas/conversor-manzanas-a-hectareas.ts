@@ -19,8 +19,9 @@ export function conversorManzanasAHectareas(i: Inputs): Outputs {
   const rTxt = r.toFixed(4).replace(/\.?0+$/, '');
   const ha = d === 'ida' ? r : v;
   const canchas = ha / 0.714;
+  const unitLabel = d === 'ida' ? 'ha' : 'mz';
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'ha'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + unitLabel,
     resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
     _insight: {
       title: 'Cuánto terreno es',

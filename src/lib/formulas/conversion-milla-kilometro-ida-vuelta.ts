@@ -3,7 +3,7 @@ export interface Outputs { [k: string]: string | number | any; }
 export function conversionMillaKilometroIdaVuelta(i: Inputs): Outputs {
   const v = Number(i.valor) || 0;
   const u = String(i.unidad || 'a');
-  const factor = 1.60934;
+  const factor = 1.609344;
   const r = u === 'a' ? v * factor : v / factor;
   const fromU = u === 'a' ? 'mi' : 'km';
   const toU = u === 'a' ? 'km' : 'mi';

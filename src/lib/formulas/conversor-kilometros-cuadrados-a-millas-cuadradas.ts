@@ -26,8 +26,9 @@ export function conversorKilometrosCuadradosAMillasCuadradas(i: Inputs): Outputs
     tone: 'neutral',
     icon: '🗺️'
   };
+  const toUnit = d === 'ida' ? 'mi²' : 'km²';
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'mi²'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + toUnit,
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight
   };

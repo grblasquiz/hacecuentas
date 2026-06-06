@@ -18,8 +18,9 @@ export function conversorVarasAMetros(i: Inputs): Outputs {
   }
   const rTxt = r.toFixed(4).replace(/\.?0+$/, '');
   const vTxt = String(v);
+  const unitLabel = d === 'ida' ? 'm' : 'varas';
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'm'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + unitLabel,
     resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
     _insight: {
       title: 'La vara no es universal',
