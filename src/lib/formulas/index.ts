@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-05
+// Generated: 2026-06-06
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -1273,6 +1273,7 @@ import { ensayosSemanalesMejorarWritingIdioma } from './ensayos-semanales-mejora
 import { entalpiaReaccionHess } from './entalpia-reaccion-hess';
 import { entropiaCambioFase } from './entropia-cambio-fase';
 import { envejecerMascotaHumanoTablaRazaTamano } from './envejecer-mascota-humano-tabla-raza-tamano';
+import { epinefrinaDosisPesoAnafilaxia } from './epinefrina-dosis-peso-anafilaxia';
 import { equipajeExtraCostoAerolinea } from './equipaje-extra-costo-aerolinea';
 import { equipajeManoBodegaPesoVolumenAerolinea } from './equipaje-mano-bodega-peso-volumen-aerolinea';
 import { equipajePesoSobrepesoCostePorKilo } from './equipaje-peso-sobrepeso-coste-por-kilo';
@@ -1280,7 +1281,6 @@ import { equipajeVuelo } from './equipaje-vuelo';
 import { equityStartupRsuIsoImpuestoEjercicioAr } from './equity-startup-rsu-iso-impuesto-ejercicio-ar';
 import { equivalenciaHuevosTamanoGramosClaras } from './equivalencia-huevos-tamano-gramos-claras';
 import { equivalenciaToeflIeltsCambridgeMcer } from './equivalencia-toefl-ielts-cambridge-mcer';
-import { epinefrinaDosisPesoAnafilaxia } from './epinefrina-dosis-peso-anafilaxia';
 import { ergonomiaEscritorioMedidas } from './ergonomia-escritorio-medidas';
 import { compute as compute__erizo_africano_temperatura_jaula_alimentacion } from './erizo-africano-temperatura-jaula-alimentacion';
 import { compute as compute__erte_vs_ere_diferencias_cuantia_espana } from './erte-vs-ere-diferencias-cuantia-espana';
@@ -4682,6 +4682,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'entalpia-reaccion-hess': entalpiaReaccionHess,
   'entropia-cambio-fase': entropiaCambioFase,
   'envejecer-mascota-humano-tabla-raza-tamano': envejecerMascotaHumanoTablaRazaTamano,
+  'epinefrina-dosis-peso-anafilaxia': epinefrinaDosisPesoAnafilaxia,
   'equipaje-extra-costo-aerolinea': equipajeExtraCostoAerolinea,
   'equipaje-mano-bodega-peso-volumen-aerolinea': equipajeManoBodegaPesoVolumenAerolinea,
   'equipaje-peso-sobrepeso-coste-por-kilo': equipajePesoSobrepesoCostePorKilo,
@@ -4689,7 +4690,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'equity-startup-rsu-iso-impuesto-ejercicio-ar': equityStartupRsuIsoImpuestoEjercicioAr,
   'equivalencia-huevos-tamano-gramos-claras': equivalenciaHuevosTamanoGramosClaras,
   'equivalencia-toefl-ielts-cambridge-mcer': equivalenciaToeflIeltsCambridgeMcer,
-  'epinefrina-dosis-peso-anafilaxia': epinefrinaDosisPesoAnafilaxia,
   'ergonomia-escritorio-medidas': ergonomiaEscritorioMedidas,
   'erizo-africano-temperatura-jaula-alimentacion': compute__erizo_africano_temperatura_jaula_alimentacion,
   'erte-vs-ere-diferencias-cuantia-espana': compute__erte_vs_ere_diferencias_cuantia_espana,
