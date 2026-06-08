@@ -8,6 +8,8 @@
  *   3º: semanas 28 0/7 en adelante (días 196+)
  */
 
+import { datosSemana, fmtLongitud, fmtPeso, notaMedida } from '../data/embarazo-semana-a-semana.ts';
+
 export interface EmbarazoInputs {
   fum: string; // fecha última menstruación YYYY-MM-DD
   __lang?: string;
@@ -23,6 +25,10 @@ export interface EmbarazoOutputs {
   inicioSegundoTrimestre: string;
   inicioTercerTrimestre: string;
   proximoControl: string;
+  tamanoBebe: string;
+  medidasBebe: string;
+  desarrolloSemana: string;
+  sintomasSemana: string;
   detalle: string;
   _insight?: any;
   _chart?: any;
@@ -142,11 +148,34 @@ export function embarazo(inputs: EmbarazoInputs): EmbarazoOutputs {
   const trimNombre = __lang === 'en'
     ? (trimestre === 1 ? '1st trimester' : trimestre === 2 ? '2nd trimester' : '3rd trimester')
     : (trimestre === 1 ? '1er trimestre' : trimestre === 2 ? '2º trimestre' : '3er trimestre');
+
+  // Datos de desarrollo fetal de la semana actual (tracker semana a semana).
+  const sem = datosSemana(semanasTotales);
+  const tamanoBebe = sem
+    ? (__lang === 'en' ? `About the size of ${sem.frutaEn}` : `Del tamaño de ${sem.fruta}`)
+    : (__lang === 'en' ? 'Too early to estimate size' : 'Demasiado temprano para estimar el tamaño');
+  const medidasBebe = sem
+    ? (__lang === 'en'
+        ? `~${fmtLongitud(sem.longitudCm, __lang)} (${notaMedida(sem.semana, __lang)}) · ~${fmtPeso(sem.pesoG, __lang)}`
+        : `~${fmtLongitud(sem.longitudCm, __lang)} (${notaMedida(sem.semana, __lang)}) · ~${fmtPeso(sem.pesoG, __lang)}`)
+    : '—';
+  const desarrolloSemana = sem
+    ? (__lang === 'en' ? sem.desarrolloEn : sem.desarrollo)
+    : (__lang === 'en' ? 'The embryo is just starting to form.' : 'El embrión recién empieza a formarse.');
+  const sintomasSemana = sem
+    ? (__lang === 'en' ? sem.sintomasEn : sem.sintomas)
+    : (__lang === 'en' ? 'You may notice the first signs of pregnancy.' : 'Quizá notes los primeros signos del embarazo.');
+  const sizeHook = sem
+    ? (__lang === 'en'
+        ? ` This week your baby is about the size of **${sem.frutaEn}** (~${fmtLongitud(sem.longitudCm, __lang)}).`
+        : ` Esta semana tu bebé es del tamaño de **${sem.fruta}** (~${fmtLongitud(sem.longitudCm, __lang)}).`)
+    : '';
+
   const _insight = {
     title: __lang === 'en' ? 'Where you are' : 'En qué punto estás',
     text: __lang === 'en'
-      ? `You're at **${semanasTotales} weeks ${diasExtra} days** (${trimNombre}), **${progreso}%** of the way through. Your estimated due date is **${formatNice(fpp, __lang)}**, about **${diasRestantes} days** away.`
-      : `Estás de **${semanasTotales} semanas ${diasExtra} días** (${trimNombre}), un **${progreso}%** del camino recorrido. La fecha probable de parto es el **${formatNice(fpp, __lang)}**, dentro de unos **${diasRestantes} días**.`,
+      ? `You're at **${semanasTotales} weeks ${diasExtra} days** (${trimNombre}), **${progreso}%** of the way through. Your estimated due date is **${formatNice(fpp, __lang)}**, about **${diasRestantes} days** away.${sizeHook}`
+      : `Estás de **${semanasTotales} semanas ${diasExtra} días** (${trimNombre}), un **${progreso}%** del camino recorrido. La fecha probable de parto es el **${formatNice(fpp, __lang)}**, dentro de unos **${diasRestantes} días**.${sizeHook}`,
     tone: 'good' as const,
     icon: '🤰',
   };
@@ -177,6 +206,10 @@ export function embarazo(inputs: EmbarazoInputs): EmbarazoOutputs {
     inicioSegundoTrimestre: formatIso(inicioSegTrim),
     inicioTercerTrimestre: formatIso(inicioTerTrim),
     proximoControl: proximoHito(semanasTotales, __lang),
+    tamanoBebe,
+    medidasBebe,
+    desarrolloSemana,
+    sintomasSemana,
     detalle,
     _insight,
     _chart,
