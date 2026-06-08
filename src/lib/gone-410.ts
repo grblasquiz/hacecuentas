@@ -57,7 +57,6 @@ export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
   // ── Batch 2026-05-27: 661 URLs zero-impr 90d, sin internal links ──
   "/blog/como-calcular-porcentajes",
   "/blog/guia-imc-peso-saludable",
-  "/blog/recategorizacion-monotributo-julio-2026-guia-completa",
   "/calculadora-biberones-necesarios-primera-infancia",
   "/calculadora-capacidad-carga-camioneta-peso-util",
   "/calculadora-edad-conversar-temas-dificiles-hijo",
