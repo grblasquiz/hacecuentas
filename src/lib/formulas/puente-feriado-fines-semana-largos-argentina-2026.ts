@@ -23,69 +23,78 @@ export function compute(i: Inputs): Outputs {
   const year = i.year || "2026";
   const filterType = i.filterType || "all";
 
+  // Fines de semana largos reales 2026 (Ley 27.399 + Resolución 164/2025 de
+  // puentes turísticos: lun 23/3, vie 10/7, lun 7/12). Fechas observadas.
   const bridges2026: Bridge[] = [
     {
-      name: "Año Nuevo + Fin de semana",
-      startDate: "1 enero",
-      endDate: "5 enero",
-      type: "inamovible",
-      continuousDays: 5
-    },
-    {
-      name: "Puente Carnaval",
-      startDate: "9 febrero",
-      endDate: "12 febrero",
+      name: "Carnaval",
+      startDate: "14 febrero",
+      endDate: "17 febrero",
       type: "movible",
       continuousDays: 4
     },
     {
-      name: "Semana Santa + Puente",
-      startDate: "9 abril",
-      endDate: "13 abril",
+      name: "Puente Día de la Memoria",
+      startDate: "21 marzo",
+      endDate: "24 marzo",
+      type: "puente",
+      continuousDays: 4
+    },
+    {
+      name: "Semana Santa (Malvinas + Viernes Santo)",
+      startDate: "2 abril",
+      endDate: "5 abril",
+      type: "inamovible",
+      continuousDays: 4
+    },
+    {
+      name: "Revolución de Mayo",
+      startDate: "23 mayo",
+      endDate: "25 mayo",
+      type: "inamovible",
+      continuousDays: 3
+    },
+    {
+      name: "Paso a la Inmortalidad de Güemes",
+      startDate: "13 junio",
+      endDate: "15 junio",
       type: "movible",
-      continuousDays: 5
+      continuousDays: 3
     },
     {
-      name: "Día del Trabajo + Puente",
-      startDate: "30 abril",
-      endDate: "4 mayo",
-      type: "inamovible",
-      continuousDays: 5
-    },
-    {
-      name: "Día de la Bandera + Invierno",
-      startDate: "19 junio",
-      endDate: "23 junio",
-      type: "inamovible",
-      continuousDays: 5
-    },
-    {
-      name: "Independencia + Puente",
+      name: "Puente Día de la Independencia",
       startDate: "9 julio",
-      endDate: "13 julio",
-      type: "inamovible",
-      continuousDays: 5
+      endDate: "12 julio",
+      type: "puente",
+      continuousDays: 4
     },
     {
-      name: "Muerte Gral. San Martín + Puente",
-      startDate: "16 agosto",
-      endDate: "20 agosto",
-      type: "inamovible",
-      continuousDays: 5
+      name: "Paso a la Inmortalidad de San Martín",
+      startDate: "15 agosto",
+      endDate: "17 agosto",
+      type: "movible",
+      continuousDays: 3
     },
     {
-      name: "Diversidad Cultural + Puente",
-      startDate: "12 octubre",
-      endDate: "16 octubre",
-      type: "inamovible",
-      continuousDays: 5
+      name: "Día del Respeto a la Diversidad Cultural",
+      startDate: "10 octubre",
+      endDate: "12 octubre",
+      type: "movible",
+      continuousDays: 3
     },
     {
-      name: "Navidad + Año Nuevo 2027",
-      startDate: "25 diciembre",
-      endDate: "31 diciembre",
-      type: "inamovible",
-      continuousDays: 7
+      name: "Día de la Soberanía Nacional",
+      startDate: "21 noviembre",
+      endDate: "23 noviembre",
+      type: "movible",
+      continuousDays: 3
+    },
+    {
+      name: "Puente Inmaculada Concepción",
+      startDate: "5 diciembre",
+      endDate: "8 diciembre",
+      type: "puente",
+      continuousDays: 4
     }
   ];
 

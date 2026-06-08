@@ -18,7 +18,13 @@ interface Feriado {
 }
 
 export function compute(i: Inputs): Outputs {
-  const hoy = new Date(i.fecha_consulta);
+  // Parsear como fecha LOCAL (no UTC) para que el conteo de días coincida con
+  // las fechas de feriados (new Date(año, mes, día) = medianoche local) sin
+  // depender del huso horario del runtime.
+  const _p = String(i.fecha_consulta || '').split('-').map(Number);
+  const hoy = (_p.length === 3 && !_p.some(isNaN))
+    ? new Date(_p[0], _p[1] - 1, _p[2])
+    : new Date(i.fecha_consulta);
   if (isNaN(hoy.getTime())) {
     return {
       proximo_feriado: "Fecha inválida",
@@ -29,22 +35,24 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
+  // Fechas observadas 2026 (con traslados aplicados) según Ley 27.399.
+  // Güemes (17/6 mié) → lun 15/6; Soberanía (20/11 vie) → lun 23/11.
   const feriados2026: Feriado[] = [
     { nombre: "Año Nuevo", fecha: new Date(2026, 0, 1), tipo: "Inamovible" },
-    { nombre: "Día de Malvinas", fecha: new Date(2026, 1, 2), tipo: "Inamovible" },
     { nombre: "Carnaval", fecha: new Date(2026, 1, 16), tipo: "Trasladable" },
     { nombre: "Carnaval", fecha: new Date(2026, 1, 17), tipo: "Trasladable" },
-    { nombre: "San José", fecha: new Date(2026, 2, 19), tipo: "Trasladable" },
-    { nombre: "Memoria por la Verdad", fecha: new Date(2026, 2, 24), tipo: "Inamovible" },
-    { nombre: "Día del Veterano y los Caídos", fecha: new Date(2026, 3, 2), tipo: "Inamovible" },
+    { nombre: "Día de la Memoria por la Verdad y la Justicia", fecha: new Date(2026, 2, 24), tipo: "Inamovible" },
+    { nombre: "Día del Veterano y de los Caídos en Malvinas", fecha: new Date(2026, 3, 2), tipo: "Inamovible" },
+    { nombre: "Viernes Santo", fecha: new Date(2026, 3, 3), tipo: "Inamovible" },
     { nombre: "Día del Trabajador", fecha: new Date(2026, 4, 1), tipo: "Inamovible" },
-    { nombre: "Bandera Nacional", fecha: new Date(2026, 5, 20), tipo: "Inamovible" },
-    { nombre: "Muerte del Gral. Güemes", fecha: new Date(2026, 5, 17), tipo: "Trasladable" },
-    { nombre: "Independencia", fecha: new Date(2026, 6, 9), tipo: "Inamovible" },
-    { nombre: "Muerte del Gral. San Martín", fecha: new Date(2026, 7, 17), tipo: "Inamovible" },
-    { nombre: "Respeto a la Diversidad Cultural", fecha: new Date(2026, 9, 12), tipo: "Inamovible" },
-    { nombre: "Soberanía Nacional", fecha: new Date(2026, 10, 20), tipo: "Trasladable" },
-    { nombre: "Corpus Christi", fecha: new Date(2026, 4, 26), tipo: "Trasladable" },
+    { nombre: "Día de la Revolución de Mayo", fecha: new Date(2026, 4, 25), tipo: "Inamovible" },
+    { nombre: "Paso a la Inmortalidad del Gral. Güemes", fecha: new Date(2026, 5, 15), tipo: "Trasladable" },
+    { nombre: "Día de la Bandera (Gral. Belgrano)", fecha: new Date(2026, 5, 20), tipo: "Inamovible" },
+    { nombre: "Día de la Independencia", fecha: new Date(2026, 6, 9), tipo: "Inamovible" },
+    { nombre: "Paso a la Inmortalidad del Gral. San Martín", fecha: new Date(2026, 7, 17), tipo: "Trasladable" },
+    { nombre: "Día del Respeto a la Diversidad Cultural", fecha: new Date(2026, 9, 12), tipo: "Trasladable" },
+    { nombre: "Día de la Soberanía Nacional", fecha: new Date(2026, 10, 23), tipo: "Trasladable" },
+    { nombre: "Inmaculada Concepción de María", fecha: new Date(2026, 11, 8), tipo: "No laborable" },
     { nombre: "Navidad", fecha: new Date(2026, 11, 25), tipo: "Inamovible" }
   ];
 
