@@ -508,6 +508,8 @@ const priorityUrls: Url[] = [
   prio('/guia/vida-cotidiana',               '0.9',  'weekly'),
   prio('/guia/mascotas',                     '0.9',  'weekly'),
   prio('/guia/viajes',                       '0.9',  'weekly'),
+  prio('/guia/sueldos-impuestos-peru-2026',  '0.9',  'weekly'),
+  prio('/guia/sueldos-impuestos-ecuador-2026', '0.9', 'weekly'),
 ];
 // Top categorías (las más grandes) — estable salvo deploys del template de categoría
 for (const cat of ['finanzas', 'vida', 'salud', 'educacion', 'mascotas', 'matematica', 'cocina', 'deportes', 'tecnologia', 'viajes', 'construccion', 'marketing', 'negocios', 'ciencia', 'automotor', 'familia', 'idiomas', 'jardineria', 'electronica', 'entretenimiento']) {
