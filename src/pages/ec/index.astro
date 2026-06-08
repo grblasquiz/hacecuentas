@@ -1,0 +1,265 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ScrollToTop from '../../components/ScrollToTop.astro';
+
+const localeModules = import.meta.glob<any>('../../content/calcs-ec/*.json', { eager: true });
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m);
+const audienceFiltered = Object.values(mainModules)
+  .map((m: any) => m.default || m)
+  .filter((c: any) => c.audience === 'EC');
+const calcs = [...localeCalcs, ...audienceFiltered];
+
+const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
+function calcUrl(c: any): string {
+  return localeSlugs.has(c.slug) ? `/ec/${c.slug}` : `/${c.slug}`;
+}
+
+const byCategory: Record<string, any[]> = {};
+calcs.forEach((c) => {
+  if (!byCategory[c.category]) byCategory[c.category] = [];
+  byCategory[c.category].push(c);
+});
+
+const categoryMeta: Record<string, { label: string; desc: string; color: string; icon: string }> = {
+  finanzas:        { label: 'Finanzas',       desc: 'Sueldo, retefuente, prima legal, cesantías.',                color: '#2563eb', icon: '💰' },
+  impuestos:       { label: 'Impuestos',      desc: 'Retefuente DIAN 2026, IVA 19%, ICA, declaración renta.',                color: '#7c3aed', icon: '🧾' },
+  salud:           { label: 'Salud',          desc: 'IMC, calorías, embarazo, fitness.',                  color: '#16a34a', icon: '❤️' },
+  familia:         { label: 'Familia',        desc: 'Licencia maternidad, hijos, escolarización.',                  color: '#db2777', icon: '👨‍👩‍👧' },
+  vida:            { label: 'Vida cotidiana', desc: 'Arriendo, costo de vida, mercado.',                     color: '#d97706', icon: '🏠' },
+  automotor:       { label: 'Automotor',      desc: 'Soat, impuesto vehículos, gasolina vs gas.',                color: '#6366f1', icon: '🚗' },
+  educacion:       { label: 'Educación',      desc: 'ICETEX, créditos universitarios, becas.',                color: '#8b5cf6', icon: '🎓' },
+  negocios:        { label: 'Negocios',       desc: 'Márgenes, IVA, modelos fiscales.',                   color: '#0891b2', icon: '📊' },
+  marketing:       { label: 'Marketing',      desc: 'CTR, CPC, ROAS, CAC, LTV.',                          color: '#e11d48', icon: '📈' },
+  deportes:        { label: 'Deportes',       desc: 'Pace, 1RM, VO2 max, ciclismo.',                      color: '#65a30d', icon: '🏃' },
+  viajes:          { label: 'Viajes',         desc: 'Combustible, presupuesto, propinas.',                color: '#0891b2', icon: '✈️' },
+  cocina:          { label: 'Cocina',         desc: 'Tazas a gramos, ajustar receta.',                    color: '#ea580c', icon: '🍳' },
+  mascotas:        { label: 'Mascotas',       desc: 'Edad perro/gato, alimentación.',                     color: '#db2777', icon: '🐕' },
+  matematica:      { label: 'Matemática',     desc: 'Promedios, Pitágoras, conversores.',                 color: '#0d9488', icon: '🧮' },
+  tecnologia:      { label: 'Tecnología',     desc: 'Almacenamiento, IA, batería, cloud.',                color: '#06b6d4', icon: '💻' },
+  'medio-ambiente':{ label: 'Medio Ambiente', desc: 'Huella de carbono, energía solar.',                  color: '#22c55e', icon: '🌱' },
+  electronica:     { label: 'Electrónica',    desc: 'Ley de Ohm, kWh, circuitos.',                        color: '#f59e0b', icon: '⚡' },
+  ciencia:         { label: 'Ciencia',        desc: 'Física, química, astronomía.',                       color: '#6366f1', icon: '🔬' },
+  jardineria:      { label: 'Jardinería',     desc: 'Riego, tierra, siembra.',                            color: '#15803d', icon: '🌿' },
+  construccion:    { label: 'Construcción',   desc: 'Materiales, presupuesto reforma.',                   color: '#b45309', icon: '🧱' },
+};
+
+const categoryOrder = ['finanzas','impuestos','vida','familia','salud','automotor','educacion','negocios','marketing','deportes','viajes','cocina','mascotas','matematica','tecnologia','medio-ambiente','electronica','ciencia','jardineria','construccion'];
+const activeCategories = categoryOrder.filter((cat) => byCategory[cat] && byCategory[cat].length > 0);
+
+const totalCalcs = calcs.length;
+
+const popularSlugs = [
+  'calculadora-prima-legal-colombia-30-dias-junio-diciembre',
+  'calculadora-cesantias-colombia-12-porciento-anual',
+  'calculadora-retefuente-colombia-2026-empleado-tabla',
+  'calculadora-liquidacion-laboral-colombia-completa-cesantias',
+  'calculadora-salario-minimo-colombia-2026-auxilio-transporte',
+  'calculadora-aporte-eps-pension-empleado-colombia-2026'
+];
+const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': ['CollectionPage', 'WebPage'],
+      '@id': 'https://hacecuentas.com/co#webpage',
+      url: 'https://hacecuentas.com/co',
+      name: 'Calculadoras Ecuador 2026 — DIAN, retefuente, EPS | Hacé Cuentas',
+      description: `Calculadoras gratis específicas para Ecuador.`,
+      inLanguage: 'es-EC',
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      breadcrumb: { '@id': 'https://hacecuentas.com/co#breadcrumb' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': 'https://hacecuentas.com/co#breadcrumb',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Ecuador', item: 'https://hacecuentas.com/co' },
+      ],
+    },
+  ],
+};
+
+const hreflangTags = [
+  { lang: 'es-AR',     href: 'https://hacecuentas.com/' },
+  { lang: 'es-ES',     href: 'https://hacecuentas.com/es' },
+  { lang: 'es-MX',     href: 'https://hacecuentas.com/mx' },
+  { lang: 'es-EC',     href: 'https://hacecuentas.com/co' },
+  { lang: 'es-CL',     href: 'https://hacecuentas.com/cl' },
+  { lang: 'es',        href: 'https://hacecuentas.com/global' },
+  { lang: 'en',        href: 'https://hacecuentas.com/en' },
+  { lang: 'pt-BR',     href: 'https://hacecuentas.com/pt' },
+  { lang: 'x-default', href: 'https://hacecuentas.com/' },
+];
+---
+
+<Layout
+  title="Calculadoras Ecuador 2026 — DIAN, retefuente, EPS | Hacé Cuentas"
+  description={`${totalCalcs} calculadoras gratis para Ecuador: retefuente DIAN, prima legal, cesantías, EPS, salario mínimo. Datos oficiales 2026.`}
+  lang="es"
+  audience="EC"
+  hreflang={hreflangTags}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <div class="cc-index">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">🇨🇴 Ecuador · 2026</div>
+        <h1>Calculadoras para Ecuador</h1>
+        <p class="hero-sub">Retefuente DIAN, prima legal, cesantías, EPS, salario mínimo, ICA. Datos oficiales DIAN, MinTrabajo y Banco de la República. Gratis.</p>
+        <div class="hero-stats">
+          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat">100% gratis</span>
+        </div>
+      </div>
+    </section>
+
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Hacé Cuentas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Ecuador</span>
+    </nav>
+
+    {popular.length > 0 && (
+      <section class="popular-section" aria-label="Más usadas">
+        <h2 class="popular-title">Más usadas en Ecuador</h2>
+        <div class="popular-grid">
+          {popular.map((c: any) => (
+            <a href={calcUrl(c)} class="popular-card">
+              <span class="popular-icon">{c.icon || '🧮'}</span>
+              <span class="popular-label">{c.h1}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <div class="categories">
+      {activeCategories.map((catKey) => {
+        const meta = categoryMeta[catKey];
+        const catCalcs = byCategory[catKey];
+        return (
+          <section class="category-section" aria-labelledby={`cat-${catKey}`}>
+            <div class="cat-header">
+              <span class="cat-icon" aria-hidden="true" style={`background: ${meta?.color}18`}>{meta?.icon ?? '📁'}</span>
+              <div class="cat-meta">
+                <h2 id={`cat-${catKey}`} class="cat-label">{meta?.label ?? catKey}</h2>
+                {meta?.desc && <p class="cat-desc">{meta.desc}</p>}
+              </div>
+            </div>
+            <div class="calc-grid">
+              {catCalcs.map((calc: any) => (
+                <a href={calcUrl(calc)} class="calc-card">
+                  <span class="card-icon" aria-hidden="true">{calc.icon}</span>
+                  <div class="card-body">
+                    <span class="card-title">{calc.h1}</span>
+                    <span class="card-desc">{calc.description}</span>
+                  </div>
+                  <span class="card-badge" style={`background:${meta?.color}18; color:${meta?.color}`}>{meta?.label ?? catKey}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+
+    <aside class="cta-footer" aria-label="Otras versiones">
+      <p class="cta-text">¿Buscas calculadoras de otro país?</p>
+      <p class="cta-sub">Tenemos versiones específicas con datos locales para Argentina, España, México, Ecuador, Chile y Brasil. La versión global aplica al resto del mundo hispano.</p>
+      <div class="cta-links">
+        <a href="/global" class="cta-pill">🌎 Global</a>
+        <a href="/" class="cta-pill">🇦🇷 Argentina</a>
+        <a href="/es" class="cta-pill">🇪🇸 España</a>
+        <a href="/mx" class="cta-pill">🇲🇽 México</a>
+        <a href="/ec" class="cta-pill">🇨🇴 Ecuador</a>
+        <a href="/cl" class="cta-pill">🇨🇱 Chile</a>
+        <a href="/pt" class="cta-pill">🇧🇷 Brasil</a>
+      </div>
+    </aside>
+  </div>
+
+  <ScrollToTop />
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .cc-index { max-width: 1060px; margin: 0 auto; }
+  .hero { text-align: center; padding: 3rem 1rem 2.5rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .hero-inner { max-width: 720px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-block; padding: 0.3rem 0.875rem; background: var(--accent-soft);
+    color: var(--accent); border: 1px solid var(--border); border-radius: 999px;
+    font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 1rem;
+  }
+  .hero h1 { font-size: clamp(2rem, 5vw, 2.75rem); margin: 0 0 0.875rem; line-height: 1.15; }
+  .hero-sub { color: var(--text-muted); font-size: 1.0625rem; line-height: 1.6; max-width: 620px; margin: 0 auto 1.5rem; }
+  .hero-stats { display: inline-flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; color: var(--text-muted); font-size: 0.9375rem; }
+  .hero-stats .stat strong { color: var(--text); font-weight: 700; }
+  .hero-stats .stat-sep { opacity: 0.4; }
+
+  .breadcrumbs { padding: 0 1rem 1.5rem; font-size: 0.875rem; color: var(--text-muted); }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+  .breadcrumbs .sep { margin: 0 0.5rem; opacity: 0.5; }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+
+  .popular-section { padding: 0 1rem 2rem; }
+  .popular-title { font-size: 1.125rem; margin: 0 0 0.875rem; color: var(--text-muted); font-weight: 600; }
+  .popular-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.625rem; }
+  .popular-card {
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    padding: 1rem 0.75rem; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
+    text-align: center; transition: all 0.15s;
+  }
+  .popular-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .popular-icon { font-size: 1.5rem; line-height: 1; }
+  .popular-label { font-size: 0.8125rem; font-weight: 600; line-height: 1.3; }
+
+  .categories { padding: 0 1rem; display: flex; flex-direction: column; gap: 2.5rem; }
+  .cat-header { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 1rem; }
+  .cat-icon { width: 2.5rem; height: 2.5rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; font-size: 1.375rem; }
+  .cat-meta { display: flex; flex-direction: column; gap: 0.125rem; }
+  .cat-label { font-size: 1.125rem; margin: 0; font-weight: 700; }
+  .cat-desc { color: var(--text-muted); font-size: 0.875rem; margin: 0; }
+
+  .calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .calc-card {
+    display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.875rem 1rem;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
+    transition: all 0.15s;
+  }
+  .calc-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .card-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+  .card-title { font-weight: 600; font-size: 0.9375rem; line-height: 1.3; }
+  .card-desc { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-badge { font-size: 0.6875rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 4px; align-self: flex-start; flex-shrink: 0; }
+
+  .cta-footer { margin: 4rem 1rem 2rem; padding: 2rem 1.5rem; text-align: center; background: var(--bg-muted); border-radius: var(--radius); }
+  .cta-text { font-size: 1.125rem; font-weight: 700; margin: 0 0 0.5rem; }
+  .cta-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; max-width: 600px; margin: 0 auto 1rem; line-height: 1.5; }
+  .cta-links { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+  .cta-pill {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.5rem 0.875rem; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 999px;
+    font-size: 0.875rem; font-weight: 600; color: var(--text);
+    text-decoration: none; transition: all 0.15s;
+  }
+  .cta-pill:hover { border-color: var(--accent); color: var(--accent); }
+</style>

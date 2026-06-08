@@ -129,6 +129,8 @@ export const collections = {
   'calcs-es': makeCalcCollection('calcs-es'),
   'calcs-co': makeCalcCollection('calcs-co'),
   'calcs-cl': makeCalcCollection('calcs-cl'),
+  'calcs-pe': makeCalcCollection('calcs-pe'),
+  'calcs-ec': makeCalcCollection('calcs-ec'),
   'calcs-pt': makeCalcCollection('calcs-pt'),
   'calcs-en': makeCalcCollection('calcs-en'),
 };

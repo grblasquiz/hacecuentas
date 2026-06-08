@@ -38,6 +38,8 @@ const CALCS_MX_DIR = join(ROOT, 'src', 'content', 'calcs-mx');
 const CALCS_ES_DIR = join(ROOT, 'src', 'content', 'calcs-es');
 const CALCS_CO_DIR = join(ROOT, 'src', 'content', 'calcs-co');
 const CALCS_CL_DIR = join(ROOT, 'src', 'content', 'calcs-cl');
+const CALCS_PE_DIR = join(ROOT, 'src', 'content', 'calcs-pe');
+const CALCS_EC_DIR = join(ROOT, 'src', 'content', 'calcs-ec');
 const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
 const TABLAS_DIR = join(ROOT, 'src', 'content', 'tablas');
 const COMPARACIONES_DIR = join(ROOT, 'src', 'content', 'comparaciones');
@@ -427,6 +429,8 @@ const calcsMx = readJSONs(CALCS_MX_DIR);
 const calcsEs = readJSONs(CALCS_ES_DIR);
 const calcsCo = readJSONs(CALCS_CO_DIR);
 const calcsCl = readJSONs(CALCS_CL_DIR);
+const calcsPe = readJSONs(CALCS_PE_DIR);
+const calcsEc = readJSONs(CALCS_EC_DIR);
 const blogPosts = readJSONs(BLOG_DIR);
 const tablas = readJSONs(TABLAS_DIR);
 const comparaciones = readJSONs(COMPARACIONES_DIR);
@@ -829,6 +833,8 @@ if (calcsMx.length > 0) sitemaps.push(sitemapForLocale(calcsMx, 'mx', CALCS_MX_D
 if (calcsEs.length > 0) sitemaps.push(sitemapForLocale(calcsEs, 'es', CALCS_ES_DIR, true));
 if (calcsCo.length > 0) sitemaps.push(sitemapForLocale(calcsCo, 'co', CALCS_CO_DIR, true));
 if (calcsCl.length > 0) sitemaps.push(sitemapForLocale(calcsCl, 'cl', CALCS_CL_DIR, true));
+if (calcsPe.length > 0) sitemaps.push(sitemapForLocale(calcsPe, 'pe', CALCS_PE_DIR, true));
+if (calcsEc.length > 0) sitemaps.push(sitemapForLocale(calcsEc, 'ec', CALCS_EC_DIR, true));
 
 // 4. Blog
 if (blogPosts.length > 0) {

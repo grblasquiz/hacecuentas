@@ -41,6 +41,8 @@ const LOCALES: Array<{ dir: string; pathPrefix: string; locale: string }> = [
   { dir: 'src/content/calcs-co', pathPrefix: 'co/', locale: 'es-CO' },
   { dir: 'src/content/calcs-mx', pathPrefix: 'mx/', locale: 'es-MX' },
   { dir: 'src/content/calcs-cl', pathPrefix: 'cl/', locale: 'es-CL' },
+  { dir: 'src/content/calcs-pe', pathPrefix: 'pe/', locale: 'es-PE' },
+  { dir: 'src/content/calcs-ec', pathPrefix: 'ec/', locale: 'es-EC' },
   { dir: 'src/content/calcs-pt', pathPrefix: 'pt/', locale: 'pt-BR' },
 ];
 
