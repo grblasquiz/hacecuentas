@@ -977,6 +977,14 @@ const IMC_RAIL_ITEMS = [
   { icon: '👴', label: 'IMC adultos mayores', href: '/calculadora-imc-adultos-mayores-edad-tabla' },
 ];
 
+// Hub de mate/ciencia: fijamos la Calculadora científica arriba del rail en
+// todas las calcs de estas categorías. Concentra autoridad interna hacia el
+// hub (157+ calcs apuntando) sin tocar ningún JSON → no mueve el sitemap.
+const railPinned =
+  ['matematica', 'ciencia'].includes(calc.category)
+    ? [{ icon: '🧮', label: 'Calculadora científica', href: '/calculadora-cientifica' }]
+    : undefined;
+
 // Icons del quick-nav (sticky pills) por section id
 const quickNavIcons: Record<string, string> = {
   'calculadora': '🧮',
@@ -1502,6 +1510,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           currentSlug={calc.slug}
           category={calc.category}
           items={isImc ? IMC_RAIL_ITEMS : undefined}
+          pinned={railPinned}
           title={isImc ? 'Más calcs de salud' : undefined}
           headerIcon={isImc ? '⚕️' : undefined}
         />

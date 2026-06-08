@@ -34,6 +34,8 @@ export interface Props {
   title?: string;
   headerIcon?: string;
   items?: RailItem[];
+  /** Items fijados arriba del rail auto-derivado (dedup). Ej: hub de categoría. */
+  pinned?: RailItem[];
   limit?: number;
 }
 
@@ -44,6 +46,7 @@ const {
   title,
   headerIcon = '🧮',
   items,
+  pinned,
   limit = 7,
 } = Astro.props;
 
@@ -99,6 +102,16 @@ if (items && items.length) {
     href: `${prefix}${c.slug}`,
     slug: c.slug,
   }));
+}
+
+// Items fijados arriba (hub de categoría), dedup contra lo ya elegido y la
+// propia página. Se aplica a ambas ramas (items curados o auto-derivados).
+if (pinned && pinned.length) {
+  const have = new Set(rail.map((r) => r.href));
+  const pins = pinned
+    .filter((p) => p.href.replace(/^\//, '') !== currentSlug && !have.has(p.href))
+    .map((p) => ({ ...p, slug: p.slug || p.href.replace(/^\//, '') }));
+  rail = [...pins, ...rail].slice(0, limit);
 }
 
 void category;
