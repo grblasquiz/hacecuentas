@@ -32,13 +32,17 @@ const isIntl = lang === 'en' || lang === 'pt';
 const intlHome = lang === 'en' ? '/en' : '/pt';
 
 // Detección de país por path para nav country-aware
-type Country = 'AR' | 'ES' | 'MX' | 'CO' | 'CL' | 'GLOBAL';
+type Country = 'AR' | 'ES' | 'MX' | 'CO' | 'CL' | 'PE' | 'EC' | 'GLOBAL';
+// Primer segmento del path (evita falsos positivos como /peso-ideal → 'pe', /como-... → 'co').
+const _seg = currentPath.split('/')[1] || '';
 let pageCountry: Country = 'AR';
-if (currentPath.startsWith('/es')) pageCountry = 'ES';
-else if (currentPath.startsWith('/mx')) pageCountry = 'MX';
-else if (currentPath.startsWith('/co')) pageCountry = 'CO';
-else if (currentPath.startsWith('/cl')) pageCountry = 'CL';
-else if (currentPath.startsWith('/global')) pageCountry = 'GLOBAL';
+if (_seg === 'es') pageCountry = 'ES';
+else if (_seg === 'mx') pageCountry = 'MX';
+else if (_seg === 'co') pageCountry = 'CO';
+else if (_seg === 'cl') pageCountry = 'CL';
+else if (_seg === 'pe') pageCountry = 'PE';
+else if (_seg === 'ec') pageCountry = 'EC';
+else if (_seg === 'global') pageCountry = 'GLOBAL';
 
 // Nav items por país
 const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePath?: string}>> = {
@@ -84,6 +88,20 @@ const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePa
     { href: '/cl/calculadora-isapre-cotizacion-chile-7-porcentaje-plan', label: 'Isapre', activePath: '/cl/calculadora-isapre' },
     { href: '/cl/calculadora-credito-hipotecario-chile-uf-cmf-2026', label: 'Hipoteca', activePath: '/cl/calculadora-credito-hipotecario' },
     { href: '/cl', label: 'Todas' },
+  ],
+  PE: [
+    { href: '/pe/calculadora-sueldo-neto-peru', label: 'Sueldo neto', activePath: '/pe/calculadora-sueldo-neto' },
+    { href: '/pe/calculadora-cts-peru-deposito-semestral', label: 'CTS', activePath: '/pe/calculadora-cts' },
+    { href: '/pe/calculadora-gratificacion-peru-julio-diciembre', label: 'Gratificación', activePath: '/pe/calculadora-gratificacion' },
+    { href: '/pe/calculadora-impuesto-renta-quinta-categoria-peru', label: 'Renta 5ta', activePath: '/pe/calculadora-impuesto-renta' },
+    { href: '/pe', label: 'Todas' },
+  ],
+  EC: [
+    { href: '/ec/calculadora-sueldo-neto-ecuador', label: 'Sueldo neto', activePath: '/ec/calculadora-sueldo-neto' },
+    { href: '/ec/calculadora-decimo-tercer-sueldo-ecuador', label: 'Décimo 13°', activePath: '/ec/calculadora-decimo-tercer' },
+    { href: '/ec/calculadora-liquidacion-finiquito-ecuador', label: 'Finiquito', activePath: '/ec/calculadora-liquidacion' },
+    { href: '/ec/calculadora-iva-ecuador', label: 'IVA', activePath: '/ec/calculadora-iva' },
+    { href: '/ec', label: 'Todas' },
   ],
   GLOBAL: [
     { href: '/global', label: 'Todas' },
@@ -144,6 +162,8 @@ const navItems = COUNTRY_NAVS[pageCountry];
           <a href="/mx" data-country="MX" role="option"><span>🇲🇽</span> México</a>
           <a href="/co" data-country="CO" role="option"><span>🇨🇴</span> Colombia</a>
           <a href="/cl" data-country="CL" role="option"><span>🇨🇱</span> Chile</a>
+          <a href="/pe" data-country="PE" role="option"><span>🇵🇪</span> Perú</a>
+          <a href="/ec" data-country="EC" role="option"><span>🇪🇨</span> Ecuador</a>
           <a href="/pt" data-country="BR" role="option"><span>🇧🇷</span> Brasil</a>
           <a href="/en" data-country="EN" role="option"><span>🇺🇸</span> English</a>
         </div>
@@ -239,8 +259,8 @@ const navItems = COUNTRY_NAVS[pageCountry];
     else if (path.startsWith('/cl')) current = 'CL';
     else if (path.startsWith('/global')) current = 'global';
 
-    const FLAGS = { AR: '🇦🇷', global: '🌎', ES: '🇪🇸', MX: '🇲🇽', CO: '🇨🇴', CL: '🇨🇱', BR: '🇧🇷', EN: '🇺🇸' };
-    const LABELS = { AR: 'AR', global: 'GLO', ES: 'ES', MX: 'MX', CO: 'CO', CL: 'CL', BR: 'BR', EN: 'EN' };
+    const FLAGS = { AR: '🇦🇷', global: '🌎', ES: '🇪🇸', MX: '🇲🇽', CO: '🇨🇴', CL: '🇨🇱', PE: '🇵🇪', EC: '🇪🇨', BR: '🇧🇷', EN: '🇺🇸' };
+    const LABELS = { AR: 'AR', global: 'GLO', ES: 'ES', MX: 'MX', CO: 'CO', CL: 'CL', PE: 'PE', EC: 'EC', BR: 'BR', EN: 'EN' };
     flagEl.textContent = FLAGS[current] || '🌎';
     codeEl.textContent = LABELS[current] || 'AR';
 
