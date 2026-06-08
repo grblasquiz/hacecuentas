@@ -42,7 +42,7 @@ const updateType = z.enum([
 const audience = z.enum([
   'AR', 'ar',
   'BR', 'br',
-  'MX', 'ES', 'CO', 'CL', 'BO', 'PE', 'US', 'EN', 'PT',
+  'MX', 'ES', 'CO', 'CL', 'BO', 'PE', 'EC', 'US', 'EN', 'PT',
   'global',
 ]);
 
