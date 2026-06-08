@@ -24,6 +24,80 @@ try {
   console.warn('[cambio-de-monedas] fetch intl failed at build time:', e);
 }
 
+// ── AR dólar (dolarapi.com) fetch build-time → tabla server-rendered crawleable ──
+// Antes las tablas AR cargaban SOLO client-side → crawlers/IA veían skeletons vacíos
+// y "dólar blue hoy" no era citable. Ahora se renderiza el valor del último build
+// (el cliente lo refresca igual cada 15 min / 1 h). Mismo patrón híbrido que /valores-bcra.
+type ArRow = { key: string; flag: string; name: string; badge: string; badgeClass: string; casa: string | null; compra: number | null; venta: number };
+const AR_BUILD_LABELS: Record<string, { name: string; flag: string; badge: string; badgeClass: string }> = {
+  USD_OFICIAL:   { name: 'Dólar oficial',   flag: '🇦🇷', badge: 'Oficial',   badgeClass: 'badge-oficial' },
+  USD_BLUE:      { name: 'Dólar blue',      flag: '🇦🇷', badge: 'Blue',      badgeClass: 'badge-blue' },
+  USD_MEP:       { name: 'Dólar MEP',       flag: '🇦🇷', badge: 'MEP',       badgeClass: 'badge-mep' },
+  USD_CCL:       { name: 'Dólar CCL',       flag: '🇦🇷', badge: 'CCL',       badgeClass: 'badge-ccl' },
+  USD_TARJETA:   { name: 'Dólar tarjeta',   flag: '🇦🇷', badge: 'Tarjeta',   badgeClass: 'badge-tarjeta' },
+  USD_CRIPTO:    { name: 'Dólar cripto',    flag: '🇦🇷', badge: 'Cripto',    badgeClass: 'badge-cripto' },
+  USD_MAYORISTA: { name: 'Dólar mayorista', flag: '🇦🇷', badge: 'Mayorista', badgeClass: 'badge-mayo' },
+  EUR_AR:        { name: 'Euro',            flag: '🇪🇺', badge: '1 unidad',  badgeClass: 'badge-eur' },
+  BRL_AR:        { name: 'Real brasileño',  flag: '🇧🇷', badge: '1 unidad',  badgeClass: 'badge-brl' },
+  CLP_AR:        { name: 'Peso chileno',    flag: '🇨🇱', badge: '1 unidad',  badgeClass: 'badge-clp' },
+  UYU_AR:        { name: 'Peso uruguayo',   flag: '🇺🇾', badge: '1 unidad',  badgeClass: 'badge-uyu' },
+};
+const AR_ORDER = ['USD_OFICIAL','USD_BLUE','USD_MEP','USD_CCL','USD_TARJETA','USD_CRIPTO','USD_MAYORISTA','EUR_AR','BRL_AR','CLP_AR','UYU_AR'];
+let arDolaresRaw: any[] = [];
+let arOtrasRaw: any[] = [];
+const arBuildMap: Record<string, { compra: number | null; venta: number; casa: string | null }> = {};
+let arBuildTs = 0;
+try {
+  const [dRes, cRes] = await Promise.all([
+    fetch('https://dolarapi.com/v1/dolares', { signal: AbortSignal.timeout(8000) }),
+    fetch('https://dolarapi.com/v1/cotizaciones', { signal: AbortSignal.timeout(8000) }),
+  ]);
+  if (dRes.ok) {
+    arDolaresRaw = await dRes.json();
+    for (const d of arDolaresRaw) {
+      const key = `USD_${String(d.casa).toUpperCase().replace('CONTADOCONLIQUI','CCL').replace('BOLSA','MEP').replace('TURISTA','TARJETA')}`;
+      if (AR_BUILD_LABELS[key]) arBuildMap[key] = { compra: d.compra ?? null, venta: d.venta, casa: d.casa };
+    }
+  }
+  if (cRes.ok) {
+    arOtrasRaw = await cRes.json();
+    for (const o of arOtrasRaw) {
+      const ok = `${o.moneda}_AR`;
+      if (AR_BUILD_LABELS[ok]) arBuildMap[ok] = { compra: o.compra ?? null, venta: o.venta, casa: null };
+    }
+  }
+  if (Object.keys(arBuildMap).length) arBuildTs = Date.now();
+} catch (e) {
+  console.warn('[cambio-de-monedas] fetch AR failed at build time:', e);
+}
+const arBuildRows: ArRow[] = AR_ORDER.filter((k) => arBuildMap[k]).map((k) => ({
+  key: k, ...AR_BUILD_LABELS[k], casa: arBuildMap[k].casa, compra: arBuildMap[k].compra, venta: arBuildMap[k].venta,
+}));
+const _ofVenta = arBuildMap['USD_OFICIAL']?.venta;
+const _blVenta = arBuildMap['USD_BLUE']?.venta;
+const arBrecha = (_ofVenta && _blVenta && _ofVenta > 0) ? ((_blVenta - _ofVenta) / _ofVenta * 100) : null;
+const arBrechaClima = arBrecha == null ? '' : arBrecha < 10 ? '🟢 baja (estabilidad)' : arBrecha < 30 ? '🟡 media (atención)' : '🔴 alta (tensión cambiaria)';
+const fmtArsBuild = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 }).format(n);
+const arBuildDate = arBuildTs ? new Date(arBuildTs) : null;
+const arBuildLabel = arBuildDate
+  ? arBuildDate.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })
+  : null;
+
+// Dataset schema → cotización citable por Bing/Copilot/AI Overviews
+const schemaDataset = arBuildRows.length ? {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: 'Cotización del dólar en Argentina hoy',
+  description: 'Valores de referencia del dólar oficial, blue, MEP, CCL, tarjeta, cripto y mayorista en pesos argentinos (ARS).',
+  url: 'https://hacecuentas.com/cambio-de-monedas',
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  dateModified: arBuildDate?.toISOString(),
+  isAccessibleForFree: true,
+  variableMeasured: arBuildRows.filter((r) => r.key.startsWith('USD_')).map((r) => ({
+    '@type': 'PropertyValue', name: r.name, value: r.venta, unitText: 'ARS por USD',
+  })),
+} : null;
+
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
@@ -152,6 +226,14 @@ const schemaBreadcrumb = {
     <section class="ar-rates">
       <h2>🇦🇷 Cotización del dólar hoy en Argentina</h2>
       <p class="section-sub">Valores para <strong>1 USD</strong> en pesos argentinos.</p>
+      {arBuildRows.length > 0 && (
+        <p class="ar-asof">
+          {arBuildMap['USD_BLUE'] && <>Dólar <strong>blue</strong> hoy: <strong>{fmtArsBuild(arBuildMap['USD_BLUE'].venta)}</strong> (venta). </>}
+          {arBuildMap['USD_OFICIAL'] && <>Dólar <strong>oficial</strong>: <strong>{fmtArsBuild(arBuildMap['USD_OFICIAL'].venta)}</strong>. </>}
+          {arBrecha != null && <>Brecha blue/oficial: <strong>{arBrecha.toFixed(1)}%</strong>. </>}
+          {arBuildLabel && <span class="ar-asof-ts">Última actualización: <time>{arBuildLabel}</time> (hora Argentina), se refresca en vivo.</span>}
+        </p>
+      )}
       <div class="rates-table">
         <div class="rate-head">
           <div>Tipo</div>
@@ -160,16 +242,34 @@ const schemaBreadcrumb = {
           <div>Spread</div>
         </div>
         <div id="ar-table">
-          <div class="hc-skeleton-rows" role="status" aria-label="Cargando cotizaciones…">
-            <div class="hc-skeleton hc-skeleton-row"></div>
-            <div class="hc-skeleton hc-skeleton-row"></div>
-            <div class="hc-skeleton hc-skeleton-row"></div>
-            <div class="hc-skeleton hc-skeleton-row"></div>
-            <div class="hc-skeleton hc-skeleton-row"></div>
-          </div>
+          {arBuildRows.length > 0 ? arBuildRows.map((r) => {
+            const spread = r.compra && r.venta && r.compra > 0 ? ((r.venta - r.compra) / r.compra * 100) : null;
+            const isDolar = r.key.startsWith('USD_');
+            return (
+              <div class="rate-row">
+                <div class="nom-wrap">
+                  <span class="nom">{r.flag} {isDolar ? 'Dólar' : r.name}<span class={`badge ${r.badgeClass}`}>{r.badge}</span></span>
+                  <span class="sub">{r.casa ? 'dolarapi · casa ' + r.casa : 'vs peso argentino'}</span>
+                </div>
+                <div class="cp">{r.compra ? fmtArsBuild(r.compra) : '—'}</div>
+                <div class="val">{fmtArsBuild(r.venta)}</div>
+                <div class="var">{spread !== null ? `${spread.toFixed(1)}%` : '—'}</div>
+              </div>
+            );
+          }) : (
+            <div class="hc-skeleton-rows" role="status" aria-label="Cargando cotizaciones…">
+              <div class="hc-skeleton hc-skeleton-row"></div>
+              <div class="hc-skeleton hc-skeleton-row"></div>
+              <div class="hc-skeleton hc-skeleton-row"></div>
+              <div class="hc-skeleton hc-skeleton-row"></div>
+              <div class="hc-skeleton hc-skeleton-row"></div>
+            </div>
+          )}
         </div>
       </div>
-      <div class="brecha-box" id="brecha-box" style="display:none"></div>
+      <div class="brecha-box" id="brecha-box" style={arBrecha != null ? '' : 'display:none'}>
+        {arBrecha != null && <div><strong>Brecha blue vs oficial:</strong> {arBrecha.toFixed(1)}% · {arBrechaClima}</div>}
+      </div>
     </section>
 
     <section class="intl-rates">
@@ -238,6 +338,8 @@ const schemaBreadcrumb = {
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
   <script id="fx-intl-build" type="application/json" set:html={JSON.stringify({ rates: intlBuildRates, ts: intlBuildTs })}></script>
+  <script id="fx-ar-build" type="application/json" set:html={JSON.stringify({ dolares: arDolaresRaw, otras: arOtrasRaw, ts: arBuildTs })}></script>
+  {schemaDataset && <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaDataset)}></script>}
   <Footer slot="footer" />
 </Layout>
 
@@ -557,6 +659,10 @@ const schemaBreadcrumb = {
   }
   .section-sub { color: var(--text-muted); font-size: .92rem; margin: 0 0 1.25rem; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
   .section-sub strong { color: var(--text); font-weight: 600; }
+  .ar-asof { font-size: .95rem; line-height: 1.6; color: var(--text-muted); background: var(--accent-soft, #eff6ff); border: 1px solid var(--border); border-radius: var(--radius-sm, 8px); padding: .65rem .9rem; margin: 0 0 1.1rem; }
+  .ar-asof strong { color: var(--text); font-weight: 700; }
+  .ar-asof-ts { display: block; margin-top: .25rem; font-size: .82rem; color: var(--text-subtle, var(--text-muted)); }
+  .ar-asof-ts time { font-weight: 600; }
 
   /* =====================================================
      RATES TABLE
@@ -842,24 +948,43 @@ const schemaBreadcrumb = {
   interface DolarQuote { casa: string; nombre: string; compra: number; venta: number; fechaActualizacion: string; }
   interface IntlRates { base_code: string; rates: Record<string, number>; time_last_update_unix: number; }
 
+  // Datos AR embebidos en build-time (server-render crawleable + fallback si la API falla)
+  function readArBuild(): { dolares: DolarQuote[]; otras: DolarQuote[]; ts: number } | null {
+    const el = document.getElementById('fx-ar-build');
+    if (!el || !el.textContent) return null;
+    try { return JSON.parse(el.textContent); } catch { return null; }
+  }
+
   async function fetchArDolares(): Promise<DolarQuote[]> {
     const cached = getCache<DolarQuote[]>('fx_ar_dolares');
     if (cached) return cached;
-    const res = await fetch('https://dolarapi.com/v1/dolares');
-    if (!res.ok) throw new Error('Error dolarapi');
-    const data = (await res.json()) as DolarQuote[];
-    setCache('fx_ar_dolares', data);
-    return data;
+    try {
+      const res = await fetch('https://dolarapi.com/v1/dolares');
+      if (!res.ok) throw new Error('Error dolarapi');
+      const data = (await res.json()) as DolarQuote[];
+      setCache('fx_ar_dolares', data);
+      return data;
+    } catch (e) {
+      const b = readArBuild();
+      if (b?.dolares?.length) return b.dolares;
+      throw e;
+    }
   }
 
   async function fetchArOtras(): Promise<DolarQuote[]> {
     const cached = getCache<DolarQuote[]>('fx_ar_otras');
     if (cached) return cached;
-    const res = await fetch('https://dolarapi.com/v1/cotizaciones');
-    if (!res.ok) throw new Error('Error dolarapi otras');
-    const data = (await res.json()) as DolarQuote[];
-    setCache('fx_ar_otras', data);
-    return data;
+    try {
+      const res = await fetch('https://dolarapi.com/v1/cotizaciones');
+      if (!res.ok) throw new Error('Error dolarapi otras');
+      const data = (await res.json()) as DolarQuote[];
+      setCache('fx_ar_otras', data);
+      return data;
+    } catch (e) {
+      const b = readArBuild();
+      if (b?.otras?.length) return b.otras;
+      throw e;
+    }
   }
 
   async function fetchIntl(): Promise<IntlRates> {
@@ -1025,7 +1150,7 @@ const schemaBreadcrumb = {
 
       const ars: FxState['arsPerUnit'] = {};
       for (const d of dolares) {
-        const key = `USD_${d.casa.toUpperCase().replace('CONTADOCONLIQUI','CCL').replace('TURISTA','TARJETA')}`;
+        const key = `USD_${d.casa.toUpperCase().replace('CONTADOCONLIQUI','CCL').replace('BOLSA','MEP').replace('TURISTA','TARJETA')}`;
         const k = key in COIN_LABELS ? key : `USD_${d.casa.toUpperCase()}`;
         ars[k] = { ...COIN_LABELS[k] || { label: d.nombre, flag: '🇦🇷' }, venta: d.venta, compra: d.compra, casa: d.casa };
       }
