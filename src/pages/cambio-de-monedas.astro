@@ -41,15 +41,15 @@ const faq = [
   },
   {
     q: '¿Cada cuánto se actualiza?',
-    a: 'La primera vez que abrís esta página se hace la consulta en vivo. Luego guardamos el valor <strong>15 minutos</strong> en tu navegador (localStorage) para no saturar las APIs. Tocá el botón <em>Actualizar</em> para forzar una consulta nueva.',
+    a: 'La primera vez que abrís esta página se hace la consulta en vivo. Luego guardamos el valor <strong>15 minutos</strong> en tu navegador (localStorage) para no saturar las APIs: si recargás dentro de esa ventana ves el último valor guardado, y pasados los 15 minutos se vuelve a consultar solo. Si dejás la pestaña abierta, además se refresca automáticamente cada hora.',
   },
   {
     q: '¿Qué diferencia hay entre blue, oficial, MEP, CCL y tarjeta?',
-    a: '<strong>Oficial</strong>: cotización regulada del BCRA. <strong>Blue</strong>: mercado informal (efectivo en cueva). <strong>MEP</strong> (bolsa): comprás bonos en pesos y los vendés en USD. <strong>CCL</strong> (contado con liqui): bonos en CABA y acreditación USD afuera. <strong>Tarjeta</strong>: oficial + percepciones (≈60% extra en 2026). <strong>Cripto</strong>: USDT/USDC en exchanges.',
+    a: '<strong>Oficial</strong>: cotización regulada del BCRA. <strong>Blue</strong>: mercado informal (efectivo en cueva). <strong>MEP</strong> (bolsa): comprás bonos en pesos y los vendés en USD. <strong>CCL</strong> (contado con liqui): bonos en CABA y acreditación USD afuera. <strong>Tarjeta</strong>: oficial + <strong>30%</strong> de percepción a cuenta de Ganancias (el Impuesto PAÍS se eliminó a fines de 2024; esa percepción se puede recuperar ante ARCA). <strong>Cripto</strong>: USDT/USDC en exchanges.',
   },
   {
     q: '¿Qué cotización me conviene para viajar?',
-    a: 'Depende del destino y forma de pago. Para <strong>efectivo en destino</strong> (comprar USD/EUR en Argentina y llevarlos): generalmente <strong>blue o MEP</strong>. Para <strong>tarjeta</strong>: se aplica el tipo <em>tarjeta</em> (oficial + 60%) en la mayoría de casos, salvo Brasil donde podés pagar con QR PIX que toma oficial sin percepciones.',
+    a: 'Depende del destino y forma de pago. Para <strong>efectivo en destino</strong> (comprar USD/EUR en Argentina y llevarlos): generalmente <strong>blue o MEP</strong>. Para <strong>tarjeta</strong>: se aplica el tipo <em>tarjeta</em> (oficial + 30% de percepción de Ganancias) en la mayoría de casos, salvo Brasil donde podés pagar con QR PIX que toma oficial sin percepciones.',
   },
   {
     q: '¿Qué es la brecha cambiaria?',
@@ -57,7 +57,7 @@ const faq = [
   },
   {
     q: '¿Puedo usar esta calculadora offline?',
-    a: 'Una vez cargada, podés seguir convirtiendo con la última cotización guardada aunque pierdas conexión. El indicador <em>“Actualizado hace X min”</em> te avisa cuán fresco es el dato.',
+    a: 'Una vez cargada, podés seguir convirtiendo con la última cotización guardada en tu navegador aunque pierdas conexión. Al recuperar señal y recargar, se trae el valor actualizado automáticamente.',
   },
   {
     q: '¿Qué monedas soporta?',
@@ -229,7 +229,7 @@ const schemaBreadcrumb = {
         <li><strong>dolarapi.com</strong> → trae las 7 cotizaciones del dólar argentino (oficial, blue, MEP, CCL, tarjeta, cripto, mayorista) y las de EUR, BRL, CLP y UYU contra el peso argentino.</li>
         <li><strong>open.er-api.com</strong> → trae un diccionario <em>USD → 160+ monedas</em> para conversiones internacionales sin Argentina de por medio.</li>
       </ul>
-      <p>Las cotizaciones se guardan <strong>15 minutos</strong> en tu navegador. Al tocar <em>Actualizar</em> forzás una consulta nueva. No guardamos nada en servidores nuestros.</p>
+      <p>Las cotizaciones se guardan <strong>15 minutos</strong> en tu navegador y se refrescan automáticamente cada hora si dejás la pestaña abierta. No guardamos nada en servidores nuestros.</p>
       <p class="disclaimer">⚠️ <strong>Aviso:</strong> los valores son orientativos. Para transacciones reales, verificá con tu banco o casa de cambio. Las APIs pueden demorar minutos en reflejar movimientos.</p>
     </section>
   </article>
@@ -808,7 +808,7 @@ const schemaBreadcrumb = {
   // ==========================================================
   //  CACHE HELPERS (localStorage 15 min)
   // ==========================================================
-  const CACHE_MIN = 60;
+  const CACHE_MIN = 15;
   const CACHE_MS = CACHE_MIN * 60 * 1000;
   const AUTO_REFRESH_MS = 60 * 60 * 1000;  // 1 hora
 
@@ -1470,7 +1470,7 @@ const schemaBreadcrumb = {
 
   // Re-fetch automático cada 1 hora mientras la pestaña esté abierta.
   // Si el user vuelve después de días, load(false) leerá cache expirado y
-  // fetcheará las cotizaciones frescas igual (CACHE_MS = 60 min).
+  // fetcheará las cotizaciones frescas igual (CACHE_MS = 15 min).
   setInterval(() => {
     console.log('[fx] auto-refresh (1h)');
     load(true);
