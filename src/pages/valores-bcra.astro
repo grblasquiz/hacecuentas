@@ -66,14 +66,84 @@ const dolarCards: { key: string; label: string; hint: string; isTaxed?: boolean 
   { key: 'cripto', label: 'Dólar Cripto', hint: 'USDT promedio en exchanges' },
 ];
 
+const builtAtISO = new Date().toISOString();
+
+// Histórico mensual (último valor de cada mes) para tablas crawleables + long-tail.
+function ultimoPorMes<T extends { fecha: string; valor: number }>(points: T[], n: number): T[] {
+  const byMonth: Record<string, T> = {};
+  for (const p of points) {
+    if (!p?.fecha) continue;
+    byMonth[p.fecha.slice(0, 7)] = p; // pisa: queda el último del mes
+  }
+  return Object.values(byMonth).slice(-n).reverse();
+}
+const mesLargo = (s: string) => {
+  try { return new Date(s).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' }); }
+  catch { return s; }
+};
+const uvaHist = ultimoPorMes(uva, 12);     // UVA es serie diaria → tomamos fin de mes
+const ipcHist = inflacion.slice(-6).reverse(); // inflación INDEC ya es mensual
+
+const uvaHoy = ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : 'el valor del día';
+const ipcMensualTxt = ultimoIpc ? `${ultimoIpc.valor.toFixed(1)}%` : 'el último dato del INDEC';
+const ipcAnualTxt = ultimaIpcAnual ? `${ultimaIpcAnual.valor.toFixed(1)}%` : 'el último interanual';
+
+const faqs: { q: string; a: string }[] = [
+  {
+    q: '¿Cuánto vale la UVA hoy?',
+    a: `La UVA (Unidad de Valor Adquisitivo) está en <strong>${uvaHoy}</strong>${ultimaUva ? ` al ${fmtDate(ultimaUva.fecha)}` : ''}, según el BCRA. La UVA se ajusta diariamente por el CER (que sigue a la inflación) con un rezago de unos 45 días, así que su valor sube prácticamente todos los días. La tabla de arriba muestra su evolución mes a mes.`,
+  },
+  {
+    q: '¿Qué es la UVA y para qué se usa?',
+    a: 'La <strong>UVA (Unidad de Valor Adquisitivo)</strong> es una unidad de cuenta creada por el BCRA en 2016 que se actualiza por inflación (índice CER). Equivalía a 1/1000 del costo de construcción de un metro cuadrado de vivienda. Se usa para indexar <strong>créditos hipotecarios UVA</strong>, <strong>plazos fijos UVA</strong> y algunos contratos, de modo que el capital mantenga su poder adquisitivo frente a la inflación.',
+  },
+  {
+    q: '¿Cuál es la inflación de Argentina hoy?',
+    a: `La última inflación mensual del INDEC (IPC Nacional) fue de <strong>${ipcMensualTxt}</strong> y la interanual (últimos 12 meses) de <strong>${ipcAnualTxt}</strong>. El INDEC publica el IPC alrededor del día 14 de cada mes con el dato del mes anterior. Arriba podés ver la serie de los últimos meses.`,
+  },
+  {
+    q: '¿Qué diferencia hay entre dólar oficial, blue, MEP y CCL?',
+    a: 'El <strong>oficial</strong> es la cotización regulada del BCRA. El <strong>blue</strong> es el paralelo informal (efectivo, sin factura). El <strong>MEP</strong> (dólar bolsa) surge de comprar un bono en pesos y venderlo en dólares en el país; es legal. El <strong>CCL</strong> (contado con liqui) es similar pero la liquidación queda en el exterior. La diferencia entre el blue/MEP y el oficial se llama <strong>brecha cambiaria</strong>.',
+  },
+  {
+    q: '¿Por qué el dólar tarjeta es más caro que el oficial?',
+    a: 'Históricamente el dólar tarjeta sumaba el Impuesto PAÍS (30%) más la percepción a cuenta de Ganancias (30%). En 2026 eso cambió: el <strong>Impuesto PAÍS está derogado</strong> (dic-2024) y la percepción del 30% sobre <strong>consumos directos en dólares se eliminó</strong> (ene-2026), así que una compra o suscripción en USD se liquida al oficial. El recargo del 30% (percepción recuperable) sólo sigue para <strong>servicios turísticos y de transporte al exterior pagados en pesos</strong> — es lo que refleja la cotización "tarjeta/turista".',
+  },
+  {
+    q: '¿Cuánto rinde un plazo fijo hoy?',
+    a: 'Las tasas (TNA) de plazo fijo tradicional rondan entre el 16% y el 22% anual según el banco, como se ve en la tabla de arriba. Para saber cuánto cobrás en pesos por un monto y plazo concretos, usá la <a href="/calculadora-plazo-fijo">calculadora de plazo fijo</a> o compará bancos en el <a href="/comparador-plazo-fijo">comparador</a>.',
+  },
+  {
+    q: '¿Cada cuánto se actualizan estos valores?',
+    a: 'Las cotizaciones del dólar se <strong>refrescan en vivo</strong> al abrir la página (desde dolarapi.com, que consolida bancos y casas de cambio). La inflación y la UVA se actualizan con cada publicación oficial del INDEC y el BCRA. La fecha de cada dato figura debajo del valor.',
+  },
+];
+
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'Dataset',
   name: 'Valores BCRA y INDEC hoy',
-  description: 'Dólar, inflación, UVA y tasas de referencia Argentina',
-  keywords: 'dolar hoy, inflación INDEC, UVA BCRA, plazo fijo TNA, valores BCRA',
+  description: 'Dólar oficial, blue, MEP, CCL y tarjeta; inflación INDEC mensual e interanual; UVA y tasas de plazo fijo de Argentina.',
+  keywords: 'dolar hoy, dolar blue, inflación INDEC, UVA BCRA, valor uva hoy, plazo fijo TNA, valores BCRA',
   creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
   license: 'https://hacecuentas.com/terminos',
+  url: 'https://hacecuentas.com/valores-bcra',
+  dateModified: builtAtISO,
+  temporalCoverage: uvaHist.length ? `${uvaHist[uvaHist.length - 1].fecha}/${uvaHist[0].fecha}` : undefined,
+  distribution: [
+    { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: 'https://dolarapi.com/v1/dolares' },
+    { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: 'https://api.argentinadatos.com/v1/finanzas/indices/uva' },
+  ],
+};
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
 };
 ---
 <Layout title={title} description={description} schema={schema}>
@@ -88,7 +158,11 @@ const schema = {
 
     <header class="dash-head">
       <h1>Valores BCRA y INDEC hoy</h1>
-      <p class="lead">Dólar, inflación, UVA y tasas oficiales Argentina. Actualizado al <strong>{buildDate}</strong>.</p>
+      <p class="lead">Dólar oficial, blue, MEP y CCL, inflación INDEC, UVA y tasas de plazo fijo de Argentina, en un solo lugar.</p>
+      <p class="updated-row">
+        <span class="live-dot" aria-hidden="true"></span>
+        Cotizaciones en vivo · actualizado <time data-updated datetime={builtAtISO}>{buildDate}</time>
+      </p>
     </header>
 
     <!-- SECCIÓN DÓLAR -->
@@ -108,13 +182,13 @@ const schema = {
               <div class="card-head">
                 <span class="card-label">{c.label}</span>
                 {showBrecha && (
-                  <span class="badge">+{brecha}%</span>
+                  <span class="badge" data-brecha-key={c.key}>+{brecha}%</span>
                 )}
                 {showTaxBadge && (
                   <span class="badge badge-tax" title="Recargo por percepción Ganancias, no brecha cambiaria">+{brecha}% impuesto</span>
                 )}
               </div>
-              <div class="card-value">
+              <div class="card-value" data-dolar-key={c.key}>
                 {venta ? `$${fmtAr(venta)}` : '—'}
               </div>
               <div class="card-sub">
@@ -135,7 +209,7 @@ const schema = {
           <div class="card-head">
             <span class="card-label">Inflación mensual</span>
           </div>
-          <div class="card-value">
+          <div class="card-value" data-ipc-mensual>
             {ultimoIpc ? `${ultimoIpc.valor.toFixed(1)}%` : '—'}
           </div>
           <div class="card-sub">IPC Nacional</div>
@@ -145,7 +219,7 @@ const schema = {
           <div class="card-head">
             <span class="card-label">Inflación anual</span>
           </div>
-          <div class="card-value">
+          <div class="card-value" data-ipc-anual>
             {ultimaIpcAnual ? `${ultimaIpcAnual.valor.toFixed(1)}%` : '—'}
           </div>
           <div class="card-sub">Interanual (últimos 12m)</div>
@@ -155,11 +229,44 @@ const schema = {
           <div class="card-head">
             <span class="card-label">UVA</span>
           </div>
-          <div class="card-value">
+          <div class="card-value" data-uva>
             {ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : '—'}
           </div>
           <div class="card-sub">Unidad de Valor Adquisitivo</div>
           <div class="card-hint">Al {ultimaUva ? fmtDate(ultimaUva.fecha) : '—'}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN HISTÓRICO UVA + INFLACIÓN -->
+    <section class="dash-section">
+      <h2>📅 Evolución reciente: UVA e inflación mes a mes</h2>
+      <div class="hist-grid">
+        <div class="hist-block">
+          <h3>Valor de la UVA por mes (BCRA)</h3>
+          {uvaHist.length ? (
+            <table class="hist-table">
+              <thead><tr><th>Mes</th><th>UVA</th></tr></thead>
+              <tbody>
+                {uvaHist.map((p) => (
+                  <tr><td>{mesLargo(p.fecha)}</td><td>{'$' + fmtAr(p.valor)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          ) : <p class="hist-empty">Datos no disponibles en este momento.</p>}
+        </div>
+        <div class="hist-block">
+          <h3>Inflación mensual (IPC INDEC)</h3>
+          {ipcHist.length ? (
+            <table class="hist-table">
+              <thead><tr><th>Mes</th><th>IPC</th></tr></thead>
+              <tbody>
+                {ipcHist.map((p) => (
+                  <tr><td>{mesLargo(p.fecha)}</td><td>{p.valor.toFixed(1) + '%'}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          ) : <p class="hist-empty">Datos no disponibles en este momento.</p>}
         </div>
       </div>
     </section>
@@ -187,6 +294,7 @@ const schema = {
           </div>
         ))}
       </div>
+      <p class="tna-note">TNA de referencia para plazo fijo tradicional a 30 días; cada banco actualiza la suya. Confirmá la tasa vigente en tu banco o en el comparador.</p>
       <p class="sec-cta">
         <a href="/comparador-plazo-fijo" class="cta-link">Ver comparador interactivo →</a>
         <a href="/calculadora-plazo-fijo" class="cta-link">Calculadora individual →</a>
@@ -224,6 +332,20 @@ const schema = {
       </div>
     </section>
 
+    <!-- FAQ -->
+    <section class="dash-section faq-section">
+      <h2>❓ Preguntas frecuentes</h2>
+      <div class="faq-list">
+        {faqs.map((f) => (
+          <details class="faq-item">
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+      <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} is:inline />
+    </section>
+
     <section class="dash-section sources">
       <h3>Fuentes</h3>
       <ul class="sources-list">
@@ -238,6 +360,52 @@ const schema = {
 
   <Footer slot="footer" />
 </Layout>
+
+<script>
+  // Refresh híbrido: el HTML llega con los valores del último build (crawleables);
+  // al cargar la página los actualizamos en vivo desde las APIs públicas.
+  (function () {
+    const fmt = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n);
+    const J = async (u: string) => { const r = await fetch(u); if (!r.ok) throw new Error('http'); return r.json(); };
+    async function refresh() {
+      if (!document.querySelector('.dashboard [data-uva], .dashboard [data-dolar-key]')) return;
+      const [dol, uva, ipc, ipcA] = await Promise.allSettled([
+        J('https://dolarapi.com/v1/dolares'),
+        J('https://api.argentinadatos.com/v1/finanzas/indices/uva'),
+        J('https://api.argentinadatos.com/v1/finanzas/indices/inflacion'),
+        J('https://api.argentinadatos.com/v1/finanzas/indices/inflacionInteranual'),
+      ]);
+      let okDol = false, oficial: number | null = null;
+      if (dol.status === 'fulfilled' && Array.isArray(dol.value)) {
+        okDol = true;
+        const map: Record<string, any> = {};
+        dol.value.forEach((d: any) => { map[d.casa] = d; });
+        oficial = map.oficial && map.oficial.venta ? map.oficial.venta : null;
+        document.querySelectorAll('[data-dolar-key]').forEach((el) => {
+          const d = map[el.getAttribute('data-dolar-key') || ''];
+          if (d && d.venta) el.textContent = '$' + fmt(d.venta);
+        });
+        if (oficial) document.querySelectorAll('[data-brecha-key]').forEach((el) => {
+          const d = map[el.getAttribute('data-brecha-key') || ''];
+          if (d && d.venta) el.textContent = '+' + ((d.venta / (oficial as number) - 1) * 100).toFixed(1) + '%';
+        });
+      }
+      const last = (s: PromiseSettledResult<any>) =>
+        (s.status === 'fulfilled' && Array.isArray(s.value) && s.value.length) ? s.value[s.value.length - 1] : null;
+      const u = last(uva); if (u) { const el = document.querySelector('[data-uva]'); if (el) el.textContent = '$' + fmt(u.valor); }
+      const m = last(ipc); if (m) { const el = document.querySelector('[data-ipc-mensual]'); if (el) el.textContent = m.valor.toFixed(1) + '%'; }
+      const a = last(ipcA); if (a) { const el = document.querySelector('[data-ipc-anual]'); if (el) el.textContent = a.valor.toFixed(1) + '%'; }
+      const t = document.querySelector('[data-updated]');
+      if (t && okDol) {
+        const now = new Date();
+        t.textContent = 'hoy ' + now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        t.setAttribute('datetime', now.toISOString());
+      }
+    }
+    refresh();
+    document.addEventListener('astro:page-load', refresh);
+  })();
+</script>
 
 <style>
   .dashboard { max-width: 1060px; margin: 0 auto; padding: 0 0 3rem; }
@@ -397,4 +565,60 @@ const schema = {
     color: var(--text-subtle);
     font-style: italic;
   }
+
+  /* Fila "en vivo" */
+  .updated-row {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.5rem;
+  }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex: none;
+    background: #16a34a; box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+    animation: pulseDot 2s infinite;
+  }
+  @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  /* Histórico UVA + inflación */
+  .hist-grid {
+    display: grid; gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .hist-block h3 { font-size: 0.95rem; margin-bottom: 0.625rem; color: var(--text); }
+  .hist-table {
+    width: 100%; border-collapse: collapse; font-size: 0.875rem;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .hist-table th, .hist-table td { padding: 0.5rem 0.75rem; text-align: left; }
+  .hist-table thead th {
+    background: var(--accent-soft); color: var(--text-muted);
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .hist-table tbody tr { border-top: 1px solid var(--border); }
+  .hist-table tbody td:first-child { text-transform: capitalize; color: var(--text-muted); }
+  .hist-table tbody td:last-child {
+    text-align: right; font-weight: 700; color: var(--text);
+    font-feature-settings: 'tnum';
+  }
+  .hist-empty { font-size: 0.875rem; color: var(--text-subtle); }
+
+  .tna-note { font-size: 0.8125rem; color: var(--text-subtle); margin-bottom: 0.75rem; }
+
+  /* FAQ */
+  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .faq-item {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0 1rem;
+  }
+  .faq-item summary {
+    cursor: pointer; font-weight: 600; font-size: 0.95rem;
+    padding: 0.875rem 0; list-style: none; color: var(--text);
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item[open] summary { color: var(--accent-strong); }
+  .faq-answer {
+    font-size: 0.9rem; color: var(--text-muted); line-height: 1.65;
+    padding: 0 0 1rem; max-width: 70ch;
+  }
+  .faq-answer a { color: var(--accent-strong); font-weight: 600; }
 </style>
