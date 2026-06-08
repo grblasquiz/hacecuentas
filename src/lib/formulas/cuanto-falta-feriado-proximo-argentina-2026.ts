@@ -1,3 +1,5 @@
+import { FERIADOS_AR_2026, parseLocal, tipoLabel } from '../data/feriados-ar-2026';
+
 export interface Inputs {
   fecha_consulta: string;
 }
@@ -35,28 +37,12 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
-  // Fechas observadas 2026 (con traslados aplicados) según Ley 27.399.
-  // Güemes (17/6 mié) → lun 15/6; Soberanía (20/11 vie) → lun 23/11.
-  const feriados2026: Feriado[] = [
-    { nombre: "Año Nuevo", fecha: new Date(2026, 0, 1), tipo: "Inamovible" },
-    { nombre: "Carnaval", fecha: new Date(2026, 1, 16), tipo: "Trasladable" },
-    { nombre: "Carnaval", fecha: new Date(2026, 1, 17), tipo: "Trasladable" },
-    { nombre: "Día de la Memoria por la Verdad y la Justicia", fecha: new Date(2026, 2, 24), tipo: "Inamovible" },
-    { nombre: "Día del Veterano y de los Caídos en Malvinas", fecha: new Date(2026, 3, 2), tipo: "Inamovible" },
-    { nombre: "Viernes Santo", fecha: new Date(2026, 3, 3), tipo: "Inamovible" },
-    { nombre: "Día del Trabajador", fecha: new Date(2026, 4, 1), tipo: "Inamovible" },
-    { nombre: "Día de la Revolución de Mayo", fecha: new Date(2026, 4, 25), tipo: "Inamovible" },
-    { nombre: "Paso a la Inmortalidad del Gral. Güemes", fecha: new Date(2026, 5, 15), tipo: "Trasladable" },
-    { nombre: "Día de la Bandera (Gral. Belgrano)", fecha: new Date(2026, 5, 20), tipo: "Inamovible" },
-    { nombre: "Día de la Independencia", fecha: new Date(2026, 6, 9), tipo: "Inamovible" },
-    { nombre: "Paso a la Inmortalidad del Gral. San Martín", fecha: new Date(2026, 7, 17), tipo: "Trasladable" },
-    { nombre: "Día del Respeto a la Diversidad Cultural", fecha: new Date(2026, 9, 12), tipo: "Trasladable" },
-    { nombre: "Día de la Soberanía Nacional", fecha: new Date(2026, 10, 23), tipo: "Trasladable" },
-    { nombre: "Inmaculada Concepción de María", fecha: new Date(2026, 11, 8), tipo: "No laborable" },
-    { nombre: "Navidad", fecha: new Date(2026, 11, 25), tipo: "Inamovible" }
-  ];
-
-  feriados2026.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+  // Calendario desde la fuente única (src/lib/data/feriados-ar-2026.ts), ya en
+  // orden cronológico. Esta calc cuenta feriados + el día no laborable, pero NO
+  // los puentes turísticos (se filtran).
+  const feriados2026: Feriado[] = FERIADOS_AR_2026
+    .filter(f => f.tipo !== 'puente')
+    .map(f => ({ nombre: f.nombre, fecha: parseLocal(f.fecha), tipo: tipoLabel(f.tipo) }));
 
   let proximoFeriado: Feriado | null = null;
   for (const fer of feriados2026) {

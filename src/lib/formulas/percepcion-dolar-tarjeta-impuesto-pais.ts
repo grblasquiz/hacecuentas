@@ -3,33 +3,34 @@ export interface Outputs { [k: string]: string | number; _insight?: any; _chart?
 export function percepcionDolarTarjetaImpuestoPais(i: Inputs): Outputs {
   const u=Number(i.montoUsd)||0; const d=Number(i.dolarOficial)||1400;
   const sub=u*d;
-  const pais=sub*0.30;
-  const gan=sub*0.30;
-  const total=sub+pais+gan;
+  const pais=0;                  // Impuesto PAÍS derogado el 22/12/2024 (Decreto 1057/2024). Ya no se aplica.
+  const gan=sub*0.30;            // Percepción 30% a cuenta de Ganancias: en 2026 sólo vigente para turismo/transporte al exterior pagado EN PESOS.
+  const totalTurismo=sub+gan;    // Caso turismo en pesos (×1,30)
+  const totalHistorico=sub*1.60; // Referencia 2019-2024 (30% PAÍS + 30% percepción = ×1,60)
   const fmt=(n:number)=>'$'+n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-  const impuestos=pais+gan;
-  const recargoPct = sub>0 ? (impuestos/sub*100) : 0;
-  const dolarEfectivo = u>0 ? total/u : 0;
+  const dolarTurismo = u>0 ? totalTurismo/u : 0;
   return {
-    subtotalArs:fmt(sub), perceptPais:fmt(pais), perceptGan:fmt(gan), totalPagar:fmt(total),
-    resumen:`USD ${u} × $${d} + PAIS + Gan = $${total.toFixed(0)}.`,
+    subtotalArs:fmt(sub),
+    perceptPais:'$0 — derogado (dic 2024)',
+    perceptGan:fmt(gan),
+    totalPagar:fmt(totalTurismo),
+    resumen:`Directo en USD: ${fmt(sub)} (sin recargo). Turismo en pesos (+30%): ${fmt(totalTurismo)}. Referencia histórica 2019-2024 (+60%): ${fmt(totalHistorico)}.`,
     _insight: {
-      title: 'Lo que pagás de más por impuestos',
-      text: `Sobre un consumo de **USD ${u}** pagás **${fmt(impuestos)}** en percepciones (PAIS + Ganancias), un **+${recargoPct.toFixed(0)}%** sobre el oficial. Tu dólar tarjeta termina costando **${fmt(dolarEfectivo)}** por cada USD.`,
-      tone: 'warn',
+      title: 'Cuánto pagás hoy y cuánto se pagaba antes',
+      text: `Un consumo de **USD ${u}** al oficial de **$${d}** son **${fmt(sub)}**. En 2026, si lo pagás **directo en dólares no tiene recargo** (dólar tarjeta = oficial; el Impuesto PAÍS está derogado y la percepción del 30% sobre consumos directos se eliminó el 2-ene-2026). Si es **turismo o transporte al exterior pagado en pesos** (vuelos, hoteles, paquetes), todavía lleva **+30%** de percepción recuperable: **${fmt(totalTurismo)}** (dólar efectivo ${fmt(dolarTurismo)}). Como referencia, entre 2019 y 2024 sumaba 30% PAÍS + 30% percepción = **${fmt(totalHistorico)}** (+60%).`,
+      tone: 'neutral',
       icon: '💳',
     },
     _chart: {
       type: 'doughnut',
       slices: [
-        { label: 'Consumo (oficial)', value: Math.round(sub) },
-        { label: 'Percepción PAIS 30%', value: Math.round(pais) },
-        { label: 'Percepción Ganancias 30%', value: Math.round(gan) },
+        { label: 'Consumo (al oficial)', value: Math.round(sub) },
+        { label: 'Percepción 30% (turismo en pesos)', value: Math.round(gan) },
       ],
       prefix: '$',
-      centerValue: fmt(total),
-      centerLabel: 'Total a pagar',
-      ariaLabel: `Desglose del total ${fmt(total)}: consumo ${fmt(sub)}, percepción PAIS ${fmt(pais)} y percepción Ganancias ${fmt(gan)}.`,
+      centerValue: fmt(totalTurismo),
+      centerLabel: 'Total turismo en pesos',
+      ariaLabel: `Desglose del caso turismo en pesos: consumo al oficial ${fmt(sub)} más percepción 30% ${fmt(gan)} = ${fmt(totalTurismo)}. El consumo directo en dólares no lleva recargo y el Impuesto PAÍS está derogado.`,
     },
   };
 }

@@ -1,6 +1,9 @@
 /**
- * Feriados Argentina 2026 — calendario completo con filtros
+ * Feriados Argentina 2026 — calendario completo con filtros.
+ * Datos: src/lib/data/feriados-ar-2026.ts (fuente única).
  */
+
+import { FERIADOS_AR_2026 as FERIADOS_2026, MESES, parseLocal, formatFecha, tipoLabel } from '../data/feriados-ar-2026';
 
 export interface FeriadosArgentina2026Inputs {
   mes: string;
@@ -15,62 +18,6 @@ export interface FeriadosArgentina2026Outputs {
   listaFeriados: string;
   explicacion: string;
   _insight?: any;
-}
-
-interface Feriado {
-  fecha: string; // YYYY-MM-DD
-  nombre: string;
-  tipo: 'inamovible' | 'trasladable' | 'no-laborable' | 'puente';
-  mes: number;
-}
-
-const FERIADOS_2026: Feriado[] = [
-  { fecha: '2026-01-01', nombre: 'Año Nuevo', tipo: 'inamovible', mes: 1 },
-  { fecha: '2026-02-16', nombre: 'Carnaval', tipo: 'trasladable', mes: 2 },
-  { fecha: '2026-02-17', nombre: 'Carnaval', tipo: 'trasladable', mes: 2 },
-  { fecha: '2026-03-23', nombre: 'Día no laborable turístico (puente del 24 de marzo)', tipo: 'puente', mes: 3 },
-  { fecha: '2026-03-24', nombre: 'Día Nacional de la Memoria por la Verdad y la Justicia', tipo: 'inamovible', mes: 3 },
-  { fecha: '2026-04-02', nombre: 'Día del Veterano y de los Caídos en Malvinas', tipo: 'inamovible', mes: 4 },
-  { fecha: '2026-04-03', nombre: 'Viernes Santo', tipo: 'inamovible', mes: 4 },
-  { fecha: '2026-05-01', nombre: 'Día del Trabajador', tipo: 'inamovible', mes: 5 },
-  { fecha: '2026-05-25', nombre: 'Día de la Revolución de Mayo', tipo: 'inamovible', mes: 5 },
-  { fecha: '2026-06-15', nombre: 'Paso a la Inmortalidad del Gral. Martín Miguel de Güemes', tipo: 'trasladable', mes: 6 },
-  { fecha: '2026-06-20', nombre: 'Paso a la Inmortalidad del Gral. Manuel Belgrano', tipo: 'inamovible', mes: 6 },
-  { fecha: '2026-07-09', nombre: 'Día de la Independencia', tipo: 'inamovible', mes: 7 },
-  { fecha: '2026-07-10', nombre: 'Día no laborable turístico (puente del 9 de julio)', tipo: 'puente', mes: 7 },
-  { fecha: '2026-08-17', nombre: 'Paso a la Inmortalidad del Gral. José de San Martín', tipo: 'trasladable', mes: 8 },
-  { fecha: '2026-10-12', nombre: 'Día del Respeto a la Diversidad Cultural', tipo: 'trasladable', mes: 10 },
-  { fecha: '2026-11-23', nombre: 'Día de la Soberanía Nacional', tipo: 'trasladable', mes: 11 },
-  { fecha: '2026-12-07', nombre: 'Día no laborable turístico (puente del 8 de diciembre)', tipo: 'puente', mes: 12 },
-  { fecha: '2026-12-08', nombre: 'Inmaculada Concepción de María', tipo: 'no-laborable', mes: 12 },
-  { fecha: '2026-12-25', nombre: 'Navidad', tipo: 'inamovible', mes: 12 },
-];
-
-const MESES = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
-const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-
-function parseLocal(s: string): Date {
-  const p = String(s || '').split('-').map(Number);
-  return new Date(p[0], p[1] - 1, p[2]);
-}
-
-function formatFecha(fechaStr: string): string {
-  const d = parseLocal(fechaStr);
-  const dia = d.getDate();
-  const mes = MESES[d.getMonth() + 1];
-  const dow = DIAS_SEMANA[d.getDay()];
-  return `${dow} ${dia} de ${mes.toLowerCase()}`;
-}
-
-function tipoLabel(tipo: string): string {
-  switch (tipo) {
-    case 'inamovible': return 'Inamovible';
-    case 'trasladable': return 'Trasladable';
-    case 'no-laborable': return 'No laborable';
-    case 'puente': return 'Puente turístico';
-    default: return tipo;
-  }
 }
 
 export function feriadosArgentina2026(inputs: FeriadosArgentina2026Inputs): FeriadosArgentina2026Outputs {

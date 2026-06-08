@@ -55,7 +55,7 @@ export function precioDolarProducto(i: Inputs): Outputs {
   } else {
     out._insight = {
       title: 'Precio en pesos',
-      text: `Los **USD ${usd}** equivalen a **${fmt(precioFinalPesos)}** al dólar de **${fmt(cotiz)}**. No agregaste impuestos; si comprás con tarjeta sumá los recargos vigentes (PAÍS, percepción de Ganancias) para el costo real.`,
+      text: `Los **USD ${usd}** equivalen a **${fmt(precioFinalPesos)}** al dólar de **${fmt(cotiz)}**. En 2026 el consumo directo en dólares con tarjeta ya no lleva recargo (el Impuesto PAÍS está derogado y la percepción del 30% se eliminó); si es un servicio turístico al exterior pagado en pesos (vuelos, hoteles, paquetes), sumá el 30% de percepción (recuperable).`,
       tone: 'neutral',
       icon: '💵',
     };

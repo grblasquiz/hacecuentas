@@ -1,3 +1,5 @@
+import { parseLocal, MESES, esDiaNoHabilPorFeriado } from '../data/feriados-ar-2026';
+
 export interface Inputs {
   year: string;
   filterType: string;
@@ -23,80 +25,43 @@ export function compute(i: Inputs): Outputs {
   const year = i.year || "2026";
   const filterType = i.filterType || "all";
 
-  // Fines de semana largos reales 2026 (Ley 27.399 + Resolución 164/2025 de
-  // puentes turísticos: lun 23/3, vie 10/7, lun 7/12). Fechas observadas.
-  const bridges2026: Bridge[] = [
-    {
-      name: "Carnaval",
-      startDate: "14 febrero",
-      endDate: "17 febrero",
-      type: "movible",
-      continuousDays: 4
-    },
-    {
-      name: "Puente Día de la Memoria",
-      startDate: "21 marzo",
-      endDate: "24 marzo",
-      type: "puente",
-      continuousDays: 4
-    },
-    {
-      name: "Semana Santa (Malvinas + Viernes Santo)",
-      startDate: "2 abril",
-      endDate: "5 abril",
-      type: "inamovible",
-      continuousDays: 4
-    },
-    {
-      name: "Revolución de Mayo",
-      startDate: "23 mayo",
-      endDate: "25 mayo",
-      type: "inamovible",
-      continuousDays: 3
-    },
-    {
-      name: "Paso a la Inmortalidad de Güemes",
-      startDate: "13 junio",
-      endDate: "15 junio",
-      type: "movible",
-      continuousDays: 3
-    },
-    {
-      name: "Puente Día de la Independencia",
-      startDate: "9 julio",
-      endDate: "12 julio",
-      type: "puente",
-      continuousDays: 4
-    },
-    {
-      name: "Paso a la Inmortalidad de San Martín",
-      startDate: "15 agosto",
-      endDate: "17 agosto",
-      type: "movible",
-      continuousDays: 3
-    },
-    {
-      name: "Día del Respeto a la Diversidad Cultural",
-      startDate: "10 octubre",
-      endDate: "12 octubre",
-      type: "movible",
-      continuousDays: 3
-    },
-    {
-      name: "Día de la Soberanía Nacional",
-      startDate: "21 noviembre",
-      endDate: "23 noviembre",
-      type: "movible",
-      continuousDays: 3
-    },
-    {
-      name: "Puente Inmaculada Concepción",
-      startDate: "5 diciembre",
-      endDate: "8 diciembre",
-      type: "puente",
-      continuousDays: 4
-    }
+  // Fines de semana largos reales 2026. El NOMBRE/TIPO de cada ventana es curado
+  // (incluye recomendaciones de turismo), pero las FECHAS se derivan de la fuente
+  // única (src/lib/data/feriados-ar-2026.ts): para cada ancla se expande la corrida
+  // de días no laborables contiguos (finde + feriados + puentes). Así las fechas no
+  // pueden quedar desincronizadas con el calendario oficial.
+  const ANCLAS: { name: string; type: string; anchor: string }[] = [
+    { name: "Carnaval", type: "movible", anchor: "2026-02-16" },
+    { name: "Puente Día de la Memoria", type: "puente", anchor: "2026-03-23" },
+    { name: "Semana Santa (Malvinas + Viernes Santo)", type: "inamovible", anchor: "2026-04-02" },
+    { name: "Revolución de Mayo", type: "inamovible", anchor: "2026-05-25" },
+    { name: "Paso a la Inmortalidad de Güemes", type: "movible", anchor: "2026-06-15" },
+    { name: "Puente Día de la Independencia", type: "puente", anchor: "2026-07-09" },
+    { name: "Paso a la Inmortalidad de San Martín", type: "movible", anchor: "2026-08-17" },
+    { name: "Día del Respeto a la Diversidad Cultural", type: "movible", anchor: "2026-10-12" },
+    { name: "Día de la Soberanía Nacional", type: "movible", anchor: "2026-11-23" },
+    { name: "Puente Inmaculada Concepción", type: "puente", anchor: "2026-12-08" },
   ];
+
+  // Un día es "no laborable" si es sábado, domingo, o está en el calendario oficial.
+  const esOff = (d: Date) => d.getDay() === 0 || d.getDay() === 6 || esDiaNoHabilPorFeriado(d);
+  const fmtDdMes = (d: Date) => `${d.getDate()} ${MESES[d.getMonth() + 1].toLowerCase()}`;
+
+  const bridges2026: Bridge[] = ANCLAS.map(a => {
+    const start = parseLocal(a.anchor);
+    const end = parseLocal(a.anchor);
+    // Expandir hacia atrás y adelante mientras siga siendo día no laborable.
+    for (;;) {
+      const prev = new Date(start); prev.setDate(prev.getDate() - 1);
+      if (esOff(prev)) start.setTime(prev.getTime()); else break;
+    }
+    for (;;) {
+      const next = new Date(end); next.setDate(next.getDate() + 1);
+      if (esOff(next)) end.setTime(next.getTime()); else break;
+    }
+    const continuousDays = Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
+    return { name: a.name, startDate: fmtDdMes(start), endDate: fmtDdMes(end), type: a.type, continuousDays };
+  });
 
   let filtered = bridges2026;
 

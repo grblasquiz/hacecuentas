@@ -1,7 +1,10 @@
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 export function impuestoPaisPasajeAvionInternacional(i: Inputs): Outputs {
-  const p=Number(i.pasajeUsd)||0; const pais=Number(i.impuestoPais)||30; const per=Number(i.percepcion)||45;
+  const p=Number(i.pasajeUsd)||0;
+  const paisRaw=i.impuestoPais; const perRaw=i.percepcion;
+  const pais=(paisRaw===''||paisRaw==null||isNaN(Number(paisRaw)))?0:Number(paisRaw); // PAÍS derogado dic-2024: default 0
+  const per=(perRaw===''||perRaw==null||isNaN(Number(perRaw)))?30:Number(perRaw);     // Pasaje pagado en pesos: 30% percepción vigente
   const impPais=p*pais/100; const impPer=p*per/100; const total=impPais+impPer; const fin=p+total;
   const recargoPct=pais+per;
   const _insight={

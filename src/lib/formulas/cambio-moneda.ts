@@ -24,7 +24,7 @@ export function cambioMoneda(i: Inputs): Outputs {
   const oficial = Number(i.cotizacionOficial);
   const blue = Number(i.cotizacionBlue) || oficial * 1.4;
   const mep = Number(i.cotizacionMEP) || oficial * 1.15;
-  const tarjeta = Number(i.cotizacionTarjeta) || oficial * 1.6;
+  const tarjeta = Number(i.cotizacionTarjeta) || oficial * 1.3; // ×1,30: percepción 30% que subsiste sólo para turismo en pesos (PAÍS derogado; percepción sobre consumo directo eliminada 01/2026)
   const dir = String(i.direccion || 'a-pesos');
   if (!monto || monto <= 0) throw new Error('Ingresá el monto');
   if (!oficial || oficial <= 0) throw new Error('Ingresá la cotización oficial');
