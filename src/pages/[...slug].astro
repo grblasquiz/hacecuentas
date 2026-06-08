@@ -154,7 +154,14 @@ const datePublished: string | undefined = typeof _rawDatePub === 'string' && /^\
 type AudienceCode = 'AR' | 'MX' | 'CL' | 'CO' | 'ES' | 'BO' | 'PE' | 'UY' | 'BR' | 'global';
 const VALID_AUDIENCES: AudienceCode[] = ['AR','MX','CL','CO','ES','BO','PE','UY','BR','global'];
 const rawAudience = calc.audience;
-const audience: AudienceCode = (VALID_AUDIENCES as string[]).includes(rawAudience) ? rawAudience : 'global';
+// Normalizar casing: "ar"→"AR", "Global"→"global". Evita que un código mal tipeado
+// se degrade en silencio a 'global' y pierda el geo/locale del país.
+const normAudience = typeof rawAudience === 'string'
+  ? (rawAudience.toLowerCase() === 'global' ? 'global' : rawAudience.toUpperCase())
+  : 'global';
+const audience: AudienceCode = (VALID_AUDIENCES as string[]).includes(normAudience)
+  ? (normAudience as AudienceCode)
+  : 'global';
 const schemaLang = audience === 'AR' ? 'es-AR' : audience === 'MX' ? 'es-MX' : audience === 'CL' ? 'es-CL' : audience === 'CO' ? 'es-CO' : audience === 'ES' ? 'es-ES' : audience === 'BR' ? 'pt-BR' : 'es';
 
 // Country badge metadata (flag + tooltip + currency). Mostrado al lado del h1.
