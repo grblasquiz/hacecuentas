@@ -58,7 +58,7 @@ export function dolarAR(inputs: DolarInputs): DolarOutputs {
     bolsa: 1380,
     contadoconliqui: 1420,
     oficial: 1080,
-    tarjeta: 1728,
+    tarjeta: 1404, // oficial × 1,30 (tarjeta turismo en pesos); consumo directo se liquida al oficial
     cripto: 1440,
   };
 
