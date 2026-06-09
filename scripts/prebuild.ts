@@ -75,11 +75,12 @@ async function main() {
   const incremental = Boolean(process.env.INCREMENTAL_CHANGES);
 
   console.log(`[prebuild] mode=${incremental ? 'incremental' : 'full'}`);
-  console.log('[prebuild] fase 1: validate:data + regenerate-formula-index + converter-tables');
+  console.log('[prebuild] fase 1: validate:data + regenerate-formula-index + converter-tables + bcra-indices');
   await Promise.all([
     run(task('validate', 'validate-data-updates')),
     run(task('formula-index', 'regenerate-formula-index')),
     run(mjsTask('converter-tables', 'generate-converter-tables')),
+    run(mjsTask('bcra-indices', 'fetch-bcra-indices')),
   ]);
 
   const phase2Tasks: Task[] = [

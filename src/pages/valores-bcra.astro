@@ -4,6 +4,7 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import bcraIndicesRaw from '../lib/bcra-indices.json';
 
 const title = 'Valores BCRA Hoy: Dólar, Inflación, UVA y Tasas';
 const description = 'Dashboard con dólar oficial, MEP, blue, CCL, tarjeta, UVA del día, inflación INDEC mensual y anual, TNA plazo fijo. Datos oficiales BCRA/INDEC actualizados.';
@@ -35,6 +36,20 @@ const inflacionInteranual = await safeFetch<InflacionPoint[]>(
 );
 type PlazoFijoRaw = { entidad: string; tnaClientes: number };
 const plazoFijoRaw = await safeFetch<PlazoFijoRaw[]>('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo', []);
+
+// ── Tasas e índices del BCRA (API oficial v4.0) — la página rankea por "badlar
+// hoy" / "tasa de referencia bcra" / "cer hoy" pero NO los mostraba. Sirve esas
+// queries directo. Node acepta el cert BCRA sin flags. Fallback seguro a null.
+// Tasas/índices BCRA (BADLAR, TAMAR, CER) + riesgo país: pre-fetcheados en build
+// por scripts/fetch-bcra-indices.mjs. NO se fetchean acá porque el WAF del BCRA
+// bloquea el SSR de Astro/Vite ("internal error; reference=…"); desde Node plano
+// (el script de prebuild) responde 200. Ver el script.
+type Punto = { valor: number; fecha: string } | null;
+const bcraIndices = bcraIndicesRaw as { badlar: Punto; tamar: Punto; cer: Punto; riesgoPais: Punto };
+const badlar = bcraIndices.badlar;
+const tamar = bcraIndices.tamar;
+const cer = bcraIndices.cer;
+const riesgoPais = bcraIndices.riesgoPais;
 
 // Últimos valores
 const dolarMap = Object.fromEntries(dolares.map((d) => [d.casa, d]));
@@ -144,6 +159,36 @@ const uvaHoy = ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : 'el valor del día';
 const ipcMensualTxt = ultimoIpc ? `${ultimoIpc.valor.toFixed(1)}%` : 'el último dato del INDEC';
 const ipcAnualTxt = ultimaIpcAnual ? `${ultimaIpcAnual.valor.toFixed(1)}%` : 'el último interanual';
 
+const pct = (n: number) => `${n.toFixed(2).replace('.', ',')}%`;
+// Cards de tasas/índices BCRA (server-rendered, crawleables).
+const tasasBcra: { label: string; value: string; sub: string; fecha: string }[] = [
+  badlar && { label: 'BADLAR', value: pct(badlar.valor), sub: 'Plazo fijo mayorista (>$1M), bancos privados', fecha: badlar.fecha },
+  tamar && { label: 'TAMAR', value: pct(tamar.valor), sub: 'Tasa mayorista de referencia del BCRA', fecha: tamar.fecha },
+  cer && { label: 'CER', value: fmtAr(cer.valor), sub: 'Coef. de Estabilización de Referencia (indexa la UVA)', fecha: cer.fecha },
+  riesgoPais && { label: 'Riesgo país', value: `${Math.round(riesgoPais.valor)} pb`, sub: 'EMBI+ Argentina (puntos básicos)', fecha: riesgoPais.fecha },
+].filter(Boolean) as { label: string; value: string; sub: string; fecha: string }[];
+
+// Frase-resumen crawleable (AEO / featured snippet para "valores bcra hoy").
+const resumenParts: string[] = [];
+if (dolarMap.blue?.venta) resumenParts.push(`el dólar blue cotiza a $${fmtAr(dolarMap.blue.venta)}`);
+if (dolarMap.oficial?.venta) resumenParts.push(`el oficial a $${fmtAr(dolarMap.oficial.venta)}`);
+if (ultimaUva) resumenParts.push(`la UVA vale $${fmtAr(ultimaUva.valor)}`);
+if (ultimoIpc) resumenParts.push(`la inflación mensual fue ${ultimoIpc.valor.toFixed(1).replace('.', ',')}%`);
+if (badlar) resumenParts.push(`la tasa BADLAR rinde ${pct(badlar.valor)} anual`);
+if (riesgoPais) resumenParts.push(`y el riesgo país está en ${Math.round(riesgoPais.valor)} puntos`);
+const resumen = resumenParts.length
+  ? `Hoy en Argentina ${resumenParts.join(', ')}, según datos oficiales del BCRA e INDEC actualizados al ${buildDate}.`
+  : '';
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Valores BCRA hoy', item: 'https://hacecuentas.com/valores-bcra' },
+  ],
+};
+
 const faqs: { q: string; a: string }[] = [
   {
     q: '¿Cuánto vale la UVA hoy?',
@@ -170,6 +215,14 @@ const faqs: { q: string; a: string }[] = [
     a: `Las tasas (TNA) de plazo fijo tradicional a 30 días van desde ~16% hasta <strong>${pfMax ? String(pfMax).replace('.', ',') + '%' : '~23%'}</strong> anual según el banco, como se ve en la tabla de arriba (ordenada de mayor a menor). Para saber cuánto cobrás en pesos por un monto y plazo concretos, usá la <a href="/calculadora-plazo-fijo">calculadora de plazo fijo</a> o compará bancos en el <a href="/comparador-plazo-fijo">comparador</a>.`,
   },
   {
+    q: '¿Qué es la tasa BADLAR y cuánto está hoy?',
+    a: `La <strong>BADLAR</strong> (Buenos Aires Deposits of Large Amount Rate) es la tasa promedio que pagan los bancos privados por plazos fijos mayoristas de más de un millón de pesos a 30-35 días. El BCRA la publica a diario y se usa como referencia para préstamos, UVA y contratos. Hoy la BADLAR de bancos privados está en <strong>${badlar ? pct(badlar.valor) : 'el último dato del BCRA'}</strong>${badlar ? ` (al ${fmtDate(badlar.fecha)})` : ''}. La <strong>TAMAR</strong>${tamar ? ` (${pct(tamar.valor)})` : ''} es la versión mayorista que el BCRA adoptó como tasa de referencia.`,
+  },
+  {
+    q: '¿Cuál es el riesgo país de Argentina hoy?',
+    a: `El <strong>riesgo país</strong> (índice EMBI+ de JP Morgan) mide la sobretasa que paga la deuda argentina frente a los bonos del Tesoro de EE.UU., en puntos básicos (100 pb = 1%). Hoy está en <strong>${riesgoPais ? Math.round(riesgoPais.valor) + ' puntos' : 'el último dato disponible'}</strong>${riesgoPais ? ` (al ${fmtDate(riesgoPais.fecha)})` : ''}. Cuanto más bajo, más confianza del mercado en que el país pagará su deuda y más cerca está de volver a financiarse en los mercados internacionales.`,
+  },
+  {
     q: '¿Cada cuánto se actualizan estos valores?',
     a: 'Las cotizaciones del dólar se <strong>refrescan en vivo</strong> al abrir la página (desde dolarapi.com, que consolida bancos y casas de cambio). La inflación y la UVA se actualizan con cada publicación oficial del INDEC y el BCRA. La fecha de cada dato figura debajo del valor.',
   },
@@ -190,6 +243,14 @@ const schema = {
     { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: 'https://dolarapi.com/v1/dolares' },
     { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: 'https://api.argentinadatos.com/v1/finanzas/indices/uva' },
   ],
+  variableMeasured: [
+    dolarMap.blue?.venta && { '@type': 'PropertyValue', name: 'Dólar blue (venta)', value: dolarMap.blue.venta, unitText: 'ARS' },
+    dolarMap.oficial?.venta && { '@type': 'PropertyValue', name: 'Dólar oficial (venta)', value: dolarMap.oficial.venta, unitText: 'ARS' },
+    ultimaUva && { '@type': 'PropertyValue', name: 'UVA', value: ultimaUva.valor, unitText: 'ARS' },
+    ultimoIpc && { '@type': 'PropertyValue', name: 'Inflación mensual IPC (INDEC)', value: ultimoIpc.valor, unitText: 'P1' },
+    badlar && { '@type': 'PropertyValue', name: 'Tasa BADLAR bancos privados', value: badlar.valor, unitText: 'P1' },
+    riesgoPais && { '@type': 'PropertyValue', name: 'Riesgo país (EMBI+)', value: Math.round(riesgoPais.valor), unitText: 'basis point' },
+  ].filter(Boolean),
 };
 
 const faqSchema = {
@@ -220,6 +281,8 @@ const faqSchema = {
         Cotizaciones en vivo · actualizado <time data-updated datetime={builtAtISO}>{buildDate}</time>
       </p>
     </header>
+
+    {resumen && <p class="vb-resumen">{resumen}</p>}
 
     <!-- SECCIÓN DÓLAR -->
     <section class="dash-section">
@@ -293,6 +356,23 @@ const faqSchema = {
         </div>
       </div>
     </section>
+
+    <!-- SECCIÓN TASAS E ÍNDICES BCRA -->
+    {tasasBcra.length > 0 && (
+      <section class="dash-section">
+        <h2>🏛️ Tasas e índices del BCRA</h2>
+        <div class="card-grid">
+          {tasasBcra.map((t) => (
+            <div class="card">
+              <div class="card-head"><span class="card-label">{t.label}</span></div>
+              <div class="card-value">{t.value}</div>
+              <div class="card-sub">{t.sub}</div>
+              <div class="card-hint">Al {fmtDate(t.fecha)} · BCRA</div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
 
     <!-- SECCIÓN HISTÓRICO UVA + INFLACIÓN -->
     <section class="dash-section">
@@ -392,6 +472,7 @@ const faqSchema = {
         ))}
       </div>
       <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} is:inline />
+      <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} is:inline />
     </section>
 
     <section class="dash-section sources">
@@ -465,6 +546,18 @@ const faqSchema = {
   .dash-head { margin-bottom: 2rem; }
   .dash-head h1 { margin-bottom: 0.5rem; }
   .lead { color: var(--text-muted); font-size: 1.0625rem; max-width: 680px; }
+  .vb-resumen {
+    margin: 1.25rem 0 0;
+    padding: 0.9rem 1.1rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm, 8px);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text);
+    max-width: 760px;
+  }
 
   .dash-section { margin-bottom: 2.5rem; }
   .dash-section h2 {
