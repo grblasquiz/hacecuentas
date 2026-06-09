@@ -6,6 +6,16 @@
 // que assets → soluciona sin necesidad de borrar JSONs.
 
 export const PRUNING_REDIRECTS: Record<string, string> = {
+  // ── Consolidación canibalización 2026-06-08 (dupes → ganador) ──
+  '/calculadora-tiempo-lectura-por-paginas': '/calculadora-tiempo-lectura-libro-paginas',
+  '/calculadora-tiempo-leer-libro-general': '/calculadora-tiempo-lectura-libro-paginas',
+  '/calculadora-lectura-tiempo-libro': '/calculadora-tiempo-lectura-libro-paginas',
+  '/calculadora-tiempo-leer-libro-paginas-velocidad': '/calculadora-tiempo-lectura-libro-paginas',
+  '/calculadora-consumo-electrico-pc-gamer-watts': '/calculadora-watts-fuente-alimentacion-pc',
+  '/calculadora-consumo-pc-componentes-watts': '/calculadora-watts-fuente-alimentacion-pc',
+  '/calculadora-consumo-watts-pc-gamer-fuente': '/calculadora-watts-fuente-alimentacion-pc',
+  '/calculadora-conversiones-tazas-gramos-ingrediente': '/conversor-tazas-gramos-cocina-recetas',
+  '/calculadora-consumo-electrodomestico-kwh-mes': '/calculadora-consumo-electrico-aparato-kwh-mes',
   '/area-jardin': '/area-perimetro',
   '/argon2-costo-memoria-tiempo': '/categoria/tecnologia',
   '/cafeina-dosis-rendimiento': '/calculadora-cafeina-dosis-rendimiento',
