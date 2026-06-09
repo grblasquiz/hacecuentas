@@ -5,7 +5,7 @@
 //  - Bypass: analytics, dominios externos (gtag, fonts.googleapis con request por separado)
 //  - Versionado por CACHE_VERSION: cambiar el número fuerza re-cache en deploy
 
-const CACHE_VERSION = 'hc-1781016508627';
+const CACHE_VERSION = 'hc-1781025777317';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGES_CACHE = `${CACHE_VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
