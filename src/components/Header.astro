@@ -113,6 +113,32 @@ const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePa
   ],
 };
 const navItems = COUNTRY_NAVS[pageCountry];
+
+// Menú mobile: lista COMPLETA de categorías (la nav de escritorio sólo muestra
+// un subset). Cada slug tiene su ruta /categoria/<slug> (las construye
+// src/pages/categoria/[cat]/[...page].astro). Labels = CATEGORY_TITLES.
+const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
+  { slug: 'finanzas', label: 'Finanzas' },
+  { slug: 'salud', label: 'Salud' },
+  { slug: 'vida', label: 'Vida diaria' },
+  { slug: 'matematica', label: 'Matemática' },
+  { slug: 'cocina', label: 'Cocina' },
+  { slug: 'deportes', label: 'Deportes' },
+  { slug: 'negocios', label: 'Negocios' },
+  { slug: 'marketing', label: 'Marketing' },
+  { slug: 'viajes', label: 'Viajes' },
+  { slug: 'construccion', label: 'Hogar / Construcción' },
+  { slug: 'automotor', label: 'Automotor' },
+  { slug: 'mascotas', label: 'Mascotas' },
+  { slug: 'familia', label: 'Familia' },
+  { slug: 'educacion', label: 'Educación' },
+  { slug: 'tecnologia', label: 'Tecnología' },
+  { slug: 'ciencia', label: 'Ciencia' },
+  { slug: 'electronica', label: 'Electrónica' },
+  { slug: 'jardineria', label: 'Jardinería' },
+  { slug: 'idiomas', label: 'Idiomas' },
+  { slug: 'entretenimiento', label: 'Entretenimiento' },
+];
 ---
 
 <a href="#main" class="skip-link">{t.skip}</a>
@@ -196,10 +222,15 @@ const navItems = COUNTRY_NAVS[pageCountry];
     </div>
   ) : (
     <div class="mobile-nav" id="mobile-nav" hidden>
+      <a href="/buscar">🔍 Buscar</a>
       {navItems.map(item => (
         <a href={item.href}>{item.label}</a>
       ))}
-      <a href="/buscar">🔍 Buscar</a>
+      <span class="mobile-nav-group">Categorías</span>
+      {MOBILE_CATEGORIES.map(cat => (
+        <a href={`/categoria/${cat.slug}`}>{cat.label}</a>
+      ))}
+      <a href="/calculadoras" class="mobile-nav-all">Ver todas las calculadoras →</a>
     </div>
   )}
 </header>
@@ -292,11 +323,19 @@ const navItems = COUNTRY_NAVS[pageCountry];
   function initMobileMenu() {
     const mToggle = document.getElementById('menu-toggle');
     const mobile = document.getElementById('mobile-nav');
-    if (!mToggle || !mobile || mToggle.dataset.init) return;
+    if (!mToggle || !mobile) return;
+    const closeMobile = () => { mobile.setAttribute('hidden', ''); mToggle.setAttribute('aria-expanded', 'false'); };
+    // Cerrar el menú al tocar cualquier link (re-aplicar tras swap del ClientRouter).
+    mobile.querySelectorAll('a').forEach((a) => {
+      if (a.dataset.mnav) return;
+      a.dataset.mnav = '1';
+      a.addEventListener('click', closeMobile);
+    });
+    if (mToggle.dataset.init) return;
     mToggle.dataset.init = '1';
     mToggle.addEventListener('click', () => {
       const open = !mobile.hasAttribute('hidden');
-      if (open) { mobile.setAttribute('hidden', ''); mToggle.setAttribute('aria-expanded', 'false'); }
+      if (open) closeMobile();
       else { mobile.removeAttribute('hidden'); mToggle.setAttribute('aria-expanded', 'true'); }
     });
   }
@@ -335,18 +374,63 @@ const navItems = COUNTRY_NAVS[pageCountry];
   // idempotencia para no duplicar handlers si el nodo sobrevive al swap.
   let calcs = null;                 // module-scoped: caché compartido entre swaps
   let calcsPromise = null;
+  let calcsFailed = false;          // true si el último fetch del índice falló
   async function ensureCalcs() {
     if (calcs) return calcs;
     if (!calcsPromise) {
       calcsPromise = fetch('/search-index.json', { cache: 'force-cache' })
-        .then((r) => r.ok ? r.json() : [])
-        .catch(() => []);
+        .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then((data) => { calcsFailed = false; return data; })
+        .catch((err) => {
+          // Marcar fallo y permitir reintento: limpiar la promesa cacheada.
+          console.error('[search] index fetch failed', err);
+          calcsFailed = true;
+          calcsPromise = null;
+          return null;
+        });
     }
     calcs = await calcsPromise;
     return calcs;
   }
 
   const categoryLabels = { finanzas: 'Finanzas', negocios: 'Negocios', negocio: 'Negocios', salud: 'Salud', marketing: 'Marketing', deportes: 'Deportes', viajes: 'Viajes', vida: 'Vida', mascotas: 'Mascotas', matematica: 'Matemática', construccion: 'Construcción', cocina: 'Cocina' };
+
+  // Tolerancia a typos: distancia de Levenshtein (early-exit por límite).
+  // Devuelve la distancia exacta si ≤ max, o max+1 si la supera.
+  function levenshtein(a, b, max) {
+    const la = a.length, lb = b.length;
+    if (Math.abs(la - lb) > max) return max + 1;
+    if (la === 0) return lb;
+    if (lb === 0) return la;
+    let prev = new Array(lb + 1);
+    let cur = new Array(lb + 1);
+    for (let j = 0; j <= lb; j++) prev[j] = j;
+    for (let i = 1; i <= la; i++) {
+      cur[0] = i;
+      let rowMin = cur[0];
+      const ai = a.charCodeAt(i - 1);
+      for (let j = 1; j <= lb; j++) {
+        const cost = ai === b.charCodeAt(j - 1) ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+        if (cur[j] < rowMin) rowMin = cur[j];
+      }
+      if (rowMin > max) return max + 1; // early-exit: ya no puede bajar de max
+      const tmp = prev; prev = cur; cur = tmp;
+    }
+    return prev[lb];
+  }
+  // Umbral de edición tolerado según largo del token (≤1 cortos, ≤2 largos).
+  function fuzzyTol(len) { return len <= 6 ? 1 : 2; }
+  // ¿Alguna palabra del texto está "cerca" del token de la query (typo)?
+  function fuzzyWordMatch(words, token) {
+    if (token.length < 4) return false; // tokens cortos dan falsos positivos
+    const tol = fuzzyTol(token.length);
+    for (const w of words) {
+      if (Math.abs(w.length - token.length) > tol) continue;
+      if (levenshtein(w, token, tol) <= tol) return true;
+    }
+    return false;
+  }
   const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   // XSS protection: escapar cualquier string antes de pegarlo en innerHTML
@@ -398,13 +482,30 @@ const navItems = COUNTRY_NAVS[pageCountry];
 
     const searchLang = modal.dataset.lang;
     const i18n = searchLang === 'en'
-      ? { loading: 'Loading...', noResults: 'No results for' }
+      ? { loading: 'Loading...', noResults: 'No results for', errMsg: 'Could not load the search index.', retry: 'Retry', openAll: 'open /buscar' }
       : searchLang === 'pt'
-      ? { loading: 'Carregando...', noResults: 'Sem resultados para' }
-      : { loading: 'Cargando...', noResults: 'Sin resultados para' };
+      ? { loading: 'Carregando...', noResults: 'Sem resultados para', errMsg: 'Não foi possível carregar o buscador.', retry: 'Tentar de novo', openAll: 'abrir /buscar' }
+      : { loading: 'Cargando...', noResults: 'Sin resultados para', errMsg: 'No se pudo cargar el buscador.', retry: 'Reintentar', openAll: 'abrí /buscar' };
     let currentIndex = -1;
 
+    function renderError() {
+      results.innerHTML =
+        '<div class="no-results search-error">'
+        + '<p>' + i18n.errMsg + '</p>'
+        + '<p><button type="button" class="search-retry" id="search-retry">' + i18n.retry + '</button>'
+        + ' · <a href="/buscar">' + i18n.openAll + ' →</a></p>'
+        + '</div>';
+      const retryBtn = document.getElementById('search-retry');
+      if (retryBtn) retryBtn.addEventListener('click', async () => {
+        results.innerHTML = `<div class="no-results">${i18n.loading}</div>`;
+        await ensureCalcs();
+        if (calcsFailed) renderError();
+        else renderResults(input.value || '');
+      });
+    }
+
     function renderResults(q) {
+      if (calcsFailed) { renderError(); return; }
       if (!calcs) {
         results.innerHTML = `<div class="no-results">${i18n.loading}</div>`;
         return;
@@ -424,24 +525,47 @@ const navItems = COUNTRY_NAVS[pageCountry];
           'AR';
         // Score: +100 título empieza con query, +50 contiene, +10 slug/desc contiene,
         // +30 audience matches path, -20 audience de otro país.
-        const scored = [];
+        // Fallback fuzzy (Levenshtein) por token cuando NO hay match por substring,
+        // para tolerar typos: "agunaldo"→"aguinaldo", "interes"→"interés".
         const isOtherCountry = function(a) {
           return ['AR','ES','MX','CO','CL','BO','PE','UY','BR'].indexOf(a) >= 0 && a !== preferredAudience;
         };
-        for (const c of calcs) {
-          const title = norm(c.h || '');
-          const slug = norm(c.s || '');
-          const desc = norm(c.d || '');
-          let score = 0;
-          if (title.startsWith(query)) score += 100;
-          else if (title.includes(query)) score += 50;
-          if (slug.includes(query) || desc.includes(query)) score += 10;
-          if (score === 0) continue;
-          if (c.a === preferredAudience) score += 30;
-          else if (preferredAudience !== 'global' && isOtherCountry(c.a)) score -= 20;
-          scored.push({ c: c, score: score });
-        }
-        scored.sort(function (a, b) { return b.score - a.score; });
+        const tokens = query.split(/\s+/).filter(Boolean);
+        // Pasada 1 (exacta) y, si quedan pocos, pasada 2 (con fuzzy).
+        const buildScored = function (useFuzzy) {
+          const scored = [];
+          for (const c of calcs) {
+            const title = norm(c.h || '');
+            const slug = norm(c.s || '');
+            const desc = norm(c.d || '');
+            let score = 0;
+            if (title.startsWith(query)) score += 100;
+            else if (title.includes(query)) score += 50;
+            if (slug.includes(query) || desc.includes(query)) score += 10;
+            if (score === 0 && useFuzzy && tokens.length) {
+              // Sin substring directo: aceptar si CADA token matchea ~fuzzy
+              // contra alguna palabra de título o slug (slug con '-' → espacios).
+              const titleWords = title.split(/\s+/).filter(Boolean);
+              const slugWords = slug.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
+              let allFuzzy = true;
+              let fuzzyScore = 0;
+              for (const tk of tokens) {
+                if (fuzzyWordMatch(titleWords, tk)) fuzzyScore += 35;
+                else if (fuzzyWordMatch(slugWords, tk)) fuzzyScore += 18;
+                else { allFuzzy = false; break; }
+              }
+              if (allFuzzy) score += fuzzyScore;
+            }
+            if (score === 0) continue;
+            if (c.a === preferredAudience) score += 30;
+            else if (preferredAudience !== 'global' && isOtherCountry(c.a)) score -= 20;
+            scored.push({ c: c, score: score });
+          }
+          scored.sort(function (a, b) { return b.score - a.score; });
+          return scored;
+        };
+        let scored = buildScored(false);
+        if (scored.length < 4) scored = buildScored(true); // sólo si la exacta da poco
         matches = scored.slice(0, 8).map(function (x) { return x.c; });
       } else {
         matches = pickDefault(calcs);
@@ -478,6 +602,7 @@ const navItems = COUNTRY_NAVS[pageCountry];
         results.innerHTML = `<div class="no-results">${i18n.loading}</div>`;
         await ensureCalcs();
       }
+      if (calcsFailed) { renderError(); return; }
       renderResults('');
     };
     const closeModal = () => {
@@ -678,8 +803,8 @@ const navItems = COUNTRY_NAVS[pageCountry];
   }
 
   .icon-btn {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -733,6 +858,11 @@ const navItems = COUNTRY_NAVS[pageCountry];
     transition: background 0.1s;
   }
   .country-dropdown a:hover { background: var(--bg-muted); }
+  .country-dropdown a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    background: var(--bg-muted);
+  }
   .country-dropdown a span { font-size: 1.125rem; line-height: 1; }
   .country-dropdown a.current { background: var(--accent-soft); color: var(--accent); }
 
@@ -747,6 +877,8 @@ const navItems = COUNTRY_NAVS[pageCountry];
     flex-direction: column;
     border-top: 1px solid var(--border);
     padding: 0.5rem 1.25rem 0.75rem;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
   }
   .mobile-nav[hidden] { display: none; }
   .mobile-nav a {
@@ -758,6 +890,15 @@ const navItems = COUNTRY_NAVS[pageCountry];
     border-bottom: 1px solid var(--border);
   }
   .mobile-nav a:last-child { border-bottom: none; }
+  .mobile-nav-group {
+    padding: 0.875rem 0.5rem 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-subtle);
+  }
+  .mobile-nav a.mobile-nav-all { color: var(--accent); font-weight: 600; }
 
   /* Search Modal */
   .search-modal {
@@ -805,6 +946,11 @@ const navItems = COUNTRY_NAVS[pageCountry];
     font-size: 1rem;
     color: var(--text);
   }
+  .search-input-wrap input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 
   .search-results {
     max-height: 50vh;
@@ -846,6 +992,20 @@ const navItems = COUNTRY_NAVS[pageCountry];
     color: var(--text-subtle);
     font-size: 0.875rem;
   }
+  .search-results :global(.search-error p) { margin: 0 0 0.5rem; }
+  .search-results :global(.search-error p:last-child) { margin-bottom: 0; }
+  .search-results :global(.search-error a) { color: var(--accent); text-decoration: none; font-weight: 500; }
+  .search-results :global(.search-retry) {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .search-results :global(.search-retry:hover) { filter: brightness(0.95); }
 
   .search-footer {
     padding: 0.625rem 1rem;
@@ -890,10 +1050,23 @@ const navItems = COUNTRY_NAVS[pageCountry];
      swipe a la derecha. Reducimos padding/gap/font-size del logo aquí y
      dejamos shrink al texto. Cero impacto en desktop ni en HTML/contenido. */
   @media (max-width: 480px) {
-    .header-container { padding: 0.625rem 0.75rem; gap: 0.5rem; }
+    .header-container { padding: 0.5rem 0.625rem; gap: 0.375rem; }
     .logo { min-width: 0; }
     .logo-text { font-size: 0.9375rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-    .header-actions { gap: 0.25rem; margin-left: 0; }
+    .header-actions { gap: 0.375rem; margin-left: 0; }
+    /* Botón de búsqueda compacto pero cómodo de tocar (44px alto). */
+    .header-search-btn { width: 44px; height: 44px; min-width: 44px; padding: 0; justify-content: center; }
+    .icon-btn { width: 44px; height: 44px; }
+    /* Selector de país: ancho auto (icon-btn lo forzaría a 44px y cortaría el
+       código de país); reasserts width:auto DESPUÉS de .icon-btn. */
+    .country-btn { width: auto; height: 44px; padding: 0 0.5rem; }
+    .country-flag { font-size: 1.0625rem; }
+  }
+
+  /* Logo: ocultar el texto en pantallas muy chicas (≤360px) para dar aire al
+     search + selector de país; el logo-mark sigue visible y linkea al home. */
+  @media (max-width: 360px) {
+    .logo-text { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {

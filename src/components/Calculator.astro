@@ -318,6 +318,17 @@ const disclaimer = (lang === 'en' || lang === 'pt') ? '' : (disclaimers[config.s
 const basicFields = config.fields.filter((f) => !f.advanced);
 const advancedFields = config.fields.filter((f) => f.advanced);
 
+// Alerta por dato (opcional): si el calc declara config.alertableFields
+// (array de strings), ofrecemos suscripción a "avisame cuando cambie X".
+// Si no existe, no se renderiza nada.
+const alertableFields: string[] = Array.isArray((config as any).alertableFields)
+  ? ((config as any).alertableFields as any[]).map((s) => String(s).trim()).filter(Boolean)
+  : [];
+// Tema legible para el copy del bloque de alerta (junta los campos con coma).
+const alertTopic = alertableFields.join(', ');
+// Source para /api/newsletter (sanitizado a 40 chars en el backend).
+const alertSource = ('alert:' + alertableFields.join(',')).slice(0, 40);
+
 // Smart Input Groups: agrupa fields con la misma key `group` para reducir
 // carga cognitiva en calcs con muchos campos. Backwards-compatible:
 // si ningún field tiene `group`, renderiza el grid plano como siempre.
@@ -557,6 +568,10 @@ const formatFreshnessDate = (iso: string): string => {
         {t.calculating}
       </span>
     </button>
+    <button type="button" class="btn-clear-form" data-clear-form>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      {lang === 'en' ? 'Clear data' : lang === 'pt' ? 'Limpar dados' : 'Borrar datos'}
+    </button>
   </form>
 
   <div class="empty-preview" data-empty-preview aria-hidden="true">
@@ -592,8 +607,16 @@ const formatFreshnessDate = (iso: string): string => {
         <div class="empty-icon" aria-hidden="true">{config.icon}</div>
         <div class="empty-text">{t.emptyText}</div>
         <div class="empty-sub">{t.emptySub} <strong>{t.calculate}</strong></div>
+        <div class="empty-microcopy">{lang === 'en' ? 'Private · no sign-up · instant.' : lang === 'pt' ? 'Privado · sem cadastro · na hora.' : 'Privado · sin registro · al instante.'}</div>
       </>
     )}
+  </div>
+
+  <div class="result-skeleton" data-result-skeleton hidden aria-hidden="true">
+    <div class="skeleton-line skeleton-badge"></div>
+    <div class="skeleton-line skeleton-label"></div>
+    <div class="skeleton-line skeleton-hero"></div>
+    <div class="skeleton-line skeleton-bar"></div>
   </div>
 
   <div class="calc-results" id={`results-${config.slug}`} hidden aria-live="polite" aria-atomic="true">
@@ -608,6 +631,9 @@ const formatFreshnessDate = (iso: string): string => {
           )}
           <div class="result-label">{out.label}</div>
           <div class="result-value" data-value>{out.primary ? exampleBaseline : ''}</div>
+          {out.primary && (
+            <div class="result-tap-hint" data-tap-hint aria-hidden="true">{lang === 'en' ? 'Tap to copy' : lang === 'pt' ? 'Toque para copiar' : 'Tocá para copiar'}</div>
+          )}
           {out.primary && out.compareBar && (
             <div class="result-compare">
               <div class="result-compare-bar" role="presentation">
@@ -647,11 +673,23 @@ const formatFreshnessDate = (iso: string): string => {
       ))}
     </div>
 
+    {/* Comparación con el cálculo anterior de ESTA calc (mismo output primary).
+        El cliente la rellena tras recalcular si hay un resultado previo. */}
+    <div class="result-compare-prev" data-compare-prev hidden></div>
+
     {/* Caja de insight narrativa. La fórmula devuelve output._insight (string
         o {title,text,tone,icon}) y el cliente la renderiza acá: explica qué
         significa el resultado en lenguaje claro. Retrocompatible: si la fórmula
         no lo devuelve, queda oculta. */}
     <div class="result-insight" data-insight hidden></div>
+
+    {/* Cálculo paso a paso. La fórmula devuelve output._steps (array de
+        {label, value} o {label, expr, value}) y el cliente renderiza un
+        <details> colapsable. Si no hay _steps, queda oculto. */}
+    <details class="result-steps" data-steps hidden>
+      <summary class="result-steps-summary">{lang === 'en' ? 'See step-by-step calculation' : lang === 'pt' ? 'Ver cálculo passo a passo' : 'Ver cálculo paso a paso'}</summary>
+      <ol class="result-steps-list" data-steps-list></ol>
+    </details>
 
     {config.visualization && (
       <Visualization title={config.visualization.title} data={config.visualization.data} />
@@ -785,6 +823,10 @@ const formatFreshnessDate = (iso: string): string => {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         PDF
       </button>
+      <button type="button" class="btn-share" data-action="share-image" title={lang === 'en' ? 'Share the result as an image' : lang === 'pt' ? 'Compartilhar o resultado como imagem' : 'Compartir el resultado como imagen'}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        {lang === 'en' ? 'Image' : lang === 'pt' ? 'Imagem' : 'Imagen'}
+      </button>
       {config.calendarReminder && (
         <button
           type="button"
@@ -821,8 +863,25 @@ const formatFreshnessDate = (iso: string): string => {
     <!-- Calc usage counter -->
     <div class="calc-counter" data-calc-counter style="display:none"></div>
 
+    {alertableFields.length > 0 && (
+      <div class="data-alert" data-data-alert data-alert-source={alertSource}>
+        <p class="data-alert-heading">
+          <span class="data-alert-bell" aria-hidden="true">🔔</span>
+          <strong>{lang === 'en' ? `Notify me when ${alertTopic} changes` : lang === 'pt' ? `Avise-me quando ${alertTopic} mudar` : `Avisame cuando cambie ${alertTopic}`}</strong>
+        </p>
+        <form class="data-alert-form" data-data-alert-form>
+          <input type="email" placeholder={t.emailPlaceholder} required data-data-alert-input aria-label={t.emailPlaceholder}>
+          <button type="submit">{lang === 'en' ? 'Notify me' : lang === 'pt' ? 'Avisar' : 'Avisarme'}</button>
+        </form>
+        <p class="data-alert-note">{t.emailNote}</p>
+        <p class="data-alert-success" data-data-alert-success hidden>{lang === 'en' ? 'Done. We will email you when it changes.' : lang === 'pt' ? 'Pronto. Avisaremos por e-mail quando mudar.' : 'Listo. Te avisamos por email cuando cambie.'}</p>
+      </div>
+    )}
+
     <!-- Feedback inline: thumbs + comentario opcional -->
     <div class="feedback" data-feedback>
+      <!-- Prueba social real: se rellena client-side solo si up ≥ 30 -->
+      <div class="social-proof" data-social-proof hidden></div>
       <div class="feedback-prompt" data-feedback-prompt>
         <span>{t.helpful}</span>
         <button type="button" class="fb-btn" data-feedback-vote="up" aria-label={t.yesAria}>
@@ -2596,6 +2655,258 @@ const formatFreshnessDate = (iso: string): string => {
       flex-direction: column;
     }
   }
+
+  /* ── #11 Microcopy del estado vacío ──────────────────────────── */
+  .empty-microcopy {
+    margin-top: 0.625rem;
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    letter-spacing: 0.01em;
+    opacity: 0.85;
+  }
+
+  /* ── #15 Botón "Borrar datos" ────────────────────────────────── */
+  .btn-clear-form {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    margin-top: 0.625rem;
+    padding: 0.55rem 1rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .btn-clear-form:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+    border-color: var(--text-subtle);
+  }
+  .btn-clear-form svg { flex-shrink: 0; }
+
+  /* ── #20 Skeleton del resultado ──────────────────────────────── */
+  .result-skeleton {
+    margin: 0 1.75rem 1.75rem;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .result-skeleton[hidden] { display: none; }
+  .skeleton-line {
+    border-radius: 8px;
+    background: linear-gradient(90deg,
+      var(--bg-soft) 25%,
+      color-mix(in srgb, var(--bg-soft) 40%, var(--bg-muted)) 50%,
+      var(--bg-soft) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.3s ease-in-out infinite;
+  }
+  .skeleton-badge { width: 30%; height: 0.75rem; margin-bottom: 1rem; }
+  .skeleton-label { width: 45%; height: 0.875rem; margin-bottom: 0.75rem; }
+  .skeleton-hero  { width: 70%; height: 2.75rem; margin-bottom: 1rem; }
+  .skeleton-bar   { width: 100%; height: 0.5rem; }
+  @keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-line { animation: none; }
+  }
+
+  /* ── #21 Error con Reintentar ────────────────────────────────── */
+  .calc-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    background: var(--bg-card);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .calc-retry-btn:hover { background: var(--accent); color: var(--bg-card); }
+
+  /* ── #22 Cálculo paso a paso ─────────────────────────────────── */
+  .result-steps {
+    margin: 0 1.75rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-soft);
+    overflow: hidden;
+  }
+  .result-steps[hidden] { display: none; }
+  .result-steps-summary {
+    cursor: pointer;
+    padding: 0.7rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    list-style: none;
+    user-select: none;
+  }
+  .result-steps-summary::-webkit-details-marker { display: none; }
+  .result-steps-summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 0.5rem;
+    color: var(--accent);
+    transition: transform 0.15s;
+  }
+  .result-steps[open] .result-steps-summary::before { transform: rotate(90deg); }
+  .result-steps-list {
+    margin: 0;
+    padding: 0 1rem 0.75rem 2.25rem;
+    list-style: decimal;
+  }
+  .result-steps-list li {
+    padding: 0.4rem 0;
+    font-size: 0.8125rem;
+    color: var(--text);
+    border-top: 1px dashed var(--border);
+  }
+  .result-steps-list li:first-child { border-top: none; }
+  .result-step-label { color: var(--text-muted); }
+  .result-step-expr {
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    margin: 0.15rem 0;
+  }
+  .result-step-value { font-weight: 700; color: var(--text); }
+
+  /* ── #27 Tap-to-copy hint + pulse ────────────────────────────── */
+  .result-tap-hint {
+    display: none;
+    margin-top: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .result-tap-hint::before { content: '👆'; }
+  @media (hover: none) and (pointer: coarse) {
+    .result-tap-hint { display: inline-flex; }
+    .result.primary [data-value] { cursor: pointer; }
+  }
+  .result.primary.tap-pulse [data-value] {
+    animation: tap-pulse 1.4s ease-out 2;
+    border-radius: 8px;
+  }
+  @keyframes tap-pulse {
+    0%   { box-shadow: 0 0 0 0 var(--accent-soft); }
+    70%  { box-shadow: 0 0 0 10px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .result.primary.tap-pulse [data-value] { animation: none; }
+  }
+
+  /* ── #12 Comparar con cálculo anterior ───────────────────────── */
+  .result-compare-prev {
+    margin: 0 1.75rem 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .result-compare-prev[hidden] { display: none; }
+  .result-compare-prev .cmp-arrow { font-weight: 700; }
+  .result-compare-prev .cmp-up { color: var(--success); }
+  .result-compare-prev .cmp-down { color: var(--danger); }
+  .result-compare-prev .cmp-now { font-weight: 700; color: var(--text); }
+
+  /* ── #9 Alerta por dato (alertableFields) ────────────────────── */
+  .data-alert {
+    margin: 0 1.75rem 1.25rem;
+    padding: 1rem 1.125rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .data-alert-heading {
+    margin: 0 0 0.625rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.9375rem;
+    color: var(--text);
+  }
+  .data-alert-bell { font-size: 1rem; }
+  .data-alert-form { display: flex; gap: 0.5rem; }
+  .data-alert-form input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 0.875rem;
+  }
+  .data-alert-form input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .data-alert-form button {
+    padding: 0.55rem 1rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .data-alert-form button:hover { background: var(--accent-strong); }
+  .data-alert-note {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+  }
+  .data-alert-success {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--success);
+  }
+  .data-alert-success[hidden] { display: none; }
+  @media (max-width: 480px) {
+    .data-alert-form { flex-direction: column; }
+  }
+
+  /* ── #7 Prueba social real (badge votos up) ──────────────────── */
+  .social-proof {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.625rem;
+    padding: 0.3rem 0.7rem;
+    background: var(--success-soft, var(--bg-soft));
+    color: var(--success, var(--text-muted));
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .social-proof[hidden] { display: none; }
 </style>
 
 <style is:global>
@@ -3553,6 +3864,22 @@ const formatFreshnessDate = (iso: string): string => {
     let lastChartSpec: any = null;
     let _compareAnimated = false;
 
+    // Referencias a elementos de las features UX nuevas.
+    const skeletonEl = container.querySelector<HTMLElement>('[data-result-skeleton]');
+    const emptyPreviewEl = container.querySelector<HTMLElement>('[data-empty-preview]');
+    const stepsEl = container.querySelector<HTMLDetailsElement>('[data-steps]');
+    const stepsListEl = container.querySelector<HTMLElement>('[data-steps-list]');
+    const comparePrevEl = container.querySelector<HTMLElement>('[data-compare-prev]');
+    const tapHintEl = container.querySelector<HTMLElement>('[data-tap-hint]');
+    const socialProofEl = container.querySelector<HTMLElement>('[data-social-proof]');
+    // Guarda los últimos inputs computados con éxito (para #21 Reintentar y para
+    // detectar cambios entre cálculos). Persiste durante la sesión del init.
+    let _lastInputs: Record<string, string | number> | null = null;
+    let _tapPulseDone = false;
+    // #12 Para comparar con el cálculo anterior: guardamos el valor numérico
+    // primary previo (junto con su format/suffix para re-formatear el "Antes").
+    let _prevPrimary: { num: number; format: string; suffix: string } | null = null;
+
     // ── Tabla de resultado dinámica (output._table) ──────────────
     // La fórmula devuelve { headers, rows, align?, collapseAfter?, emphasisEvery?, footer?, title?, note? }.
     // Las celdas vienen pre-formateadas (la fórmula decide moneda/decimales).
@@ -3642,6 +3969,33 @@ const formatFreshnessDate = (iso: string): string => {
         '<span class="result-insight-text">' + insightInline(translateOutputStr(text)) + '</span>' +
         '</div>';
       insightEl.hidden = false;
+    }
+
+    // ── #22 Cálculo paso a paso (output._steps) ─────────────────
+    // _steps es un array de {label, value} o {label, expr, value}. Renderiza
+    // un <details> colapsable. Si no hay pasos válidos, queda oculto.
+    function renderSteps(spec: any) {
+      if (!stepsEl || !stepsListEl) return;
+      const steps = Array.isArray(spec) ? spec.filter((s) => s && typeof s === 'object') : [];
+      if (steps.length === 0) {
+        stepsEl.hidden = true;
+        stepsEl.open = false;
+        stepsListEl.innerHTML = '';
+        return;
+      }
+      let html = '';
+      for (const s of steps) {
+        const label = s.label != null ? translateOutputStr(String(s.label)) : '';
+        const expr = s.expr != null ? String(s.expr) : '';
+        const value = s.value != null ? translateOutputStr(String(s.value)) : '';
+        html += '<li>';
+        if (label) html += '<span class="result-step-label">' + escapeCell(label) + '</span>';
+        if (expr) html += '<span class="result-step-expr">' + escapeCell(expr) + '</span>';
+        if (value) html += (label || expr ? ' ' : '') + '<span class="result-step-value">' + escapeCell(value) + '</span>';
+        html += '</li>';
+      }
+      stepsListEl.innerHTML = html;
+      stepsEl.hidden = false;
     }
 
     // ── Multi-chart con tabs (output._charts) ───────────────────
@@ -3959,6 +4313,35 @@ const formatFreshnessDate = (iso: string): string => {
       }
     });
 
+    // ── #20 Skeleton: mostrar placeholder mientras carga la fórmula ──
+    function showSkeleton() {
+      if (!skeletonEl) return;
+      // Solo si los resultados aún no están a la vista (primer cálculo / chunk no resuelto)
+      if (!results.hidden) return;
+      if (emptyPreviewEl) emptyPreviewEl.hidden = true;
+      skeletonEl.hidden = false;
+    }
+    function hideSkeleton() {
+      if (skeletonEl) skeletonEl.hidden = true;
+    }
+
+    // ── #21 Error diferenciado + Reintentar ─────────────────────────
+    function showError(opts: { message: string; retry: boolean }) {
+      errorBox.textContent = opts.message;
+      if (opts.retry) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'calc-retry-btn';
+        btn.textContent = CALC_LANG === 'en' ? '↻ Retry' : CALC_LANG === 'pt' ? '↻ Tentar de novo' : '↻ Reintentar';
+        btn.addEventListener('click', () => {
+          if (_lastInputs) executeFormula({ ..._lastInputs });
+        });
+        errorBox.appendChild(document.createElement('br'));
+        errorBox.appendChild(btn);
+      }
+      errorBox.hidden = false;
+    }
+
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       errorBox.hidden = true;
@@ -3968,33 +4351,57 @@ const formatFreshnessDate = (iso: string): string => {
       // (no mostramos spinner ni corremos la fórmula).
       if (!validateForm()) return;
 
+      const data = new FormData(form);
+      const inputs: Record<string, string | number> = {};
+      data.forEach((v, k) => {
+        const el = form.querySelector<HTMLInputElement>(`[name="${k}"]`);
+        let raw = v as string;
+        if (el?.dataset.format === 'thousands' && raw) {
+          inputs[k] = parseThousands(raw);
+        } else {
+          const num = Number(raw);
+          inputs[k] = !isNaN(num) && raw !== '' ? num : raw;
+        }
+      });
+      executeFormula(inputs);
+    });
+
+    // Núcleo del cálculo. Reutilizable por submit, presets, historial y el
+    // botón Reintentar (#21). Recibe los inputs ya parseados.
+    function executeFormula(rawInputs: Record<string, string | number>) {
+      errorBox.hidden = true;
+      errorBox.textContent = '';
+
       // Loading state
       submitBtn.classList.add('loading');
       submitBtn.disabled = true;
+      // #20 Skeleton mientras se espera el chunk (si los resultados no están aún)
+      showSkeleton();
 
       // Run formula — wrapped in setTimeout so spinner paints
       setTimeout(async () => {
+        let _formulaLoaded = false;
         try {
-          const data = new FormData(form);
-          const inputs: Record<string, string | number> = {};
-          data.forEach((v, k) => {
-            const el = form.querySelector<HTMLInputElement>(`[name="${k}"]`);
-            let raw = v as string;
-            if (el?.dataset.format === 'thousands' && raw) {
-              inputs[k] = parseThousands(raw);
-            } else {
-              const num = Number(raw);
-              inputs[k] = !isNaN(num) && raw !== '' ? num : raw;
-            }
-          });
+          const inputs: Record<string, string | number> = { ...rawInputs };
+          // Guardar los inputs limpios (sin __lang) para Reintentar (#21).
+          _lastInputs = { ...rawInputs };
 
           // Asegurar que la fórmula esté cargada (primer submit puede esperar el chunk)
           const formula = formulaRef ?? (await formulaReady);
           if (!formula) {
-            throw new Error(`Fórmula no disponible: ${formulaId}`);
+            const _msg = CALC_LANG === 'en' ? 'We could not load the calculator. Check your connection and retry.'
+              : CALC_LANG === 'pt' ? 'Não foi possível carregar a calculadora. Verifique sua conexão e tente de novo.'
+              : 'No pudimos cargar la calculadora. Revisá tu conexión y reintentá.';
+            hideSkeleton();
+            showError({ message: _msg, retry: true });
+            return;
           }
+          _formulaLoaded = true;
           (inputs as any).__lang = CALC_LANG;
+          // #20 Quitar skeleton justo antes de pintar el resultado real
+          hideSkeleton();
           const output = formula(inputs);
+          let _newPrimary: { num: number; format: string; suffix: string } | null = null;
           container.querySelectorAll<HTMLElement>('[data-output]').forEach((el) => {
             const outId = el.dataset.output!;
             const format = el.dataset.format!;
@@ -4002,6 +4409,9 @@ const formatFreshnessDate = (iso: string): string => {
             const val = output[outId];
             const valueEl = el.querySelector<HTMLElement>('[data-value]')!;
             const isPrimary = el.dataset.primary === 'true';
+            if (isPrimary && typeof val === 'number' && isFinite(val)) {
+              _newPrimary = { num: val, format, suffix };
+            }
             if (isPrimary && (format === 'currency' || format === 'number' || format === 'percentage') && typeof val === 'number' && isFinite(val)) {
               (valueEl as any)._formatter = (n: number) => formatValue(n, format, suffix);
               animateValue(valueEl, val, 600);
@@ -4009,6 +4419,37 @@ const formatFreshnessDate = (iso: string): string => {
               valueEl.textContent = formatValue(val, format, suffix);
             }
           });
+
+          // ── #12 Comparar con el cálculo anterior (mismo output primary) ──
+          if (comparePrevEl) {
+            if (_prevPrimary && _newPrimary && (_prevPrimary as any).num !== (_newPrimary as any).num) {
+              const prev = _prevPrimary as { num: number; format: string; suffix: string };
+              const now = _newPrimary as { num: number; format: string; suffix: string };
+              const prevStr = formatValue(prev.num, now.format, now.suffix);
+              const nowStr = formatValue(now.num, now.format, now.suffix);
+              let pctStr = '';
+              let dirClass = '';
+              let arrow = '';
+              if (prev.num !== 0) {
+                const pct = ((now.num - prev.num) / Math.abs(prev.num)) * 100;
+                const up = now.num > prev.num;
+                arrow = up ? '↑' : '↓';
+                dirClass = up ? 'cmp-up' : 'cmp-down';
+                pctStr = ' (' + arrow + ' ' + Math.abs(pct).toFixed(1) + '%)';
+              }
+              const beforeLbl = CALC_LANG === 'en' ? 'Before' : CALC_LANG === 'pt' ? 'Antes' : 'Antes';
+              const nowLbl = CALC_LANG === 'en' ? 'Now' : CALC_LANG === 'pt' ? 'Agora' : 'Ahora';
+              comparePrevEl.innerHTML =
+                escapeHtml(beforeLbl) + ': ' + escapeHtml(prevStr) +
+                ' → ' + escapeHtml(nowLbl) + ': <span class="cmp-now">' + escapeHtml(nowStr) + '</span>' +
+                (pctStr ? '<span class="cmp-arrow ' + dirClass + '">' + escapeHtml(pctStr) + '</span>' : '');
+              comparePrevEl.hidden = false;
+            } else {
+              comparePrevEl.hidden = true;
+            }
+          }
+          if (_newPrimary) _prevPrimary = _newPrimary;
+
           results.hidden = false;
           // Animar las barras de comparación al revelar: venían con su width
           // final desde SSR, así que el `transition` CSS nunca disparaba. Las
@@ -4124,6 +4565,23 @@ const formatFreshnessDate = (iso: string): string => {
           // Insight narrativo opcional — solo si la fórmula devolvió _insight
           renderInsight(output._insight);
 
+          // #22 Cálculo paso a paso opcional — solo si la fórmula devolvió _steps
+          renderSteps(output._steps);
+
+          // #27 Pulse en el resultado primary la PRIMERA vez (hint de tap-to-copy)
+          if (!_tapPulseDone) {
+            _tapPulseDone = true;
+            const primaryResultEl = container.querySelector<HTMLElement>('.result.primary');
+            const coarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (primaryResultEl && coarse && !reduce) {
+              setTimeout(() => {
+                primaryResultEl.classList.add('tap-pulse');
+                setTimeout(() => primaryResultEl.classList.remove('tap-pulse'), 3200);
+              }, 700);
+            }
+          }
+
           // Sliders "¿qué pasa si...?" — mostrar + inicializar tras primer cálculo
           if (whatIfEl) {
             whatIfEl.hidden = false;
@@ -4208,14 +4666,29 @@ const formatFreshnessDate = (iso: string): string => {
             }
           } catch {}
         } catch (err: any) {
-          errorBox.textContent = err.message || 'Error al calcular. Revisá los datos.';
-          errorBox.hidden = false;
+          // #21 Error diferenciado. Si la fórmula no llegó a cargar, ya se
+          // manejó arriba (mensaje de carga + Reintentar). Acá distinguimos:
+          //  (a) error de validación/input → mensaje accionable, sin reintento.
+          //  (b) excepción de la fórmula → mensaje genérico + botón Reintentar.
+          hideSkeleton();
+          const isInputErr = err && (err.name === 'InputError' || err.code === 'INPUT' || /\b(input|inválid|invalid|dato|valor)\b/i.test(String(err.message || '')));
+          if (isInputErr) {
+            const _msg = err.message || (CALC_LANG === 'en' ? 'Check the entered data and try again.'
+              : CALC_LANG === 'pt' ? 'Revise os dados informados e tente de novo.'
+              : 'Revisá los datos ingresados e intentá de nuevo.');
+            showError({ message: _msg, retry: false });
+          } else {
+            const _msg = CALC_LANG === 'en' ? 'Something went wrong while calculating.'
+              : CALC_LANG === 'pt' ? 'Houve um problema ao calcular.'
+              : 'Hubo un problema al calcular.';
+            showError({ message: _msg, retry: _formulaLoaded });
+          }
         } finally {
           submitBtn.classList.remove('loading');
           submitBtn.disabled = false;
         }
       }, 180);
-    });
+    }
 
     // Preset buttons: click precarga y calcula
     container.querySelectorAll<HTMLButtonElement>('.preset-btn').forEach((btn) => {
@@ -4241,6 +4714,82 @@ const formatFreshnessDate = (iso: string): string => {
         } catch {}
       });
     });
+
+    // ── #15 Botón "Borrar datos": resetea el form actual (no el historial) ──
+    container.querySelector<HTMLButtonElement>('[data-clear-form]')?.addEventListener('click', () => {
+      form.reset();
+      // Limpiar estados de validación y de "completo" en todos los campos.
+      form.querySelectorAll<HTMLElement>('.input-wrap').forEach((w) => {
+        w.classList.remove('is-invalid', 'is-complete');
+      });
+      form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+      form.querySelectorAll<HTMLElement>('.field-error').forEach((m) => { m.hidden = true; m.textContent = ''; });
+      // Quitar selección de presets.
+      container.querySelectorAll('.preset-btn').forEach((b) => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+      // Volver al empty-preview: ocultar resultados, errores, skeleton.
+      results.hidden = true;
+      errorBox.hidden = true;
+      errorBox.textContent = '';
+      hideSkeleton();
+      if (emptyPreviewEl) emptyPreviewEl.hidden = false;
+      if (comparePrevEl) comparePrevEl.hidden = true;
+      _prevPrimary = null;
+      _lastInputs = null;
+      // Foco al primer campo para seguir cargando.
+      const first = form.querySelector<HTMLInputElement | HTMLSelectElement>('input:not([type=hidden]), select');
+      try { first?.focus(); } catch {}
+      if (typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', 'clear_form', { calc_slug: slug });
+      }
+    });
+
+    // ── #9 Alerta por dato (alertableFields): suscripción a /api/newsletter ──
+    const dataAlertEl = container.querySelector<HTMLElement>('[data-data-alert]');
+    if (dataAlertEl) {
+      const alertForm = dataAlertEl.querySelector<HTMLFormElement>('[data-data-alert-form]');
+      const alertSource = dataAlertEl.getAttribute('data-alert-source') || 'alert';
+      alertForm?.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        const input = alertForm.querySelector<HTMLInputElement>('[data-data-alert-input]');
+        const email = (input?.value || '').trim();
+        if (!email) return;
+        fetch('/api/newsletter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: alertSource }),
+          keepalive: true,
+        }).catch(() => { /* silencioso */ });
+        // Feedback inmediato (optimista).
+        alertForm.style.display = 'none';
+        const note = dataAlertEl.querySelector<HTMLElement>('.data-alert-note');
+        if (note) note.style.display = 'none';
+        const ok = dataAlertEl.querySelector<HTMLElement>('[data-data-alert-success]');
+        if (ok) ok.hidden = false;
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'data_alert_subscribe', { calc_slug: slug, alert_source: alertSource });
+        }
+      });
+    }
+
+    // ── #7 Prueba social real: badge de votos 👍 si up ≥ 30 ──
+    if (socialProofEl) {
+      try {
+        fetch('/api/vote?slug=' + encodeURIComponent('/' + slug))
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d: any) => {
+            const up = d && typeof d.up === 'number' ? d.up : 0;
+            if (up >= 30) {
+              const n = up.toLocaleString(NUM_LOCALE);
+              socialProofEl.textContent =
+                CALC_LANG === 'en' ? `👍 ${n} people found this useful`
+                : CALC_LANG === 'pt' ? `👍 ${n} pessoas acharam útil`
+                : `👍 ${n} personas la encontraron útil`;
+              socialProofEl.hidden = false;
+            }
+          })
+          .catch(() => { /* sin números inventados: si falla, no se muestra */ });
+      } catch { /* idem */ }
+    }
 
     // Action buttons
     container.querySelectorAll<HTMLButtonElement>('.btn-share').forEach((btn) => {
@@ -4345,6 +4894,96 @@ const formatFreshnessDate = (iso: string): string => {
             (window as any).gtag('event', 'print_pdf', { calc_slug: slug });
           }
           window.print();
+        } else if (action === 'share-image') {
+          // #31 Compartir resultado como imagen: dibuja una tarjeta de marca en
+          // un <canvas> (marca + nombre calc + valor primary) y la descarga PNG,
+          // o usa navigator.share con el archivo si está disponible.
+          try {
+            const calcName = (document.querySelector('h1')?.textContent || container.dataset.name || document.title).trim();
+            const primaryVal = (container.querySelector<HTMLElement>('.result.primary [data-value]')?.textContent
+              || container.querySelector<HTMLElement>('[data-value]')?.textContent || '').trim();
+            const primaryLbl = (container.querySelector<HTMLElement>('.result.primary .result-label')?.textContent || '').trim();
+            const W = 1200, H = 630, R = Math.max(1, Math.floor((window.devicePixelRatio || 1)));
+            const canvas = document.createElement('canvas');
+            canvas.width = W * R; canvas.height = H * R;
+            const ctx = canvas.getContext('2d')!;
+            ctx.scale(R, R);
+            // Fondo gradiente de marca (teal/azul → violeta, igual que el hero).
+            const grad = ctx.createLinearGradient(0, 0, W, H);
+            grad.addColorStop(0, '#2563eb');
+            grad.addColorStop(1, '#7c3aed');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+            // Tarjeta blanca interior.
+            const pad = 60, cardR = 28;
+            const cx0 = pad, cy0 = pad, cw = W - pad * 2, ch = H - pad * 2;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(cx0 + cardR, cy0);
+            ctx.arcTo(cx0 + cw, cy0, cx0 + cw, cy0 + ch, cardR);
+            ctx.arcTo(cx0 + cw, cy0 + ch, cx0, cy0 + ch, cardR);
+            ctx.arcTo(cx0, cy0 + ch, cx0, cy0, cardR);
+            ctx.arcTo(cx0, cy0, cx0 + cw, cy0, cardR);
+            ctx.closePath();
+            ctx.fill();
+            const fam = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            const innerX = cx0 + 56;
+            // Marca.
+            ctx.fillStyle = '#2563eb';
+            ctx.font = '700 34px ' + fam;
+            ctx.textBaseline = 'top';
+            ctx.fillText('hacecuentas.com', innerX, cy0 + 50);
+            // Nombre de la calc (wrap a máx 2 líneas).
+            ctx.fillStyle = '#475569';
+            ctx.font = '600 30px ' + fam;
+            const maxW = cw - 112;
+            const words = calcName.split(/\s+/);
+            const lines: string[] = [];
+            let cur = '';
+            for (const w of words) {
+              const test = cur ? cur + ' ' + w : w;
+              if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; }
+              else cur = test;
+              if (lines.length >= 2) break;
+            }
+            if (cur && lines.length < 2) lines.push(cur);
+            let ny = cy0 + 120;
+            lines.slice(0, 2).forEach((ln) => { ctx.fillText(ln, innerX, ny); ny += 40; });
+            // Valor primary (grande, color de marca).
+            ctx.fillStyle = '#1d4ed8';
+            let vSize = 110;
+            ctx.font = '800 ' + vSize + 'px ' + fam;
+            while (ctx.measureText(primaryVal).width > maxW && vSize > 40) {
+              vSize -= 6; ctx.font = '800 ' + vSize + 'px ' + fam;
+            }
+            ctx.fillText(primaryVal || '—', innerX, cy0 + ch - 200);
+            // Label del resultado.
+            if (primaryLbl) {
+              ctx.fillStyle = '#64748b';
+              ctx.font = '500 28px ' + fam;
+              ctx.fillText(primaryLbl, innerX, cy0 + ch - 70);
+            }
+            const fileName = `${slug || 'hacecuentas'}.png`;
+            canvas.toBlob(async (blob) => {
+              if (!blob) return;
+              const file = new File([blob], fileName, { type: 'image/png' });
+              const nav = navigator as any;
+              if (nav.canShare && nav.canShare({ files: [file] }) && typeof nav.share === 'function') {
+                try {
+                  await nav.share({ files: [file], title: calcName, text: `${primaryLbl}: ${primaryVal} — hacecuentas.com` });
+                } catch { /* usuario canceló */ }
+              } else {
+                const u = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = u; a.download = fileName;
+                document.body.appendChild(a); a.click();
+                setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(u); }, 100);
+              }
+            }, 'image/png');
+            if (typeof (window as any).gtag === 'function') {
+              (window as any).gtag('event', 'share_image', { calc_slug: slug });
+            }
+          } catch { /* canvas no soportado → no-op */ }
         } else if (action === 'calendar') {
           // Descarga .ics con el recordatorio de la fecha clave del calc
           // (ej. vencimiento aguinaldo 30/6). Funciona offline, sin backend.
@@ -4405,9 +5044,16 @@ const formatFreshnessDate = (iso: string): string => {
           form.reset();
           results.hidden = true;
           errorBox.hidden = true;
+          errorBox.textContent = '';
           if (chartWrap) chartWrap.hidden = true;
           clearCharts();
           renderInsight(null);
+          renderSteps(null);
+          hideSkeleton();
+          if (emptyPreviewEl) emptyPreviewEl.hidden = false;
+          if (comparePrevEl) comparePrevEl.hidden = true;
+          _prevPrimary = null;
+          _lastInputs = null;
           // Reset email capture state
           const emailCap = container.querySelector<HTMLElement>('[data-email-capture]');
           if (emailCap) {
@@ -4423,6 +5069,35 @@ const formatFreshnessDate = (iso: string): string => {
         }
       });
     });
+
+    // ── #27 Tap-to-copy: tocar el valor primary lo copia (mobile-friendly) ──
+    (function setupTapToCopy() {
+      const primaryValEl = container.querySelector<HTMLElement>('.result.primary [data-value]');
+      if (!primaryValEl) return;
+      async function copyPrimary() {
+        const value = (primaryValEl!.textContent || '').trim();
+        if (!value || value === '—') return;
+        try {
+          await navigator.clipboard.writeText(value);
+        } catch { return; }
+        // Reusar el feedback "¡Copiado!" del hint (o crear uno efímero).
+        const okText = CALC_LANG === 'en' ? 'Copied!' : CALC_LANG === 'pt' ? 'Copiado!' : '¡Copiado!';
+        if (tapHintEl) {
+          const original = tapHintEl.textContent;
+          tapHintEl.textContent = okText;
+          tapHintEl.classList.add('copied');
+          setTimeout(() => {
+            tapHintEl.textContent = original;
+            tapHintEl.classList.remove('copied');
+          }, 1500);
+        }
+        // También refrescar el label del botón copy-result si existe (coherencia).
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'copy_result', { calc_slug: slug, via: 'tap' });
+        }
+      }
+      primaryValEl.addEventListener('click', copyPrimary);
+    })();
 
     // ── Re-render del chart al cambiar tema o al resize ────────
     if (chartWrap && chartCanvas) {

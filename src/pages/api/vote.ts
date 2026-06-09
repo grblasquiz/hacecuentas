@@ -40,5 +40,30 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 };
 
+/**
+ * GET /api/vote?slug=/calculadora-x
+ * Devuelve el conteo de votos 👍 (up) para el slug. Social proof real.
+ */
+export const GET: APIRoute = async ({ url, locals }) => {
+  const slug = sanitizeText(url.searchParams.get('slug') || '', 200);
+  if (!slug || !slug.startsWith('/')) {
+    return json({ error: 'Slug inválido' }, { status: 400 });
+  }
+
+  const db = getD1FromLocals(locals);
+  if (!db) return json({ error: 'DB no disponible' }, { status: 500 });
+
+  try {
+    const row = await db.prepare(
+      `SELECT COUNT(*) AS up FROM calc_votes WHERE slug = ? AND vote = 'up'`,
+    ).bind(slug).first<{ up: number }>();
+    const up = Number(row?.up ?? 0);
+    return json({ up }, { headers: { 'cache-control': 'public, max-age=300' } });
+  } catch (err) {
+    console.error('vote count failed:', err);
+    return json({ error: 'No se pudo leer el conteo.' }, { status: 500 });
+  }
+};
+
 export const ALL: APIRoute = () =>
-  json({ error: 'Usar POST' }, { status: 405, headers: { allow: 'POST' } });
+  json({ error: 'Usar POST o GET' }, { status: 405, headers: { allow: 'GET, POST' } });

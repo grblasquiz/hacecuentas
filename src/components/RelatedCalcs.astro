@@ -108,7 +108,12 @@ const categoryLabelsPt: Record<string, string> = {
 const categoryLabels = lang === 'en' ? categoryLabelsEn : lang === 'pt' ? categoryLabelsPt : categoryLabelsEs;
 const headerTitle = lang === 'en' ? 'Related calculators' : lang === 'pt' ? 'Calculadoras relacionadas' : 'Calculadoras relacionadas';
 const seeAllLabel = lang === 'en' ? 'See all →' : lang === 'pt' ? 'Ver todas →' : 'Ver todas →';
-const seeAllHref = lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : lang === 'es-ES' ? '/es' : '/';
+// "Ver todas" apunta al hub de la categoría del calc actual. Los hubs
+// /categoria/<cat> sólo existen en el sitio ES root (EN/PT no tienen páginas de
+// categoría), así que sólo enrutamos ahí para es/es-ES; EN/PT caen a su home.
+const homeHref = lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : lang === 'es-ES' ? '/es' : '/';
+const hasCategoryHubs = lang !== 'en' && lang !== 'pt';
+const seeAllHref = hasCategoryHubs && category ? `/categoria/${category}` : homeHref;
 ---
 
 {related.length > 0 && (

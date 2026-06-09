@@ -16,6 +16,17 @@ interface Props {
 const { field, lang = "es" } = Astro.props;
 const isWide = field.type === "select" || field.type === "date";
 
+// Campos opcionales del JSON (todos opt-in, ausentes = comportamiento previo):
+//  - required:     ya existía; ahora también muestra asterisco + checkmark.
+//  - recommended:  campo opcional pero que mejora la precisión → hint suave.
+//  - units:        array de unidades (["kg","lb"]) → selector chico en el suffix.
+const isRequired = (field as any).required === true;
+const showRecommended = !isRequired && (field as any).recommended === true;
+const units: string[] | undefined = Array.isArray((field as any).units)
+  ? (field as any).units.filter((u: unknown) => typeof u === "string" && u.length > 0)
+  : undefined;
+const hasUnits = !!units && units.length > 0;
+
 /**
  * Separador de miles AUTOMÁTICO.
  *
@@ -77,7 +88,7 @@ const groupedDefault = (() => {
 
 <div class={`field ${isWide ? "field-wide" : ""}`}>
   <label for={field.id}>
-    <span class="label-text">{field.label}</span>
+    <span class="label-text">{field.label}{isRequired && <span class="req" aria-label="(requerido)">*</span>}</span>
     {field.help && (
       <span class="help-wrap">
         <span class="help" tabindex="0" aria-describedby={`tip-${field.id}`}>?</span>
@@ -85,7 +96,8 @@ const groupedDefault = (() => {
       </span>
     )}
   </label>
-  <div class="input-wrap">
+  {showRecommended && <span class="recommended-hint">Opcional · mejora la precisión</span>}
+  <div class="input-wrap" data-required={isRequired ? "true" : undefined}>
     {field.prefix && <span class="prefix">{field.prefix}</span>}
     {field.type === "select" ? (
       <select id={field.id} name={field.id} required={field.required}>
@@ -118,12 +130,56 @@ const groupedDefault = (() => {
         aria-describedby={`err-${field.id}`}
         data-format={useThousands ? "thousands" : field.format}
         data-type={field.type}
+        data-unit={hasUnits ? units![0] : undefined}
+        data-current-unit={hasUnits ? units![0] : undefined}
       />
     )}
-    {field.suffix && <span class="suffix">{field.suffix}</span>}
+    {hasUnits ? (
+      <select class="unit-select" aria-label="Unidad" data-unit-select={field.id}>
+        {units!.map((u) => (
+          <option value={u}>{u}</option>
+        ))}
+      </select>
+    ) : (
+      field.suffix && <span class="suffix">{field.suffix}</span>
+    )}
+    {isRequired && <span class="complete-check" aria-hidden="true">✓</span>}
   </div>
   <p class="field-error" id={`err-${field.id}`} hidden></p>
 </div>
+
+{(isRequired || hasUnits) && (
+  <script is:inline define:vars={{ fieldId: field.id, isRequired, hasUnits }}>
+    // IIFE: cada FieldRow emite su propio inline script; sin scope propio los
+    // `const` de top-level colisionarían entre instancias en la misma página.
+    (function () {
+      const input = document.getElementById(fieldId);
+      if (!input) return;
+      const wrap = input.closest(".input-wrap");
+      // (#2) Checkmark suave en campos requeridos completos.
+      if (isRequired && wrap) {
+        const sync = () => {
+          const filled = String(input.value || "").trim() !== "";
+          wrap.classList.toggle("is-complete", filled);
+        };
+        input.addEventListener("input", sync);
+        input.addEventListener("change", sync);
+        input.addEventListener("blur", sync);
+        sync();
+      }
+      // (#4) Selector de unidad in-situ: por ahora sólo refleja la unidad
+      // elegida en data-current-unit para que la fórmula la pueda leer a futuro.
+      if (hasUnits) {
+        const sel = wrap && wrap.querySelector(".unit-select");
+        if (sel) {
+          sel.addEventListener("change", () => {
+            input.setAttribute("data-current-unit", sel.value);
+          });
+        }
+      }
+    })();
+  </script>
+)}
 
 <style>
   .field {
@@ -144,6 +200,20 @@ const groupedDefault = (() => {
   }
   .label-text {
     letter-spacing: -0.005em;
+  }
+  /* (#1) Asterisco de campo requerido. */
+  .req {
+    color: var(--danger);
+    margin-left: 0.15em;
+    font-weight: 600;
+  }
+  /* (#3) Hint suave en campos opcionales recomendados. */
+  .recommended-hint {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    line-height: 1.2;
+    margin-top: -0.125rem;
   }
   .help-wrap {
     position: relative;
@@ -240,6 +310,12 @@ const groupedDefault = (() => {
     font-feature-settings: "tnum";
     font-family: inherit;
   }
+  /* (#5) Foco visible explícito con teclado. */
+  .field input:focus-visible,
+  .field select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
   .field select {
     cursor: pointer;
     appearance: none;
@@ -263,6 +339,38 @@ const groupedDefault = (() => {
   .prefix {
     border-left: none;
     border-right: 1px solid var(--border);
+  }
+  /* (#2) Checkmark verde sutil cuando un requerido tiene valor válido. */
+  .complete-check {
+    display: none;
+    align-items: center;
+    padding: 0 0.625rem;
+    color: var(--success);
+    font-size: 0.875rem;
+    font-weight: 700;
+    pointer-events: none;
+  }
+  .input-wrap.is-complete .complete-check {
+    display: flex;
+  }
+  /* (#4) Selector de unidad in-situ pegado al input. */
+  .unit-select {
+    flex: 0 0 auto;
+    width: auto;
+    background: var(--bg-muted);
+    color: var(--text-subtle);
+    border: none;
+    border-left: 1px solid var(--border);
+    border-radius: 0;
+    padding: 0 1.75rem 0 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
   }
   /* Mobile: hit targets más grandes */
   @media (max-width: 480px) {

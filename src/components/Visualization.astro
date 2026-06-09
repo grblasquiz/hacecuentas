@@ -14,13 +14,18 @@
  */
 
 export type VizSegment = { label: string; value: number; color?: string };
-export type VizZone = { to: number; label: string; color: string };
+// `to` es el tope del tramo; algunas fórmulas usan el alias `upTo`. `from` es
+// opcional (si falta, arranca donde terminó el tramo anterior).
+export type VizZone = { from?: number; to?: number; upTo?: number; label?: string; color: string };
 export type VizSeries = { name: string; points: number[]; color?: string; dashed?: boolean };
 export type VizSlice = { label: string; value: number; color?: string };
 export type VizMilestone = { date: string; label: string; percent?: number };
 
 export interface VizData {
   type: "bar" | "gauge" | "curve" | "donut" | "timeline";
+  /** Descripción accesible opcional embebida en los datos (muchas fórmulas
+   *  ya la proveen). Tiene prioridad sobre la auto-generada. */
+  ariaLabel?: string;
   // bar
   segments?: VizSegment[];
   total?: number;
@@ -50,8 +55,11 @@ interface Props {
   data?: VizData;
   /** Si true, no envuelve en card. Útil para embeber dentro de otro panel. */
   bare?: boolean;
+  /** Descripción accesible del gráfico (role=img + aria-label + <title> en SVG).
+   *  Si falta, se construye una descriptiva a partir de los datos del tipo. */
+  ariaLabel?: string;
 }
-const { title, data, bare = false } = Astro.props;
+const { title, data, bare = false, ariaLabel } = Astro.props;
 
 // Helpers
 const DEFAULT_COLORS = ["var(--accent)", "#a78bfa", "var(--success)", "var(--warning)", "var(--danger)", "#0ea5e9"];
@@ -105,6 +113,68 @@ function gaugeMarkerPercent(value: number, min: number, max: number): number {
   const range = max - min || 1;
   return Math.max(0, Math.min(100, ((value - min) / range) * 100));
 }
+
+// Tope del tramo, tolerando el alias `upTo`.
+function zoneTo(z: VizZone, fallback: number): number {
+  return z.to ?? z.upTo ?? fallback;
+}
+
+// Zona del gauge en la que cae el valor (para el aria-label descriptivo).
+function gaugeZoneFor(value: number, zones: VizZone[] | undefined, min: number): VizZone | undefined {
+  if (!zones || !zones.length) return undefined;
+  let prevTo = min;
+  for (const z of zones) {
+    const to = zoneTo(z, prevTo);
+    const from = z.from ?? prevTo;
+    if (value >= from && value <= to) return z;
+    prevTo = to;
+  }
+  // Si está por encima del último tramo, devolver el último (>último tope).
+  return value > prevTo ? zones[zones.length - 1] : zones[0];
+}
+
+// Descripción accesible por tipo. Usa ariaLabel si vino; sino la construye.
+function buildAriaLabel(d: VizData, title?: string, override?: string): string {
+  // Prioridad: prop del componente → ariaLabel embebido en los datos → auto.
+  if (override) return override;
+  if (d.ariaLabel) return d.ariaLabel;
+  const base = title ? `${title}. ` : "";
+  switch (d.type) {
+    case "bar": {
+      const segs = d.segments || [];
+      const total = d.total ?? segs.reduce((s, x) => s + x.value, 0);
+      const parts = segs.map((s) => {
+        const pct = total > 0 ? Math.round((s.value / total) * 100) : 0;
+        return `${s.label} ${pct}%`;
+      });
+      return `${base}Distribución: ${parts.join(", ")}.`;
+    }
+    case "gauge": {
+      const zone = gaugeZoneFor(d.value ?? 0, d.zones, d.min ?? 0);
+      const zoneTxt = zone ? `, dentro de la zona ${zone.label}` : "";
+      return `${base}Valor ${d.value} en una escala de ${d.min} a ${d.max}${zoneTxt}.`;
+    }
+    case "curve": {
+      const names = (d.series || []).map((s) => s.name).filter(Boolean);
+      return `${base}Evolución a lo largo del tiempo${names.length ? ` de ${names.join(" y ")}` : ""}.`;
+    }
+    case "donut": {
+      const slices = d.slices || [];
+      const total = slices.reduce((s, x) => s + Math.max(0, x.value), 0) || 1;
+      const parts = slices.map((s) => `${s.label} ${Math.round((s.value / total) * 100)}%`);
+      return `${base}Distribución: ${parts.join(", ")}.`;
+    }
+    case "timeline": {
+      const c = d.current;
+      const pct = c?.percent != null ? `, ${Math.round(c.percent)}% completado` : "";
+      return `${base}Línea de tiempo de ${d.start?.label ?? ""} a ${d.end?.label ?? ""}${c?.label ? `, posición actual ${c.label}` : ""}${pct}.`;
+    }
+    default:
+      return base || "Visualización";
+  }
+}
+
+const a11yLabel = data ? buildAriaLabel(data, title, ariaLabel) : "";
 ---
 
 {data && (
@@ -114,7 +184,7 @@ function gaugeMarkerPercent(value: number, min: number, max: number): number {
     {/* ───────── BAR (stacked horizontal) ───────── */}
     {data.type === "bar" && (
       <div class="viz-bar-wrap">
-        <div class="viz-bar" role="img" aria-label={`${title || "Distribución"}: ${data.segments.map((s) => `${s.label} ${s.value}`).join(", ")}`}>
+        <div class="viz-bar" role="img" aria-label={a11yLabel}>
           {data.segments.map((seg, i) => {
             const total = data.total ?? data.segments.reduce((sum, s) => sum + s.value, 0);
             const pct = total > 0 ? (seg.value / total) * 100 : 0;
@@ -145,40 +215,61 @@ function gaugeMarkerPercent(value: number, min: number, max: number): number {
     )}
 
     {/* ───────── GAUGE ───────── */}
-    {data.type === "gauge" && (
-      <div class="viz-gauge-wrap">
-        <div class="viz-gauge" role="img" aria-label={`${title || "Gauge"}: ${data.value} de ${data.min}-${data.max}`}>
-          <div
-            class="viz-gauge-marker"
-            style={`left: ${gaugeMarkerPercent(data.value, data.min, data.max)}%;`}
-          >
-            <div class="viz-gauge-pin" aria-hidden="true"></div>
-            {data.markerLabel && <div class="viz-gauge-label">{data.markerLabel}</div>}
-          </div>
-          <div class="viz-gauge-bar">
-            {data.zones.map((zone, i) => {
-              const prevTo = i === 0 ? data.min : data.zones[i - 1].to;
-              const span = zone.to - prevTo;
-              return (
-                <div class="viz-gauge-zone" style={`flex: ${span}; background: ${zone.color};`}>
-                  {span > (data.max - data.min) * 0.12 && <span>{zone.label}</span>}
+    {data.type === "gauge" && (() => {
+      const gMin = data.min ?? 0;
+      const gMax = data.max ?? 100;
+      const gVal = data.value ?? gMin;
+      const zones = data.zones && data.zones.length ? data.zones : null;
+      const activeZone = zones ? gaugeZoneFor(gVal, zones, gMin) : undefined;
+      return (
+        <div class="viz-gauge-wrap">
+          <div class="viz-gauge" role="img" aria-label={a11yLabel}>
+            <div
+              class="viz-gauge-marker"
+              style={`left: ${gaugeMarkerPercent(gVal, gMin, gMax)}%;`}
+            >
+              <div class="viz-gauge-pin" aria-hidden="true"></div>
+              {data.markerLabel && <div class="viz-gauge-label">{data.markerLabel}</div>}
+            </div>
+            <div class="viz-gauge-bar">
+              {zones ? (
+                zones.map((zone, i) => {
+                  const prevTo = i === 0 ? gMin : zoneTo(zones[i - 1], gMin);
+                  const from = zone.from ?? prevTo;
+                  const to = zoneTo(zone, from);
+                  const span = Math.max(0, to - from);
+                  const isActive = activeZone === zone;
+                  return (
+                    <div
+                      class={`viz-gauge-zone${isActive ? " is-active" : ""}`}
+                      style={`flex: ${span || 1}; background: ${zone.color};`}
+                    >
+                      {zone.label && span > (gMax - gMin) * 0.12 && <span>{zone.label}</span>}
+                    </div>
+                  );
+                })
+              ) : (
+                /* Sin zonas: comportamiento simple (barra de un color + fill). */
+                <div class="viz-gauge-zone viz-gauge-zone--plain" style="flex: 1;">
+                  <div class="viz-gauge-fill" style={`width: ${gaugeMarkerPercent(gVal, gMin, gMax)}%;`} aria-hidden="true"></div>
                 </div>
-              );
-            })}
-          </div>
-          <div class="viz-gauge-scale">
-            <span>{data.min}</span>
-            {data.zones.slice(0, -1).map((z) => <span>{z.to}</span>)}
-            <span>{data.max}</span>
+              )}
+            </div>
+            <div class="viz-gauge-scale">
+              <span>{gMin}</span>
+              {zones && zones.slice(0, -1).map((z) => <span>{zoneTo(z, gMin)}</span>)}
+              <span>{gMax}</span>
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      );
+    })()}
 
     {/* ───────── CURVE ───────── */}
     {data.type === "curve" && (
       <div class="viz-curve-wrap" style={`height: ${data.height || 100}px`}>
-        <svg viewBox={`0 0 280 ${data.height || 80}`} preserveAspectRatio="none" class="viz-curve-svg" role="img" aria-label={title || "Evolución"}>
+        <svg viewBox={`0 0 280 ${data.height || 80}`} preserveAspectRatio="none" class="viz-curve-svg" role="img" aria-label={a11yLabel}>
+          <title>{a11yLabel}</title>
           {data.series.map((serie, i) => {
             const color = pickColor(i, serie.color);
             const points = curvePoints(serie.points, 280, data.height || 80);
@@ -225,7 +316,8 @@ function gaugeMarkerPercent(value: number, min: number, max: number): number {
     {data.type === "donut" && (
       <div class="viz-donut-wrap">
         <div class="viz-donut">
-          <svg viewBox="0 0 100 100" class="viz-donut-svg" role="img" aria-label={title || "Distribución"}>
+          <svg viewBox="0 0 100 100" class="viz-donut-svg" role="img" aria-label={a11yLabel}>
+            <title>{a11yLabel}</title>
             <circle cx="50" cy="50" r="38" fill="none" stroke="var(--bg-muted)" stroke-width="14" />
             {donutSegments(data.slices).map((seg) => (
               <circle
@@ -265,7 +357,7 @@ function gaugeMarkerPercent(value: number, min: number, max: number): number {
 
     {/* ───────── TIMELINE ───────── */}
     {data.type === "timeline" && (
-      <div class="viz-timeline-wrap" role="img" aria-label={`${data.start.label} → ${data.current.label} → ${data.end.label}`}>
+      <div class="viz-timeline-wrap" role="img" aria-label={a11yLabel}>
         <div class="viz-timeline-track">
           <div class="viz-timeline-line"></div>
           <div class="viz-timeline-fill" style={`width: ${Math.max(0, Math.min(100, data.current.percent || 50))}%`}></div>
@@ -415,6 +507,25 @@ function gaugeMarkerPercent(value: number, min: number, max: number): number {
     white-space: nowrap;
   }
   html[data-theme="dark"] .viz-gauge-zone { color: var(--bg); }
+  /* Zona activa (donde cae el valor): leve realce sin tapar el marker. */
+  .viz-gauge-zone.is-active {
+    box-shadow: inset 0 0 0 2px var(--text);
+    filter: saturate(1.1);
+  }
+  /* Gauge sin zonas: track plano + fill de acento. */
+  .viz-gauge-zone--plain {
+    position: relative;
+    background: var(--bg-muted) !important;
+    padding: 0;
+  }
+  .viz-gauge-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background: var(--accent);
+    border-radius: 99px;
+  }
   .viz-gauge-scale {
     display: flex;
     justify-content: space-between;

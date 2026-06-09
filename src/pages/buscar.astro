@@ -273,6 +273,50 @@ for (const c of calcs as any[]) {
 
   const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+  // Tolerancia a typos: Levenshtein con early-exit por l\u00edmite (devuelve la
+  // distancia exacta si <= max, o max+1 si la supera).
+  function levenshtein(a, b, max) {
+    const la = a.length, lb = b.length;
+    if (Math.abs(la - lb) > max) return max + 1;
+    if (la === 0) return lb;
+    if (lb === 0) return la;
+    let prev = new Array(lb + 1);
+    let cur = new Array(lb + 1);
+    for (let j = 0; j <= lb; j++) prev[j] = j;
+    for (let i = 1; i <= la; i++) {
+      cur[0] = i;
+      let rowMin = cur[0];
+      const ai = a.charCodeAt(i - 1);
+      for (let j = 1; j <= lb; j++) {
+        const cost = ai === b.charCodeAt(j - 1) ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+        if (cur[j] < rowMin) rowMin = cur[j];
+      }
+      if (rowMin > max) return max + 1;
+      const tmp = prev; prev = cur; cur = tmp;
+    }
+    return prev[lb];
+  }
+  // Umbral de edici\u00f3n segun largo del token (<=1 cortos, <=2 largos).
+  const fuzzyTol = (len) => len <= 6 ? 1 : 2;
+  // Mejor "cercania" de un token contra una lista de palabras: 0 = sin match.
+  // Devuelve 2 si matchea con dist 1, 1 si matchea con dist 2 (mas lejos = menos).
+  function fuzzyWordScore(words, token) {
+    if (token.length < 4) return 0; // tokens cortos dan falsos positivos
+    const tol = fuzzyTol(token.length);
+    let best = 0;
+    for (const w of words) {
+      if (Math.abs(w.length - token.length) > tol) continue;
+      const d = levenshtein(w, token, tol);
+      if (d <= tol) {
+        const s = d === 0 ? 3 : (tol - d + 1); // mas cerca puntua mas
+        if (s > best) best = s;
+        if (d === 1) break; // ya muy cerca, no hace falta seguir
+      }
+    }
+    return best;
+  }
+
   function escapeHtml(s) {
     return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
@@ -309,7 +353,15 @@ for (const c of calcs as any[]) {
       else if (e._sw.some((w) => w.startsWith(t))) ts = 12; // prefijo en slug
       else if (e._s.includes(t)) ts = 8;                    // substring en slug
       else if (e._d.includes(t)) ts = 4;                    // en descripción
-      else return 0;                                        // token sin match → fuera (AND)
+      else {
+        // Sin match exacto: fallback fuzzy (typos) contra palabras de título/slug.
+        // "agunaldo"→"aguinaldo", "interes"(sin acento ya lo cubre norm).
+        const fh = fuzzyWordScore(e._hw, t);
+        const fsw = fh ? 0 : fuzzyWordScore(e._sw, t);
+        if (fh) ts = 6 + fh * 2;        // fuzzy en título (debajo de un substring real)
+        else if (fsw) ts = 3 + fsw;     // fuzzy en slug
+        else return 0;                  // token sin match ni siquiera fuzzy → fuera (AND)
+      }
       score += ts;
     }
     return score;

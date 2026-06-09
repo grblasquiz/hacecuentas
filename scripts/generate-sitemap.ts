@@ -690,6 +690,8 @@ sitemaps.push({
   name: 'sitemap-core.xml',
   urls: [
     core('/',                                    '1.0',  'daily',   true),
+    core('/calculadoras',                        '0.9',  'weekly'),
+    core('/populares',                           '0.85', 'weekly'),
     core('/comparador-plazo-fijo',               '0.85', 'daily',   true),
     core('/calculadora-cientifica',              '0.85', 'weekly'),
     core('/valores-bcra',                        '0.85', 'daily',   true),

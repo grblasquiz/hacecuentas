@@ -179,6 +179,11 @@ const COUNTRY_META: Record<AudienceCode, { flag: string; tooltip: string; curren
   global: { flag: '🌎', tooltip: 'Aplica globalmente (sin localizar a país)', currency: 'USD' },
 };
 const countryBadge = COUNTRY_META[audience];
+// Nombre display por país para el aviso de jurisdicción (#25 — generalizado a todos los países, no solo AR).
+const COUNTRY_NAME: Record<AudienceCode, string> = {
+  AR: 'Argentina', MX: 'México', CL: 'Chile', CO: 'Colombia', ES: 'España',
+  BO: 'Bolivia', PE: 'Perú', UY: 'Uruguay', BR: 'Brasil', global: 'tu país',
+};
 
 /**
  * Description "safe" para schemas structured data. Google Rich Results exige
@@ -965,6 +970,12 @@ const showNextStep = !NEXT_STEP_EXCLUDED.has(calc.category) && nextStepItems.len
 const contextualOffer = getOfferForCalc(calc.slug);
 // #5 comparador "vs" relevante (conecta los comparadores existentes, antes huérfanos).
 const comparator = getComparatorForCalc(calc.slug);
+// #14 "Complemento recomendado": calcs fijadas por el autor como paso obligado
+// (campo opcional calc.mustNextSteps = [slug]). Render-if-present; resuelve título vía allCalcs.
+const mustNextSteps = (Array.isArray(calc.mustNextSteps) ? calc.mustNextSteps : [])
+  .map((s: string) => allCalcs.find((c) => c.slug === s))
+  .filter(Boolean)
+  .map((c: any) => ({ slug: c.slug, h1: c.h1, icon: c.icon }));
 
 // TOC: secciones top-level renderizadas (en orden de aparición)
 const tocSections: Array<{ id: string; label: string }> = [
@@ -1075,7 +1086,7 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
           <span class="sep" aria-hidden="true">/</span>
         </>
       )}
-      <span class="current">{calc.h1}</span>
+      <span class="current" aria-current="page">{calc.h1}</span>
     </nav>
 
     <header class="calc-header" style={`--cat: ${catColor}`}>
@@ -1120,6 +1131,21 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
         <section id="calculadora">
           <Calculator config={calc} />
         </section>
+
+        {mustNextSteps.length > 0 && (
+          <aside class="must-next" aria-label="Complemento recomendado">
+            <div class="must-next-head"><span aria-hidden="true">🧩</span> Complemento recomendado</div>
+            <div class="must-next-list">
+              {mustNextSteps.map((m: any) => (
+                <a href={`/${m.slug}`} class="must-next-card">
+                  <span class="must-next-icon" aria-hidden="true">{m.icon || '🧮'}</span>
+                  <span class="must-next-title">{m.h1}</span>
+                  <span class="must-next-arrow" aria-hidden="true">→</span>
+                </a>
+              ))}
+            </div>
+          </aside>
+        )}
 
         {tocSections.length > 2 && (
           <nav class="calc-quick-nav" aria-label="Navegación rápida del artículo">
@@ -1281,6 +1307,16 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             <div class="an-body">
               <strong>Calculadora específica para Argentina.</strong>
               Las leyes, escalas y valores usados son los vigentes en Argentina (AFIP/ARCA, BCRA, ANSES). Para otros países los importes no aplican.
+            </div>
+          </aside>
+        )}
+
+        {audience !== 'AR' && audience !== 'global' && (
+          <aside class="audience-notice" role="note" aria-label={`Aviso: datos específicos para ${COUNTRY_NAME[audience]}`}>
+            <span class="an-flag" aria-hidden="true">{countryBadge.flag}</span>
+            <div class="an-body">
+              <strong>Calculadora específica para {COUNTRY_NAME[audience]}.</strong>
+              Las leyes, escalas y valores usados son los vigentes en {COUNTRY_NAME[audience]}. Para otros países los importes pueden no aplicar.
             </div>
           </aside>
         )}
@@ -2548,6 +2584,27 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  /* #14 Complemento recomendado (mustNextSteps) */
+  .must-next {
+    margin: 1.25rem 0 1.5rem;
+    padding: 1rem 1.125rem;
+    background: var(--accent-soft, rgba(37, 99, 235, 0.06));
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+  }
+  .must-next-head { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.625rem; display: flex; align-items: center; gap: 0.4rem; }
+  .must-next-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .must-next-card {
+    display: flex; align-items: center; gap: 0.625rem;
+    padding: 0.625rem 0.75rem; background: var(--bg-card, #fff);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text); transition: border-color 0.15s, transform 0.15s;
+  }
+  .must-next-card:hover { border-color: var(--accent); transform: translateX(2px); }
+  .must-next-icon { font-size: 1.25rem; flex-shrink: 0; }
+  .must-next-title { flex: 1; font-weight: 600; font-size: 0.9375rem; }
+  .must-next-arrow { color: var(--accent); font-weight: 700; }
 
   /* CTA back */
   .calc-downloads {

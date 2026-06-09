@@ -1549,6 +1549,11 @@ function md(text: string): string {
         <span class="current">Página {currentPage}</span>
       </>
     )}
+    {pillarSlug && pillarTitle && (
+      <a class="bc-guide" href={`/guia/${pillarSlug}`}>
+        <span aria-hidden="true">📘</span> Guía completa: {pillarTitle} →
+      </a>
+    )}
   </nav>
 
   <header class="cat-header" style={`--cat-color: ${m.color}`}>
@@ -1597,6 +1602,13 @@ function md(text: string): string {
     <span class="cat-filter-count" data-total={calcs.length}>{calcs.length} resultados</span>
   </div>
 
+  <div class="cat-sort" role="group" aria-label="Ordenar calculadoras">
+    <span class="cat-sort-label">Ordenar:</span>
+    <button type="button" class="sort-tab" data-sort="featured" aria-pressed="true">Más usadas</button>
+    <button type="button" class="sort-tab" data-sort="az" aria-pressed="false">A-Z</button>
+    <button type="button" class="sort-tab" data-sort="new" aria-pressed="false">Más nuevas</button>
+  </div>
+
   {totalPages > 1 && (
     <p class="cat-global-search">
       ¿Buscás algo específico? <a href={`/buscar?cat=${cat}`}>Buscar en las {totalCalcs} calculadoras de {m.label.toLowerCase()} →</a>
@@ -1632,6 +1644,13 @@ function md(text: string): string {
     </nav>
   )}
 
+  {groups && (
+    <p class="sub-active" id="sub-active" hidden>
+      Mostrando solo <strong id="sub-active-name"></strong>.
+      <a href={pagePath} id="sub-active-clear">Ver todas las {totalCalcs} de {m.label.toLowerCase()} →</a>
+    </p>
+  )}
+
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <symbol id="cat-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="5" y1="12" x2="19" y2="12"/>
@@ -1641,7 +1660,7 @@ function md(text: string): string {
 
   <div id="cat-grid" style={`--cat-color: ${m.color}`}>
     {renderGroups.map((g: any) => (
-      <section class="cat-group" id={g.id ? `g-${g.id}` : undefined} data-group>
+      <section class="cat-group" id={g.id ? `g-${g.id}` : undefined} data-group data-group-title={g.title || undefined}>
         {g.title && (
           <h2 class="group-h">
             <span class="group-icon" aria-hidden="true">{g.icon}</span>
@@ -1651,7 +1670,12 @@ function md(text: string): string {
         )}
         <div class="grid">
           {g.calcs.map((c: any) => (
-            <a href={`/${c.slug}`} class="card">
+            <a
+              href={`/${c.slug}`}
+              class="card"
+              data-title={(c.h1 || '').toLowerCase()}
+              data-date={c.lastReviewed || c.dataUpdate?.lastUpdated || ''}
+            >
               <div class="card-icon">{c.icon}</div>
               <div class="card-body">
                 <div class="card-title">
@@ -1668,6 +1692,13 @@ function md(text: string): string {
             </a>
           ))}
         </div>
+        {g.id && g.title && g.calcs.length > 1 && (
+          <div class="group-foot">
+            <a class="group-see-all" href={`?sub=${g.id}`} data-sub={g.id}>
+              Ver las {g.calcs.length} de {g.title} →
+            </a>
+          </div>
+        )}
       </section>
     ))}
   </div>
@@ -1721,50 +1752,159 @@ function md(text: string): string {
 
       // Texto buscable pre-computado del DOM (title + desc). La normalizaci\u00f3n
       // corre una sola vez al cargar; el filtro per-keystroke s\u00f3lo hace includes().
-      var cards = Array.from(grid.querySelectorAll('.card')).map(function (el) {
+      // Guardamos tambi\u00e9n posici\u00f3n original (parent + siguiente hermano) para poder
+      // restaurar el orden curado tras ordenar A-Z / M\u00e1s nuevas.
+      var cards = Array.from(grid.querySelectorAll('.card')).map(function (el, i) {
         var t = el.querySelector('.card-title');
         var d = el.querySelector('.card-desc');
         return {
           el: el,
+          idx: i,
           text: norm(((t && t.textContent) || '') + ' ' + ((d && d.textContent) || '')),
+          title: norm(el.getAttribute('data-title') || ''),
+          date: el.getAttribute('data-date') || '',
+          parent: el.parentNode,
+          next: el.nextSibling,
         };
       });
       // Secciones de sub-tema: se ocultan cuando ninguna card matchea.
       var groupEls = Array.from(grid.querySelectorAll('[data-group]'));
       var total = cards.length;
 
-      function filter() {
-        var q = norm(input.value.trim());
-        // Mientras se filtra, escondemos "M\u00e1s usadas" y los chips: el resultado
-        // plano es m\u00e1s claro y evita cards duplicadas entre destacadas y grilla.
-        // La clase cat-filtering oculta los headers de grupo (cuyo contador es el
-        // total del grupo, no el filtrado) \u2192 queda una lista plana de matches.
-        if (featured) featured.hidden = !!q;
-        if (chips) chips.hidden = !!q;
-        grid.classList.toggle('cat-filtering', !!q);
-        if (!q) {
-          cards.forEach(function (c) { c.el.hidden = false; });
-          groupEls.forEach(function (g) { g.hidden = false; });
-          counter.textContent = total + ' resultados';
-          if (empty) empty.hidden = true;
+      // ---- Ordenamiento (Task 4) ----------------------------------------
+      var sortTabs = Array.from(document.querySelectorAll('.cat-sort .sort-tab'));
+      var sortMode = 'featured';
+      // Grilla destino para el modo plano (A-Z / nuevas): la del primer grupo.
+      var flatGrid = grid.querySelector('.grid');
+
+      function restoreOrder() {
+        // Devolver cada card a su grupo y posici\u00f3n original (orden curado).
+        cards.slice().sort(function (a, b) { return a.idx - b.idx; }).forEach(function (c) {
+          if (c.next && c.next.parentNode === c.parent) c.parent.insertBefore(c.el, c.next);
+          else c.parent.appendChild(c.el);
+        });
+      }
+
+      function applySort() {
+        if (sortMode === 'featured' || !flatGrid) {
+          grid.classList.remove('cat-sorting');
+          restoreOrder();
           return;
         }
+        grid.classList.add('cat-sorting');
+        var ordered = cards.slice();
+        if (sortMode === 'az') {
+          ordered.sort(function (a, b) { return a.title.localeCompare(b.title); });
+        } else if (sortMode === 'new') {
+          // Fecha desc; sin fecha al final. Comparaci\u00f3n de strings ISO = cronol\u00f3gica.
+          ordered.sort(function (a, b) {
+            if (a.date === b.date) return a.idx - b.idx;
+            if (!a.date) return 1;
+            if (!b.date) return -1;
+            return a.date < b.date ? 1 : -1;
+          });
+        }
+        // Mover todas las cards a la grilla plana en el nuevo orden.
+        ordered.forEach(function (c) { flatGrid.appendChild(c.el); });
+      }
+
+      sortTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          sortMode = tab.getAttribute('data-sort') || 'featured';
+          sortTabs.forEach(function (t) { t.setAttribute('aria-pressed', String(t === tab)); });
+          applySort();
+          apply();
+        });
+      });
+
+      // ---- Filtro por sub-grupo via ?sub= (Task 5) -----------------------
+      var subActive = document.getElementById('sub-active');
+      var subName = document.getElementById('sub-active-name');
+      var subFilter = null; // id de grupo activo o null
+      function readSub() {
+        try { return new URLSearchParams(location.search).get('sub'); } catch (e) { return null; }
+      }
+      function setSub(id, push) {
+        subFilter = id;
+        try {
+          var url = new URL(location.href);
+          if (id) url.searchParams.set('sub', id); else url.searchParams.delete('sub');
+          if (push) history.pushState({}, '', url);
+        } catch (e) {}
+        if (subActive && subName) {
+          var g = id ? grid.querySelector('[data-group][id="g-' + id + '"]') : null;
+          subName.textContent = g ? (g.getAttribute('data-group-title') || '') : '';
+          subActive.hidden = !id;
+        }
+      }
+
+      // ---- Filtro de texto + composici\u00f3n con sub-grupo --------------------
+      function apply() {
+        var q = norm(input.value.trim());
+        var flattening = !!q || sortMode !== 'featured';
+        // Mientras se filtra/ordena en plano, escondemos "M\u00e1s usadas" y los chips:
+        // el resultado plano es m\u00e1s claro y evita cards duplicadas. La clase
+        // cat-filtering oculta los headers de grupo (cuyo contador es el total del
+        // grupo, no el filtrado) \u2192 queda una lista plana.
+        if (featured) featured.hidden = flattening || !!subFilter;
+        if (chips) chips.hidden = flattening || !!subFilter;
+        grid.classList.toggle('cat-filtering', flattening);
+
         var visible = 0;
         cards.forEach(function (c) {
-          var match = c.text.indexOf(q) !== -1;
+          var match = !q || c.text.indexOf(q) !== -1;
+          if (match && subFilter) {
+            var grp = c.el.closest('[data-group]');
+            if (!grp || grp.id !== 'g-' + subFilter) match = false;
+          }
           c.el.hidden = !match;
           if (match) visible++;
         });
-        // Ocultar el encabezado de un grupo si no le quedaron cards visibles.
-        groupEls.forEach(function (g) { g.hidden = !g.querySelector('.card:not([hidden])'); });
-        counter.textContent = visible + ' / ' + total + ' resultados';
+        // En modo curado (sin q, sin orden plano), un grupo se oculta si no le
+        // quedan cards visibles (p.ej. por sub-filtro).
+        if (!flattening) {
+          groupEls.forEach(function (g) { g.hidden = !g.querySelector('.card:not([hidden])'); });
+        } else {
+          groupEls.forEach(function (g) { g.hidden = false; });
+        }
+        if (q || subFilter) counter.textContent = visible + ' / ' + total + ' resultados';
+        else counter.textContent = total + ' resultados';
         if (empty) empty.hidden = visible > 0;
       }
 
-      input.addEventListener('input', filter);
+      input.addEventListener('input', apply);
       input.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { input.value = ''; filter(); input.blur(); }
+        if (e.key === 'Escape') { input.value = ''; apply(); input.blur(); }
       });
+
+      // Click en "Ver las N de {subgrupo}" \u2192 filtra sin recargar.
+      grid.addEventListener('click', function (e) {
+        var link = e.target.closest ? e.target.closest('.group-see-all') : null;
+        if (!link) return;
+        e.preventDefault();
+        var id = link.getAttribute('data-sub');
+        // Ordenar fuerza modo plano sin grupos \u2192 reseteamos a curado para filtrar.
+        if (sortMode !== 'featured') {
+          sortMode = 'featured';
+          sortTabs.forEach(function (t) { t.setAttribute('aria-pressed', String(t.getAttribute('data-sort') === 'featured')); });
+          applySort();
+        }
+        setSub(id, true);
+        apply();
+        if (subActive) subActive.scrollIntoView({ block: 'nearest' });
+      });
+
+      // Reset del banner de sub-grupo sin recargar.
+      var subClear = document.getElementById('sub-active-clear');
+      if (subClear) subClear.addEventListener('click', function (e) {
+        if (subFilter) { e.preventDefault(); setSub(null, true); apply(); }
+      });
+
+      window.addEventListener('popstate', function () { setSub(readSub(), false); apply(); });
+
+      // Estado inicial desde ?sub= (deep-link / refresh).
+      setSub(readSub(), false);
+      apply();
     })();
   </script>
 
@@ -1827,6 +1967,18 @@ function md(text: string): string {
   .breadcrumbs a:hover { color: var(--accent); }
   .breadcrumbs .sep { color: var(--border-strong); }
   .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  /* Link destacado a la guía pilar, alineado al final del breadcrumb. */
+  .breadcrumbs .bc-guide {
+    margin-left: auto;
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .breadcrumbs .bc-guide:hover { text-decoration: underline; }
+  @media (max-width: 640px) {
+    .breadcrumbs { flex-wrap: wrap; }
+    .breadcrumbs .bc-guide { margin-left: 0; flex-basis: 100%; margin-top: 0.35rem; }
+  }
 
   .cat-header {
     display: flex;
@@ -2387,6 +2539,60 @@ function md(text: string): string {
   /* Filtrando: ocultar headers de grupo → lista plana de resultados */
   #cat-grid.cat-filtering .group-h { display: none; }
   #cat-grid.cat-filtering .cat-group { margin-bottom: 0.875rem; }
+  /* Orden plano (A-Z / Más nuevas): ocultar headers y pies de grupo. */
+  #cat-grid.cat-sorting .group-h,
+  #cat-grid.cat-sorting .group-foot { display: none; }
+  #cat-grid.cat-sorting .cat-group { margin-bottom: 0; }
+
+  /* ===== Control de orden (Task 4) ===== */
+  .cat-sort {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem;
+    margin: 0 0 1.5rem;
+  }
+  .cat-sort-label {
+    font-size: 0.8125rem; color: var(--text-subtle); font-weight: 500;
+    margin-right: 0.25rem;
+  }
+  .sort-tab {
+    padding: 0.35rem 0.7rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+  }
+  .sort-tab:hover { color: var(--text); border-color: var(--border-strong); }
+  .sort-tab[aria-pressed='true'] {
+    background: color-mix(in srgb, var(--cat-color, var(--accent)) 12%, var(--bg));
+    border-color: color-mix(in srgb, var(--cat-color, var(--accent)) 45%, var(--border));
+    color: var(--cat-color, var(--accent));
+  }
+
+  /* ===== Pie de sub-grupo "Ver las N" (Task 5) ===== */
+  .group-foot { margin-top: 0.875rem; }
+  .group-see-all {
+    display: inline-flex; align-items: center;
+    font-size: 0.8125rem; font-weight: 600;
+    color: var(--cat-color, var(--accent));
+    text-decoration: none;
+  }
+  .group-see-all:hover { text-decoration: underline; }
+
+  /* Banner de sub-grupo activo */
+  .sub-active {
+    margin: 0 0 1.5rem;
+    padding: 0.7rem 1rem;
+    background: color-mix(in srgb, var(--cat-color, var(--accent)) 8%, var(--bg-soft));
+    border: 1px solid color-mix(in srgb, var(--cat-color, var(--accent)) 28%, var(--border));
+    border-radius: var(--radius);
+    font-size: 0.875rem; color: var(--text-muted);
+  }
+  .sub-active strong { color: var(--text); }
+  .sub-active a { color: var(--accent); font-weight: 600; text-decoration: none; margin-left: 0.4rem; }
+  .sub-active a:hover { text-decoration: underline; }
+  .sub-active[hidden] { display: none !important; }
 
   @media (max-width: 640px) {
     .seo-content { padding: 1.5rem 1.25rem; }
