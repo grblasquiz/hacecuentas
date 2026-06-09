@@ -1,0 +1,159 @@
+{
+  "slug": "simulador-recibo-de-sueldo-argentina",
+  "title": "Simulador de Recibo de Sueldo 2026 (Argentina): liquidación mensual completa",
+  "h1": "Simulador de recibo de sueldo (Argentina)",
+  "description": "Poné tu sueldo bruto una vez y mirá todo: recibo neto desglosado, aguinaldo (SAC), vacaciones, total anual y cuánto le costás a la empresa. Datos LCT + ARCA 2026.",
+  "answerSnippet": "Un recibo de sueldo en Argentina parte del bruto y descuenta el 17% de aportes (11% jubilación SIPA + 3% obra social + 3% PAMI) más Impuesto a las Ganancias si supera el mínimo no imponible; el resultado es el neto en mano. Aparte, el trabajador devenga aguinaldo (medio sueldo por semestre) y vacaciones (de 14 a 35 días según antigüedad, a valor sueldo/25 por día). Para el empleador, el costo total ronda el bruto + 26% de contribuciones patronales, sin contar ART.",
+  "category": "finanzas",
+  "icon": "🧾",
+  "formulaId": "recibo-de-sueldo-argentina",
+  "seoKeywords": [
+    "recibo de sueldo argentina",
+    "simulador de sueldo",
+    "liquidacion de sueldo mensual",
+    "que incluye el recibo de sueldo",
+    "como se compone el sueldo",
+    "costo laboral empleado argentina",
+    "sueldo aguinaldo vacaciones"
+  ],
+  "intro": "**Este simulador toma tu sueldo bruto una sola vez y te arma el panorama completo de tu liquidación:** el recibo neto desglosado (aportes + Ganancias), cuánto te corresponde de aguinaldo, cuánto de vacaciones, tu total anual con los 13 sueldos y cuánto le costás a tu empleador. Es un multicálculo: en vez de abrir cinco calculadoras distintas, ves todo junto y conectado. A diferencia de la [calculadora de sueldo en mano](/sueldo-en-mano-argentina) —que responde rápido \"¿cuánto cobro?\"— acá la idea es **entender de qué se compone tu sueldo** de punta a punta. Cada bloque enlaza a la calculadora dedicada por si querés el detalle fino: [aguinaldo (SAC)](/calculadora-aguinaldo-sac), [vacaciones](/calculadora-vacaciones-argentina), [Impuesto a las Ganancias](/calculadora-impuesto-ganancias-sueldo) y [pasar de neto a bruto](/calculadora-sueldo-bruto-desde-neto). Los aportes (17%) y la escala de Ganancias salen de la normativa LCT 20.744 y las tablas ARCA (ex AFIP) vigentes, las mismas que usa el resto del sitio.",
+  "keyTakeaway": "De tu bruto se descuenta **17% fijo** de aportes (jubilación 11% + obra social 3% + PAMI 3%) y, si superás el mínimo no imponible, **Ganancias 4ta categoría**. Aparte devengás **medio sueldo de aguinaldo por semestre** y **vacaciones** (14 a 35 días según antigüedad). El **costo para el empleador** es tu bruto + ~26% de contribuciones patronales (es una estimación: **no incluye ART** ni seguro de vida, que varían por actividad).",
+  "useCases": [
+    "Querés entender, línea por línea, de qué se compone tu recibo de sueldo y por qué cobrás lo que cobrás.",
+    "Te ofrecen un puesto y querés ver el cuadro completo: neto mensual, aguinaldo, vacaciones y total anual.",
+    "Sos freelance o monotributista evaluando pasar a relación de dependencia y querés comparar el paquete completo.",
+    "Sos empleador o emprendés y necesitás estimar cuánto te cuesta realmente un empleado, no solo el sueldo de bolsillo.",
+    "Estás armando tu presupuesto anual y querés proyectar los 13 sueldos con aguinaldo incluido."
+  ],
+  "fields": [
+    {
+      "id": "bruto",
+      "label": "Sueldo bruto mensual",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "1500000",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "format": "thousands",
+      "tooltip": "El sueldo bruto figura arriba en tu recibo, antes de los descuentos. Si solo sabés el neto, usá primero la calculadora de neto a bruto."
+    },
+    {
+      "id": "antiguedad",
+      "label": "Antigüedad (años)",
+      "type": "number",
+      "default": 0,
+      "min": 0,
+      "step": 1,
+      "suffix": "años",
+      "tooltip": "Define los días de vacaciones (LCT art. 150): hasta 5 años = 14 días, 5 a 10 = 21, 10 a 20 = 28, más de 20 = 35."
+    },
+    {
+      "id": "conyuge",
+      "label": "¿Tenés cónyuge a cargo?",
+      "type": "select",
+      "default": "false",
+      "help": "Cónyuge sin ingresos mayores al MNI (declarado con SiRADIG F.572). Reduce Ganancias en ~$404.000/mes.",
+      "options": [
+        { "value": "false", "label": "No" },
+        { "value": "true", "label": "Sí" }
+      ]
+    },
+    {
+      "id": "hijos",
+      "label": "Hijos a cargo (menores de 18)",
+      "type": "select",
+      "default": "0",
+      "help": "Cada hijo declarado reduce Ganancias en ~$204.000/mes.",
+      "options": [
+        { "value": "0", "label": "Ninguno" },
+        { "value": "1", "label": "1 hijo" },
+        { "value": "2", "label": "2 hijos" },
+        { "value": "3", "label": "3 hijos" },
+        { "value": "4", "label": "4 hijos" },
+        { "value": "5", "label": "5 o más" }
+      ]
+    }
+  ],
+  "outputs": [
+    { "id": "neto", "label": "Sueldo neto en mano (mensual)", "format": "currency", "primary": true },
+    { "id": "aguinaldoNeto", "label": "Aguinaldo neto (por semestre)", "format": "currency", "tooltip": "Medio sueldo (SAC, LCT art. 121) con el 17% de aportes descontado. Se cobra en junio y diciembre." },
+    { "id": "montoVacaciones", "label": "Vacaciones (monto al año)", "format": "currency", "tooltip": "Días según antigüedad × valor del día (sueldo/25, LCT art. 155)." },
+    { "id": "netoAnual", "label": "Neto anual (13 sueldos)", "format": "currency", "tooltip": "12 sueldos netos + el aguinaldo neto del año." },
+    { "id": "costoEmpleadorMensual", "label": "Costo para el empleador (estimado)", "format": "currency", "tooltip": "Bruto + ~26,4% de contribuciones patronales (Dec. 814/01 + Obra Social). ESTIMACIÓN: no incluye ART ni seguro de vida obligatorio, que varían por actividad." },
+    { "id": "jubilacion", "label": "Aporte jubilatorio (11%)", "format": "currency" },
+    { "id": "obraSocial", "label": "Obra social (3%)", "format": "currency" },
+    { "id": "pami", "label": "PAMI / INSSJP (3%)", "format": "currency" },
+    { "id": "ganancias", "label": "Impuesto a las Ganancias", "format": "currency" },
+    { "id": "descuentoTotal", "label": "Total descontado (mensual)", "format": "currency" },
+    { "id": "porcentajeDescuento", "label": "Descuento sobre el bruto", "format": "percent" }
+  ],
+  "dataUpdate": {
+    "frequency": "biannual",
+    "lastUpdated": "2026-06-09",
+    "source": "ARCA — Tabla Art. 94 LIG + Deducciones Art. 30 (enero–junio 2026); LCT 20.744; Dec. 814/01",
+    "sourceUrl": "https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/documentos/Tabla-Art-94-LIG-per-ene-a-jun-2026.pdf",
+    "updateType": "auto-llm",
+    "notes": "Aportes 17% fijos (11% SIPA + 3% OS + 3% PAMI). Ganancias: escala compartida con sueldo-ar via _ganancias-escala.ts (auto-update enero/julio). Contribuciones patronales 26,4% estimadas (20,4% Dec.814 + 6% OS Ley 23.660), sin ART."
+  },
+  "faq": [
+    {
+      "q": "¿Qué incluye un recibo de sueldo en Argentina?",
+      "a": "Un recibo de sueldo en relación de dependencia (LCT 20.744) muestra: la **remuneración bruta** (sueldo básico + adicionales como antigüedad, presentismo, horas extra), los **descuentos de ley** (11% jubilación SIPA, 3% obra social, 3% PAMI = 17%, más Impuesto a las Ganancias si corresponde y aportes sindicales según convenio) y el **neto a cobrar**. También deja constancia de conceptos no remunerativos y, en los meses de junio y diciembre, del aguinaldo (SAC). Esta calculadora reconstruye ese desglose a partir de tu bruto."
+    },
+    {
+      "q": "¿Cómo se compone el sueldo bruto y cuánto se descuenta?",
+      "a": "Del bruto se descuenta un **17% fijo de aportes personales**: 11% para jubilación (SIPA), 3% para la obra social y 3% para el PAMI (INSSJP). A eso se suma el **Impuesto a las Ganancias de 4ta categoría** solo si tu remuneración supera el mínimo no imponible (aprox. $2.327.000 de bruto para un soltero sin cargas en el primer semestre 2026). Por eso el porcentaje total de descuento crece con el sueldo: arranca en 17% y sube a medida que entra Ganancias."
+    },
+    {
+      "q": "¿Cuánto cobro de aguinaldo (SAC)?",
+      "a": "El aguinaldo o Sueldo Anual Complementario es el **50% de la mejor remuneración mensual del semestre** (LCT art. 121), y se paga en dos cuotas: 30 de junio y 18 de diciembre. Sobre el aguinaldo también se descuenta el 17% de aportes. Si no trabajaste el semestre completo, cobrás la parte proporcional. Para el cálculo con meses proporcionales y mejor sueldo distinto del actual, usá la [calculadora de aguinaldo (SAC)](/calculadora-aguinaldo-sac)."
+    },
+    {
+      "q": "¿Cuánto me corresponde de vacaciones?",
+      "a": "Los días de vacaciones dependen de tu antigüedad (LCT art. 150): **14 días corridos** hasta 5 años, **21 días** de 5 a 10, **28 días** de 10 a 20 y **35 días** con más de 20 años. El valor de cada día de vacaciones se calcula como **sueldo bruto ÷ 25** (LCT art. 155). El simulador multiplica los días que te corresponden por ese valor diario. Para vacaciones proporcionales por meses trabajados, mirá la [calculadora de vacaciones](/calculadora-vacaciones-argentina)."
+    },
+    {
+      "q": "¿Cuánto le cuesta un empleado a la empresa?",
+      "a": "Además del sueldo bruto, el empleador paga **contribuciones patronales**: aproximadamente **20,4%** de seguridad social (Decreto 814/01, comercio y servicios; ~18% para otras actividades) más **6%** de obra social (Ley 23.660), o sea cerca de un **26%** sobre el bruto. A eso hay que sumarle la **ART** (variable según actividad y siniestralidad) y el seguro de vida obligatorio, que esta calculadora **no incluye** porque dependen de cada caso. Por eso el 'costo para el empleador' que ves es una **estimación** del piso, no el número exacto."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre sueldo bruto y neto?",
+      "a": "El **bruto** es el sueldo antes de descuentos (lo que figura arriba en el recibo y lo que se suele acordar en una negociación). El **neto** es lo que efectivamente cobrás en la cuenta, después de restar el 17% de aportes y el Impuesto a las Ganancias. Si conocés tu neto y querés saber el bruto equivalente, usá la [calculadora de neto a bruto](/calculadora-sueldo-bruto-desde-neto); si querés solo el neto rápido, está la [calculadora de sueldo en mano](/sueldo-en-mano-argentina)."
+    },
+    {
+      "q": "¿Cuánto gano por año contando el aguinaldo?",
+      "a": "En Argentina cobrás **13 sueldos al año**: los 12 mensuales más un sueldo completo de aguinaldo, repartido en dos medios sueldos (junio y diciembre). El simulador calcula tu **neto anual** sumando tus 12 netos mensuales más el aguinaldo neto del año. Es una estimación útil para presupuestar, asumiendo el mismo bruto todo el año (sin aumentos ni bonos)."
+    },
+    {
+      "q": "¿Por qué el Impuesto a las Ganancias da distinto según mi familia?",
+      "a": "Porque las cargas de familia declaradas bajan la base imponible. Cada **cónyuge** a cargo reduce el mínimo no imponible en aproximadamente **$404.000 por mes** y cada **hijo** menor de 18 en **$204.000 por mes** (valores ARCA primer semestre 2026, declarados con el SiRADIG F.572). Por eso, a igual bruto, alguien con cónyuge e hijos paga menos Ganancias —o no paga— y se lleva más neto."
+    },
+    {
+      "q": "¿Esta calculadora reemplaza al recibo oficial de mi empleador?",
+      "a": "No. Es una **herramienta de estimación y orientación**: usa los aportes de ley (17%) y la escala oficial de Ganancias, pero no contempla adicionales de convenio, aportes sindicales específicos, bonos no remunerativos, deducciones particulares (alquiler, prepaga, crédito hipotecario) ni embargos. El recibo oficial que liquida tu empleador es el documento válido. Si los números difieren mucho, revisá tu convenio colectivo y tu declaración de deducciones en SiRADIG."
+    }
+  ],
+  "sources": [
+    { "name": "Ley 20.744 (LCT)", "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/norma.htm" },
+    { "name": "ARCA (ex AFIP) — Ganancias", "url": "https://www.arca.gob.ar/ganancias" },
+    { "name": "Decreto 814/2001 — Contribuciones patronales", "url": "https://servicios.infoleg.gob.ar/infolegInternet/verNorma.do?id=67983" },
+    { "name": "Ley 23.660 — Obras Sociales", "url": "https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/62/texact.htm" }
+  ],
+  "relatedSlugs": [
+    "sueldo-en-mano-argentina",
+    "calculadora-aguinaldo-sac",
+    "calculadora-vacaciones-argentina",
+    "calculadora-impuesto-ganancias-sueldo",
+    "calculadora-sueldo-bruto-desde-neto"
+  ],
+  "audience": "AR",
+  "howToSteps": [
+    { "name": "Ingresá tu sueldo bruto mensual", "text": "Poné el sueldo bruto (el que figura arriba en el recibo, antes de descuentos). Ej: $1.500.000." },
+    { "name": "Indicá tu antigüedad", "text": "Cargá los años de antigüedad para calcular los días de vacaciones que te corresponden." },
+    { "name": "Cargá tus cargas de familia", "text": "Marcá si tenés cónyuge a cargo y cuántos hijos, para ajustar el Impuesto a las Ganancias." },
+    { "name": "Hacé click en Calcular", "text": "Presioná Calcular para ver de una el recibo neto, aguinaldo, vacaciones, total anual y costo para el empleador." },
+    { "name": "Profundizá en cada bloque", "text": "Cada resultado enlaza a la calculadora dedicada (aguinaldo, vacaciones, Ganancias) si querés el detalle fino." }
+  ],
+  "lastReviewed": "2026-06-09"
+}

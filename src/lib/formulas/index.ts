@@ -2701,6 +2701,7 @@ import { reactanciaInductivaCapacitiva } from './reactancia-inductiva-capacitiva
 import { reajusteArriendoChileIpc } from './reajuste-arriendo-chile-ipc';
 import { rebalanceoPortafolio } from './rebalanceo-portafolio';
 import { compute as compute__recargo_equivalencia_comerciantes_espana } from './recargo-equivalencia-comerciantes-espana';
+import { reciboDeSueldoArgentina } from './recibo-de-sueldo-argentina';
 import { compute as compute__recibo_gas_chile_metrogas_lipigas_cilindro_vs_red } from './recibo-gas-chile-metrogas-lipigas-cilindro-vs-red';
 import { compute as compute__recibo_gas_natural_colombia_vanti_epm_naturgas } from './recibo-gas-natural-colombia-vanti-epm-naturgas';
 import { compute as compute__recibo_luz_chile_enel_cge_saesa_tarifa_bt1 } from './recibo-luz-chile-enel-cge-saesa-tarifa-bt1';
@@ -6133,6 +6134,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'reajuste-arriendo-chile-ipc': reajusteArriendoChileIpc,
   'rebalanceo-portafolio': rebalanceoPortafolio,
   'recargo-equivalencia-comerciantes-espana': compute__recargo_equivalencia_comerciantes_espana,
+  'recibo-de-sueldo-argentina': reciboDeSueldoArgentina,
   'recibo-gas-chile-metrogas-lipigas-cilindro-vs-red': compute__recibo_gas_chile_metrogas_lipigas_cilindro_vs_red,
   'recibo-gas-natural-colombia-vanti-epm-naturgas': compute__recibo_gas_natural_colombia_vanti_epm_naturgas,
   'recibo-luz-chile-enel-cge-saesa-tarifa-bt1': compute__recibo_luz_chile_enel_cge_saesa_tarifa_bt1,

@@ -4,10 +4,9 @@ published: false
 description: Using Astro's content collections and dynamic routes to scale a static calculator site from 10 to 1,200 pages without bloating the codebase.
 tags: astro, webdev, staticsite, seo
 cover_image: https://hacecuentas.com/og-default.png
-canonical_url: https://hacecuentas.com/blog/astro-content-collections-scale
 ---
 
-I run [Hacé Cuentas](https://hacecuentas.com), a free collection of 535+ Spanish-language calculators. What started as 10 hand-built pages turned into **1,236 routes** — and the codebase is actually smaller than when I had 50.
+I run [Hacé Cuentas](https://hacecuentas.com), a free collection of 4,100+ Spanish-language calculators. What started as 10 hand-built pages turned into thousands of routes — and the codebase is actually smaller than when I had 50.
 
 Here's how Astro's content collections + dynamic routes made it possible.
 
@@ -22,7 +21,7 @@ Every calculator needs:
 - schema.org JSON-LD (HowTo + FAQPage + SoftwareApplication + Article + BreadcrumbList)
 - Sources and citations
 
-If I wrote one template per calc, every change (layout tweak, new CTA, CSS fix) would mean touching 535 files.
+If I wrote one template per calc, every change (layout tweak, new CTA, CSS fix) would mean touching every calc file by hand.
 
 ## The approach
 
@@ -57,7 +56,7 @@ Each JSON looks like:
     { "id": "interesGanado", "label": "Intereses", "format": "currency" }
   ],
   "faq": [ /* ... */ ],
-  "explanation": "## Cómo rinde un plazo fijo\\n\\n..."
+  "explanation": "## Cómo rinde un plazo fijo\n\n..."
 }
 ```
 
@@ -116,7 +115,7 @@ The `Calculator.astro` component imports all formulas via `import.meta.glob`, ma
 Don't force everything into one format. JSON is great for structured content (fields, labels, FAQ), terrible for functions. Keeping them separate means non-coders can add calcs by editing JSON, and the formulas stay type-safe.
 
 ### 2. Schema.org multiplies "for free"
-One JSON feeds 5 different structured data blocks: HowTo, FAQPage, SoftwareApplication, Article, BreadcrumbList. Google loves this — [my SERP impressions 5x'd after I added them](https://hacecuentas.com).
+One JSON feeds several structured data blocks: SoftwareApplication, Article, BreadcrumbList, Dataset. Generating them from the same source means every page ships rich structured data with zero extra authoring work. ([See a live calc](https://hacecuentas.com).)
 
 ### 3. Markdown in JSON is fine
 Yes, escaping `\n` in JSON is ugly. But having everything in one file (field definitions, explanation, FAQ, schema) is worth it. A simple markdown-to-HTML function at build time handles rendering:
@@ -126,9 +125,9 @@ function md(text: string): string {
   return text
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     // ... tables, links, code, etc
-    .replace(/\\n\\n/g, '</p><p>');
+    .replace(/\n\n/g, '</p><p>');
 }
 ```
 
@@ -138,14 +137,14 @@ No MDX, no Remark/Rehype pipeline. Just a 30-line function. Fast and debuggable.
 The entire page is static HTML at build time. Only the calculator widget hydrates with a tiny JS bundle. Lighthouse performance: 100. First Contentful Paint: 0.3s on 3G.
 
 ### 5. One page template = consistent UX
-Every calc has the same layout: inputs on top, results card, explanation, FAQ, related. Users never have to relearn where things are. This also makes it trivial to A/B test layout changes — one file change propagates to 535 pages.
+Every calc has the same layout: inputs on top, results card, explanation, FAQ, related. Users never have to relearn where things are. This also makes it trivial to A/B test layout changes — one file change propagates to every calc page.
 
-## Numbers
+## Numbers (today)
 
-- **Pages generated**: 1,236 (calcs + blog + tables + comparators + per-province)
-- **Build time**: 4.1 seconds (Cloudflare Pages)
-- **Source LOC**: ~6,000 lines of Astro/TS + ~8 MB of JSON content
-- **Adding a new calc**: ~30 minutes (30 min writing the JSON + formula, 0 min templating)
+- **Pages generated**: thousands (calcs + blog + tables + comparators + per-province + 3 languages)
+- **Build**: static on Cloudflare Pages, Lighthouse perf 100
+- **Source**: a few thousand lines of Astro/TS + the bulk of the repo is JSON content
+- **Adding a new calc**: ~30 minutes (writing the JSON + formula, 0 min templating)
 
 ## When this approach breaks down
 

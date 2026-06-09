@@ -2,10 +2,9 @@
 title: "Lessons from shipping 1,200+ static pages on Cloudflare Pages"
 subtitle: "Cache, deploy speed, and gotchas you'll hit past 500 pages"
 tags: webdev, cloudflare, astro, seo
-canonical_url: https://hacecuentas.com/blog/cloudflare-pages-1200-lessons
 ---
 
-[Hacé Cuentas](https://hacecuentas.com) is 1,236 static pages built with Astro, hosted on Cloudflare Pages. Started with 10 pages. Scaled to 1,200+.
+[Hacé Cuentas](https://hacecuentas.com) is thousands of static pages built with Astro, hosted on Cloudflare Pages. Started with 10 pages. Scaled to 1,200+, then well past that.
 
 Most "scale your static site" tutorials stop at 100 pages. Past 500, real problems start.
 
@@ -36,9 +35,9 @@ The only reliable cache busters:
 - Different URL path (`/page-v2`)
 - Cache purge via API:
   ```bash
-  curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \\
-    -H "Authorization: Bearer $CF_API_TOKEN" \\
-    -H "Content-Type: application/json" \\
+  curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
+    -H "Authorization: Bearer $CF_API_TOKEN" \
+    -H "Content-Type: application/json" \
     --data '{"purge_everything":true}'
   ```
 - The `_headers` no-store approach (above)
@@ -112,6 +111,6 @@ For my use case — SEO-driven static site with semi-dynamic data — Cloudflare
 
 ## Full repo
 
-[grblasquiz/hacecuentas](https://github.com/grblasquiz/hacecuentas) — MIT licensed. If you're shipping a big static site on Cloudflare, clone it and steal patterns.
+[grblasquiz/hacecuentas](https://github.com/grblasquiz/hacecuentas) — if you're shipping a big static site on Cloudflare, the patterns above are all in there.
 
-Live: [hacecuentas.com](https://hacecuentas.com) — 1,236 static pages, all on CF Pages.
+Live: [hacecuentas.com](https://hacecuentas.com) — thousands of static pages, all on CF Pages.
