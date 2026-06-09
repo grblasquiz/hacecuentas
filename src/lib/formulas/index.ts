@@ -3,7 +3,6 @@
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
-import { rmPesoMaximo } from './1rm-peso-maximo';
 import { rmPesoMuertoEstimador } from './1rm-peso-muerto-estimador';
 import { rmPressBancaEstimador } from './1rm-press-banca-estimador';
 import { rmSentadillaEstimador } from './1rm-sentadilla-estimador';
@@ -652,7 +651,6 @@ import { compute as compute__conversion_atmosferas_pascales_bar } from './conver
 import { conversionBaseDecimalBinarioHexa } from './conversion-base-decimal-binario-hexa';
 import { conversionBases } from './conversion-bases';
 import { conversionBtuKcalAireAcondicionado } from './conversion-btu-kcal-aire-acondicionado';
-import { conversionBytesKbMbGbTb } from './conversion-bytes-kb-mb-gb-tb';
 import { conversionCelsiusFahrenheitKelvin } from './conversion-celsius-fahrenheit-kelvin';
 import { compute as compute__conversion_celsius_fahrenheit_kelvin_rankine_temperatura } from './conversion-celsius-fahrenheit-kelvin-rankine-temperatura';
 import { conversionColesterolMgMmol } from './conversion-colesterol-mg-mmol';
@@ -669,7 +667,6 @@ import { conversionKiloLibraLbKgExacto } from './conversion-kilo-libra-lb-kg-exa
 import { compute as compute__conversion_libras_kilos_onzas_stone } from './conversion-libras-kilos-onzas-stone';
 import { conversionLitrosGalones } from './conversion-litros-galones';
 import { conversionMedidaNeumaticoRadioDiametro } from './conversion-medida-neumatico-radio-diametro';
-import { conversionMedidasCocina } from './conversion-medidas-cocina';
 import { compute as compute__conversion_medidas_cocina_tazas_gramos } from './conversion-medidas-cocina-tazas-gramos';
 import { conversionMetroPieFeetExacto } from './conversion-metro-pie-feet-exacto';
 import { conversionMillaKilometroIdaVuelta } from './conversion-milla-kilometro-ida-vuelta';
@@ -1509,7 +1506,6 @@ import { gananciasSegundaCategoriaRentaFinanciera2026 } from './ganancias-segund
 import { gananciasSueldo } from './ganancias-sueldo';
 import { gananciasTramosEmpleadoMensual2026 } from './ganancias-tramos-empleado-mensual-2026';
 import { gasFeeEthereumTransaccionSwap } from './gas-fee-ethereum-transaccion-swap';
-import { gasIdealPvNrt } from './gas-ideal-pv-nrt';
 import { gasNaturalConsumoM3 } from './gas-natural-consumo-m3';
 import { gasNaturalSubsidioZonasFriasPatagonia } from './gas-natural-subsidio-zonas-frias-patagonia';
 import { compute as compute__gas_trip_cost_calculator } from './gas-trip-cost-calculator';
@@ -2279,7 +2275,6 @@ import { compute as compute__pago_anticipado_credito_hipotecario_colombia_ahorro
 import { compute as compute__pago_electronico_chile_transbank_comisiones_onepay_mach } from './pago-electronico-chile-transbank-comisiones-onepay-mach';
 import { compute as compute__pago_proporcional_pareja_ingreso_gastos_compartidos } from './pago-proporcional-pareja-ingreso-gastos-compartidos';
 import { palabrasDiaParaNivel } from './palabras-dia-para-nivel';
-import { palabrasPorMinutoLecturaNivel } from './palabras-por-minuto-lectura-nivel';
 import { palabrasPorPagina } from './palabras-por-pagina';
 import { palabrasPorPaginaTrabajo } from './palabras-por-pagina-trabajo';
 import { pamiPrestacionesMontoCopago2026 } from './pami-prestaciones-monto-copago-2026';
@@ -2738,7 +2733,6 @@ import { regla600Estrellas } from './regla-600-estrellas';
 import { regla72DuplicarDinero } from './regla-72-duplicar-dinero';
 import { reglaAmistadNumeroDunbarCirculos } from './regla-amistad-numero-dunbar-circulos';
 import { compute as compute__regla_de_tres_compuesta_directa_inversa } from './regla-de-tres-compuesta-directa-inversa';
-import { reglaDeTresSimpleDirectaInversa } from './regla-de-tres-simple-directa-inversa';
 import { reglaNumeroDunbar150ContactosRed } from './regla-numero-dunbar-150-contactos-red';
 import { reglaTres } from './regla-tres';
 import { reglaTresCompuesta } from './regla-tres-compuesta';
@@ -3097,7 +3091,6 @@ import { tasaAnualEquivalenteTea } from './tasa-anual-equivalente-tea';
 import { tasaAprobacionMateria } from './tasa-aprobacion-materia';
 import { compute as compute__tasa_basura_municipios_espana_anual } from './tasa-basura-municipios-espana-anual';
 import { tasaCompresionArchivoZip } from './tasa-compresion-archivo-zip';
-import { tasaConversionLanding } from './tasa-conversion-landing';
 import { compute as compute__tasa_de_cambio_paralelo_colombia_dolar_blue } from './tasa-de-cambio-paralelo-colombia-dolar-blue';
 import { compute as compute__tasa_impuesto_renta_fictop_paraisos_fiscales_colombia } from './tasa-impuesto-renta-fictop-paraisos-fiscales-colombia';
 import { compute as compute__tasa_interes_mora_colombia_tarjeta_credito_2026 } from './tasa-interes-mora-colombia-tarjeta-credito-2026';
@@ -3317,7 +3310,6 @@ import { velocidadDistanciaTiempoFisica } from './velocidad-distancia-tiempo-fis
 import { velocidadEscapePlaneta } from './velocidad-escape-planeta';
 import { velocidadInternetMbpsReal } from './velocidad-internet-mbps-real';
 import { velocidadLecturaComprension } from './velocidad-lectura-comprension';
-import { velocidadLecturaIdiomaPalabrasMinuto } from './velocidad-lectura-idioma-palabras-minuto';
 import { velocidadLecturaRapidaEjercicio } from './velocidad-lectura-rapida-ejercicio';
 import { velocidadLecturaWpm } from './velocidad-lectura-wpm';
 import { velocidadMaximaRelacionPotenciaPeso } from './velocidad-maxima-relacion-potencia-peso';
@@ -3443,7 +3435,6 @@ import { zonasPotenciaCiclismoWattsKg } from './zonas-potencia-ciclismo-watts-kg
 export const formulas: Record<string, (inputs: any) => any> = {
   '13-salario-liquido-bruto-clt': compute__13_salario_liquido_bruto_clt,
   '1rm-estimacion-fuerza-maxima': compute__1rm_estimacion_fuerza_maxima,
-  '1rm-peso-maximo': rmPesoMaximo,
   '1rm-peso-muerto-estimador': rmPesoMuertoEstimador,
   '1rm-press-banca-estimador': rmPressBancaEstimador,
   '1rm-sentadilla-estimador': rmSentadillaEstimador,
@@ -4092,7 +4083,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversion-base-decimal-binario-hexa': conversionBaseDecimalBinarioHexa,
   'conversion-bases': conversionBases,
   'conversion-btu-kcal-aire-acondicionado': conversionBtuKcalAireAcondicionado,
-  'conversion-bytes-kb-mb-gb-tb': conversionBytesKbMbGbTb,
   'conversion-celsius-fahrenheit-kelvin': conversionCelsiusFahrenheitKelvin,
   'conversion-celsius-fahrenheit-kelvin-rankine-temperatura': compute__conversion_celsius_fahrenheit_kelvin_rankine_temperatura,
   'conversion-colesterol-mg-mmol': conversionColesterolMgMmol,
@@ -4109,7 +4099,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversion-libras-kilos-onzas-stone': compute__conversion_libras_kilos_onzas_stone,
   'conversion-litros-galones': conversionLitrosGalones,
   'conversion-medida-neumatico-radio-diametro': conversionMedidaNeumaticoRadioDiametro,
-  'conversion-medidas-cocina': conversionMedidasCocina,
   'conversion-medidas-cocina-tazas-gramos': compute__conversion_medidas_cocina_tazas_gramos,
   'conversion-metro-pie-feet-exacto': conversionMetroPieFeetExacto,
   'conversion-milla-kilometro-ida-vuelta': conversionMillaKilometroIdaVuelta,
@@ -4949,7 +4938,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ganancias-sueldo': gananciasSueldo,
   'ganancias-tramos-empleado-mensual-2026': gananciasTramosEmpleadoMensual2026,
   'gas-fee-ethereum-transaccion-swap': gasFeeEthereumTransaccionSwap,
-  'gas-ideal-pv-nrt': gasIdealPvNrt,
   'gas-natural-consumo-m3': gasNaturalConsumoM3,
   'gas-natural-subsidio-zonas-frias-patagonia': gasNaturalSubsidioZonasFriasPatagonia,
   'gas-trip-cost-calculator': compute__gas_trip_cost_calculator,
@@ -5719,7 +5707,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pago-electronico-chile-transbank-comisiones-onepay-mach': compute__pago_electronico_chile_transbank_comisiones_onepay_mach,
   'pago-proporcional-pareja-ingreso-gastos-compartidos': compute__pago_proporcional_pareja_ingreso_gastos_compartidos,
   'palabras-dia-para-nivel': palabrasDiaParaNivel,
-  'palabras-por-minuto-lectura-nivel': palabrasPorMinutoLecturaNivel,
   'palabras-por-pagina': palabrasPorPagina,
   'palabras-por-pagina-trabajo': palabrasPorPaginaTrabajo,
   'pami-prestaciones-monto-copago-2026': pamiPrestacionesMontoCopago2026,
@@ -6178,7 +6165,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'regla-72-duplicar-dinero': regla72DuplicarDinero,
   'regla-amistad-numero-dunbar-circulos': reglaAmistadNumeroDunbarCirculos,
   'regla-de-tres-compuesta-directa-inversa': compute__regla_de_tres_compuesta_directa_inversa,
-  'regla-de-tres-simple-directa-inversa': reglaDeTresSimpleDirectaInversa,
   'regla-numero-dunbar-150-contactos-red': reglaNumeroDunbar150ContactosRed,
   'regla-tres': reglaTres,
   'regla-tres-compuesta': reglaTresCompuesta,
@@ -6537,7 +6523,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tasa-aprobacion-materia': tasaAprobacionMateria,
   'tasa-basura-municipios-espana-anual': compute__tasa_basura_municipios_espana_anual,
   'tasa-compresion-archivo-zip': tasaCompresionArchivoZip,
-  'tasa-conversion-landing': tasaConversionLanding,
   'tasa-de-cambio-paralelo-colombia-dolar-blue': compute__tasa_de_cambio_paralelo_colombia_dolar_blue,
   'tasa-impuesto-renta-fictop-paraisos-fiscales-colombia': compute__tasa_impuesto_renta_fictop_paraisos_fiscales_colombia,
   'tasa-interes-mora-colombia-tarjeta-credito-2026': compute__tasa_interes_mora_colombia_tarjeta_credito_2026,
@@ -6757,7 +6742,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'velocidad-escape-planeta': velocidadEscapePlaneta,
   'velocidad-internet-mbps-real': velocidadInternetMbpsReal,
   'velocidad-lectura-comprension': velocidadLecturaComprension,
-  'velocidad-lectura-idioma-palabras-minuto': velocidadLecturaIdiomaPalabrasMinuto,
   'velocidad-lectura-rapida-ejercicio': velocidadLecturaRapidaEjercicio,
   'velocidad-lectura-wpm': velocidadLecturaWpm,
   'velocidad-maxima-relacion-potencia-peso': velocidadMaximaRelacionPotenciaPeso,
