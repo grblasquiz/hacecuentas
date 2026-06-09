@@ -226,78 +226,101 @@ const navItems = COUNTRY_NAVS[pageCountry];
 </div>
 
 <script>
-  // Theme toggle
-  const themeToggle = document.getElementById('theme-toggle');
-  const applyTheme = (theme) => {
+  // CRÍTICO: Astro ClientRouter swappea el <body> en cada navegación SPA → los
+  // nodos del header (#country-btn, #theme-toggle, #menu-toggle) se reemplazan por
+  // nodos nuevos sin listeners. Si attachábamos una sola vez al cargar el módulo,
+  // tras navegar el dropdown de países dejaba de abrir ("clickeo el 🌎 y no pasa
+  // nada"). Fix: init idempotente (guard data-init) re-corrido en cada
+  // astro:page-load. Mismo patrón que initSearch. Los listeners a nivel document
+  // se attachan UNA vez (sobreviven al swap y resuelven por id al disparar).
+
+  function applyTheme(theme) {
     document.documentElement.dataset.theme = theme;
     try { localStorage.setItem('hc-theme', theme); } catch {}
-  };
-  const saved = (() => { try { return localStorage.getItem('hc-theme'); } catch { return null; } })();
-  const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  applyTheme(saved || system);
-  themeToggle?.addEventListener('click', () => {
-    const current = document.documentElement.dataset.theme || 'light';
-    applyTheme(current === 'dark' ? 'light' : 'dark');
-  });
+  }
+  function initTheme() {
+    const saved = (() => { try { return localStorage.getItem('hc-theme'); } catch { return null; } })();
+    const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    applyTheme(saved || system);
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle && !themeToggle.dataset.init) {
+      themeToggle.dataset.init = '1';
+      themeToggle.addEventListener('click', () => {
+        const current = document.documentElement.dataset.theme || 'light';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+      });
+    }
+  }
 
-  // Country selector
-  (() => {
+  const COUNTRY_FLAGS = { AR: '🇦🇷', global: '🌎', ES: '🇪🇸', MX: '🇲🇽', CO: '🇨🇴', CL: '🇨🇱', PE: '🇵🇪', EC: '🇪🇨', BR: '🇧🇷', EN: '🇺🇸' };
+  const COUNTRY_LABELS = { AR: 'AR', global: 'GLO', ES: 'ES', MX: 'MX', CO: 'CO', CL: 'CL', PE: 'PE', EC: 'EC', BR: 'BR', EN: 'EN' };
+  function currentCountry() {
+    // Por SEGMENTO (no startsWith): evita que /peso-ideal→PE o /como-…→CO.
+    const seg = (location.pathname.split('/')[1] || '').toLowerCase();
+    const bySeg = { en: 'EN', pt: 'BR', es: 'ES', mx: 'MX', co: 'CO', cl: 'CL', pe: 'PE', ec: 'EC', global: 'global' };
+    return bySeg[seg] || 'AR';
+  }
+  function initCountry() {
     const btn = document.getElementById('country-btn');
     const dropdown = document.getElementById('country-dropdown');
     const flagEl = document.getElementById('country-flag');
     const codeEl = document.getElementById('country-code');
     if (!btn || !dropdown || !flagEl || !codeEl) return;
 
-    // Detectar país actual desde URL path
-    const path = location.pathname;
-    let current = 'AR';
-    if (path.startsWith('/en')) current = 'EN';
-    else if (path.startsWith('/pt')) current = 'BR';
-    else if (path.startsWith('/es')) current = 'ES';
-    else if (path.startsWith('/mx')) current = 'MX';
-    else if (path.startsWith('/co')) current = 'CO';
-    else if (path.startsWith('/cl')) current = 'CL';
-    else if (path.startsWith('/global')) current = 'global';
-
-    const FLAGS = { AR: '🇦🇷', global: '🌎', ES: '🇪🇸', MX: '🇲🇽', CO: '🇨🇴', CL: '🇨🇱', PE: '🇵🇪', EC: '🇪🇨', BR: '🇧🇷', EN: '🇺🇸' };
-    const LABELS = { AR: 'AR', global: 'GLO', ES: 'ES', MX: 'MX', CO: 'CO', CL: 'CL', PE: 'PE', EC: 'EC', BR: 'BR', EN: 'EN' };
-    flagEl.textContent = FLAGS[current] || '🌎';
-    codeEl.textContent = LABELS[current] || 'AR';
-
-    // Marcar opción actual
+    // Flag/label/opción-actual: re-aplicar SIEMPRE (el nodo puede ser nuevo tras swap)
+    const current = currentCountry();
+    flagEl.textContent = COUNTRY_FLAGS[current] || '🌎';
+    codeEl.textContent = COUNTRY_LABELS[current] || 'AR';
     dropdown.querySelectorAll('a').forEach((a) => {
-      if (a.getAttribute('data-country') === current) a.classList.add('current');
+      a.classList.toggle('current', a.getAttribute('data-country') === current);
     });
 
-    // Persistir clic en localStorage
+    if (btn.dataset.init) return; // handlers ya attachados a ESTE nodo
+    btn.dataset.init = '1';
     dropdown.querySelectorAll('a').forEach((a) => {
       a.addEventListener('click', () => {
         try { localStorage.setItem('hc-country', a.getAttribute('data-country')); } catch {}
       });
     });
-
-    const open = () => { dropdown.removeAttribute('hidden'); btn.setAttribute('aria-expanded', 'true'); };
-    const close = () => { dropdown.setAttribute('hidden', ''); btn.setAttribute('aria-expanded', 'false'); };
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      dropdown.hasAttribute('hidden') ? open() : close();
+      if (dropdown.hasAttribute('hidden')) { dropdown.removeAttribute('hidden'); btn.setAttribute('aria-expanded', 'true'); }
+      else { dropdown.setAttribute('hidden', ''); btn.setAttribute('aria-expanded', 'false'); }
     });
-    document.addEventListener('click', (e) => {
-      if (!dropdown.contains(e.target) && e.target !== btn) close();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !dropdown.hasAttribute('hidden')) close();
-    });
-  })();
+  }
 
-  // Mobile menu
-  const mToggle = document.getElementById('menu-toggle');
-  const mobile = document.getElementById('mobile-nav');
-  mToggle?.addEventListener('click', () => {
-    const open = !mobile.hasAttribute('hidden');
-    if (open) { mobile.setAttribute('hidden', ''); mToggle.setAttribute('aria-expanded', 'false'); }
-    else { mobile.removeAttribute('hidden'); mToggle.setAttribute('aria-expanded', 'true'); }
+  function initMobileMenu() {
+    const mToggle = document.getElementById('menu-toggle');
+    const mobile = document.getElementById('mobile-nav');
+    if (!mToggle || !mobile || mToggle.dataset.init) return;
+    mToggle.dataset.init = '1';
+    mToggle.addEventListener('click', () => {
+      const open = !mobile.hasAttribute('hidden');
+      if (open) { mobile.setAttribute('hidden', ''); mToggle.setAttribute('aria-expanded', 'false'); }
+      else { mobile.removeAttribute('hidden'); mToggle.setAttribute('aria-expanded', 'true'); }
+    });
+  }
+
+  // Listeners a nivel document: UNA sola vez (sobreviven al swap, resuelven por id).
+  document.addEventListener('click', (e) => {
+    const dd = document.getElementById('country-dropdown');
+    const b = document.getElementById('country-btn');
+    if (dd && b && !dd.hasAttribute('hidden') && !dd.contains(e.target) && !b.contains(e.target)) {
+      dd.setAttribute('hidden', ''); b.setAttribute('aria-expanded', 'false');
+    }
   });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const dd = document.getElementById('country-dropdown');
+    if (dd && !dd.hasAttribute('hidden')) {
+      dd.setAttribute('hidden', '');
+      document.getElementById('country-btn')?.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  function initHeader() { initTheme(); initCountry(); initMobileMenu(); }
+  initHeader();
+  document.addEventListener('astro:page-load', initHeader);
 
   // Search modal — calcs se carga lazy al primer open (no inlinea en HTML).
   //
