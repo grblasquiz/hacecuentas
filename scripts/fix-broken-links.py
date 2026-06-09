@@ -111,16 +111,19 @@ def resolve(target: str, sc: str, anchor: str = "", expected_colls=None) -> tupl
         for c in CALC_COLLECTIONS:
             if c not in order: order.append(c)
 
-    # 1. PRECISE: transform exacto (agregar/quitar prefijo, calculadora-)
+    # 1. PRECISE: transform exacto (agregar/quitar prefijo, calculadora-).
+    #    Nunca devolver un path que esté en 410 (seguiría roto).
     cands = [bare, "calculadora-" + bare, re.sub(r"^calculadora-", "", bare)]
     for coll in order:
         if coll in CALC_COLLECTIONS:
             for cand in cands:
                 if cand in slugs_by_coll[coll]:
-                    return (make_url(coll, cand), "PRECISE", "transform")
+                    res = make_url(coll, cand)
+                    if res not in gone:
+                        return (res, "PRECISE", "transform")
         elif coll == "blog":
             for cand in (bare, re.sub(r"^calculadora-", "", bare)):
-                if cand in blog_slugs:
+                if cand in blog_slugs and ("/blog/" + cand) not in gone:
                     return ("/blog/" + cand, "PRECISE", "transform")
         elif coll == "guias" and bare in guia_slugs:
             return ("/guia/" + bare, "PRECISE", "transform")
@@ -128,14 +131,27 @@ def resolve(target: str, sc: str, anchor: str = "", expected_colls=None) -> tupl
         return ("/guia/" + bare, "PRECISE", "transform")
 
     if is_lookup:
-        return None  # lookup: sólo transform exacto, nada de inventar
+        # repunta al ganador de un 301 SÓLO si ese ganador es una calc/post de la
+        # colección esperada (consolidaciones: el card debe ir al slug canónico vivo).
+        for k in ("/" + bare, "/calculadora-" + bare):
+            dest = redir.get(k)
+            if not dest:
+                continue
+            db = re.sub(r"^/(?:%s)/" % "|".join(LOCALE_PREFIXES), "/", dest).lstrip("/")
+            for coll in order:
+                if coll in CALC_COLLECTIONS and db in slugs_by_coll[coll] and make_url(coll, db) not in gone:
+                    return (make_url(coll, db), "PRECISE", "redirect301-lookup")
+                if coll == "blog" and db in blog_slugs and ("/blog/" + db) not in gone:
+                    return ("/blog/" + db, "PRECISE", "redirect301-lookup")
+        return None  # sin transform ni ganador-calc → dejar como está
 
-    # 2. PRECISE: redirect 301 (sólo inline)
+    # 2. PRECISE: redirect 301 (sólo inline) — el destino no puede estar en 410
     for tp in [make_url(sc if sc in CALC_COLLECTIONS else "calcs", bare),
                "/" + bare, "/calculadora-" + bare,
                make_url(sc if sc in CALC_COLLECTIONS else "calcs", "calculadora-" + bare)]:
-        if norm(tp) in redir:
-            return (redir[norm(tp)], "PRECISE", "redirect301")
+        dest = redir.get(norm(tp))
+        if dest and dest not in gone:
+            return (dest, "PRECISE", "redirect301")
 
     # 3. CONFIDENT: sólo si el target contiene TODOS los tokens (recall == 1.0).
     #    Casos peligrosos (cubo→esfera, bebé→perro) tienen recall < 1 → se rechazan.
