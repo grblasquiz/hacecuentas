@@ -26,6 +26,7 @@ import ScrollToTop from '../components/ScrollToTop.astro';
 import { findClusterForSlug } from '../lib/clusters';
 import { findHubForSlug } from '../lib/category-hubs';
 import { md, mdInline } from '../lib/markdown';
+import converterTables from '../lib/converter-tables.json';
 import { resolveGuideSlug, GUIDE_TITLES, CATEGORY_TO_GUIDE } from '../lib/category-guide-map';
 import { categoryColor } from '../lib/category-colors';
 import CategoryIcon from '../components/CategoryIcon.astro';
@@ -934,6 +935,13 @@ const cluster = findClusterForSlug(calc.slug);
 // Hub de categoría: bloque rico de columnas si esta calc es "ancla" de su familia
 const categoryHub = findHubForSlug(calc.slug);
 
+// Tabla de conversiones comunes (server-rendered, crawleable) para conversores de
+// unidades del top buscado. Factores hand-verified contra la fórmula — ver
+// scripts/generate-converter-tables.mjs. Antes ningún conversor exponía esta tabla,
+// que es justo lo que responde "cuánto es 10 cm en pulgadas" (Bing/AEO/featured snippet).
+const converterTable: { from: string; to: string; fromU: string; toU: string; note: string; rows: string[][] } | null =
+  (converterTables as Record<string, any>)[calc.slug] || null;
+
 // Lookup para related links dentro del contenido
 const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
@@ -965,6 +973,7 @@ const tocSections: Array<{ id: string; label: string }> = [
 if (keyTakeaway) tocSections.push({ id: 'resumen', label: 'En pocas palabras' });
 if (useCases.length > 0) tocSections.push({ id: 'cuando-usar', label: 'Cuándo usar' });
 if (example && example.steps) tocSections.push({ id: 'ejemplo', label: 'Ejemplo paso a paso' });
+if (converterTable) tocSections.push({ id: 'tabla-conversiones', label: 'Tabla de conversiones' });
 if (calc.explanation) tocSections.push({ id: 'como-funciona', label: 'Cómo funciona' });
 if (calc.faq && calc.faq.length > 0) tocSections.push({ id: 'faq', label: 'Preguntas frecuentes' });
 if (sources.length > 0) tocSections.push({ id: 'fuentes', label: 'Fuentes y referencias' });
@@ -1323,6 +1332,23 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             {example.result && (
               <div class="example-result"><strong>Resultado:</strong> <span set:html={md(example.result)} /></div>
             )}
+          </section>
+        )}
+
+        {converterTable && (
+          <section id="tabla-conversiones" class="converter-table-section" aria-labelledby="ct-heading">
+            <h2 id="ct-heading">Tabla de conversiones de {converterTable.from} a {converterTable.to}</h2>
+            <p class="ct-note">{converterTable.note} Valores de referencia para convertir rápido sin calculadora.</p>
+            <div class="ct-wrap">
+              <table class="converter-table">
+                <thead><tr><th>{converterTable.from} ({converterTable.fromU})</th><th>{converterTable.to} ({converterTable.toU})</th></tr></thead>
+                <tbody>
+                  {converterTable.rows.map((r) => (
+                    <tr><td>{r[0]} {converterTable.fromU}</td><td>{r[1]} {converterTable.toU}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
 
@@ -2365,6 +2391,17 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     box-shadow: 0 2px 8px -4px color-mix(in srgb, var(--accent) 20%, transparent);
   }
   .example-result strong { color: var(--accent-strong); font-weight: 700; }
+
+  /* Tabla de conversiones comunes (conversores de unidades) */
+  .converter-table-section { margin: 2rem 0; }
+  .converter-table-section h2 { font-size: 1.35rem; font-weight: 700; margin: 0 0 .5rem; color: var(--text); }
+  .ct-note { color: var(--text-muted); font-size: .92rem; margin: 0 0 1rem; }
+  .ct-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+  .converter-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  .converter-table th { background: var(--accent-soft); color: var(--text); font-weight: 700; text-align: left; padding: .6rem .9rem; border-bottom: 1px solid var(--border); }
+  .converter-table td { padding: .55rem .9rem; border-bottom: 1px solid var(--border); color: var(--text); }
+  .converter-table tbody tr:last-child td { border-bottom: none; }
+  .converter-table tbody tr:nth-child(even) td { background: var(--bg-soft, color-mix(in srgb, var(--accent) 4%, transparent)); }
 
   /* Fuentes */
   .sources-box {
