@@ -3009,7 +3009,6 @@ import { sueldoHora } from './sueldo-hora';
 import { sueldoHoraExtraNocturnaFeriado } from './sueldo-hora-extra-nocturna-feriado';
 import { compute as compute__sueldo_liquido_chile_2026_impuesto_segunda_categoria } from './sueldo-liquido-chile-2026-impuesto-segunda-categoria';
 import { sueldoMedicoResidenteHospitalPublico } from './sueldo-medico-residente-hospital-publico';
-import { sueldoMilitarFfaaSuboficialOficial } from './sueldo-militar-ffaa-suboficial-oficial';
 import { sueldoMinimoAfa } from './sueldo-minimo-afa';
 import { sueldoMlsDesignated } from './sueldo-mls-designated';
 import { sueldoMunicipalEmpleadoBuenosAiresCategoria } from './sueldo-municipal-empleado-buenos-aires-categoria';
@@ -6442,7 +6441,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueldo-hora-extra-nocturna-feriado': sueldoHoraExtraNocturnaFeriado,
   'sueldo-liquido-chile-2026-impuesto-segunda-categoria': compute__sueldo_liquido_chile_2026_impuesto_segunda_categoria,
   'sueldo-medico-residente-hospital-publico': sueldoMedicoResidenteHospitalPublico,
-  'sueldo-militar-ffaa-suboficial-oficial': sueldoMilitarFfaaSuboficialOficial,
   'sueldo-minimo-afa': sueldoMinimoAfa,
   'sueldo-mls-designated': sueldoMlsDesignated,
   'sueldo-municipal-empleado-buenos-aires-categoria': sueldoMunicipalEmpleadoBuenosAiresCategoria,

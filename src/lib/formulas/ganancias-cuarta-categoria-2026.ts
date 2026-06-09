@@ -1,3 +1,4 @@
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 /** Impuesto a las Ganancias 4ta categoría Argentina 2026
  *  Ley 20.628 — Empleados en relación de dependencia
  *  Con Ley 27.743 (Bases): nuevo piso y escala
@@ -67,7 +68,7 @@ export function gananciasCuartaCategoria2026(i: Inputs): Outputs {
   if (!sueldoBruto || sueldoBruto <= 0) throw new Error('Ingresá tu sueldo bruto mensual');
 
   // Aportes seguridad social: ~17%
-  const aportesSegSocial = sueldoBruto * 0.17;
+  const aportesSegSocial = Math.min(sueldoBruto, BASE_IMPONIBLE_MAXIMA_APORTES) * 0.17;
   const sueldoNetoSegSocial = sueldoBruto - aportesSegSocial;
 
   // Ganancia anual (13 sueldos con SAC)

@@ -1,3 +1,4 @@
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 /**
  * Calculadora de Aguinaldo (SAC - Sueldo Anual Complementario) Argentina
  * LCT art. 121: SAC = 50% de la mejor remuneración mensual del semestre
@@ -72,7 +73,7 @@ export function aguinaldo(inputs: AguinaldoInputs): AguinaldoOutputs {
   const aguinaldoBruto = (mejorSueldo / 2) * (mesesTrabajados / 6);
 
   // Descuentos sobre aguinaldo: 17% aportes (mismos que sueldo)
-  const descuentos = aguinaldoBruto * 0.17;
+  const descuentos = Math.min(aguinaldoBruto, BASE_IMPONIBLE_MAXIMA_APORTES / 2) * 0.17;
   const aguinaldoNeto = aguinaldoBruto - descuentos;
 
   const chart = {

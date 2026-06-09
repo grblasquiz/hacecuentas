@@ -1,8 +1,9 @@
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number | any; }
 export function ganancias4taCategoria2026(i: Inputs): Outputs {
   const b=Number(i.sueldoBruto)||0; const cf=Number(i.cargasFamiliares)||0;
-  const aportes=b*0.17; const neto=b-aportes;
+  const aportes=Math.min(b, BASE_IMPONIBLE_MAXIMA_APORTES)*0.17; const neto=b-aportes;
   const ingresoAnual=neto*13; const mni=1800000; const cargaFam=cf*900000;
   const baseImponible=Math.max(0, ingresoAnual-mni-cargaFam);
   let imp=0;

@@ -1,3 +1,4 @@
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _chart?: any; _insight?: any; }
 export function sueldoEmpleadoPublicoNacionalSinepAgrupamiento(i: Inputs): Outputs {
@@ -5,9 +6,10 @@ export function sueldoEmpleadoPublicoNacionalSinepAgrupamiento(i: Inputs): Outpu
   const basico=1400000;
   const plusAntig=basico*0.02*antig;
   const bruto=basico+plusAntig;
-  const jubilacion=bruto*0.11;
-  const obraSocial=bruto*0.03;
-  const pami=bruto*0.03;
+  const baseAp = Math.min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES); // tope Ley 24.241 art.9
+  const jubilacion = baseAp * 0.11;
+  const obraSocial = baseAp * 0.03;
+  const pami = baseAp * 0.03;
   const ganancias=Math.max(0,(bruto-1800000)*0.05); // Simplificación
   const neto=bruto-jubilacion-obraSocial-pami-ganancias;
   const sac=bruto/12;

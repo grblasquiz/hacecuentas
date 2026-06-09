@@ -1,3 +1,4 @@
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 /**
  * Sueldo docente CABA (ADEMYS/UTE) — escalafón GCBA, antigüedad escalonada.
  * Cargos: maestro sección primaria, maestro secundaria (15 horas cátedra), profesor especial.
@@ -40,7 +41,7 @@ export function sueldoDocenteAdemysCaba(i: Inputs): Outputs {
   const material = 25000; // material didáctico fijo mensual
   const presentismo = basico * 0.10;
   const bruto = basico + antiguedad + material + presentismo;
-  const aportes = bruto * 0.17;
+  const aportes = Math.min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES) * 0.17;
   const neto = bruto - aportes;
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;

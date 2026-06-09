@@ -1,3 +1,4 @@
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 import { aplicarEscalaMensual, MNI_MENSUAL_BASE, INCREMENTO_HIJO_MENSUAL, INCREMENTO_CONYUGE_MENSUAL } from './_ganancias-escala';
 
 export interface Inputs { [k: string]: number | string; }
@@ -12,9 +13,10 @@ export function sueldoDocenteArgentinaCargoAntiguedad(i: Inputs): Outputs {
   const basico = 500_000;
   const plusAntig = basico * 0.1 * antig;
   const bruto = basico + plusAntig;
-  const jubilacion = bruto * 0.11;
-  const obraSocial = bruto * 0.03;
-  const pami = bruto * 0.03;
+  const baseAp = Math.min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES); // tope Ley 24.241 art.9
+  const jubilacion = baseAp * 0.11;
+  const obraSocial = baseAp * 0.03;
+  const pami = baseAp * 0.03;
   const baseGanancias = Math.max(0, bruto - jubilacion - obraSocial - pami - MNI_MENSUAL_BASE - cargas * INCREMENTO_HIJO_MENSUAL - conyuge * INCREMENTO_CONYUGE_MENSUAL);
   const ganancias = aplicarEscalaMensual(baseGanancias).impuesto;
   const neto = bruto - jubilacion - obraSocial - pami - ganancias;

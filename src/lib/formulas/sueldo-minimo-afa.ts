@@ -1,3 +1,4 @@
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 /** Sueldo mínimo CCT AFA-FAA Liga Profesional Argentina 2026 */
 export interface Inputs {
   categoria: 'primera' | 'primera-nacional' | 'primera-b' | 'primera-c' | 'reserva';
@@ -39,7 +40,7 @@ export function sueldoMinimoAfa(i: Inputs): Outputs {
   const bruto = minimo + antiguedad + premios;
   // Aportes futbolistas: ~17% (jubilación 11% + obra social 3% + FAA 3%)
   const descuenta = i.descuentoAportes !== false;
-  const aportes = descuenta ? Math.round(bruto * 0.17) : 0;
+  const aportes = descuenta ? Math.round(Math.min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES) * 0.17) : 0;
   const neto = bruto - aportes;
 
   const chart = {

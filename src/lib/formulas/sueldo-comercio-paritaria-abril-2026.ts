@@ -1,3 +1,4 @@
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 /**
  * Sueldo Empleados de Comercio — CCT 130/75, paritaria abril 2026.
  * Básicos remunerativos + no remunerativos acuerdo CAC-FAECyS vigente.
@@ -33,7 +34,7 @@ export function sueldoComercioParitariaAbril2026(i: Inputs): Outputs {
   const bruto = remunerativo + noRem;
 
   // Aportes sólo sobre remunerativo: jubilación 11% + ley 19.032 3% + obra social 3%
-  const aportes = remunerativo * 0.17;
+  const aportes = Math.min(remunerativo, BASE_IMPONIBLE_MAXIMA_APORTES) * 0.17;
   const neto = bruto - aportes;
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;

@@ -19,7 +19,7 @@
  * obligatorio, ni la detracción de contribuciones. Es una ESTIMACIÓN.
  */
 
-import { sueldoAR } from './sueldo-ar';
+import { sueldoAR, BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 
 export interface ReciboSueldoInputs {
   bruto: number;
@@ -108,7 +108,8 @@ export function reciboDeSueldoArgentina(inputs: ReciboSueldoInputs): ReciboSueld
   // 2. Aguinaldo / SAC: ½ de la mejor remuneración del semestre (= medio bruto).
   //    Descuentos 17% (mismo criterio que la calc `aguinaldo`).
   const aguinaldoBruto = bruto / 2;
-  const aguinaldoNeto = aguinaldoBruto * (1 - 0.17);
+  // El SAC topea a MEDIA base imponible máxima (es medio sueldo).
+  const aguinaldoNeto = aguinaldoBruto - Math.min(aguinaldoBruto, BASE_IMPONIBLE_MAXIMA_APORTES / 2) * 0.17;
 
   // 3. Vacaciones (LCT art. 150 días según antigüedad; art. 155 valor día = bruto/25).
   const antiguedad = Math.max(0, Number(inputs.antiguedad) || 0);

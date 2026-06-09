@@ -1,3 +1,4 @@
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 /**
  * Impuesto a las Ganancias — Trabajadores en relación de dependencia (4ta categoría)
  *
@@ -59,7 +60,7 @@ export function gananciasSueldo(inputs: GananciasSueldoInputs): GananciasSueldoO
   }
 
   // Aportes personales 17%
-  const aportesMensuales = brutoMensual * 0.17;
+  const aportesMensuales = Math.min(brutoMensual, BASE_IMPONIBLE_MAXIMA_APORTES) * 0.17;
   const netoDeAportesMensual = brutoMensual - aportesMensuales;
 
   // Familiares a cargo: ARCA diferencia cónyuge (~$404k/mes) de hijo (~$204k/mes).
