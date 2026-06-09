@@ -566,16 +566,19 @@ const globalSchema = {
          de JS unused sin agregar funcionalidad. (PSI audit 2026-05-19: confirmado). -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
 
-    <!-- AdSense: snippet de verificación/serving (re-alta 2026-06-09).
-         async (no bloquea parse) + fetchpriority=low (no compite con LCP por red).
-         SIN auto-ads ni unidades: hasta la aprobación el script no inyecta nada
-         → CLS=0. Si al servir anuncios la perf cae (TBT/INP), evaluar auto-ads OFF
-         y unidades manuales below-the-fold. NO duplicar: un solo tag global acá. -->
-    <script
-      async
-      fetchpriority="low"
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561"
-      crossorigin="anonymous"></script>
+    <!-- AdSense re-alta 2026-06-09 (ca-pub-6276944768601561), versión performance-safe.
+         Medido con Lighthouse: el tag <script async> directo en head tira el score
+         mobile de 93 a 66 (LCP 2,9s → 8,1s) porque sus ~280KB+5 requests compiten
+         con el LCP en red lenta — ESTE fue el motivo del retiro anterior.
+         Arquitectura actual:
+           1. Verificación de sitio: meta tag (abajo) + línea en ads.txt. Ambos son
+              métodos oficiales de verificación → NO hace falta el script para la review.
+           2. El script se inyecta DESPUÉS de window.load + idle → la página pinta
+              primero, AdSense baja después. CLS=0 (sin unidades hasta la aprobación).
+         Si tras la aprobación los anuncios tardan en aparecer, bajar el delay,
+         pero NUNCA volver al tag estático en head sin re-medir Lighthouse. -->
+    <meta name="google-adsense-account" content="ca-pub-6276944768601561" />
+    <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){setTimeout(f,1500)})(function(){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';document.head.appendChild(s);});});`} />
 
     <!-- Microsoft Clarity (signal positiva para Bing/Copilot rankings) -->
     <!-- Se activa solo si está seteada la env var PUBLIC_MS_CLARITY_ID en build. -->
