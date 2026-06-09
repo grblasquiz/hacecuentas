@@ -10,5 +10,5 @@ export function smartGoalsObjetivosMetodologiaMeta(i: Inputs): Outputs {
     tone: r >= 1 ? 'good' : (r >= 0.5 ? 'neutral' : 'warn'),
     icon: '🎯',
   };
-  return { resultado:r.toFixed(2), resumen:`Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`, _insight };
+  return { resultado:r.toFixed(2), resumen:`Avance hacia tu meta: ${(r*100).toFixed(0)}% (lograste ${v1} de ${v2}).`, _insight };
 }

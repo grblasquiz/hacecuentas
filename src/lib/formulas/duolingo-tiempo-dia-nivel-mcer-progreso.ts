@@ -6,7 +6,7 @@ export function duolingoTiempoDiaNivelMcerProgreso(i: Inputs): Outputs {
   const r=v1/v2;
   const resumenStr = __lang === 'en'
     ? `Calculation: ${v1} / ${v2} = ${r.toFixed(2)}.`
-    : `Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`;
+    : `Necesitás ${r.toFixed(0)} minutos por día (${v1} min totales ÷ ${v2} días) para llegar a tu meta a tiempo.`;
 
   const rTxt = r.toFixed(2);
   const _insight = {

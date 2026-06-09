@@ -6,7 +6,7 @@ export function becaPromedioMinimoRequisitoUniversidades(i: Inputs): Outputs {
   const r=v1/v2;
   const resumen = __lang === 'en'
     ? `Calculation: ${v1} / ${v2} = ${r.toFixed(2)}.`
-    : `Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`;
+    : `Tu promedio es ${r.toFixed(2)} (suma de notas ${v1} ÷ ${v2} materias).`;
   const insightText = __lang === 'en'
     ? `Your resulting average is **${r.toFixed(2)}**. Compare it against the minimum GPA each scholarship or university demands: meeting it is usually a hard eligibility gate.`
     : `Tu promedio resultante es **${r.toFixed(2)}**. Compará ese número con el promedio mínimo que pide cada beca o universidad: cumplirlo suele ser un requisito excluyente para postular.`;

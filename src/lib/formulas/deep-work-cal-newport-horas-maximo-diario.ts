@@ -4,7 +4,7 @@ export function deepWorkCalNewportHorasMaximoDiario(i: Inputs): Outputs {
   const v1=Number(i.v1)||0; const v2=Number(i.v2)||1;
   const r=v1/v2;
 
-  const out:Outputs={ resultado:r.toFixed(2), resumen:`Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.` };
+  const out:Outputs={ resultado:r.toFixed(2), resumen:`Promedio de ${r.toFixed(1)} h de Deep Work por día (${v1} h en ${v2} días laborales). El máximo sostenible ronda las 4 h diarias.` };
 
   // Cal Newport sostiene que un experto rinde como máximo ~4 h de deep work por día.
   const horas=r;

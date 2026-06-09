@@ -34,5 +34,5 @@ export function okrObjetivosResultadosClaveTrimestre(i: Inputs): Outputs {
     ariaLabel: `Score OKR de ${r.toFixed(2)} sobre 1, ${zonaTxt}`,
   };
 
-  return { resultado:r.toFixed(2), resumen:`Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`, _insight, _chart };
+  return { resultado:r.toFixed(2), resumen:`Score del Key Result: ${r.toFixed(2)} — alcanzaste ${v1} sobre una meta de ${v2}. El rango sano en OKR es 0,7 a 1,0.`, _insight, _chart };
 }

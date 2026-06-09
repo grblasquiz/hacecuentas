@@ -3,7 +3,7 @@ export interface Outputs { [k: string]: string | number; _insight?: any; _chart?
 export function gpaPromedioAmericanoEscala40(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const v1 = Number(i.v1) || 0; // your grade or average
-  const v2 = Number(i.v2) || 100; // maximum scale (default 100)
+  const v2 = Number(i.v2) || 10; // maximum scale (default 100)
 
   // Standard conversion: GPA = (grade / max_scale) × 4.0
   const ratio = v2 > 0 ? v1 / v2 : 0;

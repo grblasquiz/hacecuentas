@@ -6,7 +6,7 @@ export function flashcardsCantidadDiariosMetaRetencion(i: Inputs): Outputs {
   const r=v1/v2;
   const resumen = __lang === 'en'
     ? `Calculation: ${v1} / ${v2} = ${r.toFixed(2)}.`
-    : `Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`;
+    : `Tenés que repasar ${r.toFixed(0)} flashcards por día (${v1} repasos ÷ ${v2} días).`;
   const rStr = r.toFixed(2);
   const _insight = __lang === 'en'
     ? {

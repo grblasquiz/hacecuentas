@@ -10,5 +10,5 @@ export function reglaNumeroDunbar150ContactosRed(i: Inputs): Outputs {
     tone: 'neutral',
     icon: '🧠',
   };
-  return { resultado:r.toFixed(2), resumen:`Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`, _insight };
+  return { resultado:r.toFixed(2), resumen:`Tenés ${v1} contactos activos: el ${(r*100).toFixed(0)}% del límite de Dunbar (${v2}). Las capas de Dunbar son 5 íntimos, 15 cercanos, 50 amigos y 150 conocidos.`, _insight };
 }

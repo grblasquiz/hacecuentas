@@ -6,7 +6,7 @@ export function tiempoLeerLibroPaginasVelocidad(i: Inputs): Outputs {
   const r=v1/v2;
   const resumen = __lang === 'en'
     ? `Calculation: ${v1} / ${v2} = ${r.toFixed(2)}.`
-    : `Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`;
+    : `Vas a tardar ${r.toFixed(0)} días en leer el libro (${v1} páginas ÷ ${v2} por día).`;
   const rTxt = r.toFixed(2);
   const insightText = __lang === 'en'
     ? `Reading **${v1} pages** at **${v2} per day** takes about **${rTxt} days**. Round up to a whole day to plan realistically.`

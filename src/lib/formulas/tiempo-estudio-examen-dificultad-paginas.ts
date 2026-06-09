@@ -6,7 +6,7 @@ export function tiempoEstudioExamenDificultadPaginas(i: Inputs): Outputs {
   const r=v1/v2;
   const resumen = __lang === 'en'
     ? `Calculation: ${v1} / ${v2} = ${r.toFixed(2)}.`
-    : `Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`;
+    : `Vas a necesitar ${r.toFixed(1)} horas de estudio (${v1} páginas ÷ ${v2} páginas por hora).`;
   const _insight = __lang === 'en'
     ? { title: 'Your result', text: `Dividing **${v1}** by **${v2}** gives **${r.toFixed(2)}**.`, tone: 'neutral', icon: '📐' }
     : { title: 'Tu resultado', text: `Dividir **${v1}** entre **${v2}** da **${r.toFixed(2)}**.`, tone: 'neutral', icon: '📐' };

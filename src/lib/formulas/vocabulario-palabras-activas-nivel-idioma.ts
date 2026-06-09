@@ -6,7 +6,7 @@ export function vocabularioPalabrasActivasNivelIdioma(i: Inputs): Outputs {
   const r=v1/v2;
   const resumen = __lang === 'en'
     ? `Calculation: ${v1} / ${v2} = ${r.toFixed(2)}.`
-    : `Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`;
+    : `Tu vocabulario activo es el ${(r*100).toFixed(0)}% del pasivo (${v1} palabras activas vs ${v2} pasivas).`;
   const pct = Math.round(r * 100);
   const _insight = {
     title: __lang === 'en' ? 'Active vocabulary ratio' : 'Proporción de vocabulario activo',

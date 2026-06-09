@@ -9,5 +9,5 @@ export function scrumSprintVelocityStoryPoints(i: Inputs): Outputs {
     tone: 'neutral',
     icon: '🏃',
   };
-  return { resultado:r.toFixed(2), resumen:`Cálculo: ${v1} / ${v2} = ${r.toFixed(2)}.`, _insight } as Outputs;
+  return { resultado:r.toFixed(2), resumen:`Velocity promedio: ${r.toFixed(1)} story points por sprint (${v1} puntos en ${v2} sprints).`, _insight } as Outputs;
 }
