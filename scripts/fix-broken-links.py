@@ -159,7 +159,14 @@ def resolve(target: str, sc: str, anchor: str = "", expected_coll: str | None = 
     cands_scored.sort(reverse=True)
     top = cands_scored[0]
     n_full = sum(1 for c in cands_scored if c[0] == 1.0)
-    accept = (top[0] == 1.0) and (len(qt) >= 3 or n_full == 1)
+    extra_top = -top[2]
+    accept = False
+    if top[0] == 1.0:  # target contiene TODOS los tokens de la query
+        if len(qt) >= 3:
+            accept = True
+        elif len(qt) == 2 and n_full == 1 and extra_top <= 2:
+            # 2 tokens: sólo si es candidato único y sin demasiado ruido extra
+            accept = True
     if accept:
         return (make_url(top[4], top[5]), "CONFIDENT", "tokens")
     return None
@@ -248,7 +255,7 @@ for coll, files in calc_jsons.items():
         for rs in d.get("relatedSlugs") or []:
             if rs not in slugs_by_coll[coll]:
                 classify(make_url(coll, rs), coll, rs.replace("-", " "), src,
-                         "relatedSlugs", field="relatedSlugs", raw=rs)
+                         "relatedSlugs", field="relatedSlugs", raw=rs, expected_coll=coll)
 for f in sorted((CONTENT / "guias").glob("*.json")):
     try: d = json.loads(f.read_text())
     except Exception: continue
@@ -257,7 +264,7 @@ for f in sorted((CONTENT / "guias").glob("*.json")):
         for cs in sec.get("calcs") or []:
             if cs not in slugs_by_coll["calcs"]:
                 classify("/" + cs, "calcs", cs.replace("-", " "), src,
-                         "sections.calcs", field="sections.calcs", raw=cs)
+                         "sections.calcs", field="sections.calcs", raw=cs, expected_coll="calcs")
 for f in sorted((CONTENT / "blog").glob("*.json")):
     try: d = json.loads(f.read_text())
     except Exception: continue
@@ -265,11 +272,11 @@ for f in sorted((CONTENT / "blog").glob("*.json")):
     for cs in d.get("relatedCalcs") or []:
         if cs not in slugs_by_coll["calcs"]:
             classify("/" + cs, "calcs", cs.replace("-", " "), src,
-                     "relatedCalcs", field="relatedCalcs", raw=cs)
+                     "relatedCalcs", field="relatedCalcs", raw=cs, expected_coll="calcs")
     for rp in d.get("relatedPosts") or []:
         if rp not in blog_slugs:
             classify("/blog/" + rp, "blog", rp.replace("-", " "), src,
-                     "relatedPosts", field="relatedPosts", raw=rp)
+                     "relatedPosts", field="relatedPosts", raw=rp, expected_coll="blog")
 
 # 3c. href hardcodeado en .astro
 for base in (PAGES, COMPONENTS):
@@ -320,3 +327,65 @@ for x in plan["manual"]:
 
 Path("/tmp/fix-plan.json").write_text(json.dumps(plan, ensure_ascii=False, indent=2))
 print("\n→ plan en /tmp/fix-plan.json")
+
+
+# --- APLICAR ---------------------------------------------------------------
+def apply_plan():
+    HREF_PATH_RE = re.compile(r"""(href\s*=\s*["'])(/[^"'\s]+)(["'])""")
+    # juntar todas las acciones por archivo
+    by_file: dict[str, list[dict]] = defaultdict(list)
+    for tier in ("precise", "confident"):
+        for x in plan[tier]:
+            x["_action"] = "repoint"
+            by_file[x["source"]].append(x)
+    for x in plan["unlink"]:
+        x["_action"] = "unlink"
+        by_file[x["source"]].append(x)
+    for x in plan["remove"]:
+        x["_action"] = "remove"
+        by_file[x["source"]].append(x)
+
+    files_changed = 0
+    edits = 0
+    for src, actions in by_file.items():
+        path = ROOT / src
+        text = path.read_text(encoding="utf-8")
+        orig = text
+        for x in actions:
+            kind, act, raw = x["kind"], x["_action"], x.get("raw")
+            if kind == "md":
+                i = raw.rfind("](")
+                if act == "repoint":
+                    new_raw = raw[:i] + "](" + x["new"] + ")"
+                else:  # unlink → dejar el texto del ancla
+                    new_raw = x.get("anchor", "")
+                if raw in text:
+                    text = text.replace(raw, new_raw)
+            elif kind in ("href_html", "href_astro"):
+                if act == "repoint":
+                    new_raw = HREF_PATH_RE.sub(lambda m: m.group(1) + x["new"] + m.group(3), raw)
+                    if raw in text:
+                        text = text.replace(raw, new_raw)
+            elif kind in LOOKUP_KINDS:
+                old_slug = raw
+                if act == "repoint":
+                    text = text.replace('"%s"' % old_slug, '"%s"' % x["new_slug"])
+                else:  # remove: sacar el elemento del array
+                    pat_mid = re.compile(r'\n[ \t]*"%s",' % re.escape(old_slug))
+                    pat_last = re.compile(r',\n[ \t]*"%s"' % re.escape(old_slug))
+                    if pat_mid.search(text):
+                        text = pat_mid.sub("", text, count=1)
+                    elif pat_last.search(text):
+                        text = pat_last.sub("", text, count=1)
+                    else:
+                        text = text.replace('"%s"' % old_slug, '""')
+            edits += 1
+        if text != orig:
+            path.write_text(text, encoding="utf-8")
+            files_changed += 1
+    print(f"\n✅ APLICADO: {edits} ediciones en {files_changed} archivos")
+    print(f"   (manual pendiente: {len(plan['manual'])} hrefs hardcodeados en .astro)")
+
+
+if "--apply" in sys.argv:
+    apply_plan()
