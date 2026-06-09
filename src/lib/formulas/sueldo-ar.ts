@@ -22,6 +22,19 @@ import {
   aplicarEscalaMensual,
 } from './_ganancias-escala';
 
+/**
+ * Base imponible MÁXIMA para aportes personales (Ley 24.241 art. 9).
+ * Arriba de este bruto, los aportes (jubilación 11% + obra social 3% + PAMI 3%)
+ * se calculan sobre el tope, NO sobre el bruto total → para sueldos altos el
+ * descuento deja de ser 17% del bruto y el neto real es mayor.
+ *
+ * Aplica a los 3 aportes personales con la MISMA base máxima.
+ * Se actualiza mensualmente por IPC (Dec. 274/2024). Valor vigente:
+ *   Junio 2026: $4.414.652,38 (Resolución ANSES 139/2026).
+ * ⚠️ Actualizar cada mes. Fuente: ANSES — argentina.gob.ar/trabajo/seguridadsocial/imss
+ */
+export const BASE_IMPONIBLE_MAXIMA_APORTES = 4_414_652.38;
+
 export interface SueldoInputs {
   bruto: number;
   /** Cónyuge a cargo (bool). Preferido sobre `cargas`. */
@@ -103,10 +116,13 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
     hijos = Math.max(0, cargas - 1);
   }
 
-  // Aportes personales
-  const jubilacion = bruto * 0.11;
-  const obraSocial = bruto * 0.03;
-  const pami = bruto * 0.03;
+  // Aportes personales — sobre la remuneración con TOPE en la base imponible
+  // máxima (Ley 24.241 art. 9). Para sueldos altos el aporte se congela.
+  const baseAportes = Math.min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES);
+  const topeAplicado = bruto > BASE_IMPONIBLE_MAXIMA_APORTES;
+  const jubilacion = baseAportes * 0.11;
+  const obraSocial = baseAportes * 0.03;
+  const pami = baseAportes * 0.03;
   const aportes = jubilacion + obraSocial + pami;
 
   // Base imponible para Ganancias — valores diferenciados cónyuge/hijo (ARCA 2026)
@@ -140,12 +156,17 @@ export function sueldoAR(inputs: SueldoInputs): SueldoOutputs {
 
   const f = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
   const pctTxt = porcentajeDescuento.toFixed(1);
+  const topeNota = topeAplicado
+    ? __lang === 'en'
+      ? ` Your contributions are capped: they're calculated on the maximum base of **${f(BASE_IMPONIBLE_MAXIMA_APORTES)}**, not your full gross (Law 24.241).`
+      : ` Tus aportes están topeados: se calculan sobre la base máxima de **${f(BASE_IMPONIBLE_MAXIMA_APORTES)}**, no sobre todo tu bruto (Ley 24.241), por eso el descuento no es el 17% pleno.`
+    : '';
   const insight = {
     title: T.insTitle,
     text:
-      ganancias > 0
+      (ganancias > 0
         ? T.insGan(f(neto), pctTxt, f(aportes), f(ganancias))
-        : T.insNoGan(f(neto), pctTxt, f(aportes)),
+        : T.insNoGan(f(neto), pctTxt, f(aportes))) + topeNota,
     tone: porcentajeDescuento >= 25 ? 'warn' : 'neutral',
     icon: '💸',
   };
