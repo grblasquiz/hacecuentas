@@ -185,6 +185,19 @@ const COUNTRY_NAME: Record<AudienceCode, string> = {
   BO: 'Bolivia', PE: 'Perú', UY: 'Uruguay', BR: 'Brasil', global: 'tu país',
 };
 
+// Citas estructuradas para LLMs/Copilot: objeto CreativeWork con url+name+date+publisher
+// (en vez de strings sueltos) → las IAs validan fuente y fecha antes de citar.
+const citationLd = (calc.sources || [])
+  .map((s: any) => {
+    if (!s || (!s.url && !s.name)) return null;
+    const o: any = { '@type': 'CreativeWork', name: s.name || s.url };
+    if (s.url) o.url = s.url;
+    if (s.date) o.datePublished = String(s.date);
+    if (s.publisher) o.publisher = { '@type': 'Organization', name: s.publisher };
+    return o;
+  })
+  .filter(Boolean);
+
 /**
  * Description "safe" para schemas structured data. Google Rich Results exige
  * longitud mínima (~50 chars) en varios tipos (Dataset, SoftwareApplication,
@@ -421,6 +434,7 @@ const schemaApp = {
   browserRequirements: 'Requires JavaScript. Requires HTML5.',
   inLanguage: schemaLang,
   isAccessibleForFree: true,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
   datePublished,
   dateModified,
   offers: { '@type': 'Offer', price: '0', priceCurrency: countryBadge.currency },
@@ -465,7 +479,7 @@ const schemaApp = {
   // Bing/Copilot priorizan citation para citar en answer cards y AI Overviews.
   // Importante incluirlo en SoftwareApplication (que se renderiza siempre) y no
   // solo en Article (que solo aplica a YMYL o explanation > 1500).
-  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+  citation: citationLd,
   // Mentions: entidades Wikidata reconocidas en h1/seoKeywords. Le da a LLMs
   // (ChatGPT/Claude/Perplexity/Gemini) entity disambiguation gratis vía
   // knowledge graph de Wikidata. Ej: si la calc menciona "ANSES" → linkea a
@@ -561,7 +575,8 @@ const schemaArticle = {
   // palabras → señal honesta al rich results check.
   wordCount: _articleWordCount,
   isAccessibleForFree: true,
-  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  citation: citationLd,
   // mentions: entidades Wikidata reconocidas en h1/seoKeywords (mismo helper que
   // usamos en SoftwareApplication). LLMs (ChatGPT/Claude/Perplexity/Copilot)
   // reciben entity disambiguation cross-schema → más probabilidades de ser citado.
@@ -612,6 +627,7 @@ if (calc.category === 'salud') {
     description: snippetDescription,
     inLanguage: schemaLang,
     isAccessibleForFree: true,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
     lastReviewed: dateModified.split('T')[0],
     audience: {
       '@type': 'MedicalAudience',
@@ -624,7 +640,7 @@ if (calc.category === 'salud') {
         ...(medicalCondition.sameAs ? { sameAs: medicalCondition.sameAs } : {}),
       },
     } : {}),
-    citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+    citation: citationLd,
     publisher: {
       '@type': 'Organization',
       name: 'Hacé Cuentas',
@@ -827,6 +843,7 @@ if (calc.category === 'medio-ambiente') {
       url: 'https://hacecuentas.com',
     },
     isAccessibleForFree: true,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
     license: 'https://creativecommons.org/licenses/by/4.0/',
   });
 }
@@ -862,6 +879,7 @@ if (calc.category === 'educacion') {
       url: 'https://hacecuentas.com',
     },
     isAccessibleForFree: true,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
   });
 }
 
@@ -1504,6 +1522,13 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
             </ul>
           </section>
         )}
+
+        {/* Cómo citar — facilita que LLMs (Perplexity/Claude/ChatGPT) y medios citen con atribución + link. */}
+        <aside class="cite-box" aria-label="Cómo citar esta calculadora">
+          <strong class="cite-box-title">📌 Cómo citar esta calculadora</strong>
+          <p class="cite-ref">Rodríguez, M. ({new Date(dateModified).getFullYear()}). <em>{calc.h1}</em>. Hacé Cuentas. https://hacecuentas.com/{calc.slug}</p>
+          <p class="cite-lic">Contenido bajo licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> — podés reutilizarlo citando la fuente con un enlace a <a href="/">Hacé Cuentas</a>.</p>
+        </aside>
 
         <section class="trust-block" id="metodologia" aria-labelledby="trust-heading">
           <h2 id="trust-heading">Metodología y confianza</h2>
@@ -2474,6 +2499,20 @@ const hreflangTags = alternates.length > 2 ? alternates : undefined;
     text-decoration: none;
   }
   .sources-box a:hover { text-decoration: underline; }
+
+  /* Cómo citar (#2 — citabilidad por LLMs y medios) */
+  .cite-box {
+    margin: 1rem 0 1.5rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-subtle, #f8fafc);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+  }
+  .cite-box-title { display: block; font-size: 0.9rem; margin-bottom: 0.4rem; }
+  .cite-ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); margin: 0 0 0.4rem; word-break: break-word; }
+  .cite-lic { color: var(--text-muted); margin: 0; }
+  :root[data-theme="dark"] .cite-box { background: rgba(255,255,255,0.03); }
 
   /* E-E-A-T trust block */
   .trust-block {
