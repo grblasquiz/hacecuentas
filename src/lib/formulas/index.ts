@@ -2930,6 +2930,9 @@ import { simplesAnexoII } from './simples-anexo-ii';
 import { simplesAnexoIII } from './simples-anexo-iii';
 import { simplesAnexoIV } from './simples-anexo-iv';
 import { simplesAnexoV } from './simples-anexo-v';
+import { simuladorCostoMantenerAuto } from './simulador-costo-mantener-auto';
+import { simuladorHoleriteClt } from './simulador-holerite-clt';
+import { simuladorMonotributoNeto } from './simulador-monotributo-neto';
 import { sistemaEcuaciones2x2Cramer } from './sistema-ecuaciones-2x2-cramer';
 import { sistemaNotasGpa } from './sistema-notas-gpa';
 import { sistemasEcuaciones } from './sistemas-ecuaciones';
@@ -6362,6 +6365,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'simples-anexo-iii': simplesAnexoIII,
   'simples-anexo-iv': simplesAnexoIV,
   'simples-anexo-v': simplesAnexoV,
+  'simulador-costo-mantener-auto': simuladorCostoMantenerAuto,
+  'simulador-holerite-clt': simuladorHoleriteClt,
+  'simulador-monotributo-neto': simuladorMonotributoNeto,
   'sistema-ecuaciones-2x2-cramer': sistemaEcuaciones2x2Cramer,
   'sistema-notas-gpa': sistemaNotasGpa,
   'sistemas-ecuaciones': sistemasEcuaciones,
