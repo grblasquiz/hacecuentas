@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-08
+// Generated: 2026-06-09
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -635,13 +635,9 @@ import { consumoDatosMovilesStreaming } from './consumo-datos-moviles-streaming'
 import { consumoElectricidadElectrodomestico } from './consumo-electricidad-electrodomestico';
 import { consumoElectrico } from './consumo-electrico';
 import { consumoElectricoAparatoKwhMes } from './consumo-electrico-aparato-kwh-mes';
-import { consumoElectricoPcGamerWatts } from './consumo-electrico-pc-gamer-watts';
-import { consumoElectrodomesticoKwh } from './consumo-electrodomestico-kwh';
 import { consumoElectronicaHogarWattsMensual } from './consumo-electronica-hogar-watts-mensual';
 import { consumoHeladeraAnualKwh } from './consumo-heladera-anual-kwh';
 import { consumoNaftaLitros100km } from './consumo-nafta-litros-100km';
-import { consumoPcComponentesWatts } from './consumo-pc-componentes-watts';
-import { consumoWattsPcGamerFuente } from './consumo-watts-pc-gamer-fuente';
 import { compute as compute__contabilidad_electronica_multa_sat_mexico } from './contabilidad-electronica-multa-sat-mexico';
 import { contenidoCalendarioMensual } from './contenido-calendario-mensual';
 import { context1mTokensClaudeCostoInput } from './context-1m-tokens-claude-costo-input';
@@ -694,7 +690,6 @@ import { conversionTnaTem } from './conversion-tna-tem';
 import { conversionTorqueNmLbFtKgm } from './conversion-torque-nm-lb-ft-kgm';
 import { compute as compute__conversion_uvt_uvr_colombia_actualizacion_2026 } from './conversion-uvt-uvr-colombia-actualizacion-2026';
 import { conversionVelocidadKmhMphNudos } from './conversion-velocidad-kmh-mph-nudos';
-import { conversionesTazasGramos } from './conversiones-tazas-gramos';
 import { conversorAcresAHectareas } from './conversor-acres-a-hectareas';
 import { conversorAcresAMetrosCuadrados } from './conversor-acres-a-metros-cuadrados';
 import { conversorAnosADias } from './conversor-anos-a-dias';
@@ -1951,7 +1946,6 @@ import { leasingAutoMensualVsCompra } from './leasing-auto-mensual-vs-compra';
 import { leasingVsCreditoAutoComparativaCompleta } from './leasing-vs-credito-auto-comparativa-completa';
 import { lecheFormulaBiberonCantidadPesoBebe } from './leche-formula-biberon-cantidad-peso-bebe';
 import { lecheMaterna } from './leche-materna-formula';
-import { lecturaTiempoLibro } from './lectura-tiempo-libro';
 import { lecturaVelocidadPaginasHoraWpm } from './lectura-velocidad-paginas-hora-wpm';
 import { lecturaVelocidadPalabrasMinutoTest } from './lectura-velocidad-palabras-minuto-test';
 import { leerMesLibrosMetaAnualReto } from './leer-mes-libros-meta-anual-reto';
@@ -3174,9 +3168,6 @@ import { tiempoExposicionPanning } from './tiempo-exposicion-panning';
 import { tiempoImpresion3dLayer } from './tiempo-impresion-3d-layer';
 import { tiempoLectura } from './tiempo-lectura';
 import { tiempoLecturaPaginasEstudio } from './tiempo-lectura-paginas-estudio';
-import { tiempoLecturaPorPaginas } from './tiempo-lectura-por-paginas';
-import { tiempoLeerLibroGeneral } from './tiempo-leer-libro-general';
-import { tiempoLeerLibroPaginasVelocidad } from './tiempo-leer-libro-paginas-velocidad';
 import { tiempoLeerNovelaGenero } from './tiempo-leer-novela-genero';
 import { tiempoMarinadoCarnePescado } from './tiempo-marinado-carne-pescado';
 import { tiempoMetaMaraton } from './tiempo-meta-maraton';
@@ -4084,13 +4075,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'consumo-electricidad-electrodomestico': consumoElectricidadElectrodomestico,
   'consumo-electrico': consumoElectrico,
   'consumo-electrico-aparato-kwh-mes': consumoElectricoAparatoKwhMes,
-  'consumo-electrico-pc-gamer-watts': consumoElectricoPcGamerWatts,
-  'consumo-electrodomestico-kwh': consumoElectrodomesticoKwh,
   'consumo-electronica-hogar-watts-mensual': consumoElectronicaHogarWattsMensual,
   'consumo-heladera-anual-kwh': consumoHeladeraAnualKwh,
   'consumo-nafta-litros-100km': consumoNaftaLitros100km,
-  'consumo-pc-componentes-watts': consumoPcComponentesWatts,
-  'consumo-watts-pc-gamer-fuente': consumoWattsPcGamerFuente,
   'contabilidad-electronica-multa-sat-mexico': compute__contabilidad_electronica_multa_sat_mexico,
   'contenido-calendario-mensual': contenidoCalendarioMensual,
   'context-1m-tokens-claude-costo-input': context1mTokensClaudeCostoInput,
@@ -4143,7 +4130,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversion-torque-nm-lb-ft-kgm': conversionTorqueNmLbFtKgm,
   'conversion-uvt-uvr-colombia-actualizacion-2026': compute__conversion_uvt_uvr_colombia_actualizacion_2026,
   'conversion-velocidad-kmh-mph-nudos': conversionVelocidadKmhMphNudos,
-  'conversiones-tazas-gramos': conversionesTazasGramos,
   'conversor-acres-a-hectareas': conversorAcresAHectareas,
   'conversor-acres-a-metros-cuadrados': conversorAcresAMetrosCuadrados,
   'conversor-anos-a-dias': conversorAnosADias,
@@ -5400,7 +5386,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'leasing-vs-credito-auto-comparativa-completa': leasingVsCreditoAutoComparativaCompleta,
   'leche-formula-biberon-cantidad-peso-bebe': lecheFormulaBiberonCantidadPesoBebe,
   'leche-materna-formula': lecheMaterna,
-  'lectura-tiempo-libro': lecturaTiempoLibro,
   'lectura-velocidad-paginas-hora-wpm': lecturaVelocidadPaginasHoraWpm,
   'lectura-velocidad-palabras-minuto-test': lecturaVelocidadPalabrasMinutoTest,
   'leer-mes-libros-meta-anual-reto': leerMesLibrosMetaAnualReto,
@@ -6623,9 +6608,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tiempo-impresion-3d-layer': tiempoImpresion3dLayer,
   'tiempo-lectura': tiempoLectura,
   'tiempo-lectura-paginas-estudio': tiempoLecturaPaginasEstudio,
-  'tiempo-lectura-por-paginas': tiempoLecturaPorPaginas,
-  'tiempo-leer-libro-general': tiempoLeerLibroGeneral,
-  'tiempo-leer-libro-paginas-velocidad': tiempoLeerLibroPaginasVelocidad,
   'tiempo-leer-novela-genero': tiempoLeerNovelaGenero,
   'tiempo-marinado-carne-pescado': tiempoMarinadoCarnePescado,
   'tiempo-meta-maraton': tiempoMetaMaraton,
