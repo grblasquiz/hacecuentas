@@ -79,94 +79,145 @@ def make_url(coll: str, slug: str) -> str:
     return ("/" + slug) if pref == "/" else norm(pref + slug)
 
 
-def resolve(target: str, sc: str, anchor: str = "") -> tuple | None:
-    """Devuelve (new_path, conf, method) o None si no hay match confiable."""
-    p = norm(target)
-    bare = re.sub(r"^/(?:%s)/" % "|".join(LOCALE_PREFIXES), "/", p).lstrip("/")
-    # orden de búsqueda por colección
-    order = [sc] if sc in CALC_COLLECTIONS else []
-    if "calcs" not in order: order.append("calcs")
-    for c in CALC_COLLECTIONS:
-        if c not in order: order.append(c)
+# Matches por token que verifiqué a mano como ENGAÑOSOS (concepto distinto):
+# se fuerzan a unlink aunque el recall sea alto.
+CONFIRMED_BAD = {
+    "/baby-vaccination-schedule", "/cost-of-car-ownership", "/surface-area",
+    "/capital-gains-tax-calculator", "/pounds-to-ounces-converter",
+    "/renters-insurance-cost-calculator", "/cylinder-volume-surface-area",
+    "/cone-volume-surface-area", "/cube-volume-surface-area", "/probabilidade",
+}
 
-    # 1. PRECISE: transform exacto
+
+def resolve(target: str, sc: str, anchor: str = "", expected_coll: str | None = None) -> tuple | None:
+    """Devuelve (new_path, conf, method) o None si no hay match confiable.
+
+    expected_coll: si se pasa (refs de lookup), el resultado DEBE pertenecer a
+    esa colección — relatedSlugs sólo resuelven dentro de su propio locale.
+    """
+    p = norm(target)
+    if p in CONFIRMED_BAD:
+        return None
+    bare = re.sub(r"^/(?:%s)/" % "|".join(LOCALE_PREFIXES), "/", p).lstrip("/")
+
+    if expected_coll:
+        order = [expected_coll]
+    else:
+        order = [sc] if sc in CALC_COLLECTIONS else []
+        if "calcs" not in order: order.append("calcs")
+        for c in CALC_COLLECTIONS:
+            if c not in order: order.append(c)
+
+    # 1. PRECISE: transform exacto (agregar/quitar prefijo, calculadora-)
     cands = [bare, "calculadora-" + bare, re.sub(r"^calculadora-", "", bare)]
     for coll in order:
-        for cand in cands:
-            if cand in slugs_by_coll[coll]:
-                return (make_url(coll, cand), "PRECISE", "transform")
-    # guia / blog exact
-    if bare in guia_slugs: return ("/guia/" + bare, "PRECISE", "transform")
-    if bare in blog_slugs: return ("/blog/" + bare, "PRECISE", "transform")
+        if coll in CALC_COLLECTIONS:
+            for cand in cands:
+                if cand in slugs_by_coll[coll]:
+                    return (make_url(coll, cand), "PRECISE", "transform")
+    if expected_coll in (None, "guias") and bare in guia_slugs:
+        return ("/guia/" + bare, "PRECISE", "transform")
+    if expected_coll in (None, "blog"):
+        for cand in (bare, re.sub(r"^calculadora-", "", bare)):
+            if cand in blog_slugs:
+                return ("/blog/" + cand, "PRECISE", "transform")
 
-    # 2. PRECISE: redirect 301
-    for tp in [make_url(sc if sc in CALC_COLLECTIONS else "calcs", bare),
-               "/" + bare, "/calculadora-" + bare,
-               make_url(sc if sc in CALC_COLLECTIONS else "calcs", "calculadora-" + bare)]:
-        if norm(tp) in redir:
-            return (redir[norm(tp)], "PRECISE", "redirect301")
+    # 2. PRECISE: redirect 301 (sólo inline; un lookup necesita un slug real)
+    if not expected_coll:
+        for tp in [make_url(sc if sc in CALC_COLLECTIONS else "calcs", bare),
+                   "/" + bare, "/calculadora-" + bare,
+                   make_url(sc if sc in CALC_COLLECTIONS else "calcs", "calculadora-" + bare)]:
+            if norm(tp) in redir:
+                return (redir[norm(tp)], "PRECISE", "redirect301")
 
-    # 3. CONFIDENT: match por tokens (slug + ancla), con margen
-    qt = toks(bare) | toks(anchor)
+    # 3. CONFIDENT: sólo si el target contiene TODOS los tokens (recall == 1.0).
+    #    Casos peligrosos (cubo→esfera, bebé→perro) tienen recall < 1 → se rechazan.
+    qt = toks(bare)
+    at = toks(anchor)
     if not qt:
         return None
-    search_colls = [sc] if sc in CALC_COLLECTIONS else ["calcs"]
-    if "calcs" not in search_colls: search_colls.append("calcs")
-    scored = []
-    for coll in search_colls:
-        for s in slugs_by_coll[coll]:
+    if expected_coll and expected_coll not in CALC_COLLECTIONS:
+        return None  # blog/guia lookup sin transform exacto → no inventar
+    token_colls = order if expected_coll else (
+        ([sc] if sc in CALC_COLLECTIONS else ["calcs"]) + (["calcs"] if sc != "calcs" else []))
+    cands_scored = []
+    for coll in token_colls:
+        for s in slugs_by_coll.get(coll, ()):
             ct = toks(s)
-            if not ct: continue
+            if not ct:
+                continue
             inter = len(qt & ct)
-            if inter == 0: continue
+            if not inter:
+                continue
             recall = inter / len(qt)
-            prec = inter / len(ct)
-            score = recall + 0.3 * prec
-            scored.append((score, recall, coll, s))
-    if not scored:
+            extra = len(ct - qt)
+            a_ov = len(at & ct)
+            # ranking: recall ↑, solapamiento con ancla ↑, menos tokens extra ↑, slug corto
+            cands_scored.append((recall, a_ov, -extra, -len(s), coll, s))
+    if not cands_scored:
         return None
-    scored.sort(reverse=True)
-    best = scored[0]
-    second = scored[1] if len(scored) > 1 else (0,)
-    # confiar si recall alto y margen claro sobre el 2º
-    if best[1] >= 0.6 and (best[0] - second[0]) >= 0.25:
-        return (make_url(best[2], best[3]), "CONFIDENT", "tokens")
+    cands_scored.sort(reverse=True)
+    top = cands_scored[0]
+    n_full = sum(1 for c in cands_scored if c[0] == 1.0)
+    accept = (top[0] == 1.0) and (len(qt) >= 3 or n_full == 1)
+    if accept:
+        return (make_url(top[4], top[5]), "CONFIDENT", "tokens")
     return None
 
 
-# --- cargar referencias rotas del detector --------------------------------
-detector = json.loads((Path("/tmp/broken-links.json")).read_text())
-# re-extraer CON anchor y raw, porque el detector no guardó anchor.
+# --- re-extraer referencias CON anchor + raw (para arreglo dirigido) -------
 MD_LINK = re.compile(r"\[([^\]\n]*)\]\((/[^)\s]+)\)")
 HREF = re.compile(r"""href\s*=\s*["'](/[^"'\s]+)["']""")
 
 plan = {"precise": [], "confident": [], "unlink": [], "remove": [], "manual": []}
 
 
-def classify(target, sc, anchor, source, kind, field=None, raw=None):
+LOOKUP_KINDS = {"relatedSlugs", "sections.calcs", "relatedCalcs", "relatedPosts"}
+
+
+def slug_from_path(path, expected_coll):
+    """Extrae el slug que va en un array de lookup desde el path resuelto."""
+    p = norm(path)
+    if expected_coll == "blog":
+        return p[len("/blog/"):] if p.startswith("/blog/") else None
+    pref = CALC_COLLECTIONS.get(expected_coll, "/")
+    if pref == "/":
+        seg = p.lstrip("/")
+        return seg if "/" not in seg else None
+    if p.startswith(pref) or p.startswith(pref.rstrip("/") + "/"):
+        seg = p[len(pref):] if p.startswith(pref) else p[len(pref):]
+        return seg if "/" not in seg else None
+    return None  # resolvió a otra colección → inválido como lookup
+
+
+def classify(target, sc, anchor, source, kind, field=None, raw=None, expected_coll=None):
     p = norm(target)
     is_broken = (p in gone) or (p not in valid and p not in redir)
     if not is_broken:
         return
-    r = resolve(target, sc, anchor)
+    r = resolve(target, sc, anchor, expected_coll=expected_coll)
     rec = {"source": source, "kind": kind, "old": p, "anchor": anchor,
            "field": field, "raw": raw}
     if r:
         new, conf, method = r
-        if norm(new) == p:   # se resolvería a sí mismo → no sirve
-            r = None
-        else:
+        ok = norm(new) != p
+        if ok and kind in LOOKUP_KINDS:
+            ns = slug_from_path(new, expected_coll)
+            if ns and ns != raw:
+                rec["new"] = norm(new); rec["new_slug"] = ns; rec["method"] = method
+                plan["precise" if conf == "PRECISE" else "confident"].append(rec)
+                return
+        elif ok:
             rec["new"] = norm(new); rec["method"] = method
             plan["precise" if conf == "PRECISE" else "confident"].append(rec)
             return
     # sin match confiable
-    if kind in ("md", "href_html", "href_astro"):
-        if kind == "href_astro":
-            plan["manual"].append(rec)      # hardcoded en template: revisar
-        else:
-            plan["unlink"].append(rec)
+    if kind == "href_astro":
+        plan["manual"].append(rec)          # hardcoded en template: revisar
+    elif kind in ("md", "href_html"):
+        plan["unlink"].append(rec)
     else:
-        plan["remove"].append(rec)
+        plan["remove"].append(rec)          # lookup sin destino → quitar entrada
 
 
 # 3a. inline en JSONs (md + href html)
