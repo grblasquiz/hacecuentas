@@ -9,12 +9,19 @@
 // para que la tabla NUNCA contradiga el resultado interactivo del calc.
 // Conversor de unidades = el slug "X-a-Y" define la dirección "ida".
 // ────────────────────────────────────────────────────────────────────────────
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DEF = [1, 2, 3, 5, 10, 20, 50, 100];
+
+// Slugs de calcs reales (para validar el link inverso entre conversores gemelos).
+const VALID_SLUGS = new Set();
+for (const f of readdirSync(join(ROOT, 'src', 'content', 'calcs'))) {
+  if (!f.endsWith('.json')) continue;
+  try { VALID_SLUGS.add(JSON.parse(readFileSync(join(ROOT, 'src', 'content', 'calcs', f), 'utf-8')).slug); } catch {}
+}
 
 // slug (sin 'calculadora-conversor-'), from, to, abreviatura from, abreviatura to,
 // conv(x), decimales, [samples], [tipo]
@@ -37,6 +44,7 @@ const C = [
   ['onzas-a-gramos', 'onzas', 'gramos', 'oz', 'g', x => x * 28.349523, 2],
   ['kilogramos-a-gramos', 'kilogramos', 'gramos', 'kg', 'g', x => x * 1000, 0],
   ['libras-a-onzas', 'libras', 'onzas', 'lb', 'oz', x => x * 16, 1],
+  ['libras-a-gramos', 'libras', 'gramos', 'lb', 'g', x => x * 453.59237, 1],
   // ── Temperatura (offset, no factor) ──
   ['celsius-a-fahrenheit', 'Celsius', 'Fahrenheit', '°C', '°F', x => x * 1.8 + 32, 1, [-10, 0, 10, 20, 25, 30, 37, 100], 'temp'],
   ['fahrenheit-a-celsius', 'Fahrenheit', 'Celsius', '°F', '°C', x => (x - 32) / 1.8, 1, [0, 32, 50, 68, 98.6, 100, 150, 212], 'temp'],
@@ -56,6 +64,7 @@ const C = [
   ['metros-cuadrados-a-pies-cuadrados', 'metros cuadrados', 'pies cuadrados', 'm²', 'ft²', x => x * 10.76391, 3],
   ['pies-cuadrados-a-metros-cuadrados', 'pies cuadrados', 'metros cuadrados', 'ft²', 'm²', x => x * 0.092903, 4],
   ['hectareas-a-metros-cuadrados', 'hectáreas', 'metros cuadrados', 'ha', 'm²', x => x * 10000, 0],
+  ['pulgadas-cuadradas-a-centimetros-cuadrados', 'pulgadas cuadradas', 'centímetros cuadrados', 'in²', 'cm²', x => x * 6.4516, 2],
 ];
 
 const nf = (n, dec) => new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: dec }).format(n);
@@ -71,7 +80,15 @@ for (const [slugTail, from, to, fromU, toU, conv, dec, samples, type] of C) {
         ? '0 °C = 32 °F y 100 °C = 212 °F. La fórmula es °F = °C × 1,8 + 32.'
         : '32 °F = 0 °C y 212 °F = 100 °C. La fórmula es °C = (°F − 32) ÷ 1,8.')
     : `1 ${fromU} = ${nf(one, Math.max(dec, 2))} ${toU}.`;
-  out[slug] = { from, to, fromU, toU, note, rows };
+  // Link al conversor inverso (gemelo X-a-Y ↔ Y-a-X): mejora UX + da link interno
+  // crawleable que protege a los gemelos revividos de volver a caer en el prune.
+  const i = slugTail.indexOf('-a-');
+  let revSlug = null;
+  if (i > 0) {
+    const rev = `calculadora-conversor-${slugTail.slice(i + 3)}-a-${slugTail.slice(0, i)}`;
+    if (VALID_SLUGS.has(rev)) revSlug = rev;
+  }
+  out[slug] = { from, to, fromU, toU, note, rows, revSlug, revLabel: revSlug ? `${to} a ${from}` : null };
 }
 
 writeFileSync(join(ROOT, 'src', 'lib', 'converter-tables.json'), JSON.stringify(out, null, 2) + '\n', 'utf-8');
