@@ -236,20 +236,23 @@ def detect(idx: dict) -> dict:
     for extra in ("glosario", "comparaciones", "tablas"):
         scan_inline(_load(extra))
 
-    # relatedSlugs
+    # relatedSlugs (RelatedCalcs maneja es/en/pt/es-ES; mx/co/cl/ec/pe caen a AR)
+    same_locale = {"calcs", "calcs-en", "calcs-pt", "calcs-es"}
+    ar = slugs_by_coll["calcs"]
     for coll, prefix in CC.items():
-        sset = slugs_by_coll[coll]
+        sset = slugs_by_coll[coll] if coll in same_locale else (slugs_by_coll[coll] | ar)
         for c in idx["all_calcs"][coll]:
             for rs in c.get("relatedSlugs") or []:
                 if rs not in sset:
                     tgt = ("/" + rs) if prefix == "/" else norm(prefix + rs)
                     broken_lookup.append({"path": tgt, "ref": rs,
                                           "source": c["__file"], "field": "relatedSlugs"})
-    ar = slugs_by_coll["calcs"]
+    # sections.calcs resuelve contra calcs ∪ calcs-pe ∪ calcs-ec
+    sections_valid = ar | slugs_by_coll["calcs-pe"] | slugs_by_coll["calcs-ec"]
     for g in idx["guias"]:
         for sec in g.get("sections") or []:
             for cs in sec.get("calcs") or []:
-                if cs not in ar:
+                if cs not in sections_valid:
                     broken_lookup.append({"path": "/" + cs, "ref": cs,
                                           "source": g["__file"], "field": "sections.calcs"})
     for b in idx["blog"]:

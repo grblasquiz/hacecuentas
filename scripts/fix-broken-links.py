@@ -89,19 +89,22 @@ CONFIRMED_BAD = {
 }
 
 
-def resolve(target: str, sc: str, anchor: str = "", expected_coll: str | None = None) -> tuple | None:
+def resolve(target: str, sc: str, anchor: str = "", expected_colls=None) -> tuple | None:
     """Devuelve (new_path, conf, method) o None si no hay match confiable.
 
-    expected_coll: si se pasa (refs de lookup), el resultado DEBE pertenecer a
-    esa colección — relatedSlugs sólo resuelven dentro de su propio locale.
+    expected_colls: lista de colecciones donde DEBE caer el resultado (refs de
+    lookup). Si se pasa, SÓLO se aceptan transforms exactos (sin token-match ni
+    redirects) — política conservadora: los lookup no son 404s visibles y la
+    resolución cross-locale en runtime es delicada.
     """
     p = norm(target)
     if p in CONFIRMED_BAD:
         return None
     bare = re.sub(r"^/(?:%s)/" % "|".join(LOCALE_PREFIXES), "/", p).lstrip("/")
 
-    if expected_coll:
-        order = [expected_coll]
+    is_lookup = expected_colls is not None
+    if is_lookup:
+        order = list(expected_colls)
     else:
         order = [sc] if sc in CALC_COLLECTIONS else []
         if "calcs" not in order: order.append("calcs")
@@ -115,20 +118,24 @@ def resolve(target: str, sc: str, anchor: str = "", expected_coll: str | None = 
             for cand in cands:
                 if cand in slugs_by_coll[coll]:
                     return (make_url(coll, cand), "PRECISE", "transform")
-    if expected_coll in (None, "guias") and bare in guia_slugs:
+        elif coll == "blog":
+            for cand in (bare, re.sub(r"^calculadora-", "", bare)):
+                if cand in blog_slugs:
+                    return ("/blog/" + cand, "PRECISE", "transform")
+        elif coll == "guias" and bare in guia_slugs:
+            return ("/guia/" + bare, "PRECISE", "transform")
+    if not is_lookup and bare in guia_slugs:
         return ("/guia/" + bare, "PRECISE", "transform")
-    if expected_coll in (None, "blog"):
-        for cand in (bare, re.sub(r"^calculadora-", "", bare)):
-            if cand in blog_slugs:
-                return ("/blog/" + cand, "PRECISE", "transform")
 
-    # 2. PRECISE: redirect 301 (sólo inline; un lookup necesita un slug real)
-    if not expected_coll:
-        for tp in [make_url(sc if sc in CALC_COLLECTIONS else "calcs", bare),
-                   "/" + bare, "/calculadora-" + bare,
-                   make_url(sc if sc in CALC_COLLECTIONS else "calcs", "calculadora-" + bare)]:
-            if norm(tp) in redir:
-                return (redir[norm(tp)], "PRECISE", "redirect301")
+    if is_lookup:
+        return None  # lookup: sólo transform exacto, nada de inventar
+
+    # 2. PRECISE: redirect 301 (sólo inline)
+    for tp in [make_url(sc if sc in CALC_COLLECTIONS else "calcs", bare),
+               "/" + bare, "/calculadora-" + bare,
+               make_url(sc if sc in CALC_COLLECTIONS else "calcs", "calculadora-" + bare)]:
+        if norm(tp) in redir:
+            return (redir[norm(tp)], "PRECISE", "redirect301")
 
     # 3. CONFIDENT: sólo si el target contiene TODOS los tokens (recall == 1.0).
     #    Casos peligrosos (cubo→esfera, bebé→perro) tienen recall < 1 → se rechazan.
@@ -136,10 +143,7 @@ def resolve(target: str, sc: str, anchor: str = "", expected_coll: str | None = 
     at = toks(anchor)
     if not qt:
         return None
-    if expected_coll and expected_coll not in CALC_COLLECTIONS:
-        return None  # blog/guia lookup sin transform exacto → no inventar
-    token_colls = order if expected_coll else (
-        ([sc] if sc in CALC_COLLECTIONS else ["calcs"]) + (["calcs"] if sc != "calcs" else []))
+    token_colls = ([sc] if sc in CALC_COLLECTIONS else ["calcs"]) + (["calcs"] if sc != "calcs" else [])
     cands_scored = []
     for coll in token_colls:
         for s in slugs_by_coll.get(coll, ()):
@@ -182,61 +186,66 @@ plan = {"precise": [], "confident": [], "unlink": [], "remove": [], "manual": []
 LOOKUP_KINDS = {"relatedSlugs", "sections.calcs", "relatedCalcs", "relatedPosts"}
 
 
-def slug_from_path(path, expected_coll):
-    """Extrae el slug que va en un array de lookup desde el path resuelto."""
+def slug_from_path(path):
+    """Slug bare desde un path resuelto (saca prefijo de locale)."""
     p = norm(path)
-    if expected_coll == "blog":
-        return p[len("/blog/"):] if p.startswith("/blog/") else None
-    pref = CALC_COLLECTIONS.get(expected_coll, "/")
-    if pref == "/":
-        seg = p.lstrip("/")
-        return seg if "/" not in seg else None
-    if p.startswith(pref) or p.startswith(pref.rstrip("/") + "/"):
-        seg = p[len(pref):] if p.startswith(pref) else p[len(pref):]
-        return seg if "/" not in seg else None
-    return None  # resolvió a otra colección → inválido como lookup
+    seg = re.sub(r"^/(?:%s)/" % "|".join(LOCALE_PREFIXES), "/", p)
+    seg = re.sub(r"^/(?:blog|guia)/", "/", seg).lstrip("/")
+    return seg if "/" not in seg and seg else None
 
 
-def classify(target, sc, anchor, source, kind, field=None, raw=None, expected_coll=None):
+def classify_inline(target, sc, anchor, source, kind, raw=None):
     p = norm(target)
     is_broken = (p in gone) or (p not in valid and p not in redir)
     if not is_broken:
         return
-    r = resolve(target, sc, anchor, expected_coll=expected_coll)
-    rec = {"source": source, "kind": kind, "old": p, "anchor": anchor,
-           "field": field, "raw": raw}
-    if r:
-        new, conf, method = r
-        ok = norm(new) != p
-        if ok and kind in LOOKUP_KINDS:
-            ns = slug_from_path(new, expected_coll)
-            if ns and ns != raw:
-                rec["new"] = norm(new); rec["new_slug"] = ns; rec["method"] = method
-                plan["precise" if conf == "PRECISE" else "confident"].append(rec)
-                return
-        elif ok:
-            rec["new"] = norm(new); rec["method"] = method
-            plan["precise" if conf == "PRECISE" else "confident"].append(rec)
-            return
-    # sin match confiable
+    rec = {"source": source, "kind": kind, "old": p, "anchor": anchor, "raw": raw}
+    r = resolve(target, sc, anchor)
+    if r and norm(r[0]) != p:
+        rec["new"] = norm(r[0]); rec["method"] = r[2]
+        plan["precise" if r[1] == "PRECISE" else "confident"].append(rec)
+        return
     if kind == "href_astro":
         plan["manual"].append(rec)          # hardcoded en template: revisar
-    elif kind in ("md", "href_html"):
-        plan["unlink"].append(rec)
     else:
-        plan["remove"].append(rec)          # lookup sin destino → quitar entrada
+        plan["unlink"].append(rec)          # md / href_html → des-linkear
+
+
+def classify_lookup(raw_slug, sc, source, kind, field, expected_colls):
+    """Sólo repunta refs de lookup vía transform exacto; si no, las deja como están
+    (política conservadora — no son links 404 visibles)."""
+    rec = {"source": source, "kind": kind, "old": "/" + raw_slug, "anchor": "",
+           "field": field, "raw": raw_slug}
+    r = resolve("/" + raw_slug, sc, expected_colls=expected_colls)
+    if r and r[1] == "PRECISE":
+        ns = slug_from_path(r[0])
+        if ns and ns != raw_slug:
+            rec["new"] = norm(r[0]); rec["new_slug"] = ns; rec["method"] = r[2]
+            plan["precise"].append(rec)
+
+
+# sets de validez para refs de lookup (según cómo resuelve cada ruta en runtime)
+SECTIONS_VALID = slugs_by_coll["calcs"] | slugs_by_coll["calcs-pe"] | slugs_by_coll["calcs-ec"]
+SECTIONS_COLLS = ["calcs", "calcs-pe", "calcs-ec"]
+SAME_LOCALE = {"calcs", "calcs-en", "calcs-pt", "calcs-es"}  # RelatedCalcs maneja estos
+
+
+def relatedslugs_valid_and_colls(coll):
+    if coll in SAME_LOCALE:
+        return slugs_by_coll[coll], [coll]
+    # mx/co/cl/ec/pe: RelatedCalcs cae a esModules(AR) → válido en coll propia o AR
+    return slugs_by_coll[coll] | slugs_by_coll["calcs"], [coll, "calcs"]
 
 
 # 3a. inline en JSONs (md + href html)
 def scan_json(coll_name, files):
-    sc = coll_name
     for f in files:
         txt = f.read_text(encoding="utf-8")
         src = str(f.relative_to(ROOT))
         for m in MD_LINK.finditer(txt):
-            classify(m.group(2), sc, m.group(1), src, "md", raw=m.group(0))
+            classify_inline(m.group(2), coll_name, m.group(1), src, "md", raw=m.group(0))
         for m in HREF.finditer(txt):
-            classify(m.group(1), sc, "", src, "href_html", raw=m.group(0))
+            classify_inline(m.group(1), coll_name, "", src, "href_html", raw=m.group(0))
 
 
 for coll, files in calc_jsons.items():
@@ -246,37 +255,34 @@ scan_json("blog", sorted((CONTENT / "blog").glob("*.json")))
 for extra in ("glosario", "comparaciones", "tablas"):
     scan_json(extra, sorted((CONTENT / extra).glob("*.json")))
 
-# 3b. lookup refs: relatedSlugs / relatedCalcs / sections.calcs / relatedPosts
+# 3b. lookup refs (sólo repoint vía transform exacto)
 for coll, files in calc_jsons.items():
+    rs_valid, rs_colls = relatedslugs_valid_and_colls(coll)
     for f in files:
         try: d = json.loads(f.read_text())
         except Exception: continue
         src = str(f.relative_to(ROOT))
         for rs in d.get("relatedSlugs") or []:
-            if rs not in slugs_by_coll[coll]:
-                classify(make_url(coll, rs), coll, rs.replace("-", " "), src,
-                         "relatedSlugs", field="relatedSlugs", raw=rs, expected_coll=coll)
+            if rs not in rs_valid:
+                classify_lookup(rs, coll, src, "relatedSlugs", "relatedSlugs", rs_colls)
 for f in sorted((CONTENT / "guias").glob("*.json")):
     try: d = json.loads(f.read_text())
     except Exception: continue
     src = str(f.relative_to(ROOT))
     for sec in d.get("sections") or []:
         for cs in sec.get("calcs") or []:
-            if cs not in slugs_by_coll["calcs"]:
-                classify("/" + cs, "calcs", cs.replace("-", " "), src,
-                         "sections.calcs", field="sections.calcs", raw=cs, expected_coll="calcs")
+            if cs not in SECTIONS_VALID:
+                classify_lookup(cs, "calcs", src, "sections.calcs", "sections.calcs", SECTIONS_COLLS)
 for f in sorted((CONTENT / "blog").glob("*.json")):
     try: d = json.loads(f.read_text())
     except Exception: continue
     src = str(f.relative_to(ROOT))
     for cs in d.get("relatedCalcs") or []:
         if cs not in slugs_by_coll["calcs"]:
-            classify("/" + cs, "calcs", cs.replace("-", " "), src,
-                     "relatedCalcs", field="relatedCalcs", raw=cs, expected_coll="calcs")
+            classify_lookup(cs, "calcs", src, "relatedCalcs", "relatedCalcs", ["calcs"])
     for rp in d.get("relatedPosts") or []:
         if rp not in blog_slugs:
-            classify("/blog/" + rp, "blog", rp.replace("-", " "), src,
-                     "relatedPosts", field="relatedPosts", raw=rp, expected_coll="blog")
+            classify_lookup(rp, "blog", src, "relatedPosts", "relatedPosts", ["blog"])
 
 # 3c. href hardcodeado en .astro
 for base in (PAGES, COMPONENTS):
@@ -287,7 +293,7 @@ for base in (PAGES, COMPONENTS):
             href = m.group(1)
             if "${" in href or "{" in href:
                 continue
-            classify(href, "astro", "", src, "href_astro", raw=m.group(0))
+            classify_inline(href, "astro", "", src, "href_astro", raw=m.group(0))
 
 
 # --- reporte / dry-run -----------------------------------------------------
