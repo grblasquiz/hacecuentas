@@ -20,9 +20,19 @@ export function bancoColor(short: string): string {
   return COLORS[short] || DEFAULT_COLOR;
 }
 
+// Bancos reconocibles para mostrar en el comparador. Excluye compañías
+// financieras y bancos chicos/regionales que el público no identifica
+// (Crédito Regional, CMF, Meridian, VOII, BICA, Reba, Mariva, BiBank, Dino,
+// Banco Julio, Masventas, Comercio, etc.). Martin: "solo nombres de bancos".
+export const BANCOS_RECONOCIBLES = new Set<string>([
+  'Nación', 'Galicia', 'BBVA', 'Macro', 'Provincia BA', 'Ciudad', 'Santander',
+  'Credicoop', 'Patagonia', 'Hipotecario', 'Comafi', 'ICBC', 'Supervielle', 'Bancor (Cba)',
+]);
+
 // Nombres cortos legibles desde la razón social del BCRA.
 export function bancoCorto(entidad: string): string {
   const e = (entidad || '').toUpperCase().trim();
+  if (e.includes('INDUSTRIAL AND COMMERCIAL BANK OF CHINA')) return 'ICBC';
   const map: Record<string, string> = {
     'BANCO DE LA NACION ARGENTINA': 'Nación',
     'BANCO DE GALICIA Y BUENOS AIRES S.A.': 'Galicia',
@@ -80,9 +90,10 @@ export async function getPlazoFijoTop(n = 14): Promise<PlazoFijoBanco[]> {
     const data = (await r.json()) as Raw[];
     return (data || [])
       .filter((x) => x && x.tnaClientes > 0)
-      .sort((a, b) => b.tnaClientes - a.tnaClientes)
-      .slice(0, n)
-      .map((x) => ({ banco: bancoCorto(x.entidad), tna: +(x.tnaClientes * 100).toFixed(2) }));
+      .map((x) => ({ banco: bancoCorto(x.entidad), tna: +(x.tnaClientes * 100).toFixed(2) }))
+      .filter((b) => BANCOS_RECONOCIBLES.has(b.banco)) // solo bancos reconocibles
+      .sort((a, b) => b.tna - a.tna)
+      .slice(0, n);
   } catch {
     return [];
   }
