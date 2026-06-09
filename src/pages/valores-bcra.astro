@@ -5,6 +5,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import bcraIndicesRaw from '../lib/bcra-indices.json';
+import { getPlazoFijoTop } from '../lib/plazo-fijo';
 
 const title = 'Valores BCRA Hoy: Dólar, Inflación, UVA y Tasas';
 const description = 'Dashboard con dólar oficial, MEP, blue, CCL, tarjeta, UVA del día, inflación INDEC mensual y anual, TNA plazo fijo. Datos oficiales BCRA/INDEC actualizados.';
@@ -34,8 +35,6 @@ const inflacionInteranual = await safeFetch<InflacionPoint[]>(
   'https://api.argentinadatos.com/v1/finanzas/indices/inflacionInteranual',
   []
 );
-type PlazoFijoRaw = { entidad: string; tnaClientes: number };
-const plazoFijoRaw = await safeFetch<PlazoFijoRaw[]>('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo', []);
 
 // ── Tasas e índices del BCRA (API oficial v4.0) — la página rankea por "badlar
 // hoy" / "tasa de referencia bcra" / "cer hoy" pero NO los mostraba. Sirve esas
@@ -101,58 +100,9 @@ const mesLargo = (s: string) => {
 const uvaHist = ultimoPorMes(uva, 12);     // UVA es serie diaria → tomamos fin de mes
 const ipcHist = inflacion.slice(-6).reverse(); // inflación INDEC ya es mensual
 
-// Plazo fijo: nombres cortos + top tasas (fuente live BCRA vía argentinadatos)
-function bancoCorto(entidad: string): string {
-  const e = entidad.toUpperCase().trim();
-  const map: Record<string, string> = {
-    'BANCO DE LA NACION ARGENTINA': 'Nación',
-    'BANCO DE GALICIA Y BUENOS AIRES S.A.': 'Galicia',
-    'BANCO BBVA ARGENTINA S.A.': 'BBVA',
-    'BANCO MACRO S.A.': 'Macro',
-    'BANCO DE LA PROVINCIA DE BUENOS AIRES': 'Provincia BA',
-    'BANCO DE LA CIUDAD DE BUENOS AIRES': 'Ciudad',
-    'BANCO SANTANDER ARGENTINA S.A.': 'Santander',
-    'BANCO CREDICOOP COOPERATIVO LIMITADO': 'Credicoop',
-    'BANCO PATAGONIA S.A.': 'Patagonia',
-    'BANCO HIPOTECARIO S.A.': 'Hipotecario',
-    'BANCO SUPERVIELLE S.A.': 'Supervielle',
-    'BANCO COMAFI SOCIEDAD ANONIMA': 'Comafi',
-    'UALA': 'Ualá',
-    'BANCO DE LA PROVINCIA DE CORDOBA S.A.': 'Bancor (Cba)',
-    'BANCO DEL SOL S.A.': 'Banco del Sol',
-    'BANCO VOII S.A.': 'VOII',
-    'BANCO CMF S.A.': 'CMF',
-    'BANCO MERIDIAN S.A.': 'Meridian',
-    'BANCO BICA S.A.': 'BICA',
-    'BANCO MARIVA S.A.': 'Mariva',
-    'REBA COMPAÑIA FINANCIERA S.A.': 'Reba',
-    'CRÉDITO REGIONAL COMPAÑÍA FINANCIERA S.A.U.': 'Crédito Regional',
-    'BIBANK S.A.': 'BiBank',
-    'BANCO DINO S.A.': 'Dino',
-    'BANCO JULIO SOCIEDAD ANONIMA': 'Banco Julio',
-    'BANCO DE COMERCIO S.A.': 'Comercio',
-    'BANCO DE FORMOSA S.A.': 'Formosa',
-    'BANCO MASVENTAS S.A.': 'Masventas',
-    'BANCO PROVINCIA DE TIERRA DEL FUEGO': 'Tierra del Fuego',
-  };
-  if (map[e]) return map[e];
-  let s = e
-    .replace(/\bS\.?A\.?U?\.?\b/g, '')
-    .replace(/\bSOCIEDAD ANONIMA\b/g, '')
-    .replace(/\bCOMPA[ÑN]?[IÍ]?A FINANCIERA\b/g, '')
-    .replace(/\bCOOPERATIVO LIMITADO\b/g, '')
-    .replace(/^BANCO (DE LA |DE LOS |DE |DEL )?/, '')
-    .replace(/[.]/g, ' ')       // saca puntos sueltos de siglas (S.A.U. → '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  s = s.toLowerCase().replace(/\b\w/g, (ch) => ch.toUpperCase());
-  return s || entidad;
-}
-const plazoFijoRows = (plazoFijoRaw || [])
-  .filter((x) => x && x.tnaClientes > 0)
-  .sort((a, b) => b.tnaClientes - a.tnaClientes)
-  .slice(0, 14)
-  .map((x) => ({ banco: bancoCorto(x.entidad), tna: +(x.tnaClientes * 100).toFixed(2) }));
+// Plazo fijo: top tasas de bancos RECONOCIBLES (helper compartido, mismo filtro
+// que /comparador-plazo-fijo — sin compañías financieras chicas).
+const plazoFijoRows = await getPlazoFijoTop(14);
 const pfMax = plazoFijoRows.length ? plazoFijoRows[0].tna : null;
 
 const uvaHoy = ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : 'el valor del día';
