@@ -281,6 +281,23 @@ function main() {
     excludeNoindex: true,
     label: 'pt',
   });
+  // Verticales país (2026-06-10): hasta hoy las 361 calcs CO/MX/CL/PE/EC NO
+  // tenían grafo TF-IDF propio — RelatedCalcs caía al fallback por categoría
+  // y a veces mostraba calcs ARGENTINAS (módulo es). Un mapa por país
+  // (stopwords ES, son todas español) acelera la indexación Bing del headroom
+  // vertical: más in-links internos contextuales = se rankea antes. topK=12
+  // para densificar el grafo (mismo motivo que EN: evitar crawl starvation).
+  for (const v of ['co', 'mx', 'cl', 'pe', 'ec']) {
+    computeRelated({
+      dir: join(ROOT, `src/content/calcs-${v}`),
+      stopwords: STOPWORDS_ES,
+      outputFile: join(ROOT, `src/lib/related-auto-${v}.json`),
+      cacheHashFile: join(ROOT, `src/lib/related-auto-${v}.hash`),
+      excludeNoindex: true,
+      label: v,
+      topK: 12,
+    });
+  }
 }
 
 main();

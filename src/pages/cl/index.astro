@@ -91,6 +91,15 @@ const datosClave = [
   { k: 'IVA', v: '19%', src: 'SII' },
 ];
 
+// ── Equivalencias AR → CL: inyecta autoridad interna desde el catálogo argentino ya posicionado ──
+const equivalentesAr = [
+  { ar: 'sueldo-en-mano-argentina', arLabel: 'Sueldo en mano (Argentina)', cl: 'calculadora-sueldo-liquido-chile-2026-impuesto-segunda-categoria', clLabel: 'Sueldo líquido en Chile', concepto: 'Sueldo neto / líquido' },
+  { ar: 'calculadora-aguinaldo-sac', arLabel: 'Aguinaldo (SAC) Argentina', cl: 'calculadora-gratificacion-legal-chile-25-porcentaje-4-75-utm', clLabel: 'Gratificación legal en Chile', concepto: 'Aguinaldo / gratificación' },
+  { ar: 'calculadora-monotributo-2026', arLabel: 'Monotributo Argentina', cl: 'calculadora-pyme-chile-regimen-14d-tributacion-simplificada', clLabel: 'Régimen Pyme 14 D en Chile', concepto: 'Régimen simplificado' },
+  { ar: 'calculadora-vacaciones-argentina', arLabel: 'Vacaciones Argentina', cl: 'calculadora-vacaciones-chile-15-dias-habiles-progresivas', clLabel: 'Vacaciones en Chile (15 días)', concepto: 'Vacaciones' },
+  { ar: 'calculadora-indemnizacion-despido', arLabel: 'Indemnización por despido Argentina', cl: 'calculadora-finiquito-chile-completo-causal-despido', clLabel: 'Finiquito en Chile', concepto: 'Indemnización / finiquito' },
+];
+
 // ── FAQ país-específica: respuestas con cifras computadas desde la fuente única ──
 const faq = [
   {
@@ -275,6 +284,23 @@ const hreflangTags = HOME_HREFLANG;
       })}
     </div>
 
+    <section class="equiv-ar" aria-labelledby="equiv-ar-title">
+      <h2 id="equiv-ar-title">Equivalentes en Argentina</h2>
+      <p class="section-sub">¿Venís de Argentina o comparás los dos países? Cada cálculo laboral tiene su par chileno.</p>
+      <div class="equiv-grid">
+        {equivalentesAr.map((e) => (
+          <div class="equiv-row">
+            <span class="equiv-concepto">{e.concepto}</span>
+            <div class="equiv-pair">
+              <a href={`/${e.ar}`} class="equiv-link equiv-ar-link">🇦🇷 {e.arLabel}</a>
+              <span class="equiv-arrow" aria-hidden="true">→</span>
+              <a href={`/cl/${e.cl}`} class="equiv-link equiv-co-link">🇨🇱 {e.clLabel}</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
     <section class="faq-hub" aria-labelledby="faq-title">
       <h2 id="faq-title">Preguntas frecuentes sobre sueldos e impuestos en Chile 2026</h2>
       <div class="faq-list">
@@ -409,4 +435,17 @@ const hreflangTags = HOME_HREFLANG;
   .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
   .faq-list details[open] summary::after { content: '−'; }
   .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+
+  .equiv-ar { padding: 0 1rem 2.5rem; }
+  .equiv-ar h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .equiv-grid { display: grid; gap: 0.625rem; }
+  .equiv-row {
+    display: flex; flex-direction: column; gap: 0.5rem; padding: 0.875rem 1rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  .equiv-concepto { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+  .equiv-pair { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+  .equiv-link { font-size: 0.9rem; font-weight: 600; text-decoration: none; color: var(--text); padding: 0.25rem 0; }
+  .equiv-link:hover { color: var(--accent); text-decoration: underline; }
+  .equiv-arrow { color: var(--text-muted); font-weight: 700; flex-shrink: 0; }
 </style>

@@ -2,13 +2,18 @@
 import relatedAutoEs from '../lib/related-auto.json';
 import relatedAutoEn from '../lib/related-auto-en.json';
 import relatedAutoPt from '../lib/related-auto-pt.json';
+import relatedAutoCo from '../lib/related-auto-co.json';
+import relatedAutoMx from '../lib/related-auto-mx.json';
+import relatedAutoCl from '../lib/related-auto-cl.json';
+import relatedAutoPe from '../lib/related-auto-pe.json';
+import relatedAutoEc from '../lib/related-auto-ec.json';
 
 export interface Props {
   currentSlug: string;
   category: string;
   limit?: number;
   manualSlugs?: string[]; // override manual desde el JSON de la calc (relatedSlugs)
-  lang?: 'es' | 'en' | 'pt' | 'es-ES';
+  lang?: 'es' | 'en' | 'pt' | 'es-ES' | 'co' | 'mx' | 'cl' | 'pe' | 'ec';
 }
 
 const { currentSlug, category, limit = 4, manualSlugs = [], lang = 'es' } = Astro.props;
@@ -18,11 +23,20 @@ const esModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true
 const enModules = import.meta.glob<any>('../content/calcs-en/*.json', { eager: true });
 const ptModules = import.meta.glob<any>('../content/calcs-pt/*.json', { eager: true });
 const esEsModules = import.meta.glob<any>('../content/calcs-es/*.json', { eager: true });
-const calcModules = lang === 'en' ? enModules : lang === 'pt' ? ptModules : lang === 'es-ES' ? esEsModules : esModules;
+const coModules = import.meta.glob<any>('../content/calcs-co/*.json', { eager: true });
+const mxModules = import.meta.glob<any>('../content/calcs-mx/*.json', { eager: true });
+const clModules = import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true });
+const peModules = import.meta.glob<any>('../content/calcs-pe/*.json', { eager: true });
+const ecModules = import.meta.glob<any>('../content/calcs-ec/*.json', { eager: true });
+const VERTICAL_MODULES: Record<string, any> = { co: coModules, mx: mxModules, cl: clModules, pe: peModules, ec: ecModules };
+const calcModules = lang === 'en' ? enModules : lang === 'pt' ? ptModules : lang === 'es-ES' ? esEsModules
+  : VERTICAL_MODULES[lang] ? VERTICAL_MODULES[lang] : esModules;
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
 
-const linkPrefix = lang === 'en' ? '/en/' : lang === 'pt' ? '/pt/' : lang === 'es-ES' ? '/es/' : '/';
+const VERTICAL_PREFIX: Record<string, string> = { co: '/co/', mx: '/mx/', cl: '/cl/', pe: '/pe/', ec: '/ec/' };
+const linkPrefix = lang === 'en' ? '/en/' : lang === 'pt' ? '/pt/' : lang === 'es-ES' ? '/es/'
+  : VERTICAL_PREFIX[lang] ? VERTICAL_PREFIX[lang] : '/';
 
 // 1. Slugs manuales (si los definió el autor en el JSON) tienen prioridad
 const manual = manualSlugs
@@ -31,7 +45,9 @@ const manual = manualSlugs
 
 // 2. Si faltan para llegar a limit, completamos con el mapping auto (TF-IDF).
 // Cada locale tiene su propio mapa (stopwords y vocabulario distintos).
-const relatedAuto = lang === 'en' ? relatedAutoEn : lang === 'pt' ? relatedAutoPt : lang === 'es-ES' ? {} : relatedAutoEs;
+const VERTICAL_RELATED: Record<string, any> = { co: relatedAutoCo, mx: relatedAutoMx, cl: relatedAutoCl, pe: relatedAutoPe, ec: relatedAutoEc };
+const relatedAuto = lang === 'en' ? relatedAutoEn : lang === 'pt' ? relatedAutoPt : lang === 'es-ES' ? {}
+  : VERTICAL_RELATED[lang] ? VERTICAL_RELATED[lang] : relatedAutoEs;
 const autoSlugs: string[] = (relatedAuto as Record<string, string[]>)[currentSlug] || [];
 const auto = autoSlugs
   .map((s) => bySlug.get(s))
@@ -111,8 +127,10 @@ const seeAllLabel = lang === 'en' ? 'See all →' : lang === 'pt' ? 'Ver todas �
 // "Ver todas" apunta al hub de la categoría del calc actual. Los hubs
 // /categoria/<cat> sólo existen en el sitio ES root (EN/PT no tienen páginas de
 // categoría), así que sólo enrutamos ahí para es/es-ES; EN/PT caen a su home.
-const homeHref = lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : lang === 'es-ES' ? '/es' : '/';
-const hasCategoryHubs = lang !== 'en' && lang !== 'pt';
+const homeHref = lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : lang === 'es-ES' ? '/es'
+  : VERTICAL_PREFIX[lang] ? VERTICAL_PREFIX[lang].slice(0, -1) : '/';
+// Los hubs /categoria/<cat> sólo existen en ES root. EN/PT/verticales caen a su home/hub-país.
+const hasCategoryHubs = lang === 'es' || lang === 'es-ES';
 const seeAllHref = hasCategoryHubs && category ? `/categoria/${category}` : homeHref;
 ---
 
