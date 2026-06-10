@@ -1,3 +1,5 @@
+import { MEXICO_2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   adultos: number;
   ninos: number;
@@ -62,10 +64,8 @@ export function compute(i: Inputs): Outputs {
   const total_personas = i.adultos + i.ninos;
   const costo_diario = total_personas > 0 ? Math.round((costo_mensual / 30) / total_personas * 100) / 100 : 0;
 
-  // Salario mínimo 2026 (México)
-  const salario_minimo_horario = 248.93; // MXN/hora
-  const horas_mes = 248; // jornada estándar
-  const salario_minimo_mes = Math.round(salario_minimo_horario * horas_mes);
+  // Salario mínimo 2026 (México) — fuente única src/lib/data/mexico-2026.ts (CONASAMI/DOF)
+  const salario_minimo_mes = Math.round(MEXICO_2026.salarioMinimo.generalMensual); // $315,04/día × 30,4 = $9.577,22
 
   // Porcentaje del salario mínimo
   const porcentaje_salario = salario_minimo_mes > 0 ? Math.round((costo_mensual / salario_minimo_mes) * 10000) / 100 : 0;

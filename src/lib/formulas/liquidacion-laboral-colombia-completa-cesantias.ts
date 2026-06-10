@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   salario_mensual: number;
   fecha_inicio: string; // DD/MM/YYYY
@@ -137,10 +138,10 @@ export function compute(i: Inputs): Outputs {
   const descuentoSalud = (totalBrutoBefore * i.aporte_salud) / 100;
 
   // Retención en la fuente (IRPF simplificado)
-  // En Colombia: exención parcial hasta 8 UVT (≈ $360.000 en 2026)
+  // En Colombia: exención parcial hasta 8 UVT (≈ $418.992 en 2026)
   // Aproximación: 5% sobre lo que exceda, con límites
-  const UVT_2026 = 45000; // UVT aproximado 2026
-  const exencionBase = UVT_2026 * 8; // ~360.000
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
+  const exencionBase = UVT_2026 * 8; // ~418.992
   let retencionRenta = 0;
   if (totalBrutoBefore > exencionBase) {
     const baseImponible = totalBrutoBefore - exencionBase;

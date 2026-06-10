@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   ingreso_cedula_general: number;
   ingreso_pensiones: number;
@@ -28,7 +29,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 DIAN
-  const UVT_2026 = 45351; // Resolución DIAN enero 2026
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const LIMITE_EXENTO_BASE = 95 * UVT_2026; // $4.308.245
   const TASA_AFP = 0.04; // 4% obligatorio
   const TASA_SALUD = 0.04; // 4% obligatorio

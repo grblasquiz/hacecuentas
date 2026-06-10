@@ -1,4 +1,5 @@
 /** Liquidación de cesantías Colombia — diferenciado: incluye intereses y proyección */
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 
 export interface Inputs {
   salarioMensual: number;
@@ -27,9 +28,9 @@ export function cesantiasColombiaLiquidacion(i: Inputs): Outputs {
 
   if (!salario || salario <= 0) throw new Error('Ingresá tu salario mensual');
 
-  // SMLMV 2026 estimado
-  const SMLMV = 1_423_500;
-  const AUXILIO = 200_000;
+  // SMLMV 2026 (fuente única: src/lib/data/colombia-2026.ts)
+  const SMLMV = COLOMBIA_2026.smlmv; // $1.750.905 (Decreto 1469/2025)
+  const AUXILIO = COLOMBIA_2026.auxilioTransporte; // $249.095 (Decreto 1470/2025)
 
   let baseLiquidacion = salario;
   if (incluyeAuxilio && salario <= SMLMV * 2) {

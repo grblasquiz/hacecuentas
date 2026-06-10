@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   tipo_documento: 'escritura_publica' | 'acto_contrato_mercantil' | 'poder_mandato' | 'contrato_privado' | 'documento_jurisdiccional' | 'acta_notarial' | 'otro_documento_publico';
   valor_documento: number;
@@ -18,7 +19,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // UVT 2026 según DIAN Resolución
-  const UVT_2026 = 49656;
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   
   // Umbral mínimo: 6,000 UVT (DIAN)
   const UMBRAL_UVT = 6000;

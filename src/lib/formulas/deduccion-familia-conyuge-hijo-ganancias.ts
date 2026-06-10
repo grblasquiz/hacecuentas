@@ -1,8 +1,18 @@
+import {
+  INCREMENTO_CONYUGE_MENSUAL,
+  INCREMENTO_HIJO_MENSUAL,
+  INCREMENTO_HIJO_INCAPACITADO_MENSUAL,
+} from './_ganancias-escala';
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 export function deduccionFamiliaConyugeHijoGanancias(i: Inputs): Outputs {
   const c=String(i.conyuge||'no')==='si'; const hm=Number(i.hijosMenores)||0; const hi=Number(i.hijosInca)||0;
-  const DEDUC_CONY=2800000; const DEDUC_HIJO=1400000; const DEDUC_INCA=2800000;
+  // Deducciones por carga de familia ANUALES (art. 30 inc b LIG) — fuente única
+  // _ganancias-escala (valores mensuales × 12). Cónyuge ≈ 2× un hijo según ARCA.
+  const DEDUC_CONY=INCREMENTO_CONYUGE_MENSUAL*12;
+  const DEDUC_HIJO=INCREMENTO_HIJO_MENSUAL*12;
+  const DEDUC_INCA=INCREMENTO_HIJO_INCAPACITADO_MENSUAL*12;
   const montoCony=c?DEDUC_CONY:0; const montoHijos=hm*DEDUC_HIJO; const montoInca=hi*DEDUC_INCA;
   const total=montoCony+montoHijos+montoInca;
   const fmt=(n:number)=>'$'+n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');

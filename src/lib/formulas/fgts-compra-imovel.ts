@@ -1,9 +1,11 @@
 /**
  * Cálculo de Uso do FGTS para Compra de Imóvel (Minha Casa Minha Vida e SFH) 2026
  * Regras: mínimo 3 anos de carteira, imóvel residencial urbano,
- * valor máx ≈ R$ 350.000 (SFH), não ter imóvel no mesmo município.
- * Fontes: Lei 8.036/90, Resolução CCFGTS 702, Manual Caixa.
+ * valor máx R$ 2.250.000 (SFH, Res. CMN 5.255/2025), não ter imóvel no mesmo município.
+ * Fontes: Lei 8.036/90, Resolução CCFGTS, Manual Caixa. Teto do imóvel: fonte única
+ * src/lib/data/brasil-2026.ts (FGTS_TETO_IMOVEL_SFH).
  */
+import { FGTS_TETO_IMOVEL_SFH } from '../data/brasil-2026';
 
 export interface Inputs {
   saldoFgts: number | string;
@@ -24,7 +26,7 @@ function brl(n: number): string {
   return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const TETO_IMOVEL = 350000;
+const TETO_IMOVEL = FGTS_TETO_IMOVEL_SFH;
 const MIN_CARTEIRA = 3;
 
 export function fgtsCompraImovel(i: Inputs): Outputs {

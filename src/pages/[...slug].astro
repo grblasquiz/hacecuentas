@@ -40,6 +40,7 @@ import { findMentions, findPrimaryAbout } from '../lib/wikidata-entities';
 import { datasetSchemasForCalc } from '../lib/calc-datasets';
 import { filterByIncremental } from '../lib/incremental';
 import { buildHreflangCluster, findVersionByEsSlug } from '../lib/hreflang';
+import { getDataAsOf } from '../lib/data-freshness';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -145,7 +146,33 @@ const _badgeMonthYear = new Date(dateModified).toLocaleDateString('es-AR', {
   month: 'long',
   year: 'numeric',
 });
-const updatedBadgeLabel = `Actualizado ${_badgeMonthYear}`;
+// Sello de frescura a NIVEL DATO (src/lib/data-freshness.ts): si la calc tiene
+// datos live (dataSource, refresh diario) o su fórmula importa una tabla maestra
+// de src/lib/data/ con DATA_AS_OF, el badge muestra la vigencia del DATO además
+// de la fecha editorial. Caso contrario, cae al "Actualizado <mes año>" de siempre.
+const _dataAsOf: string | null = _hasLiveData
+  ? dateModified.slice(0, 10) // live data: se refresca a diario vía cron → vigencia = build date
+  : getDataAsOf((calc as any).formulaId);
+let updatedBadgeLabel = `Actualizado ${_badgeMonthYear}`;
+let updatedBadgeTitle = `Última revisión: ${lastReviewedLabel}`;
+if (_dataAsOf) {
+  const _dataAsOfDate = new Date(_dataAsOf + 'T00:00:00Z');
+  // timeZone UTC: sin esto, medianoche UTC renderiza como el día ANTERIOR en ART (UTC-3).
+  const _dataAsOfLabel = _dataAsOfDate.toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+  updatedBadgeLabel = `Datos: ${_dataAsOfLabel} · Revisado: ${_badgeMonthYear}`;
+  const _dataAsOfFull = _dataAsOfDate.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+  updatedBadgeTitle = `Dato vigente al ${_dataAsOfFull} · Última revisión: ${lastReviewedLabel}`;
+}
 // Color de categoría (B): tiñe la zona de identidad del header (eyebrow + ícono).
 // El teal de marca (--accent) se mantiene para el CTA y el resultado.
 const catColor = categoryColor(calc.category);
@@ -1128,7 +1155,7 @@ const langPills = [
         <div>
           <div class="eyebrow">{categoryLabels[calc.category] || calc.category}</div>
           <h1>{calc.h1}<span class="ar-badge-h1" title={countryBadge.tooltip} aria-label={countryBadge.tooltip}>{countryBadge.flag}</span></h1>
-          <span class="updated-badge" title={`Última revisión: ${updated}`}>
+          <span class="updated-badge" title={updatedBadgeTitle}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             {updatedBadgeLabel}
           </span>

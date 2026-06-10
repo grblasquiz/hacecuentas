@@ -32,6 +32,13 @@
  */
 export const MNI_MENSUAL_BASE = 1_931_926;
 
+/**
+ * Ganancia No Imponible (art. 30 inc a) ANUAL, primer semestre 2026: $5.151.802,50.
+ * Es el tope legal de la deducción del 40% del alquiler de vivienda (art. 85 inc h LIG):
+ * lo deducible no puede superar la GNI del período. Fuente: ARCA, RG 4003.
+ */
+export const GNI_ANUAL = 5_151_802.5;
+
 /** Deducción mensual por cónyuge a cargo: 4.851.964,66 / 12 ≈ 404_330 */
 export const INCREMENTO_CONYUGE_MENSUAL = 404_330;
 

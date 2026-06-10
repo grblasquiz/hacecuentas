@@ -1,11 +1,16 @@
+import { aplicarEscalaMensual, MNI_MENSUAL_BASE } from './_ganancias-escala';
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number | any; }
 export function gananciasAguinaldoSacRetencion(i: Inputs): Outputs {
   const s=Number(i.sueldoBrutoMensual)||0;
   const sac=s*0.5;
-  const anualSinSac=s*13;
-  const base=anualSinSac*0.85;
-  const gan=Math.max(0,(base-21000000)*0.27);
+  // Remuneración bruta promedio mensual considerando el SAC (12 + 1 aguinaldo).
+  const brutoMensualConSac=s*13/12;
+  // Aportes ~17% → base imponible ≈ 0,83 del bruto; menos el MNI efectivo mensual
+  // (GNI + deducción especial apt.1) de la fuente única _ganancias-escala.
+  const baseMensual=Math.max(0, brutoMensualConSac*0.83 - MNI_MENSUAL_BASE);
+  const gan=aplicarEscalaMensual(baseMensual).impuesto*12;
   const miles=(n:number)=>Math.round(n).toLocaleString('es-AR');
   const _insight = gan>0
     ? {

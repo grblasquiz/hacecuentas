@@ -77,6 +77,35 @@ const STALE_LITERALS: StaleLiteral[] = [
   // ── Argentina — SIPA (fuente única: src/lib/formulas/sueldo-ar.ts) ──
   // BASE_IMPONIBLE_MAXIMA_APORTES rota mensual: al actualizarla, agregar acá
   // el valor saliente para que no re-entre por copy-paste.
+
+  // ── Colombia — SMLMV (fuente única: src/lib/data/colombia-2026.ts → smlmv = 1.750.905) ──
+  { value: 1160000, was: 'SMLMV Colombia 2023 (2026: 1.750.905)', fix: 'COLOMBIA_2026.smlmv de data/colombia-2026' },
+  { value: 1423500, was: 'SMLMV Colombia 2025 (2026: 1.750.905)', fix: 'COLOMBIA_2026.smlmv de data/colombia-2026' },
+
+  // ── Colombia — UVT (fuente única: src/lib/data/colombia-2026.ts → uvt = 52.374; uvt2025 = 49.799) ──
+  // Valores VIEJOS o inventados que se usaban como "UVT 2026":
+  { value: 41368, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 43282, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 45351, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 45352, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 45600, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 47248, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 48681, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 49656, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 50652, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 52630, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 38004, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+  { value: 368348, was: 'UVT Colombia inventada (2026: 52.374)', fix: 'COLOMBIA_2026.uvt de data/colombia-2026' },
+
+  // ── México — UMA (fuente única: src/lib/data/mexico-2026.ts → uma.diaria = 117.31; mensual 3.566,22; anual 42.794,64) ──
+  { value: 113.14, was: 'UMA diaria MX 2025 (2026: 117.31)', fix: 'MEXICO_2026.uma.diaria de data/mexico-2026' },
+  { value: 312.05, was: 'UMA diaria MX inventada (2026: 117.31)', fix: 'MEXICO_2026.uma.diaria de data/mexico-2026' },
+  { value: 310.71, was: 'UMA diaria MX inventada (2026: 117.31)', fix: 'MEXICO_2026.uma.diaria de data/mexico-2026' },
+  { value: 3439.46, was: 'UMA mensual MX 2025 (2026: 3.566,22)', fix: 'MEXICO_2026.uma.mensual de data/mexico-2026' },
+
+  // ── México — Salario Mínimo (fuente única: src/lib/data/mexico-2026.ts → salarioMinimo.generalDiario = 315.04; zlfnDiario = 440.87) ──
+  { value: 278.80, was: 'SMG diario MX 2025 (2026: 315.04)', fix: 'MEXICO_2026.salarioMinimo.generalDiario de data/mexico-2026' },
+  { value: 419.88, was: 'SM ZLFN diario MX 2025/inventado (2026: 440.87)', fix: 'MEXICO_2026.salarioMinimo.zlfnDiario de data/mexico-2026' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

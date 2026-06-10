@@ -1,9 +1,17 @@
+import { aplicarEscalaMensual, MNI_MENSUAL_BASE } from './_ganancias-escala';
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
+// Retención anual ≈ escala mensual del art. 94 LIG (fuente única _ganancias-escala)
+// sobre la base imponible mensual, × 12. Base = bruto neto de aportes (~0,83)
+// menos el MNI efectivo y las deducciones declaradas prorrateadas al mes.
+function retencionAnual(brutoAnual: number, deducAnual: number): number {
+  const baseMensual = Math.max(0, (brutoAnual * 0.83 - deducAnual) / 12 - MNI_MENSUAL_BASE);
+  return aplicarEscalaMensual(baseMensual).impuesto * 12;
+}
 export function retencionGananciasSiradigTrabajador(i: Inputs): Outputs {
   const s=Number(i.sueldoBrutoAnual)||0; const d=Number(i.deduccionesDeclaradas)||0;
-  const baseSin=s*0.85; const baseCon=Math.max(0,s*0.85-d);
-  const retSin=baseSin*0.25; const retCon=baseCon*0.25;
+  const retSin=retencionAnual(s,0); const retCon=retencionAnual(s,d);
   const ahorroVal = retSin - retCon;
   const fmt = (n: number) => '$' + Math.round(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   const insight = {

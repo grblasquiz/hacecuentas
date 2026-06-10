@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   aplica_auxilio_transporte: boolean;
   smlmv_2026: number;
@@ -17,53 +19,51 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes DIAN/Ministerio del Trabajo 2026
-  const SMLMV_2026 = 1623500; // Salario Mínimo Legal Mensual Vigente 2026
-  const AUXILIO_TRANSPORTE_2026 = 200100; // Auxilio de transporte 2026
-  const TOPE_AUXILIO = 2 * SMLMV_2026; // Tope: 2 × SMLMV = $3.247.000
-  const HORAS_MENSUALES = 230; // 8 horas/día × 23 días laborales
-  const DIAS_LABORALES_MES = 23; // Promedio anual días hábiles
-  const SEMANAS_POR_AÑO = 52;
-  const MESES_POR_AÑO = 12;
-  
+  // Constantes 2026 desde la tabla maestra (Decretos 1469 y 1470 de 2025)
+  const SMLMV_2026 = COLOMBIA_2026.smlmv; // $1.750.905
+  const AUXILIO_TRANSPORTE_2026 = COLOMBIA_2026.auxilioTransporte; // $249.095
+  const TOPE_AUXILIO = COLOMBIA_2026.topeAuxilioSmlmv * SMLMV_2026; // 2 × SMLMV = $3.501.810
+  // Jornada Ley 2101/2021: 44 h/semana hasta el 14-jul-2026 → divisor 220 h/mes
+  const HORAS_MENSUALES = COLOMBIA_2026.jornada.divisorMensualHasta14Jul2026; // 220
+  const DIAS_MES_LEGAL = 30; // SMDLV = SMLMV ÷ 30 (convención legal CST)
+  const SEMANAS_POR_ANIO = 52;
+  const MESES_POR_ANIO = 12;
+
   // Salario mínimo bruto (SMLMV sin deducciones)
   const salario_minimo_bruto = SMLMV_2026;
-  
-  // Determinar si aplica auxilio transporte
-  // Aplica si: salario < 2 × SMLMV (según input booleano)
+
+  // Auxilio de transporte: aplica si el salario es inferior a 2 SMLMV
   const auxilio_transporte_total = i.aplica_auxilio_transporte ? AUXILIO_TRANSPORTE_2026 : 0;
-  
-  // Ingreso bruto total mensual
+
+  // Ingreso bruto total mensual (salario + auxilio si procede)
   const ingreso_bruto_total_mensual = salario_minimo_bruto + auxilio_transporte_total;
-  
-  // Ingresos por período
-  const ingreso_por_hora = Math.round((ingreso_bruto_total_mensual / HORAS_MENSUALES) * 100) / 100;
-  const ingreso_por_dia = Math.round((ingreso_bruto_total_mensual / DIAS_LABORALES_MES) * 100) / 100;
-  
-  // Ingreso semanal: (230 horas mensuales ÷ 52 semanas/año × 12 meses = 4.423 semanas/mes promedio)
-  const semanas_mensuales = (SEMANAS_POR_AÑO / MESES_POR_AÑO);
-  const ingreso_por_semana = Math.round((ingreso_bruto_total_mensual / semanas_mensuales) * 100) / 100;
-  
-  // Nota sobre elegibilidad del auxilio
-  let nota_tope_auxilio = "";
-  if (i.aplica_auxilio_transporte) {
-    nota_tope_auxilio = `✓ Aplica auxilio transporte. Tu salario (${salario_minimo_bruto.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 })}) es < 2 SMLMV ($${TOPE_AUXILIO.toLocaleString('es-CO', { minimumFractionDigits: 0 })}).`;
-  } else {
-    nota_tope_auxilio = `✗ No aplica auxilio transporte. Tu salario (${salario_minimo_bruto.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 })}) es ≥ 2 SMLMV.`;
-  }
-  
+
+  // Valores por período — se calculan sobre el SALARIO (el auxilio no es salario):
+  // hora ordinaria = salario ÷ 220 h; día (SMDLV) = salario ÷ 30; semana = salario × 12 ÷ 52
+  const ingreso_por_hora = Math.round((salario_minimo_bruto / HORAS_MENSUALES) * 100) / 100;
+  const ingreso_por_dia = Math.round((salario_minimo_bruto / DIAS_MES_LEGAL) * 100) / 100;
+  const ingreso_por_semana = Math.round(((salario_minimo_bruto * MESES_POR_ANIO) / SEMANAS_POR_ANIO) * 100) / 100;
+
   const copFmt = (n: number) => '$' + n.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  // Nota sobre elegibilidad del auxilio
+  let nota_tope_auxilio = '';
+  if (i.aplica_auxilio_transporte) {
+    nota_tope_auxilio = `✓ Aplica auxilio de transporte: el salario (${copFmt(salario_minimo_bruto)}) es inferior a 2 SMLMV (${copFmt(TOPE_AUXILIO)}). Decreto 1470 de 2025.`;
+  } else {
+    nota_tope_auxilio = `✗ No aplica auxilio de transporte: solo se reconoce a quien gana menos de 2 SMLMV (${copFmt(TOPE_AUXILIO)}).`;
+  }
 
   const _insight = i.aplica_auxilio_transporte
     ? {
         title: 'Ingreso con auxilio de transporte',
-        text: `Sumando el auxilio de transporte (**${copFmt(auxilio_transporte_total)}**), tu ingreso bruto mensual llega a **${copFmt(ingreso_bruto_total_mensual)}**. El auxilio aplica porque ganás menos de 2 SMLMV.`,
+        text: `Sumando el auxilio de transporte (**${copFmt(auxilio_transporte_total)}**), tu ingreso bruto mensual llega a **${copFmt(ingreso_bruto_total_mensual)}**. El auxilio aplica porque ganás menos de 2 SMLMV (${copFmt(TOPE_AUXILIO)}).`,
         tone: 'good',
         icon: '🚌',
       }
     : {
         title: 'Sin auxilio de transporte',
-        text: `Tu ingreso bruto mensual es **${copFmt(ingreso_bruto_total_mensual)}**, todo salario. No recibís auxilio de transporte porque tu salario iguala o supera 2 SMLMV.`,
+        text: `Tu ingreso bruto mensual es **${copFmt(ingreso_bruto_total_mensual)}**, todo salario. No recibís auxilio de transporte porque tu salario iguala o supera 2 SMLMV (${copFmt(TOPE_AUXILIO)}).`,
         tone: 'neutral',
         icon: '💼',
       };

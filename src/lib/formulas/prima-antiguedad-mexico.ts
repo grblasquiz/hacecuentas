@@ -2,7 +2,9 @@
  * Calculadora de Prima de Antigüedad México (LFT art. 162)
  * 12 días de salario por cada año de servicio, con tope 2 SMG diarios.
  * Aplica en jubilación, despido, defunción, o renuncia con 15+ años.
+ * Constantes desde src/lib/data/mexico-2026.ts (SM general 2026: $315.04/día).
  */
+import { MEXICO_2026 } from '../data/mexico-2026.ts';
 
 export interface Inputs {
   salarioDiario: number;
@@ -28,7 +30,12 @@ export interface Outputs {
 export function primaAntiguedadMexico(i: Inputs): Outputs {
   const sueldo = Number(i.salarioDiario ?? i.sueldoDiario);
   const anios = Number(i.aniosAntiguedad ?? i.aniosServicio);
-  const smgDiario = Number(i.smgDiario ?? 278.80);
+  // Guard de default: ''/null/undefined/0 → SM general 2026 (nunca || que pise un valor válido)
+  const smgRaw = i.smgDiario ?? i.salarioMinimoGeneral;
+  const smgNum = Number(smgRaw);
+  const smgDiario = (smgRaw === undefined || smgRaw === null || (smgRaw as unknown) === '' || !Number.isFinite(smgNum) || smgNum <= 0)
+    ? MEXICO_2026.salarioMinimo.generalDiario
+    : smgNum;
   const motivo = i.motivo ?? 'despido';
 
   if (!sueldo || sueldo <= 0) throw new Error('Ingresá el salario diario');

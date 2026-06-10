@@ -19,13 +19,14 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Tasas Bancarias Corrientes 2026 (referencia Superfinanciera)
-  // Fuente: Circular 100, estimados 2026
+  // Interés Bancario Corriente (IBC) certificado por la Superfinanciera.
+  // Jun-2026: IBC consumo y ordinario = 19,19% EA → usura/mora máx = 28,79% EA (Resolución 0823 de 2026).
+  // Tarjeta, personal y consumo comparten la modalidad "consumo y ordinario". Se actualiza mensualmente.
   const tbcReferencias: Record<string, number> = {
-    tarjeta_credito: 0.23,      // ~23% EA (19-25% rango)
-    credito_personal: 0.175,    // ~17.5% EA (15-20% rango)
-    credito_consumo: 0.16,      // ~16% EA (14-18% rango)
-    hipotecario: 0.10,          // ~10% EA (8-12% rango)
+    tarjeta_credito: 0.1919,
+    credito_personal: 0.1919,
+    credito_consumo: 0.1919,
+    hipotecario: 0.1919,        // en vivienda el tope real es 1.5× el interés remuneratorio PACTADO (ver abajo)
   };
 
   const tbc = tbcReferencias[i.tipo_credito];
@@ -38,7 +39,7 @@ export function compute(i: Inputs): Outputs {
   const tasaMoraPactada = (i.tasa_interes_pactada / 100) * 1.5;
   tasaMoraMaxima = Math.min(tasaMoraMaxima, tasaMoraPactada);
 
-  // Piso mínimo: interés civil 6% anual (Código Civil Art. 2257)
+  // Piso mínimo: interés legal civil 6% anual (Código Civil, art. 1617)
   tasaMoraMaxima = Math.max(tasaMoraMaxima, 0.06);
 
   // Cálculo de interés mora
@@ -60,7 +61,7 @@ export function compute(i: Inputs): Outputs {
   const deudaTotalConMora = i.capital_adeudado + interesMoraCalculado + interesOrdinarioVencido;
 
   // Interés legal civil comparativo (6% anual)
-  // Código Civil Art. 2257 - referencia mínima de protección
+  // Código Civil, art. 1617 — referencia mínima de protección
   const interesLegalCivil = i.capital_adeudado * 0.06 * (i.dias_mora / 365);
 
   // Diferencia cobrada vs interés civil
@@ -109,9 +110,10 @@ export function compute(i: Inputs): Outputs {
     return { _insight, _chart };
   };
 
-  // Cálculo especial para hipotecarios: tope 1.2× TBC en lugar de 1.5×
+  // Cálculo especial para vivienda: la mora no puede exceder 1.5× el interés remuneratorio PACTADO
+  // y solo se cobra sobre cuotas vencidas (Ley 546/1999 art. 19, Sentencia C-955 de 2000).
   if (i.tipo_credito === 'hipotecario') {
-    tasaMoraMaxima = Math.min(tbc * 1.2, tasaMoraPactada);
+    tasaMoraMaxima = Math.min(tbc * 1.5, tasaMoraPactada);
     const interesMoraHipotecario = i.capital_adeudado * (tasaMoraMaxima / 365) * i.dias_mora;
     const deudaHip = i.capital_adeudado + interesMoraHipotecario + interesOrdinarioVencido;
     const { _insight, _chart } = buildExtras(tasaMoraMaxima * 100, interesMoraHipotecario, deudaHip);
@@ -122,7 +124,7 @@ export function compute(i: Inputs): Outputs {
       deuda_total_con_mora: Math.round(deudaHip * 100) / 100,
       interes_legal_civil: Math.round(interesLegalCivil * 100) / 100,
       diferencia_legal: Math.round((interesMoraHipotecario - interesLegalCivil) * 100) / 100,
-      advertencia_legal: advertenciaLegal + ' (Crédito hipotecario: tope 1.2× TBC por Ley 1480/2011)',
+      advertencia_legal: advertenciaLegal + ' (Crédito de vivienda: la mora no puede exceder 1.5× el interés remuneratorio pactado y solo sobre cuotas vencidas — Ley 546/1999 art. 19, C-955/2000)',
       _insight,
       ...(_chart ? { _chart } : {}),
     };

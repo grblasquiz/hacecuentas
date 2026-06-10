@@ -1,7 +1,9 @@
 /** Finiquito México — cálculo completo según LFT
  *  Incluye: salarios pendientes, aguinaldo proporcional, vacaciones no gozadas,
  *  prima vacacional, prima de antigüedad (si aplica)
+ *  Constantes (UMA, SM 2026): fuente única src/lib/data/mexico-2026.ts
  */
+import { MEXICO_2026 } from '../data/mexico-2026';
 
 export interface Inputs {
   salarioDiario: number;
@@ -60,7 +62,7 @@ export function finiquitoMexicoCalculo(i: Inputs): Outputs {
 
   // Prima de antigüedad: 12 días de salario por año (tope 2 salarios mínimos)
   // Solo aplica en despido o renuncia con >15 años
-  const salarioMinimoDiario = 278.80; // SMGN 2026 estimado
+  const salarioMinimoDiario = MEXICO_2026.salarioMinimo.generalDiario; // SMG 2026 = $315,04 (CONASAMI/DOF)
   const salarioTopePrima = Math.min(salarioDiario, salarioMinimoDiario * 2);
   let primaAntiguedad = 0;
   if (causa === 'despido' || (causa === 'renuncia' && aniosAntiguedad >= 15)) {
@@ -81,7 +83,7 @@ export function finiquitoMexicoCalculo(i: Inputs): Outputs {
 
   // ISR estimado simplificado (15% promedio efectivo sobre lo que no está exento)
   // Exento: indemnización hasta 90 UMA por año, prima antigüedad, etc.
-  const UMA_DIARIO = 113.14;
+  const UMA_DIARIO = MEXICO_2026.uma.diaria; // UMA diaria 2026 = $117,31 (INEGI)
   const exentoIndem = Math.min(indemnizacion3meses, 90 * UMA_DIARIO * Math.max(1, Math.floor(aniosAntiguedad)));
   const gravable = totalBruto - exentoIndem - primaAntiguedad;
   const isrEstimado = Math.max(0, gravable * 0.15);

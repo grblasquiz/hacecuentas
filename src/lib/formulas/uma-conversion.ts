@@ -1,7 +1,8 @@
 /**
  * Conversor de UMA (Unidad de Medida y Actualización) a pesos mexicanos
- * Valores 2026 (proyección INEGI/DOF)
+ * Valores 2026 — fuente única src/lib/data/mexico-2026.ts (INEGI Comunicado 1/26, DOF 09-ene-2026)
  */
+import { MEXICO_2026 } from '../data/mexico-2026';
 
 export interface Inputs {
   cantidadUma: number;
@@ -21,9 +22,9 @@ export interface Outputs {
 }
 
 const UMA_2026 = {
-  diaria: 113.14,
-  mensual: 3439.46,
-  anual: 41273.52,
+  diaria: MEXICO_2026.uma.diaria,    // $117,31
+  mensual: MEXICO_2026.uma.mensual,  // $3.566,22
+  anual: MEXICO_2026.uma.anual,      // $42.794,64
 };
 
 export function umaConversion(i: Inputs): Outputs {

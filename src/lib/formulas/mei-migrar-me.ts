@@ -2,7 +2,9 @@
  *  Quando faturamento passa R$81k/ano, precisa virar ME.
  *  Anexo I (comércio) faixa 1 (até 180k): 4% - R$0 dedução = efetivamente 4%
  *  Anexo III (serviços) faixa 1: 6% - R$0
+ *  DAS MEI atual: fonte única src/lib/data/brasil-2026.ts (DAS sobre SM 2026).
  */
+import { DAS_MEI } from '../data/brasil-2026';
 
 export interface Inputs {
   faturamentoMesME: number;
@@ -65,11 +67,11 @@ export function meiMigrarME(i: Inputs): Outputs {
   const aliquotaEfFinal = Math.max(0, aliquotaEfetiva);
   const valorDasME = fatMes * (aliquotaEfFinal / 100);
 
-  const DAS_MEI = tipo === 'servicos' ? 75.60 : 71.60;
-  const diferencaVsMEI = valorDasME - DAS_MEI;
+  const dasMeiAtual = tipo === 'servicos' ? DAS_MEI.servicos : DAS_MEI.comercio;
+  const diferencaVsMEI = valorDasME - dasMeiAtual;
 
   const formula = `Alíquota efetiva = (RBT12 × ${f.aliquota}% - R$${f.deduzir}) / RBT12 = ${aliquotaEfFinal.toFixed(2)}%. DAS = R$ ${fatMes.toFixed(2)} × ${aliquotaEfFinal.toFixed(2)}% = R$ ${valorDasME.toFixed(2)}`;
-  const explicacion = `Migrando MEI → ME Simples Nacional (${tipo}), faixa ${faixaIdx + 1} (RBT12 ≤ R$ ${f.rbt12Max.toLocaleString('pt-BR')}). Alíquota nominal ${f.aliquota}%, efetiva ${aliquotaEfFinal.toFixed(2)}% (após dedução R$ ${f.deduzir.toLocaleString('pt-BR')}). Primeiro DAS como ME: R$ ${valorDasME.toFixed(2)}/mês — um aumento de R$ ${diferencaVsMEI.toFixed(2)} em relação ao DAS MEI (R$ ${DAS_MEI}). Além disso, ME precisa de contador (R$ 300-600/mês) e emite NF-e.`;
+  const explicacion = `Migrando MEI → ME Simples Nacional (${tipo}), faixa ${faixaIdx + 1} (RBT12 ≤ R$ ${f.rbt12Max.toLocaleString('pt-BR')}). Alíquota nominal ${f.aliquota}%, efetiva ${aliquotaEfFinal.toFixed(2)}% (após dedução R$ ${f.deduzir.toLocaleString('pt-BR')}). Primeiro DAS como ME: R$ ${valorDasME.toFixed(2)}/mês — um aumento de R$ ${diferencaVsMEI.toFixed(2)} em relação ao DAS MEI (R$ ${dasMeiAtual.toFixed(2)}). Além disso, ME precisa de contador (R$ 300-600/mês) e emite NF-e.`;
 
   const _insight = {
     title: 'Quanto pesa virar ME',

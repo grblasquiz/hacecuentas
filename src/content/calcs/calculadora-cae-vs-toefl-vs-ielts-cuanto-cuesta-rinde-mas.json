@@ -133,6 +133,14 @@
       "format": "text"
     }
   ],
+  "example": {
+    "inputs": {
+      "objetivo": "universidad_uk",
+      "presupuesto_usd": 300,
+      "nivel_ingles": "b2",
+      "tipo_cambio": 1250
+    }
+  },
   "explanation": "## Cómo se calcula la recomendación\n\nLa calculadora cruza tres variables: **objetivo del examen**, **presupuesto en USD** y **nivel de inglés**. A partir de eso aplica reglas de elegibilidad y costo para devolver el examen más conveniente.\n\n## Costos de referencia 2026 (Argentina)\n\n| Examen | Costo aprox. USD | Vigencia | Reconocimiento |\n|---|---|---|---|\n| CAE Cambridge (C1) | USD 350 | Permanente | UK, AUS, IRL, Canadá, EE.UU. |\n| IELTS Academic | USD 300 | 2 años | Universal (visas + universidades) |\n| TOEFL iBT | USD 300 | 2 años | EE.UU., Canadá, Europa |\n| Duolingo English Test | USD 60 | 2 años | +5.000 instituciones, NO visas |\n\n*Los precios en ARS varían según el tipo de cambio vigente al momento del pago.*\n\n## Lógica de la recomendación\n\n```\nsi objetivo == visa_uk:\n  → IELTS Academic (obligatorio; DET no es aceptado para visas)\n\nsi objetivo == universidad_uk:\n  si nivel >= C1 y presupuesto >= 350:\n    → CAE Cambridge (certificación permanente, sin vencimiento)\n  sino:\n    → IELTS Academic\n\nsi objetivo == universidad_usa:\n  si presupuesto >= 300:\n    → TOEFL iBT (preferido por la mayoría de universidades de EE.UU.)\n  alternativa:\n    → IELTS Academic\n\nsi objetivo == trabajo_tech:\n  si presupuesto < 300:\n    → Duolingo English Test (USD 60, aceptado por empresas remotas y muchas universidades)\n  sino:\n    → IELTS o TOEFL según destino\n\nsi objetivo == cualquiera:\n  recomendar IELTS (mayor cobertura universal)\n```\n\n## Ejemplo numérico\n\nObjectivo: posgrado en UK. Nivel C1. Presupuesto USD 300. Tipo de cambio ARS 1.250.\n\n- CAE Cambridge: USD 350 → supera presupuesto → **descartado**\n- IELTS Academic: USD 300 ✓ → dentro del presupuesto\n- Costo en ARS: 300 × 1.250 = **ARS 375.000**\n- Recomendación: **IELTS Academic**\n\n## Cuándo NO aplica / limitaciones\n\n- Los precios son referencias orientativas; el costo real depende del centro de examen en Argentina y puede variar ±10%.\n- El Duolingo English Test **no es válido** para visas de UK, EE.UU., Australia ni Canadá.\n- El CAE Cambridge no tiene vencimiento, lo que lo hace más rentable a largo plazo para quienes planeen múltiples aplicaciones.\n- Algunas universidades de EE.UU. ya aceptan Duolingo; verificá siempre en el sitio oficial de la institución destino.\n- TOEFL y IELTS tienen vigencia de 2 años; si tu plan de aplicación supera ese plazo, deberás rendir nuevamente.",
   "faq": [
     {

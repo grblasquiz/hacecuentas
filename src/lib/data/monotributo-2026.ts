@@ -14,6 +14,9 @@
 // Cualquier calc de monotributo debe importar de acá para no volver a desincronizarse.
 // ────────────────────────────────────────────────────────────────────────────
 
+/** Vigencia del dato (YYYY-MM-DD): escala vigente desde 2026-02-01 (recategorización semestral). Usada por src/lib/data-freshness.ts. */
+export const DATA_AS_OF = '2026-02-01';
+
 export type Cat = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K';
 export type Actividad = 'servicios' | 'bienes';
 export const CATEGORIAS: Cat[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];

@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   aporte_mensual: number;
   ingresos_brutos_anuales: number;
@@ -24,7 +25,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes DIAN 2026
-  const UVT_2026 = 52630; // DIAN enero 2026
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const TOPE_DEDUCCION_UVT = 3800;
   const TOPE_DEDUCCION_PESOS = TOPE_DEDUCCION_UVT * UVT_2026; // ~199.994.000
   const LIMITE_PORCENTAJE_INGRESOS = 0.30; // 30% ingresos brutos

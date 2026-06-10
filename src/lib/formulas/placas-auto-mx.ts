@@ -1,6 +1,9 @@
 /**
- * Calculadora de costo de placas de auto por estado México
- * Valores proyectados 2026, validar contra fuente oficial
+ * Calculadora de costo de placas de auto por estado México.
+ * Refrendos 2026 verificados (2026-06-10): CDMX $760 (art. 219 Código Fiscal CDMX),
+ * Edomex $990, Jalisco $1,000 (con -5% pronto pago en línea ene-feb),
+ * Nuevo León por modelo: $1,075 (2011 y ant.) / $1,698 (2012-2016) / $3,762 (2017+) — se usa el tramo medio.
+ * Placas/tarjeta de circulación: estimaciones por estado.
  */
 
 export interface Inputs {
@@ -24,15 +27,16 @@ export interface Outputs {
   _chart?: any;
 }
 
+// "derechos" = refrendo anual 2026 (verificado para CDMX/Edomex/Jalisco/NL; resto estimado)
 const COSTOS_PLACAS: Record<string, { placas: number; tarjeta: number; derechos: number; duracion: string }> = {
-  cdmx:        { placas: 950,  tarjeta: 280, derechos: 320, duracion: '1 a 3 días' },
-  edomex:      { placas: 1100, tarjeta: 310, derechos: 310, duracion: '2 a 5 días' },
-  jalisco:     { placas: 820,  tarjeta: 230, derechos: 180, duracion: '1 a 2 días' },
-  'nuevo-leon':{ placas: 1400, tarjeta: 330, derechos: 310, duracion: '1 a 4 días' },
-  nuevoleon:   { placas: 1400, tarjeta: 330, derechos: 310, duracion: '1 a 4 días' },
-  puebla:      { placas: 950,  tarjeta: 260, derechos: 240, duracion: '2 a 5 días' },
-  queretaro:   { placas: 900,  tarjeta: 260, derechos: 220, duracion: '1 a 3 días' },
-  guanajuato:  { placas: 880,  tarjeta: 250, derechos: 220, duracion: '1 a 3 días' },
+  cdmx:        { placas: 950,  tarjeta: 280, derechos: 760,  duracion: '1 a 3 días' },  // refrendo 2026: $760 (art. 219 CFCDMX)
+  edomex:      { placas: 1100, tarjeta: 310, derechos: 990,  duracion: '2 a 5 días' },  // refrendo 2026: $990
+  jalisco:     { placas: 820,  tarjeta: 230, derechos: 1000, duracion: '1 a 2 días' },  // refrendo 2026: $1,000
+  'nuevo-leon':{ placas: 1400, tarjeta: 330, derechos: 1698, duracion: '1 a 4 días' },  // refrendo 2026 por modelo; tramo medio 2012-2016
+  nuevoleon:   { placas: 1400, tarjeta: 330, derechos: 1698, duracion: '1 a 4 días' },
+  puebla:      { placas: 950,  tarjeta: 260, derechos: 700,  duracion: '2 a 5 días' },  // estimado
+  queretaro:   { placas: 900,  tarjeta: 260, derechos: 600,  duracion: '1 a 3 días' },  // estimado
+  guanajuato:  { placas: 880,  tarjeta: 250, derechos: 600,  duracion: '1 a 3 días' },  // estimado
 };
 
 export function placasAutoMx(i: Inputs): Outputs {

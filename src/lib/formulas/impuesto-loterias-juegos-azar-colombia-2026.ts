@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   monto_premio: number;
   tipo_juego: 'baloto' | 'loteria_nacional' | 'loteria_departamental' | 'otros_juegos';
@@ -20,7 +22,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes y validación
-  const uvt_2026 = i.uvt_2026 || 50652; // DIAN 2026
+  const uvt_2026 = i.uvt_2026 || COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const umbral_uvt = 48; // Ley, Decreto 624/1989
   const retencion_porcentaje = 0.17; // 17% - retención obligatoria
   

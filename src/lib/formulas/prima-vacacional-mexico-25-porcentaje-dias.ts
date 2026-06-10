@@ -1,3 +1,5 @@
+import { MEXICO_2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   salario_diario_bruto: number;
   antiguedad_anos: number;
@@ -18,11 +20,11 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 México
-  const UMA_DIARIA_2026 = 205; // MXN, INEGI 2026
-  const UMA_ANUAL_2026 = UMA_DIARIA_2026 * 365; // $74,825 MXN
-  const EXENCION_ISR_UMA = 15; // 15 UMA exentas en prima vacacional
-  const EXENCION_ISR_MONTO = UMA_DIARIA_2026 * EXENCION_ISR_UMA; // $3,075 MXN
+  // Constantes 2026 México — UMA fuente única src/lib/data/mexico-2026.ts (INEGI)
+  const UMA_DIARIA_2026 = MEXICO_2026.uma.diaria; // UMA diaria 2026 = $117,31
+  const UMA_ANUAL_2026 = MEXICO_2026.uma.anual; // UMA anual 2026 = $42.794,64
+  const EXENCION_ISR_UMA = MEXICO_2026.exencionesIsrUmas.primaVacacional; // 15 UMA exentas (Art. 93 LISR)
+  const EXENCION_ISR_MONTO = UMA_DIARIA_2026 * EXENCION_ISR_UMA; // 15 × UMA diaria = $1.759,65
 
   // Tarifa ISR 2026 para personas físicas (simplificada por tramos)
   // Fuente: SAT 2026. Aplicamos tarifa marginal según base gravable

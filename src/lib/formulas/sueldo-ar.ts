@@ -35,6 +35,13 @@ import {
  */
 export const BASE_IMPONIBLE_MAXIMA_APORTES = 4_414_652.38;
 
+/**
+ * Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato
+ * (src/lib/data-freshness.ts). Refleja la base imponible máxima vigente
+ * (junio 2026, Res. ANSES 139/2026). Actualizar junto con BASE_IMPONIBLE_MAXIMA_APORTES.
+ */
+export const DATA_AS_OF = '2026-06-01';
+
 export interface SueldoInputs {
   bruto: number;
   /** Cónyuge a cargo (bool). Preferido sobre `cargas`. */

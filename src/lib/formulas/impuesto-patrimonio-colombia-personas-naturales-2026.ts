@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   activo_total: number;
   pasivo_total: number;
@@ -33,7 +35,7 @@ export function compute(i: Inputs): Outputs {
   // Validaciones básicas
   const activo_total = Math.max(0, i.activo_total || 0);
   const pasivo_total = Math.max(0, i.pasivo_total || 0);
-  const uvt = Math.max(1, i.valor_uvt_2026 || 47248);
+  const uvt = Math.max(1, i.valor_uvt_2026 || COLOMBIA_2026.uvt); // UVT 2026 = $52.374
 
   // 1. Calcular patrimonio líquido
   const patrimonio_liquido = activo_total - pasivo_total;

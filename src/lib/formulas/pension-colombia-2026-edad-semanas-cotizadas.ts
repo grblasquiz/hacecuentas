@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   genero: 'masculino' | 'femenino';
   edad_actual: number;
@@ -26,9 +28,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 Colombia (DIAN + Colpensiones)
-  const SMLM_2026 = 1160000; // Salario Mínimo Legal Mensual aprox.
-  const TECHO_PENSION = SMLM_2026 * 5; // 5 × SMLM
+  // Constantes 2026 Colombia (fuente única: src/lib/data/colombia-2026.ts)
+  const SMLM_2026 = COLOMBIA_2026.smlmv; // SMLMV 2026 = $1.750.905 (Decreto 1469/2025)
+  const TECHO_PENSION = SMLM_2026 * 5; // 5 × SMLMV (pensión máxima 5 SMLMV)
   const EDAD_MIN_HOMBRE = 62;
   const EDAD_MIN_MUJER = 57;
   const SEMANAS_MINIMO = 1300; // Requisito mínimo Colpensiones

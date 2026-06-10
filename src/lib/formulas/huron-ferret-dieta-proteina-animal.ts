@@ -78,8 +78,9 @@ export function huronFerretDietaProteinaAnimal(i: Inputs): Outputs {
     icon: '🦦',
   };
 
-  // Primary output: daily food in grams (shown prominently)
-  const resultado = `${foodStr} g/day`;
+  // Primary output: daily food in grams (shown prominently), unit localized per language
+  const unitDay = __lang === 'en' ? 'g/day' : __lang === 'pt' ? 'g/dia' : 'g/día';
+  const resultado = `${foodStr} ${unitDay}`;
 
   return { resultado, resumen, _insight: insight };
 }

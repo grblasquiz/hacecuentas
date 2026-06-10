@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   ingresos_brutos_anuales: number;
   actividad_codigo: 'comercio_minorista' | 'servicios_personales' | 'transporte' | 'alojamiento_comida' | 'profesional' | 'otras_actividades' | 'agricultura';
@@ -18,8 +20,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // DIAN 2026 - Tarifas Régimen Simple por tramos e ingresos
-  const LIMITE_REGIMEN_SIMPLE = 1447000000; // $1.447M
+  // DIAN 2026 - Tarifas Régimen Simple por tramos e ingresos.
+  // Tope de ingresos: 100.000 UVT (fuente única src/lib/data/colombia-2026.ts).
+  const LIMITE_REGIMEN_SIMPLE = COLOMBIA_2026.regimenSimple.topeIngresosPesos; // 100.000 × UVT
   
   let tarifa_base = 2.5; // default
   
@@ -84,7 +87,7 @@ export function compute(i: Inputs): Outputs {
   // Recomendación
   let recomendacion = '';
   if (i.ingresos_brutos_anuales > LIMITE_REGIMEN_SIMPLE) {
-    recomendacion = `⚠️ Ingresos exceden límite ($${(LIMITE_REGIMEN_SIMPLE / 1000000).toFixed(0)}M). Debes estar en régimen ordinario.`;
+    recomendacion = `⚠️ Ingresos exceden límite ($${(LIMITE_REGIMEN_SIMPLE / 1_000_000_000).toFixed(1)} mil millones / 100.000 UVT). Debes estar en régimen ordinario.`;
   } else if (comparativa_ordinario > 0) {
     const ahorro_pct = ((comparativa_ordinario / impuesto_ordinario_estimado) * 100).toFixed(1);
     recomendacion = `✅ Régimen Simple es **${ahorro_pct}%** más económico que ordinario. Mantente en Simple.`;
@@ -113,7 +116,7 @@ export function compute(i: Inputs): Outputs {
   if (excede) {
     _insight = {
       title: 'Excedés el Régimen Simple',
-      text: `Con ingresos de **${fmtCOP(i.ingresos_brutos_anuales)}** superás el tope del Régimen Simple ($${(LIMITE_REGIMEN_SIMPLE / 1000000).toFixed(0)}M). Tenés que tributar en el **régimen ordinario**.`,
+      text: `Con ingresos de **${fmtCOP(i.ingresos_brutos_anuales)}** superás el tope del Régimen Simple (100.000 UVT = ${fmtCOP(LIMITE_REGIMEN_SIMPLE)}). Tenés que tributar en el **régimen ordinario**.`,
       tone: 'warn',
       icon: '⚠️',
     };

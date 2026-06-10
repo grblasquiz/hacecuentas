@@ -6,6 +6,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
+import { MEXICO_2026, fmtMXN, isrMensual2026, cuotaImssObreroMensual } from '../../lib/data/mexico-2026';
 
 const localeModules = import.meta.glob<any>('../../content/calcs-mx/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
@@ -64,6 +65,75 @@ const popularSlugs = [
 ];
 const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
 
+// ── Datos clave 2026 — todo computado desde src/lib/data/mexico-2026.ts (fuente única, nunca stale) ──
+const M = MEXICO_2026;
+// Ejemplo de sueldo neto: bruto mensual $15.000 (ISR Art. 96 + cuota obrera IMSS, SBC ≈ bruto)
+const ejemploBruto = 15000;
+const isrEjemplo = isrMensual2026(ejemploBruto);
+const imssEjemplo = cuotaImssObreroMensual(ejemploBruto);
+const netoEjemplo = ejemploBruto - isrEjemplo - imssEjemplo;
+const aguinaldoSm = M.salarioMinimo.generalDiario * M.lft.aguinaldoDiasMinimo;
+const topePrimaAntiguedadDiario = M.salarioMinimo.generalDiario * M.lft.primaAntiguedad.topeSalarioVecesSm;
+const exentoAguinaldo = M.uma.diaria * M.exencionesIsrUmas.aguinaldo;
+
+const datosClave = [
+  { k: 'Salario mínimo general', v: `${fmtMXN(M.salarioMinimo.generalDiario)} /día — ${fmtMXN(M.salarioMinimo.generalMensual)} /mes`, src: 'CONASAMI, DOF 09-dic-2025' },
+  { k: 'Salario mínimo frontera norte (ZLFN)', v: `${fmtMXN(M.salarioMinimo.zlfnDiario)} /día — ${fmtMXN(M.salarioMinimo.zlfnMensual)} /mes`, src: 'CONASAMI, DOF 09-dic-2025' },
+  { k: 'UMA 2026', v: `${fmtMXN(M.uma.diaria)} /día — ${fmtMXN(M.uma.mensual)} /mes`, src: 'INEGI, vigente desde 01-feb-2026' },
+  { k: 'ISR mensual (tarifa Art. 96)', v: '1.92% a 35%', src: 'SAT, Anexo 8 RMF 2026' },
+  { k: 'Subsidio para el empleo', v: `${fmtMXN(M.subsidioEmpleo.montoMensual)} /mes (ingresos hasta ${fmtMXN(M.subsidioEmpleo.topeIngresoMensual)})`, src: 'Decreto DOF 31-dic-2025' },
+  { k: 'Cuota obrera IMSS', v: '2.375% del SBC (+0.4% sobre el excedente de 3 UMA)', src: 'Ley del Seguro Social' },
+  { k: 'Aguinaldo mínimo', v: `${M.lft.aguinaldoDiasMinimo} días de salario (antes del 20-dic)`, src: 'LFT Art. 87' },
+  { k: 'Prima vacacional mínima', v: '25% sobre los días de vacaciones', src: 'LFT Art. 80' },
+  { k: 'INFONAVIT (aportación patronal)', v: '5% del SBC', src: 'Ley INFONAVIT Art. 29' },
+];
+
+// ── Las más buscadas — calcs MX con más tracción real en Bing (GSC/Bing Webmaster, jun-2026) ──
+const masBuscadas = [
+  { slug: 'calculadora-prima-antiguedad-mexico', icon: '🎖️', title: 'Prima de antigüedad', desc: `12 días de salario por año trabajado, con salario topado a 2 veces el mínimo (${fmtMXN(topePrimaAntiguedadDiario)} diarios en 2026).` },
+  { slug: 'calculadora-placas-auto-costo-mexico', icon: '🪪', title: 'Costo de placas de auto', desc: 'Cuánto cuesta emplacar un auto según el estado: placas, tarjeta de circulación y refrendo.' },
+  { slug: 'calculadora-imss-cuotas-empleado-patron-mexico-2026', icon: '🏥', title: 'Cuotas IMSS 2026', desc: 'Cuánto aportan trabajador y patrón al IMSS sobre tu salario base de cotización.' },
+  { slug: 'calculadora-isr-honorarios-persona-fisica', icon: '💼', title: 'ISR por honorarios', desc: 'ISR de actividad profesional con retención del 10% si facturás a persona moral.' },
+  { slug: 'calculadora-credito-infonavit-descuento', icon: '🏠', title: 'Descuento Infonavit', desc: 'Cuánto te descuentan del sueldo por tu crédito Infonavit según el factor de pago.' },
+  { slug: 'calculadora-impuesto-cedular-arrendamiento-mexico', icon: '🏘️', title: 'ISR por arrendamiento', desc: `ISR por rentar un inmueble, con la deducción ciega del ${(M.arrendamiento.deduccionCiega * 100).toFixed(0)}% sin comprobantes.` },
+];
+
+// ── FAQ país-específica: respuestas con cifras computadas desde la fuente única ──
+const faq = [
+  {
+    q: '¿Cuál es el salario mínimo en México en 2026?',
+    a: `Desde el 1 de enero de 2026 el salario mínimo general es de ${fmtMXN(M.salarioMinimo.generalDiario)} diarios (${fmtMXN(M.salarioMinimo.generalMensual)} al mes) y en la Zona Libre de la Frontera Norte de ${fmtMXN(M.salarioMinimo.zlfnDiario)} diarios (${fmtMXN(M.salarioMinimo.zlfnMensual)} al mes), según la resolución de CONASAMI publicada en el DOF.`,
+  },
+  {
+    q: '¿Cómo se calcula el sueldo neto en México 2026?',
+    a: `Al sueldo bruto se le resta el ISR (tarifa mensual del Art. 96 LISR, del 1.92% al 35%) y la cuota obrera del IMSS (~2.375% del SBC más 0.4% del excedente de 3 UMA). Ejemplo: con ${fmtMXN(ejemploBruto)} brutos al mes pagás ${fmtMXN(isrEjemplo)} de ISR y ${fmtMXN(imssEjemplo)} de IMSS, y te quedan ${fmtMXN(netoEjemplo)} netos aproximados.`,
+  },
+  {
+    q: '¿Cuánto vale la UMA en 2026 y para qué sirve?',
+    a: `La UMA 2026 vale ${fmtMXN(M.uma.diaria)} diarios (${fmtMXN(M.uma.mensual)} mensuales), vigente desde el 1 de febrero de 2026 (INEGI). Se usa para topes del IMSS e INFONAVIT, exenciones de ISR, multas y créditos: por ejemplo, el SBC se topa en 25 UMA y el aguinaldo está exento hasta 30 UMA (${fmtMXN(exentoAguinaldo)}).`,
+  },
+  {
+    q: '¿Cuánto me toca de aguinaldo en 2026?',
+    a: `El mínimo legal son ${M.lft.aguinaldoDiasMinimo} días de salario, pagaderos antes del 20 de diciembre (LFT Art. 87). Con salario mínimo general son ${fmtMXN(aguinaldoSm)}. Si trabajaste menos de un año, te corresponde la parte proporcional. Está exento de ISR hasta 30 UMA (${fmtMXN(exentoAguinaldo)}).`,
+  },
+  {
+    q: '¿Cuánto descuentan de IMSS al trabajador?',
+    a: `La cuota obrera es ~2.375% del salario base de cotización (enfermedad y maternidad en dinero, gastos médicos de pensionados, invalidez y vida, y cesantía y vejez), más 0.4% sobre lo que exceda de 3 UMA. El patrón paga mucho más: cuota fija de 20.40% de la UMA por trabajador, retiro 2%, CEAV progresivo (3.15% a 7.513% en 2026), INFONAVIT 5% y riesgo de trabajo.`,
+  },
+  {
+    q: '¿Quién recibe el subsidio para el empleo en 2026?',
+    a: `Los trabajadores con ingreso mensual de hasta ${fmtMXN(M.subsidioEmpleo.topeIngresoMensual)}: el subsidio es de ${fmtMXN(M.subsidioEmpleo.montoMensual)} mensuales y se resta del ISR a retener (decreto DOF 31-dic-2025). Por eso quien gana el salario mínimo no paga ISR.`,
+  },
+  {
+    q: '¿Cómo se calcula la prima de antigüedad?',
+    a: `Son ${M.lft.primaAntiguedad.diasPorAnio} días de salario por cada año de servicio (LFT Art. 162), con el salario topado a ${M.lft.primaAntiguedad.topeSalarioVecesSm} veces el mínimo: en 2026 el tope es ${fmtMXN(topePrimaAntiguedadDiario)} diarios. Se paga al renunciar con 15+ años de antigüedad, o en cualquier despido o muerte del trabajador.`,
+  },
+  {
+    q: '¿Cuántos días de vacaciones corresponden en 2026?',
+    a: `Con la reforma de "vacaciones dignas" (LFT Art. 76): ${M.lft.vacacionesPorAnio[0]} días el primer año, y suben 2 por año hasta ${M.lft.vacacionesPorAnio[4]} en el quinto; después aumentan 2 días cada 5 años. Además se paga prima vacacional mínima del 25% sobre esos días (LFT Art. 80).`,
+  },
+];
+
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -84,6 +154,34 @@ const schema = {
         { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
         { '@type': 'ListItem', position: 2, name: 'México', item: 'https://hacecuentas.com/mx' },
       ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://hacecuentas.com/mx#faq',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'Dataset',
+      '@id': 'https://hacecuentas.com/mx#datos-2026',
+      name: 'Datos laborales y fiscales de México 2026',
+      description: `Valores oficiales vigentes en México 2026: salario mínimo (${fmtMXN(M.salarioMinimo.generalDiario)} diarios general, ${fmtMXN(M.salarioMinimo.zlfnDiario)} ZLFN), UMA (${fmtMXN(M.uma.diaria)} diaria), tarifa de ISR, subsidio para el empleo, cuotas IMSS, aguinaldo, prima vacacional e INFONAVIT.`,
+      url: 'https://hacecuentas.com/mx',
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      isAccessibleForFree: true,
+      inLanguage: 'es-MX',
+      temporalCoverage: '2026',
+      spatialCoverage: { '@type': 'Country', name: 'México' },
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      sourceOrganization: [
+        { '@type': 'GovernmentOrganization', name: 'CONASAMI', url: 'https://www.gob.mx/conasami' },
+        { '@type': 'GovernmentOrganization', name: 'SAT', url: 'https://www.sat.gob.mx' },
+        { '@type': 'GovernmentOrganization', name: 'IMSS', url: 'https://www.imss.gob.mx' },
+      ],
+      keywords: ['salario mínimo México 2026', 'UMA 2026', 'tarifa ISR 2026', 'cuotas IMSS 2026', 'subsidio para el empleo 2026', 'aguinaldo'],
     },
   ],
 };
@@ -139,6 +237,40 @@ const hreflangTags = HOME_HREFLANG;
       </section>
     )}
 
+    <section class="top-bing" aria-labelledby="mas-buscadas-title">
+      <h2 id="mas-buscadas-title">Las más buscadas en México</h2>
+      <p class="section-sub">Las calculadoras mexicanas con más búsquedas este mes.</p>
+      <div class="top-grid">
+        {masBuscadas.map((c) => (
+          <a href={`/mx/${c.slug}`} class="top-card">
+            <span class="t-icon" aria-hidden="true">{c.icon}</span>
+            <span>
+              <span class="t-title">{c.title}</span>
+              <span class="t-desc">{c.desc}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="datos-clave" aria-labelledby="datos-clave-title">
+      <h2 id="datos-clave-title">Datos clave de México 2026</h2>
+      <p class="section-sub">Los valores oficiales que usan todas nuestras calculadoras mexicanas. Uso libre con atribución (CC-BY 4.0).</p>
+      <div class="dc-wrap">
+        <table class="dc-table">
+          <thead>
+            <tr><th>Concepto</th><th>Valor 2026</th><th>Fuente</th></tr>
+          </thead>
+          <tbody>
+            {datosClave.map((d) => (
+              <tr><td>{d.k}</td><td>{d.v}</td><td class="dc-src">{d.src}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="dc-note">Última revisión: 10 de junio de 2026. Fuentes: DOF, CONASAMI, INEGI, SAT e IMSS.</p>
+    </section>
+
     <div class="categories">
       {activeCategories.map((catKey) => {
         const meta = categoryMeta[catKey];
@@ -168,6 +300,18 @@ const hreflangTags = HOME_HREFLANG;
         );
       })}
     </div>
+
+    <section class="faq-hub" aria-labelledby="faq-title">
+      <h2 id="faq-title">Preguntas frecuentes sobre sueldos e impuestos en México 2026</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary><span>{f.q}</span></summary>
+            <p class="faq-a">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
 
     <aside class="cta-footer" aria-label="Otras versiones">
       <p class="cta-text">¿Buscas calculadoras de otro país?</p>
@@ -255,4 +399,40 @@ const hreflangTags = HOME_HREFLANG;
     text-decoration: none; transition: all 0.15s;
   }
   .cta-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  .top-bing, .datos-clave, .faq-hub { padding: 0 1rem 2.5rem; }
+  .top-bing h2, .datos-clave h2, .faq-hub h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .section-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; }
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .top-card {
+    display: flex; gap: 0.75rem; padding: 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text); transition: all 0.15s;
+  }
+  .top-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .top-card .t-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .top-card .t-title { font-weight: 600; font-size: 0.9375rem; display: block; margin-bottom: 0.25rem; }
+  .top-card .t-desc { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.45; }
+
+  .dc-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .dc-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--bg-card); }
+  .dc-table th, .dc-table td { padding: 0.625rem 0.875rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .dc-table tr:last-child td { border-bottom: none; }
+  .dc-table th { background: var(--bg-muted); font-weight: 600; }
+  .dc-table td:nth-child(2) { font-weight: 600; white-space: nowrap; }
+  .dc-table .dc-src { color: var(--text-muted); font-size: 0.8125rem; }
+  .dc-note { color: var(--text-muted); font-size: 0.8125rem; margin: 0.625rem 0 0; }
+
+  .faq-hub h2 { margin-bottom: 1rem; }
+  .faq-list { display: grid; gap: 0.625rem; }
+  .faq-list details { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .faq-list summary {
+    cursor: pointer; padding: 0.875rem 1rem; font-weight: 600; font-size: 0.9375rem;
+    list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+  }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary::after { content: '+'; color: var(--text-muted); font-weight: 700; }
+  .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
 </style>

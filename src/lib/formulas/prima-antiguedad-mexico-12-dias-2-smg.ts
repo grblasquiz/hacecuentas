@@ -1,3 +1,5 @@
+import { MEXICO_2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   salario_diario: number;
   antiguedad_anos: number;
@@ -18,9 +20,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 México - SAT / Banxico
-  const SMG_DIARIO_2026 = 248.93; // Salario Mínimo General diario 2026 (SAT)
-  const TOPE_LEGAL_DIARIO = SMG_DIARIO_2026 * 2; // Tope de 2 SMG (artículo 162 LFT)
+  // Constantes 2026 México — fuente única src/lib/data/mexico-2026.ts (CONASAMI/DOF)
+  const SMG_DIARIO_2026 = MEXICO_2026.salarioMinimo.generalDiario; // Salario Mínimo General diario 2026 = $315,04
+  const TOPE_LEGAL_DIARIO = SMG_DIARIO_2026 * MEXICO_2026.lft.primaAntiguedad.topeSalarioVecesSm; // Tope de 2 SMG (art. 162/486 LFT)
   const DIAS_PRIMA_POR_ANO = 12; // 12 días por año de antigüedad (artículo 162 LFT)
   const TASA_ISR_PRIMA = 0.30; // Retención 30% ISR obligatoria (artículo 162 LFT)
   const ANTIGUEDAD_MINIMA_RENUNCIA = 15; // Mínimo 15 años para renuncia voluntaria

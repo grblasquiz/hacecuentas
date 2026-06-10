@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   salario_base_mensual: number;
   tipo_empleado: 'independiente_afiliado' | 'dependiente' | 'temporal';
@@ -23,8 +25,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 Colombia - DIAN, Ministerio Trabajo
-  const SMMLV_2026 = 1300000; // COP - Decreto Ministerio Trabajo enero 2026
+  // Constantes 2026 Colombia (fuente única: src/lib/data/colombia-2026.ts)
+  const SMMLV_2026 = COLOMBIA_2026.smlmv; // SMLMV 2026 = $1.750.905 (Decreto 1469/2025)
   const PCTJ_CESANTIAS = 0.0833; // 8.33% - Código Sustantivo Trabajo
   const PCTJ_INTERESES_CESANTIAS = 0.01; // 1% - Ley 50/1990
   const PCTJ_PRIMA = 0.0833; // 8.33% acumulado - Código Sustantivo

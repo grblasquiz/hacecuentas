@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   salario_mensual_bruto: number;
   num_dependientes?: number;
@@ -22,7 +23,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 DIAN
-  const UVT_2026 = 49799; // Resolución DIAN 2026
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const COTIZACION_EPS_PENSIÓN_DEFAULT = 8; // 4% EPS + 4% pensión
   const DEDUCCIÓN_DEPENDIENTE_UVT = 2; // 2 UVT por dependiente
 

@@ -1,3 +1,5 @@
+import { isrMensual2026, isrAnual2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   ingreso_mensual_bruto: number;
   gastos_deducibles_mensual: number;
@@ -22,82 +24,6 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Tarifa ISR Salarios 2026 México (UMA 2026 = ~$312.05 MXN)
-function calcularISRSalarios(ingreso_gravable: number): number {
-  // Tarifa simplificada 2026 (tramos aproximados)
-  const UMA = 312.05;
-  const limit1 = UMA * 2.18; // ~$680.94
-  const limit2 = UMA * 19.07; // ~$5,951.97
-  const limit3 = UMA * 333.67; // ~$104,087.95
-  const limit4 = UMA * 416.67; // ~$130,068.62
-  const limit5 = UMA * 833.33; // ~$260,137.24
-  const limit6 = UMA * 2083.33; // ~$650,343.10
-  const limit7 = UMA * 5000; // ~$1,560,250
-
-  let isr = 0;
-  let cuota = 0;
-
-  if (ingreso_gravable <= limit1) {
-    isr = ingreso_gravable * 0.0192;
-  } else if (ingreso_gravable <= limit2) {
-    cuota = limit1 * 0.0192;
-    isr = cuota + (ingreso_gravable - limit1) * 0.064;
-  } else if (ingreso_gravable <= limit3) {
-    cuota = limit1 * 0.0192 + (limit2 - limit1) * 0.064;
-    isr = cuota + (ingreso_gravable - limit2) * 0.1088;
-  } else if (ingreso_gravable <= limit4) {
-    cuota = limit1 * 0.0192 + (limit2 - limit1) * 0.064 + (limit3 - limit2) * 0.1088;
-    isr = cuota + (ingreso_gravable - limit3) * 0.1664;
-  } else if (ingreso_gravable <= limit5) {
-    cuota = limit1 * 0.0192 + (limit2 - limit1) * 0.064 + (limit3 - limit2) * 0.1088 + (limit4 - limit3) * 0.1664;
-    isr = cuota + (ingreso_gravable - limit4) * 0.1760;
-  } else if (ingreso_gravable <= limit6) {
-    cuota = limit1 * 0.0192 + (limit2 - limit1) * 0.064 + (limit3 - limit2) * 0.1088 + (limit4 - limit3) * 0.1664 + (limit5 - limit4) * 0.1760;
-    isr = cuota + (ingreso_gravable - limit5) * 0.1776;
-  } else if (ingreso_gravable <= limit7) {
-    cuota = limit1 * 0.0192 + (limit2 - limit1) * 0.064 + (limit3 - limit2) * 0.1088 + (limit4 - limit3) * 0.1664 + (limit5 - limit4) * 0.1760 + (limit6 - limit5) * 0.1776;
-    isr = cuota + (ingreso_gravable - limit6) * 0.1904;
-  } else {
-    cuota = limit1 * 0.0192 + (limit2 - limit1) * 0.064 + (limit3 - limit2) * 0.1088 + (limit4 - limit3) * 0.1664 + (limit5 - limit4) * 0.1760 + (limit6 - limit5) * 0.1776 + (limit7 - limit6) * 0.1904;
-    isr = cuota + (ingreso_gravable - limit7) * 0.35;
-  }
-
-  return Math.max(0, isr);
-}
-
-// Tarifa ISR Personas Físicas 2026 (simplificada anual)
-function calcularISRPersonasFisicas(ingreso_gravable_anual: number): number {
-  // Tarifa PF 2026 (simplificada, progresiva 5%-35%)
-  const limit1 = 20681.76 * 12; // ~$248,181.12
-  const limit2 = 34896.25 * 12; // ~$418,755
-  const limit3 = 58644.10 * 12; // ~$703,729.20
-  const limit4 = 87220.42 * 12; // ~$1,046,645.04
-  const limit5 = 173616.33 * 12; // ~$2,083,396
-
-  let isr = 0;
-  let cuota = 0;
-
-  if (ingreso_gravable_anual <= limit1) {
-    isr = ingreso_gravable_anual * 0.05;
-  } else if (ingreso_gravable_anual <= limit2) {
-    cuota = limit1 * 0.05;
-    isr = cuota + (ingreso_gravable_anual - limit1) * 0.10;
-  } else if (ingreso_gravable_anual <= limit3) {
-    cuota = limit1 * 0.05 + (limit2 - limit1) * 0.10;
-    isr = cuota + (ingreso_gravable_anual - limit2) * 0.15;
-  } else if (ingreso_gravable_anual <= limit4) {
-    cuota = limit1 * 0.05 + (limit2 - limit1) * 0.10 + (limit3 - limit2) * 0.15;
-    isr = cuota + (ingreso_gravable_anual - limit3) * 0.20;
-  } else if (ingreso_gravable_anual <= limit5) {
-    cuota = limit1 * 0.05 + (limit2 - limit1) * 0.10 + (limit3 - limit2) * 0.15 + (limit4 - limit3) * 0.20;
-    isr = cuota + (ingreso_gravable_anual - limit4) * 0.25;
-  } else {
-    cuota = limit1 * 0.05 + (limit2 - limit1) * 0.10 + (limit3 - limit2) * 0.15 + (limit4 - limit3) * 0.20 + (limit5 - limit4) * 0.25;
-    isr = cuota + (ingreso_gravable_anual - limit5) * 0.35;
-  }
-
-  return Math.max(0, isr);
-}
 
 export function compute(i: Inputs): Outputs {
   const ingreso_bruto = i.ingreso_mensual_bruto || 0;
@@ -129,7 +55,7 @@ export function compute(i: Inputs): Outputs {
   // CÁLCULO ASIMILADO
   if (modalidad === 'ambas' || modalidad === 'asimilado') {
     const gravable_asimilado = ingreso_bruto - gastos;
-    const isr_asimilado = calcularISRSalarios(gravable_asimilado);
+    const isr_asimilado = isrMensual2026(gravable_asimilado); // tarifa mensual 2026 (Art. 96 LISR, Anexo 8 RMF 2026)
     // IMSS: 7.065% patronal + 8.5% obrero = 15.565% aproximado (sobre ingreso bruto)
     const imss_asimilado = ingreso_bruto * 0.15565;
     const neto_asimilado = ingreso_bruto - isr_asimilado - imss_asimilado;
@@ -148,7 +74,7 @@ export function compute(i: Inputs): Outputs {
     const retencion_honorarios = ingreso_bruto * 0.10; // Retención 10%
     // ISR anual estimado (Personas Físicas, base anual)
     const ingreso_gravable_anual = gravable_honorarios * 12;
-    const isr_anual_pf = calcularISRPersonasFisicas(ingreso_gravable_anual);
+    const isr_anual_pf = isrAnual2026(ingreso_gravable_anual); // tarifa anual 2026 (Art. 152 LISR, Anexo 8 RMF 2026)
     // Restar retenciones anuales (10% mensual = 120% anual de ingreso bruto, simplificado)
     const retenciones_anuales = retencion_honorarios * 12;
     const isr_a_pagar_anual = Math.max(0, isr_anual_pf - retenciones_anuales);

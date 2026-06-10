@@ -1,7 +1,11 @@
 /**
  * Calculadora de descuento Infonavit sobre el sueldo
- * Descuento aplicado mensualmente al trabajador por crédito de vivienda
+ * Descuento aplicado mensualmente al trabajador por crédito de vivienda.
+ * Los créditos viejos en VSM se actualizan con la UMI (Unidad Mixta Infonavit),
+ * NO con el salario mínimo, desde 2017. UMI 2026: $100.81/día (sin aumento vs 2025).
+ * Constantes desde src/lib/data/mexico-2026.ts.
  */
+import { MEXICO_2026 } from '../data/mexico-2026.ts';
 
 export interface Inputs {
   sueldoMensual: number;
@@ -20,21 +24,24 @@ export interface Outputs {
   _chart?: any;
 }
 
-const SMG_DIARIO_2026 = 278.80;
-
 export function infonavitDescuentoSueldo(i: Inputs): Outputs {
   const sueldo = Number(i.sueldoMensual);
-  const factor = Number(i.porcentajeDescuento ?? 30);
+  // Guard de default: ''/null/undefined → 30% (Number('') = 0 pisaría el default)
+  const factorRaw = i.porcentajeDescuento;
+  const factorNum = Number(factorRaw);
+  const factor = (factorRaw === undefined || factorRaw === null || (factorRaw as unknown) === '' || !Number.isFinite(factorNum))
+    ? 30
+    : factorNum;
   const tipo = i.tipoCredito ?? 'pesos';
-  const cuotaVSM = Number(i.cuotaFijaVSM ?? 0);
+  const cuotaVSM = Number(i.cuotaFijaVSM ?? 0) || 0;
 
   if (!sueldo || sueldo <= 0) throw new Error('Ingresá el sueldo mensual');
   if (factor < 0 || factor > 100) throw new Error('Factor de descuento debe estar entre 0 y 100');
 
   let descuentoMensual: number;
   if (tipo === 'vsm' && cuotaVSM > 0) {
-    // VSM: cuotaVSM * 30 dias * SMG diario
-    descuentoMensual = cuotaVSM * 30 * SMG_DIARIO_2026;
+    // VSM: cuota en VSM × factor mensual 30.4 × UMI diaria (Infonavit actualiza los créditos VSM con la UMI desde 2017)
+    descuentoMensual = cuotaVSM * MEXICO_2026.salarioMinimo.factorMensual * MEXICO_2026.umiDiaria2026;
   } else {
     descuentoMensual = sueldo * factor / 100;
   }

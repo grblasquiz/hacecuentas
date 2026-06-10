@@ -106,13 +106,16 @@ export function cobayoVitaminaCDosisDiaria(i: Inputs): Outputs {
 
   const insightText = { es: consejo, en: consejoEn, pt: consejoPt }[__lang];
 
+  // Unidad localizada por idioma
+  const unidadDia = { es: 'mg/día', en: 'mg/day', pt: 'mg/dia' }[__lang];
+
   // Gauge chart: 0–60 mg/día (rango máximo orientativo sin prescripción)
   const maxGauge = 60;
   const pct = pesoG > 0 ? Math.min(100, (dosisTotal / maxGauge) * 100) : 0;
   const _chart = {
     type: 'gauge',
     value: pct,
-    label: `${resultado} mg/día`,
+    label: `${resultado} ${unidadDia}`,
     min: 0,
     max: maxGauge,
     zones: [
@@ -123,7 +126,7 @@ export function cobayoVitaminaCDosisDiaria(i: Inputs): Outputs {
   };
 
   return {
-    resultado: `${resultado} mg/día`,
+    resultado: `${resultado} ${unidadDia}`,
     resumen,
     _insight: { title: insightTitle, text: insightText, tone: 'neutral', icon: '🐹' },
     _chart,

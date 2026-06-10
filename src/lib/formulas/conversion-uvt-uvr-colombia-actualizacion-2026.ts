@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   tipo_conversion: 'pesos_a_uvt' | 'uvt_a_pesos' | 'pesos_a_uvr' | 'uvr_a_pesos';
   monto: number;
@@ -15,8 +17,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 Colombia - DIAN y Banco República
-  const UVT_2026 = 49799; // Pesos colombianos, vigente desde 1 enero 2026. Fuente: DIAN
+  // Constantes 2026 Colombia (fuente única: src/lib/data/colombia-2026.ts)
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const UVR_APROXIMADO_2026 = 34567.89; // UVR aproximado base 2026, variable según inflación BR
   
   // Validación entrada
@@ -42,7 +44,7 @@ export function compute(i: Inputs): Outputs {
     resultado_conversion = i.monto / UVT_2026;
     unidad_destino = 'UVT';
     valor_unitario = UVT_2026;
-    tipo_ajuste = 'División por UVT 2026 ($49.799)';
+    tipo_ajuste = 'División por UVT 2026 ($52.374)';
     referencia_normativa = 'DIAN Resolución UVT 2026 (Actualización IPC anual)';
   } else if (i.tipo_conversion === 'uvt_a_pesos') {
     // Conversión: UVT → Pesos colombianos
@@ -50,7 +52,7 @@ export function compute(i: Inputs): Outputs {
     resultado_conversion = i.monto * UVT_2026;
     unidad_destino = 'Pesos COP';
     valor_unitario = UVT_2026;
-    tipo_ajuste = 'Multiplicación por UVT 2026 ($49.799)';
+    tipo_ajuste = 'Multiplicación por UVT 2026 ($52.374)';
     referencia_normativa = 'DIAN Resolución UVT 2026';
   } else if (i.tipo_conversion === 'pesos_a_uvr') {
     // Conversión: Pesos → UVR (diaria)

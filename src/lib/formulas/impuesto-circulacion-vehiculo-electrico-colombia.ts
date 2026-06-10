@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   precio_vehiculo: number;
   departamento: string;
@@ -60,7 +62,7 @@ const tarifas_departamento: Record<string, number> = {
 export function compute(i: Inputs): Outputs {
   // Validación de entrada
   const precio = Math.max(0, i.precio_vehiculo || 0);
-  const uvt = Math.max(40000, Math.min(50000, i.uvt_2026 || 45600));
+  const uvt = Math.max(40000, Math.min(60000, i.uvt_2026 || COLOMBIA_2026.uvt));
   const tarifa_dept = tarifas_departamento[i.departamento] || 0.010;
   
   // Constantes DIAN 2026

@@ -19,6 +19,9 @@
  *    (isenção efetiva até R$ 5.000) — Lei 14.663/2023 e reforma 2026.
  */
 
+/** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
+export const DATA_AS_OF = '2026-06-05';
+
 /** Salário mínimo nacional 2026 (Decreto 12.797/2025). */
 export const SALARIO_MINIMO = 1621.0;
 
@@ -121,7 +124,32 @@ export function calcSeguroDesemprego(media: number): number {
   return Math.round(valor * 100) / 100;
 }
 
+/* ───────────────────── FGTS / SFH habitação ───────────────────── */
+// Teto do valor do imóvel para uso do FGTS dentro do SFH. Elevado de R$ 1,5 mi
+// para R$ 2,25 mi em nov/2025 (Resolução CMN 5.255; Conselho Curador do FGTS).
+// Fontes:
+//  - https://agenciabrasil.ebc.com.br/economia/noticia/2025-11/conselho-do-fgts-libera-uso-do-fundo-para-imoveis-de-ate-r-225-mi
+//  - https://www.registrodeimoveis.org.br/imoveis-de-ate-2-25-mi-poderao-usar-fgts
+/** Teto do valor do imóvel (SFH) para uso do FGTS em 2026: R$ 2.250.000. */
+export const FGTS_TETO_IMOVEL_SFH = 2_250_000;
+
+/** Alíquota de depósito mensal do FGTS — art. 15 da Lei 8.036/1990 (8%, fixa). */
+export const FGTS_ALIQUOTA_DEPOSITO = 0.08;
+
 /* ──────────────────────── DAS MEI 2026 ──────────────────────── */
+// Limite de faturamento anual do MEI: R$ 81.000 (R$ 6.750/mês), inalterado
+// desde 2018 — nenhum reajuste confirmado para 2026 (projetos para R$ 130k/150k
+// seguem em tramitação, não aprovados). Tolerância de +20% (R$ 97.200) antes do
+// desenquadramento retroativo. Fontes:
+//  - https://www.infinitepay.io/blog/limite-faturamento-mei-2026
+//  - https://www.serasaexperian.com.br/conteudos/limite-de-faturamento-mei/
+/** Teto de faturamento anual do MEI 2026: R$ 81.000. */
+export const MEI_LIMITE_FATURAMENTO = 81_000;
+/** Teto com tolerância de +20% (R$ 97.200): acima disso, desenquadramento retroativo. */
+export const MEI_LIMITE_FATURAMENTO_20 = 97_200;
+/** Limite proporcional ao 1º ano (R$ 6.750/mês): teto anual ÷ 12. */
+export const MEI_LIMITE_FATURAMENTO_MENSAL = MEI_LIMITE_FATURAMENTO / 12;
+
 // INSS = 5% do salário mínimo (TAC transportador: 12%); + ICMS R$ 1 (comércio)
 // e/ou ISS R$ 5 (serviços). Vencimento dia 20 (PGMEI).
 export const DAS_MEI = {

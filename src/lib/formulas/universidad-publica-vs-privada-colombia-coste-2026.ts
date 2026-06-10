@@ -22,8 +22,6 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 Colombia
-  const UVR_2026 = 43280; // Unidad de Valor Real DIAN
-  const SMLV_2026 = 1300000; // Salario Mínimo Legal Vigente
   const TASA_ICETEX = 0.04; // 4% anual
   const MESES_CREDITO = 180; // 15 años
   const GASTOS_ADMIN_PUBLICA = 200000;
@@ -68,7 +66,6 @@ export function compute(i: Inputs): Outputs {
   // 3. Calcular becas según tipo y ingresos familia
   let becas_total = 0;
   const ingresos_mensuales = i.ingresos_familia_anual / 12;
-  const uvr_mensuales = ingresos_mensuales / UVR_2026;
 
   if (i.tiene_beca === 'icetex_100') {
     // 100% beca (familia < 3 UVR/mes): típicamente pública

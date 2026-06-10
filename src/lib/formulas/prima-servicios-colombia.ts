@@ -1,6 +1,7 @@
 /** Prima de servicios Colombia — Art. 306 CST
  *  Un mes de salario por año: mitad en junio, mitad en diciembre
  */
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 
 export interface Inputs {
   salarioMensual: number;
@@ -27,10 +28,10 @@ export function primaServiciosColombia(i: Inputs): Outputs {
 
   if (!salario || salario <= 0) throw new Error('Ingresá tu salario mensual');
 
-  // SMLMV 2026 estimado
-  const SMLMV = 1_423_500;
+  // SMLMV 2026 (fuente única: src/lib/data/colombia-2026.ts)
+  const SMLMV = COLOMBIA_2026.smlmv; // $1.750.905 (Decreto 1469/2025)
   // Auxilio de transporte 2026 estimado
-  const AUXILIO_TRANSPORTE = 200_000;
+  const AUXILIO_TRANSPORTE = COLOMBIA_2026.auxilioTransporte; // $249.095 (Decreto 1470/2025)
 
   // Auxilio de transporte aplica si gana hasta 2 SMLMV
   let baseLiquidacion = salario;

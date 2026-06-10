@@ -24,14 +24,51 @@
     "Convertir un precio 'todo incluido' de S/ 2.950 que te pasó un proveedor a su base imponible (S/ 2.500) y su IGV (S/ 450)."
   ],
   "fields": [
-    { "id": "monto", "label": "Monto (S/)", "type": "number", "required": true, "placeholder": "1000", "min": 0, "step": 0.01, "unit": "S/" },
-    { "id": "modo", "label": "¿Qué querés hacer?", "type": "select", "default": "agregar", "options": [ { "value": "agregar", "label": "Agregar IGV (el monto es la base, sin impuesto)" }, { "value": "quitar", "label": "Quitar IGV (el monto ya incluye el 18%)" } ] }
+    {
+      "id": "monto",
+      "label": "Monto (S/)",
+      "type": "number",
+      "required": true,
+      "placeholder": "1000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "S/"
+    },
+    {
+      "id": "modo",
+      "label": "¿Qué querés hacer?",
+      "type": "select",
+      "default": "agregar",
+      "options": [
+        {
+          "value": "agregar",
+          "label": "Agregar IGV (el monto es la base, sin impuesto)"
+        },
+        {
+          "value": "quitar",
+          "label": "Quitar IGV (el monto ya incluye el 18%)"
+        }
+      ]
+    }
   ],
   "outputs": [
-    { "id": "total", "label": "Total (con IGV)", "primary": true },
-    { "id": "base", "label": "Base (sin IGV)" },
-    { "id": "igv", "label": "IGV (18%)" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "total",
+      "label": "Total (con IGV)",
+      "primary": true
+    },
+    {
+      "id": "base",
+      "label": "Base (sin IGV)"
+    },
+    {
+      "id": "igv",
+      "label": "IGV (18%)"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: agregar IGV a una base de S/ 1.000",
@@ -43,23 +80,62 @@
     ],
     "result": "Base S/ 1.000 + IGV S/ 180 = Total S/ 1.180"
   },
-  "explanation": "## Cómo se calcula el IGV\n\n```\nAgregar IGV:  IGV = base × 18% ;  Total = base × 1,18\nQuitar IGV:   Base = total ÷ 1,18 ;  IGV = total − base\n```\n\nEl **18%** se compone de **16% de IGV** propiamente dicho más **2% de Impuesto de Promoción Municipal (IPM)**, que se cobran de forma conjunta en el comprobante. Esta tasa general se mantiene vigente en 2026.\n\n## Ejemplos resueltos paso a paso\n\n**Ejemplo 1 — Agregar IGV a una factura de S/ 4.000:**\n1. Base (sin impuesto): S/ 4.000.\n2. IGV = 4.000 × 18% = **S/ 720**.\n3. Total a facturar = 4.000 + 720 = **S/ 4.720**.\n\n**Ejemplo 2 — Quitar IGV de un precio de S/ 590 (ya lo incluye):**\n1. Base = 590 ÷ 1,18 = **S/ 500**.\n2. IGV = 590 − 500 = **S/ 90**.\n3. Comprobá: 500 × 18% = 90. ✔\n\n**Ejemplo 3 — Cotizar un servicio para cobrar S/ 1.500 netos:**\n1. Querés que te queden S/ 1.500 limpios de IGV.\n2. Precio a facturar = 1.500 × 1,18 = **S/ 1.770**.\n3. El IGV de S/ 270 lo declarás a SUNAT; vos te quedás con los S/ 1.500.\n\n## Tabla rápida: agregar y quitar IGV\n\n| Base (sin IGV) | IGV (18%) | Total (con IGV) |\n|---|---|---|\n| S/ 100 | S/ 18 | S/ 118 |\n| S/ 500 | S/ 90 | S/ 590 |\n| S/ 1.000 | S/ 180 | S/ 1.180 |\n| S/ 2.500 | S/ 450 | S/ 2.950 |\n| S/ 5.000 | S/ 900 | S/ 5.900 |\n\nPara ir al revés (de un precio con IGV a la base), dividí la columna \"Total\" entre 1,18.\n\n## Quién paga y quién recauda el IGV\n\nEl IGV lo paga el **consumidor final**, pero lo recauda el vendedor (inscrito en el RUC) y lo declara a SUNAT. Las empresas usan el IGV de sus **compras** como **crédito fiscal** contra el IGV de sus **ventas** (débito fiscal), y pagan a SUNAT solo la diferencia. Por eso es clave pedir y emitir comprobantes con RUC: sin ellos, no hay crédito fiscal.\n\n## Tasas de IGV vigentes\n\n| Operación | Tasa | Detalle |\n|---|---|---|\n| Régimen general | **18%** | 16% IGV + 2% IPM (esta calculadora) |\n| MYPE restaurantes y hoteles | **10,5%** | 8,5% IGV + 2% IPM, impulso al sector |\n| Exportación de bienes | **0%** | Saldo a favor del exportador |\n| Exoneradas / inafectas | **0%** | Algunos productos de canasta básica y servicios específicos |\n\n## Errores comunes\n\n- **Sacar el 18% al precio final.** Si un precio de S/ 118 ya incluye IGV, el impuesto es S/ 18 (118 ÷ 1,18 = 100 de base), **no** S/ 21,24. El divisor para quitar IGV es 1,18.\n- **Confundir base y total al cotizar.** Si tu cliente espera \"todo incluido\", facturá el total con IGV; si espera un neto, agregá el 18% encima.\n- **No pedir comprobante con RUC** en compras del negocio: perdés el crédito fiscal y pagás más IGV del que correspondía.\n- **Aplicar 18% a una operación exonerada** (por ejemplo algunos alimentos de canasta básica), inflando el precio.\n\n## Cuándo aplica y excepciones\n\nEl IGV grava la venta de bienes muebles, la prestación de servicios, los contratos de construcción, la primera venta de inmuebles del constructor y la importación. **No** aplica a operaciones exoneradas o inafectas (parte de la canasta básica, servicios financieros específicos, exportaciones a tasa 0%). Los contribuyentes del **Nuevo RUS** no usan crédito fiscal porque pagan una cuota fija.\n\n## Disclaimer\n\nCálculo orientativo con la tasa general del 18%. Para operaciones con tasa reducida, exoneradas o inafectas, o para el cálculo del crédito fiscal de tu empresa, consultá la normativa vigente de SUNAT o tu contador.\n",
+  "explanation": "## Cómo se calcula el IGV\n\n```\nAgregar IGV:  IGV = base × 18% ;  Total = base × 1,18\nQuitar IGV:   Base = total ÷ 1,18 ;  IGV = total − base\n```\n\nEl **18%** se compone de **16% de IGV** propiamente dicho más **2% de Impuesto de Promoción Municipal (IPM)**, que se cobran de forma conjunta en el comprobante. Esta tasa general se mantiene vigente en 2026.\n\n## Ejemplos resueltos paso a paso\n\n**Ejemplo 1 — Agregar IGV a una factura de S/ 4.000:**\n1. Base (sin impuesto): S/ 4.000.\n2. IGV = 4.000 × 18% = **S/ 720**.\n3. Total a facturar = 4.000 + 720 = **S/ 4.720**.\n\n**Ejemplo 2 — Quitar IGV de un precio de S/ 590 (ya lo incluye):**\n1. Base = 590 ÷ 1,18 = **S/ 500**.\n2. IGV = 590 − 500 = **S/ 90**.\n3. Comprobá: 500 × 18% = 90. ✔\n\n**Ejemplo 3 — Cotizar un servicio para cobrar S/ 1.500 netos:**\n1. Querés que te queden S/ 1.500 limpios de IGV.\n2. Precio a facturar = 1.500 × 1,18 = **S/ 1.770**.\n3. El IGV de S/ 270 lo declarás a SUNAT; vos te quedás con los S/ 1.500.\n\n## Tabla rápida: agregar y quitar IGV\n\n| Base (sin IGV) | IGV (18%) | Total (con IGV) |\n|---|---|---|\n| S/ 100 | S/ 18 | S/ 118 |\n| S/ 500 | S/ 90 | S/ 590 |\n| S/ 1.000 | S/ 180 | S/ 1.180 |\n| S/ 2.500 | S/ 450 | S/ 2.950 |\n| S/ 5.000 | S/ 900 | S/ 5.900 |\n\nPara ir al revés (de un precio con IGV a la base), dividí la columna \"Total\" entre 1,18.\n\n## Quién paga y quién recauda el IGV\n\nEl IGV lo paga el **consumidor final**, pero lo recauda el vendedor (inscrito en el RUC) y lo declara a SUNAT. Las empresas usan el IGV de sus **compras** como **crédito fiscal** contra el IGV de sus **ventas** (débito fiscal), y pagan a SUNAT solo la diferencia. Por eso es clave pedir y emitir comprobantes con RUC: sin ellos, no hay crédito fiscal. En operaciones sujetas al SPOT, el cliente también debe efectuar la [detracción](/pe/calculadora-detracciones-igv-peru) antes de que el crédito fiscal sea válido.\n\n## Tasas de IGV vigentes\n\n| Operación | Tasa | Detalle |\n|---|---|---|\n| Régimen general | **18%** | 16% IGV + 2% IPM (esta calculadora) |\n| MYPE restaurantes y hoteles | **10,5%** | 8,5% IGV + 2% IPM, impulso al sector |\n| Exportación de bienes | **0%** | Saldo a favor del exportador |\n| Exoneradas / inafectas | **0%** | Algunos productos de canasta básica y servicios específicos |\n\n## Errores comunes\n\n- **Sacar el 18% al precio final.** Si un precio de S/ 118 ya incluye IGV, el impuesto es S/ 18 (118 ÷ 1,18 = 100 de base), **no** S/ 21,24. El divisor para quitar IGV es 1,18.\n- **Confundir base y total al cotizar.** Si tu cliente espera \"todo incluido\", facturá el total con IGV; si espera un neto, agregá el 18% encima.\n- **No pedir comprobante con RUC** en compras del negocio: perdés el crédito fiscal y pagás más IGV del que correspondía.\n- **Aplicar 18% a una operación exonerada** (por ejemplo algunos alimentos de canasta básica), inflando el precio.\n\n## Cuándo aplica y excepciones\n\nEl IGV grava la venta de bienes muebles, la prestación de servicios, los contratos de construcción, la primera venta de inmuebles del constructor y la importación. **No** aplica a operaciones exoneradas o inafectas (parte de la canasta básica, servicios financieros específicos, exportaciones a tasa 0%). Los contribuyentes del [**Nuevo RUS**](/pe/calculadora-rus-nuevo-regimen-unico-simplificado-peru) no usan crédito fiscal porque pagan una cuota fija y no emiten facturas.\n\n## Disclaimer\n\nCálculo orientativo con la tasa general del 18%. Para operaciones con tasa reducida, exoneradas o inafectas, o para el cálculo del crédito fiscal de tu empresa, consultá la normativa vigente de SUNAT o tu contador.\n",
   "faq": [
-    { "q": "¿Cuánto es el IGV en Perú en 2026?", "a": "La tasa general del IGV es del **18%**, que se compone de 16% de IGV propiamente dicho más 2% de Impuesto de Promoción Municipal (IPM). Se aplica a la mayoría de ventas de bienes y prestaciones de servicios." },
-    { "q": "¿Cómo agrego el IGV a un precio?", "a": "Multiplicás la base (precio sin impuesto) por **1,18**. Por ejemplo, S/ 1.000 × 1,18 = S/ 1.180. El IGV es la diferencia: S/ 180." },
-    { "q": "¿Cómo quito el IGV de un precio que ya lo incluye?", "a": "Dividís el total entre **1,18**. Por ejemplo, S/ 1.180 ÷ 1,18 = S/ 1.000 de base, y el IGV es S/ 180. No se calcula como 18% del total: el divisor es 1,18." },
-    { "q": "¿Quién paga el IGV?", "a": "Lo paga el **consumidor final** dentro del precio, pero lo recauda y declara el vendedor inscrito en el RUC. Las empresas usan el IGV de sus compras como crédito fiscal y pagan a SUNAT solo la diferencia." },
-    { "q": "¿Todos los productos pagan 18% de IGV?", "a": "No. La mayoría sí, pero hay **tasas reducidas** (10,5% para MYPE de restaurantes y hoteles), operaciones a **0%** (exportaciones) y bienes y servicios **exonerados o inafectos** (algunos productos de la canasta básica)." },
-    { "q": "¿Qué es el crédito fiscal del IGV?", "a": "Es el IGV que pagaste en tus compras de insumos y servicios para tu negocio. Lo restás del IGV que cobraste en tus ventas, y a SUNAT le pagás solo la diferencia. Por eso es clave pedir comprobantes con RUC." },
-    { "q": "¿La tasa del 10,5% para qué aplica?", "a": "Para micro y pequeñas empresas (MYPE) del rubro de **restaurantes, hoteles y alojamientos turísticos**, como medida de impulso al sector. Se compone de 8,5% de IGV más 2% de IPM. Esta calculadora usa la tasa general del 18%." },
-    { "q": "¿El IGV es lo mismo que el IVA de otros países?", "a": "Sí, es el equivalente peruano. En Argentina se llama IVA (21%), en Chile IVA (19%), en Colombia IVA (19%). En Perú se llama IGV y la tasa general es 18%." },
-    { "q": "¿Cuánto IGV tiene un producto que cuesta S/ 100 en la tienda?", "a": "Si el precio de góndola de S/ 100 ya incluye IGV, la base es S/ 100 ÷ 1,18 = **S/ 84,75** y el IGV es **S/ 15,25**. El impuesto ya viene dentro del precio que ves: el divisor para separarlo siempre es 1,18, no el 18% del total." },
-    { "q": "Si quiero ganar S/ 1.500 netos por un servicio, ¿cuánto facturo con IGV?", "a": "Multiplicás tu neto por 1,18: S/ 1.500 × 1,18 = **S/ 1.770**. De esos, S/ 270 son IGV que declarás a SUNAT y S/ 1.500 quedan para vos. No alcanza con sumar 18% mentalmente al final del mes: tenelo en cuenta al cotizar." },
-    { "q": "¿El IGV cambió o va a subir en 2026?", "a": "No. La tasa general del IGV se mantiene en **18%** (16% IGV + 2% IPM) en 2026. La única variación relevante es la tasa reducida del **10,5%** para MYPE de restaurantes y hoteles. Ante cualquier duda, verificá en SUNAT, que es la fuente oficial." }
+    {
+      "q": "¿Cuánto es el IGV en Perú en 2026?",
+      "a": "La tasa general del IGV es del **18%**, que se compone de 16% de IGV propiamente dicho más 2% de Impuesto de Promoción Municipal (IPM). Se aplica a la mayoría de ventas de bienes y prestaciones de servicios."
+    },
+    {
+      "q": "¿Cómo agrego el IGV a un precio?",
+      "a": "Multiplicás la base (precio sin impuesto) por **1,18**. Por ejemplo, S/ 1.000 × 1,18 = S/ 1.180. El IGV es la diferencia: S/ 180."
+    },
+    {
+      "q": "¿Cómo quito el IGV de un precio que ya lo incluye?",
+      "a": "Dividís el total entre **1,18**. Por ejemplo, S/ 1.180 ÷ 1,18 = S/ 1.000 de base, y el IGV es S/ 180. No se calcula como 18% del total: el divisor es 1,18."
+    },
+    {
+      "q": "¿Quién paga el IGV?",
+      "a": "Lo paga el **consumidor final** dentro del precio, pero lo recauda y declara el vendedor inscrito en el RUC. Las empresas usan el IGV de sus compras como crédito fiscal y pagan a SUNAT solo la diferencia."
+    },
+    {
+      "q": "¿Todos los productos pagan 18% de IGV?",
+      "a": "No. La mayoría sí, pero hay **tasas reducidas** (10,5% para MYPE de restaurantes y hoteles), operaciones a **0%** (exportaciones) y bienes y servicios **exonerados o inafectos** (algunos productos de la canasta básica)."
+    },
+    {
+      "q": "¿Qué es el crédito fiscal del IGV?",
+      "a": "Es el IGV que pagaste en tus compras de insumos y servicios para tu negocio. Lo restás del IGV que cobraste en tus ventas, y a SUNAT le pagás solo la diferencia. Por eso es clave pedir comprobantes con RUC."
+    },
+    {
+      "q": "¿La tasa del 10,5% para qué aplica?",
+      "a": "Para micro y pequeñas empresas (MYPE) del rubro de **restaurantes, hoteles y alojamientos turísticos**, como medida de impulso al sector. Se compone de 8,5% de IGV más 2% de IPM. Esta calculadora usa la tasa general del 18%."
+    },
+    {
+      "q": "¿El IGV es lo mismo que el IVA de otros países?",
+      "a": "Sí, es el equivalente peruano. En Argentina se llama IVA (21%), en Chile IVA (19%), en Colombia IVA (19%). En Perú se llama IGV y la tasa general es 18%."
+    },
+    {
+      "q": "¿Cuánto IGV tiene un producto que cuesta S/ 100 en la tienda?",
+      "a": "Si el precio de góndola de S/ 100 ya incluye IGV, la base es S/ 100 ÷ 1,18 = **S/ 84,75** y el IGV es **S/ 15,25**. El impuesto ya viene dentro del precio que ves: el divisor para separarlo siempre es 1,18, no el 18% del total."
+    },
+    {
+      "q": "Si quiero ganar S/ 1.500 netos por un servicio, ¿cuánto facturo con IGV?",
+      "a": "Multiplicás tu neto por 1,18: S/ 1.500 × 1,18 = **S/ 1.770**. De esos, S/ 270 son IGV que declarás a SUNAT y S/ 1.500 quedan para vos. No alcanza con sumar 18% mentalmente al final del mes: tenelo en cuenta al cotizar."
+    },
+    {
+      "q": "¿El IGV cambió o va a subir en 2026?",
+      "a": "No. La tasa general del IGV se mantiene en **18%** (16% IGV + 2% IPM) en 2026. La única variación relevante es la tasa reducida del **10,5%** para MYPE de restaurantes y hoteles. Ante cualquier duda, verificá en SUNAT, que es la fuente oficial."
+    }
   ],
   "sources": [
-    { "name": "SUNAT — Impuesto General a las Ventas (IGV)", "url": "https://www.gob.pe/7777-impuesto-general-a-las-ventas-igv" },
-    { "name": "SUNAT — Tasas y operaciones gravadas", "url": "https://www.sunat.gob.pe/" }
+    {
+      "name": "SUNAT — Impuesto General a las Ventas (IGV)",
+      "url": "https://www.gob.pe/7777-impuesto-general-a-las-ventas-igv"
+    },
+    {
+      "name": "SUNAT — Tasas y operaciones gravadas",
+      "url": "https://www.sunat.gob.pe/"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -81,5 +157,5 @@
     "calcular base imponible igv",
     "igv 18 por ciento sunat"
   ],
-  "lastReviewed": "2026-06-08"
+  "lastReviewed": "2026-06-10"
 }

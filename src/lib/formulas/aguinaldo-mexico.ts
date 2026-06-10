@@ -2,7 +2,12 @@
  * Calculadora de Aguinaldo Mexico 2026
  * LFT Art. 87: minimo 15 dias de salario, pagado antes del 20 de diciembre
  * ISR: exento hasta 30 UMA (Art. 93 LISR)
+ *
+ * Datos fiscales (UMA 2026, tarifa ISR mensual 2026, exención 30 UMA): fuente única
+ * src/lib/data/mexico-2026.ts. Antes la tarifa ISR y la UMA estaban hardcodeadas con
+ * valores 2025 (UMA $113.14, tabla mensual vieja).
  */
+import { MEXICO_2026, isrMensual2026 } from '../data/mexico-2026';
 
 export interface AguinaldoMexicoInputs {
   salarioDiario: number;
@@ -23,46 +28,11 @@ export interface AguinaldoMexicoOutputs {
   _insight?: any;
 }
 
-// ISR 2026 Mexico - tabla mensual
-interface ISRBracket {
-  limiteInferior: number;
-  limiteSuperior: number;
-  cuotaFija: number;
-  porcentajeExcedente: number;
-}
-
-const ISR_BRACKETS_MENSUAL: ISRBracket[] = [
-  { limiteInferior: 0.01, limiteSuperior: 746.04, cuotaFija: 0, porcentajeExcedente: 1.92 },
-  { limiteInferior: 746.05, limiteSuperior: 6332.05, cuotaFija: 14.32, porcentajeExcedente: 6.40 },
-  { limiteInferior: 6332.06, limiteSuperior: 11128.01, cuotaFija: 371.83, porcentajeExcedente: 10.88 },
-  { limiteInferior: 11128.02, limiteSuperior: 12935.82, cuotaFija: 893.63, porcentajeExcedente: 16.00 },
-  { limiteInferior: 12935.83, limiteSuperior: 15487.71, cuotaFija: 1182.88, porcentajeExcedente: 17.92 },
-  { limiteInferior: 15487.72, limiteSuperior: 31236.49, cuotaFija: 1640.18, porcentajeExcedente: 21.36 },
-  { limiteInferior: 31236.50, limiteSuperior: 49233.00, cuotaFija: 5004.12, porcentajeExcedente: 23.52 },
-  { limiteInferior: 49233.01, limiteSuperior: 93993.90, cuotaFija: 9236.89, porcentajeExcedente: 30.00 },
-  { limiteInferior: 93993.91, limiteSuperior: 125325.20, cuotaFija: 22665.17, porcentajeExcedente: 32.00 },
-  { limiteInferior: 125325.21, limiteSuperior: 375975.61, cuotaFija: 32691.18, porcentajeExcedente: 34.00 },
-  { limiteInferior: 375975.62, limiteSuperior: Infinity, cuotaFija: 117912.32, porcentajeExcedente: 35.00 },
-];
-
+// ISR sobre el monto gravado del aguinaldo: tarifa mensual 2026 directa
+// (procedimiento simplificado Art. 174 RISR), desde la fuente única mexico-2026.
 function calcularISRSobreGravado(gravado: number): number {
   if (gravado <= 0) return 0;
-
-  // Usamos la tabla mensual directamente sobre el monto gravado del aguinaldo
-  // (procedimiento simplificado Art. 174 RISR)
-  let bracket = ISR_BRACKETS_MENSUAL[0];
-  for (const b of ISR_BRACKETS_MENSUAL) {
-    if (gravado >= b.limiteInferior && gravado <= b.limiteSuperior) {
-      bracket = b;
-      break;
-    }
-    if (gravado > b.limiteSuperior) {
-      bracket = b;
-    }
-  }
-
-  const excedente = gravado - bracket.limiteInferior;
-  return bracket.cuotaFija + excedente * (bracket.porcentajeExcedente / 100);
+  return isrMensual2026(gravado);
 }
 
 export function aguinaldoMexico(inputs: AguinaldoMexicoInputs): AguinaldoMexicoOutputs {
@@ -78,10 +48,10 @@ export function aguinaldoMexico(inputs: AguinaldoMexicoInputs): AguinaldoMexicoO
   // Aguinaldo bruto proporcional
   const aguinaldoBruto = salarioDiario * diasAguinaldo * (diasTrabajados / 365);
 
-  // Exencion ISR: hasta 30 veces la UMA diaria (Art. 93 fraccion XIV LISR)
-  // UMA diario 2026 estimado: $113.14
-  const umaDiario2026 = 113.14;
-  const exentoIsr = Math.min(aguinaldoBruto, umaDiario2026 * 30);
+  // Exencion ISR: hasta 30 veces la UMA diaria (Art. 93 fraccion XIV LISR).
+  // UMA diaria 2026 y tope de 30 UMA: fuente única mexico-2026.
+  const umaDiario2026 = MEXICO_2026.uma.diaria;
+  const exentoIsr = Math.min(aguinaldoBruto, umaDiario2026 * MEXICO_2026.exencionesIsrUmas.aguinaldo);
 
   // Parte gravada
   const gravadoIsr = Math.max(0, aguinaldoBruto - exentoIsr);

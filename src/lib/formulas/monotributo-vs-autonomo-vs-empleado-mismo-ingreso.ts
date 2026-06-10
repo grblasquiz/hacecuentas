@@ -1,5 +1,11 @@
 // Calculadora: Monotributo vs Autónomo vs Empleado
-// Valores 2026 — actualizar trimestralmente según ARCA/ANSES
+// Valores 2026 — fuente única: monotributo-2026 (cuotas) + _ganancias-escala (4ª cat).
+import { CUOTA_SERVICIOS } from '../data/monotributo-2026';
+import {
+  aplicarEscalaMensual,
+  MNI_MENSUAL_BASE,
+  INCREMENTO_HIJO_MENSUAL,
+} from './_ganancias-escala';
 
 export interface Inputs {
   ingresoBruto: number;
@@ -21,21 +27,9 @@ export interface Outputs {
   _insight?: any;
 }
 
-// ─── MONOTRIBUTO: cuotas fijas mensuales por categoría (servicios, 2026)
-// Fuente: ARCA – actualizadas trimestralmente por RIPTE/IPC
-const CUOTA_MONOTRIBUTO: Record<string, number> = {
-  A: 5200,
-  B: 6100,
-  C: 7400,
-  D: 9100,
-  E: 11200,
-  F: 14000,
-  G: 17800,
-  H: 24500,
-  I: 30400,
-  J: 37200,
-  K: 44600,
-};
+// ─── MONOTRIBUTO: cuota mensual TOTAL por categoría (servicios, 2026)
+// Fuente única: src/lib/data/monotributo-2026.ts (ARCA, vigente desde feb-2026).
+const CUOTA_MONOTRIBUTO: Record<string, number> = CUOTA_SERVICIOS;
 
 // ─── AUTÓNOMO: base imponible mensual por categoría SIPA 2026
 // Fuente: ANSES – Resolución ANSES vigente 2026
@@ -60,40 +54,14 @@ const TASA_INSSJP_EMPLEADO    = 0.03;
 const TASA_SINDICAL_EMPLEADO  = 0.02; // estimada
 const TASA_APORTES_EMPLEADO   = TASA_SIPA_EMPLEADO + TASA_OS_EMPLEADO + TASA_INSSJP_EMPLEADO + TASA_SINDICAL_EMPLEADO; // 0.19
 
-// ─── GANANCIAS 4ª Cat – MNI mensual 2026
-// MNI anual: $3.091.035 (sin hijos) según RG ARCA 2026
-const MNI_MENSUAL_SIN_HIJOS = 3091035 / 12;       // ~$257.586
-const DEDUCCION_HIJO_ANUAL  = 968832;              // por hijo menor de 18
-const DEDUCCION_HIJO_MENSUAL = DEDUCCION_HIJO_ANUAL / 12; // ~$80.736
-
-// Escala progresiva Ganancias 4ª Cat 2026 (sobre excedente del MNI, valores mensuales)
-// Fuente: ARCA – art. 94 LIG actualizado
-const ESCALA_GANANCIAS = [
-  { hasta: 173666,  tasa: 0.05, fijo: 0 },
-  { hasta: 347332,  tasa: 0.09, fijo: 8683 },
-  { hasta: 520998,  tasa: 0.12, fijo: 24313 },
-  { hasta: 694664,  tasa: 0.15, fijo: 45153 },
-  { hasta: 1041996, tasa: 0.19, fijo: 71211 },
-  { hasta: 1389328, tasa: 0.23, fijo: 137212 },
-  { hasta: 2083992, tasa: 0.27, fijo: 217154 },
-  { hasta: 3126188, tasa: 0.31, fijo: 404892 },
-  { hasta: Infinity, tasa: 0.35, fijo: 728003 },
-];
+// ─── GANANCIAS 4ª Cat — fuente única src/lib/formulas/_ganancias-escala.ts
+// MNI efectivo mensual (GNI + deducción especial apt.1) e incremento por hijo,
+// más la escala progresiva del art. 94 LIG, todo del módulo compartido.
+const MNI_MENSUAL_SIN_HIJOS = MNI_MENSUAL_BASE;
+const DEDUCCION_HIJO_MENSUAL = INCREMENTO_HIJO_MENSUAL;
 
 function calcularGanancias(baseImponible: number): number {
-  if (baseImponible <= 0) return 0;
-  let impuesto = 0;
-  let excedente = baseImponible;
-  let limiteAnterior = 0;
-  for (const tramo of ESCALA_GANANCIAS) {
-    if (excedente <= 0) break;
-    const tramoMax = tramo.hasta - limiteAnterior;
-    const enEsteTramo = Math.min(excedente, tramoMax);
-    impuesto += enEsteTramo * tramo.tasa;
-    excedente -= enEsteTramo;
-    limiteAnterior = tramo.hasta;
-  }
-  return impuesto;
+  return aplicarEscalaMensual(baseImponible).impuesto;
 }
 
 export function compute(i: Inputs): Outputs {

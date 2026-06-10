@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   canon_mensual: number;
   meses_activos: number;
@@ -24,8 +26,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 DIAN Colombia
-  const UVT_2026 = 368348; // Aproximado, sujeto a confirmación DIAN
+  // Constantes 2026 (fuente única: src/lib/data/colombia-2026.ts)
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
 
   // Tramos ISR renta no laboral 2026 (límites en UVT)
   const TRAMOS = [

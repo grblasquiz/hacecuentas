@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   salario_base: number;
   smmlv_2026: number;
@@ -14,46 +16,35 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes DIAN 2026 FSP
-  const UMBRAL_MINIMO_SMMLV = 4; // Aplica a partir de 4 SMMLV
-  const SMMLV = i.smmlv_2026 || 1300000; // SMMLV 2026 Colombia (estimado)
-  
+  // Constantes FSP — fuente única: src/lib/data/colombia-2026.ts (escala Ley 100 art. 27).
+  const UMBRAL_MINIMO_SMMLV = COLOMBIA_2026.fsp[0].desdeSmlmv; // aplica a partir de 4 SMMLV
+  const SMMLV = i.smmlv_2026 || COLOMBIA_2026.smlmv; // SMLMV 2026 = $1.750.905 (Decreto 1469/2025)
+
   // Validar inputs
   const salario = Math.max(0, i.salario_base || 0);
-  
+
   // Calcular rango en SMMLV
   const rangoSmmlv = salario / SMMLV;
-  
-  // Determinar si aplica FSP
+
+  // Determinar tarifa según la escala oficial (4-16: 1%; 16-17: 1,2%; 17-18: 1,4%;
+  // 18-19: 1,6%; 19-20: 1,8%; >20: 2% — reforma pensional suspendida, rige Ley 100).
   let aplicaFsp = false;
   let tarifaAplicada = 0;
   let rangoDescripcion = "Sin aplica";
-  
+
   if (rangoSmmlv < UMBRAL_MINIMO_SMMLV) {
-    // No aplica FSP
-    aplicaFsp = false;
-    tarifaAplicada = 0;
     rangoDescripcion = `${rangoSmmlv.toFixed(2)} SMMLV (< 4 SMMLV - Exento)`;
-  } else if (rangoSmmlv >= 4 && rangoSmmlv < 16) {
-    // Tarifa 1.0%
-    aplicaFsp = true;
-    tarifaAplicada = 0.01;
-    rangoDescripcion = `${rangoSmmlv.toFixed(2)} SMMLV (4-16 SMMLV - Tarifa 1%)`;
-  } else if (rangoSmmlv >= 16 && rangoSmmlv < 17) {
-    // Tarifa 1.2%
-    aplicaFsp = true;
-    tarifaAplicada = 0.012;
-    rangoDescripcion = `${rangoSmmlv.toFixed(2)} SMMLV (16-17 SMMLV - Tarifa 1.2%)`;
-  } else if (rangoSmmlv >= 17 && rangoSmmlv < 18) {
-    // Tarifa 1.4%
-    aplicaFsp = true;
-    tarifaAplicada = 0.014;
-    rangoDescripcion = `${rangoSmmlv.toFixed(2)} SMMLV (17-18 SMMLV - Tarifa 1.4%)`;
-  } else if (rangoSmmlv >= 18) {
-    // Tarifa 1.5% (máxima)
-    aplicaFsp = true;
-    tarifaAplicada = 0.015;
-    rangoDescripcion = `${rangoSmmlv.toFixed(2)} SMMLV (≥ 18 SMMLV - Tarifa 1.5% máxima)`;
+  } else {
+    for (const tramo of COLOMBIA_2026.fsp) {
+      if (rangoSmmlv >= tramo.desdeSmlmv && rangoSmmlv < tramo.hastaSmlmv) {
+        aplicaFsp = true;
+        tarifaAplicada = tramo.tasa;
+        const pct = (tramo.tasa * 100).toLocaleString('es-CO');
+        const hasta = tramo.hastaSmlmv === Infinity ? '+' : `-${tramo.hastaSmlmv}`;
+        rangoDescripcion = `${rangoSmmlv.toFixed(2)} SMMLV (${tramo.desdeSmlmv}${hasta} SMMLV - Tarifa ${pct}%)`;
+        break;
+      }
+    }
   }
   
   // Calcular aportes
@@ -83,9 +74,11 @@ export function compute(i: Inputs): Outputs {
     segments: [
       { nombre: 'Exento', max: 4, color: '#16a34a', colorDark: '#22c55e' },
       { nombre: '1%', max: 16, color: '#84cc16', colorDark: '#a3e635' },
-      { nombre: '1,2%', max: 17, color: '#f59e0b', colorDark: '#fbbf24' },
-      { nombre: '1,4%', max: 18, color: '#f97316', colorDark: '#fb923c' },
-      { nombre: '1,5%', max: Math.max(22, Math.ceil(rangoSmmlv) + 1), color: '#dc2626', colorDark: '#ef4444' },
+      { nombre: '1,2%', max: 17, color: '#eab308', colorDark: '#facc15' },
+      { nombre: '1,4%', max: 18, color: '#f59e0b', colorDark: '#fbbf24' },
+      { nombre: '1,6%', max: 19, color: '#f97316', colorDark: '#fb923c' },
+      { nombre: '1,8%', max: 20, color: '#ea580c', colorDark: '#f97316' },
+      { nombre: '2%', max: Math.max(24, Math.ceil(rangoSmmlv) + 1), color: '#dc2626', colorDark: '#ef4444' },
     ],
     ariaLabel: `Salario de ${(Math.round(rangoSmmlv * 100) / 100).toLocaleString('es-CO')} SMMLV ubicado en el tramo de tarifa del FSP`,
   };

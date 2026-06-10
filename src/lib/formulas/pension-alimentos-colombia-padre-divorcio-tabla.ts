@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   ingresos_brutos_mensuales: number;
   tipo_ingreso: 'dependiente' | 'independiente' | 'mixto';
@@ -34,8 +36,8 @@ export function compute(i: Inputs): Outputs {
   const EPS_DEPENDIENTE = 0.04; // 4% afiliado
   const PENSION_APORTE = 0.04; // 4% Colpensiones/AFP
   const IRPF_ESTIMADO = i.tipo_ingreso === 'dependiente' ? 0.08 : 0; // ~8% dependiente, 0 independiente
-  const SALARIO_MINIMO_2026 = 1423500; // Pesos colombianos
-  const MINIMO_SUBSISTENCIA = 1300000; // Ingreso mínimo vital deudor
+  const SALARIO_MINIMO_2026 = COLOMBIA_2026.smlmv; // SMLMV 2026 = $1.750.905 (Decreto 1469/2025)
+  const MINIMO_SUBSISTENCIA = COLOMBIA_2026.smlmv; // mínimo vital del deudor ≈ 1 SMLMV
   const IPC_2026 = 0.045; // Reajuste estimado 4.5%
 
   // Descuentos obligatorios

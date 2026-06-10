@@ -1,3 +1,5 @@
+import { MEI_LIMITE_FATURAMENTO, DAS_MEI } from '../data/brasil-2026';
+
 export interface Inputs {
   faturamento_mensal: number;
   categoria: string;
@@ -16,10 +18,11 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  const LIMITE_MEI_2026 = 81000; // Lei Complementar 128/2008, em vigor desde 2018
-  const DAS_COMERCIO = 70;
-  const DAS_SERVICOS = 75;
-  const DAS_INDUSTRIA = 75;
+  // Fonte única src/lib/data/brasil-2026.ts (LC 128/2008; DAS sobre SM 2026 R$ 1.621).
+  const LIMITE_MEI_2026 = MEI_LIMITE_FATURAMENTO;
+  const DAS_COMERCIO = DAS_MEI.comercio;   // INSS 5% + ICMS
+  const DAS_SERVICOS = DAS_MEI.servicos;   // INSS 5% + ISS
+  const DAS_INDUSTRIA = DAS_MEI.comercio;  // indústria recolhe ICMS, igual ao comércio
 
   const faturamento_mensal = Number(i.faturamento_mensal) || 0;
   const categoria = String(i.categoria) || "servicos";

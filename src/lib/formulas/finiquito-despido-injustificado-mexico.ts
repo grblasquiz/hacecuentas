@@ -8,9 +8,11 @@
  *   - Salarios caídos/vencidos: hasta 12 meses (Art. 48 reforma 2012)
  *   - Partes proporcionales: aguinaldo, vacaciones, prima vacacional
  *
- * Salario mínimo general 2026 (aproximado): $278.80 MXN/día (zona general)
- * UMA 2026 (aproximado): $113.14 MXN/día
+ * Salario mínimo general 2026: $315.04 MXN/día (zona general, CONASAMI/DOF)
+ * UMA 2026: $117.31 MXN/día (INEGI)
+ * Constantes: fuente única src/lib/data/mexico-2026.ts
  */
+import { MEXICO_2026 } from '../data/mexico-2026';
 
 export interface FiniquitoDespidoInjustificadoMxInputs {
   salarioDiarioIntegrado: number; // salario diario incluyendo prestaciones (aguinaldo, prima vac, etc)
@@ -18,7 +20,7 @@ export interface FiniquitoDespidoInjustificadoMxInputs {
   mesesExtra: number; // 0-11
   diasVacacionesPendientes: number; // del año en curso
   diasAguinaldoPendientes: number; // del año en curso
-  salarioMinimoZona: number; // SMG de la zona geográfica (default 278.80 MXN 2026)
+  salarioMinimoZona: number; // SMG de la zona geográfica (default $315.04 MXN 2026)
 }
 
 export interface FiniquitoDespidoInjustificadoMxOutputs {
@@ -50,7 +52,7 @@ export function finiquitoDespidoInjustificadoMexico(
   const meses = Math.max(0, Math.min(11, Number(i.mesesExtra) || 0));
   const diasVac = Math.max(0, Number(i.diasVacacionesPendientes) || 0);
   const diasAgu = Math.max(0, Number(i.diasAguinaldoPendientes) || 0);
-  const smg = Math.max(1, Number(i.salarioMinimoZona) || 278.8);
+  const smg = Math.max(1, Number(i.salarioMinimoZona) || MEXICO_2026.salarioMinimo.generalDiario);
 
   if (!salario || salario <= 0) {
     throw new Error('Ingresá el salario diario integrado (SDI)');

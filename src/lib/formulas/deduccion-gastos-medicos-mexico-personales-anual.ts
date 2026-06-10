@@ -1,3 +1,5 @@
+import { MEXICO_2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   ingresos_brutos_anual: number;
   gastos_hospitales: number;
@@ -23,10 +25,10 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Parámetro 2026 México - UMA (INEGI ene 2026)
-  const UMA_2026 = 9700; // Pesos mexicanos
-  const LIMITE_5_UMA = UMA_2026 * 5; // $48,500 MXN
-  const PORCENTAJE_LIMITE = 0.15; // 15% ingresos brutos
+  // Parámetro 2026 México — fuente única src/lib/data/mexico-2026.ts (UMA INEGI 2026).
+  const UMA_2026 = MEXICO_2026.uma.anual; // UMA anual 2026 = $42.794,64
+  const LIMITE_5_UMA = UMA_2026 * MEXICO_2026.deduccionesPersonales.topeUmasAnuales; // 5 UMA = $213.973,20 (Art. 151 LISR)
+  const PORCENTAJE_LIMITE = MEXICO_2026.deduccionesPersonales.topePorcentajeIngresos; // 15% ingresos brutos
 
   // Validación de inputs
   const ingresos = Math.max(0, i.ingresos_brutos_anual || 0);

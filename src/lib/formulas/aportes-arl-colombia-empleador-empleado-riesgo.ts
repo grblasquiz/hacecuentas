@@ -1,6 +1,8 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   salario_mensual: number;
-  clase_riesgo: string; // 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI'
+  clase_riesgo: string; // 'I' | 'II' | 'III' | 'IV' | 'V'
   numero_trabajadores?: number;
 }
 
@@ -17,39 +19,43 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Tarifas ARL 2026 Colombia por clase de riesgo (Superintendencia Financiera)
-  const tarifas: { [key: string]: { valor: number; desc: string } } = {
-    'I': { valor: 0.522, desc: 'Clase I - Riesgo Mínimo (0.522%). Oficinas, servicios financieros, educación' },
-    'II': { valor: 1.044, desc: 'Clase II - Riesgo Bajo (1.044%). Comercio, servicios, transporte' },
-    'III': { valor: 2.436, desc: 'Clase III - Riesgo Medio (2.436%). Construcción liviana, gastronomía, textiles' },
-    'IV': { valor: 4.350, desc: 'Clase IV - Riesgo Alto (4.350%). Manufactura pesada, metalmecánica, química' },
-    'V': { valor: 6.960, desc: 'Clase V - Riesgo Muy Alto (6.960%). Minería, explosivos, trabajo en alturas' },
-    'VI': { valor: 8.700, desc: 'Clase VI - Riesgo Especial (8.700%). Actividades excepcionales reguladas' }
+  // Tarifas ARL por clase de riesgo (Decreto 1772/1994, tabla vigente 2026) — desde la tabla maestra.
+  // Solo existen 5 clases de riesgo (I a V) en el Sistema General de Riesgos Laborales.
+  const arl = COLOMBIA_2026.aportes.arl; // { I: 0.00522, II: 0.01044, III: 0.02436, IV: 0.0435, V: 0.0696 }
+  const descripciones: { [key: string]: string } = {
+    I: 'Clase I - Riesgo Mínimo (0,522%). Oficinas, servicios financieros, educación',
+    II: 'Clase II - Riesgo Bajo (1,044%). Comercio, servicios, transporte',
+    III: 'Clase III - Riesgo Medio (2,436%). Construcción liviana, gastronomía, textiles',
+    IV: 'Clase IV - Riesgo Alto (4,350%). Manufactura pesada, metalmecánica, química',
+    V: 'Clase V - Riesgo Máximo (6,960%). Minería, explosivos, trabajo en alturas',
   };
 
-  // Validar clase riesgo
-  const claseInfo = tarifas[i.clase_riesgo] || tarifas['I'];
-  const tarifaPorcentaje = claseInfo.valor;
-  const numTrabajadores = i.numero_trabajadores ?? 1;
+  const clase = (arl as Record<string, number>)[i.clase_riesgo] !== undefined ? i.clase_riesgo : 'I';
+  const tarifa = (arl as Record<string, number>)[clase];
+  const tarifaPorcentaje = Math.round(tarifa * 100000) / 1000; // ej. 0.522
+  const numTrabajadores = i.numero_trabajadores === undefined || i.numero_trabajadores === null || (i.numero_trabajadores as any) === ''
+    ? 1
+    : Math.max(1, Number(i.numero_trabajadores));
+  const salario = Math.max(0, Number(i.salario_mensual) || 0);
 
-  // Calcular aportes
-  const aporteEmpleadorMensual = i.salario_mensual * (tarifaPorcentaje / 100);
-  const aporteEmpleadoMensual = aporteEmpleadorMensual * 0.25; // 25% de tarifa empleador
+  // El aporte ARL está 100% a cargo del empleador (Decreto-Ley 1295/1994 art. 16; Ley 1562/2012).
+  // Al trabajador dependiente NO se le descuenta nada por ARL.
+  const aporteEmpleadorMensual = salario * tarifa;
+  const aporteEmpleadoMensual = 0;
   const aporteTotalMensual = aporteEmpleadorMensual + aporteEmpleadoMensual;
   const aporteAnualEmpleador = aporteEmpleadorMensual * 12;
   const costoAnualTotalEmpresa = aporteAnualEmpleador * numTrabajadores;
 
   const fmtCOP = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
   const empleadorR = Math.round(aporteEmpleadorMensual * 100) / 100;
-  const empleadoR = Math.round(aporteEmpleadoMensual * 100) / 100;
   const totalMensualR = Math.round(aporteTotalMensual * 100) / 100;
   const anualEmpleadorR = Math.round(aporteAnualEmpleador * 100) / 100;
   const costoAnualR = Math.round(costoAnualTotalEmpresa * 100) / 100;
 
-  const claseAlta = ['IV', 'V', 'VI'].includes(i.clase_riesgo);
+  const claseAlta = ['IV', 'V'].includes(clase);
   const _insight = {
-    title: `Costo ARL — Clase de riesgo ${i.clase_riesgo}`,
-    text: `Con una tarifa de **${tarifaPorcentaje}%** sobre un salario de **${fmtCOP(i.salario_mensual)}**, el aporte a la ARL es **${fmtCOP(totalMensualR)}/mes**. Para ${numTrabajadores} trabajador${numTrabajadores === 1 ? '' : 'es'}, el costo anual de la empresa llega a **${fmtCOP(costoAnualR)}**.${claseAlta ? ' Es una **clase de riesgo alta**: la tarifa pesa fuerte en la nómina.' : ''}`,
+    title: `Costo ARL — Clase de riesgo ${clase}`,
+    text: `Con una tarifa de **${tarifaPorcentaje}%** sobre un salario de **${fmtCOP(salario)}**, el aporte a la ARL es **${fmtCOP(totalMensualR)}/mes**, pagado **100% por el empleador** (al trabajador no se le descuenta nada). Para ${numTrabajadores} trabajador${numTrabajadores === 1 ? '' : 'es'}, el costo anual de la empresa llega a **${fmtCOP(costoAnualR)}**.${claseAlta ? ' Es una **clase de riesgo alta**: la tarifa pesa fuerte en la nómina.' : ''}`,
     tone: claseAlta ? 'warn' : 'neutral',
     icon: '🦺',
   };
@@ -57,23 +63,23 @@ export function compute(i: Inputs): Outputs {
   const _chart = totalMensualR <= 0 ? undefined : {
     type: 'doughnut',
     slices: [
-      { label: 'Aporte empleador', value: empleadorR },
-      { label: 'Aporte empleado', value: empleadoR },
+      { label: 'Salario mensual', value: Math.round(salario) },
+      { label: 'Aporte ARL (empleador)', value: empleadorR },
     ],
     prefix: '$',
-    centerValue: fmtCOP(totalMensualR),
-    centerLabel: 'aporte/mes',
-    ariaLabel: `Aporte ARL mensual de ${fmtCOP(totalMensualR)}: ${fmtCOP(empleadorR)} del empleador y ${fmtCOP(empleadoR)} del empleado.`,
+    centerValue: `${tarifaPorcentaje}%`,
+    centerLabel: 'tarifa ARL',
+    ariaLabel: `El aporte ARL mensual de ${fmtCOP(totalMensualR)} equivale al ${tarifaPorcentaje}% del salario de ${fmtCOP(salario)} y lo paga íntegramente el empleador.`,
   };
 
   return {
     tarifa_arl: `${tarifaPorcentaje}%`,
     aporte_empleador_mensual: empleadorR,
-    aporte_empleado_mensual: empleadoR,
+    aporte_empleado_mensual: aporteEmpleadoMensual,
     aporte_total_mensual: totalMensualR,
     aporte_anual_empleador: anualEmpleadorR,
     costo_anual_total_empresa: costoAnualR,
-    clase_riesgo_desc: claseInfo.desc,
+    clase_riesgo_desc: descripciones[clase],
     _insight,
     _chart
   };

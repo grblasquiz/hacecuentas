@@ -1,3 +1,5 @@
+import { MEXICO_2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   situacion: 'viudez' | 'divorcio';
   institucion: 'imss' | 'issste' | 'ninguna';
@@ -22,10 +24,10 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 México — Fuente: IMSS, ISSSTE, SAT, SCJN
-  const UMA_2026_DIARIA = 310.71; // Unidad de Medida y Actualización 2026
-  const UMA_2026_MENSUAL = UMA_2026_DIARIA * 30;
-  const SMM_2026 = 248.93; // Salario Mínimo Mensual 2026
+  // Constantes 2026 México — fuente única src/lib/data/mexico-2026.ts (INEGI/CONASAMI)
+  const UMA_2026_DIARIA = MEXICO_2026.uma.diaria; // UMA diaria 2026 = $117,31
+  const UMA_2026_MENSUAL = MEXICO_2026.uma.mensual; // UMA mensual 2026 = $3.566,22
+  const SMM_2026 = MEXICO_2026.salarioMinimo.generalMensual; // Salario mínimo mensual 2026 = $9.577,22
   const IPC_2025_2026 = 1.04; // Inflación estimada
   const PORCENTAJE_VUDEZ_CONYUGE = 0.60; // 60% del haber base
   const PORCENTAJE_VIUDEZ_POR_HIJO = 0.20; // 20% adicional por hijo

@@ -1,3 +1,10 @@
+/**
+ * ISR por arrendamiento de personas físicas (LISR Arts. 114-118).
+ * Deducción real (sin tope legal) o ciega del 35% + predial pagado (Art. 115).
+ * Tarifa ISR mensual 2026 desde src/lib/data/mexico-2026.ts (Anexo 8 RMF 2026).
+ */
+import { isrMensual2026, MEXICO_2026 } from '../data/mexico-2026.ts';
+
 export interface Inputs {
   renta_mensual_cobrada: number;
   tipo_deduccion: 'real' | 'ciega';
@@ -37,7 +44,7 @@ export function compute(i: Inputs): Outputs {
   let porcentaje_deduccion = 0;
 
   if (tipo_ded === 'real') {
-    // Deducción real: suma gastos comprobados
+    // Deducción real (LISR Art. 115): suma de gastos comprobados con CFDI, SIN tope porcentual
     const ibi = Math.max(0, i.ibi_predial_mensual || 0);
     const intereses = Math.max(0, i.intereses_hipotecarios_mensual || 0);
     const mantenim = Math.max(0, i.mantenimiento_reparacion_mensual || 0);
@@ -46,53 +53,20 @@ export function compute(i: Inputs): Outputs {
     const gastos_mensuales = ibi + intereses + mantenim + otros_gastos;
     deducciones_totales = gastos_mensuales * meses;
 
-    // Limitar deducción a 35% de renta bruta (regla SAT)
-    const limite_35_porciento = renta_total_periodo * 0.35;
-    if (deducciones_totales > limite_35_porciento) {
-      deducciones_totales = limite_35_porciento;
-    }
-
     porcentaje_deduccion = renta_total_periodo > 0 ? (deducciones_totales / renta_total_periodo) * 100 : 0;
   } else {
-    // Deducción ciega: 35% automático
-    deducciones_totales = renta_total_periodo * 0.35;
-    porcentaje_deduccion = 35;
+    // Deducción ciega (LISR Art. 115, 2º párrafo): 35% de los ingresos + el predial pagado del período
+    const predial = Math.max(0, i.ibi_predial_mensual || 0) * meses;
+    deducciones_totales = renta_total_periodo * MEXICO_2026.arrendamiento.deduccionCiega + predial;
+    porcentaje_deduccion = renta_total_periodo > 0 ? (deducciones_totales / renta_total_periodo) * 100 : 35;
   }
 
   // Renta neta (base gravable)
   const renta_neta = Math.max(0, renta_total_periodo - deducciones_totales);
 
-  // Tarifa ISR 2026 progresiva (mensual)
-  // Convertir a base mensual para aplicar tarifa
+  // Tarifa ISR mensual 2026 (Art. 96 LISR, Anexo 8 RMF 2026) — fuente única mexico-2026.ts
   const renta_neta_mensual = renta_neta / meses;
-
-  function aplicar_tarifa_isr(base_mensual: number): number {
-    // Tarifa ISR México 2026 (anual convertida a mensual)
-    // Límites anuales ÷ 12 = límites mensuales
-    const tramos = [
-      { limite: 715.27, cuota_fija: 0, tasa: 0.0192 },      // 1.92%
-      { limite: 7382.33, cuota_fija: 13.74, tasa: 0.064 },  // 6.40%
-      { limite: 24607.78, cuota_fija: 493.34, tasa: 0.1088 }, // 10.88%
-      { limite: 35453.26, cuota_fija: 2860.52, tasa: 0.16 }, // 16%
-      { limite: 56722.90, cuota_fija: 4840.36, tasa: 0.196 }, // 19.60%
-      { limite: 83760.15, cuota_fija: 9226.56, tasa: 0.24 }, // 24%
-      { limite: Infinity, cuota_fija: 17316.49, tasa: 0.30 } // 30% (o 35% si > 362,858.23 anual)
-    ];
-
-    let isr = 0;
-    for (let t = 0; t < tramos.length; t++) {
-      if (base_mensual <= tramos[t].limite) {
-        const limite_anterior = t > 0 ? tramos[t - 1].limite : 0;
-        const base_en_tramo = base_mensual - limite_anterior;
-        isr = tramos[t].cuota_fija + (base_en_tramo * tramos[t].tasa);
-        break;
-      }
-    }
-
-    return isr;
-  }
-
-  const isr_mensual = aplicar_tarifa_isr(renta_neta_mensual);
+  const isr_mensual = isrMensual2026(renta_neta_mensual);
   const isr_calculado = isr_mensual * meses;
 
   // Retención acreditable (inquilino persona moral 10%)

@@ -1,3 +1,5 @@
+import { MEXICO_2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   utilidad_fiscal_empresa: number;
   numero_empleados: number;
@@ -20,10 +22,10 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 México (SAT, INEGI)
-  const UMA_DIARIA_2026 = 20.40; // INEGI 2026
+  // Constantes 2026 México — UMA fuente única src/lib/data/mexico-2026.ts (INEGI)
+  const UMA_DIARIA_2026 = MEXICO_2026.uma.diaria; // UMA diaria 2026 = $117,31
   const TASA_ISR_PTU = 0.20; // Tasa marginal aproximada PTU
-  const EXENCION_UMA_DIAS = 15; // Art. 178 LISR
+  const EXENCION_UMA_DIAS = MEXICO_2026.exencionesIsrUmas.ptu; // 15 UMA exentas (Art. 93/178 LISR)
   const DIAS_3_MESES = 90; // Tope máximo
   const PORCENTAJE_PTU = 0.10; // Art. 117 LFT
   const TASA_FONDO_AHORRO = 0.02; // Opcional

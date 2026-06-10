@@ -1,3 +1,8 @@
+// UF/UTM live desde mindicador.cl (cron diario fetch-chile.mjs), con fallback verificado.
+import clLive from "../../data/live/chile.json";
+// Tasas y topes 2026 — fuente única (DL 3.500, Ley 18.469, Ley 19.728, Art. 43 N°1 LIR).
+import { CHILE_2026 } from "../data/chile-2026";
+
 export interface Inputs {
   sueldo_bruto: number;
   tipo_afp: 'aporte_obligatorio' | 'voluntario_adicional';
@@ -21,92 +26,85 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 Chile - Fuente SII
-  const UTM_2026 = 69545; // Unidad Tributaria Mensual enero 2026
-  const CREDITO_POR_HIJO_2026 = 12996; // Crédito impuesto por descendiente
-  const TASA_AFP = 0.10; // 10% obligatorio
-  const TASA_CESANTIA = 0.006; // 0.6% seguro cesantía
-  const TASA_FONASA = 0.07; // 7% Fonasa
-  
+  // ── Valores en vivo (mindicador.cl) con fallback al último verificado ──
+  const UTM = (clLive as any)?.utm?.valor ?? 71506;   // Unidad Tributaria Mensual (se actualiza el 1.º de cada mes)
+  const UF = (clLive as any)?.uf?.valor ?? 40627.62;  // Unidad de Fomento (para topes imponibles)
+
+  // ── Tasas y topes 2026 desde la fuente única ──
+  const TASA_AFP = CHILE_2026.afpObligatorio;             // 10% obligatorio (DL 3.500)
+  const TASA_FONASA = CHILE_2026.saludFonasa;             // 7% (Ley 18.469)
+  const TASA_CESANTIA = CHILE_2026.afcTrabajadorIndefinido; // 0,6% contrato indefinido (Ley 19.728)
+  const EXENTO_UTM = CHILE_2026.segundaCategoriaExentoUtm; // 13,5 UTM exentas (Art. 43 N°1 LIR)
+  const TOPE_AFP_SALUD = CHILE_2026.topeImponibleAfpUf * UF;     // 90 UF (AFP, comisión y salud)
+  const TOPE_CESANTIA = CHILE_2026.topeImponibleCesantiaUf * UF; // 135,2 UF (seguro de cesantía)
+  const CREDITO_POR_HIJO_2026 = 12996; // Crédito impuesto por descendiente (Art. 55 bis LIR)
+
   // Validar inputs
   const sueldoBruto = Math.max(0, i.sueldo_bruto || 0);
   const comisionAFP = Math.max(0.5, Math.min(2.5, i.comision_afp || 1.45)) / 100;
   const numHijos = Math.max(0, Math.floor(i.num_hijos || 0));
-  
+
+  // Bases imponibles topadas (la cotización no se calcula sobre el exceso del tope)
+  const baseAfpSalud = Math.min(sueldoBruto, TOPE_AFP_SALUD);
+  const baseCesantia = Math.min(sueldoBruto, TOPE_CESANTIA);
+
   // 1. Aporte AFP (10% obligatorio)
-  const aporteAFP = sueldoBruto * TASA_AFP;
-  
-  // 2. Comisión AFP (porcentaje del bruto)
-  const comisionAFPMonto = sueldoBruto * comisionAFP;
-  
+  const aporteAFP = baseAfpSalud * TASA_AFP;
+
+  // 2. Comisión AFP (porcentaje de la remuneración imponible)
+  const comisionAFPMonto = baseAfpSalud * comisionAFP;
+
   // 3. Aporte salud
   let aporteSalud = 0;
   if (i.tipo_salud === 'fonasa') {
-    aporteSalud = sueldoBruto * TASA_FONASA;
+    aporteSalud = baseAfpSalud * TASA_FONASA;
   } else if (i.tipo_salud === 'isapre') {
     const porcentajeIsapre = Math.max(6, Math.min(12, i.porcentaje_isapre || 8.5)) / 100;
-    aporteSalud = sueldoBruto * porcentajeIsapre;
+    aporteSalud = baseAfpSalud * porcentajeIsapre;
   }
-  
-  // 4. Seguro cesantía
-  const seguroCesantia = sueldoBruto * TASA_CESANTIA;
-  
-  // 5. Base imponible para impuesto segunda categoría
+
+  // 4. Seguro cesantía (tope propio de 135,2 UF)
+  const seguroCesantia = baseCesantia * TASA_CESANTIA;
+
+  // 5. Base imponible para impuesto de segunda categoría (sin tope: grava la renta líquida completa)
   const baseImponible = sueldoBruto - aporteAFP - comisionAFPMonto - aporteSalud - seguroCesantia;
-  
-  // 6. Cálculo impuesto segunda categoría según tabla SII 2026
-  // Convertir a UTA para aplicar tabla progresiva
-  const rentaEnUTA = baseImponible / UTM_2026;
+
+  // 6. Impuesto Único de Segunda Categoría — Art. 43 N°1 LIR.
+  // Tabla mensual progresiva en UTM (factor marginal y rebaja, ambos sobre el valor UTM vigente).
+  // Tramos: 13,5 / 30 / 50 / 70 / 90 / 120 / 310 UTM. Tasa máxima 40%.
+  // La rebaja en UTM garantiza continuidad entre tramos (impuesto = base·factor − rebaja·UTM).
+  const TRAMOS: { hastaUtm: number; factor: number; rebajaUtm: number }[] = [
+    { hastaUtm: EXENTO_UTM, factor: 0,     rebajaUtm: 0 },     // hasta 13,5 UTM → exento
+    { hastaUtm: 30,         factor: 0.04,  rebajaUtm: 0.54 },
+    { hastaUtm: 50,         factor: 0.08,  rebajaUtm: 1.74 },
+    { hastaUtm: 70,         factor: 0.135, rebajaUtm: 4.49 },
+    { hastaUtm: 90,         factor: 0.23,  rebajaUtm: 11.14 },
+    { hastaUtm: 120,        factor: 0.304, rebajaUtm: 17.80 },
+    { hastaUtm: 310,        factor: 0.35,  rebajaUtm: 23.32 },
+    { hastaUtm: Infinity,   factor: 0.40,  rebajaUtm: 38.82 },
+  ];
+
+  const rentaEnUtm = baseImponible / UTM;
   let tasaImpuesto = 0;
-  let montoImpuestoBase = 0;
-  
-  if (rentaEnUTA <= 13.5) {
-    tasaImpuesto = 0;
-    montoImpuestoBase = 0;
-  } else if (rentaEnUTA <= 20.2) {
-    tasaImpuesto = 0.05;
-    montoImpuestoBase = baseImponible * 0.05;
-  } else if (rentaEnUTA <= 35.3) {
-    tasaImpuesto = 0.10;
-    montoImpuestoBase = baseImponible * 0.10;
-  } else if (rentaEnUTA <= 58.9) {
-    tasaImpuesto = 0.14;
-    montoImpuestoBase = baseImponible * 0.14;
-  } else if (rentaEnUTA <= 70.6) {
-    tasaImpuesto = 0.17;
-    montoImpuestoBase = baseImponible * 0.17;
-  } else if (rentaEnUTA <= 105.9) {
-    tasaImpuesto = 0.20;
-    montoImpuestoBase = baseImponible * 0.20;
-  } else if (rentaEnUTA <= 117.6) {
-    tasaImpuesto = 0.23;
-    montoImpuestoBase = baseImponible * 0.23;
-  } else if (rentaEnUTA <= 176.4) {
-    tasaImpuesto = 0.255;
-    montoImpuestoBase = baseImponible * 0.255;
-  } else if (rentaEnUTA <= 235.2) {
-    tasaImpuesto = 0.285;
-    montoImpuestoBase = baseImponible * 0.285;
-  } else if (rentaEnUTA <= 282.1) {
-    tasaImpuesto = 0.315;
-    montoImpuestoBase = baseImponible * 0.315;
-  } else if (rentaEnUTA <= 329) {
-    tasaImpuesto = 0.345;
-    montoImpuestoBase = baseImponible * 0.345;
-  } else {
-    tasaImpuesto = 0.37;
-    montoImpuestoBase = baseImponible * 0.37;
+  let rebajaUtm = 0;
+  for (const tramo of TRAMOS) {
+    if (rentaEnUtm <= tramo.hastaUtm) {
+      tasaImpuesto = tramo.factor;
+      rebajaUtm = tramo.rebajaUtm;
+      break;
+    }
   }
-  
+  const montoImpuestoBase = Math.max(0, baseImponible * tasaImpuesto - rebajaUtm * UTM);
+
   // Aplicar crédito por hijos
   const creditoHijos = CREDITO_POR_HIJO_2026 * numHijos;
   const impuestoSegundaCategoria = Math.max(0, montoImpuestoBase - creditoHijos);
-  
+
   // 7. Totales
   const totalDescuentos = aporteAFP + comisionAFPMonto + aporteSalud + seguroCesantia + impuestoSegundaCategoria;
   const sueldoLiquido = sueldoBruto - totalDescuentos;
   const tasaDescuentoEfectiva = sueldoBruto > 0 ? (totalDescuentos / sueldoBruto) * 100 : 0;
-  
+
   const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
   const pagaImpuesto = impuestoSegundaCategoria > 0;
   const tone = tasaDescuentoEfectiva >= 25 ? 'warn' : 'neutral';
@@ -115,8 +113,8 @@ export function compute(i: Inputs): Outputs {
     title: 'De tu bruto a tu líquido',
     text: `De un bruto de **${fmt(sueldoBruto)}** te llegan **${fmt(sueldoLiquido)}** a la mano: los descuentos se llevan **${fmt(totalDescuentos)}** (**${tasaDescuentoEfectiva.toFixed(1)}%**). ` +
       (pagaImpuesto
-        ? `Pagás **${fmt(impuestoSegundaCategoria)}** de impuesto de 2ª categoría (tasa marginal **${(tasaImpuesto * 100).toFixed(1)}%**).`
-        : `Tu renta no llega al tramo exento, así que **no pagás impuesto de 2ª categoría**.`),
+        ? `Pagás **${fmt(impuestoSegundaCategoria)}** de impuesto de 2ª categoría (tasa marginal **${(tasaImpuesto * 100).toLocaleString('es-CL')}%**).`
+        : `Tu renta no supera el tramo exento de 13,5 UTM, así que **no pagás impuesto de 2ª categoría**.`),
     tone,
     icon: '🇨🇱',
   };

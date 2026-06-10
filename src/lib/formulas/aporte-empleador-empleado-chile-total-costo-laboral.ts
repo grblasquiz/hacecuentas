@@ -1,3 +1,6 @@
+// Ingreso mínimo mensual y demás constantes 2026 desde la fuente única.
+import { CHILE_2026 } from "../data/chile-2026";
+
 export interface Inputs {
   sueldo_bruto_mensual: number;
   tipo_trabajador: 'dependiente' | 'honorarios';
@@ -25,7 +28,7 @@ export function compute(i: Inputs): Outputs {
   const TASA_GRATIFICACION_ANUAL = 0.25; // 25% anual (art. 163 Código del Trabajo)
   const MESES_AÑO = 12;
   
-  const sueldo = Math.max(i.sueldo_bruto_mensual, 420000); // Sueldo mínimo 2026
+  const sueldo = Math.max(i.sueldo_bruto_mensual, CHILE_2026.imm); // Ingreso mínimo 2026 ($539.000, Ley 21.751)
   
   const fmtCLP = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
 

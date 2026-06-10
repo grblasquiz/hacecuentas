@@ -2,7 +2,9 @@
  * Calculadora de costo y vigencia de verificación vehicular México
  * Costo base: 2.51 UMA diaria (aprox 2026). Multa extemporánea: 20 UMA.
  * Vigencia depende del holograma (00 = 24 meses, 0 = 12 meses, 1/2 = 6 meses).
+ * UMA 2026: fuente única src/lib/data/mexico-2026.ts
  */
+import { MEXICO_2026 } from '../data/mexico-2026';
 
 export interface Inputs {
   tipoHolograma: string; // '00' | '0' | '1' | '2'
@@ -43,8 +45,8 @@ const CALENDARIO_ENGOMADO: Record<string, { meses: number[], vigencia: number }>
 
 export function verificacionVehicularMx(i: Inputs): Outputs {
   const tipoRaw = String(i.tipoHolograma ?? i.tipoEngomado ?? '').toLowerCase();
-  // UMA diaria 2026 según INEGI/DOF (vigente desde 1-feb-2026): $113.14
-  const uma = Number(i.uma ?? 113.14);
+  // UMA diaria 2026 según INEGI/DOF (vigente desde 1-feb-2026): $117.31 — fuente única mexico-2026
+  const uma = Number(i.uma ?? MEXICO_2026.uma.diaria);
   const fueraCalendario = i.fueraCalendario === true || i.fueraCalendario === 'si';
 
   if (!tipoRaw) throw new Error('Ingresá el tipo de holograma');

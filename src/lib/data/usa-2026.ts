@@ -17,6 +17,9 @@
  *   - IRA §219(b)(5)(A): $7,500; catch-up 50+ §219(b)(5)(B): $1,100
  */
 
+/** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
+export const DATA_AS_OF = '2026-06-09';
+
 /** 401(k)/403(b)/457(b) — límites 2026 (IRS Notice 2025-67). */
 export const IRS_401K = {
   /** Elective deferral, under 50 (§402(g)). */

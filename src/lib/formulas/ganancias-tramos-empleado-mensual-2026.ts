@@ -1,11 +1,14 @@
+import { aplicarEscalaMensual, MNI_MENSUAL_BASE } from './_ganancias-escala';
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 export function gananciasTramosEmpleadoMensual2026(i: Inputs): Outputs {
   const s=Number(i.sueldoBrutoMensual)||0;
-  const tramos=[[1800000,0.05],[2200000,0.09],[2700000,0.12],[3300000,0.15],[4000000,0.19],[5000000,0.23],[6500000,0.27],[9000000,0.31]];
-  let imp=0, prev=0, alic=0.35;
-  for (const [tope,al] of tramos) { if (s<=tope) { imp+=(s-prev)*al; alic=al; break; } else { imp+=(tope-prev)*al; prev=tope; } }
-  if (s>9000000) imp+=(s-9000000)*0.35;
+  // Base imponible = bruto menos el mínimo no imponible efectivo (GNI + deducción
+  // especial apt.1) de la fuente única _ganancias-escala. Sobre esa base se aplica
+  // la escala progresiva del art. 94 LIG (también de la fuente única).
+  const base=Math.max(0, s - MNI_MENSUAL_BASE);
+  const { impuesto: imp, marginal: alic } = aplicarEscalaMensual(base);
   const alicPct=alic*100;
   const efectiva=s>0?(imp/s)*100:0;
   const _insight={

@@ -1,5 +1,7 @@
 // Valor UF live desde mindicador.cl (cron diario fetch-chile.mjs), con fallback verificado.
 import clLive from "../../data/live/chile.json";
+// Ingreso mínimo mensual 2026 desde la fuente única.
+import { CHILE_2026 } from "../data/chile-2026";
 
 export interface Inputs {
   sueldo_liquido_mensual: number; // CLP
@@ -20,7 +22,7 @@ export interface Outputs {
 
 // Constantes 2026 Chile
 const VALOR_UF_2026 = (clLive as any)?.uf?.valor ?? 40610.69; // CLP, live mindicador.cl con fallback verificado
-const SMI_MENSUAL_2026 = 450000; // CLP, Sueldo Mínimo Interprofesional
+const SMI_MENSUAL_2026 = CHILE_2026.imm; // CLP, ingreso mínimo mensual 2026 ($539.000, Ley 21.751)
 const HORAS_SEMANA_SMI = 40; // jornada estándar
 
 export function compute(i: Inputs): Outputs {

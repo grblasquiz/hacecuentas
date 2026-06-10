@@ -23,16 +23,57 @@
     "Confirmar si el empleador puede descontarte un día completo por llegar 10 minutos tarde (no puede) antes de reclamar a SUNAFIL."
   ],
   "fields": [
-    { "id": "sueldoMensual", "label": "Sueldo mensual (S/)", "type": "number", "required": true, "placeholder": "3000", "min": 0, "step": 0.01, "unit": "S/" },
-    { "id": "diasFalta", "label": "Días de falta (sin justificar)", "type": "number", "required": false, "placeholder": "0", "min": 0, "step": 1 },
-    { "id": "minutosTardanzaMes", "label": "Minutos de tardanza en el mes", "type": "number", "required": false, "placeholder": "0", "min": 0, "step": 1 }
+    {
+      "id": "sueldoMensual",
+      "label": "Sueldo mensual (S/)",
+      "type": "number",
+      "required": true,
+      "placeholder": "3000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "S/"
+    },
+    {
+      "id": "diasFalta",
+      "label": "Días de falta (sin justificar)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 1
+    },
+    {
+      "id": "minutosTardanzaMes",
+      "label": "Minutos de tardanza en el mes",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 1
+    }
   ],
   "outputs": [
-    { "id": "descuentoTotal", "label": "Descuento total", "primary": true },
-    { "id": "descuentoFaltas", "label": "Descuento por faltas" },
-    { "id": "descuentoTardanzas", "label": "Descuento por tardanzas" },
-    { "id": "sueldoCobrado", "label": "Sueldo a cobrar" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "descuentoTotal",
+      "label": "Descuento total",
+      "primary": true
+    },
+    {
+      "id": "descuentoFaltas",
+      "label": "Descuento por faltas"
+    },
+    {
+      "id": "descuentoTardanzas",
+      "label": "Descuento por tardanzas"
+    },
+    {
+      "id": "sueldoCobrado",
+      "label": "Sueldo a cobrar"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: sueldo S/ 3.000, 2 faltas y 90 minutos de tardanza",
@@ -45,23 +86,62 @@
     ],
     "result": "Te descuentan S/ 218,75; cobrarías S/ 2.781,25."
   },
-  "explanation": "## Cómo se calcula el descuento\n\nEl descuento por inasistencia o tardanza es **proporcional** al tiempo no trabajado:\n\n```\nValor del día = sueldo ÷ 30\nValor del minuto = sueldo ÷ 30 ÷ 8 ÷ 60   (jornada de 8 horas)\nDescuento = (valor del día × días de falta) + (valor del minuto × minutos de tardanza)\n```\n\nSe usa el **mes de 30 días** y la jornada legal máxima de **8 horas** (o 48 a la semana). Si tu jornada es distinta, el valor del minuto se ajusta a tus horas diarias reales.\n\n## Ejemplos resueltos paso a paso\n\n**Ejemplo 1 — Sueldo S/ 3.000, 2 faltas y 90 minutos de tardanza:**\n1. Valor del día = 3.000 ÷ 30 = S/ 100.\n2. Faltas = 100 × 2 = S/ 200.\n3. Valor del minuto = 3.000 ÷ 30 ÷ 8 ÷ 60 ≈ S/ 0,21.\n4. Tardanzas = 0,21 × 90 ≈ S/ 18,75.\n5. Descuento total = 200 + 18,75 = **S/ 218,75** → cobrás **S/ 2.781,25**.\n\n**Ejemplo 2 — Sueldo S/ 1.500, 1 falta:**\n1. Valor del día = 1.500 ÷ 30 = S/ 50.\n2. Descuento = **S/ 50** → cobrás **S/ 1.450**.\n\n**Ejemplo 3 — Sueldo S/ 2.400, solo 120 minutos de tardanza:**\n1. Valor del minuto = 2.400 ÷ 30 ÷ 8 ÷ 60 ≈ S/ 0,1667.\n2. Descuento = 0,1667 × 120 = **S/ 20** → cobrás **S/ 2.380**.\n\nFijate cómo una sola falta (un día entero) pesa mucho más que dos horas de tardanza repartidas.\n\n## Valor del día y del minuto según el sueldo\n\n| Sueldo | Valor del día (÷30) | Valor del minuto (÷30÷8÷60) |\n|---|---|---|\n| S/ 1.130 | S/ 37,67 | ~S/ 0,0785 |\n| S/ 1.500 | S/ 50,00 | ~S/ 0,1042 |\n| S/ 3.000 | S/ 100,00 | ~S/ 0,2083 |\n| S/ 5.000 | S/ 166,67 | ~S/ 0,3472 |\n\n## Qué puede y qué no puede descontar el empleador\n\n- **Sí** puede descontar el **tiempo efectivamente no laborado** (faltas y tardanzas).\n- **No** puede aplicar **multas económicas** como castigo adicional sobre tu sueldo. Las faltas reiteradas se sancionan por la vía disciplinaria (amonestación, suspensión, y en casos graves, despido por causa justa), no descontando más de lo no trabajado.\n- Los descuentos no pueden dejar tu remuneración por debajo de lo que la ley protege como intangible.\n\n## Errores comunes\n\n- **Aceptar una multa además del descuento del tiempo:** es ilegal. Solo se descuenta el tiempo no laborado.\n- **Calcular el día como sueldo ÷ días hábiles** (22 o 26): la base correcta es ÷ 30, porque domingos y feriados son remunerados.\n- **Usar 8 horas cuando tu jornada es de 6:** el valor del minuto se calcula sobre tus horas reales.\n- **Descontar una falta con descanso médico:** las faltas justificadas con certificado o licencia con goce no se descuentan.\n\n## Efecto en otros beneficios\n\nLas faltas injustificadas también pueden afectar el **récord para vacaciones** (se exige un mínimo de días efectivos de labor en el año) y reducir la base de cálculo de algunos beneficios del mes.\n\n## Cuándo aplica y excepciones\n\nEl descuento por tardanza solo procede si está previsto en el **reglamento interno de trabajo** o el contrato. No se descuentan las faltas por **descanso médico** acreditado, licencias con goce ni permisos legales. El valor del minuto asume jornada de 8 horas; ajustá si la tuya es distinta.\n\n## Datos clave 2026\n\n| Concepto | Valor |\n|---|---|\n| Días del mes (cálculo) | 30 |\n| Jornada máxima legal | 8 horas diarias / 48 semanales |\n| Descuento permitido | Solo tiempo no laborado |\n| Multa económica extra | No permitida como descuento |\n| Autoridad de reclamo | SUNAFIL |\n\n## Disclaimer\n\nCálculo orientativo. El valor del minuto asume una jornada de 8 horas; si tu jornada es menor o mayor, varía. El descuento por tardanza solo procede si está previsto en el reglamento interno o el contrato. Ante un descuento que parezca excesivo o una multa indebida, consultá con SUNAFIL o tu sindicato.\n",
+  "explanation": "## Cómo se calcula el descuento\n\nEl descuento por inasistencia o tardanza es **proporcional** al tiempo no trabajado:\n\n```\nValor del día = sueldo ÷ 30\nValor del minuto = sueldo ÷ 30 ÷ 8 ÷ 60   (jornada de 8 horas)\nDescuento = (valor del día × días de falta) + (valor del minuto × minutos de tardanza)\n```\n\nSe usa el **mes de 30 días** y la jornada legal máxima de **8 horas** (o 48 a la semana). Si tu jornada es distinta, el valor del minuto se ajusta a tus horas diarias reales.\n\n## Ejemplos resueltos paso a paso\n\n**Ejemplo 1 — Sueldo S/ 3.000, 2 faltas y 90 minutos de tardanza:**\n1. Valor del día = 3.000 ÷ 30 = S/ 100.\n2. Faltas = 100 × 2 = S/ 200.\n3. Valor del minuto = 3.000 ÷ 30 ÷ 8 ÷ 60 ≈ S/ 0,21.\n4. Tardanzas = 0,21 × 90 ≈ S/ 18,75.\n5. Descuento total = 200 + 18,75 = **S/ 218,75** → cobrás **S/ 2.781,25**.\n\n**Ejemplo 2 — Sueldo S/ 1.500, 1 falta:**\n1. Valor del día = 1.500 ÷ 30 = S/ 50.\n2. Descuento = **S/ 50** → cobrás **S/ 1.450**.\n\n**Ejemplo 3 — Sueldo S/ 2.400, solo 120 minutos de tardanza:**\n1. Valor del minuto = 2.400 ÷ 30 ÷ 8 ÷ 60 ≈ S/ 0,1667.\n2. Descuento = 0,1667 × 120 = **S/ 20** → cobrás **S/ 2.380**.\n\nFijate cómo una sola falta (un día entero) pesa mucho más que dos horas de tardanza repartidas.\n\n## Valor del día y del minuto según el sueldo\n\n| Sueldo | Valor del día (÷30) | Valor del minuto (÷30÷8÷60) |\n|---|---|---|\n| S/ 1.130 | S/ 37,67 | ~S/ 0,0785 |\n| S/ 1.500 | S/ 50,00 | ~S/ 0,1042 |\n| S/ 3.000 | S/ 100,00 | ~S/ 0,2083 |\n| S/ 5.000 | S/ 166,67 | ~S/ 0,3472 |\n\n## Qué puede y qué no puede descontar el empleador\n\n- **Sí** puede descontar el **tiempo efectivamente no laborado** (faltas y tardanzas). El valor del día se divide sobre el [sueldo bruto](/pe/calculadora-sueldo-bruto-a-neto-peru) mensual.\n- **No** puede aplicar **multas económicas** como castigo adicional sobre tu sueldo. Las faltas reiteradas se sancionan por la vía disciplinaria (amonestación, suspensión, y en casos graves, despido por causa justa), no descontando más de lo no trabajado.\n- Los descuentos no pueden dejar tu remuneración por debajo de lo que la ley protege como intangible.\n\n## Errores comunes\n\n- **Aceptar una multa además del descuento del tiempo:** es ilegal. Solo se descuenta el tiempo no laborado.\n- **Calcular el día como sueldo ÷ días hábiles** (22 o 26): la base correcta es ÷ 30, porque domingos y feriados son remunerados.\n- **Usar 8 horas cuando tu jornada es de 6:** el valor del minuto se calcula sobre tus horas reales.\n- **Descontar una falta con descanso médico:** las faltas justificadas con certificado o licencia con goce no se descuentan.\n\n## Efecto en otros beneficios\n\nLas faltas injustificadas también pueden afectar el **récord para vacaciones** (se exige un mínimo de días efectivos de labor en el año) y reducir la base de cálculo de algunos beneficios del mes. Si te descontaron días de más o querés revisar cómo quedan tus [vacaciones truncas](/pe/calculadora-vacaciones-truncas-peru) o la [liquidación de beneficios sociales](/pe/calculadora-liquidacion-beneficios-sociales-peru) al cese, calculalas con tu remuneración real tras los descuentos.\n\n## Cuándo aplica y excepciones\n\nEl descuento por tardanza solo procede si está previsto en el **reglamento interno de trabajo** o el contrato. No se descuentan las faltas por **descanso médico** acreditado, licencias con goce ni permisos legales. El valor del minuto asume jornada de 8 horas; ajustá si la tuya es distinta.\n\n## Datos clave 2026\n\n| Concepto | Valor |\n|---|---|\n| Días del mes (cálculo) | 30 |\n| Jornada máxima legal | 8 horas diarias / 48 semanales |\n| Descuento permitido | Solo tiempo no laborado |\n| Multa económica extra | No permitida como descuento |\n| Autoridad de reclamo | SUNAFIL |\n\n## Disclaimer\n\nCálculo orientativo. El valor del minuto asume una jornada de 8 horas; si tu jornada es menor o mayor, varía. El descuento por tardanza solo procede si está previsto en el reglamento interno o el contrato. Ante un descuento que parezca excesivo o una multa indebida, consultá con SUNAFIL o tu sindicato.\n",
   "faq": [
-    { "q": "¿Cuánto descuentan por un día de falta?", "a": "El valor de un día, que es tu **sueldo ÷ 30**. Por un sueldo de S/ 1.500, un día de falta injustificada descuenta S/ 50. El descuento es proporcional al tiempo no trabajado." },
-    { "q": "¿Cómo se calcula el descuento por tardanza?", "a": "Por el **valor del minuto**: sueldo ÷ 30 ÷ 8 ÷ 60 (jornada de 8 horas). Se multiplica por los minutos de tardanza acumulados en el mes. Por S/ 3.000, cada minuto vale unos S/ 0,21." },
-    { "q": "¿El empleador puede descontarme más de lo que falté como castigo?", "a": "No. El empleador solo puede descontar el **tiempo efectivamente no laborado**. Una multa económica extra como sanción **no está permitida**; las faltas reiteradas se sancionan por la vía disciplinaria (amonestación, suspensión o despido), no descontando dinero de más." },
-    { "q": "¿Las tardanzas afectan mi gratificación o CTS?", "a": "El descuento por tardanza reduce tu remuneración del mes, que es base de cálculo de algunos beneficios. Además, las **faltas injustificadas** pueden afectar el récord de días efectivos exigido para generar vacaciones." },
-    { "q": "¿Qué pasa si mi jornada no es de 8 horas?", "a": "El valor del minuto se ajusta a tus **horas diarias reales**. Si trabajás 6 horas, se divide entre 6 × 60 en vez de 8 × 60. Esta calculadora usa la jornada estándar de 8 horas; adaptá el resultado si tu jornada es distinta." },
-    { "q": "¿Una falta justificada también se descuenta?", "a": "Depende del motivo. Las faltas por **descanso médico** (con certificado) o licencias con goce no se descuentan. Las faltas **injustificadas** sí se descuentan y, si son reiteradas, pueden derivar en sanción disciplinaria." },
-    { "q": "¿Por qué se divide el sueldo entre 30 y no entre los días hábiles?", "a": "Porque la remuneración mensual en Perú se considera devengada sobre **30 días**, incluyendo domingos y feriados (que son remunerados). Por eso el valor diario es sueldo ÷ 30, no sueldo ÷ días laborables." },
-    { "q": "¿Qué hago si el descuento de mi boleta no cuadra?", "a": "Pedí a RR.HH. el detalle del cálculo (días y minutos descontados). Si el descuento supera el tiempo no laborado o incluye multas, podés reclamar internamente y, de ser necesario, denunciar ante **SUNAFIL**, la autoridad de fiscalización laboral." },
-    { "q": "¿Cuánto me descuentan por 90 minutos de tardanza con sueldo de S/ 3.000?", "a": "El minuto vale 3.000 ÷ 30 ÷ 8 ÷ 60 ≈ **S/ 0,21**, así que 90 minutos descuentan unos **S/ 18,75**. Es bastante menos que una falta completa (S/ 100), porque solo pagás el tiempo exacto que llegaste tarde." },
-    { "q": "¿Pueden descontarme el día completo por llegar 10 minutos tarde?", "a": "No. El descuento por tardanza debe ser **proporcional a los minutos** de retraso, no al día entero. Descontar un día completo por una tardanza de minutos es un descuento indebido que podés reclamar ante SUNAFIL." },
-    { "q": "¿El descuento por faltas baja mi gratificación o CTS?", "a": "De forma indirecta. La gratificación y la CTS se calculan sobre tu remuneración; si un mes cobraste menos por descuentos, la base puede verse afectada. Además, las **faltas injustificadas** pueden hacerte perder días del récord exigido para generar vacaciones." }
+    {
+      "q": "¿Cuánto descuentan por un día de falta?",
+      "a": "El valor de un día, que es tu **sueldo ÷ 30**. Por un sueldo de S/ 1.500, un día de falta injustificada descuenta S/ 50. El descuento es proporcional al tiempo no trabajado."
+    },
+    {
+      "q": "¿Cómo se calcula el descuento por tardanza?",
+      "a": "Por el **valor del minuto**: sueldo ÷ 30 ÷ 8 ÷ 60 (jornada de 8 horas). Se multiplica por los minutos de tardanza acumulados en el mes. Por S/ 3.000, cada minuto vale unos S/ 0,21."
+    },
+    {
+      "q": "¿El empleador puede descontarme más de lo que falté como castigo?",
+      "a": "No. El empleador solo puede descontar el **tiempo efectivamente no laborado**. Una multa económica extra como sanción **no está permitida**; las faltas reiteradas se sancionan por la vía disciplinaria (amonestación, suspensión o despido), no descontando dinero de más."
+    },
+    {
+      "q": "¿Las tardanzas afectan mi gratificación o CTS?",
+      "a": "El descuento por tardanza reduce tu remuneración del mes, que es base de cálculo de algunos beneficios. Además, las **faltas injustificadas** pueden afectar el récord de días efectivos exigido para generar vacaciones."
+    },
+    {
+      "q": "¿Qué pasa si mi jornada no es de 8 horas?",
+      "a": "El valor del minuto se ajusta a tus **horas diarias reales**. Si trabajás 6 horas, se divide entre 6 × 60 en vez de 8 × 60. Esta calculadora usa la jornada estándar de 8 horas; adaptá el resultado si tu jornada es distinta."
+    },
+    {
+      "q": "¿Una falta justificada también se descuenta?",
+      "a": "Depende del motivo. Las faltas por **descanso médico** (con certificado) o licencias con goce no se descuentan. Las faltas **injustificadas** sí se descuentan y, si son reiteradas, pueden derivar en sanción disciplinaria."
+    },
+    {
+      "q": "¿Por qué se divide el sueldo entre 30 y no entre los días hábiles?",
+      "a": "Porque la remuneración mensual en Perú se considera devengada sobre **30 días**, incluyendo domingos y feriados (que son remunerados). Por eso el valor diario es sueldo ÷ 30, no sueldo ÷ días laborables."
+    },
+    {
+      "q": "¿Qué hago si el descuento de mi boleta no cuadra?",
+      "a": "Pedí a RR.HH. el detalle del cálculo (días y minutos descontados). Si el descuento supera el tiempo no laborado o incluye multas, podés reclamar internamente y, de ser necesario, denunciar ante **SUNAFIL**, la autoridad de fiscalización laboral."
+    },
+    {
+      "q": "¿Cuánto me descuentan por 90 minutos de tardanza con sueldo de S/ 3.000?",
+      "a": "El minuto vale 3.000 ÷ 30 ÷ 8 ÷ 60 ≈ **S/ 0,21**, así que 90 minutos descuentan unos **S/ 18,75**. Es bastante menos que una falta completa (S/ 100), porque solo pagás el tiempo exacto que llegaste tarde."
+    },
+    {
+      "q": "¿Pueden descontarme el día completo por llegar 10 minutos tarde?",
+      "a": "No. El descuento por tardanza debe ser **proporcional a los minutos** de retraso, no al día entero. Descontar un día completo por una tardanza de minutos es un descuento indebido que podés reclamar ante SUNAFIL."
+    },
+    {
+      "q": "¿El descuento por faltas baja mi gratificación o CTS?",
+      "a": "De forma indirecta. La gratificación y la CTS se calculan sobre tu remuneración; si un mes cobraste menos por descuentos, la base puede verse afectada. Además, las **faltas injustificadas** pueden hacerte perder días del récord exigido para generar vacaciones."
+    }
   ],
   "sources": [
-    { "name": "MTPE — Jornada de trabajo y remuneraciones", "url": "https://www.gob.pe/institucion/mtpe/informes-publicaciones" },
-    { "name": "SUNAFIL — Derechos laborales y fiscalización", "url": "https://www.gob.pe/sunafil" }
+    {
+      "name": "MTPE — Jornada de trabajo y remuneraciones",
+      "url": "https://www.gob.pe/institucion/mtpe/informes-publicaciones"
+    },
+    {
+      "name": "SUNAFIL — Derechos laborales y fiscalización",
+      "url": "https://www.gob.pe/sunafil"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -83,5 +163,5 @@
     "descuento falta injustificada sunafil",
     "valor del minuto de trabajo peru"
   ],
-  "lastReviewed": "2026-06-08"
+  "lastReviewed": "2026-06-10"
 }

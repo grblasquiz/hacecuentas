@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   aporte_mensual: number;
   tarifa_marginal: number;
@@ -22,7 +23,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 Colombia - DIAN
-  const UVT_2026 = 41368; // Decreto UVT 2026
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const LIMITE_UVT = 3800; // Ley 1557 de 2012
   const LIMITE_LEGAL_PESOS = LIMITE_UVT * UVT_2026; // 157.2M aprox
   const PORCENTAJE_LIMITE_INGRESO = 0.30; // 30% ingreso laboral máximo

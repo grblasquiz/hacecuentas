@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   valor_patrimonio_bruto: number;
   pasivos_deudas: number;
@@ -28,7 +29,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes DIAN 2026 Colombia
-  const UVT_2026 = 45352; // COP, Resolución DIAN 2026
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const TARIFA_GANANCIA_OCASIONAL = 0.15; // 15% Art. 49 Ley 1739/2014
   const PORCENTAJE_LEGITIMA = 0.50; // 50% patrimonio líquido para cónyuge + hijos
   const PORCENTAJE_LEGITIMA_ASCENDIENTES = 0.33; // 33% para ascendientes sin hijos

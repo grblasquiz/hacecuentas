@@ -2,7 +2,9 @@
  * Calculadora de finiquito y liquidación México (LFT)
  * - Finiquito: días pendientes + vacaciones prop + prima vacacional + aguinaldo prop
  * - Liquidación: finiquito + 3 meses sueldo + 20 días por año (indemnización por despido injustificado)
+ * SM 2026: fuente única src/lib/data/mexico-2026.ts (CONASAMI/DOF)
  */
+import { MEXICO_2026 } from '../data/mexico-2026';
 
 export interface Inputs {
   salarioDiario: number;
@@ -80,8 +82,8 @@ export function finiquitoLiquidacionMexico(i: Inputs): Outputs {
   if (tipoTerm === 'despido-injustificado') {
     tresMeses = sd * 90;
     veinteDias = sd * 20 * anios;
-    // Tope LFT Art. 162: 2 salarios mínimos generales (SMG 2026 = $278.80)
-    const salarioTope = Math.min(sd, 278.80 * 2);
+    // Tope LFT Art. 162: 2 salarios mínimos generales (SMG 2026 = $315.04)
+    const salarioTope = Math.min(sd, MEXICO_2026.salarioMinimo.generalDiario * 2);
     primaAntiguedad = 12 * anios * salarioTope;
 
     desglose['Indemnización 3 meses'] = Number(tresMeses.toFixed(2));
@@ -91,8 +93,8 @@ export function finiquitoLiquidacionMexico(i: Inputs): Outputs {
     tipoCalculado = 'Liquidación (despido injustificado)';
   } else if (tipoTerm === 'renuncia' && anios >= 15) {
     // Renuncia con 15+ años: prima antigüedad (Art. 162 LFT)
-    // Tope LFT Art. 162: 2 salarios mínimos generales (SMG 2026 = $278.80)
-    const salarioTope = Math.min(sd, 278.80 * 2);
+    // Tope LFT Art. 162: 2 salarios mínimos generales (SMG 2026 = $315.04)
+    const salarioTope = Math.min(sd, MEXICO_2026.salarioMinimo.generalDiario * 2);
     primaAntiguedad = 12 * anios * salarioTope;
     desglose['Prima de antigüedad'] = Number(primaAntiguedad.toFixed(2));
   }

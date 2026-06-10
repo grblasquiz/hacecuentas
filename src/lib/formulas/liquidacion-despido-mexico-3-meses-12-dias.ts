@@ -24,7 +24,7 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  const SMG_2026 = i.smg_diaria; // CONASAMI 2026: $248.93/día
+  const SMG_2026 = i.smg_diaria; // CONASAMI 2026: $315.04/día (zona general)
   const PRIMA_ANTIGUEDAD_MINIMA_ANOS = 15; // Art. 162, Ley Federal del Trabajo
   const PRIMA_ANTIGUEDAD_DIAS = 12; // 12 días/año
   const PRIMA_ANTIGUEDAD_TOPE_SMG = 2; // 2 × SMG/día máximo

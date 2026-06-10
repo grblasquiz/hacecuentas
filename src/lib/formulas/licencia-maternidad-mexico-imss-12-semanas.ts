@@ -1,3 +1,5 @@
+import { MEXICO_2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   salario_diario_integrado: number;
   semanas_cotizadas: number;
@@ -18,12 +20,11 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 México
-  // UMA 2026: $2,500 diarios (INEGI)
-  const UMA_DIARIA_2026 = 2500;
-  
-  // Límite IMSS: 25 veces UMA diaria
-  const LIMITE_UMA = 25 * UMA_DIARIA_2026; // $62,500 MXN
+  // Constantes 2026 México — fuente única src/lib/data/mexico-2026.ts (INEGI/LSS)
+  const UMA_DIARIA_2026 = MEXICO_2026.uma.diaria; // UMA diaria 2026 = $117,31
+
+  // Límite IMSS del SDI: 25 veces UMA diaria (LSS Art. 28)
+  const LIMITE_UMA = MEXICO_2026.imss.topeSbcUmas * UMA_DIARIA_2026; // 25 UMA ≈ $2.932,75/día
   
   // Requisito mínimo: 30 semanas cotizadas últimos 12 meses
   const SEMANAS_MINIMAS = 30;

@@ -6,6 +6,9 @@
  * Ecuador está dolarizado → moneda USD ("$").
  */
 
+/** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
+export const DATA_AS_OF = '2026-06-08';
+
 export const ECUADOR_2026 = {
   anio: 2026,
   sbu: 482,                  // Salario Básico Unificado (USD)

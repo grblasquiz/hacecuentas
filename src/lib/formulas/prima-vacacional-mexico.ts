@@ -1,4 +1,5 @@
 /** Prima vacacional México según antigüedad (reforma LFT 2023) */
+import { MEXICO_2026 } from '../data/mexico-2026';
 
 export interface Inputs {
   salarioDiario: number;
@@ -73,9 +74,9 @@ export function primaVacacionalMexico(i: Inputs): Outputs {
   // Prima vacacional = salario diario × días vacaciones × % prima
   const primaVacacionalBruta = salarioDiario * diasVacaciones * (primaPorc / 100);
 
-  // Exención: 15 UMA diarias (Art. 93 LISR)
-  const UMA_DIARIO = 113.14;
-  const exentoIsr = Math.min(primaVacacionalBruta, UMA_DIARIO * 15);
+  // Exención: 15 UMA diarias (Art. 93 LISR) — UMA fuente única src/lib/data/mexico-2026.ts
+  const UMA_DIARIO = MEXICO_2026.uma.diaria; // UMA diaria 2026 = $117,31
+  const exentoIsr = Math.min(primaVacacionalBruta, UMA_DIARIO * MEXICO_2026.exencionesIsrUmas.primaVacacional);
   const gravado = Math.max(0, primaVacacionalBruta - exentoIsr);
   const isrRetenido = calcISR(gravado);
   const primaVacacionalNeta = primaVacacionalBruta - isrRetenido;

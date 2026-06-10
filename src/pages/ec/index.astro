@@ -6,6 +6,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
+import { ECUADOR_2026, fmtUSDec } from '../../lib/data/ecuador-2026';
 
 const localeModules = import.meta.glob<any>('../../content/calcs-ec/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
@@ -27,13 +28,13 @@ calcs.forEach((c) => {
 });
 
 const categoryMeta: Record<string, { label: string; desc: string; color: string; icon: string }> = {
-  finanzas:        { label: 'Finanzas',       desc: 'Sueldo, retefuente, prima legal, cesantías.',                color: '#2563eb', icon: '💰' },
-  impuestos:       { label: 'Impuestos',      desc: 'Retefuente DIAN 2026, IVA 19%, ICA, declaración renta.',                color: '#7c3aed', icon: '🧾' },
+  finanzas:        { label: 'Finanzas',       desc: 'Sueldo neto, décimos, fondos de reserva, IESS.',                color: '#2563eb', icon: '💰' },
+  impuestos:       { label: 'Impuestos',      desc: 'Impuesto a la renta SRI 2026, IVA 15%, RIMPE.',                color: '#7c3aed', icon: '🧾' },
   salud:           { label: 'Salud',          desc: 'IMC, calorías, embarazo, fitness.',                  color: '#16a34a', icon: '❤️' },
   familia:         { label: 'Familia',        desc: 'Licencia maternidad, hijos, escolarización.',                  color: '#db2777', icon: '👨‍👩‍👧' },
   vida:            { label: 'Vida cotidiana', desc: 'Arriendo, costo de vida, mercado.',                     color: '#d97706', icon: '🏠' },
-  automotor:       { label: 'Automotor',      desc: 'Soat, impuesto vehículos, gasolina vs gas.',                color: '#6366f1', icon: '🚗' },
-  educacion:       { label: 'Educación',      desc: 'ICETEX, créditos universitarios, becas.',                color: '#8b5cf6', icon: '🎓' },
+  automotor:       { label: 'Automotor',      desc: 'Matriculación, SPPAT, combustible.',                color: '#6366f1', icon: '🚗' },
+  educacion:       { label: 'Educación',      desc: 'Becas, créditos universitarios, promedios.',                color: '#8b5cf6', icon: '🎓' },
   negocios:        { label: 'Negocios',       desc: 'Márgenes, IVA, modelos fiscales.',                   color: '#0891b2', icon: '📊' },
   marketing:       { label: 'Marketing',      desc: 'CTR, CPC, ROAS, CAC, LTV.',                          color: '#e11d48', icon: '📈' },
   deportes:        { label: 'Deportes',       desc: 'Pace, 1RM, VO2 max, ciclismo.',                      color: '#65a30d', icon: '🏃' },
@@ -55,35 +56,113 @@ const activeCategories = categoryOrder.filter((cat) => byCategory[cat] && byCate
 const totalCalcs = calcs.length;
 
 const popularSlugs = [
-  'calculadora-prima-legal-colombia-30-dias-junio-diciembre',
-  'calculadora-cesantias-colombia-12-porciento-anual',
-  'calculadora-retefuente-colombia-2026-empleado-tabla',
-  'calculadora-liquidacion-laboral-colombia-completa-cesantias',
-  'calculadora-salario-minimo-colombia-2026-auxilio-transporte',
-  'calculadora-aporte-eps-pension-empleado-colombia-2026'
+  'calculadora-sueldo-neto-ecuador',
+  'calculadora-decimo-tercer-sueldo-ecuador',
+  'calculadora-decimo-cuarto-sueldo-ecuador',
+  'calculadora-aporte-iess-ecuador',
+  'calculadora-impuesto-renta-ecuador',
+  'calculadora-liquidacion-finiquito-ecuador'
 ];
 const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
+
+// ── Datos clave 2026 — todo computado desde src/lib/data/ecuador-2026.ts (fuente única, nunca stale) ──
+const E = ECUADOR_2026;
+const netoSbu = E.sbu * (1 - E.iessPersonal);
+const costoEmpleadorSbu = E.sbu * (1 + E.iessPatronal);
+const fondosReservaSbu = E.sbu * E.fondosReserva;
+
+const datosClave = [
+  { k: 'Salario Básico Unificado (SBU)', v: `${fmtUSDec(E.sbu)} /mes`, src: 'Ministerio del Trabajo' },
+  { k: 'Aporte personal IESS', v: '9,45% del sueldo', src: 'IESS' },
+  { k: 'Aporte patronal IESS', v: '11,15% (lo paga el empleador)', src: 'IESS' },
+  { k: 'IVA', v: '15%', src: 'SRI' },
+  { k: 'Décimo tercer sueldo', v: '1 sueldo al año (hasta el 24-dic)', src: 'Código del Trabajo' },
+  { k: 'Décimo cuarto sueldo', v: `1 SBU (${fmtUSDec(E.decimoCuarto)})`, src: 'Código del Trabajo' },
+  { k: 'Fondos de reserva', v: '8,33% mensual desde el 2º año', src: 'IESS' },
+  { k: 'Impuesto a la renta: fracción exenta', v: `${fmtUSDec(E.irFraccionBasicaDesgravada)} /año`, src: 'SRI, Resolución NAC-DGERCGC25-00000043' },
+  { k: 'Utilidades', v: '15% de las utilidades de la empresa', src: 'Código del Trabajo' },
+];
+
+// ── FAQ país-específica: respuestas con cifras computadas desde la fuente única ──
+const faq = [
+  {
+    q: '¿Cuál es el sueldo básico en Ecuador en 2026?',
+    a: `El Salario Básico Unificado 2026 es de ${fmtUSDec(E.sbu)} mensuales (Ministerio del Trabajo). Ecuador está dolarizado, así que todos los valores son en dólares estadounidenses.`,
+  },
+  {
+    q: '¿Cómo se calcula el sueldo neto en Ecuador 2026?',
+    a: `Al sueldo se le descuenta el aporte personal al IESS del 9,45%. Con el SBU de ${fmtUSDec(E.sbu)} quedan ${fmtUSDec(netoSbu)} netos. El impuesto a la renta sólo aplica si tu base imponible anual supera ${fmtUSDec(E.irFraccionBasicaDesgravada)}, así que con sueldos bajos no hay retención.`,
+  },
+  {
+    q: '¿Cuándo se pagan el décimo tercero y el décimo cuarto sueldo?',
+    a: `El décimo tercero (un sueldo promedio del año) se paga hasta el 24 de diciembre. El décimo cuarto (un SBU: ${fmtUSDec(E.decimoCuarto)}) se paga hasta el 15 de marzo en Costa y Galápagos y hasta el 15 de agosto en Sierra y Amazonía. Ambos pueden cobrarse mensualizados si lo pediste.`,
+  },
+  {
+    q: '¿Qué son los fondos de reserva y cuándo se cobran?',
+    a: `Desde el segundo año con el mismo empleador tenés derecho al 8,33% mensual adicional (${fmtUSDec(fondosReservaSbu)} con el SBU), que podés cobrar cada mes con tu sueldo o acumular en el IESS. Equivalen a un sueldo más por año trabajado.`,
+  },
+  {
+    q: '¿Quién paga impuesto a la renta en Ecuador en 2026?',
+    a: `Sólo quien supera la fracción básica desgravada de ${fmtUSDec(E.irFraccionBasicaDesgravada)} anuales de base imponible (ingresos menos aportes IESS y rebaja de gastos personales). La tabla del SRI 2026 va del 5% al 37% por tramos progresivos.`,
+  },
+  {
+    q: '¿Cuánto le cuesta un trabajador al empleador en Ecuador?',
+    a: `Además del sueldo, el empleador paga el aporte patronal IESS del 11,15% (con el SBU: ${fmtUSDec(costoEmpleadorSbu)} al mes) más las provisiones de décimo tercero, décimo cuarto, fondos de reserva y vacaciones. El sobrecosto total ronda el 35% del sueldo.`,
+  },
+  {
+    q: '¿Cómo se calculan las utilidades 2026?',
+    a: `Las empresas reparten el 15% de sus utilidades líquidas entre los trabajadores: 10% por igual entre todos y 5% según las cargas familiares. Se pagan hasta el 15 de abril del año siguiente al ejercicio.`,
+  },
+];
 
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': ['CollectionPage', 'WebPage'],
-      '@id': 'https://hacecuentas.com/co#webpage',
-      url: 'https://hacecuentas.com/co',
-      name: 'Calculadoras Ecuador 2026 — DIAN, retefuente, EPS | Hacé Cuentas',
+      '@id': 'https://hacecuentas.com/ec#webpage',
+      url: 'https://hacecuentas.com/ec',
+      name: 'Calculadoras Ecuador 2026 — SRI, IESS, décimos | Hacé Cuentas',
       description: `Calculadoras gratis específicas para Ecuador.`,
       inLanguage: 'es-EC',
       isPartOf: { '@id': 'https://hacecuentas.com/#website' },
-      breadcrumb: { '@id': 'https://hacecuentas.com/co#breadcrumb' },
+      breadcrumb: { '@id': 'https://hacecuentas.com/ec#breadcrumb' },
     },
     {
       '@type': 'BreadcrumbList',
-      '@id': 'https://hacecuentas.com/co#breadcrumb',
+      '@id': 'https://hacecuentas.com/ec#breadcrumb',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Ecuador', item: 'https://hacecuentas.com/co' },
+        { '@type': 'ListItem', position: 2, name: 'Ecuador', item: 'https://hacecuentas.com/ec' },
       ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://hacecuentas.com/ec#faq',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'Dataset',
+      '@id': 'https://hacecuentas.com/ec#datos-2026',
+      name: 'Datos laborales y fiscales de Ecuador 2026',
+      description: `Valores oficiales vigentes en Ecuador 2026: Salario Básico Unificado (${fmtUSDec(E.sbu)}), aportes IESS personal y patronal, IVA, décimo tercero y décimo cuarto, fondos de reserva, fracción exenta del impuesto a la renta y utilidades.`,
+      url: 'https://hacecuentas.com/ec',
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      isAccessibleForFree: true,
+      inLanguage: 'es-EC',
+      temporalCoverage: '2026',
+      spatialCoverage: { '@type': 'Country', name: 'Ecuador' },
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      sourceOrganization: [
+        { '@type': 'GovernmentOrganization', name: 'SRI', url: 'https://www.sri.gob.ec' },
+        { '@type': 'GovernmentOrganization', name: 'IESS', url: 'https://www.iess.gob.ec' },
+        { '@type': 'GovernmentOrganization', name: 'Ministerio del Trabajo de Ecuador', url: 'https://www.trabajo.gob.ec' },
+      ],
+      keywords: ['salario básico Ecuador 2026', 'aporte IESS 9.45', 'décimo tercer sueldo', 'décimo cuarto sueldo', 'impuesto a la renta SRI 2026', 'fondos de reserva'],
     },
   ],
 };
@@ -94,8 +173,8 @@ const hreflangTags = HOME_HREFLANG;
 ---
 
 <Layout
-  title="Calculadoras Ecuador 2026 — DIAN, retefuente, EPS | Hacé Cuentas"
-  description={`${totalCalcs} calculadoras gratis para Ecuador: retefuente DIAN, prima legal, cesantías, EPS, salario mínimo. Datos oficiales 2026.`}
+  title="Calculadoras Ecuador 2026 — SRI, IESS, décimos | Hacé Cuentas"
+  description={`${totalCalcs} calculadoras gratis para Ecuador: sueldo neto, IESS, décimo tercero y cuarto, impuesto a la renta SRI, fondos de reserva. Datos oficiales 2026.`}
   lang="es"
   audience="EC"
   hreflang={hreflangTags}
@@ -106,9 +185,9 @@ const hreflangTags = HOME_HREFLANG;
   <div class="cc-index">
     <section class="hero">
       <div class="hero-inner">
-        <div class="hero-badge">🇨🇴 Ecuador · 2026</div>
+        <div class="hero-badge">🇪🇨 Ecuador · 2026</div>
         <h1>Calculadoras para Ecuador</h1>
-        <p class="hero-sub">Retefuente DIAN, prima legal, cesantías, EPS, salario mínimo, ICA. Datos oficiales DIAN, MinTrabajo y Banco de la República. Gratis.</p>
+        <p class="hero-sub">Sueldo neto, aportes IESS, décimo tercero y cuarto, impuesto a la renta, fondos de reserva. Datos oficiales SRI, IESS y Ministerio del Trabajo. Gratis.</p>
         <div class="hero-stats">
           <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
           <span class="stat-sep" aria-hidden="true">·</span>
@@ -138,6 +217,24 @@ const hreflangTags = HOME_HREFLANG;
         </div>
       </section>
     )}
+
+    <section class="datos-clave" aria-labelledby="datos-clave-title">
+      <h2 id="datos-clave-title">Datos clave de Ecuador 2026</h2>
+      <p class="section-sub">Los valores oficiales que usan todas nuestras calculadoras ecuatorianas. Uso libre con atribución (CC-BY 4.0).</p>
+      <div class="dc-wrap">
+        <table class="dc-table">
+          <thead>
+            <tr><th>Concepto</th><th>Valor 2026</th><th>Fuente</th></tr>
+          </thead>
+          <tbody>
+            {datosClave.map((d) => (
+              <tr><td>{d.k}</td><td>{d.v}</td><td class="dc-src">{d.src}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="dc-note">Última revisión: 10 de junio de 2026. Fuentes: SRI, IESS y Ministerio del Trabajo.</p>
+    </section>
 
     <div class="categories">
       {activeCategories.map((catKey) => {
@@ -169,6 +266,18 @@ const hreflangTags = HOME_HREFLANG;
       })}
     </div>
 
+    <section class="faq-hub" aria-labelledby="faq-title">
+      <h2 id="faq-title">Preguntas frecuentes sobre sueldos e impuestos en Ecuador 2026</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary><span>{f.q}</span></summary>
+            <p class="faq-a">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
     <aside class="cta-footer" aria-label="Otras versiones">
       <p class="cta-text">¿Buscas calculadoras de otro país?</p>
       <p class="cta-sub">Tenemos versiones específicas con datos locales para Argentina, España, México, Ecuador, Chile y Brasil. La versión global aplica al resto del mundo hispano.</p>
@@ -177,7 +286,7 @@ const hreflangTags = HOME_HREFLANG;
         <a href="/" class="cta-pill">🇦🇷 Argentina</a>
         <a href="/es" class="cta-pill">🇪🇸 España</a>
         <a href="/mx" class="cta-pill">🇲🇽 México</a>
-        <a href="/ec" class="cta-pill">🇨🇴 Ecuador</a>
+        <a href="/ec" class="cta-pill">🇪🇨 Ecuador</a>
         <a href="/cl" class="cta-pill">🇨🇱 Chile</a>
         <a href="/pt" class="cta-pill">🇧🇷 Brasil</a>
       </div>
@@ -255,4 +364,40 @@ const hreflangTags = HOME_HREFLANG;
     text-decoration: none; transition: all 0.15s;
   }
   .cta-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  .top-bing, .datos-clave, .faq-hub { padding: 0 1rem 2.5rem; }
+  .top-bing h2, .datos-clave h2, .faq-hub h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .section-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; }
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .top-card {
+    display: flex; gap: 0.75rem; padding: 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text); transition: all 0.15s;
+  }
+  .top-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .top-card .t-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .top-card .t-title { font-weight: 600; font-size: 0.9375rem; display: block; margin-bottom: 0.25rem; }
+  .top-card .t-desc { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.45; }
+
+  .dc-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .dc-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--bg-card); }
+  .dc-table th, .dc-table td { padding: 0.625rem 0.875rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .dc-table tr:last-child td { border-bottom: none; }
+  .dc-table th { background: var(--bg-muted); font-weight: 600; }
+  .dc-table td:nth-child(2) { font-weight: 600; white-space: nowrap; }
+  .dc-table .dc-src { color: var(--text-muted); font-size: 0.8125rem; }
+  .dc-note { color: var(--text-muted); font-size: 0.8125rem; margin: 0.625rem 0 0; }
+
+  .faq-hub h2 { margin-bottom: 1rem; }
+  .faq-list { display: grid; gap: 0.625rem; }
+  .faq-list details { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .faq-list summary {
+    cursor: pointer; padding: 0.875rem 1rem; font-weight: 600; font-size: 0.9375rem;
+    list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+  }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary::after { content: '+'; color: var(--text-muted); font-weight: 700; }
+  .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
 </style>

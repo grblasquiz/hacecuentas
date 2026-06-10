@@ -6,6 +6,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
+import { COLOMBIA_2026, fmtCOP } from '../../lib/data/colombia-2026';
 
 const localeModules = import.meta.glob<any>('../../content/calcs-co/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
@@ -64,6 +65,67 @@ const popularSlugs = [
 ];
 const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
 
+// ── Datos clave 2026 — todo computado desde src/lib/data/colombia-2026.ts (fuente única, nunca stale) ──
+const C = COLOMBIA_2026;
+const pctCO = (x: number) => (x * 100).toLocaleString('es-CO', { maximumFractionDigits: 3 }) + '%';
+const netoSmlmv = C.smlmv * (1 - C.aportes.saludEmpleado - C.aportes.pensionEmpleado) + C.auxilioTransporte;
+
+const datosClave = [
+  { k: 'Salario mínimo (SMLMV)', v: `${fmtCOP(C.smlmv)} /mes`, src: 'Decreto 1469 de 2025' },
+  { k: 'Auxilio de transporte', v: `${fmtCOP(C.auxilioTransporte)} /mes`, src: 'Decreto 1470 de 2025 (hasta 2 SMLMV)' },
+  { k: 'SMLMV + auxilio de transporte', v: fmtCOP(C.smlmv + C.auxilioTransporte), src: 'MinTrabajo' },
+  { k: 'UVT 2026', v: fmtCOP(C.uvt), src: 'Resolución DIAN 000238 de 2025' },
+  { k: 'Aportes del empleado (salud + pensión)', v: `${pctCO(C.aportes.saludEmpleado + C.aportes.pensionEmpleado)} (4% + 4%)`, src: 'Ley 100 de 1993' },
+  { k: 'Aportes del empleador (salud + pensión)', v: `${pctCO(C.aportes.saludEmpleador + C.aportes.pensionEmpleador)} (8,5% + 12%)`, src: 'Ley 100 de 1993' },
+  { k: 'ARL según clase de riesgo (I a V)', v: `${pctCO(C.aportes.arl.I)} a ${pctCO(C.aportes.arl.V)}`, src: 'Decreto 1772 de 1994 — 100% empleador' },
+  { k: 'Jornada laboral', v: '44 h/sem (42 h desde el 15-jul-2026)', src: 'Ley 2101 de 2021' },
+  { k: 'Tope de ingresos para declarar renta', v: `${fmtCOP(C.declaracionRenta2026.topeIngresosPesos)} /año`, src: 'DIAN (año gravable 2025)' },
+];
+
+// ── Las más buscadas — calcs CO con más tracción real en Bing (GSC/Bing Webmaster, jun-2026) ──
+const masBuscadas = [
+  { slug: 'calculadora-aportes-arl-colombia-empleador-empleado-riesgo', icon: '⚠️', title: 'Aportes ARL por clase de riesgo', desc: `Cuánto se paga de ARL según la clase de riesgo (I a V): del ${pctCO(C.aportes.arl.I)} al ${pctCO(C.aportes.arl.V)} del salario, 100% a cargo del empleador.` },
+  { slug: 'calculadora-recibo-luz-codensa-epm-colombia-estrato', icon: '💡', title: 'Recibo de luz por estrato', desc: 'Estimá tu factura de energía según estrato, consumo en kWh y comercializador (Codensa, EPM, Air-e).' },
+  { slug: 'calculadora-salario-minimo-colombia-2026-auxilio-transporte', icon: '💵', title: 'Salario mínimo 2026 con auxilio', desc: `SMLMV ${fmtCOP(C.smlmv)} + auxilio de transporte ${fmtCOP(C.auxilioTransporte)}: cuánto queda libre después de salud y pensión.` },
+  { slug: 'calculadora-tasa-interes-mora-colombia-tarjeta-credito-2026', icon: '⚠️', title: 'Interés de mora 2026', desc: 'Cuánto te cobran de mora en tarjetas de crédito y facturas según la tasa certificada por la Superfinanciera.' },
+];
+
+// ── FAQ país-específica: respuestas con cifras computadas desde la fuente única ──
+const faq = [
+  {
+    q: '¿Cuál es el salario mínimo en Colombia en 2026?',
+    a: `El salario mínimo 2026 es de ${fmtCOP(C.smlmv)} mensuales (Decreto 1469 de 2025), más ${fmtCOP(C.auxilioTransporte)} de auxilio de transporte para quien gana hasta 2 SMLMV (Decreto 1470 de 2025). En total, ${fmtCOP(C.smlmv + C.auxilioTransporte)} al mes.`,
+  },
+  {
+    q: '¿Cómo se calcula el sueldo neto en Colombia 2026?',
+    a: `Al salario se le descuenta el 4% de salud y el 4% de pensión (8% en total). Con el salario mínimo: ${fmtCOP(C.smlmv)} − 8% + auxilio de transporte = ${fmtCOP(netoSmlmv)} netos al mes. Si el ingreso supera 4 SMLMV se suma el Fondo de Solidaridad Pensional (1% a 2%), y desde ~${fmtCOP(95 * C.uvt)} de base gravable mensual aplica retención en la fuente.`,
+  },
+  {
+    q: '¿Cuánto vale la UVT en 2026 y para qué sirve?',
+    a: `La UVT 2026 vale ${fmtCOP(C.uvt)} (Resolución DIAN 000238 de 2025). Es la unidad con la que la DIAN fija topes y tarifas: retención en la fuente, sanciones (la mínima es 10 UVT = ${fmtCOP(C.sanciones.minimaUvt * C.uvt)}), topes de declaración de renta y multas.`,
+  },
+  {
+    q: '¿Quién está obligado a declarar renta en 2026?',
+    a: `Declara renta en 2026 (por el año gravable 2025) quien superó cualquiera de estos topes: ingresos brutos de ${fmtCOP(C.declaracionRenta2026.topeIngresosPesos)} (1.400 UVT), patrimonio bruto de ${fmtCOP(C.declaracionRenta2026.topePatrimonioPesos)} (4.500 UVT), o compras, consumos con tarjeta o consignaciones por más de 1.400 UVT.`,
+  },
+  {
+    q: '¿Cuánto le cuesta un empleado al empleador en Colombia 2026?',
+    a: `Además del salario, el empleador paga: pensión 12%, salud 8,5% (exonerada para muchas empresas por trabajadores que ganan menos de 10 SMLMV), ARL del ${pctCO(C.aportes.arl.I)} al ${pctCO(C.aportes.arl.V)} según riesgo, caja de compensación 4%, y provisiones de prima (8,33%), cesantías (8,33%), intereses de cesantías (12% anual) y vacaciones (~4,17%). El sobrecosto total ronda el 40-50% del salario.`,
+  },
+  {
+    q: '¿Cuándo se paga la prima legal en 2026?',
+    a: `La prima de servicios son 30 días de salario por año, pagados en dos cuotas: la primera a más tardar el 30 de junio y la segunda hasta el 20 de diciembre. Con salario mínimo, cada cuota es de aproximadamente ${fmtCOP((C.smlmv + C.auxilioTransporte) / 2)} (la base incluye el auxilio de transporte).`,
+  },
+  {
+    q: '¿Cuántas horas tiene la jornada laboral en Colombia 2026?',
+    a: `Hasta el 14 de julio de 2026 la jornada máxima legal es de ${C.jornada.horasSemanaHasta14Jul2026} horas semanales; desde el 15 de julio baja a ${C.jornada.horasSemanaDesde15Jul2026} horas (último escalón de la Ley 2101 de 2021). Además, el recargo dominical y festivo sube del 80% al 90% desde el 1 de julio de 2026 (Ley 2466 de 2025).`,
+  },
+  {
+    q: '¿Cuánto cuesta la ARL y quién la paga?',
+    a: `La ARL la paga 100% el empleador (el independiente con contrato la asume él mismo). La tarifa depende de la clase de riesgo: I ${pctCO(C.aportes.arl.I)} (oficinas), II ${pctCO(C.aportes.arl.II)}, III ${pctCO(C.aportes.arl.III)}, IV ${pctCO(C.aportes.arl.IV)} y V ${pctCO(C.aportes.arl.V)} (construcción, minería). Sobre un salario mínimo va de ${fmtCOP(C.smlmv * C.aportes.arl.I)} a ${fmtCOP(C.smlmv * C.aportes.arl.V)} mensuales.`,
+  },
+];
+
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -84,6 +146,33 @@ const schema = {
         { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
         { '@type': 'ListItem', position: 2, name: 'Colombia', item: 'https://hacecuentas.com/co' },
       ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://hacecuentas.com/co#faq',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'Dataset',
+      '@id': 'https://hacecuentas.com/co#datos-2026',
+      name: 'Datos laborales y fiscales de Colombia 2026',
+      description: `Valores oficiales vigentes en Colombia 2026: salario mínimo (${fmtCOP(C.smlmv)}), auxilio de transporte (${fmtCOP(C.auxilioTransporte)}), UVT (${fmtCOP(C.uvt)}), aportes a salud, pensión y ARL, jornada laboral y topes de declaración de renta.`,
+      url: 'https://hacecuentas.com/co',
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      isAccessibleForFree: true,
+      inLanguage: 'es-CO',
+      temporalCoverage: '2026',
+      spatialCoverage: { '@type': 'Country', name: 'Colombia' },
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      sourceOrganization: [
+        { '@type': 'GovernmentOrganization', name: 'Ministerio del Trabajo de Colombia', url: 'https://www.mintrabajo.gov.co' },
+        { '@type': 'GovernmentOrganization', name: 'DIAN', url: 'https://www.dian.gov.co' },
+      ],
+      keywords: ['salario mínimo Colombia 2026', 'UVT 2026', 'auxilio de transporte 2026', 'aportes salud pensión ARL', 'declaración de renta 2026'],
     },
   ],
 };
@@ -139,6 +228,40 @@ const hreflangTags = HOME_HREFLANG;
       </section>
     )}
 
+    <section class="top-bing" aria-labelledby="mas-buscadas-title">
+      <h2 id="mas-buscadas-title">Las más buscadas en Colombia</h2>
+      <p class="section-sub">Las calculadoras colombianas con más búsquedas este mes.</p>
+      <div class="top-grid">
+        {masBuscadas.map((c) => (
+          <a href={`/co/${c.slug}`} class="top-card">
+            <span class="t-icon" aria-hidden="true">{c.icon}</span>
+            <span>
+              <span class="t-title">{c.title}</span>
+              <span class="t-desc">{c.desc}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="datos-clave" aria-labelledby="datos-clave-title">
+      <h2 id="datos-clave-title">Datos clave de Colombia 2026</h2>
+      <p class="section-sub">Los valores oficiales que usan todas nuestras calculadoras colombianas. Uso libre con atribución (CC-BY 4.0).</p>
+      <div class="dc-wrap">
+        <table class="dc-table">
+          <thead>
+            <tr><th>Concepto</th><th>Valor 2026</th><th>Fuente</th></tr>
+          </thead>
+          <tbody>
+            {datosClave.map((d) => (
+              <tr><td>{d.k}</td><td>{d.v}</td><td class="dc-src">{d.src}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="dc-note">Última revisión: 10 de junio de 2026. Fuentes: MinTrabajo, DIAN y Diario Oficial.</p>
+    </section>
+
     <div class="categories">
       {activeCategories.map((catKey) => {
         const meta = categoryMeta[catKey];
@@ -168,6 +291,18 @@ const hreflangTags = HOME_HREFLANG;
         );
       })}
     </div>
+
+    <section class="faq-hub" aria-labelledby="faq-title">
+      <h2 id="faq-title">Preguntas frecuentes sobre sueldos e impuestos en Colombia 2026</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary><span>{f.q}</span></summary>
+            <p class="faq-a">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
 
     <aside class="cta-footer" aria-label="Otras versiones">
       <p class="cta-text">¿Buscas calculadoras de otro país?</p>
@@ -255,4 +390,40 @@ const hreflangTags = HOME_HREFLANG;
     text-decoration: none; transition: all 0.15s;
   }
   .cta-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  .top-bing, .datos-clave, .faq-hub { padding: 0 1rem 2.5rem; }
+  .top-bing h2, .datos-clave h2, .faq-hub h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .section-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; }
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .top-card {
+    display: flex; gap: 0.75rem; padding: 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text); transition: all 0.15s;
+  }
+  .top-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .top-card .t-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .top-card .t-title { font-weight: 600; font-size: 0.9375rem; display: block; margin-bottom: 0.25rem; }
+  .top-card .t-desc { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.45; }
+
+  .dc-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .dc-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--bg-card); }
+  .dc-table th, .dc-table td { padding: 0.625rem 0.875rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .dc-table tr:last-child td { border-bottom: none; }
+  .dc-table th { background: var(--bg-muted); font-weight: 600; }
+  .dc-table td:nth-child(2) { font-weight: 600; white-space: nowrap; }
+  .dc-table .dc-src { color: var(--text-muted); font-size: 0.8125rem; }
+  .dc-note { color: var(--text-muted); font-size: 0.8125rem; margin: 0.625rem 0 0; }
+
+  .faq-hub h2 { margin-bottom: 1rem; }
+  .faq-list { display: grid; gap: 0.625rem; }
+  .faq-list details { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .faq-list summary {
+    cursor: pointer; padding: 0.875rem 1rem; font-weight: 600; font-size: 0.9375rem;
+    list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+  }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary::after { content: '+'; color: var(--text-muted); font-weight: 700; }
+  .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
 </style>

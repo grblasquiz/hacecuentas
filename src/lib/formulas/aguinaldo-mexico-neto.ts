@@ -1,7 +1,11 @@
 /** Aguinaldo neto México con desglose ISR detallado
  *  Diferenciado del aguinaldo-mexico existente: foco en neto + tabla ISR completa
  *  + comparativa con salario mensual
+ *
+ *  Datos fiscales (UMA 2026, tarifa ISR mensual 2026, exención 30 UMA): fuente única
+ *  src/lib/data/mexico-2026.ts. Antes estaban hardcodeados con valores 2025.
  */
+import { MEXICO_2026, isrMensual2026 } from '../data/mexico-2026';
 
 export interface Inputs {
   sueldoMensual: number;
@@ -23,30 +27,10 @@ export interface Outputs {
   _insight?: any;
 }
 
-// ISR tabla Art. 96 mensual
-const ISR_MENSUAL = [
-  { limInf: 0.01, limSup: 746.04, cuota: 0, tasa: 1.92 },
-  { limInf: 746.05, limSup: 6332.05, cuota: 14.32, tasa: 6.40 },
-  { limInf: 6332.06, limSup: 11128.01, cuota: 371.83, tasa: 10.88 },
-  { limInf: 11128.02, limSup: 12935.82, cuota: 893.63, tasa: 16.00 },
-  { limInf: 12935.83, limSup: 15487.71, cuota: 1182.88, tasa: 17.92 },
-  { limInf: 15487.72, limSup: 31236.49, cuota: 1640.18, tasa: 21.36 },
-  { limInf: 31236.50, limSup: 49233.00, cuota: 5004.12, tasa: 23.52 },
-  { limInf: 49233.01, limSup: 93993.90, cuota: 9236.89, tasa: 30.00 },
-  { limInf: 93993.91, limSup: 125325.20, cuota: 22665.17, tasa: 32.00 },
-  { limInf: 125325.21, limSup: 375975.61, cuota: 32691.18, tasa: 34.00 },
-  { limInf: 375975.62, limSup: Infinity, cuota: 117912.32, tasa: 35.00 },
-];
-
+// ISR sobre el monto gravado: tarifa mensual 2026 (Art. 96 LISR) de mexico-2026.
 function calcISR(base: number): number {
   if (base <= 0) return 0;
-  for (const b of ISR_MENSUAL) {
-    if (base >= b.limInf && base <= b.limSup) {
-      return b.cuota + (base - b.limInf) * (b.tasa / 100);
-    }
-  }
-  const last = ISR_MENSUAL[ISR_MENSUAL.length - 1];
-  return last.cuota + (base - last.limInf) * (last.tasa / 100);
+  return isrMensual2026(base);
 }
 
 export function aguinaldoMexicoNeto(i: Inputs): Outputs {
@@ -59,9 +43,9 @@ export function aguinaldoMexicoNeto(i: Inputs): Outputs {
   const salarioDiario = sueldo / 30;
   const aguinaldoBruto = salarioDiario * diasAg * (mesesT / 12);
 
-  // Exención: 30 UMA diarias (UMA 2026 ≈ $113.14)
-  const UMA_DIARIO = 113.14;
-  const exentoIsr = Math.min(aguinaldoBruto, UMA_DIARIO * 30);
+  // Exención: 30 UMA diarias (Art. 93 LISR). UMA 2026 y tope: fuente única mexico-2026.
+  const UMA_DIARIO = MEXICO_2026.uma.diaria;
+  const exentoIsr = Math.min(aguinaldoBruto, UMA_DIARIO * MEXICO_2026.exencionesIsrUmas.aguinaldo);
   const gravado = Math.max(0, aguinaldoBruto - exentoIsr);
   const isrRetenido = calcISR(gravado);
   const aguinaldoNeto = aguinaldoBruto - isrRetenido;

@@ -1,3 +1,11 @@
+/**
+ * Cuotas IMSS 2026 empleado (obrero) y patrón sobre el SBC mensual.
+ * Modelo LSS Arts. 25, 106, 107, 147, 168, 211 + reforma de pensiones 2020 (CEAV progresiva patronal).
+ * Constantes desde src/lib/data/mexico-2026.ts (UMA 2026 $117.31/día; tope SBC 25 UMA ≈ $89,155.60/mes).
+ * No incluye INFONAVIT (5% patronal, fondo de vivienda aparte).
+ */
+import { MEXICO_2026, tasaCeavPatron2026 } from '../data/mexico-2026.ts';
+
 export interface Inputs {
   sbc_empleado: number;
 }
@@ -22,47 +30,43 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 México - IMSS
-  // Fuente: INEGI (UMA), IMSS (tasas)
-  const UMA_2026 = 313.75; // Unidad de Medida y Actualización 2026
-  const TOPE_SBC_UMA = 25; // Tope en UMA según IMSS
-  const SBC_MAXIMO = UMA_2026 * TOPE_SBC_UMA; // $7,843.75
+  const { uma, imss, salarioMinimo } = MEXICO_2026;
 
-  // Tasas cuota empleado (porcentajes)
-  const TASA_EMPLEADO_ENFERMEDADES = 0.004; // 0.40%
-  const TASA_EMPLEADO_GMP = 0.0025; // 0.25%
-  const TASA_EMPLEADO_INVALIDEZ = 0.00625; // 0.625%
-  const TASA_EMPLEADO_CESANTIA = 0.01125; // 1.125%
-  const TASA_EMPLEADO_TOTAL = TASA_EMPLEADO_ENFERMEDADES + TASA_EMPLEADO_GMP + TASA_EMPLEADO_INVALIDEZ + TASA_EMPLEADO_CESANTIA;
+  // Tope del SBC: 25 UMA diarias (LSS Art. 28) → mensual con factor 30.4
+  const SBC_MAXIMO = uma.diaria * imss.topeSbcUmas * salarioMinimo.factorMensual; // $89,155.60
+  const TRES_UMA_MENSUAL = uma.diaria * 3 * salarioMinimo.factorMensual; // $10,698.67
+  const UMA_MENSUAL = uma.diaria * salarioMinimo.factorMensual; // $3,566.22
 
-  // Tasas cuota patrón (porcentajes)
-  const TASA_PATRON_RIESGO = 0.0054; // 0.54% promedio riesgo de trabajo
-  const TASA_PATRON_ENFERMEDADES = 0.087; // 8.70%
-  const TASA_PATRON_INVALIDEZ = 0.025; // 2.50%
-  const TASA_PATRON_CESANTIA = 0.0315; // 3.15%
-  const TASA_PATRON_GUARDERIA = 0.01; // 1.00%
-  const TASA_PATRON_TOTAL = TASA_PATRON_RIESGO + TASA_PATRON_ENFERMEDADES + TASA_PATRON_INVALIDEZ + TASA_PATRON_CESANTIA + TASA_PATRON_GUARDERIA;
+  // Validación y manejo de entrada ('' → 0 → se trata como sin dato)
+  const sbc = Math.max(0, Number(i.sbc_empleado) || 0);
 
-  // Validación y manejo de entrada
-  const sbc = Math.max(0, i.sbc_empleado || 0);
-
-  // SBC aplicable (se topa en máximo)
+  // SBC aplicable (se topa en 25 UMA)
   const sbc_tope = Math.min(sbc, SBC_MAXIMO);
+  const excedente3Uma = Math.max(0, sbc_tope - TRES_UMA_MENSUAL);
+  const sbcDiario = sbc_tope / salarioMinimo.factorMensual;
 
-  // Cálculo cuota empleado
-  const cuota_empleado_enfermedades = sbc_tope * TASA_EMPLEADO_ENFERMEDADES;
-  const cuota_empleado_gmp = sbc_tope * TASA_EMPLEADO_GMP;
-  const cuota_empleado_invalidez = sbc_tope * TASA_EMPLEADO_INVALIDEZ;
-  const cuota_empleado_cesantia = sbc_tope * TASA_EMPLEADO_CESANTIA;
-  const cuota_empleado_total = sbc_tope * TASA_EMPLEADO_TOTAL;
+  // ── Cuota obrero (LSS 106-II, 107, 25, 147, 168) ──
+  const cuota_empleado_enfermedades =
+    excedente3Uma * imss.obrero.eymExcedente + sbc_tope * imss.obrero.eymPrestacionesDinero; // EyM: excedente >3 UMA 0.40% + prestaciones en dinero 0.25%
+  const cuota_empleado_gmp = sbc_tope * imss.obrero.gastosMedicosPensionados; // 0.375%
+  const cuota_empleado_invalidez = sbc_tope * imss.obrero.invalidezVida; // 0.625%
+  const cuota_empleado_cesantia = sbc_tope * imss.obrero.cesantiaVejez; // 1.125%
+  const cuota_empleado_total =
+    cuota_empleado_enfermedades + cuota_empleado_gmp + cuota_empleado_invalidez + cuota_empleado_cesantia;
 
-  // Cálculo cuota patrón
-  const cuota_patron_riesgo = sbc_tope * TASA_PATRON_RIESGO;
-  const cuota_patron_enfermedades = sbc_tope * TASA_PATRON_ENFERMEDADES;
-  const cuota_patron_invalidez = sbc_tope * TASA_PATRON_INVALIDEZ;
-  const cuota_patron_cesantia = sbc_tope * TASA_PATRON_CESANTIA;
-  const cuota_patron_guarderia = sbc_tope * TASA_PATRON_GUARDERIA;
-  const cuota_patron_total = sbc_tope * TASA_PATRON_TOTAL;
+  // ── Cuota patrón (LSS 106-I/II, 107, 25, 147, 168, 211 + tabla CEAV 2026) ──
+  const cuota_patron_riesgo = sbc_tope * imss.patron.riesgoTrabajoClaseI; // prima media clase I 0.54355% (varía 0.5%-15% por siniestralidad)
+  const cuota_patron_enfermedades =
+    UMA_MENSUAL * imss.patron.eymCuotaFijaUma + // cuota fija 20.40% de la UMA mensual
+    excedente3Uma * imss.patron.eymExcedente + // 1.10% sobre excedente >3 UMA
+    sbc_tope * imss.patron.eymPrestacionesDinero + // 0.70%
+    sbc_tope * imss.patron.gastosMedicosPensionados; // 1.05%
+  const cuota_patron_invalidez = sbc_tope * imss.patron.invalidezVida; // 1.75%
+  const tasaCeav = sbc > 0 ? tasaCeavPatron2026(sbcDiario) : 0;
+  const cuota_patron_cesantia = sbc_tope * (imss.patron.retiro + tasaCeav); // Retiro SAR 2% + CEAV progresiva 3.15%-7.513%
+  const cuota_patron_guarderia = sbc_tope * imss.patron.guarderias; // 1.00%
+  const cuota_patron_total =
+    cuota_patron_riesgo + cuota_patron_enfermedades + cuota_patron_invalidez + cuota_patron_cesantia + cuota_patron_guarderia;
 
   // Cálculos finales
   const costo_total_empleado = cuota_empleado_total + cuota_patron_total;
@@ -72,7 +76,7 @@ export function compute(i: Inputs): Outputs {
   const fmt = (n: number) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const _insight = {
     title: 'Quién paga las cuotas del IMSS',
-    text: `Sobre un SBC de **${fmt(sbc_tope)}**, las cuotas IMSS suman **${fmt(costo_total_empleado)}** (un **${porcentaje_costo_total.toFixed(1)}%** del salario). El patrón aporta el grueso, **${fmt(cuota_patron_total)}**, y al trabajador se le retienen **${fmt(cuota_empleado_total)}**.${topado ? ' El salario supera el tope de 25 UMA, así que las cuotas se calculan sobre ese máximo.' : ''}`,
+    text: `Sobre un SBC de **${fmt(sbc_tope)}**, las cuotas IMSS suman **${fmt(costo_total_empleado)}** (un **${porcentaje_costo_total.toFixed(1)}%** del salario). El patrón aporta el grueso, **${fmt(cuota_patron_total)}** (incluye la cuota fija de EyM y la CEAV del ${(tasaCeav * 100).toFixed(2)}%), y al trabajador se le retienen **${fmt(cuota_empleado_total)}**.${topado ? ` El salario supera el tope de 25 UMA (${fmt(SBC_MAXIMO)}/mes), así que las cuotas se calculan sobre ese máximo.` : ''}`,
     tone: 'neutral' as const,
     icon: '🇲🇽',
   };

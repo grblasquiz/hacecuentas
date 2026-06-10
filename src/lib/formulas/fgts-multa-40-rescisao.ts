@@ -17,8 +17,9 @@ export interface Outputs {
   _chart?: any;
 }
 
-// Alíquota de depósito mensal FGTS — art. 15 da Lei 8.036/1990
-const ALIQUOTA_DEPOSITO_FGTS = 0.08;
+// Alíquota de depósito mensal FGTS — art. 15 da Lei 8.036/1990.
+// Fonte única: src/lib/data/brasil-2026.ts (FGTS_ALIQUOTA_DEPOSITO = 8%).
+import { FGTS_ALIQUOTA_DEPOSITO as ALIQUOTA_DEPOSITO_FGTS } from '../data/brasil-2026';
 
 // Multa rescisória demissão sem justa causa — art. 18 da Lei 8.036/1990
 const MULTA_SEM_JUSTA_CAUSA = 0.40;

@@ -1,3 +1,5 @@
+import { MEXICO_2026, isrMensual2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   sueldo_diario: number;
   dias_trabajados_anio: number;
@@ -16,10 +18,10 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 México - Fuentes SAT, INEGI
-  const UMA_2026 = 1081; // INEGI UMA diaria 2026
-  const EXENCION_UMA = 30; // Exención aguinaldo = 30 UMA (SAT ISR 2026)
-  const EXENCION_PESOS = UMA_2026 * EXENCION_UMA; // ~$32,430
+  // Constantes 2026 México — fuente única src/lib/data/mexico-2026.ts (SAT, INEGI).
+  const UMA_2026 = MEXICO_2026.uma.diaria; // UMA diaria 2026 ($117.31)
+  const EXENCION_UMA = MEXICO_2026.exencionesIsrUmas.aguinaldo; // 30 UMA (Art. 93 LISR)
+  const EXENCION_PESOS = UMA_2026 * EXENCION_UMA; // 30 × UMA diaria
 
   // Validaciones básicas
   if (i.sueldo_diario < 0) i.sueldo_diario = 0;
@@ -39,34 +41,10 @@ export function compute(i: Inputs): Outputs {
   // Base gravable = aguinaldo - exención 30 UMA
   const base_isr = Math.max(0, aguinaldo_bruto - EXENCION_PESOS);
 
-  // Tarifa ISR anual 2026 (SAT). Aplicar a base_isr
-  // Tramos 2026:
-  // $0 - $3,271 → 1.92%
-  // $3,271 - $26,170 → 6.4%
-  // $26,170 - $61,790 → 10.88%
-  // $61,790 - $104,387 → 16%
-  // $104,387 - $130,194 → 19.84%
-  // $130,194 - $391,181 → 23.52%
-  // > $391,181 → 30% y 35%
-  
-  let isr_retenido = 0;
-  if (base_isr > 0) {
-    if (base_isr <= 3271) {
-      isr_retenido = base_isr * 0.0192;
-    } else if (base_isr <= 26170) {
-      isr_retenido = 3271 * 0.0192 + (base_isr - 3271) * 0.064;
-    } else if (base_isr <= 61790) {
-      isr_retenido = 3271 * 0.0192 + (26170 - 3271) * 0.064 + (base_isr - 26170) * 0.1088;
-    } else if (base_isr <= 104387) {
-      isr_retenido = 3271 * 0.0192 + (26170 - 3271) * 0.064 + (61790 - 26170) * 0.1088 + (base_isr - 61790) * 0.16;
-    } else if (base_isr <= 130194) {
-      isr_retenido = 3271 * 0.0192 + (26170 - 3271) * 0.064 + (61790 - 26170) * 0.1088 + (104387 - 61790) * 0.16 + (base_isr - 104387) * 0.1984;
-    } else if (base_isr <= 391181) {
-      isr_retenido = 3271 * 0.0192 + (26170 - 3271) * 0.064 + (61790 - 26170) * 0.1088 + (104387 - 61790) * 0.16 + (130194 - 104387) * 0.1984 + (base_isr - 130194) * 0.2352;
-    } else {
-      isr_retenido = 3271 * 0.0192 + (26170 - 3271) * 0.064 + (61790 - 26170) * 0.1088 + (104387 - 61790) * 0.16 + (130194 - 104387) * 0.1984 + (391181 - 130194) * 0.2352 + (base_isr - 391181) * 0.30;
-    }
-  }
+  // ISR sobre la base gravable con la tarifa MENSUAL 2026 (Art. 96 LISR), fuente
+  // única mexico-2026 — procedimiento simplificado Art. 174 RISR aplicado al
+  // monto gravado del aguinaldo (misma lógica que las otras calcs de aguinaldo MX).
+  const isr_retenido = isrMensual2026(base_isr);
 
   // Aguinaldo neto
   const aguinaldo_neto = aguinaldo_bruto - isr_retenido;

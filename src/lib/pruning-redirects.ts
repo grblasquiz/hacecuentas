@@ -360,6 +360,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/en/child-bmi-percentile': '/en',
   '/en/choking-heimlich-age-maneuver': '/calculadora-choking-heimlich-edad-maniobra',
   '/en/compound-interest-calculator-long-term': '/en/compound-interest-calculator',
+  '/en/conversion-cups-grams-flour-sugar-oil': '/en/cups-to-grams-converter',
   '/en/daily-water-intake-calculator': '/en/daily-water-intake-by-weight-calculator',
   '/en/dog-age-by-breed': '/en',
   '/en/english-levels-cambridge-duolingo-time-conversion': '/en/duolingo-time-cefr-level-progress',

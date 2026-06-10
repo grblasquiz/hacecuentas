@@ -12,9 +12,18 @@
  * Próxima actualización esperada: julio-agosto 2026 (recate cuatrimestral).
  */
 
-// Tabla oficial Monotributo 2026 (vigente desde 1-feb-2026).
-// Cuando ARCA publique nueva tabla (jul-ago 2026), actualizar y bump
-// lastReviewed en monotributo-vs-categoria-optima.json.
+// Tabla oficial Monotributo 2026 — fuente única src/lib/data/monotributo-2026.ts
+// (ARCA, vigente desde 1-feb-2026). Al rotar la escala (jul-ago 2026) se actualiza
+// el data file y todas las calcs quedan sincronizadas; bump lastReviewed en
+// monotributo-vs-categoria-optima.json para que el sitemap lo detecte.
+import {
+  CATEGORIAS as CATS_MONO,
+  TOPES,
+  CUOTA_SERVICIOS,
+  CUOTA_BIENES,
+  DATA_AS_OF,
+} from '../data/monotributo-2026';
+
 interface CategoriaMonotributo {
   letra: string;
   topeFacturacionAnual: number;
@@ -22,21 +31,16 @@ interface CategoriaMonotributo {
   cuotaBienes: number;
 }
 
-const TABLA_2026: CategoriaMonotributo[] = [
-  { letra: 'A', topeFacturacionAnual: 10_277_988, cuotaServicios: 42_387, cuotaBienes: 42_387 },
-  { letra: 'B', topeFacturacionAnual: 15_058_448, cuotaServicios: 48_251, cuotaBienes: 48_251 },
-  { letra: 'C', topeFacturacionAnual: 21_113_697, cuotaServicios: 56_502, cuotaBienes: 55_227 },
-  { letra: 'D', topeFacturacionAnual: 26_212_853, cuotaServicios: 72_414, cuotaBienes: 70_661 },
-  { letra: 'E', topeFacturacionAnual: 30_833_964, cuotaServicios: 102_538, cuotaBienes: 92_658 },
-  { letra: 'F', topeFacturacionAnual: 38_642_048, cuotaServicios: 129_045, cuotaBienes: 111_198 },
-  { letra: 'G', topeFacturacionAnual: 46_211_109, cuotaServicios: 197_108, cuotaBienes: 135_918 },
-  { letra: 'H', topeFacturacionAnual: 70_113_407, cuotaServicios: 447_347, cuotaBienes: 272_063 },
-  { letra: 'I', topeFacturacionAnual: 78_479_212, cuotaServicios: 824_802, cuotaBienes: 406_512 },
-  { letra: 'J', topeFacturacionAnual: 89_872_640, cuotaServicios: 999_008, cuotaBienes: 497_059 },
-  { letra: 'K', topeFacturacionAnual: 108_357_084, cuotaServicios: 1_381_688, cuotaBienes: 600_880 },
-];
+const TABLA_2026: CategoriaMonotributo[] = CATS_MONO.map((letra) => ({
+  letra,
+  topeFacturacionAnual: TOPES[letra],
+  // Cuota redondeada al peso: la calc compara categorías y muestra montos
+  // mensuales (los centavos del data file no aportan y ensucian el display).
+  cuotaServicios: Math.round(CUOTA_SERVICIOS[letra]),
+  cuotaBienes: Math.round(CUOTA_BIENES[letra]),
+}));
 
-const FECHA_VIGENCIA = '2026-02-01';
+const FECHA_VIGENCIA = DATA_AS_OF;
 
 export interface MonotributoCategoriaOptimaInputs {
   facturacion12meses: number;

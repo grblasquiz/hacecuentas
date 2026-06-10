@@ -4,6 +4,7 @@
  * Retencion en fuente (progresiva si >$4.9M)
  * Fuente: DIAN Colombia, Ley 100 de 1993
  */
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 
 export interface SueldoNetoColombiaInputs {
   salarioMensual: number;
@@ -24,9 +25,9 @@ export interface SueldoNetoColombiaOutputs {
   _chart?: any;
 }
 
-// SMLMV 2026 Colombia estimado
-const SMLMV_2026 = 1_423_500;
-const AUX_TRANSPORTE_2026 = 200_000;
+// SMLMV 2026 Colombia (fuente única: src/lib/data/colombia-2026.ts)
+const SMLMV_2026 = COLOMBIA_2026.smlmv; // $1.750.905 (Decreto 1469/2025)
+const AUX_TRANSPORTE_2026 = COLOMBIA_2026.auxilioTransporte; // $249.095 (Decreto 1470/2025)
 
 // Tabla retencion en fuente 2026 (UVT estimada ~$49,800 para 2026)
 const UVT_2026 = 49_800;

@@ -6,6 +6,8 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
+import { CHILE_2026, fmtCLP } from '../../lib/data/chile-2026';
+import clLive from '../../data/live/chile.json';
 
 const localeModules = import.meta.glob<any>('../../content/calcs-cl/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
@@ -64,6 +66,63 @@ const popularSlugs = [
 ];
 const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
 
+// ── Datos clave 2026 — constantes desde src/lib/data/chile-2026.ts + UF/UTM/UTA live (Banco Central/SII) ──
+const CH = CHILE_2026;
+const uf = (clLive as any)?.uf?.valor ?? 40627.62;
+const utm = (clLive as any)?.utm?.valor ?? 71506;
+const uta = (clLive as any)?.uta?.valor ?? 858072;
+const liveMes = new Date((clLive as any)?._meta?.fetchedAt ?? '2026-06-01').toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
+const descuentosLegales = CH.afpObligatorio + CH.saludFonasa + CH.afcTrabajadorIndefinido; // 17,6% sin comisión AFP
+const liquidoImm = CH.imm * (1 - descuentosLegales);
+const topeImponiblePesos = CH.topeImponibleAfpUf * uf;
+const exentoSegundaCat = CH.segundaCategoriaExentoUtm * utm;
+const gratifTopeAnual = CH.gratificacionArt50.topeImmAnual * CH.imm;
+
+const datosClave = [
+  { k: 'Ingreso mínimo mensual', v: `${fmtCLP(CH.imm)} /mes`, src: 'Ley 21.751, desde 01-ene-2026' },
+  { k: 'IMM menores de 18 y mayores de 65', v: fmtCLP(CH.immMenores18Mayores65), src: 'Ley 21.751' },
+  { k: `UF (${liveMes})`, v: fmtCLP(uf), src: 'Banco Central — se reajusta a diario' },
+  { k: `UTM (${liveMes})`, v: fmtCLP(utm), src: 'SII' },
+  { k: `UTA (${liveMes})`, v: fmtCLP(uta), src: 'SII' },
+  { k: 'Cotización AFP', v: '10% + comisión según AFP', src: 'DL 3.500' },
+  { k: 'Cotización de salud', v: '7% (Fonasa o isapre)', src: 'Fonasa / Superintendencia de Salud' },
+  { k: 'Seguro de cesantía (trabajador)', v: '0,6% (contrato indefinido)', src: 'Ley 19.728' },
+  { k: 'Tope imponible AFP y salud', v: `${CH.topeImponibleAfpUf} UF ≈ ${fmtCLP(topeImponiblePesos)}`, src: 'Superintendencia de Pensiones, 2026' },
+  { k: 'IVA', v: '19%', src: 'SII' },
+];
+
+// ── FAQ país-específica: respuestas con cifras computadas desde la fuente única ──
+const faq = [
+  {
+    q: '¿Cuál es el sueldo mínimo en Chile en 2026?',
+    a: `El ingreso mínimo mensual es de ${fmtCLP(CH.imm)} desde el 1 de enero de 2026 (Ley 21.751) para trabajadores de 18 a 65 años. Para menores de 18 y mayores de 65 es de ${fmtCLP(CH.immMenores18Mayores65)}. La misma ley ordena enviar un nuevo proyecto de reajuste para regir desde el 1 de mayo de 2026.`,
+  },
+  {
+    q: '¿Cómo se calcula el sueldo líquido en Chile 2026?',
+    a: `Al sueldo bruto imponible se le descuenta el 10% de AFP (más la comisión de tu AFP), el 7% de salud (Fonasa o isapre) y el 0,6% de seguro de cesantía si el contrato es indefinido: ~17,6% en total. Con el sueldo mínimo de ${fmtCLP(CH.imm)} quedan ${fmtCLP(liquidoImm)} líquidos aproximados (sin contar la comisión de la AFP). Sobre rentas más altas se suma el impuesto único de segunda categoría.`,
+  },
+  {
+    q: '¿Cuánto vale la UF y la UTM?',
+    a: `A ${liveMes}, la UF vale ${fmtCLP(uf)} (Banco Central; se reajusta a diario por inflación) y la UTM ${fmtCLP(utm)} (SII; cambia cada mes). La UTA anual es ${fmtCLP(uta)}. La UF se usa en créditos hipotecarios, arriendos y seguros; la UTM en impuestos y multas.`,
+  },
+  {
+    q: '¿Quién paga impuesto a la renta por su sueldo en 2026?',
+    a: `El impuesto único de segunda categoría sólo aplica si tu renta imponible mensual supera 13,5 UTM, es decir unos ${fmtCLP(exentoSegundaCat)} al mes (después de descontar AFP, salud y cesantía). Por debajo de eso estás exento; por encima rige una escala progresiva que llega al 40% marginal.`,
+  },
+  {
+    q: '¿Cuál es el tope imponible para cotizar en 2026?',
+    a: `Desde febrero de 2026 el tope imponible para AFP, salud y ley de accidentes es de ${CH.topeImponibleAfpUf} UF (≈ ${fmtCLP(topeImponiblePesos)}), y el del seguro de cesantía de ${String(CH.topeImponibleCesantiaUf).replace('.', ',')} UF (Superintendencia de Pensiones). Sobre lo que ganes por encima de ese tope no se cotiza.`,
+  },
+  {
+    q: '¿Cómo se calcula la gratificación legal?',
+    a: `Con la modalidad del Art. 50 del Código del Trabajo (la más usada), el empleador paga el 25% de lo devengado en el año con tope de 4,75 ingresos mínimos mensuales: en 2026 ese tope es ${fmtCLP(gratifTopeAnual)} al año, o ${fmtCLP(gratifTopeAnual / 12)} al mes si se prorratea.`,
+  },
+  {
+    q: '¿Cuánto le cuesta un trabajador al empleador en Chile?',
+    a: `Además del sueldo bruto, el empleador paga el seguro de cesantía (2,4% en contrato indefinido, 3% a plazo fijo — Ley 19.728), el seguro de invalidez y sobrevivencia (SIS) y la cotización a la mutual por accidentes del trabajo (tasa base más extraordinaria según siniestralidad). En conjunto, el sobrecosto típico ronda el 5-8% del sueldo imponible.`,
+  },
+];
+
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -84,6 +143,35 @@ const schema = {
         { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
         { '@type': 'ListItem', position: 2, name: 'Chile', item: 'https://hacecuentas.com/cl' },
       ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://hacecuentas.com/cl#faq',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'Dataset',
+      '@id': 'https://hacecuentas.com/cl#datos-2026',
+      name: 'Datos laborales y fiscales de Chile 2026',
+      description: `Valores oficiales vigentes en Chile 2026: ingreso mínimo mensual (${fmtCLP(CH.imm)}), UF, UTM y UTA actualizadas, cotizaciones de AFP, salud y seguro de cesantía, tope imponible (${CH.topeImponibleAfpUf} UF) y gratificación legal.`,
+      url: 'https://hacecuentas.com/cl',
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      isAccessibleForFree: true,
+      inLanguage: 'es-CL',
+      temporalCoverage: '2026',
+      spatialCoverage: { '@type': 'Country', name: 'Chile' },
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      sourceOrganization: [
+        { '@type': 'GovernmentOrganization', name: 'Ministerio del Trabajo y Previsión Social de Chile', url: 'https://www.mintrab.gob.cl' },
+        { '@type': 'GovernmentOrganization', name: 'Superintendencia de Pensiones', url: 'https://www.spensiones.cl' },
+        { '@type': 'GovernmentOrganization', name: 'Servicio de Impuestos Internos (SII)', url: 'https://www.sii.cl' },
+        { '@type': 'GovernmentOrganization', name: 'Banco Central de Chile', url: 'https://www.bcentral.cl' },
+      ],
+      keywords: ['sueldo mínimo Chile 2026', 'valor UF hoy', 'valor UTM 2026', 'cotizaciones AFP salud', 'tope imponible 2026', 'gratificación legal'],
     },
   ],
 };
@@ -139,6 +227,24 @@ const hreflangTags = HOME_HREFLANG;
       </section>
     )}
 
+    <section class="datos-clave" aria-labelledby="datos-clave-title">
+      <h2 id="datos-clave-title">Datos clave de Chile 2026</h2>
+      <p class="section-sub">Los valores oficiales que usan todas nuestras calculadoras chilenas. UF, UTM y UTA se actualizan automáticamente. Uso libre con atribución (CC-BY 4.0).</p>
+      <div class="dc-wrap">
+        <table class="dc-table">
+          <thead>
+            <tr><th>Concepto</th><th>Valor 2026</th><th>Fuente</th></tr>
+          </thead>
+          <tbody>
+            {datosClave.map((d) => (
+              <tr><td>{d.k}</td><td>{d.v}</td><td class="dc-src">{d.src}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="dc-note">Última revisión: 10 de junio de 2026. Fuentes: Diario Oficial, Superintendencia de Pensiones, SII y Banco Central.</p>
+    </section>
+
     <div class="categories">
       {activeCategories.map((catKey) => {
         const meta = categoryMeta[catKey];
@@ -168,6 +274,18 @@ const hreflangTags = HOME_HREFLANG;
         );
       })}
     </div>
+
+    <section class="faq-hub" aria-labelledby="faq-title">
+      <h2 id="faq-title">Preguntas frecuentes sobre sueldos e impuestos en Chile 2026</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary><span>{f.q}</span></summary>
+            <p class="faq-a">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
 
     <aside class="cta-footer" aria-label="Otras versiones">
       <p class="cta-text">¿Buscas calculadoras de otro país?</p>
@@ -255,4 +373,40 @@ const hreflangTags = HOME_HREFLANG;
     text-decoration: none; transition: all 0.15s;
   }
   .cta-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  .top-bing, .datos-clave, .faq-hub { padding: 0 1rem 2.5rem; }
+  .top-bing h2, .datos-clave h2, .faq-hub h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .section-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; }
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .top-card {
+    display: flex; gap: 0.75rem; padding: 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text); transition: all 0.15s;
+  }
+  .top-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .top-card .t-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .top-card .t-title { font-weight: 600; font-size: 0.9375rem; display: block; margin-bottom: 0.25rem; }
+  .top-card .t-desc { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.45; }
+
+  .dc-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .dc-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--bg-card); }
+  .dc-table th, .dc-table td { padding: 0.625rem 0.875rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .dc-table tr:last-child td { border-bottom: none; }
+  .dc-table th { background: var(--bg-muted); font-weight: 600; }
+  .dc-table td:nth-child(2) { font-weight: 600; white-space: nowrap; }
+  .dc-table .dc-src { color: var(--text-muted); font-size: 0.8125rem; }
+  .dc-note { color: var(--text-muted); font-size: 0.8125rem; margin: 0.625rem 0 0; }
+
+  .faq-hub h2 { margin-bottom: 1rem; }
+  .faq-list { display: grid; gap: 0.625rem; }
+  .faq-list details { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .faq-list summary {
+    cursor: pointer; padding: 0.875rem 1rem; font-weight: 600; font-size: 0.9375rem;
+    list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+  }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary::after { content: '+'; color: var(--text-muted); font-weight: 700; }
+  .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
 </style>

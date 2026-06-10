@@ -1,3 +1,6 @@
+// Ingreso mínimo mensual y tope de gratificación 2026 desde la fuente única.
+import { CHILE_2026 } from "../data/chile-2026";
+
 export interface Inputs {
   sueldo_mensual: number;
   modalidad: '25_remuneracion' | '30_utilidades';
@@ -21,9 +24,10 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 Chile — Fuente: Banco Central de Chile
-  const UMM_ENERO_2026 = 108250; // Unidad Monto Mensual enero 2026
-  const TOPE_GRATIFICACION = 4.75 * UMM_ENERO_2026; // $513,875
+  // Art. 50 CT: la gratificación no excede 4,75 ingresos mínimos mensuales (IMM) AL AÑO.
+  const IMM_2026 = CHILE_2026.imm; // $539.000 (Ley 21.751)
+  const TOPE_GRATIFICACION_ANUAL = CHILE_2026.gratificacionArt50.topeImmAnual * IMM_2026; // 4,75 × IMM = $2.560.250 al año
+  const TOPE_GRATIFICACION = TOPE_GRATIFICACION_ANUAL / 12; // tope mensual equivalente = $213.354
 
   // Tasas IUSC por región — Fuente: SII 2026
   const iusc_rates: { [key in Inputs['region']]: number } = {
@@ -48,7 +52,7 @@ export function compute(i: Inputs): Outputs {
   const iusc_rate = iusc_rates[i.region];
 
   // Validaciones básicas
-  const sueldo_valido = Math.max(i.sueldo_mensual, UMM_ENERO_2026);
+  const sueldo_valido = Math.max(i.sueldo_mensual, IMM_2026);
   const utilidades_validas = Math.max(i.utilidades_anuales, 0);
 
   // MODALIDAD 25% DE REMUNERACIÓN
@@ -74,7 +78,7 @@ export function compute(i: Inputs): Outputs {
   if (tope_aplica) {
     _insight = {
       title: 'Tope legal alcanzado',
-      text: `Tu 25% da ${fmt(gratificacion_sin_tope_25)} mensual, pero la ley topa la gratificación en **4,75 UMM (${fmt(TOPE_GRATIFICACION)})**, así que cobrás ese máximo. En el año son **${fmt(gratificacion_anual_25)}** y te quedan **${fmt(gratificacion_neta_25)}** netos tras el IUSC.`,
+      text: `Tu 25% da ${fmt(gratificacion_sin_tope_25)} mensual, pero la ley topa la gratificación en **4,75 ingresos mínimos al año (tope mensual ${fmt(TOPE_GRATIFICACION)})**, así que cobrás ese máximo. En el año son **${fmt(gratificacion_anual_25)}** y te quedan **${fmt(gratificacion_neta_25)}** netos tras el IUSC.`,
       tone: 'warn',
       icon: '🚧',
     };

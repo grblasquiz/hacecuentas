@@ -1,8 +1,9 @@
 /**
  * Conversor de Salario Mínimo General (SMG) México
  * Dos zonas: General y Frontera Norte
- * Valores 2026 (CONASAMI proyectados)
+ * Valores 2026 — fuente única src/lib/data/mexico-2026.ts (CONASAMI, DOF 09-dic-2025)
  */
+import { MEXICO_2026 } from '../data/mexico-2026';
 
 export interface Inputs {
   zona: 'general' | 'frontera';
@@ -23,8 +24,8 @@ export interface Outputs {
 }
 
 const SMG_2026 = {
-  general: 278.80,
-  frontera: 419.88,
+  general: MEXICO_2026.salarioMinimo.generalDiario,  // $315,04/día (zona general 2026)
+  frontera: MEXICO_2026.salarioMinimo.zlfnDiario,    // $440,87/día (Zona Libre Frontera Norte 2026)
 };
 
 export function smgMexicoConversion(i: Inputs): Outputs {

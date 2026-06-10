@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   salario_mensual: number;
   num_dependientes: number;
@@ -16,7 +17,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 Colombia - DIAN
-  const UVT_2026 = 43282; // Resolución DIAN 000052/2025
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const LIMITE_UVT_DEPENDIENTE = 32; // Artículo 31 Estatuto Tributario
   const PORCENTAJE_DEDUCCION = 0.10; // 10% ingreso laboral
   const TARIFA_IMPUESTO_ESTIMADA = 0.28; // Tarifa marginal promedio

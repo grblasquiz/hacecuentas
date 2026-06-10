@@ -23,22 +23,71 @@
     "Un candidato que quiere llevarse S/ 5.000 netos en mano averigua qué bruto pedir para superar el umbral de renta de 5ta."
   ],
   "fields": [
-    { "id": "monto", "label": "Monto del sueldo (S/)", "type": "number", "required": true, "placeholder": "3000", "min": 0, "step": 0.01, "unit": "S/" },
-    { "id": "direccion", "label": "¿Qué querés calcular?", "type": "select", "default": "bruto_a_neto", "options": [
-      { "value": "bruto_a_neto", "label": "Tengo el bruto → ver el neto" },
-      { "value": "neto_a_bruto", "label": "Quiero un neto objetivo → ver el bruto" }
-    ] },
-    { "id": "sistemaPension", "label": "Sistema de pensión", "type": "select", "default": "onp", "options": [
-      { "value": "onp", "label": "ONP (13%)" },
-      { "value": "afp", "label": "AFP (~12,5%)" }
-    ] }
+    {
+      "id": "monto",
+      "label": "Monto del sueldo (S/)",
+      "type": "number",
+      "required": true,
+      "placeholder": "3000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "S/"
+    },
+    {
+      "id": "direccion",
+      "label": "¿Qué querés calcular?",
+      "type": "select",
+      "default": "bruto_a_neto",
+      "options": [
+        {
+          "value": "bruto_a_neto",
+          "label": "Tengo el bruto → ver el neto"
+        },
+        {
+          "value": "neto_a_bruto",
+          "label": "Quiero un neto objetivo → ver el bruto"
+        }
+      ]
+    },
+    {
+      "id": "sistemaPension",
+      "label": "Sistema de pensión",
+      "type": "select",
+      "default": "onp",
+      "options": [
+        {
+          "value": "onp",
+          "label": "ONP (13%)"
+        },
+        {
+          "value": "afp",
+          "label": "AFP (~12,5%)"
+        }
+      ]
+    }
   ],
   "outputs": [
-    { "id": "neto", "label": "Sueldo neto", "primary": true },
-    { "id": "bruto", "label": "Sueldo bruto" },
-    { "id": "pension", "label": "Aporte de pensión" },
-    { "id": "renta5ta", "label": "Renta de 5ta (mensual)" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "neto",
+      "label": "Sueldo neto",
+      "primary": true
+    },
+    {
+      "id": "bruto",
+      "label": "Sueldo bruto"
+    },
+    {
+      "id": "pension",
+      "label": "Aporte de pensión"
+    },
+    {
+      "id": "renta5ta",
+      "label": "Renta de 5ta (mensual)"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: bruto S/ 3.000 en ONP",
@@ -50,22 +99,58 @@
     ],
     "result": "Sueldo neto: ~S/ 2.587 en mano"
   },
-  "explanation": "## Cómo se pasa de bruto a neto\n\nEl **sueldo neto** es lo que cobrás en mano tras dos descuentos:\n\n```\nNeto = bruto − aporte de pensión − renta de 5ta categoría (mensual)\n```\n\n- **Aporte de pensión:** ONP descuenta **13%**; la AFP descuenta alrededor de **12,5%** (fondo 10% + prima de seguro ~1,74% + comisión por flujo, que varía por AFP: Habitat, Integra, Prima o Profuturo).\n- **Renta de 5ta categoría:** se calcula sobre el **ingreso anual** (12 sueldos + 2 gratificaciones = 14), con una deducción de **7 UIT** (S/ 38.500) y tramos progresivos del 8% al 30%. El resultado anual se prorratea en 12 meses.\n- **EsSalud (9%):** lo paga el **empleador**, no se descuenta del sueldo.\n\n## Tabla bruto → neto (ONP 13%, sin hijos)\n\n| Bruto mensual | Pensión ONP (13%) | Renta 5ta (mensual aprox.) | Neto aprox. |\n|---|---|---|---|\n| S/ 1.500 | S/ 195 | S/ 0 | S/ 1.305 |\n| S/ 2.500 | S/ 325 | S/ 0 | S/ 2.175 |\n| S/ 3.000 | S/ 390 | S/ 23 | S/ 2.587 |\n| S/ 5.000 | S/ 650 | S/ 230 | S/ 4.120 |\n| S/ 8.000 | S/ 1.040 | S/ 720 | S/ 6.240 |\n\n## De neto a bruto\n\nSi sabés cuánto querés llevarte en mano, la calculadora resuelve el **bruto** que hay que pactar. Como la renta de 5ta hace que la relación no sea lineal, el cálculo **busca** el bruto exacto que produce tu neto objetivo (no alcanza con dividir por 0,87).\n\n| Neto objetivo | Sistema | Bruto aproximado a pactar |\n|---|---|---|\n| S/ 2.000 | AFP (~12,5%) | ~S/ 2.286 |\n| S/ 2.000 | ONP (13%) | ~S/ 2.299 |\n| S/ 4.000 | AFP (~12,5%) | ~S/ 4.760 |\n\n## Quién paga la renta de 5ta\n\nSolo pagan renta de 5ta los trabajadores cuyo ingreso **anual** (14 sueldos) supera las 7 UIT (S/ 38.500), es decir, alrededor de S/ 2.750 brutos mensuales. Con la RMV o sueldos bajos, no hay impuesto a descontar.\n\n## Errores comunes\n\n- **Restar EsSalud al sueldo**: el 9% de EsSalud lo paga el empleador, no reduce tu neto.\n- **Dividir el neto por una sola tasa para sacar el bruto**: la renta de 5ta no es lineal; el bruto exacto se calcula iterando.\n- **Olvidar las gratificaciones en la base de renta**: el impuesto se calcula sobre 14 sueldos, no 12.\n- **No considerar la asignación familiar**: si tenés hijos menores, sumá S/ 113 al bruto antes de calcular.\n- **Comparar solo el neto entre ONP y AFP**: la AFP deja un neto algo mayor hoy, pero la decisión también depende de la pensión futura.\n\n## Cuándo aplica y excepciones\n\nAplica a trabajadores **dependientes** del régimen privado. No aplica a recibos por honorarios (4ta categoría, retención del 8%) ni al Nuevo RUS. La comisión de AFP varía según seas de comisión por **flujo** (sobre el sueldo) o por **saldo** (sobre el fondo acumulado); acá usamos un total aproximado por flujo.\n\n## Datos clave 2026\n\n| Concepto | Valor |\n|---|---|\n| Aporte ONP | 13% |\n| Aporte AFP (aprox.) | ~12,5% |\n| EsSalud (lo paga el empleador) | 9% (no se descuenta) |\n| Deducción renta de 5ta | 7 UIT = S/ 38.500 |\n| UIT 2026 | S/ 5.500 |\n| Base anual del impuesto | 14 sueldos (12 + 2 gratificaciones) |\n\n## Disclaimer\n\nCálculo orientativo. La comisión exacta de la AFP depende de la administradora y del tipo (flujo o saldo); usamos un total aproximado del 12,5%. No incluye automáticamente la asignación familiar (S/ 113 si tenés hijos) ni descuentos por adelantos o préstamos. Verificá tu boleta con RR.HH. o la normativa vigente.\n",
+  "explanation": "## Cómo se pasa de bruto a neto\n\nEl **sueldo neto** es lo que cobrás en mano tras dos descuentos:\n\n```\nNeto = bruto − aporte de pensión − renta de 5ta categoría (mensual)\n```\n\n- **Aporte de pensión:** ONP descuenta **13%**; la AFP descuenta alrededor de **12,5%** (fondo 10% + prima de seguro ~1,74% + comisión por flujo, que varía por AFP: Habitat, Integra, Prima o Profuturo).\n- **Renta de 5ta categoría:** se calcula sobre el **ingreso anual** (12 sueldos + 2 gratificaciones = 14), con una deducción de **7 UIT** (S/ 38.500) y tramos progresivos del 8% al 30%. El resultado anual se prorratea en 12 meses.\n- **EsSalud (9%):** lo paga el **empleador**, no se descuenta del sueldo.\n\n## Tabla bruto → neto (ONP 13%, sin hijos)\n\n| Bruto mensual | Pensión ONP (13%) | Renta 5ta (mensual aprox.) | Neto aprox. |\n|---|---|---|---|\n| S/ 1.500 | S/ 195 | S/ 0 | S/ 1.305 |\n| S/ 2.500 | S/ 325 | S/ 0 | S/ 2.175 |\n| S/ 3.000 | S/ 390 | S/ 23 | S/ 2.587 |\n| S/ 5.000 | S/ 650 | S/ 230 | S/ 4.120 |\n| S/ 8.000 | S/ 1.040 | S/ 720 | S/ 6.240 |\n\n## De neto a bruto\n\nSi sabés cuánto querés llevarte en mano, la calculadora resuelve el **bruto** que hay que pactar. Como la renta de 5ta hace que la relación no sea lineal, el cálculo **busca** el bruto exacto que produce tu neto objetivo (no alcanza con dividir por 0,87).\n\n| Neto objetivo | Sistema | Bruto aproximado a pactar |\n|---|---|---|\n| S/ 2.000 | AFP (~12,5%) | ~S/ 2.286 |\n| S/ 2.000 | ONP (13%) | ~S/ 2.299 |\n| S/ 4.000 | AFP (~12,5%) | ~S/ 4.760 |\n\n## Quién paga la renta de 5ta\n\nSolo pagan renta de 5ta los trabajadores cuyo ingreso **anual** (14 sueldos) supera las 7 UIT (S/ 38.500), es decir, alrededor de S/ 2.750 brutos mensuales. Con la RMV o sueldos bajos, no hay impuesto a descontar.\n\n## Errores comunes\n\n- **Restar EsSalud al sueldo**: el 9% de EsSalud lo paga el empleador, no reduce tu neto.\n- **Dividir el neto por una sola tasa para sacar el bruto**: la renta de 5ta no es lineal; el bruto exacto se calcula iterando.\n- **Olvidar las gratificaciones en la base de renta**: el impuesto se calcula sobre 14 sueldos, no 12.\n- **No considerar la asignación familiar**: si tenés hijos menores, sumá S/ 113 al bruto antes de calcular.\n- **Comparar solo el neto entre ONP y AFP**: la AFP deja un neto algo mayor hoy, pero la decisión también depende de la pensión futura. La [calculadora AFP vs ONP](/pe/calculadora-afp-vs-onp-peru) te muestra la diferencia exacta para tu sueldo.\n\n## Cuándo aplica y excepciones\n\nAplica a trabajadores **dependientes** del régimen privado. No aplica a recibos por honorarios (4ta categoría, retención del 8%) ni al Nuevo RUS. La comisión de AFP varía según seas de comisión por **flujo** (sobre el sueldo) o por **saldo** (sobre el fondo acumulado); acá usamos un total aproximado por flujo. Si cobrás la [asignación familiar (S/ 113)](/pe/calculadora-asignacion-familiar-peru) por tener hijos, sumala al bruto antes de calcular, porque también entra a la base de pensión y de renta de 5ta.\n\n## Datos clave 2026\n\n| Concepto | Valor |\n|---|---|\n| Aporte ONP | 13% |\n| Aporte AFP (aprox.) | ~12,5% |\n| EsSalud (lo paga el empleador) | 9% (no se descuenta) |\n| Deducción renta de 5ta | 7 UIT = S/ 38.500 |\n| UIT 2026 | S/ 5.500 |\n| Base anual del impuesto | 14 sueldos (12 + 2 gratificaciones) |\n\n## Disclaimer\n\nCálculo orientativo. La comisión exacta de la AFP depende de la administradora y del tipo (flujo o saldo); usamos un total aproximado del 12,5%. No incluye automáticamente la asignación familiar (S/ 113 si tenés hijos) ni descuentos por adelantos o préstamos. Verificá tu boleta con RR.HH. o la normativa vigente.\n",
   "faq": [
-    { "q": "¿Cómo paso mi sueldo bruto a neto en Perú?", "a": "Al bruto le restás tu aporte de **pensión** (ONP 13% o AFP ~12,5%) y, si tu ingreso anual supera las 7 UIT, el **Impuesto a la Renta de 5ta** prorrateado. Un bruto de S/ 3.000 en ONP deja unos S/ 2.587 netos." },
-    { "q": "¿Cuánto bruto necesito para un neto objetivo?", "a": "Elegí la opción 'quiero un neto objetivo → ver el bruto' e ingresá el neto que querés. La calculadora resuelve el bruto exacto a pactar, considerando la pensión y la renta de 5ta. Por ejemplo, S/ 2.000 netos en AFP requieren un bruto cercano a S/ 2.286." },
-    { "q": "¿Conviene más ONP o AFP para el neto?", "a": "En ONP el descuento es 13% fijo; en AFP ronda el 12,5%, así que el **neto suele ser levemente mayor en AFP**. La diferencia real depende de la comisión de tu AFP. Pero la elección también depende de la pensión futura, no solo del neto de hoy." },
-    { "q": "¿Desde qué sueldo se paga renta de 5ta?", "a": "Recién cuando tu **ingreso anual** (12 sueldos + 2 gratificaciones) supera las **7 UIT** (S/ 38.500), es decir, alrededor de S/ 2.750 brutos mensuales. Por debajo de eso no se descuenta renta de 5ta." },
-    { "q": "¿La gratificación cuenta para la renta de 5ta?", "a": "Sí. La base anual del impuesto considera **14 sueldos** (12 mensuales + las 2 gratificaciones de julio y diciembre), aunque las gratificaciones no pagan aporte de pensión." },
-    { "q": "¿El neto incluye la CTS y las gratificaciones?", "a": "No. Esta calculadora muestra el **sueldo mensual** neto. La CTS se deposita aparte (mayo y noviembre) y las gratificaciones se pagan en julio y diciembre; ninguna se descuenta del sueldo mensual." },
-    { "q": "¿Por qué mi neto puede variar mes a mes?", "a": "Porque la **renta de 5ta** se ajusta a lo largo del año (en julio y diciembre se suman las gratificaciones a la base) y porque pueden aplicarse adelantos, préstamos o bonos variables que afectan la retención. Esta calculadora da el valor mensual promedio." },
-    { "q": "¿Esta calculadora incluye la asignación familiar?", "a": "No de forma automática. Si tenés hijos menores, sumá la **asignación familiar de S/ 113** al bruto antes de calcular: forma parte de la remuneración y también suma a la base de pensión y renta." },
-    { "q": "¿El EsSalud reduce mi sueldo neto?", "a": "No. El aporte a **EsSalud (9%)** es de cargo del **empleador** y financia tu cobertura de salud, pero no aparece como descuento en tu boleta ni reduce lo que cobrás en mano. Por eso no entra en el cálculo de bruto a neto." },
-    { "q": "¿Por qué para un neto objetivo el bruto no es simplemente neto ÷ 0,87?", "a": "Porque además de la pensión puede haber **renta de 5ta**, que crece de forma progresiva y no proporcional. Por eso, para sueldos que pagan renta, el bruto que produce un neto exacto se obtiene **iterando**, no con una división simple." }
+    {
+      "q": "¿Cómo paso mi sueldo bruto a neto en Perú?",
+      "a": "Al bruto le restás tu aporte de **pensión** (ONP 13% o AFP ~12,5%) y, si tu ingreso anual supera las 7 UIT, el **Impuesto a la Renta de 5ta** prorrateado. Un bruto de S/ 3.000 en ONP deja unos S/ 2.587 netos."
+    },
+    {
+      "q": "¿Cuánto bruto necesito para un neto objetivo?",
+      "a": "Elegí la opción 'quiero un neto objetivo → ver el bruto' e ingresá el neto que querés. La calculadora resuelve el bruto exacto a pactar, considerando la pensión y la renta de 5ta. Por ejemplo, S/ 2.000 netos en AFP requieren un bruto cercano a S/ 2.286."
+    },
+    {
+      "q": "¿Conviene más ONP o AFP para el neto?",
+      "a": "En ONP el descuento es 13% fijo; en AFP ronda el 12,5%, así que el **neto suele ser levemente mayor en AFP**. La diferencia real depende de la comisión de tu AFP. Pero la elección también depende de la pensión futura, no solo del neto de hoy."
+    },
+    {
+      "q": "¿Desde qué sueldo se paga renta de 5ta?",
+      "a": "Recién cuando tu **ingreso anual** (12 sueldos + 2 gratificaciones) supera las **7 UIT** (S/ 38.500), es decir, alrededor de S/ 2.750 brutos mensuales. Por debajo de eso no se descuenta renta de 5ta."
+    },
+    {
+      "q": "¿La gratificación cuenta para la renta de 5ta?",
+      "a": "Sí. La base anual del impuesto considera **14 sueldos** (12 mensuales + las 2 gratificaciones de julio y diciembre), aunque las gratificaciones no pagan aporte de pensión."
+    },
+    {
+      "q": "¿El neto incluye la CTS y las gratificaciones?",
+      "a": "No. Esta calculadora muestra el **sueldo mensual** neto. La CTS se deposita aparte (mayo y noviembre) y las gratificaciones se pagan en julio y diciembre; ninguna se descuenta del sueldo mensual."
+    },
+    {
+      "q": "¿Por qué mi neto puede variar mes a mes?",
+      "a": "Porque la **renta de 5ta** se ajusta a lo largo del año (en julio y diciembre se suman las gratificaciones a la base) y porque pueden aplicarse adelantos, préstamos o bonos variables que afectan la retención. Esta calculadora da el valor mensual promedio."
+    },
+    {
+      "q": "¿Esta calculadora incluye la asignación familiar?",
+      "a": "No de forma automática. Si tenés hijos menores, sumá la **asignación familiar de S/ 113** al bruto antes de calcular: forma parte de la remuneración y también suma a la base de pensión y renta."
+    },
+    {
+      "q": "¿El EsSalud reduce mi sueldo neto?",
+      "a": "No. El aporte a **EsSalud (9%)** es de cargo del **empleador** y financia tu cobertura de salud, pero no aparece como descuento en tu boleta ni reduce lo que cobrás en mano. Por eso no entra en el cálculo de bruto a neto."
+    },
+    {
+      "q": "¿Por qué para un neto objetivo el bruto no es simplemente neto ÷ 0,87?",
+      "a": "Porque además de la pensión puede haber **renta de 5ta**, que crece de forma progresiva y no proporcional. Por eso, para sueldos que pagan renta, el bruto que produce un neto exacto se obtiene **iterando**, no con una división simple."
+    }
   ],
   "sources": [
-    { "name": "SUNAT — Renta de 5ta categoría", "url": "https://www.gob.pe/7818-pagar-el-impuesto-a-la-renta-de-quinta-categoria" },
-    { "name": "SBS — Aportes a la AFP y la ONP", "url": "https://www.gob.pe/institucion/sbs/informes-publicaciones" }
+    {
+      "name": "SUNAT — Renta de 5ta categoría",
+      "url": "https://www.gob.pe/7818-pagar-el-impuesto-a-la-renta-de-quinta-categoria"
+    },
+    {
+      "name": "SBS — Aportes a la AFP y la ONP",
+      "url": "https://www.gob.pe/institucion/sbs/informes-publicaciones"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -86,5 +171,5 @@
     "diferencia neto onp y afp peru",
     "convertir sueldo neto a bruto peru"
   ],
-  "lastReviewed": "2026-06-08"
+  "lastReviewed": "2026-06-10"
 }

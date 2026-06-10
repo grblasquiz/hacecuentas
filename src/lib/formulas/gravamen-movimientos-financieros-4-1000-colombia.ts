@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   monto_retiro: number;
   frecuencia_mensual: number;
@@ -19,7 +20,7 @@ export interface Outputs {
 export function compute(i: Inputs): Outputs {
   // Constantes Colombia 2026 - DIAN
   const TASA_GMF = 0.004; // 0.4% = 4×1000
-  const UVT_2026 = 48681; // Valor UVT 2026 pesos colombianos
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const EXENCION_MAXIMA_UVT = 350; // UVT exentos por mes
   
   // Validación de inputs

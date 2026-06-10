@@ -1,4 +1,6 @@
 /** Monotributo vs Responsable Inscripto — cuál conviene por facturación */
+import { TOPES, CUOTA_SERVICIOS, CUOTA_BIENES, CATEGORIAS as CATS_MONO } from '../data/monotributo-2026';
+
 export interface Inputs {
   facturacionAnual: number;
   tipoActividad: 'servicios' | 'comercio' | string;
@@ -18,22 +20,19 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Categorías monotributo 2026 (aproximadas — actualizadas semestralmente)
-// Categorías monotributo — escala ARCA vigente junio 2026 (+14,3%), validada x2 fuentes.
-// Servicios topea en H; I-J-K son exclusivas de venta de bienes.
-const CATEGORIAS = [
-  { letra: 'A', topeFactServ: 10_277_988, topeFactCom: 10_277_988, cuota: 42_387 },
-  { letra: 'B', topeFactServ: 15_058_448, topeFactCom: 15_058_448, cuota: 48_251 },
-  { letra: 'C', topeFactServ: 21_113_697, topeFactCom: 21_113_697, cuota: 56_502 },
-  { letra: 'D', topeFactServ: 26_212_853, topeFactCom: 26_212_853, cuota: 72_414 },
-  { letra: 'E', topeFactServ: 30_833_964, topeFactCom: 30_833_964, cuota: 102_538 },
-  { letra: 'F', topeFactServ: 38_642_048, topeFactCom: 38_642_048, cuota: 129_045 },
-  { letra: 'G', topeFactServ: 46_211_109, topeFactCom: 46_211_109, cuota: 197_108 },
-  { letra: 'H', topeFactServ: 70_113_407, topeFactCom: 70_113_407, cuota: 447_347 },
-  { letra: 'I', topeFactServ: 0, topeFactCom: 78_479_212, cuota: 406_512 },
-  { letra: 'J', topeFactServ: 0, topeFactCom: 89_872_640, cuota: 497_059 },
-  { letra: 'K', topeFactServ: 0, topeFactCom: 108_357_084, cuota: 600_880 },
-];
+// Categorías monotributo — fuente única src/lib/data/monotributo-2026.ts (ARCA 2026).
+// Servicios topea en H; I-J-K son exclusivas de venta de bienes (cuota CUOTA_BIENES).
+// Para servicios usamos la cuota de servicios; para comercio/bienes la de bienes.
+const CATEGORIAS = CATS_MONO.map((letra) => {
+  const esBienesExclusiva = letra === 'I' || letra === 'J' || letra === 'K';
+  return {
+    letra,
+    topeFactServ: esBienesExclusiva ? 0 : TOPES[letra],
+    topeFactCom: TOPES[letra],
+    cuotaServ: CUOTA_SERVICIOS[letra],
+    cuotaCom: CUOTA_BIENES[letra],
+  };
+});
 
 export function monotributoVsInscripto(i: Inputs): Outputs {
   const fact = Number(i.facturacionAnual);
@@ -51,8 +50,8 @@ export function monotributoVsInscripto(i: Inputs): Outputs {
     }
   }
 
-  const monoAnual = categoria ? categoria.cuota * 12 : 0;
-  const cuotaMens = categoria ? categoria.cuota : 0;
+  const cuotaMens = categoria ? (tipo === 'servicios' ? categoria.cuotaServ : categoria.cuotaCom) : 0;
+  const monoAnual = cuotaMens * 12;
   const catLetra = categoria ? categoria.letra : 'Fuera (RI)';
 
   // Responsable inscripto: IVA + Ganancias + IIBB

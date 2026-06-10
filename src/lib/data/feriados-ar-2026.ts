@@ -70,6 +70,9 @@ export const META = {
   revisarEn: '2027-01',
 } as const;
 
+/** Vigencia del dato (YYYY-MM-DD) — alias de META.dataAsOf para el sello de frescura (src/lib/data-freshness.ts). */
+export const DATA_AS_OF: string = META.dataAsOf;
+
 export const MESES = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 export const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];

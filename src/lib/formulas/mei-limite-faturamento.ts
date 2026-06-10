@@ -1,7 +1,9 @@
 /** MEI — Monitor de limite de faturamento R$ 81.000/ano (2026)
  *  Alerta aos 70% (R$ 56.700). Se ultrapassa em até 20% (R$97.200) paga DAS complementar.
  *  Se > 20% desenquadramento retroativo ao ano.
+ *  Limites: fonte única src/lib/data/brasil-2026.ts.
  */
+import { MEI_LIMITE_FATURAMENTO, MEI_LIMITE_FATURAMENTO_20 } from '../data/brasil-2026';
 
 export interface Inputs {
   faturamentoAcumulado: number;
@@ -25,8 +27,8 @@ export function meiLimiteFaturamento(i: Inputs): Outputs {
   const fat = Math.max(0, Number(i.faturamentoAcumulado) || 0);
   const meses = Math.min(12, Math.max(1, Number(i.mesesDecorridos) || 1));
 
-  const LIMITE = 81000;
-  const LIMITE_20 = 97200;
+  const LIMITE = MEI_LIMITE_FATURAMENTO;
+  const LIMITE_20 = MEI_LIMITE_FATURAMENTO_20;
   const percentualUsado = (fat / LIMITE) * 100;
   const disponivel = Math.max(0, LIMITE - fat);
   const projecaoAnual = (fat / meses) * 12;

@@ -6,6 +6,9 @@
  * Moneda: Sol (PEN, "S/").
  */
 
+/** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
+export const DATA_AS_OF = '2026-06-08';
+
 export const PERU_2026 = {
   anio: 2026,
   rmv: 1130,                 // Remuneración Mínima Vital (S/)

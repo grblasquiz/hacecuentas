@@ -1,3 +1,4 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   dividendos_sociedades: number;
   dividendos_fiducias: number;
@@ -27,7 +28,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 Colombia - DIAN
-  const UVT_2026 = 38_004; // Unidad de Valor Tributario
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const UMBRAL_GRAVAMEN_CEDULAR_UVT = 375; // UVT
   const UMBRAL_GRAVAMEN_CEDULAR = UMBRAL_GRAVAMEN_CEDULAR_UVT * UVT_2026; // ≈14.251.500
   const TARIFA_GRAVAMEN_CEDULAR = 0.10; // 10%

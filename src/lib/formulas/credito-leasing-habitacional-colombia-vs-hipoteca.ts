@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   precio_vivienda: number;
   plazo_anos: number;
@@ -25,10 +27,10 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes Colombia 2026
+  // Constantes Colombia 2026 (fuente única: src/lib/data/colombia-2026.ts)
   const MESES_PLAZO = i.plazo_anos * 12; // Conversión años a meses
-  const UVT_2026 = 48000000; // UVT Colombia 2026
-  const LIMITE_DEDUCCION_HIPOTECA_UVT = 1.2; // Máximo UVT deducible intereses
+  const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
+  const LIMITE_DEDUCCION_HIPOTECA_UVT = 1200; // tope deducción intereses vivienda: 1.200 UVT/año (art. 119 ET)
   const SEGURO_HIPOTECA_ANUAL = 0.005; // 0.5% anual estimado
   const TASA_MARGINAL_DECIMAL = i.tasa_marginal_irpf / 100;
 
@@ -71,7 +73,7 @@ export function compute(i: Inputs): Outputs {
   const total_pagado_hipoteca =
     cuota_hipoteca_mensual * MESES_PLAZO + cuota_inicial + seguros_totales;
 
-  // Beneficio fiscal hipoteca (intereses años 1-5, límite 1.2 UVT)
+  // Beneficio fiscal hipoteca (intereses deducibles, tope 1.200 UVT/año)
   // Cálculo simplificado: intereses año 1 ≈ (saldo inicial × tasa) / 2
   const intereses_ano1_aprox =
     (prestamo_hipoteca * i.tasa_hipoteca_anual) / 100 / 2;

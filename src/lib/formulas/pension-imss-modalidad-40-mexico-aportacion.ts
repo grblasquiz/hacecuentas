@@ -1,251 +1,238 @@
+/**
+ * Modalidad 40 del IMSS — Continuación Voluntaria en el Seguro de Invalidez, Vejez y Muerte.
+ * Estima la cuota mensual (tasa 2026 progresiva por nivel salarial), la aportación total,
+ * y proyecta la pensión por Ley 73 con la MISMA metodología que pension-imss-ley-73-mexico.ts
+ * (tabla del Art. 167, factor por edad Art. 171, +11% del decreto 2001, piso de pensión mínima).
+ *
+ * Toda la data 2026 sale de src/lib/data/mexico-2026.ts (UMA, salario mínimo, cuotas IMSS,
+ * tabla Ley 73). NO hardcodear valores: hay un gate en prebuild.
+ *
+ * Tasa Modalidad 40 2026 = ramos que paga el afiliado (parte obrera + patronal):
+ *   Retiro 2.000% + Invalidez y Vida 2.375% + Gastos médicos pensionados 1.425%
+ *   + Cesantía y Vejez obrero 1.125% + Cesantía y Vejez patronal (tabla progresiva reforma 2020).
+ * Esto reproduce al decimal las tasas publicadas: 10.075% (1 SM) → 12.951% → 13.286%
+ * → 13.538% → 14.438% (4+ UMA). Sube cada año hasta 18.8% en 2030.
+ */
+import { MEXICO_2026, tasaCeavPatron2026, fmtMXN } from '../data/mexico-2026.ts';
+
+/** Decreto DOF 20-dic-2001: las pensiones de cesantía/vejez Ley 73 se incrementan 11%. */
+const FACTOR_DECRETO_2001 = 1.11;
+/** La pensión mínima Ley 73 se mensualiza con 365/12 días (igual que pension-imss-ley-73-mexico.ts). */
+const DIAS_MES_OFICIAL = 365 / 12;
+
 export interface Inputs {
   salario_base_cotizacion_uma: number;
   anos_aportacion_previos: number;
   semanas_previas: number;
   anos_modalidad_40: number;
   edad_actual: number;
-  genero: 'hombre' | 'mujer';
   incremento_anual_salario: number;
 }
 
 export interface Outputs {
-  uma_vigente: number;
+  tasa_aportacion: number;
+  salario_base_mensual: number;
   cuota_mensual_inicial: number;
-  cuota_mensual_promedio_5anos: number;
-  aportacion_acumulada_5anos: number;
+  cuota_mensual_promedio: number;
+  aportacion_total: number;
   semanas_totales_al_cierre: number;
   edad_pension: number;
   pension_mensual_ley73: number;
-  pension_anual_ley73: number;
-  pension_garantizada_minimo: number;
-  comparativa_afore_pension_mensual: number;
-  diferencia_modalidad_vs_afore: number;
-  breakeven_meses: number;
-  roi_anual_modalidad40: number;
-  valor_presente_pension_20anos: number;
-  valor_presente_neto_20anos: number;
+  pension_garantizada_minima: number;
+  meses_recuperar_aportacion: number;
   mensaje_recomendacion: string;
   _insight?: any;
+  _chart?: any;
+}
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Pensión mensual Ley 73 a partir de un salario MENSUAL promedio y semanas cotizadas.
+ * Réplica de pension-imss-ley-73-mexico.ts (mantener en sync): tabla Art. 167 + ayuda
+ * asistencial 15% (caso sin dependientes) + factor por edad + decreto 2001 + piso mínimo.
+ */
+function pensionLey73Mensual(salarioMensual: number, semanas: number, edad: number) {
+  const { ley73, uma, salarioMinimo } = MEXICO_2026;
+  const pensionMinima = salarioMinimo.generalDiario * DIAS_MES_OFICIAL * FACTOR_DECRETO_2001;
+
+  if (semanas < ley73.semanasMinimas) {
+    return { pension: 0, pensionMinima, cuantiaBasica: 0, incrementos: 0, ayudaAsistencial: 0, minimaAplica: false, escala: 0 };
+  }
+
+  const salarioDiario = salarioMensual / salarioMinimo.factorMensual;
+  const topeDiario = uma.diaria * ley73.topeSalarioUmas;
+  const diarioTopado = Math.min(salarioDiario, topeDiario);
+  const mensualTopado = diarioTopado * salarioMinimo.factorMensual;
+
+  const veces = diarioTopado / uma.diaria;
+  let fila = ley73.tablaArt167[ley73.tablaArt167.length - 1];
+  for (const f of ley73.tablaArt167) {
+    if (veces <= f[0]) { fila = f; break; }
+  }
+  const [, cuantiaPct, incrementoPct] = fila;
+
+  const cuantiaBasica = cuantiaPct * mensualTopado;
+  const aniosExcedentes = Math.floor((semanas - ley73.semanasMinimas) / 52);
+  const incrementos = aniosExcedentes * incrementoPct * mensualTopado;
+  const base = cuantiaBasica + incrementos;
+
+  // Caso sin dependientes (la calc no pide cónyuge/hijos): ayuda asistencial 15% (Art. 164/166).
+  const ayudaAsistencial = base * ley73.asignaciones.ayudaAsistencial;
+  const totalCapped = Math.min(base + ayudaAsistencial, mensualTopado);
+
+  const factorEdad = ley73.factorEdad[edad] ?? ley73.factorEdad[60];
+  const conEdad = totalCapped * factorEdad;
+  const conDecreto = conEdad * FACTOR_DECRETO_2001;
+
+  const minimaAplica = conDecreto < pensionMinima;
+  const pension = Math.max(conDecreto, pensionMinima);
+  const escala = base + ayudaAsistencial > 0 ? (conEdad / (base + ayudaAsistencial)) * FACTOR_DECRETO_2001 : 0;
+
+  return { pension, pensionMinima, cuantiaBasica, incrementos, ayudaAsistencial, minimaAplica, escala };
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 México (SAT, IMSS, CONAPO, Banxico)
-  const UMA_VIGENTE = 248.93; // UMA 2026 (SAT)
-  const TASA_APORTACION = 0.10075; // 10.075% (IMSS: 5.15% patrón + 4.925% trabajador)
-  const SALARIO_MINIMO_2026 = 248.93; // Aproximado, región central
-  const PENSION_GARANTIZADA_MINIMA = 5500; // ~55% salario mínimo IMSS 2026
-  const TASA_DESCUENTO_VPN = 0.04; // 4% anual (Banxico referencia)
-  const ESPERANZA_VIDA_HOMBRE = 81; // CONAPO 2026
-  const ESPERANZA_VIDA_MUJER = 87; // CONAPO 2026
-  const INFLACION_ANUAL = 0.035; // 3.5% base, pero se ajusta con input
+  const { uma, imss } = MEXICO_2026;
+  const pensionMinima = MEXICO_2026.salarioMinimo.generalDiario * DIAS_MES_OFICIAL * FACTOR_DECRETO_2001;
 
-  // Validaciones básicas
-  if (i.salario_base_cotizacion_uma < 1 || i.salario_base_cotizacion_uma > 25) {
-    return {
-      uma_vigente: UMA_VIGENTE,
-      cuota_mensual_inicial: 0,
-      cuota_mensual_promedio_5anos: 0,
-      aportacion_acumulada_5anos: 0,
-      semanas_totales_al_cierre: 0,
-      edad_pension: 0,
-      pension_mensual_ley73: 0,
-      pension_anual_ley73: 0,
-      pension_garantizada_minimo: PENSION_GARANTIZADA_MINIMA,
-      comparativa_afore_pension_mensual: 0,
-      diferencia_modalidad_vs_afore: 0,
-      breakeven_meses: 0,
-      roi_anual_modalidad40: 0,
-      valor_presente_pension_20anos: 0,
-      valor_presente_neto_20anos: 0,
-      mensaje_recomendacion: 'Error: UMA debe estar entre 1 y 25.',
-      _insight: {
-        title: 'Salario base fuera de rango',
-        text: 'El salario base de cotización en Modalidad 40 debe estar entre **1 y 25 UMA**. Ajustá el valor para ver tu proyección.',
-        tone: 'warn',
-        icon: '⚠️',
-      }
-    };
-  }
-
-  // 1. Cálculo de salario base en MXN
-  const salario_base_mxn = i.salario_base_cotizacion_uma * UMA_VIGENTE;
-
-  // 2. Cuota mensual inicial
-  const cuota_mensual_inicial = salario_base_mxn * TASA_APORTACION;
-
-  // 3. Aportación acumulada en 5 años con incremento anual
-  let aportacion_acumulada = 0;
-  let cuota_anual_acumulada = [];
-  for (let ano = 0; ano < Math.min(i.anos_modalidad_40, 5); ano++) {
-    const factor_incremento = Math.pow(1 + i.incremento_anual_salario / 100, ano);
-    const cuota_ano = cuota_mensual_inicial * factor_incremento * 12;
-    cuota_anual_acumulada.push(cuota_ano);
-    aportacion_acumulada += cuota_ano;
-  }
-  const cuota_mensual_promedio_5anos =
-    cuota_anual_acumulada.length > 0
-      ? aportacion_acumulada / (cuota_anual_acumulada.length * 12)
-      : cuota_mensual_inicial;
-
-  // 4. Semanas cotizadas totales
-  const semanas_previas_total =
-    i.anos_aportacion_previos * 52 + i.semanas_previas;
-  const semanas_nuevas_modalidad40 = i.anos_modalidad_40 * 52;
-  const semanas_totales_al_cierre =
-    semanas_previas_total + semanas_nuevas_modalidad40;
-
-  // 5. Edad de pensión
-  const edad_pension_minima = i.genero === 'hombre' ? 60 : 55; // Transición 2023-2030
-  const edad_pension =
-    i.edad_actual + i.anos_modalidad_40 >= edad_pension_minima
-      ? i.edad_actual + i.anos_modalidad_40
-      : edad_pension_minima;
-
-  // 6. Cálculo de pensión Ley 73 (Seguro de Vida IMSS)
-  // Factor actuarial aproximado (tabla IMSS 2026)
-  const factores_actuariales: { [key: string]: number } = {
-    'hombre-60': 0.85,
-    'hombre-65': 0.82,
-    'mujer-55': 0.78,
-    'mujer-60': 0.75
+  const nUMA = Number(i.salario_base_cotizacion_uma);
+  const errBase: Outputs = {
+    tasa_aportacion: 0,
+    salario_base_mensual: 0,
+    cuota_mensual_inicial: 0,
+    cuota_mensual_promedio: 0,
+    aportacion_total: 0,
+    semanas_totales_al_cierre: 0,
+    edad_pension: 0,
+    pension_mensual_ley73: 0,
+    pension_garantizada_minima: r2(pensionMinima),
+    meses_recuperar_aportacion: 0,
+    mensaje_recomendacion: 'Elegí un salario base entre 1 y 25 UMA para ver tu proyección.',
+    _insight: {
+      title: 'Salario base fuera de rango',
+      text: 'En Modalidad 40 podés cotizar entre **1 y 25 UMA**. Ajustá el valor para estimar tu cuota y tu pensión.',
+      tone: 'warn',
+      icon: '⚠️',
+    },
   };
-  const clave_factor = `${i.genero}-${Math.min(edad_pension, 65)}`;
-  const factor_actuarial = factores_actuariales[clave_factor] || 0.85;
+  if (!Number.isFinite(nUMA) || nUMA < 1 || nUMA > 25) return errBase;
 
-  // Pensión = Salario Base × Factor Actuarial × (Semanas / 500)
-  // Máximo: valor máximo de pensión = 10 × salario mínimo
-  const pension_bruta =
-    salario_base_mxn * factor_actuarial * (semanas_totales_al_cierre / 500);
-  const pension_mensual_ley73 =
-    semanas_totales_al_cierre >= 500
-      ? Math.max(pension_bruta, PENSION_GARANTIZADA_MINIMA)
-      : 0;
-  const pension_anual_ley73 = pension_mensual_ley73 * 12;
+  const anosModalidad = Math.max(1, Math.floor(Number(i.anos_modalidad_40) || 1));
+  const incrementoPct = Math.max(0, Number(i.incremento_anual_salario) || 0);
+  const edadActual = Math.floor(Number(i.edad_actual) || 0);
+  const anosPrevios = Math.max(0, Number(i.anos_aportacion_previos) || 0);
+  const semanasExtra = Math.max(0, Number(i.semanas_previas) || 0);
 
-  // 7. Comparativa AFORE Ley 97
-  // Asumiendo 4.5% rendimiento anual, saldo acumulado
-  const rendimiento_afore = 0.045; // 4.5% promedio CONSAR 2026
-  let saldo_afore = aportacion_acumulada;
-  for (let ano = 0; ano < 1; ano++) {
-    // Simplificado: 1 año de rendimiento
-    saldo_afore *= 1 + rendimiento_afore;
+  // 1. Salario base de cotización (diario y mensual). El SBC mensual usa la UMA mensual (factor 30,4).
+  const sbcDiario = nUMA * uma.diaria;
+  const sbcMensual = nUMA * uma.mensual;
+
+  // 2. Tasa Modalidad 40 2026 — suma de los ramos que paga el afiliado (obrero + patrón).
+  //    La cesantía y vejez patronal es progresiva por nivel salarial (tabla reforma 2020).
+  const tasaFija =
+    imss.patron.retiro +                     // 2.000%
+    imss.patron.invalidezVida +              // 1.750%
+    imss.obrero.invalidezVida +              // 0.625%
+    imss.patron.gastosMedicosPensionados +   // 1.050%
+    imss.obrero.gastosMedicosPensionados +   // 0.375%
+    imss.obrero.cesantiaVejez;               // 1.125%  → 6.925% fijo
+  const tasaModalidad40 = tasaFija + tasaCeavPatron2026(sbcDiario);
+
+  // 3. Cuota mensual inicial.
+  const cuotaMensualInicial = sbcMensual * tasaModalidad40;
+
+  // 4. Aportación total a lo largo de los años de Modalidad 40 (la UMA, y por ende la cuota,
+  //    sube cada año ~inflación; el input lo modela). Cuota mensual promedio del período.
+  let aportacionTotal = 0;
+  for (let a = 0; a < anosModalidad; a++) {
+    aportacionTotal += cuotaMensualInicial * Math.pow(1 + incrementoPct / 100, a) * 12;
   }
-  const esperanza_vida =
-    i.genero === 'hombre' ? ESPERANZA_VIDA_HOMBRE : ESPERANZA_VIDA_MUJER;
-  const meses_esperados_vida =
-    (esperanza_vida - edad_pension) * 12 + 6; // Promedio 6 meses más
-  const comparativa_afore_pension_mensual =
-    saldo_afore > 0 ? saldo_afore / meses_esperados_vida : 0;
+  const cuotaMensualPromedio = aportacionTotal / (anosModalidad * 12);
 
-  // 8. Diferencia y ROI
-  const diferencia_modalidad_vs_afore =
-    pension_mensual_ley73 - comparativa_afore_pension_mensual;
-  const beneficio_neto_mensual =
-    pension_mensual_ley73 - cuota_mensual_promedio_5anos;
-  const roi_anual_modalidad40 =
-    cuota_mensual_promedio_5anos > 0
-      ? (beneficio_neto_mensual / cuota_mensual_promedio_5anos) * 100
-      : 0;
+  // 5. Semanas cotizadas totales al cierre.
+  const semanasPreviasTotal = anosPrevios * 52 + semanasExtra;
+  const semanasNuevas = anosModalidad * 52;
+  const semanasTotales = semanasPreviasTotal + semanasNuevas;
 
-  // 9. Breakeven (meses para recuperar inversión)
-  const breakeven_meses =
-    beneficio_neto_mensual > 0
-      ? aportacion_acumulada / beneficio_neto_mensual
-      : 999;
+  // 6. Edad de pensión (Ley 73: cesantía desde 60 con factor reducido, vejez a 65 = 100%).
+  const edadProyectada = edadActual + anosModalidad;
+  const edadPension = Math.max(60, edadProyectada);
+  const edadFactor = Math.min(Math.max(edadPension, 60), 65); // factor sólo definido 60..65
 
-  // 10. Valor Presente Neto (VPN) para 20 años de jubilación
-  const meses_jubilacion = 20 * 12; // 240 meses
-  let vpn_pensiones = 0;
-  const tasa_descuento_mensual = Math.pow(1 + TASA_DESCUENTO_VPN, 1 / 12) - 1;
-  for (let mes = 1; mes <= meses_jubilacion; mes++) {
-    const factor_descuento = Math.pow(1 + tasa_descuento_mensual, mes);
-    vpn_pensiones += pension_mensual_ley73 / factor_descuento;
-  }
-  const valor_presente_pension_20anos = vpn_pensiones;
-  const valor_presente_neto_20anos =
-    vpn_pensiones - aportacion_acumulada;
+  // 7. Pensión Ley 73 proyectada con el salario base elegido y las semanas totales.
+  const p = pensionLey73Mensual(sbcMensual, semanasTotales, edadFactor);
+  const pensionMensual = p.pension;
 
-  // 11. Mensaje de recomendación
-  let mensaje_recomendacion = '';
-  if (semanas_totales_al_cierre < 500) {
-    mensaje_recomendacion =
-      '⚠️ Semanas insuficientes: No calificas para pensión. Acumula mínimo 500 semanas.';
-  } else if (valor_presente_neto_20anos > 500000) {
-    mensaje_recomendacion =
-      '✅ Modalidad 40 es altamente rentable. VPN positivo: $' +
-      valor_presente_neto_20anos.toLocaleString('es-MX', {
-        maximumFractionDigits: 0
-      }) +
-      ' MXN en 20 años de jubilación.';
-  } else if (diferencia_modalidad_vs_afore > 1000) {
-    mensaje_recomendacion =
-      '✅ Modalidad 40 ventajosa vs. AFORE: +$' +
-      diferencia_modalidad_vs_afore.toLocaleString('es-MX', {
-        maximumFractionDigits: 0
-      }) +
-      ' MXN/mes. Pensión garantizada y segura.';
-  } else if (diferencia_modalidad_vs_afore < 0) {
-    mensaje_recomendacion =
-      '⚠️ AFORE puede ofrecer mayor pensión. Diferencia: -$' +
-      Math.abs(diferencia_modalidad_vs_afore).toLocaleString('es-MX', {
-        maximumFractionDigits: 0
-      }) +
-      ' MXN/mes. Pero Modalidad 40 es más segura.';
-  } else {
-    mensaje_recomendacion =
-      '➡️ Modalidad 40 y AFORE comparable. Elige según preferencia: seguridad (IMSS) vs. potencial rendimiento (AFORE).';
-  }
+  // 8. Meses de pensión para recuperar todo lo aportado en Modalidad 40 (recupero "puro").
+  const mesesRecuperar = pensionMensual > 0 ? aportacionTotal / pensionMensual : 0;
 
-  // Insight dinámico según conveniencia de Modalidad 40 vs AFORE
-  const fmtMXN = (v: number) =>
-    '$' + Math.round(v).toLocaleString('es-MX') + ' MXN';
+  // 9. Mensaje + insight.
+  let mensaje: string;
   let insight: any;
-  if (semanas_totales_al_cierre < 500) {
+  if (semanasTotales < MEXICO_2026.ley73.semanasMinimas) {
+    const faltan = MEXICO_2026.ley73.semanasMinimas - semanasTotales;
+    mensaje = `Con ${Math.round(semanasTotales)} semanas todavía no llegás al mínimo de 500. Te faltan ${Math.round(faltan)} semanas para tener derecho a pensión por Ley 73.`;
     insight = {
       title: 'Aún no calificás para pensión',
-      text: `Con **${Math.round(semanas_totales_al_cierre)} semanas** no llegás al mínimo de 500 para pensionarte por Ley 73. Necesitás cotizar más antes de que Modalidad 40 te rinda.`,
+      text: `Con **${Math.round(semanasTotales)} semanas** no llegás a las **500** que exige la Ley 73 (te faltan ${Math.round(faltan)}). Cotizá más años en Modalidad 40 antes de que la inversión te rinda.`,
       tone: 'warn',
       icon: '⚠️',
     };
-  } else if (valor_presente_neto_20anos > 0) {
-    insight = {
-      title: 'Modalidad 40 te conviene',
-      text: `Invertís **${fmtMXN(aportacion_acumulada)}** en cuotas y proyectás una pensión de **${fmtMXN(pension_mensual_ley73)}/mes**. En 20 años de jubilación el valor presente neto es de **${fmtMXN(valor_presente_neto_20anos)}**, y recuperás lo aportado en ~**${breakeven_meses < 999 ? Math.round(breakeven_meses) + ' meses' : 'el largo plazo'}**.`,
-      tone: 'good',
-      icon: '📈',
-    };
   } else {
+    mensaje = `Cuota ${fmtMXN(cuotaMensualInicial)}/mes (${(tasaModalidad40 * 100).toFixed(3)}% de ${fmtMXN(sbcMensual)}). Pensión proyectada ${fmtMXN(pensionMensual)}/mes a los ${edadPension} años: recuperás lo aportado en ~${Math.round(mesesRecuperar)} meses de pensión.`;
+    const tone = mesesRecuperar > 0 && mesesRecuperar <= 60 ? 'good' : 'warn';
     insight = {
-      title: 'Revisá si te conviene',
-      text: `La pensión proyectada es de **${fmtMXN(pension_mensual_ley73)}/mes**, pero el valor presente neto de tu inversión a 20 años da **${fmtMXN(valor_presente_neto_20anos)}**. Compará bien Modalidad 40 (más segura) contra tu AFORE antes de decidir.`,
-      tone: 'warn',
-      icon: '🤔',
+      title: p.minimaAplica ? 'Te corresponde la pensión mínima garantizada' : 'Modalidad 40 te conviene',
+      text: p.minimaAplica
+        ? `El cálculo da una pensión que cae bajo el piso, así que cobrarías la **pensión mínima garantizada Ley 73 de ${fmtMXN(pensionMinima)}/mes** (un salario mínimo + 11%, 2026). Para superar el mínimo conviene elegir más UMA o sumar más semanas.`
+        : `Aportás **${fmtMXN(aportacionTotal)}** en ${anosModalidad} ${anosModalidad === 1 ? 'año' : 'años'} y proyectás una pensión de **${fmtMXN(pensionMensual)}/mes** a los ${edadPension} años (factor ${Math.round((MEXICO_2026.ley73.factorEdad[edadFactor] ?? 0.75) * 100)}%). Recuperás todo lo aportado en ~**${Math.round(mesesRecuperar)} meses** de pensión y desde ahí es ganancia.`,
+      tone,
+      icon: p.minimaAplica ? '👴' : '📈',
+    };
+  }
+
+  // 10. Gráfico: composición de la pensión mensual (escalada al monto final, igual que la calc Ley 73).
+  let chart: any;
+  if (pensionMensual > 0 && !p.minimaAplica) {
+    const slices = [
+      { label: 'Cuantía básica', value: r2(p.cuantiaBasica * p.escala) },
+      { label: 'Incrementos por semanas', value: r2(p.incrementos * p.escala) },
+      { label: 'Ayuda asistencial', value: r2(p.ayudaAsistencial * p.escala) },
+    ].filter((s) => s.value > 0);
+    chart = {
+      type: 'doughnut',
+      slices,
+      prefix: '$',
+      centerValue: fmtMXN(pensionMensual),
+      centerLabel: 'Pensión mensual',
+      ariaLabel: `Pensión mensual proyectada de ${fmtMXN(pensionMensual)} por Modalidad 40, compuesta por cuantía básica, incrementos por semanas y ayuda asistencial.`,
+    };
+  } else if (pensionMensual > 0) {
+    chart = {
+      type: 'gauge',
+      value: r2(pensionMensual),
+      min: 0,
+      max: r2(Math.max(pensionMensual * 1.5, pensionMinima * 2)),
+      prefix: '$',
+      label: 'Pensión mínima garantizada',
+      ariaLabel: `Pensión mínima garantizada Ley 73 de ${fmtMXN(pensionMensual)} al mes.`,
     };
   }
 
   return {
-    uma_vigente: UMA_VIGENTE,
-    cuota_mensual_inicial: Math.round(cuota_mensual_inicial * 100) / 100,
-    cuota_mensual_promedio_5anos:
-      Math.round(cuota_mensual_promedio_5anos * 100) / 100,
-    aportacion_acumulada_5anos:
-      Math.round(aportacion_acumulada * 100) / 100,
-    semanas_totales_al_cierre: Math.round(semanas_totales_al_cierre),
-    edad_pension: edad_pension,
-    pension_mensual_ley73: Math.round(pension_mensual_ley73 * 100) / 100,
-    pension_anual_ley73: Math.round(pension_anual_ley73 * 100) / 100,
-    pension_garantizada_minimo: PENSION_GARANTIZADA_MINIMA,
-    comparativa_afore_pension_mensual:
-      Math.round(comparativa_afore_pension_mensual * 100) / 100,
-    diferencia_modalidad_vs_afore:
-      Math.round(diferencia_modalidad_vs_afore * 100) / 100,
-    breakeven_meses: Math.round(breakeven_meses * 10) / 10,
-    roi_anual_modalidad40: Math.round(roi_anual_modalidad40 * 100) / 100,
-    valor_presente_pension_20anos:
-      Math.round(valor_presente_pension_20anos * 100) / 100,
-    valor_presente_neto_20anos:
-      Math.round(valor_presente_neto_20anos * 100) / 100,
-    mensaje_recomendacion: mensaje_recomendacion,
-    _insight: insight
+    tasa_aportacion: r2(tasaModalidad40 * 100),
+    salario_base_mensual: r2(sbcMensual),
+    cuota_mensual_inicial: r2(cuotaMensualInicial),
+    cuota_mensual_promedio: r2(cuotaMensualPromedio),
+    aportacion_total: r2(aportacionTotal),
+    semanas_totales_al_cierre: Math.round(semanasTotales),
+    edad_pension: edadPension,
+    pension_mensual_ley73: r2(pensionMensual),
+    pension_garantizada_minima: r2(pensionMinima),
+    meses_recuperar_aportacion: Math.round(mesesRecuperar * 10) / 10,
+    mensaje_recomendacion: mensaje,
+    _insight: insight,
+    _chart: chart,
   };
 }
