@@ -38,6 +38,7 @@ import { getComparatorForCalc } from '../lib/comparators';
 import { findMentions, findPrimaryAbout } from '../lib/wikidata-entities';
 import { datasetSchemasForCalc } from '../lib/calc-datasets';
 import { filterByIncremental } from '../lib/incremental';
+import { buildHreflangCluster, findVersionByEsSlug } from '../lib/hreflang';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -63,6 +64,10 @@ const coCalcModules = import.meta.glob<any>('../content/calcs-co/*.json', { eage
 const coCalcs = Object.values(coCalcModules).map((m: any) => m.default || m);
 const clCalcModules = import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true });
 const clCalcs = Object.values(clCalcModules).map((m: any) => m.default || m);
+const peCalcModules = import.meta.glob<any>('../content/calcs-pe/*.json', { eager: true });
+const peCalcs = Object.values(peCalcModules).map((m: any) => m.default || m);
+const ecCalcModules = import.meta.glob<any>('../content/calcs-ec/*.json', { eager: true });
+const ecCalcs = Object.values(ecCalcModules).map((m: any) => m.default || m);
 
 // Markdown simple → HTML
 // Escape HTML antes de inyectar en templates. Defense-in-depth por si un JSON
@@ -544,6 +549,7 @@ const schemaArticle = {
   description: snippetDescription,
   url: `https://hacecuentas.com/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/${calc.slug}`,
+  image: `https://hacecuentas.com${ogImage}`,
   inLanguage: schemaLang,
   datePublished,
   dateModified,
@@ -1053,31 +1059,29 @@ const reportBody = encodeURIComponent(
 );
 
 // hreflang bidireccional: detectar versiones en otros locales por slug similar o matching explícito
-const enVersion = enCalcs.find((c: any) => c.esSlug === calc.slug);
-const ptVersion = ptCalcs.find((c: any) => c.esSlug === calc.slug);
-const mxVersion = mxCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
-const esVersion = esCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
-const coVersion = coCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
-const clVersion = clCalcs.find((c: any) => c.esSlug === calc.slug || (c.slug && c.slug.replace('calculadora-','') === calc.slug.replace('calculadora-','')));
+const enVersion = findVersionByEsSlug(enCalcs, calc.slug);
+const ptVersion = findVersionByEsSlug(ptCalcs, calc.slug);
+const mxVersion = findVersionByEsSlug(mxCalcs, calc.slug, true);
+const esVersion = findVersionByEsSlug(esCalcs, calc.slug, true);
+const coVersion = findVersionByEsSlug(coCalcs, calc.slug, true);
+const clVersion = findVersionByEsSlug(clCalcs, calc.slug, true);
+const peVersion = findVersionByEsSlug(peCalcs, calc.slug);
+const ecVersion = findVersionByEsSlug(ecCalcs, calc.slug);
 
-// Hreflang lang code para esta página segun audience
-const HREFLANG_BY_AUDIENCE: Record<AudienceCode, string> = {
-  AR: 'es-AR', MX: 'es-MX', CL: 'es-CL', CO: 'es-CO', ES: 'es-ES',
-  BO: 'es-BO', PE: 'es-PE', UY: 'es-UY', BR: 'pt-BR', global: 'es',
-};
-const selfLang = HREFLANG_BY_AUDIENCE[audience];
-const alternates: Array<{ lang: string; href: string }> = [
-  { lang: selfLang, href: `https://hacecuentas.com/${calc.slug}` },
-];
-if (enVersion) alternates.push({ lang: 'en', href: `https://hacecuentas.com/en/${enVersion.slug}` });
-if (ptVersion) alternates.push({ lang: 'pt-BR', href: `https://hacecuentas.com/pt/${ptVersion.slug}` });
-if (mxVersion && audience !== 'MX') alternates.push({ lang: 'es-MX', href: `https://hacecuentas.com/mx/${mxVersion.slug}` });
-if (esVersion && audience !== 'ES') alternates.push({ lang: 'es-ES', href: `https://hacecuentas.com/es/${esVersion.slug}` });
-if (coVersion && audience !== 'CO') alternates.push({ lang: 'es-CO', href: `https://hacecuentas.com/co/${coVersion.slug}` });
-if (clVersion && audience !== 'CL') alternates.push({ lang: 'es-CL', href: `https://hacecuentas.com/cl/${clVersion.slug}` });
-alternates.push({ lang: 'x-default', href: `https://hacecuentas.com/${calc.slug}` });
-
-const hreflangTags = alternates.length > 2 ? alternates : undefined;
+// Set hreflang unificado: todos los miembros del cluster declaran el MISMO
+// set con UN solo x-default (la versión ES raíz). Ver src/lib/hreflang.ts.
+// Cluster de 1 miembro → undefined → fallback del Layout (self + x-default).
+const hreflangTags = buildHreflangCluster({
+  es: calc.slug,
+  en: enVersion?.slug,
+  pt: ptVersion?.slug,
+  mx: mxVersion?.slug,
+  esEs: esVersion?.slug,
+  co: coVersion?.slug,
+  cl: clVersion?.slug,
+  pe: peVersion?.slug,
+  ec: ecVersion?.slug,
+});
 ---
 
 <Layout

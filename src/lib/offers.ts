@@ -122,16 +122,9 @@ const OFFERS: Record<string, Offer> = {
     href: AFF.binance || 'https://www.binance.com/es-LA/activity/referral',
     note: 'Reemplazar por tu link de referido Binance/Lemon para cobrar comisión.',
   },
-  // ── Inmobiliario / alquiler (Argenprop — canal propio de Martin) ─────────
-  'calculadora-actualizacion-alquiler-icl': {
-    id: 'argenprop-alquiler', vertical: 'inmobiliario', enabled: true,
-    label: '¿El aumento te parece mucho?',
-    body: 'Mirá qué alquileres hay disponibles hoy en tu zona.',
-    bodyDynamic: 'Tu alquiler actualizado da {value}. Mirá qué hay disponible hoy en tu zona y comparalo.',
-    cta: 'Buscar alquileres en Argenprop',
-    href: 'https://www.argenprop.com/departamentos/alquiler?utm_source=hacecuentas&utm_medium=referral&utm_campaign=calc_icl',
-    note: 'Canal propio (Martin = CMO Argenprop). UTM activo → medible en el GA4 de Argenprop como hacecuentas/referral, campaña calc_icl. Primer sponsor medible del set.',
-  },
+  // ── Inmobiliario / alquiler ───────────────────────────────────────────────
+  // SIN oferta por decisión de Martin (2026-06-09): NO mezclar Argenprop con
+  // los proyectos personales. No volver a proponer cross-promo Argenprop acá.
 
   // ── ESPERANDO PARTNER (no renderizan hasta tener comprador del lead) ──────
   'calculadora-indemnizacion-despido': {

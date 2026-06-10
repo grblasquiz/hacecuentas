@@ -8,13 +8,10 @@ import Footer from '../components/Footer.astro';
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules).map((m: any) => m.default || m);
 
-// Build lightweight array for client-side fuzzy matching
-const calcIndex = calcs.map((c: any) => ({
-  slug: c.slug,
-  h1: c.h1,
-  icon: c.icon,
-  cat: c.category,
-}));
+// El índice para fuzzy matching client-side NO va inline (eran ~387KB de JS
+// en una página de error). Se fetchea /api/calcs-slim.json (generado en
+// prebuild por generate-calc-api-index.ts, cacheable). Si el fetch falla, la
+// página degrada en silencio a los populares server-rendered de abajo.
 
 const popularSlugs = [
   'sueldo-en-mano-argentina',
@@ -343,82 +340,107 @@ const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(
   .btn-secondary:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; transform: translateY(-1px); }
 </style>
 
-<script define:vars={{ calcIndex }}>
-  // [1] Fuzzy matching — find similar calcs based on attempted URL
+<script is:inline>
+  // Índice slim fetcheado (no inline: eran ~387KB de JS en la página de error).
+  // Formato: [{s: slug, t: título corto, l: '' | en | pt | es | co | mx | cl | ec | pe}]
+  // Lo genera scripts/generate-calc-api-index.ts en prebuild. Si el fetch
+  // falla, degradamos en silencio: quedan los populares server-rendered.
   (function () {
-    var path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
-    if (!path) return;
+    var PREFIXES = { en: 1, pt: 1, es: 1, co: 1, mx: 1, cl: 1, ec: 1, pe: 1 };
+    var segs = window.location.pathname.split('/').filter(Boolean);
+    var lang = segs.length && PREFIXES[segs[0]] ? segs[0] : '';
+    var attempted = (lang ? segs.slice(1) : segs).join('/');
 
+    function norm(s) {
+      return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
     // Normalize: strip "calculadora-" prefix, replace hyphens with spaces
     function toWords(s) {
-      return s.replace(/^calculadora-/, '').replace(/-/g, ' ').toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return norm(s.replace(/^calculadora-/, '').replace(/-/g, ' '));
+    }
+    function hrefOf(c) {
+      return '/' + (c.l ? c.l + '/' : '') + c.s;
+    }
+    function titleOf(c) {
+      return c.t || c.s.replace(/^calculadora-/, '').replace(/-/g, ' ');
     }
 
-    var attemptedWords = toWords(path).split(/\s+/).filter(function (w) { return w.length > 2; });
-    if (!attemptedWords.length) return;
+    fetch('/api/calcs-slim.json')
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (all) {
+        if (!Array.isArray(all) || !all.length) return;
+        // Priorizar el catálogo del mismo prefijo de idioma/vertical que la URL rota
+        var index = all.filter(function (c) { return c.l === lang; });
+        if (!index.length) index = all;
+        renderSuggestions(index);
+        wireSearch(index);
+      })
+      .catch(function () { /* degradación silenciosa: populares server-rendered */ });
 
-    // Score each calc by counting matching words
-    var scored = calcIndex.map(function (c) {
-      var slugWords = toWords(c.slug).split(/\s+/);
-      var h1Words = toWords(c.h1).split(/\s+/);
-      var allWords = slugWords.concat(h1Words);
-      var score = 0;
-      for (var i = 0; i < attemptedWords.length; i++) {
-        for (var j = 0; j < allWords.length; j++) {
-          if (allWords[j] === attemptedWords[i]) {
-            score += 3; // exact match
-          } else if (allWords[j].indexOf(attemptedWords[i]) !== -1 || attemptedWords[i].indexOf(allWords[j]) !== -1) {
-            score += 1; // partial match
+    // [1] Fuzzy matching — find similar calcs based on attempted URL
+    function renderSuggestions(index) {
+      if (!attempted) return;
+      var attemptedWords = toWords(attempted).split(/\s+/).filter(function (w) { return w.length > 2; });
+      if (!attemptedWords.length) return;
+
+      // Score each calc by counting matching words
+      var scored = index.map(function (c) {
+        var allWords = toWords(c.s).split(/\s+/).concat(toWords(c.t).split(/\s+/));
+        var score = 0;
+        for (var i = 0; i < attemptedWords.length; i++) {
+          for (var j = 0; j < allWords.length; j++) {
+            if (allWords[j] === attemptedWords[i]) {
+              score += 3; // exact match
+            } else if (allWords[j].indexOf(attemptedWords[i]) !== -1 || attemptedWords[i].indexOf(allWords[j]) !== -1) {
+              score += 1; // partial match
+            }
           }
         }
-      }
-      return { calc: c, score: score };
-    }).filter(function (s) { return s.score > 0; });
+        return { calc: c, score: score };
+      }).filter(function (s) { return s.score > 0; });
 
-    scored.sort(function (a, b) { return b.score - a.score; });
+      scored.sort(function (a, b) { return b.score - a.score; });
 
-    var top = scored.slice(0, 3);
-    if (!top.length) return;
+      var top = scored.slice(0, 3);
+      if (!top.length) return;
 
-    var container = document.getElementById('suggestions');
-    var grid = document.getElementById('suggestions-grid');
-    if (!container || !grid) return;
+      var container = document.getElementById('suggestions');
+      var grid = document.getElementById('suggestions-grid');
+      if (!container || !grid) return;
 
-    grid.innerHTML = top.map(function (s) {
-      var c = s.calc;
-      return '<a href="/' + c.slug + '">' +
-        '<span class="sg-icon" aria-hidden="true">' + c.icon + '</span>' +
-        '<span class="sg-title">' + c.h1 + '</span>' +
-        '</a>';
-    }).join('');
-
-    container.style.display = '';
-  })();
-
-  // [2] Search input
-  (function () {
-    var input = document.getElementById('nf-search');
-    var results = document.getElementById('nf-results');
-    if (!input || !results) return;
-    var norm = function (s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
-    input.addEventListener('input', function (e) {
-      var q = norm(e.target.value.trim());
-      if (!q || q.length < 2) { results.innerHTML = ''; return; }
-      var matches = calcIndex
-        .filter(function (c) { return norm(c.h1 + ' ' + c.slug).indexOf(q) !== -1; })
-        .slice(0, 6);
-      results.innerHTML = matches.map(function (c) {
-        return '<a href="/' + c.slug + '"><span>' + c.icon + '</span><span>' + c.h1 + '</span></a>';
+      grid.innerHTML = top.map(function (s) {
+        var c = s.calc;
+        return '<a href="' + hrefOf(c) + '">' +
+          '<span class="sg-icon" aria-hidden="true">🧮</span>' +
+          '<span class="sg-title">' + titleOf(c) + '</span>' +
+          '</a>';
       }).join('');
-    });
 
-    // Auto-fill search from attempted path
-    var path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '');
-    if (path) {
-      var readable = path.replace(/^calculadora-/, '').replace(/-/g, ' ');
-      input.value = readable;
-      input.dispatchEvent(new Event('input'));
+      container.style.display = '';
+    }
+
+    // [2] Search input
+    function wireSearch(index) {
+      var input = document.getElementById('nf-search');
+      var results = document.getElementById('nf-results');
+      if (!input || !results) return;
+      input.addEventListener('input', function (e) {
+        var q = norm(e.target.value.trim());
+        if (!q || q.length < 2) { results.innerHTML = ''; return; }
+        var matches = index
+          .filter(function (c) { return norm(c.t + ' ' + c.s).indexOf(q) !== -1; })
+          .slice(0, 6);
+        results.innerHTML = matches.map(function (c) {
+          return '<a href="' + hrefOf(c) + '"><span>🧮</span><span>' + titleOf(c) + '</span></a>';
+        }).join('');
+      });
+
+      // Auto-fill search from attempted path
+      if (attempted) {
+        var readable = attempted.replace(/^calculadora-/, '').replace(/-/g, ' ');
+        input.value = readable;
+        input.dispatchEvent(new Event('input'));
+      }
     }
   })();
 </script>

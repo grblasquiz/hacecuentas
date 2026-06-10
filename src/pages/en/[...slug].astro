@@ -14,6 +14,7 @@ import { md, mdInline } from '../../lib/markdown';
 import ogManifest from '../../lib/og-manifest.json';
 import { findMentions, findPrimaryAbout } from '../../lib/wikidata-entities';
 import { filterByIncremental } from '../../lib/incremental';
+import { buildHreflangCluster, findVersionByEsSlug } from '../../lib/hreflang';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../../content/calcs-en/*.json', { eager: true });
@@ -267,6 +268,7 @@ const schemaArticle = {
   description: snippetDescription,
   url: `https://hacecuentas.com/en/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/en/${calc.slug}`,
+  image: `https://hacecuentas.com${ogImage}`,
   inLanguage: enLocale,
   datePublished,
   dateModified,
@@ -413,23 +415,35 @@ const reportBody = encodeURIComponent(
   `Hi Martín,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/en/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
 );
 
-// hreflang: link to ES + PT equivalents via esSlug (check if PT version exists)
+// hreflang unificado: resolver TODO el cluster vía esSlug compartido
+// (PT + 6 verticales) para declarar un set IDÉNTICO al de la página ES raíz,
+// con UN solo x-default → versión ES. Ver src/lib/hreflang.ts.
 const esSlug = calc.esSlug;
-// Check if this calc has a PT version (lookup by esSlug in calcs-pt)
 const ptModulesHreflang = import.meta.glob<any>('../../content/calcs-pt/*.json', { eager: true });
-const ptCalc: any = Object.values(ptModulesHreflang).map((m: any) => m.default || m).find((c: any) => c.esSlug === esSlug);
-// Hreflang: en-US específico (mejor que 'en' genérico para Bing/Google US),
-// + en fallback para otros mercados EN, + ES/PT equivalentes, + x-default a la
-// versión EN de esta página (no a ES) — la EN sirve al user "sin preferencia clara"
-// mejor que ES, que es geo-targeted AR.
-const enCanonical = `https://hacecuentas.com/en/${calc.slug}`;
-const hreflangTags = [
-  { lang: 'en-US', href: enCanonical },
-  { lang: 'en', href: enCanonical },
-  ...(esSlug ? [{ lang: 'es-AR', href: `https://hacecuentas.com/${esSlug}` }] : []),
-  ...(ptCalc ? [{ lang: 'pt-BR', href: `https://hacecuentas.com/pt/${ptCalc.slug}` }] : []),
-  { lang: 'x-default', href: enCanonical },
-];
+const ptCalc: any = findVersionByEsSlug(Object.values(ptModulesHreflang).map((m: any) => m.default || m), esSlug);
+const mxModulesHreflang = import.meta.glob<any>('../../content/calcs-mx/*.json', { eager: true });
+const mxCalcHreflang: any = findVersionByEsSlug(Object.values(mxModulesHreflang).map((m: any) => m.default || m), esSlug, true);
+const esEsModulesHreflang = import.meta.glob<any>('../../content/calcs-es/*.json', { eager: true });
+const esEsCalcHreflang: any = findVersionByEsSlug(Object.values(esEsModulesHreflang).map((m: any) => m.default || m), esSlug, true);
+const coModulesHreflang = import.meta.glob<any>('../../content/calcs-co/*.json', { eager: true });
+const coCalcHreflang: any = findVersionByEsSlug(Object.values(coModulesHreflang).map((m: any) => m.default || m), esSlug, true);
+const clModulesHreflang = import.meta.glob<any>('../../content/calcs-cl/*.json', { eager: true });
+const clCalcHreflang: any = findVersionByEsSlug(Object.values(clModulesHreflang).map((m: any) => m.default || m), esSlug, true);
+const peModulesHreflang = import.meta.glob<any>('../../content/calcs-pe/*.json', { eager: true });
+const peCalcHreflang: any = findVersionByEsSlug(Object.values(peModulesHreflang).map((m: any) => m.default || m), esSlug);
+const ecModulesHreflang = import.meta.glob<any>('../../content/calcs-ec/*.json', { eager: true });
+const ecCalcHreflang: any = findVersionByEsSlug(Object.values(ecModulesHreflang).map((m: any) => m.default || m), esSlug);
+const hreflangTags = buildHreflangCluster({
+  es: esSlug,
+  en: calc.slug,
+  pt: ptCalc?.slug,
+  mx: mxCalcHreflang?.slug,
+  esEs: esEsCalcHreflang?.slug,
+  co: coCalcHreflang?.slug,
+  cl: clCalcHreflang?.slug,
+  pe: peCalcHreflang?.slug,
+  ec: ecCalcHreflang?.slug,
+});
 ---
 
 <Layout

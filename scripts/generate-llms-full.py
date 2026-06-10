@@ -117,6 +117,7 @@ def main():
 **Sitio:** {SITE}
 **Política editorial:** {SITE}/politica-editorial
 **Robots / política bots:** {SITE}/robots.txt
+**API para agentes (entrada recomendada):** {SITE}/api/calcs-top.json (top 200 calculadoras, ~44 KB; el catálogo completo {SITE}/api/calcs-index.json pesa 3.6 MB)
 **Contacto:** contacto@hacecuentas.com
 
 ## Acerca del proyecto
