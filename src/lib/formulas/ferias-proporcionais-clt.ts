@@ -2,7 +2,7 @@
  *  CLT art. 146 e art. 147. Fração ≥ 15 dias conta como mês completo.
  */
 
-import { calcInss2026, calcIrrf2026 } from './salario-liquido-clt-inss-irrf';
+import { calcINSS as calcInss2026, calcIRRF2026 as calcIrrf2026, IRRF_DEDUCAO_DEPENDENTE } from '../data/brasil-2026';
 
 export interface Inputs {
   salarioBruto: number;
@@ -26,7 +26,6 @@ export interface Outputs {
 const fmt = (n: number) =>
   'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const DEDUCAO_DEP = 189.59;
 
 export function feriasProporcionaisClt(i: Inputs): Outputs {
   const salario = Number(i.salarioBruto);
@@ -39,7 +38,7 @@ export function feriasProporcionaisClt(i: Inputs): Outputs {
   const terco = proporcional / 3;
   const bruto = proporcional + terco;
   const inss = calcInss2026(bruto);
-  const baseIrrf = bruto - inss - deps * DEDUCAO_DEP;
+  const baseIrrf = bruto - inss - deps * IRRF_DEDUCAO_DEPENDENTE;
   const irrf = Math.max(0, calcIrrf2026(baseIrrf));
   const liquido = bruto - inss - irrf;
 

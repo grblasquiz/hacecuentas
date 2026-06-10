@@ -47,6 +47,34 @@ export const PROP: Record<Cat, [number, number, number]> = {
   J: [544700, 48300, 48500], K: [632500, 53100, 58300],
 };
 
+// Parámetros físicos del régimen por categoría: superficie afectada (m²),
+// energía eléctrica consumida (kWh/año) y alquileres devengados ($/año).
+// ⚠️ Valores ORIENTATIVOS (superficie/energía son los históricos del régimen;
+// alquileres sin verificación oficial 2026) — verificar contra ARCA en la
+// próxima recategorización antes de confiar en ellos al límite.
+export const PARAMS_FISICOS: Record<Cat, { superficie: number; energia: number; alquiler: number }> = {
+  A: { superficie: 30, energia: 3330, alquiler: 219_014 },
+  B: { superficie: 45, energia: 5000, alquiler: 219_014 },
+  C: { superficie: 60, energia: 6700, alquiler: 438_028 },
+  D: { superficie: 85, energia: 10000, alquiler: 438_028 },
+  E: { superficie: 110, energia: 13000, alquiler: 657_042 },
+  F: { superficie: 150, energia: 16500, alquiler: 657_042 },
+  G: { superficie: 200, energia: 20000, alquiler: 876_057 },
+  H: { superficie: 200, energia: 20000, alquiler: 1_095_071 },
+  I: { superficie: 200, energia: 20000, alquiler: 1_095_071 },
+  J: { superficie: 200, energia: 20000, alquiler: 1_314_085 },
+  K: { superficie: 200, energia: 20000, alquiler: 1_314_085 },
+};
+
+/** Categoría mínima cuyo tope de ingresos brutos anuales cubre `anual`,
+ *  o null si excede el tope de K (excluido del régimen). */
+export function categoriaPorIngresos(anual: number): Cat | null {
+  for (const c of CATEGORIAS) {
+    if (anual <= TOPES[c]) return c;
+  }
+  return null;
+}
+
 export const META = {
   vigencia: '2026-02-01',
   fuente: 'ARCA',

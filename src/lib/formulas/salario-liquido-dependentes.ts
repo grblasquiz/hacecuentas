@@ -2,7 +2,7 @@
  *  INSS progressivo + IRRF sobre (bruto − INSS − dependentes × 189,59).
  */
 
-import { calcInss2026, calcIrrf2026 } from './salario-liquido-clt-inss-irrf';
+import { calcINSS as calcInss2026, calcIRRF2026 as calcIrrf2026, IRRF_DEDUCAO_DEPENDENTE } from '../data/brasil-2026';
 
 export interface Inputs {
   salarioBruto: number;
@@ -26,7 +26,6 @@ export interface Outputs {
 const fmt = (n: number) =>
   'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const DEDUCAO_DEP = 189.59;
 
 export function salarioLiquidoDependentes(i: Inputs): Outputs {
   const bruto = Number(i.salarioBruto);
@@ -34,7 +33,7 @@ export function salarioLiquidoDependentes(i: Inputs): Outputs {
   if (!bruto || bruto <= 0) throw new Error('Informe o salário bruto.');
 
   const inss = calcInss2026(bruto);
-  const deducaoDeps = deps * DEDUCAO_DEP;
+  const deducaoDeps = deps * IRRF_DEDUCAO_DEPENDENTE;
   const baseIrrfSemDep = bruto - inss;
   const baseIrrf = baseIrrfSemDep - deducaoDeps;
   const irrf = Math.max(0, calcIrrf2026(baseIrrf));

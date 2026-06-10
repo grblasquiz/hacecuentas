@@ -2,7 +2,7 @@
  *  Pode ser valor fixo ou % sobre salário bruto.
  */
 
-import { calcInss2026, calcIrrf2026 } from './salario-liquido-clt-inss-irrf';
+import { calcINSS as calcInss2026, calcIRRF2026 as calcIrrf2026 } from '../data/brasil-2026';
 
 export interface Inputs {
   salarioBruto: number;

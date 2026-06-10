@@ -17,39 +17,48 @@ export interface Outputs {
 }
 
 // ---------------------------------------------------------------------------
-// Tablas de parámetros 2026 — Fuente: AFIP/ARCA RG 4309 y actualizaciones
+// Tablas de parámetros 2026 — topes y cuotas desde la fuente única
+// src/lib/data/monotributo-2026.ts (ARCA). Reforma 2026: servicios y comercio
+// comparten la escala completa A–K (mismos topes); difiere la CUOTA en las
+// categorías altas (servicios paga más).
 // ---------------------------------------------------------------------------
 
+import {
+  CATEGORIAS as CATS_2026,
+  TOPES,
+  CUOTA_SERVICIOS,
+  CUOTA_BIENES,
+  PARAMS_FISICOS,
+  categoriaPorIngresos,
+  type Cat,
+} from "../data/monotributo-2026";
+
 interface Categoria {
-  nombre: string;
-  topeIngresosServicios: number;
-  topeIngresosComercio: number;
+  nombre: Cat;
+  topeIngresos: number;     // igual para servicios y comercio (reforma 2026)
   topeSuperficie: number;   // m²
   topeEnergia: number;      // kWh/año
-  cuotaMensual: number;     // impuesto + obra social + jubilacion
+  cuotaServicios: number;   // impuesto + obra social + jubilación
+  cuotaComercio: number;
 }
 
-// Escala ARCA vigente junio 2026 (+14,3%) — topes de ingresos y cuota validados
-// x2 fuentes (Estudio Brady + Ámbito). Superficie/energía: parámetros físicos oficiales.
-// Servicios topea en H; I-J-K son exclusivas de venta de cosas muebles.
-const CATEGORIAS: Categoria[] = [
-  { nombre: "A", topeIngresosServicios: 10277988, topeIngresosComercio: 10277988, topeSuperficie: 30, topeEnergia: 3330, cuotaMensual: 42387 },
-  { nombre: "B", topeIngresosServicios: 15058448, topeIngresosComercio: 15058448, topeSuperficie: 45, topeEnergia: 5000, cuotaMensual: 48251 },
-  { nombre: "C", topeIngresosServicios: 21113697, topeIngresosComercio: 21113697, topeSuperficie: 60, topeEnergia: 6700, cuotaMensual: 56502 },
-  { nombre: "D", topeIngresosServicios: 26212853, topeIngresosComercio: 26212853, topeSuperficie: 85, topeEnergia: 10000, cuotaMensual: 72414 },
-  { nombre: "E", topeIngresosServicios: 30833964, topeIngresosComercio: 30833964, topeSuperficie: 110, topeEnergia: 13000, cuotaMensual: 102538 },
-  { nombre: "F", topeIngresosServicios: 38642048, topeIngresosComercio: 38642048, topeSuperficie: 150, topeEnergia: 16500, cuotaMensual: 129045 },
-  { nombre: "G", topeIngresosServicios: 46211109, topeIngresosComercio: 46211109, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 197108 },
-  { nombre: "H", topeIngresosServicios: 70113407, topeIngresosComercio: 70113407, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 447347 },
-  { nombre: "I", topeIngresosServicios: 0, topeIngresosComercio: 78479212, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 406512 },
-  { nombre: "J", topeIngresosServicios: 0, topeIngresosComercio: 89872640, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 497059 },
-  { nombre: "K", topeIngresosServicios: 0, topeIngresosComercio: 108357084, topeSuperficie: 200, topeEnergia: 20000, cuotaMensual: 600880 },
-];
+// Parámetros físicos (superficie/energía): fuente única PARAMS_FISICOS en
+// src/lib/data/monotributo-2026.ts (orientativos, verificar contra ARCA).
+
+const CATEGORIAS: Categoria[] = CATS_2026.map((nombre) => ({
+  nombre,
+  topeIngresos: Math.round(TOPES[nombre]),
+  topeSuperficie: PARAMS_FISICOS[nombre].superficie,
+  topeEnergia: PARAMS_FISICOS[nombre].energia,
+  cuotaServicios: Math.round(CUOTA_SERVICIOS[nombre]),
+  cuotaComercio: Math.round(CUOTA_BIENES[nombre]),
+}));
 
 // Cuota por nombre de categoría (para lookup de categoría actual)
-function cuotaPorNombre(nombre: string): number {
+function cuotaPorNombre(nombre: string, actividad: string): number {
   const cat = CATEGORIAS.find((c) => c.nombre === nombre);
-  return cat ? cat.cuotaMensual : 0;
+  if (!cat) return 0;
+  return actividad === "comercio" ? cat.cuotaComercio : cat.cuotaServicios;
 }
 
 // Índice de la categoría en el array (para comparar cuál es "más alta")
@@ -75,27 +84,12 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
-  // --- Filtrar categorías disponibles según actividad ---
-  const categoriasDisponibles =
-    actividad === "servicios"
-      ? CATEGORIAS.filter((c) => c.topeIngresosServicios > 0)
-      : CATEGORIAS;
+  // --- Categorías disponibles: reforma 2026, A–K para ambas actividades ---
+  const categoriasDisponibles = CATEGORIAS;
 
-  // --- Categoría por ingresos ---
-  const topeIngresos =
-    actividad === "servicios" ? "topeIngresosServicios" : "topeIngresosComercio";
-
-  let idxPorIngresos = -1;
-  for (let idx = 0; idx < categoriasDisponibles.length; idx++) {
-    const tope =
-      actividad === "servicios"
-        ? categoriasDisponibles[idx].topeIngresosServicios
-        : categoriasDisponibles[idx].topeIngresosComercio;
-    if (facturacion <= tope) {
-      idxPorIngresos = idx;
-      break;
-    }
-  }
+  // --- Categoría por ingresos (tope igual para servicios y comercio) ---
+  const catPorIngresos = categoriaPorIngresos(facturacion);
+  const idxPorIngresos = catPorIngresos === null ? -1 : indicePorNombre(catPorIngresos);
 
   // --- Categoría por superficie (aplica solo si > 0) ---
   let idxPorSuperficie = -1;
@@ -119,25 +113,41 @@ export function compute(i: Inputs): Outputs {
     }
   }
 
-  // --- Excluido del régimen ---
-  const superaTodosTopes =
-    idxPorIngresos === -1 &&
-    (idxPorSuperficie === -1 || superficie === 0) &&
-    (idxPorEnergia === -1 || energia === 0);
-
-  // Caso: facturación supera tope máximo
+  // --- Excluido del régimen: facturación supera el tope máximo (cat. K) ---
   if (idxPorIngresos === -1) {
-    const topeMax =
-      actividad === "servicios"
-        ? "$70.113.407 (Categoría H — tope servicios)"
-        : "$108.357.084 (Categoría K)";
+    const topeMax = "$108.357.084 (Categoría K, igual para servicios y comercio desde la reforma 2026)";
     return {
       categoriaNueva: "EXCLUIDO",
       cuotaMensual: 0,
       diferenciaCuota: 0,
       parametroLimitante: "Ingresos",
       alertaExclusion:
-        `⚠️ Tu facturación supera el tope máximo del monotributo para ${actividad} (${topeMax}). Debés inscribirte como Responsable Inscripto.`,
+        `⚠️ Tu facturación supera el tope máximo del monotributo (${topeMax}). Debés inscribirte como Responsable Inscripto.`,
+    };
+  }
+
+  // --- Excluido del régimen: superficie supera el máximo de la tabla (200 m²) ---
+  const ultimaCat = categoriasDisponibles[categoriasDisponibles.length - 1];
+  if (superficie > 0 && idxPorSuperficie === -1) {
+    return {
+      categoriaNueva: "EXCLUIDO",
+      cuotaMensual: 0,
+      diferenciaCuota: 0,
+      parametroLimitante: "Superficie",
+      alertaExclusion:
+        `⚠️ La superficie afectada (${superficie} m²) supera el máximo permitido en el monotributo (${ultimaCat.topeSuperficie} m², tope de la categoría ${ultimaCat.nombre}). Quedás excluido del régimen: consultá con tu contador el pase a Responsable Inscripto.`,
+    };
+  }
+
+  // --- Excluido del régimen: energía supera el máximo de la tabla (20.000 kWh/año) ---
+  if (energia > 0 && idxPorEnergia === -1) {
+    return {
+      categoriaNueva: "EXCLUIDO",
+      cuotaMensual: 0,
+      diferenciaCuota: 0,
+      parametroLimitante: "Energía eléctrica",
+      alertaExclusion:
+        `⚠️ El consumo de energía eléctrica (${energia.toLocaleString("es-AR")} kWh/año) supera el máximo permitido en el monotributo (${ultimaCat.topeEnergia.toLocaleString("es-AR")} kWh/año, tope de la categoría ${ultimaCat.nombre}). Quedás excluido del régimen: consultá con tu contador el pase a Responsable Inscripto.`,
     };
   }
 
@@ -145,42 +155,28 @@ export function compute(i: Inputs): Outputs {
   let idxFinal = idxPorIngresos;
   let limitante = "Ingresos";
 
-  if (idxPorSuperficie !== -1 && idxPorSuperficie > idxFinal) {
+  if (idxPorSuperficie > idxFinal) {
     idxFinal = idxPorSuperficie;
     limitante = "Superficie";
   }
-  if (idxPorEnergia !== -1 && idxPorEnergia > idxFinal) {
+  if (idxPorEnergia > idxFinal) {
     idxFinal = idxPorEnergia;
     limitante = "Energía eléctrica";
   }
 
-  // Si tras aplicar superficie o energía se supera el tope disponible
-  if (idxFinal >= categoriasDisponibles.length) {
-    return {
-      categoriaNueva: "EXCLUIDO",
-      cuotaMensual: 0,
-      diferenciaCuota: 0,
-      parametroLimitante: limitante,
-      alertaExclusion:
-        "⚠️ Uno o más parámetros superan el tope máximo permitido. Consultá con tu contador sobre la exclusión del régimen.",
-    };
-  }
-
   const categoriaResultante = categoriasDisponibles[idxFinal];
-  const cuotaNueva = categoriaResultante.cuotaMensual;
+  const cuotaNueva =
+    actividad === "comercio" ? categoriaResultante.cuotaComercio : categoriaResultante.cuotaServicios;
 
   // --- Cuota actual ---
   const cuotaActual =
-    categoriaActual === "ninguna" ? 0 : cuotaPorNombre(categoriaActual);
+    categoriaActual === "ninguna" ? 0 : cuotaPorNombre(categoriaActual, actividad);
   const diferencia = cuotaNueva - cuotaActual;
 
   // --- Construir detalle del parámetro limitante ---
   let detalleParametro = `${limitante}`;
   if (limitante === "Ingresos") {
-    const tope =
-      actividad === "servicios"
-        ? categoriaResultante.topeIngresosServicios
-        : categoriaResultante.topeIngresosComercio;
+    const tope = categoriaResultante.topeIngresos;
     detalleParametro = `Ingresos: $${facturacion.toLocaleString("es-AR")} ≤ $${tope.toLocaleString("es-AR")} (tope cat. ${categoriaResultante.nombre})`;
   } else if (limitante === "Superficie") {
     detalleParametro = `Superficie: ${superficie} m² ≤ ${categoriaResultante.topeSuperficie} m² (tope cat. ${categoriaResultante.nombre})`;
@@ -226,11 +222,9 @@ export function compute(i: Inputs): Outputs {
   }
 
   // --- Gauge: dónde cae tu facturación en la escala de topes ---
-  const topeDe = (cat: Categoria) =>
-    actividad === "servicios" ? cat.topeIngresosServicios : cat.topeIngresosComercio;
   const segmentos = categoriasDisponibles.map((cat, idx) => ({
     nombre: cat.nombre,
-    max: topeDe(cat),
+    max: cat.topeIngresos,
     color: idx <= idxFinal ? "#22c55e" : "#f59e0b",
     colorDark: idx <= idxFinal ? "#15803d" : "#b45309",
   }));

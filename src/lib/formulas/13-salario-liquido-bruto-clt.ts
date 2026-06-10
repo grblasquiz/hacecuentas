@@ -1,5 +1,14 @@
 // Calculadora 13° Salário Líquido CLT — Hacé Cuentas
-// Fontes: Lei 4.090/1962; Tabela INSS 2026 (Portaria MPS); Tabela IRRF 2026 (IN RFB)
+// Fontes: Lei 4.090/1962; INSS/IRRF 2026 importados da fonte única
+// src/lib/data/brasil-2026.ts (teto INSS R$ 8.475,55; IRRF tabela mai/2025 +
+// redutor 2026 da reforma — isenção efetiva até R$ 5.000 de base).
+
+import {
+  calcINSS,
+  calcIRRF2026,
+  IRRF_DEDUCAO_DEPENDENTE,
+  IRRF_FAIXAS,
+} from "../data/brasil-2026";
 
 export interface Inputs {
   salario_bruto: number;
@@ -21,58 +30,15 @@ export interface Outputs {
   _chart?: any;
 }
 
-// --- Tabela INSS Progressiva 2026 ---
-// Fonte: Portaria MPS/MF (vigente 2026)
-const INSS_FAIXAS_2026 = [
-  { ate: 1518.00,  aliquota: 0.075 },
-  { ate: 2793.88,  aliquota: 0.090 },
-  { ate: 4190.83,  aliquota: 0.120 },
-  { ate: 8157.41,  aliquota: 0.140 },
-];
-const INSS_TETO_2026 = 908.86; // R$ 908,86 — teto de contribuição 2026
+// INSS progressivo e IRRF (tabela cheia + redutor 2026): implementação única
+// em src/lib/data/brasil-2026.ts, compartilhada com o simulador de holerite.
 
-// --- Tabela IRRF Mensal 2026 ---
-// Fonte: Instrução Normativa RFB (vigente 2026)
-const IRRF_FAIXAS_2026 = [
-  { ate: 2259.20,  aliquota: 0.000, deducao: 0.00    },
-  { ate: 2826.65,  aliquota: 0.075, deducao: 169.44  },
-  { ate: 3751.05,  aliquota: 0.150, deducao: 381.44  },
-  { ate: 4664.68,  aliquota: 0.225, deducao: 662.77  },
-  { ate: Infinity, aliquota: 0.275, deducao: 896.00  },
-];
-
-// Dedução por dependente IR 2026
-const DEDUCAO_DEPENDENTE_2026 = 189.59; // R$ por dependente
-
-function calcularINSSProgressivo(base: number): number {
-  if (base <= 0) return 0;
-  let inss = 0;
-  let baseAnterior = 0;
-  for (const faixa of INSS_FAIXAS_2026) {
-    if (base <= baseAnterior) break;
-    const valorNaFaixa = Math.min(base, faixa.ate) - baseAnterior;
-    if (valorNaFaixa <= 0) break;
-    inss += valorNaFaixa * faixa.aliquota;
-    baseAnterior = faixa.ate;
-    if (base <= faixa.ate) break;
-  }
-  // Aplica teto
-  if (inss > INSS_TETO_2026) inss = INSS_TETO_2026;
-  return Math.round(inss * 100) / 100;
-}
-
+/** IRRF 2026 (com redutor da reforma) + alíquota nominal da faixa da base. */
 function calcularIRRF(baseCalculo: number): { irrf: number; aliquotaNominal: number } {
   if (baseCalculo <= 0) return { irrf: 0, aliquotaNominal: 0 };
-  for (const faixa of IRRF_FAIXAS_2026) {
-    if (baseCalculo <= faixa.ate) {
-      const irrf = Math.max(0, baseCalculo * faixa.aliquota - faixa.deducao);
-      return { irrf: Math.round(irrf * 100) / 100, aliquotaNominal: faixa.aliquota };
-    }
-  }
-  // Fallback: faixa máxima
-  const faixaMax = IRRF_FAIXAS_2026[IRRF_FAIXAS_2026.length - 1];
-  const irrf = Math.max(0, baseCalculo * faixaMax.aliquota - faixaMax.deducao);
-  return { irrf: Math.round(irrf * 100) / 100, aliquotaNominal: faixaMax.aliquota };
+  const irrf = Math.round(calcIRRF2026(baseCalculo) * 100) / 100;
+  const faixa = IRRF_FAIXAS.find((f) => baseCalculo <= f.ate) ?? IRRF_FAIXAS[IRRF_FAIXAS.length - 1];
+  return { irrf, aliquotaNominal: faixa.aliquota };
 }
 
 function fmt(valor: number): string {
@@ -106,10 +72,10 @@ export function compute(i: Inputs): Outputs {
   const primeiraParcela = Math.round(decimoTerceiroBruto * 0.5 * 100) / 100;
 
   // 3. INSS — calculado sobre o bruto integral do 13°
-  const inssDesconto = calcularINSSProgressivo(decimoTerceiroBruto);
+  const inssDesconto = calcINSS(decimoTerceiroBruto);
 
   // 4. Base IRRF = 13° Bruto − INSS − (dependentes × dedução)
-  const deducaoDependentes = dependentes * DEDUCAO_DEPENDENTE_2026;
+  const deducaoDependentes = dependentes * IRRF_DEDUCAO_DEPENDENTE;
   const baseIRRF = Math.max(0, Math.round((decimoTerceiroBruto - inssDesconto - deducaoDependentes) * 100) / 100);
 
   // 5. IRRF sobre base
@@ -129,14 +95,14 @@ export function compute(i: Inputs): Outputs {
   // 9. Detalhamento textual
   const proporcionalStr = meses < 12 ? ` (${meses}/12 — proporcional)` : " (ano completo)";
   const dependentesStr = dependentes > 0
-    ? `Dedução dependentes: R$ ${fmt(deducaoDependentes)} (${dependentes} dep. × R$ ${fmt(DEDUCAO_DEPENDENTE_2026)}). `
+    ? `Dedução dependentes: R$ ${fmt(deducaoDependentes)} (${dependentes} dep. × R$ ${fmt(IRRF_DEDUCAO_DEPENDENTE)}). `
     : "Sem dedução de dependentes. ";
   const inssAliquota = inssDesconto > 0
     ? `Alíquota efetiva INSS: ${fmt((inssDesconto / decimoTerceiroBruto) * 100)}%. `
     : "";
   const irrfStr = irrfDesconto > 0
     ? `IRRF: alíquota nominal ${(aliquotaNominal * 100).toFixed(1)}%, efetiva ${fmt(aliquotaEfetiva)}%. `
-    : "IRRF: isento na faixa 2026. ";
+    : "IRRF: isento (redutor 2026 — base até R$ 5.000 não paga IR). ";
 
   const detalhamento =
     `13° bruto${proporcionalStr}: R$ ${fmt(decimoTerceiroBruto)}. ` +

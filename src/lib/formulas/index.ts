@@ -2863,7 +2863,7 @@ import { sakalechesProduccion } from './sacaleches-produccion';
 import { salAguaPasta } from './sal-agua-pasta';
 import { salarioBrutoDoLiquido } from './salario-bruto-do-liquido';
 import { compute as compute__salario_digno_ecuador } from './salario-digno-ecuador';
-import { calcInss2026 } from './salario-liquido-clt-inss-irrf';
+import { salarioLiquidoCltInssIrrf } from './salario-liquido-clt-inss-irrf';
 import { salarioLiquidoDependentes } from './salario-liquido-dependentes';
 import { salarioLiquidoPensao } from './salario-liquido-pensao';
 import { salarioMaternidadeInss } from './salario-maternidade-inss';
@@ -6298,7 +6298,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sal-agua-pasta': salAguaPasta,
   'salario-bruto-do-liquido': salarioBrutoDoLiquido,
   'salario-digno-ecuador': compute__salario_digno_ecuador,
-  'salario-liquido-clt-inss-irrf': calcInss2026,
+  'salario-liquido-clt-inss-irrf': salarioLiquidoCltInssIrrf,
   'salario-liquido-dependentes': salarioLiquidoDependentes,
   'salario-liquido-pensao': salarioLiquidoPensao,
   'salario-maternidade-inss': salarioMaternidadeInss,

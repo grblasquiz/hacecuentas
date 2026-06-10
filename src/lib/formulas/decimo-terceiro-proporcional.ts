@@ -2,7 +2,7 @@
  *  Descontos INSS + IRRF incidem na 2ª parcela. Lei 4.090/1962.
  */
 
-import { calcInss2026, calcIrrf2026 } from './salario-liquido-clt-inss-irrf';
+import { calcINSS as calcInss2026, calcIRRF2026 as calcIrrf2026, IRRF_DEDUCAO_DEPENDENTE } from '../data/brasil-2026';
 
 export interface Inputs {
   salarioBruto: number;
@@ -26,7 +26,6 @@ export interface Outputs {
 const fmt = (n: number) =>
   'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const DEDUCAO_DEP = 189.59;
 
 export function decimoTerceiroProporcional(i: Inputs): Outputs {
   const salario = Number(i.salarioBruto);
@@ -40,7 +39,7 @@ export function decimoTerceiroProporcional(i: Inputs): Outputs {
 
   // Descontos são calculados sobre o 13º integral do ano (bruto) na 2ª parcela
   const inss = calcInss2026(decimoBruto);
-  const baseIrrf = decimoBruto - inss - deps * DEDUCAO_DEP;
+  const baseIrrf = decimoBruto - inss - deps * IRRF_DEDUCAO_DEPENDENTE;
   const irrf = Math.max(0, calcIrrf2026(baseIrrf));
   const segunda = decimoBruto - primeira - inss - irrf;
   const liquidoTotal = decimoBruto - inss - irrf;

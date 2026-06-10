@@ -1,6 +1,18 @@
 // Roth vs Traditional IRA Calculator
-// 2026 IRS contribution limits: $7,000 (under 50) / $8,000 (50+)
-// Source: IRS Publication 590-A, IRS Retirement Topics — IRA Contribution Limits
+// 2026 IRS contribution limits: $7,500 (under 50) / $8,600 (50+, with $1,100 catch-up)
+// Source: IRS Notice 2025-67 (Nov 2025), IRS Publication 590-A — fuente única src/lib/data/usa-2026.ts
+//
+// Methodology (equal out-of-pocket comparison):
+//   Roth: contribute C after-tax → withdrawals tax-free → rothTotal = FV(C).
+//   Traditional: contribute C pre-tax → withdrawals taxed at retirement rate,
+//   AND the annual tax savings (C × currentRate) are invested at the same
+//   return in a side account → tradTotal = FV(C)·(1−tRet) + FV(C·tNow).
+//   Simplification (documented): the side account is modeled without taxes on
+//   its own growth (as if it grew tax-free). With this, Traditional wins when
+//   the retirement tax rate is LOWER than the current rate, and Roth wins when
+//   it is higher — the standard textbook result.
+
+import { IRA_2026 } from "../data/usa-2026";
 
 export interface Inputs {
   current_age: number;
@@ -17,6 +29,7 @@ export interface Outputs {
   traditional_balance_after_tax: number;
   traditional_balance_pretax: number;
   tax_savings_now: number;
+  tax_savings_invested: number;
   difference: number;
   recommendation: string;
   years_of_growth: number;
@@ -24,9 +37,9 @@ export interface Outputs {
   _insight?: any;
 }
 
-// IRS 2026 contribution limits
-const IRA_LIMIT_UNDER_50 = 7000; // Source: IRS Rev. Proc. 2025-xx
-const IRA_LIMIT_50_PLUS = 8000;  // Includes $1,000 catch-up contribution
+// IRS 2026 contribution limits — Notice 2025-67 (fuente única usa-2026.ts)
+const IRA_LIMIT_UNDER_50 = IRA_2026.limit; // $7,500 — §219(b)(5)(A), 2026
+const IRA_LIMIT_50_PLUS = IRA_2026.limit + IRA_2026.catchUp50; // $8,600 con catch-up (§219(b)(5)(B))
 
 export function compute(i: Inputs): Outputs {
   const currentAge = Math.floor(Number(i.current_age) || 0);
@@ -43,6 +56,7 @@ export function compute(i: Inputs): Outputs {
     traditional_balance_after_tax: 0,
     traditional_balance_pretax: 0,
     tax_savings_now: 0,
+    tax_savings_invested: 0,
     difference: 0,
     recommendation: "Please enter valid inputs to see a recommendation.",
     years_of_growth: 0,
@@ -103,10 +117,20 @@ export function compute(i: Inputs): Outputs {
   const traditionalAfterTax = fv * (1 - tRet);
 
   // Tax savings from Traditional IRA deductions over the contribution years
+  // (nominal sum, not invested)
   const taxSavingsNow = contribution * tNow * n;
 
-  // Net difference (positive = Roth wins, negative = Traditional wins)
-  const difference = rothBalance - traditionalAfterTax;
+  // Equal out-of-pocket comparison: each year's tax saving (contribution × tNow)
+  // is invested at the same return r → FV of that annuity = fv × tNow.
+  // Simplification (documented in the methodology): the side account is modeled
+  // without taxes on its own growth.
+  const taxSavingsInvested = fv * tNow;
+  const traditionalTotal = traditionalAfterTax + taxSavingsInvested;
+
+  // Net difference (positive = Roth wins, negative = Traditional wins).
+  // difference = fv·(tRet − tNow): Roth wins when the retirement rate is HIGHER
+  // than the current rate; Traditional wins when it is LOWER.
+  const difference = rothBalance - traditionalTotal;
 
   // Build recommendation string
   let recommendation: string;
@@ -115,13 +139,13 @@ export function compute(i: Inputs): Outputs {
 
   if (Math.abs(difference) < 1) {
     recommendation =
-      "Both accounts produce an identical after-tax balance. When your current and retirement tax rates are equal, neither type has a mathematical advantage. Consider Roth for its tax-free growth, RMD exemption, and withdrawal flexibility.";
+      "Both accounts produce an identical after-tax result. When your current and retirement tax rates are equal, neither type has a mathematical advantage. Consider Roth for its tax-free growth, RMD exemption, and withdrawal flexibility.";
   } else if (difference > 0) {
     recommendation =
-      `The Roth IRA comes out ahead by ${formattedDiff} after tax. Your retirement tax rate (${retirementTaxRate}%) is equal to or higher than your current rate (${currentTaxRate}%), so paying taxes now is the better deal. The Roth also has no Required Minimum Distributions starting at age 73.`;
+      `The Roth IRA comes out ahead by ${formattedDiff} after tax. Your retirement tax rate (${retirementTaxRate}%) is higher than your current rate (${currentTaxRate}%), so paying taxes now — while your rate is low — is the better deal. The Roth also has no Required Minimum Distributions starting at age 73.`;
   } else {
     recommendation =
-      `The Traditional IRA comes out ahead by ${formattedDiff} after tax. Your retirement tax rate (${retirementTaxRate}%) is lower than your current rate (${currentTaxRate}%), so deferring taxes is the better deal. Keep in mind Traditional IRAs require minimum distributions (RMDs) starting at age 73, which may push you into a higher bracket.`;
+      `The Traditional IRA comes out ahead by ${formattedDiff} after tax (IRA balance after taxes plus the invested tax savings). Your retirement tax rate (${retirementTaxRate}%) is lower than your current rate (${currentTaxRate}%), so deferring taxes is the better deal. Keep in mind Traditional IRAs require minimum distributions (RMDs) starting at age 73, which may push you into a higher bracket.`;
   }
 
   const fmtUsd = (x: number) =>
@@ -134,8 +158,8 @@ export function compute(i: Inputs): Outputs {
     text: tie
       ? `With equal tax rates now and at retirement, both end at **${fmtUsd(rothBalance)}** after tax over **${n} years**. Pick Roth for tax-free growth and no RMDs.`
       : winnerIsRoth
-      ? `After **${n} years** the Roth nets **${fmtUsd(rothBalance)}** tax-free vs **${fmtUsd(traditionalAfterTax)}** from the Traditional — a **${formattedDiff}** edge for paying taxes now at ${currentTaxRate}%.`
-      : `After **${n} years** the Traditional nets **${fmtUsd(traditionalAfterTax)}** vs **${fmtUsd(rothBalance)}** from the Roth — a **${formattedDiff}** edge, plus **${fmtUsd(taxSavingsNow)}** in upfront tax savings. Watch out for RMDs at 73.`,
+      ? `After **${n} years** the Roth nets **${fmtUsd(rothBalance)}** tax-free vs **${fmtUsd(traditionalTotal)}** from the Traditional (after-tax balance plus invested tax savings) — a **${formattedDiff}** edge because your retirement rate (${retirementTaxRate}%) is higher than your current rate (${currentTaxRate}%).`
+      : `After **${n} years** the Traditional route nets **${fmtUsd(traditionalTotal)}** (**${fmtUsd(traditionalAfterTax)}** after-tax balance + **${fmtUsd(taxSavingsInvested)}** from investing the yearly tax savings) vs **${fmtUsd(rothBalance)}** from the Roth — a **${formattedDiff}** edge because your retirement rate (${retirementTaxRate}%) is lower than your current rate (${currentTaxRate}%). Watch out for RMDs at 73.`,
     tone: winnerIsRoth || tie ? "good" : "neutral",
     icon: "🏦",
   };
@@ -145,6 +169,7 @@ export function compute(i: Inputs): Outputs {
     traditional_balance_after_tax: Math.round(traditionalAfterTax * 100) / 100,
     traditional_balance_pretax: Math.round(traditionalPreTax * 100) / 100,
     tax_savings_now: Math.round(taxSavingsNow * 100) / 100,
+    tax_savings_invested: Math.round(taxSavingsInvested * 100) / 100,
     difference: Math.round(difference * 100) / 100,
     recommendation,
     years_of_growth: n,

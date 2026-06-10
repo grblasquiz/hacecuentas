@@ -219,9 +219,12 @@ const translations = {
     tryExample: 'Try an example', orFillBelow: 'Or fill in your data above',
     resultBadge: 'Result', chartAriaLabel: 'Result chart', downloadPng: 'Download chart as PNG',
     whatIfBadge: '🎚️ What if...?', whatIfHint: 'Move and see how everything changes',
-    emailHeading: 'Get this result by email', emailPlaceholder: 'you@email.com',
+    emailHeading: 'Want this result in your inbox?', emailPlaceholder: 'you@email.com',
     emailNote: 'Free. No spam. Just your result.',
-    emailSuccess: 'Saved. You will receive your results by email soon.',
+    emailSuccess: 'Sent! Check your inbox (and spam the first time).',
+    emailSaved: 'Done! We saved your result and will email it as soon as sending goes live.',
+    emailError: "We couldn't save your email. Please try again in a bit.",
+    sending: 'Sending…',
     shareWhatsApp: 'Share on WhatsApp', shareReset: 'Start new calculation',
     sharePrint: 'Open print dialog (save as PDF)',
     yesAria: 'Yes, helpful', noAria: 'No, not helpful',
@@ -245,9 +248,12 @@ const translations = {
     tryExample: 'Tente um exemplo', orFillBelow: 'Ou preencha seus dados acima',
     resultBadge: 'Resultado', chartAriaLabel: 'Gráfico do resultado', downloadPng: 'Baixar gráfico como PNG',
     whatIfBadge: '🎚️ E se...?', whatIfHint: 'Mova e veja como tudo muda',
-    emailHeading: 'Receba este resultado por e-mail', emailPlaceholder: 'voce@email.com',
+    emailHeading: 'Quer este resultado no seu e-mail?', emailPlaceholder: 'voce@email.com',
     emailNote: 'Grátis. Sem spam. Apenas seu resultado.',
-    emailSuccess: 'Salvo. Você vai receber seus resultados por e-mail em breve.',
+    emailSuccess: 'Enviado! Confira sua caixa de entrada (e o spam na primeira vez).',
+    emailSaved: 'Pronto! Salvamos seu resultado e enviaremos assim que os envios forem ativados.',
+    emailError: 'Não foi possível salvar seu e-mail. Tente novamente em instantes.',
+    sending: 'Enviando…',
     shareWhatsApp: 'Compartilhar no WhatsApp', shareReset: 'Novo cálculo',
     sharePrint: 'Abrir caixa de impressão (salvar como PDF)',
     yesAria: 'Sim, foi útil', noAria: 'Não foi útil',
@@ -271,9 +277,12 @@ const translations = {
     tryExample: 'Probá con un ejemplo', orFillBelow: 'O completá tus datos arriba',
     resultBadge: 'Resultado', chartAriaLabel: 'Gráfico del resultado', downloadPng: 'Descargar gráfico como imagen',
     whatIfBadge: '🎚️ ¿Qué pasa si...?', whatIfHint: 'Movelo y mirá cómo cambia todo',
-    emailHeading: 'Recibí este resultado por email', emailPlaceholder: 'tu@email.com',
+    emailHeading: '¿Querés este resultado en tu email?', emailPlaceholder: 'tu@email.com',
     emailNote: 'Gratis. Sin spam. Solo tu resultado.',
-    emailSuccess: 'Guardado. Próximamente vas a recibir tus resultados por email.',
+    emailSuccess: '¡Enviado! Revisá tu casilla (y spam la primera vez).',
+    emailSaved: '¡Listo! Guardamos tu resultado y te lo enviamos en cuanto activemos los envíos.',
+    emailError: 'No pudimos guardar tu email. Probá de nuevo en un rato.',
+    sending: 'Enviando…',
     shareWhatsApp: 'Compartir por WhatsApp', shareReset: 'Nuevo cálculo',
     sharePrint: 'Abre el diálogo de imprimir (podés guardarlo como PDF)',
     yesAria: 'Sí, me sirvió', noAria: 'No, no me sirvió',
@@ -854,10 +863,10 @@ const formatFreshnessDate = (iso: string): string => {
       <p class="email-heading"><strong>{t.emailHeading}</strong></p>
       <form class="email-form" data-email-form>
         <input type="email" placeholder={t.emailPlaceholder} required data-email-input>
-        <button type="submit">{t.send}</button>
+        <button type="submit" data-label-sending={t.sending}>{t.send}</button>
       </form>
       <p class="email-note">{t.emailNote}</p>
-      <p class="email-success" data-email-success style="display:none">{t.emailSuccess}</p>
+      <p class="email-success" data-email-status style="display:none" data-msg-sent={t.emailSuccess} data-msg-saved={t.emailSaved} data-msg-error={t.emailError}></p>
     </div>
 
     <!-- Calc usage counter -->
@@ -2623,6 +2632,9 @@ const formatFreshnessDate = (iso: string): string => {
     color: var(--success);
     font-weight: 500;
     margin: 0;
+  }
+  .email-success.is-error {
+    color: var(--danger, #b91c1c);
   }
 
   /* Calc usage counter */
@@ -4402,6 +4414,7 @@ const formatFreshnessDate = (iso: string): string => {
           hideSkeleton();
           const output = formula(inputs);
           let _newPrimary: { num: number; format: string; suffix: string } | null = null;
+          let _primaryText = '';
           container.querySelectorAll<HTMLElement>('[data-output]').forEach((el) => {
             const outId = el.dataset.output!;
             const format = el.dataset.format!;
@@ -4409,6 +4422,11 @@ const formatFreshnessDate = (iso: string): string => {
             const val = output[outId];
             const valueEl = el.querySelector<HTMLElement>('[data-value]')!;
             const isPrimary = el.dataset.primary === 'true';
+            if (isPrimary) {
+              // Texto FINAL del primary (post-formato): es lo que termina mostrando
+              // animateValue al concluir, sin esperar la animación de ~600ms.
+              _primaryText = formatValue(val, format, suffix);
+            }
             if (isPrimary && typeof val === 'number' && isFinite(val)) {
               _newPrimary = { num: val, format, suffix };
             }
@@ -4470,11 +4488,12 @@ const formatFreshnessDate = (iso: string): string => {
           results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
           // Evento para listeners externos (ResultContext, ScenarioComparator dinámico, etc).
-          // Se dispara despues de pintar los outputs; el listener decide cuanto delay aplicar
-          // para esperar la animacion (animateValue dura ~600ms).
+          // Se dispara despues de pintar los outputs. `primary` trae el texto FINAL
+          // formateado del output primario → los listeners no necesitan scrapear el
+          // DOM con timeout para esperar la animacion (animateValue dura ~600ms).
           try {
             container.dispatchEvent(new CustomEvent('hc-calc-result', {
-              detail: { slug, output, inputs },
+              detail: { slug, output, inputs, primary: _primaryText },
               bubbles: false,
             }));
           } catch {}
@@ -5062,8 +5081,8 @@ const formatFreshnessDate = (iso: string): string => {
             if (ef) { ef.reset(); ef.style.display = 'flex'; }
             const en = emailCap.querySelector<HTMLElement>('.email-note');
             if (en) en.style.display = 'block';
-            const es = emailCap.querySelector<HTMLElement>('[data-email-success]');
-            if (es) es.style.display = 'none';
+            const est = emailCap.querySelector<HTMLElement>('[data-email-status]');
+            if (est) { est.style.display = 'none'; est.classList.remove('is-error'); }
           }
           form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -5194,40 +5213,75 @@ const formatFreshnessDate = (iso: string): string => {
       });
     }
 
-    // ── Email capture ─────────────────────────────────────────
+    // ── Email capture: POST real a /api/email-result ──────────
     const emailForm = container.querySelector<HTMLFormElement>('[data-email-form]');
     if (emailForm) {
-      emailForm.addEventListener('submit', (ev) => {
+      emailForm.addEventListener('submit', async (ev) => {
         ev.preventDefault();
         const emailInput = emailForm.querySelector<HTMLInputElement>('[data-email-input]');
         const email = emailInput?.value.trim();
         if (!email) return;
 
+        const emailSubmitBtn = emailForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+        if (emailSubmitBtn?.disabled) return; // ya hay un POST en vuelo
+        const statusEl = container.querySelector<HTMLElement>('[data-email-status]');
+        const noteEl = container.querySelector<HTMLElement>('.email-note');
+        const showStatus = (kind: 'sent' | 'saved' | 'error') => {
+          if (!statusEl) return;
+          statusEl.textContent = (kind === 'sent' ? statusEl.dataset.msgSent
+            : kind === 'saved' ? statusEl.dataset.msgSaved
+            : statusEl.dataset.msgError) || '';
+          statusEl.classList.toggle('is-error', kind === 'error');
+          statusEl.style.display = 'block';
+        };
+
+        // GA4 event — sincrónico ANTES del fetch para no perderlo si la página
+        // se cierra durante el await. Mismo shape histórico (sólo calc_slug).
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'email_capture', { calc_slug: slug });
+        }
+
         // Obtener resultado primary
         const primaryVal = container.querySelector<HTMLElement>('.result.primary [data-value]')?.textContent || '';
 
-        // Guardar en localStorage
+        // Deshabilitar el botón durante el await (evita doble submit / filas duplicadas)
+        const idleLabel = emailSubmitBtn?.textContent || '';
+        if (emailSubmitBtn) {
+          emailSubmitBtn.disabled = true;
+          emailSubmitBtn.textContent = emailSubmitBtn.dataset.labelSending || idleLabel;
+        }
+
+        // Guardar en D1 (y enviar por email si el backend tiene RESEND_API_KEY).
+        // slug = pathname completo para que el link del email respete /en/, /pt/, /ec/, etc.
+        let respOk = false;
+        let emailSent = false;
         try {
-          const stored: any[] = JSON.parse(localStorage.getItem('hc_emails') || '[]');
-          stored.push({
-            email,
-            slug,
-            result: primaryVal,
-            date: new Date().toISOString(),
+          const resp = await fetch('/api/email-result', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, slug: window.location.pathname, result: primaryVal }),
+            keepalive: true,
           });
-          localStorage.setItem('hc_emails', JSON.stringify(stored));
-        } catch {}
+          if (resp.ok) {
+            respOk = true;
+            const data: any = await resp.json().catch(() => null);
+            emailSent = !!(data && data.sent);
+          }
+        } catch { /* respOk queda false → mostramos error real */ }
 
-        // Mostrar éxito
-        emailForm.style.display = 'none';
-        const noteEl = container.querySelector<HTMLElement>('.email-note');
-        if (noteEl) noteEl.style.display = 'none';
-        const successEl = container.querySelector<HTMLElement>('[data-email-success]');
-        if (successEl) successEl.style.display = 'block';
+        // Restaurar el botón (en éxito el form se oculta igual; en error queda usable)
+        if (emailSubmitBtn) {
+          emailSubmitBtn.disabled = false;
+          emailSubmitBtn.textContent = idleLabel;
+        }
 
-        // GA4 event
-        if (typeof (window as any).gtag === 'function') {
-          (window as any).gtag('event', 'email_capture', { calc_slug: slug });
+        if (respOk) {
+          emailForm.style.display = 'none';
+          if (noteEl) noteEl.style.display = 'none';
+          showStatus(emailSent ? 'sent' : 'saved');
+        } else {
+          // Error real (400/500/red): NO ocultamos el form para que pueda reintentar.
+          showStatus('error');
         }
       });
     }

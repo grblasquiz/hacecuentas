@@ -63,6 +63,38 @@ export const IRRF_REDUTOR_TETO = 7350.0;
 /** Alíquota máxima do IRRF. */
 export const IRRF_ALIQUOTA_MAX = 0.275;
 
+/** Tabela progressiva mensal do IRRF (vigente desde mai/2025): alíquota × base − parcela a deduzir. */
+export const IRRF_FAIXAS = [
+  { ate: 2428.8, aliquota: 0, deduzir: 0 },
+  { ate: 2826.65, aliquota: 0.075, deduzir: 182.16 },
+  { ate: 3751.05, aliquota: 0.15, deduzir: 394.16 },
+  { ate: 4664.68, aliquota: 0.225, deduzir: 675.49 },
+  { ate: Infinity, aliquota: 0.275, deduzir: 908.73 },
+] as const;
+
+/** IRRF pela tabela cheia (sem o redutor 2026). */
+export function calcIRRFTabelaCheia(base: number): number {
+  if (base <= 0) return 0;
+  for (const f of IRRF_FAIXAS) {
+    if (base <= f.ate) return Math.max(0, base * f.aliquota - f.deduzir);
+  }
+  return 0;
+}
+
+/**
+ * IRRF mensal 2026 com o redutor da reforma: IR zerado até base de R$ 5.000,
+ * redução linear até R$ 7.350 (aproximação documentada da regra de transição),
+ * tabela cheia acima. Mesma lógica usada pelo simulador de holerite — manter
+ * uma única implementação evita divergência entre calcs.
+ */
+export function calcIRRF2026(base: number): number {
+  if (base <= IRRF_ISENCAO_REDUTOR) return 0;
+  const cheio = calcIRRFTabelaCheia(base);
+  if (base >= IRRF_REDUTOR_TETO) return cheio;
+  const fator = (base - IRRF_ISENCAO_REDUTOR) / (IRRF_REDUTOR_TETO - IRRF_ISENCAO_REDUTOR);
+  return cheio * fator;
+}
+
 /* ──────────────────── Seguro-desemprego 2026 ──────────────────── */
 // Tabela MTE vigente desde 11/01/2026 (reajuste pelo INPC).
 export const SEGURO_DESEMPREGO = {

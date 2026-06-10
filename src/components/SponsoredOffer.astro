@@ -11,46 +11,122 @@
  * - NO es popup/interstitial/popunder. Es un bloque inline, descartable.
  * - El wiring (qué calc muestra qué oferta) vive en offers.ts + [...slug].astro.
  *
- * Tracking: cada click dispara gtag('event','offer_click', {calc_slug, offer_id,
- * vertical}) → RPM por calc medible en GA4.
+ * Variantes:
+ * - kind 'link' (default): CTA <a> al destino de la oferta.
+ * - kind 'lead': mini-form nombre + WhatsApp → POST /api/lead (vertical legal).
+ *
+ * Copy dinámico: si la oferta trae `bodyDynamic` (template con {value}), tras
+ * calcular se usa `detail.primary` del evento (texto final, sin esperar la
+ * animación) y se pisa el body estático. Si el evento no trae primary, se cae
+ * al scrape del DOM post-animación (~700ms). Fallback silencioso si no hay valor.
+ *
+ * Tracking: offer_click (links) / offer_lead_submit (leads) en GA4.
  */
 import type { Offer } from '../lib/offers';
 interface Props { offer: Offer; slug: string; }
 const { offer, slug } = Astro.props;
+const isLead = offer.kind === 'lead';
 ---
 
-<section class="sp-offer" data-sp-offer hidden aria-labelledby={`sp-offer-h-${offer.id}`}>
+<section
+  class="sp-offer"
+  data-sp-offer
+  data-offer-id={offer.id}
+  data-calc-slug={slug}
+  data-body-dynamic={offer.bodyDynamic || undefined}
+  hidden
+  aria-labelledby={`sp-offer-h-${offer.id}`}
+>
   <span class="sp-offer-tag">Publicidad</span>
   <div class="sp-offer-body">
     <strong id={`sp-offer-h-${offer.id}`}>{offer.label}</strong>
-    <p>{offer.body}</p>
+    <p data-sp-offer-text>{offer.body}</p>
   </div>
-  <a
-    class="sp-offer-cta"
-    href={offer.href}
-    target="_blank"
-    rel="sponsored nofollow noopener"
-    data-sp-offer-link
-    data-offer-id={offer.id}
-    data-offer-vertical={offer.vertical}
-    data-calc-slug={slug}
-  >{offer.cta} →</a>
+  {!isLead && (
+    <a
+      class="sp-offer-cta"
+      href={offer.href}
+      target="_blank"
+      rel="sponsored nofollow noopener"
+      data-sp-offer-link
+      data-offer-id={offer.id}
+      data-offer-vertical={offer.vertical}
+      data-calc-slug={slug}
+    >{offer.cta} →</a>
+  )}
+  {isLead && (
+    <form class="sp-offer-lead" data-sp-offer-lead novalidate>
+      <div class="sp-offer-lead-fields">
+        <input
+          type="text" name="name" autocomplete="name"
+          placeholder="Tu nombre" aria-label="Tu nombre"
+          maxlength="80"
+        />
+        <input
+          type="tel" name="phone" autocomplete="tel"
+          placeholder="Tu WhatsApp (ej. 11 5555 5555)" aria-label="Tu WhatsApp"
+          maxlength="25"
+        />
+        <button type="submit" class="sp-offer-cta">{offer.cta}</button>
+      </div>
+      <p class="sp-offer-consent">Al enviar aceptás que un estudio laboral te contacte por tu consulta. No compartimos tu teléfono para otra cosa.</p>
+      <p class="sp-offer-lead-msg" data-sp-offer-lead-msg role="status" hidden></p>
+    </form>
+  )}
 </section>
 
 <script is:inline>
   (function () {
     var host = document.querySelector('[data-sp-offer]');
     if (!host) return;
+
+    // ── Valor primario del último cálculo (viene en detail.primary) ────────
+    var lastPrimary = '';
+
+    // ── Scrape del DOM: SOLO fallback si el evento no trajo primary ────────
+    function readPrimaryValue() {
+      var el = document.querySelector('.result.primary [data-value]');
+      var txt = el && el.textContent ? el.textContent.trim() : '';
+      return (txt && txt !== '—') ? txt : '';
+    }
+
+    // ── Copy dinámico: pisa el body con el template {value} si hay valor ────
+    function setDynamicBody(tpl, v) {
+      var p = host.querySelector('[data-sp-offer-text]');
+      if (p) p.textContent = tpl.split('{value}').join(v);
+    }
+    function applyDynamicBody(primary) {
+      var tpl = host.getAttribute('data-body-dynamic');
+      if (!tpl) return;
+      if (primary) {
+        // Texto final del evento → reemplazo inmediato, sin esperar animación.
+        setDynamicBody(tpl, primary);
+        return;
+      }
+      // Fallback: la animación del valor dura ~600ms → leemos el DOM después.
+      setTimeout(function () {
+        var v = readPrimaryValue();
+        if (!v) return; // fallback silencioso: queda el body estático
+        setDynamicBody(tpl, v);
+      }, 700);
+    }
+
     var containers = document.querySelectorAll('.calc-container');
     if (containers.length) {
       containers.forEach(function (c) {
         c.addEventListener('hc-calc-result', function (ev) {
           var d = ev && ev.detail ? ev.detail : null;
           if (!d || !d.output) return;
+          var primary = (typeof d.primary === 'string' && d.primary.trim() && d.primary.trim() !== '—')
+            ? d.primary.trim() : '';
+          if (primary) lastPrimary = primary;
           host.hidden = false;
+          applyDynamicBody(primary);
         });
       });
     }
+
+    // ── kind 'link': tracking del click ─────────────────────────────────────
     var link = host.querySelector('[data-sp-offer-link]');
     if (link) {
       link.addEventListener('click', function () {
@@ -61,6 +137,57 @@ const { offer, slug } = Astro.props;
             vertical: link.getAttribute('data-offer-vertical'),
           });
         }
+      });
+    }
+
+    // ── kind 'lead': mini-form → POST /api/lead ─────────────────────────────
+    var form = host.querySelector('[data-sp-offer-lead]');
+    if (form) {
+      var msg = form.querySelector('[data-sp-offer-lead-msg]');
+      function showMsg(text, isError) {
+        if (!msg) return;
+        msg.textContent = text;
+        msg.hidden = false;
+        msg.classList.toggle('is-error', !!isError);
+      }
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var nameInput = form.querySelector('input[name="name"]');
+        var phoneInput = form.querySelector('input[name="phone"]');
+        var btn = form.querySelector('button[type="submit"]');
+        var name = nameInput && nameInput.value ? nameInput.value.trim() : '';
+        var phone = phoneInput && phoneInput.value ? phoneInput.value.trim() : '';
+        if (name.length < 2) { showMsg('Escribí tu nombre (mínimo 2 letras).', true); return; }
+        if (phone.length < 6 || !/^[\d+\s()\-]{6,25}$/.test(phone)) {
+          showMsg('Revisá el teléfono: sólo números, espacios y +.', true);
+          return;
+        }
+        if (btn) btn.disabled = true;
+        fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            slug: host.getAttribute('data-calc-slug') || '',
+            name: name,
+            phone: phone,
+            result: lastPrimary || readPrimaryValue(),
+            offer_id: host.getAttribute('data-offer-id') || '',
+          }),
+        }).then(function (r) {
+          if (!r.ok) throw new Error('lead failed');
+          var fields = form.querySelector('.sp-offer-lead-fields');
+          if (fields) fields.hidden = true;
+          showMsg('¡Listo! Te contactan en horario hábil.', false);
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'offer_lead_submit', {
+              calc_slug: host.getAttribute('data-calc-slug'),
+              offer_id: host.getAttribute('data-offer-id'),
+            });
+          }
+        }).catch(function () {
+          if (btn) btn.disabled = false;
+          showMsg('No se pudo enviar. Probá de nuevo en un momento.', true);
+        });
       });
     }
   })();
@@ -101,8 +228,47 @@ const { offer, slug } = Astro.props;
     text-decoration: none;
     color: #fff;
     background: var(--accent, #2563eb);
+    border: none;
+    cursor: pointer;
     border-radius: var(--radius-sm, 8px);
     transition: filter 0.15s ease, transform 0.15s ease;
   }
   .sp-offer-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .sp-offer-cta:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+  /* ── Lead form ── */
+  .sp-offer-lead { flex: 1 1 100%; }
+  .sp-offer-lead-fields {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .sp-offer-lead-fields[hidden] { display: none; }
+  .sp-offer-lead-fields input {
+    flex: 1 1 160px;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--border, #d4d4d4);
+    border-radius: var(--radius-sm, 8px);
+    background: var(--bg, #fff);
+    color: var(--text, #111);
+  }
+  .sp-offer-lead-fields input:focus {
+    outline: 2px solid var(--accent, #2563eb);
+    outline-offset: 1px;
+  }
+  .sp-offer-consent {
+    margin: 0.5rem 0 0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--text-2, #777);
+  }
+  .sp-offer-lead-msg {
+    margin: 0.5rem 0 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--success, #15803d);
+  }
+  .sp-offer-lead-msg.is-error { color: var(--danger, #b91c1c); }
+  .sp-offer-lead-msg[hidden] { display: none; }
 </style>

@@ -25,9 +25,15 @@
 
 // ── IDs de afiliado / referido — COMPLETAR (Martin) ─────────────────────────
 const AFF = {
-  // Afiliados Mercado Libre: reemplazá el href de las ofertas ML por tu deep-link
-  // del Linkbuilder (https://www.mercadolibre.com.ar/afiliados). El search URL
-  // default funciona y es útil; sin tu link NO paga comisión.
+  // Afiliados Mercado Libre — paso exacto para activar:
+  //   1. Entrá al Linkbuilder del programa de afiliados de ML
+  //      (https://www.mercadolibre.com.ar/afiliados → herramienta "Linkbuilder").
+  //   2. El Linkbuilder genera UN link de afiliado POR URL: pegá la URL de
+  //      listado de cada oferta ml() de abajo (ej.
+  //      https://listado.mercadolibre.com.ar/balanza-digital-imc) y generá el link.
+  //   3. Pegá el link GENERADO (el que trae tu tag de afiliado) en el `href` de
+  //      esa oferta, repetí para cada ml(), y poné mercadolibreReady: true.
+  //   El search URL default funciona y es útil; sin tu link NO paga comisión.
   mercadolibreReady: false,
   // Crypto referral (links de invitación completos)
   binance: '',   // ej. 'https://accounts.binance.com/register?ref=XXXXXXXX'
@@ -46,6 +52,18 @@ export interface Offer {
   href: string;          // destino — real y útil aun sin ID de afiliado
   enabled: boolean;      // false = no se renderiza (sin destino honesto todavía)
   note?: string;         // nota interna (no se muestra)
+  /**
+   * Template opcional con {value}: post-cálculo se pisa `body` con este texto,
+   * reemplazando {value} por el resultado primario real del usuario (leído del
+   * DOM tras la animación). Si no hay valor, queda el `body` estático.
+   */
+  bodyDynamic?: string;
+  /**
+   * 'link' (default) = CTA <a> hacia `href`.
+   * 'lead' = mini-form (nombre + WhatsApp) que postea a /api/lead — para
+   * verticales donde lo que se vende es el LEAD, no el click (ej. legal).
+   */
+  kind?: 'link' | 'lead';
 }
 
 const ml = (slug: string) => `https://listado.mercadolibre.com.ar/${slug}`;
@@ -60,6 +78,7 @@ const OFFERS: Record<string, Offer> = {
     id: 'ml-embarazo', vertical: 'bebe', enabled: true,
     label: 'Preparando la llegada',
     body: 'Lo esencial para las primeras semanas, con envío a todo el país.',
+    bodyDynamic: 'Fecha probable de parto: {value}. Andá armando lo esencial para las primeras semanas, con envío a todo el país.',
     cta: 'Ver productos para el embarazo',
     href: ml('embarazo'),
   },
@@ -82,6 +101,7 @@ const OFFERS: Record<string, Offer> = {
     id: 'ml-balanza', vertical: 'retail', enabled: true,
     label: 'Seguí tu progreso',
     body: 'Una balanza digital con IMC integrado para medir en casa.',
+    bodyDynamic: 'Tu IMC dio {value}. Una balanza digital con IMC te ayuda a seguirlo en casa.',
     cta: 'Ver balanzas digitales',
     href: ml('balanza-digital-imc'),
   },
@@ -107,27 +127,28 @@ const OFFERS: Record<string, Offer> = {
     id: 'argenprop-alquiler', vertical: 'inmobiliario', enabled: true,
     label: '¿El aumento te parece mucho?',
     body: 'Mirá qué alquileres hay disponibles hoy en tu zona.',
+    bodyDynamic: 'Tu alquiler actualizado da {value}. Mirá qué hay disponible hoy en tu zona y comparalo.',
     cta: 'Buscar alquileres en Argenprop',
-    href: 'https://www.argenprop.com/departamentos/alquiler',
-    note: 'Canal propio (Martin = CMO Argenprop). Evaluar UTM/deal de referido interno.',
+    href: 'https://www.argenprop.com/departamentos/alquiler?utm_source=hacecuentas&utm_medium=referral&utm_campaign=calc_icl',
+    note: 'Canal propio (Martin = CMO Argenprop). UTM activo → medible en el GA4 de Argenprop como hacecuentas/referral, campaña calc_icl. Primer sponsor medible del set.',
   },
 
   // ── ESPERANDO PARTNER (no renderizan hasta tener comprador del lead) ──────
   'calculadora-indemnizacion-despido': {
-    id: 'legal-indemnizacion', vertical: 'legal', enabled: false,
+    id: 'legal-indemnizacion', vertical: 'legal', enabled: false, kind: 'lead',
     label: '¿Te despidieron?',
     body: 'Consultá gratis tu caso con un abogado laboral antes de firmar.',
     cta: 'Consultar gratis',
     href: '#',
-    note: 'ACTIVAR cuando haya estudio/red legal que compre el lead. ~960 ses/sem en este balde (indemnización+liquidación). El $/lead más alto del set.',
+    note: 'Lead-form LISTO (kind:lead → /api/lead, tabla legal_leads). ACTIVAR (enabled:true) cuando haya estudio/red legal que compre el lead. ~960 ses/sem en este balde (indemnización+liquidación). El $/lead más alto del set.',
   },
   'calculadora-liquidacion-final-renuncia': {
-    id: 'legal-liquidacion', vertical: 'legal', enabled: false,
+    id: 'legal-liquidacion', vertical: 'legal', enabled: false, kind: 'lead',
     label: 'Antes de firmar la liquidación',
     body: 'Verificá que los montos estén bien con un abogado laboral.',
     cta: 'Consultar gratis',
     href: '#',
-    note: 'Mismo partner que legal-indemnizacion.',
+    note: 'Mismo partner que legal-indemnizacion. Lead-form listo; sólo falta enabled:true al cerrar partner.',
   },
 };
 

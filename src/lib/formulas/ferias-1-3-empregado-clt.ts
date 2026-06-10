@@ -1,5 +1,9 @@
 // Calculadora Férias + 1/3 Constitucional CLT 2026
-// Fontes: CLT arts. 129-153, CF/88 art. 7º XVII, Tabelas INSS/IRRF 2026
+// Fontes: CLT arts. 129-153, CF/88 art. 7º XVII; INSS/IRRF 2026 importados da
+// fonte única src/lib/data/brasil-2026.ts (teto INSS R$ 8.475,55; IRRF tabela
+// mai/2025 + redutor 2026 da reforma — isenção efetiva até R$ 5.000 de base).
+
+import { calcINSS, calcIRRF2026, IRRF_DEDUCAO_DEPENDENTE } from "../data/brasil-2026";
 
 export interface Inputs {
   salario_bruto: number;
@@ -23,57 +27,19 @@ export interface Outputs {
   _chart?: any;
 }
 
-// ─── Tabela INSS progressiva 2026 (Portaria MPS) ───────────────────────────
-// Teto de contribuição: R$ 8.157,41 → desconto máximo R$ 908,86
-const INSS_FAIXAS_2026 = [
-  { limite: 1518.00,  aliquota: 0.075 },
-  { limite: 2793.88,  aliquota: 0.090 },
-  { limite: 4190.83,  aliquota: 0.120 },
-  { limite: 8157.41,  aliquota: 0.140 },
-];
-const INSS_TETO_2026 = 908.86;
-
-// ─── Tabela IRRF mensal 2026 (Receita Federal) ─────────────────────────────
-const IRRF_FAIXAS_2026 = [
-  { limite: 2259.20,  aliquota: 0.000, parcela: 0.00 },
-  { limite: 2826.65,  aliquota: 0.075, parcela: 169.44 },
-  { limite: 3751.05,  aliquota: 0.150, parcela: 381.44 },
-  { limite: 4664.68,  aliquota: 0.225, parcela: 662.77 },
-  { limite: Infinity, aliquota: 0.275, parcela: 896.00 },
-];
-
-// ─── Dedução por dependente IRRF 2026 ──────────────────────────────────────
-const DEDUCAO_DEPENDENTE_2026 = 189.59; // R$ por dependente
+// ─── INSS e IRRF 2026 ───────────────────────────────────────────────────────
+// Implementação única em src/lib/data/brasil-2026.ts (calcINSS progressivo com
+// teto, calcIRRF2026 = tabela cheia + redutor da reforma), compartilhada com o
+// simulador de holerite para nunca divergirem.
 
 /** Calcula INSS progressivo sobre uma base */
 function calcularINSS(base: number): number {
-  if (base <= 0) return 0;
-  let inss = 0;
-  let baseRestante = base;
-  let limiteAnterior = 0;
-  for (const faixa of INSS_FAIXAS_2026) {
-    if (baseRestante <= 0) break;
-    const faixaAtual = faixa.limite - limiteAnterior;
-    const valorNaFaixa = Math.min(baseRestante, faixaAtual);
-    inss += valorNaFaixa * faixa.aliquota;
-    baseRestante -= valorNaFaixa;
-    limiteAnterior = faixa.limite;
-    if (base <= faixa.limite) break;
-  }
-  // Aplica teto de contribuição
-  return Math.min(parseFloat(inss.toFixed(2)), INSS_TETO_2026);
+  return calcINSS(base);
 }
 
-/** Calcula IRRF sobre uma base já deduzida de INSS e dependentes */
+/** Calcula IRRF (tabela cheia + redutor 2026) sobre uma base já deduzida de INSS e dependentes */
 function calcularIRRF(baseIRRF: number): number {
-  if (baseIRRF <= 0) return 0;
-  for (const faixa of IRRF_FAIXAS_2026) {
-    if (baseIRRF <= faixa.limite) {
-      const irrf = baseIRRF * faixa.aliquota - faixa.parcela;
-      return Math.max(0, parseFloat(irrf.toFixed(2)));
-    }
-  }
-  return 0;
+  return parseFloat(calcIRRF2026(baseIRRF).toFixed(2));
 }
 
 /** Calcula o líquido de férias dado um conjunto de parâmetros */
@@ -113,7 +79,7 @@ function calcularFerias(
   const inssValor = calcularINSS(totalBruto);
 
   // Dedução dependentes
-  const deducaoDep = parseFloat((dependentes * DEDUCAO_DEPENDENTE_2026).toFixed(2));
+  const deducaoDep = parseFloat((dependentes * IRRF_DEDUCAO_DEPENDENTE).toFixed(2));
 
   // Base IRRF
   const baseIRRF = Math.max(0, parseFloat((totalBruto - inssValor - deducaoDep).toFixed(2)));
@@ -189,7 +155,7 @@ export function compute(i: Inputs): Outputs {
     `Base total bruta: R$ ${resultado.totalBruto.toFixed(2)}\n` +
     `INSS (progressivo): -R$ ${resultado.inss.toFixed(2)}\n`;
   if (dependentes > 0) {
-    det += `Dedução dependentes (${dependentes} × R$ ${DEDUCAO_DEPENDENTE_2026.toFixed(2)}): -R$ ${resultado.deducaoDep.toFixed(2)}\n`;
+    det += `Dedução dependentes (${dependentes} × R$ ${IRRF_DEDUCAO_DEPENDENTE.toFixed(2)}): -R$ ${resultado.deducaoDep.toFixed(2)}\n`;
   }
   det +=
     `Base IRRF: R$ ${resultado.baseIRRF.toFixed(2)}\n` +

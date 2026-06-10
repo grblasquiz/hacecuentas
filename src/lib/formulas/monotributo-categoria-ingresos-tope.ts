@@ -1,8 +1,12 @@
 /**
  * Calculadora de categoría de monotributo por ingresos
  * Determina categoría según ingresos anuales y tipo de actividad
- * Valores estimados 2026 — se actualizan semestralmente
+ * Datos: fuente única src/lib/data/monotributo-2026.ts (ARCA, reforma 2026:
+ * servicios y venta de bienes llegan AMBOS hasta la categoría K con los mismos
+ * topes; difiere la cuota en las categorías altas).
  */
+
+import { CATEGORIAS as CATS_2026, TOPES, CUOTA_SERVICIOS, CUOTA_BIENES } from '../data/monotributo-2026';
 
 export interface MonotributoCategoriaIngresosTopeInputs {
   ingresosAnuales: number;
@@ -23,23 +27,16 @@ interface CatMono {
   tope: number;
   cuotaServicios: number;
   cuotaVenta: number;
-  soloVenta?: boolean;
 }
 
-// Escala ARCA vigente junio 2026 (+14,3%) — validada x2 fuentes (Estudio Brady + Ámbito).
-const CATEGORIAS: CatMono[] = [
-  { cat: 'A', tope: 10277988, cuotaServicios: 42387, cuotaVenta: 42387 },
-  { cat: 'B', tope: 15058448, cuotaServicios: 48251, cuotaVenta: 48251 },
-  { cat: 'C', tope: 21113697, cuotaServicios: 56502, cuotaVenta: 56502 },
-  { cat: 'D', tope: 26212853, cuotaServicios: 72414, cuotaVenta: 72414 },
-  { cat: 'E', tope: 30833964, cuotaServicios: 102538, cuotaVenta: 102538 },
-  { cat: 'F', tope: 38642048, cuotaServicios: 129045, cuotaVenta: 129045 },
-  { cat: 'G', tope: 46211109, cuotaServicios: 197108, cuotaVenta: 197108 },
-  { cat: 'H', tope: 70113407, cuotaServicios: 447347, cuotaVenta: 447347 },
-  { cat: 'I', tope: 78479212, cuotaServicios: 0, cuotaVenta: 406512, soloVenta: true },
-  { cat: 'J', tope: 89872640, cuotaServicios: 0, cuotaVenta: 497059, soloVenta: true },
-  { cat: 'K', tope: 108357084, cuotaServicios: 0, cuotaVenta: 600880, soloVenta: true },
-];
+// Escala ARCA vigente 2026, derivada de la fuente única (reforma 2026: las 11
+// categorías A–K aplican a servicios Y a venta de bienes; misma escala de topes).
+const CATEGORIAS: CatMono[] = CATS_2026.map((cat) => ({
+  cat,
+  tope: Math.round(TOPES[cat]),
+  cuotaServicios: Math.round(CUOTA_SERVICIOS[cat]),
+  cuotaVenta: Math.round(CUOTA_BIENES[cat]),
+}));
 
 export function monotributoCategoriaIngresosTope(
   inputs: MonotributoCategoriaIngresosTopeInputs
@@ -50,9 +47,8 @@ export function monotributoCategoriaIngresosTope(
   if (!ingresos || ingresos <= 0) throw new Error('Ingresá tus ingresos anuales');
 
   const esServicios = tipo === 'servicios';
-  const categoriasDisponibles = esServicios
-    ? CATEGORIAS.filter((c) => !c.soloVenta)
-    : CATEGORIAS;
+  // Reforma 2026: ambas actividades acceden a las 11 categorías (A–K).
+  const categoriasDisponibles = CATEGORIAS;
 
   const maxCat = categoriasDisponibles[categoriasDisponibles.length - 1];
 

@@ -11,7 +11,7 @@
  *   - Si feedback_text está vacío, no insertamos (no hay info útil que guardar).
  */
 import type { APIRoute } from 'astro';
-import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv } from '../../lib/api-utils';
+import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, sendResendEmail } from '../../lib/api-utils';
 
 export const prerender = false;
 
@@ -61,50 +61,31 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const fromEmail = env.FEEDBACK_EMAIL_FROM || 'feedback@hacecuentas.com';
 
   if (apiKey) {
-    try {
-      const voteEmoji = vote === 'up' ? '👍' : '👎';
-      const escapedText = feedbackText.replace(/[<>&]/g, (c) =>
-        c === '<' ? '&lt;' : c === '>' ? '&gt;' : '&amp;'
-      );
-      const subject = `${voteEmoji} Feedback en ${slug}`;
-      const htmlBody = `
+    const voteEmoji = vote === 'up' ? '👍' : '👎';
+    const subject = `${voteEmoji} Feedback en ${slug}`;
+    const htmlBody = `
         <h2>Nuevo feedback en hacecuentas.com</h2>
-        <p><strong>Calc:</strong> <a href="https://hacecuentas.com${slug}">${slug}</a></p>
+        <p><strong>Calc:</strong> <a href="https://hacecuentas.com${escapeHtml(slug)}">${escapeHtml(slug)}</a></p>
         <p><strong>Vote:</strong> ${voteEmoji} ${vote}</p>
         <p><strong>Texto:</strong></p>
         <blockquote style="border-left: 3px solid #ccc; padding-left: 1em; color: #555;">
-          ${escapedText.replace(/\n/g, '<br>')}
+          ${escapeHtml(feedbackText).replace(/\n/g, '<br>')}
         </blockquote>
         <hr>
         <p style="color: #888; font-size: 0.85em;">
-          User agent: ${ua}<br>
+          User agent: ${escapeHtml(ua)}<br>
           Recibido: ${new Date().toISOString()}
         </p>
       `;
 
-      // Usamos fetch (no SDK) para no agregar dependency al Worker bundle
-      const resp = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: `Hacé Cuentas Feedback <${fromEmail}>`,
-          to: [toEmail],
-          subject,
-          html: htmlBody,
-        }),
-      });
-      if (!resp.ok) {
-        const errText = await resp.text().catch(() => '');
-        console.error('resend send failed:', resp.status, errText.slice(0, 200));
-      }
-    } catch (err) {
-      // No interrumpimos la respuesta al user si falla el email — el
-      // feedback ya está guardado en D1.
-      console.error('email forward failed:', err);
-    }
+    // Best-effort (sendResendEmail nunca tira) — el feedback ya está en D1.
+    await sendResendEmail({
+      apiKey,
+      from: `Hacé Cuentas Feedback <${fromEmail}>`,
+      to: [toEmail],
+      subject,
+      html: htmlBody,
+    });
   }
 
   return json({ ok: true });

@@ -1,7 +1,11 @@
 /** PJ vs CLT — Comparador líquido mensal (Brasil 2026)
  *  CLT: salário - INSS - IRRF + FGTS (8%) + multa FGTS proporcional (40% × 8% / 12) + férias (1/3 × 1/12) + 13º (1/12) + plano R$500 + VT + VR
  *  PJ: faturamento - DAS (Simples Anexo III efetivo) - contador - INSS pro-labore - IRRF pro-labore - sem benefícios
+ *  INSS/IRRF 2026: fonte única src/lib/data/brasil-2026.ts (teto INSS R$ 8.475,55;
+ *  IRRF tabela mai/2025 + redutor 2026 da reforma). Pró-labore mínimo = salário mínimo 2026 (R$ 1.621).
  */
+
+import { calcINSS, calcIRRF2026, SALARIO_MINIMO } from '../data/brasil-2026';
 
 export interface Inputs {
   salarioClt: number;
@@ -27,40 +31,10 @@ export interface Outputs {
   _chart?: any;
 }
 
-const TETO_INSS = 8157.41;
-const IRRF = [
-  { lim: 2259.20, aliq: 0, deduz: 0 },
-  { lim: 2826.65, aliq: 7.5, deduz: 169.44 },
-  { lim: 3751.05, aliq: 15.0, deduz: 381.44 },
-  { lim: 4664.68, aliq: 22.5, deduz: 662.77 },
-  { lim: Infinity, aliq: 27.5, deduz: 896.00 },
-];
-
-function inssClt(sal: number): number {
-  // Progressivo 2026: até 1518 = 7.5%; até 2793.88 = 9%; até 4190.83 = 12%; até 8157.41 = 14% (cálculo por faixa)
-  const faixas = [
-    { lim: 1518.00, aliq: 0.075 },
-    { lim: 2793.88, aliq: 0.09 },
-    { lim: 4190.83, aliq: 0.12 },
-    { lim: 8157.41, aliq: 0.14 },
-  ];
-  let contrib = 0;
-  let prev = 0;
-  for (const f of faixas) {
-    if (sal > prev) {
-      const base = Math.min(sal, f.lim) - prev;
-      contrib += base * f.aliq;
-      prev = f.lim;
-    }
-  }
-  return contrib;
-}
-
-function calcIrrf(base: number): number {
-  if (base <= 0) return 0;
-  for (const f of IRRF) if (base <= f.lim) return Math.max(0, base * (f.aliq / 100) - f.deduz);
-  return 0;
-}
+// INSS progressivo e IRRF (tabela cheia + redutor 2026): implementação única
+// em src/lib/data/brasil-2026.ts, compartilhada com o simulador de holerite.
+const inssClt = calcINSS;
+const calcIrrf = calcIRRF2026;
 
 export function pjVsCltComparador(i: Inputs): Outputs {
   const salClt = Math.max(0, Number(i.salarioClt) || 0);
@@ -86,8 +60,8 @@ export function pjVsCltComparador(i: Inputs): Outputs {
 
   // PJ
   const das = fatPj * (aliqSimples / 100);
-  // Assume pro-labore mínimo para atender lei (igual ao salário mínimo 1518)
-  const proLabore = 1518;
+  // Assume pro-labore mínimo para atender lei (igual ao salário mínimo 2026, R$ 1.621)
+  const proLabore = SALARIO_MINIMO;
   const inssProLab = proLabore * 0.11;
   // IRRF sobre pro-labore (geralmente isento pela faixa)
   const irrfProLab = calcIrrf(proLabore - inssProLab);

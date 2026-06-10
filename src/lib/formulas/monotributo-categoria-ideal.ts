@@ -1,7 +1,11 @@
 /** Categoría ideal de monotributo Argentina 2026
  *  Tabla de categorías según facturación, superficie, etc.
- *  Valores estimados para 2026 (actualización enero)
+ *  Topes y cuotas: fuente única src/lib/data/monotributo-2026.ts (ARCA).
+ *  Reforma 2026: servicios y venta de bienes comparten la escala completa A–K;
+ *  difiere la cuota (servicios paga más en las categorías altas).
  */
+
+import { CATEGORIAS as CATS_2026, TOPES, PARAMS_FISICOS, componentes, type Cat } from '../data/monotributo-2026';
 
 export interface Inputs {
   facturacionAnual: number;
@@ -26,32 +30,22 @@ export interface Outputs {
 }
 
 interface Categoria {
-  letra: string;
-  factServicios: number;
-  factVenta: number;
-  impositivo: number;
-  jubilatorio: number;
-  obraSocial: number;
+  letra: Cat;
+  tope: number;
   superficie: number;
   energia: number;
   alquiler: number;
 }
 
-// Tabla monotributo 2026 estimada (actualización enero 2026)
-// Valores aproximados basados en tendencia de actualización
-const CATEGORIAS: Categoria[] = [
-  { letra: 'A', factServicios: 7_813_063, factVenta: 7_813_063, impositivo: 3_591, jubilatorio: 13_166, obraSocial: 16_478, superficie: 30, energia: 3330, alquiler: 219_014 },
-  { letra: 'B', factServicios: 11_447_046, factVenta: 11_447_046, impositivo: 6_908, jubilatorio: 14_483, obraSocial: 16_478, superficie: 45, energia: 5000, alquiler: 219_014 },
-  { letra: 'C', factServicios: 16_050_091, factVenta: 16_050_091, impositivo: 11_853, jubilatorio: 15_930, obraSocial: 16_478, superficie: 60, energia: 6700, alquiler: 438_028 },
-  { letra: 'D', factServicios: 19_926_340, factVenta: 19_926_340, impositivo: 19_333, jubilatorio: 17_523, obraSocial: 16_478, superficie: 85, energia: 10000, alquiler: 438_028 },
-  { letra: 'E', factServicios: 23_439_192, factVenta: 27_688_614, impositivo: 26_406, jubilatorio: 19_275, obraSocial: 20_599, superficie: 110, energia: 13000, alquiler: 657_042 },
-  { letra: 'F', factServicios: 29_374_695, factVenta: 34_610_768, impositivo: 36_597, jubilatorio: 21_203, obraSocial: 20_599, superficie: 150, energia: 16500, alquiler: 657_042 },
-  { letra: 'G', factServicios: 35_128_502, factVenta: 41_532_922, impositivo: 47_402, jubilatorio: 23_323, obraSocial: 20_599, superficie: 200, energia: 20000, alquiler: 876_057 },
-  { letra: 'H', factServicios: 52_692_753, factVenta: 57_609_911, impositivo: 81_121, jubilatorio: 25_655, obraSocial: 24_718, superficie: 200, energia: 20000, alquiler: 1_095_071 },
-  { letra: 'I', factServicios: 0, factVenta: 66_111_165, impositivo: 102_841, jubilatorio: 28_221, obraSocial: 24_718, superficie: 200, energia: 20000, alquiler: 1_095_071 },
-  { letra: 'J', factServicios: 0, factVenta: 76_227_802, impositivo: 120_187, jubilatorio: 31_043, obraSocial: 24_718, superficie: 200, energia: 20000, alquiler: 1_314_085 },
-  { letra: 'K', factServicios: 0, factVenta: 86_344_440, impositivo: 137_528, jubilatorio: 34_147, obraSocial: 24_718, superficie: 200, energia: 20000, alquiler: 1_314_085 },
-];
+// Parámetros físicos orientativos del régimen (superficie m², energía kWh/año,
+// alquileres devengados $/año): fuente única PARAMS_FISICOS en
+// src/lib/data/monotributo-2026.ts. Topes de facturación: fuente única ARCA 2026.
+
+const CATEGORIAS: Categoria[] = CATS_2026.map((letra) => ({
+  letra,
+  tope: Math.round(TOPES[letra]),
+  ...PARAMS_FISICOS[letra],
+}));
 
 export function monotributoCategoriaIdeal(i: Inputs): Outputs {
   const facturacion = Number(i.facturacionAnual);
@@ -66,8 +60,8 @@ export function monotributoCategoriaIdeal(i: Inputs): Outputs {
 
   let categoriaIdeal: Categoria | null = null;
   for (const cat of CATEGORIAS) {
-    const tope = esServicios ? cat.factServicios : cat.factVenta;
-    if (tope === 0) continue; // Categoría no disponible para servicios
+    // Reforma 2026: el tope es el mismo para servicios y venta de bienes.
+    const tope = cat.tope;
 
     if (facturacion <= tope) {
       // Verificar otros parámetros
@@ -84,19 +78,24 @@ export function monotributoCategoriaIdeal(i: Inputs): Outputs {
     throw new Error(`Con $${facturacion.toLocaleString()} de facturación anual, excedés el tope del monotributo. Debés inscribirte como Responsable Inscripto.`);
   }
 
-  const cuotaMensual = categoriaIdeal.impositivo + categoriaIdeal.jubilatorio + categoriaIdeal.obraSocial;
-  const facMax = esServicios ? categoriaIdeal.factServicios : categoriaIdeal.factVenta;
+  // Cuota mensual desde la fuente única (difiere por actividad en categorías altas).
+  const comp = componentes(categoriaIdeal.letra, esServicios ? 'servicios' : 'bienes');
+  const impositivo = comp.integrado;
+  const jubilatorio = comp.sipa;
+  const obraSocialMonto = comp.obraSocial;
+  const cuotaMensual = Math.round(comp.total);
+  const facMax = categoriaIdeal.tope;
   const margenDisponible = facMax - facturacion;
 
-  const formula = `Categoría ${categoriaIdeal.letra}: cuota = $${categoriaIdeal.impositivo.toLocaleString()} + $${categoriaIdeal.jubilatorio.toLocaleString()} + $${categoriaIdeal.obraSocial.toLocaleString()} = $${cuotaMensual.toLocaleString()}/mes`;
-  const explicacion = `Con facturación anual de $${facturacion.toLocaleString()} (${actividad}), tu categoría ideal es **${categoriaIdeal.letra}**. Cuota mensual total: $${cuotaMensual.toLocaleString()} (impositivo $${categoriaIdeal.impositivo.toLocaleString()} + jubilatorio $${categoriaIdeal.jubilatorio.toLocaleString()} + obra social $${categoriaIdeal.obraSocial.toLocaleString()}). Tope de la categoría: $${facMax.toLocaleString()}. Margen: $${margenDisponible.toLocaleString()} (${((margenDisponible / facMax) * 100).toFixed(1)}%). Valores estimados 2026.`;
+  const formula = `Categoría ${categoriaIdeal.letra}: cuota = $${impositivo.toLocaleString()} + $${jubilatorio.toLocaleString()} + $${Math.round(obraSocialMonto).toLocaleString()} = $${cuotaMensual.toLocaleString()}/mes`;
+  const explicacion = `Con facturación anual de $${facturacion.toLocaleString()} (${actividad}), tu categoría ideal es **${categoriaIdeal.letra}**. Cuota mensual total: $${cuotaMensual.toLocaleString()} (impositivo $${impositivo.toLocaleString()} + jubilatorio $${jubilatorio.toLocaleString()} + obra social $${Math.round(obraSocialMonto).toLocaleString()}). Tope de la categoría: $${facMax.toLocaleString()}. Margen: $${margenDisponible.toLocaleString()} (${((margenDisponible / facMax) * 100).toFixed(1)}%). Escala ARCA 2026 (desde 02/2026, igual tope para servicios y venta).`;
 
   const chart = {
     type: 'doughnut' as const,
     slices: [
-      { label: 'Impositivo', value: categoriaIdeal.impositivo },
-      { label: 'Jubilatorio', value: categoriaIdeal.jubilatorio },
-      { label: 'Obra social', value: categoriaIdeal.obraSocial },
+      { label: 'Impositivo', value: impositivo },
+      { label: 'Jubilatorio', value: jubilatorio },
+      { label: 'Obra social', value: Math.round(obraSocialMonto) },
     ],
     prefix: '$',
     centerValue: '$' + Math.round(cuotaMensual).toLocaleString('es-AR'),
@@ -120,9 +119,9 @@ export function monotributoCategoriaIdeal(i: Inputs): Outputs {
     cuotaMensual,
     facturacionMaxima: facMax,
     margenDisponible,
-    componenteImpositivo: categoriaIdeal.impositivo,
-    componenteJubilatorio: categoriaIdeal.jubilatorio,
-    componenteObraSocial: categoriaIdeal.obraSocial,
+    componenteImpositivo: impositivo,
+    componenteJubilatorio: jubilatorio,
+    componenteObraSocial: Math.round(obraSocialMonto),
     formula,
     explicacion,
     _chart: chart,

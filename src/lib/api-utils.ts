@@ -58,6 +58,60 @@ export function sanitizeText(input: unknown, maxLen = 2000): string {
   return input.trim().slice(0, maxLen);
 }
 
+/** Escapa HTML para interpolar texto de usuario en emails (texto y atributos). */
+export function escapeHtml(s: string): string {
+  return s.replace(/[<>&"]/g, (c) =>
+    c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '&' ? '&amp;' : '&quot;'
+  );
+}
+
+/**
+ * Slug de calc válido: empieza con "/", sólo lowercase/dígitos/guiones/barras.
+ * Sin puntos, dos puntos ni comillas → no se puede inyectar un host ajeno
+ * ni romper el atributo href de los emails (anti phishing-relay).
+ */
+export function isValidCalcSlug(slug: string): boolean {
+  return /^\/[a-z0-9\-\/]{1,190}$/.test(slug);
+}
+
+/**
+ * Envía un email vía Resend (fetch directo, sin SDK, para no agregar
+ * dependency al Worker bundle). Best-effort: loguea y devuelve false
+ * ante cualquier error — NUNCA tira.
+ */
+export async function sendResendEmail(opts: {
+  apiKey: string;
+  from: string;
+  to: string[];
+  subject: string;
+  html: string;
+}): Promise<boolean> {
+  try {
+    const resp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${opts.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: opts.from,
+        to: opts.to,
+        subject: opts.subject,
+        html: opts.html,
+      }),
+    });
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => '');
+      console.error('resend send failed:', resp.status, errText.slice(0, 200));
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('resend send failed:', err);
+    return false;
+  }
+}
+
 export function getClientIP(request: Request): string {
   return (
     request.headers.get('cf-connecting-ip') ||

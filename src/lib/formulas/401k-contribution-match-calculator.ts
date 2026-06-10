@@ -1,3 +1,5 @@
+import { IRS_401K } from "../data/usa-2026";
+
 export interface Inputs {
   annual_salary: number;
   employee_rate: number;
@@ -42,11 +44,15 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
-  // 2026 IRS elective deferral limits — Source: IRS Rev. Proc. 2025-XX
-  const IRS_LIMIT_UNDER_50 = 23500; // 2026 base limit
-  const IRS_LIMIT_50_PLUS = 31000;  // 2026 base + $7,500 catch-up
+  // 2026 IRS elective deferral limits — fuente única src/lib/data/usa-2026.ts (IRS Notice 2025-67)
+  const IRS_LIMIT_UNDER_50 = IRS_401K.deferralUnder50; // $24,500 (§402(g))
+  const IRS_LIMIT_50_PLUS = IRS_401K.deferralUnder50 + IRS_401K.catchUp50; // $32,500 con catch-up 50+
+  const IRS_LIMIT_60_63 = IRS_401K.deferralUnder50 + IRS_401K.superCatchUp60_63; // $35,750 super catch-up 60–63
 
-  const irsLimit = ageBand === "50_plus" ? IRS_LIMIT_50_PLUS : IRS_LIMIT_UNDER_50;
+  const irsLimit =
+    ageBand === "60_63" ? IRS_LIMIT_60_63 :
+    ageBand === "50_plus" ? IRS_LIMIT_50_PLUS :
+    IRS_LIMIT_UNDER_50;
 
   // Employee raw contribution (before IRS cap)
   const employeeRaw = salary * (employeeRate / 100);

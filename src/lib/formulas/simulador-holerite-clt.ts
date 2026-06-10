@@ -16,7 +16,7 @@
  * competir — a intenção aqui é "holerite completo / quanto custo e quanto levo".
  */
 
-import { calcINSS, IRRF_DEDUCAO_DEPENDENTE } from '../data/brasil-2026';
+import { calcINSS, calcIRRF2026, IRRF_DEDUCAO_DEPENDENTE } from '../data/brasil-2026';
 
 export interface Inputs {
   salarioBruto: number;
@@ -38,24 +38,9 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Tabela IRRF mensal vigente desde 05/2025 (IN RFB): alíquota e parcela a deduzir.
-function irrfTabela(base: number): number {
-  if (base <= 2428.8) return 0;
-  if (base <= 2826.65) return base * 0.075 - 182.16;
-  if (base <= 3751.05) return base * 0.15 - 394.16;
-  if (base <= 4664.68) return base * 0.225 - 675.49;
-  return base * 0.275 - 908.73;
-}
-
-// Redutor 2026: IR zerado até base de R$ 5.000; redução linear até R$ 7.350
-// (aproximação da regra de transição da reforma). Acima, tabela cheia.
-function calcIrrf2026(base: number): number {
-  if (base <= 5000) return 0;
-  const cheio = irrfTabela(base);
-  if (base >= 7350) return Math.max(0, cheio);
-  const fator = (base - 5000) / (7350 - 5000);
-  return Math.max(0, cheio * fator);
-}
+// IRRF: tabela mensal (mai/2025) + redutor 2026 — implementação única em
+// src/lib/data/brasil-2026.ts (calcIRRF2026), compartilhada com a calc de
+// salário líquido para nunca divergirem.
 
 const FGTS_ALIQ = 0.08;
 // Custo do empregador (mínimo): INSS patronal 20% + FGTS 8% = 28%.
@@ -70,7 +55,7 @@ export function simuladorHoleriteClt(i: Inputs): Outputs {
   const liquidoDe = (brutoBase: number) => {
     const inss = calcINSS(brutoBase);
     const baseIr = Math.max(0, brutoBase - inss - dep * IRRF_DEDUCAO_DEPENDENTE);
-    const irrf = calcIrrf2026(baseIr);
+    const irrf = Math.max(0, calcIRRF2026(baseIr));
     return { inss, irrf, liquido: brutoBase - inss - irrf };
   };
 

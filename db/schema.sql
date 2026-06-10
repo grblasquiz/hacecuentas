@@ -125,3 +125,33 @@ SELECT
   MAX(created_at) AS last_vote_at
 FROM calc_votes
 GROUP BY slug;
+
+-- Pedidos "recibí este resultado por email" de las calcs (/api/email-result).
+-- sent=0 = pendiente de envío (backlog enviable cuando se active RESEND_API_KEY).
+CREATE TABLE IF NOT EXISTS email_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  result TEXT,
+  created_at INTEGER NOT NULL,          -- unix ms
+  user_agent TEXT,
+  ip_hash TEXT,
+  sent INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_email_results_created ON email_results(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_email_results_sent ON email_results(sent);
+
+-- Leads del vertical legal-laboral (/api/lead). Se encienden con las ofertas
+-- kind:'lead' de offers.ts cuando haya partner que compre el lead.
+CREATE TABLE IF NOT EXISTS legal_leads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  result TEXT,
+  offer_id TEXT,
+  created_at INTEGER NOT NULL,          -- unix ms
+  user_agent TEXT,
+  ip_hash TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_legal_leads_created ON legal_leads(created_at);
