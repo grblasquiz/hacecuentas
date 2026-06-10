@@ -504,6 +504,14 @@ const formatFreshnessDate = (iso: string): string => {
     </div>
   )}
 
+  {/* Guard pre-hidratación: si el usuario toca Calcular antes de que el script
+      principal ate handlers, prevenimos el GET default, encolamos el click
+      (data-hc-queued) y prendemos el spinner del botón (.loading ya trae el
+      texto t.calculating server-rendered). initCalculator lo destraba al final
+      seteando data-hc-ready y dispara el cálculo encolado. */}
+  <script is:inline data-astro-rerun>
+(function(){var c=document.currentScript.parentElement;c.addEventListener('submit',function(e){var f=e.target;if(c.dataset.hcReady||!f.classList||!f.classList.contains('calc-form'))return;e.preventDefault();c.dataset.hcQueued='1';var b=f.querySelector('.btn-primary');if(b)b.classList.add('loading')},true)})();
+  </script>
   <form id={`form-${config.slug}`} class="calc-form" data-calc-input novalidate>
     {useGroupsBasic ? (
       basicGroups.map((g) => (
@@ -1396,6 +1404,14 @@ const formatFreshnessDate = (iso: string): string => {
   }
 
   .btn-primary:disabled {
+    cursor: wait;
+    opacity: 0.85;
+  }
+
+  /* Guard pre-hidratación: click en Calcular encolado antes de que el JS
+     principal ate handlers (el spinner/texto lo aporta .loading, agregado
+     por el <script is:inline> previo al form). */
+  .calc-container[data-hc-queued='1']:not([data-hc-ready]) .btn-primary {
     cursor: wait;
     opacity: 0.85;
   }
@@ -3027,8 +3043,11 @@ const formatFreshnessDate = (iso: string): string => {
 
 <script>
   // Lazy loading por fórmula — Vite genera 1 chunk por archivo (.ts), cargado on-demand.
-  // Reemplaza el import eager del 'index' que metía las 1.500 fórmulas en el bundle principal.
-  const formulaLoaders = import.meta.glob<any>('../lib/formulas/*.ts');
+  // El MAPA de loaders (~3.400 dynamic imports) vive en su propio chunk
+  // (src/lib/formula-loader-map.ts): tenerlo inline acá inflaba ESTE bundle de
+  // ~48KB a 664KB raw. Fire-eager: el chunk del mapa baja en paralelo mientras
+  // el usuario completa el form; loadFormula() recién lo espera al usarlo.
+  const _loaderMapPromise = import('../lib/formula-loader-map');
   const formulaCache = new Map<string, Function>();
 
   // Session ID para correlacionar funnel en GA4 (calculator_used → share → …).
@@ -3052,7 +3071,16 @@ const formatFreshnessDate = (iso: string): string => {
 
   async function loadFormula(formulaId: string): Promise<Function | null> {
     if (formulaCache.has(formulaId)) return formulaCache.get(formulaId)!;
-    const loader = formulaLoaders[`../lib/formulas/${formulaId}.ts`];
+    let formulaLoaders: Record<string, () => Promise<any>>;
+    try {
+      ({ formulaLoaders } = await _loaderMapPromise);
+    } catch {
+      // El chunk del mapa no bajó (red caída) → mismo flujo que "fórmula no
+      // encontrada": executeFormula muestra el error con Reintentar.
+      return null;
+    }
+    // Keys relativas a formula-loader-map.ts, NO a este archivo.
+    const loader = formulaLoaders[`./formulas/${formulaId}.ts`];
     if (!loader) return null;
     const mod: any = await loader();
     // Encontrar la función exportada (cualquier export de tipo function)
@@ -5301,6 +5329,19 @@ const formatFreshnessDate = (iso: string): string => {
         }
       }
     } catch {}
+
+    // ── Hidratación lista: destrabar el guard pre-JS ─────────────────
+    // El <script is:inline> previo al form encola el click en Calcular
+    // (data-hc-queued) si el usuario lo tocó antes de que este init atara
+    // los handlers. Marcamos ready, limpiamos el loading visual y, si había
+    // un click encolado, disparamos el cálculo con los datos que el usuario
+    // ya cargó en el form (requestSubmit → validación + executeFormula).
+    container.dataset.hcReady = '1';
+    submitBtn.classList.remove('loading');
+    if (container.dataset.hcQueued === '1') {
+      delete container.dataset.hcQueued;
+      form.requestSubmit();
+    }
   }  // end initCalculator
 
   // Trigger en initial load + en cada astro:page-load (view transitions).

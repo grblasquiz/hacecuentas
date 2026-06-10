@@ -15,6 +15,10 @@ import { HOME_HREFLANG } from '../lib/hreflang';
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules).map((m: any) => m.default || m);
 
+// H1 hero: total del catálogo ES computado del glob (NUNCA hardcodear el número),
+// redondeado HACIA ABAJO a la centena para no over-promise: 2.832 → "Más de 2.800".
+const heroCalcsDisplay = (Math.floor(calcs.length / 100) * 100).toLocaleString('es-AR');
+
 // Notas recientes del blog → bloque "Novedades" en la home. Señal de frescura
 // para Google Discover + enlazado interno desde la home hacia el contenido
 // fresco (recomendación clave para que Discover levante las notas nuevas).
@@ -403,11 +407,12 @@ const schema = {
       </span>
     </div>
 
+    <p class="hero-kicker">Tu vida más fácil.</p>
     <h1 class="hero-title">
-      Tu vida <span class="accent">más fácil</span>.
+      Más de <span class="accent">{heroCalcsDisplay} calculadoras gratis</span>, listas al instante
     </h1>
     <p class="hero-lead">
-      <strong>{calcs.length.toLocaleString('es-AR')} calculadoras gratis</strong> en español, con fórmulas oficiales y resultado al instante.
+      Sueldo, aguinaldo, IMC, dólar y todo lo que necesites sacar: en español, con <strong>fórmulas oficiales</strong> y sin vueltas.
     </p>
     <button type="button" class="hero-search" id="hero-search-btn" aria-label={`Buscar entre ${calcs.length.toLocaleString('es-AR')} calculadoras`}>
       <svg class="hs-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -426,6 +431,18 @@ const schema = {
       <a href="/buscar?q=interes%20compuesto" class="hero-pop-chip">Interés compuesto</a>
       <a href="/buscar?q=embarazo" class="hero-pop-chip">Embarazo</a>
     </div>
+
+    <!-- Tus calculadoras (favoritos) — client-side desde localStorage 'hc_favs'
+         (contrato compartido: {s, t, l, d}, cap 50 FIFO). Oculta server-side
+         (display:none) → cero layout shift si no hay favoritos o falla storage.
+         El script de render vive abajo junto a los otros is:inline del home. -->
+    <section class="fav-strip" id="fav-strip" style="display:none" aria-labelledby="fav-strip-title">
+      <h2 class="fav-strip-title" id="fav-strip-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Tus calculadoras
+      </h2>
+      <div class="fav-strip-grid" id="fav-strip-grid"></div>
+    </section>
 
     <!-- Quick Actions: tiles de las 3 verticales que concentran el 70% del tráfico según GA.
          Reduce el bounce del hero (5s → objetivo 30s+) dando opciones inmediatas. -->
@@ -1016,6 +1033,95 @@ const schema = {
     })();
   </script>
 
+  <!-- Franja "Tus calculadoras": lee localStorage 'hc_favs' (contrato {s,t,l,d})
+       y muestra hasta 8 cards. Render 100% DOM API (textContent escapa el título;
+       nunca innerHTML con datos del storage). Si no hay favs o storage falla,
+       la sección queda display:none. Re-corre en astro:page-load (retorno SPA),
+       mismo patrón que el resto de los scripts del home. -->
+  <script is:inline>
+    (function () {
+      var KEY = 'hc_favs';
+      var LANGS = { '': 1, en: 1, pt: 1, mx: 1, es: 1, co: 1, cl: 1, pe: 1, ec: 1 };
+
+      function validFav(f) {
+        return !!f &&
+          typeof f.s === 'string' && /^[a-z0-9][a-z0-9-]*$/i.test(f.s) &&
+          typeof f.l === 'string' && LANGS[f.l] === 1;
+      }
+
+      function readFavs() {
+        try {
+          var raw = localStorage.getItem(KEY);
+          if (!raw) return [];
+          var arr = JSON.parse(raw);
+          if (!Array.isArray(arr)) return [];
+          return arr.filter(validFav);
+        } catch (e) { return []; }
+      }
+
+      // Quita un fav re-leyendo el array CRUDO y filtrando sólo el match (s,l):
+      // preserva intactos ítems de otros agentes aunque no pasen validFav.
+      function removeFav(s, l) {
+        try {
+          var raw = localStorage.getItem(KEY);
+          var arr = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(arr)) return;
+          var next = arr.filter(function (f) {
+            return !(f && f.s === s && (typeof f.l === 'string' ? f.l : '') === l);
+          });
+          localStorage.setItem(KEY, JSON.stringify(next));
+        } catch (e) {}
+      }
+
+      function render() {
+        var strip = document.getElementById('fav-strip');
+        var grid = document.getElementById('fav-strip-grid');
+        if (!strip || !grid) return; // no estamos en el home
+        var favs = readFavs();
+        if (favs.length === 0) { strip.style.display = 'none'; return; }
+        while (grid.firstChild) grid.removeChild(grid.firstChild);
+        // FIFO en storage (más nuevo al final) → mostramos los más recientes primero.
+        favs.slice().reverse().slice(0, 8).forEach(function (f) {
+          var url = (f.l ? '/' + f.l : '') + '/' + f.s;
+          var card = document.createElement('div');
+          card.className = 'fav-card';
+          var a = document.createElement('a');
+          a.className = 'fav-link';
+          a.href = url;
+          a.textContent = (typeof f.t === 'string' && f.t) ? f.t : f.s.replace(/-/g, ' ');
+          a.addEventListener('click', function () {
+            try {
+              if (typeof window.gtag === 'function') {
+                window.gtag('event', 'fav_open', { calc_slug: f.s });
+              }
+            } catch (e) {}
+          });
+          var rm = document.createElement('button');
+          rm.type = 'button';
+          rm.className = 'fav-remove';
+          rm.setAttribute('aria-label', 'Quitar ' + ((typeof f.t === 'string' && f.t) ? f.t : f.s) + ' de tus calculadoras');
+          rm.textContent = '×';
+          rm.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            removeFav(f.s, f.l);
+            render();
+          });
+          card.appendChild(a);
+          card.appendChild(rm);
+          grid.appendChild(card);
+        });
+        strip.style.display = '';
+      }
+
+      if (!window.__hcFavStrip) {
+        window.__hcFavStrip = true;
+        document.addEventListener('astro:page-load', render);
+      }
+      render();
+    })();
+  </script>
+
   <script is:inline>
     (function () {
       var topUrls = [
@@ -1240,12 +1346,25 @@ const schema = {
     font-weight: 500;
   }
 
+  /* Kicker (ex-H1 "Tu vida más fácil."): eyebrow corto arriba del H1. */
+  .hero-kicker {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--accent);
+    margin: 0 0 0.5rem;
+  }
+
+  /* H1 más largo que el viejo "Tu vida más fácil." → tope un toque menor,
+     max-width para que wrapee en 2 líneas prolijas y balance para mobile. */
   .hero-title {
-    font-size: clamp(2rem, 5.5vw, 3.5rem);
-    line-height: 1.1;
+    font-size: clamp(1.75rem, 5vw, 3.25rem);
+    line-height: 1.12;
     letter-spacing: -0.03em;
-    margin-bottom: 1.25rem;
+    margin: 0 auto 1.25rem;
+    max-width: 900px;
     font-weight: 800;
+    text-wrap: balance;
   }
 
   .hero-title .accent {
@@ -1406,6 +1525,73 @@ const schema = {
     .hero-pop-label { flex-shrink: 0; }
     .hero-pop-chip { flex-shrink: 0; scroll-snap-align: start; }
   }
+
+  /* Franja "Tus calculadoras" — favoritos del usuario (localStorage).
+     Server-side viene display:none; el JS la muestra sólo con ≥1 fav. */
+  .fav-strip {
+    max-width: 640px;
+    margin: 0 auto 1.75rem;
+  }
+  .fav-strip-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 0 0 0.625rem;
+  }
+  .fav-strip-title svg { color: #f59e0b; flex-shrink: 0; }
+  .fav-strip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.5rem;
+  }
+  .fav-card {
+    display: flex;
+    align-items: stretch;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .fav-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+  }
+  .fav-link {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.125rem 0.5rem 0.7rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .fav-link:hover { color: var(--accent); }
+  .fav-remove {
+    flex-shrink: 0;
+    width: 1.875rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-subtle);
+    font-size: 1.0625rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+  }
+  .fav-remove:hover { color: #dc2626; }
+  @media (max-width: 600px) {
+    .fav-strip { padding: 0 1rem; }
+    .fav-strip-grid { grid-template-columns: 1fr 1fr; }
+  }
+
   .hs-kbd {
     display: inline-flex;
     align-items: center;

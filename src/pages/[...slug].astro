@@ -23,6 +23,7 @@ import DateRangePresetsTable from '../components/DateRangePresetsTable.astro';
 import IclVsIpcVsUvaTable from '../components/IclVsIpcVsUvaTable.astro';
 import PediatricBmiChart from '../components/PediatricBmiChart.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
+import FavoriteStar from '../components/FavoriteStar.astro';
 import { findClusterForSlug } from '../lib/clusters';
 import { findHubForSlug } from '../lib/category-hubs';
 import { md, mdInline } from '../lib/markdown';
@@ -1082,6 +1083,16 @@ const hreflangTags = buildHreflangCluster({
   pe: peVersion?.slug,
   ec: ecVersion?.slug,
 });
+
+// Pills del lang-switch. Se renderizan en DOS navs (desktop arriba del grid /
+// mobile abajo de la calculadora — ver "AD-FIRST MOBILE" en el CSS); el array
+// único evita que las dos copias diverjan.
+const langPills = [
+  ptVersion && { href: `/pt/${ptVersion.slug}`, hreflang: 'pt', lang: 'pt', flag: '🇧🇷', label: 'Português' },
+  enVersion && { href: `/en/${enVersion.slug}`, hreflang: 'en', lang: 'en', flag: '🇺🇸', label: 'English' },
+  mxVersion && { href: `/mx/${mxVersion.slug}`, hreflang: 'es-MX', lang: 'es-MX', flag: '🇲🇽', label: 'México' },
+  esVersion && { href: `/es/${esVersion.slug}`, hreflang: 'es-ES', lang: 'es-ES', flag: '🇪🇸', label: 'España' },
+].filter(Boolean) as { href: string; hreflang: string; lang: string; flag: string; label: string }[];
 ---
 
 <Layout
@@ -1121,17 +1132,17 @@ const hreflangTags = buildHreflangCluster({
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             {updatedBadgeLabel}
           </span>
+          <FavoriteStar slug={calc.slug} title={calc.h1} langPrefix="" />
         </div>
       </div>
     </header>
 
-    {(enVersion || ptVersion || mxVersion || esVersion) && (
-      <nav class="lang-switch" aria-label="Versiones en otros idiomas">
+    {langPills.length > 0 && (
+      <nav class="lang-switch lang-switch-top" aria-label="Versiones en otros idiomas">
         <span class="lang-label">También disponible en:</span>
-        {ptVersion && <a class="lang-pill" href={`/pt/${ptVersion.slug}`} hreflang="pt" lang="pt"><span aria-hidden="true">🇧🇷</span> Português</a>}
-        {enVersion && <a class="lang-pill" href={`/en/${enVersion.slug}`} hreflang="en" lang="en"><span aria-hidden="true">🇺🇸</span> English</a>}
-        {mxVersion && <a class="lang-pill" href={`/mx/${mxVersion.slug}`} hreflang="es-MX" lang="es-MX"><span aria-hidden="true">🇲🇽</span> México</a>}
-        {esVersion && <a class="lang-pill" href={`/es/${esVersion.slug}`} hreflang="es-ES" lang="es-ES"><span aria-hidden="true">🇪🇸</span> España</a>}
+        {langPills.map((p) => (
+          <a class="lang-pill" href={p.href} hreflang={p.hreflang} lang={p.lang}><span aria-hidden="true">{p.flag}</span> {p.label}</a>
+        ))}
       </nav>
     )}
 
@@ -1148,11 +1159,29 @@ const hreflangTags = buildHreflangCluster({
       )}
 
       <div class="calc-main">
-        {cluster && <ClusterHub cluster={cluster} currentSlug={calc.slug} />}
+        {/* AD-FIRST MOBILE: .calc-top es display:contents en desktop (cero
+            efecto en layout) y flex-column en <768px para subir la calculadora
+            arriba del cluster-hub vía `order` SIN tocar el orden del DOM
+            (scroll-spy, anchors y SEO intactos). Ver CSS "AD-FIRST MOBILE". */}
+        <div class="calc-top">
+          {cluster && <ClusterHub cluster={cluster} currentSlug={calc.slug} />}
 
-        <section id="calculadora">
-          <Calculator config={calc} />
-        </section>
+          <section id="calculadora">
+            <Calculator config={calc} />
+          </section>
+
+          {/* Copia mobile del lang-switch: en <768px la copia top se oculta y
+              esta aparece DESPUÉS de la calculadora (el usuario de Ads llega a
+              UNA acción: calcular). display:none en desktop. */}
+          {langPills.length > 0 && (
+            <nav class="lang-switch lang-switch-inline" aria-label="Versiones en otros idiomas">
+              <span class="lang-label">También disponible en:</span>
+              {langPills.map((p) => (
+                <a class="lang-pill" href={p.href} hreflang={p.hreflang} lang={p.lang}><span aria-hidden="true">{p.flag}</span> {p.label}</a>
+              ))}
+            </nav>
+          )}
+        </div>
 
         {/* Oferta contextual PEGADA al resultado (se revela post-cálculo).
             Acá arriba convierte; al fondo de la página tenía CTR 0,006%. */}
@@ -2856,6 +2885,44 @@ const hreflangTags = buildHreflangCluster({
     /* En mobile ocultamos el TOC para que la calculadora aparezca arriba del fold.
        Las secciones son pocas y la navegación vertical scroll alcanza. */
     .toc { display: none; }
+  }
+
+  /* ============================================================
+   * AD-FIRST MOBILE (<768px)
+   * El usuario de Ads llega a UNA acción (calcular) y la calc quedaba
+   * 1-2 scrolls abajo (lang-switch + cluster-hub antes del form).
+   * Orden visual mobile: breadcrumb → H1 → fecha → CALCULADORA →
+   * lang-switch → TOC (ya oculto <1100px) → cluster-hub → resto.
+   *
+   * Cómo: .calc-top envuelve cluster-hub + #calculadora + copia mobile
+   * del lang-switch. En desktop es display:contents (no genera caja →
+   * layout byte-idéntico al de antes) y la copia mobile es display:none.
+   * En <768px pasa a flex-column y reordena con `order` — el DOM no
+   * cambia nunca, así que el scroll-spy del TOC (data-toc-link), el
+   * anchor #calculadora del bottom bar y el FAB siguen intactos.
+   * NO se toca display de .calc-page/.calc-layout/.calc-main: el margin
+   * collapsing del resto del contenido queda como estaba.
+   * ============================================================ */
+  .calc-top { display: contents; }
+  .lang-switch-inline { display: none; }
+
+  @media (max-width: 767px) {
+    .calc-top {
+      display: flex;
+      flex-direction: column;
+    }
+    /* La calculadora primero, el lang-switch pegado abajo; cluster-hub
+       queda en order:0 (default) → debajo de ambos, antes del resto. */
+    .calc-top > section[id='calculadora'] { order: -2; }
+    .calc-top > .lang-switch-inline {
+      display: flex;
+      order: -1;
+      /* El -0.75rem original compensaba el margin del header; acá pega
+         contra el margin-bottom de 2rem de .calc-container. */
+      margin: -0.75rem 0 0.25rem;
+    }
+    /* En mobile manda la copia inline: la top desaparece. */
+    .lang-switch-top { display: none; }
   }
 
   /* Calc actions: thumbs + share + reportar */

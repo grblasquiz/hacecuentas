@@ -1,0 +1,175 @@
+---
+/**
+ * FavoriteStar: botón estrella para guardar/quitar la calc actual de favoritos.
+ *
+ * CONTRATO FAVORITOS (compartido entre features, NO cambiar):
+ *   localStorage 'hc_favs' = JSON array de
+ *     { s: slug SIN prefijo de idioma,
+ *       t: título corto,
+ *       l: '' | 'en' | 'pt' | 'mx' | 'es' | 'co' | 'cl' | 'pe' | 'ec',
+ *       d: ISO date de agregado }
+ *   URL se reconstruye como (l ? '/' + l : '') + '/' + s.
+ *   Cap 50 ítems (FIFO: se descarta el más viejo).
+ *
+ * Los labels llegan por prop para que el componente funcione en todos los
+ * idiomas (el route de cada locale pasa su texto). Script inline
+ * autocontenido, sin imports — mismo patrón que setupCalcPage.
+ */
+interface Props {
+  /** Slug de la calc SIN prefijo de idioma. */
+  slug: string;
+  /** Título corto que se guarda en favoritos (t). */
+  title: string;
+  /** Prefijo de idioma del catálogo actual ('' = ES raíz). */
+  langPrefix?: '' | 'en' | 'pt' | 'mx' | 'es' | 'co' | 'cl' | 'pe' | 'ec';
+  /** Label accesible cuando la calc NO está guardada. */
+  labelSave?: string;
+  /** Label accesible cuando la calc YA está guardada. */
+  labelSaved?: string;
+}
+
+const {
+  slug,
+  title,
+  langPrefix = '',
+  labelSave = 'Guardar calculadora',
+  labelSaved = 'Guardada',
+} = Astro.props;
+---
+
+<button
+  type="button"
+  class="fav-star"
+  data-fav-star
+  data-fav-slug={slug}
+  data-fav-title={title}
+  data-fav-lang={langPrefix}
+  data-label-save={labelSave}
+  data-label-saved={labelSaved}
+  aria-pressed="false"
+  aria-label={labelSave}
+  title={labelSave}
+>
+  <svg class="fav-star-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+  <span class="fav-star-text" data-fav-text>{labelSave}</span>
+</button>
+
+<style>
+  /* Pill discreto, mismo lenguaje visual que .updated-badge (junto al que vive). */
+  .fav-star {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0.625rem 0 0 0.5rem;
+    padding: 0.25rem 0.625rem;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: normal;
+    color: var(--text-subtle);
+    background: var(--bg-muted);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .fav-star:hover {
+    color: var(--accent, #2563eb);
+    border-color: var(--accent, #2563eb);
+  }
+  .fav-star-icon { flex-shrink: 0; }
+  .fav-star[aria-pressed='true'] {
+    color: var(--text-muted);
+  }
+  .fav-star[aria-pressed='true'] .fav-star-icon {
+    color: var(--warning, #f59e0b);
+    fill: var(--warning, #f59e0b);
+  }
+</style>
+
+<script is:inline>
+  // Mismo patrón que setupCalcPage: ClientRouter (View Transitions) NO
+  // re-ejecuta <script is:inline> entre navegaciones SPA, así que nos
+  // re-bindeamos en astro:page-load con guard por elemento (dataset.favBound).
+  (function () {
+    var FAV_KEY = 'hc_favs';
+    var FAV_CAP = 50;
+
+    function readFavs() {
+      try {
+        var arr = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function writeFavs(arr) {
+      try {
+        localStorage.setItem(FAV_KEY, JSON.stringify(arr));
+      } catch (e) {
+        /* storage lleno o bloqueado: no romper la página */
+      }
+    }
+
+    function bindFavStar(btn) {
+      if (btn.dataset.favBound) return;
+      btn.dataset.favBound = '1';
+
+      var slug = btn.getAttribute('data-fav-slug') || '';
+      var title = btn.getAttribute('data-fav-title') || '';
+      var lang = btn.getAttribute('data-fav-lang') || '';
+      var labelSave = btn.getAttribute('data-label-save') || 'Guardar calculadora';
+      var labelSaved = btn.getAttribute('data-label-saved') || 'Guardada';
+      var textEl = btn.querySelector('[data-fav-text]');
+
+      function matches(f) {
+        return !!f && f.s === slug && (f.l || '') === lang;
+      }
+
+      function render(saved) {
+        var label = saved ? labelSaved : labelSave;
+        btn.setAttribute('aria-pressed', saved ? 'true' : 'false');
+        btn.setAttribute('aria-label', label);
+        btn.setAttribute('title', label);
+        if (textEl) textEl.textContent = label;
+      }
+
+      btn.addEventListener('click', function () {
+        var favs = readFavs();
+        var wasSaved = favs.some(matches);
+        var eventName;
+        if (wasSaved) {
+          favs = favs.filter(function (f) { return !matches(f); });
+          eventName = 'fav_remove';
+        } else {
+          favs.push({ s: slug, t: title, l: lang, d: new Date().toISOString() });
+          while (favs.length > FAV_CAP) favs.shift(); // cap 50, FIFO
+          eventName = 'fav_add';
+        }
+        writeFavs(favs);
+        render(!wasSaved);
+        try {
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', eventName, { calc_slug: slug });
+          }
+        } catch (e) {
+          /* analytics bloqueado: ignorar */
+        }
+      });
+
+      render(readFavs().some(matches));
+    }
+
+    function setupFavStar() {
+      var btns = document.querySelectorAll('[data-fav-star]');
+      for (var i = 0; i < btns.length; i++) bindFavStar(btns[i]);
+    }
+
+    setupFavStar();
+    document.addEventListener('astro:page-load', setupFavStar);
+  })();
+</script>
