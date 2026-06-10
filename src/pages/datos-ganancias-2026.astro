@@ -1,0 +1,528 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import {
+  MNI_MENSUAL_BASE,
+  INCREMENTO_CONYUGE_MENSUAL,
+  INCREMENTO_HIJO_MENSUAL,
+  INCREMENTO_HIJO_INCAPACITADO_MENSUAL,
+  ESCALA,
+} from '../lib/formulas/_ganancias-escala';
+import { sueldoAR } from '../lib/formulas/sueldo-ar';
+
+// Página-dato enlazable: escala del Impuesto a las Ganancias + deducciones art. 30 (2026).
+// Toda la data sale de la fuente única src/lib/formulas/_ganancias-escala.ts (la misma
+// que usan las calculadoras de Ganancias y de sueldo) → nunca diverge ni queda stale.
+// Patrón espejado de /datos-monotributo-2026: tabla server-rendered + schema Dataset +
+// CC-BY 4.0 + bloque "Cómo citar" → backlink editorial por atribución.
+
+const ULTIMA_REVISION = '2026-06-10';
+const VIGENCIA = 'primer semestre 2026 (enero a junio)';
+
+const fmtARS = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtPct = (n: number) => (n * 100).toFixed(0) + '%';
+
+// Escala mensual (9 tramos): reconstruimos los rangos desde la fuente única.
+const tramos = ESCALA.map((t, i) => ({
+  desde: i === 0 ? 0 : ESCALA[i - 1].hasta,
+  hasta: t.hasta,
+  tasa: t.tasa,
+  acumulado: t.acumulado,
+}));
+
+// Deducciones personales art. 30 — valores MENSUALES exportados por la fuente única
+// (el auto-updater de ARCA patchea esos literales) + los ANUALES oficiales del
+// período enero-junio 2026 tal como figuran documentados en la misma fuente
+// (PDF oficial ARCA, RG 4003 / Ley 27.743).
+const DEDUCCIONES = [
+  {
+    concepto: 'Ganancia no imponible (inc. a)',
+    anualOficial: '$5.151.802,50',
+    mensual: null as number | null,
+  },
+  {
+    concepto: 'Deducción especial empleados (inc. c, apdo. 1)',
+    anualOficial: '$18.031.308,76',
+    mensual: null as number | null,
+  },
+  {
+    concepto: 'GNI + deducción especial (mínimo efectivo empleado soltero)',
+    anualOficial: '$23.183.111,26',
+    mensual: MNI_MENSUAL_BASE,
+  },
+  {
+    concepto: 'Cónyuge a cargo (inc. b.1)',
+    anualOficial: '$4.851.964,66',
+    mensual: INCREMENTO_CONYUGE_MENSUAL,
+  },
+  {
+    concepto: 'Hijo a cargo (inc. b.2)',
+    anualOficial: '$2.446.863,48',
+    mensual: INCREMENTO_HIJO_MENSUAL,
+  },
+  {
+    concepto: 'Hijo incapacitado para el trabajo (inc. b.2.1)',
+    anualOficial: '$4.893.726,96',
+    mensual: INCREMENTO_HIJO_INCAPACITADO_MENSUAL,
+  },
+];
+
+// "¿Desde qué sueldo bruto se paga?": el MNI se compara contra el bruto NETO de
+// aportes (17%). Para sueldos por debajo del tope de aportes: bruto = MNI / 0,83.
+const brutoDesdeSoltero = MNI_MENSUAL_BASE / 0.83;
+const brutoDesdeCasado2Hijos =
+  (MNI_MENSUAL_BASE + INCREMENTO_CONYUGE_MENSUAL + 2 * INCREMENTO_HIJO_MENSUAL) / 0.83;
+
+// Ejemplos calculados con la MISMA función que la calculadora de sueldo
+// (sueldoAR importa esta escala) → cero divergencia entre tabla y calc.
+const EJEMPLOS_BRUTOS = [2_500_000, 3_000_000, 4_000_000, 5_000_000, 7_000_000, 10_000_000];
+const ejemplos = EJEMPLOS_BRUTOS.map((bruto) => {
+  const r = sueldoAR({ bruto, conyuge: false, hijos: 0 });
+  return { bruto, ganancias: r.ganancias, aportes: r.aportes, neto: r.neto, pct: r.porcentajeDescuento };
+});
+
+const tasaMin = ESCALA[0].tasa;
+const tasaMax = ESCALA[ESCALA.length - 1].tasa;
+
+const title =
+  'Datos Ganancias 2026: escala del impuesto y deducciones art. 30 (tabla oficial) | Hacé Cuentas';
+const description =
+  `Tabla completa del Impuesto a las Ganancias 2026 para empleados: escala progresiva mensual de ${ESCALA.length} tramos (${fmtPct(tasaMin)} a ${fmtPct(tasaMax)}), deducciones personales del art. 30 (GNI, cónyuge, hijos, deducción especial) y desde qué sueldo se paga. Datos oficiales ARCA, ${VIGENCIA}. Uso libre con atribución (CC-BY 4.0).`;
+
+const PAGE_URL = 'https://hacecuentas.com/datos-ganancias-2026';
+
+const faq = [
+  {
+    q: '¿Cuántos tramos tiene la escala de Ganancias 2026?',
+    a: `Tiene ${ESCALA.length} tramos con alícuotas progresivas del ${fmtPct(tasaMin)} al ${fmtPct(tasaMax)} (art. 94 de la Ley del Impuesto a las Ganancias). La alícuota es marginal: cada tasa se aplica sólo a la porción de ganancia que cae dentro de su tramo, no a todo el sueldo.`,
+  },
+  {
+    q: '¿Desde qué sueldo bruto se paga Ganancias en 2026?',
+    a: `Un empleado soltero sin hijos empieza a pagar con un bruto mensual de aproximadamente ${fmtARS(brutoDesdeSoltero)}. Casado con cónyuge y 2 hijos a cargo, desde aproximadamente ${fmtARS(brutoDesdeCasado2Hijos)}. El umbral sube porque las deducciones del art. 30 se restan antes de aplicar la escala.`,
+  },
+  {
+    q: '¿Cuál es el mínimo no imponible de Ganancias 2026?',
+    a: `Para un empleado en relación de dependencia soltero sin cargas, la suma de ganancia no imponible + deducción especial equivale a ${fmtARS(MNI_MENSUAL_BASE)} mensuales ($23.183.111,26 anuales) en el primer semestre 2026. Sobre lo que excede ese mínimo (después de aportes) se aplica la escala.`,
+  },
+  {
+    q: '¿Cuánto se deduce por cónyuge y por hijo en 2026?',
+    a: `Por cónyuge a cargo: ${fmtARS(INCREMENTO_CONYUGE_MENSUAL)} por mes ($4.851.964,66 anuales). Por cada hijo a cargo menor de 18 años: ${fmtARS(INCREMENTO_HIJO_MENSUAL)} por mes ($2.446.863,48 anuales). Por hijo incapacitado para el trabajo: ${fmtARS(INCREMENTO_HIJO_INCAPACITADO_MENSUAL)} por mes. El cónyuge deduce aproximadamente el doble que un hijo.`,
+  },
+  {
+    q: '¿La alícuota del 35% se aplica a todo el sueldo?',
+    a: `No. Es la alícuota marginal más alta: se aplica sólo al excedente de ganancia neta imponible por encima de ${fmtARS(ESCALA[ESCALA.length - 2].hasta)} mensuales. Los tramos anteriores tributan a sus propias tasas (de ${fmtPct(tasaMin)} a 31%), por eso el impuesto efectivo siempre es menor que la marginal.`,
+  },
+  {
+    q: '¿Cada cuánto se actualiza la escala de Ganancias?',
+    a: `Desde la Ley 27.743 (2024), ARCA actualiza la escala y las deducciones cada semestre por IPC (INDEC). Los valores de esta tabla rigen para el ${VIGENCIA}; en julio 2026 se publica la actualización del segundo semestre.`,
+  },
+  {
+    q: '¿Qué se descuenta antes de aplicar la escala?',
+    a: `Primero se restan del bruto los aportes obligatorios (11% jubilación + 3% obra social + 3% PAMI, con tope de base imponible), y después las deducciones personales del art. 30 (mínimo no imponible, deducción especial, cónyuge, hijos) y las deducciones admitidas (alquiler, prepaga, servicio doméstico, etc.). Sólo el resto es ganancia sujeta a impuesto.`,
+  },
+  {
+    q: '¿El aguinaldo paga Ganancias?',
+    a: `Sí: el SAC integra la remuneración gravada y la retención se prorratea durante el año (RG 4003). Por eso en junio y diciembre la retención puede saltar si el empleador no prorrateó. Hay una calculadora específica de Ganancias sobre el aguinaldo enlazada abajo.`,
+  },
+  {
+    q: '¿Puedo usar esta tabla en mi web, nota o trabajo?',
+    a: `Sí. Los datos se publican bajo licencia Creative Commons CC-BY 4.0: podés reproducirlos libremente citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".`,
+  },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset',
+  '@id': `${PAGE_URL}#dataset`,
+  name: 'Impuesto a las Ganancias Argentina 2026 — escala y deducciones art. 30',
+  description:
+    `Escala progresiva mensual del Impuesto a las Ganancias para personas humanas (art. 94 LIG) vigente en el primer semestre 2026 (${ESCALA.length} tramos, ${fmtPct(tasaMin)} a ${fmtPct(tasaMax)}) y deducciones personales del art. 30: ganancia no imponible, deducción especial, cónyuge e hijos. Fuente: ARCA.`,
+  url: PAGE_URL,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  isAccessibleForFree: true,
+  inLanguage: 'es-AR',
+  dateModified: ULTIMA_REVISION,
+  temporalCoverage: '2026-01/2026-06',
+  spatialCoverage: { '@type': 'Country', name: 'Argentina' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  sourceOrganization: {
+    '@type': 'GovernmentOrganization',
+    name: 'ARCA (ex AFIP)',
+    url: 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/',
+  },
+  keywords: ['Impuesto a las Ganancias', 'Escala Ganancias 2026', 'Deducciones art. 30', 'ARCA', 'Cuarta categoría', 'Argentina'],
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${PAGE_URL}#webpage`,
+      name: title,
+      description,
+      url: PAGE_URL,
+      inLanguage: 'es-AR',
+      dateModified: ULTIMA_REVISION,
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      publisher: { '@id': 'https://hacecuentas.com/#organization' },
+      mainEntity: { '@id': `${PAGE_URL}#dataset` },
+    },
+    datasetSchema,
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Datos Ganancias 2026', item: PAGE_URL },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical="/datos-ganancias-2026"
+  audience="AR"
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <main class="article-main">
+    <article class="page-content datos-page">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan">
+          <a href="/">Inicio</a> <span>›</span> <span>Datos Ganancias 2026</span>
+        </nav>
+        <h1>Ganancias 2026: escala del impuesto y deducciones art. 30</h1>
+        <p class="lede">
+          Tabla de referencia del <strong>Impuesto a las Ganancias para empleados</strong> en 2026:
+          la escala progresiva mensual de {ESCALA.length} tramos (art. 94 LIG), las deducciones
+          personales del art. 30 (mínimo no imponible, cónyuge, hijos, deducción especial) y desde
+          qué sueldo se paga. Datos oficiales de <strong>ARCA</strong>, vigentes para el {VIGENCIA}.
+        </p>
+        <p class="updated">
+          Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</time> ·
+          Datos al: {VIGENCIA} ·
+          Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)
+        </p>
+      </header>
+
+      <section class="stats-callout" aria-label="Datos destacados">
+        <div class="stat">
+          <span class="stat-num">{ESCALA.length}</span>
+          <span class="stat-label">tramos ({fmtPct(tasaMin)} a {fmtPct(tasaMax)})</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">{fmtARS(MNI_MENSUAL_BASE)}</span>
+          <span class="stat-label">mínimo efectivo mensual (soltero)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">{fmtARS(brutoDesdeSoltero)}</span>
+          <span class="stat-label">bruto desde el que se paga (soltero)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">{fmtARS(INCREMENTO_HIJO_MENSUAL)}</span>
+          <span class="stat-label">deducción mensual por hijo</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Escala mensual de Ganancias 2026 (art. 94 LIG)</h2>
+        <p>
+          Escala progresiva sobre la <strong>ganancia neta imponible mensual</strong> (lo que queda
+          del bruto después de aportes y deducciones). Cada alícuota es <em>marginal</em>: se aplica
+          sólo a la porción que cae dentro del tramo. El "fijo acumulado" es el impuesto ya
+          liquidado por los tramos anteriores.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ganancia imponible mensual</th>
+                <th>Fijo acumulado</th>
+                <th>Alícuota sobre excedente</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tramos.map((t) => (
+                <tr>
+                  <td data-label="Tramo">
+                    {t.hasta === Infinity
+                      ? `Más de ${fmtARS(t.desde)}`
+                      : `${fmtARS(t.desde)} a ${fmtARS(t.hasta)}`}
+                  </td>
+                  <td data-label="Fijo acumulado">{fmtARS(t.acumulado)}</td>
+                  <td data-label="Alícuota"><strong>{fmtPct(t.tasa)}</strong></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          Valores mensuales derivados de la tabla anual oficial (cada límite es 1/12 del anual).
+          ARCA actualiza la escala por IPC cada semestre (Ley 27.743); la del segundo semestre 2026
+          se publica en julio.
+        </p>
+      </section>
+
+      <section>
+        <h2>Deducciones personales del art. 30 (2026)</h2>
+        <p>
+          Montos que se restan de la ganancia antes de aplicar la escala. Los anuales son los del
+          PDF oficial de ARCA para enero-junio 2026; los mensuales son los que usan las
+          calculadoras de este sitio (anual ÷ 12).
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Concepto</th>
+                <th>Anual (oficial ARCA)</th>
+                <th>Mensual</th>
+              </tr>
+            </thead>
+            <tbody>
+              {DEDUCCIONES.map((d) => (
+                <tr>
+                  <td data-label="Concepto">{d.concepto}</td>
+                  <td data-label="Anual">{d.anualOficial}</td>
+                  <td data-label="Mensual">{d.mensual === null ? '—' : fmtARS(d.mensual)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          Para deducir cónyuge o hijos, el familiar debe estar a cargo, ser residente y no superar
+          ingresos propios por la ganancia no imponible. Hijo: menor de 18 años (sin límite de edad
+          si está incapacitado para el trabajo).
+        </p>
+      </section>
+
+      <section>
+        <h2>Cuánto paga un empleado soltero, según su bruto</h2>
+        <p>
+          Ejemplos calculados con la misma fórmula que usan nuestras calculadoras de sueldo
+          (aportes 11% + 3% + 3% con tope de base imponible, deducciones de soltero sin hijos,
+          escala de arriba):
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Sueldo bruto</th>
+                <th>Aportes</th>
+                <th>Ganancias</th>
+                <th>Neto en mano</th>
+                <th>Descuento total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ejemplos.map((e) => (
+                <tr>
+                  <td data-label="Bruto"><strong>{fmtARS(e.bruto)}</strong></td>
+                  <td data-label="Aportes">{fmtARS(e.aportes)}</td>
+                  <td data-label="Ganancias">{fmtARS(e.ganancias)}</td>
+                  <td data-label="Neto">{fmtARS(e.neto)}</td>
+                  <td data-label="% descuento">{e.pct.toLocaleString('es-AR')}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          Retención mensual estimada para empleado soltero sin hijos, sin otras deducciones
+          (alquiler, prepaga, etc.). Con cargas de familia o deducciones informadas en SiRADIG, el
+          impuesto baja.
+        </p>
+      </section>
+
+      <section>
+        <h2>Calculá tu caso</h2>
+        <p>
+          Esta página es la tabla de referencia. Para tu retención exacta según tu situación
+          familiar y deducciones, usá las calculadoras:
+        </p>
+        <ul class="calc-links">
+          <li><a href="/calculadora-ganancias-4ta-categoria-2026">Calculadora de Ganancias 4ta categoría 2026</a></li>
+          <li><a href="/calculadora-impuesto-ganancias-sueldo">Impuesto a las Ganancias sobre el sueldo</a></li>
+          <li><a href="/calculadora-deduccion-familia-conyuge-hijo-ganancias">Deducción por cónyuge e hijos en Ganancias</a></li>
+          <li><a href="/calculadora-ganancias-aguinaldo-sac-retencion">Ganancias sobre el aguinaldo (SAC)</a></li>
+          <li><a href="/sueldo-en-mano-argentina">Sueldo en mano (neto) Argentina</a></li>
+        </ul>
+        <p>
+          Más tablas de datos: <a href="/datos-topes-sipa-2026">topes de aportes SIPA 2026</a> ·
+          <a href="/datos-aguinaldo-2026">aguinaldo (SAC) 2026</a> ·
+          <a href="/datos-monotributo-2026">monotributo 2026</a>.
+        </p>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Cómo citar esta tabla</h2>
+        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
+        <pre><code>Fuente: Hacé Cuentas — https://hacecuentas.com/datos-ganancias-2026
+Datos oficiales ARCA · Licencia CC-BY 4.0</code></pre>
+        <p>
+          Si publicás online, te agradecemos el enlace a
+          <a href="https://hacecuentas.com/datos-ganancias-2026">hacecuentas.com/datos-ganancias-2026</a>.
+        </p>
+      </section>
+
+      <section class="faq">
+        <h2>Preguntas frecuentes</h2>
+        {faq.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </section>
+
+      <section class="fuentes">
+        <h2>Fuentes</h2>
+        <ul>
+          <li>
+            <a href="https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/documentos/Tabla-Art-94-LIG-per-ene-a-jun-2026.pdf" rel="nofollow noopener" target="_blank">ARCA — Tabla art. 94 LIG, período enero-junio 2026</a> (escala oficial)
+          </li>
+          <li>
+            <a href="https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-ene-a-jun-2026.pdf" rel="nofollow noopener" target="_blank">ARCA — Deducciones personales art. 30, enero-junio 2026</a> (deducciones oficiales)
+          </li>
+          <li>RG 4003 (retención a empleados) · Ley 27.743 (actualización semestral por IPC).</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem 1rem 4rem;
+  }
+  .crumbs {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-bottom: 0.75rem;
+  }
+  .crumbs a { color: var(--accent, #2563eb); text-decoration: none; }
+  .datos-page h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .lede {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text, #222);
+  }
+  .updated {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.5rem;
+  }
+  .datos-page h2 {
+    font-size: 1.4rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .stats-callout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin: 1.75rem 0;
+  }
+  .stat {
+    background: var(--bg-soft, #f4f6f9);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 0.6rem;
+    padding: 0.9rem 1rem;
+    text-align: center;
+  }
+  .stat-num {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--accent, #2563eb);
+    line-height: 1.2;
+  }
+  .stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.25rem;
+  }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  .datos-page table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    min-width: 540px;
+  }
+  .datos-page th {
+    background: var(--bg-soft, #f1f5f9);
+    padding: 0.6rem 0.7rem;
+    text-align: right;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border, #e5e7eb);
+    white-space: nowrap;
+  }
+  .datos-page th:first-child { text-align: left; }
+  .datos-page td {
+    padding: 0.55rem 0.7rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border, #eee);
+    white-space: nowrap;
+  }
+  .datos-page td:first-child { text-align: left; }
+  .datos-page tbody tr:nth-child(odd) { background: var(--bg-card, #fafafa); }
+  .note {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.5rem;
+  }
+  .calc-links li, .fuentes li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent, #2563eb); }
+  .cite-instructions {
+    margin-top: 2.5rem;
+    padding: 1.1rem;
+    background: var(--bg-soft, #f4f6f9);
+    border-radius: 0.6rem;
+  }
+  .cite-instructions pre {
+    background: var(--code-bg, #eaeef3);
+    padding: 0.75rem;
+    border-radius: 0.4rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+  }
+  .faq details {
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    padding: 0.75rem 0;
+  }
+  .faq summary {
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text, #222);
+  }
+  .faq details p {
+    margin-top: 0.5rem;
+    color: var(--text-muted, #555);
+    line-height: 1.6;
+  }
+</style>

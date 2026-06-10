@@ -70,15 +70,18 @@ def pull_queries():
 
 
 def pull_pages():
+    # Quirk de la API: GetPageStats devuelve filas tipadas QueryStats, así que
+    # la URL de la página viene en el campo "Query" (no "Page") y la posición
+    # en "AvgImpressionPosition". Verificado contra la respuesta cruda 2026-06.
     data = api_get("GetPageStats")
     rows = data.get("d", []) or []
     out = []
     for r in rows:
         out.append({
-            "page": r.get("Page", ""),
+            "page": r.get("Page") or r.get("Query", ""),
             "impressions": r.get("Impressions", 0) or 0,
             "clicks": r.get("Clicks", 0) or 0,
-            "position": r.get("Position", 0) or 0,
+            "position": r.get("AvgImpressionPosition", 0) or r.get("Position", 0) or 0,
         })
     out.sort(key=lambda x: -x["impressions"])
     return out
@@ -151,6 +154,7 @@ def main():
         path = o["page"].replace("https://hacecuentas.com", "").replace("http://hacecuentas.com", "")
         if path and not path.startswith("http"):
             opp_urls.append(path if path.startswith("/") else f"/{path}")
+    opp_urls = list(dict.fromkeys(opp_urls))  # dedupe (la API trae 1 fila por bucket semanal)
     out_txt.write_text("\n".join(opp_urls) + "\n")
     print(f"INFO Opportunities: {out_txt} ({len(opp_urls)} URLs)", file=sys.stderr)
 

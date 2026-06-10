@@ -4,7 +4,9 @@ subtitle: "Cache, deploy speed, and gotchas you'll hit past 500 pages"
 tags: webdev, cloudflare, astro, seo
 ---
 
-[Hacé Cuentas](https://hacecuentas.com) is thousands of static pages built with Astro, hosted on Cloudflare Pages. Started with 10 pages. Scaled to 1,200+, then well past that.
+[Hacé Cuentas](https://hacecuentas.com) — hacecuentas.com, the calculator site — is thousands of static pages built with Astro, hosted on Cloudflare Pages. Started with 10 pages. Scaled to 1,200+, then well past that.
+
+Most of the traffic lands on money pages like the [Argentine net-salary calculator](https://hacecuentas.com/sueldo-en-mano-argentina) and the [fixed-term deposit comparator](https://hacecuentas.com/comparador-plazo-fijo), so a stale cache isn't cosmetic — it shows people wrong numbers.
 
 Most "scale your static site" tutorials stop at 100 pages. Past 500, real problems start.
 
@@ -113,4 +115,4 @@ For my use case — SEO-driven static site with semi-dynamic data — Cloudflare
 
 [grblasquiz/hacecuentas](https://github.com/grblasquiz/hacecuentas) — if you're shipping a big static site on Cloudflare, the patterns above are all in there.
 
-Live: [hacecuentas.com](https://hacecuentas.com) — thousands of static pages, all on CF Pages.
+Live: hacecuentas.com — for example the [net salary calculator for Argentina](https://hacecuentas.com/sueldo-en-mano-argentina) or the [Monotributo 2026 tax calculator](https://hacecuentas.com/calculadora-monotributo-2026). Thousands of static pages, all on CF Pages.

@@ -4,12 +4,11 @@ published: false
 description: How I expose live BCRA, INDEC, and market data on a static Astro site without going serverless.
 tags: astro, staticsite, webdev, seo
 cover_image: https://hacecuentas.com/og-default.png
-canonical_url: https://hacecuentas.com/blog/build-time-data-fetching
 ---
 
 "Static site" usually means "content doesn't change." But what if I want my static site to show today's exchange rate, this month's inflation, and current interest rates — without a backend?
 
-On [Hacé Cuentas](https://hacecuentas.com) there's a [page with live financial values](https://hacecuentas.com/valores-bcra) (Argentine dollar quotes, inflation, UVA index, bank rates). It feels dynamic. It's not.
+On [Hacé Cuentas](https://hacecuentas.com) (hacecuentas.com) there's a [page with live financial values](https://hacecuentas.com/valores-bcra) (Argentine dollar quotes, inflation, UVA index, bank rates) and a [fixed-term deposit comparator](https://hacecuentas.com/comparador-plazo-fijo) that pulls live bank rates the same way. They feel dynamic. They're not.
 
 Here's the architecture.
 

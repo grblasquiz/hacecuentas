@@ -4,10 +4,9 @@ published: false
 description: A lightweight markdown table parser for Astro static sites that don't want to pull remark + rehype + 40 plugins.
 tags: javascript, webdev, markdown, astro
 cover_image: https://hacecuentas.com/og-default.png
-canonical_url: https://hacecuentas.com/blog/markdown-tables-minimal-parser
 ---
 
-On [Hacé Cuentas](https://hacecuentas.com) I render 1,200+ pages of user-facing explanation text from JSON content. Every page has at least one markdown table — tax brackets, conversion tables, BMI ranges, dose schedules.
+On [Hacé Cuentas](https://hacecuentas.com) (hacecuentas.com) I render 1,200+ pages of user-facing explanation text from JSON content. Every page has at least one markdown table — tax brackets (like the [Monotributo 2026 categories](https://hacecuentas.com/calculadora-monotributo-2026)), conversion tables, BMI ranges, dose schedules.
 
 For a long time my tables looked like this:
 

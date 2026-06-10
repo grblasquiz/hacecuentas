@@ -1,0 +1,438 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { salarioMinimo } from '../lib/formulas/salario-minimo';
+import { SALARIO_MINIMO as SM_BR } from '../lib/data/brasil-2026';
+import { PERU_2026 } from '../lib/data/peru-2026';
+import { ECUADOR_2026 } from '../lib/data/ecuador-2026';
+
+// Página-dato enlazable: salario mínimo comparado en LATAM 2026.
+// Cada valor sale de la fuente única verificada de su país en este repo
+// (salario-minimo.ts AR / brasil-2026.ts / peru-2026.ts / ecuador-2026.ts),
+// las mismas que usan las calculadoras → cero drift entre tabla y calcs.
+// Sólo se publican países con fuente única verificada (cero estimaciones).
+// Patrón espejado de /datos-monotributo-2026: tabla server-rendered + schema
+// Dataset + CC-BY 4.0 + bloque "Cómo citar".
+
+const ULTIMA_REVISION = '2026-06-10';
+
+// AR — el SMVM vive en la fórmula oficial (el fetcher de CNEPySMVyM la patchea).
+const ar = salarioMinimo({ horasSemana: 48 });
+
+const fmtNum = (n: number, locale = 'es-AR', dec = 0) =>
+  n.toLocaleString(locale, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+const PAISES = [
+  {
+    pais: 'Argentina',
+    bandera: '🇦🇷',
+    instrumento: 'Salario Mínimo, Vital y Móvil (SMVM)',
+    valor: `$ ${fmtNum(ar.smvmMensual)} ARS`,
+    norma: 'Resolución 9/2025 CNEPySMVyM',
+    vigencia: ar.fechaVigencia,
+    nota: `Valor hora: $ ${fmtNum(ar.smvmHora)} · jornada completa (48 h semanales)`,
+  },
+  {
+    pais: 'Brasil',
+    bandera: '🇧🇷',
+    instrumento: 'Salário mínimo nacional',
+    valor: `R$ ${fmtNum(SM_BR, 'pt-BR', 2)} BRL`,
+    norma: 'Decreto 12.797/2025',
+    vigencia: 'enero 2026',
+    nota: 'Reajuste anual en enero (+6,79% sobre los R$ 1.518 de 2025)',
+  },
+  {
+    pais: 'Perú',
+    bandera: '🇵🇪',
+    instrumento: 'Remuneración Mínima Vital (RMV)',
+    valor: `S/ ${fmtNum(PERU_2026.rmv, 'es-PE')} PEN`,
+    norma: 'DS 006-2024-TR',
+    vigencia: 'desde enero 2025 (mantenida en 2026)',
+    nota: `Asignación familiar: S/ ${fmtNum(PERU_2026.asignacionFamiliar, 'es-PE')} (10% de la RMV, con hijos menores)`,
+  },
+  {
+    pais: 'Ecuador',
+    bandera: '🇪🇨',
+    instrumento: 'Salario Básico Unificado (SBU)',
+    valor: `US$ ${fmtNum(ECUADOR_2026.sbu, 'es-EC')} USD`,
+    norma: 'Ministerio del Trabajo',
+    vigencia: 'enero 2026',
+    nota: `Economía dolarizada · décimo cuarto sueldo = 1 SBU (US$ ${fmtNum(ECUADOR_2026.decimoCuarto, 'es-EC')})`,
+  },
+];
+
+const title =
+  'Salario mínimo en LATAM 2026: Argentina, Brasil, Perú y Ecuador (tabla con fuentes) | Hacé Cuentas';
+const description =
+  `Tabla comparativa del salario mínimo 2026 en América Latina con norma legal y vigencia: SMVM Argentina ($ ${fmtNum(ar.smvmMensual)}), salário mínimo Brasil (R$ ${fmtNum(SM_BR, 'pt-BR', 0)}), RMV Perú (S/ ${fmtNum(PERU_2026.rmv, 'es-PE')}) y SBU Ecuador (US$ ${fmtNum(ECUADOR_2026.sbu)}). Fuentes oficiales por país. Uso libre con atribución (CC-BY 4.0).`;
+
+const PAGE_URL = 'https://hacecuentas.com/datos-salario-minimo-latam-2026';
+
+const faq = [
+  {
+    q: '¿Cuál es el salario mínimo de Argentina en 2026?',
+    a: `$ ${fmtNum(ar.smvmMensual)} mensuales para jornada completa (${ar.fechaVigencia}), con valor hora de $ ${fmtNum(ar.smvmHora)}. Lo fija el Consejo del Salario (CNEPySMVyM) con un cronograma de aumentos; la Resolución 9/2025 cubre noviembre 2025 a agosto 2026.`,
+  },
+  {
+    q: '¿Cuál es el salario mínimo de Brasil en 2026?',
+    a: `R$ ${fmtNum(SM_BR, 'pt-BR', 2)} mensuales (Decreto 12.797/2025), un 6,79% más que los R$ 1.518 de 2025. Se reajusta cada enero por la regla de valorización (INPC + crecimiento del PBI).`,
+  },
+  {
+    q: '¿Cuál es el salario mínimo de Perú en 2026?',
+    a: `S/ ${fmtNum(PERU_2026.rmv, 'es-PE')} (Remuneración Mínima Vital, DS 006-2024-TR), vigente desde enero 2025 y mantenida en 2026. Los trabajadores con hijos menores suman la asignación familiar de S/ ${fmtNum(PERU_2026.asignacionFamiliar, 'es-PE')} (10% de la RMV).`,
+  },
+  {
+    q: '¿Cuál es el salario mínimo de Ecuador en 2026?',
+    a: `US$ ${fmtNum(ECUADOR_2026.sbu)} (Salario Básico Unificado fijado por el Ministerio del Trabajo). Ecuador está dolarizado, así que es el único de la tabla expresado directamente en dólares. Además, el décimo cuarto sueldo equivale a 1 SBU.`,
+  },
+  {
+    q: '¿Qué país de la tabla tiene el salario mínimo más alto?',
+    a: 'No se puede responder comparando los números directamente: están en monedas distintas (peso argentino, real, sol y dólar) con poderes de compra distintos. Para compararlos hay que convertirlos a una moneda común al tipo de cambio del día — podés hacerlo con nuestro conversor de monedas — y aun así la comparación omite el costo de vida local.',
+  },
+  {
+    q: '¿Por qué no está la tabla en dólares?',
+    a: 'Porque el tipo de cambio cambia todos los días (y en Argentina, según el dólar que uses). Publicar una conversión fija dejaría la tabla desactualizada en una semana. Los valores en moneda local con su norma legal son el dato estable y citable; la conversión la hacés al día con el conversor.',
+  },
+  {
+    q: '¿Por qué no aparecen Chile, Colombia y México?',
+    a: 'Porque todavía no consolidamos para esos países una fuente única verificada con el mismo estándar que usamos para Argentina, Brasil, Perú y Ecuador. Preferimos una tabla más corta y exacta antes que una completa con valores sin verificar. Los sumaremos cuando la fuente esté consolidada.',
+  },
+  {
+    q: '¿Cada cuánto cambian estos valores?',
+    a: 'Argentina: por resolución del Consejo del Salario, con cronogramas de aumentos en el año (el valor de la tabla es el del mes de vigencia indicado). Brasil: cada enero. Perú: por decreto supremo, sin fecha fija (la RMV actual rige desde 2025). Ecuador: cada enero.',
+  },
+  {
+    q: '¿Puedo usar esta tabla en mi web, nota o trabajo?',
+    a: 'Sí. Los datos se publican bajo licencia Creative Commons CC-BY 4.0: podés reproducirlos libremente citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".',
+  },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset',
+  '@id': `${PAGE_URL}#dataset`,
+  name: 'Salario mínimo en América Latina 2026 — Argentina, Brasil, Perú y Ecuador',
+  description:
+    'Tabla comparativa del salario mínimo legal 2026 en moneda local, con instrumento legal, norma y vigencia por país: SMVM (Argentina), salário mínimo (Brasil), RMV (Perú) y SBU (Ecuador). Fuentes oficiales de cada país.',
+  url: PAGE_URL,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  isAccessibleForFree: true,
+  inLanguage: 'es-419',
+  dateModified: ULTIMA_REVISION,
+  temporalCoverage: '2026',
+  spatialCoverage: [
+    { '@type': 'Country', name: 'Argentina' },
+    { '@type': 'Country', name: 'Brasil' },
+    { '@type': 'Country', name: 'Perú' },
+    { '@type': 'Country', name: 'Ecuador' },
+  ],
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  keywords: ['Salario mínimo', 'SMVM', 'Salário mínimo', 'RMV', 'SBU', 'América Latina', 'LATAM', '2026'],
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${PAGE_URL}#webpage`,
+      name: title,
+      description,
+      url: PAGE_URL,
+      inLanguage: 'es-419',
+      dateModified: ULTIMA_REVISION,
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      publisher: { '@id': 'https://hacecuentas.com/#organization' },
+      mainEntity: { '@id': `${PAGE_URL}#dataset` },
+    },
+    datasetSchema,
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Salario mínimo LATAM 2026', item: PAGE_URL },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical="/datos-salario-minimo-latam-2026"
+  audience="global"
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <main class="article-main">
+    <article class="page-content datos-page">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan">
+          <a href="/">Inicio</a> <span>›</span> <span>Salario mínimo LATAM 2026</span>
+        </nav>
+        <h1>Salario mínimo en LATAM 2026: tabla comparativa con fuentes</h1>
+        <p class="lede">
+          El salario mínimo legal vigente en 2026 en <strong>Argentina, Brasil, Perú y
+          Ecuador</strong>, en moneda local y con la norma que lo fija. Cada valor sale de la
+          fuente oficial de su país y es el mismo que usan las calculadoras de sueldo de este
+          sitio.
+        </p>
+        <p class="updated">
+          Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</time> ·
+          Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)
+        </p>
+      </header>
+
+      <section class="stats-callout" aria-label="Datos destacados">
+        <div class="stat">
+          <span class="stat-num">$ {fmtNum(ar.smvmMensual)}</span>
+          <span class="stat-label">🇦🇷 SMVM Argentina (ARS)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">R$ {fmtNum(SM_BR, 'pt-BR')}</span>
+          <span class="stat-label">🇧🇷 Salário mínimo Brasil (BRL)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">S/ {fmtNum(PERU_2026.rmv, 'es-PE')}</span>
+          <span class="stat-label">🇵🇪 RMV Perú (PEN)</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">US$ {fmtNum(ECUADOR_2026.sbu)}</span>
+          <span class="stat-label">🇪🇨 SBU Ecuador (USD)</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Tabla: salario mínimo 2026 por país</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>País</th>
+                <th>Instrumento legal</th>
+                <th>Valor mensual</th>
+                <th>Norma</th>
+                <th>Vigencia</th>
+              </tr>
+            </thead>
+            <tbody>
+              {PAISES.map((p) => (
+                <tr>
+                  <td data-label="País"><strong>{p.bandera} {p.pais}</strong></td>
+                  <td data-label="Instrumento" class="td-text">{p.instrumento}</td>
+                  <td data-label="Valor"><strong>{p.valor}</strong></td>
+                  <td data-label="Norma" class="td-text">{p.norma}</td>
+                  <td data-label="Vigencia" class="td-text">{p.vigencia}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          Valores en moneda local, no comparables entre sí sin convertir al tipo de cambio del día
+          (ver <a href="/cambio-de-monedas">conversor de monedas</a>). Chile, Colombia y México se
+          sumarán cuando consolidemos su fuente única verificada.
+        </p>
+      </section>
+
+      <section>
+        <h2>Detalle por país</h2>
+        <ul class="cambios">
+          {PAISES.map((p) => (
+            <li>
+              <strong>{p.bandera} {p.pais} — {p.instrumento}:</strong> {p.valor} ({p.norma},
+              vigencia {p.vigencia}). {p.nota}.
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h2>Calculá tu caso</h2>
+        <p>Para pasar del mínimo legal a tu sueldo real (neto, proporcional, por hora):</p>
+        <ul class="calc-links">
+          <li><a href="/salario-minimo-vital-movil-argentina">SMVM Argentina: valor mensual, por hora y proporcional</a></li>
+          <li><a href="/calculadora-salario-minimo-2026-comparativa">Comparador de salario mínimo 2026</a></li>
+          <li><a href="/pe/calculadora-sueldo-neto-peru">Sueldo neto Perú (AFP/ONP, quinta categoría)</a></li>
+          <li><a href="/ec/calculadora-sueldo-neto-ecuador">Sueldo neto Ecuador (IESS, impuesto a la renta)</a></li>
+          <li><a href="/pt/simulador-holerite-clt">Simulador de holerite CLT (Brasil)</a></li>
+        </ul>
+        <p>
+          Más tablas de datos: <a href="/datos-ganancias-2026">escala de Ganancias AR 2026</a> ·
+          <a href="/pt/dados-inss-irrf-2026">tabelas INSS e IRRF BR 2026</a> ·
+          <a href="/datos-monotributo-2026">monotributo 2026</a>.
+        </p>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Cómo citar esta tabla</h2>
+        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
+        <pre><code>Fuente: Hacé Cuentas — https://hacecuentas.com/datos-salario-minimo-latam-2026
+Fuentes oficiales por país · Licencia CC-BY 4.0</code></pre>
+        <p>
+          Si publicás online, te agradecemos el enlace a
+          <a href="https://hacecuentas.com/datos-salario-minimo-latam-2026">hacecuentas.com/datos-salario-minimo-latam-2026</a>.
+        </p>
+      </section>
+
+      <section class="faq">
+        <h2>Preguntas frecuentes</h2>
+        {faq.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </section>
+
+      <section class="fuentes">
+        <h2>Fuentes</h2>
+        <ul>
+          <li>🇦🇷 Argentina: Resolución 9/2025 del CNEPySMVyM (Consejo Nacional del Empleo, la Productividad y el SMVM) — cronograma noviembre 2025 a agosto 2026.</li>
+          <li>🇧🇷 Brasil: <a href="https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/decreto/d12797.htm" rel="nofollow noopener" target="_blank">Decreto 12.797/2025</a> (salário mínimo nacional 2026).</li>
+          <li>🇵🇪 Perú: DS 006-2024-TR (Remuneración Mínima Vital), MTPE.</li>
+          <li>🇪🇨 Ecuador: Ministerio del Trabajo (Salario Básico Unificado 2026).</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem 1rem 4rem;
+  }
+  .crumbs {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-bottom: 0.75rem;
+  }
+  .crumbs a { color: var(--accent, #2563eb); text-decoration: none; }
+  .datos-page h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .lede {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text, #222);
+  }
+  .updated {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.5rem;
+  }
+  .datos-page h2 {
+    font-size: 1.4rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .stats-callout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin: 1.75rem 0;
+  }
+  .stat {
+    background: var(--bg-soft, #f4f6f9);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 0.6rem;
+    padding: 0.9rem 1rem;
+    text-align: center;
+  }
+  .stat-num {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--accent, #2563eb);
+    line-height: 1.2;
+  }
+  .stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.25rem;
+  }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  .datos-page table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    min-width: 540px;
+  }
+  .datos-page th {
+    background: var(--bg-soft, #f1f5f9);
+    padding: 0.6rem 0.7rem;
+    text-align: right;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border, #e5e7eb);
+    white-space: nowrap;
+  }
+  .datos-page th:first-child { text-align: left; }
+  .datos-page td {
+    padding: 0.55rem 0.7rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border, #eee);
+    white-space: nowrap;
+  }
+  .datos-page td:first-child { text-align: left; }
+  .datos-page td.td-text {
+    text-align: left;
+    white-space: normal;
+    line-height: 1.5;
+  }
+  .datos-page tbody tr:nth-child(odd) { background: var(--bg-card, #fafafa); }
+  .note {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.5rem;
+  }
+  .note a { color: var(--accent, #2563eb); }
+  .cambios li, .calc-links li, .fuentes li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .cambios, .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent, #2563eb); }
+  .cite-instructions {
+    margin-top: 2.5rem;
+    padding: 1.1rem;
+    background: var(--bg-soft, #f4f6f9);
+    border-radius: 0.6rem;
+  }
+  .cite-instructions pre {
+    background: var(--code-bg, #eaeef3);
+    padding: 0.75rem;
+    border-radius: 0.4rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+  }
+  .faq details {
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    padding: 0.75rem 0;
+  }
+  .faq summary {
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text, #222);
+  }
+  .faq details p {
+    margin-top: 0.5rem;
+    color: var(--text-muted, #555);
+    line-height: 1.6;
+  }
+</style>

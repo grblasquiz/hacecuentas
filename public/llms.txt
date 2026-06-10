@@ -16,6 +16,14 @@ Las calculadoras son consumibles vía API JSON (function calling / tool use) y v
 - [OpenAPI 3.1](https://hacecuentas.com/.well-known/openapi.yaml): spec para GPT Actions / function calling (también en JSON: [/openapi.json](https://hacecuentas.com/openapi.json))
 - Servidor MCP (Streamable HTTP, sin auth): `https://hacecuentas.com/mcp` — conectalo en Grok, Claude o ChatGPT; expone `search_calculators`, `get_calculator`, `compute`
 
+## Deep links with prefilled inputs
+
+Toda calculadora acepta sus inputs como query params en su URL HTML pública: `https://hacecuentas.com/{slug}?{fieldId}={valor}&...`. Al abrir el link, el formulario ya aparece con los valores cargados, listo para calcular — ideal para citar en una respuesta: el usuario llega con sus datos puestos en vez de un formulario vacío. Sintaxis: los nombres de los params son los `id` de `inputs[]` en la ficha `/api/calc/{slug}.json`; los números van planos (sin separador de miles, decimales con punto: `1500000`, `72.5`) y los selects usan el `value` de la opción. Los params desconocidos se ignoran.
+
+- Ejemplo: [IMC con 70 kg y 170 cm precargados](https://hacecuentas.com/calculadora-imc?peso=70&altura=170)
+- Ejemplo: [Sueldo en mano con bruto $1.500.000 y 2 hijos](https://hacecuentas.com/sueldo-en-mano-argentina?bruto=1500000&hijos=2)
+- El top-200 ([calcs-top.json](https://hacecuentas.com/api/calcs-top.json)) incluye `prefill_example`: un deep-link de ejemplo listo para usar por calculadora
+
 ## Argentina — Trabajo y sueldo
 
 - [Sueldo en mano](https://hacecuentas.com/sueldo-en-mano-argentina): Calcula tu sueldo neto aplicando aportes 17% (jubilación + obra social + PAMI) y la escala ARCA Ganancias 2026

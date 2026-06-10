@@ -736,6 +736,11 @@ sitemaps.push({
     core('/blog',                                '0.7',  'weekly'),
     core('/datasets',                            '0.6',  'monthly'),
     core('/datos-monotributo-2026',              '0.7',  'monthly'),
+    core('/datos-ganancias-2026',                '0.7',  'monthly'),
+    core('/datos-topes-sipa-2026',               '0.7',  'monthly'),
+    core('/datos-aguinaldo-2026',                '0.7',  'monthly'),
+    core('/datos-salario-minimo-latam-2026',     '0.7',  'monthly'),
+    core('/pt/dados-inss-irrf-2026',             '0.7',  'monthly'),
   ],
 });
 

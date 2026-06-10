@@ -71,6 +71,84 @@ function isDeadPath(path: string): boolean {
   return GONE_410_URLS.has(path) || path in PRUNING_REDIRECTS;
 }
 
+// ---------------------------------------------------------------------------
+// Deep-link prefill: toda calc acepta sus inputs como query params en la URL
+// pública (Calculator.astro los lee con URLSearchParams; param = field.id,
+// números planos sin separador de miles, selects por option value).
+// Acá armamos el querystring de ejemplo para calcs-top.json. Fuente de valores
+// (misma convención que /api/calc/{slug}.json): ejemplo editorial del JSON
+// (exampleData / example.inputs, validado contra los field ids reales) y si no
+// hay, default ?? placeholder por campo. Precisión sobre recall: si un valor no
+// pasa validación o queda algún required sin cubrir, se omite el campo entero
+// (nunca emitimos un deep-link roto o a medio llenar).
+// ---------------------------------------------------------------------------
+const PLAIN_NUM_RE = /^-?\d+(\.\d+)?$/;
+
+function fieldOptionValues(f: any): string[] {
+  if (!Array.isArray(f.options)) return [];
+  return f.options.map((o: any) => (typeof o === 'object' && o !== null ? String(o.value) : String(o)));
+}
+
+function isValidPrefillValue(f: any, v: unknown): boolean {
+  if (v === undefined || v === null || typeof v === 'object') return false;
+  const s = String(v).trim();
+  if (s === '') return false;
+  if (f.type === 'select') return fieldOptionValues(f).includes(s);
+  if (f.type === 'number') return PLAIN_NUM_RE.test(s);
+  return true; // date/text/time: solo llegan acá vía valor explícito
+}
+
+/** Querystring de prefill para la URL pública, o undefined si no se puede armar uno completo. */
+function buildPrefillQuery(data: any): string | undefined {
+  const fields: any[] = Array.isArray(data.fields) ? data.fields : [];
+  if (fields.length === 0) return undefined;
+  const byId = new Map(fields.map((f) => [f.id, f]));
+
+  // 1) Ejemplo editorial del JSON: exampleData (si existiera) o example.inputs.
+  const editorial =
+    data.exampleData && typeof data.exampleData === 'object' && !Array.isArray(data.exampleData)
+      ? data.exampleData
+      : data.example?.inputs && typeof data.example.inputs === 'object' && !Array.isArray(data.example.inputs)
+        ? data.example.inputs
+        : undefined;
+
+  let inputs: Record<string, string> | undefined;
+  if (editorial) {
+    const entries = Object.entries(editorial);
+    // TODAS las keys tienen que ser field ids vivos con valores válidos
+    // (hay example.inputs con ids stale, ej. v1/v2 de fórmulas reescritas).
+    if (entries.length > 0 && entries.every(([k, v]) => byId.has(k) && isValidPrefillValue(byId.get(k), v))) {
+      inputs = Object.fromEntries(entries.map(([k, v]) => [k, String(v).trim()]));
+    }
+  }
+
+  // 2) Derivado por campo: default ?? placeholder (placeholder solo en number/
+  //    select — en date/text suele ser un hint tipo "dd/mm/aaaa", no un valor).
+  if (!inputs) {
+    const derived: Record<string, string> = {};
+    for (const f of fields) {
+      const v = f.type === 'number' || f.type === 'select' ? (f.default ?? f.placeholder) : f.default;
+      if (isValidPrefillValue(f, v)) derived[f.id] = String(v).trim();
+    }
+    if (Object.keys(derived).length > 0) inputs = derived;
+  }
+  if (!inputs) return undefined;
+
+  // Gate: todos los required cubiertos — un deep-link a medio llenar no es "un click".
+  const required = fields.filter((f) => f.required === true);
+  if (!required.every((f) => inputs![f.id] !== undefined)) return undefined;
+
+  const params = new URLSearchParams();
+  for (const f of fields) {
+    if (inputs[f.id] !== undefined) params.set(f.id, inputs[f.id]);
+  }
+  const qs = params.toString();
+  return qs || undefined;
+}
+
+/** querystring de prefill por slug — solo catálogo ES root (de donde sale el top-200) */
+const prefillBySlug = new Map<string, string>();
+
 const out: CalcEntry[] = [];
 const slim: SlimEntry[] = [];
 /** slugs ES root muertos — para excluirlos del top-200 */
@@ -108,6 +186,10 @@ for (const { dir, pathPrefix, locale } of LOCALES) {
         keywords: (data.seoKeywords || []).slice(0, 5),
         lastUpdated: data.dataUpdate?.lastUpdated,
       });
+      if (pathPrefix === '') {
+        const prefill = buildPrefillQuery(data);
+        if (prefill) prefillBySlug.set(slug, prefill);
+      }
       const path = `/${pathPrefix}${slug}`;
       if (isDeadPath(path)) {
         // Sigue en el index full (comportamiento histórico: el JSON existe para
@@ -239,6 +321,12 @@ interface TopEntry {
   url: string;
   lang: string;
   category: string;
+  /**
+   * Deep-link con inputs de ejemplo precargados: la URL pública acepta los
+   * field ids como query params y el formulario aparece ya lleno. Ausente si
+   * el calc no tiene valores de ejemplo completos (todos los required).
+   */
+  prefill_example?: string;
 }
 
 // Catálogo ES root (donde viven todos los slugs de popularidad curada),
@@ -251,12 +339,14 @@ const topSeen = new Set<string>();
 function pushTop(c: CalcEntry | undefined) {
   if (!c || topSeen.has(c.slug) || topOut.length >= TOP_N) return;
   topSeen.add(c.slug);
+  const prefillQs = prefillBySlug.get(c.slug);
   topOut.push({
     slug: c.slug,
     title: c.h1 || c.title || c.slug,
     url: c.url,
     lang: c.locale,
     category: c.category,
+    ...(prefillQs ? { prefill_example: `${c.url}?${prefillQs}` } : {}),
   });
 }
 
@@ -293,8 +383,9 @@ while (topOut.length < TOP_N) {
 
 const topJson = JSON.stringify(topOut);
 writeFileSync(OUT_TOP, topJson);
+const withPrefill = topOut.filter((t) => t.prefill_example).length;
 console.log(
-  `✓ calcs-top.json: ${topOut.length} calcs (señal: ${curatedSlugs.length ? 'GSC curated' : 'fallback curado+featured'}) — ${(topJson.length / 1024).toFixed(1)} KB`
+  `✓ calcs-top.json: ${topOut.length} calcs (señal: ${curatedSlugs.length ? 'GSC curated' : 'fallback curado+featured'}, ${withPrefill} con prefill_example) — ${(topJson.length / 1024).toFixed(1)} KB`
 );
 
 // ---------------------------------------------------------------------------
