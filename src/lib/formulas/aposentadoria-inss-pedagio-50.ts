@@ -1,3 +1,4 @@
+import { INSS_TETO } from '../data/brasil-2026';
 /** Aposentadoria INSS — Regra de Transição Pedágio 50% (EC 103/2019).
  * Para quem faltava ≤ 2 anos em 13/11/2019 para completar 30m/35h de contribuição.
  * Pedágio: tempo que faltava × 1,5 (50% adicional).
@@ -38,7 +39,7 @@ export function aposentadoriaInssPedagio50(i: Inputs): Outputs {
   const pedagio = faltava * 0.5;
   const totalNecessario = contrib2019 + faltava + pedagio;
 
-  const teto = 8157.41;
+  const teto = INSS_TETO;
   const mediaAplicada = Math.min(media, teto);
   // Pedágio 50%: aplica fator previdenciário (aqui estimamos 100% × média como referência)
   const valor = elegivel ? mediaAplicada : 0;

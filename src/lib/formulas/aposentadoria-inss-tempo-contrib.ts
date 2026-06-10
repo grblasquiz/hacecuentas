@@ -1,3 +1,4 @@
+import { INSS_TETO } from '../data/brasil-2026';
 /** Aposentadoria por Tempo de Contribuição — regra antiga pré-EC 103/2019.
  * Homem: 35 anos contribuição. Mulher: 30 anos. Sem idade mínima (regra extinta p/ novos).
  * Para quem já contribuía antes de 13/nov/2019, há regras de transição (pontos, pedágio, idade progressiva).
@@ -30,7 +31,7 @@ export function aposentadoriaInssTempoContrib(i: Inputs): Outputs {
   if (!anos || !media) throw new Error('Informe anos de contribuição e média salarial.');
 
   const minimo = sexo === 'mulher' ? 30 : 35;
-  const teto = 8157.41;
+  const teto = INSS_TETO;
   const falta = Math.max(0, minimo - anos);
   const mediaAplicada = Math.min(media, teto);
 

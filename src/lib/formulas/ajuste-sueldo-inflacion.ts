@@ -54,7 +54,7 @@ export function ajusteSueldoInflacion(inputs: AjusteSueldoInflacionInputs): Ajus
   const insightText = difR > 0
     ? `Tu sueldo le ganó a la inflación: subió **${aumentoRealPorc.toFixed(1).replace('.', ',')}% real**. Cobrás $${fmt(difR)} más de lo que necesitabas ($${fmt(necesarioR)}) para mantener el poder adquisitivo.`
     : difR < 0
-      ? `Tu sueldo perdió contra la inflación: cayó **${fmt(aumentoRealPorc).replace('.', ',')}% real**. Te faltan **$${fmt(difR)}** para llegar a los $${fmt(necesarioR)} que necesitabas para no perder.`
+      ? `Tu sueldo perdió contra la inflación: cayó **${Math.abs(aumentoRealPorc).toFixed(1).replace('.', ',')}% real**. Te faltan **$${fmt(difR)}** para llegar a los $${fmt(necesarioR)} que necesitabas para no perder.`
       : `Tu sueldo empató exacto con la inflación: cobrás los **$${fmt(necesarioR)}** justos para mantener tu poder adquisitivo.`;
 
   return {

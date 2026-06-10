@@ -1,3 +1,4 @@
+import { INSS_TETO } from '../data/brasil-2026';
 /** Aposentadoria INSS — Regra de Transição por Pontos (EC 103/2019).
  * 2019: homem 96 / mulher 86 pontos. +1 ponto por ano até 2028: homem 105 / mulher 100.
  * Contribuição mínima: homem 35 / mulher 30.
@@ -46,7 +47,7 @@ export function aposentadoriaInssPontos(i: Inputs): Outputs {
   const faltaPontos = Math.max(0, pontosNecessarios - pontosAtuais);
   const faltaContrib = Math.max(0, contribMin - contrib);
 
-  const teto = 8157.41;
+  const teto = INSS_TETO;
   const mediaAplicada = Math.min(media, teto);
   // 60% + 2% por ano que exceder 20h/15m
   const excedente = Math.max(0, contrib - (sexo === 'mulher' ? 15 : 20));

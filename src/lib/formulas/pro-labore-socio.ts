@@ -3,7 +3,7 @@
  *  Teto INSS 2026: R$ 8.475,55 → contribuição máx R$ 932,31.
  *  Valores em src/lib/data/brasil-2026.ts.
  */
-import { SALARIO_MINIMO, INSS_TETO, IRRF_DEDUCAO_DEPENDENTE } from '../data/brasil-2026';
+import { SALARIO_MINIMO, INSS_TETO, IRRF_DEDUCAO_DEPENDENTE, calcIRRF2026 } from '../data/brasil-2026';
 
 export interface Inputs {
   proLaboreBruto: number;
@@ -28,22 +28,10 @@ const SALARIO_MIN = SALARIO_MINIMO;
 const TETO_INSS = INSS_TETO;
 const DEDUCAO_DEP = IRRF_DEDUCAO_DEPENDENTE;
 
-// IRRF 2026 (tabela progressiva mensal)
-const IRRF = [
-  { lim: 2259.20, aliq: 0, deduz: 0 },
-  { lim: 2826.65, aliq: 7.5, deduz: 169.44 },
-  { lim: 3751.05, aliq: 15.0, deduz: 381.44 },
-  { lim: 4664.68, aliq: 22.5, deduz: 662.77 },
-  { lim: Infinity, aliq: 27.5, deduz: 896.00 },
-];
-
-function calcIrrf(base: number): number {
-  if (base <= 0) return 0;
-  for (const f of IRRF) {
-    if (base <= f.lim) return Math.max(0, base * (f.aliq / 100) - f.deduz);
-  }
-  return 0;
-}
+// IRRF mensal 2026: tabela progressiva + redutor da reforma (isenção efetiva
+// até R$ 5.000) — implementação única em src/lib/data/brasil-2026.ts, a mesma
+// usada pelo holerite/salário-líquido (pró-labore é rendimento do trabalho).
+const calcIrrf = calcIRRF2026;
 
 export function proLaboreSocio(i: Inputs): Outputs {
   const bruto = Math.max(0, Number(i.proLaboreBruto) || 0);

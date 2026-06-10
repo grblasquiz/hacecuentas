@@ -24,7 +24,7 @@ export interface AbonoPisPasepOutputs {
   _insight?: any;
 }
 
-const SALARIO_MINIMO = 1518;
+import { SALARIO_MINIMO } from '../data/brasil-2026';
 const LIMITE_SALARIO = 2 * SALARIO_MINIMO; // 2 SM
 
 export function abonoPisPasep(inputs: AbonoPisPasepInputs): AbonoPisPasepOutputs {

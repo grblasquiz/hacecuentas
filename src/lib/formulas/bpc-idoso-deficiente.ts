@@ -22,7 +22,7 @@ export interface BpcOutputs {
   _insight?: any;
 }
 
-const SALARIO_MINIMO = 1518;
+import { SALARIO_MINIMO } from '../data/brasil-2026';
 const LIMITE_PER_CAPITA = SALARIO_MINIMO / 4; // R$ 379,50
 
 export function bpcIdosoDeficiente(inputs: BpcInputs): BpcOutputs {

@@ -1,3 +1,4 @@
+import { INSS_TETO } from '../data/brasil-2026';
 /** Aposentadoria Especial (Insalubridade/Periculosidade) — INSS.
  * 15 anos: baixa exposição (mineração subterrânea frente de trabalho).
  * 20 anos: média (mineração subterrânea não-frente, asbesto).
@@ -43,7 +44,7 @@ export function aposentadoriaInssEspecial(i: Inputs): Outputs {
   const faltaIdade = Math.max(0, idadeMin - idade);
   const faltaExp = Math.max(0, tempoMin - exp);
 
-  const teto = 8157.41;
+  const teto = INSS_TETO;
   const mediaAplicada = Math.min(media, teto);
   // Pós-EC 103: 60% + 2% por ano excedente a 20 anos contribuição total (simplificado: aplica sobre tempoMin)
   const excedente = Math.max(0, exp - tempoMin);

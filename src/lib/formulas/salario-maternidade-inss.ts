@@ -1,3 +1,4 @@
+import { INSS_TETO, SALARIO_MINIMO } from '../data/brasil-2026';
 /** Salário-Maternidade INSS.
  * 4 meses (120 dias) de salário integral.
  * Para empregadas CLT: média dos 6 últimos salários.
@@ -27,8 +28,8 @@ export function salarioMaternidadeInss(i: Inputs): Outputs {
   const media = Number(i.mediaSalarial);
   if (!media) throw new Error('Informe a média salarial.');
 
-  const teto = 8157.41;
-  const salarioMinimo = 1518;
+  const teto = INSS_TETO;
+  const salarioMinimo = SALARIO_MINIMO;
   const mediaAplicada = Math.min(media, teto);
   const mensal = Math.max(mediaAplicada, salarioMinimo);
   const total = mensal * 4;

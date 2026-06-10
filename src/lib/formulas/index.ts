@@ -2579,6 +2579,7 @@ import { presupuestoCumpleanos } from './presupuesto-cumpleanos';
 import { presupuestoDespedidaSoltera } from './presupuesto-despedida-soltera';
 import { presupuestoDiarioMochileroCiudad } from './presupuesto-diario-mochilero-ciudad';
 import { presupuestoEquipoMusica } from './presupuesto-equipo-musica';
+import { presupuestoEstudiarExteriorMesesFinanciados } from './presupuesto-estudiar-exterior-meses-financiados';
 import { presupuestoEstudiarExteriorUniversidad } from './presupuesto-estudiar-exterior-universidad';
 import { presupuestoFiestaFinAnoEmpresa } from './presupuesto-fiesta-fin-ano-empresa';
 import { presupuestoGraduacion } from './presupuesto-graduacion';
@@ -3108,6 +3109,7 @@ import { compute as compute__tasacion_vivienda_colombia_precio_m2_zona_estrato }
 import { compute as compute__tasacion_vivienda_espana_precio_m2_zona } from './tasacion-vivienda-espana-precio-m2-zona';
 import { tazasGramos } from './tazas-gramos';
 import { compute as compute__tdee_calculadora_mifflin_st_jeor } from './tdee-calculadora-mifflin-st-jeor';
+import { tdeeMifflinStJeorEs } from './tdee-mifflin-st-jeor-es';
 import { techosTejas } from './techos-tejas';
 import { teclaPorMinutoTypingTest } from './tecla-por-minuto-typing-test';
 import { tecnicaMemoryPalaceTiempo } from './tecnica-memory-palace-tiempo';
@@ -6014,6 +6016,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'presupuesto-despedida-soltera': presupuestoDespedidaSoltera,
   'presupuesto-diario-mochilero-ciudad': presupuestoDiarioMochileroCiudad,
   'presupuesto-equipo-musica': presupuestoEquipoMusica,
+  'presupuesto-estudiar-exterior-meses-financiados': presupuestoEstudiarExteriorMesesFinanciados,
   'presupuesto-estudiar-exterior-universidad': presupuestoEstudiarExteriorUniversidad,
   'presupuesto-fiesta-fin-ano-empresa': presupuestoFiestaFinAnoEmpresa,
   'presupuesto-graduacion': presupuestoGraduacion,
@@ -6543,6 +6546,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tasacion-vivienda-espana-precio-m2-zona': compute__tasacion_vivienda_espana_precio_m2_zona,
   'tazas-gramos': tazasGramos,
   'tdee-calculadora-mifflin-st-jeor': compute__tdee_calculadora_mifflin_st_jeor,
+  'tdee-mifflin-st-jeor-es': tdeeMifflinStJeorEs,
   'techos-tejas': techosTejas,
   'tecla-por-minuto-typing-test': teclaPorMinutoTypingTest,
   'tecnica-memory-palace-tiempo': tecnicaMemoryPalaceTiempo,

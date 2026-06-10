@@ -1,3 +1,4 @@
+import { INSS_TETO, SALARIO_MINIMO } from '../data/brasil-2026';
 // Calculadora Aposentadoria INSS 2026
 // Fontes: EC 103/2019, Portaria MPS 2026, IN INSS 128/2022
 
@@ -19,8 +20,8 @@ export interface Outputs {
 }
 
 // Constantes 2026 — Portaria MPS
-const TETO_INSS_2026 = 8157.41;
-const SALARIO_MINIMO_2026 = 1518.0;
+const TETO_INSS_2026 = INSS_TETO;
+const SALARIO_MINIMO_2026 = SALARIO_MINIMO;
 
 // Regra de Transição por Pontos 2026 — EC 103/2019
 const PONTOS_HOMEM_2026 = 97;

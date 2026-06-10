@@ -1,3 +1,4 @@
+import { INSS_TETO, SALARIO_MINIMO } from '../data/brasil-2026';
 /** INSS Contribuinte Individual (Autônomo) 2026.
  * Plano Simplificado (11% sobre salário mínimo): dá direito a aposentadoria por idade apenas.
  * Plano Normal (20% sobre valor escolhido, entre SM e teto): dá direito a todos os benefícios.
@@ -27,8 +28,8 @@ export function inssAutonomoIndividual(i: Inputs): Outputs {
   const base = Number(i.baseContribuicao);
   if (!base) throw new Error('Informe a base de contribuição.');
 
-  const salarioMinimo = 1518;
-  const teto = 8157.41;
+  const salarioMinimo = SALARIO_MINIMO;
+  const teto = INSS_TETO;
 
   let aliquota: number;
   let baseAplicada: number;

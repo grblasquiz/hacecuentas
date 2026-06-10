@@ -1,113 +1,140 @@
 {
   "slug": "anki-daily-flashcards-memorization-vocabulary",
-  "answerSnippet": "The Anki Daily Flashcards Calculator tells you exactly how many new cards to add each day—and whether your study time can support that pace—based on your vocabulary target and daily available minutes. It uses Anki's spaced-repetition algorithm (SM-2), where each new card generates roughly 6–10 review repetitions over its first 30 days.",
-  "lastReviewed": "2026-04-25",
+  "answerSnippet": "New cards per day = total cards in the deck ÷ days available. Example: 1,500 cards in 90 days = 16.7 new cards/day. Each new card generates roughly 7 reviews over its first weeks, so ~17 new/day implies ~117 reviews/day (~26 min/day) once the deck reaches steady state around day 21.",
+  "lastReviewed": "2026-06-09",
   "esSlug": "calculadora-anki-tarjetas-diarias-memorizacion-vocabulario",
-  "title": "Anki Daily Flashcards Calculator 2026 | Hacé Cuentas",
-  "h1": "Anki Daily Flashcards Calculator",
-  "description": "Calculate daily Anki cards based on vocabulary goals and study time. Free spaced repetition learning calculator.",
+  "title": "Anki: How Many New Cards per Day? Calculator + Table | Hacé Cuentas",
+  "h1": "Anki New Cards per Day Calculator",
+  "description": "Calculate how many new Anki cards to add per day to finish your deck on time. Enter the total cards and the days available and get the daily pace plus an estimate of reviews and study time.",
   "category": "educacion",
   "icon": "🃏",
   "formulaId": "anki-tarjetas-diarias-memorizacion-vocabulario",
   "audience": "global",
-  "intro": "The Anki Daily Flashcards Calculator tells you exactly how many new cards to add each day—and whether your study time can support that pace—based on your vocabulary target and daily available minutes. It uses Anki's spaced-repetition algorithm (SM-2), where each new card generates roughly 6–10 review repetitions over its first 30 days. The core formula is: New Cards/Day = Target Words ÷ Days Until Deadline, then validated against your available minutes using the empirical benchmark of ~10 minutes per 20 new cards + ~1 minute per 10 due reviews. Overloading new cards is the #1 reason learners abandon Anki decks—this calculator prevents that by aligning your ambition with your actual schedule.",
-  "keyTakeaway": "**New Cards/Day = Target Vocabulary ÷ Days to Deadline** — e.g., 500 words in 60 days = ~9 new cards/day, requiring ~25–30 min/day once the review backlog matures at day 14.",
+  "intro": "If you have a vocabulary deck with N cards and a deadline in days, this calculator tells you how many new cards to add per day to finish on time. The formula is simple: **total cards ÷ days**. The valuable part is the derived estimate: how many reviews you'll accumulate and how many daily minutes you'll need once the deck reaches steady state (around day 21). One new card generates on average ~7 reviews over the following weeks according to SM-2 and FSRS scheduling data. Overshooting your daily new-card rate is the #1 reason learners abandon Anki decks — this tool gives you the exact number for a sustainable pace.",
+  "keyTakeaway": "**New cards/day = total cards in the deck ÷ days available.** With 1,500 cards in 90 days: 16.7 ≈ 17 new/day → ~117 reviews/day → ~26 min/day. With 2,500 cards in 365 days: ~7 new/day → ~48 reviews/day → ~11 min/day.",
   "useCases": [
-    "A college student preparing for the GRE in 8 weeks who needs to memorize 900 high-frequency words and wants to know if 45 min/day is enough.",
-    "A Spanish learner aiming for B2 proficiency (2,000–3,000 vocabulary words) over 6 months who needs a sustainable daily card addition rate.",
-    "A medical student building a pharmacology deck of 1,200 drug names, mechanisms, and side effects before a board exam in 10 weeks.",
-    "A software engineer studying for the JLPT N3 Japanese exam who needs to absorb 2,000 kanji and vocabulary cards within 4 months.",
-    "A high school teacher creating a shared Anki deck for SAT vocabulary prep and wanting to recommend a daily study schedule to students with 20-minute study windows."
+    "A college student preparing for the GRE in 60 days who needs to memorize a 900-card high-frequency word deck (15 new cards/day, ~24 min/day).",
+    "A Spanish learner aiming for B2 who wants to finish a 2,000–3,000 card vocabulary deck over 6 months at a sustainable daily rate.",
+    "A medical student pacing a 1,200-card pharmacology deck across the 70 days before a board exam.",
+    "A software engineer studying for the JLPT who needs to absorb a 2,000-card vocabulary deck within 4 months.",
+    "Comparing two strategies for the same deck: finishing in 3 intensive months vs. 12 relaxed months, and seeing the daily review load of each."
   ],
   "seoKeywords": [
     "anki cards per day",
+    "how many new anki cards per day",
     "flashcard calculator",
     "spaced repetition calculator",
     "daily anki cards",
+    "anki deck schedule calculator",
     "vocabulary learning calculator",
-    "study planner",
     "anki study schedule",
     "memorization calculator",
-    "language learning tool",
-    "flashcard study time",
-    "cognitive learning calculator"
+    "anki review load",
+    "flashcard study time"
   ],
   "fields": [
     {
       "id": "v1",
-      "label": "Target Vocabulary Words",
+      "label": "Total cards in deck",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "1500",
+      "suffix": "cards",
+      "min": 1,
+      "max": 100000,
+      "step": 1,
+      "format": "plain",
+      "help": "The full size of the deck you want to finish (e.g., a 1,500-card B2 vocabulary deck)"
     },
     {
       "id": "v2",
-      "label": "Available Daily Study Minutes",
+      "label": "Days to finish the deck",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "90",
+      "suffix": "days",
+      "min": 1,
+      "max": 3650,
+      "step": 1,
+      "format": "plain",
+      "help": "How many days you have until your deadline (exam date, trip, course end)"
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Daily Cards to Add",
+      "label": "New cards per day",
       "primary": true
     },
     {
       "id": "resumen",
-      "label": "Study Recommendations"
+      "label": "Review load and time estimate"
     }
   ],
   "example": {
-    "title": "Example Calculation",
+    "title": "Example: B2 English deck in 3 months",
+    "inputs": {
+      "v1": "1500",
+      "v2": "90"
+    },
     "steps": [
-      "Example",
-      "Result"
+      "B2 English vocabulary deck: 1,500 cards.",
+      "Available time: 90 days (3 months).",
+      "New cards/day = 1,500 ÷ 90 = 16.7.",
+      "Rounding up: 17 new cards per day.",
+      "Estimated reviews at steady state: ~16.7 × 7 ≈ 117 per day.",
+      "Estimated time: (16.7 × 25 s) + (117 × 10 s) ≈ 417 + 1,170 = 1,587 s ≈ 26 min/day."
     ],
-    "result": "Result"
+    "result": "16.7 new cards per day (~117 reviews/day, ~26 min/day)"
   },
-  "explanation": "## How It's Calculated\n\nAnki's SM-2 spaced-repetition algorithm schedules each card for review at exponentially increasing intervals (1 day → 4 days → 10 days → 25 days…). The key implication: every new card you add today creates a *cascade* of future reviews. Empirical data from Anki's open-source community and studies on spaced repetition establish the following benchmarks used in this calculator:\n\n```\n// Step 1: Raw new cards per day\nNew_Cards_Per_Day = Target_Vocabulary_Words / Days_Until_Deadline\n\n// Step 2: Estimate mature review load at steady state (~day 21+)\nDaily_Reviews = New_Cards_Per_Day × 7   // ~7 reviews/card in first 30 days (avg interval multiplier)\n\n// Step 3: Estimate total daily time required\nTime_For_New_Cards  = New_Cards_Per_Day × 0.5 min   // ~30 sec avg per new card\nTime_For_Reviews    = Daily_Reviews × 0.083 min      // ~5 sec avg per review card\nTotal_Time_Required = Time_For_New_Cards + Time_For_Reviews  // in minutes\n\n// Step 4: Feasibility check\nIf Total_Time_Required ≤ Available_Daily_Minutes → SUSTAINABLE\nIf Total_Time_Required >  Available_Daily_Minutes → REDUCE new cards/day or extend deadline\n```\n\nThe **0.5 min/new card** and **0.083 min/review card** constants are derived from large-scale Anki user data analyzed in Superlearner research and the AnkiStats community (average across language, medical, and academic decks).\n\n---\n\n## Reference Table\n\n| Daily New Cards | Mature Reviews/Day (Day 21+) | Min. Time Needed/Day | Words After 30 Days | Words After 90 Days |\n|:-:|:-:|:-:|:-:|:-:|\n| 5 | ~35 | ~10 min | 150 | 450 |\n| 10 | ~70 | ~17 min | 300 | 900 |\n| 15 | ~105 | ~24 min | 450 | 1,350 |\n| 20 | ~140 | ~32 min | 600 | 1,800 |\n| 30 | ~210 | ~47 min | 900 | 2,700 |\n| 50 | ~350 | ~78 min | 1,500 | 4,500 |\n\n> ⚠️ Adding 50+ new cards/day is generally unsustainable for most learners—review debt compounds quickly and leads to deck abandonment within 2–3 weeks.\n\n---\n\n## Typical Cases\n\n**Case 1 — GRE Prep (900 words, 60 days, 45 min/day)**\nNew cards/day = 900 ÷ 60 = **15 cards/day**. Mature review load by week 3: ~105 reviews/day ≈ 24 min. Total time needed ≈ 24 min, well within the 45-minute budget. The learner has a comfortable 21-minute buffer for leeches, hard cards, and image occlusion.\n\n**Case 2 — Medical Boards (1,200 cards, 70 days, 30 min/day)**\nNew cards/day = 1,200 ÷ 70 ≈ **17 cards/day**. Mature reviews ≈ 119/day → ~27 min total. This is just barely feasible at 30 min/day with zero buffer. Recommended fix: extend the deadline to 85 days (≈14 cards/day, ~22 min) or cut to 1,000 high-yield cards.\n\n**Case 3 — JLPT N3 Vocabulary (2,000 words, 120 days, 60 min/day)**\nNew cards/day = 2,000 ÷ 120 ≈ **17 cards/day**. Mature reviews ≈ 117/day → ~27 min total. The 60-minute budget is very comfortable; the learner can safely add grammar and kanji reading cards without breaking their schedule.\n\n---\n\n## Common Mistakes\n\n1. **Ignoring the review snowball** — Beginners add 30–50 new cards/day in week 1 and are shocked when they face 300+ reviews/day by week 3. The review count multiplies by ~7× the daily new card count at steady state.\n2. **Counting \"learning\" cards as reviewed** — Anki's default settings show new cards in \"learning\" steps (e.g., 1 min → 10 min) multiple times per session. Each new card may appear 2–4 times on day 1 alone, inflating perceived session length.\n3. **Setting an unrealistic ease floor** — Leaving the default \"Ease Factor\" at 250% without enabling the free \"Load Balancer\" or \"FSRS\" (Free Spaced Repetition Scheduler, available in Anki 23.10+) leads to ease collapse on hard cards, dramatically increasing review times.\n4. **Not accounting for weekends or travel** — Missing even 2 consecutive days creates a catch-up pile equal to 3–4× your daily review count. Build a 10–15% time buffer into any schedule using this calculator.\n5. **Using one card per \"concept\" instead of atomic cards** — Cards that ask \"Explain oxidative phosphorylation\" take 45–90 sec each, blowing up your time estimates. Best practice: one fact per card, target ≤10 sec per review.\n\n---\n\n## Related Calculators\n\nExplore other study and productivity tools on Hacé Cuentas:\n\n- There are currently no directly linked related calculators for this topic, but check the **Education** category for study planning tools.\n",
+  "explanation": "## How It's Calculated\n\nThe optimal pace of new cards in Anki comes from dividing the deck size by the available days:\n\n```\nNew cards/day = Total cards ÷ Days available\nReviews/day (steady state) ≈ New cards/day × 7\nDaily time (min) = (New × 25 s + Reviews × 10 s) ÷ 60\n```\n\nAnki's scheduler (SM-2 or FSRS) plans the reviews automatically, so you don't need to calculate them by hand. What you *do* control is the number of new cards per day: that parameter regulates how much future work you're generating. Each new card you add today creates a *cascade* of roughly 6–10 review repetitions over its first weeks.\n\n---\n\n## Quick Reference Table\n\n| New/day | Reviews/day (est.) | Time/day | Words in 30 days | Words in 90 days |\n|:-:|:-:|:-:|:-:|:-:|\n| 5 | ~35 | ~8 min | 150 | 450 |\n| 10 | ~70 | ~16 min | 300 | 900 |\n| 15 | ~105 | ~24 min | 450 | 1,350 |\n| 20 | ~140 | ~32 min | 600 | 1,800 |\n| 30 | ~210 | ~48 min | 900 | 2,700 |\n| 50 | ~350 | ~79 min | 1,500 | 4,500 |\n\n> Estimates based on ~25 s per new card and ~10 s per review. Adding 50+ new cards/day is generally unsustainable — review debt compounds quickly and leads to deck abandonment within 2–3 weeks.\n\n---\n\n## How Big a Deck Do You Need?\n\n| Goal | Words needed | Typical deck | Days at 15 new/day |\n|---|---|---|---|\n| English A2 | ~1,000 | 1,000 cards | ~67 days |\n| English B1 | ~2,000 | 2,000 cards | ~133 days |\n| English B2 | ~4,000 | 4,000 cards | ~267 days |\n| English C1 | ~8,000 | 8,000 cards | ~533 days |\n| JLPT N5 (Japanese) | ~800 | 800 cards | ~53 days |\n| JLPT N1 (Japanese) | ~10,000 | 10,000 cards | ~667 days |\n| HSK 4 (Chinese) | ~1,200 | 1,200 cards | ~80 days |\n| Medical boards (Zanki-style) | ~20,000 | 20,000 cards | ~1,333 days |\n\n---\n\n## Typical Cases\n\n**Case 1 — GRE prep (900-card deck, 60 days):**\nNew cards/day = 900 ÷ 60 = **15/day**. Steady-state review load: ~105 reviews/day ≈ **24 min/day total**. Comfortable for most schedules.\n\n**Case 2 — Medical boards (1,200-card deck, 70 days):**\nNew cards/day = 1,200 ÷ 70 ≈ **17.1/day**. Steady-state reviews ≈ 120/day → **~27 min/day**. If that load is too heavy, extend the deadline to 85 days (≈14/day, ~22 min) or trim to the highest-yield 1,000 cards.\n\n**Case 3 — JLPT vocabulary (2,000-card deck, 120 days):**\nNew cards/day = 2,000 ÷ 120 ≈ **16.7/day**. Steady-state reviews ≈ 117/day → **~26 min/day**. Leaves room to add grammar or kanji-reading cards without breaking the schedule.\n\n---\n\n## Common Mistakes\n\n1. **Ignoring the review snowball** — Beginners add 30–50 new cards/day in week 1 and are shocked by 300+ reviews/day in week 3. The review count runs at roughly 7× the daily new-card rate at steady state.\n2. **Erratic pacing** — 50 new cards one day and 0 the next creates review spikes that are impossible to sustain. A constant daily rate is what keeps the load flat.\n3. **No review cap** — Set a maximum of 150–200 reviews/day in the deck options so a missed day doesn't bury you.\n4. **No priority within the deck** — Learn the highest-frequency words first (frequency lists for languages, high-yield cards for medicine). If you run out of time, you'll have covered what matters most.\n5. **Non-atomic cards** — Cards that ask 'Explain oxidative phosphorylation' take 45–90 s each, blowing up the time estimates. Best practice: one fact per card, ≤10 s per review."
+  ,
   "faq": [
     {
       "q": "How many new Anki cards per day is realistic for most learners?",
-      "a": "Research on spaced-repetition habits and Anki user data consistently show that **10–20 new cards/day** is the sustainable sweet spot for most adult learners. At 20 cards/day, you'll accumulate ~140 reviews/day by week 3, requiring roughly 30–35 minutes—manageable for most schedules. Going beyond 30 new cards/day sharply increases dropout risk due to review debt compounding faster than it can be cleared."
+      "a": "For adults with 15–30 minutes available daily, **10–20 new cards/day** is the sustainable sweet spot. At 20 new/day you'll face ~140 reviews/day by week 3 (~32 minutes). Fewer than 5 new/day stretches the timeline excessively; more than 30 new/day without prior experience usually ends in abandonment from review pile-up within 3–4 weeks."
     },
     {
-      "q": "What is Anki's SM-2 algorithm and how does it affect daily workload?",
-      "a": "SM-2 (SuperMemo 2) is the spaced-repetition algorithm Anki uses by default, developed by Piotr Woźniak in 1987. It schedules each card at increasing intervals: typically 1 day, 4 days, 10 days, then multiplied by an 'ease factor' (default 250%). Each new card you add today will be reviewed approximately 6–10 times in the first 30 days. Anki 23.10+ also offers FSRS (Free Spaced Repetition Scheduler), a modern ML-based algorithm shown to reduce total reviews by 15–25% at the same retention rate."
+      "q": "Is the formula really just total cards ÷ days?",
+      "a": "Yes — the direct division is the core. Anki manages the review calendar automatically, so you don't schedule reviews yourself. What you can do is sanity-check the result against your available time: if the daily rate this calculator gives generates more review minutes than you can spare, extend the deadline instead of cramming more new cards."
     },
     {
-      "q": "How long does it take to learn 1,000 vocabulary words with Anki?",
-      "a": "At 15 new cards/day, you can introduce 1,000 words in about **67 days (~9.5 weeks)**. However, 'learning' means achieving ≥90% retention, which requires those cards to mature—typically 21–30 days after introduction. Budget at least 10–13 weeks total. Total time investment: ~24 min/day × 90 days ≈ **36 hours**. This aligns with foreign language acquisition research showing ~100 hours to reach A2 vocabulary depth."
+      "q": "How long does each new card take vs. each review?",
+      "a": "A well-designed new card takes 20–35 seconds (including the '1 min + 10 min' learning steps of the SM-2 algorithm). A review of a mature card (interval >21 days) takes 5–12 seconds. That's why total session time depends more on accumulated reviews than on the new cards themselves — and why this calculator estimates time as (new × 25 s) + (reviews × 10 s)."
     },
     {
-      "q": "What is a 'mature' card in Anki and why does it matter for time planning?",
-      "a": "In Anki, a card is considered **'mature' once its interval exceeds 21 days**. Before maturity, cards are reviewed more frequently and consume more of your daily session. The critical planning insight: your review load peaks around days 14–21 when early cards start maturing while new ones keep accumulating. After day 30, if you hold your new card rate steady, total daily time stabilizes—this calculator uses that stabilized estimate for its time-needed output."
+      "q": "What happens if I skip a day of Anki?",
+      "a": "Missed reviews stack onto the next day — Anki does not redistribute them automatically. One skipped day at 20 new/day can mean 180–200 pending reviews at once. To recover: (1) cap daily reviews in the deck options (max ~200), (2) add zero new cards on the catch-up day, (3) resume the normal pace the next day."
     },
     {
-      "q": "Is 5 minutes a day with Anki actually effective?",
-      "a": "Yes, but only for maintenance of an existing deck—not for rapid acquisition. At 5 min/day, you can sustainably add **4–5 new cards/day**, yielding ~150 new words/month. Studies on distributed practice (Cepeda et al., 2006, published in *Psychological Bulletin*) confirm that even brief, consistent sessions dramatically outperform massed study. For active learning goals, 15–30 min/day is the recommended minimum."
+      "q": "Is FSRS better than classic SM-2 for managing the load?",
+      "a": "Yes. FSRS (Free Spaced Repetition Scheduler), available in Anki 23.10+, models forgetting more accurately and cuts unnecessary reviews by roughly 15–40% versus classic SM-2 at the same retention. If you use modern Anki, enabling FSRS gets you the same goals with less study time."
     },
     {
-      "q": "What happens if I miss a day of Anki reviews?",
-      "a": "Missing one day means all cards due that day stack on top of the next day's queue—Anki does not redistribute them automatically. At 20 new cards/day, missing **2 days** creates a catch-up burden of ~280–420 extra reviews (roughly 50–70 extra minutes). The practical fix: use Anki's **'Load Balancer' add-on** or simply set your daily new card limit 10–15% below your maximum capacity to absorb occasional missed days without crisis."
+      "q": "How do I estimate the daily time the deck will take?",
+      "a": "Use this estimate: (new/day × 25 s) + (reviews/day × 10 s) = seconds/day, where reviews/day at steady state ≈ new/day × 7. Example: 15 new/day → 15 × 25 + 105 × 10 = 375 + 1,050 = 1,425 s ≈ 24 minutes daily. This calculator runs that estimate for you automatically."
     },
     {
-      "q": "How does FSRS compare to SM-2 for time efficiency?",
-      "a": "FSRS (Free Spaced Repetition Scheduler), introduced in Anki 23.10, uses a machine-learning model trained on 1.7 billion Anki reviews. Benchmarks published by its developer (Expertium/open-anki-fsrs) show FSRS achieves the same **90% retention rate with ~20% fewer reviews** compared to SM-2 at default settings. For a learner doing 140 reviews/day under SM-2, FSRS could reduce that to ~112 reviews/day—saving 4–5 minutes daily, or roughly 25 hours per year."
+      "q": "Does Anki only work for languages, or for other subjects too?",
+      "a": "Anki works for any content that can be memorized as discrete units: vocabulary (languages, medical, legal, technical), pharmacology, anatomy, history dates, math and physics formulas, kanji, programming syntax. The only condition is that the material can be phrased as question–answer pairs."
     },
     {
-      "q": "How many vocabulary words do I need for language fluency?",
-      "a": "According to linguist Paul Nation's research and data cited by the **Common European Framework of Reference (CEFR)**: A2 requires ~1,000 word families; B1 ~2,000; B2 ~4,000; C1 ~8,000. The USDA's FSA and NIH's NLM both use readability tools citing ~3,000 high-frequency English words cover 95% of everyday text. For the GRE, ETS officially tests ~500–900 high-frequency academic words. This calculator helps you map whichever target applies to a daily Anki practice plan."
+      "q": "What do I do if my deck buried me in a giant backlog?",
+      "a": "The standard reset method: (1) suspend all cards overdue by more than 30 days, (2) keep only 'young' cards (<21-day intervals) active, (3) set new cards to 0 until the backlog drops below ~100 reviews/day, (4) resume new cards at 5/day. If the backlog exceeds 3 months, deleting the scheduling history and restarting is often more efficient than digging out."
+    },
+    {
+      "q": "How many vocabulary words do I need for fluency?",
+      "a": "As a reference: ~2,000 words cover about 95% of everyday conversational English (B1 level). 5,000–8,000 words correspond to advanced fluency (C1). Japanese JLPT N5 requires ~800 words; N1, ~10,000. Chinese HSK 4 uses ~1,200 words; HSK 6, ~5,000. These figures tell you the deck size to enter in this calculator."
     }
   ],
   "sources": [
     {
-      "name": "NIH National Library of Medicine — Spaced Repetition and Learning Research",
-      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8759977/"
+      "name": "Anki Manual — Deck Options and New Cards/Day",
+      "url": "https://docs.ankiweb.net/deck-options.html"
+    },
+    {
+      "name": "FSRS — Free Spaced Repetition Scheduler (algorithm and benchmarks)",
+      "url": "https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm"
     },
     {
       "name": "Wikipedia — SuperMemo SM-2 Spaced Repetition Algorithm",
@@ -120,9 +147,11 @@
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-06-09",
     "updateType": "manual",
-    "notes": "Fixed formula, no external data updates required"
+    "notes": "Fixed formula (linear division). No external data updates required. Anki SM-2/FSRS algorithm references are stable.",
+    "source": "Anki documentation — docs.ankiweb.net",
+    "sourceUrl": "https://docs.ankiweb.net/deck-options.html"
   },
   "relatedSlugs": []
 }

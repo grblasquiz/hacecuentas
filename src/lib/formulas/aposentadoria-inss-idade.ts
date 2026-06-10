@@ -1,3 +1,4 @@
+import { INSS_TETO } from '../data/brasil-2026';
 /** Aposentadoria INSS por idade (regra permanente pós-EC 103/2019).
  * Homem: 65 anos + 20 anos contribuição. Mulher: 62 anos + 15 anos contribuição.
  * Benefício = 60% da média + 2% por ano de contribuição que exceder 20 (H) ou 15 (M).
@@ -34,7 +35,7 @@ export function aposentadoriaInssIdade(i: Inputs): Outputs {
 
   const idadeMin = sexo === 'mulher' ? 62 : 65;
   const contribMin = sexo === 'mulher' ? 15 : 20;
-  const teto = 8157.41;
+  const teto = INSS_TETO;
 
   const faltaIdade = Math.max(0, idadeMin - idade);
   const faltaContrib = Math.max(0, contribMin - anosContrib);

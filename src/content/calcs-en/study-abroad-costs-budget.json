@@ -1,6 +1,6 @@
 {
   "slug": "study-abroad-costs-budget",
-  "answerSnippet": "If you are a US college student weighing a semester or year abroad, the real question is not just where to go but what it will actually cost out of pocket once tuition transfer, housing, food, flights, visa, and insurance are all on the same page.",
+  "answerSnippet": "Total study abroad cost = tuition + housing + food + insurance + flights + visa + personal expenses. Typical US student semester budgets: Latin America $8,000–15,000, Asia $15,000–22,000, Europe $12,000–25,000, London $20,000–30,000, Australia $18,000–28,000. Divide your total by 17 weeks to get the weekly burn rate.",
   "esSlug": "calculadora-presupuesto-estudiar-exterior-universidad",
   "title": "Study Abroad Budget Calculator 2026 | Hacé Cuentas",
   "h1": "Calculate Your Complete Study Abroad Budget",
@@ -9,9 +9,9 @@
   "icon": "🌍",
   "audience": "global",
   "formulaId": "presupuesto-estudiar-exterior-universidad",
-  "lastReviewed": "2026-05-28",
+  "lastReviewed": "2026-06-09",
   "intro": "If you are a US college student weighing a semester or year abroad, the real question is not just where to go but what it will actually cost out of pocket once tuition transfer, housing, food, flights, visa, and insurance are all on the same page. Typical US student budgets break down by region: Europe semesters generally land between $12,000 and $25,000, with London and other UK cities pushing $20,000 to $30,000 because of housing and the strong pound. Asia destinations like Tokyo and Seoul run roughly $15,000 to $22,000 per semester, Latin America programs in Buenos Aires, Mexico City, or Santiago typically fall in the $8,000 to $15,000 range, and Australia sits between $18,000 and $28,000. According to IIE Open Doors 2024 data, around 280,000 US students study abroad each year, and the population has expanded meaningfully since the 2008 Higher Education Opportunity Act made Pell Grants more portable for short-term and approved programs. This calculator helps you build a realistic dollar estimate before you commit to a deposit, transfer credits, or submit a Gilman or Boren application.",
-  "keyTakeaway": "Formula: **Study Abroad Cost Estimate**. Direct calculation of your total education expenses. Tuition + Housing + Food + Insurance + Travel + All Additional Costs.",
+  "keyTakeaway": "**Total semester cost = tuition + housing + food + insurance + flights + visa + personal expenses.** Example (Tokyo): $12,000 program fee + $3,000 housing + $1,500 food + $400 insurance + $1,200 flights + $50 visa + $1,800 personal = **$19,950 per semester** — about $1,174 per week over a 17-week term.",
   "seoKeywords": [
     "study abroad costs",
     "studying abroad budget",
@@ -38,27 +38,101 @@
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "Annual Tuition and Fees",
+      "id": "tuition",
+      "label": "Program fee / tuition for the semester (USD)",
       "type": "number",
       "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "12000",
+      "prefix": "$",
+      "min": 0,
+      "max": 100000,
+      "step": 100,
+      "help": "What you pay the program provider or host university for the term. Enter 0 if your home-school tuition transfers at no extra cost."
     },
     {
-      "id": "v2",
-      "label": "Annual Living Expenses",
+      "id": "housing",
+      "label": "Housing for the semester (USD)",
       "type": "number",
-      "required": true,
-      "placeholder": "0",
-      "step": 0.01
+      "placeholder": "3000",
+      "prefix": "$",
+      "default": 0,
+      "min": 0,
+      "max": 50000,
+      "step": 100,
+      "help": "Dorm, homestay or shared apartment for the full term, including deposit."
+    },
+    {
+      "id": "food",
+      "label": "Food and groceries (USD)",
+      "type": "number",
+      "placeholder": "1500",
+      "prefix": "$",
+      "default": 0,
+      "min": 0,
+      "max": 20000,
+      "step": 50
+    },
+    {
+      "id": "insurance",
+      "label": "Health insurance (USD)",
+      "type": "number",
+      "placeholder": "400",
+      "prefix": "$",
+      "default": 0,
+      "min": 0,
+      "max": 10000,
+      "step": 50,
+      "help": "International student health insurance is mandatory in most programs — typically $60–100/month (e.g. CISI)."
+    },
+    {
+      "id": "flights",
+      "label": "Round-trip flights (USD)",
+      "type": "number",
+      "placeholder": "1200",
+      "prefix": "$",
+      "default": 0,
+      "min": 0,
+      "max": 10000,
+      "step": 50
+    },
+    {
+      "id": "visa",
+      "label": "Student visa and paperwork (USD)",
+      "type": "number",
+      "placeholder": "160",
+      "prefix": "$",
+      "default": 0,
+      "min": 0,
+      "max": 5000,
+      "step": 10,
+      "help": "Visa fee plus passport, photos and document costs. $0 for many short-term stays (e.g. UK under 6 months)."
+    },
+    {
+      "id": "personal",
+      "label": "Personal, transit and entertainment (USD)",
+      "type": "number",
+      "placeholder": "1800",
+      "prefix": "$",
+      "default": 0,
+      "min": 0,
+      "max": 30000,
+      "step": 50,
+      "help": "Local transit passes, phone plan, weekend trips, going out."
     }
   ],
   "outputs": [
     {
-      "id": "resultado",
-      "label": "Total Study Abroad Cost",
+      "id": "total",
+      "label": "Total Study Abroad Cost (semester)",
       "primary": true
+    },
+    {
+      "id": "weeklyAvg",
+      "label": "Average per week (17-week semester)"
+    },
+    {
+      "id": "costBreakdown",
+      "label": "Cost Breakdown"
     },
     {
       "id": "resumen",
@@ -66,12 +140,28 @@
     }
   ],
   "example": {
-    "title": "Study Abroad Budget Calculation Example",
+    "title": "Example: a semester in Tokyo, Japan",
+    "inputs": {
+      "tuition": 12000,
+      "housing": 3000,
+      "food": 1500,
+      "insurance": 400,
+      "flights": 1200,
+      "visa": 50,
+      "personal": 1800
+    },
     "steps": [
-      "Enter your costs",
-      "View total"
+      "Program fee paid to the provider: $12,000",
+      "Dorm / shared apartment for the term: $3,000",
+      "Food and groceries: $1,500",
+      "Mandatory health insurance (~$80/month × 5 months): $400",
+      "Round-trip flight from a US hub: $1,200",
+      "Student visa and paperwork: $50",
+      "Personal, transit (Suica) and weekend trips: $1,800",
+      "Total = 12,000 + 3,000 + 1,500 + 400 + 1,200 + 50 + 1,800 = $19,950",
+      "Weekly average = 19,950 ÷ 17 weeks = ~$1,174/week"
     ],
-    "result": "Your complete study abroad budget estimate"
+    "result": "$19,950 total for the semester (~$1,174 per week)"
   },
   "explanation": "**Estimating study abroad costs** as a US student means working in USD, layering in components that your home campus bill normally hides, and being honest about hidden line items like passport fees, health insurance, and currency conversion spreads.\n\n## Cost Breakdown by Region (Per Semester, USD)\n\n**London, United Kingdom — approximately $25,000**\n- Program fee or tuition transfer: $15,000\n- Housing (shared flat or university hall): $5,000\n- Food and groceries: $2,000\n- Local transit (Oyster card, ~$35/week): $400\n- Personal and entertainment: $1,500\n- Round-trip flight from a US hub: $800\n- Visa: $0 for short-term Student Visitor stays under 6 months\n\n**Tokyo, Japan — approximately $18,000**\n- Program fee: $12,000\n- Dorm or shared apartment: $3,000\n- Food: $1,500\n- Transit (Suica, monthly passes): $300\n- Round-trip flight: $1,200\n\n**Buenos Aires, Argentina — approximately $10,000**\n- Program fee: $6,000\n- Homestay including some meals: $1,800\n- Food not covered by homestay: $800\n- Transit (SUBE card): $200\n- Round-trip flight: $900\n\n**Sydney, Australia — approximately $22,000**\n- Program fee: $14,000\n- Housing: $4,000\n- Food: $2,000\n- Transit (Opal card): $400\n- Round-trip flight: $1,500\n\n## Funding US Students Actually Use\n\n**Pell Grant portability**: Federal Pell Grants travel with you for direct-enrollment programs at eligible foreign institutions and for approved third-party study abroad programs that maintain a consortium agreement with your home school. Your financial aid office confirms eligibility per program.\n\n**Benjamin A. Gilman International Scholarship**: Up to $5,000 (and up to $8,000 for critical-need languages) for Pell Grant recipients. Roughly 2,800 awards per cycle.\n\n**Fulbright US Student Program**: Post-graduation research, study, or English Teaching Assistant grants in over 140 countries, administered through cies.org.\n\n**Boren Scholarships**: Up to $25,000 for undergraduates studying critical languages (Arabic, Mandarin, Russian, Portuguese, Swahili, and others) with a federal service commitment.\n\n**Bridging Scholarships for Study in Japan**: $2,500 (semester) or $4,000 (academic year) for US undergraduates enrolling in Japanese universities.\n\n**IES Abroad Diversity & Inclusion Scholarships**: Need-based and identity-based awards stackable with federal aid.\n\n## Hidden Costs to Plan For\n\n- First-time US passport: $165 (book + execution fee).\n- FAFSA verification documents and notary fees if requested by the aid office.\n- Mandatory study abroad health insurance, typically $60 to $100 per month — CISI (Cultural Insurance Services International) is the standard provider used by most US programs.\n- Currency conversion fees and ATM withdrawal markups (budget 1 to 3% of cash spending).\n- Phone plan: international eSIM or local SIM, roughly $20 to $40 per month.\n\n## Tax Considerations\n\nIf you take on a part-time job abroad, foreign-earned income may need to be reported on your US tax return, though most undergraduate study abroad scholarships used for qualified education expenses remain non-taxable. The F-1 versus J-1 visa distinction applies to foreign students coming into the US — as a US citizen studying abroad you follow the host country's student visa rules instead.\n\n## Final Notes\n\nThis is a planning tool. Confirm program-specific costs with your study abroad office and the financial aid office that processes your federal aid, since Pell portability and consortium agreements are program-by-program.",
   "faq": [

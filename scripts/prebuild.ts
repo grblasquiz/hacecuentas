@@ -75,9 +75,13 @@ async function main() {
   const incremental = Boolean(process.env.INCREMENTAL_CHANGES);
 
   console.log(`[prebuild] mode=${incremental ? 'incremental' : 'full'}`);
-  console.log('[prebuild] fase 1: validate:data + regenerate-formula-index + converter-tables + bcra-indices');
+  console.log('[prebuild] fase 1: validate:data + fiscal-gate + regenerate-formula-index + converter-tables + bcra-indices');
   await Promise.all([
     run(task('validate', 'validate-data-updates')),
+    // Gate anti-hardcode fiscal: falla rápido si una fórmula re-introduce un
+    // valor fiscal viejo conocido (teto INSS 2025, SM 1518, etc.) en vez de
+    // importar la fuente única de src/lib/data/.
+    run(task('fiscal-gate', 'check-fiscal-hardcode')),
     run(task('formula-index', 'regenerate-formula-index')),
     run(mjsTask('converter-tables', 'generate-converter-tables')),
     run(mjsTask('bcra-indices', 'fetch-bcra-indices')),

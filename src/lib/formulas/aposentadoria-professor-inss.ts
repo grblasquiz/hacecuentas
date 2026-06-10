@@ -1,3 +1,4 @@
+import { INSS_TETO } from '../data/brasil-2026';
 /** Aposentadoria Especial do Professor — INSS.
  * Redutor de 5 anos sobre regra geral.
  * Regra transição idade: homem 57 / mulher 55 anos (pós-EC 103).
@@ -38,7 +39,7 @@ export function aposentadoriaProfessorInss(i: Inputs): Outputs {
   const faltaIdade = Math.max(0, idadeMin - idade);
   const faltaMag = Math.max(0, tempoMin - anosMag);
 
-  const teto = 8157.41;
+  const teto = INSS_TETO;
   const mediaAplicada = Math.min(media, teto);
   // 60% + 2% por ano excedente ao tempo mínimo (regra professor)
   const excedente = Math.max(0, anosMag - tempoMin);

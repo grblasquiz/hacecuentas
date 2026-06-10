@@ -53,6 +53,30 @@ const VEGGIE_LABELS: Record<string, { en: string; pt: string; es: string }> = {
   zucchini:        { en: "Zucchini",         pt: "Abobrinha",      es: "Zapallito" },
 };
 
+// Localized size/prep tips (pt/es); English source of truth lives in VEGGIE_DATA[4]
+const VEGGIE_TIPS_I18N: Record<string, { pt: string; es: string }> = {
+  asparagus:       { pt: "Quebre a base fibrosa; talos finos no tempo mínimo, grossos no máximo.", es: "Cortá la base leñosa; los espárragos finos van al rango bajo, los gruesos al alto." },
+  beetroot:        { pt: "Deixe 2–3 cm de talo; espete com um palito para testar o ponto.", es: "Dejá 2–3 cm de tallo; pinchá con un palillo para probar el punto." },
+  broccoli:        { pt: "Corte em floretes de tamanho parecido; floretes cozinham mais rápido que os talos.", es: "Cortá en flores de tamaño parejo; las flores se cocinan más rápido que los tallos." },
+  brussels_sprouts:{ pt: "Corte ao meio para acelerar; não fure antes da hora ou encharcam.", es: "Cortalas a la mitad para acelerar; no las pinches antes de tiempo o se llenan de agua." },
+  cabbage:         { pt: "Em gomos para ferver; fatiado fino para um vapor rápido.", es: "En cascos para hervir; en juliana para un vapor rápido." },
+  carrot:          { pt: "Rodelas de ~6 mm; cenouras baby inteiras demoram mais.", es: "Rodajas de ~6 mm; las zanahorias baby enteras tardan más." },
+  cauliflower:     { pt: "Separe em floretes iguais; a cabeça inteira leva 15–20 min.", es: "Separá en flores parejas; la cabeza entera tarda 15–20 min." },
+  corn:            { pt: "Sem palha; não é recomendado ferver com a palha.", es: "Sin chala; no conviene hervirlo con la chala." },
+  eggplant:        { pt: "Em cubos ou fatias; salgue antes para reduzir o amargor.", es: "En cubos o rodajas; salala antes para reducir el amargor." },
+  green_beans:     { pt: "Apare as duas pontas; vagens mais finas no tempo mínimo.", es: "Despuntá ambos extremos; las más finas van al rango bajo." },
+  kale:            { pt: "Retire os talos; as folhas murcham rápido — confira aos 3 min.", es: "Sacá los tallos; las hojas se ablandan rápido — revisá a los 3 min." },
+  leek:            { pt: "Corte ao comprido e lave bem antes de cozinhar.", es: "Cortalo a lo largo y lavalo bien antes de cocinar." },
+  peas:            { pt: "Apenas ervilhas frescas; as congeladas já vêm branqueadas, reduza 1–2 min.", es: "Sólo arvejas frescas; las congeladas vienen blanqueadas, restá 1–2 min." },
+  potato_cubed:    { pt: "Cubos de ~2,5 cm; pedaços menores ficam prontos no tempo mínimo.", es: "Cubos de ~2,5 cm; los trozos más chicos están listos en el rango bajo." },
+  potato_whole:    { pt: "Batata média (~200 g); uma grande pode levar 5–10 min a mais.", es: "Papa mediana (~200 g); una grande puede tardar 5–10 min más." },
+  spinach:         { pt: "Adicione à água fervente ou ao vapor tampado; murcha na hora.", es: "Agregala al agua hirviendo o a la vaporera tapada; se reduce al instante." },
+  sweet_corn:      { pt: "Espiga inteira; garanta que a água cubra todo o milho ao ferver.", es: "Choclo entero; asegurate de que el agua cubra toda la mazorca al hervir." },
+  sweet_potato:    { pt: "Em cubos leva 10–15 min; inteira usa o tempo completo.", es: "En cubos tarda 10–15 min; entera usa el rango completo." },
+  turnip:          { pt: "Descasque e corte em cubos; o nabo amolece mais rápido que a batata.", es: "Pelá y cortá en cubos; el nabo se ablanda más rápido que la papa." },
+  zucchini:        { pt: "Rodelas de ~1 cm; passa do ponto rápido — confira cedo.", es: "Rodajas de ~1 cm; se pasa rápido — probá temprano." },
+};
+
 export function tiemposCoccionVerdurasAlVaporHervido(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
 
@@ -61,7 +85,11 @@ export function tiemposCoccionVerdurasAlVaporHervido(i: Inputs): Outputs {
   const method = Number(i.v2) === 2 ? 'boiled' : 'steamed';
 
   const data = VEGGIE_DATA[vegKey] ?? VEGGIE_DATA['broccoli'];
-  const [steamMin, steamMax, boilMin, boilMax, sizeTip] = data;
+  const [steamMin, steamMax, boilMin, boilMax, sizeTipEn] = data;
+  const tipKey = VEGGIE_DATA[vegKey] ? vegKey : 'broccoli';
+  const sizeTip = __lang === 'en'
+    ? sizeTipEn
+    : (VEGGIE_TIPS_I18N[tipKey] ? VEGGIE_TIPS_I18N[tipKey][__lang] : sizeTipEn);
 
   const tMin = method === 'steamed' ? steamMin : boilMin;
   const tMax = method === 'steamed' ? steamMax : boilMax;
@@ -76,6 +104,13 @@ export function tiemposCoccionVerdurasAlVaporHervido(i: Inputs): Outputs {
     en: method === 'steamed' ? 'Steamed' : 'Boiled',
     pt: method === 'steamed' ? 'No vapor' : 'Fervido',
     es: method === 'steamed' ? 'Al vapor' : 'Hervido',
+  }[__lang];
+
+  // Frase de método para texto corrido (neutra en género: "Zanahoria hervido" suena mal)
+  const methodPhrase = {
+    en: method === 'steamed' ? 'steamed' : 'boiled',
+    pt: method === 'steamed' ? 'no vapor' : 'em água fervente',
+    es: method === 'steamed' ? 'al vapor' : 'en agua hirviendo',
   }[__lang];
 
   // Result string
@@ -101,10 +136,10 @@ export function tiemposCoccionVerdurasAlVaporHervido(i: Inputs): Outputs {
 
   const resumen =
     __lang === 'en'
-      ? `${vegLabel} ${methodLabel.toLowerCase()}: **${tMin}–${tMax} minutes**. Typical target: ${midpoint} min. ${sizeTip}`
+      ? `${vegLabel} ${methodPhrase}: **${tMin}–${tMax} minutes**. Typical target: ${midpoint} min. ${sizeTip}`
       : __lang === 'pt'
-      ? `${vegLabel} ${methodLabel.toLowerCase()}: **${tMin}–${tMax} minutos**. Ponto ideal: ${midpoint} min. ${sizeTip}`
-      : `${vegLabel} ${methodLabel.toLowerCase()}: **${tMin}–${tMax} minutos**. Punto ideal: ${midpoint} min. ${sizeTip}`;
+      ? `${vegLabel} ${methodPhrase}: **${tMin}–${tMax} minutos**. Ponto ideal: ${midpoint} min. ${sizeTip}`
+      : `${vegLabel} ${methodPhrase}: **${tMin}–${tMax} minutos**. Punto ideal: ${midpoint} min. ${sizeTip}`;
 
   const _insight = {
     title: {
@@ -114,8 +149,8 @@ export function tiemposCoccionVerdurasAlVaporHervido(i: Inputs): Outputs {
     }[__lang],
     text: {
       en: `Cook for **${tMin}–${tMax} minutes** (aim for ${midpoint} min). ${sizeTip} ${nutrientNote}`,
-      pt: `Cozinhe por **${tMin}–${tMax} minutos** (aponte para ${midpoint} min). ${sizeTip} ${nutrientNote}`,
-      es: `Cocinás por **${tMin}–${tMax} minutos** (apuntá a ${midpoint} min). ${sizeTip} ${nutrientNote}`,
+      pt: `Cozinhe por **${tMin}–${tMax} minutos** (o ideal são ${midpoint} min). ${sizeTip} ${nutrientNote}`,
+      es: `Cociná **${tMin}–${tMax} minutos** (apuntá a ${midpoint} min). ${sizeTip} ${nutrientNote}`,
     }[__lang],
     tone: 'neutral',
     icon: '🥦',

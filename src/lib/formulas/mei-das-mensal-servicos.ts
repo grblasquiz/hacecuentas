@@ -1,6 +1,8 @@
 /** DAS MEI mensal — Prestador de Serviços (2026)
- *  Valor fixo 2026: R$ 75,60 (INSS 66,60 + ISS 5,00 + R$4,00)
+ *  Valor 2026: INSS 5% do salário mínimo (R$ 81,05) + ISS R$ 5,00 = R$ 86,05.
+ *  Fuente única: src/lib/data/brasil-2026.ts (DAS_MEI).
  */
+import { DAS_MEI } from '../data/brasil-2026';
 
 export interface Inputs {
   mesesAtivos: number;
@@ -22,16 +24,15 @@ export function meiDasMensalServicos(i: Inputs): Outputs {
   const meses = Math.min(12, Math.max(1, Number(i.mesesAtivos) || 12));
   const incluir13 = i.incluirDAS13 === 'sim' || i.incluirDAS13 === 'true';
 
-  const DAS_SERVICOS = 75.60;
-  const INSS = 66.60;
-  const ISS = 5.00;
-  const COMPL = 4.00;
+  const DAS_SERVICOS = DAS_MEI.servicos;
+  const INSS = DAS_MEI.inss5;
+  const ISS = DAS_MEI.iss;
 
   const dasMensal = DAS_SERVICOS;
   const meses13 = incluir13 ? 1 : 0;
   const dasAnual = dasMensal * (meses + meses13);
 
-  const composicao = `INSS R$ ${INSS.toFixed(2)} + ISS R$ ${ISS.toFixed(2)} + Complementar R$ ${COMPL.toFixed(2)} = R$ ${DAS_SERVICOS.toFixed(2)}`;
+  const composicao = `INSS (5% do salário mínimo) R$ ${INSS.toFixed(2)} + ISS R$ ${ISS.toFixed(2)} = R$ ${DAS_SERVICOS.toFixed(2)}`;
   const formula = `DAS Anual = R$ ${DAS_SERVICOS.toFixed(2)} × ${meses + meses13} meses = R$ ${dasAnual.toFixed(2)}`;
   const explicacion = `MEI prestador de serviços paga DAS mensal de R$ ${DAS_SERVICOS.toFixed(2)} em 2026 (${composicao}). Vencimento dia 20. Total em ${meses} meses: R$ ${dasAnual.toFixed(2)}${incluir13 ? ' (com 13º incluso)' : ''}. Exemplos de atividades: cabeleireiro, manicure, pedreiro, eletricista autônomo, programador MEI.`;
 
@@ -47,12 +48,11 @@ export function meiDasMensalServicos(i: Inputs): Outputs {
     slices: [
       { label: 'INSS (aposentadoria)', value: Number(INSS.toFixed(2)) },
       { label: 'ISS (município)', value: Number(ISS.toFixed(2)) },
-      { label: 'Complementar', value: Number(COMPL.toFixed(2)) },
     ],
     prefix: 'R$ ',
     centerValue: `R$ ${DAS_SERVICOS.toFixed(2)}`,
     centerLabel: 'DAS mensal',
-    ariaLabel: `Composição do DAS mensal de R$ ${DAS_SERVICOS.toFixed(2)}: INSS R$ ${INSS.toFixed(2)}, ISS R$ ${ISS.toFixed(2)} e complementar R$ ${COMPL.toFixed(2)}.`,
+    ariaLabel: `Composição do DAS mensal de R$ ${DAS_SERVICOS.toFixed(2)}: INSS R$ ${INSS.toFixed(2)}, e ISS R$ ${ISS.toFixed(2)}.`,
   };
 
   return {

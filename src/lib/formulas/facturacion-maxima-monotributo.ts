@@ -1,4 +1,8 @@
-/** Facturación máxima antes de pasar a Responsable Inscripto */
+/** Facturación máxima antes de pasar a Responsable Inscripto.
+ *  Topes/cuotas ARCA 2026 desde la fuente única src/lib/data/monotributo-2026.ts
+ *  (desde 2026 los topes son iguales para servicios y venta de bienes, y
+ *  servicios alcanza hasta la categoría K). */
+import { CATEGORIAS, TOPES, CUOTA_SERVICIOS, CUOTA_BIENES, type Cat } from '../data/monotributo-2026';
 
 export interface Inputs {
   categoriaActual: string;
@@ -21,25 +25,20 @@ export interface Outputs {
 }
 
 interface CatInfo {
-  letra: string;
+  letra: Cat;
   factServicios: number;
   factVenta: number;
   cuota: number;
 }
 
-const CATS: CatInfo[] = [
-  { letra: 'A', factServicios: 7_813_063, factVenta: 7_813_063, cuota: 33_235 },
-  { letra: 'B', factServicios: 11_447_046, factVenta: 11_447_046, cuota: 37_869 },
-  { letra: 'C', factServicios: 16_050_091, factVenta: 16_050_091, cuota: 44_261 },
-  { letra: 'D', factServicios: 19_926_340, factVenta: 19_926_340, cuota: 53_334 },
-  { letra: 'E', factServicios: 23_439_192, factVenta: 27_688_614, cuota: 66_280 },
-  { letra: 'F', factServicios: 29_374_695, factVenta: 34_610_768, cuota: 78_399 },
-  { letra: 'G', factServicios: 35_128_502, factVenta: 41_532_922, cuota: 91_324 },
-  { letra: 'H', factServicios: 52_692_753, factVenta: 57_609_911, cuota: 131_494 },
-  { letra: 'I', factServicios: 0, factVenta: 66_111_165, cuota: 155_780 },
-  { letra: 'J', factServicios: 0, factVenta: 76_227_802, cuota: 175_948 },
-  { letra: 'K', factServicios: 0, factVenta: 86_344_440, cuota: 196_393 },
-];
+// Tabla ARCA 2026 (vigente 2026-02-01): topes iguales para ambas actividades;
+// la cuota difiere (acá es informativa, el cálculo usa los topes).
+const CATS: CatInfo[] = CATEGORIAS.map((letra) => ({
+  letra,
+  factServicios: TOPES[letra],
+  factVenta: TOPES[letra],
+  cuota: CUOTA_SERVICIOS[letra] ?? CUOTA_BIENES[letra],
+}));
 
 export function facturacionMaximaMonotributo(i: Inputs): Outputs {
   const catActual = String(i.categoriaActual || 'A').toUpperCase();
@@ -51,8 +50,8 @@ export function facturacionMaximaMonotributo(i: Inputs): Outputs {
   const catInfo = CATS.find(c => c.letra === catActual);
   if (!catInfo) throw new Error('Categoría no válida');
 
+  // 2026: topes iguales para servicios y bienes; servicios alcanza hasta K.
   const topeCategoria = esServicios ? catInfo.factServicios : catInfo.factVenta;
-  if (topeCategoria === 0) throw new Error(`Categoría ${catActual} no disponible para servicios`);
 
   // Proyectar facturación anual
   const facMensualPromedio = facActual / meses;

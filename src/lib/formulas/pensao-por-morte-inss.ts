@@ -1,3 +1,4 @@
+import { SALARIO_MINIMO } from '../data/brasil-2026';
 /** Pensão por Morte INSS (pós-EC 103/2019).
  * Cônjuge: 50% + 10% por dependente (máx 100%).
  * Se óbito por acidente de trabalho ou doença profissional: 100% do benefício.
@@ -29,7 +30,7 @@ export function pensaoPorMorteInss(i: Inputs): Outputs {
   const acidente = i.acidenteTrabalho === true || i.acidenteTrabalho === 'true' || i.acidenteTrabalho === 'sim';
   if (!beneficio) throw new Error('Informe o benefício do segurado e número de dependentes.');
 
-  const salarioMinimo = 1518;
+  const salarioMinimo = SALARIO_MINIMO;
   let percentual: number;
   if (acidente) {
     percentual = 100;

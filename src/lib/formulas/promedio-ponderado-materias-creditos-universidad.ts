@@ -21,7 +21,7 @@ export function promedioPonderadoMateriasCreditosUniversidad(i: Inputs): Outputs
         : `La cantidad de notas (${a}) y de créditos (${b}) debe ser igual`,
     errGradeRange: (g: number) =>
       __lang === 'en'
-        ? `Grade ${g} is out of the expected range (0–4.0 or 0–10)`
+        ? `Grade ${g} is out of the expected range (0–4.0, 0–10 or 0–100)`
         : `La nota ${g} está fuera del rango esperado`,
     errCreditsPos: (c: number) =>
       __lang === 'en'
@@ -57,7 +57,7 @@ export function promedioPonderadoMateriasCreditosUniversidad(i: Inputs): Outputs
 
   // --- Validate ranges ---
   for (const g of grades) {
-    if (g < 0 || g > 10) throw new Error(T.errGradeRange(g));
+    if (g < 0 || g > 100) throw new Error(T.errGradeRange(g));
   }
   for (const c of credits) {
     if (c <= 0) throw new Error(T.errCreditsPos(c));
@@ -72,14 +72,24 @@ export function promedioPonderadoMateriasCreditosUniversidad(i: Inputs): Outputs
 
   const prom = Math.round(weighted * 100) / 100;
 
-  // --- Detect scale (4.0 vs 10.0) ---
-  const isScale4 = grades.every(g => g <= 4.0) && grades.some(g => g <= 4.0);
+  // --- Detect scale (4.0 vs 10.0 vs 100) ---
+  // Any grade above 10 → percentage scale (0–100, common in the U.S. and secondary systems).
+  // All grades ≤ 4.0 → GPA scale. Otherwise → 0–10 scale. Additive: 0–4.0 and 0–10 behavior unchanged.
+  const isScale100 = grades.some(g => g > 10);
+  const isScale4 = !isScale100 && grades.every(g => g <= 4.0);
   const passing4 = 2.0;
   const passing10 = 4.0;
 
   // --- Category ---
   let catEn: string, cat: string, tone: 'good' | 'warn' | 'neutral';
-  if (isScale4) {
+  if (isScale100) {
+    // Standard U.S. percentage bands: A 90–100, B 80–89, C 70–79, D 60–69, F <60
+    if (prom >= 90) { catEn = 'A range'; cat = 'excelente'; tone = 'good'; }
+    else if (prom >= 80) { catEn = 'B range'; cat = 'bueno'; tone = 'good'; }
+    else if (prom >= 70) { catEn = 'C range'; cat = 'regular'; tone = 'neutral'; }
+    else if (prom >= 60) { catEn = 'D range'; cat = 'en riesgo'; tone = 'warn'; }
+    else { catEn = 'failing'; cat = 'desaprobatorio'; tone = 'warn'; }
+  } else if (isScale4) {
     if (prom >= 3.7) { catEn = 'A range'; cat = 'excelente'; tone = 'good'; }
     else if (prom >= 3.0) { catEn = 'B range'; cat = 'bueno'; tone = 'good'; }
     else if (prom >= 2.0) { catEn = 'C range'; cat = 'regular'; tone = 'neutral'; }
@@ -115,13 +125,21 @@ export function promedioPonderadoMateriasCreditosUniversidad(i: Inputs): Outputs
   };
 
   // --- Chart: scale based on detected grading system ---
-  const scaleMax = isScale4 ? 4.0 : 10;
+  const scaleMax = isScale100 ? 100 : isScale4 ? 4.0 : 10;
   const _chart = {
     type: 'scale' as const,
     marker: prom,
     markerLabel: prom.toFixed(2),
     min: 0,
-    segments: isScale4
+    segments: isScale100
+      ? [
+          { nombre: __lang === 'en' ? 'F (<60)' : 'Desaprobado', max: 60, color: '#ef4444', colorDark: '#dc2626' },
+          { nombre: __lang === 'en' ? 'D (60–69)' : 'En riesgo', max: 70, color: '#f97316', colorDark: '#ea580c' },
+          { nombre: __lang === 'en' ? 'C (70–79)' : 'Regular', max: 80, color: '#f59e0b', colorDark: '#d97706' },
+          { nombre: __lang === 'en' ? 'B (80–89)' : 'Bueno', max: 90, color: '#84cc16', colorDark: '#65a30d' },
+          { nombre: __lang === 'en' ? 'A (90–100)' : 'Excelente', max: 100, color: '#22c55e', colorDark: '#16a34a' },
+        ]
+      : isScale4
       ? [
           { nombre: __lang === 'en' ? 'At risk (<2.0)' : 'En riesgo', max: 2.0, color: '#ef4444', colorDark: '#dc2626' },
           { nombre: __lang === 'en' ? 'C range (2.0–3.0)' : 'Regular', max: 3.0, color: '#f59e0b', colorDark: '#d97706' },

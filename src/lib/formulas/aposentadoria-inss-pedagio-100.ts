@@ -1,3 +1,4 @@
+import { INSS_TETO } from '../data/brasil-2026';
 /** Aposentadoria INSS — Regra de Transição Pedágio 100% (EC 103/2019).
  * Idade mínima: homem 60 / mulher 57.
  * Tempo de contribuição: homem 35 / mulher 30.
@@ -42,7 +43,7 @@ export function aposentadoriaInssPedagio100(i: Inputs): Outputs {
   const pedagio = faltava * 1.0; // 100%
   const totalNecessario = contrib2019 + faltava + pedagio;
 
-  const teto = 8157.41;
+  const teto = INSS_TETO;
   const mediaAplicada = Math.min(media, teto);
   const elegivel = idade >= idadeMin;
   const valor = elegivel ? mediaAplicada : 0; // 100% da média, sem fator

@@ -1,3 +1,4 @@
+import { INSS_TETO, SALARIO_MINIMO } from '../data/brasil-2026';
 /** Auxílio-Doença (Benefício por Incapacidade Temporária) INSS.
  * 91% do salário de benefício (média dos 12 últimos salários contribuição ou teto da média).
  * Teto: média dos últimos 12 salários, limitada ao teto INSS.
@@ -23,8 +24,8 @@ export function auxilioDoencaInss(i: Inputs): Outputs {
   const media = Number(i.mediaSalarial);
   if (!media) throw new Error('Informe a média dos últimos 12 salários de contribuição.');
 
-  const teto = 8157.41;
-  const salarioMinimo = 1518;
+  const teto = INSS_TETO;
+  const salarioMinimo = SALARIO_MINIMO;
   const mediaAplicada = Math.min(media, teto);
   const valorBruto = mediaAplicada * 0.91;
   let valor = valorBruto;

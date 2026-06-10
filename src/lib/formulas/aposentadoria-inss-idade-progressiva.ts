@@ -1,3 +1,4 @@
+import { INSS_TETO } from '../data/brasil-2026';
 /** Aposentadoria INSS — Regra de Transição Idade Progressiva (EC 103/2019).
  * 2019: idade mín homem 61 / mulher 56. Aumenta 6 meses/ano até 65h / 62m.
  * Tempo de contribuição: homem 35 / mulher 30.
@@ -43,7 +44,7 @@ export function aposentadoriaInssIdadeProgressiva(i: Inputs): Outputs {
   const faltaIdade = Math.max(0, idadeMin - idade);
   const faltaContrib = Math.max(0, tempoMin - contrib);
 
-  const teto = 8157.41;
+  const teto = INSS_TETO;
   const mediaAplicada = Math.min(media, teto);
   // 60% + 2% por ano excedente 20h/15m
   const excedente = Math.max(0, contrib - (sexo === 'mulher' ? 15 : 20));
