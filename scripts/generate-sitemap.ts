@@ -494,6 +494,7 @@ const priorityUrls: Url[] = [
   prio('/comparador-plazo-fijo',             '0.9',  'daily',  true),
   prio('/calculadora-cientifica',            '0.9',  'weekly'),
   prio('/valores-bcra',                      '0.9',  'daily',  true),
+  prio('/fixture-mundial-2026',              '0.95', 'daily',  true),
   // 13 guías pilares (estables)
   prio('/guia/finanzas-personales',          '0.9',  'weekly'),
   prio('/guia/sueldos-argentina-2026',       '0.9',  'weekly'),
@@ -702,6 +703,8 @@ sitemaps.push({
     core('/simulador-jubilacion-anses',          '0.95', 'weekly'),
     core('/tracker-embarazo-semana-a-semana',    '0.95', 'weekly'),
     core('/cuanto-falta-para-Navidad-2026',      '0.9',  'daily',   true),
+    core('/fixture-mundial-2026',                '0.9',  'daily',   true),
+    core('/mundial-2026',                        '0.85', 'weekly'),
     core('/guias',                               '0.9',  'weekly'),
     core('/guia/sueldos-argentina-2026',         '0.85', 'weekly'),
     core('/guia/impuestos-argentina-2026',       '0.85', 'weekly'),

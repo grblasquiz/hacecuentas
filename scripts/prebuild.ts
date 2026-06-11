@@ -85,6 +85,7 @@ async function main() {
     run(task('formula-index', 'regenerate-formula-index')),
     run(mjsTask('converter-tables', 'generate-converter-tables')),
     run(mjsTask('bcra-indices', 'fetch-bcra-indices')),
+    run(mjsTask('mundial-fixture', 'fetch-mundial-fixture')),
   ]);
 
   const phase2Tasks: Task[] = [
