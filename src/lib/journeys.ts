@@ -9,6 +9,11 @@
  * no mueve el sitemap.
  */
 import { CLUSTERS } from './clusters';
+// Fallback final: relacionadas TF-IDF (mismas que usa RelatedCalcs). Cubre las
+// ~764 calcs sin cluster ni sección de guía, que antes quedaban sin "próximo
+// paso" (dead-end post-resultado). slug → string[] de slugs afines.
+import relatedAuto from './related-auto.json';
+const RELATED_AUTO = relatedAuto as Record<string, string[]>;
 
 // Secciones de guías: cada sección agrupa calcs que son un recorrido real.
 const guideModules = import.meta.glob<any>('../content/guias/*.json', { eager: true });
@@ -39,7 +44,10 @@ for (const c of Object.values(CLUSTERS)) {
  * Próximos pasos de una calc, en orden de relevancia de recorrido:
  *   1. hermanos de cluster (lo más afín — mismo mini-tema curado)
  *   2. hermanos de sección de guía (mismo paso del journey)
- *   3. relatedSlugs manuales del JSON (fallback)
+ *   3. relatedSlugs manuales del JSON
+ *   4. relacionadas TF-IDF (related-auto.json) — fallback para que casi ninguna
+ *      calc quede sin próximo paso. Menor calidad de "recorrido" que 1-2 pero
+ *      mejor que un dead-end.
  * Deduplicado y sin la propia calc. Devuelve [] si no hay recorrido conocido.
  */
 export function getJourneySteps(slug: string, manualRelated: string[] = [], max = 6): string[] {
@@ -54,6 +62,8 @@ export function getJourneySteps(slug: string, manualRelated: string[] = [], max 
   (clusterSiblings.get(slug) || []).forEach(push);
   (guideSectionSiblings.get(slug) || []).forEach(push);
   manualRelated.forEach(push);
+  // Sólo completar con TF-IDF si lo curado no alcanzó el mínimo útil (2 ítems).
+  if (out.length < 2) (RELATED_AUTO[slug] || []).forEach(push);
   return out.slice(0, max);
 }
 

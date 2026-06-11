@@ -138,6 +138,12 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
   { slug: 'jardineria', label: 'Jardinería' },
   { slug: 'idiomas', label: 'Idiomas' },
   { slug: 'entretenimiento', label: 'Entretenimiento' },
+  { slug: 'impuestos', label: 'Impuestos' },
+  { slug: 'hogar', label: 'Hogar' },
+  { slug: 'medio-ambiente', label: 'Medio Ambiente' },
+  { slug: 'clima', label: 'Clima' },
+  { slug: 'juegos', label: 'Juegos' },
+  { slug: 'astronomia', label: 'Astronomía' },
 ];
 ---
 
@@ -251,7 +257,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     <div class="search-footer">
       <span><kbd>↑</kbd><kbd>↓</kbd> {lang === 'en' ? 'navigate' : lang === 'pt' ? 'navegar' : 'navegar'}</span>
       <span><kbd>↵</kbd> {lang === 'en' ? 'open' : lang === 'pt' ? 'abrir' : 'abrir'}</span>
-      <a href={lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : '/buscar'}>{lang === 'en' ? 'See all →' : lang === 'pt' ? 'Ver todas →' : 'Ver todas →'}</a>
+      <a id="search-seeall" data-base={lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : '/buscar'} href={lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : '/buscar'}>{lang === 'en' ? 'See all →' : lang === 'pt' ? 'Ver todas →' : 'Ver todas →'}</a>
     </div>
   </div>
 </div>
@@ -354,6 +360,13 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     if (dd && !dd.hasAttribute('hidden')) {
       dd.setAttribute('hidden', '');
       document.getElementById('country-btn')?.setAttribute('aria-expanded', 'false');
+    }
+    // Escape también cierra el menú mobile y devuelve el foco al botón.
+    const mob = document.getElementById('mobile-nav');
+    const mtog = document.getElementById('menu-toggle');
+    if (mob && !mob.hasAttribute('hidden')) {
+      mob.setAttribute('hidden', '');
+      if (mtog) { mtog.setAttribute('aria-expanded', 'false'); try { (mtog as HTMLElement).focus(); } catch {} }
     }
   });
 
@@ -487,6 +500,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
       ? { loading: 'Carregando...', noResults: 'Sem resultados para', errMsg: 'Não foi possível carregar o buscador.', retry: 'Tentar de novo', openAll: 'abrir /buscar' }
       : { loading: 'Cargando...', noResults: 'Sin resultados para', errMsg: 'No se pudo cargar el buscador.', retry: 'Reintentar', openAll: 'abrí /buscar' };
     let currentIndex = -1;
+    let _lastFocus = null; // foco previo a abrir el modal (para restaurarlo al cerrar)
 
     function renderError() {
       results.innerHTML =
@@ -505,6 +519,13 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     }
 
     function renderResults(q) {
+      // Mantener el link "Ver todas →" del footer con la query actual, para que
+      // saltar a /buscar no pierda lo que el usuario tipeó.
+      const _seeAll = document.getElementById('search-seeall');
+      if (_seeAll) {
+        const _base = _seeAll.getAttribute('data-base') || '/buscar';
+        _seeAll.setAttribute('href', q && q.trim() ? _base + '?q=' + encodeURIComponent(q.trim()) : _base);
+      }
       if (calcsFailed) { renderError(); return; }
       if (!calcs) {
         results.innerHTML = `<div class="no-results">${i18n.loading}</div>`;
@@ -571,7 +592,11 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
         matches = pickDefault(calcs);
       }
       if (matches.length === 0) {
-        results.innerHTML = `<div class="no-results">${i18n.noResults} "<strong>${escapeHtml(q)}</strong>"</div>`;
+        const _base = (document.getElementById('search-seeall')?.getAttribute('data-base')) || '/buscar';
+        const _allHref = _base + '?q=' + encodeURIComponent((q || '').trim());
+        const _allLbl = (i18n.openAll || 'abrí /buscar');
+        results.innerHTML = `<div class="no-results">${i18n.noResults} "<strong>${escapeHtml(q)}</strong>"`
+          + `<p style="margin-top:.5rem"><a href="${_allHref}">${_allLbl} →</a></p></div>`;
         return;
       }
       // Concatenación en vez de template literals: evita que Googlebot vea
@@ -596,6 +621,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     }
 
     const openModal = async () => {
+      _lastFocus = document.activeElement;
       modal.hidden = false;
       setTimeout(() => input.focus(), 30);
       if (!calcs) {
@@ -609,6 +635,8 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
       modal.hidden = true;
       input.value = '';
       currentIndex = -1;
+      // Devolver el foco al elemento que abrió el modal (WCAG 2.4.3).
+      try { if (_lastFocus && _lastFocus.focus) _lastFocus.focus(); } catch {}
     };
 
     // Guards de idempotencia: si el nodo sobrevive al swap de ClientRouter
@@ -650,6 +678,17 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
         e.preventDefault(); openModal(); return;
       }
       if (modal.hidden) return;
+      // Trap de Tab: el foco no debe escapar del modal abierto (WCAG 2.4.3).
+      if (e.key === 'Tab') {
+        const focusables = modal.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const list = Array.prototype.filter.call(focusables, (el) => el.offsetParent !== null || el === document.activeElement);
+        if (list.length) {
+          const first = list[0], last = list[list.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+        return;
+      }
       const items = results.querySelectorAll('.result-item');
       let idx = getIndex();
       if (e.key === 'Escape') { closeModal(); }
@@ -686,7 +725,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     left: 0;
     padding: 0.75rem 1rem;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     z-index: 1000;
     transform: translateY(-200%);
     transition: transform 0.15s ease;
@@ -698,7 +737,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     left: 1rem;
     padding: 0.75rem 1rem;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     font-weight: 600;
     text-decoration: none;
     z-index: 200;
@@ -997,7 +1036,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
   .search-results :global(.search-error a) { color: var(--accent); text-decoration: none; font-weight: 500; }
   .search-results :global(.search-retry) {
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     border: none;
     border-radius: var(--radius-sm);
     padding: 0.375rem 0.75rem;

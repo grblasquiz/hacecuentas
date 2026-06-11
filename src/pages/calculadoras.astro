@@ -119,13 +119,15 @@ const schema = {
   mainEntity: {
     '@type': 'ItemList',
     numberOfItems: totalCount,
-    itemListElement: groups.flatMap((g) =>
-      g.calcs.map((c: any) => ({
-        '@type': 'ListItem',
-        name: c.h1,
-        url: `${siteUrl}/${c.slug}`,
-      })),
-    ),
+    // Cap a 50 items: el ItemList completo eran ~440KB de ld+json (las 2.832
+    // calcs) inflando el HTML a 1,86MB. numberOfItems mantiene el total real y
+    // la lista de links visible queda intacta; Google no necesita las 2.832 acá.
+    itemListElement: groups.flatMap((g) => g.calcs).slice(0, 50).map((c: any, i: number) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.h1,
+      url: `${siteUrl}/${c.slug}`,
+    })),
   },
 };
 

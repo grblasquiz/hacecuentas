@@ -10,6 +10,10 @@ import CategoryIcon from '../components/CategoryIcon.astro';
 import { TOTAL_DISPLAY, PT_DISPLAY } from '../lib/calc-counts';
 import { GONE_410_URLS } from '../lib/gone-410';
 import { HOME_HREFLANG } from '../lib/hreflang';
+import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
+// Tile "próximo feriado": data de la FUENTE ÚNICA (no hardcodear acá — el drift
+// fue justo lo que la fuente vino a eliminar: Soberanía 20→23 nov + 3 puentes).
+const FERIADOS_DATA: [string, string][] = FERIADOS_AR_2026.map((f) => [f.fecha, f.nombre]);
 
 // Cargar todas las calculadoras
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -520,7 +524,7 @@ const schema = {
         </span>
         <h2 id="categorias-heading">Todas las categorías</h2>
       </div>
-      <a href="/buscar" class="see-all">Ver todas →</a>
+      <a href="/calculadoras" class="see-all">Ver todas →</a>
     </div>
     {/* Destacadas: las más usadas en AR, con sus calcs estrella */}
     <div class="row-label"><span class="row-star" aria-hidden="true">★</span>Las más usadas<span class="row-line"></span></div>
@@ -655,7 +659,7 @@ const schema = {
         </span>
         <h2 id="populares-heading">Las más buscadas en Argentina</h2>
       </div>
-      <a href="/buscar" class="see-all">Ver todas →</a>
+      <a href="/populares" class="see-all">Ver todas →</a>
     </div>
     <div class="populares-grid">
       {popular.map((c: any, i: number) => (
@@ -1004,17 +1008,10 @@ const schema = {
        dispararía cientos de requests inútiles. -->
   <!-- Próximo feriado 2026 — texto en el tile de feriados. Lo calculamos
        client-side porque la fecha "hoy" es dinámica (cambia cada día).
-       Lista hardcoded sincronizada con la fórmula de feriados. -->
-  <script is:inline>
+       La lista viene de la FUENTE ÚNICA feriados-ar-2026.ts vía define:vars. -->
+  <script is:inline define:vars={{ FERIADOS_DATA }}>
     (function () {
-      var FERIADOS = [
-        ['2026-01-01','Año Nuevo'],['2026-02-16','Carnaval'],['2026-02-17','Carnaval'],
-        ['2026-03-24','Día de la Memoria'],['2026-04-02','Malvinas'],['2026-04-03','Viernes Santo'],
-        ['2026-05-01','Día del Trabajador'],['2026-05-25','Revolución de Mayo'],
-        ['2026-06-15','Güemes'],['2026-06-20','Belgrano'],['2026-07-09','Independencia'],
-        ['2026-08-17','San Martín'],['2026-10-12','Diversidad Cultural'],
-        ['2026-11-20','Soberanía'],['2026-12-08','Inmaculada'],['2026-12-25','Navidad'],
-      ];
+      var FERIADOS = FERIADOS_DATA;
       var el = document.getElementById('proxi-feriado');
       if (!el) return;
       var hoy = new Date(); hoy.setHours(0,0,0,0);
@@ -1198,14 +1195,14 @@ const schema = {
       var fmt = typeof Intl !== 'undefined'
         ? new Intl.NumberFormat('es-AR').format
         : function (n) { return String(n); };
+      // El número se muestra estático (formateado). Se quitó el auto-incremento
+      // aleatorio (Math.random cada 2-8s): un contador que sube solo en vivo es
+      // prueba social fabricada y choca con el pitch "fórmulas oficiales" + la
+      // re-alta de AdSense. Pendiente (decisión del dueño): alimentarlo con el
+      // dato real de eventos GA4 en cada build, o pasar a copy no cuantitativo.
       document.querySelectorAll('[data-live-counter]').forEach(function (el) {
         var current = parseInt(el.getAttribute('data-initial'), 10) || 0;
-        function bump() {
-          current += 1;
-          el.textContent = fmt(current);
-          timers.push(setTimeout(bump, 2000 + Math.random() * 6000)); // 2-8s
-        }
-        timers.push(setTimeout(bump, 2000 + Math.random() * 6000));
+        el.textContent = fmt(current);
       });
 
       // Placeholder rotativo del buscador.
@@ -1632,7 +1629,7 @@ const schema = {
     background: var(--accent-soft);
     transition: all 0.15s;
   }
-  .hero-live:hover { background: var(--accent); color: #fff; text-decoration: none; }
+  .hero-live:hover { background: var(--accent); color: var(--on-accent); text-decoration: none; }
 
   @media (max-width: 540px) {
     .hs-placeholder { font-size: 0.9375rem; }
@@ -1654,10 +1651,10 @@ const schema = {
   }
   .btn-primary {
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     box-shadow: var(--shadow);
   }
-  .btn-primary:hover { background: var(--accent-strong); color: #fff; transform: translateY(-1px); box-shadow: var(--shadow-md); text-decoration: none; }
+  .btn-primary:hover { background: var(--accent-strong); color: var(--on-accent); transform: translateY(-1px); box-shadow: var(--shadow-md); text-decoration: none; }
 
   .btn-secondary {
     background: var(--bg-card);
@@ -1855,7 +1852,7 @@ const schema = {
     right: 1rem;
     padding: 0.1875rem 0.5rem;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     border-radius: 999px;
     font-size: 0.6875rem;
     font-weight: 700;
@@ -2010,7 +2007,7 @@ const schema = {
     width: 22px;
     height: 22px;
     background: var(--accent);
-    color: #ffffff;
+    color: var(--on-accent);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -2662,7 +2659,7 @@ const schema = {
     height: 2.5rem;
     border-radius: 12px;
     background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #7c3aed));
-    color: #fff;
+    color: var(--on-accent);
     font-weight: 800;
     font-size: 1.125rem;
     margin-bottom: 0.875rem;

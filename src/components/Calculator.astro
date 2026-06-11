@@ -179,9 +179,14 @@ export interface CalcConfig {
 export interface Props {
   config: CalcConfig;
   lang?: 'es' | 'en' | 'pt';
+  /** Fecha de dato UNIFICADA que calcula la página ([...slug].astro): la más
+   *  fresca entre tabla maestra / dataAsOf / lastUpdated. Si llega, el
+   *  trust-strip la usa en vez de dataUpdate.lastUpdated para no contradecir
+   *  al badge del header (YYYY-MM-DD). */
+  dataAsOf?: string;
 }
 
-const { config, lang = 'es' } = Astro.props;
+const { config, lang = 'es', dataAsOf: dataAsOfProp } = Astro.props;
 
 // SSG baseline: texto plano del example.result para el output primary.
 // El bot lo ve above-the-fold antes de ejecutar JS; el cliente lo
@@ -233,6 +238,7 @@ const translations = {
     reviewedBy: 'Reviewed by', reviewedOn: 'Last reviewed',
     teamFallback: 'Martín Rodríguez',
     changelogTitle: 'What changed', changelogShow: 'See change history',
+    editorialPolicy: 'editorial policy',
   },
   pt: {
     calculator: 'Calculadora', badge: 'Grátis · Privado', calculate: 'Calcular',
@@ -262,6 +268,7 @@ const translations = {
     reviewedBy: 'Revisado por', reviewedOn: 'Última revisão',
     teamFallback: 'Martín Rodríguez',
     changelogTitle: 'O que mudou', changelogShow: 'Ver histórico de mudanças',
+    editorialPolicy: 'política editorial',
   },
   es: {
     calculator: 'Calculadora', badge: 'Gratis · Privada', calculate: 'Calcular',
@@ -291,6 +298,7 @@ const translations = {
     reviewedBy: 'Revisado por', reviewedOn: 'Última revisión',
     teamFallback: 'Martín Rodríguez',
     changelogTitle: 'Qué cambió', changelogShow: 'Ver historial de cambios',
+    editorialPolicy: 'política editorial',
   },
 };
 const t = translations[lang as keyof typeof translations] || translations.es;
@@ -321,8 +329,42 @@ const categoryDisclaimers: Record<string, string> = {
   construccion: 'Estimación. Los proyectos constructivos requieren cálculo estructural profesional y dirección técnica.',
 };
 
-// Los disclaimers de AR (leyes argentinas, ARCA, etc) no aplican a audiencia global — ocultar en /en/ y /pt/
-const disclaimer = (lang === 'en' || lang === 'pt') ? '' : (disclaimers[config.slug] || categoryDisclaimers[config.category] || '');
+// Fallback "laboral/sueldos": las calcs de sueldo/aguinaldo/indemnización son
+// category=finanzas y caían en el disclaimer de INVERSIÓN (Ley 26.831/CNV), que
+// no tiene nada que ver con una liquidación de sueldo. Detectamos por slug.
+const LABORAL_RE = /sueldo|aguinaldo|indemniz|vacacion|liquidacion|paritaria|antiguedad|horas-extra|preaviso|finiquito|despido/;
+const laboralDisclaimer = 'Cálculo orientativo según la LCT y las escalas vigentes. Para tu liquidación exacta consultá a tu empleador o a un contador.';
+
+// Disclaimers por categoría para audiencia global (EN/PT): MISMA cobertura YMYL
+// que ES pero SIN referencias a leyes argentinas (que no aplican afuera).
+const categoryDisclaimersEN: Record<string, string> = {
+  finanzas: 'Educational tool, not investment advice. Consult a licensed financial advisor before making decisions.',
+  negocios: 'Illustrative estimate, not accounting or financial advice. Consult a licensed accountant for your case.',
+  salud: 'For guidance only — not medical advice. Consult a licensed healthcare professional.',
+  deportes: 'Generic estimate. Consult a sports professional or physician for a personalized plan.',
+  familia: 'General information. For health, fertility or parenting decisions consult licensed professionals.',
+  mascotas: 'For guidance only. Consult a licensed veterinarian about your pet’s health.',
+  construccion: 'Estimate only. Construction projects require professional structural calculation and supervision.',
+};
+const categoryDisclaimersPT: Record<string, string> = {
+  finanzas: 'Ferramenta educativa, não é recomendação de investimento. Consulte um contador ou assessor financeiro.',
+  negocios: 'Estimativa ilustrativa, não substitui orientação contábil. Consulte um contador para o seu caso.',
+  salud: 'Resultado orientativo — não substitui avaliação médica. Consulte um profissional de saúde.',
+  deportes: 'Estimativa genérica. Consulte um profissional de educação física ou médico do esporte.',
+  familia: 'Informação geral. Para decisões de saúde, fertilidade ou maternidade consulte profissionais.',
+  mascotas: 'Apenas orientativo. Consulte um veterinário sobre a saúde do seu animal.',
+  construccion: 'Apenas estimativa. Obras exigem cálculo estrutural profissional e acompanhamento técnico.',
+};
+
+// Disclaimer inline junto al resultado, por idioma. ES mantiene los overrides
+// por slug + el fallback laboral; EN/PT usan los mapas globales sin leyes AR.
+const disclaimer = (() => {
+  if (lang === 'en') return categoryDisclaimersEN[config.category] || '';
+  if (lang === 'pt') return categoryDisclaimersPT[config.category] || '';
+  if (disclaimers[config.slug]) return disclaimers[config.slug];
+  if (config.category === 'finanzas' && LABORAL_RE.test(config.slug)) return laboralDisclaimer;
+  return categoryDisclaimers[config.category] || '';
+})();
 
 const basicFields = config.fields.filter((f) => !f.advanced);
 const advancedFields = config.fields.filter((f) => f.advanced);
@@ -365,6 +407,14 @@ const useGroupsAdvanced = advancedGroups.some((g) => Boolean(g.name));
 // Data freshness: formatear última actualización para calcs con datos externos
 const dataUpdate = config.dataUpdate;
 const showFreshness = dataUpdate && dataUpdate.frequency !== 'never';
+// Fecha de dato UNIFICADA con la del badge del header: si la página nos pasó
+// dataAsOfProp y es >= lastUpdated, la usamos (evita "Datos: 11 jun" en el header
+// y "Datos actualizados: 22 abr" en el strip a 500px de distancia). ISO compara
+// lexicográficamente bien.
+const _lastUpd = dataUpdate?.lastUpdated || '';
+const effectiveDataAsOf = (dataAsOfProp && /^\d{4}-\d{2}-\d{2}$/.test(dataAsOfProp) && dataAsOfProp >= _lastUpd)
+  ? dataAsOfProp
+  : (dataUpdate?.dataAsOf || dataUpdate?.lastUpdated || '');
 
 // E-E-A-T: revisor + última revisión visible al usuario.
 // `lastReviewed` aparece si está definido; `reviewer` muestra a la persona si la
@@ -376,12 +426,19 @@ const reviewerName = config.reviewer?.name || t.teamFallback;
 const reviewerUrl = config.reviewer?.url;
 const reviewerRole = config.reviewer?.role;
 const changelog = (config.changelog || []).filter((e) => e && e.date && e.change).slice(0, 8);
-const freshnessMonths: Record<string, string> = {
-  '01': 'ene', '02': 'feb', '03': 'mar', '04': 'abr', '05': 'may', '06': 'jun',
-  '07': 'jul', '08': 'ago', '09': 'sep', '10': 'oct', '11': 'nov', '12': 'dic',
+const freshnessMonthsByLang: Record<string, Record<string, string>> = {
+  es: { '01': 'ene', '02': 'feb', '03': 'mar', '04': 'abr', '05': 'may', '06': 'jun',
+        '07': 'jul', '08': 'ago', '09': 'sep', '10': 'oct', '11': 'nov', '12': 'dic' },
+  en: { '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr', '05': 'May', '06': 'Jun',
+        '07': 'Jul', '08': 'Aug', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec' },
+  pt: { '01': 'jan', '02': 'fev', '03': 'mar', '04': 'abr', '05': 'mai', '06': 'jun',
+        '07': 'jul', '08': 'ago', '09': 'set', '10': 'out', '11': 'nov', '12': 'dez' },
 };
+const freshnessMonths = freshnessMonthsByLang[lang] || freshnessMonthsByLang.es;
 const formatFreshnessDate = (iso: string): string => {
   const [y, m, d] = iso.split('-');
+  // EN usa orden "Mon D, YYYY"; ES/PT usan "D mon YYYY".
+  if (lang === 'en') return `${freshnessMonths[m] || m} ${parseInt(d, 10)}, ${y}`;
   return `${parseInt(d, 10)} ${freshnessMonths[m] || m} ${y}`;
 };
 ---
@@ -421,11 +478,7 @@ const formatFreshnessDate = (iso: string): string => {
     <div class="data-freshness" title={dataUpdate.notes}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span>
-        {dataUpdate.dataAsOf ? (
-          <>{t.dataAsOf}: <time datetime={dataUpdate.dataAsOf}>{formatFreshnessDate(dataUpdate.dataAsOf)}</time></>
-        ) : (
-          <>{t.dataUpdated}: <time datetime={dataUpdate.lastUpdated}>{formatFreshnessDate(dataUpdate.lastUpdated)}</time></>
-        )}
+        <>{t.dataUpdated}: <time datetime={effectiveDataAsOf}>{formatFreshnessDate(effectiveDataAsOf)}</time></>
         {dataUpdate.source && (
           <>
             {` · ${t.sourceLabel}: `}
@@ -456,7 +509,7 @@ const formatFreshnessDate = (iso: string): string => {
         {!config.reviewer && (
           <>
             {' ('}
-            <a href="/politica-editorial">política editorial</a>
+            <a href="/politica-editorial">{t.editorialPolicy}</a>
             {')'}
           </>
         )}
@@ -636,7 +689,13 @@ const formatFreshnessDate = (iso: string): string => {
     <div class="skeleton-line skeleton-bar"></div>
   </div>
 
-  <div class="calc-results" id={`results-${config.slug}`} hidden aria-live="polite" aria-atomic="true">
+  <!-- Anuncio para lectores de pantalla: SIEMPRE en el DOM (fuera del bloque
+       hidden) para que el cambio de texto se anuncie. El bloque .calc-results
+       ya NO lleva aria-live: poblarlo mientras está hidden no se anuncia y
+       animateValue mutaba el valor ~36 veces = spam. -->
+  <div class="sr-only" role="status" aria-live="polite" data-sr-announce></div>
+
+  <div class="calc-results" id={`results-${config.slug}`} hidden>
     <div class="results-header">
       <span class="results-badge">{t.resultBadge}</span>
     </div>
@@ -752,7 +811,7 @@ const formatFreshnessDate = (iso: string): string => {
       type="button"
       class="back-to-input"
       data-back-to-input
-      aria-label="Volver al formulario"
+      aria-label={lang === 'en' ? 'Back to form' : lang === 'pt' ? 'Voltar ao formulário' : 'Volver al formulario'}
       onclick={`document.querySelector('[data-calc-input]').scrollIntoView({behavior:'smooth',block:'start'})`}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -922,7 +981,7 @@ const formatFreshnessDate = (iso: string): string => {
   <div class="calc-error" id={`error-${config.slug}`} hidden role="alert"></div>
 </div>
 
-<StickyResultPill />
+<StickyResultPill lang={lang} />
 
 <style>
   /* Botón "Modificar datos": solo visible en mobile dentro de la sección
@@ -1131,7 +1190,7 @@ const formatFreshnessDate = (iso: string): string => {
   }
   .preset-btn.active {
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     border-color: var(--accent);
   }
   /* Hit-target táctil: en pantallas touch los pills suben al mínimo de 44px
@@ -1363,8 +1422,8 @@ const formatFreshnessDate = (iso: string): string => {
     justify-content: center;
     gap: 0.5rem;
     padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 85%, #8b5cf6) 100%);
-    color: #ffffff;
+    background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 85%, var(--accent-2)) 100%);
+    color: var(--on-accent);
     border-radius: var(--radius-sm);
     font-weight: 700;
     font-size: 1rem;
@@ -1944,7 +2003,7 @@ const formatFreshnessDate = (iso: string): string => {
   }
   :global(.chart-tab:hover) { color: var(--text); border-color: var(--accent); }
   :global(.chart-tab.active) {
-    color: #fff;
+    color: var(--on-accent);
     background: var(--accent);
     border-color: var(--accent);
   }
@@ -2246,18 +2305,18 @@ const formatFreshnessDate = (iso: string): string => {
     align-items: flex-start;
     margin-top: 1rem;
     padding: 0.75rem 1rem;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-    border-left: 3px solid #f59e0b;
+    background: var(--warning-soft);
+    border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+    border-left: 3px solid var(--warning);
     border-radius: var(--radius-sm);
-    color: #78350f;
+    color: var(--warning-text);
     font-size: 0.8125rem;
     line-height: 1.5;
   }
 
   .inline-disclaimer svg {
     flex-shrink: 0;
-    color: #d97706;
+    color: var(--warning);
     margin-top: 1px;
   }
 
@@ -2366,7 +2425,7 @@ const formatFreshnessDate = (iso: string): string => {
     margin-top: 1.25rem;
     padding: 0.75rem 1rem;
     background: var(--danger-soft);
-    border: 1px solid #fecaca;
+    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
     border-left: 3px solid var(--danger);
     border-radius: var(--radius-sm);
     color: var(--danger);
@@ -2535,9 +2594,13 @@ const formatFreshnessDate = (iso: string): string => {
     color: var(--text);
     border-color: var(--border-strong);
   }
+  /* Tap target ≥44px en touch (Apple HIG / WCAG 2.5.5) */
+  @media (pointer: coarse) {
+    .fb-btn { min-height: 44px; }
+  }
   .fb-btn[data-feedback-vote="up"].selected {
     background: var(--success-soft);
-    color: var(--success);
+    color: var(--success-text);
     border-color: var(--success);
   }
   .fb-btn[data-feedback-vote="down"].selected {
@@ -2576,7 +2639,7 @@ const formatFreshnessDate = (iso: string): string => {
     align-self: flex-start;
     padding: 0.4rem 0.875rem;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     border: none;
     border-radius: var(--radius-sm);
     font-size: 0.8125rem;
@@ -2626,7 +2689,7 @@ const formatFreshnessDate = (iso: string): string => {
   .email-form button {
     padding: 0.5rem 1rem;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     border: none;
     border-radius: var(--radius-sm);
     font-size: 0.875rem;
@@ -2896,7 +2959,7 @@ const formatFreshnessDate = (iso: string): string => {
   .data-alert-form button {
     padding: 0.55rem 1rem;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     border: none;
     border-radius: var(--radius);
     font-size: 0.875rem;
@@ -3540,6 +3603,11 @@ const formatFreshnessDate = (iso: string): string => {
 
   function animateValue(el: HTMLElement, end: any, duration: number) {
     if (typeof end !== 'number' || isNaN(end) || !isFinite(end)) { el.textContent = end; return; }
+    // Respetar prefers-reduced-motion: pintar el valor final sin contar.
+    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.textContent = (el as any)._formatter ? (el as any)._formatter(end) : end.toLocaleString('es-AR', {maximumFractionDigits: 2});
+      return;
+    }
     var start = 0;
     var startTime: number | null = null;
     function step(ts: number) {
@@ -3790,9 +3858,12 @@ const formatFreshnessDate = (iso: string): string => {
   }
 
   function formatThousands(v: string): string {
+    // Preservar el signo menos inicial: hay ~8 calcs con min<0 (GMT offset,
+    // semitonos, déficit) donde tragarse el '-' daba un resultado al revés.
+    const neg = /^\s*-/.test(v);
     const clean = v.replace(/[^\d]/g, '');
-    if (!clean) return '';
-    return new Intl.NumberFormat('es-AR').format(Number(clean));
+    if (!clean) return neg ? '-' : '';
+    return (neg ? '-' : '') + new Intl.NumberFormat('es-AR').format(Number(clean));
   }
 
   function openEmbedModal(slug: string) {
@@ -3814,7 +3885,7 @@ const formatFreshnessDate = (iso: string): string => {
       <div class="hc-embed-modal" role="dialog" aria-modal="true" aria-labelledby="hc-embed-title">
         <div class="hc-embed-head">
           <h3 id="hc-embed-title">Embeber esta calculadora</h3>
-          <button type="button" class="hc-embed-close" aria-label="Cerrar">\u00d7</button>
+          <button type="button" class="hc-embed-close" aria-label="${CALC_LANG === 'en' ? 'Close' : CALC_LANG === 'pt' ? 'Fechar' : 'Cerrar'}">\u00d7</button>
         </div>
         <p class="hc-embed-desc">Cop\u00e1 uno de estos snippets y peg\u00e1 en tu sitio. Da c\u00e9ditos con backlink a hacecuentas.com \u2014 gracias por compartir.</p>
         <div class="hc-embed-tabs">
@@ -3888,6 +3959,7 @@ const formatFreshnessDate = (iso: string): string => {
     const formulaId = container.dataset.formula!;
     const form = container.querySelector<HTMLFormElement>('.calc-form')!;
     const results = container.querySelector<HTMLElement>('.calc-results')!;
+    const srAnnounce = container.querySelector<HTMLElement>('[data-sr-announce]');
     const errorBox = container.querySelector<HTMLElement>('.calc-error')!;
     const submitBtn = form.querySelector<HTMLButtonElement>('.btn-primary')!;
     // Pre-cargar fórmula en background (chunk separado, no bloquea render)
@@ -4056,21 +4128,46 @@ const formatFreshnessDate = (iso: string): string => {
       if (!chartTabsEl) return;
       if (chartVariants.length <= 1) { chartTabsEl.hidden = true; chartTabsEl.innerHTML = ''; return; }
       chartTabsEl.innerHTML = '';
+      const _tablistLabel = CALC_LANG === 'en' ? 'Chart views' : CALC_LANG === 'pt' ? 'Visões do gráfico' : 'Vistas del gráfico';
+      chartTabsEl.setAttribute('aria-label', _tablistLabel);
+      // El canvas es el único panel (se repinta al cambiar de tab): lo marcamos
+      // como tabpanel y lo enlazamos vía aria-controls desde cada tab.
+      const _canvas = container.querySelector<HTMLElement>('[data-chart-canvas]');
+      let _canvasId = '';
+      if (_canvas) {
+        _canvasId = _canvas.id || ('chart-panel-' + slug);
+        _canvas.id = _canvasId;
+        _canvas.setAttribute('role', 'tabpanel');
+      }
+      function selectTab(i: number, focus: boolean) {
+        activeChartIdx = i;
+        chartTabsEl!.querySelectorAll<HTMLElement>('.chart-tab').forEach((b, bi) => {
+          const on = bi === i;
+          b.classList.toggle('active', on);
+          b.setAttribute('aria-selected', on ? 'true' : 'false');
+          b.tabIndex = on ? 0 : -1; // roving tabindex
+          if (on && focus) b.focus();
+        });
+        paintActiveChart();
+      }
       chartVariants.forEach((v, i) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'chart-tab' + (i === activeChartIdx ? ' active' : '');
         btn.setAttribute('role', 'tab');
         btn.setAttribute('aria-selected', i === activeChartIdx ? 'true' : 'false');
+        btn.tabIndex = i === activeChartIdx ? 0 : -1;
+        btn.id = 'chart-tab-' + slug + '-' + i;
+        if (_canvasId) btn.setAttribute('aria-controls', _canvasId);
         btn.textContent = translateOutputStr(v.tabLabel || v.label || ('Vista ' + (i + 1)));
-        btn.addEventListener('click', () => {
-          if (activeChartIdx === i) return;
-          activeChartIdx = i;
-          chartTabsEl.querySelectorAll<HTMLElement>('.chart-tab').forEach((b, bi) => {
-            b.classList.toggle('active', bi === i);
-            b.setAttribute('aria-selected', bi === i ? 'true' : 'false');
-          });
-          paintActiveChart();
+        btn.addEventListener('click', () => { if (activeChartIdx !== i) selectTab(i, false); });
+        btn.addEventListener('keydown', (e: KeyboardEvent) => {
+          let next = -1;
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % chartVariants.length;
+          else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i - 1 + chartVariants.length) % chartVariants.length;
+          else if (e.key === 'Home') next = 0;
+          else if (e.key === 'End') next = chartVariants.length - 1;
+          if (next >= 0) { e.preventDefault(); selectTab(next, true); }
         });
         chartTabsEl.appendChild(btn);
       });
@@ -4289,11 +4386,32 @@ const formatFreshnessDate = (iso: string): string => {
     // formato de miles), así que validamos a mano y marcamos el campo culpable
     // en lugar de mostrar sólo el banner genérico. Mensajes por idioma.
     const _vmsgAll: Record<string, any> = {
-      es: { req: 'Completá este campo', num: 'Ingresá un número válido', min: (m: string) => `El mínimo es ${m}`, max: (m: string) => `El máximo es ${m}` },
-      en: { req: 'Please fill in this field', num: 'Enter a valid number', min: (m: string) => `Minimum is ${m}`, max: (m: string) => `Maximum is ${m}` },
-      pt: { req: 'Preencha este campo', num: 'Digite um número válido', min: (m: string) => `O mínimo é ${m}`, max: (m: string) => `O máximo é ${m}` },
+      es: { req: 'Completá este campo', num: 'Ingresá un número válido', numDecimal: 'Ingresá un número válido (usá punto para decimales)', min: (m: string) => `El mínimo es ${m}`, max: (m: string) => `El máximo es ${m}` },
+      en: { req: 'Please fill in this field', num: 'Enter a valid number', numDecimal: 'Enter a valid number (use a dot for decimals)', min: (m: string) => `Minimum is ${m}`, max: (m: string) => `Maximum is ${m}` },
+      pt: { req: 'Preencha este campo', num: 'Digite um número válido', numDecimal: 'Digite um número válido (use ponto para decimais)', min: (m: string) => `O mínimo é ${m}`, max: (m: string) => `O máximo é ${m}` },
     };
     const VMSG = _vmsgAll[CALC_LANG] || _vmsgAll.es;
+    // Formatea el límite min/max con separador de miles para que el mensaje
+    // diga "El mínimo es 1.000.000" en vez de "1000000".
+    const _vmsgLocale = CALC_LANG === 'en' ? 'en-US' : CALC_LANG === 'pt' ? 'pt-BR' : 'es-AR';
+    function fmtLimit(el: any, m: string): string {
+      const n = Number(m);
+      if (!isFinite(n)) return m;
+      if (el.dataset.format === 'thousands' || Math.abs(n) >= 1000) {
+        try { return new Intl.NumberFormat(_vmsgLocale).format(n); } catch { return m; }
+      }
+      return m;
+    }
+    // Devuelve el error num/min/max de un input con valor (o '' si OK).
+    function numericError(el: any, raw: string): string {
+      const num = el.dataset.format === 'thousands' ? parseThousands(raw) : Number(raw);
+      if (!isFinite(num)) return VMSG.num;
+      const min = el.getAttribute('min');
+      const max = el.getAttribute('max');
+      if (min !== null && min !== '' && num < Number(min)) return VMSG.min(fmtLimit(el, min));
+      if (max !== null && max !== '' && num > Number(max)) return VMSG.max(fmtLimit(el, max));
+      return '';
+    }
     function clearFieldError(el: any) {
       const wrap = el.closest('.input-wrap');
       if (wrap) wrap.classList.remove('is-invalid');
@@ -4318,17 +4436,29 @@ const formatFreshnessDate = (iso: string): string => {
         const raw = (el.value || '').trim();
         let err = '';
         if (raw === '') {
-          err = VMSG.req;
+          // raw==='' con badInput = el control number rechazó lo tipeado (ej.
+          // "30,5" con coma) → se ve lleno pero value queda ''. No es "vacío".
+          err = (el.validity && el.validity.badInput) ? VMSG.numDecimal : VMSG.req;
         } else if (el.dataset.type === 'number' || el.type === 'number') {
-          const num = el.dataset.format === 'thousands' ? parseThousands(raw) : Number(raw);
-          if (!isFinite(num)) {
-            err = VMSG.num;
-          } else {
-            const min = el.getAttribute('min');
-            const max = el.getAttribute('max');
-            if (min !== null && min !== '' && num < Number(min)) err = VMSG.min(min);
-            else if (max !== null && max !== '' && num > Number(max)) err = VMSG.max(max);
-          }
+          err = numericError(el, raw);
+        }
+        if (err) {
+          setFieldError(el, err);
+          if (!firstInvalid) firstInvalid = el;
+        }
+      });
+      // Campos OPCIONALES numéricos con valor: validar num/min/max igual (vacío
+      // se omite). Antes pasaban basura/out-of-range directo a la fórmula.
+      const optEls = Array.from(form.querySelectorAll<HTMLInputElement>('input:not([required])'));
+      optEls.forEach((el: any) => {
+        if (!(el.dataset.type === 'number' || el.type === 'number')) return;
+        clearFieldError(el);
+        const raw = (el.value || '').trim();
+        let err = '';
+        if (raw === '') {
+          if (el.validity && el.validity.badInput) err = VMSG.numDecimal;
+        } else {
+          err = numericError(el, raw);
         }
         if (err) {
           setFieldError(el, err);
@@ -4497,6 +4627,14 @@ const formatFreshnessDate = (iso: string): string => {
           if (_newPrimary) _prevPrimary = _newPrimary;
 
           results.hidden = false;
+          // Anunciar el resultado a lectores de pantalla UNA sola vez (texto
+          // final, ya formateado — no los pasos intermedios de animateValue).
+          if (srAnnounce && _primaryText) {
+            const _resLbl = CALC_LANG === 'en' ? 'Result' : 'Resultado';
+            srAnnounce.textContent = '';
+            const _msg = _resLbl + ': ' + _primaryText;
+            requestAnimationFrame(() => { srAnnounce.textContent = _msg; });
+          }
           // Animar las barras de comparación al revelar: venían con su width
           // final desde SSR, así que el `transition` CSS nunca disparaba. Las
           // mandamos a 0 y, en el frame siguiente, a su valor → "crecen" al

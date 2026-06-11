@@ -29,7 +29,7 @@ import { findHubForSlug } from '../lib/category-hubs';
 import { md, mdInline } from '../lib/markdown';
 import converterTables from '../lib/converter-tables.json';
 import { resolveGuideSlug, GUIDE_TITLES, CATEGORY_TO_GUIDE } from '../lib/category-guide-map';
-import { categoryColor } from '../lib/category-colors';
+import { categoryColor, categoryTextColor } from '../lib/category-colors';
 import CategoryIcon from '../components/CategoryIcon.astro';
 import NextStep from '../components/NextStep.astro';
 import { getJourneySteps, NEXT_STEP_EXCLUDED } from '../lib/journeys';
@@ -176,6 +176,8 @@ if (_dataAsOf) {
 // Color de categoría (B): tiñe la zona de identidad del header (eyebrow + ícono).
 // El teal de marca (--accent) se mantiene para el CTA y el resultado.
 const catColor = categoryColor(calc.category);
+// Variante AA-safe del color de categoría para usar como TEXTO (eyebrow).
+const catTextColor = categoryTextColor(calc.category);
 // datePublished opcional: viene de calc.datePublished si está declarada (YYYY-MM-DD o ISO).
 // Si no, omitimos el campo del schema (JSON.stringify ignora undefined).
 // Fechas uniformes hardcodeadas son señal de scaled content para Google.
@@ -200,7 +202,7 @@ const schemaLang = audience === 'AR' ? 'es-AR' : audience === 'MX' ? 'es-MX' : a
 
 // Country badge metadata (flag + tooltip + currency). Mostrado al lado del h1.
 const COUNTRY_META: Record<AudienceCode, { flag: string; tooltip: string; currency: string }> = {
-  AR:     { flag: '🇦🇷', tooltip: 'Datos Argentina (AFIP/ANSES)',          currency: 'ARS' },
+  AR:     { flag: '🇦🇷', tooltip: 'Datos Argentina (ARCA/ANSES)',          currency: 'ARS' },
   MX:     { flag: '🇲🇽', tooltip: 'Datos México (SAT/IMSS)',                currency: 'MXN' },
   CL:     { flag: '🇨🇱', tooltip: 'Datos Chile (SII/AFP)',                  currency: 'CLP' },
   CO:     { flag: '🇨🇴', tooltip: 'Datos Colombia (DIAN)',                  currency: 'COP' },
@@ -1009,7 +1011,13 @@ const relatedContextual = relatedSlugs
 // Journey (propuestas #1 y #2): próximos pasos del recorrido real (cluster +
 // sección de guía), no calcs "parecidas". Misma fuente para related y NextStep.
 const journeySlugs: string[] = getJourneySteps(calc.slug, relatedSlugs, 6);
-const journeyRelated: string[] = journeySlugs.length ? journeySlugs : relatedSlugs;
+// Dedupe vs ClusterHub: el hub de arriba ya muestra las calcs del cluster, así
+// que el bloque "Calculadoras relacionadas" del pie no debe repetirlas (era 1:1
+// cuando había cluster). Excluimos sus slugs; si queda vacío, RelatedCalcs cae
+// a su fallback por categoría/TF-IDF.
+const _clusterSlugs = new Set((cluster?.items || []).map((it: any) => it.slug));
+const journeyRelated: string[] = (journeySlugs.length ? journeySlugs : relatedSlugs)
+  .filter((s) => !_clusterSlugs.has(s));
 // #1 "Tu próximo paso" post-resultado — excluye YMYL (salud/finanzas).
 const nextStepItems = journeySlugs
   .map((s) => allCalcs.find((c) => c.slug === s))
@@ -1033,7 +1041,7 @@ const mustNextSteps = (Array.isArray(calc.mustNextSteps) ? calc.mustNextSteps : 
 const tocSections: Array<{ id: string; label: string }> = [
   { id: 'calculadora', label: 'Calculadora' },
 ];
-if (keyTakeaway) tocSections.push({ id: 'resumen', label: 'En pocas palabras' });
+if (keyTakeaway) tocSections.push({ id: 'respuesta-rapida', label: 'En pocas palabras' });
 if (useCases.length > 0) tocSections.push({ id: 'cuando-usar', label: 'Cuándo usar' });
 if (example && example.steps) tocSections.push({ id: 'ejemplo', label: 'Ejemplo paso a paso' });
 if (converterTable) tocSections.push({ id: 'tabla-conversiones', label: 'Tabla de conversiones' });
@@ -1067,7 +1075,7 @@ const railPinned =
 // Icons del quick-nav (sticky pills) por section id
 const quickNavIcons: Record<string, string> = {
   'calculadora': '🧮',
-  'resumen': '⚡',
+  'respuesta-rapida': '⚡',
   'cuando-usar': '💡',
   'ejemplo': '📋',
   'casos-resueltos': '📊',
@@ -1149,7 +1157,7 @@ const langPills = [
       <span class="current" aria-current="page">{calc.h1}</span>
     </nav>
 
-    <header class="calc-header" style={`--cat: ${catColor}`}>
+    <header class="calc-header" style={`--cat: ${catColor}; --cat-text: ${catTextColor}`}>
       <div class="header-left">
         <span class="icon-wrap" aria-hidden="true"><CategoryIcon cat={calc.category} fallback={calc.icon} size={34} /></span>
         <div>
@@ -1194,7 +1202,7 @@ const langPills = [
           {cluster && <ClusterHub cluster={cluster} currentSlug={calc.slug} />}
 
           <section id="calculadora">
-            <Calculator config={calc} />
+            <Calculator config={calc} dataAsOf={_dataAsOf ?? undefined} />
           </section>
 
           {/* Copia mobile del lang-switch: en <768px la copia top se oculta y
@@ -1318,8 +1326,12 @@ const langPills = [
         {/* Featured Snippet block (Google Position 0).
             50-60 palabras formateadas como respuesta directa para que Google las pickee
             como featured snippet. Distinto de keyTakeaway (AEO 40-75 palabras): este es
-            específico para SERP Position 0. Si no existe en JSON, no se renderiza. */}
-        {answerSnippet && (
+            específico para SERP Position 0. Si no existe en JSON, no se renderiza.
+            DEDUPE: cuando también hay keyTakeaway (la card "Respuesta rápida", con marco
+            y branding), NO renderizamos este bloque visible — eran ~3 párrafos casi
+            idénticos seguidos. El texto del answerSnippet SIGUE en la meta description
+            y el JSON-LD, así que no se pierde valor SEO/AEO. */}
+        {answerSnippet && !keyTakeaway && (
           <div class="answer-snippet" data-speakable="true" aria-label="Respuesta directa">
             <p set:html={mdInline(answerSnippet)} />
           </div>
@@ -1585,35 +1597,9 @@ const langPills = [
           </section>
         )}
 
-        {/* Cómo citar — facilita que LLMs (Perplexity/Claude/ChatGPT) y medios citen con atribución + link. */}
-        <aside class="cite-box" aria-label="Cómo citar esta calculadora">
-          <strong class="cite-box-title">📌 Cómo citar esta calculadora</strong>
-          <p class="cite-ref">Rodríguez, M. ({new Date(dateModified).getFullYear()}). <em>{calc.h1}</em>. Hacé Cuentas. https://hacecuentas.com/{calc.slug}</p>
-          <p class="cite-lic">Contenido bajo licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> — podés reutilizarlo citando la fuente con un enlace a <a href="/">Hacé Cuentas</a>.</p>
-        </aside>
-
-        <section class="trust-block" id="metodologia" aria-labelledby="trust-heading">
-          <h2 id="trust-heading">Metodología y confianza</h2>
-          <div class="trust-grid">
-            <div class="trust-item">
-              <span class="trust-label">Editorial</span>
-              <p>Contenido revisado por el <a href="/sobre-nosotros">equipo editorial de Hacé Cuentas</a>, con apego a nuestra <a href="/politica-editorial">política editorial</a> y <a href="/metodologia">metodología de cálculo</a>.</p>
-            </div>
-            <div class="trust-item">
-              <span class="trust-label">Actualización</span>
-              <p>Última revisión: <strong>{updated}</strong>. Los parámetros fiscales, legales y datos se verifican periódicamente con las fuentes citadas.</p>
-            </div>
-            <div class="trust-item">
-              <span class="trust-label">Privacidad</span>
-              <p>Los cálculos corren 100% en tu navegador. No guardamos ni transmitimos tus datos. Leé nuestra <a href="/privacidad">política de privacidad</a>.</p>
-            </div>
-            <div class="trust-item">
-              <span class="trust-label">Limitaciones</span>
-              <p>Resultados orientativos. Para decisiones financieras, médicas o legales críticas, consultá con un profesional.</p>
-            </div>
-          </div>
-        </section>
-
+        {/* Las superficies de navegación (relacionadas/guía/comparador) van
+            PRIMERO tras las fuentes — es la posición de mayor intención de
+            navegación. La cita académica + metodología van después (abajo). */}
         {relatedContextual.length > 0 && (
           <section class="also-see" aria-labelledby="also-heading">
             <h2 id="also-heading">También te puede interesar</h2>
@@ -1656,6 +1642,35 @@ const langPills = [
             <a href={`/comparar/${comparator.slug}`} class="guide-link-btn">Ver comparación →</a>
           </aside>
         )}
+
+        {/* Cómo citar — facilita que LLMs (Perplexity/Claude/ChatGPT) y medios citen con atribución + link. */}
+        <aside class="cite-box" aria-label="Cómo citar esta calculadora">
+          <strong class="cite-box-title">📌 Cómo citar esta calculadora</strong>
+          <p class="cite-ref">Rodríguez, M. ({new Date(dateModified).getFullYear()}). <em>{calc.h1}</em>. Hacé Cuentas. https://hacecuentas.com/{calc.slug}</p>
+          <p class="cite-lic">Contenido bajo licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> — podés reutilizarlo citando la fuente con un enlace a <a href="/">Hacé Cuentas</a>.</p>
+        </aside>
+
+        <section class="trust-block" id="metodologia" aria-labelledby="trust-heading">
+          <h2 id="trust-heading">Metodología y confianza</h2>
+          <div class="trust-grid">
+            <div class="trust-item">
+              <span class="trust-label">Editorial</span>
+              <p>Contenido revisado por el <a href="/sobre-nosotros">equipo editorial de Hacé Cuentas</a>, con apego a nuestra <a href="/politica-editorial">política editorial</a> y <a href="/metodologia">metodología de cálculo</a>.</p>
+            </div>
+            <div class="trust-item">
+              <span class="trust-label">Actualización</span>
+              <p>Última revisión: <strong>{updated}</strong>. Los parámetros fiscales, legales y datos se verifican periódicamente con las fuentes citadas.</p>
+            </div>
+            <div class="trust-item">
+              <span class="trust-label">Privacidad</span>
+              <p>Los cálculos corren 100% en tu navegador. No guardamos ni transmitimos tus datos. Leé nuestra <a href="/privacidad">política de privacidad</a>.</p>
+            </div>
+            <div class="trust-item">
+              <span class="trust-label">Limitaciones</span>
+              <p>Resultados orientativos. Para decisiones financieras, médicas o legales críticas, consultá con un profesional.</p>
+            </div>
+          </div>
+        </section>
 
         <aside class="cta-back">
           <p>¿Buscabas otra calculadora?</p>
@@ -1792,6 +1807,39 @@ const langPills = [
     // First load + cada navigation SPA (ClientRouter)
     setupCalcPage();
     document.addEventListener('astro:page-load', setupCalcPage);
+
+    // ── Medición GA4 del journey (una sola vez por sesión) ────────────────
+    // Hoy NINGUNA superficie de navegación interna dispara evento (salvo el
+    // rail). Como las decisiones del sitio se toman con GA4, el journey entero
+    // era invisible. Un solo listener delegado etiqueta los clicks por superficie.
+    if (!window.__hcJourneyBound) {
+      window.__hcJourneyBound = true;
+      var SURFACES = [
+        { sel: '[data-next-step]', name: 'next_step' },
+        { sel: '.cluster-hub', name: 'cluster' },
+        { sel: '.also-see', name: 'also_see' },
+        { sel: '.related-calcs', name: 'related' },
+        { sel: '.guide-link-cta', name: 'guide_cta' },
+      ];
+      document.addEventListener('click', function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (!a) return;
+        for (var i = 0; i < SURFACES.length; i++) {
+          if (a.closest(SURFACES[i].sel)) {
+            try {
+              if (typeof window.gtag === 'function') {
+                window.gtag('event', 'journey_click', {
+                  surface: SURFACES[i].name,
+                  link_slug: (a.getAttribute('href') || '').replace(/^\//, ''),
+                  source_slug: location.pathname.replace(/^\//, ''),
+                });
+              }
+            } catch (err) {}
+            break;
+          }
+        }
+      }, { passive: true });
+    }
   </script>
 
   <!-- Floating recalculate (mobile only, post-result) -->
@@ -1886,13 +1934,19 @@ const langPills = [
     align-items: center;
     font-size: 0.6875rem;
     font-weight: 700;
-    color: var(--cat, var(--accent));
+    /* Texto: variante -700/-800 (AA-safe). El --cat -500/-600 fallaba 4.5:1. */
+    color: var(--cat-text, var(--accent));
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 0.375rem;
     padding: 0.25rem 0.625rem;
     background: color-mix(in srgb, var(--cat, var(--accent)) 12%, transparent);
     border-radius: 999px;
+  }
+  /* En dark el tinte de fondo es oscuro → el -500/-600 brillante SÍ contrasta
+     (el fallo AA era sólo en light sobre tinte claro). */
+  :global(html[data-theme="dark"]) .eyebrow {
+    color: var(--cat, var(--accent));
   }
 
   .calc-header h1 {
@@ -1938,7 +1992,7 @@ const langPills = [
     background: var(--bg-muted);
     border-radius: 999px;
   }
-  .updated-badge svg { color: #16a34a; flex-shrink: 0; }
+  .updated-badge svg { color: var(--success); flex-shrink: 0; }
 
   /* Lang switcher — visible ES→PT/EN/MX/ES: mueve "link juice" interno y
      da descubrimiento al usuario. Aparece sólo si existe versión en otros
@@ -2262,6 +2316,17 @@ const langPills = [
     border-radius: var(--radius-sm);
     overflow: hidden;
     border: 1px solid var(--border);
+  }
+  /* Mobile: tablas markdown de muchas columnas (ej. la de 8 cols de sueldo)
+     desbordaban el viewport. Scroll horizontal en vez de cortar contenido
+     (mismo patrón que .calc-ref-table-scroll). */
+  @media (max-width: 767px) {
+    .explanation :global(table) {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: nowrap;
+    }
   }
 
   .explanation :global(th) {
@@ -3049,7 +3114,7 @@ const langPills = [
       z-index: 50;
       padding: 0.625rem 1rem;
       background: var(--accent);
-      color: #fff;
+      color: var(--on-accent);
       border: none;
       border-radius: 999px;
       font-size: 0.8125rem;
@@ -3278,9 +3343,25 @@ const langPills = [
     }
   }
 
-  /* Override quick-nav top en mobile (no hay header sticky) */
+  /* El header ES sticky también en mobile (.site-header top:0, ~61px). Con
+     top:0 la quick-nav quedaba pineada DEBAJO del header (invisible e
+     intapeable). La bajamos para que se pegue justo bajo el header. */
   @media (max-width: 720px) {
-    .calc-quick-nav { top: 0; }
+    .calc-quick-nav { top: 61px; }
+  }
+
+  /* Anti-colisión de elementos fixed en la esquina inferior derecha:
+     - <768px existe la bottom bar (z-70, ~67px). El FAB "Recalcular" (z-50)
+       quedaba ENTERRADO detrás de ella → lo ocultamos (la bar ya tiene "Calc").
+       Y subimos "Volver arriba" por encima de la bar.
+     - 768-1099px no hay bar pero FAB (z-50) y "Volver arriba" (z-40) se
+       superponían en la misma esquina → separamos verticalmente. */
+  @media (max-width: 767px) {
+    .fab-recalc, .fab-recalc:not([hidden]) { display: none !important; }
+    :global(.scroll-top) { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  }
+  @media (min-width: 768px) and (max-width: 1099px) {
+    :global(.scroll-top) { bottom: 5rem; }
   }
 
   /* MOBILE BOTTOM BAR */

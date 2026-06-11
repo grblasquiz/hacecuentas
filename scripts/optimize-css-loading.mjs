@@ -152,17 +152,44 @@ function replaceInHtml(html) {
   return { modified, deferred, inlined };
 }
 
+// ── modulepreload de lib-shared ──────────────────────────────────────
+// lib-shared lo importan ESTÁTICAMENTE los chunks de Layout y Calculator, pero
+// el browser sólo lo descubre tras parsear el chunk de entrada (waterfall de
+// 2 hops). Un <link rel="modulepreload"> en el <head> lo baja en paralelo,
+// ahorrando 1 RTT en la primera visita (= las landings de Ads). Sólo lo
+// inyectamos si el HTML ya referencia un chunk de _astro (o sea, hidrata algo).
+import { readdirSync as _readdir2 } from 'node:fs';
+let LIB_SHARED_HREF = null;
+try {
+  const _astro = _readdir2(join(DIST, '_astro'));
+  const _lib = _astro.find((f) => /^lib-shared\.[A-Za-z0-9_-]+\.js$/.test(f));
+  if (_lib) LIB_SHARED_HREF = `/_astro/${_lib}`;
+} catch {}
+
+let preloadsInjected = 0;
+function injectModulePreload(html) {
+  if (!LIB_SHARED_HREF) return html;
+  if (html.includes('rel="modulepreload"') && html.includes(LIB_SHARED_HREF)) return html;
+  // Sólo si la página hidrata algo (tiene scripts de _astro) y tiene </head>.
+  if (!/<script[^>]+type=["']module["'][^>]+_astro/.test(html)) return html;
+  if (!html.includes('</head>')) return html;
+  preloadsInjected++;
+  return html.replace('</head>', `<link rel="modulepreload" href="${LIB_SHARED_HREF}"></head>`);
+}
+
 const files = walk(DIST);
 for (const f of files) {
   const html = readFileSync(f, 'utf8');
   const { modified, deferred, inlined } = replaceInHtml(html);
-  if (deferred > 0 || inlined > 0) {
-    writeFileSync(f, modified);
+  const withPreload = injectModulePreload(modified);
+  if (deferred > 0 || inlined > 0 || withPreload !== modified) {
+    writeFileSync(f, withPreload);
     filesProcessed++;
     linksDeferred += deferred;
     linksInlined += inlined;
   }
 }
+console.log(`  modulepreload(lib-shared) injected: ${preloadsInjected}${LIB_SHARED_HREF ? ' → ' + LIB_SHARED_HREF : ' (chunk no encontrado)'}`);
 
 console.log(`✓ CSS loading optimized:`);
 console.log(`  Files processed: ${filesProcessed}`);

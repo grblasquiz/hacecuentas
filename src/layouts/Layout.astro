@@ -295,15 +295,16 @@ const globalSchema = {
     <meta name="format-detection" content="telephone=no" />
 
     <!-- Theme init: prevent FOUC leyendo localStorage antes del paint.
-         Default = light (ignoramos prefers-color-scheme del OS).
-         El user puede activar dark con el toggle, se persiste en localStorage. -->
+         DEBE replicar exactamente la política de Header.astro initTheme()
+         (clave 'hc-theme', fallback a prefers-color-scheme cuando no hay
+         valor guardado). Si difiere, el usuario ve un flash en cada carga
+         porque el head pinta una cosa y Header re-aplica otra al hidratar. -->
     <script is:inline>
       (function() {
         try {
-          var t = localStorage.getItem('theme');
-          if (t === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-          }
+          var saved = localStorage.getItem('hc-theme');
+          var system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', saved || system);
         } catch (e) {}
       })();
     </script>
@@ -608,7 +609,7 @@ const globalSchema = {
     <div class="print-header" aria-hidden="true">{lang === 'en' ? 'Calculator result — hacecuentas.com' : lang === 'pt' ? 'Resultado da calculadora — hacecuentas.com' : 'Resultado de calculadora — hacecuentas.com'}</div>
 
     <slot name="header" />
-    <main>
+    <main id="main" tabindex="-1">
       <slot />
     </main>
     <slot name="footer" />
@@ -697,6 +698,18 @@ const globalSchema = {
     <style is:global>
       /* Print header: hidden on screen, shown on print */
       .print-header { display: none; }
+
+      /* Fallback con métricas de Inter (valores fontaine/capsize): mientras el
+         woff2 (~50KB) no llegó, Arial se renderiza con el mismo footprint que
+         Inter → cuando swapea no hay reflow (FOUT sin shift / CLS de fuente). */
+      @font-face {
+        font-family: 'Inter Fallback';
+        src: local('Arial');
+        size-adjust: 107.06%;
+        ascent-override: 90.44%;
+        descent-override: 22.52%;
+        line-gap-override: 0%;
+      }
       :root {
         /* Surfaces */
         --bg: #ffffff;
@@ -707,6 +720,8 @@ const globalSchema = {
         /* Borders */
         --border: #e2e8f0;
         --border-strong: #cbd5e1;
+        /* Borde de inputs — pasa 3:1 sobre blanco (WCAG 1.4.11) sin verse pesado */
+        --border-input: #6b7280;
 
         /* Text */
         --text: #0f172a;
@@ -718,6 +733,14 @@ const globalSchema = {
         --accent-hover: #1d4ed8;
         --accent-soft: #eff6ff;
         --accent-strong: #1e40af;
+        /* Texto/íconos SOBRE un fondo var(--accent) sólido. En dark --accent
+           aclara a #60a5fa y el blanco baja a 2.3:1 (falla WCAG): este token
+           se oscurece en dark para mantener contraste en los CTAs del funnel. */
+        --on-accent: #ffffff;
+        /* Violeta secundario (marca de facto del gradiente del CTA/resultado) */
+        --accent-2: #8b5cf6;
+        --grad-brand: linear-gradient(135deg, var(--accent), var(--accent-2));
+        --grad-brand-soft: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--bg-card)), color-mix(in srgb, var(--accent-2) 12%, var(--bg-card)));
 
         /* Status */
         --success: #16a34a;
@@ -726,21 +749,29 @@ const globalSchema = {
         --danger-soft: #fef2f2;
         --warning: #d97706;
         --warning-soft: #fffbeb;
+        /* Variantes -text: el color de texto que SÍ pasa AA (4.5:1) sobre
+           fondo claro. --success/--warning quedan para fondos/bordes/íconos. */
+        --success-text: #15803d;
+        --warning-text: #b45309;
 
         /* Elevation */
         --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
         --shadow: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
         --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.05);
         --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.05);
+        --shadow-accent: 0 4px 14px -2px color-mix(in srgb, var(--accent) 35%, transparent);
+        /* Focus ring estándar (estaba repetido ~21 veces a mano) */
+        --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 
         /* Radii */
         --radius-sm: 6px;
         --radius: 10px;
         --radius-lg: 14px;
         --radius-xl: 20px;
+        --radius-full: 999px;
 
         /* Type */
-        --font-body: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-body: 'Inter Variable', 'Inter', 'Inter Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
       }
 
@@ -753,6 +784,7 @@ const globalSchema = {
 
         --border: #334155;
         --border-strong: #475569;
+        --border-input: #64748b;
 
         --text: #f1f5f9;
         --text-muted: #cbd5e1;
@@ -762,6 +794,9 @@ const globalSchema = {
         --accent-hover: #3b82f6;
         --accent-soft: #1e3a8a33;
         --accent-strong: #93c5fd;
+        /* Sobre #60a5fa el texto oscuro contrasta mucho mejor que el blanco */
+        --on-accent: #0f172a;
+        --accent-2: #a78bfa;
 
         --success: #4ade80;
         --success-soft: #14532d33;
@@ -769,6 +804,9 @@ const globalSchema = {
         --danger-soft: #7f1d1d33;
         --warning: #fbbf24;
         --warning-soft: #78350f33;
+        /* En dark los colores de status ya son claros → sirven como texto */
+        --success-text: var(--success);
+        --warning-text: var(--warning);
 
         --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.25);
         --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.25);
@@ -779,6 +817,18 @@ const globalSchema = {
       html[data-theme="dark"] ::selection {
         background: var(--accent-soft);
         color: var(--accent-strong);
+      }
+
+      /* Visually-hidden accesible (lectores de pantalla sí lo leen). Usado por
+         la región role=status que anuncia el resultado del cálculo. */
+      .sr-only {
+        position: absolute !important;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
 
       * {

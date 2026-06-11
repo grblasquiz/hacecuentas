@@ -6,4 +6,7 @@
 //
 // OJO: import.meta.glob es de Vite (no corre bajo tsx/node). Las KEYS del mapa
 // son relativas a ESTE archivo: './formulas/<formulaId>.ts'.
-export const formulaLoaders = import.meta.glob<any>('./formulas/*.ts');
+// Excluimos index.ts (el compute-index que importa TODAS las fórmulas estático):
+// si entra al glob, Vite publica un chunk de ~427KB con todo el catálogo que
+// nadie descarga pero infla el upload del Worker.
+export const formulaLoaders = import.meta.glob<any>(['./formulas/*.ts', '!./formulas/index.ts']);

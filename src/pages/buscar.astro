@@ -12,6 +12,9 @@ const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: tr
 const calcs = Object.values(calcModules).map((m: any) => m.default || m);
 const totalCount = calcs.length;
 
+// Las 26 categorías reales (espeja CATEGORY_LABELS de calculadoras.astro). Antes
+// sólo había 12 → las otras 14 (~735 calcs) no se podían filtrar y sus cards
+// mostraban el slug crudo sin acento como label.
 const categoryLabels: Record<string, string> = {
   finanzas: 'Finanzas',
   negocios: 'Negocios',
@@ -25,6 +28,21 @@ const categoryLabels: Record<string, string> = {
   matematica: 'Matemática',
   construccion: 'Construcción',
   cocina: 'Cocina',
+  educacion: 'Educación',
+  automotor: 'Automotor',
+  tecnologia: 'Tecnología',
+  'medio-ambiente': 'Medio Ambiente',
+  electronica: 'Electrónica',
+  entretenimiento: 'Entretenimiento',
+  ciencia: 'Ciencia',
+  jardineria: 'Jardinería',
+  familia: 'Familia',
+  idiomas: 'Idiomas',
+  impuestos: 'Impuestos',
+  hogar: 'Hogar',
+  clima: 'Clima',
+  juegos: 'Juegos',
+  astronomia: 'Astronomía',
 };
 
 const categoryCounts: Record<string, number> = {};
@@ -175,7 +193,20 @@ for (const c of calcs as any[]) {
     transition: all 0.15s;
   }
   .chip:hover { border-color: var(--border-strong); color: var(--text); }
-  .chip.active { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+  .chip.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .show-more-btn {
+    display: block;
+    margin: 1.5rem auto 0;
+    padding: 0.7rem 1.4rem;
+    background: var(--bg-card);
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius-full, 999px);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .show-more-btn:hover { background: var(--accent-soft); }
 
   .results-count {
     font-size: 0.8125rem;
@@ -384,7 +415,25 @@ for (const c of calcs as any[]) {
         .map((x) => x.e);
     }
     grid.removeAttribute('data-loading');
-    grid.innerHTML = filtered.map(cardHtml).join('');
+    { const _ex = document.querySelector('.show-more-btn'); if (_ex) _ex.remove(); }
+    // Cap inicial: sin query NI filtro, pintar las 2.8k cards de una sola vez es
+    // un primer render pesado en mobile y una pared sin jerarquía. Mostramos las
+    // primeras 100 + botón "Mostrar más". Con query o chip activo, todo el subset.
+    const CAP = 100;
+    const capped = (!tokens.length && activeCat === 'all') && filtered.length > CAP;
+    const shown = capped ? filtered.slice(0, CAP) : filtered;
+    grid.innerHTML = shown.map(cardHtml).join('');
+    if (capped) {
+      const more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'show-more-btn';
+      more.textContent = `Mostrar las ${filtered.length - CAP} restantes`;
+      more.addEventListener('click', () => {
+        grid.insertAdjacentHTML('beforeend', filtered.slice(CAP).map(cardHtml).join(''));
+        more.remove();
+      });
+      grid.insertAdjacentElement('afterend', more);
+    }
     empty.hidden = filtered.length > 0;
     count.textContent = raw || activeCat !== 'all'
       ? `${filtered.length} resultado${filtered.length === 1 ? '' : 's'}`
@@ -423,10 +472,22 @@ for (const c of calcs as any[]) {
         e._sw = e._s.split(/\s+/).filter(Boolean);
       }
       ready = true;
-      // Aplicar query inicial si vino por URL
+      // Aplicar query y/o categoría inicial si vinieron por URL. Las páginas de
+      // categoría enlazan /buscar?cat=<slug> ("Buscar en las N calculadoras…");
+      // antes el ?cat= se ignoraba y el usuario caía en la lista completa.
       const params = new URLSearchParams(window.location.search);
       const q = params.get('q');
       if (q) input.value = q;
+      const cat = params.get('cat');
+      if (cat) {
+        const chip = filters.querySelector(`.chip[data-cat="${cat.replace(/[^a-z-]/gi, '')}"]`);
+        if (chip) {
+          filters.querySelectorAll('.chip').forEach((c) => { c.classList.remove('active'); c.setAttribute('aria-pressed', 'false'); });
+          chip.classList.add('active');
+          chip.setAttribute('aria-pressed', 'true');
+          activeCat = cat;
+        }
+      }
       apply();
     })
     .catch((err) => {

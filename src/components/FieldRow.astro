@@ -16,6 +16,14 @@ interface Props {
 const { field, lang = "es" } = Astro.props;
 const isWide = field.type === "select" || field.type === "date";
 
+// Strings i18n del fragmento (aria-labels) — antes hardcodeados en español
+// y servidos también en /en/ y /pt/.
+const FT = ({
+  es: { required: "(requerido)", unit: "Unidad", help: "Ayuda" },
+  en: { required: "(required)", unit: "Unit", help: "Help" },
+  pt: { required: "(obrigatório)", unit: "Unidade", help: "Ajuda" },
+} as const)[lang] || { required: "(requerido)", unit: "Unidad", help: "Ayuda" };
+
 // Campos opcionales del JSON (todos opt-in, ausentes = comportamiento previo):
 //  - required:     ya existía; ahora también muestra asterisco + checkmark.
 //  - recommended:  campo opcional pero que mejora la precisión → hint suave.
@@ -74,24 +82,52 @@ const autoThousands =
   !isRateLike(field);
 const useThousands = field.format === "thousands" || autoThousands;
 
+// Default efectivo: SOLO undefined/null/'' cuentan como "sin default". El 0 es
+// un valor legítimo que el usuario podría querer (antigüedad 0, hijos 0), y antes
+// se descartaba → 19 calcs required+default-0 bloqueaban con "Completá este campo".
+// En OPCIONALES dejamos ver el placeholder (no prellenamos 0) salvo que sea required.
+const _hasDefault = field.default !== undefined && field.default !== null && field.default !== "";
+const effectiveDefault = (field.default === 0 && !isRequired)
+  ? undefined
+  : (_hasDefault ? field.default : undefined);
+
 // SSR: si hay default numérico en un campo de miles, renderizarlo ya agrupado
 // ("100.000") para que el bot y el usuario lo vean sin flash de "100000".
 const groupedDefault = (() => {
   if (!useThousands) return undefined;
-  const d = field.default;
-  if (d === 0 || d === undefined || d === null || d === "") return undefined;
+  const d = effectiveDefault;
+  if (d === undefined || d === null || d === "") return undefined;
   const n = typeof d === "number" ? d : Number(String(d).replace(/[^\d.-]/g, ""));
   if (!Number.isFinite(n)) return d;
   return new Intl.NumberFormat("es-AR").format(n);
 })();
+
+// Placeholder de campos de miles: formatear "1500000" → "1.500.000" para que el
+// campo principal de las landings de Ads no muestre un número ilegible.
+const displayPlaceholder = (useThousands && field.placeholder && /^\d+$/.test(String(field.placeholder)))
+  ? new Intl.NumberFormat("es-AR").format(Number(field.placeholder))
+  : field.placeholder;
+
+// inputmode por tipo de campo:
+//  - min<0 (≈8 calcs): teclado completo (numeric/decimal no tienen '-' en iOS).
+//  - miles (enteros, el formatter borra coma/punto): numeric.
+//  - resto de números (tasas/decimales): decimal.
+const _isNegativeCapable = typeof field.min === "number" && field.min < 0;
+const inputMode = field.type !== "number"
+  ? undefined
+  : _isNegativeCapable
+    ? undefined
+    : useThousands
+      ? "numeric"
+      : "decimal";
 ---
 
 <div class={`field ${isWide ? "field-wide" : ""}`}>
   <label for={field.id}>
-    <span class="label-text">{field.label}{isRequired && <span class="req" aria-label="(requerido)">*</span>}</span>
+    <span class="label-text">{field.label}{isRequired && <span class="req" aria-label={FT.required}>*</span>}</span>
     {field.help && (
       <span class="help-wrap">
-        <span class="help" tabindex="0" aria-describedby={`tip-${field.id}`}>?</span>
+        <button type="button" class="help" aria-label={FT.help} aria-describedby={`tip-${field.id}`}>?</button>
         <span class="help-tip" id={`tip-${field.id}`} role="tooltip">{field.help}</span>
       </span>
     )}
@@ -118,13 +154,13 @@ const groupedDefault = (() => {
         id={field.id}
         name={field.id}
         type={field.type === "number" && useThousands ? "text" : field.type}
-        placeholder={field.placeholder}
+        placeholder={displayPlaceholder}
         min={field.min}
         max={field.max}
         step={field.step}
-        value={useThousands ? groupedDefault : (field.default === 0 || field.default === undefined ? undefined : field.default)}
+        value={useThousands ? groupedDefault : effectiveDefault}
         required={field.required}
-        inputmode={field.type === "number" ? "decimal" : undefined}
+        inputmode={inputMode}
         autocomplete="off"
         enterkeyhint="go"
         aria-describedby={`err-${field.id}`}
@@ -135,7 +171,7 @@ const groupedDefault = (() => {
       />
     )}
     {hasUnits ? (
-      <select class="unit-select" aria-label="Unidad" data-unit-select={field.id}>
+      <select class="unit-select" aria-label={FT.unit} data-unit-select={field.id}>
         {units!.map((u) => (
           <option value={u}>{u}</option>
         ))}
@@ -232,6 +268,16 @@ const groupedDefault = (() => {
     font-weight: 600;
     cursor: help;
     border: 1px solid var(--border);
+    /* reset de <button>: ahora es un botón real (operable en touch + teclado) */
+    padding: 0;
+    line-height: 1;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .help:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
   .help-tip {
     position: absolute;
@@ -256,6 +302,7 @@ const groupedDefault = (() => {
   .help:hover + .help-tip,
   .help:focus + .help-tip {
     opacity: 1;
+    pointer-events: auto;
   }
   /* Mobile: tooltip reposicionado para no salirse */
   @media (max-width: 480px) {
@@ -270,7 +317,9 @@ const groupedDefault = (() => {
     display: flex;
     align-items: stretch;
     background: var(--bg);
-    border: 1.5px solid var(--border);
+    /* --border (#e2e8f0) sobre fondo blanco = 1.23:1, falla WCAG 1.4.11 (3:1).
+       --border-input pasa 3:1 en ambos temas → el campo es perceptible. */
+    border: 1.5px solid var(--border-input);
     border-radius: var(--radius-sm);
     overflow: hidden;
     transition: all 0.15s;
@@ -372,8 +421,9 @@ const groupedDefault = (() => {
     background-repeat: no-repeat;
     background-position: right 0.5rem center;
   }
-  /* Mobile: hit targets más grandes */
-  @media (max-width: 480px) {
+  /* Mobile + phablets/landscape: inputs ≥16px para que iOS NO haga zoom al
+     enfocar. Antes el bump era sólo ≤480px y en 481–767px (15px) iOS zoomeaba. */
+  @media (max-width: 767px) {
     .field input,
     .field select {
       padding: 0.875rem 0.875rem;

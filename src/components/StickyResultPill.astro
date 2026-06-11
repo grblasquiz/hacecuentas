@@ -12,6 +12,13 @@
  *
  * Performance: ~0.8KB minified, sin librerías, lazy (rAF + idle callback).
  */
+interface Props { lang?: 'es' | 'en' | 'pt' }
+const { lang = 'es' } = Astro.props;
+const T = ({
+  es: { copy: 'Copiar resultado', back: 'Volver al resultado', label: 'Tu resultado' },
+  en: { copy: 'Copy result', back: 'Back to result', label: 'Your result' },
+  pt: { copy: 'Copiar resultado', back: 'Voltar ao resultado', label: 'Seu resultado' },
+} as const)[lang] || { copy: 'Copiar resultado', back: 'Volver al resultado', label: 'Tu resultado' };
 ---
 
 <div class="sticky-result-pill" data-sticky-pill hidden aria-live="polite">
@@ -22,17 +29,17 @@
     </svg>
   </div>
   <div class="sticky-result-pill-content">
-    <div class="sticky-result-pill-label" data-pill-label>Tu resultado</div>
+    <div class="sticky-result-pill-label" data-pill-label>{T.label}</div>
     <div class="sticky-result-pill-value" data-pill-value>—</div>
   </div>
   <div class="sticky-result-pill-actions">
-    <button type="button" class="sticky-result-pill-btn" data-pill-copy aria-label="Copiar resultado">
+    <button type="button" class="sticky-result-pill-btn" data-pill-copy aria-label={T.copy}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
       </svg>
     </button>
-    <button type="button" class="sticky-result-pill-btn" data-pill-scroll aria-label="Volver al resultado">
+    <button type="button" class="sticky-result-pill-btn" data-pill-scroll aria-label={T.back}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <polyline points="18 15 12 9 6 15"/>
       </svg>
@@ -43,7 +50,10 @@
 <style>
   .sticky-result-pill {
     position: fixed;
-    top: 0.625rem;
+    /* DEBE quedar DEBAJO del header sticky (.site-header, top:0, z-index:100,
+       ~61px en mobile). Con top:0.625rem el header lo tapaba y los taps caían
+       en el botón de país del header. 4.25rem (~68px) lo despeja. */
+    top: 4.25rem;
     left: 0.625rem;
     right: 0.625rem;
     z-index: 80;
@@ -74,15 +84,12 @@
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 50%, #7c3aed));
-    color: #fff;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 50%, var(--accent-2)));
+    color: var(--on-accent);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-  }
-  html[data-theme="dark"] .sticky-result-pill-icon {
-    color: var(--bg);
   }
   .sticky-result-pill-content {
     flex: 1;
@@ -179,7 +186,8 @@
       // Toma el label del primary si existe
       var labelEl = primary.querySelector('.result-label');
       if (labelEl && labelOutEl) {
-        labelOutEl.textContent = (labelEl.textContent || '').trim() || 'Tu resultado';
+        var _defLabel = (labelOutEl.textContent || '').trim() || 'Tu resultado';
+        labelOutEl.textContent = (labelEl.textContent || '').trim() || _defLabel;
       }
       setPillValue();
 

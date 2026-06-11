@@ -374,8 +374,10 @@ const t = {
       var backdrop = document.querySelector('[data-share-bottom-backdrop]');
       var closeBtn = document.querySelector('[data-share-bottom-close]');
       if (!trigger || !sheet || !backdrop) return;
+      var lastFocus = null; // foco previo a abrir el sheet (WCAG 2.4.3)
 
       function open() {
+        lastFocus = document.activeElement;
         sheet.removeAttribute('hidden');
         backdrop.removeAttribute('hidden');
         backdrop.setAttribute('aria-hidden', 'false');
@@ -388,6 +390,8 @@ const t = {
         });
         trigger.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
+        // Mover el foco DENTRO del dialog (al cerrar o a la primera acción).
+        try { (closeBtn || sheet.querySelector('a,button')).focus(); } catch (e) {}
       }
 
       function close() {
@@ -400,16 +404,25 @@ const t = {
           sheet.setAttribute('hidden', '');
           backdrop.setAttribute('hidden', '');
         }, 350);
+        // Devolver el foco al trigger.
+        try { if (lastFocus && lastFocus.focus) lastFocus.focus(); else trigger.focus(); } catch (e) {}
       }
 
       trigger.addEventListener('click', open);
       backdrop.addEventListener('click', close);
       if (closeBtn) closeBtn.addEventListener('click', close);
 
-      // Cerrar con ESC
+      // Cerrar con ESC + trap de Tab dentro del sheet abierto.
       document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && sheet && !sheet.hasAttribute('hidden')) {
-          close();
+        if (sheet.hasAttribute('hidden')) return;
+        if (e.key === 'Escape') { close(); return; }
+        if (e.key === 'Tab') {
+          var f = sheet.querySelectorAll('a[href],button:not([disabled]),input,[tabindex]:not([tabindex="-1"])');
+          var list = Array.prototype.filter.call(f, function (el) { return el.offsetParent !== null; });
+          if (!list.length) return;
+          var first = list[0], last = list[list.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
         }
       });
 

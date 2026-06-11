@@ -109,6 +109,14 @@ export default defineConfig({
             if (id.includes('?astro') && id.includes('type=script')) {
               return undefined;
             }
+            // El mapa de loaders de fórmulas (~3.476 dynamic imports) va a SU
+            // PROPIO chunk, ANTES de la regla lib-shared. Si cae en lib-shared,
+            // como Calculator y Layout importan lib-shared estáticamente, los
+            // ~635KB del mapa terminan en el critical path del botón Calcular.
+            // Aislado, baja en paralelo vía el import() de Calculator.astro:3050.
+            if (id.includes('formula-loader-map')) {
+              return 'formula-map';
+            }
             // Código compartido de src/lib/* (NO formulas/, esas son por-calc)
             if (id.includes('/src/lib/') && !id.includes('/src/lib/formulas/')) {
               return 'lib-shared';
