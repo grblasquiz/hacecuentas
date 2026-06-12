@@ -5,10 +5,11 @@
 // de que puede instalarla.
 //
 // Estrategia:
-//  - Android/Chrome/Edge: captura `beforeinstallprompt`, muestra el chip y al
-//    click dispara el prompt nativo de instalación.
-//  - iOS/Safari (no soporta beforeinstallprompt): muestra el chip con
-//    instrucciones "Compartir → Agregar a inicio".
+//  - SOLO Android: captura `beforeinstallprompt`, muestra el chip y al click
+//    dispara el prompt nativo de instalación.
+//  - Desktop: NO mostramos chip (se deja el ícono de instalación nativo del
+//    browser intacto; no instalamos UI propia).
+//  - iOS/Safari: NO se muestra (no hay instalación real de PWA en iOS).
 //  - Nunca aparece si ya está instalada (display-mode: standalone) ni si el
 //    usuario lo descartó (re-aparece a los 30 días).
 //  - z-index 190 (debajo del banner de cookies, 200) y se corre hacia arriba
@@ -34,15 +35,6 @@
     class="hc-install-close"
     aria-label="No mostrar más"
   >&times;</button>
-
-  <div id="hc-install-ios" class="hc-install-ios" hidden>
-    Tocá <strong>Compartir</strong>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="vertical-align:-2px">
-      <path d="M12 3v12m0-12 4 4m-4-4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-    y luego <strong>Agregar a inicio</strong>.
-  </div>
 </div>
 
 <style>
@@ -103,23 +95,6 @@
     background: var(--accent-soft, #eff6ff);
     color: var(--text, #0f172a);
   }
-
-  .hc-install-ios {
-    position: absolute;
-    bottom: calc(100% + 0.5rem);
-    right: 0;
-    width: max-content;
-    max-width: min(78vw, 17rem);
-    background: var(--bg-card, #fff);
-    color: var(--text, #0f172a);
-    border: 1px solid var(--border, #e2e8f0);
-    border-radius: 0.6rem;
-    box-shadow: 0 6px 24px rgba(2, 6, 23, 0.18);
-    padding: 0.6rem 0.75rem;
-    font-size: 0.82rem;
-    line-height: 1.35;
-  }
-  .hc-install-ios[hidden] { display: none; }
 
   @keyframes hc-install-in {
     from { opacity: 0; transform: translateY(0.5rem); }
@@ -183,12 +158,11 @@
     var deferred = null;
     var btn = document.getElementById('hc-install-btn');
     var closeBtn = document.getElementById('hc-install-close');
-    var iosHint = document.getElementById('hc-install-ios');
 
     var ua = navigator.userAgent || '';
-    var isIOS = /iphone|ipad|ipod/i.test(ua) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    var isSafari = /^((?!chrome|crios|fxios|android).)*safari/i.test(ua);
+    // Solo Android: es donde la PWA se instala de verdad vía beforeinstallprompt.
+    // Desktop e iOS quedan excluidos a propósito.
+    var isAndroid = /android/i.test(ua);
 
     // Revela el chip y cuenta la aparición (1 sola vez por sesión)
     function reveal() {
@@ -203,35 +177,28 @@
       root.hidden = true;
     });
 
-    // Android / Chromium: prompt nativo
+    // Solo Android: capturamos el prompt nativo y mostramos el chip.
+    // En desktop (Chrome/Edge también disparan el evento) NO lo mostramos:
+    // hacemos return sin preventDefault para no tocar el ícono nativo del browser.
     window.addEventListener('beforeinstallprompt', function (e) {
+      if (!isAndroid) return;
       e.preventDefault();
       deferred = e;
       reveal();
     });
 
     btn.addEventListener('click', function () {
-      if (deferred) {
-        deferred.prompt();
-        deferred.userChoice.then(function (choice) {
-          if (window.gtag) {
-            gtag('event', 'pwa_install_prompt', { outcome: choice.outcome });
-          }
-          if (choice.outcome === 'accepted') stopForever();
-          else { setDismissed(); root.hidden = true; }
-          deferred = null;
-        });
-      } else if (isIOS) {
-        iosHint.hidden = !iosHint.hidden;
-      }
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.then(function (choice) {
+        if (window.gtag) {
+          gtag('event', 'pwa_install_prompt', { outcome: choice.outcome });
+        }
+        if (choice.outcome === 'accepted') stopForever();
+        else { setDismissed(); root.hidden = true; }
+        deferred = null;
+      });
     });
-
-    // iOS Safari no dispara beforeinstallprompt → mostrar chip con instrucciones
-    if (isIOS && isSafari) {
-      setTimeout(function () {
-        if (!isStandalone()) reveal();
-      }, 2500);
-    }
 
     // Instalada → no molestar nunca más
     window.addEventListener('appinstalled', function () {
