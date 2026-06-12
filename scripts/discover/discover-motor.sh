@@ -40,7 +40,8 @@ DOM=$(( 10#$(date +%d) ))       # día del mes sin cero a la izquierda
 
 # 1) Generar lo que toque (cada generador es idempotente)
 if [ "$DOM" -ge 14 ] && [ "$DOM" -le 17 ]; then
-  echo "→ ventana inflación"; python3 scripts/generate-inflacion-post.py || true
+  echo "→ ventana inflación AR"; python3 scripts/generate-inflacion-post.py || true
+  echo "→ ventana IPCA BR";      python3 scripts/generate-ipca-post.py || true
 fi
 if [ "$DOW" -eq 1 ] && [ "$DOM" -le 7 ]; then
   echo "→ ventana informe financiero (1er lunes)"; python3 scripts/generate-monthly-post.py || true

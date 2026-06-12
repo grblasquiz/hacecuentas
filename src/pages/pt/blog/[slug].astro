@@ -1,0 +1,212 @@
+---
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+
+export async function getStaticPaths() {
+  const posts = import.meta.glob<any>('../../../content/blog-pt/*.json', { eager: true });
+  return Object.values(posts).map((mod: any) => {
+    const p = mod.default || mod;
+    return { params: { slug: p.slug }, props: { post: p } };
+  });
+}
+
+const { post } = Astro.props;
+const siteUrl = 'https://hacecuentas.com';
+const url = `${siteUrl}/pt/blog/${post.slug}`;
+const ogImage = `/og/blog-pt-${post.slug}.jpg`;
+const ogImageAbs = `${siteUrl}${ogImage}`;
+
+// Related calcs (PT)
+const calcModules = import.meta.glob<any>('../../../content/calcs-pt/*.json', { eager: true });
+const calcBySlug = new Map(
+  Object.values(calcModules).map((m: any) => { const c = m.default || m; return [c.slug, c]; })
+);
+const relatedCalcs = (post.relatedCalcs || []).map((s: string) => calcBySlug.get(s)).filter(Boolean);
+
+function formatDate(iso: string): string {
+  return new Date(iso + 'T00:00:00Z').toLocaleDateString('pt-BR',
+    { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+const dateFormatted = formatDate(post.date);
+const dateISO = new Date(post.date + 'T00:00:00Z').toISOString();
+const modISO = post.updatedDate ? new Date(post.updatedDate + 'T00:00:00Z').toISOString() : dateISO;
+
+// TOC (h2)
+function buildToc(html: string) {
+  const toc: { id: string; text: string }[] = [];
+  const re = /<h2[^>]*>(.*?)<\/h2>/gi; let m;
+  while ((m = re.exec(html)) !== null) {
+    const text = m[1].replace(/<[^>]+>/g, '').trim();
+    const id = text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 80);
+    toc.push({ id, text });
+  }
+  return toc;
+}
+function injectIds(html: string, toc: { id: string }[]) {
+  let i = 0;
+  return html.replace(/<h2([^>]*)>/gi, (_m: string, a: string) =>
+    /\bid=/.test(a) || !toc[i] ? `<h2${a}>` : `<h2${a} id="${toc[i++].id}">`);
+}
+const toc = buildToc(post.content || '');
+const contentWithIds = injectIds(post.content || '', toc);
+
+const isNews = /^(inflacao|ipca|informe|finde|feriado|13|imposto)/i.test(post.slug);
+const articleSchema: any = {
+  '@context': 'https://schema.org',
+  '@type': isNews ? 'NewsArticle' : 'BlogPosting',
+  headline: post.title,
+  description: post.description,
+  datePublished: dateISO,
+  dateModified: modISO,
+  author: { '@type': 'Organization', name: 'Hacé Cuentas', url: siteUrl },
+  publisher: {
+    '@type': 'Organization', name: 'Hacé Cuentas', url: siteUrl,
+    logo: { '@type': 'ImageObject', url: `${siteUrl}/favicon.svg` },
+  },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+  image: [ogImageAbs],
+  inLanguage: 'pt-BR',
+  keywords: (post.seoKeywords || []).join(', '),
+  articleBody: post.content?.replace(/<[^>]+>/g, '').slice(0, 3000),
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: `${siteUrl}/pt` },
+    { '@type': 'ListItem', position: 2, name: 'Blog', item: `${siteUrl}/pt/blog` },
+    { '@type': 'ListItem', position: 3, name: post.title, item: url },
+  ],
+};
+const faqSchema = post.faq?.length ? {
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: post.faq.map((f: { q: string; a: string }) => ({
+    '@type': 'Question', name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+} : null;
+const pageSchema = { '@context': 'https://schema.org', '@graph': [articleSchema, breadcrumbSchema, ...(faqSchema ? [faqSchema] : [])] };
+---
+
+<Layout
+  title={post.title}
+  description={post.description}
+  canonical={`/pt/blog/${post.slug}`}
+  schema={pageSchema}
+  image={ogImage}
+  ogTitle={post.ogTitle}
+  lang="pt"
+  audience="BR"
+  ogType="article"
+  articleAuthor={post.author || 'Hacé Cuentas'}
+  articlePublishedTime={dateISO}
+  articleModifiedTime={modISO}
+  newsKeywords={isNews ? (post.seoKeywords || []) : undefined}
+  noindex={false}
+>
+  <Header slot="header" />
+
+  <div class="blog-wrap">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/pt">Início</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li><a href="/pt/blog">Blog</a></li>
+        <li aria-hidden="true" class="sep">›</li>
+        <li aria-current="page">{post.title}</li>
+      </ol>
+    </nav>
+
+    <article class="article">
+      <header class="article-header">
+        <div class="hero-emoji" aria-hidden="true">{post.heroEmoji || '📝'}</div>
+        <h1>{post.h1 || post.title}</h1>
+        <p class="article-description">{post.description}</p>
+        <div class="meta-line">
+          <time datetime={dateISO}>{dateFormatted}</time>
+          <span aria-hidden="true">·</span>
+          <span>{post.readingTime || 4} min de leitura</span>
+        </div>
+      </header>
+
+      {['finanzas', 'financas', 'negocios'].includes(post.category) && (
+        <aside class="post-disclaimer" role="note">
+          <p><strong>Informação educativa, não é assessoria profissional.</strong> Conteúdo jornalístico baseado em fontes públicas oficiais. Para decisões importantes, consulte um contador ou assessor financeiro.</p>
+        </aside>
+      )}
+
+      <div class="article-body prose" set:html={contentWithIds} />
+
+      {relatedCalcs.length > 0 && (
+        <section class="related">
+          <h2>Calculadoras relacionadas</h2>
+          <div class="related-grid">
+            {relatedCalcs.map((c: any) => (
+              <a href={`/pt/${c.slug}`} class="calc-card">
+                <span class="calc-card-icon">{c.icon || '🧮'}</span>
+                <span class="calc-card-title">{c.h1 || c.title}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {post.faq?.length > 0 && (
+        <section class="faq">
+          <h2>Perguntas frequentes</h2>
+          {post.faq.map((f: { q: string; a: string }, i: number) => (
+            <details class="faq-item" open={i === 0}>
+              <summary>{f.q}</summary>
+              <div class="faq-a">{f.a}</div>
+            </details>
+          ))}
+        </section>
+      )}
+    </article>
+  </div>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .blog-wrap { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .breadcrumb ol { display: flex; flex-wrap: wrap; gap: 0.25rem 0.375rem; list-style: none; margin: 0 0 1.25rem; padding: 0; font-size: 0.8125rem; color: var(--text-muted); }
+  .breadcrumb a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--accent); text-decoration: underline; }
+  .breadcrumb .sep { color: var(--border-strong); }
+  .breadcrumb [aria-current] { color: var(--text-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+  .hero-emoji { font-size: 3rem; line-height: 1; margin-bottom: 1rem; }
+  .article-header h1 { font-size: clamp(1.5rem, 4vw, 2.125rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 0.75rem; color: var(--text); }
+  .article-description { font-size: 1.0625rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 1rem; }
+  .meta-line { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.8125rem; color: var(--text-subtle); margin-bottom: 2rem; }
+  .post-disclaimer { margin: 0 0 2rem; padding: 1rem 1.25rem; background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: var(--radius-sm); color: #78350f; font-size: 0.9375rem; line-height: 1.6; }
+  .post-disclaimer p { margin: 0; }
+  :root[data-theme="dark"] .post-disclaimer { background: rgba(180,83,9,0.15); border-color: rgba(245,158,11,0.4); color: #fde68a; }
+  .prose { font-size: 1.0625rem; line-height: 1.75; color: var(--text); }
+  .prose :global(h2) { font-size: 1.5rem; font-weight: 700; line-height: 1.25; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); scroll-margin-top: 4.5rem; color: var(--text); }
+  .prose :global(h3) { font-size: 1.1875rem; font-weight: 700; margin: 2rem 0 0.75rem; color: var(--text); }
+  .prose :global(p) { margin: 0 0 1.25rem; }
+  .prose :global(a) { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  .prose :global(ul), .prose :global(ol) { margin: 0 0 1.25rem 1.5rem; padding: 0; }
+  .prose :global(li) { margin-bottom: 0.4rem; }
+  .prose :global(strong) { font-weight: 700; color: var(--text); }
+  .prose :global(table) { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9375rem; display: block; overflow-x: auto; }
+  .prose :global(th) { background: var(--bg-soft); font-weight: 700; font-size: 0.8125rem; padding: 0.625rem 0.875rem; border: 1px solid var(--border); color: var(--text-muted); }
+  .prose :global(td) { padding: 0.625rem 0.875rem; border: 1px solid var(--border); vertical-align: top; }
+  .prose :global(tr:nth-child(even) td) { background: var(--bg-soft); }
+  .related, .faq { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+  .related h2, .faq h2 { font-size: 1.25rem; font-weight: 700; margin: 0 0 1.25rem; color: var(--text); }
+  .related-grid { display: grid; grid-template-columns: 1fr; gap: 0.625rem; }
+  @media (min-width: 600px) { .related-grid { grid-template-columns: repeat(2, 1fr); } }
+  .calc-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.9375rem; transition: all 0.15s; }
+  .calc-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .calc-card-icon { flex-shrink: 0; width: 36px; height: 36px; background: var(--accent-soft); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.125rem; }
+  .faq-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.5rem; overflow: hidden; }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-item summary { padding: 1rem 1.125rem; cursor: pointer; font-weight: 600; font-size: 0.9375rem; color: var(--text); list-style: none; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-a { padding: 0 1.125rem 1rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.65; }
+</style>

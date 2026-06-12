@@ -39,6 +39,7 @@ const CALCS_INTL_DIRS = [
   join(ROOT, 'src', 'content', 'calcs-pt'),
 ];
 const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
+const BLOG_PT_DIR = join(ROOT, 'src', 'content', 'blog-pt');
 const OUT_DIR = join(ROOT, 'public', 'og');
 const FONTS_DIR = join(__dirname, '.fonts');
 
@@ -490,13 +491,15 @@ async function renderBlogJpg(
 async function processBlog(
   fonts: Awaited<ReturnType<typeof loadFonts>>,
   result: GenResult,
+  dir: string = BLOG_DIR,
+  prefix: string = 'blog-',
 ): Promise<void> {
-  if (!existsSync(BLOG_DIR)) return;
-  const files = readdirSync(BLOG_DIR).filter((f) => f.endsWith('.json'));
+  if (!existsSync(dir)) return;
+  const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
   for (const file of files) {
     let post: BlogPost;
     try {
-      post = JSON.parse(readFileSync(join(BLOG_DIR, file), 'utf8')) as BlogPost;
+      post = JSON.parse(readFileSync(join(dir, file), 'utf8')) as BlogPost;
     } catch (err) {
       result.failed.push({ slug: `blog/${file}`, error: `parse: ${(err as Error).message}` });
       continue;
@@ -513,7 +516,7 @@ async function processBlog(
       { suffix: '', height: 630 },       // blog-<slug>.jpg → 1200×630
     ];
     for (const r of ratios) {
-      const outPath = join(OUT_DIR, `blog-${post.slug}${r.suffix}.jpg`);
+      const outPath = join(OUT_DIR, `${prefix}${post.slug}${r.suffix}.jpg`);
       // SIN cache: el blog son ~17 posts (regenerar todos ≈2s, despreciable vs
       // las 9477 calcs). Regenerar siempre garantiza que la card matchee el
       // título/ogTitle/description actuales — editar un post se refleja solo.
@@ -612,6 +615,7 @@ async function main(): Promise<void> {
   // generación de las 9477 calcs (que ya corrió arriba).
   try {
     await processBlog(fonts, result);
+    await processBlog(fonts, result, BLOG_PT_DIR, 'blog-pt-');
   } catch (err) {
     console.warn(`[og] blog pass falló (no crítico): ${(err as Error).message}`);
   }

@@ -445,6 +445,7 @@ const calcsCl = readJSONs(CALCS_CL_DIR, 'cl');
 const calcsPe = readJSONs(CALCS_PE_DIR, 'pe');
 const calcsEc = readJSONs(CALCS_EC_DIR, 'ec');
 const blogPosts = readJSONs(BLOG_DIR);
+const blogPostsPt = readJSONs(join(ROOT, 'src', 'content', 'blog-pt'));
 const tablas = readJSONs(TABLAS_DIR);
 const comparaciones = readJSONs(COMPARACIONES_DIR, 'comparar');
 const glosarioTerms = readJSONs(GLOSARIO_DIR, 'glosario');
@@ -896,6 +897,20 @@ if (blogPosts.length > 0) {
       title: (p.ogTitle || p.title || p.slug).slice(0, 120),
       publicationDate: new Date(t).toISOString(),
       language: 'es',
+    });
+  }
+
+  // Blog posts PT-BR fresh (motor Discover BR) → /pt/blog/, news:language=pt
+  for (const p of (blogPostsPt as any[])) {
+    const dateStr = p.updatedDate || p.date;
+    if (!dateStr) continue;
+    const t = Date.parse(dateStr);
+    if (Number.isNaN(t) || now - t > TWO_DAYS_MS) continue;
+    newsEntries.push({
+      loc: `${site}/pt/blog/${p.slug}`,
+      title: (p.ogTitle || p.title || p.slug).slice(0, 120),
+      publicationDate: new Date(t).toISOString(),
+      language: 'pt',
     });
   }
 
