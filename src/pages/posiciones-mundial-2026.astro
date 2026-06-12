@@ -1,0 +1,163 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { fixture, LIVE_FIXTURE_URL } from '../lib/data/mundial-2026';
+import { computeStandings } from '../lib/mundial-live';
+
+const standings = computeStandings(fixture.matches);
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/posiciones-mundial-2026`;
+const title = 'Tabla de posiciones Mundial 2026 EN VIVO — todos los grupos | Hacé Cuentas';
+const description = 'Tabla de posiciones del Mundial 2026 en vivo, grupo por grupo: puntos, partidos jugados, diferencia de gol. Se actualiza con los resultados. Clasifican los 2 primeros de cada grupo (y mejores terceros).';
+const updated = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fixture.fetchedAt));
+
+const faq = [
+  { q: '¿Cómo se ordena la tabla de posiciones del Mundial?', a: 'Por puntos (3 por victoria, 1 por empate). Si hay empate en puntos, se define por diferencia de gol, luego goles a favor y resultado entre sí. Clasifican a la siguiente fase los 2 primeros de cada grupo, más los mejores terceros según el formato de 48 equipos.' },
+  { q: '¿Cada cuánto se actualiza?', a: 'Los datos vienen del proyecto abierto openfootball y se recalculan al abrir la página y durante los partidos. La hora de última actualización figura arriba de las tablas.' },
+  { q: '¿Cuántos equipos clasifican por grupo en el Mundial 2026?', a: 'Con el nuevo formato de 48 selecciones en 12 grupos de 4, avanzan los 2 primeros de cada grupo más los 8 mejores terceros, completando los 32 de la fase eliminatoria.' },
+];
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Mundial 2026', item: `${SITE}/mundial-2026` },
+    { '@type': 'ListItem', position: 3, name: 'Tabla de posiciones', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+const liveConfig = { url: LIVE_FIXTURE_URL };
+---
+
+<Layout title={title} description={description} canonical="/posiciones-mundial-2026" schema={schema} audience="AR">
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/">Inicio</a> › <a href="/mundial-2026">Mundial 2026</a> › <span>Posiciones</span></nav>
+    <h1>Tabla de posiciones del Mundial 2026 — en vivo</h1>
+    <p class="lede">Posiciones de los 12 grupos, actualizadas con cada resultado. Clasifican los <strong>2 primeros de cada grupo</strong> + los 8 mejores terceros.</p>
+    <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Datos: <a href="https://github.com/openfootball/worldcup.json" rel="noopener" target="_blank">openfootball</a></p>
+
+    <div class="groups" data-standings>
+      {standings.map(({ group, rows }) => (
+        <section class="group-card" data-group={group}>
+          <h2>{group.replace('Group', 'Grupo')}</h2>
+          <table>
+            <thead><tr><th class="l">#</th><th class="l">Selección</th><th>PJ</th><th>Pts</th><th>DG</th><th>GF</th></tr></thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr class={i < 2 ? 'q' : ''}>
+                  <td class="l">{i + 1}</td>
+                  <td class="l">{r.flag} {r.es}</td>
+                  <td>{r.pj}</td><td><strong>{r.pts}</strong></td>
+                  <td>{r.dg > 0 ? '+' + r.dg : r.dg}</td><td>{r.gf}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
+    </div>
+
+    <section class="links">
+      <h2>Seguí el Mundial</h2>
+      <ul>
+        <li><a href="/fixture-mundial-2026">📅 Fixture y resultados en vivo</a></li>
+        <li><a href="/goleadores-mundial-2026">⚽ Tabla de goleadores</a></li>
+        <li><a href="/llave-mundial-2026">🗂️ Llave de eliminación</a></li>
+        <li><a href="/cuando-juega-argentina-mundial-2026">🇦🇷 ¿Cuándo juega Argentina?</a></li>
+        <li><a href="/mundial-2026">🏆 Todas las calculadoras del Mundial</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    if (!cfg.url) return;
+    const TEAMS = {}; // se rellena con bandera/es desde el DOM existente si hace falta
+    function compute(matches) {
+      const groups = {};
+      const E = (g, t) => { (groups[g] ||= {}); (groups[g][t] ||= { t, pj:0, pts:0, gf:0, gc:0 }); return groups[g][t]; };
+      for (const m of matches) {
+        if (!m.group || !m.team1 || !m.team2) continue;
+        const a = E(m.group, m.team1), b = E(m.group, m.team2);
+        if (!m.score || !m.score.ft) continue;
+        const [ga, gb] = m.score.ft;
+        a.pj++; b.pj++; a.gf += ga; a.gc += gb; b.gf += gb; b.gc += ga;
+        if (ga > gb) a.pts += 3; else if (ga < gb) b.pts += 3; else { a.pts++; b.pts++; }
+      }
+      const out = {};
+      for (const g in groups) out[g] = Object.values(groups[g]).map(r => ({ ...r, dg: r.gf - r.gc }))
+        .sort((x, y) => y.pts - x.pts || y.dg - x.dg || y.gf - x.gf);
+      return out;
+    }
+    async function refresh() {
+      try {
+        const res = await fetch(cfg.url, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !Array.isArray(data.matches)) return;
+        const st = compute(data.matches);
+        document.querySelectorAll('[data-group]').forEach((sec) => {
+          const g = sec.getAttribute('data-group');
+          const rows = st[g]; if (!rows) return;
+          const tb = sec.querySelector('tbody'); if (!tb) return;
+          const cells = Array.from(tb.querySelectorAll('tr')).map(tr => tr.querySelector('td.l:nth-child(2)')?.textContent?.trim());
+          // map current rows DOM by team label; reordenar+actualizar números
+          const trByName = {};
+          tb.querySelectorAll('tr').forEach(tr => { const n = tr.querySelector('td.l:nth-child(2)')?.textContent?.trim(); if (n) trByName[n] = tr; });
+          rows.forEach((r, i) => {
+            // matchear por nombre es (la celda ya tiene "🏳 Nombre"); buscamos por inclusión del team
+            let tr = Object.entries(trByName).find(([label]) => label && label.includes(r.t))?.[1];
+            if (!tr) return;
+            const tds = tr.querySelectorAll('td');
+            tds[0].textContent = String(i + 1);
+            tds[2].textContent = r.pj; tds[3].innerHTML = '<strong>' + r.pts + '</strong>';
+            tds[4].textContent = r.dg > 0 ? '+' + r.dg : r.dg; tds[5].textContent = r.gf;
+            tr.classList.toggle('q', i < 2);
+            tb.appendChild(tr);
+          });
+        });
+        const u = document.querySelector('[data-live-updated]');
+        if (u) u.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      } catch {}
+    }
+    refresh();
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 920px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); font-weight: 800; margin: 0 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.4rem; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.5rem; }
+  .updated a { color: var(--accent); }
+  .groups { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+  @media (min-width: 680px) { .groups { grid-template-columns: 1fr 1fr; } }
+  .group-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.875rem 1rem; }
+  .group-card h2 { font-size: 1.05rem; font-weight: 700; margin: 0 0 0.5rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  th, td { padding: 0.4rem 0.45rem; text-align: center; border-bottom: 1px solid var(--border); }
+  th.l, td.l { text-align: left; }
+  th { font-size: 0.7rem; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; }
+  tr.q td { background: var(--accent-soft); }
+  tbody tr:last-child td { border-bottom: none; }
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links h2, .faq h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem; }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

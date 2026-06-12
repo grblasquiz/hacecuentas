@@ -1,0 +1,118 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { fixture, LIVE_FIXTURE_URL } from '../lib/data/mundial-2026';
+import { topScorers } from '../lib/mundial-live';
+
+const scorers = topScorers(fixture.matches, 40);
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/goleadores-mundial-2026`;
+const title = 'Goleadores del Mundial 2026 EN VIVO — tabla del Botín de Oro | Hacé Cuentas';
+const description = 'Tabla de goleadores del Mundial 2026 en vivo: quién va puntero en la carrera por el Botín de Oro, goles y penales. Se actualiza con cada gol.';
+const updated = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fixture.fetchedAt));
+
+const faq = [
+  { q: '¿Quién es el goleador del Mundial 2026?', a: scorers.length ? `Por ahora va puntero ${scorers[0].es} (${scorers[0].flag}) con ${scorers[0].goles} gol${scorers[0].goles === 1 ? '' : 'es'}. La tabla se actualiza con cada partido.` : 'Todavía no se jugaron partidos con goles; la tabla se completa a medida que avanza el torneo.' },
+  { q: '¿Qué es el Botín de Oro?', a: 'Es el premio al máximo goleador del Mundial. Si hay empate en goles, se define por asistencias y luego por menos minutos jugados. Los autogoles no cuentan para el goleador.' },
+  { q: '¿Los penales cuentan para el Botín de Oro?', a: 'Sí, los goles de penal en el desarrollo del partido cuentan. No cuentan los goles en las definiciones por penales (tandas), que son un desempate aparte.' },
+  { q: '¿Cada cuánto se actualiza?', a: 'Con el feed abierto de openfootball: al abrir la página se recalcula con los goles más recientes.' },
+];
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Mundial 2026', item: `${SITE}/mundial-2026` },
+    { '@type': 'ListItem', position: 3, name: 'Goleadores', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+const liveConfig = { url: LIVE_FIXTURE_URL };
+---
+
+<Layout title={title} description={description} canonical="/goleadores-mundial-2026" schema={schema} audience="AR">
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/">Inicio</a> › <a href="/mundial-2026">Mundial 2026</a> › <span>Goleadores</span></nav>
+    <h1>⚽ Goleadores del Mundial 2026 — en vivo</h1>
+    <p class="lede">Carrera por el <strong>Botín de Oro</strong>: quién va puntero, goles y penales. Se actualiza con cada gol.</p>
+    <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Datos: <a href="https://github.com/openfootball/worldcup.json" rel="noopener" target="_blank">openfootball</a></p>
+
+    {scorers.length === 0 ? (
+      <p class="empty">Todavía no hay goles registrados. Volvé cuando empiece la acción. ⚽</p>
+    ) : (
+      <table data-scorers>
+        <thead><tr><th class="l">#</th><th class="l">Jugador</th><th class="l">Selección</th><th>Goles</th><th>Penales</th></tr></thead>
+        <tbody>
+          {scorers.map((s, i) => (
+            <tr><td class="l">{i + 1}</td><td class="l">{s.name}</td><td class="l">{s.flag} {s.es}</td><td><strong>{s.goles}</strong></td><td>{s.penales || '—'}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+
+    <section class="links">
+      <h2>Seguí el Mundial</h2>
+      <ul>
+        <li><a href="/fixture-mundial-2026">📅 Fixture y resultados</a></li>
+        <li><a href="/posiciones-mundial-2026">🏆 Tabla de posiciones</a></li>
+        <li><a href="/llave-mundial-2026">🗂️ Llave de eliminación</a></li>
+        <li><a href="/cuando-juega-argentina-mundial-2026">🇦🇷 ¿Cuándo juega Argentina?</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    if (!cfg.url) return;
+    async function refresh() {
+      try {
+        const res = await fetch(cfg.url, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !Array.isArray(data.matches)) return;
+        const map = {};
+        const add = (team, goals) => { for (const g of (goals || [])) { if (g.owngoal) continue; const k = g.name + '|' + team; (map[k] ||= { name: g.name, team, goles: 0, penales: 0 }); map[k].goles++; if (g.penalty) map[k].penales++; } };
+        for (const m of data.matches) { add(m.team1, m.goals1); add(m.team2, m.goals2); }
+        const rows = Object.values(map).sort((a, b) => b.goles - a.goles || a.name.localeCompare(b.name)).slice(0, 40);
+        const tb = document.querySelector('[data-scorers] tbody');
+        if (tb && rows.length) tb.innerHTML = rows.map((s, i) => `<tr><td class="l">${i + 1}</td><td class="l">${s.name}</td><td class="l">${s.team}</td><td><strong>${s.goles}</strong></td><td>${s.penales || '—'}</td></tr>`).join('');
+        const u = document.querySelector('[data-live-updated]');
+        if (u) u.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      } catch {}
+    }
+    refresh();
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.5rem, 4.5vw, 2.05rem); font-weight: 800; margin: 0 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.4rem; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.5rem; }
+  .updated a { color: var(--accent); }
+  .empty { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center; color: var(--text-muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { padding: 0.5rem 0.55rem; text-align: center; border-bottom: 1px solid var(--border); }
+  th.l, td.l { text-align: left; }
+  th { font-size: 0.7rem; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; }
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links h2, .faq h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem; }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

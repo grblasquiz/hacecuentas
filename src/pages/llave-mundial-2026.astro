@@ -1,0 +1,132 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { fixture, LIVE_FIXTURE_URL, teamLabel, roundLabel, artDayLabel, artTime } from '../lib/data/mundial-2026';
+import { bracketRounds } from '../lib/mundial-live';
+
+const rounds = bracketRounds(fixture.matches);
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/llave-mundial-2026`;
+const title = 'Llave del Mundial 2026 EN VIVO — cuadro de eliminación directa | Hacé Cuentas';
+const description = 'La llave del Mundial 2026: cuadro completo de la fase eliminatoria (32avos, octavos, cuartos, semis y final) con cruces, días y horarios en hora argentina. Se actualiza con los resultados.';
+const updated = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fixture.fetchedAt));
+
+const faq = [
+  { q: '¿Cómo es la llave del Mundial 2026?', a: 'Con 48 equipos, la fase eliminatoria arranca en 16avos/32avos (Round of 32) con los 32 clasificados, y sigue con octavos, cuartos, semifinales, partido por el tercer puesto y la final. Acá ves el cuadro completo y los cruces a medida que se definen.' },
+  { q: '¿Cuándo se define cada cruce?', a: 'Los cruces de la fase eliminatoria se completan cuando termina la fase de grupos y cada ronda anterior. Hasta entonces aparecen como "por definir" y se llenan automáticamente.' },
+  { q: '¿Los horarios están en hora argentina?', a: 'Sí, todos los días y horarios mostrados están convertidos a la hora de Argentina (GMT-3).' },
+];
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Mundial 2026', item: `${SITE}/mundial-2026` },
+    { '@type': 'ListItem', position: 3, name: 'Llave de eliminación', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+const liveConfig = { url: LIVE_FIXTURE_URL };
+const fmtScore = (m: any) => (m.score && m.score.ft) ? `${m.score.ft[0]}-${m.score.ft[1]}` : '';
+---
+
+<Layout title={title} description={description} canonical="/llave-mundial-2026" schema={schema} audience="AR">
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/">Inicio</a> › <a href="/mundial-2026">Mundial 2026</a> › <span>Llave</span></nav>
+    <h1>🗂️ Llave del Mundial 2026 — eliminación directa</h1>
+    <p class="lede">Cuadro completo de la fase eliminatoria con cruces, días y horarios (hora argentina). Se completa a medida que avanza el torneo.</p>
+    <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Datos: <a href="https://github.com/openfootball/worldcup.json" rel="noopener" target="_blank">openfootball</a></p>
+
+    {rounds.length === 0 ? (
+      <p class="empty">La fase eliminatoria todavía no tiene cruces definidos. Se completa cuando avance la fase de grupos. 🏟️</p>
+    ) : (
+      <div class="bracket">
+        {rounds.map(({ round, matches }) => (
+          <section class="round">
+            <h2>{roundLabel(round)}</h2>
+            <div class="round-matches">
+              {matches.map((m) => (
+                <div class="ko" data-num={m.num}>
+                  <div class="ko-team"><span>{teamLabel(m.team1).flag} {teamLabel(m.team1).es}</span><span class="ko-sc" data-sc1>{m.score?.ft ? m.score.ft[0] : ''}</span></div>
+                  <div class="ko-team"><span>{teamLabel(m.team2).flag} {teamLabel(m.team2).es}</span><span class="ko-sc" data-sc2>{m.score?.ft ? m.score.ft[1] : ''}</span></div>
+                  <div class="ko-when">{m.date ? `${artDayLabel(m.date, m.time)} · ${artTime(m.date, m.time)}` : 'Por definir'}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    )}
+
+    <section class="links">
+      <h2>Seguí el Mundial</h2>
+      <ul>
+        <li><a href="/fixture-mundial-2026">📅 Fixture y resultados</a></li>
+        <li><a href="/posiciones-mundial-2026">🏆 Tabla de posiciones</a></li>
+        <li><a href="/goleadores-mundial-2026">⚽ Goleadores</a></li>
+        <li><a href="/cuando-juega-argentina-mundial-2026">🇦🇷 ¿Cuándo juega Argentina?</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    if (!cfg.url) return;
+    async function refresh() {
+      try {
+        const res = await fetch(cfg.url, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !Array.isArray(data.matches)) return;
+        const byNum = {}; data.matches.forEach((m, i) => byNum[m.num ?? i + 1] = m);
+        document.querySelectorAll('.ko[data-num]').forEach((el) => {
+          const m = byNum[Number(el.getAttribute('data-num'))]; if (!m) return;
+          if (m.score && m.score.ft) {
+            el.querySelector('[data-sc1]').textContent = m.score.ft[0];
+            el.querySelector('[data-sc2]').textContent = m.score.ft[1];
+          }
+        });
+        const u = document.querySelector('[data-live-updated]');
+        if (u) u.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      } catch {}
+    }
+    refresh();
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.5rem, 4.5vw, 2.05rem); font-weight: 800; margin: 0 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.4rem; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.5rem; }
+  .updated a { color: var(--accent); }
+  .empty { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center; color: var(--text-muted); }
+  .bracket { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; }
+  .round { min-width: 200px; flex: 0 0 auto; }
+  .round h2 { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); margin: 0 0 0.75rem; }
+  .round-matches { display: flex; flex-direction: column; gap: 0.6rem; }
+  .ko { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.6rem 0.7rem; }
+  .ko-team { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; padding: 0.15rem 0; }
+  .ko-sc { color: var(--accent); font-weight: 800; }
+  .ko-when { font-size: 0.72rem; color: var(--text-subtle); margin-top: 0.3rem; border-top: 1px dashed var(--border); padding-top: 0.3rem; }
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links h2, .faq h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem; }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>
