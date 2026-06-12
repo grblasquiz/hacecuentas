@@ -892,7 +892,8 @@ if (blogPosts.length > 0) {
     if (Number.isNaN(t) || now - t > TWO_DAYS_MS) continue;
     newsEntries.push({
       loc: `${site}/blog/${p.slug}`,
-      title: (p.title || p.slug).slice(0, 120),
+      // ogTitle = headline limpio sin sufijo "| Hacé Cuentas" → mejor para Google News/Discover.
+      title: (p.ogTitle || p.title || p.slug).slice(0, 120),
       publicationDate: new Date(t).toISOString(),
       language: 'es',
     });

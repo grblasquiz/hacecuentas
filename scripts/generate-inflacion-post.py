@@ -165,6 +165,11 @@ def generate(dry_run=False):
         return
 
     out = Path('src/content/blog') / f'{slug}.json'
+    if out.exists() and '--force' not in sys.argv:
+        # Discover premia fecha de publicación estable: si ya existe la nota del
+        # mes, NO la reescribimos (evita re-fechado diario en la ventana 14-17).
+        print(f'• ya existe (skip, fecha preservada): {out}')
+        return
     out.write_text(json.dumps(post, ensure_ascii=False, indent=2))
     print(f'✅ Post generado: {out}')
     print(f'   {mes_nombre} {year}: {ipc_mes}% | YTD {ytd}% | 12m {last12}% | $100k hoy → ${poder_s}')
