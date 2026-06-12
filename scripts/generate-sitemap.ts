@@ -62,7 +62,7 @@ function safeReadDir(dir: string): string[] {
   try { return readdirSync(dir); } catch { return []; }
 }
 
-function readJSONs(dir: string): any[] {
+function readJSONs(dir: string, pathPrefix = ''): any[] {
   return safeReadDir(dir)
     .filter((f) => f.endsWith('.json'))
     .map((f) => {
@@ -76,7 +76,15 @@ function readJSONs(dir: string): any[] {
     .filter((d: any) => !d.noindex)
     // Excluimos slugs en PRUNING_REDIRECTS: el JSON sigue presente para que
     // el middleware sepa redirigir, pero la URL ya no debe figurar en el sitemap.
-    .filter((d: any) => !d.slug || !PRUNED_SLUGS.has(d.slug));
+    // path-aware: para colecciones con prefijo (glosario, comparar…) la clave de
+    // pruning es la URL completa (`glosario/iva`), NO el slug pelado (`iva`).
+    // Sin esto, un glosario `/glosario/iva` se excluía por colisionar con la
+    // redirección raíz `/iva` → calc, aunque es una página 200 distinta.
+    .filter((d: any) => {
+      if (!d.slug) return true;
+      const key = pathPrefix ? `${pathPrefix}/${d.slug}` : d.slug;
+      return !PRUNED_SLUGS.has(key);
+    });
 }
 
 /**
@@ -433,8 +441,8 @@ const calcsPe = readJSONs(CALCS_PE_DIR);
 const calcsEc = readJSONs(CALCS_EC_DIR);
 const blogPosts = readJSONs(BLOG_DIR);
 const tablas = readJSONs(TABLAS_DIR);
-const comparaciones = readJSONs(COMPARACIONES_DIR);
-const glosarioTerms = readJSONs(GLOSARIO_DIR);
+const comparaciones = readJSONs(COMPARACIONES_DIR, 'comparar');
+const glosarioTerms = readJSONs(GLOSARIO_DIR, 'glosario');
 
 let provincias: any[] = [];
 try {
@@ -977,6 +985,16 @@ for (const calc of argCalcs as any[]) {
       });
     }
   }
+}
+// Hubs por provincia (/argentina/{provincia}) — páginas índice 200 que faltaban
+// en el sitemap (Google las marcaba "rastreada sin indexar" por no estar listadas).
+for (const p of provincias) {
+  argUrls.push({
+    loc: `${site}/argentina/${p.slug}`,
+    priority: '0.7',
+    changefreq: 'monthly',
+    lastmod: buildDate,
+  });
 }
 if (argUrls.length > 0) {
   sitemaps.push({ name: 'sitemap-argentina.xml', urls: argUrls });
