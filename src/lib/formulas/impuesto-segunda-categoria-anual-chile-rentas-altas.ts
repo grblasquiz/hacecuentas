@@ -1,3 +1,8 @@
+// UF/UTM/UTA live desde mindicador.cl (cron diario fetch-chile.mjs), con fallback verificado.
+import clLive from "../../data/live/chile.json";
+// Exención y tasa máxima 2026 — fuente única (Art. 52 / Art. 43 N°1 LIR).
+import { CHILE_2026 } from "../data/chile-2026";
+
 export interface Inputs {
   renta_sueldos_anuales: number;
   renta_honorarios: number;
@@ -25,123 +30,78 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Fuente: SII Servicio de Impuestos Internos Chile 2026
-  // Valores UTA 2026: $68.625 (promedio, actualizar según mes)
-  // Tasa IGC: 0%, 5%, 10%, 17%, 25%, 35–40% según tramo UTA
-  // Límite anticipo obligatorio: >$1.500.000 (~22 UTA)
+  // ── Valor UTA (Unidad Tributaria Anual) en vivo, con fallback al último verificado (jun-2026) ──
+  // UTA = 12 × UTM. La escala del Impuesto Global Complementario (Art. 52 LIR) es la misma
+  // del Impuesto Único mensual de 2ª categoría (Art. 43 N°1), pero anualizada en UTA.
+  const UTA = i.uta_valor > 0 ? i.uta_valor : ((clLive as any)?.uta?.valor ?? 858072);
 
-  // 1. Calcular Renta Bruta Total
-  const renta_bruta = 
-    i.renta_sueldos_anuales + 
-    i.renta_honorarios + 
-    i.renta_capital_mobiliario + 
-    i.renta_arriendos;
+  // 1. Renta bruta total (todas las fuentes)
+  const renta_bruta =
+    Math.max(0, i.renta_sueldos_anuales || 0) +
+    Math.max(0, i.renta_honorarios || 0) +
+    Math.max(0, i.renta_capital_mobiliario || 0) +
+    Math.max(0, i.renta_arriendos || 0);
 
-  // 2. Calcular Renta Imponible (después descuentos obligatorios)
-  const renta_imponible_total = 
-    renta_bruta - 
-    i.descuento_afp - 
-    i.descuento_salud - 
-    i.gastos_deducibles;
+  // 2. Renta imponible (después de cotizaciones obligatorias y gastos deducibles)
+  const renta_imp_final = Math.max(
+    0,
+    renta_bruta -
+      Math.max(0, i.descuento_afp || 0) -
+      Math.max(0, i.descuento_salud || 0) -
+      Math.max(0, i.gastos_deducibles || 0)
+  );
 
-  // Asegurar que no sea negativa
-  const renta_imp_final = Math.max(0, renta_imponible_total);
+  // 3. Renta imponible expresada en UTA
+  const renta_en_uta = renta_imp_final / UTA;
 
-  // 3. Convertir a UTA
-  const uta_valor = i.uta_valor > 0 ? i.uta_valor : 68625; // Default UTA 2026
-  const renta_en_uta = renta_imp_final / uta_valor;
+  // 4. Escala IGC anual — Art. 52 LIR (tramos en UTA, factor marginal + rebaja en UTA).
+  //    Misma estructura que el Impuesto Único mensual (Art. 43 N°1) pero anualizada.
+  //    La rebaja en UTA da continuidad entre tramos: impuesto = base·factor − rebaja·UTA.
+  //    Tramos: 13,5 / 30 / 50 / 70 / 90 / 120 / 310 UTA. Tasa máxima 40%.
+  const EXENTO_UTA = CHILE_2026.segundaCategoriaExentoUtm; // 13,5 UTA exentas
+  const TRAMOS: { hastaUta: number; factor: number; rebajaUta: number; nombre: string }[] = [
+    { hastaUta: EXENTO_UTA, factor: 0,     rebajaUta: 0,     nombre: '0–13,5 UTA (exento)' },
+    { hastaUta: 30,         factor: 0.04,  rebajaUta: 0.54,  nombre: '13,5–30 UTA (4%)' },
+    { hastaUta: 50,         factor: 0.08,  rebajaUta: 1.74,  nombre: '30–50 UTA (8%)' },
+    { hastaUta: 70,         factor: 0.135, rebajaUta: 4.49,  nombre: '50–70 UTA (13,5%)' },
+    { hastaUta: 90,         factor: 0.23,  rebajaUta: 11.14, nombre: '70–90 UTA (23%)' },
+    { hastaUta: 120,        factor: 0.304, rebajaUta: 17.80, nombre: '90–120 UTA (30,4%)' },
+    { hastaUta: 310,        factor: 0.35,  rebajaUta: 23.32, nombre: '120–310 UTA (35%)' },
+    { hastaUta: Infinity,   factor: CHILE_2026.segundaCategoriaTasaMaxima, rebajaUta: 38.82, nombre: '>310 UTA (40%)' },
+  ];
 
-  // 4. Determinar tramo y tasa marginal según UTA
-  // Tramos 2026 (verificar en www.sii.cl Tablas IGC)
   let tasa_marginal = 0;
-  let tramo_impositivo = "0–13,5 UTA (exento)";
-
-  if (renta_en_uta > 120) {
-    tasa_marginal = 0.40; // Tramo máximo 35–40%
-    tramo_impositivo = ">120 UTA (35-40%)";
-  } else if (renta_en_uta > 80) {
-    tasa_marginal = 0.25; // 25%
-    tramo_impositivo = "80–120 UTA (25%)";
-  } else if (renta_en_uta > 60) {
-    tasa_marginal = 0.17; // 17%
-    tramo_impositivo = "60–80 UTA (17%)";
-  } else if (renta_en_uta > 30) {
-    tasa_marginal = 0.10; // 10%
-    tramo_impositivo = "30–60 UTA (10%)";
-  } else if (renta_en_uta > 13.5) {
-    tasa_marginal = 0.05; // 5%
-    tramo_impositivo = "13,5–30 UTA (5%)";
+  let rebajaUta = 0;
+  let tramo_impositivo = TRAMOS[0].nombre;
+  for (const tramo of TRAMOS) {
+    if (renta_en_uta <= tramo.hastaUta) {
+      tasa_marginal = tramo.factor;
+      rebajaUta = tramo.rebajaUta;
+      tramo_impositivo = tramo.nombre;
+      break;
+    }
   }
 
-  // 5. Calcular Impuesto Global Complementario (IGC)
-  // Fórmula simplificada: aplicar tasa marginal sobre renta imponible
-  // En realidad es progresivo por cada tramo (requeriría tabla detallada)
-  // Aproximación: tasa efectiva en el margen
-  let impuesto_igc = 0;
+  // 5. Impuesto Global Complementario (progresivo por la rebaja)
+  const impuesto_igc = Math.round(Math.max(0, renta_imp_final * tasa_marginal - rebajaUta * UTA));
 
-  if (renta_en_uta > 120) {
-    // Tramos progresivos acumulados (aproximación simplificada)
-    impuesto_igc = 
-      13.5 * uta_valor * 0 + // 0–13,5
-      (30 - 13.5) * uta_valor * 0.05 + // 13,5–30
-      (60 - 30) * uta_valor * 0.10 + // 30–60
-      (80 - 60) * uta_valor * 0.17 + // 60–80
-      (120 - 80) * uta_valor * 0.25 + // 80–120
-      (renta_en_uta - 120) * uta_valor * 0.40; // >120
-  } else if (renta_en_uta > 80) {
-    impuesto_igc =
-      13.5 * uta_valor * 0 +
-      (30 - 13.5) * uta_valor * 0.05 +
-      (60 - 30) * uta_valor * 0.10 +
-      (80 - 60) * uta_valor * 0.17 +
-      (renta_en_uta - 80) * uta_valor * 0.25;
-  } else if (renta_en_uta > 60) {
-    impuesto_igc =
-      13.5 * uta_valor * 0 +
-      (30 - 13.5) * uta_valor * 0.05 +
-      (60 - 30) * uta_valor * 0.10 +
-      (renta_en_uta - 60) * uta_valor * 0.17;
-  } else if (renta_en_uta > 30) {
-    impuesto_igc =
-      13.5 * uta_valor * 0 +
-      (30 - 13.5) * uta_valor * 0.05 +
-      (renta_en_uta - 30) * uta_valor * 0.10;
-  } else if (renta_en_uta > 13.5) {
-    impuesto_igc =
-      13.5 * uta_valor * 0 +
-      (renta_en_uta - 13.5) * uta_valor * 0.05;
-  }
+  // 6. Impuesto menos créditos y retenciones ya pagadas durante el año
+  const impuesto_menos_creditos =
+    impuesto_igc - Math.max(0, i.impuestos_pagados || 0) - Math.max(0, i.credito_unico_familiar || 0);
 
-  // Redondear a pesos
-  impuesto_igc = Math.round(impuesto_igc);
+  // 7. Resultado de la declaración (cargo o devolución)
+  const resultado_declaracion = Math.round(impuesto_menos_creditos);
+  let tipo_resultado = 'Cargo';
+  if (resultado_declaracion < 0) tipo_resultado = 'Devolución';
+  else if (resultado_declaracion === 0) tipo_resultado = 'Sin movimiento';
 
-  // 6. Calcular Impuesto menos créditos y retenciones
-  const impuesto_menos_creditos = 
-    impuesto_igc - 
-    i.impuestos_pagados - 
-    i.credito_unico_familiar;
-
-  // 7. Resultado declaración (devolución o cargo)
-  const resultado_declaracion = impuesto_menos_creditos;
-  let tipo_resultado = "Cargo";
-
-  if (resultado_declaracion < 0) {
-    tipo_resultado = "Devolución";
-  } else if (resultado_declaracion === 0) {
-    tipo_resultado = "Sin movimiento";
-  }
-
-  // 8. Anticipo obligatorio (si cargo >$1.500.000 ~22 UTA)
-  // Anticipo = 50% del cargo calculado
-  let anticipo_obligatorio = 0;
-  const limite_anticipo = 1500000; // $1.500.000
-
-  if (resultado_declaracion > limite_anticipo) {
-    anticipo_obligatorio = Math.round(resultado_declaracion * 0.5);
-  }
+  // 8. Anticipo obligatorio (PPM): si el cargo supera ~$1.500.000
+  const limite_anticipo = 1500000;
+  const anticipo_obligatorio =
+    resultado_declaracion > limite_anticipo ? Math.round(resultado_declaracion * 0.5) : 0;
 
   const fmtCL = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
-  const resultadoAbs = Math.abs(Math.round(resultado_declaracion));
+  const resultadoAbs = Math.abs(resultado_declaracion);
   const tasaMargPct = Math.round(tasa_marginal * 10000) / 100;
 
   let insightTone: 'good' | 'warn' | 'neutral';
@@ -174,9 +134,9 @@ export function compute(i: Inputs): Outputs {
     tasa_marginal: Math.round(tasa_marginal * 10000) / 100, // porcentaje
     impuesto_global_complementario: impuesto_igc,
     impuesto_menos_creditos: Math.round(impuesto_menos_creditos),
-    resultado_declaracion: Math.round(resultado_declaracion),
+    resultado_declaracion,
     tipo_resultado,
     anticipo_obligatorio,
-    _insight
+    _insight,
   };
 }
