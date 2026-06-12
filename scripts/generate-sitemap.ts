@@ -431,14 +431,19 @@ function saveState(used: Map<string, string>) {
 // --------------------------------------------------------------------------
 
 const calcs = readJSONs(CALCS_DIR);
-const calcsEn = readJSONs(CALCS_EN_DIR);
-const calcsPt = readJSONs(CALCS_PT_DIR);
-const calcsMx = readJSONs(CALCS_MX_DIR);
-const calcsEs = readJSONs(CALCS_ES_DIR);
-const calcsCo = readJSONs(CALCS_CO_DIR);
-const calcsCl = readJSONs(CALCS_CL_DIR);
-const calcsPe = readJSONs(CALCS_PE_DIR);
-const calcsEc = readJSONs(CALCS_EC_DIR);
+// Locales: leer path-aware. La URL es `/${locale}/${slug}` y las claves de
+// PRUNING_REDIRECTS para locales vienen prefijadas (`/en/...`). Sin pasar el
+// prefijo, una calc locale viva (ej. /en/cafeina-dosis-rendimiento) se excluía
+// del sitemap por colisionar su slug pelado con una redirección ES-root
+// (`/cafeina-dosis-rendimiento`). Mismo bug que el comentario de readJSONs.
+const calcsEn = readJSONs(CALCS_EN_DIR, 'en');
+const calcsPt = readJSONs(CALCS_PT_DIR, 'pt');
+const calcsMx = readJSONs(CALCS_MX_DIR, 'mx');
+const calcsEs = readJSONs(CALCS_ES_DIR, 'es');
+const calcsCo = readJSONs(CALCS_CO_DIR, 'co');
+const calcsCl = readJSONs(CALCS_CL_DIR, 'cl');
+const calcsPe = readJSONs(CALCS_PE_DIR, 'pe');
+const calcsEc = readJSONs(CALCS_EC_DIR, 'ec');
 const blogPosts = readJSONs(BLOG_DIR);
 const tablas = readJSONs(TABLAS_DIR);
 const comparaciones = readJSONs(COMPARACIONES_DIR, 'comparar');
