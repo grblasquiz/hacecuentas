@@ -45,6 +45,8 @@ fi
 if [ "$DOW" -eq 1 ] && [ "$DOM" -le 7 ]; then
   echo "→ ventana informe financiero (1er lunes)"; python3 scripts/generate-monthly-post.py || true
 fi
+# Finde largo: auto-gateado (el script solo escribe si hay uno en los próximos ~7 días)
+echo "→ check finde largo"; python3 scripts/generate-finde-largo-post.py || true
 
 # 2) ¿Hay notas de blog pendientes de publicar? (recién generadas o diferidas)
 if ! git status --porcelain -- src/content/blog/ | grep -q .; then
