@@ -1,0 +1,89 @@
+{
+  "_doc": "Motor Discover — calendario de disparadores noticiosos pegados al calendario de plata argentino. Discover NO depende de autoridad de dominio: premia frescura + interés + imagen. Cada trigger = una nota fechada HOY con funnel a la calc. type=auto: lo genera un script con data live (cero alucinación). type=editorial: lo escribe un humano/agente (YMYL, dato legal) — el due-checker avisa cuándo. checkSlug usa {mes}/{año} para detectar si la nota del período ya existe en src/content/blog/.",
+  "triggers": [
+    {
+      "id": "inflacion-mensual",
+      "label": "Inflación del mes (cuánto perdiste)",
+      "type": "auto",
+      "generator": "scripts/generate-inflacion-post.py",
+      "cadence": "mensual, ~día 15 (cuando INDEC publica el IPC del mes anterior)",
+      "cronHint": "0 12 14-17 * *",
+      "checkSlug": "inflacion-{mesAnterior}-{año}-cuanto-perdiste",
+      "targetCalcs": ["calculadora-inflacion-acumulada-periodo", "calculadora-plazo-fijo", "calculadora-retorno-real-inversion-descontando-inflacion"],
+      "notes": "El más data-backed y recurrente. Ya wireado en .github/workflows/inflacion-post.yml."
+    },
+    {
+      "id": "informe-financiero-mensual",
+      "label": "Informe financiero mensual (dólar/inflación/plazo fijo)",
+      "type": "auto",
+      "generator": "scripts/generate-monthly-post.py",
+      "cadence": "1er lunes de cada mes",
+      "cronHint": "0 11 1-7 * 1",
+      "checkSlug": "informe-financiero-argentina-{año}-{mes}",
+      "targetCalcs": ["calculadora-dolar-blue-vs-oficial-brecha", "calculadora-plazo-fijo"],
+      "notes": "Ya existe + wireado en monthly-post.yml."
+    },
+    {
+      "id": "aguinaldo-1",
+      "label": "Aguinaldo 1ra cuota (deadline 30-jun)",
+      "type": "editorial",
+      "cadence": "anual, ventana 1-18 junio",
+      "month": 6,
+      "windowDays": [1, 18],
+      "checkSlug": "aguinaldo-junio-{año}",
+      "targetCalcs": ["calculadora-aguinaldo-sac", "sueldo-en-mano-argentina"],
+      "notes": "HECHO 2026. Ángulo deadline + cuánto te toca."
+    },
+    {
+      "id": "aguinaldo-2",
+      "label": "Aguinaldo 2da cuota (deadline 18-dic)",
+      "type": "editorial",
+      "cadence": "anual, ventana 1-12 diciembre",
+      "month": 12,
+      "windowDays": [1, 12],
+      "checkSlug": "aguinaldo-diciembre-{año}",
+      "targetCalcs": ["calculadora-aguinaldo-sac", "sueldo-en-mano-argentina"],
+      "notes": "Replicar el patrón del de junio con fechas de diciembre."
+    },
+    {
+      "id": "monotributo-recat",
+      "label": "Recategorización monotributo (semestral, día 20)",
+      "type": "editorial",
+      "cadence": "ene y jul, ventana primeros 18 días",
+      "months": [1, 7],
+      "windowDays": [1, 18],
+      "checkSlug": "recategorizacion-monotributo-{mesEvento}-{año}",
+      "targetCalcs": ["calculadora-monotributo-categoria", "simulador-monotributo-neto"],
+      "notes": "Topes ARCA nuevos cada semestre. Verificar cifras contra fuente única monotributo-2026.ts."
+    },
+    {
+      "id": "ganancias-deadline",
+      "label": "Ganancias personas humanas (deadline declaración)",
+      "type": "editorial",
+      "cadence": "anual, ~mayo-junio",
+      "month": 6,
+      "windowDays": [1, 20],
+      "checkSlug": "ganancias-deadline-{año}",
+      "targetCalcs": ["calculadora-ganancias-segunda-categoria-renta-financiera-2026"],
+      "notes": "Ángulo: quién tiene que presentar y hasta cuándo."
+    },
+    {
+      "id": "smvm-paritarias",
+      "label": "Salario mínimo / paritarias nuevas",
+      "type": "editorial",
+      "cadence": "event-driven (cuando se anuncia)",
+      "checkSlug": "salario-minimo-{mes}-{año}",
+      "targetCalcs": ["sueldo-en-mano-argentina"],
+      "notes": "Disparar al anuncio. El monitor de noticias (arca-monitor / reddit-monitor) puede flagear."
+    },
+    {
+      "id": "feriados-finde-largo",
+      "label": "Fin de semana largo / feriados",
+      "type": "editorial",
+      "cadence": "antes de cada finde largo",
+      "checkSlug": "finde-largo-{mes}-{año}",
+      "targetCalcs": ["calculadora-feriados-argentina-cuantos-faltan", "calculadora-dias-habiles-entre-fechas"],
+      "notes": "Fuente única feriados-ar-2026.ts. Alto interés Discover (turismo/descanso)."
+    }
+  ]
+}

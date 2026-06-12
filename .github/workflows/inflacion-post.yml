@@ -1,0 +1,36 @@
+name: Discover — nota de inflación mensual
+
+# Motor Discover: cuando INDEC publica el IPC del mes anterior (~mediados de mes),
+# genera la nota "Inflación de {mes}: cuánto perdiste" con data LIVE y la pushea.
+# El push a main dispara deploy.yml → la nota queda live y fechada HOY (cebo Discover).
+# Idempotente: si el dato del mes no cambió, no commitea nada.
+
+on:
+  schedule:
+    # Días 14 a 17 de cada mes, 12:00 UTC (9am ART). INDEC suele publicar ~día 13-15.
+    - cron: '0 12 14-17 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate inflación post
+        run: python3 scripts/generate-inflacion-post.py
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content/blog/
+          if git diff --cached --quiet; then
+            echo "Sin cambios (la nota del mes ya estaba con el dato actual)"
+          else
+            git commit -m "content(blog): nota Discover inflación mensual [auto]"
+            git push
+          fi
