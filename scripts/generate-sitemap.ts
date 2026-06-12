@@ -509,6 +509,7 @@ const priorityUrls: Url[] = [
   prio('/calculadora-cientifica',            '0.9',  'weekly'),
   prio('/valores-bcra',                      '0.9',  'daily',  true),
   prio('/dolar-hoy',                         '0.95', 'daily',  true),
+  prio('/precio-nafta-hoy',                  '0.9',  'weekly', true),
   prio('/fixture-mundial-2026',              '0.95', 'daily',  true),
   // 13 guías pilares (estables)
   prio('/guia/finanzas-personales',          '0.9',  'weekly'),
