@@ -153,6 +153,35 @@ const metaTitle = `${term.term}: Qué es y Cómo Calcular`;
       <div class="definition-body" set:html={term.definition} />
     </section>
 
+    <!-- Reference Tables -->
+    {term.referenceTables && term.referenceTables.length > 0 && (
+      <section class="ref-tables-section" aria-label="Tablas de referencia">
+        {term.referenceTables.map((tbl: any) => (
+          <figure class="ref-table">
+            <figcaption class="ref-table-cap">
+              <strong>{tbl.title}</strong>
+              {tbl.caption && <span>{tbl.caption}</span>}
+            </figcaption>
+            <div class="ref-table-scroll">
+              <table>
+                <thead>
+                  <tr>{tbl.headers.map((h: string) => <th>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {tbl.rows.map((row: (string | number)[]) => (
+                    <tr>{row.map((cell, ci) => (
+                      ci === tbl.highlightCol ? <td class="is-highlight">{cell}</td> : <td>{cell}</td>
+                    ))}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {tbl.note && <p class="ref-table-note">{tbl.note}</p>}
+          </figure>
+        ))}
+      </section>
+    )}
+
     <!-- Formula -->
     {term.formula && (
       <section class="formula-section">
@@ -339,6 +368,70 @@ const metaTitle = `${term.term}: Qué es y Cómo Calcular`;
   .definition-body :global(strong) {
     font-weight: 600;
     color: var(--text);
+  }
+
+  /* Reference Tables */
+  .ref-tables-section {
+    display: grid;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .ref-table {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-card);
+  }
+  .ref-table-cap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .ref-table-cap strong {
+    font-size: 0.9375rem;
+    color: var(--text);
+  }
+  .ref-table-cap span {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+  }
+  .ref-table-scroll {
+    overflow-x: auto;
+  }
+  .ref-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .ref-table th,
+  .ref-table td {
+    padding: 0.55rem 0.85rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .ref-table th {
+    background: var(--bg-subtle, var(--accent-soft));
+    font-weight: 600;
+    color: var(--text);
+  }
+  .ref-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .ref-table td.is-highlight {
+    font-weight: 600;
+    color: var(--accent-strong);
+  }
+  .ref-table-note {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--text-subtle);
+    border-top: 1px solid var(--border);
   }
 
   /* Formula */

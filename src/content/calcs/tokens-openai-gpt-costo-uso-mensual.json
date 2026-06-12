@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-tokens-openai-gpt-costo-uso-mensual",
-  "lastReviewed": "2026-06-04",
+  "lastReviewed": "2026-06-12",
   "title": "Costo API OpenAI por tokens: calculadora + tabla 2026 | Hacé Cuentas",
   "h1": "Calculadora de costo API OpenAI por tokens (GPT-4o, o1, mini)",
   "description": "Calculá cuánto te cuesta la API de OpenAI por mes según modelo y volumen de tokens. Tabla de precios GPT-4o, GPT-4o mini, o1 y o1-mini 2026 incluida.",
@@ -10,6 +10,36 @@
   "formulaId": "tokens-openai-gpt-costo-uso-mensual",
   "answerSnippet": "El costo de la API de OpenAI se calcula multiplicando los millones de tokens de entrada por el precio de input y los de salida por el precio de output. En junio 2026: GPT-4o cuesta USD 2,50/MTok input y USD 10/MTok output; GPT-4o mini cuesta USD 0,15/MTok input y USD 0,60/MTok output — 16 veces más barato. Fórmula: costo = (tokensEntrada × precioInput + tokensSalida × precioOutput) / 1.000.000.",
   "intro": "Si estás integrando la API de OpenAI en un producto —un chatbot, un asistente de código, un sistema de análisis de documentos— el costo puede escalar rápido y de forma poco intuitiva. No pagás por «consultas» ni por «usuarios»: pagás por tokens, y la diferencia entre un diseño eficiente y uno descuidado puede ser de 10x en la factura mensual.\n\nUn token equivale aproximadamente a 4 caracteres del inglés, o algo menos en español (el castellano tokeniza un poco peor, así que tus prompts en español suelen consumir un 15-20% más de tokens que el equivalente en inglés). Y acá está el punto crítico que muchos developers descubren tarde: <strong>el output es entre 4 y 6 veces más caro que el input</strong>. GPT-4o cobra USD 2,50 por millón de tokens de entrada pero USD 10 por millón de tokens de salida. Si tu sistema genera respuestas largas, el modelo más «barato» puede terminar costando más que uno premium con respuestas cortas y precisas.\n\nEsta calculadora te permite estimar el costo mensual real según tu volumen de tokens de entrada y salida y el modelo que usás. También calcula el costo marginal por request, que es el número que necesitás para decidir si el modelo de negocio cierra.",
+  "referenceTables": [
+    {
+      "title": "Precios API OpenAI por millón de tokens (junio 2026)",
+      "caption": "Tarifas de input y output, y costo de un request típico de 500 tokens in + 300 out.",
+      "headers": ["Modelo", "Input USD/MTok", "Output USD/MTok", "Costo por 1.000 requests (500 in / 300 out)"],
+      "rows": [
+        ["GPT-4o mini", "0,15", "0,60", "USD 0,26"],
+        ["GPT-4o", "2,50", "10,00", "USD 4,25"],
+        ["o1-mini", "3,00", "12,00", "USD 5,10"],
+        ["o1", "15,00", "60,00", "USD 25,50"],
+        ["GPT-4 Turbo (legacy)", "10,00", "30,00", "USD 14,00"],
+        ["GPT-3.5 Turbo (legacy)", "0,50", "1,50", "USD 0,70"]
+      ],
+      "note": "Costo por 1.000 requests = (500×precio_input + 300×precio_output) ÷ 1.000. GPT-4o es ~16× más caro que GPT-4o mini en el mismo request."
+    },
+    {
+      "title": "Costo mensual estimado por volumen (ratio 2:1 input/output)",
+      "caption": "Comparativa GPT-4o mini vs GPT-4o según millones de tokens de entrada por mes.",
+      "headers": ["Tokens entrada (M)", "Tokens salida (M)", "GPT-4o mini", "GPT-4o"],
+      "rows": [
+        ["1", "0,5", "USD 0,45", "USD 7,50"],
+        ["5", "2,5", "USD 2,25", "USD 37,50"],
+        ["10", "5", "USD 4,50", "USD 75,00"],
+        ["50", "25", "USD 22,50", "USD 375,00"],
+        ["100", "50", "USD 45,00", "USD 750,00"],
+        ["500", "250", "USD 225,00", "USD 3.750,00"]
+      ],
+      "note": "Costo = tokens_input_M × precio_input + tokens_output_M × precio_output. Prompt caching (−50% input) y Batch API (−50% total) reducen estas cifras."
+    }
+  ],
   "keyTakeaway": "Ingresá tokens de entrada, tokens de salida y modelo, y obtené el costo mensual en USD al instante con la fórmula oficial de OpenAI.",
   "useCases": [
     "Un freelance que construye un chatbot de atención al cliente para un e-commerce: 500 interacciones diarias, 300 tokens de input y 400 de output promedio por turno, usando GPT-4o-mini. Resultado: aproximadamente USD 5,40/mes, un costo completamente viable para incluir en un retainer mensual.",

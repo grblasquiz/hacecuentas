@@ -6,9 +6,40 @@
   "audience": "global",
   "icon": "⚡",
   "formulaId": "carga-capacitor-constante-rc",
-  "lastReviewed": "2026-06-04",
+  "lastReviewed": "2026-06-12",
   "answerSnippet": "La constante de tiempo RC es τ = R × C (resistencia en ohms por capacitancia en farads), resultado en segundos. En t = τ, el capacitor llega al 63.2% del voltaje final durante la carga. A los 5τ alcanza el 99.3%, considerado 'cargado completo' en ingeniería. Carga: V(t) = V₀ × (1 − e^(−t/τ)). Descarga: V(t) = V₀ × e^(−t/τ).",
   "intro": "Cuando conectás una resistencia y un capacitor en serie a una fuente de tensión, la física no te da un resultado inmediato: el capacitor carga (o descarga) siguiendo una curva exponencial que depende exactamente de dos parámetros —el valor de R y el de C. Ese producto R × C es la constante de tiempo τ (tau), medida en segundos, y gobierna toda la dinámica del circuito.\n\nEl problema en la práctica es que los errores de diseño con circuitos RC son silenciosos. Un filtro pasa-bajos mal calculado no \"falla\" de forma obvia: simplemente no filtra bien. Un circuito de debounce con τ demasiado corta sigue rebotando; con τ demasiado larga, el sistema no responde. Un snubber sobredimensionado disipa potencia innecesaria. La fórmula es sencilla, pero los cálculos de conversión de unidades (µF, nF, pF; kΩ, MΩ) generan errores constantes.\n\nEsta calculadora toma R y C en cualquier unidad práctica, calcula τ de forma exacta y te da tres datos que en papel son un trabajo extra: el voltaje V(t) en un instante específico usando V(t) = V₀ × (1 − e^(−t/τ)) para carga y V(t) = V₀ × e^(−t/τ)) para descarga, más los tiempos característicos: 1τ (63.2%), 3τ (95.0%) y 5τ (99.3%). El punto del 5τ es la referencia estándar que usan los ingenieros para considerar un transitorio \"terminado\" en la mayoría de las aplicaciones.\n\nSi estás cursando Física II o Electrónica I en cualquier universidad (UTN, UBA, UNC, UADE), estos circuitos transitorios son tema de parcial con valores numéricos concretos. Si estás en el mundo maker, el diseño de filtros RC para PWM de Arduino o temporizadores con NE555 depende exactamente de este cálculo. Y si trabajás en electrónica industrial, los snubbers RC en variadores de frecuencia o fuentes conmutadas también siguen la misma lógica.\n\nIngresás R, C y voltaje de fuente, elegís el modo (carga o descarga) y el instante t que te interesa. El resultado incluye τ, los tres tiempos clave y el voltaje exacto en ese instante.",
+  "referenceTables": [
+    {
+      "title": "Tiempo (en múltiplos de τ) para llegar a un % del voltaje final — carga",
+      "caption": "Despejando t de V(t) = V₀·(1 − e^(−t/τ)).",
+      "headers": ["% del voltaje final", "t / τ", "Ejemplo con τ = 1 s", "Ejemplo con τ = 100 ms"],
+      "rows": [
+        ["50%", "0,693·τ", "0,693 s", "69,3 ms"],
+        ["63,2%", "1,000·τ", "1,000 s", "100,0 ms"],
+        ["80%", "1,609·τ", "1,609 s", "160,9 ms"],
+        ["90%", "2,303·τ", "2,303 s", "230,3 ms"],
+        ["95%", "2,996·τ", "2,996 s", "299,6 ms"],
+        ["99%", "4,605·τ", "4,605 s", "460,5 ms"],
+        ["99,3% (5τ)", "5,000·τ", "5,000 s", "500,0 ms"]
+      ],
+      "note": "Fórmula: t = −τ · ln(1 − %/100). En descarga, los mismos múltiplos dan el % restante: t = −τ · ln(%/100). 5τ se toma como 'cargado completo' (99,3%)."
+    },
+    {
+      "title": "Constante de tiempo τ = R × C para combinaciones típicas",
+      "headers": ["R", "C", "τ", "5τ (completo)"],
+      "rows": [
+        ["1 kΩ", "1 nF", "1 µs", "5 µs"],
+        ["10 kΩ", "100 nF", "1 ms", "5 ms"],
+        ["10 kΩ", "1 µF", "10 ms", "50 ms"],
+        ["100 kΩ", "10 µF", "1 s", "5 s"],
+        ["100 kΩ", "100 µF", "10 s", "50 s"],
+        ["1 MΩ", "1 µF", "1 s", "5 s"],
+        ["1 MΩ", "100 µF", "100 s", "500 s"]
+      ],
+      "note": "τ = R × C con R en ohms y C en farads, resultado en segundos. Reglas prácticas: kΩ × µF = ms; kΩ × nF = µs; MΩ × pF = µs."
+    }
+  ],
   "keyTakeaway": "**τ = R × C**. Carga: V(t) = V₀·(1 − e^(−t/τ)). Descarga: V(t) = V₀·e^(−t/τ). Regla: **5τ = completo**. Para 1 MΩ + 1 µF → τ = 1 s.",
   "useCases": [
     "Debounce para pulsador mecánico: con R=10 kΩ y C=100 nF obtenés τ=1 ms. A los 5 ms (5τ) el capacitor alcanzó el 99.3% y el microcontrolador ya lee el estado estable, eliminando los rebotes típicos de los contactos mecánicos.",

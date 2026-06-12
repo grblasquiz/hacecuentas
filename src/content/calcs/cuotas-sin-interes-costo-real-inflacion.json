@@ -17,6 +17,35 @@
   ],
   "intro": "En Argentina, la frase \"cuotas sin interés\" tiene trampa. El mecanismo es simple: el comercio o banco absorbe el costo de la financiación, pero en la mayoría de los casos ese costo ya está sumado al precio en cuotas. La diferencia con el precio de contado o transferencia puede ir del 10% al 30% según el plazo y el banco emisor. Eso no es sin interés: es interés disfrazado.\n\nPero acá entra el factor que pocos calculan: la inflación. Con una inflación mensual del 3%, una cuota fija de $100.000 que pagás en el mes 12 no vale $100.000 de hoy — vale alrededor de $70.138 en pesos constantes. Si estirás eso a 18 cuotas, el efecto licuador es todavía más fuerte. En escenarios de inflación alta, puede darse la paradoja de que pagar en cuotas te cueste menos en términos reales que pagar de contado, incluso cuando el precio en cuotas es nominalmente mayor.\n\nEsta calculadora hace ese cálculo completo: toma el precio de contado, el precio total en cuotas, la cantidad de cuotas y la inflación mensual estimada, y te devuelve el Costo Financiero Total (CFT) equivalente, la Tasa Nominal Anual implícita, el valor presente real de todas las cuotas descontadas por inflación, y una recomendación directa sobre qué conviene.\n\nLo que encontrás acá no está en el cartel de la tienda ni en el resumen de tarjeta: es el número que necesitás para decidir con información real. La normativa del BCRA (Comunicación A 7585 y concordantes) obliga a publicar el CFT en publicidades de financiación, pero en la práctica las promociones de cuotas sin interés suelen esquivar ese requisito. Este cálculo lo reconstruye para vos.",
   "keyTakeaway": "**Con inflación alta, las cuotas fijas pierden valor real** y pueden convenir aunque el precio sea mayor. Compará el CFT con la inflación.",
+  "referenceTables": [
+    {
+      "title": "Cuánto licúa la inflación las cuotas fijas (umbral de sobreprecio para que convengan)",
+      "caption": "Porcentaje del costo nominal que la inflación 'licúa' en valor presente, según cantidad de cuotas e inflación mensual. Si el sobreprecio de las cuotas frente al contado es MENOR a este número, las cuotas convienen aunque el cartel diga que son más caras.",
+      "headers": ["Cuotas", "Inflación 1%/mes", "Inflación 2%/mes", "Inflación 3%/mes", "Inflación 4%/mes"],
+      "rows": [
+        ["3 cuotas", "2,0%", "3,9%", "5,7%", "7,5%"],
+        ["6 cuotas", "3,4%", "6,6%", "9,7%", "12,6%"],
+        ["12 cuotas", "6,2%", "11,9%", "17,0%", "21,8%"],
+        ["18 cuotas", "8,9%", "16,7%", "23,6%", "29,7%"],
+        ["24 cuotas", "11,5%", "21,2%", "29,4%", "36,5%"]
+      ],
+      "note": "Calculado como 1 − [Σ 1/(1+i)^n para n=1..N] / N, con cuotas iguales. Ejemplo: 12 cuotas con inflación 3% mensual licúan 17% → si el precio en cuotas es <17% más caro que el contado, conviene financiar. Usá la inflación esperada promedio (REM del BCRA), no la del último mes, para plazos largos."
+    },
+    {
+      "title": "Regla de decisión rápida: contado vs. cuotas",
+      "caption": "Cuándo gana cada opción según el sobreprecio de las cuotas y el contexto inflacionario.",
+      "headers": ["Sobreprecio cuotas/contado", "Plazo", "Inflación mensual", "Conviene"],
+      "rows": [
+        ["0%", "Cualquiera", "> 0%", "Cuotas siempre (licuás gratis)"],
+        ["Menor al umbral de la tabla", "12 cuotas", "2-4%", "Cuotas (licuación gana)"],
+        ["Igual al umbral", "12 cuotas", "2-4%", "Empate aproximado"],
+        ["Mayor al umbral", "Cualquiera", "Baja (<1,5%)", "Contado (sobreprecio gana)"],
+        ["Alto (>25%)", "6 cuotas", "2%", "Contado (poco tiempo para licuar)"],
+        ["Cualquiera + plata invertida", "Cualquiera", "Si rinde > CFT", "Cuotas (liberás capital que rinde más)"]
+      ],
+      "note": "Compará el CFT implícito de las cuotas con: (1) la inflación mensual esperada y (2) tu mejor alternativa de inversión (plazo fijo UVA, FCI). Marco normativo: Ley 24.240 (Defensa del Consumidor) y Comunicación A 7585 del BCRA exigen informar CFT y precio contado/cuotas."
+    }
+  ],
   "useCases": [
     "Comprás una notebook a $800.000 de contado o 12 cuotas de $75.000 (total $900.000). La calc te muestra que el sobreprecio es 12,5% y con inflación del 3% mensual el valor real de las cuotas es $747.000: conviene pagar en cuotas.",
     "Una heladera cuesta $350.000 de contado o 6 cuotas de $63.000 (total $378.000). Con inflación del 2% mensual, el valor presente de las cuotas es $357.000: el contado sigue siendo mejor por $7.000.",
@@ -201,7 +230,7 @@
     }
   ],
   "relatedSlugs": [],
-  "lastReviewed": "2026-05-11",
+  "lastReviewed": "2026-06-12",
   "audience": "AR",
   "dataSource": [
     "inflacion:last_month",

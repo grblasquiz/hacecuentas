@@ -17,6 +17,36 @@
   ],
   "intro": "Si alguna vez miraste el precio de un CEDEAR en tu broker y te preguntaste si estaba caro o barato, necesitás hacer este cálculo. Los <strong>CEDEARs (Certificados de Depósito Argentinos)</strong> cotizan en pesos en BYMA y están respaldados por acciones extranjeras que se negocian en dólares en NYSE o NASDAQ. Eso crea una relación matemática exacta: el precio en pesos debería ser igual al precio de la acción en USD, dividido por el ratio de conversión, multiplicado por el tipo de cambio CCL.\n\nEl problema es que esa relación no siempre se cumple. Los CEDEARs pueden cotizar con prima (más caro que el teórico) o con descuento (más barato), y esa diferencia cambia a lo largo del día según la oferta y demanda local, los movimientos del dólar CCL y la liquidez de cada papel. En momentos de mucha demanda de cobertura cambiaria, es común ver primas de 2 a 5% en CEDEARs muy operados como los de Apple (AAPL), Tesla (TSLA) o el ETF SPY.\n\nEsta calculadora hace tres cosas que los inversores necesitan en el día a día: primero, calcula el <strong>precio teórico</strong> del CEDEAR a partir del precio de la acción en dólares, el ratio oficial y el CCL que vos ingresás. Segundo, te muestra la <strong>prima o descuento porcentual</strong> respecto al precio de mercado. Tercero, calcula el <strong>tipo de cambio implícito</strong> que está usando el mercado para valuar ese CEDEAR, que muchas veces difiere del CCL publicado y sirve para detectar si el papel está siendo usado como vehículo de dolarización.\n\nLos ratios de conversión son fijos y los publica BYMA: AAPL cotiza a ratio 20:1, TSLA a 30:1, AMZN a 72:1, GOOGL a 29:1, SPY a 10:1. No cambian salvo splits o ajustes corporativos. El CCL, en cambio, fluctúa todo el día y es el dato más sensible del cálculo.",
   "keyTakeaway": "**Precio teórico = (precio USD / ratio) × CCL**. Si el CEDEAR cotiza arriba del teórico: prima. Si cotiza abajo: descuento.",
+  "referenceTables": [
+    {
+      "title": "Precio teórico de CEDEARs populares (acción a precio de referencia, CCL $1.400)",
+      "caption": "Aplicación de la fórmula precio teórico = (precio USD / ratio) × CCL. El precio USD es de referencia y el ratio debe verificarse en BYMA antes de operar, porque cambia ante splits y ajustes corporativos.",
+      "headers": ["CEDEAR", "Ratio (CEDEAR:acción)", "Precio acción (USD ref.)", "Precio teórico (ARS, CCL $1.400)"],
+      "rows": [
+        ["AAPL (Apple)", "20:1", "USD 210", "$14.700"],
+        ["MSFT (Microsoft)", "10:1", "USD 420", "$58.800"],
+        ["GOOGL (Alphabet)", "29:1", "USD 170", "$8.207"],
+        ["AMZN (Amazon)", "72:1", "USD 195", "$3.792"],
+        ["TSLA (Tesla)", "30:1", "USD 180", "$8.400"],
+        ["SPY (ETF S&P 500)", "10:1", "USD 520", "$72.800"],
+        ["QQQ (ETF Nasdaq 100)", "10:1", "USD 480", "$67.200"]
+      ],
+      "note": "Los ratios los fija BYMA y son estables, pero se ajustan ante splits (ej. Apple pasó de 80:1 a 20:1 tras el split 4:1 de 2020). Verificá el ratio vigente en byma.com.ar o tu broker. El CCL fluctúa todo el día: el precio teórico es una foto del momento. Precios de acción ilustrativos, no cotizaciones en vivo."
+    },
+    {
+      "title": "Cómo leer prima vs. descuento del CEDEAR",
+      "caption": "Interpretación de la diferencia entre el precio de mercado del CEDEAR y su precio teórico.",
+      "headers": ["Situación", "Qué significa", "Acción típica"],
+      "rows": [
+        ["Mercado > teórico (prima)", "Demanda local de cobertura cambiaria; pagás CCL implícito más caro", "Esperar / no comprar para dolarizarse"],
+        ["Prima 0,5%-3%", "Rango normal por liquidez", "Operación habitual, sin alerta"],
+        ["Prima > 5%", "Tensión cambiaria puntual; suele corregirse por arbitraje en papeles líquidos", "Cautela; revisar contexto"],
+        ["Mercado < teórico (descuento)", "Ventas locales hacia pesos o baja demanda", "Potencial entrada / dolarización barata"],
+        ["Diferencia > 30%", "Probable error de dato (ratio o cotización mal cargados)", "Revisar inputs antes de operar"]
+      ],
+      "note": "El tipo de cambio implícito = (precio CEDEAR ARS × ratio) / precio acción USD. Comparalo con el CCL de referencia (GD30) y con el MEP para decidir el vehículo de dolarización más barato. Comisiones de broker + mercado suelen comerse arbitrajes menores al 2%."
+    }
+  ],
   "useCases": [
     "Analizás AAPL CEDEAR: la acción vale USD 210, ratio 20:1, CCL $1.400. Precio teórico = (210/20) × 1.400 = $14.700. Si el CEDEAR cotiza a $15.200, la prima es 3,4%. No conviene comprar ahora.",
     "Querés calcular el CCL implícito del SPY: el CEDEAR de SPY cotiza a $57.000 y la acción SPY vale USD 520. Tipo implícito = (57.000 × 10) / 520 = $1.096. El mercado está valuando el CCL más bajo que el oficial, señal de descuento.",
@@ -198,6 +228,6 @@
     }
   ],
   "relatedSlugs": [],
-  "lastReviewed": "2026-05-19",
+  "lastReviewed": "2026-06-12",
   "audience": "AR"
 }

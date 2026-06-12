@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-divisor-tension-formula",
-  "lastReviewed": "2026-06-04",
+  "lastReviewed": "2026-06-12",
   "title": "Divisor de Tensión — fórmula Vout = Vin × R2/(R1+R2) + tabla | Hacé Cuentas",
   "h1": "Calculadora de divisor de tensión: fórmula R1, R2 y Vout",
   "description": "Calculá Vout de un divisor de tensión con R1 y R2, o encontrá R1 para tu salida deseada. Fórmula Vout = Vin × R2 / (R1 + R2), corriente, potencia y valores comerciales E12.",
@@ -19,6 +19,24 @@
   ],
   "answerSnippet": "La fórmula del divisor de tensión es **Vout = Vin × R2 / (R1 + R2)**. Con Vin=5V, R1=1kΩ y R2=2kΩ: Vout = 5 × 2000 / (1000 + 2000) = **3.33 V**. La corriente circulante es I = Vin / (R1+R2) = 1.67 mA.",
   "intro": "Si alguna vez conectaste un sensor a un Arduino o intentaste bajar 12V a 5V sin quemar nada, ya necesitabas un divisor de tensión. Es el circuito más sencillo que existe: dos resistencias R1 y R2 en serie entre Vin y GND, y la salida Vout se mide en el nodo del medio. La fórmula es <strong>Vout = Vin × R2 / (R1 + R2)</strong>. Eso es todo.\n\nEl problema real no es la fórmula —es la ingeniería detrás: ¿qué valores de resistencias usar? ¿Cuánta corriente va a circular? ¿Va a aguantar la carga conectada? ¿Uso resistencias de 1% o de 5%? ¿Y qué pasa si la carga cambia?\n\nEsta calculadora resuelve dos problemas concretos. <strong>Modo 1:</strong> tenés R1 y R2 físicas en la mano y querés saber exactamente qué Vout vas a obtener, más la corriente que circula y la potencia disipada (útil para saber si necesitás resistencias de 1/4W o 1/2W). <strong>Modo 2:</strong> sabés qué voltaje de salida necesitás y tenés una resistencia R2 disponible —la calc te dice qué R1 poner, con el valor más cercano de la serie E12 (valores comerciales estándar).\n\nCasos cotidianos donde esto importa: bajar los 5V del TX de un Arduino al pin RX de un ESP32 que tolera máximo 3.3V, leer una batería de 12V o 24V con el ADC de un microcontrolador de 5V, o diseñar el pull-down de un sensor NTC. En todos esos casos, la diferencia entre elegir 10kΩ o 100kΩ cambia el consumo, el ruido y la velocidad de respuesta del circuito. La calculadora te muestra esos números para que decidas con datos, no a ojo.",
+  "referenceTables": [
+    {
+      "title": "Resistencia R1 para conversiones de voltaje comunes (R2 = 10 kΩ fija)",
+      "caption": "Valor comercial de R1 (serie E24) y el Vout real que se obtiene fijando R2 = 10 kΩ.",
+      "headers": ["Conversión", "R1 ideal", "R1 comercial (E24)", "Vout real"],
+      "rows": [
+        ["5 V → 3,3 V", "5,15 kΩ", "5,1 kΩ", "3,31 V"],
+        ["5 V → 2,5 V", "10,0 kΩ", "10 kΩ", "2,50 V"],
+        ["5 V → 1,8 V", "17,78 kΩ", "18 kΩ", "1,79 V"],
+        ["12 V → 5 V", "14,0 kΩ", "13 kΩ", "5,22 V"],
+        ["12 V → 3,3 V", "26,36 kΩ", "27 kΩ", "3,24 V"],
+        ["24 V → 5 V", "38,0 kΩ", "39 kΩ", "4,90 V"],
+        ["24 V → 3,3 V", "62,73 kΩ", "62 kΩ", "3,33 V"],
+        ["3,3 V → 1,8 V", "8,33 kΩ", "8,2 kΩ", "1,81 V"]
+      ],
+      "note": "R1 = R2 × (Vin − Vout) / Vout, con R2 = 10 kΩ. Vout real recalculado con el valor comercial: Vout = Vin × R2 / (R1 + R2). Para medición con ADC usá resistencias de 1% (serie E96) para minimizar el error."
+    }
+  ],
   "keyTakeaway": "**5V → 3.3V** con R2=10kΩ: R1 ≈ **4.7 kΩ** (comercial). **12V → 5V**: R1/R2 = 1.4 → R1=10k, R2=7.15k (comercial: 6.8k). Para sensores: R1+R2 ≥ 100kΩ.",
   "useCases": [
     "Arduino 5V → ESP32 3.3V (señal TX): con R1=1kΩ y R2=2kΩ obtenés Vout=3.33V, corriente 1.67mA, potencia total 8.3mW. Perfecto para señales unidireccionales a menos de 100kHz.",

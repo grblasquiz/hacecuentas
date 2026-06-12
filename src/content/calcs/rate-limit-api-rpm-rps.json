@@ -1,7 +1,7 @@
 {
   "slug": "calculadora-rate-limit-api-rpm-rps",
   "answerSnippet": "Cada vez que integrás una API —MercadoPago, OpenAI, Google Maps, Stripe, Twitter/X— te encontrás con un número y una unidad: 60 RPM, 10 RPS, 100 000 RPD. El problema es que los providers usan unidades distintas, tu backend habla en otra, y NGINX o AWS API Gateway piden configuración en una tercera.",
-  "lastReviewed": "2026-05-15",
+  "lastReviewed": "2026-06-12",
   "title": "Calculadora Rate limit API (RPM/RPS) 2026 | Hacé Cuentas",
   "h1": "Rate limit API (RPM/RPS)",
   "description": "Convertí RPM, RPS y RPD al instante. Calculá rate limits de APIs como MercadoPago, OpenAI o Google Maps y evitá errores 429.",
@@ -10,6 +10,23 @@
   "icon": "⏱️",
   "formulaId": "rate-limit-api-rpm-rps",
   "intro": "Cada vez que integrás una API —MercadoPago, OpenAI, Google Maps, Stripe, Twitter/X— te encontrás con un número y una unidad: 60 RPM, 10 RPS, 100 000 RPD. El problema es que los providers usan unidades distintas, tu backend habla en otra, y NGINX o AWS API Gateway piden configuración en una tercera. Convertir mentalmente 1 200 RPM a RPS mientras estás debugueando un 429 a las 2 de la mañana es exactamente el tipo de fricción que esta calculadora elimina.\n\nLa herramienta convierte entre las tres unidades estándar de rate limiting: <strong>RPS</strong> (Requests Per Second), <strong>RPM</strong> (Requests Per Minute) y <strong>RPD</strong> (Requests Per Day). La fórmula base es simple: <strong>RPS = RPM ÷ 60 = RPD ÷ 86 400</strong>. Pero tener el número exacto importa: si configurás NGINX con 8 r/s cuando tu plan permite 8,33 r/s, estás dejando el 4% de tu cuota sin usar y posiblemente generando rechazos innecesarios en picos de tráfico.\n\nEn Argentina, esto tiene relevancia práctica concreta: la API de MercadoPago tiene límites diferenciados entre ambiente productivo y sandbox, y superarlos genera bloqueos temporales que pueden afectar transacciones reales. Las APIs del BCRA (tipos de cambio) y de AFIP/ARCA (validación de CUIT, facturación electrónica) también tienen restricciones de tasa que muchos desarrolladores descubren recién cuando la app explota en producción.\n\nEsta calculadora te da los tres valores simultáneamente: ingresás cualquier unidad y obtenés las otras dos al instante, sin registro, sin conversiones manuales. Útil para diseñar sistemas de retry, dimensionar workers paralelos, comparar planes antes de contratar, y documentar límites en tu README o runbook de incidentes.",
+  "referenceTables": [
+    {
+      "title": "Conversión exacta entre RPS, RPM, RPH y RPD",
+      "caption": "Equivalencias para los valores de rate limit más frecuentes.",
+      "headers": ["RPM", "RPS", "RPH", "RPD"],
+      "rows": [
+        ["1", "0,02", "60", "1.440"],
+        ["10", "0,17", "600", "14.400"],
+        ["60", "1", "3.600", "86.400"],
+        ["100", "1,67", "6.000", "144.000"],
+        ["500", "8,33", "30.000", "720.000"],
+        ["1.000", "16,67", "60.000", "1.440.000"],
+        ["3.000", "50", "180.000", "4.320.000"]
+      ],
+      "note": "RPS = RPM ÷ 60. RPH = RPM × 60. RPD = RPM × 1.440. Cuidado: GitHub publica el límite en RPH (por hora), no RPM — dividir por 3.600 para pasar a RPS."
+    }
+  ],
   "keyTakeaway": "**RPS = RPM ÷ 60 = RPD ÷ 86 400** → 60 RPM equivale a 1 RPS y a 86 400 RPD; 1 000 RPM equivale a ~16,67 RPS y a 1 440 000 RPD.",
   "useCases": [
     "Integrás la API de facturación electrónica de ARCA (ex-AFIP) que permite 60 RPM en el servicio wsfe: convertís a 1 RPS y sabés que con un solo worker sincrónico en producción no vas a tener problemas, pero dos workers concurrentes ya rozan el límite.",
