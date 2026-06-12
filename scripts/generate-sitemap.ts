@@ -758,6 +758,7 @@ sitemaps.push({
     core('/datos-aguinaldo-2026',                '0.7',  'monthly'),
     core('/datos-salario-minimo-latam-2026',     '0.7',  'monthly'),
     core('/pt/dados-inss-irrf-2026',             '0.7',  'monthly'),
+    core('/pt/dados-ipca-brasil-historico',      '0.7',  'monthly'),
   ],
 });
 

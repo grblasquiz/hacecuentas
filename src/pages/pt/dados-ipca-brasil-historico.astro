@@ -1,0 +1,163 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { IPCA_BR, IPCA_BR_META } from '../../lib/data/ipca-br';
+
+// Página-dato citável: série histórica do IPCA (Brasil). Fonte única: src/lib/data/ipca-br.ts
+// (snapshot do BCB SGS 433). Padrão espelhado das páginas /datos-* AR: schema Dataset +
+// CC-BY 4.0 + bloco "Como citar" → quando um blog/veículo/IA cita a tabela, atribui com link.
+
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+function label(mm: string): string {
+  return `${MESES[parseInt(mm.slice(3, 5), 10) - 1]} ${mm.slice(6, 10)}`;
+}
+// Mostrar do mais recente para o mais antigo
+const filas = [...IPCA_BR].reverse();
+const PAGE_URL = 'https://hacecuentas.com/pt/dados-ipca-brasil-historico';
+const ULTIMA = IPCA_BR_META.atualizado;
+
+const title = `IPCA Brasil: série histórica mensal e acumulado ${new Date().getFullYear()} | Hacé Cuentas`;
+const description = `Tabela do IPCA (inflação oficial do Brasil) mês a mês: variação mensal, acumulado no ano (${IPCA_BR_META.acumuladoAno}%) e em 12 meses (${IPCA_BR_META.acumulado12m}%). Dados do IBGE/BCB. Uso livre com atribuição (CC-BY 4.0).`;
+
+const faq = [
+  { q: `Qual foi o IPCA mais recente?`,
+    a: `O IPCA de ${IPCA_BR_META.ultimoMes} foi de ${IPCA_BR_META.ultimoValor}%. No acumulado do ano são ${IPCA_BR_META.acumuladoAno}% e em 12 meses, ${IPCA_BR_META.acumulado12m}%.` },
+  { q: `O que é o IPCA?`,
+    a: `É o Índice Nacional de Preços ao Consumidor Amplo, calculado pelo IBGE. É o índice oficial de inflação do Brasil e a referência da meta de inflação do Banco Central.` },
+  { q: `Qual o IPCA acumulado em 12 meses?`,
+    a: `${IPCA_BR_META.acumulado12m}% (até ${IPCA_BR_META.ultimoMes}). O acumulado não se soma: multiplicam-se os fatores (1 + IPCA/100) de cada mês.` },
+  { q: `Onde o IPCA é usado?`,
+    a: `Reajuste de aluguéis e contratos, correção do Tesouro IPCA+, meta de inflação do BCB, e como referência para comparar o rendimento de investimentos (rendimento real = nominal menos IPCA).` },
+  { q: `De onde vêm estes dados?`,
+    a: `Do IPCA oficial do IBGE, disponível na série 433 do Sistema Gerenciador de Séries Temporais (SGS) do Banco Central do Brasil.` },
+  { q: `Posso usar esta tabela no meu site ou trabalho?`,
+    a: `Sim. Os dados são publicados sob licença Creative Commons CC-BY 4.0: reproduza livremente citando a fonte com link para hacecuentas.com. Veja o bloco "Como citar".` },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset',
+  '@id': `${PAGE_URL}#dataset`,
+  name: 'IPCA Brasil — série histórica mensal',
+  description: 'Variação mensal do IPCA (inflação oficial do Brasil), com acumulado no ano e em 12 meses. Fonte: IBGE / Banco Central do Brasil (SGS 433).',
+  url: PAGE_URL,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  isAccessibleForFree: true,
+  inLanguage: 'pt-BR',
+  dateModified: ULTIMA,
+  temporalCoverage: '2024/2026',
+  spatialCoverage: { '@type': 'Country', name: 'Brasil' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  sourceOrganization: { '@type': 'GovernmentOrganization', name: 'IBGE / Banco Central do Brasil', url: IPCA_BR_META.fonteUrl },
+  keywords: ['IPCA', 'inflação', 'Brasil', 'IBGE', 'índice de preços', 'inflação acumulada'],
+  variableMeasured: ['IPCA variação mensal (%)', 'IPCA acumulado no ano (%)', 'IPCA acumulado 12 meses (%)'],
+};
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'pt-BR', dateModified: ULTIMA, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
+    datasetSchema,
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+      { '@type': 'ListItem', position: 2, name: 'IPCA Brasil', item: PAGE_URL },
+    ] },
+    { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical="/pt/dados-ipca-brasil-historico" lang="pt" audience="BR" schema={schema}>
+  <Header slot="header" />
+  <main class="article-main">
+    <article class="datos-page">
+      <header>
+        <nav class="crumbs" aria-label="Trilha"><a href="/pt">Início</a> <span>›</span> <span>IPCA Brasil</span></nav>
+        <h1>IPCA Brasil: série histórica mensal e acumulado</h1>
+        <p class="lede">Variação mensal do <strong>IPCA</strong> (inflação oficial do Brasil, IBGE), com acumulado no ano e em 12 meses. Último dado: <strong>{IPCA_BR_META.ultimoMes}</strong>.</p>
+        <p class="updated">Última atualização: <time datetime={ULTIMA}>{ULTIMA}</time> · Licença <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso livre com atribuição)</p>
+      </header>
+
+      <section class="stats-callout" aria-label="Destaques">
+        <div class="stat"><span class="stat-num">{IPCA_BR_META.ultimoValor}%</span><span class="stat-label">IPCA do mês ({IPCA_BR_META.ultimoMes})</span></div>
+        <div class="stat"><span class="stat-num">{IPCA_BR_META.acumuladoAno}%</span><span class="stat-label">acumulado no ano</span></div>
+        <div class="stat"><span class="stat-num">{IPCA_BR_META.acumulado12m}%</span><span class="stat-label">acumulado 12 meses</span></div>
+      </section>
+
+      <section>
+        <h2>Tabela do IPCA mês a mês</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mês</th><th>IPCA mensal</th></tr></thead>
+            <tbody>
+              {filas.map((f) => (
+                <tr><td data-label="Mês">{label(f.mes)}</td><td data-label="IPCA">{f.ipca}%</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Variação mensal do IPCA (%). O acumulado multiplica os fatores (1 + IPCA/100), não soma os percentuais.</p>
+      </section>
+
+      <section>
+        <h2>Calcule com o IPCA</h2>
+        <ul class="calc-links">
+          <li><a href="/pt/tesouro-ipca-mais-juro-real-composto">Tesouro IPCA+ — juro real composto</a></li>
+          <li><a href="/pt/aluguel-reajuste-ipca-anual-contrato">Reajuste de aluguel pelo IPCA</a></li>
+          <li><a href="/pt/cdb-rendimento-liquido-ir-regressivo">CDB — rendimento líquido (IR regressivo)</a></li>
+          <li><a href="/pt/calculadora-rentabilidade-cdb-poupanca-tesouro">Poupança × CDB × Tesouro</a></li>
+        </ul>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Como citar esta tabela</h2>
+        <p>Usa estes dados numa matéria, trabalho, app ou site? A atribuição pedida é:</p>
+        <pre><code>Fonte: Hacé Cuentas — https://hacecuentas.com/pt/dados-ipca-brasil-historico
+Dados IBGE / BCB · Licença CC-BY 4.0</code></pre>
+      </section>
+
+      <section class="faq">
+        <h2>Perguntas frequentes</h2>
+        {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+      </section>
+
+      <section class="fuentes">
+        <h2>Fontes</h2>
+        <ul><li><a href={IPCA_BR_META.fonteUrl} rel="nofollow noopener" target="_blank">{IPCA_BR_META.fonte}</a></li></ul>
+      </section>
+    </article>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  .datos-page h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; }
+  .lede { font-size: 1.1rem; line-height: 1.6; color: var(--text); }
+  .updated { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .datos-page h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+  .stats-callout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1.75rem 0; }
+  .stat { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.9rem 1rem; text-align: center; }
+  .stat-num { display: block; font-size: 1.35rem; font-weight: 700; color: var(--accent); line-height: 1.2; }
+  .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  .datos-page table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  .datos-page th { background: var(--bg-soft); padding: 0.6rem 0.7rem; text-align: right; font-weight: 600; border-bottom: 2px solid var(--border); }
+  .datos-page th:first-child { text-align: left; }
+  .datos-page td { padding: 0.55rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border); }
+  .datos-page td:first-child { text-align: left; }
+  .datos-page tbody tr:nth-child(odd) { background: var(--bg-card); }
+  .note { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .calc-links li, .fuentes li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent); }
+  .cite-instructions { margin-top: 2.5rem; padding: 1.1rem; background: var(--bg-soft); border-radius: 0.6rem; }
+  .cite-instructions pre { background: var(--code-bg, #eaeef3); padding: 0.75rem; border-radius: 0.4rem; overflow-x: auto; font-size: 0.85rem; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; color: var(--text); }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>
