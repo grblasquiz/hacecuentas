@@ -1,0 +1,57 @@
+---
+export const prerender = true;
+import EconomiaLanding from '../components/EconomiaLanding.astro';
+import data from '../data/live/peru.json';
+
+const d = data as any;
+const usdpen = d.usdpen?.valor ?? null;
+const fmtPEN = (n: number, dec = 2) => 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+const indicadores = [
+  { key: 'usd', liveKey: 'PEN', label: 'Dólar hoy', valor: usdpen, decimals: 3, prefix: 'S/ ', sub: 'USD → PEN (mercado)' },
+];
+
+const tabla = usdpen ? {
+  title: 'Dólar a soles hoy',
+  note: 'Tipo de cambio de mercado. Para trámites tributarios, la SUNAT publica su propio tipo de cambio (compra/venta) cada día.',
+  headers: ['Dólares (USD)', 'Soles (PEN)'],
+  rows: [1, 5, 10, 20, 50, 100, 500].map((u) => ['US$ ' + u, fmtPEN(Math.round(u * usdpen * 100) / 100)]),
+} : undefined;
+
+const faq = [
+  { q: '¿A cuánto está el dólar hoy en Perú?', a: usdpen ? `El dólar está hoy en ${fmtPEN(usdpen)} (soles por dólar), tipo de cambio de mercado. El recuadro se actualiza solo.` : 'El tipo de cambio del dólar varía durante el día según el mercado.' },
+  { q: '¿Es el mismo tipo de cambio que el de la SUNAT?', a: 'No necesariamente. La SUNAT publica un tipo de cambio oficial (compra y venta) cada día hábil que se usa para operaciones tributarias y contables. El valor de esta página es el de mercado, que se mueve durante el día y suele estar muy cerca del de la SUNAT.' },
+  { q: '¿Cuánto son 100 dólares en soles hoy?', a: usdpen ? `Hoy 100 dólares equivalen a aproximadamente ${fmtPEN(Math.round(100 * usdpen * 100) / 100)}. En la tabla de arriba ves otros montos.` : 'Multiplicá los dólares por el tipo de cambio del día.' },
+  { q: '¿Cuál es la diferencia entre tipo de cambio compra y venta?', a: 'El de compra es a cuánto te compran tus dólares (más bajo) y el de venta a cuánto te los venden (más alto). La diferencia es la ganancia de la casa de cambio o banco. Esta página muestra una referencia de mercado entre ambos.' },
+  { q: '¿Por qué sube o baja el dólar en Perú?', a: 'El sol-dólar se mueve por la oferta y demanda de divisas, el precio de los metales (cobre, oro), las tasas de interés, las intervenciones del BCRP y factores externos como las decisiones de la Reserva Federal de Estados Unidos.' },
+  { q: '¿De dónde sale este valor?', a: 'De open.er-api.com, un servicio gratuito de tipos de cambio de mercado. Al abrir la página se trae la cotización más reciente disponible.' },
+  { q: '¿Cada cuánto se actualiza?', a: 'Al cargar la página se consulta la cotización del momento y se refresca de forma automática cada pocos minutos.' },
+];
+
+const related = [
+  { href: '/cambio-de-monedas', label: '🔄 Conversor de monedas' },
+  { href: '/pe/calculadora-sueldo-neto-peru', label: '💼 Calculadora de sueldo neto' },
+  { href: '/pe/calculadora-igv-peru', label: '🧾 Calculadora de IGV' },
+  { href: '/pe', label: '🇵🇪 Más calculadoras para Perú' },
+];
+
+const title = 'Dólar hoy en Perú: tipo de cambio a soles EN VIVO | Hacé Cuentas';
+const description = `Dólar hoy en Perú: ${usdpen ? fmtPEN(usdpen) : ''} soles por dólar (tipo de cambio de mercado). Tabla de conversión de dólares a soles. Se actualiza solo.`;
+---
+<EconomiaLanding
+  pais="Perú"
+  audience="PE"
+  slug="dolar-hoy-peru"
+  locale="es-PE"
+  h1="Dólar hoy en Perú 🇵🇪"
+  lede="El <strong>tipo de cambio del dólar a soles</strong> en Perú, en vivo, con tabla de conversión."
+  title={title}
+  description={description}
+  fuente={{ nombre: 'open.er-api.com (mercado USD/PEN)', url: 'https://open.er-api.com' }}
+  updatedISO={d._meta?.fetchedAt ?? null}
+  indicadores={indicadores}
+  live={{ type: 'erapi', url: 'https://open.er-api.com/v6/latest/USD' }}
+  tabla={tabla}
+  faq={faq}
+  related={related}
+/>

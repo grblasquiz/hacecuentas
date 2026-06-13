@@ -509,6 +509,10 @@ const priorityUrls: Url[] = [
   prio('/calculadora-cientifica',            '0.9',  'weekly'),
   prio('/valores-bcra',                      '0.9',  'daily',  true),
   prio('/dolar-hoy',                         '0.95', 'daily',  true),
+  prio('/dolar-hoy-chile',                   '0.9',  'daily',  true),
+  prio('/dolar-hoy-colombia',                '0.9',  'daily',  true),
+  prio('/dolar-hoy-mexico',                  '0.9',  'daily',  true),
+  prio('/dolar-hoy-peru',                    '0.9',  'daily',  true),
   prio('/precio-nafta-hoy',                  '0.9',  'weekly', true),
   prio('/fixture-mundial-2026',              '0.95', 'daily',  true),
   // Landings de feriados LATAM 2026 (evergreen del año, alta intención)
@@ -778,6 +782,10 @@ sitemaps.push({
     core('/feriados-chile-2026',                 '0.8',  'weekly'),
     core('/feriados-peru-2026',                  '0.8',  'weekly'),
     core('/feriados-ecuador-2026',               '0.8',  'weekly'),
+    core('/dolar-hoy-chile',                     '0.85', 'daily',   true),
+    core('/dolar-hoy-colombia',                  '0.85', 'daily',   true),
+    core('/dolar-hoy-mexico',                    '0.85', 'daily',   true),
+    core('/dolar-hoy-peru',                      '0.85', 'daily',   true),
   ],
 });
 

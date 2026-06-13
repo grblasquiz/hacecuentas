@@ -1,0 +1,57 @@
+---
+export const prerender = true;
+import EconomiaLanding from '../components/EconomiaLanding.astro';
+import data from '../data/live/mexico.json';
+
+const d = data as any;
+const usdmxn = d.usdmxn?.valor ?? null;
+const fmtMX = (n: number, dec = 2) => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+const indicadores = [
+  { key: 'usd', liveKey: 'MXN', label: 'Dólar hoy', valor: usdmxn, decimals: 2, prefix: '$', suffix: ' MXN', sub: 'USD → MXN (interbancario)' },
+];
+
+const tabla = usdmxn ? {
+  title: 'Dólar a pesos mexicanos hoy',
+  note: 'Tipo de cambio interbancario (mercado). Para trámites fiscales se usa el FIX que publica el Banco de México.',
+  headers: ['Dólares (USD)', 'Pesos mexicanos (MXN)'],
+  rows: [1, 5, 10, 20, 50, 100, 500].map((u) => ['US$ ' + u, fmtMX(Math.round(u * usdmxn * 100) / 100)]),
+} : undefined;
+
+const faq = [
+  { q: '¿A cuánto está el dólar hoy en México?', a: usdmxn ? `El dólar está hoy en ${fmtMX(usdmxn)} (pesos por dólar), tipo de cambio interbancario de mercado. El recuadro se actualiza solo.` : 'El tipo de cambio del dólar varía durante el día según el mercado.' },
+  { q: '¿Es el mismo tipo de cambio que el FIX de Banxico?', a: 'No exactamente. El FIX es el tipo de cambio que publica el Banco de México una vez al día y se usa para obligaciones fiscales y contratos. El valor de esta página es el interbancario de mercado, que se mueve durante el día y suele estar muy cerca del FIX.' },
+  { q: '¿Cuánto son 100 dólares en pesos hoy?', a: usdmxn ? `Hoy 100 dólares equivalen a aproximadamente ${fmtMX(Math.round(100 * usdmxn * 100) / 100)}. En la tabla de arriba ves otros montos.` : 'Multiplicá los dólares por el tipo de cambio del día.' },
+  { q: '¿Por qué cambia el tipo de cambio?', a: 'El peso-dólar se mueve por la oferta y demanda en el mercado cambiario, las tasas de interés, el precio del petróleo, las remesas y las decisiones de Banxico y la Reserva Federal de Estados Unidos.' },
+  { q: '¿Conviene comprar dólares en el banco o en casa de cambio?', a: 'Los bancos y casas de cambio aplican un diferencial (spread) sobre el interbancario: te venden más caro y te compran más barato. Comparar el spread de cada lugar contra el valor de mercado de esta página te ayuda a no pagar de más.' },
+  { q: '¿De dónde sale este valor?', a: 'De open.er-api.com, un servicio gratuito de tipos de cambio de mercado. Al abrir la página se trae la cotización más reciente disponible.' },
+  { q: '¿Cada cuánto se actualiza?', a: 'Al cargar la página se consulta la cotización del momento y se refresca de forma automática cada pocos minutos.' },
+];
+
+const related = [
+  { href: '/mx/calculadora-peso-dolar-tipo-cambio-mexico', label: '💵 Conversor peso ⇄ dólar' },
+  { href: '/cambio-de-monedas', label: '🔄 Conversor de monedas' },
+  { href: '/mx/calculadora-aguinaldo-mexico-2026', label: '🎁 Calculadora de aguinaldo 2026' },
+  { href: '/mx', label: '🇲🇽 Más calculadoras para México' },
+];
+
+const title = 'Dólar hoy en México: tipo de cambio EN VIVO | Hacé Cuentas';
+const description = `Dólar hoy en México: ${usdmxn ? fmtMX(usdmxn) : ''} pesos por dólar (tipo de cambio interbancario). Tabla de conversión de dólares a pesos. Se actualiza solo.`;
+---
+<EconomiaLanding
+  pais="México"
+  audience="MX"
+  slug="dolar-hoy-mexico"
+  locale="es-MX"
+  h1="Dólar hoy en México 🇲🇽"
+  lede="El <strong>tipo de cambio del dólar</strong> en México, en vivo, con tabla de conversión de dólares a pesos."
+  title={title}
+  description={description}
+  fuente={{ nombre: 'open.er-api.com (mercado USD/MXN)', url: 'https://open.er-api.com' }}
+  updatedISO={d._meta?.fetchedAt ?? null}
+  indicadores={indicadores}
+  live={{ type: 'erapi', url: 'https://open.er-api.com/v6/latest/USD' }}
+  tabla={tabla}
+  faq={faq}
+  related={related}
+/>

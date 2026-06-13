@@ -1,0 +1,63 @@
+---
+export const prerender = true;
+import EconomiaLanding from '../components/EconomiaLanding.astro';
+import data from '../data/live/chile.json';
+
+const d = data as any;
+const fmtCL = (n: number, dec = 0) => '$' + n.toLocaleString('es-CL', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const dolar = d.dolar?.valor ?? null;
+const uf = d.uf?.valor ?? null;
+const utm = d.utm?.valor ?? null;
+const euro = d.euro?.valor ?? null;
+
+const indicadores = [
+  { key: 'dolar', liveKey: 'dolar', label: 'Dólar observado', valor: dolar, decimals: 0, prefix: '$', sub: 'USD → CLP' },
+  { key: 'uf', liveKey: 'uf', label: 'UF', valor: uf, decimals: 2, prefix: '$', sub: 'unidad de fomento' },
+  { key: 'utm', liveKey: 'utm', label: 'UTM', valor: utm, decimals: 0, prefix: '$', sub: 'unidad tributaria mensual' },
+  { key: 'euro', liveKey: 'euro', label: 'Euro', valor: euro, decimals: 0, prefix: '$', sub: 'EUR → CLP' },
+];
+
+const tabla = dolar ? {
+  title: 'Dólar a pesos chilenos hoy (referencia)',
+  note: 'Valores aproximados según el dólar observado. El recuadro de arriba se actualiza en vivo.',
+  headers: ['Dólares (USD)', 'Pesos chilenos (CLP)'],
+  rows: [1, 5, 10, 20, 50, 100, 500].map((u) => ['US$ ' + u, fmtCL(Math.round(u * dolar))]),
+} : undefined;
+
+const faq = [
+  { q: '¿A cuánto está el dólar hoy en Chile?', a: dolar ? `El dólar observado hoy está en ${fmtCL(dolar)} (CLP por USD). El valor del recuadro se actualiza solo desde el Banco Central vía mindicador.cl.` : 'El dólar observado lo publica el Banco Central de Chile cada día hábil; arriba ves el valor más reciente.' },
+  { q: '¿Cuánto vale la UF hoy?', a: uf ? `La UF (unidad de fomento) hoy vale ${fmtCL(uf, 2)}. La UF se reajusta a diario según el IPC y se usa en créditos hipotecarios, arriendos y contratos.` : 'La UF se reajusta diariamente según el IPC.' },
+  { q: '¿Cuánto es la UTM este mes?', a: utm ? `La UTM (unidad tributaria mensual) de este mes es ${fmtCL(utm)}. Se usa para multas, impuestos y tramos del impuesto a la renta.` : 'La UTM se fija cada mes según el IPC.' },
+  { q: '¿Qué diferencia hay entre dólar observado y dólar de mercado?', a: 'El dólar observado es el promedio de las transacciones del día hábil anterior que publica el Banco Central; es la referencia oficial. El dólar de mercado (lo que cotiza en el momento) puede variar minuto a minuto.' },
+  { q: '¿Para qué se usa la UF en Chile?', a: 'La UF es una unidad reajustable por inflación. Se usa para precios de viviendas, créditos hipotecarios, dividendos, arriendos y multas, de modo que el valor se mantenga estable en términos reales.' },
+  { q: '¿De dónde salen estos valores?', a: 'De mindicador.cl, que toma los datos del Banco Central de Chile y del SII. Al abrir la página se traen los valores más recientes.' },
+  { q: '¿Cada cuánto se actualiza esta página?', a: 'Al cargar la página se consultan los valores del momento y luego se refrescan automáticamente cada pocos minutos. Además guardamos un respaldo que se renueva varias veces al día.' },
+];
+
+const related = [
+  { href: '/cl/calculadora-uf-uta-utm-chile-conversion-pesos-2026', label: '🔄 Convertir UF, UTM y UTA a pesos' },
+  { href: '/cl/calculadora-tipo-cambio-dolar-peso-chile-clp-banco-central', label: '💵 Conversor dólar ⇄ peso chileno' },
+  { href: '/cl/calculadora-credito-hipotecario-chile-uf-cmf-2026', label: '🏠 Crédito hipotecario en UF' },
+  { href: '/cl', label: '🇨🇱 Más calculadoras para Chile' },
+];
+
+const title = 'Dólar, UF y UTM hoy en Chile EN VIVO | Hacé Cuentas';
+const description = `Valores de hoy en Chile, en vivo: dólar observado ${dolar ? fmtCL(dolar) : ''}, UF ${uf ? fmtCL(uf, 2) : ''} y UTM. Se actualiza solo desde el Banco Central. Tabla de conversión dólar a pesos.`;
+---
+<EconomiaLanding
+  pais="Chile"
+  audience="CL"
+  slug="dolar-hoy-chile"
+  locale="es-CL"
+  h1="Dólar, UF y UTM hoy en Chile 🇨🇱"
+  lede="Valores del <strong>dólar observado, la UF y la UTM</strong>, actualizados en vivo desde el Banco Central de Chile."
+  title={title}
+  description={description}
+  fuente={{ nombre: 'mindicador.cl (Banco Central / SII)', url: 'https://mindicador.cl' }}
+  updatedISO={d._meta?.fetchedAt ?? null}
+  indicadores={indicadores}
+  live={{ type: 'mindicador', url: 'https://mindicador.cl/api' }}
+  tabla={tabla}
+  faq={faq}
+  related={related}
+/>

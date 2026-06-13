@@ -1,0 +1,172 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+
+// Landing de economía "en vivo" por país (réplica del patrón AR /dolar-hoy):
+// snapshot server-rendered (crawleable) + refresh client-side desde una fuente
+// CORS-open. Soporta 3 formas de API: mindicador.cl, Socrata (datos.gov.co),
+// open.er-api.com. Configurable por país vía props.
+
+export interface Indicador {
+  key: string;        // id interno del card (para el DOM)
+  liveKey: string;    // clave para extraer el valor nuevo de la API en vivo
+  label: string;
+  valor: number | null;
+  decimals: number;
+  prefix?: string;    // '$' / 'S/ '
+  suffix?: string;    // ' CLP'
+  sub?: string;       // subtítulo (p. ej. "observado", "venta")
+}
+export interface LiveCfg { type: 'mindicador' | 'socrata' | 'erapi'; url: string }
+
+interface Props {
+  pais: string;
+  audience: string;
+  slug: string;
+  locale: string;          // 'es-CL' / 'es-CO' / 'es-MX' / 'es-PE'
+  h1: string;
+  lede: string;
+  title: string;
+  description: string;
+  fuente: { nombre: string; url: string };
+  updatedISO: string | null;
+  indicadores: Indicador[];
+  live: LiveCfg;
+  faq: { q: string; a: string }[];
+  related: { href: string; label: string }[];
+  tabla?: { title: string; note?: string; headers: string[]; rows: string[][] };
+}
+const { pais, audience, slug, locale, h1, lede, title, description, fuente, updatedISO, indicadores, live, faq, related, tabla } = Astro.props as Props;
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/${slug}`;
+const fmt = (v: number | null | undefined, dec: number, prefix = '', suffix = '') =>
+  v == null ? '—' : prefix + v.toLocaleString(locale, { minimumFractionDigits: dec, maximumFractionDigits: dec }) + suffix;
+const updated = updatedISO
+  ? new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(updatedISO))
+  : 'hoy';
+
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: h1.replace(/[💵🇨🇱🇨🇴🇲🇽🇵🇪—].*/u, '').trim() || title, item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+
+// Config para el script de refresco (solo metadatos serializables).
+const liveConfig = {
+  type: live.type, url: live.url, locale,
+  cards: indicadores.map((i) => ({ key: i.key, liveKey: i.liveKey, decimals: i.decimals, prefix: i.prefix || '', suffix: i.suffix || '' })),
+};
+---
+
+<Layout title={title} description={description} canonical={`/${slug}`} schema={schema} audience={audience}>
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/">Inicio</a> › <span>{pais}</span></nav>
+    <h1 set:html={h1} />
+    <p class="lede" set:html={lede} />
+    <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Fuente: <a href={fuente.url} rel="noopener" target="_blank">{fuente.nombre}</a></p>
+
+    <div class="cards" data-cards>
+      {indicadores.map((i) => (
+        <div class="card" data-card={i.key}>
+          <div class="card-label">{i.label}</div>
+          <div class="card-venta" data-venta>{fmt(i.valor, i.decimals, i.prefix, i.suffix)}</div>
+          {i.sub && <div class="card-meta"><span>{i.sub}</span></div>}
+        </div>
+      ))}
+    </div>
+
+    {tabla && (
+      <section class="ref-tabla">
+        <h2>{tabla.title}</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>{tabla.headers.map((h) => (<th>{h}</th>))}</tr></thead>
+            <tbody>{tabla.rows.map((row) => (<tr>{row.map((cell) => (<td>{cell}</td>))}</tr>))}</tbody>
+          </table>
+        </div>
+        {tabla.note && <p class="note">{tabla.note}</p>}
+      </section>
+    )}
+
+    <section class="links">
+      <h2>Calculá con estos valores</h2>
+      <ul>{related.map((r) => (<li><a href={r.href}>{r.label}</a></li>))}</ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    if (!cfg.url || !cfg.cards) return;
+    const fmt = (v, dec, prefix, suffix) =>
+      v == null || isNaN(v) ? null : prefix + Number(v).toLocaleString(cfg.locale, { minimumFractionDigits: dec, maximumFractionDigits: dec }) + suffix;
+    function extract(type, data, liveKey) {
+      if (type === 'mindicador') return data && data[liveKey] ? data[liveKey].valor : null;
+      if (type === 'socrata') { const row = Array.isArray(data) ? data[0] : null; return row ? Number(row[liveKey]) : null; }
+      if (type === 'erapi') return data && data.rates ? data.rates[liveKey] : null;
+      return null;
+    }
+    async function refresh() {
+      try {
+        const res = await fetch(cfg.url, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        let any = false;
+        cfg.cards.forEach((c) => {
+          const v = extract(cfg.type, data, c.liveKey);
+          const el = document.querySelector('.card[data-card="' + c.key + '"] [data-venta]');
+          const s = fmt(v, c.decimals, c.prefix, c.suffix);
+          if (el && s) { el.textContent = s; any = true; }
+        });
+        if (any) {
+          const u = document.querySelector('[data-live-updated]');
+          if (u) u.textContent = new Intl.DateTimeFormat(cfg.locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+        }
+      } catch {}
+    }
+    refresh();
+    setInterval(refresh, 180000);
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 820px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); font-weight: 800; margin: 0 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.4rem; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.5rem; }
+  .updated a { color: var(--accent); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+  .card-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-subtle); font-weight: 700; }
+  .card-venta { font-size: 1.6rem; font-weight: 800; color: var(--text); margin: 0.25rem 0; font-variant-numeric: tabular-nums; }
+  .card-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem; font-size: 0.78rem; color: var(--text-muted); }
+  .ref-tabla { margin-top: 2.5rem; }
+  .ref-tabla h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem; }
+  .table-wrap { overflow-x: auto; }
+  .ref-tabla table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  .ref-tabla th, .ref-tabla td { padding: 0.55rem 0.7rem; text-align: left; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .ref-tabla th { background: var(--bg-soft, var(--bg-card)); font-weight: 600; }
+  .ref-tabla .note { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links h2, .faq h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem; }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

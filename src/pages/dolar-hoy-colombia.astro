@@ -1,0 +1,58 @@
+---
+export const prerender = true;
+import EconomiaLanding from '../components/EconomiaLanding.astro';
+import data from '../data/live/colombia.json';
+
+const d = data as any;
+const trm = d.trm?.valor ?? null;
+const fmtCO = (n: number, dec = 2) => '$' + n.toLocaleString('es-CO', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const vigencia = d.trm?.vigenciaDesde ? String(d.trm.vigenciaDesde).slice(0, 10) : null;
+
+const indicadores = [
+  { key: 'trm', liveKey: 'valor', label: 'Dólar TRM hoy', valor: trm, decimals: 2, prefix: '$', sub: vigencia ? `vigente desde ${vigencia}` : 'tasa oficial' },
+];
+
+const tabla = trm ? {
+  title: 'Dólar (TRM) a pesos colombianos hoy',
+  note: 'Calculado con la TRM vigente. La TRM es una sola por día hábil (no cambia intradía).',
+  headers: ['Dólares (USD)', 'Pesos colombianos (COP)'],
+  rows: [1, 5, 10, 20, 50, 100, 500].map((u) => ['US$ ' + u, fmtCO(Math.round(u * trm))]),
+} : undefined;
+
+const faq = [
+  { q: '¿A cuánto está el dólar hoy en Colombia?', a: trm ? `La TRM (tasa representativa del mercado) de hoy es ${fmtCO(trm)} por dólar. Es la tasa oficial que publica la Superintendencia Financiera.` : 'La TRM es la tasa oficial del dólar en Colombia y se publica cada día hábil.' },
+  { q: '¿Qué es la TRM?', a: 'La TRM (Tasa Representativa del Mercado) es el promedio de las operaciones de compra y venta de dólares del día hábil anterior. Es la referencia oficial para contratos, impuestos y obligaciones en dólares.' },
+  { q: '¿La TRM cambia durante el día?', a: 'No. La TRM es un único valor por día hábil que rige todo el día. Lo que sí varía minuto a minuto es el dólar de mercado (lo que cobran casas de cambio y plataformas), que suele estar cerca de la TRM.' },
+  { q: '¿Dónde se usa la TRM?', a: 'Se usa para liquidar impuestos, declaraciones de renta, contratos en moneda extranjera, remesas y cualquier obligación pactada en dólares.' },
+  { q: '¿Cuánto son 100 dólares en pesos hoy?', a: trm ? `Con la TRM de hoy, 100 dólares equivalen a aproximadamente ${fmtCO(Math.round(100 * trm))}. Mirá la tabla de arriba para otros montos.` : 'Multiplicá el monto en dólares por la TRM del día para obtener el valor en pesos.' },
+  { q: '¿De dónde salen estos datos?', a: 'De los Datos Abiertos del Gobierno de Colombia (datos.gov.co), con la TRM publicada por la Superintendencia Financiera. Al abrir la página se trae el valor vigente.' },
+  { q: '¿Cada cuánto se actualiza?', a: 'Al cargar la página se consulta la TRM vigente y se refresca automáticamente. Como la TRM es diaria, el valor se mantiene durante toda la jornada.' },
+];
+
+const related = [
+  { href: '/co/calculadora-tasa-de-cambio-paralelo-colombia-dolar-blue', label: '💱 Dólar paralelo vs TRM' },
+  { href: '/cambio-de-monedas', label: '🔄 Conversor de monedas' },
+  { href: '/co/calculadora-cesantias-colombia-2026', label: '💰 Calculadora de cesantías 2026' },
+  { href: '/co', label: '🇨🇴 Más calculadoras para Colombia' },
+];
+
+const title = 'Dólar hoy en Colombia: TRM oficial EN VIVO | Hacé Cuentas';
+const description = `Dólar TRM hoy en Colombia: ${trm ? fmtCO(trm) : ''} por dólar (tasa oficial de la Superintendencia Financiera). Tabla de conversión de dólares a pesos. Se actualiza solo.`;
+---
+<EconomiaLanding
+  pais="Colombia"
+  audience="CO"
+  slug="dolar-hoy-colombia"
+  locale="es-CO"
+  h1="Dólar hoy en Colombia (TRM) 🇨🇴"
+  lede="La <strong>TRM oficial</strong> del dólar en Colombia, en vivo, con tabla de conversión de dólares a pesos."
+  title={title}
+  description={description}
+  fuente={{ nombre: 'datos.gov.co (Superintendencia Financiera)', url: 'https://www.datos.gov.co/d/32sa-8pi3' }}
+  updatedISO={d._meta?.fetchedAt ?? null}
+  indicadores={indicadores}
+  live={{ type: 'socrata', url: 'https://www.datos.gov.co/resource/32sa-8pi3.json?$order=vigenciadesde%20DESC&$limit=1' }}
+  tabla={tabla}
+  faq={faq}
+  related={related}
+/>
