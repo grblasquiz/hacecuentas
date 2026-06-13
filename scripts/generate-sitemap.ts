@@ -777,6 +777,7 @@ sitemaps.push({
     core('/pt/dados-ipca-brasil-historico',      '0.7',  'monthly'),
     core('/datos-bienes-personales-2026',        '0.7',  'monthly'),
     core('/pt/dados-salario-minimo-brasil-2026', '0.7',  'monthly'),
+    core('/datos-salario-basico-ecuador-2026',   '0.7',  'monthly'),
     core('/feriados-mexico-2026',                '0.8',  'weekly'),
     core('/feriados-colombia-2026',              '0.8',  'weekly'),
     core('/feriados-chile-2026',                 '0.8',  'weekly'),

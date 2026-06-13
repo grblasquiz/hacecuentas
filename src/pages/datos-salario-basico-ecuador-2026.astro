@@ -1,0 +1,157 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { ECUADOR_2026, DATA_AS_OF, fmtUSDec } from '../lib/data/ecuador-2026';
+
+// Página-dato citable: Salario Básico Unificado de Ecuador 2026 + lo que define
+// (IESS, décimos, fondos de reserva). Equivalente "economía" para EC (dolarizado,
+// no aplica "dólar hoy"). Fuente única verificada: src/lib/data/ecuador-2026.ts.
+// Schema Dataset + CC-BY + "Cómo citar".
+
+const SBU = ECUADOR_2026.sbu;
+const aporteIESS = SBU * ECUADOR_2026.iessPersonal;
+const neto = SBU - aporteIESS;
+const decimoCuarto = ECUADOR_2026.decimoCuarto;
+const fondosReservaMes = SBU * ECUADOR_2026.fondosReserva;
+const anual = SBU * 12;
+const f = fmtUSDec;
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/datos-salario-basico-ecuador-2026`;
+const title = 'Salario básico Ecuador 2026: SBU, décimos y aportes | Hacé Cuentas';
+const description = `Salario Básico Unificado (SBU) de Ecuador 2026: ${f(SBU)} al mes. Sueldo neto tras IESS, décimo tercero y cuarto, fondos de reserva. Datos del Ministerio del Trabajo. Uso libre con atribución (CC-BY 4.0).`;
+
+const tabla = [
+  ['Salario Básico Unificado (SBU) mensual', f(SBU)],
+  ['Aporte personal al IESS (9,45%)', '− ' + f(aporteIESS)],
+  ['Sueldo neto aproximado (solo SBU)', f(neto)],
+  ['Décimo tercer sueldo (1/12 del total anual)', '≈ ' + f(SBU) + ' (un sueldo)'],
+  ['Décimo cuarto sueldo (1 SBU)', f(decimoCuarto)],
+  ['Fondos de reserva (8,33%, desde el 2.º año)', f(fondosReservaMes) + ' / mes'],
+  ['SBU anual (12 meses)', f(anual)],
+];
+
+const faq = [
+  { q: '¿Cuánto es el salario básico en Ecuador 2026?', a: `El Salario Básico Unificado (SBU) de 2026 es de ${f(SBU)} mensuales, fijado por el Ministerio del Trabajo. Equivale a ${f(anual)} al año (sin contar décimos).` },
+  { q: '¿Cuánto queda de sueldo neto del salario básico?', a: `Sobre el SBU de ${f(SBU)} se descuenta el aporte personal al IESS del 9,45% (${f(aporteIESS)}), por lo que el neto aproximado es ${f(neto)}. Pueden aplicarse otros descuentos según el caso.` },
+  { q: '¿Qué es el décimo tercer sueldo (bono navideño)?', a: 'Es un sueldo adicional equivalente a la doceava parte (1/12) de todo lo recibido en el año. Para quien gana el SBU todo el año equivale a un sueldo completo. Se paga hasta el 24 de diciembre (o de forma mensualizada si el trabajador lo pidió).' },
+  { q: '¿Qué es el décimo cuarto sueldo y cuánto es en 2026?', a: `El décimo cuarto sueldo (bono escolar) equivale a un SBU: ${f(decimoCuarto)} en 2026. Se paga en marzo en la región Costa e Insular, y en agosto en la Sierra y Amazonía.` },
+  { q: '¿Qué son los fondos de reserva?', a: `Es un 8,33% adicional de la remuneración que el empleador deposita a partir del segundo año de trabajo con el mismo empleador. Sobre el SBU son unos ${f(fondosReservaMes)} mensuales.` },
+  { q: '¿El salario básico se paga en dólares?', a: 'Sí. Ecuador está dolarizado desde el año 2000, así que todos los sueldos, precios y aportes se expresan y pagan en dólares estadounidenses (USD).' },
+  { q: '¿De dónde salen estos datos?', a: `Del Salario Básico Unificado vigente en 2026 (Ministerio del Trabajo) y de los porcentajes de aporte del IESS. Datos verificados (actualización: ${DATA_AS_OF}).` },
+  { q: '¿Puedo usar estos datos en mi web o trabajo?', a: 'Sí, bajo licencia CC-BY 4.0: reproducí los datos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".' },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset', '@id': `${URL}#dataset`,
+  name: 'Salario Básico Unificado Ecuador 2026 — SBU, décimos y aportes',
+  description: 'Salario Básico Unificado (SBU) de Ecuador en 2026, sueldo neto tras IESS, décimo tercero y cuarto sueldo, y fondos de reserva. Fuente: Ministerio del Trabajo e IESS.',
+  url: URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+  inLanguage: 'es-EC', dateModified: DATA_AS_OF, temporalCoverage: '2026', spatialCoverage: { '@type': 'Place', name: 'Ecuador' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
+  sourceOrganization: { '@type': 'GovernmentOrganization', name: 'Ministerio del Trabajo del Ecuador', url: 'https://www.trabajo.gob.ec/' },
+  keywords: ['salario básico', 'SBU', 'Ecuador', '2026', 'décimo tercero', 'décimo cuarto', 'IESS'],
+  variableMeasured: ['SBU mensual (USD)', 'Aporte IESS (%)', 'Décimo cuarto (USD)', 'Fondos de reserva (%)'],
+};
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'WebPage', '@id': `${URL}#webpage`, name: title, description, url: URL, inLanguage: 'es-EC', dateModified: DATA_AS_OF, mainEntity: { '@id': `${URL}#dataset` } },
+  datasetSchema,
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Salario básico Ecuador 2026', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((q) => ({ '@type': 'Question', name: q.q, acceptedAnswer: { '@type': 'Answer', text: q.a } })) },
+] };
+---
+
+<Layout title={title} description={description} canonical="/datos-salario-basico-ecuador-2026" lang="es" audience="EC" schema={schema}>
+  <Header slot="header" />
+  <main class="article-main">
+    <article class="datos-page">
+      <header>
+        <nav class="crumbs"><a href="/">Inicio</a> <span>›</span> <span>Salario básico Ecuador 2026</span></nav>
+        <h1>Salario básico Ecuador 2026: SBU, décimos y aportes</h1>
+        <p class="lede">El <strong>Salario Básico Unificado (SBU)</strong> de Ecuador en 2026 y todo lo que define: sueldo neto tras el IESS, décimo tercero y cuarto, y fondos de reserva. Fuente: <strong>Ministerio del Trabajo</strong>.</p>
+        <p class="updated">Última revisión: <time datetime={DATA_AS_OF}>{DATA_AS_OF}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a></p>
+      </header>
+
+      <section class="stats-callout">
+        <div class="stat"><span class="stat-num">{f(SBU)}</span><span class="stat-label">SBU mensual</span></div>
+        <div class="stat"><span class="stat-num">{f(neto)}</span><span class="stat-label">neto (− IESS 9,45%)</span></div>
+        <div class="stat"><span class="stat-num">{f(decimoCuarto)}</span><span class="stat-label">décimo cuarto</span></div>
+      </section>
+
+      <section>
+        <h2>El salario básico de 2026 y lo que define</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="l">Concepto</th><th>Valor (USD)</th></tr></thead>
+            <tbody>{tabla.map(([k, v]) => (<tr><td class="l">{k}</td><td>{v}</td></tr>))}</tbody>
+          </table>
+        </div>
+        <p class="note">Ecuador está dolarizado: todos los valores son en dólares estadounidenses (USD).</p>
+      </section>
+
+      <section>
+        <h2>Calculá tu caso</h2>
+        <ul class="calc-links">
+          <li><a href="/ec/calculadora-sueldo-neto-ecuador">Calculadora de sueldo neto Ecuador</a></li>
+          <li><a href="/ec/calculadora-decimo-cuarto-sueldo-ecuador">Décimo cuarto sueldo</a> · <a href="/feriados-ecuador-2026">Feriados Ecuador 2026</a></li>
+          <li><a href="/ec">Más calculadoras para Ecuador</a></li>
+        </ul>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Cómo citar estos datos</h2>
+        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
+        <pre><code>Fuente: Hacé Cuentas — https://hacecuentas.com/datos-salario-basico-ecuador-2026
+SBU Ecuador 2026 · Licencia CC-BY 4.0</code></pre>
+      </section>
+
+      <section class="faq">
+        <h2>Preguntas frecuentes</h2>
+        {faq.map((q) => (<details><summary>{q.q}</summary><p>{q.a}</p></details>))}
+      </section>
+
+      <section class="fuentes">
+        <h2>Fuentes</h2>
+        <ul>
+          <li><a href="https://www.trabajo.gob.ec/" rel="nofollow noopener" target="_blank">Ministerio del Trabajo del Ecuador</a></li>
+          <li><a href="https://www.iess.gob.ec/" rel="nofollow noopener" target="_blank">IESS — aportes</a></li>
+        </ul>
+      </section>
+    </article>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  .datos-page h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; }
+  .lede { font-size: 1.1rem; line-height: 1.6; color: var(--text); }
+  .updated { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .updated a { color: var(--accent); }
+  .datos-page h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+  .stats-callout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1.75rem 0; }
+  .stat { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.9rem 1rem; text-align: center; }
+  .stat-num { display: block; font-size: 1.35rem; font-weight: 700; color: var(--accent); line-height: 1.2; }
+  .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border); }
+  th.l, td.l { text-align: left; }
+  th { background: var(--bg-soft); font-weight: 600; }
+  .note { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .calc-links li, .fuentes li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent); }
+  .cite-instructions { margin-top: 2.5rem; padding: 1.1rem; background: var(--bg-soft); border-radius: 0.6rem; }
+  .cite-instructions pre { background: var(--code-bg, #eaeef3); padding: 0.75rem; border-radius: 0.4rem; overflow-x: auto; font-size: 0.85rem; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>
