@@ -1,0 +1,136 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { SALARIO_MINIMO, INSS_TETO, DATA_AS_OF } from '../../lib/data/brasil-2026';
+
+// Página-dado citável: salário mínimo do Brasil 2026 + o que ele reajusta.
+// Fonte única verificada: src/lib/data/brasil-2026.ts. Schema Dataset + CC-BY + "Como citar".
+
+const fmt = (n) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+const SM = SALARIO_MINIMO;
+const diario = SM / 30;
+const hora = SM / 220; // jornada 220h/mês
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/pt/dados-salario-minimo-brasil-2026`;
+
+const title = 'Salário mínimo 2026 no Brasil: valor mensal, diário e por hora | Hacé Cuentas';
+const description = `Salário mínimo 2026 no Brasil: ${fmt(SM)} por mês, ${fmt(diario)} por dia e ${fmt(hora)} por hora. O que ele reajusta (INSS, FGTS, seguro-desemprego). Dados oficiais. Uso livre com atribuição (CC-BY 4.0).`;
+
+const reajusta = [
+  ['Piso do INSS (contribuição e benefícios)', `nenhum benefício abaixo de ${fmt(SM)}`],
+  ['Base do FGTS', '8% sobre o salário (mínimo a partir do piso)'],
+  ['Piso do seguro-desemprego', `1 salário mínimo (${fmt(SM)})`],
+  ['Teto de contribuição do INSS', fmt(INSS_TETO)],
+  ['Salário-família e abono (PIS/Pasep)', 'referência do salário mínimo'],
+];
+
+const faq = [
+  { q: 'Qual é o salário mínimo de 2026 no Brasil?', a: `O salário mínimo nacional de 2026 é de ${fmt(SM)} por mês, o que equivale a aproximadamente ${fmt(diario)} por dia e ${fmt(hora)} por hora (jornada de 220 horas mensais).` },
+  { q: 'Quanto é o salário mínimo por hora em 2026?', a: `Cerca de ${fmt(hora)} por hora, considerando a jornada padrão de 220 horas por mês. Para jornadas diferentes, divida ${fmt(SM)} pelas horas mensais do seu contrato.` },
+  { q: 'O que o salário mínimo reajusta?', a: 'É a referência para o piso de benefícios do INSS, a base do FGTS, o piso do seguro-desemprego, o salário-família e o abono salarial (PIS/Pasep), entre outros. Quando sobe, vários valores acompanham.' },
+  { q: 'Quando o salário mínimo é reajustado?', a: 'O reajuste é anual, em janeiro, definido pelo governo federal e considerando a inflação (INPC) mais, em alguns anos, um ganho real.' },
+  { q: 'De onde vêm estes dados?', a: `Do salário mínimo nacional vigente em 2026 e dos parâmetros do INSS publicados em portaria interministerial. Dados verificados (atualização: ${DATA_AS_OF}).` },
+  { q: 'Posso usar estes dados no meu site ou trabalho?', a: 'Sim, sob licença CC-BY 4.0: reproduza citando a fonte com link para hacecuentas.com. Veja o bloco "Como citar".' },
+];
+const datasetSchema = {
+  '@type': 'Dataset', '@id': `${URL}#dataset`,
+  name: 'Salário mínimo Brasil 2026 — valor e parâmetros',
+  description: 'Salário mínimo nacional do Brasil em 2026 (mensal, diário e por hora) e os principais valores que ele reajusta (INSS, FGTS, seguro-desemprego).',
+  url: URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+  inLanguage: 'pt-BR', dateModified: DATA_AS_OF, temporalCoverage: '2026', spatialCoverage: { '@type': 'Place', name: 'Brasil' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
+  keywords: ['salário mínimo', 'salário mínimo 2026', 'Brasil', 'INSS', 'FGTS', 'piso salarial'],
+  variableMeasured: ['Salário mínimo mensal (BRL)', 'Salário mínimo diário (BRL)', 'Salário mínimo por hora (BRL)'],
+};
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'WebPage', '@id': `${URL}#webpage`, name: title, description, url: URL, inLanguage: 'pt-BR', dateModified: DATA_AS_OF, mainEntity: { '@id': `${URL}#dataset` } },
+  datasetSchema,
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: `${SITE}/pt` },
+    { '@type': 'ListItem', position: 2, name: 'Salário mínimo 2026', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+---
+
+<Layout title={title} description={description} canonical="/pt/dados-salario-minimo-brasil-2026" lang="pt" audience="BR" schema={schema}>
+  <Header slot="header" />
+  <main class="article-main">
+    <article class="datos-page">
+      <header>
+        <nav class="crumbs"><a href="/pt">Início</a> <span>›</span> <span>Salário mínimo 2026</span></nav>
+        <h1>Salário mínimo 2026 no Brasil</h1>
+        <p class="lede">Valor do <strong>salário mínimo nacional</strong> em 2026: por mês, por dia e por hora, e o que ele reajusta. Dados oficiais.</p>
+        <p class="updated">Atualização: <time datetime={DATA_AS_OF}>{DATA_AS_OF}</time> · Licença <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a></p>
+      </header>
+
+      <section class="stats-callout">
+        <div class="stat"><span class="stat-num">{fmt(SM)}</span><span class="stat-label">por mês</span></div>
+        <div class="stat"><span class="stat-num">{fmt(diario)}</span><span class="stat-label">por dia (÷30)</span></div>
+        <div class="stat"><span class="stat-num">{fmt(hora)}</span><span class="stat-label">por hora (220h/mês)</span></div>
+      </section>
+
+      <section>
+        <h2>O que o salário mínimo reajusta em 2026</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="l">Parâmetro</th><th class="l">Referência</th></tr></thead>
+            <tbody>{reajusta.map(([k, v]) => (<tr><td class="l">{k}</td><td class="l">{v}</td></tr>))}</tbody>
+          </table>
+        </div>
+        <p class="note">Reajuste anual em janeiro (INPC + eventual ganho real). Valores do INSS conforme portaria interministerial.</p>
+      </section>
+
+      <section>
+        <h2>Calcule com o salário</h2>
+        <ul class="calc-links">
+          <li><a href="/pt/salario-liquido-clt-inss-irrf-2026">Salário líquido (CLT) — INSS + IRRF</a></li>
+          <li><a href="/pt/simulador-holerite-clt">Simulador de holerite</a></li>
+          <li><a href="/pt/dados-inss-irrf-2026">Tabela INSS e IRRF 2026</a></li>
+        </ul>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Como citar</h2>
+        <pre><code>Fonte: Hacé Cuentas — https://hacecuentas.com/pt/dados-salario-minimo-brasil-2026
+Salário mínimo 2026 · Licença CC-BY 4.0</code></pre>
+      </section>
+
+      <section class="faq">
+        <h2>Perguntas frequentes</h2>
+        {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+      </section>
+    </article>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  .datos-page h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; }
+  .lede { font-size: 1.1rem; line-height: 1.6; color: var(--text); }
+  .updated { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .updated a { color: var(--accent); }
+  .datos-page h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+  .stats-callout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1.75rem 0; }
+  .stat { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.9rem 1rem; text-align: center; }
+  .stat-num { display: block; font-size: 1.35rem; font-weight: 700; color: var(--accent); line-height: 1.2; }
+  .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.7rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--bg-soft); font-weight: 600; }
+  .note { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .calc-links li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .calc-links { margin-left: 1.25rem; }
+  .calc-links a { color: var(--accent); }
+  .cite-instructions { margin-top: 2.5rem; padding: 1.1rem; background: var(--bg-soft); border-radius: 0.6rem; }
+  .cite-instructions pre { background: var(--code-bg, #eaeef3); padding: 0.75rem; border-radius: 0.4rem; overflow-x: auto; font-size: 0.85rem; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

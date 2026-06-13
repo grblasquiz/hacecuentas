@@ -1,0 +1,204 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import type { FeriadosPais } from '../lib/data/feriados-latam-2026';
+
+// Landing de feriados por país (mismo rol que la calc de feriados AR de la home,
+// replicada para LATAM). Tabla-calendario crawleable + próximo feriado (client) +
+// fines de semana largos + FAQ + schema (WebPage/BreadcrumbList/FAQPage/Dataset).
+
+interface Props {
+  data: FeriadosPais;
+  related?: { href: string; label: string }[];
+}
+const { data, related = [] } = Astro.props as Props;
+const { pais, gentilicio, audience, slug, totalLabel, dataAsOf, marco, notaTipo, fuentes, feriados } = data;
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/${slug}`;
+const total = feriados.length;
+// Fin de semana largo = feriado en lunes o viernes (pega con el finde).
+const findesLargos = feriados.filter((f) => f.dia === 'Lunes' || f.dia === 'Viernes');
+
+const fmtFecha = (iso: string) => {
+  const [, m, d] = iso.split('-');
+  const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  return `${d}/${meses[Number(m) - 1]}`;
+};
+
+const title = `Feriados ${pais} 2026: calendario completo con fechas y días | Hacé Cuentas`;
+const description = `Calendario de feriados ${pais} 2026: ${totalLabel}, con la fecha exacta, el día de la semana y los fines de semana largos. Datos oficiales y verificados.`;
+
+const faq = [
+  { q: `¿Cuántos feriados hay en ${pais} en 2026?`, a: `En 2026 hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de arriba.` },
+  { q: `¿Cuándo es el próximo feriado en ${pais}?`, a: `El próximo feriado se marca automáticamente en la tabla según la fecha de hoy. Repasá el calendario completo para planificar tus días libres y los fines de semana largos.` },
+  { q: `¿Cuántos fines de semana largos hay en 2026?`, a: `En 2026 hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo. Sumando puentes y feriados pegados, conviene mirar el calendario completo.` },
+  { q: `¿Estos feriados son nacionales o también hay locales?`, a: `La tabla lista los feriados nacionales de ${pais} (válidos en todo el país). Además puede haber feriados locales o provinciales según la ciudad o región, que no están incluidos acá.` },
+  { q: `¿Se trabaja en los feriados? ¿Cómo se paga?`, a: `${notaTipo || 'Los feriados son días de descanso; si trabajás, suele corresponder un pago con recargo según la legislación laboral vigente.'}` },
+  { q: `¿De dónde salen estas fechas?`, a: `De las normas oficiales de ${pais} (${marco}). Verificamos cada fecha y su día de la semana contra el calendario real 2026. Última revisión: ${dataAsOf}.` },
+  { q: `¿Puedo usar este calendario en mi web o trabajo?`, a: `Sí, bajo licencia CC-BY 4.0: reproducí los datos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".` },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset', '@id': `${URL}#dataset`,
+  name: `Feriados ${pais} 2026 — calendario oficial`,
+  description: `Calendario de feriados nacionales de ${pais} en 2026: fecha observada, día de la semana y tipo de cada feriado. ${marco}.`,
+  url: URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+  inLanguage: 'es', dateModified: dataAsOf, temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Place', name: pais },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
+  keywords: [`feriados ${pais}`, `feriados ${pais} 2026`, `festivos ${pais} 2026`, 'calendario', 'fines de semana largos'],
+  variableMeasured: ['Fecha del feriado', 'Día de la semana', 'Nombre del feriado', 'Tipo'],
+};
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'WebPage', '@id': `${URL}#webpage`, name: title, description, url: URL, inLanguage: 'es', dateModified: dataAsOf, mainEntity: { '@id': `${URL}#dataset` } },
+  datasetSchema,
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: `Feriados ${pais} 2026`, item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+---
+
+<Layout title={title} description={description} canonical={`/${slug}`} audience={audience} schema={schema}>
+  <Header slot="header" />
+  <main class="article-main">
+    <article class="feriados-page">
+      <header>
+        <nav class="crumbs"><a href="/">Inicio</a> <span>›</span> <span>Feriados {pais} 2026</span></nav>
+        <h1>Feriados {pais} 2026: calendario completo</h1>
+        <p class="lede">Todos los <strong>feriados nacionales de {pais}</strong> en 2026, con la fecha exacta, el día de la semana y los <strong>fines de semana largos</strong>. Para que {gentilicio} planifiquen sus días libres.</p>
+        <p class="updated">Última revisión: <time datetime={dataAsOf}>{dataAsOf}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a></p>
+      </header>
+
+      <section class="stats-callout">
+        <div class="stat"><span class="stat-num">{total}</span><span class="stat-label">feriados en 2026</span></div>
+        <div class="stat" id="proximo-stat"><span class="stat-num" id="proximo-fecha">—</span><span class="stat-label" id="proximo-label">próximo feriado</span></div>
+        <div class="stat"><span class="stat-num">{findesLargos.length}</span><span class="stat-label">fines de semana largos</span></div>
+      </section>
+
+      <section>
+        <h2>Calendario de feriados {pais} 2026</h2>
+        <div class="table-wrap">
+          <table id="feriados-table">
+            <thead><tr><th class="l">Fecha</th><th class="l">Día</th><th class="l">Feriado</th><th class="l">Tipo</th></tr></thead>
+            <tbody>
+              {feriados.map((f) => (
+                <tr data-fecha={f.fecha}>
+                  <td class="l nowrap">{fmtFecha(f.fecha)}</td>
+                  <td class="l">{f.dia}</td>
+                  <td class="l">{f.nombre}{f.nota && <span class="feriado-nota"> · {f.nota}</span>}</td>
+                  <td class="l">{f.tipo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {notaTipo && <p class="note">{notaTipo}</p>}
+      </section>
+
+      <section>
+        <h2>Fines de semana largos 2026 en {pais}</h2>
+        <p>Estos feriados caen lunes o viernes, así que pegan con el fin de semana:</p>
+        <ul class="findes">
+          {findesLargos.map((f) => (
+            <li><strong>{f.dia} {fmtFecha(f.fecha)}</strong> — {f.nombre}</li>
+          ))}
+        </ul>
+      </section>
+
+      {related.length > 0 && (
+        <section>
+          <h2>Calculá con el calendario</h2>
+          <ul class="calc-links">
+            {related.map((r) => (<li><a href={r.href}>{r.label}</a></li>))}
+          </ul>
+        </section>
+      )}
+
+      <section class="cite-instructions">
+        <h2>Cómo citar este calendario</h2>
+        <p>¿Usás estas fechas en una nota, app o web? La atribución pedida es:</p>
+        <pre><code>Fuente: Hacé Cuentas — {URL}
+Feriados {pais} 2026 · Licencia CC-BY 4.0</code></pre>
+      </section>
+
+      <section class="faq">
+        <h2>Preguntas frecuentes</h2>
+        {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+      </section>
+
+      <section class="fuentes">
+        <h2>Fuentes</h2>
+        <ul>{fuentes.map((s) => (<li><a href={s.url} rel="nofollow noopener" target="_blank">{s.nombre}</a></li>))}</ul>
+      </section>
+    </article>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script is:inline>
+  // Marca el próximo feriado según la fecha de hoy (client-side → siempre fresco).
+  (function () {
+    const hoy = new Date();
+    const hoyISO = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+    const rows = Array.prototype.slice.call(document.querySelectorAll('#feriados-table tbody tr'));
+    let prox = null;
+    for (const tr of rows) {
+      const f = tr.getAttribute('data-fecha');
+      if (f && f >= hoyISO) { prox = { fecha: f, row: tr }; break; }
+    }
+    const numEl = document.getElementById('proximo-fecha');
+    const labelEl = document.getElementById('proximo-label');
+    if (prox && numEl && labelEl) {
+      const nombre = prox.row.children[2].textContent.split('·')[0].trim();
+      const dia = prox.row.children[1].textContent.trim();
+      const [, m, d] = prox.fecha.split('-');
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      numEl.textContent = d + '/' + meses[Number(m) - 1];
+      labelEl.textContent = dia + ' · ' + nombre;
+      prox.row.classList.add('proximo-row');
+      const td = prox.row.children[2];
+      const badge = document.createElement('span');
+      badge.className = 'proximo-badge';
+      badge.textContent = 'Próximo';
+      td.appendChild(badge);
+    } else if (numEl && labelEl) {
+      numEl.textContent = '2027';
+      labelEl.textContent = 'sin feriados pendientes en 2026';
+    }
+  })();
+</script>
+
+<style>
+  .feriados-page { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  .feriados-page h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; }
+  .lede { font-size: 1.1rem; line-height: 1.6; color: var(--text); }
+  .updated { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .updated a { color: var(--accent); }
+  .feriados-page h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+  .stats-callout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1.75rem 0; }
+  .stat { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.9rem 1rem; text-align: center; }
+  .stat-num { display: block; font-size: 1.35rem; font-weight: 700; color: var(--accent); line-height: 1.2; }
+  .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  th, td { padding: 0.6rem 0.7rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--bg-soft); font-weight: 600; }
+  .nowrap { white-space: nowrap; }
+  .feriado-nota { color: var(--text-muted); font-size: 0.82rem; }
+  tr.proximo-row { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+  .proximo-badge { display: inline-block; margin-left: 0.5rem; padding: 0.05rem 0.45rem; font-size: 0.7rem; font-weight: 700; color: #fff; background: var(--accent); border-radius: 0.4rem; vertical-align: middle; }
+  .note { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .findes li, .calc-links li, .fuentes li { line-height: 1.7; margin-bottom: 0.4rem; }
+  .findes, .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent); }
+  .cite-instructions { margin-top: 2.5rem; padding: 1.1rem; background: var(--bg-soft); border-radius: 0.6rem; }
+  .cite-instructions pre { background: var(--code-bg, #eaeef3); padding: 0.75rem; border-radius: 0.4rem; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

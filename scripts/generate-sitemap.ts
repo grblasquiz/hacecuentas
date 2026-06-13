@@ -511,6 +511,12 @@ const priorityUrls: Url[] = [
   prio('/dolar-hoy',                         '0.95', 'daily',  true),
   prio('/precio-nafta-hoy',                  '0.9',  'weekly', true),
   prio('/fixture-mundial-2026',              '0.95', 'daily',  true),
+  // Landings de feriados LATAM 2026 (evergreen del año, alta intención)
+  prio('/feriados-mexico-2026',              '0.85', 'weekly'),
+  prio('/feriados-colombia-2026',            '0.85', 'weekly'),
+  prio('/feriados-chile-2026',               '0.85', 'weekly'),
+  prio('/feriados-peru-2026',                '0.85', 'weekly'),
+  prio('/feriados-ecuador-2026',             '0.85', 'weekly'),
   // 13 guías pilares (estables)
   prio('/guia/finanzas-personales',          '0.9',  'weekly'),
   prio('/guia/sueldos-argentina-2026',       '0.9',  'weekly'),
@@ -765,6 +771,13 @@ sitemaps.push({
     core('/datos-salario-minimo-latam-2026',     '0.7',  'monthly'),
     core('/pt/dados-inss-irrf-2026',             '0.7',  'monthly'),
     core('/pt/dados-ipca-brasil-historico',      '0.7',  'monthly'),
+    core('/datos-bienes-personales-2026',        '0.7',  'monthly'),
+    core('/pt/dados-salario-minimo-brasil-2026', '0.7',  'monthly'),
+    core('/feriados-mexico-2026',                '0.8',  'weekly'),
+    core('/feriados-colombia-2026',              '0.8',  'weekly'),
+    core('/feriados-chile-2026',                 '0.8',  'weekly'),
+    core('/feriados-peru-2026',                  '0.8',  'weekly'),
+    core('/feriados-ecuador-2026',               '0.8',  'weekly'),
   ],
 });
 
