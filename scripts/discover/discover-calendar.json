@@ -9,7 +9,11 @@
       "cadence": "mensual, ~día 15 (cuando INDEC publica el IPC del mes anterior)",
       "cronHint": "0 12 14-17 * *",
       "checkSlug": "inflacion-{mesAnterior}-{año}-cuanto-perdiste",
-      "targetCalcs": ["calculadora-inflacion-acumulada-periodo", "calculadora-plazo-fijo", "calculadora-retorno-real-inversion-descontando-inflacion"],
+      "targetCalcs": [
+        "calculadora-inflacion-acumulada-periodo",
+        "calculadora-plazo-fijo",
+        "calculadora-retorno-real-inversion-descontando-inflacion"
+      ],
       "notes": "El más data-backed y recurrente. Ya wireado en .github/workflows/inflacion-post.yml."
     },
     {
@@ -20,7 +24,10 @@
       "cadence": "1er lunes de cada mes",
       "cronHint": "0 11 1-7 * 1",
       "checkSlug": "informe-financiero-argentina-{año}-{mes}",
-      "targetCalcs": ["calculadora-dolar-blue-vs-oficial-brecha", "calculadora-plazo-fijo"],
+      "targetCalcs": [
+        "calculadora-dolar-blue-vs-oficial-brecha",
+        "calculadora-plazo-fijo"
+      ],
       "notes": "Ya existe + wireado en monthly-post.yml."
     },
     {
@@ -29,9 +36,15 @@
       "type": "editorial",
       "cadence": "anual, ventana 1-18 junio",
       "month": 6,
-      "windowDays": [1, 18],
+      "windowDays": [
+        1,
+        18
+      ],
       "checkSlug": "aguinaldo-junio-{año}",
-      "targetCalcs": ["calculadora-aguinaldo-sac", "sueldo-en-mano-argentina"],
+      "targetCalcs": [
+        "calculadora-aguinaldo-sac",
+        "sueldo-en-mano-argentina"
+      ],
       "notes": "HECHO 2026. Ángulo deadline + cuánto te toca."
     },
     {
@@ -40,9 +53,15 @@
       "type": "editorial",
       "cadence": "anual, ventana 1-12 diciembre",
       "month": 12,
-      "windowDays": [1, 12],
+      "windowDays": [
+        1,
+        12
+      ],
       "checkSlug": "aguinaldo-diciembre-{año}",
-      "targetCalcs": ["calculadora-aguinaldo-sac", "sueldo-en-mano-argentina"],
+      "targetCalcs": [
+        "calculadora-aguinaldo-sac",
+        "sueldo-en-mano-argentina"
+      ],
       "notes": "Replicar el patrón del de junio con fechas de diciembre."
     },
     {
@@ -50,10 +69,19 @@
       "label": "Recategorización monotributo (semestral, día 20)",
       "type": "editorial",
       "cadence": "ene y jul, ventana primeros 18 días",
-      "months": [1, 7],
-      "windowDays": [1, 18],
+      "months": [
+        1,
+        7
+      ],
+      "windowDays": [
+        1,
+        18
+      ],
       "checkSlug": "recategorizacion-monotributo-{mesEvento}-{año}",
-      "targetCalcs": ["calculadora-monotributo-categoria", "simulador-monotributo-neto"],
+      "targetCalcs": [
+        "calculadora-monotributo-categoria",
+        "simulador-monotributo-neto"
+      ],
       "notes": "Topes ARCA nuevos cada semestre. Verificar cifras contra fuente única monotributo-2026.ts."
     },
     {
@@ -62,9 +90,14 @@
       "type": "editorial",
       "cadence": "anual, ~mayo-junio",
       "month": 6,
-      "windowDays": [1, 20],
+      "windowDays": [
+        1,
+        20
+      ],
       "checkSlug": "ganancias-vencimiento-{año}",
-      "targetCalcs": ["calculadora-ganancias-segunda-categoria-renta-financiera-2026"],
+      "targetCalcs": [
+        "calculadora-ganancias-segunda-categoria-renta-financiera-2026"
+      ],
       "notes": "Ángulo: quién tiene que presentar y hasta cuándo."
     },
     {
@@ -73,7 +106,9 @@
       "type": "editorial",
       "cadence": "event-driven (cuando se anuncia)",
       "checkSlug": "salario-minimo-{mes}-{año}",
-      "targetCalcs": ["sueldo-en-mano-argentina"],
+      "targetCalcs": [
+        "sueldo-en-mano-argentina"
+      ],
       "notes": "Disparar al anuncio. El monitor de noticias (arca-monitor / reddit-monitor) puede flagear."
     },
     {
@@ -83,8 +118,25 @@
       "generator": "scripts/generate-finde-largo-post.py",
       "cadence": "auto-gateado: dispara ~7 días antes de cada finde largo (motor diario)",
       "checkSlug": "finde-largo-{mes}-{año}",
-      "targetCalcs": ["calculadora-puente-feriado-fines-semana-largos-argentina-2026", "calculadora-cuanto-falta-feriado-proximo-argentina-2026"],
+      "targetCalcs": [
+        "calculadora-puente-feriado-fines-semana-largos-argentina-2026",
+        "calculadora-cuanto-falta-feriado-proximo-argentina-2026"
+      ],
       "notes": "Fuente única feriados-ar-2026.ts. Alto interés Discover (turismo/descanso). Slug por fecha de inicio (finde-largo-{dd}-{mes}-{año}). Cableado en discover-motor.sh."
+    },
+    {
+      "id": "mundial-finde",
+      "label": "Partidos del Mundial este fin de semana",
+      "type": "auto",
+      "generator": "scripts/generate-mundial-weekend-post.py",
+      "cadence": "jueves-domingo durante el Mundial (11-jun a 19-jul 2026)",
+      "cronHint": "discover-motor.sh lo corre a diario; el script se auto-gatea (ventana + jue-dom)",
+      "checkSlug": "partidos-mundial-finde-{diaSabado}-{mes}-{año}",
+      "targetCalcs": [
+        "calculadora-mundial-2026-quiniela-pool-probabilidad",
+        "calculadora-mundial-2026-predictor-campeon-ranking"
+      ],
+      "notes": "Ángulo de FIN DE SEMANA (el tráfico del sitio baja sáb/dom pero el interés por el fútbol sube). Funnel a /partidos-hoy-mundial-2026. Se auto-apaga al terminar el Mundial."
     }
   ]
 }

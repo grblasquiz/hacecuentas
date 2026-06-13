@@ -48,6 +48,8 @@ if [ "$DOW" -eq 1 ] && [ "$DOM" -le 7 ]; then
 fi
 # Finde largo: auto-gateado (el script solo escribe si hay uno en los próximos ~7 días)
 echo "→ check finde largo"; python3 scripts/generate-finde-largo-post.py || true
+# Partidos del Mundial del finde: auto-gateado (solo jue-dom y dentro del Mundial 11-jun/19-jul)
+echo "→ check mundial finde"; python3 scripts/generate-mundial-weekend-post.py || true
 
 # 2) ¿Hay notas de blog pendientes de publicar? (recién generadas o diferidas)
 if ! git status --porcelain -- src/content/blog/ | grep -q .; then
