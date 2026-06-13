@@ -515,6 +515,7 @@ const priorityUrls: Url[] = [
   prio('/dolar-hoy-peru',                    '0.9',  'daily',  true),
   prio('/precio-nafta-hoy',                  '0.9',  'weekly', true),
   prio('/fixture-mundial-2026',              '0.95', 'daily',  true),
+  prio('/partidos-hoy-mundial-2026',         '0.95', 'daily',  true),
   // Landings de feriados LATAM 2026 (evergreen del año, alta intención)
   prio('/feriados-mexico-2026',              '0.85', 'weekly'),
   prio('/feriados-colombia-2026',            '0.85', 'weekly'),
@@ -730,6 +731,7 @@ sitemaps.push({
     core('/tracker-embarazo-semana-a-semana',    '0.95', 'weekly'),
     core('/cuanto-falta-para-Navidad-2026',      '0.9',  'daily',   true),
     core('/fixture-mundial-2026',                '0.9',  'daily',   true),
+    core('/partidos-hoy-mundial-2026',           '0.92', 'daily',   true),
     core('/posiciones-mundial-2026',             '0.9',  'daily',   true),
     core('/goleadores-mundial-2026',             '0.85', 'daily',   true),
     core('/cuando-juega-argentina-mundial-2026', '0.9',  'daily',   true),
