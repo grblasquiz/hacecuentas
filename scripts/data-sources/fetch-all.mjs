@@ -8,6 +8,8 @@ const sources = [
   "scripts/data-sources/fetch-bcra.mjs",
   "scripts/data-sources/fetch-chile.mjs",
   "scripts/data-sources/fetch-colombia.mjs",
+  "scripts/data-sources/fetch-mexico.mjs",
+  "scripts/data-sources/fetch-peru.mjs",
   "scripts/data-sources/generate-datasets.mjs",
 ];
 

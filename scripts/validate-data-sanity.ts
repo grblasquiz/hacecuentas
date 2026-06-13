@@ -121,6 +121,12 @@ const CHECKS: Check[] = [
   // --- Colombia (src/data/live/colombia.json) ---
   { id: 'colombia.trm', file: 'src/data/live/colombia.json', extract: liveValor('trm'), min: 1500, max: 9000, maxDriftPct: 6, kind: 'continuous' },
 
+  // --- México (src/data/live/mexico.json) — USD/MXN mercado ---
+  { id: 'mexico.usdmxn', file: 'src/data/live/mexico.json', extract: liveValor('usdmxn'), min: 8, max: 40, maxDriftPct: 8, kind: 'continuous' },
+
+  // --- Perú (src/data/live/peru.json) — USD/PEN mercado ---
+  { id: 'peru.usdpen', file: 'src/data/live/peru.json', extract: liveValor('usdpen'), min: 2, max: 7, maxDriftPct: 8, kind: 'continuous' },
+
   // --- Series BCRA persistidas (db/*.json) ---
   { id: 'db.uva', file: 'db/uva.json', extract: dbUltimoValor, min: 800, max: 12000, maxDriftPct: 8, kind: 'continuous' },
   { id: 'db.icl', file: 'db/icl.json', extract: dbUltimoValor, min: 1, max: 200, maxDriftPct: 8, kind: 'continuous' },
