@@ -1,9 +1,13 @@
 ---
-export const prerender = true;
+export const prerender = false;
 import EconomiaLanding from '../components/EconomiaLanding.astro';
-import data from '../data/live/chile.json';
+import fallback from '../data/live/chile.json';
+import { readFxLive } from '../lib/fx-live';
 
-const d = data as any;
+// Snapshot en vivo desde D1 (lo refresca a diario el cron Worker hacecuentas-fx-cron);
+// si D1 no responde, cae al JSON de build. La página igual se refresca client-side.
+const d = (await readFxLive('chile')) ?? (fallback as any);
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=86400');
 const fmtCL = (n: number, dec = 0) => '$' + n.toLocaleString('es-CL', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 const dolar = d.dolar?.valor ?? null;
 const uf = d.uf?.valor ?? null;

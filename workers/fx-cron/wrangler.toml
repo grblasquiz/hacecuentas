@@ -1,0 +1,17 @@
+# Worker independiente: refresh diario de datos FX → D1 fx_live.
+# Deploy: cd workers/fx-cron && npx wrangler deploy
+# Es un worker aparte del sitio; comparte la MISMA base D1 (hacecuentas-forms).
+name = "hacecuentas-fx-cron"
+main = "index.mjs"
+compatibility_date = "2026-04-18"
+workers_dev = true
+
+# Cron: 10:00 UTC = 07:00 ART (off-peak, después del update overnight de FX).
+[triggers]
+crons = ["0 10 * * *"]
+
+# Misma base D1 que el sitio (hacecuentas-forms) — bind por id.
+[[d1_databases]]
+binding = "DB"
+database_name = "hacecuentas-forms"
+database_id = "73216cf9-dba3-4c16-875c-4073d8184bcd"

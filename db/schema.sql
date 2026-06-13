@@ -155,3 +155,13 @@ CREATE TABLE IF NOT EXISTS legal_leads (
   ip_hash TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_legal_leads_created ON legal_leads(created_at);
+
+-- Snapshot de datos FX/indicadores en vivo por país, escrito por el cron Worker
+-- `hacecuentas-fx-cron` (workers/fx-cron/) una vez al día. Las landings SSR
+-- /dolar-hoy-{chile,colombia,mexico,peru} lo leen en cada request (con fallback
+-- al JSON de build). `data` = JSON con la misma forma que src/data/live/<pais>.json.
+CREATE TABLE IF NOT EXISTS fx_live (
+  pais TEXT PRIMARY KEY,                 -- 'chile' | 'colombia' | 'mexico' | 'peru'
+  data TEXT NOT NULL,                    -- JSON snapshot
+  updated_at TEXT NOT NULL               -- ISO 8601
+);
