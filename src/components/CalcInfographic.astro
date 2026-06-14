@@ -1,0 +1,24 @@
+---
+// Infografía propia de la calc (campo `infographic` = {src, alt, caption}).
+// Imagen rica con datos reales para Bing Images / Pinterest. El route AR root
+// (/[...slug]) la renderiza inline; los routes por locale (/es, /mx, …) usan
+// este componente — mismo patrón que ReferenceTables.astro.
+interface Props { infographic?: { src?: string; alt?: string; caption?: string }; h1?: string }
+const { infographic, h1 } = Astro.props;
+---
+{infographic && infographic.src && (
+  <figure class="calc-infographic" style="margin:1.5rem 0;text-align:center;">
+    <img
+      src={infographic.src}
+      alt={infographic.alt || h1}
+      width="1000"
+      height="1500"
+      loading="lazy"
+      decoding="async"
+      style="max-width:min(440px,100%);height:auto;border:1px solid var(--border,#e2e8f0);border-radius:14px;"
+    />
+    {infographic.caption && (
+      <figcaption style="font-size:0.85rem;color:var(--text-muted,#64748b);margin-top:0.6rem;max-width:520px;margin-left:auto;margin-right:auto;">{infographic.caption}</figcaption>
+    )}
+  </figure>
+)}
