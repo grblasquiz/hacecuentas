@@ -180,8 +180,24 @@ const faqSchema = {
 };
 const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, sportsEvent, dataset, faqSchema] };
 
-// Datos para el script client-side (refresh en vivo)
-const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey };
+// Datos para el script client-side (refresh en vivo).
+// `days` va compacto para que el cliente pueda recalcular "hoy" y reconstruir
+// el bloque destacado sin redeploy (la página es estática: el todayKey del build
+// se congela y queda viejo al día siguiente).
+const daysData = days.map((d) => ({
+  key: d.key,
+  label: d.label,
+  matches: d.matches.map((m) => ({
+    num: m.num,
+    stage: m.group ? roundLabel(m.round) + ' · ' + m.group.replace('Group', 'Grupo') : roundLabel(m.round),
+    time: artTime(m.date, m.time),
+    team1: m.team1,
+    team2: m.team2,
+    ground: m.ground,
+    score: m.score,
+  })),
+}));
+const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysData };
 ---
 
 <Layout title={title} description={description} canonical={canonical} audience="global" schema={schema}>
@@ -394,29 +410,144 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey };
       }
     }
 
+    // "Hoy" en hora argentina, recalculado en el navegador (no el del build).
+    function todayKeyAR() {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date());
+    }
+
+    // Rellena una tarjeta clonada (.fx-card) con los datos de un partido.
+    function fillCard(card: Element, m: any) {
+      card.setAttribute('data-num', String(m.num));
+      card.setAttribute('data-team1', m.team1 || '');
+      card.setAttribute('data-team2', m.team2 || '');
+      const t1 = label(m.team1), t2 = label(m.team2);
+      const set = (sel: string, val: string) => { const e = card.querySelector(sel); if (e) e.textContent = val; };
+      set('.fx-round', m.stage || '');
+      set('.fx-time', m.time || '');
+      set('.fx-team.t1 .flag', t1.flag);
+      set('.fx-team.t1 .name', t1.es);
+      set('.fx-team.t2 .flag', t2.flag);
+      set('.fx-team.t2 .name', t2.es);
+      const r = fmtResult(m.score);
+      set('.fx-score', r ? r.a + ' – ' + r.b : 'vs');
+      set('.fx-detail', r ? r.detail : '');
+      card.classList.toggle('played', !!r);
+    }
+
+    // Recalcula "hoy" en el cliente y reubica el resaltado + el bloque destacado.
+    // La página es estática: sin esto, el todayKey del build queda viejo al otro día.
+    function relocateToday() {
+      const days = cfg.days || [];
+      if (!days.length) return;
+      const realToday = todayKeyAR();
+      let featured = days.find((d: any) => d.key === realToday);
+      const isToday = !!featured;
+      if (!featured) featured = days.find((d: any) => d.key >= realToday) || days[days.length - 1];
+      if (!featured) return;
+
+      // 1) Mover el resaltado "HOY" en el calendario completo
+      document.querySelectorAll('.fx-day').forEach((el) => {
+        const isT = el.getAttribute('data-day') === realToday;
+        el.classList.toggle('is-today', isT);
+        const h = el.querySelector('.fx-day-h');
+        if (!h) return;
+        const badge = h.querySelector('.fx-hoy-badge');
+        if (isT && !badge) {
+          const b = document.createElement('span');
+          b.className = 'fx-hoy-badge';
+          b.textContent = 'HOY';
+          h.insertBefore(b, h.firstChild);
+        } else if (!isT && badge) {
+          badge.remove();
+        }
+      });
+
+      // 2) Reconstruir el bloque destacado (hoy / próximos)
+      const section = document.querySelector('.fx-today');
+      if (!section) return;
+      const h2 = section.querySelector('#fx-today-h');
+      if (h2) {
+        const dateSpan = h2.querySelector('.fx-today-date');
+        if (dateSpan) dateSpan.textContent = featured.label;
+        // Actualizar el texto del encabezado conservando el <span> (scope de estilos)
+        for (const node of Array.from(h2.childNodes)) {
+          if (node.nodeType === 3 && (node.textContent || '').trim()) {
+            node.textContent = isToday ? '⚽ Partidos de hoy ' : '⏭️ Próximos partidos ';
+            break;
+          }
+        }
+      }
+      const grid = section.querySelector('.fx-today-grid');
+      const template = grid && grid.querySelector('.fx-card');
+      if (grid && template) {
+        const frag = document.createDocumentFragment();
+        featured.matches.forEach((m: any) => {
+          const card = template.cloneNode(true) as Element;
+          fillCard(card, m);
+          frag.appendChild(card);
+        });
+        grid.innerHTML = '';
+        grid.appendChild(frag);
+      }
+    }
+
+    // Reconstruye el bloque "hoy" sólo cuando cambia el día (evita parpadeo en
+    // cada poll; cubre el caso de dejar la pestaña abierta y cruzar la medianoche).
+    let lastTodayKey = '';
+    function syncToday() {
+      const k = todayKeyAR();
+      if (k === lastTodayKey) return;
+      lastTodayKey = k;
+      relocateToday();
+    }
+
     async function refresh() {
       try {
         const res = await fetch(cfg.url, { cache: 'no-store' });
-        if (!res.ok) return;
+        if (!res.ok) return null;
         const data = await res.json();
-        if (!data || !Array.isArray(data.matches)) return;
+        if (!data || !Array.isArray(data.matches)) return null;
         const byNum = new Map<number, any>();
         data.matches.forEach((m: any, i: number) => byNum.set(m.num ?? i + 1, m));
-        let played = 0;
+        // Set por num: los partidos de hoy aparecen 2 veces en el DOM (bloque
+        // destacado + lista completa); contar elementos inflaría el "jugados de".
+        const playedNums = new Set<number>();
         document.querySelectorAll('[data-match]').forEach((el) => {
           const num = Number((el as HTMLElement).dataset.num);
           const m = byNum.get(num);
           if (!m) return;
           applyMatch(el, m);
-          if (m.score && m.score.ft) played++;
+          if (m.score && m.score.ft) playedNums.add(num);
         });
+        const played = playedNums.size;
         const pEl = document.querySelector('[data-live-played]');
         if (pEl) pEl.innerHTML = '<strong>' + played + '</strong> jugados de ' + byNum.size;
         const uEl = document.querySelector('[data-live-updated]');
         if (uEl) uEl.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
-      } catch { /* snapshot server queda válido */ }
+        return { played, total: byNum.size };
+      } catch { /* snapshot server queda válido */ return null; }
     }
-    refresh();
+
+    // ── Auto-actualización: los marcadores se completan solos al terminar cada
+    // partido. La página es estática; el JSON de openfootball se actualiza durante
+    // el torneo, así que repolleamos cada 2 min sin recargar ni redeployar.
+    let poll: any = null;
+    let stopped = false;
+    async function tick() {
+      syncToday(); // corrige "hoy" (el del build queda viejo) y cubre el cambio de día
+      const st = await refresh();
+      if (st && st.total > 0 && st.played >= st.total) {
+        stopped = true; // torneo completo → no seguir polleando
+        if (poll) { clearInterval(poll); poll = null; }
+      }
+    }
+    tick();
+    poll = setInterval(() => { if (!document.hidden && !stopped) tick(); }, 120000);
+    // Al volver a la pestaña, actualizar al instante en vez de esperar el próximo poll.
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && !stopped) tick(); });
   })();
 </script>
 
