@@ -1165,6 +1165,21 @@ for (const c of calcs) {
     });
   }
 }
+// Infografías de calcs por locale (campo `infographic`) → sitemap-images con loc prefijado.
+// El loop AR de arriba solo cubre src/content/calcs; las verticales (/es, /mx, …) van acá.
+for (const [loc, list] of [['es', calcsEs], ['mx', calcsMx], ['cl', calcsCl], ['co', calcsCo], ['pe', calcsPe], ['ec', calcsEc], ['en', calcsEn], ['pt', calcsPt]] as const) {
+  for (const c of list as any[]) {
+    const info = (c as any).infographic;
+    if (info && info.src) {
+      imageEntries.push({
+        loc: `${site}/${loc}/${c.slug}`,
+        image: (info.src as string).startsWith('http') ? info.src : `${site}${info.src}`,
+        caption: ((info.caption || info.alt || '') as string).slice(0, 300),
+        title: ((info.alt || (c as any).h1 || '') as string).slice(0, 100),
+      });
+    }
+  }
+}
 if (imageEntries.length > 0) {
   writeFileSync(join(PUBLIC_DIR, 'sitemap-images.xml'), imagesetXml(imageEntries), 'utf8');
   // El sitemap de imágenes va al index con lastmod = buildDate (representa el set actual de OG).
