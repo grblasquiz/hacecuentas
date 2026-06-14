@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-10
+// Generated: 2026-06-14
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -324,6 +324,7 @@ import { boxeoCaloriasQuemadasRoundsPeso } from './boxeo-calorias-quemadas-round
 import { bpcIdosoDeficiente } from './bpc-idoso-deficiente';
 import { bpmTempoCancion } from './bpm-tempo-cancion';
 import { breakEven } from './break-even';
+import { breakEvenCampanaPublicitaria } from './break-even-campana-publicitaria';
 import { breakEvenFreelanceMes } from './break-even-freelance-mes';
 import { breakevenTradeComisiones } from './breakeven-trade-comisiones';
 import { bridgeFeeCriptoCrosschainCosto } from './bridge-fee-cripto-crosschain-costo';
@@ -335,6 +336,7 @@ import { caballoPensionMesClubHipico } from './caballo-pension-mes-club-hipico';
 import { cableAwgAmperajeSeccion } from './cable-awg-amperaje-seccion';
 import { cableElectricoSeccionAmperajeDistancia } from './cable-electrico-seccion-amperaje-distancia';
 import { cacCostoAdquisicionSalesFunnel } from './cac-costo-adquisicion-sales-funnel';
+import { cacPaybackMesesRecuperarCliente } from './cac-payback-meses-recuperar-cliente';
 import { cacPaybackMonths } from './cac-payback-months';
 import { cachorrosCamadaRaza } from './cachorros-camada-raza';
 import { compute as compute__cae_credito_aval_estado_chile_vs_becas } from './cae-credito-aval-estado-chile-vs-becas';
@@ -357,6 +359,10 @@ import { cajaSeguridadBancoComparativaMensual } from './caja-seguridad-banco-com
 import { calcioDiarioEdad } from './calcio-diario-edad';
 import { calcioDiarioEdadLactanciaMenopausia } from './calcio-diario-edad-lactancia-menopausia';
 import { calcioDietaDiariaOsteoporosisMujer } from './calcio-dieta-diaria-osteoporosis-mujer';
+import { calculadoraCostoRealPautaExteriorImpuestosArgentina } from './calculadora-costo-real-pauta-exterior-impuestos-argentina';
+import { calculadoraCostoRealPautaExteriorImpuestosColombia } from './calculadora-costo-real-pauta-exterior-impuestos-colombia';
+import { calculadoraCostoRealPautaExteriorImpuestosMexico } from './calculadora-costo-real-pauta-exterior-impuestos-mexico';
+import { calculadoraCostoRealServicioDigitalExteriorSaasArgentina } from './calculadora-costo-real-servicio-digital-exterior-saas-argentina';
 import { calculadoraProporcionesReceta } from './calculadora-proporciones-receta';
 import { calderaCondensacionPelletsVsGasAhorro } from './caldera-condensacion-pellets-vs-gas-ahorro';
 import { calderaKwM2Calefaccion } from './caldera-kw-m2-calefaccion';
@@ -820,6 +826,7 @@ import { compute as compute__coste_vida_mensual_colombia_soltero_pareja } from '
 import { compute as compute__coste_vida_mensual_mexico_soltero_pareja_familia } from './coste-vida-mensual-mexico-soltero-pareja-familia';
 import { compute as compute__coste_vida_mensual_soltero_pareja_espana_ccaa } from './coste-vida-mensual-soltero-pareja-espana-ccaa';
 import { costoAbonoBundesligaPremier } from './costo-abono-bundesliga-premier';
+import { costoAdquisicionSeguidorPagoPaidSocial } from './costo-adquisicion-seguidor-pago-paid-social';
 import { costoAireAcondicionadoHora } from './costo-aire-acondicionado-hora';
 import { costoAlmacenamientoInventario } from './costo-almacenamiento-inventario';
 import { costoAnualMascotaPerroGatoArCompleto } from './costo-anual-mascota-perro-gato-ar-completo';
@@ -858,6 +865,7 @@ import { compute as compute__costo_laboral_total_empleador_ecuador } from './cos
 import { compute as compute__costo_laboral_total_empleador_peru } from './costo-laboral-total-empleador-peru';
 import { costoLavadoRopaLavadoraVsLavanderia } from './costo-lavado-ropa-lavadora-vs-lavanderia';
 import { costoM2Construccion } from './costo-m2-construccion';
+import { costoMantenerPropiedadVaciaMensual } from './costo-mantener-propiedad-vacia-mensual';
 import { costoMantenimientoAutoAnualKm } from './costo-mantenimiento-auto-anual-km';
 import { costoMantenimientoHogarAnual } from './costo-mantenimiento-hogar-anual';
 import { costoMascotaMensual } from './costo-mascota-mensual';
@@ -878,6 +886,7 @@ import { compute as compute__costo_pasaporte_mexicano_2026 } from './costo-pasap
 import { costoPeajeRuta } from './costo-peaje-ruta';
 import { costoPorKilometroAuto } from './costo-por-kilometro-auto';
 import { costoPorLead } from './costo-por-lead';
+import { costoPorLeadCplCampana } from './costo-por-lead-cpl-campana';
 import { costoPorViewCpvVideo } from './costo-por-view-cpv-video';
 import { costoRealCuotas } from './costo-real-cuotas';
 import { costoRealCuotasSinInteres } from './costo-real-cuotas-sin-interes';
@@ -887,6 +896,7 @@ import { costoServidorCloudAwsEc2Mensual } from './costo-servidor-cloud-aws-ec2-
 import { costoSupermercadoCanasticaBasica } from './costo-supermercado-canasta-basica';
 import { costoSuscripcionesMensual } from './costo-suscripciones-mensual';
 import { costoTokensApiOpenaiClaudeMensual } from './costo-tokens-api-openai-claude-mensual';
+import { costoTotalComprarPropiedadGastos } from './costo-total-comprar-propiedad-gastos';
 import { costoTotalCriarHijo18Anios } from './costo-total-criar-hijo-18-anios';
 import { compute as compute__costo_total_empleado_empleador_colombia_2026 } from './costo-total-empleado-empleador-colombia-2026';
 import { costoTotalPropiedadAutoAnual } from './costo-total-propiedad-auto-anual';
@@ -899,6 +909,7 @@ import { cotillonCumplePersonas } from './cotillon-cumple-personas';
 import { cotizacionProyectoPrecio } from './cotizacion-proyecto-precio';
 import { coworkingPrecioMesFlexFijoComparativa } from './coworking-precio-mes-flex-fijo-comparativa';
 import { cpa } from './cpa';
+import { cpaMaximoRentableTargetCpa } from './cpa-maximo-rentable-target-cpa';
 import { cpmCpcConversionAds } from './cpm-cpc-conversion-ads';
 import { creatinaCargaMantenimientoPeso } from './creatina-carga-mantenimiento-peso';
 import { creatinaDosisarga } from './creatina-dosis-carga-mantenimiento';
@@ -2135,6 +2146,7 @@ import { metrosCuadradosHabitacion } from './metros-cuadrados-habitacion';
 import { metrosHectareas } from './metros-hectareas';
 import { compute as compute__metros_lineales_metros_cuadrados_rollos_papel_tela } from './metros-lineales-metros-cuadrados-rollos-papel-tela';
 import { mezclaAudioHeadroomDb } from './mezcla-audio-headroom-db';
+import { mezclaPresupuestoCanalesMarketing } from './mezcla-presupuesto-canales-marketing';
 import { compute as compute__mibor_euribor_historico_hipoteca_revision } from './mibor-euribor-historico-hipoteca-revision';
 import { midjourneyStableDiffusionCreditsMensual } from './midjourney-stable-diffusion-credits-mensual';
 import { midjourneyVsDalleCostoImagenComparativa } from './midjourney-vs-dalle-costo-imagen-comparativa';
@@ -2228,6 +2240,7 @@ import { negroniProporcionesInvitados } from './negroni-proporciones-invitados';
 import { compute as compute__net_worth_tracker_calculator } from './net-worth-tracker-calculator';
 import { netoABruto } from './neto-a-bruto';
 import { neumaticosMedidaEquivalente } from './neumaticos-medida-equivalente';
+import { newsletterIngresoSuscriptoresPago } from './newsletter-ingreso-suscriptores-pago';
 import { nftFloorPricePortfolio } from './nft-floor-portfolio';
 import { nftHolderBoostRewards } from './nft-holder-boost';
 import { nftMintGas } from './nft-mint-gas';
@@ -2487,6 +2500,7 @@ import { plazoTesisDeadline } from './plazo-tesis-deadline';
 import { plusAntiguedad } from './plus-antiguedad';
 import { plusvaliaInmueblePba } from './plusvalia-inmueble-pba';
 import { compute as compute__plusvalia_municipal_iivtnu_espana } from './plusvalia-municipal-iivtnu-espana';
+import { plusvaliaRevalorizacionInmuebleProyectada } from './plusvalia-revalorizacion-inmueble-proyectada';
 import { pncMadre7Hijos } from './pnc-madre-7-hijos';
 import { pncVejez70Anos } from './pnc-vejez-70-anos';
 import { pnlFuturosLongShortPerpetual } from './pnl-futuros-long-short-perpetual';
@@ -2610,6 +2624,7 @@ import { presupuestoGraduacion } from './presupuesto-graduacion';
 import { presupuestoHalloweenCostumes } from './presupuesto-halloween-costumes';
 import { presupuestoLunaMielDestinoDias } from './presupuesto-luna-miel-destino-dias';
 import { presupuestoMochileroBackpackerDiaPais } from './presupuesto-mochilero-backpacker-dia-pais';
+import { presupuestoPautaPorObjetivo } from './presupuesto-pauta-por-objetivo';
 import { presupuestoViaje } from './presupuesto-viaje';
 import { presupuestoViajeBaliIndonesia } from './presupuesto-viaje-bali-indonesia';
 import { presupuestoViajeBarcelona } from './presupuesto-viaje-barcelona';
@@ -2687,7 +2702,9 @@ import { proteinaPorComidaAnabolismo } from './proteina-por-comida-anabolismo';
 import { proximoCumpleanos } from './proximo-cumpleanos';
 import { proyeccion10kDesde5kRiegel } from './proyeccion-10k-desde-5k-riegel';
 import { proyeccion21kDesde10kCameron } from './proyeccion-21k-desde-10k-cameron';
+import { proyeccionCrecimientoSeguidoresMeses } from './proyeccion-crecimiento-seguidores-meses';
 import { proyeccionVentas } from './proyeccion-ventas';
+import { proyeccionVentasInversionRoasForecast } from './proyeccion-ventas-inversion-roas-forecast';
 import { ptuMexico } from './ptu-mexico';
 import { compute as compute__ptu_reparto_utilidades_mexico_10_porcentaje } from './ptu-reparto-utilidades-mexico-10-porcentaje';
 import { compute as compute__puam_pension_universal_adulto_mayor_anses_2026 } from './puam-pension-universal-adulto-mayor-anses-2026';
@@ -2792,6 +2809,7 @@ import { compute as compute__renta_presunta_chile_agricola_transporte_mineria } 
 import { compute as compute__renta_primera_categoria_alquiler_peru } from './renta-primera-categoria-alquiler-peru';
 import { compute as compute__renta_vitalicia_mayores_65_espana_fiscalidad } from './renta-vitalicia-mayores-65-espana-fiscalidad';
 import { rentabilidadAlquiler } from './rentabilidad-alquiler';
+import { rentabilidadAlquilerCapRate } from './rentabilidad-alquiler-cap-rate';
 import { rentabilidadAlquilerInmuebleCabaNetoBruto } from './rentabilidad-alquiler-inmueble-caba-neto-bruto';
 import { rentabilidadAlquilerVsVenta } from './rentabilidad-alquiler-vs-venta';
 import { compute as compute__rentabilidad_finca_raiz_colombia_renta_fija_comparada } from './rentabilidad-finca-raiz-colombia-renta-fija-comparada';
@@ -3114,6 +3132,7 @@ import { tarifaFreelanceDolarExperienciaHora } from './tarifa-freelance-dolar-ex
 import { compute as compute__tarifa_freelance_hora_argentina_cliente_exterior_deel } from './tarifa-freelance-hora-argentina-cliente-exterior-deel';
 import { compute as compute__tarifa_gas_metrogas_naturgy_cuadro_2026 } from './tarifa-gas-metrogas-naturgy-cuadro-2026';
 import { compute as compute__tarifa_vuelo_domestico_chile_impuestos_tasas_aeropuerto } from './tarifa-vuelo-domestico-chile-impuestos-tasas-aeropuerto';
+import { tarifarioCreadorContenidoMultiplataforma } from './tarifario-creador-contenido-multiplataforma';
 import { tarjetaAlimentarMontoHijos2026 } from './tarjeta-alimentar-monto-hijos-2026';
 import { compute as compute__tarjeta_credito_cat_mexico_pago_minimo_trampa } from './tarjeta-credito-cat-mexico-pago-minimo-trampa';
 import { compute as compute__tarjeta_credito_chile_tasa_rotativa_pago_minimo } from './tarjeta-credito-chile-tasa-rotativa-pago-minimo';
@@ -3288,6 +3307,7 @@ import { uberDriverChile } from './uber-driver-chile';
 import { uberDriverMexico } from './uber-driver-mexico';
 import { uberVsAutoPropio } from './uber-vs-auto-propio';
 import { compute as compute__uf_uta_utm_chile_conversion_pesos_2026 } from './uf-uta-utm-chile-conversion-pesos-2026';
+import { ugcTarifaContenidoMarca } from './ugc-tarifa-contenido-marca';
 import { umaConversion } from './uma-conversion';
 import { umbralLactatoEstimado } from './umbral-lactato-estimado';
 import { compute as compute__uniswap_v3_concentrated_liquidity_rango_impermanent } from './uniswap-v3-concentrated-liquidity-rango-impermanent';
@@ -3797,6 +3817,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'bpc-idoso-deficiente': bpcIdosoDeficiente,
   'bpm-tempo-cancion': bpmTempoCancion,
   'break-even': breakEven,
+  'break-even-campana-publicitaria': breakEvenCampanaPublicitaria,
   'break-even-freelance-mes': breakEvenFreelanceMes,
   'breakeven-trade-comisiones': breakevenTradeComisiones,
   'bridge-fee-cripto-crosschain-costo': bridgeFeeCriptoCrosschainCosto,
@@ -3808,6 +3829,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cable-awg-amperaje-seccion': cableAwgAmperajeSeccion,
   'cable-electrico-seccion-amperaje-distancia': cableElectricoSeccionAmperajeDistancia,
   'cac-costo-adquisicion-sales-funnel': cacCostoAdquisicionSalesFunnel,
+  'cac-payback-meses-recuperar-cliente': cacPaybackMesesRecuperarCliente,
   'cac-payback-months': cacPaybackMonths,
   'cachorros-camada-raza': cachorrosCamadaRaza,
   'cae-credito-aval-estado-chile-vs-becas': compute__cae_credito_aval_estado_chile_vs_becas,
@@ -3830,6 +3852,10 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calcio-diario-edad': calcioDiarioEdad,
   'calcio-diario-edad-lactancia-menopausia': calcioDiarioEdadLactanciaMenopausia,
   'calcio-dieta-diaria-osteoporosis-mujer': calcioDietaDiariaOsteoporosisMujer,
+  'calculadora-costo-real-pauta-exterior-impuestos-argentina': calculadoraCostoRealPautaExteriorImpuestosArgentina,
+  'calculadora-costo-real-pauta-exterior-impuestos-colombia': calculadoraCostoRealPautaExteriorImpuestosColombia,
+  'calculadora-costo-real-pauta-exterior-impuestos-mexico': calculadoraCostoRealPautaExteriorImpuestosMexico,
+  'calculadora-costo-real-servicio-digital-exterior-saas-argentina': calculadoraCostoRealServicioDigitalExteriorSaasArgentina,
   'calculadora-proporciones-receta': calculadoraProporcionesReceta,
   'caldera-condensacion-pellets-vs-gas-ahorro': calderaCondensacionPelletsVsGasAhorro,
   'caldera-kw-m2-calefaccion': calderaKwM2Calefaccion,
@@ -4293,6 +4319,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'coste-vida-mensual-mexico-soltero-pareja-familia': compute__coste_vida_mensual_mexico_soltero_pareja_familia,
   'coste-vida-mensual-soltero-pareja-espana-ccaa': compute__coste_vida_mensual_soltero_pareja_espana_ccaa,
   'costo-abono-bundesliga-premier': costoAbonoBundesligaPremier,
+  'costo-adquisicion-seguidor-pago-paid-social': costoAdquisicionSeguidorPagoPaidSocial,
   'costo-aire-acondicionado-hora': costoAireAcondicionadoHora,
   'costo-almacenamiento-inventario': costoAlmacenamientoInventario,
   'costo-anual-mascota-perro-gato-ar-completo': costoAnualMascotaPerroGatoArCompleto,
@@ -4331,6 +4358,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-laboral-total-empleador-peru': compute__costo_laboral_total_empleador_peru,
   'costo-lavado-ropa-lavadora-vs-lavanderia': costoLavadoRopaLavadoraVsLavanderia,
   'costo-m2-construccion': costoM2Construccion,
+  'costo-mantener-propiedad-vacia-mensual': costoMantenerPropiedadVaciaMensual,
   'costo-mantenimiento-auto-anual-km': costoMantenimientoAutoAnualKm,
   'costo-mantenimiento-hogar-anual': costoMantenimientoHogarAnual,
   'costo-mascota-mensual': costoMascotaMensual,
@@ -4351,6 +4379,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-peaje-ruta': costoPeajeRuta,
   'costo-por-kilometro-auto': costoPorKilometroAuto,
   'costo-por-lead': costoPorLead,
+  'costo-por-lead-cpl-campana': costoPorLeadCplCampana,
   'costo-por-view-cpv-video': costoPorViewCpvVideo,
   'costo-real-cuotas': costoRealCuotas,
   'costo-real-cuotas-sin-interes': costoRealCuotasSinInteres,
@@ -4360,6 +4389,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-supermercado-canasta-basica': costoSupermercadoCanasticaBasica,
   'costo-suscripciones-mensual': costoSuscripcionesMensual,
   'costo-tokens-api-openai-claude-mensual': costoTokensApiOpenaiClaudeMensual,
+  'costo-total-comprar-propiedad-gastos': costoTotalComprarPropiedadGastos,
   'costo-total-criar-hijo-18-anios': costoTotalCriarHijo18Anios,
   'costo-total-empleado-empleador-colombia-2026': compute__costo_total_empleado_empleador_colombia_2026,
   'costo-total-propiedad-auto-anual': costoTotalPropiedadAutoAnual,
@@ -4372,6 +4402,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cotizacion-proyecto-precio': cotizacionProyectoPrecio,
   'coworking-precio-mes-flex-fijo-comparativa': coworkingPrecioMesFlexFijoComparativa,
   'cpa': cpa,
+  'cpa-maximo-rentable-target-cpa': cpaMaximoRentableTargetCpa,
   'cpm-cpc-conversion-ads': cpmCpcConversionAds,
   'creatina-carga-mantenimiento-peso': creatinaCargaMantenimientoPeso,
   'creatina-dosis-carga-mantenimiento': creatinaDosisarga,
@@ -5608,6 +5639,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'metros-hectareas': metrosHectareas,
   'metros-lineales-metros-cuadrados-rollos-papel-tela': compute__metros_lineales_metros_cuadrados_rollos_papel_tela,
   'mezcla-audio-headroom-db': mezclaAudioHeadroomDb,
+  'mezcla-presupuesto-canales-marketing': mezclaPresupuestoCanalesMarketing,
   'mibor-euribor-historico-hipoteca-revision': compute__mibor_euribor_historico_hipoteca_revision,
   'midjourney-stable-diffusion-credits-mensual': midjourneyStableDiffusionCreditsMensual,
   'midjourney-vs-dalle-costo-imagen-comparativa': midjourneyVsDalleCostoImagenComparativa,
@@ -5701,6 +5733,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'net-worth-tracker-calculator': compute__net_worth_tracker_calculator,
   'neto-a-bruto': netoABruto,
   'neumaticos-medida-equivalente': neumaticosMedidaEquivalente,
+  'newsletter-ingreso-suscriptores-pago': newsletterIngresoSuscriptoresPago,
   'nft-floor-portfolio': nftFloorPricePortfolio,
   'nft-holder-boost': nftHolderBoostRewards,
   'nft-mint-gas': nftMintGas,
@@ -5960,6 +5993,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'plus-antiguedad': plusAntiguedad,
   'plusvalia-inmueble-pba': plusvaliaInmueblePba,
   'plusvalia-municipal-iivtnu-espana': compute__plusvalia_municipal_iivtnu_espana,
+  'plusvalia-revalorizacion-inmueble-proyectada': plusvaliaRevalorizacionInmuebleProyectada,
   'pnc-madre-7-hijos': pncMadre7Hijos,
   'pnc-vejez-70-anos': pncVejez70Anos,
   'pnl-futuros-long-short-perpetual': pnlFuturosLongShortPerpetual,
@@ -6083,6 +6117,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'presupuesto-halloween-costumes': presupuestoHalloweenCostumes,
   'presupuesto-luna-miel-destino-dias': presupuestoLunaMielDestinoDias,
   'presupuesto-mochilero-backpacker-dia-pais': presupuestoMochileroBackpackerDiaPais,
+  'presupuesto-pauta-por-objetivo': presupuestoPautaPorObjetivo,
   'presupuesto-viaje': presupuestoViaje,
   'presupuesto-viaje-bali-indonesia': presupuestoViajeBaliIndonesia,
   'presupuesto-viaje-barcelona': presupuestoViajeBarcelona,
@@ -6160,7 +6195,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'proximo-cumpleanos': proximoCumpleanos,
   'proyeccion-10k-desde-5k-riegel': proyeccion10kDesde5kRiegel,
   'proyeccion-21k-desde-10k-cameron': proyeccion21kDesde10kCameron,
+  'proyeccion-crecimiento-seguidores-meses': proyeccionCrecimientoSeguidoresMeses,
   'proyeccion-ventas': proyeccionVentas,
+  'proyeccion-ventas-inversion-roas-forecast': proyeccionVentasInversionRoasForecast,
   'ptu-mexico': ptuMexico,
   'ptu-reparto-utilidades-mexico-10-porcentaje': compute__ptu_reparto_utilidades_mexico_10_porcentaje,
   'puam-pension-universal-adulto-mayor-anses-2026': compute__puam_pension_universal_adulto_mayor_anses_2026,
@@ -6265,6 +6302,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'renta-primera-categoria-alquiler-peru': compute__renta_primera_categoria_alquiler_peru,
   'renta-vitalicia-mayores-65-espana-fiscalidad': compute__renta_vitalicia_mayores_65_espana_fiscalidad,
   'rentabilidad-alquiler': rentabilidadAlquiler,
+  'rentabilidad-alquiler-cap-rate': rentabilidadAlquilerCapRate,
   'rentabilidad-alquiler-inmueble-caba-neto-bruto': rentabilidadAlquilerInmuebleCabaNetoBruto,
   'rentabilidad-alquiler-vs-venta': rentabilidadAlquilerVsVenta,
   'rentabilidad-finca-raiz-colombia-renta-fija-comparada': compute__rentabilidad_finca_raiz_colombia_renta_fija_comparada,
@@ -6587,6 +6625,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tarifa-freelance-hora-argentina-cliente-exterior-deel': compute__tarifa_freelance_hora_argentina_cliente_exterior_deel,
   'tarifa-gas-metrogas-naturgy-cuadro-2026': compute__tarifa_gas_metrogas_naturgy_cuadro_2026,
   'tarifa-vuelo-domestico-chile-impuestos-tasas-aeropuerto': compute__tarifa_vuelo_domestico_chile_impuestos_tasas_aeropuerto,
+  'tarifario-creador-contenido-multiplataforma': tarifarioCreadorContenidoMultiplataforma,
   'tarjeta-alimentar-monto-hijos-2026': tarjetaAlimentarMontoHijos2026,
   'tarjeta-credito-cat-mexico-pago-minimo-trampa': compute__tarjeta_credito_cat_mexico_pago_minimo_trampa,
   'tarjeta-credito-chile-tasa-rotativa-pago-minimo': compute__tarjeta_credito_chile_tasa_rotativa_pago_minimo,
@@ -6761,6 +6800,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'uber-driver-mexico': uberDriverMexico,
   'uber-vs-auto-propio': uberVsAutoPropio,
   'uf-uta-utm-chile-conversion-pesos-2026': compute__uf_uta_utm_chile_conversion_pesos_2026,
+  'ugc-tarifa-contenido-marca': ugcTarifaContenidoMarca,
   'uma-conversion': umaConversion,
   'umbral-lactato-estimado': umbralLactatoEstimado,
   'uniswap-v3-concentrated-liquidity-rango-impermanent': compute__uniswap_v3_concentrated_liquidity_rango_impermanent,
