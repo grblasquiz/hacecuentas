@@ -1,3 +1,5 @@
+import { COLOMBIA_2026 } from '../data/colombia-2026';
+
 export interface Inputs {
   salario_mensual: number;
   dias_trabajados: number;
@@ -18,7 +20,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 Colombia
-  const AUXILIO_TRANSPORTE_2026 = 163286; // DIAN 2026
+  const AUXILIO_TRANSPORTE_2026 = COLOMBIA_2026.auxilioTransporte; // $249.095 (Decreto 1470/2025) — fuente única
   const DIAS_ANNO = 360; // Días laborales año colombiano
   const DIAS_PRIMA = 30; // Días prima legal anual
 

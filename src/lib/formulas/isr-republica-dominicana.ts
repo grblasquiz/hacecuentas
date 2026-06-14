@@ -22,17 +22,19 @@ export interface Outputs {
   _chart?: any;
 }
 
-// Tabla ISR personas físicas 2026 (estimada con ajuste inflación ~4%)
-// Exención anual estimada: RD$ 520,116
-const EXENCION = 520_116;
+// Tabla ISR personas físicas — Art. 296 Código Tributario (DGII). La escala está
+// CONGELADA desde 2017/2018: el Art. 327 exige ajuste anual por inflación pero las
+// leyes de presupuesto sucesivas lo suspenden. Resolución DDG-AR1-2026-00001.
+// Exención anual: RD$416.220 (RD$34.685/mes).
+const EXENCION = 416_220;
 
 const TABLA_ISR: Array<{
   desde: number; hasta: number; cuotaFija: number; tasa: number;
 }> = [
   { desde: 0, hasta: EXENCION, cuotaFija: 0, tasa: 0 },
-  { desde: EXENCION, hasta: 780_174, cuotaFija: 0, tasa: 15 },
-  { desde: 780_174, hasta: 1_083_575, cuotaFija: 39_009, tasa: 20 },
-  { desde: 1_083_575, hasta: Infinity, cuotaFija: 99_689, tasa: 25 },
+  { desde: EXENCION, hasta: 624_329, cuotaFija: 0, tasa: 15 },
+  { desde: 624_329, hasta: 867_123, cuotaFija: 31_216, tasa: 20 },
+  { desde: 867_123, hasta: Infinity, cuotaFija: 79_776, tasa: 25 },
 ];
 
 export function isrRepublicaDominicana(i: Inputs): Outputs {
