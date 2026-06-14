@@ -2,9 +2,10 @@
 export interface Inputs { tieneBono: boolean | string; }
 export interface Outputs { haberMinimo: number; bonoExtra: number; total: number; totalAnual: number; aguinaldoMedio: number; _chart?: any; _insight?: any; }
 
-// Valores aproximados abril 2026
-const HABER_MINIMO = 280000;
-const BONO_EXTRA = 70000; // bono complementario ANSES para haberes mínimos
+// Valores oficiales junio 2026 (ANSES — movilidad mensual por IPC, DNU 274/2024)
+// Haber mínimo jun-2026: $403.317,99 tras aumento del 2,58%. Se ajusta mes a mes por IPC.
+const HABER_MINIMO = 403318;
+const BONO_EXTRA = 70000; // bono complementario por decreto para haberes hasta la mínima
 
 export function jubilacionMinima(i: Inputs): Outputs {
   const tieneBono = i.tieneBono === true || i.tieneBono === 'true' || i.tieneBono === 'si';

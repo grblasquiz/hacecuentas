@@ -3,14 +3,17 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _chart?: any; _insight?: any; }
 export function sueldoBancarioBcoNacionProvincia(i: Inputs): Outputs {
   const antig=Number(i.antiguedad)||0; const cargas=Number(i.cargas)||0;
-  const basico=1800000;
+  // Salario inicial bancario (categoría Administrativo, incluye ROE/participación
+  // en ganancias) vigente desde mayo 2026, paritaria La Bancaria. Verificar el
+  // valor del mes en labancaria.org tras cada acuerdo paritario.
+  const basico=2319195;
   const plusAntig=basico*0.05*antig;
   const bruto=basico+plusAntig;
   const baseAp = Math.min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES); // tope Ley 24.241 art.9
   const jubilacion = baseAp * 0.11;
   const obraSocial = baseAp * 0.03;
   const pami = baseAp * 0.03;
-  const ganancias=Math.max(0,(bruto-1800000)*0.05); // Simplificación
+  const ganancias=Math.max(0,(bruto-basico)*0.05); // Simplificación (5% sobre el exceso de antigüedad)
   const neto=bruto-jubilacion-obraSocial-pami-ganancias;
   const sac=bruto/12;
   const chart = {

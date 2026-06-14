@@ -2,7 +2,8 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function autonomosCategoriaMonto2026(i: Inputs): Outputs {
   const c=String(i.categoria||'I');
-  const montos: Record<string,number> = { I:38000, II:53000, III:76000, IV:122000, V:168000 };
+  // Aporte mensual al SIPA por categoría — valores oficiales ARCA vigentes desde abril 2026 (RG / Valores-autonomos-desde-abril-2026)
+  const montos: Record<string,number> = { I:68315, II:95640, III:136629, IV:218606, V:300582 };
   const m=montos[c]||38000;
   const _insight = {
     title: 'Tu aporte como autónomo',

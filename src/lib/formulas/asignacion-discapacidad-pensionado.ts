@@ -2,33 +2,36 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: any; }
 
 /**
- * Asignación Familiar por Hijo con Discapacidad (Pensionado) — ANSES.
- * Requiere CUD + grado de dependencia ≥76%.
- * Monto abril 2026 (primer rango de ingresos): $222.511.
- * Fuente: ANSES Montos-AAFF-04-2026.pdf
- * ANSES actualiza por movilidad mensual (IPC) — revisar cada trimestre.
+ * Pensión No Contributiva (PNC) por invalidez — ANSES / ANDIS.
+ * Ley 13.478, Decreto 432/97. Requiere CUD + grado de invalidez ≥76%.
+ * Monto = 70% del haber mínimo jubilatorio garantizado.
+ * Junio 2026: haber mínimo $403.317,99 → 70% ≈ $282.323 (sin bono extraordinario).
+ * Fuente: ANSES — PNC por invalidez (movilidad Ley 27.609, IPC INDEC).
+ * ANSES actualiza por movilidad mensual (IPC) — revisar cada mes/trimestre.
  */
+const HABER_MINIMO_JUBILATORIO = 403318; // jun-2026 (Res. ANSES 139/2026)
+const PCT_PNC = 0.70;                     // 70% del haber mínimo (Decreto 432/97)
 export function asignacionDiscapacidadPensionado(i: Inputs): Outputs {
   const c = String(i.cdu || 'no') === 'si';
   const g = Number(i.gradoDeps) || 0;
   const acceso = c && g >= 76;
-  const monto = acceso ? 282323 : 0;
+  const monto = acceso ? Math.round(HABER_MINIMO_JUBILATORIO * PCT_PNC) : 0;
   const faltaCud = !c;
   const faltaGrado = c && g < 76;
   const _insight = acceso
     ? {
         title: 'Acceso habilitado',
-        text: `Cumplís los requisitos: con **CUD** y grado de dependencia del **${g}%** (≥76%) cobrás **$${monto.toLocaleString('es-AR')}/mes**. ANSES ajusta este monto por movilidad, así que revisá el valor cada trimestre.`,
+        text: `Cumplís los requisitos: con **CUD** y grado de invalidez del **${g}%** (≥76%) cobrás la PNC por invalidez = **70% del haber mínimo** = **$${monto.toLocaleString('es-AR')}/mes** (jun-2026, sin contar el bono extraordinario cuando se dispone). ANSES ajusta este monto por movilidad mensual, así que revisá el valor vigente.`,
         tone: 'good',
         icon: '♿',
       }
     : {
         title: 'No cumple los requisitos',
         text: faltaCud
-          ? 'Falta el **Certificado Único de Discapacidad (CUD)**: es condición obligatoria para esta asignación, sin importar el grado de dependencia.'
+          ? 'Falta el **Certificado Único de Discapacidad (CUD)**: es condición obligatoria para esta asignación, sin importar el grado de invalidez.'
           : faltaGrado
-            ? `El grado de dependencia declarado (**${g}%**) está por debajo del mínimo de **76%** que exige ANSES para el cobro.`
-            : 'No se cumplen los requisitos (CUD vigente + grado de dependencia ≥76%).',
+            ? `El grado de invalidez declarado (**${g}%**) está por debajo del mínimo de **76%** que exige ANSES para el cobro.`
+            : 'No se cumplen los requisitos (CUD vigente + grado de invalidez ≥76%).',
         tone: 'warn',
         icon: '⚠️',
       };

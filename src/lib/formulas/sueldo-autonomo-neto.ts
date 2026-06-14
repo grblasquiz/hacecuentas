@@ -1,5 +1,10 @@
 /** Sueldo neto real de un autónomo/monotributista */
 
+// Fuente única de verdad: cuotas oficiales ARCA vigentes 2026-02-01.
+// Se usa la cuota de "servicios" (la mayoría de los freelancers/autónomos prestan
+// servicios; en categorías altas es la cuota más alta, el escenario conservador).
+import { CUOTA_SERVICIOS, type Cat } from '../data/monotributo-2026';
+
 export interface Inputs {
   facturacionMensual: number;
   categoriaMonotributo: string;
@@ -16,31 +21,16 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Pagos mensuales estimados monotributo 2026 (actualización enero 2026)
-const MONOTRIBUTO_MENSUAL: Record<string, number> = {
-  A: 32000,
-  B: 37000,
-  C: 42000,
-  D: 55000,
-  E: 65000,
-  F: 78000,
-  G: 90000,
-  H: 250000,
-  I: 280000,
-  J: 320000,
-  K: 365000,
-};
-
 export function sueldoAutonomoNeto(i: Inputs): Outputs {
   const facturacion = Number(i.facturacionMensual);
   const categoria = String(i.categoriaMonotributo).toUpperCase();
   const porcentajeIIBB = Number(i.porcentajeIIBB);
 
   if (isNaN(facturacion) || facturacion <= 0) throw new Error('Ingresá tu facturación mensual');
-  if (!MONOTRIBUTO_MENSUAL[categoria]) throw new Error('Seleccioná una categoría válida (A-K)');
+  if (!CUOTA_SERVICIOS[categoria as Cat]) throw new Error('Seleccioná una categoría válida (A-K)');
   if (isNaN(porcentajeIIBB) || porcentajeIIBB < 0) throw new Error('El porcentaje de IIBB no puede ser negativo');
 
-  const monotributo = MONOTRIBUTO_MENSUAL[categoria];
+  const monotributo = CUOTA_SERVICIOS[categoria as Cat];
   const iibb = facturacion * (porcentajeIIBB / 100);
   const otrosGastos = 15000; // estimado: contador, banco, etc.
 

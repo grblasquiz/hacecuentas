@@ -1,5 +1,5 @@
 /**
- * Jubilación Docente IPS Buenos Aires — Ley 11.758.
+ * Jubilación Docente IPS Buenos Aires — Decreto-Ley 9650/80 (régimen previsional PBA).
  * Haber = 80% del mejor sueldo histórico (últimos 10 años) × 82% móvil.
  * Requisitos: 30 años servicio docente + 60 años (varón) / 55 (mujer).
  * Tareas frente al aula penosas: reducción 5 años edad y servicio.
@@ -50,7 +50,7 @@ export function jubilacionDocenteIpsBa(i: Inputs): Outputs {
     const partes: string[] = [];
     if (faltaEdad > 0) partes.push(`**${faltaEdad} año${faltaEdad === 1 ? '' : 's'}** de edad`);
     if (faltaServicios > 0) partes.push(`**${faltaServicios} año${faltaServicios === 1 ? '' : 's'}** de servicio`);
-    insightText = `Todavía no llegás al beneficio ordinario: te falta${partes.length > 1 ? 'n' : ''} ${partes.join(' y ')} (mínimos Ley 11.758: ${edadRequerida} años y ${serviciosRequeridos} de servicio). El haber mostrado es proporcional: **${fmt(haberFinal)}**.`;
+    insightText = `Todavía no llegás al beneficio ordinario: te falta${partes.length > 1 ? 'n' : ''} ${partes.join(' y ')} (mínimos Dto-Ley 9650/80: ${edadRequerida} años y ${serviciosRequeridos} de servicio). El haber mostrado es proporcional: **${fmt(haberFinal)}**.`;
     insightTone = 'warn';
   }
   const _insight = {
@@ -66,7 +66,7 @@ export function jubilacionDocenteIpsBa(i: Inputs): Outputs {
     aniosFaltantes: faltaServicios,
     edadFaltante: faltaEdad,
     estado,
-    formula: '82% móvil × 80% del mejor sueldo últimos 10 años (Ley 11.758).',
+    formula: '82% móvil × 80% del mejor sueldo últimos 10 años (Dto-Ley 9650/80).',
     _insight,
   } as Outputs;
 }

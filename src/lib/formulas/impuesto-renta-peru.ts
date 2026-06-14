@@ -1,5 +1,5 @@
 /** Impuesto a la renta Perú — 4ta y 5ta categoría 2026
- *  UIT 2026 estimada: S/ 5,350 (basado en UIT 2025: S/ 5,150 + inflación)
+ *  UIT 2026 oficial: S/ 5,500 (Decreto Supremo 301-2025-EF, vigente 01/01/2026)
  */
 
 export interface Inputs {
@@ -21,7 +21,7 @@ export interface Outputs {
   _chart?: any;
 }
 
-const UIT = 5_350; // UIT 2026 estimada
+const UIT = 5_500; // UIT 2026 oficial (DS 301-2025-EF)
 
 // Tabla impuesto renta trabajo (4ta + 5ta categoría)
 // Art. 53 LIR

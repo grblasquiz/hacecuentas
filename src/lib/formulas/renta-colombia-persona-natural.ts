@@ -1,5 +1,5 @@
 /** Impuesto de renta Colombia persona natural 2026
- *  Tabla Art. 241 Estatuto Tributario (UVT 2026 estimado $49,799)
+ *  Tabla Art. 241 Estatuto Tributario (UVT 2026 oficial $52.374 — Res. DIAN 000238/2025)
  */
 
 export interface Inputs {
@@ -23,8 +23,8 @@ export interface Outputs {
   _chart?: any;
 }
 
-// UVT 2026 estimado (UVT 2025: $49,799 — ajuste por inflación ~6%)
-const UVT = 52_787;
+// UVT 2026 oficial: $52.374 (Resolución DIAN 000238 del 15-dic-2025; UVT 2025 fue $49.799)
+const UVT = 52_374;
 
 // Tabla Art. 241 ET — personas naturales (en UVT)
 const TABLA_RENTA: Array<{

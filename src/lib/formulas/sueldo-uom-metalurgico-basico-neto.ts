@@ -2,16 +2,28 @@ import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _chart?: any; _insight?: any; }
 export function sueldoUomMetalurgicoBasicoNeto(i: Inputs): Outputs {
-  const antig=Number(i.antiguedad)||0; const cargas=Number(i.cargas)||0;
-  const basico=1150000;
+  const antig=Number(i.antiguedad)||0;
+  const categoria=String(i.categoria||'1');
+  // Básicos mensuales (200 hs) UOM Rama 17 metalmecánica, escala CCT 260/75 vigente mayo 2026 (paritaria homologada).
+  // Cambian por paritaria trimestral; verificá la escala vigente en uom.org.ar.
+  const BASICOS: Record<string, number> = {
+    '1': 862686,   // Ingresante / peón
+    '2': 934548,   // Operario calificado
+    '3': 1007216,  // Medio oficial
+    '4': 1077490,  // Operario especializado
+    '5': 1139126,  // Operario especializado múltiple
+    '6': 1191768,  // Oficial
+    '7': 1191768,  // Oficial (categoría superior — mismo tope de escala homologada)
+  };
+  const basico = BASICOS[categoria] ?? BASICOS['1'];
   const plusAntig=basico*0.01*antig;
   const bruto=basico+plusAntig;
   const baseAp = Math.min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES); // tope Ley 24.241 art.9
   const jubilacion = baseAp * 0.11;
   const obraSocial = baseAp * 0.03;
   const pami = baseAp * 0.03;
-  const ganancias=Math.max(0,(bruto-1800000)*0.05); // Simplificación
-  const neto=bruto-jubilacion-obraSocial-pami-ganancias;
+  const cuotaSind = bruto * 0.02; // cuota sindical UOM
+  const neto=bruto-jubilacion-obraSocial-pami-cuotaSind;
   const sac=bruto/12;
   const chart = {
     type: 'doughnut' as const,
@@ -20,14 +32,14 @@ export function sueldoUomMetalurgicoBasicoNeto(i: Inputs): Outputs {
       { label: 'Jubilación', value: jubilacion },
       { label: 'Obra social', value: obraSocial },
       { label: 'PAMI', value: pami },
-      { label: 'Ganancias', value: ganancias },
+      { label: 'Cuota sindical', value: cuotaSind },
     ],
     prefix: '$',
     centerValue: '$' + Math.round(bruto).toLocaleString('es-AR'),
     centerLabel: 'Bruto',
-    ariaLabel: 'Composición del sueldo bruto: neto, jubilación, obra social, PAMI y Ganancias.',
+    ariaLabel: 'Composición del sueldo bruto: neto, jubilación, obra social, PAMI y cuota sindical.',
   };
-  const totalDesc=jubilacion+obraSocial+pami+ganancias;
+  const totalDesc=jubilacion+obraSocial+pami+cuotaSind;
   const pctDesc=bruto>0?totalDesc/bruto*100:0;
   const insight={
     title:'Tu sueldo en mano',

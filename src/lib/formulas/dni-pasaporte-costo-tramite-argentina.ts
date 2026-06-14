@@ -2,9 +2,10 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function dniPasaporteCostoTramiteArgentina(i: Inputs): Outputs {
   const t=String(i.tipo||'dni-renov');
+  // Tarifario RENAPER vigente desde el 6/3/2026 (fuente: argentina.gob.ar/interior/renaper/tarifario-de-tramites-de-renaper)
   const tar: Record<string,[number,string]> = {
-    'dni-0-5':[0,'15 días'], 'dni-renov':[12000,'15 días'], 'dni-duplic':[18000,'15 días'],
-    'pas-com':[95000,'15 días'], 'pas-ex':[150000,'5-10 días']
+    'dni-0-5':[0,'15 días hábiles'], 'dni-renov':[10000,'15 días hábiles'], 'dni-duplic':[10000,'15 días hábiles'],
+    'pas-com':[100000,'15 días hábiles'], 'pas-ex':[200000,'96 horas hábiles']
   };
   const nombre: Record<string,string> = {
     'dni-0-5':'DNI de 0 a 5 años', 'dni-renov':'renovación de DNI', 'dni-duplic':'duplicado de DNI',
