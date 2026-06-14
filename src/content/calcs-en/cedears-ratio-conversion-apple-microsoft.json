@@ -20,51 +20,78 @@
   ],
   "fields": [
     {
-      "id": "monto",
-      "label": "Amount",
+      "id": "precioUSD",
+      "label": "Share price (USD)",
       "type": "number",
       "required": true,
-      "placeholder": "$",
+      "placeholder": "e.g. 220",
+      "unit": "USD",
+      "min": 0.01,
+      "max": 1000000,
       "step": 0.01,
-      "help": "Investment or loan amount in ARS or USD."
+      "help": "Price of the underlying share on Nasdaq/NYSE, in US dollars. E.g. AAPL ~220, MSFT ~430, NVDA ~130."
     },
     {
-      "id": "plazo",
-      "label": "Time Period",
+      "id": "ratio",
+      "label": "Conversion ratio",
       "type": "number",
       "required": true,
-      "placeholder": "months",
-      "step": 0.01,
-      "help": "Number of periods (days, months, or years depending on calculation)."
+      "placeholder": "e.g. 20",
+      "unit": "CEDEARs per share",
+      "min": 1,
+      "max": 100000,
+      "step": 1,
+      "format": "plain",
+      "help": "How many CEDEARs equal 1 share. Jun-2026 ratios: AAPL 20 · MSFT 30 · GOOGL 58 · AMZN 144 · TSLA 15 · NVDA 24 · META 24 · SPY 60 · QQQ 20. Verify on BYMA, ratios change after splits."
     },
     {
-      "id": "tasa",
-      "label": "Rate",
+      "id": "ccl",
+      "label": "CCL FX rate",
       "type": "number",
       "required": true,
-      "placeholder": "%",
-      "step": 0.01,
-      "help": "Annual interest rate (%) as a percentage. Example: Argentine fixed rate ~70%."
+      "placeholder": "e.g. 1250",
+      "unit": "ARS per USD",
+      "min": 1,
+      "max": 1000000,
+      "step": 1,
+      "help": "Contado con liquidación (CCL) ARS/USD rate, the FX rate implied by CEDEARs. Do NOT use the official rate. 2026 ref: 1,100–1,400."
+    },
+    {
+      "id": "cantidad",
+      "label": "Number of CEDEARs (optional)",
+      "type": "number",
+      "required": false,
+      "placeholder": "e.g. 40",
+      "unit": "CEDEARs",
+      "min": 0,
+      "max": 100000000,
+      "step": 1,
+      "format": "plain",
+      "help": "Optional. If you enter how many CEDEARs you hold (or plan to buy), it shows the equivalent fractional shares and the value in USD and ARS."
     }
   ],
   "outputs": [
     {
       "id": "resultado",
-      "label": "Result",
+      "label": "Theoretical CEDEAR price (ARS)",
       "primary": true
     },
     {
       "id": "resumen",
-      "label": "Interpretation"
+      "label": "Equivalence & detail"
     }
   ],
   "example": {
-    "title": "Calculation Example",
+    "title": "Apple (AAPL) CEDEAR with a 20:1 ratio",
     "steps": [
-      "Base example",
-      "Result"
+      "AAPL share price: USD 220 | Ratio: 20 | CCL: ARS 1,250",
+      "CEDEAR price = (220 × 1,250) ÷ 20",
+      "= 275,000 ÷ 20",
+      "= ARS 13,750 per CEDEAR",
+      "Each CEDEAR = 1/20 share = USD 11.00",
+      "To replicate 1 full share you need 20 CEDEARs = ARS 275,000"
     ],
-    "result": "Result"
+    "result": "ARS 13,750 per CEDEAR — 20 CEDEARs = 1 AAPL share"
   },
   "explanation": "## How It's Calculated\n\nCEDEARs trade on BYMA (Bolsas y Mercados Argentinos) in Argentine pesos, but their value is anchored to the USD price of the underlying foreign share via a fixed conversion ratio and the implicit CCL (Contado con Liquidación) FX rate.\n\n```\n# Core formula\nFair CEDEAR Price (ARS) = (ADR Price in USD / Conversion Ratio) × CCL Rate (ARS/USD)\n\n# Implied CCL from market prices\nImplied CCL = CEDEAR Market Price (ARS) × Conversion Ratio / ADR Price (USD)\n\n# ARS investment → fractional share exposure\nShare Fraction = (ARS Amount / CEDEAR Market Price) / Conversion Ratio\n\n# Number of CEDEARs for a target share fraction\nCEDEARs Needed = Target Share Fraction × Conversion Ratio\n```\n\n**Key variables:**\n- **ADR Price**: The closing price of AAPL or MSFT on Nasdaq/NYSE (USD), sourced from real-time feeds.\n- **Conversion Ratio**: Fixed by Caja de Valores (Argentine securities depository). AAPL = 20, MSFT = 30 (verified on BYMA, 2026).\n- **CCL Rate**: The implicit FX rate discovered through CEDEAR arbitrage; typically trades at a premium to the official USD rate.\n\n---\n\n## Reference Table\n\n| Ticker | CEDEAR Ratio | Example ADR Price (USD) | CCL Used (ARS/USD) | Fair CEDEAR Price (ARS) | CEDEARs per 1 Full Share |\n|--------|-------------|-------------------------|--------------------|-------------------------|--------------------------|\n| AAPL   | 20 : 1      | $220.00                 | $1,250             | $13,750                 | 20                       |\n| AAPL   | 20 : 1      | $220.00                 | $1,350             | $14,850                 | 20                       |\n| MSFT   | 30 : 1      | $430.00                 | $1,250             | $17,916.67              | 30                       |\n| MSFT   | 30 : 1      | $430.00                 | $1,350             | $19,350.00              | 30                       |\n| AAPL   | 20 : 1      | $200.00                 | $1,200             | $12,000                 | 20                       |\n| MSFT   | 30 : 1      | $400.00                 | $1,200             | $16,000                 | 30                       |\n\n> ADR prices are illustrative reference values. Always verify live prices on Nasdaq.com or Bloomberg before trading.\n\n---\n\n## Typical Cases\n\n### Case 1 — Converting ARS 500,000 into Apple CEDEARs\nAn investor has **ARS 500,000** to invest. The market shows Apple CEDEARs at **ARS 13,400** each (AAPL at $214 USD, CCL $1,252, ratio 20).\n\n- CEDEARs purchasable: 500,000 ÷ 13,400 ≈ **37 CEDEARs** (whole units only)\n- Fractional AAPL exposure: 37 ÷ 20 = **1.85 shares** of AAPL\n- USD equivalent: 1.85 × $214 = **$395.90 USD notional**\n- Remaining ARS: 500,000 − (37 × 13,400) = **ARS 4,200 uninvested**\n\n### Case 2 — Detecting a CEDEAR Premium on Microsoft\nMSFT trades at **$432 USD** on Nasdaq. The MSFT CEDEAR on BYMA is priced at **ARS 19,000**.\n\n- Theoretical fair price at official CCL $1,300: ($432 ÷ 30) × $1,300 = **ARS 18,720**\n- Market price: ARS 19,000\n- Premium: (19,000 − 18,720) / 18,720 = **1.50% above fair value**\n- Implied CCL from CEDEAR: 19,000 × 30 ÷ 432 = **ARS 1,319.44/USD**\n\nThis spread is typical in Argentine markets due to demand for USD hedging via CEDEARs.\n\n### Case 3 — Ratio Change Impact\nIf Caja de Valores adjusts the AAPL CEDEAR ratio from 20:1 to **10:1** (a ratio change), the fair price per CEDEAR doubles: ($220 ÷ 10) × $1,250 = **ARS 27,500** per CEDEAR. The investor's total ARS exposure is unchanged, but each individual CEDEAR unit is worth twice as much.\n\n---\n\n## Common Errors\n\n1. **Using the official USD rate instead of CCL**: The official Banco Nación rate (~$1,000 ARS/USD) is NOT the rate embedded in CEDEAR prices. CEDEARs reflect the CCL rate, which can be 20–40% higher. Using the wrong rate will make CEDEARs appear massively overpriced.\n\n2. **Confusing the ratio direction**: The ratio is **CEDEARs per 1 foreign share**, not the reverse. Dividing the ADR price by the ratio gives USD per CEDEAR. Multiplying (instead of dividing) gives a number ~100× too large.\n\n3. **Ignoring broker commissions and spreads**: BYMA trades include a 0.6%–1.0% broker commission plus a bid-ask spread that can add 0.5%–2% on less liquid CEDEARs. The theoretical fair value does not include these costs.\n\n4. **Treating CEDEARs as direct share ownership**: CEDEARs do not grant voting rights and dividend payments may be delayed or reduced by Argentine tax withholding (currently 7% on dividends for individual investors under Ley 27.430).\n\n5. **Not accounting for ratio adjustments after stock splits**: Apple's 4:1 split in August 2020 caused Caja de Valores to adjust the CEDEAR ratio proportionally. Failing to use the updated ratio yields completely wrong valuations.\n\n---\n\n## Related Calculators\n\nSince no related slugs were provided for this calculator, explore other financial tools on Hacé Cuentas for currency conversion, portfolio return calculations, and inflation-adjusted investment analysis.\n",
   "faq": [
@@ -116,12 +143,12 @@
     }
   ],
   "dataUpdate": {
-    "frequency": "never",
-    "lastUpdated": "2026-06-12",
+    "frequency": "yearly",
+    "lastUpdated": "2026-06-14",
     "updateType": "manual",
-    "notes": "Fixed formula, does not require external data updates"
+    "notes": "CEDEAR ↔ share conversion formula. Reference ratios are reviewed periodically because they change after stock splits."
   },
-  "lastReviewed": "2026-06-12",
+  "lastReviewed": "2026-06-14",
   "relatedSlugs": [],
   "seoKeywords": [
     "cedear ratio converter: apple vs. microsoft",

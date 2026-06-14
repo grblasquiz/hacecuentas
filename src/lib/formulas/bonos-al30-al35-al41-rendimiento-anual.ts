@@ -2,38 +2,76 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: any; }
 export function bonosAl30Al35Al41RendimientoAnual(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
-  const m=Number(i.monto)||0; const p=Number(i.plazo)||12; const t=(Number(i.tasa)||0)/100/12;
-  const r=t===0?m/p:m*t*Math.pow(1+t,p)/(Math.pow(1+t,p)-1);
-  const resumen = __lang === 'en'
-    ? `Amount $${m.toLocaleString('es-AR')} × ${p} months: $${r.toFixed(0)}/month.`
-    : `Monto $${m.toLocaleString('es-AR')} × ${p} meses: $${r.toFixed(0)}/mes.`;
 
-  // --- Insight + gráfico: capital vs intereses sobre el total pagado ---
-  const totalPagado = r * p;
-  const intereses = Math.max(0, totalPagado - m);
-  const pctInteres = totalPagado > 0 ? (intereses / totalPagado) * 100 : 0;
-  const fmtAR = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  // Inputs (deben coincidir con los `id` de fields del JSON):
+  // precioCompra = precio de compra del bono (USD, sobre 100 de VN)
+  // valorFinal   = valor nominal/residual a cobrar al vencimiento (USD)
+  // cuponAnual   = renta/cupón anual en USD
+  // anios        = años hasta el vencimiento
+  const precio = Number(i.precioCompra) || 0;
+  const valorFinal = Number(i.valorFinal) || 0;
+  const cupon = Number(i.cuponAnual) || 0;
+  const anios = Math.max(0.0001, Number(i.anios) || 1);
+
+  // Current yield = cupón / precio
+  const currentYield = precio > 0 ? (cupon / precio) * 100 : 0;
+
+  // Cupones totales cobrados a lo largo de la vida
+  const cuponesTotales = cupon * anios;
+
+  // Ganancia/pérdida de capital al vencimiento
+  const gananciaCapital = valorFinal - precio;
+
+  // Rendimiento total simple anualizado:
+  // ((valorFinal + cupones − precio) / precio) / años
+  const rendimientoAnual = precio > 0
+    ? (((valorFinal + cuponesTotales - precio) / precio) / anios) * 100
+    : 0;
+
+  // Rendimiento total acumulado (no anualizado), informativo
+  const rendimientoTotal = precio > 0
+    ? ((valorFinal + cuponesTotales - precio) / precio) * 100
+    : 0;
+
+  const fmtPct = (n: number) => `${n.toFixed(2)}%`;
+  const fmtUSD = (n: number) => 'USD ' + (Math.round(n * 100) / 100).toLocaleString('es-AR');
+
+  const resumen = __lang === 'en'
+    ? `Buying at ${fmtUSD(precio)} with a ${fmtUSD(cupon)} annual coupon, holding ${anios} year(s) to collect ${fmtUSD(valorFinal)}: ~${fmtPct(rendimientoAnual)} annualized simple return in USD.`
+    : `Comprando a ${fmtUSD(precio)} con cupón anual de ${fmtUSD(cupon)} y manteniendo ${anios} año(s) hasta cobrar ${fmtUSD(valorFinal)}: rinde ~${fmtPct(rendimientoAnual)} anual simple en USD.`;
+
+  // --- Insight: la TIR/rendimiento alto en estos bonos es prima de riesgo ---
+  const upside = precio > 0 ? (gananciaCapital / precio) * 100 : 0;
+  const tone = rendimientoAnual >= 15 ? 'warn' : rendimientoAnual >= 8 ? 'neutral' : 'good';
   const _insight = {
-    title: __lang === 'en' ? 'What the financing costs you' : 'Cuánto te cuesta financiarlo',
+    title: __lang === 'en' ? 'High return = priced-in risk' : 'Rendimiento alto = riesgo en el precio',
     text: __lang === 'en'
-      ? `A monthly payment of **${fmtAR(r)}** over ${p} months means paying back **${fmtAR(totalPagado)}** total — **${fmtAR(intereses)}** of that is interest (**${pctInteres.toFixed(1)}%** of the total).`
-      : `Una cuota de **${fmtAR(r)}** durante ${p} meses implica devolver **${fmtAR(totalPagado)}** en total: **${fmtAR(intereses)}** son intereses (**${pctInteres.toFixed(1)}%** del total).`,
-    tone: pctInteres >= 30 ? 'warn' : 'neutral',
-    icon: '💸'
+      ? `Buying at **${fmtUSD(precio)}** gives a current yield of **${fmtPct(currentYield)}** from the coupon alone${gananciaCapital !== 0 ? `, plus a **${fmtUSD(gananciaCapital)}** capital ${gananciaCapital > 0 ? 'gain' : 'loss'} (${upside.toFixed(0)}%) at maturity` : ''}. The total annualized simple return targets **~${fmtPct(rendimientoAnual)} in USD** — a double-digit figure reflects default risk already priced in; it only materializes if Argentina honors AL30/AL35/AL41.`
+      : `Comprar a **${fmtUSD(precio)}** da un rendimiento corriente de **${fmtPct(currentYield)}** solo por el cupón${gananciaCapital !== 0 ? `, más una ${gananciaCapital > 0 ? 'ganancia' : 'pérdida'} de capital de **${fmtUSD(gananciaCapital)}** (${upside.toFixed(0)}%) al vencimiento` : ''}. El rendimiento total anualizado simple apunta a **~${fmtPct(rendimientoAnual)} en USD**: una cifra de dos dígitos refleja riesgo de default ya descontado; solo se concreta si Argentina cumple con el AL30/AL35/AL41.`,
+    tone,
+    icon: '🇦🇷'
   };
-  const _chart = intereses > 0 ? {
+
+  // --- Gráfico: composición del retorno total (cupones + ganancia de capital) ---
+  const _chart = (cuponesTotales > 0 || gananciaCapital > 0) ? {
     type: 'doughnut',
     slices: [
-      { label: __lang === 'en' ? 'Principal' : 'Capital', value: Math.round(m) },
-      { label: __lang === 'en' ? 'Interest' : 'Intereses', value: Math.round(intereses) }
+      { label: __lang === 'en' ? 'Coupons' : 'Cupones', value: Math.max(0, Math.round(cuponesTotales)) },
+      { label: __lang === 'en' ? 'Capital gain' : 'Ganancia de capital', value: Math.max(0, Math.round(gananciaCapital)) }
     ],
-    prefix: '$',
-    centerValue: fmtAR(totalPagado),
-    centerLabel: __lang === 'en' ? 'Total' : 'Total',
+    prefix: 'USD ',
+    centerValue: fmtPct(rendimientoTotal),
+    centerLabel: __lang === 'en' ? 'Total return' : 'Retorno total',
     ariaLabel: __lang === 'en'
-      ? `Breakdown of the ${fmtAR(totalPagado)} total paid: principal and interest.`
-      : `Composición del total pagado de ${fmtAR(totalPagado)}: capital e intereses.`
+      ? `Composition of the total return: coupons collected and capital gain at maturity.`
+      : `Composición del retorno total: cupones cobrados y ganancia de capital al vencimiento.`
   } : undefined;
 
-  return { resultado:'$'+r.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), resumen, _insight, _chart };
+  return {
+    rendimientoAnual: fmtPct(rendimientoAnual),
+    currentYield: fmtPct(currentYield),
+    resumen,
+    _insight,
+    _chart
+  };
 }

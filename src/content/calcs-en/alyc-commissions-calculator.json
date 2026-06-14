@@ -1,143 +1,181 @@
 {
   "slug": "alyc-commissions-calculator",
   "esSlug": "calculadora-cuentas-comitente-alyc-comisiones",
-  "title": "Investment Loan Monthly Payment Calculator + Table | Hacé Cuentas",
-  "h1": "Investment Loan Monthly Payment Calculator",
-  "description": "Calculate the fixed monthly payment for an investment loan or broker financing. Enter loan amount, term (months), and annual rate to get your exact installment, total cost, and interest paid.",
+  "title": "Brokerage (ALyC) Commission Calculator + Table | Hacé Cuentas",
+  "h1": "Brokerage Account Commission Calculator",
+  "description": "Calculate the real cost of trading in a brokerage account: broker commission, exchange (market) fees and VAT. Enter the traded amount and commission rate to get your total cost and net amount instantly.",
   "category": "finanzas",
   "icon": "📋",
   "audience": "global",
   "formulaId": "cuentas-comitente-alyc-comisiones",
-  "lastReviewed": "2026-06-04",
-  "answerSnippet": "Monthly payment = Loan × [monthly_rate × (1 + monthly_rate)^months] ÷ [(1 + monthly_rate)^months − 1], where monthly_rate = Annual Rate ÷ 12. For example, a $10,000 loan at 8% annual rate over 24 months costs $452/month, repaying $10,855 total — $855 in interest.",
+  "lastReviewed": "2026-06-14",
+  "answerSnippet": "Total trading cost = broker commission + exchange fees + VAT. Commission = amount × commission%/100; exchange (market) fees ≈ amount × 0.08%; VAT = (commission + fees) × 21%. Example: trading $1,000,000 at a 0.5% commission costs $5,000 + $800 fees + $1,218 VAT = $7,018 total (0.70% of the amount).",
   "seoKeywords": [
-    "investment loan monthly payment calculator",
-    "loan payment formula",
-    "fixed monthly installment calculator",
-    "broker financing calculator",
-    "loan amortization calculator",
-    "how much will my loan payment be",
-    "monthly payment on loan",
-    "loan interest calculation",
-    "French amortization calculator",
-    "installment loan calculator"
+    "brokerage commission calculator",
+    "stock trading fees calculator",
+    "broker commission rate",
+    "exchange fees calculator",
+    "cost of trading stocks",
+    "how much does a broker charge",
+    "trading commission and tax",
+    "ALyC commission argentina",
+    "stock trading cost breakdown",
+    "net amount after fees calculator"
   ],
-  "intro": "Use this calculator to find the **exact fixed monthly payment** for any investment loan, broker financing, or personal credit. Enter the loan amount, term in months, and nominal annual interest rate — you get the installment, total repayment, and interest paid instantly. The calculator uses the **French amortization method** (constant payment), the standard formula used by banks and brokers worldwide.",
-  "keyTakeaway": "**Your fixed monthly payment, calculated instantly.** Enter loan amount, term, and annual rate — get your exact installment plus the total interest cost. Use the reference table below for quick estimates.",
+  "intro": "Every time you buy or sell stocks, bonds, ETFs or any security in your brokerage account, your broker (an **ALyC** — Agent for Settlement and Clearing — in Argentina) charges a **commission**, plus **exchange (market) fees** and **VAT** on top. These costs look small as a percentage but are deducted on every trade and erode your real return. This calculator shows exactly what you pay: enter the amount you're trading and your broker's commission rate, and get the full breakdown — commission, exchange fees, VAT — plus the total cost and the net amount (what you disburse when buying or receive when selling). Defaults reflect the Argentine market (0.5% commission, 0.08% BYMA fees, 21% VAT); edit them to match your broker and jurisdiction.",
+  "keyTakeaway": "**See the real cost of every trade.** Brokerage commissions look tiny (0.5% is typical), but once you add exchange fees and VAT the total runs around 0.70% per side — and a round trip (buy + sell) nearly doubles it. Use this to know exactly what your broker takes.",
   "useCases": [
-    "Calculate the monthly installment before signing a broker or bank loan",
-    "Compare short vs. long loan terms to minimize interest paid",
-    "Estimate monthly cash flow impact when financing an investment",
-    "Check whether broker financing is cheaper than bank credit",
-    "Plan repayments for margin loans or securities-backed credit"
+    "Know what your broker will deduct before sending a buy order for stocks or ETFs",
+    "Compare two brokers' commission rates (e.g. 0.5% vs 0.6%) for your trading volume",
+    "Calculate the round-trip cost (buy + sell) to see how far an asset must rise to break even",
+    "Verify that the net amount on your trade confirmation matches the commission and tax owed",
+    "Estimate how much frequent trading costs you over many transactions"
   ],
   "fields": [
     {
       "id": "monto",
-      "label": "Loan Amount",
+      "label": "Traded Amount",
       "type": "number",
       "required": true,
-      "placeholder": "e.g. 10000",
+      "placeholder": "e.g. 1000000",
       "min": 100,
       "step": 100,
-      "help": "Total amount borrowed (any currency — result will be in the same currency)."
+      "help": "Value of the trade: number of securities × price (any currency — result will be in the same currency)."
     },
     {
-      "id": "plazo",
-      "label": "Loan Term (months)",
+      "id": "comision",
+      "label": "Broker Commission",
       "type": "number",
       "required": true,
-      "placeholder": "e.g. 24",
-      "min": 1,
-      "max": 360,
-      "step": 1,
-      "unit": "months",
-      "help": "Number of monthly installments. Common terms: 6, 12, 24, 36, 60 months."
-    },
-    {
-      "id": "tasa",
-      "label": "Annual Interest Rate (nominal)",
-      "type": "number",
-      "required": true,
-      "placeholder": "e.g. 8",
+      "placeholder": "e.g. 0.5",
       "min": 0,
-      "max": 500,
-      "step": 0.1,
+      "max": 5,
+      "step": 0.01,
       "unit": "%",
-      "help": "Nominal annual interest rate (not APR). Example: enter 8 for 8% per year. If 0%, the calculator divides the principal equally over all months."
+      "help": "Percentage your broker charges on the traded amount. Typical for stocks: 0.3%–0.6%. Check your broker's fee schedule."
+    },
+    {
+      "id": "derechos",
+      "label": "Exchange (market) Fees",
+      "type": "number",
+      "required": false,
+      "placeholder": "e.g. 0.08",
+      "min": 0,
+      "max": 2,
+      "step": 0.001,
+      "unit": "%",
+      "help": "Exchange and clearing fees on the traded amount. Vary by security; ~0.08% for stocks (BYMA). Defaults to 0.08% if left blank."
+    },
+    {
+      "id": "iva",
+      "label": "VAT / Sales tax",
+      "type": "number",
+      "required": false,
+      "placeholder": "21",
+      "min": 0,
+      "max": 30,
+      "step": 0.5,
+      "unit": "%",
+      "help": "Tax applied to brokerage services (commission + fees). 21% in Argentina; set to 0 if your jurisdiction doesn't tax brokerage. Defaults to 21% if left blank."
     }
   ],
   "outputs": [
     {
-      "id": "resultado",
-      "label": "Monthly Payment",
+      "id": "costoTotal",
+      "label": "Total trading cost",
       "primary": true
     },
     {
+      "id": "comision",
+      "label": "Broker commission"
+    },
+    {
+      "id": "derechos",
+      "label": "Exchange fees"
+    },
+    {
+      "id": "iva",
+      "label": "VAT / tax"
+    },
+    {
+      "id": "netoCompra",
+      "label": "Disbursed when buying"
+    },
+    {
+      "id": "netoVenta",
+      "label": "Net when selling"
+    },
+    {
       "id": "resumen",
-      "label": "Loan Summary"
+      "label": "Summary"
     }
   ],
   "example": {
-    "title": "Example: $10,000 loan at 8% annual rate over 24 months",
+    "title": "Example: trading $1,000,000 in stocks at a 0.5% commission",
     "steps": [
-      "Loan: $10,000 · Term: 24 months · Annual rate: 8% → monthly rate = 8% ÷ 12 = 0.6667%",
-      "Monthly payment = $10,000 × 0.006667 × (1.006667)^24 ÷ ((1.006667)^24 − 1)",
-      "Monthly payment = $10,000 × 0.006667 × 1.1729 ÷ 0.1729 = $452.27",
-      "Total repaid: $452.27 × 24 = $10,854.55 — interest paid: $854.55 (8.55% of principal)"
+      "Traded amount: $1,000,000 · Commission: 0.5% · Exchange fees: 0.08% · VAT: 21%",
+      "Commission = $1,000,000 × 0.5% = $5,000",
+      "Exchange fees = $1,000,000 × 0.08% = $800",
+      "VAT = ($5,000 + $800) × 21% = $1,218",
+      "Total cost = $5,000 + $800 + $1,218 = $7,018 (0.70% of the amount)",
+      "Buying you'd disburse $1,007,018; selling you'd net $992,982"
     ],
-    "result": "Monthly payment: $452.27"
+    "result": "Total cost: $7,018"
   },
-  "explanation": "## How the monthly payment is calculated\n\nThis calculator uses the **French amortization formula** (also called constant-payment or level-payment loan), the universal standard for mortgages, personal loans, and investment financing:\n\n```\nmonthly_rate  = Annual Rate / 100 / 12\nmonthly_pmnt  = Loan × [monthly_rate × (1 + monthly_rate)^months]\n                      ÷ [(1 + monthly_rate)^months − 1]\ntotal_paid    = monthly_pmnt × months\ntotal_interest = total_paid − Loan\n```\n\nWhen the rate is 0%, the payment is simply `Loan ÷ months` (pure principal repayment).\n\n## Monthly payment reference table\n\nFor a **$10,000 loan** at common annual rates and terms:\n\n| Term | 4% rate | 8% rate | 12% rate | 18% rate |\n|------|---------|---------|----------|----------|\n| 6 months | $1,686 | $1,706 | $1,725 | $1,755 |\n| 12 months | $851 | $870 | $888 | $917 |\n| 24 months | $434 | $452 | $471 | $499 |\n| 36 months | $295 | $313 | $332 | $362 |\n| 60 months | $184 | $203 | $222 | $254 |\n\n*Monthly payment per $10,000 borrowed — scale linearly for other amounts.*\n\n## French vs. other amortization methods\n\n| Method | Monthly payment | Total interest | Best for |\n|--------|----------------|----------------|----------|\n| **French** (this calculator) | Fixed | Medium | Most loans — predictable cash flow |\n| German | Decreasing | Lower | Early payoff preference |\n| American (bullet) | Interest only + lump sum | Highest | Short-term bridge loans |\n\n## How to minimize total interest paid\n\n- **Shorter term** = lower total interest, higher monthly payment\n- **Longer term** = higher total interest, lower monthly payment\n- Rule of thumb: a 1% lower annual rate on a 3-year $10,000 loan saves ~$150 in interest\n- Always compare the **APR (Annual Percentage Rate)** across lenders — it includes fees the nominal rate omits",
+  "explanation": "## How the trading cost is calculated\n\nThe total cost of a trade in a brokerage account has three components:\n\n```\ncommission   = traded_amount × commission% / 100\nexch_fees    = traded_amount × fees% / 100        (exchange/clearing, ~0.08% for stocks)\nVAT          = (commission + exch_fees) × VAT% / 100\ntotal_cost   = commission + exch_fees + VAT\n```\n\nThe **net amount** depends on the side of the trade:\n\n```\nbuying:   you disburse = amount + total_cost\nselling:  you receive  = amount − total_cost\n```\n\n## Cost reference table\n\nTotal cost per **$100,000 traded** (0.08% exchange fees + 21% VAT), by commission rate:\n\n| Commission | Total cost | % of amount |\n|-----------|-----------|-------------|\n| 0.3% | $460 | 0.46% |\n| 0.5% | $702 | 0.70% |\n| 0.6% | $823 | 0.82% |\n| 1.0% | $1,307 | 1.31% |\n\n*Scale linearly for other amounts. A round trip (buy + sell) costs roughly twice this.*\n\n## What each charge is\n\n- **Broker commission:** what the broker charges to execute the order. Each broker has its own schedule; stock commissions usually run 0.3%–0.6%, sometimes with a fixed minimum per trade.\n- **Exchange (market) fees:** charged by the exchange and clearing house (BYMA for stocks/ETFs, MAE for many bonds in Argentina) for using market infrastructure and settlement. They vary by security; ~0.08% for stocks.\n- **VAT / tax:** brokerage intermediation is taxed at 21% in Argentina, applied on commission plus exchange fees. Set this to 0 if your jurisdiction doesn't tax brokerage services.\n\n## The round-trip cost\n\nEvery trade has its own cost. If you buy and later sell (a \"round trip\"), you pay the cost **twice**. At 0.70% per side, a round trip costs about **1.4%** — the asset has to rise at least that much just for you to break even. That's why frequent trading erodes returns.",
   "faq": [
     {
-      "q": "What is the French amortization method?",
-      "a": "French amortization means your monthly payment stays the same throughout the loan. Early payments are mostly interest; later payments are mostly principal. The total amount owed decreases with every payment. It's the standard method used by banks, brokers, and mortgage lenders worldwide."
+      "q": "What is a brokerage (comitente) account?",
+      "a": "It's the investment account you open with a broker to buy and sell financial assets — stocks, bonds, ETFs, money-market funds, currencies. In Argentina it's called a 'cuenta comitente' held at an ALyC, with custody at Caja de Valores. Every trade you make in it generates commissions and fees."
     },
     {
-      "q": "What's the difference between nominal annual rate and APR?",
-      "a": "The nominal annual rate is the base interest rate divided by 12 for monthly compounding. APR (Annual Percentage Rate) adds loan origination fees, insurance, and other charges — making it a more complete cost measure. This calculator uses the nominal rate; ask your lender for the APR to compare total costs across offers."
+      "q": "How much does a broker charge in commission to trade stocks?",
+      "a": "It depends on the broker. Stock commissions commonly run 0.3%–0.6% of the traded amount, and many brokers apply a fixed minimum per trade. Some brokers offer 0% commission on certain instruments (their own funds, for example) but make it up elsewhere. Always check the current fee schedule."
     },
     {
-      "q": "How much interest do I pay on a $10,000 loan over 3 years?",
-      "a": "At 8% annual rate: $10,000 × 36 months at 8% = $313/month, total $11,268, interest = $1,268. At 12%: $332/month, total $11,952, interest = $1,952. At 18%: $362/month, total $13,032, interest = $3,032. Higher rates sharply increase total cost over multi-year terms."
+      "q": "What are exchange (market) fees?",
+      "a": "They are charges by the exchange and clearing house — BYMA for stocks and ETFs, MAE for many bonds in Argentina — for negotiation, registration, settlement, and custody of the trade. They vary by security; around 0.08% of the amount for stocks. They appear itemized on your trade confirmation."
     },
     {
-      "q": "Does a longer term always save money monthly?",
-      "a": "Yes on the monthly payment, no on total cost. Extending from 24 to 36 months on a $10,000 / 8% loan drops the monthly payment from $452 to $313 but raises total interest from $835 to $1,268. Choose based on your monthly cash flow vs. total cost trade-off."
+      "q": "Is there a tax on trading?",
+      "a": "In Argentina, brokerage intermediation is subject to 21% VAT, applied on the commission plus the exchange fees (not on the full traded amount). Other countries tax brokerage differently or not at all — set the VAT field to your local rate, or 0 if it doesn't apply."
     },
     {
-      "q": "How does this apply to broker or investment financing?",
-      "a": "Brokers (including Argentine ALyCs) may offer credit lines backed by your portfolio assets. The monthly repayment uses exactly this formula. The interest rate depends on the collateral quality and loan term — use this calculator to verify the monthly installment quoted by your broker."
+      "q": "What's the real cost of trading $1,000,000?",
+      "a": "At 0.5% commission, 0.08% exchange fees and 21% VAT: commission is $5,000, fees $800, and VAT on ($5,000 + $800) is $1,218. Total cost is $7,018 — 0.70% of the amount. Buying you'd disburse $1,007,018; selling you'd net $992,982."
     },
     {
-      "q": "What if the rate is 0%?",
-      "a": "When the annual rate is 0%, the formula simplifies to monthly payment = loan ÷ months. This applies to interest-free installment plans (e.g., buy-now-pay-later schemes or personal loans between individuals)."
+      "q": "How far must an asset rise before I profit after fees?",
+      "a": "You pay the cost on both the buy and the sell. At 0.70% per side, a round trip costs about 1.4%. The asset must rise at least 1.4% just to cover commissions and taxes before you start making money. This is why trading very often eats into returns."
     },
     {
-      "q": "Can I use this for mortgages?",
-      "a": "Yes. Enter the mortgage amount, term in months (e.g., 30 years = 360 months), and the nominal annual rate. The formula is identical. Note that mortgage APR usually includes insurance and origination fees not captured in the nominal rate."
+      "q": "Why do minimum commissions hurt small trades?",
+      "a": "Many brokers charge a fixed minimum per trade. On a small amount, that minimum can represent a far higher percentage than the headline rate. A $10 minimum on a $500 trade equals 2% — well above a 0.5% rate. For small amounts, look for a broker with no minimum or a low floor."
     },
     {
-      "q": "How do I compare two loan offers?",
-      "a": "Enter the same amount and term for both offers, changing only the rate. The difference in monthly payment multiplied by the term gives the extra interest cost. Additionally, ask each lender for the APR to capture any fees built into the loan structure."
+      "q": "Are commissions the same for stocks, bonds and currencies?",
+      "a": "No. Each instrument has its own commission and exchange-fee schedule. Bonds usually carry lower commissions than stocks, repos have their own structure, and currency trades (like dólar MEP) may be commission-free or have a specific fee. Adjust the percentages in the calculator to match the instrument and your broker."
     }
   ],
   "sources": [
     {
-      "name": "Investopedia — Loan Amortization",
-      "url": "https://www.investopedia.com/terms/a/amortization.asp"
+      "name": "BYMA — Market fees and tariffs",
+      "url": "https://www.byma.com.ar"
     },
     {
-      "name": "Consumer Financial Protection Bureau — Understanding loan costs",
-      "url": "https://www.consumerfinance.gov/ask-cfpb/what-is-the-difference-between-a-loan-interest-rate-and-the-apr-en-733/"
+      "name": "CNV — National Securities Commission (ALyC regulation)",
+      "url": "https://www.cnv.gob.ar"
+    },
+    {
+      "name": "Investopedia — Brokerage commissions and fees",
+      "url": "https://www.investopedia.com/terms/b/brokerage-fee.asp"
     }
   ],
   "dataUpdate": {
-    "frequency": "never",
-    "lastUpdated": "2026-06-04",
+    "frequency": "yearly",
+    "lastUpdated": "2026-06-14",
     "updateType": "manual",
-    "notes": "Fixed mathematical formula — French amortization. No external data required."
+    "notes": "Commission and exchange-fee rates are editable in the calculator. Default values (0.5% commission, 0.08% BYMA fees, 21% VAT) are reviewed when BYMA tariffs or tax rules change."
   },
   "relatedSlugs": [],
   "noindex": false

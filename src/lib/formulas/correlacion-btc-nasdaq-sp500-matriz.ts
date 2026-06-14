@@ -1,59 +1,149 @@
 export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; }
+
+/** Coeficiente de correlación de Pearson entre dos series de retornos/valores. */
 export function correlacionBtcNasdaqSp500Matriz(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
   const T = ({
     es: {
-      alta: 'Alta correlación: BTC se mueve con tech',
-      media: 'Correlación media',
-      baja: 'Baja correlación, diversifica bien',
-      tAlta: 'Poca diversificación',
-      tMedia: 'Diversificación parcial',
-      tBaja: 'Buena diversificación',
-      mesesTxt: (mm: number) => `${mm} meses`,
+      pedirA: 'Ingresá la serie del activo A (números separados por coma)',
+      pedirB: 'Ingresá la serie del activo B (números separados por coma)',
+      noNum: 'Todos los valores deben ser números (separados por coma)',
+      pocos: 'Necesitás al menos 3 valores en cada serie',
+      distinto: 'Ambas series deben tener la misma cantidad de valores',
+      varCero: 'Una de las series es constante (sin variación), no se puede calcular correlación',
+      fuertePos: 'Correlación positiva fuerte',
+      moderadaPos: 'Correlación positiva moderada',
+      debilPos: 'Correlación positiva débil',
+      nula: 'Correlación prácticamente nula',
+      debilNeg: 'Correlación negativa débil',
+      moderadaNeg: 'Correlación negativa moderada',
+      fuerteNeg: 'Correlación negativa fuerte',
+      tituloDiv: (s: string) => `Diversificación: ${s}`,
+      poca: 'poca',
+      parcial: 'parcial',
+      buena: 'buena',
+      detalle: (n: number, r: string) => `${n} pares de datos. r de Pearson = ${r}.`,
+      muevenJuntos: 'los activos se mueven en el mismo sentido',
+      muevenOpuesto: 'los activos se mueven en sentido contrario (útil como cobertura)',
+      muevenIndep: 'los activos se mueven de forma casi independiente',
     },
     en: {
-      alta: 'High correlation: BTC moves with tech',
-      media: 'Medium correlation',
-      baja: 'Low correlation, diversifies well',
-      tAlta: 'Little diversification',
-      tMedia: 'Partial diversification',
-      tBaja: 'Good diversification',
-      mesesTxt: (mm: number) => `${mm} months`,
+      pedirA: 'Enter the series for asset A (comma-separated numbers)',
+      pedirB: 'Enter the series for asset B (comma-separated numbers)',
+      noNum: 'All values must be numbers (comma-separated)',
+      pocos: 'You need at least 3 values in each series',
+      distinto: 'Both series must have the same number of values',
+      varCero: 'One series is constant (no variation), correlation cannot be computed',
+      fuertePos: 'Strong positive correlation',
+      moderadaPos: 'Moderate positive correlation',
+      debilPos: 'Weak positive correlation',
+      nula: 'Virtually no correlation',
+      debilNeg: 'Weak negative correlation',
+      moderadaNeg: 'Moderate negative correlation',
+      fuerteNeg: 'Strong negative correlation',
+      tituloDiv: (s: string) => `Diversification: ${s}`,
+      poca: 'little',
+      parcial: 'partial',
+      buena: 'good',
+      detalle: (n: number, r: string) => `${n} data pairs. Pearson r = ${r}.`,
+      muevenJuntos: 'the assets move in the same direction',
+      muevenOpuesto: 'the assets move in opposite directions (useful as a hedge)',
+      muevenIndep: 'the assets move almost independently',
     },
   } as const)[__lang];
-  const m=Number(i.periodoMeses)||12;
-  const cNas=m<=6?0.75:m<=12?0.65:m<=24?0.55:0.45;
-  const cSp=cNas*0.85;
-  const interp=cNas>0.6?T.alta:cNas>0.3?T.media:T.baja;
-  const zona = cNas > 0.6 ? 'alta' : cNas > 0.3 ? 'media' : 'baja';
-  const tone = zona === 'alta' ? 'warn' : zona === 'baja' ? 'good' : 'neutral';
-  const _insight = __lang === 'en'
-    ? {
-        title: zona === 'alta' ? T.tAlta : zona === 'baja' ? T.tBaja : T.tMedia,
-        text: `Over **${T.mesesTxt(m)}**, BTC's correlation with the Nasdaq is **${cNas.toFixed(2)}** and with the S&P 500 **${cSp.toFixed(2)}**. ${cNas > 0.6 ? 'It largely tracks tech stocks, so it adds little diversification to an equity portfolio.' : cNas > 0.3 ? 'It moves somewhat with stocks but keeps part of its own behavior.' : 'It largely decouples from stocks, so it diversifies an equity portfolio well.'}`,
-        tone,
-        icon: '₿',
-      }
-    : {
-        title: zona === 'alta' ? T.tAlta : zona === 'baja' ? T.tBaja : T.tMedia,
-        text: `En **${T.mesesTxt(m)}**, la correlación de BTC con el Nasdaq es **${cNas.toFixed(2)}** y con el S&P 500 **${cSp.toFixed(2)}**. ${cNas > 0.6 ? 'Se mueve casi como las tech, así que aporta poca diversificación a una cartera de acciones.' : cNas > 0.3 ? 'Acompaña en parte a las acciones pero conserva algo de comportamiento propio.' : 'Se desacopla bastante de las acciones, así que diversifica bien una cartera de equity.'}`,
-        tone,
-        icon: '₿',
-      };
+
+  const err = (m: string): Outputs => ({ coeficiente: '—', interpretacion: '—', detalle: m });
+  const aStr = String(i.serieA ?? '').trim();
+  const bStr = String(i.serieB ?? '').trim();
+  if (!aStr) return err(T.pedirA);
+  if (!bStr) return err(T.pedirB);
+
+  const splitNums = (raw: string): number[] =>
+    raw
+      .split(/[,;\s]+/)
+      .filter(s => s.length > 0)
+      .map(s => Number(s.trim()));
+
+  const a = splitNums(aStr);
+  const b = splitNums(bStr);
+
+  if (a.some(v => !Number.isFinite(v)) || b.some(v => !Number.isFinite(v))) return err(T.noNum);
+  if (a.length !== b.length) return err(T.distinto);
+  if (a.length < 3) return err(T.pocos);
+
+  const n = a.length;
+  const meanA = a.reduce((s, v) => s + v, 0) / n;
+  const meanB = b.reduce((s, v) => s + v, 0) / n;
+
+  let cov = 0;
+  let varA = 0;
+  let varB = 0;
+  for (let k = 0; k < n; k++) {
+    const da = a[k] - meanA;
+    const db = b[k] - meanB;
+    cov += da * db;
+    varA += da * da;
+    varB += db * db;
+  }
+
+  if (varA === 0 || varB === 0) return err(T.varCero);
+
+  let r = cov / Math.sqrt(varA * varB);
+  // Clamp por errores de punto flotante
+  if (r > 1) r = 1;
+  if (r < -1) r = -1;
+
+  const abs = Math.abs(r);
+  // Interpretación por fuerza + signo
+  let interp: string;
+  if (abs < 0.1) interp = T.nula;
+  else if (r >= 0.7) interp = T.fuertePos;
+  else if (r >= 0.4) interp = T.moderadaPos;
+  else if (r >= 0.1) interp = T.debilPos;
+  else if (r <= -0.7) interp = T.fuerteNeg;
+  else if (r <= -0.4) interp = T.moderadaNeg;
+  else interp = T.debilNeg;
+
+  // Diversificación según magnitud
+  const divNivel = abs >= 0.6 ? T.poca : abs >= 0.3 ? T.parcial : T.buena;
+  const tone = abs >= 0.6 ? 'warn' : abs >= 0.3 ? 'neutral' : 'good';
+
+  const direccion = abs < 0.1 ? T.muevenIndep : r > 0 ? T.muevenJuntos : T.muevenOpuesto;
+  const rTxt = r.toFixed(2);
+
+  const _insight = {
+    title: T.tituloDiv(divNivel),
+    text:
+      __lang === 'en'
+        ? `Over **${n} data pairs**, the Pearson correlation is **${rTxt}**: ${direccion}. With |r| of ${abs.toFixed(2)}, the diversification benefit is **${divNivel}**.`
+        : `Sobre **${n} pares de datos**, la correlación de Pearson es **${rTxt}**: ${direccion}. Con un |r| de ${abs.toFixed(2)}, el aporte de diversificación es **${divNivel}**.`,
+    tone,
+    icon: '🔗',
+  };
+
+  // Gauge sobre |r| (0 a 1)
   const _chart = {
     type: 'scale',
-    marker: cNas,
-    markerLabel: cNas.toFixed(2),
+    marker: Number(abs.toFixed(2)),
+    markerLabel: `r = ${rTxt}`,
     min: 0,
     segments: [
-      { nombre: __lang === 'en' ? 'Low' : 'Baja', max: 0.3, color: '#22c55e', colorDark: '#16a34a' },
-      { nombre: __lang === 'en' ? 'Medium' : 'Media', max: 0.6, color: '#f59e0b', colorDark: '#d97706' },
-      { nombre: __lang === 'en' ? 'High' : 'Alta', max: 1, color: '#ef4444', colorDark: '#dc2626' },
+      { nombre: __lang === 'en' ? 'Weak' : 'Débil', max: 0.3, color: '#22c55e', colorDark: '#16a34a' },
+      { nombre: __lang === 'en' ? 'Moderate' : 'Moderada', max: 0.6, color: '#f59e0b', colorDark: '#d97706' },
+      { nombre: __lang === 'en' ? 'Strong' : 'Fuerte', max: 1, color: '#ef4444', colorDark: '#dc2626' },
     ],
-    ariaLabel: __lang === 'en'
-      ? `BTC vs Nasdaq correlation ${cNas.toFixed(2)} on a 0 to 1 scale; above 0.6 means it tracks tech closely.`
-      : `Correlación BTC vs Nasdaq de ${cNas.toFixed(2)} en escala 0 a 1; por encima de 0,6 se mueve muy pegado a las tech.`,
+    ariaLabel:
+      __lang === 'en'
+        ? `Pearson correlation of ${rTxt}; absolute value ${abs.toFixed(2)} on a 0 to 1 strength scale.`
+        : `Correlación de Pearson de ${rTxt}; valor absoluto ${abs.toFixed(2)} en una escala de fuerza de 0 a 1.`,
   };
-  return { correlacionNasdaq:cNas.toFixed(2), correlacionSp500:cSp.toFixed(2), interpretacion:interp, _insight, _chart };
+
+  return {
+    coeficiente: rTxt,
+    interpretacion: interp,
+    detalle: T.detalle(n, rTxt),
+    _insight,
+    _chart,
+  };
 }

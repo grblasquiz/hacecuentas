@@ -1,29 +1,81 @@
+/** Ganancia e impuesto por venta de criptomonedas en Argentina
+ *  Personas humanas: la venta de cripto puede tributar Impuesto a las Ganancias.
+ *  El tratamiento y la alícuota dependen de la situación particular (régimen,
+ *  fuente, otras rentas), por eso la alícuota se deja como input editable
+ *  (default razonable 15%) en lugar de hardcodearla.
+ *
+ *  Ganancia = (precioVenta − precioCompra) × cantidad
+ *  Impuesto = max(0, ganancia) × alícuota
+ *  Ganancia neta = ganancia − impuesto
+ */
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: any; }
+
 export function criptomonedasGananciaImpuestoAfip(i: Inputs): Outputs {
-  const m=Number(i.monto)||0; const p=Number(i.plazo)||12; const t=(Number(i.tasa)||0)/100/12;
-  const r=t===0?m/p:m*t*Math.pow(1+t,p)/(Math.pow(1+t,p)-1);
-  const totalPagado = r * p;
-  const interesTotal = Math.max(0, totalPagado - m);
+  const precioCompra = Number(i.precioCompra) || 0;
+  const precioVenta = Number(i.precioVenta) || 0;
+  const cantidad = Number(i.cantidad) || 0;
+  // Alícuota editable: '' / null / undefined → default 15%
+  const alicuotaRaw = i.alicuota;
+  const alicuotaPct = (alicuotaRaw === '' || alicuotaRaw === null || alicuotaRaw === undefined || !Number.isFinite(Number(alicuotaRaw)))
+    ? 15
+    : Number(alicuotaRaw);
+
+  const costoTotal = precioCompra * cantidad;
+  const ingresoTotal = precioVenta * cantidad;
+  const ganancia = ingresoTotal - costoTotal; // puede ser negativa (pérdida)
+  const baseImponible = Math.max(0, ganancia);
+  const impuesto = baseImponible * (alicuotaPct / 100);
+  const gananciaNeta = ganancia - impuesto; // tras impuesto (si hay pérdida, no hay impuesto)
+
   const ars = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
-  const pctInteres = totalPagado > 0 ? (interesTotal / totalPagado) * 100 : 0;
-  const tone = pctInteres >= 40 ? 'warn' : pctInteres >= 20 ? 'neutral' : 'good';
-  const _insight = {
-    title: 'Cuánto pagás de interés',
-    text: `Vas a pagar **${ars(r)}/mes** durante ${p} meses, un total de **${ars(totalPagado)}**. De eso, **${ars(interesTotal)}** son intereses (${pctInteres.toFixed(0)}% de lo que devolvés) sobre los ${ars(m)} de capital.`,
-    tone,
-    icon: '💸',
+  const variacionPct = costoTotal > 0 ? (ganancia / costoTotal) * 100 : 0;
+
+  const hayGanancia = ganancia > 0;
+
+  const _insight = hayGanancia
+    ? {
+        title: 'Lo que te queda después del impuesto',
+        text: `Vendiste por **${ars(ingresoTotal)}** lo que te costó **${ars(costoTotal)}**: ganancia de **${ars(ganancia)}** (+${variacionPct.toFixed(1)}%). Con una alícuota del ${alicuotaPct}%, el impuesto estimado es **${ars(impuesto)}** y te quedan **${ars(gananciaNeta)}** netos.`,
+        tone: 'warn',
+        icon: '₿',
+      }
+    : {
+        title: ganancia === 0 ? 'Ni ganancia ni pérdida' : 'Operación en pérdida',
+        text: ganancia === 0
+          ? `Vendiste por lo mismo que pagaste (${ars(ingresoTotal)}): no hay ganancia gravable, así que no hay impuesto estimado.`
+          : `Vendiste por **${ars(ingresoTotal)}** lo que costó **${ars(costoTotal)}**: pérdida de **${ars(Math.abs(ganancia))}** (${variacionPct.toFixed(1)}%). Sin ganancia no hay impuesto; el quebranto podés guardarlo para compensar futuras ganancias del mismo tipo.`,
+        tone: ganancia === 0 ? 'neutral' : 'good',
+        icon: ganancia === 0 ? '➖' : '📉',
+      };
+
+  const _chart = hayGanancia
+    ? {
+        type: 'doughnut',
+        slices: [
+          { label: 'Te queda (neto)', value: Math.round(gananciaNeta) },
+          { label: `Impuesto ${alicuotaPct}%`, value: Math.round(impuesto) },
+        ],
+        prefix: '$',
+        centerValue: ars(ganancia),
+        centerLabel: 'Ganancia bruta',
+        ariaLabel: `De ${ars(ganancia)} de ganancia, ${ars(impuesto)} es impuesto estimado y ${ars(gananciaNeta)} te queda neto.`,
+      }
+    : undefined;
+
+  const resumen = hayGanancia
+    ? `Ganancia ${ars(ganancia)} · impuesto estimado (${alicuotaPct}%) ${ars(impuesto)} · neto ${ars(gananciaNeta)}.`
+    : ganancia === 0
+      ? `Sin ganancia: ni impuesto ni resultado neto.`
+      : `Pérdida de ${ars(Math.abs(ganancia))}: no hay impuesto a las ganancias.`;
+
+  return {
+    ganancia: ars(ganancia),
+    impuesto: ars(impuesto),
+    gananciaNeta: ars(gananciaNeta),
+    resumen,
+    _insight,
+    ...(_chart ? { _chart } : {}),
   };
-  const _chart = interesTotal > 0 ? {
-    type: 'doughnut',
-    slices: [
-      { label: 'Capital', value: Math.round(m) },
-      { label: 'Intereses', value: Math.round(interesTotal) },
-    ],
-    prefix: '$',
-    centerValue: ars(totalPagado),
-    centerLabel: 'Total a pagar',
-    ariaLabel: `De ${ars(totalPagado)} totales, ${ars(m)} son capital y ${ars(interesTotal)} intereses.`,
-  } : undefined;
-  return { resultado:'$'+r.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'), resumen:`Monto $${m.toLocaleString('es-AR')} × ${p} meses: $${r.toFixed(0)}/mes.`, _insight, _chart };
 }

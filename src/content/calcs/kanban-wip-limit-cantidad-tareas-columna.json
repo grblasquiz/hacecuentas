@@ -1,16 +1,16 @@
 {
   "slug": "calculadora-kanban-wip-limit-cantidad-tareas-columna",
-  "lastReviewed": "2026-06-08",
+  "lastReviewed": "2026-06-14",
   "title": "WIP limit Kanban por columna: cómo calcularlo + tabla | Hacé Cuentas",
   "h1": "Calculadora de WIP limit Kanban por columna",
-  "description": "Calculá el WIP limit (límite de trabajo en curso) por columna de tu tablero Kanban: WIP total del equipo ÷ columnas activas. Incluye tabla por tamaño de equipo, regla ×1.5 de David Anderson y Ley de Little.",
+  "description": "Calculá el WIP limit (límite de trabajo en curso) de tu tablero Kanban a partir del tamaño del equipo. Aplica la heurística estándar de 1 a 1,5 tareas por persona (regla ×1.5 de David Anderson) y reparte el total entre las columnas activas. Incluye tabla por tamaño de equipo y Ley de Little.",
   "category": "vida",
   "audience": "global",
   "icon": "📋",
-  "answerSnippet": "El WIP limit por columna se calcula como **WIP total del equipo ÷ cantidad de columnas activas**. El WIP total suele estimarse con la regla de David Anderson: **personas × 1.5**. Ejemplo: equipo de 6 personas (WIP total = 9) con 3 columnas activas → **9 ÷ 3 = 3 tareas por columna**. Solo contás como activas las columnas con trabajo humano directo (En análisis, En desarrollo, En revisión), no el Backlog ni el Done.",
+  "answerSnippet": "El WIP limit se calcula a partir del **tamaño del equipo**: la heurística estándar de Kanban asigna **de 1 a 1,5 tareas por persona**. El WIP total sugerido = **round(personas × 1,5)** y el límite por columna = **max(1, round(total ÷ columnas activas))**. Ejemplo: equipo de 6 personas → WIP total = 9; con 3 columnas activas → **round(9 ÷ 3) = 3 tareas por columna**. Solo contás como activas las columnas con trabajo humano directo (En análisis, En desarrollo, En revisión), no el Backlog ni el Done.",
   "formulaId": "kanban-wip-limit-cantidad-tareas-columna",
-  "intro": "El **WIP limit** (Work In Progress limit) es la cantidad máxima de tareas que pueden estar activas simultáneamente en una columna del tablero Kanban. Dividir el WIP total del equipo entre las columnas activas te da el límite por etapa, evitando que una sola columna acapare todo el trabajo en curso. Un WIP bien calibrado reduce el multitasking, acorta el Lead Time y fuerza al equipo a terminar tareas antes de abrir nuevas, mejorando el flujo de entrega.",
-  "keyTakeaway": "**WIP limit por columna = WIP total del equipo ÷ cantidad de columnas activas.** Por ejemplo, un equipo con WIP total de 9 tareas y 3 columnas activas obtiene un límite de 3 tareas por columna. El WIP total suele calcularse como: cantidad de personas × 1.5 (regla de David Anderson).",
+  "intro": "El **WIP limit** (Work In Progress limit) es la cantidad máxima de tareas que pueden estar activas simultáneamente en una columna del tablero Kanban. Esta calculadora parte del **tamaño de tu equipo** y aplica la heurística estándar de Kanban —**1 a 1,5 tareas por persona** (regla de David Anderson)— para sugerir el WIP total, y luego lo reparte entre las columnas activas. Así evitás que una sola columna acapare todo el trabajo en curso. Un WIP bien calibrado reduce el multitasking, acorta el Lead Time y fuerza al equipo a terminar tareas antes de abrir nuevas, mejorando el flujo de entrega.",
+  "keyTakeaway": "**WIP total sugerido = round(personas × 1,5)** y **WIP limit por columna = max(1, round(total ÷ columnas activas))**. La heurística de Kanban asigna de 1 a 1,5 tareas por persona. Ejemplo: un equipo de 6 personas → WIP total = 9; con 3 columnas activas → 3 tareas por columna.",
   "useCases": [
     "Equipo de desarrollo de 6 personas que trabaja con columnas 'En análisis', 'En desarrollo' y 'En revisión': WIP total = 6 × 1.5 = 9 tareas; dividido entre 3 columnas activas = 3 tareas por columna.",
     "Área de soporte técnico con 4 agentes y 2 columnas activas ('En diagnóstico' y 'En resolución'): WIP total = 4 × 1.5 = 6; límite por columna = 3 tickets simultáneos.",
@@ -19,18 +19,18 @@
   ],
   "fields": [
     {
-      "id": "v1",
-      "label": "WIP total del equipo (tareas en curso permitidas)",
+      "id": "equipo",
+      "label": "Tamaño del equipo (personas)",
       "type": "number",
       "required": true,
-      "placeholder": "Ej: 9",
-      "unit": "tareas",
+      "placeholder": "Ej: 6",
+      "unit": "personas",
       "min": 1,
       "max": 200,
       "step": 1
     },
     {
-      "id": "v2",
+      "id": "columnas",
       "label": "Cantidad de columnas activas en el tablero",
       "type": "number",
       "required": true,
@@ -43,9 +43,13 @@
   ],
   "outputs": [
     {
-      "id": "resultado",
+      "id": "porColumna",
       "label": "WIP limit por columna",
       "primary": true
+    },
+    {
+      "id": "limiteTotal",
+      "label": "WIP total sugerido (equipo × 1,5)"
     },
     {
       "id": "resumen",
@@ -55,12 +59,12 @@
   "example": {
     "title": "Equipo de desarrollo de 6 personas",
     "steps": [
-      "El equipo tiene 6 personas. Usando la regla de David Anderson (N × 1.5): WIP total = 6 × 1.5 = **9 tareas** en curso en todo el tablero.",
+      "Ingresás el tamaño del equipo: 6 personas. La calculadora aplica la regla de David Anderson (personas × 1.5): WIP total sugerido = 6 × 1.5 = **9 tareas** en curso en todo el tablero.",
       "El tablero tiene 3 columnas activas: 'En análisis', 'En desarrollo' y 'En revisión'.",
-      "WIP limit por columna = 9 ÷ 3 = **3.00 tareas por columna**.",
+      "WIP limit por columna = round(9 ÷ 3) = **3 tareas por columna**.",
       "Resultado: ninguna columna puede tener más de 3 tareas simultáneas. Si 'En desarrollo' llega a 3 tickets abiertos, nadie puede empezar uno nuevo hasta cerrar uno existente."
     ],
-    "result": "3.00 tareas por columna"
+    "result": "3 tareas por columna (WIP total 9)"
   },
   "explanation": "## Cómo se calcula\n\nEsta calculadora aplica una división directa para obtener el **WIP limit por columna**:\n\n```\nWIP limit por columna = WIP total del equipo ÷ Cantidad de columnas activas\n```\n\n**¿Cómo obtengo el WIP total del equipo?**\n\nUsá cualquiera de estas tres formas según el dato que tenés disponible:\n\n```\n# 1. Regla práctica de David Anderson (la más usada)\nWIP total = Cantidad de personas en el equipo × 1.5\n\n# 2. Ley de Little (cuando ya tenés métricas del equipo)\nWIP total = Throughput × Lead Time\n  Throughput = tareas completadas por unidad de tiempo (ej: 10 tareas/semana)\n  Lead Time   = tiempo promedio de inicio a entrega (ej: 0.9 semanas)\n  → WIP total = 10 × 0.9 = 9 tareas\n\n# 3. Variante conservadora (equipos nuevos en Kanban)\nWIP total = Cantidad de personas × 1  (una tarea por persona, sin buffer)\n```\n\n**Columnas activas vs. columnas de cola**\n\nNo todas las columnas del tablero cuentan como \"activas\". Solo se incluyen en el denominador las columnas donde hay trabajo humano directo:\n\n| Tipo de columna | ¿Cuenta como activa? |\n|---|---|\n| En análisis / En desarrollo / En revisión | ✅ Sí |\n| Backlog / Listo para QA / Esperando cliente | ❌ No (son colas de espera) |\n| Done / Terminado | ❌ No |\n\nLas columnas de cola o buffer suelen tener WIP limits propios, generalmente el doble de la columna activa anterior.\n\n**Ejemplo con Ley de Little:**\n- Throughput medido: 8 tareas completadas por semana.\n- Lead Time promedio: 1.5 semanas.\n- WIP total = 8 × 1.5 = 12 tareas.\n- Columnas activas: 4.\n- WIP limit por columna = 12 ÷ 4 = **3 tareas**.\n\n---\n\n## Tabla de referencia rápida\n\n| Equipo (personas) | WIP total (×1.5) | 2 columnas activas | 3 columnas activas | 4 columnas activas |\n|:-----------------:|:----------------:|:------------------:|:------------------:|:------------------:|\n| 2                 | 3                | 1.5 → **2**        | 1 → **1**          | 0.75 → **1**       |\n| 4                 | 6                | **3**              | **2**              | 1.5 → **2**        |\n| 6                 | 9                | 4.5 → **5**        | **3**              | 2.25 → **3**       |\n| 8                 | 12               | **6**              | **4**              | **3**              |\n| 10                | 15               | 7.5 → **8**        | **5**              | 3.75 → **4**       |\n\n> Redondear hacia **arriba** si el equipo es nuevo en Kanban. Redondear hacia **abajo** si ya tiene buen flujo y quiere aumentar la presión para terminar.\n\n---\n\n## Errores comunes\n\n1. **Incluir columnas de cola en el divisor**: 'Backlog', 'Esperando aprobación' o 'Listo para deploy' no son columnas activas. Incluirlas infla el denominador y baja el límite por columna innecesariamente.\n\n2. **No recalcular cuando cambia el equipo**: Si se va un integrante o entra uno nuevo, el WIP total cambia y el límite por columna también debe actualizarse.\n\n3. **Ignorar el límite ante urgencias**: Romper el WIP limit por cada \"urgencia\" vacía de significado al proceso. La tarea urgente debe reemplazar una existente, no sumarse.\n\n4. **Aplicar el mismo límite a todas las columnas sin importar la carga**: Si 'En desarrollo' tiene 5 personas asignadas y 'En revisión' tiene 1, el WIP por columna debería ser diferente.\n",
   "faq": [
@@ -70,7 +74,7 @@
     },
     {
       "q": "¿Qué diferencia hay entre WIP total del tablero y WIP limit por columna?",
-      "a": "El WIP total es el máximo de tareas activas en todo el sistema a la vez (calculado con la Ley de Little o la regla ×1.5). El WIP limit por columna es la porción de ese total que corresponde a cada etapa activa. Esta calculadora hace exactamente esa división: toma el WIP total y lo distribuye uniformemente entre las columnas activas del tablero."
+      "a": "El WIP total es el máximo de tareas activas en todo el sistema a la vez. El WIP limit por columna es la porción de ese total que corresponde a cada etapa activa. Esta calculadora hace ambos pasos: a partir del tamaño del equipo estima el WIP total con la regla ×1,5 (1 a 1,5 tareas por persona) y luego lo distribuye uniformemente entre las columnas activas del tablero (redondeando, con un mínimo de 1 por columna)."
     },
     {
       "q": "¿Cómo calculo el WIP total si no tengo métricas todavía?",
