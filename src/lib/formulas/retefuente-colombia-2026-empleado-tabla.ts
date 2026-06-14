@@ -1,4 +1,4 @@
-import { COLOMBIA_2026 } from '../data/colombia-2026';
+import { COLOMBIA_2026, retefuenteMensualArt383 } from '../data/colombia-2026';
 export interface Inputs {
   salario_mensual_bruto: number;
   num_dependientes?: number;
@@ -25,31 +25,46 @@ export function compute(i: Inputs): Outputs {
   // Constantes 2026 DIAN
   const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const COTIZACION_EPS_PENSIÓN_DEFAULT = 8; // 4% EPS + 4% pensión
-  const DEDUCCIÓN_DEPENDIENTE_UVT = 2; // 2 UVT por dependiente
+  const DEDUCCIÓN_DEPENDIENTE_UVT = 2; // 2 UVT/mes por dependiente (art. 387 ET, variante simplificada)
+  const RENTA_EXENTA_PCT = COLOMBIA_2026.rentaExentaLaboral.porcentaje; // 0,25 (art. 206-10 ET)
+  const TOPE_EXENTA_MENSUAL_UVT = COLOMBIA_2026.rentaExentaLaboral.topeAnualUvt / 12; // 790/12 ≈ 65,83 UVT/mes
+  const TOPE_GLOBAL_MENSUAL_UVT = 1340 / 12; // art. 336/388 ET: 1.340 UVT/año ≈ 111,67 UVT/mes
 
   // Inputs con defaults
   const salarioMensual = Math.max(0, i.salario_mensual_bruto || 0);
   const numDependientes = Math.max(0, i.num_dependientes || 0);
   const aporteAfc = Math.max(0, i.aporte_afc_mensual || 0);
   const cotizacionPorcentaje = i.cotizacion_eps_pensión ?? COTIZACION_EPS_PENSIÓN_DEFAULT;
-  const cotizacionMontoMensual = (salarioMensual * cotizacionPorcentaje) / 100;
+  const cotizacionMontoMensual = (salarioMensual * cotizacionPorcentaje) / 100; // aportes obligatorios = INCRNGO
 
   // 1. Salario anual bruto
   const salarioAnualBruto = salarioMensual * 12;
 
-  // 2. Deducciones autorizadas
-  const cotizacionAnual = cotizacionMontoMensual * 12;
-  const aporteAfcAnual = aporteAfc * 12;
-  const deduccionDependientes = DEDUCCIÓN_DEPENDIENTE_UVT * UVT_2026 * numDependientes;
-  const totalDeducciones = cotizacionAnual + aporteAfcAnual + deduccionDependientes;
+  // 2. Ingreso del mes tras INCRNGO (aportes obligatorios a salud y pensión, art. 387 ET)
+  const ingresoNetoMensual = Math.max(0, salarioMensual - cotizacionMontoMensual);
 
-  // 3. Renta anual depurada (base imponible)
-  const rentaAnualDepurada = Math.max(0, salarioAnualBruto - totalDeducciones);
+  // 3. Deducciones (art. 387 ET): dependientes a 2 UVT/mes c/u.
+  //    (Intereses de vivienda y medicina prepagada no se modelan en esta versión.)
+  const deduccionDependientesMensual = DEDUCCIÓN_DEPENDIENTE_UVT * UVT_2026 * numDependientes;
 
-  // 4. Convertir a UVT
-  const rentaEnUvt = rentaAnualDepurada / UVT_2026;
+  // 4. Renta exenta laboral del 25% (art. 206-10 ET). Se calcula sobre el subtotal que queda
+  //    tras restar INCRNGO, deducciones y las demás rentas exentas (AFC). Tope 790 UVT/año.
+  const subtotalParaExenta = Math.max(0, ingresoNetoMensual - deduccionDependientesMensual - aporteAfc);
+  const rentaExenta25 = Math.min(RENTA_EXENTA_PCT * subtotalParaExenta, TOPE_EXENTA_MENSUAL_UVT * UVT_2026);
 
-  // 5. Aplicar tabla DIAN 2026 (Artículo 383 ET)
+  // 5. Límite global de beneficios (art. 336/388 ET): deducciones + rentas exentas
+  //    ≤ 40% del ingreso tras INCRNGO y ≤ 1.340 UVT/año.
+  const beneficiosBrutos = deduccionDependientesMensual + aporteAfc + rentaExenta25;
+  const topeGlobal = Math.min(0.40 * ingresoNetoMensual, TOPE_GLOBAL_MENSUAL_UVT * UVT_2026);
+  const beneficiosAplicados = Math.min(beneficiosBrutos, topeGlobal);
+
+  // 6. Base gravable MENSUAL de retención y su valor en UVT.
+  //    La tabla del art. 383 ET es MENSUAL: los tramos en UVT se evalúan sobre la base del mes.
+  const baseMensualDepurada = Math.max(0, ingresoNetoMensual - beneficiosAplicados);
+  const rentaAnualDepurada = baseMensualDepurada * 12; // base anual equivalente (para el output)
+  const rentaEnUvt = baseMensualDepurada / UVT_2026;
+
+  // 7. Tramo marginal del art. 383 ET sobre la base MENSUAL en UVT
   // Tramos: 0-95 (0%), 95-150 (19%), 150-360 (28%), 360-640 (33%), 640-945 (35%), 945-2300 (37%), >2300 (39%)
   let tarifaMarginal = 0;
   let tramoAplicable = "0-95 UVT (Exento)";
@@ -77,11 +92,12 @@ export function compute(i: Inputs): Outputs {
     tramoAplicable = "0-95 UVT (0%)";
   }
 
-  // 6. Retefuente anual
-  const retefuenteAnual = (rentaAnualDepurada * tarifaMarginal) / 100;
+  // 8. Retención MENSUAL: tabla progresiva del art. 383 ET
+  // (cuota fija en UVT + tarifa marginal sobre el excedente del tramo), NO tasa plana.
+  const retefuenteMensual = retefuenteMensualArt383(baseMensualDepurada);
 
-  // 7. Retefuente mensual
-  const retefuenteMensual = retefuenteAnual / 12;
+  // 9. Retefuente anual
+  const retefuenteAnual = retefuenteMensual * 12;
 
   // 8. Salario neto mensual
   const salarioNetoMensual = Math.max(
