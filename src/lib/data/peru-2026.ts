@@ -42,6 +42,18 @@ export const PERU_2026 = {
     // Julio y diciembre: 1 sueldo completo cada una, libres de AFP/ONP.
     bonificacionExtraordinaria: 0.09, // 9% extra (lo que iría a EsSalud) — Ley 30334
   },
+  // Impuesto predial municipal anual — Art. 11-13, TUO Ley de Tributación Municipal
+  // (DS 156-2004-EF, base Decreto Legislativo 776). Escala progresiva acumulativa
+  // sobre el autovalúo, en tramos de UIT. Mínimo = 0,6% de la UIT.
+  predial: {
+    tramos: [                // límite superior del tramo en UIT (acumulativo) y tasa marginal
+      { hastaUit: 15, tasa: 0.002 },        // hasta 15 UIT (S/ 82.500): 0,2%
+      { hastaUit: 60, tasa: 0.006 },        // de 15 a 60 UIT (S/ 82.500–330.000): 0,6%
+      { hastaUit: Infinity, tasa: 0.01 },   // exceso de 60 UIT (> S/ 330.000): 1,0%
+    ],
+    minimoUit: 0.006,        // impuesto mínimo = 0,6% de la UIT (Art. 13)
+    deduccionPensionistaUit: 50, // deducción de hasta 50 UIT del autovalúo (pensionista/adulto mayor, vivienda única) — Art. 19
+  },
   moneda: 'PEN',
   simbolo: 'S/',
 } as const;
@@ -66,7 +78,12 @@ export function impuestoRenta5taAnual(ingresoBrutoAnual: number): number {
   return impuesto;
 }
 
-/** Formatea un monto en soles (es-PE). */
+/**
+ * Formatea un monto en soles con el formato legal peruano: punto para miles,
+ * coma para decimales (Ley 23560) → "S/ 1.291,88", "S/ 60.000".
+ * Se usa 'de-DE' a propósito: en Node/V8 el locale 'es-PE' emite formato estilo
+ * US ("S/ 1,291.88"), que no coincide con la prosa de los JSONs de calcs-pe.
+ */
 export function fmtPEN(n: number): string {
-  return 'S/ ' + new Intl.NumberFormat('es-PE', { maximumFractionDigits: 2 }).format(Math.round(n * 100) / 100);
+  return 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round(n * 100) / 100);
 }
