@@ -1,8 +1,17 @@
 import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
+import {
+  MNI_MENSUAL_BASE,
+  INCREMENTO_CONYUGE_MENSUAL,
+  INCREMENTO_HIJO_MENSUAL,
+  aplicarEscalaMensual,
+} from './_ganancias-escala';
+
 /** Impuesto a las Ganancias 4ta categoría Argentina 2026
- *  Ley 20.628 — Empleados en relación de dependencia
- *  Con Ley 27.743 (Bases): nuevo piso y escala
- */
+ *  Ley 20.628 — Empleados en relación de dependencia, reforma Ley 27.743 (Bases).
+ *
+ *  MNI + Deducción Especial, cargas de familia diferenciadas (cónyuge / hijo) y la
+ *  escala del Art. 94 LIG vienen de `_ganancias-escala.ts`, que el fetcher de ARCA
+ *  auto-actualiza por semestre. Sin valores hardcodeados ni escala propia. */
 
 export interface Inputs {
   sueldoBrutoMensual: number;
@@ -26,62 +35,32 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Valores estimados 2026 (basado en Ley 27.743 + actualización por inflación)
-const MINIMO_NO_IMPONIBLE = 5_100_000; // Anual
-const DEDUCCION_ESPECIAL = 24_480_000; // 4.8x del MNI para empleados
-const DEDUCCION_CONYUGE = 4_775_000;
-const DEDUCCION_HIJO = 2_400_000;
-
-// Escala Art. 94 LIG (anual, estimada 2026)
-const ESCALA = [
-  { hasta: 1_500_000, tasa: 5, acum: 0 },
-  { hasta: 3_000_000, tasa: 9, acum: 75_000 },
-  { hasta: 4_500_000, tasa: 12, acum: 210_000 },
-  { hasta: 6_000_000, tasa: 15, acum: 390_000 },
-  { hasta: 9_000_000, tasa: 19, acum: 615_000 },
-  { hasta: 12_000_000, tasa: 23, acum: 1_185_000 },
-  { hasta: 18_000_000, tasa: 27, acum: 1_875_000 },
-  { hasta: 27_000_000, tasa: 31, acum: 3_495_000 },
-  { hasta: Infinity, tasa: 35, acum: 6_285_000 },
-];
-
-function calcGanancias(gananciaNetaAnual: number): number {
-  if (gananciaNetaAnual <= 0) return 0;
-  for (const e of ESCALA) {
-    if (gananciaNetaAnual <= e.hasta) {
-      const prevHasta = ESCALA.indexOf(e) > 0 ? ESCALA[ESCALA.indexOf(e) - 1].hasta : 0;
-      return e.acum + (gananciaNetaAnual - prevHasta) * (e.tasa / 100);
-    }
-  }
-  const last = ESCALA[ESCALA.length - 1];
-  const prevHasta = ESCALA[ESCALA.length - 2].hasta;
-  return last.acum + (gananciaNetaAnual - prevHasta) * (last.tasa / 100);
-}
-
 export function gananciasCuartaCategoria2026(i: Inputs): Outputs {
   const sueldoBruto = Number(i.sueldoBrutoMensual);
-  const cargasFam = Number(i.cargasFamiliares) || 0;
   const tieneConyuge = i.conyuge === 'si' || i.conyuge === 'true';
-  const hijos = Number(i.hijos) || 0;
+  const hijos = Math.max(0, Number(i.hijos) || 0);
   const deduccEsp = Number(i.deduccionesEspeciales) || 0;
 
   if (!sueldoBruto || sueldoBruto <= 0) throw new Error('Ingresá tu sueldo bruto mensual');
 
-  // Aportes seguridad social: ~17%
+  // Aportes seg. social 17% (Jub 11 + OS 3 + INSSJP 3) con tope en la base imponible
+  // máxima (Ley 24.241). Para sueldos altos el aporte se congela en el tope.
   const aportesSegSocial = Math.min(sueldoBruto, BASE_IMPONIBLE_MAXIMA_APORTES) * 0.17;
   const sueldoNetoSegSocial = sueldoBruto - aportesSegSocial;
 
   // Ganancia anual (13 sueldos con SAC)
   const gananciaAnual = sueldoNetoSegSocial * 13;
 
-  // Deducciones
-  let deduccionesTotal = MINIMO_NO_IMPONIBLE + DEDUCCION_ESPECIAL;
-  if (tieneConyuge) deduccionesTotal += DEDUCCION_CONYUGE;
-  deduccionesTotal += hijos * DEDUCCION_HIJO;
-  deduccionesTotal += deduccEsp;
+  // Deducciones anuales = montos mensuales de ARCA × 12
+  // (MNI_MENSUAL_BASE ya combina GNI + Deducción Especial apartado 1).
+  const deduccionFamiliaMensual =
+    (tieneConyuge ? INCREMENTO_CONYUGE_MENSUAL : 0) + hijos * INCREMENTO_HIJO_MENSUAL;
+  const deduccionesTotal = (MNI_MENSUAL_BASE + deduccionFamiliaMensual) * 12 + deduccEsp;
 
   const gananciaNetaSujetaImpuesto = Math.max(0, gananciaAnual - deduccionesTotal);
-  const impuestoAnual = calcGanancias(gananciaNetaSujetaImpuesto);
+  // Escala progresiva Art. 94 LIG (expresada en términos mensuales): el impuesto
+  // anual exacto = aplicarEscalaMensual(base/12) × 12 (topes y acumulados escalan ×12).
+  const impuestoAnual = aplicarEscalaMensual(gananciaNetaSujetaImpuesto / 12).impuesto * 12;
   const impuestoMensual = impuestoAnual / 12;
   const tasaEfectiva = gananciaAnual > 0 ? (impuestoAnual / gananciaAnual) * 100 : 0;
 

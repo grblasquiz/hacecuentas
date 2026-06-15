@@ -4,7 +4,9 @@ export function paredLadrillosMetrosM2(i: Inputs): Outputs {
   const rates: Record<string, number> = { comun: 60, portante: 16, cerramiento: 20 };
   const r = rates[String(i.tipo)] || 60;
   const m = Number(i.m2) || 0;
-  const total = Math.ceil(m * r * 1.1);
+  // +10% de desperdicio. toFixed(6) limpia el ruido de coma flotante de ×1,1
+  // (p.ej. 1800*1.1 = 1980.0000000000002) que si no inflaría el Math.ceil en 1.
+  const total = Math.ceil(+(m * r * 1.1).toFixed(6));
   const sinDesperdicio = Math.ceil(m * r);
   const desperdicio = Math.max(0, total - sinDesperdicio);
   const fmt = (n: number) => n.toLocaleString('es-AR');

@@ -14,7 +14,8 @@
  *
  * NOTA: el tope de la prestación por desempleo (ANSES) NO es igual al SMVM
  * vigente — ANSES lo ajusta con ~1 mes de lag (jun-2026: SMVM $367.800 vs
- * techo desempleo $363.000). No reutilizar estas constantes para desempleo.
+ * techo desempleo $363.000). Para desempleo usar DESEMPLEO_PISO/DESEMPLEO_TECHO
+ * (abajo), nunca SMVM_MENSUAL.
  */
 
 // Valores oficiales junio 2026 — Res 9/2025 CNEPySMVyM (Boletín Oficial 03-12-2025).
@@ -22,3 +23,13 @@ export const SMVM_MENSUAL = 367_800;
 export const SMVM_HORA = 1_839;
 export const SMVM_FECHA = 'junio 2026 (Res 9/2025)';
 export const SMVM_RESOLUCION = 'Resolución 9/2025 CNEPySMVyM';
+
+/**
+ * Topes de la PRESTACIÓN POR DESEMPLEO (ANSES, Ley 24.013 / Decreto 267/2006).
+ * Cuantía = 75% del promedio de las mejores 6 remuneraciones, acotada entre un
+ * piso y un techo que ANSES fija por resolución. Equivalen a ~50%/100% del SMVM,
+ * pero ANSES los aplica con rezago: jun-2026 = $181.500/$363.000 (= SMVM de mayo),
+ * mientras el SMVM de junio ya es $367.800. ⚠️ ACTUALIZAR mensualmente.
+ */
+export const DESEMPLEO_PISO = 181_500;   // piso ANSES jun-2026
+export const DESEMPLEO_TECHO = 363_000;  // techo ANSES jun-2026

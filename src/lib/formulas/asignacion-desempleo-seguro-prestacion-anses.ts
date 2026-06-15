@@ -1,3 +1,5 @@
+import { DESEMPLEO_PISO, DESEMPLEO_TECHO } from '../data/smvm-ar-2026';
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: any; }
 // ANSES — Prestación por Desempleo (Ley 24.013, modif. Decreto 267/2006).
@@ -6,8 +8,8 @@ export interface Outputs { [k: string]: any; }
 // Valores liquidados junio 2026: piso $181.500 / techo $363.000.
 // (Topes vigentes a 06-2026; ANSES los ajusta periódicamente — revisar trimestralmente.)
 const PCT_PRESTACION = 0.75;          // 75% del promedio (Decreto 267/2006)
-const PISO_DESEMPLEO = 181500;        // piso liquidado jun-2026
-const TECHO_DESEMPLEO = 363000;       // techo liquidado jun-2026
+const PISO_DESEMPLEO = DESEMPLEO_PISO;   // fuente única src/lib/data/smvm-ar-2026.ts
+const TECHO_DESEMPLEO = DESEMPLEO_TECHO; // fuente única src/lib/data/smvm-ar-2026.ts
 export function asignacionDesempleoSeguroPrestacionAnses(i: Inputs): Outputs {
   const s=Number(i.ultimoSueldoBruto)||0; const m=Number(i.mesesCotizados)||0;
   const base=s*PCT_PRESTACION;
