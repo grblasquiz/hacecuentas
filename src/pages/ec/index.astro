@@ -115,6 +115,14 @@ const faq = [
   },
 ];
 
+// ── Equivalencias AR → EC: inyecta autoridad interna desde el catálogo argentino ya posicionado ──
+const equivalentesAr = [
+  { ar: 'sueldo-en-mano-argentina', arLabel: 'Sueldo en mano (Argentina)', ec: 'calculadora-sueldo-neto-ecuador', ecLabel: 'Sueldo neto en Ecuador', concepto: 'Sueldo neto' },
+  { ar: 'calculadora-aguinaldo-sac', arLabel: 'Aguinaldo (SAC) Argentina', ec: 'calculadora-decimo-tercer-sueldo-ecuador', ecLabel: 'Décimo tercer sueldo', concepto: 'Aguinaldo / décimo tercero' },
+  { ar: 'calculadora-vacaciones-argentina', arLabel: 'Vacaciones Argentina', ec: 'calculadora-vacaciones-ecuador', ecLabel: 'Vacaciones en Ecuador', concepto: 'Vacaciones' },
+  { ar: 'calculadora-indemnizacion-despido', arLabel: 'Indemnización por despido Argentina', ec: 'calculadora-liquidacion-finiquito-ecuador', ecLabel: 'Liquidación (finiquito)', concepto: 'Indemnización / finiquito' },
+];
+
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -195,6 +203,7 @@ const hreflangTags = HOME_HREFLANG;
           <span class="stat-sep" aria-hidden="true">·</span>
           <span class="stat">100% gratis</span>
         </div>
+        <span class="hero-live hero-live-static"><span class="dot-live" aria-hidden="true"></span>Moneda oficial: dólar estadounidense (USD)</span>
       </div>
     </section>
 
@@ -236,6 +245,15 @@ const hreflangTags = HOME_HREFLANG;
       <p class="dc-note">Última revisión: 10 de junio de 2026. Fuentes: SRI, IESS y Ministerio del Trabajo.</p>
     </section>
 
+    <section class="popular-section" aria-label="Más recursos de Ecuador">
+      <h2 class="popular-title">Más recursos de Ecuador</h2>
+      <div class="popular-grid">
+        <a href="/datos-salario-basico-ecuador-2026" class="popular-card"><span class="popular-icon">💵</span><span class="popular-label">Salario básico Ecuador 2026</span></a>
+        <a href="/feriados-ecuador-2026" class="popular-card"><span class="popular-icon">📅</span><span class="popular-label">Feriados Ecuador 2026</span></a>
+        <a href="/datos-salario-minimo-latam-2026" class="popular-card"><span class="popular-icon">🌎</span><span class="popular-label">Salario mínimo LATAM</span></a>
+      </div>
+    </section>
+
     <div class="categories">
       {activeCategories.map((catKey) => {
         const meta = categoryMeta[catKey];
@@ -265,6 +283,23 @@ const hreflangTags = HOME_HREFLANG;
         );
       })}
     </div>
+
+    <section class="equiv-ar" aria-labelledby="equiv-ar-title">
+      <h2 id="equiv-ar-title">Equivalentes en Argentina</h2>
+      <p class="section-sub">¿Venís de Argentina o comparás los dos países? Cada cálculo laboral tiene su par ecuatoriano.</p>
+      <div class="equiv-grid">
+        {equivalentesAr.map((e) => (
+          <div class="equiv-row">
+            <span class="equiv-concepto">{e.concepto}</span>
+            <div class="equiv-pair">
+              <a href={`/${e.ar}`} class="equiv-link">🇦🇷 {e.arLabel}</a>
+              <span class="equiv-arrow" aria-hidden="true">→</span>
+              <a href={`/ec/${e.ec}`} class="equiv-link">🇪🇨 {e.ecLabel}</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
 
     <section class="faq-hub" aria-labelledby="faq-title">
       <h2 id="faq-title">Preguntas frecuentes sobre sueldos e impuestos en Ecuador 2026</h2>
@@ -400,4 +435,24 @@ const hreflangTags = HOME_HREFLANG;
   .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
   .faq-list details[open] summary::after { content: '−'; }
   .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+
+  .hero-live { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.875rem; font-size: 0.9rem; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .hero-live:hover { text-decoration: underline; }
+  .hero-live-static { color: var(--text-muted); cursor: default; }
+  .hero-live-static:hover { text-decoration: none; }
+  .hero-live .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgba(22,163,74,0.5); animation: pulse-live 2s infinite; flex-shrink: 0; }
+  @keyframes pulse-live { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); } 70% { box-shadow: 0 0 0 6px rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
+
+  .equiv-ar { padding: 0 1rem 2.5rem; }
+  .equiv-ar h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .equiv-grid { display: grid; gap: 0.625rem; }
+  .equiv-row {
+    display: flex; flex-direction: column; gap: 0.5rem; padding: 0.875rem 1rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  .equiv-concepto { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+  .equiv-pair { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+  .equiv-link { font-size: 0.9rem; font-weight: 600; text-decoration: none; color: var(--text); padding: 0.25rem 0; }
+  .equiv-link:hover { color: var(--accent); text-decoration: underline; }
+  .equiv-arrow { color: var(--text-muted); font-weight: 700; flex-shrink: 0; }
 </style>

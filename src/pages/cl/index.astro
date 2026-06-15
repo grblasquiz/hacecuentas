@@ -71,6 +71,7 @@ const CH = CHILE_2026;
 const uf = (clLive as any)?.uf?.valor ?? 40627.62;
 const utm = (clLive as any)?.utm?.valor ?? 71506;
 const uta = (clLive as any)?.uta?.valor ?? 858072;
+const dolarCl = (clLive as any)?.dolar?.valor ?? 909.02;
 const liveMes = new Date((clLive as any)?._meta?.fetchedAt ?? '2026-06-01').toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
 const descuentosLegales = CH.afpObligatorio + CH.saludFonasa + CH.afcTrabajadorIndefinido; // 17,6% sin comisión AFP
 const liquidoImm = CH.imm * (1 - descuentosLegales);
@@ -84,6 +85,7 @@ const datosClave = [
   { k: `UF (${liveMes})`, v: fmtCLP(uf), src: 'Banco Central — se reajusta a diario' },
   { k: `UTM (${liveMes})`, v: fmtCLP(utm), src: 'SII' },
   { k: `UTA (${liveMes})`, v: fmtCLP(uta), src: 'SII' },
+  { k: `Dólar observado (${liveMes})`, v: fmtCLP(dolarCl), src: 'Banco Central — referencia diaria' },
   { k: 'Cotización AFP', v: '10% + comisión según AFP', src: 'DL 3.500' },
   { k: 'Cotización de salud', v: '7% (Fonasa o isapre)', src: 'Fonasa / Superintendencia de Salud' },
   { k: 'Seguro de cesantía (trabajador)', v: '0,6% (contrato indefinido)', src: 'Ley 19.728' },
@@ -213,6 +215,7 @@ const hreflangTags = HOME_HREFLANG;
           <span class="stat-sep" aria-hidden="true">·</span>
           <span class="stat">100% gratis</span>
         </div>
+        <a href="/dolar-hoy-chile" class="hero-live"><span class="dot-live" aria-hidden="true"></span>Dólar hoy en Chile: {fmtCLP(dolarCl)}</a>
       </div>
     </section>
 
@@ -252,6 +255,15 @@ const hreflangTags = HOME_HREFLANG;
         </table>
       </div>
       <p class="dc-note">Última revisión: 10 de junio de 2026. Fuentes: Diario Oficial, Superintendencia de Pensiones, SII y Banco Central.</p>
+    </section>
+
+    <section class="popular-section" aria-label="Más recursos de Chile">
+      <h2 class="popular-title">Más recursos de Chile</h2>
+      <div class="popular-grid">
+        <a href="/dolar-hoy-chile" class="popular-card"><span class="popular-icon">💵</span><span class="popular-label">Dólar hoy en Chile</span></a>
+        <a href="/feriados-chile-2026" class="popular-card"><span class="popular-icon">📅</span><span class="popular-label">Feriados Chile 2026</span></a>
+        <a href="/datos-salario-minimo-latam-2026" class="popular-card"><span class="popular-icon">🌎</span><span class="popular-label">Salario mínimo LATAM</span></a>
+      </div>
     </section>
 
     <div class="categories">
@@ -435,6 +447,11 @@ const hreflangTags = HOME_HREFLANG;
   .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
   .faq-list details[open] summary::after { content: '−'; }
   .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+
+  .hero-live { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.875rem; font-size: 0.9rem; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .hero-live:hover { text-decoration: underline; }
+  .hero-live .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgba(22,163,74,0.5); animation: pulse-live 2s infinite; flex-shrink: 0; }
+  @keyframes pulse-live { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); } 70% { box-shadow: 0 0 0 6px rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
 
   .equiv-ar { padding: 0 1rem 2.5rem; }
   .equiv-ar h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }

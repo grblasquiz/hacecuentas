@@ -7,6 +7,7 @@ import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { COLOMBIA_2026, fmtCOP } from '../../lib/data/colombia-2026';
+import coLive from '../../data/live/colombia.json';
 
 const localeModules = import.meta.glob<any>('../../content/calcs-co/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
@@ -69,12 +70,16 @@ const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(
 const C = COLOMBIA_2026;
 const pctCO = (x: number) => (x * 100).toLocaleString('es-CO', { maximumFractionDigits: 3 }) + '%';
 const netoSmlmv = C.smlmv * (1 - C.aportes.saludEmpleado - C.aportes.pensionEmpleado) + C.auxilioTransporte;
+const trm = (coLive as any)?.trm?.valor ?? 3475.72;
+const trmStr = `$${trm.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const liveMes = new Date((coLive as any)?._meta?.fetchedAt ?? '2026-06-01').toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
 
 const datosClave = [
   { k: 'Salario mínimo (SMLMV)', v: `${fmtCOP(C.smlmv)} /mes`, src: 'Decreto 1469 de 2025' },
   { k: 'Auxilio de transporte', v: `${fmtCOP(C.auxilioTransporte)} /mes`, src: 'Decreto 1470 de 2025 (hasta 2 SMLMV)' },
   { k: 'SMLMV + auxilio de transporte', v: fmtCOP(C.smlmv + C.auxilioTransporte), src: 'MinTrabajo' },
   { k: 'UVT 2026', v: fmtCOP(C.uvt), src: 'Resolución DIAN 000238 de 2025' },
+  { k: `Dólar (TRM, ${liveMes})`, v: trmStr, src: 'Superintendencia Financiera / datos.gov.co' },
   { k: 'Aportes del empleado (salud + pensión)', v: `${pctCO(C.aportes.saludEmpleado + C.aportes.pensionEmpleado)} (4% + 4%)`, src: 'Ley 100 de 1993' },
   { k: 'Aportes del empleador (salud + pensión)', v: `${pctCO(C.aportes.saludEmpleador + C.aportes.pensionEmpleador)} (8,5% + 12%)`, src: 'Ley 100 de 1993' },
   { k: 'ARL según clase de riesgo (I a V)', v: `${pctCO(C.aportes.arl.I)} a ${pctCO(C.aportes.arl.V)}`, src: 'Decreto 1772 de 1994 — 100% empleador' },
@@ -214,6 +219,7 @@ const hreflangTags = HOME_HREFLANG;
           <span class="stat-sep" aria-hidden="true">·</span>
           <span class="stat">100% gratis</span>
         </div>
+        <a href="/dolar-hoy-colombia" class="hero-live"><span class="dot-live" aria-hidden="true"></span>Dólar hoy en Colombia (TRM): {trmStr}</a>
       </div>
     </section>
 
@@ -269,6 +275,15 @@ const hreflangTags = HOME_HREFLANG;
         </table>
       </div>
       <p class="dc-note">Última revisión: 10 de junio de 2026. Fuentes: MinTrabajo, DIAN y Diario Oficial.</p>
+    </section>
+
+    <section class="popular-section" aria-label="Más recursos de Colombia">
+      <h2 class="popular-title">Más recursos de Colombia</h2>
+      <div class="popular-grid">
+        <a href="/dolar-hoy-colombia" class="popular-card"><span class="popular-icon">💵</span><span class="popular-label">Dólar hoy (TRM)</span></a>
+        <a href="/feriados-colombia-2026" class="popular-card"><span class="popular-icon">📅</span><span class="popular-label">Feriados Colombia 2026</span></a>
+        <a href="/datos-salario-minimo-latam-2026" class="popular-card"><span class="popular-icon">🌎</span><span class="popular-label">Salario mínimo LATAM</span></a>
+      </div>
     </section>
 
     <div class="categories">
@@ -452,6 +467,11 @@ const hreflangTags = HOME_HREFLANG;
   .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
   .faq-list details[open] summary::after { content: '−'; }
   .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+
+  .hero-live { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.875rem; font-size: 0.9rem; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .hero-live:hover { text-decoration: underline; }
+  .hero-live .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgba(22,163,74,0.5); animation: pulse-live 2s infinite; flex-shrink: 0; }
+  @keyframes pulse-live { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); } 70% { box-shadow: 0 0 0 6px rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
 
   .equiv-ar { padding: 0 1rem 2.5rem; }
   .equiv-ar h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
