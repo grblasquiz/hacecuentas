@@ -3928,16 +3928,49 @@ const formatFreshnessDate = (iso: string): string => {
     overlay.querySelector<HTMLButtonElement>('.hc-embed-copy')!.addEventListener('click', async (e) => {
       const activeTab = overlay.querySelector<HTMLElement>('.hc-tab.active')!.dataset.tab;
       const code = activeTab === 'iframe' ? iframeSnippet : scriptSnippet;
+      const btn = e.currentTarget as HTMLButtonElement;
+      let ok = false;
       try {
-        await navigator.clipboard.writeText(code);
-        const btn = e.currentTarget as HTMLButtonElement;
-        const orig = btn.textContent;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(code);
+          ok = true;
+        }
+      } catch { /* clipboard API bloqueada \u2192 cae al fallback */ }
+      if (!ok) {
+        // Fallback: navegadores viejos / webviews in-app (Instagram, Facebook,
+        // Android WebView) donde navigator.clipboard no existe o falla en
+        // silencio. Sin esto, "Copiar c\u00f3digo" no copiaba NADA ni avisaba.
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = code;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch { /* ni el fallback anduvo */ }
+      }
+      if (ok) {
         btn.textContent = '\u00a1Copiado!';
-        setTimeout(() => { btn.textContent = orig; }, 1500);
+        setTimeout(() => { btn.textContent = 'Copiar c\u00f3digo'; }, 1500);
         if (typeof (window as any).gtag === 'function') {
           (window as any).gtag('event', 'embed_copy', { calc_slug: slug, type: activeTab });
         }
-      } catch {}
+      } else {
+        // \u00daltimo recurso: seleccionar el c\u00f3digo visible para copiar a mano.
+        const pane = overlay.querySelector<HTMLElement>('[data-pane="' + activeTab + '"] code');
+        if (pane) {
+          const range = document.createRange();
+          range.selectNodeContents(pane);
+          const sel = window.getSelection();
+          sel && sel.removeAllRanges();
+          sel && sel.addRange(range);
+        }
+        btn.textContent = 'Seleccion\u00e1 y Ctrl+C';
+        setTimeout(() => { btn.textContent = 'Copiar c\u00f3digo'; }, 2500);
+      }
     });
 
     if (typeof (window as any).gtag === 'function') {
