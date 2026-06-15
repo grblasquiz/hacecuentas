@@ -584,6 +584,7 @@ import { compute as compute__comida_golden_retriever_cantidad_cachorro_adulto } 
 import { comidaHamsterSemana } from './comida-hamster-semana';
 import { comidaPerroDiaria } from './comida-perro-diaria';
 import { comidaPerroGramosAdultoSeniorPesos } from './comida-perro-gramos-adulto-senior-pesos';
+import { comidaPerroInviernoFrioAjuste } from './comida-perro-invierno-frio-ajuste';
 import { comidaTortugaDiariaGramos } from './comida-tortuga-diaria-gramos';
 import { compute as compute__comida_yorkshire_terrier_porcion_diaria_edad } from './comida-yorkshire-terrier-porcion-diaria-edad';
 import { comisionAmazonFbaProducto } from './comision-amazon-fba-producto';
@@ -2719,6 +2720,7 @@ import { puntajeIngresoUniversidad } from './puntaje-ingreso-universidad';
 import { puntoDeRocio } from './punto-de-rocio';
 import { puntoEquilibrioOpciones } from './punto-equilibrio-opciones';
 import { puntosAmexMembershipRewards } from './puntos-amex-membership-rewards';
+import { puntosNecesariosClasificarFutbol } from './puntos-necesarios-clasificar-futbol';
 import { puntosPorPartidoPpp } from './puntos-por-partido-ppp';
 import { puntosRankingAjedrezElo } from './puntos-ranking-ajedrez-elo';
 import { puntosVsCashVueloCuandoConviene } from './puntos-vs-cash-vuelo-cuando-conviene';
@@ -4077,6 +4079,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'comida-hamster-semana': comidaHamsterSemana,
   'comida-perro-diaria': comidaPerroDiaria,
   'comida-perro-gramos-adulto-senior-pesos': comidaPerroGramosAdultoSeniorPesos,
+  'comida-perro-invierno-frio-ajuste': comidaPerroInviernoFrioAjuste,
   'comida-tortuga-diaria-gramos': comidaTortugaDiariaGramos,
   'comida-yorkshire-terrier-porcion-diaria-edad': compute__comida_yorkshire_terrier_porcion_diaria_edad,
   'comision-amazon-fba-producto': comisionAmazonFbaProducto,
@@ -6212,6 +6215,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'punto-de-rocio': puntoDeRocio,
   'punto-equilibrio-opciones': puntoEquilibrioOpciones,
   'puntos-amex-membership-rewards': puntosAmexMembershipRewards,
+  'puntos-necesarios-clasificar-futbol': puntosNecesariosClasificarFutbol,
   'puntos-por-partido-ppp': puntosPorPartidoPpp,
   'puntos-ranking-ajedrez-elo': puntosRankingAjedrezElo,
   'puntos-vs-cash-vuelo-cuando-conviene': puntosVsCashVueloCuandoConviene,
