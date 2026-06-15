@@ -9,9 +9,11 @@
  *   - smvmMensual / 200h ≈ smvmHora oficial
  *   - smvmDia = smvmHora × 8
  *
- * El fetcher `scripts/update-data/fetchers/salario-minimo.ts` patchea
- * SMVM_MENSUAL, SMVM_HORA y FECHA como literales.
+ * Los valores vienen de la fuente única `src/lib/data/smvm-ar-2026.ts`
+ * (la patchea el fetcher `scripts/update-data/fetchers/smvm.ts`).
  */
+
+import { SMVM_MENSUAL, SMVM_HORA, SMVM_FECHA } from '../data/smvm-ar-2026';
 
 export interface Inputs {
   horasSemana: number;
@@ -25,10 +27,7 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Valores oficiales abril 2026 — Res 9/2025 CNEPySMVyM
-const SMVM_MENSUAL = 357_800;
-const SMVM_HORA = 1_789;
-const FECHA = 'abril 2026 (Res 9/2025)';
+// SMVM_MENSUAL, SMVM_HORA y SMVM_FECHA → src/lib/data/smvm-ar-2026.ts (fuente única).
 // Jornada legal completa: 48h/sem × 52 sem / 12 meses ≈ 208h. La resolución
 // oficial redondea a 200h (8h × 25 días hábiles) al fijar el valor hora.
 const HORAS_MES_LEGAL = 200;
@@ -67,7 +66,7 @@ export function salarioMinimo(i: Inputs): Outputs {
     smvmHora: SMVM_HORA,
     smvmDia,
     smvmProporcionalMensual,
-    fechaVigencia: FECHA,
+    fechaVigencia: SMVM_FECHA,
     _insight,
   };
 }

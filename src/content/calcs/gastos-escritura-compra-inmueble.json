@@ -12,11 +12,12 @@
         ["Sellos CABA (general)", "2,7 %", "Comprador y vendedor (suele dividirse)", "Valor de escritura o valuación (el mayor)"],
         ["Sellos CABA — vivienda única familiar", "Exento hasta $226.100.000 (3,5 % sobre el excedente)", "Comprador y vendedor", "Valor de escritura"],
         ["Sellos PBA", "2 % (1 % cada parte)", "Comprador y vendedor", "Valor de escritura"],
-        ["ITI (Impuesto a la Transferencia)", "1,5 %", "Vendedor (persona física que no tributa Ganancias)", "Valor de transferencia"],
+        ["Ganancias — impuesto cedular (reemplaza al ITI)", "15 % sobre la ganancia", "Vendedor (inmuebles adquiridos desde 2018)", "Ganancia (precio de venta − costo actualizado)"],
+        ["ITI (Impuesto a la Transferencia)", "Derogado (0 %)", "Ya no se tributa desde 2024", "—"],
         ["Inscripción registral + certificados", "Monto fijo según jurisdicción", "Comprador", "Tasa registral"],
         ["Comisión inmobiliaria", "3 % a 4 % + IVA por parte", "Comprador y vendedor", "Valor de la operación"]
       ],
-      "note": "Sellos: CABA Ley Tarifaria 2026 / Ley 6.927 (general 2,7 %; vivienda única familiar y permanente exenta hasta $226.100.000, paga 3,5 % sobre el excedente); PBA Ley Impositiva 2026 / Ley 15.558 (2 %, 1 % cada parte; la exención de vivienda única se mide sobre la valuación fiscal con tope muy bajo, ~$1.154.400). ITI: 1,5 %, RG AFIP; exento si el vendedor reinvierte en vivienda única. Las alícuotas de sellos varían en otras provincias (1,5 %-3,5 %)."
+      "note": "Sellos: CABA Ley Tarifaria 2026 / Ley 6.927 (general 2,7 %; vivienda única familiar y permanente exenta hasta $226.100.000, paga 3,5 % sobre el excedente); PBA Ley Impositiva 2026 / Ley 15.558 (2 %, 1 % cada parte; la exención de vivienda única se mide sobre la valuación fiscal con tope muy bajo, ~$1.154.400). El ITI (1,5 %) fue derogado por la Ley 27.743 (art. 67, B.O. 08/07/2024) y AFIP lo informa como no vigente: las personas humanas ya no lo pagan. En su lugar, los inmuebles adquiridos desde el 01/01/2018 tributan el impuesto cedular a Ganancias del 15 % sobre la ganancia; los anteriores a 2018 quedan exentos. Las alícuotas de sellos varían en otras provincias (1,5 %-3,5 %)."
     }
   ],
   "title": "Calculadora de gastos de escrituración de inmueble 2026",
@@ -32,8 +33,8 @@
     "ITI compraventa",
     "costos escritura argentina"
   ],
-  "intro": "Comprar un inmueble implica gastos de escrituración que representan entre el **5% y el 8%** del valor de la propiedad. Incluyen **honorarios del escribano**, **impuesto de [sellos](/calculadora-sellos-compra-inmueble-caba-pba)**, **ITI** (Impuesto a la Transferencia de Inmuebles), **inscripción en el Registro de la Propiedad** y **certificados**. Esta calculadora te da una **estimación detallada** de todos los gastos para que puedas presupuestar la operación correctamente. **Son gastos que muchos compradores olvidan y representan una suma considerable que hay que tener en efectivo al momento de la escritura.**",
-  "keyTakeaway": "**Los gastos de escrituración rondan el 5-8% del valor del inmueble.** Los principales son: honorarios escribano (~2%), sellos (~2-3%), ITI (1.5% — lo paga el vendedor pero se negocia), e inscripción registral.",
+  "intro": "Comprar un inmueble implica gastos de escrituración que representan entre el **5% y el 8%** del valor de la propiedad. Incluyen **honorarios del escribano**, **impuesto de [sellos](/calculadora-sellos-compra-inmueble-caba-pba)**, **inscripción en el Registro de la Propiedad** y **certificados**. El **ITI** (Impuesto a la Transferencia de Inmuebles, 1,5%) **fue derogado en 2024** por la **Ley 27.743**: las personas humanas ya no lo pagan al vender. En su lugar, el vendedor de un inmueble **adquirido desde 2018** tributa el **impuesto cedular a Ganancias del 15%** sobre la ganancia (los anteriores a 2018 quedan exentos). Esta calculadora te da una **estimación detallada** de los gastos del comprador para que puedas presupuestar la operación correctamente. **Son gastos que muchos compradores olvidan y representan una suma considerable que hay que tener en efectivo al momento de la escritura.**",
+  "keyTakeaway": "**Los gastos de escrituración rondan el 5-8% del valor del inmueble.** Los principales (a cargo del comprador) son: honorarios escribano (~2%), sellos (~2-3%) e inscripción registral. El **ITI fue derogado en 2024** (Ley 27.743): el vendedor de un inmueble comprado desde 2018 tributa el impuesto cedular a Ganancias del 15% sobre la ganancia.",
   "useCases": [
     "Estás por comprar un inmueble y querés saber cuánto necesitás para los gastos.",
     "Querés presupuestar el costo total de la operación (precio + gastos).",
@@ -91,29 +92,44 @@
       "help": "Registro de la Propiedad + certificados"
     },
     {
-      "id": "incluyeITI",
-      "label": "¿Incluir ITI del vendedor?",
+      "id": "incluyeGananciaCedular",
+      "label": "¿Incluir el impuesto del vendedor (Ganancias cedular 15%)?",
       "type": "select",
       "default": "no",
+      "help": "El ITI (1,5%) fue derogado en 2024. El vendedor de un inmueble adquirido desde 2018 paga 15% sobre la ganancia (no sobre el valor total).",
       "options": [
         {
           "value": "no",
-          "label": "No (ITI lo paga el vendedor)"
+          "label": "No (solo gastos del comprador)"
         },
         {
           "value": "si",
-          "label": "Sí (quiero ver el costo total)"
+          "label": "Sí (sumar el impuesto del vendedor)"
         }
       ]
+    },
+    {
+      "id": "gananciaVendedor",
+      "label": "Ganancia del vendedor (precio de venta − costo de compra)",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "20000000",
+      "format": "thousands",
+      "min": 0,
+      "step": 100000,
+      "default": 0,
+      "dependsOn": "incluyeGananciaCedular",
+      "conditional": true,
+      "help": "Base del impuesto cedular (15%). Inmuebles adquiridos antes de 2018: exentos, dejá $0."
     }
   ],
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-15",
-    "source": "Datos de referencia actualizados periódicamente",
-    "sourceUrl": "https://hacecuentas.com",
+    "lastUpdated": "2026-06-15",
+    "source": "Ley 27.743 (derogación del ITI) / AFIP-ARCA / leyes impositivas provinciales 2026",
+    "sourceUrl": "https://www.afip.gob.ar/",
     "updateType": "manual",
-    "notes": "Los honorarios y alícuotas varían por provincia. El usuario ingresa los valores."
+    "notes": "ITI derogado por la Ley 27.743 (art. 67, B.O. 08/07/2024); el vendedor de inmuebles adquiridos desde 2018 tributa Ganancias cedular 15% sobre la ganancia. Los honorarios y las alícuotas de sellos varían por provincia; el usuario ingresa los valores."
   },
   "outputs": [
     {
@@ -146,11 +162,11 @@
       "**Sellos CABA (2.5%)**: $80M × 2.5% = **$2.000.000**.",
       "**Inscripción registral + certificados**: ~**$100.000**.",
       "**Total gastos comprador**: ~**$4.036.000** (5.05% del valor).",
-      "**ITI vendedor (1.5%)**: $80M × 1.5% = $1.200.000 (lo paga el vendedor)."
+      "**Impuesto del vendedor**: el ITI (1,5%) ya no existe desde 2024. Si el vendedor compró en 2019 a $50M y vende a $80M, la ganancia es $30M → Ganancias cedular 15% = **$4.500.000** (a cargo del vendedor)."
     ],
     "result": "Para un departamento de $80M en CABA, los gastos del comprador rondan **$4M** (5% del valor). Necesitás tener esa plata adicional al precio."
   },
-  "explanation": "## Desglose de gastos de escrituración\n\n### 1. Honorarios del escribano\n- **Porcentaje**: 1.5-2.5% del valor de la escritura.\n- **[IVA](/calculadora-iva-saldo-favor-contra-ri)**: 21% sobre los honorarios.\n- **Quién paga**: generalmente el **comprador** elige y paga al escribano.\n- **Referencia**: los Colegios de Escribanos tienen aranceles sugeridos.\n\n### 2. Impuesto de [sellos](/calculadora-sellos-compra-inmueble-caba-pba)\n- **Porcentaje**: varía por provincia (1.5-3.5%).\n- **Base**: valor de escritura o valuación fiscal (el mayor).\n- **Quién paga**: responsabilidad solidaria, pero suele pagarlo el **comprador** o dividirse.\n\n### 3. ITI (Impuesto a la Transferencia de Inmuebles)\n- **Alícuota**: 1.5% del valor de transferencia.\n- **Quién paga**: el **vendedor** (persona física que no tributa Ganancias).\n- **Exención**: si el vendedor vende su vivienda única y compra otra (certificado de no retención).\n\n### 4. Inscripción en el Registro de la Propiedad\n- Tasa registral para inscribir la escritura.\n- Monto variable según jurisdicción y valor.\n- Incluye certificados de dominio e inhibición.\n\n### 5. Otros gastos\n- **Certificados**: dominio, inhibición, catastral, deuda de [ABL](/calculadora-abl-caba-valuacion-fiscal-vivienda)/[expensas](/calculadora-expensas-departamento-calcular-m2-categoria).\n- **Informe de dominio**: verificación de titularidad.\n- **Estudio de títulos**: verificación de antecedentes del inmueble.\n\n## Gastos del comprador vs del vendedor\n\n| Gasto | Comprador | Vendedor |\n|---|---|---|\n| Honorarios escribano | ✅ | ❌ |\n| Sellos | ✅ (o compartido) | ✅ (o compartido) |\n| ITI (1.5%) | ❌ | ✅ |\n| Inscripción registral | ✅ | ❌ |\n| Certificados | ✅ | ✅ (algunos) |\n| Comisión inmobiliaria | ✅ (3-4%) | ✅ (3-4%) |\n\n## Tips para reducir gastos\n\n1. **Negociá los honorarios** del escribano — los aranceles son sugeridos, no obligatorios.\n2. **Consultá exenciones de sellos** en tu provincia para primera vivienda.\n3. **El ITI se exime** si el vendedor reinvierte en otra vivienda (certificado AFIP).\n4. **Pedí presupuesto cerrado** al escribano antes de la operación.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
+  "explanation": "## Desglose de gastos de escrituración\n\n### 1. Honorarios del escribano\n- **Porcentaje**: 1.5-2.5% del valor de la escritura.\n- **[IVA](/calculadora-iva-saldo-favor-contra-ri)**: 21% sobre los honorarios.\n- **Quién paga**: generalmente el **comprador** elige y paga al escribano.\n- **Referencia**: los Colegios de Escribanos tienen aranceles sugeridos.\n\n### 2. Impuesto de [sellos](/calculadora-sellos-compra-inmueble-caba-pba)\n- **Porcentaje**: varía por provincia (1.5-3.5%).\n- **Base**: valor de escritura o valuación fiscal (el mayor).\n- **Quién paga**: responsabilidad solidaria, pero suele pagarlo el **comprador** o dividirse.\n\n### 3. Impuesto del vendedor: del ITI derogado a Ganancias cedular\n- **El ITI ya no existe**: el Impuesto a la Transferencia de Inmuebles (1,5%) fue **derogado por la Ley 27.743** (art. 67, B.O. 08/07/2024). AFIP lo informa como *ITI. No vigente*. Las personas humanas ya **no tributan ITI** al vender.\n- **Qué paga hoy el vendedor**: si el inmueble fue **adquirido desde el 01/01/2018**, la venta tributa el **impuesto cedular a Ganancias del 15%** sobre la **ganancia** (precio de venta − costo de adquisición actualizado − gastos de la operación).\n- **Inmuebles adquiridos antes de 2018**: quedan **exentos** (no pagan ni ITI ni cedular).\n- **Vivienda única (venta y reemplazo)**: la venta de la casa-habitación propia para adquirir o construir otra destinada a casa-habitación puede quedar al margen del cedular.\n- **Quién paga**: el **vendedor**, no el comprador.\n\n### 4. Inscripción en el Registro de la Propiedad\n- Tasa registral para inscribir la escritura.\n- Monto variable según jurisdicción y valor.\n- Incluye certificados de dominio e inhibición.\n\n### 5. Otros gastos\n- **Certificados**: dominio, inhibición, catastral, deuda de [ABL](/calculadora-abl-caba-valuacion-fiscal-vivienda)/[expensas](/calculadora-expensas-departamento-calcular-m2-categoria).\n- **Informe de dominio**: verificación de titularidad.\n- **Estudio de títulos**: verificación de antecedentes del inmueble.\n\n## Gastos del comprador vs del vendedor\n\n| Gasto | Comprador | Vendedor |\n|---|---|---|\n| Honorarios escribano | ✅ | ❌ |\n| Sellos | ✅ (o compartido) | ✅ (o compartido) |\n| Ganancias cedular (15% s/ganancia, inmuebles desde 2018) | ❌ | ✅ |\n| Inscripción registral | ✅ | ❌ |\n| Certificados | ✅ | ✅ (algunos) |\n| Comisión inmobiliaria | ✅ (3-4%) | ✅ (3-4%) |\n\n## Tips para reducir gastos\n\n1. **Negociá los honorarios** del escribano — los aranceles son sugeridos, no obligatorios.\n2. **Consultá exenciones de sellos** en tu provincia para primera vivienda.\n3. **Recordá que el ITI ya no se cobra** (derogado en 2024): el vendedor de un inmueble adquirido desde 2018 tributa Ganancias cedular (15% sobre la **ganancia**, no sobre el precio); los anteriores a 2018 están exentos.\n4. **Pedí presupuesto cerrado** al escribano antes de la operación.\n\n## Revisión editorial\n\n**Revisado por el equipo editorial de Hacé Cuentas.** El contenido de esta calculadora se mantiene con criterios editoriales documentados en nuestra [política editorial](/politica-editorial) y [metodología](/metodologia). Cada valor de referencia se contrasta contra las fuentes oficiales citadas al pie de esta página.\n\n**Disclaimer:** Los resultados son orientativos y no constituyen asesoramiento financiero. Para decisiones relevantes (préstamos, inversiones, impuestos), consultá con un contador público matriculado o asesor financiero registrado ante la CNV.\n\n**Actualización:** los datos se revisan periódicamente. La fecha de última revisión figura en el encabezado de esta página y en el sitemap XML de Hacé Cuentas.\n",
   "faq": [
     {
       "q": "¿Cuánto representan los gastos de escritura sobre el valor del inmueble?",
@@ -158,11 +174,15 @@
     },
     {
       "q": "¿El comprador o el vendedor paga los gastos de escritura?",
-      "a": "La mayoría la paga el **comprador**: honorarios del escribano, inscripción registral y su parte de sellos. El vendedor paga el **ITI (1.5%)** y su parte de sellos y certificados."
+      "a": "La mayoría la paga el **comprador**: honorarios del escribano, inscripción registral y su parte de sellos. El **vendedor** paga su parte de sellos y certificados y, si vende un inmueble adquirido desde 2018, el **impuesto cedular a Ganancias del 15%** sobre la ganancia. El ITI de 1,5% que antes pagaba el vendedor **fue derogado en 2024** (Ley 27.743)."
     },
     {
       "q": "¿Qué es el ITI y quién lo paga?",
-      "a": "El **Impuesto a la Transferencia de Inmuebles** es el 1.5% del valor de la operación. Lo paga el **vendedor** (persona física que no tributa Ganancias por la venta). Está exento si el vendedor vende su única vivienda para comprar otra."
+      "a": "El **ITI** (Impuesto a la Transferencia de Inmuebles) era un impuesto del **1,5%** que pagaba el vendedor persona humana sobre el valor de la operación. **Fue derogado por la Ley 27.743** (art. 67, B.O. 08/07/2024) y AFIP lo informa como *no vigente*: **ya no se paga**. Desde entonces, el vendedor de un inmueble **adquirido a partir de 2018** tributa el **impuesto cedular a Ganancias del 15%** sobre la ganancia; los adquiridos antes de 2018 quedan **exentos**."
+    },
+    {
+      "q": "¿Cómo se calcula el impuesto a las Ganancias al vender un inmueble?",
+      "a": "Solo aplica a inmuebles **adquiridos desde el 01/01/2018**. La **ganancia** se calcula como **precio de venta − costo de adquisición actualizado − gastos** (escritura, comisiones, etc.) y sobre ella se aplica el **15%** (impuesto cedular). Ejemplo: comprado en 2019 a $50M y vendido a $80M → ganancia $30M → impuesto $4,5M. Los inmuebles **anteriores a 2018 están exentos**."
     },
     {
       "q": "¿Se puede elegir escribano?",
@@ -183,12 +203,16 @@
   ],
   "sources": [
     {
-      "name": "Colegio de Escribanos de CABA",
-      "url": "https://www.colegio-escribanos.org.ar/"
+      "name": "Ley 27.743 (art. 67) — derogación del ITI, B.O. 08/07/2024",
+      "url": "https://www.boletinoficial.gob.ar/"
     },
     {
-      "name": "AFIP — ITI Impuesto a la Transferencia de Inmuebles",
+      "name": "AFIP/ARCA — ITI. Impuesto a la Transferencia de Inmuebles (no vigente)",
       "url": "https://www.afip.gob.ar/"
+    },
+    {
+      "name": "Colegio de Escribanos de CABA",
+      "url": "https://www.colegio-escribanos.org.ar/"
     }
   ],
   "relatedSlugs": [],
@@ -207,7 +231,7 @@
     },
     {
       "name": "Completá los datos restantes",
-      "text": "Completá los campos adicionales: inscripción registral (monto fijo), ¿incluir iti del vendedor?. Estos valores complementan el cálculo principal."
+      "text": "Completá los campos adicionales: inscripción registral (monto fijo) y, si querés ver también el impuesto del vendedor, activá el impuesto cedular a Ganancias (15% sobre la ganancia, no sobre el valor total). Estos valores complementan el cálculo principal."
     },
     {
       "name": "Hacé click en Calcular",

@@ -5,8 +5,8 @@
  * por resolución, usualmente 1-2 veces por año. Fuente oficial:
  * argentina.gob.ar/trabajo/consejodelsalario.
  *
- * Patchea 3 constantes en `src/lib/formulas/salario-minimo.ts`:
- * SMVM_MENSUAL, SMVM_HORA, FECHA.
+ * Patchea 3 constantes en `src/lib/data/smvm-ar-2026.ts` (fuente única):
+ * SMVM_MENSUAL, SMVM_HORA, SMVM_FECHA.
  */
 
 import { join } from 'node:path';
@@ -16,7 +16,7 @@ import { touchLastUpdated } from '../patchers/data-update-date.ts';
 import { createLogger } from '../utils/logger.ts';
 
 const log = createLogger('smvm');
-const FILE = join(process.cwd(), 'src/lib/formulas/salario-minimo.ts');
+const FILE = join(process.cwd(), 'src/lib/data/smvm-ar-2026.ts');
 
 interface SmvmData {
   fechaVigencia: string;
@@ -76,7 +76,7 @@ export async function fetchSmvm({ dry = false }: { dry?: boolean }): Promise<boo
   if (dry) {
     log.info(`would patch SMVM_MENSUAL = ${result.mensual}`);
     log.info(`would patch SMVM_HORA = ${result.porHora}`);
-    log.info(`would patch FECHA = '${result.fechaVigenciaLegible}'`);
+    log.info(`would patch SMVM_FECHA = '${result.fechaVigenciaLegible}'`);
     return true;
   }
 
@@ -91,9 +91,9 @@ export async function fetchSmvm({ dry = false }: { dry?: boolean }): Promise<boo
     log.success(`SMVM_HORA: ${hRes.oldValue} → ${result.porHora}`);
     anyChanged = true;
   }
-  const fRes = replaceStringConst(FILE, 'FECHA', result.fechaVigenciaLegible);
+  const fRes = replaceStringConst(FILE, 'SMVM_FECHA', result.fechaVigenciaLegible);
   if (fRes.changed) {
-    log.success(`FECHA: '${fRes.oldValue}' → '${result.fechaVigenciaLegible}'`);
+    log.success(`SMVM_FECHA: '${fRes.oldValue}' → '${result.fechaVigenciaLegible}'`);
     anyChanged = true;
   }
 
