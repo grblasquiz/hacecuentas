@@ -18,8 +18,34 @@ export function creditoPrendarioAutoCftComparativaBancos(i: Inputs): Outputs {
   const gastosOtorg = monto * gastos;
   const seguroTotal = seguro * plazo;
   const costoTotal = total + gastosOtorg + seguroTotal;
-  // CFT estimado: anualizar costo total
-  const cftAnual = (Math.pow(costoTotal / monto, 12 / plazo) - 1) * 100;
+  // CFT real: TIR mensual de los flujos reales, luego anualizada.
+  // t0: el tomador recibe (monto − gastos de otorgamiento).
+  // t1..plazo: paga (cuota + seguro mensual).
+  // Anualizar costoTotal/monto sería un error: ese ratio incluye la devolución
+  // del capital, así que comprime un préstamo de varios años y subestima el CFT.
+  const desembolsoNeto = monto - gastosOtorg;
+  const pagoMensual = cuota + seguro;
+  const npv = (im: number) =>
+    Math.abs(im) < 1e-12
+      ? -desembolsoNeto + pagoMensual * plazo
+      : -desembolsoNeto + pagoMensual * (1 - Math.pow(1 + im, -plazo)) / im;
+  let cftAnual: number;
+  if (desembolsoNeto <= 0 || pagoMensual * plazo <= desembolsoNeto) {
+    // Sin costo financiero medible (gastos ≥ monto, o pagos ≤ desembolso).
+    cftAnual = 0;
+  } else {
+    // npv(im) es decreciente en im → bisección sobre la tasa mensual.
+    let lo = 1e-9;
+    let hi = 1;
+    while (npv(hi) > 0 && hi < 1e6) hi *= 2;
+    for (let k = 0; k < 200; k++) {
+      const mid = (lo + hi) / 2;
+      if (npv(mid) > 0) lo = mid;
+      else hi = mid;
+    }
+    const tirMensual = (lo + hi) / 2;
+    cftAnual = (Math.pow(1 + tirMensual, 12) - 1) * 100;
+  }
   const chart = {
     type: 'doughnut' as const,
     slices: [
