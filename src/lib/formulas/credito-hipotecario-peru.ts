@@ -35,7 +35,11 @@ const MIVIVIENDA_VIVIENDA_MIN = 68800;
 const MIVIVIENDA_CUOTA_INICIAL_MIN = 0.075; // 7,5%
 
 /** Devuelve el Bono del Buen Pagador según el valor de la vivienda (S/), o 0 si no califica. */
-export function bonoBuenPagador(valorVivienda: number): number {
+// Helper interno (sólo usado por `compute`). NO exportar: el generador de
+// índice (scripts/regenerate-formula-index.ts) registra el PRIMER `export
+// function`, así que un helper exportado antes de `compute` haría que la calc
+// llame al helper en vez de a `compute`.
+function bonoBuenPagador(valorVivienda: number): number {
   if (valorVivienda < MIVIVIENDA_VIVIENDA_MIN || valorVivienda > MIVIVIENDA_VIVIENDA_MAX) return 0;
   for (const t of BBP_2026) {
     if (valorVivienda >= t.min && valorVivienda <= t.max) return t.bono;

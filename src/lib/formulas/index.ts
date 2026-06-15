@@ -937,7 +937,7 @@ import { compute as compute__credito_educativo_icetex_vs_banco_colombia_2026 } f
 import { compute as compute__credito_hipotecario_biess_ecuador } from './credito-hipotecario-biess-ecuador';
 import { compute as compute__credito_hipotecario_chile_uf_cmf_2026 } from './credito-hipotecario-chile-uf-cmf-2026';
 import { compute as compute__credito_hipotecario_colombia_2026_uvr_pesos } from './credito-hipotecario-colombia-2026-uvr-pesos';
-import { bonoBuenPagador } from './credito-hipotecario-peru';
+import { compute as compute__credito_hipotecario_peru } from './credito-hipotecario-peru';
 import { compute as compute__credito_leasing_habitacional_colombia_vs_hipoteca } from './credito-leasing-habitacional-colombia-vs-hipoteca';
 import { compute as compute__credito_libranza_colombia_empleado_cuota_tasa } from './credito-libranza-colombia-empleado-cuota-tasa';
 import { creditoPrendarioAutoCftComparativaBancos } from './credito-prendario-auto-cft-comparativa-bancos';
@@ -4487,7 +4487,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'credito-hipotecario-biess-ecuador': compute__credito_hipotecario_biess_ecuador,
   'credito-hipotecario-chile-uf-cmf-2026': compute__credito_hipotecario_chile_uf_cmf_2026,
   'credito-hipotecario-colombia-2026-uvr-pesos': compute__credito_hipotecario_colombia_2026_uvr_pesos,
-  'credito-hipotecario-peru': bonoBuenPagador,
+  'credito-hipotecario-peru': compute__credito_hipotecario_peru,
   'credito-leasing-habitacional-colombia-vs-hipoteca': compute__credito_leasing_habitacional_colombia_vs_hipoteca,
   'credito-libranza-colombia-empleado-cuota-tasa': compute__credito_libranza_colombia_empleado_cuota_tasa,
   'credito-prendario-auto-cft-comparativa-bancos': creditoPrendarioAutoCftComparativaBancos,
