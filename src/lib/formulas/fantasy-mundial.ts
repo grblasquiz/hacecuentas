@@ -1,9 +1,9 @@
-/** Fantasy Mundial 2026 — puntos estimados de un once para torneo corto (max 7 partidos) */
+/** Fantasy Mundial 2026 — puntos estimados de un once para torneo corto (max 8 partidos) */
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 
 export function fantasyMundial(i: Inputs): Outputs {
-  const partidos = Math.min(Number(i.partidosEstimados) || 5, 7); // max 7: 3 grupo + 4 eliminatoria
+  const partidos = Math.min(Number(i.partidosEstimados) || 5, 8); // max 8: 3 grupo + 5 eliminatoria (16avos→octavos→cuartos→semi→final)
   const golesTeam = Number(i.golesEsperadosEquipo) || 0;
   const cleanSheetsEsperados = Number(i.cleanSheetsEsperados) || 0;
 

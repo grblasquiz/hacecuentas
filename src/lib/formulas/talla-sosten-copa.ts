@@ -51,7 +51,8 @@ export function tallaSostenCopa(i: Inputs): Outputs {
   const contornoUS = Math.round(contornoBajo / 2.54);
   // Si es par sumamos 4, si es impar sumamos 5
   const bandaUS = contornoUS % 2 === 0 ? contornoUS + 4 : contornoUS + 5;
-  const tallaUS = `${bandaUS}${copa.replace(/ \(DD\)/, '')}`;
+  // En US/UK la copa EU/AR "E (DD)" se llama "DD" (no "E"); el resto coincide.
+  const tallaUS = `${bandaUS}${copa === 'E (DD)' ? 'DD' : copa}`;
 
   // UK: similar a US
   const tallaUK = tallaUS;
