@@ -19,6 +19,9 @@
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   # CSP: whitelist explícito de orígenes permitidos. 'unsafe-inline' para style e
   # inline scripts (astro genera muchos). Si migramos a CSP con nonce, eliminar.
+  # CSP rev 11 (2026-06-16): + raw.githubusercontent.com en connect-src — el refresh
+  # client-side del fixture Mundial 2026 (openfootball) estaba BLOQUEADO por CSP en
+  # prod (andaba en dev, que no aplica _headers) → los resultados no se actualizaban solos.
   # CSP rev 10 (2026-06-09): AdSense re-alta (3er intento, ca-pub-6276944768601561) —
   # pagead2 a script-src, *.adtrafficquality.google a script/connect/frame-src,
   # googleads/googlesyndication a frame-src. Solo agregados; gtag/GA4 intactos.
@@ -35,7 +38,7 @@
   # CSP rev 5 (2026-05-27): Infolinks origins agregados (removidos en rev 8).
   # CSP rev 4 (2026-05-27): AdSense origins removidos (sitio rechazado por AdSense).
   # CSP rev 3 (2026-05-13): 'unsafe-eval' eliminado — restaurado bajo control en rev 8 (vacío, sin partners eval).
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.adtrafficquality.google https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.clarity.ms https://*.clarity.ms; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com https://www.clarity.ms https://*.clarity.ms https://*.adtrafficquality.google; frame-src 'self' https://td.doubleclick.net https://googleads.g.doubleclick.net https://*.googlesyndication.com https://*.adtrafficquality.google; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.adtrafficquality.google https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.clarity.ms https://*.clarity.ms; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; font-src 'self' data:; connect-src 'self' https://raw.githubusercontent.com https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com https://www.clarity.ms https://*.clarity.ms https://*.adtrafficquality.google; frame-src 'self' https://td.doubleclick.net https://googleads.g.doubleclick.net https://*.googlesyndication.com https://*.adtrafficquality.google; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
   # Cross-Origin-Opener/Embedder/Resource Policy: aplicados vía
   # src/middleware.ts (CF Workers Static Assets ignora silenciosamente estos
   # headers en _headers — verificado 2026-05-04).
