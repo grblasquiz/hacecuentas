@@ -701,6 +701,22 @@ const globalSchema = {
       /* Print header: hidden on screen, shown on print */
       .print-header { display: none; }
 
+      /* Mobile: el contenido markdown (tablas y <pre>) scrollea horizontalmente
+         en vez de desbordar y "correr" la página. El HTML del markdown se inyecta
+         con set:html en varias secciones (explicación, FAQ, casos, ejemplos…);
+         antes SÓLO `.explanation table` tenía el fix → lo generalizamos a todas
+         las secciones de contenido, en TODOS los locales (regla global única). No
+         toca .result-table / .bmi-ref-table / referenceTables (ya tienen su scroll). */
+      @media (max-width: 767px) {
+        :is(.explanation, .faq, .key-takeaway, .intro, .use-cases, .example-box, .seo-content, .cat-faq) table {
+          display: block;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          max-width: 100%;
+        }
+        .calc-main pre { overflow-x: auto; max-width: 100%; }
+      }
+
       /* Fallback con métricas de Inter (valores fontaine/capsize): mientras el
          woff2 (~50KB) no llegó, Arial se renderiza con el mismo footprint que
          Inter → cuando swapea no hay reflow (FOUT sin shift / CLS de fuente). */
