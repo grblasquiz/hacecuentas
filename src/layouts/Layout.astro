@@ -717,6 +717,16 @@ const globalSchema = {
         .calc-main pre { overflow-x: auto; max-width: 100%; }
       }
 
+      /* referenceTables: el <figure>.calc-ref-table es grid-item de
+         .calc-ref-tables; con el min-width:auto default NO encoge bajo el
+         min-content de la tabla (celdas nowrap) → el wrapper .calc-ref-table-scroll
+         (pese a su overflow-x:auto) quedaba más ancho que el viewport y "corría"
+         la página en mobile. El render INLINE del route ES no tenía el
+         overflow:hidden que sí neutraliza esto en el componente de locales.
+         min-width:0 deja encoger el figure → el scroll interno recién ahí contiene
+         la tabla. Cubre ES inline + comparar/glosario (.ref-table) en un solo lugar. */
+      .calc-ref-table, .ref-table { min-width: 0; }
+
       /* Fallback con métricas de Inter (valores fontaine/capsize): mientras el
          woff2 (~50KB) no llegó, Arial se renderiza con el mismo footprint que
          Inter → cuando swapea no hay reflow (FOUT sin shift / CLS de fuente). */
