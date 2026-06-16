@@ -35,8 +35,14 @@
       "type": "select",
       "required": true,
       "options": [
-        { "value": "ruta2", "label": "Ruta 2 — Buenos Aires a Mar del Plata (AUBASA, ~400 km, 3 peajes)" },
-        { "value": "ruta3", "label": "Ruta 3 — Buenos Aires a Bahía Blanca (Corredores Viales, ~650 km, 5 peajes)" }
+        {
+          "value": "ruta2",
+          "label": "Ruta 2 — Buenos Aires a Mar del Plata (AUBASA, ~400 km, 3 peajes)"
+        },
+        {
+          "value": "ruta3",
+          "label": "Ruta 3 — Buenos Aires a Bahía Blanca (Corredores Viales, ~650 km, 5 peajes)"
+        }
       ]
     },
     {
@@ -45,11 +51,26 @@
       "type": "select",
       "required": true,
       "options": [
-        { "value": "moto",     "label": "Moto (Cat 1) — factor 0.5×" },
-        { "value": "auto",     "label": "Auto / auto sin remolque (Cat 2) — factor 1.0×" },
-        { "value": "camioneta","label": "Camioneta con remolque / utilitario grande (Cat 3) — factor 1.5×" },
-        { "value": "camion2",  "label": "Camión 2 ejes (Cat 4) — factor 2.0×" },
-        { "value": "camion3",  "label": "Camión 3 o más ejes (Cat 5) — factor 3.0×" }
+        {
+          "value": "moto",
+          "label": "Moto (Cat 1) — factor 0.5×"
+        },
+        {
+          "value": "auto",
+          "label": "Auto / auto sin remolque (Cat 2) — factor 1.0×"
+        },
+        {
+          "value": "camioneta",
+          "label": "Camioneta con remolque / utilitario grande (Cat 3) — factor 1.5×"
+        },
+        {
+          "value": "camion2",
+          "label": "Camión 2 ejes (Cat 4) — factor 2.0×"
+        },
+        {
+          "value": "camion3",
+          "label": "Camión 3 o más ejes (Cat 5) — factor 3.0×"
+        }
       ]
     },
     {
@@ -58,8 +79,14 @@
       "type": "select",
       "required": true,
       "options": [
-        { "value": "ida_vuelta", "label": "Ida y vuelta" },
-        { "value": "ida",        "label": "Solo ida" }
+        {
+          "value": "ida_vuelta",
+          "label": "Ida y vuelta"
+        },
+        {
+          "value": "ida",
+          "label": "Solo ida"
+        }
       ]
     },
     {
@@ -68,8 +95,14 @@
       "type": "select",
       "required": true,
       "options": [
-        { "value": "no", "label": "No — pago en cabina (efectivo / tarjeta)" },
-        { "value": "si", "label": "Sí — TelePASE (10% de descuento)" }
+        {
+          "value": "no",
+          "label": "No — pago en cabina (efectivo / tarjeta)"
+        },
+        {
+          "value": "si",
+          "label": "Sí — TelePASE (10% de descuento)"
+        }
       ]
     }
   ],
@@ -85,7 +118,12 @@
     }
   ],
   "example": {
-    "inputs": {"ruta": "ruta2", "categoria": "auto", "sentido": "ida_vuelta", "telepase": "no"},
+    "inputs": {
+      "ruta": "ruta2",
+      "categoria": "auto",
+      "sentido": "ida_vuelta",
+      "telepase": "no"
+    },
     "title": "Ejemplo: Auto (Cat 2) — Ruta 2 ida y vuelta, sin TelePASE",
     "steps": [
       "**Ruta seleccionada**: Ruta 2 BA–Mar del Plata (AUBASA)",
@@ -190,5 +228,62 @@
     "Corredores Viales tarifas",
     "cuanto sale ir a Mar del Plata en peajes"
   ],
-  "lastReviewed": "2026-06-04"
+  "lastReviewed": "2026-06-16",
+  "referenceTables": [
+    {
+      "title": "Costo de peajes por ruta, categoría y TelePASE (solo ida, $ARS 2026)",
+      "caption": "Tarifas calculadas para un viaje de ida. Multiplicar × 2 para ida y vuelta.",
+      "headers": [
+        "Vehículo (categoría)",
+        "Factor",
+        "Ruta 2 ida efectivo",
+        "Ruta 2 ida TelePASE",
+        "Ruta 3 ida efectivo",
+        "Ruta 3 ida TelePASE"
+      ],
+      "rows": [
+        [
+          "Moto (Cat 1)",
+          "0.5×",
+          "$9.200",
+          "$8.280",
+          "$3.015",
+          "$2.714"
+        ],
+        [
+          "Auto (Cat 2)",
+          "1.0×",
+          "$18.400",
+          "$16.560",
+          "$6.030",
+          "$5.427"
+        ],
+        [
+          "Camioneta c/remolque (Cat 3)",
+          "1.5×",
+          "$27.600",
+          "$24.840",
+          "$9.045",
+          "$8.141"
+        ],
+        [
+          "Camión 2 ejes (Cat 4)",
+          "2.0×",
+          "$36.800",
+          "$33.120",
+          "$12.060",
+          "$10.854"
+        ],
+        [
+          "Camión 3+ ejes (Cat 5)",
+          "3.0×",
+          "$55.200",
+          "$49.680",
+          "$18.090",
+          "$16.281"
+        ]
+      ],
+      "note": "Cálculo: Σ(tarifa_base_cabina × factor_categoría) × (1 − 0.10 con TelePASE). Ruta 2 (AUBASA): Hudson $4.400 + Samborombón $7.000 + Maipú $7.000 = $18.400 base cat 2 (tarifas enero 2026). Ruta 3 (Corredores Viales): 5 cabinas × $1.206 = $6.030 base cat 2 (Resolución 248/2026, feb 2026). Tarifas se actualizan trimestralmente; verificar en aubasa.com.ar y cvsa.com.ar."
+    }
+  ]
 }
