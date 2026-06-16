@@ -4025,6 +4025,31 @@ const formatFreshnessDate = (iso: string): string => {
     return (neg ? '-' : '') + new Intl.NumberFormat('es-AR').format(Number(clean));
   }
 
+  // Copia robusta reutilizable: Clipboard API → fallback textarea+execCommand
+  // (webviews in-app / doc sin foco donde navigator.clipboard falla en
+  // silencio). Devuelve si pudo copiar; el caller decide el último recurso.
+  async function copyTextRobust(text: string): Promise<boolean> {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch { /* cae al fallback */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '0';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch { return false; }
+  }
+
   function openEmbedModal(slug: string) {
     const origin = 'https://hacecuentas.com';
     const embedUrl = `${origin}/embed/${slug}`;
@@ -5227,17 +5252,20 @@ const formatFreshnessDate = (iso: string): string => {
           const primary = container.querySelector<HTMLElement>('.result.primary [data-value]');
           const fallback = container.querySelector<HTMLElement>('[data-value]');
           const value = (primary || fallback)?.textContent || '';
-          try {
-            await navigator.clipboard.writeText(value);
-            const label = btn.querySelector<HTMLElement>('[data-copy-result-label]')!;
-            const original = label.textContent;
-            label.textContent = '¡Copiado!';
+          const ok = await copyTextRobust(value);
+          const label = btn.querySelector<HTMLElement>('[data-copy-result-label]')!;
+          const original = label.textContent;
+          if (ok) {
+            label.textContent = CALC_LANG === 'en' ? 'Copied!' : CALC_LANG === 'pt' ? 'Copiado!' : '¡Copiado!';
             btn.classList.add('copied');
             setTimeout(() => {
               label.textContent = original;
               btn.classList.remove('copied');
             }, 1500);
-          } catch {}
+          } else if (value) {
+            // Último recurso (webview que bloquea todo): mostrar el valor para copiar a mano.
+            try { window.prompt(CALC_LANG === 'en' ? 'Copy:' : 'Copiá:', value); } catch {}
+          }
         } else if (action === 'copy-link') {
           // Armar link con fields actuales como querystring (viralización)
           const data = new FormData(form);
@@ -5252,11 +5280,11 @@ const formatFreshnessDate = (iso: string): string => {
             }
           });
           const shareUrl = `${window.location.origin}${window.location.pathname}${params.size > 0 ? '?' + params.toString() : ''}`;
-          try {
-            await navigator.clipboard.writeText(shareUrl);
-            const label = btn.querySelector<HTMLElement>('[data-copy-link-label]')!;
-            const original = label.textContent;
-            label.textContent = '¡Copiado!';
+          const ok = await copyTextRobust(shareUrl);
+          const label = btn.querySelector<HTMLElement>('[data-copy-link-label]')!;
+          const original = label.textContent;
+          if (ok) {
+            label.textContent = CALC_LANG === 'en' ? 'Copied!' : CALC_LANG === 'pt' ? 'Copiado!' : '¡Copiado!';
             btn.classList.add('copied');
             if (typeof (window as any).gtag === 'function') {
               (window as any).gtag('event', 'share_link', { calc_slug: slug });
@@ -5265,7 +5293,10 @@ const formatFreshnessDate = (iso: string): string => {
               label.textContent = original;
               btn.classList.remove('copied');
             }, 1500);
-          } catch {}
+          } else {
+            // Último recurso: mostrar el link para copiar a mano.
+            try { window.prompt(CALC_LANG === 'en' ? 'Copy:' : 'Copiá:', shareUrl); } catch {}
+          }
         } else if (action === 'print') {
           if (typeof (window as any).gtag === 'function') {
             (window as any).gtag('event', 'print_pdf', { calc_slug: slug });
@@ -5454,9 +5485,8 @@ const formatFreshnessDate = (iso: string): string => {
       async function copyPrimary() {
         const value = (primaryValEl!.textContent || '').trim();
         if (!value || value === '—') return;
-        try {
-          await navigator.clipboard.writeText(value);
-        } catch { return; }
+        const okCopy = await copyTextRobust(value);
+        if (!okCopy) return;
         // Reusar el feedback "¡Copiado!" del hint (o crear uno efímero).
         const okText = CALC_LANG === 'en' ? 'Copied!' : CALC_LANG === 'pt' ? 'Copiado!' : '¡Copiado!';
         if (tapHintEl) {
