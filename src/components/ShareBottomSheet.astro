@@ -426,18 +426,26 @@ const t = {
         }
       });
 
-      // Cerrar al tocar una acción (después del click handler de Calculator)
+      // Cada acción del sheet delega al botón REAL del share row
+      // (.btn-share[data-action]) — ese es el que tiene el listener de Calculator.
+      // OJO: Calculator NO usa event delegation; bindea directo a .btn-share, así
+      // que el data-action del sheet por sí solo NO dispara nada (los botones
+      // "no hacían nada"). Los .btn-share están display:none en mobile, pero el
+      // .click() programático corre su handler igual.
       sheet.querySelectorAll('.share-bottom-action').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          // calendar-delegate: hacemos click programático al .btn-share-calendar
-          // del share row (que tiene los data-attrs del .ics generator).
           var action = btn.getAttribute('data-action');
+          var target = null;
           if (action === 'calendar-delegate') {
-            var rowBtn = document.querySelector('.btn-share-calendar');
-            if (rowBtn) rowBtn.click();
+            // El botón .ics del row tiene los data-attrs del generador.
+            target = document.querySelector('.btn-share-calendar')
+              || document.querySelector('.btn-share[data-action="calendar"]');
+          } else if (action) {
+            target = document.querySelector('.btn-share[data-action="' + action + '"]');
           }
-          // pequeño delay para que el handler de Calculator (event delegation) procese primero
-          setTimeout(close, 80);
+          if (target) target.click();
+          // cerrar después de que el handler de Calculator haya corrido
+          setTimeout(close, 120);
         });
       });
     }
