@@ -4543,14 +4543,9 @@ const formatFreshnessDate = (iso: string): string => {
       errorBox.hidden = true;
       errorBox.textContent = '';
 
-      // Loading state
-      submitBtn.classList.add('loading');
-      submitBtn.disabled = true;
-      // #20 Skeleton mientras se espera el chunk (si los resultados no están aún)
-      showSkeleton();
-
-      // Run formula — wrapped in setTimeout so spinner paints
-      setTimeout(async () => {
+      // Render del resultado, extraído a función para correrlo SINCRÓNICO
+      // (fórmula tibia) o diferido tras spinner (fórmula fría, primer submit).
+      const _render = async () => {
         let _formulaLoaded = false;
         try {
           const inputs: Record<string, string | number> = { ...rawInputs };
@@ -4873,7 +4868,24 @@ const formatFreshnessDate = (iso: string): string => {
           submitBtn.classList.remove('loading');
           submitBtn.disabled = false;
         }
-      }, 180);
+      };
+
+      if (formulaRef) {
+        // Fórmula ya prefetcheada en init (caso normal): corremos el render en el
+        // MISMO task del click → todo layout-shift queda input-atribuido
+        // (hadRecentInput=true) → NO cuenta para CLS, en cualquier device. Además
+        // elimina los ~180ms muertos del spinner → baja el INP. El resultado
+        // aparece al instante, sin skeleton.
+        submitBtn.disabled = true;
+        _render();
+      } else {
+        // Fórmula fría (primer submit, el chunk aún carga): spinner + skeleton y
+        // diferimos 180ms para que el spinner pinte antes de esperar el chunk.
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+        showSkeleton();
+        setTimeout(_render, 180);
+      }
     }
 
     // Preset buttons: click precarga y calcula
