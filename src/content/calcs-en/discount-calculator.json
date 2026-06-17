@@ -19,33 +19,165 @@
     "Verifying a clearance rack tag price against the original ticket"
   ],
   "fields": [
-    { "id": "original_price", "label": "Original Price ($)", "type": "number", "placeholder": "100.00", "default": 100, "step": 0.01, "required": true },
-    { "id": "discount_1", "label": "Discount (%)", "type": "number", "placeholder": "20", "default": 20, "step": 0.1, "required": true },
-    { "id": "discount_2", "label": "Second Discount (%) — optional, stacks", "type": "number", "placeholder": "0", "default": 0, "step": 0.1, "required": false }
+    {
+      "id": "original_price",
+      "label": "Original Price ($)",
+      "type": "number",
+      "placeholder": "100.00",
+      "default": 100,
+      "step": 0.01,
+      "required": true
+    },
+    {
+      "id": "discount_1",
+      "label": "Discount (%)",
+      "type": "number",
+      "placeholder": "20",
+      "default": 20,
+      "step": 0.1,
+      "required": true
+    },
+    {
+      "id": "discount_2",
+      "label": "Second Discount (%) — optional, stacks",
+      "type": "number",
+      "placeholder": "0",
+      "default": 0,
+      "step": 0.1,
+      "required": false
+    }
   ],
   "outputs": [
-    { "id": "final_price", "label": "Final Price", "primary": true, "format": "currency" },
-    { "id": "savings", "label": "You Save", "primary": false, "format": "currency" },
-    { "id": "total_discount", "label": "Real Discount", "primary": false, "format": "text" }
+    {
+      "id": "final_price",
+      "label": "Final Price",
+      "primary": true,
+      "format": "currency"
+    },
+    {
+      "id": "savings",
+      "label": "You Save",
+      "primary": false,
+      "format": "currency"
+    },
+    {
+      "id": "total_discount",
+      "label": "Real Discount",
+      "primary": false,
+      "format": "text"
+    }
   ],
   "explanation": "## How to Calculate a Percent Discount\n\nThe formula is: **Final Price = Original Price × (1 − discount / 100)**. Savings = Original Price − Final Price.\n\n| Original Price | Discount | Final Price | You Save |\n|---|---|---|---|\n| $50 | 10% | $45.00 | $5.00 |\n| $100 | 20% | $80.00 | $20.00 |\n| $100 | 25% | $75.00 | $25.00 |\n| $200 | 30% | $140.00 | $60.00 |\n| $300 | 40% | $180.00 | $120.00 |\n| $500 | 50% | $250.00 | $250.00 |\n| $80 | 15% | $68.00 | $12.00 |\n| $120 | 33% | $80.40 | $39.60 |\n\n## How Stacked Discounts Work\n\nWhen two discounts apply one after the other, each is computed on the new lower base — they do **not** simply add:\n\n```\nfactor      = (1 - d1/100) × (1 - d2/100)\nfinalPrice  = originalPrice × factor\nsavings     = originalPrice - finalPrice\nrealPercent = savings / originalPrice × 100\n```\n\n**Combined rate shortcut:** `d1 + d2 − (d1 × d2) / 100`\nFor 20% and 10%: 20 + 10 − (20 × 10)/100 = 30 − 2 = **28%**.\n\n## Common Stacked Discount Examples\n\n| First Discount | Second Discount | Combined Real Rate |\n|---|---|---|\n| 10% | 10% | 19% |\n| 20% | 10% | 28% |\n| 25% | 15% | 36.25% |\n| 30% | 20% | 44% |\n| 50% | 50% | 75% |\n| 20% | 20% | 36% |\n| 15% | 5% | 19.25% |\n\n## Worked Example — Stacked Discounts\n\n**$120 item: 25% sale, then extra 15% coupon**\n\n| Step | Calculation | Result |\n|---|---|---|\n| After 25% off | $120 × 0.75 | $90.00 |\n| After 15% coupon | $90 × 0.85 | **$76.50** |\n| Savings | $120 − $76.50 | **$43.50** |\n| Real discount | 43.50 / 120 × 100 | **36.25%** (not 40%) |\n\n## Does Order Matter?\n\nFor two **percentage** discounts: no. 20% then 10% gives the same final price as 10% then 20% (multiplication is commutative). Order only matters when mixing a percentage discount with a fixed-dollar coupon.\n\n## What This Calculator Does Not Cover\n\n- **Sales tax** — applied after discounts at checkout; this shows the pre-tax final price.\n- **Buy One Get One (BOGO)** — treat as 50% off one item's price if needed.\n- **Fixed-dollar coupons** — subtract the coupon first, then apply the percentage discount.",
   "faq": [
-    { "q": "How do I calculate percent off?", "a": "Multiply the original price by (1 − discount/100). For 25% off $80: $80 × 0.75 = $60. Savings = $80 − $60 = $20. This calculator handles it instantly." },
-    { "q": "Is 20% + 10% the same as 30% off?", "a": "No. The second discount applies to the price already reduced by the first. The real combined rate is 28%, not 30%. The formula: d1 + d2 − (d1×d2)/100 = 20 + 10 − 2 = 28%." },
-    { "q": "What is 30% off $100?", "a": "$100 × (1 − 0.30) = $70. You save $30. For other amounts at 30% off: $50 → $35; $200 → $140; $250 → $175; $500 → $350." },
-    { "q": "How do I find the original price from the sale price?", "a": "Divide the sale price by (1 − discount/100). If an item sells for $63 after a 30% discount, the original was $63 ÷ 0.70 = $90." },
-    { "q": "Does the order of two stacked discounts change the final price?", "a": "Not for two percentage discounts — multiplication is commutative, so 20% then 10% gives the same result as 10% then 20%. Order does matter if one coupon is a fixed dollar amount." },
-    { "q": "What is a 50% discount on $120?", "a": "$120 × 0.50 = $60. You pay $60 and save $60. Stack an additional 10% and you pay $54 (a real 55% combined discount)." },
-    { "q": "How do I calculate three stacked discounts?", "a": "Multiply all (1 − rate) factors together. For 20%, 10%, and 5%: 0.80 × 0.90 × 0.95 = 0.684, so you pay 68.4% of the original — a real 31.6% combined discount. Run the calculator twice to chain three." },
-    { "q": "Should the discount be applied before or after tax?", "a": "Discounts apply to the pre-tax price; sales tax is then calculated on the discounted amount. A bigger discount slightly lowers the tax too. This calculator shows the pre-tax final price." },
-    { "q": "What is 15% off $200?", "a": "$200 × 0.85 = $170. You save $30. Common reference: 10% of any price is just move the decimal (10% of $200 = $20), then 15% = $20 + $10 = $30 off." },
-    { "q": "How do retailers use discount math?", "a": "To hit a target final price: discount % = (1 − targetPrice/originalPrice) × 100. Knowing stacked discounts compound helps avoid giving away more margin than intended when combining a sale with a promo code." }
+    {
+      "q": "How do I calculate percent off?",
+      "a": "Multiply the original price by (1 − discount/100). For 25% off $80: $80 × 0.75 = $60. Savings = $80 − $60 = $20. This calculator handles it instantly."
+    },
+    {
+      "q": "Is 20% + 10% the same as 30% off?",
+      "a": "No. The second discount applies to the price already reduced by the first. The real combined rate is 28%, not 30%. The formula: d1 + d2 − (d1×d2)/100 = 20 + 10 − 2 = 28%."
+    },
+    {
+      "q": "What is 30% off $100?",
+      "a": "$100 × (1 − 0.30) = $70. You save $30. For other amounts at 30% off: $50 → $35; $200 → $140; $250 → $175; $500 → $350."
+    },
+    {
+      "q": "How do I find the original price from the sale price?",
+      "a": "Divide the sale price by (1 − discount/100). If an item sells for $63 after a 30% discount, the original was $63 ÷ 0.70 = $90."
+    },
+    {
+      "q": "Does the order of two stacked discounts change the final price?",
+      "a": "Not for two percentage discounts — multiplication is commutative, so 20% then 10% gives the same result as 10% then 20%. Order does matter if one coupon is a fixed dollar amount."
+    },
+    {
+      "q": "What is a 50% discount on $120?",
+      "a": "$120 × 0.50 = $60. You pay $60 and save $60. Stack an additional 10% and you pay $54 (a real 55% combined discount)."
+    },
+    {
+      "q": "How do I calculate three stacked discounts?",
+      "a": "Multiply all (1 − rate) factors together. For 20%, 10%, and 5%: 0.80 × 0.90 × 0.95 = 0.684, so you pay 68.4% of the original — a real 31.6% combined discount. Run the calculator twice to chain three."
+    },
+    {
+      "q": "Should the discount be applied before or after tax?",
+      "a": "Discounts apply to the pre-tax price; sales tax is then calculated on the discounted amount. A bigger discount slightly lowers the tax too. This calculator shows the pre-tax final price."
+    },
+    {
+      "q": "What is 15% off $200?",
+      "a": "$200 × 0.85 = $170. You save $30. Common reference: 10% of any price is just move the decimal (10% of $200 = $20), then 15% = $20 + $10 = $30 off."
+    },
+    {
+      "q": "How do retailers use discount math?",
+      "a": "To hit a target final price: discount % = (1 − targetPrice/originalPrice) × 100. Knowing stacked discounts compound helps avoid giving away more margin than intended when combining a sale with a promo code."
+    }
   ],
   "sources": [
-    { "name": "Federal Trade Commission — Guides Against Deceptive Pricing (16 CFR Part 233)", "url": "https://www.ecfr.gov/current/title-16/chapter-I/subchapter-B/part-233", "publisher": "U.S. Federal Trade Commission", "date": "2026" },
-    { "name": "Khan Academy — Percent word problems", "url": "https://www.khanacademy.org/math/pre-algebra/pre-algebra-ratios-rates/pre-algebra-percent-problems/v/finding-a-percent", "publisher": "Khan Academy", "date": "2026" },
-    { "name": "National Institute of Standards and Technology — Handbook 130: Uniform Pricing", "url": "https://www.nist.gov/system/files/documents/2021/01/08/hb130-2021-final.pdf", "publisher": "NIST", "date": "2021" }
+    {
+      "name": "Federal Trade Commission — Guides Against Deceptive Pricing (16 CFR Part 233)",
+      "url": "https://www.ecfr.gov/current/title-16/chapter-I/subchapter-B/part-233",
+      "publisher": "U.S. Federal Trade Commission",
+      "date": "2026"
+    },
+    {
+      "name": "Khan Academy — Percent word problems",
+      "url": "https://www.khanacademy.org/math/pre-algebra/pre-algebra-ratios-rates/pre-algebra-percent-problems/v/finding-a-percent",
+      "publisher": "Khan Academy",
+      "date": "2026"
+    },
+    {
+      "name": "National Institute of Standards and Technology — Handbook 130: Uniform Pricing",
+      "url": "https://www.nist.gov/system/files/documents/2021/01/08/hb130-2021-final.pdf",
+      "publisher": "NIST",
+      "date": "2021"
+    }
   ],
-  "dataUpdate": { "frequency": "never", "lastUpdated": "2026-06-04", "updateType": "manual", "notes": "Pure arithmetic — no external data. Stacked-discount formula verified correct." },
-  "lastReviewed": "2026-06-04"
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-06-04",
+    "updateType": "manual",
+    "notes": "Pure arithmetic — no external data. Stacked-discount formula verified correct."
+  },
+  "lastReviewed": "2026-06-16",
+  "referenceTables": [
+    {
+      "title": "Final price after discount",
+      "caption": "Final = price × (1 − discount%). Stacked discounts multiply, they don't add (20% then 10% = 28% off, not 30%).",
+      "headers": [
+        "Original",
+        "10% off",
+        "20% off",
+        "30% off",
+        "50% off"
+      ],
+      "rows": [
+        [
+          "$20",
+          "$18.00",
+          "$16.00",
+          "$14.00",
+          "$10.00"
+        ],
+        [
+          "$50",
+          "$45.00",
+          "$40.00",
+          "$35.00",
+          "$25.00"
+        ],
+        [
+          "$100",
+          "$90.00",
+          "$80.00",
+          "$70.00",
+          "$50.00"
+        ],
+        [
+          "$250",
+          "$225.00",
+          "$200.00",
+          "$175.00",
+          "$125.00"
+        ]
+      ]
+    }
+  ]
 }
