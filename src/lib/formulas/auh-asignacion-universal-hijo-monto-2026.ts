@@ -2,7 +2,7 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; }
 export function auhAsignacionUniversalHijoMonto2026(i: Inputs): Outputs {
   const h=Number(i.hijos)||0; const e=String(i.embarazo||'no')==='si';
-  const porHijo=144931;
+  const porHijo=144562;
   const total=h*porHijo+(e?porHijo:0);
   const retenido=total*0.20;
   const cobro=total*0.80;

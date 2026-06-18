@@ -145,8 +145,19 @@ const OFFERS: Record<string, Offer> = {
   },
 };
 
+/**
+ * Kill-switch global de ofertas contextuales. En `true`, NINGÚN bloque
+ * "Publicidad"/oferta se renderiza en ninguna ruta. Lo activamos durante la
+ * revisión de AdSense: un sitio que todavía no está aprobado pero ya muestra
+ * bloques "Publicidad" hacia comercios externos se lee como "made for
+ * advertising" (justo la política que nos rechazó). Volver a `false`
+ * post-aprobación para reactivar la monetización por intención.
+ */
+export const OFFERS_PAUSED_FOR_ADSENSE_REVIEW = true;
+
 /** Devuelve la oferta habilitada para una calc, o null. */
 export function getOfferForCalc(slug: string): Offer | null {
+  if (OFFERS_PAUSED_FOR_ADSENSE_REVIEW) return null;
   const o = OFFERS[slug];
   return o && o.enabled ? o : null;
 }

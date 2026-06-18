@@ -10,7 +10,8 @@
  *   - Cónyuge (art. 30 inc b.1):                  $4.851.964,66
  *   - Hijo (art. 30 inc b.2):                     $2.446.863,48
  *   - Hijo incapacitado (art. 30 inc b.2.1):      $4.893.726,96
- *   - Deducción especial empleados (inc c apt 1): $18.031.308,76
+ *   - Deducción especial empleados (inc c apt 2): $24.728.652,02
+ *   - Deducción especial autónomos (inc c apt 1): $18.031.308,76
  *
  * ARCA actualiza semestralmente por IPC INDEC. El fetcher
  * `scripts/update-data/fetchers/ganancias-escala.ts` patchea este archivo.
@@ -18,19 +19,24 @@
  */
 
 // --- Valores ANUALES oficiales (primer semestre 2026, referencia) ---
-// GNI:                            $5.151.802,50
-// Deducción especial apartado 1:  $18.031.308,76
-// Cónyuge:                        $4.851.964,66
-// Hijo:                           $2.446.863,48
-// Hijo incapacitado:              $4.893.726,96
+// GNI:                                   $5.151.802,50
+// Deducción especial empleados (apt 2):  $24.728.652,02
+// Deducción especial autónomos (apt 1):  $18.031.308,76
+// Cónyuge:                               $4.851.964,66
+// Hijo:                                  $2.446.863,48
+// Hijo incapacitado:                     $4.893.726,96
 
 /**
  * Mínimo no imponible efectivo mensual para trabajador en relación de dependencia
- * soltero sin cargas. Combina GNI + Deducción Especial apartado 1.
- * Cálculo: (5.151.802,50 + 18.031.308,76) / 12 = 1.931.925,94 ≈ 1_931_926
+ * soltero sin cargas. Combina GNI + Deducción Especial del art. 30 inc c) APARTADO 2
+ * (la incrementada para rentas del trabajo en relación de dependencia y jubilaciones).
+ * El apartado 1 ($18.031.308,76), menor, es el de autónomos — NO aplica a empleados.
+ * Cálculo: (5.151.802,50 + 24.728.652,02) / 12 = 2.490.037,88 ≈ 2_490_038
+ * Validación: el piso resultante ≈ $3.000.000 bruto / $2.490.000 neto para soltero,
+ * coincidente con ARCA/iProfesional jun-2026.
  * El fetcher patchea este valor como literal.
  */
-export const MNI_MENSUAL_BASE = 1_931_926;
+export const MNI_MENSUAL_BASE = 2_490_038;
 
 /**
  * Ganancia No Imponible (art. 30 inc a) ANUAL, primer semestre 2026: $5.151.802,50.

@@ -24,77 +24,82 @@ export function compute(i: Inputs): Outputs {
   const escolaridad = Boolean(i.tiene_escolaridad);
   const prenatal = Boolean(i.tiene_prenatal);
 
-  // Valores ANSES 2026 aproximados en pesos (ARS)
+  // Valores oficiales ANSES junio 2026 (movilidad mensual por IPC, DNU 274/2024).
+  // Asignación SUAF por hijo según tramo de ingreso del grupo familiar (IGF).
   const TRAMOS_2026 = [
-    { limite: 90000, tramo: 1, asignacion: 18500, escolar: 6500, prenatal: 10000 },
-    { limite: 135000, tramo: 2, asignacion: 15800, escolar: 5500, prenatal: 8500 },
-    { limite: 180000, tramo: 3, asignacion: 12200, escolar: 4200, prenatal: 6500 },
-    { limite: Infinity, tramo: 4, asignacion: 8500, escolar: 3000, prenatal: 5000 }
+    { limite: 1122074, tramo: 1, asignacion: 72474 },
+    { limite: 1645630, tramo: 2, asignacion: 48888 },
+    { limite: 1899934, tramo: 3, asignacion: 29570 },
+    { limite: 5941936, tramo: 4, asignacion: 15257 },
   ];
+  const AYUDA_ESCOLAR_ANUAL = 85000; // pago ÚNICO anual por hijo (inicio del ciclo lectivo)
+  const AUH_POR_HIJO = 144562;       // desocupados/informales cobran AUH, no SUAF
+  const TOPE_IGF = 5941936;          // tope de IGF para la asignación general por hijo
 
-  let tramoActual = TRAMOS_2026[3];
-  let tramoLabel = 'Tramo 4 (Ingreso alto)';
-
+  // Desocupado / trabajador informal → AUH (no SUAF)
   if (condicion === 'desocupado') {
+    const totalAuh = AUH_POR_HIJO * hijos + (prenatal ? AUH_POR_HIJO : 0);
     return {
-      tramo_ingreso: 'Desocupado con hijos',
-      asignacion_por_hijo: 5000,
-      monto_escolaridad: 0,
-      monto_prenatal: 0,
-      total_mensual: 5000 * hijos,
-      observaciones: 'Como desocupado cobras $5.000 por hijo. No aplican adicionales de escolaridad ni prenatal. Requiere estar registrado en ANSES como desocupado.'
+      tramo_ingreso: 'Desocupado/informal → AUH',
+      asignacion_por_hijo: AUH_POR_HIJO,
+      monto_escolaridad: escolaridad ? AYUDA_ESCOLAR_ANUAL : 0,
+      monto_prenatal: prenatal ? AUH_POR_HIJO : 0,
+      total_mensual: totalAuh,
+      observaciones: `Sin trabajo registrado cobrás la AUH: $${AUH_POR_HIJO.toLocaleString('es-AR')} por hijo (ANSES deposita el 80% por mes; el 20% se libera al presentar la Libreta). La ayuda escolar es un pago anual de $${AYUDA_ESCOLAR_ANUAL.toLocaleString('es-AR')} por hijo.`,
     };
   }
 
-  for (let t of TRAMOS_2026) {
-    if (ingreso <= t.limite) {
-      tramoActual = t;
-      tramoLabel = `Tramo ${t.tramo} (hasta $${t.limite.toLocaleString('es-AR')})`;
-      break;
-    }
-  }
-
-  let asignacionPorHijo = tramoActual.asignacion;
-  let montoEscolar = escolaridad ? tramoActual.escolar : 0;
-  let montoPrenatal = prenatal ? tramoActual.prenatal : 0;
-
-  // Los monotributistas pueden tener restricciones adicionales
-  if (condicion === 'monotributista' && ingreso > 180000) {
+  // Ingreso del grupo familiar supera el tope → sin asignación general
+  if (ingreso > TOPE_IGF) {
     return {
-      tramo_ingreso: 'Fuera de rango monotributista',
+      tramo_ingreso: `Supera el tope de $${TOPE_IGF.toLocaleString('es-AR')}`,
       asignacion_por_hijo: 0,
       monto_escolaridad: 0,
       monto_prenatal: 0,
       total_mensual: 0,
-      observaciones: 'Como monotributista, los ingresos declarados superan el límite para acceder a asignación familiar (máx. ~$180.000). Consulta con ANSES sobre tu categoría.'
+      observaciones: `El ingreso del grupo familiar ($${ingreso.toLocaleString('es-AR')}) supera el tope de $${TOPE_IGF.toLocaleString('es-AR')}, así que no corresponde la asignación familiar general. La asignación por hijo con discapacidad no tiene tope de ingresos.`,
+      _insight: {
+        title: 'Superás el tope de ingresos',
+        text: `Con un ingreso del grupo familiar de **$${ingreso.toLocaleString('es-AR')}** superás el tope de **$${TOPE_IGF.toLocaleString('es-AR')}**, por lo que no se cobra la asignación general por hijo. Solo la asignación por hijo con discapacidad sigue sin tope.`,
+        tone: 'warn',
+        icon: '🚫',
+      },
     };
   }
 
-  const totalAsignacion = asignacionPorHijo * hijos;
-  const totalMensual = totalAsignacion + montoEscolar + montoPrenatal;
+  // Determinar tramo
+  let tramoActual = TRAMOS_2026[TRAMOS_2026.length - 1];
+  for (const t of TRAMOS_2026) {
+    if (ingreso <= t.limite) { tramoActual = t; break; }
+  }
+  const tramoLabel = `Tramo ${tramoActual.tramo} (hasta $${tramoActual.limite.toLocaleString('es-AR')})`;
 
-  let obs = `Trabajador ${condicion === 'empleado' ? 'en relación de dependencia' : 'monotributista'} ubicado en ${tramoLabel}.`;
-  if (escolaridad) obs += ` Incluye adicional escolaridad ($${montoEscolar.toLocaleString('es-AR')}).`;
-  if (prenatal) obs += ` Incluye prenatal ($${montoPrenatal.toLocaleString('es-AR')}).`;
-  obs += ' Valores aproximados; verificar en anses.gob.ar.';
+  const asignacionPorHijo = tramoActual.asignacion;
+  const montoEscolar = escolaridad ? AYUDA_ESCOLAR_ANUAL : 0;   // anual, pago único
+  const montoPrenatal = prenatal ? asignacionPorHijo : 0;       // mensual, = asignación del tramo
+  const totalAsignacion = asignacionPorHijo * hijos;
+  const totalMensual = totalAsignacion + montoPrenatal;         // mensual (la ayuda escolar es anual, no se suma)
+
+  let obs = `Trabajador ${condicion === 'monotributista' ? 'monotributista' : 'en relación de dependencia'} en ${tramoLabel}: $${asignacionPorHijo.toLocaleString('es-AR')} por hijo.`;
+  if (prenatal) obs += ` Prenatal (mensual): $${montoPrenatal.toLocaleString('es-AR')}.`;
+  if (escolaridad) obs += ` Ayuda escolar: pago anual único de $${montoEscolar.toLocaleString('es-AR')} por hijo.`;
+  obs += ' Valores ANSES junio 2026; verificá en anses.gob.ar.';
 
   const chart = {
     type: 'doughnut' as const,
     slices: [
       { label: `Asignación (${hijos} hijo/s)`, value: totalAsignacion },
-      { label: 'Adicional escolaridad', value: montoEscolar },
-      { label: 'Adicional prenatal', value: montoPrenatal },
+      { label: 'Prenatal (mensual)', value: montoPrenatal },
     ],
     prefix: '$',
     centerValue: '$' + Math.round(totalMensual).toLocaleString('es-AR'),
     centerLabel: 'Total mensual',
-    ariaLabel: 'Composición de la asignación familiar mensual: asignación por hijos más adicionales',
+    ariaLabel: 'Composición de la asignación familiar mensual: asignación por hijos más prenatal',
   };
 
-  const adicionales = montoEscolar + montoPrenatal;
   const insight = {
     title: `Estás en el ${tramoLabel}`,
-    text: `Cobrás **$${asignacionPorHijo.toLocaleString('es-AR')} por hijo** (${hijos} hijo/s = $${totalAsignacion.toLocaleString('es-AR')})${adicionales > 0 ? ` más **$${adicionales.toLocaleString('es-AR')}** en adicionales` : ''}, total **$${Math.round(totalMensual).toLocaleString('es-AR')}/mes**. ${tramoActual.tramo <= 2 ? 'Estás en un tramo bajo, que es el que más paga por hijo.' : 'A mayor ingreso declarado, menor el monto por hijo: el tramo 1 paga más del doble.'}`,
+    text: `Con un ingreso del grupo familiar de **$${ingreso.toLocaleString('es-AR')}** cobrás **$${asignacionPorHijo.toLocaleString('es-AR')} por hijo** (${hijos} hijo/s = $${totalAsignacion.toLocaleString('es-AR')})${montoPrenatal > 0 ? ` más **$${montoPrenatal.toLocaleString('es-AR')}** de prenatal` : ''}, total **$${Math.round(totalMensual).toLocaleString('es-AR')}/mes**.${escolaridad ? ` Aparte, la ayuda escolar es un pago anual de **$${montoEscolar.toLocaleString('es-AR')}** por hijo.` : ''} ${tramoActual.tramo <= 2 ? 'A menor ingreso familiar, mayor la asignación por hijo: el tramo 1 paga casi 5 veces más que el tramo 4.' : 'A mayor ingreso declarado, menor el monto por hijo.'}`,
     tone: (tramoActual.tramo <= 2 ? 'good' : 'neutral') as 'good' | 'neutral' | 'warn',
     icon: '👨‍👩‍👧',
   };
@@ -107,6 +112,6 @@ export function compute(i: Inputs): Outputs {
     total_mensual: totalMensual,
     observaciones: obs,
     _chart: chart,
-    _insight: insight
+    _insight: insight,
   };
 }

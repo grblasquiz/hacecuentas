@@ -16,9 +16,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 ANSES
-  const HABER_MINIMO_2026 = 264228; // ARS - haber mínimo jubilatorio vigente
-  const CUANTIA_INTEGRAL = HABER_MINIMO_2026 * 0.70; // ~185.160 ARS
+  // Constantes 2026 ANSES — haber mínimo junio 2026 (movilidad IPC, DNU 274/2024)
+  const HABER_MINIMO_2026 = 403318; // ARS - haber mínimo jubilatorio jun-2026
+  const CUANTIA_INTEGRAL = HABER_MINIMO_2026 * 0.70; // ~282.323 ARS (70% del haber mínimo)
   const TOPE_PERSONAL_FACTOR = 3.73; // ~986.000 ARS
   const TOPE_PERSONAL = HABER_MINIMO_2026 * TOPE_PERSONAL_FACTOR;
   const TOPE_FAMILIAR_FACTOR = 5.5; // Aproximado para grupo familiar típico

@@ -19,9 +19,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Valores vigentes 2026 — Resolución ANSES actualización trimestral
-  const AUH_GENERAL = 105640;        // ARS por hijo sin discapacidad
-  const AUH_DISCAPACIDAD = 354280;   // ARS por hijo con CUD
+  // Valores vigentes jun-2026 — ANSES, movilidad mensual IPC (DNU 274/2024)
+  const AUH_GENERAL = 144562;        // ARS por hijo sin discapacidad (jun-2026)
+  const AUH_DISCAPACIDAD = 472095;   // ARS por hijo con CUD (jun-2026)
   const TOPE_POR_INTEGRANTE = 952110; // ARS — tope ingreso por integrante grupo familiar
   const BONO_REFUERZO_VALOR = 70000; // ARS por hijo — cuando ANSES lo activa
   const PORCENTAJE_MENSUAL = 0.80;

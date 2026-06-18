@@ -16,8 +16,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 - ANSES actualización mensual
-  const HABER_MINIMO_2026 = 273750; // ARS, estimado abril 2026
+  // Constantes 2026 - ANSES actualización mensual (movilidad IPC, DNU 274/2024)
+  const HABER_MINIMO_2026 = 403318; // ARS, haber mínimo jun-2026 (PUAM = 80% = $322.654)
   const PORCENTAJE_PUAM = 0.80;
   const EDAD_MINIMA = 65;
   const ANIOS_APORTES_MINIMOS_JUBILACION = 30;
