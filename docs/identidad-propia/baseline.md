@@ -31,10 +31,12 @@ dándole valor único e identidad a cada calc. Medir antes/después con los scri
 | similitud intra-familia promedio (explanation) | (script intra-familia) | ~0.00 |
 
 ## Plan por tracks
-- **A** Dashboard/medición (este doc + scripts). ✅
-- **B** Matar 47 familias-clon → data layer real por entidad (raza/ciudad). [EN CURSO]
-- **C** De-fingerprint chrome global (metodología/cómo-citar/footer editorial) en template.
-- **D** Information gain en top ~300 por tráfico (GA4+GSC).
+- **A** Dashboard/medición (este doc + scripts). ✅ HECHO 2026-06-19.
+- **B** Matar 47 familias-clon → de-fingerprint prosa conectiva + sustancia única por entidad.
+  - ✅ Recipe PROBADO en `peso-ideal-beagle` (0.64→0.16 vs dachshund, +ángulo único obesidad).
+  - ⏳ Pendiente: aplicar a ~46 restantes (peso-ideal razas, presupuesto-viaje ciudades). Recipe = quitar boilerplate template-redundante + reescribir frases-puente + agregar lo único de la entidad. Gate: sim 8-gramas <0.30 con su gemela. Escalable con subagentes.
+- **C** ✅ HECHO 2026-06-19. `scripts/strip-redundant-boilerplate.py` quitó de **966 calcs** el boilerplate que el template ya renderiza (footer editorial 762→0, "## Calculadoras relacionadas" redundante 280, −594 KB). Verificado en vivo: el template provee disclaimer YMYL + relatedSlugs + última-revisión + metodología. IndexNow 967.
+- **D** Information gain en top ~300 por tráfico (GA4+GSC). [SIGUIENTE]
 - **E** Arquetipos de layout (4-6 por tipo de calc).
 - **F** Levantar el piso (cola larga) con gate anti-fingerprint.
 
