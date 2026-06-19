@@ -1,7 +1,6 @@
 ---
 import CookieConsent from '../components/CookieConsent.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
-import { ClientRouter } from 'astro:transitions';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
 // Antes (5 weights estáticos): 5 woff2 × ~17 KB = ~85 KB de Inter.
@@ -600,10 +599,18 @@ const globalSchema = {
       <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){return setTimeout(f,500)})(function(){var fired={};var thresholds=[25,50,75,100];function send(d){if(fired[d]||typeof clarity!=='function')return;fired[d]=1;try{clarity('event','scroll_'+d);}catch(e){}}function check(){var f=document.body;var h=Math.max(f.scrollHeight,document.documentElement.scrollHeight)-window.innerHeight;if(h<=0){send(100);return;}var p=Math.round((window.scrollY/h)*100);thresholds.forEach(function(t){if(p>=t)send(t);});}window.addEventListener('scroll',check,{passive:true});check();},{timeout:2000});});`} />
     )}
 
-    <!-- View Transitions: navegación SPA-like entre páginas. Reduce flash de
-         contenido + mantiene scroll position en navigation. fallback='swap'
-         para browsers sin View Transitions API (Safari < 18, Firefox sin flag). -->
-    <ClientRouter fallback="swap" />
+    <!-- ClientRouter (view-transitions) REMOVIDO: ningún componente usa transition:*,
+         así que solo sumaba ~209ms de main-thread (peso muerto, dañaba INP). Shim:
+         disparamos `astro:page-load` una vez en la carga normal para preservar el
+         trigger de init de los scripts que lo usaban (ya idempotentes). Sin SPA-nav:
+         cada navegación es recarga normal y los scripts re-corren solos. -->
+    <script>
+      (() => {
+        const fire = () => document.dispatchEvent(new Event('astro:page-load'));
+        if (document.readyState === 'complete') fire();
+        else document.addEventListener('DOMContentLoaded', fire, { once: true });
+      })();
+    </script>
   </head>
   <body>
     <!-- Print-only header (hidden on screen, visible when printing) -->
