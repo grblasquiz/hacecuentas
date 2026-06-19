@@ -192,6 +192,12 @@ const { config, lang = 'es', dataAsOf: dataAsOfProp } = Astro.props;
 // El bot lo ve above-the-fold antes de ejecutar JS; el cliente lo
 // sobreescribe en compute() al primer input valido.
 const exampleBaseline: string = (() => {
+  // Si la calc define un valor primario limpio (example.primaryValue), usarlo:
+  // evita sembrar una ORACIÓN entera en el slot del número primary, que el bot
+  // y el usuario ven above-the-fold antes de calcular (ej. imc/aguinaldo mostraban
+  // un párrafo donde va el número). Fallback: texto plano del example.result.
+  const pv = (config.example as any)?.primaryValue;
+  if (pv) return String(pv).trim().slice(0, 40);
   const raw = config.example?.result;
   if (!raw) return '';
   return raw.replace(/[*`_]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120);
