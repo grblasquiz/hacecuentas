@@ -10,3 +10,4 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 delete_transient( 'hacecuentas_titles' );
+delete_transient( 'hacecuentas_welcome' );

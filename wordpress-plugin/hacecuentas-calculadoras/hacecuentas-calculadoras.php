@@ -4,7 +4,7 @@
  * Plugin URI:        https://hacecuentas.com/wordpress
  * Description:       Insertá calculadoras interactivas de Hacé Cuentas (sueldo, monotributo, aguinaldo, IMC, préstamos, IVA y +2700 más) en tus posts y páginas con un bloque o un shortcode. Gratis, sin registro, los cálculos corren en el navegador del visitante.
  * Version:           1.0.0
- * Requires at least: 5.8
+ * Requires at least: 6.0
  * Requires PHP:      7.2
  * Author:            Hacé Cuentas
  * Author URI:        https://hacecuentas.com
@@ -75,9 +75,10 @@ function hacecuentas_title_for( $slug ) {
  *
  * @param string     $slug   Slug de la calc.
  * @param int|string $height Alto inicial del iframe en px (auto-resize después).
+ * @param bool       $credit Mostrar el enlace de crédito a la fuente (opt-in, default no).
  * @return string HTML.
  */
-function hacecuentas_render( $slug, $height = 640 ) {
+function hacecuentas_render( $slug, $height = 640, $credit = false ) {
 	$slug = sanitize_title( $slug );
 	if ( empty( $slug ) ) {
 		return '';
@@ -94,21 +95,27 @@ function hacecuentas_render( $slug, $height = 640 ) {
 		wp_enqueue_script( 'hacecuentas-frontend' );
 	}
 
-	$origin   = HACECUENTAS_ORIGIN;
-	$embed    = esc_url( $origin . '/embed/' . $slug );
-	$calc_url = esc_url( $origin . '/' . $slug );
-	$home     = esc_url( $origin );
-	$title    = hacecuentas_title_for( $slug );
+	$origin = HACECUENTAS_ORIGIN;
+	$embed  = esc_url( $origin . '/embed/' . $slug );
+	$title  = hacecuentas_title_for( $slug );
 
 	$out  = '<div class="hacecuentas-embed" data-hc-slug="' . esc_attr( $slug ) . '">';
 	$out .= '<iframe src="' . $embed . '" width="100%" height="' . $height . '"'
 		. ' style="border:1px solid #e2e8f0;border-radius:12px;width:100%;max-width:720px;display:block;margin:0 auto;background:#fff"'
 		. ' loading="lazy" title="' . esc_attr( $title ) . '" allow="clipboard-write"></iframe>';
-	$out .= '<p class="hacecuentas-credit"'
-		. ' style="font-size:13px;text-align:center;margin:8px auto 0;max-width:720px;font-family:system-ui,-apple-system,sans-serif;color:#475569">';
-	$out .= 'Calculadora de <a href="' . $calc_url . '" target="_blank" rel="noopener">' . esc_html( $title ) . '</a>';
-	$out .= ' por <a href="' . $home . '" target="_blank" rel="noopener">Hacé Cuentas</a>';
-	$out .= '</p>';
+
+	// Crédito con enlace a la fuente: OPT-IN, apagado por defecto. wordpress.org
+	// prohíbe inyectar enlaces externos en el sitio público sin permiso explícito
+	// del usuario; por eso sólo se muestra si el usuario lo activa (bloque/shortcode).
+	if ( $credit ) {
+		$calc_url = esc_url( $origin . '/' . $slug );
+		$home     = esc_url( $origin );
+		$out .= '<p class="hacecuentas-credit"'
+			. ' style="font-size:13px;text-align:center;margin:8px auto 0;max-width:720px;font-family:system-ui,-apple-system,sans-serif;color:#475569">';
+		$out .= 'Calculadora de <a href="' . $calc_url . '" target="_blank" rel="noopener">' . esc_html( $title ) . '</a>';
+		$out .= ' por <a href="' . $home . '" target="_blank" rel="noopener">Hacé Cuentas</a>';
+		$out .= '</p>';
+	}
 	$out .= '</div>';
 
 	return $out;
@@ -164,13 +171,14 @@ add_action( 'init', 'hacecuentas_init' );
 function hacecuentas_render_block( $attrs ) {
 	$slug   = isset( $attrs['slug'] ) ? $attrs['slug'] : '';
 	$height = isset( $attrs['height'] ) ? $attrs['height'] : 640;
+	$credit = ! empty( $attrs['credit'] );
 
 	if ( empty( $slug ) ) {
 		// Bloque sin configurar: no mostramos nada en el frontend.
 		return '';
 	}
 
-	return hacecuentas_render( $slug, $height );
+	return hacecuentas_render( $slug, $height, $credit );
 }
 
 /**
@@ -184,12 +192,15 @@ function hacecuentas_shortcode( $atts ) {
 		array(
 			'slug'   => '',
 			'height' => 640,
+			'credit' => 'no',
 		),
 		$atts,
 		'hacecuentas'
 	);
 
-	return hacecuentas_render( $a['slug'], $a['height'] );
+	$credit = in_array( strtolower( (string) $a['credit'] ), array( 'yes', 'true', '1', 'on' ), true );
+
+	return hacecuentas_render( $a['slug'], $a['height'], $credit );
 }
 add_shortcode( 'hacecuentas', 'hacecuentas_shortcode' );
 
@@ -205,3 +216,55 @@ function hacecuentas_plugin_links( $links ) {
 	return $links;
 }
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'hacecuentas_plugin_links' );
+
+/**
+ * Al activar: marca para mostrar el aviso de bienvenida una sola vez.
+ */
+function hacecuentas_activate() {
+	set_transient( 'hacecuentas_welcome', 1, WEEK_IN_SECONDS );
+}
+register_activation_hook( __FILE__, 'hacecuentas_activate' );
+
+/**
+ * Aviso de bienvenida tras activar — descartable, con el cómo-usar en una línea.
+ * Baja la fricción del primer uso: el usuario sabe al toque qué hacer.
+ */
+function hacecuentas_welcome_notice() {
+	if ( ! get_transient( 'hacecuentas_welcome' ) || ! current_user_can( 'edit_posts' ) ) {
+		return;
+	}
+
+	$dismiss = wp_nonce_url(
+		add_query_arg( 'hacecuentas_dismiss', '1' ),
+		'hacecuentas_dismiss'
+	);
+
+	echo '<div class="notice notice-info is-dismissible"><p>';
+	echo wp_kses(
+		__( '<strong>¡Listo, Hacé Cuentas está activo!</strong> Agregá el bloque <em>«Calculadora Hacé Cuentas»</em> a cualquier entrada o página —o pegá el link de una calculadora— y elegí la que quieras mostrar.', 'hacecuentas-calculadoras' ),
+		array(
+			'strong' => array(),
+			'em'     => array(),
+		)
+	);
+	echo ' <a href="' . esc_url( HACECUENTAS_ORIGIN . '/calculadoras' ) . '" target="_blank" rel="noopener">'
+		. esc_html__( 'Ver calculadoras', 'hacecuentas-calculadoras' ) . '</a>';
+	echo ' &middot; <a href="' . esc_url( $dismiss ) . '">'
+		. esc_html__( 'Ocultar', 'hacecuentas-calculadoras' ) . '</a>';
+	echo '</p></div>';
+}
+add_action( 'admin_notices', 'hacecuentas_welcome_notice' );
+
+/**
+ * Descartar el aviso de bienvenida (link "Ocultar").
+ */
+function hacecuentas_maybe_dismiss() {
+	if ( ! isset( $_GET['hacecuentas_dismiss'] ) || ! current_user_can( 'edit_posts' ) ) {
+		return;
+	}
+	check_admin_referer( 'hacecuentas_dismiss' );
+	delete_transient( 'hacecuentas_welcome' );
+	wp_safe_redirect( remove_query_arg( array( 'hacecuentas_dismiss', '_wpnonce' ) ) );
+	exit;
+}
+add_action( 'admin_init', 'hacecuentas_maybe_dismiss' );

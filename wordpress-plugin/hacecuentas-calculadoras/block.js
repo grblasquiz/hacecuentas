@@ -13,8 +13,53 @@
 
 	var ORIGIN = 'https://hacecuentas.com';
 
+	// Populares curadas y verificadas embebibles. Un clic las inserta sin
+	// buscar ni conocer el slug. Cubren contadores / finanzas / RRHH / salud / mate.
+	var POPULAR = [
+		{ slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano' },
+		{ slug: 'calculadora-monotributo-2026', label: 'Monotributo 2026' },
+		{ slug: 'calculadora-aguinaldo-sac', label: 'Aguinaldo (SAC)' },
+		{ slug: 'calculadora-indemnizacion-despido', label: 'Indemnización' },
+		{ slug: 'calculadora-impuesto-ganancias-sueldo', label: 'Ganancias' },
+		{ slug: 'calculadora-cuota-prestamo', label: 'Cuota de préstamo' },
+		{ slug: 'calculadora-interes-compuesto', label: 'Interés compuesto' },
+		{ slug: 'calculadora-plazo-fijo', label: 'Plazo fijo' },
+		{ slug: 'calculadora-imc', label: 'IMC' },
+		{ slug: 'calculadora-porcentajes', label: 'Porcentajes' },
+	];
+
+	// Chips de populares: insertar al toque.
+	function Popular( props ) {
+		return el(
+			'div',
+			{
+				style: {
+					display: 'flex',
+					flexWrap: 'wrap',
+					gap: '6px',
+					justifyContent: 'center',
+					marginBottom: '14px',
+				},
+			},
+			POPULAR.map( function ( p ) {
+				return el(
+					c.Button,
+					{
+						key: p.slug,
+						variant: 'secondary',
+						onClick: function () {
+							props.onPick( p.slug );
+						},
+						style: { borderRadius: '999px' },
+					},
+					p.label
+				);
+			} )
+		);
+	}
+
+	// Buscador del catálogo completo (combobox si cargó; input manual si falló).
 	function Picker( props ) {
-		// Selector buscable cuando la lista cargó; input manual si falló.
 		if ( props.status === 'loading' ) {
 			return el( c.Spinner );
 		}
@@ -88,6 +133,15 @@
 			setAttributes( { slug: v } );
 		};
 
+		// Título legible de la calc elegida (para el encabezado del preview).
+		var currentLabel = slug;
+		for ( var i = 0; i < options.length; i++ ) {
+			if ( options[ i ].value === slug ) {
+				currentLabel = options[ i ].label;
+				break;
+			}
+		}
+
 		var inspector = el(
 			InspectorControls,
 			{},
@@ -101,11 +155,15 @@
 					status: status,
 					options: options,
 					slug: slug,
-					label: __( 'Elegí una calculadora', 'hacecuentas-calculadoras' ),
+					label: __( 'Cambiar calculadora', 'hacecuentas-calculadoras' ),
 					onChange: setSlug,
 				} ),
 				el( c.RangeControl, {
 					label: __( 'Alto inicial (px)', 'hacecuentas-calculadoras' ),
+					help: __(
+						'Se ajusta solo al cargar; esto es sólo el alto de arranque.',
+						'hacecuentas-calculadoras'
+					),
 					value: height,
 					onChange: function ( v ) {
 						setAttributes( { height: v || 640 } );
@@ -113,31 +171,63 @@
 					min: 320,
 					max: 1200,
 					step: 20,
+				} ),
+				el( c.ToggleControl, {
+					label: __( 'Enlazar a la fuente (Hacé Cuentas)', 'hacecuentas-calculadoras' ),
+					help: __(
+						'Agrega un enlace de crédito debajo de la calculadora. Opcional, apagado por defecto.',
+						'hacecuentas-calculadoras'
+					),
+					checked: !! attributes.credit,
+					onChange: function ( v ) {
+						setAttributes( { credit: !! v } );
+					},
 				} )
 			)
 		);
 
 		var body;
 		if ( ! slug ) {
+			// Sin elegir: populares (1 clic) + buscador + "ver todas".
 			body = el(
 				c.Placeholder,
 				{
 					icon: 'calculator',
 					label: __( 'Calculadora Hacé Cuentas', 'hacecuentas-calculadoras' ),
 					instructions: __(
-						'Elegí una calculadora para insertarla en tu página.',
+						'Elegí una de las más usadas o buscá entre más de 2700.',
 						'hacecuentas-calculadoras'
 					),
 				},
-				el( Picker, {
-					status: status,
-					options: options,
-					slug: slug,
-					label: '',
-					onChange: setSlug,
-				} )
+				el(
+					'div',
+					{ style: { width: '100%' } },
+					el( Popular, { onPick: setSlug } ),
+					el( Picker, {
+						status: status,
+						options: options,
+						slug: slug,
+						label: __( '¿Otra? Buscá todas', 'hacecuentas-calculadoras' ),
+						onChange: setSlug,
+					} ),
+					el(
+						'a',
+						{
+							href: ORIGIN + '/calculadoras',
+							target: '_blank',
+							rel: 'noopener',
+							style: {
+								fontSize: '12px',
+								marginTop: '10px',
+								display: 'inline-block',
+							},
+						},
+						__( 'Ver todas las calculadoras ↗', 'hacecuentas-calculadoras' )
+					)
+				)
 			);
 		} else {
+			// Elegida: encabezado con título + "Cambiar" + preview en vivo.
 			body = el(
 				'div',
 				{
@@ -147,9 +237,38 @@
 						overflow: 'hidden',
 					},
 				},
+				el(
+					'div',
+					{
+						style: {
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'space-between',
+							gap: '8px',
+							padding: '6px 10px',
+							background: '#f8fafc',
+							borderBottom: '1px solid #e2e8f0',
+						},
+					},
+					el(
+						'strong',
+						{ style: { fontSize: '13px', color: '#0f172a' } },
+						currentLabel
+					),
+					el(
+						c.Button,
+						{
+							variant: 'tertiary',
+							onClick: function () {
+								setSlug( '' );
+							},
+						},
+						__( 'Cambiar', 'hacecuentas-calculadoras' )
+					)
+				),
 				el( 'iframe', {
 					src: ORIGIN + '/embed/' + slug,
-					title: slug,
+					title: currentLabel,
 					loading: 'lazy',
 					style: {
 						width: '100%',
@@ -158,19 +277,7 @@
 						display: 'block',
 						background: '#fff',
 					},
-				} ),
-				el(
-					'p',
-					{
-						style: {
-							fontSize: '12px',
-							textAlign: 'center',
-							color: '#475569',
-							margin: '6px 0',
-						},
-					},
-					'hacecuentas.com/' + slug
-				)
+				} )
 			);
 		}
 

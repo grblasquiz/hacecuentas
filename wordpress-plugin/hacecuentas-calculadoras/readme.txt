@@ -1,8 +1,8 @@
 === Hacé Cuentas — Calculadoras ===
 Contributors: hacecuentas
 Tags: calculadora, calculator, embed, finanzas, shortcode
-Requires at least: 5.8
-Tested up to: 6.6
+Requires at least: 6.0
+Tested up to: 6.8
 Requires PHP: 7.2
 Stable tag: 1.0.0
 License: GPLv2 or later
@@ -18,10 +18,11 @@ Ideal para estudios contables, blogs de finanzas personales, consultoras de RRHH
 
 = Características =
 
-* **Bloque de Gutenberg** con un selector buscable de todas las calculadoras y vista previa en vivo en el editor.
+* **Bloque de Gutenberg** con botones de las calculadoras más usadas (un clic para insertarlas), buscador de las más de 2700 y vista previa en vivo en el editor.
 * **Shortcode** `[hacecuentas slug="calculadora-monotributo-2026"]` para el editor clásico o widgets.
 * **Auto-embed por URL**: pegás el link de una calculadora en el editor de bloques y aparece sola (vía oEmbed).
 * **Responsive**: el embed se adapta al ancho de tu contenido y ajusta su alto automáticamente.
+* **Enlace a la fuente opcional**: si querés, activás un crédito a Hacé Cuentas debajo de la calculadora. Apagado por defecto — vos decidís.
 * **Privado y liviano**: los cálculos corren en el navegador del visitante. No se envían datos a ningún servidor y no carga librerías pesadas en tu sitio.
 * **Gratis y sin registro.**
 
@@ -73,6 +74,10 @@ No. La calculadora se muestra dentro de un iframe liviano y los cálculos corren
 
 No. Los cálculos se hacen del lado del cliente. El visitante ingresa sus datos y el resultado se computa en su propio navegador.
 
+= ¿El plugin agrega enlaces a mi sitio sin permiso? =
+
+No. Por defecto sólo se muestra la calculadora. Si querés, podés activar un enlace de crédito a Hacé Cuentas debajo de la calculadora (opción "Enlazar a la fuente" en el bloque, o `credit="yes"` en el shortcode). Está apagado por defecto.
+
 = ¿Cómo encuentro el slug de una calculadora? =
 
 Es la última parte de la URL. En `https://hacecuentas.com/calculadora-aguinaldo-sac`, el slug es `calculadora-aguinaldo-sac`. El bloque de Gutenberg además trae un buscador con todas.
@@ -91,9 +96,8 @@ Se limpia la caché temporal que crea el plugin. No deja datos residuales.
 
 == Screenshots ==
 
-1. El bloque "Calculadora Hacé Cuentas" con el selector buscable y la vista previa en el editor.
-2. Una calculadora embebida en un post, lista para que el lector la use.
-3. Uso del shortcode en el editor clásico.
+1. El bloque "Calculadora Hacé Cuentas": botones de las calculadoras más usadas (un clic) y buscador de las más de 2700, en el editor.
+2. Una calculadora embebida, lista para que el lector la use — con el crédito enlazado a Hacé Cuentas.
 
 == Changelog ==
 

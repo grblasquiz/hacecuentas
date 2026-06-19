@@ -11,10 +11,10 @@ import slim from '../../public/api/calcs-slim.json';
 //     hacecuentas como oEmbed provider) y cualquier consumidor de oEmbed (Ghost,
 //     etc.): pegás la URL de una calc y aparece la calculadora embebida.
 //
-// El html del modo rich arranca con un <blockquote> con los links de crédito
-// SEGUIDO del <iframe>. WordPress filtra el html de oEmbed y conserva sólo el
-// (blockquote opcional) + (iframe) — así el backlink followable del blockquote
-// sobrevive en la página anfitriona (no queda atrapado dentro del iframe).
+// El html del modo rich es SÓLO el <iframe> (sin enlaces inyectados en la página
+// anfitriona) para cumplir las directrices de wordpress.org, que prohíben insertar
+// links externos en el sitio público sin opt-in del usuario. El crédito/backlink es
+// opt-in: lo agrega el usuario desde el plugin, o vive en el widget self-hosted (/embed.js).
 
 export const prerender = false;
 
@@ -92,14 +92,13 @@ export const GET: APIRoute = ({ url }) => {
     720,
   );
   const height = 640;
-  const calcUrl = `${ORIGIN}/${slug}`;
   const embedUrl = `${ORIGIN}/embed/${slug}`;
   const t = escHtml(title);
 
+  // Sólo el iframe — sin enlaces inyectados en la página anfitriona (cumple
+  // wordpress.org). El crédito vive dentro del iframe (página propia) y, en el
+  // plugin, como opción explícita del usuario.
   const html =
-    `<blockquote class="hacecuentas-embed">` +
-    `<a href="${calcUrl}">${t}</a> — calculadora gratis de ` +
-    `<a href="${ORIGIN}">Hacé Cuentas</a></blockquote>` +
     `<iframe src="${embedUrl}" width="${maxwidth}" height="${height}" ` +
     `style="border:1px solid #e2e8f0;border-radius:12px;max-width:100%;width:${maxwidth}px;height:${height}px;background:#fff" ` +
     `frameborder="0" loading="lazy" title="${t}" allow="clipboard-write"></iframe>`;

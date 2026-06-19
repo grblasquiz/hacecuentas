@@ -5,21 +5,77 @@
     {
       "title": "Los 13 símbolos canónicos del sistema romano (7 básicos + 6 sustractivos)",
       "caption": "El algoritmo de conversión usa estos 13 valores de mayor a menor. Los 7 básicos (I, V, X, L, C, D, M) son letras simples; los 6 sustractivos (IV, IX, XL, XC, CD, CM) son los únicos pares de resta válidos.",
-      "headers": ["Símbolo", "Valor decimal", "Tipo"],
+      "headers": [
+        "Símbolo",
+        "Valor decimal",
+        "Tipo"
+      ],
       "rows": [
-        ["M", "1000", "Básico"],
-        ["CM", "900", "Sustractivo (M − C)"],
-        ["D", "500", "Básico"],
-        ["CD", "400", "Sustractivo (D − C)"],
-        ["C", "100", "Básico"],
-        ["XC", "90", "Sustractivo (C − X)"],
-        ["L", "50", "Básico"],
-        ["XL", "40", "Sustractivo (L − X)"],
-        ["X", "10", "Básico"],
-        ["IX", "9", "Sustractivo (X − I)"],
-        ["V", "5", "Básico"],
-        ["IV", "4", "Sustractivo (V − I)"],
-        ["I", "1", "Básico"]
+        [
+          "M",
+          "1000",
+          "Básico"
+        ],
+        [
+          "CM",
+          "900",
+          "Sustractivo (M − C)"
+        ],
+        [
+          "D",
+          "500",
+          "Básico"
+        ],
+        [
+          "CD",
+          "400",
+          "Sustractivo (D − C)"
+        ],
+        [
+          "C",
+          "100",
+          "Básico"
+        ],
+        [
+          "XC",
+          "90",
+          "Sustractivo (C − X)"
+        ],
+        [
+          "L",
+          "50",
+          "Básico"
+        ],
+        [
+          "XL",
+          "40",
+          "Sustractivo (L − X)"
+        ],
+        [
+          "X",
+          "10",
+          "Básico"
+        ],
+        [
+          "IX",
+          "9",
+          "Sustractivo (X − I)"
+        ],
+        [
+          "V",
+          "5",
+          "Básico"
+        ],
+        [
+          "IV",
+          "4",
+          "Sustractivo (V − I)"
+        ],
+        [
+          "I",
+          "1",
+          "Básico"
+        ]
       ],
       "note": "Reglas: solo I, X, C y M se repiten (máx. 3 veces); V, L y D nunca se repiten. La sustracción solo admite los 6 pares de la tabla. Rango del sistema estándar: 1 (I) a 3999 (MMMCMXCIX). Fuente: Numeración romana (norma de uso clásico)."
     }
@@ -110,7 +166,7 @@
     ],
     "result": "2026 en números romanos es **MMXXVI**."
   },
-  "explanation": "## Cómo se calcula\n\nLa conversión decimal → romano usa un algoritmo **greedy** (voraz): se toma el mayor valor romano posible, se resta del número, y se repite hasta llegar a 0. Los 13 símbolos clave (incluyendo los 6 sustractivos) son:\n\n```\nTabla de valores:\nM   = 1000\nCM  =  900\nD   =  500\nCD  =  400\nC   =  100\nXC  =   90\nL   =   50\nXL  =   40\nX   =   10\nIX  =    9\nV   =    5\nIV  =    4\nI   =    1\n\nAlgoritmo:\nentrada: n (entero, 1 ≤ n ≤ 3999)\nresultado = \"\"\npara cada (valor, símbolo) en la tabla de mayor a menor:\n    mientras n >= valor:\n        resultado += símbolo\n        n -= valor\nretornar resultado\n\nEjemplo: n = 2026\n2026 >= 1000 → resultado = \"M\",    n = 1026\n1026 >= 1000 → resultado = \"MM\",   n =   26\n  26 <  900  → (saltar CM, D, CD, C, XC, L, XL)\n  26 >= 10   → resultado = \"MMX\",  n =   16\n  16 >= 10   → resultado = \"MMXX\", n =    6\n   6 <  10   → (saltar IX)\n   6 >= 5    → resultado = \"MMXXV\",n =    1\n   1 >= 1    → resultado = \"MMXXVI\"n =    0\n→ MMXXVI ✓\n```\n\nLa conversión inversa (romano → decimal) recorre la cadena de izquierda a derecha: si el valor del símbolo actual es **menor** que el siguiente, se **resta**; si es **igual o mayor**, se **suma**.\n\n```\nEjemplo inverso: MCMXCIX\nM   = 1000 (siguiente C=100 < M → suma)   acum = 1000\nC   =  100 (siguiente M=1000 > C → resta)  acum =  900\nM   = 1000 (siguiente X=10 < M → suma)     acum = 1900\nX   =   10 (siguiente C=100 > X → resta)   acum = 1890\nC   =  100 (siguiente I=1 < C → suma)      acum = 1990\nI   =    1 (siguiente X=10 > I → resta)    acum = 1989\nX   =   10 (fin → suma)                    acum = 1999\n→ 1999 ✓\n```\n\n---\n\n## Tabla de referencia\n\n| Decimal | Romano   | Decimal | Romano   |\n|---------|----------|---------|----------|\n| 1       | I        | 50      | L        |\n| 2       | II       | 90      | XC       |\n| 3       | III      | 100     | C        |\n| 4       | IV       | 400     | CD       |\n| 5       | V        | 500     | D        |\n| 6       | VI       | 900     | CM       |\n| 9       | IX       | 1000    | M        |\n| 10      | X        | 1999    | MCMXCIX  |\n| 14      | XIV      | 2000    | MM       |\n| 20      | XX       | 2024    | MMXXIV   |\n| 40      | XL       | 2025    | MMXXV    |\n| 49      | XLIX     | 2026    | MMXXVI   |\n\n**Años históricos frecuentes:**\n\n| Año | Romano     | Significado                        |\n|-----|------------|------------------------------------|\n| 476 | CDLXXVI    | Caída del Imperio Romano Occidental|\n| 1492| MCDXCII    | Llegada de Colón a América         |\n| 1776| MDCCLXXVI  | Independencia de EE.UU.            |\n| 1816| MDCCCXVI   | Independencia Argentina            |\n| 1994| MCMXCIV    | Argentina, Copa del Mundo USA 94   |\n| 2001| MMI        | Inicio del siglo XXI               |\n\n---\n\n## Casos típicos\n\n**Caso 1 — El año actual (2026)**\n2026 = 2000 + 20 + 6 = MM + XX + VI = **MMXXVI**\nÚtil para diplomas, actas notariales, portadas de tesis universitarias y tatuajes conmemorativos.\n\n**Caso 2 — Un número con muchas sustracciones (1999)**\n1999 = 1000 + 900 + 90 + 9 = M + CM + XC + IX = **MCMXCIX**\nEste es uno de los números que más confusión genera porque tiene tres pares sustractivos seguidos.\n\n**Caso 3 — Número límite del sistema clásico (3999)**\n3999 = 3000 + 900 + 90 + 9 = MMM + CM + XC + IX = **MMMCMXCIX**\nEl sistema romano clásico sin notación especial llega hasta 3999 (cuatro M estarían fuera de norma estándar). Para números ≥ 4000 se usaban barras sobre las letras (*vinculum*), pero esa notación no es de uso cotidiano.\n\n---\n\n## Errores comunes\n\n1. **Repetir V, L o D más de una vez**: V, L y D NO se repiten. El 10 es X (no VV), el 100 es C (no LL), el 1000 es M (no DD). Solo I, X, C y M pueden repetirse, y como máximo 3 veces seguidas.\n\n2. **Sustracción inválida**: solo se puede restar I de V y X; X de L y C; C de D y M. Escribir IL (49 incorrecto) o VX es un error grave — lo correcto es XLIX.\n\n3. **Más de un símbolo sustractivo**: no se puede escribir IIX para 8; lo correcto es VIII. La regla es un único símbolo por sustracción.\n\n4. **Confundir IV con IIII**: en relojes analógicos muchas marcas usan IIII (forma arcaica) por razones de simetría visual con el VIII del lado opuesto, pero en escritura estándar el 4 siempre es IV.\n\n5. **Intentar escribir el 0 en romano**: el sistema romano **no tiene cero**. El concepto de cero llegó a Europa a través del sistema indo-arábigo. Si tu cálculo da 0, no tiene representación romana.\n\n6. **Números mayores a 3999**: el sistema estándar no representa 4000 o más sin notación extendida (*vinculum* o apostrophus). Esta calculadora opera en el rango 1–3999.\n\n---\n\n## Calculadoras relacionadas\n\n- [Conversor Binario ↔ Decimal](/calculadora-conversor-binario-decimal) — convertí números entre base 2 y base 10.\n- [Calculadora Letra del DNI Argentino](/calculadora-letra-dni-argentina) — calculá el dígito verificador de tu documento.\n- [Conversor Celsius ↔ Fahrenheit](/conversor-celsius-fahrenheit-temperatura) — pasá temperaturas entre escalas.\n- [Conversor Kilogramos ↔ Libras y Onzas](/conversor-kilogramos-libras-onzas) — convertí pesos entre sistemas métrico e imperial.\n",
+  "explanation": "## Cómo se calcula\n\nLa conversión decimal → romano usa un algoritmo **greedy** (voraz): se toma el mayor valor romano posible, se resta del número, y se repite hasta llegar a 0. Los 13 símbolos clave (incluyendo los 6 sustractivos) son:\n\n```\nTabla de valores:\nM   = 1000\nCM  =  900\nD   =  500\nCD  =  400\nC   =  100\nXC  =   90\nL   =   50\nXL  =   40\nX   =   10\nIX  =    9\nV   =    5\nIV  =    4\nI   =    1\n\nAlgoritmo:\nentrada: n (entero, 1 ≤ n ≤ 3999)\nresultado = \"\"\npara cada (valor, símbolo) en la tabla de mayor a menor:\n    mientras n >= valor:\n        resultado += símbolo\n        n -= valor\nretornar resultado\n\nEjemplo: n = 2026\n2026 >= 1000 → resultado = \"M\",    n = 1026\n1026 >= 1000 → resultado = \"MM\",   n =   26\n  26 <  900  → (saltar CM, D, CD, C, XC, L, XL)\n  26 >= 10   → resultado = \"MMX\",  n =   16\n  16 >= 10   → resultado = \"MMXX\", n =    6\n   6 <  10   → (saltar IX)\n   6 >= 5    → resultado = \"MMXXV\",n =    1\n   1 >= 1    → resultado = \"MMXXVI\"n =    0\n→ MMXXVI ✓\n```\n\nLa conversión inversa (romano → decimal) recorre la cadena de izquierda a derecha: si el valor del símbolo actual es **menor** que el siguiente, se **resta**; si es **igual o mayor**, se **suma**.\n\n```\nEjemplo inverso: MCMXCIX\nM   = 1000 (siguiente C=100 < M → suma)   acum = 1000\nC   =  100 (siguiente M=1000 > C → resta)  acum =  900\nM   = 1000 (siguiente X=10 < M → suma)     acum = 1900\nX   =   10 (siguiente C=100 > X → resta)   acum = 1890\nC   =  100 (siguiente I=1 < C → suma)      acum = 1990\nI   =    1 (siguiente X=10 > I → resta)    acum = 1989\nX   =   10 (fin → suma)                    acum = 1999\n→ 1999 ✓\n```\n\n---\n\n## Tabla de referencia\n\n| Decimal | Romano   | Decimal | Romano   |\n|---------|----------|---------|----------|\n| 1       | I        | 50      | L        |\n| 2       | II       | 90      | XC       |\n| 3       | III      | 100     | C        |\n| 4       | IV       | 400     | CD       |\n| 5       | V        | 500     | D        |\n| 6       | VI       | 900     | CM       |\n| 9       | IX       | 1000    | M        |\n| 10      | X        | 1999    | MCMXCIX  |\n| 14      | XIV      | 2000    | MM       |\n| 20      | XX       | 2024    | MMXXIV   |\n| 40      | XL       | 2025    | MMXXV    |\n| 49      | XLIX     | 2026    | MMXXVI   |\n\n**Años históricos frecuentes:**\n\n| Año | Romano     | Significado                        |\n|-----|------------|------------------------------------|\n| 476 | CDLXXVI    | Caída del Imperio Romano Occidental|\n| 1492| MCDXCII    | Llegada de Colón a América         |\n| 1776| MDCCLXXVI  | Independencia de EE.UU.            |\n| 1816| MDCCCXVI   | Independencia Argentina            |\n| 1994| MCMXCIV    | Argentina, Copa del Mundo USA 94   |\n| 2001| MMI        | Inicio del siglo XXI               |\n\n---\n\n## Casos típicos\n\n**Caso 1 — El año actual (2026)**\n2026 = 2000 + 20 + 6 = MM + XX + VI = **MMXXVI**\nÚtil para diplomas, actas notariales, portadas de tesis universitarias y tatuajes conmemorativos.\n\n**Caso 2 — Un número con muchas sustracciones (1999)**\n1999 = 1000 + 900 + 90 + 9 = M + CM + XC + IX = **MCMXCIX**\nEste es uno de los números que más confusión genera porque tiene tres pares sustractivos seguidos.\n\n**Caso 3 — Número límite del sistema clásico (3999)**\n3999 = 3000 + 900 + 90 + 9 = MMM + CM + XC + IX = **MMMCMXCIX**\nEl sistema romano clásico sin notación especial llega hasta 3999 (cuatro M estarían fuera de norma estándar). Para números ≥ 4000 se usaban barras sobre las letras (*vinculum*), pero esa notación no es de uso cotidiano.\n\n---\n\n## Errores comunes\n\n1. **Repetir V, L o D más de una vez**: V, L y D NO se repiten. El 10 es X (no VV), el 100 es C (no LL), el 1000 es M (no DD). Solo I, X, C y M pueden repetirse, y como máximo 3 veces seguidas.\n\n2. **Sustracción inválida**: solo se puede restar I de V y X; X de L y C; C de D y M. Escribir IL (49 incorrecto) o VX es un error grave — lo correcto es XLIX.\n\n3. **Más de un símbolo sustractivo**: no se puede escribir IIX para 8; lo correcto es VIII. La regla es un único símbolo por sustracción.\n\n4. **Confundir IV con IIII**: en relojes analógicos muchas marcas usan IIII (forma arcaica) por razones de simetría visual con el VIII del lado opuesto, pero en escritura estándar el 4 siempre es IV.\n\n5. **Intentar escribir el 0 en romano**: el sistema romano **no tiene cero**. El concepto de cero llegó a Europa a través del sistema indo-arábigo. Si tu cálculo da 0, no tiene representación romana.\n\n6. **Números mayores a 3999**: el sistema estándar no representa 4000 o más sin notación extendida (*vinculum* o apostrophus). Esta calculadora opera en el rango 1–3999.\n\n---\n",
   "faq": [
     {
       "q": "¿Hasta qué número llega el sistema romano estándar?",
