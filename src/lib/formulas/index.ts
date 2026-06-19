@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-15
+// Generated: 2026-06-19
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -147,8 +147,8 @@ import { compute as compute__annuity_payout_monthly_calculator } from './annuity
 import { anosFluidezIdioma } from './anos-fluidez-idioma';
 import { anosLuzDistanciaConversion } from './anos-luz-distancia-conversion';
 import { ansesComplementoLecheMaternidad } from './anses-complemento-leche-maternidad';
-import { compute as compute__anticipo_impuesto_renta_ecuador } from './anticipo-impuesto-renta-ecuador';
 import { compute as compute__anticipo_impuesto_renta_colombia_2026 } from './anticipo-impuesto-renta-colombia-2026';
+import { compute as compute__anticipo_impuesto_renta_ecuador } from './anticipo-impuesto-renta-ecuador';
 import { antiguedadAutoAmortizacion } from './antiguedad-auto-amortizacion';
 import { antiguedadLaboral } from './antiguedad-laboral';
 import { antiinflamatorioScoreComida } from './antiinflamatorio-score-comida';
@@ -1809,12 +1809,12 @@ import { compute as compute__incapacidad_imss_enfermedad_general } from './incap
 import { compute as compute__incapacidad_medica_eps_colombia } from './incapacidad-medica-eps-colombia';
 import { indemnizacion } from './indemnizacion';
 import { compute as compute__indemnizacion_despido_arbitrario_peru } from './indemnizacion-despido-arbitrario-peru';
-import { compute as compute__indemnizacion_despido_sin_justa_causa_colombia } from './indemnizacion-despido-sin-justa-causa-colombia';
 import { indemnizacionDespidoEmbarazo } from './indemnizacion-despido-embarazo';
 import { indemnizacionDespidoFuerzaMayorArt247 } from './indemnizacion-despido-fuerza-mayor-art-247';
 import { indemnizacionDespidoImprocedenteEspana } from './indemnizacion-despido-improcedente-espana';
 import { compute as compute__indemnizacion_despido_intempestivo_ecuador } from './indemnizacion-despido-intempestivo-ecuador';
 import { indemnizacionDespidoObjetivoEspana } from './indemnizacion-despido-objetivo-espana';
+import { compute as compute__indemnizacion_despido_sin_justa_causa_colombia } from './indemnizacion-despido-sin-justa-causa-colombia';
 import { indemnizacionEmpleadaCasaParticularLey26844 } from './indemnizacion-empleada-casa-particular-ley-26844';
 import { independenciaFinancieraFireMovimiento } from './independencia-financiera-fire-movimiento';
 import { indiceAsistenciaFaltas } from './indice-asistencia-faltas';
@@ -1920,7 +1920,6 @@ import { compute as compute__isr_anual_personas_fisicas_mexico_tarifa_2026 } fro
 import { compute as compute__isr_arrendamiento_arrendador_colombia_deducciones } from './isr-arrendamiento-arrendador-colombia-deducciones';
 import { compute as compute__isr_arrendamiento_deduccion_ciega_mexico } from './isr-arrendamiento-deduccion-ciega-mexico';
 import { isrHonorariosMexico } from './isr-honorarios-mexico';
-import { compute as compute__isr_honorarios_personas_fisicas_mexico_2026 } from './isr-honorarios-personas-fisicas-mexico-2026';
 import { compute as compute__isr_mensual_empleados_subsidio_empleo_mexico } from './isr-mensual-empleados-subsidio-empleo-mexico';
 import { isrMexico2026 } from './isr-mexico-2026';
 import { compute as compute__isr_mexico_2026_tarifa_mensual_empleado } from './isr-mexico-2026-tarifa-mensual-empleado';
@@ -2685,7 +2684,6 @@ import { presupuestoViajeSantiagoChile } from './presupuesto-viaje-santiago-chil
 import { presupuestoViajeTokio } from './presupuesto-viaje-tokio';
 import { previdenciaPgblVgbl } from './previdencia-pgbl-vgbl';
 import { primaAntiguedadMexico } from './prima-antiguedad-mexico';
-import { compute as compute__prima_antiguedad_mexico_12_dias_2_smg } from './prima-antiguedad-mexico-12-dias-2-smg';
 import { compute as compute__prima_dominical_dias_festivos_mexico } from './prima-dominical-dias-festivos-mexico';
 import { compute as compute__prima_legal_colombia_30_dias_junio_diciembre } from './prima-legal-colombia-30-dias-junio-diciembre';
 import { compute as compute__prima_riesgo_trabajo_imss_siniestralidad } from './prima-riesgo-trabajo-imss-siniestralidad';
@@ -2895,8 +2893,8 @@ import { restakingEigenlayerRendimientoEth } from './restaking-eigenlayer-rendim
 import { resumenCapituloLibroMetodoCornell } from './resumen-capitulo-libro-metodo-cornell';
 import { compute as compute__retefuente_colombia_2026_empleado_tabla } from './retefuente-colombia-2026-empleado-tabla';
 import { retencionAfipCuitRegimenGeneral } from './retencion-afip-cuit-regimen-general';
-import { compute as compute__retencion_fuente_compras_servicios_2026 } from './retencion-fuente-compras-servicios-2026';
 import { compute as compute__retencion_fuente_arrendamientos_colombia_2026 } from './retencion-fuente-arrendamientos-colombia-2026';
+import { compute as compute__retencion_fuente_compras_servicios_2026 } from './retencion-fuente-compras-servicios-2026';
 import { compute as compute__retencion_fuente_dependencia_ecuador } from './retencion-fuente-dependencia-ecuador';
 import { retencionGananciasSiradigTrabajador } from './retencion-ganancias-siradig-trabajador';
 import { retencionRg2616ProveedorMonotributo } from './retencion-rg2616-proveedor-monotributo';
@@ -3700,8 +3698,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'anos-fluidez-idioma': anosFluidezIdioma,
   'anos-luz-distancia-conversion': anosLuzDistanciaConversion,
   'anses-complemento-leche-maternidad': ansesComplementoLecheMaternidad,
-  'anticipo-impuesto-renta-ecuador': compute__anticipo_impuesto_renta_ecuador,
   'anticipo-impuesto-renta-colombia-2026': compute__anticipo_impuesto_renta_colombia_2026,
+  'anticipo-impuesto-renta-ecuador': compute__anticipo_impuesto_renta_ecuador,
   'antiguedad-auto-amortizacion': antiguedadAutoAmortizacion,
   'antiguedad-laboral': antiguedadLaboral,
   'antiinflamatorio-score-comida': antiinflamatorioScoreComida,
@@ -5362,12 +5360,12 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'incapacidad-medica-eps-colombia': compute__incapacidad_medica_eps_colombia,
   'indemnizacion': indemnizacion,
   'indemnizacion-despido-arbitrario-peru': compute__indemnizacion_despido_arbitrario_peru,
-  'indemnizacion-despido-sin-justa-causa-colombia': compute__indemnizacion_despido_sin_justa_causa_colombia,
   'indemnizacion-despido-embarazo': indemnizacionDespidoEmbarazo,
   'indemnizacion-despido-fuerza-mayor-art-247': indemnizacionDespidoFuerzaMayorArt247,
   'indemnizacion-despido-improcedente-espana': indemnizacionDespidoImprocedenteEspana,
   'indemnizacion-despido-intempestivo-ecuador': compute__indemnizacion_despido_intempestivo_ecuador,
   'indemnizacion-despido-objetivo-espana': indemnizacionDespidoObjetivoEspana,
+  'indemnizacion-despido-sin-justa-causa-colombia': compute__indemnizacion_despido_sin_justa_causa_colombia,
   'indemnizacion-empleada-casa-particular-ley-26844': indemnizacionEmpleadaCasaParticularLey26844,
   'independencia-financiera-fire-movimiento': independenciaFinancieraFireMovimiento,
   'indice-asistencia-faltas': indiceAsistenciaFaltas,
@@ -5473,7 +5471,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'isr-arrendamiento-arrendador-colombia-deducciones': compute__isr_arrendamiento_arrendador_colombia_deducciones,
   'isr-arrendamiento-deduccion-ciega-mexico': compute__isr_arrendamiento_deduccion_ciega_mexico,
   'isr-honorarios-mexico': isrHonorariosMexico,
-  'isr-honorarios-personas-fisicas-mexico-2026': compute__isr_honorarios_personas_fisicas_mexico_2026,
   'isr-mensual-empleados-subsidio-empleo-mexico': compute__isr_mensual_empleados_subsidio_empleo_mexico,
   'isr-mexico-2026': isrMexico2026,
   'isr-mexico-2026-tarifa-mensual-empleado': compute__isr_mexico_2026_tarifa_mensual_empleado,
@@ -6238,7 +6235,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'presupuesto-viaje-tokio': presupuestoViajeTokio,
   'previdencia-pgbl-vgbl': previdenciaPgblVgbl,
   'prima-antiguedad-mexico': primaAntiguedadMexico,
-  'prima-antiguedad-mexico-12-dias-2-smg': compute__prima_antiguedad_mexico_12_dias_2_smg,
   'prima-dominical-dias-festivos-mexico': compute__prima_dominical_dias_festivos_mexico,
   'prima-legal-colombia-30-dias-junio-diciembre': compute__prima_legal_colombia_30_dias_junio_diciembre,
   'prima-riesgo-trabajo-imss-siniestralidad': compute__prima_riesgo_trabajo_imss_siniestralidad,
@@ -6448,8 +6444,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'resumen-capitulo-libro-metodo-cornell': resumenCapituloLibroMetodoCornell,
   'retefuente-colombia-2026-empleado-tabla': compute__retefuente_colombia_2026_empleado_tabla,
   'retencion-afip-cuit-regimen-general': retencionAfipCuitRegimenGeneral,
-  'retencion-fuente-compras-servicios-2026': compute__retencion_fuente_compras_servicios_2026,
   'retencion-fuente-arrendamientos-colombia-2026': compute__retencion_fuente_arrendamientos_colombia_2026,
+  'retencion-fuente-compras-servicios-2026': compute__retencion_fuente_compras_servicios_2026,
   'retencion-fuente-dependencia-ecuador': compute__retencion_fuente_dependencia_ecuador,
   'retencion-ganancias-siradig-trabajador': retencionGananciasSiradigTrabajador,
   'retencion-rg2616-proveedor-monotributo': retencionRg2616ProveedorMonotributo,
