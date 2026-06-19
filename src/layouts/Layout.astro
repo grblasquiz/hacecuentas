@@ -468,7 +468,10 @@ const globalSchema = {
     {!articleSection && <meta property="article:section" content="Calculadoras" />}
     <meta name="pinterest-rich-pin" content="true" />
     <!-- Verificación Pinterest se hace via Webmaster con tag específico cuando Martin la crea -->
-    <link rel="alternate" type="application/json+oembed" href="https://hacecuentas.com/oembed.json" title="oEmbed JSON" />
+    <!-- oEmbed discovery: cada página apunta a su propio oEmbed (?url=canonical). En
+         calcs el endpoint devuelve type:"rich" con el iframe embebible (WordPress,
+         Ghost, etc. auto-embeben al pegar la URL); en el resto, type:"link". -->
+    <link rel="alternate" type="application/json+oembed" href={`https://hacecuentas.com/oembed.json?url=${encodeURIComponent(fullCanonical)}`} title="oEmbed JSON" />
 
     <!-- Schema.org global (Organization + WebSite) -->
     <script type="application/ld+json" set:html={JSON.stringify(globalSchema)} />

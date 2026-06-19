@@ -18,6 +18,8 @@ const mxGlob = import.meta.glob('../content/calcs-mx/*.json');
 const esGlob = import.meta.glob('../content/calcs-es/*.json');
 const coGlob = import.meta.glob('../content/calcs-co/*.json');
 const clGlob = import.meta.glob('../content/calcs-cl/*.json');
+const peGlob = import.meta.glob('../content/calcs-pe/*.json');
+const ecGlob = import.meta.glob('../content/calcs-ec/*.json');
 
 const AR = Object.keys(arGlob).length;
 const EN = Object.keys(enGlob).length;
@@ -26,6 +28,8 @@ const MX = Object.keys(mxGlob).length;
 const ES = Object.keys(esGlob).length;
 const CO = Object.keys(coGlob).length;
 const CL = Object.keys(clGlob).length;
+const PE = Object.keys(peGlob).length;
+const EC = Object.keys(ecGlob).length;
 
 export const CALC_COUNTS = {
   ar: AR,
@@ -35,7 +39,9 @@ export const CALC_COUNTS = {
   es: ES,
   co: CO,
   cl: CL,
-  total: AR + EN + PT + MX + ES + CO + CL,
+  pe: PE,
+  ec: EC,
+  total: AR + EN + PT + MX + ES + CO + CL + PE + EC,
 } as const;
 
 function floorTo100(n: number): number {
@@ -49,3 +55,5 @@ function formatES(n: number): string {
 export const TOTAL_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.total))}+`;
 export const AR_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.ar))}+`;
 export const PT_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.pt))}+`;
+// Sin sufijo "+", para frases tipo "Más de {TOTAL_PLAIN} calculadoras".
+export const TOTAL_PLAIN = formatES(floorTo100(CALC_COUNTS.total));

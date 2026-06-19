@@ -7,7 +7,7 @@ import Footer from '../components/Footer.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
 import Newsletter from '../components/Newsletter.astro';
 import CategoryIcon from '../components/CategoryIcon.astro';
-import { TOTAL_DISPLAY, PT_DISPLAY } from '../lib/calc-counts';
+import { TOTAL_DISPLAY, PT_DISPLAY, TOTAL_PLAIN } from '../lib/calc-counts';
 import { GONE_410_URLS } from '../lib/gone-410';
 import { HOME_HREFLANG } from '../lib/hreflang';
 import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
@@ -19,9 +19,10 @@ const FERIADOS_DATA: [string, string][] = FERIADOS_AR_2026.map((f) => [f.fecha, 
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules).map((m: any) => m.default || m);
 
-// H1 hero: total del catálogo ES computado del glob (NUNCA hardcodear el número),
-// redondeado HACIA ABAJO a la centena para no over-promise: 2.832 → "Más de 2.800".
-const heroCalcsDisplay = (Math.floor(calcs.length / 100) * 100).toLocaleString('es-AR');
+// H1 hero: total del catálogo COMPLETO (todos los países, no solo ES-root) desde
+// la fuente única calc-counts (NUNCA hardcodear el número), redondeado HACIA ABAJO
+// a la centena para no over-promise: 4.179 → "Más de 4.100".
+const heroCalcsDisplay = TOTAL_PLAIN;
 
 // Notas recientes del blog → bloque "Novedades" en la home. Señal de frescura
 // para Google Discover + enlazado interno desde la home hacia el contenido

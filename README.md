@@ -262,10 +262,10 @@ npm run test         # vitest
 hacecuentas/
 ├── src/
 │   ├── content/
-│   │   ├── calcs/          # 2.598 calculadoras AR (JSON)
-│   │   ├── calcs-en/       # 28 calculadoras inglés
-│   │   ├── calcs-pt/       # 204 calculadoras portugués BR/PT
-│   │   ├── calcs-mx/       # calculadoras México específicas
+│   │   ├── calcs/          # 2.760 calculadoras AR/ES-root (JSON)
+│   │   ├── calcs-en/       # 681 calculadoras inglés
+│   │   ├── calcs-pt/       # 218 calculadoras portugués BR/PT
+│   │   ├── calcs-mx/       # 109 calculadoras México (+ calcs-co/cl/es/pe/ec)
 │   │   ├── blog/           # artículos del blog
 │   │   ├── tablas/         # tablas de referencia
 │   │   ├── comparaciones/  # comparadores (plazo fijo vs FCI vs dólar, etc.)
@@ -273,7 +273,7 @@ hacecuentas/
 │   ├── components/         # Componentes Astro reutilizables
 │   ├── layouts/            # Layouts base
 │   ├── lib/
-│   │   └── formulas/       # 2.700+ fórmulas TypeScript + index.ts
+│   │   └── formulas/       # 3.500+ fórmulas TypeScript + index.ts
 │   ├── pages/              # Rutas (incluye [...slug].astro router)
 │   └── styles/             # CSS global
 ├── public/
