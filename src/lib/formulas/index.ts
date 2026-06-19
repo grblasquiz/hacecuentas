@@ -87,6 +87,7 @@ import { ahorroTermoElectricoVsGas } from './ahorro-termo-electrico-vs-gas';
 import { ahorroTransportePublicoVsAuto } from './ahorro-transporte-publico-vs-auto';
 import { ahorroUniversidadHijo18AniosCuota } from './ahorro-universidad-hijo-18-anios-cuota';
 import { ahorroUvaVsPesosVsDolar12Meses } from './ahorro-uva-vs-pesos-vs-dolar-12-meses';
+import { compute as compute__ahorro_voluntario_afore_mexico_2026 } from './ahorro-voluntario-afore-mexico-2026';
 import { compute as compute__ahorros_en_dolares_colombia_bancos_internacionales_2026 } from './ahorros-en-dolares-colombia-bancos-internacionales-2026';
 import { airdropElegibilidadWalletScorePuntaje } from './airdrop-elegibilidad-wallet-score-puntaje';
 import { compute as compute__airdrop_jupiter_ena_pyth_eligibility_puntos } from './airdrop-jupiter-ena-pyth-eligibility-puntos';
@@ -232,6 +233,7 @@ import { autonomosCategorias2026Aportes } from './autonomos-categorias-2026-apor
 import { autoviaPeajesArgentinaRuta2Ruta3 } from './autovia-peajes-argentina-ruta-2-ruta-3';
 import { auxilioBrasil } from './auxilio-brasil';
 import { auxilioDoencaInss } from './auxilio-doenca-inss';
+import { compute as compute__auxilio_transporte_colombia_2026 } from './auxilio-transporte-colombia-2026';
 import { avisoPrevioIndenizado } from './aviso-previo-indenizado';
 import { avisoPrevioProporcional } from './aviso-previo-proporcional';
 import { compute as compute__axolotl_acuario_tamano_temperatura_litros } from './axolotl-acuario-tamano-temperatura-litros';
@@ -846,6 +848,7 @@ import { costoCloudServidorMensual } from './costo-cloud-servidor-mensual';
 import { compute as compute__costo_constitucion_empresa_peru } from './costo-constitucion-empresa-peru';
 import { costoCriarCachorroPrimerAno } from './costo-criar-cachorro-primer-ano';
 import { costoEmanciparseHijoSueldoAlquiler } from './costo-emanciparse-hijo-sueldo-alquiler';
+import { compute as compute__costo_empleada_domestica_patron_mexico_2026 } from './costo-empleada-domestica-patron-mexico-2026';
 import { compute as compute__costo_empleado_patron_mexico_2026 } from './costo-empleado-patron-mexico-2026';
 import { costoEmpleadoTotalEmpresa } from './costo-empleado-total-empresa';
 import { costoEnvioCompraExterior } from './costo-envio-compra-exterior';
@@ -862,6 +865,7 @@ import { costoHijoPrimerAno } from './costo-hijo-primer-ano';
 import { costoHoraConsultorMarketing } from './costo-hora-consultor-marketing';
 import { costoHoraDesarrolladorSenior } from './costo-hora-desarrollador-senior';
 import { costoHoraDisenadorGrafico } from './costo-hora-disenador-grafico';
+import { compute as compute__costo_hora_empleado_empresa_colombia_2026 } from './costo-hora-empleado-empresa-colombia-2026';
 import { costoHoraEmpleadoReal } from './costo-hora-empleado-real';
 import { costoHoraFotografoEvento } from './costo-hora-fotografo-evento';
 import { costoHoraIlustradorDigital } from './costo-hora-ilustrador-digital';
@@ -1206,6 +1210,7 @@ import { dosisAntiparasitario } from './dosis-antiparasitario';
 import { dosisAntipulgasPesoMascota } from './dosis-antipulgas-peso-mascota';
 import { dosisMascota } from './dosis-mascota';
 import { dosisVitaminaDDiariaRecomendada } from './dosis-vitamina-d-diaria-recomendada';
+import { compute as compute__dotacion_laboral_colombia_2026 } from './dotacion-laboral-colombia-2026';
 import { doulaPartoAcompanamientoHonorarios } from './doula-parto-acompanamiento-honorarios';
 import { dpiPppImpresionResolucion } from './dpi-ppp-impresion-resolucion';
 import { dpsDamagePerSecond } from './dps-damage-per-second';
@@ -1535,6 +1540,7 @@ import { gamingFpsComponentesPcArmarPresupuesto } from './gaming-fps-componentes
 import { gananciaCrypto } from './ganancia-crypto';
 import { compute as compute__ganancia_ocasional_venta_casa_colombia } from './ganancia-ocasional-venta-casa-colombia';
 import { compute as compute__ganancia_patrimonial_venta_vivienda_espana } from './ganancia-patrimonial-venta-vivienda-espana';
+import { compute as compute__ganancia_repartidor_apps_colombia_2026 } from './ganancia-repartidor-apps-colombia-2026';
 import { ganancias4taCategoria2026 } from './ganancias-4ta-categoria-2026';
 import { gananciasAguinaldoSacRetencion } from './ganancias-aguinaldo-sac-retencion';
 import { gananciasCuartaCategoria2026 } from './ganancias-cuarta-categoria-2026';
@@ -1740,6 +1746,7 @@ import { compute as compute__impermeabilizacion_techo_membrana_rollos_m2_costo }
 import { impermeabilizanteM2 } from './impermeabilizante-m2';
 import { impermeabilizanteTechoKgM2 } from './impermeabilizante-techo-kg-m2';
 import { implantacionEmbrion } from './implantacion-embrion';
+import { compute as compute__impoconsumo_restaurantes_bares_colombia_2026 } from './impoconsumo-restaurantes-bares-colombia-2026';
 import { compute as compute__imposto_renda_2026_brasil_completa_simplificada } from './imposto-renda-2026-brasil-completa-simplificada';
 import { impresionDpiCalidad } from './impresion-dpi-calidad';
 import { compute as compute__impuesto_1_5_por_mil_activos_ecuador } from './impuesto-1-5-por-mil-activos-ecuador';
@@ -1871,6 +1878,7 @@ import { integralIndefinidaPolinomioCoefs } from './integral-indefinida-polinomi
 import { interesAcumuladoTarjeta } from './interes-acumulado-tarjeta';
 import { interesCompuesto } from './interes-compuesto';
 import { interesJudicialTasa } from './interes-judicial-tasa';
+import { compute as compute__interes_mora_dian_colombia_2026 } from './interes-mora-dian-colombia-2026';
 import { interesSimple } from './interes-simple';
 import { interesSimpleCapitalTiempoTasa } from './interes-simple-capital-tiempo-tasa';
 import { compute as compute__interes_simple_prestamo } from './interes-simple-prestamo';
@@ -1915,15 +1923,18 @@ import { islrVenezuela } from './islr-venezuela';
 import { isnImpuestoNominasMexico } from './isn-impuesto-nominas-mexico';
 import { isoInvarianceCamaraModelo } from './iso-invariance-camara-modelo';
 import { compute as compute__isr_acciones_bolsa_mexico_10_por_ciento } from './isr-acciones-bolsa-mexico-10-por-ciento';
+import { compute as compute__isr_actividad_empresarial_persona_fisica_mexico_2026 } from './isr-actividad-empresarial-persona-fisica-mexico-2026';
 import { compute as compute__isr_anual_colombia_personas_naturales_cedulas } from './isr-anual-colombia-personas-naturales-cedulas';
 import { compute as compute__isr_anual_personas_fisicas_mexico_tarifa_2026 } from './isr-anual-personas-fisicas-mexico-tarifa-2026';
 import { compute as compute__isr_arrendamiento_arrendador_colombia_deducciones } from './isr-arrendamiento-arrendador-colombia-deducciones';
 import { compute as compute__isr_arrendamiento_deduccion_ciega_mexico } from './isr-arrendamiento-deduccion-ciega-mexico';
 import { isrHonorariosMexico } from './isr-honorarios-mexico';
+import { isrInteresesBancariosInversionMexico2026 } from './isr-intereses-bancarios-inversion-mexico-2026';
 import { compute as compute__isr_mensual_empleados_subsidio_empleo_mexico } from './isr-mensual-empleados-subsidio-empleo-mexico';
 import { isrMexico2026 } from './isr-mexico-2026';
 import { compute as compute__isr_mexico_2026_tarifa_mensual_empleado } from './isr-mexico-2026-tarifa-mensual-empleado';
 import { compute as compute__isr_personas_morales_mexico_30_porcentaje } from './isr-personas-morales-mexico-30-porcentaje';
+import { compute as compute__isr_premios_loteria_mexico_2026 } from './isr-premios-loteria-mexico-2026';
 import { compute as compute__isr_quincenal_mexico_2026 } from './isr-quincenal-mexico-2026';
 import { compute as compute__isr_rentas_de_capital_dividendos_intereses_colombia } from './isr-rentas-de-capital-dividendos-intereses-colombia';
 import { isrRepublicaDominicana } from './isr-republica-dominicana';
@@ -2343,6 +2354,7 @@ import { compute as compute__pago_anticipado_credito_hipotecario_chile_ahorro_uf
 import { compute as compute__pago_anticipado_credito_hipotecario_colombia_ahorro_intereses } from './pago-anticipado-credito-hipotecario-colombia-ahorro-intereses';
 import { compute as compute__pago_electronico_chile_transbank_comisiones_onepay_mach } from './pago-electronico-chile-transbank-comisiones-onepay-mach';
 import { compute as compute__pago_proporcional_pareja_ingreso_gastos_compartidos } from './pago-proporcional-pareja-ingreso-gastos-compartidos';
+import { pagoProvisionalIsrArrendamientoMexico2026 } from './pago-provisional-isr-arrendamiento-mexico-2026';
 import { palabrasDiaParaNivel } from './palabras-dia-para-nivel';
 import { palabrasPorPagina } from './palabras-por-pagina';
 import { palabrasPorPaginaTrabajo } from './palabras-por-pagina-trabajo';
@@ -2423,6 +2435,7 @@ import { compute as compute__pension_imss_ley_73_mexico } from './pension-imss-l
 import { compute as compute__pension_imss_modalidad_40_mexico_aportacion } from './pension-imss-modalidad-40-mexico-aportacion';
 import { compute as compute__pension_invalidez_anses_no_contributiva_2026_cuantia } from './pension-invalidez-anses-no-contributiva-2026-cuantia';
 import { compute as compute__pension_invalidez_imss_mexico } from './pension-invalidez-imss-mexico';
+import { compute as compute__pension_issste_decimo_transitorio_mexico_2026 } from './pension-issste-decimo-transitorio-mexico-2026';
 import { compute as compute__pension_jubilacion_chile_edad_aportes_2026 } from './pension-jubilacion-chile-edad-aportes-2026';
 import { compute as compute__pension_no_contributiva_jubilacion_invalidez_espana } from './pension-no-contributiva-jubilacion-invalidez-espana';
 import { compute as compute__pension_rais_vs_prima_media_colombia } from './pension-rais-vs-prima-media-colombia';
@@ -2635,7 +2648,9 @@ import { presionNeumaticoPsiBarAuto } from './presion-neumatico-psi-bar-auto';
 import { presionNeumaticosPsiBar } from './presion-neumaticos-psi-bar';
 import { presionParcialDalton } from './presion-parcial-dalton';
 import { pressBancaRelativo } from './press-banca-relativo';
+import { compute as compute__prestaciones_empleada_domestica_colombia_2026 } from './prestaciones-empleada-domestica-colombia-2026';
 import { prestacionesSocialesVenezuela } from './prestaciones-sociales-venezuela';
+import { compute as compute__prestaciones_superiores_ley_mexico_2026 } from './prestaciones-superiores-ley-mexico-2026';
 import { prestamoAnsesJubiladoArgentaMonto } from './prestamo-anses-jubilado-argenta-monto';
 import { compute as compute__prestamo_anses_jubilados_monto_cuota_2026 } from './prestamo-anses-jubilados-monto-cuota-2026';
 import { compute as compute__prestamo_coche_espana_cdc_vs_renting } from './prestamo-coche-espana-cdc-vs-renting';
@@ -2790,6 +2805,7 @@ import { rebalanceoPortafolio } from './rebalanceo-portafolio';
 import { compute as compute__recargo_dominical_festivo_colombia_2026 } from './recargo-dominical-festivo-colombia-2026';
 import { compute as compute__recargo_equivalencia_comerciantes_espana } from './recargo-equivalencia-comerciantes-espana';
 import { compute as compute__recargo_nocturno_colombia_2026 } from './recargo-nocturno-colombia-2026';
+import { recargosActualizacionSatMexico2026 } from './recargos-actualizacion-sat-mexico-2026';
 import { compute as compute__recibo_agua_sedapal_peru } from './recibo-agua-sedapal-peru';
 import { reciboDeSueldoArgentina } from './recibo-de-sueldo-argentina';
 import { compute as compute__recibo_gas_chile_metrogas_lipigas_cilindro_vs_red } from './recibo-gas-chile-metrogas-lipigas-cilindro-vs-red';
@@ -2851,6 +2867,7 @@ import { compute as compute__renta_cuarta_categoria_honorarios_peru } from './re
 import { compute as compute__renta_disponible_mensual_espana_gastos_fijos_30_30_30_10 } from './renta-disponible-mensual-espana-gastos-fijos-30-30-30-10';
 import { rentaFinancieraCedularPersonas } from './renta-financiera-cedular-personas';
 import { compute as compute__renta_mensual_cdmx_vs_guadalajara_monterrey } from './renta-mensual-cdmx-vs-guadalajara-monterrey';
+import { compute as compute__renta_pensionados_colombia_2026 } from './renta-pensionados-colombia-2026';
 import { compute as compute__renta_personas_naturales_colombia_2026_anual } from './renta-personas-naturales-colombia-2026-anual';
 import { compute as compute__renta_presunta_chile_agricola_transporte_mineria } from './renta-presunta-chile-agricola-transporte-mineria';
 import { compute as compute__renta_primera_categoria_alquiler_peru } from './renta-primera-categoria-alquiler-peru';
@@ -2878,6 +2895,7 @@ import { rescisaoCltPedidoDemissao } from './rescisao-clt-pedido-demissao';
 import { rescisaoCltSemJustaCausa } from './rescisao-clt-sem-justa-causa';
 import { resetMetabolismoPlateauDietaEstrategia } from './reset-metabolismo-plateau-dieta-estrategia';
 import { compute as compute__resico_personas_fisicas_mexico_2026_cuota } from './resico-personas-fisicas-mexico-2026-cuota';
+import { resicoPersonasMoralesMexico2026 } from './resico-personas-morales-mexico-2026';
 import { resin3dMililitrosPieza } from './resin-3d-mililitros-pieza';
 import { resistenciaCodigoColores45Bandas } from './resistencia-codigo-colores-4-5-bandas';
 import { resistenciaLedSerieParalelo } from './resistencia-led-serie-paralelo';
@@ -2897,6 +2915,8 @@ import { compute as compute__retencion_fuente_arrendamientos_colombia_2026 } fro
 import { compute as compute__retencion_fuente_compras_servicios_2026 } from './retencion-fuente-compras-servicios-2026';
 import { compute as compute__retencion_fuente_dependencia_ecuador } from './retencion-fuente-dependencia-ecuador';
 import { retencionGananciasSiradigTrabajador } from './retencion-ganancias-siradig-trabajador';
+import { retencionPlataformasDigitalesMexico2026 } from './retencion-plataformas-digitales-mexico-2026';
+import { compute as compute__retencion_procedimiento_2_colombia_2026 } from './retencion-procedimiento-2-colombia-2026';
 import { retencionRg2616ProveedorMonotributo } from './retencion-rg2616-proveedor-monotributo';
 import { compute as compute__retiro_afore_desempleo_mexico } from './retiro-afore-desempleo-mexico';
 import { compute as compute__retiro_afp_jubilacion_peru } from './retiro-afp-jubilacion-peru';
@@ -2982,6 +3002,7 @@ import { compute as compute__saldo_afp_rentabilidad_multifondos_chile_2026 } fro
 import { saldoCriptoValorMonedaLocalMulti } from './saldo-cripto-valor-moneda-local-multi';
 import { saldoSalarioRescisao } from './saldo-salario-rescisao';
 import { salesTaxCalculator } from './sales-tax-calculator';
+import { compute as compute__sancion_correccion_declaracion_dian_colombia_2026 } from './sancion-correccion-declaracion-dian-colombia-2026';
 import { compute as compute__sancion_extemporaneidad_dian_2026 } from './sancion-extemporaneidad-dian-2026';
 import { satIeltsToeflEquivalenciasPuntajeConvertidor } from './sat-ielts-toefl-equivalencias-puntaje-convertidor';
 import { saturacionOxigenoEvaluacion } from './saturacion-oxigeno-evaluacion';
@@ -3105,6 +3126,7 @@ import { sueldoBancarioBcoNacionProvincia } from './sueldo-bancario-bco-nacion-p
 import { compute as compute__sueldo_bruto_a_neto_ecuador } from './sueldo-bruto-a-neto-ecuador';
 import { compute as compute__sueldo_bruto_a_neto_peru } from './sueldo-bruto-a-neto-peru';
 import { sueldoBrutoDesdeNeto } from './sueldo-bruto-desde-neto';
+import { sueldoBrutoDesdeNetoMexico2026 } from './sueldo-bruto-desde-neto-mexico-2026';
 import { sueldoCamioneroFedcamBasicoAdicionales } from './sueldo-camionero-fedcam-basico-adicionales';
 import { sueldoChoferColectivoUtaUrbano } from './sueldo-chofer-colectivo-uta-urbano';
 import { sueldoComercioParitariaAbril2026 } from './sueldo-comercio-paritaria-abril-2026';
@@ -3638,6 +3660,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ahorro-transporte-publico-vs-auto': ahorroTransportePublicoVsAuto,
   'ahorro-universidad-hijo-18-anios-cuota': ahorroUniversidadHijo18AniosCuota,
   'ahorro-uva-vs-pesos-vs-dolar-12-meses': ahorroUvaVsPesosVsDolar12Meses,
+  'ahorro-voluntario-afore-mexico-2026': compute__ahorro_voluntario_afore_mexico_2026,
   'ahorros-en-dolares-colombia-bancos-internacionales-2026': compute__ahorros_en_dolares_colombia_bancos_internacionales_2026,
   'airdrop-elegibilidad-wallet-score-puntaje': airdropElegibilidadWalletScorePuntaje,
   'airdrop-jupiter-ena-pyth-eligibility-puntos': compute__airdrop_jupiter_ena_pyth_eligibility_puntos,
@@ -3783,6 +3806,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'autovia-peajes-argentina-ruta-2-ruta-3': autoviaPeajesArgentinaRuta2Ruta3,
   'auxilio-brasil': auxilioBrasil,
   'auxilio-doenca-inss': auxilioDoencaInss,
+  'auxilio-transporte-colombia-2026': compute__auxilio_transporte_colombia_2026,
   'aviso-previo-indenizado': avisoPrevioIndenizado,
   'aviso-previo-proporcional': avisoPrevioProporcional,
   'axolotl-acuario-tamano-temperatura-litros': compute__axolotl_acuario_tamano_temperatura_litros,
@@ -4397,6 +4421,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-constitucion-empresa-peru': compute__costo_constitucion_empresa_peru,
   'costo-criar-cachorro-primer-ano': costoCriarCachorroPrimerAno,
   'costo-emanciparse-hijo-sueldo-alquiler': costoEmanciparseHijoSueldoAlquiler,
+  'costo-empleada-domestica-patron-mexico-2026': compute__costo_empleada_domestica_patron_mexico_2026,
   'costo-empleado-patron-mexico-2026': compute__costo_empleado_patron_mexico_2026,
   'costo-empleado-total-empresa': costoEmpleadoTotalEmpresa,
   'costo-envio-compra-exterior': costoEnvioCompraExterior,
@@ -4413,6 +4438,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-hora-consultor-marketing': costoHoraConsultorMarketing,
   'costo-hora-desarrollador-senior': costoHoraDesarrolladorSenior,
   'costo-hora-disenador-grafico': costoHoraDisenadorGrafico,
+  'costo-hora-empleado-empresa-colombia-2026': compute__costo_hora_empleado_empresa_colombia_2026,
   'costo-hora-empleado-real': costoHoraEmpleadoReal,
   'costo-hora-fotografo-evento': costoHoraFotografoEvento,
   'costo-hora-ilustrador-digital': costoHoraIlustradorDigital,
@@ -4757,6 +4783,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'dosis-antipulgas-peso-mascota': dosisAntipulgasPesoMascota,
   'dosis-mascota': dosisMascota,
   'dosis-vitamina-d-diaria-recomendada': dosisVitaminaDDiariaRecomendada,
+  'dotacion-laboral-colombia-2026': compute__dotacion_laboral_colombia_2026,
   'doula-parto-acompanamiento-honorarios': doulaPartoAcompanamientoHonorarios,
   'dpi-ppp-impresion-resolucion': dpiPppImpresionResolucion,
   'dps-damage-per-second': dpsDamagePerSecond,
@@ -5086,6 +5113,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ganancia-crypto': gananciaCrypto,
   'ganancia-ocasional-venta-casa-colombia': compute__ganancia_ocasional_venta_casa_colombia,
   'ganancia-patrimonial-venta-vivienda-espana': compute__ganancia_patrimonial_venta_vivienda_espana,
+  'ganancia-repartidor-apps-colombia-2026': compute__ganancia_repartidor_apps_colombia_2026,
   'ganancias-4ta-categoria-2026': ganancias4taCategoria2026,
   'ganancias-aguinaldo-sac-retencion': gananciasAguinaldoSacRetencion,
   'ganancias-cuarta-categoria-2026': gananciasCuartaCategoria2026,
@@ -5291,6 +5319,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'impermeabilizante-m2': impermeabilizanteM2,
   'impermeabilizante-techo-kg-m2': impermeabilizanteTechoKgM2,
   'implantacion-embrion': implantacionEmbrion,
+  'impoconsumo-restaurantes-bares-colombia-2026': compute__impoconsumo_restaurantes_bares_colombia_2026,
   'imposto-renda-2026-brasil-completa-simplificada': compute__imposto_renda_2026_brasil_completa_simplificada,
   'impresion-dpi-calidad': impresionDpiCalidad,
   'impuesto-1-5-por-mil-activos-ecuador': compute__impuesto_1_5_por_mil_activos_ecuador,
@@ -5422,6 +5451,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'interes-acumulado-tarjeta': interesAcumuladoTarjeta,
   'interes-compuesto': interesCompuesto,
   'interes-judicial-tasa': interesJudicialTasa,
+  'interes-mora-dian-colombia-2026': compute__interes_mora_dian_colombia_2026,
   'interes-simple': interesSimple,
   'interes-simple-capital-tiempo-tasa': interesSimpleCapitalTiempoTasa,
   'interes-simple-prestamo': compute__interes_simple_prestamo,
@@ -5466,15 +5496,18 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'isn-impuesto-nominas-mexico': isnImpuestoNominasMexico,
   'iso-invariance-camara-modelo': isoInvarianceCamaraModelo,
   'isr-acciones-bolsa-mexico-10-por-ciento': compute__isr_acciones_bolsa_mexico_10_por_ciento,
+  'isr-actividad-empresarial-persona-fisica-mexico-2026': compute__isr_actividad_empresarial_persona_fisica_mexico_2026,
   'isr-anual-colombia-personas-naturales-cedulas': compute__isr_anual_colombia_personas_naturales_cedulas,
   'isr-anual-personas-fisicas-mexico-tarifa-2026': compute__isr_anual_personas_fisicas_mexico_tarifa_2026,
   'isr-arrendamiento-arrendador-colombia-deducciones': compute__isr_arrendamiento_arrendador_colombia_deducciones,
   'isr-arrendamiento-deduccion-ciega-mexico': compute__isr_arrendamiento_deduccion_ciega_mexico,
   'isr-honorarios-mexico': isrHonorariosMexico,
+  'isr-intereses-bancarios-inversion-mexico-2026': isrInteresesBancariosInversionMexico2026,
   'isr-mensual-empleados-subsidio-empleo-mexico': compute__isr_mensual_empleados_subsidio_empleo_mexico,
   'isr-mexico-2026': isrMexico2026,
   'isr-mexico-2026-tarifa-mensual-empleado': compute__isr_mexico_2026_tarifa_mensual_empleado,
   'isr-personas-morales-mexico-30-porcentaje': compute__isr_personas_morales_mexico_30_porcentaje,
+  'isr-premios-loteria-mexico-2026': compute__isr_premios_loteria_mexico_2026,
   'isr-quincenal-mexico-2026': compute__isr_quincenal_mexico_2026,
   'isr-rentas-de-capital-dividendos-intereses-colombia': compute__isr_rentas_de_capital_dividendos_intereses_colombia,
   'isr-republica-dominicana': isrRepublicaDominicana,
@@ -5894,6 +5927,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pago-anticipado-credito-hipotecario-colombia-ahorro-intereses': compute__pago_anticipado_credito_hipotecario_colombia_ahorro_intereses,
   'pago-electronico-chile-transbank-comisiones-onepay-mach': compute__pago_electronico_chile_transbank_comisiones_onepay_mach,
   'pago-proporcional-pareja-ingreso-gastos-compartidos': compute__pago_proporcional_pareja_ingreso_gastos_compartidos,
+  'pago-provisional-isr-arrendamiento-mexico-2026': pagoProvisionalIsrArrendamientoMexico2026,
   'palabras-dia-para-nivel': palabrasDiaParaNivel,
   'palabras-por-pagina': palabrasPorPagina,
   'palabras-por-pagina-trabajo': palabrasPorPaginaTrabajo,
@@ -5974,6 +6008,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pension-imss-modalidad-40-mexico-aportacion': compute__pension_imss_modalidad_40_mexico_aportacion,
   'pension-invalidez-anses-no-contributiva-2026-cuantia': compute__pension_invalidez_anses_no_contributiva_2026_cuantia,
   'pension-invalidez-imss-mexico': compute__pension_invalidez_imss_mexico,
+  'pension-issste-decimo-transitorio-mexico-2026': compute__pension_issste_decimo_transitorio_mexico_2026,
   'pension-jubilacion-chile-edad-aportes-2026': compute__pension_jubilacion_chile_edad_aportes_2026,
   'pension-no-contributiva-jubilacion-invalidez-espana': compute__pension_no_contributiva_jubilacion_invalidez_espana,
   'pension-rais-vs-prima-media-colombia': compute__pension_rais_vs_prima_media_colombia,
@@ -6186,7 +6221,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'presion-neumaticos-psi-bar': presionNeumaticosPsiBar,
   'presion-parcial-dalton': presionParcialDalton,
   'press-banca-relativo': pressBancaRelativo,
+  'prestaciones-empleada-domestica-colombia-2026': compute__prestaciones_empleada_domestica_colombia_2026,
   'prestaciones-sociales-venezuela': prestacionesSocialesVenezuela,
+  'prestaciones-superiores-ley-mexico-2026': compute__prestaciones_superiores_ley_mexico_2026,
   'prestamo-anses-jubilado-argenta-monto': prestamoAnsesJubiladoArgentaMonto,
   'prestamo-anses-jubilados-monto-cuota-2026': compute__prestamo_anses_jubilados_monto_cuota_2026,
   'prestamo-coche-espana-cdc-vs-renting': compute__prestamo_coche_espana_cdc_vs_renting,
@@ -6341,6 +6378,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'recargo-dominical-festivo-colombia-2026': compute__recargo_dominical_festivo_colombia_2026,
   'recargo-equivalencia-comerciantes-espana': compute__recargo_equivalencia_comerciantes_espana,
   'recargo-nocturno-colombia-2026': compute__recargo_nocturno_colombia_2026,
+  'recargos-actualizacion-sat-mexico-2026': recargosActualizacionSatMexico2026,
   'recibo-agua-sedapal-peru': compute__recibo_agua_sedapal_peru,
   'recibo-de-sueldo-argentina': reciboDeSueldoArgentina,
   'recibo-gas-chile-metrogas-lipigas-cilindro-vs-red': compute__recibo_gas_chile_metrogas_lipigas_cilindro_vs_red,
@@ -6402,6 +6440,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'renta-disponible-mensual-espana-gastos-fijos-30-30-30-10': compute__renta_disponible_mensual_espana_gastos_fijos_30_30_30_10,
   'renta-financiera-cedular-personas': rentaFinancieraCedularPersonas,
   'renta-mensual-cdmx-vs-guadalajara-monterrey': compute__renta_mensual_cdmx_vs_guadalajara_monterrey,
+  'renta-pensionados-colombia-2026': compute__renta_pensionados_colombia_2026,
   'renta-personas-naturales-colombia-2026-anual': compute__renta_personas_naturales_colombia_2026_anual,
   'renta-presunta-chile-agricola-transporte-mineria': compute__renta_presunta_chile_agricola_transporte_mineria,
   'renta-primera-categoria-alquiler-peru': compute__renta_primera_categoria_alquiler_peru,
@@ -6429,6 +6468,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'rescisao-clt-sem-justa-causa': rescisaoCltSemJustaCausa,
   'reset-metabolismo-plateau-dieta-estrategia': resetMetabolismoPlateauDietaEstrategia,
   'resico-personas-fisicas-mexico-2026-cuota': compute__resico_personas_fisicas_mexico_2026_cuota,
+  'resico-personas-morales-mexico-2026': resicoPersonasMoralesMexico2026,
   'resin-3d-mililitros-pieza': resin3dMililitrosPieza,
   'resistencia-codigo-colores-4-5-bandas': resistenciaCodigoColores45Bandas,
   'resistencia-led-serie-paralelo': resistenciaLedSerieParalelo,
@@ -6448,6 +6488,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'retencion-fuente-compras-servicios-2026': compute__retencion_fuente_compras_servicios_2026,
   'retencion-fuente-dependencia-ecuador': compute__retencion_fuente_dependencia_ecuador,
   'retencion-ganancias-siradig-trabajador': retencionGananciasSiradigTrabajador,
+  'retencion-plataformas-digitales-mexico-2026': retencionPlataformasDigitalesMexico2026,
+  'retencion-procedimiento-2-colombia-2026': compute__retencion_procedimiento_2_colombia_2026,
   'retencion-rg2616-proveedor-monotributo': retencionRg2616ProveedorMonotributo,
   'retiro-afore-desempleo-mexico': compute__retiro_afore_desempleo_mexico,
   'retiro-afp-jubilacion-peru': compute__retiro_afp_jubilacion_peru,
@@ -6533,6 +6575,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'saldo-cripto-valor-moneda-local-multi': saldoCriptoValorMonedaLocalMulti,
   'saldo-salario-rescisao': saldoSalarioRescisao,
   'sales-tax-calculator': salesTaxCalculator,
+  'sancion-correccion-declaracion-dian-colombia-2026': compute__sancion_correccion_declaracion_dian_colombia_2026,
   'sancion-extemporaneidad-dian-2026': compute__sancion_extemporaneidad_dian_2026,
   'sat-ielts-toefl-equivalencias-puntaje-convertidor': satIeltsToeflEquivalenciasPuntajeConvertidor,
   'saturacion-oxigeno-evaluacion': saturacionOxigenoEvaluacion,
@@ -6656,6 +6699,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueldo-bruto-a-neto-ecuador': compute__sueldo_bruto_a_neto_ecuador,
   'sueldo-bruto-a-neto-peru': compute__sueldo_bruto_a_neto_peru,
   'sueldo-bruto-desde-neto': sueldoBrutoDesdeNeto,
+  'sueldo-bruto-desde-neto-mexico-2026': sueldoBrutoDesdeNetoMexico2026,
   'sueldo-camionero-fedcam-basico-adicionales': sueldoCamioneroFedcamBasicoAdicionales,
   'sueldo-chofer-colectivo-uta-urbano': sueldoChoferColectivoUtaUrbano,
   'sueldo-comercio-paritaria-abril-2026': sueldoComercioParitariaAbril2026,
