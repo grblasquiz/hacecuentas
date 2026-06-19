@@ -6,7 +6,7 @@
  *   - Salário médio até 2 salários mínimos
  *   - Empregador ter informado dados na RAIS/eSocial
  * Valor: 1 salário mínimo proporcional aos meses trabalhados (1/12 por mês).
- * Salário mínimo 2026: R$ 1.518 (paga com base no SM vigente no ano do pagamento).
+ * Salário mínimo 2026: R$ 1.621 (paga com base no SM vigente no ano do pagamento).
  */
 
 export interface AbonoPisPasepInputs {

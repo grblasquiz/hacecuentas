@@ -1,6 +1,6 @@
 /**
  * BPC/LOAS — Benefício de Prestação Continuada
- * Lei 8.742/1993 (LOAS) — 1 salário mínimo (R$ 1.518 em 2026)
+ * Lei 8.742/1993 (LOAS) — 1 salário mínimo (R$ 1.621 em 2026)
  * Requisitos: idoso 65+ anos OU pessoa com deficiência
  * Renda per capita familiar < 1/4 do salário mínimo
  */

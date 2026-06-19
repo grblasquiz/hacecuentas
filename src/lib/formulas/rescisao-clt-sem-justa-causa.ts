@@ -2,7 +2,7 @@
  * Cálculo de Rescisão CLT — Demissão sem Justa Causa 2026
  * Parcelas: saldo de salário + aviso prévio + 13º proporcional + férias proporcionais + 1/3
  *           + multa de 40% sobre FGTS (CLT art. 477, 487, Lei 8.036/90 art. 18).
- * Salário mínimo 2026: R$ 1.518/mês.
+ * Salário mínimo 2026: R$ 1.621/mês.
  */
 
 export interface Inputs {
