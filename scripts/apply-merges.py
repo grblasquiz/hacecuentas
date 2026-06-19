@@ -5,12 +5,14 @@
   - borra los JSON de los perdedores (NO borra fórmulas: pueden estar importadas)
 Después: correr extract-pruning-redirects.py + npm run related + build/deploy.
 """
-import json, re
+import json, re, sys
 from pathlib import Path
 
 ROOT = Path('/Users/marrod/hacecuentas')
 REDIR = ROOT / 'public' / '_redirects'
-merges = json.load(open('/tmp/merges_full.json'))
+IN = sys.argv[1] if len(sys.argv) > 1 else '/tmp/merges_full.json'
+LABEL = sys.argv[2] if len(sys.argv) > 2 else 'Unificación calcs similares (2026-06-19)'
+merges = json.load(open(IN))
 
 def url(loc, slug):
     return f"/{slug}" if loc == 'ar' else f"/{loc}/{slug}"
@@ -58,7 +60,7 @@ for loser_url, winner_url in lw.items():
     appends.append((loser_url, winner_url))
 
 # armar sección nueva
-section = ['', '# Pruning batch — Unificación calcs similares (2026-06-19)']
+section = ['', f'# Pruning batch — {LABEL}']
 for src, dst in sorted(appends):
     section.append(f"{src}  {dst}  301")
 
