@@ -112,7 +112,7 @@ NO mezcles idiomas. Si lang=en, todo en inglés. Si lang=es, español neutro LAT
   "faq": [
     {"q": "Concrete question?", "a": "Direct answer with figures. 200-500 chars."}
   ],                                              # 7-10 items
-  "sources": [
+  "sources": [                                    # 2-5 REAL sources SPECIFIC to THIS calc's topic. Never reuse a fixed trio across calcs — identical source lists across pages is a "scaled content" fingerprint that fails AdSense. Vary by topic.
     {"name": "Source name", "url": "https://real-url.gov/path", "publisher": "Org", "date": "2026"}
   ],                                              # 2-5 fuentes oficiales reales
   "dataUpdate": {

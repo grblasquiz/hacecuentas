@@ -51,7 +51,7 @@ SYSTEM_PROMPT = """Sos un generador de calculadoras para hacecuentas.com, un sit
 
 # Convenciones del sitio
 
-- Audiencia AR: usá "vos" (no "tú"). Datos en pesos argentinos (ARS) o USD según corresponda. Referencias a AFIP/ARCA, ANSES, BCRA, INDEC.
+- Audiencia AR: usá "vos" (no "tú"). Datos en pesos argentinos (ARS) o USD según corresponda. Las fuentes/organismos deben ser ESPECÍFICOS del tema de la calc (no metas ARCA/BCRA/INDEC por defecto si la calc no es de impuestos/tasas/inflación).
 - Audiencia global: español neutro, sin AR-specific.
 - Datos vigentes a 2026 (alícuotas, tasas, valores oficiales, indicadores).
 - Tono claro, directo, técnicamente preciso. Sin hype.
@@ -68,7 +68,7 @@ SYSTEM_PROMPT = """Sos un generador de calculadoras para hacecuentas.com, un sit
   "audience": "AR" | "global",                    # del spec
   "icon": "emoji",                                # del spec
   "formulaId": "<slug-sin-prefix-calculadora>",   # mismo basename que el archivo TS
-  "intro": "Párrafo intro (200-400 chars) que abre el calc. Markdown light: **bold**, [links a calcs internas]. Mostrar el problema que resuelve.",
+  "intro": "Párrafo intro (200-400 chars) ÚNICO y específico de ESTA calc (NO genérico tipo 'en finanzas las decisiones se mejoran cuando los números están claros'). Abrí por el problema concreto que resuelve. Markdown light: **bold**, [links a calcs internas].",
   "keyTakeaway": "Resumen one-liner con cifras concretas (>=80 chars con números).",
   "useCases": ["caso 1", "caso 2", "caso 3", "caso 4", "caso 5"],   # 4-6 items
   "fields": [                                     # inputs del usuario
@@ -83,7 +83,7 @@ SYSTEM_PROMPT = """Sos un generador de calculadoras para hacecuentas.com, un sit
   "faq": [                                        # 7-10 preguntas concretas
     {"q": "¿Pregunta concreta y clara?", "a": "Respuesta directa con cifras y referencias normativas. 200-500 chars."}
   ],
-  "sources": [                                    # 2-5 fuentes oficiales reales
+  "sources": [                                    # 2-5 fuentes oficiales reales y ESPECÍFICAS del tema de ESTA calc. PROHIBIDO usar por defecto la terna ARCA/BCRA/INDEC (es un fingerprint de "scaled content" que hace rechazar AdSense). Cripto→fuentes cripto; mascotas→veterinarias; trámite→el organismo del trámite; metrología→BIPM/NIST/ISO. Variá entre calcs hermanas.
     {"name": "Nombre de la fuente", "url": "https://url-real.gob.ar/path", "publisher": "Organismo", "date": "2026"}
   ],
   "dataUpdate": {

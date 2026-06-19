@@ -76,7 +76,7 @@ async function main() {
   let updateType = 'manual';
 
   if (frequency !== 'never') {
-    source = await ask('Fuente oficial (ej: ARCA, BCRA, INDEC)');
+    source = await ask('Fuente oficial específica del tema (el organismo/ley que rige ESTA calc, no la terna genérica)');
     sourceUrl = await ask('URL oficial (ej: https://www.arca.gob.ar/...)');
     updateType = await askChoice('updateType', UPDATE_TYPES, 'auto-llm');
   }

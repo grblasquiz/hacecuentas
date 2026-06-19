@@ -148,6 +148,7 @@ import { anosFluidezIdioma } from './anos-fluidez-idioma';
 import { anosLuzDistanciaConversion } from './anos-luz-distancia-conversion';
 import { ansesComplementoLecheMaternidad } from './anses-complemento-leche-maternidad';
 import { compute as compute__anticipo_impuesto_renta_ecuador } from './anticipo-impuesto-renta-ecuador';
+import { compute as compute__anticipo_impuesto_renta_colombia_2026 } from './anticipo-impuesto-renta-colombia-2026';
 import { antiguedadAutoAmortizacion } from './antiguedad-auto-amortizacion';
 import { antiguedadLaboral } from './antiguedad-laboral';
 import { antiinflamatorioScoreComida } from './antiinflamatorio-score-comida';
@@ -1808,6 +1809,7 @@ import { compute as compute__incapacidad_imss_enfermedad_general } from './incap
 import { compute as compute__incapacidad_medica_eps_colombia } from './incapacidad-medica-eps-colombia';
 import { indemnizacion } from './indemnizacion';
 import { compute as compute__indemnizacion_despido_arbitrario_peru } from './indemnizacion-despido-arbitrario-peru';
+import { compute as compute__indemnizacion_despido_sin_justa_causa_colombia } from './indemnizacion-despido-sin-justa-causa-colombia';
 import { indemnizacionDespidoEmbarazo } from './indemnizacion-despido-embarazo';
 import { indemnizacionDespidoFuerzaMayorArt247 } from './indemnizacion-despido-fuerza-mayor-art-247';
 import { indemnizacionDespidoImprocedenteEspana } from './indemnizacion-despido-improcedente-espana';
@@ -2894,6 +2896,7 @@ import { resumenCapituloLibroMetodoCornell } from './resumen-capitulo-libro-meto
 import { compute as compute__retefuente_colombia_2026_empleado_tabla } from './retefuente-colombia-2026-empleado-tabla';
 import { retencionAfipCuitRegimenGeneral } from './retencion-afip-cuit-regimen-general';
 import { compute as compute__retencion_fuente_compras_servicios_2026 } from './retencion-fuente-compras-servicios-2026';
+import { compute as compute__retencion_fuente_arrendamientos_colombia_2026 } from './retencion-fuente-arrendamientos-colombia-2026';
 import { compute as compute__retencion_fuente_dependencia_ecuador } from './retencion-fuente-dependencia-ecuador';
 import { retencionGananciasSiradigTrabajador } from './retencion-ganancias-siradig-trabajador';
 import { retencionRg2616ProveedorMonotributo } from './retencion-rg2616-proveedor-monotributo';
@@ -3698,6 +3701,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'anos-luz-distancia-conversion': anosLuzDistanciaConversion,
   'anses-complemento-leche-maternidad': ansesComplementoLecheMaternidad,
   'anticipo-impuesto-renta-ecuador': compute__anticipo_impuesto_renta_ecuador,
+  'anticipo-impuesto-renta-colombia-2026': compute__anticipo_impuesto_renta_colombia_2026,
   'antiguedad-auto-amortizacion': antiguedadAutoAmortizacion,
   'antiguedad-laboral': antiguedadLaboral,
   'antiinflamatorio-score-comida': antiinflamatorioScoreComida,
@@ -5358,6 +5362,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'incapacidad-medica-eps-colombia': compute__incapacidad_medica_eps_colombia,
   'indemnizacion': indemnizacion,
   'indemnizacion-despido-arbitrario-peru': compute__indemnizacion_despido_arbitrario_peru,
+  'indemnizacion-despido-sin-justa-causa-colombia': compute__indemnizacion_despido_sin_justa_causa_colombia,
   'indemnizacion-despido-embarazo': indemnizacionDespidoEmbarazo,
   'indemnizacion-despido-fuerza-mayor-art-247': indemnizacionDespidoFuerzaMayorArt247,
   'indemnizacion-despido-improcedente-espana': indemnizacionDespidoImprocedenteEspana,
@@ -6444,6 +6449,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'retefuente-colombia-2026-empleado-tabla': compute__retefuente_colombia_2026_empleado_tabla,
   'retencion-afip-cuit-regimen-general': retencionAfipCuitRegimenGeneral,
   'retencion-fuente-compras-servicios-2026': compute__retencion_fuente_compras_servicios_2026,
+  'retencion-fuente-arrendamientos-colombia-2026': compute__retencion_fuente_arrendamientos_colombia_2026,
   'retencion-fuente-dependencia-ecuador': compute__retencion_fuente_dependencia_ecuador,
   'retencion-ganancias-siradig-trabajador': retencionGananciasSiradigTrabajador,
   'retencion-rg2616-proveedor-monotributo': retencionRg2616ProveedorMonotributo,
