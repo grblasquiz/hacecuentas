@@ -522,8 +522,10 @@ const priorityUrls: Url[] = [
   prio('/feriados-chile-2026',               '0.85', 'weekly'),
   prio('/feriados-peru-2026',                '0.85', 'weekly'),
   prio('/feriados-ecuador-2026',             '0.85', 'weekly'),
-  // 13 guías pilares (estables)
+  // guías pilares (estables)
   prio('/guia/finanzas-personales',          '0.9',  'weekly'),
+  prio('/guia/marketing-roi-metricas',       '0.9',  'weekly'),
+  prio('/guia/inversion-inmobiliaria',       '0.9',  'weekly'),
   prio('/guia/sueldos-argentina-2026',       '0.9',  'weekly'),
   prio('/guia/impuestos-argentina-2026',     '0.9',  'weekly'),
   prio('/guia/subsidios-anses-2026',         '0.9',  'weekly'),
@@ -742,6 +744,8 @@ sitemaps.push({
     core('/guia/impuestos-argentina-2026',       '0.85', 'weekly'),
     core('/guia/subsidios-anses-2026',           '0.85', 'weekly'),
     core('/guia/finanzas-personales',            '0.85', 'weekly'),
+    core('/guia/marketing-roi-metricas',         '0.85', 'weekly'),
+    core('/guia/inversion-inmobiliaria',         '0.85', 'weekly'),
     core('/guia/salud-nutricion-fitness',        '0.85', 'weekly'),
     core('/guia/embarazo-y-bebe',                '0.85', 'weekly'),
     core('/guia/construccion-diy-hogar',         '0.85', 'weekly'),

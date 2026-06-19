@@ -15,7 +15,7 @@
 export const CATEGORY_TO_GUIDE: Record<string, string> = {
   finanzas: 'finanzas-personales',
   negocios: 'finanzas-personales',
-  marketing: 'finanzas-personales',
+  marketing: 'marketing-roi-metricas',
   salud: 'salud-nutricion-fitness',
   deportes: 'salud-nutricion-fitness',
   familia: 'embarazo-y-bebe',
@@ -72,6 +72,14 @@ function arGuideFromSlug(slug: string): string | null {
   ) {
     return 'subsidios-anses-2026';
   }
+  // Inversión inmobiliaria (AR): alquiler, hipoteca, compraventa, rentabilidad.
+  // Va al final: las tax-specific (deducción Ganancias, sellos como impuesto) ya
+  // se resolvieron arriba a impuestos. Acá caen las de inversión/operación.
+  if (
+    /cap-rate|rentabilidad-alquiler|alquiler-(vs-comprar|temporal|icl)|actualizacion-alquiler|expensas-vs-alquiler|hipotec|comision-inmobiliaria|inmobiliari|tasacion-m2|propiedad-(tasacion|vacia)|costo-(total-comprar-propiedad|mantener-propiedad)|gastos-escritura-compra|sellos-inmobiliarios|sueldo-minimo-para-alquilar/.test(slug)
+  ) {
+    return 'inversion-inmobiliaria';
+  }
   return null;
 }
 
@@ -90,6 +98,8 @@ export function resolveGuideSlug(calc: { slug?: string; category?: string; guide
 /** Títulos cortos para UI de links (evitar depender de carga JSON). */
 export const GUIDE_TITLES: Record<string, string> = {
   'finanzas-personales': 'Finanzas personales',
+  'marketing-roi-metricas': 'Marketing y ROI publicitario',
+  'inversion-inmobiliaria': 'Inversión inmobiliaria',
   'salud-nutricion-fitness': 'Salud, nutrición y fitness',
   'embarazo-y-bebe': 'Embarazo y bebé',
   'productividad-aprendizaje': 'Productividad y aprendizaje',
@@ -132,6 +142,8 @@ export const SIBLING_CATEGORIES: Record<string, string[]> = {
 /** Reverse map: guía pilar → categorías relacionadas (para links guía→categoría). */
 export const GUIDE_TO_CATEGORIES: Record<string, string[]> = {
   'finanzas-personales': ['finanzas', 'negocios', 'marketing'],
+  'marketing-roi-metricas': ['marketing', 'negocios', 'finanzas'],
+  'inversion-inmobiliaria': ['finanzas', 'negocios'],
   'salud-nutricion-fitness': ['salud', 'deportes'],
   'embarazo-y-bebe': ['familia', 'salud'],
   'productividad-aprendizaje': ['educacion', 'idiomas', 'tecnologia', 'electronica'],
