@@ -129,6 +129,24 @@
     "calculadora-monotributo-categoria-2026-recategorizacion-julio",
     "calculadora-facturacion-maxima-monotributo-vs-ri"
   ],
+  "explanation": "## Cómo se calcula cuánto te queda neto\n\nEl simulador parte de una sola cifra —tu **facturación mensual promedio**— y la anualiza (×12) para ubicarte en la **primera categoría cuyo tope anual de ingresos brutos cubre ese monto**. Con la categoría definida, aplica:\n\n1. **Cuota mensual** = la cuota fija de tu categoría según tu actividad (servicios o venta de bienes). Es un monto fijo, no un porcentaje.\n2. **Neto mensual** = facturación − cuota − gastos del negocio (si los cargás).\n3. **Carga %** = cuota ÷ facturación × 100. Como la cuota es fija, este porcentaje **baja cuanto más facturás dentro de la misma categoría**.\n4. **Margen de categoría** = tope anual de tu categoría − tu facturación anual. Cuánto más podés facturar en el año sin tener que subir.\n5. **Margen de exclusión** = tope de la categoría K ($108.357.084) − tu facturación anual. Lo que te falta para quedar fuera del régimen.\n\nLa cuota fija ya incluye tres cosas: **impuesto integrado** (reemplaza Ganancias e IVA), **aporte jubilatorio al SIPA** y **obra social**. Por eso un monotributista no liquida IVA ni Ganancias por su actividad.\n\n## Cuota y tope por categoría (ARCA, vigencia 01/02/2026)\n\n| Cat | Tope anual | Cuota servicios/mes | Cuota bienes/mes |\n|---|---|---|---|\n| A | $10.277.988 | $42.387 | $42.387 |\n| B | $15.058.448 | $48.251 | $48.251 |\n| C | $21.113.697 | $56.502 | $55.227 |\n| D | $26.212.853 | $72.414 | $70.661 |\n| E | $30.833.964 | $102.538 | $92.658 |\n| F | $38.642.048 | $129.045 | $111.198 |\n| G | $46.211.109 | $197.108 | $135.918 |\n| H | $70.113.407 | $447.347 | $272.063 |\n| I | $78.479.212 | $824.802 | $406.512 |\n| J | $89.872.640 | $999.008 | $497.059 |\n| K | $108.357.084 | $1.381.688 | $600.880 |\n\nLos topes de facturación son **iguales** para servicios y venta de bienes; lo que difiere es la cuota en las categorías altas (de C para arriba servicios paga más, y la brecha se agranda).\n\n## Cuándo usar y errores comunes\n\n- **El neto que ves es \"antes de gastos\" si no cargás el campo de gastos.** Un freelance con poco gasto operativo se queda con casi todo; un comercio con alquiler, insumos y empleados, no. Cargá tus gastos para el neto real.\n- **No confundir facturación con ganancia.** El monotributo te ubica por lo que *facturás*, no por lo que ganás. Si tenés muchos gastos deducibles, quizás el Régimen General te convenga más (compará con [monotributo vs RI](/calculadora-monotributo-vs-responsable-inscripto)).\n- **El simulador anualiza tu mes promedio (×12).** Si tu facturación es estacional (un par de meses fuertes y el resto flojo), lo que importa para la categoría es el acumulado real de los últimos 12 meses, no un mes pico.\n- **No contempla parámetros secundarios** (superficie del local, energía eléctrica, alquileres devengados) que pueden empujarte a una categoría más alta aunque tu facturación sea baja — aplican sobre todo a comercios con local.\n- **La exclusión opera de pleno derecho:** si superás el tope de K en cualquier momento, quedás fuera del monotributo ese mismo día, sin esperar a la recategorización semestral.\n",
+  "referenceTables": [
+    {
+      "title": "Cuánto te queda neto por mes según facturación (servicios, sin gastos)",
+      "caption": "Calculado con esta calc: neto = facturación − cuota de la categoría que le corresponde a esa facturación anualizada (×12). Cuota de servicios, ARCA 01/02/2026.",
+      "headers": ["Facturación/mes", "Anual (×12)", "Categoría", "Cuota/mes", "Neto/mes", "La cuota se lleva"],
+      "rows": [
+        ["$800.000", "$9.600.000", "A", "$42.387", "$757.613", "5,3%"],
+        ["$1.500.000", "$18.000.000", "C", "$56.502", "$1.443.498", "3,8%"],
+        ["$2.000.000", "$24.000.000", "D", "$72.414", "$1.927.586", "3,6%"],
+        ["$3.000.000", "$36.000.000", "F", "$129.045", "$2.870.955", "4,3%"],
+        ["$4.000.000", "$48.000.000", "H", "$447.347", "$3.552.653", "11,2%"],
+        ["$6.500.000", "$78.000.000", "I", "$824.802", "$5.675.198", "12,7%"],
+        ["$9.000.000", "$108.000.000", "K", "$1.381.688", "$7.618.312", "15,4%"]
+      ],
+      "note": "Fuente: fórmula simulador-monotributo-neto.ts + tabla ARCA en src/lib/data/monotributo-2026.ts. La categoría sale de anualizar la facturación mensual (×12) y buscar el primer tope que la cubre. La carga % sube de golpe al cambiar de categoría (ej.: de G a H la cuota de servicios salta de $197.108 a $447.347) porque la cuota es fija pero el tope de facturación no es lineal. Con $9.000.000/mes ($108M anuales) estás al borde del tope de K ($108.357.084): un poco más y quedás excluido."
+    }
+  ],
   "audience": "AR",
   "howToSteps": [
     { "name": "Ingresá tu facturación mensual", "text": "Poné lo que facturás por mes en promedio (el simulador lo anualiza para ubicar tu categoría)." },
@@ -137,5 +155,17 @@
     { "name": "Hacé click en Calcular", "text": "Vas a ver tu categoría, la cuota, el neto mensual y anual, y los márgenes antes de recategorizar o quedar excluido." },
     { "name": "Profundizá en cada tema", "text": "Cada bloque enlaza a la calculadora dedicada: tabla de categorías, recategorización y comparación con Responsable Inscripto." }
   ],
-  "lastReviewed": "2026-06-14"
+  "example": {
+    "title": "Ejemplo: freelance de servicios que factura $3.000.000/mes",
+    "steps": [
+      "**Anualización**: $3.000.000 × 12 = $36.000.000 de ingresos brutos proyectados.",
+      "**Categoría**: el primer tope que cubre $36M es el de la **F** ($38.642.048).",
+      "**Cuota mensual** (servicios, cat. F): **$129.045** — incluye impuesto integrado + SIPA + obra social.",
+      "**Neto mensual**: $3.000.000 − $129.045 = **$2.870.955** (antes de gastos del negocio).",
+      "**Carga**: la cuota se lleva el **4,3%** de tu facturación.",
+      "**Margen**: te quedan $38.642.048 − $36.000.000 = **$2.642.048** de margen anual antes de pasar a la categoría G."
+    ],
+    "result": "Facturando $3.000.000/mes en servicios sos categoría F: pagás $129.045 de cuota (4,3%) y te quedan $2.870.955 netos por mes. Tenés $2,64M de margen anual antes de subir a G."
+  },
+  "lastReviewed": "2026-06-19"
 }
