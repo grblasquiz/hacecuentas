@@ -221,3 +221,44 @@ export function result(m: RawMatch): {
   }
   return { a, b, detail, winner };
 }
+
+// ── Schema.org: SportsEvent enriquecido para SEO ─────────────────────────────
+// Search Console marcaba "Event" sin los campos recomendados (description, image,
+// location.address, offers, performer). Definimos el evento una sola vez acá y lo
+// consumen el hub (/mundial-2026) y el fixture (/fixture-mundial-2026) para no
+// divergir. Los `performer` salen de la fixture real (selecciones efectivamente
+// sorteadas), filtrando placeholders de eliminatorias contra TEAMS.
+const WORLD_CUP_PERFORMERS = [
+  ...new Set(
+    fixture.matches
+      .flatMap((m) => [m.team1, m.team2])
+      .filter((t): t is string => !!t && t in TEAMS)
+  ),
+].map((name) => ({ '@type': 'SportsTeam', name: TEAMS[name].es }));
+
+export const WORLD_CUP_EVENT = {
+  '@type': 'SportsEvent',
+  name: 'Copa Mundial de la FIFA 2026',
+  description:
+    'La Copa Mundial de la FIFA 2026 es la 23.ª edición del Mundial de fútbol masculino: la primera con 48 selecciones y 104 partidos, disputada en Estados Unidos, México y Canadá del 11 de junio al 19 de julio de 2026.',
+  startDate: '2026-06-11',
+  endDate: '2026-07-19',
+  eventStatus: 'https://schema.org/EventScheduled',
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+  sport: 'Football',
+  image: ['https://hacecuentas.com/og-default.png'],
+  location: [
+    { '@type': 'Place', name: 'Estados Unidos', address: { '@type': 'PostalAddress', addressCountry: 'US' } },
+    { '@type': 'Place', name: 'México', address: { '@type': 'PostalAddress', addressCountry: 'MX' } },
+    { '@type': 'Place', name: 'Canadá', address: { '@type': 'PostalAddress', addressCountry: 'CA' } },
+  ],
+  organizer: { '@type': 'Organization', name: 'FIFA', url: 'https://www.fifa.com' },
+  offers: {
+    '@type': 'AggregateOffer',
+    url: 'https://www.fifa.com/en/tickets',
+    priceCurrency: 'USD',
+    lowPrice: '60',
+    availability: 'https://schema.org/InStock',
+  },
+  performer: WORLD_CUP_PERFORMERS,
+};

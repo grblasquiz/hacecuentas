@@ -16,6 +16,7 @@ import {
   artDayLabel,
   kickoffUTC,
   result,
+  WORLD_CUP_EVENT,
 } from '../lib/data/mundial-2026.ts';
 
 // Calcs de fútbol para el funnel (se resuelven del catálogo para tomar título/icono).
@@ -68,8 +69,6 @@ const todayKey = new Intl.DateTimeFormat('en-CA', {
 }).format(new Date());
 
 // Estado del torneo
-const START = '2026-06-11';
-const END = '2026-07-19';
 const played = fixture.matches.filter((m) => m.score && m.score.ft).length;
 const total = fixture.total || fixture.matches.length;
 
@@ -106,22 +105,6 @@ const breadcrumb = {
     { '@type': 'ListItem', position: 2, name: 'Mundial 2026', item: 'https://hacecuentas.com/mundial-2026' },
     { '@type': 'ListItem', position: 3, name: 'Fixture y resultados', item: 'https://hacecuentas.com/fixture-mundial-2026' },
   ],
-};
-const sportsEvent = {
-  '@context': 'https://schema.org',
-  '@type': 'SportsEvent',
-  name: 'Copa Mundial de la FIFA 2026',
-  startDate: START,
-  endDate: END,
-  eventStatus: 'https://schema.org/EventScheduled',
-  sport: 'Football',
-  location: [
-    { '@type': 'Country', name: 'Estados Unidos' },
-    { '@type': 'Country', name: 'México' },
-    { '@type': 'Country', name: 'Canadá' },
-  ],
-  organizer: { '@type': 'Organization', name: 'FIFA', url: 'https://www.fifa.com' },
-  description,
 };
 const dataset = {
   '@context': 'https://schema.org',
@@ -178,7 +161,7 @@ const faqSchema = {
     acceptedAnswer: { '@type': 'Answer', text: f.a },
   })),
 };
-const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, sportsEvent, dataset, faqSchema] };
+const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, WORLD_CUP_EVENT, dataset, faqSchema] };
 
 // Datos para el script client-side (refresh en vivo).
 // `days` va compacto para que el cliente pueda recalcular "hoy" y reconstruir
