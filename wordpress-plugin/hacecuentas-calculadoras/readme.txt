@@ -1,5 +1,5 @@
 === Hacé Cuentas — Calculadoras ===
-Contributors: hacecuentas
+Contributors: Rambiss
 Tags: calculadora, calculator, embed, finanzas, shortcode
 Requires at least: 6.0
 Tested up to: 6.8
