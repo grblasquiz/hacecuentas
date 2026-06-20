@@ -23,21 +23,95 @@
     "Un agente inmobiliario da a su cliente un estimado del impuesto para negociar el precio neto de la operación."
   ],
   "fields": [
-    { "id": "precioVenta", "label": "Precio de venta", "type": "number", "required": true, "placeholder": "8000000", "min": 0, "step": 1000, "unit": "MXN", "help": "El precio que aparecerá en la escritura de compraventa." },
-    { "id": "costoAdquisicion", "label": "Costo de adquisición (lo que pagaste)", "type": "number", "required": true, "placeholder": "3000000", "min": 0, "step": 1000, "unit": "MXN", "help": "El valor de tu escritura de compra. Si fue herencia o donación, el costo de adquisición del autor de la sucesión o donante." },
-    { "id": "gastos", "label": "Gastos deducibles (notario, comisiones, mejoras con factura)", "type": "number", "default": 0, "placeholder": "0", "min": 0, "step": 1000, "unit": "MXN", "help": "Gastos notariales e impuestos de cuando compraste, comisiones de venta y construcciones o mejoras con factura." },
-    { "id": "anios", "label": "Años desde que la compraste", "type": "number", "required": true, "placeholder": "10", "min": 1, "max": 60, "step": 1, "help": "Años entre la fecha de adquisición y la de venta. Para el cálculo del ISR la ley considera máximo 20." },
-    { "id": "aplicaExencion", "label": "¿Es tu casa habitación y NO usaste la exención en los últimos 3 años?", "type": "select", "default": "si", "options": [ { "value": "si", "label": "Sí (aplica la exención de 700,000 UDIS)" }, { "value": "no", "label": "No (se grava toda la ganancia)" } ] }
+    {
+      "id": "precioVenta",
+      "label": "Precio de venta",
+      "type": "number",
+      "required": true,
+      "placeholder": "8000000",
+      "min": 0,
+      "step": 1000,
+      "unit": "MXN",
+      "help": "El precio que aparecerá en la escritura de compraventa."
+    },
+    {
+      "id": "costoAdquisicion",
+      "label": "Costo de adquisición (lo que pagaste)",
+      "type": "number",
+      "required": true,
+      "placeholder": "3000000",
+      "min": 0,
+      "step": 1000,
+      "unit": "MXN",
+      "help": "El valor de tu escritura de compra. Si fue herencia o donación, el costo de adquisición del autor de la sucesión o donante."
+    },
+    {
+      "id": "gastos",
+      "label": "Gastos deducibles (notario, comisiones, mejoras con factura)",
+      "type": "number",
+      "default": 0,
+      "placeholder": "0",
+      "min": 0,
+      "step": 1000,
+      "unit": "MXN",
+      "help": "Gastos notariales e impuestos de cuando compraste, comisiones de venta y construcciones o mejoras con factura."
+    },
+    {
+      "id": "anios",
+      "label": "Años desde que la compraste",
+      "type": "number",
+      "required": true,
+      "placeholder": "10",
+      "min": 1,
+      "max": 60,
+      "step": 1,
+      "help": "Años entre la fecha de adquisición y la de venta. Para el cálculo del ISR la ley considera máximo 20."
+    },
+    {
+      "id": "aplicaExencion",
+      "label": "¿Es tu casa habitación y NO usaste la exención en los últimos 3 años?",
+      "type": "select",
+      "default": "si",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí (aplica la exención de 700,000 UDIS)"
+        },
+        {
+          "value": "no",
+          "label": "No (se grava toda la ganancia)"
+        }
+      ]
+    }
   ],
   "outputs": [
-    { "id": "isr", "label": "ISR estimado", "primary": true },
-    { "id": "montoExento", "label": "Monto exento" },
-    { "id": "gananciaGravable", "label": "Ganancia gravable" },
-    { "id": "detalle", "label": "Detalle del cálculo" }
+    {
+      "id": "isr",
+      "label": "ISR estimado",
+      "primary": true
+    },
+    {
+      "id": "montoExento",
+      "label": "Monto exento"
+    },
+    {
+      "id": "gananciaGravable",
+      "label": "Ganancia gravable"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo"
+    }
   ],
   "example": {
     "title": "Ejemplo: venta a $8,000,000, costo $3,000,000 + $200,000 de gastos, 8 años, casa habitación",
-    "inputs": { "precioVenta": 8000000, "costoAdquisicion": 3000000, "gastos": 200000, "anios": 8, "aplicaExencion": "si" },
+    "inputs": {
+      "precioVenta": 8000000,
+      "costoAdquisicion": 3000000,
+      "gastos": 200000,
+      "anios": 8,
+      "aplicaExencion": "si"
+    },
     "steps": [
       "Exención: 700,000 UDIS × $8.8308 = $6,181,560. El precio ($8,000,000) la supera.",
       "Excedente gravado: $8,000,000 − $6,181,560 = $1,818,440 → proporción 22.73% del precio.",
@@ -49,22 +123,64 @@
   },
   "explanation": "## Cómo funciona la exención de 700,000 UDIS\n\n```\nExención = 700,000 UDIS × valor de la UDI ≈ $6,181,560 (UDI $8.8308, jun-2026)\n```\n\nEl **Art. 93, fracción XIX de la LISR** exenta del ISR el ingreso por la venta de tu **casa habitación** hasta por 700,000 UDIS (Unidades de Inversión). La UDI cambia a diario — la publica **Banxico** en el DOF — así que el tope en pesos también: en junio de 2026, con la UDI en $8.8308, la exención ronda **$6,181,560**. Si el precio de venta no supera ese monto, el ISR es **cero**.\n\nLas condiciones para aplicarla:\n\n1. Que el inmueble sea tu **casa habitación** y lo acredites ante el notario: credencial INE con ese domicilio, recibos de luz, agua o teléfono fijo, o estados de cuenta bancarios a tu nombre.\n2. Que **no hayas vendido otra casa habitación con exención en los últimos 3 años**. Lo declaras bajo protesta de decir verdad y el notario lo verifica en el sistema del SAT.\n\n## Qué pasa si el precio supera la exención\n\nNo pierdes el beneficio: solo se grava la parte proporcional. La ley manda calcular la ganancia considerando las deducciones **en la proporción que el excedente representa del precio total**. En la práctica:\n\n```\nProporción gravada = (precio − $6,181,560) ÷ precio\nGanancia gravable = (precio − costo − gastos) × proporción gravada\n```\n\nDespués, la ganancia gravable se **divide entre los años de tenencia** (máximo 20, LISR Art. 120), al resultado se le aplica la **tarifa anual del ISR 2026** (Anexo 8 de la RMF, DOF 28-dic-2025) y el impuesto se multiplica de vuelta por los años. Dividir entre los años evita que una ganancia acumulada en décadas caiga completa en los tramos altos de la tarifa (que llega al 35%). La misma tarifa progresiva es la que usa la [calculadora de ISR anual de personas físicas](/mx/calculadora-isr-anual-personas-fisicas-mexico-tarifa-2026).\n\n## Tabla 2026: ISR estimado según el precio de venta\n\nSupuestos: casa habitación con exención, costo de adquisición = 50% del precio, 10 años de tenencia, sin otros ingresos.\n\n| Precio de venta | ¿Supera la exención? | Ganancia gravable | ISR estimado |\n|---|---|---|---|\n| $3,000,000 | No | $0 | **$0** |\n| $5,000,000 | No | $0 | **$0** |\n| $6,181,560 | Justo en el límite | $0 | **$0** |\n| $7,000,000 | Sí ($818,440) | $409,220 | **≈ $21,650** |\n| $8,000,000 | Sí ($1,818,440) | $909,220 | **≈ $55,845** |\n| $10,000,000 | Sí ($3,818,440) | $1,909,220 | **≈ $187,910** |\n| $5,000,000 sin exención | — | $2,500,000 | **≈ $307,399** |\n\nLa última fila muestra el contraste: la misma venta de $5,000,000 que paga $0 como casa habitación pagaría más de $300,000 si fuera un inmueble de inversión sin exención. Por eso, antes de escriturar conviene revisar si puedes acreditar el inmueble como tu vivienda y si ya corrieron los 3 años desde tu última venta exenta: la diferencia de impuesto puede ser de cientos de miles de pesos.\n\n## Qué puedes restar del precio (deducciones)\n\n- **Costo de adquisición**: el valor de tu escritura de compra. La ley además lo **actualiza por inflación** (INPC) desde la fecha de compra — esta calculadora no aplica esa actualización, así que el ISR real suele salir **menor** al estimado. En el costo, la construcción se deprecia 3% por año (el terreno no).\n- **Gastos notariales, impuestos y derechos** que pagaste al comprar (ISAI/traslado de dominio incluido).\n- **Comisiones** de compra y venta (la del agente inmobiliario, con factura).\n- **Construcciones, mejoras y ampliaciones** con factura o aviso de obra (las reparaciones y el mantenimiento no cuentan).\n\nSi rentabas el inmueble antes de venderlo, recuerda que ese ingreso tributa aparte — el detalle está en la [calculadora de ISR por arrendamiento](/mx/calculadora-impuesto-cedular-arrendamiento-mexico).\n\n## El papel del notario\n\nEn ventas de personas físicas formalizadas en escritura, el **notario calcula, retiene y entera** el ISR como pago provisional (además del impuesto estatal de adquisición, que paga el comprador). También presenta la informativa al SAT con los datos de la operación y verifica si ya usaste la exención en los últimos 3 años. El gasto anual del inmueble — como el [predial](/mx/calculadora-predial-cdmx-monterrey-guadalajara-2026) — no entra en este cálculo: solo afecta la ganancia lo que pagaste por adquirir y mejorar la propiedad.\n\n## Qué documentos te va a pedir el notario\n\nPara aplicar la exención y calcular bien el impuesto, llega a la firma con:\n\n- **Escritura de adquisición** (tu título de propiedad): de ahí salen el costo y la fecha de compra.\n- **Comprobantes de domicilio** a tu nombre en el inmueble: recibos de luz, agua, gas, teléfono fijo o estados de cuenta bancarios. Con que el domicilio coincida, acreditas la casa habitación.\n- **Identificación oficial, CURP y RFC** — el RFC es indispensable: sin él, el notario no puede aplicar la exención y la operación se retiene como gravada.\n- **Facturas de mejoras y ampliaciones**, avisos de terminación de obra y comprobantes de comisiones pagadas, si quieres deducirlas.\n- **Boletas de predial y agua** al corriente (requisito para escriturar, aunque no afectan el ISR).\n\n## Errores comunes\n\n- **Creer que toda venta de casa paga ISR**: si es tu casa habitación y el precio no supera ~$6.18 millones, el impuesto es cero.\n- **Olvidar la regla de los 3 años**: si ya aplicaste la exención en otra venta reciente, esta venta se grava completa; conviene revisar fechas antes de escriturar.\n- **Escriturar por debajo del valor real** para \"ahorrar\": si el avalúo excede el precio declarado en más de 10%, la diferencia tributa como ingreso, y subdeclarar es un riesgo fiscal serio.\n- **No juntar facturas de mejoras**: una ampliación con factura reduce la ganancia gravable peso por peso; sin factura, no deduce.\n- **Ignorar la actualización del costo**: el costo se indexa por inflación; en propiedades compradas hace muchos años la diferencia es enorme y casi siempre a tu favor.\n- **Confundir la exención con un tope al precio**: puedes vender en más de 700,000 UDIS; solo el excedente proporcional genera impuesto.\n\n## Cuándo aplica y excepciones\n\nAplica a **personas físicas** que venden un inmueble en México ante notario. La exención es exclusiva de la **casa habitación** del vendedor (no aplica a terrenos solos, locales, oficinas ni casas de descanso). Si la operación es por adjudicación, donación o herencia hay reglas particulares: la donación entre cónyuges y de padres a hijos está exenta, y en herencias el costo de adquisición se hereda del autor de la sucesión. Esta calculadora estima el pago provisional sin otros ingresos acumulables; tu declaración anual puede ajustar el resultado final.\n\n## Datos clave 2026\n\n| Concepto | Valor |\n|---|---|\n| Exención casa habitación | 700,000 UDIS (LISR Art. 93-XIX) |\n| Valor UDI (09-jun-2026, Banxico) | $8.8308 |\n| Exención en pesos | ≈ $6,181,560 |\n| Periodo entre exenciones | 3 años |\n| División de la ganancia | Entre años de tenencia, máx. 20 (LISR Art. 120) |\n| Tarifa anual ISR 2026 | 1.92% a 35% (Anexo 8 RMF 2026) |\n| Quién retiene | El notario, como pago provisional |\n\n## Disclaimer\n\nEstimación orientativa. El cálculo notarial exacto actualiza el costo por INPC, deprecia construcciones, prorratea deducciones y puede diferir según tu situación (otros ingresos, copropiedad, régimen conyugal). La UDI cambia a diario. Antes de escriturar, pide al notario la proyección del impuesto para tu operación concreta.\n",
   "faq": [
-    { "q": "¿Cuánto ISR se paga por vender una casa en México en 2026?", "a": "Si es tu **casa habitación**, nada hasta 700,000 UDIS de precio (~$6,181,560 con la UDI de junio 2026). Por encima, solo se grava la ganancia proporcional al excedente: una venta de $8,000,000 con costo de $3,200,000 paga alrededor de $84,000. Si no es tu vivienda, toda la ganancia paga ISR con la tarifa anual (hasta 35%)." },
-    { "q": "¿Cuánto son 700,000 UDIS en pesos?", "a": "Con la UDI en **$8.8308** (Banxico, 9 de junio de 2026), 700,000 UDIS equivalen a **$6,181,560**. La UDI se actualiza a diario con la inflación, así que el tope en pesos sube un poco cada mes; el valor exacto del día lo publica Banxico." },
-    { "q": "¿Qué requisitos tiene la exención por casa habitación?", "a": "Dos: **acreditar ante notario** que el inmueble es tu casa habitación (INE con ese domicilio, recibos de luz, agua, teléfono o estados de cuenta) y **no haber usado la exención en los últimos 3 años**. El notario consulta en el sistema del SAT si ya la aplicaste." },
-    { "q": "¿Qué pasa si vendo en más de 700,000 UDIS?", "a": "No pierdes la exención: se grava solo la **proporción excedente**. Por ejemplo, en una venta de $8,000,000 el excedente es $1,818,440 (22.7% del precio), así que solo el 22.7% de tu ganancia paga ISR. El resto queda exento." },
-    { "q": "¿Cómo se calcula la ganancia por la venta?", "a": "Precio de venta menos deducciones: **costo de adquisición actualizado por inflación** (la construcción se deprecia 3% anual), gastos notariales e impuestos de cuando compraste, comisiones y **mejoras con factura**. La ganancia se divide entre los años de tenencia (máximo 20) y se aplica la tarifa anual del ISR." },
-    { "q": "¿Por qué se divide la ganancia entre los años?", "a": "Porque la tarifa del ISR es progresiva (hasta 35%) y la ganancia se generó a lo largo de años, no en uno solo. El Art. 120 de la LISR permite dividirla entre los años transcurridos desde la compra (tope 20): así una ganancia de $1,000,000 en 10 años tributa como diez ganancias de $100,000, a tasas mucho menores." },
-    { "q": "¿Quién paga el ISR, el comprador o el vendedor?", "a": "El **vendedor**. El notario se lo retiene al firmar la escritura y lo entera al SAT como pago provisional. El comprador paga otro impuesto distinto: el ISAI o traslado de dominio (estatal/municipal, suele rondar 2–4.5% según la entidad)." },
-    { "q": "¿Puedo usar la exención si vendí otra casa hace 2 años?", "a": "No. La exención por casa habitación se puede aplicar **una vez cada 3 años**. Si la usaste hace 2, esta venta paga ISR sobre toda la ganancia — a veces conviene esperar a cumplir los 3 años antes de escriturar, si la diferencia de impuesto lo justifica." },
-    { "q": "¿La venta de un terreno o un local tiene exención?", "a": "No. La exención de 700,000 UDIS es exclusiva de la **casa habitación**. Terrenos solos, locales comerciales, oficinas, bodegas y casas de descanso pagan ISR sobre toda la ganancia. En el caso de casa habitación con terreno, la exención cubre el terreno hasta por tres veces la superficie construida." },
-    { "q": "¿Qué pasa si heredé la casa que voy a vender?", "a": "Recibir la herencia no paga ISR, pero al **vender** sí puede haber impuesto: tu costo de adquisición es el que tuvo el **autor de la sucesión** (lo que él pagó, actualizado). Si la casa heredada es además tu casa habitación y cumples los requisitos, puedes aplicar la exención de 700,000 UDIS como cualquier propietario." },
-    { "q": "¿El estimado de esta calculadora es lo que me va a retener el notario?", "a": "Es una buena aproximación, generalmente **conservadora**: el notario además actualiza tu costo de adquisición por inflación (INPC) y deprecia la construcción, lo que suele reducir la ganancia gravable. Pídele la proyección exacta antes de firmar; con ella puedes validar que la retención esté bien calculada." }
+    {
+      "q": "¿Cuánto ISR se paga por vender una casa en México en 2026?",
+      "a": "Si es tu **casa habitación**, nada hasta 700,000 UDIS de precio (~$6,181,560 con la UDI de junio 2026). Por encima, solo se grava la ganancia proporcional al excedente: una venta de $8,000,000 con costo de $3,200,000 paga alrededor de $84,000. Si no es tu vivienda, toda la ganancia paga ISR con la tarifa anual (hasta 35%)."
+    },
+    {
+      "q": "¿Cuánto son 700,000 UDIS en pesos?",
+      "a": "Con la UDI en **$8.8308** (Banxico, 9 de junio de 2026), 700,000 UDIS equivalen a **$6,181,560**. La UDI se actualiza a diario con la inflación, así que el tope en pesos sube un poco cada mes; el valor exacto del día lo publica Banxico."
+    },
+    {
+      "q": "¿Qué requisitos tiene la exención por casa habitación?",
+      "a": "Dos: **acreditar ante notario** que el inmueble es tu casa habitación (INE con ese domicilio, recibos de luz, agua, teléfono o estados de cuenta) y **no haber usado la exención en los últimos 3 años**. El notario consulta en el sistema del SAT si ya la aplicaste."
+    },
+    {
+      "q": "¿Qué pasa si vendo en más de 700,000 UDIS?",
+      "a": "No pierdes la exención: se grava solo la **proporción excedente**. Por ejemplo, en una venta de $8,000,000 el excedente es $1,818,440 (22.7% del precio), así que solo el 22.7% de tu ganancia paga ISR. El resto queda exento."
+    },
+    {
+      "q": "¿Cómo se calcula la ganancia por la venta?",
+      "a": "Precio de venta menos deducciones: **costo de adquisición actualizado por inflación** (la construcción se deprecia 3% anual), gastos notariales e impuestos de cuando compraste, comisiones y **mejoras con factura**. La ganancia se divide entre los años de tenencia (máximo 20) y se aplica la tarifa anual del ISR."
+    },
+    {
+      "q": "¿Por qué se divide la ganancia entre los años?",
+      "a": "Porque la tarifa del ISR es progresiva (hasta 35%) y la ganancia se generó a lo largo de años, no en uno solo. El Art. 120 de la LISR permite dividirla entre los años transcurridos desde la compra (tope 20): así una ganancia de $1,000,000 en 10 años tributa como diez ganancias de $100,000, a tasas mucho menores."
+    },
+    {
+      "q": "¿Quién paga el ISR, el comprador o el vendedor?",
+      "a": "El **vendedor**. El notario se lo retiene al firmar la escritura y lo entera al SAT como pago provisional. El comprador paga otro impuesto distinto: el ISAI o traslado de dominio (estatal/municipal, suele rondar 2–4.5% según la entidad)."
+    },
+    {
+      "q": "¿Puedo usar la exención si vendí otra casa hace 2 años?",
+      "a": "No. La exención por casa habitación se puede aplicar **una vez cada 3 años**. Si la usaste hace 2, esta venta paga ISR sobre toda la ganancia — a veces conviene esperar a cumplir los 3 años antes de escriturar, si la diferencia de impuesto lo justifica."
+    },
+    {
+      "q": "¿La venta de un terreno o un local tiene exención?",
+      "a": "No. La exención de 700,000 UDIS es exclusiva de la **casa habitación**. Terrenos solos, locales comerciales, oficinas, bodegas y casas de descanso pagan ISR sobre toda la ganancia. En el caso de casa habitación con terreno, la exención cubre el terreno hasta por tres veces la superficie construida."
+    },
+    {
+      "q": "¿Qué pasa si heredé la casa que voy a vender?",
+      "a": "Recibir la herencia no paga ISR, pero al **vender** sí puede haber impuesto: tu costo de adquisición es el que tuvo el **autor de la sucesión** (lo que él pagó, actualizado). Si la casa heredada es además tu casa habitación y cumples los requisitos, puedes aplicar la exención de 700,000 UDIS como cualquier propietario."
+    },
+    {
+      "q": "¿El estimado de esta calculadora es lo que me va a retener el notario?",
+      "a": "Es una buena aproximación, generalmente **conservadora**: el notario además actualiza tu costo de adquisición por inflación (INPC) y deprecia la construcción, lo que suele reducir la ganancia gravable. Pídele la proyección exacta antes de firmar; con ella puedes validar que la retención esté bien calculada."
+    }
   ],
   "sources": [
-    { "name": "LISR — Arts. 93 fracc. XIX, 120-126 y 152 (Cámara de Diputados)", "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf" },
-    { "name": "Banxico — Valor de la UDI (serie CP150)", "url": "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarCuadro&idCuadro=CP150" },
-    { "name": "SAT — Anexo 8 RMF 2026: tarifa anual del ISR (DOF 28-dic-2025)", "url": "https://www.sat.gob.mx/minisitio/NormatividadRMFyRGCE/documentos2026/rmf/anexos/Anexo-8-RMF-2026_DOF-28122025.pdf" }
+    {
+      "name": "LISR — Arts. 93 fracc. XIX, 120-126 y 152 (Cámara de Diputados)",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf"
+    },
+    {
+      "name": "Banxico — Valor de la UDI (serie CP150)",
+      "url": "https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarCuadro&idCuadro=CP150"
+    },
+    {
+      "name": "SAT — Anexo 8 RMF 2026: tarifa anual del ISR (DOF 28-dic-2025)",
+      "url": "https://www.sat.gob.mx/minisitio/NormatividadRMFyRGCE/documentos2026/rmf/anexos/Anexo-8-RMF-2026_DOF-28122025.pdf"
+    }
   ],
   "relatedSlugs": [
     "calculadora-isr-anual-personas-fisicas-mexico-tarifa-2026",
@@ -90,5 +206,49 @@
     "vender casa sin pagar impuestos mexico",
     "ganancia por venta de inmueble isr"
   ],
-  "lastReviewed": "2026-06-10"
+  "lastReviewed": "2026-06-20",
+  "referenceTables": [
+    {
+      "title": "Datos clave ISR por venta de casa habitación — México 2026",
+      "headers": [
+        "Concepto",
+        "Valor / Referencia"
+      ],
+      "rows": [
+        [
+          "Exención casa habitación",
+          "700,000 UDIS (LISR Art. 93, fracc. XIX)"
+        ],
+        [
+          "Valor UDI (09-jun-2026, Banxico)",
+          "$8.8308"
+        ],
+        [
+          "Exención en pesos (referencia jun-2026)",
+          "≈ $6,181,560"
+        ],
+        [
+          "Periodo mínimo entre exenciones",
+          "3 años"
+        ],
+        [
+          "Divisor de la ganancia",
+          "Años de tenencia, máximo 20 (LISR Art. 120)"
+        ],
+        [
+          "Tarifa anual ISR 2026 (rango)",
+          "1.92% a 35% (Anexo 8, RMF 2026, DOF 28-dic-2025)"
+        ],
+        [
+          "Quién calcula y retiene el ISR",
+          "El notario (pago provisional)"
+        ],
+        [
+          "Depreciación anual de construcción",
+          "3% por año (el terreno no deprecia)"
+        ]
+      ],
+      "note": "Fuente: LISR Arts. 93-XIX, 120-126 y 152; Banxico (valor UDI jun-2026); Anexo 8 RMF 2026, DOF 28-dic-2025"
+    }
+  ]
 }

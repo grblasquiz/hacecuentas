@@ -23,32 +23,126 @@
     "Quien va a corregir una declaración con impuesto omitido calcula primero el recargo y la actualización para saber si le conviene autocorregirse antes de un requerimiento (donde además entraría una multa)."
   ],
   "fields": [
-    { "id": "impuesto", "label": "Impuesto original que debiste pagar (sin recargos)", "type": "number", "required": true, "placeholder": "100000", "min": 0, "step": 0.01, "unit": "$" },
-    { "id": "mesesAtraso", "label": "Meses de atraso (se redondea hacia arriba; tope 60)", "type": "number", "required": true, "placeholder": "6", "min": 0, "step": 1 },
-    { "id": "tipoRecargo", "label": "Tipo de adeudo", "type": "select", "default": "mora", "options": [
-      { "value": "mora", "label": "Mora / pago extemporáneo (2.07% mensual)" },
-      { "value": "prorroga", "label": "Prórroga o plazo autorizado (1.38% mensual)" }
-    ] },
-    { "id": "modoActualizacion", "label": "¿Cómo calculamos la actualización (Art. 17-A)?", "type": "select", "default": "factor", "options": [
-      { "value": "factor", "label": "Ya conozco el factor de actualización" },
-      { "value": "inpc", "label": "Tengo los dos valores del INPC" }
-    ] },
-    { "id": "factorActualizacion", "label": "Factor de actualización (si lo conoces; 1 = sin inflación)", "type": "number", "required": false, "placeholder": "1.0526", "min": 0, "step": 0.0001, "default": 1 },
-    { "id": "inpcReciente", "label": "INPC del mes anterior al más reciente (numerador)", "type": "number", "required": false, "placeholder": "140.000", "min": 0, "step": 0.001 },
-    { "id": "inpcOriginal", "label": "INPC del mes anterior al vencimiento (denominador)", "type": "number", "required": false, "placeholder": "133.000", "min": 0, "step": 0.001 }
+    {
+      "id": "impuesto",
+      "label": "Impuesto original que debiste pagar (sin recargos)",
+      "type": "number",
+      "required": true,
+      "placeholder": "100000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "mesesAtraso",
+      "label": "Meses de atraso (se redondea hacia arriba; tope 60)",
+      "type": "number",
+      "required": true,
+      "placeholder": "6",
+      "min": 0,
+      "step": 1
+    },
+    {
+      "id": "tipoRecargo",
+      "label": "Tipo de adeudo",
+      "type": "select",
+      "default": "mora",
+      "options": [
+        {
+          "value": "mora",
+          "label": "Mora / pago extemporáneo (2.07% mensual)"
+        },
+        {
+          "value": "prorroga",
+          "label": "Prórroga o plazo autorizado (1.38% mensual)"
+        }
+      ]
+    },
+    {
+      "id": "modoActualizacion",
+      "label": "¿Cómo calculamos la actualización (Art. 17-A)?",
+      "type": "select",
+      "default": "factor",
+      "options": [
+        {
+          "value": "factor",
+          "label": "Ya conozco el factor de actualización"
+        },
+        {
+          "value": "inpc",
+          "label": "Tengo los dos valores del INPC"
+        }
+      ]
+    },
+    {
+      "id": "factorActualizacion",
+      "label": "Factor de actualización (si lo conoces; 1 = sin inflación)",
+      "type": "number",
+      "required": false,
+      "placeholder": "1.0526",
+      "min": 0,
+      "step": 0.0001,
+      "default": 1
+    },
+    {
+      "id": "inpcReciente",
+      "label": "INPC del mes anterior al más reciente (numerador)",
+      "type": "number",
+      "required": false,
+      "placeholder": "140.000",
+      "min": 0,
+      "step": 0.001
+    },
+    {
+      "id": "inpcOriginal",
+      "label": "INPC del mes anterior al vencimiento (denominador)",
+      "type": "number",
+      "required": false,
+      "placeholder": "133.000",
+      "min": 0,
+      "step": 0.001
+    }
   ],
   "outputs": [
-    { "id": "total", "label": "Total a pagar al SAT", "primary": true },
-    { "id": "impuestoActualizado", "label": "Impuesto actualizado (Art. 17-A)" },
-    { "id": "actualizacion", "label": "Actualización por inflación" },
-    { "id": "recargos", "label": "Recargos por mora (Art. 21)" },
-    { "id": "factorAplicado", "label": "Factor de actualización aplicado" },
-    { "id": "recargoPorMes", "label": "Cuánto suma cada mes de atraso" },
-    { "id": "detalle", "label": "Detalle del cálculo" }
+    {
+      "id": "total",
+      "label": "Total a pagar al SAT",
+      "primary": true
+    },
+    {
+      "id": "impuestoActualizado",
+      "label": "Impuesto actualizado (Art. 17-A)"
+    },
+    {
+      "id": "actualizacion",
+      "label": "Actualización por inflación"
+    },
+    {
+      "id": "recargos",
+      "label": "Recargos por mora (Art. 21)"
+    },
+    {
+      "id": "factorAplicado",
+      "label": "Factor de actualización aplicado"
+    },
+    {
+      "id": "recargoPorMes",
+      "label": "Cuánto suma cada mes de atraso"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo"
+    }
   ],
   "example": {
     "title": "Ejemplo: ISR de $100,000 pagado 6 meses tarde (sin inflación relevante, factor 1.0)",
-    "inputs": { "impuesto": 100000, "mesesAtraso": 6, "tipoRecargo": "mora", "modoActualizacion": "factor", "factorActualizacion": 1 },
+    "inputs": {
+      "impuesto": 100000,
+      "mesesAtraso": 6,
+      "tipoRecargo": "mora",
+      "modoActualizacion": "factor",
+      "factorActualizacion": 1
+    },
     "steps": [
       "Actualización (Art. 17-A): factor 1.0 (plazo corto, inflación no relevante) → impuesto actualizado = $100,000 × 1.0 = $100,000 (sin cargo por actualización).",
       "Recargos por mora (Art. 21): tasa 2026 = 2.07% mensual × 6 meses = 12.42% sobre el impuesto actualizado.",
@@ -59,23 +153,73 @@
   },
   "explanation": "## Qué te cobra el SAT cuando pagas tarde\n\nCuando un impuesto no se paga en la fecha o dentro del plazo que marca la ley, el adeudo deja de ser solo el monto original. El Código Fiscal de la Federación (CFF) obliga a sumar **dos conceptos** —que son distintos de las **multas**— y a calcularlos en este orden:\n\n```\nTotal a pagar = (Impuesto × Factor de actualización)  +  Recargos\n                └──────── Art. 17-A CFF ────────┘     └─ Art. 21 CFF ─┘\n```\n\n1. **Actualización (Art. 17-A):** trae el impuesto a valor presente por la **inflación** transcurrida. No es una sanción; es reconocer que el peso de hace meses no vale lo mismo hoy.\n2. **Recargos (Art. 21):** son la **indemnización al fisco** por el financiamiento forzoso que significó tu atraso. Se calculan **sobre el impuesto ya actualizado**.\n\nEs un error frecuente aplicar los recargos sobre el monto histórico: la ley es explícita en que se calculan sobre las **contribuciones actualizadas**. Por eso primero se actualiza y después se aplican los recargos.\n\n## 1. La actualización (Art. 17-A CFF)\n\nLa actualización se obtiene multiplicando el impuesto por un **factor de actualización**:\n\n```\nFactor = INPC del mes anterior al más reciente ÷ INPC del mes anterior al más antiguo\n```\n\n- El **mes más reciente** es, en general, el mes anterior a aquel en que pagas.\n- El **mes más antiguo** es el mes anterior a aquel en que debiste pagar (el vencimiento).\n- El INPC es el **Índice Nacional de Precios al Consumidor** que publica el INEGI.\n\nDos reglas importantes del Art. 17-A:\n\n- **No se actualiza por fracciones de mes** del factor: se usan meses completos del INPC.\n- **Si el factor resulta menor a 1, se aplica 1.** Es decir, la actualización nunca reduce tu adeudo aunque hubiera deflación.\n\nEjemplo: si el INPC del mes anterior al pago es 140.000 y el del mes anterior al vencimiento es 133.000, el factor es 140.000 ÷ 133.000 = **1.0526**. Un impuesto de $50,000 se actualiza a $50,000 × 1.0526 = **$52,630**; la actualización es de **$2,630**.\n\nPara atrasos de pocos días o un mes, donde la inflación acumulada es mínima, el factor suele ser muy cercano a 1, y la actualización es prácticamente cero. El peso del cargo lo llevan los recargos.\n\n## 2. Los recargos por mora (Art. 21 CFF)\n\nUna vez actualizado el impuesto, se aplican los recargos:\n\n```\nRecargos = Impuesto actualizado × Tasa mensual de recargos × Número de meses de atraso\n```\n\nLa tasa la fija cada año el Congreso en la **Ley de Ingresos de la Federación (LIF)**. El Art. 21 del CFF ordena que la tasa de **mora** sea la que resulte de **incrementar en 50%** la tasa de prórroga aprobada por el Congreso.\n\n### Tasas de recargos 2026 (LIF, DOF 07-nov-2025)\n\n| Concepto | Tasa mensual 2026 | Tasa mensual 2025 |\n|---|---|---|\n| **Mora / pago extemporáneo** (Art. 21 CFF) | **2.07%** | 1.47% |\n| Prórroga (plazo autorizado) | 1.38% | 0.98% |\n| Parcialidades hasta 12 meses | 1.42% | 1.26% |\n| Parcialidades de 13 a 24 meses | 1.63% | 1.53% |\n| Parcialidades > 24 meses o pago diferido | 1.97% | 1.82% |\n\nLa tasa de mora subió de **1.47% a 2.07% mensual** para 2026 —un aumento del **40%**— lo que encarece de forma notable cualquier atraso. La calculadora usa **2.07%** por defecto (mora); si tu adeudo está bajo un plazo autorizado, elige **prórroga** (1.38%).\n\n### Reglas de los recargos\n\n- **Se cobran por cada mes o fracción de mes** de atraso. Un día de retraso en el segundo mes cuenta como mes completo; por eso la calculadora **redondea los meses hacia arriba**.\n- **Topan a 5 años (60 meses).** Pasado ese plazo dejan de causarse recargos, pero **la actualización sigue corriendo** indefinidamente hasta que pagues.\n- Se calculan **sobre el impuesto actualizado**, no sobre el histórico.\n\n## Ejemplo completo paso a paso\n\nTomemos un ISR de **$100,000** que se paga **6 meses tarde**, en un periodo de inflación baja (factor 1.0):\n\n| Paso | Operación | Resultado |\n|---|---|---|\n| 1. Actualización | $100,000 × 1.0 (factor) | $100,000 |\n| 2. Tasa de recargos acumulada | 2.07% × 6 meses | 12.42% |\n| 3. Recargos | $100,000 × 12.42% | $12,420 |\n| 4. **Total a pagar** | $100,000 + $12,420 | **$112,420** |\n\nCada mes adicional de atraso suma **$2,070** (2.07% de $100,000). Si además hubiera inflación —digamos un factor de 1.03—, el impuesto actualizado sería $103,000 y los recargos se calcularían sobre esa cifra: $103,000 × 12.42% = $12,792.60, para un total de $115,792.60.\n\n## Recargos y actualización NO son la multa\n\nEste es el punto que más confusión genera. Si te **autocorriges de forma espontánea** (pagas antes de que el SAT te requiera), normalmente solo pagas **impuesto actualizado + recargos**, sin multa. La multa aparece cuando es la autoridad la que detecta la omisión mediante un requerimiento o una revisión: ahí se suma una **sanción** que suele ir del **55% al 75% de la contribución omitida** (Art. 76 CFF), además de la actualización y los recargos. Por eso conviene regularizarse cuanto antes y por cuenta propia.\n\nNo confundas esta calculadora con la de **multas por contabilidad electrónica**, que estima una **sanción fija** por no enviar la contabilidad; aquí calculamos el costo financiero (actualización + recargos) de un **impuesto** pagado tarde.\n\n## Cómo reducir lo que pagas de más\n\n- **Paga lo antes posible:** cada mes de mora suma 2.07% sobre el actualizado. Adelantar el pago un mes es un ahorro inmediato.\n- **Autocorrígete antes de un requerimiento:** evitas la multa del 55-75% y solo cargas con actualización y recargos.\n- **Evalúa parcialidades o prórroga:** si no puedes pagar todo, la tasa de prórroga (1.38%) y la de parcialidades (1.42-1.97%) son menores que la de mora (2.07%); el SAT permite pagar en hasta 36 meses con autorización.\n- **Revisa el factor de actualización:** usa el INPC oficial del INEGI; un factor mal calculado infla o subestima el adeudo.\n\n## Errores comunes\n\n- **Aplicar los recargos sobre el impuesto histórico:** la ley manda calcularlos sobre el impuesto **actualizado**. Primero actualizas, luego aplicas recargos.\n- **Usar la tasa de 2025 (1.47%):** para adeudos que corren en 2026 aplica **2.07% mensual**.\n- **Olvidar el redondeo de meses:** un atraso de un mes y un día cuenta como **dos meses** de recargos.\n- **Creer que los recargos crecen para siempre:** topan a **60 meses**; la actualización, no.\n- **Confundir recargos con multa:** son conceptos distintos; los recargos no requieren resolución, las multas sí.\n- **Aplicar un factor menor a 1:** si el factor sale por debajo de 1, se usa **1** (Art. 17-A).\n\n## Cuánto crece el adeudo mes a mes (solo recargos)\n\nPara dimensionar el costo de dejar correr la mora, esta tabla muestra los recargos acumulados sobre un impuesto de $100,000 a la tasa 2026 (2.07% mensual), sin considerar la actualización por inflación, que se sumaría aparte:\n\n| Meses de atraso | Recargos acumulados | % del impuesto | Total a pagar |\n|---|---|---|---|\n| 1 mes | $2,070 | 2.07% | $102,070 |\n| 3 meses | $6,210 | 6.21% | $106,210 |\n| 6 meses | $12,420 | 12.42% | $112,420 |\n| 12 meses | $24,840 | 24.84% | $124,840 |\n| 24 meses | $49,680 | 49.68% | $149,680 |\n| 60 meses (tope) | $124,200 | 124.20% | $224,200 |\n\nEn el tope de 60 meses, los recargos por mora pueden **superar el monto original** del impuesto: $124,200 sobre $100,000. A partir de ahí ya no crecen los recargos, pero la actualización por inflación —que en 5 años puede ser considerable— sigue inflando el adeudo. La lectura práctica es clara: el costo de no pagar se acelera y, mientras antes regularices, menos pagas.\n\n## Cuándo aplica y excepciones\n\nEsta calculadora estima el costo de pagar **tarde** una contribución federal (ISR, IVA, IEPS, retenciones) bajo las tasas 2026. No calcula multas formales, gastos de ejecución, ni los recargos de adeudos garantizados con embargo, que tienen reglas adicionales. Tampoco sustituye la **línea de captura** del SAT: el monto oficial lo determina la autoridad con el INPC publicado y la fecha exacta de pago. Antes de pagar, genera tu línea de captura en el portal del SAT y compara.\n\n## Disclaimer\n\nCálculo orientativo con la tasa de recargos por mora 2026 (**2.07% mensual**, Art. 11 LIF 2026) y el procedimiento de los Arts. 17-A y 21 del CFF. El factor de actualización depende del INPC oficial del INEGI a la fecha real de pago, y el monto definitivo lo determina el SAT en tu línea de captura. Esta herramienta no constituye asesoría fiscal; ante adeudos relevantes, consulta a un contador o a la autoridad.",
   "faq": [
-    { "q": "¿Cuál es la tasa de recargos por mora del SAT en 2026?", "a": "**2.07% mensual** para pago extemporáneo (mora), según el Art. 11, fracción I, de la Ley de Ingresos de la Federación 2026 (DOF 07-nov-2025) y la regla 2.1.20 de la RMF. Subió desde el **1.47%** de 2025, un aumento del 40%. La tasa de **prórroga** (plazo autorizado) es de **1.38% mensual**." },
-    { "q": "¿Los recargos se calculan sobre el impuesto original o sobre el actualizado?", "a": "Sobre el impuesto **actualizado**. El Art. 21 del CFF es explícito: primero se actualiza la contribución por inflación (Art. 17-A) y los recargos se aplican sobre ese monto ya actualizado, por cada mes de atraso. Calcularlos sobre el histórico subestima el adeudo." },
-    { "q": "¿Cómo se calcula el factor de actualización (Art. 17-A)?", "a": "Factor = **INPC del mes anterior al más reciente ÷ INPC del mes anterior al más antiguo** (el del vencimiento). El INPC lo publica el INEGI. No se consideran fracciones de mes y, si el factor resulta **menor a 1, se aplica 1** (la actualización nunca reduce el adeudo)." },
-    { "q": "¿Hay un tope de tiempo para los recargos?", "a": "Sí. Los recargos se causan **hasta por 5 años (60 meses)** según el Art. 21 del CFF. Después de ese plazo dejan de generarse recargos, pero la **actualización** por inflación sigue corriendo hasta que pagues, sin límite de tiempo." },
-    { "q": "¿La actualización y los recargos son lo mismo que una multa?", "a": "No. La **actualización** trae el impuesto a valor presente y los **recargos** indemnizan al fisco por el atraso; ambos se causan automáticamente. La **multa** es una sanción aparte (Art. 76 CFF, del 55% al 75% de la contribución omitida) que aplica cuando es el SAT quien detecta la omisión mediante requerimiento o revisión." },
-    { "q": "¿Cuánto pagaría por un impuesto de $100,000 con 6 meses de atraso?", "a": "Con factor de actualización 1.0 (inflación no relevante en el periodo), los recargos son $100,000 × 2.07% × 6 = **$12,420**, para un total de **$112,420**. Cada mes extra de atraso suma $2,070. Si hubiera inflación, primero se actualiza el impuesto y los recargos se calculan sobre el monto actualizado." },
-    { "q": "¿Cómo se cuentan los meses de atraso?", "a": "Por **mes o fracción de mes**: cualquier día dentro de un nuevo mes cuenta como mes completo. Un atraso de un mes y tres días genera **dos meses** de recargos. Por eso esta calculadora redondea los meses hacia arriba." },
-    { "q": "¿Me conviene pagar en parcialidades o de contado?", "a": "Depende. La tasa de **mora** (2.07%) es la más alta; si solicitas **prórroga** (1.38%) o **parcialidades** (1.42% hasta 12 meses, 1.63% de 13 a 24, 1.97% a más de 24 meses), la tasa baja, pero pagas durante más tiempo. El SAT autoriza hasta 36 meses. Compara el costo total con la calculadora antes de decidir." },
-    { "q": "¿Puedo evitar la multa si pago tarde?", "a": "Generalmente sí, si te **autocorriges de forma espontánea** (pagas antes de que el SAT te notifique un requerimiento o inicie facultades de comprobación). En ese caso solo pagas impuesto actualizado más recargos. Si es la autoridad la que detecta la omisión, se suma la multa del Art. 76 además de la actualización y los recargos." },
-    { "q": "¿De dónde saco el INPC para calcular la actualización?", "a": "Del **INEGI**, que publica el Índice Nacional de Precios al Consumidor cada mes. Necesitas el INPC del mes anterior al de pago (numerador) y el del mes anterior al vencimiento (denominador). El propio portal del SAT y su sistema de líneas de captura ya aplican el INPC vigente al generar el adeudo." }
+    {
+      "q": "¿Cuál es la tasa de recargos por mora del SAT en 2026?",
+      "a": "**2.07% mensual** para pago extemporáneo (mora), según el Art. 11, fracción I, de la Ley de Ingresos de la Federación 2026 (DOF 07-nov-2025) y la regla 2.1.20 de la RMF. Subió desde el **1.47%** de 2025, un aumento del 40%. La tasa de **prórroga** (plazo autorizado) es de **1.38% mensual**."
+    },
+    {
+      "q": "¿Los recargos se calculan sobre el impuesto original o sobre el actualizado?",
+      "a": "Sobre el impuesto **actualizado**. El Art. 21 del CFF es explícito: primero se actualiza la contribución por inflación (Art. 17-A) y los recargos se aplican sobre ese monto ya actualizado, por cada mes de atraso. Calcularlos sobre el histórico subestima el adeudo."
+    },
+    {
+      "q": "¿Cómo se calcula el factor de actualización (Art. 17-A)?",
+      "a": "Factor = **INPC del mes anterior al más reciente ÷ INPC del mes anterior al más antiguo** (el del vencimiento). El INPC lo publica el INEGI. No se consideran fracciones de mes y, si el factor resulta **menor a 1, se aplica 1** (la actualización nunca reduce el adeudo)."
+    },
+    {
+      "q": "¿Hay un tope de tiempo para los recargos?",
+      "a": "Sí. Los recargos se causan **hasta por 5 años (60 meses)** según el Art. 21 del CFF. Después de ese plazo dejan de generarse recargos, pero la **actualización** por inflación sigue corriendo hasta que pagues, sin límite de tiempo."
+    },
+    {
+      "q": "¿La actualización y los recargos son lo mismo que una multa?",
+      "a": "No. La **actualización** trae el impuesto a valor presente y los **recargos** indemnizan al fisco por el atraso; ambos se causan automáticamente. La **multa** es una sanción aparte (Art. 76 CFF, del 55% al 75% de la contribución omitida) que aplica cuando es el SAT quien detecta la omisión mediante requerimiento o revisión."
+    },
+    {
+      "q": "¿Cuánto pagaría por un impuesto de $100,000 con 6 meses de atraso?",
+      "a": "Con factor de actualización 1.0 (inflación no relevante en el periodo), los recargos son $100,000 × 2.07% × 6 = **$12,420**, para un total de **$112,420**. Cada mes extra de atraso suma $2,070. Si hubiera inflación, primero se actualiza el impuesto y los recargos se calculan sobre el monto actualizado."
+    },
+    {
+      "q": "¿Cómo se cuentan los meses de atraso?",
+      "a": "Por **mes o fracción de mes**: cualquier día dentro de un nuevo mes cuenta como mes completo. Un atraso de un mes y tres días genera **dos meses** de recargos. Por eso esta calculadora redondea los meses hacia arriba."
+    },
+    {
+      "q": "¿Me conviene pagar en parcialidades o de contado?",
+      "a": "Depende. La tasa de **mora** (2.07%) es la más alta; si solicitas **prórroga** (1.38%) o **parcialidades** (1.42% hasta 12 meses, 1.63% de 13 a 24, 1.97% a más de 24 meses), la tasa baja, pero pagas durante más tiempo. El SAT autoriza hasta 36 meses. Compara el costo total con la calculadora antes de decidir."
+    },
+    {
+      "q": "¿Puedo evitar la multa si pago tarde?",
+      "a": "Generalmente sí, si te **autocorriges de forma espontánea** (pagas antes de que el SAT te notifique un requerimiento o inicie facultades de comprobación). En ese caso solo pagas impuesto actualizado más recargos. Si es la autoridad la que detecta la omisión, se suma la multa del Art. 76 además de la actualización y los recargos."
+    },
+    {
+      "q": "¿De dónde saco el INPC para calcular la actualización?",
+      "a": "Del **INEGI**, que publica el Índice Nacional de Precios al Consumidor cada mes. Necesitas el INPC del mes anterior al de pago (numerador) y el del mes anterior al vencimiento (denominador). El propio portal del SAT y su sistema de líneas de captura ya aplican el INPC vigente al generar el adeudo."
+    }
   ],
   "sources": [
-    { "name": "Ley de Ingresos de la Federación 2026 (Art. 11 — tasas de recargos) — Cámara de Diputados", "url": "http://www.diputados.gob.mx/LeyesBiblio/pdf/LIF_2026.pdf", "date": "2026-06-19" },
-    { "name": "Código Fiscal de la Federación — Arts. 17-A (actualización) y 21 (recargos) — Cámara de Diputados", "url": "http://www.diputados.gob.mx/LeyesBiblio/pdf/CFF.pdf", "date": "2026-06-19" },
-    { "name": "SAT — Recargos y actualización por pago extemporáneo (Art. 21 CFF)", "url": "https://www.sat.gob.mx/articulo/40771/articulo-21", "date": "2026-06-19" },
-    { "name": "INEGI — Índice Nacional de Precios al Consumidor (INPC)", "url": "https://www.inegi.org.mx/temas/inpc/", "date": "2026-06-19" },
-    { "name": "Infobae — Recargos por mora del SAT subieron 40% en 2026 (1.47% → 2.07%)", "url": "https://www.infobae.com/mexico/2026/06/07/tu-deuda-con-el-sat-ahora-crece-al-doble-los-recargos-por-mora-subieron-40-en-2026/", "date": "2026-06-19" }
+    {
+      "name": "Ley de Ingresos de la Federación 2026 (Art. 11 — tasas de recargos) — Cámara de Diputados",
+      "url": "http://www.diputados.gob.mx/LeyesBiblio/pdf/LIF_2026.pdf",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "Código Fiscal de la Federación — Arts. 17-A (actualización) y 21 (recargos) — Cámara de Diputados",
+      "url": "http://www.diputados.gob.mx/LeyesBiblio/pdf/CFF.pdf",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "SAT — Recargos y actualización por pago extemporáneo (Art. 21 CFF)",
+      "url": "https://www.sat.gob.mx/articulo/40771/articulo-21",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "INEGI — Índice Nacional de Precios al Consumidor (INPC)",
+      "url": "https://www.inegi.org.mx/temas/inpc/",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "Infobae — Recargos por mora del SAT subieron 40% en 2026 (1.47% → 2.07%)",
+      "url": "https://www.infobae.com/mexico/2026/06/07/tu-deuda-con-el-sat-ahora-crece-al-doble-los-recargos-por-mora-subieron-40-en-2026/",
+      "date": "2026-06-19"
+    }
   ],
   "relatedSlugs": [
     "calculadora-isr-anual-personas-fisicas-mexico-tarifa-2026",
@@ -104,5 +248,43 @@
     "recargos vs multa sat",
     "tasa recargos prorroga parcialidades 2026"
   ],
-  "lastReviewed": "2026-06-19"
+  "lastReviewed": "2026-06-20",
+  "referenceTables": [
+    {
+      "title": "Tasas de recargos SAT 2026 vs. 2025 (por modalidad de pago)",
+      "headers": [
+        "Modalidad de pago",
+        "Tasa mensual 2025",
+        "Tasa mensual 2026"
+      ],
+      "rows": [
+        [
+          "Mora / pago extemporáneo (Art. 21 CFF)",
+          "1.47%",
+          "2.07%"
+        ],
+        [
+          "Prórroga (plazo autorizado)",
+          "0.98%",
+          "1.38%"
+        ],
+        [
+          "Parcialidades hasta 12 meses",
+          "1.26%",
+          "1.42%"
+        ],
+        [
+          "Parcialidades de 13 a 24 meses",
+          "1.53%",
+          "1.63%"
+        ],
+        [
+          "Parcialidades más de 24 meses o pago diferido",
+          "1.82%",
+          "1.97%"
+        ]
+      ],
+      "note": "Fuente: Ley de Ingresos de la Federación 2026, Art. 11 fracc. I (DOF 07-nov-2025) y LIF 2025; Art. 21 Código Fiscal de la Federación."
+    }
+  ]
 }

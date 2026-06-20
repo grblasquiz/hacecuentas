@@ -23,24 +23,92 @@
     "Comprador de una propiedad de $200.000 verifica que el valor liquidado por el municipio coincida con el 1% más el adicional."
   ],
   "fields": [
-    { "id": "valorCompraventa", "label": "Valor de la compraventa ($)", "type": "number", "required": true, "placeholder": "50000", "min": 0, "step": 0.01, "unit": "$" },
-    { "id": "avaluoCatastral", "label": "Avalúo catastral municipal ($) — opcional", "type": "number", "required": false, "placeholder": "50000", "min": 0, "step": 0.01, "unit": "$" },
-    { "id": "rebajaReventa", "label": "Rebaja por reventa del mismo inmueble (Art. 533)", "type": "select", "required": false, "default": "ninguna", "options": [
-      { "value": "ninguna", "label": "Sin rebaja" },
-      { "value": "1", "label": "Reventa dentro del 1.º año (−40%)" },
-      { "value": "2", "label": "Reventa dentro del 2.º año (−30%)" },
-      { "value": "3", "label": "Reventa dentro del 3.º año (−20%)" }
-    ] },
-    { "id": "esPermuta", "label": "¿Es una permuta? (cada parte tributa sobre el 75%)", "type": "checkbox", "required": false, "default": false },
-    { "id": "incluirAdicionalProvincial", "label": "Incluir adicional del Consejo Provincial (10%)", "type": "checkbox", "required": false, "default": true }
+    {
+      "id": "valorCompraventa",
+      "label": "Valor de la compraventa ($)",
+      "type": "number",
+      "required": true,
+      "placeholder": "50000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "avaluoCatastral",
+      "label": "Avalúo catastral municipal ($) — opcional",
+      "type": "number",
+      "required": false,
+      "placeholder": "50000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "rebajaReventa",
+      "label": "Rebaja por reventa del mismo inmueble (Art. 533)",
+      "type": "select",
+      "required": false,
+      "default": "ninguna",
+      "options": [
+        {
+          "value": "ninguna",
+          "label": "Sin rebaja"
+        },
+        {
+          "value": "1",
+          "label": "Reventa dentro del 1.º año (−40%)"
+        },
+        {
+          "value": "2",
+          "label": "Reventa dentro del 2.º año (−30%)"
+        },
+        {
+          "value": "3",
+          "label": "Reventa dentro del 3.º año (−20%)"
+        }
+      ]
+    },
+    {
+      "id": "esPermuta",
+      "label": "¿Es una permuta? (cada parte tributa sobre el 75%)",
+      "type": "checkbox",
+      "required": false,
+      "default": false
+    },
+    {
+      "id": "incluirAdicionalProvincial",
+      "label": "Incluir adicional del Consejo Provincial (10%)",
+      "type": "checkbox",
+      "required": false,
+      "default": true
+    }
   ],
   "outputs": [
-    { "id": "total", "label": "Total a pagar (alcabala + adicional)", "primary": true },
-    { "id": "baseImponible", "label": "Base imponible" },
-    { "id": "alcabala", "label": "Impuesto de alcabala (1%)" },
-    { "id": "adicionalProvincial", "label": "Adicional Consejo Provincial (10%)" },
-    { "id": "rebajaAplicada", "label": "Rebaja aplicada (Art. 533)" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "total",
+      "label": "Total a pagar (alcabala + adicional)",
+      "primary": true
+    },
+    {
+      "id": "baseImponible",
+      "label": "Base imponible"
+    },
+    {
+      "id": "alcabala",
+      "label": "Impuesto de alcabala (1%)"
+    },
+    {
+      "id": "adicionalProvincial",
+      "label": "Adicional Consejo Provincial (10%)"
+    },
+    {
+      "id": "rebajaAplicada",
+      "label": "Rebaja aplicada (Art. 533)"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: compra de una casa por $50.000 (avalúo catastral $50.000)",
@@ -55,21 +123,60 @@
   },
   "explanation": "## Cómo se calcula el impuesto de alcabala en Ecuador 2026\n\nLa alcabala es un impuesto **municipal** sobre la **transferencia de dominio** de inmuebles, regulado por el COOTAD. La fórmula base es:\n\n```\nBase imponible = max(valor de la compraventa, avalúo catastral)\nAlcabala       = base imponible × 1%\nTotal          = alcabala + adicional Consejo Provincial (10% de la alcabala)\n```\n\nEcuador está dolarizado, así que todo va en dólares. El impuesto lo paga el **comprador** (sujeto pasivo) y lo recauda el **municipio (GAD)** donde está ubicado el inmueble (sujeto activo).\n\n## La base imponible: el mayor de los dos valores (Art. 532)\n\nEl error más común es calcular la alcabala solo sobre el precio de la escritura. El **Art. 532 del COOTAD** establece que la base imponible es el **valor contractual del inmueble**, pero si ese valor es **menor al avalúo catastral** registrado en el municipio, se usa el **avalúo**. Por eso la calculadora te pide los dos: siempre toma el mayor.\n\n```\nSi avalúo catastral > precio de venta → base = avalúo catastral\nSi precio de venta ≥ avalúo catastral → base = precio de venta\n```\n\n## La tarifa: 1% (Art. 535)\n\nEl **Art. 535 del COOTAD** fija la tarifa en el **1% sobre la base imponible**. No es progresiva ni tiene tramos: es un porcentaje plano. Para un inmueble de $50.000 la alcabala es exactamente $500.\n\n| Valor del inmueble | Alcabala (1%) | Adicional provincial (10%) | Total |\n|---|---|---|---|\n| $30.000 | $300 | $30 | $330 |\n| $50.000 | $500 | $50 | $550 |\n| $80.000 | $800 | $80 | $880 |\n| $120.000 | $1.200 | $120 | $1.320 |\n| $200.000 | $2.000 | $200 | $2.200 |\n\n## El adicional del Consejo Provincial\n\nAdemás del 1% municipal, casi todas las transferencias pagan el **adicional del Consejo Provincial** (la prefectura), que equivale al **10% del impuesto de alcabala** (un 0,10% efectivo sobre la base). Para una alcabala de $500, el adicional es $50. Si querés ver solo el impuesto municipal, desmarcá la opción en la calculadora.\n\n## Rebajas por reventa del mismo inmueble (Art. 533)\n\nSi se transfiere **el mismo inmueble** otra vez dentro de los 3 años, el Art. 533 concede una rebaja sobre la alcabala:\n\n| Reventa dentro de | Rebaja sobre la alcabala |\n|---|---|\n| 1.º año | 40% |\n| 2.º año | 30% |\n| 3.º año | 20% |\n\nAdemás, en las **permutas** cada parte tributa sobre el **75% del valor** del inmueble (una rebaja efectiva del 25% de la base).\n\n## Ejemplos resueltos en USD\n\n**Ejemplo 1 — compra estándar ($90.000, avalúo igual).** Base $90.000 → alcabala $90.000 × 1% = $900. Adicional provincial $90. Total **$990**.\n\n**Ejemplo 2 — avalúo mayor al precio.** Vendés en $80.000 pero el avalúo catastral es $95.000. Base = $95.000 (el mayor). Alcabala $950 + adicional $95 = **$1.045**.\n\n**Ejemplo 3 — reventa dentro del 1.º año.** Inmueble de $120.000, base $120.000, alcabala bruta $1.200. Rebaja del 40% (Art. 533): −$480 → $720. Adicional $72. Total **$792**.\n\n## Exenciones (Art. 534)\n\nNo pagan alcabala, entre otros: el **Estado** y entidades públicas, el **Banco Central**, el **IESS**, los inmuebles de **programas de vivienda de interés social**, las propiedades de gobiernos extranjeros para servicio diplomático, las adjudicaciones por partición o disolución de sociedades, las expropiaciones y los aportes de inmuebles que hacen los cónyuges o convivientes a la sociedad conyugal. Algunos municipios suman exenciones o rebajas para **adultos mayores** y **personas con discapacidad**; verificá la ordenanza de tu cantón.\n\n## Errores comunes\n\n- **Calcular sobre el precio de venta cuando el avalúo es mayor.** La base imponible es el mayor de los dos (Art. 532).\n- **Olvidar el adicional del Consejo Provincial.** Suma un 10% sobre la alcabala; en la práctica casi siempre se cobra.\n- **Confundir alcabala con el impuesto a la utilidad (plusvalía).** Son impuestos distintos: la alcabala (1%) la paga el comprador; el impuesto a las utilidades/plusvalía lo paga el vendedor sobre la ganancia.\n- **Asumir que la alcabala es progresiva.** Es un 1% plano, sin tramos.\n- **No aplicar la rebaja por reventa.** Si revendés el mismo inmueble dentro de 3 años, te corresponde una rebaja del 40%/30%/20% (Art. 533).\n\n## Relacionadas\n\nSi estás comprando un inmueble, te sirven la [calculadora de IVA Ecuador](/ec/calculadora-iva-ecuador) (15%), la [calculadora de impuesto a la renta Ecuador](/ec/calculadora-impuesto-renta-ecuador) y, si financiás la compra, tu [sueldo neto Ecuador](/ec/calculadora-sueldo-neto-ecuador) y el [crédito vehicular Ecuador](/ec/calculadora-credito-vehicular-ecuador) para dimensionar cuotas.\n\n## Disclaimer\n\nCálculo orientativo según el COOTAD (Art. 527/532/533/534/535). El valor exacto a pagar lo liquida el **municipio (GAD)** donde está el inmueble y puede variar por el avalúo catastral específico, ordenanzas locales, tasas de registro, exenciones (adulto mayor, discapacidad, vivienda de interés social) y el adicional del Consejo Provincial de tu provincia. Verificá siempre con la oficina de rentas de tu municipio antes de firmar la escritura.\n",
   "faq": [
-    { "q": "¿Cuánto se paga de alcabala en Ecuador?", "a": "El **1% sobre la base imponible** (COOTAD Art. 535). Para un inmueble de $50.000 son **$500**. A eso suele sumarse el adicional del Consejo Provincial (10% de la alcabala = $50), dando $550 en total. Es un porcentaje plano, no progresivo." },
-    { "q": "¿Sobre qué valor se calcula la alcabala: el precio de venta o el avalúo?", "a": "Sobre el **mayor de los dos** (Art. 532). La base imponible es el valor contractual de la compraventa, pero si el **avalúo catastral** municipal es más alto, se calcula sobre el avalúo. Por eso conviene ingresar ambos valores en la calculadora." },
-    { "q": "¿Quién paga el impuesto de alcabala, el comprador o el vendedor?", "a": "Lo paga el **comprador** (el adquirente del dominio, sujeto pasivo). Es distinto del impuesto a la utilidad o plusvalía, que paga el **vendedor** sobre la ganancia obtenida en la venta." },
-    { "q": "¿Qué es el adicional del Consejo Provincial?", "a": "Es un impuesto adicional que cobra la prefectura/Consejo Provincial equivalente al **10% del impuesto de alcabala** municipal (un 0,10% efectivo sobre la base). Para una alcabala de $500, el adicional es $50. Casi siempre se cobra junto con la alcabala." },
-    { "q": "¿Hay rebajas en la alcabala?", "a": "Sí. El Art. 533 del COOTAD da una rebaja si se transfiere el **mismo inmueble** dentro de 3 años: **40%** el primer año, **30%** el segundo y **20%** el tercero. En las **permutas**, cada parte tributa sobre el 75% del valor del inmueble." },
-    { "q": "¿Quién está exento de pagar alcabala?", "a": "Según el Art. 534: el **Estado** y entidades públicas, el **Banco Central**, el **IESS**, los inmuebles de **vivienda de interés social**, las propiedades diplomáticas de gobiernos extranjeros, las expropiaciones, las adjudicaciones por partición o disolución societaria y los aportes de inmuebles a la sociedad conyugal. Algunos municipios exoneran a adultos mayores y personas con discapacidad." },
-    { "q": "¿La alcabala es lo mismo que el impuesto a la plusvalía?", "a": "No. La **alcabala** (1%) grava la transferencia de dominio y la paga el comprador. El **impuesto a la utilidad o plusvalía** grava la ganancia de la venta y lo paga el vendedor. Son dos impuestos municipales distintos que conviven en una compraventa." },
-    { "q": "¿Dónde se paga la alcabala?", "a": "En el **municipio (GAD)** donde está ubicado el inmueble. El municipio liquida el impuesto a partir de la minuta o escritura y se paga antes de inscribir la transferencia en el Registro de la Propiedad." },
-    { "q": "¿La alcabala se paga en dólares?", "a": "Sí. Ecuador está dolarizado desde el año 2000, así que la base imponible y el impuesto se expresan en dólares estadounidenses (USD, \"$\"). No hay conversión de moneda en el cálculo." },
-    { "q": "¿Cuánto pago de alcabala por una casa de $120.000?", "a": "La alcabala es $120.000 × 1% = **$1.200**, más el adicional del Consejo Provincial (10% = $120), dando **$1.320** en total. Si el avalúo catastral fuera mayor a $120.000, se calcularía sobre el avalúo. Si revendés el mismo inmueble dentro del primer año, te corresponde una rebaja del 40%." }
+    {
+      "q": "¿Cuánto se paga de alcabala en Ecuador?",
+      "a": "El **1% sobre la base imponible** (COOTAD Art. 535). Para un inmueble de $50.000 son **$500**. A eso suele sumarse el adicional del Consejo Provincial (10% de la alcabala = $50), dando $550 en total. Es un porcentaje plano, no progresivo."
+    },
+    {
+      "q": "¿Sobre qué valor se calcula la alcabala: el precio de venta o el avalúo?",
+      "a": "Sobre el **mayor de los dos** (Art. 532). La base imponible es el valor contractual de la compraventa, pero si el **avalúo catastral** municipal es más alto, se calcula sobre el avalúo. Por eso conviene ingresar ambos valores en la calculadora."
+    },
+    {
+      "q": "¿Quién paga el impuesto de alcabala, el comprador o el vendedor?",
+      "a": "Lo paga el **comprador** (el adquirente del dominio, sujeto pasivo). Es distinto del impuesto a la utilidad o plusvalía, que paga el **vendedor** sobre la ganancia obtenida en la venta."
+    },
+    {
+      "q": "¿Qué es el adicional del Consejo Provincial?",
+      "a": "Es un impuesto adicional que cobra la prefectura/Consejo Provincial equivalente al **10% del impuesto de alcabala** municipal (un 0,10% efectivo sobre la base). Para una alcabala de $500, el adicional es $50. Casi siempre se cobra junto con la alcabala."
+    },
+    {
+      "q": "¿Hay rebajas en la alcabala?",
+      "a": "Sí. El Art. 533 del COOTAD da una rebaja si se transfiere el **mismo inmueble** dentro de 3 años: **40%** el primer año, **30%** el segundo y **20%** el tercero. En las **permutas**, cada parte tributa sobre el 75% del valor del inmueble."
+    },
+    {
+      "q": "¿Quién está exento de pagar alcabala?",
+      "a": "Según el Art. 534: el **Estado** y entidades públicas, el **Banco Central**, el **IESS**, los inmuebles de **vivienda de interés social**, las propiedades diplomáticas de gobiernos extranjeros, las expropiaciones, las adjudicaciones por partición o disolución societaria y los aportes de inmuebles a la sociedad conyugal. Algunos municipios exoneran a adultos mayores y personas con discapacidad."
+    },
+    {
+      "q": "¿La alcabala es lo mismo que el impuesto a la plusvalía?",
+      "a": "No. La **alcabala** (1%) grava la transferencia de dominio y la paga el comprador. El **impuesto a la utilidad o plusvalía** grava la ganancia de la venta y lo paga el vendedor. Son dos impuestos municipales distintos que conviven en una compraventa."
+    },
+    {
+      "q": "¿Dónde se paga la alcabala?",
+      "a": "En el **municipio (GAD)** donde está ubicado el inmueble. El municipio liquida el impuesto a partir de la minuta o escritura y se paga antes de inscribir la transferencia en el Registro de la Propiedad."
+    },
+    {
+      "q": "¿La alcabala se paga en dólares?",
+      "a": "Sí. Ecuador está dolarizado desde el año 2000, así que la base imponible y el impuesto se expresan en dólares estadounidenses (USD, \"$\"). No hay conversión de moneda en el cálculo."
+    },
+    {
+      "q": "¿Cuánto pago de alcabala por una casa de $120.000?",
+      "a": "La alcabala es $120.000 × 1% = **$1.200**, más el adicional del Consejo Provincial (10% = $120), dando **$1.320** en total. Si el avalúo catastral fuera mayor a $120.000, se calcularía sobre el avalúo. Si revendés el mismo inmueble dentro del primer año, te corresponde una rebaja del 40%."
+    }
   ],
   "sources": [
-    { "name": "COOTAD — Código Orgánico de Organización Territorial (Art. 527/532/533/534/535)", "url": "https://www.cuenca.gob.ec/content/impuesto-de-alcabalas" },
-    { "name": "Calendario Tributario Ecuador — Impuesto de Alcabala (tarifa, base, rebajas)", "url": "https://calendariotributario.org/ec/en-que-consiste-impuesto-alcabala/" },
-    { "name": "Gob.ec — Trámite oficial: Impuesto de Alcabalas por transferencia de dominio", "url": "https://www.gob.ec/gadmcp/tramites/impuesto-alcabalas-transferencia-dominio" }
+    {
+      "name": "COOTAD — Código Orgánico de Organización Territorial (Art. 527/532/533/534/535)",
+      "url": "https://www.cuenca.gob.ec/content/impuesto-de-alcabalas"
+    },
+    {
+      "name": "Calendario Tributario Ecuador — Impuesto de Alcabala (tarifa, base, rebajas)",
+      "url": "https://calendariotributario.org/ec/en-que-consiste-impuesto-alcabala/"
+    },
+    {
+      "name": "Gob.ec — Trámite oficial: Impuesto de Alcabalas por transferencia de dominio",
+      "url": "https://www.gob.ec/gadmcp/tramites/impuesto-alcabalas-transferencia-dominio"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -90,5 +197,55 @@
     "adicional consejo provincial alcabala",
     "quien paga la alcabala comprador o vendedor"
   ],
-  "lastReviewed": "2026-06-15"
+  "lastReviewed": "2026-06-20",
+  "referenceTables": [
+    {
+      "title": "Rebajas por reventa y componentes del impuesto de alcabala — COOTAD Ecuador",
+      "headers": [
+        "Concepto",
+        "Base de cálculo",
+        "Tarifa / Rebaja",
+        "Artículo COOTAD"
+      ],
+      "rows": [
+        [
+          "Alcabala (tarifa general)",
+          "Mayor valor entre precio de venta y avalúo catastral",
+          "1%",
+          "Art. 535"
+        ],
+        [
+          "Adicional Consejo Provincial",
+          "Monto de la alcabala calculada",
+          "10% de la alcabala (0,10% efectivo sobre la base)",
+          "—"
+        ],
+        [
+          "Rebaja por reventa — dentro del 1.º año",
+          "Alcabala bruta",
+          "40% de descuento",
+          "Art. 533"
+        ],
+        [
+          "Rebaja por reventa — dentro del 2.º año",
+          "Alcabala bruta",
+          "30% de descuento",
+          "Art. 533"
+        ],
+        [
+          "Rebaja por reventa — dentro del 3.º año",
+          "Alcabala bruta",
+          "20% de descuento",
+          "Art. 533"
+        ],
+        [
+          "Permuta (cada parte)",
+          "75% del valor del inmueble de cada parte",
+          "1% sobre ese 75%",
+          "Art. 533"
+        ]
+      ],
+      "note": "Fuente: COOTAD — Código Orgánico de Organización Territorial, Art. 532, 533 y 535 (Ecuador, vigente 2026). El valor exacto lo liquida el municipio (GAD) donde está ubicado el inmueble."
+    }
+  ]
 }

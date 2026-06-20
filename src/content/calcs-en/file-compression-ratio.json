@@ -78,8 +78,7 @@
     ],
     "result": "3.33:1 ratio = 70% saved (70 MB)"
   },
-  "explanation": "## How to calculate compression ratio\n\nThere are two numbers people mean when they say \"compression ratio\", and they come from the same two inputs:\n\n```\n# 1. Compression ratio (the \"N:1\" number)\nRatio = Original Size ÷ Compressed Size\nExample: 100 MB ÷ 30 MB = 3.33  →  reported as 3.33:1\n\n# 2. Space saved / compression rate (the percentage)\nSaving % = (1 − Compressed Size ÷ Original Size) × 100\nExample: (1 − 30 ÷ 100) × 100 = 70%\n\n# 3. Space saved (absolute)\nSpace Saved = Original Size − Compressed Size\nExample: 100 MB − 30 MB = 70 MB\n```\n\nThe units cancel out, so it does not matter whether you enter MB, GB, KB or bytes — just keep **both fields in the same unit**. A ratio of **1:1** means no compression; anything below 1:1 (e.g. 0.98:1) means the \"compressed\" file is actually *larger* than the original, which is normal when you compress already-compressed data.\n\n---\n\n## Ratio ↔ percentage quick conversion\n\n| Compression ratio | Space saved (%) |\n|---|---|\n| 1.0:1 | 0% |\n| 1.25:1 | 20% |\n| 1.5:1 | 33% |\n| 2:1 | 50% |\n| 3:1 | 67% |\n| 3.33:1 | 70% |\n| 4:1 | 75% |\n| 5:1 | 80% |\n| 10:1 | 90% |\n| 20:1 | 95% |\n| 100:1 | 99% |\n\n*Conversion formula: Saving % = (1 − 1 ÷ Ratio) × 100, and Ratio = 1 ÷ (1 − Saving %/100).*\n\n---\n\n## Typical compression ratios by file type\n\n| File / Format | Algorithm | Typical ratio | Typical saving |\n|---|---|---|---|\n| Plain text (.txt, .log) | GZIP / Deflate | 4:1 – 10:1 | 75% – 90% |\n| Source code (.js, .css, .html) | Brotli | 3:1 – 6:1 | 67% – 83% |\n| Office docs (.docx, .xlsx) | ZIP (internal) | 1.05:1 – 1.2:1 | 5% – 17% |\n| JPEG / PNG images | ZIP / GZIP | 1.0:1 – 1.05:1 | 0% – 5% |\n| RAW photo (e.g. Canon CR3) | ZIP | 1.5:1 – 2.5:1 | 33% – 60% |\n| Video — ProRes 4K | H.265 / HEVC | 10:1 – 30:1 | 90% – 97% |\n| Video — MP4 (H.264) | H.265 / HEVC | 1.5:1 – 2:1 | 33% – 50% |\n| Database dump (.sql) | zstd / GZIP | 3:1 – 8:1 | 67% – 87% |\n| Executable (.exe, .dll) | ZIP | 1.5:1 – 2:1 | 33% – 50% |\n| Already-compressed (.zip, .mp3, .mp4) | ZIP | ≈ 1.0:1 | ≈ 0% |\n\n*Ratios are empirical averages; real results vary with the content's entropy.*\n\n---\n\n## Worked cases\n\n### Case 1 — Office document folder backup\nA 2,400 MB folder of `.docx` and `.xlsx` files compresses to 600 MB.\n\n```\nRatio       = 2,400 ÷ 600 = 4.0:1\nSpace saved = (1 − 600 ÷ 2,400) × 100 = 75%\nMB saved    = 2,400 − 600 = 1,800 MB (≈ 1.76 GB)\n```\n\n### Case 2 — JavaScript bundle on a CDN\nA 1,200 KB unminified JS bundle compresses with Brotli to 210 KB.\n\n```\nRatio       = 1,200 ÷ 210 = 5.71:1\nSpace saved = (1 − 210 ÷ 1,200) × 100 = 82.5%\nKB saved    = 990 KB per request\n```\n\nAt 500,000 requests/month that is roughly 495 GB of bandwidth saved.\n\n### Case 3 — Re-zipping an MP3\nZipping a 48 MB MP3 produces a 47.9 MB archive.\n\n```\nRatio       = 48 ÷ 47.9 = 1.002:1\nSpace saved = (1 − 47.9 ÷ 48) × 100 = 0.21%\nMB saved    = 0.1 MB\n```\n\nMP3 is already lossy-compressed (near-maximum entropy), so further lossless compression does almost nothing — the *entropy ceiling*.\n\n---\n\n## Common mistakes\n\n1. **Confusing ratio with percentage.** A 4:1 ratio is *not* 4% — it is 75% saved. Mixing them produces wildly wrong storage estimates.\n2. **Compressing already-compressed files.** JPEG, MP3, MP4, ZIP and DOCX already contain compression; re-zipping yields < 1% and burns CPU.\n3. **Measuring after encryption.** Encrypted data is near-random and compresses to ≈ 1:1. Always compress *first*, then encrypt.\n4. **Container overhead on tiny files.** Headers, checksums and the central directory can make an archive of many sub-1 KB files *bigger* than the originals (ratio < 1:1).\n5. **Mismatched units.** Original in MB and compressed in KB without converting is off by a factor of 1,024. Use the same unit in both fields.\n6. **Averaging ratios.** Ratio depends on content entropy; average by *total size*, not by simple mean of per-file ratios."
-  ,
+  "explanation": "## How to calculate compression ratio\n\nThere are two numbers people mean when they say \"compression ratio\", and they come from the same two inputs:\n\n```\n# 1. Compression ratio (the \"N:1\" number)\nRatio = Original Size ÷ Compressed Size\nExample: 100 MB ÷ 30 MB = 3.33  →  reported as 3.33:1\n\n# 2. Space saved / compression rate (the percentage)\nSaving % = (1 − Compressed Size ÷ Original Size) × 100\nExample: (1 − 30 ÷ 100) × 100 = 70%\n\n# 3. Space saved (absolute)\nSpace Saved = Original Size − Compressed Size\nExample: 100 MB − 30 MB = 70 MB\n```\n\nThe units cancel out, so it does not matter whether you enter MB, GB, KB or bytes — just keep **both fields in the same unit**. A ratio of **1:1** means no compression; anything below 1:1 (e.g. 0.98:1) means the \"compressed\" file is actually *larger* than the original, which is normal when you compress already-compressed data.\n\n---\n\n## Ratio ↔ percentage quick conversion\n\n| Compression ratio | Space saved (%) |\n|---|---|\n| 1.0:1 | 0% |\n| 1.25:1 | 20% |\n| 1.5:1 | 33% |\n| 2:1 | 50% |\n| 3:1 | 67% |\n| 3.33:1 | 70% |\n| 4:1 | 75% |\n| 5:1 | 80% |\n| 10:1 | 90% |\n| 20:1 | 95% |\n| 100:1 | 99% |\n\n*Conversion formula: Saving % = (1 − 1 ÷ Ratio) × 100, and Ratio = 1 ÷ (1 − Saving %/100).*\n\n---\n\n## Typical compression ratios by file type\n\n| File / Format | Algorithm | Typical ratio | Typical saving |\n|---|---|---|---|\n| Plain text (.txt, .log) | GZIP / Deflate | 4:1 – 10:1 | 75% – 90% |\n| Source code (.js, .css, .html) | Brotli | 3:1 – 6:1 | 67% – 83% |\n| Office docs (.docx, .xlsx) | ZIP (internal) | 1.05:1 – 1.2:1 | 5% – 17% |\n| JPEG / PNG images | ZIP / GZIP | 1.0:1 – 1.05:1 | 0% – 5% |\n| RAW photo (e.g. Canon CR3) | ZIP | 1.5:1 – 2.5:1 | 33% – 60% |\n| Video — ProRes 4K | H.265 / HEVC | 10:1 – 30:1 | 90% – 97% |\n| Video — MP4 (H.264) | H.265 / HEVC | 1.5:1 – 2:1 | 33% – 50% |\n| Database dump (.sql) | zstd / GZIP | 3:1 – 8:1 | 67% – 87% |\n| Executable (.exe, .dll) | ZIP | 1.5:1 – 2:1 | 33% – 50% |\n| Already-compressed (.zip, .mp3, .mp4) | ZIP | ≈ 1.0:1 | ≈ 0% |\n\n*Ratios are empirical averages; real results vary with the content's entropy.*\n\n---\n\n## Worked cases\n\n### Case 1 — Office document folder backup\nA 2,400 MB folder of `.docx` and `.xlsx` files compresses to 600 MB.\n\n```\nRatio       = 2,400 ÷ 600 = 4.0:1\nSpace saved = (1 − 600 ÷ 2,400) × 100 = 75%\nMB saved    = 2,400 − 600 = 1,800 MB (≈ 1.76 GB)\n```\n\n### Case 2 — JavaScript bundle on a CDN\nA 1,200 KB unminified JS bundle compresses with Brotli to 210 KB.\n\n```\nRatio       = 1,200 ÷ 210 = 5.71:1\nSpace saved = (1 − 210 ÷ 1,200) × 100 = 82.5%\nKB saved    = 990 KB per request\n```\n\nAt 500,000 requests/month that is roughly 495 GB of bandwidth saved.\n\n### Case 3 — Re-zipping an MP3\nZipping a 48 MB MP3 produces a 47.9 MB archive.\n\n```\nRatio       = 48 ÷ 47.9 = 1.002:1\nSpace saved = (1 − 47.9 ÷ 48) × 100 = 0.21%\nMB saved    = 0.1 MB\n```\n\nMP3 is already lossy-compressed (near-maximum entropy), so further lossless compression does almost nothing — the *entropy ceiling*.\n\n---\n\n## Common mistakes\n\n1. **Confusing ratio with percentage.** A 4:1 ratio is *not* 4% — it is 75% saved. Mixing them produces wildly wrong storage estimates.\n2. **Compressing already-compressed files.** JPEG, MP3, MP4, ZIP and DOCX already contain compression; re-zipping yields < 1% and burns CPU.\n3. **Measuring after encryption.** Encrypted data is near-random and compresses to ≈ 1:1. Always compress *first*, then encrypt.\n4. **Container overhead on tiny files.** Headers, checksums and the central directory can make an archive of many sub-1 KB files *bigger* than the originals (ratio < 1:1).\n5. **Mismatched units.** Original in MB and compressed in KB without converting is off by a factor of 1,024. Use the same unit in both fields.\n6. **Averaging ratios.** Ratio depends on content entropy; average by *total size*, not by simple mean of per-file ratios.",
   "faq": [
     {
       "q": "How do I calculate compression ratio?",
@@ -146,7 +145,81 @@
     "updateType": "manual",
     "notes": "Fixed mathematical formula, no external data updates required"
   },
-  "lastReviewed": "2026-06-04",
+  "lastReviewed": "2026-06-20",
   "relatedSlugs": [],
-  "noindex": false
+  "noindex": false,
+  "referenceTables": [
+    {
+      "title": "Typical Compression Ratios by File Type",
+      "headers": [
+        "File / Format",
+        "Algorithm",
+        "Typical Ratio",
+        "Space Saved"
+      ],
+      "rows": [
+        [
+          "Plain text (.txt, .log)",
+          "GZIP / Deflate",
+          "4:1 – 10:1",
+          "75% – 90%"
+        ],
+        [
+          "Source code (.js, .css, .html)",
+          "Brotli",
+          "3:1 – 6:1",
+          "67% – 83%"
+        ],
+        [
+          "Office docs (.docx, .xlsx)",
+          "ZIP (internal)",
+          "1.05:1 – 1.2:1",
+          "5% – 17%"
+        ],
+        [
+          "JPEG / PNG images",
+          "ZIP / GZIP",
+          "1.0:1 – 1.05:1",
+          "0% – 5%"
+        ],
+        [
+          "RAW photo (e.g. Canon CR3)",
+          "ZIP",
+          "1.5:1 – 2.5:1",
+          "33% – 60%"
+        ],
+        [
+          "Video — ProRes 4K",
+          "H.265 / HEVC",
+          "10:1 – 30:1",
+          "90% – 97%"
+        ],
+        [
+          "Video — MP4 (H.264)",
+          "H.265 / HEVC",
+          "1.5:1 – 2:1",
+          "33% – 50%"
+        ],
+        [
+          "Database dump (.sql)",
+          "zstd / GZIP",
+          "3:1 – 8:1",
+          "67% – 87%"
+        ],
+        [
+          "Executable (.exe, .dll)",
+          "ZIP",
+          "1.5:1 – 2:1",
+          "33% – 50%"
+        ],
+        [
+          "Already-compressed (.zip, .mp3, .mp4)",
+          "ZIP",
+          "≈ 1.0:1",
+          "≈ 0%"
+        ]
+      ],
+      "note": "Fuente: Wikipedia — Data compression ratio; RFC 7932 (Brotli), RFC 8878 (Zstandard), RFC 1951 (DEFLATE). Ratios are empirical averages; real results vary with content entropy."
+    }
+  ]
 }

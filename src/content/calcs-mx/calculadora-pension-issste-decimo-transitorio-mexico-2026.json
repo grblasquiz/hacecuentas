@@ -23,24 +23,83 @@
     "Un trabajador compara su futura pensión ISSSTE contra la de un familiar del sector privado bajo la Ley 73 del IMSS para entender por qué se calculan distinto."
   ],
   "fields": [
-    { "id": "sueldoBasico", "label": "Sueldo básico mensual promedio de tu último año de cotización", "type": "number", "required": true, "placeholder": "18000", "min": 0, "step": 0.01, "unit": "$" },
-    { "id": "aniosServicio", "label": "Años de servicio cotizados al ISSSTE", "type": "number", "required": true, "placeholder": "20", "min": 0, "step": 1 },
-    { "id": "edad", "label": "Edad a la que planeas pensionarte", "type": "number", "required": true, "placeholder": "62", "min": 0, "step": 1, "unit": "años" },
-    { "id": "sexo", "label": "Sexo (define los años para el 100% y la edad mínima)", "type": "select", "default": "hombre", "options": [
-      { "value": "hombre", "label": "Hombre (30 años = 100%)" },
-      { "value": "mujer", "label": "Mujer (28 años = 100%)" }
-    ] }
+    {
+      "id": "sueldoBasico",
+      "label": "Sueldo básico mensual promedio de tu último año de cotización",
+      "type": "number",
+      "required": true,
+      "placeholder": "18000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "aniosServicio",
+      "label": "Años de servicio cotizados al ISSSTE",
+      "type": "number",
+      "required": true,
+      "placeholder": "20",
+      "min": 0,
+      "step": 1
+    },
+    {
+      "id": "edad",
+      "label": "Edad a la que planeas pensionarte",
+      "type": "number",
+      "required": true,
+      "placeholder": "62",
+      "min": 0,
+      "step": 1,
+      "unit": "años"
+    },
+    {
+      "id": "sexo",
+      "label": "Sexo (define los años para el 100% y la edad mínima)",
+      "type": "select",
+      "default": "hombre",
+      "options": [
+        {
+          "value": "hombre",
+          "label": "Hombre (30 años = 100%)"
+        },
+        {
+          "value": "mujer",
+          "label": "Mujer (28 años = 100%)"
+        }
+      ]
+    }
   ],
   "outputs": [
-    { "id": "pensionMensual", "label": "Pensión mensual estimada", "primary": true },
-    { "id": "regimenAplicable", "label": "Régimen aplicable" },
-    { "id": "porcentajeSb", "label": "Porcentaje del sueldo básico" },
-    { "id": "sueldoBasicoCalculo", "label": "Sueldo básico para el cálculo" },
-    { "id": "detalle", "label": "Detalle del cálculo" }
+    {
+      "id": "pensionMensual",
+      "label": "Pensión mensual estimada",
+      "primary": true
+    },
+    {
+      "id": "regimenAplicable",
+      "label": "Régimen aplicable"
+    },
+    {
+      "id": "porcentajeSb",
+      "label": "Porcentaje del sueldo básico"
+    },
+    {
+      "id": "sueldoBasicoCalculo",
+      "label": "Sueldo básico para el cálculo"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo"
+    }
   ],
   "example": {
     "title": "Ejemplo: sueldo básico $18,000, 20 años de servicio, 62 años (hombre)",
-    "inputs": { "sueldoBasico": 18000, "aniosServicio": 20, "edad": 62, "sexo": "hombre" },
+    "inputs": {
+      "sueldoBasico": 18000,
+      "aniosServicio": 20,
+      "edad": 62,
+      "sexo": "hombre"
+    },
     "steps": [
       "20 años de servicio no llegan a los 30 de la jubilación, pero con 62 años (≥60) y ≥15 de servicio aplica el régimen de retiro por edad y tiempo de servicios.",
       "La tabla del Décimo Transitorio asigna a 20 años de servicio el 62.5% del sueldo básico.",
@@ -51,24 +110,78 @@
   },
   "explanation": "## Quién puede pensionarse por el Décimo Transitorio\n\nCuando entró en vigor la nueva **Ley del ISSSTE el 1 de abril de 2007**, los trabajadores del Estado que ya cotizaban tuvieron que **elegir** entre dos regímenes: el de **cuentas individuales** (su pensión sale de lo ahorrado en su AFORE PENSIONISSSTE, como en el sector privado bajo la Ley 97) o el del **Artículo Décimo Transitorio** (el régimen de *reparto* anterior, con pensión definida por ley). Quien optó por el Décimo Transitorio conserva las reglas de la ley vieja, y eso es lo que calcula esta herramienta.\n\nEste régimen aplica **solo al sector público** (federación, dependencias, organismos y entidades incorporadas al ISSSTE): maestros de la SEP, personal de salud, burócratas, etc. Es un **universo paralelo al IMSS**: si trabajaste en una empresa privada, tu pensión se rige por la [Ley 73 del IMSS](/mx/calculadora-pension-imss-ley-73-mexico) o la Ley 97, no por esto. Y dentro del propio ISSSTE, si elegiste cuentas individuales, tu pensión depende de tu saldo, que puedes proyectar con la [calculadora de AFORE](/mx/calculadora-afore-saldo-pension-jubilacion-mexico-2026).\n\n## Cómo se calcula la pensión (paso a paso)\n\n```\nPensión = Sueldo básico promedio del último año × Porcentaje según años de servicio\n```\n\n**1. Sueldo básico.** El ISSSTE toma el **promedio del sueldo básico que disfrutaste en el último año** inmediato anterior a tu baja o jubilación. El \"sueldo básico\" es el tabular más el sobresueldo de zona (no incluye compensaciones ni bonos). Por jurisprudencia de la Suprema Corte (2a./J. 200/2020) y el Artículo 17 de la Ley del ISSSTE, ese sueldo básico se **topa a 10 veces la UMA** elevada al mes: con la UMA 2026 mensual de $3,566.22, el tope es **$35,662.20 al mes**. Si tu sueldo básico es mayor, el excedente no cuenta. Puedes convertir tu sueldo a UMA con la [calculadora de UMA](/mx/calculadora-uma-conversion-mexico).\n\n**2. Porcentaje según el régimen.** Aquí está la diferencia con el IMSS: el ISSSTE no usa una tabla solidaria por nivel salarial, sino un porcentaje que **depende de tus años de servicio (y a veces de tu edad)**. Hay tres modalidades.\n\n## Las tres modalidades de pensión\n\n### Jubilación (la mejor): 100% del sueldo básico\n\nCon **30 años de servicio** (hombres) o **28 años** (mujeres) tienes derecho al **100% de tu sueldo básico**. Es la pensión más alta del sistema y por eso es la meta de la mayoría. La condición que cambió en 2026 es la **edad mínima**: la reforma del 24 de junio de 2025 ordenó que **baje** de forma gradual, revirtiendo el esquema anterior de la ley 2007 que la subía hasta 60/58. Esta es la progresión:\n\n| Periodo | Edad mínima hombres | Edad mínima mujeres |\n|---|---|---|\n| **2026-2027** | **58** | **56** |\n| 2028-2030 | 57 | 55 |\n| 2031-2033 | 56 | 54 |\n| 2034 en adelante | 55 | 53 |\n\nEs decir: aunque ya tengas los 30 (o 28) años cotizados, en 2026 necesitas cumplir **58 años (hombres) o 56 (mujeres)** para jubilarte al 100%, y esa edad mínima seguirá bajando en los próximos años.\n\n### Retiro por edad y tiempo de servicios: 50% a 95%\n\nSi todavía no llegas a los 30/28 años pero ya tienes **60 años de edad y al menos 15 de servicio**, accedes a esta modalidad. El porcentaje sube con los años de servicio: **2.5% por año del 15 al 24, y 5% por año del 25 al 29**.\n\n| Años de servicio | % del sueldo básico | Años de servicio | % del sueldo básico |\n|---|---|---|---|\n| 15 | 50.0% | 23 | 70.0% |\n| 16 | 52.5% | 24 | 72.5% |\n| 17 | 55.0% | 25 | 75.0% |\n| 18 | 57.5% | 26 | 80.0% |\n| 19 | 60.0% | 27 | 85.0% |\n| 20 | 62.5% | 28 | 90.0% |\n| 21 | 65.0% | 29 | 95.0% |\n| 22 | 67.5% | 30 | 100% (jubilación) |\n\nPor eso conviene seguir cotizando: pasar de 24 a 25 años de servicio sube tu pensión del 72.5% al 75%, y cada año posterior vale 5 puntos.\n\n### Cesantía en edad avanzada: 40% a 50%\n\nEs la modalidad de menor requisito: **65 años de edad y al menos 10 de servicio**. El porcentaje depende de la edad a la que te retires, partiendo del 40%:\n\n| Edad | % del sueldo básico |\n|---|---|\n| 65 | 40% |\n| 66 | 42% |\n| 67 | 44% |\n| 68 | 46% |\n| 69 | 48% |\n| 70 o más | 50% |\n\n## Pensión mínima y tope 2026\n\nNinguna pensión del ISSSTE puede ser **menor a un salario mínimo mensual**. Con el salario mínimo 2026 de $315.04 diarios, ese piso es de **$9,577.22 al mes** (315.04 × 30.4). Si tu cálculo da menos —por ejemplo, cesantía del 40% sobre un sueldo básico bajo— cobras la mínima. Del otro lado, el techo es el sueldo básico topado a **10 UMA** ($35,662.20): aun con el 100%, una jubilación no parte de un sueldo básico mayor a esa cifra.\n\n## Cómo subir tu pensión antes de retirarte\n\nComo el cálculo usa el **sueldo básico del último año** y un porcentaje por **años de servicio**, las dos palancas son claras:\n\n- **Acumular años de servicio**: cada año adicional sube el porcentaje (2.5 o 5 puntos) hasta llegar al 100% con 30 (28 mujeres). Llegar a la jubilación completa puede valer decenas de puntos sobre tu sueldo.\n- **Cuidar el sueldo básico del último año**: a diferencia del IMSS (que promedia 5 años), aquí cuenta solo el **último año**, así que un ascenso o una recategorización tabular justo antes del retiro impacta de lleno —siempre bajo el tope de 10 UMA—.\n\nUn ejemplo del efecto: con sueldo básico de $20,000, pasar de 24 a 30 años de servicio sube la pensión de $14,500 (72.5%) a $20,000 (100%) —un 38% más por seguir cotizando esos 6 años.\n\n## Diferencias clave con el IMSS\n\n| Concepto | ISSSTE Décimo Transitorio | IMSS Ley 73 |\n|---|---|---|\n| Sector | Público (gobierno) | Privado (empresas) |\n| Base del cálculo | Sueldo básico del **último año** | Salario promedio de **250 semanas** (5 años) |\n| 100% del sueldo | 30 años servicio (28 mujeres) | Difícil; tabla por nivel salarial |\n| Tope del sueldo base | 10 UMA | 25 UMA |\n| Asignaciones familiares | No aplica de la misma forma | Sí (15% esposa, 10% por hijo) |\n\n## Errores comunes\n\n- **Confundir Décimo Transitorio con cuentas individuales**: si en 2007 elegiste AFORE PENSIONISSSTE, tu pensión depende de tu saldo, no de esta fórmula.\n- **Olvidar la edad mínima 2026**: tener 30 años de servicio no basta; en 2026 hay que cumplir 58 (hombres) o 56 (mujeres) para jubilarse al 100%.\n- **Usar el sueldo de toda tu carrera**: solo cuenta el promedio del **último año** de cotización.\n- **Ignorar el tope de 10 UMA**: sueldos básicos altos se topan en $35,662.20 para el cálculo.\n- **Pensar que es lo mismo que el IMSS**: son sistemas distintos, con bases, topes y porcentajes diferentes.\n- **No contar bien los años de servicio**: cruzar de un rango a otro (por ejemplo 24 a 25 años) cambia el porcentaje de 72.5% a 75%.\n\n## Cuándo aplica y excepciones\n\nEsta calculadora estima las pensiones de **jubilación, retiro por edad y tiempo de servicios, y cesantía en edad avanzada** del Artículo Décimo Transitorio. No cubre las pensiones por **invalidez** ni las de **viudez/orfandad** (que tienen reglas propias), ni el régimen de **cuentas individuales** del ISSSTE. El monto definitivo lo determina el ISSSTE con tu expediente real de cotización, tu sueldo básico registrado y la edad mínima vigente al momento del trámite.\n\n## Disclaimer\n\nCálculo orientativo con los parámetros 2026 (UMA $117.31 diaria / $3,566.22 mensual, salario mínimo $315.04, tope de 10 UMA = $35,662.20, edad mínima de jubilación 58 hombres / 56 mujeres). Los porcentajes provienen del Artículo Décimo Transitorio de la Ley del ISSSTE y la reforma del 24 de junio de 2025; el sueldo básico, la edad mínima vigente y tu antigüedad registrada pueden modificar el resultado. El monto oficial lo determina el ISSSTE. No constituye asesoría previsional.",
   "faq": [
-    { "q": "¿Quién puede pensionarse por el Artículo Décimo Transitorio del ISSSTE?", "a": "Los trabajadores del **sector público que cotizaban al ISSSTE antes del 1 de abril de 2007** y que, al entrar en vigor la nueva ley, **optaron por el régimen de reparto** (Décimo Transitorio) en lugar del de cuentas individuales (AFORE PENSIONISSSTE). Conservan las reglas de la ley anterior: pensión definida sobre el sueldo básico y los años de servicio." },
-    { "q": "¿Cómo se calcula mi pensión ISSSTE Décimo Transitorio?", "a": "Es **sueldo básico promedio de tu último año de cotización × un porcentaje** que depende del régimen: 100% con 30 años de servicio (28 mujeres); del 50% al 95% por edad y tiempo de servicios (≥60 años y 15-29 de servicio); o del 40% al 50% por cesantía en edad avanzada (≥65 años y ≥10 de servicio). El sueldo básico se topa a 10 UMA ($35,662.20 al mes en 2026)." },
-    { "q": "¿Cuál es la edad mínima para jubilarme en 2026?", "a": "Por la reforma del 24 de junio de 2025, la edad mínima para jubilarse con 30/28 años de servicio **baja gradualmente** (revirtió el esquema anterior que la subía hacia 60/58). En **2026-2027 es 58 años para hombres y 56 para mujeres**; baja a 57/55 en 2028-2030, 56/54 en 2031-2033 y 55/53 desde 2034. Aunque ya tengas los años de servicio, necesitas cumplir esa edad para acceder al 100% del sueldo básico." },
-    { "q": "¿Cuántos años de servicio necesito para el 100% del sueldo básico?", "a": "**30 años de servicio para hombres y 28 para mujeres**: es la jubilación, la pensión más alta del régimen. Con menos años, el porcentaje baja según las tablas de edad y tiempo de servicios (50%-95%) o de cesantía en edad avanzada (40%-50%)." },
-    { "q": "¿Qué es el sueldo básico y cómo se promedia?", "a": "El **sueldo básico** es el sueldo tabular más el sobresueldo de zona (no incluye compensaciones ni bonos). Para la pensión se toma el **promedio del sueldo básico del último año** inmediato anterior a tu baja o jubilación. Por eso, a diferencia del IMSS (que promedia 5 años), aquí solo cuenta tu último año de cotización." },
-    { "q": "¿Cuál es el tope del sueldo básico para la pensión?", "a": "**10 veces la UMA** elevada al mes. La Suprema Corte (jurisprudencia 2a./J. 200/2020) y el Artículo 17 de la Ley del ISSSTE establecen que el sueldo básico se limita a 10 UMA, no a salarios mínimos. En 2026, con la UMA mensual de $3,566.22, ese tope es de **$35,662.20 al mes**: si tu sueldo básico es mayor, el excedente no cuenta para el cálculo." },
-    { "q": "¿Cuánto cobraría con 20 años de servicio y 62 años de edad?", "a": "Caes en la modalidad de **retiro por edad y tiempo de servicios**, que con 20 años de servicio paga el **62.5% del sueldo básico**. Si tu sueldo básico promedio es de $18,000, tu pensión sería de **$11,250 al mes**. Cada año extra de servicio sube el porcentaje (2.5% por año hasta los 24, 5% del 25 al 29)." },
-    { "q": "¿Hay pensión mínima en el ISSSTE?", "a": "Sí: ninguna pensión puede ser **menor a un salario mínimo mensual**. Con el salario mínimo 2026 de $315.04 diarios, el piso es de **$9,577.22 al mes**. Si tu cálculo (por ejemplo, una cesantía del 40% sobre un sueldo bajo) da menos, cobras la mínima." },
-    { "q": "¿Qué diferencia hay entre el ISSSTE y el IMSS para la pensión?", "a": "Son **sistemas distintos**: el ISSSTE es para el **sector público** y el IMSS para el **privado**. El ISSSTE calcula sobre el sueldo básico del **último año** y llega al 100% con 30/28 años de servicio, con tope de 10 UMA. El IMSS Ley 73 usa el promedio de **250 semanas** (5 años), una tabla por nivel salarial y asignaciones familiares, con tope de 25 UMA. No se mezclan." },
-    { "q": "¿Me conviene el Décimo Transitorio o las cuentas individuales?", "a": "Para la mayoría de quienes ya cotizaban antes de 2007 y planeaban una carrera larga en el sector público, el **Décimo Transitorio suele ser más conveniente**, porque la pensión es definida (un porcentaje del sueldo) y puede llegar al 100%, en vez de depender del saldo acumulado. Pero la elección se hizo en 2007 y es definitiva; quien optó por cuentas individuales se pensiona con su AFORE PENSIONISSSTE." }
+    {
+      "q": "¿Quién puede pensionarse por el Artículo Décimo Transitorio del ISSSTE?",
+      "a": "Los trabajadores del **sector público que cotizaban al ISSSTE antes del 1 de abril de 2007** y que, al entrar en vigor la nueva ley, **optaron por el régimen de reparto** (Décimo Transitorio) en lugar del de cuentas individuales (AFORE PENSIONISSSTE). Conservan las reglas de la ley anterior: pensión definida sobre el sueldo básico y los años de servicio."
+    },
+    {
+      "q": "¿Cómo se calcula mi pensión ISSSTE Décimo Transitorio?",
+      "a": "Es **sueldo básico promedio de tu último año de cotización × un porcentaje** que depende del régimen: 100% con 30 años de servicio (28 mujeres); del 50% al 95% por edad y tiempo de servicios (≥60 años y 15-29 de servicio); o del 40% al 50% por cesantía en edad avanzada (≥65 años y ≥10 de servicio). El sueldo básico se topa a 10 UMA ($35,662.20 al mes en 2026)."
+    },
+    {
+      "q": "¿Cuál es la edad mínima para jubilarme en 2026?",
+      "a": "Por la reforma del 24 de junio de 2025, la edad mínima para jubilarse con 30/28 años de servicio **baja gradualmente** (revirtió el esquema anterior que la subía hacia 60/58). En **2026-2027 es 58 años para hombres y 56 para mujeres**; baja a 57/55 en 2028-2030, 56/54 en 2031-2033 y 55/53 desde 2034. Aunque ya tengas los años de servicio, necesitas cumplir esa edad para acceder al 100% del sueldo básico."
+    },
+    {
+      "q": "¿Cuántos años de servicio necesito para el 100% del sueldo básico?",
+      "a": "**30 años de servicio para hombres y 28 para mujeres**: es la jubilación, la pensión más alta del régimen. Con menos años, el porcentaje baja según las tablas de edad y tiempo de servicios (50%-95%) o de cesantía en edad avanzada (40%-50%)."
+    },
+    {
+      "q": "¿Qué es el sueldo básico y cómo se promedia?",
+      "a": "El **sueldo básico** es el sueldo tabular más el sobresueldo de zona (no incluye compensaciones ni bonos). Para la pensión se toma el **promedio del sueldo básico del último año** inmediato anterior a tu baja o jubilación. Por eso, a diferencia del IMSS (que promedia 5 años), aquí solo cuenta tu último año de cotización."
+    },
+    {
+      "q": "¿Cuál es el tope del sueldo básico para la pensión?",
+      "a": "**10 veces la UMA** elevada al mes. La Suprema Corte (jurisprudencia 2a./J. 200/2020) y el Artículo 17 de la Ley del ISSSTE establecen que el sueldo básico se limita a 10 UMA, no a salarios mínimos. En 2026, con la UMA mensual de $3,566.22, ese tope es de **$35,662.20 al mes**: si tu sueldo básico es mayor, el excedente no cuenta para el cálculo."
+    },
+    {
+      "q": "¿Cuánto cobraría con 20 años de servicio y 62 años de edad?",
+      "a": "Caes en la modalidad de **retiro por edad y tiempo de servicios**, que con 20 años de servicio paga el **62.5% del sueldo básico**. Si tu sueldo básico promedio es de $18,000, tu pensión sería de **$11,250 al mes**. Cada año extra de servicio sube el porcentaje (2.5% por año hasta los 24, 5% del 25 al 29)."
+    },
+    {
+      "q": "¿Hay pensión mínima en el ISSSTE?",
+      "a": "Sí: ninguna pensión puede ser **menor a un salario mínimo mensual**. Con el salario mínimo 2026 de $315.04 diarios, el piso es de **$9,577.22 al mes**. Si tu cálculo (por ejemplo, una cesantía del 40% sobre un sueldo bajo) da menos, cobras la mínima."
+    },
+    {
+      "q": "¿Qué diferencia hay entre el ISSSTE y el IMSS para la pensión?",
+      "a": "Son **sistemas distintos**: el ISSSTE es para el **sector público** y el IMSS para el **privado**. El ISSSTE calcula sobre el sueldo básico del **último año** y llega al 100% con 30/28 años de servicio, con tope de 10 UMA. El IMSS Ley 73 usa el promedio de **250 semanas** (5 años), una tabla por nivel salarial y asignaciones familiares, con tope de 25 UMA. No se mezclan."
+    },
+    {
+      "q": "¿Me conviene el Décimo Transitorio o las cuentas individuales?",
+      "a": "Para la mayoría de quienes ya cotizaban antes de 2007 y planeaban una carrera larga en el sector público, el **Décimo Transitorio suele ser más conveniente**, porque la pensión es definida (un porcentaje del sueldo) y puede llegar al 100%, en vez de depender del saldo acumulado. Pero la elección se hizo en 2007 y es definitiva; quien optó por cuentas individuales se pensiona con su AFORE PENSIONISSSTE."
+    }
   ],
   "sources": [
-    { "name": "Ley del ISSSTE — Artículo 17 y Décimo Transitorio (texto oficial, Cámara de Diputados)", "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISSSTE.pdf", "date": "2026-06-19" },
-    { "name": "PENSIONISSSTE — Régimen de reparto: Décimo Transitorio (modalidades y porcentajes)", "url": "https://www.pensionissste.gob.mx/assets/pdf/que-hacemos/publicaciones/API/Decimo_Transitorio_AFOREPENSIONISSSTE_Feb2026.pdf", "date": "2026-06-19" },
-    { "name": "PENSIONISSSTE — Nueva tabla de jubilación Décimo Transitorio (reforma 24-jun-2025)", "url": "https://www.gob.mx/pensionissste/documentos/nueva-tabla-de-jubilacion-decimo-transitorio", "date": "2026-06-19" },
-    { "name": "SCJN — Jurisprudencia 2a./J. 200/2020: tope de pensiones ISSSTE a 10 UMA", "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2022502", "date": "2026-06-19" },
-    { "name": "INEGI — UMA 2026 ($117.31 diarios)", "url": "https://www.inegi.org.mx/temas/uma/", "date": "2026-06-19" },
-    { "name": "CONASAMI — Salario mínimo 2026 ($315.04)", "url": "https://www.gob.mx/conasami", "date": "2026-06-19" }
+    {
+      "name": "Ley del ISSSTE — Artículo 17 y Décimo Transitorio (texto oficial, Cámara de Diputados)",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISSSTE.pdf",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "PENSIONISSSTE — Régimen de reparto: Décimo Transitorio (modalidades y porcentajes)",
+      "url": "https://www.pensionissste.gob.mx/assets/pdf/que-hacemos/publicaciones/API/Decimo_Transitorio_AFOREPENSIONISSSTE_Feb2026.pdf",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "PENSIONISSSTE — Nueva tabla de jubilación Décimo Transitorio (reforma 24-jun-2025)",
+      "url": "https://www.gob.mx/pensionissste/documentos/nueva-tabla-de-jubilacion-decimo-transitorio",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "SCJN — Jurisprudencia 2a./J. 200/2020: tope de pensiones ISSSTE a 10 UMA",
+      "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2022502",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "INEGI — UMA 2026 ($117.31 diarios)",
+      "url": "https://www.inegi.org.mx/temas/uma/",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "CONASAMI — Salario mínimo 2026 ($315.04)",
+      "url": "https://www.gob.mx/conasami",
+      "date": "2026-06-19"
+    }
   ],
   "relatedSlugs": [
     "calculadora-pension-imss-ley-73-mexico",
@@ -97,5 +210,151 @@
     "tope 10 uma pension issste",
     "como se calcula pension issste decimo transitorio"
   ],
-  "lastReviewed": "2026-06-19"
+  "lastReviewed": "2026-06-20",
+  "referenceTables": [
+    {
+      "title": "Porcentajes de pensión por modalidad — ISSSTE Décimo Transitorio (2026)",
+      "headers": [
+        "Modalidad",
+        "Requisito de edad",
+        "Requisito de servicio",
+        "% del sueldo básico"
+      ],
+      "rows": [
+        [
+          "Jubilación",
+          "58 años (H) / 56 años (M) en 2026",
+          "30 años (H) / 28 años (M)",
+          "100%"
+        ],
+        [
+          "Retiro por edad y tiempo — 15 años",
+          "60 años",
+          "15 años",
+          "50.0%"
+        ],
+        [
+          "Retiro por edad y tiempo — 16 años",
+          "60 años",
+          "16 años",
+          "52.5%"
+        ],
+        [
+          "Retiro por edad y tiempo — 17 años",
+          "60 años",
+          "17 años",
+          "55.0%"
+        ],
+        [
+          "Retiro por edad y tiempo — 18 años",
+          "60 años",
+          "18 años",
+          "57.5%"
+        ],
+        [
+          "Retiro por edad y tiempo — 19 años",
+          "60 años",
+          "19 años",
+          "60.0%"
+        ],
+        [
+          "Retiro por edad y tiempo — 20 años",
+          "60 años",
+          "20 años",
+          "62.5%"
+        ],
+        [
+          "Retiro por edad y tiempo — 21 años",
+          "60 años",
+          "21 años",
+          "65.0%"
+        ],
+        [
+          "Retiro por edad y tiempo — 22 años",
+          "60 años",
+          "22 años",
+          "67.5%"
+        ],
+        [
+          "Retiro por edad y tiempo — 23 años",
+          "60 años",
+          "23 años",
+          "70.0%"
+        ],
+        [
+          "Retiro por edad y tiempo — 24 años",
+          "60 años",
+          "24 años",
+          "72.5%"
+        ],
+        [
+          "Retiro por edad y tiempo — 25 años",
+          "60 años",
+          "25 años",
+          "75.0%"
+        ],
+        [
+          "Retiro por edad y tiempo — 26 años",
+          "60 años",
+          "26 años",
+          "80.0%"
+        ],
+        [
+          "Retiro por edad y tiempo — 27 años",
+          "60 años",
+          "27 años",
+          "85.0%"
+        ],
+        [
+          "Retiro por edad y tiempo — 28 años",
+          "60 años",
+          "28 años",
+          "90.0%"
+        ],
+        [
+          "Retiro por edad y tiempo — 29 años",
+          "60 años",
+          "29 años",
+          "95.0%"
+        ],
+        [
+          "Cesantía en edad avanzada — 65 años",
+          "65 años",
+          "10 años mínimo",
+          "40%"
+        ],
+        [
+          "Cesantía en edad avanzada — 66 años",
+          "66 años",
+          "10 años mínimo",
+          "42%"
+        ],
+        [
+          "Cesantía en edad avanzada — 67 años",
+          "67 años",
+          "10 años mínimo",
+          "44%"
+        ],
+        [
+          "Cesantía en edad avanzada — 68 años",
+          "68 años",
+          "10 años mínimo",
+          "46%"
+        ],
+        [
+          "Cesantía en edad avanzada — 69 años",
+          "69 años",
+          "10 años mínimo",
+          "48%"
+        ],
+        [
+          "Cesantía en edad avanzada — 70+ años",
+          "70 años o más",
+          "10 años mínimo",
+          "50%"
+        ]
+      ],
+      "note": "Fuente: Artículo Décimo Transitorio de la Ley del ISSSTE (2007), reforma del 24 de junio de 2025, y UMA 2026 mensual $3,566.22 (INEGI). Tope del sueldo básico: 10 UMA = $35,662.20/mes (jurisprudencia 2a./J. 200/2020 SCJN). Pensión mínima: $9,577.22/mes (salario mínimo 2026 de $315.04 diarios × 30.4)."
+    }
+  ]
 }

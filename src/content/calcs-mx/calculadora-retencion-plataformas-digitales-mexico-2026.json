@@ -23,27 +23,83 @@
     "Un trabajador de plataforma planea su declaración anual sabiendo que el ISR e IVA retenidos son pagos provisionales acreditables, no impuestos definitivos (salvo que opte por considerarlos definitivos)."
   ],
   "fields": [
-    { "id": "ingresoMensual", "label": "Ingreso mensual cobrado por la app (antes de retenciones)", "type": "number", "required": true, "placeholder": "20000", "min": 0, "step": 0.01, "unit": "$" },
-    { "id": "actividad", "label": "Tipo de actividad", "type": "select", "default": "transporte", "options": [
-      { "value": "transporte", "label": "Transporte de pasajeros o entrega de bienes (Uber, Didi, Rappi) — ISR 2.1%" },
-      { "value": "hospedaje", "label": "Hospedaje (Airbnb, Booking) — ISR 4%" },
-      { "value": "bienesServicios", "label": "Venta de bienes o servicios (Mercado Libre, Amazon) — ISR 2.5%" }
-    ] },
-    { "id": "dioRfc", "label": "¿Proporcionaste tu RFC a la plataforma?", "type": "select", "default": "si", "options": [
-      { "value": "si", "label": "Sí (retención normal)" },
-      { "value": "no", "label": "No (ISR 20% e IVA 16%)" }
-    ] }
+    {
+      "id": "ingresoMensual",
+      "label": "Ingreso mensual cobrado por la app (antes de retenciones)",
+      "type": "number",
+      "required": true,
+      "placeholder": "20000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "actividad",
+      "label": "Tipo de actividad",
+      "type": "select",
+      "default": "transporte",
+      "options": [
+        {
+          "value": "transporte",
+          "label": "Transporte de pasajeros o entrega de bienes (Uber, Didi, Rappi) — ISR 2.1%"
+        },
+        {
+          "value": "hospedaje",
+          "label": "Hospedaje (Airbnb, Booking) — ISR 4%"
+        },
+        {
+          "value": "bienesServicios",
+          "label": "Venta de bienes o servicios (Mercado Libre, Amazon) — ISR 2.5%"
+        }
+      ]
+    },
+    {
+      "id": "dioRfc",
+      "label": "¿Proporcionaste tu RFC a la plataforma?",
+      "type": "select",
+      "default": "si",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí (retención normal)"
+        },
+        {
+          "value": "no",
+          "label": "No (ISR 20% e IVA 16%)"
+        }
+      ]
+    }
   ],
   "outputs": [
-    { "id": "netoRecibir", "label": "Neto a recibir (después de retenciones)", "primary": true },
-    { "id": "retencionIsr", "label": "Retención de ISR (Art. 113-A)" },
-    { "id": "retencionIva", "label": "Retención de IVA (Art. 18-J)" },
-    { "id": "retencionTotal", "label": "Retención total" },
-    { "id": "detalle", "label": "Detalle del cálculo" }
+    {
+      "id": "netoRecibir",
+      "label": "Neto a recibir (después de retenciones)",
+      "primary": true
+    },
+    {
+      "id": "retencionIsr",
+      "label": "Retención de ISR (Art. 113-A)"
+    },
+    {
+      "id": "retencionIva",
+      "label": "Retención de IVA (Art. 18-J)"
+    },
+    {
+      "id": "retencionTotal",
+      "label": "Retención total"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo"
+    }
   ],
   "example": {
     "title": "Ejemplo: chofer de Uber/Didi con RFC que cobra $20,000 al mes",
-    "inputs": { "ingresoMensual": 20000, "actividad": "transporte", "dioRfc": "si" },
+    "inputs": {
+      "ingresoMensual": 20000,
+      "actividad": "transporte",
+      "dioRfc": "si"
+    },
     "steps": [
       "Actividad: transporte de pasajeros y entrega de bienes → ISR del 2.1% (Art. 113-A fracc. I).",
       "Retención de ISR: $20,000 × 2.1% = $420.",
@@ -54,23 +110,73 @@
   },
   "explanation": "## Cómo te retiene el SAT cuando trabajas con una plataforma\n\nDesde 2020 (y reforzado en la **reforma fiscal 2026**), las plataformas digitales que intermedian entre tú y tus clientes —**Uber, Didi, Rappi, Didi Food, Uber Eats, Airbnb, Booking, Mercado Libre, Amazon** y similares— están obligadas a **retenerte ISR e IVA** y enterarlos directamente al SAT. La plataforma calcula la retención sobre **lo que cobras por la app** (tu ingreso bruto, sin restar comisiones de la propia plataforma), te lo descuenta y te entrega un **CFDI de retenciones e información de pagos** cada mes.\n\nLo importante de entender: estas retenciones son un **pago provisional**, es decir, un **anticipo** de los impuestos que de todos modos te tocarían. No son un impuesto adicional ni dinero perdido: cuando presentas tu declaración (mensual o anual), **acreditas** lo retenido contra lo que debes. Si te retuvieron de más, te sale **saldo a favor**.\n\n```\nRetención total = Retención de ISR (Art. 113-A LISR) + Retención de IVA (Art. 18-J LIVA)\nNeto a recibir  = Ingreso cobrado por la app − Retención total\n```\n\n## Retención de ISR — Artículo 113-A de la LISR (tasas 2026)\n\nEl ISR que te retiene la plataforma **depende del tipo de actividad**. La ley (Art. 113-A) fija tasas distintas por fracción, y para el **ejercicio 2026** quedan así:\n\n| Actividad | Fracción | Tasa de ISR 2026 | Ejemplos de plataforma |\n|---|---|---|---|\n| Transporte terrestre de pasajeros y entrega de bienes | I | **2.1%** | Uber, Didi, Rappi, Didi Food, Uber Eats |\n| Prestación de servicios de hospedaje | II | **4.0%** | Airbnb, Booking, Vrbo |\n| Enajenación de bienes y prestación de servicios | III | **2.5%** | Mercado Libre, Amazon, tiendas y servicios |\n\nLa tasa se aplica sobre el **ingreso sin IVA** que cobras por cada operación. El cambio grande de 2026 fue la **fracción III**: la **enajenación de bienes y prestación de servicios** pasó del **1% al 2.5%** por el ajuste de la Ley de Ingresos de la Federación 2026. Las tasas de **transporte (2.1%)** y **hospedaje (4%)** se mantienen. (El texto base de la LISR todavía publica el 1% en la fracción III; la LIF 2026, publicada en el DOF en diciembre de 2025, lo elevó a 2.5% a partir del 1 de enero de 2026.)\n\n### El castigo por no dar RFC: ISR al 20%\n\nSi **no proporcionas tu RFC** a la plataforma, el último párrafo del Art. 113-A obliga a retenerte el **20% de ISR** sobre tus ingresos, sin importar la actividad. Para un chofer que factura $20,000, eso es la diferencia entre que le retengan **$420 (2.1% con RFC)** o **$4,000 (20% sin RFC)**. Inscribirte en el RFC bajo el régimen de **\"Plataformas tecnológicas\"** y registrarlo en la app es, de lejos, la decisión que más dinero te ahorra.\n\n## Retención de IVA — Artículo 18-J de la LIVA\n\nIndependientemente del ISR, la plataforma también te retiene **IVA**. La tasa general del IVA en México es **16%**, y la regla de retención es:\n\n| Situación | % de IVA que retiene la app | Equivale a |\n|---|---|---|\n| Diste tu RFC a la plataforma | **8%** del valor | 50% del IVA del 16% |\n| No diste tu RFC (o cobras a una cuenta en el extranjero) | **16%** del valor | 100% del IVA |\n\nEs decir: **con RFC te retienen la mitad del IVA (8%)** y tú enteras el resto en tu declaración; **sin RFC te retienen el IVA completo (16%)**. Para una persona física en zona general que cobra $20,000, la retención de IVA es **$1,600 con RFC** o **$3,200 sin RFC**.\n\n## Ejemplo completo paso a paso\n\nUn **chofer de Uber/Didi con RFC** que cobra **$20,000 al mes**:\n\n1. **ISR**: actividad de transporte → 2.1% → $20,000 × 0.021 = **$420**.\n2. **IVA**: dio RFC → 8% → $20,000 × 0.08 = **$1,600**.\n3. **Retención total** = $420 + $1,600 = **$2,020**.\n4. **Neto a recibir** = $20,000 − $2,020 = **$17,980**.\n\nEl **mismo chofer sin RFC**: ISR 20% = $4,000, IVA 16% = $3,200, retención total **$7,200**, neto **$12,800**. La diferencia de **$5,180 al mes** es lo que cuesta no estar inscrito.\n\n| Ingreso mensual | Transporte con RFC (2.1% + 8%) | Hospedaje con RFC (4% + 8%) | Bienes/servicios con RFC (2.5% + 8%) | Cualquier actividad SIN RFC (20% + 16%) |\n|---|---|---|---|---|\n| $10,000 | $8,990 | $8,800 | $8,950 | $6,400 |\n| $20,000 | $17,980 | $17,600 | $17,900 | $12,800 |\n| $30,000 | $26,970 | $26,400 | $26,850 | $19,200 |\n| $50,000 | $44,950 | $44,000 | $44,750 | $32,000 |\n\n(Montos de **neto a recibir** tras ISR + IVA, con las tasas 2026.)\n\n## ¿Las retenciones son definitivas o provisionales?\n\nPor regla general son **pagos provisionales**: tú presentas tu declaración mensual de ISR e IVA del régimen de plataformas, acreditas lo retenido y, si vendes o manejas poco, normalmente **no pagas nada extra** (o te queda saldo a favor). Las personas físicas que **solo** obtienen ingresos por plataformas y no rebasan **$300,000 al año** pueden optar por considerar las retenciones como **pago definitivo**: en ese caso ya no presentan declaración mensual de ISR por esos ingresos, pero tampoco pueden deducir gastos. Muchos choferes y repartidores con bajos ingresos eligen esta opción por simplicidad; quienes tienen gastos altos (gasolina, mantenimiento, comisiones) suelen preferir el régimen general o **RESICO** para deducir y pagar menos.\n\n## RESICO: una alternativa con tasas más bajas\n\nSi tu actividad lo permite y no rebasas $3.5 millones al año, el **Régimen Simplificado de Confianza (RESICO)** puede convenir: el ISR se calcula con tasas del **1% al 2.5%** según tus ingresos del mes (más bajas que el ISR general), y la retención de las plataformas se acredita igual. Compara tu caso con la [calculadora RESICO de personas físicas](/mx/calculadora-resico-personas-fisicas-mexico-2026-cuota) antes de decidir tu régimen.\n\n## Cómo se acredita lo retenido en tu declaración\n\nLas retenciones no se quedan ahí: son tu **pago a cuenta**. Cada mes presentas tus declaraciones de ISR e IVA del régimen de plataformas y restas lo que ya te retuvieron. Para el **ISR**, comparas el impuesto que te correspondería sobre tus ingresos del mes contra lo retenido; si la retención fue mayor, no pagas nada ese mes y el excedente se arrastra o se vuelve saldo a favor en el anual. Para el **IVA**, la lógica es distinta: tú trasladas el 16% a tus clientes (incluido en la tarifa que cobra la app), la plataforma te retuvo 8% (con RFC) y tú **enteras el 8% restante** menos el IVA que puedas **acreditar** de tus gastos con factura (gasolina, refacciones, datos móviles). Por eso guardar **CFDI de tus gastos** importa tanto como guardar el de retenciones: bajan tanto tu ISR como tu IVA a pagar.\n\n## Frontera, varias apps y casos especiales\n\nSi vives y operas en la **región fronteriza norte o sur**, el IVA general puede ser del **8%** por el estímulo fiscal —no del 16%—, lo que cambia la retención de IVA; esta calculadora usa la tasa general nacional del 16%, así que en frontera verifica tu caso con el estímulo aplicado. Si trabajas en **varias plataformas** a la vez (por ejemplo Uber y Didi, o Rappi y Uber Eats), cada una te retiene por separado sobre lo que cobras en ella, pero al declarar debes **sumar todos tus ingresos y todas las retenciones**: el SAT ve el total con tu RFC. Y si además tienes un **empleo asalariado**, esos ingresos van por cuenta aparte (tu patrón retiene su propio ISR), pero ambos se juntan en la **declaración anual**, donde puede salirte impuesto a cargo o a favor según el conjunto.\n\n## Qué te conviene hacer\n\n- **Inscríbete en el RFC** y regístralo en cada app: baja tu ISR de 20% a 2.1%-4% y tu IVA de 16% a 8%.\n- **Guarda tus CFDI de retenciones**: son tu comprobante de los pagos provisionales; los necesitas para acreditar y para tu declaración anual.\n- **Lleva el control de tus ingresos por cada plataforma**: si trabajas en varias, debes sumar todo para tu declaración.\n- **Decide tu régimen** (plataformas como pago provisional, definitivo o RESICO) según si tienes gastos deducibles altos.\n- **Verifica que las apps apliquen bien las tasas**: con la reforma 2026, la fracción III subió a 2.5%; revisa tu CFDI.\n\n## Errores comunes\n\n- **Creer que la retención es un cobro extra**: es anticipo de tus impuestos, lo acreditas en tu declaración.\n- **No dar RFC \"para que no me cobren\"**: al revés, sin RFC te retienen mucho más (20% ISR + 16% IVA).\n- **Confundir el ingreso bruto con el neto**: la plataforma retiene sobre lo que cobras por la app, antes de su comisión de servicio.\n- **Mezclar este cálculo con tus costos de operación**: gasolina, mantenimiento y depreciación son otra cosa; para eso usa la [calculadora de costos reales de un chofer de Uber](/calculadora-uber-driver-mexico-costos-reales).\n- **Olvidar el IVA**: muchos solo miran el ISR, pero el IVA retenido suele ser la mayor de las dos retenciones.\n\n## Disclaimer\n\nCálculo orientativo con las tasas vigentes en 2026: ISR del Art. 113-A LISR (2.1% transporte, 4% hospedaje, 2.5% enajenación de bienes/servicios; 20% sin RFC) e IVA del Art. 18-J LIVA (8% con RFC, 16% sin RFC, tasa general 16%). No considera comisiones de la plataforma, deducciones, acreditamientos ni regímenes especiales (RESICO, frontera con IVA 8%). El monto definitivo depende de tu CFDI de retenciones, tu régimen y tus deducciones. No constituye asesoría fiscal; valida con tu contador o en el SAT.",
   "faq": [
-    { "q": "¿Cuánto me retiene Uber, Didi o Rappi en 2026?", "a": "Por **transporte de pasajeros o entrega de bienes** te retienen **2.1% de ISR** (Art. 113-A fracc. I LISR) más **IVA**: 8% si diste tu RFC o 16% si no. Un chofer con RFC que cobra $20,000 al mes recibe $17,980 netos (le retienen $420 de ISR y $1,600 de IVA). Sin RFC, el ISR sube al 20% y el IVA al 16%, así que cobraría solo $12,800." },
-    { "q": "¿Qué pasa si no le doy mi RFC a la plataforma?", "a": "Te aplican las **tasas de castigo**: **20% de ISR** (Art. 113-A, último párrafo) y **16% de IVA** (100% del IVA, Art. 18-J LIVA), en lugar de 2.1%-4% de ISR y 8% de IVA. Para alguien que factura $20,000, la diferencia es cobrar $12,800 en vez de $17,980 — más de $5,000 al mes. Inscribirte en el RFC como 'Plataformas tecnológicas' y registrarlo en la app revierte el castigo." },
-    { "q": "¿Cuánto retienen las plataformas de hospedaje como Airbnb?", "a": "El **hospedaje** tiene una tasa de ISR del **4%** (Art. 113-A fracc. II LISR), más IVA del 8% con RFC o 16% sin RFC. Un anfitrión con RFC que cobra $30,000 al mes por hospedaje recibe $26,400 netos: $1,200 de ISR (4%) y $2,400 de IVA (8%)." },
-    { "q": "¿Por qué subió la retención de ISR en 2026?", "a": "La **reforma fiscal 2026** (Ley de Ingresos de la Federación 2026, DOF diciembre 2025) elevó la tasa de la **fracción III** del Art. 113-A —**enajenación de bienes y prestación de servicios**— del **1% al 2.5%**. Afecta sobre todo a quienes venden en Mercado Libre, Amazon o prestan servicios por app. Las tasas de transporte (2.1%) y hospedaje (4%) no cambiaron." },
-    { "q": "¿La retención de IVA es 8% o 16%?", "a": "Depende del RFC. Con RFC, la plataforma retiene el **50% del IVA = 8%** del valor (Art. 18-J LIVA); tú enteras el otro 8% en tu declaración. Sin RFC, o si cobras a una cuenta en el extranjero, retiene el **100% del IVA = 16%**. La tasa general del IVA en México es 16% (en frontera puede ser 8%, con reglas propias)." },
-    { "q": "¿Las retenciones de la plataforma son mi impuesto final?", "a": "Por regla general son **pagos provisionales** (anticipos): presentas tu declaración mensual, acreditas lo retenido y ajustas. Si **solo** tienes ingresos por plataformas y no rebasas **$300,000 al año**, puedes optar por considerarlas **pago definitivo** y dejar de presentar declaración mensual de ISR por esos ingresos —pero entonces no deduces gastos. Conviene comparar contra el régimen general o RESICO." },
-    { "q": "¿Sobre qué monto se calcula la retención: lo que cobro o lo que me deposita la app?", "a": "Sobre el **ingreso que cobras por la app** (la contraprestación del viaje, entrega, hospedaje o venta), **antes** de la comisión de servicio de la plataforma. Por eso la retención que ves en tu CFDI se calcula sobre el bruto, no sobre el neto ya descontada la comisión de Uber, Rappi o Mercado Libre." },
-    { "q": "¿Me conviene RESICO en lugar del régimen de plataformas?", "a": "Puede convenir si no rebasas $3.5 millones al año: en **RESICO** el ISR va del **1% al 2.5%** según tus ingresos del mes y acreditas lo retenido por las plataformas, lo que suele dar un impuesto menor que el régimen general. Si tienes gastos deducibles altos (gasolina, mantenimiento), compara ambos. Usa la calculadora RESICO de personas físicas para ver tu caso." },
-    { "q": "¿Tengo que dar de alta el RFC aunque sea mi único ingreso?", "a": "Sí. Para que te retengan las tasas bajas (2.1%-4% de ISR y 8% de IVA) necesitas estar inscrito en el RFC y registrar tu clave en cada app. El alta es gratuita y se hace en el portal del SAT eligiendo el régimen de 'Ingresos a través de plataformas tecnológicas'. Sin ese registro, te retienen 20% de ISR y 16% de IVA." },
-    { "q": "¿Cómo verifico que la plataforma me retuvo bien?", "a": "Cada mes la plataforma debe emitirte un **CFDI de retenciones e información de pagos** con el ISR e IVA retenidos. Revisa que el ISR corresponda a tu actividad (2.1%/4%/2.5%) y que el IVA sea 8% (si diste RFC). Esos comprobantes son los que acreditas en tu declaración; si no coinciden, reclama a la plataforma o acláralo con tu contador." }
+    {
+      "q": "¿Cuánto me retiene Uber, Didi o Rappi en 2026?",
+      "a": "Por **transporte de pasajeros o entrega de bienes** te retienen **2.1% de ISR** (Art. 113-A fracc. I LISR) más **IVA**: 8% si diste tu RFC o 16% si no. Un chofer con RFC que cobra $20,000 al mes recibe $17,980 netos (le retienen $420 de ISR y $1,600 de IVA). Sin RFC, el ISR sube al 20% y el IVA al 16%, así que cobraría solo $12,800."
+    },
+    {
+      "q": "¿Qué pasa si no le doy mi RFC a la plataforma?",
+      "a": "Te aplican las **tasas de castigo**: **20% de ISR** (Art. 113-A, último párrafo) y **16% de IVA** (100% del IVA, Art. 18-J LIVA), en lugar de 2.1%-4% de ISR y 8% de IVA. Para alguien que factura $20,000, la diferencia es cobrar $12,800 en vez de $17,980 — más de $5,000 al mes. Inscribirte en el RFC como 'Plataformas tecnológicas' y registrarlo en la app revierte el castigo."
+    },
+    {
+      "q": "¿Cuánto retienen las plataformas de hospedaje como Airbnb?",
+      "a": "El **hospedaje** tiene una tasa de ISR del **4%** (Art. 113-A fracc. II LISR), más IVA del 8% con RFC o 16% sin RFC. Un anfitrión con RFC que cobra $30,000 al mes por hospedaje recibe $26,400 netos: $1,200 de ISR (4%) y $2,400 de IVA (8%)."
+    },
+    {
+      "q": "¿Por qué subió la retención de ISR en 2026?",
+      "a": "La **reforma fiscal 2026** (Ley de Ingresos de la Federación 2026, DOF diciembre 2025) elevó la tasa de la **fracción III** del Art. 113-A —**enajenación de bienes y prestación de servicios**— del **1% al 2.5%**. Afecta sobre todo a quienes venden en Mercado Libre, Amazon o prestan servicios por app. Las tasas de transporte (2.1%) y hospedaje (4%) no cambiaron."
+    },
+    {
+      "q": "¿La retención de IVA es 8% o 16%?",
+      "a": "Depende del RFC. Con RFC, la plataforma retiene el **50% del IVA = 8%** del valor (Art. 18-J LIVA); tú enteras el otro 8% en tu declaración. Sin RFC, o si cobras a una cuenta en el extranjero, retiene el **100% del IVA = 16%**. La tasa general del IVA en México es 16% (en frontera puede ser 8%, con reglas propias)."
+    },
+    {
+      "q": "¿Las retenciones de la plataforma son mi impuesto final?",
+      "a": "Por regla general son **pagos provisionales** (anticipos): presentas tu declaración mensual, acreditas lo retenido y ajustas. Si **solo** tienes ingresos por plataformas y no rebasas **$300,000 al año**, puedes optar por considerarlas **pago definitivo** y dejar de presentar declaración mensual de ISR por esos ingresos —pero entonces no deduces gastos. Conviene comparar contra el régimen general o RESICO."
+    },
+    {
+      "q": "¿Sobre qué monto se calcula la retención: lo que cobro o lo que me deposita la app?",
+      "a": "Sobre el **ingreso que cobras por la app** (la contraprestación del viaje, entrega, hospedaje o venta), **antes** de la comisión de servicio de la plataforma. Por eso la retención que ves en tu CFDI se calcula sobre el bruto, no sobre el neto ya descontada la comisión de Uber, Rappi o Mercado Libre."
+    },
+    {
+      "q": "¿Me conviene RESICO en lugar del régimen de plataformas?",
+      "a": "Puede convenir si no rebasas $3.5 millones al año: en **RESICO** el ISR va del **1% al 2.5%** según tus ingresos del mes y acreditas lo retenido por las plataformas, lo que suele dar un impuesto menor que el régimen general. Si tienes gastos deducibles altos (gasolina, mantenimiento), compara ambos. Usa la calculadora RESICO de personas físicas para ver tu caso."
+    },
+    {
+      "q": "¿Tengo que dar de alta el RFC aunque sea mi único ingreso?",
+      "a": "Sí. Para que te retengan las tasas bajas (2.1%-4% de ISR y 8% de IVA) necesitas estar inscrito en el RFC y registrar tu clave en cada app. El alta es gratuita y se hace en el portal del SAT eligiendo el régimen de 'Ingresos a través de plataformas tecnológicas'. Sin ese registro, te retienen 20% de ISR y 16% de IVA."
+    },
+    {
+      "q": "¿Cómo verifico que la plataforma me retuvo bien?",
+      "a": "Cada mes la plataforma debe emitirte un **CFDI de retenciones e información de pagos** con el ISR e IVA retenidos. Revisa que el ISR corresponda a tu actividad (2.1%/4%/2.5%) y que el IVA sea 8% (si diste RFC). Esos comprobantes son los que acreditas en tu declaración; si no coinciden, reclama a la plataforma o acláralo con tu contador."
+    }
   ],
   "sources": [
-    { "name": "LISR — Artículo 113-A (retención de ISR en plataformas tecnológicas) — Cámara de Diputados", "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf", "date": "2026-06-19" },
-    { "name": "LIVA — Artículo 18-J (retención de IVA por plataformas de intermediación) — SAT", "url": "https://wwwmat.sat.gob.mx/ordenamiento/37585/ley-del-impuesto-al-valor-agregado", "date": "2026-06-19" },
-    { "name": "SAT — Plataformas tecnológicas (régimen, obligaciones y retenciones)", "url": "http://omawww.sat.gob.mx/plataformastecnologicas/Paginas/index.html", "date": "2026-06-19" },
-    { "name": "DOF — Ley de Ingresos de la Federación 2026 (ajuste de retención fracc. III Art. 113-A)", "url": "https://www.dof.gob.mx/", "date": "2026-06-19" },
-    { "name": "EY México — Propuestas de ISR e IVA 2026 para el sector de plataformas digitales", "url": "https://www.ey.com/es_mx/technical/tax/boletines-fiscales/propuestas-isr-e-iva-sector-plataformas-digitales", "date": "2026-06-19" }
+    {
+      "name": "LISR — Artículo 113-A (retención de ISR en plataformas tecnológicas) — Cámara de Diputados",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "LIVA — Artículo 18-J (retención de IVA por plataformas de intermediación) — SAT",
+      "url": "https://wwwmat.sat.gob.mx/ordenamiento/37585/ley-del-impuesto-al-valor-agregado",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "SAT — Plataformas tecnológicas (régimen, obligaciones y retenciones)",
+      "url": "http://omawww.sat.gob.mx/plataformastecnologicas/Paginas/index.html",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "DOF — Ley de Ingresos de la Federación 2026 (ajuste de retención fracc. III Art. 113-A)",
+      "url": "https://www.dof.gob.mx/",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "EY México — Propuestas de ISR e IVA 2026 para el sector de plataformas digitales",
+      "url": "https://www.ey.com/es_mx/technical/tax/boletines-fiscales/propuestas-isr-e-iva-sector-plataformas-digitales",
+      "date": "2026-06-19"
+    }
   ],
   "relatedSlugs": [
     "calculadora-resico-personas-fisicas-mexico-2026-cuota",
@@ -99,5 +205,45 @@
     "cuanto cobra neto chofer uber con retenciones",
     "retencion mercado libre amazon isr 2.5 2026"
   ],
-  "lastReviewed": "2026-06-19"
+  "lastReviewed": "2026-06-20",
+  "referenceTables": [
+    {
+      "title": "Tasas de retención ISR e IVA para plataformas digitales — México 2026",
+      "headers": [
+        "Actividad",
+        "Plataformas ejemplo",
+        "Tasa ISR con RFC (Art. 113-A LISR)",
+        "Tasa IVA con RFC (Art. 18-J LIVA)",
+        "Tasa ISR sin RFC",
+        "Tasa IVA sin RFC"
+      ],
+      "rows": [
+        [
+          "Transporte terrestre de pasajeros y entrega de bienes (Fracc. I)",
+          "Uber, Didi, Rappi, Didi Food, Uber Eats",
+          "2.1%",
+          "8%",
+          "20%",
+          "16%"
+        ],
+        [
+          "Prestación de servicios de hospedaje (Fracc. II)",
+          "Airbnb, Booking, Vrbo",
+          "4.0%",
+          "8%",
+          "20%",
+          "16%"
+        ],
+        [
+          "Enajenación de bienes y prestación de servicios (Fracc. III)",
+          "Mercado Libre, Amazon",
+          "2.5%",
+          "8%",
+          "20%",
+          "16%"
+        ]
+      ],
+      "note": "Fuente: Art. 113-A LISR y Art. 18-J LIVA; tasa Fracc. III elevada de 1% a 2.5% por Ley de Ingresos de la Federación 2026 (DOF diciembre 2025), vigente desde el 1 de enero de 2026."
+    }
+  ]
 }

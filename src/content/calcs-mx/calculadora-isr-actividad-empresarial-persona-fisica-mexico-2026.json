@@ -23,25 +23,90 @@
     "Una persona física con dos meses de pérdida (deducciones mayores que ingresos) comprueba que su base gravable de esos meses es cero y no paga ISR provisional."
   ],
   "fields": [
-    { "id": "periodo", "label": "¿Los montos son de un mes o de todo el año?", "type": "select", "default": "anual", "options": [
-      { "value": "mensual", "label": "Un mes (pago provisional — Art. 96/106)" },
-      { "value": "anual", "label": "Todo el año (declaración anual — Art. 152)" }
-    ] },
-    { "id": "ingresosPeriodo", "label": "Ingresos acumulables del periodo (cobrados, sin IVA)", "type": "number", "required": true, "placeholder": "1200000", "min": 0, "step": 0.01, "unit": "$" },
-    { "id": "deduccionesPeriodo", "label": "Deducciones autorizadas del periodo (gastos indispensables del negocio)", "type": "number", "required": false, "placeholder": "400000", "min": 0, "step": 0.01, "unit": "$", "default": 0 },
-    { "id": "deduccionesPersonales", "label": "Deducciones personales (solo anual: médicos, colegiaturas, hipoteca…)", "type": "number", "required": false, "placeholder": "0", "min": 0, "step": 0.01, "unit": "$", "default": 0 }
+    {
+      "id": "periodo",
+      "label": "¿Los montos son de un mes o de todo el año?",
+      "type": "select",
+      "default": "anual",
+      "options": [
+        {
+          "value": "mensual",
+          "label": "Un mes (pago provisional — Art. 96/106)"
+        },
+        {
+          "value": "anual",
+          "label": "Todo el año (declaración anual — Art. 152)"
+        }
+      ]
+    },
+    {
+      "id": "ingresosPeriodo",
+      "label": "Ingresos acumulables del periodo (cobrados, sin IVA)",
+      "type": "number",
+      "required": true,
+      "placeholder": "1200000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "deduccionesPeriodo",
+      "label": "Deducciones autorizadas del periodo (gastos indispensables del negocio)",
+      "type": "number",
+      "required": false,
+      "placeholder": "400000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$",
+      "default": 0
+    },
+    {
+      "id": "deduccionesPersonales",
+      "label": "Deducciones personales (solo anual: médicos, colegiaturas, hipoteca…)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$",
+      "default": 0
+    }
   ],
   "outputs": [
-    { "id": "isr", "label": "ISR del periodo (provisional o anual)", "primary": true },
-    { "id": "utilidadFiscal", "label": "Utilidad fiscal (ingresos − deducciones autorizadas)" },
-    { "id": "baseGravable", "label": "Base gravable (tras deducciones personales)" },
-    { "id": "tasaEfectiva", "label": "Tasa efectiva sobre ingresos (%)" },
-    { "id": "margenUtilidad", "label": "Margen de utilidad (%)" },
-    { "id": "netoDespuesIsr", "label": "Utilidad neta después de ISR" }
+    {
+      "id": "isr",
+      "label": "ISR del periodo (provisional o anual)",
+      "primary": true
+    },
+    {
+      "id": "utilidadFiscal",
+      "label": "Utilidad fiscal (ingresos − deducciones autorizadas)"
+    },
+    {
+      "id": "baseGravable",
+      "label": "Base gravable (tras deducciones personales)"
+    },
+    {
+      "id": "tasaEfectiva",
+      "label": "Tasa efectiva sobre ingresos (%)"
+    },
+    {
+      "id": "margenUtilidad",
+      "label": "Margen de utilidad (%)"
+    },
+    {
+      "id": "netoDespuesIsr",
+      "label": "Utilidad neta después de ISR"
+    }
   ],
   "example": {
     "title": "Ejemplo anual: ingresos $1,200,000, deducciones autorizadas $400,000 (sin deducciones personales)",
-    "inputs": { "periodo": "anual", "ingresosPeriodo": 1200000, "deduccionesPeriodo": 400000, "deduccionesPersonales": 0 },
+    "inputs": {
+      "periodo": "anual",
+      "ingresosPeriodo": 1200000,
+      "deduccionesPeriodo": 400000,
+      "deduccionesPersonales": 0
+    },
     "steps": [
       "Utilidad fiscal = ingresos acumulables $1,200,000 − deducciones autorizadas $400,000 = $800,000.",
       "Sin deducciones personales, la base gravable del ejercicio es $800,000.",
@@ -52,23 +117,73 @@
   },
   "explanation": "## Quién tributa en este régimen\n\nEl **régimen general de actividades empresariales para personas físicas** (Título IV, Capítulo II, Sección I de la LISR, Arts. 100 a 110) es para quien obtiene ingresos por **actividades comerciales, industriales, agrícolas, ganaderas, de pesca o silvícolas** como persona física: una tienda, una fábrica, un taller, un restaurante, una refaccionaria, un negocio en línea. A diferencia del asalariado, aquí **tú determinas tu propio impuesto**: nadie te lo retiene íntegro, sino que tú calculas y pagas pagos provisionales mensuales y una declaración anual.\n\nEste régimen comparte la Sección I con los **servicios profesionales (honorarios)**, pero hay una diferencia práctica clave: cuando prestas servicios profesionales a una persona moral, te **retienen el 10% de ISR**; en cambio, en la actividad **empresarial pura no hay retención del 10%** (salvo casos específicos), así que todo el ISR lo entreras tú. Si lo tuyo son honorarios, usa la [calculadora de ISR por honorarios](/mx/calculadora-isr-honorarios-persona-fisica).\n\n## La base del impuesto: la utilidad fiscal, no las ventas\n\nEl error más caro de un negocio nuevo es creer que el ISR se paga sobre lo que factura. **No.** Se paga sobre la **utilidad fiscal**:\n\n```\nUtilidad fiscal = Ingresos acumulables − Deducciones autorizadas\n```\n\n- **Ingresos acumulables**: lo que **efectivamente cobraste** en el periodo (este régimen tributa con base en flujo de efectivo, Art. 102), sin incluir el IVA que trasladaste.\n- **Deducciones autorizadas** (Art. 103): los gastos **estrictamente indispensables** para tu actividad y **efectivamente pagados** en el ejercicio: compra de mercancía e insumos, renta del local, sueldos y cuotas IMSS de tus trabajadores, luz, agua, teléfono, papelería, fletes, comisiones bancarias y la **deducción de inversiones** (depreciación de tu equipo, mobiliario y vehículos a los porcentajes de los Arts. 31-34). El requisito de fondo es el del Art. 105: que el gasto sea indispensable, esté amparado con **CFDI** y se haya pagado en el mismo ejercicio (los pagos mayores a $2,000 deben ser por medios bancarios o cheque nominativo).\n\nSi en un mes tus deducciones superan a tus ingresos, tu utilidad de ese mes es **cero** (la calculadora no genera base negativa); la pérdida del ejercicio se maneja por separado en la anual.\n\n## Pagos provisionales mensuales (Art. 106)\n\nCada mes debes presentar un **pago provisional** a cuenta del impuesto anual, **a más tardar el día 17 del mes siguiente**. El procedimiento del Art. 106 es:\n\n1. Suma tus **ingresos acumulables** desde el inicio del año hasta el mes que declaras.\n2. Resta las **deducciones autorizadas** del mismo periodo (y, en su caso, la PTU pagada y pérdidas de años anteriores).\n3. A la utilidad acumulada le aplicas la **tarifa del Art. 96 elevada al periodo** (la tarifa mensual acumulada que publica el SAT).\n4. Al resultado le restas los **pagos provisionales anteriores** y las retenciones, y pagas la diferencia.\n\nPara una **estimación rápida de un solo mes**, esta calculadora aplica la **tarifa mensual del Art. 96** directamente a la utilidad de ese mes. Es exacto cuando tu utilidad es pareja mes con mes; si tus ingresos son muy estacionales, el cálculo oficial acumulado puede diferir, porque la tarifa es progresiva y \"recuerda\" lo que ya acumulaste en el año.\n\n### Tarifa mensual ISR 2026 (Art. 96 — extracto)\n\n| Límite inferior | Límite superior | Cuota fija | % sobre excedente |\n|---|---|---|---|\n| $0.01 | $844.59 | $0.00 | 1.92% |\n| $844.60 | $7,168.51 | $16.22 | 6.40% |\n| $7,168.52 | $12,598.02 | $420.95 | 10.88% |\n| $12,598.03 | $14,644.64 | $1,011.68 | 16.00% |\n| $14,644.65 | $17,533.64 | $1,339.14 | 17.92% |\n| $17,533.65 | $35,362.83 | $1,856.84 | 21.36% |\n| $35,362.84 | $55,736.68 | $5,665.16 | 23.52% |\n| $55,736.69 | $106,410.50 | $10,457.09 | 30.00% |\n| $106,410.51 | $141,880.66 | $25,659.23 | 32.00% |\n| $141,880.67 | $425,641.99 | $37,009.69 | 34.00% |\n| $425,642.00 | En adelante | $133,488.54 | 35.00% |\n\n**Cómo se lee:** ubicas tu utilidad mensual en el renglón, le restas el límite inferior, multiplicas el excedente por el porcentaje y le sumas la cuota fija. Ejemplo: utilidad de $60,000 → renglón de $55,736.69; ISR = $10,457.09 + 30% × ($60,000 − $55,736.69) = **$11,736.08**.\n\n## Declaración anual (Art. 152)\n\nEn **abril** del año siguiente presentas la **declaración anual**. Aquí determinas la **utilidad fiscal del ejercicio** (ingresos anuales − deducciones autorizadas anuales − PTU − pérdidas pendientes) y, sobre ella, restas tus **deducciones personales** del Art. 151 para obtener la **base gravable**. A esa base le aplicas la **tarifa anual del Art. 152**:\n\n### Tarifa anual ISR 2026 (Art. 152 — extracto)\n\n| Límite inferior | Límite superior | Cuota fija | % sobre excedente |\n|---|---|---|---|\n| $0.01 | $10,135.11 | $0.00 | 1.92% |\n| $10,135.12 | $86,022.11 | $194.59 | 6.40% |\n| $86,022.12 | $151,176.19 | $5,051.37 | 10.88% |\n| $151,176.20 | $175,735.66 | $12,140.13 | 16.00% |\n| $175,735.67 | $210,403.69 | $16,069.64 | 17.92% |\n| $210,403.70 | $424,353.97 | $22,282.14 | 21.36% |\n| $424,353.98 | $668,840.14 | $67,981.92 | 23.52% |\n| $668,840.15 | $1,276,925.98 | $125,485.07 | 30.00% |\n| $1,276,925.99 | $1,702,567.97 | $307,910.81 | 32.00% |\n| $1,702,567.98 | $5,107,703.92 | $444,116.23 | 34.00% |\n| $5,107,704.00 | En adelante | $1,601,862.46 | 35.00% |\n\nAl ISR anual así obtenido le **restas todos los pagos provisionales** que hiciste durante el año y las retenciones: si lo retenido/pagado fue menor, tienes **ISR a cargo**; si fue mayor, tienes **saldo a favor** que puedes solicitar en devolución o compensar. Para ese cierre completo, mira la [calculadora de ISR anual de personas físicas 2026](/mx/calculadora-isr-anual-personas-fisicas-mexico-tarifa-2026).\n\n## Deducciones personales y su tope (Art. 151)\n\nSolo en la **anual** puedes restar tus **deducciones personales**: honorarios médicos, dentales y hospitalarios, gastos funerarios, intereses reales de tu crédito hipotecario, donativos, aportaciones complementarias de retiro, primas de gastos médicos mayores y las **colegiaturas** (estas últimas con su propio tope por nivel, fuera del tope global). El **tope global** es el **menor** entre **5 UMA anuales** ($213,973.20 en 2026) y el **15% de tus ingresos totales**. La calculadora aplica ese límite automáticamente: si capturas más de lo permitido, solo considera el monto deducible. Detalla el cálculo con la [calculadora del tope de deducciones personales 2026](/mx/calculadora-tope-deducciones-personales-2026-mexico).\n\n## Régimen general vs. RESICO vs. honorarios\n\n| Concepto | Actividad empresarial (general) | RESICO PF | Honorarios (servicios) |\n|---|---|---|---|\n| Base del ISR | Ingresos − deducciones (utilidad) | Ingresos cobrados (sin deducir gastos) | Ingresos − deducciones (utilidad) |\n| Tasa | Progresiva 1.92%–35% | 1.00%–2.50% sobre ingresos | Progresiva 1.92%–35% |\n| Deduces gastos | Sí | No | Sí |\n| Retención al cobrar a moral | No (regla general) | 1.25% | 10% |\n| Tope de ingresos | Sin tope | $3.5 millones/año | Sin tope |\n| Te conviene si… | Tienes gastos altos que deducir | Margen alto y pocos gastos | Prestas servicios profesionales |\n\nSi tu **margen es alto** y casi no tienes gastos, **RESICO** suele pagar menos; revísalo con la [calculadora de RESICO PF 2026](/mx/calculadora-resico-personas-fisicas-mexico-2026-cuota). Si tienes **gastos fuertes** (compras mucha mercancía, pagas renta, nómina), el **régimen general** te deja deducirlos y bajar la base. El cruce exacto depende de tu margen real.\n\n## El IVA va por separado\n\nOjo: esta calculadora estima el **ISR**, no el **IVA**. Como persona física con actividad empresarial gravada, también trasladas IVA (16% general u 8% en región fronteriza), acreditas el IVA de tus gastos y enteras la diferencia mensual. Calcula esa parte con la [calculadora de IVA trasladado y acreditable](/mx/calculadora-iva-mexico-trasladado-acreditable). ISR e IVA son impuestos distintos que se declaran por separado.\n\n## Errores comunes\n\n- **Pagar ISR sobre las ventas**: la base es la utilidad (ventas − gastos deducibles), no el ingreso bruto.\n- **No hacer pagos provisionales**: acumular todo para abril genera un ISR anual enorme, recargos y actualización; los provisionales reparten la carga.\n- **Deducir gastos sin CFDI o pagados en efectivo arriba de $2,000**: el SAT los rechaza; todo gasto necesita comprobante fiscal y, sobre $2,000, pago bancarizado.\n- **Confundir deducciones autorizadas con personales**: las del negocio (Art. 103) van en provisionales y anual; las personales (Art. 151) solo en la anual y con tope global.\n- **Creer que RESICO siempre conviene**: con gastos altos, el régimen general puede pagar menos ISR que el porcentaje fijo de RESICO.\n- **Olvidar la depreciación**: tus activos (equipo, mobiliario, vehículos) se deducen por inversión a lo largo de varios años, no de golpe.\n\n## Disclaimer\n\nCálculo orientativo con las **tarifas ISR 2026** del SAT (Anexo 8 de la RMF 2026, DOF 28-dic-2025). Para el pago provisional, esta herramienta aplica la tarifa mensual del Art. 96 a la utilidad del mes; el cálculo oficial del Art. 106 es **acumulado** y resta pagos provisionales previos, por lo que con ingresos estacionales puede diferir. El impuesto definitivo depende de tu contabilidad completa (PTU, pérdidas fiscales de ejercicios anteriores, deducción de inversiones, coeficiente de utilidad) y debe determinarse con tu contador y con los CFDI que respaldan ingresos y deducciones. No constituye asesoría fiscal.",
   "faq": [
-    { "q": "¿Sobre qué se calcula el ISR de una persona física con actividad empresarial?", "a": "Sobre la **utilidad fiscal**, no sobre las ventas: ingresos acumulables (lo efectivamente cobrado, sin IVA) **menos** las deducciones autorizadas (gastos estrictamente indispensables del negocio, con CFDI y pagados en el ejercicio). A esa utilidad se le aplica la tarifa progresiva del 1.92% al 35%." },
-    { "q": "¿Cuál es la diferencia entre este régimen y RESICO?", "a": "RESICO es el régimen **simplificado opcional**: pagas un porcentaje pequeño (1% a 2.5%) sobre tus **ingresos cobrados sin deducir gastos**, con tope de $3.5 millones al año. El régimen general grava tu **utilidad** (ingresos − deducciones) con tarifa progresiva. Si tienes gastos altos que deducir, el general suele convenir; si tu margen es alto y casi no tienes gastos, RESICO paga menos." },
-    { "q": "¿Esto es lo mismo que el ISR por honorarios?", "a": "No del todo. Los honorarios (servicios profesionales) están en la misma Sección I y usan la misma tarifa, pero cuando facturas a una **persona moral te retienen el 10% de ISR**. En la actividad **empresarial pura no hay esa retención del 10%** (regla general), así que todo el ISR lo calculas y pagas tú en tus provisionales y en la anual." },
-    { "q": "¿Cuándo y cómo hago los pagos provisionales?", "a": "Cada mes, **a más tardar el día 17 del mes siguiente** (Art. 106). Acumulas tus ingresos del año hasta ese mes, restas las deducciones del mismo periodo, aplicas la tarifa mensual del Art. 96 y le quitas los pagos provisionales anteriores y retenciones. Esta calculadora te da una estimación mensual aplicando la tarifa del Art. 96 a la utilidad del mes." },
-    { "q": "¿Qué gastos puedo deducir como deducciones autorizadas?", "a": "Los **estrictamente indispensables** para tu actividad y efectivamente pagados: compra de mercancía e insumos, renta del local, sueldos y cuotas IMSS, luz, agua, teléfono, papelería, fletes, comisiones bancarias y la deducción de inversiones (depreciación de equipo, mobiliario y vehículos). Necesitan **CFDI**, y los pagos mayores a $2,000 deben hacerse por transferencia, tarjeta o cheque nominativo." },
-    { "q": "¿Las deducciones personales (médicos, colegiaturas) las puedo restar cada mes?", "a": "No. Las **deducciones personales** del Art. 151 (gastos médicos, colegiaturas, intereses hipotecarios, donativos, aportaciones al retiro) solo se restan en la **declaración anual**. Tienen un tope global: el **menor** entre 5 UMA anuales ($213,973.20 en 2026) y el 15% de tus ingresos totales (las colegiaturas tienen su propio tope aparte)." },
-    { "q": "¿Qué pasa si en un mes gasto más de lo que cobro?", "a": "Tu utilidad fiscal de ese mes es **cero** y no pagas ISR provisional por ese periodo (la base no puede ser negativa). La pérdida del ejercicio se determina en la anual y, si la hay, se puede **amortizar contra utilidades de los siguientes 10 ejercicios** conforme al Art. 109." },
-    { "q": "¿Cuánto ISR pagaría con $800,000 de utilidad anual?", "a": "Con una base gravable de $800,000 (ya restadas deducciones autorizadas y personales), caes en el renglón $668,840.15 – $1,276,925.98 de la tarifa anual 2026: ISR = $125,485.07 + 30% × ($800,000 − $668,840.15) = **$164,833.03** del ejercicio. A eso le restas tus pagos provisionales del año para saber si pagas o tienes saldo a favor." },
-    { "q": "¿El IVA está incluido en este cálculo?", "a": "No. Esta calculadora estima solo el **ISR**. El **IVA** (16% general u 8% en frontera) se traslada, se acredita y se entera por separado cada mes. ISR e IVA son impuestos distintos: calcula el IVA con la calculadora de IVA trasladado y acreditable." },
-    { "q": "¿Las tarifas son las mismas para el pago provisional y para la anual?", "a": "Son **tarifas hermanas**, las dos progresivas del 1.92% al 35%, pero con límites distintos: la **mensual** (Art. 96) se usa en cada pago provisional y la **anual** (Art. 152) en la declaración del ejercicio. La anual equivale aproximadamente a la mensual multiplicada por 12. Ambas se actualizan por inflación; las de 2026 vienen del Anexo 8 de la RMF 2026 (DOF 28-dic-2025)." }
+    {
+      "q": "¿Sobre qué se calcula el ISR de una persona física con actividad empresarial?",
+      "a": "Sobre la **utilidad fiscal**, no sobre las ventas: ingresos acumulables (lo efectivamente cobrado, sin IVA) **menos** las deducciones autorizadas (gastos estrictamente indispensables del negocio, con CFDI y pagados en el ejercicio). A esa utilidad se le aplica la tarifa progresiva del 1.92% al 35%."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre este régimen y RESICO?",
+      "a": "RESICO es el régimen **simplificado opcional**: pagas un porcentaje pequeño (1% a 2.5%) sobre tus **ingresos cobrados sin deducir gastos**, con tope de $3.5 millones al año. El régimen general grava tu **utilidad** (ingresos − deducciones) con tarifa progresiva. Si tienes gastos altos que deducir, el general suele convenir; si tu margen es alto y casi no tienes gastos, RESICO paga menos."
+    },
+    {
+      "q": "¿Esto es lo mismo que el ISR por honorarios?",
+      "a": "No del todo. Los honorarios (servicios profesionales) están en la misma Sección I y usan la misma tarifa, pero cuando facturas a una **persona moral te retienen el 10% de ISR**. En la actividad **empresarial pura no hay esa retención del 10%** (regla general), así que todo el ISR lo calculas y pagas tú en tus provisionales y en la anual."
+    },
+    {
+      "q": "¿Cuándo y cómo hago los pagos provisionales?",
+      "a": "Cada mes, **a más tardar el día 17 del mes siguiente** (Art. 106). Acumulas tus ingresos del año hasta ese mes, restas las deducciones del mismo periodo, aplicas la tarifa mensual del Art. 96 y le quitas los pagos provisionales anteriores y retenciones. Esta calculadora te da una estimación mensual aplicando la tarifa del Art. 96 a la utilidad del mes."
+    },
+    {
+      "q": "¿Qué gastos puedo deducir como deducciones autorizadas?",
+      "a": "Los **estrictamente indispensables** para tu actividad y efectivamente pagados: compra de mercancía e insumos, renta del local, sueldos y cuotas IMSS, luz, agua, teléfono, papelería, fletes, comisiones bancarias y la deducción de inversiones (depreciación de equipo, mobiliario y vehículos). Necesitan **CFDI**, y los pagos mayores a $2,000 deben hacerse por transferencia, tarjeta o cheque nominativo."
+    },
+    {
+      "q": "¿Las deducciones personales (médicos, colegiaturas) las puedo restar cada mes?",
+      "a": "No. Las **deducciones personales** del Art. 151 (gastos médicos, colegiaturas, intereses hipotecarios, donativos, aportaciones al retiro) solo se restan en la **declaración anual**. Tienen un tope global: el **menor** entre 5 UMA anuales ($213,973.20 en 2026) y el 15% de tus ingresos totales (las colegiaturas tienen su propio tope aparte)."
+    },
+    {
+      "q": "¿Qué pasa si en un mes gasto más de lo que cobro?",
+      "a": "Tu utilidad fiscal de ese mes es **cero** y no pagas ISR provisional por ese periodo (la base no puede ser negativa). La pérdida del ejercicio se determina en la anual y, si la hay, se puede **amortizar contra utilidades de los siguientes 10 ejercicios** conforme al Art. 109."
+    },
+    {
+      "q": "¿Cuánto ISR pagaría con $800,000 de utilidad anual?",
+      "a": "Con una base gravable de $800,000 (ya restadas deducciones autorizadas y personales), caes en el renglón $668,840.15 – $1,276,925.98 de la tarifa anual 2026: ISR = $125,485.07 + 30% × ($800,000 − $668,840.15) = **$164,833.03** del ejercicio. A eso le restas tus pagos provisionales del año para saber si pagas o tienes saldo a favor."
+    },
+    {
+      "q": "¿El IVA está incluido en este cálculo?",
+      "a": "No. Esta calculadora estima solo el **ISR**. El **IVA** (16% general u 8% en frontera) se traslada, se acredita y se entera por separado cada mes. ISR e IVA son impuestos distintos: calcula el IVA con la calculadora de IVA trasladado y acreditable."
+    },
+    {
+      "q": "¿Las tarifas son las mismas para el pago provisional y para la anual?",
+      "a": "Son **tarifas hermanas**, las dos progresivas del 1.92% al 35%, pero con límites distintos: la **mensual** (Art. 96) se usa en cada pago provisional y la **anual** (Art. 152) en la declaración del ejercicio. La anual equivale aproximadamente a la mensual multiplicada por 12. Ambas se actualizan por inflación; las de 2026 vienen del Anexo 8 de la RMF 2026 (DOF 28-dic-2025)."
+    }
   ],
   "sources": [
-    { "name": "LISR — Arts. 100, 102, 103, 106 y 109 (actividad empresarial PF), Cámara de Diputados", "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf", "date": "2026-06-19" },
-    { "name": "SAT — Artículo 152 LISR (tarifa anual)", "url": "https://www.sat.gob.mx/articulo/36785/articulo-152", "date": "2026-06-19" },
-    { "name": "SAT — Régimen de las actividades empresariales y profesionales (personas físicas)", "url": "https://www.sat.gob.mx/consultas/61825/conoce-el-regimen-de-las-actividades-empresariales-y-profesionales", "date": "2026-06-19" },
-    { "name": "DOF — Anexo 8 de la RMF 2026 (tarifas ISR, factor de actualización 1.1321)", "url": "https://www.dof.gob.mx/nota_detalle.php?codigo=5746825&fecha=28/12/2025", "date": "2026-06-19" },
-    { "name": "INEGI — UMA 2026 ($117.31 diarios / $42,794.64 anual)", "url": "https://www.inegi.org.mx/temas/uma/", "date": "2026-06-19" }
+    {
+      "name": "LISR — Arts. 100, 102, 103, 106 y 109 (actividad empresarial PF), Cámara de Diputados",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "SAT — Artículo 152 LISR (tarifa anual)",
+      "url": "https://www.sat.gob.mx/articulo/36785/articulo-152",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "SAT — Régimen de las actividades empresariales y profesionales (personas físicas)",
+      "url": "https://www.sat.gob.mx/consultas/61825/conoce-el-regimen-de-las-actividades-empresariales-y-profesionales",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "DOF — Anexo 8 de la RMF 2026 (tarifas ISR, factor de actualización 1.1321)",
+      "url": "https://www.dof.gob.mx/nota_detalle.php?codigo=5746825&fecha=28/12/2025",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "INEGI — UMA 2026 ($117.31 diarios / $42,794.64 anual)",
+      "url": "https://www.inegi.org.mx/temas/uma/",
+      "date": "2026-06-19"
+    }
   ],
   "relatedSlugs": [
     "calculadora-isr-anual-personas-fisicas-mexico-tarifa-2026",
@@ -97,5 +212,133 @@
     "utilidad fiscal persona fisica isr",
     "deducciones autorizadas actividad empresarial sat"
   ],
-  "lastReviewed": "2026-06-19"
+  "lastReviewed": "2026-06-20",
+  "referenceTables": [
+    {
+      "title": "Tarifas ISR 2026 — Mensual (Art. 96) y Anual (Art. 152) para Actividad Empresarial Persona Física",
+      "headers": [
+        "Tramo",
+        "Límite inferior (mensual)",
+        "Límite superior (mensual)",
+        "Cuota fija (mensual)",
+        "% excedente",
+        "Límite inferior (anual)",
+        "Límite superior (anual)",
+        "Cuota fija (anual)"
+      ],
+      "rows": [
+        [
+          "1",
+          "$0.01",
+          "$844.59",
+          "$0.00",
+          "1.92%",
+          "$0.01",
+          "$10,135.11",
+          "$0.00"
+        ],
+        [
+          "2",
+          "$844.60",
+          "$7,168.51",
+          "$16.22",
+          "6.40%",
+          "$10,135.12",
+          "$86,022.11",
+          "$194.59"
+        ],
+        [
+          "3",
+          "$7,168.52",
+          "$12,598.02",
+          "$420.95",
+          "10.88%",
+          "$86,022.12",
+          "$151,176.19",
+          "$5,051.37"
+        ],
+        [
+          "4",
+          "$12,598.03",
+          "$14,644.64",
+          "$1,011.68",
+          "16.00%",
+          "$151,176.20",
+          "$175,735.66",
+          "$12,140.13"
+        ],
+        [
+          "5",
+          "$14,644.65",
+          "$17,533.64",
+          "$1,339.14",
+          "17.92%",
+          "$175,735.67",
+          "$210,403.69",
+          "$16,069.64"
+        ],
+        [
+          "6",
+          "$17,533.65",
+          "$35,362.83",
+          "$1,856.84",
+          "21.36%",
+          "$210,403.70",
+          "$424,353.97",
+          "$22,282.14"
+        ],
+        [
+          "7",
+          "$35,362.84",
+          "$55,736.68",
+          "$5,665.16",
+          "23.52%",
+          "$424,353.98",
+          "$668,840.14",
+          "$67,981.92"
+        ],
+        [
+          "8",
+          "$55,736.69",
+          "$106,410.50",
+          "$10,457.09",
+          "30.00%",
+          "$668,840.15",
+          "$1,276,925.98",
+          "$125,485.07"
+        ],
+        [
+          "9",
+          "$106,410.51",
+          "$141,880.66",
+          "$25,659.23",
+          "32.00%",
+          "$1,276,925.99",
+          "$1,702,567.97",
+          "$307,910.81"
+        ],
+        [
+          "10",
+          "$141,880.67",
+          "$425,641.99",
+          "$37,009.69",
+          "34.00%",
+          "$1,702,567.98",
+          "$5,107,703.92",
+          "$444,116.23"
+        ],
+        [
+          "11",
+          "$425,642.00",
+          "En adelante",
+          "$133,488.54",
+          "35.00%",
+          "$5,107,704.00",
+          "En adelante",
+          "$1,601,862.46"
+        ]
+      ],
+      "note": "Fuente: SAT — Anexo 8 de la Resolución Miscelánea Fiscal 2026, DOF 28-dic-2025. Arts. 96 y 152 LISR. Cifras en pesos mexicanos (MXN). La tarifa mensual se aplica a pagos provisionales; la anual, a la declaración del ejercicio."
+    }
+  ]
 }

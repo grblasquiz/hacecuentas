@@ -23,33 +23,115 @@
     "Un contribuyente revisa si debe declarar el premio en su anual y confirma que, al ser pago definitivo, solo lo informa pero no vuelve a tributar por él."
   ],
   "fields": [
-    { "id": "premio", "label": "Valor del premio", "type": "number", "required": true, "placeholder": "1000000", "min": 0, "step": 0.01, "unit": "$", "help": "Monto del premio en pesos (el del boleto premiado, el valor del sorteo o el valor de mercado si es un premio en especie como un auto o un viaje)." },
-    { "id": "estado", "label": "Estado donde se paga el premio", "type": "select", "default": "general6", "options": [
-      { "value": "general6", "label": "Mayoría de estados (impuesto local 6%)" },
-      { "value": "CDMX", "label": "Ciudad de México (6%)" },
-      { "value": "Estado de México", "label": "Estado de México (6%)" },
-      { "value": "Jalisco", "label": "Jalisco (6%)" },
-      { "value": "Nuevo León", "label": "Nuevo León (6%)" },
-      { "value": "Querétaro", "label": "Querétaro (6%)" },
-      { "value": "Yucatán", "label": "Yucatán (6%)" },
-      { "value": "Guanajuato", "label": "Guanajuato (6%)" },
-      { "value": "Puebla", "label": "Puebla (6%)" },
-      { "value": "Veracruz", "label": "Veracruz (6%)" },
-      { "value": "ninguno", "label": "Estado sin impuesto local (0%)" },
-      { "value": "personalizado", "label": "Otro / porcentaje a la medida…" }
-    ] },
-    { "id": "impuestoEstatalCustom", "label": "Impuesto estatal a la medida (%)", "type": "number", "required": false, "placeholder": "6", "min": 0, "max": 30, "step": 0.5, "unit": "%", "help": "Solo si elegiste \"Otro\": captura el porcentaje del impuesto local de tu estado. Si supera el 6%, el ISR federal pasa de 1% a 21% (LISR Art. 138)." }
+    {
+      "id": "premio",
+      "label": "Valor del premio",
+      "type": "number",
+      "required": true,
+      "placeholder": "1000000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$",
+      "help": "Monto del premio en pesos (el del boleto premiado, el valor del sorteo o el valor de mercado si es un premio en especie como un auto o un viaje)."
+    },
+    {
+      "id": "estado",
+      "label": "Estado donde se paga el premio",
+      "type": "select",
+      "default": "general6",
+      "options": [
+        {
+          "value": "general6",
+          "label": "Mayoría de estados (impuesto local 6%)"
+        },
+        {
+          "value": "CDMX",
+          "label": "Ciudad de México (6%)"
+        },
+        {
+          "value": "Estado de México",
+          "label": "Estado de México (6%)"
+        },
+        {
+          "value": "Jalisco",
+          "label": "Jalisco (6%)"
+        },
+        {
+          "value": "Nuevo León",
+          "label": "Nuevo León (6%)"
+        },
+        {
+          "value": "Querétaro",
+          "label": "Querétaro (6%)"
+        },
+        {
+          "value": "Yucatán",
+          "label": "Yucatán (6%)"
+        },
+        {
+          "value": "Guanajuato",
+          "label": "Guanajuato (6%)"
+        },
+        {
+          "value": "Puebla",
+          "label": "Puebla (6%)"
+        },
+        {
+          "value": "Veracruz",
+          "label": "Veracruz (6%)"
+        },
+        {
+          "value": "ninguno",
+          "label": "Estado sin impuesto local (0%)"
+        },
+        {
+          "value": "personalizado",
+          "label": "Otro / porcentaje a la medida…"
+        }
+      ]
+    },
+    {
+      "id": "impuestoEstatalCustom",
+      "label": "Impuesto estatal a la medida (%)",
+      "type": "number",
+      "required": false,
+      "placeholder": "6",
+      "min": 0,
+      "max": 30,
+      "step": 0.5,
+      "unit": "%",
+      "help": "Solo si elegiste \"Otro\": captura el porcentaje del impuesto local de tu estado. Si supera el 6%, el ISR federal pasa de 1% a 21% (LISR Art. 138)."
+    }
   ],
   "outputs": [
-    { "id": "premioNeto", "label": "Premio neto a cobrar", "primary": true },
-    { "id": "isrFederal", "label": "ISR federal retenido" },
-    { "id": "impuestoEstatal", "label": "Impuesto estatal retenido" },
-    { "id": "retencionTotal", "label": "Retención total" },
-    { "id": "detalle", "label": "Detalle del cálculo" }
+    {
+      "id": "premioNeto",
+      "label": "Premio neto a cobrar",
+      "primary": true
+    },
+    {
+      "id": "isrFederal",
+      "label": "ISR federal retenido"
+    },
+    {
+      "id": "impuestoEstatal",
+      "label": "Impuesto estatal retenido"
+    },
+    {
+      "id": "retencionTotal",
+      "label": "Retención total"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo"
+    }
   ],
   "example": {
     "title": "Ejemplo: premio de $1,000,000 en CDMX (impuesto estatal 6%)",
-    "inputs": { "premio": 1000000, "estado": "CDMX" },
+    "inputs": {
+      "premio": 1000000,
+      "estado": "CDMX"
+    },
     "steps": [
       "Como el impuesto local de CDMX es 6% (no excede el 6%), el ISR federal es del 1% (LISR Art. 138).",
       "ISR federal: $1,000,000 × 1% = $10,000.",
@@ -60,23 +142,73 @@
   },
   "explanation": "## Dos impuestos, no uno: ISR federal + impuesto estatal\n\nGanar un premio en México —**lotería, rifa, sorteo, concurso o juego con apuestas**— genera ingresos gravados que tributan en un régimen propio: el **Capítulo VII del Título IV de la Ley del Impuesto Sobre la Renta (Arts. 137 a 139)**. Lo que muchos no saben es que sobre el mismo premio recaen **dos** impuestos distintos, retenidos por quien entrega el premio:\n\n1. **ISR federal sobre premios** (LISR Art. 138) — lo cobra la Federación.\n2. **Impuesto estatal sobre loterías, rifas, sorteos y concursos** — lo cobra la entidad federativa donde se paga el premio, conforme a su ley de hacienda.\n\nAmbos se calculan sobre el **valor del premio, sin deducción alguna**, y los retiene el organizador antes de entregarte el dinero. La fórmula del neto es directa:\n\n```\nPremio neto = Valor del premio − ISR federal − Impuesto estatal\n```\n\n## La regla del Art. 138: por qué a veces es 1% y a veces 21%\n\nEsta es la parte que confunde a casi todos. El Art. 138 de la LISR fija la tasa del ISR federal **según lo que cobre el estado**:\n\n- **1%** sobre el valor del premio en las entidades federativas que **no establezcan impuesto local** sobre estos ingresos **o que lo establezcan a una tasa que no exceda del 6%**.\n- **21%** sobre el valor del premio en las entidades donde el impuesto local **exceda del 6%**.\n\nDicho de otra forma: el legislador federal premia a los estados \"moderados\" (≤6%) cobrando apenas 1%, y castiga con 21% federal a quien cobre local por encima del 6%. En la práctica **prácticamente todos los estados se quedan justo en el 6%** —el tope que mantiene el ISR federal en 1%—, por lo que el escenario habitual es **1% federal + 6% estatal = 7% de retención total**.\n\n| Impuesto estatal del estado | ISR federal aplicable (Art. 138) | Retención total típica |\n|---|---|---|\n| 0% (estado sin impuesto local) | 1% | 1% |\n| Hasta 6% (la mayoría) | 1% | 1% + estatal (p. ej. 7%) |\n| Más de 6% | 21% | 21% + estatal |\n\nEl impuesto estatal sobre loterías y sorteos lo fija cada ley de hacienda local. Estados como **Ciudad de México, Estado de México, Jalisco, Nuevo León, Querétaro y Yucatán** lo cobran al **6%** sobre el valor del premio obtenido. Por eso la calculadora trae el 6% como caso general y te deja capturar un porcentaje a la medida si tu estado difiere.\n\n## Cuánto te queda según el premio (estado al 6%)\n\nPara el caso más común —un estado que cobra 6% de impuesto local, con ISR federal al 1%—, la retención total es del **7%** y te quedas con el **93%** del premio:\n\n| Valor del premio | ISR federal (1%) | Impuesto estatal (6%) | Retención total | Premio neto |\n|---|---|---|---|---|\n| $10,000 | $100 | $600 | $700 | $9,300 |\n| $100,000 | $1,000 | $6,000 | $7,000 | $93,000 |\n| $500,000 | $5,000 | $30,000 | $35,000 | $465,000 |\n| $1,000,000 | $10,000 | $60,000 | $70,000 | $930,000 |\n| $5,000,000 | $50,000 | $300,000 | $350,000 | $4,650,000 |\n| $20,000,000 | $200,000 | $1,200,000 | $1,400,000 | $18,600,000 |\n\n(En un premio de $20,000,000 la retención es $200,000 federal + $1,200,000 estatal = **$1,400,000**, y el neto **$18,600,000**.) La proporción es lineal: mientras el estado se quede en el 6%, **siempre cobras el 93%**, sin importar el tamaño del premio. Si vives en un estado que cobra más del 6%, el ISR federal salta al 21% y la diferencia es enorme: ese mismo millón de pesos te dejaría $930,000 con 1% federal contra apenas $730,000 con 21% federal y 6% estatal.\n\n## El ISR sobre premios es pago definitivo\n\nUn punto clave del Art. 138: la retención del ISR federal tiene el carácter de **pago definitivo**. Esto significa que, una vez retenido, **no vuelves a pagar ISR por ese premio** ni se suma a tus demás ingresos (sueldo, honorarios, [arrendamiento](/mx/calculadora-impuesto-cedular-arrendamiento-mexico)) en tu declaración anual. Es un régimen cedular cerrado, parecido al [10% definitivo de las ganancias en bolsa](/mx/calculadora-isr-acciones-bolsa-mexico-10-por-ciento).\n\nHay una excepción de forma: si en el año obtienes **premios por más de $600,000**, debes **informarlos** en tu declaración anual (no para volver a pagar, sino como obligación de información del Art. 90 LISR). Si no los informas, el premio podría perder su tratamiento de ingreso por el que ya pagaste y la autoridad podría acumularlo. Por eso conviene declarar el premio aunque el impuesto ya esté pagado.\n\n## Quién retiene y qué documento te dan (Art. 139)\n\nEl **Art. 139** obliga a quien entrega el premio —Lotería Nacional, Pronósticos para la Asistencia Pública, la marca organizadora de la rifa o el sorteo— a:\n\n- **Retener** el ISR federal y enterarlo al SAT.\n- **Entregarte un comprobante (constancia)** donde conste el monto de la operación, el premio y el ISR retenido.\n- **Conservar** la documentación de la retención.\n\nEl impuesto estatal lo retiene y entera el mismo organizador conforme a la ley local. Así que cuando cobras un premio grande, lo que recibes es el **neto**, más una **constancia** que documenta ambas retenciones. Guarda esa constancia: es tu prueba de que el impuesto ya quedó pagado.\n\n## Premios en especie: autos, viajes, electrónicos\n\nMuchos sorteos no dan dinero sino un **bien** (un auto, una casa, un viaje, electrónicos). El impuesto se calcula igual, sobre el **valor del premio**, que para bienes es su **valor de mercado** o el consignado en las bases del sorteo. El problema es práctico: el organizador no puede \"retener el 7% de un coche\". Por eso, en premios en especie, la ley permite que el ganador **entregue al organizador el monto de la retención** para que este la entere, o que el premio se ajuste. Antes de aceptar un premio en especie, calcula la retención: si el auto vale $400,000, prepárate para cubrir alrededor de $28,000 de impuestos (1% + 6%) para poder llevártelo.\n\n## Diferencia con otros ingresos gravados\n\nEl régimen de premios es muy distinto al de otros ingresos:\n\n- **No es la tarifa progresiva del Art. 152**: no importa cuánto ganes de sueldo, el premio paga su 1% (o 21%) plano, no tu tasa marginal. Compáralo con la [tarifa anual de personas físicas](/mx/calculadora-isr-anual-personas-fisicas-mexico-tarifa-2026).\n- **No lleva IVA**: los premios no son una contraprestación por bienes o servicios, así que no causan [IVA](/mx/calculadora-iva-mexico-16-tasa-cero-exenta-frontera).\n- **No se confunde con el impuesto a las nóminas ni con el ISR de sueldos**: un premio de la empresa a un empleado por un concurso interno puede tener reglas propias; lo que aquí se calcula son loterías, rifas, sorteos y concursos abiertos.\n\n## Errores comunes\n\n- **Creer que te retienen el 30% o más**: el ISR sobre premios es 1% (o 21% en estados con local >6%), no la tasa de personas morales ni la marginal de sueldos.\n- **Olvidar el impuesto estatal**: el 1% federal es solo una parte; el grueso de la retención suele ser el 6% estatal.\n- **Pensar que hay que volver a pagar en la anual**: la retención de ISR es definitiva; solo informas el premio si supera $600,000 en el año.\n- **Ignorar la regla del 21%**: si tu estado cobra impuesto local por encima del 6%, el ISR federal se dispara a 21% y el neto cae fuerte.\n- **Aceptar un premio en especie sin calcular la retención**: necesitas tener el efectivo para cubrir los impuestos antes de que te entreguen el bien.\n- **Perder la constancia**: es el documento que prueba que el impuesto ya está pagado; sin ella, acreditar el origen del dinero ante el SAT es más difícil.\n\n## Cuándo aplica y excepciones\n\nEsta calculadora estima la retención federal y estatal sobre **premios de loterías, rifas, sorteos y concursos** pagados a personas físicas residentes en México. No cubre **premios exentos** específicos (por ejemplo, ciertos premios derivados de un sorteo realizado por la Federación con fines distintos, o los que la ley exente expresamente), ni el tratamiento de **no residentes** (que tributan conforme al Título V), ni casos de **juegos con apuestas** sujetos a reglas locales particulares. El monto y el porcentaje estatal exactos dependen de la **ley de hacienda de cada entidad**, que puede cambiar año con año; verifica la tasa local vigente de tu estado.\n\n## Disclaimer\n\nCálculo orientativo conforme al Art. 138 de la LISR (ISR federal 1% / 21%) y a una tasa estatal de referencia del 6% (la más común en 2026). El impuesto estatal exacto lo fija la ley de hacienda de cada entidad federativa y puede diferir; la retención definitiva la determina y entera quien paga el premio, que debe entregarte la constancia respectiva (Art. 139). No constituye asesoría fiscal: para premios grandes, premios en especie o residencia fiscal dudosa, consulta a un contador.",
   "faq": [
-    { "q": "¿Cuánto impuesto pago si me saco la lotería en México?", "a": "Te retienen dos impuestos sobre el valor del premio: el **ISR federal** y el **impuesto estatal**. El ISR federal es **1%** cuando el estado no cobra impuesto local o lo cobra hasta 6% (LISR Art. 138), y **21%** donde el local excede el 6%. El impuesto estatal ronda el **6%**. En el caso típico (estado al 6%) la retención total es del **7%**, así que cobras el **93%** del premio: de $1,000,000 te quedas con $930,000." },
-    { "q": "¿Por qué unas veces el ISR es 1% y otras 21%?", "a": "Lo define el Art. 138 de la LISR según el impuesto local del estado: si la entidad **no grava o grava hasta el 6%**, el ISR federal es **1%**; si el impuesto local **excede el 6%**, el ISR federal sube a **21%**. Es un mecanismo para desincentivar que los estados cobren local por encima del 6%, por lo que casi todos se quedan justo en ese tope." },
-    { "q": "¿Cuál es el impuesto estatal sobre loterías y sorteos?", "a": "Es un impuesto que fija cada **ley de hacienda estatal** sobre el valor del premio. La mayoría de los estados lo cobra al **6%** —Ciudad de México, Estado de México, Jalisco, Nuevo León, Querétaro y Yucatán, entre otros—, que además es el tope que mantiene el ISR federal en 1%. Algunos estados no lo cobran (0%) y unos pocos podrían cobrar más; verifica el de tu entidad." },
-    { "q": "¿Tengo que volver a pagar el premio en mi declaración anual?", "a": "No. La retención del ISR sobre premios es **pago definitivo** (Art. 138): no se acumula a tus demás ingresos ni vuelves a pagar por él. La única obligación es de **información**: si en el año obtuviste premios por más de **$600,000**, debes informarlos en tu anual (sin pagar de nuevo). Conserva la constancia de retención como respaldo." },
-    { "q": "¿Quién me retiene el impuesto, yo o el organizador?", "a": "El **organizador** que paga el premio (Lotería Nacional, Pronósticos, la marca del sorteo o rifa) está obligado a **retener** el ISR, enterarlo al SAT y **entregarte una constancia** con el monto del premio y el impuesto retenido (Art. 139). Tú recibes el **premio neto**; no tienes que hacer el pago tú mismo, salvo en premios en especie." },
-    { "q": "¿Cómo se calcula el impuesto si gano un premio en especie (un auto, un viaje)?", "a": "Sobre el **valor de mercado del bien** (o el consignado en las bases del sorteo), con las mismas tasas (1% o 21% federal + estatal). Como el organizador no puede \"retener parte de un coche\", la práctica es que el ganador **aporte el monto de la retención** para que se entere antes de recibir el premio. Calcula esa retención antes de aceptar: para un auto de $400,000 son unos $28,000 (1% + 6%)." },
-    { "q": "¿El premio paga IVA además del ISR?", "a": "No. Los premios de loterías, rifas, sorteos y concursos **no causan IVA**, porque no son una contraprestación por la enajenación de bienes o la prestación de servicios. Solo aplican el ISR federal sobre premios y el impuesto estatal correspondiente." },
-    { "q": "¿Es lo mismo la retención sobre premios que el ISR de mi sueldo?", "a": "No. El premio tributa en un **régimen cedular propio** (Cap. VII, Título IV) con tasa plana del 1% o 21%, **independiente de tu tarifa de sueldos**. No importa cuánto ganes por tu trabajo: el premio no eleva tu tasa marginal ni esta eleva la del premio. Es distinto de la [tarifa progresiva del Art. 152](/mx/calculadora-isr-anual-personas-fisicas-mexico-tarifa-2026)." },
-    { "q": "¿Cuánto me queda de un premio de $1,000,000?", "a": "En un estado con impuesto local del 6% (el caso más común), te retienen **$10,000 de ISR federal** (1%) y **$60,000 de impuesto estatal** (6%): **$70,000** en total, así que cobras **$930,000 netos** (el 93%). Si tu estado cobrara local por encima del 6%, el ISR federal sería 21% y el neto bajaría a unos $730,000." },
-    { "q": "¿Los premios de rifas y sorteos pequeños también pagan?", "a": "Sí: el régimen no tiene un mínimo exento general, así que toda lotería, rifa, sorteo o concurso causa la retención (1% o 21% federal + estatal). En premios chicos el monto es bajo —de un premio de $10,000 en un estado al 6% te retienen $700— pero el organizador igual debe retener y darte constancia." }
+    {
+      "q": "¿Cuánto impuesto pago si me saco la lotería en México?",
+      "a": "Te retienen dos impuestos sobre el valor del premio: el **ISR federal** y el **impuesto estatal**. El ISR federal es **1%** cuando el estado no cobra impuesto local o lo cobra hasta 6% (LISR Art. 138), y **21%** donde el local excede el 6%. El impuesto estatal ronda el **6%**. En el caso típico (estado al 6%) la retención total es del **7%**, así que cobras el **93%** del premio: de $1,000,000 te quedas con $930,000."
+    },
+    {
+      "q": "¿Por qué unas veces el ISR es 1% y otras 21%?",
+      "a": "Lo define el Art. 138 de la LISR según el impuesto local del estado: si la entidad **no grava o grava hasta el 6%**, el ISR federal es **1%**; si el impuesto local **excede el 6%**, el ISR federal sube a **21%**. Es un mecanismo para desincentivar que los estados cobren local por encima del 6%, por lo que casi todos se quedan justo en ese tope."
+    },
+    {
+      "q": "¿Cuál es el impuesto estatal sobre loterías y sorteos?",
+      "a": "Es un impuesto que fija cada **ley de hacienda estatal** sobre el valor del premio. La mayoría de los estados lo cobra al **6%** —Ciudad de México, Estado de México, Jalisco, Nuevo León, Querétaro y Yucatán, entre otros—, que además es el tope que mantiene el ISR federal en 1%. Algunos estados no lo cobran (0%) y unos pocos podrían cobrar más; verifica el de tu entidad."
+    },
+    {
+      "q": "¿Tengo que volver a pagar el premio en mi declaración anual?",
+      "a": "No. La retención del ISR sobre premios es **pago definitivo** (Art. 138): no se acumula a tus demás ingresos ni vuelves a pagar por él. La única obligación es de **información**: si en el año obtuviste premios por más de **$600,000**, debes informarlos en tu anual (sin pagar de nuevo). Conserva la constancia de retención como respaldo."
+    },
+    {
+      "q": "¿Quién me retiene el impuesto, yo o el organizador?",
+      "a": "El **organizador** que paga el premio (Lotería Nacional, Pronósticos, la marca del sorteo o rifa) está obligado a **retener** el ISR, enterarlo al SAT y **entregarte una constancia** con el monto del premio y el impuesto retenido (Art. 139). Tú recibes el **premio neto**; no tienes que hacer el pago tú mismo, salvo en premios en especie."
+    },
+    {
+      "q": "¿Cómo se calcula el impuesto si gano un premio en especie (un auto, un viaje)?",
+      "a": "Sobre el **valor de mercado del bien** (o el consignado en las bases del sorteo), con las mismas tasas (1% o 21% federal + estatal). Como el organizador no puede \"retener parte de un coche\", la práctica es que el ganador **aporte el monto de la retención** para que se entere antes de recibir el premio. Calcula esa retención antes de aceptar: para un auto de $400,000 son unos $28,000 (1% + 6%)."
+    },
+    {
+      "q": "¿El premio paga IVA además del ISR?",
+      "a": "No. Los premios de loterías, rifas, sorteos y concursos **no causan IVA**, porque no son una contraprestación por la enajenación de bienes o la prestación de servicios. Solo aplican el ISR federal sobre premios y el impuesto estatal correspondiente."
+    },
+    {
+      "q": "¿Es lo mismo la retención sobre premios que el ISR de mi sueldo?",
+      "a": "No. El premio tributa en un **régimen cedular propio** (Cap. VII, Título IV) con tasa plana del 1% o 21%, **independiente de tu tarifa de sueldos**. No importa cuánto ganes por tu trabajo: el premio no eleva tu tasa marginal ni esta eleva la del premio. Es distinto de la [tarifa progresiva del Art. 152](/mx/calculadora-isr-anual-personas-fisicas-mexico-tarifa-2026)."
+    },
+    {
+      "q": "¿Cuánto me queda de un premio de $1,000,000?",
+      "a": "En un estado con impuesto local del 6% (el caso más común), te retienen **$10,000 de ISR federal** (1%) y **$60,000 de impuesto estatal** (6%): **$70,000** en total, así que cobras **$930,000 netos** (el 93%). Si tu estado cobrara local por encima del 6%, el ISR federal sería 21% y el neto bajaría a unos $730,000."
+    },
+    {
+      "q": "¿Los premios de rifas y sorteos pequeños también pagan?",
+      "a": "Sí: el régimen no tiene un mínimo exento general, así que toda lotería, rifa, sorteo o concurso causa la retención (1% o 21% federal + estatal). En premios chicos el monto es bajo —de un premio de $10,000 en un estado al 6% te retienen $700— pero el organizador igual debe retener y darte constancia."
+    }
   ],
   "sources": [
-    { "name": "LISR Art. 138 — De los ingresos por la obtención de premios (SAT)", "url": "https://www.sat.gob.mx/articulo/38032/articulo-138", "date": "2026-06-19" },
-    { "name": "Ley del Impuesto Sobre la Renta (Cap. VII, Arts. 137-139) — Cámara de Diputados, texto vigente", "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf", "date": "2026-06-19" },
-    { "name": "SAT — Ingresos por la obtención de premios (personas físicas)", "url": "https://www.sat.gob.mx/articulo/38032/articulo-138", "date": "2026-06-19" },
-    { "name": "Gobierno de la CDMX — Impuesto sobre Loterías, Rifas, Sorteos y Concursos (6%)", "url": "https://www.finanzas.cdmx.gob.mx/", "date": "2026-06-19" },
-    { "name": "Gobierno de Querétaro — Loterías, Rifas, Sorteos, Concursos y Juegos con Apuestas (6%)", "url": "https://asistenciaspf.queretaro.gob.mx/pf_RifasySorteos.html", "date": "2026-06-19" }
+    {
+      "name": "LISR Art. 138 — De los ingresos por la obtención de premios (SAT)",
+      "url": "https://www.sat.gob.mx/articulo/38032/articulo-138",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "Ley del Impuesto Sobre la Renta (Cap. VII, Arts. 137-139) — Cámara de Diputados, texto vigente",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LISR.pdf",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "SAT — Ingresos por la obtención de premios (personas físicas)",
+      "url": "https://www.sat.gob.mx/articulo/38032/articulo-138",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "Gobierno de la CDMX — Impuesto sobre Loterías, Rifas, Sorteos y Concursos (6%)",
+      "url": "https://www.finanzas.cdmx.gob.mx/",
+      "date": "2026-06-19"
+    },
+    {
+      "name": "Gobierno de Querétaro — Loterías, Rifas, Sorteos, Concursos y Juegos con Apuestas (6%)",
+      "url": "https://asistenciaspf.queretaro.gob.mx/pf_RifasySorteos.html",
+      "date": "2026-06-19"
+    }
   ],
   "relatedSlugs": [
     "calculadora-isr-acciones-bolsa-mexico-10-por-ciento",
@@ -105,5 +237,37 @@
     "cuanto te queda si ganas la loteria mexico",
     "premios sorteos concursos pago definitivo isr"
   ],
-  "lastReviewed": "2026-06-19"
+  "lastReviewed": "2026-06-20",
+  "referenceTables": [
+    {
+      "title": "Tasas de retención sobre premios según impuesto estatal — Art. 138 LISR 2026",
+      "headers": [
+        "Impuesto estatal sobre el premio",
+        "ISR federal aplicable (Art. 138 LISR)",
+        "Retención total (federal + estatal)",
+        "Premio neto (sobre el valor bruto)"
+      ],
+      "rows": [
+        [
+          "0% (estado sin impuesto local)",
+          "1%",
+          "1%",
+          "99%"
+        ],
+        [
+          "Hasta 6% (caso general: CDMX, Edomex, Jalisco, NL, Querétaro, Yucatán)",
+          "1%",
+          "7% (ej. 1% + 6%)",
+          "93%"
+        ],
+        [
+          "Más de 6% (supera el umbral del Art. 138)",
+          "21%",
+          "Más de 27% (ej. 21% + estatal)",
+          "Menos del 73%"
+        ]
+      ],
+      "note": "Fuente: Ley del Impuesto Sobre la Renta, Arts. 137–139, Capítulo VII del Título IV (DOF, vigente 2026). Las tasas estatales del 6% corresponden a las leyes de hacienda de cada entidad federativa; verificar la ley local aplicable al estado donde se pague el premio."
+    }
+  ]
 }

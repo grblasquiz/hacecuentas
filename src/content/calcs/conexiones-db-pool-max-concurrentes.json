@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-conexiones-db-pool-max-concurrentes",
-  "lastReviewed": "2026-06-04",
+  "lastReviewed": "2026-06-20",
   "title": "Conexiones máximas en pool de BD: calculadora + tabla | Hacé Cuentas",
   "h1": "¿Cuántas conexiones poner en el pool de base de datos?",
   "description": "Calculá el pool mínimo y máximo de conexiones para PostgreSQL, MySQL o cualquier BD relacional según la cantidad de cores y el perfil de carga. Fórmula de HikariCP: cores × 2 para OLTP típico.",
@@ -152,5 +152,85 @@
     "conexiones máximas PostgreSQL",
     "pool db conexiones max concurrentes",
     "PgBouncer cuándo usar"
+  ],
+  "referenceTables": [
+    {
+      "title": "Pool de conexiones recomendado por tipo de instancia RDS",
+      "headers": [
+        "Instancia",
+        "Cores",
+        "Pool carga baja (×1)",
+        "Pool carga media (×2)",
+        "Pool carga alta (×3)",
+        "¿Necesita pooler externo?"
+      ],
+      "rows": [
+        [
+          "RDS db.t3.micro",
+          "2",
+          "2",
+          "4",
+          "6",
+          "No (monitorear)"
+        ],
+        [
+          "RDS db.t3.medium",
+          "2",
+          "2",
+          "4",
+          "6",
+          "No"
+        ],
+        [
+          "RDS db.m5.large",
+          "2",
+          "2",
+          "4",
+          "6",
+          "No"
+        ],
+        [
+          "RDS db.m5.xlarge",
+          "4",
+          "4",
+          "8",
+          "12",
+          "No"
+        ],
+        [
+          "RDS db.m5.2xlarge",
+          "8",
+          "8",
+          "16",
+          "24",
+          "Posiblemente"
+        ],
+        [
+          "RDS db.m5.4xlarge",
+          "16",
+          "16",
+          "32",
+          "48",
+          "Sí (PgBouncer)"
+        ],
+        [
+          "RDS db.r5.8xlarge",
+          "32",
+          "32",
+          "64",
+          "96",
+          "Sí (PgBouncer)"
+        ],
+        [
+          "Aurora Serverless v2",
+          "Variable",
+          "Auto",
+          "Auto",
+          "—",
+          "RDS Proxy"
+        ]
+      ],
+      "note": "Fuente: HikariCP (Brett Wooldridge) y PostgreSQL wiki — Number Of Database Connections. Fórmula: pool = cores × factor (1/2/3 según carga). Si el total de conexiones de todas las instancias de app supera cores × 4, se recomienda PgBouncer en modo transaction."
+    }
   ]
 }

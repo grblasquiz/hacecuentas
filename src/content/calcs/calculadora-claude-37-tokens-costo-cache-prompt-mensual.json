@@ -130,8 +130,7 @@
       "format": "text"
     }
   ],
-  "explanation": "## Qué hace el prompt caching\n\nEl prompt caching de la API de Anthropic guarda en caché la parte estática del prompt (el system prompt o un contexto largo de documentos) para reutilizarla en los requests siguientes. La primera vez se **escribe** la caché (cache write), que cuesta **1,25x** el precio de input normal; en cada request posterior dentro del TTL se **lee** desde caché (cache read), que cuesta solo **0,1x** el input normal. Esa diferencia de 12,5x entre escribir y leer es lo que abarata las aplicaciones con prompts repetitivos.\n\n## Tabla de precios 2026 (USD por millón de tokens)\n\n| Modelo | Input normal | Cache write (1,25x) | Cache read (0,1x) | Output |\n|---|---|---|---|---|\n| Claude Opus 4.8 | $5,00 | $6,25 | $0,50 | $25,00 |\n| Claude Sonnet 4.6 | $3,00 | $3,75 | $0,30 | $15,00 |\n| Claude Haiku 4.5 | $1,00 | $1,25 | $0,10 | $5,00 |\n\nLos valores de cache write y cache read son el TTL estándar de 5 minutos. El TTL extendido de 1 hora cuesta **2x** el input en el write (ej.: $6,00/M en Sonnet 4.6).\n\n## Cuánto cuesta un prompt base de 10.000 tokens (costo por request, Sonnet 4.6)\n\n| Cache hit rate | Costo del prompt base / request | Equivalente sin caché |\n|---|---|---|\n| 0% (siempre write) | $0,0000375 | $0,0000300 |\n| 50% | $0,0000206 | $0,0000300 |\n| 80% | $0,0000099 | $0,0000300 |\n| 90% | $0,0000064 | $0,0000300 |\n| 95% | $0,0000046 | $0,0000300 |\n\nA partir de ~20% de hit rate, leer desde caché ya sale más barato que pagar el input normal en cada request.\n\n## Fórmula\n\n```\n// Por request:\ntokens_write    = basePromptTokens × (1 - cacheHitRate)\ntokens_read     = basePromptTokens × cacheHitRate\ntokens_variable = variableTokensPerRequest\ntokens_output   = outputTokensPerRequest\n\ncosto_por_request =\n  (tokens_write    / 1.000.000) × precio_cache_write\n+ (tokens_read     / 1.000.000) × precio_cache_read\n+ (tokens_variable / 1.000.000) × precio_input_normal\n+ (tokens_output   / 1.000.000) × precio_output\n\ncosto_mensual = costo_por_request × requestsPerDay × 30\n\n// Sin caché (todo el prompt base se cobra como input normal):\ncosto_sin_cache_por_request =\n  ((basePromptTokens + variableTokensPerRequest) / 1.000.000) × precio_input_normal\n+ (outputTokensPerRequest / 1.000.000) × precio_output\n```\n\n## Ejemplo numérico (Claude Sonnet 4.6)\n\nSupuestos: 10.000 tokens base, 500 variables, 800 de output, 1.000 requests/día, 80% de cache hit rate → 30.000 requests/mes.\n\n- Cache write: 10.000 × 0,20 = 2.000 tokens → 2.000/1M × $3,75 = $0,0000075/req\n- Cache read: 10.000 × 0,80 = 8.000 tokens → 8.000/1M × $0,30 = $0,0000024/req\n- Input variable: 500/1M × $3,00 = $0,0000015/req\n- Output: 800/1M × $15,00 = $0,000012/req\n- **Total/req ≈ $0,0000234 → mensual ≈ $702**\n\nSin caché: (10.500/1M × $3,00 + 800/1M × $15,00) × 30.000 req ≈ **$1.305/mes** — un 46% más caro. Con el mismo escenario en **Opus 4.8** serían ~$1.170 con caché vs ~$2.175 sin caché; en **Haiku 4.5**, ~$234 vs ~$435.\n\n## Cuándo NO aplica / Limitaciones\n\n- El cache hit rate real depende del TTL (5 minutos por defecto) y del patrón de tráfico; con requests muy esporádicos puede acercarse a 0%.\n- El bloque cacheado debe superar el mínimo de tokens cacheables (1.024–4.096 según el modelo) para activar el caching.\n- Los precios pueden cambiar según tier de volumen, contratos enterprise o cambios de Anthropic.\n- La calculadora no incluye costos de red, latencia ni overhead de infraestructura propia, ni el costo de los tokens de definición de herramientas (tools)."
-  ,
+  "explanation": "## Qué hace el prompt caching\n\nEl prompt caching de la API de Anthropic guarda en caché la parte estática del prompt (el system prompt o un contexto largo de documentos) para reutilizarla en los requests siguientes. La primera vez se **escribe** la caché (cache write), que cuesta **1,25x** el precio de input normal; en cada request posterior dentro del TTL se **lee** desde caché (cache read), que cuesta solo **0,1x** el input normal. Esa diferencia de 12,5x entre escribir y leer es lo que abarata las aplicaciones con prompts repetitivos.\n\n## Tabla de precios 2026 (USD por millón de tokens)\n\n| Modelo | Input normal | Cache write (1,25x) | Cache read (0,1x) | Output |\n|---|---|---|---|---|\n| Claude Opus 4.8 | $5,00 | $6,25 | $0,50 | $25,00 |\n| Claude Sonnet 4.6 | $3,00 | $3,75 | $0,30 | $15,00 |\n| Claude Haiku 4.5 | $1,00 | $1,25 | $0,10 | $5,00 |\n\nLos valores de cache write y cache read son el TTL estándar de 5 minutos. El TTL extendido de 1 hora cuesta **2x** el input en el write (ej.: $6,00/M en Sonnet 4.6).\n\n## Cuánto cuesta un prompt base de 10.000 tokens (costo por request, Sonnet 4.6)\n\n| Cache hit rate | Costo del prompt base / request | Equivalente sin caché |\n|---|---|---|\n| 0% (siempre write) | $0,0000375 | $0,0000300 |\n| 50% | $0,0000206 | $0,0000300 |\n| 80% | $0,0000099 | $0,0000300 |\n| 90% | $0,0000064 | $0,0000300 |\n| 95% | $0,0000046 | $0,0000300 |\n\nA partir de ~20% de hit rate, leer desde caché ya sale más barato que pagar el input normal en cada request.\n\n## Fórmula\n\n```\n// Por request:\ntokens_write    = basePromptTokens × (1 - cacheHitRate)\ntokens_read     = basePromptTokens × cacheHitRate\ntokens_variable = variableTokensPerRequest\ntokens_output   = outputTokensPerRequest\n\ncosto_por_request =\n  (tokens_write    / 1.000.000) × precio_cache_write\n+ (tokens_read     / 1.000.000) × precio_cache_read\n+ (tokens_variable / 1.000.000) × precio_input_normal\n+ (tokens_output   / 1.000.000) × precio_output\n\ncosto_mensual = costo_por_request × requestsPerDay × 30\n\n// Sin caché (todo el prompt base se cobra como input normal):\ncosto_sin_cache_por_request =\n  ((basePromptTokens + variableTokensPerRequest) / 1.000.000) × precio_input_normal\n+ (outputTokensPerRequest / 1.000.000) × precio_output\n```\n\n## Ejemplo numérico (Claude Sonnet 4.6)\n\nSupuestos: 10.000 tokens base, 500 variables, 800 de output, 1.000 requests/día, 80% de cache hit rate → 30.000 requests/mes.\n\n- Cache write: 10.000 × 0,20 = 2.000 tokens → 2.000/1M × $3,75 = $0,0000075/req\n- Cache read: 10.000 × 0,80 = 8.000 tokens → 8.000/1M × $0,30 = $0,0000024/req\n- Input variable: 500/1M × $3,00 = $0,0000015/req\n- Output: 800/1M × $15,00 = $0,000012/req\n- **Total/req ≈ $0,0000234 → mensual ≈ $702**\n\nSin caché: (10.500/1M × $3,00 + 800/1M × $15,00) × 30.000 req ≈ **$1.305/mes** — un 46% más caro. Con el mismo escenario en **Opus 4.8** serían ~$1.170 con caché vs ~$2.175 sin caché; en **Haiku 4.5**, ~$234 vs ~$435.\n\n## Cuándo NO aplica / Limitaciones\n\n- El cache hit rate real depende del TTL (5 minutos por defecto) y del patrón de tráfico; con requests muy esporádicos puede acercarse a 0%.\n- El bloque cacheado debe superar el mínimo de tokens cacheables (1.024–4.096 según el modelo) para activar el caching.\n- Los precios pueden cambiar según tier de volumen, contratos enterprise o cambios de Anthropic.\n- La calculadora no incluye costos de red, latencia ni overhead de infraestructura propia, ni el costo de los tokens de definición de herramientas (tools).",
   "faq": [
     {
       "q": "¿Cuánto cuesta la API de Claude con prompt caching?",
@@ -232,9 +231,45 @@
     "source": "Anthropic API Pricing",
     "sourceUrl": "https://www.anthropic.com/pricing"
   },
-  "lastReviewed": "2026-06-04",
+  "lastReviewed": "2026-06-20",
   "relatedSlugs": [
     "calculadora-rag-vector-db-pinecone-pgvector-costo-mensual",
     "calculadora-cursor-vs-copilot-vs-claude-code-precio-mensual"
+  ],
+  "referenceTables": [
+    {
+      "title": "Precios API de Claude 2026 (USD por millón de tokens)",
+      "headers": [
+        "Modelo",
+        "Input normal",
+        "Cache write (1,25×)",
+        "Cache read (0,1×)",
+        "Output"
+      ],
+      "rows": [
+        [
+          "Claude Opus 4.8",
+          "$5,00",
+          "$6,25",
+          "$0,50",
+          "$25,00"
+        ],
+        [
+          "Claude Sonnet 4.6",
+          "$3,00",
+          "$3,75",
+          "$0,30",
+          "$15,00"
+        ],
+        [
+          "Claude Haiku 4.5",
+          "$1,00",
+          "$1,25",
+          "$0,10",
+          "$5,00"
+        ]
+      ],
+      "note": "Fuente: Anthropic – API Pricing & Prompt Caching Docs (2026). Cache write = 1,25× input (TTL 5 min); cache read = 0,1× input. TTL extendido (1 h) cuesta 2× input en el write. El bloque cacheado debe superar el mínimo de tokens cacheables (1.024–4.096 según modelo)."
+    }
   ]
 }
