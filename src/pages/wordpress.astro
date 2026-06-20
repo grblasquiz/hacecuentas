@@ -1,0 +1,977 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { TOTAL_DISPLAY, TOTAL_PLAIN } from '../lib/calc-counts';
+
+const PLUGIN_ZIP = '/hacecuentas-calculadoras.zip';
+// Cuando el plugin esté aprobado en el directorio oficial, definir esta URL y el
+// CTA primario pasa a "Instalar desde WordPress.org". Mientras tanto: descarga directa.
+const WPORG_URL = '';
+
+const title =
+  'Plugin de WordPress — Calculadoras Hacé Cuentas | Embebé calculadoras en tu sitio';
+const description =
+  `Plugin gratis de WordPress para insertar más de ${TOTAL_PLAIN} calculadoras (sueldo, monotributo, aguinaldo, IMC, préstamos, IVA y más) en tus posts y páginas con un bloque, un shortcode o pegando el link. Sin código, sin registro.`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  '@id': 'https://hacecuentas.com/wordpress#plugin',
+  name: 'Hacé Cuentas — Calculadoras (Plugin de WordPress)',
+  description,
+  url: 'https://hacecuentas.com/wordpress',
+  downloadUrl: 'https://hacecuentas.com' + PLUGIN_ZIP,
+  applicationCategory: 'BrowserApplication',
+  operatingSystem: 'WordPress 6.0+',
+  softwareVersion: '1.0.0',
+  inLanguage: ['es', 'es-AR', 'es-419'],
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: 'https://hacecuentas.com',
+    logo: 'https://hacecuentas.com/favicon.svg',
+  },
+};
+
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Plugin de WordPress', item: 'https://hacecuentas.com/wordpress' },
+  ],
+};
+
+const faqs = [
+  {
+    q: '¿El plugin es gratis?',
+    a: 'Sí, 100% gratis. El plugin y las calculadoras no tienen costo, plan premium ni límite de uso. No pedimos registro ni API key.',
+  },
+  {
+    q: '¿Cómo lo instalo?',
+    a: 'Cuando esté publicado en el directorio oficial, lo vas a poder instalar desde tu panel: Plugins → Añadir nuevo → buscá "Hacé Cuentas". Mientras tanto, descargá el .zip de esta página y subilo desde Plugins → Añadir nuevo → Subir plugin → Activar.',
+  },
+  {
+    q: '¿Necesito saber programar?',
+    a: 'No. Agregás el bloque "Calculadora Hacé Cuentas" en cualquier entrada o página, elegís la calculadora de un buscador y listo. No tocás nada de código.',
+  },
+  {
+    q: '¿Funciona con Gutenberg y con el editor clásico?',
+    a: 'Con los dos. En el editor de bloques (Gutenberg) usás el bloque dedicado o pegás el link de la calculadora. En el editor clásico usás el shortcode [hacecuentas slug="..."].',
+  },
+  {
+    q: '¿Puedo pegar el link de una calculadora y que aparezca sola?',
+    a: 'Sí. El plugin registra a hacecuentas.com como proveedor de oEmbed: pegás la URL completa de una calculadora en una línea sola en el editor de bloques y WordPress la convierte en un embed automáticamente.',
+  },
+  {
+    q: '¿El plugin agrega enlaces a mi sitio sin permiso?',
+    a: 'No. Por defecto sólo se muestra la calculadora, sin ningún enlace externo. Si querés, podés activar un crédito opcional a Hacé Cuentas debajo del widget (toggle "Enlazar a la fuente" en el bloque, o credit="yes" en el shortcode). Está apagado por defecto.',
+  },
+  {
+    q: '¿Carga scripts pesados o afecta la velocidad de mi sitio?',
+    a: 'No. La calculadora se muestra en un iframe liviano con carga diferida (lazy) y los cálculos corren en el navegador del visitante. El único script que el plugin suma a tu página es un ajuste de altura de pocos KB, y sólo cuando hay un embed presente.',
+  },
+  {
+    q: '¿Los datos de mis visitantes son privados?',
+    a: 'Totalmente. Los cálculos se hacen del lado del cliente: el visitante ingresa sus datos y el resultado se computa en su propio navegador. No se envían datos del formulario a ningún servidor.',
+  },
+  {
+    q: '¿Cuántas calculadoras puedo embeber?',
+    a: `Las que quieras. Tenés más de ${TOTAL_PLAIN} disponibles y no hay límite de cuántas embebés ni en cuántas páginas. Podés poner varias en la misma página y el alto de cada una se ajusta solo.`,
+  },
+];
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <article class="wp-page">
+
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs" aria-label="Migas de pan">
+      <a href="/">Inicio</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Plugin de WordPress</span>
+    </nav>
+
+    <!-- ══════════════════════════════════════
+         1. HERO
+    ══════════════════════════════════════ -->
+    <header class="hero">
+      <div class="hero__badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM3.01 12c0-1.3.28-2.53.78-3.65l4.29 11.75A8.98 8.98 0 0 1 3.01 12zM12 21c-.88 0-1.74-.13-2.55-.36l2.7-7.86 2.77 7.59c.02.04.04.09.06.12A8.97 8.97 0 0 1 12 21zm1.24-13.22c.54-.03 1.03-.09 1.03-.09.48-.06.43-.77-.06-.74 0 0-1.46.11-2.4.11-.88 0-2.37-.12-2.37-.12-.48-.02-.54.72-.05.75 0 0 .46.06.94.09l1.4 3.84-1.97 5.9-3.27-9.74c.54-.03 1.03-.09 1.03-.09.48-.06.43-.77-.06-.74 0 0-1.46.11-2.4.11-.17 0-.37 0-.58-.01A8.99 8.99 0 0 1 12 3c2.36 0 4.51.9 6.13 2.38-.04 0-.08-.01-.12-.01-.88 0-1.51.77-1.51 1.6 0 .74.43 1.37.88 2.11.34.6.74 1.37.74 2.48 0 .77-.3 1.66-.69 2.9l-.9 3.01-3.27-9.69zm5.65 8.55a8.95 8.95 0 0 0 .98-4.08c0-1.31-.34-2.49-.85-3.51.39.99.65 1.99.65 3.05 0 1.46-.27 3.09-1.07 5.13l-2.6 7.51A8.98 8.98 0 0 0 21 12c0-.06 0-.13-.01-.19-.13 2.06-.84 3.96-2.1 5.51z"/></svg>
+        Plugin gratis para WordPress
+      </div>
+      <h1>Calculadoras de Hacé Cuentas,<br />ahora en WordPress</h1>
+      <p class="hero__sub">
+        Insertá cualquiera de las {TOTAL_PLAIN} calculadoras en tus entradas y páginas
+        con un bloque, un shortcode o pegando el link. Sin código, sin registro, sin límites.
+      </p>
+      <div class="hero__cta">
+        {WPORG_URL ? (
+          <a href={WPORG_URL} class="btn-primary" target="_blank" rel="noopener">
+            Instalar desde WordPress.org <span aria-hidden="true">→</span>
+          </a>
+        ) : (
+          <a href={PLUGIN_ZIP} class="btn-primary" download>
+            Descargar plugin (.zip) <span aria-hidden="true">↓</span>
+          </a>
+        )}
+        <a href="#instalar" class="btn-ghost btn-ghost--hero">Cómo instalarlo</a>
+      </div>
+      {!WPORG_URL && (
+        <p class="hero__note">Próximamente también en el directorio oficial de WordPress.org.</p>
+      )}
+    </header>
+
+    <!-- ══════════════════════════════════════
+         2. WAYS TO USE — 3 cards
+    ══════════════════════════════════════ -->
+    <section class="modes-section" aria-labelledby="modes-heading">
+      <h2 id="modes-heading">Tres formas de usarlo</h2>
+      <div class="modes-grid">
+        <div class="mode-card">
+          <div class="mode-icon" aria-hidden="true">🧩</div>
+          <h3>Bloque de Gutenberg</h3>
+          <p>
+            Agregás el bloque <strong>"Calculadora Hacé Cuentas"</strong>, elegís una de las más
+            usadas con un clic o la buscás entre las {TOTAL_PLAIN}, y la ves en vivo en el editor.
+          </p>
+        </div>
+        <div class="mode-card">
+          <div class="mode-icon" aria-hidden="true">⌨️</div>
+          <h3>Shortcode</h3>
+          <p>
+            Para el editor clásico o widgets: pegás un shortcode con el slug de la
+            calculadora. Opcionalmente ajustás el alto.
+          </p>
+        </div>
+        <div class="mode-card">
+          <div class="mode-icon" aria-hidden="true">🔗</div>
+          <h3>Auto-embed por URL</h3>
+          <p>
+            Pegás el link de una calculadora en una línea sola y WordPress la convierte
+            en un embed automáticamente, vía oEmbed.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         3. LIVE DEMO
+    ══════════════════════════════════════ -->
+    <section class="demo-section" aria-labelledby="demo-heading">
+      <h2 id="demo-heading">Así se ve embebido</h2>
+      <p class="demo-intro">
+        Este es exactamente el widget que inserta el plugin. Está corriendo en esta misma página:
+      </p>
+      <div class="demo-widget">
+        <iframe
+          src="https://hacecuentas.com/embed/calculadora-imc"
+          width="100%"
+          height="560"
+          frameborder="0"
+          loading="lazy"
+          title="Calculadora de IMC"
+        ></iframe>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         4. HOW TO INSTALL — steps
+    ══════════════════════════════════════ -->
+    <section id="instalar" class="steps-section" aria-labelledby="steps-heading">
+      <h2 id="steps-heading">Cómo instalarlo en 3 pasos</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step__num" aria-hidden="true">1</div>
+          <div class="step__body">
+            <h3>Instalá el plugin</h3>
+            <p>
+              Descargá el .zip y subilo desde <em>Plugins → Añadir nuevo → Subir plugin</em>.
+              Activá. (Pronto, también buscando "Hacé Cuentas" en el directorio.)
+            </p>
+            <a href={PLUGIN_ZIP} class="step__link" download>Descargar .zip ↓</a>
+          </div>
+        </div>
+        <div class="step__connector" aria-hidden="true"></div>
+        <div class="step">
+          <div class="step__num" aria-hidden="true">2</div>
+          <div class="step__body">
+            <h3>Agregá el bloque</h3>
+            <p>En cualquier entrada o página, insertá el bloque <em>"Calculadora Hacé Cuentas"</em>.</p>
+          </div>
+        </div>
+        <div class="step__connector" aria-hidden="true"></div>
+        <div class="step">
+          <div class="step__num" aria-hidden="true">3</div>
+          <div class="step__body">
+            <h3>Elegí la calculadora</h3>
+            <p>Buscá la que necesités entre las {TOTAL_PLAIN}, publicá y listo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         5. SHORTCODE / oEMBED EXAMPLES
+    ══════════════════════════════════════ -->
+    <section class="code-section" aria-labelledby="code-heading">
+      <h2 id="code-heading">Para el editor clásico</h2>
+      <p class="code-intro">
+        Si usás el editor clásico, widgets de texto o preferís el shortcode, copiá y pegá:
+      </p>
+
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-label">Shortcode</span>
+          <button class="btn-copy" data-code={`[hacecuentas slug="calculadora-monotributo-2026"]`} aria-label="Copiar shortcode">
+            Copiar
+          </button>
+        </div>
+        <pre class="code-block"><code>[hacecuentas slug="calculadora-monotributo-2026"]</code></pre>
+      </div>
+
+      <p class="code-intro code-intro--mt">
+        Podés ajustar el alto inicial o activar el enlace de crédito (opcional):
+      </p>
+      <div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span class="code-block-label">Shortcode con opciones</span>
+          <button class="btn-copy" data-code={`[hacecuentas slug="calculadora-imc" height="700" credit="yes"]`} aria-label="Copiar shortcode con opciones">
+            Copiar
+          </button>
+        </div>
+        <pre class="code-block"><code>[hacecuentas slug="calculadora-imc" height="700" credit="yes"]</code></pre>
+      </div>
+
+      <p class="code-hint">
+        El <code>slug</code> es la última parte de la URL de la calculadora. Para
+        <code>hacecuentas.com/calculadora-imc</code> el slug es <code>calculadora-imc</code>.
+        El bloque de Gutenberg además trae un buscador con todas.
+      </p>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         6. BENEFITS
+    ══════════════════════════════════════ -->
+    <section class="benefits-section" aria-labelledby="benefits-heading">
+      <h2 id="benefits-heading">¿Por qué usar el plugin?</h2>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon" aria-hidden="true">🎁</div>
+          <h3>Gratis para siempre</h3>
+          <p>Sin costo, sin plan premium, sin límites. No hay letra chica ni registro.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon" aria-hidden="true">📱</div>
+          <h3>Responsive</h3>
+          <p>Se adapta al ancho de tu contenido y ajusta su alto automáticamente. Light/dark según el sistema del visitante.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon" aria-hidden="true">🪶</div>
+          <h3>Liviano</h3>
+          <p>Iframe con carga diferida y un script de pocos KB. No mete librerías pesadas en tu sitio.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon" aria-hidden="true">🔒</div>
+          <h3>Privado</h3>
+          <p>Los cálculos corren en el navegador del visitante. Ningún dato del formulario sale de su equipo.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         7. USE CASES
+    ══════════════════════════════════════ -->
+    <section class="usecases-section" aria-labelledby="usecases-heading">
+      <h2 id="usecases-heading">¿Para quién es?</h2>
+      <div class="usecases-grid">
+        <div class="usecase-card">
+          <div class="usecase-icon" aria-hidden="true">🧮</div>
+          <h3>Estudios contables</h3>
+          <p>Monotributo, sueldo neto, aguinaldo, ganancias e IVA dentro de tus artículos y páginas de servicios.</p>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon" aria-hidden="true">💰</div>
+          <h3>Blogs de finanzas</h3>
+          <p>Plazo fijo, interés compuesto, cuota de préstamo e inversiones para darle valor real a cada nota.</p>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon" aria-hidden="true">👥</div>
+          <h3>Consultoras de RRHH</h3>
+          <p>Indemnización por despido, vacaciones, costo laboral y liquidación, listos para tus lectores.</p>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon" aria-hidden="true">🏃</div>
+          <h3>Salud y fitness</h3>
+          <p>IMC, calorías TDEE, peso ideal y embarazo: herramientas que mantienen al lector más tiempo en la página.</p>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon" aria-hidden="true">📰</div>
+          <h3>Medios y periodismo</h3>
+          <p>Inflación, tipo de cambio, aumentos de tarifas: embed interactivo para notas de actualidad.</p>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon" aria-hidden="true">🏠</div>
+          <h3>Inmobiliarias</h3>
+          <p>Crédito hipotecario, gastos de escritura y costo de comprar vs alquilar en tus fichas y guías.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         8. ATTRIBUTION / OPEN
+    ══════════════════════════════════════ -->
+    <section class="attribution-section" aria-labelledby="attribution-heading">
+      <div class="attribution-inner">
+        <div class="attribution-icon" aria-hidden="true">🤝</div>
+        <h2 id="attribution-heading">Sin condiciones escondidas</h2>
+        <p>
+          El plugin no inyecta enlaces en tu sitio. Si querés sumar un crédito a Hacé Cuentas
+          debajo del widget, lo activás vos con un toggle — <strong>apagado por defecto</strong>.
+        </p>
+        <p class="attribution-reason">
+          Lo mantenemos gratis porque cada sitio que usa nuestras calculadoras nos ayuda a
+          crecer y a crear más herramientas para todos. Vos sumás valor para tus visitantes,
+          nosotros ganamos alcance. Una relación justa.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         9. FAQ
+    ══════════════════════════════════════ -->
+    <section class="faq-section" aria-labelledby="faq-heading">
+      <h2 id="faq-heading">Preguntas frecuentes</h2>
+      <dl class="faq-list">
+        {faqs.map((item) => (
+          <details class="faq-item">
+            <summary class="faq-q">
+              <span>{item.q}</span>
+              <span class="faq-chevron" aria-hidden="true">›</span>
+            </summary>
+            <dd class="faq-a"><p>{item.a}</p></dd>
+          </details>
+        ))}
+      </dl>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         10. FINAL CTA
+    ══════════════════════════════════════ -->
+    <section class="cta-final" aria-labelledby="cta-heading">
+      <h2 id="cta-heading">Sumá una calculadora a tu WordPress</h2>
+      <p>Gratis, en minutos y sin tocar código.</p>
+      <div class="hero__cta">
+        {WPORG_URL ? (
+          <a href={WPORG_URL} class="btn-primary btn-primary--large" target="_blank" rel="noopener">
+            Instalar desde WordPress.org <span aria-hidden="true">→</span>
+          </a>
+        ) : (
+          <a href={PLUGIN_ZIP} class="btn-primary btn-primary--large" download>
+            Descargar plugin (.zip) <span aria-hidden="true">↓</span>
+          </a>
+        )}
+        <a href="/buscar" class="btn-ghost btn-ghost--hero">Ver las {TOTAL_DISPLAY} calculadoras</a>
+      </div>
+    </section>
+
+    <Newsletter />
+
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  // Copy-to-clipboard for all .btn-copy buttons
+  document.querySelectorAll<HTMLButtonElement>('.btn-copy').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const code = btn.dataset.code ?? '';
+      try {
+        await navigator.clipboard.writeText(code);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      const original = btn.textContent ?? '';
+      btn.textContent = '¡Copiado!';
+      btn.classList.add('btn-copy--success');
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove('btn-copy--success');
+      }, 2000);
+    });
+  });
+</script>
+
+<style>
+  /* ── Page wrapper ── */
+  .wp-page {
+    max-width: 880px;
+    margin: 1rem auto 2rem;
+    padding: 0 1rem;
+  }
+
+  /* ── Breadcrumbs ── */
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-subtle);
+    margin-bottom: 1.5rem;
+  }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+
+  /* ── Shared section spacing ── */
+  section { margin-bottom: 4rem; }
+  section h2 {
+    font-size: clamp(1.375rem, 3vw, 1.75rem);
+    margin-bottom: 1.25rem;
+    color: var(--text);
+  }
+
+  /* ══════════════════════════════
+     1. HERO
+  ══════════════════════════════ */
+  .hero {
+    text-align: center;
+    padding: 3rem 1rem 3.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3.5rem;
+  }
+  .hero__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    background: var(--accent-subtle, #ecfdf5);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 1.25rem;
+  }
+  :global([data-theme="dark"]) .hero__badge {
+    background: rgba(52,211,153,0.1);
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+  .hero__sub {
+    font-size: 1.0625rem;
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+  }
+  .hero__cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .hero__note {
+    font-size: 0.875rem;
+    color: var(--text-subtle);
+    margin: 1rem 0 0;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.75rem 1.75rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: filter 0.15s, transform 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    text-decoration: none;
+    color: #fff;
+  }
+  .btn-primary--large {
+    font-size: 1.0625rem;
+    padding: 0.875rem 2rem;
+  }
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .btn-ghost:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+  .btn-ghost--hero { background: var(--bg-card); }
+  .btn-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .btn-copy:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .btn-copy--success {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: var(--accent-subtle, #ecfdf5) !important;
+  }
+  :global([data-theme="dark"]) .btn-copy--success {
+    background: rgba(52,211,153,0.1) !important;
+  }
+
+  /* ══════════════════════════════
+     2. MODES (ways to use)
+  ══════════════════════════════ */
+  .modes-section h2 { text-align: center; }
+  .modes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .mode-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .mode-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .mode-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+  .mode-card h3 {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+  .mode-card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  /* ══════════════════════════════
+     3. DEMO
+  ══════════════════════════════ */
+  .demo-intro {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    font-size: 0.9375rem;
+  }
+  .demo-widget {
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-card);
+  }
+  .demo-widget iframe {
+    display: block;
+    border: none;
+    width: 100%;
+  }
+
+  /* ══════════════════════════════
+     4. STEPS
+  ══════════════════════════════ */
+  .steps-section h2 { text-align: center; }
+  .steps {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin-top: 2rem;
+  }
+  .step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+  .step__num {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step__body h3 {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+  .step__body p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0 0 0.75rem;
+  }
+  .step__link {
+    color: var(--accent);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .step__link:hover { text-decoration: underline; }
+  .step__connector {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2px;
+    background: var(--border);
+    margin-top: 1.5rem;
+    position: relative;
+  }
+  .step__connector::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: -4px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 7px solid var(--border);
+  }
+
+  /* ══════════════════════════════
+     5. CODE BLOCKS
+  ══════════════════════════════ */
+  .code-intro {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    margin-bottom: 1rem;
+  }
+  .code-intro--mt { margin-top: 1.5rem; }
+  .code-block-wrapper {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-block-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .code-block {
+    margin: 0;
+    padding: 1.1rem 1rem;
+    background: #1e293b;
+    color: #e2e8f0;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    overflow-x: auto;
+    tab-size: 2;
+    white-space: pre;
+  }
+  .code-hint {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 1rem;
+  }
+  .code-hint code {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+    font-size: 0.85em;
+  }
+
+  /* ══════════════════════════════
+     6. BENEFITS
+  ══════════════════════════════ */
+  .benefits-section h2 { text-align: center; }
+  .benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .benefit-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .benefit-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .benefit-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+  .benefit-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+  .benefit-card p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  /* ══════════════════════════════
+     7. USE CASES
+  ══════════════════════════════ */
+  .usecases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .usecase-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.375rem;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .usecase-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+  }
+  .usecase-icon { font-size: 1.75rem; margin-bottom: 0.75rem; display: block; }
+  .usecase-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+  .usecase-card p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  /* ══════════════════════════════
+     8. ATTRIBUTION
+  ══════════════════════════════ */
+  .attribution-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+  }
+  .attribution-inner {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .attribution-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+  .attribution-inner h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.875rem;
+  }
+  .attribution-inner p {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 0.75rem;
+  }
+  .attribution-inner strong { color: var(--text); }
+  .attribution-reason {
+    font-size: 0.9375rem !important;
+    opacity: 0.85;
+  }
+
+  /* ══════════════════════════════
+     9. FAQ
+  ══════════════════════════════ */
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .faq-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+    list-style: none;
+    user-select: none;
+    transition: color 0.15s;
+  }
+  .faq-q::-webkit-details-marker { display: none; }
+  .faq-item[open] .faq-q { color: var(--accent); }
+  .faq-chevron {
+    font-size: 1.125rem;
+    color: var(--text-subtle);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .faq-item[open] .faq-chevron {
+    transform: rotate(90deg);
+    color: var(--accent);
+  }
+  .faq-a {
+    padding: 0 1.25rem 1.125rem;
+    margin: 0;
+  }
+  .faq-a p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* ══════════════════════════════
+     10. FINAL CTA
+  ══════════════════════════════ */
+  .cta-final {
+    text-align: center;
+    padding: 3rem 1rem;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .cta-final h2 {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    margin-bottom: 0.75rem;
+  }
+  .cta-final p {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  /* ══════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════ */
+  @media (max-width: 720px) {
+    .modes-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .steps {
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .step__connector {
+      width: 2px;
+      height: 1.5rem;
+      margin-top: 0;
+    }
+    .step__connector::after {
+      right: -4px;
+      top: auto;
+      bottom: -5px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 7px solid var(--border);
+    }
+    .benefits-grid { grid-template-columns: 1fr; }
+    .usecases-grid { grid-template-columns: 1fr; }
+    .attribution-section { padding: 2rem 1.25rem; }
+    .code-block { font-size: 0.75rem; }
+  }
+</style>
