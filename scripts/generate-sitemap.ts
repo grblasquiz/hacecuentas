@@ -761,6 +761,7 @@ sitemaps.push({
     core('/co',                                  '0.8',  'weekly'),
     core('/cl',                                  '0.8',  'weekly'),
     core('/embeber',                             '0.6',  'monthly'),
+    core('/wordpress',                           '0.75', 'weekly'),
     core('/sobre-nosotros',                      '0.5',  'yearly'),
     core('/privacidad',                          '0.3',  'yearly'),
     core('/cookies',                             '0.3',  'yearly'),
