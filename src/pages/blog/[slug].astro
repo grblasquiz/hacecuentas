@@ -27,8 +27,11 @@ const siteUrl = 'https://hacecuentas.com';
 // No usamos node:fs para chequear: el adapter de Cloudflare corre las páginas
 // en workerd y node:fs rompe el build. og-default.png queda como red de
 // seguridad sólo si alguien borra el JPG a mano.
-const ogImage = `/og/blog-${post.slug}.jpg`;
-const ogImageAbs = `${siteUrl}${ogImage}`;
+// heroImage (foto/ilustración real, ≥1200px) tiene prioridad para og:image + schema
+// image: Discover es image-first y prefiere imágenes reales antes que la card de texto.
+// Si el post no define heroImage, caemos a la OG card de marca (blog-<slug>.jpg).
+const ogImage = (post.heroImage as string)?.trim() || `/og/blog-${post.slug}.jpg`;
+const ogImageAbs = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
 
 // ─── Related calcs ──────────────────────────────────────────────────────────
 const calcModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
@@ -265,7 +268,14 @@ const pageSchema = {
 
         <!-- Article header -->
         <header class="article-header">
-          <div class="hero-emoji" aria-hidden="true">{post.heroEmoji || '📝'}</div>
+          {post.heroImage ? (
+            <figure class="hero-figure">
+              <img class="hero-image" src={post.heroImage} alt={post.h1 || post.title} width="1200" height="630" loading="eager" fetchpriority="high" decoding="async" />
+              {post.heroImageCredit && <figcaption class="hero-credit" set:html={post.heroImageCredit} />}
+            </figure>
+          ) : (
+            <div class="hero-emoji" aria-hidden="true">{post.heroEmoji || '📝'}</div>
+          )}
           <span
             class="cat-badge"
             style={`background:${catColor.bg};color:${catColor.text}`}
@@ -506,6 +516,33 @@ const pageSchema = {
     line-height: 1;
     margin-bottom: 1rem;
     display: block;
+  }
+
+  .hero-figure {
+    margin: 0 0 1.5rem;
+  }
+
+  .hero-image {
+    display: block;
+    width: 100%;
+    max-width: 760px;
+    aspect-ratio: 1200 / 630;
+    height: auto;
+    object-fit: cover;
+    border-radius: 12px;
+    margin: 0 auto 0.4rem;
+  }
+
+  .hero-credit {
+    font-size: 0.78rem;
+    color: var(--text-muted, #6b7280);
+    text-align: center;
+    margin: 0;
+  }
+
+  .hero-credit a {
+    color: inherit;
+    text-decoration: underline;
   }
 
   .cat-badge {
