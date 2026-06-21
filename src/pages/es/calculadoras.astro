@@ -1,0 +1,208 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+// Catálogo completo de España (paridad con /calculadoras de AR). Lista TODAS las
+// calcs que se sirven en /es/* — las localizadas (calcs-es/) + las de calcs/ con
+// audience=ES. Página liviana: solo links, el filtro corre en el cliente.
+// Objetivo SEO: superficie de crawl dedicada + enlace de autoridad hacia el
+// cluster España, que estaba casi aislado del grafo interno.
+const localeModules = import.meta.glob<any>('../../content/calcs-es/*.json', { eager: true });
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const localeCalcs = Object.values(localeModules)
+  .map((m: any) => m.default || m)
+  .filter((c: any) => c && c.slug && c.h1 && !c.noindex);
+const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
+const audienceCalcs = Object.values(mainModules)
+  .map((m: any) => m.default || m)
+  .filter((c: any) => c && c.slug && c.h1 && !c.noindex && c.audience === 'ES');
+const allCalcs = [...localeCalcs, ...audienceCalcs];
+
+function calcUrl(c: any): string {
+  return localeSlugs.has(c.slug) ? `/es/${c.slug}` : `/${c.slug}`;
+}
+
+const CAT: Record<string, { label: string; color: string; icon: string }> = {
+  impuestos:        { label: 'Impuestos',      color: '#7c3aed', icon: '🧾' },
+  finanzas:         { label: 'Finanzas',       color: '#2563eb', icon: '💰' },
+  familia:          { label: 'Familia',        color: '#db2777', icon: '👨‍👩‍👧' },
+  vida:             { label: 'Vida cotidiana', color: '#d97706', icon: '🏠' },
+  salud:            { label: 'Salud',          color: '#16a34a', icon: '❤️' },
+  automotor:        { label: 'Automotor',      color: '#6366f1', icon: '🚗' },
+  educacion:        { label: 'Educación',      color: '#8b5cf6', icon: '🎓' },
+  negocios:         { label: 'Negocios',       color: '#0891b2', icon: '📊' },
+  marketing:        { label: 'Marketing',      color: '#e11d48', icon: '📈' },
+  deportes:         { label: 'Deportes',       color: '#65a30d', icon: '🏃' },
+  viajes:           { label: 'Viajes',         color: '#0891b2', icon: '✈️' },
+  cocina:           { label: 'Cocina',         color: '#ea580c', icon: '🍳' },
+  mascotas:         { label: 'Mascotas',       color: '#db2777', icon: '🐕' },
+  matematica:       { label: 'Matemática',     color: '#0d9488', icon: '🧮' },
+  tecnologia:       { label: 'Tecnología',     color: '#06b6d4', icon: '💻' },
+  'medio-ambiente': { label: 'Medio Ambiente', color: '#22c55e', icon: '🌱' },
+  electronica:      { label: 'Electrónica',    color: '#f59e0b', icon: '⚡' },
+  ciencia:          { label: 'Ciencia',        color: '#6366f1', icon: '🔬' },
+  construccion:     { label: 'Construcción',   color: '#b45309', icon: '🧱' },
+};
+const ORDER = ['impuestos','finanzas','familia','vida','salud','automotor','educacion','negocios','marketing','deportes','viajes','cocina','mascotas','matematica','tecnologia','medio-ambiente','electronica','ciencia','construccion'];
+
+const byCat: Record<string, any[]> = {};
+allCalcs.forEach((c) => { (byCat[c.category] ||= []).push(c); });
+const groups = ORDER
+  .filter((cat) => byCat[cat]?.length)
+  .map((cat) => ({
+    cat,
+    label: CAT[cat]?.label || cat,
+    icon: CAT[cat]?.icon || '🧮',
+    color: CAT[cat]?.color || '#2563eb',
+    calcs: byCat[cat].slice().sort((a, b) => (a.h1 || '').localeCompare(b.h1 || '', 'es')),
+  }));
+
+const total = allCalcs.length;
+const siteUrl = 'https://hacecuentas.com';
+const title = `Todas las calculadoras de España — ${total} gratis | Hacé Cuentas`;
+const description = `Catálogo completo de ${total} calculadoras online gratis para España: IRPF 2026, autónomos, hipoteca, finiquito, IBI, IVA, jubilación y más. Filtrá y entrá a cualquiera.`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Calculadoras de España',
+  description,
+  url: `${siteUrl}/es/calculadoras`,
+  inLanguage: 'es-ES',
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: total,
+    itemListElement: groups.flatMap((g) => g.calcs).slice(0, 50).map((c: any, i: number) => ({
+      '@type': 'ListItem', position: i + 1, name: c.h1, url: `${siteUrl}${calcUrl(c)}`,
+    })),
+  },
+};
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'España', item: `${siteUrl}/es` },
+    { '@type': 'ListItem', position: 2, name: 'Todas las calculadoras', item: `${siteUrl}/es/calculadoras` },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical="/es/calculadoras" audience="ES" schema={schema}>
+  <Header slot="header" />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumb)} />
+
+  <nav class="breadcrumbs" aria-label="Ruta de navegación">
+    <a href="/es">España</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="current">Todas las calculadoras</span>
+  </nav>
+
+  <header class="page-header">
+    <h1>Calculadoras de España</h1>
+    <p>El catálogo completo: <strong>{total}</strong> calculadoras gratis adaptadas a España (IRPF, autónomos, hipoteca, IBI…), ordenadas por categoría. Filtrá por nombre o navegá la lista.</p>
+  </header>
+
+  <div class="search-wrap">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <input id="filter-input" type="search" placeholder="Filtrar calculadoras por nombre…" autocomplete="off" aria-label="Filtrar calculadoras" />
+    <button id="filter-clear" type="button" aria-label="Limpiar filtro" hidden>✕</button>
+  </div>
+  <div class="results-count" id="results-count" aria-live="polite"></div>
+
+  <nav class="cat-jump" aria-label="Saltar a categoría">
+    {groups.map((g) => (
+      <a class="cat-jump-chip" href={`#cat-${g.cat}`} style={`--cat: ${g.color}`}>
+        <span aria-hidden="true">{g.icon}</span> {g.label} <span class="cat-jump-n">{g.calcs.length}</span>
+      </a>
+    ))}
+  </nav>
+
+  <div id="cat-list">
+    {groups.map((g) => (
+      <section class="cat-block" id={`cat-${g.cat}`} style={`--cat: ${g.color}`}>
+        <h2 class="cat-title"><span aria-hidden="true">{g.icon}</span> {g.label} <span class="cat-title-n">{g.calcs.length}</span></h2>
+        <ul class="calc-list">
+          {g.calcs.map((c: any) => (
+            <li class="calc-item" data-name={`${c.h1} ${c.slug}`.toLowerCase()}>
+              <a href={calcUrl(c)}>
+                <span class="calc-item-icon" aria-hidden="true">{c.icon || '🧮'}</span>
+                <span class="calc-item-name">{c.h1}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+
+  <div class="empty" id="empty" hidden>
+    <div class="empty-icon">🔍</div>
+    <h3>Sin resultados</h3>
+    <p>No encontramos calculadoras que coincidan con tu filtro.</p>
+  </div>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const input = document.getElementById('filter-input');
+    const clear = document.getElementById('filter-clear');
+    const count = document.getElementById('results-count');
+    const empty = document.getElementById('empty');
+    const items = Array.from(document.querySelectorAll('.calc-item'));
+    const blocks = Array.from(document.querySelectorAll('.cat-block'));
+    if (!input) return;
+    function apply() {
+      const q = input.value.trim().toLowerCase();
+      clear.hidden = !q;
+      let shown = 0;
+      items.forEach((li) => {
+        const ok = !q || li.getAttribute('data-name').includes(q);
+        li.style.display = ok ? '' : 'none';
+        if (ok) shown++;
+      });
+      blocks.forEach((b) => {
+        const any = b.querySelector('.calc-item:not([style*="display: none"])');
+        b.style.display = any ? '' : 'none';
+      });
+      empty.hidden = shown > 0;
+      count.textContent = q ? `${shown} resultado${shown === 1 ? '' : 's'}` : '';
+    }
+    input.addEventListener('input', apply);
+    clear.addEventListener('click', () => { input.value = ''; apply(); input.focus(); });
+  })();
+</script>
+
+<style>
+  .breadcrumbs { display: flex; gap: 0.5rem; font-size: 0.8125rem; color: var(--text-subtle); margin-bottom: 1.25rem; }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .page-header { margin-bottom: 1.5rem; }
+  .page-header h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); margin-bottom: 0.5rem; }
+  .page-header p { color: var(--text-muted); margin: 0; max-width: 640px; }
+  .page-header strong { color: var(--text); }
+  .search-wrap { display: flex; align-items: center; gap: 0.625rem; padding: 0.875rem 1.125rem; background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 1rem; color: var(--text-subtle); position: sticky; top: 0.5rem; z-index: 5; }
+  .search-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .search-wrap input { flex: 1; border: none; outline: none; background: transparent; font-size: 1rem; color: var(--text); }
+  #filter-clear { background: transparent; border: none; color: var(--text-subtle); cursor: pointer; font-size: 1rem; padding: 0.25rem 0.5rem; }
+  .results-count { font-size: 0.8125rem; color: var(--text-subtle); min-height: 1.25rem; margin-bottom: 1rem; }
+  .cat-jump { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
+  .cat-jump-chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; font-size: 0.8125rem; font-weight: 500; border: 1px solid var(--border); border-radius: 999px; text-decoration: none; color: var(--text-muted); border-left: 3px solid var(--cat); }
+  .cat-jump-chip:hover { color: var(--text); background: var(--bg-muted); }
+  .cat-jump-n { color: var(--text-subtle); font-size: 0.75rem; }
+  .cat-block { margin-bottom: 2.5rem; scroll-margin-top: 4rem; }
+  .cat-title { display: flex; align-items: center; gap: 0.5rem; font-size: 1.25rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--cat); margin-bottom: 1rem; }
+  .cat-title-n { color: var(--text-subtle); font-size: 0.875rem; font-weight: 400; }
+  .calc-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.25rem; }
+  .calc-item a { display: flex; align-items: center; gap: 0.625rem; padding: 0.625rem 0.75rem; border-radius: var(--radius-sm); text-decoration: none; color: var(--text); }
+  .calc-item a:hover { background: var(--bg-muted); }
+  .calc-item-icon { flex-shrink: 0; }
+  .calc-item-name { font-size: 0.9375rem; line-height: 1.3; }
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+  .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+</style>

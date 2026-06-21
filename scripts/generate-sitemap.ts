@@ -761,6 +761,7 @@ sitemaps.push({
     core('/guia/viajes',                         '0.85', 'weekly'),
     core('/global',                              '0.9',  'weekly',  true),
     core('/es',                                  '0.85', 'weekly',  true),
+    core('/es/calculadoras',                     '0.85', 'weekly',  true),
     core('/mx',                                  '0.85', 'weekly',  true),
     core('/co',                                  '0.8',  'weekly'),
     core('/cl',                                  '0.8',  'weekly'),
