@@ -1064,11 +1064,20 @@ const IMC_RAIL_ITEMS = [
   { icon: '👴', label: 'IMC adultos mayores', href: '/calculadora-imc-adultos-mayores-edad-tabla' },
 ];
 
-// Hub de mate/ciencia: fijamos la Calculadora científica arriba del rail en
-// todas las calcs de estas categorías. Concentra autoridad interna hacia el
-// hub (157+ calcs apuntando) sin tocar ningún JSON → no mueve el sitemap.
+// Hubs temáticos fijados arriba del rail (concentran autoridad interna hacia el
+// hub sin tocar ningún JSON → no mueven el sitemap):
+//  - Mundial 2026: las ~30 calcs del cluster apuntan al hub /mundial-2026, así el
+//    que cae de Google a una calc del Mundial descubre el cluster entero (driver
+//    #1 de tráfico de fin de semana, timely jun-jul 2026).
+//  - Mate/ciencia: la Calculadora científica (157+ calcs).
+const isMundialCalc =
+  calc.slug.includes('mundial-2026') ||
+  calc.slug === 'cuanto-falta-mundial-fifa-2026-2030' ||
+  calc.slug === 'calculadora-top-10-goleadores-historico-mundial-fifa';
 const railPinned =
-  ['matematica', 'ciencia'].includes(calc.category)
+  isMundialCalc
+    ? [{ icon: '⚽', label: 'Mundial 2026 — todas las calculadoras', href: '/mundial-2026' }]
+    : ['matematica', 'ciencia'].includes(calc.category)
     ? [{ icon: '🧮', label: 'Calculadora científica', href: '/calculadora-cientifica' }]
     : undefined;
 
