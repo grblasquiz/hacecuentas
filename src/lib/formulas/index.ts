@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-19
+// Generated: 2026-06-21
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -369,6 +369,7 @@ import { calculadoraCostoRealPautaExteriorImpuestosColombia } from './calculador
 import { calculadoraCostoRealPautaExteriorImpuestosMexico } from './calculadora-costo-real-pauta-exterior-impuestos-mexico';
 import { calculadoraCostoRealServicioDigitalExteriorSaasArgentina } from './calculadora-costo-real-servicio-digital-exterior-saas-argentina';
 import { calculadoraProporcionesReceta } from './calculadora-proporciones-receta';
+import { calculadoraSubeArgentina } from './calculadora-sube-argentina-costo-viaje-gasto-mensual';
 import { calderaCondensacionPelletsVsGasAhorro } from './caldera-condensacion-pellets-vs-gas-ahorro';
 import { calderaKwM2Calefaccion } from './caldera-kw-m2-calefaccion';
 import { calderaPotenciaKwAmbienteMetros } from './caldera-potencia-kw-ambiente-metros';
@@ -971,6 +972,7 @@ import { crossfitFranBenchmarkTiempoRx } from './crossfit-fran-benchmark-tiempo-
 import { ctsPeru } from './cts-peru';
 import { compute as compute__cts_peru_calculo_deposito } from './cts-peru-calculo-deposito';
 import { cuadroAlturaColgar } from './cuadro-altura-colgar';
+import { cuandoEsElDiaDelPadreMadreNinoPorPais } from './cuando-es-el-dia-del-padre-madre-nino-por-pais';
 import { compute as compute__cuantas_calorias_bicicleta_distancia_pendiente_perfil } from './cuantas-calorias-bicicleta-distancia-pendiente-perfil';
 import { cuantasMateriassFaltan } from './cuantas-materias-faltan';
 import { compute as compute__cuanto_cobrar_traduccion_palabra_2026_espanol_ingles } from './cuanto-cobrar-traduccion-palabra-2026-espanol-ingles';
@@ -996,6 +998,7 @@ import { cuantoFaltaVeranoEneroFebrero } from './cuanto-falta-verano-enero-febre
 import { cuantoGanoPorSegundo } from './cuanto-gano-por-segundo';
 import { cuantoGastarRegaloNoviaAniversario } from './cuanto-gastar-regalo-novia-aniversario';
 import { cuantoGastoEnDelivery } from './cuanto-gasto-en-delivery';
+import { cuantoHubierasGanado } from './cuanto-hubieras-ganado-invertir-bitcoin-oro-acciones';
 import { cuantoValeMiTiempo } from './cuanto-vale-mi-tiempo';
 import { compute as compute__cuanto_vale_mi_tiempo_hora_anual_salario } from './cuanto-vale-mi-tiempo-hora-anual-salario';
 import { cuantosDiasVacacionesLaboralesAntiguedad } from './cuantos-dias-vacaciones-laborales-antiguedad';
@@ -2262,6 +2265,7 @@ import { mundial2026Descanso } from './mundial-2026-descanso';
 import { mundial2026DiasDebut } from './mundial-2026-dias-debut';
 import { mundial2026DiferenciaGol } from './mundial-2026-diferencia-gol';
 import { mundial2026DreamTeam } from './mundial-2026-dream-team';
+import { mundial2026EnQueCanalPasanElPartidoPorPais } from './mundial-2026-en-que-canal-pasan-el-partido-por-pais';
 import { mundial2026EstadiosComparador } from './mundial-2026-estadios-comparador';
 import { mundial2026FixtureOctavos } from './mundial-2026-fixture-octavos';
 import { mundial2026GolesArgentina } from './mundial-2026-goles-argentina';
@@ -3942,6 +3946,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-costo-real-pauta-exterior-impuestos-mexico': calculadoraCostoRealPautaExteriorImpuestosMexico,
   'calculadora-costo-real-servicio-digital-exterior-saas-argentina': calculadoraCostoRealServicioDigitalExteriorSaasArgentina,
   'calculadora-proporciones-receta': calculadoraProporcionesReceta,
+  'calculadora-sube-argentina-costo-viaje-gasto-mensual': calculadoraSubeArgentina,
   'caldera-condensacion-pellets-vs-gas-ahorro': calderaCondensacionPelletsVsGasAhorro,
   'caldera-kw-m2-calefaccion': calderaKwM2Calefaccion,
   'caldera-potencia-kw-ambiente-metros': calderaPotenciaKwAmbienteMetros,
@@ -4544,6 +4549,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cts-peru': ctsPeru,
   'cts-peru-calculo-deposito': compute__cts_peru_calculo_deposito,
   'cuadro-altura-colgar': cuadroAlturaColgar,
+  'cuando-es-el-dia-del-padre-madre-nino-por-pais': cuandoEsElDiaDelPadreMadreNinoPorPais,
   'cuantas-calorias-bicicleta-distancia-pendiente-perfil': compute__cuantas_calorias_bicicleta_distancia_pendiente_perfil,
   'cuantas-materias-faltan': cuantasMateriassFaltan,
   'cuanto-cobrar-traduccion-palabra-2026-espanol-ingles': compute__cuanto_cobrar_traduccion_palabra_2026_espanol_ingles,
@@ -4569,6 +4575,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-gano-por-segundo': cuantoGanoPorSegundo,
   'cuanto-gastar-regalo-novia-aniversario': cuantoGastarRegaloNoviaAniversario,
   'cuanto-gasto-en-delivery': cuantoGastoEnDelivery,
+  'cuanto-hubieras-ganado-invertir-bitcoin-oro-acciones': cuantoHubierasGanado,
   'cuanto-vale-mi-tiempo': cuantoValeMiTiempo,
   'cuanto-vale-mi-tiempo-hora-anual-salario': compute__cuanto_vale_mi_tiempo_hora_anual_salario,
   'cuantos-dias-vacaciones-laborales-antiguedad': cuantosDiasVacacionesLaboralesAntiguedad,
@@ -5835,6 +5842,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'mundial-2026-dias-debut': mundial2026DiasDebut,
   'mundial-2026-diferencia-gol': mundial2026DiferenciaGol,
   'mundial-2026-dream-team': mundial2026DreamTeam,
+  'mundial-2026-en-que-canal-pasan-el-partido-por-pais': mundial2026EnQueCanalPasanElPartidoPorPais,
   'mundial-2026-estadios-comparador': mundial2026EstadiosComparador,
   'mundial-2026-fixture-octavos': mundial2026FixtureOctavos,
   'mundial-2026-goles-argentina': mundial2026GolesArgentina,
