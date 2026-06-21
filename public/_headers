@@ -175,11 +175,16 @@
   CDN-Cache-Control: public, max-age=600, stale-while-revalidate=86400
 
 # Embed widget: HABILITAR cross-origin iframes para que /embed/* se pueda
-# poner en blogs, medios, fintech. CSP frame-ancestors:* es lo que browsers
-# modernos respetan; X-Frame-Options es legacy y CF Pages no acepta header
-# sin valor para borrarlo. Override SAMEORIGIN-global a ALLOWALL acá.
-# CSP frame-ancestors gana si hay conflicto entre los dos headers.
+# poner en blogs, medios, fintech (plugin WP, /embeber, oEmbed).
+# CLAVE: CF Pages CONCATENA los headers de /* y /embed/*, así que el navegador
+# recibe DOS Content-Security-Policy y aplica la INTERSECCIÓN → el
+# `frame-ancestors 'self'` del CSP global GANABA sobre `frame-ancestors *` y
+# bloqueaba el iframe en cualquier dominio externo (Playground, blogs, etc.).
+# Fix: BORRAR el CSP y XFO heredados con `!` (igual que /search-index.json borra
+# Cache-Control) y recién setear el del embed. Sin el `!` el widget NO carga
+# cross-origin — el caso de uso entero del plugin/oEmbed depende de esto.
 /embed/*
-  X-Frame-Options: ALLOWALL
+  ! X-Frame-Options
+  ! Content-Security-Policy
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com; frame-ancestors *
   # CORP/COOP override para /embed/*: aplicado en src/middleware.ts (ver arriba).
