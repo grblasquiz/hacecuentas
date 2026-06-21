@@ -99,6 +99,15 @@ const SITEMAP_410_HEADERS = {
   'X-Robots-Tag': 'noindex',
 };
 
+// Embed widgets: CSP que permite cargar /embed/* en cualquier dominio externo
+// (frame-ancestors *). /embed/* es prerender → ni el middleware (no corre para
+// assets estaticos) ni _headers (CF Workers Static Assets ignora el operador !
+// para borrar el XFO/CSP global heredado) pueden override los headers. El
+// wrapper corre para TODA request → es el unico lugar que gana. Sin esto el
+// plugin de WordPress, /embeber y oEmbed no cargan cross-origin (el caso de uso
+// entero). Mantener en sync con el bloque /embed/* de public/_headers.
+const EMBED_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com; frame-ancestors *";
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -128,7 +137,21 @@ export default {
     }
 
     // 5) Delegate to Astro (assets + SSR + middleware)
-    return astroHandler.fetch(request, env, ctx);
+    const response = await astroHandler.fetch(request, env, ctx);
+
+    // 6) Embed widgets: override de headers para habilitar carga cross-origin.
+    //    Ver nota en EMBED_CSP arriba. Mutamos una copia (los headers de la
+    //    Response de ASSETS son inmutables) DESPUES de _headers → ganamos.
+    if (APEX_HOSTS.has(url.hostname) && url.pathname.startsWith('/embed/')) {
+      const embedRes = new Response(response.body, response);
+      embedRes.headers.delete('X-Frame-Options');
+      embedRes.headers.set('Content-Security-Policy', EMBED_CSP);
+      embedRes.headers.set('Cross-Origin-Opener-Policy', 'unsafe-none');
+      embedRes.headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+      return embedRes;
+    }
+
+    return response;
   },
 };
 `;
