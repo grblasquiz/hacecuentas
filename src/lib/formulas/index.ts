@@ -658,6 +658,7 @@ import { consumoElectronicaHogarWattsMensual } from './consumo-electronica-hogar
 import { consumoHeladeraAnualKwh } from './consumo-heladera-anual-kwh';
 import { consumoNaftaLitros100km } from './consumo-nafta-litros-100km';
 import { compute as compute__contabilidad_electronica_multa_sat_mexico } from './contabilidad-electronica-multa-sat-mexico';
+import { contadorDePalabrasYCaracteres } from './contador-de-palabras-y-caracteres';
 import { contenidoCalendarioMensual } from './contenido-calendario-mensual';
 import { context1mTokensClaudeCostoInput } from './context-1m-tokens-claude-costo-input';
 import { contraccionesParto } from './contracciones-parto';
@@ -3354,6 +3355,7 @@ import { compute as compute__tmb_metabolismo_basal_mifflin } from './tmb-metabol
 import { compute as compute__tmb_mifflin_st_jeor_portugues } from './tmb-mifflin-st-jeor-portugues';
 import { tokenVestingCliffTgeUnlockRoi } from './token-vesting-cliff-tge-unlock-roi';
 import { tokensOpenaiGptCostoUsoMensual } from './tokens-openai-gpt-costo-uso-mensual';
+import { tokensPorModeloDeIa } from './tokens-por-modelo-de-ia-costo';
 import { topGoleadoresMundial } from './top-goleadores-mundial';
 import { compute as compute__tope_deducciones_personales_2026_mexico } from './tope-deducciones-personales-2026-mexico';
 import { tornillosDurlock } from './tornillos-durlock';
@@ -4238,6 +4240,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'consumo-heladera-anual-kwh': consumoHeladeraAnualKwh,
   'consumo-nafta-litros-100km': consumoNaftaLitros100km,
   'contabilidad-electronica-multa-sat-mexico': compute__contabilidad_electronica_multa_sat_mexico,
+  'contador-de-palabras-y-caracteres': contadorDePalabrasYCaracteres,
   'contenido-calendario-mensual': contenidoCalendarioMensual,
   'context-1m-tokens-claude-costo-input': context1mTokensClaudeCostoInput,
   'contracciones-parto': contraccionesParto,
@@ -6934,6 +6937,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tmb-mifflin-st-jeor-portugues': compute__tmb_mifflin_st_jeor_portugues,
   'token-vesting-cliff-tge-unlock-roi': tokenVestingCliffTgeUnlockRoi,
   'tokens-openai-gpt-costo-uso-mensual': tokensOpenaiGptCostoUsoMensual,
+  'tokens-por-modelo-de-ia-costo': tokensPorModeloDeIa,
   'top-goleadores-mundial': topGoleadoresMundial,
   'tope-deducciones-personales-2026-mexico': compute__tope_deducciones_personales_2026_mexico,
   'tornillos-durlock': tornillosDurlock,
