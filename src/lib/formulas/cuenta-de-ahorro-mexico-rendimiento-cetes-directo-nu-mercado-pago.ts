@@ -24,14 +24,14 @@ export interface Outputs {
 export function compute(i: Inputs): Outputs {
   // Tasas anuales por plataforma (abril 2026, México)
   const tasas: Record<string, number> = {
-    "cetes_directo": 0.1113,
-    "nu_mexico": 0.1000,
-    "mercado_pago": 0.0913,
-    "stori": 0.0850,
-    "klar": 0.0900,
-    "hey_banco": 0.0920,
-    "bbva_libreta": 0.0450,
-    "banorte_inteligente": 0.0680
+    "cetes_directo": 0.0700,
+    "nu_mexico": 0.0700,
+    "mercado_pago": 0.0700,
+    "stori": 0.0650,
+    "klar": 0.0700,
+    "hey_banco": 0.0700,
+    "bbva_libreta": 0.0300,
+    "banorte_inteligente": 0.0500
   };
 
   // Retención ISR sobre intereses (SAT 2026)
@@ -40,7 +40,7 @@ export function compute(i: Inputs): Outputs {
   // Inflación México 2026 (Banxico proyección)
   const INFLACION_MEXICO = 0.0280;
 
-  const tasa_anual = tasas[i.tipo_cuenta] || 0.10;
+  const tasa_anual = tasas[i.tipo_cuenta] || 0.07;
   
   // Cálculo de interés bruto sobre monto inicial
   const interes_bruto_inicial = i.monto_inicial * tasa_anual * (i.plazo_dias / 365);
@@ -108,13 +108,13 @@ export function compute(i: Inputs): Outputs {
   if (i.plazo_dias >= 365 && i.monto_inicial >= 5000) {
     mejor_opcion_perfil = "Perfil: Ahorrador a largo plazo. Recomendación: CetesDirecto o NU (máxima ganancia, capital seguro). Espera 1-2 días tras compra inicial en Cetes.";
   } else if (i.plazo_dias >= 180 && i.plazo_dias < 365) {
-    mejor_opcion_perfil = "Perfil: Ahorrador mediano plazo. Recomendación: NU (10% garantizado) o Mercado Pago (9.1%, retiro diario). Sin comisiones, liquidez flexible.";
+    mejor_opcion_perfil = "Perfil: Ahorrador mediano plazo. Recomendación: NU (7% en saldo disponible) o Mercado Pago (7% base, retiro diario). Sin comisiones, liquidez flexible.";
   } else if (i.plazo_dias < 180) {
-    mejor_opcion_perfil = "Perfil: Emergencias, corto plazo. Recomendación: Mercado Pago, Stori o Klar. Retiro inmediato 1-2 horas, tasa 8.5-9.1%, sin comisiones.";
+    mejor_opcion_perfil = "Perfil: Emergencias, corto plazo. Recomendación: Mercado Pago, Stori o Klar. Retiro inmediato 1-2 horas, tasa 6.5-7%, sin comisiones.";
   } else if (i.monto_inicial > 100000) {
-    mejor_opcion_perfil = "Perfil: Inversionista con capital alto. Recomendación: CetesDirecto (11.13%, Tesorería, seguridad estatal) o NU (10%, sin comisiones, crecimiento ágil).";
+    mejor_opcion_perfil = "Perfil: Inversionista con capital alto. Recomendación: CetesDirecto (hasta 7% a 350 días, Tesorería, seguridad estatal) o NU (7%, sin comisiones, crecimiento ágil).";
   } else {
-    mejor_opcion_perfil = "Perfil: Ahorrador general. Recomendación: NU (10%) o Mercado Pago (9.1%). Ambas sin mínimo exigente, retiro flexible, sin comisiones.";
+    mejor_opcion_perfil = "Perfil: Ahorrador general. Recomendación: NU (7%) o Mercado Pago (7% base). Ambas sin mínimo exigente, retiro flexible, sin comisiones.";
   }
   
   // --- Insight + gráfico ---
