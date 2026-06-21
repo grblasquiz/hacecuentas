@@ -1,0 +1,254 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+// Página-dato enlazable (autoridad) para España: tabla de cuotas de autónomos
+// RETA 2026 por tramo de rendimiento neto. Patrón espejado de /datos-monotributo
+// -2026: schema Dataset + CC-BY 4.0 + bloque "Cómo citar" → cuando un medio o
+// blog .es cita la tabla, atribuye con link = backlink editorial. La tabla de
+// autónomos es de las más citadas del nicho fiscal español.
+// Fuente de datos: src/lib/formulas/autonomo-cuota-2026-espana-rendimiento-neto.ts
+// (TRAMOS_RETA_2026) + Seguridad Social/BOE 2026. Mantener en sync.
+
+const ULTIMA_REVISION = '2026-06-21';
+const PAGE_URL = 'https://hacecuentas.com/es/datos-cuota-autonomos-2026';
+const FUENTE_URL = 'https://www.seg-social.es/wps/portal/wss/internet/Trabajadores/CotizacionRecaudacionTrabajadores/36537';
+const TIPO_COTIZACION = 0.312;
+
+const tramos = [
+  { n: 1,  rn: '≤ 670',            min: 0,       max: 670,    cuota: 200 },
+  { n: 2,  rn: '670 – 900',         min: 670,     max: 900,    cuota: 220 },
+  { n: 3,  rn: '900 – 1.166,70',    min: 900,     max: 1166.7, cuota: 260 },
+  { n: 4,  rn: '1.166,70 – 1.300',  min: 1166.7,  max: 1300,   cuota: 290 },
+  { n: 5,  rn: '1.300 – 1.500',     min: 1300,    max: 1500,   cuota: 294 },
+  { n: 6,  rn: '1.500 – 1.700',     min: 1500,    max: 1700,   cuota: 294 },
+  { n: 7,  rn: '1.700 – 1.850',     min: 1700,    max: 1850,   cuota: 310 },
+  { n: 8,  rn: '1.850 – 2.030',     min: 1850,    max: 2030,   cuota: 315 },
+  { n: 9,  rn: '2.030 – 2.330',     min: 2030,    max: 2330,   cuota: 320 },
+  { n: 10, rn: '2.330 – 2.760',     min: 2330,    max: 2760,   cuota: 330 },
+  { n: 11, rn: '2.760 – 3.190',     min: 2760,    max: 3190,   cuota: 350 },
+  { n: 12, rn: '3.190 – 3.620',     min: 3190,    max: 3620,   cuota: 370 },
+  { n: 13, rn: '3.620 – 4.050',     min: 3620,    max: 4050,   cuota: 390 },
+  { n: 14, rn: '4.050 – 6.000',     min: 4050,    max: 6000,   cuota: 420 },
+  { n: 15, rn: '> 6.000',           min: 6000,    max: null,   cuota: 500 },
+];
+
+const cuotaMin = 200;
+const cuotaMax = 500;
+const cuotaAnualMin = cuotaMin * 12;
+
+const title = 'Cuota de autónomos 2026 en España: tabla por tramos de rendimiento (RETA) | Hacé Cuentas';
+const description = 'Tabla oficial de la cuota de autónomos 2026 en España: los 15 tramos del RETA por rendimiento neto, de 200 €/mes (hasta 670 €) a 500 €/mes (más de 6.000 €). Datos Seguridad Social / BOE. Uso libre con atribución (CC-BY 4.0).';
+
+const faq = [
+  { q: '¿Cuánto se paga de cuota de autónomos en 2026?', a: `La cuota mínima del RETA 2026 va de ${cuotaMin} €/mes (rendimiento neto de hasta 670 €/mes) a ${cuotaMax} €/mes (rendimiento superior a 6.000 €/mes), según el tramo en el que caiga tu rendimiento neto. Son 15 tramos.` },
+  { q: '¿Qué es el rendimiento neto a efectos de la cuota?', a: 'Es tu rendimiento neto anual (ingresos menos gastos deducibles), al que se aplica una deducción adicional del 7% (autónomos individuales) o 3% (societarios), dividido entre 12. Ese rendimiento neto mensual determina tu tramo.' },
+  { q: '¿La cuota de 2026 subió respecto a 2025?', a: 'El sistema de cotización por ingresos reales (vigente desde 2023) sigue su calendario de tramos. Los importes de cada tramo se fijan en la Orden de cotización anual; esta tabla recoge los tramos vigentes en 2026.' },
+  { q: '¿Puedo cotizar por una base superior a la mínima de mi tramo?', a: 'Sí. Cada tramo tiene una base de cotización mínima y una máxima; podés elegir cotizar por una base más alta dentro de tu tramo (lo que sube la cuota pero mejora la futura pensión y prestaciones).' },
+  { q: '¿Qué incluye la cuota de autónomos?', a: `Se calcula aplicando el tipo de cotización global del RETA (${(TIPO_COTIZACION * 100).toFixed(2).replace('.', ',')}%) sobre la base elegida. Cubre contingencias comunes y profesionales, cese de actividad, formación profesional y MEI. No incluye el IRPF.` },
+  { q: '¿La tarifa plana de 80 € sigue vigente en 2026?', a: 'La tarifa plana para nuevos autónomos (80 €/mes el primer año, prorrogable) es un régimen aparte de bonificación. Esta tabla muestra la cuota ordinaria por tramos, que es la que se aplica al terminar la bonificación.' },
+  { q: '¿De dónde salen estos datos?', a: 'De la Seguridad Social y la Orden de cotización publicada en el BOE para 2026. La fuente oficial está enlazada al final de la página.' },
+  { q: '¿Puedo usar esta tabla en mi web, nota o trabajo?', a: 'Sí. Los datos se publican bajo licencia Creative Commons CC-BY 4.0: podés reproducirlos libremente citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".' },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset',
+  '@id': `${PAGE_URL}#dataset`,
+  name: 'Cuota de autónomos (RETA) España 2026 — tabla por tramos de rendimiento neto',
+  description: 'Los 15 tramos del Régimen Especial de Trabajadores Autónomos (RETA) vigentes en España en 2026: rango de rendimiento neto mensual, base de cotización mínima y cuota mínima mensual de cada tramo. Fuente: Seguridad Social / BOE.',
+  url: PAGE_URL,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  isAccessibleForFree: true,
+  inLanguage: 'es-ES',
+  dateModified: ULTIMA_REVISION,
+  temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Place', name: 'España' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  sourceOrganization: { '@type': 'GovernmentOrganization', name: 'Seguridad Social (España)', url: FUENTE_URL },
+  keywords: ['cuota autónomos 2026', 'RETA', 'tramos autónomos', 'rendimiento neto', 'cotización autónomos', 'España', 'Seguridad Social'],
+  variableMeasured: ['Rendimiento neto mensual (EUR)', 'Base de cotización mínima (EUR)', 'Cuota mínima mensual (EUR)'],
+  identifier: 'https://hacecuentas.com/datos/cuota-autonomos-espana-2026.json',
+  version: '2026',
+  distribution: [
+    { '@type': 'DataDownload', name: 'Cuota autónomos España 2026 (JSON)', encodingFormat: 'application/json', contentUrl: 'https://hacecuentas.com/datos/cuota-autonomos-espana-2026.json' },
+    { '@type': 'DataDownload', name: 'Cuota autónomos España 2026 (CSV)', encodingFormat: 'text/csv', contentUrl: 'https://hacecuentas.com/datos/cuota-autonomos-espana-2026.csv' },
+  ],
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${PAGE_URL}#webpage`,
+      name: title,
+      description,
+      url: PAGE_URL,
+      inLanguage: 'es-ES',
+      dateModified: ULTIMA_REVISION,
+      mainEntity: { '@id': `${PAGE_URL}#dataset` },
+    },
+    datasetSchema,
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'España', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: 'Cuota autónomos 2026', item: PAGE_URL },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical="/es/datos-cuota-autonomos-2026" audience="ES" lang="es" schema={schema}>
+  <Header slot="header" />
+
+  <main class="article-main">
+    <article class="page-content datos-page">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan">
+          <a href="/es">España</a> <span>›</span> <span>Cuota autónomos 2026</span>
+        </nav>
+        <h1>Cuota de autónomos 2026 en España: tabla por tramos (RETA)</h1>
+        <p class="lede">
+          Los <strong>15 tramos del RETA 2026</strong> por rendimiento neto: la cuota mínima mensual
+          va de <strong>{cuotaMin} €/mes</strong> (rendimiento de hasta 670 €/mes) a
+          <strong>{cuotaMax} €/mes</strong> (más de 6.000 €/mes). Datos de la
+          <strong>Seguridad Social</strong> (Orden de cotización, BOE 2026).
+        </p>
+        <p class="updated">
+          Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-ES')}</time> ·
+          Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)
+        </p>
+      </header>
+
+      <section class="stats-callout" aria-label="Datos destacados">
+        <div class="stat"><span class="stat-num">15</span><span class="stat-label">tramos de rendimiento</span></div>
+        <div class="stat"><span class="stat-num">{cuotaMin} €</span><span class="stat-label">cuota mínima (tramo&nbsp;1)</span></div>
+        <div class="stat"><span class="stat-num">{cuotaMax} €</span><span class="stat-label">cuota tramo más alto</span></div>
+        <div class="stat"><span class="stat-num">{(TIPO_COTIZACION * 100).toFixed(2).replace('.', ',')}%</span><span class="stat-label">tipo de cotización</span></div>
+      </section>
+
+      <section>
+        <h2>Tabla de cuotas de autónomos 2026 por tramo</h2>
+        <p>
+          La cuota depende de tu <strong>rendimiento neto mensual</strong> (ingresos menos gastos, con la
+          deducción adicional, dividido entre 12). Cada tramo fija una base de cotización mínima y la
+          cuota mínima mensual correspondiente.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Tramo</th><th>Rendimiento neto (€/mes)</th><th>Cuota mínima (€/mes)</th><th>Cuota anual (€)</th></tr>
+            </thead>
+            <tbody>
+              {tramos.map((t) => (
+                <tr>
+                  <td data-label="Tramo"><strong>{t.n}</strong></td>
+                  <td data-label="Rendimiento neto">{t.rn}</td>
+                  <td data-label="Cuota mensual">{t.cuota} €</td>
+                  <td data-label="Cuota anual">{(t.cuota * 12).toLocaleString('es-ES')} €</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          Cuota mínima de cada tramo (cotizando por la base mínima). Podés elegir una base superior dentro
+          del tramo, lo que sube la cuota pero mejora pensión y prestaciones. No incluye IRPF.
+        </p>
+      </section>
+
+      <section>
+        <h2>Cómo se determina tu tramo</h2>
+        <ul class="cambios">
+          <li><strong>Rendimiento neto anual</strong> = ingresos − gastos deducibles de la actividad.</li>
+          <li><strong>Deducción adicional</strong> del 7% (autónomos individuales) o 3% (societarios) sobre ese rendimiento.</li>
+          <li><strong>Entre 12</strong> = rendimiento neto mensual, que es lo que ubica tu tramo en la tabla.</li>
+          <li>La cuota se regulariza: si tu rendimiento real del año difiere del previsto, la Seguridad Social ajusta lo pagado de más o de menos.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Calculá tu caso</h2>
+        <p>Esta página es la tabla de referencia. Para tu cuota exacta según rendimiento, usá las calculadoras de España:</p>
+        <ul class="calc-links">
+          <li><a href="/es/calculadora-autonomo-cuota-2026-espana-rendimiento-neto">Calculadora de cuota de autónomos 2026 por rendimiento</a></li>
+          <li><a href="/es/calculadora-modelo-130-pago-fraccionado-autonomo-espana">Modelo 130 — pago fraccionado del IRPF (autónomo)</a></li>
+          <li><a href="/es/calculadora-modelo-303-iva-trimestral-autonomo-espana">Modelo 303 — IVA trimestral del autónomo</a></li>
+          <li><a href="/es/calculadora-irpf-2026-tramos-espana-nomina">IRPF 2026 — tramos y retención</a></li>
+          <li><a href="/es/calculadoras">Todas las calculadoras de España →</a></li>
+        </ul>
+      </section>
+
+      <section class="cite-instructions" aria-label="Descargar datos">
+        <h2>Descargar estos datos</h2>
+        <p>Datos abiertos (CC-BY 4.0), listos para usar en tu app, planilla o análisis:</p>
+        <p>
+          <a href="/datos/cuota-autonomos-espana-2026.json" download>⬇ Descargar JSON</a> ·
+          <a href="/datos/cuota-autonomos-espana-2026.csv" download>⬇ Descargar CSV</a>
+        </p>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Cómo citar esta tabla</h2>
+        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
+        <pre><code>Fuente: Hacé Cuentas — https://hacecuentas.com/es/datos-cuota-autonomos-2026
+Datos: Seguridad Social (RETA 2026) · Licencia CC-BY 4.0</code></pre>
+        <p>Si publicás online, te agradecemos el enlace a <a href="https://hacecuentas.com/es/datos-cuota-autonomos-2026">hacecuentas.com/es/datos-cuota-autonomos-2026</a>.</p>
+      </section>
+
+      <section class="faq">
+        <h2>Preguntas frecuentes</h2>
+        {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+      </section>
+
+      <section class="fuentes">
+        <h2>Fuentes</h2>
+        <ul>
+          <li><a href={FUENTE_URL} rel="nofollow noopener" target="_blank">Seguridad Social — Cotización de trabajadores autónomos (RETA)</a> (fuente oficial, 2026)</li>
+          <li>Importes de los tramos según la Orden de cotización publicada en el BOE para 2026.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted, #666); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent, #2563eb); text-decoration: none; }
+  .datos-page h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; }
+  .lede { font-size: 1.1rem; line-height: 1.6; color: var(--text, #222); }
+  .updated { font-size: 0.85rem; color: var(--text-muted, #666); margin-top: 0.5rem; }
+  .datos-page h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+  .stats-callout { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin: 1.75rem 0; }
+  .stat { background: var(--bg-soft, #f4f6f9); border: 1px solid var(--border, #e5e7eb); border-radius: 0.6rem; padding: 0.9rem 1rem; text-align: center; }
+  .stat-num { display: block; font-size: 1.35rem; font-weight: 700; color: var(--accent, #2563eb); line-height: 1.2; }
+  .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted, #666); margin-top: 0.25rem; }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  .datos-page table { width: 100%; border-collapse: collapse; font-size: 0.95rem; min-width: 480px; }
+  .datos-page th { background: var(--bg-soft, #f1f5f9); padding: 0.6rem 0.7rem; text-align: right; font-weight: 600; border-bottom: 2px solid var(--border, #e5e7eb); white-space: nowrap; }
+  .datos-page th:first-child { text-align: left; }
+  .datos-page td { padding: 0.55rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border, #eee); white-space: nowrap; }
+  .datos-page td:first-child, .datos-page td:nth-child(2) { text-align: left; }
+  .datos-page tbody tr:nth-child(odd) { background: var(--bg-card, #fafafa); }
+  .note { font-size: 0.85rem; color: var(--text-muted, #666); margin-top: 0.5rem; }
+  .cambios li, .calc-links li, .fuentes li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .cambios, .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent, #2563eb); }
+  .cite-instructions { margin-top: 2.5rem; padding: 1.1rem; background: var(--bg-soft, #f4f6f9); border-radius: 0.6rem; }
+  .cite-instructions pre { background: var(--code-bg, #eaeef3); padding: 0.75rem; border-radius: 0.4rem; overflow-x: auto; font-size: 0.85rem; }
+  .faq details { border-bottom: 1px solid var(--border, #e5e7eb); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; color: var(--text, #222); }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted, #555); line-height: 1.6; }
+</style>

@@ -762,6 +762,7 @@ sitemaps.push({
     core('/global',                              '0.9',  'weekly',  true),
     core('/es',                                  '0.85', 'weekly',  true),
     core('/es/calculadoras',                     '0.85', 'weekly',  true),
+    core('/es/datos-cuota-autonomos-2026',       '0.8',  'monthly', true),
     core('/mx',                                  '0.85', 'weekly',  true),
     core('/co',                                  '0.8',  'weekly'),
     core('/cl',                                  '0.8',  'weekly'),
