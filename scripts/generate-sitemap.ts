@@ -522,6 +522,10 @@ const priorityUrls: Url[] = [
   prio('/feriados-chile-2026',               '0.85', 'weekly'),
   prio('/feriados-peru-2026',                '0.85', 'weekly'),
   prio('/feriados-ecuador-2026',             '0.85', 'weekly'),
+  // Web Stories (AMP) — Google les da carrusel propio en Discover/Imágenes
+  prio('/historias/vacaciones-invierno-2026',            '0.7', 'weekly'),
+  prio('/historias/aguinaldo-2026-plazo-fijo-dolar-uva', '0.7', 'weekly'),
+  prio('/historias/calefaccion-invierno-2026',           '0.7', 'weekly'),
   // guías pilares (estables)
   prio('/guia/finanzas-personales',          '0.9',  'weekly'),
   prio('/guia/marketing-roi-metricas',       '0.9',  'weekly'),
