@@ -25,8 +25,8 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 México - SAT/Banxico
-  const RETENCION_ISR_PAGARE = 0.012; // 1.2% retención pagaré personas físicas
-  const RETENCION_ISR_CETE = 0.015;   // 1.5% retención CETE personas físicas
+  const RETENCION_ISR_PAGARE = 0.009; // 0.90% retención provisional ISR sobre intereses 2026, LIF Art. 24 — igual para pagaré y CETE
+  const RETENCION_ISR_CETE = 0.009;   // 0.90% retención provisional ISR sobre intereses 2026, LIF Art. 24 — tasa única por instrumento
   const DIAS_ANIO = 365;
   const AJUSTE_CLIENTE_PREFERENTE = i.cliente_tiie ? 0.005 : 0; // descuento 0.5% cliente preferente
 
@@ -40,7 +40,7 @@ export function compute(i: Inputs): Outputs {
   // Fórmula: Interés bruto = Capital × (Tasa / 100) × (Días / 365)
   const interes_bruto_pagare = (monto * (tasa_pagare_ajustada / 100) * (dias / DIAS_ANIO));
   
-  // Retención ISR = Interés bruto × 1.2%
+  // Retención ISR provisional = Interés bruto × 0.90% (acreditable en declaración anual)
   const retencion_isr_pagare = interes_bruto_pagare * RETENCION_ISR_PAGARE;
   
   // Interés neto = Interés bruto − Retención
@@ -56,7 +56,7 @@ export function compute(i: Inputs): Outputs {
   // Fórmula igual: Interés bruto = Capital × (Tasa / 100) × (Días / 365)
   const interes_bruto_cete = (monto * (tasa_cete / 100) * (dias / DIAS_ANIO));
   
-  // Retención ISR = Interés bruto × 1.5%
+  // Retención ISR provisional = Interés bruto × 0.90% (acreditable en declaración anual)
   const retencion_isr_cete = interes_bruto_cete * RETENCION_ISR_CETE;
   
   // Interés neto = Interés bruto − Retención
@@ -88,7 +88,7 @@ export function compute(i: Inputs): Outputs {
   }
 
   recomendacion += `\n\n**Liquidez**: Pagaré sin salida antes vencimiento. CETE vendible en BMV (comisión ~0.1-0.5%). `;
-  recomendacion += `\n\n**ISR**: Pagaré retiene ${(RETENCION_ISR_PAGARE * 100).toFixed(1)}%; CETE ${(RETENCION_ISR_CETE * 100).toFixed(1)}%. Ambos automáticos. `;
+  recomendacion += `\n\n**ISR**: ambos retienen ${(RETENCION_ISR_PAGARE * 100).toFixed(2)}% provisional sobre intereses (tasa única 2026, acreditable en tu declaración anual). `;
   recomendacion += `\n\n**Decisión**: Elige CETE si prioriza seguridad y liquidez. Elige pagaré si acepta bloquear capital y busca máxima tasa (verifica realmente en tu banco).`;
 
   const ganador = diferencia_absoluta > 0 ? 'El pagaré' : 'El CETE';
