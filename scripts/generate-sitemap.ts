@@ -1136,54 +1136,47 @@ ${entries.map((e) => `  <url>
 }
 
 const imageEntries: ImageEntry[] = [];
-for (const c of calcs) {
-  const ogPath = join(PUBLIC_DIR, 'og', `${c.slug}.png`);
-  if (!existsSync(ogPath)) continue;
+// Gate de OG contra el manifest (src/lib/og-manifest.json), NO contra existsSync(public/og):
+// en prebuild `og` y `sitemap` corren EN PARALELO → el disco está a medio repoblar y el
+// existsSync tiraba ~1500 OG (incluidas TODAS las de locales, que ni se intentaban). El
+// manifest del build previo es estable y se auto-cura al build siguiente.
+let ogSet: Set<string>;
+try {
+  ogSet = new Set(Object.keys(JSON.parse(readFileSync(join(ROOT, 'src', 'lib', 'og-manifest.json'), 'utf8'))));
+} catch {
+  ogSet = new Set();
+}
+// Empuja la OG card (1200×630, una por calc indexada) + la infografía propia (si existe)
+// al sitemap de imágenes. Mismo criterio para AR y para cada locale.
+function pushImageEntries(loc: string, c: any) {
   // Caption enriquecido: H1 + description + primer keyword secundario.
-  // Google Images premia captions descriptivos (50-150 chars) vs títulos cortos.
+  // Google/Bing Images premian captions descriptivos (50-150 chars) vs títulos cortos.
   const h1 = (c.h1 || c.title || c.slug).trim();
   const desc = ((c.description || '') as string).trim();
   const primaryKw = ((c.seoKeywords || [])[0] as string | undefined)?.trim() || '';
   const captionParts = [h1];
   if (desc) captionParts.push(desc);
-  if (primaryKw && !h1.toLowerCase().includes(primaryKw.toLowerCase())) {
-    captionParts.push(primaryKw);
-  }
+  if (primaryKw && !h1.toLowerCase().includes(primaryKw.toLowerCase())) captionParts.push(primaryKw);
   const caption = captionParts.join(' — ').slice(0, 300);
-  imageEntries.push({
-    loc: `${site}/${c.slug}`,
-    image: `${site}/og/${c.slug}.png`,
-    caption,
-    title: h1.slice(0, 100),
-  });
-  // Infografía propia de la calc (campo `infographic`): imagen rica con datos
-  // reales → entrada extra para Bing/Google Images. El nombre de archivo y el
-  // alt llevan keywords. La imagen vive en /img (no /og), por eso no la captura
-  // el chequeo de existsSync de arriba.
+  if (ogSet.has(c.slug)) {
+    imageEntries.push({ loc, image: `${site}/og/${c.slug}.png`, caption, title: h1.slice(0, 100) });
+  }
+  // Infografía propia (campo `infographic`): imagen rica con datos reales. Vive en /img.
   const info = (c as any).infographic;
   if (info && info.src) {
     imageEntries.push({
-      loc: `${site}/${c.slug}`,
-      image: info.src.startsWith('http') ? info.src : `${site}${info.src}`,
+      loc,
+      image: (info.src as string).startsWith('http') ? info.src : `${site}${info.src}`,
       caption: ((info.caption || info.alt || caption) as string).slice(0, 300),
       title: ((info.alt || h1) as string).slice(0, 100),
     });
   }
 }
-// Infografías de calcs por locale (campo `infographic`) → sitemap-images con loc prefijado.
-// El loop AR de arriba solo cubre src/content/calcs; las verticales (/es, /mx, …) van acá.
+for (const c of calcs) pushImageEntries(`${site}/${c.slug}`, c);
+// Calcs por locale: el loop AR de arriba solo cubre src/content/calcs; las verticales
+// (/es, /mx, …) van acá — ahora también con su OG card, no solo la infografía.
 for (const [loc, list] of [['es', calcsEs], ['mx', calcsMx], ['cl', calcsCl], ['co', calcsCo], ['pe', calcsPe], ['ec', calcsEc], ['en', calcsEn], ['pt', calcsPt]] as const) {
-  for (const c of list as any[]) {
-    const info = (c as any).infographic;
-    if (info && info.src) {
-      imageEntries.push({
-        loc: `${site}/${loc}/${c.slug}`,
-        image: (info.src as string).startsWith('http') ? info.src : `${site}${info.src}`,
-        caption: ((info.caption || info.alt || '') as string).slice(0, 300),
-        title: ((info.alt || (c as any).h1 || '') as string).slice(0, 100),
-      });
-    }
-  }
+  for (const c of list as any[]) pushImageEntries(`${site}/${loc}/${c.slug}`, c);
 }
 if (imageEntries.length > 0) {
   writeFileSync(join(PUBLIC_DIR, 'sitemap-images.xml'), imagesetXml(imageEntries), 'utf8');
