@@ -974,6 +974,7 @@ import { ctsPeru } from './cts-peru';
 import { compute as compute__cts_peru_calculo_deposito } from './cts-peru-calculo-deposito';
 import { cuadroAlturaColgar } from './cuadro-altura-colgar';
 import { cuandoEsElDiaDelPadreMadreNinoPorPais } from './cuando-es-el-dia-del-padre-madre-nino-por-pais';
+import { cuandoSonLasProximasElecciones } from './cuando-son-las-proximas-elecciones-por-pais';
 import { compute as compute__cuantas_calorias_bicicleta_distancia_pendiente_perfil } from './cuantas-calorias-bicicleta-distancia-pendiente-perfil';
 import { cuantasMateriassFaltan } from './cuantas-materias-faltan';
 import { compute as compute__cuanto_cobrar_traduccion_palabra_2026_espanol_ingles } from './cuanto-cobrar-traduccion-palabra-2026-espanol-ingles';
@@ -1661,6 +1662,7 @@ import { hopUtilizationBoilTime } from './hop-utilization-boil-time';
 import { horaCheckInAeropuertoAnticipacion } from './hora-check-in-aeropuerto-anticipacion';
 import { horaFreelancePorPaisMercado } from './hora-freelance-por-pais-mercado';
 import { horaMundoZonaHoraria } from './hora-mundo-zona-horaria';
+import { horarioDeVerano } from './horario-de-verano-cambio-hora-por-pais';
 import { horarioLlegadaZonaHoraria } from './horario-llegada-zona-horaria';
 import { horasAprenderAlemanC1 } from './horas-aprender-aleman-c1';
 import { horasAprenderArabeB2 } from './horas-aprender-arabe-b2';
@@ -4552,6 +4554,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cts-peru-calculo-deposito': compute__cts_peru_calculo_deposito,
   'cuadro-altura-colgar': cuadroAlturaColgar,
   'cuando-es-el-dia-del-padre-madre-nino-por-pais': cuandoEsElDiaDelPadreMadreNinoPorPais,
+  'cuando-son-las-proximas-elecciones-por-pais': cuandoSonLasProximasElecciones,
   'cuantas-calorias-bicicleta-distancia-pendiente-perfil': compute__cuantas_calorias_bicicleta_distancia_pendiente_perfil,
   'cuantas-materias-faltan': cuantasMateriassFaltan,
   'cuanto-cobrar-traduccion-palabra-2026-espanol-ingles': compute__cuanto_cobrar_traduccion_palabra_2026_espanol_ingles,
@@ -5239,6 +5242,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'hora-check-in-aeropuerto-anticipacion': horaCheckInAeropuertoAnticipacion,
   'hora-freelance-por-pais-mercado': horaFreelancePorPaisMercado,
   'hora-mundo-zona-horaria': horaMundoZonaHoraria,
+  'horario-de-verano-cambio-hora-por-pais': horarioDeVerano,
   'horario-llegada-zona-horaria': horarioLlegadaZonaHoraria,
   'horas-aprender-aleman-c1': horasAprenderAlemanC1,
   'horas-aprender-arabe-b2': horasAprenderArabeB2,
