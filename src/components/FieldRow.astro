@@ -149,6 +149,18 @@ const inputMode = field.type !== "number"
           );
         })}
       </select>
+    ) : field.type === "textarea" ? (
+      <textarea
+        id={field.id}
+        name={field.id}
+        placeholder={displayPlaceholder}
+        required={field.required}
+        rows={6}
+        inputmode={inputMode}
+        autocomplete="off"
+        aria-describedby={`err-${field.id}`}
+        data-type="textarea"
+      >{effectiveDefault ?? ""}</textarea>
     ) : (
       <input
         id={field.id}
@@ -347,7 +359,8 @@ const inputMode = field.type !== "number"
   }
   .field-error[hidden] { display: none; }
   .field input,
-  .field select {
+  .field select,
+  .field textarea {
     flex: 1;
     padding: 0.6875rem 0.875rem;
     background: transparent;
@@ -359,9 +372,17 @@ const inputMode = field.type !== "number"
     font-feature-settings: "tnum";
     font-family: inherit;
   }
+  /* type:"textarea" (contador de palabras, tokens IA): multilínea, redimensionable. */
+  .field textarea {
+    resize: vertical;
+    min-height: 7.5rem;
+    line-height: 1.5;
+    font-feature-settings: normal;
+  }
   /* (#5) Foco visible explícito con teclado. */
   .field input:focus-visible,
-  .field select:focus-visible {
+  .field select:focus-visible,
+  .field textarea:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
