@@ -34,8 +34,8 @@ export function compute(i: Inputs): Outputs {
     "banorte_inteligente": 0.0500
   };
 
-  // Retención ISR sobre intereses (SAT 2026)
-  const ISR_RATE = 0.0145;
+  // Retención ISR sobre intereses (Art. 24 LIF 2026, DOF 7-nov-2025; antes 1.45%)
+  const ISR_RATE = 0.009;
   
   // Inflación México 2026 (Banxico proyección)
   const INFLACION_MEXICO = 0.0280;

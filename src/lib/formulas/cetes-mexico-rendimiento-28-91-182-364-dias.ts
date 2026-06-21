@@ -16,7 +16,7 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 México - Fuente: Banxico, SAT
-  const TASA_RETENCION_ISR = 0.0145; // 1.45% retención en la fuente (SAT, CETES)
+  const TASA_RETENCION_ISR = 0.009; // 0.90% retención anual sobre el capital (Art. 24 LIF 2026, DOF 7-nov-2025; antes 1.45%)
   const DIAS_ANNO = 365; // Año base para prorrateo retención
   const DIAS_ANNO_COMERCIAL = 360; // Año comercial para rendimiento
 
@@ -49,7 +49,7 @@ export function compute(i: Inputs): Outputs {
     (i.plazo_dias / DIAS_ANNO_COMERCIAL);
 
   // 2. Retención ISR prorratead por plazo
-  // Fórmula: Rendimiento bruto × Tasa retención 1.45% × (Días / 365)
+  // Fórmula: Rendimiento bruto × Tasa retención 0.90% × (Días / 365)
   const retencion_isr =
     rendimiento_bruto *
     TASA_RETENCION_ISR *
