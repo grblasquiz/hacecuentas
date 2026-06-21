@@ -29,7 +29,7 @@ export function compute(i: Inputs): Outputs {
   const PRECIO_EQUILIBRIO_FISCAL = 3.05; // USD/lb, precio balance presupuesto fiscal (SII 2026)
 
   // Inputs con defaults sensatos
-  const precioCobreUsdLibra = Math.max(2.0, Math.min(5.5, i.precio_cobre_usd_libra || 3.5));
+  const precioCobreUsdLibra = Math.max(2.0, Math.min(7.5, i.precio_cobre_usd_libra || 6.3));
   const tipoCambioUsdClp = Math.max(750, Math.min(1100, i.tipo_cambio_usd_clp || 900));
   const produccionCobreTon = Math.max(1000000, Math.min(2000000, i.produccion_cobre_ton || 1650000));
   const tasaRoyaltyPorcentaje = Math.max(5, Math.min(14, i.tasa_royalty_promedio || 9.5));

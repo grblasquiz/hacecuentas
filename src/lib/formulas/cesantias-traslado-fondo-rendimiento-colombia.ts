@@ -23,12 +23,13 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Rentabilidades históricas 2026 Colombia según Superfinanciera
+// Rentabilidad nominal portafolio corto plazo, fondos de cesantías
+// Fuente: Superfinanciera Colombia, corte 31-mar-2026 (Carta Circular 31/2026)
 const fondosData: Record<string, { rentabilidad: number; comision: number }> = {
-  porvenir: { rentabilidad: 5.2, comision: 0.48 },      // Fuente: Superfinanciera 2026
-  proteccion: { rentabilidad: 4.8, comision: 0.50 },    // Fuente: Superfinanciera 2026
-  colfondos: { rentabilidad: 5.6, comision: 0.45 },     // Fuente: Superfinanciera 2026
-  oldmutual: { rentabilidad: 5.0, comision: 0.52 }      // Fuente: Superfinanciera 2026
+  porvenir: { rentabilidad: 9.84, comision: 0.48 },     // Superfinanciera 31-mar-2026
+  proteccion: { rentabilidad: 10.55, comision: 0.50 },  // Superfinanciera 31-mar-2026
+  colfondos: { rentabilidad: 8.40, comision: 0.45 },    // Superfinanciera 31-mar-2026
+  oldmutual: { rentabilidad: 8.64, comision: 0.52 }     // Skandia (ex Old Mutual), Superfinanciera 31-mar-2026
 };
 
 export function compute(i: Inputs): Outputs {

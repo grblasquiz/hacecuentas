@@ -20,15 +20,15 @@ export interface Outputs {
 }
 
 // Escala salarial CCT 130/75 — básicos jornada completa 48 h
-// Valores vigentes paritaria FAECYS 2026 (referencia abril 2026)
+// Valores vigentes paritaria FAECYS 2026 (acuerdo 04/2026, vigencia junio 2026)
 const BASICOS_2026: Record<string, number> = {
-  A: 760000,   // Ayudante / Repositor
-  B: 795000,   // Cajero / Empaquetador
-  C: 830000,   // Vendedor / Administrativo C
-  D: 875000,   // Vendedor Especializado / Administrativo B
-  E: 930000,   // Jefe de Sección / Administrativo A
-  F: 1010000,  // Subgerente / Encargado
-  G: 1110000,  // Gerente / Apoderado
+  A: 1113585,  // Ayudante / Repositor (Maestranza A)
+  B: 1129646,  // Cajero / Empaquetador (Cajero A)
+  C: 1135270,  // Vendedor / Administrativo C
+  D: 1153746,  // Vendedor Especializado / Administrativo B (Vendedor B)
+  E: 1161775,  // Jefe de Sección / Administrativo E (Vendedor C)
+  F: 1179445,  // Subgerente / Encargado (Administrativo F / Vendedor D)
+  G: 1200000,  // Gerente / Apoderado (referencial, fuera de escala de convenio)
 };
 
 // Tasa de aportes del trabajador — CCT 130/75 / AFIP

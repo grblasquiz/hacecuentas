@@ -31,7 +31,7 @@ const PARAMETROS_BANCOS: Record<string, { tasa_base: number; comision_anual: num
   scotiabank: { tasa_base: 4.45, comision_anual: 210000, nombre: "Scotiabank" }
 };
 
-const UF_2026_REFERENCIAL = 37455; // Valor UF referencial abril 2026 — Banco Central
+const UF_2026_REFERENCIAL = 40796; // Valor UF referencial junio 2026 — SII/Banco Central
 const SEGURO_DESGRAVAMEN_TASA = 0.0025; // 0,25% anual del saldo — SVS 2026
 const SEGURO_INCENDIO_TASA = 0.0018; // 0,18% anual valor asegurado — SMG
 const GASTO_TASACION = 250000; // Gasto tasación, pago único

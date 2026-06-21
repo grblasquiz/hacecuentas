@@ -25,15 +25,15 @@ export function compute(i: Inputs): Outputs {
   const APORTE_OBLIGATORIO = 0.10; // 10% obligatorio AFP
   const TASA_SIS_BASE = 0.0075; // SIS base ~0,75% (variable por edad, aquí promedio)
   
-  // Comisiones AFP 2026 según SII
+  // Comisiones AFP 2026 según Superintendencia de Pensiones (vigentes desde oct-2025)
   const COMISIONES_AFP: Record<string, number> = {
-    'capital': 0.0057,
-    'uno': 0.0076,
-    'habitat': 0.0080,
-    'planvital': 0.0089,
-    'modelo': 0.0119,
-    'provida': 0.0148,
-    'cuprum': 0.0149
+    'uno': 0.0046,
+    'modelo': 0.0058,
+    'planvital': 0.0116,
+    'habitat': 0.0127,
+    'capital': 0.0144,
+    'cuprum': 0.0144,
+    'provida': 0.0145
   };
   
   // Rentabilidades históricas 2024 por fondo (anual)
@@ -72,9 +72,9 @@ export function compute(i: Inputs): Outputs {
   }
   const proyeccion_10_anos = Math.round(saldo_proyectado);
   
-  // Comparativa vs AFP Cuprum (más cara)
-  const comision_cuprum = salario_imponible * COMISIONES_AFP['cuprum'];
-  const comparativa_afp_ventaja = Math.round(comision_cuprum - comision_afp);
+  // Comparativa vs AFP ProVida (más cara)
+  const comision_provida = salario_imponible * COMISIONES_AFP['provida'];
+  const comparativa_afp_ventaja = Math.round(comision_provida - comision_afp);
 
   // Valores redondeados para el desglose y el gráfico (las partes suman el total exacto).
   const r_aporte = Math.round(aporte_obligatorio_10);
@@ -85,15 +85,15 @@ export function compute(i: Inputs): Outputs {
 
   // Insight: peso de la comisión de tu AFP. Tasa de comisión seleccionada vs el rango del mercado.
   const tasaComisionPct = (COMISIONES_AFP[i.afp_seleccionada] || COMISIONES_AFP['uno']) * 100;
-  const comisionMin = Math.min(...Object.values(COMISIONES_AFP)) * 100; // Capital 0,57%
-  const comisionMax = Math.max(...Object.values(COMISIONES_AFP)) * 100; // Cuprum 1,49%
+  const comisionMin = Math.min(...Object.values(COMISIONES_AFP)) * 100; // Uno 0,46%
+  const comisionMax = Math.max(...Object.values(COMISIONES_AFP)) * 100; // ProVida 1,45%
   let insightTone: 'good' | 'warn' | 'neutral';
   let insightCalif: string;
-  if (tasaComisionPct <= 0.80) { insightTone = 'good'; insightCalif = 'baja'; }
-  else if (tasaComisionPct <= 1.10) { insightTone = 'neutral'; insightCalif = 'media'; }
+  if (tasaComisionPct <= 0.60) { insightTone = 'good'; insightCalif = 'baja'; }
+  else if (tasaComisionPct <= 1.20) { insightTone = 'neutral'; insightCalif = 'media'; }
   else { insightTone = 'warn'; insightCalif = 'alta'; }
   const ahorroTxt = comparativa_afp_ventaja > 0
-    ? ` Frente a la AFP más cara (Cuprum) ahorrás **${fmtCLP(comparativa_afp_ventaja)}/mes** solo en comisión.`
+    ? ` Frente a la AFP más cara (ProVida) ahorrás **${fmtCLP(comparativa_afp_ventaja)}/mes** solo en comisión.`
     : ` Es la comisión más alta del mercado: cambiarte podría ahorrarte hasta **${fmtCLP(comision_afp - salario_imponible * comisionMin / 100)}/mes**.`;
   const insightText = `Tu AFP cobra una comisión **${insightCalif}** de **${tasaComisionPct.toFixed(2)}%** (el mercado va de ${comisionMin.toFixed(2)}% a ${comisionMax.toFixed(2)}%), o sea **${fmtCLP(r_comision)}/mes** sobre un descuento total de **${fmtCLP(r_total)}/mes**.${ahorroTxt}`;
 

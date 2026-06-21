@@ -26,11 +26,11 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Alícuotas derechos de exportación vigentes 2026 — Decreto 37/2024 y modificatorias
+// Alícuotas derechos de exportación vigentes 2026 — Decreto 423/2026
 const ALICUOTAS: Record<string, number> = {
-  soja: 0.33,   // 33 % soja (poroto)
-  maiz: 0.12,   // 12 % maíz
-  trigo: 0.12,  // 12 % trigo
+  soja: 0.24,    // 24 % soja (poroto)
+  maiz: 0.085,   // 8,5 % maíz
+  trigo: 0.055,  // 5,5 % trigo
 };
 
 // Rendimientos típicos orientativos por zona y cultivo (qq/ha)
@@ -69,7 +69,7 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
-  const alicuota = ALICUOTAS[cultivo] ?? 0.12;
+  const alicuota = ALICUOTAS[cultivo] ?? 0.085;
 
   // 1. Ingreso bruto
   const ingresoBruto = rendimiento * precioPizarra;
