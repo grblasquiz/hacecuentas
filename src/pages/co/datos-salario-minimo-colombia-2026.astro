@@ -1,0 +1,174 @@
+---
+export const prerender = true;
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+// Página-dato enlazable (autoridad) Colombia: salario mínimo, auxilio, UVT,
+// jornada y recargos 2026. Patrón [[linkable-data-pages-strategy]]: Dataset +
+// CC-BY + "Cómo citar" → backlink editorial. Datos: src/lib/data/colombia-2026.ts
+// (SMLMV $1.750.905, auxilio $249.095, UVT $52.374) + CST/leyes citadas.
+
+const ULTIMA_REVISION = '2026-06-21';
+const PAGE_URL = 'https://hacecuentas.com/co/datos-salario-minimo-colombia-2026';
+
+const valores = [
+  { c: 'Salario mínimo (SMLMV)', v: '$1.750.905', n: 'Decreto 1469/2025 · desde 01-ene-2026' },
+  { c: 'Salario mínimo diario', v: '$58.363,50', n: 'SMLMV ÷ 30' },
+  { c: 'Auxilio de transporte', v: '$249.095', n: 'Decreto 1470/2025 · si ganás hasta 2 SMLMV' },
+  { c: 'SMLMV + auxilio de transporte', v: '$2.000.000', n: 'el "mínimo" que se suele citar' },
+  { c: 'UVT 2026', v: '$52.374', n: 'DIAN Resolución 000238/2025' },
+  { c: 'Jornada laboral', v: '42 horas/semana', n: 'desde 15-jul-2026 (antes 44 h, Ley 2101/2021)' },
+];
+
+const recargos = [
+  { c: 'Recargo nocturno (21:00 → ahora 19:00)', v: '+35%', n: 'Art. 168 CST' },
+  { c: 'Hora extra diurna', v: '+25%', n: '' },
+  { c: 'Hora extra nocturna', v: '+75%', n: '' },
+  { c: 'Dominical / festivo (desde 01-jul-2026)', v: '+90%', n: 'Ley 2466/2025 (antes 80%)' },
+  { c: 'Cesantías', v: '1 mes/año', n: 'consignar antes del 14-feb' },
+  { c: 'Intereses sobre cesantías', v: '12% anual', n: 'pagar antes del 31-ene' },
+  { c: 'Prima de servicios', v: '1 mes/año', n: 'mitad en junio, mitad en diciembre' },
+  { c: 'Vacaciones', v: '15 días hábiles/año', n: '' },
+];
+
+const title = 'Salario mínimo Colombia 2026: $1.750.905 + auxilio, UVT, recargos (tabla) | Hacé Cuentas';
+const description = 'Salario mínimo legal en Colombia 2026: $1.750.905 mensual + auxilio de transporte $249.095 (total $2.000.000). UVT $52.374, jornada 42h, recargos nocturno y festivo, prestaciones. Datos oficiales. Uso libre con atribución (CC-BY 4.0).';
+
+const faq = [
+  { q: '¿Cuál es el salario mínimo en Colombia 2026?', a: 'El salario mínimo legal mensual vigente (SMLMV) en 2026 es de $1.750.905 (Decreto 1469/2025), vigente desde el 1 de enero de 2026. Sumado al auxilio de transporte de $249.095, el ingreso mínimo llega a $2.000.000.' },
+  { q: '¿A quién le corresponde el auxilio de transporte?', a: 'El auxilio de transporte ($249.095 en 2026) lo recibe quien gana hasta 2 SMLMV (es decir, hasta $3.501.810). No se recibe si el empleador pone el transporte.' },
+  { q: '¿Cuánto vale la UVT en 2026?', a: 'La UVT (Unidad de Valor Tributario) 2026 es de $52.374, según la Resolución DIAN 000238 de 2025. Se usa para topes de retención, sanciones y declaración de renta.' },
+  { q: '¿Cuántas horas es la jornada laboral en 2026?', a: 'Desde el 15 de julio de 2026 la jornada máxima legal baja a 42 horas semanales (era 44 h antes), según el último escalón de la Ley 2101 de 2021. La hora ordinaria "sube" porque el sueldo se divide entre menos horas.' },
+  { q: '¿Cuánto se paga de recargo nocturno y dominical?', a: 'El recargo nocturno es del 35% sobre la hora ordinaria. La hora extra diurna es +25% y la nocturna +75%. El recargo por dominical o festivo sube al 90% desde el 1 de julio de 2026 (Ley 2466/2025).' },
+  { q: '¿Qué prestaciones recibe un trabajador?', a: 'Cesantías (1 mes de salario por año), intereses sobre cesantías (12% anual), prima de servicios (1 mes por año, pagada mitad en junio y mitad en diciembre) y vacaciones (15 días hábiles por año).' },
+  { q: '¿De dónde salen estos datos?', a: 'De los decretos de salario mínimo y auxilio de transporte de MinTrabajo, las resoluciones de la DIAN para la UVT y el Código Sustantivo del Trabajo. Fuentes al final.' },
+  { q: '¿Puedo usar esta tabla en mi web, nota o trabajo?', a: 'Sí. Los datos se publican bajo licencia CC-BY 4.0: podés reproducirlos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".' },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset', '@id': `${PAGE_URL}#dataset`,
+  name: 'Salario mínimo y prestaciones Colombia 2026',
+  description: 'Salario mínimo legal mensual (SMLMV), auxilio de transporte, UVT, jornada laboral, recargos y prestaciones vigentes en Colombia en 2026.',
+  url: PAGE_URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+  inLanguage: 'es-CO', dateModified: ULTIMA_REVISION, temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Place', name: 'Colombia' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  keywords: ['salario mínimo Colombia 2026', 'SMLMV', 'auxilio de transporte', 'UVT', 'recargo nocturno', 'prestaciones', 'Colombia'],
+  variableMeasured: ['Salario mínimo (COP)', 'Auxilio de transporte (COP)', 'UVT (COP)', 'Recargos (%)'],
+  identifier: 'https://hacecuentas.com/datos/salario-minimo-colombia-2026.json', version: '2026',
+  distribution: [
+    { '@type': 'DataDownload', name: 'Salario mínimo Colombia 2026 (JSON)', encodingFormat: 'application/json', contentUrl: 'https://hacecuentas.com/datos/salario-minimo-colombia-2026.json' },
+    { '@type': 'DataDownload', name: 'Salario mínimo Colombia 2026 (CSV)', encodingFormat: 'text/csv', contentUrl: 'https://hacecuentas.com/datos/salario-minimo-colombia-2026.csv' },
+  ],
+};
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-CO', dateModified: ULTIMA_REVISION, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
+    datasetSchema,
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Colombia', item: 'https://hacecuentas.com/co' },
+      { '@type': 'ListItem', position: 2, name: 'Salario mínimo 2026', item: PAGE_URL },
+    ]},
+    { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical="/co/datos-salario-minimo-colombia-2026" audience="CO" lang="es" schema={schema}>
+  <Header slot="header" />
+  <main class="article-main">
+    <article class="page-content datos-page">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan"><a href="/co">Colombia</a> <span>›</span> <span>Salario mínimo 2026</span></nav>
+        <h1>Salario mínimo en Colombia 2026: valor, auxilio, UVT y recargos</h1>
+        <p class="lede">El salario mínimo legal (SMLMV) 2026 es de <strong>$1.750.905</strong> mensual; con el <strong>auxilio de transporte de $249.095</strong> el ingreso mínimo llega a <strong>$2.000.000</strong>. UVT $52.374, jornada de 42 horas y recargos actualizados.</p>
+        <p class="updated">Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-CO')}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)</p>
+      </header>
+
+      <section class="stats-callout">
+        <div class="stat"><span class="stat-num">$1.750.905</span><span class="stat-label">salario mínimo (SMLMV)</span></div>
+        <div class="stat"><span class="stat-num">$249.095</span><span class="stat-label">auxilio de transporte</span></div>
+        <div class="stat"><span class="stat-num">$2.000.000</span><span class="stat-label">mínimo + auxilio</span></div>
+        <div class="stat"><span class="stat-num">$52.374</span><span class="stat-label">UVT 2026</span></div>
+      </section>
+
+      <section>
+        <h2>Salario mínimo y valores de referencia 2026</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Concepto</th><th>Valor 2026</th></tr></thead>
+          <tbody>{valores.map((r) => (<tr><td data-label="Concepto"><strong>{r.c}</strong>{r.n ? <span class="sub"> · {r.n}</span> : null}</td><td data-label="Valor">{r.v}</td></tr>))}</tbody>
+        </table></div>
+      </section>
+
+      <section>
+        <h2>Recargos, horas extra y prestaciones</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Concepto</th><th>2026</th></tr></thead>
+          <tbody>{recargos.map((r) => (<tr><td data-label="Concepto"><strong>{r.c}</strong>{r.n ? <span class="sub"> · {r.n}</span> : null}</td><td data-label="Valor">{r.v}</td></tr>))}</tbody>
+        </table></div>
+      </section>
+
+      <section>
+        <h2>Calculá tu caso</h2>
+        <ul class="calc-links">
+          <li><a href="/co/calculadora-salario-minimo-colombia-2026-prestaciones">Salario mínimo y prestaciones</a></li>
+          <li><a href="/co/calculadora-hora-extra-recargo-nocturno-dominical-colombia">Horas extra y recargos</a></li>
+          <li><a href="/co/calculadora-liquidacion-laboral-colombia-cesantias-prima">Liquidación laboral (cesantías, prima)</a></li>
+          <li><a href="/co/calculadoras">Todas las calculadoras de Colombia →</a></li>
+        </ul>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Descargar estos datos</h2>
+        <p>Datos abiertos (CC-BY 4.0): <a href="/datos/salario-minimo-colombia-2026.json" download>⬇ JSON</a> · <a href="/datos/salario-minimo-colombia-2026.csv" download>⬇ CSV</a></p>
+      </section>
+      <section class="cite-instructions">
+        <h2>Cómo citar esta tabla</h2>
+        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
+        <pre><code>Fuente: Hacé Cuentas — https://hacecuentas.com/co/datos-salario-minimo-colombia-2026
+Salario mínimo y prestaciones Colombia 2026 · Licencia CC-BY 4.0</code></pre>
+      </section>
+
+      <section class="faq"><h2>Preguntas frecuentes</h2>{faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}</section>
+      <section class="fuentes"><h2>Fuentes</h2><ul>
+        <li>MinTrabajo — Decreto 1469/2025 (salario mínimo) y Decreto 1470/2025 (auxilio de transporte).</li>
+        <li>DIAN — Resolución 000238/2025 (UVT 2026).</li>
+        <li>Código Sustantivo del Trabajo + Ley 2101/2021 (jornada) y Ley 2466/2025 (recargos).</li>
+      </ul></section>
+    </article>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted, #666); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent, #2563eb); text-decoration: none; }
+  .datos-page h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; }
+  .lede { font-size: 1.1rem; line-height: 1.6; color: var(--text, #222); }
+  .updated { font-size: 0.85rem; color: var(--text-muted, #666); margin-top: 0.5rem; }
+  .datos-page h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+  .stats-callout { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin: 1.75rem 0; }
+  .stat { background: var(--bg-soft, #f4f6f9); border: 1px solid var(--border, #e5e7eb); border-radius: 0.6rem; padding: 0.9rem 1rem; text-align: center; }
+  .stat-num { display: block; font-size: 1.15rem; font-weight: 700; color: var(--accent, #2563eb); line-height: 1.2; }
+  .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted, #666); margin-top: 0.25rem; }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  .datos-page table { width: 100%; border-collapse: collapse; font-size: 0.95rem; min-width: 420px; }
+  .datos-page th { background: var(--bg-soft, #f1f5f9); padding: 0.6rem 0.7rem; text-align: right; font-weight: 600; border-bottom: 2px solid var(--border, #e5e7eb); }
+  .datos-page th:first-child { text-align: left; }
+  .datos-page td { padding: 0.55rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border, #eee); }
+  .datos-page td:first-child { text-align: left; }
+  .datos-page tbody tr:nth-child(odd) { background: var(--bg-card, #fafafa); }
+  .sub { color: var(--text-subtle, #888); font-weight: 400; font-size: 0.85em; }
+  .calc-links li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent, #2563eb); }
+  .fuentes li { line-height: 1.6; margin-bottom: 0.4rem; }
+  .cite-instructions { margin-top: 2rem; padding: 1.1rem; background: var(--bg-soft, #f4f6f9); border-radius: 0.6rem; }
+  .cite-instructions pre { background: var(--code-bg, #eaeef3); padding: 0.75rem; border-radius: 0.4rem; overflow-x: auto; font-size: 0.85rem; }
+  .faq details { border-bottom: 1px solid var(--border, #e5e7eb); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted, #555); line-height: 1.6; }
+</style>

@@ -1,0 +1,172 @@
+---
+export const prerender = true;
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+// Página-dato enlazable (autoridad) Perú: RMV, UIT y descuentos del sueldo 2026.
+// Datos: src/lib/data/peru-2026.ts (RMV S/1.130, UIT S/5.500, IGV 18%, ONP 13%,
+// AFP ~12,5%) + LIR. Patrón [[linkable-data-pages-strategy]] (Dataset+CC-BY).
+
+const ULTIMA_REVISION = '2026-06-21';
+const PAGE_URL = 'https://hacecuentas.com/pe/datos-sueldo-minimo-peru-2026';
+
+const valores = [
+  { c: 'Remuneración Mínima Vital (RMV)', v: 'S/ 1.130', n: 'DS 006-2024-TR · por mes' },
+  { c: 'UIT (Unidad Impositiva Tributaria)', v: 'S/ 5.500', n: 'DS 301-2025-EF' },
+  { c: 'IGV (tasa general)', v: '18%', n: '16% IGV + 2% IPM' },
+  { c: 'Asignación familiar', v: 'S/ 113', n: '10% de la RMV · con hijos menores' },
+  { c: 'Renta de 5ª categoría — exento hasta', v: 'S/ 38.500', n: '7 UIT al año' },
+];
+
+const descuentos = [
+  { c: 'Pensión ONP', v: '13%', n: 'sistema público · sobre la remuneración' },
+  { c: 'Pensión AFP (aprox.)', v: '≈ 12,5%', n: 'fondo 10% + prima + comisión · alternativa a ONP' },
+  { c: 'EsSalud', v: '9%', n: 'lo paga el EMPLEADOR · no se descuenta de la boleta' },
+  { c: 'Renta 5ª — tramos', v: '8% / 14% / 17% / 20% / 30%', n: 'progresivo por tramos de UIT, tras deducir 7 UIT' },
+  { c: 'Gratificaciones', v: '2 al año', n: 'julio y diciembre · 1 sueldo cada una' },
+  { c: 'CTS', v: '≈ 1 sueldo/año', n: 'depósitos en mayo y noviembre' },
+];
+
+const title = 'Sueldo mínimo Perú 2026: RMV S/1.130, UIT S/5.500 y descuentos (tabla) | Hacé Cuentas';
+const description = 'Sueldo mínimo (RMV) en Perú 2026: S/1.130 mensual. UIT S/5.500, IGV 18%, descuentos de pensión (ONP 13% / AFP ~12,5%), asignación familiar S/113, renta de 5ª categoría, gratificaciones y CTS. Datos oficiales. Uso libre con atribución (CC-BY 4.0).';
+
+const faq = [
+  { q: '¿Cuál es el sueldo mínimo en Perú 2026?', a: 'La Remuneración Mínima Vital (RMV) en 2026 es de S/ 1.130 mensuales (DS 006-2024-TR, mantenida en 2026). A eso puede sumarse la asignación familiar de S/ 113 si tenés hijos menores.' },
+  { q: '¿Cuánto vale la UIT en 2026?', a: 'La UIT (Unidad Impositiva Tributaria) 2026 es de S/ 5.500 (DS 301-2025-EF). Se usa para topes del impuesto a la renta, multas, trámites y deducciones.' },
+  { q: '¿Cuánto te descuentan del sueldo en Perú?', a: 'El principal descuento es la pensión: 13% si estás en la ONP (sistema público) o ≈ 12,5% si estás en una AFP (fondo 10% + prima de seguro + comisión). EsSalud (9%) lo paga el empleador, no se descuenta de tu boleta. Si tu renta supera las 7 UIT al año, también se retiene impuesto de 5ª categoría.' },
+  { q: '¿Desde cuánto se paga impuesto a la renta de 5ª categoría?', a: 'Está exento hasta 7 UIT al año (S/ 38.500 en 2026). Por encima, la tasa es progresiva: 8% hasta 5 UIT, 14% de 5 a 20 UIT, 17% de 20 a 35, 20% de 35 a 45 y 30% sobre el exceso.' },
+  { q: '¿Cuántas gratificaciones hay al año?', a: 'Dos: en julio (Fiestas Patrias) y en diciembre (Navidad), equivalentes a un sueldo cada una. Además se suma una bonificación extraordinaria del 9% (lo que se ahorraría de EsSalud).' },
+  { q: '¿Qué es la CTS?', a: 'La Compensación por Tiempo de Servicios es un beneficio que equivale a aproximadamente un sueldo al año, depositado en dos partes (mayo y noviembre) como fondo de respaldo ante el desempleo.' },
+  { q: '¿De dónde salen estos datos?', a: 'De los decretos supremos de RMV y UIT, la Ley del IGV, las normas de AFP/ONP y la Ley del Impuesto a la Renta. Fuentes al final.' },
+  { q: '¿Puedo usar esta tabla en mi web, nota o trabajo?', a: 'Sí. Los datos se publican bajo licencia CC-BY 4.0: reproducilos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".' },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset', '@id': `${PAGE_URL}#dataset`,
+  name: 'Sueldo mínimo (RMV), UIT y descuentos del sueldo Perú 2026',
+  description: 'Remuneración Mínima Vital, UIT, IGV, descuentos de pensión (ONP/AFP), asignación familiar, impuesto de 5ª categoría, gratificaciones y CTS vigentes en Perú en 2026.',
+  url: PAGE_URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+  inLanguage: 'es-PE', dateModified: ULTIMA_REVISION, temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Place', name: 'Perú' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  keywords: ['sueldo mínimo Perú 2026', 'RMV', 'UIT 2026', 'ONP', 'AFP', 'renta de quinta', 'CTS', 'Perú'],
+  variableMeasured: ['RMV (PEN)', 'UIT (PEN)', 'IGV (%)', 'Descuento pensión (%)'],
+  identifier: 'https://hacecuentas.com/datos/sueldo-minimo-peru-2026.json', version: '2026',
+  distribution: [
+    { '@type': 'DataDownload', name: 'Sueldo mínimo Perú 2026 (JSON)', encodingFormat: 'application/json', contentUrl: 'https://hacecuentas.com/datos/sueldo-minimo-peru-2026.json' },
+    { '@type': 'DataDownload', name: 'Sueldo mínimo Perú 2026 (CSV)', encodingFormat: 'text/csv', contentUrl: 'https://hacecuentas.com/datos/sueldo-minimo-peru-2026.csv' },
+  ],
+};
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-PE', dateModified: ULTIMA_REVISION, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
+    datasetSchema,
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Perú', item: 'https://hacecuentas.com/pe' },
+      { '@type': 'ListItem', position: 2, name: 'Sueldo mínimo 2026', item: PAGE_URL },
+    ]},
+    { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical="/pe/datos-sueldo-minimo-peru-2026" audience="PE" lang="es" schema={schema}>
+  <Header slot="header" />
+  <main class="article-main">
+    <article class="page-content datos-page">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan"><a href="/pe">Perú</a> <span>›</span> <span>Sueldo mínimo 2026</span></nav>
+        <h1>Sueldo mínimo en Perú 2026: RMV, UIT y descuentos del sueldo</h1>
+        <p class="lede">La Remuneración Mínima Vital (RMV) 2026 es de <strong>S/ 1.130</strong> al mes. La <strong>UIT</strong> es de <strong>S/ 5.500</strong>. Más IGV, descuentos de pensión (ONP 13% o AFP ≈12,5%), asignación familiar, renta de 5ª, gratificaciones y CTS.</p>
+        <p class="updated">Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-PE')}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)</p>
+      </header>
+
+      <section class="stats-callout">
+        <div class="stat"><span class="stat-num">S/ 1.130</span><span class="stat-label">sueldo mínimo (RMV)</span></div>
+        <div class="stat"><span class="stat-num">S/ 5.500</span><span class="stat-label">UIT 2026</span></div>
+        <div class="stat"><span class="stat-num">18%</span><span class="stat-label">IGV</span></div>
+        <div class="stat"><span class="stat-num">13% / ≈12,5%</span><span class="stat-label">pensión ONP / AFP</span></div>
+      </section>
+
+      <section>
+        <h2>Valores de referencia 2026</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Concepto</th><th>Valor 2026</th></tr></thead>
+          <tbody>{valores.map((r) => (<tr><td data-label="Concepto"><strong>{r.c}</strong>{r.n ? <span class="sub"> · {r.n}</span> : null}</td><td data-label="Valor">{r.v}</td></tr>))}</tbody>
+        </table></div>
+      </section>
+
+      <section>
+        <h2>Descuentos y beneficios del sueldo</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Concepto</th><th>2026</th></tr></thead>
+          <tbody>{descuentos.map((r) => (<tr><td data-label="Concepto"><strong>{r.c}</strong>{r.n ? <span class="sub"> · {r.n}</span> : null}</td><td data-label="Valor">{r.v}</td></tr>))}</tbody>
+        </table></div>
+        <p class="note">EsSalud (9%) lo paga el empleador y no se descuenta de tu boleta. El descuento real de tu sueldo es la pensión (ONP o AFP) más, si corresponde, el impuesto de 5ª categoría.</p>
+      </section>
+
+      <section>
+        <h2>Calculá tu caso</h2>
+        <ul class="calc-links">
+          <li><a href="/pe/calculadora-sueldo-neto-peru-afp-onp">Sueldo neto (AFP/ONP)</a></li>
+          <li><a href="/pe/calculadora-gratificacion-peru-julio-diciembre">Gratificación (julio/diciembre)</a></li>
+          <li><a href="/pe/calculadora-cts-peru-deposito">CTS (depósito)</a></li>
+          <li><a href="/pe/calculadoras">Todas las calculadoras de Perú →</a></li>
+        </ul>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Descargar estos datos</h2>
+        <p>Datos abiertos (CC-BY 4.0): <a href="/datos/sueldo-minimo-peru-2026.json" download>⬇ JSON</a> · <a href="/datos/sueldo-minimo-peru-2026.csv" download>⬇ CSV</a></p>
+      </section>
+      <section class="cite-instructions">
+        <h2>Cómo citar esta tabla</h2>
+        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
+        <pre><code>Fuente: Hacé Cuentas — https://hacecuentas.com/pe/datos-sueldo-minimo-peru-2026
+Sueldo mínimo (RMV), UIT y descuentos Perú 2026 · Licencia CC-BY 4.0</code></pre>
+      </section>
+
+      <section class="faq"><h2>Preguntas frecuentes</h2>{faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}</section>
+      <section class="fuentes"><h2>Fuentes</h2><ul>
+        <li>DS 006-2024-TR (RMV) · DS 301-2025-EF (UIT 2026).</li>
+        <li>Ley del IGV · normas de AFP y ONP.</li>
+        <li>Ley del Impuesto a la Renta — rentas de quinta categoría.</li>
+      </ul></section>
+    </article>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted, #666); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent, #2563eb); text-decoration: none; }
+  .datos-page h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; }
+  .lede { font-size: 1.1rem; line-height: 1.6; color: var(--text, #222); }
+  .updated { font-size: 0.85rem; color: var(--text-muted, #666); margin-top: 0.5rem; }
+  .datos-page h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+  .stats-callout { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin: 1.75rem 0; }
+  .stat { background: var(--bg-soft, #f4f6f9); border: 1px solid var(--border, #e5e7eb); border-radius: 0.6rem; padding: 0.9rem 1rem; text-align: center; }
+  .stat-num { display: block; font-size: 1.1rem; font-weight: 700; color: var(--accent, #2563eb); line-height: 1.2; }
+  .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted, #666); margin-top: 0.25rem; }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  .datos-page table { width: 100%; border-collapse: collapse; font-size: 0.95rem; min-width: 420px; }
+  .datos-page th { background: var(--bg-soft, #f1f5f9); padding: 0.6rem 0.7rem; text-align: right; font-weight: 600; border-bottom: 2px solid var(--border, #e5e7eb); }
+  .datos-page th:first-child { text-align: left; }
+  .datos-page td { padding: 0.55rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border, #eee); }
+  .datos-page td:first-child { text-align: left; }
+  .datos-page tbody tr:nth-child(odd) { background: var(--bg-card, #fafafa); }
+  .sub { color: var(--text-subtle, #888); font-weight: 400; font-size: 0.85em; }
+  .note { font-size: 0.85rem; color: var(--text-muted, #666); margin-top: 0.5rem; }
+  .calc-links li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent, #2563eb); }
+  .fuentes li { line-height: 1.6; margin-bottom: 0.4rem; }
+  .cite-instructions { margin-top: 2rem; padding: 1.1rem; background: var(--bg-soft, #f4f6f9); border-radius: 0.6rem; }
+  .cite-instructions pre { background: var(--code-bg, #eaeef3); padding: 0.75rem; border-radius: 0.4rem; overflow-x: auto; font-size: 0.85rem; }
+  .faq details { border-bottom: 1px solid var(--border, #e5e7eb); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted, #555); line-height: 1.6; }
+</style>

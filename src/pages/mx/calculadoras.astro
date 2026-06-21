@@ -1,0 +1,12 @@
+---
+export const prerender = true;
+import LocaleCatalog from '../../components/LocaleCatalog.astro';
+const localeModules = import.meta.glob<any>('../../content/calcs-mx/*.json', { eager: true });
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex);
+const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
+const audienceCalcs = Object.values(mainModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex && c.audience === 'MX');
+const all = [...localeCalcs, ...audienceCalcs];
+const calcs = all.map((c: any) => ({ h1: c.h1, slug: c.slug, icon: c.icon, category: c.category, url: localeSlugs.has(c.slug) ? `/mx/${c.slug}` : `/${c.slug}` }));
+---
+<LocaleCatalog calcs={calcs} prefix="mx" audience="MX" country="México" lang="es-MX" topics="salario mínimo, UMA, ISR, aguinaldo, finiquito, IMSS" dataLink="/mx/datos-salario-minimo-mexico-2026" dataLabel="📊 Salario mínimo, UMA e ISR México 2026" />

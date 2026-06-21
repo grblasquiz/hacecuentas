@@ -1,0 +1,12 @@
+---
+export const prerender = true;
+import LocaleCatalog from '../../components/LocaleCatalog.astro';
+const localeModules = import.meta.glob<any>('../../content/calcs-ec/*.json', { eager: true });
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex);
+const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
+const audienceCalcs = Object.values(mainModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex && c.audience === 'EC');
+const all = [...localeCalcs, ...audienceCalcs];
+const calcs = all.map((c: any) => ({ h1: c.h1, slug: c.slug, icon: c.icon, category: c.category, url: localeSlugs.has(c.slug) ? `/ec/${c.slug}` : `/${c.slug}` }));
+---
+<LocaleCatalog calcs={calcs} prefix="ec" audience="EC" country="Ecuador" lang="es-EC" topics="salario básico (SBU), IESS, décimos, IVA, impuesto a la renta, utilidades" dataLink="/datos-salario-basico-ecuador-2026" dataLabel="📊 Salario básico, IESS y décimos Ecuador 2026" />

@@ -1,0 +1,12 @@
+---
+export const prerender = true;
+import LocaleCatalog from '../../components/LocaleCatalog.astro';
+const localeModules = import.meta.glob<any>('../../content/calcs-pe/*.json', { eager: true });
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex);
+const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
+const audienceCalcs = Object.values(mainModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex && c.audience === 'PE');
+const all = [...localeCalcs, ...audienceCalcs];
+const calcs = all.map((c: any) => ({ h1: c.h1, slug: c.slug, icon: c.icon, category: c.category, url: localeSlugs.has(c.slug) ? `/pe/${c.slug}` : `/${c.slug}` }));
+---
+<LocaleCatalog calcs={calcs} prefix="pe" audience="PE" country="Perú" lang="es-PE" topics="sueldo mínimo (RMV), UIT, IGV, gratificaciones, CTS, AFP y ONP" dataLink="/pe/datos-sueldo-minimo-peru-2026" dataLabel="📊 Sueldo mínimo, UIT y descuentos Perú 2026" />
