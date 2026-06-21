@@ -1327,6 +1327,7 @@ import { envejecerMascotaHumanoTablaRazaTamano } from './envejecer-mascota-human
 import { epinefrinaDosisPesoAnafilaxia } from './epinefrina-dosis-peso-anafilaxia';
 import { equipajeExtraCostoAerolinea } from './equipaje-extra-costo-aerolinea';
 import { equipajeManoBodegaPesoVolumenAerolinea } from './equipaje-mano-bodega-peso-volumen-aerolinea';
+import { equipajePermitidoFranquiciaAerolinea } from './equipaje-permitido-franquicia-aerolinea';
 import { equipajePesoSobrepesoCostePorKilo } from './equipaje-peso-sobrepeso-coste-por-kilo';
 import { equipajeVuelo } from './equipaje-vuelo';
 import { equityStartupRsuIsoImpuestoEjercicioAr } from './equity-startup-rsu-iso-impuesto-ejercicio-ar';
@@ -1589,6 +1590,7 @@ import { goldenHourHorario } from './golden-hour-horario';
 import { golesPelotaParada } from './goles-pelota-parada';
 import { golesPor90Minutos } from './goles-por-90-minutos';
 import { golesTiempoAnadido } from './goles-tiempo-anadido';
+import { gooseAgenteIaVsOperarioHumanoCusto } from './goose-agente-ia-vs-operario-humano-custo';
 import { gpaArgentinoAEscala4 } from './gpa-argentino-a-escala-4';
 import { gpaPromedioAmericanoEscala40 } from './gpa-promedio-americano-escala-4-0';
 import { compute as compute__gpt_5_vs_claude_37_vs_gemini_25_precio_uso } from './gpt-5-vs-claude-37-vs-gemini-25-precio-uso';
@@ -4909,6 +4911,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'epinefrina-dosis-peso-anafilaxia': epinefrinaDosisPesoAnafilaxia,
   'equipaje-extra-costo-aerolinea': equipajeExtraCostoAerolinea,
   'equipaje-mano-bodega-peso-volumen-aerolinea': equipajeManoBodegaPesoVolumenAerolinea,
+  'equipaje-permitido-franquicia-aerolinea': equipajePermitidoFranquiciaAerolinea,
   'equipaje-peso-sobrepeso-coste-por-kilo': equipajePesoSobrepesoCostePorKilo,
   'equipaje-vuelo': equipajeVuelo,
   'equity-startup-rsu-iso-impuesto-ejercicio-ar': equityStartupRsuIsoImpuestoEjercicioAr,
@@ -5171,6 +5174,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'goles-pelota-parada': golesPelotaParada,
   'goles-por-90-minutos': golesPor90Minutos,
   'goles-tiempo-anadido': golesTiempoAnadido,
+  'goose-agente-ia-vs-operario-humano-custo': gooseAgenteIaVsOperarioHumanoCusto,
   'gpa-argentino-a-escala-4': gpaArgentinoAEscala4,
   'gpa-promedio-americano-escala-4-0': gpaPromedioAmericanoEscala40,
   'gpt-5-vs-claude-37-vs-gemini-25-precio-uso': compute__gpt_5_vs_claude_37_vs_gemini_25_precio_uso,
