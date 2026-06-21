@@ -1,0 +1,238 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { CHILE_2026, DATA_AS_OF, fmtCLP } from '../../lib/data/chile-2026';
+
+// Página-dato enlazable (autoridad) para Chile: descuentos legales del sueldo
+// 2026 (cotizaciones, topes, impuesto único, IVA). Patrón espejado de
+// /es/datos-cuota-autonomos-2026: Dataset schema + CC-BY 4.0 + "Cómo citar" →
+// backlink editorial cuando un medio/blog .cl cita la tabla. Toda la data viene
+// de la fuente única src/lib/data/chile-2026.ts → nunca queda stale.
+
+const C = CHILE_2026;
+const ULTIMA_REVISION = DATA_AS_OF;
+const PAGE_URL = 'https://hacecuentas.com/cl/datos-sueldo-chile-2026';
+
+const pct = (n: number) => (n * 100).toLocaleString('es-CL', { maximumFractionDigits: 2 }) + '%';
+const descTrabajadorMin = C.afpObligatorio + C.saludFonasa + C.afcTrabajadorIndefinido; // sin comisión AFP
+
+const descuentos = [
+  { concepto: 'AFP — fondo de pensiones', paga: 'Trabajador', valor: pct(C.afpObligatorio), nota: 'DL 3.500' },
+  { concepto: 'AFP — comisión de la administradora', paga: 'Trabajador', valor: '0,49% – 1,45%', nota: 'varía por AFP' },
+  { concepto: 'Salud (Fonasa)', paga: 'Trabajador', valor: pct(C.saludFonasa), nota: 'en isapre el plan puede costar más' },
+  { concepto: 'Seguro de cesantía (contrato indefinido)', paga: 'Trabajador', valor: pct(C.afcTrabajadorIndefinido), nota: 'Ley 19.728' },
+  { concepto: 'Seguro de cesantía (contrato indefinido)', paga: 'Empleador', valor: pct(C.afcEmpleadorIndefinido), nota: 'Ley 19.728' },
+  { concepto: 'Seguro de cesantía (plazo fijo)', paga: 'Empleador', valor: pct(C.afcEmpleadorPlazoFijo), nota: 'el trabajador no cotiza' },
+];
+
+const valores = [
+  { concepto: 'Ingreso mínimo mensual (IMM)', valor: fmtCLP(C.imm), nota: 'Ley 21.751, desde 01-ene-2026' },
+  { concepto: 'Tope imponible AFP / salud / mutual', valor: `${C.topeImponibleAfpUf} UF`, nota: 'Superintendencia de Pensiones' },
+  { concepto: 'Tope imponible seguro de cesantía', valor: `${C.topeImponibleCesantiaUf} UF`, nota: '' },
+  { concepto: 'Impuesto único 2ª categoría — exento hasta', valor: `${C.segundaCategoriaExentoUtm} UTM/mes`, nota: 'Art. 43 N°1 LIR' },
+  { concepto: 'Impuesto único 2ª categoría — tasa máxima', valor: pct(C.segundaCategoriaTasaMaxima), nota: '' },
+  { concepto: 'Gratificación legal (Art. 50)', valor: `${pct(C.gratificacionArt50.porcentaje)} (tope ${C.gratificacionArt50.topeImmAnual} IMM/año)`, nota: 'Código del Trabajo' },
+  { concepto: 'IVA', valor: pct(C.iva), nota: 'DL 825' },
+];
+
+const title = 'Descuentos del sueldo en Chile 2026: AFP, salud, cesantía, topes e impuesto (tabla) | Hacé Cuentas';
+const description = `Tabla de descuentos legales del sueldo en Chile 2026: AFP 10%, salud 7%, seguro de cesantía 0,6%, topes imponibles (90 y 135,2 UF), impuesto único e IVA. Ingreso mínimo ${fmtCLP(C.imm)}. Datos oficiales. Uso libre con atribución (CC-BY 4.0).`;
+
+const faq = [
+  { q: '¿Cuánto te descuentan del sueldo en Chile en 2026?', a: `Las cotizaciones legales del trabajador suman como mínimo ${pct(descTrabajadorMin)} del sueldo imponible: ${pct(C.afpObligatorio)} de AFP (fondo), ${pct(C.saludFonasa)} de salud y ${pct(C.afcTrabajadorIndefinido)} de seguro de cesantía. A eso se suma la comisión de la AFP (0,49%–1,45% según administradora) y el impuesto único si tu renta supera las ${C.segundaCategoriaExentoUtm} UTM mensuales.` },
+  { q: '¿Cuál es el sueldo mínimo en Chile 2026?', a: `El ingreso mínimo mensual (IMM) es de ${fmtCLP(C.imm)} desde el 1 de enero de 2026 (Ley 21.751).` },
+  { q: '¿Qué es el tope imponible?', a: `Es el máximo de renta sobre el que se calculan las cotizaciones. En 2026 es de ${C.topeImponibleAfpUf} UF para AFP, salud y mutual, y ${C.topeImponibleCesantiaUf} UF para el seguro de cesantía. Lo que ganes por encima del tope no cotiza.` },
+  { q: '¿Desde qué renta se paga impuesto único de segunda categoría?', a: `El impuesto único de segunda categoría (sueldos) está exento hasta ${C.segundaCategoriaExentoUtm} UTM mensuales de renta líquida imponible. Por encima, la tasa es progresiva hasta un máximo del ${pct(C.segundaCategoriaTasaMaxima)}.` },
+  { q: '¿Cuánto aporta el empleador?', a: `El empleador aporta el seguro de cesantía: ${pct(C.afcEmpleadorIndefinido)} en contratos indefinidos y ${pct(C.afcEmpleadorPlazoFijo)} en plazo fijo, además del seguro de invalidez y sobrevivencia (SIS) y la mutualidad.` },
+  { q: '¿La gratificación legal es obligatoria?', a: `Las empresas que cumplen los requisitos del Art. 50 del Código del Trabajo pagan una gratificación equivalente al ${pct(C.gratificacionArt50.porcentaje)} de lo devengado, con tope de ${C.gratificacionArt50.topeImmAnual} ingresos mínimos al año (suele prorratearse mensualmente).` },
+  { q: '¿De dónde salen estos datos?', a: 'De la normativa vigente: DL 3.500 (AFP), leyes de salud y cesantía, Ley 21.751 (ingreso mínimo) y el Art. 43 de la Ley de la Renta. Los valores en UF/UTM se actualizan con el indicador oficial. Fuentes al final.' },
+  { q: '¿Puedo usar esta tabla en mi web, nota o trabajo?', a: 'Sí. Los datos se publican bajo licencia Creative Commons CC-BY 4.0: podés reproducirlos libremente citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".' },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset',
+  '@id': `${PAGE_URL}#dataset`,
+  name: 'Descuentos y valores del sueldo en Chile 2026',
+  description: 'Cotizaciones legales (AFP, salud, seguro de cesantía), topes imponibles, impuesto único de segunda categoría, ingreso mínimo, gratificación legal e IVA vigentes en Chile en 2026.',
+  url: PAGE_URL,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  isAccessibleForFree: true,
+  inLanguage: 'es-CL',
+  dateModified: ULTIMA_REVISION,
+  temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Place', name: 'Chile' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  keywords: ['descuentos sueldo Chile', 'cotizaciones', 'AFP', 'Fonasa', 'seguro cesantía', 'tope imponible', 'impuesto único', 'ingreso mínimo 2026', 'Chile'],
+  variableMeasured: ['Cotización AFP (%)', 'Cotización salud (%)', 'Seguro de cesantía (%)', 'Tope imponible (UF)', 'Ingreso mínimo (CLP)', 'IVA (%)'],
+  identifier: 'https://hacecuentas.com/datos/sueldo-chile-2026.json',
+  version: '2026',
+  distribution: [
+    { '@type': 'DataDownload', name: 'Sueldo Chile 2026 (JSON)', encodingFormat: 'application/json', contentUrl: 'https://hacecuentas.com/datos/sueldo-chile-2026.json' },
+    { '@type': 'DataDownload', name: 'Sueldo Chile 2026 (CSV)', encodingFormat: 'text/csv', contentUrl: 'https://hacecuentas.com/datos/sueldo-chile-2026.csv' },
+  ],
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-CL', dateModified: ULTIMA_REVISION, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
+    datasetSchema,
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Chile', item: 'https://hacecuentas.com/cl' },
+      { '@type': 'ListItem', position: 2, name: 'Descuentos del sueldo 2026', item: PAGE_URL },
+    ]},
+    { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical="/cl/datos-sueldo-chile-2026" audience="CL" lang="es" schema={schema}>
+  <Header slot="header" />
+
+  <main class="article-main">
+    <article class="page-content datos-page">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan">
+          <a href="/cl">Chile</a> <span>›</span> <span>Descuentos del sueldo 2026</span>
+        </nav>
+        <h1>Descuentos del sueldo en Chile 2026: cotizaciones, topes e impuesto</h1>
+        <p class="lede">
+          Tabla de referencia con los <strong>descuentos legales del sueldo</strong> en Chile 2026:
+          AFP <strong>{pct(C.afpObligatorio)}</strong>, salud <strong>{pct(C.saludFonasa)}</strong>,
+          seguro de cesantía, topes imponibles ({C.topeImponibleAfpUf} y {C.topeImponibleCesantiaUf} UF),
+          impuesto único e IVA. Ingreso mínimo: <strong>{fmtCLP(C.imm)}</strong>.
+        </p>
+        <p class="updated">
+          Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-CL')}</time> ·
+          Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)
+        </p>
+      </header>
+
+      <section class="stats-callout" aria-label="Datos destacados">
+        <div class="stat"><span class="stat-num">{fmtCLP(C.imm)}</span><span class="stat-label">ingreso mínimo (IMM)</span></div>
+        <div class="stat"><span class="stat-num">≈ {pct(descTrabajadorMin)}</span><span class="stat-label">descuento mín. del trabajador</span></div>
+        <div class="stat"><span class="stat-num">{C.topeImponibleAfpUf} UF</span><span class="stat-label">tope imponible AFP/salud</span></div>
+        <div class="stat"><span class="stat-num">{pct(C.iva)}</span><span class="stat-label">IVA</span></div>
+      </section>
+
+      <section>
+        <h2>Cotizaciones legales sobre el sueldo</h2>
+        <p>Porcentajes sobre la renta imponible (con tope). El trabajador cotiza AFP, salud y su parte del seguro de cesantía; el empleador aporta el resto del seguro de cesantía.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Concepto</th><th>Quién paga</th><th>2026</th></tr></thead>
+            <tbody>
+              {descuentos.map((d) => (
+                <tr>
+                  <td data-label="Concepto"><strong>{d.concepto}</strong>{d.nota ? <span class="sub"> · {d.nota}</span> : null}</td>
+                  <td data-label="Quién paga">{d.paga}</td>
+                  <td data-label="2026">{d.valor}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">El descuento mínimo del trabajador (AFP fondo + salud + cesantía) es ≈ {pct(descTrabajadorMin)}; con la comisión de la AFP llega a ≈ 18–19%. No incluye el impuesto único.</p>
+      </section>
+
+      <section>
+        <h2>Topes, mínimos e impuestos 2026</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Concepto</th><th>Valor 2026</th></tr></thead>
+            <tbody>
+              {valores.map((v) => (
+                <tr>
+                  <td data-label="Concepto"><strong>{v.concepto}</strong>{v.nota ? <span class="sub"> · {v.nota}</span> : null}</td>
+                  <td data-label="Valor">{v.valor}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="note">UF y UTM se actualizan mensualmente; mirá el <a href="/dolar-hoy-chile">valor de la UF y el dólar hoy en Chile</a> para los montos en pesos.</p>
+      </section>
+
+      <section>
+        <h2>Calculá tu caso</h2>
+        <p>Esta página es la tabla de referencia. Para tu sueldo líquido o tus descuentos exactos, usá las calculadoras de Chile:</p>
+        <ul class="calc-links">
+          <li><a href="/cl/calculadora-sueldo-liquido-chile-afp-salud-impuesto">Calculadora de sueldo líquido (AFP, salud, impuesto)</a></li>
+          <li><a href="/cl/calculadora-finiquito-chile-indemnizacion-aviso-previo">Finiquito e indemnización</a></li>
+          <li><a href="/cl/calculadora-gratificacion-legal-chile-25-porcentaje-4-75-utm">Gratificación legal (Art. 50)</a></li>
+          <li><a href="/cl/calculadora-seguro-cesantia-chile-afc-cuota-fondo">Seguro de cesantía (AFC)</a></li>
+          <li><a href="/cl/calculadoras">Todas las calculadoras de Chile →</a></li>
+        </ul>
+      </section>
+
+      <section class="cite-instructions" aria-label="Descargar datos">
+        <h2>Descargar estos datos</h2>
+        <p>Datos abiertos (CC-BY 4.0), listos para usar en tu app, planilla o análisis:</p>
+        <p>
+          <a href="/datos/sueldo-chile-2026.json" download>⬇ Descargar JSON</a> ·
+          <a href="/datos/sueldo-chile-2026.csv" download>⬇ Descargar CSV</a>
+        </p>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Cómo citar esta tabla</h2>
+        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
+        <pre><code>Fuente: Hacé Cuentas — https://hacecuentas.com/cl/datos-sueldo-chile-2026
+Cotizaciones y valores legales Chile 2026 · Licencia CC-BY 4.0</code></pre>
+        <p>Si publicás online, te agradecemos el enlace a <a href="https://hacecuentas.com/cl/datos-sueldo-chile-2026">hacecuentas.com/cl/datos-sueldo-chile-2026</a>.</p>
+      </section>
+
+      <section class="faq">
+        <h2>Preguntas frecuentes</h2>
+        {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+      </section>
+
+      <section class="fuentes">
+        <h2>Fuentes</h2>
+        <ul>
+          <li>DL 3.500 (AFP), Ley 18.469/18.933 (salud), Ley 19.728 (seguro de cesantía).</li>
+          <li>Ley 21.751 — ingreso mínimo mensual 2026.</li>
+          <li>Art. 43 N°1 de la Ley sobre Impuesto a la Renta (impuesto único de segunda categoría).</li>
+          <li>Topes imponibles: Superintendencia de Pensiones (en UF, desde febrero 2026).</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .datos-page { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted, #666); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent, #2563eb); text-decoration: none; }
+  .datos-page h1 { font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; }
+  .lede { font-size: 1.1rem; line-height: 1.6; color: var(--text, #222); }
+  .updated { font-size: 0.85rem; color: var(--text-muted, #666); margin-top: 0.5rem; }
+  .datos-page h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+  .stats-callout { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin: 1.75rem 0; }
+  .stat { background: var(--bg-soft, #f4f6f9); border: 1px solid var(--border, #e5e7eb); border-radius: 0.6rem; padding: 0.9rem 1rem; text-align: center; }
+  .stat-num { display: block; font-size: 1.2rem; font-weight: 700; color: var(--accent, #2563eb); line-height: 1.2; }
+  .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted, #666); margin-top: 0.25rem; }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  .datos-page table { width: 100%; border-collapse: collapse; font-size: 0.95rem; min-width: 440px; }
+  .datos-page th { background: var(--bg-soft, #f1f5f9); padding: 0.6rem 0.7rem; text-align: right; font-weight: 600; border-bottom: 2px solid var(--border, #e5e7eb); white-space: nowrap; }
+  .datos-page th:first-child { text-align: left; }
+  .datos-page td { padding: 0.55rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border, #eee); }
+  .datos-page td:first-child { text-align: left; white-space: normal; }
+  .datos-page tbody tr:nth-child(odd) { background: var(--bg-card, #fafafa); }
+  .sub { color: var(--text-subtle, #888); font-weight: 400; font-size: 0.85em; }
+  .note { font-size: 0.85rem; color: var(--text-muted, #666); margin-top: 0.5rem; }
+  .note a { color: var(--accent, #2563eb); }
+  .calc-links li, .fuentes li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .calc-links, .fuentes ul { margin-left: 1.25rem; }
+  .calc-links a, .fuentes a { color: var(--accent, #2563eb); }
+  .cite-instructions { margin-top: 2.5rem; padding: 1.1rem; background: var(--bg-soft, #f4f6f9); border-radius: 0.6rem; }
+  .cite-instructions pre { background: var(--code-bg, #eaeef3); padding: 0.75rem; border-radius: 0.4rem; overflow-x: auto; font-size: 0.85rem; }
+  .faq details { border-bottom: 1px solid var(--border, #e5e7eb); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; color: var(--text, #222); }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted, #555); line-height: 1.6; }
+</style>
