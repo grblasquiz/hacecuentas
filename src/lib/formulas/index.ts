@@ -368,6 +368,7 @@ import { calculadoraCostoRealPautaExteriorImpuestosArgentina } from './calculado
 import { calculadoraCostoRealPautaExteriorImpuestosColombia } from './calculadora-costo-real-pauta-exterior-impuestos-colombia';
 import { calculadoraCostoRealPautaExteriorImpuestosMexico } from './calculadora-costo-real-pauta-exterior-impuestos-mexico';
 import { calculadoraCostoRealServicioDigitalExteriorSaasArgentina } from './calculadora-costo-real-servicio-digital-exterior-saas-argentina';
+import { calcularMejorEpocaViaje } from './calculadora-mejor-epoca-viajar-destino-lluvia-huracanes';
 import { calculadoraProporcionesReceta } from './calculadora-proporciones-receta';
 import { calculadoraSubeArgentina } from './calculadora-sube-argentina-costo-viaje-gasto-mensual';
 import { calderaCondensacionPelletsVsGasAhorro } from './caldera-condensacion-pellets-vs-gas-ahorro';
@@ -3945,6 +3946,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-costo-real-pauta-exterior-impuestos-colombia': calculadoraCostoRealPautaExteriorImpuestosColombia,
   'calculadora-costo-real-pauta-exterior-impuestos-mexico': calculadoraCostoRealPautaExteriorImpuestosMexico,
   'calculadora-costo-real-servicio-digital-exterior-saas-argentina': calculadoraCostoRealServicioDigitalExteriorSaasArgentina,
+  'calculadora-mejor-epoca-viajar-destino-lluvia-huracanes': calcularMejorEpocaViaje,
   'calculadora-proporciones-receta': calculadoraProporcionesReceta,
   'calculadora-sube-argentina-costo-viaje-gasto-mensual': calculadoraSubeArgentina,
   'caldera-condensacion-pellets-vs-gas-ahorro': calderaCondensacionPelletsVsGasAhorro,
