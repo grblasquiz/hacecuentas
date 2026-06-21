@@ -53,7 +53,33 @@ echo "→ check mundial finde"; python3 scripts/generate-mundial-weekend-post.py
 
 # 2) ¿Hay notas de blog pendientes de publicar? (recién generadas o diferidas)
 if ! git status --porcelain -- src/content/blog/ | grep -q .; then
-  echo "nada pendiente en blog/, nada que hacer"; exit 0
+  echo "nada pendiente en blog/, nada que hacer"
+  # Alerta de cadencia: Discover premia el goteo CONSTANTE, y el motor auto solo
+  # dispara en eventos de calendario (inflación, finde, mundial) → entre eventos
+  # hay huecos. Si hace >3 días que no publicamos, avisamos para alimentar la capa
+  # editorial (capa 2, a mano/agente). NO generamos relleno (sería thin-content).
+  GAP=$(python3 -c "
+import json, glob
+from datetime import date
+ds=[]
+for f in glob.glob('src/content/blog/*.json'):
+    try:
+        j=json.load(open(f)); d=(j.get('date') or j.get('datePublished') or '')[:10]
+        if d: ds.append(d)
+    except Exception: pass
+if ds:
+    y,m,dd=map(int, max(ds).split('-')); print((date.today()-date(y,m,dd)).days)
+else:
+    print(999)
+" 2>/dev/null)
+  if [ "${GAP:-0}" -gt 3 ]; then
+    echo "⚠ hace $GAP días sin publicar — Discover pierde ritmo. Toca una nota editorial (capa 2)."
+    notify "Discover: hace $GAP días sin nota. Escribí una editorial."
+    [ -f scripts/discover/discover-due.py ] && python3 scripts/discover/discover-due.py 2>/dev/null | head -8
+  else
+    echo "cadencia OK (última nota hace ${GAP:-?} días)"
+  fi
+  exit 0
 fi
 PEND=$(git status --porcelain -- src/content/blog/ | awk '{print $2}' | tr '\n' ' ')
 echo "pendiente: $PEND"
