@@ -1,0 +1,473 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ScrollToTop from '../../components/ScrollToTop.astro';
+import { HOME_HREFLANG } from '../../lib/hreflang';
+import { VENEZUELA_2026, usdToVes, fmtVES } from '../../lib/data/venezuela-2026';
+
+const localeModules = import.meta.glob<any>('../../content/calcs-ve/*.json', { eager: true });
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m);
+const audienceFiltered = Object.values(mainModules)
+  .map((m: any) => m.default || m)
+  .filter((c: any) => c.audience === 'VE');
+const calcs = [...localeCalcs, ...audienceFiltered];
+
+const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
+function calcUrl(c: any): string {
+  return localeSlugs.has(c.slug) ? `/ve/${c.slug}` : `/${c.slug}`;
+}
+
+const byCategory: Record<string, any[]> = {};
+calcs.forEach((c) => {
+  if (!byCategory[c.category]) byCategory[c.category] = [];
+  byCategory[c.category].push(c);
+});
+
+const categoryMeta: Record<string, { label: string; desc: string; color: string; icon: string }> = {
+  finanzas:        { label: 'Finanzas',       desc: 'Sueldo, prestaciones sociales, dólar BCV y paralelo.',          color: '#2563eb', icon: '💰' },
+  impuestos:       { label: 'Impuestos',      desc: 'ISLR 2026, IVA 16%, IGTF, Unidad Tributaria SENIAT.',           color: '#7c3aed', icon: '🧾' },
+  salud:           { label: 'Salud',          desc: 'IMC, calorías, embarazo, fitness.',                  color: '#16a34a', icon: '❤️' },
+  familia:         { label: 'Familia',        desc: 'Licencia maternidad, hijos, escolarización.',                  color: '#db2777', icon: '👨‍👩‍👧' },
+  vida:            { label: 'Vida cotidiana', desc: 'Alquiler, costo de vida, mercado.',                     color: '#d97706', icon: '🏠' },
+  automotor:       { label: 'Automotor',      desc: 'Combustible subsidiado, cupo Patria, gasto del auto.',         color: '#6366f1', icon: '🚗' },
+  educacion:       { label: 'Educación',      desc: 'Becas, créditos universitarios, promedios.',                color: '#8b5cf6', icon: '🎓' },
+  negocios:        { label: 'Negocios',       desc: 'Márgenes, IVA, IGTF, modelos fiscales.',                   color: '#0891b2', icon: '📊' },
+  marketing:       { label: 'Marketing',      desc: 'CTR, CPC, ROAS, CAC, LTV.',                          color: '#e11d48', icon: '📈' },
+  deportes:        { label: 'Deportes',       desc: 'Pace, 1RM, VO2 max, ciclismo.',                      color: '#65a30d', icon: '🏃' },
+  viajes:          { label: 'Viajes',         desc: 'Combustible, presupuesto, propinas.',                color: '#0891b2', icon: '✈️' },
+  cocina:          { label: 'Cocina',         desc: 'Tazas a gramos, ajustar receta.',                    color: '#ea580c', icon: '🍳' },
+  mascotas:        { label: 'Mascotas',       desc: 'Edad perro/gato, alimentación.',                     color: '#db2777', icon: '🐕' },
+  matematica:      { label: 'Matemática',     desc: 'Promedios, Pitágoras, conversores.',                 color: '#0d9488', icon: '🧮' },
+  tecnologia:      { label: 'Tecnología',     desc: 'Almacenamiento, IA, batería, cloud.',                color: '#06b6d4', icon: '💻' },
+  'medio-ambiente':{ label: 'Medio Ambiente', desc: 'Huella de carbono, energía solar.',                  color: '#22c55e', icon: '🌱' },
+  electronica:     { label: 'Electrónica',    desc: 'Ley de Ohm, kWh, circuitos.',                        color: '#f59e0b', icon: '⚡' },
+  ciencia:         { label: 'Ciencia',        desc: 'Física, química, astronomía.',                       color: '#6366f1', icon: '🔬' },
+  jardineria:      { label: 'Jardinería',     desc: 'Riego, tierra, siembra.',                            color: '#15803d', icon: '🌿' },
+  construccion:    { label: 'Construcción',   desc: 'Materiales, presupuesto reforma.',                   color: '#b45309', icon: '🧱' },
+};
+
+const categoryOrder = ['finanzas','impuestos','vida','familia','salud','automotor','educacion','negocios','marketing','deportes','viajes','cocina','mascotas','matematica','tecnologia','medio-ambiente','electronica','ciencia','jardineria','construccion'];
+const activeCategories = categoryOrder.filter((cat) => byCategory[cat] && byCategory[cat].length > 0);
+
+const totalCalcs = calcs.length;
+
+const popularSlugs = [
+  'calculadora-utilidades-aguinaldo-venezuela',
+  'calculadora-prestaciones-sociales-venezuela',
+  'calculadora-vacaciones-bono-vacacional-venezuela',
+  'dolar-bcv-paralelo-bolivares-hoy',
+  'calculadora-islr-venezuela-2026',
+  'calculadora-liquidacion-finiquito-venezuela'
+];
+const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
+
+// ── Datos clave 2026 — todo computado desde src/lib/data/venezuela-2026.ts (fuente única, nunca stale) ──
+const V = VENEZUELA_2026;
+const brechaPct = Math.round((V.fx.paralelo / V.fx.bcv - 1) * 1000) / 10; // p.ej. 31,9 %
+const fmtPct = (n: number) => new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 }).format(n);
+const cestaticketVes = usdToVes(V.cestaticketUsd, 'bcv');
+
+const datosClave = [
+  { k: 'Dólar BCV (tasa oficial)', v: `${fmtVES(V.fx.bcv)} /USD`, src: `BCV (${V.fx.fechaBcv})` },
+  { k: 'Dólar paralelo (Monitor Dólar)', v: `${fmtVES(V.fx.paralelo)} /USD`, src: `Monitor Dólar (${V.fx.fechaParalelo})` },
+  { k: 'Brecha cambiaria (paralelo vs BCV)', v: `${fmtPct(brechaPct)}%`, src: 'Cálculo propio (BCV / paralelo)' },
+  { k: 'Salario mínimo legal (LOTTT)', v: `${fmtVES(V.salarioMinimoVes)} /mes`, src: 'Gaceta Oficial · MinTrabajo' },
+  { k: 'Ingreso Mínimo Integral (bonos)', v: `USD ${V.ingresoMinimoIntegralUsd} /mes`, src: 'Ejecutivo · Sistema Patria' },
+  { k: 'Cestaticket socialista', v: `USD ${V.cestaticketUsd} (${fmtVES(cestaticketVes)} a tasa BCV)`, src: 'Sistema Patria (indexado BCV)' },
+  { k: 'Unidad Tributaria (U.T.)', v: `${fmtVES(V.unidadTributaria)}`, src: 'SENIAT · Gaceta Oficial 43.140' },
+  { k: 'IVA (alícuota general)', v: `${fmtPct(V.iva * 100)}%`, src: 'SENIAT · Ley del IVA' },
+  { k: 'IGTF (pagos en divisas)', v: `${fmtPct(V.igtf * 100)}%`, src: 'SENIAT · Ley del IGTF' },
+  { k: 'Vacaciones (1er año)', v: `${V.lottt.vacacionesDiasBase} días + bono vacacional`, src: 'LOTTT Art. 190 y 192' },
+  { k: 'Utilidades (aguinaldo)', v: `${V.lottt.utilidadesDiasMin} a ${V.lottt.utilidadesDiasMax} días/año`, src: 'LOTTT Art. 131' },
+  { k: 'Prestaciones sociales', v: `${V.lottt.prestaciones.garantiaDiasPorTrimestre} días/trimestre o ${V.lottt.prestaciones.retroactivoDiasPorAnio} días/año (el mayor)`, src: 'LOTTT Art. 142' },
+];
+
+// ── FAQ país-específica: respuestas con cifras computadas desde la fuente única ──
+const faq = [
+  {
+    q: '¿A cuánto está el dólar BCV hoy en Venezuela 2026?',
+    a: `La tasa oficial del Banco Central de Venezuela es de ${fmtVES(V.fx.bcv)} por dólar (referencia del ${V.fx.fechaBcv}). Cambia todos los días: el BCV publica el tipo de cambio cada jornada hábil. En el mercado paralelo el dólar cotiza alrededor de ${fmtVES(V.fx.paralelo)}, es decir un ${fmtPct(brechaPct)}% más alto.`,
+  },
+  {
+    q: '¿Cuál es la diferencia entre el dólar BCV y el dólar paralelo?',
+    a: `El dólar BCV es la tasa oficial fijada por el Banco Central y se usa para facturación, tributos del SENIAT y bonos del Estado. El dólar paralelo (Monitor Dólar / Binance P2P) es el del mercado libre. Hoy la brecha entre ambos ronda el ${fmtPct(brechaPct)}%: BCV ${fmtVES(V.fx.bcv)} frente a ${fmtVES(V.fx.paralelo)} en el paralelo.`,
+  },
+  {
+    q: '¿Cuánto es el salario mínimo en Venezuela 2026?',
+    a: `El salario mínimo legal (base de la LOTTT) es de ${fmtVES(V.salarioMinimoVes)} mensuales, sin cambios desde marzo de 2022. Sin embargo, el Ejecutivo paga un Ingreso Mínimo Integral de USD ${V.ingresoMinimoIntegralUsd} al mes vía bonos (Bono de Guerra Económica de unos USD ${V.bonoGuerraEconomicaUsd} más el cestaticket de USD ${V.cestaticketUsd}). Esos bonos NO son salario en sentido legal y no generan prestaciones.`,
+  },
+  {
+    q: '¿Qué es el cestaticket socialista y cuánto es?',
+    a: `El cestaticket socialista es un beneficio de alimentación que paga el empleador. En 2026 equivale a USD ${V.cestaticketUsd} mensuales, indexados a la tasa BCV (hoy ${fmtVES(cestaticketVes)}). Es un beneficio social, no salario, por lo que no incide en el cálculo de prestaciones, utilidades ni vacaciones.`,
+  },
+  {
+    q: '¿Cómo se calculan las prestaciones sociales en Venezuela?',
+    a: `La LOTTT (Art. 142) usa un sistema dual y te paga el monto MAYOR: la garantía de ${V.lottt.prestaciones.garantiaDiasPorTrimestre} días por trimestre (más ${V.lottt.prestaciones.diasAdicionalesPorAnio} días adicionales por año desde el 2º año) o el retroactivo de ${V.lottt.prestaciones.retroactivoDiasPorAnio} días por año calculado al último salario integral. El salario integral incluye el salario normal más las alícuotas del bono vacacional y de las utilidades.`,
+  },
+  {
+    q: '¿Cuántos días de vacaciones y bono vacacional corresponden?',
+    a: `En el primer año te corresponden ${V.lottt.vacacionesDiasBase} días hábiles de vacaciones, más 1 día adicional por cada año de antigüedad, con un tope de ${V.lottt.vacacionesDiasMax} días (LOTTT Art. 190). Además se paga un bono vacacional de mínimo ${V.lottt.bonoVacacionalDiasBase} días, también con tope de ${V.lottt.bonoVacacionalDiasMax} (Art. 192).`,
+  },
+  {
+    q: '¿Cuánto se paga de utilidades (aguinaldo) en Venezuela?',
+    a: `Las utilidades son el equivalente al aguinaldo: la LOTTT (Art. 131) fija un mínimo legal de ${V.lottt.utilidadesDiasMin} días de salario por año y, según las ganancias de la empresa, pueden llegar hasta ${V.lottt.utilidadesDiasMax} días. Se calculan sobre el salario normal y se pagan a fin de año.`,
+  },
+  {
+    q: '¿Cuánto es el IVA en Venezuela en 2026?',
+    a: `La alícuota general del IVA es del ${fmtPct(V.iva * 100)}% (SENIAT, Ley del IVA). Hay una alícuota reducida del ${fmtPct(V.ivaReducida * 100)}% para ciertos bienes y servicios, y un adicional suntuario del ${fmtPct(V.ivaSuntuariaAdicional * 100)}% para artículos de lujo (que totaliza ${fmtPct((V.iva + V.ivaSuntuariaAdicional) * 100)}%).`,
+  },
+  {
+    q: '¿Qué es el IGTF y cuándo se paga?',
+    a: `El IGTF (Impuesto a las Grandes Transacciones Financieras) grava con un ${fmtPct(V.igtf * 100)}% los pagos en divisas en efectivo realizados por sujetos no exonerados. Es el impuesto que se suma cuando pagás en dólares o euros en efectivo en muchos comercios. En bolívares aplica solo a sujetos pasivos especiales.`,
+  },
+  {
+    q: '¿Quién paga ISLR y cómo funciona la Unidad Tributaria?',
+    a: `El Impuesto sobre la Renta (ISLR) de personas naturales residentes se calcula sobre el enriquecimiento neto convertido a Unidades Tributarias. La U.T. vale ${fmtVES(V.unidadTributaria)} (SENIAT). Hay un desgravamen único de ${V.islr.desgravamenUnicoUt} U.T. y una rebaja personal de ${V.islr.rebajaPersonalUt} U.T. (más ${V.islr.rebajaCargaFamiliarUt} U.T. por cónyuge y por carga familiar). La Tarifa N° 1 es progresiva, del 6% al 34%.`,
+  },
+];
+
+// ── Equivalencias AR → VE: inyecta autoridad interna desde el catálogo argentino ya posicionado ──
+const equivalentesAr = [
+  { ar: 'calculadora-aguinaldo-sac', arLabel: 'Aguinaldo (SAC) Argentina', ve: 'calculadora-utilidades-aguinaldo-venezuela', veLabel: 'Utilidades (aguinaldo)', concepto: 'Aguinaldo / utilidades' },
+  { ar: 'calculadora-vacaciones-argentina', arLabel: 'Vacaciones Argentina', ve: 'calculadora-vacaciones-bono-vacacional-venezuela', veLabel: 'Vacaciones y bono vacacional', concepto: 'Vacaciones' },
+  { ar: 'calculadora-indemnizacion-despido', arLabel: 'Indemnización por despido Argentina', ve: 'calculadora-liquidacion-finiquito-venezuela', veLabel: 'Liquidación (finiquito)', concepto: 'Indemnización / liquidación' },
+  { ar: 'calculadora-iva', arLabel: 'IVA Argentina', ve: 'calculadora-iva-venezuela-16', veLabel: 'IVA Venezuela (16%)', concepto: 'IVA' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': ['CollectionPage', 'WebPage'],
+      '@id': 'https://hacecuentas.com/ve#webpage',
+      url: 'https://hacecuentas.com/ve',
+      name: 'Calculadoras Venezuela 2026 — ISLR, IVA, prestaciones, dólar BCV | Hacé Cuentas',
+      description: `Calculadoras gratis específicas para Venezuela.`,
+      inLanguage: 'es-VE',
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      breadcrumb: { '@id': 'https://hacecuentas.com/ve#breadcrumb' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': 'https://hacecuentas.com/ve#breadcrumb',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Venezuela', item: 'https://hacecuentas.com/ve' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://hacecuentas.com/ve#faq',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'Dataset',
+      '@id': 'https://hacecuentas.com/ve#datos-2026',
+      name: 'Datos laborales, fiscales y cambiarios de Venezuela 2026',
+      description: `Valores oficiales vigentes en Venezuela 2026: dólar BCV (${fmtVES(V.fx.bcv)}) y paralelo (${fmtVES(V.fx.paralelo)}), salario mínimo legal LOTTT, Ingreso Mínimo Integral en bonos, Unidad Tributaria del SENIAT, IVA 16%, IGTF 3%, ISLR Tarifa N° 1 y parámetros LOTTT (vacaciones, utilidades, prestaciones sociales).`,
+      url: 'https://hacecuentas.com/ve',
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      isAccessibleForFree: true,
+      inLanguage: 'es-VE',
+      temporalCoverage: '2026',
+      spatialCoverage: { '@type': 'Place', name: 'Venezuela' },
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      sourceOrganization: [
+        { '@type': 'GovernmentOrganization', name: 'BCV — Banco Central de Venezuela', url: 'https://www.bcv.org.ve' },
+        { '@type': 'GovernmentOrganization', name: 'SENIAT', url: 'https://www.seniat.gob.ve' },
+        { '@type': 'GovernmentOrganization', name: 'Ministerio del Poder Popular para el Proceso Social de Trabajo', url: 'https://www.mpppst.gob.ve' },
+      ],
+      keywords: ['dólar BCV hoy', 'dólar paralelo Venezuela', 'salario mínimo Venezuela 2026', 'ISLR Venezuela', 'IVA 16% Venezuela', 'IGTF 3%', 'prestaciones sociales LOTTT', 'utilidades aguinaldo', 'Unidad Tributaria SENIAT'],
+    },
+  ],
+};
+
+// Set hreflang único y simétrico para todas las homes (es + en + pt +
+// 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
+const hreflangTags = HOME_HREFLANG;
+---
+
+<Layout
+  title="Calculadoras Venezuela 2026 — ISLR, IVA, prestaciones, dólar BCV | Hacé Cuentas"
+  description={`${totalCalcs} calculadoras gratis para Venezuela: prestaciones sociales, utilidades, vacaciones, ISLR, IVA, IGTF y dólar BCV vs paralelo. Datos oficiales 2026.`}
+  lang="es"
+  audience="VE"
+  hreflang={hreflangTags}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <div class="cc-index">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">🇻🇪 Venezuela · 2026</div>
+        <h1>Calculadoras para Venezuela</h1>
+        <p class="hero-sub">Prestaciones sociales, utilidades, vacaciones, ISLR, IVA, IGTF y el dólar BCV frente al paralelo. Datos oficiales del BCV, SENIAT y la LOTTT. Gratis.</p>
+        <div class="hero-stats">
+          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat">100% gratis</span>
+        </div>
+        <span class="hero-live hero-live-static"><span class="dot-live" aria-hidden="true"></span>Dólar BCV: {fmtVES(V.fx.bcv)} · Paralelo: {fmtVES(V.fx.paralelo)} ({fmtPct(brechaPct)}% de brecha)</span>
+      </div>
+    </section>
+
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Hacé Cuentas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Venezuela</span>
+    </nav>
+
+    {popular.length > 0 && (
+      <section class="popular-section" aria-label="Más usadas">
+        <h2 class="popular-title">Más usadas en Venezuela</h2>
+        <div class="popular-grid">
+          {popular.map((c: any) => (
+            <a href={calcUrl(c)} class="popular-card">
+              <span class="popular-icon">{c.icon || '🧮'}</span>
+              <span class="popular-label">{c.h1}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section class="datos-clave" aria-labelledby="datos-clave-title">
+      <h2 id="datos-clave-title">Datos clave de Venezuela 2026</h2>
+      <p class="section-sub">Los valores oficiales que usan todas nuestras calculadoras venezolanas. Uso libre con atribución (CC-BY 4.0).</p>
+      <div class="dc-wrap">
+        <table class="dc-table">
+          <thead>
+            <tr><th>Concepto</th><th>Valor 2026</th><th>Fuente</th></tr>
+          </thead>
+          <tbody>
+            {datosClave.map((d) => (
+              <tr><td>{d.k}</td><td>{d.v}</td><td class="dc-src">{d.src}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="dc-note">Última revisión: {V.fx.fechaBcv}. Fuentes: BCV, SENIAT, Gaceta Oficial y LOTTT. El dólar BCV y el paralelo cambian a diario.</p>
+    </section>
+
+    <section class="popular-section" aria-label="Más recursos de Venezuela">
+      <h2 class="popular-title">Más recursos de Venezuela</h2>
+      <div class="popular-grid">
+        <a href="/ve/dolar-bcv-paralelo-bolivares-hoy" class="popular-card"><span class="popular-icon">💵</span><span class="popular-label">Dólar BCV y paralelo hoy</span></a>
+        <a href="/ve/cuanto-es-salario-minimo-venezuela-2026" class="popular-card"><span class="popular-icon">📅</span><span class="popular-label">Salario mínimo Venezuela 2026</span></a>
+        <a href="/datos-salario-minimo-latam-2026" class="popular-card"><span class="popular-icon">🌎</span><span class="popular-label">Salario mínimo LATAM</span></a>
+      </div>
+    </section>
+
+    <div class="categories">
+      {activeCategories.map((catKey) => {
+        const meta = categoryMeta[catKey];
+        const catCalcs = byCategory[catKey];
+        return (
+          <section class="category-section" aria-labelledby={`cat-${catKey}`}>
+            <div class="cat-header">
+              <span class="cat-icon" aria-hidden="true" style={`background: ${meta?.color}18`}>{meta?.icon ?? '📁'}</span>
+              <div class="cat-meta">
+                <h2 id={`cat-${catKey}`} class="cat-label">{meta?.label ?? catKey}</h2>
+                {meta?.desc && <p class="cat-desc">{meta.desc}</p>}
+              </div>
+            </div>
+            <div class="calc-grid">
+              {catCalcs.map((calc: any) => (
+                <a href={calcUrl(calc)} class="calc-card">
+                  <span class="card-icon" aria-hidden="true">{calc.icon}</span>
+                  <div class="card-body">
+                    <span class="card-title">{calc.h1}</span>
+                    <span class="card-desc">{calc.description}</span>
+                  </div>
+                  <span class="card-badge" style={`background:${meta?.color}18; color:${meta?.color}`}>{meta?.label ?? catKey}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+
+    <section class="equiv-ar" aria-labelledby="equiv-ar-title">
+      <h2 id="equiv-ar-title">Equivalentes en Argentina</h2>
+      <p class="section-sub">¿Venís de Argentina o comparás los dos países? Cada cálculo laboral tiene su par venezolano.</p>
+      <div class="equiv-grid">
+        {equivalentesAr.map((e) => (
+          <div class="equiv-row">
+            <span class="equiv-concepto">{e.concepto}</span>
+            <div class="equiv-pair">
+              <a href={`/${e.ar}`} class="equiv-link">🇦🇷 {e.arLabel}</a>
+              <span class="equiv-arrow" aria-hidden="true">→</span>
+              <a href={`/ve/${e.ve}`} class="equiv-link">🇻🇪 {e.veLabel}</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="faq-hub" aria-labelledby="faq-title">
+      <h2 id="faq-title">Preguntas frecuentes sobre sueldos, impuestos y el dólar en Venezuela 2026</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary><span>{f.q}</span></summary>
+            <p class="faq-a">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <aside class="cta-footer" aria-label="Otras versiones">
+      <p class="cta-text">¿Buscas calculadoras de otro país?</p>
+      <p class="cta-sub">Tenemos versiones específicas con datos locales para Argentina, España, México, Ecuador, Chile y Brasil. La versión global aplica al resto del mundo hispano.</p>
+      <div class="cta-links">
+        <a href="/global" class="cta-pill">🌎 Global</a>
+        <a href="/" class="cta-pill">🇦🇷 Argentina</a>
+        <a href="/es" class="cta-pill">🇪🇸 España</a>
+        <a href="/mx" class="cta-pill">🇲🇽 México</a>
+        <a href="/ec" class="cta-pill">🇪🇨 Ecuador</a>
+        <a href="/cl" class="cta-pill">🇨🇱 Chile</a>
+        <a href="/pt" class="cta-pill">🇧🇷 Brasil</a>
+      </div>
+    </aside>
+  </div>
+
+  <ScrollToTop />
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .cc-index { max-width: 1060px; margin: 0 auto; }
+  .hero { text-align: center; padding: 3rem 1rem 2.5rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .hero-inner { max-width: 720px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-block; padding: 0.3rem 0.875rem; background: var(--accent-soft);
+    color: var(--accent); border: 1px solid var(--border); border-radius: 999px;
+    font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 1rem;
+  }
+  .hero h1 { font-size: clamp(2rem, 5vw, 2.75rem); margin: 0 0 0.875rem; line-height: 1.15; }
+  .hero-sub { color: var(--text-muted); font-size: 1.0625rem; line-height: 1.6; max-width: 620px; margin: 0 auto 1.5rem; }
+  .hero-stats { display: inline-flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; color: var(--text-muted); font-size: 0.9375rem; }
+  .hero-stats .stat strong { color: var(--text); font-weight: 700; }
+  .hero-stats .stat-sep { opacity: 0.4; }
+
+  .breadcrumbs { padding: 0 1rem 1.5rem; font-size: 0.875rem; color: var(--text-muted); }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+  .breadcrumbs .sep { margin: 0 0.5rem; opacity: 0.5; }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+
+  .popular-section { padding: 0 1rem 2rem; }
+  .popular-title { font-size: 1.125rem; margin: 0 0 0.875rem; color: var(--text-muted); font-weight: 600; }
+  .popular-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.625rem; }
+  .popular-card {
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    padding: 1rem 0.75rem; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
+    text-align: center; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .popular-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .popular-icon { font-size: 1.5rem; line-height: 1; }
+  .popular-label { font-size: 0.8125rem; font-weight: 600; line-height: 1.3; }
+
+  .categories { padding: 0 1rem; display: flex; flex-direction: column; gap: 2.5rem; }
+  .cat-header { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 1rem; }
+  .cat-icon { width: 2.5rem; height: 2.5rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; font-size: 1.375rem; }
+  .cat-meta { display: flex; flex-direction: column; gap: 0.125rem; }
+  .cat-label { font-size: 1.125rem; margin: 0; font-weight: 700; }
+  .cat-desc { color: var(--text-muted); font-size: 0.875rem; margin: 0; }
+
+  .calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .calc-card {
+    display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.875rem 1rem;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .calc-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .card-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+  .card-title { font-weight: 600; font-size: 0.9375rem; line-height: 1.3; }
+  .card-desc { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-badge { font-size: 0.6875rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 4px; align-self: flex-start; flex-shrink: 0; }
+
+  .cta-footer { margin: 4rem 1rem 2rem; padding: 2rem 1.5rem; text-align: center; background: var(--bg-muted); border-radius: var(--radius); }
+  .cta-text { font-size: 1.125rem; font-weight: 700; margin: 0 0 0.5rem; }
+  .cta-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; max-width: 600px; margin: 0 auto 1rem; line-height: 1.5; }
+  .cta-links { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+  .cta-pill {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.5rem 0.875rem; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 999px;
+    font-size: 0.875rem; font-weight: 600; color: var(--text);
+    text-decoration: none; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .cta-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  .top-bing, .datos-clave, .faq-hub { padding: 0 1rem 2.5rem; }
+  .top-bing h2, .datos-clave h2, .faq-hub h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .section-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; }
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .top-card {
+    display: flex; gap: 0.75rem; padding: 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .top-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .top-card .t-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .top-card .t-title { font-weight: 600; font-size: 0.9375rem; display: block; margin-bottom: 0.25rem; }
+  .top-card .t-desc { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.45; }
+
+  .dc-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .dc-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--bg-card); }
+  .dc-table th, .dc-table td { padding: 0.625rem 0.875rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .dc-table tr:last-child td { border-bottom: none; }
+  .dc-table th { background: var(--bg-muted); font-weight: 600; }
+  .dc-table td:nth-child(2) { font-weight: 600; white-space: nowrap; }
+  .dc-table .dc-src { color: var(--text-muted); font-size: 0.8125rem; }
+  .dc-note { color: var(--text-muted); font-size: 0.8125rem; margin: 0.625rem 0 0; }
+
+  .faq-hub h2 { margin-bottom: 1rem; }
+  .faq-list { display: grid; gap: 0.625rem; }
+  .faq-list details { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .faq-list summary {
+    cursor: pointer; padding: 0.875rem 1rem; font-weight: 600; font-size: 0.9375rem;
+    list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+  }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary::after { content: '+'; color: var(--text-muted); font-weight: 700; }
+  .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+
+  .hero-live { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.875rem; font-size: 0.9rem; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .hero-live:hover { text-decoration: underline; }
+  .hero-live-static { color: var(--text-muted); cursor: default; }
+  .hero-live-static:hover { text-decoration: none; }
+  .hero-live .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgba(22,163,74,0.5); animation: pulse-live 2s infinite; flex-shrink: 0; }
+  @keyframes pulse-live { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); } 70% { box-shadow: 0 0 0 6px rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
+
+  .equiv-ar { padding: 0 1rem 2.5rem; }
+  .equiv-ar h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .equiv-grid { display: grid; gap: 0.625rem; }
+  .equiv-row {
+    display: flex; flex-direction: column; gap: 0.5rem; padding: 0.875rem 1rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  .equiv-concepto { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+  .equiv-pair { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+  .equiv-link { font-size: 0.9rem; font-weight: 600; text-decoration: none; color: var(--text); padding: 0.25rem 0; }
+  .equiv-link:hover { color: var(--accent); text-decoration: underline; }
+  .equiv-arrow { color: var(--text-muted); font-weight: 700; flex-shrink: 0; }
+</style>

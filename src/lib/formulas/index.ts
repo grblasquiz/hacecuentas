@@ -63,6 +63,7 @@ import { compute as compute__aguinaldo_empleado_mensual_quincenal_vs_quincena } 
 import { aguinaldoMexico } from './aguinaldo-mexico';
 import { compute as compute__aguinaldo_mexico_2026_15_dias_tope_30 } from './aguinaldo-mexico-2026-15-dias-tope-30';
 import { aguinaldoMexicoNeto } from './aguinaldo-mexico-neto';
+import { aguinaldoProporcionalParaguay } from './aguinaldo-proporcional-paraguay';
 import { ahorroAguaDuchasCortasMes } from './ahorro-agua-duchas-cortas-mes';
 import { ahorroAutoElectricoVsNaftaAnual } from './ahorro-auto-electrico-vs-nafta-anual';
 import { ahorroBiciVsAuto } from './ahorro-bici-vs-auto';
@@ -312,6 +313,7 @@ import { boloCasamentoBr } from './bolo-casamento-br';
 import { bolsaFamiliaValor } from './bolsa-familia-valor';
 import { compute as compute__bomba_calor_aerotermia_espana_coste_instalacion } from './bomba-calor-aerotermia-espana-coste-instalacion';
 import { bombeoCisternaTanqueWatts } from './bombeo-cisterna-tanque-watts';
+import { bonificacionFamiliarParaguay } from './bonificacion-familiar-paraguay';
 import { compute as compute__bono_anses_jubilados_junio_2026_aumento_mensual } from './bono-anses-jubilados-junio-2026-aumento-mensual';
 import { compute as compute__bono_cumplimiento_laboral_chile_pago_empresa } from './bono-cumplimiento-laboral-chile-pago-empresa';
 import { compute as compute__bono_electrico_chile_subsidio_cuenta_electrica } from './bono-electrico-chile-subsidio-cuenta-electrica';
@@ -364,13 +366,34 @@ import { cajaSeguridadBancoComparativaMensual } from './caja-seguridad-banco-com
 import { calcioDiarioEdad } from './calcio-diario-edad';
 import { calcioDiarioEdadLactanciaMenopausia } from './calcio-diario-edad-lactancia-menopausia';
 import { calcioDietaDiariaOsteoporosisMujer } from './calcio-dieta-diaria-osteoporosis-mujer';
+import { calculadoraAguinaldoParaguay } from './calculadora-aguinaldo-paraguay';
+import { calculadoraBrechaDolarBcvParalelo } from './calculadora-brecha-dolar-bcv-paralelo';
 import { calculadoraCostoRealPautaExteriorImpuestosArgentina } from './calculadora-costo-real-pauta-exterior-impuestos-argentina';
 import { calculadoraCostoRealPautaExteriorImpuestosColombia } from './calculadora-costo-real-pauta-exterior-impuestos-colombia';
 import { calculadoraCostoRealPautaExteriorImpuestosMexico } from './calculadora-costo-real-pauta-exterior-impuestos-mexico';
 import { calculadoraCostoRealServicioDigitalExteriorSaasArgentina } from './calculadora-costo-real-servicio-digital-exterior-saas-argentina';
+import { calculadoraCostoVidaParaguay } from './calculadora-costo-vida-paraguay';
+import { calculadoraCupoGasolinaSubsidiadaVenezuela } from './calculadora-cupo-gasolina-subsidiada-venezuela';
+import { calculadoraHorasExtrasParaguay } from './calculadora-horas-extras-paraguay';
+import { calculadoraIgtfVenezuela3 } from './calculadora-igtf-venezuela-3';
+import { calculadoraIslrVenezuela2026 } from './calculadora-islr-venezuela-2026';
+import { calculadoraIvaParaguay } from './calculadora-iva-paraguay';
+import { calculadoraIvaVenezuela16 } from './calculadora-iva-venezuela-16';
+import { calculadoraLiquidacionFinalParaguay } from './calculadora-liquidacion-final-paraguay';
+import { calculadoraLiquidacionFiniquitoVenezuela } from './calculadora-liquidacion-finiquito-venezuela';
 import { calcularMejorEpocaViaje } from './calculadora-mejor-epoca-viajar-destino-lluvia-huracanes';
+import { calculadoraPreavisoParaguay } from './calculadora-preaviso-paraguay';
+import { calculadoraPreavisoVenezuela } from './calculadora-preaviso-venezuela';
+import { calculadoraPrestacionesSocialesVenezuela } from './calculadora-prestaciones-sociales-venezuela';
 import { calculadoraProporcionesReceta } from './calculadora-proporciones-receta';
+import { calculadoraRemesaZelleBolivaresVenezuela } from './calculadora-remesa-zelle-bolivares-venezuela';
+import { calculadoraRetencionIslrVenezuela } from './calculadora-retencion-islr-venezuela';
+import { calculadoraSalarioIntegralVenezuela } from './calculadora-salario-integral-venezuela';
+import { calculadoraSalarioNetoParaguay } from './calculadora-salario-neto-paraguay';
 import { calculadoraSubeArgentina } from './calculadora-sube-argentina-costo-viaje-gasto-mensual';
+import { calculadoraUtilidadesAguinaldoVenezuela } from './calculadora-utilidades-aguinaldo-venezuela';
+import { calculadoraVacacionesBonoVacacionalVenezuela } from './calculadora-vacaciones-bono-vacacional-venezuela';
+import { calculadoraVacacionesParaguay } from './calculadora-vacaciones-paraguay';
 import { calderaCondensacionPelletsVsGasAhorro } from './caldera-condensacion-pellets-vs-gas-ahorro';
 import { calderaKwM2Calefaccion } from './caldera-kw-m2-calefaccion';
 import { calderaPotenciaKwAmbienteMetros } from './caldera-potencia-kw-ambiente-metros';
@@ -522,6 +545,7 @@ import { cesantiasColombiaLiquidacion } from './cesantias-colombia-liquidacion';
 import { compute as compute__cesantias_traslado_fondo_rendimiento_colombia } from './cesantias-traslado-fondo-rendimiento-colombia';
 import { cespedSemillasKgM2 } from './cesped-semillas-kg-m2';
 import { compute as compute__cesta_compra_mensual_familia_espana_inflacion } from './cesta-compra-mensual-familia-espana-inflacion';
+import { cestaticketBonoGuerraEconomicaVenezuela } from './cestaticket-bono-guerra-economica-venezuela';
 import { cetEmprestimoPessoal } from './cet-emprestimo-pessoal';
 import { compute as compute__cetes_mexico_rendimiento_28_91_182_364_dias } from './cetes-mexico-rendimiento-28-91-182-364-dias';
 import { cetesRendimientoMx } from './cetes-rendimiento-mx';
@@ -876,6 +900,7 @@ import { costoHoraRedactorCopywriter } from './costo-hora-redactor-copywriter';
 import { costoImpresion3dPieza } from './costo-impresion-3d-pieza';
 import { costoKmAuto } from './costo-km-auto';
 import { costoLaboral } from './costo-laboral';
+import { costoLaboralEmpleadorParaguay } from './costo-laboral-empleador-paraguay';
 import { costoLaboralTotalEmpleadorCargas } from './costo-laboral-total-empleador-cargas';
 import { compute as compute__costo_laboral_total_empleador_ecuador } from './costo-laboral-total-empleador-ecuador';
 import { compute as compute__costo_laboral_total_empleador_peru } from './costo-laboral-total-empleador-peru';
@@ -980,6 +1005,13 @@ import { compute as compute__cuantas_calorias_bicicleta_distancia_pendiente_perf
 import { cuantasMateriassFaltan } from './cuantas-materias-faltan';
 import { compute as compute__cuanto_cobrar_traduccion_palabra_2026_espanol_ingles } from './cuanto-cobrar-traduccion-palabra-2026-espanol-ingles';
 import { cuantoCobroPorHoraFreelance } from './cuanto-cobro-por-hora-freelance';
+import { cuantoCuestaLlenarTanqueGasolinaVenezuela } from './cuanto-cuesta-llenar-tanque-gasolina-venezuela';
+import { cuantoEsBolivaresEnDolares } from './cuanto-es-bolivares-en-dolares';
+import { cuantoEsDolaresEnBolivares } from './cuanto-es-dolares-en-bolivares';
+import { cuantoEsEnGuaraniesPesoArgentino } from './cuanto-es-en-guaranies-peso-argentino';
+import { cuantoEsEnGuaraniesRealBrasileno } from './cuanto-es-en-guaranies-real-brasileno';
+import { cuantoEsSalarioMinimoVenezuela2026 } from './cuanto-es-salario-minimo-venezuela-2026';
+import { cuantoEsUnidadTributariaBolivares } from './cuanto-es-unidad-tributaria-bolivares';
 import { cuantoFaltaAguinaldoJunioDiciembre } from './cuanto-falta-aguinaldo-junio-diciembre';
 import { cuantoFaltaBlackFridayCyberMonday } from './cuanto-falta-black-friday-cyber-monday';
 import { cuantoFaltaCumpleanosFechaEspecifica } from './cuanto-falta-cumpleanos-fecha-especifica';
@@ -1116,6 +1148,7 @@ import { descensoPremierLeague } from './descenso-premier-league';
 import { descensoProbabilidadMatematica } from './descenso-probabilidad-matematica';
 import { descensoSerieAItalia } from './descenso-serie-a-italia';
 import { descuento } from './descuento';
+import { descuentoIps9Salario } from './descuento-ips-9-salario';
 import { descuentoPorcentajePrecio } from './descuento-porcentaje-precio';
 import { compute as compute__descuento_tardanzas_faltas_peru } from './descuento-tardanzas-faltas-peru';
 import { descuentoVolumenCantidad } from './descuento-volumen-cantidad';
@@ -1200,8 +1233,10 @@ import { compute as compute__divorcio_particion_bienes_colombia_sociedad_conyuga
 import { dniExtranjeroResidenciaCostoMigraciones } from './dni-extranjero-residencia-costo-migraciones';
 import { dniPasaporteCostoTramiteArgentina } from './dni-pasaporte-costo-tramite-argentina';
 import { dolarAR } from './dolar-ar';
+import { dolarBcvParaleloBolivaresHoy } from './dolar-bcv-paralelo-bolivares-hoy';
 import { dolarBlueVsOficialBrecha } from './dolar-blue-vs-oficial-brecha';
 import { dolarBolsaVsCriptoArbitrajeSpreadReal } from './dolar-bolsa-vs-cripto-arbitraje-spread-real';
+import { dolarHoyParaguay } from './dolar-hoy-paraguay';
 import { dolarMepCocosIolComisionReal } from './dolar-mep-cocos-iol-comision-real';
 import { dolarMepPasoAPasoCostoOperacion } from './dolar-mep-paso-a-paso-costo-operacion';
 import { dolarRealIofCartao } from './dolar-real-iof-cartao';
@@ -1734,6 +1769,7 @@ import { compute as compute__ibi_cuota_anual_espana_valor_catastral_municipio } 
 import { ibuCervezaLupuloTinseth } from './ibu-cerveza-lupulo-tinseth';
 import { idiomaParalelo2AlMismo } from './idioma-paralelo-2-al-mismo';
 import { idiomasMasUtilesProfesionInternacional } from './idiomas-mas-utiles-profesion-internacional';
+import { iduDividendosParaguay } from './idu-dividendos-paraguay';
 import { compute as compute__ielts_toefl_puntaje_equivalencia_cef_c1_c2 } from './ielts-toefl-puntaje-equivalencia-cef-c1-c2';
 import { ifeIngresoFamiliarEmergenciaHistoria } from './ife-ingreso-familiar-emergencia-historia';
 import { iguazu3DiasPresupuestoCataratas2Personas } from './iguazu-3-dias-presupuesto-cataratas-2-personas';
@@ -1830,6 +1866,7 @@ import { indemnizacionDespidoFuerzaMayorArt247 } from './indemnizacion-despido-f
 import { indemnizacionDespidoImprocedenteEspana } from './indemnizacion-despido-improcedente-espana';
 import { compute as compute__indemnizacion_despido_intempestivo_ecuador } from './indemnizacion-despido-intempestivo-ecuador';
 import { indemnizacionDespidoObjetivoEspana } from './indemnizacion-despido-objetivo-espana';
+import { indemnizacionDespidoParaguay } from './indemnizacion-despido-paraguay';
 import { compute as compute__indemnizacion_despido_sin_justa_causa_colombia } from './indemnizacion-despido-sin-justa-causa-colombia';
 import { indemnizacionEmpleadaCasaParticularLey26844 } from './indemnizacion-empleada-casa-particular-ley-26844';
 import { independenciaFinancieraFireMovimiento } from './independencia-financiera-fire-movimiento';
@@ -1912,7 +1949,9 @@ import { irAluguelCarneLeao } from './ir-aluguel-carne-leao';
 import { irDayTrade } from './ir-day-trade';
 import { irGanhoCapitalImovel } from './ir-ganho-capital-imovel';
 import { irSwingTrade } from './ir-swing-trade';
+import { ireParaguay } from './ire-paraguay';
 import { compute as compute__irnr_no_residentes_alquiler_vivienda_espana } from './irnr-no-residentes-alquiler-vivienda-espana';
+import { irpParaguayTramos } from './irp-paraguay-tramos';
 import { compute as compute__irpf_2026_tramos_espana_nomina } from './irpf-2026-tramos-espana-nomina';
 import { compute as compute__irpf_alquiler_vivienda_arrendador_espana } from './irpf-alquiler-vivienda-arrendador-espana';
 import { irpfAndalucia2026 } from './irpf-andalucia-2026';
@@ -3007,6 +3046,7 @@ import { salarioMaternidadeInss } from './salario-maternidade-inss';
 import { salarioMinimo } from './salario-minimo';
 import { salarioMinimo2026Comparativa } from './salario-minimo-2026-comparativa';
 import { compute as compute__salario_minimo_colombia_2026_auxilio_transporte } from './salario-minimo-colombia-2026-auxilio-transporte';
+import { salarioMinimoParaguay2026 } from './salario-minimo-paraguay-2026';
 import { salarioRealInflacion } from './salario-real-inflacion';
 import { compute as compute__saldo_afp_rentabilidad_multifondos_chile_2026 } from './saldo-afp-rentabilidad-multifondos-chile-2026';
 import { saldoCriptoValorMonedaLocalMulti } from './saldo-cripto-valor-moneda-local-multi';
@@ -3647,6 +3687,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aguinaldo-mexico': aguinaldoMexico,
   'aguinaldo-mexico-2026-15-dias-tope-30': compute__aguinaldo_mexico_2026_15_dias_tope_30,
   'aguinaldo-mexico-neto': aguinaldoMexicoNeto,
+  'aguinaldo-proporcional-paraguay': aguinaldoProporcionalParaguay,
   'ahorro-agua-duchas-cortas-mes': ahorroAguaDuchasCortasMes,
   'ahorro-auto-electrico-vs-nafta-anual': ahorroAutoElectricoVsNaftaAnual,
   'ahorro-bici-vs-auto': ahorroBiciVsAuto,
@@ -3896,6 +3937,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'bolsa-familia-valor': bolsaFamiliaValor,
   'bomba-calor-aerotermia-espana-coste-instalacion': compute__bomba_calor_aerotermia_espana_coste_instalacion,
   'bombeo-cisterna-tanque-watts': bombeoCisternaTanqueWatts,
+  'bonificacion-familiar-paraguay': bonificacionFamiliarParaguay,
   'bono-anses-jubilados-junio-2026-aumento-mensual': compute__bono_anses_jubilados_junio_2026_aumento_mensual,
   'bono-cumplimiento-laboral-chile-pago-empresa': compute__bono_cumplimiento_laboral_chile_pago_empresa,
   'bono-electrico-chile-subsidio-cuenta-electrica': compute__bono_electrico_chile_subsidio_cuenta_electrica,
@@ -3948,13 +3990,34 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calcio-diario-edad': calcioDiarioEdad,
   'calcio-diario-edad-lactancia-menopausia': calcioDiarioEdadLactanciaMenopausia,
   'calcio-dieta-diaria-osteoporosis-mujer': calcioDietaDiariaOsteoporosisMujer,
+  'calculadora-aguinaldo-paraguay': calculadoraAguinaldoParaguay,
+  'calculadora-brecha-dolar-bcv-paralelo': calculadoraBrechaDolarBcvParalelo,
   'calculadora-costo-real-pauta-exterior-impuestos-argentina': calculadoraCostoRealPautaExteriorImpuestosArgentina,
   'calculadora-costo-real-pauta-exterior-impuestos-colombia': calculadoraCostoRealPautaExteriorImpuestosColombia,
   'calculadora-costo-real-pauta-exterior-impuestos-mexico': calculadoraCostoRealPautaExteriorImpuestosMexico,
   'calculadora-costo-real-servicio-digital-exterior-saas-argentina': calculadoraCostoRealServicioDigitalExteriorSaasArgentina,
+  'calculadora-costo-vida-paraguay': calculadoraCostoVidaParaguay,
+  'calculadora-cupo-gasolina-subsidiada-venezuela': calculadoraCupoGasolinaSubsidiadaVenezuela,
+  'calculadora-horas-extras-paraguay': calculadoraHorasExtrasParaguay,
+  'calculadora-igtf-venezuela-3': calculadoraIgtfVenezuela3,
+  'calculadora-islr-venezuela-2026': calculadoraIslrVenezuela2026,
+  'calculadora-iva-paraguay': calculadoraIvaParaguay,
+  'calculadora-iva-venezuela-16': calculadoraIvaVenezuela16,
+  'calculadora-liquidacion-final-paraguay': calculadoraLiquidacionFinalParaguay,
+  'calculadora-liquidacion-finiquito-venezuela': calculadoraLiquidacionFiniquitoVenezuela,
   'calculadora-mejor-epoca-viajar-destino-lluvia-huracanes': calcularMejorEpocaViaje,
+  'calculadora-preaviso-paraguay': calculadoraPreavisoParaguay,
+  'calculadora-preaviso-venezuela': calculadoraPreavisoVenezuela,
+  'calculadora-prestaciones-sociales-venezuela': calculadoraPrestacionesSocialesVenezuela,
   'calculadora-proporciones-receta': calculadoraProporcionesReceta,
+  'calculadora-remesa-zelle-bolivares-venezuela': calculadoraRemesaZelleBolivaresVenezuela,
+  'calculadora-retencion-islr-venezuela': calculadoraRetencionIslrVenezuela,
+  'calculadora-salario-integral-venezuela': calculadoraSalarioIntegralVenezuela,
+  'calculadora-salario-neto-paraguay': calculadoraSalarioNetoParaguay,
   'calculadora-sube-argentina-costo-viaje-gasto-mensual': calculadoraSubeArgentina,
+  'calculadora-utilidades-aguinaldo-venezuela': calculadoraUtilidadesAguinaldoVenezuela,
+  'calculadora-vacaciones-bono-vacacional-venezuela': calculadoraVacacionesBonoVacacionalVenezuela,
+  'calculadora-vacaciones-paraguay': calculadoraVacacionesParaguay,
   'caldera-condensacion-pellets-vs-gas-ahorro': calderaCondensacionPelletsVsGasAhorro,
   'caldera-kw-m2-calefaccion': calderaKwM2Calefaccion,
   'caldera-potencia-kw-ambiente-metros': calderaPotenciaKwAmbienteMetros,
@@ -4106,6 +4169,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cesantias-traslado-fondo-rendimiento-colombia': compute__cesantias_traslado_fondo_rendimiento_colombia,
   'cesped-semillas-kg-m2': cespedSemillasKgM2,
   'cesta-compra-mensual-familia-espana-inflacion': compute__cesta_compra_mensual_familia_espana_inflacion,
+  'cestaticket-bono-guerra-economica-venezuela': cestaticketBonoGuerraEconomicaVenezuela,
   'cet-emprestimo-pessoal': cetEmprestimoPessoal,
   'cetes-mexico-rendimiento-28-91-182-364-dias': compute__cetes_mexico_rendimiento_28_91_182_364_dias,
   'cetes-rendimiento-mx': cetesRendimientoMx,
@@ -4460,6 +4524,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-impresion-3d-pieza': costoImpresion3dPieza,
   'costo-km-auto': costoKmAuto,
   'costo-laboral': costoLaboral,
+  'costo-laboral-empleador-paraguay': costoLaboralEmpleadorParaguay,
   'costo-laboral-total-empleador-cargas': costoLaboralTotalEmpleadorCargas,
   'costo-laboral-total-empleador-ecuador': compute__costo_laboral_total_empleador_ecuador,
   'costo-laboral-total-empleador-peru': compute__costo_laboral_total_empleador_peru,
@@ -4564,6 +4629,13 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuantas-materias-faltan': cuantasMateriassFaltan,
   'cuanto-cobrar-traduccion-palabra-2026-espanol-ingles': compute__cuanto_cobrar_traduccion_palabra_2026_espanol_ingles,
   'cuanto-cobro-por-hora-freelance': cuantoCobroPorHoraFreelance,
+  'cuanto-cuesta-llenar-tanque-gasolina-venezuela': cuantoCuestaLlenarTanqueGasolinaVenezuela,
+  'cuanto-es-bolivares-en-dolares': cuantoEsBolivaresEnDolares,
+  'cuanto-es-dolares-en-bolivares': cuantoEsDolaresEnBolivares,
+  'cuanto-es-en-guaranies-peso-argentino': cuantoEsEnGuaraniesPesoArgentino,
+  'cuanto-es-en-guaranies-real-brasileno': cuantoEsEnGuaraniesRealBrasileno,
+  'cuanto-es-salario-minimo-venezuela-2026': cuantoEsSalarioMinimoVenezuela2026,
+  'cuanto-es-unidad-tributaria-bolivares': cuantoEsUnidadTributariaBolivares,
   'cuanto-falta-aguinaldo-junio-diciembre': cuantoFaltaAguinaldoJunioDiciembre,
   'cuanto-falta-black-friday-cyber-monday': cuantoFaltaBlackFridayCyberMonday,
   'cuanto-falta-cumpleanos-fecha-especifica': cuantoFaltaCumpleanosFechaEspecifica,
@@ -4700,6 +4772,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'descenso-probabilidad-matematica': descensoProbabilidadMatematica,
   'descenso-serie-a-italia': descensoSerieAItalia,
   'descuento': descuento,
+  'descuento-ips-9-salario': descuentoIps9Salario,
   'descuento-porcentaje-precio': descuentoPorcentajePrecio,
   'descuento-tardanzas-faltas-peru': compute__descuento_tardanzas_faltas_peru,
   'descuento-volumen-cantidad': descuentoVolumenCantidad,
@@ -4784,8 +4857,10 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'dni-extranjero-residencia-costo-migraciones': dniExtranjeroResidenciaCostoMigraciones,
   'dni-pasaporte-costo-tramite-argentina': dniPasaporteCostoTramiteArgentina,
   'dolar-ar': dolarAR,
+  'dolar-bcv-paralelo-bolivares-hoy': dolarBcvParaleloBolivaresHoy,
   'dolar-blue-vs-oficial-brecha': dolarBlueVsOficialBrecha,
   'dolar-bolsa-vs-cripto-arbitraje-spread-real': dolarBolsaVsCriptoArbitrajeSpreadReal,
+  'dolar-hoy-paraguay': dolarHoyParaguay,
   'dolar-mep-cocos-iol-comision-real': dolarMepCocosIolComisionReal,
   'dolar-mep-paso-a-paso-costo-operacion': dolarMepPasoAPasoCostoOperacion,
   'dolar-real-iof-cartao': dolarRealIofCartao,
@@ -5318,6 +5393,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ibu-cerveza-lupulo-tinseth': ibuCervezaLupuloTinseth,
   'idioma-paralelo-2-al-mismo': idiomaParalelo2AlMismo,
   'idiomas-mas-utiles-profesion-internacional': idiomasMasUtilesProfesionInternacional,
+  'idu-dividendos-paraguay': iduDividendosParaguay,
   'ielts-toefl-puntaje-equivalencia-cef-c1-c2': compute__ielts_toefl_puntaje_equivalencia_cef_c1_c2,
   'ife-ingreso-familiar-emergencia-historia': ifeIngresoFamiliarEmergenciaHistoria,
   'iguazu-3-dias-presupuesto-cataratas-2-personas': iguazu3DiasPresupuestoCataratas2Personas,
@@ -5414,6 +5490,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'indemnizacion-despido-improcedente-espana': indemnizacionDespidoImprocedenteEspana,
   'indemnizacion-despido-intempestivo-ecuador': compute__indemnizacion_despido_intempestivo_ecuador,
   'indemnizacion-despido-objetivo-espana': indemnizacionDespidoObjetivoEspana,
+  'indemnizacion-despido-paraguay': indemnizacionDespidoParaguay,
   'indemnizacion-despido-sin-justa-causa-colombia': compute__indemnizacion_despido_sin_justa_causa_colombia,
   'indemnizacion-empleada-casa-particular-ley-26844': indemnizacionEmpleadaCasaParticularLey26844,
   'independencia-financiera-fire-movimiento': independenciaFinancieraFireMovimiento,
@@ -5496,7 +5573,9 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ir-day-trade': irDayTrade,
   'ir-ganho-capital-imovel': irGanhoCapitalImovel,
   'ir-swing-trade': irSwingTrade,
+  'ire-paraguay': ireParaguay,
   'irnr-no-residentes-alquiler-vivienda-espana': compute__irnr_no_residentes_alquiler_vivienda_espana,
+  'irp-paraguay-tramos': irpParaguayTramos,
   'irpf-2026-tramos-espana-nomina': compute__irpf_2026_tramos_espana_nomina,
   'irpf-alquiler-vivienda-arrendador-espana': compute__irpf_alquiler_vivienda_arrendador_espana,
   'irpf-andalucia-2026': irpfAndalucia2026,
@@ -6591,6 +6670,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'salario-minimo': salarioMinimo,
   'salario-minimo-2026-comparativa': salarioMinimo2026Comparativa,
   'salario-minimo-colombia-2026-auxilio-transporte': compute__salario_minimo_colombia_2026_auxilio_transporte,
+  'salario-minimo-paraguay-2026': salarioMinimoParaguay2026,
   'salario-real-inflacion': salarioRealInflacion,
   'saldo-afp-rentabilidad-multifondos-chile-2026': compute__saldo_afp_rentabilidad_multifondos_chile_2026,
   'saldo-cripto-valor-moneda-local-multi': saldoCriptoValorMonedaLocalMulti,

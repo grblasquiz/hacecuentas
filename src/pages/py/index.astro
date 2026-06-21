@@ -1,0 +1,470 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ScrollToTop from '../../components/ScrollToTop.astro';
+import { HOME_HREFLANG } from '../../lib/hreflang';
+import { PARAGUAY_2026, TIPO_CAMBIO_PY, fmtPYG } from '../../lib/data/paraguay-2026';
+
+const localeModules = import.meta.glob<any>('../../content/calcs-py/*.json', { eager: true });
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m);
+const audienceFiltered = Object.values(mainModules)
+  .map((m: any) => m.default || m)
+  .filter((c: any) => c.audience === 'PY');
+const calcs = [...localeCalcs, ...audienceFiltered];
+
+const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
+function calcUrl(c: any): string {
+  return localeSlugs.has(c.slug) ? `/py/${c.slug}` : `/${c.slug}`;
+}
+
+const byCategory: Record<string, any[]> = {};
+calcs.forEach((c) => {
+  if (!byCategory[c.category]) byCategory[c.category] = [];
+  byCategory[c.category].push(c);
+});
+
+const categoryMeta: Record<string, { label: string; desc: string; color: string; icon: string }> = {
+  finanzas:        { label: 'Finanzas',       desc: 'Salario neto, aguinaldo, IPS, jornal.',                color: '#2563eb', icon: '💰' },
+  impuestos:       { label: 'Impuestos',      desc: 'IRP, IVA 10% y 5%, IRE, DNIT 2026.',                color: '#7c3aed', icon: '🧾' },
+  salud:           { label: 'Salud',          desc: 'IMC, calorías, embarazo, fitness.',                  color: '#16a34a', icon: '❤️' },
+  familia:         { label: 'Familia',        desc: 'Bonificación familiar, hijos, escolarización.',                  color: '#db2777', icon: '👨‍👩‍👧' },
+  vida:            { label: 'Vida cotidiana', desc: 'Alquiler, costo de vida, mercado.',                     color: '#d97706', icon: '🏠' },
+  automotor:       { label: 'Automotor',      desc: 'Patente, despacho, combustible.',                color: '#6366f1', icon: '🚗' },
+  educacion:       { label: 'Educación',      desc: 'Becas, créditos universitarios, promedios.',                color: '#8b5cf6', icon: '🎓' },
+  negocios:        { label: 'Negocios',       desc: 'Márgenes, IVA, regímenes fiscales.',                   color: '#0891b2', icon: '📊' },
+  marketing:       { label: 'Marketing',      desc: 'CTR, CPC, ROAS, CAC, LTV.',                          color: '#e11d48', icon: '📈' },
+  deportes:        { label: 'Deportes',       desc: 'Pace, 1RM, VO2 max, ciclismo.',                      color: '#65a30d', icon: '🏃' },
+  viajes:          { label: 'Viajes',         desc: 'Combustible, presupuesto, propinas.',                color: '#0891b2', icon: '✈️' },
+  cocina:          { label: 'Cocina',         desc: 'Tazas a gramos, ajustar receta.',                    color: '#ea580c', icon: '🍳' },
+  mascotas:        { label: 'Mascotas',       desc: 'Edad perro/gato, alimentación.',                     color: '#db2777', icon: '🐕' },
+  matematica:      { label: 'Matemática',     desc: 'Promedios, Pitágoras, conversores.',                 color: '#0d9488', icon: '🧮' },
+  tecnologia:      { label: 'Tecnología',     desc: 'Almacenamiento, IA, batería, cloud.',                color: '#06b6d4', icon: '💻' },
+  'medio-ambiente':{ label: 'Medio Ambiente', desc: 'Huella de carbono, energía solar.',                  color: '#22c55e', icon: '🌱' },
+  electronica:     { label: 'Electrónica',    desc: 'Ley de Ohm, kWh, circuitos.',                        color: '#f59e0b', icon: '⚡' },
+  ciencia:         { label: 'Ciencia',        desc: 'Física, química, astronomía.',                       color: '#6366f1', icon: '🔬' },
+  jardineria:      { label: 'Jardinería',     desc: 'Riego, tierra, siembra.',                            color: '#15803d', icon: '🌿' },
+  construccion:    { label: 'Construcción',   desc: 'Materiales, presupuesto reforma.',                   color: '#b45309', icon: '🧱' },
+};
+
+const categoryOrder = ['finanzas','impuestos','vida','familia','salud','automotor','educacion','negocios','marketing','deportes','viajes','cocina','mascotas','matematica','tecnologia','medio-ambiente','electronica','ciencia','jardineria','construccion'];
+const activeCategories = categoryOrder.filter((cat) => byCategory[cat] && byCategory[cat].length > 0);
+
+const totalCalcs = calcs.length;
+
+const popularSlugs = [
+  'calculadora-salario-neto-paraguay',
+  'calculadora-aguinaldo-paraguay',
+  'calculadora-vacaciones-paraguay',
+  'calculadora-liquidacion-final-paraguay',
+  'indemnizacion-despido-paraguay',
+  'irp-paraguay-tramos'
+];
+const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
+
+// ── Datos clave 2026 — todo computado desde src/lib/data/paraguay-2026.ts (fuente única, nunca stale) ──
+const P = PARAGUAY_2026;
+const T = TIPO_CAMBIO_PY;
+const netoSalarioMinimo = P.salarioMinimo * (1 - P.ips.obrero);
+const bonifFamiliarPorHijo = P.salarioMinimo * P.laboral.bonificacionFamiliarPct;
+
+const datosClave = [
+  { k: 'Salario mínimo (SMVM)', v: `${fmtPYG(P.salarioMinimo)} /mes (vig. 1-jul-2026)`, src: 'MTESS, Decreto N° 6225' },
+  { k: 'Jornal mínimo', v: `${fmtPYG(P.jornalMinimo)} /día`, src: 'MTESS' },
+  { k: 'Aporte obrero IPS', v: '9% del salario (se descuenta)', src: 'IPS' },
+  { k: 'Aporte patronal IPS', v: '16,5% (lo paga el empleador)', src: 'IPS' },
+  { k: 'IVA general', v: '10%', src: 'SET / DNIT, Ley 6380/19' },
+  { k: 'IVA reducido', v: '5% (vivienda, inmuebles, medicamentos, canasta básica)', src: 'SET / DNIT, Ley 6380/19' },
+  { k: 'IRP — no incidido', v: `Exento hasta ${fmtPYG(P.irp.noIncididoAnual)} de ingreso bruto anual`, src: 'SET / DNIT, Ley 6380/19' },
+  { k: 'IRP — escala progresiva', v: 'Renta neta: 8% / 9% / 10% por tramos', src: 'SET / DNIT, Ley 6380/19' },
+  { k: 'Aguinaldo (13er sueldo)', v: '1/12 de lo percibido en el año (hasta 31-dic)', src: 'Código del Trabajo, art. 243' },
+  { k: 'Indemnización por despido', v: `${P.laboral.indemnizacionJornalesPorAnio} jornales por año de servicio`, src: 'Código del Trabajo, art. 91' },
+  { k: 'Tipo de cambio', v: `1 USD = ${fmtPYG(T.usdPyg)} · 1 BRL = ${fmtPYG(T.brlPyg)} · 1 ARS = ${fmtPYG(T.arsPyg)}`, src: 'BCP' },
+];
+
+// ── FAQ país-específica: respuestas con cifras computadas desde la fuente única ──
+const faq = [
+  {
+    q: '¿Cuál es el salario mínimo en Paraguay 2026?',
+    a: `El salario mínimo mensual (SMVM) es de ${fmtPYG(P.salarioMinimo)}, vigente desde el 1 de julio de 2026 (Decreto N° 6225, reajuste del 5%). El jornal mínimo diario es de ${fmtPYG(P.jornalMinimo)}. Antes del reajuste el SMVM era ${fmtPYG(P.salarioMinimoAnterior)}.`,
+  },
+  {
+    q: '¿Cuánto se descuenta de IPS del salario?',
+    a: `Al trabajador se le descuenta el aporte obrero del 9% del salario bruto. Con el salario mínimo de ${fmtPYG(P.salarioMinimo)}, el descuento es ${fmtPYG(P.salarioMinimo * P.ips.obrero)} y el salario neto queda en ${fmtPYG(netoSalarioMinimo)}. Aparte, el empleador aporta un 16,5% adicional que no sale del recibo del trabajador.`,
+  },
+  {
+    q: '¿Cómo se calcula el aguinaldo en Paraguay?',
+    a: `El aguinaldo (13er sueldo, art. 243 del Código del Trabajo) equivale a la doceava parte (1/12) de todo lo percibido durante el año calendario: sueldos, horas extras, comisiones y bonificaciones. Se paga hasta el 31 de diciembre. Si trabajaste el año completo cobrando un salario fijo, el aguinaldo es aproximadamente un salario mensual.`,
+  },
+  {
+    q: '¿Cuánto es la indemnización por despido injustificado?',
+    a: `La indemnización por despido sin causa es de ${P.laboral.indemnizacionJornalesPorAnio} jornales (salarios diarios) por cada año de servicio o fracción mayor a 6 meses (art. 91). Con ${P.laboral.estabilidadAniosDoble} años o más de antigüedad (estabilidad), el trabajador tiene derecho a doble indemnización o reposición. Además corresponde el preaviso, que va de 30 a 90 días según la antigüedad.`,
+  },
+  {
+    q: '¿Quién paga el IRP (Impuesto a la Renta Personal)?',
+    a: `Sólo paga IRP quien supera ${fmtPYG(P.irp.noIncididoAnual)} de ingreso bruto anual por servicios personales. Por debajo de ese umbral de no incidencia, el impuesto es cero. Superado el umbral se grava la renta neta (ingresos menos gastos deducibles) con una escala progresiva del 8% al 10% por tramos. Las rentas del capital (intereses, alquileres) tributan 8%.`,
+  },
+  {
+    q: '¿Cuánto es el IVA en Paraguay?',
+    a: `La tasa general del IVA es del 10%. Existe una tasa reducida del 5% que aplica a alquiler de inmuebles para vivienda, venta de inmuebles, medicamentos de uso humano registrados y productos de la canasta familiar básica (Ley 6380/19).`,
+  },
+  {
+    q: '¿Cuántos días de vacaciones corresponden por año?',
+    a: `Las vacaciones (art. 218) dependen de la antigüedad: 12 días hábiles hasta los 5 años de servicio, 18 días de 5 a 10 años, y 30 días con más de 10 años. Se gozan en forma continua y se pagan por adelantado.`,
+  },
+  {
+    q: '¿Qué es la bonificación familiar y cuánto es?',
+    a: `Es un adicional del 5% del salario mínimo por cada hijo menor de 17 años (sin límite de edad si tiene discapacidad), según el art. 261 del Código del Trabajo. Con el SMVM 2026 equivale a ${fmtPYG(bonifFamiliarPorHijo)} por hijo. Sólo la cobran los trabajadores que ganan hasta 2 salarios mínimos.`,
+  },
+  {
+    q: '¿Cuánto le cuesta un trabajador al empleador?',
+    a: `Además del salario, el empleador paga el aporte patronal al IPS del 16,5% (14% al IPS + 2,5% al Ministerio de Salud Pública), más las provisiones de aguinaldo y vacaciones. Sobre el salario mínimo de ${fmtPYG(P.salarioMinimo)}, sólo el aporte patronal suma ${fmtPYG(P.salarioMinimo * P.ips.patronal)} al mes.`,
+  },
+];
+
+// ── Equivalencias AR → PY: inyecta autoridad interna desde el catálogo argentino ya posicionado ──
+const equivalentesAr = [
+  { ar: 'sueldo-en-mano-argentina', arLabel: 'Sueldo en mano (Argentina)', py: 'calculadora-salario-neto-paraguay', pyLabel: 'Salario neto en Paraguay', concepto: 'Salario neto' },
+  { ar: 'calculadora-aguinaldo-sac', arLabel: 'Aguinaldo (SAC) Argentina', py: 'calculadora-aguinaldo-paraguay', pyLabel: 'Aguinaldo en Paraguay', concepto: 'Aguinaldo' },
+  { ar: 'calculadora-vacaciones-argentina', arLabel: 'Vacaciones Argentina', py: 'calculadora-vacaciones-paraguay', pyLabel: 'Vacaciones en Paraguay', concepto: 'Vacaciones' },
+  { ar: 'calculadora-indemnizacion-despido', arLabel: 'Indemnización por despido Argentina', py: 'calculadora-liquidacion-final-paraguay', pyLabel: 'Liquidación final', concepto: 'Indemnización / liquidación' },
+  { ar: 'calcular-iva', arLabel: 'Calcular IVA (Argentina)', py: 'calculadora-iva-paraguay', pyLabel: 'IVA en Paraguay (10% / 5%)', concepto: 'IVA' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': ['CollectionPage', 'WebPage'],
+      '@id': 'https://hacecuentas.com/py#webpage',
+      url: 'https://hacecuentas.com/py',
+      name: 'Calculadoras Paraguay 2026 — IRP, IPS, aguinaldo, IVA | Hacé Cuentas',
+      description: `Calculadoras gratis específicas para Paraguay.`,
+      inLanguage: 'es-PY',
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      breadcrumb: { '@id': 'https://hacecuentas.com/py#breadcrumb' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': 'https://hacecuentas.com/py#breadcrumb',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Paraguay', item: 'https://hacecuentas.com/py' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://hacecuentas.com/py#faq',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'Dataset',
+      '@id': 'https://hacecuentas.com/py#datos-2026',
+      name: 'Datos laborales y fiscales de Paraguay 2026',
+      description: `Valores oficiales vigentes en Paraguay 2026: salario mínimo (${fmtPYG(P.salarioMinimo)}) y jornal, aportes IPS obrero y patronal, IVA 10% y 5%, IRP (umbral de no incidencia y escala progresiva), aguinaldo, indemnización por despido y tipo de cambio del guaraní.`,
+      url: 'https://hacecuentas.com/py',
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      isAccessibleForFree: true,
+      inLanguage: 'es-PY',
+      temporalCoverage: '2026',
+      spatialCoverage: { '@type': 'Place', name: 'Paraguay' },
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      sourceOrganization: [
+        { '@type': 'GovernmentOrganization', name: 'SET / DNIT', url: 'https://www.dnit.gov.py' },
+        { '@type': 'GovernmentOrganization', name: 'IPS', url: 'https://portal.ips.gov.py' },
+        { '@type': 'GovernmentOrganization', name: 'MTESS', url: 'https://www.mtess.gov.py' },
+        { '@type': 'GovernmentOrganization', name: 'Banco Central del Paraguay', url: 'https://www.bcp.gov.py' },
+      ],
+      keywords: ['salario mínimo Paraguay 2026', 'aporte IPS 9', 'aguinaldo Paraguay', 'IRP Paraguay tramos', 'IVA Paraguay 10', 'indemnización despido Paraguay'],
+    },
+  ],
+};
+
+// Set hreflang único y simétrico para todas las homes (es + en + pt +
+// 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
+const hreflangTags = HOME_HREFLANG;
+---
+
+<Layout
+  title="Calculadoras Paraguay 2026 — IRP, IPS, aguinaldo, IVA | Hacé Cuentas"
+  description={`${totalCalcs} calculadoras gratis para Paraguay: salario neto, aguinaldo, IPS, IRP, IVA 10% y 5%, indemnización. Datos oficiales 2026.`}
+  lang="es"
+  audience="PY"
+  hreflang={hreflangTags}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <div class="cc-index">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">🇵🇾 Paraguay · 2026</div>
+        <h1>Calculadoras para Paraguay</h1>
+        <p class="hero-sub">Salario neto, aguinaldo, aportes IPS, IRP, IVA, indemnización por despido. Datos oficiales MTESS, IPS, SET/DNIT y BCP. Gratis.</p>
+        <div class="hero-stats">
+          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat">100% gratis</span>
+        </div>
+        <span class="hero-live hero-live-static"><span class="dot-live" aria-hidden="true"></span>Moneda oficial: guaraní (Gs., PYG)</span>
+      </div>
+    </section>
+
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Hacé Cuentas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Paraguay</span>
+    </nav>
+
+    {popular.length > 0 && (
+      <section class="popular-section" aria-label="Más usadas">
+        <h2 class="popular-title">Más usadas en Paraguay</h2>
+        <div class="popular-grid">
+          {popular.map((c: any) => (
+            <a href={calcUrl(c)} class="popular-card">
+              <span class="popular-icon">{c.icon || '🧮'}</span>
+              <span class="popular-label">{c.h1}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section class="datos-clave" aria-labelledby="datos-clave-title">
+      <h2 id="datos-clave-title">Datos clave de Paraguay 2026</h2>
+      <p class="section-sub">Los valores oficiales que usan todas nuestras calculadoras paraguayas. Uso libre con atribución (CC-BY 4.0).</p>
+      <div class="dc-wrap">
+        <table class="dc-table">
+          <thead>
+            <tr><th>Concepto</th><th>Valor 2026</th><th>Fuente</th></tr>
+          </thead>
+          <tbody>
+            {datosClave.map((d) => (
+              <tr><td>{d.k}</td><td>{d.v}</td><td class="dc-src">{d.src}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="dc-note">Última revisión: 21 de junio de 2026. Fuentes: MTESS, IPS, SET/DNIT y BCP. Salario mínimo vigente desde el 1-jul-2026 (Decreto N° 6225).</p>
+    </section>
+
+    <section class="popular-section" aria-label="Más recursos de Paraguay">
+      <h2 class="popular-title">Más recursos de Paraguay</h2>
+      <div class="popular-grid">
+        <a href="/py/salario-minimo-paraguay-2026" class="popular-card"><span class="popular-icon">💵</span><span class="popular-label">Salario mínimo Paraguay 2026</span></a>
+        <a href="/datos-salario-minimo-latam-2026" class="popular-card"><span class="popular-icon">🌎</span><span class="popular-label">Salario mínimo LATAM</span></a>
+        <a href="/cambio-de-monedas" class="popular-card"><span class="popular-icon">💱</span><span class="popular-label">Cambio de monedas</span></a>
+      </div>
+    </section>
+
+    <div class="categories">
+      {activeCategories.map((catKey) => {
+        const meta = categoryMeta[catKey];
+        const catCalcs = byCategory[catKey];
+        return (
+          <section class="category-section" aria-labelledby={`cat-${catKey}`}>
+            <div class="cat-header">
+              <span class="cat-icon" aria-hidden="true" style={`background: ${meta?.color}18`}>{meta?.icon ?? '📁'}</span>
+              <div class="cat-meta">
+                <h2 id={`cat-${catKey}`} class="cat-label">{meta?.label ?? catKey}</h2>
+                {meta?.desc && <p class="cat-desc">{meta.desc}</p>}
+              </div>
+            </div>
+            <div class="calc-grid">
+              {catCalcs.map((calc: any) => (
+                <a href={calcUrl(calc)} class="calc-card">
+                  <span class="card-icon" aria-hidden="true">{calc.icon}</span>
+                  <div class="card-body">
+                    <span class="card-title">{calc.h1}</span>
+                    <span class="card-desc">{calc.description}</span>
+                  </div>
+                  <span class="card-badge" style={`background:${meta?.color}18; color:${meta?.color}`}>{meta?.label ?? catKey}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+
+    <section class="equiv-ar" aria-labelledby="equiv-ar-title">
+      <h2 id="equiv-ar-title">Equivalentes en Argentina</h2>
+      <p class="section-sub">¿Venís de Argentina o comparás los dos países? Cada cálculo tiene su par paraguayo.</p>
+      <div class="equiv-grid">
+        {equivalentesAr.map((e) => (
+          <div class="equiv-row">
+            <span class="equiv-concepto">{e.concepto}</span>
+            <div class="equiv-pair">
+              <a href={`/${e.ar}`} class="equiv-link">🇦🇷 {e.arLabel}</a>
+              <span class="equiv-arrow" aria-hidden="true">→</span>
+              <a href={`/py/${e.py}`} class="equiv-link">🇵🇾 {e.pyLabel}</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="faq-hub" aria-labelledby="faq-title">
+      <h2 id="faq-title">Preguntas frecuentes sobre sueldos e impuestos en Paraguay 2026</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary><span>{f.q}</span></summary>
+            <p class="faq-a">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <aside class="cta-footer" aria-label="Otras versiones">
+      <p class="cta-text">¿Buscas calculadoras de otro país?</p>
+      <p class="cta-sub">Tenemos versiones específicas con datos locales para Argentina, España, México, Ecuador, Chile y Brasil. La versión global aplica al resto del mundo hispano.</p>
+      <div class="cta-links">
+        <a href="/global" class="cta-pill">🌎 Global</a>
+        <a href="/" class="cta-pill">🇦🇷 Argentina</a>
+        <a href="/es" class="cta-pill">🇪🇸 España</a>
+        <a href="/mx" class="cta-pill">🇲🇽 México</a>
+        <a href="/ec" class="cta-pill">🇪🇨 Ecuador</a>
+        <a href="/cl" class="cta-pill">🇨🇱 Chile</a>
+        <a href="/pt" class="cta-pill">🇧🇷 Brasil</a>
+      </div>
+    </aside>
+  </div>
+
+  <ScrollToTop />
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .cc-index { max-width: 1060px; margin: 0 auto; }
+  .hero { text-align: center; padding: 3rem 1rem 2.5rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .hero-inner { max-width: 720px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-block; padding: 0.3rem 0.875rem; background: var(--accent-soft);
+    color: var(--accent); border: 1px solid var(--border); border-radius: 999px;
+    font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 1rem;
+  }
+  .hero h1 { font-size: clamp(2rem, 5vw, 2.75rem); margin: 0 0 0.875rem; line-height: 1.15; }
+  .hero-sub { color: var(--text-muted); font-size: 1.0625rem; line-height: 1.6; max-width: 620px; margin: 0 auto 1.5rem; }
+  .hero-stats { display: inline-flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; color: var(--text-muted); font-size: 0.9375rem; }
+  .hero-stats .stat strong { color: var(--text); font-weight: 700; }
+  .hero-stats .stat-sep { opacity: 0.4; }
+
+  .breadcrumbs { padding: 0 1rem 1.5rem; font-size: 0.875rem; color: var(--text-muted); }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+  .breadcrumbs .sep { margin: 0 0.5rem; opacity: 0.5; }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+
+  .popular-section { padding: 0 1rem 2rem; }
+  .popular-title { font-size: 1.125rem; margin: 0 0 0.875rem; color: var(--text-muted); font-weight: 600; }
+  .popular-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.625rem; }
+  .popular-card {
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    padding: 1rem 0.75rem; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
+    text-align: center; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .popular-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .popular-icon { font-size: 1.5rem; line-height: 1; }
+  .popular-label { font-size: 0.8125rem; font-weight: 600; line-height: 1.3; }
+
+  .categories { padding: 0 1rem; display: flex; flex-direction: column; gap: 2.5rem; }
+  .cat-header { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 1rem; }
+  .cat-icon { width: 2.5rem; height: 2.5rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; font-size: 1.375rem; }
+  .cat-meta { display: flex; flex-direction: column; gap: 0.125rem; }
+  .cat-label { font-size: 1.125rem; margin: 0; font-weight: 700; }
+  .cat-desc { color: var(--text-muted); font-size: 0.875rem; margin: 0; }
+
+  .calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .calc-card {
+    display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.875rem 1rem;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .calc-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .card-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+  .card-title { font-weight: 600; font-size: 0.9375rem; line-height: 1.3; }
+  .card-desc { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-badge { font-size: 0.6875rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 4px; align-self: flex-start; flex-shrink: 0; }
+
+  .cta-footer { margin: 4rem 1rem 2rem; padding: 2rem 1.5rem; text-align: center; background: var(--bg-muted); border-radius: var(--radius); }
+  .cta-text { font-size: 1.125rem; font-weight: 700; margin: 0 0 0.5rem; }
+  .cta-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; max-width: 600px; margin: 0 auto 1rem; line-height: 1.5; }
+  .cta-links { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+  .cta-pill {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.5rem 0.875rem; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 999px;
+    font-size: 0.875rem; font-weight: 600; color: var(--text);
+    text-decoration: none; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .cta-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  .top-bing, .datos-clave, .faq-hub { padding: 0 1rem 2.5rem; }
+  .top-bing h2, .datos-clave h2, .faq-hub h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .section-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; }
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .top-card {
+    display: flex; gap: 0.75rem; padding: 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+  }
+  .top-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .top-card .t-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .top-card .t-title { font-weight: 600; font-size: 0.9375rem; display: block; margin-bottom: 0.25rem; }
+  .top-card .t-desc { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.45; }
+
+  .dc-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .dc-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--bg-card); }
+  .dc-table th, .dc-table td { padding: 0.625rem 0.875rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .dc-table tr:last-child td { border-bottom: none; }
+  .dc-table th { background: var(--bg-muted); font-weight: 600; }
+  .dc-table td:nth-child(2) { font-weight: 600; }
+  .dc-table .dc-src { color: var(--text-muted); font-size: 0.8125rem; }
+  .dc-note { color: var(--text-muted); font-size: 0.8125rem; margin: 0.625rem 0 0; }
+
+  .faq-hub h2 { margin-bottom: 1rem; }
+  .faq-list { display: grid; gap: 0.625rem; }
+  .faq-list details { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .faq-list summary {
+    cursor: pointer; padding: 0.875rem 1rem; font-weight: 600; font-size: 0.9375rem;
+    list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+  }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary::after { content: '+'; color: var(--text-muted); font-weight: 700; }
+  .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+
+  .hero-live { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.875rem; font-size: 0.9rem; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .hero-live:hover { text-decoration: underline; }
+  .hero-live-static { color: var(--text-muted); cursor: default; }
+  .hero-live-static:hover { text-decoration: none; }
+  .hero-live .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgba(22,163,74,0.5); animation: pulse-live 2s infinite; flex-shrink: 0; }
+  @keyframes pulse-live { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); } 70% { box-shadow: 0 0 0 6px rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
+
+  .equiv-ar { padding: 0 1rem 2.5rem; }
+  .equiv-ar h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .equiv-grid { display: grid; gap: 0.625rem; }
+  .equiv-row {
+    display: flex; flex-direction: column; gap: 0.5rem; padding: 0.875rem 1rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  .equiv-concepto { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+  .equiv-pair { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+  .equiv-link { font-size: 0.9rem; font-weight: 600; text-decoration: none; color: var(--text); padding: 0.25rem 0; }
+  .equiv-link:hover { color: var(--accent); text-decoration: underline; }
+  .equiv-arrow { color: var(--text-muted); font-weight: 700; flex-shrink: 0; }
+</style>
