@@ -225,6 +225,33 @@ for (const f of walk(DIST)) {
   if (referencedCss.size === cssBasenames.length) break;
 }
 
+// ── CRÍTICO: las páginas SSR (prerender=false: partidos-hoy, dolar-hoy-*,
+// sugerencias, admin…) referencian su CSS desde los chunks del worker
+// (dist/server/**/*.mjs), NO desde el HTML de dist/client. Sin escanear
+// dist/server, este orphan-removal borra ese CSS (Astro emite un hash de
+// components-shared para client y otro para server) y las SSR pages quedan
+// SIN ESTILOS (404 del CSS = página "rota"). Escaneamos dist/server también.
+if (referencedCss.size < cssBasenames.length) {
+  const walkCode = (dir) => {
+    const out = [];
+    try {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) out.push(...walkCode(full));
+        else if (entry.name.endsWith('.mjs') || entry.name.endsWith('.js')) out.push(full);
+      }
+    } catch {}
+    return out;
+  };
+  for (const f of walkCode('dist/server')) {
+    const code = readFileSync(f, 'utf8');
+    for (const basename of cssBasenames) {
+      if (!referencedCss.has(basename) && code.includes(basename)) referencedCss.add(basename);
+    }
+    if (referencedCss.size === cssBasenames.length) break;
+  }
+}
+
 let orphansRemoved = 0;
 let orphanKb = 0;
 for (const cssFile of allCssFiles) {
