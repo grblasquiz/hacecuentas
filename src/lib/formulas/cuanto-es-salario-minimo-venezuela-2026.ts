@@ -1,14 +1,12 @@
 /**
- * Salario mínimo en Venezuela 2026: descompone el "Ingreso Mínimo Integral"
- * (lo que efectivamente cobra un trabajador) en sus tres componentes:
- *   - Salario mínimo legal LOTTT: Bs. 130/mes (la ÚNICA base de pasivos laborales).
- *   - Bono de Guerra Económica ("Ingreso Integral"): ~USD 200 (Sistema Patria).
- *   - Cestaticket socialista: USD 40, indexado a la tasa BCV.
- * Los bonos NO son salario en sentido legal: no generan prestaciones, vacaciones
- * ni utilidades. El total se expresa en bolívares a la tasa elegida (BCV por defecto).
+ * Salario mínimo en Venezuela 2026: muestra el salario mínimo legal LOTTT
+ * (Bs. 130/mes, la ÚNICA base de pasivos laborales) más el cestaticket
+ * socialista (USD 40, indexado a la tasa BCV). El cestaticket NO es salario
+ * en sentido legal: no genera prestaciones, vacaciones ni utilidades.
+ * El total se expresa en bolívares a la tasa elegida (BCV por defecto).
  *
  * Datos: NO se hardcodean — se leen de src/lib/data/venezuela-2026.ts.
- *   Fuentes: MinTrabajo (LOTTT), Sistema Patria, Infobae/Banca y Negocios.
+ *   Fuentes: MinTrabajo (LOTTT), BCV, Banca y Negocios.
  */
 import { VENEZUELA_2026, usdToVes, fmtVES } from '../data/venezuela-2026';
 
@@ -34,13 +32,11 @@ export function cuantoEsSalarioMinimoVenezuela2026(i: Inputs): Outputs {
 
   // Componentes.
   const salarioMinimoVes = ve.salarioMinimoVes;                 // Bs. 130
-  const bonoGuerraUsd = ve.bonoGuerraEconomicaUsd;              // USD 200
-  const cestaticketUsd = ve.cestaticketUsd;                    // USD 40
-  const bonoGuerraVes = usdToVes(bonoGuerraUsd, tasa);
+  const cestaticketUsd = ve.cestaticketUsd;                     // USD 40
   const cestaticketVes = usdToVes(cestaticketUsd, tasa);
 
-  // Ingreso Integral total (Bs.) = salario base + bono + cestaticket convertidos.
-  const totalVes = salarioMinimoVes + bonoGuerraVes + cestaticketVes;
+  // Ingreso del trabajador (Bs.) = salario mínimo legal + cestaticket convertido.
+  const totalVes = salarioMinimoVes + cestaticketVes;
   const totalUsd = totalVes / valorTasa;
 
   // Equivalente en USD del salario base legal (suele ser ínfimo).
@@ -49,16 +45,14 @@ export function cuantoEsSalarioMinimoVenezuela2026(i: Inputs): Outputs {
   const narrativa =
     `El salario mínimo LEGAL en Venezuela sigue en ${fmtVES(salarioMinimoVes)} al mes ` +
     `(unos ${fmtUSD(salarioBaseUsd)} a la tasa ${nombreTasa}), congelado desde marzo de 2022. ` +
-    `Pero el Ingreso Mínimo Integral que cobra el trabajador suma además el Bono de Guerra Económica ` +
-    `(${fmtUSD(bonoGuerraUsd)}) y el Cestaticket (${fmtUSD(cestaticketUsd)}): en total, ` +
-    `${fmtVES(totalVes)} (${fmtUSD(totalUsd)}). Ojo: los bonos NO son salario, así que no cuentan ` +
-    `para prestaciones, utilidades ni vacaciones.`;
+    `Sumado al Cestaticket socialista (${fmtUSD(cestaticketUsd)}), el trabajador recibe en total ` +
+    `${fmtVES(totalVes)} (${fmtUSD(totalUsd)}). Ojo: el cestaticket NO es salario, así que no cuenta ` +
+    `para prestaciones, utilidades ni vacaciones — solo el salario legal de ${fmtVES(salarioMinimoVes)} genera pasivos laborales.`;
 
   return {
-    // Output principal (titular): ingreso integral total en Bs.
+    // Output principal (titular): salario mínimo + cestaticket en Bs.
     ingresoIntegralTotal: `${fmtVES(totalVes)} · ${fmtUSD(totalUsd)} / mes`,
     salarioMinimoLegal: `${fmtVES(salarioMinimoVes)} (${fmtUSD(salarioBaseUsd)})`,
-    bonoGuerraEconomica: `${fmtVES(bonoGuerraVes)} (${fmtUSD(bonoGuerraUsd)})`,
     cestaticket: `${fmtVES(cestaticketVes)} (${fmtUSD(cestaticketUsd)})`,
     totalBolivares: Number(totalVes.toFixed(2)),
     totalDolares: Number(totalUsd.toFixed(2)),
@@ -69,15 +63,14 @@ export function cuantoEsSalarioMinimoVenezuela2026(i: Inputs): Outputs {
       text: narrativa,
     },
     _table: {
-      title: 'Salario mínimo e Ingreso Integral en Venezuela 2026',
+      title: 'Salario mínimo y cestaticket en Venezuela 2026',
       headers: ['Concepto', 'En dólares', `En bolívares (${tasa === 'bcv' ? 'BCV' : 'paralelo'})`, '¿Es salario?'],
       rows: [
         ['Salario mínimo legal (LOTTT)', fmtUSD(salarioBaseUsd), fmtVES(salarioMinimoVes), 'Sí — base de pasivos'],
-        ['Bono de Guerra Económica', fmtUSD(bonoGuerraUsd), fmtVES(bonoGuerraVes), 'No — es un bono'],
-        ['Cestaticket socialista', fmtUSD(cestaticketUsd), fmtVES(cestaticketVes), 'No — es un bono'],
-        ['Ingreso Mínimo Integral', fmtUSD(totalUsd), fmtVES(totalVes), 'Mixto'],
+        ['Cestaticket socialista', fmtUSD(cestaticketUsd), fmtVES(cestaticketVes), 'No — es un beneficio'],
+        ['Total mensual', fmtUSD(totalUsd), fmtVES(totalVes), 'Mixto'],
       ],
-      note: 'El salario mínimo legal es Bs. 130 desde mar-2022 y es lo único que genera prestaciones, vacaciones y utilidades. El Bono de Guerra (~USD 200) y el Cestaticket (USD 40) se pagan en bolívares al equivalente USD según la tasa BCV del día, pero NO son salario. Tasas de referencia: cambian a diario.',
+      note: 'El salario mínimo legal es Bs. 130 desde mar-2022 y es lo único que genera prestaciones, vacaciones y utilidades. El Cestaticket (USD 40) se paga en bolívares al equivalente USD según la tasa BCV del día, pero NO es salario. Tasas de referencia: cambian a diario.',
     },
   };
 }

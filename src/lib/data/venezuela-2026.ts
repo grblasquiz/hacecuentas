@@ -8,14 +8,12 @@
  * Ambas cambian a diario; los snapshots de abajo son de referencia y deben
  * actualizarse (idealmente con data live; mientras tanto se hardcodean con fecha).
  *
- * Ingreso del trabajador (2026): el Ejecutivo paga un "Ingreso Mínimo Integral"
- * de USD 240/mes que NO es salario en sentido legal. Se compone de:
+ * Ingreso del trabajador (2026):
  *   - Salario mínimo (base legal LOTTT): Bs. 130/mes (lo ÚNICO que genera
  *     pasivos laborales: vacaciones, utilidades, prestaciones, seguridad social).
- *   - Bono de Guerra Económica / "Ingreso Integral": ~USD 200 (Sistema Patria).
- *   - Cestaticket socialista: USD 40 indexado a la tasa BCV.
- * Los bonos NO inciden en el cálculo de prestaciones/utilidades/vacaciones.
- * Fuente: Infobae 2026-05-05, Banca y Negocios, Bloomberg Línea.
+ *   - Cestaticket socialista: USD 40 indexado a la tasa BCV (beneficio de
+ *     alimentación, NO salario: no incide en prestaciones/utilidades/vacaciones).
+ * Fuente: BCV, MinTrabajo (LOTTT), Banca y Negocios.
  */
 
 /** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
@@ -39,14 +37,11 @@ export const VENEZUELA_2026 = {
     // Brecha = (paralelo/bcv - 1). Snapshot ≈ 31,9%. Se recalcula en runtime.
   },
 
-  // ───────────────────────── SALARIO Y BONOS ─────────────────────────
+  // ───────────────────────── SALARIO Y CESTATICKET ─────────────────────────
   // Salario mínimo legal LOTTT — única base de pasivos laborales.
   salarioMinimoVes: 130,       // Bs./mes (sin cambios desde mar-2022). ⚠️ ACTUALIZAR
-  // Ingreso Mínimo Integral USD (vía bonos, NO salario):
-  ingresoMinimoIntegralUsd: 240,
-  bonoGuerraEconomicaUsd: 200, // "Ingreso Integral" (Sistema Patria), ~USD 200
   cestaticketUsd: 40,          // Cestaticket socialista, indexado a tasa BCV
-  // Nota: el cestaticket y el bono se pagan en Bs. al equivalente USD según tasa BCV del día.
+  // Nota: el cestaticket se paga en Bs. al equivalente USD según la tasa BCV del día.
 
   // ───────────────────────── UNIDAD TRIBUTARIA ─────────────────────────
   // Valor de la U.T. — SOLO para tributos nacionales del SENIAT (prohibido para

@@ -132,8 +132,8 @@ const faqItems = [
     a: 'Hay 12 grupos de 4 equipos. Clasifican a la siguiente ronda los dos primeros de cada grupo (24 selecciones) más los 8 mejores terceros, lo que da 32 equipos que arrancan en los dieciseisavos de final (Round of 32). De ahí en adelante es eliminación directa hasta la final.',
   },
   {
-    q: '¿A qué hora juega cada partido en Argentina?',
-    a: 'Todos los horarios de este fixture están convertidos a hora de Argentina (UTC-3). Como las sedes están en zonas horarias de Norteamérica (UTC-4 a UTC-7), un partido del mediodía local suele verse a media tarde o noche en Argentina. Cada partido muestra su horario argentino exacto.',
+    q: '¿A qué hora juega cada partido en mi país?',
+    a: 'Con el selector de país arriba del fixture podés ver todos los horarios en tu hora local: Argentina, México, Colombia, Chile, Perú, Ecuador, Venezuela, Paraguay, Uruguay, Bolivia, Brasil, España y EE.UU. Por defecto se muestran en hora de Argentina (UTC-3). Como las sedes están en zonas horarias de Norteamérica (UTC-4 a UTC-7), un partido del mediodía local suele verse a media tarde o noche en Sudamérica; en España es de madrugada del día siguiente (por eso algunos aparecen con "+1").',
   },
   {
     q: '¿De dónde salen los resultados y cada cuánto se actualizan?',
@@ -174,6 +174,7 @@ const daysData = days.map((d) => ({
     num: m.num,
     stage: m.group ? roundLabel(m.round) + ' · ' + m.group.replace('Group', 'Grupo') : roundLabel(m.round),
     time: artTime(m.date, m.time),
+    utc: kickoffUTC(m.date, m.time)?.toISOString() || '',
     team1: m.team1,
     team2: m.team2,
     ground: m.ground,
@@ -204,6 +205,28 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
         </div>
       </header>
 
+      <!-- Selector de país: convierte TODOS los horarios a la hora local del visitante -->
+      <div class="fx-tzbar">
+        <label for="fx-tz">🕐 Ver horarios en</label>
+        <select id="fx-tz" aria-label="Elegí tu país para ver los horarios del Mundial en tu hora local">
+          <option value="America/Argentina/Buenos_Aires">🇦🇷 Argentina</option>
+          <option value="America/Mexico_City">🇲🇽 México</option>
+          <option value="America/Bogota">🇨🇴 Colombia</option>
+          <option value="America/Santiago">🇨🇱 Chile</option>
+          <option value="America/Lima">🇵🇪 Perú</option>
+          <option value="America/Guayaquil">🇪🇨 Ecuador</option>
+          <option value="America/Caracas">🇻🇪 Venezuela</option>
+          <option value="America/Asuncion">🇵🇾 Paraguay</option>
+          <option value="America/Montevideo">🇺🇾 Uruguay</option>
+          <option value="America/La_Paz">🇧🇴 Bolivia</option>
+          <option value="America/Sao_Paulo">🇧🇷 Brasil</option>
+          <option value="Europe/Madrid">🇪🇸 España</option>
+          <option value="America/New_York">🇺🇸 EE.UU. (Este)</option>
+          <option value="America/Los_Angeles">🇺🇸 EE.UU. (Pacífico)</option>
+        </select>
+        <span class="fx-tznote">Mostrando <strong data-tz-current>hora de Argentina</strong></span>
+      </div>
+
       <!-- Bloque destacado: hoy / próximo día -->
       {featuredDay && (
         <section class="fx-today" aria-labelledby="fx-today-h">
@@ -220,7 +243,7 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
                 <div class="fx-card" data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
                   <div class="fx-card-top">
                     <span class="fx-round">{m.group ? roundLabel(m.round) + ' · ' + m.group.replace('Group', 'Grupo') : roundLabel(m.round)}</span>
-                    <span class="fx-time" data-time>{artTime(m.date, m.time)}</span>
+                    <span class="fx-time" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artTime(m.date, m.time)}</span>
                   </div>
                   <div class="fx-card-teams">
                     <span class="fx-team t1"><span class="flag">{t1.flag}</span><span class="name">{t1.es}</span></span>
@@ -259,8 +282,8 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
       <section class="fx-full" aria-labelledby="fx-full-h">
         <h2 id="fx-full-h">Calendario completo, día por día</h2>
         <p class="fx-note">
-          Horarios en hora de Argentina (UTC-3). Los marcadores se completan automáticamente a
-          medida que se juegan los partidos.
+          Elegí tu país arriba para ver los horarios en tu hora local (por defecto, Argentina UTC-3).
+          Los marcadores se completan automáticamente a medida que se juegan los partidos.
         </p>
         {days.map((d) => (
           <div class={`fx-day${d.key === todayKey ? ' is-today' : ''}`} data-day={d.key}>
@@ -275,7 +298,7 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
                 const r = result(m);
                 return (
                   <li class={`fx-row${r ? ' played' : ''}`} data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
-                    <span class="fx-row-time" data-time>{artTime(m.date, m.time)}</span>
+                    <span class="fx-row-time" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artTime(m.date, m.time)}</span>
                     <span class="fx-row-stage">{m.group ? m.group.replace('Group', 'Gr.') : roundLabel(m.round)}</span>
                     <span class={`fx-row-team r-t1${r && r.winner === 1 ? ' win' : ''}`} data-side="1">
                       <span class="name">{t1.es}</span><span class="flag">{t1.flag}</span>
@@ -355,6 +378,51 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
     try { cfg = JSON.parse(cfgEl.textContent || '{}'); } catch { return; }
     const TEAMS = cfg.teams || {};
 
+    // ── Horarios por país: convertir el kickoff (UTC, en data-utc) a la zona elegida ──
+    const AR_TZ = 'America/Argentina/Buenos_Aires';
+    const ZONES = [
+      AR_TZ, 'America/Mexico_City', 'America/Bogota', 'America/Santiago', 'America/Lima',
+      'America/Guayaquil', 'America/Caracas', 'America/Asuncion', 'America/Montevideo',
+      'America/La_Paz', 'America/Sao_Paulo', 'Europe/Madrid', 'America/New_York', 'America/Los_Angeles',
+    ];
+    function tzLabel(tz: string): string {
+      const sel = document.getElementById('fx-tz') as HTMLSelectElement | null;
+      if (sel) { const o = Array.from(sel.options).find((o) => o.value === tz); if (o) return o.textContent || tz; }
+      return tz === AR_TZ ? '🇦🇷 Argentina' : tz;
+    }
+    function dayInTZ(d: Date, tz: string): string {
+      try { return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); }
+      catch { return ''; }
+    }
+    // currentTZ: preferencia guardada > auto-detect (si está en la lista) > Argentina.
+    let currentTZ = AR_TZ;
+    try {
+      const saved = localStorage.getItem('fx-tz');
+      if (saved && ZONES.indexOf(saved) >= 0) currentTZ = saved;
+      else { const det = Intl.DateTimeFormat().resolvedOptions().timeZone; if (det && ZONES.indexOf(det) >= 0) currentTZ = det; }
+    } catch {}
+    // Formatea un kickoff UTC (ISO) a la zona actual, con marcador de día (+1/−1)
+    // relativo al día del calendario (que está agrupado en hora argentina).
+    function fmtTimeTZ(utc: string): string {
+      if (!utc) return '';
+      const d = new Date(utc);
+      if (isNaN(d.getTime())) return '';
+      let t: string;
+      try { t = new Intl.DateTimeFormat('es-AR', { timeZone: currentTZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(d); }
+      catch { return ''; }
+      const ar = dayInTZ(d, AR_TZ), loc = dayInTZ(d, currentTZ);
+      let off = '';
+      if (loc && ar && loc !== ar) off = loc > ar ? ' +1' : ' −1';
+      return t + off;
+    }
+    // Reconvierte TODOS los horarios visibles ([data-time] con data-utc) a la zona actual.
+    function reformatTimes() {
+      document.querySelectorAll('[data-time][data-utc]').forEach((el) => {
+        const utc = el.getAttribute('data-utc');
+        if (utc) el.textContent = fmtTimeTZ(utc);
+      });
+    }
+
     function label(name: string | null): { es: string; flag: string } {
       if (!name) return { es: 'A definir', flag: '⚽' };
       if (TEAMS[name]) return TEAMS[name];
@@ -417,7 +485,11 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
       const t1 = label(m.team1), t2 = label(m.team2);
       const set = (sel: string, val: string) => { const e = card.querySelector(sel); if (e) e.textContent = val; };
       set('.fx-round', m.stage || '');
-      set('.fx-time', m.time || '');
+      const timeEl = card.querySelector('.fx-time');
+      if (timeEl) {
+        if (m.utc) timeEl.setAttribute('data-utc', m.utc);
+        timeEl.textContent = m.utc ? fmtTimeTZ(m.utc) : (m.time || '');
+      }
       set('.fx-team.t1 .flag', t1.flag);
       set('.fx-team.t1 .name', t1.es);
       set('.fx-team.t2 .flag', t2.flag);
@@ -535,6 +607,23 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
         if (poll) { clearInterval(poll); poll = null; }
       }
     }
+    // ── Selector de país: restaurar preferencia y reconvertir todos los horarios ──
+    const tzSel = document.getElementById('fx-tz') as HTMLSelectElement | null;
+    const tzNote = document.querySelector('[data-tz-current]');
+    function applyTZ() {
+      reformatTimes();
+      if (tzNote) tzNote.textContent = 'hora de ' + tzLabel(currentTZ).replace(/^[^\s]+\s/, '');
+    }
+    if (tzSel) {
+      tzSel.value = currentTZ;
+      tzSel.addEventListener('change', () => {
+        currentTZ = tzSel.value;
+        try { localStorage.setItem('fx-tz', currentTZ); } catch {}
+        applyTZ();
+      });
+    }
+    applyTZ(); // reconvierte el snapshot SSR (hora Argentina) a la zona detectada/guardada
+
     tick();
     poll = setInterval(() => { if (!document.hidden && !stopped) tick(); }, 120000);
     // Al volver a la pestaña, actualizar al instante en vez de esperar el próximo poll.
@@ -551,6 +640,13 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
   .fx-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: center; font-size: 0.875rem; color: var(--text-2, #475569); }
   .fx-meta strong { color: var(--text, #1e293b); }
   .meta-item { white-space: nowrap; }
+
+  /* Selector de país para los horarios */
+  .fx-tzbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.5rem 0.65rem; margin: 0 0 1.75rem; padding: 0.7rem 0.95rem; background: var(--accent-soft, #eef4ff); border: 1px solid var(--border, #e2e8f0); border-radius: 0.75rem; font-size: 0.9rem; }
+  .fx-tzbar label { font-weight: 600; color: var(--text, #1e293b); }
+  .fx-tzbar select { padding: 0.4rem 0.6rem; border: 1px solid var(--border, #cbd5e1); border-radius: 0.5rem; background: var(--surface, #fff); color: var(--text, #1e293b); font-size: 0.9rem; font-family: inherit; cursor: pointer; max-width: 100%; }
+  .fx-tznote { color: var(--text-2, #64748b); }
+  .fx-tznote strong { color: var(--accent-strong, #1e40af); }
 
   /* Bloque destacado */
   .fx-today { margin: 0 0 2rem; }

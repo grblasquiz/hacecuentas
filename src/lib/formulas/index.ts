@@ -545,7 +545,6 @@ import { cesantiasColombiaLiquidacion } from './cesantias-colombia-liquidacion';
 import { compute as compute__cesantias_traslado_fondo_rendimiento_colombia } from './cesantias-traslado-fondo-rendimiento-colombia';
 import { cespedSemillasKgM2 } from './cesped-semillas-kg-m2';
 import { compute as compute__cesta_compra_mensual_familia_espana_inflacion } from './cesta-compra-mensual-familia-espana-inflacion';
-import { cestaticketBonoGuerraEconomicaVenezuela } from './cestaticket-bono-guerra-economica-venezuela';
 import { cetEmprestimoPessoal } from './cet-emprestimo-pessoal';
 import { compute as compute__cetes_mexico_rendimiento_28_91_182_364_dias } from './cetes-mexico-rendimiento-28-91-182-364-dias';
 import { cetesRendimientoMx } from './cetes-rendimiento-mx';
@@ -4169,7 +4168,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cesantias-traslado-fondo-rendimiento-colombia': compute__cesantias_traslado_fondo_rendimiento_colombia,
   'cesped-semillas-kg-m2': cespedSemillasKgM2,
   'cesta-compra-mensual-familia-espana-inflacion': compute__cesta_compra_mensual_familia_espana_inflacion,
-  'cestaticket-bono-guerra-economica-venezuela': cestaticketBonoGuerraEconomicaVenezuela,
   'cet-emprestimo-pessoal': cetEmprestimoPessoal,
   'cetes-mexico-rendimiento-28-91-182-364-dias': compute__cetes_mexico_rendimiento_28_91_182_364_dias,
   'cetes-rendimiento-mx': cetesRendimientoMx,
