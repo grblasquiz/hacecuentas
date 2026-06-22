@@ -4,13 +4,13 @@
  * Plugin URI:        https://hacecuentas.com/wordpress
  * Description:       Insertá calculadoras interactivas de Hacé Cuentas (sueldo, monotributo, aguinaldo, IMC, préstamos, IVA y +2700 más) en tus posts y páginas con un bloque o un shortcode. Gratis, sin registro, los cálculos corren en el navegador del visitante.
  * Version:           1.0.0
- * Requires at least: 6.0
+ * Requires at least: 6.5
  * Requires PHP:      7.2
  * Author:            Hacé Cuentas
  * Author URI:        https://hacecuentas.com
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       hacecuentas-calculadoras
+ * Text Domain:       hace-cuentas-calculadoras
  *
  * @package HaceCuentas
  */
@@ -212,7 +212,7 @@ add_shortcode( 'hacecuentas', 'hacecuentas_shortcode' );
  */
 function hacecuentas_plugin_links( $links ) {
 	$links[] = '<a href="' . esc_url( HACECUENTAS_ORIGIN . '/calculadoras' ) . '" target="_blank" rel="noopener">'
-		. esc_html__( 'Ver calculadoras', 'hacecuentas-calculadoras' ) . '</a>';
+		. esc_html__( 'Ver calculadoras', 'hace-cuentas-calculadoras' ) . '</a>';
 	return $links;
 }
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'hacecuentas_plugin_links' );
@@ -241,16 +241,16 @@ function hacecuentas_welcome_notice() {
 
 	echo '<div class="notice notice-info is-dismissible"><p>';
 	echo wp_kses(
-		__( '<strong>¡Listo, Hacé Cuentas está activo!</strong> Agregá el bloque <em>«Calculadora Hacé Cuentas»</em> a cualquier entrada o página —o pegá el link de una calculadora— y elegí la que quieras mostrar.', 'hacecuentas-calculadoras' ),
+		__( '<strong>¡Listo, Hacé Cuentas está activo!</strong> Agregá el bloque <em>«Calculadora Hacé Cuentas»</em> a cualquier entrada o página —o pegá el link de una calculadora— y elegí la que quieras mostrar.', 'hace-cuentas-calculadoras' ),
 		array(
 			'strong' => array(),
 			'em'     => array(),
 		)
 	);
 	echo ' <a href="' . esc_url( HACECUENTAS_ORIGIN . '/calculadoras' ) . '" target="_blank" rel="noopener">'
-		. esc_html__( 'Ver calculadoras', 'hacecuentas-calculadoras' ) . '</a>';
+		. esc_html__( 'Ver calculadoras', 'hace-cuentas-calculadoras' ) . '</a>';
 	echo ' &middot; <a href="' . esc_url( $dismiss ) . '">'
-		. esc_html__( 'Ocultar', 'hacecuentas-calculadoras' ) . '</a>';
+		. esc_html__( 'Ocultar', 'hace-cuentas-calculadoras' ) . '</a>';
 	echo '</p></div>';
 }
 add_action( 'admin_notices', 'hacecuentas_welcome_notice' );
