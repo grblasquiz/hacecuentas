@@ -2013,7 +2013,6 @@ import { compute as compute__isr_personas_morales_mexico_30_porcentaje } from '.
 import { compute as compute__isr_premios_loteria_mexico_2026 } from './isr-premios-loteria-mexico-2026';
 import { compute as compute__isr_quincenal_mexico_2026 } from './isr-quincenal-mexico-2026';
 import { compute as compute__isr_rentas_de_capital_dividendos_intereses_colombia } from './isr-rentas-de-capital-dividendos-intereses-colombia';
-import { isrRepublicaDominicana } from './isr-republica-dominicana';
 import { isrSueldoMexico } from './isr-sueldo-mexico';
 import { compute as compute__isr_venta_casa_mexico_700000_udis } from './isr-venta-casa-mexico-700000-udis';
 import { itbaUtdtCostoCarreraAnualPrivada } from './itba-utdt-costo-carrera-anual-privada';
@@ -5674,7 +5673,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'isr-premios-loteria-mexico-2026': compute__isr_premios_loteria_mexico_2026,
   'isr-quincenal-mexico-2026': compute__isr_quincenal_mexico_2026,
   'isr-rentas-de-capital-dividendos-intereses-colombia': compute__isr_rentas_de_capital_dividendos_intereses_colombia,
-  'isr-republica-dominicana': isrRepublicaDominicana,
   'isr-sueldo-mexico': isrSueldoMexico,
   'isr-venta-casa-mexico-700000-udis': compute__isr_venta_casa_mexico_700000_udis,
   'itba-utdt-costo-carrera-anual-privada': itbaUtdtCostoCarreraAnualPrivada,
