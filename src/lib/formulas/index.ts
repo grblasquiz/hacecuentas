@@ -410,6 +410,7 @@ import { calculadoraRemesasEstadosUnidosRepublicaDominicana } from './calculador
 import { calculadoraRetencionIslrVenezuela } from './calculadora-retencion-islr-venezuela';
 import { calculadoraRetencionIsrSalarioRepublicaDominicana } from './calculadora-retencion-isr-salario-republica-dominicana';
 import { calculadoraSalarioIntegralVenezuela } from './calculadora-salario-integral-venezuela';
+import { calculadoraSalarioMinimoRepublicaDominicana } from './calculadora-salario-minimo-republica-dominicana';
 import { calculadoraSalarioNetoParaguay } from './calculadora-salario-neto-paraguay';
 import { calculadoraSubeArgentina } from './calculadora-sube-argentina-costo-viaje-gasto-mensual';
 import { calculadoraTssAfpSfsRepublicaDominicana } from './calculadora-tss-afp-sfs-republica-dominicana';
@@ -4070,6 +4071,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-retencion-islr-venezuela': calculadoraRetencionIslrVenezuela,
   'calculadora-retencion-isr-salario-republica-dominicana': calculadoraRetencionIsrSalarioRepublicaDominicana,
   'calculadora-salario-integral-venezuela': calculadoraSalarioIntegralVenezuela,
+  'calculadora-salario-minimo-republica-dominicana': calculadoraSalarioMinimoRepublicaDominicana,
   'calculadora-salario-neto-paraguay': calculadoraSalarioNetoParaguay,
   'calculadora-sube-argentina-costo-viaje-gasto-mensual': calculadoraSubeArgentina,
   'calculadora-tss-afp-sfs-republica-dominicana': calculadoraTssAfpSfsRepublicaDominicana,
