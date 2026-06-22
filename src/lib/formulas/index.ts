@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-21
+// Generated: 2026-06-22
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -1966,7 +1966,6 @@ import { irpfMadrid2026 } from './irpf-madrid-2026';
 import { irpfRestituicaoPagar } from './irpf-restituicao-pagar';
 import { irrfMensalFolha } from './irrf-mensal-folha';
 import { compute as compute__isapre_cotizacion_chile_7_porcentaje_plan } from './isapre-cotizacion-chile-7-porcentaje-plan';
-import { islrVenezuela } from './islr-venezuela';
 import { isnImpuestoNominasMexico } from './isn-impuesto-nominas-mexico';
 import { isoInvarianceCamaraModelo } from './iso-invariance-camara-modelo';
 import { compute as compute__isr_acciones_bolsa_mexico_10_por_ciento } from './isr-acciones-bolsa-mexico-10-por-ciento';
@@ -2697,7 +2696,6 @@ import { presionNeumaticosPsiBar } from './presion-neumaticos-psi-bar';
 import { presionParcialDalton } from './presion-parcial-dalton';
 import { pressBancaRelativo } from './press-banca-relativo';
 import { compute as compute__prestaciones_empleada_domestica_colombia_2026 } from './prestaciones-empleada-domestica-colombia-2026';
-import { prestacionesSocialesVenezuela } from './prestaciones-sociales-venezuela';
 import { compute as compute__prestaciones_superiores_ley_mexico_2026 } from './prestaciones-superiores-ley-mexico-2026';
 import { prestamoAnsesJubiladoArgentaMonto } from './prestamo-anses-jubilado-argenta-monto';
 import { compute as compute__prestamo_anses_jubilados_monto_cuota_2026 } from './prestamo-anses-jubilados-monto-cuota-2026';
@@ -5589,7 +5587,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'irpf-restituicao-pagar': irpfRestituicaoPagar,
   'irrf-mensal-folha': irrfMensalFolha,
   'isapre-cotizacion-chile-7-porcentaje-plan': compute__isapre_cotizacion_chile_7_porcentaje_plan,
-  'islr-venezuela': islrVenezuela,
   'isn-impuesto-nominas-mexico': isnImpuestoNominasMexico,
   'iso-invariance-camara-modelo': isoInvarianceCamaraModelo,
   'isr-acciones-bolsa-mexico-10-por-ciento': compute__isr_acciones_bolsa_mexico_10_por_ciento,
@@ -6320,7 +6317,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'presion-parcial-dalton': presionParcialDalton,
   'press-banca-relativo': pressBancaRelativo,
   'prestaciones-empleada-domestica-colombia-2026': compute__prestaciones_empleada_domestica_colombia_2026,
-  'prestaciones-sociales-venezuela': prestacionesSocialesVenezuela,
   'prestaciones-superiores-ley-mexico-2026': compute__prestaciones_superiores_ley_mexico_2026,
   'prestamo-anses-jubilado-argenta-monto': prestamoAnsesJubiladoArgentaMonto,
   'prestamo-anses-jubilados-monto-cuota-2026': compute__prestamo_anses_jubilados_monto_cuota_2026,
