@@ -8,7 +8,7 @@
   "icon": "📈",
   "formulaId": "pnl-futuros-long-short-perpetual",
   "audience": "global",
-  "lastReviewed": "2026-06-04",
+  "lastReviewed": "2026-06-22",
   "intro": "Perpetual futures let you go long or short with leverage, and your P&L scales with the price move, position size, and direction. This calculator gives you exact profit or loss in USD and ROE (return on margin) — before funding and fees — so you can size your trade and plan your stop before you enter.",
   "keyTakeaway": "**Long P&L = (Exit Price − Entry Price) × (Notional / Entry Price)**. Short P&L = (Entry Price − Exit Price) × (Notional / Entry Price). ROE = P&L / Margin × 100%, where Margin = Notional / Leverage.",
   "answerSnippet": "To calculate perpetual futures P&L: subtract entry price from exit price (or reverse for short), multiply by quantity (notional ÷ entry price). For example, a $10,000 long on BTC at $60,000 closing at $64,000 earns (64,000−60,000) × (10,000/60,000) = $666.67 P&L. With 10x leverage, the margin is $1,000 and ROE is 66.7%.",
@@ -180,5 +180,25 @@
     "notes": "Fixed formula — no external data updates required. P&L formulas are static."
   },
   "relatedSlugs": [],
+  "referenceTables": [
+    {
+      "title": "Liquidation distance by leverage — how far price can move against you before you're wiped out",
+      "caption": "P&L is only half the story: leverage also sets how much room you have before liquidation. For an isolated position, you're liquidated when your loss eats your margin minus the maintenance margin. Approximate adverse price move to liquidation ≈ (1 ÷ leverage) − maintenance margin rate. This table uses the 0.40% maintenance-margin rate of the lowest BTCUSDT/ETHUSDT tier on Binance and Bybit. Cross-margin and higher notional tiers (larger maintenance rates) liquidate slightly sooner. Gross of funding and fees, which push the real liquidation price closer.",
+      "headers": ["Leverage", "Margin (on $10k notional)", "Adverse move to liquidation", "ROE at liquidation"],
+      "rows": [
+        ["2×", "$5,000", "−49.6%", "−100%"],
+        ["3×", "$3,333", "−32.9%", "−100%"],
+        ["5×", "$2,000", "−19.6%", "−100%"],
+        ["10×", "$1,000", "−9.6%", "−100%"],
+        ["20×", "$500", "−4.6%", "−100%"],
+        ["25×", "$400", "−3.6%", "−100%"],
+        ["50×", "$200", "−1.6%", "−100%"],
+        ["100×", "$100", "−0.6%", "−100%"],
+        ["125×", "$80", "−0.4%", "−100%"]
+      ],
+      "note": "At liquidation you lose ~100% of the margin regardless of leverage — only the size of the price move that gets you there changes. At 100× a 0.6% wick liquidates the trade; at 5× it takes a ~20% move. Maintenance margin rate (here 0.40%) rises with position size, so big positions liquidate at slightly smaller moves than shown.",
+      "highlightCol": 2
+    }
+  ],
   "noindex": false
 }

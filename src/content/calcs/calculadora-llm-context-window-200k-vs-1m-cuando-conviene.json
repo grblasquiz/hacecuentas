@@ -288,7 +288,37 @@
     "source": "Gemini API Pricing — Google AI",
     "sourceUrl": "https://ai.google.dev/pricing"
   },
-  "lastReviewed": "2026-05-28",
+  "lastReviewed": "2026-06-22",
+  "referenceTables": [
+    {
+      "title": "Context window y precio por modelo (mediados de 2026)",
+      "caption": "Ventana de contexto máxima y precio de input/output por millón de tokens, para decidir entre long context y RAG.",
+      "headers": ["Modelo", "Context window", "Input (USD/1M)", "Output (USD/1M)"],
+      "rows": [
+        ["Gemini 2.5 Flash", "1M", "$0,30", "$2,50"],
+        ["Gemini 2.5 Pro", "1M", "$1,25 (≤200K) / $2,50 (>200K)", "$10,00 (≤200K) / $15,00 (>200K)"],
+        ["GPT-4o", "128K", "$2,50", "$10,00"],
+        ["GPT-4o mini", "128K", "$0,15", "$0,60"],
+        ["Claude Sonnet 4.6", "1M", "$3,00", "$15,00"],
+        ["Claude Haiku 4.5", "200K", "$1,00", "$5,00"],
+        ["Claude Opus 4.8", "1M", "$5,00", "$25,00"]
+      ],
+      "note": "Precios de lista publicados por Google (Gemini API), OpenAI (platform.openai.com) y Anthropic (Claude API), vigentes a mediados de 2026. Gemini 2.5 Pro tiene precio escalonado: el tramo caro se aplica al prompt completo cuando supera 200K tokens. Prompt caching puede reducir el costo de input a ~0,1x en consultas repetidas sobre el mismo documento."
+    },
+    {
+      "title": "Tokens aproximados por tamaño de documento",
+      "caption": "Equivalencia orientativa entre páginas / palabras y tokens, para estimar si tu corpus entra en 200K o 1M.",
+      "headers": ["Documento", "Palabras aprox.", "Tokens aprox.", "¿Entra en 200K?", "¿Entra en 1M?"],
+      "rows": [
+        ["1 página densa (contrato)", "400–500", "500–700", "Sí", "Sí"],
+        ["Informe de 50 páginas", "20.000–25.000", "30.000–35.000", "Sí", "Sí"],
+        ["Libro de 300 páginas", "120.000–150.000", "150.000–200.000", "Justo / sí", "Sí"],
+        ["Codebase mediano", "—", "300.000–800.000", "No", "Sí"],
+        ["Base de conocimiento grande", "—", "Más de 1M", "No", "No (usar RAG)"]
+      ],
+      "note": "Regla práctica: ~1 token ≈ 0,75 palabras en inglés (algo más en español). Una página de texto denso ronda 500–700 tokens. Si el corpus supera 1M tokens, RAG o una arquitectura de agentes es la única opción viable."
+    }
+  ],
   "relatedSlugs": [
     "calculadora-fine-tuning-openai-vs-rag-cuando-conviene",
     "calculadora-batch-api-openai-anthropic-50-descuento-cuando"

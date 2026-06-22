@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-prompt-caching-anthropic-ahorro-mensual",
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-22",
   "title": "Prompt caching Anthropic: calculadora de ahorro mensual + tabla | Hacé Cuentas",
   "h1": "Calculadora de ahorro con prompt caching de Anthropic",
   "description": "Calculá cuánto ahorrás por mes activando prompt caching en Claude Sonnet, Opus o Haiku. Con 80% de cache hit en Sonnet ahorrás hasta 70% del costo de input — ingresá tokens diarios, hit rate y modelo para obtener tu ahorro en USD.",
@@ -248,6 +248,20 @@
         ]
       ],
       "note": "Fuente: Anthropic Pricing — Claude API, anthropic.com/pricing (2026). MT = millón de tokens. El mínimo cacheable es 1.024 tokens en Sonnet/Opus y 2.048 tokens en Haiku. TTL del cache: 5 minutos (se refresca con cada uso)."
+    },
+    {
+      "title": "Punto de equilibrio: ¿a partir de cuántas lecturas conviene cachear?",
+      "caption": "Costo acumulado de un mismo bloque cacheado, en múltiplos del precio de input base, según cantidad de veces que se reusa. La 1ª vez paga el write; cada reuso paga solo el read (0,10×). Se compara contra no cachear (1× por request).",
+      "headers": ["Veces que se usa el bloque", "Sin cache (× base)", "Cache 5 min, write 1,25× (× base)", "Cache 1 h, write 2× (× base)"],
+      "rows": [
+        ["1 (solo write, sin reuso)", "1,00×", "1,25× (pierde)", "2,00× (pierde)"],
+        ["2", "2,00×", "1,35× (conviene)", "2,10× (pierde)"],
+        ["3", "3,00×", "1,45× (conviene)", "2,20× (conviene)"],
+        ["5", "5,00×", "1,65× (conviene)", "2,40× (conviene)"],
+        ["10", "10,00×", "2,15× (conviene)", "2,90× (conviene)"],
+        ["50", "50,00×", "6,15× (conviene)", "6,90× (conviene)"]
+      ],
+      "note": "Fórmula: cache 5 min = 1,25 + 0,10×(N−1); cache 1 h = 2,00 + 0,10×(N−1); sin cache = N. Break-even: el cache de 5 min conviene desde la 2ª lectura (2 usos); el de 1 h, desde la 3ª (3 usos). Elegí 1 h solo si las requests llegan separadas por más de 5 minutos. Cache read = 0,10× del precio base en todos los modelos. Fuente: Anthropic Pricing — anthropic.com/pricing (2026)."
     }
   ]
 }

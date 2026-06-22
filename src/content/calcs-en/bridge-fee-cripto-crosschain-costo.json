@@ -181,6 +181,22 @@
     "updateType": "manual",
     "notes": "Fixed formula, no external data updates required"
   },
+  "referenceTables": [
+    {
+      "title": "Official L1↔L2 Native Bridge Mechanics (timing & security model)",
+      "caption": "Fees vary minute to minute, but the timing and security model of each official native bridge are protocol-level facts that don't change. The big asymmetry to know: deposits (Ethereum → L2) take minutes, but withdrawals back to Ethereum on optimistic rollups take ~7 days due to the fraud-proof challenge window. Third-party 'fast' bridges skip the wait by fronting you liquidity (for a fee).",
+      "headers": ["Network", "Type", "Deposit (L1→L2)", "Withdraw to Ethereum (native)", "Why the wait"],
+      "rows": [
+        ["Arbitrum One", "Optimistic rollup", "~10–15 min", "~7 days", "Fraud-proof challenge period"],
+        ["Optimism (OP Mainnet)", "Optimistic rollup", "~1–3 min", "~7 days", "Fraud-proof challenge period"],
+        ["Base", "Optimistic rollup (OP Stack)", "~1–3 min", "~7 days", "Fraud-proof challenge period"],
+        ["Polygon PoS", "Sidechain / PoS bridge", "~10–20 min", "~30 min–3 h (checkpoint)", "Waits for PoS checkpoint to Ethereum"],
+        ["Polygon zkEVM", "ZK rollup", "~10–15 min", "~15 min–1 h", "Validity proof, no challenge window"]
+      ],
+      "note": "ZK rollups (validity proofs) avoid the 7-day wait because withdrawals are cryptographically proven rather than assumed-honest-then-challenged. To exit an optimistic rollup faster than 7 days, you use a third-party liquidity bridge (Across, Hop, etc.) that pays you now and waits out the period itself — that convenience is what the variable fee covers. Always confirm the bridge contract address from the official docs before sending. Major historical bridge hacks: Ronin ($625M, 2022), Wormhole ($325M, 2022)."
+    }
+  ],
   "relatedSlugs": [],
-  "noindex": false
+  "noindex": false,
+  "lastReviewed": "2026-06-22"
 }
