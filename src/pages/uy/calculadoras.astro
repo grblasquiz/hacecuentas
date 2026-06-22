@@ -1,0 +1,12 @@
+---
+export const prerender = true;
+import LocaleCatalog from '../../components/LocaleCatalog.astro';
+const localeModules = import.meta.glob<any>('../../content/calcs-uy/*.json', { eager: true });
+const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex);
+const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
+const audienceCalcs = Object.values(mainModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex && c.audience === 'UY');
+const all = [...localeCalcs, ...audienceCalcs];
+const calcs = all.map((c: any) => ({ h1: c.h1, slug: c.slug, icon: c.icon, category: c.category, url: localeSlugs.has(c.slug) ? `/uy/${c.slug}` : `/${c.slug}` }));
+---
+<LocaleCatalog calcs={calcs} prefix="uy" audience="UY" country="Uruguay" lang="es-UY" topics="IRPF, BPS, aguinaldo, salario líquido, IVA, despido" dataLink="/uy" dataLabel="📊 Datos laborales y cambiarios de Uruguay 2026" />

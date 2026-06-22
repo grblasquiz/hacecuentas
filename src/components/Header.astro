@@ -32,7 +32,7 @@ const isIntl = lang === 'en' || lang === 'pt';
 const intlHome = lang === 'en' ? '/en' : '/pt';
 
 // Detección de país por path para nav country-aware
-type Country = 'AR' | 'ES' | 'MX' | 'CO' | 'CL' | 'PE' | 'EC' | 'VE' | 'PY' | 'GLOBAL';
+type Country = 'AR' | 'ES' | 'MX' | 'CO' | 'CL' | 'PE' | 'EC' | 'VE' | 'PY' | 'UY' | 'DO' | 'GLOBAL';
 // Primer segmento del path (evita falsos positivos como /peso-ideal → 'pe', /como-... → 'co').
 const _seg = currentPath.split('/')[1] || '';
 let pageCountry: Country = 'AR';
@@ -44,6 +44,8 @@ else if (_seg === 'pe') pageCountry = 'PE';
 else if (_seg === 'ec') pageCountry = 'EC';
 else if (_seg === 've') pageCountry = 'VE';
 else if (_seg === 'py') pageCountry = 'PY';
+else if (_seg === 'uy') pageCountry = 'UY';
+else if (_seg === 'do') pageCountry = 'DO';
 else if (_seg === 'global') pageCountry = 'GLOBAL';
 
 // Nav items por país
@@ -120,6 +122,22 @@ const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePa
     { href: '/py/indemnizacion-despido-paraguay', label: 'Indemnización', activePath: '/py/indemnizacion-despido' },
     { href: '/py/irp-paraguay-tramos', label: 'IRP', activePath: '/py/irp-paraguay' },
     { href: '/py', label: 'Todas' },
+  ],
+  UY: [
+    { href: '/uy/salario-liquido-uruguay', label: 'Sueldo líquido', activePath: '/uy/salario-liquido' },
+    { href: '/uy/aguinaldo-uruguay', label: 'Aguinaldo', activePath: '/uy/aguinaldo' },
+    { href: '/uy/calculadora-bps-aportes', label: 'BPS', activePath: '/uy/calculadora-bps' },
+    { href: '/uy/calculadora-irpf-uruguay', label: 'IRPF', activePath: '/uy/calculadora-irpf' },
+    { href: '/uy/calculadora-despido-uruguay', label: 'Despido', activePath: '/uy/calculadora-despido' },
+    { href: '/uy', label: 'Todas' },
+  ],
+  DO: [
+    { href: '/do/salario-neto-republica-dominicana', label: 'Salario neto', activePath: '/do/salario-neto' },
+    { href: '/do/calculadora-liquidacion-republica-dominicana', label: 'Liquidación', activePath: '/do/calculadora-liquidacion' },
+    { href: '/do/calculadora-cesantia-republica-dominicana', label: 'Cesantía', activePath: '/do/calculadora-cesantia' },
+    { href: '/do/regalia-pascual-republica-dominicana', label: 'Regalía', activePath: '/do/regalia-pascual' },
+    { href: '/do/calculadora-itbis-republica-dominicana', label: 'ITBIS', activePath: '/do/calculadora-itbis' },
+    { href: '/do', label: 'Todas' },
   ],
   GLOBAL: [
     { href: '/global', label: 'Todas' },
@@ -216,6 +234,8 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
           <a href="/ec" data-country="EC" role="option"><span>🇪🇨</span> Ecuador</a>
           <a href="/ve" data-country="VE" role="option"><span>🇻🇪</span> Venezuela</a>
           <a href="/py" data-country="PY" role="option"><span>🇵🇾</span> Paraguay</a>
+          <a href="/uy" data-country="UY" role="option"><span>🇺🇾</span> Uruguay</a>
+          <a href="/do" data-country="DO" role="option"><span>🇩🇴</span> República Dominicana</a>
           <a href="/pt" data-country="BR" role="option"><span>🇧🇷</span> Brasil</a>
           <a href="/en" data-country="EN" role="option"><span>🇺🇸</span> English</a>
         </div>
@@ -309,12 +329,12 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     }
   }
 
-  const COUNTRY_FLAGS = { AR: '🇦🇷', global: '🌎', ES: '🇪🇸', MX: '🇲🇽', CO: '🇨🇴', CL: '🇨🇱', PE: '🇵🇪', EC: '🇪🇨', VE: '🇻🇪', PY: '🇵🇾', BR: '🇧🇷', EN: '🇺🇸' };
-  const COUNTRY_LABELS = { AR: 'AR', global: 'GLO', ES: 'ES', MX: 'MX', CO: 'CO', CL: 'CL', PE: 'PE', EC: 'EC', VE: 'VE', PY: 'PY', BR: 'BR', EN: 'EN' };
+  const COUNTRY_FLAGS = { AR: '🇦🇷', global: '🌎', ES: '🇪🇸', MX: '🇲🇽', CO: '🇨🇴', CL: '🇨🇱', PE: '🇵🇪', EC: '🇪🇨', VE: '🇻🇪', PY: '🇵🇾', UY: '🇺🇾', DO: '🇩🇴', BR: '🇧🇷', EN: '🇺🇸' };
+  const COUNTRY_LABELS = { AR: 'AR', global: 'GLO', ES: 'ES', MX: 'MX', CO: 'CO', CL: 'CL', PE: 'PE', EC: 'EC', VE: 'VE', PY: 'PY', UY: 'UY', DO: 'DO', BR: 'BR', EN: 'EN' };
   function currentCountry() {
     // Por SEGMENTO (no startsWith): evita que /peso-ideal→PE o /como-…→CO.
     const seg = (location.pathname.split('/')[1] || '').toLowerCase();
-    const bySeg = { en: 'EN', pt: 'BR', es: 'ES', mx: 'MX', co: 'CO', cl: 'CL', pe: 'PE', ec: 'EC', ve: 'VE', py: 'PY', global: 'global' };
+    const bySeg = { en: 'EN', pt: 'BR', es: 'ES', mx: 'MX', co: 'CO', cl: 'CL', pe: 'PE', ec: 'EC', ve: 'VE', py: 'PY', uy: 'UY', do: 'DO', global: 'global' };
     return bySeg[seg] || 'AR';
   }
   function initCountry() {

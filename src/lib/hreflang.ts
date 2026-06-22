@@ -31,6 +31,8 @@ export interface HreflangClusterMembers {
   ec?: string;
   ve?: string;
   py?: string;
+  uy?: string;
+  do?: string;
 }
 
 export interface HreflangTag {
@@ -60,6 +62,8 @@ export function buildHreflangCluster(
   const ec = strip(members.ec);
   const ve = strip(members.ve);
   const py = strip(members.py);
+  const uy = strip(members.uy);
+  const doDom = strip(members.do);
 
   const urls = {
     es: es ? `${BASE}/${es}` : undefined,
@@ -73,6 +77,8 @@ export function buildHreflangCluster(
     ec: ec ? `${BASE}/ec/${ec}` : undefined,
     ve: ve ? `${BASE}/ve/${ve}` : undefined,
     py: py ? `${BASE}/py/${py}` : undefined,
+    uy: uy ? `${BASE}/uy/${uy}` : undefined,
+    do: doDom ? `${BASE}/do/${doDom}` : undefined,
   };
 
   const memberCount = Object.values(urls).filter(Boolean).length;
@@ -95,6 +101,8 @@ export function buildHreflangCluster(
   if (urls.ec) tags.push({ lang: 'es-EC', href: urls.ec });
   if (urls.ve) tags.push({ lang: 'es-VE', href: urls.ve });
   if (urls.py) tags.push({ lang: 'es-PY', href: urls.py });
+  if (urls.uy) tags.push({ lang: 'es-UY', href: urls.uy });
+  if (urls.do) tags.push({ lang: 'es-DO', href: urls.do });
 
   const xDefault =
     urls.es ||
@@ -107,7 +115,9 @@ export function buildHreflangCluster(
     urls.pe ||
     urls.ec ||
     urls.ve ||
-    urls.py;
+    urls.py ||
+    urls.uy ||
+    urls.do;
   tags.push({ lang: 'x-default', href: xDefault! });
 
   return tags;
@@ -153,6 +163,8 @@ export const HOME_HREFLANG: HreflangTag[] = [
   { lang: 'es-EC', href: `${BASE}/ec` },
   { lang: 'es-VE', href: `${BASE}/ve` },
   { lang: 'es-PY', href: `${BASE}/py` },
+  { lang: 'es-UY', href: `${BASE}/uy` },
+  { lang: 'es-DO', href: `${BASE}/do` },
   { lang: 'en-US', href: `${BASE}/en` },
   { lang: 'en', href: `${BASE}/en` },
   { lang: 'pt-BR', href: `${BASE}/pt` },

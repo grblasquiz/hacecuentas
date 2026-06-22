@@ -64,6 +64,7 @@ import { aguinaldoMexico } from './aguinaldo-mexico';
 import { compute as compute__aguinaldo_mexico_2026_15_dias_tope_30 } from './aguinaldo-mexico-2026-15-dias-tope-30';
 import { aguinaldoMexicoNeto } from './aguinaldo-mexico-neto';
 import { aguinaldoProporcionalParaguay } from './aguinaldo-proporcional-paraguay';
+import { aguinaldoUruguay } from './aguinaldo-uruguay';
 import { ahorroAguaDuchasCortasMes } from './ahorro-agua-duchas-cortas-mes';
 import { ahorroAutoElectricoVsNaftaAnual } from './ahorro-auto-electrico-vs-nafta-anual';
 import { ahorroBiciVsAuto } from './ahorro-bici-vs-auto';
@@ -162,6 +163,7 @@ import { compute as compute__aporte_eps_pension_empleado_colombia_2026 } from '.
 import { compute as compute__aporte_fic_fomento_investigacion_cientifica_colombia } from './aporte-fic-fomento-investigacion-cientifica-colombia';
 import { compute as compute__aporte_fondo_solidaridad_pension_fsp_colombia } from './aporte-fondo-solidaridad-pension-fsp-colombia';
 import { compute as compute__aporte_iess_ecuador } from './aporte-iess-ecuador';
+import { aporteJubilatorioUruguay } from './aporte-jubilatorio-uruguay';
 import { compute as compute__aporte_mutual_empresa_chile_trabajador_tasa_base } from './aporte-mutual-empresa-chile-trabajador-tasa-base';
 import { compute as compute__aporte_mutual_empresa_comparar_ist_asociacion_chilena } from './aporte-mutual-empresa-comparar-ist-asociacion-chilena';
 import { compute as compute__aporte_previsional_solidario_aps_chile } from './aporte-previsional-solidario-aps-chile';
@@ -367,33 +369,54 @@ import { calcioDiarioEdad } from './calcio-diario-edad';
 import { calcioDiarioEdadLactanciaMenopausia } from './calcio-diario-edad-lactancia-menopausia';
 import { calcioDietaDiariaOsteoporosisMujer } from './calcio-dieta-diaria-osteoporosis-mujer';
 import { calculadoraAguinaldoParaguay } from './calculadora-aguinaldo-paraguay';
+import { calculadoraBonificacionRepublicaDominicana } from './calculadora-bonificacion-republica-dominicana';
+import { calculadoraBpsAportes } from './calculadora-bps-aportes';
 import { calculadoraBrechaDolarBcvParalelo } from './calculadora-brecha-dolar-bcv-paralelo';
+import { calculadoraCesantiaRepublicaDominicana } from './calculadora-cesantia-republica-dominicana';
 import { calculadoraCostoRealPautaExteriorImpuestosArgentina } from './calculadora-costo-real-pauta-exterior-impuestos-argentina';
 import { calculadoraCostoRealPautaExteriorImpuestosColombia } from './calculadora-costo-real-pauta-exterior-impuestos-colombia';
 import { calculadoraCostoRealPautaExteriorImpuestosMexico } from './calculadora-costo-real-pauta-exterior-impuestos-mexico';
 import { calculadoraCostoRealServicioDigitalExteriorSaasArgentina } from './calculadora-costo-real-servicio-digital-exterior-saas-argentina';
 import { calculadoraCostoVidaParaguay } from './calculadora-costo-vida-paraguay';
+import { calculadoraCostoVidaRepublicaDominicana } from './calculadora-costo-vida-republica-dominicana';
 import { calculadoraCupoGasolinaSubsidiadaVenezuela } from './calculadora-cupo-gasolina-subsidiada-venezuela';
+import { calculadoraDespidoUruguay } from './calculadora-despido-uruguay';
+import { calculadoraHorasExtraUruguay } from './calculadora-horas-extra-uruguay';
 import { calculadoraHorasExtrasParaguay } from './calculadora-horas-extras-paraguay';
+import { calculadoraHorasExtrasRepublicaDominicana } from './calculadora-horas-extras-republica-dominicana';
+import { calculadoraIassUruguay } from './calculadora-iass-uruguay';
 import { calculadoraIgtfVenezuela3 } from './calculadora-igtf-venezuela-3';
+import { calculadoraIraeUruguay } from './calculadora-irae-uruguay';
+import { calculadoraIrpfUruguay } from './calculadora-irpf-uruguay';
 import { calculadoraIslrVenezuela2026 } from './calculadora-islr-venezuela-2026';
+import { calculadoraIsrRepublicaDominicana } from './calculadora-isr-republica-dominicana';
+import { calculadoraItbisRepublicaDominicana } from './calculadora-itbis-republica-dominicana';
 import { calculadoraIvaParaguay } from './calculadora-iva-paraguay';
+import { calculadoraIvaUruguay } from './calculadora-iva-uruguay';
 import { calculadoraIvaVenezuela16 } from './calculadora-iva-venezuela-16';
+import { calculadoraJornalUruguay } from './calculadora-jornal-uruguay';
+import { diasLicenciaPorAntiguedad } from './calculadora-licencia-uruguay';
 import { calculadoraLiquidacionFinalParaguay } from './calculadora-liquidacion-final-paraguay';
 import { calculadoraLiquidacionFiniquitoVenezuela } from './calculadora-liquidacion-finiquito-venezuela';
+import { calculadoraLiquidacionRepublicaDominicana } from './calculadora-liquidacion-republica-dominicana';
 import { calcularMejorEpocaViaje } from './calculadora-mejor-epoca-viajar-destino-lluvia-huracanes';
 import { calculadoraPreavisoParaguay } from './calculadora-preaviso-paraguay';
+import { calculadoraPreavisoRepublicaDominicana } from './calculadora-preaviso-republica-dominicana';
 import { calculadoraPreavisoVenezuela } from './calculadora-preaviso-venezuela';
 import { calculadoraPrestacionesSocialesVenezuela } from './calculadora-prestaciones-sociales-venezuela';
 import { calculadoraProporcionesReceta } from './calculadora-proporciones-receta';
 import { calculadoraRemesaZelleBolivaresVenezuela } from './calculadora-remesa-zelle-bolivares-venezuela';
+import { calculadoraRemesasEstadosUnidosRepublicaDominicana } from './calculadora-remesas-estados-unidos-republica-dominicana';
 import { calculadoraRetencionIslrVenezuela } from './calculadora-retencion-islr-venezuela';
+import { calculadoraRetencionIsrSalarioRepublicaDominicana } from './calculadora-retencion-isr-salario-republica-dominicana';
 import { calculadoraSalarioIntegralVenezuela } from './calculadora-salario-integral-venezuela';
 import { calculadoraSalarioNetoParaguay } from './calculadora-salario-neto-paraguay';
 import { calculadoraSubeArgentina } from './calculadora-sube-argentina-costo-viaje-gasto-mensual';
+import { calculadoraTssAfpSfsRepublicaDominicana } from './calculadora-tss-afp-sfs-republica-dominicana';
 import { calculadoraUtilidadesAguinaldoVenezuela } from './calculadora-utilidades-aguinaldo-venezuela';
 import { calculadoraVacacionesBonoVacacionalVenezuela } from './calculadora-vacaciones-bono-vacacional-venezuela';
 import { calculadoraVacacionesParaguay } from './calculadora-vacaciones-paraguay';
+import { calculadoraVacacionesRepublicaDominicana } from './calculadora-vacaciones-republica-dominicana';
 import { calderaCondensacionPelletsVsGasAhorro } from './caldera-condensacion-pellets-vs-gas-ahorro';
 import { calderaKwM2Calefaccion } from './caldera-kw-m2-calefaccion';
 import { calderaPotenciaKwAmbienteMetros } from './caldera-potencia-kw-ambiente-metros';
@@ -877,6 +900,8 @@ import { costoEmanciparseHijoSueldoAlquiler } from './costo-emanciparse-hijo-sue
 import { compute as compute__costo_empleada_domestica_patron_mexico_2026 } from './costo-empleada-domestica-patron-mexico-2026';
 import { compute as compute__costo_empleado_patron_mexico_2026 } from './costo-empleado-patron-mexico-2026';
 import { costoEmpleadoTotalEmpresa } from './costo-empleado-total-empresa';
+import { costoEmpleadorRepublicaDominicana } from './costo-empleador-republica-dominicana';
+import { costoEmpleadorUruguay } from './costo-empleador-uruguay';
 import { costoEnvioCompraExterior } from './costo-envio-compra-exterior';
 import { costoEnvioPaquete } from './costo-envio-paquete';
 import { costoEnvioPesoDestino } from './costo-envio-peso-destino';
@@ -1166,6 +1191,7 @@ import { deudaAvalanchaVsBolaNieve } from './deuda-avalancha-vs-bola-nieve';
 import { deudaBolaNieve } from './deuda-bola-nieve';
 import { compute as compute__deuda_mes_tarjeta_credito_colombia_pago_tope } from './deuda-mes-tarjeta-credito-colombia-pago-tope';
 import { deudaTarjetaPagoMinimoMeses } from './deuda-tarjeta-pago-minimo-meses';
+import { devolucionFonasaUruguay } from './devolucion-fonasa-uruguay';
 import { devolucionIsrAnualMexico } from './devolucion-isr-anual-mexico';
 import { diaNacimientoSemana } from './dia-nacimiento-semana';
 import { diametroCaneria } from './diametro-caneria';
@@ -1236,6 +1262,8 @@ import { dolarBcvParaleloBolivaresHoy } from './dolar-bcv-paralelo-bolivares-hoy
 import { dolarBlueVsOficialBrecha } from './dolar-blue-vs-oficial-brecha';
 import { dolarBolsaVsCriptoArbitrajeSpreadReal } from './dolar-bolsa-vs-cripto-arbitraje-spread-real';
 import { dolarHoyParaguay } from './dolar-hoy-paraguay';
+import { dolarHoyRepublicaDominicana } from './dolar-hoy-republica-dominicana';
+import { dolarHoyUruguay } from './dolar-hoy-uruguay';
 import { dolarMepCocosIolComisionReal } from './dolar-mep-cocos-iol-comision-real';
 import { dolarMepPasoAPasoCostoOperacion } from './dolar-mep-paso-a-paso-costo-operacion';
 import { dolarRealIofCartao } from './dolar-real-iof-cartao';
@@ -1964,6 +1992,7 @@ import { irpfDeducaoPgbl } from './irpf-deducao-pgbl';
 import { irpfDeducaoSaude } from './irpf-deducao-saude';
 import { irpfMadrid2026 } from './irpf-madrid-2026';
 import { irpfRestituicaoPagar } from './irpf-restituicao-pagar';
+import { irpfServiciosPersonalesUruguay } from './irpf-servicios-personales-uruguay';
 import { irrfMensalFolha } from './irrf-mensal-folha';
 import { compute as compute__isapre_cotizacion_chile_7_porcentaje_plan } from './isapre-cotizacion-chile-7-porcentaje-plan';
 import { isnImpuestoNominasMexico } from './isn-impuesto-nominas-mexico';
@@ -2110,6 +2139,7 @@ import { compute as compute__liquidacion_beneficios_sociales_peru } from './liqu
 import { compute as compute__liquidacion_despido_mexico_3_meses_12_dias } from './liquidacion-despido-mexico-3-meses-12-dias';
 import { liquidacionFinalEmpleadaCasaParticular } from './liquidacion-final-empleada-casa-particular';
 import { liquidacionFinalRenuncia } from './liquidacion-final-renuncia';
+import { liquidacionFinalUruguay } from './liquidacion-final-uruguay';
 import { compute as compute__liquidacion_haberes_finiquito_ecuador } from './liquidacion-haberes-finiquito-ecuador';
 import { compute as compute__liquidacion_laboral_colombia_completa_cesantias } from './liquidacion-laboral-colombia-completa-cesantias';
 import { litrosGalones } from './litros-galones';
@@ -2876,6 +2906,8 @@ import { compute as compute__reembolso_iva_turista_extranjero_tax_free_uruguay_c
 import { refinanciarPrestamoAhorro } from './refinanciar-prestamo-ahorro';
 import { compute as compute__reforma_pensional_colombia_2025_pilares_ahorro } from './reforma-pensional-colombia-2025-pilares-ahorro';
 import { refractometroCervezaCorreccion } from './refractometro-cerveza-correccion';
+import { regaliaPascualProporcionalRepublicaDominicana } from './regalia-pascual-proporcional-republica-dominicana';
+import { regaliaPascualRepublicaDominicana } from './regalia-pascual-republica-dominicana';
 import { regaliasSpotifyPais } from './regalias-spotify-pais';
 import { regaloBodaApropiadoInvitado } from './regalo-boda-apropiado-invitado';
 import { regaloIdealPresupuesto } from './regalo-ideal-presupuesto';
@@ -3039,12 +3071,15 @@ import { compute as compute__salario_integral_colombia_2026 } from './salario-in
 import { salarioLiquidoCltInssIrrf } from './salario-liquido-clt-inss-irrf';
 import { salarioLiquidoDependentes } from './salario-liquido-dependentes';
 import { salarioLiquidoPensao } from './salario-liquido-pensao';
+import { salarioLiquidoUruguay } from './salario-liquido-uruguay';
 import { salarioMaternidadeInss } from './salario-maternidade-inss';
 import { salarioMinimo } from './salario-minimo';
 import { salarioMinimo2026Comparativa } from './salario-minimo-2026-comparativa';
 import { compute as compute__salario_minimo_colombia_2026_auxilio_transporte } from './salario-minimo-colombia-2026-auxilio-transporte';
 import { salarioMinimoParaguay2026 } from './salario-minimo-paraguay-2026';
+import { salarioNetoRepublicaDominicana } from './salario-neto-republica-dominicana';
 import { salarioRealInflacion } from './salario-real-inflacion';
+import { salarioVacacionalUruguay } from './salario-vacacional-uruguay';
 import { compute as compute__saldo_afp_rentabilidad_multifondos_chile_2026 } from './saldo-afp-rentabilidad-multifondos-chile-2026';
 import { saldoCriptoValorMonedaLocalMulti } from './saldo-cripto-valor-moneda-local-multi';
 import { saldoSalarioRescisao } from './saldo-salario-rescisao';
@@ -3167,11 +3202,13 @@ import { sucesionesCostoTotalArgentinaAbogado } from './sucesiones-costo-total-a
 import { sueldoAbogadoRelacionDependenciaEstudio } from './sueldo-abogado-relacion-dependencia-estudio';
 import { sueldoActualizadoInflacion } from './sueldo-actualizado-inflacion';
 import { sueldoAeronauticoPilotoAzafataTripulante } from './sueldo-aeronautico-piloto-azafata-tripulante';
+import { sueldoAnualRepublicaDominicana } from './sueldo-anual-republica-dominicana';
 import { sueldoAR } from './sueldo-ar';
 import { sueldoAutonomoNeto } from './sueldo-autonomo-neto';
 import { sueldoBancarioBcoNacionProvincia } from './sueldo-bancario-bco-nacion-provincia';
 import { compute as compute__sueldo_bruto_a_neto_ecuador } from './sueldo-bruto-a-neto-ecuador';
 import { compute as compute__sueldo_bruto_a_neto_peru } from './sueldo-bruto-a-neto-peru';
+import { sueldoBrutoANetoRepublicaDominicana } from './sueldo-bruto-a-neto-republica-dominicana';
 import { sueldoBrutoDesdeNeto } from './sueldo-bruto-desde-neto';
 import { sueldoBrutoDesdeNetoMexico2026 } from './sueldo-bruto-desde-neto-mexico-2026';
 import { sueldoCamioneroFedcamBasicoAdicionales } from './sueldo-camionero-fedcam-basico-adicionales';
@@ -3200,6 +3237,7 @@ import { sueldoNetoColombia } from './sueldo-neto-colombia';
 import { compute as compute__sueldo_neto_ecuador } from './sueldo-neto-ecuador';
 import { sueldoNetoMexico } from './sueldo-neto-mexico';
 import { compute as compute__sueldo_neto_peru } from './sueldo-neto-peru';
+import { sueldoNominalALiquidoUruguay } from './sueldo-nominal-a-liquido-uruguay';
 import { sueldoPanaderoBasicoFeriadoNocturno } from './sueldo-panadero-basico-feriado-nocturno';
 import { sueldoPoliciaFederalGradoAntiguedad } from './sueldo-policia-federal-grado-antiguedad';
 import { sueldoPorHora } from './sueldo-por-hora';
@@ -3438,6 +3476,7 @@ import { compute as compute__uf_uta_utm_chile_conversion_pesos_2026 } from './uf
 import { ugcTarifaContenidoMarca } from './ugc-tarifa-contenido-marca';
 import { umaConversion } from './uma-conversion';
 import { umbralLactatoEstimado } from './umbral-lactato-estimado';
+import { unidadIndexadaAPesosUruguay } from './unidad-indexada-a-pesos-uruguay';
 import { compute as compute__uniswap_v3_concentrated_liquidity_rango_impermanent } from './uniswap-v3-concentrated-liquidity-rango-impermanent';
 import { uniswapV3Fees } from './uniswap-v3-fees';
 import { unitConverter } from './unit-converter';
@@ -3685,6 +3724,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aguinaldo-mexico-2026-15-dias-tope-30': compute__aguinaldo_mexico_2026_15_dias_tope_30,
   'aguinaldo-mexico-neto': aguinaldoMexicoNeto,
   'aguinaldo-proporcional-paraguay': aguinaldoProporcionalParaguay,
+  'aguinaldo-uruguay': aguinaldoUruguay,
   'ahorro-agua-duchas-cortas-mes': ahorroAguaDuchasCortasMes,
   'ahorro-auto-electrico-vs-nafta-anual': ahorroAutoElectricoVsNaftaAnual,
   'ahorro-bici-vs-auto': ahorroBiciVsAuto,
@@ -3783,6 +3823,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aporte-fic-fomento-investigacion-cientifica-colombia': compute__aporte_fic_fomento_investigacion_cientifica_colombia,
   'aporte-fondo-solidaridad-pension-fsp-colombia': compute__aporte_fondo_solidaridad_pension_fsp_colombia,
   'aporte-iess-ecuador': compute__aporte_iess_ecuador,
+  'aporte-jubilatorio-uruguay': aporteJubilatorioUruguay,
   'aporte-mutual-empresa-chile-trabajador-tasa-base': compute__aporte_mutual_empresa_chile_trabajador_tasa_base,
   'aporte-mutual-empresa-comparar-ist-asociacion-chilena': compute__aporte_mutual_empresa_comparar_ist_asociacion_chilena,
   'aporte-previsional-solidario-aps-chile': compute__aporte_previsional_solidario_aps_chile,
@@ -3988,33 +4029,54 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calcio-diario-edad-lactancia-menopausia': calcioDiarioEdadLactanciaMenopausia,
   'calcio-dieta-diaria-osteoporosis-mujer': calcioDietaDiariaOsteoporosisMujer,
   'calculadora-aguinaldo-paraguay': calculadoraAguinaldoParaguay,
+  'calculadora-bonificacion-republica-dominicana': calculadoraBonificacionRepublicaDominicana,
+  'calculadora-bps-aportes': calculadoraBpsAportes,
   'calculadora-brecha-dolar-bcv-paralelo': calculadoraBrechaDolarBcvParalelo,
+  'calculadora-cesantia-republica-dominicana': calculadoraCesantiaRepublicaDominicana,
   'calculadora-costo-real-pauta-exterior-impuestos-argentina': calculadoraCostoRealPautaExteriorImpuestosArgentina,
   'calculadora-costo-real-pauta-exterior-impuestos-colombia': calculadoraCostoRealPautaExteriorImpuestosColombia,
   'calculadora-costo-real-pauta-exterior-impuestos-mexico': calculadoraCostoRealPautaExteriorImpuestosMexico,
   'calculadora-costo-real-servicio-digital-exterior-saas-argentina': calculadoraCostoRealServicioDigitalExteriorSaasArgentina,
   'calculadora-costo-vida-paraguay': calculadoraCostoVidaParaguay,
+  'calculadora-costo-vida-republica-dominicana': calculadoraCostoVidaRepublicaDominicana,
   'calculadora-cupo-gasolina-subsidiada-venezuela': calculadoraCupoGasolinaSubsidiadaVenezuela,
+  'calculadora-despido-uruguay': calculadoraDespidoUruguay,
+  'calculadora-horas-extra-uruguay': calculadoraHorasExtraUruguay,
   'calculadora-horas-extras-paraguay': calculadoraHorasExtrasParaguay,
+  'calculadora-horas-extras-republica-dominicana': calculadoraHorasExtrasRepublicaDominicana,
+  'calculadora-iass-uruguay': calculadoraIassUruguay,
   'calculadora-igtf-venezuela-3': calculadoraIgtfVenezuela3,
+  'calculadora-irae-uruguay': calculadoraIraeUruguay,
+  'calculadora-irpf-uruguay': calculadoraIrpfUruguay,
   'calculadora-islr-venezuela-2026': calculadoraIslrVenezuela2026,
+  'calculadora-isr-republica-dominicana': calculadoraIsrRepublicaDominicana,
+  'calculadora-itbis-republica-dominicana': calculadoraItbisRepublicaDominicana,
   'calculadora-iva-paraguay': calculadoraIvaParaguay,
+  'calculadora-iva-uruguay': calculadoraIvaUruguay,
   'calculadora-iva-venezuela-16': calculadoraIvaVenezuela16,
+  'calculadora-jornal-uruguay': calculadoraJornalUruguay,
+  'calculadora-licencia-uruguay': diasLicenciaPorAntiguedad,
   'calculadora-liquidacion-final-paraguay': calculadoraLiquidacionFinalParaguay,
   'calculadora-liquidacion-finiquito-venezuela': calculadoraLiquidacionFiniquitoVenezuela,
+  'calculadora-liquidacion-republica-dominicana': calculadoraLiquidacionRepublicaDominicana,
   'calculadora-mejor-epoca-viajar-destino-lluvia-huracanes': calcularMejorEpocaViaje,
   'calculadora-preaviso-paraguay': calculadoraPreavisoParaguay,
+  'calculadora-preaviso-republica-dominicana': calculadoraPreavisoRepublicaDominicana,
   'calculadora-preaviso-venezuela': calculadoraPreavisoVenezuela,
   'calculadora-prestaciones-sociales-venezuela': calculadoraPrestacionesSocialesVenezuela,
   'calculadora-proporciones-receta': calculadoraProporcionesReceta,
   'calculadora-remesa-zelle-bolivares-venezuela': calculadoraRemesaZelleBolivaresVenezuela,
+  'calculadora-remesas-estados-unidos-republica-dominicana': calculadoraRemesasEstadosUnidosRepublicaDominicana,
   'calculadora-retencion-islr-venezuela': calculadoraRetencionIslrVenezuela,
+  'calculadora-retencion-isr-salario-republica-dominicana': calculadoraRetencionIsrSalarioRepublicaDominicana,
   'calculadora-salario-integral-venezuela': calculadoraSalarioIntegralVenezuela,
   'calculadora-salario-neto-paraguay': calculadoraSalarioNetoParaguay,
   'calculadora-sube-argentina-costo-viaje-gasto-mensual': calculadoraSubeArgentina,
+  'calculadora-tss-afp-sfs-republica-dominicana': calculadoraTssAfpSfsRepublicaDominicana,
   'calculadora-utilidades-aguinaldo-venezuela': calculadoraUtilidadesAguinaldoVenezuela,
   'calculadora-vacaciones-bono-vacacional-venezuela': calculadoraVacacionesBonoVacacionalVenezuela,
   'calculadora-vacaciones-paraguay': calculadoraVacacionesParaguay,
+  'calculadora-vacaciones-republica-dominicana': calculadoraVacacionesRepublicaDominicana,
   'caldera-condensacion-pellets-vs-gas-ahorro': calderaCondensacionPelletsVsGasAhorro,
   'caldera-kw-m2-calefaccion': calderaKwM2Calefaccion,
   'caldera-potencia-kw-ambiente-metros': calderaPotenciaKwAmbienteMetros,
@@ -4498,6 +4560,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-empleada-domestica-patron-mexico-2026': compute__costo_empleada_domestica_patron_mexico_2026,
   'costo-empleado-patron-mexico-2026': compute__costo_empleado_patron_mexico_2026,
   'costo-empleado-total-empresa': costoEmpleadoTotalEmpresa,
+  'costo-empleador-republica-dominicana': costoEmpleadorRepublicaDominicana,
+  'costo-empleador-uruguay': costoEmpleadorUruguay,
   'costo-envio-compra-exterior': costoEnvioCompraExterior,
   'costo-envio-paquete': costoEnvioPaquete,
   'costo-envio-peso-destino': costoEnvioPesoDestino,
@@ -4787,6 +4851,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'deuda-bola-nieve': deudaBolaNieve,
   'deuda-mes-tarjeta-credito-colombia-pago-tope': compute__deuda_mes_tarjeta_credito_colombia_pago_tope,
   'deuda-tarjeta-pago-minimo-meses': deudaTarjetaPagoMinimoMeses,
+  'devolucion-fonasa-uruguay': devolucionFonasaUruguay,
   'devolucion-isr-anual-mexico': devolucionIsrAnualMexico,
   'dia-nacimiento-semana': diaNacimientoSemana,
   'diametro-caneria': diametroCaneria,
@@ -4857,6 +4922,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'dolar-blue-vs-oficial-brecha': dolarBlueVsOficialBrecha,
   'dolar-bolsa-vs-cripto-arbitraje-spread-real': dolarBolsaVsCriptoArbitrajeSpreadReal,
   'dolar-hoy-paraguay': dolarHoyParaguay,
+  'dolar-hoy-republica-dominicana': dolarHoyRepublicaDominicana,
+  'dolar-hoy-uruguay': dolarHoyUruguay,
   'dolar-mep-cocos-iol-comision-real': dolarMepCocosIolComisionReal,
   'dolar-mep-paso-a-paso-costo-operacion': dolarMepPasoAPasoCostoOperacion,
   'dolar-real-iof-cartao': dolarRealIofCartao,
@@ -5585,6 +5652,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'irpf-deducao-saude': irpfDeducaoSaude,
   'irpf-madrid-2026': irpfMadrid2026,
   'irpf-restituicao-pagar': irpfRestituicaoPagar,
+  'irpf-servicios-personales-uruguay': irpfServiciosPersonalesUruguay,
   'irrf-mensal-folha': irrfMensalFolha,
   'isapre-cotizacion-chile-7-porcentaje-plan': compute__isapre_cotizacion_chile_7_porcentaje_plan,
   'isn-impuesto-nominas-mexico': isnImpuestoNominasMexico,
@@ -5731,6 +5799,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'liquidacion-despido-mexico-3-meses-12-dias': compute__liquidacion_despido_mexico_3_meses_12_dias,
   'liquidacion-final-empleada-casa-particular': liquidacionFinalEmpleadaCasaParticular,
   'liquidacion-final-renuncia': liquidacionFinalRenuncia,
+  'liquidacion-final-uruguay': liquidacionFinalUruguay,
   'liquidacion-haberes-finiquito-ecuador': compute__liquidacion_haberes_finiquito_ecuador,
   'liquidacion-laboral-colombia-completa-cesantias': compute__liquidacion_laboral_colombia_completa_cesantias,
   'litros-galones': litrosGalones,
@@ -6497,6 +6566,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'refinanciar-prestamo-ahorro': refinanciarPrestamoAhorro,
   'reforma-pensional-colombia-2025-pilares-ahorro': compute__reforma_pensional_colombia_2025_pilares_ahorro,
   'refractometro-cerveza-correccion': refractometroCervezaCorreccion,
+  'regalia-pascual-proporcional-republica-dominicana': regaliaPascualProporcionalRepublicaDominicana,
+  'regalia-pascual-republica-dominicana': regaliaPascualRepublicaDominicana,
   'regalias-spotify-pais': regaliasSpotifyPais,
   'regalo-boda-apropiado-invitado': regaloBodaApropiadoInvitado,
   'regalo-ideal-presupuesto': regaloIdealPresupuesto,
@@ -6660,12 +6731,15 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'salario-liquido-clt-inss-irrf': salarioLiquidoCltInssIrrf,
   'salario-liquido-dependentes': salarioLiquidoDependentes,
   'salario-liquido-pensao': salarioLiquidoPensao,
+  'salario-liquido-uruguay': salarioLiquidoUruguay,
   'salario-maternidade-inss': salarioMaternidadeInss,
   'salario-minimo': salarioMinimo,
   'salario-minimo-2026-comparativa': salarioMinimo2026Comparativa,
   'salario-minimo-colombia-2026-auxilio-transporte': compute__salario_minimo_colombia_2026_auxilio_transporte,
   'salario-minimo-paraguay-2026': salarioMinimoParaguay2026,
+  'salario-neto-republica-dominicana': salarioNetoRepublicaDominicana,
   'salario-real-inflacion': salarioRealInflacion,
+  'salario-vacacional-uruguay': salarioVacacionalUruguay,
   'saldo-afp-rentabilidad-multifondos-chile-2026': compute__saldo_afp_rentabilidad_multifondos_chile_2026,
   'saldo-cripto-valor-moneda-local-multi': saldoCriptoValorMonedaLocalMulti,
   'saldo-salario-rescisao': saldoSalarioRescisao,
@@ -6788,11 +6862,13 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueldo-abogado-relacion-dependencia-estudio': sueldoAbogadoRelacionDependenciaEstudio,
   'sueldo-actualizado-inflacion': sueldoActualizadoInflacion,
   'sueldo-aeronautico-piloto-azafata-tripulante': sueldoAeronauticoPilotoAzafataTripulante,
+  'sueldo-anual-republica-dominicana': sueldoAnualRepublicaDominicana,
   'sueldo-ar': sueldoAR,
   'sueldo-autonomo-neto': sueldoAutonomoNeto,
   'sueldo-bancario-bco-nacion-provincia': sueldoBancarioBcoNacionProvincia,
   'sueldo-bruto-a-neto-ecuador': compute__sueldo_bruto_a_neto_ecuador,
   'sueldo-bruto-a-neto-peru': compute__sueldo_bruto_a_neto_peru,
+  'sueldo-bruto-a-neto-republica-dominicana': sueldoBrutoANetoRepublicaDominicana,
   'sueldo-bruto-desde-neto': sueldoBrutoDesdeNeto,
   'sueldo-bruto-desde-neto-mexico-2026': sueldoBrutoDesdeNetoMexico2026,
   'sueldo-camionero-fedcam-basico-adicionales': sueldoCamioneroFedcamBasicoAdicionales,
@@ -6821,6 +6897,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueldo-neto-ecuador': compute__sueldo_neto_ecuador,
   'sueldo-neto-mexico': sueldoNetoMexico,
   'sueldo-neto-peru': compute__sueldo_neto_peru,
+  'sueldo-nominal-a-liquido-uruguay': sueldoNominalALiquidoUruguay,
   'sueldo-panadero-basico-feriado-nocturno': sueldoPanaderoBasicoFeriadoNocturno,
   'sueldo-policia-federal-grado-antiguedad': sueldoPoliciaFederalGradoAntiguedad,
   'sueldo-por-hora': sueldoPorHora,
@@ -7059,6 +7136,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ugc-tarifa-contenido-marca': ugcTarifaContenidoMarca,
   'uma-conversion': umaConversion,
   'umbral-lactato-estimado': umbralLactatoEstimado,
+  'unidad-indexada-a-pesos-uruguay': unidadIndexadaAPesosUruguay,
   'uniswap-v3-concentrated-liquidity-rango-impermanent': compute__uniswap_v3_concentrated_liquidity_rango_impermanent,
   'uniswap-v3-fees': uniswapV3Fees,
   'unit-converter': unitConverter,

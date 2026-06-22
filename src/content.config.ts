@@ -43,7 +43,7 @@ const audience = z.enum([
   'AR', 'ar',
   'BR', 'br',
   'MX', 'ES', 'CO', 'CL', 'BO', 'PE', 'EC', 'US', 'EN', 'PT',
-  'VE', 'PY',
+  'VE', 'PY', 'UY', 'DO',
   'global',
 ]);
 
@@ -134,6 +134,8 @@ export const collections = {
   'calcs-ec': makeCalcCollection('calcs-ec'),
   'calcs-ve': makeCalcCollection('calcs-ve'),
   'calcs-py': makeCalcCollection('calcs-py'),
+  'calcs-uy': makeCalcCollection('calcs-uy'),
+  'calcs-do': makeCalcCollection('calcs-do'),
   'calcs-pt': makeCalcCollection('calcs-pt'),
   'calcs-en': makeCalcCollection('calcs-en'),
 };

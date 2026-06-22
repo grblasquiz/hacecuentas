@@ -22,6 +22,8 @@ const peGlob = import.meta.glob('../content/calcs-pe/*.json');
 const ecGlob = import.meta.glob('../content/calcs-ec/*.json');
 const veGlob = import.meta.glob('../content/calcs-ve/*.json');
 const pyGlob = import.meta.glob('../content/calcs-py/*.json');
+const uyGlob = import.meta.glob('../content/calcs-uy/*.json');
+const doGlob = import.meta.glob('../content/calcs-do/*.json');
 
 const AR = Object.keys(arGlob).length;
 const EN = Object.keys(enGlob).length;
@@ -34,6 +36,8 @@ const PE = Object.keys(peGlob).length;
 const EC = Object.keys(ecGlob).length;
 const VE = Object.keys(veGlob).length;
 const PY = Object.keys(pyGlob).length;
+const UY = Object.keys(uyGlob).length;
+const DO = Object.keys(doGlob).length;
 
 export const CALC_COUNTS = {
   ar: AR,
@@ -47,7 +51,9 @@ export const CALC_COUNTS = {
   ec: EC,
   ve: VE,
   py: PY,
-  total: AR + EN + PT + MX + ES + CO + CL + PE + EC + VE + PY,
+  uy: UY,
+  do: DO,
+  total: AR + EN + PT + MX + ES + CO + CL + PE + EC + VE + PY + UY + DO,
 } as const;
 
 function floorTo100(n: number): number {

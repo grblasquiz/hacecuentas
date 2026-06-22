@@ -42,6 +42,8 @@ const CALCS_PE_DIR = join(ROOT, 'src', 'content', 'calcs-pe');
 const CALCS_EC_DIR = join(ROOT, 'src', 'content', 'calcs-ec');
 const CALCS_VE_DIR = join(ROOT, 'src', 'content', 'calcs-ve');
 const CALCS_PY_DIR = join(ROOT, 'src', 'content', 'calcs-py');
+const CALCS_UY_DIR = join(ROOT, 'src', 'content', 'calcs-uy');
+const CALCS_DO_DIR = join(ROOT, 'src', 'content', 'calcs-do');
 const BLOG_DIR = join(ROOT, 'src', 'content', 'blog');
 const TABLAS_DIR = join(ROOT, 'src', 'content', 'tablas');
 const COMPARACIONES_DIR = join(ROOT, 'src', 'content', 'comparaciones');
@@ -448,6 +450,8 @@ const calcsPe = readJSONs(CALCS_PE_DIR, 'pe');
 const calcsEc = readJSONs(CALCS_EC_DIR, 'ec');
 const calcsVe = readJSONs(CALCS_VE_DIR, 've');
 const calcsPy = readJSONs(CALCS_PY_DIR, 'py');
+const calcsUy = readJSONs(CALCS_UY_DIR, 'uy');
+const calcsDo = readJSONs(CALCS_DO_DIR, 'do');
 const blogPosts = readJSONs(BLOG_DIR);
 const blogPostsPt = readJSONs(join(ROOT, 'src', 'content', 'blog-pt'));
 const tablas = readJSONs(TABLAS_DIR);
@@ -780,6 +784,8 @@ sitemaps.push({
     core('/ec/calculadoras',                     '0.85', 'weekly',  true),
     core('/ve/calculadoras',                     '0.85', 'weekly',  true),
     core('/py/calculadoras',                     '0.85', 'weekly',  true),
+    core('/uy/calculadoras',                     '0.85', 'weekly',  true),
+    core('/do/calculadoras',                     '0.85', 'weekly',  true),
     core('/mx',                                  '0.85', 'weekly',  true),
     core('/co',                                  '0.8',  'weekly'),
     core('/cl',                                  '0.8',  'weekly'),
@@ -922,6 +928,8 @@ if (calcsPe.length > 0) sitemaps.push(sitemapForLocale(calcsPe, 'pe', CALCS_PE_D
 if (calcsEc.length > 0) sitemaps.push(sitemapForLocale(calcsEc, 'ec', CALCS_EC_DIR, true));
 if (calcsVe.length > 0) sitemaps.push(sitemapForLocale(calcsVe, 've', CALCS_VE_DIR, true));
 if (calcsPy.length > 0) sitemaps.push(sitemapForLocale(calcsPy, 'py', CALCS_PY_DIR, true));
+if (calcsUy.length > 0) sitemaps.push(sitemapForLocale(calcsUy, 'uy', CALCS_UY_DIR, true));
+if (calcsDo.length > 0) sitemaps.push(sitemapForLocale(calcsDo, 'do', CALCS_DO_DIR, true));
 
 // 4. Blog
 if (blogPosts.length > 0) {
@@ -1200,7 +1208,7 @@ function pushImageEntries(loc: string, c: any) {
 for (const c of calcs) pushImageEntries(`${site}/${c.slug}`, c);
 // Calcs por locale: el loop AR de arriba solo cubre src/content/calcs; las verticales
 // (/es, /mx, …) van acá — ahora también con su OG card, no solo la infografía.
-for (const [loc, list] of [['es', calcsEs], ['mx', calcsMx], ['cl', calcsCl], ['co', calcsCo], ['pe', calcsPe], ['ec', calcsEc], ['ve', calcsVe], ['py', calcsPy], ['en', calcsEn], ['pt', calcsPt]] as const) {
+for (const [loc, list] of [['es', calcsEs], ['mx', calcsMx], ['cl', calcsCl], ['co', calcsCo], ['pe', calcsPe], ['ec', calcsEc], ['ve', calcsVe], ['py', calcsPy], ['uy', calcsUy], ['do', calcsDo], ['en', calcsEn], ['pt', calcsPt]] as const) {
   for (const c of list as any[]) pushImageEntries(`${site}/${loc}/${c.slug}`, c);
 }
 if (imageEntries.length > 0) {
