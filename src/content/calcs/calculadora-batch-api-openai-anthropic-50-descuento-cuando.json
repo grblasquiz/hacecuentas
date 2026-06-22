@@ -168,7 +168,7 @@
       "format": "text"
     }
   ],
-  "explanation": "## Cómo se calcula\n\nEl costo de la API de LLMs se factura por **millón de tokens** (MTok), separando tokens de entrada (*input*) y de salida (*output*). La Batch API aplica exactamente un **50% de descuento** sobre las tarifas estándar publicadas por OpenAI y Anthropic, a cambio de procesar las solicitudes de forma asíncrona con una ventana de hasta **24 horas**.\n\n### Fórmula\n\n```\ncosto_realtime = (input_MTok × precio_input) + (output_MTok × precio_output)\ncosto_batch    = costo_realtime × 0.50\nahorro         = costo_realtime − costo_batch\nahorro_pct     = (ahorro / costo_realtime) × 100\n```\n\n### Precios de referencia 2026 (USD por millón de tokens)\n\n| Modelo | Input RT | Output RT | Input Batch | Output Batch |\n|---|---|---|---|---|\n| GPT-4o | 2.50 | 10.00 | 1.25 | 5.00 |\n| GPT-4o mini | 0.15 | 0.60 | 0.075 | 0.30 |\n| o3-mini | 1.10 | 4.40 | 0.55 | 2.20 |\n| Claude 3.5 Sonnet | 3.00 | 15.00 | 1.50 | 7.50 |\n| Claude 3 Haiku | 0.25 | 1.25 | 0.125 | 0.625 |\n| Claude 3.5 Haiku | 0.80 | 4.00 | 0.40 | 2.00 |\n\n### Ejemplo numérico\n\nPipeline de clasificación mensual con GPT-4o mini: 50 M tokens input + 5 M tokens output.\n\n```\ncosto_realtime = (50 × 0.15) + (5 × 0.60) = 7.50 + 3.00 = USD 10.50\ncosto_batch    = 10.50 × 0.50 = USD 5.25\nahorro         = USD 5.25 (50% exacto)\n```\n\n### Volumen mínimo recomendado\n\nBoth OpenAI y Anthropic requieren que cada lote (*batch*) contenga al menos **1 solicitud** pero en la práctica el overhead de gestión de archivos JSONL y la espera de 24 h solo se justifica con **≥ 100 solicitudes/día** o cuando el ahorro mensual supera **USD 5**. Por debajo de ese umbral, la complejidad operativa no justifica la migración.\n\n### Cuándo NO aplica\n\n- Aplicaciones interactivas con usuarios esperando respuesta (chatbots, copilots).\n- Pipelines que necesitan resultado en < 1 minuto.\n- Flujos con dependencias encadenadas donde cada paso necesita la salida del anterior en tiempo real.\n- Modelos con capacidades de streaming que se aprovechan solo en real-time (e.g., tool use con latencia crítica).\n\n**Fuentes:** Páginas de pricing oficiales de OpenAI y Anthropic, documentación de Batch API (2026).",
+  "explanation": "## Cómo se calcula\n\nEl costo de la API de LLMs se factura por **millón de tokens** (MTok), separando tokens de entrada (*input*) y de salida (*output*). La Batch API aplica exactamente un **50% de descuento** sobre las tarifas estándar publicadas por OpenAI y Anthropic, a cambio de procesar las solicitudes de forma asíncrona con una ventana de hasta **24 horas**.\n\n### Fórmula\n\n```\ncosto_realtime = (input_MTok × precio_input) + (output_MTok × precio_output)\ncosto_batch    = costo_realtime × 0.50\nahorro         = costo_realtime − costo_batch\nahorro_pct     = (ahorro / costo_realtime) × 100\n```\n\n### Precios de referencia 2026 (USD por millón de tokens)\n\n| Modelo | Input RT | Output RT | Input Batch | Output Batch |\n|---|---|---|---|---|\n| GPT-4o | 2.50 | 10.00 | 1.25 | 5.00 |\n| GPT-4o mini | 0.15 | 0.60 | 0.075 | 0.30 |\n| o3-mini | 1.10 | 4.40 | 0.55 | 2.20 |\n| Claude 3.5 Sonnet | 3.00 | 15.00 | 1.50 | 7.50 |\n| Claude 3 Haiku | 0.25 | 1.25 | 0.125 | 0.625 |\n| Claude 3.5 Haiku | 0.80 | 4.00 | 0.40 | 2.00 |\n\n> **Verificá siempre los precios vigentes** en [platform.openai.com/docs/guides/batch](https://platform.openai.com/docs/guides/batch) y [docs.anthropic.com/en/docs/build-with-claude/message-batches](https://docs.anthropic.com/en/docs/build-with-claude/message-batches), ya que OpenAI y Anthropic actualizan tarifas sin previo aviso.\n\n---\n\n### Ejemplo numérico\n\nPipeline de clasificación mensual con GPT-4o mini: 50 M tokens input + 5 M tokens output.\n\n```\ncosto_realtime = (50 × 0.15) + (5 × 0.60) = 7.50 + 3.00 = USD 10.50\ncosto_batch    = 10.50 × 0.50 = USD 5.25\nahorro         = USD 5.25 (50% exacto)\n```\n\n---\n\n### Cuándo conviene realmente usar Batch API\n\nEl descuento es fijo e independiente del volumen, pero **la ventaja real aparece con casos de uso tolerantes a la latencia**. Los escenarios donde el ahorro justifica el cambio operativo son:\n\n- **Enriquecimiento masivo de datos**: categorización, extracción de entidades o resumen de miles de registros que no necesitan respuesta inmediata.\n- **Evaluaciones y benchmarks**: correr conjuntos de test sobre modelos de forma periódica (diaria, semanal).\n- **Generación de embeddings o fine-tuning data**: preparar datasets grandes donde el tiempo de respuesta no importa.\n- **Reportes nocturnos o pipelines ETL**: procesos que se lanzan fuera del horario crítico.\n\nEl descuento **no conviene** cuando el usuario espera la respuesta en tiempo real, cuando el SLA del producto exige latencia baja, o cuando el volumen es tan pequeño que la diferencia absoluta en dólares no justifica el overhead de implementación.\n\n---\n\n### Restricciones técnicas que afectan el cálculo real\n\n- **Límite de tamaño por lote**: OpenAI acepta archivos JSONL de hasta **100 MB** y un máximo de **50 000 solicitudes por lote**. Anthropic permite hasta **100 000 solicitudes** por lote con límites similares de tamaño. Lotes que superen estos límites deben dividirse, lo que agrega complejidad operativa.\n- **Ventana de 24 horas**: es el tiempo *máximo*. En la práctica, los lotes suelen completarse en 1–6 horas según la carga del sistema, pero no existe SLA garantizado de tiempo mínimo.\n- **Modelos disponibles**: no todos los modelos soportan Batch API. GPT-4 Turbo, o1 y versiones legacy de Claude pueden tener disponibilidad limitada o nula en el modo batch. Verificar la documentación oficial antes de diseñar el pipeline.\n- **Formato obligatorio JSONL**: cada solicitud debe ser un objeto JSON independiente por línea, con un `custom_id` único. Errores de formato invalidan solicitudes individuales sin cancelar el lote completo.\n\n---\n\n### Qué NO incluye este descuento\n\n- **Llamadas a herramientas (*function calling* / *tool use*)**: los tokens consumidos por las definiciones de herramientas se facturan como input tokens estándar y el descuento aplica sobre ellos, pero el costo adicional de esquemas complejos puede reducir el ahorro neto percibido.\n- **Imágenes y archivos**: el procesamiento de imágenes en modelos multimodales (GPT-4o con visión) se factura por imagen además de los tokens de texto. El descuento del 50% aplica sobre los tokens de texto, pero las imágenes pueden tener su propia tarifa batch.\n- **Costos de infraestructura propios**: almacenamiento de archivos JSONL, gestión de reintentos y monitoreo del estado del lote (`polling`) son costos operativos que recaen en el equipo que implementa la solución.\n\n---\n\n### Errores comunes al estimar el ahorro\n\n1. **Ignorar la proporción input/output**: el output es 3–5× más caro que el input en la mayoría de los modelos. Un pipeline con respuestas largas (resúmenes, redacción) tiene un perfil de costo muy diferente a uno de clasificación (respuestas cortas). Calculá ambos componentes por separado.\n2. **Asumir que el 50% aplica sobre el precio con descuentos previos**: el descuento batch se aplica sobre el **precio publicado estándar**, no sobre precios negociados por volumen u otros créditos.\n3. **No contabilizar solicitudes fallidas**: OpenAI **no cobra** por solicitudes que retornan error dentro del lote, pero sí cobra por las que se procesan correctamente aunque el resultado no sea útil para la aplicación.\n4. **Comparar batch vs. caché sin distinción**: OpenAI ofrece también **prompt caching** con descuentos de hasta 50% en tokens de entrada repetidos. Batch y caché son mecanismos independientes que en algunos casos pueden combinarse, pero no siempre son comparables directamente.\n\n---\n\n### Regla práctica para decidir\n\nSi el ahorro mensual proyectado supera **USD 20–50**, el overhead de implementar el pipeline batch suele amortizarse en el primer mes. Por debajo de ese umbral, la complejidad adicional rara vez vale la pena frente a la simplicitud de la API síncrona estándar.",
   "faq": [
     {
       "q": "¿El descuento del 50% aplica a todos los modelos?",
@@ -241,18 +241,60 @@
     "source": "OpenAI Batch API Documentation",
     "sourceUrl": "https://platform.openai.com/docs/guides/batch"
   },
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-22",
   "referenceTables": [
     {
       "title": "Precios Batch API vs Real-time (USD por millón de tokens, 2026)",
-      "headers": ["Modelo", "Input real-time", "Output real-time", "Input batch (-50%)", "Output batch (-50%)"],
+      "headers": [
+        "Modelo",
+        "Input real-time",
+        "Output real-time",
+        "Input batch (-50%)",
+        "Output batch (-50%)"
+      ],
       "rows": [
-        ["GPT-4o", "$2,50", "$10,00", "$1,25", "$5,00"],
-        ["GPT-4o mini", "$0,15", "$0,60", "$0,075", "$0,30"],
-        ["o3-mini", "$1,10", "$4,40", "$0,55", "$2,20"],
-        ["Claude 3.5 Sonnet", "$3,00", "$15,00", "$1,50", "$7,50"],
-        ["Claude 3 Haiku", "$0,25", "$1,25", "$0,125", "$0,625"],
-        ["Claude 3.5 Haiku", "$0,80", "$4,00", "$0,40", "$2,00"]
+        [
+          "GPT-4o",
+          "$2,50",
+          "$10,00",
+          "$1,25",
+          "$5,00"
+        ],
+        [
+          "GPT-4o mini",
+          "$0,15",
+          "$0,60",
+          "$0,075",
+          "$0,30"
+        ],
+        [
+          "o3-mini",
+          "$1,10",
+          "$4,40",
+          "$0,55",
+          "$2,20"
+        ],
+        [
+          "Claude 3.5 Sonnet",
+          "$3,00",
+          "$15,00",
+          "$1,50",
+          "$7,50"
+        ],
+        [
+          "Claude 3 Haiku",
+          "$0,25",
+          "$1,25",
+          "$0,125",
+          "$0,625"
+        ],
+        [
+          "Claude 3.5 Haiku",
+          "$0,80",
+          "$4,00",
+          "$0,40",
+          "$2,00"
+        ]
       ],
       "note": "Fuente: OpenAI API Pricing (openai.com/api/pricing) y Anthropic API Pricing (anthropic.com/pricing, 2026). El descuento del 50% aplica a todos los tokens del request (system prompt, historial y respuesta). Verificar precios actualizados en las páginas oficiales."
     }
