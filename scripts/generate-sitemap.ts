@@ -521,6 +521,7 @@ const priorityUrls: Url[] = [
   prio('/dolar-hoy-colombia',                '0.9',  'daily',  true),
   prio('/dolar-hoy-mexico',                  '0.9',  'daily',  true),
   prio('/dolar-hoy-peru',                    '0.9',  'daily',  true),
+  prio('/dolar-hoy-venezuela',               '0.9',  'daily',  true),
   prio('/precio-nafta-hoy',                  '0.9',  'weekly', true),
   prio('/fixture-mundial-2026',              '0.95', 'daily',  true),
   prio('/partidos-hoy-mundial-2026',         '0.95', 'daily',  true),
@@ -823,6 +824,7 @@ sitemaps.push({
     core('/dolar-hoy-colombia',                  '0.85', 'daily',   true),
     core('/dolar-hoy-mexico',                    '0.85', 'daily',   true),
     core('/dolar-hoy-peru',                      '0.85', 'daily',   true),
+    core('/dolar-hoy-venezuela',                 '0.85', 'daily',   true),
   ],
 });
 

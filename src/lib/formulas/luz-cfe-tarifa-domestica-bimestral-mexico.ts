@@ -1,14 +1,13 @@
 export interface Inputs {
-  consumo_kwh: number;
-  tarifa_zona: string; // '1', '1a', '1b', '1c', '1d', '1e', '1f'
+  consumo_kwh: number; // consumo BIMESTRAL en kWh (suma de los 2 meses del recibo)
+  tarifa_zona: string; // '1' | '1a' | '1b' | '1c' | '1d' | '1e' | '1f'
+  temporada: string; // 'verano' | 'fuera_verano'
   aplicar_dac: string; // 'si' | 'no'
 }
 
 export interface Outputs {
-  cargo_base: number;
-  subsidio_aplicado: number;
-  cargo_energia_neto: number;
-  cargo_dac: number;
+  cargo_energia: number;
+  cargo_fijo: number;
   subtotal_antes_iva: number;
   iva_16: number;
   total_recibo: number;
@@ -19,85 +18,134 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Datos tarifarios CFE 2026 abril (MXN/kWh) — Fuente: CFE tarifas oficiales
-  const tarifasBase: Record<string, { tarifa: number; limiteSubsidio: number; umbralDAC: number; subsidioPercent: number }> = {
-    '1': { tarifa: 4.20, limiteSubsidio: 150, umbralDAC: 400, subsidioPercent: 0.15 },
-    '1a': { tarifa: 4.60, limiteSubsidio: 130, umbralDAC: 350, subsidioPercent: 0.16 },
-    '1b': { tarifa: 4.90, limiteSubsidio: 110, umbralDAC: 300, subsidioPercent: 0.17 },
-    '1c': { tarifa: 5.30, limiteSubsidio: 100, umbralDAC: 250, subsidioPercent: 0.18 },
-    '1d': { tarifa: 4.70, limiteSubsidio: 120, umbralDAC: 320, subsidioPercent: 0.16 },
-    '1e': { tarifa: 4.50, limiteSubsidio: 125, umbralDAC: 330, subsidioPercent: 0.15 },
-    '1f': { tarifa: 3.90, limiteSubsidio: 180, umbralDAC: 450, subsidioPercent: 0.14 }
+  // ===== Cuotas CFE — tarifa doméstica, junio 2026 (MXN/kWh) =====
+  // Estructura escalonada MENSUAL subsidiada. Cuotas confirmadas para Tarifa 1
+  // (DOF junio 2026). Las cuotas exactas se ajustan cada mes y varían por región;
+  // en zonas muy cálidas (1E/1F) el básico/intermedio de verano corre más barato.
+  const PRECIO_BASICO = 1.125; //   tramo básico
+  const PRECIO_INTERMEDIO = 1.369; // tramo intermedio
+  const PRECIO_EXCEDENTE = 4.004; //  tramo excedente (sin subsidio efectivo)
+
+  // Tarifa DAC (Doméstica de Alto Consumo): SIN subsidio y SIN tramos.
+  const DAC_PRECIO_KWH = 6.8; // MXN/kWh (rango típico ~$5.70–6.80 según región)
+  const DAC_CARGO_FIJO_MENSUAL = 142.41; // MXN/mes
+
+  const IVA = 0.16; // 16% nacional (8% en franja fronteriza de 20 km)
+
+  // Límites de bloque MENSUALES (kWh/mes). En la temporada de verano las zonas
+  // cálidas amplían básico+intermedio; fuera de verano TODAS facturan como
+  // Tarifa 1 (75 / 140). basicoHasta = techo del básico; intermedioHasta = techo
+  // del intermedio (en 1C–1F agrupa intermedio bajo + alto).
+  const BLOQUES_VERANO: Record<string, { basicoHasta: number; intermedioHasta: number }> = {
+    '1': { basicoHasta: 75, intermedioHasta: 140 }, // templada: sin temporada de verano
+    '1a': { basicoHasta: 100, intermedioHasta: 150 },
+    '1b': { basicoHasta: 125, intermedioHasta: 225 },
+    '1c': { basicoHasta: 150, intermedioHasta: 450 },
+    '1d': { basicoHasta: 175, intermedioHasta: 600 },
+    '1e': { basicoHasta: 300, intermedioHasta: 900 },
+    '1f': { basicoHasta: 300, intermedioHasta: 2500 },
+  };
+  const BLOQUE_FUERA_VERANO = { basicoHasta: 75, intermedioHasta: 140 };
+
+  // Límite de Alto Consumo (LAC): promedio móvil de 12 meses (kWh/mes) que
+  // dispara la reclasificación a DAC.
+  const LIMITE_DAC: Record<string, number> = {
+    '1': 250, '1a': 300, '1b': 400, '1c': 850, '1d': 1000, '1e': 2000, '1f': 2500,
   };
 
-  // Tarifa escalonada (segundo tramo, después del subsidio) — multiplicador 1.24x
-  const multiplicadorSegundoTramo = 1.24;
+  const zona = (i.tarifa_zona || '1').toLowerCase();
+  const esVerano = (i.temporada || 'verano').toLowerCase() === 'verano';
+  const aplicaDac = (i.aplicar_dac || 'no').toLowerCase() === 'si';
 
-  const zona = i.tarifa_zona.toLowerCase();
-  const datos = tarifasBase[zona] || tarifasBase['1'];
-  const consumo = Math.max(0, i.consumo_kwh);
+  const consumoBim = Math.max(0, i.consumo_kwh || 0);
+  const consumoMes = consumoBim / 2; // los tramos CFE son MENSUALES
 
-  // 1. Calcular cargo base con tramos escalonados
-  let cargoBase = 0;
-  if (consumo <= datos.limiteSubsidio) {
-    cargoBase = consumo * datos.tarifa;
+  const limiteDac = LIMITE_DAC[zona] ?? 250;
+  const bloques = esVerano ? (BLOQUES_VERANO[zona] || BLOQUE_FUERA_VERANO) : BLOQUE_FUERA_VERANO;
+
+  // Montos por tramo (mensuales) y kWh en cada tramo
+  let kwhBasico = 0, kwhIntermedio = 0, kwhExcedente = 0;
+  let basicoMes = 0, intermedioMes = 0, excedenteMes = 0;
+  let cargoEnergiaMes: number;
+  let cargoFijoMes = 0;
+
+  if (aplicaDac) {
+    // DAC: todo el consumo a precio pleno + cargo fijo mensual, sin subsidio.
+    cargoEnergiaMes = consumoMes * DAC_PRECIO_KWH;
+    cargoFijoMes = DAC_CARGO_FIJO_MENSUAL;
   } else {
-    const primerTramo = datos.limiteSubsidio * datos.tarifa;
-    const segundoTramo = (consumo - datos.limiteSubsidio) * (datos.tarifa * multiplicadorSegundoTramo);
-    cargoBase = primerTramo + segundoTramo;
+    const { basicoHasta, intermedioHasta } = bloques;
+    kwhBasico = Math.min(consumoMes, basicoHasta);
+    kwhIntermedio = Math.max(0, Math.min(consumoMes, intermedioHasta) - basicoHasta);
+    kwhExcedente = Math.max(0, consumoMes - intermedioHasta);
+    basicoMes = kwhBasico * PRECIO_BASICO;
+    intermedioMes = kwhIntermedio * PRECIO_INTERMEDIO;
+    excedenteMes = kwhExcedente * PRECIO_EXCEDENTE;
+    cargoEnergiaMes = basicoMes + intermedioMes + excedenteMes;
   }
 
-  // 2. Aplicar subsidio progresivo (primeros kWh del tramo 1)
-  const subsidioAplicado = consumo <= datos.limiteSubsidio
-    ? cargoBase * datos.subsidioPercent
-    : (datos.limiteSubsidio * datos.tarifa) * datos.subsidioPercent;
-
-  const cargoEnergiaNeto = cargoBase - subsidioAplicado;
-
-  // 3. Aplicar cargo DAC si aplica (12% sobre subtotal sin IVA)
-  const aplicaDac = i.aplicar_dac.toLowerCase() === 'si' && consumo > datos.umbralDAC;
-  const cargoDac = aplicaDac ? cargoEnergiaNeto * 0.12 : 0;
-
-  // 4. Subtotal antes IVA
-  const subtotalAntesIva = cargoEnergiaNeto + cargoDac;
-
-  // 5. IVA 16% — Fuente: SAT, tasa general energía eléctrica doméstica
-  const iva16 = subtotalAntesIva * 0.16;
-
-  // 6. Total recibo
+  // Bimestral = mensual × 2
+  const cargoEnergia = cargoEnergiaMes * 2;
+  const cargoFijo = cargoFijoMes * 2;
+  const subtotalAntesIva = cargoEnergia + cargoFijo;
+  const iva16 = subtotalAntesIva * IVA;
   const totalRecibo = subtotalAntesIva + iva16;
+  const costoPorKwh = consumoBim > 0 ? totalRecibo / consumoBim : 0;
 
-  // 7. Costo promedio por kWh
-  const costoPorKwh = consumo > 0 ? totalRecibo / consumo : 0;
+  // Ahorro solar: 80% del consumo anual valuado al costo promedio actual
+  const consumoAnual = consumoBim * 6; // 6 bimestres
+  const ahorroConSolar = consumoAnual * 0.8 * costoPorKwh;
 
-  // 8. Ahorro anual estimado con solar 80% (comparativa)
-  // Asunción: sistema solar genera 80% del consumo anual
-  const consumoAnual = consumo * 6; // bimestral × 6
-  const ahorroConSolar = (consumoAnual * 0.80) * costoPorKwh;
+  const fmt = (n: number) =>
+    '$' + (Math.round(n * 100) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const r0 = (n: number) => Math.round(n);
 
-  const fmt = (n: number) => '$' + (Math.round(n * 100) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const totalR = Math.round(totalRecibo * 100) / 100;
-  const energiaR = Math.round(cargoEnergiaNeto * 100) / 100;
-  const dacR = Math.round(cargoDac * 100) / 100;
-  const ivaR = Math.round(iva16 * 100) / 100;
+  const totalR = r2(totalRecibo);
+  const energiaR = r2(cargoEnergia);
+  const fijoR = r2(cargoFijo);
+  const ivaR = r2(iva16);
+  const kwhR = r2(costoPorKwh);
 
-  const insight = aplicaDac
-    ? {
-        title: 'Caíste en tarifa DAC',
-        text: `Con ${consumo} kWh superaste el umbral de ${datos.umbralDAC} kWh de la zona ${zona.toUpperCase()}: perdiste el subsidio y se sumó un cargo DAC de **${fmt(dacR)}**. Tu recibo bimestral queda en **${fmt(totalR)}** (${fmt(costoPorKwh)}/kWh).`,
-        tone: 'warn',
-        icon: '⚡',
-      }
-    : {
-        title: 'Tu recibo CFE, desglosado',
-        text: `Pagás **${fmt(totalR)}** por el bimestre, o sea **${fmt(costoPorKwh)} por kWh**. El subsidio te descuenta ${fmt(Math.round(subsidioAplicado * 100) / 100)} y todavía estás dentro del umbral DAC (${datos.umbralDAC} kWh de la zona ${zona.toUpperCase()}).`,
-        tone: 'neutral',
-        icon: '⚡',
-      };
+  const superaDac = !aplicaDac && consumoMes > limiteDac;
+  const cercaDac = !aplicaDac && !superaDac && consumoMes >= limiteDac * 0.85;
 
-  const slices = [{ label: 'Energía (neto)', value: energiaR }];
-  if (dacR > 0) slices.push({ label: 'Cargo DAC', value: dacR });
-  slices.push({ label: 'IVA 16%', value: ivaR });
+  let insight;
+  if (aplicaDac) {
+    insight = {
+      title: 'Estás en tarifa DAC',
+      text: `Sin subsidio: tus **${r0(consumoBim)} kWh** del bimestre se cobran a **$${DAC_PRECIO_KWH.toFixed(2)}/kWh** más el cargo fijo. El recibo queda en **${fmt(totalR)}** (~**${fmt(kwhR)}/kWh**), varias veces más caro que la tarifa subsidiada. Para volver al subsidio tenés que bajar tu **promedio móvil de 12 meses** por debajo de **${limiteDac} kWh/mes** (zona ${zona.toUpperCase()}).`,
+      tone: 'warn',
+      icon: '⚡',
+    };
+  } else {
+    const desglose = kwhExcedente > 0
+      ? `${r0(kwhBasico)} kWh caen en básico, ${r0(kwhIntermedio)} en intermedio y ${r0(kwhExcedente)} en excedente (**$${PRECIO_EXCEDENTE.toFixed(2)}/kWh**)`
+      : `${r0(kwhBasico)} kWh caen en básico y ${r0(kwhIntermedio)} en intermedio: todavía no tocás el excedente`;
+    let aviso = '';
+    if (superaDac) {
+      aviso = ` ⚠️ Tu consumo mensual (${r0(consumoMes)} kWh) ya supera el límite DAC de ${limiteDac} kWh/mes; si lo sostenés 12 meses, CFE te reclasifica y perdés el subsidio.`;
+    } else if (cercaDac) {
+      aviso = ` ⚠️ Estás cerca del límite DAC (${limiteDac} kWh/mes); vigilá tu promedio anual para no perder el subsidio.`;
+    }
+    insight = {
+      title: 'Tu recibo CFE, desglosado',
+      text: `Pagás **${fmt(totalR)}** por el bimestre, o sea **${fmt(kwhR)} por kWh**. Tu consumo de ${r0(consumoBim)} kWh equivale a **${r0(consumoMes)} kWh/mes**: ${desglose}.${aviso}`,
+      tone: superaDac ? 'warn' : 'neutral',
+      icon: '⚡',
+    };
+  }
+
+  const slices: { label: string; value: number }[] = [];
+  if (aplicaDac) {
+    if (energiaR > 0) slices.push({ label: 'Energía DAC', value: energiaR });
+    if (fijoR > 0) slices.push({ label: 'Cargo fijo', value: fijoR });
+  } else {
+    if (basicoMes > 0) slices.push({ label: 'Básico', value: r2(basicoMes * 2) });
+    if (intermedioMes > 0) slices.push({ label: 'Intermedio', value: r2(intermedioMes * 2) });
+    if (excedenteMes > 0) slices.push({ label: 'Excedente', value: r2(excedenteMes * 2) });
+  }
+  if (ivaR > 0) slices.push({ label: 'IVA 16%', value: ivaR });
 
   const chart = totalR > 0
     ? {
@@ -106,21 +154,19 @@ export function compute(i: Inputs): Outputs {
         prefix: '$',
         centerValue: fmt(totalR),
         centerLabel: 'Total bimestral',
-        ariaLabel: 'Composición del recibo CFE: cargo de energía neto, cargo DAC si aplica e IVA.',
+        ariaLabel: 'Composición del recibo CFE por tramo de consumo e IVA.',
       }
     : undefined;
 
   return {
-    cargo_base: Math.round(cargoBase * 100) / 100,
-    subsidio_aplicado: Math.round(subsidioAplicado * 100) / 100,
-    cargo_energia_neto: energiaR,
-    cargo_dac: dacR,
-    subtotal_antes_iva: Math.round(subtotalAntesIva * 100) / 100,
+    cargo_energia: energiaR,
+    cargo_fijo: fijoR,
+    subtotal_antes_iva: r2(subtotalAntesIva),
     iva_16: ivaR,
     total_recibo: totalR,
-    costo_por_kwh: Math.round(costoPorKwh * 100) / 100,
-    ahorro_anual_solar_80: Math.round(ahorroConSolar * 100) / 100,
+    costo_por_kwh: kwhR,
+    ahorro_anual_solar_80: r2(ahorroConSolar),
     _insight: insight,
-    _chart: chart
+    _chart: chart,
   };
 }

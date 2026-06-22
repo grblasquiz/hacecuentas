@@ -18,7 +18,7 @@ export interface Indicador {
   suffix?: string;    // ' CLP'
   sub?: string;       // subtítulo (p. ej. "observado", "venta")
 }
-export interface LiveCfg { type: 'mindicador' | 'socrata' | 'erapi'; url: string }
+export interface LiveCfg { type: 'mindicador' | 'socrata' | 'erapi' | 'dolarapi'; url: string }
 
 interface Props {
   pais: string;
@@ -116,6 +116,7 @@ const liveConfig = {
       if (type === 'mindicador') return data && data[liveKey] ? data[liveKey].valor : null;
       if (type === 'socrata') { const row = Array.isArray(data) ? data[0] : null; return row ? Number(row[liveKey]) : null; }
       if (type === 'erapi') return data && data.rates ? data.rates[liveKey] : null;
+      if (type === 'dolarapi') { const row = Array.isArray(data) ? data.find((x) => (x.nombre || '').toLowerCase() === liveKey.toLowerCase()) : null; return row ? Number(row.promedio ?? row.venta) : null; }
       return null;
     }
     async function refresh() {

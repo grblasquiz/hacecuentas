@@ -373,6 +373,8 @@ import { calculadoraBonificacionRepublicaDominicana } from './calculadora-bonifi
 import { calculadoraBpsAportes } from './calculadora-bps-aportes';
 import { calculadoraBrechaDolarBcvParalelo } from './calculadora-brecha-dolar-bcv-paralelo';
 import { calculadoraCesantiaRepublicaDominicana } from './calculadora-cesantia-republica-dominicana';
+import { compute as compute__calculadora_costo_despido_empleador_colombia_2026 } from './calculadora-costo-despido-empleador-colombia-2026';
+import { compute as compute__calculadora_costo_despido_liquidacion_patron_mexico_2026 } from './calculadora-costo-despido-liquidacion-patron-mexico-2026';
 import { calculadoraCostoRealPautaExteriorImpuestosArgentina } from './calculadora-costo-real-pauta-exterior-impuestos-argentina';
 import { calculadoraCostoRealPautaExteriorImpuestosColombia } from './calculadora-costo-real-pauta-exterior-impuestos-colombia';
 import { calculadoraCostoRealPautaExteriorImpuestosMexico } from './calculadora-costo-real-pauta-exterior-impuestos-mexico';
@@ -389,6 +391,7 @@ import { calculadoraIgtfVenezuela3 } from './calculadora-igtf-venezuela-3';
 import { calculadoraIraeUruguay } from './calculadora-irae-uruguay';
 import { calculadoraIrpfUruguay } from './calculadora-irpf-uruguay';
 import { calculadoraIslrVenezuela2026 } from './calculadora-islr-venezuela-2026';
+import { compute as compute__calculadora_isr_finiquito_liquidacion_mexico_2026 } from './calculadora-isr-finiquito-liquidacion-mexico-2026';
 import { calculadoraIsrRepublicaDominicana } from './calculadora-isr-republica-dominicana';
 import { calculadoraItbisRepublicaDominicana } from './calculadora-itbis-republica-dominicana';
 import { calculadoraIvaParaguay } from './calculadora-iva-paraguay';
@@ -396,15 +399,20 @@ import { calculadoraIvaUruguay } from './calculadora-iva-uruguay';
 import { calculadoraIvaVenezuela16 } from './calculadora-iva-venezuela-16';
 import { calculadoraJornalUruguay } from './calculadora-jornal-uruguay';
 import { diasLicenciaPorAntiguedad } from './calculadora-licencia-uruguay';
+import { compute as compute__calculadora_liquidacion_contrato_termino_fijo_colombia_2026 } from './calculadora-liquidacion-contrato-termino-fijo-colombia-2026';
+import { compute as compute__calculadora_liquidacion_empleada_domestica_por_dias_colombia_2026 } from './calculadora-liquidacion-empleada-domestica-por-dias-colombia-2026';
 import { calculadoraLiquidacionFinalParaguay } from './calculadora-liquidacion-final-paraguay';
 import { calculadoraLiquidacionFiniquitoVenezuela } from './calculadora-liquidacion-finiquito-venezuela';
 import { calculadoraLiquidacionRepublicaDominicana } from './calculadora-liquidacion-republica-dominicana';
 import { calcularMejorEpocaViaje } from './calculadora-mejor-epoca-viajar-destino-lluvia-huracanes';
+import { compute as compute__calculadora_pension_minima_garantizada_ley_97_mexico_2026 } from './calculadora-pension-minima-garantizada-ley-97-mexico-2026';
 import { calculadoraPreavisoParaguay } from './calculadora-preaviso-paraguay';
 import { calculadoraPreavisoRepublicaDominicana } from './calculadora-preaviso-republica-dominicana';
 import { calculadoraPreavisoVenezuela } from './calculadora-preaviso-venezuela';
 import { calculadoraPrestacionesSocialesVenezuela } from './calculadora-prestaciones-sociales-venezuela';
 import { calculadoraProporcionesReceta } from './calculadora-proporciones-receta';
+import { compute as compute__calculadora_provision_prestaciones_sociales_mensual_empleador_colombia_2026 } from './calculadora-provision-prestaciones-sociales-mensual-empleador-colombia-2026';
+import { compute as compute__calculadora_recibo_nomina_percepciones_deducciones_mexico_2026 } from './calculadora-recibo-nomina-percepciones-deducciones-mexico-2026';
 import { calculadoraRemesaZelleBolivaresVenezuela } from './calculadora-remesa-zelle-bolivares-venezuela';
 import { calculadoraRemesasEstadosUnidosRepublicaDominicana } from './calculadora-remesas-estados-unidos-republica-dominicana';
 import { calculadoraRetencionIslrVenezuela } from './calculadora-retencion-islr-venezuela';
@@ -4033,6 +4041,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-bps-aportes': calculadoraBpsAportes,
   'calculadora-brecha-dolar-bcv-paralelo': calculadoraBrechaDolarBcvParalelo,
   'calculadora-cesantia-republica-dominicana': calculadoraCesantiaRepublicaDominicana,
+  'calculadora-costo-despido-empleador-colombia-2026': compute__calculadora_costo_despido_empleador_colombia_2026,
+  'calculadora-costo-despido-liquidacion-patron-mexico-2026': compute__calculadora_costo_despido_liquidacion_patron_mexico_2026,
   'calculadora-costo-real-pauta-exterior-impuestos-argentina': calculadoraCostoRealPautaExteriorImpuestosArgentina,
   'calculadora-costo-real-pauta-exterior-impuestos-colombia': calculadoraCostoRealPautaExteriorImpuestosColombia,
   'calculadora-costo-real-pauta-exterior-impuestos-mexico': calculadoraCostoRealPautaExteriorImpuestosMexico,
@@ -4049,6 +4059,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-irae-uruguay': calculadoraIraeUruguay,
   'calculadora-irpf-uruguay': calculadoraIrpfUruguay,
   'calculadora-islr-venezuela-2026': calculadoraIslrVenezuela2026,
+  'calculadora-isr-finiquito-liquidacion-mexico-2026': compute__calculadora_isr_finiquito_liquidacion_mexico_2026,
   'calculadora-isr-republica-dominicana': calculadoraIsrRepublicaDominicana,
   'calculadora-itbis-republica-dominicana': calculadoraItbisRepublicaDominicana,
   'calculadora-iva-paraguay': calculadoraIvaParaguay,
@@ -4056,15 +4067,20 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-iva-venezuela-16': calculadoraIvaVenezuela16,
   'calculadora-jornal-uruguay': calculadoraJornalUruguay,
   'calculadora-licencia-uruguay': diasLicenciaPorAntiguedad,
+  'calculadora-liquidacion-contrato-termino-fijo-colombia-2026': compute__calculadora_liquidacion_contrato_termino_fijo_colombia_2026,
+  'calculadora-liquidacion-empleada-domestica-por-dias-colombia-2026': compute__calculadora_liquidacion_empleada_domestica_por_dias_colombia_2026,
   'calculadora-liquidacion-final-paraguay': calculadoraLiquidacionFinalParaguay,
   'calculadora-liquidacion-finiquito-venezuela': calculadoraLiquidacionFiniquitoVenezuela,
   'calculadora-liquidacion-republica-dominicana': calculadoraLiquidacionRepublicaDominicana,
   'calculadora-mejor-epoca-viajar-destino-lluvia-huracanes': calcularMejorEpocaViaje,
+  'calculadora-pension-minima-garantizada-ley-97-mexico-2026': compute__calculadora_pension_minima_garantizada_ley_97_mexico_2026,
   'calculadora-preaviso-paraguay': calculadoraPreavisoParaguay,
   'calculadora-preaviso-republica-dominicana': calculadoraPreavisoRepublicaDominicana,
   'calculadora-preaviso-venezuela': calculadoraPreavisoVenezuela,
   'calculadora-prestaciones-sociales-venezuela': calculadoraPrestacionesSocialesVenezuela,
   'calculadora-proporciones-receta': calculadoraProporcionesReceta,
+  'calculadora-provision-prestaciones-sociales-mensual-empleador-colombia-2026': compute__calculadora_provision_prestaciones_sociales_mensual_empleador_colombia_2026,
+  'calculadora-recibo-nomina-percepciones-deducciones-mexico-2026': compute__calculadora_recibo_nomina_percepciones_deducciones_mexico_2026,
   'calculadora-remesa-zelle-bolivares-venezuela': calculadoraRemesaZelleBolivaresVenezuela,
   'calculadora-remesas-estados-unidos-republica-dominicana': calculadoraRemesasEstadosUnidosRepublicaDominicana,
   'calculadora-retencion-islr-venezuela': calculadoraRetencionIslrVenezuela,

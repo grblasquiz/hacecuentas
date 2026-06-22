@@ -1,0 +1,67 @@
+---
+export const prerender = false;
+import EconomiaLanding from '../components/EconomiaLanding.astro';
+import fallback from '../data/live/venezuela.json';
+import { readFxLive } from '../lib/fx-live';
+
+// VE no está en el cron de D1 (readFxLive devuelve null) → cae al snapshot de build;
+// el refresh client-side desde ve.dolarapi.com lo mantiene vivo en el navegador.
+const d = (await readFxLive('venezuela')) ?? (fallback as any);
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=86400');
+const fmtVes = (n: number) => 'Bs. ' + n.toLocaleString('es-VE', { maximumFractionDigits: 2 });
+const bcv = d.bcv?.valor ?? null;
+const paralelo = d.paralelo?.valor ?? null;
+const brecha = bcv && paralelo ? paralelo / bcv - 1 : null;
+const brechaPct = brecha != null ? Math.round(brecha * 1000) / 10 : null;
+
+const indicadores = [
+  { key: 'bcv', liveKey: 'Dólar', label: 'Dólar BCV (oficial)', valor: bcv, decimals: 2, prefix: 'Bs. ', sub: 'USD → Bs (BCV)' },
+  { key: 'paralelo', liveKey: 'Paralelo', label: 'Dólar paralelo', valor: paralelo, decimals: 2, prefix: 'Bs. ', sub: 'USD → Bs (paralelo)' },
+  { key: 'brecha', liveKey: '__none__', label: 'Brecha', valor: brechaPct, decimals: 1, suffix: '%', sub: 'paralelo vs BCV' },
+];
+
+const tabla = bcv ? {
+  title: 'Dólar a bolívares hoy (tasa BCV)',
+  note: 'Valores a la tasa oficial del BCV. El dólar BCV del recuadro de arriba se actualiza en vivo.',
+  headers: ['Dólares (USD)', 'Bolívares (Bs)'],
+  rows: [1, 5, 10, 20, 50, 100, 500].map((u) => ['US$ ' + u, fmtVes(u * bcv)]),
+} : undefined;
+
+const faq = [
+  { q: '¿A cuánto está el dólar BCV hoy en Venezuela?', a: bcv ? `El dólar oficial del Banco Central de Venezuela (BCV) hoy está en ${fmtVes(bcv)} por dólar. Es la tasa que se usa para facturación, tributos del SENIAT y bonos del Estado. El recuadro de arriba se actualiza solo desde ve.dolarapi.com (toma el valor del BCV).` : 'El BCV publica la tasa oficial cada día hábil; arriba ves el valor más reciente.' },
+  { q: '¿A cuánto está el dólar paralelo hoy?', a: paralelo ? `El dólar paralelo (mercado libre, Monitor Dólar / Binance P2P) hoy cotiza alrededor de ${fmtVes(paralelo)} por dólar${brechaPct != null ? `, es decir un ${brechaPct.toLocaleString('es-VE')}% más alto que la tasa oficial del BCV` : ''}.` : 'El dólar paralelo es el del mercado libre; arriba ves el valor más reciente.' },
+  { q: '¿Cuál es la diferencia entre el dólar BCV y el dólar paralelo?', a: 'El dólar BCV es la tasa oficial fijada por el Banco Central de Venezuela y es la referencia legal para facturas, impuestos y precios regulados. El dólar paralelo es el del mercado libre (Monitor Dólar, Binance P2P), que se mueve según la oferta y la demanda y suele ser más alto que el oficial.' },
+  { q: '¿Qué es la brecha cambiaria?', a: brechaPct != null ? `La brecha cambiaria es la diferencia porcentual entre el dólar paralelo y el dólar BCV. Hoy es de ${brechaPct.toLocaleString('es-VE')}%: el BCV está en ${fmtVes(bcv!)} y el paralelo en ${fmtVes(paralelo!)}. Cuanto mayor es la brecha, más se aleja el precio del mercado libre del valor oficial.` : 'La brecha cambiaria es la diferencia porcentual entre el dólar paralelo y el dólar BCV. Cuanto mayor es, más se aleja el mercado libre de la tasa oficial.' },
+  { q: '¿Cada cuánto se actualiza esta página?', a: 'Al abrir la página se consultan los valores del momento y luego se refrescan automáticamente cada pocos minutos desde ve.dolarapi.com. Además guardamos un respaldo que se renueva varias veces al día, de modo que siempre veas una cifra reciente. La brecha se recalcula cuando recargás la página.' },
+  { q: '¿De dónde salen estos valores?', a: 'Del agregador ve.dolarapi.com, que toma el dólar oficial directamente del Banco Central de Venezuela (BCV) y el dólar paralelo de fuentes de mercado tipo Monitor Dólar. Son los mismos valores que usan los comercios y bancos como referencia.' },
+  { q: '¿El dólar BCV es el que se usa para pagar impuestos?', a: 'Sí. El SENIAT y la mayoría de los trámites oficiales (ISLR, IVA, IGTF, aranceles) usan la tasa del BCV vigente para convertir montos en divisas a bolívares. Por eso, aunque pagues o cobres en dólares en el mercado, el cálculo fiscal se hace con el dólar oficial.' },
+  { q: '¿Por qué cambia el dólar todos los días en Venezuela?', a: 'El BCV ajusta la tasa oficial casi a diario en función del mercado cambiario regulado, y el dólar paralelo se mueve de manera continua según la oferta y la demanda. En un contexto de alta inflación, ambos valores tienden a subir, por eso conviene consultar la cifra del día antes de cerrar cualquier operación.' },
+];
+
+const related = [
+  { href: '/ve/dolar-bcv-paralelo-bolivares-hoy', label: '💵 Dólar BCV vs paralelo: brecha y conversión' },
+  { href: '/ve/cuanto-es-dolares-en-bolivares', label: '🔄 Convertir dólares a bolívares' },
+  { href: '/ve/cuanto-es-salario-minimo-venezuela-2026', label: '📅 Salario mínimo Venezuela 2026' },
+  { href: '/ve', label: '🇻🇪 Más calculadoras de Venezuela' },
+];
+
+const title = 'Dólar BCV y Paralelo Hoy en Venezuela EN VIVO | Hacé Cuentas';
+const description = `Dólar de hoy en Venezuela, en vivo: dólar BCV (oficial) ${bcv ? fmtVes(bcv) : ''}, dólar paralelo ${paralelo ? fmtVes(paralelo) : ''} y la brecha cambiaria${brechaPct != null ? ` (${brechaPct.toLocaleString('es-VE')}%)` : ''}. Se actualiza solo. Tabla de conversión dólar a bolívares.`;
+---
+<EconomiaLanding
+  pais="Venezuela"
+  audience="VE"
+  slug="dolar-hoy-venezuela"
+  locale="es-VE"
+  h1="Dólar BCV y paralelo hoy en Venezuela 🇻🇪"
+  lede="Valor del <strong>dólar BCV (oficial), el dólar paralelo y la brecha cambiaria</strong>, actualizados en vivo. El dólar BCV es la referencia del Banco Central de Venezuela."
+  title={title}
+  description={description}
+  fuente={{ nombre: 've.dolarapi.com (BCV / Monitor Dólar)', url: 'https://ve.dolarapi.com' }}
+  updatedISO={d._meta?.fetchedAt ?? null}
+  indicadores={indicadores}
+  live={{ type: 'dolarapi', url: 'https://ve.dolarapi.com/v1/dolares' }}
+  tabla={tabla}
+  faq={faq}
+  related={related}
+/>

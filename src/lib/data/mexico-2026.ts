@@ -216,6 +216,26 @@ export const MEXICO_2026 = {
     paternidadDiasLft: 5,           // LFT Art. 132-XXVII bis
   },
 
+  // ── Pensión Mínima / Garantizada Ley 97 (RCV) — LSS Art. 170, reforma DOF 16-dic-2020 ──
+  // La reforma 2020 reemplazó el monto único por una tabla por rango de SBC (en UMA), edad
+  // (60-65) y semanas cotizadas. El requisito de semanas sube 25/año desde 750 (2021) hasta
+  // 1.000 en 2031; en 2026 son 875. El monto se actualiza por INPC (+3,69% en 2026) y va de
+  // ~$3.500 a ~$10.600 mensuales (promedio del sistema ~$6.600). Verificado vs CONSAR/IMSS y
+  // AMCP (montos 2026) el 2026-06-22. Cuando el SBC promedio queda por debajo del mínimo de la
+  // tabla, igual se garantiza el piso si se cumplen semanas+edad.
+  pmgLey97: {
+    semanasRequeridas2026: 875,
+    incrementoAnualSemanas: 25,
+    semanasTope: 1000,
+    anioTope: 2031,
+    edadCesantia: 60,        // cesantía en edad avanzada (con factor de edad)
+    edadVejez: 65,           // vejez (100%)
+    montoMin: 3500,          // piso de la tabla art. 170 (2026)
+    montoMax: 10600,         // techo de la tabla art. 170 (2026)
+    montoPromedioSistema: 6600,
+    inpc2026: 0.0369,        // actualización INPC aplicada en 2026
+  },
+
   // ── Pensión por invalidez (Ley 97) — LSS Art. 141 ──
   pensionInvalidez: {
     porcentajeSalarioPromedio: 0.35,  // 35% del salario promedio de las últimas 500 semanas (actualizado)
