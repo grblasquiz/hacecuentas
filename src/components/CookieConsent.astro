@@ -166,33 +166,37 @@
     if (e.key === 'Escape' && !modal.hidden) hideModal();
   });
 
-  // Exponer función para que el footer / página /cookies puedan re-abrir.
-  // Si el CMP certificado de Google (Funding Choices) está cargado (usuarios EEA+UK),
-  // reabrimos SU mensaje — es el que cuenta para TCF v2.2 / AdSense en la UE. Fuera
-  // de la UE (FC no carga mensaje) cae al modal casero, que sigue sirviendo para que
-  // cualquiera ajuste analytics/ads manualmente.
-  window.hcOpenCookieSettings = function () {
-    try {
-      if (window.googlefc && typeof window.googlefc.showRevocationMessage === 'function') {
-        window.googlefc.showRevocationMessage();
-        return;
-      }
-    } catch (e) {}
-    showModal();
-  };
+  // Exponer función para que el footer pueda re-abrir (desde cualquier país).
+  // Si un usuario de AR quiere ver el banner manualmente, puede abrir desde el footer.
+  window.hcOpenCookieSettings = function () { showModal(); };
 
   // Limpiar clave v1 vieja (usuarios legacy con analytics:false quedaban silenciados).
   try { localStorage.removeItem('hc-consent-v1'); } catch (e) {}
 
-  // Boot: el CMP certificado de Google (Funding Choices, cargado en Layout.astro)
-  // maneja el prompt de consentimiento en EEA+UK. Este banner casero YA NO se
-  // auto-muestra: hacerlo duplicaría el prompt sobre los usuarios europeos (FC ya
-  // les pregunta) y no aporta nada fuera de la UE (default 'granted' del Layout).
-  // Sólo re-aplicamos preferencias guardadas por usuarios legacy del banner viejo.
-  // REQUIRES_CONSENT y showBanner se conservan por si hay que revertir a banner propio.
-  void REQUIRES_CONSENT; void showBanner;
-  var saved = readPrefs();
-  if (saved) applyConsent(saved);
+  // Boot: detectar país vía Cloudflare trace (gratis, sin config). Sólo aplicar
+  // consent update / mostrar banner si el país está en REQUIRES_CONSENT. Fuera
+  // de ahí el default del Layout ('granted' para analytics, 'denied' para ads)
+  // prevalece y no perdemos tracking por rechazos accidentales.
+  fetch('/cdn-cgi/trace', { cache: 'no-store' })
+    .then(function (r) { return r.text(); })
+    .then(function (txt) {
+      var m = txt.match(/loc=([A-Z]{2})/);
+      var country = m ? m[1] : null;
+      if (!country || !REQUIRES_CONSENT.has(country)) return; // no-op en AR/LATAM/US/etc
+      var saved = readPrefs();
+      if (saved) {
+        applyConsent(saved);
+      } else {
+        setTimeout(showBanner, 300);
+      }
+    })
+    .catch(function () {
+      // Si /cdn-cgi/trace falla (ej. bloqueo de red): fail-safe mostrando el banner
+      // si no hay preferencia guardada. Mejor preguntar de más que violar GDPR.
+      var saved = readPrefs();
+      if (saved) applyConsent(saved);
+      else setTimeout(showBanner, 300);
+    });
 })();
 </script>
 
