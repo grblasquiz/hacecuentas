@@ -19,7 +19,7 @@ const MET_NATACION: Record<string, { met: number; nombre: string; nameEn: string
   'crawl-suave': { met: 5.8, nombre: 'Crawl (freestyle) suave', nameEn: 'Crawl (freestyle) easy' },
   'crawl-moderado': { met: 8.3, nombre: 'Crawl moderado', nameEn: 'Crawl moderate' },
   'crawl-intenso': { met: 10.0, nombre: 'Crawl intenso/competición', nameEn: 'Crawl intense/competition' },
-  'espalda': { met: 7.0, nombre: 'Espalda (backstroke)', nameEn: 'Backstroke' },
+  'espalda': { met: 9.5, nombre: 'Espalda (backstroke)', nameEn: 'Backstroke' },
   'pecho-suave': { met: 5.3, nombre: 'Pecho (breaststroke) suave', nameEn: 'Breaststroke easy' },
   'pecho-intenso': { met: 10.3, nombre: 'Pecho intenso', nameEn: 'Breaststroke intense' },
   'mariposa': { met: 13.8, nombre: 'Mariposa (butterfly)', nameEn: 'Butterfly' },

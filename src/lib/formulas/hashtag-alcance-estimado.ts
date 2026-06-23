@@ -10,7 +10,8 @@ export function hashtagAlcanceEstimado(i: Inputs): Outputs {
   if (!seg || seg <= 0) throw new Error('Ingresá tus seguidores');
 
   const totalHashtags = grandes + medianos + peqs;
-  if (totalHashtags > 30) throw new Error('Instagram permite máximo 30 hashtags');
+  // Desde dic-2025 Instagram limita a 5 hashtags por post/reel (antes 30).
+  if (totalHashtags > 5) throw new Error('Instagram permite máximo 5 hashtags por post desde dic-2025');
 
   // Base organic reach: ~10-20% of followers (Instagram 2026 avg)
   const alcanceOrganico = Math.round(seg * 0.15);
@@ -31,7 +32,7 @@ export function hashtagAlcanceEstimado(i: Inputs): Outputs {
   } else if (grandes > peqs) {
     recomendacion = 'Demasiados hashtags grandes — tu post se pierde en la competencia. Usá más hashtags de nicho (<100K posts) para mejor visibilidad.';
   } else {
-    recomendacion = `Con ${totalHashtags} hashtags, tu alcance estimado es ${alcanceEstimado.toLocaleString()}. Mix ideal: 2-3 grandes, 5-7 medianos, 8-10 nicho.`;
+    recomendacion = `Con ${totalHashtags} hashtags, tu alcance estimado es ${alcanceEstimado.toLocaleString()}. Instagram limita a 5 por post (dic-2025): mix ideal 0-1 grande, 1-2 medianos, 2-3 nicho.`;
   }
 
   // Aporte de los hashtags sobre el alcance total
@@ -46,7 +47,7 @@ export function hashtagAlcanceEstimado(i: Inputs): Outputs {
     txtIns = `Alcance estimado **${alcanceEstimado.toLocaleString()}**: **${alcanceOrganico.toLocaleString()}** orgánico de tus seguidores + **${alcanceHashtags.toLocaleString()}** sumado por los hashtags (**${pctHashtags}%** del total). Buen mix de nicho — son los que más visibilidad relativa dan.`;
   } else {
     toneIns = 'neutral';
-    txtIns = `Con **${totalHashtags} hashtags** llegás a un alcance estimado de **${alcanceEstimado.toLocaleString()}**: los hashtags aportan **${pctHashtags}%** sobre tu base orgánica. Mix ideal: 2-3 grandes, 5-7 medianos y 8-10 de nicho.`;
+    txtIns = `Con **${totalHashtags} hashtags** llegás a un alcance estimado de **${alcanceEstimado.toLocaleString()}**: los hashtags aportan **${pctHashtags}%** sobre tu base orgánica. Instagram limita a 5 por post (dic-2025): mix ideal 0-1 grande, 1-2 medianos y 2-3 de nicho.`;
   }
   const _insight = { title: 'De dónde sale tu alcance', text: txtIns, tone: toneIns, icon: '📣' };
 

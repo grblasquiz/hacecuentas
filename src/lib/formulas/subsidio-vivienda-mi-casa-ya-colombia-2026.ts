@@ -23,17 +23,20 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 Colombia – Fuente: DIAN, FNA, Minvivienda
-  const SMMLV_2026 = 1_580_000; // Salario Mínimo 2026 (aprox. con inflación esperada)
-  const LIMITE_RANGO_2 = 2 * SMMLV_2026; // ~$3,160,000
-  const LIMITE_RANGO_3 = 4 * SMMLV_2026; // ~$6,320,000
-  const SUBSIDIO_RANGO_1 = 48_000_000; // 0–2 SMMLV
-  const SUBSIDIO_RANGO_2 = 32_000_000; // 2–4 SMMLV
+  // Constantes 2026 Colombia – Fuente: Minvivienda/FONVIVIENDA + Decretos 1469 y 1470 de 2025
+  const SMMLV_2026 = 1_750_905; // Salario Mínimo Mensual Legal Vigente 2026 (Decretos 1469 y 1470 del 29-dic-2025)
+  const LIMITE_RANGO_2 = 2 * SMMLV_2026; // 2 SMMLV = $3.501.810
+  const LIMITE_RANGO_3 = 4 * SMMLV_2026; // 4 SMMLV (tope elegibilidad) = $7.003.620
+  // Subsidio a la cuota inicial expresado en SMMLV (Mi Casa Ya 2026):
+  // 30 SMMLV para hogares de menores ingresos (Sisbén A1–C8 ≈ 0–2 SMMLV)
+  // 20 SMMLV para hogares de ingresos medios-bajos (Sisbén C9–D20 ≈ 2–4 SMMLV)
+  const SUBSIDIO_RANGO_1 = 30 * SMMLV_2026; // 30 SMMLV = $52.527.150
+  const SUBSIDIO_RANGO_2 = 20 * SMMLV_2026; // 20 SMMLV = $35.018.100
   const CUOTA_INICIAL_PORCENTAJE = 0.30; // 30% valor vivienda (típico)
-  const DESCUENTO_TASA_RANGO_1 = 5; // puntos porcentuales 0–2 SMMLV
-  const DESCUENTO_TASA_RANGO_2 = 4; // puntos porcentuales 2–4 SMMLV
-  const LIMITE_VIS = 188_000_000; // Límite VIS 2026 (aproximado)
-  const LIMITE_VIP_MAX = 280_000_000; // Límite VIP máx. 2026
+  const DESCUENTO_TASA_RANGO_1 = 5; // cobertura de tasa FRECH (pp aprox.), tramo menores ingresos
+  const DESCUENTO_TASA_RANGO_2 = 4; // cobertura de tasa FRECH (pp aprox.), tramo medios-bajos
+  const LIMITE_VIS = 262_635_750; // Tope VIS 2026 ciudades principales = 150 SMMLV
+  const LIMITE_VIP_MAX = 262_635_750; // Tope máx. elegible = 150 SMMLV (VIP hasta 90 SMMLV)
 
   // Validar requisitos básicos
   let cumple = true;
@@ -56,13 +59,14 @@ export function compute(i: Inputs): Outputs {
     descuento_tasa = 0;
   }
 
-  // Validar tipo vivienda
+  // Validar tipo vivienda (topes 2026 en SMMLV: VIS hasta 150 SMMLV, VIP hasta 90 SMMLV)
+  const LIMITE_VIP = 90 * SMMLV_2026; // 90 SMMLV = $157.581.450
   if (i.tipo_vivienda === 'vis' && i.valor_vivienda > LIMITE_VIS) {
     cumple = false;
-    rango_beneficio += ' | VIS exceeds $188M';
-  } else if (i.tipo_vivienda === 'vip' && (i.valor_vivienda <= LIMITE_VIS || i.valor_vivienda > LIMITE_VIP_MAX)) {
+    rango_beneficio += ' | VIS supera tope 150 SMMLV ($262,6M)';
+  } else if (i.tipo_vivienda === 'vip' && i.valor_vivienda > LIMITE_VIP) {
     cumple = false;
-    rango_beneficio += ' | VIP fuera rango $188M–$280M';
+    rango_beneficio += ' | VIP supera tope 90 SMMLV ($157,6M)';
   }
 
   // Calcular cuota inicial teórica y neta
@@ -106,7 +110,7 @@ export function compute(i: Inputs): Outputs {
       }
     : {
         title: 'No calificás con estos datos',
-        text: `Con los datos cargados **no accederías** al subsidio Mi Casa Ya: ${rango_beneficio}. Revisá que tus ingresos estén dentro de 4 SMMLV y que el valor de la vivienda respete el tope ${i.tipo_vivienda.toUpperCase()} (VIS hasta $188M, VIP $188M–$280M).`,
+        text: `Con los datos cargados **no accederías** al subsidio Mi Casa Ya: ${rango_beneficio}. Revisá que tus ingresos estén dentro de 4 SMMLV ($7.003.620) y que el valor de la vivienda respete el tope ${i.tipo_vivienda.toUpperCase()} (VIS hasta 150 SMMLV ≈ $262,6M, VIP hasta 90 SMMLV ≈ $157,6M).`,
         tone: 'warn',
         icon: '🏠',
       };

@@ -1,7 +1,6 @@
 export interface Inputs {
   monto_bruto_honorario: number;
   incluye_iva: boolean;
-  es_pyme: boolean;
   anio_factura: number;
 }
 
@@ -19,21 +18,16 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Tasas retención por año - Ley 21.578 reforma progresiva
+  // Tasas retención por año - Ley 21.133 (2019), gradualidad hasta 2028
+  // Fuente SII: https://www.sii.cl/destacados/boletas_honorarios/aumento_gradual.html
   const tasas_por_anio: { [key: number]: number } = {
-    2026: 0.1375,  // 13.75% vigente 2026
-    2027: 0.155,   // 15.5% vigente 2027
-    2028: 0.17,    // 17% vigente 2028+
+    2026: 0.1525,  // 15,25% vigente 2026 (subió desde 14,5% en 2025)
+    2027: 0.16,    // 16% vigente 2027 (+0,75 pp)
+    2028: 0.17,    // 17% vigente 2028+ (+1 pp, tope final)
   };
 
   // Obtener tasa aplicable
-  let tasa_retencion = tasas_por_anio[i.anio_factura] || 0.17;
-
-  // Si es pyme, aplica retención reducida 8.75%
-  // Fuente: SII artículo 14 ter, UTA máximo $4.310.000 (2026)
-  if (i.es_pyme) {
-    tasa_retencion = 0.0875;  // 8.75% régimen pyme
-  }
+  const tasa_retencion = tasas_por_anio[i.anio_factura] || 0.17;
 
   // Separar IVA si está incluido en monto
   let monto_bruto_neto = i.monto_bruto_honorario;
@@ -57,12 +51,8 @@ export function compute(i: Inputs): Outputs {
   const total_costo_empresa = monto_bruto_neto + iva_incluido;
 
   // Obligación SII - texto dinámico
-  let obligacion_declaracion = "Empresa retiene y deposita en SII antes día 12 hábil siguiente.";
-  if (i.es_pyme) {
-    obligacion_declaracion = "Régimen pyme: retención reducida 8.75%. Profesional declara en F-29 o F-20.";
-  } else {
-    obligacion_declaracion = "Retención estándar 13.75%. Profesional reporta en formulario 29 y reconcilia en abril.";
-  }
+  const tasaPctTxt = (tasa_retencion * 100).toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const obligacion_declaracion = `Quien paga (empresa/pagador) retiene el ${tasaPctTxt}% y lo declara/entera en SII (F-29) dentro de los 12 primeros días del mes siguiente. El profesional reconcilia en la Operación Renta de abril.`;
 
   // Proyección anual (12 meses con mismo monto)
   const proyeccion_anual_12_meses = monto_retencion * 12;

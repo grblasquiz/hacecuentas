@@ -15,11 +15,11 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Cifras MLS 2025 (USD)
-const SALARY_CAP = 5_470_000;
+// Cifras MLS 2025 (USD) — Roster Rules & Regulations oficiales 2025
+const SALARY_CAP = 5_950_000;
 const MAX_BUDGET_CHARGE = 743_750; // DP hit máximo 2025
 const MIN_SENIOR = 104_000;
-const MIN_SUPPLEMENTAL = 71_401;
+const MIN_SUPPLEMENTAL = 80_622; // reserve minimum salary 2025
 const YOUNG_DP_AGE = 23;
 
 export function sueldoMlsDesignated(i: Inputs): Outputs {
@@ -46,7 +46,7 @@ export function sueldoMlsDesignated(i: Inputs): Outputs {
       regla = `Designated Player: sólo impacta USD ${MAX_BUDGET_CHARGE.toLocaleString('en-US')} al cap sin importar salario real (sobrante lo paga el club).`;
       break;
     case 'young-dp':
-      capHit = edad <= 20 ? 200_000 : edad <= YOUNG_DP_AGE ? 400_000 : MAX_BUDGET_CHARGE;
+      capHit = edad <= 20 ? 150_000 : edad <= YOUNG_DP_AGE ? 200_000 : MAX_BUDGET_CHARGE;
       esDp = true;
       regla = `Young DP (${edad <= 20 ? '≤20' : '21–23'} años): hit reducido (USD ${capHit.toLocaleString('en-US')}).`;
       break;
@@ -58,7 +58,7 @@ export function sueldoMlsDesignated(i: Inputs): Outputs {
     case 'minimo-supplemental':
       capHit = 0; // slots 21-30 no cuentan para cap
       cuentaParaCap = false;
-      regla = `Supplemental roster (slots 21–30): no cuenta al cap. Mínimo USD ${MIN_SUPPLEMENTAL.toLocaleString('en-US')}.`;
+      regla = `Supplemental roster (slots 21–31): no cuenta al cap. Mínimo USD ${MIN_SUPPLEMENTAL.toLocaleString('en-US')}.`;
       break;
   }
 

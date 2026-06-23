@@ -19,7 +19,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 desde la tabla maestra (Decretos 1469 y 1470 de 2025)
+  // Constantes 2026 desde la tabla maestra. SMLMV: Decreto 0159/2026 (transitorio,
+  // tras suspenderse el 1469/2025 por el Consejo de Estado). Auxilio: Decreto 1470/2025 (vigente).
   const SMLMV_2026 = COLOMBIA_2026.smlmv; // $1.750.905
   const AUXILIO_TRANSPORTE_2026 = COLOMBIA_2026.auxilioTransporte; // $249.095
   const TOPE_AUXILIO = COLOMBIA_2026.topeAuxilioSmlmv * SMLMV_2026; // 2 × SMLMV = $3.501.810

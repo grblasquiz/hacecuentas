@@ -38,7 +38,9 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Constantes SII 2026 Chile
-  const TASA_RETENCION_HONORARIOS = 0.1375; // 13.75% retención en fuente
+  // Retención boleta de honorarios 2026 = 15,25% (Ley 21.133, gradualidad hasta 17% en 2028)
+  // Fuente SII: https://www.sii.cl/destacados/boletas_honorarios/aumento_gradual.html
+  const TASA_RETENCION_HONORARIOS = 0.1525; // 15,25% retención en fuente 2026
   const PORC_IMPONIBLE_HONORARIOS = 0.80; // 80% imponible
   const TASA_AFP = 0.10; // 10% cotización AFP obligatoria
   const TASA_SALUD_FONASA = 0.07; // 7% descuento salud

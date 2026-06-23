@@ -6,11 +6,12 @@ export function instagramHashtagsOptimos(i: Inputs): Outputs {
   const tp = String(i.tipoPost);
   const tam = String(i.tamano);
   if (!tp || !tam) throw new Error('Seleccioná tipo y tamaño');
+  // Instagram limita a 5 hashtags por post/reel desde dic-2025 (antes 30). Ningún valor supera 5.
   const grid: Record<string, Record<string, string>> = {
-    'Feed post': { '< 1K followers': '5-7', '1K - 10K': '4-6', '10K - 100K': '3-5', '100K - 1M': '3-4', '+1M': '3-4' },
-    'Reel': { '< 1K followers': '5-7', '1K - 10K': '4-5', '10K - 100K': '3-5', '100K - 1M': '3', '+1M': '3' },
+    'Feed post': { '< 1K followers': '5', '1K - 10K': '4-5', '10K - 100K': '3-5', '100K - 1M': '3-4', '+1M': '3-4' },
+    'Reel': { '< 1K followers': '5', '1K - 10K': '4-5', '10K - 100K': '3-5', '100K - 1M': '3', '+1M': '3' },
     'Story': { '< 1K followers': '1-3', '1K - 10K': '1-2', '10K - 100K': '1-2', '100K - 1M': '1-2', '+1M': '1-2' },
-    'Carrousel': { '< 1K followers': '5-8', '1K - 10K': '4-6', '10K - 100K': '3-5', '100K - 1M': '3-4', '+1M': '3-4' },
+    'Carrousel': { '< 1K followers': '5', '1K - 10K': '4-5', '10K - 100K': '3-5', '100K - 1M': '3-4', '+1M': '3-4' },
   };
   const cant = grid[tp]?.[tam] || '3-5';
   const donde = tp === 'Story' ? 'Sticker de hashtag dentro de la story' : 'Caption o primer comentario (reach similar)';
