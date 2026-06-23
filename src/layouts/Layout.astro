@@ -586,7 +586,14 @@ const globalSchema = {
          Si tras la aprobación los anuncios tardan en aparecer, bajar el delay,
          pero NUNCA volver al tag estático en head sin re-medir Lighthouse. -->
     <meta name="google-adsense-account" content="ca-pub-6276944768601561" />
-    <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){setTimeout(f,1500)})(function(){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';document.head.appendChild(s);});});`} />
+    <!-- Funding Choices (CMP certificado IAB TCF v2.2) + AdSense, ambos diferidos a
+         post-load + idle (mismo motivo performance que AdSense: no competir con LCP).
+         FC sólo muestra mensaje de consentimiento en EEA+UK — geo-restringido por Google,
+         no-op en Argentina/LATAM. Requerido por Google para servir ads en la UE (ene-2024).
+         Se inyecta ANTES de adsbygoogle para que el consentimiento esté presente.
+         La UI de consentimiento UE pasa a ser FC; el banner casero (CookieConsent.astro)
+         deja de auto-mostrarse para no duplicar. -->
+    <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){setTimeout(f,1500)})(function(){var fc=document.createElement('script');fc.async=true;fc.src='https://fundingchoicesmessages.google.com/i/pub-6276944768601561?ers=1';document.head.appendChild(fc);(function(){function sig(){if(!window.frames['googlefcPresent']){if(document.body){var i=document.createElement('iframe');i.style.cssText='width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;display:none';i.name='googlefcPresent';document.body.appendChild(i);}else{setTimeout(sig,0);}}}sig();})();var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';document.head.appendChild(s);});});`} />
 
     <!-- Microsoft Clarity (signal positiva para Bing/Copilot rankings) -->
     <!-- Se activa solo si está seteada la env var PUBLIC_MS_CLARITY_ID en build. -->
