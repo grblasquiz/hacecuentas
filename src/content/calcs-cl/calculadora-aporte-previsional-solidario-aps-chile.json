@@ -9,9 +9,9 @@
   "icon": "🤝",
   "formulaId": "aporte-previsional-solidario-aps-chile",
   "intro": "El **Aporte Previsional Solidario (APS)** es un complemento de pensión dirigido a adultos mayores con ingresos insuficientes, integrado hoy en la **Pensión Garantizada Universal (PGU)** desde 2022. Esta calculadora estima el APS aplicable según edad, pensión actual y condición de vulnerabilidad (Registro Social de Hogares). Aunque sustituido por PGU, permanece relevante para casos históricos y análisis comparativos.",
-  "keyTakeaway": "El APS complementa pensiones bajo $ 170.000–$ 220.000 MXN mensuales (PMAS 2026). Beneficiarios: mayores 65 años con RSH vulnerable. Máximo complemento: hasta alcanzar PMAS.",
+  "keyTakeaway": "La PGU (que reemplazó al APS desde 2022) entrega hasta $231.732/mes a personas de 65 a 81 años y $250.275/mes desde los 82 años. Se recibe completa con una pensión base de hasta $789.139 y baja en forma decreciente hasta $0 al llegar a $1.252.602. Requisitos: 65 años o más, integrar el 90% más pobre y 20 años de residencia. La administra el IPS (no el SII).",
   "useCases": [
-    "Estimar complemento pensional si estás en el 40% más vulnerable (RSH).",
+    "Estimar el complemento de pensión si integrás el 90% más pobre (quedás fuera solo en el 10% más rico).",
     "Comparar APS histórico vs. PGU actual para jubilados pre-2022.",
     "Planificar ingresos complementarios en vejez con cobertura solidaria.",
     "Verificar elegibilidad y monto teórico de aporte previsional.",
@@ -27,17 +27,17 @@
       "max": 100,
       "step": 1,
       "placeholder": "65",
-      "tooltip": "Mínimo 65 años para APS. Mayores de 70 años: APS incrementado."
+      "tooltip": "Mínimo 65 años. Desde los 82 años la PGU máxima es mayor: $250.275 frente a $231.732 del tramo 65–81."
     },
     {
       "id": "pension_actual",
-      "label": "Pensión actual ($ MXN/mes)",
+      "label": "Pensión base autofinanciada (CLP/mes)",
       "type": "number",
       "min": 0,
-      "max": 500000,
-      "step": 1000,
+      "max": 2000000,
+      "step": 10000,
       "placeholder": "150000",
-      "tooltip": "Monto mensual que recibís de AFP, APV o pensión solidaria anterior."
+      "tooltip": "Pensión base mensual que ya tenés (AFP, renta vitalicia, etc.), antes del aporte estatal. Determina cuánta PGU te corresponde."
     },
     {
       "id": "rsh_decil",
@@ -47,188 +47,213 @@
       "max": 10,
       "step": 1,
       "placeholder": "3",
-      "tooltip": "Registro Social de Hogares: deciles 1–4 (40% vulnerable) acceden a APS. Consultá en mides.gob.cl."
-    },
-    {
-      "id": "numero_dependientes",
-      "label": "Número de dependientes económicos",
-      "type": "number",
-      "min": 0,
-      "max": 10,
-      "step": 1,
-      "placeholder": "1",
-      "tooltip": "Hijos u otros a cargo. Algunos factores históricos aumentaban APS con dependientes."
-    },
-    {
-      "id": "es_indigena",
-      "label": "¿Pertenecés a pueblo indígena?",
-      "type": "select",
-      "options": [
-        {
-          "value": "no",
-          "label": "No"
-        },
-        {
-          "value": "si",
-          "label": "Sí (Mapuche, Aymara, etc.)"
-        }
-      ],
-      "placeholder": "No",
-      "tooltip": "Criterio adicional de vulnerabilidad histórico en APS."
+      "tooltip": "Registro Social de Hogares. La PGU excluye solo al 10% más rico (decil 10): acceden los deciles 1 a 9. Consultá tu decil en www.rsh.cl."
     }
   ],
   "outputs": [
     {
       "id": "elegible_aps",
-      "label": "¿Elegible APS 2026?",
+      "label": "¿Elegible para la PGU 2026?",
       "type": "boolean",
-      "tooltip": "Cumple edad ≥65, RSH decil 1–4, pensión < PMAS."
+      "tooltip": "Cumple 65 años o más, no estar en el 10% más rico (deciles 1–9) y pensión base bajo $1.252.602."
     },
     {
       "id": "pmas_2026",
-      "label": "PMAS 2026 ($ MXN/mes)",
+      "label": "PGU máxima según tu edad (CLP/mes)",
       "type": "currency",
-      "tooltip": "Pensión Máxima con Aporte Solidario = base para cálculo complemento."
+      "tooltip": "Tope de la PGU: $231.732 entre 65 y 81 años, o $250.275 desde los 82 años."
     },
     {
       "id": "brecha_pension",
-      "label": "Brecha pensional ($ MXN)",
+      "label": "Reducción de PGU por tu pensión base (CLP)",
       "type": "currency",
-      "tooltip": "PMAS menos tu pensión actual. Si negativa, no hay complemento."
+      "tooltip": "Cuánto se descuenta del tope porque tu pensión base supera $789.139. Si es menor o igual a ese valor, no hay reducción."
     },
     {
       "id": "aps_complemento",
-      "label": "APS complemento estimado ($ MXN/mes)",
+      "label": "PGU mensual estimada (CLP/mes)",
       "type": "currency",
-      "tooltip": "Monto adicional mensual si eres elegible. Máximo: brecha pensional."
+      "tooltip": "Complemento mensual de la PGU según tu edad y tu pensión base."
     },
     {
       "id": "pension_total_aps",
-      "label": "Pensión total con APS ($ MXN/mes)",
+      "label": "Pensión total con PGU (CLP/mes)",
       "type": "currency",
-      "tooltip": "Tu pensión actual + complemento APS = hasta PMAS."
+      "tooltip": "Tu pensión base más la PGU estimada."
     },
     {
       "id": "motivo_ineligibilidad",
       "label": "Motivo ineligibilidad (si aplica)",
       "type": "text",
-      "tooltip": "Razón por la que no cumplís requisitos APS."
+      "tooltip": "Razón por la que no cumplís los requisitos de la PGU."
     },
     {
       "id": "referencias_pgu",
       "label": "Comparación PGU 2026",
       "type": "text",
-      "tooltip": "Contexto: PGU reemplaza APS desde 2022. Monto PGU 2026 referencial."
+      "tooltip": "Contexto y monto de referencia de la PGU 2026, que reemplazó al APS desde 2022."
     }
   ],
-  "explanation": "## ¿Qué es el Aporte Previsional Solidario (APS)?\n\nEl APS es un complemento de pensión que aumenta ingresos de adultos mayores con pensiones insuficientes, integrado actualmente en la Pensión Garantizada Universal desde 2022. Beneficia a mayores de 65 años en condición vulnerable, complementando hasta alcanzar el Pensión Mínima Garantizada (PMG) establecida anualmente por ley.\n\n## Cómo se calcula el APS (Aporte Previsional Solidario) Chile\n\nEl **APS** fue un mecanismo de complemento pensional dirigido a adultos mayores con pensiones insuficientes, operativo entre 2008 y 2021. Desde 2022 fue reemplazado por la **Pensión Garantizada Universal (PGU)**, pero permanece relevante para análisis histórico y beneficiarios en transición.\n\n### Requisitos de elegibilidad\n\n1. **Edad**: mínimo 65 años (hasta 2021).\n2. **Registro Social de Hogares (RSH)**: pertenencia al 40% más vulnerable (deciles 1–4).\n3. **Pensión actual**: inferior a PMAS (Pensión Máxima con Aporte Solidario).\n4. **Cotización**: mínimo 20 años de aporte previsional (historicidad).\n5. **Nacionalidad**: ciudadanía chilena o residencia legal.\n\n### Fórmula base\n\n```\nAPS = máx(0, PMAS − pensión_actual)\n```\n\nDonde:\n- **PMAS 2026**: aprox. $\\,220.000–$\\,225.000 MXN/mes (IPC actualizado anual por SII).\n- **Pensión actual**: lo que recibís de AFP, Fonasa complementario, APV u otra fuente.\n- **Resultado**: complemento mensual hasta igualar PMAS.\n\n### Ajustes adicionales (históricos)\n\n- **Edad 70+**: algunos años incluían bonificación adicional (~5–10% del monto base).\n- **Dependientes**: en ciertos tramos, se consideraban cargas económicas.\n- **Condición indígena**: factor de vulnerabilidad adicional reconocido.\n\n## Ejemplo numérico\n\n| Concepto | Valor |\n|----------|-------|\n| **Tu edad** | 68 años |\n| **Pensión actual (AFP)** | $\\,150.000 MXN/mes |\n| **RSH decil** | 2 (vulnerable ✓) |\n| **PMAS 2026** | $\\,220.000 MXN/mes |\n| **Brecha** | $\\,220.000 − $\\,150.000 = $\\,70.000 |\n| **APS complemento** | $\\,70.000 MXN/mes |\n| **Pensión total** | $\\,150.000 + $\\,70.000 = $\\,220.000 MXN |\n\n### Diferencias APS vs. PGU (2022 en adelante)\n\n| Aspecto | APS (hasta 2021) | PGU (2022+) |\n|--------|------------------|------------|\n| Base elegibilidad | RSH deciles 1–4 | RSH + edad 65+ |\n| Monto máximo | PMAS (~$\\,220k) | PGU 2026 (~$\\,225k) |\n| Complemento | Hasta PMAS | Universal garantizado |\n| Administración | SII + AFP | SII directo |\n| Transición | Automática | En proceso 2022–2026 |\n\n## Limitaciones y consideraciones\n\n1. **Carácter histórico**: APS fue descontinuado formalmente. Esta calculadora es **referencial y educativa**.\n2. **Casos remanentes**: algunos beneficiarios activos en 2026 mantienen derechos APS históricos; consulta SII.\n3. **RSH actualización**: el Registro Social de Hogares se revisa anualmente. Tu decil puede cambiar.\n4. **Cotización**: requería ≥20 años de aporte verificado. Para proyectar cuánto habrás acumulado en AFP al momento de jubilar, la [calculadora de pensión de jubilación Chile](/cl/calculadora-pension-jubilacion-chile-edad-aportes-2026) permite estimar el saldo según edad y aportes mensuales.\n5. **Indexación**: PMAS se reajusta en línea con IPC anual (SII anuncia enero).\n6. **Interacción con otras pensiones**: APV, rentas vitalicias o bonificaciones complementarias pueden afectar cálculo neto. Podés complementar el APS/PGU con aportes voluntarios a [Cuenta 2 AFP](/cl/calculadora-cuenta-2-afp-chile-aporte-voluntario-rendimiento) para mejorar tu pensión base.\n7. **Validez legal**: para trámites oficiales, dirígete a **www.sii.cl** o sucursal local.\n\nSi ya estás cerca de la edad de retiro, la [calculadora AFP Chile 2026](/cl/calculadora-afp-pension-chile-2026-tabla-comisiones) compara comisiones entre administradoras y proyecta el saldo acumulado según el fondo elegido (A–E).",
+  "explanation": "## ¿Qué es la Pensión Garantizada Universal (PGU) y su relación con el APS?\n\nEl **Aporte Previsional Solidario (APS)** fue un complemento de pensión para adultos mayores con pensiones bajas, vigente entre 2008 y 2021. Desde 2022 fue **reemplazado por la Pensión Garantizada Universal (PGU)**, el instrumento vigente hoy. Esta calculadora estima el monto de **PGU** que te corresponde con las reglas actuales y mantiene el contexto histórico del APS para comparaciones.\n\nLa PGU la **administra y paga el Instituto de Previsión Social (IPS)** y los trámites se hacen en **ChileAtiende**. El **SII** es el organismo tributario y **no** interviene en la PGU.\n\n## Cómo se calcula la PGU 2026\n\nEl monto depende de tu **edad** y de tu **pensión base autofinanciada** (lo que recibís de tu AFP, renta vitalicia u otra fuente, antes del aporte del Estado).\n\n### Requisitos de elegibilidad\n\n1. **Edad**: 65 años o más.\n2. **Focalización**: integrar el **90% más pobre** de la población; quedás fuera solo si estás en el **10% más rico**.\n3. **Pensión base**: inferior a la **Pensión Base Superior (PBS)** de **$1.252.602**.\n4. **Residencia**: al menos 20 años de residencia en Chile.\n\n### Montos vigentes (reajuste +3,45% desde el 1 de febrero de 2026)\n\n| Tramo de edad | PGU máxima 2026 |\n|---------------|-----------------|\n| **65 a 81 años** | **$231.732/mes** |\n| **82 años o más** | **$250.275/mes** |\n\nEl reajuste se aplica cada **1 de febrero** según la variación del **IPC** del año calendario anterior (Ley N° 21.419).\n\n### Fórmula del monto\n\n- Si tu **pensión base es menor o igual a $789.139** (Pensión Base Inferior, PBI): recibís el **100%** de la PGU máxima.\n- Si tu pensión base está **entre $789.139 y $1.252.602**, la PGU **baja en forma lineal**:\n\n**PGU = PGU_máx × [ 1 − (pensión base − 789.139) ÷ (1.252.602 − 789.139) ]**\n\n- Si tu **pensión base es igual o mayor a $1.252.602** (PBS): **no corresponde PGU**.\n\n## Ejemplo numérico\n\n| Concepto | Valor |\n|----------|-------|\n| **Edad** | 68 años (tramo 65–81) |\n| **Pensión base (AFP)** | $1.000.000/mes |\n| **PGU máxima del tramo** | $231.732 |\n| **Factor por pensión base** | 1 − (1.000.000 − 789.139) ÷ 463.463 = 0,545 |\n| **PGU estimada** | 231.732 × 0,545 ≈ **$126.301/mes** |\n| **Pensión total** | 1.000.000 + 126.301 = **$1.126.301/mes** |\n\nCon una pensión base de **$150.000** (bajo la PBI) recibirías, en cambio, la **PGU completa de $231.732**, para una pensión total de **$381.732**.\n\n## Diferencias entre el APS (hasta 2021) y la PGU (2022 en adelante)\n\n| Aspecto | APS (hasta 2021) | PGU (2022 en adelante) |\n|---------|------------------|------------------------|\n| Población objetivo | 40% más vulnerable | 90% más pobre |\n| Monto máximo | PMAS (tope histórico) | $231.732 / $250.275 (2026) |\n| Administra y paga | IPS | IPS |\n| Trámite | IPS / ChileAtiende | ChileAtiende |\n\n## Limitaciones y consideraciones\n\n1. **Carácter referencial**: es una estimación educativa; el monto oficial lo determina el **IPS** según tu pensión base y antecedentes.\n2. **Focalización**: el 90% se mide con un instrumento estatal basado en el Registro Social de Hogares; tu situación puede cambiar si se actualizan tus datos.\n3. **Reajuste anual**: los montos y los topes PBI/PBS se reajustan cada 1 de febrero por IPC.\n4. **Cerca del tope**: sobre la PBS ($1.252.602) no hay PGU, y cerca de ese valor el aporte es muy bajo.\n5. **Impuestos**: la PGU está **exenta de impuesto a la renta**.\n6. **Trámite oficial**: se solicita y consulta en **www.chileatiende.gob.cl** o en sucursales del **IPS**.\n\nPara proyectar cuánto habrás acumulado en tu AFP al jubilar, la [calculadora de pensión de jubilación Chile](/cl/calculadora-pension-jubilacion-chile-edad-aportes-2026) estima el saldo según edad y aportes mensuales. Podés complementar tu pensión con aportes voluntarios a la [Cuenta 2 AFP](/cl/calculadora-cuenta-2-afp-chile-aporte-voluntario-rendimiento) y comparar comisiones entre administradoras con la [calculadora AFP Chile 2026](/cl/calculadora-afp-pension-chile-2026-tabla-comisiones).",
   "faq": [
     {
-      "q": "¿Dónde consulto mi estado en RSH para APS?",
-      "a": "En **www.rsh.cl** o **www.mides.gob.cl** (Ministerio de Desarrollo Social). Necesitas RUT e ingresar al portal ciudadano. Tu decil determina elegibilidad."
+      "q": "¿Dónde consulto mi situación en el RSH para la PGU?",
+      "a": "En **www.rsh.cl** (Registro Social de Hogares) o en **www.chileatiende.gob.cl**. Necesitás tu RUT y ClaveÚnica. Tu posición en la distribución (deciles) define si integrás el 90% que accede a la PGU."
     },
     {
       "q": "¿APS y PGU son lo mismo?",
-      "a": "No. **APS** (2008–2021) era complemento para RSH vulnerable. **PGU** (2022+) es pensión garantizada universal, más amplia. Si recibías APS, fuiste migrado automáticamente a PGU con monto ≥ anterior."
+      "a": "No. El **APS** (2008–2021) complementaba pensiones del 40% más vulnerable. La **PGU** (2022 en adelante) es una pensión garantizada universal más amplia (90% más pobre). Si recibías APS, fuiste migrado automáticamente a la PGU con un monto igual o mayor."
     },
     {
-      "q": "¿Qué es PMAS exactamente?",
-      "a": "**Pensión Máxima con Aporte Solidario**: monto techo histórico de APS, actualizado anualmente por IPC. En 2026 ronda $\\,220.000–$\\,225.000 MXN. SII publica el valor exacto en enero."
+      "q": "¿Qué era el PMAS y qué lo reemplazó?",
+      "a": "El **PMAS (Pensión Máxima con Aporte Solidario)** era el tope del APS hasta 2021. Hoy la **PGU** usa dos referencias: la **Pensión Base Inferior ($789.139)**, bajo la cual recibís el 100% de la PGU, y la **Pensión Base Superior ($1.252.602)**, sobre la cual no corresponde. Los montos los reajusta la **Superintendencia de Pensiones** cada 1 de febrero."
     },
     {
-      "q": "¿Cuánto tiempo tarda el trámite de APS?",
-      "a": "APS ya no se tramita (2022+). Estás automáticamente en **PGU** si cumpliste requisitos. Trámites históricos tardaban 30–60 días. Para consultar estado: www.sii.cl → Mi SII → Pensiones."
+      "q": "¿Cómo se tramita hoy la PGU?",
+      "a": "El APS ya no se tramita: desde 2022 rige la **PGU**. Si cumplís los requisitos y aún no la recibís, podés solicitarla en **www.chileatiende.gob.cl** o en una sucursal del **IPS**. Si ya estás en nómina, el pago aparece automáticamente."
     },
     {
-      "q": "¿Pierde APS si trabajo?",
-      "a": "En el modelo original: ingresos por trabajo podían afectar RSH y elegibilidad futura. Actualmente, bajo **PGU**, no hay penalización por ingresos laborales si estás jubilado (>65 años)."
+      "q": "¿Pierdo la PGU si trabajo?",
+      "a": "No. Estando jubilado (65 años o más), los ingresos por trabajo no te hacen perder la PGU. Lo que influye es tu **pensión base**: si sube mucho, la PGU se reduce de forma proporcional."
     },
     {
-      "q": "¿APS se hereda o es solo durante vida?",
-      "a": "APS **no es heritable**. Es beneficio personal, vitalicio para quien lo perciba. Al fallecer el beneficiario, cesa. La viuda/o puede acceder a pensión de sobrevivencia (distinto)."
+      "q": "¿La PGU se hereda o es solo en vida?",
+      "a": "La PGU **no es heredable**: es un beneficio personal y vitalicio que cesa al fallecer la persona. Sus cargas pueden acceder a una pensión de sobrevivencia, que es un beneficio distinto."
     },
     {
-      "q": "¿Cómo verifico si tengo derechos APS remanentes en 2026?",
-      "a": "Contacta a **SII**: teléfono 600 352 4000 o portal **www.sii.cl**. Ingresa con tu RUT + contraseña. Sección 'Consulta de Derechos Pensionales' o 'Mi SII'. Si estás en nómina PGU, aparecerá automáticamente."
+      "q": "¿Cómo verifico si recibo la PGU en 2026?",
+      "a": "Consultá en **ChileAtiende** (www.chileatiende.gob.cl) o en el **IPS**, que administra y paga la PGU. Ingresá con tu **ClaveÚnica** para ver tu nómina de pago. El **SII** no interviene en esto: es el organismo de impuestos, no de pensiones."
     },
     {
-      "q": "¿Qué pasa si mi pensión sube (p. ej., por APV)?",
-      "a": "Si tu pensión base sube y supera PMAS, **APS se reduce proporcionalmente** hasta $0. PGU aplica criterio similar: garantiza mínimo, pero no incrementa si estás arriba del techo."
+      "q": "¿Qué pasa si mi pensión base sube (por ejemplo, por APV)?",
+      "a": "Si tu pensión base sube, la PGU **baja en forma proporcional**. Al superar la **Pensión Base Superior ($1.252.602)** dejás de recibir PGU. Por eso conviene estimar el efecto neto antes de rescatar o capitalizar ahorros."
     },
     {
-      "q": "¿RSH decil 5–10 puede recibir APS?",
-      "a": "No. APS era **exclusivamente para deciles 1–4** (40% más vulnerable). Deciles 5–10 no cumplen requisito. PGU (2022+) es más inclusiva, pero con montos escalonados por vulnerabilidad."
+      "q": "¿Los deciles 5 a 9 pueden recibir la PGU?",
+      "a": "Sí. A diferencia del antiguo APS (que llegaba al 40% más vulnerable, deciles 1–4), la **PGU alcanza al 90% más pobre**: acceden los **deciles 1 a 9**. Solo queda excluido el **decil 10** (10% más rico)."
     },
     {
-      "q": "¿Debo pagar impuestos sobre APS/PGU?",
-      "a": "**No**: APS y PGU están **exentas de impuesto a la renta** (IRPF). Son transferencias solidarias, no renta tributable según Código Tributario Chile."
+      "q": "¿Debo pagar impuestos por la PGU?",
+      "a": "**No**. La PGU está **exenta de impuesto a la renta**: es una transferencia del Estado, no una renta tributable."
     }
   ],
   "sources": [
     {
-      "name": "SII — Aporte Previsional Solidario (histórico)",
-      "url": "https://www.sii.cl/portales/publico/ayuda/temas/pensiones/aporte-previsional-solidario-aps.html",
-      "publisher": "Servicio de Impuestos Internos",
+      "name": "ChileAtiende — Pensión Garantizada Universal (PGU)",
+      "url": "https://www.chileatiende.gob.cl/fichas/130457-aumento-de-la-pension-garantizada-universal-pgu",
+      "publisher": "IPS / ChileAtiende",
       "date": "2026"
     },
     {
-      "name": "SII — Pensión Garantizada Universal (PGU) 2026",
-      "url": "https://www.sii.cl/portales/publico/ayuda/temas/pensiones/pension-garantizada-universal.html",
-      "publisher": "Servicio de Impuestos Internos",
+      "name": "IPS — Instituto de Previsión Social (administra y paga la PGU)",
+      "url": "https://www.ips.gob.cl/",
+      "publisher": "Instituto de Previsión Social",
+      "date": "2026"
+    },
+    {
+      "name": "Superintendencia de Pensiones — Reajuste de la PGU desde febrero 2026 (+3,45%)",
+      "url": "https://www.spensiones.cl/portal/institucional/594/w3-article-16886.html",
+      "publisher": "Superintendencia de Pensiones",
       "date": "2026"
     },
     {
       "name": "MIDES — Registro Social de Hogares (RSH)",
       "url": "https://www.rsh.cl/",
-      "publisher": "Ministerio de Desarrollo Social e Inclusión",
+      "publisher": "Ministerio de Desarrollo Social y Familia",
       "date": "2026"
     },
     {
-      "name": "Banco Central de Chile — IPC y Reajustes 2026",
+      "name": "Banco Central de Chile — IPC y reajustes 2026",
       "url": "https://www.bcentral.cl/contenido/-/detalle/ipc",
-      "publisher": "Banco Central",
-      "date": "2026"
-    },
-    {
-      "name": "Superintendencia de Pensiones — Normativa AFP y Pensiones",
-      "url": "https://www.spensiones.cl/",
-      "publisher": "Superintendencia de Pensiones",
+      "publisher": "Banco Central de Chile",
       "date": "2026"
     }
   ],
   "dataUpdate": {
     "frequency": "yearly",
-    "lastUpdated": "2026-04-28",
-    "source": "SII, MIDES RSH, Banco Central Chile",
-    "sourceUrl": "https://www.sii.cl/portales/publico/ayuda/temas/pensiones/",
+    "lastUpdated": "2026-06-22",
+    "source": "Superintendencia de Pensiones, IPS/ChileAtiende, MIDES (RSH), Banco Central de Chile",
+    "sourceUrl": "https://www.chileatiende.gob.cl/fichas/130457-aumento-de-la-pension-garantizada-universal-pgu",
     "updateType": "manual",
-    "notes": "PMAS 2026 actualizado por IPC enero. RSH deciles publicados Q1. PGU montos vigentes publicados SII. APS como referencia histórica; PGU es instrumento vigente."
+    "notes": "Montos PGU vigentes desde el 1 de febrero de 2026 (reajuste +3,45% por IPC ene–dic 2025, Ley N° 21.419): tope $231.732 (65–81 años) y $250.275 (82 años o más), PBI $789.139, PBS $1.252.602. La administra el IPS; trámites en ChileAtiende. El APS (2008–2021) queda como referencia histórica."
   },
   "referenceTables": [
     {
       "title": "Montos oficiales de la PGU vigentes desde febrero 2026 (pesos chilenos)",
       "caption": "Valores reajustados un 3,45% (variación IPC enero–diciembre 2025) según la Ley N° 21.419. La PGU es el instrumento vigente que reemplazó al APS desde 2022.",
-      "headers": ["Concepto", "Monto 2026 (CLP)", "Detalle"],
+      "headers": [
+        "Concepto",
+        "Monto 2026 (CLP)",
+        "Detalle"
+      ],
       "rows": [
-        ["PGU máxima (65 a 81 años)", "$231.732/mes", "Antes $224.004; reajuste +3,45% desde el 1-feb-2026"],
-        ["PGU máxima (82 años o más)", "$250.275/mes", "Desde sept-2026 también accede el grupo de 75 años o más"],
-        ["Pensión Base Inferior (PBI)", "$789.139", "Con pensión base ≤ este valor se recibe el 100% de la PGU"],
-        ["Pensión Base Superior (PBS)", "$1.252.602", "Sobre este valor NO corresponde PGU"],
-        ["Reajuste anual", "+3,45%", "Se aplica cada 1 de febrero según IPC del año calendario anterior"],
-        ["Edad mínima", "65 años", "Más requisitos: 20 años de residencia y no estar en el 10% más rico"]
+        [
+          "PGU máxima (65 a 81 años)",
+          "$231.732/mes",
+          "Antes $224.004; reajuste +3,45% desde el 1-feb-2026"
+        ],
+        [
+          "PGU máxima (82 años o más)",
+          "$250.275/mes",
+          "Desde sept-2026 también accede el grupo de 75 años o más"
+        ],
+        [
+          "Pensión Base Inferior (PBI)",
+          "$789.139",
+          "Con pensión base ≤ este valor se recibe el 100% de la PGU"
+        ],
+        [
+          "Pensión Base Superior (PBS)",
+          "$1.252.602",
+          "Sobre este valor NO corresponde PGU"
+        ],
+        [
+          "Reajuste anual",
+          "+3,45%",
+          "Se aplica cada 1 de febrero según IPC del año calendario anterior"
+        ],
+        [
+          "Edad mínima",
+          "65 años",
+          "Más requisitos: 20 años de residencia y no estar en el 10% más rico"
+        ]
       ],
       "note": "Fuente: Superintendencia de Pensiones de Chile e IPS/ChileAtiende (Ley N° 21.419). La PGU NO se mide en pesos mexicanos: los valores oficiales están expresados en pesos chilenos (CLP). El organismo que administra la PGU es el Instituto de Previsión Social (IPS), no el SII. El APS (vigente 2008–2021) usaba el concepto de PMAS; desde 2022 el marco vigente es la PGU con los tramos PBI/PBS de esta tabla."
     },
     {
       "title": "Cuánto baja la PGU 2026 según tu pensión autofinanciada (tramo 65–81 años)",
       "caption": "Entre la Pensión Base Inferior ($789.139) y la Superior ($1.252.602) la PGU se reduce en forma lineal hasta llegar a cero. Cálculo para el monto máximo de $231.732.",
-      "headers": ["Pensión base mensual (CLP)", "PGU a recibir (CLP)", "Pensión final con PGU"],
+      "headers": [
+        "Pensión base mensual (CLP)",
+        "PGU a recibir (CLP)",
+        "Pensión final con PGU"
+      ],
       "rows": [
-        ["$0 – $789.139", "$231.732", "Pensión base + $231.732"],
-        ["$900.000", "$176.301", "$1.076.301"],
-        ["$1.000.000", "$126.301", "$1.126.301"],
-        ["$1.100.000", "$76.301", "$1.176.301"],
-        ["$1.252.602 o más", "$0", "Sin PGU"]
+        [
+          "$0 – $789.139",
+          "$231.732",
+          "Pensión base + $231.732"
+        ],
+        [
+          "$900.000",
+          "$176.301",
+          "$1.076.301"
+        ],
+        [
+          "$1.000.000",
+          "$126.301",
+          "$1.126.301"
+        ],
+        [
+          "$1.100.000",
+          "$76.301",
+          "$1.176.301"
+        ],
+        [
+          "$1.252.602 o más",
+          "$0",
+          "Sin PGU"
+        ]
       ],
       "note": "Fórmula oficial del tramo decreciente: PGU = PGU_máx × [1 − (Pensión_base − PBI) ÷ (PBS − PBI)], con PBI = $789.139 y PBS = $1.252.602. Ejemplo verificado con pensión base $1.000.000: 231.732 × [1 − (1.000.000 − 789.139) ÷ 463.463] = 231.732 × 0,5450 ≈ $126.301. La PGU está exenta de impuesto a la renta. Para el grupo de 82+ años el cálculo es idéntico pero con monto máximo $250.275."
     }
