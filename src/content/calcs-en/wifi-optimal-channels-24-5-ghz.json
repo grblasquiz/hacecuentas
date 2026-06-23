@@ -1,7 +1,7 @@
 {
   "slug": "wifi-optimal-channels-24-5-ghz",
   "answerSnippet": "Technical WiFi calculations matter: channel selection, interference avoidance, and band optimization. Choosing the right channels upfront prevents connectivity issues and coverage dead zones. This free guide covers WiFi 2.4 GHz and 5 GHz channel selection with recommendations based on industry standards. Updated through 2026.",
-  "lastReviewed": "2026-06-19",
+  "lastReviewed": "2026-06-22",
   "esSlug": "calculadora-wifi-canal-optimo-24-5-ghz",
   "title": "WiFi Channel Selector 2.4/5 GHz 2026 | Hacé Cuentas",
   "h1": "Choose the Best WiFi Channel: 2.4 GHz or 5 GHz",
@@ -61,28 +61,72 @@
     ],
     "result": "1, 6, 11"
   },
-  "explanation": "## Why 2.4 GHz only has three good channels\n\nThe 2.4 GHz band has 11–13 numbered channels (region-dependent), but each one is ~20–22 MHz wide while the channels are spaced only 5 MHz apart. That means adjacent channels **overlap and bleed into each other**. Only **1, 6 and 11** are far enough apart not to overlap. Setting your router to channel 3 or 9 doesn't give you private spectrum — it just smears interference across two of the clean channels. Pick 1, 6, or 11 and choose whichever your neighbors use least.\n\n## 5 GHz: more room, two catches\n\nThe 5 GHz band offers far more non-overlapping channels (the exact count depends on your country's regulations), so congestion is rarely the problem it is on 2.4 GHz. Two things to know:\n\n- **DFS channels** (Dynamic Frequency Selection) share spectrum with weather and military radar. Routers may use them, but must vacate instantly if radar is detected — which can cause a brief drop. Most routers handle this automatically.\n- **Channel width** trades speed for cleanliness. 80 MHz or 160 MHz channels are faster but swallow several channels at once, raising the odds of overlap in a crowded building. In an apartment, 40 MHz is often more stable than 80 MHz.\n\n## 2.4 vs 5 GHz: which band for what\n\n2.4 GHz travels farther and through walls better, so it's the band for far rooms and old smart-home gadgets. 5 GHz is faster with much less interference but shorter range — ideal for streaming and gaming near the router. Modern routers broadcast both at once, often under one name (\"band steering\"), letting each device pick the better band.\n\n## How to actually choose\n\n1. Install a WiFi analyzer app (e.g. on Android or a desktop tool) and walk around your home.\n2. On 2.4 GHz, see whether 1, 6, or 11 is least crowded — set your router to that one manually.\n3. On 5 GHz, leave the router on **auto** unless you see a specific congested channel.\n4. Re-check after any new neighbors move in; the radio environment changes over time.\n\nFor enterprise deployments or regulatory questions, consult a network specialist — channel availability and DFS rules vary by country.",
+  "explanation": "## Why 2.4 GHz only has three good channels\n\nThe 2.4 GHz band has 11–13 numbered channels (region-dependent), but each one is ~20–22 MHz wide while the channels are spaced only 5 MHz apart. That means adjacent channels **overlap and bleed into each other**. Only **1, 6 and 11** are far enough apart (25 MHz between center frequencies) not to overlap at all. Setting your router to channel 3 or 9 doesn't give you private spectrum — it just smears interference across two of the clean channels at once, which is worse than picking a busy non-overlapping channel.\n\n**How to pick between 1, 6 and 11:** Use a free scanner (Wi-Fi Analyzer on Android, or the Wireless Diagnostics tool built into macOS) to see which channel your neighbors use least. Even if you can't avoid sharing, you want to share with *one* network, not sit between two.\n\n> **Note for European users:** In Europe and many other regions, channel 13 is legal, but channel 12 and 13 are still not recommended — they still overlap with channel 11, and many client devices default to ignoring them for compatibility reasons.\n\n## 5 GHz: more room, two catches\n\nThe 5 GHz band is divided into four sub-bands (UNII-1 through UNII-4). In the US, routers typically have access to 24+ non-overlapping 20 MHz channels, so congestion is rarely the problem it is on 2.4 GHz. Two things to know:\n\n- **DFS channels** (Dynamic Frequency Selection) cover UNII-2 and UNII-2e sub-bands (channels 52–144). These share spectrum with weather and military radar. Routers must perform a *Channel Availability Check* (CAC) of up to 60 seconds before transmitting, and must vacate within 10 seconds if radar is detected — which can cause a brief but noticeable drop. Most routers handle this automatically, but it can be disruptive during video calls or gaming. If stability matters more than having more channel options, sticking to UNII-1 channels (36, 40, 44, 48) avoids DFS entirely.\n- **Channel width** trades speed for cleanliness. A 40 MHz channel bonds two 20 MHz channels; 80 MHz bonds four; 160 MHz bonds eight. Wider channels deliver higher peak throughput (Wi-Fi 5 and Wi-Fi 6 speeds assume 80 MHz), but in a dense apartment building they consume more spectrum and increase the chance of overlapping a neighbor. In practice, **40 MHz is often more stable than 80 MHz in crowded environments**, even though the theoretical speed is lower.\n\n## 2.4 vs 5 GHz: which band for what\n\n| Situation | Recommended band |\n|---|---|\n| Far room or through multiple walls | 2.4 GHz |\n| Smart home sensors, IoT devices | 2.4 GHz (many only support it) |\n| Streaming, gaming, video calls near router | 5 GHz |\n| Crowded apartment building | 5 GHz (less congestion) |\n| Older devices (pre-2013) | 2.4 GHz |\n\n2.4 GHz travels farther because lower frequencies lose less energy passing through walls and floors (better diffraction and lower attenuation). The tradeoff: it shares spectrum with **microwave ovens** (which operate at 2.45 GHz), **Bluetooth**, baby monitors, and virtually every router in a multi-unit building. 5 GHz has shorter range but far less competition for spectrum.\n\nModern routers with **band steering** broadcast both on a single SSID and attempt to push capable devices toward 5 GHz automatically. This works well most of the time but can occasionally keep a device on 2.4 GHz longer than ideal — if you notice a device underperforming, connecting manually to the 5 GHz SSID (if your router exposes separate ones) is a reliable fix.\n\n## What this calculator does NOT include\n\n- **Wi-Fi 6E and Wi-Fi 7 (6 GHz band):** The 6 GHz band opens up to 1,200 MHz of new spectrum in regions where it's approved (US, EU, others). It has no legacy interference and no DFS requirements. This calculator focuses on the 2.4/5 GHz decision relevant to the vast majority of current hardware.\n- **Mesh systems:** Channel selection in mesh networks is largely managed automatically by the system firmware; manual channel tuning may not be exposed or effective.\n- **MU-MIMO and OFDMA:** Wi-Fi 6 features that affect real-world throughput independently of channel selection.\n\n## Common mistakes\n\n- **Leaving the router on \"Auto\" channel in a dense building.** Auto algorithms don't always rescan frequently, and they can park on a congested channel for hours. Manual selection based on a scan is more reliable.\n- **Choosing a wide channel (80/160 MHz) and wondering why performance is inconsistent.** Wider isn't always faster in practice — it depends heavily on neighbor density.\n- **Mixing up channel number and channel width.** Channel 6 at 20 MHz and channel 6 at 40 MHz are very different configurations; the wider one will overlap into channels 1 and 11.\n- **Assuming 5 GHz is always better.** At 15+ meters through concrete walls, a clean 2.4 GHz connection will outperform a weak 5 GHz signal every time.",
   "referenceTables": [
     {
       "title": "2.4 GHz vs 5 GHz at a glance",
-      "headers": ["Property", "2.4 GHz", "5 GHz"],
+      "headers": [
+        "Property",
+        "2.4 GHz",
+        "5 GHz"
+      ],
       "rows": [
-        ["Non-overlapping channels", "3 (ch. 1, 6, 11)", "Many (region-dependent)"],
-        ["Range / wall penetration", "Better", "Shorter"],
-        ["Typical speed", "Lower", "Higher"],
-        ["Interference / congestion", "High", "Low"],
-        ["Best for", "Far rooms, IoT devices", "Streaming, gaming, near router"]
+        [
+          "Non-overlapping channels",
+          "3 (ch. 1, 6, 11)",
+          "Many (region-dependent)"
+        ],
+        [
+          "Range / wall penetration",
+          "Better",
+          "Shorter"
+        ],
+        [
+          "Typical speed",
+          "Lower",
+          "Higher"
+        ],
+        [
+          "Interference / congestion",
+          "High",
+          "Low"
+        ],
+        [
+          "Best for",
+          "Far rooms, IoT devices",
+          "Streaming, gaming, near router"
+        ]
       ],
       "note": "Most dual-band routers broadcast both bands simultaneously. Exact 5 GHz channel counts depend on your country's spectrum regulations and DFS rules."
     },
     {
       "title": "2.4 GHz channel cheat sheet",
-      "headers": ["Channel", "Recommended?", "Reason"],
+      "headers": [
+        "Channel",
+        "Recommended?",
+        "Reason"
+      ],
       "rows": [
-        ["1", "Yes", "Non-overlapping — pick if least crowded"],
-        ["6", "Yes", "Non-overlapping — pick if least crowded"],
-        ["11", "Yes", "Non-overlapping — pick if least crowded"],
-        ["2–5, 7–10", "No", "Overlap with the clean channels and add interference"]
+        [
+          "1",
+          "Yes",
+          "Non-overlapping — pick if least crowded"
+        ],
+        [
+          "6",
+          "Yes",
+          "Non-overlapping — pick if least crowded"
+        ],
+        [
+          "11",
+          "Yes",
+          "Non-overlapping — pick if least crowded"
+        ],
+        [
+          "2–5, 7–10",
+          "No",
+          "Overlap with the clean channels and add interference"
+        ]
       ],
       "note": "Channels 12–13 exist in some regions (not the US) but are best avoided unless all your devices support them."
     }

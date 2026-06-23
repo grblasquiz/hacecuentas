@@ -1,7 +1,7 @@
 {
   "slug": "elo-rating-change-calculator",
   "answerSnippet": "The ELO system, invented by Arpad Elo for chess, is now used in League of Legends, CS2, Valorant, Dota 2, and most competitive games. The concept is straightforward: beating someone with a higher rating earns you more points, while losing to someone weaker costs you more points.",
-  "lastReviewed": "2026-04-28",
+  "lastReviewed": "2026-06-22",
   "esSlug": "calculadora-rankeo-elo-puntos",
   "audience": "global",
   "relatedSlugs": [],
@@ -150,7 +150,7 @@
       "a": "Using the formula: **Expected = 1 / (1 + 10^((Opponent ELO - Your ELO) / 400)).** A result of 0.5 (50%) means equal chance; higher means you're favored."
     }
   ],
-  "explanation": "## What is the ELO System?\n\nThe **ELO system**, invented by Arpad Elo to rank chess players (adopted by FIDE in 1970), now powers **League of Legends, CS2, Valorant, Dota 2, Fortnite**, and nearly every competitive game. The core idea is elegant: **beating a stronger opponent gains you more points than beating a weaker one**.\n\n## The Formula\n\n**New ELO = Current ELO + K × (Result - Expected)**\n\nWhere:\n- **K** = volatility factor (32 standard by FIDE, 40 for novices, 10 for elite players).\n- **Result** = 1 (win), 0.5 (draw), 0 (loss).\n- **Expected** = 1 / (1 + 10^((Opponent ELO - Your ELO) / 400)).\n\n## Rating Point Exchange by ELO Difference\n\n| ELO Difference | Win Probability | Points Gained (K=32) |\n|---|---|---|\n| +400 | 91% | +3 |\n| +200 | 76% | +8 |\n| 0 | 50% | +16 |\n| -200 | 24% | +24 |\n| -400 | 9% | +29 |\n\n## When to Use and Common Mistakes\n\n- **Higher K for beginners**: accelerates rating movement when skill improves faster than rating shows.\n- **Draws** benefit lower-rated players, penalize higher-rated ones.\n- **Starting ELO is typically 1200–1500** across most systems.\n- Modern games use **MMR** (Matchmaking Rating), which is ELO-based but tuned with win streaks and individual performance metrics.",
+  "explanation": "## What is the ELO System?\n\nThe **ELO system**, invented by Hungarian-American physicist Arpad Elo, was adopted by FIDE in 1970 to replace the previous Harkness system. Today it powers ranking in **League of Legends, CS2, Valorant, Dota 2, chess.com, Lichess** and virtually every competitive matchmaking system. The core principle: your rating reflects the probability that you beat any given opponent, and **every game redistributes points between players — the total in the system stays constant**.\n\n## How It's Calculated\n\n**New ELO = Current ELO + K × (Result − Expected Score)**\n\n**Step 1 — Calculate Expected Score:**\n> Expected = 1 / (1 + 10^((Opponent ELO − Your ELO) / 400))\n\nThis gives a number between 0 and 1 representing your win probability based on the rating gap.\n\n**Step 2 — Assign Result:**\n- Win = **1**\n- Draw = **0.5**\n- Loss = **0**\n\n**Step 3 — Apply K-factor:**\n> ELO Change = K × (Result − Expected)\n\nThe K-factor controls how drastically one game can shift your rating:\n- **K = 40** → FIDE uses this for new players (under 30 rated games)\n- **K = 20** → Standard FIDE for players under 2400\n- **K = 10** → FIDE for established players above 2400\n- **K = 32** → Original USCF standard, still common in online platforms\n\n**Example:** You are rated 1400, opponent is 1600.\n- Expected = 1 / (1 + 10^(200/400)) = 1 / (1 + 3.162) = **0.24**\n- If you win with K=32: 32 × (1 − 0.24) = **+24 points**\n- If you lose with K=32: 32 × (0 − 0.24) = **−8 points**\n\n## Rating Point Exchange by ELO Difference\n\n| ELO Difference (you vs. opponent) | Your Win Probability | Points if You Win (K=32) | Points if You Lose (K=32) |\n|---|---|---|---|\n| +400 (you're stronger) | 91% | +3 | −29 |\n| +200 | 76% | +8 | −24 |\n| 0 (equal) | 50% | +16 | −16 |\n| −200 (they're stronger) | 24% | +24 | −8 |\n| −400 | 9% | +29 | −3 |\n\nNote: wins and losses are **mirror images**. What you gain, your opponent loses — exactly.\n\n## K-Factor: Why It Matters\n\nChoosing the wrong K creates distorted ratings. A high K on an experienced player produces wild swings that don't reflect real skill. A low K on a beginner means their rating takes months to reach their actual level — they get matched poorly the entire time.\n\nSome platforms (chess.com, Lichess) use **dynamic K-factors** that decrease automatically as your number of rated games increases, without the player needing to adjust anything.\n\n## What This Calculator Does NOT Include\n\nModern competitive games almost never use pure ELO. They layer additional mechanics on top:\n\n- **Win/loss streaks**: some systems accelerate rating changes during streaks (Dota 2, League of Legends historically)\n- **Individual performance metrics**: kills, objectives, accuracy — these adjust MMR independently of win/loss in several games\n- **Placement matches**: many systems use an initial calibration phase with artificially high K to estimate starting MMR faster\n- **Uncertainty intervals** (Glicko-2, used by Lichess and many modern systems): adds a \"rating deviation\" that widens when you haven't played recently, making the system more responsive after inactivity\n\nThis calculator gives you **pure ELO math** — the foundation that all those systems build on.\n\n## Common Mistakes\n\n- **Assuming MMR = ELO**: In League of Legends or Valorant, your visible rank (Bronze, Gold, etc.) is a display layer over an invisible MMR. You can gain LP (League Points) and still have your underlying MMR drop if you underperform.\n- **Ignoring starting ELO**: Most systems start players between **1000–1500**. FIDE starts new players at **1000 if under age 18** or **1500 otherwise** (as of recent rules). Chess.com starts unrated players provisionally.\n- **Thinking draws are neutral**: A draw against a lower-rated opponent *hurts* the higher-rated player. A draw against a much stronger opponent *helps* the weaker one significantly.\n- **Comparing ELO across systems**: A 1500 on Lichess is not equivalent to 1500 on chess.com or 1500 FIDE. Each platform has its own rating distribution and inflation history. FIDE 2000 is roughly top 2–3% of rated players worldwide.\n\n## Historical Context Worth Knowing\n\nThe 400-point divisor in the formula is not arbitrary — it was chosen so that a 400-point difference corresponds to approximately **10:1 odds**, which Elo calibrated against historical chess results. FIDE has considered but not adopted alternatives. The Glicko system (1995) and Glicko-2 (2001) by Mark Glickman are the main academic improvements, adding the **Rating Deviation (RD)** and **volatility** parameters that pure ELO lacks.",
   "example": {
     "title": "Real Example: Your ELO 1200 vs Opponent 1350, You Lose",
     "steps": [
@@ -171,16 +171,45 @@
   "referenceTables": [
     {
       "title": "ELO Points Gained / Lost by Rating Difference (K = 32)",
-      "headers": ["ELO Difference (you vs opponent)", "Your win probability", "Points gained (win)", "Points lost (loss)"],
+      "headers": [
+        "ELO Difference (you vs opponent)",
+        "Your win probability",
+        "Points gained (win)",
+        "Points lost (loss)"
+      ],
       "rows": [
-        ["+400 (you rated higher)", "91%", "+3", "−29"],
-        ["+200 (you rated higher)", "76%", "+8", "−24"],
-        ["0 (equal rating)", "50%", "+16", "−16"],
-        ["−200 (you rated lower)", "24%", "+24", "−8"],
-        ["−400 (you rated lower)", "9%", "+29", "−3"]
+        [
+          "+400 (you rated higher)",
+          "91%",
+          "+3",
+          "−29"
+        ],
+        [
+          "+200 (you rated higher)",
+          "76%",
+          "+8",
+          "−24"
+        ],
+        [
+          "0 (equal rating)",
+          "50%",
+          "+16",
+          "−16"
+        ],
+        [
+          "−200 (you rated lower)",
+          "24%",
+          "+24",
+          "−8"
+        ],
+        [
+          "−400 (you rated lower)",
+          "9%",
+          "+29",
+          "−3"
+        ]
       ],
       "note": "Source: FIDE Rating Regulations (2026). Formula: K × (Result − Expected). Expected = 1 / (1 + 10^(ΔElo / 400))."
     }
-  ],
-  "lastReviewed": "2026-06-20"
+  ]
 }

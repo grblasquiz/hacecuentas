@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-nozzle-layer-height-3d",
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-22",
   "title": "Layer height para tu nozzle: calculadora + tabla | Hacé Cuentas",
   "h1": "Calculadora de layer height según nozzle 3D",
   "description": "Calculá el layer height óptimo para tu nozzle 3D. Regla del 25-75%: con nozzle 0.4 mm usá entre 0.10 y 0.30 mm. Tabla completa + extrusion width ideal.",
@@ -89,7 +89,7 @@
     ],
     "result": "Usá **layer 0.20 mm con extrusion width 0.45 mm**. Sweet spot clásico para impresión general."
   },
-  "explanation": "## Regla 25-75% del nozzle\n\n```\nLayer_min = nozzle × 0.25\nLayer_max = nozzle × 0.75\nLayer_calidad = nozzle × 0.30\nLayer_balance = nozzle × 0.50 ✅\nLayer_velocidad = nozzle × 0.70\nExtrusion_width = nozzle × 1.10–1.20\n```\n\n## Tabla layer height por nozzle\n\n| Nozzle | Layer mín | Layer balance | Layer máx | Uso típico |\n|---|---|---|---|---|\n| 0.2 mm | 0.05 | 0.10 | 0.15 | Miniaturas |\n| 0.25 mm | 0.06 | 0.12 | 0.18 | Detalle fino |\n| 0.3 mm | 0.08 | 0.15 | 0.22 | Estándar alta res |\n| **0.4 mm** ✅ | **0.10** | **0.20** | **0.30** | **General** |\n| 0.5 mm | 0.12 | 0.25 | 0.37 | Prototipos |\n| 0.6 mm | 0.15 | 0.30 | 0.45 | Rápido |\n| 0.8 mm | 0.20 | 0.40 | 0.60 | Funcional rápido |\n| 1.0 mm | 0.25 | 0.50 | 0.75 | Piezas grandes |\n\n## Extrusion width según nozzle\n\nEl **extrusion width** (ancho de línea) ideal es 110-120% del nozzle:\n\n| Nozzle | Extrusion width recomendado |\n|---|---|\n| 0.4 mm | 0.44–0.48 mm |\n| 0.6 mm | 0.66–0.72 mm |\n| 0.8 mm | 0.88–0.96 mm |\n| 1.0 mm | 1.10–1.20 mm |\n\n## Excepciones y casos especiales\n\n- **Adaptive layers**: slicers modernos varían layer por zona. Superar 75% puntualmente está permitido.\n- **First layer**: siempre 0.2-0.3 mm independiente del nozzle, para adherencia a la cama.\n- **Vase mode**: puede usar 0.4-0.6 mm con nozzle 0.4 porque imprime en espiral continua.\n\n## Consecuencias de ignorar la regla\n\n1. **Layer < 25%**: under-extrusion, capas débiles, globos de plástico en las paredes.\n2. **Layer > 75%**: adhesión pobre entre capas, piezas que se delaminan bajo esfuerzo.\n3. **Extrusion width = nozzle**: líneas que no se fusionan, piezas porosas y sin resistencia.\n\nCombiná con [tiempo de impresión](/calculadora-tiempo-impresion-3d-layer) y [primer layer](/calculadora-primer-layer-adherencia-bed).",
+  "explanation": "## Regla 25-75% del nozzle\n\nLa altura de capa en impresión FDM no es libre: está físicamente limitada por el diámetro del nozzle. Un nozzle de 0.4 mm no puede aplastar filamento hasta 0.05 mm sin pérdida de presión, ni apilar 0.35 mm sin que las capas no se adhieran. La regla empírica del 25-75% resume ese límite mecánico.\n\n```\nLayer_min = nozzle × 0.25\nLayer_max = nozzle × 0.75\nLayer_calidad = nozzle × 0.30\nLayer_balance = nozzle × 0.50 ✅\nLayer_velocidad = nozzle × 0.70\nExtrusion_width = nozzle × 1.10–1.20\n```\n\n---\n\n## Cómo se calcula\n\nEl slicer convierte layer height en volumen de plástico por milímetro lineal:\n\n```\nVolumen = layer_height × extrusion_width × longitud\n```\n\nSi el layer height es muy bajo respecto al nozzle, el plástico tiene que escapar lateralmente en exceso → over-pressure, grinding del filamento o blobs. Si es muy alto, el nozzle no aplasta suficiente la capa anterior → falta de fusión entre capas y pieza frágil. El 25-75% mantiene la presión dentro del rango donde el extrusor puede compensar variaciones sin fallar.\n\n---\n\n## Tabla layer height por nozzle\n\n| Nozzle | Layer mín | Layer balance | Layer máx | Uso típico |\n|---|---|---|---|---|\n| 0.2 mm | 0.05 | 0.10 | 0.15 | Miniaturas, joyería |\n| 0.25 mm | 0.06 | 0.12 | 0.18 | Detalle fino |\n| 0.3 mm | 0.08 | 0.15 | 0.22 | Estándar alta res |\n| **0.4 mm** ✅ | **0.10** | **0.20** | **0.30** | **General** |\n| 0.5 mm | 0.12 | 0.25 | 0.37 | Prototipos |\n| 0.6 mm | 0.15 | 0.30 | 0.45 | Funcional rápido |\n| 0.8 mm | 0.20 | 0.40 | 0.60 | Piezas estructurales |\n| 1.0 mm | 0.25 | 0.50 | 0.75 | Piezas grandes |\n\n> **Por qué 0.4 mm es el estándar**: es el equilibrio entre resolución visible (capas de 0.2 mm son imperceptibles al tacto) y velocidad. Cambiar a 0.6 mm con layer de 0.3 mm puede reducir el tiempo de impresión hasta un 50% sin pérdida funcional en piezas de uso.\n\n---\n\n## Extrusion width según nozzle\n\nEl **extrusion width** (ancho de línea depositada) ideal es 110-120% del nozzle porque el plástico se aplana ligeramente al salir. Valores por debajo del 100% generan líneas que no se tocan entre sí; valores sobre 150% causan sobre-extrusión visible en las paredes.\n\n| Nozzle | Extrusion width recomendado |\n|---|---|\n| 0.4 mm | 0.44–0.48 mm |\n| 0.6 mm | 0.66–0.72 mm |\n| 0.8 mm | 0.88–0.96 mm |\n| 1.0 mm | 1.10–1.20 mm |\n\nAlgunos slicers (PrusaSlicer, OrcaSlicer) permiten diferenciar el extrusion width por zona: paredes exteriores más finas (100-105%) para mejor acabado superficial, relleno más ancho (120-140%) para velocidad.\n\n---\n\n## Excepciones y casos especiales\n\n- **Adaptive layers**: slicers modernos varían el layer automáticamente por zona según la pendiente de la pieza. Superar 75% puntualmente en zonas casi verticales está permitido y es intencionado.\n- **First layer**: se recomienda 0.2-0.3 mm independientemente del nozzle para maximizar adhesión a la cama. Una primera capa delgada compensa leves desnivelaciones y aumenta la superficie de contacto.\n- **Vase mode (spiralize)**: puede usar 0.4-0.6 mm con nozzle 0.4 porque al imprimir en espiral continua sin retracción la presión es más estable y se toleran layers más altos.\n- **Materiales flexibles (TPU)**: se benefician de layers en el rango 50-65% del nozzle; layers altos con TPU generan buckling dentro del hotend en configuraciones Bowden.\n- **Materiales con fibra (carbono, vidrio)**: usar siempre nozzle endurecido y reducir layer al 30-40% mejora la distribución de fibras y la resistencia interlayer.\n\n---\n\n## Consecuencias de ignorar la regla\n\n1. **Layer < 25%**: under-extrusion, capas débiles, globos de plástico en paredes, desgaste prematuro del extrusor por presión excesiva.\n2. **Layer > 75%**: adhesión pobre entre capas, piezas que se delaminan bajo carga, acabado superficial rugoso con escalones visibles.\n3. **Extrusion width < 100% del nozzle**: líneas separadas, relleno poroso, pérdida de resistencia mecánica.\n\n---\n\n## Errores comunes\n\n- **Confundir resolución con calidad**: capas de 0.05 mm se ven finas pero son mecánicamente más débiles que 0.15 mm. Para piezas funcionales, layer más alto = mejor adhesión interlayer.\n- **Cambiar nozzle sin actualizar el perfil del slicer**: instalar un nozzle de 0.6 mm y mantener el perfil de 0.4 mm es el error más frecuente; el slicer calcula flujo incorrecto y la pieza sale porosa o con over-extrusion.\n- **Asumir que layer height afecta la resistencia isotrópicamente**: la resistencia en Z (dirección de capas) siempre es inferior a X/Y en FDM, independientemente del layer elegido. Para piezas de carga crítica en Z, considerar orientación de impresión antes que ajustar layer height.\n\n---\n\n## Qué NO incluye esta calculadora\n\n- Ajustes de temperatura por layer height (a mayor layer, mayor masa de plástico que enfriar → puede requerir ventilación diferente).\n- Cálculo de tiempo de impresión (depende de velocidad, aceleración y geometría de la pieza).\n- Perfiles específicos por marca de filamento ni por impresora concreta.",
   "faq": [
     {
       "q": "¿Qué layer height debo usar con nozzle 0.4 mm?",
@@ -141,16 +141,79 @@
   "referenceTables": [
     {
       "title": "Layer height recomendado por diámetro de nozzle (regla 25–75%)",
-      "headers": ["Nozzle", "Layer mín (25%)", "Layer balance (50%)", "Layer máx (75%)", "Extrusion width", "Uso típico"],
+      "headers": [
+        "Nozzle",
+        "Layer mín (25%)",
+        "Layer balance (50%)",
+        "Layer máx (75%)",
+        "Extrusion width",
+        "Uso típico"
+      ],
       "rows": [
-        ["0.2 mm", "0.05 mm", "0.10 mm", "0.15 mm", "0.22–0.24 mm", "Miniaturas"],
-        ["0.25 mm", "0.06 mm", "0.12 mm", "0.18 mm", "0.28–0.30 mm", "Detalle fino"],
-        ["0.3 mm", "0.08 mm", "0.15 mm", "0.22 mm", "0.33–0.36 mm", "Alta resolución"],
-        ["0.4 mm", "0.10 mm", "0.20 mm", "0.30 mm", "0.44–0.48 mm", "General"],
-        ["0.5 mm", "0.12 mm", "0.25 mm", "0.37 mm", "0.55–0.60 mm", "Prototipos"],
-        ["0.6 mm", "0.15 mm", "0.30 mm", "0.45 mm", "0.66–0.72 mm", "Rápido"],
-        ["0.8 mm", "0.20 mm", "0.40 mm", "0.60 mm", "0.88–0.96 mm", "Funcional rápido"],
-        ["1.0 mm", "0.25 mm", "0.50 mm", "0.75 mm", "1.10–1.20 mm", "Piezas grandes"]
+        [
+          "0.2 mm",
+          "0.05 mm",
+          "0.10 mm",
+          "0.15 mm",
+          "0.22–0.24 mm",
+          "Miniaturas"
+        ],
+        [
+          "0.25 mm",
+          "0.06 mm",
+          "0.12 mm",
+          "0.18 mm",
+          "0.28–0.30 mm",
+          "Detalle fino"
+        ],
+        [
+          "0.3 mm",
+          "0.08 mm",
+          "0.15 mm",
+          "0.22 mm",
+          "0.33–0.36 mm",
+          "Alta resolución"
+        ],
+        [
+          "0.4 mm",
+          "0.10 mm",
+          "0.20 mm",
+          "0.30 mm",
+          "0.44–0.48 mm",
+          "General"
+        ],
+        [
+          "0.5 mm",
+          "0.12 mm",
+          "0.25 mm",
+          "0.37 mm",
+          "0.55–0.60 mm",
+          "Prototipos"
+        ],
+        [
+          "0.6 mm",
+          "0.15 mm",
+          "0.30 mm",
+          "0.45 mm",
+          "0.66–0.72 mm",
+          "Rápido"
+        ],
+        [
+          "0.8 mm",
+          "0.20 mm",
+          "0.40 mm",
+          "0.60 mm",
+          "0.88–0.96 mm",
+          "Funcional rápido"
+        ],
+        [
+          "1.0 mm",
+          "0.25 mm",
+          "0.50 mm",
+          "0.75 mm",
+          "1.10–1.20 mm",
+          "Piezas grandes"
+        ]
       ],
       "note": "Fuente: Prusa Knowledge Base — Layer Heights (help.prusa3d.com, 2026)"
     }

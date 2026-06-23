@@ -251,7 +251,7 @@
       "format": "text"
     }
   ],
-  "explanation": "## What is overtime?\n\nOvertime is any work hours beyond 40 in a standard workweek, typically compensated at 1.5 times your regular hourly rate. For example, 45 hours at $20/hour means 40 regular hours ($800) plus 5 overtime hours at $30/hour ($150), totaling $950 gross pay for the week.\n\n## How It Works\n\nThis calculator uses **decimal hours** (e.g., 9.50 = 9:30 AM) for simplicity. For each day, it subtracts the clock-in time from the clock-out time, then deducts the lunch break.\n\n```\ndaily_hours = (clock_out − clock_in) − (lunch_minutes / 60)\n```\n\nNegative or zero values (days off, blank entries) are treated as 0 hours. The seven daily totals are summed into a weekly total.\n\n```\nweekly_total = Σ daily_hours  (Mon–Sun)\n```\n\n## Regular vs. Overtime\n\nUnder the **Fair Labor Standards Act (FLSA)**, non-exempt employees must receive overtime pay at **1.5× their regular rate** for all hours over **40 in a single workweek**.\n\n```\nregular_hours = min(weekly_total, 40)\not_hours      = max(weekly_total − 40, 0)\n```\n\n## Gross Pay Formula\n\nIf you enter an hourly rate, estimated gross pay is:\n\n```\ngross_pay = (regular_hours × rate) + (ot_hours × rate × 1.5)\n```\n\n**Example:** You work Mon–Fri, 9 AM to 6 PM with a 30-minute lunch each day. That's 8.5 hours/day × 5 days = 42.5 total hours. At $22/hr:\n\n| Metric | Value |\n|---|---|\n| Total hours | 42.50 h |\n| Regular hours | 40.00 h |\n| Overtime hours | 2.50 h |\n| Regular pay | $880.00 |\n| OT pay (×1.5) | $82.50 |\n| **Gross pay** | **$962.50** |\n\n## Limitations\n\n- **Daily OT not calculated.** Some states (CA, AK, NV) require OT after **8 hours in a single day**. This calculator uses only the federal 40-hr/week threshold.\n- **Time entered in decimal format.** If your clock reads 9:45, enter 9.75, not 9.45.\n- **Pre-tax only.** Gross pay does not account for federal/state income tax, FICA, or any other deductions.\n- **Salaried / exempt workers.** The FLSA overtime rule applies to non-exempt hourly workers; salaried-exempt employees are generally not entitled to OT.\n- **Shift spanning midnight.** If clock-out is earlier than clock-in (e.g., in=22.00, out=6.00), the calculator will return 0 for that day. Use total elapsed hours manually in that case.",
+  "explanation": "## What Is Overtime?\n\nOvertime is any work hours beyond 40 in a standard workweek, typically compensated at **1.5× your regular hourly rate**. Under the **Fair Labor Standards Act (FLSA)**, this rule applies to non-exempt employees in the United States. Some states go further: **California** mandates overtime after **8 hours in a single day** (daily overtime), not just after 40 weekly hours — a distinction this calculator does not cover.\n\n> **Quick example:** 45 hours at $20/hour → 40 regular hours ($800) + 5 OT hours at $30/hour ($150) = **$950 gross pay**.\n\n---\n\n## How It Works\n\nThe calculator uses **decimal hours** (e.g., 9.50 = 9:30 AM) for all inputs. For each day, it subtracts the clock-in time from the clock-out time, then deducts the lunch break:\n\n```\ndaily_hours = (clock_out − clock_in) − (lunch_minutes / 60)\n```\n\nNegative or zero values — rest days, holidays, or blank entries — are treated as **0 hours**. The seven daily totals are summed into a weekly total:\n\n```\nweekly_total = Σ daily_hours  (Mon–Sun)\n```\n\n---\n\n## Regular vs. Overtime Hours\n\n```\nregular_hours = min(weekly_total, 40)\not_hours      = max(weekly_total − 40, 0)\n```\n\nThe FLSA defines a **workweek** as any fixed, recurring period of 168 consecutive hours (7 × 24 hours). Employers choose which day starts their workweek — it does not have to be Monday. Hours cannot be averaged across two weeks: 50 hours one week + 30 the next are **not** equivalent to 40 + 40 for overtime purposes.\n\n---\n\n## Gross Pay Formula\n\n```\ngross_pay = (regular_hours × rate) + (ot_hours × rate × 1.5)\n```\n\n**Worked example:** Mon–Fri, 9 AM to 6 PM with a 30-minute lunch each day → 8.5 h/day × 5 days = **42.5 total hours**. At $22/hr:\n\n| Metric | Value |\n|---|---|\n| Total hours | 42.50 h |\n| Regular hours | 40.00 h |\n| Overtime hours | 2.50 h |\n| Regular pay | $880.00 |\n| OT pay (×1.5) | $82.50 |\n| **Gross pay** | **$962.50** |\n\n---\n\n## Common Errors When Calculating Time Cards\n\n- **Forgetting to convert minutes to decimals.** 7 hours 45 minutes is **7.75**, not 7.45. Entering 7.45 understates your time by 18 minutes per day.\n- **Double-counting lunch.** If your employer already excludes your break from recorded time, subtracting it again in this calculator will undercount your hours.\n- **Mixing 12-hour and 24-hour formats.** Use a consistent format throughout the week. 1:00 PM in 12-hour = 13.00 in decimal 24-hour notation.\n- **Assuming all hours over 8/day are overtime.** Federally, overtime is calculated **weekly**, not daily. Only in states with daily OT laws (CA, AK, NV, and a few others) does each day's excess count separately.\n\n---\n\n## What This Calculator Does NOT Include\n\n| Not covered | Why it matters |\n|---|---|\n| **Daily overtime** (CA, AK, NV) | State law may owe you more than federal formula |\n| **Double time** (2×) | California requires 2× pay after 12 hours/day or 8 hours on the 7th consecutive day |\n| **Paid time off / sick leave** | PTO hours typically count toward gross pay but not toward overtime hours |\n| **Tips, commissions, or bonuses** | Non-discretionary bonuses must be included in the \"regular rate\" for OT calculation under FLSA §207 |\n| **Taxes or deductions** | Result is **gross pay only** — net take-home will be lower after federal/state withholding, FICA (7.65%), and any benefit deductions |\n| **Multiple pay rates** | Employees working two roles at different rates require a blended rate calculation |\n\n---\n\n## Who Is \"Non-Exempt\"?\n\nThe FLSA overtime rule applies to **non-exempt** workers. Employees classified as **exempt** (executive, administrative, professional, or certain computer/sales roles earning above a salary threshold — currently **$684/week** as of 2024) are not entitled to overtime pay by federal law. If you are salaried, confirm your classification before relying on overtime calculations.\n\n---\n\n## Rounding Rules\n\nMany employers round clock-in/out times to the nearest **5, 6, or 15 minutes**. The FLSA permits rounding only if it **averages out neutrally** over time — it cannot systematically favor the employer. If your paycheck consistently reflects fewer hours than you worked, rounding practices may warrant review.\n\n---\n\n> **This tool calculates estimated gross pay based on federal FLSA rules. It is not a substitute for payroll software, a licensed payroll professional, or legal advice. State and local laws vary significantly.**",
   "faq": [
     {
       "q": "How do I enter 7:45 AM and 5:15 PM?",
@@ -323,13 +323,49 @@
   "referenceTables": [
     {
       "title": "Overtime Rules by State — 2026 (Key Variations from Federal 40-hr Rule)",
-      "headers": ["State", "Daily OT Threshold", "Weekly OT Threshold", "Double-Time Trigger", "Governing Authority"],
+      "headers": [
+        "State",
+        "Daily OT Threshold",
+        "Weekly OT Threshold",
+        "Double-Time Trigger",
+        "Governing Authority"
+      ],
       "rows": [
-        ["California", "After 8 hrs/day", "After 40 hrs/week", "After 12 hrs/day or 8 hrs on 7th consecutive day", "CA Labor Code §510; IWC Wage Orders"],
-        ["Alaska", "After 8 hrs/day", "After 40 hrs/week", "None (state law)", "AS 23.10.060"],
-        ["Nevada", "After 8 hrs/day (if <$18.00/hr in 2026)", "After 40 hrs/week", "None (state law)", "NRS 608.018"],
-        ["All other states", "No daily threshold", "After 40 hrs/week", "No federal requirement", "FLSA 29 U.S.C. §207"],
-        ["Federal (FLSA)", "No daily threshold", "After 40 hrs/week", "No federal requirement", "U.S. DOL – WHD"]
+        [
+          "California",
+          "After 8 hrs/day",
+          "After 40 hrs/week",
+          "After 12 hrs/day or 8 hrs on 7th consecutive day",
+          "CA Labor Code §510; IWC Wage Orders"
+        ],
+        [
+          "Alaska",
+          "After 8 hrs/day",
+          "After 40 hrs/week",
+          "None (state law)",
+          "AS 23.10.060"
+        ],
+        [
+          "Nevada",
+          "After 8 hrs/day (if <$18.00/hr in 2026)",
+          "After 40 hrs/week",
+          "None (state law)",
+          "NRS 608.018"
+        ],
+        [
+          "All other states",
+          "No daily threshold",
+          "After 40 hrs/week",
+          "No federal requirement",
+          "FLSA 29 U.S.C. §207"
+        ],
+        [
+          "Federal (FLSA)",
+          "No daily threshold",
+          "After 40 hrs/week",
+          "No federal requirement",
+          "U.S. DOL – WHD"
+        ]
       ],
       "note": "Fuente: U.S. Department of Labor – Wage and Hour Division (dol.gov/whd); California Department of Industrial Relations (dir.ca.gov); Alaska Dept. of Labor (labor.alaska.gov); Nevada Labor Commissioner (labor.nv.gov) — 2026."
     }
@@ -340,5 +376,5 @@
     "updateType": "manual",
     "notes": "Review federal overtime threshold (40 hrs/week), federal minimum wage ($7.25/hr), and any DOL rule changes to the FLSA salary-level test annually."
   },
-  "lastReviewed": "2026-06-20"
+  "lastReviewed": "2026-06-22"
 }

@@ -133,7 +133,7 @@
       "a": "Use a wired Ethernet connection instead of Wi-Fi (saves 3–10 ms), close bandwidth-hungry background apps, restart your modem and router, or try a gaming-optimized VPN if ISP routing is poor."
     }
   ],
-  "explanation": "## Why There's an Unavoidable Minimum Ping\n\nPing (round-trip latency) has a **physical limit**: the speed of light in fiber optic cables is **~200,000 km/s** (about 2/3 the speed of light in a vacuum, due to the material's refractive index). No data packet can travel faster than that.\n\n## Theoretical Minimum Ping vs. Real-World Distance\n\n| Source → Destination | Distance (approx.) | Theoretical Ping | Typical Real Ping |\n|---|---|---|---|\n| Same City | < 10 km | < 1 ms | 5–15 ms |\n| Nearby City (400 km) | 400 km | 4 ms | 10–25 ms |\n| Cross-Country (3,000 km) | 3,000 km | 30 ms | 50–80 ms |\n| Intercontinental (8,000 km) | 8,000 km | 80 ms | 130–180 ms |\n| Opposite Side of Earth (20,000 km) | 20,000 km | 200 ms | 300+ ms |\n\n## The Formula\n\n**Theoretical minimum ping (ms) = (distance_km × 2) ÷ 200,000 × 1,000 = distance_km ÷ 100**\n\nIt's round-trip, so we multiply by 2. Real-world overhead (routers, switches, queuing, processing) typically adds 50–200% on top of the theoretical minimum.\n\n## When to Use This Calculator & Common Mistakes\n\n- **Submarine cables aren't straight**: real cables are 20–30% longer than the straight-line distance.\n- **CDNs and edge servers** (Cloudflare, Akamai) dramatically reduce real ping by placing servers closer to you.\n- **Wi-Fi adds 3–10 ms**: Ethernet wired connections are always faster.\n- **For competitive gaming**, aim for ping under 50 ms; anything over 100 ms puts you at a significant disadvantage.",
+  "explanation": "## Why There's an Unavoidable Minimum Ping\n\nPing (round-trip latency) has a **physical limit**: the speed of light in fiber optic cables is **~200,000 km/s** (roughly 2/3 the speed of light in a vacuum, due to the glass core's refractive index of ~1.5). No data packet can ever travel faster than this, regardless of hardware or software improvements.\n\nThis calculator estimates that **theoretical floor** — the lowest ping physically achievable given the straight-line distance to a server. It does not predict your actual gaming or browsing ping, which is always higher.\n\n---\n\n## How This Calculator Works\n\nThe formula is straightforward:\n\n**Theoretical minimum ping (ms) = (distance_km × 2) ÷ 200,000 × 1,000**\n\nWhich simplifies to:\n\n**Theoretical minimum ping (ms) = distance_km ÷ 100**\n\nThe **×2** accounts for the round trip: your request travels to the server, and the response travels back. The result is in milliseconds.\n\n**Example:** A server 3,000 km away has a theoretical minimum ping of 3,000 ÷ 100 = **30 ms**. In practice, that same route will typically show 50–80 ms due to infrastructure overhead.\n\n---\n\n## Theoretical Minimum Ping vs. Real-World Distance\n\n| Source → Destination | Distance (approx.) | Theoretical Ping | Typical Real Ping |\n|---|---|---|---|\n| Same City | < 10 km | < 1 ms | 5–15 ms |\n| Nearby City (400 km) | 400 km | 4 ms | 10–25 ms |\n| Cross-Country (3,000 km) | 3,000 km | 30 ms | 50–80 ms |\n| Intercontinental (8,000 km) | 8,000 km | 80 ms | 130–180 ms |\n| Opposite Side of Earth (20,000 km) | 20,000 km | 200 ms | 300+ ms |\n\nThe gap between theoretical and real ping is never zero. Even within the same data center, measured latency is rarely below 0.1–0.5 ms due to network interface processing alone.\n\n---\n\n## Why Real Ping Is Always Higher Than the Theoretical Minimum\n\nSeveral layers of overhead accumulate between you and any server:\n\n- **Router and switch processing:** Each network hop adds ~0.5–2 ms. A typical intercontinental route crosses 15–30 hops.\n- **Queuing delay:** When a router is congested, packets wait in a buffer. This is the most variable component and responsible for most \"lag spikes.\"\n- **Protocol overhead:** TCP handshakes, TLS encryption negotiation (for HTTPS), and DNS lookups add latency before the first useful byte is transferred. A cold DNS lookup can add 20–120 ms on its own.\n- **Cable routing inefficiency:** Submarine and terrestrial cables follow geography, not straight lines. Real cable paths are typically **20–40% longer** than straight-line (great-circle) distance. The transatlantic cable between New York and London, for instance, is ~6,600 km despite a great-circle distance of ~5,500 km.\n- **ISP peering agreements:** Traffic between two ISPs sometimes routes through a third country entirely, adding hundreds of kilometers unnecessarily. This is called \"cold potato routing\" and is a known source of unexpectedly high ping.\n\n---\n\n## Context: What Ping Levels Mean in Practice\n\nPing thresholds matter differently depending on the application:\n\n| Use Case | Acceptable Ping | Noticeable Degradation |\n|---|---|---|\n| Web browsing | < 200 ms | > 500 ms |\n| Video streaming | < 100 ms | > 300 ms (buffering) |\n| Online gaming (casual) | < 100 ms | > 150 ms |\n| Competitive FPS gaming | < 30 ms | > 60 ms |\n| Real-time trading / HFT | < 1 ms | > 5 ms |\n| VoIP / video calls | < 150 ms | > 200 ms (ITU G.114 standard) |\n\nThe ITU-T G.114 recommendation sets **150 ms one-way delay** as the threshold for acceptable voice quality — equivalent to roughly 300 ms round-trip ping.\n\n---\n\n## What This Calculator Does NOT Include\n\nBeing clear about limitations is important:\n\n- **Your ISP's internal routing:** Traffic from your home doesn't go directly to the destination. It first travels to your ISP's Point of Presence (PoP), which may be in a different city.\n- **CDN and edge server effects:** Services like Cloudflare, Akamai, and AWS CloudFront place servers worldwide to reduce effective distance. Your ping to a \"US server\" may actually be served from a node 50 km away.\n- **Wireless overhead:** Wi-Fi adds 3–10 ms of latency compared to a wired Ethernet connection. Mobile (4G/5G) connections add 20–60 ms of radio access network delay on top of the distance-based component.\n- **Satellite internet (LEO vs. GEO):** Geostationary satellites orbit at ~35,786 km altitude, adding a minimum of ~477 ms round-trip — before any terrestrial routing. Low Earth Orbit (LEO) systems like Starlink orbit at ~550 km, achieving typical pings of 25–60 ms, much closer to fiber.\n\n---\n\n## Common Mistakes When Interpreting Ping\n\n- **Confusing ping with bandwidth:** Ping measures delay, not speed. A high-bandwidth connection can still have terrible ping if routing is poor.\n- **Testing from a browser tab:** Browser-based speed tests include rendering overhead. Use `ping` from a command line or dedicated tools (PingPlotter, WinMTR) for accurate measurements.\n- **Ignoring server location claims:** A server advertised as \"US East\" may be physically hosted in a data center far from where you are in the eastern US, or even rerouted internationally.\n- **Single-sample measurements:** Ping varies by time of day due to network congestion. A single reading is not representative; average over at least 50–100 samples.",
   "example": {
     "title": "Example: US gamer in New York playing on a London server",
     "steps": [
@@ -158,18 +158,53 @@
       "url": "https://www.fcc.gov/consumers/guides/measuring-broadband-america"
     }
   ],
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-22",
   "referenceTables": [
     {
       "title": "Theoretical vs Typical Real-World Ping by Server Distance",
-      "headers": ["Route", "Distance (km)", "Theoretical Min Ping", "Typical Real-World Ping"],
+      "headers": [
+        "Route",
+        "Distance (km)",
+        "Theoretical Min Ping",
+        "Typical Real-World Ping"
+      ],
       "rows": [
-        ["Same city", "< 10 km", "< 1 ms", "5–15 ms"],
-        ["Nearby city", "~400 km", "~4 ms", "10–25 ms"],
-        ["Cross-country (US)", "~3,000 km", "~30 ms", "50–80 ms"],
-        ["Transatlantic (NY ↔ London)", "~5,570 km", "~56 ms", "100–150 ms"],
-        ["Intercontinental", "~8,000 km", "~80 ms", "130–180 ms"],
-        ["Opposite side of Earth", "~20,000 km", "~200 ms", "300+ ms"]
+        [
+          "Same city",
+          "< 10 km",
+          "< 1 ms",
+          "5–15 ms"
+        ],
+        [
+          "Nearby city",
+          "~400 km",
+          "~4 ms",
+          "10–25 ms"
+        ],
+        [
+          "Cross-country (US)",
+          "~3,000 km",
+          "~30 ms",
+          "50–80 ms"
+        ],
+        [
+          "Transatlantic (NY ↔ London)",
+          "~5,570 km",
+          "~56 ms",
+          "100–150 ms"
+        ],
+        [
+          "Intercontinental",
+          "~8,000 km",
+          "~80 ms",
+          "130–180 ms"
+        ],
+        [
+          "Opposite side of Earth",
+          "~20,000 km",
+          "~200 ms",
+          "300+ ms"
+        ]
       ],
       "note": "Fuente: NIST Time and Frequency Division (speed of light in fiber ≈ 200,000 km/s); FCC Measuring Broadband America (real-world latency benchmarks). Formula: min ping (ms) = distance_km ÷ 100."
     }
