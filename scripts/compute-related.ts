@@ -287,7 +287,12 @@ function main() {
   // (stopwords ES, son todas español) acelera la indexación Bing del headroom
   // vertical: más in-links internos contextuales = se rankea antes. topK=12
   // para densificar el grafo (mismo motivo que EN: evitar crawl starvation).
-  for (const v of ['co', 'mx', 'cl', 'pe', 'ec']) {
+  // 2026-06-23: + es/ve/py/uy/do. España (calcs-es) y las 4 verticales nuevas
+  // NO tenían grafo TF-IDF → RelatedCalcs caía a fallback por categoría o (es-ES)
+  // a mapa vacío, renderizando 0 enlaces internos a su propio cluster (verificado
+  // en vivo: convenio-hosteleria-es mostraba 0 /es/ links vs 11 del CO equivalente).
+  // Huérfanos internamente = peor indexación/autoridad justo en el cuello de España.
+  for (const v of ['co', 'mx', 'cl', 'pe', 'ec', 'es', 've', 'py', 'uy', 'do']) {
     computeRelated({
       dir: join(ROOT, `src/content/calcs-${v}`),
       stopwords: STOPWORDS_ES,

@@ -7,13 +7,18 @@ import relatedAutoMx from '../lib/related-auto-mx.json';
 import relatedAutoCl from '../lib/related-auto-cl.json';
 import relatedAutoPe from '../lib/related-auto-pe.json';
 import relatedAutoEc from '../lib/related-auto-ec.json';
+import relatedAutoEsEs from '../lib/related-auto-es.json';
+import relatedAutoVe from '../lib/related-auto-ve.json';
+import relatedAutoPy from '../lib/related-auto-py.json';
+import relatedAutoUy from '../lib/related-auto-uy.json';
+import relatedAutoDo from '../lib/related-auto-do.json';
 
 export interface Props {
   currentSlug: string;
   category: string;
   limit?: number;
   manualSlugs?: string[]; // override manual desde el JSON de la calc (relatedSlugs)
-  lang?: 'es' | 'en' | 'pt' | 'es-ES' | 'co' | 'mx' | 'cl' | 'pe' | 'ec';
+  lang?: 'es' | 'en' | 'pt' | 'es-ES' | 'co' | 'mx' | 'cl' | 'pe' | 'ec' | 've' | 'py' | 'uy' | 'do';
 }
 
 const { currentSlug, category, limit = 4, manualSlugs = [], lang = 'es' } = Astro.props;
@@ -28,13 +33,17 @@ const mxModules = import.meta.glob<any>('../content/calcs-mx/*.json', { eager: t
 const clModules = import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true });
 const peModules = import.meta.glob<any>('../content/calcs-pe/*.json', { eager: true });
 const ecModules = import.meta.glob<any>('../content/calcs-ec/*.json', { eager: true });
-const VERTICAL_MODULES: Record<string, any> = { co: coModules, mx: mxModules, cl: clModules, pe: peModules, ec: ecModules };
+const veModules = import.meta.glob<any>('../content/calcs-ve/*.json', { eager: true });
+const pyModules = import.meta.glob<any>('../content/calcs-py/*.json', { eager: true });
+const uyModules = import.meta.glob<any>('../content/calcs-uy/*.json', { eager: true });
+const doModules = import.meta.glob<any>('../content/calcs-do/*.json', { eager: true });
+const VERTICAL_MODULES: Record<string, any> = { co: coModules, mx: mxModules, cl: clModules, pe: peModules, ec: ecModules, ve: veModules, py: pyModules, uy: uyModules, do: doModules };
 const calcModules = lang === 'en' ? enModules : lang === 'pt' ? ptModules : lang === 'es-ES' ? esEsModules
   : VERTICAL_MODULES[lang] ? VERTICAL_MODULES[lang] : esModules;
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
 
-const VERTICAL_PREFIX: Record<string, string> = { co: '/co/', mx: '/mx/', cl: '/cl/', pe: '/pe/', ec: '/ec/' };
+const VERTICAL_PREFIX: Record<string, string> = { co: '/co/', mx: '/mx/', cl: '/cl/', pe: '/pe/', ec: '/ec/', ve: '/ve/', py: '/py/', uy: '/uy/', do: '/do/' };
 const linkPrefix = lang === 'en' ? '/en/' : lang === 'pt' ? '/pt/' : lang === 'es-ES' ? '/es/'
   : VERTICAL_PREFIX[lang] ? VERTICAL_PREFIX[lang] : '/';
 
@@ -45,8 +54,8 @@ const manual = manualSlugs
 
 // 2. Si faltan para llegar a limit, completamos con el mapping auto (TF-IDF).
 // Cada locale tiene su propio mapa (stopwords y vocabulario distintos).
-const VERTICAL_RELATED: Record<string, any> = { co: relatedAutoCo, mx: relatedAutoMx, cl: relatedAutoCl, pe: relatedAutoPe, ec: relatedAutoEc };
-const relatedAuto = lang === 'en' ? relatedAutoEn : lang === 'pt' ? relatedAutoPt : lang === 'es-ES' ? {}
+const VERTICAL_RELATED: Record<string, any> = { co: relatedAutoCo, mx: relatedAutoMx, cl: relatedAutoCl, pe: relatedAutoPe, ec: relatedAutoEc, ve: relatedAutoVe, py: relatedAutoPy, uy: relatedAutoUy, do: relatedAutoDo };
+const relatedAuto = lang === 'en' ? relatedAutoEn : lang === 'pt' ? relatedAutoPt : lang === 'es-ES' ? relatedAutoEsEs
   : VERTICAL_RELATED[lang] ? VERTICAL_RELATED[lang] : relatedAutoEs;
 const autoSlugs: string[] = (relatedAuto as Record<string, string[]>)[currentSlug] || [];
 const auto = autoSlugs
