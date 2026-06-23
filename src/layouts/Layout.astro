@@ -17,7 +17,7 @@ export interface Props {
   canonical?: string;
   schema?: object;
   image?: string;
-  audience?: 'AR' | 'MX' | 'CL' | 'CO' | 'ES' | 'BO' | 'PE' | 'EC' | 'VE' | 'PY' | 'UY' | 'DO' | 'BR' | 'US' | 'GB' | 'CA' | 'AU' | 'global'; // país-específica o 'global'
+  audience?: 'AR' | 'MX' | 'CL' | 'CO' | 'ES' | 'BO' | 'PE' | 'EC' | 'VE' | 'PY' | 'UY' | 'DO' | 'BR' | 'PT' | 'US' | 'GB' | 'CA' | 'AU' | 'global'; // país-específica o 'global'
   lang?: 'es' | 'en' | 'pt';
   hreflang?: Array<{lang: string, href: string}>;
   noindex?: boolean;
@@ -74,7 +74,7 @@ const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
 const _LANG_BY_AUDIENCE: Record<string, [string, string]> = {
   AR: ['es-AR', 'es_AR'], MX: ['es-MX', 'es_MX'], CL: ['es-CL', 'es_CL'],
   CO: ['es-CO', 'es_CO'], ES: ['es-ES', 'es_ES'], BO: ['es-BO', 'es_BO'],
-  PE: ['es-PE', 'es_PE'], EC: ['es-EC', 'es_EC'], VE: ['es-VE', 'es_VE'], PY: ['es-PY', 'es_PY'], UY: ['es-UY', 'es_UY'], DO: ['es-DO', 'es_DO'], BR: ['pt-BR', 'pt_BR'],
+  PE: ['es-PE', 'es_PE'], EC: ['es-EC', 'es_EC'], VE: ['es-VE', 'es_VE'], PY: ['es-PY', 'es_PY'], UY: ['es-UY', 'es_UY'], DO: ['es-DO', 'es_DO'], BR: ['pt-BR', 'pt_BR'], PT: ['pt-PT', 'pt_PT'],
   US: ['en-US', 'en_US'], GB: ['en-GB', 'en_GB'], CA: ['en-CA', 'en_CA'],
   AU: ['en-AU', 'en_AU'],
   global: ['es', 'es_419'],
@@ -84,7 +84,7 @@ const _audByLocale = _LANG_BY_AUDIENCE[audience] || _LANG_BY_AUDIENCE.global;
 // Si el audience no es EN-mercado pero lang='en', default a en-US (mercado prioritario Bing).
 const htmlLang = lang === 'en'
   ? (['US','GB','CA','AU'].includes(audience) ? _audByLocale[0] : 'en-US')
-  : lang === 'pt' ? 'pt-BR' : _audByLocale[0];
+  : lang === 'pt' ? (audience === 'PT' ? 'pt-PT' : 'pt-BR') : _audByLocale[0];
 
 // Geo targeting por audience — Bing Local + Yandex usan; Google ignora.
 const _GEO_BY_AUDIENCE: Record<string, {region: string; placename: string; icbm: string; country: string}> = {
@@ -100,6 +100,7 @@ const _GEO_BY_AUDIENCE: Record<string, {region: string; placename: string; icbm:
   UY: { region: 'UY', placename: 'Montevideo, Uruguay', icbm: '-34.9011, -56.1645', country: 'Uruguay' },
   DO: { region: 'DO', placename: 'Santo Domingo, República Dominicana', icbm: '18.4861, -69.9312', country: 'Dominican Republic' },
   BR: { region: 'BR', placename: 'São Paulo, Brasil', icbm: '-23.5505, -46.6333', country: 'Brazil' },
+  PT: { region: 'PT', placename: 'Lisboa, Portugal', icbm: '38.7223, -9.1393', country: 'Portugal' },
   US: { region: 'US', placename: 'Washington, DC, United States', icbm: '38.8951, -77.0364', country: 'United States' },
   GB: { region: 'GB', placename: 'London, United Kingdom', icbm: '51.5074, -0.1278', country: 'United Kingdom' },
   CA: { region: 'CA', placename: 'Ottawa, Canada', icbm: '45.4215, -75.6972', country: 'Canada' },
@@ -110,7 +111,7 @@ const _geo = _GEO_BY_AUDIENCE[audience] ||
   (lang === 'en' ? _GEO_BY_AUDIENCE.US : lang === 'pt' ? _GEO_BY_AUDIENCE.BR : _GEO_BY_AUDIENCE.AR);
 const ogLocale = lang === 'en'
   ? (['US','GB','CA','AU'].includes(audience) ? _audByLocale[1] : 'en_US')
-  : lang === 'pt' ? 'pt_BR' : _audByLocale[1];
+  : lang === 'pt' ? (audience === 'PT' ? 'pt_PT' : 'pt_BR') : _audByLocale[1];
 const schemaLang = htmlLang;
 
 // Schema.org WebSite + Organization global (siempre presente)
@@ -376,9 +377,9 @@ const globalSchema = {
         <link rel="alternate" hreflang="x-default" href={fullCanonical} />
       </>
     ) : lang === 'pt' ? (
-      /* Página portugués sin alternates conocidos. */
+      /* Página portugués sin alternates conocidos. pt-PT (Portugal) vs pt-BR (Brasil). */
       <>
-        <link rel="alternate" hreflang="pt-BR" href={fullCanonical} />
+        <link rel="alternate" hreflang={audience === 'PT' ? 'pt-PT' : 'pt-BR'} href={fullCanonical} />
         <link rel="alternate" hreflang="x-default" href={fullCanonical} />
       </>
     ) : audience !== 'global' ? (

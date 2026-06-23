@@ -34,6 +34,7 @@ const ROOT = resolve(__dirname, '..');
 const CALCS_DIR = join(ROOT, 'src', 'content', 'calcs');
 const CALCS_EN_DIR = join(ROOT, 'src', 'content', 'calcs-en');
 const CALCS_PT_DIR = join(ROOT, 'src', 'content', 'calcs-pt');
+const CALCS_PT_PT_DIR = join(ROOT, 'src', 'content', 'calcs-pt-pt');
 const CALCS_MX_DIR = join(ROOT, 'src', 'content', 'calcs-mx');
 const CALCS_ES_DIR = join(ROOT, 'src', 'content', 'calcs-es');
 const CALCS_CO_DIR = join(ROOT, 'src', 'content', 'calcs-co');
@@ -442,6 +443,7 @@ const calcs = readJSONs(CALCS_DIR);
 // (`/cafeina-dosis-rendimiento`). Mismo bug que el comentario de readJSONs.
 const calcsEn = readJSONs(CALCS_EN_DIR, 'en');
 const calcsPt = readJSONs(CALCS_PT_DIR, 'pt');
+const calcsPtPt = readJSONs(CALCS_PT_PT_DIR, 'pt-pt');
 const calcsMx = readJSONs(CALCS_MX_DIR, 'mx');
 const calcsEs = readJSONs(CALCS_ES_DIR, 'es');
 const calcsCo = readJSONs(CALCS_CO_DIR, 'co');
@@ -787,6 +789,7 @@ sitemaps.push({
     core('/py/calculadoras',                     '0.85', 'weekly',  true),
     core('/uy/calculadoras',                     '0.85', 'weekly',  true),
     core('/do/calculadoras',                     '0.85', 'weekly',  true),
+    core('/pt-pt/calculadoras',                  '0.85', 'weekly',  true),
     core('/mx',                                  '0.85', 'weekly',  true),
     core('/co',                                  '0.8',  'weekly'),
     core('/cl',                                  '0.8',  'weekly'),
@@ -932,6 +935,7 @@ if (calcsVe.length > 0) sitemaps.push(sitemapForLocale(calcsVe, 've', CALCS_VE_D
 if (calcsPy.length > 0) sitemaps.push(sitemapForLocale(calcsPy, 'py', CALCS_PY_DIR, true));
 if (calcsUy.length > 0) sitemaps.push(sitemapForLocale(calcsUy, 'uy', CALCS_UY_DIR, true));
 if (calcsDo.length > 0) sitemaps.push(sitemapForLocale(calcsDo, 'do', CALCS_DO_DIR, true));
+if (calcsPtPt.length > 0) sitemaps.push(sitemapForLocale(calcsPtPt, 'pt-pt', CALCS_PT_PT_DIR, true));
 
 // 4. Blog
 if (blogPosts.length > 0) {
@@ -1210,7 +1214,7 @@ function pushImageEntries(loc: string, c: any) {
 for (const c of calcs) pushImageEntries(`${site}/${c.slug}`, c);
 // Calcs por locale: el loop AR de arriba solo cubre src/content/calcs; las verticales
 // (/es, /mx, …) van acá — ahora también con su OG card, no solo la infografía.
-for (const [loc, list] of [['es', calcsEs], ['mx', calcsMx], ['cl', calcsCl], ['co', calcsCo], ['pe', calcsPe], ['ec', calcsEc], ['ve', calcsVe], ['py', calcsPy], ['uy', calcsUy], ['do', calcsDo], ['en', calcsEn], ['pt', calcsPt]] as const) {
+for (const [loc, list] of [['es', calcsEs], ['mx', calcsMx], ['cl', calcsCl], ['co', calcsCo], ['pe', calcsPe], ['ec', calcsEc], ['ve', calcsVe], ['py', calcsPy], ['uy', calcsUy], ['do', calcsDo], ['pt-pt', calcsPtPt], ['en', calcsEn], ['pt', calcsPt]] as const) {
   for (const c of list as any[]) pushImageEntries(`${site}/${loc}/${c.slug}`, c);
 }
 if (imageEntries.length > 0) {

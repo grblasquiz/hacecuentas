@@ -136,6 +136,7 @@ export const collections = {
   'calcs-py': makeCalcCollection('calcs-py'),
   'calcs-uy': makeCalcCollection('calcs-uy'),
   'calcs-do': makeCalcCollection('calcs-do'),
-  'calcs-pt': makeCalcCollection('calcs-pt'),
+  'calcs-pt': makeCalcCollection('calcs-pt'),       // Brasil (pt-BR)
+  'calcs-pt-pt': makeCalcCollection('calcs-pt-pt'), // Portugal (pt-PT)
   'calcs-en': makeCalcCollection('calcs-en'),
 };

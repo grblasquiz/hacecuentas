@@ -33,6 +33,8 @@ export interface HreflangClusterMembers {
   py?: string;
   uy?: string;
   do?: string;
+  /** vertical Portugal (carpeta /pt-pt/, locale pt-PT) */
+  ptPt?: string;
 }
 
 export interface HreflangTag {
@@ -64,6 +66,7 @@ export function buildHreflangCluster(
   const py = strip(members.py);
   const uy = strip(members.uy);
   const doDom = strip(members.do);
+  const ptPt = strip(members.ptPt);
 
   const urls = {
     es: es ? `${BASE}/${es}` : undefined,
@@ -79,6 +82,7 @@ export function buildHreflangCluster(
     py: py ? `${BASE}/py/${py}` : undefined,
     uy: uy ? `${BASE}/uy/${uy}` : undefined,
     do: doDom ? `${BASE}/do/${doDom}` : undefined,
+    ptPt: ptPt ? `${BASE}/pt-pt/${ptPt}` : undefined,
   };
 
   const memberCount = Object.values(urls).filter(Boolean).length;
@@ -103,6 +107,7 @@ export function buildHreflangCluster(
   if (urls.py) tags.push({ lang: 'es-PY', href: urls.py });
   if (urls.uy) tags.push({ lang: 'es-UY', href: urls.uy });
   if (urls.do) tags.push({ lang: 'es-DO', href: urls.do });
+  if (urls.ptPt) tags.push({ lang: 'pt-PT', href: urls.ptPt });
 
   const xDefault =
     urls.es ||
@@ -117,7 +122,8 @@ export function buildHreflangCluster(
     urls.ve ||
     urls.py ||
     urls.uy ||
-    urls.do;
+    urls.do ||
+    urls.ptPt;
   tags.push({ lang: 'x-default', href: xDefault! });
 
   return tags;
@@ -168,5 +174,6 @@ export const HOME_HREFLANG: HreflangTag[] = [
   { lang: 'en-US', href: `${BASE}/en` },
   { lang: 'en', href: `${BASE}/en` },
   { lang: 'pt-BR', href: `${BASE}/pt` },
+  { lang: 'pt-PT', href: `${BASE}/pt-pt` },
   { lang: 'x-default', href: `${BASE}/` },
 ];

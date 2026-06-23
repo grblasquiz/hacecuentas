@@ -303,6 +303,18 @@ function main() {
       topK: 12,
     });
   }
+  // Portugal (/pt-pt/) — vertical aparte del loop ES porque es PORTUGUÉS:
+  // usa STOPWORDS_PT (no las ES), igual que Brasil (calcs-pt). Sin esto los
+  // calcs PT quedan huérfanos del grafo interno (mismo bug que tenía España).
+  computeRelated({
+    dir: join(ROOT, 'src/content/calcs-pt-pt'),
+    stopwords: STOPWORDS_PT,
+    outputFile: join(ROOT, 'src/lib/related-auto-pt-pt.json'),
+    cacheHashFile: join(ROOT, 'src/lib/related-auto-pt-pt.hash'),
+    excludeNoindex: true,
+    label: 'pt-pt',
+    topK: 12,
+  });
 }
 
 main();
