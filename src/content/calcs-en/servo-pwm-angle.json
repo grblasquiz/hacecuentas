@@ -118,17 +118,73 @@
   "referenceTables": [
     {
       "title": "Real Servo Models — Pulse Width Range & Travel (from datasheets)",
-      "headers": ["Servo", "Type", "Pulse range (µs)", "Neutral (µs)", "Rated travel", "Notes"],
-      "rows": [
-        ["TowerPro SG90", "Analog micro 9g", "1000–2000", "1500", "~180°", "Controller may default 500–2400 µs → hits stops"],
-        ["TowerPro MG90S", "Analog metal-gear 13g", "1000–2000", "1500", "~180°", "Same protocol as SG90, metal gears"],
-        ["TowerPro MG996R", "Digital metal-gear", "1000–2000", "1500", "~120° actual", "Often labeled 180° but mech travel is less"],
-        ["Hitec HS-422", "Analog standard", "900–2100", "1500", "~180°", "Classic 1.0–2.0 ms ≈ 90° usable"],
-        ["Hitec HS-785HB", "Analog winch (multi-turn)", "900–2100", "1500", "±2.625 turns (~1890°)", "Drum/sail winch — NOT a 0–180° servo"],
-        ["Savöx SV-0320", "HV digital standard", "800–2200", "1500", "120° (1000–2000)", "Extended ends 800/2200 reach full travel"],
-        ["Savöx SH-1290MG", "Digital high-speed", "800–2200", "1520", "100° (1000–2000)", "Neutral is 1520 µs, not 1500"]
+      "headers": [
+        "Servo",
+        "Type",
+        "Pulse range (µs)",
+        "Neutral (µs)",
+        "Rated travel",
+        "Notes"
       ],
-      "note": "Verified against manufacturer datasheets. The universal RC convention is 1000–2000 µs at 50 Hz with 1500 µs neutral, but real travel for a given 1000–2000 µs sweep varies by model (100°–180°+) and some servos accept extended 800–2400 µs ranges that drive the horn past 1000–2000 µs. Always confirm the rated pulse range before sending pulses outside 1.0–2.0 ms — out-of-range pulses stall the motor against its end-stop and can strip gears within seconds. Sources: TowerPro MG996R / SG90 datasheets; Hitec HS-785HB spec sheet; Savöx SV-0320 / SH-1290MG product specs.",
+      "rows": [
+        [
+          "TowerPro SG90",
+          "Analog micro 9g",
+          "500–2400",
+          "1500",
+          "~180°",
+          "Native range is 500–2400 µs; 1000–2000 µs covers ~180° and is the safe RC convention"
+        ],
+        [
+          "TowerPro MG90S",
+          "Analog metal-gear 13g",
+          "1000–2000",
+          "1500",
+          "~180°",
+          "Same protocol as SG90, metal gears"
+        ],
+        [
+          "TowerPro MG996R",
+          "Digital metal-gear",
+          "1000–2000",
+          "1500",
+          "~120° actual",
+          "Often labeled 180° but mech travel is ~120° (60° each direction) per datasheet"
+        ],
+        [
+          "Hitec HS-422",
+          "Analog standard",
+          "900–2100",
+          "1500",
+          "~180°",
+          "Classic 1.0–2.0 ms ≈ 90° usable"
+        ],
+        [
+          "Hitec HS-785HB",
+          "Analog winch (multi-turn)",
+          "900–2100",
+          "1500",
+          "±2.625 turns (~1890°)",
+          "Drum/sail winch — NOT a 0–180° servo"
+        ],
+        [
+          "Savöx SV-0320",
+          "HV digital standard",
+          "800–2200",
+          "1500",
+          "120° (1000–2000)",
+          "Extended ends 800/2200 reach full travel"
+        ],
+        [
+          "Savöx SH-1290MG",
+          "Digital high-speed",
+          "800–2200",
+          "1520",
+          "100° (1000–2000)",
+          "Neutral is 1520 µs, not 1500"
+        ]
+      ],
+      "note": "Verified against manufacturer datasheets. The TowerPro SG90 native pulse range is 500–2400 µs per its datasheet; the 1000–2000 µs RC convention is safe but does not represent the servo's full rated range. The MG996R mechanical travel is ~120° (60° each direction) per the official datasheet, despite being commonly marketed as 180°. Real travel for a given 1000–2000 µs sweep varies by model (100°–180°+) and some servos accept extended ranges. Always confirm the rated pulse range before sending pulses outside 1.0–2.0 ms — out-of-range pulses stall the motor against its end-stop and can strip gears within seconds. Sources: TowerPro MG996R / SG90 datasheets; Hitec HS-785HB spec sheet; Savöx SV-0320 / SH-1290MG product specs.",
       "caption": "Actual PWM pulse ranges and mechanical travel for popular hobby/industrial servos."
     }
   ],

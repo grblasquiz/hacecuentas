@@ -56,12 +56,30 @@
       "default": "gpt-4o-mini",
       "help": "Preço por 1 milhão de tokens (input/output), vigente em jun/2026. Modelos 'mini'/baratos cabem na maioria das tarefas de texto.",
       "options": [
-        { "value": "gpt-4o-mini", "label": "GPT-4o mini — US$ 0,15 / 0,60 por 1M (barato)" },
-        { "value": "deepseek", "label": "DeepSeek V3 — US$ 0,27 / 1,10 por 1M (barato)" },
-        { "value": "gemini-flash", "label": "Gemini 2.5 Flash — US$ 0,30 / 2,50 por 1M" },
-        { "value": "claude-haiku", "label": "Claude Haiku 4.x — US$ 1 / 5 por 1M" },
-        { "value": "gpt-4o", "label": "GPT-4o — US$ 2,50 / 10 por 1M" },
-        { "value": "claude-sonnet", "label": "Claude Sonnet 4.x — US$ 3 / 15 por 1M (premium)" }
+        {
+          "value": "gpt-4o-mini",
+          "label": "GPT-4o mini — US$ 0,15 / 0,60 por 1M (barato)"
+        },
+        {
+          "value": "deepseek",
+          "label": "DeepSeek V3 — US$ 0,27 / 1,10 por 1M (barato)"
+        },
+        {
+          "value": "gemini-flash",
+          "label": "Gemini 2.5 Flash — US$ 0,30 / 2,50 por 1M"
+        },
+        {
+          "value": "claude-haiku",
+          "label": "Claude Haiku 4.x — US$ 1 / 5 por 1M"
+        },
+        {
+          "value": "gpt-4o",
+          "label": "GPT-4o — US$ 2,50 / 10 por 1M"
+        },
+        {
+          "value": "claude-sonnet",
+          "label": "Claude Sonnet 4.x — US$ 3 / 15 por 1M (premium)"
+        }
       ]
     },
     {
@@ -117,7 +135,12 @@
     }
   ],
   "example": {
-    "inputs": { "salarioBruto": 3000, "horasMes": 220, "modeloIa": "gpt-4o-mini", "tokensHora": 50000 },
+    "inputs": {
+      "salarioBruto": 3000,
+      "horasMes": 220,
+      "modeloIa": "gpt-4o-mini",
+      "tokensHora": 50000
+    },
     "result": "Operário ~R$ 5.040/mês (R$ 22,91/h) × agente GPT-4o mini ~R$ 19,60/mês (R$ 0,09/h): economia de ~R$ 60.245/ano, IA ~257× mais barata por hora."
   },
   "dataUpdate": {
@@ -170,8 +193,7 @@
       "a": "Parcialmente. O multiplicador de 1,68 vale para empresas fora do Simples. No Simples Nacional, a maior parte dos encargos patronais (INSS de 20% e contribuições a terceiros) está embutida na alíquota única do DAS, então o custo extra sobre a folha é menor — mais perto de FGTS (8%) + 13º + férias, algo como 1,4× a 1,5× o bruto, dependendo do anexo e do Fator R. Se a sua empresa é do Simples, leia o resultado como um teto: o custo real do funcionário tende a ser um pouco menor, mas a comparação com a IA continua válida em ordem de grandeza."
     }
   ],
-  "explanation": "## Como se calcula\n\nA calculadora faz duas contas independentes e compara.\n\n### Lado humano — custo real do operário para a empresa\n\nO ponto de partida é o salário bruto, mas o que importa para o empregador é o **custo total**. Sobre a folha (empresa fora do Simples) incidem:\n\n| Encargo | Aproximado |\n|---|---|\n| INSS patronal | 20% |\n| FGTS | 8% |\n| 13º salário | ~8,33% ao ano |\n| Férias + 1/3 constitucional | ~11,11% |\n| RAT + Sistema S / terceiros | ~8% (varia por CNAE) |\n| **Total sobre o bruto** | **~68%** |\n\nPor isso a calculadora usa **custo real = salário bruto × 1,68**. O custo por hora é esse valor dividido pelas horas do mês (220 por padrão, equivalente à jornada CLT de 44h/semana). É uma estimativa: o número exato depende do CNAE, do regime tributário e da convenção coletiva.\n\n### Lado da IA — custo do agente\n\nO custo de um agente de IA é, na prática, o **preço dos tokens** do modelo que ele usa:\n\n1. **Tokens por mês** = tokens por hora × horas do mês.\n2. **Preço médio** = mistura de 60% input + 40% output do modelo escolhido (em US$ por 1M de tokens).\n3. **Custo em USD** = tokens por mês × preço médio ÷ 1.000.000.\n4. **Custo em R$** = custo em USD × 5,40 (câmbio aproximado).\n\nO resultado é o custo mensal só do modelo. Dividido pelas horas, dá o custo por hora da IA.\n\n### O contraste\n\nA economia mensal é simplesmente *custo do operário − custo da IA*, e a economia anual multiplica por 12. A calculadora também mostra **quantas vezes a IA é mais barata por hora** — o número de efeito.\n\n## A ressalva: a IA não substitui tudo\n\nO custo dos tokens **não é o custo total** de usar IA. Faltam, no mínimo:\n\n- **Engenharia e manutenção** do agente.\n- **Supervisão humana** das saídas (em tarefas críticas, pode custar mais que os tokens).\n- **Ferramentas, APIs e infraestrutura** onde o agente roda.\n- **Retrabalho** quando a IA erra, e o custo de uma falha.\n\nE há o que a máquina simplesmente não faz: **julgamento** em situações ambíguas, **relacionamento** de confiança com clientes, e **responsabilidade legal** — um agente de IA não responde perante a Justiça do Trabalho nem perante o consumidor. A leitura honesta destes números é: a IA reduz drasticamente o custo de muitas *tarefas*, mas substituir a *pessoa* é outra conversa. O resultado mais comum é cada profissional fazer mais com a IA do lado — e os papéis que sobram passarem a valer justamente pelo que a IA não consegue entregar."
-  ,
+  "explanation": "## Como se calcula\n\nA calculadora faz duas contas independentes e compara.\n\n### Lado humano — custo real do operário para a empresa\n\nO ponto de partida é o salário bruto, mas o que importa para o empregador é o **custo total**. Sobre a folha (empresa fora do Simples) incidem:\n\n| Encargo | Aproximado |\n|---|---|\n| INSS patronal | 20% |\n| FGTS | 8% |\n| 13º salário | ~8,33% ao ano |\n| Férias + 1/3 constitucional | ~11,11% |\n| RAT + Sistema S / terceiros | ~8% (varia por CNAE) |\n| **Total sobre o bruto** | **~68%** |\n\nPor isso a calculadora usa **custo real = salário bruto × 1,68**. O custo por hora é esse valor dividido pelas horas do mês (220 por padrão, equivalente à jornada CLT de 44h/semana). É uma estimativa: o número exato depende do CNAE, do regime tributário e da convenção coletiva.\n\n### Lado da IA — custo do agente\n\nO custo de um agente de IA é, na prática, o **preço dos tokens** do modelo que ele usa:\n\n1. **Tokens por mês** = tokens por hora × horas do mês.\n2. **Preço médio** = mistura de 60% input + 40% output do modelo escolhido (em US$ por 1M de tokens).\n3. **Custo em USD** = tokens por mês × preço médio ÷ 1.000.000.\n4. **Custo em R$** = custo em USD × 5,40 (câmbio aproximado).\n\nO resultado é o custo mensal só do modelo. Dividido pelas horas, dá o custo por hora da IA.\n\n### O contraste\n\nA economia mensal é simplesmente *custo do operário − custo da IA*, e a economia anual multiplica por 12. A calculadora também mostra **quantas vezes a IA é mais barata por hora** — o número de efeito.\n\n## A ressalva: a IA não substitui tudo\n\nO custo dos tokens **não é o custo total** de usar IA. Faltam, no mínimo:\n\n- **Engenharia e manutenção** do agente.\n- **Supervisão humana** das saídas (em tarefas críticas, pode custar mais que os tokens).\n- **Ferramentas, APIs e infraestrutura** onde o agente roda.\n- **Retrabalho** quando a IA erra, e o custo de uma falha.\n\nE há o que a máquina simplesmente não faz: **julgamento** em situações ambíguas, **relacionamento** de confiança com clientes, e **responsabilidade legal** — um agente de IA não responde perante a Justiça do Trabalho nem perante o consumidor. A leitura honesta destes números é: a IA reduz drasticamente o custo de muitas *tarefas*, mas substituir a *pessoa* é outra conversa. O resultado mais comum é cada profissional fazer mais com a IA do lado — e os papéis que sobram passarem a valer justamente pelo que a IA não consegue entregar.",
   "sources": [
     {
       "name": "INSS — Tabelas e contribuição patronal",
@@ -197,16 +219,65 @@
     {
       "title": "Custo mensal de um agente de IA por modelo (50.000 tokens/h, 220 h/mês)",
       "caption": "Cenário fixo: 11 milhões de tokens/mês, mistura 60% input + 40% output, câmbio US$ 1 = R$ 5,40 (jun/2026).",
-      "headers": ["Modelo de IA", "Preço (US$/1M in · out)", "Custo US$/mês", "Custo R$/mês", "R$/hora", "× mais barato que operário R$ 3.000"],
-      "rows": [
-        ["GPT-4o mini", "0,15 · 0,60", "US$ 3,63", "R$ 19,60", "R$ 0,09", "257×"],
-        ["DeepSeek V3", "0,27 · 1,10", "US$ 6,62", "R$ 35,76", "R$ 0,16", "141×"],
-        ["Gemini 2.5 Flash", "0,30 · 2,50", "US$ 12,98", "R$ 70,09", "R$ 0,32", "72×"],
-        ["Claude Haiku 4.x", "1,00 · 5,00", "US$ 28,60", "R$ 154,44", "R$ 0,70", "33×"],
-        ["GPT-4o", "2,50 · 10,00", "US$ 60,50", "R$ 326,70", "R$ 1,49", "15×"],
-        ["Claude Sonnet 4.x", "3,00 · 15,00", "US$ 85,80", "R$ 463,32", "R$ 2,11", "11×"]
+      "headers": [
+        "Modelo de IA",
+        "Preço (US$/1M in · out)",
+        "Custo US$/mês",
+        "Custo R$/mês",
+        "R$/hora",
+        "× mais barato que operário R$ 3.000"
       ],
-      "note": "Comparação contra o custo real de um operário CLT de R$ 3.000 brutos (≈ R$ 5.040/mês com encargos × 1,68). Preços de API vigentes em jun/2026; só o custo dos tokens, sem orquestração, supervisão nem retrabalho. Reverificar quando os provedores reajustarem ou o câmbio variar."
+      "rows": [
+        [
+          "GPT-4o mini",
+          "0,15 · 0,60",
+          "US$ 3,63",
+          "R$ 19,60",
+          "R$ 0,09",
+          "257×"
+        ],
+        [
+          "DeepSeek V3 (via API direta)",
+          "0,014 · 0,028",
+          "US$ 0,19",
+          "R$ 1,03",
+          "R$ 0,00",
+          ">4.800×"
+        ],
+        [
+          "Gemini 2.5 Flash",
+          "0,30 · 2,50",
+          "US$ 12,98",
+          "R$ 70,09",
+          "R$ 0,32",
+          "72×"
+        ],
+        [
+          "Claude Haiku 4.x",
+          "1,00 · 5,00",
+          "US$ 28,60",
+          "R$ 154,44",
+          "R$ 0,70",
+          "33×"
+        ],
+        [
+          "GPT-4o",
+          "2,50 · 10,00",
+          "US$ 60,50",
+          "R$ 326,70",
+          "R$ 1,49",
+          "15×"
+        ],
+        [
+          "Claude Sonnet 4.x",
+          "3,00 · 15,00",
+          "US$ 85,80",
+          "R$ 463,32",
+          "R$ 2,11",
+          "11×"
+        ]
+      ],
+      "note": "Comparação contra o custo real de um operário CLT de R$ 3.000 brutos (≈ R$ 5.040/mês com encargos × 1,68). Preços de API vigentes em jun/2026; só o custo dos tokens, sem orquestração, supervisão nem retrabalho. ATENÇÃO: DeepSeek V3 foi corrigido para o preço oficial direto da API DeepSeek ($0,014/$0,028 por 1M tokens); o valor anterior ($0,27/$1,10) correspondia ao modelo legacy deepseek-v3 via provedores terceiros (ex.: OpenRouter). Claude Haiku 4.x não teve confirmação de preço atualizado em jun/2026; verificar em anthropic.com. Reverificar quando os provedores reajustarem ou o câmbio variar."
     }
   ],
   "audience": "BR",
