@@ -1141,11 +1141,13 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
      dejamos shrink al texto. Cero impacto en desktop ni en HTML/contenido. */
   @media (max-width: 480px) {
     .header-container { padding: 0.5rem 0.625rem; gap: 0.375rem; }
-    .logo { min-width: 0; }
-    /* En mobile el header (logo + búsqueda + país + tema + menú) no deja ancho
-       para el texto: el flex lo aplastaba a ~0 y se veía "Hacé C…". Mostramos
-       solo la marca (logo-mark); el texto vuelve ≥481px. */
-    .logo-text { display: none; }
+    /* El logo no se aprieta (flex-shrink:0): antes min-width:0 + ellipsis dejaban
+       que el flex aplastara el texto a ~0 → se veía "Hacé C…". */
+    .logo { flex-shrink: 0; }
+    /* Texto visible (nowrap viene del base) con un punto menos de font para que
+       "Hacé Cuentas" + ícono + las 4 acciones entren sin desbordar (≥~361px).
+       En pantallas más chicas se oculta (bloque ≤360px abajo). */
+    .logo-text { font-size: 0.875rem; }
     .header-actions { gap: 0.375rem; margin-left: 0; }
     /* Botón de búsqueda compacto pero cómodo de tocar (44px alto). */
     .header-search-btn { width: 44px; height: 44px; min-width: 44px; padding: 0; justify-content: center; }
@@ -1156,8 +1158,11 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     .country-flag { font-size: 1.0625rem; }
   }
 
-  /* (El texto del logo ya se oculta en ≤480px; antes había una regla extra a
-     ≤360px, ahora redundante.) */
+  /* Pantallas muy chicas (≤360px, p. ej. iPhone mini): no entra "Hacé Cuentas"
+     + las 4 acciones sin desbordar → solo la marca/ícono. */
+  @media (max-width: 360px) {
+    .logo-text { display: none; }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .search-backdrop, .search-panel { animation: none; }
