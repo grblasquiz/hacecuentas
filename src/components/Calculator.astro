@@ -3259,6 +3259,30 @@ const formatFreshnessDate = (iso: string): string => {
     return String(Math.round(n * 100) / 100);
   }
 
+  // Donut SVG del rediseño v2 (idéntico al prototipo): paleta por concepto,
+  // leyenda con $ y %, centro que cambia al pasar el mouse, segmento que crece.
+  function renderV2Donut(canvas: HTMLCanvasElement, labels: string[], values: number[], total: number, fmtN: (n: number) => string, spec: any): void {
+    const wrap = (canvas as any).closest('[data-chart-wrap]');
+    if (!wrap) return;
+    canvas.style.display = 'none';
+    const dl = wrap.querySelector('[data-chart-download]'); if (dl) (dl as HTMLElement).style.display = 'none';
+    let host = wrap.querySelector('.v2-donut') as HTMLElement | null;
+    if (!host) { host = document.createElement('div'); host.className = 'v2-donut'; (canvas.parentNode as HTMLElement).insertBefore(host, canvas); }
+    const PAL = ['#16a34a', '#2563eb', '#0ea5e9', '#8b5cf6', '#ef7a3d', '#06b6d4', '#eab308'];
+    const fmtShort = (n: number) => { n = Math.round(n); if (n >= 1e6) return '$' + (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace('.', ',') + 'M'; if (n >= 1e3) return '$' + Math.round(n / 1e3) + 'K'; return '$' + n; };
+    const lbl = (spec.centerLabel ? String(spec.centerLabel) : 'Total').toUpperCase();
+    let acc = 0, circles = '';
+    values.forEach((v, i) => { const len = total > 0 ? v / total * 100 : 0; circles += `<circle data-i="${i}" cx="21" cy="21" r="15.915" fill="none" stroke="${PAL[i % PAL.length]}" stroke-width="5.6" stroke-dasharray="${len.toFixed(2)} ${(100 - len).toFixed(2)}" stroke-dashoffset="${(25 - acc).toFixed(2)}"></circle>`; acc += len; });
+    circles += `<text class="v2-donut-cval" x="21" y="20" text-anchor="middle" font-size="5">${fmtShort(total)}</text>`;
+    circles += `<text class="v2-donut-clbl" x="21" y="24.6" text-anchor="middle" font-size="2.6">${lbl}</text>`;
+    const legend = values.map((v, i) => { const pct = total > 0 ? v / total * 100 : 0; return `<div class="v2-donut-lg" data-i="${i}"><span class="sw" style="background:${PAL[i % PAL.length]}"></span><span class="nm">${labels[i]}</span><span class="vl">${fmtN(v)} · ${pct.toFixed(0)}%</span></div>`; }).join('');
+    host.innerHTML = `<svg class="v2-donut-svg" viewBox="0 0 42 42" aria-label="Composición del resultado">${circles}</svg><div class="v2-donut-legend">${legend}</div>`;
+    const svg = host.querySelector('svg')!, cval = host.querySelector('.v2-donut-cval')!, clbl = host.querySelector('.v2-donut-clbl')!;
+    const setHot = (i: number) => { svg.classList.add('hot'); host!.querySelectorAll('circle').forEach((c) => c.classList.toggle('on', Number((c as HTMLElement).dataset.i) === i)); host!.querySelectorAll('.v2-donut-lg').forEach((l) => l.classList.toggle('on', Number((l as HTMLElement).dataset.i) === i)); cval.textContent = fmtShort(values[i]); clbl.textContent = (labels[i] || '').toUpperCase(); };
+    const clr = () => { svg.classList.remove('hot'); host!.querySelectorAll('circle').forEach((c) => c.classList.remove('on')); host!.querySelectorAll('.v2-donut-lg').forEach((l) => l.classList.remove('on')); cval.textContent = fmtShort(total); clbl.textContent = lbl; };
+    host.querySelectorAll('circle, .v2-donut-lg').forEach((el) => { el.addEventListener('mouseenter', () => setHot(Number((el as HTMLElement).dataset.i))); el.addEventListener('mouseleave', clr); });
+  }
+
   // Render: devuelve la instancia Chart o null
   function renderChart(Chart: any, canvas: HTMLCanvasElement, spec: any, existing: any | null): any {
     if (existing) { try { existing.destroy(); } catch {} }
@@ -3369,6 +3393,12 @@ const formatFreshnessDate = (iso: string): string => {
       const pfx = spec.prefix || '';
       const sfx = spec.suffix || '';
       const fmtN = (n: number) => pfx + new Intl.NumberFormat('es-AR').format(Math.round(n)) + sfx;
+      // v2: donut SVG idéntico al prototipo (paleta por concepto, leyenda con $/%,
+      // centro que cambia al pasar el mouse, segmento que crece). Solo en .calc-v2.
+      if ((canvas as any).closest && (canvas as any).closest('.calc-v2')) {
+        renderV2Donut(canvas, labels, values, total, fmtN, spec);
+        return null;
+      }
       const centerPlugin = {
         id: 'doughnutCenter',
         afterDraw(chart: any) {

@@ -1,0 +1,265 @@
+/* ============================================================================
+   calc-redesign.css — Rediseño de landings de calculadoras (v2)
+   ----------------------------------------------------------------------------
+   TODO está scopeado bajo `.calc-v2` a propósito: el diseño nuevo NO afecta
+   ninguna página hasta que el template la marca con esa clase. Eso hace la
+   migración incremental y 100% reversible (cero riesgo SEO mientras se
+   construye). Inspirado en el mock-up aprobado de "sueldo en mano".
+
+   Paleta fintech: azul #2563eb, navy #0f172a, grises, fondo #f2f5fb.
+   Tipografías: Plus Jakarta Sans (texto) + IBM Plex Mono (números).
+   ========================================================================== */
+
+.calc-v2{
+  --v2-bg:#f2f5fb; --v2-card:#fff; --v2-ink:#0f172a; --v2-body:#475569; --v2-muted:#94a0ad;
+  --v2-line:#e2e8f0; --v2-line-soft:#eef2f7;
+  --v2-accent:#2563eb; --v2-accent-ink:#1d4ed8; --v2-accent-bg:#e8effd; --v2-accent-soft:#f5f8ff;
+  --v2-neg:#c25a2c; --v2-ok:#1e7d52; --v2-ok-bg:#e9f6ef;
+  /* donut: colores distintos por concepto */
+  --v2-c1:#16a34a; --v2-c2:#2563eb; --v2-c3:#0ea5e9; --v2-c4:#8b5cf6; --v2-c5:#ef7a3d;
+  --v2-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --v2-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -12px rgba(15,23,42,.12);
+  --v2-radius:18px;
+}
+
+/* La marca .calc-v2 va en el <article>. Es el contenedor de página:
+   max-width + centrado + padding horizontal (en el template real lo daba el CSS
+   del [...slug], que acá no cargamos). Sin esto el h1 desborda en mobile. */
+.calc-v2{ color:var(--v2-body); max-width:760px; margin:0 auto; padding:24px 20px 96px; overflow-wrap:break-word; }
+.calc-v2 *{ box-sizing:border-box; }
+.calc-v2 :where(h1,h2,h3){ color:var(--v2-ink); letter-spacing:-.02em; }
+.calc-v2 strong{ color:var(--v2-ink); font-weight:600; }
+
+/* ===== Hero ===== */
+.calc-v2 .v2-eyebrow{ display:inline-flex; align-items:center; gap:6px; background:var(--v2-accent-bg); color:var(--v2-accent); font-size:12px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:5px 11px; border-radius:8px; margin-bottom:14px; }
+.calc-v2 .v2-h1{ font-size:clamp(28px,5.4vw,40px); line-height:1.1; font-weight:800; margin:0 0 14px; max-width:760px; text-wrap:balance; }
+.calc-v2 .v2-h1 .accent{ color:var(--v2-accent); }
+.calc-v2 .v2-lede{ font-size:17px; color:var(--v2-body); margin:0 0 16px; max-width:680px; }
+.calc-v2 .v2-meta{ display:flex; flex-wrap:wrap; gap:8px 16px; font-size:13px; color:var(--v2-muted); align-items:center; margin-bottom:14px; }
+.calc-v2 .v2-meta a{ color:var(--v2-accent); font-weight:600; }
+.calc-v2 .v2-meta .dot{ width:4px; height:4px; border-radius:50%; background:#cbd5e1; }
+
+/* ===== Herramientas relacionadas (recuadro destacado, debajo del calc) ===== */
+.calc-v2 .v2-rel{ margin:0 0 26px; background:var(--v2-accent-soft); border:1px solid #dbe6f9; border-radius:16px; padding:16px 18px; }
+.calc-v2 .v2-rel-label{ font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--v2-accent-ink); margin-bottom:11px; display:flex; align-items:center; gap:7px; }
+.calc-v2 .v2-rel-chips{ display:flex; flex-wrap:wrap; gap:9px; }
+.calc-v2 .v2-rel-chip{ display:inline-flex; align-items:center; gap:7px; font-size:13.5px; font-weight:600; color:var(--v2-ink); background:#fff; border:1px solid var(--v2-line); border-radius:11px; padding:9px 13px; transition:.15s; }
+.calc-v2 .v2-rel-chip:hover{ border-color:var(--v2-accent); color:var(--v2-accent); box-shadow:var(--v2-shadow); transform:translateY(-1px); }
+
+/* ===== Respuesta rápida (keyTakeaway / AEO) ===== */
+.calc-v2 .v2-quick{ background:#fff; border:1px solid var(--v2-line); border-left:4px solid var(--v2-accent); border-radius:14px; padding:18px 22px; margin-bottom:14px; box-shadow:var(--v2-shadow); }
+.calc-v2 .v2-quick-h{ font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--v2-accent); margin:0 0 9px; display:flex; align-items:center; gap:8px; font-weight:700; }
+.calc-v2 .v2-quick p{ margin:0; font-size:16px; color:var(--v2-body); }
+.calc-v2 .v2-kt-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:11px; margin-bottom:30px; }
+.calc-v2 .v2-kt-card{ background:#fff; border:1px solid var(--v2-line); border-radius:13px; padding:15px; }
+.calc-v2 .v2-kt-card .ico{ width:38px; height:38px; border-radius:10px; background:var(--v2-accent-bg); display:grid; place-items:center; font-size:19px; margin-bottom:9px; }
+.calc-v2 .v2-kt-card .h{ font-weight:700; color:var(--v2-ink); font-size:15px; }
+.calc-v2 .v2-kt-card .d{ font-size:13.5px; color:var(--v2-body); margin-top:3px; }
+
+/* ===== TABS (4 fijas: Resumen / Cómo funciona / Preguntas / Fuentes) ===== */
+.calc-v2 .v2-tabs{ margin-bottom:30px; }
+.calc-v2 .v2-tabnav{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:22px; }
+.calc-v2 .v2-tab{ display:flex; align-items:center; justify-content:center; gap:7px; font-size:14px; font-weight:600; color:var(--v2-body); padding:12px 14px; border-radius:11px; background:#fff; border:1px solid var(--v2-line); transition:.15s; cursor:pointer; font-family:inherit; }
+.calc-v2 .v2-tab .ti{ font-size:15px; }
+.calc-v2 .v2-tab[aria-selected="true"]{ background:var(--v2-accent); color:#fff; border-color:var(--v2-accent); }
+.calc-v2 .v2-tab:hover:not([aria-selected="true"]){ color:var(--v2-ink); border-color:#cbd5e1; }
+.calc-v2 .v2-panel{ display:none; animation:v2fade .25s ease; }
+.calc-v2 .v2-panel.active{ display:block; }
+@keyframes v2fade{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:none;} }
+@media(min-width:721px){
+  .calc-v2 .v2-tabnav{ display:flex; gap:6px; background:#fff; border:1px solid var(--v2-line); border-radius:14px; padding:6px; box-shadow:var(--v2-shadow); }
+  .calc-v2 .v2-tab{ flex:1; border:none; background:transparent; border-radius:10px; }
+  .calc-v2 .v2-tab[aria-selected="true"]{ background:var(--v2-accent-bg); color:var(--v2-accent-ink); border-color:transparent; }
+}
+
+/* ===== Bloques de contenido ===== */
+.calc-v2 .v2-block{ margin-bottom:26px; }
+.calc-v2 .v2-block h2{ font-size:23px; font-weight:800; margin:0 0 14px; }
+.calc-v2 .v2-block h3{ font-size:18px; font-weight:700; margin:22px 0 8px; }
+.calc-v2 .v2-block p{ margin:0 0 13px; font-size:15.5px; }
+.calc-v2 .v2-block a{ color:var(--v2-accent); font-weight:600; }
+.calc-v2 .v2-block a:hover{ text-decoration:underline; }
+.calc-v2 .v2-checks{ list-style:none; padding:0; margin:0; display:grid; gap:11px; }
+.calc-v2 .v2-checks li{ display:flex; gap:11px; font-size:15.5px; background:#fff; border:1px solid var(--v2-line); border-radius:12px; padding:13px 15px; }
+.calc-v2 .v2-checks li::before{ content:"✓"; color:var(--v2-accent); font-weight:800; flex-shrink:0; }
+.calc-v2 .v2-code{ background:#0f172a; color:#cfe0fb; font-family:var(--v2-mono); font-size:14px; border-radius:12px; padding:14px 16px; margin:0 0 14px; overflow-x:auto; }
+
+/* tablas (entran sin cortarse en mobile gracias al wrap con overflow + sizing) */
+.calc-v2 .v2-tbl{ overflow-x:auto; border:1px solid var(--v2-line); border-radius:14px; box-shadow:var(--v2-shadow); margin:0 0 8px; }
+.calc-v2 .v2-tbl table{ width:100%; border-collapse:collapse; font-size:14.5px; background:#fff; min-width:0; }
+.calc-v2 .v2-tbl th, .calc-v2 .v2-tbl td{ padding:11px 16px; text-align:left; border-bottom:1px solid var(--v2-line-soft); }
+.calc-v2 .v2-tbl thead th{ background:#fbfcfe; font-size:12.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--v2-muted); }
+.calc-v2 .v2-tbl td.num, .calc-v2 .v2-tbl th.num{ text-align:right; font-family:var(--v2-mono); }
+.calc-v2 .v2-tbl tbody tr:last-child td{ border-bottom:none; }
+.calc-v2 .v2-tbl td.hl{ color:var(--v2-accent); font-weight:600; }
+.calc-v2 .v2-tbl-note{ font-size:12.5px; color:var(--v2-muted); margin:0 0 4px; padding:0 2px; }
+
+/* contenido markdown dentro de los bloques (explanation via md()) */
+.calc-v2 .v2-block :where(h2){ font-size:23px; font-weight:800; margin:0 0 14px; }
+.calc-v2 .v2-block :where(h3){ font-size:18px; font-weight:700; margin:22px 0 8px; }
+.calc-v2 .v2-block :where(ul,ol){ padding-left:20px; margin:0 0 14px; }
+.calc-v2 .v2-block :where(li){ margin-bottom:5px; font-size:15.5px; }
+.calc-v2 .v2-block :where(a){ color:var(--v2-accent); font-weight:600; }
+.calc-v2 .v2-block :where(blockquote){ border-left:3px solid var(--v2-accent); padding:10px 14px; background:var(--v2-accent-soft); border-radius:0 10px 10px 0; color:var(--v2-body); margin:0 0 14px; font-size:14.5px; }
+.calc-v2 .v2-block :where(code){ font-family:var(--v2-mono); background:var(--v2-line-soft); padding:1px 5px; border-radius:5px; font-size:.9em; }
+.calc-v2 .v2-block :where(pre){ background:#0f172a; color:#cfe0fb; padding:14px 16px; border-radius:12px; overflow-x:auto; margin:0 0 14px; }
+.calc-v2 .v2-block :where(pre) code{ background:none; padding:0; color:inherit; }
+/* tablas markdown (sin wrapper): scroll propio para no desbordar mobile */
+.calc-v2 .v2-block :where(table){ display:block; overflow-x:auto; max-width:100%; border-collapse:collapse; font-size:14px; border:1px solid var(--v2-line); border-radius:12px; margin:0 0 14px; }
+.calc-v2 .v2-block :where(table) :where(th,td){ padding:9px 12px; border-bottom:1px solid var(--v2-line-soft); text-align:left; }
+.calc-v2 .v2-block :where(table) :where(thead th){ background:#fbfcfe; font-size:12px; text-transform:uppercase; letter-spacing:.02em; color:var(--v2-muted); }
+.calc-v2 .v2-block :where(table) :where(tbody tr:last-child td){ border-bottom:none; }
+@media(max-width:560px){
+  .calc-v2 .v2-block :where(table){ font-size:12px; }
+  .calc-v2 .v2-block :where(table) :where(th,td){ padding:7px 9px; }
+}
+
+/* ledger (ejemplo paso a paso) */
+.calc-v2 .v2-ledger{ background:#fff; border:1px solid var(--v2-line); border-radius:14px; overflow:hidden; box-shadow:var(--v2-shadow); }
+.calc-v2 .v2-ledger .row{ display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid var(--v2-line-soft); font-size:15px; }
+.calc-v2 .v2-ledger .row:last-child{ border-bottom:none; }
+.calc-v2 .v2-ledger .row .lab{ flex:1; color:var(--v2-body); min-width:0; }
+.calc-v2 .v2-ledger .row .amt{ font-family:var(--v2-mono); font-weight:600; color:var(--v2-ink); white-space:nowrap; }
+.calc-v2 .v2-ledger .row.final{ background:var(--v2-accent-soft); }
+.calc-v2 .v2-ledger .row.final .amt{ color:var(--v2-accent); }
+
+/* FAQ */
+.calc-v2 .v2-faq details{ background:#fff; border:1px solid var(--v2-line); border-radius:12px; margin-bottom:9px; overflow:hidden; }
+.calc-v2 .v2-faq details[open]{ border-color:#cfe0fb; }
+.calc-v2 .v2-faq summary{ list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 18px; font-weight:600; color:var(--v2-ink); font-size:15.5px; cursor:pointer; }
+.calc-v2 .v2-faq summary::-webkit-details-marker{ display:none; }
+.calc-v2 .v2-faq summary .chev{ transition:.2s; color:var(--v2-muted); flex-shrink:0; }
+.calc-v2 .v2-faq details[open] summary .chev{ transform:rotate(180deg); color:var(--v2-accent); }
+.calc-v2 .v2-faq .ans{ padding:0 18px 16px; font-size:15px; color:var(--v2-body); }
+
+/* fuentes / metodología / citar / disclaimer */
+.calc-v2 .v2-sources{ list-style:none; padding:0; margin:0; display:grid; gap:10px; }
+.calc-v2 .v2-sources li{ background:#fff; border:1px solid var(--v2-line); border-radius:12px; padding:13px 15px; font-size:14px; }
+.calc-v2 .v2-sources a{ color:var(--v2-accent); font-weight:600; }
+.calc-v2 .v2-trust-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.calc-v2 .v2-trust-item{ background:#fff; border:1px solid var(--v2-line); border-radius:13px; padding:15px 17px; }
+.calc-v2 .v2-trust-item .tl{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--v2-accent); margin-bottom:6px; }
+.calc-v2 .v2-trust-item p{ font-size:13.5px; margin:0; }
+.calc-v2 .v2-cite{ background:var(--v2-accent-soft); border:1px solid #dbe6f9; border-radius:13px; padding:16px 18px; margin-top:16px; font-size:13.5px; }
+.calc-v2 .v2-cite .ct{ font-weight:700; color:var(--v2-ink); display:block; margin-bottom:7px; }
+.calc-v2 .v2-cite .ref{ font-family:var(--v2-mono); font-size:12.5px; color:var(--v2-body); background:#fff; border:1px solid var(--v2-line); border-radius:8px; padding:9px 11px; margin:0 0 8px; overflow-x:auto; }
+.calc-v2 .v2-disclaimer{ background:#fff7ed; border:1px solid #fad9b3; border-radius:12px; padding:14px 16px; font-size:13.5px; color:#7c4a16; margin-top:14px; }
+
+/* también te puede interesar */
+.calc-v2 .v2-also-h{ font-size:21px; font-weight:800; margin:34px 0 14px; }
+.calc-v2 .v2-also-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.calc-v2 .v2-also-card{ display:flex; gap:12px; background:#fff; border:1px solid var(--v2-line); border-radius:14px; padding:15px; transition:.15s; }
+.calc-v2 .v2-also-card:hover{ border-color:var(--v2-accent); box-shadow:var(--v2-shadow); transform:translateY(-2px); }
+
+/* guía pilar / comparador CTA — texto arriba (full width), botón abajo izq */
+.calc-v2 .v2-guide{ display:flex; flex-direction:column; align-items:flex-start; gap:14px; background:linear-gradient(120deg,#0f172a,#1e3a8a); color:#fff; border-radius:16px; padding:22px; margin-top:16px; }
+.calc-v2 .v2-guide .gc-text{ width:100%; }
+.calc-v2 .v2-guide .eb{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:#9fb0cf; }
+.calc-v2 .v2-guide strong{ color:#fff; display:block; font-size:18px; margin:4px 0 6px; letter-spacing:-.01em; }
+.calc-v2 .v2-guide .gd{ font-size:13.5px; color:#cfe0fb; }
+.calc-v2 .v2-guide .gb{ background:#fff; color:var(--v2-accent-ink); font-weight:700; font-size:14px; padding:12px 20px; border-radius:11px; }
+
+/* descargas */
+.calc-v2 .v2-downloads{ background:#fff; border:1px dashed #cbd5e1; border-radius:14px; padding:16px 18px; margin-top:16px; }
+.calc-v2 .v2-downloads .dh{ display:flex; align-items:center; gap:8px; font-weight:700; color:var(--v2-ink); margin-bottom:10px; }
+
+/* ===== Mobile: tablas compactas (entran las columnas) + espaciado ajustado ===== */
+@media(max-width:560px){
+  .calc-v2 .v2-tbl table{ font-size:12px; }
+  .calc-v2 .v2-tbl th, .calc-v2 .v2-tbl td{ padding:8px 6px; }
+  .calc-v2 .v2-tbl thead th{ font-size:9.5px; letter-spacing:0; }
+  .calc-v2 .v2-block{ margin-bottom:20px; }
+  .calc-v2 .v2-block h2{ font-size:20px; line-height:1.2; }
+  .calc-v2 .v2-block h3{ font-size:16.5px; }
+  .calc-v2 .v2-block p{ font-size:15px; margin-bottom:11px; }
+  .calc-v2 .v2-kt-cards{ grid-template-columns:1fr; margin-bottom:24px; }
+  .calc-v2 .v2-also-grid{ grid-template-columns:1fr; }
+  .calc-v2 .v2-trust-grid{ grid-template-columns:1fr; }
+}
+
+/* ============================================================================
+   Overrides del widget Calculator.astro (scopeados a .calc-v2)
+   Se completan al cablear el widget (paso 3). Acá dejo los tokens base para
+   que el form/result tomen la estética nueva; el detalle fino (input mono,
+   toggles segmentados, donut con leyenda+hover) se afina contra el DOM real.
+   ========================================================================== */
+/* Card del widget */
+.calc-v2 .calc-container{ background:#fff; border:1px solid var(--v2-line); border-radius:var(--v2-radius); box-shadow:var(--v2-shadow); }
+/* Quitar en v2 (redundante con el hero/meta o no deseado): el badge "Gratis · Privada"
+   y la barra "Datos actualizados · Fuente · Revisado por" (ya está en el meta del hero). */
+.calc-v2 .calc-card-badge{ display:none !important; }
+.calc-v2 .trust-strip{ display:none !important; }
+/* Header "Calculadora" + trust-strip como barra superior */
+.calc-v2 .calc-card-header{ border-bottom:1px solid var(--v2-line); color:var(--v2-muted); }
+.calc-v2 .trust-strip{ background:linear-gradient(180deg,#fbfcfe,#f6f8fc); }
+/* ===== 2 columnas (form | resultado) en desktop, como el prototipo =====
+   Truco sin tocar el DOM: el container es grid; por defecto cada hijo ocupa
+   ambas columnas (full width), y solo el form va a col 1 y el área de resultado
+   (empty/skeleton/results, que son mutuamente excluyentes) va a col 2. Cuando el
+   resultado aparece, el empty-preview pasa a display:none y results toma su lugar
+   al lado del form. Solo >=861px; en mobile queda apilado. */
+@media (min-width: 861px){
+  .calc-v2 .calc-container{ display:grid !important; grid-template-columns:0.92fr 1.08fr !important; align-items:start !important; column-gap:0 !important; }
+  .calc-v2 .calc-container > *{ grid-column:1 / -1; }
+  .calc-v2 .calc-container > .calc-form{ grid-column:1 !important; border-right:1px solid var(--v2-line); }
+  .calc-v2 .calc-container > .empty-preview,
+  .calc-v2 .calc-container > .result-skeleton,
+  .calc-v2 .calc-container > .calc-results{ grid-column:2 !important; }
+  /* padding parejo entre las dos columnas */
+  .calc-v2 .calc-container > .calc-form{ padding:22px 24px !important; }
+  .calc-v2 .calc-container > .empty-preview,
+  .calc-v2 .calc-container > .calc-results{ padding:22px 24px !important; }
+}
+
+/* Input "tipo plata": número grande en mono con prefijo $ */
+.calc-v2 .calc-form :where(input[type="text"],input[type="number"]){ font-family:var(--v2-mono) !important; font-size:18px !important; font-weight:600 !important; color:var(--v2-ink) !important; }
+
+/* Resultado: valor primario grande, secundarios en cards */
+.calc-v2 .calc-results .results-grid{ gap:10px !important; }
+.calc-v2 .calc-results .result{ background:#fafbfd !important; border:1px solid var(--v2-line-soft) !important; border-radius:12px !important; padding:12px 14px !important; }
+.calc-v2 .calc-results .result.primary{ background:var(--v2-accent-soft) !important; border-color:#dbe6f9 !important; }
+.calc-v2 .calc-results .result.primary .result-value{ font-size:30px !important; }
+.calc-v2 .calc-results .result-value{ font-family:var(--v2-mono) !important; }
+
+/* Inputs / selects: foco azul, radios suaves */
+.calc-v2 .calc-form :where(input[type="text"],input[type="number"],input[type="date"],select,textarea){ border-radius:12px; border:1.5px solid var(--v2-line); }
+.calc-v2 .calc-form :where(input[type="text"],input[type="number"]):focus,
+.calc-v2 .calc-form select:focus,
+.calc-v2 .calc-form textarea:focus{ border-color:var(--v2-accent); box-shadow:0 0 0 4px var(--v2-accent-bg); outline:none; }
+/* Botón Calcular en azul de marca v2 */
+.calc-v2 .calc-form .btn-primary{ background:var(--v2-accent); border-radius:13px; box-shadow:0 8px 18px -8px rgba(37,99,235,.6); }
+.calc-v2 .calc-form .btn-primary:hover{ background:var(--v2-accent-ink); }
+.calc-v2 .calc-form .btn-clear-form{ border-radius:13px; }
+/* Resultado: valor primario grande en mono + acento */
+.calc-v2 .calc-results .result.primary .result-value{ font-family:var(--v2-mono); color:var(--v2-accent); }
+.calc-v2 .calc-results .result{ border-radius:13px; }
+.calc-v2 .calc-results .results-badge{ color:var(--v2-accent-ink); background:var(--v2-accent-bg); border-radius:8px; }
+/* Empty state en acento suave */
+.calc-v2 .empty-preview{ border-radius:13px; }
+/* Chart: contenedor a tono */
+.calc-v2 .chart-wrap{ border-radius:13px; }
+/* Donut SVG v2 (idéntico al prototipo): colores por concepto, leyenda $/%, centro al hover */
+.calc-v2 .v2-donut{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:8px 0 4px; }
+.calc-v2 .v2-donut-svg{ width:150px; height:150px; overflow:visible; }
+.calc-v2 .v2-donut-svg circle{ transition:stroke-width .2s ease, opacity .2s ease; cursor:pointer; }
+.calc-v2 .v2-donut-svg.hot circle:not(.on){ opacity:.3; }
+.calc-v2 .v2-donut-svg circle.on{ stroke-width:7.2; }
+.calc-v2 .v2-donut-cval{ font-family:var(--v2-mono); font-weight:600; fill:var(--v2-ink); }
+.calc-v2 .v2-donut-clbl{ fill:var(--v2-muted); font-weight:700; letter-spacing:.04em; }
+.calc-v2 .v2-donut-legend{ display:grid; gap:6px; width:100%; }
+.calc-v2 .v2-donut-lg{ display:flex; align-items:center; gap:9px; font-size:13px; padding:6px 10px; border-radius:9px; background:#fafbfd; border:1px solid var(--v2-line-soft); cursor:default; transition:background .15s, border-color .15s; }
+.calc-v2 .v2-donut-lg:hover, .calc-v2 .v2-donut-lg.on{ background:#eef3fc; border-color:#cfe0fb; }
+.calc-v2 .v2-donut-lg .sw{ width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+.calc-v2 .v2-donut-lg .nm{ flex:1; color:var(--v2-body); white-space:nowrap; font-weight:500; }
+.calc-v2 .v2-donut-lg .vl{ font-family:var(--v2-mono); font-weight:600; color:var(--v2-ink); white-space:nowrap; }
+/* Embed CTA: el botón "Embeber en tu sitio" no debe cortarse a la derecha.
+   NOTA: el widget trae su CSS scopeado por Astro ([data-astro-cid]) → mayor
+   especificidad; por eso estos overrides usan !important. La summary apila (copia
+   a ancho completo → el botón cae debajo) y el botón se limita al ancho de la card
+   y deja envolver su texto, así nunca se sale. (Sin @media: el minificador no lo
+   tomaba en este bloque, y estas reglas aplican en todos los anchos por igual.) */
+.calc-v2 .embed-cta-summary{ flex-wrap:wrap !important; align-items:stretch !important; }
+.calc-v2 .embed-cta-copy{ flex:1 1 100% !important; min-width:0 !important; }
+.calc-v2 .embed-cta-summary .btn-embed{ width:100% !important; max-width:100% !important; justify-content:center !important; box-sizing:border-box !important; white-space:normal !important; padding-left:0.9rem !important; padding-right:0.9rem !important; }
+.calc-v2 .embed-cta-summary .btn-embed-label{ white-space:normal !important; }
+.calc-v2 .embed-code{ overflow-x:auto !important; max-width:100% !important; }

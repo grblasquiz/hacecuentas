@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototipo · Calculadora de sueldo en mano (rediseño)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2f5fb; --card:#ffffff; --ink:#0f172a; --body:#475569; --muted:#94a0ad;
+    --line:#e2e8f0; --line-soft:#eef2f7;
+    --accent:#2563eb; --accent-ink:#1d4ed8; --accent-bg:#e8effd; --accent-bg-soft:#f5f8ff;
+    --neg:#c25a2c; --neg-bg:#f7ebe3;
+    --ok:#1e7d52; --ok-bg:#e9f6ef;
+    /* paleta del donut — colores distintos por concepto */
+    --c-neto:#16a34a; --c-jub:#2563eb; --c-os:#0ea5e9; --c-pami:#8b5cf6; --c-gan:#ef7a3d;
+    --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+    --sans:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+    --shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -12px rgba(15,23,42,.12);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;scroll-padding-top:78px;}
+  body{margin:0;background:var(--bg);font-family:var(--sans);color:var(--body);line-height:1.55;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;}
+  input,select{font-family:inherit;}
+  ::selection{background:#cfe0fb;}
+  strong{color:var(--ink);font-weight:600;}
+  h1,h2,h3{color:var(--ink);letter-spacing:-.02em;}
+
+  /* ===== Header ===== */
+  .site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid var(--line);}
+  .site-header .wrap{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:26px;padding:14px 22px;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--ink);font-size:18px;}
+  .brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#4f8bff);display:grid;place-items:center;color:#fff;font-size:18px;}
+  .nav-links{display:flex;gap:20px;font-size:14px;font-weight:600;color:var(--body);}
+  .nav-links a:last-child{color:var(--accent);}
+  .header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+  .search-fake{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;}
+  .search-fake kbd{font:inherit;font-size:11px;background:var(--line-soft);border-radius:5px;padding:1px 5px;}
+  .pill-ar{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:7px 11px;background:#fff;}
+  @media(max-width:780px){.nav-links,.search-fake{display:none;}}
+
+  /* ===== Layout ===== */
+  .page{max-width:760px;margin:0 auto;padding:26px 22px 120px;}
+  .breadcrumb{font-size:13px;color:var(--muted);margin-bottom:22px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+  .breadcrumb a:hover{color:var(--accent);}
+  .breadcrumb .cur{color:var(--ink);font-weight:500;}
+  .breadcrumb .sep{color:#cbd5e1;}
+
+  /* ===== Hero ===== */
+  .eyebrow{display:inline-block;background:var(--accent-bg);color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:5px 11px;border-radius:8px;margin-bottom:14px;}
+  h1{font-size:clamp(30px,6vw,42px);line-height:1.08;font-weight:800;margin:0 0 14px;max-width:760px;text-wrap:balance;}
+  h1 .accent{color:var(--accent);}
+  .lede{font-size:17px;color:var(--body);margin:0 0 18px;max-width:680px;}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);align-items:center;margin-bottom:16px;}
+  .hero-meta .dot{width:4px;height:4px;border-radius:50%;background:#cbd5e1;}
+  .hero-meta a{color:var(--accent);font-weight:600;}
+  .hero-meta strong{color:var(--body);font-weight:600;}
+  .save-btn{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--body);border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 13px;margin-bottom:24px;}
+  .save-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* ===== Related tools row ===== */
+  .rel-tools{margin-bottom:26px;background:var(--accent-bg-soft);border:1px solid #dbe6f9;border-radius:16px;padding:16px 18px;}
+  .rel-tools .rt-label{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:11px;display:flex;align-items:center;gap:7px;}
+  .rt-chips{display:flex;flex-wrap:wrap;gap:9px;}
+  .rt-chip{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 13px;transition:.15s;}
+  .rt-chip:hover{border-color:var(--accent);color:var(--accent);box-shadow:var(--shadow);transform:translateY(-1px);}
+
+  /* ===== Calculator card (breakout más ancho en desktop p/ 2 columnas) ===== */
+  .calc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:26px;}
+  @media(min-width:861px){
+    .calc{width:960px;max-width:calc(100vw - 40px);margin-left:50%;transform:translateX(-50%);}
+  }
+  .calc-bar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;justify-content:space-between;padding:13px 22px;background:linear-gradient(180deg,#fbfcfe,#f6f8fc);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted);}
+  .calc-bar .upd{display:flex;align-items:center;gap:7px;font-weight:600;color:var(--ok);}
+  .calc-bar .upd .led{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px var(--ok-bg);}
+  .calc-bar a{color:var(--accent);font-weight:600;}
+  .calc-bar .rev strong{color:var(--body);}
+
+  /* grid 2 columnas en desktop: form | resultado */
+  .calc-grid{display:grid;grid-template-columns:1fr;}
+  /* clave: las columnas grid/flex tienen min-width:auto por defecto → el contenido
+     nowrap (número, valores de la leyenda) las fuerza a no achicarse y desborda a la
+     derecha. min-width:0 lo evita. (gotcha grid/flex documentado del proyecto) */
+  .calc-grid > *{min-width:0;}
+  @media(min-width:861px){.calc-grid{grid-template-columns:0.88fr 1.12fr;}}
+  .calc-form{padding:24px 22px;}
+  @media(min-width:861px){.calc-form{border-right:1px solid var(--line);}}
+  .privacy{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--accent-ink);background:var(--accent-bg-soft);border:1px solid #dbe6f9;border-radius:9px;padding:6px 11px;margin-bottom:22px;}
+  .field{margin-bottom:20px;}
+  .field > label{display:block;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:5px;}
+  .field .req{color:var(--accent);}
+  .field .help{font-size:13px;color:var(--muted);margin:0 0 9px;}
+  .input-money{position:relative;}
+  .input-money .pfx{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:22px;font-weight:500;color:var(--muted);}
+  .input-money input{width:100%;font-family:var(--mono);font-size:24px;font-weight:600;color:var(--ink);padding:16px 16px 16px 40px;border:1.5px solid var(--line);border-radius:13px;background:#fff;outline:none;transition:.15s;}
+  .input-money input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-bg);}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;}
+  .seg button{padding:13px;font-size:15px;font-weight:600;color:var(--body);background:#fff;transition:.12s;}
+  .seg button + button{border-left:1.5px solid var(--line);}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:#fff;}
+  select.sel{width:100%;font-size:15px;font-weight:500;color:var(--ink);padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%2394a0ad' stroke-width='2'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
+  .actions{display:flex;gap:12px;margin-top:4px;}
+  .btn-primary{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;font-size:16px;font-weight:700;color:#fff;background:var(--accent);border-radius:13px;padding:16px;transition:.15s;box-shadow:0 8px 18px -8px rgba(37,99,235,.6);}
+  .btn-primary:hover{background:var(--accent-ink);}
+  .btn-primary svg{stroke:#fff;}
+  .btn-ghost{font-size:15px;font-weight:600;color:var(--body);border:1.5px solid var(--line);border-radius:13px;padding:16px 22px;}
+  .btn-ghost:hover{border-color:#cbd5e1;}
+
+  /* ===== Result (columna derecha en desktop) ===== */
+  .calc-result{background:linear-gradient(180deg,#fbfcff,#f7faff);display:flex;flex-direction:column;justify-content:center;}
+  .result-empty{padding:40px 24px;text-align:center;}
+  .result-empty .ico{width:64px;height:64px;border-radius:16px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:30px;margin:0 auto 14px;}
+  .result-empty .t{font-weight:700;color:var(--ink);font-size:18px;}
+  .result-empty .s{font-size:14px;color:var(--muted);margin-top:4px;}
+  .result-empty .s a{color:var(--accent);font-weight:600;cursor:pointer;}
+  .result-empty .micro{font-size:12px;color:#b4bdc8;margin-top:12px;}
+  .result-full{padding:24px;display:none;}
+  .result-hero{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin-bottom:14px;min-width:0;}
+  .result-hero .big{flex:1;min-width:0;}
+  .result-hero .big .lbl{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  /* nunca se corta: nowrap + la tipografía se achica sola en pantallas angostas */
+  .result-hero .big .val{font-family:var(--mono);font-size:clamp(24px,6vw,34px);font-weight:600;color:var(--accent);line-height:1.1;margin-top:2px;white-space:nowrap;max-width:100%;}
+  /* en pantallas chicas: neto arriba (full width, sin partirse) y donut centrado debajo */
+  @media(max-width:520px){
+    .result-hero{flex-direction:column;align-items:stretch;text-align:center;}
+    .result-hero .donut{align-self:center;}
+  }
+
+  /* donut */
+  .donut{width:120px;height:120px;flex-shrink:0;overflow:visible;}
+  .donut circle{transition:stroke-width .2s ease, opacity .2s ease;cursor:pointer;}
+  .donut.hovering circle:not(.hot){opacity:.3;}
+  .donut circle.hot{stroke-width:7.4;}
+  .donut .ctr-val{font-family:var(--mono);font-weight:600;fill:var(--ink);}
+  .donut .ctr-lbl{fill:var(--muted);font-weight:700;letter-spacing:.04em;}
+
+  /* leyenda full-width: cada fila = swatch + nombre …… valor (sin wraps) */
+  .legend{display:grid;gap:6px;padding-top:14px;border-top:1px solid var(--line-soft);margin-bottom:16px;}
+  .legend .lg{display:flex;align-items:center;gap:9px;font-size:13px;padding:7px 11px;border-radius:9px;background:#fafbfd;border:1px solid var(--line-soft);cursor:default;transition:background .15s, border-color .15s;}
+  .legend .lg:hover{background:#eef3fc;border-color:#cfe0fb;}
+  .legend .sw{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+  .legend .lg .nm{color:var(--body);flex:1;white-space:nowrap;font-weight:500;}
+  .legend .lg .vl{font-family:var(--mono);font-weight:600;color:var(--ink);white-space:nowrap;}
+
+  .grid-out{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .out-cell{background:#fff;border:1px solid var(--line-soft);border-radius:12px;padding:11px 13px;}
+  .out-cell .ol{font-size:12px;color:var(--muted);font-weight:600;}
+  .out-cell .ov{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--ink);margin-top:2px;}
+  .out-cell.neg .ov{color:var(--neg);}
+  .insight{display:flex;gap:11px;background:#fff;border:1px solid #dbe6f9;border-radius:13px;padding:13px 15px;font-size:13.5px;}
+  .insight.warn{background:#fff7ed;border-color:#fad9b3;}
+  .insight .ii{font-size:20px;line-height:1;}
+  .result-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px;}
+  .ra{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--body);border:1px solid var(--line);border-radius:10px;padding:9px 13px;background:#fff;}
+  .ra:hover{border-color:var(--accent);color:var(--accent);}
+  .ra.primary{background:var(--accent-bg);border-color:#cfe0fb;color:var(--accent-ink);}
+  .feedback{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft);font-size:13px;color:var(--muted);}
+  .feedback .fb{border:1px solid var(--line);border-radius:9px;padding:6px 12px;font-weight:600;color:var(--body);background:#fff;}
+  .feedback .fb:hover{border-color:var(--accent);}
+  /* en mobile el placeholder vacío no aporta → ocultarlo, el resultado aparece tras calcular */
+  @media(max-width:860px){.calc-result{border-top:1px solid var(--line);}.result-empty{display:none;}}
+
+  /* ===== Respuesta rápida (keyTakeaway) ===== */
+  .quick{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:14px;padding:20px 22px;margin-bottom:14px;box-shadow:var(--shadow);}
+  .quick h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+  .quick p{margin:0;font-size:16px;color:var(--body);}
+  .kt-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:30px;}
+  .kt-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:15px;}
+  .kt-card .ico{width:38px;height:38px;border-radius:10px;background:var(--accent-bg);display:grid;place-items:center;font-size:19px;margin-bottom:9px;}
+  .kt-card .h{font-weight:700;color:var(--ink);font-size:15px;}
+  .kt-card .d{font-size:13.5px;color:var(--body);margin-top:3px;}
+  @media(max-width:640px){.kt-cards{grid-template-columns:1fr;}.grid-out{grid-template-columns:1fr 1fr;}}
+
+  /* ===== TABS ===== */
+  .tabs-wrap{margin-bottom:30px;}
+  .tabnav{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:transparent;padding:0;margin-bottom:22px;}
+  @media(min-width:721px){.tabnav{display:flex;gap:6px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:var(--shadow);}}
+  .tab{display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:600;color:var(--body);padding:12px 14px;border-radius:11px;background:#fff;border:1px solid var(--line);transition:.15s;}
+  @media(min-width:721px){.tab{flex:1;border:none;background:transparent;border-radius:10px;}}
+  .tab .ti{font-size:15px;}
+  .tab[aria-selected="true"]{background:var(--accent);color:#fff;border-color:var(--accent);}
+  @media(min-width:721px){.tab[aria-selected="true"]{background:var(--accent-bg);color:var(--accent-ink);box-shadow:none;}}
+  .tab:hover:not([aria-selected="true"]){color:var(--ink);border-color:#cbd5e1;}
+  .panel{display:none;animation:fade .25s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  /* ===== Content blocks ===== */
+  .block{margin-bottom:26px;}
+  .block h2{font-size:23px;font-weight:800;margin:0 0 14px;}
+  .block h3{font-size:18px;font-weight:700;margin:22px 0 8px;}
+  .block p{margin:0 0 13px;font-size:15.5px;}
+  .block a{color:var(--accent);font-weight:600;}
+  .block a:hover{text-decoration:underline;}
+  ul.checks{list-style:none;padding:0;margin:0;display:grid;gap:11px;}
+  ul.checks li{display:flex;gap:11px;font-size:15.5px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px;}
+  ul.checks li::before{content:"✓";color:var(--accent);font-weight:800;flex-shrink:0;}
+
+  /* ledger */
+  .ledger{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+  .ledger .lh{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700;color:var(--ink);font-size:15px;background:#fbfcfe;}
+  .ledger .row{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line-soft);font-size:15px;}
+  .ledger .row:last-child{border-bottom:none;}
+  .ledger .row .n{width:22px;height:22px;flex-shrink:0;border-radius:50%;background:var(--line-soft);color:var(--muted);font-size:12px;font-weight:700;display:grid;place-items:center;}
+  .ledger .row .lab{flex:1;color:var(--body);}
+  .ledger .row .lab small{color:var(--muted);font-weight:500;}
+  .ledger .row .amt{font-family:var(--mono);font-weight:600;color:var(--ink);}
+  .ledger .row .amt.neg{color:var(--neg);}
+  .ledger .row.final{background:var(--accent-bg-soft);}
+  .ledger .row.final .n{background:var(--accent);color:#fff;}
+  .ledger .row.final .lab{font-weight:700;color:var(--ink);}
+  .ledger .row.final .amt{color:var(--accent);font-size:18px;}
+
+  /* tables */
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin:0 0 8px;}
+  table.data{width:100%;border-collapse:collapse;font-size:14.5px;background:#fff;}
+  table.data th,table.data td{padding:11px 16px;text-align:left;border-bottom:1px solid var(--line-soft);}
+  table.data thead th{background:#fbfcfe;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);}
+  table.data td.num,table.data th.num{text-align:right;font-family:var(--mono);}
+  table.data tbody tr:last-child td{border-bottom:none;}
+  table.data td.hl{color:var(--accent);font-weight:600;}
+  .tbl-note{font-size:12.5px;color:var(--muted);margin:0 0 4px;padding:0 2px;}
+  .codeblock{background:#0f172a;color:#cfe0fb;font-family:var(--mono);font-size:14px;border-radius:12px;padding:14px 16px;margin:0 0 14px;overflow-x:auto;}
+  /* en mobile: tablas compactas para que entren las columnas sin cortarse,
+     y espaciado más ajustado para que el contenido no quede "tan para abajo" */
+  @media(max-width:560px){
+    table.data{font-size:12px;}
+    table.data th,table.data td{padding:8px 6px;}
+    table.data thead th{font-size:9.5px;letter-spacing:0;}
+    table.data td.num,table.data th.num{padding-left:4px;}
+    .tbl-note{font-size:11.5px;}
+    .block{margin-bottom:20px;}
+    .block h2{font-size:20px;line-height:1.2;}
+    .block h3{font-size:16.5px;}
+    .block p{font-size:15px;margin-bottom:11px;}
+    ul.checks{gap:9px;}
+    ul.checks li{padding:11px 13px;font-size:14.5px;}
+    .kt-cards{margin-bottom:24px;}
+  }
+
+  /* FAQ */
+  .faq details{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:9px;overflow:hidden;}
+  .faq details[open]{border-color:#cfe0fb;}
+  .faq summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;font-weight:600;color:var(--ink);font-size:15.5px;}
+  .faq summary::-webkit-details-marker{display:none;}
+  .faq summary .chev{transition:.2s;color:var(--muted);flex-shrink:0;}
+  .faq details[open] summary .chev{transform:rotate(180deg);color:var(--accent);}
+  .faq .ans{padding:0 18px 16px;font-size:15px;color:var(--body);}
+
+  /* sources / trust */
+  .sources{list-style:none;padding:0;margin:0;display:grid;gap:10px;}
+  .sources li{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:14px;}
+  .sources a{color:var(--accent);font-weight:600;}
+  .sources .pub{color:var(--muted);}
+  .trust-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .trust-item{background:#fff;border:1px solid var(--line);border-radius:13px;padding:15px 17px;}
+  .trust-item .tl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+  .trust-item p{font-size:13.5px;margin:0;}
+  .cite-box{background:var(--accent-bg-soft);border:1px solid #dbe6f9;border-radius:13px;padding:16px 18px;margin-top:16px;font-size:13.5px;}
+  .cite-box .ct{font-weight:700;color:var(--ink);display:block;margin-bottom:7px;}
+  .cite-box .ref{font-family:var(--mono);font-size:12.5px;color:var(--body);background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin:0 0 8px;}
+  .disclaimer{background:#fff7ed;border:1px solid #fad9b3;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#7c4a16;margin-top:14px;}
+  @media(max-width:640px){.trust-grid{grid-template-columns:1fr;}}
+
+  /* also-see / related */
+  .section-h{font-size:21px;font-weight:800;margin:34px 0 14px;}
+  .also-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .also-card{display:flex;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;transition:.15s;}
+  .also-card:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-2px);}
+  .also-card .ico{font-size:24px;}
+  .also-card .t{font-weight:700;color:var(--ink);font-size:14.5px;}
+  .also-card .d{font-size:13px;color:var(--muted);margin-top:2px;}
+  @media(max-width:640px){.also-grid{grid-template-columns:1fr;}}
+
+  /* guía: texto arriba (todo el ancho) y botón abajo a la izquierda, no a la derecha */
+  .guide-cta{display:flex;flex-direction:column;align-items:flex-start;gap:14px;background:linear-gradient(120deg,#0f172a,#1e3a8a);color:#fff;border-radius:16px;padding:22px;margin-top:16px;}
+  .guide-cta .gc-text{width:100%;}
+  .guide-cta .eb{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#9fb0cf;}
+  .guide-cta strong{color:#fff;display:block;font-size:18px;margin:4px 0 6px;letter-spacing:-.01em;}
+  .guide-cta .gd{font-size:13.5px;color:#cfe0fb;}
+  .guide-cta .gb{background:#fff;color:var(--accent-ink);font-weight:700;font-size:14px;padding:12px 20px;border-radius:11px;}
+
+  .downloads{background:#fff;border:1px dashed #cbd5e1;border-radius:14px;padding:16px 18px;margin-top:16px;}
+  .downloads .dh{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+  .dl-list{display:flex;flex-wrap:wrap;gap:9px;}
+  .dl-item{display:inline-flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-size:13.5px;font-weight:600;color:var(--ink);}
+  .dl-item small{font-weight:500;color:var(--muted);}
+  .dl-item:hover{border-color:var(--accent);}
+
+  .cta-back{text-align:center;margin-top:34px;padding-top:26px;border-top:1px solid var(--line);}
+  .cta-back .bb{display:inline-block;background:var(--accent-bg);color:var(--accent-ink);font-weight:700;border-radius:11px;padding:11px 18px;margin:8px 0;}
+  .cta-back .sg{font-size:13px;color:var(--muted);}
+
+  /* mobile bottom bar */
+  .mobile-bar{position:fixed;bottom:0;left:0;right:0;z-index:60;display:none;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 6px;justify-content:space-around;}
+  .mobile-bar a,.mobile-bar button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--body);padding:4px 10px;}
+  .mobile-bar .mi{font-size:19px;}
+  @media(max-width:780px){.mobile-bar{display:flex;}.page{padding-bottom:90px;}}
+
+  .proto-tag{position:fixed;left:12px;bottom:12px;z-index:99;background:#0f172a;color:#fff;font-size:11px;font-weight:600;padding:6px 11px;border-radius:8px;opacity:.85;}
+  @media(max-width:780px){.proto-tag{bottom:64px;}}
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand"><span class="logo">≈</span> Hacé Cuentas</a>
+    <nav class="nav-links">
+      <a>Cambio</a><a>Cripto</a><a>Inflación</a><a>Guías</a><a>Finanzas</a>
+    </nav>
+    <div class="header-right">
+      <span class="search-fake">Buscar <kbd>⌘K</kbd></span>
+      <span class="pill-ar">🌎 AR ▾</span>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+
+  <!-- ===== BREADCRUMB ===== -->
+  <nav class="breadcrumb" aria-label="Ruta">
+    <a>Inicio</a><span class="sep">/</span>
+    <a>Finanzas</a><span class="sep">/</span>
+    <a>Sueldos Argentina 2026</a><span class="sep">/</span>
+    <span class="cur">Calculadora de sueldo en mano</span>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <span class="eyebrow">💰 Finanzas</span>
+  <h1>Calculadora de sueldo en mano <span class="accent">(Argentina)</span> 🇦🇷</h1>
+  <p class="lede">Pasá tu sueldo <strong>bruto a neto</strong> con los descuentos reales de 2026: 17% de aportes (jubilación, obra social y PAMI) más Impuesto a las Ganancias según tu situación familiar.</p>
+
+  <div class="hero-meta">
+    <span>🗓️ Datos: 1 de jun 2026 · Revisado: junio de 2026</span>
+    <span class="dot"></span>
+    <a>🇺🇸 Also available in English</a>
+  </div>
+  <button class="save-btn">⭐ Guardar calculadora</button>
+
+  <!-- ===== CALCULATOR (2 columnas en desktop) ===== -->
+  <section class="calc" id="calculadora">
+    <div class="calc-bar">
+      <span class="upd"><span class="led"></span> Actualizado 24 jun 2026</span>
+      <span>Fuente: <a>ARCA — Tabla Art. 94 LIG + Deducciones Art. 30</a></span>
+      <span class="rev">Revisado por <strong>Martín Rodríguez</strong></span>
+    </div>
+
+    <div class="calc-grid">
+      <!-- IZQUIERDA: formulario -->
+      <div class="calc-form">
+        <span class="privacy">🔒 Calculadora gratis · 100% privada</span>
+
+        <div class="field">
+          <label for="bruto">Sueldo bruto mensual <span class="req">*</span></label>
+          <div class="input-money">
+            <span class="pfx">$</span>
+            <input id="bruto" type="text" inputmode="numeric" placeholder="1.500.000" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>¿Tenés cónyuge a cargo?</label>
+          <p class="help">Cónyuge sin ingresos propios, declarado con SiRADIG (F.572). Reduce el impuesto hasta ~$404.000/mes.</p>
+          <div class="seg" id="seg-conyuge" role="group" aria-label="Cónyuge a cargo">
+            <button type="button" data-v="false" aria-pressed="true">No</button>
+            <button type="button" data-v="true" aria-pressed="false">Sí</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="hijos">Hijos a cargo (menores de 18)</label>
+          <p class="help">Cada hijo declarado reduce el impuesto hasta ~$204.000/mes.</p>
+          <select id="hijos" class="sel">
+            <option value="0">Ninguno</option>
+            <option value="1">1 hijo</option>
+            <option value="2">2 hijos</option>
+            <option value="3">3 hijos</option>
+            <option value="4">4 hijos</option>
+            <option value="5">5 o más</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" id="calcBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+            Calcular sueldo en mano
+          </button>
+          <button class="btn-ghost" id="clearBtn">Borrar</button>
+        </div>
+      </div>
+
+      <!-- DERECHA: resultado (visible al instante, sin scroll) -->
+      <div class="calc-result">
+        <div class="result-empty" id="resEmpty">
+          <div class="ico">💰</div>
+          <div class="t">Tu resultado va a aparecer acá</div>
+          <div class="s">Completá el sueldo bruto y tocá <a id="calcBtn2">Calcular</a>.</div>
+          <div class="micro">Privado · sin registro · al instante</div>
+        </div>
+        <div class="result-full" id="resFull">
+          <div class="result-hero">
+            <div class="big">
+              <div class="lbl">Sueldo en mano (neto)</div>
+              <div class="val" id="outNeto">$0</div>
+            </div>
+            <svg class="donut" id="donut" viewBox="0 0 42 42" aria-label="Composición del sueldo bruto"></svg>
+          </div>
+          <div class="legend" id="legend"></div>
+          <div class="grid-out">
+            <div class="out-cell neg"><div class="ol">Descuentos totales</div><div class="ov" id="outDesc">$0</div></div>
+            <div class="out-cell neg"><div class="ol">Aportes (17%)</div><div class="ov" id="outAportes">$0</div></div>
+            <div class="out-cell neg"><div class="ol">Impuesto a las Ganancias</div><div class="ov" id="outGan">$0</div></div>
+            <div class="out-cell"><div class="ol">% descontado</div><div class="ov" id="outPct">0%</div></div>
+          </div>
+          <div class="insight" id="insight">
+            <span class="ii">💸</span>
+            <span id="insightText"></span>
+          </div>
+          <div class="result-actions">
+            <button class="ra primary" id="copyBtn">📋 Copiar resultado</button>
+            <button class="ra">📄 PDF</button>
+            <button class="ra">🖼️ Imagen</button>
+            <button class="ra" id="resetBtn">↻ Nuevo cálculo</button>
+          </div>
+          <div class="feedback">
+            ¿Te sirvió este cálculo?
+            <button class="fb">👍 Sí</button>
+            <button class="fb">👎 No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RELATED TOOLS (debajo del calc) ===== -->
+  <div class="rel-tools">
+    <div class="rt-label">🧰 Herramientas relacionadas</div>
+    <div class="rt-chips">
+      <a class="rt-chip">🔄 Neto a bruto</a>
+      <a class="rt-chip">📊 Sueldo vs inflación</a>
+      <a class="rt-chip">🎁 Aguinaldo (SAC)</a>
+      <a class="rt-chip">🏛️ Cuota sindical</a>
+    </div>
+  </div>
+
+  <!-- ===== RESPUESTA RÁPIDA (keyTakeaway / AEO) ===== -->
+  <aside class="quick" data-speakable>
+    <h2>⚡ Respuesta rápida</h2>
+    <p>Un empleado en relación de dependencia paga <strong>17% de aportes</strong> (jubilación + obra social + PAMI), pero sobre una base con <strong>tope de $4.414.652/mes</strong> (jun 2026, Ley 24.241): arriba de ese bruto los aportes se congelan y el descuento efectivo baja del 17%. Si tu bruto supera ~<strong>$2.327.000</strong> (soltero) sumás <strong>Ganancias 4ta categoría</strong> (5% → 35%). Cada cónyuge baja el MNI ~$404.000/mes; cada hijo ~$204.000/mes.</p>
+  </aside>
+  <div class="kt-cards">
+    <div class="kt-card"><div class="ico">🏛️</div><div class="h">Aportes 17%</div><div class="d">11% jubilación + 3% obra social + 3% PAMI. Se descuentan siempre.</div></div>
+    <div class="kt-card"><div class="ico">📈</div><div class="h">Ganancias</div><div class="d">Solo si superás el mínimo no imponible. Escala progresiva 5%→35%.</div></div>
+    <div class="kt-card"><div class="ico">👨‍👩‍👧</div><div class="h">Cargas de familia</div><div class="d">Cónyuge e hijos declarados con SiRADIG bajan la base imponible.</div></div>
+  </div>
+
+  <!-- ===== TABS ===== -->
+  <div class="tabs-wrap">
+    <div class="tabnav" role="tablist" aria-label="Secciones de la guía">
+      <button class="tab" role="tab" aria-selected="true"  data-panel="p-resumen"><span class="ti">📋</span> Resumen</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="p-como"><span class="ti">⚙️</span> Cómo funciona</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="p-faq"><span class="ti">💬</span> Preguntas</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="p-fuentes"><span class="ti">📚</span> Fuentes</button>
+    </div>
+
+    <!-- PANEL 1: RESUMEN -->
+    <section class="panel active" id="p-resumen" role="tabpanel">
+      <div class="block">
+        <p>Pasar de <a>sueldo bruto</a> a <a>sueldo en mano</a> en Argentina no es restar un porcentaje fijo: entran los aportes jubilatorios (11%), obra social (3%), PAMI (3%) y el Impuesto a las Ganancias de 4ta categoría si superás el mínimo no imponible. Esta calculadora toma tu bruto mensual, cruza las escalas oficiales enero–junio 2026 de ARCA (ex AFIP) y te devuelve exactamente cuánto cobrás, cuánto te descuentan y qué porcentaje representa.</p>
+      </div>
+
+      <div class="block">
+        <h2>Cuándo usar esta calculadora</h2>
+        <ul class="checks">
+          <li>Te ofrecen un trabajo y querés saber cuánto vas a cobrar real antes de decir que sí.</li>
+          <li>Estás negociando un aumento y necesitás saber cuánto te queda en la mano con la nueva cifra.</li>
+          <li>Pasaste de monotributo a relación de dependencia y querés entender los nuevos descuentos.</li>
+          <li>Querés saber si el sueldo alcanza el mínimo no imponible de Ganancias para presupuestar.</li>
+          <li>Sos empleador y querés estimar el neto que verá el empleado para comunicarle la oferta.</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h2>Sueldo en mano según bruto (2026, soltero sin cargas)</h2>
+        <p class="tbl-note">Aportes del 17% (jubilación 11% + obra social 3% + PAMI 3%) y neto resultante para los brutos más consultados.</p>
+        <div class="tbl-wrap">
+          <table class="data">
+            <thead><tr><th>Sueldo bruto</th><th class="num">Aportes (17%)</th><th class="num">Ganancias</th><th class="num">Sueldo en mano</th></tr></thead>
+            <tbody>
+              <tr><td>$500.000</td><td class="num">$85.000</td><td class="num">$0</td><td class="num hl">$415.000</td></tr>
+              <tr><td>$1.000.000</td><td class="num">$170.000</td><td class="num">$0</td><td class="num hl">$830.000</td></tr>
+              <tr><td>$1.500.000</td><td class="num">$255.000</td><td class="num">$0</td><td class="num hl">$1.245.000</td></tr>
+              <tr><td>$2.000.000</td><td class="num">$340.000</td><td class="num">$0</td><td class="num hl">$1.660.000</td></tr>
+              <tr><td>$2.500.000</td><td class="num">$425.000</td><td class="num">$7.154</td><td class="num hl">$2.067.846</td></tr>
+              <tr><td>$3.000.000</td><td class="num">$510.000</td><td class="num">$52.044</td><td class="num hl">$2.437.956</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tbl-note">Ganancias 4ta cat. solo arriba del MNI soltero (~$2.327.000 bruto/mes), escala ARCA ene–jun 2026. Valores que cambian con cargas de familia y deducciones.</p>
+      </div>
+
+      <div class="block">
+        <h2>Qué NO incluye esta calculadora</h2>
+        <ul class="checks">
+          <li><strong>Cuota sindical</strong> — varía según convenio (Comercio 2,5%, Construcción 2%, etc.).</li>
+          <li><strong>Embargo judicial / cuota alimentaria</strong> — descuento por orden judicial.</li>
+          <li><strong>Adelantos o préstamos</strong> tomados de la empresa.</li>
+          <li><strong>Aguinaldo (SAC) y vacaciones</strong> — se pagan aparte y se calculan distinto.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- PANEL 2: CÓMO FUNCIONA -->
+    <section class="panel" id="p-como" role="tabpanel">
+      <div class="block">
+        <h2>Cómo funciona el cálculo</h2>
+        <h3>1. Aportes obligatorios (17%)</h3>
+        <p>Se descuentan sobre el sueldo bruto remunerativo: <strong>11%</strong> de jubilación (SIPA), <strong>3%</strong> de obra social y <strong>3%</strong> de PAMI (INSSJP). Los paga todo empleado en relación de dependencia, sin excepción.</p>
+        <h3>2. Impuesto a las Ganancias</h3>
+        <p>Se aplica la escala progresiva del <strong>Art. 94 de la Ley de Impuesto a las Ganancias</strong> solo si superás el Mínimo No Imponible. Antes se restan las deducciones del Art. 30 (MNI, deducción especial, cónyuge e hijos), que declarás con el <strong>SiRADIG (F.572)</strong> en ARCA.</p>
+        <h3>3. Cargas de familia</h3>
+        <p>Cada cónyuge declarado baja la base imponible ~$404.000/mes y cada hijo menor de 18 ~$204.000/mes. ARCA actualiza estos valores cada 6 meses (enero y julio) por IPC INDEC.</p>
+        <div class="codeblock">Neto = Bruto − (Bruto × 0,17) − Ganancias</div>
+      </div>
+
+      <div class="block">
+        <h2>Ejemplo paso a paso</h2>
+        <p class="tbl-note">Sueldo bruto de $3.000.000, soltero sin hijos.</p>
+        <div class="ledger">
+          <div class="lh">Del bruto al neto</div>
+          <div class="row"><span class="n">1</span><span class="lab">Sueldo bruto</span><span class="amt">$3.000.000</span></div>
+          <div class="row"><span class="n">2</span><span class="lab">Aportes 17% <small>(330.000 + 90.000 + 90.000)</small></span><span class="amt neg">− $510.000</span></div>
+          <div class="row"><span class="n">3</span><span class="lab">Neto antes de Ganancias</span><span class="amt">$2.490.000</span></div>
+          <div class="row"><span class="n">4</span><span class="lab">Base imponible <small>(menos deducciones ≈ $1.900.000)</small></span><span class="amt">≈ $590.000</span></div>
+          <div class="row"><span class="n">5</span><span class="lab">Impuesto a las Ganancias</span><span class="amt neg">− $52.000</span></div>
+          <div class="row final"><span class="n">6</span><span class="lab">Sueldo en mano</span><span class="amt">$2.438.000</span></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>MNI mensual 2026 (ARCA, enero–junio)</h2>
+        <div class="tbl-wrap">
+          <table class="data">
+            <thead><tr><th>Situación familiar</th><th class="num">MNI mensual</th></tr></thead>
+            <tbody>
+              <tr><td>Soltero sin cargas</td><td class="num">$1.931.926</td></tr>
+              <tr><td>+ cónyuge</td><td class="num">$2.336.256</td></tr>
+              <tr><td>+ 1 hijo</td><td class="num">$2.135.831</td></tr>
+              <tr><td>+ cónyuge + 1 hijo</td><td class="num">$2.540.161</td></tr>
+              <tr><td>+ cónyuge + 2 hijos</td><td class="num">$2.744.066</td></tr>
+              <tr><td>+ cónyuge + 3 hijos</td><td class="num">$2.947.971</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Escala de Ganancias 4ta cat. (mensual 2026, 9 tramos)</h2>
+        <div class="tbl-wrap">
+          <table class="data">
+            <thead><tr><th>Base imponible mensual</th><th class="num">Alícuota</th><th class="num">Fijo acumulado</th></tr></thead>
+            <tbody>
+              <tr><td>Hasta $166.669</td><td class="num">5%</td><td class="num">$0</td></tr>
+              <tr><td>$166.669 – $333.338</td><td class="num">9%</td><td class="num">$8.333</td></tr>
+              <tr><td>$333.338 – $500.008</td><td class="num">12%</td><td class="num">$23.334</td></tr>
+              <tr><td>$500.008 – $750.011</td><td class="num">15%</td><td class="num">$43.334</td></tr>
+              <tr><td>$750.011 – $1.500.023</td><td class="num">19%</td><td class="num">$80.835</td></tr>
+              <tr><td>$1.500.023 – $2.250.034</td><td class="num">23%</td><td class="num">$223.337</td></tr>
+              <tr><td>$2.250.034 – $3.375.051</td><td class="num">27%</td><td class="num">$395.839</td></tr>
+              <tr><td>$3.375.051 – $5.062.576</td><td class="num">31%</td><td class="num">$699.594</td></tr>
+              <tr><td>Más de $5.062.576</td><td class="num">35%</td><td class="num">$1.222.727</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>Qué cambió en 2026 (vs 2025)</h2>
+        <p>Los descuentos siguen siendo <strong>17%</strong>, pero el tope de la base imponible subió 32,4% (jun a jun) y las deducciones de Ganancias subieron 31,5%.</p>
+        <div class="tbl-wrap">
+          <table class="data">
+            <thead><tr><th>Concepto</th><th class="num">2025</th><th class="num">2026</th><th class="num">Var.</th></tr></thead>
+            <tbody>
+              <tr><td>Base imponible máxima mensual</td><td class="num">$3.335.458</td><td class="num">$4.414.652</td><td class="num hl">+32,4%</td></tr>
+              <tr><td>Aporte máximo posible (17%)</td><td class="num">$567.028</td><td class="num">$750.491</td><td class="num hl">+32,4%</td></tr>
+              <tr><td>Ganancia no imponible anual</td><td class="num">$3.916.268</td><td class="num">$5.151.803</td><td class="num hl">+31,5%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 3: FAQ -->
+    <section class="panel" id="p-faq" role="tabpanel">
+      <div class="block faq" id="faq">
+        <h2>Preguntas frecuentes</h2>
+        <details open><summary><span>¿Qué es el sueldo bruto y el neto?</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="ans">El <strong>sueldo bruto</strong> es el monto total pactado con el empleador antes de descuentos. El <strong>sueldo neto</strong> (o «en mano») es lo que cobrás en la cuenta después de aportes, obra social, PAMI y —si corresponde— Ganancias.</div></details>
+        <details><summary><span>¿Por qué me descuentan 17% de aportes?</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="ans">Es la suma de tres aportes obligatorios: <strong>11%</strong> jubilación (SIPA), <strong>3%</strong> obra social y <strong>3%</strong> PAMI. Lo pagan todos los trabajadores en relación de dependencia bajo LCT.</div></details>
+        <details><summary><span>¿Cuándo me cobran Impuesto a las Ganancias?</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="ans">Solo si tu bruto mensual supera el Mínimo No Imponible. En el primer semestre 2026 el umbral para un soltero sin cargas está en ~<strong>$2.327.000/mes</strong>. Cada cónyuge resta ~$404.000/mes y cada hijo ~$204.000/mes.</div></details>
+        <details><summary><span>¿Incluye aguinaldo y vacaciones?</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="ans">No. Es el cálculo del sueldo mensual regular. Para el aguinaldo usá la calculadora de SAC; para vacaciones, la de plus vacacional.</div></details>
+        <details><summary><span>¿Cómo declaro familiares a cargo para bajar Ganancias?</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="ans">Con el formulario <strong>SiRADIG (F.572 web)</strong> cada año o cuando cambien tus datos. Podés incluir cónyuge, hijos menores de 18, familiares con discapacidad y pagos deducibles (prepaga, alquiler, donaciones).</div></details>
+        <details><summary><span>¿Se descuenta lo mismo en provincia que en CABA?</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="ans">Sí. Los aportes (17%) y Ganancias son nacionales. La única diferencia territorial puede ser la cuota sindical según convenio.</div></details>
+        <details><summary><span>¿Este cálculo vale para monotributistas?</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="ans">No. Los monotributistas pagan una cuota fija mensual que incluye jubilación, obra social e impuesto integrado. Usá la calculadora de monotributo 2026.</div></details>
+      </div>
+    </section>
+
+    <!-- PANEL 4: FUENTES Y MÉTODO -->
+    <section class="panel" id="p-fuentes" role="tabpanel">
+      <div class="block">
+        <h2>Fuentes y referencias</h2>
+        <ul class="sources">
+          <li><a>ARCA — Tabla Art. 94 LIG y deducciones Art. 30, período enero–junio 2026</a> <span class="pub">— ARCA (ex AFIP) (2026-01-01)</span></li>
+          <li><a>Ley 24.241 art. 9 — base imponible máxima de aportes (SIPA); tope $4.414.652,38 desde junio 2026</a> <span class="pub">— Boletín Oficial / ANSES (2026-05-29)</span></li>
+          <li><a>Ley 20.744 (LCT) — Ley de Contrato de Trabajo</a> <span class="pub">— InfoLEG (1976-05-13)</span></li>
+          <li><a>Ley 27.743 — Medidas Fiscales Paliativas (Impuesto a las Ganancias)</a> <span class="pub">— Boletín Oficial (2024-07-08)</span></li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h2>Metodología y confianza</h2>
+        <div class="trust-grid">
+          <div class="trust-item"><div class="tl">Editorial</div><p>Calculadora de finanzas revisada por el equipo editorial de Hacé Cuentas, contrastada con ARCA, según nuestra política editorial y metodología de cálculo.</p></div>
+          <div class="trust-item"><div class="tl">Actualización</div><p>Última revisión: <strong>17 de junio de 2026</strong>. Los parámetros fiscales se verifican periódicamente con las fuentes citadas.</p></div>
+          <div class="trust-item"><div class="tl">Privacidad</div><p>Los cálculos corren 100% en tu navegador. No guardamos ni transmitimos tus datos.</p></div>
+          <div class="trust-item"><div class="tl">Limitaciones</div><p>Resultados orientativos. Para decisiones financieras críticas, consultá con un profesional matriculado.</p></div>
+        </div>
+
+        <div class="disclaimer"><strong>Disclaimer:</strong> Los resultados son orientativos y no constituyen asesoramiento financiero individualizado. Antes de tomar decisiones con impacto, consultá con un contador público matriculado o asesor financiero registrado.</div>
+
+        <div class="cite-box">
+          <span class="ct">📌 Cómo citar esta calculadora</span>
+          <p class="ref">Rodríguez, M. (2026). Calculadora de sueldo en mano (Argentina). Hacé Cuentas. https://hacecuentas.com/sueldo-en-mano-argentina</p>
+          <p style="margin:0;">Contenido bajo licencia <a>CC-BY 4.0</a> — podés reutilizarlo citando la fuente con un enlace a Hacé Cuentas.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== TAMBIÉN TE PUEDE INTERESAR ===== -->
+  <h2 class="section-h">También te puede interesar</h2>
+  <div class="also-grid">
+    <a class="also-card"><span class="ico">🎁</span><span><span class="t">Aguinaldo (SAC)</span><span class="d">Medio aguinaldo de junio y diciembre.</span></span></a>
+    <a class="also-card"><span class="ico">📄</span><span><span class="t">Indemnización por despido</span><span class="d">Cálculo según Art. 245 LCT.</span></span></a>
+    <a class="also-card"><span class="ico">📈</span><span><span class="t">Ganancias sobre sueldo</span><span class="d">Desglose mensual del impuesto.</span></span></a>
+    <a class="also-card"><span class="ico">🏖️</span><span><span class="t">Vacaciones</span><span class="d">Días y plus vacacional por antigüedad.</span></span></a>
+  </div>
+
+  <!-- ===== GUÍA PILAR CTA ===== -->
+  <aside class="guide-cta">
+    <div class="gc-text">
+      <span class="eb">📘 ¿Querés entender más a fondo?</span>
+      <strong>Leé la guía: Sueldos Argentina 2026</strong>
+      <span class="gd">Contexto, conceptos y cómo combinar calculadoras del tema.</span>
+    </div>
+    <a class="gb">Abrir guía →</a>
+  </aside>
+
+  <!-- ===== DESCARGAS ===== -->
+  <div class="downloads">
+    <div class="dh">⬇️ Llevate esto contigo</div>
+    <div class="dl-list">
+      <a class="dl-item">Tabla MNI 2026 (CSV)<small>Valores oficiales ARCA</small></a>
+      <a class="dl-item">Escala Ganancias (PDF)<small>9 tramos mensuales</small></a>
+    </div>
+  </div>
+
+  <!-- ===== CTA BACK ===== -->
+  <div class="cta-back">
+    <p>¿Buscabas otra calculadora?</p>
+    <a class="bb">Ver todas las calculadoras →</a>
+    <p class="sg">¿No encontrás lo que buscás? <a style="color:var(--accent);font-weight:600;">Pedí una calculadora nueva →</a></p>
+  </div>
+</main>
+
+<!-- ===== MOBILE BAR ===== -->
+<nav class="mobile-bar">
+  <a href="#calculadora"><span class="mi">🧮</span>Calc</a>
+  <a href="#p-como"><span class="mi">📋</span>Ejemplo</a>
+  <a href="#faq"><span class="mi">💬</span>FAQ</a>
+  <button><span class="mi">📤</span>Compartir</button>
+</nav>
+
+<div class="proto-tag">PROTOTIPO · rediseño + tabs</div>
+
+<script>
+const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+// formato compacto para el centro del donut (no se sale del aro)
+const fmtShort = n => {
+  n = Math.round(n);
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(n >= 1e7 ? 0 : 1).replace('.', ',') + 'M';
+  if (n >= 1e3) return '$' + Math.round(n/1e3) + 'K';
+  return '$' + n;
+};
+const brutoEl = document.getElementById('bruto');
+brutoEl.addEventListener('input', e => {
+  let v = e.target.value.replace(/\D/g,'');
+  e.target.value = v ? Number(v).toLocaleString('es-AR') : '';
+});
+
+// ===== Toggle segmentado cónyuge =====
+let conyuge = false;
+document.querySelectorAll('#seg-conyuge button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#seg-conyuge button').forEach(x => x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+    conyuge = b.dataset.v === 'true';
+  });
+});
+
+// ===== Fórmula sueldo-ar (port fiel) =====
+const BASE_MAX = 4414652.38, MNI_BASE = 2490038, INC_CONY = 404330, INC_HIJO = 203905;
+const ESCALA = [
+  [166669,.05,0],[333338,.09,8333],[500008,.12,23334],[750011,.15,43334],
+  [1500023,.19,80835],[2250034,.23,223337],[3375051,.27,395839],
+  [5062576,.31,699594],[Infinity,.35,1222727]
+];
+function ganancias(base){
+  if(base<=0) return 0; let ant=0;
+  for(const [hasta,tasa,acum] of ESCALA){ if(base<=hasta) return acum+(base-ant)*tasa; ant=hasta; }
+  return 0;
+}
+function calcular(bruto, conyuge, hijos){
+  const baseAp = Math.min(bruto, BASE_MAX), topeAp = bruto > BASE_MAX;
+  const jub = baseAp*0.11, os = baseAp*0.03, pami = baseAp*0.03;
+  const aportes = jub+os+pami;
+  const mni = MNI_BASE + (conyuge?INC_CONY:0) + hijos*INC_HIJO;
+  const baseG = Math.max(0, bruto - aportes - mni);
+  const gan = ganancias(baseG);
+  const desc = aportes + gan, neto = bruto - desc, pct = desc/bruto*100;
+  return {neto,aportes,jub,os,pami,gan,desc,pct,topeAp};
+}
+
+// ===== Donut interactivo + leyenda =====
+const DONUT = [
+  {key:'neto', nm:'Neto en mano', color:'var(--c-neto)'},
+  {key:'jub',  nm:'Jubilación',   color:'var(--c-jub)'},
+  {key:'os',   nm:'Obra social',  color:'var(--c-os)'},
+  {key:'pami', nm:'PAMI',         color:'var(--c-pami)'},
+  {key:'gan',  nm:'Ganancias',    color:'var(--c-gan)'},
+];
+let lastBruto = 0;
+function renderDonut(r){
+  const svg = document.getElementById('donut');
+  const legend = document.getElementById('legend');
+  const vals = {neto:r.neto, jub:r.jub, os:r.os, pami:r.pami, gan:r.gan};
+  const total = r.neto + r.aportes + r.gan;
+  let acc = 0, circles = '';
+  DONUT.forEach((s,i)=>{
+    const v = vals[s.key]; if(v<=0 && s.key==='gan'){} // mostrar igual aunque sea 0 en leyenda
+    const len = total>0 ? v/total*100 : 0;
+    circles += `<circle data-i="${i}" cx="21" cy="21" r="15.915" fill="none" stroke="${s.color}" stroke-width="5.6" stroke-dasharray="${len.toFixed(2)} ${(100-len).toFixed(2)}" stroke-dashoffset="${(25-acc).toFixed(2)}" stroke-linecap="butt"></circle>`;
+    acc += len;
+  });
+  // centro (abreviado para no salirse del aro)
+  circles += `<text class="ctr-val" x="21" y="20" text-anchor="middle" font-size="5.4" id="ctrVal">${fmtShort(total)}</text>`;
+  circles += `<text class="ctr-lbl" x="21" y="24.6" text-anchor="middle" font-size="2.6" id="ctrLbl">BRUTO</text>`;
+  svg.innerHTML = circles;
+
+  // leyenda
+  legend.innerHTML = DONUT.map((s,i)=>{
+    const v = vals[s.key]; const pct = total>0 ? (v/total*100) : 0;
+    return `<div class="lg" data-i="${i}"><span class="sw" style="background:${s.color}"></span><span class="nm">${s.nm}</span><span class="vl">${fmt(v)} · ${pct.toFixed(0)}%</span></div>`;
+  }).join('');
+
+  // interactividad hover (slices + leyenda sincronizados)
+  const ctrVal = svg.querySelector('#ctrVal'), ctrLbl = svg.querySelector('#ctrLbl');
+  const setHot = (i)=>{
+    svg.classList.add('hovering');
+    svg.querySelectorAll('circle[data-i]').forEach(c=>c.classList.toggle('hot', +c.dataset.i===i));
+    legend.querySelectorAll('.lg').forEach(l=>l.style.background = +l.dataset.i===i ? '#eef3fc' : '');
+    const v = vals[DONUT[i].key];
+    ctrVal.textContent = fmtShort(v); ctrLbl.textContent = DONUT[i].nm.toUpperCase();
+  };
+  const clearHot = ()=>{
+    svg.classList.remove('hovering');
+    svg.querySelectorAll('circle[data-i]').forEach(c=>c.classList.remove('hot'));
+    legend.querySelectorAll('.lg').forEach(l=>l.style.background='');
+    ctrVal.textContent = fmtShort(total); ctrLbl.textContent='BRUTO';
+  };
+  svg.querySelectorAll('circle[data-i]').forEach(c=>{
+    c.addEventListener('mouseenter',()=>setHot(+c.dataset.i));
+    c.addEventListener('mouseleave',clearHot);
+  });
+  legend.querySelectorAll('.lg').forEach(l=>{
+    l.addEventListener('mouseenter',()=>setHot(+l.dataset.i));
+    l.addEventListener('mouseleave',clearHot);
+  });
+}
+
+// ===== Render principal =====
+function run(skipScroll){
+  const raw = brutoEl.value.replace(/\D/g,'');
+  const bruto = Number(raw);
+  if(!bruto || bruto<=0){ brutoEl.focus(); return; }
+  const hijos = Number(document.getElementById('hijos').value)||0;
+  const r = calcular(bruto, conyuge, hijos);
+
+  document.getElementById('outNeto').textContent = fmt(r.neto);
+  document.getElementById('outDesc').textContent = fmt(r.desc);
+  document.getElementById('outAportes').textContent = fmt(r.aportes);
+  document.getElementById('outGan').textContent = fmt(r.gan);
+  document.getElementById('outPct').textContent = r.pct.toFixed(1)+'%';
+
+  const ins = document.getElementById('insight');
+  const tope = r.topeAp ? ` Tus aportes están topeados: se calculan sobre la base máxima de ${fmt(BASE_MAX)}, no sobre todo tu bruto (Ley 24.241).` : '';
+  document.getElementById('insightText').innerHTML = (r.gan>0
+    ? `De tu bruto te queda <strong>${fmt(r.neto)}</strong> en mano; un <strong>${r.pct.toFixed(1)}%</strong> se va en descuentos: <strong>${fmt(r.aportes)}</strong> de aportes y <strong>${fmt(r.gan)}</strong> de Ganancias.`
+    : `De tu bruto te queda <strong>${fmt(r.neto)}</strong> en mano: solo se descuenta el <strong>${r.pct.toFixed(1)}%</strong> de aportes (<strong>${fmt(r.aportes)}</strong>) y no pagás Ganancias con tu situación.`) + tope;
+  ins.className = 'insight' + (r.pct>=25 ? ' warn' : '');
+
+  renderDonut(r);
+
+  document.getElementById('resEmpty').style.display='none';
+  document.getElementById('resFull').style.display='block';
+  if(!skipScroll && window.matchMedia('(max-width:860px)').matches){
+    document.getElementById('resFull').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+document.getElementById('calcBtn').addEventListener('click', run);
+document.getElementById('calcBtn2').addEventListener('click', run);
+brutoEl.addEventListener('keydown', e=>{ if(e.key==='Enter') run(); });
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  brutoEl.value=''; document.getElementById('hijos').value='0';
+  document.querySelectorAll('#seg-conyuge button').forEach((x,i)=>x.setAttribute('aria-pressed', i===0?'true':'false'));
+  conyuge=false;
+});
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  document.getElementById('resFull').style.display='none';
+  document.getElementById('resEmpty').style.display='block';
+  brutoEl.focus();
+});
+document.getElementById('copyBtn').addEventListener('click', e=>{
+  const t = `Sueldo en mano: ${document.getElementById('outNeto').textContent} (descuento ${document.getElementById('outPct').textContent}) — hacecuentas.com`;
+  navigator.clipboard?.writeText(t); e.target.textContent='✓ Copiado';
+  setTimeout(()=>e.target.textContent='📋 Copiar resultado',1500);
+});
+
+// ===== Tabs =====
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.setAttribute('aria-selected','true');
+    document.getElementById(tab.dataset.panel).classList.add('active');
+  });
+});
+
+// Demo: precargar ejemplo y calcular al abrir (sin saltar el scroll)
+brutoEl.value = '3.000.000';
+run(true);
+</script>
+</body>
+</html>

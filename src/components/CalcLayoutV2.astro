@@ -1,0 +1,541 @@
+---
+/**
+ * CalcLayoutV2 — Cuerpo (article) del rediseño v2 de las landings de calculadoras.
+ *
+ * Renderiza SOLO el <article> (va dentro del <Layout> que provee head/schema/
+ * Header/Footer). Reutiliza el <Calculator> real y las mismas libs que el
+ * template productivo, así no se pierde ninguna sección ni lógica.
+ *
+ * Todo el markup va bajo `.calc-v2` → la CSS de calc-redesign.css solo aplica acá.
+ * Estrategia de migración: cuando esto esté aprobado, el [...slug].astro y los 12
+ * locales renderizan <CalcLayoutV2 .../> en vez de su body inline. Una sola fuente.
+ *
+ * Las 4 pestañas son FIJAS (Resumen / Cómo funciona / Preguntas / Fuentes). Si una
+ * no tiene contenido, muestra un fallback corto (no queda vacía).
+ */
+import Calculator from './Calculator.astro';
+import RelatedCalcs from './RelatedCalcs.astro';
+import CategoryIcon from './CategoryIcon.astro';
+import FavoriteStar from './FavoriteStar.astro';
+import LiveData from './LiveData.astro';
+import CategoryHub from './CategoryHub.astro';
+import SponsoredOffer from './SponsoredOffer.astro';
+import CalendarioFeriados from './CalendarioFeriados.astro';
+import GaugeImcPediatrico from './GaugeImcPediatrico.astro';
+import GaugeEmbarazo from './GaugeEmbarazo.astro';
+import ImcResultCta from './ImcResultCta.astro';
+import InteractiveBmiTable from './InteractiveBmiTable.astro';
+import ImcUnitsHook from './ImcUnitsHook.astro';
+import PediatricBmiChart from './PediatricBmiChart.astro';
+import HealthHub from './HealthHub.astro';
+import DateRangePresetsTable from './DateRangePresetsTable.astro';
+import IclVsIpcVsUvaTable from './IclVsIpcVsUvaTable.astro';
+import { md, mdInline } from '../lib/markdown';
+import { findClusterForSlug } from '../lib/clusters';
+import { findHubForSlug } from '../lib/category-hubs';
+import { getComparatorForCalc } from '../lib/comparators';
+import { getOfferForCalc } from '../lib/offers';
+import { resolveGuideSlug, GUIDE_TITLES } from '../lib/category-guide-map';
+import { getJourneySteps } from '../lib/journeys';
+import converterTables from '../lib/converter-tables.json';
+import '../styles/calc-redesign.css';
+
+interface Props {
+  calc: any;
+  dataAsOf?: string;
+  /** Código de locale: '' (AR), 'es', 'en', 'pt', 'pt-pt', 'mx', 'co', 'cl', 'pe', 'ec', 've', 'py', 'uy', 'do'. */
+  lang?: string;
+}
+const { calc, dataAsOf, lang = '' } = Astro.props as Props;
+// Prefijo para TODOS los links internos (AR='' → '/', locales → '/es', '/pt', ...).
+const linkPrefix = lang ? `/${lang}` : '';
+const P = (slug: string) => `${linkPrefix}/${slug}`;
+// Idioma de UI: los verticales hispanos usan 'es'; solo en/pt traducen.
+const uiLang: 'es' | 'en' | 'pt' = lang === 'en' ? 'en' : (lang === 'pt' || lang === 'pt-pt') ? 'pt' : 'es';
+const dateLocale = uiLang === 'en' ? 'en-US' : uiLang === 'pt' ? 'pt-BR' : 'es-AR';
+// Idioma del widget Calculator (solo es/en/pt; los verticales hispanos usan 'es').
+const calcWidgetLang = lang === 'en' ? 'en' : (lang === 'pt' || lang === 'pt-pt') ? 'pt' : 'es';
+// Locale para RelatedCalcs (bucket correcto): AR→'es' (=calcs/), España→'es-ES'
+// (=calcs-es), resto = código de locale (en/pt/pt-pt/mx/co/...).
+const relatedLang = !lang ? 'es' : (lang === 'es' ? 'es-ES' : lang);
+
+const TRANSLATIONS = {
+  es: {
+    home: 'Inicio', saveLabel: 'Guardar calculadora', lastReview: 'Última revisión', editorialTxt: 'Revisada por el equipo editorial de Hacé Cuentas, según nuestra política editorial y metodología.', updateTxt: 'Los parámetros se verifican periódicamente con las fuentes citadas.', updated: 'Actualizado', reviewedBy: 'Revisado por', save: '⭐ Guardar calculadora',
+    relTools: '🧰 Herramientas relacionadas', quickAnswer: '⚡ Respuesta rápida',
+    tabSummary: 'Resumen', tabHow: 'Cómo funciona', tabFaq: 'Preguntas', tabSources: 'Fuentes',
+    whenUse: 'Cuándo usar esta calculadora', howWorks: 'Cómo funciona', example: 'Ejemplo paso a paso',
+    solvedCases: 'Casos resueltos', faq: 'Preguntas frecuentes', sources: 'Fuentes y referencias',
+    methodology: 'Metodología y confianza', editorial: 'Editorial', updateLbl: 'Actualización',
+    privacy: 'Privacidad', limits: 'Limitaciones', howCite: '📌 Cómo citar esta calculadora',
+    alsoSee: 'También te puede interesar', guideEyebrow: '📘 ¿Querés entender más a fondo?',
+    guideRead: 'Leé la guía:', guideOpen: 'Abrir guía →', compareEyebrow: '¿Dudás entre opciones?',
+    compareLbl: 'Compará:', compareOpen: 'Ver comparación →', downloads: '⬇️ Llevate esto contigo',
+    backQ: '¿Buscabas otra calculadora?', backAll: 'Ver todas las calculadoras →',
+    reportErr: '✉️ Reportar un error en esta calculadora', noFaq: '¿Tenés una duda sobre esta calculadora? Escribinos y la sumamos.',
+    licensePre: 'Contenido bajo licencia', licensePost: '— reutilizable citando la fuente con enlace a',
+    privacyTxt: 'Los cálculos corren 100% en tu navegador. No guardamos ni transmitimos tus datos.',
+    limitsTxt: 'Resultados orientativos. Para decisiones críticas, consultá con un profesional.',
+  },
+  en: {
+    home: 'Home', saveLabel: 'Save calculator', lastReview: 'Last reviewed', editorialTxt: 'Reviewed by the Hacé Cuentas editorial team, per our editorial policy and methodology.', updateTxt: 'Parameters are verified periodically against the cited sources.', updated: 'Updated', reviewedBy: 'Reviewed by', save: '⭐ Save calculator',
+    relTools: '🧰 Related tools', quickAnswer: '⚡ Quick answer',
+    tabSummary: 'Summary', tabHow: 'How it works', tabFaq: 'FAQ', tabSources: 'Sources',
+    whenUse: 'When to use this calculator', howWorks: 'How it works', example: 'Step-by-step example',
+    solvedCases: 'Worked examples', faq: 'Frequently asked questions', sources: 'Sources & references',
+    methodology: 'Methodology & trust', editorial: 'Editorial', updateLbl: 'Updates',
+    privacy: 'Privacy', limits: 'Limitations', howCite: '📌 How to cite this calculator',
+    alsoSee: 'You might also like', guideEyebrow: '📘 Want to go deeper?',
+    guideRead: 'Read the guide:', guideOpen: 'Open guide →', compareEyebrow: 'Torn between options?',
+    compareLbl: 'Compare:', compareOpen: 'See comparison →', downloads: '⬇️ Take this with you',
+    backQ: 'Looking for another calculator?', backAll: 'See all calculators →',
+    reportErr: '✉️ Report an error in this calculator', noFaq: 'Have a question about this calculator? Write to us and we will add it.',
+    licensePre: 'Content licensed under', licensePost: '— reuse it citing the source with a link to',
+    privacyTxt: 'Calculations run 100% in your browser. We do not store or transmit your data.',
+    limitsTxt: 'Indicative results. For critical decisions, consult a professional.',
+  },
+  pt: {
+    home: 'Início', saveLabel: 'Salvar calculadora', lastReview: 'Última revisão', editorialTxt: 'Revisado pela equipe editorial do Hacé Cuentas, conforme nossa política editorial e metodologia.', updateTxt: 'Os parâmetros são verificados periodicamente com as fontes citadas.', updated: 'Atualizado', reviewedBy: 'Revisado por', save: '⭐ Salvar calculadora',
+    relTools: '🧰 Ferramentas relacionadas', quickAnswer: '⚡ Resposta rápida',
+    tabSummary: 'Resumo', tabHow: 'Como funciona', tabFaq: 'Perguntas', tabSources: 'Fontes',
+    whenUse: 'Quando usar esta calculadora', howWorks: 'Como funciona', example: 'Exemplo passo a passo',
+    solvedCases: 'Exemplos resolvidos', faq: 'Perguntas frequentes', sources: 'Fontes e referências',
+    methodology: 'Metodologia e confiança', editorial: 'Editorial', updateLbl: 'Atualização',
+    privacy: 'Privacidade', limits: 'Limitações', howCite: '📌 Como citar esta calculadora',
+    alsoSee: 'Você também pode gostar', guideEyebrow: '📘 Quer se aprofundar?',
+    guideRead: 'Leia o guia:', guideOpen: 'Abrir guia →', compareEyebrow: 'Em dúvida entre opções?',
+    compareLbl: 'Compare:', compareOpen: 'Ver comparação →', downloads: '⬇️ Leve isto com você',
+    backQ: 'Procurando outra calculadora?', backAll: 'Ver todas as calculadoras →',
+    reportErr: '✉️ Relatar um erro nesta calculadora', noFaq: 'Tem uma dúvida sobre esta calculadora? Escreva para nós e a adicionamos.',
+    licensePre: 'Conteúdo sob licença', licensePost: '— reutilizável citando a fonte com link para',
+    privacyTxt: 'Os cálculos rodam 100% no seu navegador. Não guardamos nem transmitimos seus dados.',
+    limitsTxt: 'Resultados orientativos. Para decisões críticas, consulte um profissional.',
+  },
+} as const;
+const L = TRANSLATIONS[uiLang];
+
+const categoryLabels: Record<string, string> = {
+  finanzas: 'Finanzas', negocios: 'Negocios', negocio: 'Negocios', salud: 'Salud',
+  marketing: 'Marketing', deportes: 'Deportes', viajes: 'Viajes', vida: 'Vida cotidiana',
+  mascotas: 'Mascotas', matematica: 'Matemática', construccion: 'Construcción', cocina: 'Cocina',
+  educacion: 'Educación', automotor: 'Automotor', tecnologia: 'Tecnología',
+  'medio-ambiente': 'Medio Ambiente', electronica: 'Electrónica', impuestos: 'Impuestos',
+};
+const catLabel = categoryLabels[calc.category] || calc.category;
+
+// Audience badge
+type AudienceCode = 'AR'|'MX'|'CL'|'CO'|'ES'|'BO'|'PE'|'UY'|'BR'|'global';
+const VALID: AudienceCode[] = ['AR','MX','CL','CO','ES','BO','PE','UY','BR','global'];
+const rawAud = typeof calc.audience === 'string'
+  ? (calc.audience.toLowerCase() === 'global' ? 'global' : calc.audience.toUpperCase())
+  : 'global';
+const audience: AudienceCode = (VALID as string[]).includes(rawAud) ? rawAud as AudienceCode : 'global';
+const COUNTRY_META: Record<AudienceCode, { flag: string; tooltip: string }> = {
+  AR:{flag:'🇦🇷',tooltip:'Datos Argentina (ARCA/ANSES)'}, MX:{flag:'🇲🇽',tooltip:'Datos México (SAT/IMSS)'},
+  CL:{flag:'🇨🇱',tooltip:'Datos Chile (SII/AFP)'}, CO:{flag:'🇨🇴',tooltip:'Datos Colombia (DIAN)'},
+  ES:{flag:'🇪🇸',tooltip:'Datos España (IRPF/Hacienda)'}, BO:{flag:'🇧🇴',tooltip:'Datos Bolivia'},
+  PE:{flag:'🇵🇪',tooltip:'Datos Perú (SUNAT)'}, UY:{flag:'🇺🇾',tooltip:'Datos Uruguay (DGI/BPS)'},
+  BR:{flag:'🇧🇷',tooltip:'Datos Brasil (Receita Federal)'}, global:{flag:'🌎',tooltip:'Aplica globalmente'},
+};
+const COUNTRY_NAME: Record<AudienceCode, string> = {
+  AR:'Argentina', MX:'México', CL:'Chile', CO:'Colombia', ES:'España',
+  BO:'Bolivia', PE:'Perú', UY:'Uruguay', BR:'Brasil', global:'tu país',
+};
+const countryBadge = COUNTRY_META[audience];
+
+// Badge "Actualizado <mes año>"
+const _src = (dataAsOf || calc.lastReviewed || calc.dataUpdate?.lastUpdated || '').slice(0,10);
+let updatedLabel = '';
+if (/^\d{4}-\d{2}-\d{2}$/.test(_src)) {
+  updatedLabel = new Date(_src + 'T00:00:00Z').toLocaleDateString(dateLocale, { month:'long', year:'numeric', timeZone:'UTC' });
+}
+const updated = (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed))
+  ? new Date(calc.lastReviewed + 'T00:00:00Z').toLocaleDateString(dateLocale,{day:'2-digit',month:'long',year:'numeric',timeZone:'UTC'})
+  : updatedLabel;
+
+// Campos de contenido
+const sources: Array<{ name:string; url?:string; publisher?:string; date?:string }> = calc.sources || [];
+const useCases: Array<string | {title?:string;description?:string}> = calc.useCases || [];
+const example = calc.example || null;
+const solvedExamples = Array.isArray(calc.solvedExamples) ? calc.solvedExamples : [];
+const keyTakeaway: string = calc.keyTakeaway || '';
+const answerSnippet: string = calc.answerSnippet || '';
+const downloads: Array<{label:string;href:string;description?:string}> = calc.downloads || [];
+const referenceTables = Array.isArray(calc.referenceTables) ? calc.referenceTables : [];
+
+// Navegación / clusters
+const cluster = findClusterForSlug(calc.slug);
+const categoryHub = findHubForSlug(calc.slug);
+const comparator = lang ? null : getComparatorForCalc(calc.slug);
+const pillarGuideSlug = lang ? null : resolveGuideSlug(calc);
+const pillarGuideTitle = pillarGuideSlug ? GUIDE_TITLES[pillarGuideSlug] : null;
+const contextualOffer = getOfferForCalc(calc.slug);
+const converterTable = (converterTables as Record<string, any>)[calc.slug] || null;
+const audienceRedirect = calc.audienceRedirect || null;
+
+const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
+const relatedSlugs: string[] = calc.relatedSlugs || [];
+const relatedContextual = lang ? [] : relatedSlugs.map((s) => allCalcs.find((c) => c.slug === s)).filter(Boolean);
+const journeySlugs = getJourneySteps(calc.slug, relatedSlugs, 6);
+const _clusterSlugs = new Set((cluster?.items || []).map((it: any) => it.slug));
+const journeyRelated = (journeySlugs.length ? journeySlugs : relatedSlugs).filter((s) => !_clusterSlugs.has(s));
+// Chips del recuadro "Herramientas relacionadas" (UNA sola sección, DEBAJO del calc,
+// como en el prototipo aprobado). Fuente: los items curados del cluster si existe
+// (así no perdemos ese linking interno que antes daba el ClusterHub), si no el journey.
+const relTools = lang ? [] : (cluster?.items?.length
+  ? cluster.items.filter((it: any) => it.slug !== calc.slug).map((it: any) => ({ slug: it.slug, name: it.label, icon: it.icon }))
+  : journeySlugs.map((s) => allCalcs.find((c) => c.slug === s)).filter(Boolean).map((c: any) => ({ slug: c.slug, name: c.h1, icon: c.icon }))
+).slice(0, 6);
+
+// hasMath: SOLO LaTeX real. No usar `$...$` pelado porque la moneda ($166.669 … $0)
+// da falso positivo y KaTeX rompe las tablas de la explanation. Requerimos display
+// math ($$…$$) o comandos LaTeX (\frac, \sqrt, etc.).
+const hasMath = calc.explanation && /(\$\$[^$]+\$\$|\\frac|\\sqrt|\\sum|\\times|\\cdot|\\int|\\pi|\\alpha|\\beta|\\theta|\\sigma)/.test(calc.explanation);
+
+// YMYL disclaimer
+const isYMYL = ['finanzas','salud','negocios','mascotas','familia','impuestos'].includes(calc.category);
+const _explLower = ((calc.explanation||'')+(calc.intro||'')+(calc.keyTakeaway||'')).toLowerCase();
+const _hasDisc = ['disclaimer','orientativ','no reemplaz','consultá con','consulta con','profesional matriculado','asesor financiero','contador público','profesional de la salud','no constituye asesoramiento','no sustituye'].some(k=>_explLower.includes(k));
+const _discBy: Record<string,{who:string;verb:string}> = {
+  salud:{who:'médico, nutricionista o profesional de la salud matriculado',verb:'reemplazan la consulta médica profesional'},
+  mascotas:{who:'veterinario matriculado',verb:'reemplazan la consulta veterinaria'},
+  finanzas:{who:'asesor financiero registrado en la CNV o contador público matriculado',verb:'constituyen asesoramiento financiero individualizado'},
+  impuestos:{who:'contador público matriculado o asesor fiscal',verb:'constituyen asesoramiento tributario'},
+  negocios:{who:'contador público, abogado o asesor matriculado',verb:'constituyen asesoramiento profesional'},
+  familia:{who:'profesional matriculado del área correspondiente',verb:'reemplazan asesoramiento personalizado'},
+};
+const _disc = _discBy[calc.category];
+const showYmyl = isYMYL && !_hasDisc && !!_disc;
+
+// ¿Qué pestañas tienen contenido? (las 4 son fijas, pero marcamos cuáles traen algo)
+const hasComoFunciona = !!(calc.explanation || (example && example.steps) || solvedExamples.length || calc.infographic?.src);
+const yearNow = updated ? updated.slice(-4) : '2026';
+const reportSubject = encodeURIComponent(`Error en /${calc.slug}`);
+const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré un error en "${calc.h1}":\n\nURL: https://hacecuentas.com/${calc.slug}\n\nGracias.`);
+---
+
+<article class="calc-page calc-v2">
+  <!-- Breadcrumb -->
+  <nav class="v2-breadcrumb" aria-label="Ruta de navegación" style="font-size:13px;color:var(--v2-muted);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+    <a href={linkPrefix || "/"} style="color:inherit;">{L.home}</a><span aria-hidden="true" style="color:#cbd5e1;">/</span>
+    <a href={`/categoria/${calc.category}`} style="color:inherit;">{catLabel}</a><span aria-hidden="true" style="color:#cbd5e1;">/</span>
+    <span aria-current="page" style="color:var(--v2-ink);font-weight:500;">{calc.h1}</span>
+  </nav>
+
+  <!-- Hero -->
+  <span class="v2-eyebrow"><CategoryIcon cat={calc.category} fallback={calc.icon} size={16} /> {catLabel}</span>
+  <h1 class="v2-h1" set:html={`${calc.h1.replace(/\(([^)]+)\)/, '<span class="accent">($1)</span>')} <span aria-hidden="true">${countryBadge.flag}</span>`}></h1>
+  <p class="v2-lede" set:html={mdInline(calc.description || calc.intro || '')}></p>
+  <div class="v2-meta">
+    {updatedLabel && <span>🗓️ {L.updated} {updatedLabel}</span>}
+    <span class="dot" aria-hidden="true"></span>
+    <span>{L.reviewedBy} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></span>
+    <FavoriteStar slug={calc.slug} title={calc.h1} langPrefix="" labelSave={L.saveLabel} />
+  </div>
+
+  <!-- Calculadora (widget real). NADA arriba del calc salvo el hero — como el prototipo. -->
+  <section id="calculadora">
+    <Calculator config={calc} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang} />
+  </section>
+
+  <!-- Datos en vivo (si la calc los declara) -->
+  {Array.isArray(calc.dataSource) && calc.dataSource.length > 0 && <LiveData dataSource={calc.dataSource} />}
+
+  <!-- Oferta contextual (se revela post-resultado) -->
+  {contextualOffer && <SponsoredOffer offer={contextualOffer} slug={calc.slug} />}
+
+  <!-- Componentes específicos por calc — preservados del template original -->
+  {calc.slug === 'calculadora-feriados-argentina-2026-calendario' && <CalendarioFeriados />}
+  {calc.slug === 'calculadora-indice-masa-corporal-pediatrico' && (<><GaugeImcPediatrico /><PediatricBmiChart /></>)}
+  {calc.slug === 'calculadora-embarazo' && <GaugeEmbarazo />}
+  {calc.slug === 'calculadora-imc' && (<><ImcResultCta /><InteractiveBmiTable /><ImcUnitsHook /><HealthHub /></>)}
+  {calc.slug === 'dias-entre-dos-fechas' && <DateRangePresetsTable />}
+  {calc.slug === 'calculadora-actualizacion-alquiler-icl' && <IclVsIpcVsUvaTable />}
+
+  <!-- Herramientas relacionadas: UNA sola sección, recuadro destacado, DEBAJO del calc -->
+  {relTools.length > 0 && (
+    <div class="v2-rel">
+      <div class="v2-rel-label">{L.relTools}</div>
+      <div class="v2-rel-chips">
+        {relTools.map((t: any) => (
+          <a class="v2-rel-chip" href={P(t.slug)}><span aria-hidden="true">{t.icon || '🧮'}</span> {t.name}</a>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Respuesta rápida (keyTakeaway / AEO) — visible, fuera de tabs -->
+  {keyTakeaway && (
+    <aside id="respuesta-rapida" class="v2-quick" data-speakable="true" aria-label="Respuesta rápida">
+      <div class="v2-quick-h">{L.quickAnswer}</div>
+      <div set:html={md(keyTakeaway)}></div>
+    </aside>
+  )}
+  {!keyTakeaway && answerSnippet && (
+    <aside class="v2-quick" data-speakable="true" aria-label="Respuesta directa">
+      <div class="v2-quick-h">{L.quickAnswer}</div>
+      <p set:html={mdInline(answerSnippet)}></p>
+    </aside>
+  )}
+  <div style="margin-bottom:30px;"></div>
+
+  <!-- ===== TABS (4 fijas) ===== -->
+  <div class="v2-tabs">
+    <div class="v2-tabnav" role="tablist" aria-label="Secciones">
+      <button class="v2-tab" role="tab" aria-selected="true"  data-panel="v2-resumen"><span class="ti">📋</span> {L.tabSummary}</button>
+      <button class="v2-tab" role="tab" aria-selected="false" data-panel="v2-como"><span class="ti">⚙️</span> {L.tabHow}</button>
+      <button class="v2-tab" role="tab" aria-selected="false" data-panel="v2-faq"><span class="ti">💬</span> {L.tabFaq}</button>
+      <button class="v2-tab" role="tab" aria-selected="false" data-panel="v2-fuentes"><span class="ti">📚</span> {L.tabSources}</button>
+    </div>
+
+    <!-- Panel Resumen -->
+    <section class="v2-panel active" id="v2-resumen" role="tabpanel">
+      {audienceRedirect && (
+        <aside class="v2-block" role="note" style="display:flex;gap:11px;background:#fff7ed;border:1px solid #fad9b3;border-radius:12px;padding:13px 15px;">
+          <span aria-hidden="true" style="font-size:20px;">{audienceRedirect.icon}</span>
+          <div><strong>{audienceRedirect.title}</strong><div set:html={mdInline(audienceRedirect.body)}></div>{audienceRedirect.ctaHref && <a href={audienceRedirect.ctaHref} style="color:var(--v2-accent);font-weight:600;">{audienceRedirect.ctaText}</a>}</div>
+        </aside>
+      )}
+      {audience === 'AR' && (
+        <div class="v2-block"><p style="background:#f5f8ff;border:1px solid #dbe6f9;border-radius:12px;padding:12px 14px;font-size:14px;margin:0 0 18px;"><span aria-hidden="true">🇦🇷</span> <strong>Calculadora específica para Argentina.</strong> Las leyes, escalas y valores son los vigentes en Argentina (ARCA, BCRA, ANSES).</p></div>
+      )}
+      {audience !== 'AR' && audience !== 'global' && (
+        <div class="v2-block"><p style="background:#f5f8ff;border:1px solid #dbe6f9;border-radius:12px;padding:12px 14px;font-size:14px;margin:0 0 18px;"><span aria-hidden="true">{countryBadge.flag}</span> <strong>Calculadora específica para {COUNTRY_NAME[audience]}.</strong> Las leyes, escalas y valores son los vigentes en {COUNTRY_NAME[audience]}.</p></div>
+      )}
+
+      {calc.intro && <div class="v2-block" id="intro"><div set:html={md(calc.intro)}></div></div>}
+
+      {useCases.length > 0 && (
+        <div class="v2-block" id="cuando-usar">
+          <h2>{L.whenUse}</h2>
+          <ul class="v2-checks">
+            {useCases.map((u) => (
+              <li set:html={md(typeof u === 'string' ? u : `**${u.title ?? ''}** — ${u.description ?? ''}`)}></li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {!calc.intro && useCases.length === 0 && (
+        <div class="v2-block"><p>Completá los datos arriba y obtené el resultado al instante. Abajo tenés cómo funciona el cálculo, ejemplos y preguntas frecuentes.</p></div>
+      )}
+
+      {referenceTables.length > 0 && referenceTables.map((tbl: any) => (
+        <div class="v2-block">
+          <h2>{tbl.title}</h2>
+          {tbl.caption && <p class="v2-tbl-note">{tbl.caption}</p>}
+          <div class="v2-tbl">
+            <table>
+              <thead><tr>{tbl.headers.map((h: string, ci: number) => <th class={ci>0 ? 'num' : ''}>{h}</th>)}</tr></thead>
+              <tbody>
+                {tbl.rows.map((row: string[]) => (
+                  <tr>{row.map((cell, ci) => <td class={`${ci>0?'num':''} ${ci===tbl.highlightCol?'hl':''}`}>{cell}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {tbl.note && <p class="v2-tbl-note">{tbl.note}</p>}
+        </div>
+      ))}
+
+      {converterTable && (
+        <div class="v2-block" id="tabla-conversiones">
+          <h2>Tabla de conversiones de {converterTable.from} a {converterTable.to}</h2>
+          <p class="v2-tbl-note">{converterTable.note} Valores de referencia para convertir rápido.</p>
+          <div class="v2-tbl">
+            <table>
+              <thead><tr><th>{converterTable.from} ({converterTable.fromU})</th><th class="num">{converterTable.to} ({converterTable.toU})</th></tr></thead>
+              <tbody>
+                {converterTable.rows.map((r: string[]) => (
+                  <tr><td>{r[0]} {converterTable.fromU}</td><td class="num">{r[1]} {converterTable.toU}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {converterTable.revSlug && <p class="v2-tbl-note">¿Al revés? <a href={P(converterTable.revSlug)}>Convertir de {converterTable.revLabel}</a>.</p>}
+        </div>
+      )}
+
+      {categoryHub && <CategoryHub title={categoryHub.title} subtitle={categoryHub.subtitle} sections={categoryHub.sections} />}
+    </section>
+
+    <!-- Panel Cómo funciona -->
+    <section class="v2-panel" id="v2-como" role="tabpanel">
+      {calc.explanation && (
+        <div class="v2-block" id="como-funciona" data-has-math={hasMath ? 'true' : 'false'}>
+          <h2>{L.howWorks}</h2>
+          <div set:html={md(calc.explanation)}></div>
+        </div>
+      )}
+
+      {example && example.steps && (
+        <div class="v2-block" id="ejemplo">
+          <h2>{example.title || 'Ejemplo paso a paso'}</h2>
+          <div class="v2-ledger">
+            {example.steps.map((s: string) => (
+              <div class="row"><span class="lab" set:html={md(s)}></span></div>
+            ))}
+            {example.result && <div class="row final"><span class="lab" set:html={md(example.result)}></span></div>}
+          </div>
+        </div>
+      )}
+
+      {solvedExamples.length > 0 && (
+        <div class="v2-block" id="casos-resueltos">
+          <h2>Casos resueltos</h2>
+          {solvedExamples.map((c: any, i: number) => (
+            <div style="margin-bottom:16px;">
+              <h3>Caso {i+1}{c.title ? `: ${c.title}` : ''}</h3>
+              {c.context && <p set:html={mdInline(c.context)}></p>}
+              {Array.isArray(c.steps) && (
+                <div class="v2-ledger">{c.steps.map((s: string) => <div class="row"><span class="lab" set:html={md(s)}></span></div>)}
+                  {c.result && <div class="row final"><span class="lab" set:html={md(c.result)}></span></div>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {calc.infographic && calc.infographic.src && (
+        <figure class="v2-block" style="text-align:center;">
+          <img src={calc.infographic.src} alt={calc.infographic.alt || calc.h1} width="1000" height="1500" loading="lazy" decoding="async" style="max-width:min(440px,100%);height:auto;border:1px solid var(--v2-line);border-radius:14px;" />
+          {calc.infographic.caption && <figcaption class="v2-tbl-note" style="margin-top:.6rem;">{calc.infographic.caption}</figcaption>}
+        </figure>
+      )}
+
+      {showYmyl && _disc && (
+        <div class="v2-disclaimer"><strong>Disclaimer:</strong> Los resultados son orientativos y no {_disc.verb}. Antes de tomar decisiones con impacto, consultá con un {_disc.who}.</div>
+      )}
+
+      {!hasComoFunciona && <div class="v2-block"><p>Esta calculadora aplica la fórmula directa sobre los datos que ingresás. Cargá los valores arriba para ver el resultado.</p></div>}
+    </section>
+
+    <!-- Panel Preguntas -->
+    <section class="v2-panel" id="v2-faq" role="tabpanel">
+      {calc.faq && calc.faq.length > 0 ? (
+        <div class="v2-block v2-faq" id="faq">
+          <h2>{L.faq}</h2>
+          {calc.faq.map((f: any) => (
+            <details>
+              <summary><span>{f.q}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></summary>
+              <div class="ans" set:html={md(f.a)}></div>
+            </details>
+          ))}
+        </div>
+      ) : (
+        <div class="v2-block"><h2>{L.faq}</h2><p>¿Tenés una duda sobre esta calculadora? Escribinos a <a href="mailto:ideas@hacecuentas.com">ideas@hacecuentas.com</a> y la sumamos.</p></div>
+      )}
+    </section>
+
+    <!-- Panel Fuentes -->
+    <section class="v2-panel" id="v2-fuentes" role="tabpanel">
+      {sources.length > 0 && (
+        <div class="v2-block" id="fuentes">
+          <h2>{L.sources}</h2>
+          <ul class="v2-sources">
+            {sources.map((s: any) => (
+              <li><cite>{s.url ? <a href={s.url} target="_blank" rel="noopener nofollow external">{s.name}</a> : s.name}{s.publisher && <span style="color:var(--v2-muted);"> — {s.publisher}</span>}{s.date && <span style="color:var(--v2-muted);"> ({s.date})</span>}</cite></li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div class="v2-block" id="metodologia">
+        <h2>{L.methodology}</h2>
+        <div class="v2-trust-grid">
+          <div class="v2-trust-item"><div class="tl">{L.editorial}</div><p>Calculadora de {catLabel.toLowerCase()} revisada por el equipo editorial de Hacé Cuentas{sources?.[0]?.name ? `, contrastada con ${sources[0].name}` : ''}, según nuestra <a href="/politica-editorial">política editorial</a> y <a href="/metodologia">metodología</a>.</p></div>
+          <div class="v2-trust-item"><div class="tl">{L.updateLbl}</div><p>Última revisión: <strong>{updated || updatedLabel}</strong>. Los parámetros se verifican periódicamente con las fuentes citadas.</p></div>
+          <div class="v2-trust-item"><div class="tl">{L.privacy}</div><p>{L.privacyTxt}</p></div>
+          <div class="v2-trust-item"><div class="tl">{L.limits}</div><p>{L.limitsTxt}</p></div>
+        </div>
+      </div>
+
+      <div class="v2-cite">
+        <span class="ct">{L.howCite}</span>
+        <p class="ref">Rodríguez, M. ({yearNow}). {calc.h1}. Hacé Cuentas. https://hacecuentas.com/{calc.slug}</p>
+        <p style="margin:0;">Contenido bajo licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> — reutilizable citando la fuente con enlace a <a href="/">Hacé Cuentas</a>.</p>
+      </div>
+
+      <p class="v2-tbl-note" style="margin-top:14px;"><a href={`mailto:errores@hacecuentas.com?subject=${reportSubject}&body=${reportBody}`}>✉️ Reportar un error en esta calculadora</a></p>
+    </section>
+  </div>
+
+  <!-- También te puede interesar -->
+  {relatedContextual.length > 0 && (
+    <>
+      <h2 class="v2-also-h">{L.alsoSee}</h2>
+      <div class="v2-also-grid">
+        {relatedContextual.map((c: any) => (
+          <a class="v2-also-card" href={P(c.slug)}>
+            <span class="ico" aria-hidden="true" style="font-size:24px;">{c.icon}</span>
+            <span><span style="font-weight:700;color:var(--v2-ink);font-size:14.5px;display:block;">{c.h1}</span><span style="font-size:13px;color:var(--v2-muted);">{c.description}</span></span>
+          </a>
+        ))}
+      </div>
+    </>
+  )}
+
+  <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={journeyRelated} lang={relatedLang} />
+
+  {pillarGuideSlug && pillarGuideTitle && (
+    <aside class="v2-guide">
+      <div class="gc-text">
+        <span class="eb">📘 ¿Querés entender más a fondo?</span>
+        <strong>Leé la guía: {pillarGuideTitle}</strong>
+        <span class="gd">Contexto, conceptos y cómo combinar calculadoras del tema.</span>
+      </div>
+      <a class="gb" href={`/guia/${pillarGuideSlug}`}>{L.guideOpen}</a>
+    </aside>
+  )}
+
+  {comparator && (
+    <aside class="v2-guide">
+      <div class="gc-text">
+        <span class="eb">{comparator.heroEmoji || '⚖️'} ¿Dudás entre opciones?</span>
+        <strong>Compará: {comparator.title}</strong>
+        <span class="gd">Tabla lado a lado, veredicto y cuándo conviene cada una.</span>
+      </div>
+      <a class="gb" href={`/comparar/${comparator.slug}`}>{L.compareOpen}</a>
+    </aside>
+  )}
+
+  {downloads.length > 0 && (
+    <div class="v2-downloads">
+      <div class="dh">{L.downloads}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:9px;">
+        {downloads.map((d) => (
+          <a href={d.href} download style="display:inline-flex;flex-direction:column;border:1px solid var(--v2-line);border-radius:10px;padding:9px 13px;font-size:13.5px;font-weight:600;color:var(--v2-ink);">{d.label}{d.description && <span style="font-weight:500;color:var(--v2-muted);">{d.description}</span>}</a>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <aside style="text-align:center;margin-top:34px;padding-top:26px;border-top:1px solid var(--v2-line);">
+    <p style="margin:0 0 8px;">¿Buscabas otra calculadora?</p>
+    <a href="/" style="display:inline-block;background:var(--v2-accent-bg);color:var(--v2-accent-ink);font-weight:700;border-radius:11px;padding:11px 18px;">{L.backAll}</a>
+  </aside>
+</article>
+
+{hasMath && (
+  <Fragment>
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'" />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.querySelector('#como-funciona'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false});"></script>
+  </Fragment>
+)}
+
+<script is:inline>
+// Tabs v2 (delegación, sirve para cualquier instancia)
+document.querySelectorAll('.calc-v2 .v2-tabnav').forEach((nav) => {
+  nav.addEventListener('click', (e) => {
+    const btn = e.target.closest('.v2-tab'); if (!btn) return;
+    const wrap = nav.closest('.v2-tabs');
+    wrap.querySelectorAll('.v2-tab').forEach((t) => t.setAttribute('aria-selected', 'false'));
+    wrap.querySelectorAll('.v2-panel').forEach((p) => p.classList.remove('active'));
+    btn.setAttribute('aria-selected', 'true');
+    wrap.querySelector('#' + btn.dataset.panel)?.classList.add('active');
+  });
+});
+</script>

@@ -37,7 +37,8 @@ for f in glob.glob('/Users/marrod/hacecuentas/src/content/calcs/*.json'):
         pass
 
 PREFIX2COUNTRY = {'mx': 'México', 'cl': 'Chile', 'co': 'Colombia', 'pe': 'Perú',
-                  'ec': 'Ecuador', 'pt': 'Brasil', 'es': 'España', 'en': 'Inglés/US'}
+                  'ec': 'Ecuador', 'pt': 'Brasil', 'pt-pt': 'Portugal', 'es': 'España', 'en': 'Inglés/US',
+                  've': 'Venezuela', 'py': 'Paraguay', 'uy': 'Uruguay', 'do': 'Rep. Dominicana'}
 AUD2COUNTRY = {'AR': 'Argentina', 'MX': 'México', 'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Perú',
                'EC': 'Ecuador', 'ES': 'España', 'BO': 'Bolivia', 'BR': 'Brasil', 'US': 'Inglés/US',
                'EN': 'Inglés/US', 'global': 'Global (raíz, sin país)'}
