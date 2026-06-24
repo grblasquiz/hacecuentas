@@ -1,0 +1,155 @@
+---
+/**
+ * NextCalcs — bloque "Seguí calculando" pegado al resultado (zona de mayor
+ * intención de navegación). Reemplaza al recuadro de chips v2-rel: tarjetas
+ * (icono + título + descripción + flecha) que invitan al siguiente cálculo.
+ *
+ * Multi-locale: resuelve las relacionadas contra el bucket de calcs del locale
+ * correcto (AR root, España, verticales, en/pt). Fuente, en orden:
+ *   1. cluster curado (solo AR; preserva el linking que daba el ClusterHub)
+ *   2. journey (AR; cluster-siblings + sección de guía + relatedSlugs + TF-IDF)
+ *   3. relatedSlugs curados del JSON + related-auto del locale (verticales)
+ *
+ * Glob idéntico al de RelatedCalcs.astro A PROPÓSITO: Vite comparte el chunk de
+ * contenido (~25MB) en vez de duplicarlo (límite CF 64MiB). No mover a lib/.
+ *
+ * Tracking: cada clic dispara next_calc_click (aditivo, guard typeof gtag) —
+ * recupera la medición de navegación interna que se perdió al migrar a V2.
+ */
+import { findClusterForSlug } from '../lib/clusters';
+import { getJourneySteps } from '../lib/journeys';
+import relatedAutoEs from '../lib/related-auto.json';
+import relatedAutoEn from '../lib/related-auto-en.json';
+import relatedAutoPt from '../lib/related-auto-pt.json';
+import relatedAutoCo from '../lib/related-auto-co.json';
+import relatedAutoMx from '../lib/related-auto-mx.json';
+import relatedAutoCl from '../lib/related-auto-cl.json';
+import relatedAutoPe from '../lib/related-auto-pe.json';
+import relatedAutoEc from '../lib/related-auto-ec.json';
+import relatedAutoEsEs from '../lib/related-auto-es.json';
+import relatedAutoVe from '../lib/related-auto-ve.json';
+import relatedAutoPy from '../lib/related-auto-py.json';
+import relatedAutoUy from '../lib/related-auto-uy.json';
+import relatedAutoDo from '../lib/related-auto-do.json';
+import relatedAutoPtPt from '../lib/related-auto-pt-pt.json';
+
+interface Props {
+  calc: any;
+  /** '' = AR root · 'es' = España · 'en' · 'pt' · 'pt-pt' · 'mx' | 'co' | 'cl' | 'pe' | 'ec' | 've' | 'py' | 'uy' | 'do' */
+  lang?: string;
+  title?: string;
+  limit?: number;
+}
+const { calc, lang = '', title, limit = 4 } = Astro.props as Props;
+const isAR = !lang;
+
+// Buckets de contenido por locale (mismos strings glob que RelatedCalcs → chunk compartido).
+const BUCKETS: Record<string, any> = {
+  '': import.meta.glob<any>('../content/calcs/*.json', { eager: true }),
+  es: import.meta.glob<any>('../content/calcs-es/*.json', { eager: true }),
+  en: import.meta.glob<any>('../content/calcs-en/*.json', { eager: true }),
+  pt: import.meta.glob<any>('../content/calcs-pt/*.json', { eager: true }),
+  'pt-pt': import.meta.glob<any>('../content/calcs-pt-pt/*.json', { eager: true }),
+  mx: import.meta.glob<any>('../content/calcs-mx/*.json', { eager: true }),
+  co: import.meta.glob<any>('../content/calcs-co/*.json', { eager: true }),
+  cl: import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true }),
+  pe: import.meta.glob<any>('../content/calcs-pe/*.json', { eager: true }),
+  ec: import.meta.glob<any>('../content/calcs-ec/*.json', { eager: true }),
+  ve: import.meta.glob<any>('../content/calcs-ve/*.json', { eager: true }),
+  py: import.meta.glob<any>('../content/calcs-py/*.json', { eager: true }),
+  uy: import.meta.glob<any>('../content/calcs-uy/*.json', { eager: true }),
+  do: import.meta.glob<any>('../content/calcs-do/*.json', { eager: true }),
+};
+const AUTOS: Record<string, any> = {
+  '': relatedAutoEs, es: relatedAutoEsEs, en: relatedAutoEn, pt: relatedAutoPt, 'pt-pt': relatedAutoPtPt,
+  mx: relatedAutoMx, co: relatedAutoCo, cl: relatedAutoCl, pe: relatedAutoPe, ec: relatedAutoEc,
+  ve: relatedAutoVe, py: relatedAutoPy, uy: relatedAutoUy, do: relatedAutoDo,
+};
+
+const modules = BUCKETS[lang] || BUCKETS[''];
+const relatedAuto = (AUTOS[lang] || relatedAutoEs) as Record<string, string[]>;
+const linkPrefix = lang ? `/${lang}/` : '/';
+
+const allCalcs = Object.values(modules).map((m: any) => m.default || m).filter((c: any) => c && c.slug);
+const bySlug = new Map<string, any>(allCalcs.map((c: any) => [c.slug, c]));
+
+const relatedSlugs: string[] = calc.relatedSlugs || [];
+const cluster = isAR ? findClusterForSlug(calc.slug) : null;
+const journeySlugs = isAR ? getJourneySteps(calc.slug, relatedSlugs, 6) : [];
+const autoSlugs: string[] = relatedAuto[calc.slug] || [];
+
+// Orden de prioridad de candidatos.
+let candidates: string[];
+if (cluster?.items?.length) candidates = cluster.items.map((it: any) => it.slug);
+else if (journeySlugs.length) candidates = journeySlugs;
+else candidates = [...relatedSlugs, ...autoSlugs];
+
+// Descripción para la tarjeta: saca emoji/símbolos iniciales (redundantes con el
+// icono) y el prefijo "Nombre: …" repetido del título → queda la frase útil.
+const cardDesc = (d: string): string => {
+  let t = (d || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+  const ci = t.indexOf(':');
+  if (ci > 0 && ci < 60) t = t.slice(ci + 1).trim();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+};
+
+const seen = new Set<string>([calc.slug]);
+const items: Array<{ slug: string; name: string; icon: string; description: string }> = [];
+for (const s of candidates) {
+  if (seen.has(s)) continue;
+  seen.add(s);
+  const c = bySlug.get(s);
+  if (!c) continue;
+  items.push({ slug: c.slug, name: c.h1 || c.title || c.slug, icon: c.icon, description: cardDesc(c.description) });
+  if (items.length >= limit) break;
+}
+
+const headerTitle = title || (lang === 'en' ? '🧮 Keep calculating' : lang === 'pt' || lang === 'pt-pt' ? '🧮 Continue calculando' : '🧮 Seguí calculando');
+---
+
+{items.length > 0 && (
+  <div class="v2-next" data-next-calcs>
+    <div class="v2-next-label">{headerTitle}</div>
+    <div class="v2-next-grid">
+      {items.map((t, i) => (
+        <a class="v2-next-card" href={`${linkPrefix}${t.slug}`} data-next-slug={t.slug} data-next-pos={i + 1}>
+          <span class="v2-next-ico" aria-hidden="true">{t.icon || '🧮'}</span>
+          <span class="v2-next-body">
+            <span class="v2-next-title">{t.name}</span>
+            {t.description && <span class="v2-next-desc">{t.description}</span>}
+          </span>
+          <span class="v2-next-arrow" aria-hidden="true">→</span>
+        </a>
+      ))}
+    </div>
+  </div>
+)}
+
+<style>
+  /* Hereda las var(--v2-*) del ancestro .calc-v2; scoped al componente. */
+  .v2-next { margin: 0 0 26px; }
+  .v2-next-label { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--v2-accent-ink); margin-bottom: 11px; display: flex; align-items: center; gap: 7px; }
+  .v2-next-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .v2-next-card { display: flex; align-items: center; gap: 11px; background: #fff; border: 1px solid var(--v2-line); border-radius: 14px; padding: 12px 14px; text-decoration: none; transition: border-color .15s, box-shadow .15s, transform .15s; }
+  .v2-next-card:hover { border-color: var(--v2-accent); box-shadow: var(--v2-shadow); transform: translateY(-1px); }
+  .v2-next-ico { flex-shrink: 0; width: 42px; height: 42px; border-radius: 11px; background: var(--v2-accent-bg); display: grid; place-items: center; font-size: 21px; }
+  .v2-next-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .v2-next-title { font-weight: 700; color: var(--v2-ink); font-size: 14.5px; line-height: 1.25; }
+  .v2-next-desc { font-size: 12.5px; color: var(--v2-muted); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .v2-next-arrow { margin-left: auto; color: var(--v2-accent); font-weight: 700; font-size: 17px; flex-shrink: 0; transition: transform .15s; }
+  .v2-next-card:hover .v2-next-arrow { transform: translateX(2px); }
+</style>
+
+<script is:inline>
+  document.querySelectorAll('[data-next-calcs] a[data-next-slug]').forEach(function (a) {
+    a.addEventListener('click', function () {
+      try {
+        if (typeof window.gtag === 'function') window.gtag('event', 'next_calc_click', {
+          link_slug: a.getAttribute('data-next-slug'),
+          source_slug: location.pathname.replace(/^\//, ''),
+          position: Number(a.getAttribute('data-next-pos')),
+        });
+      } catch (e) {}
+    }, { passive: true });
+  });
+</script>

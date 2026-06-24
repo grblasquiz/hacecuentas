@@ -16,6 +16,7 @@
 import Calculator from './Calculator.astro';
 import { getDatosSource } from '../lib/datos-source-map';
 import RelatedCalcs from './RelatedCalcs.astro';
+import NextCalcs from './NextCalcs.astro';
 import CategoryIcon from './CategoryIcon.astro';
 import FavoriteStar from './FavoriteStar.astro';
 import LiveData from './LiveData.astro';
@@ -181,17 +182,11 @@ const audienceRedirect = calc.audienceRedirect || null;
 const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
 const relatedSlugs: string[] = calc.relatedSlugs || [];
-const relatedContextual = lang ? [] : relatedSlugs.map((s) => allCalcs.find((c) => c.slug === s)).filter(Boolean);
 const journeySlugs = getJourneySteps(calc.slug, relatedSlugs, 6);
 const _clusterSlugs = new Set((cluster?.items || []).map((it: any) => it.slug));
 const journeyRelated = (journeySlugs.length ? journeySlugs : relatedSlugs).filter((s) => !_clusterSlugs.has(s));
-// Chips del recuadro "Herramientas relacionadas" (UNA sola sección, DEBAJO del calc,
-// como en el prototipo aprobado). Fuente: los items curados del cluster si existe
-// (así no perdemos ese linking interno que antes daba el ClusterHub), si no el journey.
-const relTools = lang ? [] : (cluster?.items?.length
-  ? cluster.items.filter((it: any) => it.slug !== calc.slug).map((it: any) => ({ slug: it.slug, name: it.label, icon: it.icon }))
-  : journeySlugs.map((s) => allCalcs.find((c) => c.slug === s)).filter(Boolean).map((c: any) => ({ slug: c.slug, name: c.h1, icon: c.icon }))
-).slice(0, 6);
+// "Seguí calculando" (recirculación pegada al resultado, multi-locale + tracking)
+// vive ahora en NextCalcs.astro — autocontenido, un solo punto de mantenimiento.
 
 // hasMath: SOLO LaTeX real. No usar `$...$` pelado porque la moneda ($166.669 … $0)
 // da falso positivo y KaTeX rompe las tablas de la explanation. Requerimos display
@@ -258,17 +253,9 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
   {calc.slug === 'dias-entre-dos-fechas' && <DateRangePresetsTable />}
   {calc.slug === 'calculadora-actualizacion-alquiler-icl' && <IclVsIpcVsUvaTable />}
 
-  <!-- Herramientas relacionadas: UNA sola sección, recuadro destacado, DEBAJO del calc -->
-  {relTools.length > 0 && (
-    <div class="v2-rel">
-      <div class="v2-rel-label">{L.relTools}</div>
-      <div class="v2-rel-chips">
-        {relTools.map((t: any) => (
-          <a class="v2-rel-chip" href={P(t.slug)}><span aria-hidden="true">{t.icon || '🧮'}</span> {t.name}</a>
-        ))}
-      </div>
-    </div>
-  )}
+  <!-- Seguí calculando: recirculación pegada al resultado. En NextCalcs.astro
+       (multi-locale + tracking next_calc_click). -->
+  <NextCalcs calc={calc} lang={lang} />
 
   <!-- Respuesta rápida (keyTakeaway / AEO) — visible, fuera de tabs -->
   {keyTakeaway && (
@@ -473,20 +460,9 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
     </section>
   </div>
 
-  <!-- También te puede interesar -->
-  {relatedContextual.length > 0 && (
-    <>
-      <h2 class="v2-also-h">{L.alsoSee}</h2>
-      <div class="v2-also-grid">
-        {relatedContextual.map((c: any) => (
-          <a class="v2-also-card" href={P(c.slug)}>
-            <span class="ico" aria-hidden="true" style="font-size:24px;">{c.icon}</span>
-            <span><span style="font-weight:700;color:var(--v2-ink);font-size:14.5px;display:block;">{c.h1}</span><span style="font-size:13px;color:var(--v2-muted);">{c.description}</span></span>
-          </a>
-        ))}
-      </div>
-    </>
-  )}
+  {/* "También te puede interesar" se removió: era redundante con el bloque
+      "Seguí calculando" de arriba (misma fuente relatedSlugs). La malla SEO del
+      pie la cubre <RelatedCalcs/>, que además linkea al hub de categoría. */}
 
   <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={journeyRelated} lang={relatedLang} />
 
