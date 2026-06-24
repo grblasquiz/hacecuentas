@@ -14,6 +14,7 @@
  * no tiene contenido, muestra un fallback corto (no queda vacía).
  */
 import Calculator from './Calculator.astro';
+import { getDatosSource } from '../lib/datos-source-map';
 import RelatedCalcs from './RelatedCalcs.astro';
 import CategoryIcon from './CategoryIcon.astro';
 import FavoriteStar from './FavoriteStar.astro';
@@ -155,6 +156,10 @@ const updated = (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReview
 
 // Campos de contenido
 const sources: Array<{ name:string; url?:string; publisher?:string; date?:string }> = calc.sources || [];
+// Página-dato canónica del sitio (Dataset+CC-BY) para este calc, o null. Se
+// renderiza como enlace interno DOFOLLOW en el panel Fuentes → concentra
+// autoridad en las /datos-* (grounding Gemini/AIO). Ver datos-source-map.ts.
+const datosSource = getDatosSource(calc);
 const useCases: Array<string | {title?:string;description?:string}> = calc.useCases || [];
 const example = calc.example || null;
 const solvedExamples = Array.isArray(calc.solvedExamples) ? calc.solvedExamples : [];
@@ -431,6 +436,12 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
 
     <!-- Panel Fuentes -->
     <section class="v2-panel" id="v2-fuentes" role="tabpanel">
+      {datosSource && (
+        <div class="v2-block" id="datos-fuente">
+          <h2>Datos completos y verificables</h2>
+          <p style="margin:0;">Tabla de referencia oficial, citable y actualizada (CC-BY): <a href={datosSource.url}>📊 {datosSource.label}</a>.</p>
+        </div>
+      )}
       {sources.length > 0 && (
         <div class="v2-block" id="fuentes">
           <h2>{L.sources}</h2>
