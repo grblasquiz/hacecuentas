@@ -106,6 +106,8 @@ export function alquilerIcl(i: Inputs): Outputs {
       chAumento: 'Aumento ICL',
       chCenter: 'Nuevo',
       chAria: (a: string, b: string) => `Alquiler actual ${a} más el aumento por ICL, total ${b}.`,
+      warnSpan:
+        'Ojo: el período supera los 2 años. El ICL se re-aplica en **cada** ajuste (cada 6 a 12 meses), no de una sola vez. Si el alquiler que pagás hoy ya tuvo aumentos desde la firma, no uses la fecha de firma original: como inicio poné la fecha de tu **último ajuste**, porque ese monto ya incluye los aumentos previos. Si no, estás contando la inflación dos veces y el número se dispara.',
     },
     en: {
       errValor: 'Enter the current rent amount',
@@ -125,6 +127,8 @@ export function alquilerIcl(i: Inputs): Outputs {
       chAumento: 'ICL increase',
       chCenter: 'New',
       chAria: (a: string, b: string) => `Current rent ${a} plus the ICL increase, total ${b}.`,
+      warnSpan:
+        "Heads up: the period is over 2 years. The ICL re-applies at **each** adjustment (every 6 to 12 months), not all at once. If the rent you pay today already had increases since signing, don't use the original signing date: set the start to your **last adjustment** date, since that amount already includes the prior increases. Otherwise you count inflation twice and the number balloons.",
     },
     pt: {
       errValor: 'Informe o valor atual do aluguel',
@@ -144,6 +148,8 @@ export function alquilerIcl(i: Inputs): Outputs {
       chAumento: 'Aumento ICL',
       chCenter: 'Novo',
       chAria: (a: string, b: string) => `Aluguel atual ${a} mais o aumento por ICL, total ${b}.`,
+      warnSpan:
+        'Atenção: o período passa de 2 anos. O ICL é reaplicado a **cada** ajuste (a cada 6 a 12 meses), não de uma só vez. Se o aluguel que você paga hoje já teve aumentos desde a assinatura, não use a data de assinatura original: coloque como início a data do seu **último ajuste**, pois esse valor já inclui os aumentos anteriores. Senão, você conta a inflação duas vezes e o número dispara.',
     },
   } as const)[lang];
 
@@ -205,13 +211,25 @@ export function alquilerIcl(i: Inputs): Outputs {
         fmtFecha(fechaInicioUsada)
       );
 
+  // Span en meses (solo modo fechas): detecta el error típico de anclar un
+  // alquiler YA actualizado a la fecha de firma original → doble conteo de
+  // inflación y coeficiente disparado (ej: 2022→2026 ≈ 19×, un falso "anda mal").
+  let spanMeses = 0;
+  if (!modoManual && validDate(fInicio) && validDate(fAjuste)) {
+    const [yi, mi] = fInicio.split('-').map(Number);
+    const [ya, ma] = fAjuste.split('-').map(Number);
+    spanMeses = (ya - yi) * 12 + (ma - mi);
+  }
+  const periodoLargo = spanMeses >= 25;
+
+  const insightText = modoManual
+    ? T.insManual(pctStr, coefStr)
+    : T.insFechas(pctStr, coefStr, fmtFecha(fechaInicioUsada), fmtFecha(fechaActualizacionUsada));
   const insight = {
     title: T.insTitle(money(valorR), money(actualizado)),
-    text: modoManual
-      ? T.insManual(pctStr, coefStr)
-      : T.insFechas(pctStr, coefStr, fmtFecha(fechaInicioUsada), fmtFecha(fechaActualizacionUsada)),
-    tone: 'neutral' as const,
-    icon: '🏠',
+    text: periodoLargo ? insightText + ' ' + T.warnSpan : insightText,
+    tone: (periodoLargo ? 'warn' : 'neutral') as 'warn' | 'neutral',
+    icon: periodoLargo ? '⚠️' : '🏠',
   };
 
   // Donut: parte "alquiler actual" + parte "aumento" → el centro muestra el nuevo total.
