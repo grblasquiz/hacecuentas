@@ -1,0 +1,188 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { fixture, LIVE_FIXTURE_URL, teamLabel, kickoffUTC } from '../../lib/data/mundial-2026';
+import { teamMatches } from '../../lib/mundial-live';
+
+// Versão em PORTUGUÊS de "quando joga o Brasil" — vertical pt (Brasil), horário
+// de Brasília. As 6 versões em espanhol (México/Colômbia/etc.) ficam em
+// /cuando-juega-[equipo]-mundial-2026; esta é standalone porque precisa de
+// nomes de adversários e rótulos de fase em português (teamLabel devolve ES).
+const TEAM = 'Brazil';
+const TZ = 'America/Sao_Paulo';
+const LOCALE = 'pt-BR';
+
+// Nomes das seleções em português (teamLabel só tem ES). Fallback ao ES p/ raros.
+const PT_TEAMS: Record<string, string> = {
+  Brazil: 'Brasil', Morocco: 'Marrocos', Haiti: 'Haiti', Scotland: 'Escócia',
+  Argentina: 'Argentina', Mexico: 'México', Colombia: 'Colômbia', Ecuador: 'Equador',
+  Uruguay: 'Uruguai', Paraguay: 'Paraguai', Spain: 'Espanha', France: 'França',
+  Germany: 'Alemanha', England: 'Inglaterra', Portugal: 'Portugal', Netherlands: 'Países Baixos',
+  Belgium: 'Bélgica', Croatia: 'Croácia', Switzerland: 'Suíça', Japan: 'Japão',
+  'South Korea': 'Coreia do Sul', 'South Africa': 'África do Sul', USA: 'Estados Unidos',
+  Canada: 'Canadá', Australia: 'Austrália', 'New Zealand': 'Nova Zelândia', Senegal: 'Senegal',
+  'Ivory Coast': 'Costa do Marfim', Ghana: 'Gana', Egypt: 'Egito', Tunisia: 'Tunísia',
+  Algeria: 'Argélia', 'Cape Verde': 'Cabo Verde', 'DR Congo': 'RD Congo', Nigeria: 'Nigéria',
+  Iran: 'Irã', Iraq: 'Iraque', 'Saudi Arabia': 'Arábia Saudita', Qatar: 'Catar',
+  Jordan: 'Jordânia', Uzbekistan: 'Uzbequistão', Austria: 'Áustria', Norway: 'Noruega',
+  Sweden: 'Suécia', 'Czech Republic': 'República Tcheca', Turkey: 'Turquia', Panama: 'Panamá',
+  Curaçao: 'Curaçao', 'Bosnia & Herzegovina': 'Bósnia e Herzegovina',
+};
+function ptTeam(name: string | null): { name: string; flag: string } {
+  const b = teamLabel(name);
+  if (b.tbd) return { name: b.es.replace('Ganador', 'Vencedor').replace('Perdedor', 'Perdedor').replace(/\.º/g, 'º'), flag: b.flag };
+  return { name: (name && PT_TEAMS[name]) || b.es, flag: b.flag };
+}
+function ptRound(round: string): string {
+  const md = round.match(/^Matchday (\d+)$/);
+  if (md) return `Rodada ${md[1]}`;
+  const map: Record<string, string> = {
+    'Round of 32': '16 avos de final', 'Round of 16': 'Oitavas de final',
+    'Quarter-final': 'Quartas de final', 'Quarter-finals': 'Quartas de final',
+    'Semi-final': 'Semifinais', 'Semi-finals': 'Semifinais',
+    'Match for third place': 'Disputa de 3º lugar', 'Third-place match': 'Disputa de 3º lugar',
+    Final: 'Final',
+  };
+  return map[round] || round;
+}
+
+const locTime = (date: string | null, time: string | null) => {
+  const d = kickoffUTC(date, time);
+  return d ? new Intl.DateTimeFormat(LOCALE, { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(d) : '';
+};
+const locDay = (date: string | null, time: string | null) => {
+  const d = kickoffUTC(date, time);
+  return d ? new Intl.DateTimeFormat(LOCALE, { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' }).format(d) : (date || '');
+};
+
+const { mine, next } = teamMatches(fixture.matches, TEAM);
+const nextKO = next ? kickoffUTC(next.date, next.time) : null;
+const rivalOf = (m: any) => (m.team1 === TEAM ? m.team2 : m.team1);
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/pt/quando-joga-brasil-copa-2026`;
+const title = 'Quando joga o Brasil na Copa do Mundo 2026? Próximo jogo, dia e hora | Hacé Cuentas';
+const description = next
+  ? `O próximo jogo do Brasil na Copa 2026 é contra ${ptTeam(rivalOf(next)).name}, ${locDay(next.date, next.time)} às ${locTime(next.date, next.time)} (horário de Brasília). Calendário completo da Seleção, ao vivo.`
+  : 'Calendário do Brasil na Copa do Mundo 2026: dias, horários (horário de Brasília) e resultados, ao vivo.';
+const updated = new Intl.DateTimeFormat(LOCALE, { timeZone: TZ, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fixture.fetchedAt));
+
+const faq = [
+  { q: 'Quando é o próximo jogo do Brasil?', a: next ? `O Brasil joga contra ${ptTeam(rivalOf(next)).name} ${locDay(next.date, next.time)} às ${locTime(next.date, next.time)} (horário de Brasília), pela ${ptRound(next.round)}.` : 'O calendário se atualiza sozinho; quando o próximo jogo for confirmado, aparece aqui com dia e horário de Brasília.' },
+  { q: 'Em que horário o Brasil joga?', a: 'Os horários desta página já estão convertidos para o horário de Brasília (BRT). A Copa de 2026 acontece nos Estados Unidos, México e Canadá, então a maioria dos jogos é à tarde/noite no Brasil.' },
+  { q: 'De quanto em quanto tempo atualiza?', a: 'Atualiza sozinho com o feed aberto do openfootball: ao abrir a página, já traz o calendário e os resultados mais recentes.' },
+];
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: `${SITE}/pt` },
+    { '@type': 'ListItem', position: 2, name: 'Quando joga o Brasil?', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+const liveConfig = { url: LIVE_FIXTURE_URL, team: TEAM, nextKO: nextKO ? nextKO.toISOString() : null };
+---
+
+<Layout title={title} description={description} canonical="/pt/quando-joga-brasil-copa-2026" lang="pt" audience="BR" schema={schema}>
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/pt">Início</a> › <span>Quando joga o Brasil?</span></nav>
+    <h1>🇧🇷 Quando joga o Brasil na Copa do Mundo 2026?</h1>
+
+    {next ? (
+      <section class="next-card" data-next>
+        <div class="next-label">Próximo jogo · {ptRound(next.round)}</div>
+        <div class="next-teams">{ptTeam(next.team1).flag} {ptTeam(next.team1).name} <span class="vs">x</span> {ptTeam(next.team2).name} {ptTeam(next.team2).flag}</div>
+        <div class="next-when">{locDay(next.date, next.time)} · <strong>{locTime(next.date, next.time)}</strong> (horário de Brasília){next.ground ? ` · ${next.ground}` : ''}</div>
+        <div class="countdown" data-countdown aria-live="polite">—</div>
+      </section>
+    ) : (
+      <section class="next-card"><div class="next-when">Quando o próximo jogo do Brasil for confirmado, aparece aqui com dia e horário de Brasília.</div></section>
+    )}
+
+    <p class="updated">Última atualização: <span data-live-updated>{updated}</span> · horário de Brasília (BRT)</p>
+
+    <section>
+      <h2>Calendário do Brasil na Copa</h2>
+      <div class="matches" data-matches>
+        {mine.map((m: any) => {
+          const played = !!(m.score && m.score.ft);
+          return (
+            <div class={`m ${played ? 'done' : ''}`}>
+              <div class="m-round">{ptRound(m.round)}</div>
+              <div class="m-body">
+                <span>{ptTeam(m.team1).flag} {ptTeam(m.team1).name}</span>
+                <span class="m-mid">{played && m.score?.ft ? `${m.score.ft[0]} - ${m.score.ft[1]}` : 'x'}</span>
+                <span>{ptTeam(m.team2).name} {ptTeam(m.team2).flag}</span>
+              </div>
+              <div class="m-when">{played ? 'Encerrado' : `${locDay(m.date, m.time)} · ${locTime(m.date, m.time)}`}</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <section class="links">
+      <h2>Acompanhe a Copa</h2>
+      <ul>
+        <li><a href="/fixture-mundial-2026">📅 Tabela de jogos completa (ao vivo)</a></li>
+        <li><a href="/posiciones-mundial-2026">🏆 Classificação dos grupos</a></li>
+        <li><a href="/goleadores-mundial-2026">⚽ Artilheiros</a></li>
+        <li><a href="/llave-mundial-2026">🗂️ Chave do mata-mata</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Perguntas frequentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    const el = document.querySelector('[data-countdown]');
+    function tick() {
+      if (!el || !cfg.nextKO) return;
+      const diff = new Date(cfg.nextKO).getTime() - Date.now();
+      if (diff <= 0) { el.textContent = 'Em jogo ou prestes a começar!'; return; }
+      const d = Math.floor(diff / 86400000), h = Math.floor(diff % 86400000 / 3600000), mm = Math.floor(diff % 3600000 / 60000);
+      el.textContent = (d > 0 ? d + 'd ' : '') + h + 'h ' + mm + 'm';
+    }
+    if (cfg.nextKO) { tick(); setInterval(tick, 60000); }
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.5rem, 4.5vw, 2.05rem); font-weight: 800; margin: 0 0 1rem; }
+  .next-card { background: linear-gradient(135deg, var(--accent-soft), var(--bg-card)); border: 1px solid var(--accent); border-radius: var(--radius); padding: 1.25rem; text-align: center; margin-bottom: 0.75rem; }
+  .next-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); font-weight: 700; }
+  .next-teams { font-size: 1.35rem; font-weight: 800; margin: 0.5rem 0; }
+  .vs { color: var(--text-subtle); font-weight: 600; font-size: 0.9rem; }
+  .next-when { font-size: 0.95rem; color: var(--text-muted); }
+  .countdown { font-size: 1.5rem; font-weight: 800; color: var(--accent); margin-top: 0.6rem; font-variant-numeric: tabular-nums; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.75rem; }
+  h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem; }
+  .matches { display: flex; flex-direction: column; gap: 0.5rem; }
+  .m { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; }
+  .m.done { opacity: 0.82; }
+  .m-round { font-size: 0.68rem; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; }
+  .m-body { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin: 0.25rem 0; gap: 0.5rem; }
+  .m-mid { color: var(--accent); }
+  .m-when { font-size: 0.82rem; color: var(--text-muted); }
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links h2, .faq h2 { font-size: 1.2rem; }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>
