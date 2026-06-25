@@ -90,7 +90,10 @@ async function getRecipients(env) {
 
 // ── plantilla del email ─────────────────────────────────────────────────────
 const FONT = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-const LOGO_URL = `${SELF_BASE}/brand.png`;
+// El logo se sirve desde hacecuentas.com (mismo dominio que las OG): Gmail no
+// proxea bien imágenes desde workers.dev. El worker mantiene /brand.png igual
+// como fallback, pero el email usa la URL del sitio.
+const LOGO_URL = 'https://hacecuentas.com/brand-email.png';
 
 /** Primera oración del snippet (hook escaneable, no un bloque denso). */
 function shortDesc(s) {
