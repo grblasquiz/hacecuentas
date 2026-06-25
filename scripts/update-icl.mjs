@@ -79,3 +79,12 @@ out = out.replace(/\/\/ Total: \d+ días/, `// Total: ${totalDias} días`);
 
 await fs.writeFile(FILE, out);
 console.log(`[icl] +${nuevos.length} días (hasta ${ultimo.fecha} = ${fmtNum(ultimo.valor)}). Total: ${totalDias}.`);
+
+// Regenerar las tablas de referencia data-driven del calc (info-gain crawlable:
+// "ICL hoy", "coeficiente ICL {mes}") a partir de la serie recién actualizada.
+// Aislado en try: si falla, el update del índice igual quedó persistido.
+try {
+  await import('./gen-icl-tables.mjs');
+} catch (e) {
+  console.warn('[icl] aviso: no se pudieron regenerar las tablas del calc:', e.message);
+}

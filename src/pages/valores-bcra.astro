@@ -6,9 +6,10 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import bcraIndicesRaw from '../lib/bcra-indices.json';
 import { getPlazoFijoTop } from '../lib/plazo-fijo';
+import { ICL_VALORES, ICL_LAST_UPDATED } from '../lib/formulas/_bcra-icl';
 
-const title = 'Valores BCRA Hoy: Dólar, Inflación, UVA y Tasas';
-const description = 'Dashboard con dólar oficial, MEP, blue, CCL, tarjeta, UVA del día, inflación INDEC mensual y anual, TNA plazo fijo. Datos oficiales BCRA/INDEC actualizados.';
+const title = 'Valores BCRA Hoy: Dólar, Inflación, UVA, ICL y Tasas';
+const description = 'Dashboard con dólar oficial, MEP, blue, CCL, tarjeta, UVA del día, inflación INDEC mensual y anual, ICL para alquileres y TNA plazo fijo. Datos oficiales BCRA/INDEC actualizados.';
 
 // Fetch en build-time con fallbacks seguros
 async function safeFetch<T>(url: string, fallback: T): Promise<T> {
@@ -109,12 +110,18 @@ const uvaHoy = ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : 'el valor del día';
 const ipcMensualTxt = ultimoIpc ? `${ultimoIpc.valor.toFixed(1)}%` : 'el último dato del INDEC';
 const ipcAnualTxt = ultimaIpcAnual ? `${ultimaIpcAnual.valor.toFixed(1)}%` : 'el último interanual';
 
+// ICL (Índice de Contratos de Locación) — ajuste de alquileres. Data oficial BCRA
+// (serie diaria en _bcra-icl.ts). La exponemos acá para servir "ICL hoy / valor ICL".
+const iclHoy = ICL_VALORES.at(-1) ?? null;
+const iclFmt = iclHoy != null ? iclHoy.toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : null;
+
 const pct = (n: number) => `${n.toFixed(2).replace('.', ',')}%`;
 // Cards de tasas/índices BCRA (server-rendered, crawleables).
 const tasasBcra: { label: string; value: string; sub: string; fecha: string }[] = [
   badlar && { label: 'BADLAR', value: pct(badlar.valor), sub: 'Plazo fijo mayorista (>$1M), bancos privados', fecha: badlar.fecha },
   tamar && { label: 'TAMAR', value: pct(tamar.valor), sub: 'Tasa mayorista de referencia del BCRA', fecha: tamar.fecha },
   cer && { label: 'CER', value: fmtAr(cer.valor), sub: 'Coef. de Estabilización de Referencia (indexa la UVA)', fecha: cer.fecha },
+  iclHoy != null && { label: 'ICL', value: iclFmt ?? '', sub: 'Índice de Contratos de Locación — ajuste de alquileres', fecha: ICL_LAST_UPDATED },
   riesgoPais && { label: 'Riesgo país', value: `${Math.round(riesgoPais.valor)} pb`, sub: 'EMBI+ Argentina (puntos básicos)', fecha: riesgoPais.fecha },
 ].filter(Boolean) as { label: string; value: string; sub: string; fecha: string }[];
 
@@ -123,6 +130,7 @@ const resumenParts: string[] = [];
 if (dolarMap.blue?.venta) resumenParts.push(`el dólar blue cotiza a $${fmtAr(dolarMap.blue.venta)}`);
 if (dolarMap.oficial?.venta) resumenParts.push(`el oficial a $${fmtAr(dolarMap.oficial.venta)}`);
 if (ultimaUva) resumenParts.push(`la UVA vale $${fmtAr(ultimaUva.valor)}`);
+if (iclHoy != null) resumenParts.push(`el ICL para alquileres está en ${iclFmt}`);
 if (ultimoIpc) resumenParts.push(`la inflación mensual fue ${ultimoIpc.valor.toFixed(1).replace('.', ',')}%`);
 if (badlar) resumenParts.push(`la tasa BADLAR rinde ${pct(badlar.valor)} anual`);
 if (riesgoPais) resumenParts.push(`y el riesgo país está en ${Math.round(riesgoPais.valor)} puntos`);
@@ -140,6 +148,10 @@ const breadcrumbSchema = {
 };
 
 const faqs: { q: string; a: string }[] = [
+  {
+    q: '¿Cuánto vale el ICL hoy y cómo se ajusta un alquiler?',
+    a: `El <strong>ICL (Índice de Contratos de Locación)</strong> del BCRA está en <strong>${iclFmt ?? 'el último dato'}</strong>${iclHoy != null ? ` al ${fmtDate(ICL_LAST_UPDATED)}` : ''}. Se publica a diario y combina 50% inflación (IPC) y 50% salarios (RIPTE). Para ajustar un alquiler se divide el ICL del día del ajuste por el del día de inicio del período; hacé la cuenta automática en la <a href="/calculadora-actualizacion-alquiler-icl">calculadora de actualización de alquiler por ICL</a>.`,
+  },
   {
     q: '¿Cuánto vale la UVA hoy?',
     a: `La UVA (Unidad de Valor Adquisitivo) está en <strong>${uvaHoy}</strong>${ultimaUva ? ` al ${fmtDate(ultimaUva.fecha)}` : ''}, según el BCRA. La UVA se ajusta diariamente por el CER (que sigue a la inflación) con un rezago de unos 45 días, así que su valor sube prácticamente todos los días. La tabla de arriba muestra su evolución mes a mes.`,
@@ -183,7 +195,7 @@ const schema = {
   '@type': 'Dataset',
   name: 'Valores BCRA y INDEC hoy',
   description: 'Dólar oficial, blue, MEP, CCL y tarjeta; inflación INDEC mensual e interanual; UVA y tasas de plazo fijo de Argentina.',
-  keywords: 'dolar hoy, dolar blue, inflación INDEC, UVA BCRA, valor uva hoy, plazo fijo TNA, valores BCRA',
+  keywords: 'dolar hoy, dolar blue, inflación INDEC, UVA BCRA, valor uva hoy, plazo fijo TNA, valores BCRA, ICL hoy, valor ICL BCRA, coeficiente ICL alquiler',
   creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
   license: 'https://hacecuentas.com/terminos',
   url: 'https://hacecuentas.com/valores-bcra',
