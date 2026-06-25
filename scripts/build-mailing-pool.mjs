@@ -102,6 +102,7 @@ for (const { slug } of ranked) {
     title: cleanText(j.h1 || j.title),
     answer_snippet: truncate(snippet, 320),
     category: j.category || '',
+    icon: (j.icon || '').trim(),
     url: `https://hacecuentas.com/${slug}`,
     rank: pool.length + 1,
   });
@@ -120,8 +121,8 @@ const sqlLines = [
 ];
 for (const c of pool) {
   sqlLines.push(
-    `INSERT OR REPLACE INTO mailing_pool (slug, title, answer_snippet, category, url, rank) VALUES (` +
-    `${sqlStr(c.slug)}, ${sqlStr(c.title)}, ${sqlStr(c.answer_snippet)}, ${sqlStr(c.category)}, ${sqlStr(c.url)}, ${c.rank});`,
+    `INSERT OR REPLACE INTO mailing_pool (slug, title, answer_snippet, category, icon, url, rank) VALUES (` +
+    `${sqlStr(c.slug)}, ${sqlStr(c.title)}, ${sqlStr(c.answer_snippet)}, ${sqlStr(c.category)}, ${sqlStr(c.icon)}, ${sqlStr(c.url)}, ${c.rank});`,
   );
 }
 fs.writeFileSync(path.join(ROOT, 'db/mailing-pool.sql'), sqlLines.join('\n') + '\n');
