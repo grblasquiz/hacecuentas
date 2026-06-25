@@ -12,4 +12,10 @@
 //       siga alimentando ad_storage/analytics_storage de GA4/Ads en la UE.
 //  - Tráfico: anuncios a TODO el tráfico (sin gate por source). Si Google Ads
 //    flaggea arbitraje en el 70% pago, gatear acá por gclid/utm=cpc.
+//
+// GO-LIVE 2026-06-25: true para que los header scripts estén vivos y Ezoic pase
+//    su "check connection" (lo necesita Martin para destrabar el panel). Pendiente
+//    en el panel Ezoic: (1) ads.txt → manager, (2) placements, (3) "Google Consent
+//    Mode" ON, (4) CMP geo-targeteado a GDPR-only (no global, así AR/LATAM no ve
+//    banner). Rollback instantáneo = volver a false + redeploy.
 export const EZOIC_ENABLED = true;

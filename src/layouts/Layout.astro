@@ -1,6 +1,7 @@
 ---
 import CookieConsent from '../components/CookieConsent.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
+import { EZOIC_ENABLED } from '../lib/ezoic';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
 // Antes (5 weights estáticos): 5 woff2 × ~17 KB = ~85 KB de Inter.
@@ -575,6 +576,28 @@ const globalSchema = {
          de JS unused sin agregar funcionalidad. (PSI audit 2026-05-19: confirmado). -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
 
+    {/* Ezoic — display ads. Orden requerido por Ezoic: privacy scripts (CMP
+        gatekeeper, TCF 2.2) ANTES del header script. data-cfasync="false" evita
+        que Rocket Loader de CF los reordene. is:inline = Astro los deja verbatim.
+        El Consent Mode default de GA4/Ads (arriba) NO se toca; el gatekeeper de
+        Ezoic maneja el consent de la UE (ver src/lib/ezoic.ts). Kill-switch:
+        EZOIC_ENABLED=false. */}
+    {EZOIC_ENABLED && (
+      <Fragment>
+        <script is:inline data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
+        <script is:inline data-cfasync="false" src="https://the.gatekeeperconsent.com/cmp.min.js"></script>
+        <script is:inline async src="https://www.ezojs.com/ezoic/sa.min.js"></script>
+        <script is:inline>
+          window.ezstandalone = window.ezstandalone || {};
+          ezstandalone.cmd = ezstandalone.cmd || [];
+          // Señal para CookieConsent.astro: el gatekeeper de Ezoic posee el
+          // consent de la UE → el banner casero se defiere ahí.
+          window.__hcEzoicCmp = true;
+        </script>
+        <script is:inline src="https://ezoicanalytics.com/analytics.js"></script>
+      </Fragment>
+    )}
+
     <!-- AdSense re-alta 2026-06-09 (ca-pub-6276944768601561), versión performance-safe.
          Medido con Lighthouse: el tag <script async> directo en head tira el score
          mobile de 93 a 66 (LCP 2,9s → 8,1s) porque sus ~280KB+5 requests compiten
@@ -587,7 +610,14 @@ const globalSchema = {
          Si tras la aprobación los anuncios tardan en aparecer, bajar el delay,
          pero NUNCA volver al tag estático en head sin re-medir Lighthouse. -->
     <meta name="google-adsense-account" content="ca-pub-6276944768601561" />
-    <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){setTimeout(f,1500)})(function(){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';document.head.appendChild(s);});});`} />
+    {/* Loader crudo de adsbygoogle: SOLO cuando Ezoic está apagado. Con Ezoic
+        vivo, él maneja la demanda de Google/AdSense (la cuenta se conecta como
+        partner de mediación en el panel), así que cargarlo nosotros duplicaría
+        y violaría policy. La verificación de cuenta (meta de arriba + línea en
+        ads.txt) se mantiene SIEMPRE — Ezoic la necesita. */}
+    {!EZOIC_ENABLED && (
+      <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){setTimeout(f,1500)})(function(){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';document.head.appendChild(s);});});`} />
+    )}
 
     <!-- Microsoft Clarity (signal positiva para Bing/Copilot rankings) -->
     <!-- Se activa solo si está seteada la env var PUBLIC_MS_CLARITY_ID en build. -->
