@@ -1,0 +1,172 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { fixture, LIVE_FIXTURE_URL, teamLabel, roundLabel, kickoffUTC, result } from '../lib/data/mundial-2026';
+import { teamMatches } from '../lib/mundial-live';
+
+export function getStaticPaths() {
+  // Selecciones de los verticales del sitio que CLASIFICARON al Mundial 2026.
+  // Argentina ya tiene su página estática (cuando-juega-argentina-mundial-2026);
+  // acá generamos el resto de los países hispanohablantes, cada uno con su
+  // horario LOCAL (kickoffUTC es UTC-neutral; formateamos por TZ + locale).
+  // Brasil va en portugués en una página aparte (vertical pt).
+  // OJO: el array va DENTRO de getStaticPaths — la función se hoistea sobre los
+  // const del frontmatter (temporal dead zone si quedan afuera).
+  const COUNTRIES = [
+    { slug: 'mexico',   team: 'Mexico',   name: 'México',   flag: '🇲🇽', tz: 'America/Mexico_City', locale: 'es-MX', audience: 'MX', tzLabel: 'hora del centro de México' },
+    { slug: 'colombia', team: 'Colombia', name: 'Colombia', flag: '🇨🇴', tz: 'America/Bogota',      locale: 'es-CO', audience: 'CO', tzLabel: 'hora de Colombia' },
+    { slug: 'ecuador',  team: 'Ecuador',  name: 'Ecuador',  flag: '🇪🇨', tz: 'America/Guayaquil',   locale: 'es-EC', audience: 'EC', tzLabel: 'hora de Ecuador' },
+    { slug: 'uruguay',  team: 'Uruguay',  name: 'Uruguay',  flag: '🇺🇾', tz: 'America/Montevideo',  locale: 'es-UY', audience: 'UY', tzLabel: 'hora de Uruguay' },
+    { slug: 'paraguay', team: 'Paraguay', name: 'Paraguay', flag: '🇵🇾', tz: 'America/Asuncion',    locale: 'es-PY', audience: 'PY', tzLabel: 'hora de Paraguay' },
+    { slug: 'espana',   team: 'Spain',    name: 'España',   flag: '🇪🇸', tz: 'Europe/Madrid',       locale: 'es-ES', audience: 'ES', tzLabel: 'hora peninsular de España' },
+  ];
+  return COUNTRIES.map((c) => ({ params: { equipo: c.slug }, props: c }));
+}
+
+const { slug, team, name, flag, tz, locale, audience, tzLabel } = Astro.props as {
+  slug: string; team: string; name: string; flag: string; tz: string; locale: string; audience: string; tzLabel: string;
+};
+
+// Formateadores en hora LOCAL del país (kickoffUTC ya es UTC).
+const locTime = (date: string | null, time: string | null) => {
+  const d = kickoffUTC(date, time);
+  return d ? new Intl.DateTimeFormat(locale, { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(d) : '';
+};
+const locDay = (date: string | null, time: string | null) => {
+  const d = kickoffUTC(date, time);
+  return d ? new Intl.DateTimeFormat(locale, { timeZone: tz, weekday: 'long', day: 'numeric', month: 'long' }).format(d) : (date || '');
+};
+
+const { mine, next } = teamMatches(fixture.matches, team);
+const nextKO = next ? kickoffUTC(next.date, next.time) : null;
+const rivalOf = (m: any) => (m.team1 === team ? m.team2 : m.team1);
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/cuando-juega-${slug}-mundial-2026`;
+const title = `¿Cuándo juega ${name} en el Mundial 2026? Próximo partido, día y hora | Hacé Cuentas`;
+const description = next
+  ? `El próximo partido de ${name} en el Mundial 2026 es vs ${teamLabel(rivalOf(next)).es}, el ${locDay(next.date, next.time)} a las ${locTime(next.date, next.time)} (${tzLabel}). Calendario completo de la selección, en vivo.`
+  : `Calendario de ${name} en el Mundial 2026: días, horarios (${tzLabel}) y resultados, en vivo.`;
+const updated = new Intl.DateTimeFormat(locale, { timeZone: tz, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fixture.fetchedAt));
+
+const faq = [
+  { q: `¿Cuándo es el próximo partido de ${name}?`, a: next ? `${name} juega contra ${teamLabel(rivalOf(next)).es} el ${locDay(next.date, next.time)} a las ${locTime(next.date, next.time)} (${tzLabel}), por ${roundLabel(next.round)}.` : 'El calendario se actualiza automáticamente; cuando se confirme el próximo partido aparecerá acá con día y hora local.' },
+  { q: `¿En qué horario juega ${name}?`, a: `Los horarios de esta página ya están convertidos a la ${tzLabel}. El Mundial 2026 se juega en Estados Unidos, México y Canadá, así que los partidos caen mayormente a la tarde/noche.` },
+  { q: '¿Cada cuánto se actualiza?', a: 'Se actualiza solo con el feed abierto de openfootball: al abrir la página trae el calendario y los resultados más recientes, sin esperar a nada.' },
+];
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Mundial 2026', item: `${SITE}/mundial-2026` },
+    { '@type': 'ListItem', position: 3, name: `¿Cuándo juega ${name}?`, item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+const liveConfig = { url: LIVE_FIXTURE_URL, team, nextKO: nextKO ? nextKO.toISOString() : null };
+---
+
+<Layout title={title} description={description} canonical={`/cuando-juega-${slug}-mundial-2026`} schema={schema} audience={audience as any}>
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/">Inicio</a> › <a href="/mundial-2026">Mundial 2026</a> › <span>¿Cuándo juega {name}?</span></nav>
+    <h1>{flag} ¿Cuándo juega {name} en el Mundial 2026?</h1>
+
+    {next ? (
+      <section class="next-card" data-next>
+        <div class="next-label">Próximo partido · {roundLabel(next.round)}</div>
+        <div class="next-teams">{teamLabel(next.team1).flag} {teamLabel(next.team1).es} <span class="vs">vs</span> {teamLabel(next.team2).es} {teamLabel(next.team2).flag}</div>
+        <div class="next-when">{locDay(next.date, next.time)} · <strong>{locTime(next.date, next.time)}</strong> ({tzLabel}){next.ground ? ` · ${next.ground}` : ''}</div>
+        <div class="countdown" data-countdown aria-live="polite">—</div>
+      </section>
+    ) : (
+      <section class="next-card"><div class="next-when">Cuando se confirme el próximo partido de {name} aparecerá acá con día y hora local.</div></section>
+    )}
+
+    <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · {tzLabel}</p>
+
+    <section>
+      <h2>Calendario de {name} en el Mundial</h2>
+      <div class="matches" data-matches>
+        {mine.map((m: any) => {
+          const r = result(m);
+          const played = !!(m.score && m.score.ft);
+          return (
+            <div class={`m ${played ? 'done' : ''}`}>
+              <div class="m-round">{roundLabel(m.round)}</div>
+              <div class="m-body">
+                <span>{teamLabel(m.team1).flag} {teamLabel(m.team1).es}</span>
+                <span class="m-mid">{played && m.score?.ft ? `${m.score.ft[0]} - ${m.score.ft[1]}` : 'vs'}</span>
+                <span>{teamLabel(m.team2).es} {teamLabel(m.team2).flag}</span>
+              </div>
+              <div class="m-when">{played ? (r?.detail || 'Finalizado') : `${locDay(m.date, m.time)} · ${locTime(m.date, m.time)}`}</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <section class="links">
+      <h2>Seguí el Mundial</h2>
+      <ul>
+        <li><a href="/fixture-mundial-2026">📅 Fixture completo en vivo</a></li>
+        <li><a href="/posiciones-mundial-2026">🏆 Tabla de posiciones</a></li>
+        <li><a href="/goleadores-mundial-2026">⚽ Goleadores</a></li>
+        <li><a href="/llave-mundial-2026">🗂️ Llave de eliminación</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    const el = document.querySelector('[data-countdown]');
+    function tick() {
+      if (!el || !cfg.nextKO) return;
+      const diff = new Date(cfg.nextKO).getTime() - Date.now();
+      if (diff <= 0) { el.textContent = '¡En juego o por comenzar!'; return; }
+      const d = Math.floor(diff / 86400000), h = Math.floor(diff % 86400000 / 3600000), mm = Math.floor(diff % 3600000 / 60000);
+      el.textContent = (d > 0 ? d + 'd ' : '') + h + 'h ' + mm + 'm';
+    }
+    if (cfg.nextKO) { tick(); setInterval(tick, 60000); }
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.5rem, 4.5vw, 2.05rem); font-weight: 800; margin: 0 0 1rem; }
+  .next-card { background: linear-gradient(135deg, var(--accent-soft), var(--bg-card)); border: 1px solid var(--accent); border-radius: var(--radius); padding: 1.25rem; text-align: center; margin-bottom: 0.75rem; }
+  .next-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); font-weight: 700; }
+  .next-teams { font-size: 1.35rem; font-weight: 800; margin: 0.5rem 0; }
+  .vs { color: var(--text-subtle); font-weight: 600; font-size: 0.9rem; }
+  .next-when { font-size: 0.95rem; color: var(--text-muted); }
+  .countdown { font-size: 1.5rem; font-weight: 800; color: var(--accent); margin-top: 0.6rem; font-variant-numeric: tabular-nums; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.75rem; }
+  h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem; }
+  .matches { display: flex; flex-direction: column; gap: 0.5rem; }
+  .m { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; }
+  .m.done { opacity: 0.82; }
+  .m-round { font-size: 0.68rem; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; }
+  .m-body { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin: 0.25rem 0; gap: 0.5rem; }
+  .m-mid { color: var(--accent); }
+  .m-when { font-size: 0.82rem; color: var(--text-muted); }
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links h2, .faq h2 { font-size: 1.2rem; }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>
