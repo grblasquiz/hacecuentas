@@ -90,7 +90,19 @@ async function getRecipients(env) {
 
 // ── plantilla del email ─────────────────────────────────────────────────────
 const FONT = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-const LOGO_URL = `${SELF_BASE}/logo.png`;
+const LOGO_URL = `${SELF_BASE}/brand.png`;
+
+/** Primera oración del snippet (hook escaneable, no un bloque denso). */
+function shortDesc(s) {
+  s = String(s || '').replace(/\s+/g, ' ').trim();
+  const m = s.match(/^(.{40,}?[.!?])(\s|$)/);
+  let out = m ? m[1] : s;
+  if (out.length > 150) {
+    const cut = out.slice(0, 148);
+    out = cut.slice(0, cut.lastIndexOf(' ')).replace(/[.,;:\s]+$/, '') + '…';
+  }
+  return out;
+}
 // La imagen OG de cada calc (1200×630, branded: logo+categoría+título+pills) es el hero.
 const ogUrl = (slug) => `https://hacecuentas.com/og/${slug}.png`;
 
@@ -105,7 +117,7 @@ function calcCard(c) {
       </a>
     </td></tr>
     <tr><td style="padding:20px 24px 24px;">
-      <p style="margin:0 0 20px;font:400 14px/1.65 ${FONT};color:#475569;">${esc(c.answer_snippet)}</p>
+      <p style="margin:0 0 20px;font:400 16px/1.6 ${FONT};color:#334155;">${esc(shortDesc(c.answer_snippet))}</p>
       <a href="${esc(c.url)}" style="display:inline-block;background:#2563eb;color:#ffffff;font:600 15px ${FONT};text-decoration:none;padding:13px 28px;border-radius:10px;">Usar calculadora →</a>
     </td></tr>
   </table>`;
@@ -270,7 +282,7 @@ export default {
     try {
       if (url.pathname === '/unsubscribe') return handleUnsubscribe(env, url);
 
-      if (url.pathname === '/logo.png') {
+      if (url.pathname === '/brand.png' || url.pathname === '/logo.png') {
         const bin = Uint8Array.from(atob(LOGO_PNG_B64), (ch) => ch.charCodeAt(0));
         return new Response(bin, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=604800' } });
       }
