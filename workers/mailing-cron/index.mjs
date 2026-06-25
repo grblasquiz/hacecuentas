@@ -17,9 +17,13 @@
  *   GET /?run=TOKEN&test=mail@x    → manda una PRUEBA solo a esa dirección (no loguea)
  *   GET /?run=TOKEN                → fuerza una edición real YA (go-live / catch-up)
  *   GET /unsubscribe?e=..&t=..     → baja (verifica HMAC, setea unsubscribed=1)
+ *   GET /logo.png                  → logo oficial (lo usa el header del email)
  */
 
+import { LOGO_PNG_B64 } from './logo-data.mjs';
+
 const RUN_TOKEN = 'hc-mail-9Kp4wZ';            // dispara run manual; no es dato sensible
+const SELF_BASE = 'https://hacecuentas-mailing-cron.rodriguezb-martin.workers.dev';
 const TEST_SOURCES = ['smoketest', 'post-ci']; // direcciones de test que NUNCA reciben
 
 // ── utilidades ─────────────────────────────────────────────────────────────
@@ -86,38 +90,23 @@ async function getRecipients(env) {
 
 // ── plantilla del email ─────────────────────────────────────────────────────
 const FONT = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+const LOGO_URL = `${SELF_BASE}/logo.png`;
+// La imagen OG de cada calc (1200×630, branded: logo+categoría+título+pills) es el hero.
+const ogUrl = (slug) => `https://hacecuentas.com/og/${slug}.png`;
 
-// Color del ícono/chip por categoría (fondo claro + texto del mismo tono).
-const CAT = {
-  finanzas: { c: '#dbeafe', t: '#1e40af' }, salud: { c: '#ccfbf1', t: '#0f766e' },
-  vida: { c: '#ede9fe', t: '#5b21b6' }, construccion: { c: '#fef3c7', t: '#92400e' },
-  automotor: { c: '#e0e7ff', t: '#3730a3' }, viajes: { c: '#cffafe', t: '#155e75' },
-  deportes: { c: '#dcfce7', t: '#15803d' }, cocina: { c: '#ffedd5', t: '#9a3412' },
-  mascotas: { c: '#fce7f3', t: '#9d174d' }, tecnologia: { c: '#e0e7ff', t: '#3730a3' },
-  educacion: { c: '#fef9c3', t: '#854d0e' }, impuestos: { c: '#ede9fe', t: '#5b21b6' },
-};
-const catColor = (k) => CAT[k] || { c: '#dbeafe', t: '#1e40af' };
-
+// Tarjeta: imagen OG (hero) → descripción de qué hace → botón "Usar".
 function calcCard(c) {
-  const col = catColor(c.category);
   const name = esc(shortName(c.title));
-  const icon = c.icon || '🧮';
   return `
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;background:#ffffff;border:1px solid #e8edf3;border-radius:14px;">
-    <tr><td style="padding:20px 20px 18px;">
-      <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>
-        <td width="52" valign="top" style="width:52px;">
-          <div style="width:46px;height:46px;line-height:46px;text-align:center;font-size:24px;background:${col.c};border-radius:12px;">${icon}</div>
-        </td>
-        <td valign="top" style="padding-left:14px;">
-          <span style="display:inline-block;font:600 11px ${FONT};letter-spacing:.04em;text-transform:uppercase;color:${col.t};background:${col.c};padding:3px 9px;border-radius:6px;">${esc(c.category)}</span>
-          <h2 style="margin:8px 0 0;font:700 17px ${FONT};line-height:1.35;color:#0f172a;">
-            <a href="${esc(c.url)}" style="color:#0f172a;text-decoration:none;">${name}</a>
-          </h2>
-        </td>
-      </tr></table>
-      <p style="margin:12px 0 16px;font:400 14px/1.6 ${FONT};color:#475569;">${esc(c.answer_snippet)}</p>
-      <a href="${esc(c.url)}" style="display:inline-block;background:#2563eb;color:#ffffff;font:600 14px ${FONT};text-decoration:none;padding:11px 20px;border-radius:9px;">Abrir calculadora →</a>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#ffffff;border:1px solid #e6ebf2;border-radius:16px;">
+    <tr><td style="padding:0;line-height:0;">
+      <a href="${esc(c.url)}" style="text-decoration:none;">
+        <img src="${esc(ogUrl(c.slug))}" width="600" alt="${name}" style="display:block;width:100%;max-width:600px;height:auto;border:0;border-radius:16px 16px 0 0;">
+      </a>
+    </td></tr>
+    <tr><td style="padding:20px 24px 24px;">
+      <p style="margin:0 0 20px;font:400 14px/1.65 ${FONT};color:#475569;">${esc(c.answer_snippet)}</p>
+      <a href="${esc(c.url)}" style="display:inline-block;background:#2563eb;color:#ffffff;font:600 15px ${FONT};text-decoration:none;padding:13px 28px;border-radius:10px;">Usar calculadora →</a>
     </td></tr>
   </table>`;
 }
@@ -126,26 +115,23 @@ function renderEmail(calcs, unsubLink) {
   const cards = calcs.map(calcCard).join('');
   return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>Hacé Cuentas</title></head>
 <body style="margin:0;padding:0;background:#eef2f7;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Dos calculadoras para arrancar la semana.</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Dos calculadoras para arrancar la semana 👇</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;">
- <tr><td align="center" style="padding:28px 12px;">
+ <tr><td align="center" style="padding:30px 14px;">
   <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;">
-   <tr><td style="background:#2563eb;border-radius:16px 16px 0 0;padding:22px 28px;">
-     <table role="presentation" width="100%"><tr>
-       <td style="font:700 21px ${FONT};color:#ffffff;">🧮 Hacé Cuentas</td>
-       <td align="right" style="font:500 13px ${FONT};color:#bfdbfe;">Boletín de calculadoras</td>
-     </tr></table>
+   <tr><td style="padding:4px 4px 22px;">
+     <img src="${LOGO_URL}" width="188" alt="Hacé Cuentas" style="display:block;width:188px;height:auto;border:0;">
    </td></tr>
-   <tr><td style="background:#ffffff;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;padding:26px 26px 20px;">
-     <p style="margin:0 0 4px;font:700 18px ${FONT};color:#0f172a;">Dos calculadoras para vos 👇</p>
-     <p style="margin:0 0 22px;font:400 15px ${FONT};color:#64748b;">Elegidas entre las más usadas esta semana.</p>
-     ${cards}
-     <table role="presentation" width="100%"><tr><td align="center" style="padding:10px 0 2px;">
-       <a href="https://hacecuentas.com" style="font:600 14px ${FONT};color:#2563eb;text-decoration:none;">Ver las 4.000+ calculadoras →</a>
-     </td></tr></table>
+   <tr><td style="padding:0 4px 20px;">
+     <p style="margin:0;font:700 20px ${FONT};color:#0f172a;">Dos calculadoras para vos 👇</p>
+     <p style="margin:7px 0 0;font:400 15px ${FONT};color:#64748b;">Elegidas entre las más usadas esta semana.</p>
    </td></tr>
-   <tr><td style="padding:18px 28px 4px;">
-     <p style="margin:0 0 6px;font:400 12px/1.6 ${FONT};color:#94a3b8;">Recibís esto porque dejaste tu mail en hacecuentas.com · Calculadoras gratis, sin registro · Argentina.</p>
+   <tr><td>${cards}</td></tr>
+   <tr><td align="center" style="padding:6px 0 2px;">
+     <a href="https://hacecuentas.com" style="display:inline-block;font:600 14px ${FONT};color:#2563eb;text-decoration:none;padding:8px 0;">Ver las 4.000+ calculadoras →</a>
+   </td></tr>
+   <tr><td style="padding:24px 4px 4px;border-top:1px solid #dde4ec;margin-top:8px;">
+     <p style="margin:14px 0 6px;font:400 12px/1.6 ${FONT};color:#94a3b8;">Recibís esto porque dejaste tu mail en hacecuentas.com · Calculadoras gratis, sin registro · Argentina.</p>
      <p style="margin:0;font:400 12px ${FONT};color:#94a3b8;"><a href="${esc(unsubLink)}" style="color:#64748b;text-decoration:underline;">Darme de baja</a></p>
    </td></tr>
   </table>
@@ -283,6 +269,11 @@ export default {
     const H = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
     try {
       if (url.pathname === '/unsubscribe') return handleUnsubscribe(env, url);
+
+      if (url.pathname === '/logo.png') {
+        const bin = Uint8Array.from(atob(LOGO_PNG_B64), (ch) => ch.charCodeAt(0));
+        return new Response(bin, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=604800' } });
+      }
 
       if (url.searchParams.get('preview') === '1') {
         const r = await runEdition(env, { dryRun: true });
