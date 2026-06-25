@@ -1,0 +1,35 @@
+# Worker independiente: newsletter 2×/semana de calculadoras.
+# Envía con Cloudflare Email Service (binding EMAIL) — 100% Cloudflare, sin terceros.
+# Deploy: cd workers/mailing-cron && npx wrangler deploy --config ./wrangler.toml
+#   (el --config es obligatorio: sin él wrangler agarra el wrangler.jsonc del SITIO)
+#
+# Requisitos para ENVIAR (lo hace Martin en el dash de Cloudflare, una vez):
+#   1. Workers Paid ($5/mes) — Email Sending no está en el free.
+#   2. Onboardear hacecuentas.com en Email > Email Sending (SPF/DKIM/DMARC auto, DNS ya en CF).
+name = "hacecuentas-mailing-cron"
+main = "index.mjs"
+compatibility_date = "2026-06-01"
+workers_dev = true
+
+# Martes (2) y jueves (4) 13:00 UTC = 10:00 ART.
+[triggers]
+crons = ["0 13 * * 2", "0 13 * * 4"]
+
+# Cloudflare Email Service — binding de envío. Tras onboardear el dominio,
+# manda a cualquier destinatario. 3.000 mails/mes incluidos en Workers Paid.
+[[send_email]]
+name = "EMAIL"
+
+[vars]
+MAILING_FROM = "Hacé Cuentas <novedades@hacecuentas.com>"
+# Base pública del worker para el link de baja (URL real workers.dev).
+UNSUB_BASE = "https://hacecuentas-mailing-cron.rodriguezb-martin.workers.dev"
+
+# Opcional, fija la firma del link de baja entre deploys:
+#   npx wrangler secret put UNSUB_SECRET --config ./wrangler.toml
+
+# Misma base D1 que el sitio (hacecuentas-forms) — bind por id.
+[[d1_databases]]
+binding = "DB"
+database_name = "hacecuentas-forms"
+database_id = "73216cf9-dba3-4c16-875c-4073d8184bcd"

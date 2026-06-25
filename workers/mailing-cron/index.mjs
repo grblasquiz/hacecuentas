@@ -1,0 +1,292 @@
+/**
+ * hacecuentas-mailing-cron — newsletter 2×/semana de calculadoras.
+ *
+ * Cron (martes y jueves 13:00 UTC = 10:00 ART): manda a los suscriptores un mail
+ * con 2 calculadoras NO repetidas antes (anti-join contra mailing_log) y su
+ * explicación corta. Comparte la D1 del sitio (hacecuentas-forms).
+ *
+ * Worker aparte del sitio (igual que fx-cron): corre 100% en Cloudflare, no
+ * depende del build de Astro ni del repo local.
+ *
+ * Tablas: mailing_pool (pool curado, seedeado por scripts/build-mailing-pool.mjs),
+ *         mailing_log (qué se mandó), newsletter_subs (destinatarios + baja).
+ *
+ * Endpoints (workers.dev):
+ *   GET /                          → status (pool, enviadas, restantes, suscriptores)
+ *   GET /?preview=1                → HTML del próximo envío (NO manda, no consume pool)
+ *   GET /?run=TOKEN&test=mail@x    → manda una PRUEBA solo a esa dirección (no loguea)
+ *   GET /?run=TOKEN                → fuerza una edición real YA (go-live / catch-up)
+ *   GET /unsubscribe?e=..&t=..     → baja (verifica HMAC, setea unsubscribed=1)
+ */
+
+const RUN_TOKEN = 'hc-mail-9Kp4wZ';            // dispara run manual; no es dato sensible
+const TEST_SOURCES = ['smoketest', 'post-ci']; // direcciones de test que NUNCA reciben
+
+// ── utilidades ─────────────────────────────────────────────────────────────
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/** "Calculadora de Aguinaldo (SAC)" → "Aguinaldo (SAC)" para asunto/encabezado. */
+function shortName(title) {
+  return String(title || '')
+    .replace(/^(Calculadora|Conversor|Simulador)\s+(de\s+|del\s+)?/i, '')
+    .trim() || title;
+}
+
+/** HMAC-SHA256(secret, msg) en hex (truncado a 32) — token del link de baja. */
+async function hmacToken(secret, msg) {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(msg));
+  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+}
+
+function unsubUrl(base, email, token) {
+  return `${base.replace(/\/+$/, '')}/unsubscribe?e=${encodeURIComponent(email)}&t=${token}`;
+}
+
+// ── selección de calcs ──────────────────────────────────────────────────────
+/**
+ * Elige n calcs: primero las NO enviadas (por rank), y si el pool se agotó,
+ * completa con las menos-recientemente enviadas. Nunca repite hasta agotar.
+ */
+async function pickCalcs(env, n = 2) {
+  const fresh = await env.DB.prepare(
+    `SELECT slug, title, answer_snippet, category, url FROM mailing_pool
+     WHERE slug NOT IN (SELECT slug FROM mailing_log)
+     ORDER BY rank ASC LIMIT ?`,
+  ).bind(n).all();
+  const picked = fresh.results || [];
+  if (picked.length >= n) return picked;
+
+  // Pool agotado: reciclar las más viejas que no estén ya elegidas.
+  const have = picked.map((c) => c.slug);
+  const placeholders = have.map(() => '?').join(',') || "''";
+  const recycled = await env.DB.prepare(
+    `SELECT p.slug, p.title, p.answer_snippet, p.category, p.url
+     FROM mailing_pool p
+     JOIN (SELECT slug, MAX(edition_at) me FROM mailing_log GROUP BY slug) l ON l.slug = p.slug
+     WHERE p.slug NOT IN (${placeholders})
+     ORDER BY l.me ASC LIMIT ?`,
+  ).bind(...have, n - picked.length).all();
+  return picked.concat(recycled.results || []);
+}
+
+async function getRecipients(env) {
+  const rows = await env.DB.prepare(
+    `SELECT email FROM newsletter_subs
+     WHERE (unsubscribed IS NULL OR unsubscribed = 0)
+       AND source NOT IN ('${TEST_SOURCES.join("','")}')
+       AND email LIKE '%_@_%_.__%'
+     ORDER BY created_at ASC`,
+  ).all();
+  return (rows.results || []).map((r) => r.email);
+}
+
+// ── plantilla del email ─────────────────────────────────────────────────────
+function calcCard(c) {
+  const name = esc(shortName(c.title));
+  const cat = c.category ? `<span style="display:inline-block;background:#eff6ff;color:#2563eb;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;text-transform:capitalize;margin-bottom:10px;">${esc(c.category)}</span>` : '';
+  return `
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+    <tr><td style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;">
+      ${cat}
+      <h2 style="margin:0 0 8px;font-size:20px;line-height:1.3;color:#0f172a;">
+        <a href="${esc(c.url)}" style="color:#0f172a;text-decoration:none;">${name}</a>
+      </h2>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#475569;">${esc(c.answer_snippet)}</p>
+      <a href="${esc(c.url)}" style="display:inline-block;background:#2563eb;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:11px 22px;border-radius:8px;">Abrir calculadora →</a>
+    </td></tr>
+  </table>`;
+}
+
+function renderEmail(calcs, unsubLink) {
+  const cards = calcs.map(calcCard).join('');
+  return `<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hacé Cuentas</title></head>
+<body style="margin:0;padding:0;background:#f1f5f9;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr><td style="padding:0 4px 18px;">
+          <span style="font-size:22px;font-weight:800;color:#2563eb;letter-spacing:-0.5px;">Hacé Cuentas</span>
+          <span style="float:right;font-size:13px;color:#94a3b8;padding-top:8px;">2 calculadoras para vos</span>
+        </td></tr>
+        <tr><td style="padding:0 4px 8px;">
+          <p style="margin:0 0 16px;font-size:15px;color:#334155;">Dos calculadoras que te pueden servir esta semana 👇</p>
+        </td></tr>
+        <tr><td>${cards}</td></tr>
+        <tr><td style="padding:18px 4px 0;border-top:1px solid #e2e8f0;">
+          <p style="margin:0 0 6px;font-size:12px;line-height:1.6;color:#94a3b8;">
+            Recibís esto porque dejaste tu mail en <a href="https://hacecuentas.com" style="color:#94a3b8;">hacecuentas.com</a>.
+            Calculadoras gratis, sin registro · Argentina.
+          </p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">
+            ¿No querés más estos mails? <a href="${esc(unsubLink)}" style="color:#64748b;text-decoration:underline;">Darme de baja</a>.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+/** Versión texto plano (multipart) — mejora deliverability / inbox placement. */
+function renderText(calcs, unsubLink) {
+  const lines = ['Hacé Cuentas — 2 calculadoras para vos', ''];
+  for (const c of calcs) {
+    lines.push(`• ${shortName(c.title)}`, `  ${c.answer_snippet}`, `  ${c.url}`, '');
+  }
+  lines.push('Recibís esto porque dejaste tu mail en hacecuentas.com.');
+  lines.push(`Darte de baja: ${unsubLink}`);
+  return lines.join('\n');
+}
+
+// ── envío vía Cloudflare Email Service (binding env.EMAIL) ───────────────────
+// 1 mensaje por destinatario (cada uno con su link de baja). 100% Cloudflare,
+// sin terceros. Devuelve {sent, failed}.
+async function sendAll(env, recipients, { from, subject, calcs, unsubBase, secret }) {
+  let sent = 0, failed = 0;
+  for (const email of recipients) {
+    try {
+      const link = unsubUrl(unsubBase, email, await hmacToken(secret, email));
+      await env.EMAIL.send({
+        from,
+        to: email,
+        subject,
+        html: renderEmail(calcs, link),
+        text: renderText(calcs, link),
+      });
+      sent++;
+    } catch (e) {
+      failed++;
+      const code = e?.message || String(e);
+      console.error('[mailing] send fail', email, code.slice(0, 140));
+      // Límite diario: no tiene sentido seguir martillando.
+      if (/E_DAILY_LIMIT_EXCEEDED/.test(code)) { console.error('[mailing] daily limit — abort'); break; }
+    }
+  }
+  return { sent, failed };
+}
+
+// ── edición: arma y manda (o devuelve dryRun) ───────────────────────────────
+async function runEdition(env, { dryRun = false, testTo = null } = {}) {
+  const from = env.MAILING_FROM || 'Hacé Cuentas <novedades@hacecuentas.com>';
+  const unsubBase = env.UNSUB_BASE || 'https://hacecuentas-mailing-cron.workers.dev';
+  const secret = env.UNSUB_SECRET || RUN_TOKEN;
+
+  const calcs = await pickCalcs(env, 2);
+  if (calcs.length < 2) return { ok: false, reason: 'pool vacío', calcs: calcs.length };
+
+  const a = shortName(calcs[0].title), b = shortName(calcs[1].title);
+  const subject = `🧮 ${a} y ${b}`;
+
+  // Preview puro: devolver HTML sin mandar nada.
+  if (dryRun) {
+    const link = unsubUrl(unsubBase, 'vos@ejemplo.com', await hmacToken(secret, 'vos@ejemplo.com'));
+    return { ok: true, dryRun: true, subject, html: renderEmail(calcs, link), calcs: calcs.map((c) => c.slug) };
+  }
+
+  if (!env.EMAIL) return { ok: false, reason: 'falta binding EMAIL (Cloudflare Email Service no onboardeado)' };
+
+  // Destinatarios: prueba (1) o lista real.
+  const recipients = testTo ? [testTo] : await getRecipients(env);
+  if (!recipients.length) return { ok: false, reason: 'sin destinatarios' };
+
+  const { sent, failed } = await sendAll(env, recipients, { from, subject, calcs, unsubBase, secret });
+
+  // Las pruebas NO se loguean ni consumen el pool.
+  if (!testTo) {
+    const now = Date.now();
+    await env.DB.batch(calcs.map((c) => env.DB.prepare(
+      `INSERT INTO mailing_log (slug, edition_at, recipients, resend_ok) VALUES (?, ?, ?, ?)`,
+    ).bind(c.slug, now, sent, failed === 0 ? 1 : 0)));
+  }
+
+  return { ok: sent > 0, test: !!testTo, subject, enviados: sent, fallidos: failed, calcs: calcs.map((c) => c.slug) };
+}
+
+// ── handler de baja ─────────────────────────────────────────────────────────
+async function handleUnsubscribe(env, url) {
+  const email = (url.searchParams.get('e') || '').toLowerCase();
+  const token = url.searchParams.get('t') || '';
+  const secret = env.UNSUB_SECRET || RUN_TOKEN;
+  const page = (title, msg) => new Response(
+    `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
+     <body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;margin:0;padding:48px 16px;text-align:center;color:#0f172a;">
+       <div style="max-width:420px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;border:1px solid #e5e7eb;">
+         <div style="font-size:22px;font-weight:800;color:#2563eb;margin-bottom:16px;">Hacé Cuentas</div>
+         <p style="font-size:16px;line-height:1.6;color:#334155;">${msg}</p>
+         <a href="https://hacecuentas.com" style="color:#2563eb;font-size:14px;">Ir al sitio</a>
+       </div></body></html>`,
+    { headers: { 'content-type': 'text/html; charset=utf-8' } });
+
+  if (!email || !token) return page('Baja', 'Link de baja inválido.');
+  const expected = await hmacToken(secret, email);
+  if (token !== expected) return page('Baja', 'Link de baja inválido o vencido.');
+
+  await env.DB.prepare(
+    `UPDATE newsletter_subs SET unsubscribed = 1, unsub_at = ? WHERE email = ?`,
+  ).bind(Date.now(), email).run();
+  return page('Listo', `Listo, diste de baja a <strong>${esc(email)}</strong>. No vas a recibir más estos mails. 👋`);
+}
+
+// ── status ──────────────────────────────────────────────────────────────────
+async function status(env) {
+  const pool = await env.DB.prepare('SELECT COUNT(*) n FROM mailing_pool').first();
+  const sent = await env.DB.prepare('SELECT COUNT(DISTINCT slug) n FROM mailing_log').first();
+  const subs = await env.DB.prepare(
+    `SELECT COUNT(*) n FROM newsletter_subs WHERE (unsubscribed IS NULL OR unsubscribed = 0)
+       AND source NOT IN ('${TEST_SOURCES.join("','")}') AND email LIKE '%_@_%_.__%'`,
+  ).first();
+  const last = await env.DB.prepare('SELECT MAX(edition_at) t FROM mailing_log').first();
+  return {
+    pool_size: pool?.n ?? 0,
+    enviadas: sent?.n ?? 0,
+    restantes_sin_repetir: Math.max(0, (pool?.n ?? 0) - (sent?.n ?? 0)),
+    suscriptores_activos: subs?.n ?? 0,
+    ultima_edicion: last?.t ? new Date(last.t).toISOString() : null,
+    tiene_email_binding: !!env.EMAIL,
+  };
+}
+
+// ── entrypoints ─────────────────────────────────────────────────────────────
+export default {
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil((async () => {
+      if (!env.EMAIL) { console.log('[mailing] sin binding EMAIL — skip'); return; }
+      // Anti doble-disparo: si hubo edición en las últimas 12h, no repetir.
+      const last = await env.DB.prepare('SELECT MAX(edition_at) t FROM mailing_log').first();
+      if (last?.t && Date.now() - last.t < 12 * 3600 * 1000) {
+        console.log('[mailing] edición reciente (<12h) — skip'); return;
+      }
+      const r = await runEdition(env, {});
+      console.log('[mailing] scheduled', JSON.stringify(r));
+    })());
+  },
+
+  async fetch(req, env) {
+    const url = new URL(req.url);
+    const H = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
+    try {
+      if (url.pathname === '/unsubscribe') return handleUnsubscribe(env, url);
+
+      if (url.searchParams.get('preview') === '1') {
+        const r = await runEdition(env, { dryRun: true });
+        if (!r.ok) return new Response(JSON.stringify(r), { status: 409, headers: H });
+        return new Response(r.html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+      }
+
+      if (url.searchParams.get('run') === RUN_TOKEN) {
+        const testTo = url.searchParams.get('test');
+        const r = await runEdition(env, { testTo: testTo || null });
+        return new Response(JSON.stringify(r), { status: r.ok ? 200 : 409, headers: H });
+      }
+
+      return new Response(JSON.stringify({ ok: true, ...(await status(env)) }, null, 2), { headers: H });
+    } catch (e) {
+      return new Response(JSON.stringify({ ok: false, error: String(e) }), { status: 500, headers: H });
+    }
+  },
+};
