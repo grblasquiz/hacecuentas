@@ -861,6 +861,7 @@ import { conversorMonedaLatam } from './conversor-moneda-latam';
 import { conversorMphAKmh } from './conversor-mph-a-kmh';
 import { conversorMsAKmh } from './conversor-ms-a-kmh';
 import { conversorNudosAKmh } from './conversor-nudos-a-kmh';
+import { compute as compute__conversor_numero_a_letras_cantidad } from './conversor-numero-a-letras-cantidad';
 import { conversorOnzasAGramos } from './conversor-onzas-a-gramos';
 import { conversorOnzasLiquidasAMililitros } from './conversor-onzas-liquidas-a-mililitros';
 import { conversorPieTablaAMetroCubico } from './conversor-pie-tabla-a-metro-cubico';
@@ -4550,6 +4551,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversor-mph-a-kmh': conversorMphAKmh,
   'conversor-ms-a-kmh': conversorMsAKmh,
   'conversor-nudos-a-kmh': conversorNudosAKmh,
+  'conversor-numero-a-letras-cantidad': compute__conversor_numero_a_letras_cantidad,
   'conversor-onzas-a-gramos': conversorOnzasAGramos,
   'conversor-onzas-liquidas-a-mililitros': conversorOnzasLiquidasAMililitros,
   'conversor-pie-tabla-a-metro-cubico': conversorPieTablaAMetroCubico,

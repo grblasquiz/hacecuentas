@@ -167,27 +167,31 @@ function renderEmail(calcs, unsubLink) {
 // sin terceros. Devuelve {sent, failed}.
 async function sendAll(env, recipients, { from, subject, calcs, unsubBase, secret }) {
   let sent = 0, failed = 0;
+  const ids = [], errors = [];
   for (const email of recipients) {
     try {
       const link = unsubUrl(unsubBase, email, await hmacToken(secret, email));
       // Solo HTML (sin parte text/plain): Cloudflare ordenaba el multipart de
       // forma que Gmail mostraba el texto plano y se perdía el diseño.
-      await env.EMAIL.send({
+      const resp = await env.EMAIL.send({
         from,
         to: email,
         subject,
         html: renderEmail(calcs, link),
       });
+      ids.push(resp?.messageId || resp?.id || JSON.stringify(resp || {}).slice(0, 80));
+      console.log('[mailing] sent', email, JSON.stringify(resp || {}).slice(0, 120));
       sent++;
     } catch (e) {
       failed++;
       const code = e?.message || String(e);
-      console.error('[mailing] send fail', email, code.slice(0, 140));
+      errors.push(code.slice(0, 160));
+      console.error('[mailing] send fail', email, code.slice(0, 160));
       // Límite diario: no tiene sentido seguir martillando.
       if (/E_DAILY_LIMIT_EXCEEDED/.test(code)) { console.error('[mailing] daily limit — abort'); break; }
     }
   }
-  return { sent, failed };
+  return { sent, failed, ids, errors };
 }
 
 // ── edición: arma y manda (o devuelve dryRun) ───────────────────────────────
@@ -214,7 +218,7 @@ async function runEdition(env, { dryRun = false, testTo = null } = {}) {
   const recipients = testTo ? [testTo] : await getRecipients(env);
   if (!recipients.length) return { ok: false, reason: 'sin destinatarios' };
 
-  const { sent, failed } = await sendAll(env, recipients, { from, subject, calcs, unsubBase, secret });
+  const { sent, failed, ids, errors } = await sendAll(env, recipients, { from, subject, calcs, unsubBase, secret });
 
   // Las pruebas NO se loguean ni consumen el pool.
   if (!testTo) {
@@ -224,7 +228,7 @@ async function runEdition(env, { dryRun = false, testTo = null } = {}) {
     ).bind(c.slug, now, sent, failed === 0 ? 1 : 0)));
   }
 
-  return { ok: sent > 0, test: !!testTo, subject, enviados: sent, fallidos: failed, calcs: calcs.map((c) => c.slug) };
+  return { ok: sent > 0, test: !!testTo, subject, enviados: sent, fallidos: failed, ids, errors, from, calcs: calcs.map((c) => c.slug) };
 }
 
 // ── handler de baja ─────────────────────────────────────────────────────────
