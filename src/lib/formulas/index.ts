@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-23
+// Generated: 2026-06-25
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -385,6 +385,7 @@ import { calculadoraCostoVidaRepublicaDominicana } from './calculadora-costo-vid
 import { calculadoraCupoGasolinaSubsidiadaVenezuela } from './calculadora-cupo-gasolina-subsidiada-venezuela';
 import { calculadoraCustoTrabalhadorEntidadeEmpregadoraPortugal } from './calculadora-custo-trabalhador-entidade-empregadora-portugal';
 import { calculadoraDespidoUruguay } from './calculadora-despido-uruguay';
+import { compute as compute__calculadora_factor_integracion_salarial_imss_mexico } from './calculadora-factor-integracion-salarial-imss-mexico';
 import { calculadoraHorasExtraUruguay } from './calculadora-horas-extra-uruguay';
 import { calculadoraHorasExtraordinariasPortugal } from './calculadora-horas-extraordinarias-portugal';
 import { calculadoraHorasExtrasParaguay } from './calculadora-horas-extras-paraguay';
@@ -4073,6 +4074,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-cupo-gasolina-subsidiada-venezuela': calculadoraCupoGasolinaSubsidiadaVenezuela,
   'calculadora-custo-trabalhador-entidade-empregadora-portugal': calculadoraCustoTrabalhadorEntidadeEmpregadoraPortugal,
   'calculadora-despido-uruguay': calculadoraDespidoUruguay,
+  'calculadora-factor-integracion-salarial-imss-mexico': compute__calculadora_factor_integracion_salarial_imss_mexico,
   'calculadora-horas-extra-uruguay': calculadoraHorasExtraUruguay,
   'calculadora-horas-extraordinarias-portugal': calculadoraHorasExtraordinariasPortugal,
   'calculadora-horas-extras-paraguay': calculadoraHorasExtrasParaguay,
