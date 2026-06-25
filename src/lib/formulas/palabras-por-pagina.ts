@@ -13,6 +13,7 @@ export interface Outputs {
   tiempoLectura: number;
   tiempoEscritura: number;
   mensaje: string;
+  _table?: any;
   _insight?: any;
 }
 
@@ -55,6 +56,18 @@ export function palabrasPorPagina(i: Inputs): Outputs {
     tiempoLectura,
     tiempoEscritura,
     mensaje: `${Math.round(palabras)} palabras = ${paginas.toFixed(1)} páginas (interlineado ${interlineado}, ${tamano}pt). Lectura: ~${tiempoLectura} min. Escritura: ~${tiempoEscritura} min.`,
+    _table: {
+      title: `Tu texto en páginas (interlineado ${interlineado}, ${tamano}pt)`,
+      headers: ['Palabras', 'Páginas', 'Lectura', 'Escritura'],
+      align: ['left', 'right', 'right', 'right'],
+      rows: [250, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000].map((wc) => {
+        const lm = Math.ceil(wc / 200);
+        const wm = Math.ceil(wc / 40);
+        const fmt = (m: number) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)}h ${m % 60}min`);
+        return [wc.toLocaleString('es-AR'), (wc / ppg).toFixed(1), fmt(lm), fmt(wm)];
+      }),
+      note: `Páginas recalculadas para tu formato actual (interlineado ${interlineado}, fuente ${tamano}pt). La lectura (~200 palabras/min) y la escritura (~40 palabras/min) no dependen del interlineado.`,
+    },
     _insight: {
       title: 'Tu texto en páginas y tiempo',
       text: `Con interlineado ${interlineado} a ${tamano}pt, **${Math.round(palabras).toLocaleString('es-AR')} palabras** ocupan **${paginas.toFixed(1)} páginas**. Se leen en ~**${tiempoLectura} min** y se escriben en ~**${tiempoEscritura} min**; el interlineado es lo que más mueve el conteo de páginas.`,

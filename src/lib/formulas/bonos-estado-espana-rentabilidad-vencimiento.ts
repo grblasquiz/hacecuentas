@@ -22,6 +22,7 @@ export interface Outputs {
   alerta_tipo: string;               // texto informativo
   _insight?: any;
   _chart?: any;
+  _table?: any;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,6 +108,45 @@ function calcularDuracionModificada(
   return macaulay / (1 + tir);
 }
 
+/**
+ * Calcula un escenario de compra completo (cupón neto, TIR bruta, TIR neta,
+ * plusvalía) para un precio de compra dado, reutilizando exactamente la misma
+ * mecánica que el cálculo principal. Se usa tanto para el resultado principal
+ * como para cada fila de la tabla comparativa de precios, de modo que ningún
+ * número de la tabla puede derivar de una tasa o lógica distinta.
+ */
+function escenarioPrecio(
+  precioPct: number,
+  nominal: number,
+  cuponBrutoAnual: number,
+  plazo: number,
+  tipoMarginal: number
+): {
+  precioCompraEuros: number;
+  cuponNetoAnual: number;
+  gananciaCapital: number;
+  tirBruta: number;
+  tirNeta: number;
+} {
+  const precioCompraEuros = nominal * (precioPct / 100);
+
+  // Cupón neto anual (retención a cuenta art. 101 LIRPF)
+  const cuponNetoAnual = cuponBrutoAnual - cuponBrutoAnual * RETENCION_CUPON;
+
+  // Ganancia o pérdida de capital al vencimiento
+  const gananciaCapital = nominal - precioCompraEuros;
+
+  // TIR bruta
+  const tirBruta = calcularTIR(precioCompraEuros, cuponBrutoAnual, nominal, plazo);
+
+  // TIR neta estimada (misma aproximación que el cálculo principal)
+  const cuponNetoParaTIR = cuponBrutoAnual * (1 - tipoMarginal);
+  const nominalNetoFiscal = nominal - (gananciaCapital > 0 ? gananciaCapital * tipoMarginal : 0);
+  const tirNeta = calcularTIR(precioCompraEuros, cuponNetoParaTIR, nominalNetoFiscal, plazo);
+
+  return { precioCompraEuros, cuponNetoAnual, gananciaCapital, tirBruta, tirNeta };
+}
+
 export function compute(i: Inputs): Outputs {
   // --- Saneado de inputs ---
   const nominal = Math.max(1000, Math.round(i.nominal / 1000) * 1000);
@@ -115,42 +155,32 @@ export function compute(i: Inputs): Outputs {
   const plazo = [3, 5, 10, 15, 30].includes(i.plazo_anios) ? i.plazo_anios : 5;
   const baseAhorro = Math.max(0, i.base_imponible_ahorro);
 
-  // --- Precio efectivo de compra ---
-  const precioCompraEuros = nominal * (precioPct / 100);
-
   // --- Cupón anual ---
   const cuponBrutoAnual = nominal * (cuponPct / 100);
   const retencionAnual = cuponBrutoAnual * RETENCION_CUPON;
-  const cuponNetoAnual = cuponBrutoAnual - retencionAnual;
-
-  // --- Totales a lo largo del plazo ---
-  const totalCuponesBrutos = cuponBrutoAnual * plazo;
-  const totalCuponesNetos = cuponNetoAnual * plazo;
-
-  // --- Ganancia o pérdida de capital al vencimiento ---
-  // Tributación: rendimiento del capital mobiliario (art. 25.2 LIRPF)
-  const gananciaCapital = nominal - precioCompraEuros;
 
   // Tipo marginal aplicable a la base total estimada
   // (sumamos el cupón bruto anual a la base para estimar el tramo marginal)
   const baseTotal = baseAhorro + cuponBrutoAnual;
   const tipoMarginal = tipoMarginalAhorro(baseTotal);
 
+  // --- Escenario del precio elegido (misma lógica que la tabla comparativa) ---
+  const esc = escenarioPrecio(precioPct, nominal, cuponBrutoAnual, plazo, tipoMarginal);
+  const precioCompraEuros = esc.precioCompraEuros;
+  const cuponNetoAnual = esc.cuponNetoAnual;
+  const gananciaCapital = esc.gananciaCapital;
+  const tirBruta = esc.tirBruta;
+  const tirNeta = esc.tirNeta;
+
+  // --- Totales a lo largo del plazo ---
+  const totalCuponesBrutos = cuponBrutoAnual * plazo;
+  const totalCuponesNetos = cuponNetoAnual * plazo;
+
   // Impuesto sobre ganancia de capital (solo si hay ganancia positiva;
   // las pérdidas se compensan con otros rendimientos del ahorro)
   const impuestoGananciaCapital = gananciaCapital > 0
     ? gananciaCapital * tipoMarginal
     : gananciaCapital * tipoMarginal; // pérdida genera ahorro fiscal (valor negativo)
-
-  // --- TIR bruta ---
-  const tirBruta = calcularTIR(precioCompraEuros, cuponBrutoAnual, nominal, plazo);
-
-  // --- TIR neta estimada ---
-  // Aproximación: aplicamos tipo marginal a cupones y ganancia de capital
-  const cuponNetoParaTIR = cuponBrutoAnual * (1 - tipoMarginal);
-  // Ajuste por impuesto sobre ganancia/pérdida de capital al vencimiento
-  const nominalNetoFiscal = nominal - (gananciaCapital > 0 ? gananciaCapital * tipoMarginal : 0);
-  const tirNeta = calcularTIR(precioCompraEuros, cuponNetoParaTIR, nominalNetoFiscal, plazo);
 
   // --- Duración modificada (con TIR bruta) ---
   const durMod = tirBruta > -0.99
@@ -202,7 +232,40 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: `Termómetro de rentabilidad neta: ${tirNetaPct.toFixed(2)}% anual tras impuestos, sobre una escala de zonas de pérdida a alta.`
   };
 
+  // --- Tabla: rentabilidad real según el precio de compra ---
+  // Mismo bono (nominal, cupón, plazo, tipo marginal) comprado al 95 %, 100 %
+  // (par) y 105 % del nominal. Cada fila se calcula con escenarioPrecio(), la
+  // MISMA función que produce el resultado principal.
+  const fmtEUR0 = (n: number) => Math.round(n).toLocaleString('es-ES') + ' €';
+  const fmtPctTabla = (r: number) => (Math.round(r * 10000) / 100).toFixed(2).replace('.', ',') + ' %';
+  const fmtGanancia = (n: number) => {
+    const r = Math.round(n);
+    if (r > 0) return '+' + r.toLocaleString('es-ES') + ' €';
+    if (r < 0) return r.toLocaleString('es-ES') + ' €';
+    return '0 €';
+  };
+  const preciosTabla = [95, 100, 105];
+  const _table = {
+    title: `Rentabilidad real según el precio de compra (cupón ${cuponPct.toString().replace('.', ',')} %, ${plazo} años)`,
+    headers: ['Precio compra', 'Desembolso', 'Cupón neto/año', 'Plusvalía al vto.', 'TIR bruta', 'TIR neta'],
+    align: ['left', 'right', 'right', 'right', 'right', 'right'] as const,
+    rows: preciosTabla.map((p) => {
+      const e = escenarioPrecio(p, nominal, cuponBrutoAnual, plazo, tipoMarginal);
+      const etiqueta = p === 100 ? '100 % (par)' : `${p} %`;
+      return [
+        etiqueta,
+        fmtEUR0(e.precioCompraEuros),
+        fmtEUR0(e.cuponNetoAnual),
+        fmtGanancia(e.gananciaCapital),
+        fmtPctTabla(e.tirBruta),
+        fmtPctTabla(e.tirNeta),
+      ];
+    }),
+    note: `El cupón neto/año es fijo (${fmtEUR0(cuponNetoAnual)}, no depende del precio): lo que cambia la rentabilidad es el precio de entrada. Comprar bajo par (95 %) suma plusvalía al vencimiento y sube la TIR; sobre par (105 %) la resta. TIR neta estimada con tu tipo marginal del ahorro (${tipoMarginalPct.toFixed(0).replace('.', ',')} %); no incluye comisiones ni inflación.`,
+  };
+
   return {
+    _table,
     cupon_bruto_anual: Math.round(cuponBrutoAnual * 100) / 100,
     retencion_anual: Math.round(retencionAnual * 100) / 100,
     cupon_neto_anual: Math.round(cuponNetoAnual * 100) / 100,

@@ -19,21 +19,29 @@ export interface Outputs {
   advertencia_limite: string;
   _insight?: any;
   _chart?: any;
+  _table?: any;
 }
 
-export function compute(i: Inputs): Outputs {
-  // Constantes CST 2026 Colombia
-  const DIAS_VACACIONES_POR_ANO = 15; // CST art. 186
-  const LIMITE_ACUMULACION_DIAS = 30; // Máximo legal (2 años)
-  const DIAS_MES = 30; // Para cálculo de valor diario
-  const MESES_ANO = 12;
+// Constantes CST 2026 Colombia
+const DIAS_VACACIONES_POR_ANO = 15; // CST art. 186
+const LIMITE_ACUMULACION_DIAS = 30; // Máximo legal (2 años)
+const DIAS_MES = 30; // Para cálculo de valor diario
+const MESES_ANO = 12;
 
-  // Validaciones básicas
-  const salario = Math.max(0, i.salario_mensual);
-  const meses = Math.max(0, Math.min(i.meses_trabajados, MESES_ANO));
-  const anos = Math.max(0, i.anos_servicio);
-  const tomados = Math.max(0, i.dias_vacaciones_tomadas);
-  const acumulados_ant = Math.max(0, i.dias_acumulados_anteriores);
+// Helper puro: misma lógica que produce el resultado principal y cada fila de la tabla.
+// NO cambia ninguna constante ni regla; sólo encapsula el cálculo existente.
+function calcularVacaciones(args: {
+  salario: number;
+  meses: number;
+  anos: number;
+  tomados: number;
+  acumulados_ant: number;
+}) {
+  const salario = Math.max(0, args.salario);
+  const meses = Math.max(0, Math.min(args.meses, MESES_ANO));
+  const anos = Math.max(0, args.anos);
+  const tomados = Math.max(0, args.tomados);
+  const acumulados_ant = Math.max(0, args.acumulados_ant);
 
   // Cálculo de días anuales (años completos)
   const anos_completos = Math.floor(anos);
@@ -82,6 +90,39 @@ export function compute(i: Inputs): Outputs {
     (pago_vacaciones_dias_tomados + pago_vacaciones_pendientes) * 100
   ) / 100;
 
+  return {
+    dias_vacaciones_anuales,
+    dias_vacaciones_proporcional,
+    dias_vacaciones_disponibles,
+    dias_vacaciones_pendientes,
+    dias_acumulados_total,
+    dias_acumulados_legales,
+    valor_diario,
+    pago_vacaciones_dias_tomados,
+    pago_vacaciones_pendientes,
+    pago_total_vacaciones,
+  };
+}
+
+export function compute(i: Inputs): Outputs {
+  const salario = Math.max(0, i.salario_mensual);
+  const meses = Math.max(0, Math.min(i.meses_trabajados, MESES_ANO));
+  const anos = Math.max(0, i.anos_servicio);
+  const tomados = Math.max(0, i.dias_vacaciones_tomadas);
+  const acumulados_ant = Math.max(0, i.dias_acumulados_anteriores);
+
+  const r = calcularVacaciones({ salario, meses, anos, tomados, acumulados_ant });
+  const dias_vacaciones_anuales = r.dias_vacaciones_anuales;
+  const dias_vacaciones_proporcional = r.dias_vacaciones_proporcional;
+  const dias_vacaciones_disponibles = r.dias_vacaciones_disponibles;
+  const dias_vacaciones_pendientes = r.dias_vacaciones_pendientes;
+  const dias_acumulados_total = r.dias_acumulados_total;
+  const dias_acumulados_legales = r.dias_acumulados_legales;
+  const valor_diario = r.valor_diario;
+  const pago_vacaciones_dias_tomados = r.pago_vacaciones_dias_tomados;
+  const pago_vacaciones_pendientes = r.pago_vacaciones_pendientes;
+  const pago_total_vacaciones = r.pago_total_vacaciones;
+
   // Advertencia si excede límite de acumulación
   let advertencia_limite = "";
   if (dias_acumulados_total > LIMITE_ACUMULACION_DIAS) {
@@ -123,6 +164,34 @@ export function compute(i: Inputs): Outputs {
     ],
     ariaLabel: `Días acumulados ${dias_acumulados_total.toFixed(1)} frente al tope legal de ${LIMITE_ACUMULACION_DIAS} días`,
   };
+
+  // Tabla computada: días y valor de vacaciones según ANTIGÜEDAD (años de servicio),
+  // manteniendo tu salario, meses del año en curso, días tomados y saldo anterior.
+  // Cada fila llama al MISMO helper que produce el resultado principal (sin fabricar números).
+  const fmtDias = (n: number) => (Math.round(n * 10) / 10).toLocaleString('es-CO', { maximumFractionDigits: 1 });
+  const anosTabla = Array.from(new Set([1, 2, 3, 5, 10, Math.floor(anos)]))
+    .filter((a) => a >= 0)
+    .sort((a, b) => a - b)
+    .slice(0, 7);
+  const tableRows = anosTabla.map((a) => {
+    const f = calcularVacaciones({ salario, meses, anos: a, tomados, acumulados_ant });
+    const esTuCaso = a === Math.floor(anos);
+    return [
+      `${a} año${a === 1 ? '' : 's'}${esTuCaso ? ' (tu caso)' : ''}`,
+      `${fmtDias(f.dias_vacaciones_anuales)} días`,
+      `${fmtDias(f.dias_vacaciones_disponibles)} días`,
+      `${fmtDias(f.dias_vacaciones_pendientes)} días`,
+      fmtCop(f.pago_vacaciones_pendientes),
+    ];
+  });
+  const table = {
+    title: `Vacaciones según antigüedad (salario ${fmtCop(salario)}/mes)`,
+    headers: ['Antigüedad', 'Días/año (15×años)', 'Días disponibles', 'Días pendientes', 'Valor pendiente'],
+    align: ['left', 'right', 'right', 'right', 'right'] as ('left' | 'right' | 'center')[],
+    rows: tableRows,
+    note: `15 días hábiles por año cumplido (CST art. 186). "Disponibles" y "pendientes" incluyen tu proporcional del año en curso (${meses} mes${meses === 1 ? '' : 'es'}), tus ${tomados} día${tomados === 1 ? '' : 's'} ya tomados y ${acumulados_ant} día${acumulados_ant === 1 ? '' : 's'} de años anteriores. Valor diario = salario / 30.`,
+  };
+
   return {
     dias_vacaciones_anuales: Math.round(dias_vacaciones_anuales * 100) / 100,
     dias_vacaciones_proporcional,
@@ -135,6 +204,7 @@ export function compute(i: Inputs): Outputs {
     pago_total_vacaciones,
     advertencia_limite,
     _insight: insight,
-    _chart: chart
+    _chart: chart,
+    _table: table
   };
 }

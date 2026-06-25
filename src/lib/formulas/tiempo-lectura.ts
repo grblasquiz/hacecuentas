@@ -1,6 +1,11 @@
 /** Tiempo estimado para leer un libro o artículo */
 export interface Inputs { cantidadPalabras: number; velocidadLectura?: string; }
-export interface Outputs { minutosLectura: number; horasLectura: number; paginasEquivalentes: number; detalle: string; _insight?: any; }
+export interface Outputs { minutosLectura: number; horasLectura: number; paginasEquivalentes: number; detalle: string; _table?: any; _insight?: any; }
+
+// Math central: minutos = palabras / ppm. La usa el resultado principal Y cada fila de la tabla.
+function minutosLeer(palabras: number, ppm: number): number {
+  return palabras / ppm;
+}
 
 export function tiempoLectura(i: Inputs): Outputs {
   const palabras = Number(i.cantidadPalabras);
@@ -10,7 +15,7 @@ export function tiempoLectura(i: Inputs): Outputs {
   const ppmMap: Record<string, number> = { lento: 150, normal: 250, rapido: 350 };
   const ppm = ppmMap[vel] || 250;
 
-  const minutos = palabras / ppm;
+  const minutos = minutosLeer(palabras, ppm);
   const horas = minutos / 60;
   const paginas = Math.round(palabras / 250);
 
@@ -33,11 +38,37 @@ export function tiempoLectura(i: Inputs): Outputs {
     insightTone = 'good';
   }
 
+  const fmtTiempo = (m: number) => {
+    const h = Math.floor(m / 60);
+    const mn = Math.round(m - h * 60);
+    return h > 0 ? `${h} h ${mn} min` : `${mn} min`;
+  };
+
+  // Velocidades derivadas del propio ppmMap del input (150/250/350) + una extra,
+  // garantizando que la velocidad elegida por el usuario siempre tenga su fila.
+  const velocidades: { etiqueta: string; ppm: number }[] = [
+    { etiqueta: 'Lenta', ppm: ppmMap.lento },
+    { etiqueta: 'Media', ppm: ppmMap.normal },
+    { etiqueta: 'Rápida', ppm: ppmMap.rapido },
+    { etiqueta: 'Muy rápida', ppm: 450 },
+  ];
+
   return {
     minutosLectura: Number(minutos.toFixed(1)),
     horasLectura: Number(horas.toFixed(2)),
     paginasEquivalentes: paginas,
     detalle: `A ${ppm} palabras/min, leer ${fmt.format(palabras)} palabras te lleva ${tiempoFmt} (~${paginas} páginas).`,
+    _table: {
+      title: `Cuánto tardás en leer ${fmt.format(palabras)} palabras según tu velocidad`,
+      headers: ['Velocidad', 'Palabras/min', 'Tiempo'],
+      align: ['left', 'right', 'right'],
+      rows: velocidades.map((v) => {
+        const m = minutosLeer(palabras, v.ppm);
+        const esTuyo = v.ppm === ppm;
+        return [esTuyo ? `${v.etiqueta} (tu ritmo)` : v.etiqueta, String(v.ppm), fmtTiempo(m)];
+      }),
+      note: `Misma cantidad de palabras (${fmt.format(palabras)}) leída a distintas velocidades. El lector promedio ronda las 200-250 palabras/min; con técnica de lectura veloz se llega a 300-400.`,
+    },
     _insight: { title: 'Tu tiempo de lectura', text: insightText, tone: insightTone, icon: '📖' },
   };
 }
