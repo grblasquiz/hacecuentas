@@ -16,9 +16,12 @@ CREATE TABLE IF NOT EXISTS mailing_pool (
   title TEXT NOT NULL,                   -- nombre para mostrar (h1 limpio)
   answer_snippet TEXT NOT NULL,          -- explicación corta (answerSnippet, markdown limpiado)
   category TEXT,                         -- finanzas|salud|... (para el chip)
+  icon TEXT,                             -- emoji de la calc (para el círculo de la tarjeta)
   url TEXT NOT NULL,                     -- URL absoluta a la calc
   rank INTEGER NOT NULL                  -- 1 = más tráfico; orden de envío
 );
+-- Si la tabla ya existía sin icon (idempotente: "duplicate column" se ignora):
+ALTER TABLE mailing_pool ADD COLUMN icon TEXT;
 CREATE INDEX IF NOT EXISTS idx_mailing_pool_rank ON mailing_pool(rank);
 
 -- Log de cada calc enviada (1 fila por calc por edición).
