@@ -93,7 +93,7 @@ const FONT = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 // El logo se sirve desde hacecuentas.com (mismo dominio que las OG): Gmail no
 // proxea bien imágenes desde workers.dev. El worker mantiene /brand.png igual
 // como fallback, pero el email usa la URL del sitio.
-const LOGO_URL = 'https://hacecuentas.com/brand-email.png';
+const LOGO_URL = 'https://hacecuentas.com/brand-email-v3.png';
 
 /** Primera oración del snippet (hook escaneable, no un bloque denso). */
 function shortDesc(s) {
@@ -109,19 +109,26 @@ function shortDesc(s) {
 // La imagen OG de cada calc (1200×630, branded: logo+categoría+título+pills) es el hero.
 const ogUrl = (slug) => `https://hacecuentas.com/og/${slug}.png`;
 
+// UTMs en cada link → GA4 atribuye el tráfico al canal Email (utm_medium=email).
+// utm_content distingue qué calc/CTA se clickeó.
+function withUtm(url, content) {
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}utm_source=newsletter&utm_medium=email&utm_campaign=2calcs-semanales&utm_content=${encodeURIComponent(content)}`;
+}
+
 // Tarjeta: imagen OG (hero) → descripción de qué hace → botón "Usar".
 function calcCard(c) {
   const name = esc(shortName(c.title));
   return `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#ffffff;border:1px solid #e6ebf2;border-radius:16px;">
     <tr><td style="padding:0;line-height:0;">
-      <a href="${esc(c.url)}" style="text-decoration:none;">
+      <a href="${esc(withUtm(c.url, c.slug))}" style="text-decoration:none;">
         <img src="${esc(ogUrl(c.slug))}" width="600" alt="${name}" style="display:block;width:100%;max-width:600px;height:auto;border:0;border-radius:16px 16px 0 0;">
       </a>
     </td></tr>
     <tr><td style="padding:20px 24px 24px;">
       <p style="margin:0 0 20px;font:400 16px/1.6 ${FONT};color:#334155;">${esc(shortDesc(c.answer_snippet))}</p>
-      <a href="${esc(c.url)}" style="display:inline-block;background:#2563eb;color:#ffffff;font:600 15px ${FONT};text-decoration:none;padding:13px 28px;border-radius:10px;">Usar calculadora →</a>
+      <a href="${esc(withUtm(c.url, c.slug))}" style="display:inline-block;background:#2563eb;color:#ffffff;font:600 15px ${FONT};text-decoration:none;padding:13px 28px;border-radius:10px;">Usar calculadora →</a>
     </td></tr>
   </table>`;
 }
@@ -134,8 +141,8 @@ function renderEmail(calcs, unsubLink) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;">
  <tr><td align="center" style="padding:30px 14px;">
   <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;">
-   <tr><td style="padding:4px 4px 22px;">
-     <img src="${LOGO_URL}" width="188" alt="Hacé Cuentas" style="display:block;width:188px;height:auto;border:0;">
+   <tr><td align="center" style="padding:8px 4px 24px;">
+     <img src="${LOGO_URL}" width="210" alt="Hacé Cuentas" style="display:block;margin:0 auto;width:210px;height:auto;border:0;">
    </td></tr>
    <tr><td style="padding:0 4px 20px;">
      <p style="margin:0;font:700 20px ${FONT};color:#0f172a;">Dos calculadoras para vos 👇</p>
@@ -143,7 +150,7 @@ function renderEmail(calcs, unsubLink) {
    </td></tr>
    <tr><td>${cards}</td></tr>
    <tr><td align="center" style="padding:6px 0 2px;">
-     <a href="https://hacecuentas.com" style="display:inline-block;font:600 14px ${FONT};color:#2563eb;text-decoration:none;padding:8px 0;">Ver las 4.000+ calculadoras →</a>
+     <a href="${esc(withUtm('https://hacecuentas.com', 'ver-todas'))}" style="display:inline-block;font:600 14px ${FONT};color:#2563eb;text-decoration:none;padding:8px 0;">Ver las 4.000+ calculadoras →</a>
    </td></tr>
    <tr><td style="padding:24px 4px 4px;border-top:1px solid #dde4ec;margin-top:8px;">
      <p style="margin:14px 0 6px;font:400 12px/1.6 ${FONT};color:#94a3b8;">Recibís esto porque dejaste tu mail en hacecuentas.com · Calculadoras gratis, sin registro · Argentina.</p>
