@@ -384,6 +384,8 @@ import { calculadoraCostoVidaParaguay } from './calculadora-costo-vida-paraguay'
 import { calculadoraCostoVidaRepublicaDominicana } from './calculadora-costo-vida-republica-dominicana';
 import { calculadoraCupoGasolinaSubsidiadaVenezuela } from './calculadora-cupo-gasolina-subsidiada-venezuela';
 import { calculadoraCustoTrabalhadorEntidadeEmpregadoraPortugal } from './calculadora-custo-trabalhador-entidade-empregadora-portugal';
+import { calculadoraDeEscala } from './calculadora-de-escala';
+import { calculadoraDeHoras } from './calculadora-de-horas';
 import { calculadoraDespidoUruguay } from './calculadora-despido-uruguay';
 import { compute as compute__calculadora_factor_integracion_salarial_imss_mexico } from './calculadora-factor-integracion-salarial-imss-mexico';
 import { calculadoraHorasExtraUruguay } from './calculadora-horas-extra-uruguay';
@@ -427,6 +429,7 @@ import { calculadoraProporcionesReceta } from './calculadora-proporciones-receta
 import { compute as compute__calculadora_provision_prestaciones_sociales_mensual_empleador_colombia_2026 } from './calculadora-provision-prestaciones-sociales-mensual-empleador-colombia-2026';
 import { compute as compute__calculadora_recibo_nomina_percepciones_deducciones_mexico_2026 } from './calculadora-recibo-nomina-percepciones-deducciones-mexico-2026';
 import { calculadoraRecibosVerdesTrabalhadorIndependentePortugal } from './calculadora-recibos-verdes-trabalhador-independente-portugal';
+import { calculadoraRelacionDeAspecto } from './calculadora-relacion-de-aspecto';
 import { calculadoraRemesaZelleBolivaresVenezuela } from './calculadora-remesa-zelle-bolivares-venezuela';
 import { calculadoraRemesasEstadosUnidosRepublicaDominicana } from './calculadora-remesas-estados-unidos-republica-dominicana';
 import { calculadoraRetencionIslrVenezuela } from './calculadora-retencion-islr-venezuela';
@@ -1329,6 +1332,7 @@ import { duracionCarreraUniversidad } from './duracion-carrera-universidad';
 import { duracionModificadaBonoRiesgoTasa } from './duracion-modificada-bono-riesgo-tasa';
 import { ebbinghausCurvaOlvido } from './ebbinghaus-curva-olvido';
 import { ebitdaEmpresa } from './ebitda-empresa';
+import { eclipseSolar12Agosto2026 } from './eclipse-solar-12-agosto-2026';
 import { ecuacionCuadratica } from './ecuacion-cuadratica';
 import { ecuacionCuadraticaRaicesDiscriminante } from './ecuacion-cuadratica-raices-discriminante';
 import { ecuacionesCinematicasMruMrua } from './ecuaciones-cinematicas-mru-mrua';
@@ -4074,6 +4078,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-costo-vida-republica-dominicana': calculadoraCostoVidaRepublicaDominicana,
   'calculadora-cupo-gasolina-subsidiada-venezuela': calculadoraCupoGasolinaSubsidiadaVenezuela,
   'calculadora-custo-trabalhador-entidade-empregadora-portugal': calculadoraCustoTrabalhadorEntidadeEmpregadoraPortugal,
+  'calculadora-de-escala': calculadoraDeEscala,
+  'calculadora-de-horas': calculadoraDeHoras,
   'calculadora-despido-uruguay': calculadoraDespidoUruguay,
   'calculadora-factor-integracion-salarial-imss-mexico': compute__calculadora_factor_integracion_salarial_imss_mexico,
   'calculadora-horas-extra-uruguay': calculadoraHorasExtraUruguay,
@@ -4117,6 +4123,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-provision-prestaciones-sociales-mensual-empleador-colombia-2026': compute__calculadora_provision_prestaciones_sociales_mensual_empleador_colombia_2026,
   'calculadora-recibo-nomina-percepciones-deducciones-mexico-2026': compute__calculadora_recibo_nomina_percepciones_deducciones_mexico_2026,
   'calculadora-recibos-verdes-trabalhador-independente-portugal': calculadoraRecibosVerdesTrabalhadorIndependentePortugal,
+  'calculadora-relacion-de-aspecto': calculadoraRelacionDeAspecto,
   'calculadora-remesa-zelle-bolivares-venezuela': calculadoraRemesaZelleBolivaresVenezuela,
   'calculadora-remesas-estados-unidos-republica-dominicana': calculadoraRemesasEstadosUnidosRepublicaDominicana,
   'calculadora-retencion-islr-venezuela': calculadoraRetencionIslrVenezuela,
@@ -5019,6 +5026,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'duracion-modificada-bono-riesgo-tasa': duracionModificadaBonoRiesgoTasa,
   'ebbinghaus-curva-olvido': ebbinghausCurvaOlvido,
   'ebitda-empresa': ebitdaEmpresa,
+  'eclipse-solar-12-agosto-2026': eclipseSolar12Agosto2026,
   'ecuacion-cuadratica': ecuacionCuadratica,
   'ecuacion-cuadratica-raices-discriminante': ecuacionCuadraticaRaicesDiscriminante,
   'ecuaciones-cinematicas-mru-mrua': ecuacionesCinematicasMruMrua,
