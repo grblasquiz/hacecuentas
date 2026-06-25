@@ -958,6 +958,10 @@ if (blogPosts.length > 0) {
 {
   const now = Date.now();
   const TWO_DAYS_MS = 2 * 24 * 3600 * 1000;
+  // Blog: ventana 7d para que el sitemap-news NUNCA quede 404 entre notas (Google
+  // News usa las <48h e ignora el resto sin penalizar; Bing/Yandex sí leen las más
+  // viejas). Un feed vivo permanente >> uno que aparece y desaparece (mata Discover).
+  const BLOG_WINDOW_MS = 7 * 24 * 3600 * 1000;
   const newsEntries: NewsEntry[] = [];
 
   // Blog posts fresh
@@ -965,7 +969,7 @@ if (blogPosts.length > 0) {
     const dateStr = p.updatedDate || p.date;
     if (!dateStr) continue;
     const t = Date.parse(dateStr);
-    if (Number.isNaN(t) || now - t > TWO_DAYS_MS) continue;
+    if (Number.isNaN(t) || now - t > BLOG_WINDOW_MS) continue;
     newsEntries.push({
       loc: `${site}/blog/${p.slug}`,
       // ogTitle = headline limpio sin sufijo "| Hacé Cuentas" → mejor para Google News/Discover.
@@ -980,7 +984,7 @@ if (blogPosts.length > 0) {
     const dateStr = p.updatedDate || p.date;
     if (!dateStr) continue;
     const t = Date.parse(dateStr);
-    if (Number.isNaN(t) || now - t > TWO_DAYS_MS) continue;
+    if (Number.isNaN(t) || now - t > BLOG_WINDOW_MS) continue;
     newsEntries.push({
       loc: `${site}/pt/blog/${p.slug}`,
       title: (p.ogTitle || p.title || p.slug).slice(0, 120),
@@ -1023,15 +1027,10 @@ if (blogPosts.length > 0) {
     });
     console.log(`📰 sitemap-news.xml: ${newsEntries.length} entries fresh (<48h)`);
   } else {
-    // Si no hay entries fresh, borramos el archivo viejo. Sin esto el sitemap-news.xml
-    // de la corrida anterior queda servido — engines siguen leyendo data stale.
-    const newsPath = join(PUBLIC_DIR, 'sitemap-news.xml');
-    if (existsSync(newsPath)) {
-      execSync(`rm -f "${newsPath}"`);
-      console.log('📰 sitemap-news.xml: 0 entries fresh — removed stale file');
-    } else {
-      console.log('📰 sitemap-news.xml: 0 entries fresh — skipping');
-    }
+    // Con ventana de 7d esto solo pasa si el motor lleva >7 días sin publicar
+    // (anomalía → el motor alerta aparte). NO borramos el archivo: un feed un
+    // poco viejo es mejor que un 404 para Discover/News.
+    console.log('📰 sitemap-news.xml: 0 entries en 7d — ¿motor sin notas? mantengo el archivo anterior');
   }
 }
 
