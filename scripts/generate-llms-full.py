@@ -17,6 +17,8 @@ Uso:
 Fuente de verdad: src/content/calcs/*.json (JSONs editoriales con metadata)
 """
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
 from collections import OrderedDict
