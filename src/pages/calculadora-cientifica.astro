@@ -8,7 +8,7 @@ import Footer from '../components/Footer.astro';
 
 const title = 'Calculadora Científica Online Gratis 2026 | Hacé Cuentas';
 const description =
-  'Calculadora científica online gratis para la compu y el celular: seno, coseno, tangente, logaritmos (ln, log), raíces, potencias, factorial, π y e. Modo grados/radianes y teclado. Para secundaria, CBC y facultad, sin descargar ni registrarte.';
+  'Calculadora científica online gratis para la compu y el celular: seno, coseno, tangente, logaritmos (ln, log, log₂), raíces, potencias, factorial, combinaciones (nCr) y notación científica. Modo grados/radianes, memoria y teclado. Para secundaria, CBC y facultad, sin descargar ni registrarte.';
 
 // Teclado. Cada tecla: append (texto a insertar) o act (acción).
 // li/ai = etiqueta y append cuando INV está activo (funciones inversas).
@@ -27,9 +27,21 @@ const keys = [
 
   { l: 'ln', cls: 'k-fn', ap: 'ln(', li: 'eˣ', ai: 'exp(' },
   { l: 'log', cls: 'k-fn', ap: 'log(', li: '10ˣ', ai: '10^(' },
-  { l: '√', cls: 'k-fn', ap: '√(' },
+  { l: '√', cls: 'k-fn', ap: '√(', li: '∛', ai: 'cbrt(' },
   { l: 'x²', cls: 'k-fn', ap: '^2' },
   { l: 'xʸ', cls: 'k-op', ap: '^' },
+
+  { l: 'sinh', cls: 'k-fn', ap: 'sinh(', title: 'Seno hiperbólico' },
+  { l: 'cosh', cls: 'k-fn', ap: 'cosh(', title: 'Coseno hiperbólico' },
+  { l: 'tanh', cls: 'k-fn', ap: 'tanh(', title: 'Tangente hiperbólica' },
+  { l: '|x|', cls: 'k-fn', ap: 'abs(', title: 'Valor absoluto' },
+  { l: 'log₂', cls: 'k-fn', ap: 'log2(', title: 'Logaritmo en base 2' },
+
+  { l: 'MC', cls: 'k-ctrl k-mem', act: 'mc', title: 'Borrar memoria' },
+  { l: 'MR', cls: 'k-ctrl k-mem', act: 'mr', title: 'Recuperar memoria' },
+  { l: 'M+', cls: 'k-ctrl k-mem', act: 'mplus', title: 'Sumar a memoria' },
+  { l: 'Ans', cls: 'k-fn', act: 'ans', title: 'Último resultado' },
+  { l: 'nCr', cls: 'k-fn', ap: 'nCr', li: 'nPr', ai: 'nPr', title: 'Combinaciones (INV → permutaciones nPr)' },
 
   { l: '7', cls: 'k-num', ap: '7' },
   { l: '8', cls: 'k-num', ap: '8' },
@@ -59,14 +71,21 @@ const keys = [
 const funcTable = [
   ['sin, cos, tan', 'Funciones trigonométricas. Respetan el modo DEG/RAD elegido.'],
   ['sin⁻¹, cos⁻¹, tan⁻¹', 'Funciones inversas (arcoseno, arcocoseno, arcotangente). Activá INV.'],
+  ['sinh, cosh, tanh', 'Funciones hiperbólicas (seno, coseno y tangente hiperbólicos).'],
   ['ln', 'Logaritmo natural (base e).'],
   ['log', 'Logaritmo en base 10. Con INV se vuelve 10ˣ.'],
+  ['log₂', 'Logaritmo en base 2. log₂(8) = 3.'],
   ['√', 'Raíz cuadrada. Escribí √(número).'],
+  ['∛ (INV de √)', 'Raíz cúbica. Activá INV y tocá √: ∛(27) = 3. También sale como 27^(1÷3).'],
   ['x²  /  xʸ', 'Elevar al cuadrado (^2) o a cualquier potencia (^).'],
+  ['|x|', 'Valor absoluto: |−5| = 5.'],
   ['n!', 'Factorial de un entero ≥ 0 (5! = 120).'],
+  ['nCr, nPr', 'Combinaciones y permutaciones: 5 nCr 2 = 10; 5 nPr 2 = 20. Con INV, nCr pasa a nPr.'],
   ['%', 'Porcentaje: convierte a decimal (50% = 0,5). Para "el 15% de 200" escribí 200×15%.'],
   ['π, e', 'Constantes pi (3,14159…) y número de Euler (2,71828…).'],
   ['EXP', 'Notación científica: 3 EXP 8 = 3×10⁸.'],
+  ['MC, MR, M+', 'Memoria: M+ suma el valor actual, MR lo trae, MC la borra. Aparece "M" en la pantalla.'],
+  ['Ans', 'Inserta el último resultado calculado para encadenar cuentas.'],
 ];
 
 const faqs = [
@@ -128,7 +147,23 @@ const faqs = [
   },
   {
     q: '¿Qué funciones tiene una calculadora científica?',
-    a: 'Las funciones científicas básicas que incluye esta: <strong>trigonométricas</strong> (sin, cos, tan y sus inversas sin⁻¹, cos⁻¹, tan⁻¹), <strong>logaritmos</strong> (ln natural y log base 10, más eˣ y 10ˣ con INV), <strong>raíz cuadrada</strong> y potencias (x², xʸ), <strong>factorial</strong> (n!), <strong>porcentajes</strong>, las constantes <strong>π y e</strong>, <strong>notación científica</strong> (EXP) y paréntesis con jerarquía de operaciones. Todo con modo grados o radianes.',
+    a: 'Las que incluye esta: <strong>trigonométricas</strong> (sin, cos, tan y sus inversas) e <strong>hiperbólicas</strong> (sinh, cosh, tanh), <strong>logaritmos</strong> (ln, log base 10 y log₂, más eˣ y 10ˣ con INV), <strong>raíz cuadrada y cúbica</strong>, potencias (x², xʸ), <strong>factorial</strong> (n!), <strong>combinaciones y permutaciones</strong> (nCr, nPr), <strong>valor absoluto</strong> (|x|), <strong>porcentajes</strong>, las constantes <strong>π y e</strong>, <strong>notación científica</strong> (EXP), <strong>memoria</strong> (M+, MR, MC) y <strong>Ans</strong>, todo con jerarquía de operaciones y modo grados o radianes.',
+  },
+  {
+    q: '¿Cómo calculo combinaciones (nCr) y permutaciones (nPr)?',
+    a: 'Escribí el total, tocá <code>nCr</code> y después la cantidad que elegís: <code>5 nCr 2</code> = 10 combinaciones. Para <strong>permutaciones</strong> (cuando el orden importa) activá <strong>INV</strong> y el botón pasa a <code>nPr</code>: <code>5 nPr 2</code> = 20. Si querés el paso a paso, tenés la <a href="/calculadora-combinaciones-permutaciones-factorial">calculadora de combinaciones y permutaciones</a> dedicada.',
+  },
+  {
+    q: '¿Tiene funciones hiperbólicas, raíz cúbica y log en base 2?',
+    a: 'Sí. Están los botones <code>sinh</code>, <code>cosh</code> y <code>tanh</code> para las <strong>funciones hiperbólicas</strong>; la <strong>raíz cúbica</strong> sale activando <strong>INV</strong> y tocando <code>√</code> (se convierte en <code>∛</code>): <code>∛(27)</code> = 3; y tenés <code>log₂</code> para el <strong>logaritmo en base 2</strong> y <code>|x|</code> para el <strong>valor absoluto</strong>.',
+  },
+  {
+    q: '¿Cómo uso la memoria (M+, MR, MC) y el botón Ans?',
+    a: 'Con <strong>M+</strong> sumás el valor en pantalla a la memoria (aparece una <strong>M</strong> arriba), con <strong>MR</strong> lo traés de vuelta a la cuenta y con <strong>MC</strong> la borrás. El botón <strong>Ans</strong> inserta el <strong>último resultado</strong> para encadenar operaciones. La memoria queda guardada en tu navegador aunque cierres la página.',
+  },
+  {
+    q: '¿Hace fracciones?',
+    a: 'Esta calculadora trabaja con <strong>decimales</strong> (por ejemplo 1÷4 = 0,25). Si necesitás operar y simplificar <strong>fracciones</strong> mostradas como a/b, usá nuestra <a href="/calculadora-fracciones-suma-resta-multiplicacion-division">calculadora de fracciones</a>, que suma, resta, multiplica, divide y simplifica paso a paso.',
   },
 ];
 
@@ -137,6 +172,8 @@ const related = [
   { href: '/calculadora-logaritmos-base-10-natural-cualquier-base', t: 'Logaritmos (log, ln, log₂)', i: '📊' },
   { href: '/calculadora-raiz-cuadrada-cubica', t: 'Raíz cuadrada, cúbica y n-ésima', i: '√' },
   { href: '/calculadora-factorial-numero-n', t: 'Factorial (n!)', i: '❗' },
+  { href: '/calculadora-combinaciones-permutaciones-factorial', t: 'Combinaciones y permutaciones (nCr, nPr)', i: '🎲' },
+  { href: '/calculadora-fracciones-suma-resta-multiplicacion-division', t: 'Fracciones: sumar, restar, simplificar', i: '½' },
   { href: '/calculadora-ecuacion-cuadratica-raices-discriminante', t: 'Ecuación cuadrática', i: '🧮' },
   { href: '/calculadora-regla-de-tres-simple-directa-inversa', t: 'Regla de 3 simple', i: '➗' },
   { href: '/calculadora-conversion-porcentaje-fraccion-decimal', t: 'Porcentaje ↔ fracción ↔ decimal', i: '％' },
@@ -164,12 +201,14 @@ const schema = {
   isAccessibleForFree: true,
   offers: freeOfferSchema({ priceCurrency: 'ARS' }),
   featureList: [
-    'Funciones trigonométricas y sus inversas',
-    'Logaritmo natural y base 10',
-    'Raíces y potencias',
-    'Factorial',
+    'Funciones trigonométricas, inversas e hiperbólicas',
+    'Logaritmo natural, base 10 y base 2',
+    'Raíces (cuadrada y cúbica) y potencias',
+    'Factorial, combinaciones (nCr) y permutaciones (nPr)',
+    'Valor absoluto y notación científica',
     'Constantes π y e',
     'Modo grados / radianes',
+    'Memoria (M+, MR, MC) y Ans',
     'Soporte de teclado',
   ],
 };
@@ -226,9 +265,21 @@ const schemaHowTo = {
       teclado, y presioná <strong>=</strong> para ver el resultado. Todo corre en tu navegador, sin instalar nada.
     </p>
 
+    <div class="sci-answer">
+      <p>
+        <strong>¿Qué es una calculadora científica?</strong> Es una calculadora que, además de las cuatro
+        operaciones básicas, resuelve <strong>funciones trigonométricas</strong> (sin, cos, tan) e hiperbólicas,
+        <strong>logaritmos</strong> (ln, log, log₂), <strong>raíces y potencias</strong>, <strong>factoriales</strong>,
+        <strong>combinaciones y permutaciones</strong> (nCr, nPr) y <strong>notación científica</strong>, respetando la
+        jerarquía de operaciones. Esta es <strong>online y gratis</strong>: corre en el navegador de la compu o el
+        celular, con modo grados/radianes, memoria (M+, MR) y teclado, <strong>sin instalar ni registrarte</strong>.
+      </p>
+    </div>
+
     <div class="sci-card">
       <div class="sci-display" id="sciDisplay">
         <span class="sci-mode-ind" id="sciModeInd" aria-label="Modo de ángulo">RAD</span>
+        <span class="sci-mem-ind" id="sciMemInd" aria-label="Hay un valor guardado en memoria" hidden>M</span>
         <div class="sci-expr" id="sciExpr" aria-hidden="true"></div>
         <output class="sci-out" id="sciOut" aria-live="polite" aria-label="Resultado">0</output>
       </div>
@@ -329,6 +380,35 @@ const schemaHowTo = {
     </section>
 
     <section class="sci-section">
+      <h2>¿Reemplaza a una Casio fx-82 o fx-991?</h2>
+      <p>
+        Para la mayoría de los usos de <strong>secundaria, CBC y primeros años de facultad</strong>, sí: esta
+        calculadora científica online cubre las mismas funciones de cálculo diario que una <strong>Casio fx-82</strong>,
+        fx-95 o fx-991 (trigonometría, logaritmos, raíces, potencias, factoriales, combinaciones y notación
+        científica). Las equivalencias de teclas más comunes:
+      </p>
+      <div class="sci-table-wrap">
+        <table class="sci-table">
+          <thead><tr><th>En una Casio</th><th>Acá</th></tr></thead>
+          <tbody>
+            <tr><td class="sci-td-key">SHIFT / 2ndF</td><td>Botón <strong>INV</strong> (sin⁻¹, eˣ, 10ˣ, ∛, nPr).</td></tr>
+            <tr><td class="sci-td-key">MODE → Deg/Rad</td><td>Botón <strong>Rad/Deg</strong> arriba a la izquierda.</td></tr>
+            <tr><td class="sci-td-key">x², xʸ</td><td>Botones <strong>x²</strong> y <strong>xʸ</strong> (símbolo ^).</td></tr>
+            <tr><td class="sci-td-key">nCr / nPr</td><td>Botón <strong>nCr</strong> y, con INV, <strong>nPr</strong>.</td></tr>
+            <tr><td class="sci-td-key">M+, MR, MC</td><td>Misma memoria: <strong>M+</strong>, <strong>MR</strong>, <strong>MC</strong>.</td></tr>
+            <tr><td class="sci-td-key">Ans</td><td>Botón <strong>Ans</strong> (último resultado).</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Lo que todavía no reemplaza de una Casio física: <strong>fracciones en pantalla</strong> (para eso usá nuestra
+        <a href="/calculadora-fracciones-suma-resta-multiplicacion-division">calculadora de fracciones</a>), matrices,
+        resolución de ecuaciones y estadística avanzada. Para exámenes presenciales, confirmá siempre qué modelo
+        permite tu cátedra: una web o un celular no suelen estar autorizados.
+      </p>
+    </section>
+
+    <section class="sci-section">
       <h2>Ejemplos resueltos</h2>
       <div class="sci-examples">
         <div class="sci-ex">
@@ -346,6 +426,14 @@ const schemaHowTo = {
         <div class="sci-ex">
           <code>2^10 − 24</code>
           <span>2 elevado a la 10 es 1024, menos 24 → <strong>1000</strong>.</span>
+        </div>
+        <div class="sci-ex">
+          <code>8 nCr 2</code>
+          <span>Combinaciones de 8 tomadas de a 2 → <strong>28</strong>. Con INV, 8 nPr 2 = 56 (permutaciones).</span>
+        </div>
+        <div class="sci-ex">
+          <code>∛(27) + |−4|</code>
+          <span>Raíz cúbica de 27 = 3 (INV + √) y valor absoluto de −4 = 4 → <strong>7</strong>.</span>
         </div>
       </div>
     </section>
@@ -410,7 +498,7 @@ const schemaHowTo = {
     'sqrt', 'cbrt', 'abs', 'exp',
   ]);
   const CONSTS: Record<string, number> = { pi: Math.PI, e: Math.E };
-  const PREC: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2, neg: 3, '^': 4 };
+  const PREC: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2, ncr: 3, npr: 3, neg: 3, '^': 4 };
   const RIGHT = new Set(['^', 'neg']);
 
   type TokType = 'num' | 'op' | 'u' | 'func' | 'lp' | 'rp' | 'post';
@@ -425,6 +513,7 @@ const schemaHowTo = {
       .replace(/√/g, 'sqrt')
       .replace(/∛/g, 'cbrt')
       .replace(/π/g, 'pi')
+      .toLowerCase()
       .replace(/\s+/g, '');
   }
 
@@ -455,6 +544,13 @@ const schemaHowTo = {
         continue;
       }
       if (/[a-z]/.test(c)) {
+        // nCr / nPr son operadores binarios: detectarlos ANTES del lector de
+        // nombres (si no, "5ncr2" se leería como un único símbolo "ncr2").
+        if (s.startsWith('ncr', i) || s.startsWith('npr', i)) {
+          toks.push({ t: 'op', v: s.slice(i, i + 3) });
+          i += 3;
+          continue;
+        }
         let j = i;
         while (j < s.length && /[a-z0-9]/.test(s[j])) j++;
         const name = s.slice(i, j);
@@ -527,6 +623,25 @@ const schemaHowTo = {
     return r;
   }
 
+  // Combinaciones (nCr) y permutaciones (nPr). Producto directo (no factoriales
+  // sueltos) para no desbordar con n grande: nPr = n·(n−1)···(n−r+1).
+  function nPr(n: number, r: number): number {
+    if (!Number.isInteger(n) || !Number.isInteger(r) || n < 0 || r < 0 || r > n)
+      throw new Error('nPr requiere enteros con 0 ≤ r ≤ n');
+    let res = 1;
+    for (let k = 0; k < r; k++) res *= n - k;
+    return res;
+  }
+  function nCr(n: number, r: number): number {
+    if (!Number.isInteger(n) || !Number.isInteger(r) || n < 0 || r < 0 || r > n)
+      throw new Error('nCr requiere enteros con 0 ≤ r ≤ n');
+    // Simetría: usar el r más chico reduce iteraciones y error de redondeo.
+    const k = Math.min(r, n - r);
+    let res = 1;
+    for (let i = 0; i < k; i++) res = (res * (n - i)) / (i + 1);
+    return Math.round(res);
+  }
+
   function applyFunc(name: string, x: number, mode: AngleMode): number {
     const toRad = (d: number) => (d * Math.PI) / 180;
     const fromRad = (r: number) => (r * 180) / Math.PI;
@@ -572,6 +687,8 @@ const schemaHowTo = {
           case '*': st.push(a * b); break;
           case '/': if (b === 0) throw new Error('No se puede dividir por cero'); st.push(a / b); break;
           case '^': st.push(Math.pow(a, b)); break;
+          case 'ncr': st.push(nCr(a, b)); break;
+          case 'npr': st.push(nPr(a, b)); break;
         }
       }
     }
@@ -623,9 +740,11 @@ const schemaHowTo = {
   let inv = false;
   let justEval = false;
   let ans = 0;
+  let mem = 0;
 
   const MODE_KEY = 'hc-sci-mode';
   const HIST_KEY = 'hc-sci-history';
+  const MEM_KEY = 'hc-sci-mem';
   const OP_STARTS = new Set(['+', '−', '×', '÷', '^', '!', '%']);
 
   try {
@@ -636,6 +755,10 @@ const schemaHowTo = {
   let history: Array<{ e: string; r: string }> = [];
   try {
     history = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+  } catch {}
+  try {
+    const m = parseFloat(localStorage.getItem(MEM_KEY) || '0');
+    if (isFinite(m)) mem = m;
   } catch {}
 
   function fmt(n: number): string {
@@ -759,6 +882,36 @@ const schemaHowTo = {
     renderHistory();
   }
 
+  // ── Memoria y Ans ─────────────────────────────────────────────────────────
+  // Insertar un valor en la expresión, entre paréntesis si es negativo para no
+  // romper la jerarquía (ej. Ans = −3 → "(-3)").
+  function insertValue(v: number) {
+    append(v < 0 ? `(${fmt(v)})` : fmt(v));
+  }
+  // Valor "vivo" para M+: si hay expresión, la evalúa; si no, usa el último Ans.
+  function currentValue(): number | null {
+    if (expr.trim()) {
+      try { return evaluate(autoCloseParens(expr), mode); } catch { return null; }
+    }
+    return ans;
+  }
+  function memIndicator() {
+    const el = document.getElementById('sciMemInd') as HTMLElement | null;
+    if (el) el.hidden = mem === 0;
+  }
+  function memPlus() {
+    const v = currentValue();
+    if (v == null || !isFinite(v)) return;
+    mem += v;
+    try { localStorage.setItem(MEM_KEY, String(mem)); } catch {}
+    memIndicator();
+  }
+  function memClear() {
+    mem = 0;
+    try { localStorage.removeItem(MEM_KEY); } catch {}
+    memIndicator();
+  }
+
   pad.addEventListener('click', (ev) => {
     const btn = (ev.target as HTMLElement).closest('button.sci-key') as HTMLButtonElement | null;
     if (!btn) return;
@@ -768,6 +921,10 @@ const schemaHowTo = {
     if (action === 'equals') return equals();
     if (action === 'mode') return toggleMode();
     if (action === 'inv') { inv = !inv; return applyInv(); }
+    if (action === 'ans') return insertValue(ans);
+    if (action === 'mr') return insertValue(mem);
+    if (action === 'mplus') return memPlus();
+    if (action === 'mc') return memClear();
     const ap = btn.getAttribute('data-append');
     if (ap != null) append(ap);
   });
@@ -802,6 +959,7 @@ const schemaHowTo = {
   applyMode();
   applyInv();
   renderHistory();
+  memIndicator();
   }
 
   setupSciCalc();
@@ -817,6 +975,14 @@ const schemaHowTo = {
 
   h1 { margin-bottom: 0.75rem; }
   .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1.75rem; }
+  .sci-answer {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    padding: 0.875rem 1rem;
+    margin-bottom: 1.75rem;
+  }
+  .sci-answer p { margin: 0; color: var(--text); font-size: 0.96875rem; line-height: 1.65; }
 
   .sci-card {
     background: var(--bg-card);
@@ -848,6 +1014,18 @@ const schemaHowTo = {
     letter-spacing: 0.06em;
     color: var(--accent-strong);
     background: var(--accent-soft);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+  }
+  .sci-mem-ind {
+    position: absolute;
+    top: 0.5rem;
+    left: 3.1rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #fff;
+    background: var(--accent);
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
   }
@@ -909,6 +1087,7 @@ const schemaHowTo = {
   .sci-key.k-op:hover { background: var(--accent); color: #fff; }
   .sci-key.k-ctrl { font-size: 0.875rem; color: var(--text-muted); }
   .sci-key.k-clear { color: var(--danger, #dc2626); font-weight: 600; }
+  .sci-key.k-mem { font-size: 0.8125rem; font-weight: 600; color: var(--accent-strong); }
   .sci-key.k-inv.active { background: var(--accent); color: #fff; border-color: transparent; }
   .sci-key.k-eq {
     background: var(--accent);
