@@ -543,6 +543,9 @@ const priorityUrls: Url[] = [
   prio('/historias/vacaciones-invierno-2026',            '0.7', 'weekly'),
   prio('/historias/aguinaldo-2026-plazo-fijo-dolar-uva', '0.7', 'weekly'),
   prio('/historias/calefaccion-invierno-2026',           '0.7', 'weekly'),
+  prio('/historias/mundial-2026-lo-que-tenes-que-saber-hoy',     '0.7', 'daily'),
+  prio('/historias/recategorizacion-monotributo-julio-2026',    '0.7', 'weekly'),
+  prio('/historias/aguinaldo-2026-como-se-calcula',             '0.7', 'weekly'),
   // guías pilares (estables)
   prio('/guia/finanzas-personales',          '0.9',  'weekly'),
   prio('/guia/marketing-roi-metricas',       '0.9',  'weekly'),

@@ -71,6 +71,38 @@ const description =
 
 const PAGE_URL = 'https://hacecuentas.com/datos-salario-minimo-latam-2026';
 
+// ── Datos numéricos crudos por país para el gráfico SVG.
+// Valores EXACTOS de la fuente única de cada país (los mismos de la tabla) → cero fabricación.
+// OJO: monedas distintas (ARS/BRL/PEN/USD) → NO comparables en un eje común.
+// Por eso cada barra ocupa el mismo ancho (NO se escalan entre sí, evitando la
+// comparación engañosa que la página ya advierte) y lleva su moneda y monto.
+const chartPaises = [
+  { pais: 'Argentina', bandera: '🇦🇷', moneda: 'ARS', simbolo: '$', valor: ar.smvmMensual, locale: 'es-AR' },
+  { pais: 'Brasil', bandera: '🇧🇷', moneda: 'BRL', simbolo: 'R$', valor: SM_BR, locale: 'pt-BR' },
+  { pais: 'Perú', bandera: '🇵🇪', moneda: 'PEN', simbolo: 'S/', valor: PERU_2026.rmv, locale: 'es-PE' },
+  { pais: 'Ecuador', bandera: '🇪🇨', moneda: 'USD', simbolo: 'US$', valor: ECUADOR_2026.sbu, locale: 'es-EC' },
+];
+// Geometría del SVG (barras horizontales: una fila por país).
+const VB_W = 760;
+const ROW_H = 70;
+const VB_H = chartPaises.length * ROW_H + 16;
+const LABEL_W = 160; // ancho reservado a la etiqueta de país
+const BAR_X = LABEL_W;
+const BAR_MAX_W = VB_W - LABEL_W - 16; // la barra llega casi al borde (no es eje comparativo)
+const BAR_H = 30;
+const chartRows = chartPaises.map((p, i) => {
+  const cy = 8 + i * ROW_H + ROW_H / 2;
+  return {
+    ...p,
+    cy,
+    barY: cy - BAR_H / 2,
+    barW: BAR_MAX_W, // mismo ancho para todas → señala que NO se comparan
+    montoFmt: `${p.simbolo} ${p.valor.toLocaleString(p.locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ${p.moneda}`,
+  };
+});
+// Snippet de cita listo para copiar (atribución + dato clave + backlink canónico).
+const citeSnippet = `<p>Salario mínimo 2026 en LATAM: Argentina $ ${fmtNum(ar.smvmMensual)} ARS · Brasil R$ ${fmtNum(SM_BR, 'pt-BR')} BRL · Perú S/ ${fmtNum(PERU_2026.rmv, 'es-PE')} PEN · Ecuador US$ ${fmtNum(ECUADOR_2026.sbu)} USD. <a href="${PAGE_URL}">Fuente: Hacé Cuentas — Salario mínimo LATAM 2026</a></p>`;
+
 const faq = [
   {
     q: '¿Cuál es el salario mínimo de Argentina en 2026?',
@@ -257,6 +289,41 @@ const schema = {
       </section>
 
       <section>
+        <h2>Gráfico: salario mínimo 2026 por país</h2>
+        <p>
+          Cada país con su salario mínimo mensual en <strong>moneda local</strong>. Las barras
+          tienen el mismo largo a propósito: son monedas distintas (peso, real, sol, dólar) y
+          <strong>no se pueden comparar entre sí</strong> sin convertir al tipo de cambio del día.
+        </p>
+        <figure class="chart-fig">
+          <svg
+            class="bar-chart"
+            viewBox={`0 0 ${VB_W} ${VB_H}`}
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-labelledby="chart-title chart-desc"
+          >
+            <title id="chart-title">Salario mínimo mensual 2026 por país en moneda local</title>
+            <desc id="chart-desc">
+              {chartRows.map((r) => `${r.pais}: ${r.montoFmt}. `).join('')}
+              Valores en monedas distintas, no comparables directamente.
+            </desc>
+            {chartRows.map((r) => (
+              <g>
+                <text x="8" y={r.cy + 5} class="bar-country">{r.bandera} {r.pais}</text>
+                <rect x={BAR_X} y={r.barY} width={r.barW} height={BAR_H} rx="5" class="bar-rect" />
+                <text x={BAR_X + 12} y={r.cy + 5} class="bar-monto">{r.montoFmt}</text>
+              </g>
+            ))}
+          </svg>
+          <figcaption class="note">
+            Salario mínimo legal mensual 2026, cada uno en su moneda local. Fuentes oficiales por
+            país (ver tabla). No comparable sin convertir al tipo de cambio del día.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section>
         <h2>Detalle por país</h2>
         <ul class="cambios">
           {PAISES.map((p) => (
@@ -305,6 +372,23 @@ Fuentes oficiales por país · Licencia CC-BY 4.0</code></pre>
         </p>
       </section>
 
+      <section class="cite-instructions">
+        <details class="embed-block">
+          <summary><h2>Insertá / citá este dato en tu web</h2></summary>
+          <p>
+            Copiá este bloque HTML y pegalo en tu nota, blog o web. Muestra el salario mínimo
+            2026 de los cuatro países e incluye la atribución con enlace a la fuente:
+          </p>
+          <textarea class="embed-code" readonly rows="5" aria-label="Código HTML para citar este dato">{citeSnippet}</textarea>
+          <button type="button" class="btn-copy" data-code={citeSnippet} aria-label="Copiar código HTML">
+            Copiar código
+          </button>
+          <p class="note">
+            Se ve así: <span class="embed-preview">Salario mínimo 2026 en LATAM: Argentina $ {fmtNum(ar.smvmMensual)} ARS · Brasil R$ {fmtNum(SM_BR, 'pt-BR')} BRL · Perú S/ {fmtNum(PERU_2026.rmv, 'es-PE')} PEN · Ecuador US$ {fmtNum(ECUADOR_2026.sbu)} USD. <a href={PAGE_URL}>Fuente: Hacé Cuentas — Salario mínimo LATAM 2026</a></span>
+          </p>
+        </details>
+      </section>
+
       <section class="faq">
         <h2>Preguntas frecuentes</h2>
         {faq.map((f) => (
@@ -329,6 +413,34 @@ Fuentes oficiales por país · Licencia CC-BY 4.0</code></pre>
 
   <Footer slot="footer" />
 </Layout>
+
+<script>
+  // Copiar el snippet de cita (navigator.clipboard con fallback execCommand).
+  document.querySelectorAll<HTMLButtonElement>('.btn-copy').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const code = btn.dataset.code ?? '';
+      try {
+        await navigator.clipboard.writeText(code);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      const original = btn.textContent ?? '';
+      btn.textContent = '¡Copiado!';
+      btn.classList.add('btn-copy--success');
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove('btn-copy--success');
+      }, 2000);
+    });
+  });
+</script>
 
 <style>
   .datos-page {
@@ -453,4 +565,72 @@ Fuentes oficiales por país · Licencia CC-BY 4.0</code></pre>
     color: var(--text-muted, #555);
     line-height: 1.6;
   }
+
+  /* ── Gráfico SVG de barras (una fila por país) ── */
+  .chart-fig {
+    margin: 1.25rem 0 0.5rem;
+  }
+  .bar-chart {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .bar-rect {
+    fill: var(--accent, #2563eb);
+  }
+  .bar-country {
+    fill: var(--text, #222);
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .bar-monto {
+    fill: #fff;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  /* ── Bloque de inserción/cita ── */
+  .embed-block summary {
+    cursor: pointer;
+    list-style: none;
+  }
+  .embed-block summary::-webkit-details-marker { display: none; }
+  .embed-block summary h2 {
+    display: inline;
+    margin: 0;
+  }
+  .embed-block summary::before {
+    content: '▸ ';
+    color: var(--accent, #2563eb);
+  }
+  .embed-block[open] summary::before { content: '▾ '; }
+  .embed-block > p { margin-top: 0.75rem; }
+  .embed-code {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 0.4rem;
+    background: var(--code-bg, #eaeef3);
+    color: var(--text, #222);
+    resize: vertical;
+  }
+  .btn-copy {
+    margin-top: 0.6rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent, #2563eb);
+    border: none;
+    border-radius: 0.4rem;
+    cursor: pointer;
+  }
+  .btn-copy:hover { filter: brightness(0.95); }
+  .btn-copy--success { background: var(--success, #16a34a); }
+  .embed-preview { display: inline; }
+  .embed-preview a { color: var(--accent, #2563eb); }
 </style>
