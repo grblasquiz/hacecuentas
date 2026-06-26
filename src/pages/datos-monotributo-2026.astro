@@ -41,31 +41,6 @@ const cuotaMaxBienes = CUOTA_BIENES.K;
 const ratioServBienesK = CUOTA_SERVICIOS.K / CUOTA_BIENES.K;
 const facturacionMensualMaxA = TOPES.A / 12;
 
-// ── Datos para el gráfico SVG de barras (cuota mensual de servicios A→K).
-// Valores EXACTOS de CUOTA_SERVICIOS (los mismos de la tabla) → cero fabricación.
-const chartData = filas.map((f) => ({ cat: f.cat, valor: f.cuotaServicios }));
-const chartMax = Math.max(...chartData.map((d) => d.valor)); // = CUOTA_SERVICIOS.K
-// Geometría del SVG (viewBox, coords internas).
-const VB_W = 760;
-const VB_H = 360;
-const PAD_L = 8;
-const PAD_R = 8;
-const PAD_TOP = 24;
-const PAD_BOTTOM = 56; // espacio para etiquetas de categoría
-const PLOT_W = VB_W - PAD_L - PAD_R;
-const PLOT_H = VB_H - PAD_TOP - PAD_BOTTOM;
-const N = chartData.length;
-const GAP = 10;
-const BAR_W = (PLOT_W - GAP * (N - 1)) / N;
-const bars = chartData.map((d, i) => {
-  const h = (d.valor / chartMax) * PLOT_H;
-  const x = PAD_L + i * (BAR_W + GAP);
-  const y = PAD_TOP + (PLOT_H - h);
-  return { ...d, x, y, h, cx: x + BAR_W / 2 };
-});
-// Snippet de cita listo para copiar (atribución + dato clave + backlink canónico).
-const citeSnippet = `<p>Cuota mensual del monotributo 2026 (cat. K, servicios): ${fmtARS(cuotaMaxServ)}. Tope anual cat. K: ${fmtARS(topeMax)}. <a href="${PAGE_URL}">Fuente: Hacé Cuentas — Monotributo 2026 (datos ARCA)</a></p>`;
-
 const title =
   'Datos Monotributo 2026: tabla de categorías, topes y cuotas (A a K) | Hacé Cuentas';
 const description =
@@ -271,48 +246,6 @@ const schema = {
       </section>
 
       <section>
-        <h2>Gráfico: cuota mensual por categoría (servicios)</h2>
-        <p>
-          Cómo escala la cuota total mensual de servicios desde la categoría A hasta la K.
-          La curva es pronunciada: la K paga {(cuotaMaxServ / cuotaMin).toFixed(0)}× lo que paga la A.
-        </p>
-        <figure class="chart-fig">
-          <svg
-            class="bar-chart"
-            viewBox={`0 0 ${VB_W} ${VB_H}`}
-            preserveAspectRatio="xMidYMid meet"
-            role="img"
-            aria-labelledby="chart-title chart-desc"
-          >
-            <title id="chart-title">Cuota mensual de servicios del monotributo 2026 por categoría</title>
-            <desc id="chart-desc">
-              Gráfico de barras de la cuota total mensual de servicios para las 11 categorías,
-              de la A ({fmtARS(cuotaMin)}) a la K ({fmtARS(cuotaMaxServ)}).
-            </desc>
-            {bars.map((b) => (
-              <g>
-                <rect
-                  x={b.x}
-                  y={b.y}
-                  width={BAR_W}
-                  height={b.h}
-                  rx="3"
-                  class="bar-rect"
-                />
-                <text x={b.cx} y={b.y - 6} class="bar-value" text-anchor="middle">{fmtARS(b.valor)}</text>
-                <text x={b.cx} y={VB_H - 32} class="bar-cat" text-anchor="middle">{b.cat}</text>
-              </g>
-            ))}
-            <text x={PAD_L} y={VB_H - 10} class="bar-axis">Categoría · cuota mensual de servicios (ARS)</text>
-          </svg>
-          <figcaption class="note">
-            Cuota total mensual de servicios (impuesto integrado + SIPA + obra social), categorías A&nbsp;a&nbsp;K.
-            Valores oficiales ARCA — los mismos de la tabla de arriba.
-          </figcaption>
-        </figure>
-      </section>
-
-      <section>
         <h2>Qué cambió en el monotributo 2026</h2>
         <ul class="cambios">
           <li>
@@ -409,23 +342,6 @@ Datos oficiales ARCA · Licencia CC-BY 4.0</code></pre>
         </p>
       </section>
 
-      <section class="cite-instructions">
-        <details class="embed-block">
-          <summary><h2>Insertá / citá este dato en tu web</h2></summary>
-          <p>
-            Copiá este bloque HTML y pegalo en tu nota, blog o web. Muestra el dato clave
-            del monotributo 2026 e incluye la atribución con enlace a la fuente:
-          </p>
-          <textarea class="embed-code" readonly rows="4" aria-label="Código HTML para citar este dato">{citeSnippet}</textarea>
-          <button type="button" class="btn-copy" data-code={citeSnippet} aria-label="Copiar código HTML">
-            Copiar código
-          </button>
-          <p class="note">
-            Se ve así: <span class="embed-preview">Cuota mensual del monotributo 2026 (cat. K, servicios): {fmtARS(cuotaMaxServ)}. Tope anual cat. K: {fmtARS(topeMax)}. <a href={PAGE_URL}>Fuente: Hacé Cuentas — Monotributo 2026 (datos ARCA)</a></span>
-          </p>
-        </details>
-      </section>
-
       <section class="faq">
         <h2>Preguntas frecuentes</h2>
         {faq.map((f) => (
@@ -451,34 +367,6 @@ Datos oficiales ARCA · Licencia CC-BY 4.0</code></pre>
 
   <Footer slot="footer" />
 </Layout>
-
-<script>
-  // Copiar el snippet de cita (navigator.clipboard con fallback execCommand).
-  document.querySelectorAll<HTMLButtonElement>('.btn-copy').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const code = btn.dataset.code ?? '';
-      try {
-        await navigator.clipboard.writeText(code);
-      } catch {
-        const ta = document.createElement('textarea');
-        ta.value = code;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      }
-      const original = btn.textContent ?? '';
-      btn.textContent = '¡Copiado!';
-      btn.classList.add('btn-copy--success');
-      setTimeout(() => {
-        btn.textContent = original;
-        btn.classList.remove('btn-copy--success');
-      }, 2000);
-    });
-  });
-</script>
 
 <style>
   .datos-page {
@@ -597,78 +485,4 @@ Datos oficiales ARCA · Licencia CC-BY 4.0</code></pre>
     color: var(--text-muted, #555);
     line-height: 1.6;
   }
-
-  /* ── Gráfico SVG de barras ── */
-  .chart-fig {
-    margin: 1.25rem 0 0.5rem;
-  }
-  .bar-chart {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-  .bar-rect {
-    fill: var(--accent, #2563eb);
-  }
-  .bar-value {
-    fill: var(--text, #222);
-    font-size: 12px;
-    font-weight: 600;
-  }
-  .bar-cat {
-    fill: var(--text-muted, #666);
-    font-size: 14px;
-    font-weight: 700;
-  }
-  .bar-axis {
-    fill: var(--text-muted, #666);
-    font-size: 12px;
-  }
-
-  /* ── Bloque de inserción/cita ── */
-  .embed-block summary {
-    cursor: pointer;
-    list-style: none;
-  }
-  .embed-block summary::-webkit-details-marker { display: none; }
-  .embed-block summary h2 {
-    display: inline;
-    margin: 0;
-  }
-  .embed-block summary::before {
-    content: '▸ ';
-    color: var(--accent, #2563eb);
-  }
-  .embed-block[open] summary::before { content: '▾ '; }
-  .embed-block > p { margin-top: 0.75rem; }
-  .embed-code {
-    width: 100%;
-    box-sizing: border-box;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.8rem;
-    line-height: 1.5;
-    padding: 0.6rem 0.7rem;
-    border: 1px solid var(--border, #e5e7eb);
-    border-radius: 0.4rem;
-    background: var(--code-bg, #eaeef3);
-    color: var(--text, #222);
-    resize: vertical;
-  }
-  .btn-copy {
-    margin-top: 0.6rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--accent, #2563eb);
-    border: none;
-    border-radius: 0.4rem;
-    cursor: pointer;
-  }
-  .btn-copy:hover { filter: brightness(0.95); }
-  .btn-copy--success { background: var(--success, #16a34a); }
-  .embed-preview {
-    display: inline;
-  }
-  .embed-preview a { color: var(--accent, #2563eb); }
 </style>
