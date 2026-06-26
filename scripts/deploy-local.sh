@@ -178,8 +178,10 @@ ok "build verificado: $HTML_COUNT HTMLs + wrapper.mjs"
 # fallar el build (exit 0). El smoke test (6 URLs) no lo cataba → se publicaban
 # páginas rotas en silencio (/desarrolladores quedó 0 bytes en prod semanas).
 # Gate: abortar si alguna HTML contiene el error o quedó vacía.
-BROKEN=$(grep -rl --include='*.html' 'Illegal invocation' dist/client 2>/dev/null)
-EMPTY=$(find dist/client -name '*.html' -size 0 2>/dev/null)
+# `|| true`: grep -rl devuelve exit 1 cuando NO hay matches (= caso bueno) y con
+# `set -e` eso abortaría el deploy en el caso exitoso. Lo neutralizamos.
+BROKEN=$(grep -rl --include='*.html' 'Illegal invocation' dist/client 2>/dev/null || true)
+EMPTY=$(find dist/client -name '*.html' -size 0 2>/dev/null || true)
 if [ -n "$BROKEN" ] || [ -n "$EMPTY" ]; then
   err "PÁGINAS ROTAS en el build (error de prerender) — NO deployo:"
   [ -n "$BROKEN" ] && printf '%s\n' "$BROKEN" | sed 's,^dist/client/,  · ,'
