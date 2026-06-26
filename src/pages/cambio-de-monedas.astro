@@ -3,6 +3,7 @@ export const prerender = true;
 
 import Layout from '../layouts/Layout.astro';
 import { freeOfferSchema } from '../lib/offer-schema';
+import { fetchJSON } from '../lib/fetch-timeout';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
@@ -14,15 +15,13 @@ const buildTimestamp = new Date().toISOString();
 // Las cotizaciones AR siguen cargando client-side desde dolarapi.com (permitido en CSP).
 let intlBuildRates: Record<string, number> = {};
 let intlBuildTs: number = 0;
-try {
-  const r = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(8000) });
-  if (r.ok) {
-    const d = await r.json() as { rates: Record<string, number>; time_last_update_unix: number };
-    intlBuildRates = d.rates || {};
+{
+  const d = await fetchJSON<{ rates?: Record<string, number>; time_last_update_unix?: number }>(
+    'https://open.er-api.com/v6/latest/USD', {});
+  if (d.rates) {
+    intlBuildRates = d.rates;
     intlBuildTs = (d.time_last_update_unix || Math.floor(Date.now() / 1000)) * 1000;
   }
-} catch (e) {
-  console.warn('[cambio-de-monedas] fetch intl failed at build time:', e);
 }
 
 // ── AR dólar (dolarapi.com) fetch build-time → tabla server-rendered crawleable ──
@@ -48,28 +47,22 @@ let arDolaresRaw: any[] = [];
 let arOtrasRaw: any[] = [];
 const arBuildMap: Record<string, { compra: number | null; venta: number; casa: string | null }> = {};
 let arBuildTs = 0;
-try {
-  const [dRes, cRes] = await Promise.all([
-    fetch('https://dolarapi.com/v1/dolares', { signal: AbortSignal.timeout(8000) }),
-    fetch('https://dolarapi.com/v1/cotizaciones', { signal: AbortSignal.timeout(8000) }),
+{
+  const [dArr, cArr] = await Promise.all([
+    fetchJSON<any[]>('https://dolarapi.com/v1/dolares', []),
+    fetchJSON<any[]>('https://dolarapi.com/v1/cotizaciones', []),
   ]);
-  if (dRes.ok) {
-    arDolaresRaw = await dRes.json();
-    for (const d of arDolaresRaw) {
-      const key = `USD_${String(d.casa).toUpperCase().replace('CONTADOCONLIQUI','CCL').replace('BOLSA','MEP').replace('TURISTA','TARJETA')}`;
-      if (AR_BUILD_LABELS[key]) arBuildMap[key] = { compra: d.compra ?? null, venta: d.venta, casa: d.casa };
-    }
+  arDolaresRaw = dArr || [];
+  for (const d of arDolaresRaw) {
+    const key = `USD_${String(d.casa).toUpperCase().replace('CONTADOCONLIQUI','CCL').replace('BOLSA','MEP').replace('TURISTA','TARJETA')}`;
+    if (AR_BUILD_LABELS[key]) arBuildMap[key] = { compra: d.compra ?? null, venta: d.venta, casa: d.casa };
   }
-  if (cRes.ok) {
-    arOtrasRaw = await cRes.json();
-    for (const o of arOtrasRaw) {
-      const ok = `${o.moneda}_AR`;
-      if (AR_BUILD_LABELS[ok]) arBuildMap[ok] = { compra: o.compra ?? null, venta: o.venta, casa: null };
-    }
+  arOtrasRaw = cArr || [];
+  for (const o of arOtrasRaw) {
+    const ok = `${o.moneda}_AR`;
+    if (AR_BUILD_LABELS[ok]) arBuildMap[ok] = { compra: o.compra ?? null, venta: o.venta, casa: null };
   }
   if (Object.keys(arBuildMap).length) arBuildTs = Date.now();
-} catch (e) {
-  console.warn('[cambio-de-monedas] fetch AR failed at build time:', e);
 }
 const arBuildRows: ArRow[] = AR_ORDER.filter((k) => arBuildMap[k]).map((k) => ({
   key: k, ...AR_BUILD_LABELS[k], casa: arBuildMap[k].casa, compra: arBuildMap[k].compra, venta: arBuildMap[k].venta,

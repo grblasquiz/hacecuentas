@@ -7,22 +7,14 @@ import Footer from '../components/Footer.astro';
 import bcraIndicesRaw from '../lib/bcra-indices.json';
 import { getPlazoFijoTop } from '../lib/plazo-fijo';
 import { ICL_VALORES, ICL_LAST_UPDATED } from '../lib/formulas/_bcra-icl';
+import { fetchJSON } from '../lib/fetch-timeout';
 
 const title = 'Valores BCRA Hoy: Dólar, Inflación, UVA, ICL y Tasas';
 const description = 'Dashboard con dólar oficial, MEP, blue, CCL, tarjeta, UVA del día, inflación INDEC mensual y anual, ICL para alquileres y TNA plazo fijo. Datos oficiales BCRA/INDEC actualizados.';
 
 // Fetch en build-time con fallbacks seguros
-async function safeFetch<T>(url: string, fallback: T): Promise<T> {
-  try {
-    const r = await fetch(url, {
-      headers: { 'User-Agent': 'hacecuentas.com/1.0' },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!r.ok) return fallback;
-    return (await r.json()) as T;
-  } catch {
-    return fallback;
-  }
+function safeFetch<T>(url: string, fallback: T): Promise<T> {
+  return fetchJSON<T>(url, fallback, { headers: { 'User-Agent': 'hacecuentas.com/1.0' } });
 }
 
 type Dolar = { casa: string; nombre: string; compra: number; venta: number; fechaActualizacion: string };

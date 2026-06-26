@@ -4,6 +4,8 @@
 // Astro — a diferencia del WAF de api.bcra.gob.ar, ver fetch-bcra-indices.mjs.)
 // ────────────────────────────────────────────────────────────────────────────
 
+import { fetchJSON } from './fetch-timeout';
+
 export type PlazoFijoBanco = { banco: string; tna: number };
 
 // Colores de marca para los bancos reconocibles; default neutro para el resto.
@@ -83,11 +85,7 @@ export function bancoCorto(entidad: string): string {
 type Raw = { entidad: string; tnaClientes: number };
 export async function getPlazoFijoTop(n = 14): Promise<PlazoFijoBanco[]> {
   try {
-    const r = await fetch('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo', {
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!r.ok) return [];
-    const data = (await r.json()) as Raw[];
+    const data = await fetchJSON<Raw[]>('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo', []);
     return (data || [])
       .filter((x) => x && x.tnaClientes > 0)
       .map((x) => ({ banco: bancoCorto(x.entidad), tna: +(x.tnaClientes * 100).toFixed(2) }))

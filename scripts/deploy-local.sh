@@ -171,6 +171,24 @@ if [ "$HTML_COUNT" -lt "$MIN_HTML" ]; then
 fi
 ok "build verificado: $HTML_COUNT HTMLs + wrapper.mjs"
 
+# ─── 3b. Gate: páginas rotas por error de prerender ───────────────────────
+# El adapter CF prerenderea en workerd; si una página tira en render (p.ej.
+# "Illegal invocation" por I/O pendiente, ver src/lib/fetch-timeout.ts) el
+# adapter escribe el ERROR como el HTML de esa página (stub ~300b o vacío) SIN
+# fallar el build (exit 0). El smoke test (6 URLs) no lo cataba → se publicaban
+# páginas rotas en silencio (/desarrolladores quedó 0 bytes en prod semanas).
+# Gate: abortar si alguna HTML contiene el error o quedó vacía.
+BROKEN=$(grep -rl --include='*.html' 'Illegal invocation' dist/client 2>/dev/null)
+EMPTY=$(find dist/client -name '*.html' -size 0 2>/dev/null)
+if [ -n "$BROKEN" ] || [ -n "$EMPTY" ]; then
+  err "PÁGINAS ROTAS en el build (error de prerender) — NO deployo:"
+  [ -n "$BROKEN" ] && printf '%s\n' "$BROKEN" | sed 's,^dist/client/,  · ,'
+  [ -n "$EMPTY" ]  && printf '%s\n' "$EMPTY"  | sed 's,^dist/client/,  · (vacía) ,'
+  err "Causa típica: I/O pendiente en prerender (usar fetchWithTimeout, no AbortSignal.timeout). El sitio en vivo queda intacto."
+  exit 1
+fi
+ok "sin páginas rotas (prerender limpio)"
+
 # ─── 4. Cleanup pre-deploy ────────────────────────────────────────────────
 rm -rf .wrangler/deploy 2>/dev/null || true
 # dist/server/.prerender/ son chunks build-time (generan el HTML); el runtime

@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { freeOfferSchema } from '../lib/offer-schema';
+import { fetchJSON } from '../lib/fetch-timeout';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
@@ -20,16 +21,12 @@ let plazoFijo: PlazoFijoBanco[] = [];
 let buildTs = 0;
 
 try {
-  const [rInf, rInfIa, rUva, rPf] = await Promise.all([
-    fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion', { signal: AbortSignal.timeout(8000) }),
-    fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacionInteranual', { signal: AbortSignal.timeout(8000) }),
-    fetch('https://api.argentinadatos.com/v1/finanzas/indices/uva', { signal: AbortSignal.timeout(8000) }),
-    fetch('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo', { signal: AbortSignal.timeout(8000) }),
+  [inflacionMensual, inflacionInteranual, uva, plazoFijo] = await Promise.all([
+    fetchJSON<DataPoint[]>('https://api.argentinadatos.com/v1/finanzas/indices/inflacion', []),
+    fetchJSON<DataPoint[]>('https://api.argentinadatos.com/v1/finanzas/indices/inflacionInteranual', []),
+    fetchJSON<DataPoint[]>('https://api.argentinadatos.com/v1/finanzas/indices/uva', []),
+    fetchJSON<PlazoFijoBanco[]>('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo', []),
   ]);
-  if (rInf.ok) inflacionMensual = await rInf.json();
-  if (rInfIa.ok) inflacionInteranual = await rInfIa.json();
-  if (rUva.ok) uva = await rUva.json();
-  if (rPf.ok) plazoFijo = await rPf.json();
   buildTs = Date.now();
 } catch (e) {
   console.warn('[inflacion] fetch failed at build:', e);
