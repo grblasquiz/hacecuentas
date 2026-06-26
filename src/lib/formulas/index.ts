@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-25
+// Generated: 2026-06-26
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -372,22 +372,34 @@ import { calculadoraAguinaldoParaguay } from './calculadora-aguinaldo-paraguay';
 import { calculadoraBonificacionRepublicaDominicana } from './calculadora-bonificacion-republica-dominicana';
 import { calculadoraBpsAportes } from './calculadora-bps-aportes';
 import { calculadoraBrechaDolarBcvParalelo } from './calculadora-brecha-dolar-bcv-paralelo';
+import { caloriasQuemadasCaminando } from './calculadora-calorias-quemadas-caminando';
+import { capitalInicialAbrirNegocio } from './calculadora-capital-inicial-abrir-negocio';
 import { calculadoraCesantiaRepublicaDominicana } from './calculadora-cesantia-republica-dominicana';
 import { calculadoraCompensacaoDespedimentoPortugal } from './calculadora-compensacao-despedimento-portugal';
+import { consumoStandbyAparatos } from './calculadora-consumo-standby-aparatos';
+import { costoAireCalefactorTochaLaNoche } from './calculadora-costo-aire-calefactor-toda-la-noche';
+import { costoCargarAutoElectricoVsNafta } from './calculadora-costo-cargar-auto-electrico-vs-nafta';
+import { costoCespedSintetico } from './calculadora-costo-cesped-sintetico-m2';
 import { compute as compute__calculadora_costo_despido_empleador_colombia_2026 } from './calculadora-costo-despido-empleador-colombia-2026';
 import { compute as compute__calculadora_costo_despido_liquidacion_patron_mexico_2026 } from './calculadora-costo-despido-liquidacion-patron-mexico-2026';
+import { costoMensualPileta } from './calculadora-costo-mensual-pileta';
 import { calculadoraCostoRealPautaExteriorImpuestosArgentina } from './calculadora-costo-real-pauta-exterior-impuestos-argentina';
 import { calculadoraCostoRealPautaExteriorImpuestosColombia } from './calculadora-costo-real-pauta-exterior-impuestos-colombia';
 import { calculadoraCostoRealPautaExteriorImpuestosMexico } from './calculadora-costo-real-pauta-exterior-impuestos-mexico';
 import { calculadoraCostoRealServicioDigitalExteriorSaasArgentina } from './calculadora-costo-real-servicio-digital-exterior-saas-argentina';
 import { calculadoraCostoVidaParaguay } from './calculadora-costo-vida-paraguay';
 import { calculadoraCostoVidaRepublicaDominicana } from './calculadora-costo-vida-republica-dominicana';
+import { cuantasFotosVideosEntranGb } from './calculadora-cuantas-fotos-videos-entran-gb';
+import { cuantoFacturarCubrirGastos } from './calculadora-cuanto-facturar-cubrir-gastos';
+import { cuantoPierdoInflacionPlataQuieta } from './calculadora-cuanto-pierdo-inflacion-plata-quieta';
 import { calculadoraCupoGasolinaSubsidiadaVenezuela } from './calculadora-cupo-gasolina-subsidiada-venezuela';
 import { calculadoraCustoTrabalhadorEntidadeEmpregadoraPortugal } from './calculadora-custo-trabalhador-entidade-empregadora-portugal';
 import { calculadoraDeEscala } from './calculadora-de-escala';
 import { calculadoraDeHoras } from './calculadora-de-horas';
 import { calculadoraDespidoUruguay } from './calculadora-despido-uruguay';
+import { diasSinFumarAhorroSalud } from './calculadora-dias-sin-fumar-ahorro-salud';
 import { compute as compute__calculadora_factor_integracion_salarial_imss_mexico } from './calculadora-factor-integracion-salarial-imss-mexico';
+import { gastoCafeAnual } from './calculadora-gasto-cafe-anual';
 import { calculadoraHorasExtraUruguay } from './calculadora-horas-extra-uruguay';
 import { calculadoraHorasExtraordinariasPortugal } from './calculadora-horas-extraordinarias-portugal';
 import { calculadoraHorasExtrasParaguay } from './calculadora-horas-extras-paraguay';
@@ -418,15 +430,22 @@ import { calculadoraLiquidacionFiniquitoVenezuela } from './calculadora-liquidac
 import { calculadoraLiquidacionRepublicaDominicana } from './calculadora-liquidacion-republica-dominicana';
 import { calculadoraMaisValiasVendaImovelPortugal } from './calculadora-mais-valias-venda-imovel-portugal';
 import { calcularMejorEpocaViaje } from './calculadora-mejor-epoca-viajar-destino-lluvia-huracanes';
+import { metrosCuadradosPorPersona } from './calculadora-metros-cuadrados-vivienda-por-persona';
+import { mezcla2TiemposNaftaAceite } from './calculadora-mezcla-2-tiempos-nafta-aceite';
+import { pasosAKilometros } from './calculadora-pasos-a-kilometros';
 import { calculadoraPensaoReformaSegurancaSocialPortugal } from './calculadora-pensao-reforma-seguranca-social-portugal';
 import { compute as compute__calculadora_pension_minima_garantizada_ley_97_mexico_2026 } from './calculadora-pension-minima-garantizada-ley-97-mexico-2026';
+import { plantasPurificarAire } from './calculadora-plantas-purificar-aire-habitacion';
 import { calculadoraPreavisoParaguay } from './calculadora-preaviso-paraguay';
 import { calculadoraPreavisoRepublicaDominicana } from './calculadora-preaviso-republica-dominicana';
 import { calculadoraPreavisoVenezuela } from './calculadora-preaviso-venezuela';
 import { calculadoraPrestacaoCreditoHabitacaoPortugal } from './calculadora-prestacao-credito-habitacao-portugal';
 import { calculadoraPrestacionesSocialesVenezuela } from './calculadora-prestaciones-sociales-venezuela';
+import { primerMillonAhorroInteres } from './calculadora-primer-millon-ahorro-interes';
 import { calculadoraProporcionesReceta } from './calculadora-proporciones-receta';
 import { compute as compute__calculadora_provision_prestaciones_sociales_mensual_empleador_colombia_2026 } from './calculadora-provision-prestaciones-sociales-mensual-empleador-colombia-2026';
+import { proyeccionAhorroJubilacion } from './calculadora-proyeccion-ahorro-jubilacion';
+import { queGeneracionSos } from './calculadora-que-generacion-sos';
 import { compute as compute__calculadora_recibo_nomina_percepciones_deducciones_mexico_2026 } from './calculadora-recibo-nomina-percepciones-deducciones-mexico-2026';
 import { calculadoraRecibosVerdesTrabalhadorIndependentePortugal } from './calculadora-recibos-verdes-trabalhador-independente-portugal';
 import { calculadoraRelacionDeAspecto } from './calculadora-relacion-de-aspecto';
@@ -434,6 +453,7 @@ import { calculadoraRemesaZelleBolivaresVenezuela } from './calculadora-remesa-z
 import { calculadoraRemesasEstadosUnidosRepublicaDominicana } from './calculadora-remesas-estados-unidos-republica-dominicana';
 import { calculadoraRetencionIslrVenezuela } from './calculadora-retencion-islr-venezuela';
 import { calculadoraRetencionIsrSalarioRepublicaDominicana } from './calculadora-retencion-isr-salario-republica-dominicana';
+import { rollosEmpapelado } from './calculadora-rollos-empapelado-papel-pared';
 import { calculadoraSalarioAnual14MesesPortugal } from './calculadora-salario-anual-14-meses-portugal';
 import { calculadoraSalarioIntegralVenezuela } from './calculadora-salario-integral-venezuela';
 import { calculadoraSalarioLiquidoPortugal } from './calculadora-salario-liquido-portugal';
@@ -445,6 +465,7 @@ import { calculadoraSubsidioDesempregoPortugal } from './calculadora-subsidio-de
 import { calculadoraSubsidioFeriasPortugal } from './calculadora-subsidio-ferias-portugal';
 import { calculadoraSubsidioNatalPortugal } from './calculadora-subsidio-natal-portugal';
 import { calculadoraSubsidioRefeicaoPortugal } from './calculadora-subsidio-refeicao-portugal';
+import { sueldoEnDolaresPoderCompra } from './calculadora-sueldo-en-dolares-poder-compra';
 import { calculadoraTssAfpSfsRepublicaDominicana } from './calculadora-tss-afp-sfs-republica-dominicana';
 import { calculadoraUtilidadesAguinaldoVenezuela } from './calculadora-utilidades-aguinaldo-venezuela';
 import { calculadoraVacacionesBonoVacacionalVenezuela } from './calculadora-vacaciones-bono-vacacional-venezuela';
@@ -4066,22 +4087,34 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-bonificacion-republica-dominicana': calculadoraBonificacionRepublicaDominicana,
   'calculadora-bps-aportes': calculadoraBpsAportes,
   'calculadora-brecha-dolar-bcv-paralelo': calculadoraBrechaDolarBcvParalelo,
+  'calculadora-calorias-quemadas-caminando': caloriasQuemadasCaminando,
+  'calculadora-capital-inicial-abrir-negocio': capitalInicialAbrirNegocio,
   'calculadora-cesantia-republica-dominicana': calculadoraCesantiaRepublicaDominicana,
   'calculadora-compensacao-despedimento-portugal': calculadoraCompensacaoDespedimentoPortugal,
+  'calculadora-consumo-standby-aparatos': consumoStandbyAparatos,
+  'calculadora-costo-aire-calefactor-toda-la-noche': costoAireCalefactorTochaLaNoche,
+  'calculadora-costo-cargar-auto-electrico-vs-nafta': costoCargarAutoElectricoVsNafta,
+  'calculadora-costo-cesped-sintetico-m2': costoCespedSintetico,
   'calculadora-costo-despido-empleador-colombia-2026': compute__calculadora_costo_despido_empleador_colombia_2026,
   'calculadora-costo-despido-liquidacion-patron-mexico-2026': compute__calculadora_costo_despido_liquidacion_patron_mexico_2026,
+  'calculadora-costo-mensual-pileta': costoMensualPileta,
   'calculadora-costo-real-pauta-exterior-impuestos-argentina': calculadoraCostoRealPautaExteriorImpuestosArgentina,
   'calculadora-costo-real-pauta-exterior-impuestos-colombia': calculadoraCostoRealPautaExteriorImpuestosColombia,
   'calculadora-costo-real-pauta-exterior-impuestos-mexico': calculadoraCostoRealPautaExteriorImpuestosMexico,
   'calculadora-costo-real-servicio-digital-exterior-saas-argentina': calculadoraCostoRealServicioDigitalExteriorSaasArgentina,
   'calculadora-costo-vida-paraguay': calculadoraCostoVidaParaguay,
   'calculadora-costo-vida-republica-dominicana': calculadoraCostoVidaRepublicaDominicana,
+  'calculadora-cuantas-fotos-videos-entran-gb': cuantasFotosVideosEntranGb,
+  'calculadora-cuanto-facturar-cubrir-gastos': cuantoFacturarCubrirGastos,
+  'calculadora-cuanto-pierdo-inflacion-plata-quieta': cuantoPierdoInflacionPlataQuieta,
   'calculadora-cupo-gasolina-subsidiada-venezuela': calculadoraCupoGasolinaSubsidiadaVenezuela,
   'calculadora-custo-trabalhador-entidade-empregadora-portugal': calculadoraCustoTrabalhadorEntidadeEmpregadoraPortugal,
   'calculadora-de-escala': calculadoraDeEscala,
   'calculadora-de-horas': calculadoraDeHoras,
   'calculadora-despido-uruguay': calculadoraDespidoUruguay,
+  'calculadora-dias-sin-fumar-ahorro-salud': diasSinFumarAhorroSalud,
   'calculadora-factor-integracion-salarial-imss-mexico': compute__calculadora_factor_integracion_salarial_imss_mexico,
+  'calculadora-gasto-cafe-anual': gastoCafeAnual,
   'calculadora-horas-extra-uruguay': calculadoraHorasExtraUruguay,
   'calculadora-horas-extraordinarias-portugal': calculadoraHorasExtraordinariasPortugal,
   'calculadora-horas-extras-paraguay': calculadoraHorasExtrasParaguay,
@@ -4112,15 +4145,22 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-liquidacion-republica-dominicana': calculadoraLiquidacionRepublicaDominicana,
   'calculadora-mais-valias-venda-imovel-portugal': calculadoraMaisValiasVendaImovelPortugal,
   'calculadora-mejor-epoca-viajar-destino-lluvia-huracanes': calcularMejorEpocaViaje,
+  'calculadora-metros-cuadrados-vivienda-por-persona': metrosCuadradosPorPersona,
+  'calculadora-mezcla-2-tiempos-nafta-aceite': mezcla2TiemposNaftaAceite,
+  'calculadora-pasos-a-kilometros': pasosAKilometros,
   'calculadora-pensao-reforma-seguranca-social-portugal': calculadoraPensaoReformaSegurancaSocialPortugal,
   'calculadora-pension-minima-garantizada-ley-97-mexico-2026': compute__calculadora_pension_minima_garantizada_ley_97_mexico_2026,
+  'calculadora-plantas-purificar-aire-habitacion': plantasPurificarAire,
   'calculadora-preaviso-paraguay': calculadoraPreavisoParaguay,
   'calculadora-preaviso-republica-dominicana': calculadoraPreavisoRepublicaDominicana,
   'calculadora-preaviso-venezuela': calculadoraPreavisoVenezuela,
   'calculadora-prestacao-credito-habitacao-portugal': calculadoraPrestacaoCreditoHabitacaoPortugal,
   'calculadora-prestaciones-sociales-venezuela': calculadoraPrestacionesSocialesVenezuela,
+  'calculadora-primer-millon-ahorro-interes': primerMillonAhorroInteres,
   'calculadora-proporciones-receta': calculadoraProporcionesReceta,
   'calculadora-provision-prestaciones-sociales-mensual-empleador-colombia-2026': compute__calculadora_provision_prestaciones_sociales_mensual_empleador_colombia_2026,
+  'calculadora-proyeccion-ahorro-jubilacion': proyeccionAhorroJubilacion,
+  'calculadora-que-generacion-sos': queGeneracionSos,
   'calculadora-recibo-nomina-percepciones-deducciones-mexico-2026': compute__calculadora_recibo_nomina_percepciones_deducciones_mexico_2026,
   'calculadora-recibos-verdes-trabalhador-independente-portugal': calculadoraRecibosVerdesTrabalhadorIndependentePortugal,
   'calculadora-relacion-de-aspecto': calculadoraRelacionDeAspecto,
@@ -4128,6 +4168,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-remesas-estados-unidos-republica-dominicana': calculadoraRemesasEstadosUnidosRepublicaDominicana,
   'calculadora-retencion-islr-venezuela': calculadoraRetencionIslrVenezuela,
   'calculadora-retencion-isr-salario-republica-dominicana': calculadoraRetencionIsrSalarioRepublicaDominicana,
+  'calculadora-rollos-empapelado-papel-pared': rollosEmpapelado,
   'calculadora-salario-anual-14-meses-portugal': calculadoraSalarioAnual14MesesPortugal,
   'calculadora-salario-integral-venezuela': calculadoraSalarioIntegralVenezuela,
   'calculadora-salario-liquido-portugal': calculadoraSalarioLiquidoPortugal,
@@ -4139,6 +4180,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-subsidio-ferias-portugal': calculadoraSubsidioFeriasPortugal,
   'calculadora-subsidio-natal-portugal': calculadoraSubsidioNatalPortugal,
   'calculadora-subsidio-refeicao-portugal': calculadoraSubsidioRefeicaoPortugal,
+  'calculadora-sueldo-en-dolares-poder-compra': sueldoEnDolaresPoderCompra,
   'calculadora-tss-afp-sfs-republica-dominicana': calculadoraTssAfpSfsRepublicaDominicana,
   'calculadora-utilidades-aguinaldo-venezuela': calculadoraUtilidadesAguinaldoVenezuela,
   'calculadora-vacaciones-bono-vacacional-venezuela': calculadoraVacacionesBonoVacacionalVenezuela,
