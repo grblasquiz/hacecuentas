@@ -79,6 +79,10 @@ function readJSONs(dir: string, pathPrefix = ''): any[] {
     // contradictorio (Google se confunde) y desperdicia crawl budget.
     // Cuando alguien des-noindexa una calc, regenerar sitemap la incluye de nuevo.
     .filter((d: any) => !d.noindex)
+    // Excluimos páginas con `canonicalSlug`: son duplicados que canonicalizan a
+    // OTRA URL (vienen de la unificación de similares). Listarlas en el sitemap
+    // es "non-canonical page in sitemap" (Ahrefs) y desperdicia crawl budget.
+    .filter((d: any) => !d.canonicalSlug)
     // Excluimos slugs en PRUNING_REDIRECTS: el JSON sigue presente para que
     // el middleware sepa redirigir, pero la URL ya no debe figurar en el sitemap.
     // path-aware: para colecciones con prefijo (glosario, comparar…) la clave de
