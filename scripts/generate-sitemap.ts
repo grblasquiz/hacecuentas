@@ -533,6 +533,8 @@ const priorityUrls: Url[] = [
   prio('/partidos-hoy-mundial-2026',         '0.95', 'daily',  true),
   // Hub temático asado/fiesta/evento (cluster de ~40 calcs por invitado, alta intención de finde)
   prio('/calculadoras-evento',               '0.8',  'monthly'),
+  // Meta-hub de fin de semana (clusters resilientes: cocina, escapadas, fitness, ocio, mascotas)
+  prio('/calculadoras-fin-de-semana',        '0.8',  'monthly'),
   // Landings de feriados LATAM 2026 (evergreen del año, alta intención)
   prio('/feriados-mexico-2026',              '0.85', 'weekly'),
   prio('/feriados-colombia-2026',            '0.85', 'weekly'),
