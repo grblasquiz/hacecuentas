@@ -3,6 +3,7 @@
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
+import { rmPesoMaximo } from './1rm-peso-maximo';
 import { rmPesoMuertoEstimador } from './1rm-peso-muerto-estimador';
 import { rmPressBancaEstimador } from './1rm-press-banca-estimador';
 import { rmSentadillaEstimador } from './1rm-sentadilla-estimador';
@@ -757,6 +758,7 @@ import { consumoElectricoAparatoKwhMes } from './consumo-electrico-aparato-kwh-m
 import { consumoElectronicaHogarWattsMensual } from './consumo-electronica-hogar-watts-mensual';
 import { consumoHeladeraAnualKwh } from './consumo-heladera-anual-kwh';
 import { consumoNaftaLitros100km } from './consumo-nafta-litros-100km';
+import { consumoWattsPcGamerFuente } from './consumo-watts-pc-gamer-fuente';
 import { compute as compute__contabilidad_electronica_multa_sat_mexico } from './contabilidad-electronica-multa-sat-mexico';
 import { contadorDePalabrasYCaracteres } from './contador-de-palabras-y-caracteres';
 import { contenidoCalendarioMensual } from './contenido-calendario-mensual';
@@ -772,6 +774,7 @@ import { compute as compute__conversion_atmosferas_pascales_bar } from './conver
 import { conversionBaseDecimalBinarioHexa } from './conversion-base-decimal-binario-hexa';
 import { conversionBases } from './conversion-bases';
 import { conversionBtuKcalAireAcondicionado } from './conversion-btu-kcal-aire-acondicionado';
+import { conversionBytesKbMbGbTb } from './conversion-bytes-kb-mb-gb-tb';
 import { conversionCelsiusFahrenheitKelvin } from './conversion-celsius-fahrenheit-kelvin';
 import { compute as compute__conversion_celsius_fahrenheit_kelvin_rankine_temperatura } from './conversion-celsius-fahrenheit-kelvin-rankine-temperatura';
 import { conversionColesterolMgMmol } from './conversion-colesterol-mg-mmol';
@@ -1675,6 +1678,7 @@ import { gananciasSegundaCategoriaRentaFinanciera2026 } from './ganancias-segund
 import { gananciasSueldo } from './ganancias-sueldo';
 import { gananciasTramosEmpleadoMensual2026 } from './ganancias-tramos-empleado-mensual-2026';
 import { gasFeeEthereumTransaccionSwap } from './gas-fee-ethereum-transaccion-swap';
+import { gasIdealPvNrt } from './gas-ideal-pv-nrt';
 import { gasNaturalConsumoM3 } from './gas-natural-consumo-m3';
 import { gasNaturalSubsidioZonasFriasPatagonia } from './gas-natural-subsidio-zonas-frias-patagonia';
 import { compute as compute__gas_trip_cost_calculator } from './gas-trip-cost-calculator';
@@ -2977,6 +2981,7 @@ import { regla600Estrellas } from './regla-600-estrellas';
 import { regla72DuplicarDinero } from './regla-72-duplicar-dinero';
 import { reglaAmistadNumeroDunbarCirculos } from './regla-amistad-numero-dunbar-circulos';
 import { compute as compute__regla_de_tres_compuesta_directa_inversa } from './regla-de-tres-compuesta-directa-inversa';
+import { reglaDeTresSimpleDirectaInversa } from './regla-de-tres-simple-directa-inversa';
 import { reglaNumeroDunbar150ContactosRed } from './regla-numero-dunbar-150-contactos-red';
 import { reglaTres } from './regla-tres';
 import { reglaTresCompuesta } from './regla-tres-compuesta';
@@ -3440,6 +3445,7 @@ import { tiempoExposicionPanning } from './tiempo-exposicion-panning';
 import { tiempoImpresion3dLayer } from './tiempo-impresion-3d-layer';
 import { tiempoLectura } from './tiempo-lectura';
 import { tiempoLecturaPaginasEstudio } from './tiempo-lectura-paginas-estudio';
+import { tiempoLeerLibroGeneral } from './tiempo-leer-libro-general';
 import { tiempoLeerNovelaGenero } from './tiempo-leer-novela-genero';
 import { tiempoMarinadoCarnePescado } from './tiempo-marinado-carne-pescado';
 import { tiempoMetaMaraton } from './tiempo-meta-maraton';
@@ -3718,6 +3724,7 @@ import { zonasPotenciaCiclismoWattsKg } from './zonas-potencia-ciclismo-watts-kg
 export const formulas: Record<string, (inputs: any) => any> = {
   '13-salario-liquido-bruto-clt': compute__13_salario_liquido_bruto_clt,
   '1rm-estimacion-fuerza-maxima': compute__1rm_estimacion_fuerza_maxima,
+  '1rm-peso-maximo': rmPesoMaximo,
   '1rm-peso-muerto-estimador': rmPesoMuertoEstimador,
   '1rm-press-banca-estimador': rmPressBancaEstimador,
   '1rm-sentadilla-estimador': rmSentadillaEstimador,
@@ -4472,6 +4479,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'consumo-electronica-hogar-watts-mensual': consumoElectronicaHogarWattsMensual,
   'consumo-heladera-anual-kwh': consumoHeladeraAnualKwh,
   'consumo-nafta-litros-100km': consumoNaftaLitros100km,
+  'consumo-watts-pc-gamer-fuente': consumoWattsPcGamerFuente,
   'contabilidad-electronica-multa-sat-mexico': compute__contabilidad_electronica_multa_sat_mexico,
   'contador-de-palabras-y-caracteres': contadorDePalabrasYCaracteres,
   'contenido-calendario-mensual': contenidoCalendarioMensual,
@@ -4487,6 +4495,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversion-base-decimal-binario-hexa': conversionBaseDecimalBinarioHexa,
   'conversion-bases': conversionBases,
   'conversion-btu-kcal-aire-acondicionado': conversionBtuKcalAireAcondicionado,
+  'conversion-bytes-kb-mb-gb-tb': conversionBytesKbMbGbTb,
   'conversion-celsius-fahrenheit-kelvin': conversionCelsiusFahrenheitKelvin,
   'conversion-celsius-fahrenheit-kelvin-rankine-temperatura': compute__conversion_celsius_fahrenheit_kelvin_rankine_temperatura,
   'conversion-colesterol-mg-mmol': conversionColesterolMgMmol,
@@ -5390,6 +5399,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ganancias-sueldo': gananciasSueldo,
   'ganancias-tramos-empleado-mensual-2026': gananciasTramosEmpleadoMensual2026,
   'gas-fee-ethereum-transaccion-swap': gasFeeEthereumTransaccionSwap,
+  'gas-ideal-pv-nrt': gasIdealPvNrt,
   'gas-natural-consumo-m3': gasNaturalConsumoM3,
   'gas-natural-subsidio-zonas-frias-patagonia': gasNaturalSubsidioZonasFriasPatagonia,
   'gas-trip-cost-calculator': compute__gas_trip_cost_calculator,
@@ -6692,6 +6702,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'regla-72-duplicar-dinero': regla72DuplicarDinero,
   'regla-amistad-numero-dunbar-circulos': reglaAmistadNumeroDunbarCirculos,
   'regla-de-tres-compuesta-directa-inversa': compute__regla_de_tres_compuesta_directa_inversa,
+  'regla-de-tres-simple-directa-inversa': reglaDeTresSimpleDirectaInversa,
   'regla-numero-dunbar-150-contactos-red': reglaNumeroDunbar150ContactosRed,
   'regla-tres': reglaTres,
   'regla-tres-compuesta': reglaTresCompuesta,
@@ -7155,6 +7166,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tiempo-impresion-3d-layer': tiempoImpresion3dLayer,
   'tiempo-lectura': tiempoLectura,
   'tiempo-lectura-paginas-estudio': tiempoLecturaPaginasEstudio,
+  'tiempo-leer-libro-general': tiempoLeerLibroGeneral,
   'tiempo-leer-novela-genero': tiempoLeerNovelaGenero,
   'tiempo-marinado-carne-pescado': tiempoMarinadoCarnePescado,
   'tiempo-meta-maraton': tiempoMetaMaraton,
