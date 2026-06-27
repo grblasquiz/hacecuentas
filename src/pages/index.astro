@@ -452,6 +452,19 @@ const schema = {
       <div class="fav-strip-grid" id="fav-strip-grid"></div>
     </section>
 
+    <!-- Calculadoras que viste (recientes) — client-side desde localStorage
+         'hc_recent' (mismo contrato {s,t,l,d}, cap 12). Registro PASIVO (sin
+         acción del usuario, lo graba FavoriteStar al cargar cada calc) → retoma
+         donde dejó y sube páginas/sesión. Reusa las clases de .fav-strip.
+         Oculta server-side; el script de render vive abajo. -->
+    <section class="fav-strip" id="recent-strip" style="display:none" aria-labelledby="recent-strip-title">
+      <h2 class="fav-strip-title" id="recent-strip-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+        Seguí donde dejaste
+      </h2>
+      <div class="fav-strip-grid" id="recent-strip-grid"></div>
+    </section>
+
     <!-- Quick Actions: tiles de las 3 verticales que concentran el 70% del tráfico según GA.
          Reduce el bounce del hero (5s → objetivo 30s+) dando opciones inmediatas. -->
     <div class="hero-quick-actions" aria-label="Herramientas destacadas">
@@ -1141,6 +1154,69 @@ const schema = {
 
       if (!window.__hcFavStrip) {
         window.__hcFavStrip = true;
+        document.addEventListener('astro:page-load', render);
+      }
+      render();
+    })();
+  </script>
+
+  <!-- Franja "Seguí donde dejaste": lee localStorage 'hc_recent' (contrato
+       {s,t,l,d}) y muestra hasta 8 cards de las últimas calcs vistas, más
+       reciente primero. Registro pasivo desde FavoriteStar. Mismo render 100%
+       DOM API (textContent escapa el título). Mínimo 2 ítems para mostrarse. -->
+  <script is:inline>
+    (function () {
+      var KEY = 'hc_recent';
+      var LANGS = { '': 1, en: 1, pt: 1, mx: 1, es: 1, co: 1, cl: 1, pe: 1, ec: 1 };
+
+      function validRecent(f) {
+        return !!f &&
+          typeof f.s === 'string' && /^[a-z0-9][a-z0-9-]*$/i.test(f.s) &&
+          typeof f.l === 'string' && LANGS[f.l] === 1;
+      }
+
+      function readRecent() {
+        try {
+          var raw = localStorage.getItem(KEY);
+          if (!raw) return [];
+          var arr = JSON.parse(raw);
+          if (!Array.isArray(arr)) return [];
+          return arr.filter(validRecent);
+        } catch (e) { return []; }
+      }
+
+      function render() {
+        var strip = document.getElementById('recent-strip');
+        var grid = document.getElementById('recent-strip-grid');
+        if (!strip || !grid) return; // no estamos en el home
+        var items = readRecent();
+        // Con 0-1 vistas la franja aporta poco → ocultar (umbral 2).
+        if (items.length < 2) { strip.style.display = 'none'; return; }
+        while (grid.firstChild) grid.removeChild(grid.firstChild);
+        // Más nuevo al final en storage → mostramos los más recientes primero.
+        items.slice().reverse().slice(0, 8).forEach(function (f) {
+          var url = (f.l ? '/' + f.l : '') + '/' + f.s;
+          var card = document.createElement('div');
+          card.className = 'fav-card';
+          var a = document.createElement('a');
+          a.className = 'fav-link';
+          a.href = url;
+          a.textContent = (typeof f.t === 'string' && f.t) ? f.t : f.s.replace(/-/g, ' ');
+          a.addEventListener('click', function () {
+            try {
+              if (typeof window.gtag === 'function') {
+                window.gtag('event', 'recent_open', { calc_slug: f.s });
+              }
+            } catch (e) {}
+          });
+          card.appendChild(a);
+          grid.appendChild(card);
+        });
+        strip.style.display = '';
+      }
+
+      if (!window.__hcRecentStrip) {
+        window.__hcRecentStrip = true;
         document.addEventListener('astro:page-load', render);
       }
       render();

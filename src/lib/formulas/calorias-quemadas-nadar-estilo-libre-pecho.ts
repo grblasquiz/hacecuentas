@@ -26,12 +26,12 @@ const ESTILOS: Record<string, DatoEstilo> = {
   crol_rapido: { nombre: 'Crol (estilo libre) rápido', met: 9.8 },
   pecho_suave: { nombre: 'Pecho suave', met: 5.3 },
   pecho_vigoroso: { nombre: 'Pecho vigoroso', met: 10.3 },
-  espalda: { nombre: 'Espalda', met: 4.8 },
+  espalda: { nombre: 'Espalda', met: 9.5 },
   mariposa: { nombre: 'Mariposa', met: 13.8 },
 };
 
 // Orden de menor a mayor demanda, para la comparación visual entre estilos.
-const ORDEN = ['espalda', 'pecho_suave', 'crol_moderado', 'crol_rapido', 'pecho_vigoroso', 'mariposa'];
+const ORDEN = ['pecho_suave', 'crol_moderado', 'espalda', 'crol_rapido', 'pecho_vigoroso', 'mariposa'];
 
 export function caloriasQuemadasNadarEstiloLibrePecho(i: Inputs): Outputs {
   const peso = Number(i.peso);
@@ -84,7 +84,7 @@ export function caloriasQuemadasNadarEstiloLibrePecho(i: Inputs): Outputs {
     },
     _chart: {
       type: 'bar',
-      ariaLabel: `Comparación de calorías quemadas en ${minutos} min según estilo de nado para ${peso} kg. La mariposa es la más demandante; espalda y pecho suave, las menos.`,
+      ariaLabel: `Comparación de calorías quemadas en ${minutos} min según estilo de nado para ${peso} kg. La mariposa es la más demandante; el pecho suave y el crol moderado, los menos.`,
       data: {
         labels,
         datasets: [{ label: `kcal en ${minutos} min`, data, suffix: ' kcal' }],

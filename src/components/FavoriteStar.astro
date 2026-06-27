@@ -97,6 +97,24 @@ const {
   (function () {
     var FAV_KEY = 'hc_favs';
     var FAV_CAP = 50;
+    // "Calculadoras que viste": registro pasivo (sin acción del usuario) que
+    // alimenta la franja de recientes del home. Mismo contrato {s,t,l,d} que
+    // favoritos, key aparte 'hc_recent', cap 12, dedup por (s,l), más nuevo al
+    // final. Sube páginas/sesión y visitas recurrentes (retención).
+    var RECENT_KEY = 'hc_recent';
+    var RECENT_CAP = 12;
+
+    function recordRecent(slug, title, lang) {
+      if (!slug) return;
+      try {
+        var arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+        if (!Array.isArray(arr)) arr = [];
+        arr = arr.filter(function (r) { return !(r && r.s === slug && (r.l || '') === lang); });
+        arr.push({ s: slug, t: title, l: lang, d: new Date().toISOString() });
+        while (arr.length > RECENT_CAP) arr.shift();
+        localStorage.setItem(RECENT_KEY, JSON.stringify(arr));
+      } catch (e) { /* storage bloqueado: no romper la página */ }
+    }
 
     function readFavs() {
       try {
@@ -125,6 +143,10 @@ const {
       var labelSave = btn.getAttribute('data-label-save') || 'Guardar calculadora';
       var labelSaved = btn.getAttribute('data-label-saved') || 'Guardada';
       var textEl = btn.querySelector('[data-fav-text]');
+
+      // Registrar esta calc como "vista recientemente" (una vez por vista: el
+      // guard favBound de arriba ya garantiza una sola corrida por instancia).
+      recordRecent(slug, title, lang);
 
       function matches(f) {
         return !!f && f.s === slug && (f.l || '') === lang;
