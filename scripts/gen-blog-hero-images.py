@@ -35,20 +35,12 @@ STYLE = ("photorealistic editorial photography, clean and modern, soft natural "
          "no charts with labels. No human faces.")
 
 POSTS = {
-  "como-calcular-porcentajes":
-    "Overhead flat-lay of a modern white calculator, an open notebook and a pencil on a light wood desk, a cup of coffee to the side. Tidy minimal workspace.",
-  "como-calcular-interes-compuesto":
-    "Stacks of coins gradually increasing in height with a tiny fresh green sprout growing from the tallest stack, warm soft bokeh background. Concept of money growing over time.",
-  "guia-imc-peso-saludable":
-    "A cloth measuring tape coiled next to a glass of water and a small bowl of fresh colorful vegetables on a bright clean kitchen counter. Wellness and healthy-weight mood.",
-  "como-ahorrar-en-dolares-argentina":
-    "A neat stack of US one-hundred dollar bills beside a clear glass savings jar partly filled with folded bills, on a warm wooden surface. Personal savings concept.",
-  "como-calcular-calorias-para-bajar-de-peso":
-    "Top-down view of a balanced healthy meal: a plate with grilled lean protein, leafy greens, cherry tomatoes and avocado, on a bright clean table. Fresh nutritious food.",
-  "indemnizacion-por-despido-argentina":
-    "A tidy modern office desk with a neat closed paper folder, a fountain pen and a pair of reading glasses, soft daylight from a window. Calm neutral professional tone.",
-  "como-calcular-sueldo-en-mano-argentina":
-    "A calculator, a plain folded document and a small neat stack of banknotes on a clean light desk, warm morning light. Personal-finance payroll mood.",
+  "guia-completa-monotributo-2026":
+    "A bright tidy freelancer home-office desk with an open laptop showing a plain blank screen, a small potted succulent, a cup of coffee and a closed notebook. Small-business / self-employed workspace, warm natural light.",
+  "como-invertir-en-plazo-fijo-2026":
+    "A ceramic piggy bank beside a neat stack of coins and a small modern calculator on a clean light desk, soft warm light, shallow depth of field. Savings and fixed-term investment concept.",
+  "costo-de-vida-argentina-2026":
+    "An overhead view of a woven shopping basket full of fresh groceries — vegetables, fruit, bread and a carton — on a clean kitchen counter. Household budget and cost of living mood, bright natural light.",
 }
 
 def gen(key, slug, scene):
