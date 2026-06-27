@@ -175,6 +175,21 @@ const categoryHub = findHubForSlug(calc.slug);
 const comparator = lang ? null : getComparatorForCalc(calc.slug);
 const pillarGuideSlug = lang ? null : resolveGuideSlug(calc);
 const pillarGuideTitle = pillarGuideSlug ? GUIDE_TITLES[pillarGuideSlug] : null;
+// Hub temático contextual (solo AR root: estos hubs viven en / sin prefijo de
+// locale). Re-establece el pin a hubs que el rediseño v2 perdió cuando dejó de
+// renderizar CalcRail (quedó huérfano en [...slug].astro). Concentra equity
+// interna en los hubs y los hace crawleables desde ~2500 calcs. salud queda
+// fuera del hub de finde a propósito (YMYL médico donde "finde" no aplica).
+const themeHub = lang ? null
+  : (calc.slug.includes('mundial-2026') || calc.slug === 'cuanto-falta-mundial-fifa-2026-2030' || calc.slug === 'calculadora-top-10-goleadores-historico-mundial-fifa')
+    ? { icon: '⚽', eb: 'Mundial 2026', label: 'Todas las calculadoras del Mundial', href: '/mundial-2026' }
+  : /invitado|asado|por-persona-evento|fernet-cola|presupuesto-cumple|cotillon|invitaciones-cumple|quinceanera/.test(calc.slug)
+    ? { icon: '🎉', eb: 'Asado, fiesta y evento', label: 'Calculadoras para tu asado o fiesta', href: '/calculadoras-evento' }
+  : ['cocina', 'viajes', 'mascotas', 'entretenimiento', 'automotor'].includes(calc.category)
+    ? { icon: '🗓️', eb: 'Para el fin de semana', label: 'Calculadoras para el fin de semana', href: '/calculadoras-fin-de-semana' }
+  : ['matematica', 'ciencia'].includes(calc.category)
+    ? { icon: '🧮', eb: 'Calculadora científica', label: 'Abrí la calculadora científica', href: '/calculadora-cientifica' }
+  : null;
 const contextualOffer = getOfferForCalc(calc.slug);
 const converterTable = (converterTables as Record<string, any>)[calc.slug] || null;
 const audienceRedirect = calc.audienceRedirect || null;
@@ -490,6 +505,17 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
         <span class="gd">Tabla lado a lado, veredicto y cuándo conviene cada una.</span>
       </div>
       <a class="gb" href={`/comparar/${comparator.slug}`}>{L.compareOpen}</a>
+    </aside>
+  )}
+
+  {themeHub && (
+    <aside class="v2-guide">
+      <div class="gc-text">
+        <span class="eb">{themeHub.icon} {themeHub.eb}</span>
+        <strong>{themeHub.label}</strong>
+        <span class="gd">Más calculadoras del mismo tema, juntas en un solo lugar.</span>
+      </div>
+      <a class="gb" href={themeHub.href}>Ver el hub →</a>
     </aside>
   )}
 

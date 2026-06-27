@@ -77,6 +77,39 @@ async function pickCalcs(env, n = 2) {
   return picked.concat(recycled.results || []);
 }
 
+// Edición de VIERNES (ángulo fin de semana): mismas reglas que pickCalcs pero
+// acotado a categorías resilientes al finde (cuando el orgánico se cae ~48%).
+// Trae gente de vuelta sáb/dom por un canal propio. Si el subset agotó su pool,
+// recicla las más viejas de esas categorías; si aún falta, completa con generales.
+const WEEKEND_CATS = ['cocina', 'viajes', 'mascotas', 'entretenimiento', 'automotor'];
+async function pickWeekendCalcs(env, n = 2) {
+  const inCats = WEEKEND_CATS.map(() => '?').join(',');
+  const fresh = await env.DB.prepare(
+    `SELECT slug, title, answer_snippet, category, icon, url FROM mailing_pool
+     WHERE category IN (${inCats}) AND slug NOT IN (SELECT slug FROM mailing_log)
+     ORDER BY rank ASC LIMIT ?`,
+  ).bind(...WEEKEND_CATS, n).all();
+  let picked = fresh.results || [];
+  if (picked.length >= n) return picked;
+
+  const have = picked.map((c) => c.slug);
+  const ph = have.map(() => '?').join(',') || "''";
+  const recycled = await env.DB.prepare(
+    `SELECT p.slug, p.title, p.answer_snippet, p.category, p.icon, p.url
+     FROM mailing_pool p
+     JOIN (SELECT slug, MAX(edition_at) me FROM mailing_log GROUP BY slug) l ON l.slug = p.slug
+     WHERE p.category IN (${inCats}) AND p.slug NOT IN (${ph})
+     ORDER BY l.me ASC LIMIT ?`,
+  ).bind(...WEEKEND_CATS, ...have, n - picked.length).all();
+  picked = picked.concat(recycled.results || []);
+  // Último recurso: completar con calcs generales para nunca mandar menos de n.
+  if (picked.length < n) {
+    const extra = await pickCalcs(env, n);
+    for (const c of extra) { if (picked.length >= n) break; if (!picked.some((p) => p.slug === c.slug)) picked.push(c); }
+  }
+  return picked.slice(0, n);
+}
+
 async function getRecipients(env) {
   const rows = await env.DB.prepare(
     `SELECT email FROM newsletter_subs
@@ -195,16 +228,16 @@ async function sendAll(env, recipients, { from, subject, calcs, unsubBase, secre
 }
 
 // ── edición: arma y manda (o devuelve dryRun) ───────────────────────────────
-async function runEdition(env, { dryRun = false, testTo = null } = {}) {
+async function runEdition(env, { dryRun = false, testTo = null, weekend = false } = {}) {
   const from = env.MAILING_FROM || 'Hacé Cuentas <novedades@hacecuentas.com>';
   const unsubBase = env.UNSUB_BASE || 'https://hacecuentas-mailing-cron.workers.dev';
   const secret = env.UNSUB_SECRET || RUN_TOKEN;
 
-  const calcs = await pickCalcs(env, 2);
+  const calcs = weekend ? await pickWeekendCalcs(env, 2) : await pickCalcs(env, 2);
   if (calcs.length < 2) return { ok: false, reason: 'pool vacío', calcs: calcs.length };
 
   const a = shortName(calcs[0].title), b = shortName(calcs[1].title);
-  const subject = `🧮 ${a} y ${b}`;
+  const subject = weekend ? `🗓️ Para tu finde: ${a} y ${b}` : `🧮 ${a} y ${b}`;
 
   // Preview puro: devolver HTML sin mandar nada.
   if (dryRun) {
@@ -285,8 +318,10 @@ export default {
       if (last?.t && Date.now() - last.t < 12 * 3600 * 1000) {
         console.log('[mailing] edición reciente (<12h) — skip'); return;
       }
-      const r = await runEdition(env, {});
-      console.log('[mailing] scheduled', JSON.stringify(r));
+      // Viernes (UTC 5) = edición de fin de semana (calcs resilientes al finde).
+      const weekend = new Date().getUTCDay() === 5;
+      const r = await runEdition(env, { weekend });
+      console.log('[mailing] scheduled', JSON.stringify({ weekend, ...r }));
     })());
   },
 
@@ -301,15 +336,17 @@ export default {
         return new Response(bin, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=604800' } });
       }
 
+      const weekend = url.searchParams.get('weekend') === '1';
+
       if (url.searchParams.get('preview') === '1') {
-        const r = await runEdition(env, { dryRun: true });
+        const r = await runEdition(env, { dryRun: true, weekend });
         if (!r.ok) return new Response(JSON.stringify(r), { status: 409, headers: H });
         return new Response(r.html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
       }
 
       if (url.searchParams.get('run') === RUN_TOKEN) {
         const testTo = url.searchParams.get('test');
-        const r = await runEdition(env, { testTo: testTo || null });
+        const r = await runEdition(env, { testTo: testTo || null, weekend });
         return new Response(JSON.stringify(r), { status: r.ok ? 200 : 409, headers: H });
       }
 
