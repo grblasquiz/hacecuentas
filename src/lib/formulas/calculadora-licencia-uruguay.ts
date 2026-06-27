@@ -34,7 +34,7 @@ export interface LicenciaOutputs {
 }
 
 /** Días de licencia que corresponden por la antigüedad (sin prorrateo por meses). */
-export function diasLicenciaPorAntiguedad(aniosAntiguedad: number): number {
+function diasLicenciaPorAntiguedad(aniosAntiguedad: number): number {
   const base = URUGUAY_2026.laboral.licenciaDiasBase;
   const anios = Math.max(0, Math.floor(aniosAntiguedad));
   // +1 día cada 4 años desde el 5º: día extra al cumplir 5, 9, 13, 17…

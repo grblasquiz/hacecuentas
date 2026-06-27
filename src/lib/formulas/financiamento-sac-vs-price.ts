@@ -63,7 +63,7 @@ export function financiamentoSacVsPrice(i: Inputs): Outputs {
 
   const _insight = {
     title: 'SAC vs PRICE: quanto você economiza',
-    text: `Optando pelo **SAC** você paga **${brl(economia)}** a menos em juros que no PRICE. A 1ª parcela do SAC (**${brl(parcelaInicialSac)}**) é mais pesada que a parcela fixa do PRICE (**${brl(parcelaFixaPrice)}**), mas vai caindo até ${brl(parcelaFinalSac)}. Se a renda aguenta o começo, o SAC compensa.`,
+    text: `Optando pelo **SAC** você paga **${brl(economia)}** a menos em juros que no PRICE. A 1ª parcela do SAC (**${brl(parcelaInicialSac)}**) é mais pesada que a parcela fixa do PRICE (**${brl(parcelaPrice)}**), mas vai caindo até ${brl(parcelaFinalSac)}. Se a renda aguenta o começo, o SAC compensa.`,
     tone: 'good',
     icon: '📉',
   };

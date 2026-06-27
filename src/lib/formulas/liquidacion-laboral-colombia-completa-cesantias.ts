@@ -35,7 +35,13 @@ export interface Outputs {
 export function compute(i: Inputs): Outputs {
   // Parsing de fechas
   const parseDate = (dateStr: string): Date => {
-    const [day, month, year] = dateStr.split('/').map(Number);
+    const s = String(dateStr || '').trim();
+    // <input type="date"> envía ISO YYYY-MM-DD; soportamos también DD/MM/YYYY.
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+      const [year, month, day] = s.slice(0, 10).split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    const [day, month, year] = s.split('/').map(Number);
     return new Date(year, month - 1, day);
   };
 

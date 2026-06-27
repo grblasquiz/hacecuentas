@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-26
+// Generated: 2026-06-27
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -422,7 +422,7 @@ import { calculadoraIvaPortugal } from './calculadora-iva-portugal';
 import { calculadoraIvaUruguay } from './calculadora-iva-uruguay';
 import { calculadoraIvaVenezuela16 } from './calculadora-iva-venezuela-16';
 import { calculadoraJornalUruguay } from './calculadora-jornal-uruguay';
-import { diasLicenciaPorAntiguedad } from './calculadora-licencia-uruguay';
+import { calculadoraLicenciaUruguay } from './calculadora-licencia-uruguay';
 import { compute as compute__calculadora_liquidacion_contrato_termino_fijo_colombia_2026 } from './calculadora-liquidacion-contrato-termino-fijo-colombia-2026';
 import { compute as compute__calculadora_liquidacion_empleada_domestica_por_dias_colombia_2026 } from './calculadora-liquidacion-empleada-domestica-por-dias-colombia-2026';
 import { calculadoraLiquidacionFinalParaguay } from './calculadora-liquidacion-final-paraguay';
@@ -4137,7 +4137,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-iva-uruguay': calculadoraIvaUruguay,
   'calculadora-iva-venezuela-16': calculadoraIvaVenezuela16,
   'calculadora-jornal-uruguay': calculadoraJornalUruguay,
-  'calculadora-licencia-uruguay': diasLicenciaPorAntiguedad,
+  'calculadora-licencia-uruguay': calculadoraLicenciaUruguay,
   'calculadora-liquidacion-contrato-termino-fijo-colombia-2026': compute__calculadora_liquidacion_contrato_termino_fijo_colombia_2026,
   'calculadora-liquidacion-empleada-domestica-por-dias-colombia-2026': compute__calculadora_liquidacion_empleada_domestica_por_dias_colombia_2026,
   'calculadora-liquidacion-final-paraguay': calculadoraLiquidacionFinalParaguay,
