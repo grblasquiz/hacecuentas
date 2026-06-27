@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
+import CalendarGrid from './CalendarGrid.astro';
 import type { FeriadosPais } from '../lib/data/feriados-latam-2026';
 
 // Landing de feriados por país (mismo rol que la calc de feriados AR de la home,
@@ -78,8 +79,14 @@ const schema = { '@context': 'https://schema.org', '@graph': [
         <div class="stat"><span class="stat-num">{findesLargos.length}</span><span class="stat-label">fines de semana largos</span></div>
       </section>
 
+      <section class="cal-visual">
+        <h2>Calendario {pais} 2026 mes a mes</h2>
+        <p>El año completo en un vistazo: los <strong>{total} feriados</strong> están marcados en <span style="background:var(--accent,#2c5cdc);color:#fff;padding:0 .4rem;border-radius:5px;font-weight:600;">color</span>. Más abajo tenés la tabla con la fecha exacta, el día y el tipo de cada uno.</p>
+        <CalendarGrid feriados={feriados.map((f) => ({ fecha: f.fecha, nombre: f.nombre }))} pais={pais} />
+      </section>
+
       <section>
-        <h2>Calendario de feriados y días festivos de {pais} 2026</h2>
+        <h2>Tabla de feriados y días festivos de {pais} 2026</h2>
         <div class="table-wrap">
           <table id="feriados-table">
             <thead><tr><th class="l">Fecha</th><th class="l">Día</th><th class="l">Feriado</th><th class="l">Tipo</th></tr></thead>

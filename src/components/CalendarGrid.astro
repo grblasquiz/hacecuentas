@@ -1,0 +1,68 @@
+---
+/**
+ * CalendarGrid — grilla visual del año 2026 (12 meses, semana lunes-primero)
+ * con los feriados marcados. Reutilizable: la alimenta cualquier landing que
+ * tenga un array de feriados {fecha:'YYYY-MM-DD', nombre}.
+ *
+ * Por qué existe: Bing muestra miles de impresiones para "calendario <país>
+ * 2026" pero las landings sólo daban la LISTA de feriados (otra intención) →
+ * CTR ~0. Esta grilla satisface la intención "ver el año" en la MISMA página
+ * que ya rankea (en vez de crear una URL nueva que canibalice). Cero data
+ * inventada: usa los feriados verificados que ya recibe la landing.
+ */
+interface Props {
+  feriados: { fecha: string; nombre: string }[];
+  pais: string;
+  year?: number;
+}
+const { feriados, pais, year = 2026 } = Astro.props as Props;
+
+const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const DOW = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+const byDate = new Map<string, string[]>();
+for (const f of feriados) {
+  if (!byDate.has(f.fecha)) byDate.set(f.fecha, []);
+  byDate.get(f.fecha)!.push(f.nombre);
+}
+
+function buildMonth(monthIdx: number) {
+  const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+  const firstDow = (new Date(year, monthIdx, 1).getDay() + 6) % 7; // lunes-primero
+  const cells: Array<{ d: number; hol: string[] } | null> = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    cells.push({ d, hol: byDate.get(iso) || [] });
+  }
+  return cells;
+}
+const months = MESES.map((_, i) => buildMonth(i));
+---
+
+<div class="calgrid" role="group" aria-label={`Calendario ${pais} ${year} con feriados marcados`}>
+  {months.map((cells, mi) => (
+    <div class="calgrid-month">
+      <h3 class="calgrid-mname">{MESES[mi]}</h3>
+      <div class="calgrid-dow">{DOW.map((d) => <span>{d}</span>)}</div>
+      <div class="calgrid-days">
+        {cells.map((c) => c === null
+          ? <span class="calgrid-empty"></span>
+          : <span class={c.hol.length ? 'calgrid-day is-hol' : 'calgrid-day'} title={c.hol.join(' · ') || undefined}>{c.d}</span>
+        )}
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .calgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.85rem; margin: 0.5rem 0 0.5rem; }
+  .calgrid-month { border: 1px solid var(--border, #e2e8f0); border-radius: 0.55rem; padding: 0.7rem; background: var(--surface, #fff); }
+  .calgrid-mname { font-size: 0.95rem; margin: 0 0 0.45rem; text-align: center; color: var(--text, #1e293b); }
+  .calgrid-dow, .calgrid-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .calgrid-dow { margin-bottom: 3px; }
+  .calgrid-dow span { text-align: center; font-size: 0.68rem; font-weight: 700; color: var(--text-3, #94a3b8); }
+  .calgrid-day, .calgrid-empty { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; border-radius: 5px; color: var(--text-2, #475569); }
+  .calgrid-day.is-hol { background: var(--accent, #2c5cdc); color: #fff; font-weight: 700; }
+  @media (max-width: 520px) { .calgrid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; } .calgrid-month { padding: 0.45rem; } .calgrid-day, .calgrid-empty { font-size: 0.68rem; } }
+</style>
