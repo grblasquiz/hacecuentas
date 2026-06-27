@@ -3,6 +3,7 @@ export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function fideicomisoConstruccionAporteCuotas(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
   const v=Number(i.valorDepto)||0; const n=Number(i.cuotasTotales)||0; const a=(Number(i.avanceObra)||0)/100;
+  if (!(n > 0)) throw new Error(__lang === 'en' ? 'Enter the total number of installments (greater than 0).' : __lang === 'pt' ? 'Informe o número total de parcelas (maior que 0).' : 'Ingresá la cantidad total de cuotas (mayor que 0).');
   const cuota=v/n;
   const debido=cuota*(n*a);
   const fmt=(x:number)=>'$'+x.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
