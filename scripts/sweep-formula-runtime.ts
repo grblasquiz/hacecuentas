@@ -19,12 +19,25 @@ function inputFor(field: any): any {
   const id = field.id || field.name;
   if (!id) return null;
   const t = field.type || 'number';
-  if (t === 'select' || field.options) {
+  // 1) Si el campo declara un default, usarlo: es el valor que el autor eligió y
+  //    el que ve el usuario. Evita falsos positivos por inputs sintéticos malos.
+  if (field.default !== undefined && field.default !== null && field.default !== '') {
+    return { id, val: field.default };
+  }
+  // 2) Selects / radios → primer option válido.
+  if (t === 'select' || t === 'radio' || field.options) {
     const opts = field.options || [];
     const first = opts[0];
     return { id, val: typeof first === 'object' ? (first.value ?? first.val ?? first.id) : first };
   }
-  if (t === 'number' || field.inputmode) {
+  // 2b) Horas (HH:MM) ANTES del branch numérico: muchos campos de hora son
+  //     type:text con inputmode, y el branch numérico les extraería "20" del
+  //     placeholder "Ej: 20:00" → la fórmula espera "HH:MM" y devuelve NaN:NaN.
+  if (t === 'time' || /\d{1,2}:\d{2}/.test(String(field.placeholder || ''))) {
+    return { id, val: '08:00' };
+  }
+  // 3) Numéricos (incluye currency/percent/range e inputmode numérico).
+  if (t === 'number' || t === 'currency' || t === 'percent' || t === 'range' || field.inputmode) {
     // placeholder "Ej: 120" → 120; si no, punto medio min/max; si no, 10
     const ph = String(field.placeholder || '').match(/-?\d+([.,]\d+)?/);
     let v = ph ? Number(ph[0].replace(',', '.')) : NaN;
@@ -34,8 +47,20 @@ function inputFor(field: any): any {
     }
     return { id, val: v };
   }
+  // 4) Fechas y horas.
   if (t === 'date') return { id, val: '2026-01-01' };
-  return { id, val: field.placeholder || '10' };
+  if (t === 'time') return { id, val: '08:00' };
+  // 5) Texto/textarea: si el placeholder sugiere una lista de números, devolverla
+  //    (ej. promedio/desvío esperan "10, 20, 30"). Si parece hora (HH:MM), 08:00.
+  const phStr = String(field.placeholder || '');
+  const listNums = phStr.match(/-?\d+([.,]\d+)?/g);
+  if (/\d[\s,;]+\d/.test(phStr) && listNums && listNums.length >= 2) {
+    return { id, val: listNums.map((n) => n.replace(',', '.')).join(', ') };
+  }
+  if (/\d{1,2}:\d{2}/.test(phStr) || /\b(hora|time)\b/i.test(id)) return { id, val: '08:00' };
+  // 6) Texto genérico: usar el placeholder si es un valor de ejemplo limpio, si no '10'.
+  const clean = phStr.replace(/^ej[:.]?\s*/i, '').trim();
+  return { id, val: clean || '10' };
 }
 
 const fails: any[] = [];

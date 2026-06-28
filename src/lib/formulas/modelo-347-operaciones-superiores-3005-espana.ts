@@ -84,7 +84,7 @@ export function compute(i: Inputs): Outputs {
       situacion_declarante = `Incumplidor: NO PRESENTASTE el Modelo 347. Sanción AEAT ${sancion_minima}€–${sancion_maxima}€ (infracción ${tasa_sancion}).`;
     }
   } else {
-    situacion_declaracion = "No obligado: operaciones por debajo del umbral. Sin obligación de presentar ni sanciones aplicables.";
+    situacion_declarante = "No obligado: operaciones por debajo del umbral. Sin obligación de presentar ni sanciones aplicables.";
   }
   
   // Recomendación
