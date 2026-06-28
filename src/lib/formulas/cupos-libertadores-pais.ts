@@ -84,9 +84,12 @@ export function cuposLibertadoresPais(
 ): CuposLibertadoresOutputs {
   const pais = String(inputs.pais || 'otro').toLowerCase();
   const pos = Math.max(1, Math.floor(Number(inputs.posicionLiga) || 20));
-  const campeonCopa = !!inputs.campeonCopaNacional;
-  const campeonLib = !!inputs.campeonLibertadoresVigente;
-  const campeonSuda = !!inputs.campeonSudamericanaVigente;
+  // El <select> manda el string "false"/"true": "false" es truthy, así que
+  // hay que comparar explícitamente (no usar !! sobre el valor crudo).
+  const asBool = (v: unknown) => v === true || v === 'true';
+  const campeonCopa = asBool(inputs.campeonCopaNacional);
+  const campeonLib = asBool(inputs.campeonLibertadoresVigente);
+  const campeonSuda = asBool(inputs.campeonSudamericanaVigente);
 
   let cuposDirectos = 4;
   let cuposRepechaje = 0;

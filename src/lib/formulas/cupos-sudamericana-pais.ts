@@ -61,8 +61,11 @@ export function cuposSudamericanaPais(
 ): CuposSudamericanaOutputs {
   const pais = String(inputs.pais || 'otro').toLowerCase();
   const pos = Math.max(1, Math.floor(Number(inputs.posicionLiga) || 20));
-  const vieneLib = !!inputs.vieneDeLibertadores;
-  const campeonSuda = !!inputs.campeonSudamericanaVigente;
+  // El <select> manda el string "false"/"true": "false" es truthy, así que
+  // hay que comparar explícitamente (no usar !! sobre el valor crudo).
+  const asBool = (v: unknown) => v === true || v === 'true';
+  const vieneLib = asBool(inputs.vieneDeLibertadores);
+  const campeonSuda = asBool(inputs.campeonSudamericanaVigente);
 
   let cuposPaisSuda = 4;
   if (pais === 'argentina' || pais === 'brasil') cuposPaisSuda = 6;
