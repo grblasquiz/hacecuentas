@@ -26,6 +26,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tiene_cargas = (i as any).tiene_cargas === true || (i as any).tiene_cargas === 'true';
   // Cotización 7% legal (base mínima Isapre obligatoria por ley DL 3500)
   const cotizacion_7_legal = i.sueldo_bruto * 0.07;
 

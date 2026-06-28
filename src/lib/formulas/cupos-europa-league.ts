@@ -55,6 +55,10 @@ function buildInsightEuropa(o: {
 export function cuposEuropaLeague(
   inputs: CuposEuropaLeagueInputs
 ): CuposEuropaLeagueOutputs {
+  (inputs as any).campeonCopaNacional = (inputs as any).campeonCopaNacional === true || (inputs as any).campeonCopaNacional === 'true';
+  (inputs as any).eliminadoChampionsPlayoff = (inputs as any).eliminadoChampionsPlayoff === true || (inputs as any).eliminadoChampionsPlayoff === 'true';
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (inputs as any).campeonConferenceLeagueVigente = (inputs as any).campeonConferenceLeagueVigente === true || (inputs as any).campeonConferenceLeagueVigente === 'true';
   const rank = Math.max(1, Math.floor(Number(inputs.rankingUefaPais) || 20));
   const pos = Math.max(1, Math.floor(Number(inputs.posicionLiga) || 10));
   const campeonCopa = !!inputs.campeonCopaNacional;

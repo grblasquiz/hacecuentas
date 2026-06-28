@@ -27,6 +27,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_interes_financiamiento = (i as any).incluir_interes_financiamiento === true || (i as any).incluir_interes_financiamiento === 'true';
   // Tasas base por pasarela y tipo tarjeta (2026, SII)
   // Fuente: Transbank, OnePay, Mach, Mercado Pago tarifarios 2026
   const tasas: Record<string, Record<string, { debito: number; credito: number }>> = {

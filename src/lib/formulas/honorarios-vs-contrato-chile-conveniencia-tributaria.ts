@@ -37,6 +37,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_gratificacion = (i as any).incluir_gratificacion === true || (i as any).incluir_gratificacion === 'true';
   // Constantes SII 2026 Chile
   // Retención boleta de honorarios 2026 = 15,25% (Ley 21.133, gradualidad hasta 17% en 2028)
   // Fuente SII: https://www.sii.cl/destacados/boletas_honorarios/aumento_gradual.html

@@ -20,6 +20,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_iva = (i as any).incluir_iva === true || (i as any).incluir_iva === 'true';
   // Constantes IEPS 2026 México (SAT)
   const IEPS_BEBIDA_SABORIZADA_POR_LITRO = 1.4451; // $/L
   const IEPS_CIGARRO_PORCENTAJE = 1.6; // 160% ad valorem

@@ -17,6 +17,8 @@ export interface Outputs {
 }
 
 export function becaNecesitoPromedio(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).materiasEnPlazo = (i as any).materiasEnPlazo === true || (i as any).materiasEnPlazo === 'true';
   const tipoBeca = String(i.tipoBeca || 'progresar');
   const promedioActual = Number(i.promedioActual);
   const materiasAprobadas = Number(i.materiasAprobadas) || 0;

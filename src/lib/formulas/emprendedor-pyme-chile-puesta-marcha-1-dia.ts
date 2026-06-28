@@ -20,6 +20,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).requiere_asesoria = (i as any).requiere_asesoria === true || (i as any).requiere_asesoria === 'true';
   // Constantes 2026 SII + Registro Mercantil
   const ARANCEL_SII_EIRL = 0; // Gratis En Un Día
   const ARANCEL_SII_SPA = 0; // Gratis En Un Día

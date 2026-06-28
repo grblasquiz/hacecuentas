@@ -50,6 +50,8 @@ function etapaVida(edad: number): string {
 }
 
 export function esperanzaVidaGatoRazaIndoor(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).castrado = (i as any).castrado === true || (i as any).castrado === 'true';
   const raza = String(i.raza || 'mestizo');
   const estilo = String(i.estiloVida || 'indoor');
   const castrado = i.castrado !== false;

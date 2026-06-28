@@ -21,6 +21,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).vivienda_hereditaria = (i as any).vivienda_hereditaria === true || (i as any).vivienda_hereditaria === 'true';
   // Constantes 2026 Chile - Fuente: SII
   const UTA_2026 = 30440; // Unidad Tributaria Anual 2026 (aprox.)
   const UTA_VIVIENDA_LIMITE = 2000 * UTA_2026; // $60.880.000

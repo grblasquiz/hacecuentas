@@ -29,6 +29,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).es_rescision_injustificada = (i as any).es_rescision_injustificada === true || (i as any).es_rescision_injustificada === 'true';
   // Constantes SAT 2026
   const EXENCION_AGUINALDO_2026 = 124000; // 40 × salario mínimo regional aprox. $3,100
   const EXENCION_VACACIONES_2026 = 2500; // Exención anual vacaciones

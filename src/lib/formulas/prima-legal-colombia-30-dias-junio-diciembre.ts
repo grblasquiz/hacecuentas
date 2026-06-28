@@ -19,6 +19,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).auxilio_transporte = (i as any).auxilio_transporte === true || (i as any).auxilio_transporte === 'true';
   // Constantes 2026 Colombia
   const AUXILIO_TRANSPORTE_2026 = COLOMBIA_2026.auxilioTransporte; // $249.095 (Decreto 1470/2025) — fuente única
   const DIAS_ANNO = 360; // Días laborales año colombiano

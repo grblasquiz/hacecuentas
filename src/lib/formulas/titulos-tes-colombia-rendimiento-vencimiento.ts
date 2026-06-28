@@ -31,6 +31,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_fiscalidad = (i as any).incluir_fiscalidad === true || (i as any).incluir_fiscalidad === 'true';
   // Constantes DIAN 2026
   const TASA_IMPUESTO_GANANCIA_OCASIONAL = 0.10; // 10% DIAN Decreto 560/2024
   const VALOR_PAR = 100; // TES se expresan como % del par

@@ -43,6 +43,8 @@ const fmtEUR = (n: number) =>
 export function indemnizacionDespidoObjetivoEspana(
   i: DespidoObjetivoInputs
 ): DespidoObjetivoOutputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).preavisoIncumplido = (i as any).preavisoIncumplido === true || (i as any).preavisoIncumplido === 'true';
   const salario = Number(i.salarioMensualBruto);
   const anios = Math.max(0, Number(i.aniosServicio) || 0);
   const meses = Math.max(0, Math.min(11, Number(i.mesesExtra) || 0));

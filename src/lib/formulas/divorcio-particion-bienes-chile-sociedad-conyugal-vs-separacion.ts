@@ -36,6 +36,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).impuesto_transferencia = (i as any).impuesto_transferencia === true || (i as any).impuesto_transferencia === 'true';
   // Constantes SII 2026
   const TASA_IMPUESTO_TRANSFERENCIA = 0.0125; // 1.25%
   const EXENSION_DIVORCIO = 0.5; // 50% exención en divorcio mutuo acuerdo

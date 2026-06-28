@@ -20,6 +20,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).comparar_prestamo = (i as any).comparar_prestamo === true || (i as any).comparar_prestamo === 'true';
   const deuda = Math.max(i.deuda_inicial, 10000);
   const cae = Math.min(Math.max(i.cae_anual, 20), 55); // Tope CMF 2026 ~51%
   const tasaMensual = cae / 12 / 100;

@@ -22,6 +22,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tiene_vehiculo = (i as any).tiene_vehiculo === true || (i as any).tiene_vehiculo === 'true';
   // Fuente: DANE 2026, Banco República, encuestas mercado
   // Base: Bogotá nivel medio, soltero sin dependientes
 

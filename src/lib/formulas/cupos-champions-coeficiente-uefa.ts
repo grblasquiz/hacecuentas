@@ -32,6 +32,10 @@ export interface CuposChampionsOutputs {
 export function cuposChampionsCoeficienteUefa(
   inputs: CuposChampionsInputs
 ): CuposChampionsOutputs {
+  (inputs as any).campeonEuropaLeagueVigente = (inputs as any).campeonEuropaLeagueVigente === true || (inputs as any).campeonEuropaLeagueVigente === 'true';
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (inputs as any).tieneCupoExtraPerformance = (inputs as any).tieneCupoExtraPerformance === true || (inputs as any).tieneCupoExtraPerformance === 'true';
+  (inputs as any).campeonChampionsVigente = (inputs as any).campeonChampionsVigente === true || (inputs as any).campeonChampionsVigente === 'true';
   const rank = Math.max(1, Math.floor(Number(inputs.rankingUefaPais) || 20));
   const pos = Math.max(1, Math.floor(Number(inputs.posicionLiga) || 10));
   const perfSpot = !!inputs.tieneCupoExtraPerformance;

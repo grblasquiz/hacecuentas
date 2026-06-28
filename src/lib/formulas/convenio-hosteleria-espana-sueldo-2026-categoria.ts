@@ -26,6 +26,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tiene_nocturnidad = (i as any).tiene_nocturnidad === true || (i as any).tiene_nocturnidad === 'true';
+  (i as any).pagas_extraordinarias = (i as any).pagas_extraordinarias === true || (i as any).pagas_extraordinarias === 'true';
   // CCNH 2024-2026 salarios base mensuales por categoría y provincia (€)
   // Fuente: BOE 2024, Acuerdo Sectorial Hostelería
   const salarios: { [key: string]: { [key: string]: number } } = {

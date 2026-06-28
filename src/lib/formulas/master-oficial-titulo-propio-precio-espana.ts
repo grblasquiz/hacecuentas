@@ -23,6 +23,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).solicitar_beca_mec = (i as any).solicitar_beca_mec === true || (i as any).solicitar_beca_mec === 'true';
   // Tarifas base 2026 España (€/ECTS) según CRUE y universidades
   const tarifasBase: Record<string, number> = {
     'oficial_publico': 27,      // Promedio CRUE 2026

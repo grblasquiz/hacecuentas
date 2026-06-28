@@ -71,6 +71,8 @@ const RONDA_LABELS: Record<string, string> = {
 export function premiosLibertadoresRonda(
   inputs: PremiosLibertadoresInputs
 ): PremiosLibertadoresOutputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (inputs as any).jugoFasesPrevias = (inputs as any).jugoFasesPrevias === true || (inputs as any).jugoFasesPrevias === 'true';
   const ronda = String(inputs.rondaAlcanzada || 'grupos').toLowerCase();
   const victorias = Math.max(
     0,

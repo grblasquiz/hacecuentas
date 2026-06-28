@@ -23,6 +23,8 @@ export interface Outputs {
 }
 
 export function financialFairPlayUefa(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).acreditaSponsorTest = (i as any).acreditaSponsorTest === true || (i as any).acreditaSponsorTest === 'true';
   const ing = Math.max(0, Number(i.ingresosAnualMEUR) || 0);
   const gastos = Math.max(0, Number(i.gastosAnualMEUR) || 0);
   const salTr = Math.max(0, Number(i.salariosYTransfersMEUR) || 0);

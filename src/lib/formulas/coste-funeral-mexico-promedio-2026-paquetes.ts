@@ -31,6 +31,13 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).traslado_terrestre = (i as any).traslado_terrestre === true || (i as any).traslado_terrestre === 'true';
+  (i as any).traslado_aereo = (i as any).traslado_aereo === true || (i as any).traslado_aereo === 'true';
+  (i as any).embalsamamiento = (i as any).embalsamamiento === true || (i as any).embalsamamiento === 'true';
+  (i as any).ceremonia_religiosa = (i as any).ceremonia_religiosa === true || (i as any).ceremonia_religiosa === 'true';
+  (i as any).catering_receptio = (i as any).catering_receptio === true || (i as any).catering_receptio === 'true';
+  (i as any).seguro_funerario = (i as any).seguro_funerario === true || (i as any).seguro_funerario === 'true';
   // Costos base por tipo servicio (MXN 2026, fuente: funerarias principales)
   const costosBase: Record<string, number> = {
     inhumacion: 12000,  // promedio nacional

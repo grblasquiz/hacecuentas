@@ -2,6 +2,9 @@
 export interface Inputs { tvlUsd: number; audits: number; ageMonths: number; hasBounty: boolean; hasTimelock: boolean; multisig: number; tokenHolders: number; }
 export interface Outputs { riskScore: number; riskLabel: string; breakdown: string; recommendedExposure: number; explicacion: string; _insight?: any; _chart?: any; }
 export function defiProtocolHackRisk(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).hasBounty = (i as any).hasBounty === true || (i as any).hasBounty === 'true';
+  (i as any).hasTimelock = (i as any).hasTimelock === true || (i as any).hasTimelock === 'true';
   const tvl = Number(i.tvlUsd);
   const audits = Number(i.audits);
   const age = Number(i.ageMonths);

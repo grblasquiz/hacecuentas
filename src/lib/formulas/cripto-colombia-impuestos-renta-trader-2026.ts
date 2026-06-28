@@ -23,6 +23,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).retension_plataforma = (i as any).retension_plataforma === true || (i as any).retension_plataforma === 'true';
   // Constantes 2026 DIAN
   // Fuente: DIAN Resolución tarifa renta 2026
   const TARIFA_GO = 0.10; // Ganancia ocasional: 10%

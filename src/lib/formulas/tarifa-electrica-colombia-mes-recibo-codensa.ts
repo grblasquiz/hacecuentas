@@ -22,6 +22,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).aplicar_restriccion = (i as any).aplicar_restriccion === true || (i as any).aplicar_restriccion === 'true';
   // Tarifas CREG 2026 (COP/kWh) - Resolución 015/2026
   const TARIFA_GENERACION = 385; // $/kWh
   const TARIFA_TRANSMISION = 52; // $/kWh

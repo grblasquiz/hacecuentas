@@ -20,6 +20,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tiene_empleados = (i as any).tiene_empleados === true || (i as any).tiene_empleados === 'true';
   // DIAN 2026 - Tarifas Régimen Simple por tramos e ingresos.
   // Tope de ingresos: 100.000 UVT (fuente única src/lib/data/colombia-2026.ts).
   const LIMITE_REGIMEN_SIMPLE = COLOMBIA_2026.regimenSimple.topeIngresosPesos; // 100.000 × UVT

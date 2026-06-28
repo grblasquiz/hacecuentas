@@ -2,6 +2,8 @@
 export interface Inputs { gananciaArs: number; tipoDeclarante: string; incluyeMonotributo: boolean; }
 export interface Outputs { impuestoArs: number; aliquotaEfectiva: number; tipoImpuesto: string; netoArs: number; explicacion: string; _insight?: any; _chart?: any; }
 export function criptoTaxArgentinaGanancia(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluyeMonotributo = (i as any).incluyeMonotributo === true || (i as any).incluyeMonotributo === 'true';
   const ganancia = Number(i.gananciaArs);
   const tipo = String(i.tipoDeclarante || 'fisica');
   const monot = Boolean(i.incluyeMonotributo);

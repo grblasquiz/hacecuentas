@@ -26,6 +26,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).jubilacion_anticipada = (i as any).jubilacion_anticipada === true || (i as any).jubilacion_anticipada === 'true';
   // ── CONSTANTES 2026 (Seguridad Social / BOE) ──────────────────────────────
   const PENSION_MAXIMA_2026 = 3267.60;          // €/mes (14 pagas) - Orden HFP 2026
   const PENSION_MINIMA_2026 = 900.00;           // €/mes referencia con cónyuge a cargo

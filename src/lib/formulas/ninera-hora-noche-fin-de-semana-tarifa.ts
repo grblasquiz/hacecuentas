@@ -2,6 +2,10 @@
 export interface Inputs { tarifaBaseHoraDiurna: number; horasContratadas: number; esFinDeSemana: boolean; esNocturna: boolean; zonaPremium: boolean; cantidadNinos: number; }
 export interface Outputs { tarifaHoraAjustada: number; recargoTotalPct: number; subtotal: number; aportesEstimados: number; totalAPagar: number; explicacion: string; _chart?: any; _insight?: any; }
 export function nineraHoraNocheFinDeSemanaTarifa(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).esFinDeSemana = (i as any).esFinDeSemana === true || (i as any).esFinDeSemana === 'true';
+  (i as any).esNocturna = (i as any).esNocturna === true || (i as any).esNocturna === 'true';
+  (i as any).zonaPremium = (i as any).zonaPremium === true || (i as any).zonaPremium === 'true';
   const base = Number(i.tarifaBaseHoraDiurna);
   const horas = Number(i.horasContratadas);
   const finde = Boolean(i.esFinDeSemana);

@@ -15,6 +15,8 @@ export interface Outputs {
 }
 
 export function pesoIdealPerro(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).castrado = (i as any).castrado === true || (i as any).castrado === 'true';
   const peso = Number(i.pesoActual);
   const edad = Number(i.edad);
   const actividad = String(i.actividad || 'normal');

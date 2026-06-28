@@ -18,6 +18,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).es_motocicleta = (i as any).es_motocicleta === true || (i as any).es_motocicleta === 'true';
   // Año actual: 2026
   const anio_actual = 2026;
   const antigüedad_años = anio_actual - i.anio_modelo;

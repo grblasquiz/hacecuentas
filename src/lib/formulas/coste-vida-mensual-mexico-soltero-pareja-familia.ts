@@ -22,6 +22,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_auto = (i as any).incluir_auto === true || (i as any).incluir_auto === 'true';
+  (i as any).dependientes_mayores = (i as any).dependientes_mayores === true || (i as any).dependientes_mayores === 'true';
   // Factores multiplicadores por ciudad (vs CDMX = 1.0)
   // Fuente: INEGI 2026, costo de vida regional
   const factoresCiudad: { [key: string]: number } = {

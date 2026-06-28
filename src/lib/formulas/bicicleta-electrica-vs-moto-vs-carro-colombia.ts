@@ -26,6 +26,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_seguro = (i as any).incluir_seguro === true || (i as any).incluir_seguro === 'true';
+  (i as any).incluir_financiacion = (i as any).incluir_financiacion === true || (i as any).incluir_financiacion === 'true';
   // Constantes 2026 Colombia - DIAN, Superfinanciera, ECOPETROL
   const PRECIO_GASOLINA_POR_GAL = 10500; // pesos, ECOPETROL 2026
   const CONSUMO_MOTO_KM_POR_GAL = 45; // km/galón típico

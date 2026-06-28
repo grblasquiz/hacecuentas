@@ -41,6 +41,8 @@ const fmtEUR = (n: number) =>
   });
 
 export function pensionViudezEspana(i: PensionViudezEsInputs): PensionViudezEsOutputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tieneCargasFamiliares = (i as any).tieneCargasFamiliares === true || (i as any).tieneCargasFamiliares === 'true';
   const br = Number(i.baseReguladoraMensual);
   const edad = Math.max(0, Number(i.edadViudo) || 0);
   const cargas = Boolean(i.tieneCargasFamiliares);

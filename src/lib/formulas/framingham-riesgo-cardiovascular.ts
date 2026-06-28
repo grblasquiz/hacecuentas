@@ -100,6 +100,10 @@ function riesgoFromPuntaje(pts: number, sexo: string): number {
 }
 
 export function framinghamRiesgoCardiovascular(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tratamientoHTA = (i as any).tratamientoHTA === true || (i as any).tratamientoHTA === 'true';
+  (i as any).fumador = (i as any).fumador === true || (i as any).fumador === 'true';
+  (i as any).diabetico = (i as any).diabetico === true || (i as any).diabetico === 'true';
   const edad = Number(i.edad);
   const sexo = String(i.sexo || 'm');
   const ct = Number(i.colesterolTotal);

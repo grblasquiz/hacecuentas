@@ -16,6 +16,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  (i as any).pago_anticipado = (i as any).pago_anticipado === true || (i as any).pago_anticipado === 'true';
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).es_electrico = (i as any).es_electrico === true || (i as any).es_electrico === 'true';
   // Constantes 2026 - Fuente: Ministerio de Hacienda
   const RANGO_1_MAX = 50_000_000; // $50M
   const RANGO_1_TARIFA = 0.015; // 1.5%

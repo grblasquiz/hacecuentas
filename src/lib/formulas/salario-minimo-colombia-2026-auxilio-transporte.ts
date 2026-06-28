@@ -19,6 +19,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).aplica_auxilio_transporte = (i as any).aplica_auxilio_transporte === true || (i as any).aplica_auxilio_transporte === 'true';
   // Constantes 2026 desde la tabla maestra. SMLMV: Decreto 0159/2026 (transitorio,
   // tras suspenderse el 1469/2025 por el Consejo de Estado). Auxilio: Decreto 1470/2025 (vigente).
   const SMLMV_2026 = COLOMBIA_2026.smlmv; // $1.750.905

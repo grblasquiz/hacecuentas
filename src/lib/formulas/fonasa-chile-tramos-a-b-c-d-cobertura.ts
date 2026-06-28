@@ -23,6 +23,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).comparar_isapre = (i as any).comparar_isapre === true || (i as any).comparar_isapre === 'true';
   // Constantes 2026 Chile (SII, SuperSalud)
   const UF_2026 = 780000; // UF promedio 2026 (referencia SII)
   const TRAMO_B_LIMITE = UF_2026 * 0.5; // ~$390.000

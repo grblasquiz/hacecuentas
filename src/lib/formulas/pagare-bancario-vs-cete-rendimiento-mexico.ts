@@ -24,6 +24,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).cliente_tiie = (i as any).cliente_tiie === true || (i as any).cliente_tiie === 'true';
   // Constantes 2026 México - SAT/Banxico
   const RETENCION_ISR_PAGARE = 0.009; // 0.90% retención provisional ISR sobre intereses 2026, LIF Art. 24 — igual para pagaré y CETE
   const RETENCION_ISR_CETE = 0.009;   // 0.90% retención provisional ISR sobre intereses 2026, LIF Art. 24 — tasa única por instrumento

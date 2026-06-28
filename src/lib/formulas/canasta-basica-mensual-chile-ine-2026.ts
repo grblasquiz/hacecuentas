@@ -24,6 +24,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_cbt = (i as any).incluir_cbt === true || (i as any).incluir_cbt === 'true';
   // Constantes INE 2026 - Canasta Básica Alimentaria
   // Fuente: INE Abril 2026
   const CBA_ADULTO = 70500;

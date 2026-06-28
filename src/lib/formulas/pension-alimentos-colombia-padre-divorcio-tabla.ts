@@ -32,6 +32,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tiene_otros_hijos = (i as any).tiene_otros_hijos === true || (i as any).tiene_otros_hijos === 'true';
   // Constantes 2026 Colombia
   const EPS_DEPENDIENTE = 0.04; // 4% afiliado
   const PENSION_APORTE = 0.04; // 4% Colpensiones/AFP

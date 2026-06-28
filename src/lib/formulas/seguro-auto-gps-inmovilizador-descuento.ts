@@ -2,6 +2,9 @@
 export interface Inputs { primaMensualSinDescuento: number; tieneGps: boolean; tieneInmovilizador: boolean; companiaDescuentoPct: number; costoInstalacionEquipo: number; }
 export interface Outputs { descuentoPct: number; ahorroMensual: number; primaConDescuento: number; ahorroAnual: number; mesesRetornoEquipo: number; explicacion: string; _insight?: any; _chart?: any; }
 export function seguroAutoGpsInmovilizadorDescuento(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tieneGps = (i as any).tieneGps === true || (i as any).tieneGps === 'true';
+  (i as any).tieneInmovilizador = (i as any).tieneInmovilizador === true || (i as any).tieneInmovilizador === 'true';
   const prima = Number(i.primaMensualSinDescuento);
   const gps = Boolean(i.tieneGps);
   const inmo = Boolean(i.tieneInmovilizador);

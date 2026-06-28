@@ -20,6 +20,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_paternidad = (i as any).incluir_paternidad === true || (i as any).incluir_paternidad === 'true';
   // Constantes Ley 1822/2017 Colombia
   const DIAS_MATERNIDAD = 126; // 18 semanas × 7 días
   const SEMANAS_MATERNIDAD = 18;

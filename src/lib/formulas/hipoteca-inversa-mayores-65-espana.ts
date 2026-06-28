@@ -22,6 +22,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_nuda_propiedad = (i as any).incluir_nuda_propiedad === true || (i as any).incluir_nuda_propiedad === 'true';
   // CONSTANTES Y TABLAS 2026 ESPAÑA
   // Fuentes: Banco de España, INE, Tesoro Público
 

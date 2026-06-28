@@ -16,6 +16,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_bono = (i as any).incluir_bono === true || (i as any).incluir_bono === 'true';
   // Constantes 2026 Chile — Art. 195 Código del Trabajo
   const DIAS_PERMISO_PATERNIDAD = 5; // Fijo, irrenunciable
   const PROMEDIO_OCDE_DIAS = 12; // Referencia comparativa OCDE 2025

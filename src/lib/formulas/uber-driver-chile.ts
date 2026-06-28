@@ -31,6 +31,8 @@ function formatClp(n: number): string {
 }
 
 export function uberDriverChile(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).emiteBoletaHonorarios = (i as any).emiteBoletaHonorarios === true || (i as any).emiteBoletaHonorarios === 'true';
   const tarifas = Number(i.tarifasBrutas) || 0;
   const propinas = Number(i.propinas) || 0;
   const km = Number(i.kmRecorridos) || 0;

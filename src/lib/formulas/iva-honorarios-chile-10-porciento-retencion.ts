@@ -18,6 +18,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluye_iva = (i as any).incluye_iva === true || (i as any).incluye_iva === 'true';
   // Tasas retención por año - Ley 21.133 (2019), gradualidad hasta 2028
   // Fuente SII: https://www.sii.cl/destacados/boletas_honorarios/aumento_gradual.html
   const tasas_por_anio: { [key: number]: number } = {

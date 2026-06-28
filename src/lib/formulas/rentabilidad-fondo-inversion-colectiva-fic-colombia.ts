@@ -28,6 +28,8 @@ const TASAS_RETENCION: Record<string, number> = {
 };
 
 export function compute(inputs: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (inputs as any).reinvertir_dividendos = (inputs as any).reinvertir_dividendos === true || (inputs as any).reinvertir_dividendos === 'true';
   const {
     monto_inicial,
     plazo_meses,

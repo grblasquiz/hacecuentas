@@ -18,6 +18,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tiene_escolaridad = (i as any).tiene_escolaridad === true || (i as any).tiene_escolaridad === 'true';
+  (i as any).tiene_prenatal = (i as any).tiene_prenatal === true || (i as any).tiene_prenatal === 'true';
   const ingreso = Number(i.ingreso_bruto_familia) || 0;
   const hijos = Math.max(1, Math.floor(Number(i.cantidad_hijos) || 1));
   const condicion = String(i.condicion_laboral || 'empleado');

@@ -21,6 +21,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).es_trabajador_formal = (i as any).es_trabajador_formal === true || (i as any).es_trabajador_formal === 'true';
   // Constantes 2026 Colombia
   const DIAS_LICENCIA_LEGAL = 14; // Ley 1822/2017
   const PORCENTAJE_COBERTURA = 100; // EPS cubre 100%

@@ -33,6 +33,8 @@ const BASE: Record<string, { mensual: number; nombre: string }> = {
 };
 
 export function sueldoDtAfaCategoria(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).viaticos = (i as any).viaticos === true || (i as any).viaticos === 'true';
   const cat = String(i.categoria || 'primera-b-metro');
   const exp = Math.max(0, Number(i.experienciaAnos) || 0);
   const tit = Math.max(0, Number(i.titulosGanados) || 0);

@@ -23,6 +23,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).tiene_retraso = (i as any).tiene_retraso === true || (i as any).tiene_retraso === 'true';
   // Validación decil elegible (1-6 RSH)
   const decil_elegible = i.decil_rsh >= 1 && i.decil_rsh <= 6;
   

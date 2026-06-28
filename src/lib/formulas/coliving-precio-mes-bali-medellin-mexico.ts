@@ -2,6 +2,8 @@
 export interface Inputs { destino: 'canggu' | 'medellin' | 'cdmx' | 'lisboa' | 'lisbonOther'; tipoHabitacion: 'compartida' | 'privada' | 'suite'; meses: number; coworking: boolean; }
 export interface Outputs { precioMensualUsd: number; totalEstanciaUsd: number; descuentoLargaEstanciaUsd: number; explicacion: string; _insight?: any; _chart?: any; }
 export function colivingPrecioMesBaliMedellinMexico(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).coworking = (i as any).coworking === true || (i as any).coworking === 'true';
   const meses = Number(i.meses);
   if (!meses || meses <= 0) throw new Error('Ingresá la cantidad de meses');
   const tabla: Record<string, Record<string, number>> = {

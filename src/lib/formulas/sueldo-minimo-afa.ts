@@ -28,6 +28,8 @@ const MINIMOS: Record<string, { label: string; minimo: number }> = {
 };
 
 export function sueldoMinimoAfa(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).descuentoAportes = (i as any).descuentoAportes === true || (i as any).descuentoAportes === 'true';
   const catKey = i.categoria;
   const anos = Math.max(0, Number(i.anosAfa) || 0);
   const premios = Math.max(0, Number(i.premiosMensuales) || 0);

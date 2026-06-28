@@ -28,6 +28,10 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluye_iva = (i as any).incluye_iva === true || (i as any).incluye_iva === 'true';
+  (i as any).cliente_es_retenedor = (i as any).cliente_es_retenedor === true || (i as any).cliente_es_retenedor === 'true';
+  (i as any).aplica_reteiva = (i as any).aplica_reteiva === true || (i as any).aplica_reteiva === 'true';
   // Constantes 2026 DIAN
   const IVA_RATE = 0.19; // 19% IVA estándar Colombia
   const RETENCION_RENTA_SERVICIOS = 0.10; // 10% servicios generales

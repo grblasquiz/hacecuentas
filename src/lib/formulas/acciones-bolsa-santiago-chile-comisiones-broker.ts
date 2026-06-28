@@ -24,6 +24,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_venta = (i as any).incluir_venta === true || (i as any).incluir_venta === 'true';
   // Datos brokers 2026 Chile (en %)
   // Fuente: SII, Bolsa Santiago, webs brokers
   const brokerRates: Record<string, {comision: number; custodia_anual: number}> = {

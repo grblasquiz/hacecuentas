@@ -22,6 +22,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).verificar_contabilidad = (i as any).verificar_contabilidad === true || (i as any).verificar_contabilidad === 'true';
   // Tasas presuntivas 2026 SII por sector
   const tasasPresuntivas: Record<string, number> = {
     'agricola': 0.07,

@@ -100,6 +100,9 @@ function calcularBeneficioFiscalLeasing(
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_seguros_mantenimiento = (i as any).incluir_seguros_mantenimiento === true || (i as any).incluir_seguros_mantenimiento === 'true';
+  (i as any).es_uso_empresarial = (i as any).es_uso_empresarial === true || (i as any).es_uso_empresarial === 'true';
   // Validaciones básicas
   if (i.precio_vehiculo <= 0 || i.plazo_meses <= 0) {
     return {

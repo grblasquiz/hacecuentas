@@ -42,6 +42,8 @@ const fmtCLP = (n: number) =>
   });
 
 export function finiquitoRenunciaChile(i: FiniquitoChileInputs): FiniquitoChileOutputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).avisoPrevio = (i as any).avisoPrevio === true || (i as any).avisoPrevio === 'true';
   const sueldo = Number(i.sueldoBaseMensual);
   const anos = Math.max(0, Number(i.anosServicio) || 0);
   const meses = Math.max(0, Math.min(11, Number(i.mesesExtra) || 0));

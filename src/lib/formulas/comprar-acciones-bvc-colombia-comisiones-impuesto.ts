@@ -22,6 +22,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).es_persona_natural = (i as any).es_persona_natural === true || (i as any).es_persona_natural === 'true';
   // Constantes DIAN 2026 Colombia
   const RETENCION_DIVIDENDOS_PN = 0.075; // 7.5% personas naturales
   const TASA_GANANCIA_OCASIONAL = 0.15;  // 15% si tenencia > 365 días

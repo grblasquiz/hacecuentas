@@ -2,6 +2,8 @@
 export interface Inputs { personas: number; dias: number; vueloPorPersonaArs: number; hotelPorNocheArs: number; entradaParqueArs: number; ladoBrasil: boolean; comidaDiariaArs: number; trasladosArs: number; }
 export interface Outputs { vuelosArs: number; hospedajeArs: number; entradasArs: number; comidasArs: number; trasladosTotalArs: number; totalArs: number; totalPorPersonaArs: number; explicacion: string; _chart?: any; _insight?: any; }
 export function iguazu3DiasPresupuestoCataratas2Personas(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).ladoBrasil = (i as any).ladoBrasil === true || (i as any).ladoBrasil === 'true';
   const personas = Number(i.personas) || 2;
   const dias = Number(i.dias) || 3;
   const vuelo = Number(i.vueloPorPersonaArs) || 0;

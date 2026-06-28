@@ -95,6 +95,8 @@ function r2(n: number): number {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).es_autonomo = (i as any).es_autonomo === true || (i as any).es_autonomo === 'true';
   // --- Validaciones y clamps ---
   const precioCoche = Math.max(0, i.precio_coche ?? 25000);
   const entrada = Math.min(Math.max(0, i.entrada ?? 0), precioCoche);

@@ -2,6 +2,9 @@
 export interface Inputs { edadActualMeses: number; alturaActualCm: number; saltaCunaSiNo: boolean; pesaMasDe18Kg: boolean; }
 export interface Outputs { edadRecomendadaMinMeses: number; edadRecomendadaMaxMeses: number; senalRiesgoActual: boolean; mesesEsperaEstimados: number; explicacion: string; _insight?: any; _chart?: any; }
 export function cunaColechoEdadTransicionCamaNinos(i: Inputs): Outputs {
+  (i as any).pesaMasDe18Kg = (i as any).pesaMasDe18Kg === true || (i as any).pesaMasDe18Kg === 'true';
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).saltaCunaSiNo = (i as any).saltaCunaSiNo === true || (i as any).saltaCunaSiNo === 'true';
   const edad = Number(i.edadActualMeses);
   const altura = Number(i.alturaActualCm) || 0;
   const salta = Boolean(i.saltaCunaSiNo);

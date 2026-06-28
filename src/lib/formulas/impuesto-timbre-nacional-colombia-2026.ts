@@ -18,6 +18,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).exento_timbre = (i as any).exento_timbre === true || (i as any).exento_timbre === 'true';
   // UVT 2026 según DIAN Resolución
   const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   

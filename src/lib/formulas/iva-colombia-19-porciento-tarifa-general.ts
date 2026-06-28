@@ -16,6 +16,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).es_autorretenedor = (i as any).es_autorretenedor === true || (i as any).es_autorretenedor === 'true';
+  (i as any).modo_inverso = (i as any).modo_inverso === true || (i as any).modo_inverso === 'true';
   // Fuente: DIAN - Tarifas IVA 2026
   const TARIFA_GENERAL = 19;
   const TARIFA_REDUCIDA = 5;

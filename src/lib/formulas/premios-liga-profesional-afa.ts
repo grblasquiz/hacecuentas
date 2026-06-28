@@ -28,6 +28,9 @@ const EMPATE_DEFAULT = 8_000_000;
 const PLANTEL_DEFAULT = 30;
 
 export function premiosLigaProfesionalAfa(i: Inputs): Outputs {
+  (i as any).subcampeon = (i as any).subcampeon === true || (i as any).subcampeon === 'true';
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).campeon = (i as any).campeon === true || (i as any).campeon === 'true';
   const ganados = Math.max(0, Number(i.partidosGanados) || 0);
   const empatados = Math.max(0, Number(i.partidosEmpatados) || 0);
   const premioVic = i.premioPorVictoria !== undefined ? Number(i.premioPorVictoria) : VICTORIA_DEFAULT;

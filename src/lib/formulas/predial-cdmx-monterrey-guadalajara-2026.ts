@@ -19,6 +19,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).aplica_subsidio = (i as any).aplica_subsidio === true || (i as any).aplica_subsidio === 'true';
+  (i as any).pago_anticipado_enero = (i as any).pago_anticipado_enero === true || (i as any).pago_anticipado_enero === 'true';
   // Tasas prediales por ciudad 2026 (Fuente: SAT, tesorerías municipales)
   const tasas: Record<string, number> = {
     'cdmx': 0.0084,      // 0.84% CDMX

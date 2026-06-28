@@ -91,6 +91,8 @@ const DATOS_MUTUALES: Record<string, { tasa_ajuste: number; cobertura_mercado: n
 };
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).considerar_bono_prevencion = (i as any).considerar_bono_prevencion === true || (i as any).considerar_bono_prevencion === 'true';
   // Validaciones
   if (i.remuneracion_promedio_mensual <= 0 || i.numero_trabajadores <= 0) {
     return {

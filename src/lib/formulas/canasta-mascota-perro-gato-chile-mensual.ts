@@ -21,6 +21,9 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_vacunas = (i as any).incluir_vacunas === true || (i as any).incluir_vacunas === 'true';
+  (i as any).incluir_esterilizacion = (i as any).incluir_esterilizacion === true || (i as any).incluir_esterilizacion === 'true';
   // Costos mensuales comida 2026 Chile (pesos, valores medios)
   const costos_comida_mensual: Record<string, { standard: number; premium: number }> = {
     perro_pequeno: { standard: 13500, premium: 21500 },

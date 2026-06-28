@@ -19,6 +19,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).es_pequena_empresa = (i as any).es_pequena_empresa === true || (i as any).es_pequena_empresa === 'true';
   // Constantes 2026 Colombia - DIAN
   const TASA_EPS_EMPLEADO = 0.04; // 4% Seguro de salud empleado
   const TASA_PENSION_EMPLEADO = 0.04; // 4% Fondo pensión empleado

@@ -17,6 +17,8 @@ export interface Outputs {
 }
 
 export function caloriasAmamantarExtra(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).exclusiva = (i as any).exclusiva === true || (i as any).exclusiva === 'true';
   const base = Number(i.caloriasBase);
   const meses = Number(i.mesesPostparto);
   const exclusiva = i.exclusiva !== false;

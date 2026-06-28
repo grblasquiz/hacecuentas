@@ -23,6 +23,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_condonacion = (i as any).incluir_condonacion === true || (i as any).incluir_condonacion === 'true';
   // Constantes y validación
   const duracion = Math.max(2, Math.min(7, i.duracion_anos || 5));
   const arancel_base = Math.max(1500000, i.arancel_anual || 8500000);

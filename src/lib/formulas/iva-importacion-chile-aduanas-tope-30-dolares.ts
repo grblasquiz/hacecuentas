@@ -23,6 +23,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_gasto_envio_usd = (i as any).incluir_gasto_envio_usd === true || (i as any).incluir_gasto_envio_usd === 'true';
   // Constantes 2026 Chile - Fuente: SII, Banco Central, Aduanas
   const LIMITE_EXENCION_USD = 30; // Resolución Exenta 108/2011 SII
   const ARANCEL_BASE_PORCENTAJE = 0.06; // 6% arancel base

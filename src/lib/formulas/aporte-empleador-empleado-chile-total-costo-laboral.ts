@@ -22,6 +22,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_gratificacion = (i as any).incluir_gratificacion === true || (i as any).incluir_gratificacion === 'true';
   // Constantes 2026 Chile (SII, Superintendencia de Pensiones, ACHS)
   const TASA_CESANTIA = 0.024; // 2.4% obligatorio (art. 162 Código del Trabajo)
   const TASA_SIS = 0.015; // 1.5% Seguro de Invalidez y Sobrevivencia

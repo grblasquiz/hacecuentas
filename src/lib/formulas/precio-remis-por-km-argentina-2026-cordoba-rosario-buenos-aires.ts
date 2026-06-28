@@ -37,6 +37,8 @@ const MINIMO_GARANTIZADO: Record<string, number> = {
 };
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).include_tip = (i as any).include_tip === true || (i as any).include_tip === 'true';
   const city = i.city || 'caba';
   const distance_km = Math.max(0, Number(i.distance_km) || 0);
   const time_slot = i.time_slot || 'day';

@@ -27,6 +27,8 @@ const AGENCIA_PCT: Record<string, { pct: number; nombre: string }> = {
 };
 
 export function derechosImagenComision(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluyeSponsors = (i as any).incluyeSponsors === true || (i as any).incluyeSponsors === 'true';
   const ing = Math.max(0, Number(i.ingresosImagenAnual) || 0);
   const tipo = String(i.tipoAgencia || 'big');
   const anos = Math.max(1, Number(i.anosContrato) || 1);

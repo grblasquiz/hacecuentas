@@ -25,6 +25,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).incluir_promocion = (i as any).incluir_promocion === true || (i as any).incluir_promocion === 'true';
   // Constantes tarifas operadores abril 2026 (sin IVA)
   // Fuente: Tarifas públicas operadores España Q2 2026
   

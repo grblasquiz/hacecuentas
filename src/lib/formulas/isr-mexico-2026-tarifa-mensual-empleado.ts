@@ -16,6 +16,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).aplicar_subsidio = (i as any).aplicar_subsidio === true || (i as any).aplicar_subsidio === 'true';
   // Constantes 2026 SAT — Artículo 96 LISR, tarifa mensual
   // Fuente: SAT Resolución Miscelánea Fiscal 2026
   const tramos = [

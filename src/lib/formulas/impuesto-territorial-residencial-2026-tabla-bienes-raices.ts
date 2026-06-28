@@ -17,6 +17,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar a boolean.
+  (i as any).aplicar_sobretasa = (i as any).aplicar_sobretasa === true || (i as any).aplicar_sobretasa === 'true';
   // Tarifas base 2026 SII — vigentes para cálculo de contribuciones territoriales
   const tarifas: Record<string, number> = {
     residencial: 0.933,      // Casas, departamentos, viviendas
