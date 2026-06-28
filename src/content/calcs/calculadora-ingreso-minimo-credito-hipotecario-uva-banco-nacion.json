@@ -258,16 +258,41 @@
     "source": "BCRA (serie UVA id 31) + Banco de la Nación Argentina",
     "sourceUrl": "https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/31"
   },
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-28",
   "referenceTables": [
     {
       "title": "Condiciones crédito hipotecario UVA por banco (referencia 2026)",
-      "headers": ["Banco", "TNA real (sobre UVA)", "Financiación máxima", "Plazo máximo"],
+      "headers": [
+        "Banco",
+        "TNA real (sobre UVA)",
+        "Financiación máxima",
+        "Plazo máximo"
+      ],
       "rows": [
-        ["Banco Nación", "5,50%", "75% del valor", "30 años"],
-        ["Banco Hipotecario", "6,25%", "80% del valor", "30 años"],
-        ["Banco Galicia", "7,00%", "75% del valor", "20 años"],
-        ["Banco Macro", "7,50%", "75% del valor", "20 años"]
+        [
+          "Banco Nación",
+          "5,50%",
+          "75% del valor",
+          "30 años"
+        ],
+        [
+          "Banco Hipotecario",
+          "6,25%",
+          "80% del valor",
+          "30 años"
+        ],
+        [
+          "Banco Galicia",
+          "7,00%",
+          "75% del valor",
+          "20 años"
+        ],
+        [
+          "Banco Macro",
+          "7,50%",
+          "75% del valor",
+          "20 años"
+        ]
       ],
       "note": "Fuente: webs oficiales Banco Nación, Banco Hipotecario, Banco Galicia y Banco Macro (2026). Tasas reales sobre UVA sujetas a condiciones de acreditación de haberes."
     }
@@ -276,5 +301,23 @@
   "dataSource": [
     "uva",
     "inflacion:acumulado_12m"
-  ]
+  ],
+  "example": {
+    "title": "Ejemplo: propiedad US$80.000, financiás 75% a 20 años (tasa de referencia 5,5%)",
+    "inputs": {
+      "precioUsd": 80000,
+      "porcentajeFinanciado": 75,
+      "plazoAnios": "20",
+      "banco": "nacion",
+      "tasaPersonalizada": 5.5,
+      "tipoCambio": 1250,
+      "relacionCuotaIngreso": "30"
+    },
+    "steps": [
+      "**Monto del crédito**: 75% de US$80.000 = US$60.000 (≈ $75.000.000 a $1.250).",
+      "**Cuota inicial**: con tasa 5,5% a 20 años (240 cuotas) → ~$510.257/mes.",
+      "**Ingreso mínimo**: el banco pide que la cuota sea ≤30% del ingreso → $510.257 ÷ 0,30 = **$1.700.858**."
+    ],
+    "result": "Para un crédito UVA de US$60.000 a 20 años necesitás un ingreso familiar neto de ~**$1.700.000** (la cuota inicial ronda $510.000, el 30% de ese ingreso)."
+  }
 }
