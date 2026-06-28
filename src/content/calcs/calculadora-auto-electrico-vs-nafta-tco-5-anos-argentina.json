@@ -231,15 +231,26 @@
     }
   ],
   "example": {
+    "title": "Ejemplo: BYD Dolphin vs Toyota Corolla, 15.000 km al año",
     "inputs": {
-      "modeloElectrico": "byd_yuan_plus",
+      "modeloElectrico": "byd_dolphin",
+      "precioElectricoCustom": 35000,
       "modeloNafta": "toyota_corolla",
+      "precioNaftaCustom": 28000,
       "kmAnio": 15000,
       "precioKwhARS": 120,
       "precioNaftaARS": 1450,
       "tipoCambioUSD": 1200,
-      "financiacion": "no"
-    }
+      "financiacion": "no",
+      "tasaFinanciacion": 45,
+      "porcentajeFinanciado": 50
+    },
+    "steps": [
+      "**Costo por km**: eléctrico US$0,25 vs nafta US$0,40.",
+      "**TCO a 5 años**: eléctrico US$18.649 vs nafta US$29.745.",
+      "**Ahorro en energía**: US$6.200 en 75.000 km."
+    ],
+    "result": "En 5 años, el BYD Dolphin sale **US$11.096 más barato** que el Corolla en costo total (TCO): a estos precios de nafta y luz, el eléctrico conviene desde el primer año."
   },
   "explanation": "## Cómo se calcula el TCO (Costo Total de Propiedad)\n\nEl TCO integra todos los costos relevantes durante 5 años de uso de un vehículo. No alcanza con comparar el precio de lista: un auto más caro puede ser más barato de operar.\n\n### Componentes del TCO\n\n| Componente | Eléctrico | Nafta |\n|---|---|---|\n| Precio de compra | USD 27.000–55.000 | USD 16.000–38.000 |\n| Depreciación 5 años | ~45% del valor | ~55% del valor |\n| Combustible/electricidad | ~1,2 USD/100 km | ~5–7 USD/100 km |\n| Mantenimiento anual | ~USD 300 | ~USD 600 |\n| Patente anual | ~1,5% valor fiscal | ~1,5% valor fiscal |\n| Seguro anual | ~2,5% valor | ~2,5% valor |\n\n### Fórmula\n\n```\n// Depreciación\nvalorResidual = precioCompra × (1 - tasaDepreciacion)^5\ndepreciacion5a = precioCompra - valorResidual\n\n// Combustible eléctrico\nconsumoKWh = kmTotales × consumoKWhPor100km / 100\ncostoElec = consumoKWh × precioKWh_ARS / tipoCambio\n\n// Combustible nafta\nconsumoLitros = kmTotales × consumoLtsPor100km / 100\ncostoNafta = consumoLitros × precioNafta_ARS / tipoCambio\n\n// Mantenimiento (5 años)\nmantElec = 300 × 5\nmantNafta = 600 × 5\n\n// Patente (sobre valor promedio)\npatente5a = precioCompra × 0.015 × 5 × 0.7  // valor promedio decrece\n\n// Seguro (sobre valor promedio)\nseguro5a = precioCompra × 0.025 × 5 × 0.75\n\n// Financiación (opcional, interés total sobre monto financiado)\ninteresTotal = montoFinanciado × ((1+TNA)^5 - 1)\n\n// TCO total\ntco = depreciacion + combustible + mantenimiento + patente + seguro + financiacion\n```\n\n### Ejemplo numérico\n\nBYD Yuan Plus (USD 35.000) vs Toyota Corolla (USD 28.000), 15.000 km/año, kWh a ARS 120, nafta a ARS 1.450, TC 1.200:\n\n- **Eléctrico**: depreciación USD 15.750 + electricidad USD 1.500 + mantenimiento USD 1.500 + patente USD 2.205 + seguro USD 3.281 = **~USD 24.236**\n- **Nafta**: depreciación USD 15.400 + nafta USD 7.656 + mantenimiento USD 3.000 + patente USD 1.764 + seguro USD 2.625 = **~USD 30.445**\n- **Diferencia**: ~USD 6.200 a favor del eléctrico en 5 años\n- **Breakeven**: ~5,6 años (el mayor precio de compra se compensa por menores costos operativos)\n\n### Consumos de referencia 2026\n\n| Modelo eléctrico | kWh/100 km | Modelo nafta | L/100 km |\n|---|---|---|---|\n| BYD Yuan Plus | 16 | Toyota Corolla | 8,0 |\n| BYD Dolphin | 14 | VW Polo | 6,5 |\n| Tesla Model 3 | 14,5 | Ford Ranger | 11,5 |\n| Renault Kangoo Z.E. | 22 | Renault Logan | 7,5 |\n\n### Cuándo NO aplica / Limitaciones\n\n- Los precios de autos en Argentina varían significativamente por disponibilidad, impuestos de importación y cotización del dólar. Verificá valores actuales antes de tomar decisiones.\n- El cálculo asume precios de electricidad y nafta constantes, sin proyectar inflación diferencial entre energías.\n- No incluye costos de instalación de cargador domiciliario (wallbox: ~USD 800–1.500).\n- La depreciación real depende del mercado usado, que para eléctricos en Argentina aún tiene poca liquidez.\n- La financiación bancaria para autos eléctricos importados puede tener condiciones distintas a las de vehículos nacionales.\n\nFuentes: ACARA (Asociación de Concesionarios), ENARGAS, Secretaría de Energía, relevamiento de precios de combustibles SURTIDORES.COM.AR.",
   "faq": [
@@ -318,7 +329,7 @@
     "source": "Precios de referencia de combustibles",
     "sourceUrl": "https://www.energia.gob.ar/contenidos/verpagina.php?idpagina=3366"
   },
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-28",
   "relatedSlugs": [],
   "referenceTables": [
     {
