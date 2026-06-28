@@ -18,6 +18,13 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // servicios_adicionales es un select simple: el form manda un string, pero el
+  // loop esperaba un array → iteraba los caracteres → NaN. Normalizar a array.
+  // cantidad_asistentes opcional vacío → undefined → NaN; coercionar a 0.
+  (i as any).servicios_adicionales = Array.isArray(i.servicios_adicionales)
+    ? i.servicios_adicionales
+    : (i.servicios_adicionales ? [i.servicios_adicionales] : []);
+  (i as any).cantidad_asistentes = Number(i.cantidad_asistentes) || 0;
   // Constantes 2026 Chile (fuente: cotizaciones SII, funerarias)
   const COSTO_CREMACION_BASICA_RM = 450000; // $450K RM
   const COSTO_CREMACION_COMPLETA_RM = 680000; // $680K RM

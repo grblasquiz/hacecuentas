@@ -73,9 +73,9 @@ export function compute(i: Inputs): Outputs {
 
     // Deudas: mitad gananciales + propias
     deuda_neta_a =
-      i.deudas_propios_a + i.deudas_gananciales * 0.5;
+      i.deudas_propias_a + i.deudas_gananciales * 0.5;
     deuda_neta_b =
-      i.deudas_propios_b + i.deudas_gananciales * 0.5;
+      i.deudas_propias_b + i.deudas_gananciales * 0.5;
 
     porcentaje_a = 50;
     porcentaje_b = 50;
@@ -84,8 +84,8 @@ export function compute(i: Inputs): Outputs {
     patrimonio_bruto_a = i.bienes_propios_conyugue_a;
     patrimonio_bruto_b = i.bienes_propios_conyugue_b;
 
-    deuda_neta_a = i.deudas_propios_a; // Sin asumir deudas gananciales
-    deuda_neta_b = i.deudas_propios_b;
+    deuda_neta_a = i.deudas_propias_a; // Sin asumir deudas gananciales
+    deuda_neta_b = i.deudas_propias_b;
 
     porcentaje_a = 100;
     porcentaje_b = 0; // No hay división de gananciales
@@ -110,8 +110,8 @@ export function compute(i: Inputs): Outputs {
       patrimonio_bruto_a -= diferencia * 0.5;
     }
 
-    deuda_neta_a = i.deudas_propios_a; // Deudas propias
-    deuda_neta_b = i.deudas_propios_b;
+    deuda_neta_a = i.deudas_propias_a; // Deudas propias
+    deuda_neta_b = i.deudas_propias_b;
 
     porcentaje_a = 50; // Conceptualmente equiparable a sociedad conyugal en resultado
     porcentaje_b = 50;
