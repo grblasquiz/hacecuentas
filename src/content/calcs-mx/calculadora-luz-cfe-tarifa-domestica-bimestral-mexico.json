@@ -223,26 +223,97 @@
   "referenceTables": [
     {
       "title": "Tramos y límites de la tarifa doméstica CFE 2026 (por mes)",
-      "headers": ["Tarifa", "Zona (verano)", "Básico (kWh/mes)", "Intermedio (kWh/mes)", "Excedente", "Límite DAC (kWh/mes)"],
+      "headers": [
+        "Tarifa",
+        "Zona (verano)",
+        "Básico (kWh/mes)",
+        "Intermedio (kWh/mes)",
+        "Excedente",
+        "Límite DAC (kWh/mes)"
+      ],
       "rows": [
-        ["1", "Templada — sin verano", "0–75", "76–140", "141+", "250"],
-        ["1A", "~25 °C", "0–100", "101–150", "151+", "300"],
-        ["1B", "~28 °C", "0–125", "126–225", "226+", "400"],
-        ["1C", "~30 °C", "0–150", "151–450", "451+", "850"],
-        ["1D", "~31 °C", "0–175", "176–600", "601+", "1,000"],
-        ["1E", "~32 °C", "0–300", "301–900", "901+", "2,000"],
-        ["1F", "≥33 °C", "0–300", "301–2,500", "2,501+", "2,500"]
+        [
+          "1",
+          "Templada — sin verano",
+          "0–75",
+          "76–140",
+          "141+",
+          "250"
+        ],
+        [
+          "1A",
+          "~25 °C",
+          "0–100",
+          "101–150",
+          "151+",
+          "300"
+        ],
+        [
+          "1B",
+          "~28 °C",
+          "0–125",
+          "126–225",
+          "226+",
+          "400"
+        ],
+        [
+          "1C",
+          "~30 °C",
+          "0–150",
+          "151–450",
+          "451+",
+          "850"
+        ],
+        [
+          "1D",
+          "~31 °C",
+          "0–175",
+          "176–600",
+          "601+",
+          "1,000"
+        ],
+        [
+          "1E",
+          "~32 °C",
+          "0–300",
+          "301–900",
+          "901+",
+          "2,000"
+        ],
+        [
+          "1F",
+          "≥33 °C",
+          "0–300",
+          "301–2,500",
+          "2,501+",
+          "2,500"
+        ]
       ],
       "note": "Límites de la temporada de verano. Fuera de verano todas las zonas facturan como Tarifa 1 (75/140 kWh/mes). El límite DAC se evalúa sobre el promedio móvil de los últimos 12 meses."
     },
     {
       "title": "Precio por kWh por tramo — CFE junio 2026 (Tarifa 1)",
-      "headers": ["Tramo", "Precio (MXN/kWh)"],
+      "headers": [
+        "Tramo",
+        "Precio (MXN/kWh)"
+      ],
       "rows": [
-        ["Básico (0–75 kWh/mes)", "$1.125"],
-        ["Intermedio (76–140 kWh/mes)", "$1.369"],
-        ["Excedente (141+ kWh/mes)", "$4.004"],
-        ["DAC (sin subsidio)", "~$6.80/kWh + $142.41 cargo fijo/mes"]
+        [
+          "Básico (0–75 kWh/mes)",
+          "$1.125"
+        ],
+        [
+          "Intermedio (76–140 kWh/mes)",
+          "$1.369"
+        ],
+        [
+          "Excedente (141+ kWh/mes)",
+          "$4.004"
+        ],
+        [
+          "DAC (sin subsidio)",
+          "~$6.80/kWh + $142.41 cargo fijo/mes"
+        ]
       ],
       "note": "Cuotas CFE de junio 2026; se ajustan cada mes y varían por región. En zonas muy cálidas (1E/1F) el básico e intermedio de verano corren más baratos. El IVA 16 % se suma aparte (8 % en la franja fronteriza)."
     }
@@ -255,5 +326,21 @@
     "updateType": "manual",
     "notes": "Cuotas por tramo (MXN/kWh) de Tarifa 1 confirmadas para junio 2026; la CFE las ajusta cada mes según costo de combustible. Límites de bloque por zona, límites DAC y estructura (básico/intermedio/excedente) son estructurales. IVA 16 % nacional (8 % franja fronteriza)."
   },
-  "lastReviewed": "2026-06-22"
+  "lastReviewed": "2026-06-28",
+  "example": {
+    "title": "Ejemplo: 300 kWh bimestrales en Tarifa 1 (zona templada)",
+    "inputs": {
+      "consumo_kwh": 300,
+      "tarifa_zona": "1",
+      "temporada": "fuera_verano",
+      "aplicar_dac": "no"
+    },
+    "steps": [
+      "**Tramos de consumo**: 300 kWh bimestrales equivalen a 150 kWh/mes. En Tarifa 1 caen 75 kWh en básico, 65 en intermedio y 10 en excedente.",
+      "**Cargo por energía**: la suma de los tramos da $426.80 antes de IVA.",
+      "**IVA 16%**: $426.80 × 16% = $68.29.",
+      "**Total del recibo**: $426.80 + $68.29 = $495.09, o sea $1.65 promedio por kWh."
+    ],
+    "result": "**Total del recibo CFE: $495.09** por el bimestre ($1.65 por kWh). *Valores vigentes a jun-2026.*"
+  }
 }
