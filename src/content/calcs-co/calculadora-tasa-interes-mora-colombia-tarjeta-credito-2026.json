@@ -216,13 +216,37 @@
   "referenceTables": [
     {
       "title": "Interés de mora máximo legal en Colombia por modalidad (jun-2026)",
-      "headers": ["Modalidad de crédito", "Interés Bancario Corriente (IBC)", "Mora máxima = usura (1,5 × IBC)"],
+      "headers": [
+        "Modalidad de crédito",
+        "Interés Bancario Corriente (IBC)",
+        "Mora máxima = usura (1,5 × IBC)"
+      ],
       "rows": [
-        ["Tarjeta de crédito (consumo y ordinario)", "19,19% EA", "28,79% EA"],
-        ["Crédito personal (consumo y ordinario)", "19,19% EA", "28,79% EA"],
-        ["Crédito de consumo", "19,19% EA", "28,79% EA"],
-        ["Hipotecario / vivienda", "Según interés remuneratorio pactado", "1,5 × interés pactado (según contrato)"],
-        ["Interés legal civil (piso de referencia)", "—", "6% anual simple (Cód. Civil art. 1617/2257)"]
+        [
+          "Tarjeta de crédito (consumo y ordinario)",
+          "19,19% EA",
+          "28,79% EA"
+        ],
+        [
+          "Crédito personal (consumo y ordinario)",
+          "19,19% EA",
+          "28,79% EA"
+        ],
+        [
+          "Crédito de consumo",
+          "19,19% EA",
+          "28,79% EA"
+        ],
+        [
+          "Hipotecario / vivienda",
+          "Según interés remuneratorio pactado",
+          "1,5 × interés pactado (según contrato)"
+        ],
+        [
+          "Interés legal civil (piso de referencia)",
+          "—",
+          "6% anual simple (Cód. Civil art. 1617/2257)"
+        ]
       ],
       "note": "Fuente: Superintendencia Financiera de Colombia (2026), Circular 100 de 1995 y Resolución 0823 de 2026. La mora no puede superar la tasa de usura (1,5 × IBC); el IBC se certifica mensualmente. Cobrar por encima de la usura configura delito (Cód. Penal art. 305) y es reclamable."
     }
@@ -235,5 +259,22 @@
     "updateType": "manual",
     "notes": "IBC consumo y ordinario jun-2026 = 19,19% EA → usura/mora máx = 28,79% EA. El IBC se certifica mensualmente; la constante de jun-2026 vive en src/lib/formulas/tasa-interes-mora-colombia-tarjeta-credito-2026.ts. La regla 1,5× es legal y fija."
   },
-  "lastReviewed": "2026-06-19"
+  "lastReviewed": "2026-06-28",
+  "example": {
+    "title": "Ejemplo: $2.000.000 en mora 60 días con tarjeta de crédito",
+    "inputs": {
+      "tipo_credito": "tarjeta_credito",
+      "capital_adeudado": 2000000,
+      "dias_mora": 60,
+      "tasa_interes_pactada": 24,
+      "incluir_interes_ordinario": "false"
+    },
+    "steps": [
+      "**Tasa de mora máxima legal**: el banco no puede cobrar por encima del tope vigente, que para 2026 queda en **28,79% EA** para tarjeta de crédito.",
+      "**Interés de mora**: sobre el capital de $2.000.000 durante 60 días a esa tasa, se acumulan **$94.636** de intereses de mora cobrables.",
+      "**Deuda total**: capital más mora suma **$2.095.569**.",
+      "**Comparativo**: con el interés legal civil del 6% solo serían $19.726, así que pagás **$74.910** más por estar a la tasa máxima de mora."
+    ],
+    "result": "**Deuda total con mora: $2.095.569** (capital $2.000.000 + $94.636 de mora). *Valores vigentes a jun-2026.*"
+  }
 }
