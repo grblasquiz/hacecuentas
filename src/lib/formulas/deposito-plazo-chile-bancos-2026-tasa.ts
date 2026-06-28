@@ -62,6 +62,9 @@ function aplicarIGC(interesBruto: number, tasaIgc: number) {
 }
 
 export function compute(i: Inputs): Outputs {
+  // tasa_uf_anual es opcional: si el usuario la deja vacía llega undefined y el
+  // texto de la alternativa UF hace .toFixed() → throw. Coercionar (default 2.5%).
+  (i as any).tasa_uf_anual = Number(i.tasa_uf_anual) || 2.5;
   const tasa_igc = (Number(i.tasa_marginal_igc) || 0) / 100;
 
   // Determinar tasa a usar
