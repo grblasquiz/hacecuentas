@@ -154,7 +154,7 @@
       "label": "Precio output (USD por 1M tokens) — solo modelo personalizado",
       "type": "number",
       "placeholder": "10.00",
-      "default": 10.0,
+      "default": 10,
       "step": 0.01,
       "required": false,
       "format": "plain"
@@ -221,6 +221,7 @@
     }
   ],
   "example": {
+    "title": "Ejemplo: agente con 50 tool calls por run, 500 runs/mes en GPT-4o",
     "inputs": {
       "tool_calls_per_run": 50,
       "tokens_per_tool_call": 500,
@@ -232,7 +233,13 @@
       "runs_per_month": 500,
       "model": "gpt4o",
       "input_output_ratio": 70
-    }
+    },
+    "steps": [
+      "**Tokens por run**: 50 tool calls × 500 tokens + contexto acumulado en 3 iteraciones = 39.250 tokens; con 10% de errores y 2 retries sube a **47.100 tokens**.",
+      "**Costo por run**: con split 70% input / 30% output a precios de GPT-4o (input USD 2,50 / output USD 10 por 1M) = **USD 0,22373**.",
+      "**Mensual**: 47.100 × 500 runs = 23.550.000 tokens → **USD 111,86/mes**."
+    ],
+    "result": "Ese agente consume **23,55M de tokens/mes** y cuesta **USD 111,86/mes** en GPT-4o. *Valores vigentes a jun-2026.*"
   },
   "explanation": "## Cuánto cuesta un agente de IA: la cuenta rápida\n\nEl costo mensual de un agente autónomo se reduce a una fórmula simple:\n\n```\ncosto_mensual (USD) = tokens_por_run × runs_por_mes × precio_del_modelo\n```\n\nLo que la hace traicionera es **tokens_por_run**: en un agente en loop el contexto no es fijo, crece en cada vuelta porque acumula el historial de acciones y resultados previos. Por eso un agente que parece barato por llamada puede costar cientos de dólares al mes.\n\n### Tabla de referencia: tokens y costo mensual\n\nEjemplos con un agente estándar (50 tool calls de 500 tokens, contexto base 2.000, 3 iteraciones, factor 1,5, 10% error rate, 2 retries → **~47.100 tokens/run**), 70% input / 30% output:\n\n| Runs/mes | Tokens/mes | GPT-4o | GPT-4o mini | Claude 3.5 Sonnet | Claude 3 Haiku | Gemini 1.5 Flash |\n|---------:|-----------:|-------:|------------:|------------------:|---------------:|-----------------:|\n| 100      | 4,7M       | ~$22   | ~$1,3       | ~$31              | ~$2,6          | ~$0,7            |\n| 500      | 23,5M      | ~$112  | ~$6,7       | ~$155             | ~$13           | ~$3,4            |\n| 1.000    | 47,1M      | ~$224  | ~$13        | ~$311             | ~$26           | ~$6,7            |\n| 5.000    | 235M       | ~$1.119| ~$67        | ~$1.554           | ~$130          | ~$34             |\n| 10.000   | 471M       | ~$2.237| ~$134       | ~$3.109           | ~$259          | ~$67             |\n\nEl salto de modelo premium a small (Haiku, mini, Flash) baja el costo **10-40×**. El salto de 1 a 5 iteraciones de loop, en cambio, puede triplicar los tokens por el contexto acumulado.\n\n### Cómo se calcula (la fórmula completa)\n\nUn agente en loop no consume tokens de forma lineal: el contexto crece en cada iteración porque se concatena el historial de acciones y resultados.\n\n- **Tool calls por run**: cuántas veces el agente llama a una herramienta (búsqueda, código, API, DB).\n- **Tokens por tool call**: tokens del resultado de la herramienta que se inyectan al contexto.\n- **Contexto base**: system prompt + descripción de la tarea original.\n- **Iteraciones de loop**: cuántas veces el agente evalúa su progreso y decide continuar.\n- **Factor de crecimiento**: en cada iteración el contexto acumulado se multiplica por este factor (1,0 = sin crecimiento, 1,5 = crece 50% por vuelta).\n- **Error rate + retries**: porcentaje de tool calls que fallan y cuántas veces se reintentan.\n\n```\n// Contexto acumulado en la iteración k (crecimiento geométrico):\nctx_k = context_base × growth_factor^k\n\n// Tokens de tool calls por iteración (distribuidas uniformemente):\ntool_tokens_k = (tool_calls_per_run / loop_iterations) × tokens_per_tool_call\n\n// Tokens totales por run (suma sobre todas las iteraciones):\ntokens_run = Σ(k=1..N) [ ctx_k + tool_tokens_k ]\n\n// Tokens extra por retries:\nretry_tokens ≈ tokens_run × error_rate × retries_per_error\n\n// Tokens por run con errores:\ntokens_run_total = tokens_run + retry_tokens\n\n// Tokens por mes y costo:\ntokens_month  = tokens_run_total × runs_per_month\ninput_tokens  = tokens_month × input_ratio\noutput_tokens = tokens_month × (1 - input_ratio)\ncosto_mensual = (input_tokens × price_input + output_tokens × price_output) / 1.000.000\n```\n\n### Ejemplo numérico (paso a paso)\n\nAgente de investigación con: 50 tool calls, 500 tokens/call, contexto base 2.000 tokens, 3 iteraciones, factor 1,5, 10% error rate, 2 retries, 500 runs/mes, GPT-4o.\n\n| Iteración | Contexto (tokens) | Tool tokens | Subtotal |\n|-----------|-------------------:|------------:|---------:|\n| 1         | 3.000             | 8.333       | 11.333   |\n| 2         | 4.500             | 8.333       | 12.833   |\n| 3         | 6.750             | 8.334       | 15.084   |\n| **Total run base** | —        | —           | **39.250** |\n\nRetry overhead: 39.250 × 0,10 × 2 ≈ 7.850 → **~47.100 tokens/run**.\n\nMensual: 47.100 × 500 = **23,55M tokens** → con GPT-4o (70% input a $2,50/1M, 30% output a $10/1M) = **~USD 112/mes**.\n\n### Precios por 1M de tokens (referencia 2025-2026)\n\n| Modelo | Input | Output |\n|--------|------:|-------:|\n| GPT-4o | $2,50 | $10,00 |\n| GPT-4o mini | $0,15 | $0,60 |\n| Claude 3.5 Sonnet | $3,00 | $15,00 |\n| Claude 3 Haiku | $0,25 | $1,25 |\n| Gemini 1.5 Pro | $1,25 | $5,00 |\n| Gemini 1.5 Flash | $0,075 | $0,30 |\n\n### Limitaciones\n\n- El factor de crecimiento de contexto es una aproximación geométrica. Los agentes con sliding window o resumen automático crecen más lento.\n- Los precios de los modelos cambian con frecuencia; verificá la pricing page oficial del proveedor antes de presupuestar.\n- No incluye costos de infraestructura (servidor de orquestación, APIs externas pagas).\n- La tasa de errores depende mucho de la confiabilidad de las herramientas externas.",
   "faq": [
@@ -343,7 +350,7 @@
     "source": "OpenAI API Pricing",
     "sourceUrl": "https://openai.com/api/pricing/"
   },
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-28",
   "relatedSlugs": [
     "calculadora-claude-37-tokens-costo-cache-prompt-mensual"
   ],

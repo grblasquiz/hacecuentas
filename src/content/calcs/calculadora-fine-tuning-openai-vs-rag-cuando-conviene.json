@@ -295,19 +295,59 @@
     "source": "OpenAI API Pricing",
     "sourceUrl": "https://openai.com/api/pricing/"
   },
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-28",
   "referenceTables": [
     {
       "title": "Tarifas de inferencia y entrenamiento gpt-4o-mini (OpenAI, 2026)",
-      "headers": ["Componente", "Operación", "Tarifa (USD/1M tokens)", "Aplica a"],
+      "headers": [
+        "Componente",
+        "Operación",
+        "Tarifa (USD/1M tokens)",
+        "Aplica a"
+      ],
       "rows": [
-        ["Fine-tuning", "Entrenamiento",          "$25,00 / 1M tokens",  "Dataset completo por run"],
-        ["Fine-tuning", "Inference — input",       "$0,30 / 1M tokens",  "Cada request al modelo fine-tuned"],
-        ["Fine-tuning", "Inference — output",      "$1,20 / 1M tokens",  "Cada request al modelo fine-tuned"],
-        ["RAG",         "Inference base — input",  "$0,15 / 1M tokens",  "Prompt + chunks de contexto"],
-        ["RAG",         "Inference base — output", "$0,60 / 1M tokens",  "Respuesta del LLM base"],
-        ["RAG",         "Embeddings (consulta)",   "$0,02 / 1M tokens",  "text-embedding-3-small por request"],
-        ["RAG",         "Vector DB (Pinecone/Qdrant)", "~$10/mes base",  "Hosting independiente del volumen"]
+        [
+          "Fine-tuning",
+          "Entrenamiento",
+          "$25,00 / 1M tokens",
+          "Dataset completo por run"
+        ],
+        [
+          "Fine-tuning",
+          "Inference — input",
+          "$0,30 / 1M tokens",
+          "Cada request al modelo fine-tuned"
+        ],
+        [
+          "Fine-tuning",
+          "Inference — output",
+          "$1,20 / 1M tokens",
+          "Cada request al modelo fine-tuned"
+        ],
+        [
+          "RAG",
+          "Inference base — input",
+          "$0,15 / 1M tokens",
+          "Prompt + chunks de contexto"
+        ],
+        [
+          "RAG",
+          "Inference base — output",
+          "$0,60 / 1M tokens",
+          "Respuesta del LLM base"
+        ],
+        [
+          "RAG",
+          "Embeddings (consulta)",
+          "$0,02 / 1M tokens",
+          "text-embedding-3-small por request"
+        ],
+        [
+          "RAG",
+          "Vector DB (Pinecone/Qdrant)",
+          "~$10/mes base",
+          "Hosting independiente del volumen"
+        ]
       ],
       "note": "Fuente: OpenAI API Pricing (2026) — openai.com/api/pricing. Pinecone Pricing (2026) — pinecone.io/pricing. Los precios de inference del modelo fine-tuned son el doble del modelo base por el costo de mantener pesos separados."
     }
@@ -324,5 +364,25 @@
       "calculation": "Opción A - Fine-tuning: convertir docs a 2.000 ejemplos Q&A. Costo entrenamiento USD 50. Costo por consulta USD 0,01 (GPT-4o-mini ft). Total: USD 500/mes + USD 50 cada reentrenamiento. Problema: no se puede citar la fuente exacta, riesgo de hallucinations. Opción B - RAG: embeddings de docs (~3M tokens × USD 0,02/1M = USD 60 una sola vez), vector DB Pinecone USD 30/mes, consultas 5K × USD 0,005 (GPT-4o-mini + contexto) = USD 25/mes. Total: USD 55/mes + reindexar gratis con actualizaciones.",
       "result": "RAG gana por amplio margen: 10x más barato (USD 55 vs USD 500), permite citar fuentes, soporta actualizaciones trimestrales sin recosto, y reduce hallucinations. Fine-tuning solo se justificaría si necesitaras un formato/estilo muy específico que el prompt no logra. Stack sugerido: LangChain + Pinecone + GPT-4o-mini."
     }
-  ]
+  ],
+  "example": {
+    "title": "Ejemplo: 10.000 requests/mes de generación con dataset de 500 KB",
+    "inputs": {
+      "taskType": "generation",
+      "datasetSizeKB": 500,
+      "updateFrequency": "monthly",
+      "requestsPerMonth": 10000,
+      "avgInputTokens": 500,
+      "avgOutputTokens": 200,
+      "ragChunks": 5,
+      "avgChunkTokens": 300,
+      "vectorDbSizeGB": 1
+    },
+    "steps": [
+      "**Fine-tune**: entrenamiento amortizado USD 3,13/mes + inference USD 3,90/mes = **USD 7,03/mes**.",
+      "**RAG**: embeddings USD 0,10 + inference base USD 4,20 + vector DB USD 10 = **USD 14,30/mes**. La base vectorial fija domina el costo.",
+      "**Comparación**: con datos que cambian solo una vez al mes, fine-tune sale ~51% más barato a este volumen."
+    ],
+    "result": "Para este escenario conviene **fine-tune a USD 7,03/mes**, ~**51% más barato** que RAG (USD 14,30/mes). *Precios de referencia, ajustables.*"
+  }
 }

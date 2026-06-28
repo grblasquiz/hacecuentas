@@ -4,13 +4,49 @@
     {
       "title": "Precios reales por millón de tokens: estándar vs Batch API (junio 2026)",
       "caption": "Precio de lista por 1M tokens (input / output). El Batch API de OpenAI y Anthropic aplica 50% off sobre input y output.",
-      "headers": ["Modelo", "Input estándar", "Output estándar", "Input batch (−50%)", "Output batch (−50%)"],
+      "headers": [
+        "Modelo",
+        "Input estándar",
+        "Output estándar",
+        "Input batch (−50%)",
+        "Output batch (−50%)"
+      ],
       "rows": [
-        ["OpenAI GPT-4o", "USD 2,50", "USD 10,00", "USD 1,25", "USD 5,00"],
-        ["OpenAI GPT-4o mini", "USD 0,15", "USD 0,60", "USD 0,075", "USD 0,30"],
-        ["Anthropic Claude Haiku 4.5", "USD 1,00", "USD 5,00", "USD 0,50", "USD 2,50"],
-        ["Anthropic Claude Sonnet 4.6", "USD 3,00", "USD 15,00", "USD 1,50", "USD 7,50"],
-        ["Anthropic Claude Opus 4.x", "USD 5,00", "USD 25,00", "USD 2,50", "USD 12,50"]
+        [
+          "OpenAI GPT-4o",
+          "USD 2,50",
+          "USD 10,00",
+          "USD 1,25",
+          "USD 5,00"
+        ],
+        [
+          "OpenAI GPT-4o mini",
+          "USD 0,15",
+          "USD 0,60",
+          "USD 0,075",
+          "USD 0,30"
+        ],
+        [
+          "Anthropic Claude Haiku 4.5",
+          "USD 1,00",
+          "USD 5,00",
+          "USD 0,50",
+          "USD 2,50"
+        ],
+        [
+          "Anthropic Claude Sonnet 4.6",
+          "USD 3,00",
+          "USD 15,00",
+          "USD 1,50",
+          "USD 7,50"
+        ],
+        [
+          "Anthropic Claude Opus 4.x",
+          "USD 5,00",
+          "USD 25,00",
+          "USD 2,50",
+          "USD 12,50"
+        ]
       ],
       "note": "Output suele costar 4–5× más que input: ponderá un precio promedio según tu ratio (habitual 3:1 input/output) antes de cargarlo en la calculadora. El batch procesa en hasta 24 h sin diferencia de calidad. Verificá siempre el precio vigente del proveedor: cambia con frecuencia.",
       "highlightCol": 3
@@ -18,13 +54,43 @@
     {
       "title": "Descuento batch y ventana de latencia por proveedor (2026)",
       "caption": "Cuánto baja el costo y cuánto puede tardar cada Batch API.",
-      "headers": ["Proveedor", "Descuento batch", "Ventana máxima", "Aplica a"],
+      "headers": [
+        "Proveedor",
+        "Descuento batch",
+        "Ventana máxima",
+        "Aplica a"
+      ],
       "rows": [
-        ["OpenAI Batch API", "50%", "24 h", "GPT-4o, GPT-4o mini, o-series"],
-        ["Anthropic Message Batches", "50%", "24 h", "Todos los Claude (Haiku/Sonnet/Opus)"],
-        ["Google Vertex AI Batch", "50%", "24 h", "Gemini Flash / Pro"],
-        ["AWS Bedrock Batch", "≈50%", "24 h", "Claude, Llama, Titan, Nova"],
-        ["Azure OpenAI Batch", "50%", "24 h", "GPT-4o y compatibles"]
+        [
+          "OpenAI Batch API",
+          "50%",
+          "24 h",
+          "GPT-4o, GPT-4o mini, o-series"
+        ],
+        [
+          "Anthropic Message Batches",
+          "50%",
+          "24 h",
+          "Todos los Claude (Haiku/Sonnet/Opus)"
+        ],
+        [
+          "Google Vertex AI Batch",
+          "50%",
+          "24 h",
+          "Gemini Flash / Pro"
+        ],
+        [
+          "AWS Bedrock Batch",
+          "≈50%",
+          "24 h",
+          "Claude, Llama, Titan, Nova"
+        ],
+        [
+          "Azure OpenAI Batch",
+          "50%",
+          "24 h",
+          "GPT-4o y compatibles"
+        ]
       ],
       "note": "Combinar batch (−50%) con prompt caching (−90% sobre el input cacheado) puede recortar hasta ~95% del costo en cargas repetitivas. El batch solo conviene cuando el usuario no espera la respuesta en tiempo real.",
       "highlightCol": 1
@@ -244,9 +310,26 @@
     "source": "OpenAI Batch API Documentation",
     "sourceUrl": "https://platform.openai.com/docs/guides/batch"
   },
-  "lastReviewed": "2026-06-22",
+  "lastReviewed": "2026-06-28",
   "relatedSlugs": [
     "calculadora-rag-vector-db-pinecone-pgvector-costo-mensual",
     "calculadora-modelo-local-ollama-vs-api-openai-costo-tco"
-  ]
+  ],
+  "example": {
+    "title": "Ejemplo: 1M tokens/día, 40% sensible a latencia, a USD 3/M",
+    "inputs": {
+      "totalTokensPerDay": 1000000,
+      "latencySensitivePercent": 40,
+      "pricePerMillionTokens": 3,
+      "batchDiscountPercent": 50,
+      "daysPerMonth": 30,
+      "avgLatencyStreamingMs": 400
+    },
+    "steps": [
+      "**Volumen mensual**: 1.000.000 tokens/día × 30 días = 30M tokens/mes. El 40% (12M) va por streaming y el 60% (18M) por batch.",
+      "**Costo del mix**: streaming 12M × USD 3/M = USD 36; batch 18M × USD 1,50/M (50% off) = USD 27. Total óptimo = **USD 63/mes**.",
+      "**Comparación**: todo por streaming costaría USD 90/mes y todo por batch USD 45/mes."
+    ],
+    "result": "El mix óptimo cuesta **USD 63/mes**, un ahorro de **USD 27 (30%)** frente a mandar todo por streaming. *Precios de referencia, ajustables.*"
+  }
 }

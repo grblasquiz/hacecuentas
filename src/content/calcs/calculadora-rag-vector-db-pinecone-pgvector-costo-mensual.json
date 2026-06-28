@@ -314,7 +314,7 @@
     "source": "Pinecone — Understanding cost",
     "sourceUrl": "https://docs.pinecone.io/guides/manage-cost/understanding-cost"
   },
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-28",
   "relatedSlugs": [],
   "referenceTables": [
     {
@@ -461,5 +461,28 @@
       ],
       "note": "Fuente: Pinecone Pricing (pinecone.io/pricing), OpenAI API Pricing (openai.com/api/pricing), Weaviate Cloud Pricing (weaviate.io/pricing), pgvector (github.com/pgvector/pgvector) — valores estimados 2026; los proveedores los actualizan con frecuencia."
     }
-  ]
+  ],
+  "example": {
+    "title": "Ejemplo: RAG de 10.000 docs con Pinecone Serverless y GPT-4o mini",
+    "inputs": {
+      "numDocs": 10000,
+      "chunksPerDoc": 5,
+      "embeddingDimensions": "1536",
+      "queriesPerDay": 1000,
+      "topK": 5,
+      "provider": "pinecone_serverless",
+      "llmModel": "gpt4o_mini",
+      "avgTokensPerChunk": 200,
+      "avgOutputTokens": 300,
+      "embeddingProvider": "openai_small",
+      "avgTokensPerQueryInput": 30
+    },
+    "steps": [
+      "**Base vectorial**: 50.000 vectores (10.000 docs × 5 chunks) de 1536 dims ≈ 0,29 GB → Pinecone Serverless **$2,50/mes**.",
+      "**Embeddings** (text-embedding-3-small, indexación amortizada + queries): **$0,03/mes** — casi nada.",
+      "**LLM** (GPT-4o mini, 30.000 queries/mes, ~1.130 tokens input + 300 output c/u): **$10,49/mes**, el 81% del total.",
+      "**Total**: 2,50 + 0,03 + 10,49 = **$13,02/mes**."
+    ],
+    "result": "Ese RAG cuesta **~$13/mes**, dominado por el LLM ($10,49, el 81%); la base vectorial y los embeddings son marginales. *Precios de referencia, ajustables.*"
+  }
 }

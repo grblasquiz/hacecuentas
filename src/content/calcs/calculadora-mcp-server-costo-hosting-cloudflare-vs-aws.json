@@ -258,16 +258,46 @@
     "source": "Cloudflare Workers Pricing",
     "sourceUrl": "https://developers.cloudflare.com/workers/platform/pricing/"
   },
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-28",
   "referenceTables": [
     {
       "title": "Precios de hosting por plataforma para MCP servers (2026)",
-      "headers": ["Plataforma", "Free tier", "Costo base", "Costo por exceso", "Cold starts"],
+      "headers": [
+        "Plataforma",
+        "Free tier",
+        "Costo base",
+        "Costo por exceso",
+        "Cold starts"
+      ],
       "rows": [
-        ["Cloudflare Workers", "10 M req/mes", "$5/mes (plan Paid)", "$0,30 / M req extra", "< 5 ms (isolates)"],
-        ["AWS Lambda + ALB", "1 M req + 400.000 GB-s/mes", "$5,84/mes (ALB mínimo)", "$0,0000166667/GB-s + $0,0000002/req", "200–500 ms (Node/Python)"],
-        ["Vercel Pro", "1 M req/mes", "$20/mes por seat", "$2 / 500.000 req extra", "Varía (Edge < 50 ms, Serverless > 200 ms)"],
-        ["DigitalOcean Droplet", "Sin free tier", "Desde $4/mes (512 MB)", "Costo fijo, no por req", "Sin cold starts"]
+        [
+          "Cloudflare Workers",
+          "10 M req/mes",
+          "$5/mes (plan Paid)",
+          "$0,30 / M req extra",
+          "< 5 ms (isolates)"
+        ],
+        [
+          "AWS Lambda + ALB",
+          "1 M req + 400.000 GB-s/mes",
+          "$5,84/mes (ALB mínimo)",
+          "$0,0000166667/GB-s + $0,0000002/req",
+          "200–500 ms (Node/Python)"
+        ],
+        [
+          "Vercel Pro",
+          "1 M req/mes",
+          "$20/mes por seat",
+          "$2 / 500.000 req extra",
+          "Varía (Edge < 50 ms, Serverless > 200 ms)"
+        ],
+        [
+          "DigitalOcean Droplet",
+          "Sin free tier",
+          "Desde $4/mes (512 MB)",
+          "Costo fijo, no por req",
+          "Sin cold starts"
+        ]
       ],
       "note": "Fuente: Cloudflare Workers Pricing (developers.cloudflare.com), AWS Lambda Pricing (aws.amazon.com), Vercel Pricing (vercel.com), DigitalOcean Droplets Pricing (digitalocean.com) — 2026"
     }
@@ -276,5 +306,21 @@
     "calculadora-streaming-vs-batch-llm-latencia-costo-tradeoff",
     "calculadora-rag-vector-db-pinecone-pgvector-costo-mensual",
     "calculadora-modelo-local-ollama-vs-api-openai-costo-tco"
-  ]
+  ],
+  "example": {
+    "title": "Ejemplo: MCP server con 100.000 requests/día (3M/mes), 200 ms, Lambda 256 MB",
+    "inputs": {
+      "requests_per_day": 100000,
+      "avg_duration_ms": 200,
+      "memory_mb": "256",
+      "vps_size": "basic_1vcpu_1gb",
+      "cold_start_ok": "yes"
+    },
+    "steps": [
+      "**Volumen**: 100.000 requests/día = **3.000.000 requests/mes**.",
+      "**Costo por opción**: Cloudflare Workers **$0** (dentro del free tier), VPS DigitalOcean $6, AWS Lambda + ALB $6,26, Vercel Pro $28.",
+      "**Ganador**: con cold starts aceptables, Cloudflare Workers es lo más barato."
+    ],
+    "result": "Para 3M requests/mes, la opción más económica es **Cloudflare Workers a $0/mes**, unos $72/año menos que la siguiente alternativa. *Precios de referencia, ajustables.*"
+  }
 }
