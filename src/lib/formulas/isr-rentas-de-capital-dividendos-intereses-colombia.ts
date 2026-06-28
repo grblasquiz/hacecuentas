@@ -27,6 +27,11 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // Campos de monto opcionales: si el usuario deja alguno vacío llega undefined
+  // y la suma da NaN, envenenando todos los outputs. Coercionar a 0.
+  for (const k of ['dividendos_sociedades','dividendos_fiducias','intereses_cdts','arrendamientos','ganancias_capital','retencion_intereses','retencion_dividendos','deducciones_arrendamiento','renta_laboral_total','dependientes_económicos'] as const) {
+    (i as any)[k] = Number((i as any)[k]) || 0;
+  }
   // Constantes 2026 Colombia - DIAN
   const UVT_2026 = COLOMBIA_2026.uvt; // UVT 2026 = $52.374 (Resolución DIAN 000238/2025)
   const UMBRAL_GRAVAMEN_CEDULAR_UVT = 375; // UVT
