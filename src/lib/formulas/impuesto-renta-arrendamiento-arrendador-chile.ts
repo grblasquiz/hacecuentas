@@ -50,6 +50,12 @@ export function compute(i: Inputs): Outputs {
     { limite: Infinity, tasa: 0.45, credito: 44866812 }
   ];
   
+  // Gastos opcionales: si el usuario los deja vacíos llegan undefined → NaN en la
+  // suma. Coercionar a 0 (antes la renta imponible quedaba NaN).
+  for (const k of ['gastos_mantencion','gastos_seguros','contribuciones_anuales','gastos_administracion','intereses_hipotecarios_anuales','otros_gastos'] as const) {
+    (i as any)[k] = Number((i as any)[k]) || 0;
+  }
+
   // Cálculo arriendo anual bruto
   const arriendo_anual_bruto = i.arriendo_mensual * 12;
   
@@ -79,23 +85,19 @@ export function compute(i: Inputs): Outputs {
     renta_imponible_neta = 0; // Exención 100% años 1-3
   }
   
-  // Función calcular impuesto progresivo
+  // Impuesto Global Complementario (IGC): se ubica el tramo donde CAE la renta
+  // y se aplica la fórmula chilena estándar  impuesto = renta × factor − rebaja
+  // (el `credito` del tramo es la cantidad a rebajar, que se RESTA). El loop
+  // anterior entraba siempre al tramo 0 (devolvía $0 para cualquier renta).
   const calcularImpuestoRenta = (rentaGravable: number): number => {
     if (rentaGravable <= 0) return 0;
-    
-    let impuesto = 0;
     for (let j = 0; j < TRAMOS_2026.length; j++) {
       const tramo = TRAMOS_2026[j];
-      const tramo_anterior = j > 0 ? TRAMOS_2026[j - 1].limite : 0;
-      
-      if (rentaGravable > tramo_anterior) {
-        const renta_tramo = Math.min(rentaGravable, tramo.limite) - tramo_anterior;
-        impuesto = renta_tramo * tramo.tasa + tramo.credito;
-        break;
+      if (rentaGravable <= tramo.limite) {
+        return Math.max(0, rentaGravable * tramo.tasa - tramo.credito);
       }
     }
-    
-    return Math.max(0, impuesto);
+    return 0;
   };
   
   // Impuesto renta neto (sin adicional municipal para este ejemplo)
