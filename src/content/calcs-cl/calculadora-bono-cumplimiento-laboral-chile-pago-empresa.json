@@ -13,30 +13,101 @@
     {
       "title": "Qué se descuenta cuando el bono se suma al sueldo (Chile 2026)",
       "caption": "El bono imponible se suma al sueldo del mes y todo el conjunto paga las mismas retenciones. Por eso un bono puede empujarte a un tramo más alto del impuesto.",
-      "headers": ["Descuento", "Tasa", "Base", "Lo paga"],
+      "headers": [
+        "Descuento",
+        "Tasa",
+        "Base",
+        "Lo paga"
+      ],
       "rows": [
-        ["AFP (fondo de pensiones)", "10%", "Imponible (tope 90 UF)", "Trabajador"],
-        ["Comisión AFP", "~0,49%–1,45%", "Imponible (tope 90 UF)", "Trabajador"],
-        ["Salud (Fonasa/Isapre)", "7% mínimo", "Imponible (tope 90 UF)", "Trabajador"],
-        ["Seguro de cesantía (indefinido)", "0,6%", "Imponible (tope 135,2 UF)", "Trabajador"],
-        ["IUSC (Impuesto Único 2ª Categoría)", "0%–40% por tramo (sin tope)", "Renta líquida imponible", "Trabajador"],
-        ["Aporte empleador cesantía (indefinido)", "2,4%", "Imponible", "Empresa"]
+        [
+          "AFP (fondo de pensiones)",
+          "10%",
+          "Imponible (tope 90 UF)",
+          "Trabajador"
+        ],
+        [
+          "Comisión AFP",
+          "~0,49%–1,45%",
+          "Imponible (tope 90 UF)",
+          "Trabajador"
+        ],
+        [
+          "Salud (Fonasa/Isapre)",
+          "7% mínimo",
+          "Imponible (tope 90 UF)",
+          "Trabajador"
+        ],
+        [
+          "Seguro de cesantía (indefinido)",
+          "0,6%",
+          "Imponible (tope 135,2 UF)",
+          "Trabajador"
+        ],
+        [
+          "IUSC (Impuesto Único 2ª Categoría)",
+          "0%–40% por tramo (sin tope)",
+          "Renta líquida imponible",
+          "Trabajador"
+        ],
+        [
+          "Aporte empleador cesantía (indefinido)",
+          "2,4%",
+          "Imponible",
+          "Empresa"
+        ]
       ],
       "note": "AFP y salud topean en 90 UF mensuales; el IUSC no tiene tope. El bono se ajusta primero por cumplimiento (bono × % objetivos) y luego se suma al sueldo. Fuente: chile-2026.ts del repo (AFP 10%, salud 7%, cesantía 0,6%, topes 90/135,2 UF); Art. 43 N°1 LIR."
     },
     {
       "title": "Tramos del IUSC 2026 que determinan cuánto te retienen del bono (en UTM)",
       "caption": "Impuesto marginal mensual: solo la parte de la renta que supera cada umbral paga la tasa del tramo. Cálculo = base × factor − (rebaja UTM × valor UTM).",
-      "headers": ["Renta líquida imponible (UTM)", "Tasa marginal", "Rebaja (UTM)"],
+      "headers": [
+        "Renta líquida imponible (UTM)",
+        "Tasa marginal",
+        "Rebaja (UTM)"
+      ],
       "rows": [
-        ["Hasta 13,5 UTM", "Exento", "—"],
-        ["13,5 a 30 UTM", "4%", "0,54"],
-        ["30 a 50 UTM", "8%", "1,74"],
-        ["50 a 70 UTM", "13,5%", "4,49"],
-        ["70 a 90 UTM", "23%", "11,14"],
-        ["90 a 120 UTM", "30,4%", "17,80"],
-        ["120 a 310 UTM", "35%", "23,32"],
-        ["Sobre 310 UTM", "40%", "38,82"]
+        [
+          "Hasta 13,5 UTM",
+          "Exento",
+          "—"
+        ],
+        [
+          "13,5 a 30 UTM",
+          "4%",
+          "0,54"
+        ],
+        [
+          "30 a 50 UTM",
+          "8%",
+          "1,74"
+        ],
+        [
+          "50 a 70 UTM",
+          "13,5%",
+          "4,49"
+        ],
+        [
+          "70 a 90 UTM",
+          "23%",
+          "11,14"
+        ],
+        [
+          "90 a 120 UTM",
+          "30,4%",
+          "17,80"
+        ],
+        [
+          "120 a 310 UTM",
+          "35%",
+          "23,32"
+        ],
+        [
+          "Sobre 310 UTM",
+          "40%",
+          "38,82"
+        ]
       ],
       "note": "Las primeras 13,5 UTM están exentas (~$965.000 con la UTM de jun-2026, ~$71.506). El SII actualiza la UTM el 1.º de cada mes; verificá en sii.cl. Si recibís el bono en el mismo mes que el sueldo, la suma puede tributar a la tasa del tramo superior. Fuente: tabla Art. 43 N°1 LIR; chile-2026.ts del repo."
     }
@@ -301,5 +372,22 @@
     "updateType": "manual",
     "notes": "Tramos IUSC, tasas AFP y comisiones se actualizan anualmente; la UTM se reajusta cada mes (SII)"
   },
-  "lastReviewed": "2026-06-12"
+  "lastReviewed": "2026-06-28",
+  "example": {
+    "title": "Ejemplo: bono de $600.000 al 80% de objetivos",
+    "inputs": {
+      "sueldo_base_mensual": 1200000,
+      "bono_esperado": 600000,
+      "objetivos_cumplidos_pct": 80,
+      "tipo_salud": "fonasa",
+      "afiliado_afp": "si",
+      "comision_afp_pct": 1.27
+    },
+    "steps": [
+      "**Bono según cumplimiento**: $600.000 × 80% = $480.000 de bono bruto, que sumado al sueldo base da una remuneración bruta de $1.680.000.",
+      "**Descuentos previsionales**: AFP 10% ($168.000) + comisión AFP ($21.336) + salud Fonasa 7% ($117.600) sobre el imponible.",
+      "**Líquido a pagar**: descontadas las retenciones obligatorias ($306.936) queda lo que llega al bolsillo."
+    ],
+    "result": "El sueldo líquido del mes con bono es de **$1.373.064** (el 81,7% de la remuneración bruta). *Valores vigentes a jun-2026.*"
+  }
 }
