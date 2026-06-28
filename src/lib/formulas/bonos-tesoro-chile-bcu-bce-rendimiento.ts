@@ -41,10 +41,12 @@ export function compute(i: Inputs): Outputs {
   if (i.tasa_cupon_anual < 0 || i.tasa_cupon_anual > 20) return getEmptyOutput();
   if (i.precio_compra <= 0 || i.precio_compra > 150) return getEmptyOutput();
 
-  // 1. Cálculo cupones
+  // 1. Cálculo cupones — tasa_cupon_anual viene en % (ej. 3.5), hay que pasarla a
+  // decimal (/100). Antes se usaba sin dividir → cupones inflados ~100×.
+  const tasa_cupon_dec = i.tasa_cupon_anual / 100;
   const numero_cupones = i.plazo_anos * 2; // semestral
-  const cupones_totales_brutos = (i.monto_nominal * i.tasa_cupon_anual) / 2 * numero_cupones;
-  const flujo_semestral = (i.monto_nominal * i.tasa_cupon_anual) / 2;
+  const cupones_totales_brutos = (i.monto_nominal * tasa_cupon_dec) / 2 * numero_cupones;
+  const flujo_semestral = (i.monto_nominal * tasa_cupon_dec) / 2;
 
   // 2. Tributación cupones (IRPF marginal persona natural)
   let tasa_tributaria_cupones = 0;
