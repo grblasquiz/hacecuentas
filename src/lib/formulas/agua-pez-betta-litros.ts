@@ -14,6 +14,8 @@ export interface Outputs {
 }
 
 export function aguaPezBettaLitros(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).conCompaneros = (i as any).conCompaneros === true || (i as any).conCompaneros === 'true';
   const tipo = String(i.tipo || 'macho');
   const cant = Math.max(1, Math.round(Number(i.cantidad ?? 1)));
   const conComp = i.conCompaneros === true;

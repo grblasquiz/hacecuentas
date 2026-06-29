@@ -16,6 +16,9 @@ export interface Outputs {
 }
 
 export function vacunasGatoCalendarioGatito(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).saleAfuera = (i as any).saleAfuera === true || (i as any).saleAfuera === 'true';
+  (i as any).yaVacunado = (i as any).yaVacunado === true || (i as any).yaVacunado === 'true';
   let em = Number(i.edadMeses);
   const semanas = Number(i.edadSemanas);
   if (!em && semanas) em = semanas / 4.345;

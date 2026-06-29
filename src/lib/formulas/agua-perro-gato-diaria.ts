@@ -21,6 +21,9 @@ export interface Outputs {
 }
 
 export function aguaPerroGatoDiaria(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).climaCalido = (i as any).climaCalido === true || (i as any).climaCalido === 'true';
+  (i as any).lactante = (i as any).lactante === true || (i as any).lactante === 'true';
   const especie = String(i.especie || 'perro');
   const peso = Number(i.pesoKg);
   const act = String(i.actividad || 'media');

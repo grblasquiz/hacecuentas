@@ -15,6 +15,8 @@ export interface Outputs {
 }
 
 export function alimentoAcuarioPorPez(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).conCamarones = (i as any).conCamarones === true || (i as any).conCamarones === 'true';
   const cant = Math.max(1, Math.round(Number(i.cantidadPeces ?? 1)));
   const perfil = String(i.perfil || 'comunitario');
   const conCam = i.conCamarones === true;

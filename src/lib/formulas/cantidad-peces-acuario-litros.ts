@@ -14,6 +14,8 @@ export interface Outputs {
 }
 
 export function cantidadPecesAcuarioLitros(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).plantado = (i as any).plantado === true || (i as any).plantado === 'true';
   const litros = Number(i.litros);
   if (!litros || litros <= 0) throw new Error('Ingresá los litros del acuario');
 

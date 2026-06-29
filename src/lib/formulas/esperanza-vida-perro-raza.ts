@@ -55,6 +55,8 @@ const RAZAS: Record<string, RazaInfo> = {
 };
 
 export function esperanzaVidaPerroRaza(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).castrado = (i as any).castrado === true || (i as any).castrado === 'true';
   const raza = String(i.raza || 'mestizo_mediano');
   const peso = Number(i.pesoKg) || 0;
   const edad = Number(i.edadActual) || 0;

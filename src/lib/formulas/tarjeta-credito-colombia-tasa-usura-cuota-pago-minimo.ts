@@ -20,6 +20,8 @@ export interface Outputs {
 }
 
 export function compute(inputs: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (inputs as any).usar_pago_minimo = (inputs as any).usar_pago_minimo === true || (inputs as any).usar_pago_minimo === 'true';
   // Validación de entrada
   const deuda = Math.max(0, inputs.deuda_inicial || 0);
   const tareaEA = Math.max(0, Math.min(100, inputs.tasa_anual_ea || 0)) / 100;

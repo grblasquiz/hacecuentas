@@ -18,6 +18,8 @@ export interface Outputs {
 }
 
 export function expectativaVidaConejoRaza(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).castrado = (i as any).castrado === true || (i as any).castrado === 'true';
   const raza = String(i.raza || 'enano');
   const sexo = String(i.sexo || 'hembra');
   const castrado = i.castrado === true;

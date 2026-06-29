@@ -17,6 +17,8 @@ export interface Outputs {
 }
 
 export function costoMensualPezAcuario(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).invierno = (i as any).invierno === true || (i as any).invierno === 'true';
   const litros = Number(i.litros);
   if (!litros || litros <= 0) throw new Error('Ingresá los litros del acuario');
 

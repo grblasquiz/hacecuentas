@@ -19,6 +19,8 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).incluir_manutención = (i as any).incluir_manutención === true || (i as any).incluir_manutención === 'true';
   // Validaciones básicas
   const estrato = Math.max(1, Math.min(6, i.estrato_socioeconomico));
   const semestres = Math.max(1, Math.min(16, i.numero_semestres));

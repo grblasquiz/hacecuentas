@@ -15,6 +15,9 @@ export interface Outputs {
 }
 
 export function aguaPeriquitoDiaria(i: Inputs): Outputs {
+  // footgun-fix: selects "true"/"false" llegan como string; "false" es truthy → coercionar.
+  (i as any).climaCalido = (i as any).climaCalido === true || (i as any).climaCalido === 'true';
+  (i as any).criando = (i as any).criando === true || (i as any).criando === 'true';
   const cant = Math.max(1, Math.round(Number(i.cantidad ?? 1)));
   const calor = i.climaCalido === true;
   const criando = i.criando === true;
