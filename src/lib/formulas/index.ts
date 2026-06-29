@@ -157,6 +157,7 @@ import { compute as compute__anticipo_impuesto_renta_colombia_2026 } from './ant
 import { compute as compute__anticipo_impuesto_renta_ecuador } from './anticipo-impuesto-renta-ecuador';
 import { antiguedadAutoAmortizacion } from './antiguedad-auto-amortizacion';
 import { antiguedadLaboral } from './antiguedad-laboral';
+import { antiguedadLaboralVenezuela } from './antiguedad-laboral-venezuela';
 import { antiinflamatorioScoreComida } from './antiinflamatorio-score-comida';
 import { apalancamientoLiquidacion } from './apalancamiento-liquidacion';
 import { aperolSpritzProporciones } from './aperol-spritz-proporciones';
@@ -330,6 +331,7 @@ import { compute as compute__bono_cumplimiento_laboral_chile_pago_empresa } from
 import { compute as compute__bono_electrico_chile_subsidio_cuenta_electrica } from './bono-electrico-chile-subsidio-cuenta-electrica';
 import { compute as compute__bono_hambre_cero_colombia_renta_ciudadana } from './bono-hambre-cero-colombia-renta-ciudadana';
 import { compute as compute__bono_marzo_bono_invierno_chile_cuantia_requisitos } from './bono-marzo-bono-invierno-chile-cuantia-requisitos';
+import { bonoNocturnoVenezuela } from './bono-nocturno-venezuela';
 import { compute as compute__bono_renta_chile_cuanto_vale_mi_tiempo_uf } from './bono-renta-chile-cuanto-vale-mi-tiempo-uf';
 import { compute as compute__bono_social_electrico_espana_2026_criterios } from './bono-social-electrico-espana-2026-criterios';
 import { bonosAl30Al35Al41RendimientoAnual } from './bonos-al30-al35-al41-rendimiento-anual';
@@ -631,6 +633,7 @@ import { cesantiasColombiaLiquidacion } from './cesantias-colombia-liquidacion';
 import { compute as compute__cesantias_traslado_fondo_rendimiento_colombia } from './cesantias-traslado-fondo-rendimiento-colombia';
 import { cespedSemillasKgM2 } from './cesped-semillas-kg-m2';
 import { compute as compute__cesta_compra_mensual_familia_espana_inflacion } from './cesta-compra-mensual-familia-espana-inflacion';
+import { cestaticketBonoAlimentacionVenezuela } from './cestaticket-bono-alimentacion-venezuela';
 import { cetEmprestimoPessoal } from './cet-emprestimo-pessoal';
 import { compute as compute__cetes_mexico_rendimiento_28_91_182_364_dias } from './cetes-mexico-rendimiento-28-91-182-364-dias';
 import { cetesRendimientoMx } from './cetes-rendimiento-mx';
@@ -1125,6 +1128,7 @@ import { cuantoGanoPorSegundo } from './cuanto-gano-por-segundo';
 import { cuantoGastarRegaloNoviaAniversario } from './cuanto-gastar-regalo-novia-aniversario';
 import { cuantoGastoEnDelivery } from './cuanto-gasto-en-delivery';
 import { cuantoHubierasGanado } from './cuanto-hubieras-ganado-invertir-bitcoin-oro-acciones';
+import { cuantoValeMiSueldoEnDolaresVenezuela } from './cuanto-vale-mi-sueldo-en-dolares-venezuela';
 import { cuantoValeMiTiempo } from './cuanto-vale-mi-tiempo';
 import { compute as compute__cuanto_vale_mi_tiempo_hora_anual_salario } from './cuanto-vale-mi-tiempo-hora-anual-salario';
 import { cuantosDiasVacacionesLaboralesAntiguedad } from './cuantos-dias-vacaciones-laborales-antiguedad';
@@ -1825,6 +1829,7 @@ import { horasExtrasClt } from './horas-extras-clt';
 import { compute as compute__horas_extras_colombia_2026 } from './horas-extras-colombia-2026';
 import { horasExtrasMexico } from './horas-extras-mexico';
 import { compute as compute__horas_extras_peru } from './horas-extras-peru';
+import { horasExtrasVenezuela } from './horas-extras-venezuela';
 import { horasFacturablesEmpleadoVsFreelanceComparativa } from './horas-facturables-empleado-vs-freelance-comparativa';
 import { horasLuzDiaFechaLatitud } from './horas-luz-dia-fecha-latitud';
 import { horasLuzSolarPlanta } from './horas-luz-solar-planta';
@@ -1965,6 +1970,7 @@ import { compute as compute__imss_independientes_modalidad_10 } from './imss-ind
 import { compute as compute__imss_trabajadoras_hogar_mexico } from './imss-trabajadoras-hogar-mexico';
 import { compute as compute__incapacidad_imss_enfermedad_general } from './incapacidad-imss-enfermedad-general';
 import { compute as compute__incapacidad_medica_eps_colombia } from './incapacidad-medica-eps-colombia';
+import { incesVenezuela } from './inces-venezuela';
 import { indemnizacion } from './indemnizacion';
 import { compute as compute__indemnizacion_anos_servicio_chile_despido } from './indemnizacion-anos-servicio-chile-despido';
 import { compute as compute__indemnizacion_despido_arbitrario_peru } from './indemnizacion-despido-arbitrario-peru';
@@ -2038,6 +2044,7 @@ import { interesSimpleCapitalTiempoTasa } from './interes-simple-capital-tiempo-
 import { compute as compute__interes_simple_prestamo } from './interes-simple-prestamo';
 import { compute as compute__intereses_cesantias_colombia_2026 } from './intereses-cesantias-colombia-2026';
 import { compute as compute__intereses_moratorios_sunat_peru } from './intereses-moratorios-sunat-peru';
+import { interesesPrestacionesSocialesVenezuela } from './intereses-prestaciones-sociales-venezuela';
 import { interesesResarcitoriosPunitoriosAfip } from './intereses-resarcitorios-punitorios-afip';
 import { compute as compute__intermittent_fasting_window_calculator } from './intermittent-fasting-window-calculator';
 import { internetFibraCableModemComparativaMbps } from './internet-fibra-cable-modem-comparativa-mbps';
@@ -2775,6 +2782,7 @@ import { potenciasRaices } from './potencias-raices';
 import { ppfAhorroRetiroArcaModeloBrasil } from './ppf-ahorro-retiro-arca-modelo-brasil';
 import { prebioticosProbioticosDiarios } from './prebioticos-probioticos-diarios';
 import { precioDolarProducto } from './precio-dolar-producto';
+import { precioDolaresABolivaresBcvVenezuela } from './precio-dolares-a-bolivares-bcv-venezuela';
 import { precioEbookKindleKdp } from './precio-ebook-kindle-kdp';
 import { compute as compute__precio_gasolina_acpm_galon_colombia_2026 } from './precio-gasolina-acpm-galon-colombia-2026';
 import { precioHoraServicio3d } from './precio-hora-servicio-3d';
@@ -3103,6 +3111,7 @@ import { retraccion3dBowdenDirect } from './retraccion-3d-bowden-direct';
 import { retrasoAmanecerAtardecer } from './retraso-amanecer-atardecer';
 import { retrasoVueloCompensacionEu } from './retraso-vuelo-compensacion-eu';
 import { retrasoVueloCompensacionUsa } from './retraso-vuelo-compensacion-usa';
+import { retroactivoAumentoSueldoVenezuela } from './retroactivo-aumento-sueldo-venezuela';
 import { compute as compute__reunificacion_deudas_espana_cuota_unificada } from './reunificacion-deudas-espana-cuota-unificada';
 import { reunionesCostoTiempoPersonasEmpresa } from './reuniones-costo-tiempo-personas-empresa';
 import { revaluoFiscalBienesUsoEmpresa } from './revaluo-fiscal-bienes-uso-empresa';
@@ -3341,6 +3350,7 @@ import { sueldoMunicipalEmpleadoBuenosAiresCategoria } from './sueldo-municipal-
 import { sueldoNecesarioAlquiler } from './sueldo-necesario-alquiler';
 import { sueldoNetoChile } from './sueldo-neto-chile';
 import { sueldoNetoColombia } from './sueldo-neto-colombia';
+import { sueldoNetoDeduccionesVenezuela } from './sueldo-neto-deducciones-venezuela';
 import { compute as compute__sueldo_neto_ecuador } from './sueldo-neto-ecuador';
 import { sueldoNetoMexico } from './sueldo-neto-mexico';
 import { compute as compute__sueldo_neto_peru } from './sueldo-neto-peru';
@@ -3928,6 +3938,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'anticipo-impuesto-renta-ecuador': compute__anticipo_impuesto_renta_ecuador,
   'antiguedad-auto-amortizacion': antiguedadAutoAmortizacion,
   'antiguedad-laboral': antiguedadLaboral,
+  'antiguedad-laboral-venezuela': antiguedadLaboralVenezuela,
   'antiinflamatorio-score-comida': antiinflamatorioScoreComida,
   'apalancamiento-liquidacion': apalancamientoLiquidacion,
   'aperol-spritz-proporciones': aperolSpritzProporciones,
@@ -4101,6 +4112,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'bono-electrico-chile-subsidio-cuenta-electrica': compute__bono_electrico_chile_subsidio_cuenta_electrica,
   'bono-hambre-cero-colombia-renta-ciudadana': compute__bono_hambre_cero_colombia_renta_ciudadana,
   'bono-marzo-bono-invierno-chile-cuantia-requisitos': compute__bono_marzo_bono_invierno_chile_cuantia_requisitos,
+  'bono-nocturno-venezuela': bonoNocturnoVenezuela,
   'bono-renta-chile-cuanto-vale-mi-tiempo-uf': compute__bono_renta_chile_cuanto_vale_mi_tiempo_uf,
   'bono-social-electrico-espana-2026-criterios': compute__bono_social_electrico_espana_2026_criterios,
   'bonos-al30-al35-al41-rendimiento-anual': bonosAl30Al35Al41RendimientoAnual,
@@ -4402,6 +4414,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cesantias-traslado-fondo-rendimiento-colombia': compute__cesantias_traslado_fondo_rendimiento_colombia,
   'cesped-semillas-kg-m2': cespedSemillasKgM2,
   'cesta-compra-mensual-familia-espana-inflacion': compute__cesta_compra_mensual_familia_espana_inflacion,
+  'cestaticket-bono-alimentacion-venezuela': cestaticketBonoAlimentacionVenezuela,
   'cet-emprestimo-pessoal': cetEmprestimoPessoal,
   'cetes-mexico-rendimiento-28-91-182-364-dias': compute__cetes_mexico_rendimiento_28_91_182_364_dias,
   'cetes-rendimiento-mx': cetesRendimientoMx,
@@ -4896,6 +4909,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-gastar-regalo-novia-aniversario': cuantoGastarRegaloNoviaAniversario,
   'cuanto-gasto-en-delivery': cuantoGastoEnDelivery,
   'cuanto-hubieras-ganado-invertir-bitcoin-oro-acciones': cuantoHubierasGanado,
+  'cuanto-vale-mi-sueldo-en-dolares-venezuela': cuantoValeMiSueldoEnDolaresVenezuela,
   'cuanto-vale-mi-tiempo': cuantoValeMiTiempo,
   'cuanto-vale-mi-tiempo-hora-anual-salario': compute__cuanto_vale_mi_tiempo_hora_anual_salario,
   'cuantos-dias-vacaciones-laborales-antiguedad': cuantosDiasVacacionesLaboralesAntiguedad,
@@ -5596,6 +5610,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'horas-extras-colombia-2026': compute__horas_extras_colombia_2026,
   'horas-extras-mexico': horasExtrasMexico,
   'horas-extras-peru': compute__horas_extras_peru,
+  'horas-extras-venezuela': horasExtrasVenezuela,
   'horas-facturables-empleado-vs-freelance-comparativa': horasFacturablesEmpleadoVsFreelanceComparativa,
   'horas-luz-dia-fecha-latitud': horasLuzDiaFechaLatitud,
   'horas-luz-solar-planta': horasLuzSolarPlanta,
@@ -5736,6 +5751,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'imss-trabajadoras-hogar-mexico': compute__imss_trabajadoras_hogar_mexico,
   'incapacidad-imss-enfermedad-general': compute__incapacidad_imss_enfermedad_general,
   'incapacidad-medica-eps-colombia': compute__incapacidad_medica_eps_colombia,
+  'inces-venezuela': incesVenezuela,
   'indemnizacion': indemnizacion,
   'indemnizacion-anos-servicio-chile-despido': compute__indemnizacion_anos_servicio_chile_despido,
   'indemnizacion-despido-arbitrario-peru': compute__indemnizacion_despido_arbitrario_peru,
@@ -5809,6 +5825,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'interes-simple-prestamo': compute__interes_simple_prestamo,
   'intereses-cesantias-colombia-2026': compute__intereses_cesantias_colombia_2026,
   'intereses-moratorios-sunat-peru': compute__intereses_moratorios_sunat_peru,
+  'intereses-prestaciones-sociales-venezuela': interesesPrestacionesSocialesVenezuela,
   'intereses-resarcitorios-punitorios-afip': interesesResarcitoriosPunitoriosAfip,
   'intermittent-fasting-window-calculator': compute__intermittent_fasting_window_calculator,
   'internet-fibra-cable-modem-comparativa-mbps': internetFibraCableModemComparativaMbps,
@@ -6546,6 +6563,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ppf-ahorro-retiro-arca-modelo-brasil': ppfAhorroRetiroArcaModeloBrasil,
   'prebioticos-probioticos-diarios': prebioticosProbioticosDiarios,
   'precio-dolar-producto': precioDolarProducto,
+  'precio-dolares-a-bolivares-bcv-venezuela': precioDolaresABolivaresBcvVenezuela,
   'precio-ebook-kindle-kdp': precioEbookKindleKdp,
   'precio-gasolina-acpm-galon-colombia-2026': compute__precio_gasolina_acpm_galon_colombia_2026,
   'precio-hora-servicio-3d': precioHoraServicio3d,
@@ -6874,6 +6892,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'retraso-amanecer-atardecer': retrasoAmanecerAtardecer,
   'retraso-vuelo-compensacion-eu': retrasoVueloCompensacionEu,
   'retraso-vuelo-compensacion-usa': retrasoVueloCompensacionUsa,
+  'retroactivo-aumento-sueldo-venezuela': retroactivoAumentoSueldoVenezuela,
   'reunificacion-deudas-espana-cuota-unificada': compute__reunificacion_deudas_espana_cuota_unificada,
   'reuniones-costo-tiempo-personas-empresa': reunionesCostoTiempoPersonasEmpresa,
   'revaluo-fiscal-bienes-uso-empresa': revaluoFiscalBienesUsoEmpresa,
@@ -7112,6 +7131,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueldo-necesario-alquiler': sueldoNecesarioAlquiler,
   'sueldo-neto-chile': sueldoNetoChile,
   'sueldo-neto-colombia': sueldoNetoColombia,
+  'sueldo-neto-deducciones-venezuela': sueldoNetoDeduccionesVenezuela,
   'sueldo-neto-ecuador': compute__sueldo_neto_ecuador,
   'sueldo-neto-mexico': sueldoNetoMexico,
   'sueldo-neto-peru': compute__sueldo_neto_peru,
