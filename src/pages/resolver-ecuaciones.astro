@@ -152,6 +152,20 @@ const schemaHowTo = {
     '@type': 'HowToStep', position: idx + 1, name: s.name, text: s.text,
   })),
 };
+
+const schemaMathSolver = {
+  '@context': 'https://schema.org',
+  '@type': 'MathSolver',
+  name: 'Resolver ecuaciones paso a paso',
+  url: `${site}/resolver-ecuaciones`,
+  inLanguage: 'es',
+  potentialAction: {
+    '@type': 'SolveMathAction',
+    target: `${site}/resolver-ecuaciones?q={math_expression_string}`,
+    'mathExpression-input': 'required name=math_expression_string',
+    eduQuestionType: ['Polynomial equation'],
+  },
+};
 ---
 
 <Layout title={title} description={description} canonical="/resolver-ecuaciones" schema={schema}>
@@ -315,6 +329,7 @@ const schemaHowTo = {
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaMathSolver)}></script>
 
   <Footer slot="footer" />
 </Layout>
@@ -387,6 +402,9 @@ const schemaHowTo = {
       document.body.removeChild(ta);
     }
 
+    // URL compartible: ?q=<ecuación> prefila y resuelve (potencia el schema MathSolver).
+    const q = new URLSearchParams(location.search).get('q');
+    if (q) input.value = q;
     compute();
   }
 

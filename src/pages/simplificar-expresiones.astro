@@ -144,6 +144,19 @@ const schemaHowTo = {
   name: 'Cómo simplificar una expresión paso a paso',
   step: howToSteps.map((s, idx) => ({ '@type': 'HowToStep', position: idx + 1, name: s.name, text: s.text })),
 };
+
+const schemaMathSolver = {
+  '@context': 'https://schema.org',
+  '@type': 'MathSolver',
+  name: 'Simplificar expresiones algebraicas',
+  url: `${site}/simplificar-expresiones`,
+  inLanguage: 'es',
+  potentialAction: {
+    '@type': 'SolveMathAction',
+    target: `${site}/simplificar-expresiones?q={math_expression_string}`,
+    'mathExpression-input': 'required name=math_expression_string',
+  },
+};
 ---
 
 <Layout title={title} description={description} canonical="/simplificar-expresiones" schema={schema}>
@@ -274,6 +287,7 @@ const schemaHowTo = {
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaMathSolver)}></script>
 
   <Footer slot="footer" />
 </Layout>
@@ -329,6 +343,9 @@ const schemaHowTo = {
       try { document.execCommand('copy'); done(); } catch {}
       document.body.removeChild(ta);
     }
+    // URL compartible: ?q=<expresión> prefila y resuelve (potencia el schema MathSolver).
+    const q = new URLSearchParams(location.search).get('q');
+    if (q) input.value = q;
     compute();
   }
 
