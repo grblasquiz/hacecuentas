@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-27
+// Generated: 2026-06-29
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { compute as compute__1rm_estimacion_fuerza_maxima } from './1rm-estimacion-fuerza-maxima';
@@ -158,6 +158,7 @@ import { antiguedadLaboral } from './antiguedad-laboral';
 import { antiinflamatorioScoreComida } from './antiinflamatorio-score-comida';
 import { apalancamientoLiquidacion } from './apalancamiento-liquidacion';
 import { aperolSpritzProporciones } from './aperol-spritz-proporciones';
+import { compute as compute__aporte_caja_compensacion_colombia_2026 } from './aporte-caja-compensacion-colombia-2026';
 import { compute as compute__aporte_cesantias_empleador_empleado_colombia_fondo } from './aporte-cesantias-empleador-empleado-colombia-fondo';
 import { compute as compute__aporte_empleador_empleado_chile_total_costo_laboral } from './aporte-empleador-empleado-chile-total-costo-laboral';
 import { compute as compute__aporte_eps_pension_empleado_colombia_2026 } from './aporte-eps-pension-empleado-colombia-2026';
@@ -224,6 +225,7 @@ import { auhAsignacionUniversalHijoMonto2026 } from './auh-asignacion-universal-
 import { aumentoAlquilerTrimestralCuatrimestralSemestral } from './aumento-alquiler-trimestral-cuatrimestral-semestral';
 import { aumentoAlturaAdolescentePrediccion } from './aumento-altura-adolescente-prediccion';
 import { aumentoPesoEmbarazoImcSemana } from './aumento-peso-embarazo-imc-semana';
+import { compute as compute__aumento_salario_2026_colombia } from './aumento-salario-2026-colombia';
 import { compute as compute__auto_electrico_vs_nafta_tco_5_anos_argentina } from './auto-electrico-vs-nafta-tco-5-anos-argentina';
 import { autoUsadoValorDepreciacionAnosAntiguedad } from './auto-usado-valor-depreciacion-anos-antiguedad';
 import { compute as compute__autoconsumo_solar_compensacion_excedentes_espana } from './autoconsumo-solar-compensacion-excedentes-espana';
@@ -1852,6 +1854,7 @@ import { humedadAbsolutaRelativa } from './humedad-absoluta-relativa';
 import { humedadIdealAmbiente } from './humedad-ideal-ambiente';
 import { huronFerretDietaProteinaAnimal } from './huron-ferret-dieta-proteina-animal';
 import { hyroxTiempoEdadCategoriaMundial } from './hyrox-tiempo-edad-categoria-mundial';
+import { compute as compute__ibc_independientes_contratista_colombia_2026 } from './ibc-independientes-contratista-colombia-2026';
 import { compute as compute__ibi_cuota_anual_espana_valor_catastral_municipio } from './ibi-cuota-anual-espana-valor-catastral-municipio';
 import { ibuCervezaLupuloTinseth } from './ibu-cerveza-lupulo-tinseth';
 import { idiomaParalelo2AlMismo } from './idioma-paralelo-2-al-mismo';
@@ -1939,6 +1942,7 @@ import { compute as compute__impuesto_vehiculos_colombia_2026_departamento } fro
 import { impuestos1099ContractorUsa } from './impuestos-1099-contractor-usa';
 import { compute as compute__impuestos_aerolineas_tasa_aeropuerto_colombia_internacional } from './impuestos-aerolineas-tasa-aeropuerto-colombia-internacional';
 import { impuestosAutonomoEspana } from './impuestos-autonomo-espana';
+import { compute as compute__impuestos_compras_internacionales_colombia } from './impuestos-compras-internacionales-colombia';
 import { impuestosFreelanceUsaArgentinaDoble } from './impuestos-freelance-usa-argentina-doble';
 import { impuestosMonotributoFreelance } from './impuestos-monotributo-freelance';
 import { compute as compute__imss_cuotas_empleado_patron_mexico_2026 } from './imss-cuotas-empleado-patron-mexico-2026';
@@ -2015,6 +2019,7 @@ import { compute as compute__interes_mora_dian_colombia_2026 } from './interes-m
 import { interesSimple } from './interes-simple';
 import { interesSimpleCapitalTiempoTasa } from './interes-simple-capital-tiempo-tasa';
 import { compute as compute__interes_simple_prestamo } from './interes-simple-prestamo';
+import { compute as compute__intereses_cesantias_colombia_2026 } from './intereses-cesantias-colombia-2026';
 import { interesesResarcitoriosPunitoriosAfip } from './intereses-resarcitorios-punitorios-afip';
 import { compute as compute__intermittent_fasting_window_calculator } from './intermittent-fasting-window-calculator';
 import { internetFibraCableModemComparativaMbps } from './internet-fibra-cable-modem-comparativa-mbps';
@@ -3056,6 +3061,7 @@ import { retencionGananciasSiradigTrabajador } from './retencion-ganancias-sirad
 import { retencionPlataformasDigitalesMexico2026 } from './retencion-plataformas-digitales-mexico-2026';
 import { compute as compute__retencion_procedimiento_2_colombia_2026 } from './retencion-procedimiento-2-colombia-2026';
 import { retencionRg2616ProveedorMonotributo } from './retencion-rg2616-proveedor-monotributo';
+import { compute as compute__retencion_salarios_procedimiento_1_colombia_2026 } from './retencion-salarios-procedimiento-1-colombia-2026';
 import { compute as compute__retiro_afore_desempleo_mexico } from './retiro-afore-desempleo-mexico';
 import { compute as compute__retiro_afp_jubilacion_peru } from './retiro-afp-jubilacion-peru';
 import { compute as compute__retiro_cts_desempleo_peru } from './retiro-cts-desempleo-peru';
@@ -3137,15 +3143,18 @@ import { salarioMinimo } from './salario-minimo';
 import { salarioMinimo2026Comparativa } from './salario-minimo-2026-comparativa';
 import { compute as compute__salario_minimo_colombia_2026_auxilio_transporte } from './salario-minimo-colombia-2026-auxilio-transporte';
 import { salarioMinimoParaguay2026 } from './salario-minimo-paraguay-2026';
+import { compute as compute__salario_neto_colombia_2026_bruto_a_neto } from './salario-neto-colombia-2026-bruto-a-neto';
 import { salarioNetoRepublicaDominicana } from './salario-neto-republica-dominicana';
 import { salarioRealInflacion } from './salario-real-inflacion';
 import { salarioVacacionalUruguay } from './salario-vacacional-uruguay';
+import { compute as compute__salarios_minimos_a_pesos_colombia_2026 } from './salarios-minimos-a-pesos-colombia-2026';
 import { compute as compute__saldo_afp_rentabilidad_multifondos_chile_2026 } from './saldo-afp-rentabilidad-multifondos-chile-2026';
 import { saldoCriptoValorMonedaLocalMulti } from './saldo-cripto-valor-moneda-local-multi';
 import { saldoSalarioRescisao } from './saldo-salario-rescisao';
 import { salesTaxCalculator } from './sales-tax-calculator';
 import { compute as compute__sancion_correccion_declaracion_dian_colombia_2026 } from './sancion-correccion-declaracion-dian-colombia-2026';
 import { compute as compute__sancion_extemporaneidad_dian_2026 } from './sancion-extemporaneidad-dian-2026';
+import { compute as compute__sancion_minima_dian_colombia_2026 } from './sancion-minima-dian-colombia-2026';
 import { satIeltsToeflEquivalenciasPuntajeConvertidor } from './sat-ielts-toefl-equivalencias-puntaje-convertidor';
 import { saturacionOxigenoEvaluacion } from './saturacion-oxigeno-evaluacion';
 import { saturacionOxigenoSpo2AltitudNormal } from './saturacion-oxigeno-spo2-altitud-normal';
@@ -3325,6 +3334,7 @@ import { sustitutoHuevoVegano } from './sustituto-huevo-vegano';
 import { sustratoMezclaProporciones } from './sustrato-mezcla-proporciones';
 import { swolfNatacionIndice } from './swolf-natacion-indice';
 import { tablaAnualArgentina } from './tabla-anual-argentina';
+import { compute as compute__tabla_impuesto_renta_personas_naturales_colombia_2026 } from './tabla-impuesto-renta-personas-naturales-colombia-2026';
 import { tablaWilksPowerliftingScore } from './tabla-wilks-powerlifting-score';
 import { tableroMelaminaCortesAprovechamiento } from './tablero-melamina-cortes-aprovechamiento';
 import { tallaAnilloDedo } from './talla-anillo-dedo';
@@ -3879,6 +3889,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'antiinflamatorio-score-comida': antiinflamatorioScoreComida,
   'apalancamiento-liquidacion': apalancamientoLiquidacion,
   'aperol-spritz-proporciones': aperolSpritzProporciones,
+  'aporte-caja-compensacion-colombia-2026': compute__aporte_caja_compensacion_colombia_2026,
   'aporte-cesantias-empleador-empleado-colombia-fondo': compute__aporte_cesantias_empleador_empleado_colombia_fondo,
   'aporte-empleador-empleado-chile-total-costo-laboral': compute__aporte_empleador_empleado_chile_total_costo_laboral,
   'aporte-eps-pension-empleado-colombia-2026': compute__aporte_eps_pension_empleado_colombia_2026,
@@ -3945,6 +3956,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aumento-alquiler-trimestral-cuatrimestral-semestral': aumentoAlquilerTrimestralCuatrimestralSemestral,
   'aumento-altura-adolescente-prediccion': aumentoAlturaAdolescentePrediccion,
   'aumento-peso-embarazo-imc-semana': aumentoPesoEmbarazoImcSemana,
+  'aumento-salario-2026-colombia': compute__aumento_salario_2026_colombia,
   'auto-electrico-vs-nafta-tco-5-anos-argentina': compute__auto_electrico_vs_nafta_tco_5_anos_argentina,
   'auto-usado-valor-depreciacion-anos-antiguedad': autoUsadoValorDepreciacionAnosAntiguedad,
   'autoconsumo-solar-compensacion-excedentes-espana': compute__autoconsumo_solar_compensacion_excedentes_espana,
@@ -5573,6 +5585,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'humedad-ideal-ambiente': humedadIdealAmbiente,
   'huron-ferret-dieta-proteina-animal': huronFerretDietaProteinaAnimal,
   'hyrox-tiempo-edad-categoria-mundial': hyroxTiempoEdadCategoriaMundial,
+  'ibc-independientes-contratista-colombia-2026': compute__ibc_independientes_contratista_colombia_2026,
   'ibi-cuota-anual-espana-valor-catastral-municipio': compute__ibi_cuota_anual_espana_valor_catastral_municipio,
   'ibu-cerveza-lupulo-tinseth': ibuCervezaLupuloTinseth,
   'idioma-paralelo-2-al-mismo': idiomaParalelo2AlMismo,
@@ -5660,6 +5673,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'impuestos-1099-contractor-usa': impuestos1099ContractorUsa,
   'impuestos-aerolineas-tasa-aeropuerto-colombia-internacional': compute__impuestos_aerolineas_tasa_aeropuerto_colombia_internacional,
   'impuestos-autonomo-espana': impuestosAutonomoEspana,
+  'impuestos-compras-internacionales-colombia': compute__impuestos_compras_internacionales_colombia,
   'impuestos-freelance-usa-argentina-doble': impuestosFreelanceUsaArgentinaDoble,
   'impuestos-monotributo-freelance': impuestosMonotributoFreelance,
   'imss-cuotas-empleado-patron-mexico-2026': compute__imss_cuotas_empleado_patron_mexico_2026,
@@ -5736,6 +5750,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'interes-simple': interesSimple,
   'interes-simple-capital-tiempo-tasa': interesSimpleCapitalTiempoTasa,
   'interes-simple-prestamo': compute__interes_simple_prestamo,
+  'intereses-cesantias-colombia-2026': compute__intereses_cesantias_colombia_2026,
   'intereses-resarcitorios-punitorios-afip': interesesResarcitoriosPunitoriosAfip,
   'intermittent-fasting-window-calculator': compute__intermittent_fasting_window_calculator,
   'internet-fibra-cable-modem-comparativa-mbps': internetFibraCableModemComparativaMbps,
@@ -6777,6 +6792,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'retencion-plataformas-digitales-mexico-2026': retencionPlataformasDigitalesMexico2026,
   'retencion-procedimiento-2-colombia-2026': compute__retencion_procedimiento_2_colombia_2026,
   'retencion-rg2616-proveedor-monotributo': retencionRg2616ProveedorMonotributo,
+  'retencion-salarios-procedimiento-1-colombia-2026': compute__retencion_salarios_procedimiento_1_colombia_2026,
   'retiro-afore-desempleo-mexico': compute__retiro_afore_desempleo_mexico,
   'retiro-afp-jubilacion-peru': compute__retiro_afp_jubilacion_peru,
   'retiro-cts-desempleo-peru': compute__retiro_cts_desempleo_peru,
@@ -6858,15 +6874,18 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'salario-minimo-2026-comparativa': salarioMinimo2026Comparativa,
   'salario-minimo-colombia-2026-auxilio-transporte': compute__salario_minimo_colombia_2026_auxilio_transporte,
   'salario-minimo-paraguay-2026': salarioMinimoParaguay2026,
+  'salario-neto-colombia-2026-bruto-a-neto': compute__salario_neto_colombia_2026_bruto_a_neto,
   'salario-neto-republica-dominicana': salarioNetoRepublicaDominicana,
   'salario-real-inflacion': salarioRealInflacion,
   'salario-vacacional-uruguay': salarioVacacionalUruguay,
+  'salarios-minimos-a-pesos-colombia-2026': compute__salarios_minimos_a_pesos_colombia_2026,
   'saldo-afp-rentabilidad-multifondos-chile-2026': compute__saldo_afp_rentabilidad_multifondos_chile_2026,
   'saldo-cripto-valor-moneda-local-multi': saldoCriptoValorMonedaLocalMulti,
   'saldo-salario-rescisao': saldoSalarioRescisao,
   'sales-tax-calculator': salesTaxCalculator,
   'sancion-correccion-declaracion-dian-colombia-2026': compute__sancion_correccion_declaracion_dian_colombia_2026,
   'sancion-extemporaneidad-dian-2026': compute__sancion_extemporaneidad_dian_2026,
+  'sancion-minima-dian-colombia-2026': compute__sancion_minima_dian_colombia_2026,
   'sat-ielts-toefl-equivalencias-puntaje-convertidor': satIeltsToeflEquivalenciasPuntajeConvertidor,
   'saturacion-oxigeno-evaluacion': saturacionOxigenoEvaluacion,
   'saturacion-oxigeno-spo2-altitud-normal': saturacionOxigenoSpo2AltitudNormal,
@@ -7046,6 +7065,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sustrato-mezcla-proporciones': sustratoMezclaProporciones,
   'swolf-natacion-indice': swolfNatacionIndice,
   'tabla-anual-argentina': tablaAnualArgentina,
+  'tabla-impuesto-renta-personas-naturales-colombia-2026': compute__tabla_impuesto_renta_personas_naturales_colombia_2026,
   'tabla-wilks-powerlifting-score': tablaWilksPowerliftingScore,
   'tablero-melamina-cortes-aprovechamiento': tableroMelaminaCortesAprovechamiento,
   'talla-anillo-dedo': tallaAnilloDedo,
