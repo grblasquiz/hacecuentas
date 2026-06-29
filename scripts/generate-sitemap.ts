@@ -531,6 +531,9 @@ const priorityUrls: Url[] = [
   prio('/precio-nafta-hoy',                  '0.9',  'weekly', true),
   prio('/fixture-mundial-2026',              '0.95', 'daily',  true),
   prio('/partidos-hoy-mundial-2026',         '0.95', 'daily',  true),
+  prio('/donde-ver-mundial-2026',            '0.9',  'daily',  true),
+  // Receso escolar de invierno 2026 (ola de demanda jun-jul, fechas oficiales por provincia)
+  prio('/vacaciones-invierno-2026',          '0.9',  'weekly', true),
   // Hub temático asado/fiesta/evento (cluster de ~40 calcs por invitado, alta intención de finde)
   prio('/calculadoras-evento',               '0.8',  'monthly'),
   // Meta-hub de fin de semana (clusters resilientes: cocina, escapadas, fitness, ocio, mascotas)
@@ -760,6 +763,8 @@ sitemaps.push({
     core('/cuanto-falta-para-Navidad-2026',      '0.9',  'daily',   true),
     core('/fixture-mundial-2026',                '0.9',  'daily',   true),
     core('/partidos-hoy-mundial-2026',           '0.92', 'daily',   true),
+    core('/donde-ver-mundial-2026',              '0.9',  'daily',   true),
+    core('/vacaciones-invierno-2026',            '0.88', 'weekly',  true),
     core('/posiciones-mundial-2026',             '0.9',  'daily',   true),
     core('/goleadores-mundial-2026',             '0.85', 'daily',   true),
     core('/cuando-juega-argentina-mundial-2026', '0.9',  'daily',   true),

@@ -1,0 +1,205 @@
+---
+// Superficie de demanda en vivo: "vacaciones de invierno 2026 [provincia]" — pico de búsqueda
+// jun-jul en AR. Fechas oficiales por jurisdicción (Calendario Escolar 2026, Res. 508 + portales
+// provinciales). Snapshot estático (prerender) + highlighter client-side de "en curso / faltan X días".
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import {
+  RECESOS_INVIERNO_2026, RECESOS_DATA_AS_OF, RECESOS_BLOQUES,
+} from '../lib/data/vacaciones-invierno-ar-2026';
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/vacaciones-invierno-2026`;
+
+// Orden: por fecha de inicio, luego alfabético por provincia.
+const filas = [...RECESOS_INVIERNO_2026].sort((a, b) =>
+  a.inicio !== b.inicio ? a.inicio.localeCompare(b.inicio) : a.prov.localeCompare(b.prov, 'es'));
+
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const fmt = (iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return { dia: DIAS[dt.getUTCDay()], texto: `${d} de ${MESES[m - 1]}` };
+};
+// "Vuelven a clases" = lunes siguiente al fin (fin es viernes → +3 días). Computado en build
+// para que quede en el HTML estático (crawlable, sin depender de JS del cliente).
+const vueltaLabel = (finIso: string) => {
+  const [y, m, d] = finIso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + 3));
+  return `${dt.getUTCDate()} de ${MESES[dt.getUTCMonth()]}`;
+};
+
+const total = filas.length;
+const primerInicio = '6 de julio';
+const ultimoFin = '31 de julio';
+
+const title = 'Vacaciones de invierno 2026: fechas por provincia (calendario oficial) | Hacé Cuentas';
+const description = 'Cuándo son las vacaciones de invierno 2026 en Argentina, provincia por provincia. Fechas de inicio y fin del receso escolar según el calendario oficial: del 6 al 31 de julio según la jurisdicción.';
+
+const faqItems = [
+  { q: '¿Cuándo empiezan las vacaciones de invierno 2026?', a: `Depende de la provincia. Las primeras (Córdoba, Santa Fe, Mendoza, Entre Ríos, San Juan y San Luis) arrancan el lunes 6 de julio de 2026. La mayoría empieza el lunes 13 de julio, y CABA, Buenos Aires, Chaco y Santiago del Estero son las últimas, el lunes 20 de julio.` },
+  { q: '¿Cuándo son las vacaciones de invierno 2026 en CABA y Provincia de Buenos Aires?', a: 'En la Ciudad de Buenos Aires y en la Provincia de Buenos Aires el receso invernal 2026 va del lunes 20 al viernes 31 de julio. Las clases se retoman el lunes 3 de agosto.' },
+  { q: '¿Cuándo son las vacaciones de invierno 2026 en Córdoba?', a: 'En Córdoba el receso es del lunes 6 al viernes 17 de julio de 2026, una de las provincias que arranca primero.' },
+  { q: '¿Cuánto duran las vacaciones de invierno 2026?', a: 'El receso invernal escolar dura dos semanas (de lunes a viernes, dos semanas seguidas) en todas las jurisdicciones. Lo que cambia entre provincias es la fecha de inicio, no la duración.' },
+  { q: '¿Por qué cada provincia tiene fechas distintas?', a: 'Cada jurisdicción fija su propio calendario escolar dentro del marco nacional. Las fechas se escalonan en tres bloques (6-17, 13-24 y 20-31 de julio) para repartir la demanda turística y de servicios a lo largo del mes.' },
+  { q: '¿Las vacaciones de invierno son iguales en todo el país?', a: 'No. Hay tres bloques de fechas. Bloque 1 (6 al 17 de julio): Córdoba, Entre Ríos, Mendoza, San Juan, San Luis y Santa Fe. Bloque 2 (13 al 24 de julio): la mayoría de las provincias. Bloque 3 (20 al 31 de julio): CABA, Buenos Aires, Chaco y Santiago del Estero.' },
+  { q: '¿De dónde salen estas fechas?', a: `Del Calendario Escolar 2026 oficial (Ministerio de Capital Humano, Anexo Resolución N° 508), que consolida las 24 jurisdicciones, reforzado con el calendario oficial de cada provincia para las principales. Última verificación: ${RECESOS_DATA_AS_OF}.` },
+  { q: '¿Cuándo vuelven a clases después de las vacaciones de invierno?', a: 'Las clases se retoman el lunes siguiente al fin del receso de cada provincia: el 20 de julio para el bloque 1, el 27 de julio para el bloque 2 y el 3 de agosto para el bloque 3.' },
+];
+
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Vacaciones de invierno 2026', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faqItems.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  { '@type': 'Dataset', '@id': `${URL}#dataset`, name: 'Vacaciones de invierno 2026 Argentina por provincia',
+    description: 'Fechas de inicio y fin del receso escolar invernal 2026 en cada jurisdicción de Argentina, según el calendario escolar oficial.',
+    url: URL, inLanguage: 'es-AR', dateModified: RECESOS_DATA_AS_OF, isAccessibleForFree: true,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
+    spatialCoverage: { '@type': 'Country', name: 'Argentina' },
+    temporalCoverage: '2026-07-06/2026-07-31' },
+] };
+---
+
+<Layout title={title} description={description} canonical="/vacaciones-invierno-2026" audience="AR" schema={schema}>
+  <Header slot="header" />
+  <main class="article-main">
+    <article class="vi-page">
+      <header class="vi-header">
+        <nav class="crumbs"><a href="/">Inicio</a> <span>›</span> <span>Vacaciones de invierno 2026</span></nav>
+        <div class="vi-eyebrow">❄️ Receso escolar · Argentina</div>
+        <h1>Vacaciones de invierno 2026: fechas por provincia</h1>
+        <p class="lede">Cuándo son las <strong>vacaciones de invierno 2026</strong> en cada provincia de Argentina. Según la jurisdicción, el receso escolar va del <strong>{primerInicio}</strong> al <strong>{ultimoFin}</strong>. Buscá tu provincia abajo.</p>
+        <p class="vi-status" data-status hidden></p>
+      </header>
+
+      <section class="vi-bloques" aria-label="Resumen por bloques">
+        {RECESOS_BLOQUES.map((b, i) => (
+          <div class="vi-bloque">
+            <span class="vi-bloque-n">Bloque {i + 1}</span>
+            <strong>{b.label}</strong>
+          </div>
+        ))}
+      </section>
+
+      <section aria-labelledby="vi-tabla-h">
+        <h2 id="vi-tabla-h">Calendario completo 2026 por jurisdicción</h2>
+        <div class="vi-table-wrap">
+          <table class="vi-table">
+            <thead>
+              <tr><th>Provincia</th><th>Inicio</th><th>Fin</th><th>Vuelven a clases</th></tr>
+            </thead>
+            <tbody>
+              {filas.map((f) => {
+                const ini = fmt(f.inicio); const fin = fmt(f.fin);
+                return (
+                  <tr data-prov data-inicio={f.inicio} data-fin={f.fin}>
+                    <th scope="row">{f.prov}</th>
+                    <td><span class="vi-dow">{ini.dia}</span> {ini.texto}</td>
+                    <td><span class="vi-dow">{fin.dia}</span> {fin.texto}</td>
+                    <td class="vi-vuelta">{vueltaLabel(f.fin)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p class="vi-note">Receso de dos semanas (lunes a viernes) en todas las jurisdicciones. Lo que cambia es la fecha de inicio.</p>
+      </section>
+
+      <section class="vi-calc">
+        <h2>Calculá con estas fechas</h2>
+        <ul>
+          <li><a href="/calculadora-cuenta-regresiva-dias-faltan">⏳ Cuántos días faltan para tus vacaciones</a></li>
+          <li><a href="/dias-entre-dos-fechas">📅 Días entre dos fechas</a></li>
+          <li><a href="/calculadora-feriados-argentina-2026-calendario">🎌 Feriados Argentina 2026 (fines de semana largos)</a></li>
+          <li><a href="/calculadora-presupuesto-viaje-vacaciones">💰 Presupuesto de viaje de vacaciones</a></li>
+        </ul>
+      </section>
+
+      <section class="vi-faq">
+        <h2>Preguntas frecuentes</h2>
+        {faqItems.map((f) => (<details><summary>{f.q}</summary><p set:html={f.a}></p></details>))}
+      </section>
+
+      <section class="vi-sources">
+        <h2>Fuentes</h2>
+        <p>Datos del <strong>Calendario Escolar 2026</strong> oficial (Ministerio de Capital Humano, Anexo Resolución N° 508), que consolida las 24 jurisdicciones, reforzado con el calendario oficial de cada provincia para las principales. Última verificación: {RECESOS_DATA_AS_OF}.</p>
+        <ul>
+          <li><a href="https://www.argentina.gob.ar/capital-humano/educacion/calendario-escolar-2026" rel="noopener nofollow" target="_blank">Calendario Escolar 2026 — Ministerio de Capital Humano</a></li>
+          <li><a href="https://abc.gob.ar/noticias/la-provincia-oficializo-el-calendario-escolar-2026" rel="noopener nofollow" target="_blank">Portal ABC — Provincia de Buenos Aires</a></li>
+          <li><a href="https://prensa.cba.gov.ar/educacion-3/ciclo-lectivo-2026-en-cordoba-las-clases-comenzaran-el-2-de-marzo-y-se-garantizan-los-190-dias-efectivos/" rel="noopener nofollow" target="_blank">Gobierno de Córdoba — Ciclo Lectivo 2026</a></li>
+          <li><a href="https://www.educaciontuc.gov.ar/2026/01/22/conoce-el-calendario-escolar-2026-de-tucuman/" rel="noopener nofollow" target="_blank">Ministerio de Educación de Tucumán</a></li>
+        </ul>
+      </section>
+    </article>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  // Enhancement puro: línea de estado "en curso / faltan X días" (frescura sin redeploy).
+  // La tabla y la columna "vuelven a clases" ya son HTML estático (no dependen de esto).
+  (function () {
+    const MES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    function parse(iso: string) { const [y,m,d] = iso.split('-').map(Number); return new Date(y, m-1, d); }
+    function diasHasta(d: Date) { const hoy = new Date(); hoy.setHours(0,0,0,0); return Math.round((d.getTime() - hoy.getTime()) / 86400000); }
+
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const rows = [...document.querySelectorAll('[data-prov]')] as HTMLElement[];
+    const enCurso = rows.filter((r) => parse(r.dataset.inicio!) <= hoy && hoy <= parse(r.dataset.fin!));
+    const statusEl = document.querySelector('[data-status]') as HTMLElement | null;
+    if (statusEl) {
+      if (enCurso.length) {
+        statusEl.textContent = `🟢 Hoy hay ${enCurso.length} provincia${enCurso.length > 1 ? 's' : ''} de receso invernal.`;
+        statusEl.hidden = false;
+        enCurso.forEach((r) => r.classList.add('vi-activo'));
+      } else {
+        const prox = rows.map((r) => ({ r, ini: parse(r.dataset.inicio!) })).filter((x) => x.ini > hoy).sort((a,b) => a.ini.getTime() - b.ini.getTime())[0];
+        if (prox) {
+          const d = diasHasta(prox.ini);
+          statusEl.textContent = `⏳ Faltan ${d} día${d !== 1 ? 's' : ''} para el primer receso de invierno (${prox.ini.getDate()} de ${MES[prox.ini.getMonth()]}).`;
+          statusEl.hidden = false;
+        }
+      }
+    }
+  })();
+</script>
+
+<style>
+  .vi-page { max-width: 820px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+  .crumbs { font-size: 0.8rem; color: var(--text-subtle); margin-bottom: 0.6rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  .vi-eyebrow { font-size: 0.8rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; }
+  .vi-header h1 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); font-weight: 800; margin: 0.3rem 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.75rem; }
+  .vi-status { font-size: 0.92rem; font-weight: 600; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem 0.8rem; margin: 0 0 0.5rem; }
+  .vi-page h2 { font-size: 1.3rem; font-weight: 700; margin: 2rem 0 1rem; }
+  .vi-bloques { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1.5rem 0; }
+  .vi-bloque { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.8rem 1rem; }
+  .vi-bloque-n { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); font-weight: 700; }
+  .vi-bloque strong { font-size: 1rem; }
+  .vi-table-wrap { overflow-x: auto; }
+  .vi-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  .vi-table th, .vi-table td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); }
+  .vi-table thead th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-subtle); }
+  .vi-table tbody th { font-weight: 600; }
+  .vi-dow { display: block; font-size: 0.72rem; color: var(--text-subtle); text-transform: capitalize; }
+  .vi-table tr.vi-activo { background: var(--bg-soft); }
+  .vi-vuelta { color: var(--text-muted); }
+  .vi-note { font-size: 0.82rem; color: var(--text-subtle); margin-top: 0.6rem; }
+  .vi-calc ul, .vi-sources ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+  @media (min-width: 600px) { .vi-calc ul { grid-template-columns: 1fr 1fr; } }
+  .vi-calc a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .vi-faq { margin-top: 2rem; }
+  .vi-faq details { border-bottom: 1px solid var(--border); padding: 0.7rem 0; }
+  .vi-faq summary { font-weight: 600; cursor: pointer; }
+  .vi-faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+  .vi-sources { margin-top: 2rem; font-size: 0.88rem; color: var(--text-muted); }
+  .vi-sources a { color: var(--accent); }
+</style>

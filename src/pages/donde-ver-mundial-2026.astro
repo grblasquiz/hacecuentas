@@ -1,0 +1,197 @@
+---
+// Superficie de demanda en vivo: "dónde ver el Mundial 2026 [país]" / "qué canal transmite" —
+// pico durante el torneo (jun-jul 2026). Guía de canales TV + streaming por país (datos verificados
+// contra Wikipedia/El Universo/CBS/Sportcal/sitios de broadcasters, jun-2026). Bloque "hoy" deriva
+// del fixture openfootball (snapshot SSR + nada de claims canal-por-partido sin fuente).
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import {
+  fixture, teamLabel, artTime, artDayKey, roundLabel, kickoffUTC, result,
+} from '../lib/data/mundial-2026.ts';
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=86400');
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/donde-ver-mundial-2026`;
+const DATA_AS_OF = '2026-06-29';
+
+// "Hoy" en hora argentina (request time → nunca queda viejo).
+const now = new Date();
+const todayKey = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit',
+}).format(now);
+const sorted = [...fixture.matches].sort((a, b) => {
+  const ka = kickoffUTC(a.date, a.time)?.getTime() ?? 0;
+  const kb = kickoffUTC(b.date, b.time)?.getTime() ?? 0;
+  return ka !== kb ? ka - kb : a.num - b.num;
+});
+const todayMatches = sorted.filter((m) => artDayKey(m.date, m.time) === todayKey);
+
+// Broadcasters por país. SOLO datos verificados con fuente (jun-2026). Omitidos a propósito:
+// Mega (CL) no es titular, Latina (PE) sin confirmar, Sky (MX) sin confirmar, Claro Video (EC) dudoso.
+interface Pais { code: string; flag: string; nombre: string; abierta: string[]; paga: string[]; streaming: string[]; nota?: string; }
+const PAISES: Pais[] = [
+  { code: 'AR', flag: '🇦🇷', nombre: 'Argentina',
+    abierta: ['Telefe', 'TV Pública'], paga: ['TyC Sports', 'DSports / DirecTV'],
+    streaming: ['DGO', 'Disney+ (plan Premium, vía ESPN)'],
+    nota: 'Los partidos de la Selección Argentina van por TV abierta (Telefe y TV Pública). DSports/DGO tiene el torneo completo.' },
+  { code: 'MX', flag: '🇲🇽', nombre: 'México',
+    abierta: ['TelevisaUnivisión (Canal 5, Las Estrellas, Canal 9)', 'TV Azteca (Azteca Uno y Azteca 7)'],
+    paga: ['TUDN'], streaming: ['ViX Premium con "Pase Mundial" (los 104 partidos)'],
+    nota: 'En TV abierta van ~32 partidos (inaugural, todos los de México y eliminatorias). Para ver los 104 hace falta ViX Premium con el Pase Mundial; ViX Premium estándar solo trae los 32 de señal abierta.' },
+  { code: 'CO', flag: '🇨🇴', nombre: 'Colombia',
+    abierta: ['Caracol', 'RCN'], paga: ['Win Sports', 'DirecTV'],
+    streaming: ['DGO', 'Disney+ (plan Premium, vía ESPN)'],
+    nota: 'Los partidos de la Selección Colombia van por señal abierta (Caracol y RCN); Win Sports NO los lleva. DirecTV/DGO tiene los 104.' },
+  { code: 'CL', flag: '🇨🇱', nombre: 'Chile',
+    abierta: ['Chilevisión'], paga: ['DSports / DirecTV'],
+    streaming: ['DGO', 'Paramount+', 'Disney+ (plan Premium)'],
+    nota: 'El canal abierto en Chile es Chilevisión (no Mega). Pasa partidos seleccionados; DSports/DGO tiene el torneo completo.' },
+  { code: 'PE', flag: '🇵🇪', nombre: 'Perú',
+    abierta: ['América TV'], paga: ['DSports / DirecTV'],
+    streaming: ['América tvGO', 'DGO', 'Paramount+', 'Disney+ (plan Premium)'],
+    nota: 'América TV pasa ~40 partidos gratis (también por América tvGO). DSports/DGO tiene los 104.' },
+  { code: 'EC', flag: '🇪🇨', nombre: 'Ecuador',
+    abierta: ['Teleamazonas'], paga: ['DSports / DirecTV'],
+    streaming: ['DGO', 'Paramount+', 'Disney+ (plan Premium)'],
+    nota: 'Teleamazonas es el único canal abierto: ~40 partidos, incluidos los 3 de la Tri en fase de grupos. DSports/DGO tiene los 104.' },
+  { code: 'ES', flag: '🇪🇸', nombre: 'España',
+    abierta: ['RTVE (La 1 y Teledeporte)', 'RTVE Play (gratis)'], paga: ['Mediapro (canal Gol Mundial)'],
+    streaming: ['DAZN (los 104 partidos)'],
+    nota: 'RTVE pasa en abierto y gratis todos los de España, el inaugural, las semifinales y la final (~33 partidos). Para los 104 completos, DAZN.' },
+  { code: 'US', flag: '🇺🇸', nombre: 'Estados Unidos',
+    abierta: ['Fox (en inglés)', 'Telemundo (en español)'], paga: ['FS1 (inglés)', 'Universo (español)'],
+    streaming: ['Peacock (en español, los 104)', 'Fox Sports app / Fox One (inglés)', 'Tubi (gratis, partidos selectos)'],
+    nota: 'En español: Telemundo pasa la mayoría en abierto y Peacock tiene los 104 en streaming. En inglés: Fox y FS1, con algunos partidos gratis en Tubi.' },
+];
+
+const title = 'Dónde ver el Mundial 2026: canales de TV y streaming por país | Hacé Cuentas';
+const description = 'Por dónde ver el Mundial 2026 en cada país: canales de TV abierta, TV paga y streaming en Argentina, México, Colombia, Chile, Perú, Ecuador, España y Estados Unidos. Datos verificados.';
+
+const faqItems = [
+  { q: '¿Dónde puedo ver el Mundial 2026 en Argentina?', a: 'En Argentina el Mundial 2026 se ve por TV abierta en Telefe y la TV Pública (incluidos los partidos de la Selección), por TV paga en TyC Sports y DSports/DirecTV, y en streaming por DGO y Disney+ (plan Premium, vía ESPN).' },
+  { q: '¿Cómo ver todos los partidos del Mundial 2026 gratis?', a: 'Por TV abierta (gratis) cada país pasa una parte de los partidos: en Argentina Telefe y TV Pública; en México TelevisaUnivisión y TV Azteca; en Colombia Caracol y RCN; en España RTVE (y RTVE Play gratis). El canal abierto no pasa los 104 partidos: para el torneo completo hace falta una opción de paga o streaming.' },
+  { q: '¿Qué canal transmite el Mundial 2026 en México?', a: 'En México lo pasan en TV abierta TelevisaUnivisión (Canal 5, Las Estrellas, Canal 9) y TV Azteca (Azteca Uno y Azteca 7), con ~32 partidos. Para ver los 104 completos está ViX Premium con el Pase Mundial.' },
+  { q: '¿Dónde ver el Mundial 2026 en Colombia?', a: 'En Colombia, por TV abierta Caracol y RCN (que pasan los partidos de la Selección Colombia), por TV paga Win Sports y DirecTV, y en streaming DGO y Disney+ (plan Premium). DirecTV/DGO tiene los 104 partidos.' },
+  { q: '¿Dónde se ve el Mundial 2026 en España?', a: 'En España, RTVE (La 1 y Teledeporte) pasa en abierto y gratis todos los partidos de España, el inaugural, las semifinales y la final; también gratis por RTVE Play. Para los 104 partidos completos, DAZN (con el canal Gol Mundial de Mediapro).' },
+  { q: '¿Cómo ver el Mundial 2026 en Estados Unidos en español?', a: 'En Estados Unidos, en español lo pasa Telemundo (la mayoría de los partidos en abierto) y Universo, y Peacock tiene los 104 partidos en streaming. En inglés, Fox y FS1, con algunos partidos gratis en Tubi.' },
+  { q: '¿Cuántos partidos pasan por TV abierta?', a: 'Varía por país, pero ningún canal abierto pasa los 104. Lo habitual es que la TV abierta lleve los partidos de la selección local, el inaugural, las semifinales y la final, más una selección por jornada. El resto queda en TV paga o streaming.' },
+  { q: '¿De dónde salen estos datos?', a: `De los anuncios oficiales de los broadcasters y fuentes verificadas (anexo de derechos de transmisión de Wikipedia, El Universo, CBS News, Sportcal y los sitios de cada canal). Última verificación: ${DATA_AS_OF}. Si un canal no aparece, es porque no encontramos fuente confiable que confirme que tiene los derechos.` },
+];
+
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Mundial 2026', item: `${SITE}/mundial-2026` },
+    { '@type': 'ListItem', position: 3, name: 'Dónde ver', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faqItems.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+---
+
+<Layout title={title} description={description} canonical="/donde-ver-mundial-2026" audience="global" schema={schema}>
+  <Header slot="header" />
+  <main class="article-main">
+    <article class="dv-page">
+      <header class="dv-header">
+        <nav class="crumbs"><a href="/">Inicio</a> <span>›</span> <a href="/mundial-2026">Mundial 2026</a> <span>›</span> <span>Dónde ver</span></nav>
+        <div class="dv-eyebrow">📺 Mundial 2026 · TV y streaming</div>
+        <h1>Dónde ver el Mundial 2026: canales por país</h1>
+        <p class="lede">Por dónde ver el <strong>Mundial 2026</strong> en cada país: <strong>TV abierta, TV paga y streaming</strong>. Elegí tu país abajo. Solo incluimos canales con derechos confirmados.</p>
+      </header>
+
+      {todayMatches.length > 0 && (
+        <section class="dv-today" aria-labelledby="dv-today-h">
+          <h2 id="dv-today-h">⚽ Partidos de hoy</h2>
+          <ul class="dv-today-list">
+            {todayMatches.map((m) => {
+              const t1 = teamLabel(m.team1); const t2 = teamLabel(m.team2); const r = result(m);
+              return (
+                <li>
+                  <span class="dv-t-time">{artTime(m.date, m.time)}</span>
+                  <span class="dv-t-stage">{m.group ? m.group.replace('Group', 'Gr.') : roundLabel(m.round)}</span>
+                  <span class="dv-t-match">{t1.flag} {t1.es} <b>{r ? `${r.a}–${r.b}` : 'vs'}</b> {t2.es} {t2.flag}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <p class="dv-today-note">Horarios en hora de Argentina (UTC-3). ¿Buscás el detalle minuto a minuto? <a href="/partidos-hoy-mundial-2026">Partidos de hoy en vivo →</a></p>
+        </section>
+      )}
+
+      <section aria-labelledby="dv-paises-h">
+        <h2 id="dv-paises-h">Dónde verlo según tu país</h2>
+        <div class="dv-grid">
+          {PAISES.map((p) => (
+            <div class="dv-card" id={`pais-${p.code.toLowerCase()}`}>
+              <h3 class="dv-card-h"><span class="dv-flag">{p.flag}</span> {p.nombre}</h3>
+              <dl class="dv-rows">
+                <div><dt>📡 TV abierta</dt><dd>{p.abierta.join(' · ')}</dd></div>
+                <div><dt>💳 TV paga</dt><dd>{p.paga.join(' · ')}</dd></div>
+                <div><dt>📱 Streaming</dt><dd>{p.streaming.join(' · ')}</dd></div>
+              </dl>
+              {p.nota && <p class="dv-card-note">{p.nota}</p>}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="dv-links">
+        <h2>Seguí el Mundial</h2>
+        <ul>
+          <li><a href="/partidos-hoy-mundial-2026">📆 Partidos de hoy y horarios (hora ARG)</a></li>
+          <li><a href="/fixture-mundial-2026">📅 Fixture completo</a></li>
+          <li><a href="/posiciones-mundial-2026">📊 Tabla de posiciones</a></li>
+          <li><a href="/goleadores-mundial-2026">⚽ Goleadores</a></li>
+          <li><a href="/cuando-juega-argentina-mundial-2026">🇦🇷 Cuándo juega Argentina</a></li>
+          <li><a href="/mundial-2026">🏆 Todas las calculadoras del Mundial</a></li>
+        </ul>
+      </section>
+
+      <section class="dv-faq">
+        <h2>Preguntas frecuentes</h2>
+        {faqItems.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+      </section>
+
+      <p class="dv-source">Datos de derechos de transmisión verificados (jun-2026) contra los anuncios oficiales de los broadcasters, el anexo de derechos del Mundial 2026 de Wikipedia, El Universo, CBS News y Sportcal. Última revisión: {DATA_AS_OF}. Las grillas y horarios pueden ajustarse: confirmá con tu proveedor.</p>
+    </article>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .dv-page { max-width: 860px; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+  .crumbs { font-size: 0.8rem; color: var(--text-subtle); margin-bottom: 0.6rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  .dv-eyebrow { font-size: 0.8rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; }
+  .dv-header h1 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); font-weight: 800; margin: 0.3rem 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.5rem; }
+  .dv-page h2 { font-size: 1.3rem; font-weight: 700; margin: 2rem 0 1rem; }
+  .dv-today { background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem 1rem 1rem; }
+  .dv-today-list { list-style: none; padding: 0; margin: 0; }
+  .dv-today-list li { display: grid; grid-template-columns: 3.4rem 3rem 1fr; align-items: center; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .dv-t-time { font-weight: 700; color: var(--accent); }
+  .dv-t-stage { font-size: 0.72rem; color: var(--text-subtle); }
+  .dv-today-note { font-size: 0.82rem; color: var(--text-subtle); margin: 0.6rem 0 0; }
+  .dv-today-note a { color: var(--accent); }
+  .dv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.9rem; }
+  .dv-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; }
+  .dv-card-h { display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; font-weight: 700; margin: 0 0 0.6rem; }
+  .dv-flag { font-size: 1.3rem; }
+  .dv-rows { margin: 0; }
+  .dv-rows > div { padding: 0.35rem 0; border-bottom: 1px dashed var(--border); }
+  .dv-rows > div:last-child { border-bottom: 0; }
+  .dv-rows dt { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-subtle); font-weight: 700; }
+  .dv-rows dd { margin: 0.15rem 0 0; font-size: 0.92rem; line-height: 1.4; }
+  .dv-card-note { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin: 0.6rem 0 0; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+  .dv-links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .dv-links ul { grid-template-columns: 1fr 1fr; } }
+  .dv-links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .dv-faq { margin-top: 2rem; }
+  .dv-faq details { border-bottom: 1px solid var(--border); padding: 0.7rem 0; }
+  .dv-faq summary { font-weight: 600; cursor: pointer; }
+  .dv-faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+  .dv-source { font-size: 0.78rem; color: var(--text-subtle); margin-top: 2rem; }
+</style>
