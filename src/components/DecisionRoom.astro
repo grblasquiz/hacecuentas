@@ -310,7 +310,13 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
   }
 </script>
 
-<style>
+<!--
+  is:global a propósito: el resultado se re-renderiza por innerHTML desde el
+  script cliente, y los nodos nuevos NO llevan el data-astro-cid del scope, así
+  que el CSS scopeado no los alcanzaría (quedaría "sin diseño" tras Analizar).
+  Todos los selectores están namespaceados bajo .dr-* → seguro como global.
+-->
+<style is:global>
   .dr {
     display: flex;
     flex-direction: column;
