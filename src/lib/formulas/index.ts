@@ -173,6 +173,7 @@ import { compute as compute__aporte_mutual_empresa_comparar_ist_asociacion_chile
 import { compute as compute__aporte_onp_afp_independiente_peru } from './aporte-onp-afp-independiente-peru';
 import { compute as compute__aporte_previsional_solidario_aps_chile } from './aporte-previsional-solidario-aps-chile';
 import { compute as compute__aporte_trabajador_honorarios_chile_cotizacion_obligatoria } from './aporte-trabajador-honorarios-chile-cotizacion-obligatoria';
+import { compute as compute__aporte_voluntario_iess_ecuador } from './aporte-voluntario-iess-ecuador';
 import { compute as compute__aportes_arl_colombia_empleador_empleado_riesgo } from './aportes-arl-colombia-empleador-empleado-riesgo';
 import { aportesPatronalesCargasSociales } from './aportes-patronales-cargas-sociales';
 import { compute as compute__aposentadoria_inss_2026_tempo_contribuicao } from './aposentadoria-inss-2026-tempo-contribuicao';
@@ -1193,6 +1194,7 @@ import { decimoTerceiroPrimeiraParcela } from './decimo-terceiro-primeira-parcel
 import { decimoTerceiroProporcional } from './decimo-terceiro-proporcional';
 import { decimoTerceiroSegundaParcela } from './decimo-terceiro-segunda-parcela';
 import { compute as compute__decimo_tercer_sueldo_ecuador } from './decimo-tercer-sueldo-ecuador';
+import { compute as compute__decimos_mensualizado_vs_acumulado_ecuador } from './decimos-mensualizado-vs-acumulado-ecuador';
 import { deckMaderaTablastornillos } from './deck-madera-tablas-tornillos';
 import { deduccionAlquilerGanancias40Porciento } from './deduccion-alquiler-ganancias-40-porciento';
 import { compute as compute__deduccion_dependientes_colombia_renta_2026 } from './deduccion-dependientes-colombia-renta-2026';
@@ -2002,6 +2004,7 @@ import { ingestaSodioDiariaMgSalHipertension } from './ingesta-sodio-diaria-mg-s
 import { inglesNivelMcerHorasEstudioFsi } from './ingles-nivel-mcer-horas-estudio-fsi';
 import { inglesNivelesCambridgeDuolingoTiempoConversion } from './ingles-niveles-cambridge-duolingo-tiempo-conversion';
 import { ingredientesBudinVainillaCaseroAdaptar } from './ingredientes-budin-vainilla-casero-adaptar';
+import { compute as compute__ingreso_anual_total_decimos_ecuador } from './ingreso-anual-total-decimos-ecuador';
 import { ingresoColegioPrivadoCuotaAnualCaba } from './ingreso-colegio-privado-cuota-anual-caba';
 import { ingresoMedicinaPuntajeCbcUba2026 } from './ingreso-medicina-puntaje-cbc-uba-2026';
 import { compute as compute__ingreso_minimo_credito_hipotecario_uva_banco_nacion } from './ingreso-minimo-credito-hipotecario-uva-banco-nacion';
@@ -2142,6 +2145,7 @@ import { compute as compute__jubilacion_espana_2026_pension_anos_cotizados } fro
 import { jubilacionHaberMinimoMovilidad } from './jubilacion-haber-minimo-movilidad';
 import { compute as compute__jubilacion_iess_ecuador } from './jubilacion-iess-ecuador';
 import { jubilacionMinima } from './jubilacion-minima';
+import { compute as compute__jubilacion_patronal_ecuador } from './jubilacion-patronal-ecuador';
 import { jubilacionPuaPrestacionUniversalAdultoMayor } from './jubilacion-pua-prestacion-universal-adulto-mayor';
 import { jugoPorInvitadoBautismo } from './jugo-por-invitado-bautismo';
 import { juntasPastinaRejuntadoCeramicosKg } from './juntas-pastina-rejuntado-ceramicos-kg';
@@ -2405,6 +2409,7 @@ import { mudanzaCajasEstimacion } from './mudanza-cajas-estimacion';
 import { mudanzaCostoFleteCamionetaKmCaja } from './mudanza-costo-flete-camioneta-km-caja';
 import { mudanzaPrecioKilometrosM3Cuadro } from './mudanza-precio-kilometros-m3-cuadro';
 import { mulchingEspesorCantidad } from './mulching-espesor-cantidad';
+import { compute as compute__multa_interes_mora_sri_ecuador } from './multa-interes-mora-sri-ecuador';
 import { compute as compute__multa_no_aviso_uoct_transito_comuna_chile_2026 } from './multa-no-aviso-uoct-transito-comuna-chile-2026';
 import { multaTransitoPuntosLicencia } from './multa-transito-puntos-licencia';
 import { multaTransitoValor } from './multa-transito-valor';
@@ -2966,6 +2971,7 @@ import { reachFrequencyGrpMedios } from './reach-frequency-grp-medios';
 import { reactanciaInductivaCapacitiva } from './reactancia-inductiva-capacitiva';
 import { reajusteArriendoChileIpc } from './reajuste-arriendo-chile-ipc';
 import { compute as compute__reajuste_arriendo_ipc_chile } from './reajuste-arriendo-ipc-chile';
+import { compute as compute__rebaja_gastos_personales_ecuador } from './rebaja-gastos-personales-ecuador';
 import { rebalanceoPortafolio } from './rebalanceo-portafolio';
 import { compute as compute__recargo_dominical_festivo_colombia_2026 } from './recargo-dominical-festivo-colombia-2026';
 import { compute as compute__recargo_equivalencia_comerciantes_espana } from './recargo-equivalencia-comerciantes-espana';
@@ -3083,6 +3089,7 @@ import { compute as compute__retencion_fuente_arrendamientos_colombia_2026 } fro
 import { compute as compute__retencion_fuente_compras_servicios_2026 } from './retencion-fuente-compras-servicios-2026';
 import { compute as compute__retencion_fuente_dependencia_ecuador } from './retencion-fuente-dependencia-ecuador';
 import { retencionGananciasSiradigTrabajador } from './retencion-ganancias-siradig-trabajador';
+import { compute as compute__retencion_honorarios_profesionales_ecuador } from './retencion-honorarios-profesionales-ecuador';
 import { retencionPlataformasDigitalesMexico2026 } from './retencion-plataformas-digitales-mexico-2026';
 import { compute as compute__retencion_procedimiento_2_colombia_2026 } from './retencion-procedimiento-2-colombia-2026';
 import { retencionRg2616ProveedorMonotributo } from './retencion-rg2616-proveedor-monotributo';
@@ -3171,6 +3178,7 @@ import { salarioMinimoParaguay2026 } from './salario-minimo-paraguay-2026';
 import { compute as compute__salario_neto_colombia_2026_bruto_a_neto } from './salario-neto-colombia-2026-bruto-a-neto';
 import { salarioNetoRepublicaDominicana } from './salario-neto-republica-dominicana';
 import { compute as compute__salario_por_hora_dia_peru } from './salario-por-hora-dia-peru';
+import { compute as compute__salario_por_hora_ecuador } from './salario-por-hora-ecuador';
 import { salarioPorHoraMensualDiarioMexico } from './salario-por-hora-mensual-diario-mexico';
 import { salarioRealInflacion } from './salario-real-inflacion';
 import { salarioVacacionalUruguay } from './salario-vacacional-uruguay';
@@ -3289,6 +3297,7 @@ import { compute as compute__streaming_vs_batch_llm_latencia_costo_tradeoff } fr
 import { compute as compute__student_loan_payoff_time_calculator } from './student-loan-payoff-time-calculator';
 import { compute as compute__stylecraze_peso_ideal_women_formula_altura } from './stylecraze-peso-ideal-women-formula-altura';
 import { subnettingMascaraRedCidr } from './subnetting-mascara-red-cidr';
+import { compute as compute__subsidio_enfermedad_iess_ecuador } from './subsidio-enfermedad-iess-ecuador';
 import { compute as compute__subsidio_incapacidad_temporal_essalud_peru } from './subsidio-incapacidad-temporal-essalud-peru';
 import { compute as compute__subsidio_mayores_52_anos_espana_cuantia_meses } from './subsidio-mayores-52-anos-espana-cuantia-meses';
 import { compute as compute__subsidio_vivienda_mi_casa_ya_colombia_2026 } from './subsidio-vivienda-mi-casa-ya-colombia-2026';
@@ -3591,6 +3600,7 @@ import { upworkFreelancerComisionNetaArgentina } from './upwork-freelancer-comis
 import { usdtVsUsdcComisionExchange } from './usdt-vs-usdc-comision-exchange';
 import { compute as compute__utilidades_ecuador } from './utilidades-ecuador';
 import { compute as compute__utilidades_peru } from './utilidades-peru';
+import { compute as compute__utilidades_tope_iess_ecuador } from './utilidades-tope-iess-ecuador';
 import { uvaHipotecaVsInflacionRiesgo } from './uva-hipoteca-vs-inflacion-riesgo';
 import { vacaciones } from './vacaciones';
 import { vacacionesBarilochePresupuesto7DiasFamilia } from './vacaciones-bariloche-presupuesto-7-dias-familia';
@@ -3934,6 +3944,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aporte-onp-afp-independiente-peru': compute__aporte_onp_afp_independiente_peru,
   'aporte-previsional-solidario-aps-chile': compute__aporte_previsional_solidario_aps_chile,
   'aporte-trabajador-honorarios-chile-cotizacion-obligatoria': compute__aporte_trabajador_honorarios_chile_cotizacion_obligatoria,
+  'aporte-voluntario-iess-ecuador': compute__aporte_voluntario_iess_ecuador,
   'aportes-arl-colombia-empleador-empleado-riesgo': compute__aportes_arl_colombia_empleador_empleado_riesgo,
   'aportes-patronales-cargas-sociales': aportesPatronalesCargasSociales,
   'aposentadoria-inss-2026-tempo-contribuicao': compute__aposentadoria_inss_2026_tempo_contribuicao,
@@ -4954,6 +4965,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'decimo-terceiro-proporcional': decimoTerceiroProporcional,
   'decimo-terceiro-segunda-parcela': decimoTerceiroSegundaParcela,
   'decimo-tercer-sueldo-ecuador': compute__decimo_tercer_sueldo_ecuador,
+  'decimos-mensualizado-vs-acumulado-ecuador': compute__decimos_mensualizado_vs_acumulado_ecuador,
   'deck-madera-tablas-tornillos': deckMaderaTablastornillos,
   'deduccion-alquiler-ganancias-40-porciento': deduccionAlquilerGanancias40Porciento,
   'deduccion-dependientes-colombia-renta-2026': compute__deduccion_dependientes_colombia_renta_2026,
@@ -5763,6 +5775,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ingles-nivel-mcer-horas-estudio-fsi': inglesNivelMcerHorasEstudioFsi,
   'ingles-niveles-cambridge-duolingo-tiempo-conversion': inglesNivelesCambridgeDuolingoTiempoConversion,
   'ingredientes-budin-vainilla-casero-adaptar': ingredientesBudinVainillaCaseroAdaptar,
+  'ingreso-anual-total-decimos-ecuador': compute__ingreso_anual_total_decimos_ecuador,
   'ingreso-colegio-privado-cuota-anual-caba': ingresoColegioPrivadoCuotaAnualCaba,
   'ingreso-medicina-puntaje-cbc-uba-2026': ingresoMedicinaPuntajeCbcUba2026,
   'ingreso-minimo-credito-hipotecario-uva-banco-nacion': compute__ingreso_minimo_credito_hipotecario_uva_banco_nacion,
@@ -5903,6 +5916,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'jubilacion-haber-minimo-movilidad': jubilacionHaberMinimoMovilidad,
   'jubilacion-iess-ecuador': compute__jubilacion_iess_ecuador,
   'jubilacion-minima': jubilacionMinima,
+  'jubilacion-patronal-ecuador': compute__jubilacion_patronal_ecuador,
   'jubilacion-pua-prestacion-universal-adulto-mayor': jubilacionPuaPrestacionUniversalAdultoMayor,
   'jugo-por-invitado-bautismo': jugoPorInvitadoBautismo,
   'juntas-pastina-rejuntado-ceramicos-kg': juntasPastinaRejuntadoCeramicosKg,
@@ -6166,6 +6180,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'mudanza-costo-flete-camioneta-km-caja': mudanzaCostoFleteCamionetaKmCaja,
   'mudanza-precio-kilometros-m3-cuadro': mudanzaPrecioKilometrosM3Cuadro,
   'mulching-espesor-cantidad': mulchingEspesorCantidad,
+  'multa-interes-mora-sri-ecuador': compute__multa_interes_mora_sri_ecuador,
   'multa-no-aviso-uoct-transito-comuna-chile-2026': compute__multa_no_aviso_uoct_transito_comuna_chile_2026,
   'multa-transito-puntos-licencia': multaTransitoPuntosLicencia,
   'multa-transito-valor': multaTransitoValor,
@@ -6727,6 +6742,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'reactancia-inductiva-capacitiva': reactanciaInductivaCapacitiva,
   'reajuste-arriendo-chile-ipc': reajusteArriendoChileIpc,
   'reajuste-arriendo-ipc-chile': compute__reajuste_arriendo_ipc_chile,
+  'rebaja-gastos-personales-ecuador': compute__rebaja_gastos_personales_ecuador,
   'rebalanceo-portafolio': rebalanceoPortafolio,
   'recargo-dominical-festivo-colombia-2026': compute__recargo_dominical_festivo_colombia_2026,
   'recargo-equivalencia-comerciantes-espana': compute__recargo_equivalencia_comerciantes_espana,
@@ -6844,6 +6860,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'retencion-fuente-compras-servicios-2026': compute__retencion_fuente_compras_servicios_2026,
   'retencion-fuente-dependencia-ecuador': compute__retencion_fuente_dependencia_ecuador,
   'retencion-ganancias-siradig-trabajador': retencionGananciasSiradigTrabajador,
+  'retencion-honorarios-profesionales-ecuador': compute__retencion_honorarios_profesionales_ecuador,
   'retencion-plataformas-digitales-mexico-2026': retencionPlataformasDigitalesMexico2026,
   'retencion-procedimiento-2-colombia-2026': compute__retencion_procedimiento_2_colombia_2026,
   'retencion-rg2616-proveedor-monotributo': retencionRg2616ProveedorMonotributo,
@@ -6932,6 +6949,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'salario-neto-colombia-2026-bruto-a-neto': compute__salario_neto_colombia_2026_bruto_a_neto,
   'salario-neto-republica-dominicana': salarioNetoRepublicaDominicana,
   'salario-por-hora-dia-peru': compute__salario_por_hora_dia_peru,
+  'salario-por-hora-ecuador': compute__salario_por_hora_ecuador,
   'salario-por-hora-mensual-diario-mexico': salarioPorHoraMensualDiarioMexico,
   'salario-real-inflacion': salarioRealInflacion,
   'salario-vacacional-uruguay': salarioVacacionalUruguay,
@@ -7050,6 +7068,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'student-loan-payoff-time-calculator': compute__student_loan_payoff_time_calculator,
   'stylecraze-peso-ideal-women-formula-altura': compute__stylecraze_peso_ideal_women_formula_altura,
   'subnetting-mascara-red-cidr': subnettingMascaraRedCidr,
+  'subsidio-enfermedad-iess-ecuador': compute__subsidio_enfermedad_iess_ecuador,
   'subsidio-incapacidad-temporal-essalud-peru': compute__subsidio_incapacidad_temporal_essalud_peru,
   'subsidio-mayores-52-anos-espana-cuantia-meses': compute__subsidio_mayores_52_anos_espana_cuantia_meses,
   'subsidio-vivienda-mi-casa-ya-colombia-2026': compute__subsidio_vivienda_mi_casa_ya_colombia_2026,
@@ -7352,6 +7371,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'usdt-vs-usdc-comision-exchange': usdtVsUsdcComisionExchange,
   'utilidades-ecuador': compute__utilidades_ecuador,
   'utilidades-peru': compute__utilidades_peru,
+  'utilidades-tope-iess-ecuador': compute__utilidades_tope_iess_ecuador,
   'uva-hipoteca-vs-inflacion-riesgo': uvaHipotecaVsInflacionRiesgo,
   'vacaciones': vacaciones,
   'vacaciones-bariloche-presupuesto-7-dias-familia': vacacionesBarilochePresupuesto7DiasFamilia,

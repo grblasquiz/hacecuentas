@@ -64,6 +64,14 @@ def published_today(c, tier):
     return row['n']
 
 
+def published_today_total(c):
+    today = now()[:10]
+    row = c.execute(
+        "SELECT COUNT(*) n FROM links WHERE substr(created_at,1,10)=? "
+        "AND status IN ('published','verified_live')", (today,)).fetchone()
+    return row['n']
+
+
 def live_tier1_urls(c, limit=200):
     rows = c.execute(
         "SELECT published_url FROM links WHERE tier=1 AND published_url IS NOT NULL "

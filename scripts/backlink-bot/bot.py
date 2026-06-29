@@ -23,6 +23,7 @@ import db                       # noqa: E402
 import spinner                  # noqa: E402
 import indexer                  # noqa: E402
 import verify as verifier       # noqa: E402
+import parasite as parasite_mod  # noqa: E402
 from webreq import get_json     # noqa: E402
 from publishers import REGISTRY  # noqa: E402
 
@@ -124,19 +125,24 @@ def run_once(dry=False):
             if url:
                 published_urls.append(url)
 
-    for tier in (1, 2):
-        cap = cap_for(tier)
-        already = db.published_today(c, tier)
-        budget = max(0, cap - already)
-        plats = list(by_tier[tier])
-        rng.shuffle(plats)   # varía qué plataforma arranca (reparto parejo en el resto)
-        if not plats or budget == 0:
-            print(f'tier{tier}: cap={cap} ya_hoy={already} budget=0 → skip')
-            continue
-        print(f'tier{tier}: cap={cap} ya_hoy={already} budget={budget} plataformas={plats}')
+    # --- relleno hasta el TARGET DIARIO con Telegraph (volumen barato) ---
+    # Las premium (dofollow de valor) ya se postearon arriba y cuentan para el target.
+    target_total = CFG.get('daily_target', 10)
+    fill = max(0, target_total - db.published_today_total(c))
+    # repartir el relleno: ~1 de cada 4 a tier1 (telegra.ph→site), resto tier2 (graph.org→tier1)
+    n_t1 = max(1, fill // 4) if fill else 0
+    plan = [1] * n_t1 + [2] * (fill - n_t1)
+    print(f'relleno Telegraph: target={target_total} ya_hoy={db.published_today_total(c)} '
+          f'→ {fill} ({n_t1} tier1 + {fill - n_t1} tier2)')
 
-        for i in range(budget):
-            platform = plats[i % len(plats)]   # round-robin: reparte parejo entre plataformas
+    for tier in plan:
+        plats = list(by_tier[tier])
+        if plats:
+            rng.shuffle(plats)
+        if True:
+            platform = plats[0] if plats else None
+            if not platform:
+                continue
             mod = REGISTRY[platform]
 
             if tier == 1:
@@ -179,6 +185,40 @@ def run_once(dry=False):
     return published_urls
 
 
+def parasite(topic_key, dry=False):
+    """Publica un artículo keyword-targeted en TODOS los hosts parasite a la vez (SERP domination)."""
+    c = db.conn()
+    hosts = CFG.get('parasite_hosts', ['blogger', 'wpcom', 'github', 'telegraph', 'graphorg'])
+    rng = random.Random()
+    if topic_key not in parasite_mod.topic_keys():
+        print(f'topic desconocido. Disponibles: {parasite_mod.topic_keys()}')
+        return []
+    t = parasite_mod.TOPICS[topic_key]
+    print(f'parasite "{topic_key}" → query: "{t["query"]}" → {t["target_url"]}')
+    urls = []
+    for host in hosts:
+        if host not in REGISTRY:
+            continue
+        article = parasite_mod.article_for(topic_key, seed=rng.random())
+        if dry:
+            print(f'  [dry] {host}'); continue
+        try:
+            url = REGISTRY[host].publish(article, CFG)
+        except Exception as e:
+            url = None; print(f'  ✗ {host} error: {e}')
+        st = 'published' if url else 'failed'
+        db.record(c, target_url=t['target_url'], anchor=article['anchor'], platform=host,
+                  tier=1, published_url=url, status=st, title=article['title'],
+                  note=f'parasite:{topic_key}')
+        print(f'  {"✓" if url else "✗"} {host} → {url or "no publicó"}')
+        if url:
+            urls.append(url)
+    if urls and not dry:
+        indexer.index_new(urls, c)
+    print(f'parasite: {len(urls)} hosts publicados para "{t["query"]}"')
+    return urls
+
+
 def report():
     c = db.conn()
     total = c.execute("SELECT COUNT(*) n FROM links").fetchone()['n']
@@ -202,7 +242,8 @@ def report():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['run', 'verify', 'report'])
+    ap.add_argument('cmd', choices=['run', 'verify', 'report', 'parasite'])
+    ap.add_argument('topic', nargs='?', help='topic key para parasite')
     ap.add_argument('--dry', action='store_true')
     args = ap.parse_args()
     if args.cmd == 'run':
@@ -211,6 +252,17 @@ def main():
         verifier.run()
     elif args.cmd == 'report':
         report()
+    elif args.cmd == 'parasite':
+        topic = args.topic
+        if not topic:
+            # auto-rotación: el cron semanal elige el siguiente topic solo
+            keys = parasite_mod.topic_keys()
+            c = db.conn()
+            idx = int(db.kv_get(c, 'parasite_rotate_idx', '0') or '0')
+            topic = keys[idx % len(keys)]
+            db.kv_set(c, 'parasite_rotate_idx', str(idx + 1))
+            print(f'auto-rotate → topic "{topic}"')
+        parasite(topic, dry=args.dry)
 
 
 if __name__ == '__main__':
