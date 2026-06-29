@@ -65,6 +65,7 @@ import { aguinaldoMexico } from './aguinaldo-mexico';
 import { compute as compute__aguinaldo_mexico_2026_15_dias_tope_30 } from './aguinaldo-mexico-2026-15-dias-tope-30';
 import { aguinaldoMexicoNeto } from './aguinaldo-mexico-neto';
 import { aguinaldoProporcionalParaguay } from './aguinaldo-proporcional-paraguay';
+import { aguinaldoProporcionalRenunciaMexico } from './aguinaldo-proporcional-renuncia-mexico';
 import { aguinaldoUruguay } from './aguinaldo-uruguay';
 import { ahorroAguaDuchasCortasMes } from './ahorro-agua-duchas-cortas-mes';
 import { ahorroAutoElectricoVsNaftaAnual } from './ahorro-auto-electrico-vs-nafta-anual';
@@ -226,6 +227,7 @@ import { aumentoAlquilerTrimestralCuatrimestralSemestral } from './aumento-alqui
 import { aumentoAlturaAdolescentePrediccion } from './aumento-altura-adolescente-prediccion';
 import { aumentoPesoEmbarazoImcSemana } from './aumento-peso-embarazo-imc-semana';
 import { compute as compute__aumento_salario_2026_colombia } from './aumento-salario-2026-colombia';
+import { autoContadoVsFinanciadoMexico } from './auto-contado-vs-financiado-mexico';
 import { compute as compute__auto_electrico_vs_nafta_tco_5_anos_argentina } from './auto-electrico-vs-nafta-tco-5-anos-argentina';
 import { autoUsadoValorDepreciacionAnosAntiguedad } from './auto-usado-valor-depreciacion-anos-antiguedad';
 import { compute as compute__autoconsumo_solar_compensacion_excedentes_espana } from './autoconsumo-solar-compensacion-excedentes-espana';
@@ -1233,6 +1235,7 @@ import { descensoProbabilidadMatematica } from './descenso-probabilidad-matemati
 import { descensoSerieAItalia } from './descenso-serie-a-italia';
 import { descuento } from './descuento';
 import { descuentoIps9Salario } from './descuento-ips-9-salario';
+import { descuentoPensionAlimenticiaNominaMexico } from './descuento-pension-alimenticia-nomina-mexico';
 import { descuentoPorcentajePrecio } from './descuento-porcentaje-precio';
 import { compute as compute__descuento_tardanzas_faltas_peru } from './descuento-tardanzas-faltas-peru';
 import { descuentoVolumenCantidad } from './descuento-volumen-cantidad';
@@ -1601,6 +1604,7 @@ import { finiquitoLiquidacionMexico } from './finiquito-liquidacion-mexico';
 import { finiquitoMexicoCalculo } from './finiquito-mexico-calculo';
 import { compute as compute__finiquito_mexico_completo_rescision_relacion } from './finiquito-mexico-completo-rescision-relacion';
 import { finiquitoRenunciaChile } from './finiquito-renuncia-chile';
+import { finiquitoVsLiquidacionComparadorMexico } from './finiquito-vs-liquidacion-comparador-mexico';
 import { compute as compute__fire_retirement_number_calculator } from './fire-retirement-number-calculator';
 import { fireRetiroTemprano } from './fire-retiro-temprano';
 import { flashNumeroGuiaDistancia } from './flash-numero-guia-distancia';
@@ -2064,6 +2068,7 @@ import { isnImpuestoNominasMexico } from './isn-impuesto-nominas-mexico';
 import { isoInvarianceCamaraModelo } from './iso-invariance-camara-modelo';
 import { compute as compute__isr_acciones_bolsa_mexico_10_por_ciento } from './isr-acciones-bolsa-mexico-10-por-ciento';
 import { compute as compute__isr_actividad_empresarial_persona_fisica_mexico_2026 } from './isr-actividad-empresarial-persona-fisica-mexico-2026';
+import { isrAguinaldoExentoGravadoMexico } from './isr-aguinaldo-exento-gravado-mexico';
 import { compute as compute__isr_anual_colombia_personas_naturales_cedulas } from './isr-anual-colombia-personas-naturales-cedulas';
 import { compute as compute__isr_anual_personas_fisicas_mexico_tarifa_2026 } from './isr-anual-personas-fisicas-mexico-tarifa-2026';
 import { compute as compute__isr_arrendamiento_arrendador_colombia_deducciones } from './isr-arrendamiento-arrendador-colombia-deducciones';
@@ -2077,8 +2082,11 @@ import { compute as compute__isr_personas_morales_mexico_30_porcentaje } from '.
 import { compute as compute__isr_premios_loteria_mexico_2026 } from './isr-premios-loteria-mexico-2026';
 import { compute as compute__isr_quincenal_mexico_2026 } from './isr-quincenal-mexico-2026';
 import { compute as compute__isr_rentas_de_capital_dividendos_intereses_colombia } from './isr-rentas-de-capital-dividendos-intereses-colombia';
+import { isrRetiroPprAforeVoluntarioAnticipadoMexico } from './isr-retiro-ppr-afore-voluntario-anticipado-mexico';
 import { isrSueldoMexico } from './isr-sueldo-mexico';
+import { isrVentaAutoUsadoPersonaFisicaMexico } from './isr-venta-auto-usado-persona-fisica-mexico';
 import { compute as compute__isr_venta_casa_mexico_700000_udis } from './isr-venta-casa-mexico-700000-udis';
+import { isrVentaTerrenoInmuebleComercialMexico } from './isr-venta-terreno-inmueble-comercial-mexico';
 import { itbaUtdtCostoCarreraAnualPrivada } from './itba-utdt-costo-carrera-anual-privada';
 import { itbiBeloHorizonte } from './itbi-belo-horizonte';
 import { itbiPortoAlegre } from './itbi-porto-alegre';
@@ -2800,6 +2808,7 @@ import { prestamoEstudiantilCuotas } from './prestamo-estudiantil-cuotas';
 import { compute as compute__prestamo_personal_chile_cae_cmf_cuota } from './prestamo-personal-chile-cae-cmf-cuota';
 import { compute as compute__prestamo_personal_cuota_mensual } from './prestamo-personal-cuota-mensual';
 import { prestamoPersonalGaliciaVsSantanderCuota } from './prestamo-personal-galicia-vs-santander-cuota';
+import { prestamoPersonalMensualidadCatMexico } from './prestamo-personal-mensualidad-cat-mexico';
 import { compute as compute__prestamo_personal_tae_tin_comparador_espana } from './prestamo-personal-tae-tin-comparador-espana';
 import { compute as compute__prestamo_personal_tcea_peru } from './prestamo-personal-tcea-peru';
 import { compute as compute__prestamo_quirografario_iess_ecuador } from './prestamo-quirografario-iess-ecuador';
@@ -3145,6 +3154,7 @@ import { compute as compute__salario_minimo_colombia_2026_auxilio_transporte } f
 import { salarioMinimoParaguay2026 } from './salario-minimo-paraguay-2026';
 import { compute as compute__salario_neto_colombia_2026_bruto_a_neto } from './salario-neto-colombia-2026-bruto-a-neto';
 import { salarioNetoRepublicaDominicana } from './salario-neto-republica-dominicana';
+import { salarioPorHoraMensualDiarioMexico } from './salario-por-hora-mensual-diario-mexico';
 import { salarioRealInflacion } from './salario-real-inflacion';
 import { salarioVacacionalUruguay } from './salario-vacacional-uruguay';
 import { compute as compute__salarios_minimos_a_pesos_colombia_2026 } from './salarios-minimos-a-pesos-colombia-2026';
@@ -3796,6 +3806,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aguinaldo-mexico-2026-15-dias-tope-30': compute__aguinaldo_mexico_2026_15_dias_tope_30,
   'aguinaldo-mexico-neto': aguinaldoMexicoNeto,
   'aguinaldo-proporcional-paraguay': aguinaldoProporcionalParaguay,
+  'aguinaldo-proporcional-renuncia-mexico': aguinaldoProporcionalRenunciaMexico,
   'aguinaldo-uruguay': aguinaldoUruguay,
   'ahorro-agua-duchas-cortas-mes': ahorroAguaDuchasCortasMes,
   'ahorro-auto-electrico-vs-nafta-anual': ahorroAutoElectricoVsNaftaAnual,
@@ -3957,6 +3968,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aumento-altura-adolescente-prediccion': aumentoAlturaAdolescentePrediccion,
   'aumento-peso-embarazo-imc-semana': aumentoPesoEmbarazoImcSemana,
   'aumento-salario-2026-colombia': compute__aumento_salario_2026_colombia,
+  'auto-contado-vs-financiado-mexico': autoContadoVsFinanciadoMexico,
   'auto-electrico-vs-nafta-tco-5-anos-argentina': compute__auto_electrico_vs_nafta_tco_5_anos_argentina,
   'auto-usado-valor-depreciacion-anos-antiguedad': autoUsadoValorDepreciacionAnosAntiguedad,
   'autoconsumo-solar-compensacion-excedentes-espana': compute__autoconsumo_solar_compensacion_excedentes_espana,
@@ -4964,6 +4976,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'descenso-serie-a-italia': descensoSerieAItalia,
   'descuento': descuento,
   'descuento-ips-9-salario': descuentoIps9Salario,
+  'descuento-pension-alimenticia-nomina-mexico': descuentoPensionAlimenticiaNominaMexico,
   'descuento-porcentaje-precio': descuentoPorcentajePrecio,
   'descuento-tardanzas-faltas-peru': compute__descuento_tardanzas_faltas_peru,
   'descuento-volumen-cantidad': descuentoVolumenCantidad,
@@ -5332,6 +5345,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'finiquito-mexico-calculo': finiquitoMexicoCalculo,
   'finiquito-mexico-completo-rescision-relacion': compute__finiquito_mexico_completo_rescision_relacion,
   'finiquito-renuncia-chile': finiquitoRenunciaChile,
+  'finiquito-vs-liquidacion-comparador-mexico': finiquitoVsLiquidacionComparadorMexico,
   'fire-retirement-number-calculator': compute__fire_retirement_number_calculator,
   'fire-retiro-temprano': fireRetiroTemprano,
   'flash-numero-guia-distancia': flashNumeroGuiaDistancia,
@@ -5795,6 +5809,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'iso-invariance-camara-modelo': isoInvarianceCamaraModelo,
   'isr-acciones-bolsa-mexico-10-por-ciento': compute__isr_acciones_bolsa_mexico_10_por_ciento,
   'isr-actividad-empresarial-persona-fisica-mexico-2026': compute__isr_actividad_empresarial_persona_fisica_mexico_2026,
+  'isr-aguinaldo-exento-gravado-mexico': isrAguinaldoExentoGravadoMexico,
   'isr-anual-colombia-personas-naturales-cedulas': compute__isr_anual_colombia_personas_naturales_cedulas,
   'isr-anual-personas-fisicas-mexico-tarifa-2026': compute__isr_anual_personas_fisicas_mexico_tarifa_2026,
   'isr-arrendamiento-arrendador-colombia-deducciones': compute__isr_arrendamiento_arrendador_colombia_deducciones,
@@ -5808,8 +5823,11 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'isr-premios-loteria-mexico-2026': compute__isr_premios_loteria_mexico_2026,
   'isr-quincenal-mexico-2026': compute__isr_quincenal_mexico_2026,
   'isr-rentas-de-capital-dividendos-intereses-colombia': compute__isr_rentas_de_capital_dividendos_intereses_colombia,
+  'isr-retiro-ppr-afore-voluntario-anticipado-mexico': isrRetiroPprAforeVoluntarioAnticipadoMexico,
   'isr-sueldo-mexico': isrSueldoMexico,
+  'isr-venta-auto-usado-persona-fisica-mexico': isrVentaAutoUsadoPersonaFisicaMexico,
   'isr-venta-casa-mexico-700000-udis': compute__isr_venta_casa_mexico_700000_udis,
+  'isr-venta-terreno-inmueble-comercial-mexico': isrVentaTerrenoInmuebleComercialMexico,
   'itba-utdt-costo-carrera-anual-privada': itbaUtdtCostoCarreraAnualPrivada,
   'itbi-belo-horizonte': itbiBeloHorizonte,
   'itbi-porto-alegre': itbiPortoAlegre,
@@ -6531,6 +6549,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'prestamo-personal-chile-cae-cmf-cuota': compute__prestamo_personal_chile_cae_cmf_cuota,
   'prestamo-personal-cuota-mensual': compute__prestamo_personal_cuota_mensual,
   'prestamo-personal-galicia-vs-santander-cuota': prestamoPersonalGaliciaVsSantanderCuota,
+  'prestamo-personal-mensualidad-cat-mexico': prestamoPersonalMensualidadCatMexico,
   'prestamo-personal-tae-tin-comparador-espana': compute__prestamo_personal_tae_tin_comparador_espana,
   'prestamo-personal-tcea-peru': compute__prestamo_personal_tcea_peru,
   'prestamo-quirografario-iess-ecuador': compute__prestamo_quirografario_iess_ecuador,
@@ -6876,6 +6895,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'salario-minimo-paraguay-2026': salarioMinimoParaguay2026,
   'salario-neto-colombia-2026-bruto-a-neto': compute__salario_neto_colombia_2026_bruto_a_neto,
   'salario-neto-republica-dominicana': salarioNetoRepublicaDominicana,
+  'salario-por-hora-mensual-diario-mexico': salarioPorHoraMensualDiarioMexico,
   'salario-real-inflacion': salarioRealInflacion,
   'salario-vacacional-uruguay': salarioVacacionalUruguay,
   'salarios-minimos-a-pesos-colombia-2026': compute__salarios_minimos_a_pesos_colombia_2026,
