@@ -4,16 +4,16 @@ export interface Inputs {
   nombre: string;
   fecha_nacimiento: string; // YYYY-MM-DD
   sexo: 'H' | 'M';
-  entidad_nacimiento: string; // clave 2 letras
+  entidad_nacimiento: string; // clave 2 letras (ej. DF, JC, NL)
 }
 
 export interface Componentes {
-  apellidos: string; // 3 caracteres
-  nombre: string; // 1 carácter
-  fecha_nacimiento: string; // 6 caracteres YYMMDD
-  sexo: string; // 1 carácter
-  entidad: string; // 2 caracteres
-  folio: string; // 3 caracteres (hipotético 000)
+  iniciales: string;        // pos 1-4
+  fecha_nacimiento: string; // pos 5-10 (YYMMDD)
+  sexo: string;             // pos 11
+  entidad: string;          // pos 12-13
+  consonantes_internas: string; // pos 14-16
+  homoclave: string;        // pos 17 (asignada por RENAPO — no derivable)
 }
 
 export interface Outputs {
@@ -25,204 +25,148 @@ export interface Outputs {
   _insight?: any;
 }
 
-function normalizarTexto(texto: string): string {
-  // Elimina espacios, guiones, tildes y convierte a mayúsculas
-  return texto
-    .trim()
-    .toUpperCase()
-    .replace(/[\s\-]/g, '')
-    .replace(/Á/g, 'A')
-    .replace(/É/g, 'E')
-    .replace(/Í/g, 'I')
-    .replace(/Ó/g, 'O')
-    .replace(/Ú/g, 'U')
-    .replace(/Ü/g, 'U')
-    .replace(/Ñ/g, 'N');
+const VOCALES = 'AEIOU';
+const CONSONANTES = 'BCDFGHJKLMNPQRSTVWXYZ';
+// Nombres de pila que se omiten para tomar el SIGUIENTE nombre (regla RENAPO).
+const NOMBRES_OMITIBLES = new Set(['MARIA', 'MA', 'JOSE', 'J']);
+// Palabras altisonantes: si las 4 iniciales forman una, la 2da letra pasa a X.
+const ALTISONANTES = new Set([
+  'BACA','BAKA','BUEI','BUEY','CACA','CACO','CAGA','CAGO','CAKA','CAKO','COGE','COGI','COJA','COJE','COJI','COJO','COLA','CULO',
+  'FALO','FETO','GETA','GUEI','GUEY','JOTO','KACA','KACO','KAGA','KAGO','KAKA','KAKO','KOGE','KOGI','KOJA','KOJE','KOJI','KOJO',
+  'KOLA','KULO','LILO','LOCA','LOCO','LOKA','LOKO','MAME','MAMO','MEAR','MEAS','MEON','MIAR','MION','MOCO','MOKO','MULA','MULO',
+  'NACA','NACO','PEDA','PEDO','PENE','PIPI','PITO','POPO','PUTA','PUTO','QULO','RATA','ROBA','ROBE','ROBO','RUIN','SENO','TETA',
+  'VACA','VAGA','VAGO','VAKA','VUEI','VUEY','WUEI','WUEY',
+]);
+
+function normalizar(texto: string): string {
+  // Mayúsculas, sin tildes; Ñ→X y dígitos/símbolos fuera. Se quitan partículas
+  // de enlace comunes (DE, LA, LOS, etc.) según convención RENAPO.
+  let t = (texto || '')
+    .trim().toUpperCase()
+    .replace(/Á/g, 'A').replace(/É/g, 'E').replace(/Í/g, 'I').replace(/Ó/g, 'O').replace(/Ú/g, 'U').replace(/Ü/g, 'U')
+    .replace(/Ñ/g, 'X');
+  // quitar partículas de enlace
+  t = ' ' + t + ' ';
+  for (const p of [' DE ', ' DEL ', ' LA ', ' LAS ', ' LOS ', ' Y ', ' MC ', ' MAC ', ' VON ', ' VAN ']) {
+    t = t.split(p).join(' ');
+  }
+  return t.replace(/[^A-Z ]/g, '').replace(/\s+/g, ' ').trim();
 }
 
-function obtenerConsonantes(texto: string): string {
-  const consonantes = 'BCDFGHJKLMNPQRSTVWXYZ';
-  return texto.split('').filter(c => consonantes.includes(c)).join('');
+function primeraVocalInterna(t: string): string {
+  for (let i = 1; i < t.length; i++) if (VOCALES.includes(t[i])) return t[i];
+  return 'X';
+}
+function primeraConsonanteInterna(t: string): string {
+  for (let i = 1; i < t.length; i++) if (CONSONANTES.includes(t[i])) return t[i];
+  return 'X';
+}
+function inicial(t: string): string {
+  return t.length > 0 ? t[0] : 'X';
 }
 
-function obtenerVocales(texto: string): string {
-  const vocales = 'AEIOU';
-  return texto.split('').filter(c => vocales.includes(c)).join('');
-}
-
-function extraerComponentesCurp(inputs: Inputs): Componentes {
-  const notas: string[] = [];
-  
-  // Normalizar entradas
-  const primerApellido = normalizarTexto(inputs.primer_apellido);
-  const segundoApellido = inputs.segundo_apellido ? normalizarTexto(inputs.segundo_apellido) : '';
-  const nombre = normalizarTexto(inputs.nombre);
-  
-  // Validación básica
-  if (primerApellido.length < 2) {
-    notas.push('Primer apellido muy corto (mín. 2 caracteres)');
-  }
-  if (nombre.length < 2) {
-    notas.push('Nombre muy corto (mín. 2 caracteres)');
-  }
-  
-  // Extrae componente 1-3: apellidos
-  let apellidosComp = '';
-  
-  // Inicial primer apellido
-  apellidosComp += primerApellido.charAt(0);
-  
-  // Primera consonante primer apellido
-  const consAp1 = obtenerConsonantes(primerApellido.substring(1));
-  apellidosComp += consAp1.length > 0 ? consAp1.charAt(0) : 'X';
-  
-  // Primera consonante segundo apellido (o X si no existe)
-  if (segundoApellido.length > 0) {
-    const consAp2 = obtenerConsonantes(segundoApellido);
-    apellidosComp += consAp2.length > 0 ? consAp2.charAt(0) : 'X';
-  } else {
-    apellidosComp += 'X';
-    notas.push('Sin segundo apellido: se usa X en posición 3');
-  }
-  
-  // Componente 4: primera consonante nombre
-  const consNombre = obtenerConsonantes(nombre);
-  const nombreComp = consNombre.length > 0 ? consNombre.charAt(0) : 'X';
-  
-  if (nombre.indexOf(' ') > -1) {
-    notas.push('Nombre compuesto detectado: se toma primera consonante del primer nombre');
-  }
-  
-  // Componente 5-10: fecha nacimiento YYMMDD
-  let fecha = '';
-  try {
-    const [year, month, day] = inputs.fecha_nacimiento.split('-');
-    const yyyy = parseInt(year);
-    const mm = month.padStart(2, '0');
-    const dd = day.padStart(2, '0');
-    
-    if (yyyy < 1900 || yyyy > new Date().getFullYear()) {
-      notas.push('Año de nacimiento fuera de rango válido (1900-presente)');
-    }
-    
-    const yy = yyyy.toString().substring(2).padStart(2, '0');
-    fecha = yy + mm + dd;
-  } catch (e) {
-    fecha = '000000';
-    notas.push('Formato fecha inválido (esperado YYYY-MM-DD)');
-  }
-  
-  // Componente 11: sexo
-  const sexoComp = inputs.sexo === 'H' ? 'H' : 'M';
-  
-  // Componente 12-13: entidad
-  const entidadComp = inputs.entidad_nacimiento.toUpperCase().substring(0, 2);
-  
-  // Folio (hipotético para validación)
-  const folioComp = '000';
-  
-  return {
-    apellidos: apellidosComp,
-    nombre: nombreComp,
-    fecha_nacimiento: fecha,
-    sexo: sexoComp,
-    entidad: entidadComp,
-    folio: folioComp
-  };
-}
-
-function calcularDigitoVerificador(curp17: string): string {
-  // Tabla de conversión letra → número
-  const letraAnum: { [key: string]: number } = {
-    A: 10, B: 11, C: 12, D: 13, E: 14, F: 15, G: 16, H: 17, I: 18, J: 19,
-    K: 20, L: 21, M: 22, N: 23, O: 24, P: 25, Q: 26, R: 27, S: 28, T: 29,
-    U: 30, V: 31, W: 32, X: 33, Y: 34, Z: 35,
-    '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9
-  };
-  
-  // Pesos para módulo 97 (patrón repetido)
-  const pesos = [3, 7, 13, 1, 3, 7, 13, 1, 3, 7, 13, 1, 3, 7, 13, 1, 3];
-  
+// Dígito verificador oficial CURP: Σ valor(char)·(18−i) sobre las 17 primeras
+// posiciones, dígito = (10 − (Σ mod 10)) mod 10. Diccionario con Ñ=24.
+function digitoVerificador(curp17: string): string {
+  const DICT = '0123456789ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
   let suma = 0;
-  for (let i = 0; i < curp17.length; i++) {
-    const char = curp17.charAt(i);
-    const valor = letraAnum[char] || 0;
-    suma += valor * pesos[i];
+  for (let i = 0; i < 17; i++) {
+    const v = DICT.indexOf(curp17.charAt(i));
+    suma += (v < 0 ? 0 : v) * (18 - i);
   }
-  
-  // Módulo 97 y cálculo dígito
-  const residuo = suma % 97;
-  const digito = (97 - residuo) % 10;
-  
-  return digito.toString();
+  return String((10 - (suma % 10)) % 10);
+}
+
+function extraer(inputs: Inputs, notas: string[]): Componentes {
+  const ap1 = normalizar(inputs.primer_apellido);
+  const ap2 = inputs.segundo_apellido ? normalizar(inputs.segundo_apellido) : '';
+  // Nombre de pila: omitir MARIA/JOSE/etc. si hay un segundo nombre.
+  const nombres = normalizar(inputs.nombre).split(' ').filter(Boolean);
+  let nombreUsado = nombres[0] || '';
+  if (nombres.length > 1 && NOMBRES_OMITIBLES.has(nombres[0])) {
+    nombreUsado = nombres[1];
+    notas.push(`Nombre compuesto: se usa "${nombres[1]}" (se omite "${nombres[0]}" según RENAPO).`);
+  }
+  const ap1c = ap1.replace(/ /g, '');
+  const ap2c = ap2.replace(/ /g, '');
+  const nomC = nombreUsado;
+
+  if (ap1c.length < 2) notas.push('Primer apellido muy corto: posiciones se completan con X.');
+  if (!nomC) notas.push('Falta el nombre.');
+
+  // pos 1-4
+  let iniciales =
+    inicial(ap1c) +
+    primeraVocalInterna(ap1c) +
+    (ap2c ? inicial(ap2c) : 'X') +
+    inicial(nomC);
+  if (!ap2c) notas.push('Sin segundo apellido: se usa X en la posición 3.');
+  // Palabra altisonante → 2da letra a X
+  if (ALTISONANTES.has(iniciales)) {
+    iniciales = iniciales[0] + 'X' + iniciales.slice(2);
+    notas.push('Las 4 iniciales formaban una palabra inconveniente: la 2da letra se cambia a X (regla RENAPO).');
+  }
+
+  // pos 5-10
+  let fecha = '000000';
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(inputs.fecha_nacimiento || ''));
+  let anio = 0;
+  if (m) {
+    anio = parseInt(m[1], 10);
+    fecha = m[1].slice(2) + m[2] + m[3];
+    if (anio < 1900) notas.push('Año de nacimiento fuera de rango.');
+  } else {
+    notas.push('Fecha inválida (se espera YYYY-MM-DD).');
+  }
+
+  // pos 11
+  const sexo = inputs.sexo === 'M' ? 'M' : 'H';
+
+  // pos 12-13
+  const entidad = String(inputs.entidad_nacimiento || 'NE').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2).padEnd(2, 'E');
+
+  // pos 14-16: consonantes internas
+  const consonantes =
+    primeraConsonanteInterna(ap1c) +
+    (ap2c ? primeraConsonanteInterna(ap2c) : 'X') +
+    primeraConsonanteInterna(nomC);
+
+  // pos 17: homoclave — asignada por RENAPO, NO derivable. Placeholder por época:
+  // dígito (0-9) para nacidos antes de 2000; letra (A-Z) desde 2000.
+  const homoclave = anio >= 2000 ? 'A' : '0';
+
+  return { iniciales, fecha_nacimiento: fecha, sexo, entidad, consonantes_internas: consonantes, homoclave };
 }
 
 export function compute(inputs: Inputs): Outputs {
   const notas: string[] = [];
-  
-  // Extrae componentes
-  const comp = extraerComponentesCurp(inputs);
-  notas.push(...comp.componentes || []);
-  
-  // Arma CURP sin dígito verificador (17 caracteres)
-  const curp17 = (
-    comp.apellidos +
-    comp.nombre +
-    comp.fecha_nacimiento +
-    comp.sexo +
-    comp.entidad +
-    comp.folio
-  );
-  
-  // Valida longitud
-  if (curp17.length !== 17) {
-    notas.push(`Error: CURP sin dígito tiene ${curp17.length} caracteres (esperado 17)`);
-  }
-  
-  // Calcula dígito verificador
-  const digito = calcularDigitoVerificador(curp17);
-  const curpCompleta = curp17 + digito;
-  
-  // Validación estructural
-  const esValida = (
-    curpCompleta.length === 18 &&
-    /^[A-Z0-9]{18}$/.test(curpCompleta) &&
-    (inputs.sexo === 'H' || inputs.sexo === 'M')
-  );
-  
-  if (!esValida) {
-    notas.push('CURP no cumple estructura esperada (18 caracteres alfanuméricos)');
-  }
-  
-  const _insight = esValida
-    ? {
-        title: notas.length > 0 ? 'Estructura válida, con observaciones' : 'CURP con estructura válida',
-        text: notas.length > 0
-          ? `La CURP estimada **${curpCompleta}** cumple la estructura de 18 caracteres, pero hay **${notas.length} observación${notas.length === 1 ? '' : 'es'}** a revisar. Verificá siempre el dato oficial en RENAPO.`
-          : `La CURP estimada **${curpCompleta}** cumple la estructura de 18 caracteres y su dígito verificador es **${digito}**. Es una reconstrucción: confirmá el dato oficial en RENAPO.`,
-        tone: notas.length > 0 ? 'neutral' : 'good',
-        icon: '🪪',
-      }
-    : {
-        title: 'Estructura no válida',
-        text: `La CURP reconstruida **no cumple** la estructura esperada de 18 caracteres alfanuméricos. Revisá los datos cargados (nombre, fecha, entidad y sexo) antes de usarla.`,
-        tone: 'warn',
-        icon: '⚠️',
-      };
+  const c = extraer(inputs, notas);
+
+  const curp17 = c.iniciales + c.fecha_nacimiento + c.sexo + c.entidad + c.consonantes_internas + c.homoclave;
+  const dv = digitoVerificador(curp17);
+  const curp = curp17 + dv;
+
+  // Estructura válida: 18 caracteres con el patrón oficial AAAA######H/M AA AAA #.
+  const patron = /^[A-Z]{4}\d{6}[HM][A-Z]{2}[A-Z]{3}[0-9A-Z]\d$/;
+  const es_valida = patron.test(curp) && !notas.some((n) => n.includes('inválida') || n.includes('Falta'));
+
+  notas.push('La posición 17 (homoclave) la asigna RENAPO y no se puede derivar; acá es un valor de referencia. Verificá tu CURP oficial en gob.mx.');
+
+  const _insight = {
+    title: es_valida ? 'CURP reconstruida' : 'Revisá los datos',
+    text: es_valida
+      ? `Con esos datos, la CURP sigue el patrón **${curp}** (primeros 16 caracteres derivados de tus datos + homoclave de referencia + dígito verificador **${dv}**). La homoclave real la asigna RENAPO.`
+      : `No se pudo reconstruir una CURP con estructura válida: revisá nombre, apellidos, fecha y entidad.`,
+    tone: es_valida ? 'good' : 'warn',
+    icon: '🪪',
+  };
 
   return {
-    curp_esperada: curpCompleta,
-    digito_verificador: digito,
-    es_valida: esValida,
-    componentes: {
-      apellidos: comp.apellidos,
-      nombre: comp.nombre,
-      fecha_nacimiento: comp.fecha_nacimiento,
-      sexo: comp.sexo,
-      entidad: comp.entidad,
-      folio: comp.folio
-    },
-    notas_validacion: notas.length > 0 ? notas : ['CURP válida según estructura SAT 2026'],
-    _insight
+    curp_esperada: curp,
+    digito_verificador: dv,
+    es_valida,
+    componentes: c,
+    notas_validacion: notas,
+    _insight,
   };
 }

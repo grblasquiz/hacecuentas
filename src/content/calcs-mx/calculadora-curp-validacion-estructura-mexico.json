@@ -223,7 +223,7 @@
       "id": "componentes",
       "label": "Desglose de componentes",
       "type": "object",
-      "description": "Tabla con cada sección CURP: apellidos (6), nombre (3), fecha (6), sexo/estado (2), folio (3)"
+      "description": "Desglose por sección: iniciales (4), fecha AAMMDD (6), sexo (1), entidad (2), consonantes internas (3), homoclave (1)."
     },
     {
       "id": "notas_validacion",
@@ -309,7 +309,7 @@
     "updateType": "manual",
     "notes": "Estructura CURP y algoritmo dígito verificador se revisan anualmente. Listado 32 entidades federativas y claves SAT actualizado cada reforma administrativa."
   },
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-06-28",
   "referenceTables": [
     {
       "title": "Estructura de los 18 caracteres de la CURP (México)",
@@ -389,5 +389,23 @@
       ],
       "note": "Fuente: Registro Nacional de Población e Identidad – RNRPI / SAT (2026). Pesos para dígito verificador (posiciones 1-17): 3,7,13,1,3,7,13,1,3,7,13,1,3,7,13,1,3. Letras se convierten A=10…Z=35; dígitos conservan su valor."
     }
-  ]
+  ],
+  "example": {
+    "title": "Ejemplo: Juan Hernández García, hombre, 15/05/1990, CDMX",
+    "inputs": {
+      "primer_apellido": "Hernandez",
+      "segundo_apellido": "Garcia",
+      "nombre": "Juan",
+      "fecha_nacimiento": "1990-05-15",
+      "sexo": "H",
+      "entidad_nacimiento": "DF"
+    },
+    "steps": [
+      "**Posiciones 1-4**: inicial + 1ª vocal interna del 1er apellido (H, E) + inicial del 2º apellido (G) + inicial del nombre (J) → **HEGJ**.",
+      "**5-13**: fecha AAMMDD (900515) + sexo (H) + entidad (DF).",
+      "**14-16**: 1ª consonante interna de apellido paterno, materno y nombre (R, R, N) → **RRN**.",
+      "**17-18**: homoclave (la asigna RENAPO) + dígito verificador calculado (**1**)."
+    ],
+    "result": "Esos datos generan el patrón **HEGJ900515HDFRRN01**. Los primeros 16 caracteres son deterministas; la posición 17 (homoclave) la asigna RENAPO, no se puede derivar. *Reconstrucción de referencia.*"
+  }
 }
