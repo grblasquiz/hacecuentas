@@ -19,14 +19,17 @@ export interface Outputs {
 }
 
 function getZoneValue(zone: string): number {
+  // Valor fiscal de referencia por m² en ARS (Neuquén 2026).
+  // La valuación fiscal NO es valor de mercado: es el valor catastral
+  // sobre el que se aplica la alícuota del impuesto inmobiliario provincial.
   const zoneValues: Record<string, number> = {
-    centro: 200,
-    semicentro: 160,
-    residencial_media: 120,
-    residencial_baja: 85,
-    periferica: 55
+    centro: 250000,
+    semicentro: 200000,
+    residencial_media: 150000,
+    residencial_baja: 110000,
+    periferica: 70000
   };
-  return zoneValues[zone] || 120;
+  return zoneValues[zone] || 150000;
 }
 
 function getAliquot(zone: string, propertyType: string): number {
