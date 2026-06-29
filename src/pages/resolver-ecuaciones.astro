@@ -1,0 +1,538 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MathToolNav from '../components/MathToolNav.astro';
+import { freeOfferSchema } from '../lib/offer-schema';
+import { solveEquation, renderEquationHTML } from '../lib/math/equation';
+
+const title = 'Resolver Ecuaciones Paso a Paso: Lineales y Cuadráticas | Hacé Cuentas';
+const description =
+  'Resolvé ecuaciones de primer y segundo grado online y mirá toda la resolución paso a paso: despeje, identificación de coeficientes, discriminante y fórmula resolvente. Gratis, sin registrarte. Para secundaria, CBC y facultad.';
+
+const site = 'https://hacecuentas.com';
+
+const DEFAULT_INPUT = 'x^2 - 5x + 6 = 0';
+const defaultSolution = renderEquationHTML(solveEquation(DEFAULT_INPUT));
+
+const examples = [
+  { label: '2x + 3 = 7', input: '2x + 3 = 7', note: 'Ecuación de primer grado (lineal): se despeja la x.' },
+  { label: 'x² − 5x + 6 = 0', input: 'x^2 - 5x + 6 = 0', note: 'Cuadrática con dos soluciones reales (Δ > 0).' },
+  { label: 'x² − 6x + 9 = 0', input: 'x^2 - 6x + 9 = 0', note: 'Raíz doble: discriminante igual a 0.' },
+  { label: 'x² + 1 = 0', input: 'x^2 + 1 = 0', note: 'Sin solución real: discriminante negativo (raíces complejas).' },
+  { label: '(x + 1)(x − 2) = 0', input: '(x+1)*(x-2) = 0', note: 'Producto de factores: se expande y se resuelve.' },
+  { label: 'x² = 2x + 3', input: 'x^2 = 2x + 3', note: 'Con incógnita en los dos lados: se pasa todo a la izquierda.' },
+].map((ex) => ({ ...ex, html: renderEquationHTML(solveEquation(ex.input)) }));
+
+const chips = [
+  { l: 'x', ins: 'x' },
+  { l: 'x²', ins: '^2' },
+  { l: '=', ins: '=' },
+  { l: '+', ins: '+' },
+  { l: '−', ins: '-' },
+  { l: '·', ins: '*' },
+  { l: '( )', ins: '()' },
+  { l: '÷', ins: '/' },
+];
+
+const methods = [
+  ['Primer grado (lineal)', 'ax + b = 0', 'Se despeja: x = −b / a. Una única solución.'],
+  ['Segundo grado (cuadrática)', 'ax² + bx + c = 0', 'Fórmula resolvente con el discriminante Δ = b² − 4ac.'],
+  ['Δ > 0', 'discriminante positivo', 'Dos soluciones reales distintas.'],
+  ['Δ = 0', 'discriminante cero', 'Una solución real (raíz doble).'],
+  ['Δ < 0', 'discriminante negativo', 'Ninguna solución real (dos raíces complejas).'],
+];
+
+const faqs = [
+  {
+    q: '¿Cómo se resuelve una ecuación paso a paso?',
+    a: 'Primero se <strong>pasan todos los términos a un lado</strong> para que la ecuación quede igualada a cero. Después se mira el <strong>grado</strong>: si es de primer grado (la x sin exponente), se despeja directamente; si es de segundo grado (aparece x²), se usa la <strong>fórmula resolvente</strong>. Esta calculadora hace cada uno de esos pasos y te los muestra con la regla aplicada.',
+  },
+  {
+    q: '¿Qué tipos de ecuaciones puedo resolver?',
+    a: 'Ecuaciones <strong>de primer grado</strong> (lineales, como <code>2x + 3 = 7</code>) y <strong>de segundo grado</strong> (cuadráticas, como <code>x² − 5x + 6 = 0</code>), incluso si la incógnita aparece a ambos lados o entre paréntesis sin desarrollar, por ejemplo <code>(x+1)(x−2) = 0</code> o <code>x² = 2x + 3</code>. La calculadora expande, ordena y resuelve.',
+  },
+  {
+    q: '¿Cómo escribo la ecuación?',
+    a: 'Usá <code>^</code> para el cuadrado (<code>x^2</code>), <code>*</code> o un espacio para multiplicar (<code>3*x</code> o <code>3x</code>) y el signo <code>=</code> para separar los dos lados. Si no ponés <code>=</code>, se asume que la expresión vale 0. Ejemplos válidos: <code>2x + 3 = 7</code>, <code>x^2 - 4 = 0</code>, <code>(x+1)(x-2)=0</code>.',
+  },
+  {
+    q: '¿Qué es el discriminante y para qué sirve?',
+    a: 'El <strong>discriminante</strong> es <code>Δ = b² − 4·a·c</code> y aparece dentro de la raíz de la fórmula resolvente. Su <strong>signo</strong> te dice cuántas soluciones reales tiene la ecuación: si <code>Δ &gt; 0</code> hay dos soluciones distintas, si <code>Δ = 0</code> hay una sola (raíz doble) y si <code>Δ &lt; 0</code> no hay soluciones reales (son complejas). Por eso conviene calcularlo antes de aplicar la fórmula completa.',
+  },
+  {
+    q: '¿Cuál es la fórmula resolvente (cuadrática)?',
+    a: 'Para <code>ax² + bx + c = 0</code> la fórmula es <code>x = (−b ± √(b² − 4ac)) / (2a)</code>. El símbolo <strong>±</strong> indica que hay que hacer la cuenta dos veces: una sumando la raíz y otra restándola, lo que da las dos soluciones. Esta calculadora sustituye los valores de a, b y c y resuelve ambas.',
+  },
+  {
+    q: '¿Qué pasa si la ecuación no tiene solución real?',
+    a: 'Cuando el discriminante es <strong>negativo</strong>, no hay ningún número real que cumpla la ecuación: la parábola no toca el eje x. En ese caso las soluciones son <strong>números complejos</strong> conjugados (con la unidad imaginaria <code>i = √−1</code>), que la calculadora también te muestra.',
+  },
+  {
+    q: '¿Resuelve ecuaciones de grado 3 o más?',
+    a: 'Por ahora resuelve ecuaciones de <strong>primer y segundo grado</strong>, que son las más frecuentes en secundaria y en el ingreso. Para grados mayores (cúbicas, cuárticas) o ecuaciones con funciones (seno, logaritmo, etc.) hace falta otro método; lo iremos sumando.',
+  },
+  {
+    q: '¿Puedo usar otra letra como incógnita?',
+    a: 'Sí. Cambiá la letra en el campo "incógnita" (por ejemplo <code>t</code> o <code>y</code>) y escribí la ecuación con esa variable. Tené en cuenta que las demás letras se interpretarían como otra incógnita o parámetro, así que para resolver numéricamente usá una sola variable y coeficientes con números.',
+  },
+  {
+    q: '¿Es gratis y necesito registrarme?',
+    a: 'Es <strong>100% gratis</strong>, sin registro y sin límite de uso. Todo el cálculo se hace <strong>en tu navegador</strong>: la ecuación no se envía a ningún servidor. Funciona en la compu y en el celular.',
+  },
+  {
+    q: '¿Sirve para la secundaria, el CBC y la facultad?',
+    a: 'Sí. Cubre las ecuaciones <strong>lineales y cuadráticas</strong> que se piden en matemática de secundaria, en el CBC/ingreso y en los primeros parciales de facultad, mostrando el procedimiento completo (despeje, discriminante y resolvente) para que entiendas cada paso, no sólo el resultado.',
+  },
+];
+
+const related = [
+  { href: '/calculadora-derivadas', t: 'Calculadora de derivadas', i: '𝒹/𝒹𝓍' },
+  { href: '/calculadora-ecuacion-cuadratica-raices-discriminante', t: 'Ecuación cuadrática (detalle)', i: '📐' },
+  { href: '/calculadora-cientifica', t: 'Calculadora científica', i: '🧮' },
+  { href: '/calculadora-regla-de-tres-simple-directa-inversa', t: 'Regla de 3 simple', i: '➗' },
+  { href: '/calculadora-logaritmos-base-10-natural-cualquier-base', t: 'Logaritmos (ln, log)', i: '📊' },
+  { href: '/calculadora-raiz-cuadrada-cubica', t: 'Raíz cuadrada y cúbica', i: '√' },
+];
+
+const howToSteps = [
+  { name: 'Escribí la ecuación', text: 'Tipeá los dos lados con el signo =, por ejemplo x^2 - 5x + 6 = 0. Usá ^ para el cuadrado.' },
+  { name: 'Elegí la incógnita', text: 'Por defecto es x. Cambiala si tu ecuación usa otra letra.' },
+  { name: 'Tocá "Resolver"', text: 'La calculadora iguala a cero, identifica los coeficientes y aplica el método según el grado.' },
+  { name: 'Seguí la resolución', text: 'Vas viendo el despeje o el discriminante y la resolvente, hasta las soluciones finales.' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Resolver ecuaciones paso a paso',
+  url: `${site}/resolver-ecuaciones`,
+  description,
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'ARS' }),
+  featureList: [
+    'Ecuaciones de primer grado (lineales) paso a paso',
+    'Ecuaciones de segundo grado (cuadráticas) con fórmula resolvente',
+    'Cálculo del discriminante y análisis de soluciones',
+    'Soluciones reales y complejas',
+    'Resultado copiable',
+  ],
+};
+
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+    { '@type': 'ListItem', position: 2, name: 'Matemática', item: `${site}/categoria/matematica` },
+    { '@type': 'ListItem', position: 3, name: 'Resolver ecuaciones', item: `${site}/resolver-ecuaciones` },
+  ],
+};
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo resolver una ecuación paso a paso',
+  step: howToSteps.map((s, idx) => ({
+    '@type': 'HowToStep', position: idx + 1, name: s.name, text: s.text,
+  })),
+};
+---
+
+<Layout title={title} description={description} canonical="/resolver-ecuaciones" schema={schema}>
+  <Header slot="header" />
+
+  <article class="dv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/matematica">Matemática</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Resolver ecuaciones</span>
+    </nav>
+
+    <h1>Resolver ecuaciones paso a paso</h1>
+    <p class="lead">
+      Escribí una ecuación de <strong>primer o segundo grado</strong> y la calculadora te muestra
+      <strong>toda la resolución</strong>: iguala a cero, identifica los coeficientes, calcula el discriminante y
+      aplica la <strong>fórmula resolvente</strong> hasta las soluciones. Online, gratis y sin registrarte.
+    </p>
+
+    <div class="dv-answer">
+      <p>
+        <strong>¿Qué es resolver una ecuación?</strong> Es encontrar el valor (o los valores) de la incógnita que
+        hacen verdadera la igualdad. En las <strong>lineales</strong> (ax + b = 0) se despeja la x; en las
+        <strong>cuadráticas</strong> (ax² + bx + c = 0) se usa la <strong>fórmula resolvente</strong> y el
+        <strong>discriminante</strong> para saber cuántas soluciones hay. Acá lo ves <strong>paso a paso</strong>.
+      </p>
+    </div>
+
+    <MathToolNav current="ecuaciones" />
+
+    <div class="dv-card">
+      <form id="dvForm" class="dv-form" novalidate>
+        <label class="dv-label" for="dvInput">Ecuación a resolver</label>
+        <div class="dv-input-row">
+          <input
+            id="dvInput"
+            class="dv-input"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            value={DEFAULT_INPUT}
+            aria-label="Ecuación a resolver"
+            placeholder="ej.: x^2 - 5x + 6 = 0"
+          />
+          <div class="dv-var">
+            <label for="dvVar">incógnita</label>
+            <input id="dvVar" class="dv-var-input" type="text" value="x" maxlength="1" aria-label="Incógnita" />
+          </div>
+        </div>
+
+        <div class="dv-chips" role="group" aria-label="Inserción rápida">
+          {chips.map((c) => (
+            <button type="button" class="dv-chip" data-ins={c.ins}>{c.l}</button>
+          ))}
+          <button type="button" class="dv-chip dv-chip-del" data-act="back" title="Borrar">⌫</button>
+          <button type="button" class="dv-chip dv-chip-clear" data-act="clear" title="Limpiar">AC</button>
+        </div>
+
+        <button type="submit" id="dvGo" class="dv-go">Resolver ecuación</button>
+      </form>
+
+      <div class="dv-out" id="dvOut" aria-live="polite" set:html={defaultSolution}></div>
+    </div>
+
+    <section class="dv-section">
+      <h2>Cómo usar la calculadora de ecuaciones</h2>
+      <ol class="dv-steps-list">
+        {howToSteps.map((s) => (
+          <li><strong>{s.name}.</strong> {s.text}</li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="dv-section">
+      <h2>Métodos según el tipo de ecuación</h2>
+      <p>La calculadora elige el método automáticamente según el grado y el discriminante:</p>
+      <div class="dv-table-wrap">
+        <table class="dv-table">
+          <thead><tr><th>Caso</th><th>Forma</th><th>Qué se hace</th></tr></thead>
+          <tbody>
+            {methods.map(([name, form, words]) => (
+              <tr><td class="dv-td-name">{name}</td><td class="dv-td-formula">{form}</td><td>{words}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="dv-section">
+      <h2>Ejemplos resueltos paso a paso</h2>
+      <p>Distintos tipos de ecuación, con la resolución completa. Tocá cada una para ver el detalle:</p>
+      <div class="dv-examples">
+        {examples.map((ex, i) => (
+          <details class="dv-example" open={i === 0}>
+            <summary>
+              <span class="dv-ex-fx">{ex.label}</span>
+              <span class="dv-ex-note">{ex.note}</span>
+            </summary>
+            <div class="dv-ex-solution" set:html={ex.html}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="dv-section">
+      <h2>El discriminante: cuántas soluciones hay</h2>
+      <p>
+        Antes de aplicar la fórmula completa conviene calcular el <strong>discriminante</strong>
+        <code>Δ = b² − 4ac</code>. Es lo que está adentro de la raíz, y su signo decide todo:
+      </p>
+      <ul class="dv-steps-list">
+        <li><strong>Δ &gt; 0:</strong> la raíz da un número real positivo → <strong>dos soluciones reales</strong> distintas.</li>
+        <li><strong>Δ = 0:</strong> la raíz es 0 → <strong>una sola solución</strong> (raíz doble).</li>
+        <li><strong>Δ &lt; 0:</strong> la raíz de un negativo no es real → <strong>no hay soluciones reales</strong> (sí complejas).</li>
+      </ul>
+      <p>
+        Si necesitás derivar funciones, también tenés la <a href="/calculadora-derivadas">calculadora de derivadas paso a paso</a>.
+      </p>
+    </section>
+
+    <section class="dv-section dv-related">
+      <h2>Calculadoras de matemática relacionadas</h2>
+      <div class="dv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="dv-related-card">
+            <span class="dv-related-icon" aria-hidden="true">{r.i}</span>
+            <span>{r.t}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="dv-section">
+      <h2>Preguntas frecuentes</h2>
+      <div class="dv-faq">
+        {faqs.map((f) => (
+          <details class="dv-faq-item">
+            <summary>{f.q}</summary>
+            <div class="dv-faq-a" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="dv-section dv-editorial">
+      <p>
+        <strong>Revisado por el equipo editorial de Hacé Cuentas.</strong> El motor se prueba contra decenas de casos
+        de referencia (lineales, cuadráticas con discriminante positivo, cero y negativo, e identidades).
+        Más en nuestra <a href="/politica-editorial">política editorial</a> y <a href="/metodologia">metodología</a>.
+      </p>
+      <p class="dv-disclaimer">
+        Los resultados son orientativos y pensados para estudiar. Para trabajos académicos, verificá con tu material de cátedra.
+      </p>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  import { solveEquation, renderEquationHTML } from '../lib/math/equation';
+
+  function setupEq() {
+    const form = document.getElementById('dvForm') as HTMLFormElement | null;
+    if (!form || form.dataset.dvReady) return;
+    form.dataset.dvReady = '1';
+
+    const input = document.getElementById('dvInput') as HTMLInputElement;
+    const varInput = document.getElementById('dvVar') as HTMLInputElement;
+    const out = document.getElementById('dvOut') as HTMLElement;
+
+    function compute() {
+      const expr = input.value.trim();
+      const v = (varInput.value.trim() || 'x').slice(0, 1);
+      out.innerHTML = renderEquationHTML(solveEquation(expr, v));
+    }
+
+    function insertAtCursor(text: string) {
+      const start = input.selectionStart ?? input.value.length;
+      const end = input.selectionEnd ?? input.value.length;
+      input.value = input.value.slice(0, start) + text + input.value.slice(end);
+      let caret = start + text.length;
+      if (text === '()') caret = start + 1;
+      input.focus();
+      input.setSelectionRange(caret, caret);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      compute();
+      out.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+
+    form.querySelectorAll<HTMLButtonElement>('.dv-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const act = chip.getAttribute('data-act');
+        if (act === 'clear') { input.value = ''; input.focus(); return; }
+        if (act === 'back') {
+          const s = input.selectionStart ?? input.value.length;
+          if (s > 0) { input.value = input.value.slice(0, s - 1) + input.value.slice(s); input.focus(); input.setSelectionRange(s - 1, s - 1); }
+          return;
+        }
+        const ins = chip.getAttribute('data-ins');
+        if (ins) insertAtCursor(ins);
+      });
+    });
+
+    out.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('.dv-copy') as HTMLElement | null;
+      if (!btn) return;
+      const text = btn.getAttribute('data-copy') || '';
+      const done = () => { const o = btn.textContent; btn.textContent = '✓ Copiado'; setTimeout(() => { btn.textContent = o; }, 1500); };
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      } else {
+        fallbackCopy(text, done);
+      }
+    });
+
+    function fallbackCopy(text: string, done: () => void) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch {}
+      document.body.removeChild(ta);
+    }
+
+    compute();
+  }
+
+  setupEq();
+  document.addEventListener('astro:page-load', setupEq);
+</script>
+
+<style>
+  .dv-page { max-width: 760px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  h1 { margin-bottom: 0.75rem; }
+  .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1.75rem; }
+  .dv-answer {
+    border-left: 3px solid var(--accent); background: var(--accent-soft);
+    border-radius: var(--radius-sm); padding: 0.875rem 1rem; margin-bottom: 1.5rem;
+  }
+  .dv-answer p { margin: 0; color: var(--text); font-size: 0.96875rem; line-height: 1.65; }
+
+  .dv-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.25rem; box-shadow: var(--shadow); margin-bottom: 2.5rem;
+  }
+
+  .dv-form { margin-bottom: 1.25rem; }
+  .dv-label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .dv-input-row { display: flex; gap: 0.625rem; flex-wrap: wrap; align-items: stretch; }
+  .dv-input {
+    flex: 1 1 240px; font-family: var(--font-mono); font-size: 1.0625rem; padding: 0.75rem 0.875rem;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-soft); color: var(--text);
+  }
+  .dv-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .dv-var { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8125rem; color: var(--text-subtle); }
+  .dv-var-input {
+    width: 2.6rem; text-align: center; font-family: var(--font-mono); font-size: 1rem; font-weight: 600;
+    padding: 0.55rem 0.25rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg-soft); color: var(--text);
+  }
+  .dv-var-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .dv-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.875rem 0; }
+  .dv-chip {
+    appearance: none; border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    border-radius: var(--radius-sm); padding: 0.4rem 0.7rem; font-size: 0.9375rem; font-family: var(--font-mono);
+    cursor: pointer; transition: background 0.12s, border-color 0.12s; -webkit-tap-highlight-color: transparent;
+  }
+  .dv-chip:hover { background: var(--bg-soft); border-color: var(--accent); }
+  .dv-chip:active { transform: translateY(1px); }
+  .dv-chip-del { color: var(--text-muted); }
+  .dv-chip-clear { color: var(--danger, #dc2626); font-weight: 600; }
+
+  .dv-go {
+    width: 100%; appearance: none; border: none; cursor: pointer; background: var(--accent); color: #fff;
+    font-weight: 700; font-size: 1.0625rem; padding: 0.85rem 1rem; border-radius: var(--radius-sm); transition: background 0.12s;
+  }
+  .dv-go:hover { background: var(--accent-strong); }
+  .dv-go:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+
+  /* ── Resolución (HTML inyectado con set:html → clases en :global) ─────────── */
+  .dv-out { margin-top: 1.25rem; }
+  :global(.dv-input-line) {
+    background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem; margin-bottom: 1rem; overflow-x: auto;
+  }
+  :global(.dv-steps) { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  :global(.dv-step) { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); padding: 0.75rem 0.875rem; }
+  :global(.dv-step-head) { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
+  :global(.dv-step-n) {
+    flex-shrink: 0; width: 1.5rem; height: 1.5rem; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--accent-soft); color: var(--accent-strong); border-radius: 50%; font-size: 0.8125rem; font-weight: 700;
+  }
+  :global(.dv-step-rule) { font-weight: 600; font-size: 0.9375rem; color: var(--text); }
+  :global(.dv-step-formula) { margin: 0 0 0.4rem; font-size: 0.8125rem; color: var(--text-subtle); font-family: var(--font-mono); }
+  :global(.dv-step-math) { overflow-x: auto; padding: 0.25rem 0; }
+  :global(.dv-result) {
+    margin-top: 1rem; border: 1.5px solid var(--accent); background: var(--accent-soft);
+    border-radius: var(--radius-sm); padding: 0.875rem 1rem; position: relative;
+  }
+  :global(.dv-result-label) {
+    display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--accent-strong); margin-bottom: 0.35rem;
+  }
+  :global(.dv-result-math) { overflow-x: auto; }
+  :global(.dv-copy) {
+    position: absolute; top: 0.6rem; right: 0.6rem; appearance: none; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text-muted); border-radius: 6px; padding: 0.25rem 0.55rem; font-size: 0.75rem; cursor: pointer;
+  }
+  :global(.dv-copy:hover) { border-color: var(--accent); color: var(--accent-strong); }
+  :global(.dv-error) { color: var(--danger, #dc2626); font-weight: 500; padding: 0.75rem 0; margin: 0; }
+  :global(.dv-out math), :global(.dv-ex-solution math) { font-size: 1.15em; color: var(--text); }
+  :global(.dv-input-line math), :global(.dv-result-math math) { font-size: 1.2em; }
+  :global(.dv-step-math mfrac), :global(.dv-input-line mfrac) { font-size: 0.97em; }
+
+  .dv-section { margin: 2.25rem 0; }
+  .dv-section h2 { font-size: 1.375rem; margin-bottom: 0.875rem; }
+  .dv-section p { color: var(--text-muted); margin-bottom: 0.875rem; line-height: 1.7; }
+  .dv-section code {
+    background: var(--bg-soft); padding: 0.1rem 0.4rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.875rem; color: var(--text);
+  }
+  .dv-steps-list { color: var(--text-muted); line-height: 1.7; padding-left: 1.25rem; margin-bottom: 0.875rem; }
+  .dv-steps-list li { margin-bottom: 0.4rem; }
+
+  .dv-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .dv-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+  .dv-table th, .dv-table td { text-align: left; padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .dv-table thead th { background: var(--bg-soft); font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+  .dv-table tr:last-child td { border-bottom: none; }
+  .dv-table .dv-td-name { font-weight: 600; color: var(--text); white-space: nowrap; }
+  .dv-table .dv-td-formula { font-family: var(--font-mono); color: var(--accent-strong); white-space: nowrap; }
+  .dv-table td { color: var(--text-muted); }
+
+  .dv-examples { display: flex; flex-direction: column; gap: 0.625rem; }
+  .dv-example { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); padding: 0 1rem; }
+  .dv-example summary { cursor: pointer; padding: 0.875rem 0; list-style: none; display: flex; flex-direction: column; gap: 0.2rem; }
+  .dv-example summary::-webkit-details-marker { display: none; }
+  .dv-ex-fx { font-family: var(--font-mono); font-weight: 600; color: var(--text); font-size: 0.96875rem; }
+  .dv-ex-note { font-size: 0.8125rem; color: var(--text-subtle); }
+  .dv-ex-solution { padding: 0.25rem 0 1rem; }
+
+  .dv-related-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.625rem; }
+  .dv-related-card {
+    display: flex; align-items: center; gap: 0.625rem; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.75rem 0.875rem; font-size: 0.9375rem; font-weight: 500; color: var(--text);
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .dv-related-card:hover { border-color: var(--accent); background: var(--bg-soft); }
+  .dv-related-icon { font-size: 1.25rem; flex-shrink: 0; width: 1.5rem; text-align: center; font-style: italic; }
+
+  .dv-faq { display: flex; flex-direction: column; gap: 0.5rem; }
+  .dv-faq-item { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); padding: 0 1rem; }
+  .dv-faq-item summary { cursor: pointer; padding: 0.875rem 0; font-weight: 600; list-style: none; font-size: 0.9875rem; }
+  .dv-faq-item summary::-webkit-details-marker { display: none; }
+  .dv-faq-item summary::after { content: '+'; float: right; color: var(--accent-strong); font-weight: 700; }
+  .dv-faq-item[open] summary::after { content: '−'; }
+  .dv-faq-a { color: var(--text-muted); padding-bottom: 0.875rem; line-height: 1.7; }
+  .dv-faq-a :global(code) { background: var(--bg-soft); padding: 0.1rem 0.35rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; }
+
+  .dv-editorial p { font-size: 0.875rem; color: var(--text-subtle); line-height: 1.7; }
+  .dv-disclaimer { font-style: italic; }
+
+  @media (max-width: 520px) {
+    .dv-card { padding: 0.875rem; }
+    .dv-related-grid { grid-template-columns: 1fr; }
+    .dv-table th, .dv-table td { padding: 0.6rem 0.7rem; }
+  }
+</style>

@@ -173,6 +173,7 @@ import { compute as compute__aporte_mutual_empresa_chile_trabajador_tasa_base } 
 import { compute as compute__aporte_mutual_empresa_comparar_ist_asociacion_chilena } from './aporte-mutual-empresa-comparar-ist-asociacion-chilena';
 import { compute as compute__aporte_onp_afp_independiente_peru } from './aporte-onp-afp-independiente-peru';
 import { aportePatronalIpsParaguay } from './aporte-patronal-ips-paraguay';
+import { aportePatronalUruguay } from './aporte-patronal-uruguay';
 import { compute as compute__aporte_previsional_solidario_aps_chile } from './aporte-previsional-solidario-aps-chile';
 import { compute as compute__aporte_trabajador_honorarios_chile_cotizacion_obligatoria } from './aporte-trabajador-honorarios-chile-cotizacion-obligatoria';
 import { compute as compute__aporte_voluntario_iess_ecuador } from './aporte-voluntario-iess-ecuador';
@@ -1633,6 +1634,7 @@ import { compute as compute__fna_cesantias_colombia_vivienda_rentabilidad } from
 import { focoLedEquivalenciaWatts } from './foco-led-equivalencia-watts';
 import { fodmapAlimentosIntoleranciaSiiTabla } from './fodmap-alimentos-intolerancia-sii-tabla';
 import { compute as compute__fonacot_credito_mexico_monto_cat_tasa } from './fonacot-credito-mexico-monto-cat-tasa';
+import { fonasaAporteUruguay } from './fonasa-aporte-uruguay';
 import { compute as compute__fonasa_chile_tramos_a_b_c_d_cobertura } from './fonasa-chile-tramos-a-b-c-d-cobertura';
 import { fondoComunInversionMoneyMarketRendimiento } from './fondo-comun-inversion-money-market-rendimiento';
 import { fondoDesempleoAnsesMontoTiempo } from './fondo-desempleo-anses-monto-tiempo';
@@ -2077,8 +2079,11 @@ import { compute as compute__irnr_no_residentes_alquiler_vivienda_espana } from 
 import { irpParaguaySaldoAnual } from './irp-paraguay-saldo-anual';
 import { irpParaguayTramos } from './irp-paraguay-tramos';
 import { compute as compute__irpf_2026_tramos_espana_nomina } from './irpf-2026-tramos-espana-nomina';
+import { irpfAguinaldoUruguay } from './irpf-aguinaldo-uruguay';
+import { compute as compute__irpf_alquiler_uruguay } from './irpf-alquiler-uruguay';
 import { compute as compute__irpf_alquiler_vivienda_arrendador_espana } from './irpf-alquiler-vivienda-arrendador-espana';
 import { irpfAndalucia2026 } from './irpf-andalucia-2026';
+import { irpfAnualDevolucionUruguay } from './irpf-anual-devolucion-uruguay';
 import { compute as compute__irpf_capital_mobiliario_intereses_dividendos_espana } from './irpf-capital-mobiliario-intereses-dividendos-espana';
 import { irpfCataluna2026 } from './irpf-cataluna-2026';
 import { irpfDeclaracaoComparador } from './irpf-declaracao-comparador';
@@ -2123,6 +2128,7 @@ import { itbiSaoPaulo } from './itbi-sao-paulo';
 import { compute as compute__itf_peru } from './itf-peru';
 import { itinerarioCiudadesDiasOptimoPorCiudad } from './itinerario-ciudades-dias-optimo-por-ciudad';
 import { compute as compute__itp_actos_juridicos_documentados_espana_vivienda } from './itp-actos-juridicos-documentados-espana-vivienda';
+import { itpUruguay } from './itp-uruguay';
 import { ivPokemonGo } from './iv-pokemon-go';
 import { compute as compute__iva_bienes_exentos_excluidos_colombia_2026 } from './iva-bienes-exentos-excluidos-colombia-2026';
 import { compute as compute__iva_chile_19_porciento_tarifa_general } from './iva-chile-19-porciento-tarifa-general';
@@ -2152,6 +2158,7 @@ import { jetLagRecuperacionHorasDiferenciaDias } from './jet-lag-recuperacion-ho
 import { jetLagZonasHorariasAdaptacionDias } from './jet-lag-zonas-horarias-adaptacion-dias';
 import { jpgCalidadTamanoWebOptimizacion } from './jpg-calidad-tamano-web-optimizacion';
 import { jubilacionAnsesMontoMinimoMaxima2026 } from './jubilacion-anses-monto-minimo-maxima-2026';
+import { compute as compute__jubilacion_bps_uruguay } from './jubilacion-bps-uruguay';
 import { jubilacionCuantoNecesito } from './jubilacion-cuanto-necesito';
 import { jubilacionDocenteCaba } from './jubilacion-docente-caba';
 import { jubilacionDocenteIpsBa } from './jubilacion-docente-ips-ba';
@@ -2410,6 +2417,7 @@ import { monotributoCategoriaIngresosTope } from './monotributo-categoria-ingres
 import { compute as compute__monotributo_colombia_pequenos_comercios } from './monotributo-colombia-pequenos-comercios';
 import { monotributoCuota2026TodasCategorias } from './monotributo-cuota-2026-todas-categorias';
 import { monotributoSocialBeneficioExencion } from './monotributo-social-beneficio-exencion';
+import { compute as compute__monotributo_uruguay } from './monotributo-uruguay';
 import { compute as compute__monotributo_vs_autonomo_vs_empleado_mismo_ingreso } from './monotributo-vs-autonomo-vs-empleado-mismo-ingreso';
 import { monotributoVsCategoriaOptima } from './monotributo-vs-categoria-optima';
 import { monotributoVsInscripto } from './monotributo-vs-inscripto';
@@ -3194,6 +3202,7 @@ import { salarioMinimo } from './salario-minimo';
 import { salarioMinimo2026Comparativa } from './salario-minimo-2026-comparativa';
 import { compute as compute__salario_minimo_colombia_2026_auxilio_transporte } from './salario-minimo-colombia-2026-auxilio-transporte';
 import { salarioMinimoParaguay2026 } from './salario-minimo-paraguay-2026';
+import { compute as compute__salario_minimo_uruguay } from './salario-minimo-uruguay';
 import { compute as compute__salario_neto_colombia_2026_bruto_a_neto } from './salario-neto-colombia-2026-bruto-a-neto';
 import { salarioNetoRepublicaDominicana } from './salario-neto-republica-dominicana';
 import { compute as compute__salario_por_hora_dia_peru } from './salario-por-hora-dia-peru';
@@ -3318,6 +3327,7 @@ import { compute as compute__stylecraze_peso_ideal_women_formula_altura } from '
 import { subnettingMascaraRedCidr } from './subnetting-mascara-red-cidr';
 import { compute as compute__subsidio_enfermedad_iess_ecuador } from './subsidio-enfermedad-iess-ecuador';
 import { compute as compute__subsidio_incapacidad_temporal_essalud_peru } from './subsidio-incapacidad-temporal-essalud-peru';
+import { subsidioMaternidadUruguay } from './subsidio-maternidad-uruguay';
 import { compute as compute__subsidio_mayores_52_anos_espana_cuantia_meses } from './subsidio-mayores-52-anos-espana-cuantia-meses';
 import { compute as compute__subsidio_vivienda_mi_casa_ya_colombia_2026 } from './subsidio-vivienda-mi-casa-ya-colombia-2026';
 import { substackSuscriptoresMeta } from './substack-suscriptores-meta';
@@ -3964,6 +3974,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aporte-mutual-empresa-comparar-ist-asociacion-chilena': compute__aporte_mutual_empresa_comparar_ist_asociacion_chilena,
   'aporte-onp-afp-independiente-peru': compute__aporte_onp_afp_independiente_peru,
   'aporte-patronal-ips-paraguay': aportePatronalIpsParaguay,
+  'aporte-patronal-uruguay': aportePatronalUruguay,
   'aporte-previsional-solidario-aps-chile': compute__aporte_previsional_solidario_aps_chile,
   'aporte-trabajador-honorarios-chile-cotizacion-obligatoria': compute__aporte_trabajador_honorarios_chile_cotizacion_obligatoria,
   'aporte-voluntario-iess-ecuador': compute__aporte_voluntario_iess_ecuador,
@@ -5424,6 +5435,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'foco-led-equivalencia-watts': focoLedEquivalenciaWatts,
   'fodmap-alimentos-intolerancia-sii-tabla': fodmapAlimentosIntoleranciaSiiTabla,
   'fonacot-credito-mexico-monto-cat-tasa': compute__fonacot_credito_mexico_monto_cat_tasa,
+  'fonasa-aporte-uruguay': fonasaAporteUruguay,
   'fonasa-chile-tramos-a-b-c-d-cobertura': compute__fonasa_chile_tramos_a_b_c_d_cobertura,
   'fondo-comun-inversion-money-market-rendimiento': fondoComunInversionMoneyMarketRendimiento,
   'fondo-desempleo-anses-monto-tiempo': fondoDesempleoAnsesMontoTiempo,
@@ -5868,8 +5880,11 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'irp-paraguay-saldo-anual': irpParaguaySaldoAnual,
   'irp-paraguay-tramos': irpParaguayTramos,
   'irpf-2026-tramos-espana-nomina': compute__irpf_2026_tramos_espana_nomina,
+  'irpf-aguinaldo-uruguay': irpfAguinaldoUruguay,
+  'irpf-alquiler-uruguay': compute__irpf_alquiler_uruguay,
   'irpf-alquiler-vivienda-arrendador-espana': compute__irpf_alquiler_vivienda_arrendador_espana,
   'irpf-andalucia-2026': irpfAndalucia2026,
+  'irpf-anual-devolucion-uruguay': irpfAnualDevolucionUruguay,
   'irpf-capital-mobiliario-intereses-dividendos-espana': compute__irpf_capital_mobiliario_intereses_dividendos_espana,
   'irpf-cataluna-2026': irpfCataluna2026,
   'irpf-declaracao-comparador': irpfDeclaracaoComparador,
@@ -5914,6 +5929,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'itf-peru': compute__itf_peru,
   'itinerario-ciudades-dias-optimo-por-ciudad': itinerarioCiudadesDiasOptimoPorCiudad,
   'itp-actos-juridicos-documentados-espana-vivienda': compute__itp_actos_juridicos_documentados_espana_vivienda,
+  'itp-uruguay': itpUruguay,
   'iv-pokemon-go': ivPokemonGo,
   'iva-bienes-exentos-excluidos-colombia-2026': compute__iva_bienes_exentos_excluidos_colombia_2026,
   'iva-chile-19-porciento-tarifa-general': compute__iva_chile_19_porciento_tarifa_general,
@@ -5943,6 +5959,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'jet-lag-zonas-horarias-adaptacion-dias': jetLagZonasHorariasAdaptacionDias,
   'jpg-calidad-tamano-web-optimizacion': jpgCalidadTamanoWebOptimizacion,
   'jubilacion-anses-monto-minimo-maxima-2026': jubilacionAnsesMontoMinimoMaxima2026,
+  'jubilacion-bps-uruguay': compute__jubilacion_bps_uruguay,
   'jubilacion-cuanto-necesito': jubilacionCuantoNecesito,
   'jubilacion-docente-caba': jubilacionDocenteCaba,
   'jubilacion-docente-ips-ba': jubilacionDocenteIpsBa,
@@ -6201,6 +6218,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'monotributo-colombia-pequenos-comercios': compute__monotributo_colombia_pequenos_comercios,
   'monotributo-cuota-2026-todas-categorias': monotributoCuota2026TodasCategorias,
   'monotributo-social-beneficio-exencion': monotributoSocialBeneficioExencion,
+  'monotributo-uruguay': compute__monotributo_uruguay,
   'monotributo-vs-autonomo-vs-empleado-mismo-ingreso': compute__monotributo_vs_autonomo_vs_empleado_mismo_ingreso,
   'monotributo-vs-categoria-optima': monotributoVsCategoriaOptima,
   'monotributo-vs-inscripto': monotributoVsInscripto,
@@ -6985,6 +7003,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'salario-minimo-2026-comparativa': salarioMinimo2026Comparativa,
   'salario-minimo-colombia-2026-auxilio-transporte': compute__salario_minimo_colombia_2026_auxilio_transporte,
   'salario-minimo-paraguay-2026': salarioMinimoParaguay2026,
+  'salario-minimo-uruguay': compute__salario_minimo_uruguay,
   'salario-neto-colombia-2026-bruto-a-neto': compute__salario_neto_colombia_2026_bruto_a_neto,
   'salario-neto-republica-dominicana': salarioNetoRepublicaDominicana,
   'salario-por-hora-dia-peru': compute__salario_por_hora_dia_peru,
@@ -7109,6 +7128,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'subnetting-mascara-red-cidr': subnettingMascaraRedCidr,
   'subsidio-enfermedad-iess-ecuador': compute__subsidio_enfermedad_iess_ecuador,
   'subsidio-incapacidad-temporal-essalud-peru': compute__subsidio_incapacidad_temporal_essalud_peru,
+  'subsidio-maternidad-uruguay': subsidioMaternidadUruguay,
   'subsidio-mayores-52-anos-espana-cuantia-meses': compute__subsidio_mayores_52_anos_espana_cuantia_meses,
   'subsidio-vivienda-mi-casa-ya-colombia-2026': compute__subsidio_vivienda_mi_casa_ya_colombia_2026,
   'substack-suscriptores-meta': substackSuscriptoresMeta,

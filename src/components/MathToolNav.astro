@@ -1,0 +1,60 @@
+---
+// Selector de modo compartido por las calculadoras simbólicas (multicálculo).
+// Cada herramienta es su propia URL (mejor SEO); este nav las une.
+interface Props { current: string; }
+const { current } = Astro.props;
+
+const tools = [
+  { key: 'derivadas', href: '/calculadora-derivadas', label: 'Derivar', icon: '𝒹/𝒹𝓍' },
+  { key: 'ecuaciones', href: '/resolver-ecuaciones', label: 'Resolver ecuación', icon: '=' },
+  { key: 'integrales', href: '/calculadora-integrales', label: 'Integrar', icon: '∫', soon: true },
+  { key: 'simplificar', href: '/simplificar-expresiones', label: 'Simplificar', icon: '≈', soon: true },
+];
+---
+
+<nav class="mtool-nav" aria-label="Herramientas de matemática">
+  {tools.map((t) => (
+    t.soon ? (
+      <span class="mtool-tab mtool-soon" aria-disabled="true" title="Próximamente">
+        <span class="mtool-icon" aria-hidden="true">{t.icon}</span>{t.label}
+        <span class="mtool-tag">pronto</span>
+      </span>
+    ) : (
+      <a
+        href={t.href}
+        class={`mtool-tab${t.key === current ? ' is-active' : ''}`}
+        aria-current={t.key === current ? 'page' : undefined}
+      >
+        <span class="mtool-icon" aria-hidden="true">{t.icon}</span>{t.label}
+      </a>
+    )
+  ))}
+</nav>
+
+<style>
+  .mtool-nav {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .mtool-tab {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.5rem 0.85rem; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--bg-card);
+    color: var(--text-muted); font-size: 0.9375rem; font-weight: 500;
+    text-decoration: none; transition: border-color 0.12s, background 0.12s, color 0.12s;
+  }
+  a.mtool-tab:hover { border-color: var(--accent); color: var(--text); }
+  .mtool-tab.is-active {
+    background: var(--accent); border-color: transparent; color: #fff; font-weight: 600;
+  }
+  .mtool-icon { font-size: 0.875rem; opacity: 0.85; font-style: italic; }
+  .mtool-tab.is-active .mtool-icon { opacity: 1; }
+  .mtool-soon { color: var(--text-subtle); cursor: default; }
+  .mtool-tag {
+    font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    background: var(--bg-soft); color: var(--text-subtle); padding: 0.1rem 0.35rem; border-radius: 4px;
+  }
+  @media (max-width: 520px) {
+    .mtool-tab { padding: 0.45rem 0.7rem; font-size: 0.875rem; }
+  }
+</style>
