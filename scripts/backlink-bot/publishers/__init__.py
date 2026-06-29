@@ -2,7 +2,7 @@
 
 article = {title, paragraphs:[str con {LINK}], anchor, target_url}
 """
-from . import telegraph, graphorg, writeas, rentry, devto, blogger, reddit
+from . import telegraph, graphorg, writeas, rentry, devto, blogger, reddit, github
 
 REGISTRY = {
     'telegraph': telegraph,
@@ -12,4 +12,5 @@ REGISTRY = {
     'devto': devto,
     'blogger': blogger,
     'reddit': reddit,
+    'github': github,
 }
