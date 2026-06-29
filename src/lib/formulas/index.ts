@@ -170,6 +170,7 @@ import { compute as compute__aporte_iess_ecuador } from './aporte-iess-ecuador';
 import { aporteJubilatorioUruguay } from './aporte-jubilatorio-uruguay';
 import { compute as compute__aporte_mutual_empresa_chile_trabajador_tasa_base } from './aporte-mutual-empresa-chile-trabajador-tasa-base';
 import { compute as compute__aporte_mutual_empresa_comparar_ist_asociacion_chilena } from './aporte-mutual-empresa-comparar-ist-asociacion-chilena';
+import { compute as compute__aporte_onp_afp_independiente_peru } from './aporte-onp-afp-independiente-peru';
 import { compute as compute__aporte_previsional_solidario_aps_chile } from './aporte-previsional-solidario-aps-chile';
 import { compute as compute__aporte_trabajador_honorarios_chile_cotizacion_obligatoria } from './aporte-trabajador-honorarios-chile-cotizacion-obligatoria';
 import { compute as compute__aportes_arl_colombia_empleador_empleado_riesgo } from './aportes-arl-colombia-empleador-empleado-riesgo';
@@ -717,6 +718,7 @@ import { compute as compute__comision_tienda_nube_2026_monto_mensual_checkout } 
 import { compute as compute__comision_uber_driver_ganancia_real_argentina_2026 } from './comision-uber-driver-ganancia-real-argentina-2026';
 import { comisionUberEatsGlovoRider } from './comision-uber-eats-glovo-rider';
 import { comisionVenta } from './comision-venta';
+import { compute as compute__comparador_comisiones_afp_peru } from './comparador-comisiones-afp-peru';
 import { compute as compute__comparador_tarjeta_debito_colombia_2026_comisiones } from './comparador-tarjeta-debito-colombia-2026-comisiones';
 import { compararInversiones } from './comparar-inversiones';
 import { compararNaftaVsGncAhorro } from './comparar-nafta-vs-gnc-ahorro';
@@ -1258,6 +1260,7 @@ import { compute as compute__deuda_mes_tarjeta_credito_colombia_pago_tope } from
 import { deudaTarjetaPagoMinimoMeses } from './deuda-tarjeta-pago-minimo-meses';
 import { devolucionFonasaUruguay } from './devolucion-fonasa-uruguay';
 import { devolucionIsrAnualMexico } from './devolucion-isr-anual-mexico';
+import { compute as compute__devolucion_renta_quinta_categoria_peru } from './devolucion-renta-quinta-categoria-peru';
 import { diaNacimientoSemana } from './dia-nacimiento-semana';
 import { diametroCaneria } from './diametro-caneria';
 import { diasEntreFechas } from './dias-entre-fechas';
@@ -1819,6 +1822,7 @@ import { compute as compute__horas_extras_chile_recargo_50 } from './horas-extra
 import { horasExtrasClt } from './horas-extras-clt';
 import { compute as compute__horas_extras_colombia_2026 } from './horas-extras-colombia-2026';
 import { horasExtrasMexico } from './horas-extras-mexico';
+import { compute as compute__horas_extras_peru } from './horas-extras-peru';
 import { horasFacturablesEmpleadoVsFreelanceComparativa } from './horas-facturables-empleado-vs-freelance-comparativa';
 import { horasLuzDiaFechaLatitud } from './horas-luz-dia-fecha-latitud';
 import { horasLuzSolarPlanta } from './horas-luz-solar-planta';
@@ -2030,6 +2034,7 @@ import { interesSimple } from './interes-simple';
 import { interesSimpleCapitalTiempoTasa } from './interes-simple-capital-tiempo-tasa';
 import { compute as compute__interes_simple_prestamo } from './interes-simple-prestamo';
 import { compute as compute__intereses_cesantias_colombia_2026 } from './intereses-cesantias-colombia-2026';
+import { compute as compute__intereses_moratorios_sunat_peru } from './intereses-moratorios-sunat-peru';
 import { interesesResarcitoriosPunitoriosAfip } from './intereses-resarcitorios-punitorios-afip';
 import { compute as compute__intermittent_fasting_window_calculator } from './intermittent-fasting-window-calculator';
 import { internetFibraCableModemComparativaMbps } from './internet-fibra-cable-modem-comparativa-mbps';
@@ -2220,6 +2225,7 @@ import { liquidacionFinalRenuncia } from './liquidacion-final-renuncia';
 import { liquidacionFinalUruguay } from './liquidacion-final-uruguay';
 import { compute as compute__liquidacion_haberes_finiquito_ecuador } from './liquidacion-haberes-finiquito-ecuador';
 import { compute as compute__liquidacion_laboral_colombia_completa_cesantias } from './liquidacion-laboral-colombia-completa-cesantias';
+import { compute as compute__liquidacion_trabajadora_hogar_peru } from './liquidacion-trabajadora-hogar-peru';
 import { litrosGalones } from './litros-galones';
 import { litrosNaftaPorSalarioPoderCompra } from './litros-nafta-por-salario-poder-compra';
 import { litrosNaftaViaje } from './litros-nafta-viaje';
@@ -2593,8 +2599,10 @@ import { compute as compute__pension_invalidez_anses_no_contributiva_2026_cuanti
 import { compute as compute__pension_invalidez_imss_mexico } from './pension-invalidez-imss-mexico';
 import { compute as compute__pension_issste_decimo_transitorio_mexico_2026 } from './pension-issste-decimo-transitorio-mexico-2026';
 import { compute as compute__pension_jubilacion_chile_edad_aportes_2026 } from './pension-jubilacion-chile-edad-aportes-2026';
+import { compute as compute__pension_jubilacion_onp_peru } from './pension-jubilacion-onp-peru';
 import { compute as compute__pension_no_contributiva_jubilacion_invalidez_espana } from './pension-no-contributiva-jubilacion-invalidez-espana';
 import { compute as compute__pension_rais_vs_prima_media_colombia } from './pension-rais-vs-prima-media-colombia';
+import { compute as compute__pension_sobrevivencia_afp_peru } from './pension-sobrevivencia-afp-peru';
 import { pensionViudezEspana } from './pension-viudez-espana';
 import { compute as compute__pension_viudez_imss_90_porcentaje_mexico } from './pension-viudez-imss-90-porcentaje-mexico';
 import { pensionViudezImssMexico } from './pension-viudez-imss-mexico';
@@ -3162,6 +3170,7 @@ import { compute as compute__salario_minimo_colombia_2026_auxilio_transporte } f
 import { salarioMinimoParaguay2026 } from './salario-minimo-paraguay-2026';
 import { compute as compute__salario_neto_colombia_2026_bruto_a_neto } from './salario-neto-colombia-2026-bruto-a-neto';
 import { salarioNetoRepublicaDominicana } from './salario-neto-republica-dominicana';
+import { compute as compute__salario_por_hora_dia_peru } from './salario-por-hora-dia-peru';
 import { salarioPorHoraMensualDiarioMexico } from './salario-por-hora-mensual-diario-mexico';
 import { salarioRealInflacion } from './salario-real-inflacion';
 import { salarioVacacionalUruguay } from './salario-vacacional-uruguay';
@@ -3280,6 +3289,7 @@ import { compute as compute__streaming_vs_batch_llm_latencia_costo_tradeoff } fr
 import { compute as compute__student_loan_payoff_time_calculator } from './student-loan-payoff-time-calculator';
 import { compute as compute__stylecraze_peso_ideal_women_formula_altura } from './stylecraze-peso-ideal-women-formula-altura';
 import { subnettingMascaraRedCidr } from './subnetting-mascara-red-cidr';
+import { compute as compute__subsidio_incapacidad_temporal_essalud_peru } from './subsidio-incapacidad-temporal-essalud-peru';
 import { compute as compute__subsidio_mayores_52_anos_espana_cuantia_meses } from './subsidio-mayores-52-anos-espana-cuantia-meses';
 import { compute as compute__subsidio_vivienda_mi_casa_ya_colombia_2026 } from './subsidio-vivienda-mi-casa-ya-colombia-2026';
 import { substackSuscriptoresMeta } from './substack-suscriptores-meta';
@@ -3921,6 +3931,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aporte-jubilatorio-uruguay': aporteJubilatorioUruguay,
   'aporte-mutual-empresa-chile-trabajador-tasa-base': compute__aporte_mutual_empresa_chile_trabajador_tasa_base,
   'aporte-mutual-empresa-comparar-ist-asociacion-chilena': compute__aporte_mutual_empresa_comparar_ist_asociacion_chilena,
+  'aporte-onp-afp-independiente-peru': compute__aporte_onp_afp_independiente_peru,
   'aporte-previsional-solidario-aps-chile': compute__aporte_previsional_solidario_aps_chile,
   'aporte-trabajador-honorarios-chile-cotizacion-obligatoria': compute__aporte_trabajador_honorarios_chile_cotizacion_obligatoria,
   'aportes-arl-colombia-empleador-empleado-riesgo': compute__aportes_arl_colombia_empleador_empleado_riesgo,
@@ -4468,6 +4479,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'comision-uber-driver-ganancia-real-argentina-2026': compute__comision_uber_driver_ganancia_real_argentina_2026,
   'comision-uber-eats-glovo-rider': comisionUberEatsGlovoRider,
   'comision-venta': comisionVenta,
+  'comparador-comisiones-afp-peru': compute__comparador_comisiones_afp_peru,
   'comparador-tarjeta-debito-colombia-2026-comisiones': compute__comparador_tarjeta_debito_colombia_2026_comisiones,
   'comparar-inversiones': compararInversiones,
   'comparar-nafta-vs-gnc-ahorro': compararNaftaVsGncAhorro,
@@ -5009,6 +5021,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'deuda-tarjeta-pago-minimo-meses': deudaTarjetaPagoMinimoMeses,
   'devolucion-fonasa-uruguay': devolucionFonasaUruguay,
   'devolucion-isr-anual-mexico': devolucionIsrAnualMexico,
+  'devolucion-renta-quinta-categoria-peru': compute__devolucion_renta_quinta_categoria_peru,
   'dia-nacimiento-semana': diaNacimientoSemana,
   'diametro-caneria': diametroCaneria,
   'dias-entre-fechas': diasEntreFechas,
@@ -5570,6 +5583,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'horas-extras-clt': horasExtrasClt,
   'horas-extras-colombia-2026': compute__horas_extras_colombia_2026,
   'horas-extras-mexico': horasExtrasMexico,
+  'horas-extras-peru': compute__horas_extras_peru,
   'horas-facturables-empleado-vs-freelance-comparativa': horasFacturablesEmpleadoVsFreelanceComparativa,
   'horas-luz-dia-fecha-latitud': horasLuzDiaFechaLatitud,
   'horas-luz-solar-planta': horasLuzSolarPlanta,
@@ -5781,6 +5795,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'interes-simple-capital-tiempo-tasa': interesSimpleCapitalTiempoTasa,
   'interes-simple-prestamo': compute__interes_simple_prestamo,
   'intereses-cesantias-colombia-2026': compute__intereses_cesantias_colombia_2026,
+  'intereses-moratorios-sunat-peru': compute__intereses_moratorios_sunat_peru,
   'intereses-resarcitorios-punitorios-afip': interesesResarcitoriosPunitoriosAfip,
   'intermittent-fasting-window-calculator': compute__intermittent_fasting_window_calculator,
   'internet-fibra-cable-modem-comparativa-mbps': internetFibraCableModemComparativaMbps,
@@ -5971,6 +5986,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'liquidacion-final-uruguay': liquidacionFinalUruguay,
   'liquidacion-haberes-finiquito-ecuador': compute__liquidacion_haberes_finiquito_ecuador,
   'liquidacion-laboral-colombia-completa-cesantias': compute__liquidacion_laboral_colombia_completa_cesantias,
+  'liquidacion-trabajadora-hogar-peru': compute__liquidacion_trabajadora_hogar_peru,
   'litros-galones': litrosGalones,
   'litros-nafta-por-salario-poder-compra': litrosNaftaPorSalarioPoderCompra,
   'litros-nafta-viaje': litrosNaftaViaje,
@@ -6344,8 +6360,10 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pension-invalidez-imss-mexico': compute__pension_invalidez_imss_mexico,
   'pension-issste-decimo-transitorio-mexico-2026': compute__pension_issste_decimo_transitorio_mexico_2026,
   'pension-jubilacion-chile-edad-aportes-2026': compute__pension_jubilacion_chile_edad_aportes_2026,
+  'pension-jubilacion-onp-peru': compute__pension_jubilacion_onp_peru,
   'pension-no-contributiva-jubilacion-invalidez-espana': compute__pension_no_contributiva_jubilacion_invalidez_espana,
   'pension-rais-vs-prima-media-colombia': compute__pension_rais_vs_prima_media_colombia,
+  'pension-sobrevivencia-afp-peru': compute__pension_sobrevivencia_afp_peru,
   'pension-viudez-espana': pensionViudezEspana,
   'pension-viudez-imss-90-porcentaje-mexico': compute__pension_viudez_imss_90_porcentaje_mexico,
   'pension-viudez-imss-mexico': pensionViudezImssMexico,
@@ -6913,6 +6931,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'salario-minimo-paraguay-2026': salarioMinimoParaguay2026,
   'salario-neto-colombia-2026-bruto-a-neto': compute__salario_neto_colombia_2026_bruto_a_neto,
   'salario-neto-republica-dominicana': salarioNetoRepublicaDominicana,
+  'salario-por-hora-dia-peru': compute__salario_por_hora_dia_peru,
   'salario-por-hora-mensual-diario-mexico': salarioPorHoraMensualDiarioMexico,
   'salario-real-inflacion': salarioRealInflacion,
   'salario-vacacional-uruguay': salarioVacacionalUruguay,
@@ -7031,6 +7050,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'student-loan-payoff-time-calculator': compute__student_loan_payoff_time_calculator,
   'stylecraze-peso-ideal-women-formula-altura': compute__stylecraze_peso_ideal_women_formula_altura,
   'subnetting-mascara-red-cidr': subnettingMascaraRedCidr,
+  'subsidio-incapacidad-temporal-essalud-peru': compute__subsidio_incapacidad_temporal_essalud_peru,
   'subsidio-mayores-52-anos-espana-cuantia-meses': compute__subsidio_mayores_52_anos_espana_cuantia_meses,
   'subsidio-vivienda-mi-casa-ya-colombia-2026': compute__subsidio_vivienda_mi_casa_ya_colombia_2026,
   'substack-suscriptores-meta': substackSuscriptoresMeta,
