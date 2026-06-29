@@ -172,6 +172,7 @@ import { aporteJubilatorioUruguay } from './aporte-jubilatorio-uruguay';
 import { compute as compute__aporte_mutual_empresa_chile_trabajador_tasa_base } from './aporte-mutual-empresa-chile-trabajador-tasa-base';
 import { compute as compute__aporte_mutual_empresa_comparar_ist_asociacion_chilena } from './aporte-mutual-empresa-comparar-ist-asociacion-chilena';
 import { compute as compute__aporte_onp_afp_independiente_peru } from './aporte-onp-afp-independiente-peru';
+import { aportePatronalIpsParaguay } from './aporte-patronal-ips-paraguay';
 import { compute as compute__aporte_previsional_solidario_aps_chile } from './aporte-previsional-solidario-aps-chile';
 import { compute as compute__aporte_trabajador_honorarios_chile_cotizacion_obligatoria } from './aporte-trabajador-honorarios-chile-cotizacion-obligatoria';
 import { compute as compute__aporte_voluntario_iess_ecuador } from './aporte-voluntario-iess-ecuador';
@@ -1135,6 +1136,7 @@ import { cuantosDiasVacacionesLaboralesAntiguedad } from './cuantos-dias-vacacio
 import { cuantosDiasVividoPersonaFechaNacimiento } from './cuantos-dias-vivido-persona-fecha-nacimiento';
 import { cuantosFeriadosRestanAnoArgentina } from './cuantos-feriados-restan-ano-argentina';
 import { cuantosJuguetesNinoEdadDesarrollo } from './cuantos-juguetes-nino-edad-desarrollo';
+import { cuantosSalariosMinimosParaguay } from './cuantos-salarios-minimos-paraguay';
 import { cuartaCategoriaEmpleadoEmpresaArgentina } from './cuarta-categoria-empleado-empresa-argentina';
 import { compute as compute__cuenta_2_afp_chile_aporte_voluntario_rendimiento } from './cuenta-2-afp-chile-aporte-voluntario-rendimiento';
 import { compute as compute__cuenta_afc_ahorro_fomento_construccion_colombia } from './cuenta-afc-ahorro-fomento-construccion-colombia';
@@ -1156,6 +1158,7 @@ import { cuotaCreditoHipotecarioUvaBancoNacion } from './cuota-credito-hipotecar
 import { compute as compute__cuota_jardin_maternal_cama_cuna_mensual_2026 } from './cuota-jardin-maternal-cama-cuna-mensual-2026';
 import { compute as compute__cuota_moderadora_copago_eps_colombia_2026 } from './cuota-moderadora-copago-eps-colombia-2026';
 import { cuotaPrestamoAutoFrancesArgentino } from './cuota-prestamo-auto-frances-argentino';
+import { cuotaPrestamoParaguay } from './cuota-prestamo-paraguay';
 import { cuotaSindicalDescuentoSueldo } from './cuota-sindical-descuento-sueldo';
 import { cuotaSocioFutbol } from './cuota-socio-futbol';
 import { cuotasCreditoMercado } from './cuotas-credito-mercado';
@@ -1443,6 +1446,7 @@ import { compute as compute__empanadas_docena_por_invitado_evento_estimacion } f
 import { empanadasPorInvitadoJuntada } from './empanadas-por-invitado-juntada';
 import { compute as compute__empanadas_por_persona_evento_asado_cumple } from './empanadas-por-persona-evento-asado-cumple';
 import { compute as compute__empleada_domestica_dias_colombia_2026 } from './empleada-domestica-dias-colombia-2026';
+import { empleadaDomesticaParaguay } from './empleada-domestica-paraguay';
 import { employerOfRecordEorCostoMesPais } from './employer-of-record-eor-costo-mes-pais';
 import { compute as compute__emprendedor_pyme_chile_puesta_marcha_1_dia } from './emprendedor-pyme-chile-puesta-marcha-1-dia';
 import { empujeArquimedesVolumen } from './empuje-arquimedes-volumen';
@@ -1615,6 +1619,7 @@ import { finiquitoLiquidacionMexico } from './finiquito-liquidacion-mexico';
 import { finiquitoMexicoCalculo } from './finiquito-mexico-calculo';
 import { compute as compute__finiquito_mexico_completo_rescision_relacion } from './finiquito-mexico-completo-rescision-relacion';
 import { finiquitoRenunciaChile } from './finiquito-renuncia-chile';
+import { finiquitoRenunciaParaguay } from './finiquito-renuncia-paraguay';
 import { compute as compute__finiquito_renuncia_voluntaria_chile } from './finiquito-renuncia-voluntaria-chile';
 import { finiquitoVsLiquidacionComparadorMexico } from './finiquito-vs-liquidacion-comparador-mexico';
 import { compute as compute__fire_retirement_number_calculator } from './fire-retirement-number-calculator';
@@ -1805,6 +1810,7 @@ import { hopUtilizationBoilTime } from './hop-utilization-boil-time';
 import { horaCheckInAeropuertoAnticipacion } from './hora-check-in-aeropuerto-anticipacion';
 import { horaFreelancePorPaisMercado } from './hora-freelance-por-pais-mercado';
 import { horaMundoZonaHoraria } from './hora-mundo-zona-horaria';
+import { horaTrabajoJornalParaguay } from './hora-trabajo-jornal-paraguay';
 import { horarioDeVerano } from './horario-de-verano-cambio-hora-por-pais';
 import { horarioLlegadaZonaHoraria } from './horario-llegada-zona-horaria';
 import { horasAprenderAlemanC1 } from './horas-aprender-aleman-c1';
@@ -2068,6 +2074,7 @@ import { irGanhoCapitalImovel } from './ir-ganho-capital-imovel';
 import { irSwingTrade } from './ir-swing-trade';
 import { ireParaguay } from './ire-paraguay';
 import { compute as compute__irnr_no_residentes_alquiler_vivienda_espana } from './irnr-no-residentes-alquiler-vivienda-espana';
+import { irpParaguaySaldoAnual } from './irp-paraguay-saldo-anual';
 import { irpParaguayTramos } from './irp-paraguay-tramos';
 import { compute as compute__irpf_2026_tramos_espana_nomina } from './irpf-2026-tramos-espana-nomina';
 import { compute as compute__irpf_alquiler_vivienda_arrendador_espana } from './irpf-alquiler-vivienda-arrendador-espana';
@@ -2151,6 +2158,7 @@ import { jubilacionDocenteIpsBa } from './jubilacion-docente-ips-ba';
 import { compute as compute__jubilacion_espana_2026_pension_anos_cotizados } from './jubilacion-espana-2026-pension-anos-cotizados';
 import { jubilacionHaberMinimoMovilidad } from './jubilacion-haber-minimo-movilidad';
 import { compute as compute__jubilacion_iess_ecuador } from './jubilacion-iess-ecuador';
+import { jubilacionIpsParaguay } from './jubilacion-ips-paraguay';
 import { jubilacionMinima } from './jubilacion-minima';
 import { compute as compute__jubilacion_patronal_ecuador } from './jubilacion-patronal-ecuador';
 import { jubilacionPuaPrestacionUniversalAdultoMayor } from './jubilacion-pua-prestacion-universal-adulto-mayor';
@@ -2568,6 +2576,7 @@ import { patenteCiclomotorMotoArgentinaCosto } from './patente-ciclomotor-moto-a
 import { compute as compute__patente_comercial_municipal_chile } from './patente-comercial-municipal-chile';
 import { patenteMotoProvincias2026Alicuota } from './patente-moto-provincias-2026-alicuota';
 import { compute as compute__patente_municipal_ecuador } from './patente-municipal-ecuador';
+import { patenteVehiculoParaguay } from './patente-vehiculo-paraguay';
 import { patreonTiersSetupOptimo } from './patreon-tiers-setup-optimo';
 import { pausasActivasTrabajo } from './pausas-activas-trabajo';
 import { paybackInversion } from './payback-inversion';
@@ -2725,6 +2734,7 @@ import { compute as compute__planilla_luz_cnel_ecuador } from './planilla-luz-cn
 import { playlistDuracionCanciones } from './playlist-duracion-canciones';
 import { plazoFijo } from './plazo-fijo';
 import { plazoFijoGananciaNetaAnual } from './plazo-fijo-ganancia-neta-anual';
+import { plazoFijoParaguay } from './plazo-fijo-paraguay';
 import { plazoFijoUvaPrecancelableRendimiento } from './plazo-fijo-uva-precancelable-rendimiento';
 import { plazoPrescripcionDeuda } from './plazo-prescripcion-deuda';
 import { plazoTesisDeadline } from './plazo-tesis-deadline';
@@ -3953,6 +3963,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aporte-mutual-empresa-chile-trabajador-tasa-base': compute__aporte_mutual_empresa_chile_trabajador_tasa_base,
   'aporte-mutual-empresa-comparar-ist-asociacion-chilena': compute__aporte_mutual_empresa_comparar_ist_asociacion_chilena,
   'aporte-onp-afp-independiente-peru': compute__aporte_onp_afp_independiente_peru,
+  'aporte-patronal-ips-paraguay': aportePatronalIpsParaguay,
   'aporte-previsional-solidario-aps-chile': compute__aporte_previsional_solidario_aps_chile,
   'aporte-trabajador-honorarios-chile-cotizacion-obligatoria': compute__aporte_trabajador_honorarios_chile_cotizacion_obligatoria,
   'aporte-voluntario-iess-ecuador': compute__aporte_voluntario_iess_ecuador,
@@ -4916,6 +4927,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuantos-dias-vivido-persona-fecha-nacimiento': cuantosDiasVividoPersonaFechaNacimiento,
   'cuantos-feriados-restan-ano-argentina': cuantosFeriadosRestanAnoArgentina,
   'cuantos-juguetes-nino-edad-desarrollo': cuantosJuguetesNinoEdadDesarrollo,
+  'cuantos-salarios-minimos-paraguay': cuantosSalariosMinimosParaguay,
   'cuarta-categoria-empleado-empresa-argentina': cuartaCategoriaEmpleadoEmpresaArgentina,
   'cuenta-2-afp-chile-aporte-voluntario-rendimiento': compute__cuenta_2_afp_chile_aporte_voluntario_rendimiento,
   'cuenta-afc-ahorro-fomento-construccion-colombia': compute__cuenta_afc_ahorro_fomento_construccion_colombia,
@@ -4937,6 +4949,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuota-jardin-maternal-cama-cuna-mensual-2026': compute__cuota_jardin_maternal_cama_cuna_mensual_2026,
   'cuota-moderadora-copago-eps-colombia-2026': compute__cuota_moderadora_copago_eps_colombia_2026,
   'cuota-prestamo-auto-frances-argentino': cuotaPrestamoAutoFrancesArgentino,
+  'cuota-prestamo-paraguay': cuotaPrestamoParaguay,
   'cuota-sindical-descuento-sueldo': cuotaSindicalDescuentoSueldo,
   'cuota-socio-futbol': cuotaSocioFutbol,
   'cuotas-credito-mercado': cuotasCreditoMercado,
@@ -5224,6 +5237,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'empanadas-por-invitado-juntada': empanadasPorInvitadoJuntada,
   'empanadas-por-persona-evento-asado-cumple': compute__empanadas_por_persona_evento_asado_cumple,
   'empleada-domestica-dias-colombia-2026': compute__empleada_domestica_dias_colombia_2026,
+  'empleada-domestica-paraguay': empleadaDomesticaParaguay,
   'employer-of-record-eor-costo-mes-pais': employerOfRecordEorCostoMesPais,
   'emprendedor-pyme-chile-puesta-marcha-1-dia': compute__emprendedor_pyme_chile_puesta_marcha_1_dia,
   'empuje-arquimedes-volumen': empujeArquimedesVolumen,
@@ -5396,6 +5410,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'finiquito-mexico-calculo': finiquitoMexicoCalculo,
   'finiquito-mexico-completo-rescision-relacion': compute__finiquito_mexico_completo_rescision_relacion,
   'finiquito-renuncia-chile': finiquitoRenunciaChile,
+  'finiquito-renuncia-paraguay': finiquitoRenunciaParaguay,
   'finiquito-renuncia-voluntaria-chile': compute__finiquito_renuncia_voluntaria_chile,
   'finiquito-vs-liquidacion-comparador-mexico': finiquitoVsLiquidacionComparadorMexico,
   'fire-retirement-number-calculator': compute__fire_retirement_number_calculator,
@@ -5586,6 +5601,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'hora-check-in-aeropuerto-anticipacion': horaCheckInAeropuertoAnticipacion,
   'hora-freelance-por-pais-mercado': horaFreelancePorPaisMercado,
   'hora-mundo-zona-horaria': horaMundoZonaHoraria,
+  'hora-trabajo-jornal-paraguay': horaTrabajoJornalParaguay,
   'horario-de-verano-cambio-hora-por-pais': horarioDeVerano,
   'horario-llegada-zona-horaria': horarioLlegadaZonaHoraria,
   'horas-aprender-aleman-c1': horasAprenderAlemanC1,
@@ -5849,6 +5865,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ir-swing-trade': irSwingTrade,
   'ire-paraguay': ireParaguay,
   'irnr-no-residentes-alquiler-vivienda-espana': compute__irnr_no_residentes_alquiler_vivienda_espana,
+  'irp-paraguay-saldo-anual': irpParaguaySaldoAnual,
   'irp-paraguay-tramos': irpParaguayTramos,
   'irpf-2026-tramos-espana-nomina': compute__irpf_2026_tramos_espana_nomina,
   'irpf-alquiler-vivienda-arrendador-espana': compute__irpf_alquiler_vivienda_arrendador_espana,
@@ -5932,6 +5949,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'jubilacion-espana-2026-pension-anos-cotizados': compute__jubilacion_espana_2026_pension_anos_cotizados,
   'jubilacion-haber-minimo-movilidad': jubilacionHaberMinimoMovilidad,
   'jubilacion-iess-ecuador': compute__jubilacion_iess_ecuador,
+  'jubilacion-ips-paraguay': jubilacionIpsParaguay,
   'jubilacion-minima': jubilacionMinima,
   'jubilacion-patronal-ecuador': compute__jubilacion_patronal_ecuador,
   'jubilacion-pua-prestacion-universal-adulto-mayor': jubilacionPuaPrestacionUniversalAdultoMayor,
@@ -6349,6 +6367,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'patente-comercial-municipal-chile': compute__patente_comercial_municipal_chile,
   'patente-moto-provincias-2026-alicuota': patenteMotoProvincias2026Alicuota,
   'patente-municipal-ecuador': compute__patente_municipal_ecuador,
+  'patente-vehiculo-paraguay': patenteVehiculoParaguay,
   'patreon-tiers-setup-optimo': patreonTiersSetupOptimo,
   'pausas-activas-trabajo': pausasActivasTrabajo,
   'payback-inversion': paybackInversion,
@@ -6506,6 +6525,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'playlist-duracion-canciones': playlistDuracionCanciones,
   'plazo-fijo': plazoFijo,
   'plazo-fijo-ganancia-neta-anual': plazoFijoGananciaNetaAnual,
+  'plazo-fijo-paraguay': plazoFijoParaguay,
   'plazo-fijo-uva-precancelable-rendimiento': plazoFijoUvaPrecancelableRendimiento,
   'plazo-prescripcion-deuda': plazoPrescripcionDeuda,
   'plazo-tesis-deadline': plazoTesisDeadline,

@@ -7,7 +7,7 @@ import Footer from '../components/Footer.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
 import Newsletter from '../components/Newsletter.astro';
 import CategoryIcon from '../components/CategoryIcon.astro';
-import { TOTAL_DISPLAY, PT_DISPLAY, TOTAL_PLAIN } from '../lib/calc-counts';
+import { TOTAL_DISPLAY, PT_DISPLAY, TOTAL_PLAIN, CALC_COUNTS } from '../lib/calc-counts';
 import { GONE_410_URLS } from '../lib/gone-410';
 import { HOME_HREFLANG } from '../lib/hreflang';
 import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
@@ -23,6 +23,12 @@ const calcs = Object.values(calcModules).map((m: any) => m.default || m);
 // la fuente única calc-counts (NUNCA hardcodear el número), redondeado HACIA ABAJO
 // a la centena para no over-promise: 4.179 → "Más de 4.100".
 const heroCalcsDisplay = TOTAL_PLAIN;
+
+// Conteo EXACTO del catálogo completo (todos los países), de la MISMA fuente única
+// que el hero. Antes estos displays usaban calcs.length (sólo el catálogo AR ≈ 2.793),
+// contradiciendo el "Más de 4.300" del H1 en la misma página. NUNCA usar calcs.length
+// para un total visible: calcs sólo carga ../content/calcs/*.json (ES-root/AR).
+const totalCalcsDisplay = CALC_COUNTS.total.toLocaleString('es-AR');
 
 // Notas recientes del blog → bloque "Novedades" en la home. Señal de frescura
 // para Google Discover + enlazado interno desde la home hacia el contenido
@@ -509,7 +515,7 @@ const schema = {
     </div>
 
     <div class="hero-meta-row">
-      <span class="hero-stat"><strong>{calcs.length.toLocaleString('es-AR')}</strong> calculadoras</span>
+      <span class="hero-stat"><strong>{totalCalcsDisplay}</strong> calculadoras</span>
       <span class="hero-dot" aria-hidden="true">·</span>
       <span class="hero-stat"><strong>{categoryOrder.length}</strong> categorías</span>
       <span class="hero-dot" aria-hidden="true">·</span>
@@ -781,7 +787,7 @@ const schema = {
       <div class="stat-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/></svg>
       </div>
-      <div class="stat-num">{calcs.length.toLocaleString('es-AR')}</div>
+      <div class="stat-num">{totalCalcsDisplay}</div>
       <div class="stat-label">Calculadoras disponibles</div>
     </div>
     <div class="stat">
@@ -842,7 +848,7 @@ const schema = {
       <h2 id="editorial-intro-heading">Qué encontrarás en Hacé Cuentas</h2>
       <p>
         Hacé Cuentas es un proyecto argentino independiente que reúne
-        <strong>{calcs.length.toLocaleString('es-AR')} calculadoras online gratuitas</strong> en español, con
+        <strong>{totalCalcsDisplay} calculadoras online gratuitas</strong> en español, con
         cobertura específica para Argentina y para todo el mundo hispanohablante,
         Brasil y Estados Unidos. Resolvemos cuentas concretas: cuánto vas a cobrar
         de aguinaldo, qué categoría de monotributo te conviene, si te conviene
@@ -946,7 +952,7 @@ const schema = {
         <summary>¿Es gratis? ¿Tengo que registrarme?</summary>
         <p>
           Sí, es completamente gratis y no necesitás registrarte ni dejar tu
-          email. Las {calcs.length.toLocaleString('es-AR')} calculadoras están abiertas a cualquiera que entre al
+          email. Las {totalCalcsDisplay} calculadoras están abiertas a cualquiera que entre al
           sitio. Nos sostenemos con publicidad y acuerdos comerciales (incluidos
           enlaces de afiliados, siempre identificados): no cobramos por listar
           calculadoras, no tenemos versión premium oculta ni muros de pago.
@@ -1029,7 +1035,7 @@ const schema = {
 
   <section class="final-cta">
     <h3>¿No encontrás la calculadora que buscás?</h3>
-    <p>Explorá el buscador con las {calcs.length.toLocaleString('es-AR')} calculadoras disponibles, o escribinos qué te falta.</p>
+    <p>Explorá el buscador con las {totalCalcsDisplay} calculadoras disponibles, o escribinos qué te falta.</p>
     <div class="cta-actions">
       <a href="/buscar" class="btn-primary">Buscar calculadora</a>
       <a href="/contacto" class="btn-ghost">Sugerir una nueva →</a>

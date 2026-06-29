@@ -494,47 +494,51 @@ const schemaHowTo = {
   .dv-go:hover { background: var(--accent-strong); }
   .dv-go:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
 
-  /* ── Resolución (compartida con el render del motor) ─────────────────────── */
+  /* ── Resolución (compartida con el render del motor) ──────────────────────
+     OJO: este HTML se inyecta con set:html, así que NO recibe el atributo de
+     scope de Astro. Las clases tienen que ir en :global() o no se estilan. */
   .dv-out { margin-top: 1.25rem; }
-  .dv-input-line {
+  :global(.dv-input-line) {
     background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm);
     padding: 0.75rem 1rem; margin-bottom: 1rem; overflow-x: auto;
   }
-  .dv-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-  .dv-step {
+  :global(.dv-steps) { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  :global(.dv-step) {
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     background: var(--bg-card); padding: 0.75rem 0.875rem;
   }
-  .dv-step-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
-  .dv-step-n {
+  :global(.dv-step-head) { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
+  :global(.dv-step-n) {
     flex-shrink: 0; width: 1.5rem; height: 1.5rem; display: inline-flex; align-items: center; justify-content: center;
     background: var(--accent-soft); color: var(--accent-strong); border-radius: 50%;
     font-size: 0.8125rem; font-weight: 700;
   }
-  .dv-step-rule { font-weight: 600; font-size: 0.9375rem; color: var(--text); }
-  .dv-step-formula { margin: 0 0 0.4rem; font-size: 0.8125rem; color: var(--text-subtle); font-family: var(--font-mono); }
-  .dv-step-math { overflow-x: auto; padding: 0.25rem 0; }
+  :global(.dv-step-rule) { font-weight: 600; font-size: 0.9375rem; color: var(--text); }
+  :global(.dv-step-formula) { margin: 0 0 0.4rem; font-size: 0.8125rem; color: var(--text-subtle); font-family: var(--font-mono); }
+  :global(.dv-step-math) { overflow-x: auto; padding: 0.25rem 0; }
 
-  .dv-result {
+  :global(.dv-result) {
     margin-top: 1rem; border: 1.5px solid var(--accent); background: var(--accent-soft);
     border-radius: var(--radius-sm); padding: 0.875rem 1rem; position: relative;
   }
-  .dv-result-label {
+  :global(.dv-result-label) {
     display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
     color: var(--accent-strong); margin-bottom: 0.35rem;
   }
-  .dv-result-math { overflow-x: auto; }
-  .dv-copy {
+  :global(.dv-result-math) { overflow-x: auto; }
+  :global(.dv-copy) {
     position: absolute; top: 0.6rem; right: 0.6rem; appearance: none; border: 1px solid var(--border);
     background: var(--bg); color: var(--text-muted); border-radius: 6px; padding: 0.25rem 0.55rem;
     font-size: 0.75rem; cursor: pointer;
   }
-  .dv-copy:hover { border-color: var(--accent); color: var(--accent-strong); }
-  .dv-error { color: var(--danger, #dc2626); font-weight: 500; padding: 0.75rem 0; margin: 0; }
+  :global(.dv-copy:hover) { border-color: var(--accent); color: var(--accent-strong); }
+  :global(.dv-error) { color: var(--danger, #dc2626); font-weight: 500; padding: 0.75rem 0; margin: 0; }
 
   /* MathML: tamaño y color coherentes con el sitio */
-  .dv-out math, .dv-ex-solution math { font-size: 1.15em; color: var(--text); }
-  .dv-input-line math, .dv-result-math math { font-size: 1.2em; }
+  :global(.dv-out math), :global(.dv-ex-solution math) { font-size: 1.15em; color: var(--text); }
+  :global(.dv-input-line math), :global(.dv-result-math math) { font-size: 1.2em; }
+  /* el d/dx queda más prolijo con la fracción un poco más chica */
+  :global(.dv-step-math mfrac), :global(.dv-input-line mfrac) { font-size: 0.95em; }
 
   .dv-section { margin: 2.25rem 0; }
   .dv-section h2 { font-size: 1.375rem; margin-bottom: 0.875rem; }
