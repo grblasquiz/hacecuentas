@@ -1,0 +1,337 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MathToolNav from '../components/MathToolNav.astro';
+import { freeOfferSchema } from '../lib/offer-schema';
+import { simplifyExpression, renderSimplifyHTML } from '../lib/math/simplify-tool';
+import '../styles/math-tools.css';
+
+const title = 'Simplificar Expresiones Algebraicas Paso a Paso (Online) | Hacé Cuentas';
+const description =
+  'Simplificá expresiones algebraicas: agrupá términos semejantes, desarrollá productos y potencias de binomios o evaluá operaciones numéricas, paso a paso. Online, gratis y sin registrarte. Para secundaria y CBC.';
+
+const site = 'https://hacecuentas.com';
+
+const DEFAULT_INPUT = '(x+2)^2';
+const defaultSolution = renderSimplifyHTML(simplifyExpression(DEFAULT_INPUT));
+
+const examples = [
+  { label: '2x + 3x + 5', input: '2x + 3x + 5', note: 'Agrupar términos semejantes.' },
+  { label: '(x + 1)(x − 1)', input: '(x+1)*(x-1)', note: 'Desarrollar un producto de binomios (diferencia de cuadrados).' },
+  { label: '(x + 2)²', input: '(x+2)^2', note: 'Potencia de un binomio (trinomio cuadrado perfecto).' },
+  { label: '2(x + 3) + 4x', input: '2*(x+3) + 4x', note: 'Distribuir y luego agrupar.' },
+  { label: '4a + 2a − a', input: '4a + 2a - a', note: 'Detecta sola la variable (acá, a).' },
+  { label: '2 + 3·4 − 5', input: '2 + 3*4 - 5', note: 'Expresión puramente numérica: se evalúa.' },
+].map((ex) => ({ ...ex, html: renderSimplifyHTML(simplifyExpression(ex.input)) }));
+
+const chips = [
+  { l: 'x', ins: 'x' },
+  { l: 'x²', ins: '^2' },
+  { l: 'xⁿ', ins: '^' },
+  { l: '+', ins: '+' },
+  { l: '−', ins: '-' },
+  { l: '·', ins: '*' },
+  { l: '( )', ins: '()' },
+];
+
+const methods = [
+  ['Agrupar términos semejantes', '2x + 3x = 5x', 'Se suman los coeficientes de los términos del mismo grado.'],
+  ['Distribuir (propiedad distributiva)', 'a(b + c) = ab + ac', 'Se multiplica el factor por cada término del paréntesis.'],
+  ['Producto de binomios', '(x+1)(x−1) = x² − 1', 'Se multiplican todos los términos entre sí y se agrupan.'],
+  ['Cuadrado de un binomio', '(x+a)² = x² + 2ax + a²', 'Trinomio cuadrado perfecto.'],
+  ['Evaluar', '2 + 3·4 = 14', 'Si es solo números, se resuelven las operaciones.'],
+];
+
+const faqs = [
+  {
+    q: '¿Qué significa simplificar una expresión?',
+    a: 'Es escribirla de la forma <strong>más corta y ordenada</strong> posible sin cambiar su valor: se <strong>desarrollan</strong> los productos y potencias, y se <strong>agrupan los términos semejantes</strong> (los del mismo grado). Por ejemplo, <code>2x + 3x</code> se simplifica como <code>5x</code>, y <code>(x+1)(x−1)</code> como <code>x² − 1</code>.',
+  },
+  {
+    q: '¿Qué son los términos semejantes?',
+    a: 'Son los que tienen la <strong>misma parte literal</strong> (la misma variable elevada al mismo exponente): <code>2x</code> y <code>5x</code> son semejantes; <code>3x²</code> y <code>4x²</code> también. Para simplificar, se <strong>suman o restan sus coeficientes</strong>: <code>2x + 5x = 7x</code>. En cambio <code>2x</code> y <code>3x²</code> no son semejantes y no se pueden agrupar.',
+  },
+  {
+    q: '¿Qué expresiones puedo simplificar?',
+    a: 'Expresiones <strong>polinómicas en una variable</strong>: sumas, restas, productos y potencias de términos con una misma letra (<code>x</code>, <code>a</code>, <code>t</code>…), por ejemplo <code>(x+2)^2</code> o <code>2x + 3x²  − x</code>. También evalúa <strong>expresiones puramente numéricas</strong>. La variable la detecta sola.',
+  },
+  {
+    q: '¿Cómo desarrolla un producto como (x+1)(x−1)?',
+    a: 'Multiplica <strong>cada término del primer paréntesis por cada término del segundo</strong> (propiedad distributiva) y después agrupa los términos semejantes. En <code>(x+1)(x−1)</code> da <code>x² − x + x − 1</code>, y al agrupar <code>−x + x = 0</code>, queda <code>x² − 1</code> (la conocida <strong>diferencia de cuadrados</strong>).',
+  },
+  {
+    q: '¿Desarrolla potencias de binomios como (x+2)²?',
+    a: 'Sí. <code>(x+2)²</code> significa <code>(x+2)·(x+2)</code>, y al desarrollarlo da el <strong>trinomio cuadrado perfecto</strong> <code>x² + 4x + 4</code>. La calculadora lo expande y agrupa los términos automáticamente, mostrando el resultado ordenado por grado.',
+  },
+  {
+    q: '¿Cómo escribo la expresión?',
+    a: 'Usá <code>^</code> para potencias (<code>x^2</code>), <code>*</code> o un espacio para multiplicar (<code>3x</code> o <code>2*(x+1)</code>), <code>+</code> y <code>-</code> para sumar y restar, y paréntesis para agrupar. Ejemplos: <code>2x + 3x</code>, <code>(x+1)*(x-1)</code>, <code>(x+2)^2</code>, <code>2 + 3*4</code>.',
+  },
+  {
+    q: '¿Simplifica expresiones con fracciones o varias variables?',
+    a: 'Por ahora trabaja con <strong>polinomios en una sola variable</strong> y expresiones numéricas. Para varias variables a la vez o fracciones algebraicas complejas el resultado puede quedar sin simplificar del todo; lo iremos ampliando. Para operar y simplificar <strong>fracciones numéricas</strong> tenés la <a href="/calculadora-fracciones-suma-resta-multiplicacion-division">calculadora de fracciones</a>.',
+  },
+  {
+    q: '¿Es gratis y necesito registrarme?',
+    a: 'Es <strong>100% gratis</strong>, sin registro y sin límite de uso. Todo el cálculo se hace <strong>en tu navegador</strong>: nada se envía a un servidor. Funciona en la compu y en el celular.',
+  },
+  {
+    q: '¿Sirve para la secundaria y el CBC?',
+    a: 'Sí. Cubre lo que se pide en <strong>matemática de secundaria</strong> y el <strong>CBC/ingreso</strong> sobre operaciones con polinomios: agrupar términos semejantes, aplicar la distributiva y desarrollar productos y cuadrados de binomios, mostrando el procedimiento.',
+  },
+];
+
+const related = [
+  { href: '/calculadora-derivadas', t: 'Calculadora de derivadas', i: '𝒹/𝒹𝓍' },
+  { href: '/resolver-ecuaciones', t: 'Resolver ecuaciones', i: '=' },
+  { href: '/calculadora-integrales', t: 'Calculadora de integrales', i: '∫' },
+  { href: '/calculadora-fracciones-suma-resta-multiplicacion-division', t: 'Operar fracciones', i: '½' },
+  { href: '/calculadora-cientifica', t: 'Calculadora científica', i: '🧮' },
+  { href: '/calculadora-ecuacion-cuadratica-raices-discriminante', t: 'Ecuación cuadrática', i: '📐' },
+];
+
+const howToSteps = [
+  { name: 'Escribí la expresión', text: 'Tipeá la expresión, por ejemplo (x+2)^2 o 2x + 3x. Usá ^ para potencias.' },
+  { name: 'Tocá "Simplificar"', text: 'La calculadora desarrolla productos y potencias y agrupa los términos semejantes.' },
+  { name: 'Mirá el resultado', text: 'Obtenés la expresión en su forma más simple, ordenada por grado.' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Simplificar expresiones algebraicas',
+  url: `${site}/simplificar-expresiones`,
+  description,
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'ARS' }),
+  featureList: [
+    'Agrupar términos semejantes',
+    'Desarrollar productos de binomios',
+    'Potencias de binomios (trinomio cuadrado perfecto)',
+    'Evaluación de expresiones numéricas',
+    'Detección automática de la variable',
+  ],
+};
+
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+    { '@type': 'ListItem', position: 2, name: 'Matemática', item: `${site}/categoria/matematica` },
+    { '@type': 'ListItem', position: 3, name: 'Simplificar expresiones', item: `${site}/simplificar-expresiones` },
+  ],
+};
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question', name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo simplificar una expresión paso a paso',
+  step: howToSteps.map((s, idx) => ({ '@type': 'HowToStep', position: idx + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical="/simplificar-expresiones" schema={schema}>
+  <Header slot="header" />
+
+  <article class="dv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/matematica">Matemática</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Simplificar expresiones</span>
+    </nav>
+
+    <h1>Simplificar expresiones algebraicas paso a paso</h1>
+    <p class="dv-lead">
+      Escribí una expresión y la calculadora la <strong>simplifica</strong>: desarrolla los productos y potencias y
+      <strong>agrupa los términos semejantes</strong> hasta dejarla en su forma más simple. Online, gratis y sin
+      registrarte.
+    </p>
+
+    <div class="dv-answer">
+      <p>
+        <strong>¿Qué es simplificar?</strong> Es reescribir una expresión de la forma <strong>más corta</strong>
+        posible sin cambiar su valor: se <strong>desarrollan</strong> los paréntesis y potencias y se
+        <strong>agrupan los términos semejantes</strong> (los del mismo grado). Acá lo ves paso a paso.
+      </p>
+    </div>
+
+    <MathToolNav current="simplificar" />
+
+    <div class="dv-card">
+      <form id="dvForm" class="dv-form" novalidate>
+        <label class="dv-label" for="dvInput">Expresión a simplificar</label>
+        <div class="dv-input-row">
+          <input
+            id="dvInput" class="dv-input" type="text" inputmode="text" autocomplete="off"
+            autocapitalize="off" spellcheck="false" value={DEFAULT_INPUT}
+            aria-label="Expresión a simplificar" placeholder="ej.: (x+2)^2"
+          />
+        </div>
+
+        <div class="dv-chips" role="group" aria-label="Inserción rápida">
+          {chips.map((c) => (<button type="button" class="dv-chip" data-ins={c.ins}>{c.l}</button>))}
+          <button type="button" class="dv-chip dv-chip-del" data-act="back" title="Borrar">⌫</button>
+          <button type="button" class="dv-chip dv-chip-clear" data-act="clear" title="Limpiar">AC</button>
+        </div>
+
+        <button type="submit" id="dvGo" class="dv-go">Simplificar</button>
+      </form>
+
+      <div class="dv-out" id="dvOut" aria-live="polite" set:html={defaultSolution}></div>
+    </div>
+
+    <section class="dv-section">
+      <h2>Cómo usar la calculadora</h2>
+      <ol class="dv-steps-list">
+        {howToSteps.map((s) => (<li><strong>{s.name}.</strong> {s.text}</li>))}
+      </ol>
+    </section>
+
+    <section class="dv-section">
+      <h2>Reglas que aplica</h2>
+      <div class="dv-table-wrap">
+        <table class="dv-table">
+          <thead><tr><th>Operación</th><th>Ejemplo</th><th>Qué se hace</th></tr></thead>
+          <tbody>
+            {methods.map(([name, form, words]) => (
+              <tr><td class="dv-td-name">{name}</td><td class="dv-td-formula">{form}</td><td>{words}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="dv-section">
+      <h2>Ejemplos resueltos paso a paso</h2>
+      <p>Distintos tipos de expresión con la resolución completa. Tocá cada una para ver el detalle:</p>
+      <div class="dv-examples">
+        {examples.map((ex, i) => (
+          <details class="dv-example" open={i === 0}>
+            <summary>
+              <span class="dv-ex-fx">{ex.label}</span>
+              <span class="dv-ex-note">{ex.note}</span>
+            </summary>
+            <div class="dv-ex-solution" set:html={ex.html}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="dv-section dv-related">
+      <h2>Calculadoras de matemática relacionadas</h2>
+      <div class="dv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="dv-related-card">
+            <span class="dv-related-icon" aria-hidden="true">{r.i}</span>
+            <span>{r.t}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="dv-section">
+      <h2>Preguntas frecuentes</h2>
+      <div class="dv-faq">
+        {faqs.map((f) => (
+          <details class="dv-faq-item">
+            <summary>{f.q}</summary>
+            <div class="dv-faq-a" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="dv-section dv-editorial">
+      <p>
+        <strong>Revisado por el equipo editorial de Hacé Cuentas.</strong> El motor se prueba contra decenas de casos
+        de referencia (agrupar semejantes, distributiva, productos y cuadrados de binomios, evaluación numérica).
+        Más en nuestra <a href="/politica-editorial">política editorial</a> y <a href="/metodologia">metodología</a>.
+      </p>
+      <p class="dv-disclaimer">
+        Los resultados son orientativos y pensados para estudiar. Para trabajos académicos, verificá con tu material de cátedra.
+      </p>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  import { simplifyExpression, renderSimplifyHTML } from '../lib/math/simplify-tool';
+
+  function setupSimp() {
+    const form = document.getElementById('dvForm') as HTMLFormElement | null;
+    if (!form || form.dataset.dvReady) return;
+    form.dataset.dvReady = '1';
+
+    const input = document.getElementById('dvInput') as HTMLInputElement;
+    const out = document.getElementById('dvOut') as HTMLElement;
+
+    function compute() {
+      out.innerHTML = renderSimplifyHTML(simplifyExpression(input.value.trim()));
+    }
+    function insertAtCursor(text: string) {
+      const start = input.selectionStart ?? input.value.length;
+      const end = input.selectionEnd ?? input.value.length;
+      input.value = input.value.slice(0, start) + text + input.value.slice(end);
+      let caret = start + text.length;
+      if (text === '()') caret = start + 1;
+      input.focus(); input.setSelectionRange(caret, caret);
+    }
+    form.addEventListener('submit', (e) => { e.preventDefault(); compute(); out.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+    form.querySelectorAll<HTMLButtonElement>('.dv-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const act = chip.getAttribute('data-act');
+        if (act === 'clear') { input.value = ''; input.focus(); return; }
+        if (act === 'back') {
+          const s = input.selectionStart ?? input.value.length;
+          if (s > 0) { input.value = input.value.slice(0, s - 1) + input.value.slice(s); input.focus(); input.setSelectionRange(s - 1, s - 1); }
+          return;
+        }
+        const ins = chip.getAttribute('data-ins');
+        if (ins) insertAtCursor(ins);
+      });
+    });
+    out.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('.dv-copy') as HTMLElement | null;
+      if (!btn) return;
+      const text = btn.getAttribute('data-copy') || '';
+      const done = () => { const o = btn.textContent; btn.textContent = '✓ Copiado'; setTimeout(() => { btn.textContent = o; }, 1500); };
+      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      else fallbackCopy(text, done);
+    });
+    function fallbackCopy(text: string, done: () => void) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch {}
+      document.body.removeChild(ta);
+    }
+    compute();
+  }
+
+  setupSimp();
+  document.addEventListener('astro:page-load', setupSimp);
+</script>

@@ -10,8 +10,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
-  type Node, type Step, type SolutionView,
-  parse, num, ZERO, simplifyFully, mml, esc, wrapMath, fmtNum, renderSolution,
+  type Node, type Step, type SolutionView, type Poly,
+  parse, mml, esc, wrapMath, fmtNum, renderSolution,
+  toPoly, polyToNode, pDegree as degree,
 } from './core';
 
 export interface EquationResult {
@@ -24,72 +25,7 @@ export interface EquationResult {
   steps: Step[];
 }
 
-// ── Polinomio como mapa grado → coeficiente ──────────────────────────────────
-type Poly = Record<number, number>;
 const EPS = 1e-10;
-
-function pClean(p: Poly): Poly {
-  const r: Poly = {};
-  for (const d in p) if (Math.abs(p[d]) > EPS) r[d] = p[d];
-  return r;
-}
-function pAdd(a: Poly, b: Poly, sign = 1): Poly {
-  const r: Poly = { ...a };
-  for (const d in b) r[d] = (r[d] || 0) + sign * b[d];
-  return pClean(r);
-}
-function pScale(p: Poly, s: number): Poly {
-  const r: Poly = {};
-  for (const d in p) r[d] = p[d] * s;
-  return pClean(r);
-}
-function pMul(a: Poly, b: Poly): Poly {
-  const r: Poly = {};
-  for (const da in a) for (const db in b) {
-    const d = Number(da) + Number(db);
-    r[d] = (r[d] || 0) + a[da] * b[db];
-  }
-  return pClean(r);
-}
-function degree(p: Poly): number {
-  let d = 0;
-  for (const k in p) d = Math.max(d, Number(k));
-  return d;
-}
-
-// Convierte un AST en su polinomio en `varName`. Lanza errores claros cuando la
-// ecuación no es polinómica (funciones, incógnita en el denominador, parámetros).
-function toPoly(n: Node, varName: string): Poly {
-  switch (n.k) {
-    case 'num': return { 0: n.v };
-    case 'const': return { 0: n.name === 'π' ? Math.PI : Math.E };
-    case 'var': return { 1: 1 };
-    case 'param':
-      throw new Error(`La ecuación tiene la letra "${n.name}" además de la incógnita. Ingresá coeficientes numéricos.`);
-    case 'neg': return pScale(toPoly(n.a, varName), -1);
-    case 'add': return pAdd(toPoly(n.a, varName), toPoly(n.b, varName));
-    case 'sub': return pAdd(toPoly(n.a, varName), toPoly(n.b, varName), -1);
-    case 'mul': return pMul(toPoly(n.a, varName), toPoly(n.b, varName));
-    case 'div': {
-      const den = toPoly(n.b, varName);
-      if (degree(den) !== 0 || Math.abs(den[0] ?? 0) < EPS)
-        throw new Error('No resuelvo ecuaciones con la incógnita en el denominador.');
-      return pScale(toPoly(n.a, varName), 1 / den[0]);
-    }
-    case 'pow': {
-      if (n.b.k !== 'num' || !Number.isInteger(n.b.v) || n.b.v < 0)
-        throw new Error('Sólo manejo potencias con exponente entero ≥ 0.');
-      let r: Poly = { 0: 1 };
-      const base = toPoly(n.a, varName);
-      for (let i = 0; i < n.b.v; i++) r = pMul(r, base);
-      return r;
-    }
-    case 'func':
-      throw new Error('Por ahora resuelvo ecuaciones polinómicas (sin sin, cos, ln, √, etc.).');
-    default:
-      throw new Error('No pude interpretar la ecuación.');
-  }
-}
 
 // ── Helpers de MathML para las sustituciones numéricas ───────────────────────
 const TIMES = '<mo>&#x22C5;</mo>';
@@ -104,24 +40,6 @@ function pc(v: number): string {
 function mnum(v: number): string {
   if (v < 0) return `<mrow>${MINUS}<mn>${fmtNum(-v)}</mn></mrow>`;
   return `<mn>${fmtNum(v)}</mn>`;
-}
-
-// Construye el AST de la forma estándar a·xⁿ + … para renderizarla prolija.
-function polyToNode(p: Poly, varName: string): Node {
-  const degs = Object.keys(p).map(Number).filter((d) => Math.abs(p[d]) > EPS).sort((a, b) => b - a);
-  if (degs.length === 0) return ZERO;
-  let node: Node | null = null;
-  for (const d of degs) {
-    const c = p[d];
-    let term: Node;
-    if (d === 0) term = num(c);
-    else {
-      const pw: Node = d === 1 ? { k: 'var', name: varName } : { k: 'pow', a: { k: 'var', name: varName }, b: num(d) };
-      term = c === 1 ? pw : { k: 'mul', a: num(c), b: pw };
-    }
-    node = node ? { k: 'add', a: node, b: term } : term;
-  }
-  return simplifyFully(node!);
 }
 
 function eqMathml(left: string, right: string): string {

@@ -20,7 +20,8 @@ export type Node =
   | { k: 'div'; a: Node; b: Node }
   | { k: 'pow'; a: Node; b: Node }
   | { k: 'func'; name: string; a: Node }
-  | { k: 'deriv'; a: Node }; // pseudo-nodo usado por la derivada
+  | { k: 'deriv'; a: Node } // pseudo-nodo usado por la derivada
+  | { k: 'integ'; a: Node }; // pseudo-nodo usado por la integral (∫ … dx)
 
 export interface Step {
   rule: string; // nombre de la regla / acción aplicada
@@ -199,7 +200,7 @@ export function dependsOnVar(n: Node): boolean {
   switch (n.k) {
     case 'var': return true;
     case 'num': case 'const': case 'param': return false;
-    case 'neg': case 'deriv': case 'func': return dependsOnVar(n.a);
+    case 'neg': case 'deriv': case 'integ': case 'func': return dependsOnVar(n.a);
     default: return dependsOnVar((n as any).a) || dependsOnVar((n as any).b);
   }
 }
@@ -210,7 +211,7 @@ export function equalNode(a: Node, b: Node): boolean {
     case 'num': return a.v === (b as any).v;
     case 'const': case 'var': case 'param': return a.name === (b as any).name;
     case 'func': return a.name === (b as any).name && equalNode(a.a, (b as any).a);
-    case 'neg': case 'deriv': return equalNode(a.a, (b as any).a);
+    case 'neg': case 'deriv': case 'integ': return equalNode(a.a, (b as any).a);
     default: return equalNode((a as any).a, (b as any).a) && equalNode((a as any).b, (b as any).b);
   }
 }
@@ -218,7 +219,7 @@ export function equalNode(a: Node, b: Node): boolean {
 // ── Simplificación (conservadora, suficiente para resultados limpios) ────────
 export function simplify(n: Node): Node {
   switch (n.k) {
-    case 'num': case 'const': case 'var': case 'param': case 'deriv':
+    case 'num': case 'const': case 'var': case 'param': case 'deriv': case 'integ':
       return n;
     case 'neg': {
       const a = simplify(n.a);
@@ -233,6 +234,7 @@ export function simplify(n: Node): Node {
       if (b.k === 'num' && b.v === 0) return a;
       if (a.k === 'num' && b.k === 'num') return num(a.v + b.v);
       if (b.k === 'neg') return simplify({ k: 'sub', a, b: b.a });
+      if (b.k === 'num' && b.v < 0) return simplify({ k: 'sub', a, b: num(-b.v) });
       return { k: 'add', a, b };
     }
     case 'sub': {
@@ -311,6 +313,92 @@ export function simplifyFully(n: Node): Node {
   return cur;
 }
 
+// ── Polinomios (grado → coeficiente) ─────────────────────────────────────────
+// Usado por la resolución de ecuaciones y la simplificación de polinomios en una
+// variable. Lanza errores claros cuando la expresión no es polinómica.
+export type Poly = Record<number, number>;
+const POLY_EPS = 1e-10;
+
+export function pClean(p: Poly): Poly {
+  const r: Poly = {};
+  for (const d in p) if (Math.abs(p[d]) > POLY_EPS) r[d] = p[d];
+  return r;
+}
+export function pAdd(a: Poly, b: Poly, sign = 1): Poly {
+  const r: Poly = { ...a };
+  for (const d in b) r[d] = (r[d] || 0) + sign * b[d];
+  return pClean(r);
+}
+export function pScale(p: Poly, s: number): Poly {
+  const r: Poly = {};
+  for (const d in p) r[d] = p[d] * s;
+  return pClean(r);
+}
+export function pMul(a: Poly, b: Poly): Poly {
+  const r: Poly = {};
+  for (const da in a) for (const db in b) {
+    const d = Number(da) + Number(db);
+    r[d] = (r[d] || 0) + a[da] * b[db];
+  }
+  return pClean(r);
+}
+export function pDegree(p: Poly): number {
+  let d = 0;
+  for (const k in p) d = Math.max(d, Number(k));
+  return d;
+}
+
+// Convierte un AST en su polinomio en `varName`. Lanza si no es polinómico.
+export function toPoly(n: Node, varName: string): Poly {
+  switch (n.k) {
+    case 'num': return { 0: n.v };
+    case 'const': return { 0: n.name === 'π' ? Math.PI : Math.E };
+    case 'var': return { 1: 1 };
+    case 'param':
+      throw new Error(`Aparece la letra "${n.name}" además de la incógnita. Usá una sola variable y coeficientes numéricos.`);
+    case 'neg': return pScale(toPoly(n.a, varName), -1);
+    case 'add': return pAdd(toPoly(n.a, varName), toPoly(n.b, varName));
+    case 'sub': return pAdd(toPoly(n.a, varName), toPoly(n.b, varName), -1);
+    case 'mul': return pMul(toPoly(n.a, varName), toPoly(n.b, varName));
+    case 'div': {
+      const den = toPoly(n.b, varName);
+      if (pDegree(den) !== 0 || Math.abs(den[0] ?? 0) < POLY_EPS)
+        throw new Error('No manejo la variable en el denominador.');
+      return pScale(toPoly(n.a, varName), 1 / den[0]);
+    }
+    case 'pow': {
+      if (n.b.k !== 'num' || !Number.isInteger(n.b.v) || n.b.v < 0)
+        throw new Error('Sólo manejo potencias con exponente entero ≥ 0.');
+      let r: Poly = { 0: 1 };
+      const base = toPoly(n.a, varName);
+      for (let i = 0; i < n.b.v; i++) r = pMul(r, base);
+      return r;
+    }
+    case 'func':
+      throw new Error('Hay una función (sin, cos, ln, √…); esto no es un polinomio.');
+    default:
+      throw new Error('No pude interpretar la expresión.');
+  }
+}
+
+// Construye el AST de la forma estándar (a·xⁿ + … + c) a partir de un polinomio.
+export function polyToNode(p: Poly, varName: string): Node {
+  const degs = Object.keys(p).map(Number).filter((d) => Math.abs(p[d]) > POLY_EPS).sort((a, b) => b - a);
+  if (degs.length === 0) return ZERO;
+  let node: Node | null = null;
+  for (const d of degs) {
+    const c = p[d];
+    let term: Node;
+    if (d === 0) term = num(c);
+    else {
+      const pw: Node = d === 1 ? { k: 'var', name: varName } : { k: 'pow', a: { k: 'var', name: varName }, b: num(d) };
+      term = c === 1 ? pw : { k: 'mul', a: num(c), b: pw };
+    }
+    node = node ? { k: 'add', a: node, b: term } : term;
+  }
+  return simplifyFully(node!);
+}
+
 // ── Render MathML (presentación) ─────────────────────────────────────────────
 export function prec(n: Node): number {
   switch (n.k) {
@@ -318,7 +406,7 @@ export function prec(n: Node): number {
     case 'mul': case 'div': return 2;
     case 'neg': return 2;
     case 'pow': return 3;
-    case 'deriv': return 2;
+    case 'deriv': case 'integ': return 1;
     default: return 4;
   }
 }
@@ -379,6 +467,8 @@ export function mml(n: Node, varName: string): string {
     }
     case 'deriv':
       return `<mrow><mfrac><mi>d</mi><mrow><mi>d</mi><mi>${esc(varName)}</mi></mrow></mfrac>${paren(mml(n.a, varName))}</mrow>`;
+    case 'integ':
+      return `<mrow><mo>&#x222B;</mo>${mml(n.a, varName)}<mspace width="0.15em"/><mrow><mi>d</mi><mi>${esc(varName)}</mi></mrow></mrow>`;
   }
 }
 
@@ -413,6 +503,7 @@ export function toText(n: Node, varName: string): string {
       if (n.name === 'sqrt') return `√(${toText(n.a, varName)})`;
       return `${FUNC_MML[n.name] ?? n.name}(${toText(n.a, varName)})`;
     case 'deriv': return `d/d${varName}(${toText(n.a, varName)})`;
+    case 'integ': return `∫(${toText(n.a, varName)}) d${varName}`;
   }
 }
 

@@ -1,0 +1,363 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MathToolNav from '../components/MathToolNav.astro';
+import { freeOfferSchema } from '../lib/offer-schema';
+import { integrate, renderIntegralHTML } from '../lib/math/integral';
+import '../styles/math-tools.css';
+
+const title = 'Calculadora de Integrales Paso a Paso (Online y Gratis) | Hacé Cuentas';
+const description =
+  'Calculá integrales indefinidas (antiderivadas) y mirá la resolución paso a paso: linealidad, regla de la potencia, funciones elementales y sustitución lineal. Online, gratis y sin registrarte. Para CBC y Análisis Matemático.';
+
+const site = 'https://hacecuentas.com';
+
+const DEFAULT_INPUT = 'x^2 + cos(x)';
+const defaultSolution = renderIntegralHTML(integrate(DEFAULT_INPUT));
+
+const examples = [
+  { label: '∫ (3x² + 2x + 1) dx', input: '3*x^2 + 2*x + 1', note: 'Polinomio: linealidad + regla de la potencia término a término.' },
+  { label: '∫ 1/x dx', input: '1/x', note: 'Caso especial de la potencia: da el logaritmo natural.' },
+  { label: '∫ cos(x) dx', input: 'cos(x)', note: 'Integral inmediata de una función trigonométrica.' },
+  { label: '∫ sin(2x) dx', input: 'sin(2*x)', note: 'Argumento lineal (2x): sustitución lineal, se divide por 2.' },
+  { label: '∫ (2x + 1)³ dx', input: '(2*x+1)^3', note: 'Potencia de una expresión lineal: sustitución lineal.' },
+  { label: '∫ eˣ dx', input: 'e^x', note: 'La exponencial: es su propia integral (+ C).' },
+].map((ex) => ({ ...ex, html: renderIntegralHTML(integrate(ex.input)) }));
+
+const chips = [
+  { l: 'x', ins: 'x' },
+  { l: 'x²', ins: '^2' },
+  { l: 'xⁿ', ins: '^' },
+  { l: '√', ins: 'sqrt(' },
+  { l: 'sin', ins: 'sin(' },
+  { l: 'cos', ins: 'cos(' },
+  { l: 'eˣ', ins: 'e^' },
+  { l: '( )', ins: '()' },
+  { l: '÷', ins: '/' },
+];
+
+const rules = [
+  ['Constante', '∫ c dx = c·x', 'La integral de un número es ese número por x.'],
+  ['Potencia', '∫ xⁿ dx = xⁿ⁺¹/(n+1)', 'Se sube el exponente en 1 y se divide por el nuevo exponente (n ≠ −1).'],
+  ['1 / x', '∫ x⁻¹ dx = ln|x|', 'El único caso de la potencia que da logaritmo.'],
+  ['Linealidad', '∫ (f ± g) dx = ∫f ± ∫g', 'La integral de una suma es la suma de las integrales.'],
+  ['Seno', '∫ sin(x) dx = −cos(x)', 'Aparece un signo menos.'],
+  ['Coseno', '∫ cos(x) dx = sin(x)', 'Sin signo.'],
+  ['Exponencial', '∫ eˣ dx = eˣ', 'Es su propia integral.'],
+  ['Sustitución lineal', '∫ f(ax+b) dx = F(ax+b)/a', 'Si el argumento es lineal, se divide por el coeficiente a.'],
+];
+
+const faqs = [
+  {
+    q: '¿Qué es una integral indefinida?',
+    a: 'Es la operación <strong>inversa de la derivada</strong>: dada una función, busca otra (la <strong>antiderivada</strong>) cuya derivada sea la función original. Como hay infinitas que difieren en una constante, el resultado siempre lleva <strong>+ C</strong>. Por ejemplo, la integral de <code>2x</code> es <code>x² + C</code>, porque la derivada de <code>x² + C</code> es <code>2x</code>.',
+  },
+  {
+    q: '¿Cómo se resuelve una integral paso a paso?',
+    a: 'Primero se aplica la <strong>linealidad</strong>: la integral de una suma es la suma de las integrales, y las constantes salen afuera. Después, cada término se resuelve con su regla: la <strong>regla de la potencia</strong> para <code>xⁿ</code>, o las integrales inmediatas de seno, coseno, exponencial, etc. Esta calculadora hace cada uno de esos pasos y te muestra la regla aplicada.',
+  },
+  {
+    q: '¿Qué integrales puede resolver esta calculadora?',
+    a: 'Resuelve <strong>integrales inmediatas</strong>: polinomios y potencias (<code>x^n</code>), <code>1/x</code> (que da <code>ln|x|</code>), funciones <strong>trigonométricas</strong> (sin, cos), <strong>exponenciales</strong> (<code>eˣ</code>, <code>2ˣ</code>), raíces, y esos mismos casos con <strong>argumento lineal</strong> (ax + b) mediante sustitución, como <code>∫sin(2x) dx</code> o <code>∫(3x+1)⁴ dx</code>.',
+  },
+  {
+    q: '¿Resuelve integración por partes o por sustitución general?',
+    a: 'Por ahora no. Se enfoca en las <strong>integrales inmediatas</strong> y la <strong>sustitución lineal</strong> (cuando el argumento es de la forma ax + b), que son la mayoría de las que se ven al empezar Análisis Matemático. Para productos de funciones (como <code>x·sin(x)</code>) o sustituciones no lineales (como <code>sin(x²)</code>) hace falta otro método, y te lo avisa.',
+  },
+  {
+    q: '¿Por qué aparece "+ C" en el resultado?',
+    a: 'Porque al derivar, cualquier <strong>constante desaparece</strong> (su derivada es 0). Entonces, al hacer el camino inverso, no podemos saber qué constante había: por eso se agrega <strong>+ C</strong>, la "constante de integración", que representa todas las antiderivadas posibles. Si te dan una condición inicial, podés calcular el valor exacto de C.',
+  },
+  {
+    q: '¿Cómo escribo la función a integrar?',
+    a: 'Usá <code>^</code> para potencias (<code>x^3</code>), <code>*</code> o un espacio para multiplicar (<code>3x</code>), <code>/</code> para dividir y paréntesis para agrupar. Las funciones llevan paréntesis: <code>sin(x)</code>, <code>cos(2*x)</code>, <code>sqrt(x)</code>. No hace falta escribir el <code>dx</code>: la calculadora lo agrega. Ejemplos: <code>x^2 + 1</code>, <code>cos(3*x)</code>, <code>(2*x+1)^4</code>.',
+  },
+  {
+    q: '¿La integral es lo contrario de la derivada?',
+    a: 'Sí. Derivar e integrar son operaciones <strong>inversas</strong> (es el Teorema Fundamental del Cálculo). Si derivás el resultado de una integral, volvés a la función original. Por eso, una buena forma de <strong>verificar</strong> una integral es derivar la respuesta: tenés la <a href="/calculadora-derivadas">calculadora de derivadas paso a paso</a> para hacerlo.',
+  },
+  {
+    q: '¿Es gratis y necesito registrarme?',
+    a: 'Es <strong>100% gratis</strong>, sin registro y sin límite de uso. Todo el cálculo se hace <strong>en tu navegador</strong>: la función no se envía a ningún servidor. Funciona en la compu y en el celular.',
+  },
+  {
+    q: '¿Sirve para el CBC y la facultad?',
+    a: 'Sí. Cubre las <strong>integrales inmediatas y por sustitución lineal</strong> que se piden al arrancar <strong>Análisis Matemático I</strong> y en el CBC, mostrando el procedimiento completo para que entiendas cada paso, no sólo el resultado.',
+  },
+];
+
+const related = [
+  { href: '/calculadora-derivadas', t: 'Calculadora de derivadas', i: '𝒹/𝒹𝓍' },
+  { href: '/resolver-ecuaciones', t: 'Resolver ecuaciones', i: '=' },
+  { href: '/calculadora-cientifica', t: 'Calculadora científica', i: '🧮' },
+  { href: '/calculadora-logaritmos-base-10-natural-cualquier-base', t: 'Logaritmos (ln, log)', i: '📊' },
+  { href: '/calculadora-raiz-cuadrada-cubica', t: 'Raíz cuadrada y cúbica', i: '√' },
+  { href: '/calculadora-trigonometria-seno-coseno-tangente', t: 'Trigonometría', i: '📐' },
+];
+
+const howToSteps = [
+  { name: 'Escribí la función', text: 'Tipeá la función a integrar, por ejemplo x^2 + cos(x). No hace falta el dx.' },
+  { name: 'Elegí la variable', text: 'Por defecto se integra respecto de x. Cambiala si usás otra letra.' },
+  { name: 'Tocá "Integrar"', text: 'La calculadora aplica la linealidad y resuelve cada término con su regla.' },
+  { name: 'Seguí los pasos', text: 'Ves cada regla aplicada y, al final, la antiderivada con su + C.' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Calculadora de integrales paso a paso',
+  url: `${site}/calculadora-integrales`,
+  description,
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'ARS' }),
+  featureList: [
+    'Integrales indefinidas paso a paso',
+    'Linealidad y regla de la potencia',
+    'Funciones trigonométricas, exponenciales y logaritmo',
+    'Sustitución lineal (argumento ax + b)',
+    'Resultado con constante de integración',
+  ],
+};
+
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+    { '@type': 'ListItem', position: 2, name: 'Matemática', item: `${site}/categoria/matematica` },
+    { '@type': 'ListItem', position: 3, name: 'Calculadora de integrales', item: `${site}/calculadora-integrales` },
+  ],
+};
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question', name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo calcular una integral paso a paso',
+  step: howToSteps.map((s, idx) => ({ '@type': 'HowToStep', position: idx + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical="/calculadora-integrales" schema={schema}>
+  <Header slot="header" />
+
+  <article class="dv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/matematica">Matemática</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Calculadora de integrales</span>
+    </nav>
+
+    <h1>Calculadora de integrales paso a paso</h1>
+    <p class="dv-lead">
+      Escribí una función y la calculadora te muestra <strong>toda la resolución de la integral</strong>:
+      aplica la linealidad, resuelve cada término con su regla y llega a la <strong>antiderivada</strong> con su
+      <strong>+ C</strong>. Online, gratis y sin registrarte.
+    </p>
+
+    <div class="dv-answer">
+      <p>
+        <strong>¿Qué es integrar?</strong> Es la operación <strong>inversa de derivar</strong>: buscar una función
+        cuya derivada sea la que te dan. Se resuelve con la <strong>linealidad</strong> (la integral de una suma es la
+        suma de integrales) y las <strong>reglas básicas</strong> (potencia, funciones, exponencial). Acá lo ves
+        <strong>paso a paso</strong>, con cada regla marcada.
+      </p>
+    </div>
+
+    <MathToolNav current="integrales" />
+
+    <div class="dv-card">
+      <form id="dvForm" class="dv-form" novalidate>
+        <label class="dv-label" for="dvInput">Función a integrar &nbsp;<span class="dv-fx">∫ … dx</span></label>
+        <div class="dv-input-row">
+          <input
+            id="dvInput" class="dv-input" type="text" inputmode="text" autocomplete="off"
+            autocapitalize="off" spellcheck="false" value={DEFAULT_INPUT}
+            aria-label="Función a integrar" placeholder="ej.: x^2 + cos(x)"
+          />
+          <div class="dv-var">
+            <label for="dvVar">respecto de</label>
+            <input id="dvVar" class="dv-var-input" type="text" value="x" maxlength="1" aria-label="Variable de integración" />
+          </div>
+        </div>
+
+        <div class="dv-chips" role="group" aria-label="Inserción rápida">
+          {chips.map((c) => (<button type="button" class="dv-chip" data-ins={c.ins}>{c.l}</button>))}
+          <button type="button" class="dv-chip dv-chip-del" data-act="back" title="Borrar">⌫</button>
+          <button type="button" class="dv-chip dv-chip-clear" data-act="clear" title="Limpiar">AC</button>
+        </div>
+
+        <button type="submit" id="dvGo" class="dv-go">Integrar</button>
+      </form>
+
+      <div class="dv-out" id="dvOut" aria-live="polite" set:html={defaultSolution}></div>
+    </div>
+
+    <section class="dv-section">
+      <h2>Cómo usar la calculadora de integrales</h2>
+      <ol class="dv-steps-list">
+        {howToSteps.map((s) => (<li><strong>{s.name}.</strong> {s.text}</li>))}
+      </ol>
+      <p>Para <strong>verificar</strong> el resultado, derivalo: tenés que volver a la función original.</p>
+    </section>
+
+    <section class="dv-section">
+      <h2>Tabla de reglas de integración</h2>
+      <p>Estas son las reglas básicas que la calculadora aplica. La constante de integración + C va siempre al final:</p>
+      <div class="dv-table-wrap">
+        <table class="dv-table">
+          <thead><tr><th>Regla</th><th>Fórmula</th><th>En palabras</th></tr></thead>
+          <tbody>
+            {rules.map(([name, formula, words]) => (
+              <tr><td class="dv-td-name">{name}</td><td class="dv-td-formula">{formula}</td><td>{words}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="dv-section">
+      <h2>Ejemplos resueltos paso a paso</h2>
+      <p>Distintos tipos de integral con la resolución completa. Tocá cada una para ver el detalle:</p>
+      <div class="dv-examples">
+        {examples.map((ex, i) => (
+          <details class="dv-example" open={i === 0}>
+            <summary>
+              <span class="dv-ex-fx">{ex.label}</span>
+              <span class="dv-ex-note">{ex.note}</span>
+            </summary>
+            <div class="dv-ex-solution" set:html={ex.html}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="dv-section">
+      <h2>La sustitución lineal (argumento ax + b)</h2>
+      <p>
+        Cuando dentro de la función hay algo <strong>lineal</strong> (de la forma <code>ax + b</code>), como en
+        <code>∫sin(2x) dx</code> o <code>∫(3x+1)⁴ dx</code>, se integra como si fuera la variable sola y al final se
+        <strong>divide por el coeficiente a</strong>. Por eso <code>∫sin(2x) dx = −cos(2x)/2 + C</code>: el 2 que
+        multiplica a la x aparece dividiendo. Es el caso más simple del método de sustitución.
+      </p>
+    </section>
+
+    <section class="dv-section dv-related">
+      <h2>Calculadoras de matemática relacionadas</h2>
+      <div class="dv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="dv-related-card">
+            <span class="dv-related-icon" aria-hidden="true">{r.i}</span>
+            <span>{r.t}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="dv-section">
+      <h2>Preguntas frecuentes</h2>
+      <div class="dv-faq">
+        {faqs.map((f) => (
+          <details class="dv-faq-item">
+            <summary>{f.q}</summary>
+            <div class="dv-faq-a" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="dv-section dv-editorial">
+      <p>
+        <strong>Revisado por el equipo editorial de Hacé Cuentas.</strong> El motor se prueba contra decenas de casos
+        de referencia (potencias, 1/x, funciones trigonométricas y exponenciales, y sustitución lineal). Cada
+        resultado se puede verificar derivándolo. Más en nuestra
+        <a href="/politica-editorial">política editorial</a> y <a href="/metodologia">metodología</a>.
+      </p>
+      <p class="dv-disclaimer">
+        Los resultados son orientativos y pensados para estudiar. Para trabajos académicos, verificá con tu material de cátedra.
+      </p>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  import { integrate, renderIntegralHTML } from '../lib/math/integral';
+
+  function setupInt() {
+    const form = document.getElementById('dvForm') as HTMLFormElement | null;
+    if (!form || form.dataset.dvReady) return;
+    form.dataset.dvReady = '1';
+
+    const input = document.getElementById('dvInput') as HTMLInputElement;
+    const varInput = document.getElementById('dvVar') as HTMLInputElement;
+    const out = document.getElementById('dvOut') as HTMLElement;
+
+    function compute() {
+      const v = (varInput.value.trim() || 'x').slice(0, 1);
+      out.innerHTML = renderIntegralHTML(integrate(input.value.trim(), v));
+    }
+    function insertAtCursor(text: string) {
+      const start = input.selectionStart ?? input.value.length;
+      const end = input.selectionEnd ?? input.value.length;
+      input.value = input.value.slice(0, start) + text + input.value.slice(end);
+      let caret = start + text.length;
+      if (text === '()') caret = start + 1;
+      input.focus(); input.setSelectionRange(caret, caret);
+    }
+    form.addEventListener('submit', (e) => { e.preventDefault(); compute(); out.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+    form.querySelectorAll<HTMLButtonElement>('.dv-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const act = chip.getAttribute('data-act');
+        if (act === 'clear') { input.value = ''; input.focus(); return; }
+        if (act === 'back') {
+          const s = input.selectionStart ?? input.value.length;
+          if (s > 0) { input.value = input.value.slice(0, s - 1) + input.value.slice(s); input.focus(); input.setSelectionRange(s - 1, s - 1); }
+          return;
+        }
+        const ins = chip.getAttribute('data-ins');
+        if (ins) insertAtCursor(ins);
+      });
+    });
+    out.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('.dv-copy') as HTMLElement | null;
+      if (!btn) return;
+      const text = btn.getAttribute('data-copy') || '';
+      const done = () => { const o = btn.textContent; btn.textContent = '✓ Copiado'; setTimeout(() => { btn.textContent = o; }, 1500); };
+      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      else fallbackCopy(text, done);
+    });
+    function fallbackCopy(text: string, done: () => void) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch {}
+      document.body.removeChild(ta);
+    }
+    compute();
+  }
+
+  setupInt();
+  document.addEventListener('astro:page-load', setupInt);
+</script>

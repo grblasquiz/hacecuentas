@@ -211,6 +211,7 @@ import { compute as compute__arriendo_vs_comprar_chile_10_anos_uf } from './arri
 import { arrozAguaProporcion } from './arroz-agua-proporcion';
 import { artIndemnizacionTablaIncapacidadPermanente } from './art-indemnizacion-tabla-incapacidad-permanente';
 import { artPrestacionIltIncapacidadTemporaria } from './art-prestacion-ilt-incapacidad-temporaria';
+import { articulo86RetrasoPrestacionesRepublicaDominicana } from './articulo-86-retraso-prestaciones-republica-dominicana';
 import { compute as compute__asado_kg_por_persona_cortes_tira_vacio_pollo } from './asado-kg-por-persona-cortes-tira-vacio-pollo';
 import { asadoPorInvitadoKgCarne } from './asado-por-invitado-kg-carne';
 import { asignacionDesempleoSeguroPrestacionAnses } from './asignacion-desempleo-seguro-prestacion-anses';
@@ -1257,6 +1258,7 @@ import { descuentoVueloMillasVsCash } from './descuento-vuelo-millas-vs-cash';
 import { desintegracionRadioactivaVidaMedia } from './desintegracion-radioactiva-vida-media';
 import { despedidaCasamientoPresupuesto } from './despedida-casamiento-presupuesto';
 import { despidoEnfermedadInculpableArt211 } from './despido-enfermedad-inculpable-art-211';
+import { despidoInjustificadoRepublicaDominicana } from './despido-injustificado-republica-dominicana';
 import { desviacionEstandar } from './desviacion-estandar';
 import { compute as compute__desviacion_estandar_varianza } from './desviacion-estandar-varianza';
 import { desvioEstandarVarianzaConjunto } from './desvio-estandar-varianza-conjunto';
@@ -1335,6 +1337,7 @@ import { compute as compute__divorcio_particion_bienes_chile_sociedad_conyugal_v
 import { compute as compute__divorcio_particion_bienes_colombia_sociedad_conyugal } from './divorcio-particion-bienes-colombia-sociedad-conyugal';
 import { dniExtranjeroResidenciaCostoMigraciones } from './dni-extranjero-residencia-costo-migraciones';
 import { dniPasaporteCostoTramiteArgentina } from './dni-pasaporte-costo-tramite-argentina';
+import { dobleSueldoRepublicaDominicana } from './doble-sueldo-republica-dominicana';
 import { dolarAR } from './dolar-ar';
 import { dolarBcvParaleloBolivaresHoy } from './dolar-bcv-paralelo-bolivares-hoy';
 import { dolarBlueVsOficialBrecha } from './dolar-blue-vs-oficial-brecha';
@@ -1962,6 +1965,7 @@ import { compute as compute__impuesto_territorial_contribuciones_bienes_raices_c
 import { compute as compute__impuesto_territorial_residencial_2026_tabla_bienes_raices } from './impuesto-territorial-residencial-2026-tabla-bienes-raices';
 import { compute as compute__impuesto_timbre_nacional_colombia_2026 } from './impuesto-timbre-nacional-colombia-2026';
 import { compute as compute__impuesto_timbres_estampillas_chile_credito_hipotecario } from './impuesto-timbres-estampillas-chile-credito-hipotecario';
+import { impuestoTransferenciaInmobiliariaRepublicaDominicana } from './impuesto-transferencia-inmobiliaria-republica-dominicana';
 import { impuestoTransferenciaItuItiInmueble } from './impuesto-transferencia-itu-iti-inmueble';
 import { compute as compute__impuesto_vehicular_peru } from './impuesto-vehicular-peru';
 import { compute as compute__impuesto_vehiculos_bogota_2026_tabla } from './impuesto-vehiculos-bogota-2026-tabla';
@@ -2066,6 +2070,7 @@ import { compute as compute__inversion_departamento_arriendo_chile_yield_rentabi
 import { inversionDolarizadaCocosBalanzRendimiento } from './inversion-dolarizada-cocos-balanz-rendimiento';
 import { inversorSolarPotencia } from './inversor-solar-potencia';
 import { invitacionesCumpleNumero } from './invitaciones-cumple-numero';
+import { ipiRepublicaDominicana } from './ipi-republica-dominicana';
 import { iptuSaoPaulo } from './iptu-sao-paulo';
 import { ipvaMinasGerais } from './ipva-minas-gerais';
 import { ipvaRioDeJaneiro } from './ipva-rio-de-janeiro';
@@ -2308,6 +2313,7 @@ import { manhattanClasico } from './manhattan-clasico';
 import { maratonPaceGoalTimeSplitKilometro } from './maraton-pace-goal-time-split-kilometro';
 import { maratonSerieTiempo } from './maraton-serie-tiempo';
 import { maratonTiempoObjetivoEdadExperiencia } from './maraton-tiempo-objetivo-edad-experiencia';
+import { marbeteRepublicaDominicana } from './marbete-republica-dominicana';
 import { mareasCicloLunarCosta } from './mareas-ciclo-lunar-costa';
 import { margaritaIngredientesJarra } from './margarita-ingredientes-jarra';
 import { margenContribucion } from './margen-contribucion';
@@ -2610,6 +2616,7 @@ import { compute as compute__pendle_pt_yt_vencimiento_fixed_yield } from './pend
 import { penduloSimplePeriodo } from './pendulo-simple-periodo';
 import { pensaoPorMorteInss } from './pensao-por-morte-inss';
 import { compute as compute__pension_65_peru } from './pension-65-peru';
+import { pensionAfpRepublicaDominicana } from './pension-afp-republica-dominicana';
 import { pensionAlimentariaHijoPorcentajeSueldoDetallada } from './pension-alimentaria-hijo-porcentaje-sueldo-detallada';
 import { compute as compute__pension_alimenticia_chile_padre_tribunal_familia } from './pension-alimenticia-chile-padre-tribunal-familia';
 import { compute as compute__pension_alimenticia_divorcio_espana_tabla } from './pension-alimenticia-divorcio-espana-tabla';
@@ -2851,10 +2858,12 @@ import { compute as compute__prestamo_coche_espana_cdc_vs_renting } from './pres
 import { prestamoCuota } from './prestamo-cuota';
 import { prestamoCuotaMexico } from './prestamo-cuota-mexico';
 import { prestamoEstudiantilCuotas } from './prestamo-estudiantil-cuotas';
+import { prestamoHipotecarioRepublicaDominicana } from './prestamo-hipotecario-republica-dominicana';
 import { compute as compute__prestamo_personal_chile_cae_cmf_cuota } from './prestamo-personal-chile-cae-cmf-cuota';
 import { compute as compute__prestamo_personal_cuota_mensual } from './prestamo-personal-cuota-mensual';
 import { prestamoPersonalGaliciaVsSantanderCuota } from './prestamo-personal-galicia-vs-santander-cuota';
 import { prestamoPersonalMensualidadCatMexico } from './prestamo-personal-mensualidad-cat-mexico';
+import { prestamoPersonalRepublicaDominicana } from './prestamo-personal-republica-dominicana';
 import { compute as compute__prestamo_personal_tae_tin_comparador_espana } from './prestamo-personal-tae-tin-comparador-espana';
 import { compute as compute__prestamo_personal_tcea_peru } from './prestamo-personal-tcea-peru';
 import { compute as compute__prestamo_quirografario_iess_ecuador } from './prestamo-quirografario-iess-ecuador';
@@ -3591,6 +3600,7 @@ import { transportadoraTamanoMascotaViaje } from './transportadora-tamano-mascot
 import { transportePublicoViajePresupuesto } from './transporte-publico-viaje-presupuesto';
 import { transposicionAcordes } from './transposicion-acordes';
 import { trasladoAeropuertoCiudadTiempo } from './traslado-aeropuerto-ciudad-tiempo';
+import { traspasoVehiculoRepublicaDominicana } from './traspaso-vehiculo-republica-dominicana';
 import { compute as compute__trastero_garaje_precio_alquiler_espana_2026 } from './trastero-garaje-precio-alquiler-espana-2026';
 import { triatlonIronmanTiempoMedioEdadCategoria } from './triatlon-ironman-tiempo-medio-edad-categoria';
 import { trigliceridosValoresNormalesRiesgo } from './trigliceridos-valores-normales-riesgo';
@@ -4012,6 +4022,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'arroz-agua-proporcion': arrozAguaProporcion,
   'art-indemnizacion-tabla-incapacidad-permanente': artIndemnizacionTablaIncapacidadPermanente,
   'art-prestacion-ilt-incapacidad-temporaria': artPrestacionIltIncapacidadTemporaria,
+  'articulo-86-retraso-prestaciones-republica-dominicana': articulo86RetrasoPrestacionesRepublicaDominicana,
   'asado-kg-por-persona-cortes-tira-vacio-pollo': compute__asado_kg_por_persona_cortes_tira_vacio_pollo,
   'asado-por-invitado-kg-carne': asadoPorInvitadoKgCarne,
   'asignacion-desempleo-seguro-prestacion-anses': asignacionDesempleoSeguroPrestacionAnses,
@@ -5058,6 +5069,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'desintegracion-radioactiva-vida-media': desintegracionRadioactivaVidaMedia,
   'despedida-casamiento-presupuesto': despedidaCasamientoPresupuesto,
   'despido-enfermedad-inculpable-art-211': despidoEnfermedadInculpableArt211,
+  'despido-injustificado-republica-dominicana': despidoInjustificadoRepublicaDominicana,
   'desviacion-estandar': desviacionEstandar,
   'desviacion-estandar-varianza': compute__desviacion_estandar_varianza,
   'desvio-estandar-varianza-conjunto': desvioEstandarVarianzaConjunto,
@@ -5136,6 +5148,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'divorcio-particion-bienes-colombia-sociedad-conyugal': compute__divorcio_particion_bienes_colombia_sociedad_conyugal,
   'dni-extranjero-residencia-costo-migraciones': dniExtranjeroResidenciaCostoMigraciones,
   'dni-pasaporte-costo-tramite-argentina': dniPasaporteCostoTramiteArgentina,
+  'doble-sueldo-republica-dominicana': dobleSueldoRepublicaDominicana,
   'dolar-ar': dolarAR,
   'dolar-bcv-paralelo-bolivares-hoy': dolarBcvParaleloBolivaresHoy,
   'dolar-blue-vs-oficial-brecha': dolarBlueVsOficialBrecha,
@@ -5763,6 +5776,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'impuesto-territorial-residencial-2026-tabla-bienes-raices': compute__impuesto_territorial_residencial_2026_tabla_bienes_raices,
   'impuesto-timbre-nacional-colombia-2026': compute__impuesto_timbre_nacional_colombia_2026,
   'impuesto-timbres-estampillas-chile-credito-hipotecario': compute__impuesto_timbres_estampillas_chile_credito_hipotecario,
+  'impuesto-transferencia-inmobiliaria-republica-dominicana': impuestoTransferenciaInmobiliariaRepublicaDominicana,
   'impuesto-transferencia-itu-iti-inmueble': impuestoTransferenciaItuItiInmueble,
   'impuesto-vehicular-peru': compute__impuesto_vehicular_peru,
   'impuesto-vehiculos-bogota-2026-tabla': compute__impuesto_vehiculos_bogota_2026_tabla,
@@ -5867,6 +5881,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'inversion-dolarizada-cocos-balanz-rendimiento': inversionDolarizadaCocosBalanzRendimiento,
   'inversor-solar-potencia': inversorSolarPotencia,
   'invitaciones-cumple-numero': invitacionesCumpleNumero,
+  'ipi-republica-dominicana': ipiRepublicaDominicana,
   'iptu-sao-paulo': iptuSaoPaulo,
   'ipva-minas-gerais': ipvaMinasGerais,
   'ipva-rio-de-janeiro': ipvaRioDeJaneiro,
@@ -6109,6 +6124,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'maraton-pace-goal-time-split-kilometro': maratonPaceGoalTimeSplitKilometro,
   'maraton-serie-tiempo': maratonSerieTiempo,
   'maraton-tiempo-objetivo-edad-experiencia': maratonTiempoObjetivoEdadExperiencia,
+  'marbete-republica-dominicana': marbeteRepublicaDominicana,
   'mareas-ciclo-lunar-costa': mareasCicloLunarCosta,
   'margarita-ingredientes-jarra': margaritaIngredientesJarra,
   'margen-contribucion': margenContribucion,
@@ -6411,6 +6427,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pendulo-simple-periodo': penduloSimplePeriodo,
   'pensao-por-morte-inss': pensaoPorMorteInss,
   'pension-65-peru': compute__pension_65_peru,
+  'pension-afp-republica-dominicana': pensionAfpRepublicaDominicana,
   'pension-alimentaria-hijo-porcentaje-sueldo-detallada': pensionAlimentariaHijoPorcentajeSueldoDetallada,
   'pension-alimenticia-chile-padre-tribunal-familia': compute__pension_alimenticia_chile_padre_tribunal_familia,
   'pension-alimenticia-divorcio-espana-tabla': compute__pension_alimenticia_divorcio_espana_tabla,
@@ -6652,10 +6669,12 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'prestamo-cuota': prestamoCuota,
   'prestamo-cuota-mexico': prestamoCuotaMexico,
   'prestamo-estudiantil-cuotas': prestamoEstudiantilCuotas,
+  'prestamo-hipotecario-republica-dominicana': prestamoHipotecarioRepublicaDominicana,
   'prestamo-personal-chile-cae-cmf-cuota': compute__prestamo_personal_chile_cae_cmf_cuota,
   'prestamo-personal-cuota-mensual': compute__prestamo_personal_cuota_mensual,
   'prestamo-personal-galicia-vs-santander-cuota': prestamoPersonalGaliciaVsSantanderCuota,
   'prestamo-personal-mensualidad-cat-mexico': prestamoPersonalMensualidadCatMexico,
+  'prestamo-personal-republica-dominicana': prestamoPersonalRepublicaDominicana,
   'prestamo-personal-tae-tin-comparador-espana': compute__prestamo_personal_tae_tin_comparador_espana,
   'prestamo-personal-tcea-peru': compute__prestamo_personal_tcea_peru,
   'prestamo-quirografario-iess-ecuador': compute__prestamo_quirografario_iess_ecuador,
@@ -7392,6 +7411,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'transporte-publico-viaje-presupuesto': transportePublicoViajePresupuesto,
   'transposicion-acordes': transposicionAcordes,
   'traslado-aeropuerto-ciudad-tiempo': trasladoAeropuertoCiudadTiempo,
+  'traspaso-vehiculo-republica-dominicana': traspasoVehiculoRepublicaDominicana,
   'trastero-garaje-precio-alquiler-espana-2026': compute__trastero_garaje_precio_alquiler_espana_2026,
   'triatlon-ironman-tiempo-medio-edad-categoria': triatlonIronmanTiempoMedioEdadCategoria,
   'trigliceridos-valores-normales-riesgo': trigliceridosValoresNormalesRiesgo,
