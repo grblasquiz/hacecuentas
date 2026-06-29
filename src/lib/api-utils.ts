@@ -20,6 +20,17 @@ export interface CfEnv {
   SESSION?: KVNamespace;
   IMAGES?: unknown;
   ADMIN_PASSCODE?: string;
+  /**
+   * Cloudflare Email Sending — binding send_email. Mismo mecanismo que el
+   * newsletter (workers/mailing-cron). Manda el código OTP de login. En dev
+   * (astro dev) no existe → request-code cae al fallback con devCode.
+   */
+  EMAIL?: { send: (msg: { from: string; to: string; subject: string; html: string }) => Promise<unknown> };
+  /** Remitente de los emails de login/cuenta. Default 'cuenta@hacecuentas.com'. */
+  AUTH_EMAIL_FROM?: string;
+  /** Resend (legacy, usado por email-result/feedback/lead). El OTP NO lo usa. */
+  RESEND_API_KEY?: string;
+  RESULT_EMAIL_FROM?: string;
 }
 
 /** Acceso tipado al env del Worker (D1, KV, secrets). */

@@ -1,0 +1,125 @@
+---
+/**
+ * ProfileStore — store global de "Mi Hacé Cuentas" (perfil numérico local).
+ *
+ * Expone `window.HCProfile`, una API mínima que leen/escriben el prefill de
+ * las calcs (ProfilePrefill.astro) y la pantalla de gestión (/mi-hacecuentas).
+ * Se monta UNA vez en el Layout para estar disponible en todo el sitio.
+ *
+ * CONTRATO (ver src/lib/profile/schema.ts — NO romper):
+ *   localStorage 'hc_profile'         = { v, fields: { "<key>": {value, at, src} } }
+ *   localStorage 'hc_profile_consent' = 'granted' | 'denied'   (ausente = sin decidir)
+ *
+ * API window.HCProfile:
+ *   .get(key)            -> value | undefined
+ *   .entry(key)          -> { value, at, src } | undefined
+ *   .set(key, value, src)-> guarda (NO chequea consentimiento; lo hace el caller)
+ *   .clear(key?)         -> borra una clave o (sin arg) todo el perfil
+ *   .all()               -> { "<key>": {value, at, src} }   (copia)
+ *   .consent()           -> 'granted' | 'denied' | null
+ *   .setConsent(v)       -> setea consentimiento ('granted' | 'denied')
+ *
+ * Cada escritura dispara window event 'hc-profile-change' (detail: {key}) para
+ * que el prefill y la pantalla de perfil reaccionen en vivo.
+ *
+ * Privado por defecto: todo vive en este navegador, nunca se envía al servidor.
+ * Patrón is:inline sin imports (ClientRouter no re-ejecuta inline en navegación
+ * SPA, pero el global queda colgado de window y persiste).
+ */
+---
+
+<script is:inline>
+  (function () {
+    if (window.HCProfile) return; // idempotente: una sola instancia por documento
+
+    var PROFILE_KEY = 'hc_profile';
+    var CONSENT_KEY = 'hc_profile_consent';
+    var PROFILE_VERSION = 1;
+
+    function readRaw() {
+      try {
+        var obj = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
+        if (!obj || typeof obj !== 'object' || typeof obj.fields !== 'object') {
+          return { v: PROFILE_VERSION, fields: {} };
+        }
+        // Migraciones futuras irían acá según obj.v. v1: se acepta tal cual.
+        return { v: PROFILE_VERSION, fields: obj.fields || {} };
+      } catch (e) {
+        return { v: PROFILE_VERSION, fields: {} };
+      }
+    }
+
+    function writeRaw(obj) {
+      try {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(obj));
+        return true;
+      } catch (e) {
+        return false; // storage lleno/bloqueado: no romper la página
+      }
+    }
+
+    function emitChange(key) {
+      try {
+        window.dispatchEvent(new CustomEvent('hc-profile-change', { detail: { key: key } }));
+      } catch (e) { /* entorno sin CustomEvent: ignorar */ }
+    }
+
+    window.HCProfile = {
+      entry: function (key) {
+        var e = readRaw().fields[key];
+        return e && typeof e === 'object' ? e : undefined;
+      },
+      get: function (key) {
+        var e = this.entry(key);
+        return e ? e.value : undefined;
+      },
+      all: function () {
+        return readRaw().fields;
+      },
+      set: function (key, value, src) {
+        if (!key) return false;
+        if (value === '' || value === null || value === undefined) return false;
+        var data = readRaw();
+        data.fields[key] = {
+          value: value,
+          at: new Date().toISOString(),
+          src: src || 'profile',
+        };
+        var ok = writeRaw(data);
+        if (ok) emitChange(key);
+        return ok;
+      },
+      clear: function (key) {
+        var data = readRaw();
+        if (key) {
+          delete data.fields[key];
+        } else {
+          data.fields = {};
+        }
+        var ok = writeRaw(data);
+        if (ok) emitChange(key || '*');
+        return ok;
+      },
+      consent: function () {
+        try {
+          var v = localStorage.getItem(CONSENT_KEY);
+          return v === 'granted' || v === 'denied' ? v : null;
+        } catch (e) {
+          return null;
+        }
+      },
+      setConsent: function (v) {
+        if (v !== 'granted' && v !== 'denied') return false;
+        try {
+          localStorage.setItem(CONSENT_KEY, v);
+        } catch (e) {
+          return false;
+        }
+        // Si revoca, el perfil deja de auto-capturar; los datos ya guardados se
+        // gestionan/borran desde /mi-hacecuentas (no se tocan acá).
+        emitChange('*');
+        return true;
+      },
+    };
+  })();
+</script>

@@ -165,3 +165,57 @@ CREATE TABLE IF NOT EXISTS fx_live (
   data TEXT NOT NULL,                    -- JSON snapshot
   updated_at TEXT NOT NULL               -- ISO 8601
 );
+
+-- ── Cuentas "Mi Hacé Cuentas" (perfil numérico con login) ──────────────────
+-- Login por OTP (código de un solo uso al mail) y/o Google. Los calcs siguen
+-- siendo PÚBLICOS sin login; sólo la memoria-entre-herramientas pide cuenta.
+
+-- Usuarios. email único. newsletter_optin se setea en el registro (casilla).
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  created_at INTEGER NOT NULL,          -- unix ms
+  last_login_at INTEGER,
+  newsletter_optin INTEGER DEFAULT 0,   -- 1 = suscripto al newsletter
+  auth_provider TEXT DEFAULT 'otp',     -- 'otp' | 'google'
+  email_verified INTEGER DEFAULT 0      -- OTP y Google entregan mail verificado
+);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Perfil numérico server-side: espejo sincronizable del localStorage del cliente.
+-- Una fila por (usuario, clave canónica de src/lib/profile/schema.ts).
+CREATE TABLE IF NOT EXISTS user_profile (
+  user_id INTEGER NOT NULL,
+  key TEXT NOT NULL,                     -- clave canónica: 'trabajo.sueldoBruto'
+  value TEXT NOT NULL,                   -- number/string/bool serializado
+  updated_at INTEGER NOT NULL,          -- unix ms
+  src TEXT,                              -- procedencia: 'calc:<slug>' | 'profile'
+  PRIMARY KEY (user_id, key),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Códigos OTP de un solo uso. Guardamos el HASH del código (nunca el plano),
+-- con expiración corta y contador anti fuerza-bruta. Se borran al consumirse.
+CREATE TABLE IF NOT EXISTS auth_codes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL,
+  code_hash TEXT NOT NULL,              -- SHA-256 del código de 6 dígitos
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,          -- unix ms (~+10 min)
+  attempts INTEGER DEFAULT 0,           -- intentos fallidos de verificación
+  consumed INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_auth_codes_email ON auth_codes(email);
+CREATE INDEX IF NOT EXISTS idx_auth_codes_expires ON auth_codes(expires_at);
+
+-- Sesiones: token opaco aleatorio (256-bit) en cookie httpOnly+Secure+SameSite.
+-- Se valida contra esta tabla en cada request autenticado.
+CREATE TABLE IF NOT EXISTS sessions (
+  token TEXT PRIMARY KEY,               -- random base64url, nunca en JS del cliente
+  user_id INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,          -- unix ms (~+90 días, sliding)
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);

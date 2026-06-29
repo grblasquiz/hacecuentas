@@ -26,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
+import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
 
 const PRUNED_SLUGS = new Set(Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')));
 
@@ -1084,6 +1085,27 @@ if (tablas.length > 0) {
 }
 if (glosarioTerms.length > 0) {
   sitemaps.push({ name: 'sitemap-glosario.xml', urls: sitemapForContent(glosarioTerms, GLOSARIO_DIR, 'glosario', '0.6') });
+}
+
+// 7b. Salas de decisión (/decidir/*) — namespace propio, segmento AISLADO.
+// Intención decisional (≠ calc transaccional, ≠ guía informacional). El lastmod
+// sale de room.lastReviewed (editorial), NO del buildDate, así que deployar otra
+// cosa NO mueve estas URLs ni inflar el sitemap de las ~2500 calcs (regla #1/#3).
+if (DECISION_MANIFEST.length > 0) {
+  const hubLastmod = maxLastmod(
+    DECISION_MANIFEST.map((r) => ({ loc: '', priority: '', changefreq: '', lastmod: clampToToday(r.lastReviewed) })),
+    buildDate,
+  );
+  const decidirUrls: Url[] = [
+    { loc: `${site}/decidir`, priority: '0.8', changefreq: 'weekly', lastmod: hubLastmod },
+    ...DECISION_MANIFEST.map((r) => ({
+      loc: `${site}/decidir/${r.slug}`,
+      priority: '0.8',
+      changefreq: 'monthly',
+      lastmod: clampToToday(r.lastReviewed),
+    })),
+  ];
+  sitemaps.push({ name: 'sitemap-decidir.xml', urls: decidirUrls });
 }
 
 // 8. Argentina provincial — lastmod del JSON de la calc

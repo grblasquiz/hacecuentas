@@ -1,0 +1,259 @@
+---
+/**
+ * ProfilePrefill — capa de "Mi Hacé Cuentas" dentro de una calc (modelo CUENTAS).
+ *
+ * Los calcs son públicos; la memoria-entre-herramientas pide cuenta:
+ *   - LOGUEADO (cookie hc_authed=1): hidrata los campos mapeados desde el perfil
+ *     del servidor (con caché local window.HCProfile para pintar al instante), y
+ *     al completar un campo lo guarda en el servidor (POST /api/profile).
+ *   - DESLOGUEADO: no precarga. Cuando el usuario completa un campo guardable,
+ *     ofrece (una vez, sin molestar) iniciar sesión para no recargarlo nunca más.
+ *
+ * Depende de window.HCProfile (ProfileStore.astro, caché local en el Layout).
+ * Patrón is:inline autocontenido, sin imports.
+ */
+interface Props {
+  slug: string;
+  lang?: 'es' | 'en' | 'pt';
+}
+const { slug, lang = 'es' } = Astro.props;
+
+const T = ({
+  es: {
+    from: '📌 de tu perfil',
+    cta: '💾 Iniciá sesión para guardar tus datos y reusarlos en otras calculadoras.',
+    ctaLink: 'Iniciar sesión',
+    dismiss: 'Ahora no',
+  },
+  en: {
+    from: '📌 from your profile',
+    cta: '💾 Sign in to save your data and reuse it across calculators.',
+    ctaLink: 'Sign in',
+    dismiss: 'Not now',
+  },
+  pt: {
+    from: '📌 do seu perfil',
+    cta: '💾 Entre para salvar seus dados e reutilizá-los em outras calculadoras.',
+    ctaLink: 'Entrar',
+    dismiss: 'Agora não',
+  },
+} as const)[lang];
+---
+
+<div
+  data-profile-prefill
+  data-calc-slug={slug}
+  data-t-from={T.from}
+  data-t-cta={T.cta}
+  data-t-cta-link={T.ctaLink}
+  data-t-dismiss={T.dismiss}
+  hidden
+></div>
+
+<script is:inline>
+  (function () {
+    function getCookie(name) {
+      var m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+      return m ? m.pop() : '';
+    }
+
+    function setupProfilePrefill() {
+      var root = document.querySelector('[data-profile-prefill]');
+      if (!root || root.dataset.profileBound) return;
+      root.dataset.profileBound = '1';
+
+      var slug = root.getAttribute('data-calc-slug') || '';
+      var T = {
+        from: root.getAttribute('data-t-from'),
+        cta: root.getAttribute('data-t-cta'),
+        ctaLink: root.getAttribute('data-t-cta-link'),
+        dismiss: root.getAttribute('data-t-dismiss'),
+      };
+
+      var inputs = document.querySelectorAll('[data-profile-key]');
+      if (!inputs.length) return;
+
+      var authed = getCookie('hc_authed') === '1';
+
+      function track(name, params) {
+        try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); }
+        catch (e) {}
+      }
+
+      function readCanonical(el) {
+        var v = (el.value || '').trim();
+        if (v === '') return '';
+        var type = el.getAttribute('data-type') || el.type;
+        if (type === 'number') {
+          var fmt = el.getAttribute('data-format');
+          var cleaned = fmt === 'thousands' ? v.replace(/[.\s]/g, '').replace(',', '.') : v.replace(/\s/g, '');
+          var n = Number(cleaned);
+          return Number.isFinite(n) ? n : '';
+        }
+        return v;
+      }
+
+      function applyToInput(el, value) {
+        // Marcamos el campo mientras lo precargamos para que NUESTRO listener de
+        // change no lo re-guarde (los listeners del calc —compute, formato— sí
+        // corren). Sin esto cada carga re-postearía cada campo precargado.
+        el.dataset.prefilling = '1';
+        if (el.tagName === 'SELECT') {
+          el.value = String(value);
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+          el.value = String(value);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        delete el.dataset.prefilling;
+      }
+
+      function addProvenanceChip(el) {
+        var field = el.closest('.field');
+        if (!field || field.querySelector('.profile-chip')) return;
+        var chip = document.createElement('p');
+        chip.className = 'profile-chip';
+        chip.textContent = T.from;
+        field.appendChild(chip);
+      }
+
+      // Precarga un campo desde el caché local si está disponible y el campo está
+      // "libre" (input vacío, o select en su default con la opción guardada válida).
+      function prefillFrom(store, el) {
+        var key = el.getAttribute('data-profile-key');
+        var stored = store.get(key);
+        if (stored === undefined || stored === '') return false;
+        var doFill;
+        if (el.tagName === 'SELECT') {
+          var has = Array.prototype.some.call(el.options, function (o) { return o.value === String(stored); });
+          doFill = has && el.value !== String(stored);
+        } else {
+          doFill = (el.value || '').trim() === '';
+        }
+        if (doFill) { applyToInput(el, stored); addProvenanceChip(el); return true; }
+        return false;
+      }
+
+      function prefillAll() {
+        if (!window.HCProfile) return 0;
+        var n = 0;
+        inputs.forEach(function (el) { if (prefillFrom(window.HCProfile, el)) n++; });
+        if (n > 0) track('profile_prefill', { calc_slug: slug, keys: n });
+        return n;
+      }
+
+      // ── Deslogueado: CTA de login (una vez, al completar un campo guardable) ──
+      function showLoginCta() {
+        if (document.querySelector('[data-profile-cta]')) return;
+        var form = document.querySelector('[data-calc-input]') || document.body;
+        var bar = document.createElement('div');
+        bar.setAttribute('data-profile-cta', '');
+        bar.className = 'profile-consent';
+        var next = '/mi-hacecuentas?next=' + encodeURIComponent(location.pathname);
+        bar.innerHTML =
+          '<div class="profile-consent-text"><span>' + T.cta + '</span></div>' +
+          '<div class="profile-consent-actions">' +
+          '<a href="' + next + '" class="profile-consent-yes">' + T.ctaLink + '</a>' +
+          '<button type="button" data-cta-dismiss class="profile-consent-no">' + T.dismiss + '</button>' +
+          '</div>';
+        if (form.parentNode) form.parentNode.insertBefore(bar, form.nextSibling);
+        var d = bar.querySelector('[data-cta-dismiss]');
+        if (d) d.addEventListener('click', function () { bar.remove(); });
+        track('profile_login_cta', { calc_slug: slug });
+      }
+
+      // ── Logueado: guardar al servidor al completar un campo ──
+      function saveToServer(key, value) {
+        try {
+          fetch('/api/profile', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ key: key, value: value, src: 'calc:' + slug }),
+          });
+        } catch (e) {}
+        if (window.HCProfile) { if (value === '') window.HCProfile.clear(key); else window.HCProfile.set(key, value, 'calc:' + slug); }
+        track('profile_save', { calc_slug: slug, profile_key: key });
+      }
+
+      // Listeners de captura por campo mapeado.
+      inputs.forEach(function (el) {
+        var key = el.getAttribute('data-profile-key');
+        if (!key) return;
+        el.addEventListener('change', function () {
+          if (el.dataset.prefilling) return; // eco del prefill, no es edición del usuario
+          var val = readCanonical(el);
+          if (val === '') return;
+          if (authed) saveToServer(key, val);
+          else showLoginCta();
+        });
+      });
+
+      if (!authed) return; // sin sesión: no precargamos (login requerido)
+
+      // Prefill inmediato desde el caché local, y refresco desde el servidor.
+      prefillAll();
+      try {
+        fetch('/api/profile', { credentials: 'same-origin' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            if (!data || !data.profile || !window.HCProfile) return;
+            Object.keys(data.profile).forEach(function (k) {
+              window.HCProfile.set(k, data.profile[k].value, data.profile[k].src || 'profile');
+            });
+            prefillAll(); // completa los campos que seguían vacíos
+          })
+          .catch(function () {});
+      } catch (e) {}
+    }
+
+    setupProfilePrefill();
+    document.addEventListener('astro:page-load', setupProfilePrefill);
+    window.addEventListener('load', setupProfilePrefill);
+  })();
+</script>
+
+<style>
+  .profile-chip {
+    margin: 0.25rem 0 0;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-subtle);
+    line-height: 1.2;
+  }
+  .profile-consent {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    background: var(--bg-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .profile-consent-text { font-size: 0.8125rem; color: var(--text); min-width: 0; }
+  .profile-consent-actions { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; }
+  .profile-consent-yes {
+    padding: 0.4375rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    background: var(--accent, #2563eb);
+    color: #fff;
+    text-decoration: none;
+  }
+  .profile-consent-no {
+    padding: 0.4375rem 0.875rem;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-subtle);
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+</style>

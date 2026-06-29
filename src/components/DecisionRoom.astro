@@ -1,0 +1,587 @@
+---
+/**
+ * DecisionRoom — renderiza una "sala de decisión" (/decidir/*).
+ *
+ * Hermano de Calculator.astro, pero para decisiones multi-fórmula: form
+ * agrupado (reusa FieldRow + el prefill de "Mi Hacé Cuentas") y un resultado
+ * integrado de 4 bloques (conclusión, número decisivo, 3 escenarios, próximos
+ * pasos) + comparación A/B.
+ *
+ * El cómputo corre en el CLIENTE (room.compute, que compone las fórmulas). El
+ * server pre-renderiza un baseline de ejemplo (initialResult) para que el bot
+ * vea contenido sin ejecutar JS y no haya layout shift.
+ */
+import FieldRow from './FieldRow.astro';
+import ProfilePrefill from './ProfilePrefill.astro';
+import type { DecisionRoom, DecisionResult, DecisionField } from '../lib/decisions/types';
+
+interface Props {
+  room: DecisionRoom;
+  initialResult: DecisionResult;
+}
+const { room, initialResult } = Astro.props;
+
+// Agrupar campos por `group` preservando el orden de aparición.
+const groups: { name: string; icon?: string; fields: DecisionField[] }[] = [];
+for (const f of room.fields) {
+  const key = f.group || '';
+  let g = groups.find((x) => x.name === key);
+  if (!g) {
+    g = { name: key, icon: f.groupIcon, fields: [] };
+    groups.push(g);
+  }
+  if (!g.icon && f.groupIcon) g.icon = f.groupIcon;
+  g.fields.push(f);
+}
+const hasAdvanced = room.fields.some((f) => f.advanced);
+
+// Markdown inline mínimo (**negrita**) → HTML, con escape defensivo.
+function esc(s: string): string {
+  return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
+}
+function mdInline(s: string): string {
+  return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+const STATUS_BADGE: Record<DecisionResult['status'], string> = {
+  a: 'Conviene quedarte',
+  b: 'Conviene la oferta',
+  tie: 'Mejora, pensalo',
+  insufficient: 'Faltan datos',
+};
+---
+
+<section class="dr" data-decision-room={room.slug}>
+  <p class="dr-intro" data-speakable>{room.intro}</p>
+
+  <form class="dr-form" id="dr-form" novalidate>
+    {groups.map((g) => (
+      <fieldset class="dr-group">
+        {g.name && (
+          <legend>
+            {g.icon && <span class="dr-group-icon" aria-hidden="true">{g.icon}</span>}
+            {g.name}
+          </legend>
+        )}
+        <div class="dr-fields">
+          {g.fields.filter((f) => !f.advanced).map((f) => (
+            <FieldRow field={f as any} />
+          ))}
+        </div>
+        {g.fields.some((f) => f.advanced) && (
+          <details class="dr-advanced">
+            <summary>Opciones avanzadas</summary>
+            <div class="dr-fields">
+              {g.fields.filter((f) => f.advanced).map((f) => (
+                <FieldRow field={f as any} />
+              ))}
+            </div>
+          </details>
+        )}
+      </fieldset>
+    ))}
+
+    <button type="submit" class="dr-submit" id="dr-analyze">
+      Analizar mi decisión
+    </button>
+  </form>
+
+  <ProfilePrefill slug={`decidir/${room.slug}`} />
+
+  <!-- Resultado integrado (baseline SSR; el cliente lo reescribe al analizar) -->
+  <div class="dr-result" id="dr-result" data-example="true">
+    <p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — cargá tus datos y tocá <strong>Analizar mi decisión</strong>.</p>
+
+    <div class={`dr-verdict dr-tone-${initialResult.verdict.tone}`} data-dr-verdict>
+      <span class="dr-badge" data-dr-badge>{STATUS_BADGE[initialResult.status]}</span>
+      <h3 data-dr-title>{initialResult.verdict.title}</h3>
+      <p data-dr-detail set:html={mdInline(initialResult.verdict.detail)} />
+    </div>
+
+    <div class="dr-decisive" data-dr-decisive>
+      <span class="dr-decisive-label" data-dr-dec-label>{initialResult.decisiveNumber.label}</span>
+      <span class="dr-decisive-value" data-dr-dec-value>{initialResult.decisiveNumber.value}</span>
+      {initialResult.decisiveNumber.sub && (
+        <span class="dr-decisive-sub" data-dr-dec-sub set:html={mdInline(initialResult.decisiveNumber.sub)} />
+      )}
+    </div>
+
+    {initialResult.scenarios.length > 0 && (
+      <div class="dr-scenarios" data-dr-scenarios-wrap>
+        <h4>Tres escenarios a 12 meses</h4>
+        <div class="dr-scenario-grid" data-dr-scenarios>
+          {initialResult.scenarios.map((s) => (
+            <div class="dr-scenario">
+              <span class="dr-scenario-label">{s.label}</span>
+              <span class="dr-scenario-value">{s.value}</span>
+              <span class="dr-scenario-detail">{s.detail}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {initialResult.comparison && (
+      <div class="dr-comparison-wrap" data-dr-comparison-wrap>
+        <h4>El desglose, número por número</h4>
+        <table class="dr-comparison" data-dr-comparison>
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th>{initialResult.comparison.columns[0]}</th>
+              <th>{initialResult.comparison.columns[1]}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {initialResult.comparison.rows.map((r) => (
+              <tr>
+                <th scope="row">
+                  {r.label}
+                  {r.hint && <span class="dr-hint">{r.hint}</span>}
+                </th>
+                <td>{r.a}</td>
+                <td>{r.b}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+
+    <div class="dr-actions" data-dr-actions-wrap>
+      <h4>Próximos pasos</h4>
+      <ul data-dr-actions>
+        {initialResult.nextActions.map((a) => (
+          <li set:html={mdInline(a)} />
+        ))}
+      </ul>
+    </div>
+
+    {initialResult.notes && initialResult.notes.length > 0 && (
+      <details class="dr-notes">
+        <summary>Supuestos del cálculo</summary>
+        <ul data-dr-notes>
+          {initialResult.notes.map((n) => (
+            <li set:html={mdInline(n)} />
+          ))}
+        </ul>
+      </details>
+    )}
+  </div>
+</section>
+
+<script>
+  import { DECISION_ROOMS } from '../lib/decisions/index';
+
+  const root = document.querySelector('[data-decision-room]');
+  if (root) {
+    const slug = root.getAttribute('data-decision-room') || '';
+    const room = DECISION_ROOMS[slug];
+    const form = document.getElementById('dr-form') as HTMLFormElement | null;
+    const resultEl = document.getElementById('dr-result');
+
+    const STATUS_BADGE: Record<string, string> = {
+      a: 'Conviene quedarte',
+      b: 'Conviene la oferta',
+      tie: 'Mejora, pensalo',
+      insufficient: 'Faltan datos',
+    };
+
+    const esc = (s: string) =>
+      String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] || c));
+    const mdInline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // Separador de miles en vivo (es-AR) en los campos de plata. El formateador
+    // de Calculator.astro no vive acá, así que lo replicamos mínimo: al tipear,
+    // reagrupa los dígitos ("1500000" → "1.500.000"). Caret al final (suficiente).
+    const nf = new Intl.NumberFormat('es-AR');
+    form?.querySelectorAll('input[data-format="thousands"]').forEach((node) => {
+      const input = node as HTMLInputElement;
+      const fmt = () => {
+        const neg = input.value.trim().startsWith('-');
+        const digits = input.value.replace(/\D/g, '');
+        input.value = digits ? (neg ? '-' : '') + nf.format(Number(digits)) : '';
+      };
+      input.addEventListener('input', fmt);
+      fmt(); // formatea defaults / valores precargados del perfil
+    });
+
+    // Lee un input parseando el separador de miles / decimal según data-format.
+    function readVal(id: string): string {
+      const el = form?.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(id) : id)) as
+        | HTMLInputElement
+        | HTMLSelectElement
+        | null;
+      if (!el) return '';
+      if (el.tagName === 'SELECT') return (el as HTMLSelectElement).value;
+      const v = (el as HTMLInputElement).value.trim();
+      if (v === '') return '';
+      const fmt = el.getAttribute('data-format');
+      if (fmt === 'thousands') return v.replace(/\./g, '').replace(/[^\d-]/g, '');
+      return v.replace(/\.(?=\d{3}\b)/g, '').replace(',', '.');
+    }
+
+    function collect(): Record<string, string> {
+      const out: Record<string, string> = {};
+      for (const f of room.fields) out[f.id] = readVal(f.id);
+      return out;
+    }
+
+    function render(result: any, isExample: boolean) {
+      if (!resultEl) return;
+      const r = result;
+      const tone = r.verdict.tone || 'neutral';
+
+      const flag = isExample
+        ? '<p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — cargá tus datos y tocá <strong>Analizar mi decisión</strong>.</p>'
+        : '';
+
+      const scenarios = (r.scenarios && r.scenarios.length)
+        ? `<div class="dr-scenarios"><h4>Tres escenarios a 12 meses</h4>
+            <div class="dr-scenario-grid">${r.scenarios
+              .map(
+                (s: any) =>
+                  `<div class="dr-scenario"><span class="dr-scenario-label">${esc(s.label)}</span><span class="dr-scenario-value">${esc(s.value)}</span><span class="dr-scenario-detail">${esc(s.detail)}</span></div>`,
+              )
+              .join('')}</div></div>`
+        : '';
+
+      const comparison = r.comparison
+        ? `<div class="dr-comparison-wrap"><h4>El desglose, número por número</h4>
+            <table class="dr-comparison"><thead><tr><th>Concepto</th><th>${esc(r.comparison.columns[0])}</th><th>${esc(r.comparison.columns[1])}</th></tr></thead>
+            <tbody>${r.comparison.rows
+              .map(
+                (row: any) =>
+                  `<tr><th scope="row">${esc(row.label)}${row.hint ? `<span class="dr-hint">${esc(row.hint)}</span>` : ''}</th><td>${esc(row.a)}</td><td>${esc(row.b)}</td></tr>`,
+              )
+              .join('')}</tbody></table></div>`
+        : '';
+
+      const breakdown = (!r.comparison && r.breakdown && r.breakdown.length)
+        ? `<div class="dr-comparison-wrap"><h4>El desglose</h4><table class="dr-comparison"><tbody>${r.breakdown
+            .map(
+              (b: any) =>
+                `<tr><th scope="row">${esc(b.label)}${b.hint ? `<span class="dr-hint">${esc(b.hint)}</span>` : ''}</th><td>${esc(b.value)}</td></tr>`,
+            )
+            .join('')}</tbody></table></div>`
+        : '';
+
+      const actions = `<div class="dr-actions"><h4>Próximos pasos</h4><ul>${r.nextActions
+        .map((a: string) => `<li>${mdInline(a)}</li>`)
+        .join('')}</ul></div>`;
+
+      const notes = (r.notes && r.notes.length)
+        ? `<details class="dr-notes"><summary>Supuestos del cálculo</summary><ul>${r.notes
+            .map((n: string) => `<li>${mdInline(n)}</li>`)
+            .join('')}</ul></details>`
+        : '';
+
+      resultEl.className = 'dr-result';
+      resultEl.dataset.example = isExample ? 'true' : 'false';
+      resultEl.innerHTML = `${flag}
+        <div class="dr-verdict dr-tone-${tone}">
+          <span class="dr-badge">${esc(STATUS_BADGE[r.status] || '')}</span>
+          <h3>${esc(r.verdict.title)}</h3>
+          <p>${mdInline(r.verdict.detail)}</p>
+        </div>
+        <div class="dr-decisive">
+          <span class="dr-decisive-label">${esc(r.decisiveNumber.label)}</span>
+          <span class="dr-decisive-value">${esc(r.decisiveNumber.value)}</span>
+          ${r.decisiveNumber.sub ? `<span class="dr-decisive-sub">${mdInline(r.decisiveNumber.sub)}</span>` : ''}
+        </div>
+        ${scenarios}${comparison}${breakdown}${actions}${notes}`;
+    }
+
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      try {
+        const result = room.compute(collect());
+        render(result, false);
+        resultEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'decision_compute', {
+            decision_slug: slug,
+            decision_status: result.status, // sin montos: solo metadata
+          });
+        }
+      } catch (err) {
+        console.error('[decision-room] compute error', err);
+      }
+    });
+  }
+</script>
+
+<style>
+  .dr {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .dr-intro {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--text);
+    margin: 0;
+  }
+  .dr-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .dr-group {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 0.75rem);
+    padding: 1rem 1.125rem 1.125rem;
+    margin: 0;
+    background: var(--bg);
+  }
+  .dr-group legend {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+    padding: 0 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .dr-group-icon {
+    font-size: 1.05rem;
+  }
+  .dr-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.875rem 1rem;
+  }
+  .dr-advanced {
+    margin-top: 0.875rem;
+    border-top: 1px dashed var(--border);
+    padding-top: 0.875rem;
+  }
+  .dr-advanced > summary {
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    list-style: none;
+  }
+  .dr-advanced > summary::before {
+    content: '⚙ ';
+  }
+  .dr-advanced[open] > summary {
+    margin-bottom: 0.875rem;
+  }
+  .dr-submit {
+    align-self: flex-start;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm, 0.5rem);
+    padding: 0.8125rem 1.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: filter 0.15s, transform 0.1s;
+  }
+  .dr-submit:hover {
+    filter: brightness(1.05);
+  }
+  .dr-submit:active {
+    transform: translateY(1px);
+  }
+
+  /* — Resultado — */
+  .dr-result {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 0.75rem);
+    padding: 1.25rem;
+    background: var(--bg-muted, #f8fafc);
+  }
+  .dr-result[data-example='true'] {
+    opacity: 0.92;
+  }
+  .dr-result-flag {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    background: var(--accent-soft, #e0f2fe);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm, 0.5rem);
+  }
+  .dr-verdict {
+    border-radius: var(--radius-sm, 0.5rem);
+    padding: 1rem 1.125rem;
+    border-left: 4px solid var(--border-strong, #94a3b8);
+    background: var(--bg);
+  }
+  .dr-tone-good {
+    border-left-color: var(--success, #16a34a);
+    background: var(--success-soft, #f0fdf4);
+  }
+  .dr-tone-warn {
+    border-left-color: var(--danger, #dc2626);
+    background: var(--danger-soft, #fef2f2);
+  }
+  .dr-tone-bad {
+    border-left-color: var(--danger, #dc2626);
+    background: var(--danger-soft, #fef2f2);
+  }
+  .dr-tone-neutral {
+    border-left-color: var(--accent, #0ea5e9);
+  }
+  .dr-badge {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+  .dr-verdict h3 {
+    margin: 0 0 0.4rem;
+    font-size: 1.1875rem;
+    line-height: 1.3;
+    color: var(--text);
+  }
+  .dr-verdict p {
+    margin: 0;
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .dr-decisive {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+    text-align: center;
+    padding: 0.5rem 0;
+  }
+  .dr-decisive-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .dr-decisive-value {
+    font-size: clamp(1.75rem, 6vw, 2.5rem);
+    font-weight: 800;
+    color: var(--accent-strong, #0369a1);
+    font-feature-settings: 'tnum';
+    line-height: 1.1;
+  }
+  .dr-decisive-sub {
+    font-size: 0.875rem;
+    color: var(--text);
+    max-width: 46ch;
+    line-height: 1.45;
+  }
+  .dr-scenarios h4,
+  .dr-comparison-wrap h4,
+  .dr-actions h4 {
+    margin: 0 0 0.625rem;
+    font-size: 1rem;
+    color: var(--text);
+  }
+  .dr-scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+  .dr-scenario {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.875rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 0.5rem);
+    background: var(--bg);
+  }
+  .dr-scenario-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+  }
+  .dr-scenario-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    font-feature-settings: 'tnum';
+  }
+  .dr-scenario-detail {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .dr-comparison {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .dr-comparison th,
+  .dr-comparison td {
+    padding: 0.5rem 0.625rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-feature-settings: 'tnum';
+  }
+  .dr-comparison thead th {
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border-strong, #cbd5e1);
+  }
+  .dr-comparison thead th:first-child,
+  .dr-comparison tbody th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .dr-comparison tbody th {
+    display: flex;
+    flex-direction: column;
+  }
+  .dr-hint {
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+  .dr-actions ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .dr-actions li {
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .dr-notes {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .dr-notes > summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .dr-notes ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    line-height: 1.45;
+  }
+  @media (max-width: 520px) {
+    .dr-comparison th,
+    .dr-comparison td {
+      padding: 0.45rem 0.4rem;
+      font-size: 0.8125rem;
+    }
+  }
+</style>

@@ -1,0 +1,417 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { PROFILE_GROUPS, PROFILE_FIELDS } from '../lib/profile/schema';
+
+const groups = PROFILE_GROUPS.map((g) => ({
+  ...g,
+  fields: PROFILE_FIELDS.filter((f) => f.group === g.id),
+})).filter((g) => g.fields.length > 0);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Mi Hacé Cuentas — tu perfil numérico',
+  description:
+    'Iniciá sesión para guardar tu perfil numérico y que precargue todas las calculadoras en cualquier dispositivo.',
+  url: 'https://hacecuentas.com/mi-hacecuentas',
+  inLanguage: 'es-AR',
+  isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+};
+
+const inputType = (t: string) =>
+  t === 'number' ? 'number' : t === 'date' ? 'date' : 'text';
+---
+
+<Layout
+  title="Mi Hacé Cuentas — tu perfil numérico"
+  description="Iniciá sesión para guardar tu perfil y que precargue todas las calculadoras en cualquier dispositivo. Login sin contraseña."
+  noindex={true}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <div class="profile-page">
+    <header class="profile-hero">
+      <h1>Mi Hacé Cuentas</h1>
+      <p class="profile-lead">
+        Tu perfil numérico. Lo cargás una vez y precarga todas las calculadoras,
+        en cualquier dispositivo donde inicies sesión.
+      </p>
+    </header>
+
+    <!-- Estado de carga -->
+    <p class="profile-loading" data-auth-loading>Cargando…</p>
+
+    <!-- ───────── No logueado: login ───────── -->
+    <section class="login-card" data-login-view hidden>
+      <h2>Iniciá sesión</h2>
+      <p class="login-sub">
+        Sin contraseña: te mandamos un código de 6 dígitos al mail. Tus datos
+        quedan guardados en tu cuenta y nunca los compartimos.
+      </p>
+
+      <form data-email-step>
+        <label for="login-email">Tu email</label>
+        <input id="login-email" type="email" data-login-email placeholder="tu@email.com" autocomplete="email" required />
+        <label class="nl-check">
+          <input type="checkbox" data-nl checked />
+          <span>Quiero suscribirme al newsletter y recibir novedades y tips por mail</span>
+        </label>
+        <button type="submit" data-email-submit>Enviarme un código</button>
+        <p class="login-err" data-email-err hidden></p>
+      </form>
+
+      <form data-code-step hidden>
+        <p class="code-sent">Te mandamos un código a <strong data-email-display></strong>.</p>
+        <label for="login-code">Código</label>
+        <input id="login-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" data-login-code placeholder="000000" />
+        <button type="submit" data-code-submit>Entrar</button>
+        <button type="button" class="link-btn" data-login-back>← Cambiar email</button>
+        <p class="login-err" data-code-err hidden></p>
+      </form>
+
+      <p class="login-privacy">
+        🔒 Al entrar guardamos tu email y tu perfil en nuestros servidores para
+        sincronizarlo entre tus dispositivos. Podés borrar todo cuando quieras.
+        Ver <a href="/privacidad">privacidad</a>.
+      </p>
+    </section>
+
+    <!-- ───────── Logueado: perfil ───────── -->
+    <section data-profile-view hidden>
+      <div class="profile-account">
+        <span>Sesión iniciada como <strong data-account-email></strong></span>
+        <button type="button" class="link-btn" data-logout>Cerrar sesión</button>
+      </div>
+
+      <p class="profile-count" data-profile-count></p>
+
+      <form class="profile-form" data-profile-form>
+        {groups.map((g) => (
+          <fieldset class="profile-group" data-profile-group={g.id}>
+            <legend><span aria-hidden="true">{g.icon}</span> {g.label}</legend>
+            <div class="profile-rows">
+              {g.fields.map((f) => (
+                <div class="profile-row" data-profile-row={f.key}>
+                  <label for={`pf-${f.key}`}>
+                    {f.label}
+                    {f.unit && <span class="profile-unit">({f.unit})</span>}
+                  </label>
+                  <div class="profile-control">
+                    {f.type === 'enum' ? (
+                      <select id={`pf-${f.key}`} data-pk={f.key} data-ptype="enum">
+                        <option value="">—</option>
+                        {f.options?.map((o) => <option value={o.value}>{o.label}</option>)}
+                      </select>
+                    ) : f.type === 'boolean' ? (
+                      <select id={`pf-${f.key}`} data-pk={f.key} data-ptype="boolean">
+                        <option value="">—</option>
+                        <option value="true">Sí</option>
+                        <option value="false">No</option>
+                      </select>
+                    ) : (
+                      <input
+                        id={`pf-${f.key}`}
+                        type={inputType(f.type)}
+                        data-pk={f.key}
+                        data-ptype={f.type}
+                        inputmode={f.type === 'number' ? 'decimal' : undefined}
+                        placeholder="—"
+                      />
+                    )}
+                    <button type="button" class="profile-del" data-profile-del={f.key} hidden aria-label={`Borrar ${f.label}`}>✕</button>
+                  </div>
+                  <p class="profile-meta" data-profile-meta={f.key} hidden></p>
+                </div>
+              ))}
+            </div>
+          </fieldset>
+        ))}
+      </form>
+
+      <div class="profile-actions">
+        <button type="button" class="profile-clear-all" data-profile-clear-all>Borrar todos mis datos</button>
+        <button type="button" class="profile-delete-account" data-delete-account>Borrar mi cuenta</button>
+      </div>
+    </section>
+  </div>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script is:inline>
+  (function () {
+    function qs(s) { return document.querySelector(s); }
+    var state = { email: '' };
+
+    async function api(path, opts) {
+      var res = await fetch(path, Object.assign({
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+      }, opts));
+      var data = null;
+      try { data = await res.json(); } catch (e) {}
+      return { ok: res.ok, status: res.status, data: data };
+    }
+
+    function show(view) {
+      qs('[data-auth-loading]').hidden = view !== 'loading';
+      qs('[data-login-view]').hidden = view !== 'login';
+      qs('[data-profile-view]').hidden = view !== 'profile';
+    }
+
+    function fmtDate(iso) { try { return new Date(iso).toLocaleDateString('es-AR'); } catch (e) { return ''; } }
+    function srcLabel(src) {
+      if (!src || src === 'profile') return 'editado por vos';
+      if (src.indexOf('calc:') === 0) return 'desde ' + src.slice(5);
+      return src;
+    }
+
+    // ───── Editor (logueado) ─────
+    function hydrateEditor(profile) {
+      // Espejá el perfil del server al store local para que las calcs precarguen.
+      try {
+        if (window.HCProfile) {
+          window.HCProfile.clear();
+          Object.keys(profile).forEach(function (k) {
+            window.HCProfile.set(k, profile[k].value, profile[k].src || 'profile');
+          });
+        }
+      } catch (e) {}
+
+      var count = 0;
+      var fields = document.querySelectorAll('[data-pk]');
+      Array.prototype.forEach.call(fields, function (el) {
+        var key = el.getAttribute('data-pk');
+        var entry = profile[key];
+        var del = qs('[data-profile-del="' + key + '"]');
+        var meta = qs('[data-profile-meta="' + key + '"]');
+        if (entry) {
+          el.value = String(entry.value);
+          if (del) del.hidden = false;
+          if (meta) { meta.hidden = false; meta.textContent = 'Actualizado ' + fmtDate(entry.at) + ' · ' + srcLabel(entry.src); }
+          count++;
+        } else {
+          el.value = '';
+          if (del) del.hidden = true;
+          if (meta) meta.hidden = true;
+        }
+      });
+      var c = qs('[data-profile-count]');
+      c.textContent = count === 0 ? 'Tu perfil está vacío. Cargá tus datos abajo.' : (count === 1 ? '1 dato guardado' : count + ' datos guardados');
+    }
+
+    function wireEditor() {
+      var fields = document.querySelectorAll('[data-pk]');
+      Array.prototype.forEach.call(fields, function (el) {
+        if (el.dataset.wired) return; el.dataset.wired = '1';
+        var key = el.getAttribute('data-pk');
+        var ptype = el.getAttribute('data-ptype');
+        el.addEventListener('change', async function () {
+          var v = (el.value || '').trim();
+          var value = v === '' ? '' : (ptype === 'number' ? Number(v.replace(/[.\s]/g, '').replace(',', '.')) : v);
+          await api('/api/profile', { method: 'POST', body: JSON.stringify({ key: key, value: value, src: 'profile' }) });
+          if (window.HCProfile) { if (value === '') window.HCProfile.clear(key); else window.HCProfile.set(key, value, 'profile'); }
+          await refresh();
+        });
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-profile-del]'), function (btn) {
+        if (btn.dataset.wired) return; btn.dataset.wired = '1';
+        btn.addEventListener('click', async function () {
+          var key = btn.getAttribute('data-profile-del');
+          await api('/api/profile', { method: 'DELETE', body: JSON.stringify({ key: key }) });
+          if (window.HCProfile) window.HCProfile.clear(key);
+          await refresh();
+        });
+      });
+      var clearAll = qs('[data-profile-clear-all]');
+      if (clearAll && !clearAll.dataset.wired) {
+        clearAll.dataset.wired = '1';
+        clearAll.addEventListener('click', async function () {
+          if (!window.confirm('¿Borrar todos los datos de tu perfil? No se puede deshacer.')) return;
+          await api('/api/profile', { method: 'DELETE', body: '{}' });
+          if (window.HCProfile) window.HCProfile.clear();
+          await refresh();
+        });
+      }
+      var del = qs('[data-delete-account]');
+      if (del && !del.dataset.wired) {
+        del.dataset.wired = '1';
+        del.addEventListener('click', async function () {
+          if (!window.confirm('¿Borrar tu cuenta y todos tus datos para siempre?')) return;
+          await api('/api/auth/account', { method: 'DELETE' });
+          if (window.HCProfile) window.HCProfile.clear();
+          location.reload();
+        });
+      }
+      var logout = qs('[data-logout]');
+      if (logout && !logout.dataset.wired) {
+        logout.dataset.wired = '1';
+        logout.addEventListener('click', async function () {
+          await api('/api/auth/logout', { method: 'POST', body: '{}' });
+          if (window.HCProfile) window.HCProfile.clear();
+          location.reload();
+        });
+      }
+    }
+
+    async function refresh() {
+      var r = await api('/api/auth/me', { method: 'GET' });
+      if (r.data && r.data.authed) hydrateEditor(r.data.profile || {});
+    }
+
+    function showProfile(me) {
+      qs('[data-account-email]').textContent = me.email || '';
+      show('profile');
+      hydrateEditor(me.profile || {});
+      wireEditor();
+    }
+
+    // ───── Login ─────
+    function err(sel, msg) { var e = qs(sel); if (!e) return; e.hidden = !msg; e.textContent = msg || ''; }
+
+    function wireLogin() {
+      var emailStep = qs('[data-email-step]');
+      var codeStep = qs('[data-code-step]');
+
+      emailStep.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        err('[data-email-err]', '');
+        var email = (qs('[data-login-email]').value || '').trim().toLowerCase();
+        if (!email) return;
+        var btn = qs('[data-email-submit]'); btn.disabled = true; btn.textContent = 'Enviando…';
+        var r = await api('/api/auth/request-code', { method: 'POST', body: JSON.stringify({ email: email }) });
+        btn.disabled = false; btn.textContent = 'Enviarme un código';
+        if (!r.ok) { err('[data-email-err]', (r.data && r.data.error) || 'No se pudo enviar.'); return; }
+        state.email = email;
+        qs('[data-email-display]').textContent = email;
+        emailStep.hidden = true; codeStep.hidden = false;
+        qs('[data-login-code]').focus();
+        if (r.data && r.data.devCode) { qs('[data-login-code]').value = r.data.devCode; } // sólo dev
+      });
+
+      qs('[data-login-back]').addEventListener('click', function () {
+        codeStep.hidden = true; emailStep.hidden = false; err('[data-code-err]', '');
+      });
+
+      codeStep.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        err('[data-code-err]', '');
+        var code = (qs('[data-login-code]').value || '').trim();
+        if (!/^\d{6}$/.test(code)) { err('[data-code-err]', 'Ingresá los 6 dígitos.'); return; }
+        var newsletter = qs('[data-nl]').checked;
+        var btn = qs('[data-code-submit]'); btn.disabled = true; btn.textContent = 'Entrando…';
+        var r = await api('/api/auth/verify', { method: 'POST', body: JSON.stringify({ email: state.email, code: code, newsletter: newsletter }) });
+        btn.disabled = false; btn.textContent = 'Entrar';
+        if (!r.ok) { err('[data-code-err]', (r.data && r.data.error) || 'Código incorrecto.'); return; }
+        showProfile({ email: r.data.email, profile: r.data.profile || {} });
+        // Si vino de una calc (?next=/ruta), volver allá (el perfil ya quedó en
+        // el caché local, así que la calc precarga). Guard anti open-redirect.
+        var next = new URLSearchParams(location.search).get('next');
+        if (next && next.charAt(0) === '/' && next.charAt(1) !== '/') location.assign(next);
+      });
+    }
+
+    async function init() {
+      show('loading');
+      wireLogin();
+      var r = await api('/api/auth/me', { method: 'GET' });
+      if (r.data && r.data.authed) showProfile(r.data);
+      else show('login');
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  })();
+</script>
+
+<style>
+  .profile-page { max-width: 720px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+  .profile-hero h1 { font-size: 1.75rem; margin: 0 0 0.5rem; }
+  .profile-lead { color: var(--text-muted); margin: 0 0 1.25rem; line-height: 1.5; }
+  .profile-loading { color: var(--text-subtle); padding: 1.5rem 0; }
+
+  /* Login card */
+  .login-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+    max-width: 440px;
+  }
+  .login-card h2 { margin: 0 0 0.5rem; font-size: 1.25rem; }
+  .login-sub { color: var(--text-muted); font-size: 0.875rem; line-height: 1.5; margin: 0 0 1.25rem; }
+  .login-card label { display: block; font-size: 0.8125rem; font-weight: 600; margin: 0 0 0.375rem; }
+  .login-card input[type="email"],
+  .login-card input[type="text"] {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1.5px solid var(--border-input);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 1rem;
+    margin-bottom: 0.875rem;
+  }
+  #login-code { letter-spacing: 0.4em; text-align: center; font-size: 1.5rem; font-weight: 700; }
+  .nl-check { display: flex !important; align-items: flex-start; gap: 0.5rem; font-weight: 400 !important; font-size: 0.8125rem !important; color: var(--text-muted); margin-bottom: 1rem !important; cursor: pointer; }
+  .nl-check input { margin-top: 0.15rem; flex: 0 0 auto; }
+  .login-card button[type="submit"] {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--accent, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+  .login-card button[disabled] { opacity: 0.6; cursor: default; }
+  .link-btn { background: none; border: none; color: var(--accent, #2563eb); cursor: pointer; font: inherit; font-size: 0.8125rem; padding: 0.5rem 0 0; }
+  .code-sent { font-size: 0.875rem; color: var(--text-muted); margin: 0 0 0.875rem; }
+  .login-err { color: var(--danger); font-size: 0.8125rem; margin: 0.5rem 0 0; }
+  .login-privacy { margin: 1.25rem 0 0; font-size: 0.75rem; color: var(--text-subtle); line-height: 1.5; }
+  .login-privacy a { color: var(--accent, #2563eb); }
+
+  /* Profile (logged in) */
+  .profile-account {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;
+    padding: 0.75rem 1rem; background: var(--bg-muted); border-radius: var(--radius-sm);
+    font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.25rem;
+  }
+  .profile-count { margin: 0 0 1rem; font-size: 0.8125rem; font-weight: 600; color: var(--text-subtle); }
+  .profile-form { display: flex; flex-direction: column; gap: 1.25rem; }
+  .profile-group { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem 1.25rem 1.25rem; margin: 0; }
+  .profile-group legend { font-weight: 700; font-size: 0.9375rem; padding: 0 0.5rem; }
+  .profile-rows { display: flex; flex-direction: column; gap: 0.875rem; }
+  .profile-row { display: flex; flex-direction: column; gap: 0.3125rem; }
+  .profile-row label { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
+  .profile-unit { font-weight: 400; color: var(--text-subtle); margin-left: 0.25rem; }
+  .profile-control { display: flex; align-items: center; gap: 0.5rem; }
+  .profile-control input, .profile-control select {
+    flex: 1; padding: 0.5rem 0.625rem; border: 1.5px solid var(--border-input);
+    border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font: inherit; font-size: 0.9375rem;
+  }
+  .profile-del { flex: 0 0 auto; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-subtle); width: 2rem; height: 2rem; cursor: pointer; }
+  .profile-del:hover { border-color: var(--danger); color: var(--danger); }
+  .profile-meta { margin: 0; font-size: 0.6875rem; color: var(--text-subtle); }
+  .profile-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
+  .profile-clear-all, .profile-delete-account {
+    background: none; border: 1px solid var(--border); color: var(--text-muted);
+    padding: 0.5rem 1rem; border-radius: var(--radius-sm); font: inherit; font-weight: 600; font-size: 0.8125rem; cursor: pointer;
+  }
+  .profile-delete-account { border-color: var(--danger); color: var(--danger); }
+  .profile-delete-account:hover { background: var(--danger); color: #fff; }
+  @media (min-width: 560px) {
+    .profile-row { flex-direction: row; align-items: center; }
+    .profile-row label { flex: 0 0 40%; }
+    .profile-control { flex: 1; }
+    .profile-meta { flex-basis: 100%; padding-left: 40%; }
+  }
+</style>

@@ -1,5 +1,6 @@
 ---
 import FieldRow from "./FieldRow.astro";
+import ProfilePrefill from "./ProfilePrefill.astro";
 import StickyResultPill from "./StickyResultPill.astro";
 import Visualization from "./Visualization.astro";
 import type { VizData } from "./Visualization.astro";
@@ -30,6 +31,13 @@ export interface Field {
   group?: string;
   /** Icono opcional para el header del grupo (emoji o caracter). Solo se usa en el primer field del grupo. */
   groupIcon?: string;
+  /**
+   * "Mi Hacé Cuentas": clave canónica del perfil numérico a la que mapea este
+   * campo (ej. "trabajo.sueldoBruto"). Si está, el campo se precarga desde el
+   * perfil local del usuario y, con su consentimiento, escribe de vuelta. Las
+   * claves válidas viven en src/lib/profile/schema.ts (PROFILE_KEYS).
+   */
+  profileKey?: string;
 }
 
 export interface Preset {
@@ -666,6 +674,12 @@ const formatFreshnessDate = (iso: string): string => {
       <slot name="next-steps" />
     </div>
   </form>
+
+  {/* Mi Hacé Cuentas: prefill + writeback del perfil numérico. Sólo si la calc
+      declara campos mapeados (profileKey) y no estamos en un embed aislado. */}
+  {config.fields.some((f) => f.profileKey) && !Astro.url.pathname.includes('/embed/') && (
+    <ProfilePrefill slug={config.slug} lang={lang} />
+  )}
 
   <div class="empty-preview" data-empty-preview aria-hidden="true">
     {config.presets && config.presets.items.length > 0 ? (
