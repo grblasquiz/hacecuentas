@@ -26,11 +26,14 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
-  // Gramos consumidos por cada mate individual cebado (fuente: INYM, estimaciones de consumo promedio)
-  // Caliente: ~0.27g por cebada individual
-  // Frío (tereré): ~0.20g por cebada individual (extracción más lenta)
-  const GRAMOS_POR_MATE_CALIENTE = 0.27;
-  const GRAMOS_POR_MATE_FRIO = 0.20;
+  // Gramos de yerba por cebada (consumo efectivo promedio). La yerba se carga una
+  // vez por armado (~50 g) y rinde muchas cebadas, así que el gasto se reparte:
+  // ~2,5 g/cebada caliente. Anclado a consumo real: un tomador habitual (~40
+  // cebadas/día) gasta ~100 g/día → 1 kg le dura ~10 días (INYM per cápita ~6,4
+  // kg/año). El valor anterior (0,27) subestimaba ~10× (1 kg "duraba 4 meses").
+  // Tereré (frío): cebadas de más agua, ~2,0 g/cebada efectivos.
+  const GRAMOS_POR_MATE_CALIENTE = 2.5;
+  const GRAMOS_POR_MATE_FRIO = 2.0;
 
   const gramosPorMate =
     tipoCebado === "frio" ? GRAMOS_POR_MATE_FRIO : GRAMOS_POR_MATE_CALIENTE;
