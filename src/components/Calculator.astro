@@ -3147,8 +3147,12 @@ const formatFreshnessDate = (iso: string): string => {
     border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; outline: none;
   }
   .coop-field select:focus, .coop-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .coop-consent { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.625rem; cursor: pointer; }
-  .coop-consent input { margin-top: 0.15rem; flex-shrink: 0; }
+  /* Grid (no flex): inmune al quirk min-width:auto que colapsaba el texto del
+     consentimiento a una palabra por línea cuando el widget queda angosto (p.ej.
+     en la columna del resultado del workspace 2-col). col1=checkbox, col2=texto. */
+  .coop-consent { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.5rem; align-items: start; font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.625rem; cursor: pointer; }
+  .coop-consent input { margin-top: 0.15rem; width: auto; flex-shrink: 0; }
+  .coop-consent > span { min-width: 0; }
   .coop-form button {
     padding: 0.55rem 1.1rem; background: var(--success, #16a34a); color: #fff; border: none;
     border-radius: var(--radius-sm); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
