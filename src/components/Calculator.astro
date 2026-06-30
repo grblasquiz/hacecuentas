@@ -360,6 +360,18 @@ const categoryDisclaimers: Record<string, string> = {
 const LABORAL_RE = /sueldo|aguinaldo|indemniz|vacacion|liquidacion|paritaria|antiguedad|horas-extra|preaviso|finiquito|despido/;
 const laboralDisclaimer = 'Cálculo orientativo según la LCT y las escalas vigentes. Para tu liquidación exacta consultá a tu empleador o a un contador.';
 
+// Calcs de DOSIS / suplementación (YMYL médico crítico): disclaimer más fuerte
+// que el genérico de salud — explícito en que NO es una indicación de dosis ni
+// receta, para que un revisor (AdSense) lo vea in-situ. Las ~9 calcs de dosis
+// llevan "dosis" en el slug; "posolog"/"suplementaci" cubre variantes.
+const DOSIS_RE = /dosis|posolog|suplementaci/;
+const dosisDisc = {
+  es: 'Las dosis que ves son orientativas y generales: NO son una indicación médica para tu caso ni una receta. No te automediques ni modifiques una dosis indicada por un profesional. Consultá con tu médico o farmacéutico antes de tomar suplementos o medicamentos.',
+  en: 'The doses shown are general estimates — NOT medical advice or a prescription for your case. Do not self-medicate or change a dose set by a professional. Consult your doctor or pharmacist before taking supplements or medication.',
+  pt: 'As doses mostradas são estimativas gerais — NÃO são orientação médica nem receita. Não se automedique nem altere uma dose indicada por um profissional. Consulte seu médico ou farmacêutico antes de tomar suplementos ou medicamentos.',
+};
+const dosisDiscVet = 'Las dosis son orientativas y generales: NO reemplazan la indicación de un veterinario. No mediques a tu mascota por tu cuenta. Consultá con un veterinario matriculado.';
+
 // Disclaimers por categoría para audiencia global (EN/PT): MISMA cobertura YMYL
 // que ES pero SIN referencias a leyes argentinas (que no aplican afuera).
 const categoryDisclaimersEN: Record<string, string> = {
@@ -384,6 +396,12 @@ const categoryDisclaimersPT: Record<string, string> = {
 // Disclaimer inline junto al resultado, por idioma. ES mantiene los overrides
 // por slug + el fallback laboral; EN/PT usan los mapas globales sin leyes AR.
 const disclaimer = (() => {
+  // Dosis: prioridad sobre el genérico de salud, en los 3 idiomas.
+  const isDosis = DOSIS_RE.test(config.slug);
+  if (isDosis && config.category === 'mascotas' && lang === 'es') return dosisDiscVet;
+  if (isDosis && ['salud', 'familia', 'deportes'].includes(config.category)) {
+    return dosisDisc[lang as 'es' | 'en' | 'pt'] || dosisDisc.es;
+  }
   if (lang === 'en') return categoryDisclaimersEN[config.category] || '';
   if (lang === 'pt') return categoryDisclaimersPT[config.category] || '';
   if (disclaimers[config.slug]) return disclaimers[config.slug];
