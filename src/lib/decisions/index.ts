@@ -1,24 +1,26 @@
 /**
  * Registro de salas de decisión (/decidir/*).
  *
- * Importa los módulos completos (con `compute`, que a su vez importa fórmulas).
- * Se consume en:
- *   - el cliente: DecisionRoom.astro corre `room.compute(inputs)` en el browser.
- *   - el server: /decidir/[slug].astro arma SEO + baseline SSR.
+ * Auto-descubre TODOS los módulos `src/lib/decisions/*.ts` que exporten un
+ * `room` (vía import.meta.glob de Vite/Astro). Agregar una sala = crear su
+ * archivo; no hay que tocar este registro.
  *
- * Para enumerar slugs en scripts de build SIN arrastrar las fórmulas, usar
- * `manifest.ts` (metadata pura, sin compute).
+ * Se consume en el cliente (DecisionRoom.astro corre room.compute en el browser)
+ * y en el server (/decidir/[slug].astro arma SEO + baseline SSR). Para enumerar
+ * slugs en scripts de build SIN arrastrar las fórmulas, usar `manifest.ts`
+ * (metadata pura, generada por scripts/gen-decisions-manifest.ts).
  */
 import type { DecisionRoom } from './types';
-import { room as aceptarOfertaLaboral } from './aceptar-oferta-laboral';
-import { room as meDespidieron } from './me-despidieron';
-import { room as cancelarDeudaOInvertir } from './cancelar-deuda-o-invertir';
 
-export const DECISION_LIST: DecisionRoom[] = [
-  aceptarOfertaLaboral,
-  meDespidieron,
-  cancelarDeudaOInvertir,
-];
+const modules = import.meta.glob<{ room?: DecisionRoom }>(
+  ['./*.ts', '!./index.ts', '!./types.ts', '!./manifest.ts'],
+  { eager: true },
+);
+
+export const DECISION_LIST: DecisionRoom[] = Object.values(modules)
+  .map((m) => m.room)
+  .filter((r): r is DecisionRoom => !!r && typeof r.slug === 'string')
+  .sort((a, b) => a.slug.localeCompare(b.slug));
 
 export const DECISION_ROOMS: Record<string, DecisionRoom> = Object.fromEntries(
   DECISION_LIST.map((r) => [r.slug, r]),
