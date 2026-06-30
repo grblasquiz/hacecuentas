@@ -92,7 +92,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
     <p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — cargá tus datos y tocá <strong>Analizar mi decisión</strong>.</p>
 
     <div class={`dr-verdict dr-tone-${initialResult.verdict.tone}`} data-dr-verdict>
-      <span class="dr-badge" data-dr-badge>{STATUS_BADGE[initialResult.status]}</span>
+      <span class="dr-badge" data-dr-badge>{initialResult.verdict.badge || STATUS_BADGE[initialResult.status]}</span>
       <h3 data-dr-title>{initialResult.verdict.title}</h3>
       <p data-dr-detail set:html={mdInline(initialResult.verdict.detail)} />
     </div>
@@ -140,6 +140,25 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
                 </th>
                 <td>{r.a}</td>
                 <td>{r.b}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+
+    {!initialResult.comparison && initialResult.breakdown && initialResult.breakdown.length > 0 && (
+      <div class="dr-comparison-wrap" data-dr-comparison-wrap>
+        <h4>El desglose</h4>
+        <table class="dr-comparison" data-dr-comparison>
+          <tbody>
+            {initialResult.breakdown.map((r) => (
+              <tr>
+                <th scope="row">
+                  {r.label}
+                  {r.hint && <span class="dr-hint">{r.hint}</span>}
+                </th>
+                <td>{r.value}</td>
               </tr>
             ))}
           </tbody>
@@ -279,7 +298,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
       resultEl.dataset.example = isExample ? 'true' : 'false';
       resultEl.innerHTML = `${flag}
         <div class="dr-verdict dr-tone-${tone}">
-          <span class="dr-badge">${esc(STATUS_BADGE[r.status] || '')}</span>
+          <span class="dr-badge">${esc(r.verdict.badge || STATUS_BADGE[r.status] || '')}</span>
           <h3>${esc(r.verdict.title)}</h3>
           <p>${mdInline(r.verdict.detail)}</p>
         </div>

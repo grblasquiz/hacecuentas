@@ -11,8 +11,14 @@
  */
 import type { DecisionRoom } from './types';
 import { room as aceptarOfertaLaboral } from './aceptar-oferta-laboral';
+import { room as meDespidieron } from './me-despidieron';
+import { room as cancelarDeudaOInvertir } from './cancelar-deuda-o-invertir';
 
-export const DECISION_LIST: DecisionRoom[] = [aceptarOfertaLaboral];
+export const DECISION_LIST: DecisionRoom[] = [
+  aceptarOfertaLaboral,
+  meDespidieron,
+  cancelarDeudaOInvertir,
+];
 
 export const DECISION_ROOMS: Record<string, DecisionRoom> = Object.fromEntries(
   DECISION_LIST.map((r) => [r.slug, r]),

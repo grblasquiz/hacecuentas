@@ -58,8 +58,9 @@ export interface DecisionResult {
    *   'insufficient'  → faltan datos para concluir
    */
   status: 'a' | 'b' | 'tie' | 'insufficient';
-  /** Bloque 1 — conclusión directa en una frase. */
-  verdict: { title: string; detail: string; tone: DecisionTone };
+  /** Bloque 1 — conclusión directa en una frase. `badge` = etiqueta corta del
+   *  estado (cada sala define la suya; si falta, el componente usa un default). */
+  verdict: { title: string; detail: string; tone: DecisionTone; badge?: string };
   /** Bloque 2 — el número que decide. */
   decisiveNumber: { value: string; label: string; sub?: string };
   /** Bloque 3 — tres escenarios (conservador / probable / favorable). */
