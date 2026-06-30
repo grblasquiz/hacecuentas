@@ -14,6 +14,7 @@
 
 import type { DecisionRoom, DecisionResult } from './types';
 import { fmtMoney, num } from './types';
+import { categoriaPorIngresos, cuota as cuotaMono } from '../data/monotributo-2026';
 
 const IVA = 0.21;
 
@@ -43,9 +44,14 @@ function compute(inputs: Record<string, any>): DecisionResult {
   }
 
   // — MONOTRIBUTO (A) —
-  // Cuota fija estimada como ~5% de la facturación (incluye impositivo + aportes
-  // jubilatorios + obra social). Es una aproximación grosera; varía por categoría.
-  const cuotaMonotributo = facturacion * 0.05;
+  // Cuota REAL de la categoría que corresponde a tu facturación anualizada
+  // (fuente única src/lib/data/monotributo-2026.ts, escala ARCA vigente). Usamos
+  // la cuota de servicios (la más alta en categorías altas; conservador). Si tu
+  // facturación supera el tope de K, no podés ser monotributo: usamos la cuota de
+  // K como piso y lo avisamos.
+  const catMono = categoriaPorIngresos(facturacion * 12);
+  const excedeMonotributo = catMono === null;
+  const cuotaMonotributo = cuotaMono(catMono ?? 'K', 'servicios');
   // El monotributista NO computa el IVA de sus compras: lo paga como mayor costo.
   const ivaCompras = comprasConIVA * IVA / (1 + IVA); // IVA contenido en compras con IVA
   const costoMono = cuotaMonotributo + ivaCompras; // carga mensual total
@@ -144,7 +150,9 @@ function compute(inputs: Record<string, any>): DecisionResult {
   ];
 
   const notes = [
-    '⚠️ Estimación MUY aproximada. La cuota de monotributo se modela como ~5% de la facturación y Ganancias/IIBB con alícuotas genéricas (15% y 3%). Tu carga real depende de tu categoría, actividad, jurisdicción y deducciones.',
+    excedeMonotributo
+      ? '⚠️ Tu facturación anualizada SUPERA el tope de la categoría K: no podrías inscribirte en monotributo (usamos la cuota de K solo como referencia). En tu caso el Responsable Inscripto es prácticamente la única opción.'
+      : `La cuota de monotributo usa el valor REAL de la categoría que te corresponde por facturación (escala ARCA vigente). Ganancias/IIBB se estiman con alícuotas genéricas (15% y 3%): tu carga real depende de actividad, jurisdicción y deducciones.`,
     'El IVA es el factor clave: como Responsable Inscripto computás crédito fiscal de tus compras y trasladás el débito a clientes que descarguen IVA (empresas). A consumidor final, ese IVA suele pesar como costo.',
     'El monotributo incluye en su cuota el componente impositivo, los aportes jubilatorios y la obra social. Como Responsable Inscripto, los aportes autónomos van aparte (no incluidos en este modelo).',
     'No es asesoramiento contable. La elección de régimen tiene consecuencias importantes: consultá SIEMPRE con un contador público matriculado y verificá los valores vigentes en ARCA.',
@@ -272,7 +280,7 @@ export const room: DecisionRoom = {
     },
     {
       q: '¿Los números de esta calculadora son exactos?',
-      a: 'No, son una estimación con supuestos genéricos (cuota ~5% de la facturación, Ganancias 15%, IIBB 3%). Tu carga real depende de tu categoría, actividad, jurisdicción y deducciones. Usala para tener una intuición y validá la decisión con un contador.',
+      a: 'La cuota de monotributo es real (la de tu categoría según la escala ARCA vigente), pero Ganancias e IIBB del Responsable Inscripto se estiman con alícuotas genéricas (15% y 3%). Tu carga real depende de tu actividad, jurisdicción y deducciones. Usala para tener una intuición y validá la decisión con un contador.',
     },
     {
       q: '¿Esto reemplaza a un contador?',

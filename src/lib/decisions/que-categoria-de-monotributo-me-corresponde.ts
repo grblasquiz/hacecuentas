@@ -13,33 +13,18 @@
 
 import type { DecisionRoom, DecisionResult } from './types';
 import { fmtMoney, num } from './types';
+import { TOPES, categoriaPorIngresos } from '../data/monotributo-2026';
 
 /**
- * Topes de facturación anual (ingresos brutos) por categoría — valores ARCA
- * oficiales vigentes desde el 01/02/2026 (coinciden con /datos-monotributo-2026).
- * En 2026 los topes de INGRESOS son iguales para servicios y venta de bienes;
- * lo que difiere por categoría es la cuota, no el tope. Cambian en cada
- * recategorización (próxima: julio 2026): son guía, verificá en ARCA.
+ * Topes y categorías = FUENTE ÚNICA DE VERDAD src/lib/data/monotributo-2026.ts
+ * (la misma que alimenta /datos-monotributo-2026). Cuando ARCA actualice la
+ * escala (recategorización semestral: enero y julio), se corrige en UN solo
+ * lugar y esta sala se sincroniza sola. En 2026 los topes de ingresos son
+ * iguales para servicios y venta de bienes; lo que difiere es la cuota.
  */
-const CATEGORIAS: Array<{ cat: string; tope: number }> = [
-  { cat: 'A', tope: 10_277_988 },
-  { cat: 'B', tope: 15_058_448 },
-  { cat: 'C', tope: 21_113_697 },
-  { cat: 'D', tope: 26_212_853 },
-  { cat: 'E', tope: 30_833_964 },
-  { cat: 'F', tope: 38_642_048 },
-  { cat: 'G', tope: 46_211_109 },
-  { cat: 'H', tope: 70_113_407 },
-  { cat: 'I', tope: 78_479_212 },
-  { cat: 'J', tope: 89_872_640 },
-  { cat: 'K', tope: 108_357_084 },
-];
-
 function categoriaPara(facturacion: number): { cat: string; tope: number } | null {
-  for (const c of CATEGORIAS) {
-    if (facturacion <= c.tope) return c;
-  }
-  return null; // supera la K → fuera de monotributo
+  const c = categoriaPorIngresos(facturacion);
+  return c ? { cat: c, tope: TOPES[c] } : null;
 }
 
 function compute(inputs: Record<string, any>): DecisionResult {
