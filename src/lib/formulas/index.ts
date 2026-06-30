@@ -2495,6 +2495,7 @@ import { suenoBebe } from './sueno-bebe-horas';
 import { compute as compute__sueno_bebe_horas_meses_tabla_padres } from './sueno-bebe-horas-meses-tabla-padres';
 import { suenoIdealEdad } from './sueno-ideal-edad';
 import { superavitCalorico } from './superavit-calorico';
+import { superficieCorporal } from './superficie-corporal';
 import { superficieCorporalBsa } from './superficie-corporal-bsa';
 import { superficieQuemaduraReglaNueves } from './superficie-quemadura-regla-nueves';
 import { compute as compute__sushi_piezas_por_persona_evento_cumpleanos } from './sushi-piezas-por-persona-evento-cumpleanos';
@@ -5275,6 +5276,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueno-bebe-horas-meses-tabla-padres': compute__sueno_bebe_horas_meses_tabla_padres,
   'sueno-ideal-edad': suenoIdealEdad,
   'superavit-calorico': superavitCalorico,
+  'superficie-corporal': superficieCorporal,
   'superficie-corporal-bsa': superficieCorporalBsa,
   'superficie-quemadura-regla-nueves': superficieQuemaduraReglaNueves,
   'sushi-piezas-por-persona-evento-cumpleanos': compute__sushi_piezas_por_persona_evento_cumpleanos,
