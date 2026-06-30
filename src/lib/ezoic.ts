@@ -18,4 +18,10 @@
 //    en el panel Ezoic: (1) ads.txt → manager, (2) placements, (3) "Google Consent
 //    Mode" ON, (4) CMP geo-targeteado a GDPR-only (no global, así AR/LATAM no ve
 //    banner). Rollback instantáneo = volver a false + redeploy.
-export const EZOIC_ENABLED = true;
+//
+// OFF 2026-06-30 (Martin): Ezoic NO aprobó la cuenta → sacamos todo su stack
+//    (CMP gatekeeper + sa.min.js + ezoicanalytics). Eran scripts render-blocking
+//    de terceros que inflaban el INP en mobile sin devolver ni un peso. Al apagar,
+//    el banner de cookies casero vuelve a manejar la UE y se reactiva el loader
+//    diferido de adsbygoogle (rama !EZOIC_ENABLED en Layout.astro).
+export const EZOIC_ENABLED = false;

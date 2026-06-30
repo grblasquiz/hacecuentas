@@ -922,14 +922,17 @@ const formatFreshnessDate = (iso: string): string => {
       </div>
     )}
 
-    <!-- Acciones post-resultado: 3 primarias visibles (Copiar / Compartir / Modificar)
-         + "Más opciones" (PDF, Imagen, Agendar, Nuevo cálculo) colapsado. El email-capture
-         (lead-magnet) y el feedback quedan visibles abajo; el embed sigue como banner aparte. -->
+    <!-- Acciones post-resultado: SÓLO 3 visibles (Guardar / Compartir / Más opciones).
+         El resto (copiar número/detalle, PDF, imagen, agendar, embeber, modificar,
+         reiniciar) vive colapsado en "Más opciones" para no rodear el resultado de
+         botones. El embed dejó de ser banner prominente → ahora se revela desde acá
+         o por referrer (/desarrolladores, /embeber). -->
     <div class="share">
-      <!-- 1. Copiar resultado -->
-      <button type="button" class="btn-share btn-share--primary" data-action="copy-result">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        <span data-copy-result-label>{t.copyResult}</span>
+      <!-- 1. Guardar resultado — PRINCIPAL. Snapshot a localStorage (historial). -->
+      <button type="button" class="btn-share btn-share--primary" data-action="save-result"
+        title={lang === 'en' ? 'Save this result to your history' : lang === 'pt' ? 'Salvar este resultado no seu histórico' : 'Guardá este resultado en tu historial'}>
+        <svg class="ic-save" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <span data-save-label>{lang === 'en' ? 'Save result' : lang === 'pt' ? 'Salvar resultado' : 'Guardar resultado'}</span>
       </button>
 
       <!-- 2. Compartir — share nativo del SO si existe; si no, menú con WhatsApp + Copiar link -->
@@ -952,20 +955,29 @@ const formatFreshnessDate = (iso: string): string => {
         </div>
       </div>
 
-      <!-- 3. Modificar datos — scrollea al formulario (mantiene los valores cargados) -->
-      <button type="button" class="btn-share btn-share--primary" data-action="edit"
-        title={lang === 'en' ? 'Go back and change your inputs' : lang === 'pt' ? 'Voltar e alterar os dados' : 'Volver y cambiar tus datos'}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        {lang === 'en' ? 'Edit data' : lang === 'pt' ? 'Editar dados' : 'Modificar datos'}
-      </button>
-
-      <!-- Más opciones — acciones secundarias colapsadas -->
+      <!-- 3. Más opciones — TODO lo secundario, colapsado -->
       <details class="share-more" data-share-more>
         <summary class="btn-share share-more-summary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
           {lang === 'en' ? 'More options' : lang === 'pt' ? 'Mais opções' : 'Más opciones'}
         </summary>
         <div class="share-more-panel">
+          <!-- Copiar número (sólo el valor) -->
+          <button type="button" class="btn-share" data-action="copy-number">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span data-copy-number-label>{lang === 'en' ? 'Copy number' : lang === 'pt' ? 'Copiar número' : 'Copiar número'}</span>
+          </button>
+          <!-- Copiar detalle (datos + resultado completo) -->
+          <button type="button" class="btn-share" data-action="copy-detail">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span data-copy-detail-label>{lang === 'en' ? 'Copy details' : lang === 'pt' ? 'Copiar detalhes' : 'Copiar detalle'}</span>
+          </button>
+          <!-- Modificar datos — scrollea al formulario (mantiene los valores) -->
+          <button type="button" class="btn-share" data-action="edit"
+            title={lang === 'en' ? 'Go back and change your inputs' : lang === 'pt' ? 'Voltar e alterar os dados' : 'Volver y cambiar tus datos'}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            {lang === 'en' ? 'Edit data' : lang === 'pt' ? 'Editar dados' : 'Modificar datos'}
+          </button>
           <button type="button" class="btn-share" data-action="print" title={t.sharePrint}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             PDF
@@ -973,6 +985,12 @@ const formatFreshnessDate = (iso: string): string => {
           <button type="button" class="btn-share" data-action="share-image" title={lang === 'en' ? 'Share the result as an image' : lang === 'pt' ? 'Compartilhar o resultado como imagem' : 'Compartir el resultado como imagen'}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             {lang === 'en' ? 'Image' : lang === 'pt' ? 'Imagem' : 'Imagen'}
+          </button>
+          <!-- Embeber — revela el bloque de embed (oculto por defecto para usuarios comunes) -->
+          <button type="button" class="btn-share" data-action="embed-reveal"
+            title={lang === 'en' ? 'Embed this calculator on your website' : lang === 'pt' ? 'Incorporar esta calculadora no seu site' : 'Incrustá esta calculadora en tu web'}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            {lang === 'en' ? 'Embed' : lang === 'pt' ? 'Incorporar' : 'Embeber en tu web'}
           </button>
           {config.calendarReminder && (
             <button
@@ -991,7 +1009,7 @@ const formatFreshnessDate = (iso: string): string => {
           )}
           <button type="button" class="btn-share" data-action="reset">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-            {t.newCalc}
+            {lang === 'en' ? 'Reset' : lang === 'pt' ? 'Reiniciar' : 'Reiniciar'}
           </button>
         </div>
       </details>
@@ -1139,6 +1157,14 @@ const formatFreshnessDate = (iso: string): string => {
       while (root && !(root.matches && root.matches('details.embed-cta[data-embed]'))) root = root.previousElementSibling;
       if (!root || root.dataset.embedWired) return;
       root.dataset.embedWired = '1';
+      // Intención profesional → revelar el embed sin pasar por "Más opciones":
+      // (1) viene de /desarrolladores o /embeber, (2) llega con ?embed.
+      try {
+        var ref = document.referrer || '';
+        var proIntent = /\/(desarrolladores|embeber)\b/.test(ref) ||
+          new URLSearchParams(location.search).has('embed');
+        if (proIntent) { root.classList.add('is-revealed'); }
+      } catch (e) {}
       var btn = root.querySelector('[data-embed-copy]');
       var codeEl = root.querySelector('.embed-code code');
       if (btn && codeEl) {
@@ -1777,7 +1803,7 @@ const formatFreshnessDate = (iso: string): string => {
     grid-column: 1 / -1;
     background:
       radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 55%),
-      linear-gradient(135deg, var(--accent-soft) 0%, color-mix(in srgb, #a78bfa 15%, var(--accent-soft)) 100%);
+      linear-gradient(135deg, var(--accent-soft) 0%, color-mix(in srgb, var(--accent-2) 15%, var(--accent-soft)) 100%);
     border: 1.5px solid color-mix(in srgb, var(--accent) 35%, transparent);
     padding: 2rem 1.75rem;
     overflow: hidden;
@@ -1832,11 +1858,16 @@ const formatFreshnessDate = (iso: string): string => {
   }
 
   .result-value {
+    /* La voz de los números: JetBrains Mono + cifras tabulares (alineación y
+       count-up sin saltos de ancho). El family lo fija el rule global de Layout;
+       lo repetimos acá defensivo por el scoping de Astro. */
+    font-family: var(--font-num);
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text);
-    font-feature-settings: 'tnum';
-    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+    letter-spacing: -0.01em;
     line-height: 1.15;
   }
 
@@ -1847,8 +1878,8 @@ const formatFreshnessDate = (iso: string): string => {
        el clip (el resultado más importante quedaba en blanco). */
     color: var(--accent-strong);
     font-size: clamp(1.875rem, 8vw, 4rem);
-    font-weight: 800;
-    letter-spacing: -0.035em;
+    font-weight: 700;
+    letter-spacing: -0.03em;
     line-height: 1;
     animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
@@ -1859,7 +1890,7 @@ const formatFreshnessDate = (iso: string): string => {
   }
   @supports ((-webkit-background-clip: text) or (background-clip: text)) {
     .result.primary .result-value {
-      background: linear-gradient(135deg, var(--accent-strong) 0%, color-mix(in srgb, var(--accent-strong) 60%, #7c3aed) 100%);
+      background: linear-gradient(135deg, var(--accent-strong) 0%, color-mix(in srgb, var(--accent-strong) 60%, var(--accent-2)) 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -1925,7 +1956,7 @@ const formatFreshnessDate = (iso: string): string => {
   }
   .result-compare-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #7c3aed));
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, var(--accent-2)));
     border-radius: 99px;
     position: relative;
     transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -2659,13 +2690,19 @@ const formatFreshnessDate = (iso: string): string => {
 
   /* Embed CTA — banner desplegable (details/summary): se despliega el código
      inline sin depender de JS, y el botón copia con fallback. */
+  /* Embed CTA: oculto por defecto para usuarios comunes (no rodea el resultado
+     de superficies "para developers"). Se revela desde "Más opciones → Embeber",
+     o automáticamente por referrer (/desarrolladores, /embeber) / ?embed — ver el
+     script de reveal. Sigue en el DOM (crawlable, no pierde el backlink). */
   .embed-cta {
+    display: none;
     margin-top: 1.5rem;
     background: color-mix(in srgb, var(--accent) 7%, transparent);
     border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
     border-radius: var(--radius);
     overflow: hidden;
   }
+  .embed-cta.is-revealed { display: block; }
   .embed-cta-summary {
     display: flex;
     align-items: center;
@@ -5346,18 +5383,97 @@ const formatFreshnessDate = (iso: string): string => {
             (window as any).gtag('event', 'share_whatsapp', { calc_slug: slug });
           }
           window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
-        } else if (action === 'copy-result') {
+        } else if (action === 'save-result') {
+          // Guardar resultado → snapshot {slug,title,inputs,resultado,fecha} en
+          // localStorage 'hc_saved' (historial; lo lee Mi Hacé Cuentas).
+          try {
+            const calcTitle = (document.querySelector('h1')?.textContent || document.title).trim();
+            const primaryEl = container.querySelector<HTMLElement>('.result.primary [data-value]') || container.querySelector<HTMLElement>('[data-value]');
+            const primaryLabel = container.querySelector<HTMLElement>('.result.primary .result-label');
+            const inputs: Record<string, string> = {};
+            form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select').forEach((el) => {
+              const ie = el as HTMLInputElement;
+              if (!el.name || ie.type === 'hidden' || ie.type === 'submit') return;
+              const val = el.tagName === 'SELECT'
+                ? ((el as HTMLSelectElement).options[(el as HTMLSelectElement).selectedIndex]?.text || '')
+                : ie.value;
+              if (val && val.trim()) inputs[el.name] = val.trim();
+            });
+            const snap = {
+              slug,
+              url: window.location.pathname + window.location.search,
+              title: calcTitle,
+              resultLabel: primaryLabel?.textContent?.trim() || '',
+              result: primaryEl?.textContent?.trim() || '',
+              inputs,
+              ts: Date.now(),
+            };
+            let saved: any[] = [];
+            try { saved = JSON.parse(localStorage.getItem('hc_saved') || '[]'); } catch {}
+            saved = saved.filter((s) => !(s && s.slug === snap.slug && s.result === snap.result));
+            saved.unshift(snap);
+            if (saved.length > 50) saved = saved.slice(0, 50);
+            localStorage.setItem('hc_saved', JSON.stringify(saved));
+            try { window.dispatchEvent(new CustomEvent('hc:result-saved', { detail: snap })); } catch {}
+            const label = btn.querySelector<HTMLElement>('[data-save-label]');
+            if (label) {
+              const original = label.textContent;
+              label.textContent = CALC_LANG === 'en' ? 'Saved ✓' : CALC_LANG === 'pt' ? 'Salvo ✓' : 'Guardado ✓';
+              btn.classList.add('copied');
+              setTimeout(() => { label.textContent = original; btn.classList.remove('copied'); }, 1600);
+            }
+            if (typeof (window as any).gtag === 'function') (window as any).gtag('event', 'save_result', { calc_slug: slug });
+          } catch { /* localStorage lleno/bloqueado: no romper la página */ }
+        } else if (action === 'embed-reveal') {
+          const embed = (container.querySelector<HTMLElement>('.embed-cta') || document.querySelector<HTMLElement>('.embed-cta'));
+          if (embed) {
+            embed.classList.add('is-revealed');
+            try { (embed as HTMLDetailsElement).open = true; } catch {}
+            embed.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          if (typeof (window as any).gtag === 'function') (window as any).gtag('event', 'embed_reveal', { calc_slug: slug });
+        } else if (action === 'copy-detail') {
+          // Copiar detalle: datos ingresados + resultado(s) en texto plano.
+          const calcTitle = (document.querySelector('h1')?.textContent || document.title).trim();
+          const lines: string[] = [calcTitle, ''];
+          const inputLines: string[] = [];
+          form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select').forEach((el) => {
+            const ie = el as HTMLInputElement;
+            if (!el.name || ie.type === 'hidden' || ie.type === 'submit') return;
+            const val = el.tagName === 'SELECT'
+              ? ((el as HTMLSelectElement).options[(el as HTMLSelectElement).selectedIndex]?.text || '')
+              : ie.value;
+            if (!val || !val.trim()) return;
+            const labelEl = form.querySelector<HTMLElement>(`label[for="${el.id}"] .label-text`);
+            inputLines.push(`${(labelEl?.textContent || el.name).trim()}: ${val.trim()}`);
+          });
+          if (inputLines.length) { lines.push(CALC_LANG === 'en' ? 'Inputs:' : CALC_LANG === 'pt' ? 'Dados:' : 'Datos:'); lines.push(...inputLines); lines.push(''); }
+          container.querySelectorAll<HTMLElement>('.result').forEach((r) => {
+            const l = r.querySelector<HTMLElement>('.result-label')?.textContent?.trim() || '';
+            const v = r.querySelector<HTMLElement>('[data-value]')?.textContent?.trim() || '';
+            if (v) lines.push(`${l ? l + ': ' : ''}${v}`);
+          });
+          lines.push('', window.location.href);
+          const detail = lines.join('\n');
+          const ok = await copyTextRobust(detail);
+          const label = btn.querySelector<HTMLElement>('[data-copy-detail-label]');
+          if (label) {
+            const original = label.textContent;
+            if (ok) { label.textContent = CALC_LANG === 'en' ? 'Copied!' : CALC_LANG === 'pt' ? 'Copiado!' : '¡Copiado!'; btn.classList.add('copied'); setTimeout(() => { label.textContent = original; btn.classList.remove('copied'); }, 1500); }
+            else { try { window.prompt(CALC_LANG === 'en' ? 'Copy:' : 'Copiá:', detail); } catch {} }
+          }
+        } else if (action === 'copy-result' || action === 'copy-number') {
           const primary = container.querySelector<HTMLElement>('.result.primary [data-value]');
           const fallback = container.querySelector<HTMLElement>('[data-value]');
           const value = (primary || fallback)?.textContent || '';
           const ok = await copyTextRobust(value);
-          const label = btn.querySelector<HTMLElement>('[data-copy-result-label]')!;
-          const original = label.textContent;
-          if (ok) {
+          const label = btn.querySelector<HTMLElement>('[data-copy-number-label], [data-copy-result-label]');
+          const original = label?.textContent;
+          if (ok && label) {
             label.textContent = CALC_LANG === 'en' ? 'Copied!' : CALC_LANG === 'pt' ? 'Copiado!' : '¡Copiado!';
             btn.classList.add('copied');
             setTimeout(() => {
-              label.textContent = original;
+              label.textContent = original ?? '';
               btn.classList.remove('copied');
             }, 1500);
           } else if (value) {

@@ -217,7 +217,7 @@ const faqSchema = {
   })),
 };
 ---
-<Layout title={title} description={description} schema={schema}>
+<Layout title={title} description={description} schema={schema} domain="data" pageType="dashboard">
   <Header slot="header" />
 
   <article class="dashboard">
@@ -365,11 +365,12 @@ const faqSchema = {
     <section class="dash-section">
       <h2>🏦 Plazo fijo: mejores TNA por banco{pfMax ? ` (hasta ${String(pfMax).replace('.', ',')}%)` : ''}</h2>
       {plazoFijoRows.length ? (
-        <div class="tna-grid">
-          {plazoFijoRows.map((x) => (
-            <div class="tna-card">
-              <div class="tna-bank">{x.banco}</div>
-              <div class="tna-val">{String(x.tna).replace('.', ',')}%</div>
+        <div class="tna-bars">
+          {plazoFijoRows.map((x, i) => (
+            <div class={`tna-row${i === 0 ? ' tna-row-top' : ''}`}>
+              <span class="tna-bank">{x.banco}</span>
+              <span class="tna-track" aria-hidden="true"><span class="tna-fill" style={`width:${Math.max(8, Math.round((x.tna / (pfMax || x.tna)) * 100))}%`}></span></span>
+              <span class="tna-val">{String(x.tna).replace('.', ',')}%</span>
             </div>
           ))}
         </div>
@@ -604,15 +605,47 @@ const faqSchema = {
   }
 
   .card-value {
-    font-size: 1.75rem;
-    font-weight: 800;
+    font-family: var(--font-num, var(--font-mono));
+    font-size: 1.85rem;
+    font-weight: 700;
     color: var(--text);
-    letter-spacing: -0.02em;
-    font-feature-settings: 'tnum';
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
     margin-bottom: 0.25rem;
     line-height: 1.1;
   }
   .card.hi .card-value { color: var(--accent-strong); }
+
+  /* === Terminal financiero (#14): canvas gris-azulado + tarjetas-monitor ===
+     El fondo levemente azulado y las métricas en mono dan el "look terminal",
+     no una sucesión de bloques editoriales. */
+  :global(body[data-page-type="dashboard"]) { background: #eef2f8; }
+  :global(html[data-theme="dark"] body[data-page-type="dashboard"]) { background: #0b1220; }
+  .card { background: var(--bg-card); }
+
+  /* Tabla de bancos con BARRAS horizontales (plazo fijo). */
+  .tna-bars {
+    display: flex; flex-direction: column;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 4px 12px; margin-bottom: 1rem;
+  }
+  .tna-row {
+    display: grid; grid-template-columns: 150px 1fr 64px; align-items: center; gap: 14px;
+    padding: 8px 2px; border-bottom: 1px solid var(--border);
+  }
+  .tna-row:last-child { border-bottom: 0; }
+  .tna-bank { font-size: 0.85rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tna-track { height: 8px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; }
+  .tna-fill {
+    display: block; height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--accent-2, #0d9488)));
+  }
+  .tna-val {
+    font-family: var(--font-num, var(--font-mono)); font-variant-numeric: tabular-nums;
+    font-weight: 700; font-size: 0.92rem; text-align: right; color: var(--accent-strong);
+  }
+  .tna-row-top .tna-val { color: var(--success-text, #15803d); }
+  @media (max-width: 520px) { .tna-row { grid-template-columns: 92px 1fr 50px; gap: 9px; } }
 
   .card-sub {
     font-size: 0.8125rem;

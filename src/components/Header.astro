@@ -51,17 +51,13 @@ else if (_seg === 'global') pageCountry = 'GLOBAL';
 
 // Nav items por país
 const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePath?: string}>> = {
+  // Nav por DOMINIOS (no por inventario de categorías): 4 universos principales
+  // → productos /mi/*. El resto vive en el dropdown "Más". Header decluttered.
   AR: [
-    { href: '/cambio-de-monedas', label: 'Cambio de monedas' },
-    { href: '/cotizacion-cripto', label: 'Cripto' },
-    { href: '/inflacion-argentina', label: 'Inflación', activePath: '/inflacion' },
-    { href: '/guias', label: 'Guías', activePath: '/guia' },
-    { href: '/decidir', label: 'Decidir', activePath: '/decidir' },
-    { href: '/categoria/finanzas', label: 'Finanzas' },
-    { href: '/categoria/marketing', label: 'Marketing' },
-    { href: '/categoria/salud', label: 'Salud' },
-    { href: '/categoria/viajes', label: 'Viajes' },
-    { href: '/categoria/vida', label: 'Vida' },
+    { href: '/mi/plata', label: 'Dinero', activePath: '/mi/plata' },
+    { href: '/mi/trabajo', label: 'Trabajo', activePath: '/mi/trabajo' },
+    { href: '/mi/casa', label: 'Casa', activePath: '/mi/casa' },
+    { href: '/mi/familia', label: 'Salud', activePath: '/mi/familia' },
   ],
   ES: [
     { href: '/es/calculadora-irpf-2026-tramos-espana-nomina', label: 'IRPF', activePath: '/es/calculadora-irpf' },
@@ -160,6 +156,22 @@ const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePa
 };
 const navItems = COUNTRY_NAVS[pageCountry];
 
+// Dropdown "Más" (solo AR): el resto de dominios/superficies que salieron de la
+// nav principal. Preserva los links internos que tenía la nav vieja (Decidir,
+// Guías, conversores) para no perder esos enlaces del grafo SEO.
+const NAV_MORE: Array<{ href: string; label: string }> = pageCountry === 'AR' ? [
+  { href: '/decidir', label: '🧭 Salas de decisión' },
+  { href: '/valores-bcra', label: '📊 Dólar y economía' },
+  { href: '/categoria/viajes', label: 'Viajes' },
+  { href: '/categoria/cocina', label: 'Cocina' },
+  { href: '/categoria/tecnologia', label: 'Tecnología' },
+  { href: '/categoria/educacion', label: 'Educación' },
+  { href: '/categoria/deportes', label: 'Deportes' },
+  { href: '/categoria/mascotas', label: 'Mascotas' },
+  { href: '/guias', label: 'Guías y notas' },
+  { href: '/calculadoras', label: 'Todas las categorías →' },
+] : [];
+
 // Menú mobile: lista COMPLETA de categorías (la nav de escritorio sólo muestra
 // un subset). Cada slug tiene su ruta /categoria/<slug> (las construye
 // src/pages/categoria/[cat]/[...page].astro). Labels = CATEGORY_TITLES.
@@ -214,6 +226,14 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
         {navItems.map(item => (
           <a href={item.href} class={isActive(item.activePath || item.href) ? 'active' : ''}>{item.label}</a>
         ))}
+        {NAV_MORE.length > 0 && (
+          <details class="nav-more">
+            <summary>Más <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="nav-more-menu">
+              {NAV_MORE.map(m => <a href={m.href}>{m.label}</a>)}
+            </div>
+          </details>
+        )}
       </nav>
     )}
 
@@ -421,6 +441,10 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     if (dd && b && !dd.hasAttribute('hidden') && !dd.contains(e.target) && !b.contains(e.target)) {
       dd.setAttribute('hidden', ''); b.setAttribute('aria-expanded', 'false');
     }
+    // Cerrar el dropdown "Más" (<details>) al clickear fuera.
+    document.querySelectorAll('.nav-more[open]').forEach((d) => {
+      if (!d.contains(e.target)) d.removeAttribute('open');
+    });
   });
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
@@ -896,6 +920,32 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
   nav a:hover { color: var(--text); background: var(--bg-muted); text-decoration: none; }
   nav a.active { color: var(--accent); background: var(--accent-soft); }
 
+  /* Dropdown "Más" — <details> nativo (sin JS para abrir). */
+  .nav-more { position: relative; display: inline-block; }
+  .nav-more > summary {
+    list-style: none; cursor: pointer; white-space: nowrap;
+    color: var(--text-muted); font-size: 0.9375rem; font-weight: 500;
+    padding: 0.5rem 0.875rem; border-radius: var(--radius-sm);
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .nav-more > summary::-webkit-details-marker { display: none; }
+  .nav-more > summary:hover,
+  .nav-more[open] > summary { color: var(--text); background: var(--bg-muted); }
+  .nav-more > summary svg { transition: transform 0.15s; }
+  .nav-more[open] > summary svg { transform: rotate(180deg); }
+  .nav-more-menu {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 60;
+    min-width: 230px; display: flex; flex-direction: column; gap: 1px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 6px;
+  }
+  .nav-more-menu a {
+    padding: 0.5rem 0.7rem; border-radius: var(--radius-sm);
+    color: var(--text-muted); font-size: 0.9rem; font-weight: 500; white-space: nowrap;
+  }
+  .nav-more-menu a:hover { background: var(--bg-muted); color: var(--text); text-decoration: none; }
+
   .header-actions {
     display: flex;
     align-items: center;
@@ -904,21 +954,24 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     flex-shrink: 0;   /* nunca se encoge: queda fija a la derecha y visible */
   }
 
+  /* Buscador PROMINENTE: es la acción primaria del header (no compite de igual a
+     igual con los demás controles). Borde más marcado, icono en color de marca. */
   .header-search-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.625rem 0.5rem 0.75rem;
-    background: var(--bg-muted);
-    border: 1px solid var(--border);
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-strong);
     border-radius: var(--radius-sm);
     color: var(--text-subtle);
     font-size: 0.875rem;
     cursor: pointer;
-    min-width: 180px;
+    min-width: 220px;
     transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
   }
-  .header-search-btn:hover { border-color: var(--border-strong); color: var(--text); }
+  .header-search-btn > svg { color: var(--accent); flex-shrink: 0; }
+  .header-search-btn:hover { border-color: var(--accent); color: var(--text); box-shadow: var(--ring); }
   .search-label { flex: 1; text-align: left; }
 
   .kbd {

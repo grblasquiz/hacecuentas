@@ -423,63 +423,65 @@ const schema = {
   <Header slot="header" />
 
   <section class="hero">
-    <div class="trust-row">
-      <span class="trust-pill">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Fórmulas oficiales
-      </span>
-      <span class="trust-pill">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Actualizado 2026
-      </span>
-      <span class="trust-pill">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Sin registro
-      </span>
-    </div>
+    {/* Hero ASIMÉTRICO organizado por INTENCIÓN (no por inventario): a la izquierda
+        "qué necesitás resolver" + buscador natural + atajos de intención; a la
+        derecha un panel "Hoy en Argentina" con datos en vivo que le da vida visual
+        y cambia por país. El conteo de calculadoras baja a la meta-row. */}
+    <div class="hero-grid">
+      <div class="hero-main">
+        <p class="hero-kicker">Tu vida más fácil.</p>
+        <h1 class="hero-title">¿Qué necesitás <span class="accent">resolver</span> hoy?</h1>
+        <p class="hero-lead">
+          Contanos tu situación y te llevamos a la cuenta exacta — en español, con <strong>fórmulas oficiales</strong> y sin vueltas.
+        </p>
 
-    <p class="hero-kicker">Tu vida más fácil.</p>
-    <h1 class="hero-title">
-      Más de <span class="accent">{heroCalcsDisplay} calculadoras gratis</span>, listas al instante
-    </h1>
-    <p class="hero-lead">
-      Sueldo, aguinaldo, IMC, dólar y todo lo que necesites sacar: en español, con <strong>fórmulas oficiales</strong> y sin vueltas.
-    </p>
+        {/* Intérprete de problemas: entrada primaria. El usuario cuenta su situación
+            en lenguaje natural y el asistente elige la calc, pide lo que falte y
+            ejecuta el cálculo en el motor determinístico. Cae al buscador (503). */}
+        <ProblemInterpreter
+          variant="hero"
+          searchHref="/buscar"
+          showSearchLink={false}
+          examples={[
+            'Me ofrecen 3,4M brutos pero viajo a Capital 4 veces por semana',
+            'Me despidieron después de 8 años, ¿cuánto me corresponde?',
+            '¿Conviene plazo fijo o cancelar el préstamo?',
+          ]}
+        />
 
-    {/* Intérprete de problemas: entrada primaria. El usuario cuenta su situación
-        en lenguaje natural y el asistente elige la calc, pide lo que falte y
-        ejecuta el cálculo en el motor determinístico. Cae al buscador por nombre
-        si no hay API (503). */}
-    <ProblemInterpreter
-      variant="hero"
-      searchHref="/buscar"
-      showSearchLink={false}
-      examples={[
-        'Me ofrecen 3,4M brutos pero viajo a Capital 4 veces por semana',
-        'Me despidieron después de 8 años, ¿cuánto me corresponde?',
-        '¿Conviene plazo fijo o cancelar el préstamo?',
-      ]}
-    />
+        {/* Buscador por nombre (secundario). Mantiene ⌘K, el modal y el contador. */}
+        <button type="button" class="hero-search hero-search--secondary" id="hero-search-btn" aria-label={`Buscar entre ${TOTAL_DISPLAY} calculadoras`}>
+          <svg class="hs-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <span class="hs-placeholder" id="hs-placeholder">Buscar entre {TOTAL_DISPLAY} calculadoras por nombre…</span>
+          <kbd class="hs-kbd">⌘K</kbd>
+        </button>
 
-    {/* Buscador por nombre (secundario). Se conserva intacto: mantiene el atajo
-        ⌘K, el modal del header y el contador vivo (guard #hs-placeholder). */}
-    <button type="button" class="hero-search hero-search--secondary" id="hero-search-btn" aria-label={`Buscar entre ${TOTAL_DISPLAY} calculadoras`}>
-      <svg class="hs-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <span class="hs-placeholder" id="hs-placeholder">Buscar entre {TOTAL_DISPLAY} calculadoras por nombre…</span>
-      <kbd class="hs-kbd">⌘K</kbd>
-    </button>
-    <div class="hero-pop" aria-label="Búsquedas populares">
-      <span class="hero-pop-label">Populares:</span>
-      <a href="/fixture-mundial-2026" class="hero-pop-chip">⚽ Mundial 2026</a>
-      <a href="/buscar?q=aguinaldo" class="hero-pop-chip">Aguinaldo</a>
-      <a href="/buscar?q=sueldo%20en%20mano" class="hero-pop-chip">Sueldo en mano</a>
-      <a href="/buscar?q=imc" class="hero-pop-chip">IMC</a>
-      <a href="/buscar?q=dolar" class="hero-pop-chip">Dólar</a>
-      <a href="/buscar?q=interes%20compuesto" class="hero-pop-chip">Interés compuesto</a>
-      <a href="/buscar?q=embarazo" class="hero-pop-chip">Embarazo</a>
+        <div class="hero-intents" aria-label="Atajos">
+          <span class="hero-intents-label">Resolvé:</span>
+          <a href="/sueldo-en-mano-argentina" class="hero-intent-chip">Sueldo en mano</a>
+          <a href="/calculadora-aguinaldo-sac" class="hero-intent-chip">Aguinaldo</a>
+          <a href="/calculadora-actualizacion-alquiler-icl" class="hero-intent-chip">Alquiler</a>
+          <a href="/decidir/cancelar-deuda-o-invertir" class="hero-intent-chip">Deudas</a>
+          <a href="/calculadora-imc" class="hero-intent-chip">IMC</a>
+          <a href="/valores-bcra" class="hero-intent-chip">Dólar</a>
+        </div>
+      </div>
+
+      <!-- Panel "Hoy en Argentina": datos en vivo (client-fetch progresivo; si falla
+           queda el link a /valores-bcra). Surface 3 — tinte, no card blanca neutra. -->
+      <aside class="hoy-panel" aria-label="Hoy en Argentina" data-hoy-panel>
+        <div class="hoy-head"><span class="dot-live" aria-hidden="true"></span> Hoy en Argentina</div>
+        <ul class="hoy-list">
+          <li><span class="hoy-lbl">Dólar MEP</span><span class="hoy-val" data-hoy="mep">···</span></li>
+          <li><span class="hoy-lbl">Inflación mensual</span><span class="hoy-val" data-hoy="ipc">···</span></li>
+          <li><span class="hoy-lbl">UVA</span><span class="hoy-val" data-hoy="uva">···</span></li>
+          <li><span class="hoy-lbl">Próximo feriado</span><span class="hoy-val" id="proxi-feriado-hero">···</span></li>
+        </ul>
+        <a href="/valores-bcra" class="hoy-more">Ver dólar, tasas y economía →</a>
+      </aside>
     </div>
 
     <!-- Tus calculadoras (favoritos) — client-side desde localStorage 'hc_favs'
@@ -507,34 +509,16 @@ const schema = {
       <div class="fav-strip-grid" id="recent-strip-grid"></div>
     </section>
 
-    <!-- Quick Actions: tiles de las 3 verticales que concentran el 70% del tráfico según GA.
-         Reduce el bounce del hero (5s → objetivo 30s+) dando opciones inmediatas. -->
-    <div class="hero-quick-actions" aria-label="Herramientas destacadas">
-      <a href="/tracker-embarazo-semana-a-semana" class="qa-tile qa-tile-pink">
-        <span class="qa-icon" aria-hidden="true"><CategoryIcon cat="baby" fallback="🤰" size={30} /></span>
-        <span class="qa-body">
-          <span class="qa-title">Embarazo y bebé</span>
-          <span class="qa-desc">Tracker semanal, fecha parto, peso bebé</span>
-        </span>
-        <span class="qa-arrow" aria-hidden="true">→</span>
-      </a>
-      <a href="/valores-bcra" class="qa-tile qa-tile-green">
-        <span class="qa-icon" aria-hidden="true"><CategoryIcon cat="finanzas" fallback="💵" size={30} /></span>
-        <span class="qa-body">
-          <span class="qa-title">Dólar y economía AR</span>
-          <span class="qa-desc">Cotización, inflación, plazo fijo</span>
-        </span>
-        <span class="qa-arrow" aria-hidden="true">→</span>
-      </a>
-      <a href="/calculadora-feriados-argentina-2026-calendario" class="qa-tile qa-tile-blue">
-        <span class="qa-icon" aria-hidden="true"><CategoryIcon cat="vida" fallback="📅" size={30} /></span>
-        <span class="qa-body">
-          <span class="qa-title">Feriados 2026</span>
-          <span class="qa-desc" id="proxi-feriado">Próximo feriado: cargando…</span>
-        </span>
-        <span class="qa-arrow" aria-hidden="true">→</span>
-      </a>
-    </div>
+    <!-- Resultados guardados (acción "Guardar resultado" de las calcs → localStorage
+         'hc_saved'). Muestra título + valor. Oculto si no hay ninguno. -->
+    <section class="fav-strip saved-strip" id="saved-strip" style="display:none" aria-labelledby="saved-strip-title">
+      <h2 class="fav-strip-title" id="saved-strip-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        Tus resultados guardados
+      </h2>
+      <div class="fav-strip-grid" id="saved-strip-grid"></div>
+    </section>
+
 
     <div class="hero-country-picker" aria-label="Elegí tu país o región">
       <span class="hcp-label">¿De qué país sos?</span>
@@ -567,6 +551,37 @@ const schema = {
       <span class="source-chip">Mifflin-St Jeor</span>
       <span class="source-chip">NSCA</span>
       <span class="source-chip">AFIP/ARCA 🇦🇷</span>
+    </div>
+  </section>
+
+  {/* Cuatro caminos = las cuatro INTENCIONES (no 3 tiles arbitrarios). Estilos
+      distintos por camino, no 4 cards iguales. */}
+  <section class="caminos" aria-label="Por dónde empezar">
+    <div class="caminos-grid">
+      <a href="/calculadoras" class="camino" style="--c-ac:#4f46e5;--c-bg:#eef2ff;--c-bd:#c7d2fe">
+        <span class="camino-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="12" y1="10" x2="14" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="12" y1="14" x2="16" y2="18"/></svg></span>
+        <span class="camino-t">Hacer una cuenta</span>
+        <span class="camino-d">Sueldo, IMC, interés, conversores y +4.000 más.</span>
+        <span class="camino-go">Ver calculadoras →</span>
+      </a>
+      <a href="/decidir" class="camino" style="--c-ac:#7c3aed;--c-bg:#f5f3ff;--c-bd:#ddd6fe">
+        <span class="camino-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7l-2 5h6l-2-5"/><path d="M19 7l-2 5h6l-2-5"/><path d="M5 7l7-2 7 2"/></svg></span>
+        <span class="camino-t">Tomar una decisión</span>
+        <span class="camino-d">Salas que comparan opciones y te dan un veredicto.</span>
+        <span class="camino-go">Abrir salas →</span>
+      </a>
+      <a href="/valores-bcra" class="camino" style="--c-ac:#059669;--c-bg:#ecfdf5;--c-bd:#a7f3d0">
+        <span class="camino-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M21 8v5h-5"/></svg></span>
+        <span class="camino-t">Seguir un dato</span>
+        <span class="camino-d">Dólar, inflación, UVA y tasas, actualizados al cierre.</span>
+        <span class="camino-go">Ver economía →</span>
+      </a>
+      <a href="/mi/plata" class="camino" style="--c-ac:#d97706;--c-bg:#fffbeb;--c-bd:#fde68a">
+        <span class="camino-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
+        <span class="camino-t">Planificar una meta</span>
+        <span class="camino-d">Presupuesto, ahorro y deudas, guardados mes a mes.</span>
+        <span class="camino-go">Empezar →</span>
+      </a>
     </div>
   </section>
 
@@ -1120,24 +1135,44 @@ const schema = {
        La lista viene de la FUENTE ÚNICA feriados-ar-2026.ts vía define:vars. -->
   <script is:inline define:vars={{ FERIADOS_DATA }}>
     (function () {
+      // Próximo feriado (panel "Hoy en Argentina") — formato compacto.
       var FERIADOS = FERIADOS_DATA;
-      var el = document.getElementById('proxi-feriado');
-      if (!el) return;
-      var hoy = new Date(); hoy.setHours(0,0,0,0);
-      var prox = FERIADOS.map(function(f){
-        var d = new Date(f[0]+'T00:00:00');
-        return { d: d, n: f[1], diff: Math.ceil((d-hoy)/86400000) };
-      }).filter(function(x){ return x.diff >= 0; });
-      if (prox.length === 0) { el.textContent = 'Último feriado del año ya pasó'; return; }
-      var p = prox[0];
-      var dow = ['dom','lun','mar','mié','jue','vie','sáb'][p.d.getDay()];
-      var dia = p.d.getDate();
-      var mes = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][p.d.getMonth()];
-      var txt = 'Próximo: ' + p.n + ' (' + dow + ' ' + dia + ' ' + mes;
-      if (p.diff === 0) txt += ' — HOY)';
-      else if (p.diff === 1) txt += ' — mañana)';
-      else txt += ' — en ' + p.diff + ' días)';
-      el.textContent = txt;
+      var el = document.getElementById('proxi-feriado-hero');
+      if (el) {
+        var hoy = new Date(); hoy.setHours(0,0,0,0);
+        var prox = FERIADOS.map(function(f){
+          var d = new Date(f[0]+'T00:00:00');
+          return { d: d, n: f[1], diff: Math.ceil((d-hoy)/86400000) };
+        }).filter(function(x){ return x.diff >= 0; });
+        if (prox.length === 0) { el.textContent = '—'; }
+        else {
+          var p = prox[0];
+          var dia = p.d.getDate();
+          var mes = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][p.d.getMonth()];
+          el.textContent = dia + ' ' + mes + (p.diff <= 1 ? (p.diff === 0 ? ' · hoy' : ' · mañana') : '');
+          el.title = p.n;
+        }
+      }
+
+      // Datos en vivo (dólar MEP, inflación, UVA) — fetch progresivo con fallback.
+      // Si falla (CORS/red), quedan los "···" y el link a /valores-bcra.
+      var panel = document.querySelector('[data-hoy-panel]');
+      if (!panel || panel.dataset.hoyWired) return;
+      panel.dataset.hoyWired = '1';
+      var fmt = function (n, dec) { return Number(n).toLocaleString('es-AR', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 }); };
+      var put = function (k, v) { var n = panel.querySelector('[data-hoy="' + k + '"]'); if (n) n.textContent = v; };
+      var grab = function (url) { return fetch(url, { mode: 'cors' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); };
+      grab('https://dolarapi.com/v1/dolares').then(function (arr) {
+        if (!Array.isArray(arr)) return;
+        var mep = arr.filter(function (d) { return d.casa === 'bolsa' || d.casa === 'mep'; })[0];
+        if (mep && mep.venta) put('mep', '$ ' + fmt(mep.venta, 0));
+      });
+      grab('https://api.argentinadatos.com/v1/finanzas/indices/inflacion').then(function (arr) {
+        if (Array.isArray(arr) && arr.length) { var last = arr[arr.length - 1]; if (last && last.valor != null) put('ipc', fmt(last.valor, 1) + '%'); }
+      });
+      grab('https://api.argentinadatos.com/v1/finanzas/indices/uva').then(function (arr) {
+        if (Array.isArray(arr) && arr.length) { var last = arr[arr.length - 1]; if (last && last.valor != null) put('uva', '$ ' + fmt(last.valor, 2)); }
+      });
     })();
   </script>
 
@@ -1287,6 +1322,48 @@ const schema = {
 
       if (!window.__hcRecentStrip) {
         window.__hcRecentStrip = true;
+        document.addEventListener('astro:page-load', render);
+      }
+      render();
+    })();
+  </script>
+
+  <!-- Franja "Tus resultados guardados": lee 'hc_saved' (snapshots de la acción
+       Guardar resultado). Render 100% DOM API. Oculta si no hay ninguno. -->
+  <script is:inline>
+    (function () {
+      function readSaved() {
+        try {
+          var arr = JSON.parse(localStorage.getItem('hc_saved') || '[]');
+          return Array.isArray(arr) ? arr.filter(function (s) {
+            return s && typeof s.slug === 'string' && /^[a-z0-9][a-z0-9/-]*$/i.test(s.slug);
+          }) : [];
+        } catch (e) { return []; }
+      }
+      function render() {
+        var strip = document.getElementById('saved-strip');
+        var grid = document.getElementById('saved-strip-grid');
+        if (!strip || !grid) return;
+        var items = readSaved();
+        if (items.length === 0) { strip.style.display = 'none'; return; }
+        while (grid.firstChild) grid.removeChild(grid.firstChild);
+        items.slice(0, 8).forEach(function (s) {
+          var card = document.createElement('a');
+          card.className = 'fav-card saved-card';
+          card.href = (typeof s.url === 'string' && s.url.charAt(0) === '/') ? s.url : '/' + s.slug;
+          var t = document.createElement('span');
+          t.className = 'saved-card-t';
+          t.textContent = (typeof s.title === 'string' && s.title) ? s.title : s.slug.replace(/-/g, ' ');
+          var v = document.createElement('span');
+          v.className = 'saved-card-v';
+          v.textContent = (typeof s.result === 'string' && s.result) ? s.result : '';
+          card.appendChild(t); card.appendChild(v);
+          grid.appendChild(card);
+        });
+        strip.style.display = '';
+      }
+      if (!window.__hcSavedStrip) {
+        window.__hcSavedStrip = true;
         document.addEventListener('astro:page-load', render);
       }
       render();
@@ -1496,6 +1573,117 @@ const schema = {
     z-index: 0;
   }
   .hero > * { position: relative; z-index: 1; }
+
+  /* Hero asimétrico: izquierda intención + buscador, derecha panel "Hoy". */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.45fr 0.85fr;
+    gap: 2.5rem;
+    align-items: start;
+    max-width: 1080px;
+    margin: 0 auto 1.5rem;
+    text-align: left;
+  }
+  .hero-grid .hero-title { margin-left: 0; margin-right: 0; text-align: left; }
+  .hero-grid .hero-lead { margin-left: 0; }
+  .hero-grid .hero-search--secondary { margin-left: 0; margin-right: 0; }
+  .hero-main > :where(.search-shell, .pi-shell, form) { margin-left: 0; }
+
+  .hero-intents {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem;
+    margin-top: 1.1rem;
+  }
+  .hero-intents-label { color: var(--text-subtle); font-size: 0.8125rem; font-weight: 700; }
+  .hero-intent-chip {
+    display: inline-flex; align-items: center;
+    padding: 0.34rem 0.8rem; border-radius: 999px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); text-decoration: none;
+    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+  }
+  .hero-intent-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+  /* Panel "Hoy en Argentina" — Surface 3: tinte de marca, no card neutra. */
+  .hoy-panel {
+    align-self: stretch;
+    padding: 1.25rem 1.35rem 1.1rem;
+    border-radius: 18px;
+    background: linear-gradient(165deg, color-mix(in srgb, var(--accent) 10%, var(--bg-card)), var(--bg-card) 75%);
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
+    box-shadow: var(--shadow-md);
+  }
+  .hoy-head {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--accent-strong); margin-bottom: 0.9rem;
+  }
+  .hoy-list { list-style: none; margin: 0 0 0.9rem; padding: 0; display: flex; flex-direction: column; }
+  .hoy-list li {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem;
+    padding: 0.55rem 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
+  }
+  .hoy-list li:last-child { border-bottom: 0; }
+  .hoy-lbl { color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; }
+  .hoy-val {
+    font-family: var(--font-num, var(--font-mono)); font-variant-numeric: tabular-nums;
+    font-weight: 700; font-size: 0.95rem; color: var(--text); white-space: nowrap;
+  }
+  .hoy-more {
+    display: inline-flex; align-items: center; font-size: 0.8125rem; font-weight: 700;
+    color: var(--accent); text-decoration: none;
+  }
+  .hoy-more:hover { text-decoration: underline; }
+
+  /* Resultados guardados (hc_saved) — card vertical: título + valor en mono. */
+  .saved-strip { max-width: 640px; margin: 0 auto 1.75rem; }
+  .saved-card { flex-direction: column; align-items: flex-start; gap: 0.15rem; padding: 0.6rem 0.75rem; text-decoration: none; }
+  .saved-card:hover { border-color: var(--accent); }
+  .saved-card-t { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .saved-card-v { font-family: var(--font-num, var(--font-mono)); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.95rem; color: var(--accent-strong); }
+
+  @media (max-width: 880px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 1.5rem; text-align: center; }
+    .hero-grid .hero-title, .hero-grid .hero-lead, .hero-grid .hero-search--secondary { margin-left: auto; margin-right: auto; text-align: center; }
+    .hero-intents { justify-content: center; }
+    .hoy-panel { text-align: left; max-width: 460px; margin: 0 auto; width: 100%; }
+  }
+
+  /* Caminos principales (4) — intenciones, no inventario. Estilos distintos. */
+  .caminos { max-width: 1080px; margin: 0 auto 2.5rem; }
+  .caminos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; }
+  .camino {
+    display: flex; flex-direction: column; gap: 0.3rem;
+    padding: 1.15rem 1.2rem 1.1rem; border-radius: 16px; text-decoration: none; color: var(--text);
+    border: 1px solid var(--c-bd, var(--border));
+    background: linear-gradient(165deg, var(--c-bg, var(--bg-soft)), var(--bg-card) 80%);
+    transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s;
+  }
+  .camino:hover { transform: translateY(-3px); border-color: var(--c-ac); box-shadow: 0 10px 26px -8px color-mix(in srgb, var(--c-ac) 30%, transparent); }
+  .camino-ic { width: 42px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--c-ac) 16%, var(--bg-card)); color: var(--c-ac); margin-bottom: 0.45rem; }
+  .camino-t { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; }
+  .camino-d { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4; }
+  .camino-go { margin-top: 0.4rem; font-size: 0.8rem; font-weight: 700; color: var(--c-ac); }
+  @media (max-width: 760px) { .caminos-grid { grid-template-columns: 1fr 1fr; } }
+
+  /* Mobile (#5): los destacados pasan a CARRUSEL horizontal con snap, no a una
+     pila infinita. Aplica a caminos, productos y "lo nuevo" (feature cards). */
+  @media (max-width: 640px) {
+    .caminos-grid, .productos-home-grid, .destacados-grid {
+      display: grid; grid-auto-flow: column; grid-template-columns: none;
+      grid-auto-columns: 78%; gap: 0.75rem;
+      overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; margin: 0 -1rem; padding: 0 1rem 0.5rem;
+    }
+    .caminos-grid::-webkit-scrollbar, .productos-home-grid::-webkit-scrollbar, .destacados-grid::-webkit-scrollbar { display: none; }
+    .caminos-grid > *, .productos-home-grid > *, .destacados-grid > * { scroll-snap-align: start; }
+  }
+
+  /* Motion = causalidad, no decoración: calmamos rotaciones de íconos en hover
+     (quedan los lifts/translate, que sí comunican estado). */
+  .feat-card:hover .feat-icon { transform: scale(1.04); }
+  @media (hover: none) {
+    .pop-card:hover, .pilar-card:hover, .feat-card:hover, .producto-card:hover, .camino:hover { transform: none; box-shadow: none; }
+  }
 
   .trust-row {
     display: inline-flex;
@@ -1960,32 +2148,49 @@ const schema = {
   /* Banda de productos verticales */
   .productos-home { margin: 2rem 0 2.5rem; }
   .productos-home-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
-  .productos-home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.875rem; margin-top: 1.25rem; }
+  /* Productos = la experiencia de marca → tiles grandes, cada uno con su color
+     propio (no más cards blancas idénticas). Silueta: bloque de tiles con color. */
+  .productos-home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.25rem; }
   .producto-card {
-    display: flex; flex-direction: column; gap: 0.2rem; padding: 1.25rem 1.125rem;
-    background: var(--bg-card); border: 1px solid var(--border); border-top: 3px solid var(--c-accent);
-    border-radius: var(--radius, 12px); text-decoration: none; color: var(--text);
-    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+    display: flex; flex-direction: column; gap: 0.35rem;
+    padding: 1.5rem 1.4rem 1.45rem;
+    background: linear-gradient(165deg, color-mix(in srgb, var(--c-accent) 13%, var(--bg-card)), var(--bg-card) 72%);
+    border: 1px solid color-mix(in srgb, var(--c-accent) 30%, var(--border));
+    border-radius: 18px; text-decoration: none; color: var(--text); overflow: hidden;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
   }
-  .producto-card:hover { transform: translateY(-2px); border-color: var(--c-accent); box-shadow: 0 6px 20px color-mix(in srgb, var(--c-accent) 18%, transparent); }
-  .producto-icon { font-size: 2rem; line-height: 1; }
-  .producto-name { font-size: 1.125rem; font-weight: 700; }
+  .producto-card:hover { transform: translateY(-3px); border-color: var(--c-accent); box-shadow: 0 10px 28px -6px color-mix(in srgb, var(--c-accent) 32%, transparent); }
+  .producto-icon {
+    width: 54px; height: 54px; border-radius: 15px; margin-bottom: 0.35rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--c-accent) 18%, var(--bg-card));
+    font-size: 1.85rem; line-height: 1;
+  }
+  .producto-name { font-size: 1.1875rem; font-weight: 800; letter-spacing: -0.02em; }
   .producto-tag { color: var(--c-accent); font-weight: 600; font-size: 0.875rem; }
 
   .salas-home { margin: 2.5rem 0 3rem; }
   .salas-home-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
+  /* Salas = navegación decisional → lista editorial de filas, SIN cards ni cajas.
+     Silueta: índice de dos columnas con hairlines (no un grid de recuadros). */
   .salas-home-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.875rem; margin-top: 1.25rem;
+    display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 2rem; margin-top: 1.25rem;
+    border-top: 1px solid var(--border);
   }
   .sala-card {
-    display: flex; flex-direction: column; gap: 0.4rem;
-    padding: 1.1rem 1.15rem; border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--card-bg, var(--bg)); text-decoration: none; transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    display: flex; flex-direction: row; align-items: center; gap: 0.85rem;
+    padding: 0.95rem 0.35rem;
+    border: 0; border-bottom: 1px solid var(--border); border-radius: 0;
+    background: transparent; text-decoration: none;
+    transition: padding-left 0.15s ease, border-color 0.15s;
   }
-  .sala-card:hover { border-color: var(--accent, #2563eb); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.10); }
-  .sala-icon { font-size: 1.6rem; line-height: 1; }
-  .sala-title { font-weight: 700; font-size: 0.975rem; color: var(--text); line-height: 1.3; }
-  .sala-cta { margin-top: auto; font-size: 0.8125rem; font-weight: 600; color: var(--accent, #2563eb); }
+  .sala-card:hover { padding-left: 0.7rem; border-bottom-color: var(--accent, #2563eb); transform: none; box-shadow: none; }
+  .sala-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+  .sala-title { font-weight: 700; font-size: 0.95rem; color: var(--text); line-height: 1.25; flex: 1; min-width: 0; }
+  .sala-cta { margin: 0 0 0 auto; flex-shrink: 0; font-size: 0.8rem; font-weight: 600; color: var(--accent, #2563eb); white-space: nowrap; }
+  .sala-card:hover .sala-title { color: var(--accent, #2563eb); }
+  @media (max-width: 560px) { .salas-home-grid { grid-template-columns: 1fr; column-gap: 0; } }
 
   /* Banda unificada de calculadoras (populares + para vos + lo nuevo) */
   .explorar-calcs { margin: 2.5rem 0 3rem; }
@@ -2194,10 +2399,16 @@ const schema = {
   .populares {
     margin: 2rem 0 3rem;
   }
+  /* Populares = un ranking → leaderboard en un solo panel con filas numeradas y
+     divisores internos (no 10 cards boxeadas). Silueta: banda de datos / tabla. */
   .populares-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0 1.5rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0.5rem 1.125rem;
   }
 
   .pop-card {
@@ -2205,29 +2416,28 @@ const schema = {
     display: flex;
     align-items: center;
     gap: 0.875rem;
-    padding: 1rem 1.125rem 1rem 2.75rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    padding: 0.8rem 0.25rem 0.8rem 2.5rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
     text-decoration: none;
     color: var(--text);
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.2s ease-out,
-                border-color 0.2s ease-out,
-                background 0.2s ease-out;
-    will-change: transform;
+    transition: padding-left 0.15s ease, color 0.15s ease;
+    will-change: padding-left;
   }
 
   .pop-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-3px) scale(1.015);
-    box-shadow: var(--shadow-lg);
+    border-color: var(--border);
+    transform: none;
+    box-shadow: none;
     text-decoration: none;
-    background: linear-gradient(180deg, var(--bg-card), color-mix(in srgb, var(--accent-soft) 30%, var(--bg-card)));
+    padding-left: 2.85rem;
+    background: transparent;
   }
+  .pop-card:hover .pop-title { color: var(--accent); }
   .pop-card:active {
-    transform: translateY(-1px) scale(1);
-    transition-duration: 0.05s;
+    transform: none;
   }
   .pop-card:hover .pop-icon {
     transform: rotate(-4deg) scale(1.08);
@@ -2360,32 +2570,35 @@ const schema = {
 
   /* [5b] Pilares / guías — mostradas encima de categorías */
   .pilares { margin: 2rem 0 3rem; }
+  /* Guías + notas = contenido editorial → índice abierto sin cajas, filas con
+     hairline superior. Silueta: lista editorial en columnas (no grid de cards). */
   .pilares-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 0.6rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0 1.75rem;
+    border-top: 1px solid var(--border);
   }
   .pilar-card {
     display: flex; align-items: center; gap: 0.75rem;
-    padding: 0.85rem 1rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    padding: 0.8rem 0.25rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
     color: var(--text);
     text-decoration: none;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.2s ease-out,
-                border-color 0.2s ease-out;
-    will-change: transform;
+    transition: padding-left 0.15s ease, border-color 0.15s;
   }
   .pilar-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px) scale(1.015);
-    box-shadow: var(--shadow-md);
+    border-bottom-color: var(--accent);
+    padding-left: 0.7rem;
+    transform: none;
+    box-shadow: none;
   }
-  .pilar-card:active { transform: translateY(-1px) scale(1); transition-duration: 0.05s; }
+  .pilar-card:active { transform: none; }
+  .pilar-card:hover strong { color: var(--accent); }
   .pilar-card:hover .pilar-icon {
-    transform: scale(1.15) rotate(-5deg);
+    transform: scale(1.12) rotate(-5deg);
   }
   .pilar-icon {
     font-size: 1.5rem; flex-shrink: 0;
@@ -2534,43 +2747,44 @@ const schema = {
   }
   .feat-all:hover { text-decoration: underline; }
 
-  /* ---- Mosaico compacto: el resto del catálogo, escaneable ---- */
+  /* ---- Mosaico compacto: el resto del catálogo ---- */
+  /* Navegación secundaria → links compactos, sin caja ni borde: el color vive
+     sólo en el ícono. Silueta: clúster de chips (contrasta con las feat-cards). */
   .cat-mosaic {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 0.7rem;
+    gap: 0.25rem 0.5rem;
   }
   .cat-tile {
     position: relative;
     overflow: hidden;
     display: flex;
     align-items: center;
-    gap: 0.7rem;
-    min-height: 62px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--cat-color, var(--accent));
-    border-radius: 11px;
-    padding: 0.7rem 0.75rem;
+    gap: 0.6rem;
+    min-height: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    padding: 0.5rem 0.6rem;
     text-decoration: none;
     color: var(--text);
-    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, border-color 0.15s;
+    transition: background-color 0.15s ease-out, transform 0.15s ease-out;
   }
   .cat-tile:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    transform: none;
+    box-shadow: none;
     text-decoration: none;
-    border-color: color-mix(in srgb, var(--cat-color) 55%, var(--border));
-    border-left-color: var(--cat-color);
+    background: color-mix(in srgb, var(--cat-color) 10%, transparent);
   }
+  .cat-tile:hover .tile-name { color: var(--cat-color); }
   .tile-icon {
-    width: 34px; height: 34px;
+    width: 30px; height: 30px;
     flex-shrink: 0;
     border-radius: 8px;
-    background: color-mix(in srgb, var(--cat-color) 13%, transparent);
+    background: color-mix(in srgb, var(--cat-color) 15%, transparent);
     color: var(--cat-color);
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.05rem;
+    font-size: 1rem;
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .cat-tile:hover .tile-icon { transform: scale(1.1); }
@@ -2649,16 +2863,18 @@ const schema = {
     margin-bottom: 2rem;
     font-size: 1.75rem;
   }
+  /* Why = información contextual → columnas abiertas, sin recuadros ni borde.
+     Silueta: banda de 4 columnas con icono de color, separadas sólo por aire. */
   .why-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem 2rem;
   }
   .why-item {
-    padding: 1.5rem;
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
   }
   .why-icon {
     width: 44px;

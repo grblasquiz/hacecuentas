@@ -17,10 +17,27 @@
   --v2-neg:#c25a2c; --v2-ok:#1e7d52; --v2-ok-bg:#e9f6ef;
   /* donut: colores distintos por concepto */
   --v2-c1:#16a34a; --v2-c2:#2563eb; --v2-c3:#0ea5e9; --v2-c4:#8b5cf6; --v2-c5:#ef7a3d;
-  --v2-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  /* La voz de los números usa la fuente mono REALMENTE cargada (JetBrains Mono
+     vía --font-num); IBM Plex Mono no se descargaba y caía a la mono del sistema. */
+  --v2-mono:var(--font-num,'JetBrains Mono',ui-monospace,Menlo,monospace);
   --v2-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -12px rgba(15,23,42,.12);
   --v2-radius:18px;
 }
+
+/* === Identidad de dominio en el layout V2 ===
+   El V2 usa --v2-accent como texto chico Y como relleno → tiene que ser un tono
+   AA (≥4.5 sobre blanco) que además funcione como fondo con texto blanco. Por eso
+   cada familia usa su tinte -700/-800 (acento) + -800/-900 (ink/hover). Valores
+   en claro EXPLÍCITO: el V2 es light-only, así no se rompe en modo oscuro del
+   sitio (donde --accent se aclararía y fallaría sobre las cards blancas). */
+body[data-domain="money"] .calc-v2     { --v2-accent:#4338ca; --v2-accent-ink:#3730a3; --v2-accent-bg:#eef2ff; --v2-accent-soft:#f6f7ff; }
+body[data-domain="data"] .calc-v2      { --v2-accent:#065f46; --v2-accent-ink:#064e3b; --v2-accent-bg:#ecfdf5; --v2-accent-soft:#f3fdf8; }
+body[data-domain="health"] .calc-v2    { --v2-accent:#be123c; --v2-accent-ink:#9f1239; --v2-accent-bg:#fff1f2; --v2-accent-soft:#fff6f7; }
+body[data-domain="home"] .calc-v2      { --v2-accent:#b45309; --v2-accent-ink:#92400e; --v2-accent-bg:#fffbeb; --v2-accent-soft:#fffdf5; }
+body[data-domain="knowledge"] .calc-v2 { --v2-accent:#6d28d9; --v2-accent-ink:#5b21b6; --v2-accent-bg:#f5f3ff; --v2-accent-soft:#faf9ff; }
+body[data-domain="life"] .calc-v2      { --v2-accent:#0e7490; --v2-accent-ink:#155e75; --v2-accent-bg:#ecfeff; --v2-accent-soft:#f4feff; }
+/* El relleno de marca (botón Calcular) es el acento profundo → texto blanco. */
+body[data-domain] .calc-v2 .calc-form .btn-primary { color:#fff; }
 
 /* La marca .calc-v2 va en el <article>. Es el contenedor de página:
    max-width + centrado + padding horizontal (en el template real lo daba el CSS
@@ -67,10 +84,22 @@
 .calc-v2 .v2-panel.active{ display:block; }
 @keyframes v2fade{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:none;} }
 @media(min-width:721px){
-  .calc-v2 .v2-tabnav{ display:flex; gap:6px; background:#fff; border:1px solid var(--v2-line); border-radius:14px; padding:6px; box-shadow:var(--v2-shadow); }
+  /* Tabnav STICKY: la navegación de secciones queda fija bajo el header del sitio
+     mientras se scrollea el contenido del panel → estado siempre a la vista (#8). */
+  .calc-v2 .v2-tabnav{ display:flex; gap:6px; background:#fff; border:1px solid var(--v2-line); border-radius:14px; padding:6px; box-shadow:var(--v2-shadow); position:sticky; top:70px; z-index:20; }
   .calc-v2 .v2-tab{ flex:1; border:none; background:transparent; border-radius:10px; }
   .calc-v2 .v2-tab[aria-selected="true"]{ background:var(--v2-accent-bg); color:var(--v2-accent-ink); border-color:transparent; }
 }
+
+/* ===== Trust Strip (#7): una sola línea de confianza, no señales dispersas ===== */
+.calc-v2 .v2-trust-strip{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:9px 18px; margin-bottom:22px; padding:10px 14px; background:var(--v2-accent-soft); border:1px solid var(--v2-line); border-radius:12px; }
+.calc-v2 .v2-trust-list{ display:flex; flex-wrap:wrap; gap:5px 16px; list-style:none; margin:0; padding:0; font-size:13px; color:var(--v2-body); }
+.calc-v2 .v2-trust-list li{ display:inline-flex; align-items:center; gap:6px; }
+.calc-v2 .v2-trust-list .tck{ color:var(--v2-ok); font-weight:800; }
+.calc-v2 .v2-trust-list a{ color:var(--v2-accent); font-weight:600; }
+.calc-v2 .v2-trust-actions{ display:inline-flex; align-items:center; gap:14px; flex-shrink:0; }
+.calc-v2 .v2-trust-more{ background:none; border:0; color:var(--v2-accent); font-weight:600; font-size:13px; cursor:pointer; font-family:inherit; padding:0; white-space:nowrap; }
+.calc-v2 .v2-trust-more:hover{ text-decoration:underline; }
 
 /* ===== Bloques de contenido ===== */
 .calc-v2 .v2-block{ margin-bottom:26px; }
@@ -209,6 +238,12 @@
   .calc-v2 .calc-container > .calc-form{ padding:22px 24px !important; }
   .calc-v2 .calc-container > .empty-preview,
   .calc-v2 .calc-container > .calc-results{ padding:22px 24px !important; }
+  /* El panel de resultado queda PEGADO (sticky) mientras el usuario modifica los
+     inputs en la columna izquierda → workspace real, el resultado siempre a la vista.
+     top = header sticky (~64px) + respiro. */
+  .calc-v2 .calc-container > .empty-preview,
+  .calc-v2 .calc-container > .result-skeleton,
+  .calc-v2 .calc-container > .calc-results{ position:sticky; top:84px; align-self:start; }
 }
 
 /* "Seguí calculando" vive DENTRO del form (columna izquierda). Se revela sólo

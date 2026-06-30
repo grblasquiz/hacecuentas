@@ -244,11 +244,31 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
   <span class="v2-eyebrow"><CategoryIcon cat={calc.category} fallback={calc.icon} size={16} /> {catLabel}</span>
   <h1 class="v2-h1" set:html={`${calc.h1.replace(/\(([^)]+)\)/, '<span class="accent">($1)</span>')} <span aria-hidden="true">${countryBadge.flag}</span>`}></h1>
   <p class="v2-lede" set:html={mdInline(calc.description || calc.intro || '')}></p>
-  <div class="v2-meta">
-    {updatedLabel && <span>🗓️ {L.updated} {updatedLabel}</span>}
-    <span class="dot" aria-hidden="true"></span>
-    <span>{L.reviewedBy} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></span>
-    <FavoriteStar slug={calc.slug} title={calc.h1} langPrefix="" labelSave={L.saveLabel} />
+  {/* Trust Strip único: condensa las señales de confianza (datos+fecha, revisión,
+      privacidad) en UNA línea. El detalle completo (fuentes, revisor, changelog,
+      metodología, disclaimer) sigue en la pestaña Fuentes — indexable, pero ya no
+      compite visualmente con el formulario. "Ver fuentes" salta a esa pestaña. */}
+  <div class="v2-trust-strip">
+    <ul class="v2-trust-list">
+      {updatedLabel && (
+        <li><span class="tck" aria-hidden="true">✓</span>{(() => {
+          // Org corto: "InfoLEG — Ministerio de Justicia (Argentina)" → "InfoLEG".
+          const pubRaw = (sources.find((s: any) => s.publisher)?.publisher || '');
+          const pub = pubRaw.split(/[—(]/)[0].trim();
+          return lang === 'en'
+            ? (pub ? `${pub} data · ${updatedLabel}` : `Data verified · ${updatedLabel}`)
+            : lang === 'pt'
+            ? (pub ? `Dados ${pub} · ${updatedLabel}` : `Dados verificados · ${updatedLabel}`)
+            : (pub ? `Datos ${pub} · ${updatedLabel}` : `Datos verificados · ${updatedLabel}`);
+        })()}</li>
+      )}
+      <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Formula reviewed by' : 'Fórmula revisada por'} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
+      <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Private — runs on your device' : lang === 'pt' ? 'Cálculo privado no seu dispositivo' : 'Cálculo privado en tu dispositivo'}</li>
+    </ul>
+    <div class="v2-trust-actions">
+      <button type="button" class="v2-trust-more" data-goto-tab="v2-fuentes">{lang === 'en' ? 'See sources & methodology →' : lang === 'pt' ? 'Ver fontes e metodologia →' : 'Ver fuentes y metodología →'}</button>
+      <FavoriteStar slug={calc.slug} title={calc.h1} langPrefix="" labelSave={L.saveLabel} />
+    </div>
   </div>
 
   <!-- Calculadora (widget real). NADA arriba del calc salvo el hero — como el prototipo. -->
@@ -564,6 +584,20 @@ document.querySelectorAll('.calc-v2 .v2-tabnav').forEach((nav) => {
     wrap.querySelectorAll('.v2-panel').forEach((p) => p.classList.remove('active'));
     btn.setAttribute('aria-selected', 'true');
     wrap.querySelector('#' + btn.dataset.panel)?.classList.add('active');
+  });
+});
+
+// "Ver fuentes y metodología" (Trust Strip) → activa esa pestaña y scrollea a ella.
+document.querySelectorAll('.calc-v2 [data-goto-tab]').forEach((link) => {
+  link.addEventListener('click', () => {
+    const target = link.getAttribute('data-goto-tab');
+    const root = link.closest('.calc-v2') || document;
+    const tabBtn = root.querySelector('.v2-tab[data-panel="' + target + '"]');
+    if (tabBtn) {
+      tabBtn.click();
+      const tabs = root.querySelector('.v2-tabs');
+      (tabs || tabBtn).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
 });
 </script>

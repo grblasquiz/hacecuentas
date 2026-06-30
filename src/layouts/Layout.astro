@@ -11,6 +11,9 @@ import { EZOIC_ENABLED } from '../lib/ezoic';
 // Importamos el CSS único + el woff2 latin-wght-normal (axis: weight, no italic).
 import '@fontsource-variable/inter/wght.css';
 import '@fontsource/jetbrains-mono/latin-500.css';
+// Peso 700 de JetBrains Mono: la voz de los números necesita un headline con
+// cuerpo (el resultado grande). Mismo family, +1 woff2 chico; no se preloadea.
+import '@fontsource/jetbrains-mono/latin-700.css';
 import interVariableFontUrl from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 
 export interface Props {
@@ -37,6 +40,8 @@ export interface Props {
   ogTitle?: string;          // título "curiosidad" para og:title/twitter:title
                              // (Discover/redes). Si falta, usa `title` (SEO). El
                              // <title> del <head> NO cambia — sigue optimizado SEO.
+  domain?: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life';  // familia visual → data-domain en <body> (tokens --domain-*)
+  pageType?: 'calculator' | 'category' | 'guide' | 'hub' | 'home' | 'data' | 'room';  // data-page-type en <body>
 }
 
 const {
@@ -61,6 +66,8 @@ const {
   articleModifiedTime,
   newsKeywords,
   ogTitle,
+  domain,
+  pageType,
 } = Astro.props;
 
 // Defensivo: keywords/newsKeywords deben ser string[]. Si una página los pasa
@@ -663,7 +670,7 @@ const globalSchema = {
       })();
     </script>
   </head>
-  <body>
+  <body data-domain={domain} data-page-type={pageType}>
     <!-- Mi Hacé Cuentas: store del perfil numérico. Primero en el body para que
          window.HCProfile exista antes que los inline scripts de las calcs. -->
     <ProfileStore />
@@ -859,10 +866,53 @@ const globalSchema = {
         --radius-xl: 20px;
         --radius-full: 999px;
 
-        /* Type */
+        /* Type — tres niveles:
+           · body    → Inter: interfaz, campos, botones, texto.
+           · display → Inter pesada (800/900, tracking apretado): títulos
+                       editoriales y salas de decisión. Mismo archivo variable,
+                       sin descarga extra; el registro display lo da el peso+tracking.
+           · num     → JetBrains Mono: la VOZ de los números (resultados,
+                       porcentajes, monedas, comparaciones, tablas). Cifras
+                       tabulares para alineación y count-up sin saltos de ancho. */
         --font-body: 'Inter Variable', 'Inter', 'Inter Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-display: 'Inter Variable', 'Inter', 'Inter Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+        --font-num: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+
+        /* Identidad de dominio — defaults = marca (azul). Cada página de calc
+           los re-mapea vía body[data-domain] (más abajo). Componentes que quieran
+           el color de familia explícito usan estos alias. */
+        --domain-accent: var(--accent);
+        --domain-strong: var(--accent-strong);
+        --domain-soft: var(--accent-soft);
+        --domain-surface: var(--bg-soft);
+        --domain-contrast: var(--on-accent);
+        --domain-gradient: var(--grad-brand);
       }
+
+      /* Nivel display: peso alto + tracking apretado + optical sizing.
+         Aplicado a títulos editoriales y de salas vía .u-display / font-family. */
+      .u-display {
+        font-family: var(--font-display);
+        font-weight: 850;
+        letter-spacing: -0.035em;
+        font-optical-sizing: auto;
+      }
+      /* Voz de los números: mono + cifras tabulares (alineación y count-up estable). */
+      .u-num, [data-value], .result-value,
+      .dr-decisive-value, .dr-scenario-value {
+        font-family: var(--font-num);
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: 'tnum' 1, 'cv01' 1;
+      }
+      /* Nivel display en títulos editoriales y de salas de decisión. */
+      body[data-page-type="room"] h1,
+      .editorial-intro h2, .editorial-method h2, .editorial-faq h2,
+      .dr-decisive-label {
+        font-family: var(--font-display);
+        letter-spacing: -0.035em;
+      }
+      body[data-page-type="room"] h1 { font-weight: 850; }
 
       /* Dark mode — data-theme="dark" en <html> */
       html[data-theme="dark"] {
@@ -906,6 +956,65 @@ const globalSchema = {
       html[data-theme="dark"] ::selection {
         background: var(--accent-soft);
         color: var(--accent-strong);
+      }
+
+      /* ===================================================================
+         IDENTIDAD DE DOMINIO (6 familias visuales)
+         Cada página de calc lleva data-domain en el <body>. Re-mapeamos los
+         tokens de marca (--accent y compañía) a la familia: como TODO el sitio
+         consume --accent (header, botón, resultado, TOC, relacionadas, callouts,
+         focus, tablas), la personalidad se propaga sola sin tocar componentes.
+         Los alias --domain-* se derivan acá una vez (resuelven el --accent ya
+         re-mapeado del propio <body>). =================================== */
+      body[data-domain] {
+        --grad-brand: linear-gradient(135deg, var(--accent), var(--accent-2));
+        --grad-brand-soft: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--bg-card)), color-mix(in srgb, var(--accent-2) 12%, var(--bg-card)));
+        --domain-accent: var(--accent);
+        --domain-strong: var(--accent-strong);
+        --domain-soft: var(--accent-soft);
+        --domain-surface: color-mix(in srgb, var(--accent) 5%, var(--bg));
+        --domain-contrast: var(--on-accent);
+        --domain-gradient: var(--grad-brand);
+      }
+
+      /* — Light — */
+      body[data-domain="money"] {      /* Índigo */
+        --accent: #4f46e5; --accent-hover: #4338ca; --accent-strong: #3730a3; --accent-soft: #eef2ff; --on-accent: #ffffff; --accent-2: #7c3aed;
+      }
+      body[data-domain="data"] {       /* Esmeralda */
+        --accent: #059669; --accent-hover: #047857; --accent-strong: #065f46; --accent-soft: #ecfdf5; --on-accent: #ffffff; --accent-2: #0d9488;
+      }
+      body[data-domain="health"] {     /* Rosa coral */
+        --accent: #f43f5e; --accent-hover: #e11d48; --accent-strong: #be123c; --accent-soft: #fff1f2; --on-accent: #ffffff; --accent-2: #ec4899;
+      }
+      body[data-domain="home"] {       /* Ámbar — texto oscuro sobre el fill (amber falla con blanco) */
+        --accent: #d97706; --accent-hover: #b45309; --accent-strong: #92400e; --accent-soft: #fffbeb; --on-accent: #1c1917; --accent-2: #f59e0b;
+      }
+      body[data-domain="knowledge"] {  /* Violeta */
+        --accent: #7c3aed; --accent-hover: #6d28d9; --accent-strong: #5b21b6; --accent-soft: #f5f3ff; --on-accent: #ffffff; --accent-2: #a855f7;
+      }
+      body[data-domain="life"] {       /* Cian */
+        --accent: #0891b2; --accent-hover: #0e7490; --accent-strong: #155e75; --accent-soft: #ecfeff; --on-accent: #ffffff; --accent-2: #06b6d4;
+      }
+
+      /* — Dark (acentos aclarados, texto oscuro sobre el fill como la marca) — */
+      html[data-theme="dark"] body[data-domain="money"] {
+        --accent: #818cf8; --accent-hover: #6366f1; --accent-strong: #c7d2fe; --accent-soft: #4f46e533; --on-accent: #0f172a; --accent-2: #a78bfa;
+      }
+      html[data-theme="dark"] body[data-domain="data"] {
+        --accent: #34d399; --accent-hover: #10b981; --accent-strong: #a7f3d0; --accent-soft: #05966933; --on-accent: #0f172a; --accent-2: #2dd4bf;
+      }
+      html[data-theme="dark"] body[data-domain="health"] {
+        --accent: #fb7185; --accent-hover: #f43f5e; --accent-strong: #fecdd3; --accent-soft: #f43f5e33; --on-accent: #0f172a; --accent-2: #f472b6;
+      }
+      html[data-theme="dark"] body[data-domain="home"] {
+        --accent: #fbbf24; --accent-hover: #f59e0b; --accent-strong: #fde68a; --accent-soft: #d9770633; --on-accent: #0f172a; --accent-2: #f59e0b;
+      }
+      html[data-theme="dark"] body[data-domain="knowledge"] {
+        --accent: #a78bfa; --accent-hover: #8b5cf6; --accent-strong: #ddd6fe; --accent-soft: #7c3aed33; --on-accent: #0f172a; --accent-2: #c084fc;
+      }
+      html[data-theme="dark"] body[data-domain="life"] {
+        --accent: #22d3ee; --accent-hover: #06b6d4; --accent-strong: #a5f3fc; --accent-soft: #0891b233; --on-accent: #0f172a; --accent-2: #2dd4bf;
       }
 
       /* Visually-hidden accesible (lectores de pantalla sí lo leen). Usado por

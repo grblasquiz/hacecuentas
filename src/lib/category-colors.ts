@@ -77,6 +77,55 @@ export const CATEGORY_TEXT_COLORS: Record<string, string> = {
   astronomia: '#4338ca',
 };
 
+/**
+ * Familias visuales de dominio. En vez de 26 colores sueltos que no construyen
+ * identidad, agrupamos el sitio en 6 familias. Cada página hereda los tokens
+ * `--domain-*` (definidos en Layout.astro) vía `data-domain` en el <body>.
+ *
+ *   money      → Índigo     (finanzas, impuestos, negocios, marketing)
+ *   data       → Esmeralda  (economía, dólar, BCRA, medio-ambiente, datasets)
+ *   health     → Rosa coral (salud, embarazo/familia, mascotas)
+ *   home       → Ámbar      (construcción, hogar, jardinería)
+ *   knowledge  → Violeta    (matemática, educación, ciencia, tecnología…)
+ *   life       → Cian       (viajes, deportes, automotor, cocina, vida…)
+ */
+export type DomainFamily = 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life';
+
+export const CATEGORY_DOMAIN: Record<string, DomainFamily> = {
+  finanzas: 'money',
+  impuestos: 'money',
+  negocios: 'money',
+  marketing: 'money',
+  'medio-ambiente': 'data',
+  clima: 'data',
+  salud: 'health',
+  familia: 'health',
+  mascotas: 'health',
+  construccion: 'home',
+  hogar: 'home',
+  jardineria: 'home',
+  matematica: 'knowledge',
+  educacion: 'knowledge',
+  ciencia: 'knowledge',
+  tecnologia: 'knowledge',
+  electronica: 'knowledge',
+  idiomas: 'knowledge',
+  astronomia: 'knowledge',
+  viajes: 'life',
+  deportes: 'life',
+  automotor: 'life',
+  cocina: 'life',
+  vida: 'life',
+  entretenimiento: 'life',
+  juegos: 'life',
+};
+
+/** Familia visual de la categoría. Default 'money' (índigo) si no mapea. */
+export function categoryDomain(cat: string | undefined | null): DomainFamily {
+  if (!cat) return 'money';
+  return CATEGORY_DOMAIN[cat] || 'money';
+}
+
 /** Color de la categoría (tinte -500/-600), con fallback al azul de marca. */
 export function categoryColor(cat: string | undefined | null): string {
   if (!cat) return BRAND_DEFAULT;
