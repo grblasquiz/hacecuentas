@@ -90,6 +90,87 @@ export function clearAuthCookies(request: Request): string[] {
   ];
 }
 
+/** base64url → Uint8Array (sin padding, alfabeto URL-safe). */
+function base64urlToBytes(input: string): Uint8Array {
+  const b64 = input.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((input.length + 3) % 4);
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/** base64url → string UTF-8 (para el header/payload del JWT). */
+function base64urlToString(input: string): string {
+  return new TextDecoder().decode(base64urlToBytes(input));
+}
+
+const GOOGLE_ISSUERS = ['accounts.google.com', 'https://accounts.google.com'];
+const GOOGLE_JWKS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
+
+export interface GoogleIdentity {
+  email: string;
+  emailVerified: boolean;
+}
+
+/**
+ * Verifica un ID token (JWT RS256) de Google Identity Services contra el JWKS
+ * público de Google y valida los claims (iss/aud/exp). Sólo necesita el Client
+ * ID público — no hay client secret en este flujo. Devuelve el mail o null.
+ *
+ * Web Crypto del Worker hace toda la cripto (RSASSA-PKCS1-v1_5 + SHA-256). El
+ * JWKS se cachea en el edge (cf.cacheTtl) para no pegarle a Google en cada login.
+ */
+export async function verifyGoogleIdToken(
+  credential: string,
+  clientId: string,
+): Promise<GoogleIdentity | null> {
+  const parts = credential.split('.');
+  if (parts.length !== 3) return null;
+  const [headerB64, payloadB64, sigB64] = parts;
+
+  let header: { alg?: string; kid?: string };
+  let payload: {
+    iss?: string; aud?: string; exp?: number; email?: string; email_verified?: boolean | string;
+  };
+  try {
+    header = JSON.parse(base64urlToString(headerB64));
+    payload = JSON.parse(base64urlToString(payloadB64));
+  } catch { return null; }
+
+  if (header.alg !== 'RS256' || !header.kid) return null;
+  if (!payload.iss || !GOOGLE_ISSUERS.includes(payload.iss)) return null;
+  if (payload.aud !== clientId) return null;
+  if (!payload.exp || payload.exp * 1000 < Date.now()) return null;
+  if (!payload.email) return null;
+
+  // JWKS de Google (cacheado en el edge) → la JWK que matchea el kid.
+  let jwks: { keys: Array<JsonWebKey & { kid?: string }> };
+  try {
+    const res = await fetch(GOOGLE_JWKS_URL, { cf: { cacheTtl: 3600, cacheEverything: true } } as unknown as RequestInit);
+    if (!res.ok) return null;
+    jwks = await res.json();
+  } catch { return null; }
+  const jwk = jwks.keys.find((k) => k.kid === header.kid);
+  if (!jwk) return null;
+
+  // Verificar la firma RS256 sobre `header.payload`.
+  let ok = false;
+  try {
+    const key = await crypto.subtle.importKey(
+      'jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify'],
+    );
+    ok = await crypto.subtle.verify(
+      'RSASSA-PKCS1-v1_5', key,
+      base64urlToBytes(sigB64),
+      new TextEncoder().encode(`${headerB64}.${payloadB64}`),
+    );
+  } catch { return null; }
+  if (!ok) return null;
+
+  const emailVerified = payload.email_verified === true || payload.email_verified === 'true';
+  return { email: payload.email.toLowerCase(), emailVerified };
+}
+
 export interface SessionUser {
   id: number;
   email: string;

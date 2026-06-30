@@ -54,13 +54,21 @@ const inputType = (t: string) =>
         quedan guardados en tu cuenta y nunca los compartimos.
       </p>
 
+      <label class="nl-check">
+        <input type="checkbox" data-nl checked />
+        <span>Quiero suscribirme al newsletter y recibir novedades y tips por mail</span>
+      </label>
+
+      <!-- Google Sign-In (se rellena por JS sólo si hay Client ID configurado) -->
+      <div class="google-login" data-google-wrap hidden>
+        <div class="google-btn-host" data-google-btn></div>
+        <p class="login-err" data-google-err hidden></p>
+        <div class="login-divider"><span>o seguí con tu email</span></div>
+      </div>
+
       <form data-email-step>
         <label for="login-email">Tu email</label>
         <input id="login-email" type="email" data-login-email placeholder="tu@email.com" autocomplete="email" required />
-        <label class="nl-check">
-          <input type="checkbox" data-nl checked />
-          <span>Quiero suscribirme al newsletter y recibir novedades y tips por mail</span>
-        </label>
         <button type="submit" data-email-submit>Enviarme un código</button>
         <p class="login-err" data-email-err hidden></p>
       </form>
@@ -316,12 +324,63 @@ const inputType = (t: string) =>
       });
     }
 
+    // ───── Google Sign-In (Google Identity Services) ─────
+    var googleInited = false;
+    function setupGoogle(clientId) {
+      if (!clientId || googleInited) return;
+      googleInited = true;
+      var wrap = qs('[data-google-wrap]');
+      if (wrap) wrap.hidden = false;
+
+      function initGsi() {
+        if (!(window.google && window.google.accounts && window.google.accounts.id)) return;
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: onGoogleCredential,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+        var host = qs('[data-google-btn]');
+        if (host) {
+          window.google.accounts.id.renderButton(host, {
+            type: 'standard', theme: 'outline', size: 'large',
+            text: 'continue_with', shape: 'rectangular', logo_alignment: 'left',
+            locale: 'es-419', width: 360,
+          });
+        }
+      }
+
+      // Cargar el script de GIS una sola vez y luego inicializar.
+      var existing = document.getElementById('gsi-script');
+      if (existing) { if (window.google) initGsi(); else existing.addEventListener('load', initGsi); return; }
+      var s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true; s.defer = true; s.id = 'gsi-script';
+      s.onload = initGsi;
+      document.head.appendChild(s);
+    }
+
+    async function onGoogleCredential(resp) {
+      err('[data-google-err]', '');
+      if (!resp || !resp.credential) { err('[data-google-err]', 'No se pudo iniciar sesión con Google.'); return; }
+      var newsletter = qs('[data-nl]') ? qs('[data-nl]').checked : false;
+      var r = await api('/api/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ credential: resp.credential, newsletter: newsletter }),
+      });
+      if (!r.ok) { err('[data-google-err]', (r.data && r.data.error) || 'No se pudo iniciar sesión con Google.'); return; }
+      showProfile({ email: r.data.email, profile: r.data.profile || {} });
+      var next = new URLSearchParams(location.search).get('next');
+      if (next && next.charAt(0) === '/' && next.charAt(1) !== '/') location.assign(next);
+    }
+
     async function init() {
       show('loading');
       wireLogin();
       var r = await api('/api/auth/me', { method: 'GET' });
-      if (r.data && r.data.authed) showProfile(r.data);
-      else show('login');
+      if (r.data && r.data.authed) { showProfile(r.data); return; }
+      show('login');
+      if (r.data && r.data.googleClientId) setupGoogle(r.data.googleClientId);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
@@ -376,6 +435,9 @@ const inputType = (t: string) =>
   .link-btn { background: none; border: none; color: var(--accent, #2563eb); cursor: pointer; font: inherit; font-size: 0.8125rem; padding: 0.5rem 0 0; }
   .code-sent { font-size: 0.875rem; color: var(--text-muted); margin: 0 0 0.875rem; }
   .login-err { color: var(--danger); font-size: 0.8125rem; margin: 0.5rem 0 0; }
+  .google-btn-host { display: flex; justify-content: center; margin-bottom: 0.25rem; }
+  .login-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0 1.125rem; color: var(--text-subtle); font-size: 0.75rem; }
+  .login-divider::before, .login-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
   .login-privacy { margin: 1.25rem 0 0; font-size: 0.75rem; color: var(--text-subtle); line-height: 1.5; }
   .login-privacy a { color: var(--accent, #2563eb); }
 

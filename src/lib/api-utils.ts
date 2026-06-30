@@ -28,6 +28,12 @@ export interface CfEnv {
   EMAIL?: { send: (msg: { from: string; to: string; subject: string; html: string }) => Promise<unknown> };
   /** Remitente de los emails de login/cuenta. Default 'cuenta@hacecuentas.com'. */
   AUTH_EMAIL_FROM?: string;
+  /**
+   * Client ID público de Google OAuth (Google Identity Services). Si está
+   * seteado, /mi-hacecuentas muestra el botón "Iniciá sesión con Google". Es
+   * público (va en el cliente); no hay client secret en el flujo de ID token.
+   */
+  GOOGLE_CLIENT_ID?: string;
   /** Resend (legacy, usado por email-result/feedback/lead). El OTP NO lo usa. */
   RESEND_API_KEY?: string;
   RESULT_EMAIL_FROM?: string;
