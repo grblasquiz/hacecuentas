@@ -27,6 +27,7 @@ import { execSync } from 'node:child_process';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
+import { PRODUCTS } from '../src/lib/products/manifest.ts';
 
 const PRUNED_SLUGS = new Set(Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')));
 
@@ -823,6 +824,7 @@ sitemaps.push({
     core('/co',                                  '0.8',  'weekly'),
     core('/cl',                                  '0.8',  'weekly'),
     core('/embeber',                             '0.6',  'monthly'),
+    core('/partners',                            '0.7',  'monthly'),
     core('/wordpress',                           '0.75', 'weekly'),
     core('/sobre-nosotros',                      '0.5',  'yearly'),
     core('/privacidad',                          '0.3',  'yearly'),
@@ -831,6 +833,7 @@ sitemaps.push({
     core('/aviso-legal',                         '0.5',  'yearly'),
     core('/politica-editorial',                  '0.5',  'monthly'),
     core('/metodologia',                         '0.5',  'monthly'),
+    core('/cooperativa-de-datos',                '0.7',  'weekly'),
     core('/contacto',                            '0.4',  'yearly'),
     core('/sugerir',                             '0.6',  'weekly'),
     core('/sugerencias',                         '0.7',  'daily',   true),
@@ -1106,6 +1109,23 @@ if (DECISION_MANIFEST.length > 0) {
     })),
   ];
   sitemaps.push({ name: 'sitemap-decidir.xml', urls: decidirUrls });
+}
+
+// 7c. Productos verticales (/mi y /mi/*) — namespace propio, segmento AISLADO.
+// Superficies de marca (Mi Plata / Trabajo / Casa / Familia). lastmod editorial
+// FIJO (no buildDate) para no inflar el sitemap en cada deploy (regla #1/#3).
+if (PRODUCTS.length > 0) {
+  const PRODUCTS_REVIEWED = '2026-06-30';
+  const miUrls: Url[] = [
+    { loc: `${site}/mi`, priority: '0.8', changefreq: 'weekly', lastmod: clampToToday(PRODUCTS_REVIEWED) },
+    ...PRODUCTS.map((p) => ({
+      loc: `${site}/mi/${p.slug}`,
+      priority: '0.8',
+      changefreq: 'weekly',
+      lastmod: clampToToday(PRODUCTS_REVIEWED),
+    })),
+  ];
+  sitemaps.push({ name: 'sitemap-mi.xml', urls: miUrls });
 }
 
 // 8. Argentina provincial — lastmod del JSON de la calc

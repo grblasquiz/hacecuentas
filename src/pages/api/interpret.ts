@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getEnv, json, parseBody, getClientIP, hashIP } from '../../lib/api-utils';
-import { interpret, DEFAULT_MODEL, type ChatMessage } from '../../lib/interpret';
+import { interpret, type ChatMessage } from '../../lib/interpret';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTÉRPRETE DE PROBLEMAS — POST /api/interpret
@@ -10,14 +10,18 @@ import { interpret, DEFAULT_MODEL, type ChatMessage } from '../../lib/interpret'
 // calculadoras, pide los datos que falten y ejecuta el cálculo con el motor
 // determinístico (runCompute). El modelo NUNCA calcula: solo orquesta.
 //
-// Es la "única inteligencia de cálculo" compartida por todas las superficies
-// (portada, buscador, WhatsApp, extensión, plugin WP). Stateless: el cliente
-// manda el historial de texto; el server resuelve el turno.
+// Motor HÍBRIDO: Workers AI (binding env.AI, gratis) primero; si degrada, cae a
+// Anthropic Haiku (env.ANTHROPIC_API_KEY) solo en ese turno. Es la "única
+// inteligencia de cálculo" compartida por todas las superficies (portada,
+// buscador, WhatsApp, extensión, plugin WP). Stateless: el cliente manda el
+// historial de texto; el server resuelve el turno.
 //
-// Si no hay ANTHROPIC_API_KEY (ej. dev sin secret) devuelve 503 con
-// {fallback:true} → el front cae al buscador por palabra clave.
+// Si no hay NINGÚN motor (ni AI ni clave) devuelve 503 con {fallback:true} → el
+// front cae al buscador por palabra clave.
 // ─────────────────────────────────────────────────────────────────────────────
 export const prerender = false;
+
+const TURN_TIMEOUT_MS = 30_000; // tope de un turno completo (varias llamadas al modelo)
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -45,9 +49,10 @@ function sanitizeHistory(raw: unknown): ChatMessage[] {
 
 export const POST: APIRoute = async ({ request }) => {
   const env = getEnv();
-  const apiKey = env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    // Sin clave (dev / no configurado) → el front usa el buscador clásico.
+  const ai = env.AI && typeof env.AI.run === 'function' ? env.AI : undefined;
+  const anthropicKey = env.ANTHROPIC_API_KEY;
+  if (!ai && !anthropicKey) {
+    // Sin ningún motor (dev / no configurado) → el front usa el buscador clásico.
     return json(
       { ok: false, fallback: true, message: 'El asistente no está disponible ahora. Probá el buscador por nombre.' },
       { status: 503, headers: CORS },
@@ -71,16 +76,24 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: false, error: 'empty', message: 'Contame qué necesitás calcular.' }, { status: 400, headers: CORS });
   }
 
-  // Timeout duro: el intérprete hace varias llamadas; no dejamos colgar el Worker.
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 25_000);
+  // Timeout duro: el intérprete hace varias llamadas al modelo; no dejamos colgar
+  // el Worker. Workers AI no toma AbortSignal → corremos contra un Promise.race.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('turn_timeout')), TURN_TIMEOUT_MS);
+  });
   try {
-    const res = await interpret({
-      apiKey,
-      model: env.INTERPRET_MODEL || DEFAULT_MODEL,
-      history,
-      signal: ctrl.signal,
-    });
+    const res = await Promise.race([
+      interpret({
+        ai,
+        vectorize: env.VECTORIZE,
+        anthropicKey,
+        model: env.INTERPRET_MODEL || undefined,
+        fallbackModel: env.INTERPRET_FALLBACK_MODEL || undefined,
+        history,
+      }),
+      timeout,
+    ]);
     return json(
       { ok: true, reply: res.reply, cards: res.cards },
       { status: 200, headers: { ...CORS, 'Cache-Control': 'no-store' } },
@@ -88,19 +101,19 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (err: any) {
     // Hash de IP solo para correlacionar logs sin guardar PII.
     console.error('[interpret] failed', hashIP(getClientIP(request)), err?.message || err);
-    const aborted = err?.name === 'AbortError';
+    const timedOut = err?.message === 'turn_timeout';
     return json(
       {
         ok: false,
         fallback: true,
-        message: aborted
+        message: timedOut
           ? 'Tardé demasiado. Probá reformular más corto o usá el buscador por nombre.'
           : 'No pude procesarlo ahora. Probá el buscador por nombre.',
       },
-      { status: aborted ? 504 : 502, headers: CORS },
+      { status: timedOut ? 504 : 502, headers: CORS },
     );
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 };
 

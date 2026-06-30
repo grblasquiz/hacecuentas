@@ -11,6 +11,7 @@ import type { Scenario } from "./ScenarioComparator.astro";
 import ResultContext from "./ResultContext.astro";
 import type { EquivalenciaId } from "./ResultContext.astro";
 import { isAlertEligible } from "../lib/alerts/eligible";
+import { getCoopSource, getDataset } from "../lib/coop/datasets";
 export interface Field {
   id: string;
   label: string;
@@ -199,6 +200,12 @@ const { config, lang = 'es', dataAsOf: dataAsOfProp } = Astro.props;
 // Alerta "avisame cuando este resultado cambie": solo en calcs AR fiscales
 // elegibles (data-driven) y nunca en embeds. La UI se rellena con JS.
 const alertEligible = lang === 'es' && isAlertEligible(config.slug);
+
+// Cooperativa de datos anónimos: tras el resultado, invitación OPT-IN a aportar
+// el dato de forma anónima a cambio del percentil del segmento. Solo calcs AR
+// con fuente declarada. Consentimiento explícito; nada se guarda sin tocar el botón.
+const coopSource = lang === 'es' ? getCoopSource(config.slug) : null;
+const coopDataset = coopSource ? getDataset(coopSource.dataset) : null;
 
 // SSG baseline: texto plano del example.result para el output primary.
 // El bot lo ve above-the-fold antes de ejecutar JS; el cliente lo
@@ -1012,6 +1019,44 @@ const formatFreshnessDate = (iso: string): string => {
         </form>
         <p class="alert-note">Gratis. Sin spam. Solo cuando el número cambie de verdad.</p>
         <p class="alert-success" data-alert-status style="display:none"></p>
+      </div>
+    )}
+
+    {coopSource && (
+      <!-- Cooperativa de datos anónimos: aporte OPT-IN a cambio del percentil -->
+      <div class="coop-capture" data-coop-capture data-coop-slug={config.slug} data-coop-dataset={coopSource.dataset} data-coop-label={coopDataset?.indexName ?? coopSource.dataset} style="display:none">
+        <p class="coop-heading"><strong>📊 Sumá tu dato (anónimo)</strong></p>
+        <p class="coop-sub">{coopSource.prompt} <a href="/cooperativa-de-datos" target="_blank" rel="noopener">Cómo lo cuidamos →</a></p>
+        <form class="coop-form" data-coop-form>
+          <div class="coop-fields">
+            {coopSource.ask.map((f) => (
+              f.type === 'enum' ? (
+                <label class="coop-field">
+                  <span>{f.label}</span>
+                  <select name={f.id} data-coop-extra={f.id} required={f.required}>
+                    <option value="">Elegí…</option>
+                    {(f.options || []).filter((o) => o.value !== '').map((o) => (
+                      <option value={o.value}>{o.label}</option>
+                    ))}
+                    {(f.options || []).some((o) => o.value === '') && <option value="">Prefiero no decir</option>}
+                  </select>
+                </label>
+              ) : (
+                <label class="coop-field">
+                  <span>{f.label}{f.unit ? ` (${f.unit})` : ''}</span>
+                  <input type="number" inputmode="numeric" name={f.id} data-coop-extra={f.id} placeholder={f.placeholder} required={f.required}>
+                </label>
+              )
+            ))}
+          </div>
+          <label class="coop-consent">
+            <input type="checkbox" data-coop-consent required>
+            <span>Acepto aportar este dato de forma <strong>anónima</strong> para construir estadísticas abiertas. Entiendo que no se asocia a mi email.</span>
+          </label>
+          <button type="submit" data-label-sending="Enviando…">Aportar y ver mi percentil</button>
+        </form>
+        <p class="coop-note">Sin email. Sin spam. Podés revocarlo cuando quieras.</p>
+        <div class="coop-result" data-coop-status style="display:none"></div>
       </div>
     )}
 
@@ -3046,6 +3091,41 @@ const formatFreshnessDate = (iso: string): string => {
   .alert-success { font-size: 0.8125rem; color: var(--success); font-weight: 500; margin: 0; line-height: 1.5; }
   .alert-success.is-error { color: var(--danger, #b91c1c); }
 
+  /* Cooperativa de datos anónimos — aporte opt-in */
+  .coop-capture {
+    margin-top: 0.875rem;
+    padding: 1rem 1.25rem;
+    background: color-mix(in srgb, var(--success, #16a34a) 6%, var(--bg-card));
+    border: 1.5px solid color-mix(in srgb, var(--success, #16a34a) 28%, var(--border));
+    border-radius: var(--radius-sm);
+  }
+  .coop-heading { font-size: 0.9375rem; color: var(--text); margin: 0 0 0.25rem; }
+  .coop-sub { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 0.75rem; }
+  .coop-sub a { color: var(--accent); white-space: nowrap; }
+  .coop-fields { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; margin-bottom: 0.625rem; }
+  .coop-field { display: flex; flex-direction: column; gap: 0.2rem; flex: 1 1 8rem; min-width: 7.5rem; }
+  .coop-field > span { font-size: 0.75rem; color: var(--text-muted); }
+  .coop-field select, .coop-field input {
+    padding: 0.45rem 0.6rem; background: var(--bg); color: var(--text);
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; outline: none;
+  }
+  .coop-field select:focus, .coop-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .coop-consent { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.625rem; cursor: pointer; }
+  .coop-consent input { margin-top: 0.15rem; flex-shrink: 0; }
+  .coop-form button {
+    padding: 0.55rem 1.1rem; background: var(--success, #16a34a); color: #fff; border: none;
+    border-radius: var(--radius-sm); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+  }
+  .coop-form button:hover { opacity: 0.92; }
+  .coop-form button:disabled { opacity: 0.55; cursor: default; }
+  .coop-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.5rem 0 0; }
+  .coop-result {
+    margin-top: 0.625rem; padding: 0.75rem 0.9rem; border-radius: var(--radius-sm);
+    background: var(--bg); border: 1px solid var(--border); font-size: 0.875rem; line-height: 1.5; color: var(--text);
+  }
+  .coop-result.is-error { color: var(--danger, #b91c1c); border-color: color-mix(in srgb, var(--danger, #b91c1c) 40%, var(--border)); }
+  .coop-result .coop-pct { font-size: 1.5rem; font-weight: 800; color: var(--success, #16a34a); display: block; }
+
   /* Calc usage counter */
   .calc-counter {
     margin-top: 0.75rem;
@@ -5047,6 +5127,12 @@ const formatFreshnessDate = (iso: string): string => {
             alertCapture.style.display = 'block';
           }
 
+          // Mostrar invitación a aportar a la cooperativa (si el calc participa)
+          const coopCapture = container.querySelector<HTMLElement>('[data-coop-capture]');
+          if (coopCapture) {
+            coopCapture.style.display = 'block';
+          }
+
           // Incrementar y mostrar contador de cálculos
           try {
             const countKey = 'hc_calc_count';
@@ -5533,6 +5619,17 @@ const formatFreshnessDate = (iso: string): string => {
             const ast = alertCap.querySelector<HTMLElement>('[data-alert-status]');
             if (ast) { ast.style.display = 'none'; ast.classList.remove('is-error'); }
           }
+          // Reset cooperativa de datos
+          const coopCap = container.querySelector<HTMLElement>('[data-coop-capture]');
+          if (coopCap) {
+            coopCap.style.display = 'none';
+            const cf = coopCap.querySelector<HTMLFormElement>('[data-coop-form]');
+            if (cf) { cf.reset(); cf.style.display = 'block'; }
+            const cn = coopCap.querySelector<HTMLElement>('.coop-note');
+            if (cn) cn.style.display = 'block';
+            const cst = coopCap.querySelector<HTMLElement>('[data-coop-status]');
+            if (cst) { cst.style.display = 'none'; cst.classList.remove('is-error'); cst.innerHTML = ''; }
+          }
           const emailCap = container.querySelector<HTMLElement>('[data-email-capture]');
           if (emailCap) {
             emailCap.style.display = 'none';
@@ -5813,6 +5910,110 @@ const formatFreshnessDate = (iso: string): string => {
           showStatus('✅ Listo. Te vamos a avisar por mail si una norma cambia este resultado.', false);
         } else {
           showStatus(msg, true);
+        }
+      });
+    }
+
+    // ── Cooperativa de datos anónimos: aporte opt-in ───────────
+    const coopForm = container.querySelector<HTMLFormElement>('[data-coop-form]');
+    const coopCapEl = container.querySelector<HTMLElement>('[data-coop-capture]');
+    if (coopForm && coopCapEl) {
+      const escHtml = (s: string) => s.replace(/[<>&"]/g, (c) =>
+        c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '&' ? '&amp;' : '&quot;');
+
+      coopForm.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const statusEl = coopCapEl.querySelector<HTMLElement>('[data-coop-status]');
+        const coopNote = coopCapEl.querySelector<HTMLElement>('.coop-note');
+        const consentEl = coopForm.querySelector<HTMLInputElement>('[data-coop-consent]');
+        const showCoop = (html: string, isErr: boolean) => {
+          if (!statusEl) return;
+          statusEl.innerHTML = html;
+          statusEl.classList.toggle('is-error', isErr);
+          statusEl.style.display = 'block';
+        };
+
+        if (!consentEl?.checked) { showCoop('Marcá el consentimiento para aportar.', true); return; }
+
+        // Campos extra (segmentación / valores) declarados por la fuente.
+        const extra: Record<string, string> = {};
+        coopForm.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-coop-extra]').forEach((el) => {
+          extra[el.dataset.coopExtra!] = (el.value || '').trim();
+        });
+
+        // Inputs del cálculo: mismo parseo que el cómputo (parseThousands).
+        const fd = new FormData(form);
+        const inputs: Record<string, string | number> = {};
+        fd.forEach((v, k) => {
+          const el = form.querySelector<HTMLInputElement>(`[name="${k}"]`);
+          const raw = v as string;
+          if (el?.dataset.format === 'thousands' && raw) inputs[k] = parseThousands(raw);
+          else { const num = Number(raw); inputs[k] = !isNaN(num) && raw !== '' ? num : raw; }
+        });
+
+        const submitBtn = coopForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+        if (submitBtn?.disabled) return;
+        const idle = submitBtn?.textContent || 'Aportar';
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = submitBtn.dataset.labelSending || idle; }
+
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', 'coop_contribute', { calc_slug: slug, dataset: coopCapEl.dataset.coopDataset });
+        }
+
+        let data: any = null; let netOk = false;
+        try {
+          const resp = await fetch('/api/coop/contribute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug, inputs, extra, consent: true }),
+          });
+          data = await resp.json().catch(() => null);
+          netOk = resp.ok && data && data.ok;
+        } catch { /* red caída */ }
+
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = idle; }
+
+        if (!netOk) {
+          showCoop((data && data.error) || 'No pudimos registrar tu aporte. Probá de nuevo.', true);
+          return;
+        }
+
+        // Guardar token de revocación en el dispositivo (NO en el servidor con identidad).
+        if (data.revokeToken) {
+          try {
+            const raw = localStorage.getItem('hc_coop');
+            const list = raw ? JSON.parse(raw) : [];
+            (Array.isArray(list) ? list : []).push({
+              token: data.revokeToken,
+              dataset: coopCapEl.dataset.coopDataset,
+              label: coopCapEl.dataset.coopLabel,
+              at: Date.now(),
+            });
+            localStorage.setItem('hc_coop', JSON.stringify(list));
+          } catch { /* localStorage lleno/bloqueado */ }
+        }
+
+        coopForm.style.display = 'none';
+        if (coopNote) coopNote.style.display = 'none';
+
+        if (data.feedback && data.feedback.text) {
+          const fb = data.feedback;
+          const scopeNote = fb.scope === 'dataset'
+            ? '<br><span style="font-size:.78rem;color:var(--text-subtle)">Tu segmento exacto todavía no llega a 30 aportes; comparamos contra todos los aportes.</span>'
+            : '';
+          showCoop(
+            `<span class="coop-pct">Percentil ${fb.percentile}</span>${escHtml(fb.text)}${scopeNote}` +
+            `<br><a href="/cooperativa-de-datos#tus-aportes" target="_blank" rel="noopener" style="font-size:.78rem">Ver o revocar tus aportes →</a>`,
+            false,
+          );
+        } else if (data.pending) {
+          showCoop(
+            `✅ ${escHtml(data.message || 'Gracias por tu aporte.')}` +
+            `<br><a href="/cooperativa-de-datos#tus-aportes" target="_blank" rel="noopener" style="font-size:.78rem">Ver o revocar tus aportes →</a>`,
+            false,
+          );
+        } else {
+          showCoop('✅ ¡Gracias! Tu aporte quedó registrado de forma anónima.', false);
         }
       });
     }

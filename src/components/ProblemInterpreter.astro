@@ -463,5 +463,15 @@ const {
     });
   }
 
-  document.querySelectorAll<HTMLElement>('.pi').forEach((el) => init(el));
+  // Idempotente + re-init en navegación SPA (astro:page-load). El guard evita
+  // doble-init si el sitio NO usa ClientRouter (el módulo ya corrió una vez).
+  function setup() {
+    document.querySelectorAll<HTMLElement>('.pi').forEach((el) => {
+      if (el.dataset.piInit) return;
+      el.dataset.piInit = '1';
+      init(el);
+    });
+  }
+  setup();
+  document.addEventListener('astro:page-load', setup);
 </script>

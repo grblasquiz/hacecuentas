@@ -1,0 +1,86 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { PRODUCTS } from '../../lib/products/manifest';
+
+const canonical = '/mi';
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Mis productos — Hacé Cuentas',
+  description:
+    'Cuatro productos para las cuentas que repetís: Mi Plata, Mi Trabajo, Mi Casa y Mi Familia. Con tu perfil, alertas, hitos e historial.',
+  url: 'https://hacecuentas.com/mi',
+  inLanguage: 'es-AR',
+  isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+  hasPart: PRODUCTS.map((p) => ({
+    '@type': 'WebApplication',
+    name: `${p.name} — Hacé Cuentas`,
+    url: `https://hacecuentas.com/mi/${p.slug}`,
+  })),
+};
+---
+
+<Layout
+  title="Mis productos — Hacé Cuentas"
+  description="Cuatro productos para las cuentas que repetís cada mes: Mi Plata, Mi Trabajo, Mi Casa y Mi Familia. Con perfil que precarga todo, alertas, próximos hitos e historial."
+  canonical={canonical}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <div class="mi-hub">
+    <header class="mi-hub-hero">
+      <h1>Tus productos</h1>
+      <p class="mi-hub-lede">
+        No son 26 categorías sueltas. Son cuatro productos para las cuentas que volvés a hacer
+        cada mes: cargás tus números una vez, y vuelven con alertas, fechas e historial.
+      </p>
+    </header>
+
+    <div class="mi-hub-grid">
+      {PRODUCTS.map((p) => (
+        <a class="mi-product-card" href={`/mi/${p.slug}`} style={`--c-accent:${p.accent}`}>
+          <span class="mi-product-icon" aria-hidden="true">{p.icon}</span>
+          <span class="mi-product-name">{p.name}</span>
+          <span class="mi-product-tag">{p.tagline}</span>
+          <span class="mi-product-tools">{p.tools.length} herramientas · {p.salas.length} decisiones</span>
+        </a>
+      ))}
+    </div>
+
+    <p class="mi-hub-foot">
+      ¿Querés que precarguen tus datos? <a href="/mi-hacecuentas">Creá tu cuenta gratis</a>.
+      El resto de las <a href="/calculadoras">calculadoras</a> sigue disponible sin cuenta.
+    </p>
+  </div>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .mi-hub { max-width: 820px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  .mi-hub-hero { text-align: center; margin-bottom: 2rem; }
+  .mi-hub-hero h1 { font-size: 2rem; margin: 0 0 0.5rem; }
+  .mi-hub-lede { color: var(--text-muted); line-height: 1.6; max-width: 600px; margin: 0 auto; }
+
+  .mi-hub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+  .mi-product-card {
+    display: flex; flex-direction: column; gap: 0.25rem;
+    padding: 1.5rem 1.25rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-top: 3px solid var(--c-accent);
+    border-radius: var(--radius); text-decoration: none; color: var(--text);
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+  .mi-product-card:hover { transform: translateY(-2px); border-color: var(--c-accent); box-shadow: 0 6px 20px color-mix(in srgb, var(--c-accent) 18%, transparent); }
+  .mi-product-icon { font-size: 2.25rem; line-height: 1; }
+  .mi-product-name { font-size: 1.25rem; font-weight: 700; }
+  .mi-product-tag { color: var(--c-accent); font-weight: 600; font-size: 0.9375rem; }
+  .mi-product-tools { color: var(--text-muted); font-size: 0.8125rem; margin-top: 0.375rem; }
+
+  .mi-hub-foot { text-align: center; margin-top: 2.5rem; color: var(--text-muted); font-size: 0.9375rem; }
+  .mi-hub-foot a { color: var(--accent); font-weight: 600; }
+</style>

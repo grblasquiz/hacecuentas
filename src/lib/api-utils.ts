@@ -38,15 +38,39 @@ export interface CfEnv {
   RESEND_API_KEY?: string;
   RESULT_EMAIL_FROM?: string;
   /**
-   * Anthropic API key — secret del Worker. Lo usa el "intérprete de problemas"
-   * (/api/interpret): traduce lenguaje natural → calc + inputs y orquesta el
-   * cómputo determinístico. Si falta (ej. dev sin secret), el endpoint devuelve
-   * 503 y el front cae al buscador por palabra clave. Setup:
+   * Cloudflare Workers AI — binding `AI`. Motor primario (gratis) del "intérprete
+   * de problemas" (/api/interpret): traduce lenguaje natural → calc + inputs y
+   * orquesta el cómputo determinístico. Se declara en wrangler.jsonc:
+   * "ai": { "binding": "AI" }.
+   */
+  AI?: { run: (model: string, inputs: Record<string, unknown>, options?: Record<string, unknown>) => Promise<unknown> };
+  /**
+   * Vectorize — índice semántico de calculadoras (`hacecuentas-calcs`) para el
+   * retrieval del intérprete. Se puebla con `npm run embeddings`. Si falta, el
+   * intérprete cae a la búsqueda por palabras clave.
+   */
+  VECTORIZE?: {
+    query: (
+      vector: number[],
+      opts?: { topK?: number; returnMetadata?: boolean | 'all' | 'indexed' | 'none'; returnValues?: boolean },
+    ) => Promise<{ matches: Array<{ id: string; score: number; metadata?: Record<string, unknown> }> }>;
+    upsert: (vectors: Array<{ id: string; values: number[]; metadata?: Record<string, unknown> }>) => Promise<unknown>;
+  };
+  /**
+   * Anthropic API key — FALLBACK del intérprete. Cuando Workers AI degrada (no
+   * logra calcular, se estanca o tarda demasiado), ese turno se reintenta con
+   * Haiku. Opcional: sin clave, el intérprete corre 100% en Workers AI. Setup:
    *   npx wrangler secret put ANTHROPIC_API_KEY
+   * Si no hay NI binding AI NI clave, el endpoint devuelve 503 → buscador por nombre.
    */
   ANTHROPIC_API_KEY?: string;
-  /** Modelo del intérprete. Default 'claude-haiku-4-5-20251001' (rápido/barato). */
+  /**
+   * Modelo primario del intérprete (Workers AI). Default
+   * '@cf/meta/llama-3.3-70b-instruct-fp8-fast'.
+   */
   INTERPRET_MODEL?: string;
+  /** Modelo de fallback (Anthropic). Default 'claude-haiku-4-5-20251001'. */
+  INTERPRET_FALLBACK_MODEL?: string;
 }
 
 /** Acceso tipado al env del Worker (D1, KV, secrets). */

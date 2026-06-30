@@ -1,0 +1,21 @@
+# Worker independiente: motor de la cooperativa de datos anónimos.
+# Cada día recalcula los agregados (percentiles por segmento) desde los aportes
+# anónimos y poda los datos detallados viejos (eliminación programada).
+# 100% Cloudflare, sin terceros.
+#
+# Deploy: cd workers/coop-aggregate && npx wrangler deploy --config ./wrangler.toml
+#   (el --config es obligatorio: sin él wrangler agarra el wrangler.jsonc del SITIO)
+name = "hacecuentas-coop-aggregate"
+main = "index.mjs"
+compatibility_date = "2026-06-01"
+workers_dev = true
+
+# Diario 15:00 UTC = 12:00 ART (después de alerts-recompute a las 11:30).
+[triggers]
+crons = ["0 15 * * *"]
+
+# Misma base D1 que el sitio (hacecuentas-forms) — bind por id.
+[[d1_databases]]
+binding = "DB"
+database_name = "hacecuentas-forms"
+database_id = "73216cf9-dba3-4c16-875c-4073d8184bcd"

@@ -10,6 +10,7 @@ import CategoryIcon from '../components/CategoryIcon.astro';
 import ProblemInterpreter from '../components/ProblemInterpreter.astro';
 import { TOTAL_DISPLAY, PT_DISPLAY, TOTAL_PLAIN, CALC_COUNTS } from '../lib/calc-counts';
 import { DECISION_MANIFEST } from '../lib/decisions/manifest';
+import { PRODUCTS } from '../lib/products/manifest';
 import { GONE_410_URLS } from '../lib/gone-410';
 import { HOME_HREFLANG } from '../lib/hreflang';
 import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
@@ -566,6 +567,30 @@ const schema = {
       <span class="source-chip">Mifflin-St Jeor</span>
       <span class="source-chip">NSCA</span>
       <span class="source-chip">AFIP/ARCA 🇦🇷</span>
+    </div>
+  </section>
+
+  {/* Productos verticales: la experiencia de marca principal. 4 productos con
+      recurrencia (perfil + alertas + hitos + historial), no 26 categorías sueltas. */}
+  <section class="productos-home" aria-labelledby="productos-home-h">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow eyebrow-inline">⭐ Tus productos</span>
+        <h2 id="productos-home-h">Las cuentas que hacés todos los meses, en un solo lugar</h2>
+        <p class="productos-home-lede">
+          Cargás tus números una vez y vuelven con alertas, fechas e historial. Elegí tu producto.
+        </p>
+      </div>
+      <a href="/mi" class="see-all">Ver mis productos →</a>
+    </div>
+    <div class="productos-home-grid">
+      {PRODUCTS.map((p) => (
+        <a href={`/mi/${p.slug}`} class="producto-card" style={`--c-accent:${p.accent}`}>
+          <span class="producto-icon" aria-hidden="true">{p.icon}</span>
+          <span class="producto-name">{p.name}</span>
+          <span class="producto-tag">{p.tagline}</span>
+        </a>
+      ))}
     </div>
   </section>
 
@@ -1932,6 +1957,21 @@ const schema = {
 
   /* [4] Destacados (BCRA + Comparador) with shimmer */
   /* Salas de decisión (super calculadoras) — banda destacada post-buscador */
+  /* Banda de productos verticales */
+  .productos-home { margin: 2rem 0 2.5rem; }
+  .productos-home-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
+  .productos-home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.875rem; margin-top: 1.25rem; }
+  .producto-card {
+    display: flex; flex-direction: column; gap: 0.2rem; padding: 1.25rem 1.125rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-top: 3px solid var(--c-accent);
+    border-radius: var(--radius, 12px); text-decoration: none; color: var(--text);
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+  .producto-card:hover { transform: translateY(-2px); border-color: var(--c-accent); box-shadow: 0 6px 20px color-mix(in srgb, var(--c-accent) 18%, transparent); }
+  .producto-icon { font-size: 2rem; line-height: 1; }
+  .producto-name { font-size: 1.125rem; font-weight: 700; }
+  .producto-tag { color: var(--c-accent); font-weight: 600; font-size: 0.875rem; }
+
   .salas-home { margin: 2.5rem 0 3rem; }
   .salas-home-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
   .salas-home-grid {

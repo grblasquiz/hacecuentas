@@ -50,6 +50,25 @@
 			"database_id": "73216cf9-dba3-4c16-875c-4073d8184bcd"
 		}
 	],
+	// Cloudflare Workers AI — motor del "intérprete de problemas" (/api/interpret).
+	// Corre Llama (function calling) en la cuenta CF: sin costo por uso de Anthropic,
+	// gratis hasta la cuota diaria de Neurons. Sin este binding el endpoint cae al
+	// buscador por nombre. No requiere setup extra (Workers AI está habilitado por
+	// defecto en la cuenta).
+	"ai": {
+		"binding": "AI"
+	},
+	// Vectorize — búsqueda semántica de calculadoras para el intérprete. El índice
+	// se puebla con `npm run embeddings` (scripts/build-calc-embeddings.ts). Setup
+	// del índice (una vez): wrangler vectorize create hacecuentas-calcs
+	// --dimensions=1024 --metric=cosine. Si falta el binding o el índice, el
+	// intérprete cae a la búsqueda por palabras clave (searchCalcs).
+	// `remote: true` permite que `wrangler dev` / astro dev consulten el índice
+	// remoto (Vectorize no tiene emulación local). En producción se ignora (el
+	// Worker ya corre remoto y usa el binding nativo).
+	"vectorize": [
+		{ "binding": "VECTORIZE", "index_name": "hacecuentas-calcs", "remote": true }
+	],
 	// Cloudflare Email Sending — manda el código OTP de login (Mi Hacé Cuentas).
 	// Mismo mecanismo que el newsletter (workers/mailing-cron). El dominio
 	// hacecuentas.com ya está onboardeado en Email > Email Sending. En `astro

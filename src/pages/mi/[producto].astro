@@ -1,0 +1,569 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { PRODUCTS, getProduct } from '../../lib/products/manifest';
+import { PROFILE_FIELDS } from '../../lib/profile/schema';
+import { DECISION_MANIFEST } from '../../lib/decisions/manifest';
+
+export function getStaticPaths() {
+  return PRODUCTS.map((p) => ({ params: { producto: p.slug } }));
+}
+
+const { producto } = Astro.params;
+const product = getProduct(producto!)!;
+
+const fieldByKey = new Map(PROFILE_FIELDS.map((f) => [f.key, f]));
+const salaBySlug = new Map(DECISION_MANIFEST.map((r) => [r.slug, r]));
+
+// Campos del perfil de este vertical (Estado persistente).
+const estadoFields = product.profileKeys
+  .map((k) => fieldByKey.get(k))
+  .filter(Boolean)
+  .map((f) => ({
+    key: f!.key,
+    label: f!.label,
+    type: f!.type,
+    unit: f!.unit || '',
+    sensitive: !!f!.sensitive,
+    options: f!.options || null,
+  }));
+
+const keyMetricFields = product.keyMetrics
+  .map((k) => fieldByKey.get(k))
+  .filter(Boolean)
+  .map((f) => ({ key: f!.key, label: f!.label, unit: f!.unit || '', type: f!.type }));
+
+// Salas (Recomendaciones) resueltas a metadata real.
+const salas = product.salas.map((s) => salaBySlug.get(s)).filter(Boolean) as typeof DECISION_MANIFEST;
+
+// Otros productos (cross-nav).
+const otros = PRODUCTS.filter((p) => p.id !== product.id);
+
+// Config que consume el script inline del cliente.
+const clientConfig = JSON.stringify({
+  id: product.id,
+  slug: product.slug,
+  name: product.name,
+  profileKeys: estadoFields,
+  keyMetrics: keyMetricFields,
+  tools: product.tools,
+  alertSlugs: product.alertSlugs,
+  milestones: product.milestones,
+});
+
+const canonical = `/mi/${product.slug}`;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: `${product.name} — Hacé Cuentas`,
+  description: product.description,
+  url: `https://hacecuentas.com${canonical}`,
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es-AR',
+  isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+};
+---
+
+<Layout
+  title={`${product.name} — ${product.tagline} | Hacé Cuentas`}
+  description={product.description}
+  canonical={canonical}
+  schema={schema}
+>
+  <Header slot="header" />
+
+  <div class="product-page" data-product={product.id} style={`--p-accent:${product.accent}`}>
+    <!-- ───────── Panel / Hero ───────── -->
+    <header class="product-hero">
+      <nav class="product-crumbs" aria-label="Migas">
+        <a href="/mi">Mis productos</a> <span aria-hidden="true">/</span> <span>{product.name}</span>
+      </nav>
+      <div class="product-hero-head">
+        <span class="product-hero-icon" aria-hidden="true">{product.icon}</span>
+        <div>
+          <h1>{product.name}</h1>
+          <p class="product-tagline">{product.tagline}</p>
+        </div>
+      </div>
+      <p class="product-intro">{product.intro}</p>
+
+      <!-- Números destacados (se rellenan con tu perfil) -->
+      {keyMetricFields.length > 0 && (
+        <div class="product-metrics" data-metrics hidden>
+          {keyMetricFields.map((m) => (
+            <div class="metric-tile" data-metric-key={m.key}>
+              <span class="metric-value" data-metric-value>—</span>
+              <span class="metric-label">{m.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <p class="product-signedout" data-signedout hidden>
+        <a href={`/mi-hacecuentas?next=${canonical}`}>Iniciá sesión</a> para ver tus números y que precarguen todas las herramientas.
+      </p>
+    </header>
+
+    <!-- ───────── Próximos hitos / Timeline ───────── -->
+    <section class="product-block" aria-labelledby="hitos-h">
+      <h2 id="hitos-h">📅 Próximos hitos</h2>
+      <p class="block-lede">Las fechas que importan en este producto, ordenadas por la más cercana.</p>
+      <ol class="timeline" data-timeline></ol>
+    </section>
+
+    <!-- ───────── Estado persistente ───────── -->
+    <section class="product-block" aria-labelledby="estado-h">
+      <h2 id="estado-h">🗂️ Tus datos</h2>
+      <p class="block-lede">
+        Lo que cargás acá precarga todas las herramientas del producto.
+        <span data-estado-progress></span>
+      </p>
+      <ul class="estado-list" data-estado-list>
+        {estadoFields.map((f) => (
+          <li class="estado-row" data-estado-key={f.key}>
+            <span class="estado-label">{f.label}</span>
+            <span class="estado-value" data-estado-value>—</span>
+          </li>
+        ))}
+      </ul>
+      <a class="block-cta" href={`/mi-hacecuentas?next=${canonical}`}>Completar o editar mi perfil →</a>
+    </section>
+
+    <!-- ───────── Alertas ───────── -->
+    {product.alertSlugs.length > 0 && (
+      <section class="product-block" aria-labelledby="alertas-h">
+        <h2 id="alertas-h">🔔 Tus alertas</h2>
+        <p class="block-lede">Te avisamos por mail si una norma (paritaria, Ganancias, ICL…) cambia un resultado que guardaste.</p>
+        <div data-alerts-authed hidden>
+          <ul class="alerts-list" data-alerts-list></ul>
+          <p class="alerts-empty" data-alerts-empty hidden>Todavía no tenés alertas en este producto. Activá una desde cualquier calculadora de abajo, después de calcular.</p>
+        </div>
+        <p class="alerts-signedout" data-alerts-signedout hidden>
+          <a href={`/mi-hacecuentas?next=${canonical}`}>Iniciá sesión</a> para guardar y ver tus alertas en todos tus dispositivos.
+        </p>
+      </section>
+    )}
+
+    <!-- ───────── Herramientas (categoría como producto) ───────── -->
+    <section class="product-block" aria-labelledby="tools-h">
+      <h2 id="tools-h">🧰 Herramientas</h2>
+      <div class="tool-grid">
+        {product.tools.map((t) => (
+          <a class="tool-card" href={`/${t.slug}`}>
+            <span class="tool-label">{t.label}</span>
+            <span class="tool-arrow" aria-hidden="true">→</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- ───────── Recomendaciones / Salas de decisión ───────── -->
+    {salas.length > 0 && (
+      <section class="product-block" aria-labelledby="salas-h">
+        <h2 id="salas-h">🧭 Decisiones</h2>
+        <p class="block-lede">Cuando no es una cuenta sino una decisión, estas salas corren todos los números por vos.</p>
+        <div class="sala-grid">
+          {salas.map((r) => (
+            <a class="sala-card" href={`/decidir/${r.slug}`}>
+              <span class="sala-icon" aria-hidden="true">{r.icon}</span>
+              <span class="sala-title">{r.h1}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- ───────── Historial ───────── -->
+    <section class="product-block" aria-labelledby="hist-h" data-history-block hidden>
+      <h2 id="hist-h">📊 Tu historial</h2>
+      <p class="block-lede">Los últimos resultados que calculaste en este producto, en este dispositivo.</p>
+      <ul class="hist-list" data-history-list></ul>
+    </section>
+
+    <!-- ───────── Exportación ───────── -->
+    <section class="product-block product-export" aria-labelledby="export-h">
+      <h2 id="export-h">⬇️ Exportar</h2>
+      <p class="block-lede">Descargá tus datos de este producto o imprimí esta página como resumen.</p>
+      <div class="export-actions">
+        <button type="button" class="export-btn" data-export-json>Descargar mis datos (JSON)</button>
+        <button type="button" class="export-btn export-btn--ghost" data-export-print>Imprimir / PDF</button>
+      </div>
+    </section>
+
+    <!-- ───────── Cross-nav a otros productos ───────── -->
+    <nav class="product-otros" aria-label="Otros productos">
+      <span class="otros-label">Seguí con</span>
+      <div class="otros-grid">
+        {otros.map((p) => (
+          <a class="otros-card" href={`/mi/${p.slug}`} style={`--o-accent:${p.accent}`}>
+            <span class="otros-icon" aria-hidden="true">{p.icon}</span>
+            <span class="otros-name">{p.name}</span>
+          </a>
+        ))}
+      </div>
+    </nav>
+  </div>
+
+  <script type="application/json" data-product-config set:html={clientConfig}></script>
+
+  <script is:inline>
+  (function () {
+    var cfgEl = document.querySelector('[data-product-config]');
+    if (!cfgEl) return;
+    var CFG;
+    try { CFG = JSON.parse(cfgEl.textContent || '{}'); } catch (e) { return; }
+    var root = document.querySelector('.product-page');
+    if (!root) return;
+
+    var MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+    function isAuthed() { return /(^|;)\s*hc_authed=1(;|$)/.test(document.cookie); }
+
+    function fmtNumber(v) {
+      var n = typeof v === 'number' ? v : Number(String(v).replace(/\./g, '').replace(',', '.'));
+      if (!isNaN(n) && String(v).trim() !== '') return n.toLocaleString('es-AR');
+      return String(v);
+    }
+    function fmtValue(f, raw) {
+      if (raw === undefined || raw === null || raw === '') return null;
+      if (f.options) {
+        for (var i = 0; i < f.options.length; i++) if (String(f.options[i].value) === String(raw)) return f.options[i].label;
+      }
+      if (f.type === 'boolean') return (raw === true || raw === 'true' || raw === 'si') ? 'Sí' : 'No';
+      if (f.type === 'number') return (f.unit === '$' ? '$ ' : '') + fmtNumber(raw) + (f.unit && f.unit !== '$' ? ' ' + f.unit : '');
+      return String(raw);
+    }
+    function profileGet(key) {
+      try { return window.HCProfile ? window.HCProfile.get(key) : undefined; } catch (e) { return undefined; }
+    }
+
+    // ── Timeline / Próximos hitos ────────────────────────────
+    function nextOccurrence(rule, now) {
+      var y = now.getFullYear();
+      function mk(yy, mm, dd) { return new Date(yy, mm, dd); }
+      function lastDay(yy, mm) { return new Date(yy, mm + 1, 0); }
+      if (rule.type === 'monthly-last') {
+        var d = lastDay(now.getFullYear(), now.getMonth());
+        if (d < stripTime(now)) d = lastDay(now.getFullYear(), now.getMonth() + 1);
+        return d;
+      }
+      if (rule.type === 'monthly-day') {
+        var d2 = mk(now.getFullYear(), now.getMonth(), rule.day);
+        if (d2 < stripTime(now)) d2 = mk(now.getFullYear(), now.getMonth() + 1, rule.day);
+        return d2;
+      }
+      if (rule.type === 'yearly') {
+        var d3 = mk(y, rule.month - 1, rule.day);
+        if (d3 < stripTime(now)) d3 = mk(y + 1, rule.month - 1, rule.day);
+        return d3;
+      }
+      if (rule.type === 'biyearly') {
+        var cands = [mk(y, rule.month1 - 1, rule.day), mk(y, rule.month2 - 1, rule.day), mk(y + 1, rule.month1 - 1, rule.day)];
+        var t = stripTime(now);
+        for (var i = 0; i < cands.length; i++) if (cands[i] >= t) return cands[i];
+        return cands[cands.length - 1];
+      }
+      return now;
+    }
+    function stripTime(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+    function daysUntil(d, now) { return Math.round((stripTime(d) - stripTime(now)) / 86400000); }
+
+    function renderTimeline() {
+      var ol = root.querySelector('[data-timeline]');
+      if (!ol) return;
+      var now = new Date();
+      var items = (CFG.milestones || []).map(function (m) {
+        var d = nextOccurrence(m.rule, now);
+        return { m: m, d: d, days: daysUntil(d, now) };
+      }).sort(function (a, b) { return a.d - b.d; });
+      ol.innerHTML = '';
+      items.forEach(function (it) {
+        var li = document.createElement('li');
+        li.className = 'timeline-item';
+        var dateStr = it.d.getDate() + ' de ' + MONTHS[it.d.getMonth()];
+        var countdown = it.days === 0 ? 'hoy' : it.days === 1 ? 'mañana' : 'en ' + it.days + ' días';
+        var tool = it.m.toolSlug ? '<a class="timeline-cta" href="/' + it.m.toolSlug + '">Calcular →</a>' : '';
+        li.innerHTML =
+          '<span class="timeline-emoji" aria-hidden="true">' + it.m.emoji + '</span>' +
+          '<div class="timeline-body"><div class="timeline-top"><span class="timeline-label">' + esc(it.m.label) + '</span>' +
+          '<span class="timeline-when">' + dateStr + ' · ' + countdown + '</span></div>' +
+          '<p class="timeline-detail">' + esc(it.m.detail) + '</p>' + tool + '</div>';
+        ol.appendChild(li);
+      });
+    }
+
+    // ── Estado persistente + números destacados ──────────────
+    function renderEstado() {
+      var loaded = 0, total = (CFG.profileKeys || []).length;
+      (CFG.profileKeys || []).forEach(function (f) {
+        var raw = profileGet(f.key);
+        var disp = fmtValue(f, raw);
+        var row = root.querySelector('[data-estado-key="' + cssEsc(f.key) + '"] [data-estado-value]');
+        if (row) {
+          if (disp !== null) { row.textContent = disp; row.classList.add('is-set'); loaded++; }
+          else { row.textContent = '—'; row.classList.remove('is-set'); }
+        }
+      });
+      var prog = root.querySelector('[data-estado-progress]');
+      if (prog) prog.textContent = total ? ' ' + loaded + ' de ' + total + ' datos cargados.' : '';
+    }
+    function renderMetrics() {
+      var box = root.querySelector('[data-metrics]');
+      if (!box) return;
+      var any = false;
+      (CFG.keyMetrics || []).forEach(function (m) {
+        var raw = profileGet(m.key);
+        var el = root.querySelector('[data-metric-key="' + cssEsc(m.key) + '"] [data-metric-value]');
+        if (!el) return;
+        if (raw !== undefined && raw !== null && raw !== '') {
+          el.textContent = (m.unit === '$' ? '$ ' : '') + fmtNumber(raw) + (m.unit && m.unit !== '$' ? ' ' + m.unit : '');
+          any = true;
+        } else { el.textContent = '—'; }
+      });
+      box.hidden = !any;
+      var so = root.querySelector('[data-signedout]');
+      if (so) so.hidden = any || isAuthed();
+    }
+
+    // ── Alertas ──────────────────────────────────────────────
+    async function loadAlerts() {
+      var authedBox = root.querySelector('[data-alerts-authed]');
+      var signedout = root.querySelector('[data-alerts-signedout]');
+      if (!authedBox) return;
+      if (!isAuthed()) { if (signedout) signedout.hidden = false; return; }
+      try {
+        var res = await fetch('/api/alerts/mine', { credentials: 'same-origin' });
+        if (!res.ok) { if (signedout) signedout.hidden = false; return; }
+        var data = await res.json();
+        var setSlugs = {};
+        (CFG.alertSlugs || []).forEach(function (s) { setSlugs[s] = 1; });
+        var mine = (data.alerts || []).filter(function (a) { return setSlugs[a.slug]; });
+        authedBox.hidden = false;
+        var list = root.querySelector('[data-alerts-list]');
+        var empty = root.querySelector('[data-alerts-empty]');
+        if (list) list.innerHTML = '';
+        if (mine.length === 0) { if (empty) empty.hidden = false; return; }
+        if (empty) empty.hidden = true;
+        mine.forEach(function (a) {
+          var li = document.createElement('li');
+          li.className = 'alert-row';
+          var changed = a.last_changed_at ? 'cambió' : 'sin cambios';
+          li.innerHTML =
+            '<a class="alert-link" href="/' + esc(a.slug) + '">' + esc(a.headline_label || 'Resultado') + '</a>' +
+            '<span class="alert-headline">' + esc(a.last_headline || '') + '</span>' +
+            '<span class="alert-state alert-state--' + (a.last_changed_at ? 'changed' : 'stable') + '">' + changed + '</span>';
+          if (list) list.appendChild(li);
+        });
+      } catch (e) { if (signedout) signedout.hidden = false; }
+    }
+
+    // ── Historial (localStorage hc-history-<slug>) ───────────
+    function relTime(ts) {
+      var s = Math.floor((Date.now() - ts) / 1000);
+      if (s < 60) return 'recién';
+      var m = Math.floor(s / 60); if (m < 60) return 'hace ' + m + ' min';
+      var h = Math.floor(m / 60); if (h < 24) return 'hace ' + h + ' h';
+      var d = Math.floor(h / 24); if (d < 30) return 'hace ' + d + (d === 1 ? ' día' : ' días');
+      return 'hace tiempo';
+    }
+    function renderHistory() {
+      var block = root.querySelector('[data-history-block]');
+      var list = root.querySelector('[data-history-list]');
+      if (!block || !list) return;
+      var labelBySlug = {};
+      (CFG.tools || []).forEach(function (t) { labelBySlug[t.slug] = t.label; });
+      var all = [];
+      (CFG.tools || []).forEach(function (t) {
+        var arr = [];
+        try { arr = JSON.parse(localStorage.getItem('hc-history-' + t.slug) || '[]'); } catch (e) {}
+        arr.forEach(function (e2) { all.push({ slug: t.slug, label: t.label, primary: e2.primary, sub: e2.label, ts: e2.ts }); });
+      });
+      all.sort(function (a, b) { return b.ts - a.ts; });
+      all = all.slice(0, 12);
+      if (all.length === 0) { block.hidden = true; return; }
+      block.hidden = false;
+      list.innerHTML = '';
+      all.forEach(function (e2) {
+        var li = document.createElement('li');
+        li.className = 'hist-row';
+        li.innerHTML =
+          '<a class="hist-tool" href="/' + esc(e2.slug) + '">' + esc(e2.label) + '</a>' +
+          '<span class="hist-val">' + esc(e2.primary) + '</span>' +
+          '<time class="hist-time">' + relTime(e2.ts) + '</time>';
+        list.appendChild(li);
+      });
+    }
+
+    // ── Exportación ──────────────────────────────────────────
+    function collectExport() {
+      var profile = {};
+      (CFG.profileKeys || []).forEach(function (f) { var v = profileGet(f.key); if (v !== undefined && v !== '') profile[f.key] = v; });
+      var history = {};
+      (CFG.tools || []).forEach(function (t) {
+        try { var arr = JSON.parse(localStorage.getItem('hc-history-' + t.slug) || '[]'); if (arr.length) history[t.slug] = arr; } catch (e) {}
+      });
+      return { producto: CFG.name, slug: CFG.slug, exportadoEl: new Date().toISOString(), perfil: profile, historial: history };
+    }
+    function wireExport() {
+      var jb = root.querySelector('[data-export-json]');
+      if (jb) jb.addEventListener('click', function () {
+        var blob = new Blob([JSON.stringify(collectExport(), null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'mi-' + CFG.slug + '-hacecuentas.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      });
+      var pb = root.querySelector('[data-export-print]');
+      if (pb) pb.addEventListener('click', function () { window.print(); });
+    }
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function cssEsc(s) { return String(s).replace(/[^a-zA-Z0-9_.-]/g, '\\$&'); }
+
+    function renderProfileBits() { renderEstado(); renderMetrics(); }
+
+    function init() {
+      renderTimeline();
+      renderProfileBits();
+      renderHistory();
+      wireExport();
+      loadAlerts();
+      // Si hay sesión, refrescá el perfil desde el server por si el cache local está vacío.
+      if (isAuthed()) {
+        fetch('/api/profile', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
+          if (data && data.profile && window.HCProfile) {
+            Object.keys(data.profile).forEach(function (k) { try { window.HCProfile.set(k, data.profile[k], 'profile'); } catch (e) {} });
+            renderProfileBits();
+          }
+        }).catch(function () {});
+      }
+      // Reaccioná a cambios del perfil hechos en otra pestaña/herramienta.
+      window.addEventListener('hc-profile-change', renderProfileBits);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  })();
+  </script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .product-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 4rem;
+  }
+
+  /* Hero / Panel */
+  .product-crumbs { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1rem; }
+  .product-crumbs a { color: var(--text-muted); text-decoration: none; }
+  .product-crumbs a:hover { color: var(--p-accent); }
+  .product-hero-head { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 0.75rem; }
+  .product-hero-icon { font-size: 2.75rem; line-height: 1; }
+  .product-hero h1 { margin: 0; font-size: 1.875rem; }
+  .product-tagline { margin: 0.125rem 0 0; color: var(--p-accent); font-weight: 600; font-size: 1rem; }
+  .product-intro { color: var(--text-muted); line-height: 1.6; margin: 0 0 1.25rem; }
+
+  .product-metrics { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
+  .metric-tile {
+    flex: 1 1 140px; display: flex; flex-direction: column; gap: 0.25rem;
+    padding: 0.875rem 1rem; background: color-mix(in srgb, var(--p-accent) 7%, var(--bg-card));
+    border: 1.5px solid color-mix(in srgb, var(--p-accent) 26%, var(--border)); border-radius: var(--radius-sm);
+  }
+  .metric-value { font-size: 1.375rem; font-weight: 700; color: var(--text); }
+  .metric-label { font-size: 0.75rem; color: var(--text-muted); }
+  .product-signedout { font-size: 0.875rem; color: var(--text-muted); margin: 0.5rem 0 0; }
+  .product-signedout a, .alerts-signedout a { color: var(--p-accent); font-weight: 600; }
+
+  /* Bloques */
+  .product-block { margin-top: 2.25rem; }
+  .product-block h2 { font-size: 1.25rem; margin: 0 0 0.375rem; }
+  .block-lede { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; margin: 0 0 1rem; }
+  .block-cta { display: inline-block; margin-top: 0.875rem; color: var(--p-accent); font-weight: 600; font-size: 0.9375rem; text-decoration: none; }
+  .block-cta:hover { text-decoration: underline; }
+
+  /* Timeline */
+  .timeline { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.625rem; }
+  .timeline-item { display: flex; gap: 0.75rem; padding: 0.875rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--p-accent); border-radius: var(--radius-sm); }
+  .timeline-emoji { font-size: 1.375rem; line-height: 1.4; }
+  .timeline-body { flex: 1; min-width: 0; }
+  .timeline-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 0.75rem; align-items: baseline; }
+  .timeline-label { font-weight: 600; color: var(--text); }
+  .timeline-when { font-size: 0.8125rem; color: var(--p-accent); font-weight: 600; white-space: nowrap; }
+  .timeline-detail { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; }
+  .timeline-cta { display: inline-block; margin-top: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: var(--p-accent); text-decoration: none; }
+  .timeline-cta:hover { text-decoration: underline; }
+
+  /* Estado */
+  .estado-list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .estado-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.625rem 1rem; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  .estado-row:last-child { border-bottom: none; }
+  .estado-label { color: var(--text-muted); font-size: 0.9375rem; }
+  .estado-value { font-weight: 600; color: var(--text-subtle); }
+  .estado-value.is-set { color: var(--text); }
+
+  /* Alertas */
+  .alerts-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  .alert-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; padding: 0.75rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .alert-link { font-weight: 600; color: var(--text); text-decoration: none; }
+  .alert-link:hover { color: var(--p-accent); }
+  .alert-headline { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
+  .alert-state { font-size: 0.75rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 999px; }
+  .alert-state--stable { background: color-mix(in srgb, var(--text-muted) 14%, transparent); color: var(--text-muted); }
+  .alert-state--changed { background: color-mix(in srgb, var(--p-accent) 18%, transparent); color: var(--p-accent); }
+  .alerts-empty, .alerts-signedout { font-size: 0.875rem; color: var(--text-muted); margin: 0; }
+
+  /* Herramientas */
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.625rem; }
+  .tool-card { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.875rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); text-decoration: none; color: var(--text); font-weight: 500; transition: border-color 0.15s, transform 0.15s; }
+  .tool-card:hover { border-color: var(--p-accent); transform: translateY(-1px); }
+  .tool-arrow { color: var(--p-accent); }
+
+  /* Salas */
+  .sala-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.625rem; }
+  .sala-card { display: flex; align-items: center; gap: 0.625rem; padding: 0.875rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); text-decoration: none; color: var(--text); transition: border-color 0.15s; }
+  .sala-card:hover { border-color: var(--p-accent); }
+  .sala-icon { font-size: 1.375rem; }
+  .sala-title { font-size: 0.9375rem; font-weight: 500; line-height: 1.35; }
+
+  /* Historial */
+  .hist-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.375rem; }
+  .hist-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .hist-tool { font-weight: 600; color: var(--text); text-decoration: none; }
+  .hist-tool:hover { color: var(--p-accent); }
+  .hist-val { margin-left: auto; font-weight: 700; color: var(--p-accent); }
+  .hist-time { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+
+  /* Export */
+  .export-actions { display: flex; flex-wrap: wrap; gap: 0.625rem; }
+  .export-btn { padding: 0.625rem 1.1rem; background: var(--p-accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 0.9375rem; font-weight: 600; cursor: pointer; }
+  .export-btn:hover { filter: brightness(0.95); }
+  .export-btn--ghost { background: transparent; color: var(--p-accent); border: 1.5px solid var(--p-accent); }
+
+  /* Otros productos */
+  .product-otros { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .otros-label { display: block; font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.625rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .otros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.625rem; }
+  .otros-card { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0.875rem; background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--o-accent); border-radius: var(--radius-sm); text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.9375rem; }
+  .otros-card:hover { border-color: var(--o-accent); }
+  .otros-icon { font-size: 1.25rem; }
+
+  @media (max-width: 540px) {
+    .product-hero h1 { font-size: 1.5rem; }
+    .product-hero-icon { font-size: 2.25rem; }
+  }
+
+  /* Impresión: resumen limpio */
+  @media print {
+    :global(header), :global(footer), .product-otros, .product-export, .block-cta, .timeline-cta { display: none !important; }
+    .product-page { max-width: 100%; }
+    .product-block { break-inside: avoid; }
+  }
+</style>
