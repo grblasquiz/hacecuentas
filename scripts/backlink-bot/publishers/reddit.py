@@ -16,7 +16,7 @@ PLATFORM = 'reddit'
 
 
 def _ua(cfg):
-    return f"web:hacecuentas-backlink-bot:1.0 (by /u/{cfg.get('reddit_username','user')})"
+    return f"web:hacecuentas-guias:1.0 (by /u/{cfg.get('reddit_username','user')})"
 
 
 def _access_token(cfg):

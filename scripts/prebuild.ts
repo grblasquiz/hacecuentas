@@ -101,6 +101,8 @@ async function main() {
     // compute-index DEBE existir antes del build de Vite (lo importa el Worker).
     task('calcs-api', 'generate-calc-api-index'),
     task('compute-index', 'generate-compute-index'),
+    // Índice inverso profileKey → calcs que lo usan, para /mi-hacecuentas.
+    task('profile-usage', 'generate-profile-usage'),
   ];
   // Skip compute-related solo si estamos en incremental Y el output cacheado
   // ya existe. Si no existe (primer build de la rama, cache invalidado, etc.)

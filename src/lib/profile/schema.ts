@@ -135,6 +135,9 @@ export const PROFILE_FIELDS: ProfileFieldDef[] = [
       { value: 'USD', label: 'Dólar (USD)' },
       { value: 'MXN', label: 'Peso mexicano (MXN)' },
       { value: 'EUR', label: 'Euro (EUR)' },
+      { value: 'COP', label: 'Peso colombiano (COP)' },
+      { value: 'CLP', label: 'Peso chileno (CLP)' },
+      { value: 'PEN', label: 'Sol peruano (PEN)' },
     ],
   },
 
@@ -282,6 +285,72 @@ export const PROFILE_FIELDS: ProfileFieldDef[] = [
     sensitive: true,
   },
 ];
+
+/**
+ * Moneda principal sugerida por país (ISO). Al elegir país en el perfil, si
+ * todavía no hay moneda elegida, se autocompleta con esta. Editable después.
+ */
+export const CURRENCY_BY_COUNTRY: Record<string, string> = {
+  AR: 'ARS',
+  MX: 'MXN',
+  ES: 'EUR',
+  CO: 'COP',
+  CL: 'CLP',
+  PE: 'PEN',
+  EC: 'USD',
+};
+
+/**
+ * Jurisdicciones (provincia / estado / departamento / región / CCAA) por país.
+ * `ubicacion.provincia` se renderiza como desplegable dependiente del país
+ * elegido. El value guardado es el nombre legible (compat con el texto libre
+ * previo). Si el país no está acá, el campo cae a texto libre.
+ */
+export const PROVINCES_BY_COUNTRY: Record<string, string[]> = {
+  AR: [
+    'Buenos Aires', 'Ciudad Autónoma de Buenos Aires', 'Catamarca', 'Chaco', 'Chubut',
+    'Córdoba', 'Corrientes', 'Entre Ríos', 'Formosa', 'Jujuy', 'La Pampa', 'La Rioja',
+    'Mendoza', 'Misiones', 'Neuquén', 'Río Negro', 'Salta', 'San Juan', 'San Luis',
+    'Santa Cruz', 'Santa Fe', 'Santiago del Estero', 'Tierra del Fuego', 'Tucumán',
+  ],
+  MX: [
+    'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas',
+    'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima', 'Durango', 'Estado de México',
+    'Guanajuato', 'Guerrero', 'Hidalgo', 'Jalisco', 'Michoacán', 'Morelos', 'Nayarit',
+    'Nuevo León', 'Oaxaca', 'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí',
+    'Sinaloa', 'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas',
+  ],
+  ES: [
+    'Andalucía', 'Aragón', 'Asturias', 'Islas Baleares', 'Canarias', 'Cantabria',
+    'Castilla-La Mancha', 'Castilla y León', 'Cataluña', 'Comunidad Valenciana',
+    'Extremadura', 'Galicia', 'La Rioja', 'Madrid', 'Murcia', 'Navarra', 'País Vasco',
+    'Ceuta', 'Melilla',
+  ],
+  CO: [
+    'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bogotá D.C.', 'Bolívar', 'Boyacá',
+    'Caldas', 'Caquetá', 'Casanare', 'Cauca', 'Cesar', 'Chocó', 'Córdoba', 'Cundinamarca',
+    'Guainía', 'Guaviare', 'Huila', 'La Guajira', 'Magdalena', 'Meta', 'Nariño',
+    'Norte de Santander', 'Putumayo', 'Quindío', 'Risaralda', 'San Andrés y Providencia',
+    'Santander', 'Sucre', 'Tolima', 'Valle del Cauca', 'Vaupés', 'Vichada',
+  ],
+  CL: [
+    'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo', 'Valparaíso',
+    'Metropolitana de Santiago', "Libertador General Bernardo O'Higgins", 'Maule', 'Ñuble',
+    'Biobío', 'La Araucanía', 'Los Ríos', 'Los Lagos', 'Aysén', 'Magallanes',
+  ],
+  PE: [
+    'Amazonas', 'Áncash', 'Apurímac', 'Arequipa', 'Ayacucho', 'Cajamarca', 'Callao',
+    'Cusco', 'Huancavelica', 'Huánuco', 'Ica', 'Junín', 'La Libertad', 'Lambayeque',
+    'Lima', 'Loreto', 'Madre de Dios', 'Moquegua', 'Pasco', 'Piura', 'Puno', 'San Martín',
+    'Tacna', 'Tumbes', 'Ucayali',
+  ],
+  EC: [
+    'Azuay', 'Bolívar', 'Cañar', 'Carchi', 'Chimborazo', 'Cotopaxi', 'El Oro', 'Esmeraldas',
+    'Galápagos', 'Guayas', 'Imbabura', 'Loja', 'Los Ríos', 'Manabí', 'Morona Santiago',
+    'Napo', 'Orellana', 'Pastaza', 'Pichincha', 'Santa Elena',
+    'Santo Domingo de los Tsáchilas', 'Sucumbíos', 'Tungurahua', 'Zamora Chinchipe',
+  ],
+};
 
 /** Índice por clave para lookups O(1) en build y en la pantalla del perfil. */
 export const PROFILE_FIELD_BY_KEY: Record<string, ProfileFieldDef> = Object.fromEntries(

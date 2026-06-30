@@ -4,12 +4,23 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { PROFILE_GROUPS, PROFILE_FIELDS } from '../lib/profile/schema';
+import {
+  PROFILE_GROUPS, PROFILE_FIELDS, PROVINCES_BY_COUNTRY, CURRENCY_BY_COUNTRY,
+} from '../lib/profile/schema';
+import profileUsage from '../lib/profile/usage-auto.json';
 
 const groups = PROFILE_GROUPS.map((g) => ({
   ...g,
   fields: PROFILE_FIELDS.filter((f) => f.group === g.id),
 })).filter((g) => g.fields.length > 0);
+
+const usage = profileUsage as Record<string, { slug: string; title: string }[]>;
+const totalFields = PROFILE_FIELDS.length;
+// Config que consume el script inline (provincias dependientes + moneda por país).
+const profileConfig = JSON.stringify({
+  provinces: PROVINCES_BY_COUNTRY,
+  currency: CURRENCY_BY_COUNTRY,
+});
 
 const schema = {
   '@context': 'https://schema.org',
@@ -96,7 +107,14 @@ const inputType = (t: string) =>
         <button type="button" class="link-btn" data-logout>Cerrar sesión</button>
       </div>
 
-      <p class="profile-count" data-profile-count></p>
+      <!-- Progreso del perfil (#7) -->
+      <div class="profile-progress" data-progress-wrap>
+        <div class="profile-progress-head">
+          <span class="profile-progress-label" data-progress-label></span>
+          <span class="profile-progress-pct" data-progress-pct></span>
+        </div>
+        <div class="profile-progress-track"><div class="profile-progress-fill" data-progress-fill></div></div>
+      </div>
 
       <form class="profile-form" data-profile-form>
         {groups.map((g) => (
@@ -110,7 +128,11 @@ const inputType = (t: string) =>
                     {f.unit && <span class="profile-unit">({f.unit})</span>}
                   </label>
                   <div class="profile-control">
-                    {f.type === 'enum' ? (
+                    {f.key === 'ubicacion.provincia' ? (
+                      <select id={`pf-${f.key}`} data-pk={f.key} data-ptype="provincia">
+                        <option value="">Elegí primero el país</option>
+                      </select>
+                    ) : f.type === 'enum' ? (
                       <select id={`pf-${f.key}`} data-pk={f.key} data-ptype="enum">
                         <option value="">—</option>
                         {f.options?.map((o) => <option value={o.value}>{o.label}</option>)}
@@ -121,6 +143,16 @@ const inputType = (t: string) =>
                         <option value="true">Sí</option>
                         <option value="false">No</option>
                       </select>
+                    ) : f.type === 'number' && f.unit === '$' ? (
+                      <input
+                        id={`pf-${f.key}`}
+                        type="text"
+                        data-pk={f.key}
+                        data-ptype="number"
+                        data-money="1"
+                        inputmode="numeric"
+                        placeholder="—"
+                      />
                     ) : (
                       <input
                         id={`pf-${f.key}`}
@@ -133,7 +165,21 @@ const inputType = (t: string) =>
                     )}
                     <button type="button" class="profile-del" data-profile-del={f.key} hidden aria-label={`Borrar ${f.label}`}>✕</button>
                   </div>
+                  {f.key === 'trabajo.antiguedadAnios' && (
+                    <p class="profile-hint" data-antiguedad-hint hidden>Calculada desde tu fecha de ingreso. Podés ajustarla a mano.</p>
+                  )}
                   <p class="profile-meta" data-profile-meta={f.key} hidden></p>
+                  {usage[f.key] && usage[f.key].length > 0 && (
+                    <p class="profile-usage">
+                      <span aria-hidden="true">↻</span> Precarga {usage[f.key].length === 1 ? 'la calculadora' : `${usage[f.key].length} calculadoras`}:{' '}
+                      {usage[f.key].map((c, i) => (
+                        <>
+                          {i > 0 && ', '}
+                          <a href={`/${c.slug}`}>{c.title}</a>
+                        </>
+                      ))}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -147,6 +193,14 @@ const inputType = (t: string) =>
       </div>
     </section>
   </div>
+
+  <!-- Barra de guardado fija (#2). Visible sólo logueado. -->
+  <div class="save-bar" data-save-bar hidden>
+    <span class="save-status" data-save-status>Todo guardado</span>
+    <button type="button" class="save-btn" data-save-btn disabled>Guardar datos</button>
+  </div>
+
+  <script type="application/json" data-profile-config set:html={profileConfig}></script>
 
   <Footer slot="footer" />
 </Layout>
@@ -180,6 +234,87 @@ const inputType = (t: string) =>
     }
 
     // ───── Editor (logueado) ─────
+    // Config del server (provincias dependientes + moneda por país).
+    var CFG = (function () { try { return JSON.parse(qs('[data-profile-config]').textContent || '{}'); } catch (e) { return {}; } })();
+    var PROVINCES = CFG.provinces || {};
+    var CURRENCY = CFG.currency || {};
+
+    var dirty = {};      // claves con cambios sin guardar
+    var saving = false;
+
+    function fields() { return document.querySelectorAll('[data-pk]'); }
+    function fieldEl(key) { return qs('[data-pk="' + key + '"]'); }
+
+    // Formatea miles en vivo (1000000 → 1.000.000). Solo enteros.
+    function fmtMoney(str) {
+      var digits = String(str == null ? '' : str).replace(/\D/g, '');
+      return digits ? Number(digits).toLocaleString('es-AR') : '';
+    }
+    function displayValue(el, value) {
+      if (el.getAttribute('data-money')) return fmtMoney(value);
+      return String(value);
+    }
+    // Valor actual normalizado del campo (number/string/'' ).
+    function currentValue(el) {
+      var ptype = el.getAttribute('data-ptype');
+      var raw = (el.value || '').trim();
+      if (raw === '') return '';
+      if (ptype === 'number') return Number(raw.replace(/[.\s]/g, '').replace(',', '.'));
+      return raw;
+    }
+
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    // Rellena el desplegable de provincia según el país (#1).
+    function populateProvinces(country, selected) {
+      var sel = fieldEl('ubicacion.provincia');
+      if (!sel) return;
+      var list = PROVINCES[country] || [];
+      if (!list.length) {
+        sel.innerHTML = '<option value="">' + (country ? 'Sin jurisdicciones para este país' : 'Elegí primero el país') + '</option>';
+        return;
+      }
+      var html = '<option value="">—</option>';
+      for (var i = 0; i < list.length; i++) html += '<option value="' + esc(list[i]) + '">' + esc(list[i]) + '</option>';
+      sel.innerHTML = html;
+      if (selected) sel.value = selected;
+    }
+
+    // Antigüedad en años (#4) derivada de la fecha de ingreso.
+    function yearsSince(iso) {
+      var d = new Date(iso); if (isNaN(d.getTime())) return null;
+      var now = new Date();
+      var y = now.getFullYear() - d.getFullYear();
+      var m = now.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < d.getDate())) y--;
+      return y >= 0 && y < 100 ? y : null;
+    }
+    function toggleAntiguedadHint(on) {
+      var h = qs('[data-antiguedad-hint]'); if (h) h.hidden = !on;
+    }
+
+    function updateProgress() {
+      var all = fields(); var n = 0, total = all.length;
+      Array.prototype.forEach.call(all, function (el) { if (currentValue(el) !== '') n++; });
+      var pct = total ? Math.round((n / total) * 100) : 0;
+      var fill = qs('[data-progress-fill]'); if (fill) fill.style.width = pct + '%';
+      var pe = qs('[data-progress-pct]'); if (pe) pe.textContent = pct + '%';
+      var le = qs('[data-progress-label]');
+      if (le) le.textContent = n === 0 ? 'Tu perfil está vacío — cargá tus datos' : (n + ' de ' + total + ' datos cargados');
+    }
+
+    function setStatus(text, kind) {
+      var s = qs('[data-save-status]'); if (!s) return;
+      s.textContent = text;
+      s.className = 'save-status' + (kind ? ' is-' + kind : '');
+    }
+    function updateSaveBar() {
+      var n = Object.keys(dirty).length;
+      var btn = qs('[data-save-btn]'); if (btn) btn.disabled = (n === 0) || saving;
+      if (n > 0) setStatus(n === 1 ? '1 cambio sin guardar' : n + ' cambios sin guardar', 'dirty');
+    }
+    function markDirty(key) { dirty[key] = true; updateProgress(); updateSaveBar(); }
+
     function hydrateEditor(profile) {
       // Espejá el perfil del server al store local para que las calcs precarguen.
       try {
@@ -191,51 +326,77 @@ const inputType = (t: string) =>
         }
       } catch (e) {}
 
-      var count = 0;
-      var fields = document.querySelectorAll('[data-pk]');
-      Array.prototype.forEach.call(fields, function (el) {
+      var pais = profile['ubicacion.pais'] ? String(profile['ubicacion.pais'].value) : '';
+      var prov = profile['ubicacion.provincia'] ? String(profile['ubicacion.provincia'].value) : '';
+      populateProvinces(pais, prov);
+
+      Array.prototype.forEach.call(fields(), function (el) {
         var key = el.getAttribute('data-pk');
         var entry = profile[key];
         var del = qs('[data-profile-del="' + key + '"]');
         var meta = qs('[data-profile-meta="' + key + '"]');
-        if (entry) {
-          el.value = String(entry.value);
-          if (del) del.hidden = false;
-          if (meta) { meta.hidden = false; meta.textContent = 'Actualizado ' + fmtDate(entry.at) + ' · ' + srcLabel(entry.src); }
-          count++;
+        if (key === 'ubicacion.provincia') {
+          // value ya seteado por populateProvinces
+        } else if (entry) {
+          el.value = displayValue(el, entry.value);
         } else {
           el.value = '';
-          if (del) del.hidden = true;
-          if (meta) meta.hidden = true;
         }
+        if (del) del.hidden = !entry && currentValue(el) === '';
+        if (entry && meta) { meta.hidden = false; meta.textContent = 'Actualizado ' + fmtDate(entry.at) + ' · ' + srcLabel(entry.src); }
+        else if (meta) meta.hidden = true;
       });
-      var c = qs('[data-profile-count]');
-      c.textContent = count === 0 ? 'Tu perfil está vacío. Cargá tus datos abajo.' : (count === 1 ? '1 dato guardado' : count + ' datos guardados');
+
+      toggleAntiguedadHint(!!profile['trabajo.fechaIngreso']);
+      dirty = {};
+      updateProgress();
+      setStatus('Todo guardado', 'saved');
+      var btn = qs('[data-save-btn]'); if (btn) btn.disabled = true;
     }
 
     function wireEditor() {
-      var fields = document.querySelectorAll('[data-pk]');
-      Array.prototype.forEach.call(fields, function (el) {
+      Array.prototype.forEach.call(fields(), function (el) {
         if (el.dataset.wired) return; el.dataset.wired = '1';
         var key = el.getAttribute('data-pk');
-        var ptype = el.getAttribute('data-ptype');
-        el.addEventListener('change', async function () {
-          var v = (el.value || '').trim();
-          var value = v === '' ? '' : (ptype === 'number' ? Number(v.replace(/[.\s]/g, '').replace(',', '.')) : v);
-          await api('/api/profile', { method: 'POST', body: JSON.stringify({ key: key, value: value, src: 'profile' }) });
-          if (window.HCProfile) { if (value === '') window.HCProfile.clear(key); else window.HCProfile.set(key, value, 'profile'); }
-          await refresh();
+        var isMoney = !!el.getAttribute('data-money');
+        var evt = (el.tagName === 'SELECT' || el.getAttribute('data-ptype') === 'date') ? 'change' : 'input';
+
+        el.addEventListener(evt, function () {
+          if (isMoney) el.value = fmtMoney(el.value);
+          markDirty(key);
+          var del = qs('[data-profile-del="' + key + '"]'); if (del) del.hidden = currentValue(el) === '';
+
+          if (key === 'ubicacion.pais') {
+            var pais = el.value;
+            populateProvinces(pais, '');
+            markDirty('ubicacion.provincia');
+            // Autosugerir moneda si está vacía (#3).
+            var mon = fieldEl('moneda.principal');
+            if (mon && !mon.value && CURRENCY[pais]) { mon.value = CURRENCY[pais]; markDirty('moneda.principal'); }
+          }
+          if (key === 'trabajo.fechaIngreso') {
+            var yrs = yearsSince(el.value);
+            var ant = fieldEl('trabajo.antiguedadAnios');
+            if (ant && yrs != null) { ant.value = String(yrs); markDirty('trabajo.antiguedadAnios'); }
+            toggleAntiguedadHint(!!el.value);
+          }
         });
       });
+
       Array.prototype.forEach.call(document.querySelectorAll('[data-profile-del]'), function (btn) {
         if (btn.dataset.wired) return; btn.dataset.wired = '1';
-        btn.addEventListener('click', async function () {
+        btn.addEventListener('click', function () {
           var key = btn.getAttribute('data-profile-del');
-          await api('/api/profile', { method: 'DELETE', body: JSON.stringify({ key: key }) });
-          if (window.HCProfile) window.HCProfile.clear(key);
-          await refresh();
+          var el = fieldEl(key); if (el) el.value = '';
+          btn.hidden = true;
+          markDirty(key);
+          if (key === 'trabajo.fechaIngreso') toggleAntiguedadHint(false);
         });
       });
+
+      var saveBtn = qs('[data-save-btn]');
+      if (saveBtn && !saveBtn.dataset.wired) { saveBtn.dataset.wired = '1'; saveBtn.addEventListener('click', save); }
+
       var clearAll = qs('[data-profile-clear-all]');
       if (clearAll && !clearAll.dataset.wired) {
         clearAll.dataset.wired = '1';
@@ -265,6 +426,40 @@ const inputType = (t: string) =>
           location.reload();
         });
       }
+
+      if (!window.__hcUnloadGuard) {
+        window.__hcUnloadGuard = true;
+        window.addEventListener('beforeunload', function (e) {
+          if (Object.keys(dirty).length) { e.preventDefault(); e.returnValue = ''; }
+        });
+      }
+    }
+
+    async function save() {
+      if (saving) return;
+      var keys = Object.keys(dirty); if (!keys.length) return;
+      saving = true;
+      var btn = qs('[data-save-btn]'); if (btn) btn.disabled = true;
+      setStatus('Guardando…', 'saving');
+      var ok = true;
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var el = fieldEl(key);
+        var value = el ? currentValue(el) : '';
+        var r;
+        if (value === '') {
+          r = await api('/api/profile', { method: 'DELETE', body: JSON.stringify({ key: key }) });
+          if (window.HCProfile) window.HCProfile.clear(key);
+        } else {
+          r = await api('/api/profile', { method: 'POST', body: JSON.stringify({ key: key, value: value, src: 'profile' }) });
+          if (window.HCProfile) window.HCProfile.set(key, value, 'profile');
+        }
+        if (!r.ok) ok = false;
+      }
+      saving = false;
+      dirty = {};
+      await refresh();
+      setStatus(ok ? 'Guardado ✓' : 'Hubo un error al guardar', ok ? 'saved' : 'error');
     }
 
     async function refresh() {
@@ -275,6 +470,7 @@ const inputType = (t: string) =>
     function showProfile(me) {
       qs('[data-account-email]').textContent = me.email || '';
       show('profile');
+      var bar = qs('[data-save-bar]'); if (bar) bar.hidden = false;
       hydrateEditor(me.profile || {});
       wireEditor();
     }
@@ -448,6 +644,38 @@ const inputType = (t: string) =>
     font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.25rem;
   }
   .profile-count { margin: 0 0 1rem; font-size: 0.8125rem; font-weight: 600; color: var(--text-subtle); }
+
+  /* Progreso del perfil (#7) */
+  .profile-progress { margin: 0 0 1.5rem; }
+  .profile-progress-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem; }
+  .profile-progress-label { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
+  .profile-progress-pct { font-size: 0.8125rem; font-weight: 700; color: var(--accent, #2563eb); }
+  .profile-progress-track { height: 8px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; }
+  .profile-progress-fill { height: 100%; width: 0; background: var(--accent, #2563eb); border-radius: 999px; transition: width 0.3s ease; }
+
+  /* Hint de antigüedad derivada (#4) + usage links (#8) */
+  .profile-hint { margin: 0.15rem 0 0; font-size: 0.6875rem; color: var(--text-subtle); font-style: italic; }
+  .profile-usage { margin: 0.25rem 0 0; font-size: 0.6875rem; color: var(--text-subtle); line-height: 1.5; }
+  .profile-usage a { color: var(--accent, #2563eb); text-decoration: none; }
+  .profile-usage a:hover { text-decoration: underline; }
+
+  /* Barra de guardado fija (#2) */
+  .save-bar {
+    position: sticky; bottom: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    max-width: 720px; margin: 0 auto; padding: 0.75rem 1rem;
+    background: var(--bg); border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  }
+  .save-status { font-size: 0.8125rem; color: var(--text-muted); }
+  .save-status.is-dirty { color: var(--accent, #2563eb); font-weight: 600; }
+  .save-status.is-saved { color: var(--success, #16a34a); }
+  .save-status.is-error { color: var(--danger); font-weight: 600; }
+  .save-btn {
+    flex: 0 0 auto; padding: 0.625rem 1.5rem; background: var(--accent, #2563eb); color: #fff;
+    border: none; border-radius: var(--radius-sm); font: inherit; font-weight: 600; font-size: 0.9375rem; cursor: pointer;
+  }
+  .save-btn:disabled { opacity: 0.5; cursor: default; }
   .profile-form { display: flex; flex-direction: column; gap: 1.25rem; }
   .profile-group { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem 1.25rem 1.25rem; margin: 0; }
   .profile-group legend { font-weight: 700; font-size: 0.9375rem; padding: 0 0.5rem; }
@@ -471,9 +699,9 @@ const inputType = (t: string) =>
   .profile-delete-account { border-color: var(--danger); color: var(--danger); }
   .profile-delete-account:hover { background: var(--danger); color: #fff; }
   @media (min-width: 560px) {
-    .profile-row { flex-direction: row; align-items: center; }
+    .profile-row { flex-direction: row; flex-wrap: wrap; align-items: center; }
     .profile-row label { flex: 0 0 40%; }
     .profile-control { flex: 1; }
-    .profile-meta { flex-basis: 100%; padding-left: 40%; }
+    .profile-meta, .profile-usage, .profile-hint { flex-basis: 100%; padding-left: 40%; }
   }
 </style>
