@@ -15,21 +15,24 @@ import type { DecisionRoom, DecisionResult } from './types';
 import { fmtMoney, num } from './types';
 
 /**
- * Topes de facturación anual por categoría (servicios), aproximados 2026.
- * Estos valores cambian con cada recategorización: son una guía, NO oficiales.
+ * Topes de facturación anual (ingresos brutos) por categoría — valores ARCA
+ * oficiales vigentes desde el 01/02/2026 (coinciden con /datos-monotributo-2026).
+ * En 2026 los topes de INGRESOS son iguales para servicios y venta de bienes;
+ * lo que difiere por categoría es la cuota, no el tope. Cambian en cada
+ * recategorización (próxima: julio 2026): son guía, verificá en ARCA.
  */
 const CATEGORIAS: Array<{ cat: string; tope: number }> = [
-  { cat: 'A', tope: 8_992_597 },
-  { cat: 'B', tope: 13_175_201 },
-  { cat: 'C', tope: 18_473_166 },
-  { cat: 'D', tope: 22_934_610 },
-  { cat: 'E', tope: 26_977_793 },
-  { cat: 'F', tope: 33_809_379 },
-  { cat: 'G', tope: 40_431_835 },
-  { cat: 'H', tope: 61_344_853 },
-  { cat: 'I', tope: 68_664_410 },
-  { cat: 'J', tope: 78_632_948 },
-  { cat: 'K', tope: 94_805_682 },
+  { cat: 'A', tope: 10_277_988 },
+  { cat: 'B', tope: 15_058_448 },
+  { cat: 'C', tope: 21_113_697 },
+  { cat: 'D', tope: 26_212_853 },
+  { cat: 'E', tope: 30_833_964 },
+  { cat: 'F', tope: 38_642_048 },
+  { cat: 'G', tope: 46_211_109 },
+  { cat: 'H', tope: 70_113_407 },
+  { cat: 'I', tope: 78_479_212 },
+  { cat: 'J', tope: 89_872_640 },
+  { cat: 'K', tope: 108_357_084 },
 ];
 
 function categoriaPara(facturacion: number): { cat: string; tope: number } | null {
@@ -158,7 +161,7 @@ function compute(inputs: Record<string, any>): DecisionResult {
   const notes = [
     '⚠️ Los topes de facturación A–K son APROXIMADOS para 2026 y cambian en cada recategorización. Esta sala es orientativa: confirmá siempre los valores vigentes en ARCA antes de decidir.',
     'La categorización de monotributo considera tres parámetros: facturación anual, alquiler devengado y energía eléctrica consumida. Esta estimación se basa principalmente en la facturación; los otros dos pueden elevar tu categoría.',
-    'Existen escalas distintas para servicios y para venta de cosas muebles (topes más altos en categorías superiores). Acá se usa una guía única; verificá tu actividad real.',
+    'En 2026 los topes de ingresos son iguales para servicios y para venta de cosas muebles; lo que cambia por categoría es la cuota mensual, no el tope. Verificá el valor de tu cuota según tu actividad en ARCA.',
     'No es asesoramiento contable. Para tu situación exacta (actividad, recategorización, exclusión) consultá con un contador público matriculado.',
   ];
 
@@ -277,7 +280,7 @@ export const room: DecisionRoom = {
     },
     {
       q: '¿La escala es igual para servicios y para venta de productos?',
-      a: 'No. Hay dos escalas: la de servicios y la de venta de cosas muebles, con topes más altos en las categorías superiores para la venta. Esta sala usa una guía única; verificá la escala de tu actividad real en ARCA.',
+      a: 'En 2026 los topes de facturación (ingresos brutos) son iguales para servicios y para venta de cosas muebles de las categorías A a K. Lo que difiere según la actividad es el monto de la cuota mensual, no el tope de facturación. Verificá tu cuota en ARCA según tu actividad.',
     },
     {
       q: '¿Conviene quedarse en una categoría más baja facturando menos por fuera?',

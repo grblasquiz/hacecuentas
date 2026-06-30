@@ -45,8 +45,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
   // — Relación de dependencia: neto en mano + beneficios que trae "gratis" —
   const netoRD = sueldoAR({ bruto: sueldoBrutoRD, conyuge, hijos }).neto;
   const aguinaldoMes = netoRD / 12; // SAC ≈ 1 sueldo/año prorrateado
-  const vacacionesMes = netoRD * 0.08; // ~14 días pagos extra al año ≈ 8% mensual
-  const aporteIndemnMes = netoRD / 12; // provisión: 1 sueldo/año de antigüedad en juego
+  const vacacionesMes = netoRD * 0.02; // plus vacacional real (pago a sueldo/25 vs /30) ≈ 1-2% mensual; las vacaciones ya están en el sueldo
+  const aporteIndemnMes = netoRD / 24; // provisión por antigüedad indemnizable: costo EVENTUAL (solo si hay despido), ponderado ~50%
   // Obra social: en RD viene incluida en los aportes; en monotributo va en la cuota.
   const beneficiosRD = aguinaldoMes + vacacionesMes + aporteIndemnMes;
   const valorTotalRD = netoRD + beneficiosRD;
@@ -125,7 +125,7 @@ function compute(inputs: Record<string, any>): DecisionResult {
   ];
 
   const notes = [
-    'Los beneficios de la relación de dependencia se valorizan como prorrateo mensual: aguinaldo ≈ un sueldo neto al año, vacaciones ≈ 8% del neto mensual, y una provisión por la antigüedad indemnizable que acumulás (≈ un sueldo al año).',
+    'Los beneficios de la relación de dependencia se valorizan como prorrateo mensual: aguinaldo ≈ un sueldo neto al año, el plus vacacional ≈ 1-2% del neto (las vacaciones en sí ya están dentro del sueldo), y una provisión PARCIAL por la antigüedad indemnizable, que es un costo eventual (solo si hay despido sin causa), no un ingreso garantizado.',
     'Se asume que el autoaporte jubilatorio y la obra social del monotributista están incluidos en la cuota. Si pagás obra social privada aparte, restala del neto facturado.',
     'No considera ingresos brutos provinciales ni la posibilidad de deducir gastos: en facturación pueden cambiar el resultado. No es asesoramiento contable: consultá con un contador matriculado.',
   ];
@@ -255,7 +255,7 @@ export const room: DecisionRoom = {
   howItWorks: `Comparar el bruto contra la factura es engañoso: hay que poner todo en el mismo plano.
 
 1. **Neto en mano de la relación de dependencia.** Aplica aportes (17%) y Ganancias al sueldo bruto, con la misma lógica de la calculadora de sueldo en mano.
-2. **Beneficios que la RD trae "gratis".** Valoriza por mes el aguinaldo (≈ un sueldo neto al año), las vacaciones pagas (≈ 8% del neto mensual) y la cobertura de indemnización (acumulás antigüedad indemnizable). El monotributista no tiene nada de eso.
+2. **Beneficios que la RD trae "gratis".** Valoriza por mes el aguinaldo (≈ un sueldo neto al año), el plus vacacional (≈ 1-2% del neto; las vacaciones ya están en el sueldo) y una cobertura parcial de la indemnización eventual (acumulás antigüedad indemnizable). El monotributista no tiene nada de eso.
 3. **Neto real de facturar.** Al monto que facturarías le resta la cuota del monotributo y el costo del contador. El autoaporte jubilatorio y la obra social se asumen dentro de la cuota.
 4. **Número decisivo.** Calcula cuánto tendrías que facturar para igualar el valor total de la relación de dependencia (neto + beneficios + costos fijos del monotributo).
 5. **Veredicto.** Compara ambos lados y marca cuál conviene, recordando que la RD da estabilidad y la facturación da flexibilidad.`,

@@ -10,9 +10,9 @@
 import type { DecisionRoom, DecisionResult } from './types';
 import { fmtMoney, fmtPct, num } from './types';
 
-const CARGAS = 0.27;     // cargas patronales aprox (jubilación, OS, etc.)
-const ART = 0.05;        // ART + seguro de vida aprox
-const VACAC = 0.08;      // provisión vacaciones (~ aprox del bruto mensual)
+const CARGAS = 0.21;     // contribuciones patronales aprox post Ley 27.802 (2026): seg. social 15-17,4% + obra social 5%; varía por actividad/tamaño
+const ART = 0.05;        // ART (% variable) + seguro de vida (suma fija); ~5% como proxy
+const VACAC = 0.05;      // provisión vacaciones: 14 días LCT pagados a sueldo/25 ≈ 4,7%/mes (sube con antigüedad)
 
 function compute(inputs: Record<string, any>): DecisionResult {
   const bruto = Math.max(0, num(inputs.sueldoBrutoOfrecido));
@@ -123,7 +123,7 @@ function compute(inputs: Record<string, any>): DecisionResult {
   ];
 
   const notes = [
-    'El costo total se estima como bruto + cargas patronales (~27%) + ART/seguro (~5%) + aguinaldo (bruto/12) + provisión de vacaciones (~8%), dando ~1,5× el bruto. Es una aproximación: las alícuotas varían por actividad, convenio y zona.',
+    'El costo total se estima como bruto + cargas patronales (~21%, ya con la baja de contribuciones de la Ley 27.802 vigente 2026) + ART/seguro (~5%) + aguinaldo (bruto/12) + provisión de vacaciones (~5%), dando ~1,4× el bruto. Es una aproximación: las alícuotas varían por actividad, convenio y zona, y hay reducciones para pymes y nuevas contrataciones.',
     'No incluye la indemnización por despido (un costo eventual importante) ni costos de incorporación (ropa, herramientas, capacitación).',
     'La regla "el empleado no debería superar ~40% del ingreso" es una guía de prudencia, no una norma: tu caso depende de tu margen y de cuánto genere esa persona.',
     'No es asesoramiento contable ni laboral. Para las cargas exactas de tu actividad y convenio, consultá con un contador y/o un abogado laboral matriculado.',
@@ -209,18 +209,18 @@ export const room: DecisionRoom = {
   howItWorks: `Esta sala te muestra lo que de verdad cuesta sumar a alguien y si tu negocio lo aguanta.
 
 1. **Sueldo bruto.** El punto de partida: lo que figura en el recibo, antes de descuentos.
-2. **Cargas patronales.** Suma ~27% del bruto en aportes patronales (jubilación, obra social, asignaciones, etc.) que paga el empleador, además de lo que se le descuenta al empleado.
+2. **Cargas patronales.** Suma ~21% del bruto en contribuciones patronales (jubilación, obra social, asignaciones, etc.) que paga el empleador, ya con la baja de la Ley 27.802 (2026), además de lo que se le descuenta al empleado.
 3. **ART y seguros.** Agrega ~5% por la ART (riesgos del trabajo) y el seguro de vida obligatorio.
-4. **Aguinaldo y vacaciones.** Prorratea el aguinaldo (bruto ÷ 12) y provisiona las vacaciones (~8%): son costos que vienen sí o sí, aunque no los pagues todos los meses.
+4. **Aguinaldo y vacaciones.** Prorratea el aguinaldo (bruto ÷ 12) y provisiona las vacaciones (~5%, 14 días LCT a sueldo/25): son costos que vienen sí o sí, aunque no los pagues todos los meses.
 5. **Costo total y test de sostenibilidad.** Suma todo (≈1,5× el bruto) y lo compara con tu ingreso menos tus otros gastos. Si el empleado se come tu margen, te avisa; si te deja colchón, te dice que podés contratar.`,
   faq: [
     {
       q: '¿Por qué contratar cuesta 1,5 veces el sueldo?',
-      a: 'Porque al bruto se le suman las cargas patronales (~27%), la ART y el seguro de vida (~5%), el aguinaldo (un sueldo extra al año, prorrateado da bruto/12) y la provisión de vacaciones (~8%). Todo eso lo paga el empleador además del sueldo, llevando el costo real a cerca de 1,5× el bruto.',
+      a: 'Porque al bruto se le suman las cargas patronales (~21%, ya con la baja de la Ley 27.802), la ART y el seguro de vida (~5%), el aguinaldo (un sueldo extra al año, prorrateado da bruto/12) y la provisión de vacaciones (~5%). Todo eso lo paga el empleador además del sueldo, llevando el costo real a cerca de 1,4× el bruto.',
     },
     {
       q: '¿Qué incluyen las cargas patronales?',
-      a: 'Los aportes que paga el empleador sobre el sueldo: jubilación (SIPA), obra social, PAMI, asignaciones familiares y fondo de empleo, entre otros. Rondan el 27% del bruto, aunque la alícuota exacta depende de la actividad y del tamaño de la empresa (hay reducciones para pymes).',
+      a: 'Los aportes que paga el empleador sobre el sueldo: jubilación (SIPA), obra social, PAMI, asignaciones familiares y fondo de empleo, entre otros. Rondan el 21% del bruto tras la baja de contribuciones de la Ley 27.802 (2026), aunque la alícuota exacta depende de la actividad y del tamaño de la empresa (hay reducciones para pymes y nuevas contrataciones).',
     },
     {
       q: '¿Tengo que pagar el aguinaldo aparte?',

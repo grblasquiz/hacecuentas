@@ -81,7 +81,7 @@ function compute(inputs: Record<string, any>): DecisionResult {
     title = 'Sí, podés afrontar el crédito';
     badge = 'Podés';
     detail = `La cuota inicial de ${fmtMoney(cuotaInicial)} es el ${relacionInicial.toFixed(0)}% de tu ingreso, dentro del 25% que exigen los bancos. Aun proyectando el stress UVA, en 24 meses la relación llega al ${relacion24.toFixed(0)}%: manejable. Tenés ${fmtMoney(Math.max(0, colchon))} de colchón mensual.`;
-  } else if (relacionInicial <= 30 || (relacionInicial <= 25 && relacionPeor <= 38)) {
+  } else if ((relacionInicial <= 30 && relacionPeor <= 38) || (relacionInicial <= 25 && relacionPeor <= 45)) {
     status = 'tie'; // ajustado
     tone = 'warn';
     title = 'Podés, pero al límite: cuidado con el UVA';

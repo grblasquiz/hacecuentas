@@ -11,7 +11,8 @@
 import type { DecisionRoom, DecisionResult } from './types';
 import { fmtMoney, num } from './types';
 
-const EDAD_JUBILACION = 65; // referencia general (varones); mujeres pueden a los 60
+const EDAD_JUBILACION = 65; // referencia varones
+const EDAD_MINIMA = 60;     // piso jubilatorio (mujeres). Sin dato de sexo usamos 60 para no negar jubilación a mujeres ya elegibles (60-64)
 const ANIOS_APORTES_REQUERIDOS = 30;
 
 function compute(inputs: Record<string, any>): DecisionResult {
@@ -41,7 +42,7 @@ function compute(inputs: Record<string, any>): DecisionResult {
   }
 
   const faltanAportes = Math.max(0, ANIOS_APORTES_REQUERIDOS - aniosAportados);
-  const cumpleEdad = edad >= EDAD_JUBILACION;
+  const cumpleEdad = edad >= EDAD_MINIMA;
   const cumpleAportes = faltanAportes <= 0;
 
   // Brecha mensual: lo que te falta para cubrir tus gastos con la jubilación.
@@ -76,7 +77,7 @@ function compute(inputs: Record<string, any>): DecisionResult {
     detail = `Tu jubilación deja una brecha de ${fmtMoney(brechaMensual)} por mes contra tus gastos, y tu ahorro complementario solo la cubre ${Number.isFinite(mesesQueCubreAhorro) ? `${mesesQueCubreAhorro.toFixed(0)} meses` : 'muy poco'}. Conviene seguir trabajando/aportando, reforzar el ahorro o ajustar el nivel de gastos antes de jubilarte.`;
   }
 
-  const reqDetalle = `${cumpleEdad ? `Cumplís la edad (${edad} años)` : `Te faltan ${EDAD_JUBILACION - edad} años para los ${EDAD_JUBILACION}`} · ${cumpleAportes ? `Tenés los ${ANIOS_APORTES_REQUERIDOS} años de aportes` : `Te faltan ${faltanAportes} años de aportes`}`;
+  const reqDetalle = `${cumpleEdad ? `Cumplís la edad mínima (${edad} años)` : `Te faltan ${EDAD_MINIMA - edad} años para los ${EDAD_MINIMA} (mujeres) / ${EDAD_JUBILACION} (varones)`} · ${cumpleAportes ? `Tenés los ${ANIOS_APORTES_REQUERIDOS} años de aportes` : `Te faltan ${faltanAportes} años de aportes`}`;
 
   const scenarios = [
     {
@@ -99,7 +100,7 @@ function compute(inputs: Record<string, any>): DecisionResult {
   ];
 
   const breakdown = [
-    { label: 'Edad actual', value: edad + ' años', hint: cumpleEdad ? 'Cumplís la edad jubilatoria' : `Faltan ${EDAD_JUBILACION - edad} para los ${EDAD_JUBILACION}` },
+    { label: 'Edad actual', value: edad + ' años', hint: cumpleEdad ? 'Cumplís la edad mínima (60 mujeres / 65 varones)' : `Faltan ${EDAD_MINIMA - edad} para los ${EDAD_MINIMA} (mujeres)` },
     { label: 'Años aportados', value: aniosAportados + ' años', hint: cumpleAportes ? 'Llegás a los 30 requeridos' : `Faltan ${faltanAportes} años` },
     { label: 'Jubilación estimada', value: fmtMoney(ingresoJubilacion) + '/mes' },
     { label: 'Gastos mensuales', value: fmtMoney(gastosMensuales) + '/mes' },
