@@ -20,6 +20,21 @@ const FERIADOS_DATA: [string, string][] = FERIADOS_AR_2026.map((f) => [f.fecha, 
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules).map((m: any) => m.default || m);
 
+// Salas de decisión destacadas en la home (super calculadoras). Slugs de alto
+// interés; si alguno no existe en el manifest, se completa con las primeras.
+const FEATURED_SALA_SLUGS = [
+  'aceptar-oferta-laboral', 'alquilar-o-comprar', 'cancelar-deuda-o-invertir',
+  'me-despidieron', 'puedo-afrontar-un-credito-uva', 'que-hago-con-mis-ahorros',
+];
+const salaBySlug = new Map(DECISION_MANIFEST.map((r) => [r.slug, r]));
+const featuredSalas = (() => {
+  const picked = FEATURED_SALA_SLUGS.map((s) => salaBySlug.get(s)).filter(Boolean) as typeof DECISION_MANIFEST;
+  const seen = new Set(picked.map((r) => r.slug));
+  for (const r of DECISION_MANIFEST) { if (picked.length >= 6) break; if (!seen.has(r.slug)) picked.push(r); }
+  return picked.slice(0, 6);
+})();
+const totalSalas = DECISION_MANIFEST.length;
+
 // H1 hero: total del catálogo COMPLETO (todos los países, no solo ES-root) desde
 // la fuente única calc-counts (NUNCA hardcodear el número), redondeado HACIA ABAJO
 // a la centena para no over-promise: 4.179 → "Más de 4.100".
@@ -535,6 +550,32 @@ const schema = {
     </div>
   </section>
 
+  {/* Salas de decisión (super calculadoras): banda destacada post-buscador.
+      No son calcs sueltas — combinan varias fórmulas para una decisión completa. */}
+  <section class="salas-home" aria-labelledby="salas-home-h">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow eyebrow-inline">🧭 Salas de decisión</span>
+        <h2 id="salas-home-h">Decisiones de plata, con números reales</h2>
+        <p class="salas-home-lede">
+          No son calculadoras sueltas: cada sala combina varias fórmulas para responder
+          una decisión completa. Cargás tus datos una vez y te damos una conclusión clara,
+          escenarios y próximos pasos.
+        </p>
+      </div>
+      <a href="/decidir" class="see-all">Ver las {totalSalas} salas →</a>
+    </div>
+    <div class="salas-home-grid">
+      {featuredSalas.map((r) => (
+        <a href={`/decidir/${r.slug}`} class="sala-card">
+          <span class="sala-icon" aria-hidden="true">{r.icon}</span>
+          <span class="sala-title">{r.h1}</span>
+          <span class="sala-cta">Abrir la sala →</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
   {/* Bloque estacional Mundial 2026 (11 jun – 19 jul 2026) — surfacea el cluster
       en la página de más autoridad mientras dura el torneo. */}
   <section class="seasonal-mundial" aria-labelledby="mundial-seasonal-h">
@@ -630,18 +671,57 @@ const schema = {
     </div>
   </section>
 
-  <section class="destacados" aria-labelledby="destacados-heading">
+  {/* Banda unificada de calculadoras: más buscadas + para tu país + lo nuevo,
+      en una sola sección para no apilar tres headers (declutter). */}
+  <section class="explorar-calcs" aria-labelledby="explorar-calcs-h">
     <div class="section-header">
       <div>
         <span class="eyebrow eyebrow-inline">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>
           </svg>
-          Herramientas destacadas
+          Para usar ahora
         </span>
-        <h2 id="destacados-heading">Lo nuevo en Hacé Cuentas</h2>
+        <h2 id="explorar-calcs-h">Calculadoras populares y para vos</h2>
+      </div>
+      <a href="/populares" class="see-all">Ver todas →</a>
+    </div>
+
+    {/* Las más buscadas */}
+    <div class="row-label"><span class="row-star" aria-hidden="true">★</span>Las más buscadas en Argentina<span class="row-line"></span></div>
+    <div class="populares-grid">
+      {popular.map((c: any, i: number) => (
+        <a href={`/${c.slug}`} class="pop-card">
+          <span class={`pop-rank ${i < 3 ? 'pop-rank-' + (i + 1) : ''}`}>{i < 3 ? ['🥇','🥈','🥉'][i] : i + 1}</span>
+          <span class="pop-icon" aria-hidden="true">{c.icon}</span>
+          <div class="pop-body">
+            <div class="pop-title">
+              {c.h1}
+              {c.audience === 'AR' && (
+                <span class="ar-badge" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>
+              )}
+            </div>
+            <div class="pop-cat">{categoryMeta[c.category]?.label || c.category}</div>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    {/* Para tu país — ids preservados para el swap client-side por país */}
+    <div id="para-vos-section">
+      <div class="row-label"><span id="pv-flag" aria-hidden="true">🇦🇷</span>&nbsp;Para <span id="pv-country-name">Argentina</span><span class="row-line"></span></div>
+      <div class="pv-grid" id="pv-grid">
+        {countryCalcData.AR.map((c) => (
+          <a href={`/${c.slug}`} class="pv-card">
+            <span class="pv-icon" aria-hidden="true">{c.icon}</span>
+            <span class="pv-title">{c.h1}</span>
+          </a>
+        ))}
       </div>
     </div>
+
+    {/* Lo nuevo */}
+    <div class="row-label"><span class="row-star" aria-hidden="true">✨</span>Lo nuevo en Hacé Cuentas<span class="row-line"></span></div>
     <div class="destacados-grid">
       <a href="/valores-bcra" class="feature-card feature-bcra">
         <div class="feature-badge">Nuevo</div>
@@ -674,71 +754,21 @@ const schema = {
     </div>
   </section>
 
-  <section class="para-vos" id="para-vos-section" aria-labelledby="para-vos-heading">
-    <div class="section-header">
-      <div>
-        <span class="eyebrow eyebrow-inline">
-          <span id="pv-flag" aria-hidden="true">🇦🇷</span>
-          Para vos
-        </span>
-        <h2 id="para-vos-heading">Calculadoras para <span id="pv-country-name">Argentina</span></h2>
-      </div>
-    </div>
-    <div class="pv-grid" id="pv-grid">
-      {countryCalcData.AR.map((c) => (
-        <a href={`/${c.slug}`} class="pv-card">
-          <span class="pv-icon" aria-hidden="true">{c.icon}</span>
-          <span class="pv-title">{c.h1}</span>
-        </a>
-      ))}
-    </div>
-  </section>
-
-  <section class="populares" aria-labelledby="populares-heading">
-    <div class="section-header">
-      <div>
-        <span class="eyebrow eyebrow-inline">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>
-          </svg>
-          Más populares
-        </span>
-        <h2 id="populares-heading">Las más buscadas en Argentina</h2>
-      </div>
-      <a href="/populares" class="see-all">Ver todas →</a>
-    </div>
-    <div class="populares-grid">
-      {popular.map((c: any, i: number) => (
-        <a href={`/${c.slug}`} class="pop-card">
-          <span class={`pop-rank ${i < 3 ? 'pop-rank-' + (i + 1) : ''}`}>{i < 3 ? ['🥇','🥈','🥉'][i] : i + 1}</span>
-          <span class="pop-icon" aria-hidden="true">{c.icon}</span>
-          <div class="pop-body">
-            <div class="pop-title">
-              {c.h1}
-              {c.audience === 'AR' && (
-                <span class="ar-badge" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>
-              )}
-            </div>
-            <div class="pop-cat">{categoryMeta[c.category]?.label || c.category}</div>
-          </div>
-        </a>
-      ))}
-    </div>
-  </section>
-
-  <section class="pilares" aria-labelledby="pilares-heading">
+  {/* Banda "Aprendé": guías + últimas notas en una sola sección (declutter). */}
+  <section class="pilares aprende" aria-labelledby="aprende-heading">
     <div class="section-header">
       <div>
         <span class="eyebrow eyebrow-inline">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 19.5v-15a2.5 2.5 0 0 1 2.5-2.5H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
           </svg>
-          Guías completas
+          Aprendé
         </span>
-        <h2 id="pilares-heading">Guías para entender el tema</h2>
+        <h2 id="aprende-heading">Guías y notas para entender el tema</h2>
       </div>
-      <a href="/guias" class="see-all">Ver todas →</a>
+      <a href="/guias" class="see-all">Ver todas las guías →</a>
     </div>
+    <div class="row-label"><span class="row-star" aria-hidden="true">📘</span>Guías completas<span class="row-line"></span></div>
     <div class="pilares-grid">
       <a href="/guia/finanzas-personales" class="pilar-card"><span class="pilar-icon">💰</span><div><strong>Finanzas personales</strong><span>Ahorro, inversiones y presupuesto</span></div></a>
       <a href="/guia/sueldos-argentina-2026" class="pilar-card"><span class="pilar-icon">💼</span><div><strong>Sueldos Argentina 2026</strong><span>Bruto, neto, aguinaldo, indemnización</span></div></a>
@@ -754,33 +784,22 @@ const schema = {
       <a href="/guia/mascotas" class="pilar-card"><span class="pilar-icon">🐾</span><div><strong>Mascotas</strong><span>Perros, gatos, peces, costos y cuidado</span></div></a>
       <a href="/guia/viajes" class="pilar-card"><span class="pilar-icon">✈️</span><div><strong>Viajes y auto</strong><span>Nafta, peajes, equipaje, vuelos</span></div></a>
     </div>
-  </section>
 
-  {recentPosts.length > 0 && (
-  <section class="pilares" aria-labelledby="novedades-heading">
-    <div class="section-header">
-      <div>
-        <span class="eyebrow eyebrow-inline">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
-            <path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6z"/>
-          </svg>
-          Novedades
-        </span>
-        <h2 id="novedades-heading">Últimas notas</h2>
-      </div>
-      <a href="/blog" class="see-all">Ver el blog →</a>
-    </div>
-    <div class="pilares-grid">
-      {recentPosts.map((p) => (
-        <a href={`/blog/${p.slug}`} class="pilar-card">
-          <span class="pilar-icon">{p.emoji}</span>
-          <div><strong>{p.title}</strong><span>{p.date}</span></div>
-        </a>
-      ))}
-    </div>
+    {recentPosts.length > 0 && (
+      <>
+        <div class="row-label"><span class="row-star" aria-hidden="true">📝</span>Últimas notas del blog<span class="row-line"></span></div>
+        <div class="pilares-grid">
+          {recentPosts.map((p) => (
+            <a href={`/blog/${p.slug}`} class="pilar-card">
+              <span class="pilar-icon">{p.emoji}</span>
+              <div><strong>{p.title}</strong><span>{p.date}</span></div>
+            </a>
+          ))}
+        </div>
+        <div class="aprende-bloglink"><a href="/blog" class="see-all">Ver el blog →</a></div>
+      </>
+    )}
   </section>
-  )}
 
 
   <section class="stats">
@@ -1879,6 +1898,32 @@ const schema = {
   .see-all:hover { text-decoration: underline; }
 
   /* [4] Destacados (BCRA + Comparador) with shimmer */
+  /* Salas de decisión (super calculadoras) — banda destacada post-buscador */
+  .salas-home { margin: 2.5rem 0 3rem; }
+  .salas-home-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
+  .salas-home-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.875rem; margin-top: 1.25rem;
+  }
+  .sala-card {
+    display: flex; flex-direction: column; gap: 0.4rem;
+    padding: 1.1rem 1.15rem; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--card-bg, var(--bg)); text-decoration: none; transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .sala-card:hover { border-color: var(--accent, #2563eb); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.10); }
+  .sala-icon { font-size: 1.6rem; line-height: 1; }
+  .sala-title { font-weight: 700; font-size: 0.975rem; color: var(--text); line-height: 1.3; }
+  .sala-cta { margin-top: auto; font-size: 0.8125rem; font-weight: 600; color: var(--accent, #2563eb); }
+
+  /* Banda unificada de calculadoras (populares + para vos + lo nuevo) */
+  .explorar-calcs { margin: 2.5rem 0 3rem; }
+  .explorar-calcs .populares-grid,
+  .explorar-calcs .pv-grid { margin-bottom: 1.75rem; }
+  .explorar-calcs .row-label { margin-top: 0.5rem; }
+  /* Banda "Aprendé": espacio entre guías y notas + link del blog */
+  .aprende .pilares-grid { margin-bottom: 0.5rem; }
+  .aprende .row-label { margin-top: 1.5rem; }
+  .aprende-bloglink { text-align: right; margin-top: 0.75rem; }
+
   .destacados {
     margin: 2.5rem 0 3rem;
   }
