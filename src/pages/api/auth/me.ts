@@ -28,5 +28,12 @@ export const GET: APIRoute = async ({ request }) => {
     profile[r.key] = { value: r.value, at: new Date(r.updated_at).toISOString(), src: r.src || 'profile' };
   }
 
-  return json({ authed: true, email: user.email, profile, googleClientId });
+  return json({
+    authed: true,
+    email: user.email,
+    authProvider: user.authProvider,
+    createdAt: user.createdAt,
+    profile,
+    googleClientId,
+  });
 };

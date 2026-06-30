@@ -174,6 +174,10 @@ export async function verifyGoogleIdToken(
 export interface SessionUser {
   id: number;
   email: string;
+  /** Proveedor con el que se creó la cuenta: 'otp' | 'google'. */
+  authProvider: string;
+  /** Alta de la cuenta (unix ms) — para "miembro desde". */
+  createdAt: number;
 }
 
 /**
@@ -188,16 +192,24 @@ export async function getSessionUser(
   if (!token) return null;
   const row = await db
     .prepare(
-      `SELECT s.token, s.expires_at, u.id AS user_id, u.email
+      `SELECT s.token, s.expires_at, u.id AS user_id, u.email, u.auth_provider, u.created_at
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token = ?`,
     )
     .bind(token)
-    .first<{ token: string; expires_at: number; user_id: number; email: string }>();
+    .first<{
+      token: string; expires_at: number; user_id: number; email: string;
+      auth_provider: string | null; created_at: number | null;
+    }>();
   if (!row) return null;
   if (row.expires_at < Date.now()) {
     await db.prepare('DELETE FROM sessions WHERE token = ?').bind(token).run();
     return null;
   }
-  return { id: row.user_id, email: row.email };
+  return {
+    id: row.user_id,
+    email: row.email,
+    authProvider: row.auth_provider || 'otp',
+    createdAt: row.created_at || 0,
+  };
 }

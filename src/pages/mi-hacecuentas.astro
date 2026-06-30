@@ -59,11 +59,18 @@ const inputType = (t: string) =>
 
     <!-- ───────── No logueado: login ───────── -->
     <section class="login-card" data-login-view hidden>
-      <h2>Iniciá sesión</h2>
+      <h2>Creá tu cuenta gratis</h2>
       <p class="login-sub">
-        Sin contraseña: te mandamos un código de 6 dígitos al mail. Tus datos
-        quedan guardados en tu cuenta y nunca los compartimos.
+        Sin contraseña: te mandamos un código de 6 dígitos al mail (o entrás con
+        Google). Tus datos quedan guardados en tu cuenta y nunca los compartimos.
       </p>
+
+      <ul class="login-benefits">
+        <li><span aria-hidden="true">⚡</span> <strong>Cargás tus datos una vez</strong> y precargan todas las calculadoras.</li>
+        <li><span aria-hidden="true">🔄</span> <strong>Sincronizado</strong> en todos tus dispositivos donde inicies sesión.</li>
+        <li><span aria-hidden="true">✍️</span> <strong>No volvés a tipear</strong> sueldo, antigüedad, provincia ni alquiler.</li>
+        <li><span aria-hidden="true">🔒</span> <strong>Privado y tuyo</strong>: los montos nunca van a analytics y borrás todo cuando quieras.</li>
+      </ul>
 
       <label class="nl-check">
         <input type="checkbox" data-nl checked />
@@ -102,12 +109,26 @@ const inputType = (t: string) =>
 
     <!-- ───────── Logueado: perfil ───────── -->
     <section data-profile-view hidden>
-      <div class="profile-account">
-        <span>Sesión iniciada como <strong data-account-email></strong></span>
-        <button type="button" class="link-btn" data-logout>Cerrar sesión</button>
+      <!-- Encabezado de cuenta (#19) -->
+      <div class="account-card">
+        <div class="account-avatar" data-account-avatar aria-hidden="true"></div>
+        <div class="account-info">
+          <strong class="account-email" data-account-email></strong>
+          <span class="account-sub" data-account-sub></span>
+        </div>
+        <div class="account-menu">
+          <button type="button" class="link-btn" data-logout>Cerrar sesión</button>
+          <button type="button" class="link-btn link-subtle" data-logout-all>Cerrar en todos los dispositivos</button>
+        </div>
       </div>
 
-      <!-- Progreso del perfil (#7) -->
+      <!-- Progreso del perfil (#7) + toggle ocultar montos (#16) -->
+      <div class="profile-toolbar">
+        <button type="button" class="amounts-toggle" data-amounts-toggle aria-pressed="false">
+          <span class="eye-open" aria-hidden="true">👁️</span><span class="eye-off" aria-hidden="true" hidden>🙈</span>
+          <span data-amounts-toggle-label>Ocultar montos</span>
+        </button>
+      </div>
       <div class="profile-progress" data-progress-wrap>
         <div class="profile-progress-head">
           <span class="profile-progress-label" data-progress-label></span>
@@ -118,9 +139,16 @@ const inputType = (t: string) =>
 
       <form class="profile-form" data-profile-form>
         {groups.map((g) => (
-          <fieldset class="profile-group" data-profile-group={g.id}>
-            <legend><span aria-hidden="true">{g.icon}</span> {g.label}</legend>
-            <div class="profile-rows">
+          <div class="profile-group" data-profile-group={g.id}>
+            <button type="button" class="group-toggle" data-group-toggle={g.id} aria-expanded="true">
+              <span class="group-title"><span aria-hidden="true">{g.icon}</span> {g.label}</span>
+              <span class="group-count" data-group-count={g.id}></span>
+              <span class="group-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div class="profile-rows" data-group-body={g.id}>
+              {g.emptyHint && (
+                <p class="group-empty-hint" data-group-empty={g.id} hidden>{g.emptyHint}</p>
+              )}
               {g.fields.map((f) => (
                 <div class="profile-row" data-profile-row={f.key}>
                   <label for={`pf-${f.key}`}>
@@ -183,7 +211,7 @@ const inputType = (t: string) =>
                 </div>
               ))}
             </div>
-          </fieldset>
+          </div>
         ))}
       </form>
 
@@ -313,7 +341,52 @@ const inputType = (t: string) =>
       var btn = qs('[data-save-btn]'); if (btn) btn.disabled = (n === 0) || saving;
       if (n > 0) setStatus(n === 1 ? '1 cambio sin guardar' : n + ' cambios sin guardar', 'dirty');
     }
-    function markDirty(key) { dirty[key] = true; updateProgress(); updateSaveBar(); }
+    // Contador por grupo (#18) + visibilidad del hint de grupo vacío (#20).
+    function updateGroupCounts() {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-group-body]'), function (body) {
+        var gid = body.getAttribute('data-group-body');
+        var els = body.querySelectorAll('[data-pk]');
+        var n = 0;
+        Array.prototype.forEach.call(els, function (el) { if (currentValue(el) !== '') n++; });
+        var cnt = qs('[data-group-count="' + gid + '"]'); if (cnt) cnt.textContent = n + '/' + els.length;
+        var empty = qs('[data-group-empty="' + gid + '"]'); if (empty) empty.hidden = n > 0;
+      });
+    }
+
+    function markDirty(key) { dirty[key] = true; updateProgress(); updateGroupCounts(); updateSaveBar(); }
+
+    // Ocultar/mostrar montos (#16) — blur en los campos $, recordado en localStorage.
+    function applyAmountsHidden(on) {
+      var form = qs('[data-profile-form]'); if (form) form.classList.toggle('amounts-hidden', on);
+      var btn = qs('[data-amounts-toggle]'); if (!btn) return;
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      var eo = qs('.eye-open'), ef = qs('.eye-off'); if (eo) eo.hidden = on; if (ef) ef.hidden = !on;
+      var lbl = qs('[data-amounts-toggle-label]'); if (lbl) lbl.textContent = on ? 'Mostrar montos' : 'Ocultar montos';
+    }
+    function wireAmountsToggle() {
+      var btn = qs('[data-amounts-toggle]'); if (!btn || btn.dataset.wired) return; btn.dataset.wired = '1';
+      var saved = false; try { saved = localStorage.getItem('hc_hide_amounts') === '1'; } catch (e) {}
+      applyAmountsHidden(saved);
+      btn.addEventListener('click', function () {
+        var on = btn.getAttribute('aria-pressed') !== 'true';
+        applyAmountsHidden(on);
+        try { localStorage.setItem('hc_hide_amounts', on ? '1' : '0'); } catch (e) {}
+      });
+    }
+
+    // Acordeón de grupos (#18).
+    function wireGroupToggles() {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-group-toggle]'), function (btn) {
+        if (btn.dataset.wired) return; btn.dataset.wired = '1';
+        btn.addEventListener('click', function () {
+          var gid = btn.getAttribute('data-group-toggle');
+          var body = qs('[data-group-body="' + gid + '"]');
+          var open = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+          if (body) body.hidden = open;
+        });
+      });
+    }
 
     function hydrateEditor(profile) {
       // Espejá el perfil del server al store local para que las calcs precarguen.
@@ -350,6 +423,7 @@ const inputType = (t: string) =>
       toggleAntiguedadHint(!!profile['trabajo.fechaIngreso']);
       dirty = {};
       updateProgress();
+      updateGroupCounts();
       setStatus('Todo guardado', 'saved');
       var btn = qs('[data-save-btn]'); if (btn) btn.disabled = true;
     }
@@ -426,6 +500,19 @@ const inputType = (t: string) =>
           location.reload();
         });
       }
+      var logoutAll = qs('[data-logout-all]');
+      if (logoutAll && !logoutAll.dataset.wired) {
+        logoutAll.dataset.wired = '1';
+        logoutAll.addEventListener('click', async function () {
+          if (!window.confirm('¿Cerrar sesión en TODOS los dispositivos? Vas a tener que volver a entrar en cada uno.')) return;
+          await api('/api/auth/logout-all', { method: 'POST', body: '{}' });
+          if (window.HCProfile) window.HCProfile.clear();
+          location.reload();
+        });
+      }
+
+      wireAmountsToggle();
+      wireGroupToggles();
 
       if (!window.__hcUnloadGuard) {
         window.__hcUnloadGuard = true;
@@ -467,8 +554,23 @@ const inputType = (t: string) =>
       if (r.data && r.data.authed) hydrateEditor(r.data.profile || {});
     }
 
+    // Encabezado de cuenta rico (#19): avatar (inicial), email, proveedor + alta.
+    function fillAccountHeader(me) {
+      var email = me.email || '';
+      var em = qs('[data-account-email]'); if (em) em.textContent = email;
+      var av = qs('[data-account-avatar]'); if (av) av.textContent = (email.charAt(0) || '?').toUpperCase();
+      var sub = qs('[data-account-sub]');
+      if (sub) {
+        var parts = [];
+        if (me.authProvider) parts.push(me.authProvider === 'google' ? 'Entraste con Google' : 'Entrás con código por mail');
+        if (me.createdAt) { try { parts.push('miembro desde ' + new Date(me.createdAt).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })); } catch (e) {} }
+        sub.textContent = parts.join(' · ');
+        sub.hidden = parts.length === 0;
+      }
+    }
+
     function showProfile(me) {
-      qs('[data-account-email]').textContent = me.email || '';
+      fillAccountHeader(me);
       show('profile');
       var bar = qs('[data-save-bar]'); if (bar) bar.hidden = false;
       hydrateEditor(me.profile || {});
@@ -637,13 +739,34 @@ const inputType = (t: string) =>
   .login-privacy { margin: 1.25rem 0 0; font-size: 0.75rem; color: var(--text-subtle); line-height: 1.5; }
   .login-privacy a { color: var(--accent, #2563eb); }
 
-  /* Profile (logged in) */
-  .profile-account {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;
-    padding: 0.75rem 1rem; background: var(--bg-muted); border-radius: var(--radius-sm);
-    font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.25rem;
+  /* Ventajas de la cuenta (pre-login) */
+  .login-benefits { list-style: none; margin: 0 0 1.25rem; padding: 0.875rem 1rem; background: var(--bg-muted); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 0.625rem; }
+  .login-benefits li { font-size: 0.8125rem; line-height: 1.45; color: var(--text-muted); display: flex; gap: 0.5rem; align-items: flex-start; }
+  .login-benefits li span { flex: 0 0 auto; }
+  .login-benefits strong { color: var(--text); font-weight: 600; }
+
+  /* Profile (logged in) — encabezado de cuenta (#19) */
+  .account-card {
+    display: flex; align-items: center; gap: 0.875rem;
+    padding: 0.875rem 1rem; background: var(--bg-muted); border-radius: var(--radius-sm); margin-bottom: 1.25rem;
   }
-  .profile-count { margin: 0 0 1rem; font-size: 0.8125rem; font-weight: 600; color: var(--text-subtle); }
+  .account-avatar {
+    flex: 0 0 auto; width: 2.75rem; height: 2.75rem; border-radius: 50%;
+    background: var(--accent, #2563eb); color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1.25rem; text-transform: uppercase;
+  }
+  .account-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+  .account-email { font-size: 0.9375rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .account-sub { font-size: 0.75rem; color: var(--text-subtle); }
+  .account-menu { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; }
+  .link-subtle { color: var(--text-subtle) !important; font-size: 0.75rem !important; }
+
+  /* Toolbar (toggle ocultar montos #16) */
+  .profile-toolbar { display: flex; justify-content: flex-end; margin: 0 0 0.75rem; }
+  .amounts-toggle { display: inline-flex; align-items: center; gap: 0.4rem; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.35rem 0.75rem; font: inherit; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; }
+  .amounts-toggle:hover { border-color: var(--accent, #2563eb); color: var(--accent, #2563eb); }
+  .profile-form.amounts-hidden input[data-money] { filter: blur(6px); }
+  .profile-form.amounts-hidden input[data-money]:focus { filter: none; }
 
   /* Progreso del perfil (#7) */
   .profile-progress { margin: 0 0 1.5rem; }
@@ -677,8 +800,17 @@ const inputType = (t: string) =>
   }
   .save-btn:disabled { opacity: 0.5; cursor: default; }
   .profile-form { display: flex; flex-direction: column; gap: 1.25rem; }
-  .profile-group { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem 1.25rem 1.25rem; margin: 0; }
-  .profile-group legend { font-weight: 700; font-size: 0.9375rem; padding: 0 0.5rem; }
+  .profile-group { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0; margin: 0; overflow: hidden; }
+  .group-toggle {
+    width: 100%; display: flex; align-items: center; gap: 0.5rem;
+    background: none; border: none; padding: 0.875rem 1.25rem; cursor: pointer; font: inherit; color: var(--text); text-align: left;
+  }
+  .group-title { font-weight: 700; font-size: 0.9375rem; flex: 1; }
+  .group-count { font-size: 0.75rem; font-weight: 600; color: var(--text-subtle); }
+  .group-chevron { font-size: 0.75rem; color: var(--text-subtle); transition: transform 0.2s ease; }
+  .group-toggle[aria-expanded="false"] .group-chevron { transform: rotate(-90deg); }
+  .group-empty-hint { margin: 0 0 0.5rem; font-size: 0.75rem; color: var(--text-subtle); line-height: 1.45; font-style: italic; }
+  .profile-rows[data-group-body] { padding: 0 1.25rem 1.25rem; }
   .profile-rows { display: flex; flex-direction: column; gap: 0.875rem; }
   .profile-row { display: flex; flex-direction: column; gap: 0.3125rem; }
   .profile-row label { font-size: 0.8125rem; font-weight: 600; color: var(--text); }

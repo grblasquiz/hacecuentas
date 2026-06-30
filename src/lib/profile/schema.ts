@@ -82,15 +82,15 @@ export interface ProfileFieldDef {
 }
 
 /** Metadatos de cada grupo para titular/ordenar la pantalla del perfil. */
-export const PROFILE_GROUPS: { id: ProfileGroup; label: string; icon: string }[] = [
-  { id: 'ubicacion', label: 'Ubicación', icon: '📍' },
-  { id: 'moneda', label: 'Moneda', icon: '💱' },
-  { id: 'trabajo', label: 'Trabajo e ingresos', icon: '💼' },
-  { id: 'familia', label: 'Grupo familiar', icon: '👨‍👩‍👧' },
-  { id: 'vivienda', label: 'Vivienda', icon: '🏠' },
-  { id: 'gastos', label: 'Gastos', icon: '🧾' },
-  { id: 'vehiculo', label: 'Vehículo', icon: '🚗' },
-  { id: 'finanzas', label: 'Ahorros y deudas', icon: '🏦' },
+export const PROFILE_GROUPS: { id: ProfileGroup; label: string; icon: string; emptyHint?: string }[] = [
+  { id: 'ubicacion', label: 'Ubicación', icon: '📍', emptyHint: 'Tu país y jurisdicción definen alícuotas, mínimos y feriados en las calcs.' },
+  { id: 'moneda', label: 'Moneda', icon: '💱', emptyHint: 'Elegí tu moneda para ver resultados en tu divisa.' },
+  { id: 'trabajo', label: 'Trabajo e ingresos', icon: '💼', emptyHint: 'Cargá tu sueldo y antigüedad y autocompletás aguinaldo, vacaciones, ganancias y más.' },
+  { id: 'familia', label: 'Grupo familiar', icon: '👨‍👩‍👧', emptyHint: 'Las personas a cargo ajustan deducciones de Ganancias y el recibo de sueldo.' },
+  { id: 'vivienda', label: 'Vivienda', icon: '🏠', emptyHint: 'Tu alquiler precarga las calcs de actualización ICL y aumentos.' },
+  { id: 'gastos', label: 'Gastos', icon: '🧾', emptyHint: 'Tus gastos fijos alimentan el presupuesto y la regla 50/30/20.' },
+  { id: 'vehiculo', label: 'Vehículo', icon: '🚗', emptyHint: 'Datos del vehículo para patente, seguro y costos.' },
+  { id: 'finanzas', label: 'Ahorros y deudas', icon: '🏦', emptyHint: 'Tus ahorros precargan plazo fijo e interés compuesto.' },
 ];
 
 /**

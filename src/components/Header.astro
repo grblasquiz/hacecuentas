@@ -263,6 +263,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
         </svg>
+        <span class="account-label">{lang === 'en' ? 'Sign in' : lang === 'pt' ? 'Entrar' : 'Ingresá'}</span>
       </a>
 
       <button class="icon-btn" id="theme-toggle" aria-label={t.themeAria} title={t.themeTitle}>
@@ -947,9 +948,23 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
   }
   .icon-btn:hover { background: var(--bg-muted); color: var(--text); border-color: var(--border-strong); }
-  /* Acceso a Mi Hacé Cuentas (cuenta/login). Acento cuando hay sesión activa. */
-  .account-btn { text-decoration: none; }
+  /* Acceso a Mi Hacé Cuentas. Sin sesión = pill de acento destacado con label
+     "Ingresá"; con sesión = ícono sutil con acento (label oculto). El JS toggla
+     .is-authed leyendo la cookie hc_authed. */
+  .account-btn { text-decoration: none; gap: 0.4rem; }
+  .account-label { font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+  .account-btn:not(.is-authed) {
+    width: auto; padding: 0 0.9rem;
+    background: var(--accent, #2563eb); color: #fff; border-color: var(--accent, #2563eb);
+  }
+  .account-btn:not(.is-authed):hover { filter: brightness(1.05); background: var(--accent, #2563eb); color: #fff; }
   .account-btn.is-authed { color: var(--accent, #2563eb); border-color: var(--accent, #2563eb); }
+  .account-btn.is-authed .account-label { display: none; }
+  @media (max-width: 380px) {
+    /* En pantallas muy chicas, colapsar a ícono para no apretar el header. */
+    .account-btn:not(.is-authed) { width: 44px; padding: 0; }
+    .account-label { display: none; }
+  }
 
   /* Country selector */
   .country-selector { position: relative; }
