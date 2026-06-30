@@ -1567,7 +1567,7 @@ function md(text: string): string {
 
   <header class="cat-header" style={`--cat-color: ${m.color}`}>
     <div class="icon-wrap" aria-hidden="true"><CategoryIcon cat={cat} fallback={m.icon} size={30} /></div>
-    <div>
+    <div class="cat-head-text">
       <div class="eyebrow">Categoría{isFirstPage ? '' : ` · Página ${currentPage} de ${totalPages}`}</div>
       <h1>{m.label}</h1>
       {isFirstPage && <p class="intro">{m.intro}</p>}
@@ -1581,6 +1581,7 @@ function md(text: string): string {
         <span class="qs-item">Sin registro</span>
       </div>
     </div>
+    <img class="cat-banner" src={`/cat-img/${cat}.webp`} alt="" aria-hidden="true" loading="eager" decoding="async" width="240" height="160" onerror="this.style.display='none'" />
   </header>
 
   {isFirstPage && pillarSlug && pillarTitle && (
@@ -2012,6 +2013,17 @@ function md(text: string): string {
     border-radius: var(--radius-lg);
     margin-bottom: 2rem;
   }
+  .cat-head-text { flex: 1; min-width: 0; }
+  /* Banner ilustrado por categoría (decorativo). Oculto en mobile para no
+     competir con el título ni empujar el contenido. */
+  .cat-banner {
+    flex-shrink: 0;
+    align-self: center;
+    width: clamp(160px, 22vw, 240px);
+    height: auto;
+    border-radius: var(--radius);
+  }
+  @media (max-width: 760px) { .cat-banner { display: none; } }
 
   .icon-wrap {
     flex-shrink: 0;
