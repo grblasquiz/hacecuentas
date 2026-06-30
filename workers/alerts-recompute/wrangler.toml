@@ -1,0 +1,32 @@
+# Worker independiente: motor de "avisame cuando este resultado cambie".
+# Cada día reejecuta las alertas activas contra el endpoint de compute del sitio
+# y, si el resultado headline cambió (por una actualización normativa deployada),
+# manda un mail con el diff concreto. 100% Cloudflare, sin terceros.
+#
+# Deploy: cd workers/alerts-recompute && npx wrangler deploy --config ./wrangler.toml
+#   (el --config es obligatorio: sin él wrangler agarra el wrangler.jsonc del SITIO)
+#
+# Requisitos para ENVIAR (ya cumplidos por el newsletter): Workers Paid +
+# hacecuentas.com onboardeado en Email > Email Sending (binding EMAIL).
+name = "hacecuentas-alerts-recompute"
+main = "index.mjs"
+compatibility_date = "2026-06-01"
+workers_dev = true
+
+# Diario 14:30 UTC = 11:30 ART (después de la ventana típica de data-refresh+deploy).
+[triggers]
+crons = ["30 14 * * *"]
+
+# Cloudflare Email Service — binding de envío (mismo que el newsletter).
+[[send_email]]
+name = "EMAIL"
+
+[vars]
+ALERTS_FROM = "Hacé Cuentas <novedades@hacecuentas.com>"
+SITE_BASE = "https://hacecuentas.com"
+
+# Misma base D1 que el sitio (hacecuentas-forms) — bind por id.
+[[d1_databases]]
+binding = "DB"
+database_name = "hacecuentas-forms"
+database_id = "73216cf9-dba3-4c16-875c-4073d8184bcd"

@@ -1,0 +1,83 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ProblemInterpreter from '../components/ProblemInterpreter.astro';
+
+// Página canónica del intérprete de problemas. Superficie compartible y target
+// para WhatsApp / extensión / deep links. noindex (como /buscar): es una
+// herramienta interactiva, no contenido para rankear.
+---
+
+<Layout
+  title="Asistente de cálculo | Hacé Cuentas"
+  description="Contanos qué necesitás calcular con tus palabras. Elegimos la calculadora, te pedimos lo que falte y sacamos el número con fórmulas oficiales."
+  noindex={true}
+>
+  <Header slot="header" />
+
+  <nav class="breadcrumbs" aria-label="Ruta de navegación">
+    <a href="/">Inicio</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="current">Asistente</span>
+  </nav>
+
+  <header class="page-header">
+    <h1>Contame qué necesitás calcular</h1>
+    <p>
+      No hace falta que sepas qué calculadora usar. Describí tu situación con tus
+      palabras: detecto la intención, te pido lo que falte y ejecuto el cálculo con
+      el motor de Hacé Cuentas.
+    </p>
+  </header>
+
+  <ProblemInterpreter variant="page" searchHref="/buscar" autofocus={true} />
+
+  <section class="how">
+    <h2>Cómo funciona</h2>
+    <ol>
+      <li><strong>Detecto la intención</strong> de lo que escribís (comparar dos sueldos, actualizar un alquiler, ver una indemnización…).</li>
+      <li><strong>Extraigo los datos</strong> que ya diste y <strong>te pido los que falten</strong>, en una sola pregunta.</li>
+      <li><strong>Elijo la o las calculadoras</strong> adecuadas entre miles.</li>
+      <li><strong>Ejecuto el cálculo</strong> en el motor determinístico. El número nunca lo inventa la IA: sale de las fórmulas oficiales.</li>
+    </ol>
+    <p class="how-note">
+      ¿Preferís ir directo a una calculadora puntual? <a href="/buscar">Buscá por nombre</a>.
+    </p>
+  </section>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .breadcrumbs {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin-bottom: 1.25rem;
+  }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+  .breadcrumbs .sep { color: var(--border-strong); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+
+  .page-header { margin-bottom: 1.75rem; max-width: 720px; }
+  .page-header h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); margin-bottom: 0.5rem; }
+  .page-header p { color: var(--text-muted); margin: 0; line-height: 1.6; }
+
+  .how {
+    max-width: 720px;
+    margin: 3rem auto 0;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+  .how h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+  .how ol { margin: 0 0 1rem; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.625rem; }
+  .how li { color: var(--text-muted); line-height: 1.55; }
+  .how li strong { color: var(--text); }
+  .how-note { color: var(--text-subtle); font-size: 0.9375rem; }
+  .how-note a { color: var(--accent); }
+</style>

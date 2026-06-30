@@ -215,6 +215,14 @@ const inputType = (t: string) =>
         ))}
       </form>
 
+      <!-- Alertas de cambios normativos -->
+      <section class="alerts-block" data-alerts-block>
+        <h2 class="alerts-h">🔔 Tus alertas de cambios</h2>
+        <p class="alerts-intro">Te avisamos por mail cuando una actualización normativa cambia un resultado que guardaste.</p>
+        <p class="alerts-empty" data-alerts-empty hidden>Todavía no tenés alertas. Creá una desde cualquier calculadora fiscal, con el botón <strong>“Avisame si una norma cambia este resultado”</strong>.</p>
+        <ul class="alerts-list" data-alerts-list></ul>
+      </section>
+
       <div class="profile-actions">
         <button type="button" class="profile-clear-all" data-profile-clear-all>Borrar todos mis datos</button>
         <button type="button" class="profile-delete-account" data-delete-account>Borrar mi cuenta</button>
@@ -575,6 +583,40 @@ const inputType = (t: string) =>
       var bar = qs('[data-save-bar]'); if (bar) bar.hidden = false;
       hydrateEditor(me.profile || {});
       wireEditor();
+      loadAlerts();
+    }
+
+    // ───── Alertas "avisame cuando cambie" ─────
+    function fmtAlertVal(v) {
+      var n = Number(String(v).replace(/[^\d.-]/g, ''));
+      return isFinite(n) && String(v).replace(/[^\d.-]/g, '') !== '' ? '$' + n.toLocaleString('es-AR', { maximumFractionDigits: 0 }) : String(v);
+    }
+    async function loadAlerts() {
+      var list = qs('[data-alerts-list]'); var empty = qs('[data-alerts-empty]');
+      if (!list) return;
+      var r = await api('/api/alerts/mine', { method: 'GET' });
+      var alerts = (r.data && r.data.alerts) || [];
+      list.innerHTML = '';
+      if (empty) empty.hidden = alerts.length > 0;
+      alerts.forEach(function (a) {
+        var li = document.createElement('li');
+        li.className = 'alert-item';
+        var changed = a.last_changed_at ? ' · cambió ' + new Date(a.last_changed_at).toLocaleDateString('es-AR') : '';
+        li.innerHTML =
+          '<div class="alert-item-body">' +
+            '<a class="alert-item-title" href="/' + a.slug + '">' + (a.headline_label || a.slug) + '</a>' +
+            '<span class="alert-item-meta">Hoy: <strong>' + fmtAlertVal(a.last_headline) + '</strong>' + changed + '</span>' +
+          '</div>' +
+          '<button type="button" class="alert-item-del" data-alert-del="' + a.id + '" aria-label="Borrar alerta">✕</button>';
+        list.appendChild(li);
+      });
+      Array.prototype.forEach.call(list.querySelectorAll('[data-alert-del]'), function (btn) {
+        btn.addEventListener('click', async function () {
+          var id = btn.getAttribute('data-alert-del');
+          await api('/api/alerts/' + id, { method: 'DELETE' });
+          loadAlerts();
+        });
+      });
     }
 
     // ───── Login ─────
@@ -823,6 +865,20 @@ const inputType = (t: string) =>
   .profile-del { flex: 0 0 auto; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-subtle); width: 2rem; height: 2rem; cursor: pointer; }
   .profile-del:hover { border-color: var(--danger); color: var(--danger); }
   .profile-meta { margin: 0; font-size: 0.6875rem; color: var(--text-subtle); }
+  /* Alertas de cambios normativos */
+  .alerts-block { margin-top: 2rem; }
+  .alerts-h { font-size: 1.05rem; margin: 0 0 0.25rem; }
+  .alerts-intro { font-size: 0.8125rem; color: var(--text-muted); margin: 0 0 1rem; line-height: 1.5; }
+  .alerts-empty { font-size: 0.8125rem; color: var(--text-subtle); line-height: 1.5; padding: 0.875rem 1rem; background: var(--bg-muted); border-radius: var(--radius-sm); margin: 0; }
+  .alerts-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  .alert-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .alert-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+  .alert-item-title { font-weight: 600; font-size: 0.875rem; color: var(--accent, #2563eb); text-decoration: none; }
+  .alert-item-title:hover { text-decoration: underline; }
+  .alert-item-meta { font-size: 0.75rem; color: var(--text-subtle); }
+  .alert-item-del { flex: 0 0 auto; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-subtle); width: 2rem; height: 2rem; cursor: pointer; }
+  .alert-item-del:hover { border-color: var(--danger); color: var(--danger); }
+
   .profile-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
   .profile-clear-all, .profile-delete-account {
     background: none; border: 1px solid var(--border); color: var(--text-muted);

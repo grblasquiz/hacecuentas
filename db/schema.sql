@@ -219,3 +219,88 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+
+-- Alertas "avisame cuando este resultado cambie". El usuario guarda el resultado
+-- de una calc (slug + inputs) y, cuando un cambio normativo modifica el número,
+-- un cron reejecuta el cálculo y le manda el diff por mail. Híbrido: anda con
+-- email solo; si hay sesión, se ata a user_id para gestionarla en el perfil.
+CREATE TABLE IF NOT EXISTS result_alerts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL,
+  user_id INTEGER,                       -- NULL si se creó sin sesión
+  slug TEXT NOT NULL,                    -- slug canónico del calc (AR root)
+  inputs TEXT NOT NULL,                  -- JSON de inputs para reejecutar
+  headline_field TEXT,                   -- clave del result que es "el resultado"
+  headline_label TEXT,                   -- etiqueta legible para el mail
+  last_result TEXT NOT NULL,             -- JSON snapshot del result (para diff)
+  last_headline TEXT,                    -- valor headline mostrable del snapshot
+  sig TEXT NOT NULL,                     -- hash(email|slug|inputs) anti-duplicado
+  unsub_token TEXT NOT NULL,             -- token opaco para baja por link
+  created_at INTEGER NOT NULL,           -- unix ms
+  last_checked_at INTEGER,               -- última vez que el cron la reejecutó
+  last_changed_at INTEGER,               -- última vez que el resultado cambió
+  status TEXT DEFAULT 'active',          -- 'active' | 'unsubscribed'
+  UNIQUE(sig)
+);
+CREATE INDEX IF NOT EXISTS idx_result_alerts_email ON result_alerts(email);
+CREATE INDEX IF NOT EXISTS idx_result_alerts_user ON result_alerts(user_id);
+CREATE INDEX IF NOT EXISTS idx_result_alerts_status_slug ON result_alerts(status, slug);
+CREATE INDEX IF NOT EXISTS idx_result_alerts_unsub ON result_alerts(unsub_token);
+
+-- ── Cooperativa de datos anónimos ─────────────────────────────────────────────
+-- Sistema y política SEPARADOS del feedback/votos. Tras ciertos resultados, el
+-- usuario puede APORTAR EXPLÍCITAMENTE (consentimiento granular, nada automático)
+-- un dato numérico anónimo para construir índices propios (sueldo neto, relación
+-- alquiler/ingreso, tasas ofrecidas…). A cambio ve su percentil dentro del
+-- segmento, sólo si el segmento tiene ≥30 observaciones.
+--
+-- INVARIANTES DE PRIVACIDAD (no romper):
+--   · NUNCA se guarda email ni user_id acá. El aporte es anónimo por diseño:
+--     el endpoint /api/coop/contribute ni siquiera lee la sesión.
+--   · `value` (valor exacto) e `ip_hash`/`dedup_sig` son DATOS DETALLADOS: el
+--     worker coop-aggregate los poda (NULL) pasado el período de retención, una
+--     vez horneados en coop_aggregates. Sobreviven sólo `value_bucket` (rango),
+--     `segment_key` y `period` para transparencia y conteos.
+--   · `dedup_sig` = hash(ip|dataset|segment|period): un dispositivo aporta un
+--     punto por segmento por mes (anti-skew), sin identificar a la persona.
+--   · `revoke_token`: el cliente lo guarda en localStorage (atado al dispositivo,
+--     NO al email) y puede revocar el aporte vía /api/coop/revoke.
+CREATE TABLE IF NOT EXISTS coop_contributions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  dataset TEXT NOT NULL,                 -- id del índice: 'sueldo-neto' | 'alquiler-ingreso' | 'tasa-plazo-fijo'
+  slug TEXT NOT NULL,                    -- calc de origen (atribución/auditoría)
+  segment_key TEXT NOT NULL,             -- clave canónica del segmento: 'sueldo-neto|prov=caba|rol=it|sen=senior'
+  value REAL,                            -- valor numérico exacto (para percentiles). Se poda con el tiempo.
+  value_bucket TEXT,                     -- rango legible ('$800.000–$900.000') — sobrevive a la poda
+  unit TEXT,                             -- 'ARS' | 'pct'
+  period TEXT NOT NULL,                  -- 'YYYY-MM' (cohorte temporal)
+  segments TEXT,                         -- JSON con dims legibles {provincia,rol,seniority}
+  ip_hash TEXT,                          -- truncado; SOLO anti-spam; se poda
+  dedup_sig TEXT,                        -- hash(ip|dataset|segment|period); UNIQUE para 1 punto/dispositivo. Se poda.
+  revoke_token TEXT,                     -- token opaco para revocar (vive en localStorage del cliente)
+  created_at INTEGER NOT NULL,           -- unix ms
+  UNIQUE(dedup_sig)
+);
+CREATE INDEX IF NOT EXISTS idx_coop_dataset_seg ON coop_contributions(dataset, segment_key);
+CREATE INDEX IF NOT EXISTS idx_coop_revoke ON coop_contributions(revoke_token);
+CREATE INDEX IF NOT EXISTS idx_coop_created ON coop_contributions(created_at);
+CREATE INDEX IF NOT EXISTS idx_coop_value_age ON coop_contributions(created_at) WHERE value IS NOT NULL;
+
+-- Agregados materializados por (dataset, segment_key, period). Los recalcula el
+-- worker coop-aggregate. period='all' = pool vivo actual; period='YYYY-MM' =
+-- snapshot congelado que PERSISTE aunque después se poden los valores exactos
+-- (esa es la durabilidad del índice). Sólo se exponen públicamente los segmentos
+-- con n ≥ minObs (30). Esta tabla es la fuente de los "índices propios".
+CREATE TABLE IF NOT EXISTS coop_aggregates (
+  dataset TEXT NOT NULL,
+  segment_key TEXT NOT NULL,             -- '__all__' = todo el dataset; o la clave del segmento
+  period TEXT NOT NULL,                  -- 'all' (vivo) | 'YYYY-MM' (snapshot)
+  n INTEGER NOT NULL,
+  p10 REAL, p25 REAL, p50 REAL, p75 REAL, p90 REAL,
+  mean REAL, min REAL, max REAL,
+  unit TEXT,
+  segments TEXT,                         -- JSON dims legibles del segmento (para render)
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (dataset, segment_key, period)
+);
+CREATE INDEX IF NOT EXISTS idx_coop_agg_dataset ON coop_aggregates(dataset, period);

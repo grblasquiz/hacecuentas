@@ -37,6 +37,16 @@ export interface CfEnv {
   /** Resend (legacy, usado por email-result/feedback/lead). El OTP NO lo usa. */
   RESEND_API_KEY?: string;
   RESULT_EMAIL_FROM?: string;
+  /**
+   * Anthropic API key — secret del Worker. Lo usa el "intérprete de problemas"
+   * (/api/interpret): traduce lenguaje natural → calc + inputs y orquesta el
+   * cómputo determinístico. Si falta (ej. dev sin secret), el endpoint devuelve
+   * 503 y el front cae al buscador por palabra clave. Setup:
+   *   npx wrangler secret put ANTHROPIC_API_KEY
+   */
+  ANTHROPIC_API_KEY?: string;
+  /** Modelo del intérprete. Default 'claude-haiku-4-5-20251001' (rápido/barato). */
+  INTERPRET_MODEL?: string;
 }
 
 /** Acceso tipado al env del Worker (D1, KV, secrets). */

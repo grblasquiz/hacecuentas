@@ -1,0 +1,467 @@
+---
+// ─────────────────────────────────────────────────────────────────────────────
+// INTÉRPRETE DE PROBLEMAS — UI
+//
+// Reemplaza conceptualmente al buscador: en vez de buscar por nombre, el usuario
+// CUENTA su problema en lenguaje natural ("me ofrecen 3 millones brutos y voy 3
+// veces a la oficina"). El componente habla con /api/interpret, que detecta la
+// intención, pide los datos que falten, elige las fórmulas y ejecuta el cálculo
+// en el motor determinístico. Acá sólo se renderiza la conversación + tarjetas.
+//
+// Progresivo: sin JS o sin API (503) cae al buscador por palabra clave.
+// ─────────────────────────────────────────────────────────────────────────────
+interface Props {
+  variant?: 'hero' | 'page';
+  searchHref?: string; // fallback buscador por nombre
+  examples?: string[];
+  autofocus?: boolean;
+  showSearchLink?: boolean; // mostrar "¿Preferís buscar por nombre?" (false si ya hay otro buscador al lado)
+}
+const {
+  variant = 'page',
+  searchHref = '/buscar',
+  autofocus = false,
+  showSearchLink = true,
+  examples = [
+    'Me ofrecen 3,4 millones brutos pero tengo que viajar a Capital 4 veces por semana',
+    'Tengo 15 millones, ¿conviene plazo fijo o cancelar el préstamo?',
+    'Me despidieron después de 8 años, ¿cuánto me corresponde?',
+    'Quiero construir una pieza de 4 por 3, ¿cuántos ladrillos y bolsas necesito?',
+    'Tengo que actualizar un alquiler que empezó en noviembre',
+  ],
+} = Astro.props as Props;
+---
+
+<section
+  class:list={['pi', `pi--${variant}`]}
+  data-search-href={searchHref}
+  aria-label="Asistente de cálculo"
+>
+  <div class="pi-thread" id="pi-thread" aria-live="polite" aria-atomic="false" hidden></div>
+
+  <form class="pi-form" id="pi-form" autocomplete="off">
+    <label class="pi-srlabel" for="pi-input">Contame qué necesitás calcular</label>
+    <textarea
+      id="pi-input"
+      class="pi-input"
+      name="message"
+      rows="1"
+      maxlength="2000"
+      placeholder="Contame qué necesitás calcular…"
+      autofocus={autofocus}
+    ></textarea>
+    <button type="submit" class="pi-send" id="pi-send" aria-label="Enviar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </form>
+
+  <div class="pi-examples" id="pi-examples" aria-label="Ejemplos">
+    {examples.map((ex) => (
+      <button type="button" class="pi-chip" data-ex={ex}>{ex}</button>
+    ))}
+  </div>
+
+  <p class="pi-foot">
+    <span class="pi-foot-hint">El cálculo lo hace el motor de Hacé Cuentas, no la IA.</span>
+    {showSearchLink && (
+      <a href={searchHref} class="pi-foot-link" id="pi-search-link">¿Preferís buscar por nombre?</a>
+    )}
+  </p>
+</section>
+
+<style>
+  .pi {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .pi--hero { max-width: 640px; }
+
+  /* ── Input ─────────────────────────────────────────────────────── */
+  .pi-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 0.625rem 0.625rem 0.625rem 1.125rem;
+    box-shadow: var(--shadow-md);
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .pi-form:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .pi-srlabel {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0);
+    white-space: nowrap; border: 0;
+  }
+  .pi-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    resize: none;
+    font-family: inherit;
+    font-size: 1.0625rem;
+    line-height: 1.45;
+    color: var(--text);
+    max-height: 160px;
+    padding: 0.375rem 0;
+  }
+  .pi-input::placeholder { color: var(--text-subtle); }
+
+  .pi-send {
+    flex-shrink: 0;
+    width: 44px; height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: var(--on-accent, #fff);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background-color 0.15s, transform 0.15s, opacity 0.15s;
+  }
+  .pi-send:hover { transform: translateY(-1px); }
+  .pi-send:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+  /* ── Examples ──────────────────────────────────────────────────── */
+  .pi-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.875rem;
+    justify-content: center;
+  }
+  .pi--page .pi-examples { justify-content: flex-start; }
+  .pi-chip {
+    font-family: inherit;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    text-align: left;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.4375rem 0.875rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+    max-width: 100%;
+  }
+  .pi-chip:hover { border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+
+  .pi-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: center;
+    justify-content: center;
+    margin: 0.875rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+  }
+  .pi--page .pi-foot { justify-content: flex-start; }
+  .pi-foot-link { color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; }
+  .pi-foot-link:hover { color: var(--accent); }
+
+  /* ── Thread ────────────────────────────────────────────────────── */
+  .pi-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    margin-bottom: 1.125rem;
+    text-align: left;
+  }
+  .pi-msg {
+    max-width: 100%;
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 1rem;
+    line-height: 1.55;
+    font-size: 0.9375rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .pi-msg-user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: var(--on-accent, #fff);
+    border-bottom-right-radius: 4px;
+    max-width: 85%;
+  }
+  .pi-msg-bot {
+    align-self: flex-start;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+  .pi-msg-bot strong { font-weight: 700; }
+  .pi-msg-err {
+    align-self: flex-start;
+    background: var(--warn-soft, #fef3c7);
+    border: 1px solid var(--warn, #f59e0b);
+    color: var(--text);
+  }
+
+  /* Typing indicator */
+  .pi-typing { display: inline-flex; gap: 4px; align-items: center; }
+  .pi-typing span {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text-subtle);
+    animation: pi-bounce 1.2s infinite ease-in-out both;
+  }
+  .pi-typing span:nth-child(2) { animation-delay: 0.15s; }
+  .pi-typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes pi-bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pi-typing span { animation: none; opacity: 0.7; }
+  }
+
+  /* ── Cards (resultados + sugerencias) ──────────────────────────── */
+  .pi-cards { display: flex; flex-direction: column; gap: 0.625rem; margin-top: 0.625rem; }
+  .pi-card {
+    display: block;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem 1rem;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .pi-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .pi-card-head { display: flex; align-items: center; gap: 0.5rem; justify-content: space-between; }
+  .pi-card-name { font-weight: 650; font-size: 0.9375rem; }
+  .pi-card-go { color: var(--accent); font-weight: 600; font-size: 0.875rem; white-space: nowrap; }
+  .pi-card-vals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 1rem;
+    margin-top: 0.5rem;
+  }
+  .pi-val { font-size: 0.8125rem; color: var(--text-muted); }
+  .pi-val b { color: var(--text); font-weight: 650; }
+  .pi-card-result { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); background: var(--accent-soft); }
+
+  .pi-suggs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.625rem; }
+  .pi-sugg {
+    font-size: 0.8125rem;
+    text-decoration: none;
+    color: var(--accent);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.375rem 0.75rem;
+    transition: border-color 0.15s, background-color 0.15s;
+  }
+  .pi-sugg:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+  .pi-reset {
+    margin-top: 1rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .pi-reset:hover { color: var(--accent); }
+</style>
+
+<script>
+  // Intérprete de problemas — cliente. JS puro (este bloque SÍ transpila TS en
+  // Astro, pero lo mantenemos simple). Habla con /api/interpret.
+  type Role = 'user' | 'assistant';
+  interface Msg { role: Role; content: string; }
+  interface ResultCard { type: 'result'; slug: string; name: string; url: string; inputs: Record<string, unknown>; result: Record<string, unknown>; }
+  interface SuggCard { type: 'suggestion'; slug: string; name: string; url: string; category?: string; }
+  type Card = ResultCard | SuggCard;
+
+  function init(root: HTMLElement) {
+    const form = root.querySelector<HTMLFormElement>('#pi-form')!;
+    const input = root.querySelector<HTMLTextAreaElement>('#pi-input')!;
+    const send = root.querySelector<HTMLButtonElement>('#pi-send')!;
+    const thread = root.querySelector<HTMLElement>('#pi-thread')!;
+    const examples = root.querySelector<HTMLElement>('#pi-examples')!;
+    const searchHref = root.dataset.searchHref || '/buscar';
+
+    const history: Msg[] = [];
+    let busy = false;
+
+    function esc(s: string): string {
+      return s.replace(/[&<>"]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : '&quot;'));
+    }
+    // Mini-markdown: escapa, **negrita**, saltos de línea.
+    function fmt(s: string): string {
+      return esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    }
+
+    function autosize() {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+    }
+    input.addEventListener('input', autosize);
+
+    function scrollToEnd() {
+      const last = thread.lastElementChild;
+      if (last) last.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    function addUser(text: string) {
+      const el = document.createElement('div');
+      el.className = 'pi-msg pi-msg-user';
+      el.textContent = text;
+      thread.appendChild(el);
+    }
+
+    function addTyping(): HTMLElement {
+      const el = document.createElement('div');
+      el.className = 'pi-msg pi-msg-bot';
+      el.innerHTML = '<span class="pi-typing"><span></span><span></span><span></span></span>';
+      thread.appendChild(el);
+      scrollToEnd();
+      return el;
+    }
+
+    function prettyKey(k: string): string {
+      return k.replace(/[_-]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^\w/, (c) => c.toUpperCase());
+    }
+
+    function valuesHtml(result: Record<string, unknown>): string {
+      const parts: string[] = [];
+      for (const [k, v] of Object.entries(result || {})) {
+        if (v == null) continue;
+        if (typeof v === 'object') continue;
+        const sv = String(v);
+        // Saltar textos largos (fórmula, explicación, etc.) — la tarjeta es un resumen.
+        if (sv.length > 40 || /^https?:/.test(sv)) continue;
+        parts.push(`<span class="pi-val">${esc(prettyKey(k))}: <b>${esc(sv)}</b></span>`);
+        if (parts.length >= 4) break;
+      }
+      return parts.length ? `<div class="pi-card-vals">${parts.join('')}</div>` : '';
+    }
+
+    function cardsHtml(cards: Card[]): string {
+      if (!cards || !cards.length) return '';
+      const results = cards.filter((c) => c.type === 'result') as ResultCard[];
+      const suggs = cards.filter((c) => c.type === 'suggestion') as SuggCard[];
+      let html = '';
+      if (results.length) {
+        html += '<div class="pi-cards">';
+        for (const c of results) {
+          html += `<a class="pi-card pi-card-result" href="${esc(c.url)}">
+            <div class="pi-card-head">
+              <span class="pi-card-name">${esc(c.name)}</span>
+              <span class="pi-card-go">Abrir con tus datos →</span>
+            </div>
+            ${valuesHtml(c.result)}
+          </a>`;
+        }
+        html += '</div>';
+      }
+      if (suggs.length) {
+        html += '<div class="pi-suggs">';
+        for (const c of suggs) html += `<a class="pi-sugg" href="${esc(c.url)}">${esc(c.name)}</a>`;
+        html += '</div>';
+      }
+      return html;
+    }
+
+    function addBot(reply: string, cards: Card[]) {
+      const el = document.createElement('div');
+      el.className = 'pi-msg pi-msg-bot';
+      el.innerHTML = `<div class="pi-bot-text">${fmt(reply)}</div>${cardsHtml(cards)}`;
+      thread.appendChild(el);
+      scrollToEnd();
+    }
+
+    function addError(msg: string, withSearch: boolean) {
+      const el = document.createElement('div');
+      el.className = 'pi-msg pi-msg-err';
+      el.innerHTML = withSearch
+        ? `${esc(msg)} <a href="${esc(searchHref)}" style="text-decoration:underline">Buscar por nombre</a>`
+        : esc(msg);
+      thread.appendChild(el);
+      scrollToEnd();
+    }
+
+    function setBusy(b: boolean) {
+      busy = b;
+      send.disabled = b;
+      input.disabled = b;
+    }
+
+    async function ask(text: string) {
+      if (busy || !text.trim()) return;
+      thread.hidden = false;
+      examples.style.display = 'none';
+      addUser(text);
+      history.push({ role: 'user', content: text });
+      input.value = '';
+      autosize();
+      setBusy(true);
+      const typing = addTyping();
+
+      // GA4 (si está): medir uso del intérprete.
+      try { (window as any).gtag?.('event', 'interpret_ask', { length: text.length }); } catch {}
+
+      try {
+        const resp = await fetch('/api/interpret', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ messages: history }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        typing.remove();
+
+        if (resp.ok && data.ok) {
+          addBot(data.reply || 'Listo.', data.cards || []);
+          history.push({ role: 'assistant', content: data.reply || '' });
+        } else if (data.fallback) {
+          addError(data.message || 'El asistente no está disponible ahora.', true);
+        } else {
+          addError(data.message || 'No pude procesarlo. Probá reformular.', true);
+        }
+      } catch {
+        typing.remove();
+        addError('Se cortó la conexión. Probá de nuevo.', true);
+      } finally {
+        setBusy(false);
+        input.focus();
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      ask(input.value);
+    });
+
+    // Enter envía, Shift+Enter hace salto de línea.
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        ask(input.value);
+      }
+    });
+
+    examples.querySelectorAll<HTMLButtonElement>('.pi-chip').forEach((chip) => {
+      chip.addEventListener('click', () => ask(chip.dataset.ex || chip.textContent || ''));
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('.pi').forEach((el) => init(el));
+</script>

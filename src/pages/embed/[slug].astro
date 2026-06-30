@@ -57,6 +57,102 @@ const { calc } = Astro.props;
       window.addEventListener('load', function () { postHeight(); postMeta(); });
     </script>
 
+    <!-- Partner Studio: aplica tema/logo/título/CTA desde la querystring y
+         puentea eventos al parent (web component <hace-cuentas>). Los params de
+         prefill (name=value) ya los consume el script propio de Calculator. -->
+    <script is:inline define:vars={{ EMBED_SLUG: calc.slug }}>
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var root = document.documentElement;
+
+        // Tema: accent del partner.
+        var accent = p.get('accent');
+        if (accent && /^#[0-9a-fA-F]{3,8}$/.test(accent)) {
+          root.style.setProperty('--accent', accent);
+          root.style.setProperty('--accent-hover', accent);
+          root.style.setProperty('--accent-strong', accent);
+        }
+
+        // Título personalizado.
+        var title = p.get('title');
+        if (title) {
+          var h = document.querySelector('.embed-title');
+          if (h) h.textContent = title;
+          try { document.title = title; } catch (e) {}
+        }
+
+        // Logo del partner en el encabezado.
+        var logo = p.get('logo');
+        if (logo && /^https:\/\//.test(logo)) {
+          var head = document.querySelector('.embed-head');
+          if (head) {
+            var img = document.createElement('img');
+            img.src = logo;
+            img.alt = '';
+            img.setAttribute('aria-hidden', 'true');
+            img.style.cssText = 'max-height:28px;max-width:140px;width:auto;height:auto;object-fit:contain;flex-shrink:0';
+            head.insertBefore(img, head.firstChild);
+          }
+        }
+
+        // Ocultar atribución (sólo llega noattr=1 si el web component lo autorizó).
+        if (p.get('noattr') === '1') {
+          var src = document.querySelector('.embed-source');
+          if (src) src.style.display = 'none';
+        }
+
+        // Puente de eventos hacia el parent.
+        var ctaLabel = p.get('cta');
+        var ctaUrl = p.get('ctaurl');
+        var container = document.querySelector('.calc-container');
+
+        function postEvent(event, detail) {
+          if (window.parent !== window) {
+            window.parent.postMessage({ type: 'hc-embed-event', event: event, slug: EMBED_SLUG, detail: detail || {} }, '*');
+          }
+        }
+
+        if (container) {
+          var ctaInjected = false;
+          // Calculó: el contenedor dispara hc-calc-result con el primary ya formateado.
+          container.addEventListener('hc-calc-result', function (e) {
+            var primary = (e.detail && e.detail.primary) || '';
+            postEvent('calculate', { primary: primary, slug: EMBED_SLUG });
+
+            // CTA propio del partner debajo del resultado.
+            if (ctaLabel && ctaUrl && /^https:\/\//.test(ctaUrl) && !ctaInjected) {
+              ctaInjected = true;
+              var results = document.querySelector('.calc-results');
+              if (results) {
+                var wrap = document.createElement('div');
+                wrap.style.cssText = 'margin-top:1rem;text-align:center';
+                var a = document.createElement('a');
+                a.href = ctaUrl;
+                a.target = '_top';
+                a.rel = 'noopener';
+                a.textContent = ctaLabel;
+                a.style.cssText = 'display:inline-block;background:var(--accent);color:#fff;font-weight:600;font-size:.9375rem;padding:.6rem 1.25rem;border-radius:10px;text-decoration:none';
+                a.addEventListener('click', function () { postEvent('complete', { cta: ctaUrl }); });
+                wrap.appendChild(a);
+                results.appendChild(wrap);
+              }
+            }
+          });
+
+          // Compartir/copiar.
+          container.addEventListener('click', function (e) {
+            var t = e.target;
+            var btn = t && t.closest ? t.closest('[data-action]') : null;
+            if (!btn) return;
+            var action = btn.getAttribute('data-action');
+            if (action === 'share' || action === 'whatsapp' || action === 'copy' || action === 'embed' || action === 'copyLink') {
+              postEvent('share', { action: action });
+            }
+          });
+        }
+      })();
+    </script>
+
     <style is:global>
       :root {
         --bg: #ffffff;
