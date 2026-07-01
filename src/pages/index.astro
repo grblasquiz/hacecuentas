@@ -849,8 +849,13 @@ const schema = {
     </div>
   </section>
 
-  <section class="why">
-    <h2>¿Por qué Hacé Cuentas?</h2>
+  <!-- Sección "Sobre Hacé Cuentas": fusiona las 3 bandas editoriales (por qué /
+       qué encontrás / cómo trabajamos) en UNA. Las 4 tarjetas del "por qué"
+       quedan visibles; el texto extenso (E-E-A-T para AdSense, extracts de
+       /sobre-nosotros, /metodologia, /politica-editorial) vive en <details>
+       colapsados: sigue en el HTML (crawlable) pero ocupa mínimo espacio. -->
+  <section class="why about-hc" aria-labelledby="about-hc-h">
+    <h2 id="about-hc-h">Por qué elegir Hacé Cuentas</h2>
     <div class="why-grid">
       <div class="why-item" style="--why-color: #f59e0b; --why-soft: rgba(245, 158, 11, 0.1);">
         <div class="why-icon">
@@ -881,14 +886,15 @@ const schema = {
         <p>Responsive desde el primer día. Del celular en el transporte a la computadora en la oficina.</p>
       </div>
     </div>
-  </section>
 
-  <!-- Contenido editorial extendido. Necesario para AdSense E-E-A-T: la home
-       no puede ser solo grids de cards. Estos 3 bloques son extracts curados de
-       /sobre-nosotros, /metodologia y /politica-editorial (no AI-generated). -->
-  <section class="editorial-intro" aria-labelledby="editorial-intro-heading">
-    <div class="editorial-wrap">
-      <h2 id="editorial-intro-heading">Qué encontrarás en Hacé Cuentas</h2>
+    <!-- Contenido editorial (E-E-A-T para AdSense: extracts de /sobre-nosotros,
+         /metodologia, /politica-editorial). Colapsado en <details> → sigue en el
+         HTML (crawlable) pero no infla la home. -->
+    <div class="about-fold">
+      <details class="ed-collapse">
+        <summary>Qué vas a encontrar en Hacé Cuentas</summary>
+        <div class="editorial-wrap" aria-labelledby="editorial-intro-heading">
+      <h2 id="editorial-intro-heading" class="sr-only">Qué encontrarás en Hacé Cuentas</h2>
       <p>
         Hacé Cuentas es un proyecto argentino independiente que reúne
         <strong>{totalCalcsDisplay} calculadoras online gratuitas</strong> en español, con
@@ -923,12 +929,12 @@ const schema = {
         (ARCA/AFIP, ANSES, BCRA, INDEC, OMS, ACOG y demás organismos
         verificables) para que puedas auditar el resultado.
       </p>
-    </div>
-  </section>
-
-  <section class="editorial-method" aria-labelledby="editorial-method-heading">
-    <div class="editorial-wrap">
-      <h2 id="editorial-method-heading">Cómo construimos cada calculadora</h2>
+        </div>
+      </details>
+      <details class="ed-collapse">
+        <summary>Cómo construimos cada calculadora</summary>
+        <div class="editorial-wrap" aria-labelledby="editorial-method-heading">
+      <h2 id="editorial-method-heading" class="sr-only">Cómo construimos cada calculadora</h2>
       <p>
         Detrás de cada calculadora hay un proceso editorial en seis pasos. No
         improvisamos fórmulas ni copiamos resultados de otros sitios: cada
@@ -985,6 +991,8 @@ const schema = {
         <a href="/politica-editorial">/politica-editorial</a> (criterios de
         revisión, fuentes admitidas y proceso de actualización).
       </p>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -2816,6 +2824,40 @@ const schema = {
     margin: 0;
     line-height: 1.6;
   }
+
+  /* Fusión "Sobre Hacé Cuentas": el texto editorial (E-E-A-T) vive colapsado
+     en <details> → presente en el HTML, sin ocupar media home. */
+  .about-fold { margin-top: 1.5rem; display: grid; gap: 0.625rem; }
+  .ed-collapse {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+  }
+  .ed-collapse > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.875rem 1.125rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .ed-collapse > summary::-webkit-details-marker { display: none; }
+  .ed-collapse > summary::before {
+    content: "";
+    width: 0.5rem; height: 0.5rem;
+    flex-shrink: 0;
+    border-right: 2px solid var(--text-subtle);
+    border-bottom: 2px solid var(--text-subtle);
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease;
+  }
+  .ed-collapse[open] > summary::before { transform: rotate(45deg); }
+  .ed-collapse > summary:hover { color: var(--accent); }
+  .ed-collapse[open] > summary { border-bottom: 1px solid var(--border); }
+  .ed-collapse .editorial-wrap { padding: 0.75rem 1.125rem 1.25rem; margin: 0; }
 
   /* Final CTA */
   .final-cta {
