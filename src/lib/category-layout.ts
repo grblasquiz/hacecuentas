@@ -116,7 +116,7 @@ export const SUBGROUPS: Record<string, SubGroup[]> = {
     // matchear las calcs de otros países (IRPF España, IVA México), que caen al
     // subgrupo "Otros países" del final. Por eso el bucket IVA usa substrings
     // largos ('iva-incluido') y no el token corto 'iva' (matchearía iva-mexico).
-    { id: 'monotributo', title: 'Monotributo', icon: '🧾', kw: ['monotributo', 'monotributista', 'recategorizacion'] },
+    { id: 'monotributo', title: 'Monotributo', icon: '🧾', kw: ['monotributo', 'monotributista', 'recategorizacion', 'facturar'] },
     { id: 'ganancias', title: 'Impuesto a las Ganancias', icon: '💼', kw: ['ganancias', 'cuarta-categoria', 'siradig', 'deduccion'] },
     { id: 'iva', title: 'IVA', icon: '🧮', kw: ['iva-incluido', 'iva-saldo', 'iva-paises', 'discriminar'] },
     { id: 'iibb', title: 'Ingresos Brutos', icon: '🏛️', kw: ['iibb', 'ingresos-brutos', 'multilateral'] },
