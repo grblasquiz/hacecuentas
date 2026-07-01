@@ -60,25 +60,27 @@ export function compute(i: Inputs): Outputs {
   const precioCesmec = preciosBase[i.tipo_vehiculo].cesmec || 0;
   const precioDetran = preciosBase[i.tipo_vehiculo].detran || 0;
   
-  // Calcular multa por atraso (Código Tránsito, UTA 2026 ≈ 62.000 CLP)
-  // Tramos: 0-1 mes = 5-10 UTM, 2-3 meses = 15-20 UTM, 4+ meses = 30-50 UTM
+  // Multa por circular sin revisión técnica vigente: es una infracción GRAVE
+  // (Ley de Tránsito 18.290, art. 200) → 1 a 1,5 UTM. Antes los tramos eran
+  // 7,5/17,5/40 UTM (≈ $0,5–2,8 M), inflados ~10× y mal rotulados como "UTA".
+  // Se mantiene una leve escalada dentro del rango legal según meses de atraso.
   const utmValor = (clLive as any)?.utm?.valor ?? 70588; // Valor UTM live mindicador.cl con fallback verificado
   let multaUtm = 0;
   let estadoLegal = 'Revisión vigente: legal';
-  
+
   if (i.meses_atraso > 0) {
     if (i.meses_atraso <= 1) {
-      multaUtm = 7.5; // promedio 5-10
+      multaUtm = 1.0; // grave: mínimo del tramo
     } else if (i.meses_atraso <= 3) {
-      multaUtm = 17.5; // promedio 15-20
+      multaUtm = 1.25; // grave: punto medio
     } else {
-      multaUtm = 40; // promedio 30-50
+      multaUtm = 1.5; // grave: máximo del tramo
     }
     
     if (i.meses_atraso >= 6) {
       estadoLegal = `⚠️ ALERTA CRÍTICA: ${i.meses_atraso} meses atraso. Bloqueo circulatorio automático activo. Riesgo decomiso temporal. Circulación prohibida.`;
     } else {
-      estadoLegal = `⚠️ Circulación sin revisión: ${i.meses_atraso} mes(es) atraso. Multa aplicable + possibles sanciones adicionales (sin seguro, sin permiso).`;
+      estadoLegal = `⚠️ Circulación sin revisión: ${i.meses_atraso} mes(es) atraso. Multa aplicable + posibles sanciones adicionales (sin seguro, sin permiso).`;
     }
   }
   

@@ -37,44 +37,30 @@ const SEGURO_INCENDIO_TASA = 0.0018; // 0,18% anual valor asegurado — SMG
 const GASTO_TASACION = 250000; // Gasto tasación, pago único
 const ARANCEL_NOTARIAL = 0.004; // ~0,4% monto crédito
 
-function calcularCAEIterativo(
-  monto_credito: number,
-  tasa_anual: number,
-  plazo_meses: number,
-  seguro_desgravamen_anual: number,
-  seguro_incendio_anual: number,
-  comision_anual: number
+// CAE (Carga Anual Equivalente, CMF): tasa que iguala el valor presente de TODAS
+// las cuotas reales (capital + interés + seguros + comisión, todas fijas) al monto
+// neto que el deudor recibe. Bisección sobre la TIR mensual — el deudor paga una
+// cuota fija, así que el flujo NO cambia con la tasa (el Newton-Raphson anterior
+// recalculaba el interés con la tasa que buscaba → divergía a valores absurdos).
+function calcularCAEAnual(
+  cuotaMensualFija: number,
+  principalNeto: number,
+  plazo_meses: number
 ): number {
-  const tasa_mensual_inicial = tasa_anual / 100 / 12;
-  let cae_mensual = tasa_mensual_inicial;
-  const gastos_mensuales = (seguro_desgravamen_anual + seguro_incendio_anual + comision_anual) / 12;
-
-  // Newton-Raphson simplificado para hallar CAE
-  for (let iter = 0; iter < 50; iter++) {
-    let vpn = 0;
-    let vpn_derivada = 0;
-    let saldo = monto_credito;
-
-    for (let mes = 1; mes <= plazo_meses; mes++) {
-      const cuota_capital = (monto_credito / plazo_meses); // Simplificado lineal
-      const interes = saldo * cae_mensual;
-      const cuota_total = cuota_capital + interes + gastos_mensuales / 12;
-      
-      const descuento = Math.pow(1 + cae_mensual, -mes);
-      vpn += cuota_total * descuento;
-      vpn_derivada += -mes * cuota_total * descuento / (1 + cae_mensual);
-      
-      saldo -= cuota_capital;
-    }
-
-    const delta = vpn - monto_credito;
-    if (Math.abs(delta) < 0.01) break;
-
-    const ajuste = delta / (vpn_derivada || 0.0001);
-    cae_mensual = Math.max(0.0001, cae_mensual - ajuste * 0.5);
+  if (cuotaMensualFija <= 0 || principalNeto <= 0 || plazo_meses <= 0) return 0;
+  // VP de una anualidad decrece monótonamente con r → bisección directa.
+  const vp = (r: number) =>
+    r <= 0
+      ? cuotaMensualFija * plazo_meses
+      : cuotaMensualFija * (1 - Math.pow(1 + r, -plazo_meses)) / r;
+  let lo = 1e-7;
+  let hi = 1; // 100% mensual: techo holgado
+  for (let k = 0; k < 200; k++) {
+    const mid = (lo + hi) / 2;
+    if (vp(mid) > principalNeto) lo = mid;
+    else hi = mid;
   }
-
-  return cae_mensual * 12 * 100; // CAE anual en %
+  return ((lo + hi) / 2) * 12 * 100; // CAE anual en %
 }
 
 function calcularCuotaMensual(
@@ -126,61 +112,56 @@ export function compute(i: Inputs): Outputs {
   const params_banco = PARAMETROS_BANCOS[i.banco_seleccionado] || PARAMETROS_BANCOS.bancochile;
   const tasa_ajustada = i.tasa_anual_referencial > 0 ? i.tasa_anual_referencial : params_banco.tasa_base;
 
-  // Monto en UF si aplica
-  let monto_operativo = monto_credito;
-  let uf_operativa = UF_2026_REFERENCIAL;
-  if (i.moneda === "uf") {
-    monto_operativo = monto_credito / uf_operativa;
-  }
+  // UF referencial para mostrar el equivalente del crédito (los seguros y la cuota
+  // se calculan siempre en pesos).
+  const uf_operativa = UF_2026_REFERENCIAL;
 
   // Gastos adicionales
   const arancel_notarial = monto_credito * ARANCEL_NOTARIAL;
   const gasto_tasacion = GASTO_TASACION;
   const monto_total_credito = monto_credito + arancel_notarial + gasto_tasacion;
 
-  // Seguros anuales
-  const seguro_desgravamen_anual = monto_operativo * SEGURO_DESGRAVAMEN_TASA;
-  const seguro_incendio_anual = monto_operativo * SEGURO_INCENDIO_TASA;
+  // Seguros anuales — primas en PESOS sobre el monto del crédito, no sobre el monto
+  // expresado en UF (antes con moneda=uf daban primas ridículas de ~$4/año).
+  const seguro_desgravamen_anual = monto_credito * SEGURO_DESGRAVAMEN_TASA;
+  const seguro_incendio_anual = monto_credito * SEGURO_INCENDIO_TASA;
   const comision_anual = params_banco.comision_anual;
 
   // Plazo en meses
   const plazo_meses = i.plazo_anos * 12;
 
-  // Cuota mensual (capital + interés)
-  const cuota_base = calcularCuotaMensual(monto_total_credito, tasa_ajustada, plazo_meses);
-
-  // Cuota con seguros y comisión
+  // Componentes mensuales fijos (seguros: independientes del banco)
   const seguro_desgravamen_mensual = seguro_desgravamen_anual / 12;
   const seguro_incendio_mensual = seguro_incendio_anual / 12;
   const comision_mensual = comision_anual / 12;
-  const cuota_mensual = cuota_base + seguro_desgravamen_mensual + seguro_incendio_mensual + comision_mensual;
+
+  // Cuota total mensual para una tasa y comisión dadas (capital+interés+seguros+comisión)
+  const cuotaTotalMensual = (tasa: number, comision_anual_banco: number) =>
+    calcularCuotaMensual(monto_total_credito, tasa, plazo_meses) +
+    seguro_desgravamen_mensual +
+    seguro_incendio_mensual +
+    comision_anual_banco / 12;
+
+  // Cuota mensual (capital + interés) y total con seguros/comisión
+  const cuota_base = calcularCuotaMensual(monto_total_credito, tasa_ajustada, plazo_meses);
+  const cuota_mensual = cuotaTotalMensual(tasa_ajustada, comision_anual);
 
   // Total interés pagado
   const total_pagado = cuota_mensual * plazo_meses;
   const total_interes_pagado = total_pagado - monto_total_credito;
 
-  // CAE real (iterativo)
-  const cae_real = calcularCAEIterativo(
-    monto_total_credito,
-    tasa_ajustada,
-    plazo_meses,
-    seguro_desgravamen_anual,
-    seguro_incendio_anual,
-    comision_anual
-  );
+  // CAE real: TIR de la cuota fija contra el monto neto recibido (monto_credito)
+  const cae_real = calcularCAEAnual(cuota_mensual, monto_credito, plazo_meses);
 
-  // Comparativa simple entre bancos (simulación)
+  // Comparativa entre bancos (misma fórmula, distinta tasa base y comisión)
   let banco_recomendado = params_banco.nombre;
   let cae_mejor = cae_real;
-  
+
   for (const [key, banco] of Object.entries(PARAMETROS_BANCOS)) {
-    const cae_temp = calcularCAEIterativo(
-      monto_total_credito,
-      banco.tasa_base,
-      plazo_meses,
-      seguro_desgravamen_anual,
-      seguro_incendio_anual,
-      banco.comision_anual
+    const cae_temp = calcularCAEAnual(
+      cuotaTotalMensual(banco.tasa_base, banco.comision_anual),
+      monto_credito,
+      plazo_meses
     );
     if (cae_temp < cae_mejor) {
       cae_mejor = cae_temp;

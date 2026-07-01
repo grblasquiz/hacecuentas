@@ -34,7 +34,11 @@ export function compute(i: Inputs): Outputs {
   const deuda = Math.max(0, i.deuda_acumulada);
   const meses = Math.max(0, i.meses_atraso);
   const pension = Math.max(0, i.pension_mensual_fijada);
-  const tiene_sentencia = i.tiene_sentencia_firme === true;
+  // El <select> manda el string "true"/"false"; el endpoint REST lo coerciona a
+  // booleano. Aceptar ambos: antes `=== true` daba false para el string "true",
+  // así que NUNCA se activaban registro/prohibición aunque hubiera sentencia firme.
+  const tiene_sentencia =
+    (i.tiene_sentencia_firme as any) === true || (i.tiene_sentencia_firme as any) === 'true';
 
   // 1. Cálculo de intereses legales (simple, no capitalizado)
   // Fórmula: Intereses = Capital × (Tasa anual × Meses / 12)

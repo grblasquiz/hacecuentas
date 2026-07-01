@@ -66,15 +66,16 @@ export function compute(i: Inputs): Outputs {
   const maxRange = Math.round(averageWeight * 1.05);
   const weightRange = minRange + " - " + maxRange + " lb";
 
-  // Calculate current BMI: weight (lb) / (height (inches) * 0.0254)^2
+  // Calculate current BMI: weight (kg) / height (m)^2. Inputs are imperial, so convert.
   const heightMeters = totalInches * 0.0254;
-  const currentBMI = Math.round((currentWeight / (heightMeters * heightMeters)) * 10) / 10;
+  const weightKg = currentWeight * 0.453592;
+  const currentBMI = Math.round((weightKg / (heightMeters * heightMeters)) * 10) / 10;
 
-  // Ideal BMI range (18.5 - 24.9)
+  // Ideal BMI range (18.5 - 24.9): BMI * m^2 gives kg, convert back to lb for display.
   const minIdealBMI = 18.5;
   const maxIdealBMI = 24.9;
-  const minIdealWeight = Math.round(minIdealBMI * (heightMeters * heightMeters));
-  const maxIdealWeight = Math.round(maxIdealBMI * (heightMeters * heightMeters));
+  const minIdealWeight = Math.round(minIdealBMI * (heightMeters * heightMeters) / 0.453592);
+  const maxIdealWeight = Math.round(maxIdealBMI * (heightMeters * heightMeters) / 0.453592);
   const idealBMI = "18.5 - 24.9 (" + minIdealWeight + " - " + maxIdealWeight + " lb)";
 
   // Weight difference from average
