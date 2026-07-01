@@ -1047,13 +1047,13 @@ const formatFreshnessDate = (iso: string): string => {
     {alertEligible && (
       <!-- Alerta de cambio normativo: "avisame cuando este resultado cambie" -->
       <div class="alert-capture" data-alert-capture style="display:none">
-        <p class="alert-heading"><strong><svg class="alert-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg> ¿Y si cambia una norma?</strong></p>
-        <p class="alert-sub">Te avisamos por mail si una actualización (escala de Ganancias, ICL, paritaria, monotributo…) cambia <em>este</em> resultado. Reejecutamos tu cálculo y te mostramos cuánto pasó a ser.</p>
+        <p class="alert-heading"><strong><svg class="alert-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg> Guardá este resultado</strong></p>
+        <p class="alert-sub">Te lo mandamos por mail y te avisamos si una actualización (escala de Ganancias, ICL, paritaria, monotributo…) cambia <em>este</em> número. Reejecutamos tu cálculo y te mostramos cuánto pasó a ser.</p>
         <form class="alert-form" data-alert-form>
           <input type="email" placeholder="tu@email.com" autocomplete="email" data-alert-email>
-          <button type="submit" data-label-sending="Guardando…">Avisame</button>
+          <button type="submit" data-label-sending="Guardando…">Guardar y avisarme</button>
         </form>
-        <p class="alert-note">Gratis. Sin spam. Solo cuando el número cambie de verdad.</p>
+        <p class="alert-note">Gratis. Sin spam. Te escribimos solo cuando el número cambie de verdad.</p>
         <p class="alert-success" data-alert-status style="display:none"></p>
       </div>
     )}
@@ -5177,15 +5177,17 @@ const formatFreshnessDate = (iso: string): string => {
             }
           } catch {}
 
-          // Mostrar email capture CTA
+          // Captura de email UNIFICADA (no pedir el correo dos veces):
+          // si el calc es alertEligible, la alerta es el módulo único (su submit
+          // también guarda/envía el resultado por mail — ver handler). Solo si NO
+          // hay alerta mostramos el email-capture "a secas".
           const emailCapture = container.querySelector<HTMLElement>('[data-email-capture]');
-          if (emailCapture) {
-            emailCapture.style.display = 'block';
-          }
-          // Mostrar alerta de cambio normativo (si el calc es elegible)
           const alertCapture = container.querySelector<HTMLElement>('[data-alert-capture]');
           if (alertCapture) {
             alertCapture.style.display = 'block';
+            if (emailCapture) emailCapture.style.display = 'none';
+          } else if (emailCapture) {
+            emailCapture.style.display = 'block';
           }
 
           // Mostrar invitación a aportar a la cooperativa (si el calc participa)
@@ -6047,7 +6049,27 @@ const formatFreshnessDate = (iso: string): string => {
         if (ok) {
           alertForm.style.display = 'none';
           if (noteEl) noteEl.style.display = 'none';
-          showStatus('✅ Listo. Te vamos a avisar por mail si una norma cambia este resultado.', false);
+          // Fusión email+alertas: además de crear la alerta, guardamos/enviamos el
+          // resultado por mail (misma captura que el módulo email-capture, que ya
+          // no se muestra por separado cuando hay alerta). Solo con email tipeado
+          // (no-authed); en sesión, el server ya usa el email de la cuenta para la
+          // alerta y no tenemos el correo client-side. Fire-and-forget: no bloquea
+          // ni revierte la alerta ya creada si /api/email-result falla.
+          if (email) {
+            if (typeof (window as any).gtag === 'function') {
+              (window as any).gtag('event', 'email_capture', { calc_slug: slug });
+            }
+            const primaryVal = container.querySelector<HTMLElement>('.result.primary [data-value]')?.textContent || '';
+            try {
+              fetch('/api/email-result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, slug: window.location.pathname, result: primaryVal }),
+                keepalive: true,
+              });
+            } catch { /* la alerta ya quedó creada; no bloqueamos por esto */ }
+          }
+          showStatus('✅ Listo. Te enviamos el resultado y te avisamos si una norma lo cambia.', false);
         } else {
           showStatus(msg, true);
         }
