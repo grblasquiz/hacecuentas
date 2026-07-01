@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Newsletter from '../../components/Newsletter.astro';
+import Icon from '../../components/ui/Icon.astro';
 import { TOTAL_DISPLAY } from '../../lib/calc-counts';
 
 // Load all published blog posts from content/blog/*.json
@@ -19,6 +20,19 @@ interface BlogPost {
   readingTime: number;
   heroEmoji: string;
   seoKeywords?: string[];
+  author?: string;
+}
+
+// Autor E-E-A-T por defecto del sitio. Los JSON viejos traen "author" genérico
+// ("Hacé Cuentas", "Equipo editorial…") que NO es una persona verificable.
+// Para señal E-E-A-T mostramos siempre una persona real como fallback.
+const DEFAULT_AUTHOR = 'Martín Rodríguez';
+function displayAuthor(p: BlogPost): string {
+  const a = (p.author || '').trim();
+  // Si el author guardado no es una persona (contiene "Hacé Cuentas"/"Equipo"),
+  // caemos al autor real del sitio.
+  if (!a || /hac[eé] cuentas|equipo/i.test(a)) return DEFAULT_AUTHOR;
+  return a;
 }
 
 const allPosts: BlogPost[] = Object.values(postModules) as BlogPost[];
@@ -27,60 +41,6 @@ const allPosts: BlogPost[] = Object.values(postModules) as BlogPost[];
 const posts = allPosts.sort(
   (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
 );
-
-// Which "planned" topics have NOT yet been published as posts
-const publishedSlugs = new Set(posts.map((p) => p.slug));
-
-const plannedArticulos = [
-  {
-    cat: 'finanzas',
-    titulo: 'Plazo fijo vs UVA vs dólar: cuál te conviene este mes',
-    bajada: 'Comparativa con TNA actualizada y simulación a 30, 60 y 90 días.',
-    slug: 'plazo-fijo-vs-uva-vs-dolar',
-  },
-  {
-    cat: 'finanzas',
-    titulo: 'Monotributo 2026: nuevas escalas y cuándo recategorizar',
-    bajada: 'Tabla actualizada de cuotas, topes y obra social por categoría.',
-    slug: 'monotributo-2026-escalas-recategorizar',
-  },
-  {
-    cat: 'finanzas',
-    titulo: 'Indemnización por despido: cómo calcular el mejor remunerativo',
-    bajada: 'Errores comunes que te pueden costar varios sueldos.',
-    slug: 'indemnizacion-despido-mejor-remunerativo',
-  },
-  {
-    cat: 'salud',
-    titulo: 'IMC, grasa corporal y TDEE: qué mide cada cosa y cuál te sirve',
-    bajada: 'Las 3 calculadoras de salud más buscadas, explicadas sin tecnicismos.',
-    slug: 'imc-grasa-corporal-tdee-diferencias',
-  },
-  {
-    cat: 'salud',
-    titulo: 'Calorías para bajar de peso: el método Mifflin-St Jeor',
-    bajada: 'Por qué las "calculadoras de calorías" online suelen darte mal.',
-    slug: 'calorias-bajar-peso-mifflin-st-jeor',
-  },
-  {
-    cat: 'negocios',
-    titulo: 'Markup vs margen: el error que arruina los precios de tu negocio',
-    bajada: 'Diferencias prácticas y cómo subir precios sin perder clientes.',
-    slug: 'markup-vs-margen-precios-negocio',
-  },
-  {
-    cat: 'marketing',
-    titulo: 'CAC, LTV y payback: las tres métricas que definen si tu negocio escala',
-    bajada: 'Fórmulas, benchmarks por industria y cómo mejorarlas.',
-    slug: 'cac-ltv-payback-metricas-negocio',
-  },
-  {
-    cat: 'vida',
-    titulo: 'Calcular gastos compartidos: la mejor forma de no pelearte con tus amigos',
-    bajada: 'Tres métodos para dividir cuentas (proporcional, igualitario, ponderado).',
-    slug: 'calcular-gastos-compartidos-metodos',
-  },
-].filter((a) => !publishedSlugs.has(a.slug));
 
 // Format date: "15 abril 2026"
 function formatDate(dateStr: string): string {
@@ -91,6 +51,47 @@ function formatDate(dateStr: string): string {
 const hasPosts = posts.length > 0;
 const featuredPost = hasPosts ? posts[0] : null;
 const restPosts = hasPosts ? posts.slice(1) : [];
+
+// ── Agrupación temática ──────────────────────────────────────────────────────
+// El grid plano no da jerarquía. Agrupamos los posts (menos el featured) en
+// secciones temáticas según su `category`. Cada sección tiene un ícono del UI
+// kit (no emoji). Las categorías que no mapean caen en "Más artículos".
+type SectionKey = 'datos' | 'cambios' | 'guias' | 'casos' | 'otros';
+const SECTIONS: { key: SectionKey; title: string; icon: string; desc: string }[] = [
+  { key: 'datos',   title: 'Datos y análisis', icon: 'chart',    desc: 'Informes con números actualizados: inflación, sueldos, costo de vida.' },
+  { key: 'cambios', title: 'Qué cambió',       icon: 'calendar', desc: 'Vencimientos, escalas y novedades fiscales del mes.' },
+  { key: 'guias',   title: 'Guías',            icon: 'book',     desc: 'Paso a paso para calcular y entender, sin tecnicismos.' },
+  { key: 'casos',   title: 'Casos prácticos',  icon: 'target',   desc: 'Decisiones concretas: dónde conviene, cuánto sale, cómo dividir.' },
+  { key: 'otros',   title: 'Más artículos',    icon: 'info',     desc: '' },
+];
+
+// Mapeo category → sección temática. Data-driven: se apoya en el `category`
+// real de cada JSON. Si aparece una categoría nueva sin mapear, cae en "otros".
+const CATEGORY_TO_SECTION: Record<string, SectionKey> = {
+  economia: 'datos',
+  fiscal: 'cambios',
+  salud: 'guias',
+  vida: 'guias',
+  finanzas: 'casos',
+  hogar: 'casos',
+  viajes: 'casos',
+  deportes: 'casos',
+};
+
+// Heurística fina para finanzas (categoría más poblada): informes → datos,
+// vencimientos → cambios, guías how-to → guías. El resto queda en casos.
+function sectionFor(p: BlogPost): SectionKey {
+  const slug = p.slug;
+  if (/^informe-financiero|^inflacion-|costo-de-vida|sueldo-real|argentino-promedio/.test(slug)) return 'datos';
+  if (/vencimiento|recategorizacion|escala-ganancias|prorroga/.test(slug)) return 'cambios';
+  if (/^como-|^guia-/.test(slug)) return 'guias';
+  return CATEGORY_TO_SECTION[p.category] || 'otros';
+}
+
+const grouped = SECTIONS.map((s) => ({
+  ...s,
+  posts: restPosts.filter((p) => sectionFor(p) === s.key),
+})).filter((s) => s.posts.length > 0);
 
 const description = hasPosts
   ? 'Artículos prácticos sobre finanzas, salud y negocios. Cobertura para Argentina (sueldos, impuestos, monotributo). Sin tecnicismos, con ejemplos reales.'
@@ -171,6 +172,11 @@ const schema = {
               <h2 class="post-card__title">{featuredPost.title}</h2>
               <p class="post-card__desc">{featuredPost.description}</p>
               <div class="post-card__meta">
+                <span class="meta-author">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  {displayAuthor(featuredPost)}
+                </span>
+                <span class="meta-dot" aria-hidden="true">·</span>
                 <time datetime={featuredPost.date}>{formatDate(featuredPost.date)}</time>
                 <span class="meta-dot" aria-hidden="true">·</span>
                 <span>{featuredPost.readingTime} min de lectura</span>
@@ -179,52 +185,46 @@ const schema = {
           </a>
         )}
 
-        {/* Rest of posts — 2-column grid */}
-        {restPosts.length > 0 && (
-          <ul class="posts-grid">
-            {restPosts.map((post) => (
-              <li>
-                <a href={`/blog/${post.slug}`} class="post-card">
-                  <div class="post-card__emoji" aria-hidden="true">{post.heroEmoji}</div>
-                  <div class="post-card__body">
-                    <span class={`cat-tag cat-${post.category}`}>{post.category}</span>
-                    <h3 class="post-card__title">{post.title}</h3>
-                    <p class="post-card__desc">{post.description}</p>
-                    <div class="post-card__meta">
-                      <time datetime={post.date}>{formatDate(post.date)}</time>
-                      <span class="meta-dot" aria-hidden="true">·</span>
-                      <span>{post.readingTime} min de lectura</span>
+        {/* Rest of posts — grouped into thematic sections */}
+        {grouped.map((section) => (
+          <div class="topic-group">
+            <div class="topic-head">
+              <span class="topic-icon" aria-hidden="true">
+                <Icon name={section.icon} size={18} />
+              </span>
+              <div>
+                <h2 class="topic-title">{section.title}</h2>
+                {section.desc && <p class="topic-desc">{section.desc}</p>}
+              </div>
+            </div>
+            <ul class="posts-grid">
+              {section.posts.map((post) => (
+                <li>
+                  <a href={`/blog/${post.slug}`} class="post-card">
+                    <div class="post-card__emoji" aria-hidden="true">{post.heroEmoji}</div>
+                    <div class="post-card__body">
+                      <span class={`cat-tag cat-${post.category}`}>{post.category}</span>
+                      <h3 class="post-card__title">{post.title}</h3>
+                      <p class="post-card__desc">{post.description}</p>
+                      <div class="post-card__meta">
+                        <span class="meta-author">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          {displayAuthor(post)}
+                        </span>
+                        <span class="meta-dot" aria-hidden="true">·</span>
+                        <time datetime={post.date}>{formatDate(post.date)}</time>
+                        <span class="meta-dot" aria-hidden="true">·</span>
+                        <span>{post.readingTime} min</span>
+                      </div>
                     </div>
-                  </div>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </section>
     ) : null}
-
-    {/* Planned articles (only if there are unpublished ones left) */}
-    {plannedArticulos.length > 0 && (
-      <section class="upcoming">
-        <h2>{hasPosts ? 'Próximamente' : 'Lo que estamos preparando'}</h2>
-        <p class="upcoming-intro">
-          {hasPosts
-            ? 'Artículos que estamos terminando de preparar.'
-            : 'Estos son algunos de los artículos que publicaremos primero. ¿Te falta alguno?'}{' '}
-          <a href="/contacto">Sugerinos un tema.</a>
-        </p>
-        <ul class="article-list">
-          {plannedArticulos.map((a) => (
-            <li class="article-item">
-              <span class={`cat-tag cat-${a.cat}`}>{a.cat}</span>
-              <h3>{a.titulo}</h3>
-              <p>{a.bajada}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-    )}
 
     <section class="meanwhile">
       <h2>Mientras tanto</h2>
@@ -454,60 +454,62 @@ const schema = {
   .post-card__meta {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.375rem;
     font-size: 0.8125rem;
     color: var(--text-subtle);
   }
   .meta-dot { opacity: 0.5; }
+  .meta-author {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .meta-author svg { flex-shrink: 0; opacity: 0.85; }
 
-  /* ── Upcoming (planned) ── */
+  /* ── Thematic groups ── */
   section { margin-bottom: 3rem; }
 
-  .upcoming h2,
+  .topic-group { margin-top: 2.5rem; }
+  .topic-group:first-of-type { margin-top: 0; }
+
+  .topic-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1.1rem;
+  }
+  .topic-icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm, 8px);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .topic-title {
+    font-size: 1.25rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0;
+    color: var(--text);
+  }
+  .topic-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin: 0.2rem 0 0;
+  }
+
+  /* ── Meanwhile quick links ── */
   .meanwhile h2 {
     font-size: 1.375rem;
     margin-bottom: 0.5rem;
   }
-  .upcoming-intro {
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-    font-size: 0.9375rem;
-  }
-  .upcoming-intro a { color: var(--accent); font-weight: 500; }
-
-  .article-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-  }
-  .article-item {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-    transition: border-color 0.15s, transform 0.15s;
-  }
-  .article-item:hover {
-    border-color: var(--border-strong);
-    transform: translateY(-2px);
-  }
-  .article-item h3 {
-    font-size: 1rem;
-    line-height: 1.35;
-    margin-bottom: 0.5rem;
-    color: var(--text);
-  }
-  .article-item p {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-    margin: 0;
-  }
-
-  /* ── Meanwhile quick links ── */
   .meanwhile p {
     color: var(--text-muted);
     line-height: 1.65;
@@ -553,9 +555,6 @@ const schema = {
       font-size: 2.25rem;
     }
     .posts-grid {
-      grid-template-columns: 1fr;
-    }
-    .article-list {
       grid-template-columns: 1fr;
     }
   }

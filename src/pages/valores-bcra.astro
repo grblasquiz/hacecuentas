@@ -4,6 +4,7 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import TrustStrip from '../components/ui/TrustStrip.astro';
 import bcraIndicesRaw from '../lib/bcra-indices.json';
 import { getPlazoFijoTop } from '../lib/plazo-fijo';
 import { ICL_VALORES, ICL_LAST_UPDATED } from '../lib/formulas/_bcra-icl';
@@ -92,6 +93,54 @@ const mesLargo = (s: string) => {
 };
 const uvaHist = ultimoPorMes(uva, 12);     // UVA es serie diaria → tomamos fin de mes
 const ipcHist = inflacion.slice(-6).reverse(); // inflación INDEC ya es mensual
+
+// ── Sparklines SVG (polyline) a partir de series REALES ya en scope. No se
+// inventan datos: si no hay ≥2 puntos, sparkline() devuelve null y no se pinta.
+// Se toman los últimos ~30 puntos de la serie diaria de UVA y los últimos 12
+// meses de inflación mensual (INDEC no publica diario).
+function sparkline(values: number[], w = 88, h = 26): string | null {
+  const v = values.filter((n) => typeof n === 'number' && isFinite(n));
+  if (v.length < 2) return null;
+  const min = Math.min(...v);
+  const max = Math.max(...v);
+  const span = max - min || 1;
+  const step = w / (v.length - 1);
+  const pad = 2; // margen vertical para que no se corte el trazo
+  const pts = v
+    .map((n, i) => {
+      const x = (i * step).toFixed(1);
+      const y = (h - pad - ((n - min) / span) * (h - pad * 2)).toFixed(1);
+      return `${x},${y}`;
+    })
+    .join(' ');
+  return pts;
+}
+const uvaSpark = sparkline(uva.slice(-30).map((p) => p.valor));
+const uvaSparkUp = uva.length >= 2 ? uva[uva.length - 1].valor >= uva[uva.length - 30 >= 0 ? uva.length - 30 : 0].valor : true;
+const ipcSpark = sparkline(inflacion.slice(-12).map((p) => p.valor));
+const ipcSparkUp = inflacion.length >= 2 ? inflacion[inflacion.length - 1].valor >= inflacion[0].valor : false;
+
+// ── Variación mes a mes (delta) para UVA e inflación — dato REAL de las series.
+// La UVA sube ~siempre (indexada), así que su delta suele ser 'pos' visual pero
+// aquí lo dejamos neutral: subir la UVA no es "bueno". La inflación SÍ es
+// semántica: baja = verde (pos), sube = rojo (neg).
+function pctDelta(cur?: number, prev?: number): string | null {
+  if (cur == null || prev == null || prev === 0) return null;
+  const d = ((cur / prev - 1) * 100);
+  const s = d.toFixed(1).replace('.', ',');
+  return (d >= 0 ? '+' : '') + s + '%';
+}
+const uvaPrevMes = uvaHist.length >= 2 ? uvaHist[1]?.valor : undefined; // uvaHist va del más nuevo al más viejo
+const uvaDeltaMes = pctDelta(ultimaUva?.valor, uvaPrevMes);
+const ipcPrev = inflacion.length >= 2 ? inflacion[inflacion.length - 2]?.valor : undefined;
+const ipcDeltaPts = (ultimoIpc?.valor != null && ipcPrev != null)
+  ? (() => { const d = ultimoIpc.valor - ipcPrev; return (d >= 0 ? '+' : '') + d.toFixed(1).replace('.', ',') + ' pts'; })()
+  : null;
+// Tono de la inflación: si el IPC del mes es menor que el previo → desaceleró (pos/verde).
+const ipcDeltaTone: 'pos' | 'neg' | 'neutral' =
+  (ultimoIpc?.valor != null && ipcPrev != null)
+    ? (ultimoIpc.valor < ipcPrev ? 'pos' : ultimoIpc.valor > ipcPrev ? 'neg' : 'neutral')
+    : 'neutral';
 
 // Plazo fijo: top tasas de bancos RECONOCIBLES (helper compartido, mismo filtro
 // que /comparador-plazo-fijo — sin compañías financieras chicas).
@@ -230,16 +279,32 @@ const faqSchema = {
     <header class="dash-head">
       <h1>Valores BCRA y INDEC hoy</h1>
       <p class="lead">Dólar oficial, blue, MEP y CCL, inflación INDEC, UVA y tasas de plazo fijo de Argentina, en un solo lugar.</p>
-      <p class="updated-row">
-        <span class="live-dot" aria-hidden="true"></span>
-        Cotizaciones en vivo · actualizado <time data-updated datetime={builtAtISO}>{buildDate}</time>
-      </p>
     </header>
+
+    <!-- BARRA SUPERIOR DE DASHBOARD: estado en vivo + fuente + metodología -->
+    <TrustStrip class="dash-bar">
+      <span class="ui-trust__item dash-bar__live">
+        <span class="live-dot" aria-hidden="true"></span>
+        Cotizaciones en vivo · <time data-updated datetime={builtAtISO}>actualizado {buildDate}</time>
+      </span>
+      <span class="ui-trust__item">Fuente: BCRA · INDEC · dolarapi</span>
+      <a class="ui-trust__item dash-bar__method" href="#fuentes">Ver metodología →</a>
+    </TrustStrip>
 
     {resumen && <p class="vb-resumen">{resumen}</p>}
 
+    <!-- ÍNDICE DE ANCLAS (sticky) — navegación entre secciones sin ocultar
+         contenido: TODO sigue en el HTML (crawleable), sólo hace scroll. -->
+    <nav class="dash-tabs" aria-label="Secciones del dashboard">
+      <a href="#dolar">Dólar</a>
+      <a href="#inflacion">Inflación</a>
+      <a href="#tasas">Tasas BCRA</a>
+      <a href="#historico">UVA e IPC</a>
+      <a href="#plazo-fijo">Plazo fijo</a>
+    </nav>
+
     <!-- SECCIÓN DÓLAR -->
-    <section class="dash-section">
+    <section class="dash-section" id="dolar">
       <h2>💵 Cotización del dólar</h2>
       <div class="card-grid">
         {dolarCards.map((c) => {
@@ -254,9 +319,6 @@ const faqSchema = {
             <div class="card">
               <div class="card-head">
                 <span class="card-label">{c.label}</span>
-                {showBrecha && (
-                  <span class="badge" data-brecha-key={c.key}>+{brecha}%</span>
-                )}
                 {showTaxBadge && (
                   <span class="badge badge-tax" title="Recargo por percepción Ganancias, no brecha cambiaria">+{brecha}% impuesto</span>
                 )}
@@ -267,7 +329,14 @@ const faqSchema = {
               <div class="card-sub">
                 {d?.compra ? `Compra: $${fmtAr(d.compra)}` : c.hint}
               </div>
-              <div class="card-hint">{c.hint}</div>
+              {showBrecha ? (
+                <div class="card-meta">
+                  <span class="meta-label">Brecha vs oficial</span>
+                  <span class="meta-val" data-brecha-key={c.key}>+{brecha}%</span>
+                </div>
+              ) : (
+                <div class="card-hint">{c.hint}</div>
+              )}
             </div>
           );
         })}
@@ -275,17 +344,25 @@ const faqSchema = {
     </section>
 
     <!-- SECCIÓN INFLACIÓN -->
-    <section class="dash-section">
+    <section class="dash-section" id="inflacion">
       <h2>📈 Inflación (INDEC)</h2>
       <div class="card-grid">
         <div class="card hi">
           <div class="card-head">
             <span class="card-label">Inflación mensual</span>
+            {ipcDeltaPts && (
+              <span class={`delta delta-${ipcDeltaTone}`} title="Variación vs el mes anterior (puntos porcentuales)">{ipcDeltaPts}</span>
+            )}
           </div>
           <div class="card-value" data-ipc-mensual>
             {ultimoIpc ? `${ultimoIpc.valor.toFixed(1)}%` : '—'}
           </div>
-          <div class="card-sub">IPC Nacional</div>
+          {ipcSpark && (
+            <svg class={`spark spark-${ipcSparkUp ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true" role="img">
+              <polyline points={ipcSpark} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          )}
+          <div class="card-sub">IPC Nacional · últimos 12 meses</div>
           <div class="card-hint">Último dato: {ultimoIpc ? fmtDate(ultimoIpc.fecha) : '—'}</div>
         </div>
         <div class="card hi">
@@ -301,11 +378,19 @@ const faqSchema = {
         <div class="card hi">
           <div class="card-head">
             <span class="card-label">UVA</span>
+            {uvaDeltaMes && (
+              <span class="delta delta-neutral" title="Variación vs el mes anterior">{uvaDeltaMes}</span>
+            )}
           </div>
           <div class="card-value" data-uva>
             {ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : '—'}
           </div>
-          <div class="card-sub">Unidad de Valor Adquisitivo</div>
+          {uvaSpark && (
+            <svg class={`spark spark-${uvaSparkUp ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true" role="img">
+              <polyline points={uvaSpark} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          )}
+          <div class="card-sub">Unidad de Valor Adquisitivo · últimos 30 días</div>
           <div class="card-hint">Al {ultimaUva ? fmtDate(ultimaUva.fecha) : '—'}</div>
         </div>
       </div>
@@ -313,7 +398,7 @@ const faqSchema = {
 
     <!-- SECCIÓN TASAS E ÍNDICES BCRA -->
     {tasasBcra.length > 0 && (
-      <section class="dash-section">
+      <section class="dash-section" id="tasas">
         <h2>🏛️ Tasas e índices del BCRA</h2>
         <div class="card-grid">
           {tasasBcra.map((t) => (
@@ -329,7 +414,7 @@ const faqSchema = {
     )}
 
     <!-- SECCIÓN HISTÓRICO UVA + INFLACIÓN -->
-    <section class="dash-section">
+    <section class="dash-section" id="historico">
       <h2>📅 Evolución reciente: UVA e inflación mes a mes</h2>
       <div class="hist-grid">
         <div class="hist-block">
@@ -362,7 +447,7 @@ const faqSchema = {
     </section>
 
     <!-- SECCIÓN PLAZO FIJO / TASAS -->
-    <section class="dash-section">
+    <section class="dash-section" id="plazo-fijo">
       <h2>🏦 Plazo fijo: mejores TNA por banco{pfMax ? ` (hasta ${String(pfMax).replace('.', ',')}%)` : ''}</h2>
       {plazoFijoRows.length ? (
         <div class="tna-bars">
@@ -456,8 +541,8 @@ const faqSchema = {
       <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} is:inline />
     </section>
 
-    <section class="dash-section sources">
-      <h3>Fuentes</h3>
+    <section class="dash-section sources" id="fuentes">
+      <h3>Fuentes y metodología</h3>
       <ul class="sources-list">
         <li><a href="https://www.bcra.gob.ar" target="_blank" rel="noopener">BCRA — Banco Central de la República Argentina</a> (cotización oficial, UVA)</li>
         <li><a href="https://www.indec.gob.ar" target="_blank" rel="noopener">INDEC</a> (IPC Nacional)</li>
@@ -540,6 +625,33 @@ const faqSchema = {
     max-width: 760px;
   }
 
+  /* Barra superior de dashboard (TrustStrip + estado en vivo) */
+  .dash-bar { margin: 0 0 1.5rem; }
+  .dash-bar__live { font-weight: 600; color: var(--text); }
+  .dash-bar__method { color: var(--accent-strong); font-weight: 600; text-decoration: none; }
+  .dash-bar__method:hover { text-decoration: underline; }
+  .dash-bar .live-dot { margin-right: 2px; }
+
+  /* Índice de anclas sticky entre secciones (no oculta contenido). */
+  .dash-tabs {
+    position: sticky; top: 0; z-index: 3;
+    display: flex; gap: 0.375rem; flex-wrap: wrap;
+    padding: 0.5rem 0; margin-bottom: 1.5rem;
+    background: color-mix(in srgb, var(--bg-card) 82%, transparent);
+    backdrop-filter: saturate(1.4) blur(6px);
+    border-bottom: 1px solid var(--border);
+  }
+  .dash-tabs a {
+    font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
+    padding: 0.3rem 0.7rem; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--bg-card);
+    text-decoration: none; white-space: nowrap;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .dash-tabs a:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+  /* que la barra sticky no tape el título al saltar por ancla */
+  .dash-section[id] { scroll-margin-top: 3.25rem; }
+
   .dash-section { margin-bottom: 2.5rem; }
   .dash-section h2 {
     font-size: 1.25rem;
@@ -602,6 +714,36 @@ const faqSchema = {
     background: var(--warning-soft, rgba(245, 158, 11, 0.14));
     color: var(--warning, #b45309);
     cursor: help;
+  }
+
+  /* Delta de variación (mes a mes) — coloreado por tono semántico.
+     Es la VARIACIÓN (sube/baja), distinta de la brecha (sub-dato aparte). */
+  .delta {
+    font-family: var(--font-num, var(--font-mono));
+    font-variant-numeric: tabular-nums;
+    font-size: 0.72rem; font-weight: 700;
+    padding: 0.1rem 0.4rem; border-radius: 999px;
+    background: var(--bg-muted, rgba(100, 116, 139, 0.12));
+    color: var(--text-muted); white-space: nowrap;
+  }
+  .delta-pos { background: var(--success-soft, rgba(22, 163, 74, 0.14)); color: var(--success-text, #15803d); }
+  .delta-neg { background: var(--danger-soft, rgba(220, 38, 38, 0.12)); color: var(--danger, #dc2626); }
+  .delta-neutral { background: var(--bg-muted, rgba(100, 116, 139, 0.12)); color: var(--text-muted); }
+
+  /* Sparkline SVG (30d / 12m) — hereda color por dirección de la serie. */
+  .spark { display: block; width: 88px; height: 26px; margin: 0.35rem 0 0.15rem; overflow: visible; }
+  .spark-up { color: var(--accent-strong); }
+  .spark-down { color: var(--danger, #dc2626); }
+
+  /* Brecha como sub-dato ETIQUETADO (no un badge ambiguo de variación). */
+  .card-meta {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 0.5rem; margin-top: 0.1rem;
+  }
+  .meta-label { font-size: 0.72rem; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.03em; }
+  .meta-val {
+    font-family: var(--font-num, var(--font-mono)); font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem; font-weight: 700; color: var(--text-muted);
   }
 
   .card-value {

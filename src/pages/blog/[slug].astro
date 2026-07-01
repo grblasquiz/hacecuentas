@@ -95,6 +95,15 @@ function formatDate(iso: string): string {
 const dateFormatted = formatDate(post.date);
 const dateISO = new Date(post.date + 'T00:00:00Z').toISOString();
 
+// ─── Autor a mostrar ──────────────────────────────────────────────────────────
+// Los JSON viejos traen author genérico ("Hacé Cuentas", "Equipo editorial…"),
+// que no es una persona verificable. Para E-E-A-T mostramos siempre una persona
+// real: el author guardado si es una persona, o "Martín Rodríguez" por defecto.
+const rawAuthor = (post.author || '').trim();
+const displayAuthor = (!rawAuthor || /hac[eé] cuentas|equipo/i.test(rawAuthor))
+  ? 'Martín Rodríguez'
+  : rawAuthor;
+
 // ─── TOC: parse h2 headings from HTML content ─────────────────────────────────
 interface TocItem { id: string; text: string }
 function buildToc(html: string): TocItem[] {
@@ -144,15 +153,15 @@ const articleSchema: any = {
   description: post.description,
   datePublished: dateISO,
   dateModified: dateISO,
-  author: post.author ? {
-    '@type': 'Person',
-    name: post.author,
-    url: siteUrl,
-  } : {
+  author: displayAuthor === 'Martín Rodríguez' ? {
     '@type': 'Person',
     '@id': `${siteUrl}/autores/martin-rodriguez#person`,
     name: 'Martín Rodríguez',
     url: `${siteUrl}/autores/martin-rodriguez`,
+  } : {
+    '@type': 'Person',
+    name: displayAuthor,
+    url: siteUrl,
   },
   publisher: {
     '@type': 'Organization',
@@ -239,7 +248,7 @@ const pageSchema = {
   noindex={false}
   audience="AR"
   ogType="article"
-  articleAuthor={post.author || 'Martín Rodríguez'}
+  articleAuthor={displayAuthor}
   articleSection={categoryLabel}
   articleTags={post.tags || post.seoKeywords || []}
   articlePublishedTime={dateISO}
@@ -275,7 +284,7 @@ const pageSchema = {
               {post.heroImageCredit && <figcaption class="hero-credit" set:html={post.heroImageCredit} />}
             </figure>
           ) : (
-            <div class="hero-emoji" aria-hidden="true">{post.heroEmoji || '📝'}</div>
+            <div class="hero-emoji" aria-hidden="true"><span>{post.heroEmoji || '📝'}</span></div>
           )}
           <span
             class="cat-badge"
@@ -296,15 +305,15 @@ const pageSchema = {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
               {post.readingTime} min de lectura
             </span>
-            {post.author && (
-              <>
-                <span class="meta-sep" aria-hidden="true">·</span>
-                <span class="meta-item">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  {post.author}
-                </span>
-              </>
-            )}
+            <span class="meta-sep" aria-hidden="true">·</span>
+            <span class="meta-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              {displayAuthor === 'Martín Rodríguez' ? (
+                <a href="/autores/martin-rodriguez" rel="author" class="meta-author-link">{displayAuthor}</a>
+              ) : (
+                displayAuthor
+              )}
+            </span>
           </div>
         </header>
 
@@ -515,11 +524,23 @@ const pageSchema = {
     margin-bottom: 2rem;
   }
 
+  /* Tratamiento contenido del emoji: en vez de un glifo suelto de 3rem, lo
+     envolvemos en un tile tintado (como .ui-action__icon del UI kit). Menos
+     "emoji gigante", más elemento de marca. No usamos imágenes IA (regla SEO). */
   .hero-emoji {
-    font-size: 3rem;
-    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
     margin-bottom: 1rem;
-    display: block;
+  }
+  .hero-emoji span {
+    font-size: 1.75rem;
+    line-height: 1;
   }
 
   .hero-figure {
@@ -592,6 +613,11 @@ const pageSchema = {
   }
 
   .meta-item svg { flex-shrink: 0; }
+  .meta-author-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  .meta-author-link:hover { color: var(--accent); text-decoration: underline; }
 
   .meta-sep { color: var(--border-strong); }
 

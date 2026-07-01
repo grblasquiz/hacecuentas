@@ -1417,6 +1417,12 @@ const groups = groupCalcs(cat, calcs);
 // sin título que contiene todos los calcs de la página.
 const renderGroups = groups || [{ id: null, title: null, icon: null, calcs }];
 
+// Filtro por país (Task 4): sólo tiene sentido si esta página mezcla calcs AR
+// con calcs globales. audience !== 'AR' se trata como "Global" (MX/ES/CO/etc.
+// son minoría en estas categorías y se agrupan bajo Global para no fragmentar).
+const arCount = calcs.filter((c: any) => c.audience === 'AR').length;
+const showCountryFilter = arCount > 0 && arCount < calcs.length;
+
 // Interlinking: guía pilar del tema + categorías hermanas
 const pillarSlug = CATEGORY_TO_GUIDE[cat];
 const pillarTitle = pillarSlug ? GUIDE_TITLES[pillarSlug] : null;
@@ -1572,7 +1578,13 @@ function md(text: string): string {
       <h1>{m.label}</h1>
       {isFirstPage && <p class="intro">{m.intro}</p>}
       <div class="quick-stats">
-        <span class="qs-item"><strong>{totalCalcs}</strong> calculadoras</span>
+        {isFirstPage && featured.length > 0 && (
+          <>
+            <span class="qs-item"><strong class="qs-num">{featured.length}</strong> destacadas</span>
+            <span class="qs-dot" aria-hidden="true">·</span>
+          </>
+        )}
+        <span class="qs-item"><strong class="qs-num">{totalCalcs}</strong> calculadoras en total</span>
         <span class="qs-dot" aria-hidden="true">·</span>
         <span class="qs-item">Actualizadas a <strong>2026</strong></span>
         <span class="qs-dot" aria-hidden="true">·</span>
@@ -1622,6 +1634,23 @@ function md(text: string): string {
       />
     </label>
     <span class="cat-filter-count" data-total={calcs.length}>{calcs.length} resultados</span>
+    {showCountryFilter && (
+      <div class="cat-country" role="group" aria-label="Filtrar por país">
+        <button type="button" class="ctry-tab" data-ctry="all" aria-pressed="true">Todas</button>
+        <button type="button" class="ctry-tab" data-ctry="AR" aria-pressed="false">🇦🇷 Argentina</button>
+        <button type="button" class="ctry-tab" data-ctry="global" aria-pressed="false">🌎 Global</button>
+      </div>
+    )}
+    <div class="cat-density" role="group" aria-label="Densidad de la lista">
+      <button type="button" class="dns-tab is-active" data-density="cards" aria-pressed="true" title="Ver como tarjetas">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Tarjetas</span>
+      </button>
+      <button type="button" class="dns-tab" data-density="list" aria-pressed="false" title="Ver como lista compacta">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <span>Lista</span>
+      </button>
+    </div>
   </div>
 
   <div class="cat-sort" role="group" aria-label="Ordenar calculadoras">
@@ -1697,6 +1726,7 @@ function md(text: string): string {
               class="card"
               data-title={(c.h1 || '').toLowerCase()}
               data-date={c.lastReviewed || c.dataUpdate?.lastUpdated || ''}
+              data-aud={c.audience === 'AR' ? 'AR' : 'global'}
             >
               <div class="card-icon">{c.icon}</div>
               <div class="card-body">
@@ -1786,6 +1816,7 @@ function md(text: string): string {
           text: norm(((t && t.textContent) || '') + ' ' + ((d && d.textContent) || '')),
           title: norm(el.getAttribute('data-title') || ''),
           date: el.getAttribute('data-date') || '',
+          aud: el.getAttribute('data-aud') || 'global',
           parent: el.parentNode,
           next: el.nextSibling,
         };
@@ -1861,10 +1892,47 @@ function md(text: string): string {
         }
       }
 
+      // ---- Filtro por pa\u00eds (Task 4) -------------------------------------
+      // all | AR | global. Compone con texto y sub-grupo dentro de apply().
+      var ctryTabs = Array.from(document.querySelectorAll('.cat-country .ctry-tab'));
+      var ctryFilter = 'all';
+      ctryTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          ctryFilter = tab.getAttribute('data-ctry') || 'all';
+          ctryTabs.forEach(function (t) { t.setAttribute('aria-pressed', String(t === tab)); });
+          apply();
+        });
+      });
+
+      // ---- Densidad: tarjetas / lista compacta (Task 3) ------------------
+      // 100% CSS: alterna una clase en #cat-grid. Las mismas .card siguen en el
+      // DOM (crawlable) y el filtro/orden no se enteran.
+      var dnsTabs = Array.from(document.querySelectorAll('.cat-density .dns-tab'));
+      dnsTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var mode = tab.getAttribute('data-density') || 'cards';
+          grid.classList.toggle('cat-compact', mode === 'list');
+          dnsTabs.forEach(function (t) {
+            var on = t === tab;
+            t.classList.toggle('is-active', on);
+            t.setAttribute('aria-pressed', String(on));
+          });
+          try { localStorage.setItem('hc-cat-density', mode); } catch (e) {}
+        });
+      });
+      // Restaurar preferencia de densidad.
+      try {
+        var savedDns = localStorage.getItem('hc-cat-density');
+        if (savedDns === 'list') {
+          var listTab = document.querySelector('.cat-density .dns-tab[data-density="list"]');
+          if (listTab) listTab.click();
+        }
+      } catch (e) {}
+
       // ---- Filtro de texto + composici\u00f3n con sub-grupo --------------------
       function apply() {
         var q = norm(input.value.trim());
-        var flattening = !!q || sortMode !== 'featured';
+        var flattening = !!q || sortMode !== 'featured' || ctryFilter !== 'all';
         // Mientras se filtra/ordena en plano, escondemos "M\u00e1s usadas" y los chips:
         // el resultado plano es m\u00e1s claro y evita cards duplicadas. La clase
         // cat-filtering oculta los headers de grupo (cuyo contador es el total del
@@ -1876,6 +1944,7 @@ function md(text: string): string {
         var visible = 0;
         cards.forEach(function (c) {
           var match = !q || c.text.indexOf(q) !== -1;
+          if (match && ctryFilter !== 'all' && c.aud !== ctryFilter) match = false;
           if (match && subFilter) {
             var grp = c.el.closest('[data-group]');
             if (!grp || grp.id !== 'g-' + subFilter) match = false;
@@ -1890,7 +1959,7 @@ function md(text: string): string {
         } else {
           groupEls.forEach(function (g) { g.hidden = false; });
         }
-        if (q || subFilter) counter.textContent = visible + ' / ' + total + ' resultados';
+        if (q || subFilter || ctryFilter !== 'all') counter.textContent = visible + ' / ' + total + ' resultados';
         else counter.textContent = total + ' resultados';
         if (empty) empty.hidden = visible > 0;
       }
@@ -2069,6 +2138,12 @@ function md(text: string): string {
     margin-top: 0.9rem;
   }
   .qs-item strong { color: var(--text-muted); font-weight: 650; }
+  .qs-num {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    color: var(--cat-color) !important;
+    font-weight: 700 !important;
+  }
   .qs-dot { color: var(--border-strong); }
 
   .cat-toolbar {
@@ -2185,6 +2260,77 @@ function md(text: string): string {
     overflow: hidden;
   }
   .card-arrow { flex-shrink: 0; color: var(--text-subtle); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s; margin-top: 0.5rem; }
+
+  /* ===== Filtro por país (Task 4) ===== */
+  .cat-country { display: inline-flex; gap: 0.3rem; flex-wrap: wrap; }
+  .ctry-tab {
+    padding: 0.32rem 0.65rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+  }
+  .ctry-tab:hover { color: var(--text); border-color: var(--border-strong); }
+  .ctry-tab[aria-pressed='true'] {
+    background: color-mix(in srgb, var(--cat-color, var(--accent)) 12%, var(--bg));
+    border-color: color-mix(in srgb, var(--cat-color, var(--accent)) 45%, var(--border));
+    color: var(--cat-color, var(--accent));
+  }
+
+  /* ===== Toggle de densidad: tarjetas / lista compacta (Task 3) ===== */
+  .cat-density { display: inline-flex; gap: 0; margin-left: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .dns-tab {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.4rem 0.7rem;
+    background: var(--bg);
+    border: none;
+    font-family: inherit;
+    font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.13s, color 0.13s;
+  }
+  .dns-tab + .dns-tab { border-left: 1px solid var(--border); }
+  .dns-tab:hover { color: var(--text); }
+  .dns-tab.is-active {
+    background: color-mix(in srgb, var(--cat-color, var(--accent)) 12%, var(--bg));
+    color: var(--cat-color, var(--accent));
+  }
+  .dns-tab svg { flex-shrink: 0; }
+  @media (max-width: 520px) { .dns-tab span { display: none; } }
+
+  /* Lista compacta: una línea por calc. Reusa las mismas .card (crawlables),
+     sólo cambia el layout. El icono y la flecha se achican; la descripción
+     se oculta para máxima densidad/escaneo. */
+  #cat-grid.cat-compact .grid {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    gap: 0;
+  }
+  #cat-grid.cat-compact .card {
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.6rem 0.9rem;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  #cat-grid.cat-compact .card:last-child { border-bottom: none; }
+  #cat-grid.cat-compact .card:hover {
+    background: color-mix(in srgb, var(--cat-color, var(--accent)) 7%, var(--bg-card));
+  }
+  #cat-grid.cat-compact .card-icon {
+    width: 26px; height: 26px; font-size: 0.95rem;
+  }
+  #cat-grid.cat-compact .card-title { margin-bottom: 0; font-size: 0.9rem; }
+  #cat-grid.cat-compact .card-desc { display: none; }
+  #cat-grid.cat-compact .card-arrow { margin-top: 0; }
 
   /* SEO content block */
   .seo-content {

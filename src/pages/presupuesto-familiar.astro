@@ -80,6 +80,26 @@ const schema = {
       </p>
     </header>
 
+    <!-- RESUMEN STICKY EN VIVO -->
+    <div class="bp-sticky" id="bp-sticky" aria-live="polite">
+      <div class="bp-sticky-inner">
+        <div class="bp-sticky-item">
+          <span class="bp-sticky-lbl">Ingresos</span>
+          <span class="bp-sticky-val" id="sticky-ing">$0</span>
+        </div>
+        <span class="bp-sticky-sep" aria-hidden="true">·</span>
+        <div class="bp-sticky-item">
+          <span class="bp-sticky-lbl">Gastos</span>
+          <span class="bp-sticky-val" id="sticky-gastos">$0</span>
+        </div>
+        <span class="bp-sticky-sep" aria-hidden="true">·</span>
+        <div class="bp-sticky-item">
+          <span class="bp-sticky-lbl">Disponible</span>
+          <span class="bp-sticky-val" id="sticky-disp">$0</span>
+        </div>
+      </div>
+    </div>
+
     <section class="bp-form">
       <h2>1. Tus ingresos mensuales (neto)</h2>
       <div class="bp-inputs">
@@ -114,19 +134,29 @@ const schema = {
         <label><span>Supermercado / comida</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-super" value="0" data-group="necesidades" data-label="Supermercado" /></div></label>
         <label><span>Transporte (nafta, SUBE, tren)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-transporte" value="0" data-group="necesidades" data-label="Transporte" /></div></label>
         <label><span>Salud (prepaga, farmacia, médicos)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-salud" value="0" data-group="necesidades" data-label="Salud" /></div></label>
-        <label><span>Educación (colegio, universidad, cursos)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-educ" value="0" data-group="necesidades" data-label="Educación" /></div></label>
-        <label><span>Seguros (auto, hogar, vida)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-seguros" value="0" data-group="necesidades" data-label="Seguros" /></div></label>
       </div>
+      <details class="bp-more-fields">
+        <summary>Más gastos necesarios (educación, seguros)</summary>
+        <div class="bp-inputs">
+          <label><span>Educación (colegio, universidad, cursos)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-educ" value="0" data-group="necesidades" data-label="Educación" /></div></label>
+          <label><span>Seguros (auto, hogar, vida)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-seguros" value="0" data-group="necesidades" data-label="Seguros" /></div></label>
+        </div>
+      </details>
 
       <h2>3. Gastos variables / deseos</h2>
       <div class="bp-inputs">
         <label><span>Salidas (restaurantes, bares, delivery)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-salidas" value="0" data-group="deseos" data-label="Salidas" /></div></label>
         <label><span>Suscripciones (Netflix, Spotify, gym, etc.)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-subs" value="0" data-group="deseos" data-label="Suscripciones" /></div></label>
         <label><span>Ropa / cuidado personal</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-ropa" value="0" data-group="deseos" data-label="Ropa/cuidado" /></div></label>
-        <label><span>Viajes / vacaciones (prorrateado mensual)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-viajes" value="0" data-group="deseos" data-label="Viajes" /></div></label>
-        <label><span>Hobbies / ocio</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-hobbies" value="0" data-group="deseos" data-label="Hobbies" /></div></label>
-        <label><span>Otros gastos variables</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-otros" value="0" data-group="deseos" data-label="Otros" /></div></label>
       </div>
+      <details class="bp-more-fields">
+        <summary>Más gastos variables (viajes, hobbies, otros)</summary>
+        <div class="bp-inputs">
+          <label><span>Viajes / vacaciones (prorrateado mensual)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-viajes" value="0" data-group="deseos" data-label="Viajes" /></div></label>
+          <label><span>Hobbies / ocio</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-hobbies" value="0" data-group="deseos" data-label="Hobbies" /></div></label>
+          <label><span>Otros gastos variables</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-otros" value="0" data-group="deseos" data-label="Otros" /></div></label>
+        </div>
+      </details>
 
       <h2>4. Ahorro y deudas</h2>
       <div class="bp-inputs">
@@ -148,6 +178,12 @@ const schema = {
         </label>
       </div>
     </section>
+
+    <!-- CHIP AUTOGUARDADO -->
+    <div class="bp-saved-chip" id="bp-saved-chip" role="status" aria-live="polite">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Guardado en este dispositivo</span>
+    </div>
 
     <!-- RESULTADOS -->
     <section class="bp-results" id="bp-results" aria-live="polite">
@@ -400,7 +436,17 @@ const schema = {
     const balance = t.ingresos - gastos - t.ahorro;
     const balEl = document.getElementById('bp-balance')!;
     balEl.textContent = (balance >= 0 ? '+' : '') + fmtArs(balance).replace('$', '$');
-    balEl.style.color = balance >= 0 ? '#059669' : '#dc2626';
+    balEl.style.color = balance >= 0 ? 'var(--success-text, #059669)' : 'var(--danger, #dc2626)';
+
+    // Barra sticky en vivo
+    const gastosTotal = gastos + t.ahorro;
+    const disp = t.ingresos - gastosTotal;
+    (document.getElementById('sticky-ing') as any).textContent = fmtArs(t.ingresos);
+    (document.getElementById('sticky-gastos') as any).textContent = fmtArs(gastosTotal);
+    const dispEl = document.getElementById('sticky-disp')!;
+    dispEl.textContent = (disp >= 0 ? '+' : '') + fmtArs(disp);
+    dispEl.classList.toggle('is-pos', disp >= 0);
+    dispEl.classList.toggle('is-neg', disp < 0);
     (document.getElementById('bp-balance-pct') as any).textContent = t.ingresos > 0 ? fmtPct((balance / t.ingresos) * 100) + ' del ingreso' : '—';
     const mesesReserva = gastos > 0 ? (t.reserva / gastos) : 0;
     (document.getElementById('bp-reserva-meses') as any).textContent = mesesReserva.toFixed(1) + ' meses';
@@ -441,8 +487,11 @@ const schema = {
     recsEl.innerHTML = recs.map(r => '<li>' + r + '</li>').join('');
 
     // localStorage
-    saveState();
+    saveState(!suppressSave);
   }
+
+  // Evita flashear el chip durante la carga inicial
+  let suppressSave = true;
 
   function renderPie(t: Totals) {
     const canvas = document.getElementById('bp-pie') as HTMLCanvasElement;
@@ -480,12 +529,27 @@ const schema = {
     leg.innerHTML = legend.join('');
   }
 
-  function saveState() {
+  let savedChipTimer: number | undefined;
+  const savedChip = document.getElementById('bp-saved-chip');
+  function flashSavedChip() {
+    if (!savedChip) return;
+    savedChip.classList.add('is-visible');
+    if (savedChipTimer) clearTimeout(savedChipTimer);
+    savedChipTimer = window.setTimeout(() => savedChip.classList.remove('is-visible'), 1800);
+  }
+
+  let saveDebounce: number | undefined;
+  function saveState(showChip = true) {
     try {
       const state: Record<string, string> = {};
       numInputs.forEach(el => state[el.id] = el.value);
       state['situacion'] = situacion.value;
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      if (showChip) {
+        // Debounce el chip: no parpadear en cada tecla
+        if (saveDebounce) clearTimeout(saveDebounce);
+        saveDebounce = window.setTimeout(flashSavedChip, 400);
+      }
     } catch {}
   }
 
@@ -509,8 +573,35 @@ const schema = {
   });
   situacion.addEventListener('change', render);
 
+  // "No tengo este gasto": pone en 0 y colapsa el campo. Sólo en gastos opcionales.
+  const OPTIONAL_GROUPS = new Set(['deseos', 'deudas']);
+  numInputs.forEach(el => {
+    if (!OPTIONAL_GROUPS.has(el.dataset.group || '')) return;
+    const label = el.closest('label');
+    const wrap = el.closest('.bp-input-wrap');
+    if (!label || !wrap) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bp-no-gasto';
+    btn.textContent = 'No tengo este gasto';
+    label.appendChild(btn);
+    btn.addEventListener('click', () => {
+      const collapsed = label.classList.toggle('is-collapsed');
+      btn.textContent = collapsed ? 'Agregar este gasto' : 'No tengo este gasto';
+      if (collapsed) {
+        el.value = '';
+      }
+      render();
+    });
+  });
+
   document.getElementById('bp-reset')!.addEventListener('click', () => {
     numInputs.forEach(el => el.value = '');
+    document.querySelectorAll('.bp-inputs label.is-collapsed').forEach(l => {
+      l.classList.remove('is-collapsed');
+      const b = l.querySelector('.bp-no-gasto');
+      if (b) b.textContent = 'No tengo este gasto';
+    });
     localStorage.removeItem(STORE_KEY);
     render();
   });
@@ -536,12 +627,14 @@ const schema = {
   });
 
   document.getElementById('bp-save')!.addEventListener('click', () => {
-    saveState();
+    saveState(false);
+    flashSavedChip();
     alert('✓ Presupuesto guardado en tu dispositivo. La próxima vez se carga automáticamente.');
   });
 
   loadState();
   render();
+  suppressSave = false;
 </script>
 
 <style>
@@ -566,6 +659,128 @@ const schema = {
   }
   .lead { color: var(--text-muted); font-size: 1.1rem; max-width: 720px; margin: 0 auto; line-height: 1.6; }
   .lead strong { color: var(--text); font-weight: 700; }
+
+  /* Resumen sticky en vivo */
+  .bp-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 0 0 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: saturate(1.2) blur(6px);
+  }
+  .bp-sticky-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: .7rem 1rem;
+  }
+  .bp-sticky-item { display: flex; align-items: baseline; gap: .4rem; }
+  .bp-sticky-lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; color: var(--text-subtle); }
+  .bp-sticky-val {
+    font-family: var(--font-num), var(--font-mono), ui-monospace, monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .bp-sticky-val.is-pos { color: var(--success-text, #059669); }
+  .bp-sticky-val.is-neg { color: var(--danger, #dc2626); }
+  .bp-sticky-sep { color: var(--text-subtle); font-weight: 700; }
+  @media (max-width: 640px) {
+    .bp-sticky {
+      position: fixed;
+      top: auto;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: 0;
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+    }
+    .bp-sticky-inner { gap: .6rem; padding: .55rem .6rem; }
+    .bp-sticky-lbl { font-size: .62rem; }
+    .bp-sticky-val { font-size: .92rem; }
+    .bp-page { padding-bottom: 6.5rem; }
+  }
+
+  /* Chip autoguardado */
+  .bp-saved-chip {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem .85rem;
+    background: var(--success-soft, #ecfdf5);
+    color: var(--success-text, #059669);
+    border: 1px solid var(--success-text, #059669);
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,.12));
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+  }
+  .bp-saved-chip.is-visible { opacity: 1; transform: translateY(0); }
+  .bp-saved-chip svg { flex-shrink: 0; }
+  @media (max-width: 640px) {
+    .bp-saved-chip { bottom: 4.5rem; right: .75rem; }
+  }
+
+  /* Campos "Más ..." colapsables */
+  .bp-more-fields { margin-bottom: 1rem; }
+  .bp-more-fields > summary {
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding: .5rem 0;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .bp-more-fields > summary::-webkit-details-marker { display: none; }
+  .bp-more-fields > summary::before {
+    content: '';
+    width: 8px; height: 8px;
+    border: 2px solid currentColor;
+    border-top: 0; border-left: 0;
+    transform: rotate(45deg);
+    transition: transform .2s;
+  }
+  .bp-more-fields[open] > summary::before { transform: rotate(-135deg); }
+
+  /* Botón "No tengo este gasto" + colapso de campo */
+  .bp-no-gasto {
+    align-self: flex-start;
+    margin-top: .1rem;
+    background: none;
+    border: 0;
+    padding: .1rem 0;
+    color: var(--text-subtle);
+    font-size: .72rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .bp-no-gasto:hover { color: var(--accent); }
+  .bp-inputs label.is-collapsed .bp-input-wrap { display: none; }
+  .bp-inputs label.is-collapsed { opacity: .6; }
+  .bp-inputs label.is-collapsed > span:first-child { text-decoration: line-through; }
 
   .bp-form h2 {
     font-size: 1.15rem;
