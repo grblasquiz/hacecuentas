@@ -55,6 +55,7 @@ jobs:
           echo "changed=$CHANGED" >> $GITHUB_OUTPUT
 
       - name: Create pull request
+        id: cpr
         if: steps.run.outputs.changed != '0' && inputs.dry != true
         uses: peter-evans/create-pull-request@v6
         with:
@@ -84,7 +85,16 @@ jobs:
             - Si el BCRA cambió el ID de una variable, el fetcher tira warning en logs.
             - Los presets de plazo-fijo usan TNA BCRA +/- spread típico — verificar que no se disparó.
 
-            Si algo está mal, cerrar el PR y corregir el fetcher antes del próximo cron.
+            Auto-merge activado: data determinística de BCRA/INDEC, no LLM.
           labels: |
             data-update
             automated
+
+      # Auto-merge: la data monthly viene de APIs públicas determinísticas
+      # (BCRA, INDEC), no de un LLM → no requiere revisión humana. Se mergea
+      # sola a main para que `lastUpdated` no se congele (misma razón que daily).
+      - name: Auto-merge PR
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --squash --delete-branch

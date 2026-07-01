@@ -58,6 +58,7 @@ jobs:
           echo "changed=$CHANGED" >> $GITHUB_OUTPUT
 
       - name: Create pull request
+        id: cpr
         if: steps.run.outputs.changed != '0' && inputs.dry != true
         uses: peter-evans/create-pull-request@v6
         with:
@@ -82,7 +83,18 @@ jobs:
             - `dolar` — dolarapi.com (cotizaciones USD/ARS)
             - `bcra-series` — api.bcra.gob.ar (ICL, UVA, CER, TM20, plazo fijo 30d → `db/*.json`)
 
-            Revisar los cambios antes de mergear. Si algo está raro, cerrar el PR y el próximo cron vuelve a intentar.
+            Auto-merge activado: la data viene de APIs públicas determinísticas (dolarapi/BCRA), no de un LLM.
           labels: |
             data-update
             automated
+
+      # Auto-merge: la data daily viene de APIs públicas determinísticas
+      # (dolarapi, BCRA), no de un LLM → no requiere revisión humana. Se mergea
+      # sola a main el mismo día para que `lastUpdated` no se congele. Ese
+      # congelamiento (PRs sin mergear ~1 mes) fue la causa del warning
+      # "feed was empty" en sitemap-fresh.xml de Bing (jul-2026).
+      - name: Auto-merge PR
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --squash --delete-branch
