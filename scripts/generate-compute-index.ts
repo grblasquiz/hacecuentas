@@ -5,7 +5,7 @@
  * locale (ES/EN/ES-ES/MX/CO/CL/PT) — los slugs son únicos entre colecciones.
  *
  * POR QUÉ existe (no borrar sin entender):
- * El endpoint compute corre en el Worker de Cloudflare. Importar ahí los ~4100
+ * El endpoint compute corre en el Worker de Cloudflare. Importar ahí los miles de
  * JSON de calcs (eager glob) mete ~21 MiB en el Worker y revienta el límite de
  * bundle (3 MiB free / 10 MiB paid) — mismo problema documentado en
  * src/pages/search-index.json.ts. Por eso bakeamos en build-time SOLO lo mínimo

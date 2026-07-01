@@ -103,6 +103,9 @@ async function main() {
     task('compute-index', 'generate-compute-index'),
     // Índice inverso profileKey → calcs que lo usan, para /mi-hacecuentas.
     task('profile-usage', 'generate-profile-usage'),
+    // Conteo de calcs en los estáticos de public/ (llms.txt, ai.txt, openapi,
+    // ai-plugin) — no pueden importar calc-counts.ts, así que se patchean acá.
+    task('calc-counts', 'sync-calc-counts'),
   ];
   // Skip compute-related solo si estamos en incremental Y el output cacheado
   // ya existe. Si no existe (primer build de la rama, cache invalidado, etc.)

@@ -8,7 +8,7 @@
  *
  * Estrategia conservadora:
  *   - Strict en lo que ya causo bugs en prod (dataUpdate, audience).
- *   - .passthrough() en el resto para no romper las 4.118 calcs existentes
+ *   - .passthrough() en el resto para no romper las miles de calcs existentes
  *     que tienen campos heredados / experimentales.
  *
  * IMPORTANTE: actualmente [...slug].astro NO usa getCollection() — sigue
