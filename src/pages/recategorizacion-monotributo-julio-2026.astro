@@ -6,33 +6,36 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Newsletter from '../components/Newsletter.astro';
 import ActionCard from '../components/ui/ActionCard.astro';
+import { CATEGORIAS, TOPES, componentes } from '../lib/data/monotributo-2026';
 
 const title = 'Recategorización Monotributo Julio 2026: fechas, categorías (A a K) y cómo hacerla | Hacé Cuentas';
-const description = 'Guía completa de la recategorización monotributo julio 2026: vencimiento 20 de julio, nuevas categorías A a K con montos actualizados, paso a paso en AFIP y errores a evitar.';
+const description = 'Guía completa de la recategorización monotributo julio 2026: vence el 5 de agosto de 2026, nuevas categorías A a K con los montos oficiales de ARCA, paso a paso y errores a evitar.';
 
 const siteUrl = 'https://hacecuentas.com';
 
 const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
-// Categorías monotributo 2026 (valores estimados basados en actualizaciones semestrales)
-const categorias = [
-  { cat: 'A', ingresosAnuales: 7813063, cuotaTotal: 26600, impuesto: 3190, sipa: 18516, obraSocial: 4894, actividad: 'Servicios y comercio' },
-  { cat: 'B', ingresosAnuales: 11601632, cuotaTotal: 30400, impuesto: 5995, sipa: 20348, obraSocial: 4057, actividad: 'Servicios y comercio' },
-  { cat: 'C', ingresosAnuales: 16267027, cuotaTotal: 35300, impuesto: 10239, sipa: 22383, obraSocial: 4678, actividad: 'Servicios y comercio' },
-  { cat: 'D', ingresosAnuales: 20199891, cuotaTotal: 43800, impuesto: 17028, sipa: 24621, obraSocial: 5151, actividad: 'Servicios y comercio' },
-  { cat: 'E', ingresosAnuales: 23789586, cuotaTotal: 60450, impuesto: 30302, sipa: 27083, obraSocial: 5665, actividad: 'Servicios y comercio' },
-  { cat: 'F', ingresosAnuales: 29727527, cuotaTotal: 75900, impuesto: 40554, sipa: 29791, obraSocial: 5555, actividad: 'Solo comercio' },
-  { cat: 'G', ingresosAnuales: 35621792, cuotaTotal: 90150, impuesto: 49765, sipa: 32770, obraSocial: 5615, actividad: 'Solo comercio' },
-  { cat: 'H', ingresosAnuales: 53423400, cuotaTotal: 157050, impuesto: 110587, sipa: 36047, obraSocial: 10416, actividad: 'Solo comercio' },
-  { cat: 'I', ingresosAnuales: 59591045, cuotaTotal: 202900, impuesto: 150380, sipa: 39652, obraSocial: 12868, actividad: 'Solo comercio' },
-  { cat: 'J', ingresosAnuales: 68253710, cuotaTotal: 232350, impuesto: 173432, sipa: 43617, obraSocial: 15301, actividad: 'Solo comercio' },
-  { cat: 'K', ingresosAnuales: 82069578, cuotaTotal: 263900, impuesto: 198024, sipa: 47979, obraSocial: 17897, actividad: 'Solo comercio' },
-];
+// Categorías monotributo 2026 — FUENTE ÚNICA: src/lib/data/monotributo-2026.ts
+// (escala oficial ARCA vigente desde 2026-02-01, validada x3). Se muestra la
+// cuota de SERVICIOS; en venta de bienes las categorías altas pagan una cuota
+// menor con el mismo tope de facturación. Reforma 2026: servicios llega a K.
+const categorias = CATEGORIAS.map((cat) => {
+  const c = componentes(cat, 'servicios');
+  return {
+    cat,
+    ingresosAnuales: TOPES[cat],
+    cuotaTotal: c.total,
+    impuesto: c.integrado,
+    sipa: c.sipa,
+    obraSocial: c.obraSocial,
+    actividad: 'Servicios y bienes',
+  };
+});
 
 const faqItems = [
   {
     q: '¿Cuándo es la recategorización del monotributo julio 2026?',
-    a: 'La recategorización semestral del monotributo de julio 2026 vence el 20 de julio de 2026. Debés evaluar tus ingresos, gastos y parámetros de los últimos 12 meses (julio 2025 a junio 2026) y, si corresponde, cambiar de categoría a través del portal de AFIP.'
+    a: 'La recategorización semestral del monotributo de julio 2026 vence el 5 de agosto de 2026. Debés evaluar tus ingresos, gastos y parámetros de los últimos 12 meses (julio 2025 a junio 2026) y, si corresponde, cambiar de categoría a través del portal de ARCA (ex-AFIP).'
   },
   {
     q: '¿Qué período se evalúa en la recategorización de julio 2026?',
@@ -89,7 +92,7 @@ const schema = {
       isPartOf: { '@id': `${siteUrl}/#website` },
       inLanguage: 'es-AR',
       datePublished: '2026-04-16',
-      dateModified: '2026-04-16',
+      dateModified: '2026-07-01',
     },
     {
       '@type': 'BreadcrumbList',
@@ -138,11 +141,11 @@ const schema = {
     <header class="hero">
       <h1>Recategorización Monotributo Julio 2026: fechas, categorías y paso a paso</h1>
       <p class="lead">
-        Cada 6 meses (enero y julio) los monotributistas deben evaluar si les corresponde cambiar de categoría. La <strong>recategorización de julio 2026 vence el 20 de julio</strong>. En esta guía te explicamos todo: las nuevas categorías con montos actualizados, cómo hacerla en AFIP paso a paso y qué pasa si no te recategorizás.
+        Cada 6 meses (enero y julio) los monotributistas deben evaluar si les corresponde cambiar de categoría. La <strong>recategorización de julio 2026 se puede hacer del 15 de julio al 5 de agosto</strong>. En esta guía te explicamos todo: las nuevas categorías con montos actualizados, cómo hacerla en AFIP paso a paso y qué pasa si no te recategorizás.
       </p>
       <div class="hero-meta">
-        <span>Actualizado: abril 2026</span>
-        <span>Vencimiento: 20 de julio 2026</span>
+        <span>Actualizado: julio 2026</span>
+        <span>Vencimiento: 5 de agosto 2026</span>
       </div>
       <p class="answer-snippet">
         <strong>Recategorización monotributo julio 2026:</strong> se evalúa la facturación de los
@@ -162,8 +165,8 @@ const schema = {
         </div>
         <div class="date-card accent">
           <div class="date-label">Vencimiento recategorización</div>
-          <div class="date-value">20 de julio 2026</div>
-          <div class="date-hint">Fecha límite para cambiar de categoría</div>
+          <div class="date-value">5 de agosto 2026</div>
+          <div class="date-hint">Fecha límite (la ventana abre el 15 de julio)</div>
         </div>
         <div class="date-card">
           <div class="date-label">Vigencia nueva categoría</div>
@@ -177,8 +180,8 @@ const schema = {
     <section class="section">
       <h2>Categorías del monotributo 2026 (valores actualizados)</h2>
       <p>
-        Los montos se actualizan semestralmente según el índice de movilidad jubilatoria. Estos son los valores vigentes para la recategorización de julio 2026.
-        <strong>Nota:</strong> los valores son estimados basados en la actualización proyectada. Verificá los montos oficiales en la web de AFIP al momento de recategorizarte.
+        Los montos se actualizan semestralmente según el índice de movilidad jubilatoria. Estos son los valores oficiales de ARCA vigentes (escala desde febrero 2026) para la recategorización de julio 2026.
+        <strong>Nota:</strong> se muestra la cuota de <strong>servicios</strong>; en venta de bienes las categorías altas (D a K) pagan una cuota menor, con el mismo tope de facturación. Verificá siempre tu situación en el portal de ARCA.
       </p>
       <div class="table-wrap">
         <table>
@@ -209,7 +212,7 @@ const schema = {
         </table>
       </div>
       <p class="table-note">
-        Las categorías A a E aplican tanto para servicios como para venta de bienes. Las categorías F a K son exclusivas para venta de bienes (comercio). Si prestás servicios y superás el tope de la categoría E, quedás excluido del monotributo.
+        Desde la reforma 2026, <strong>todas las categorías (A a K) aplican tanto para servicios como para venta de bienes</strong> — los servicios ya no topean en la H. El tope de facturación es igual para ambas actividades; en las categorías altas (I, J, K) la cuota de servicios es mayor que la de venta de bienes.
       </p>
     </section>
 
@@ -265,7 +268,7 @@ const schema = {
     <section class="section">
       <h2>Monotributo vs. Responsable Inscripto: cuándo conviene pasar</h2>
       <p>
-        Si estás cerca del tope de tu categoría (especialmente la E para servicios o la K para comercio), es buen momento para evaluar si te conviene pasarte a Responsable Inscripto. En algunos casos, especialmente si tenés muchos gastos deducibles, el régimen general puede ser más conveniente.
+        Si estás cerca del tope de la categoría K (el tope más alto del monotributo, ahora igual para servicios y para venta de bienes), es buen momento para evaluar si te conviene pasarte a Responsable Inscripto. En algunos casos, especialmente si tenés muchos gastos deducibles, el régimen general puede ser más conveniente.
       </p>
       <p>
         Usá nuestra <a href="/calculadora-monotributo-vs-responsable-inscripto">calculadora comparativa Monotributo vs. RI</a> para simular ambos escenarios con tus números reales.
