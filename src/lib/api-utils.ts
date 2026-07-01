@@ -22,8 +22,10 @@ export interface CfEnv {
   ADMIN_PASSCODE?: string;
   /**
    * Cloudflare Email Sending — binding send_email. Mismo mecanismo que el
-   * newsletter (workers/mailing-cron). Manda el código OTP de login. En dev
-   * (astro dev) no existe → request-code cae al fallback con devCode.
+   * newsletter (workers/mailing-cron). Manda el OTP de login y TODOS los
+   * emails transaccionales (email-result, feedback, lead) vía
+   * sendHostingEmail(). En dev (astro dev) no existe → los sends devuelven
+   * false y request-code cae al fallback con devCode.
    */
   EMAIL?: { send: (msg: { from: string; to: string; subject: string; html: string }) => Promise<unknown> };
   /** Remitente de los emails de login/cuenta. Default 'cuenta@hacecuentas.com'. */
@@ -34,9 +36,13 @@ export interface CfEnv {
    * público (va en el cliente); no hay client secret en el flujo de ID token.
    */
   GOOGLE_CLIENT_ID?: string;
-  /** Resend (legacy, usado por email-result/feedback/lead). El OTP NO lo usa. */
-  RESEND_API_KEY?: string;
+  /** Remitente del email "tu resultado". Default 'resultados@hacecuentas.com'. */
   RESULT_EMAIL_FROM?: string;
+  /** Destino/remitente de notificaciones internas (feedback, leads). */
+  FEEDBACK_EMAIL_TO?: string;
+  FEEDBACK_EMAIL_FROM?: string;
+  /** Key alternativa para endpoints admin de mantenimiento (backfills). */
+  BACKFILL_KEY?: string;
   /**
    * Cloudflare Workers AI — binding `AI`. Motor primario (gratis) del "intérprete
    * de problemas" (/api/interpret): traduce lenguaje natural → calc + inputs y
@@ -126,41 +132,71 @@ export function isValidCalcSlug(slug: string): boolean {
 }
 
 /**
- * Envía un email vía Resend (fetch directo, sin SDK, para no agregar
- * dependency al Worker bundle). Best-effort: loguea y devuelve false
- * ante cualquier error — NUNCA tira.
+ * Envía un email vía Cloudflare Email Sending (binding EMAIL, wrangler.jsonc
+ * `send_email`) — el hosting, mismo mecanismo que el newsletter
+ * (workers/mailing-cron) y el OTP de login. Sin terceros ni API keys.
+ * Best-effort: loguea y devuelve false ante cualquier error o si el binding
+ * no existe (astro dev) — NUNCA tira.
  */
-export async function sendResendEmail(opts: {
-  apiKey: string;
+export async function sendHostingEmail(opts: {
   from: string;
-  to: string[];
+  to: string;
   subject: string;
   html: string;
 }): Promise<boolean> {
-  try {
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${opts.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: opts.from,
-        to: opts.to,
-        subject: opts.subject,
-        html: opts.html,
-      }),
-    });
-    if (!resp.ok) {
-      const errText = await resp.text().catch(() => '');
-      console.error('resend send failed:', resp.status, errText.slice(0, 200));
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error('resend send failed:', err);
+  const env = getEnv();
+  if (!env.EMAIL) {
+    console.log(`[email] sin binding EMAIL (dev): "${opts.subject}" → ${opts.to} NO enviado`);
     return false;
   }
+  try {
+    await env.EMAIL.send(opts);
+    return true;
+  } catch (err) {
+    console.error('hosting email send failed:', err);
+    return false;
+  }
+}
+
+/** "/calculadora-sueldo-en-mano" → "Sueldo en mano" (para asuntos de email). */
+export function humanizeSlug(slug: string): string {
+  const seg = slug.replace(/^\/+|\/+$/g, '').split('/').pop() || '';
+  const base = seg
+    .replace(/^(calculadora|calculator|calculadoras|simulador|conversor)-(de-)?/, '')
+    .replace(/-/g, ' ')
+    .trim();
+  if (!base) return 'tu cálculo';
+  return base.charAt(0).toUpperCase() + base.slice(1);
+}
+
+/**
+ * Arma subject+html del email "tu resultado" de las calcs. Compartido entre
+ * /api/email-result (envío en caliente) y /api/admin/resend-results (backlog).
+ * `slug` tiene que venir validado con isValidCalcSlug (se interpola en href).
+ */
+export function buildResultEmail(slug: string, result: string): { subject: string; html: string } {
+  const calcName = humanizeSlug(slug);
+  const calcUrl = `https://hacecuentas.com${slug}`;
+  return {
+    subject: `Tu resultado de ${calcName} — Hacé Cuentas`,
+    html: `
+      <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; color: #1f2937;">
+        <h2 style="color: #2563eb; margin-bottom: 0.25em;">Hacé Cuentas</h2>
+        <p style="margin-top: 0;">Tu resultado de <strong>${escapeHtml(calcName)}</strong>:</p>
+        <p style="font-size: 1.6em; font-weight: 700; background: #f1f5f9; border-radius: 8px; padding: 16px 20px; text-align: center;">
+          ${escapeHtml(result || '—')}
+        </p>
+        <p>
+          <a href="${escapeHtml(calcUrl)}" style="color: #2563eb;">Volver a la calculadora</a>
+          para ajustar los datos o probar otro escenario.
+        </p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+        <p style="color: #888; font-size: 0.85em;">
+          Recibiste esto porque lo pediste en hacecuentas.com.
+        </p>
+      </div>
+    `,
+  };
 }
 
 export function getClientIP(request: Request): string {
