@@ -53,6 +53,34 @@ def api_get(path):
         return json.loads(resp.read().decode("utf-8", errors="ignore"))
 
 
+def aggregate_buckets(rows, key):
+    """La API devuelve 1 fila por bucket semanal (hasta 8 por key) sin campo
+    de fecha utilizable acá. Colapsa a 1 fila por key: suma impressions/clicks,
+    posición ponderada por impresiones (avg_click_position ponderada por clicks)."""
+    by_key = {}
+    for r in rows:
+        k = r[key]
+        acc = by_key.setdefault(k, {**r, "impressions": 0, "clicks": 0,
+                                     "_pos_w": 0.0, "_pos_n": 0, "_clkpos_w": 0.0})
+        acc["impressions"] += r["impressions"]
+        acc["clicks"] += r["clicks"]
+        acc["_pos_w"] += r["position"] * r["impressions"]
+        acc["_pos_n"] += 1
+        acc["_pos_plain"] = acc.get("_pos_plain", 0.0) + r["position"]
+        acc["_clkpos_w"] += r.get("avg_click_position", 0) * r["clicks"]
+    out = []
+    for acc in by_key.values():
+        impr, clk = acc["impressions"], acc["clicks"]
+        acc["position"] = acc["_pos_w"] / impr if impr else acc["_pos_plain"] / max(acc["_pos_n"], 1)
+        if "avg_click_position" in acc:
+            acc["avg_click_position"] = acc["_clkpos_w"] / clk if clk else 0
+        for tmp in ("_pos_w", "_pos_n", "_pos_plain", "_clkpos_w"):
+            acc.pop(tmp, None)
+        out.append(acc)
+    out.sort(key=lambda x: -x["impressions"])
+    return out
+
+
 def pull_queries():
     data = api_get("GetQueryStats")
     rows = data.get("d", []) or []
@@ -65,8 +93,7 @@ def pull_queries():
             "position": r.get("Position", 0) or 0,
             "avg_click_position": r.get("AvgClickPosition", 0) or 0,
         })
-    out.sort(key=lambda x: -x["impressions"])
-    return out
+    return aggregate_buckets(out, "query")
 
 
 def pull_pages():
@@ -83,8 +110,7 @@ def pull_pages():
             "clicks": r.get("Clicks", 0) or 0,
             "position": r.get("AvgImpressionPosition", 0) or r.get("Position", 0) or 0,
         })
-    out.sort(key=lambda x: -x["impressions"])
-    return out
+    return aggregate_buckets(out, "page")
 
 
 def pull_rank_traffic():
@@ -111,8 +137,8 @@ def pull_crawl():
 def compute_opportunities(queries, pages):
     """URLs prioritarias para empujar en Bing.
 
-    Bing API GetPageStats no expone Position por page, así que usamos
-    impressions + CTR como proxy:
+    `pages` ya viene agregado por URL (aggregate_buckets), así que los
+    umbrales aplican sobre el total del período, no sobre un bucket suelto:
     - Pages con +30 impr y CTR <3% → snippet o ranking enfermo
     - Pages con +100 impr y 0 clicks → CRÍTICO (Bing muestra pero no convierte)
     """
@@ -154,7 +180,7 @@ def main():
         path = o["page"].replace("https://hacecuentas.com", "").replace("http://hacecuentas.com", "")
         if path and not path.startswith("http"):
             opp_urls.append(path if path.startswith("/") else f"/{path}")
-    opp_urls = list(dict.fromkeys(opp_urls))  # dedupe (la API trae 1 fila por bucket semanal)
+    opp_urls = list(dict.fromkeys(opp_urls))  # dedupe defensivo (http/https colapsan al mismo path)
     out_txt.write_text("\n".join(opp_urls) + "\n")
     print(f"INFO Opportunities: {out_txt} ({len(opp_urls)} URLs)", file=sys.stderr)
 

@@ -1,12 +1,12 @@
 {
   "slug": "calculadora-sueldo-camionero-fedcam-basico-adicionales",
   "answerSnippet": "El sueldo del camionero argentino se arma con varias capas: básico de convenio según categoría (conductor primera, conductor cargas peligrosas, ayudante, etc.), más adicionales remunerativos (antigüedad 1% por año, título, zona desfavorable), más no remunerativos negociados por FEDCAM en cada paritaria, más ítems variables (viáticos por kilómetro, horas extra, nocturnidad y presentismo).",
-  "lastReviewed": "2026-06-17",
-  "title": "Calculadora Sueldo camionero 2026 (Fedcam) 2026",
+  "lastReviewed": "2026-07-01",
+  "title": "Sueldo Camionero 2026 (CCT 40/89): básico por categoría, antigüedad y viáticos",
   "referenceTables": [
     {
-      "title": "Básico de convenio y antigüedad por categoría — CCT 40/89 (escala mayo 2026)",
-      "caption": "Básico mensual de cada categoría y cuánto suma la antigüedad (1% por año).",
+      "title": "Básico de convenio y antigüedad por categoría — CCT 40/89 (escala julio 2026)",
+      "caption": "Básico mensual de cada categoría tras la revisión paritaria (+$27.258 al básico del conductor de 1ª desde el 1/7) y cuánto suma la antigüedad (1% por año).",
       "headers": [
         "Categoría",
         "Básico mensual",
@@ -16,32 +16,46 @@
       ],
       "rows": [
         [
-          "Ayudante / lavadores / engrasadores",
-          "$949.464",
-          "$9.495",
-          "$47.473",
-          "$94.946"
+          "Peón / ayudante / lavadores / engrasadores",
+          "$968.120",
+          "$9.681",
+          "$48.406",
+          "$96.812"
         ],
         [
-          "Conductor de primera",
-          "$984.338",
-          "$9.843",
-          "$49.217",
-          "$98.434"
+          "Conductor de 3ª categoría",
+          "$1.022.212",
+          "$10.222",
+          "$51.111",
+          "$102.221"
         ],
         [
-          "Conductor especializado / operador",
-          "$1.018.919",
-          "$10.189",
-          "$50.946",
-          "$101.892"
+          "Conductor de 2ª categoría",
+          "$1.041.121",
+          "$10.411",
+          "$52.056",
+          "$104.112"
+        ],
+        [
+          "Conductor de 1ª categoría",
+          "$1.060.010",
+          "$10.600",
+          "$53.001",
+          "$106.001"
+        ],
+        [
+          "Conductor especializado (p. ej. caudales)",
+          "$1.139.646",
+          "$11.396",
+          "$56.982",
+          "$113.965"
         ]
       ],
-      "note": "Básicos CCT 40/89 (FADEEAC/FAETYL/CATAC), escala mayo 2026. Adicional por antigüedad = básico × 1% × años. A larga distancia se suman viáticos no remunerativos: pernoctada $17.841,22/día + comida $15.318/jornada. Verificar la escala vigente tras cada paritaria en fedcam.org.ar."
+      "note": "Básicos CCT 40/89, escala julio 2026 (revisión de la paritaria marzo–agosto 2026: 10,1% en seis tramos + $27.258 inyectados al básico desde julio, con impacto proporcional en el escalafón, + bono no remunerativo de $30.000 por única vez con los haberes de junio). Adicional por antigüedad = básico × 1% × años. A larga distancia se suman viáticos no remunerativos: permanencia fuera de residencia $54.059,44/día + $80,08748 por km recorrido + cruce de frontera $37.228,67. Verificar la escala vigente tras cada paritaria en fedcam.org.ar."
     }
   ],
-  "h1": "Sueldo camionero 2026 (Fedcam)",
-  "description": "💰 Calculá sueldo camionero 2026 según rama, categoría y años. Obtené básico al instante. Cálculo al instante, sin registro. Ideal para consulta rápida.",
+  "h1": "Sueldo camionero 2026 — CCT 40/89 por categoría y rama",
+  "description": "Calculá el sueldo camionero según CCT 40/89 con la escala julio 2026: categoría, rama, antigüedad y viáticos de larga distancia (permanencia + km). Básico, bruto y neto al instante.",
   "category": "finanzas",
   "audience": "AR",
   "icon": "🚛",
@@ -88,27 +102,48 @@
       "options": [
         {
           "value": "ayudante",
-          "label": "Ayudante"
+          "label": "Peón / Ayudante"
+        },
+        {
+          "value": "conductor3",
+          "label": "Conductor de 3ª categoría"
+        },
+        {
+          "value": "conductor2",
+          "label": "Conductor de 2ª categoría"
         },
         {
           "value": "conductor",
-          "label": "Conductor"
+          "label": "Conductor de 1ª categoría"
         },
         {
           "value": "espec",
-          "label": "Conductor Especializado"
+          "label": "Conductor Especializado (caudales)"
         }
       ],
       "default": "ayudante"
     },
     {
       "id": "antiguedad",
-      "label": "Años",
+      "label": "Años de antigüedad",
       "type": "number",
       "required": true,
       "placeholder": "0",
-      "step": 0.01,
-      "help": "Años trabajando en la empresa."
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "help": "Años trabajando en la empresa. Cada año suma 1% del básico (CCT 40/89)."
+    },
+    {
+      "id": "km_mes",
+      "label": "Kilómetros recorridos en el mes (solo larga distancia)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 1,
+      "default": 0,
+      "help": "Viático por km de larga distancia: $80,08748/km (escala julio 2026, no remunerativo). Dejá 0 si no aplica."
     }
   ],
   "outputs": [
@@ -131,53 +166,59 @@
     }
   ],
   "example": {
-    "title": "Conductor de larga distancia, 3 años de antigüedad",
+    "title": "Conductor de 1ª en larga distancia, 3 años de antigüedad",
     "steps": [
-      "Básico de convenio Conductor (escala mayo 2026): $984.338",
-      "Antigüedad: $984.338 × 1% × 3 años = $29.530",
-      "Viáticos larga distancia (≈12 pernoctadas × $17.841): $214.092 (no remunerativos)",
-      "Bruto total: $984.338 + $29.530 + $214.092 = $1.227.960",
-      "Aportes 17% sobre la base remunerativa ($1.013.868): $172.357",
-      "Neto en mano (sin Ganancias): ~$1.054.126"
+      "Básico de convenio Conductor 1ª (escala julio 2026): $1.060.010",
+      "Antigüedad: $1.060.010 × 1% × 3 años = $31.800",
+      "Viáticos larga distancia (≈12 días de permanencia × $54.059,44): $648.713 (no remunerativos)",
+      "Bruto total: $1.060.010 + $31.800 + $648.713 = $1.740.524",
+      "Aportes 17% sobre la base remunerativa ($1.091.810): $185.608",
+      "Neto en mano (sin Ganancias): ~$1.554.916"
     ],
-    "result": "~$1.054.126 netos (incluye viáticos)"
+    "result": "~$1.554.916 netos (incluye viáticos)"
   },
-  "explanation": "El sueldo del camionero argentino se rige por el **Convenio Colectivo de Trabajo 40/89 (Fedcam — Federación Nacional de Trabajadores Camioneros y Obreros del Transporte Automotor de Cargas, Logística y Servicios)**, uno de los CCT con mayor poder de negociación del mercado laboral argentino. La estructura del salario tiene varias capas que se suman al básico de convenio: adicional por antigüedad, adicional por título (registro profesional clase E), zonas desfavorables, viáticos por kilómetro recorrido en larga distancia, horas extra al 50% y 100%, nocturnidad y presentismo.\n\nA diferencia de gremios industriales con una escala más plana, el CCT 40/89 tiene **ramas diferenciadas** por especialidad de la operación: corta distancia urbana, larga distancia interurbana, recolección de residuos, correo, transporte de granel, transporte de combustibles y otras. Cada rama tiene su propio cuadro de básicos y adicionales específicos. El conductor de larga distancia, por ejemplo, recibe viáticos por noche fuera de casa que pueden representar un porcentaje significativo del bruto mensual.\n\nLas paritarias del sector suelen cerrar **con aumentos por encima del IPC** y tienen reapertura trimestral o cuatrimestral en contextos inflacionarios. La estructura sindical fuerte permite resguardar el poder adquisitivo mejor que otros gremios.\n\nEsta calculadora toma la rama de operación, la categoría dentro del CCT y los años de antigüedad y devuelve el básico de convenio, el bruto estimado con adicionales y el neto después de aportes obligatorios.\n\n## Cómo se calcula\n\n```\nbasico_categoria = escala_CCT_40_89[categoria]   # mayo 2026\nadicional_antiguedad = basico_categoria × (anios × 0.01)   # 1% por año (CCT 40/89)\nviaticos = (rama == larga) ? pernoctada_dia × noches_mes : 0   # no remunerativos\nbase_remunerativa = basico + antiguedad\nbruto = base_remunerativa + viaticos\n\naportes = base_remunerativa × 0.17   # jubilación 11% + obra social 3% + PAMI 3%\nganancias = 5% × (base_remunerativa − basico)   # simplificación sobre el exceso\nneto = bruto − aportes − ganancias\n```\n\n## Básicos de convenio por categoría (escala mayo 2026)\n\nValores de **referencia** según la escala paritaria del CCT 40/89 publicada por las cámaras (FADEEAC/FAETYL/CATAC). Se actualizan mes a mes por paritaria; verificá la escala vigente en [fedcam.org.ar](https://www.fedcam.org.ar) o en tu seccional.\n\n| Categoría | Básico mensual (mayo 2026) |\n|---|---|\n| Personal de maestranza | $890.401 |\n| Ayudante / lavadores / engrasadores | $949.464 |\n| Conductor de primera | $984.338 |\n| Conductor especializado / operador de equipos | $1.018.919 |\n\nA estos básicos se suman los adicionales: antigüedad (1% por año), zona desfavorable (coef. 1,20 al sur del Río Colorado; 1,40 al sur del Río Santa Cruz), título, horas extra, presentismo y, en larga distancia, los **viáticos por pernoctada** ($17.841,22/día) y comida ($15.318/jornada) vigentes en mayo 2026. Los viáticos son no remunerativos: no integran la base de aportes ni de Ganancias. En recolección hay adicional por insalubridad reconocido por la Ley 24.557 de Riesgos del Trabajo y la jurisprudencia laboral.\n\n**Nota:** esta calculadora estima el bruto y neto a partir del básico por categoría más antigüedad (y viáticos si elegís larga distancia). El recibo real puede variar por adicionales específicos de rama, zona, horas extra y acuerdos de empresa.\n\n## Marco normativo\n\n- **Ley de Contrato de Trabajo 20.744 (LCT)** — régimen laboral supletorio.\n- **Convenio Colectivo de Trabajo 40/89** — convenio nacional del transporte automotor de cargas.\n- **Ley 24.557 (Riesgos del Trabajo)** — cobertura ART, especialmente relevante en ramas peligrosas.\n- **Ley 24.013 (Empleo)** y **Ley 26.844** — normas complementarias sobre empleo registrado.\n- **Ley Nacional de Tránsito 24.449** — obligación de registro profesional clase E para camiones de mayor porte.\n- **Resoluciones del Ministerio de Transporte / CNRT** — sobre tiempo máximo de conducción, descansos y tacógrafos.\n\n## Adicionales y plus específicos del sector\n\n- **Viáticos por noche pernoctada** fuera de la base (larga distancia).\n- **Plus por carga peligrosa** (IFLE en combustibles, granel especial).\n- **Adicional por insalubridad** en recolección de residuos.\n- **Bonificación por kilometraje** en algunas ramas y rutas.\n- **Premio por siniestralidad** en flotas con bajo índice de accidentes.\n\n## Cuándo NO se aplica esta calculadora\n\n- Fleteros autónomos (camión propio) — facturan, no perciben sueldo bajo CCT.\n- Choferes de UTA (transporte urbano de pasajeros) — tienen su propio CCT.\n- Empleados administrativos de empresas de transporte (CCT 130/75 Comercio si no están encuadrados como camioneros).\n- Conductores internacionales con regímenes especiales (Argentina-Brasil, Argentina-Chile) que pueden tener convenios bilaterales aplicables a viáticos.\n",
+  "explanation": "El sueldo del camionero argentino se rige por el **Convenio Colectivo de Trabajo 40/89 (Fedcam — Federación Nacional de Trabajadores Camioneros y Obreros del Transporte Automotor de Cargas, Logística y Servicios)**, uno de los CCT con mayor poder de negociación del mercado laboral argentino. La estructura del salario tiene varias capas que se suman al básico de convenio: adicional por antigüedad, adicional por título (registro profesional clase E), zonas desfavorables, viáticos por kilómetro recorrido en larga distancia, horas extra al 50% y 100%, nocturnidad y presentismo.\n\nA diferencia de gremios industriales con una escala más plana, el CCT 40/89 tiene **ramas diferenciadas** por especialidad de la operación: corta distancia urbana, larga distancia interurbana, recolección de residuos, correo, transporte de granel, transporte de combustibles y otras. Cada rama tiene su propio cuadro de básicos y adicionales específicos. El conductor de larga distancia, por ejemplo, recibe viáticos por noche fuera de casa que pueden representar un porcentaje significativo del bruto mensual.\n\nLas paritarias del sector suelen cerrar **con aumentos por encima del IPC** y tienen reapertura trimestral o cuatrimestral en contextos inflacionarios. La estructura sindical fuerte permite resguardar el poder adquisitivo mejor que otros gremios.\n\nEsta calculadora toma la rama de operación, la categoría dentro del CCT y los años de antigüedad y devuelve el básico de convenio, el bruto estimado con adicionales y el neto después de aportes obligatorios.\n\n## Cómo se calcula\n\n```\nbasico_categoria = escala_CCT_40_89[categoria]   # julio 2026\nadicional_antiguedad = basico_categoria × (anios × 0.01)   # 1% por año (CCT 40/89)\nviaticos = (rama == larga) ? permanencia_dia × dias_fuera + km × 80,08748 : 0   # no remunerativos\nbase_remunerativa = basico + antiguedad\nbruto = base_remunerativa + viaticos\n\naportes = base_remunerativa × 0.17   # jubilación 11% + obra social 3% + PAMI 3%\nganancias = 5% × max(0, base_remunerativa − 1.800.000)   # simplificación MNI\nneto = bruto − aportes − ganancias\n```\n\n## Básicos de convenio por categoría (escala julio 2026)\n\nValores según la escala del CCT 40/89 vigente en **julio 2026**, tras la revisión paritaria que activó la cláusula de revisión del acuerdo marzo–agosto 2026 (10,1% en seis tramos: 2% mar, 1,8% abr, 1,7% may, 1,6% jun, 1,5% jul y 1,5% ago) e inyectó **$27.258 directamente al básico** del conductor de 1ª desde el 1° de julio, con impacto proporcional en todo el escalafón. Verificá la escala vigente en [fedcam.org.ar](https://www.fedcam.org.ar) o en tu seccional.\n\n| Categoría | Básico mensual (julio 2026) | Básico agosto 2026 |\n|---|---|---|\n| Peón / ayudante / lavadores / engrasadores | $968.120,14 | $982.641,94 |\n| Conductor de 3ª categoría | $1.022.211,59 | $1.037.544,76 |\n| Conductor de 2ª categoría | $1.041.120,50 | $1.056.737,31 |\n| Conductor de 1ª categoría | $1.060.010,29 | $1.075.910,44 |\n| Conductor especializado (caudales) | $1.139.645,55 | — |\n\nA estos básicos se suman los adicionales: antigüedad (1% por año), zona desfavorable (coef. 1,20 al sur del Río Colorado; 1,40 al sur del Río Santa Cruz), título, horas extra, presentismo y, en larga distancia, los **viáticos por permanencia fuera de la residencia habitual** ($54.059,44/día), el **viático por kilómetro recorrido** ($80,08748/km) y el **adicional por cruce de frontera** ($37.228,67 por cruce), vigentes en julio 2026. Los viáticos son no remunerativos: no integran la base de aportes ni de Ganancias. Con los haberes de junio se pagó además un bono no remunerativo de $30.000 por única vez. En recolección hay adicional por insalubridad reconocido por la Ley 24.557 de Riesgos del Trabajo y la jurisprudencia laboral.\n\n**Nota:** esta calculadora estima el bruto y neto a partir del básico por categoría más antigüedad (y viáticos si elegís larga distancia). El recibo real puede variar por adicionales específicos de rama, zona, horas extra y acuerdos de empresa.\n\n## Marco normativo\n\n- **Ley de Contrato de Trabajo 20.744 (LCT)** — régimen laboral supletorio.\n- **Convenio Colectivo de Trabajo 40/89** — convenio nacional del transporte automotor de cargas.\n- **Ley 24.557 (Riesgos del Trabajo)** — cobertura ART, especialmente relevante en ramas peligrosas.\n- **Ley 24.013 (Empleo)** y **Ley 26.844** — normas complementarias sobre empleo registrado.\n- **Ley Nacional de Tránsito 24.449** — obligación de registro profesional clase E para camiones de mayor porte.\n- **Resoluciones del Ministerio de Transporte / CNRT** — sobre tiempo máximo de conducción, descansos y tacógrafos.\n\n## Adicionales y plus específicos del sector\n\n- **Viáticos por noche pernoctada** fuera de la base (larga distancia).\n- **Plus por carga peligrosa** (IFLE en combustibles, granel especial).\n- **Adicional por insalubridad** en recolección de residuos.\n- **Bonificación por kilometraje** en algunas ramas y rutas.\n- **Premio por siniestralidad** en flotas con bajo índice de accidentes.\n\n## Cuándo NO se aplica esta calculadora\n\n- Fleteros autónomos (camión propio) — facturan, no perciben sueldo bajo CCT.\n- Choferes de UTA (transporte urbano de pasajeros) — tienen su propio CCT.\n- Empleados administrativos de empresas de transporte (CCT 130/75 Comercio si no están encuadrados como camioneros).\n- Conductores internacionales con regímenes especiales (Argentina-Brasil, Argentina-Chile) que pueden tener convenios bilaterales aplicables a viáticos.\n",
   "faq": [
     {
-      "q": "¿Cuál es el básico de un camionero en 2026?",
-      "a": "Según la escala del CCT 40/89 vigente en mayo 2026, el básico de convenio es de aproximadamente $890.401 para personal de maestranza, $949.464 para ayudantes, $984.338 para conductor de primera y $1.018.919 para conductor especializado. Sobre estos básicos se suman antigüedad (1% por año), zona desfavorable, viáticos en larga distancia y otros adicionales. Las cifras se actualizan mes a mes por paritaria, así que conviene verificar la escala vigente en tu seccional."
+      "q": "¿Cuál es el básico de un camionero en julio 2026?",
+      "a": "Según la escala del CCT 40/89 vigente en julio 2026, el básico de convenio es de $968.120,14 para peón/ayudante, $1.022.211,59 para conductor de 3ª, $1.041.120,50 para conductor de 2ª, $1.060.010,29 para conductor de 1ª categoría y aproximadamente $1.139.645,55 para conductor especializado de caudales. Sobre estos básicos se suman antigüedad (1% por año), zona desfavorable, viáticos en larga distancia y otros adicionales. En agosto 2026 se aplica el último tramo del acuerdo (+1,5%): conductor de 1ª pasa a $1.075.910,44. Verificá la escala vigente en tu seccional."
     },
     {
       "q": "¿Qué ramas cubre el convenio de Camioneros?",
-      "a": "El CCT 40/89 cubre corta distancia (urbana), larga distancia (interurbana), recolección de residuos, correo y paquetería, transporte de granel y de combustibles, entre otras. Cada rama tiene adicionales propios: la larga distancia paga viáticos por pernoctada, la recolección tiene adicional por insalubridad y el transporte de combustibles/granel suma plus por carga peligrosa."
+      "a": "El CCT 40/89 cubre corta distancia (urbana), larga distancia (interurbana), recolección de residuos, correo y paquetería, transporte de granel y de combustibles, caudales, entre otras. Cada rama tiene adicionales propios: la larga distancia paga viáticos por permanencia fuera de residencia y por kilómetro recorrido, la recolección tiene adicional por insalubridad y el transporte de combustibles/granel suma plus por carga peligrosa."
     },
     {
       "q": "¿Cómo se pagan los viáticos en larga distancia?",
-      "a": "En larga distancia se pagan viáticos por comida ($15.318 por jornada) y por pernoctada fuera de la base ($17.841,22 por día) según la escala vigente en mayo 2026 del CCT 40/89. Son conceptos no remunerativos: no generan aportes ni Ganancias, pero pueden representar entre el 20% y el 40% extra del bruto mensual según la cantidad de noches que el chofer pase fuera de su casa."
+      "a": "En larga distancia se paga un viático por kilómetro recorrido de $80,08748/km y una permanencia fuera de la residencia habitual de $54.059,44 por día, según la escala del CCT 40/89 vigente en julio 2026. Si el chofer cruza la frontera, se suma un adicional de $37.228,67 por cada cruce. Son conceptos no remunerativos: no generan aportes ni Ganancias, pero pueden representar entre el 30% y el 50% extra del ingreso mensual según los días que el chofer pase fuera de su casa y los kilómetros del mes."
     },
     {
-      "q": "¿Adicional por kilo/tonelada?",
-      "a": "En algunas ramas hay bonos por volumen transportado."
+      "q": "¿Cómo quedó la paritaria de Camioneros 2026?",
+      "a": "El acuerdo paritario marzo–agosto 2026 fijó un incremento acumulado del 10,1% en seis tramos: 2% en marzo, 1,8% en abril, 1,7% en mayo, 1,6% en junio y 1,5% en julio y agosto. En junio 2026 el gremio activó la cláusula de revisión y consiguió además una suma de $27.258 inyectada directamente al básico del conductor de 1ª desde el 1° de julio (con impacto proporcional en todo el escalafón) y un bono no remunerativo de $30.000 por única vez pagado con los haberes de junio. La Federación también anunció que buscará actualizar el texto del convenio colectivo."
     },
     {
-      "q": "¿Horas de conducción?",
-      "a": "Reglamentadas por ley: máximo 8hs diarias, 48 semanales."
+      "q": "¿Cuántas horas puede manejar un camionero por día?",
+      "a": "La jornada está regulada por la LCT y las resoluciones de la CNRT: la jornada laboral general es de 8 horas diarias y 48 semanales, con horas extra al 50% en días hábiles y al 100% en feriados y francos. En larga distancia rigen además límites de conducción continua con descansos obligatorios controlados por tacógrafo, según la Ley Nacional de Tránsito 24.449 y normas del Ministerio de Transporte. El tiempo de espera en carga y descarga también se computa y se paga."
     },
     {
-      "q": "¿Registro profesional?",
-      "a": "Conductor necesita registro profesional clase E (camiones pesados)."
+      "q": "¿Qué registro necesita un conductor de camión?",
+      "a": "Para conducir camiones de mayor porte se exige licencia profesional clase E (articulados y con acoplado) o C (camiones sin acoplado), según la Ley Nacional de Tránsito 24.449. Además, para transporte interjurisdiccional de cargas se requiere la LiNTI (Licencia Nacional de Transporte Interjurisdiccional) con curso y examen psicofísico periódico ante la CNRT. Sin LiNTI vigente no se puede liquidar como conductor de larga distancia."
     },
     {
-      "q": "¿Camión propio vs empresa?",
-      "a": "Si es camión propio: fletero autónomo, factura. Si es empleado: sueldo + convenio."
+      "q": "¿Qué diferencia hay entre camión propio y ser empleado bajo convenio?",
+      "a": "Si el chofer trabaja con camión propio es un fletero autónomo: factura sus servicios, no percibe sueldo bajo el CCT 40/89, paga monotributo o autónomos y no tiene aguinaldo ni vacaciones pagas ni aportes patronales. Si es empleado de una empresa de transporte, cobra sueldo de convenio con básico por categoría, antigüedad, viáticos, SAC, vacaciones y cobertura de ART. La diferencia de ingreso bruto puede favorecer al fletero, pero el empleado tiene estabilidad, indemnización y cargas sociales cubiertas."
     },
     {
-      "q": "¿Paritaria Camioneros?",
-      "a": "Suele ser agresiva, con aumentos por encima del IPC."
+      "q": "¿Hay adicional por volumen o tipo de carga?",
+      "a": "Sí. En varias ramas del CCT 40/89 existen bonificaciones por volumen transportado (kilos/toneladas) y plus por tipo de carga: las cargas peligrosas (combustibles, químicos) suman un adicional específico, el transporte de caudales tiene básicos superiores, y la recolección de residuos paga adicional por insalubridad. Estos conceptos son remunerativos y se suman a la base de aportes, a diferencia de los viáticos."
     }
   ],
   "sources": [
+    {
+      "name": "Paritaria Camioneros 2026 — revisión y escala julio/agosto 2026 (conductor 1ª $1.060.010,29; viático km $80,08748; permanencia $54.059,44/día)",
+      "url": "https://calcularsueldo.com.ar/paritarias/15276/paritaria-de-camioneros-2026-como-quedan-los-sueldos-basicos-tras-la-revision-y-nuevo-acuerdo.html",
+      "publisher": "Calcular Sueldo (sobre acta FEDCAM–FADEEAC/FAETYL/CATAC homologada)",
+      "date": "2026-06-25"
+    },
     {
       "name": "CCT 40/89 — Transporte automotor de cargas (FEDCAM/FADEEAC), texto ordenado",
       "url": "https://www.fadeeac.org.ar/wp-content/uploads/2021/08/CCT-40-89.pdf",
@@ -203,16 +244,26 @@
       "date": "1995-10-04"
     }
   ],
-  "relatedSlugs": [],
+  "relatedSlugs": [
+    "calculadora-paritaria-camioneros-2026-flete-larga-distancia",
+    "calculadora-sueldo-chofer-colectivo-uta-urbano",
+    "sueldo-en-mano-argentina",
+    "calculadora-aguinaldo-sac",
+    "calculadora-horas-extra",
+    "calculadora-plus-antiguedad"
+  ],
   "dataUpdate": {
     "frequency": "monthly",
-    "lastUpdated": "2026-06-17",
+    "lastUpdated": "2026-07-01",
     "updateType": "manual",
-    "notes": "Básicos de convenio CCT 40/89 escala mayo 2026 (ayudante $949.464, conductor $984.338, especializado $1.018.919) + antigüedad 1%/año + viático pernoctada $17.841/día. Se actualizan mes a mes; verificar la escala vigente tras cada acuerdo paritario.",
-    "source": "FEDCAM / cámaras FADEEAC-FAETYL-CATAC — escala CCT 40/89",
+    "notes": "Básicos de convenio CCT 40/89 escala julio 2026 (ayudante $968.120,14, conductor 3ª $1.022.211,59, conductor 2ª $1.041.120,50, conductor 1ª $1.060.010,29, especializado $1.139.645,55) + antigüedad 1%/año + viáticos larga distancia (permanencia $54.059,44/día, km $80,08748, cruce frontera $37.228,67). Revisión paritaria homologada jun-2026. Se actualizan mes a mes; verificar la escala vigente tras cada acuerdo.",
+    "source": "FEDCAM / cámaras FADEEAC-FAETYL-CATAC — escala CCT 40/89 julio-agosto 2026 (revisión homologada)",
     "sourceUrl": "https://www.fedcam.org.ar"
   },
   "seoKeywords": [
+    "sueldo camionero julio 2026",
+    "escala salarial camioneros cct 40/89",
+    "viatico por kilometro camioneros 2026",
     "sueldo camionero 2026",
     "escala salarial camioneros",
     "fedcam paritarias",

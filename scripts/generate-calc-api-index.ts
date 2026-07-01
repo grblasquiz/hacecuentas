@@ -29,7 +29,12 @@ const LOCALES: Array<{ dir: string; pathPrefix: string; locale: string }> = [
   { dir: 'src/content/calcs-cl', pathPrefix: 'cl/', locale: 'es-CL' },
   { dir: 'src/content/calcs-ec', pathPrefix: 'ec/', locale: 'es-EC' },
   { dir: 'src/content/calcs-pe', pathPrefix: 'pe/', locale: 'es-PE' },
+  { dir: 'src/content/calcs-ve', pathPrefix: 've/', locale: 'es-VE' },
+  { dir: 'src/content/calcs-py', pathPrefix: 'py/', locale: 'es-PY' },
+  { dir: 'src/content/calcs-uy', pathPrefix: 'uy/', locale: 'es-UY' },
+  { dir: 'src/content/calcs-do', pathPrefix: 'do/', locale: 'es-DO' },
   { dir: 'src/content/calcs-pt', pathPrefix: 'pt/', locale: 'pt-BR' },
+  { dir: 'src/content/calcs-pt-pt', pathPrefix: 'pt-pt/', locale: 'pt-PT' },
 ];
 
 interface CalcEntry {
@@ -53,7 +58,7 @@ interface SlimEntry {
   s: string;
   /** título corto (h1 truncado) */
   t: string;
-  /** prefijo de lang/vertical: '' (ES root) | en | es | co | mx | cl | ec | pe | pt */
+  /** prefijo de lang/vertical: '' (ES root) | en | es | co | mx | cl | ec | pe | ve | py | uy | do | pt | pt-pt */
   l: string;
 }
 

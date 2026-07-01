@@ -1,0 +1,336 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { bancoCorto, BANCOS_RECONOCIBLES } from '../lib/plazo-fijo';
+import snap from '../data/live/tasas-billeteras.json';
+
+const API = 'https://api.argentinadatos.com/v1/finanzas';
+const fetchedAt = (snap as any)._meta?.fetchedAt;
+
+// ── Filas: bancos reconocibles (plazo fijo 30d) + billeteras ────────────────
+type Row = {
+  key: string; nombre: string; kind: 'pf' | 'bill'; tipoLabel: string;
+  tna: number; detalle?: string; fecha?: string; fondo?: string; entidad?: string;
+};
+
+const bancos: Row[] = ((snap as any).bancos || [])
+  .map((b: any) => ({ raw: b.entidad, corto: bancoCorto(b.entidad), tna: b.tna }))
+  .filter((b: any) => BANCOS_RECONOCIBLES.has(b.corto))
+  .map((b: any) => ({ key: b.raw, nombre: b.corto, kind: 'pf' as const, tipoLabel: 'Plazo fijo', tna: b.tna, detalle: 'Plazo fijo tradicional a 30 días' }));
+
+const billeteras: Row[] = ((snap as any).billeteras || []).map((b: any) => ({
+  key: b.id, nombre: b.nombre, kind: 'bill' as const,
+  tipoLabel: b.tipo === 'remunerada' ? 'Cuenta remunerada' : 'Billetera (FCI)',
+  tna: b.tna, detalle: b.detalle, fecha: b.fecha, fondo: b.fondo, entidad: b.entidad,
+}));
+
+// ── Matemática de tasas ──────────────────────────────────────────────────────
+// PF: interés simple a 30 días; TEA asume renovar cada 30 días reinvirtiendo.
+// Billetera: el rendimiento capitaliza a diario (FCI/cuenta remunerada).
+const teaDe = (tna: number, kind: 'pf' | 'bill') =>
+  kind === 'pf'
+    ? (Math.pow(1 + (tna / 100) * (30 / 365), 365 / 30) - 1) * 100
+    : (Math.pow(1 + tna / 100 / 365, 365) - 1) * 100;
+const interes30 = (monto: number, tna: number, kind: 'pf' | 'bill') =>
+  kind === 'pf' ? monto * (tna / 100) * (30 / 365) : monto * (Math.pow(1 + tna / 100 / 365, 30) - 1);
+
+const DEF_MONTO = 1_000_000;
+const rows = [...billeteras, ...bancos]
+  .map((r) => ({ ...r, tea: teaDe(r.tna, r.kind), interes: interes30(DEF_MONTO, r.tna, r.kind) }))
+  .sort((a, b) => b.tna - a.tna);
+
+const fmtArs = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const pct = (n: number) => n.toFixed(2).replace('.', ',') + '%';
+const mejor = rows[0];
+const mejorBanco = rows.find((r) => r.kind === 'pf');
+const mejorBill = rows.find((r) => r.kind === 'bill');
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/plazo-fijo-vs-billeteras`;
+const hoy = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+const updated = fetchedAt
+  ? new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fetchedAt))
+  : '—';
+const builtAtISO = new Date().toISOString();
+
+const title = 'Plazo fijo vs billeteras virtuales HOY: ¿dónde conviene poner la plata? | Hacé Cuentas';
+const description = `Comparación de tasas al ${hoy}: plazo fijo por banco (hasta ${mejorBanco ? pct(mejorBanco.tna) : '—'} TNA) vs billeteras como Mercado Pago, Ualá y Personal Pay (hasta ${mejorBill ? pct(mejorBill.tna) : '—'}). Simulá cuánto gana tu plata a 30 días. Se actualiza solo.`;
+
+// ── FAQ (≥7) ────────────────────────────────────────────────────────────────
+const faq = [
+  { q: '¿Qué paga más hoy: el plazo fijo o una billetera virtual?', a: mejor ? `Hoy la tasa más alta de la comparación es la de ${mejor.nombre} (${pct(mejor.tna)} TNA, ${mejor.tipoLabel.toLowerCase()}). ${mejorBanco && mejorBill ? `El mejor plazo fijo bancario paga ${pct(mejorBanco.tna)} (${mejorBanco.nombre}) y la mejor billetera ${pct(mejorBill.tna)} (${mejorBill.nombre}).` : ''} Ojo: las cuentas remuneradas con tasas promocionales suelen tener tope de saldo — el excedente rinde mucho menos o nada.` : 'Mirá la tabla de arriba: se ordena de mayor a menor TNA con los datos más recientes.' },
+  { q: '¿Puedo sacar la plata cuando quiera?', a: 'En una billetera sí: el saldo en FCI money market o cuenta remunerada es de disponibilidad inmediata (rescate en el momento o en 24 hs). En un plazo fijo tradicional no: la plata queda inmovilizada hasta el vencimiento (mínimo 30 días). Esa liquidez es el precio que pagás por la tasa más alta del plazo fijo.' },
+  { q: '¿Es seguro dejar la plata en una billetera virtual?', a: 'Depende del instrumento. El plazo fijo bancario está cubierto por el seguro de garantía de los depósitos (hasta el tope vigente por persona y por banco). El saldo que la billetera invierte en un FCI money market no tiene esa garantía: es una cuotaparte de un fondo que invierte en plazos fijos y cauciones — de riesgo muy bajo, pero no garantizado. Las cuentas remuneradas de entidades reguladas por el BCRA sí suelen estar alcanzadas por la garantía.' },
+  { q: '¿Qué es la TNA y en qué se diferencia de la TEA?', a: 'La TNA (tasa nominal anual) es la tasa que publica el banco o la billetera. La TEA (tasa efectiva anual) es lo que realmente ganás en un año si el interés se reinvierte: en las billeteras el rendimiento capitaliza todos los días, y en el plazo fijo, cada vez que renovás a 30 días. Por eso, a igual TNA, la TEA de una billetera es un poco mayor. Convertí cualquier tasa en la calculadora TNA ↔ TEM ↔ TEA.' },
+  { q: '¿Cómo se calcula cuánto gano a 30 días?', a: 'Para el plazo fijo: interés = monto × TNA/100 × 30/365 (interés simple, se cobra al vencimiento). Para una billetera: el saldo rinde a diario, así que a 30 días ganás monto × ((1 + TNA/365)³⁰ − 1). Con $1.000.000 y una TNA del 20%, son ~$16.438 en un plazo fijo y ~$16.570 en una billetera.' },
+  { q: '¿Las cuentas remuneradas tienen tope?', a: 'Casi siempre. Las tasas promocionales altas (como la de Ualá) aplican hasta un tope de saldo; lo que excede el tope rinde una tasa mucho menor o directamente no rinde. Si manejás montos grandes, compará la tasa "sin promo" o dividí la plata entre varias opciones.' },
+  { q: '¿Le ganan a la inflación?', a: 'Depende del mes. Compará la TEA de la tabla con la inflación interanual del INDEC: si la tasa efectiva es menor, tu plata pierde poder de compra aunque "gane" intereses. Podés medir el efecto exacto con la calculadora de cuánto pierdo con la plata quieta y ver la inflación vigente en valores BCRA.' },
+  { q: '¿De dónde salen estas tasas y cada cuánto se actualizan?', a: 'Las TNA de plazo fijo son las informadas por los bancos al BCRA (vía argentinadatos.com). Los rendimientos de billeteras salen del valor cuotaparte de los FCI money market publicado por CAFCI y de los rendimientos publicados por cada billetera; las tasas promocionales de cuentas remuneradas se verifican a mano contra los anuncios de cada empresa y llevan fecha visible. Al abrir la página se consultan los datos más recientes en vivo.' },
+  { q: '¿Y si el monto es grande, conviene dividirlo?', a: 'Suele convenir: podés aprovechar el tope de la cuenta remunerada con mejor tasa, dejar un fondo de liquidez en una billetera y poner el resto en el plazo fijo con mejor TNA. La tabla te muestra cuánto rinde cada tramo a 30 días para el monto que ingreses.' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Plazo fijo vs billeteras', item: URL },
+    ] },
+    { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+    {
+      '@type': 'Dataset',
+      name: 'Tasas de plazo fijo por banco vs rendimiento de billeteras virtuales en Argentina',
+      description: 'TNA de plazo fijo tradicional a 30 días por banco (BCRA) y rendimiento anualizado de billeteras virtuales (FCI money market y cuentas remuneradas), actualizado a diario.',
+      keywords: 'plazo fijo vs billeteras, tna billeteras virtuales, rendimiento mercado pago, cuenta remunerada uala, fci money market, tasa plazo fijo hoy',
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
+      license: `${SITE}/terminos`,
+      url: URL,
+      dateModified: builtAtISO,
+      distribution: [
+        { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${API}/tasas/plazoFijo` },
+        { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${API}/rendimientos` },
+      ],
+      variableMeasured: [
+        mejorBanco && { '@type': 'PropertyValue', name: `Mejor TNA plazo fijo 30 días (${mejorBanco.nombre})`, value: mejorBanco.tna, unitText: 'P1' },
+        mejorBill && { '@type': 'PropertyValue', name: `Mejor TNA billetera virtual (${mejorBill.nombre})`, value: mejorBill.tna, unitText: 'P1' },
+      ].filter(Boolean),
+    },
+  ],
+};
+
+const liveConfig = {
+  api: API,
+  fci: billeteras.filter((b) => b.fondo).map((b) => ({ key: b.key, fondo: b.fondo })),
+  rend: billeteras.filter((b) => b.entidad).map((b) => ({ key: b.key, entidad: b.entidad })),
+};
+---
+
+<Layout title={title} description={description} canonical="/plazo-fijo-vs-billeteras" schema={schema} audience="AR" domain="data">
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/">Inicio</a> › <span>Plazo fijo vs billeteras</span></nav>
+    <h1>Plazo fijo vs billeteras virtuales hoy: ¿dónde conviene poner la plata? 💰</h1>
+    <p class="lede">
+      Tasas del <strong>{hoy}</strong>: plazo fijo por banco contra <strong>Mercado Pago, Ualá, Personal Pay, Naranja X, Cocos y más</strong>, ordenadas de mayor a menor. Poné tu monto y mirá cuánto gana a 30 días en cada opción.
+    </p>
+    <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Fuente: <a href="https://argentinadatos.com" rel="noopener" target="_blank">argentinadatos</a> (BCRA + CAFCI); tasas promocionales verificadas en prensa con fecha visible.</p>
+
+    {mejor && (
+      <div class="resumen" data-resumen>
+        Hoy la tasa más alta es la de <strong data-res-nombre>{mejor.nombre}</strong> (<span data-res-tasa>{pct(mejor.tna)}</span> TNA, {mejor.tipoLabel.toLowerCase()}).
+        {mejorBanco && mejorBill && mejorBill.tna > mejorBanco.tna
+          ? ' Las billeteras vienen pagando más que el mejor plazo fijo bancario — pero ojo con los topes de saldo.'
+          : ' El plazo fijo bancario vuelve a pagar más que las billeteras, a cambio de inmovilizar la plata 30 días.'}
+      </div>
+    )}
+
+    <div class="sim">
+      <label for="monto">¿Cuánto querés poner?</label>
+      <div class="sim-input">
+        <span class="sim-currency">$</span>
+        <input id="monto" type="text" inputmode="numeric" autocomplete="off" value={DEF_MONTO.toLocaleString('es-AR')} aria-label="Monto a invertir en pesos" />
+      </div>
+      <span class="sim-hint">La última columna muestra el interés a 30 días para ese monto.</span>
+    </div>
+
+    <div class="tabla-scroll">
+      <table class="tabla" data-tabla>
+        <thead>
+          <tr><th>#</th><th>Opción</th><th>TNA</th><th>TEA</th><th>Ganás a 30 días</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr class={i === 0 ? 'top' : undefined} data-key={r.key} data-kind={r.kind} data-tna={r.tna} data-fondo={r.fondo} data-entidad={r.entidad}>
+              <td class="rank" data-rank>{i + 1}</td>
+              <td class="ent">
+                <span class="ent-nombre">{r.nombre}</span>
+                <span class={`badge badge-${r.kind}`}>{r.tipoLabel}</span>
+                {r.detalle && <span class="ent-detalle">{r.detalle}{r.fecha ? ` · dato al ${r.fecha}` : ''}</span>}
+              </td>
+              <td class="num" data-cell-tna>{pct(r.tna)}</td>
+              <td class="num" data-cell-tea>{pct(r.tea)}</td>
+              <td class="num interes" data-cell-int>{fmtArs(r.interes)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="nota">
+      TNA de plazo fijo tradicional a 30 días para clientes, informada por cada banco al BCRA. El rendimiento de las billeteras que invierten en FCI money market se calcula con la variación del valor cuotaparte (CAFCI) del último período publicado y puede variar a diario. TEA: en billeteras asume capitalización diaria; en plazo fijo, renovación cada 30 días. Las tasas promocionales de cuentas remuneradas tienen tope de saldo — confirmá condiciones en cada app antes de decidir.
+    </p>
+
+    <section class="links">
+      <h2>Seguí la cuenta</h2>
+      <ul>
+        <li><a href="/calculadora-plazo-fijo">💰 Calculadora de plazo fijo — interés exacto por monto y días</a></li>
+        <li><a href="/comparador-plazo-fijo">🏦 Comparador de plazo fijo por banco</a></li>
+        <li><a href="/calculadora-conversion-tna-tem-tea">🔁 Convertir TNA ↔ TEM ↔ TEA</a></li>
+        <li><a href="/calculadora-cuanto-pierdo-inflacion-plata-quieta">📉 ¿Cuánto pierdo si dejo la plata quieta?</a></li>
+        <li><a href="/valores-bcra">🏛️ Dólar, UVA, inflación y tasas BCRA hoy</a></li>
+        <li><a href="/calculadora-tasa-anual-equivalente-tea">📈 Calcular la TEA desde la TNA</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    const tbody = document.querySelector('[data-tabla] tbody');
+    const montoInput = document.getElementById('monto');
+    if (!tbody || !montoInput) return;
+
+    const fmtArs = (n) => '$' + Math.round(n).toLocaleString('es-AR');
+    const pct = (n) => n.toFixed(2).replace('.', ',') + '%';
+    const teaDe = (tna, kind) => kind === 'pf'
+      ? (Math.pow(1 + (tna / 100) * (30 / 365), 365 / 30) - 1) * 100
+      : (Math.pow(1 + tna / 100 / 365, 365) - 1) * 100;
+    const int30 = (m, tna, kind) => kind === 'pf' ? m * (tna / 100) * (30 / 365) : m * (Math.pow(1 + tna / 100 / 365, 30) - 1);
+
+    function monto() {
+      const v = parseInt((montoInput.value || '').replace(/[^\d]/g, ''), 10);
+      return isFinite(v) && v > 0 ? v : 1000000;
+    }
+
+    function recompute() {
+      const m = monto();
+      const trs = Array.from(tbody.querySelectorAll('tr'));
+      trs.forEach((tr) => {
+        const tna = parseFloat(tr.getAttribute('data-tna'));
+        const kind = tr.getAttribute('data-kind');
+        if (!isFinite(tna)) return;
+        tr.querySelector('[data-cell-tna]').textContent = pct(tna);
+        tr.querySelector('[data-cell-tea]').textContent = pct(teaDe(tna, kind));
+        tr.querySelector('[data-cell-int]').textContent = fmtArs(int30(m, tna, kind));
+      });
+      trs.sort((a, b) => parseFloat(b.getAttribute('data-tna')) - parseFloat(a.getAttribute('data-tna')));
+      trs.forEach((tr, i) => {
+        tr.classList.toggle('top', i === 0);
+        const rank = tr.querySelector('[data-rank]'); if (rank) rank.textContent = String(i + 1);
+        tbody.appendChild(tr);
+      });
+      const best = trs[0];
+      const resNombre = document.querySelector('[data-res-nombre]');
+      const resTasa = document.querySelector('[data-res-tasa]');
+      if (best && resNombre && resTasa) {
+        const nombre = best.querySelector('.ent-nombre');
+        if (nombre) resNombre.textContent = nombre.textContent;
+        resTasa.textContent = pct(parseFloat(best.getAttribute('data-tna')));
+      }
+    }
+
+    montoInput.addEventListener('input', () => {
+      const raw = montoInput.value.replace(/[^\d]/g, '');
+      if (raw) montoInput.value = parseInt(raw, 10).toLocaleString('es-AR');
+      recompute();
+    });
+
+    async function getJSON(url) {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(String(res.status));
+      return res.json();
+    }
+
+    async function refresh() {
+      if (!cfg.api) return;
+      let touched = false;
+      // 1) Plazo fijo por banco
+      try {
+        const pf = await getJSON(cfg.api + '/tasas/plazoFijo');
+        const by = {}; (pf || []).forEach((x) => { if (x && x.entidad) by[x.entidad] = x; });
+        tbody.querySelectorAll('tr[data-kind="pf"]').forEach((tr) => {
+          const q = by[tr.getAttribute('data-key')];
+          if (q && q.tnaClientes > 0) { tr.setAttribute('data-tna', String(+(q.tnaClientes * 100).toFixed(2))); touched = true; }
+        });
+      } catch {}
+      // 2) Rendimientos publicados (Let'sBit, Fiwind)
+      try {
+        if ((cfg.rend || []).length) {
+          const rend = await getJSON(cfg.api + '/rendimientos');
+          (cfg.rend || []).forEach((m) => {
+            const e = (rend || []).find((x) => x.entidad === m.entidad);
+            const ars = e && (e.rendimientos || []).find((r) => r.moneda === 'ARS' && r.apy > 0);
+            const tr = tbody.querySelector('tr[data-entidad="' + m.entidad + '"]');
+            if (ars && tr) { tr.setAttribute('data-tna', String(+ars.apy.toFixed(2))); touched = true; }
+          });
+        }
+      } catch {}
+      // 3) FCI money market (Mercado Pago, Personal Pay, Cocos): TNA por variación del VCP
+      try {
+        if ((cfg.fci || []).length) {
+          const [u, p] = await Promise.all([getJSON(cfg.api + '/fci/mercadoDinero/ultimo'), getJSON(cfg.api + '/fci/mercadoDinero/penultimo')]);
+          (cfg.fci || []).forEach((m) => {
+            const fu = (u || []).find((x) => x.fondo === m.fondo);
+            const fp = (p || []).find((x) => x.fondo === m.fondo);
+            if (!fu || !fp || !fu.vcp || !fp.vcp) return;
+            const days = Math.round((new Date(fu.fecha) - new Date(fp.fecha)) / 86400000);
+            if (days < 1 || days > 45) return;
+            const tna = (Math.pow(fu.vcp / fp.vcp, 1 / days) - 1) * 365 * 100;
+            if (!isFinite(tna) || tna < 3 || tna > 120) return;
+            const tr = tbody.querySelector('tr[data-fondo="' + m.fondo + '"]');
+            if (tr) { tr.setAttribute('data-tna', String(+tna.toFixed(2))); touched = true; }
+          });
+        }
+      } catch {}
+      if (touched) {
+        recompute();
+        const el = document.querySelector('[data-live-updated]');
+        if (el) el.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      }
+    }
+
+    refresh();
+    setInterval(refresh, 600000);
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.5rem, 4.5vw, 2.05rem); font-weight: 800; margin: 0 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.4rem; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.25rem; }
+  .updated a { color: var(--accent); }
+  .resumen { background: var(--bg-card); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 0.85rem 1rem; margin: 0 0 1.25rem; line-height: 1.55; }
+  .sim { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.9rem; margin: 0 0 1rem; }
+  .sim label { font-weight: 700; }
+  .sim-input { display: inline-flex; align-items: center; gap: 0.35rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.45rem 0.75rem; }
+  .sim-currency { color: var(--text-subtle); font-weight: 700; }
+  .sim-input input { background: transparent; border: 0; outline: none; color: var(--text); font-size: 1.05rem; font-weight: 700; width: 9.5rem; font-variant-numeric: tabular-nums; }
+  .sim-hint { font-size: 0.78rem; color: var(--text-subtle); }
+  .tabla-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tabla { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  .tabla th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-subtle); padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
+  .tabla td { padding: 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .tabla .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tabla th:nth-child(n+3), .tabla td:nth-child(n+3) { text-align: right; }
+  .rank { color: var(--text-subtle); font-weight: 700; width: 2rem; }
+  .ent-nombre { font-weight: 700; }
+  .badge { display: inline-block; margin-left: 0.45rem; padding: 0.1rem 0.45rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; vertical-align: middle; }
+  .badge-pf { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+  .badge-bill { background: color-mix(in srgb, #10b981 16%, transparent); color: #10b981; }
+  .ent-detalle { display: block; font-size: 0.75rem; color: var(--text-subtle); margin-top: 0.15rem; }
+  .interes { font-weight: 700; }
+  tr.top td { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+  tr.top .interes { color: var(--accent); }
+  .nota { font-size: 0.78rem; color: var(--text-subtle); line-height: 1.55; margin-top: 0.9rem; }
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links h2, .faq h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem; }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; margin: 0; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

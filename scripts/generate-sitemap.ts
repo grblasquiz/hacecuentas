@@ -523,6 +523,7 @@ const priorityUrls: Url[] = [
   prio('/presupuesto-familiar',              '0.95', 'weekly'),
   prio('/simulador-jubilacion-anses',        '0.95', 'weekly'),
   prio('/comparador-plazo-fijo',             '0.9',  'daily',  true),
+  prio('/plazo-fijo-vs-billeteras',          '0.9',  'daily',  true),
   prio('/calculadora-cientifica',            '0.9',  'weekly'),
   prio('/calculadora-derivadas',             '0.9',  'monthly'),
   prio('/resolver-ecuaciones',               '0.9',  'monthly'),

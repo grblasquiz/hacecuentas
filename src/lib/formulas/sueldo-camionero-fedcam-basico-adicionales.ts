@@ -1,34 +1,40 @@
 import { BASE_IMPONIBLE_MAXIMA_APORTES } from './sueldo-ar';
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _chart?: any; _insight?: any; }
-// Básicos de convenio mensuales CCT 40/89 (Camioneros) vigentes desde mayo 2026,
-// según escala paritaria publicada (FADEEAC/FAETYL/CATAC). Verificar la escala del
-// mes vigente en fedcam.org.ar / camioneros-ba.org.ar tras cada acuerdo.
+// Básicos de convenio mensuales CCT 40/89 (Camioneros) VIGENTES JULIO 2026,
+// tras la revisión paritaria que inyectó $27.258 al básico del conductor de 1ª
+// (impacto proporcional en todo el escalafón). Verificar la escala del mes
+// vigente en fedcam.org.ar / camioneros-ba.org.ar tras cada acuerdo.
 const BASICO_CATEGORIA: Record<string, number> = {
-  ayudante: 949464,   // lavadores, engrasadores y ayudantes
-  conductor: 984338,  // conductor de primera categoría
-  espec: 1018919,     // conductor especializado / operador de equipos
+  ayudante: 968120,    // peón/ayudante, lavadores, engrasadores
+  conductor3: 1022212, // conductor de 3ª categoría
+  conductor2: 1041121, // conductor de 2ª categoría
+  conductor: 1060010,  // conductor de 1ª categoría
+  espec: 1139646,      // conductor especializado (p. ej. caudales)
 };
-// Viático estimado por pernoctada en larga distancia (no remunerativo).
-// $17.841,22/día × ~12 noches/mes (estimación). Verificar contra recibo real.
-const VIATICO_PERNOCTADA_DIA = 17841;
-const NOCHES_LARGA_DISTANCIA = 12;
+// Viáticos larga distancia (no remunerativos) — escala julio 2026:
+const PERMANENCIA_FUERA_RESIDENCIA_DIA = 54059.44; // por día fuera de la residencia habitual
+const VIATICO_KM = 80.08748;                       // por kilómetro recorrido
+const DIAS_FUERA_ESTIMADOS = 12;                   // estimación mensual si no se informan km
 
 export function sueldoCamioneroFedcamBasicoAdicionales(i: Inputs): Outputs {
   const antig=Number(i.antiguedad)||0;
   const categoria=String(i.categoria||'ayudante');
   const rama=String(i.rama||'corta');
+  const kmMes=Math.max(Number(i.km_mes)||0,0);
   const basico=BASICO_CATEGORIA[categoria] ?? BASICO_CATEGORIA.ayudante;
   const plusAntig=basico*0.01*antig; // 1% por año (CCT 40/89)
   // Viáticos no remunerativos solo en larga distancia (no integran base de aportes).
-  const viaticos = rama==='larga' ? VIATICO_PERNOCTADA_DIA*NOCHES_LARGA_DISTANCIA : 0;
+  const viaticosPermanencia = rama==='larga' ? PERMANENCIA_FUERA_RESIDENCIA_DIA*DIAS_FUERA_ESTIMADOS : 0;
+  const viaticosKm = rama==='larga' ? kmMes*VIATICO_KM : 0;
+  const viaticos = viaticosPermanencia + viaticosKm;
   const brutoRemun=basico+plusAntig;       // base remunerativa (aportes + Ganancias)
   const bruto=brutoRemun+viaticos;         // bruto total que ve el chofer
   const baseAp = Math.min(brutoRemun, BASE_IMPONIBLE_MAXIMA_APORTES); // tope Ley 24.241 art.9
   const jubilacion = baseAp * 0.11;
   const obraSocial = baseAp * 0.03;
   const pami = baseAp * 0.03;
-  const ganancias=Math.max(0,(brutoRemun-basico)*0.05); // Simplificación: 5% sobre el exceso de antigüedad
+  const ganancias=Math.max(0,(brutoRemun-1800000)*0.05); // Simplificación (MNI orientativo)
   const neto=bruto-jubilacion-obraSocial-pami-ganancias;
   const sac=brutoRemun/12;
   const chart = {
@@ -48,10 +54,10 @@ export function sueldoCamioneroFedcamBasicoAdicionales(i: Inputs): Outputs {
   const descTotal=jubilacion+obraSocial+pami+ganancias;
   const pctDesc=bruto>0?(descTotal/bruto)*100:0;
   const fmtAr=(n:number)=>'$'+Math.round(n).toLocaleString('es-AR');
-  const viaticoTxt = viaticos>0 ? ` Incluye **${fmtAr(viaticos)}** de viáticos por pernoctada (larga distancia, no remunerativos).` : '';
+  const viaticoTxt = viaticos>0 ? ` Incluye **${fmtAr(viaticos)}** de viáticos no remunerativos de larga distancia (permanencia ${DIAS_FUERA_ESTIMADOS} días × $54.059${viaticosKm>0?` + ${Math.round(kmMes).toLocaleString('es-AR')} km × $80,09`:''}).` : '';
   const insight={
     title:'Lo que cobra el camionero',
-    text:`Con un bruto de **${fmtAr(bruto)}** los descuentos suman **${fmtAr(descTotal)}** (${pctDesc.toFixed(0)}%) y el neto de bolsillo queda en **${fmtAr(neto)}**. La antigüedad de ${antig} año${antig===1?'':'s'} (1% anual) aporta **${fmtAr(plusAntig)}** sobre el básico de convenio.${viaticoTxt}`,
+    text:`Con un bruto de **${fmtAr(bruto)}** los descuentos suman **${fmtAr(descTotal)}** (${pctDesc.toFixed(0)}%) y el neto de bolsillo queda en **${fmtAr(neto)}**. La antigüedad de ${antig} año${antig===1?'':'s'} (1% anual) aporta **${fmtAr(plusAntig)}** sobre el básico de convenio julio 2026.${viaticoTxt}`,
     tone:'neutral' as const,
     icon:'🚛',
   };
@@ -60,7 +66,7 @@ export function sueldoCamioneroFedcamBasicoAdicionales(i: Inputs): Outputs {
     bruto: '$'+bruto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     neto: '$'+neto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     sac: '$'+sac.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
-    resumen: `Básico: $${basico.toLocaleString('es-AR')}. Con antigüedad ${antig} años y cargas: neto ~$${neto.toFixed(0)}.`,
+    resumen: `Básico julio 2026: $${basico.toLocaleString('es-AR')}. Con ${antig} años de antigüedad${viaticos>0?' y viáticos de larga distancia':''}: neto ~$${neto.toFixed(0)}.`,
     _chart: chart,
     _insight: insight
   };

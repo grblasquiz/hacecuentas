@@ -1184,6 +1184,7 @@ import { focoLedEquivalenciaWatts } from './foco-led-equivalencia-watts';
 import { compute as compute__fonacot_credito_mexico_monto_cat_tasa } from './fonacot-credito-mexico-monto-cat-tasa';
 import { fonasaAporteUruguay } from './fonasa-aporte-uruguay';
 import { compute as compute__fonasa_chile_tramos_a_b_c_d_cobertura } from './fonasa-chile-tramos-a-b-c-d-cobertura';
+import { compute as compute__fondo_asistencia_laboral_fal } from './fondo-asistencia-laboral-fal';
 import { fondoComunInversionMoneyMarketRendimiento } from './fondo-comun-inversion-money-market-rendimiento';
 import { fondoDesempleoAnsesMontoTiempo } from './fondo-desempleo-anses-monto-tiempo';
 import { compute as compute__fondo_emergencia_chile_meses_gastos_recomendado } from './fondo-emergencia-chile-meses-gastos-recomendado';
@@ -3900,6 +3901,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'fonacot-credito-mexico-monto-cat-tasa': compute__fonacot_credito_mexico_monto_cat_tasa,
   'fonasa-aporte-uruguay': fonasaAporteUruguay,
   'fonasa-chile-tramos-a-b-c-d-cobertura': compute__fonasa_chile_tramos_a_b_c_d_cobertura,
+  'fondo-asistencia-laboral-fal': compute__fondo_asistencia_laboral_fal,
   'fondo-comun-inversion-money-market-rendimiento': fondoComunInversionMoneyMarketRendimiento,
   'fondo-desempleo-anses-monto-tiempo': fondoDesempleoAnsesMontoTiempo,
   'fondo-emergencia-chile-meses-gastos-recomendado': compute__fondo_emergencia_chile_meses_gastos_recomendado,
