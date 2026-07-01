@@ -12,6 +12,8 @@
  *     "calcs_cl":      { "slugs": [...] },
  *     "calcs_co":      { "slugs": [...] },
  *     "calcs_es":      { "slugs": [...] },
+ *     "calcs_ec": ... "calcs_pe" ... "calcs_do" ... "calcs_py" ...
+ *     "calcs_uy" ... "calcs_ve" ... "calcs_pt-pt":  { "slugs": [...] },
  *     "blog":          { "slugs": [...] },
  *     "guias":         { "slugs": [...] },
  *     "tablas":        { "slugs": [...] },
@@ -101,9 +103,15 @@ const IGNORE_PATTERNS: RegExp[] = [
 ];
 
 // Regex de content types
-const CALC_RE = /^src\/content\/calcs(-([a-z]{2}))?\/([^/]+)\.json$/;
+// Locale = 2 letras, opcionalmente compuesto (`pt-pt`). El sufijo del dir
+// (`calcs-<loc>`) coincide 1:1 con el key que pasa cada [...slug].astro y con
+// el bucket `calcs_<loc>` que consume filterByIncremental.
+const CALC_RE = /^src\/content\/calcs(-([a-z]{2}(?:-[a-z]{2})?))?\/([^/]+)\.json$/;
 const FORMULA_TS_RE = /^src\/lib\/formulas\/([^/]+)\.ts$/;
-const LOCALES = ['ar', 'en', 'es', 'mx', 'cl', 'co', 'pt'] as const;
+const LOCALES = [
+  'ar', 'en', 'es', 'mx', 'cl', 'co', 'pt',
+  'ec', 'pe', 'do', 'py', 'uy', 've', 'pt-pt',
+] as const;
 type Locale = typeof LOCALES[number];
 const BLOG_RE = /^src\/content\/blog\/([^/]+)\.json$/;
 const GUIAS_RE = /^src\/content\/guias\/([^/]+)\.json$/;
@@ -127,6 +135,13 @@ interface DetectResult {
     calcs_cl?: { slugs: string[] };
     calcs_co?: { slugs: string[] };
     calcs_es?: { slugs: string[] };
+    calcs_ec?: { slugs: string[] };
+    calcs_pe?: { slugs: string[] };
+    calcs_do?: { slugs: string[] };
+    calcs_py?: { slugs: string[] };
+    calcs_uy?: { slugs: string[] };
+    calcs_ve?: { slugs: string[] };
+    'calcs_pt-pt'?: { slugs: string[] };
     blog?: { slugs: string[] };
     guias?: { slugs: string[] };
     tablas?: { slugs: string[] };
@@ -162,7 +177,7 @@ function readJsonField<T = unknown>(filePath: string, field: string): T | null {
 }
 
 function readSlugsFromFormulaId(formulaId: string): { slug: string; locale: string }[] {
-  const locales = ['ar', 'en', 'es', 'mx', 'cl', 'co', 'pt'];
+  const locales = LOCALES;
   const out: { slug: string; locale: string }[] = [];
   for (const loc of locales) {
     const dir = loc === 'ar' ? 'src/content/calcs' : `src/content/calcs-${loc}`;
@@ -221,6 +236,8 @@ function detect(baseSha: string): DetectResult {
   const calcsByLocale: Record<Locale, Set<string>> = {
     ar: new Set(), en: new Set(), es: new Set(), mx: new Set(),
     cl: new Set(), co: new Set(), pt: new Set(),
+    ec: new Set(), pe: new Set(), do: new Set(), py: new Set(),
+    uy: new Set(), ve: new Set(), 'pt-pt': new Set(),
   };
   const blog: ContentChanges = { slugs: new Set() };
   const guias: ContentChanges = { slugs: new Set() };
@@ -238,7 +255,13 @@ function detect(baseSha: string): DetectResult {
     // Calcs JSON
     const calcM = file.match(CALC_RE);
     if (calcM) {
-      const locale = (calcM[2] || 'ar') as Locale;
+      const locStr = calcM[2] || 'ar';
+      // Locale no soportado (dir `calcs-xx` nuevo sin cablear) → full defensivo
+      // en vez de crashear indexando calcsByLocale[undefined].
+      if (!(LOCALES as readonly string[]).includes(locStr)) {
+        return fullResult(`locale no soportado (${locStr}) en ${file}`, files.length);
+      }
+      const locale = locStr as Locale;
       const slug = readSlugFromJson(file);
       if (!slug) return fullResult(`no se pudo leer slug de ${file}`, files.length);
       calcsByLocale[locale].add(slug);
