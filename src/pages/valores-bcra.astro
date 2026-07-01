@@ -37,12 +37,22 @@ const inflacionInteranual = await safeFetch<InflacionPoint[]>(
 // por scripts/fetch-bcra-indices.mjs. NO se fetchean acá porque el WAF del BCRA
 // bloquea el SSR de Astro/Vite ("internal error; reference=…"); desde Node plano
 // (el script de prebuild) responde 200. Ver el script.
-type Punto = { valor: number; fecha: string } | null;
-const bcraIndices = bcraIndicesRaw as { badlar: Punto; tamar: Punto; cer: Punto; riesgoPais: Punto };
+type Punto = { valor: number; fecha: string; prev?: number | null; spark?: number[] } | null;
+type DolarPunto = { venta: number; fecha: string; prev?: number | null; spark?: number[] } | null;
+const bcraIndices = bcraIndicesRaw as {
+  badlar: Punto; tamar: Punto; cer: Punto; riesgoPais: Punto;
+  dolar?: Record<string, DolarPunto>;
+};
 const badlar = bcraIndices.badlar;
 const tamar = bcraIndices.tamar;
 const cer = bcraIndices.cer;
 const riesgoPais = bcraIndices.riesgoPais;
+const dolarHist = bcraIndices.dolar || {};
+
+// Fecha de hoy (build) para detectar valores PUBLICADOS POR ADELANTADO: el BCRA
+// publica el CER con ~10 días de anticipación, así que su "fecha" puede ser futura.
+const todayStr = new Date().toISOString().slice(0, 10);
+const isFutureDate = (s?: string) => !!s && s.slice(0, 10) > todayStr;
 
 // Últimos valores
 const dolarMap = Object.fromEntries(dolares.map((d) => [d.casa, d]));
@@ -67,13 +77,13 @@ const buildDate = new Date().toLocaleDateString('es-AR', { day: '2-digit', month
 // Nota sobre dólar tarjeta: el Impuesto PAIS (30%) se dejó vencer el 22/12/2024.
 // Desde entonces el recargo es sólo la percepción Ganancias/Bienes Personales del 30%.
 // Antes de tocar este hint verificar última normativa AFIP vigente.
-const dolarCards: { key: string; label: string; hint: string; isTaxed?: boolean }[] = [
-  { key: 'oficial', label: 'Dólar Oficial', hint: 'Cotización mayorista del BCRA' },
-  { key: 'blue', label: 'Dólar Blue', hint: 'Paralelo informal (Parque Lezama, arbolitos)' },
-  { key: 'bolsa', label: 'Dólar MEP', hint: 'MEP / Bolsa: AL30 en pesos vs AL30 en USD' },
-  { key: 'contadoconliqui', label: 'Dólar CCL', hint: 'Contado con liqui: para girar al exterior' },
-  { key: 'tarjeta', label: 'Dólar Tarjeta', hint: 'Oficial + 30% percepción Ganancias (PAIS derogado dic 2024)', isTaxed: true },
-  { key: 'cripto', label: 'Dólar Cripto', hint: 'USDT promedio en exchanges' },
+const dolarCards: { key: string; label: string; hint: string; isTaxed?: boolean; href: string; cta: string }[] = [
+  { key: 'oficial', label: 'Dólar Oficial', hint: 'Cotización mayorista del BCRA', href: '/conversor-dolar-argentina', cta: 'Convertir →' },
+  { key: 'blue', label: 'Dólar Blue', hint: 'Paralelo informal (Parque Lezama, arbolitos)', href: '/conversor-dolar-argentina', cta: 'Convertir →' },
+  { key: 'bolsa', label: 'Dólar MEP', hint: 'MEP / Bolsa: AL30 en pesos vs AL30 en USD', href: '/conversor-dolar-argentina', cta: 'Convertir →' },
+  { key: 'contadoconliqui', label: 'Dólar CCL', hint: 'Contado con liqui: para girar al exterior', href: '/conversor-dolar-argentina', cta: 'Convertir →' },
+  { key: 'tarjeta', label: 'Dólar Tarjeta', hint: 'Oficial + 30% percepción Ganancias (PAIS derogado dic 2024)', isTaxed: true, href: '/conversor-dolar-argentina', cta: 'Calcular con recargo →' },
+  { key: 'cripto', label: 'Dólar Cripto', hint: 'USDT promedio en exchanges', href: '/conversor-dolar-argentina', cta: 'Convertir →' },
 ];
 
 const builtAtISO = new Date().toISOString();
@@ -157,14 +167,39 @@ const iclHoy = ICL_VALORES.at(-1) ?? null;
 const iclFmt = iclHoy != null ? iclHoy.toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : null;
 
 const pct = (n: number) => `${n.toFixed(2).replace('.', ',')}%`;
-// Cards de tasas/índices BCRA (server-rendered, crawleables).
-const tasasBcra: { label: string; value: string; sub: string; fecha: string }[] = [
-  badlar && { label: 'BADLAR', value: pct(badlar.valor), sub: 'Plazo fijo mayorista (>$1M), bancos privados', fecha: badlar.fecha },
-  tamar && { label: 'TAMAR', value: pct(tamar.valor), sub: 'Tasa mayorista de referencia del BCRA', fecha: tamar.fecha },
-  cer && { label: 'CER', value: fmtAr(cer.valor), sub: 'Coef. de Estabilización de Referencia (indexa la UVA)', fecha: cer.fecha },
-  iclHoy != null && { label: 'ICL', value: iclFmt ?? '', sub: 'Índice de Contratos de Locación — ajuste de alquileres', fecha: ICL_LAST_UPDATED },
-  riesgoPais && { label: 'Riesgo país', value: `${Math.round(riesgoPais.valor)} pb`, sub: 'EMBI+ Argentina (puntos básicos)', fecha: riesgoPais.fecha },
-].filter(Boolean) as { label: string; value: string; sub: string; fecha: string }[];
+
+// ── Enriquecido por tarjeta (D): sparkline + variación + acción. Helpers reales
+// sobre las series ya en scope; si no hay ≥2 puntos, el sparkline no se pinta.
+function sparkFrom(spark?: number[] | null): { pts: string | null; up: boolean } {
+  if (!spark || spark.length < 2) return { pts: null, up: true };
+  return { pts: sparkline(spark), up: spark[spark.length - 1] >= spark[0] };
+}
+// Variación firmada: pct → porcentaje; digits/suffix configurables (pts, pb…).
+function deltaSigned(cur?: number | null, prev?: number | null, opts: { pct?: boolean; digits?: number; suffix?: string } = {}): string | null {
+  if (cur == null || prev == null || prev === 0) return null;
+  const raw = opts.pct ? (cur / prev - 1) * 100 : cur - prev;
+  const digits = opts.digits ?? (opts.pct ? 1 : 2);
+  const s = raw.toFixed(digits).replace('.', ',');
+  return (raw >= 0 ? '+' : '') + s + (opts.pct ? '%' : (opts.suffix ? ' ' + opts.suffix : ''));
+}
+
+const iclSparkArr = ICL_VALORES.slice(-30) as number[];
+const iclPrev = ICL_VALORES.length >= 2 ? ICL_VALORES.at(-2)! : null;
+
+// Cards de tasas/índices BCRA (server-rendered, crawleables) — ahora con
+// sparkline, variación, fuente, acción y aviso de valor anticipado (CER).
+type TasaView = {
+  label: string; value: string; sub: string; fecha: string;
+  spark: number[] | null; prev: number | null; deltaKind: 'pct' | 'pts' | 'pb';
+  href?: string; cta?: string; riskTone?: boolean;
+};
+const tasasBcra: TasaView[] = [
+  badlar && { label: 'BADLAR', value: pct(badlar.valor), sub: 'Plazo fijo mayorista (>$1M), bancos privados', fecha: badlar.fecha, spark: badlar.spark ?? null, prev: badlar.prev ?? null, deltaKind: 'pts', href: '/calculadora-plazo-fijo', cta: 'Calcular plazo fijo →' },
+  tamar && { label: 'TAMAR', value: pct(tamar.valor), sub: 'Tasa mayorista de referencia del BCRA', fecha: tamar.fecha, spark: tamar.spark ?? null, prev: tamar.prev ?? null, deltaKind: 'pts', href: '/calculadora-plazo-fijo', cta: 'Calcular plazo fijo →' },
+  cer && { label: 'CER', value: fmtAr(cer.valor), sub: 'Coef. de Estabilización de Referencia (indexa la UVA)', fecha: cer.fecha, spark: cer.spark ?? null, prev: cer.prev ?? null, deltaKind: 'pct', href: '/calculadora-actualizacion-inflacion-ipc', cta: 'Actualizar por inflación →' },
+  iclHoy != null && { label: 'ICL', value: iclFmt ?? '', sub: 'Índice de Contratos de Locación — ajuste de alquileres', fecha: ICL_LAST_UPDATED, spark: iclSparkArr, prev: iclPrev, deltaKind: 'pct', href: '/calculadora-actualizacion-alquiler-icl', cta: 'Actualizar alquiler →' },
+  riesgoPais && { label: 'Riesgo país', value: `${Math.round(riesgoPais.valor)} pb`, sub: 'EMBI+ Argentina (puntos básicos)', fecha: riesgoPais.fecha, spark: riesgoPais.spark ?? null, prev: riesgoPais.prev ?? null, deltaKind: 'pb', riskTone: true },
+].filter(Boolean) as TasaView[];
 
 // Frase-resumen crawleable (AEO / featured snippet para "valores bcra hoy").
 const resumenParts: string[] = [];
@@ -178,6 +213,65 @@ if (riesgoPais) resumenParts.push(`y el riesgo país está en ${Math.round(riesg
 const resumen = resumenParts.length
   ? `Hoy en Argentina ${resumenParts.join(', ')}, según datos oficiales del BCRA e INDEC actualizados al ${buildDate}.`
   : '';
+
+// ── Enriquecido del dólar por tarjeta (D): sparkline + variación diaria + fecha.
+// venta live (dolarapi) para el número; spark/prev del histórico de build.
+const dolarView: Record<string, { spark: number[] | null; delta: string | null; fecha: string }> = {};
+for (const c of dolarCards) {
+  const h = dolarHist[c.key];
+  const venta = dolarMap[c.key]?.venta ?? h?.venta ?? null;
+  dolarView[c.key] = {
+    spark: h?.spark ?? null,
+    delta: deltaSigned(venta, h?.prev, { pct: true }),
+    fecha: dolarMap[c.key]?.fechaActualizacion || h?.fecha || '',
+  };
+}
+
+// ── LECTURA EJECUTIVA (B): "qué mirar hoy". Insights computados de la data real,
+// cada uno con a-quién-afecta y qué calculadora usar. Sin recomendación financiera.
+const mercadoKeys = ['blue', 'bolsa', 'contadoconliqui', 'cripto'];
+let topBrecha: { label: string; pct: number } | null = null;
+for (const k of mercadoKeys) {
+  const v = dolarMap[k]?.venta;
+  const of = dolarMap.oficial?.venta;
+  if (v && of) {
+    const p = (v / of - 1) * 100;
+    if (!topBrecha || p > topBrecha.pct) {
+      topBrecha = { label: (dolarCards.find((c) => c.key === k)?.label || k).replace('Dólar ', ''), pct: p };
+    }
+  }
+}
+const execItems: { icon: string; html: string; href: string; cta: string }[] = [];
+if (topBrecha) {
+  execItems.push({
+    icon: '💸',
+    html: `El <strong>dólar ${topBrecha.label}</strong> marca la mayor brecha frente al oficial: <strong>+${topBrecha.pct.toFixed(1).replace('.', ',')}%</strong>. Es el número que miran quienes ahorran o giran divisas.`,
+    href: '/conversor-dolar-argentina', cta: 'Convertir a mi cotización →',
+  });
+}
+if (badlar && ultimaIpcAnual) {
+  const gana = badlar.valor >= ultimaIpcAnual.valor;
+  execItems.push({
+    icon: gana ? '📈' : '📉',
+    html: `La <strong>BADLAR</strong> mayorista rinde <strong>${pct(badlar.valor)}</strong> anual, ${gana ? 'por encima' : 'por debajo'} de la inflación interanual (<strong>${ipcAnualTxt}</strong>): un plazo fijo tradicional ${gana ? 'le gana' : 'pierde contra'} la inflación en términos nominales.`,
+    href: '/calculadora-plazo-fijo', cta: 'Calcular mi plazo fijo →',
+  });
+}
+if (ultimoIpc && ipcPrev != null && ipcDeltaPts) {
+  const desac = ultimoIpc.valor < ipcPrev;
+  execItems.push({
+    icon: desac ? '🟢' : '🔴',
+    html: `La <strong>inflación mensual</strong> del INDEC fue <strong>${ipcMensualTxt}</strong>, ${desac ? 'una desaceleración' : 'una aceleración'} frente al mes previo (${ipcDeltaPts}). Impacta alquileres, salarios y ahorros en pesos.`,
+    href: '/calculadora-actualizacion-inflacion-ipc', cta: 'Actualizar un monto →',
+  });
+}
+if (isFutureDate(cer?.fecha) && cer) {
+  execItems.push({
+    icon: '🗓️',
+    html: `El <strong>CER</strong> ya tiene valor publicado por el BCRA para el <strong>${fmtDate(cer.fecha)}</strong> (${fmtAr(cer.valor)}): la UVA de esos días está anticipada. Útil si tenés un crédito o alquiler que ajusta por UVA/CER.`,
+    href: '/calculadora-credito-uva-vs-tasa-fija', cta: 'Ver cuota UVA →',
+  });
+}
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -293,6 +387,29 @@ const faqSchema = {
 
     {resumen && <p class="vb-resumen">{resumen}</p>}
 
+    <!-- LECTURA EJECUTIVA (B): qué mirar hoy — insights computados de la data,
+         con a-quién-afecta y qué calculadora usar. Sin recomendación financiera. -->
+    {execItems.length > 0 && (
+      <section class="exec" aria-label="Qué mirar hoy">
+        <div class="exec-head">
+          <span class="exec-kicker">Lectura del día</span>
+          <h2 class="exec-title">Qué mirar hoy · {buildDate}</h2>
+        </div>
+        <ul class="exec-list">
+          {execItems.map((it) => (
+            <li class="exec-item">
+              <span class="exec-icon" aria-hidden="true">{it.icon}</span>
+              <span class="exec-body">
+                <span class="exec-text" set:html={it.html}></span>
+                <a class="exec-cta" href={it.href}>{it.cta}</a>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p class="exec-note">Lectura informativa de datos oficiales, no es recomendación de inversión.</p>
+      </section>
+    )}
+
     <!-- ÍNDICE DE ANCLAS (sticky) — navegación entre secciones sin ocultar
          contenido: TODO sigue en el HTML (crawleable), sólo hace scroll. -->
     <nav class="dash-tabs" aria-label="Secciones del dashboard">
@@ -301,6 +418,7 @@ const faqSchema = {
       <a href="#tasas">Tasas BCRA</a>
       <a href="#historico">UVA e IPC</a>
       <a href="#plazo-fijo">Plazo fijo</a>
+      <a href="#alertas">Alertas</a>
     </nav>
 
     <!-- SECCIÓN DÓLAR -->
@@ -315,17 +433,27 @@ const faqSchema = {
           // no para el tarjeta — ese "+30%" es el impuesto, no una brecha.
           const showBrecha = brecha && c.key !== 'oficial' && !c.isTaxed;
           const showTaxBadge = c.isTaxed && brecha;
+          const view = dolarView[c.key];
+          const sparkPts = view?.spark ? sparkline(view.spark) : null;
+          const sparkUp = view?.spark && view.spark.length >= 2 ? view.spark[view.spark.length - 1] >= view.spark[0] : true;
           return (
             <div class="card">
               <div class="card-head">
                 <span class="card-label">{c.label}</span>
-                {showTaxBadge && (
+                {showTaxBadge ? (
                   <span class="badge badge-tax" title="Recargo por percepción Ganancias, no brecha cambiaria">+{brecha}% impuesto</span>
+                ) : view?.delta && (
+                  <span class="delta delta-neutral" title="Variación vs el día anterior">{view.delta}</span>
                 )}
               </div>
               <div class="card-value" data-dolar-key={c.key}>
                 {venta ? `$${fmtAr(venta)}` : '—'}
               </div>
+              {sparkPts && (
+                <svg class={`spark spark-${sparkUp ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true" role="img">
+                  <polyline points={sparkPts} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              )}
               <div class="card-sub">
                 {d?.compra ? `Compra: $${fmtAr(d.compra)}` : c.hint}
               </div>
@@ -337,6 +465,10 @@ const faqSchema = {
               ) : (
                 <div class="card-hint">{c.hint}</div>
               )}
+              <div class="card-foot">
+                <span class="card-src">{view?.fecha ? `Al ${fmtDate(view.fecha)} · dolarapi` : 'Fuente: dolarapi'}</span>
+                <a class="card-act" href={c.href}>{c.cta}</a>
+              </div>
             </div>
           );
         })}
@@ -401,14 +533,50 @@ const faqSchema = {
       <section class="dash-section" id="tasas">
         <h2>🏛️ Tasas e índices del BCRA</h2>
         <div class="card-grid">
-          {tasasBcra.map((t) => (
-            <div class="card">
-              <div class="card-head"><span class="card-label">{t.label}</span></div>
-              <div class="card-value">{t.value}</div>
-              <div class="card-sub">{t.sub}</div>
-              <div class="card-hint">Al {fmtDate(t.fecha)} · BCRA</div>
-            </div>
-          ))}
+          {tasasBcra.map((t) => {
+            const s = sparkFrom(t.spark);
+            const cur = t.deltaKind === 'pct'
+              ? (t.spark && t.spark.length ? t.spark[t.spark.length - 1] : null)
+              : (t.spark && t.spark.length ? t.spark[t.spark.length - 1] : null);
+            const delta = t.deltaKind === 'pct'
+              ? deltaSigned(cur, t.prev, { pct: true, digits: 2 })
+              : t.deltaKind === 'pb'
+                ? deltaSigned(cur, t.prev, { digits: 0, suffix: 'pb' })
+                : deltaSigned(cur, t.prev, { digits: 2, suffix: 'pts' });
+            // Riesgo país: bajar es "bueno" (verde); subir "malo" (rojo). El resto, neutral.
+            const tone = t.riskTone && cur != null && t.prev != null
+              ? (cur < t.prev ? 'pos' : cur > t.prev ? 'neg' : 'neutral')
+              : 'neutral';
+            const futuro = isFutureDate(t.fecha);
+            return (
+              <div class="card">
+                <div class="card-head">
+                  <span class="card-label">{t.label}</span>
+                  {delta && (
+                    <span class={`delta delta-${tone}`} title="Variación vs el dato anterior">{delta}</span>
+                  )}
+                </div>
+                <div class="card-value" data-tasa={t.label === 'ICL' ? 'icl' : t.label === 'BADLAR' ? 'badlar' : undefined}>{t.value}</div>
+                {s.pts && (
+                  <svg class={`spark spark-${s.up ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true" role="img">
+                    <polyline points={s.pts} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                )}
+                <div class="card-sub">{t.sub}</div>
+                {futuro ? (
+                  <div class="card-hint card-hint-future" title="El BCRA publica el CER con días de anticipación">📅 Valor publicado por el BCRA para el {fmtDate(t.fecha)}</div>
+                ) : (
+                  <div class="card-hint">Al {fmtDate(t.fecha)} · BCRA</div>
+                )}
+                {t.href && t.cta && (
+                  <div class="card-foot">
+                    <span class="card-src">Fuente: BCRA</span>
+                    <a class="card-act" href={t.href}>{t.cta}</a>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
     )}
@@ -455,7 +623,7 @@ const faqSchema = {
             <div class={`tna-row${i === 0 ? ' tna-row-top' : ''}`}>
               <span class="tna-bank">{x.banco}</span>
               <span class="tna-track" aria-hidden="true"><span class="tna-fill" style={`width:${Math.max(8, Math.round((x.tna / (pfMax || x.tna)) * 100))}%`}></span></span>
-              <span class="tna-val">{String(x.tna).replace('.', ',')}%</span>
+              <span class="tna-val" data-pf-top={i === 0 ? '' : undefined}>{String(x.tna).replace('.', ',')}%</span>
             </div>
           ))}
         </div>
@@ -466,6 +634,54 @@ const faqSchema = {
       <p class="sec-cta">
         <a href="/comparador-plazo-fijo" class="cta-link">Ver comparador interactivo →</a>
         <a href="/calculadora-plazo-fijo" class="cta-link">Calculadora individual →</a>
+      </p>
+    </section>
+
+    <!-- SECCIÓN ALERTAS (C): avisos en el navegador (localStorage + Notification).
+         Sin backend: se guardan en el dispositivo y se chequean al abrir la página.
+         Para avisos por email, se derivan a las calcs con motor de alertas real. -->
+    <section class="dash-section" id="alertas">
+      <h2>🔔 Alertas de valores</h2>
+      <p class="alert-lead">
+        Poné un aviso y te avisamos <strong>en este navegador</strong> —con notificación del sistema si la permitís— cuando se cumpla.
+        Se guarda sólo en tu dispositivo y se chequea cada vez que abrís esta página.
+      </p>
+      <form class="alert-form" id="hcAlertForm" novalidate>
+        <div class="alert-row">
+          <label class="alert-field">
+            <span class="alert-lbl">Métrica</span>
+            <select id="hcAlertMetric" class="alert-input">
+              <option value="blue">Dólar blue</option>
+              <option value="oficial">Dólar oficial</option>
+              <option value="bolsa">Dólar MEP</option>
+              <option value="contadoconliqui">Dólar CCL</option>
+              <option value="cripto">Dólar cripto</option>
+              <option value="uva">UVA</option>
+              <option value="icl">ICL (alquileres)</option>
+              <option value="pfmax">Plazo fijo · TNA máxima</option>
+            </select>
+          </label>
+          <label class="alert-field" id="hcAlertOpField">
+            <span class="alert-lbl">Condición</span>
+            <select id="hcAlertOp" class="alert-input">
+              <option value="gte">Supere</option>
+              <option value="lte">Baje de</option>
+            </select>
+          </label>
+          <label class="alert-field" id="hcAlertValField">
+            <span class="alert-lbl">Valor</span>
+            <input id="hcAlertVal" class="alert-input" type="number" inputmode="decimal" step="any" placeholder="Ej. 1600" />
+          </label>
+          <button type="submit" class="alert-btn">Activar aviso</button>
+        </div>
+        <p class="alert-hint" id="hcAlertChangeHint" hidden>Te avisamos cuando este valor <strong>cambie</strong> respecto del que ves ahora.</p>
+        <p class="alert-msg" id="hcAlertMsg" role="status" aria-live="polite"></p>
+      </form>
+      <ul class="alert-list" id="hcAlertList" aria-label="Alertas activas"></ul>
+      <p class="alert-fallback">
+        ¿Preferís aviso por <strong>email</strong> cuando cambie un valor por normativa? Activalo dentro de la
+        <a href="/calculadora-actualizacion-alquiler-icl">calculadora de alquiler ICL</a> o la
+        <a href="/calculadora-plazo-fijo">de plazo fijo</a> — usan nuestro motor de alertas con recálculo.
       </p>
     </section>
 
@@ -596,9 +812,155 @@ const faqSchema = {
         t.textContent = 'hoy ' + now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
         t.setAttribute('datetime', now.toISOString());
       }
+      try { checkAlerts(); } catch (e) { /* noop */ }
     }
+
+    // ── ALERTAS EN EL NAVEGADOR (C) ─────────────────────────────────────────
+    // Sin backend: se guardan en localStorage y se chequean contra el valor que
+    // se ve en pantalla (ya actualizado por refresh()). Notificación del sistema
+    // si el usuario la permite; si no, banner en la lista.
+    const LS_KEY = 'hc_bcra_alerts_v1';
+    const METRIC_META: Record<string, { label: string; sel: string; unit: string; type: 'threshold' | 'change' }> = {
+      blue: { label: 'Dólar blue', sel: '[data-dolar-key="blue"]', unit: '$', type: 'threshold' },
+      oficial: { label: 'Dólar oficial', sel: '[data-dolar-key="oficial"]', unit: '$', type: 'threshold' },
+      bolsa: { label: 'Dólar MEP', sel: '[data-dolar-key="bolsa"]', unit: '$', type: 'threshold' },
+      contadoconliqui: { label: 'Dólar CCL', sel: '[data-dolar-key="contadoconliqui"]', unit: '$', type: 'threshold' },
+      cripto: { label: 'Dólar cripto', sel: '[data-dolar-key="cripto"]', unit: '$', type: 'threshold' },
+      uva: { label: 'UVA', sel: '[data-uva]', unit: '$', type: 'change' },
+      icl: { label: 'ICL', sel: '[data-tasa="icl"]', unit: '', type: 'change' },
+      pfmax: { label: 'Plazo fijo (TNA máx.)', sel: '[data-pf-top]', unit: '%', type: 'change' },
+    };
+    function readNum(sel: string): number | null {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const raw = (el.textContent || '').replace(/[^0-9.,-]/g, '').replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(raw);
+      return isFinite(n) ? n : null;
+    }
+    function loadAlerts(): any[] {
+      try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
+    }
+    function saveAlerts(a: any[]) { localStorage.setItem(LS_KEY, JSON.stringify(a)); }
+    function fmtNum(n: number, unit: string): string {
+      const s = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n);
+      return unit === '$' ? '$' + s : unit === '%' ? s + '%' : s;
+    }
+    function notify(title: string, body: string) {
+      try {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(title, { body, icon: '/favicon.svg' });
+          return;
+        }
+      } catch { /* noop */ }
+      // Fallback visible: marcar la fila y avisar en el status.
+      const msg = document.getElementById('hcAlertMsg');
+      if (msg) { msg.textContent = '🔔 ' + title + ' — ' + body; msg.className = 'alert-msg alert-msg-ok'; }
+    }
+    function checkAlerts() {
+      const alerts = loadAlerts();
+      if (!alerts.length) { renderAlerts(); return; }
+      let changed = false;
+      for (const al of alerts) {
+        const meta = METRIC_META[al.metric];
+        if (!meta) continue;
+        const cur = readNum(meta.sel);
+        if (cur == null) continue;
+        if (meta.type === 'threshold') {
+          const hit = al.op === 'lte' ? cur <= al.val : cur >= al.val;
+          if (hit && !al.fired) {
+            al.fired = true; changed = true;
+            notify('Alerta: ' + meta.label, meta.label + ' ' + (al.op === 'lte' ? 'bajó a' : 'superó') + ' ' + fmtNum(cur, meta.unit) + ' (umbral ' + fmtNum(al.val, meta.unit) + ')');
+          } else if (!hit && al.fired) {
+            al.fired = false; changed = true; // rearma cuando vuelve del otro lado
+          }
+        } else { // change
+          if (al.base == null) { al.base = cur; changed = true; }
+          else if (Math.abs(cur - al.base) > 1e-6) {
+            notify('Alerta: ' + meta.label, meta.label + ' cambió de ' + fmtNum(al.base, meta.unit) + ' a ' + fmtNum(cur, meta.unit));
+            al.base = cur; changed = true;
+          }
+        }
+      }
+      if (changed) saveAlerts(alerts);
+      renderAlerts();
+    }
+    function removeAlert(id: string) {
+      saveAlerts(loadAlerts().filter((a: any) => a.id !== id));
+      renderAlerts();
+    }
+    function renderAlerts() {
+      const list = document.getElementById('hcAlertList');
+      if (!list) return;
+      const alerts = loadAlerts();
+      list.innerHTML = '';
+      for (const al of alerts) {
+        const meta = METRIC_META[al.metric];
+        if (!meta) continue;
+        const li = document.createElement('li');
+        li.className = 'alert-chip' + (al.fired ? ' alert-chip-fired' : '');
+        const desc = meta.type === 'threshold'
+          ? meta.label + ' ' + (al.op === 'lte' ? '≤' : '≥') + ' ' + fmtNum(al.val, meta.unit)
+          : meta.label + ' cambie' + (al.base != null ? ' (desde ' + fmtNum(al.base, meta.unit) + ')' : '');
+        const txt = document.createElement('span');
+        txt.textContent = (al.fired ? '✅ ' : '🔔 ') + desc;
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'alert-chip-x'; btn.setAttribute('aria-label', 'Quitar alerta'); btn.textContent = '✕';
+        btn.addEventListener('click', () => removeAlert(al.id));
+        li.appendChild(txt); li.appendChild(btn);
+        list.appendChild(li);
+      }
+    }
+    function initAlertForm() {
+      const form = document.getElementById('hcAlertForm') as HTMLFormElement | null;
+      if (!form || form.dataset.wired) return;
+      form.dataset.wired = '1';
+      const metricSel = document.getElementById('hcAlertMetric') as HTMLSelectElement;
+      const opField = document.getElementById('hcAlertOpField')!;
+      const valField = document.getElementById('hcAlertValField')!;
+      const changeHint = document.getElementById('hcAlertChangeHint')!;
+      const valInput = document.getElementById('hcAlertVal') as HTMLInputElement;
+      const msg = document.getElementById('hcAlertMsg')!;
+      function syncMode() {
+        const meta = METRIC_META[metricSel.value];
+        const isThreshold = meta && meta.type === 'threshold';
+        opField.hidden = !isThreshold;
+        valField.hidden = !isThreshold;
+        changeHint.hidden = !!isThreshold;
+      }
+      metricSel.addEventListener('change', syncMode);
+      syncMode();
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const metric = metricSel.value;
+        const meta = METRIC_META[metric];
+        if (!meta) return;
+        const alerts = loadAlerts();
+        const id = metric + '-' + Date.now().toString(36);
+        if (meta.type === 'threshold') {
+          const val = parseFloat(valInput.value);
+          if (!isFinite(val)) { msg.textContent = 'Poné un valor numérico.'; msg.className = 'alert-msg alert-msg-err'; return; }
+          const op = (document.getElementById('hcAlertOp') as HTMLSelectElement).value;
+          alerts.push({ id, metric, op, val, fired: false });
+          msg.textContent = 'Listo: te avisamos si ' + meta.label + ' ' + (op === 'lte' ? 'baja a ' : 'supera ') + fmtNum(val, meta.unit) + '.';
+        } else {
+          const cur = readNum(meta.sel);
+          alerts.push({ id, metric, base: cur, type: 'change' });
+          msg.textContent = 'Listo: te avisamos cuando ' + meta.label + ' cambie' + (cur != null ? ' (ahora ' + fmtNum(cur, meta.unit) + ')' : '') + '.';
+        }
+        msg.className = 'alert-msg alert-msg-ok';
+        saveAlerts(alerts);
+        valInput.value = '';
+        if ('Notification' in window && Notification.permission === 'default') {
+          try { Notification.requestPermission(); } catch { /* noop */ }
+        }
+        checkAlerts();
+      });
+      renderAlerts();
+    }
+
     refresh();
-    document.addEventListener('astro:page-load', refresh);
+    initAlertForm();
+    document.addEventListener('astro:page-load', function () { refresh(); initAlertForm(); });
   })();
 </script>
 

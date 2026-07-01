@@ -7,7 +7,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
 const title = 'Presupuesto Familiar 2026 — Regla 50/30/20';
-const description = 'Armá tu presupuesto familiar en 5 minutos: ingresá sueldos y gastos, obtené tu score de salud financiera, distribución 50/30/20 y recomendaciones personalizadas. Gratis.';
+const description = 'Armá tu presupuesto familiar paso a paso: cargá ingresos y gastos por bloques y obtené tu score de salud financiera, distribución 50/30/20 y recomendaciones personalizadas. Gratis.';
 
 const schemaApp = {
   '@type': 'WebApplication',
@@ -76,108 +76,177 @@ const schema = {
     <header class="bp-header">
       <h1>Calculadora de presupuesto familiar 💰</h1>
       <p class="lead">
-        Armá tu presupuesto mensual en minutos. Obtené tu <strong>score de salud financiera</strong> (0-100), distribución <strong>50/30/20</strong>, recomendaciones personalizadas y gráfico de gastos. <em>Todo corre en tu navegador, no guardamos nada.</em>
+        Armá tu presupuesto mensual <strong>paso a paso</strong>. Completá cada bloque y obtené tu <strong>score de salud financiera</strong> (0-100), distribución <strong>50/30/20</strong>, recomendaciones personalizadas y gráfico de gastos. <em>Todo corre en tu navegador, no guardamos nada.</em>
       </p>
     </header>
 
-    <!-- RESUMEN STICKY EN VIVO -->
-    <div class="bp-sticky" id="bp-sticky" aria-live="polite">
-      <div class="bp-sticky-inner">
-        <div class="bp-sticky-item">
-          <span class="bp-sticky-lbl">Ingresos</span>
-          <span class="bp-sticky-val" id="sticky-ing">$0</span>
+    <!-- WIZARD: bloques colapsables (desktop) + stepper (mobile) + sidebar en vivo -->
+    <div class="bp-wizard is-desktop" id="bp-wizard">
+
+      <div class="bp-steps" id="bp-steps">
+
+        <!-- PASO 1 · Ingresos -->
+        <section class="bp-step is-open" data-step="ingresos">
+          <h2 class="bp-vh">Ingresos mensuales del hogar (neto)</h2>
+          <button type="button" class="bp-step-head" aria-expanded="true">
+            <span class="bp-step-marker" aria-hidden="true"><span class="bp-step-n">1</span><svg class="bp-step-check" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="bp-step-title">Ingresos</span>
+            <span class="bp-step-total" data-step-total>Completar</span>
+            <span class="bp-step-caret" aria-hidden="true"></span>
+          </button>
+          <div class="bp-step-body">
+            <p class="bp-step-hint">Sueldos netos (en mano) e ingresos extra del hogar.</p>
+            <div class="bp-inputs">
+              <label>
+                <span>Sueldo en mano tuyo</span>
+                <div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ing-sueldo1" value="0" data-group="ingresos" /></div>
+              </label>
+              <label>
+                <span>Sueldo pareja / co-titular</span>
+                <div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ing-sueldo2" value="0" data-group="ingresos" /></div>
+              </label>
+              <label>
+                <span>Otros ingresos (freelance, alquileres, etc.)</span>
+                <div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ing-otros" value="0" data-group="ingresos" /></div>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- PASO 2 · Gastos necesarios -->
+        <section class="bp-step is-open" data-step="necesidades">
+          <h2 class="bp-vh">Gastos necesarios (vivienda, servicios, comida)</h2>
+          <button type="button" class="bp-step-head" aria-expanded="true">
+            <span class="bp-step-marker" aria-hidden="true"><span class="bp-step-n">2</span><svg class="bp-step-check" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="bp-step-title">Gastos necesarios</span>
+            <span class="bp-step-total" data-step-total>Completar</span>
+            <span class="bp-step-caret" aria-hidden="true"></span>
+          </button>
+          <div class="bp-step-body">
+            <p class="bp-step-hint">Lo indispensable: techo, servicios, comida, transporte y salud.</p>
+            <div class="bp-inputs">
+              <label><span>Alquiler / cuota hipoteca</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-alquiler" value="0" data-group="necesidades" data-label="Alquiler/hipoteca" /></div></label>
+              <label><span>Expensas</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-expensas" value="0" data-group="necesidades" data-label="Expensas" /></div></label>
+              <label><span>Servicios (luz, gas, agua, internet, cel)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-servicios" value="0" data-group="necesidades" data-label="Servicios" /></div></label>
+              <label><span>Supermercado / comida</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-super" value="0" data-group="necesidades" data-label="Supermercado" /></div></label>
+              <label><span>Transporte (nafta, SUBE, tren)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-transporte" value="0" data-group="necesidades" data-label="Transporte" /></div></label>
+              <label><span>Salud (prepaga, farmacia, médicos)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-salud" value="0" data-group="necesidades" data-label="Salud" /></div></label>
+            </div>
+            <details class="bp-more-fields">
+              <summary>Más gastos necesarios (educación, seguros)</summary>
+              <div class="bp-inputs">
+                <label><span>Educación (colegio, universidad, cursos)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-educ" value="0" data-group="necesidades" data-label="Educación" /></div></label>
+                <label><span>Seguros (auto, hogar, vida)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-seguros" value="0" data-group="necesidades" data-label="Seguros" /></div></label>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <!-- PASO 3 · Gastos variables / deseos -->
+        <section class="bp-step is-open" data-step="deseos">
+          <h2 class="bp-vh">Gastos variables o deseos</h2>
+          <button type="button" class="bp-step-head" aria-expanded="true">
+            <span class="bp-step-marker" aria-hidden="true"><span class="bp-step-n">3</span><svg class="bp-step-check" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="bp-step-title">Gastos variables</span>
+            <span class="bp-step-total" data-step-total>Completar</span>
+            <span class="bp-step-caret" aria-hidden="true"></span>
+          </button>
+          <div class="bp-step-body">
+            <p class="bp-step-hint">Lo prescindible: ocio, suscripciones, ropa. Podés marcar los que no tengas.</p>
+            <div class="bp-inputs">
+              <label><span>Salidas (restaurantes, bares, delivery)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-salidas" value="0" data-group="deseos" data-label="Salidas" /></div></label>
+              <label><span>Suscripciones (Netflix, Spotify, gym, etc.)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-subs" value="0" data-group="deseos" data-label="Suscripciones" /></div></label>
+              <label><span>Ropa / cuidado personal</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-ropa" value="0" data-group="deseos" data-label="Ropa/cuidado" /></div></label>
+            </div>
+            <details class="bp-more-fields">
+              <summary>Más gastos variables (viajes, hobbies, otros)</summary>
+              <div class="bp-inputs">
+                <label><span>Viajes / vacaciones (prorrateado mensual)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-viajes" value="0" data-group="deseos" data-label="Viajes" /></div></label>
+                <label><span>Hobbies / ocio</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-hobbies" value="0" data-group="deseos" data-label="Hobbies" /></div></label>
+                <label><span>Otros gastos variables</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-otros" value="0" data-group="deseos" data-label="Otros" /></div></label>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <!-- PASO 4 · Ahorro y deudas -->
+        <section class="bp-step is-open" data-step="ahorrodeudas">
+          <h2 class="bp-vh">Ahorro y deudas mensuales</h2>
+          <button type="button" class="bp-step-head" aria-expanded="true">
+            <span class="bp-step-marker" aria-hidden="true"><span class="bp-step-n">4</span><svg class="bp-step-check" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="bp-step-title">Ahorro y deudas</span>
+            <span class="bp-step-total" data-step-total>Completar</span>
+            <span class="bp-step-caret" aria-hidden="true"></span>
+          </button>
+          <div class="bp-step-body">
+            <p class="bp-step-hint">Cuánto ahorrás por mes y qué cuotas de deuda pagás.</p>
+            <div class="bp-inputs">
+              <label><span>Ahorro / inversión mensual</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ga-ahorro" value="0" data-group="ahorro" data-label="Ahorro/inversión" /></div></label>
+              <label><span>Cuota tarjeta de crédito (total pagado/mes)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ga-tarjeta" value="0" data-group="deudas" data-label="Tarjeta crédito" /></div></label>
+              <label><span>Cuotas de préstamos (personal, prendario)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ga-prestamos" value="0" data-group="deudas" data-label="Préstamos" /></div></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- PASO 5 · Datos opcionales -->
+        <section class="bp-step is-open" data-step="opcionales" data-optional="1">
+          <h2 class="bp-vh">Datos opcionales para recomendaciones</h2>
+          <button type="button" class="bp-step-head" aria-expanded="true">
+            <span class="bp-step-marker" aria-hidden="true"><span class="bp-step-n">5</span><svg class="bp-step-check" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="bp-step-title">Datos opcionales</span>
+            <span class="bp-step-total" data-step-total>Omitir</span>
+            <span class="bp-step-caret" aria-hidden="true"></span>
+          </button>
+          <div class="bp-step-body">
+            <p class="bp-step-hint">Afinan las recomendaciones. Podés saltarlos.</p>
+            <div class="bp-inputs">
+              <label><span>Reserva de emergencia actual ($)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="opt-reserva" value="0" data-group="meta" /></div></label>
+              <label class="bp-select-label"><span>Situación del hogar</span>
+                <select id="opt-situacion" data-group="meta">
+                  <option value="soltero">Soltero/a sin hijos</option>
+                  <option value="pareja">Pareja sin hijos</option>
+                  <option value="hijos">Con hijos</option>
+                  <option value="mayor">Mayor, sin hijos a cargo</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEPPER MOBILE (nav fija abajo) -->
+        <div class="bp-stepper-nav" id="bp-stepper-nav">
+          <div class="bp-progress"><div class="bp-progress-fill" id="bp-prog-fill"></div></div>
+          <div class="bp-stepper-row">
+            <div class="bp-stepper-meta">Paso <b id="bp-step-num">1</b> de 5 · <span id="bp-step-label">Ingresos</span></div>
+            <div class="bp-stepper-partial" id="bp-step-partial">Sin cargar</div>
+          </div>
+          <div class="bp-stepper-btns">
+            <button type="button" class="bp-nav-btn bp-nav-prev" id="bp-prev">← Anterior</button>
+            <button type="button" class="bp-nav-btn bp-nav-skip" id="bp-skip" hidden>Saltar opcionales</button>
+            <button type="button" class="bp-nav-btn bp-nav-next" id="bp-next">Continuar →</button>
+          </div>
         </div>
-        <span class="bp-sticky-sep" aria-hidden="true">·</span>
-        <div class="bp-sticky-item">
-          <span class="bp-sticky-lbl">Gastos</span>
-          <span class="bp-sticky-val" id="sticky-gastos">$0</span>
-        </div>
-        <span class="bp-sticky-sep" aria-hidden="true">·</span>
-        <div class="bp-sticky-item">
-          <span class="bp-sticky-lbl">Disponible</span>
-          <span class="bp-sticky-val" id="sticky-disp">$0</span>
-        </div>
+
       </div>
+
+      <!-- SIDEBAR EN VIVO (desktop) -->
+      <aside class="bp-side" id="bp-side" aria-label="Resumen en vivo">
+        <div class="bp-side-inner">
+          <div class="bp-side-scorewrap">
+            <div class="bp-side-score" id="bp-side-score" data-score-value>—</div>
+            <div class="bp-side-score-sub">/ 100</div>
+          </div>
+          <div class="bp-side-grade" id="bp-side-grade">Completá tus datos</div>
+          <div class="bp-side-metrics">
+            <div class="bp-side-metric"><span>Balance</span><b id="bp-side-balance">$0</b></div>
+            <div class="bp-side-metric"><span>Ahorro</span><b id="bp-side-ahorro">0%</b></div>
+            <div class="bp-side-metric"><span>Deuda</span><b id="bp-side-deuda">0%</b></div>
+          </div>
+          <a href="#bp-results" class="bp-side-cta">Ver detalle completo ↓</a>
+        </div>
+      </aside>
+
     </div>
-
-    <section class="bp-form">
-      <h2>1. Tus ingresos mensuales (neto)</h2>
-      <div class="bp-inputs">
-        <label>
-          <span>Sueldo en mano tuyo</span>
-          <div class="bp-input-wrap">
-            <span class="prefix">$</span>
-            <input type="text" inputmode="numeric" class="bp-num" id="ing-sueldo1" value="0" data-group="ingresos" />
-          </div>
-        </label>
-        <label>
-          <span>Sueldo pareja / co-titular</span>
-          <div class="bp-input-wrap">
-            <span class="prefix">$</span>
-            <input type="text" inputmode="numeric" class="bp-num" id="ing-sueldo2" value="0" data-group="ingresos" />
-          </div>
-        </label>
-        <label>
-          <span>Otros ingresos (freelance, alquileres, etc.)</span>
-          <div class="bp-input-wrap">
-            <span class="prefix">$</span>
-            <input type="text" inputmode="numeric" class="bp-num" id="ing-otros" value="0" data-group="ingresos" />
-          </div>
-        </label>
-      </div>
-
-      <h2>2. Gastos necesarios (vivienda, servicios, comida)</h2>
-      <div class="bp-inputs">
-        <label><span>Alquiler / cuota hipoteca</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-alquiler" value="0" data-group="necesidades" data-label="Alquiler/hipoteca" /></div></label>
-        <label><span>Expensas</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-expensas" value="0" data-group="necesidades" data-label="Expensas" /></div></label>
-        <label><span>Servicios (luz, gas, agua, internet, cel)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-servicios" value="0" data-group="necesidades" data-label="Servicios" /></div></label>
-        <label><span>Supermercado / comida</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-super" value="0" data-group="necesidades" data-label="Supermercado" /></div></label>
-        <label><span>Transporte (nafta, SUBE, tren)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-transporte" value="0" data-group="necesidades" data-label="Transporte" /></div></label>
-        <label><span>Salud (prepaga, farmacia, médicos)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-salud" value="0" data-group="necesidades" data-label="Salud" /></div></label>
-      </div>
-      <details class="bp-more-fields">
-        <summary>Más gastos necesarios (educación, seguros)</summary>
-        <div class="bp-inputs">
-          <label><span>Educación (colegio, universidad, cursos)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-educ" value="0" data-group="necesidades" data-label="Educación" /></div></label>
-          <label><span>Seguros (auto, hogar, vida)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gn-seguros" value="0" data-group="necesidades" data-label="Seguros" /></div></label>
-        </div>
-      </details>
-
-      <h2>3. Gastos variables / deseos</h2>
-      <div class="bp-inputs">
-        <label><span>Salidas (restaurantes, bares, delivery)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-salidas" value="0" data-group="deseos" data-label="Salidas" /></div></label>
-        <label><span>Suscripciones (Netflix, Spotify, gym, etc.)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-subs" value="0" data-group="deseos" data-label="Suscripciones" /></div></label>
-        <label><span>Ropa / cuidado personal</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-ropa" value="0" data-group="deseos" data-label="Ropa/cuidado" /></div></label>
-      </div>
-      <details class="bp-more-fields">
-        <summary>Más gastos variables (viajes, hobbies, otros)</summary>
-        <div class="bp-inputs">
-          <label><span>Viajes / vacaciones (prorrateado mensual)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-viajes" value="0" data-group="deseos" data-label="Viajes" /></div></label>
-          <label><span>Hobbies / ocio</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-hobbies" value="0" data-group="deseos" data-label="Hobbies" /></div></label>
-          <label><span>Otros gastos variables</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="gd-otros" value="0" data-group="deseos" data-label="Otros" /></div></label>
-        </div>
-      </details>
-
-      <h2>4. Ahorro y deudas</h2>
-      <div class="bp-inputs">
-        <label><span>Ahorro / inversión mensual</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ga-ahorro" value="0" data-group="ahorro" data-label="Ahorro/inversión" /></div></label>
-        <label><span>Cuota tarjeta de crédito (total pagado/mes)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ga-tarjeta" value="0" data-group="deudas" data-label="Tarjeta crédito" /></div></label>
-        <label><span>Cuotas de préstamos (personal, prendario)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="ga-prestamos" value="0" data-group="deudas" data-label="Préstamos" /></div></label>
-      </div>
-
-      <h2>5. Datos opcionales para recomendaciones</h2>
-      <div class="bp-inputs">
-        <label><span>Reserva de emergencia actual ($)</span><div class="bp-input-wrap"><span class="prefix">$</span><input type="text" inputmode="numeric" class="bp-num" id="opt-reserva" value="0" data-group="meta" /></div></label>
-        <label class="bp-select-label"><span>Situación del hogar</span>
-          <select id="opt-situacion" data-group="meta">
-            <option value="soltero">Soltero/a sin hijos</option>
-            <option value="pareja">Pareja sin hijos</option>
-            <option value="hijos">Con hijos</option>
-            <option value="mayor">Mayor, sin hijos a cargo</option>
-          </select>
-        </label>
-      </div>
-    </section>
 
     <!-- CHIP AUTOGUARDADO -->
     <div class="bp-saved-chip" id="bp-saved-chip" role="status" aria-live="polite">
@@ -189,7 +258,7 @@ const schema = {
     <section class="bp-results" id="bp-results" aria-live="polite">
       <div class="bp-score-row">
         <div class="bp-score-card">
-          <div class="bp-score-label">Salud financiera</div>
+          <div class="bp-score-label" data-score-label>Salud financiera</div>
           <div class="bp-score-ring">
             <svg width="160" height="160" viewBox="0 0 160 160">
               <circle cx="80" cy="80" r="68" fill="none" stroke="var(--bg-muted)" stroke-width="14" />
@@ -417,6 +486,53 @@ const schema = {
     return { score, grade, reasons };
   }
 
+  // ---- Wizard: definición de pasos ----
+  const STEPS = [
+    { key: 'ingresos', label: 'Ingresos', optional: false },
+    { key: 'necesidades', label: 'Gastos necesarios', optional: false },
+    { key: 'deseos', label: 'Gastos variables', optional: false },
+    { key: 'ahorrodeudas', label: 'Ahorro y deudas', optional: false },
+    { key: 'opcionales', label: 'Datos opcionales', optional: true },
+  ];
+
+  function stepTotals(t: Totals): Record<string, number> {
+    return {
+      ingresos: t.ingresos,
+      necesidades: t.necesidades,
+      deseos: t.deseos,
+      ahorrodeudas: t.ahorro + t.deudas,
+      opcionales: t.reserva,
+    };
+  }
+
+  const stepEls = Array.from(document.querySelectorAll<HTMLElement>('.bp-step'));
+
+  function updateSteps(t: Totals) {
+    const map = stepTotals(t);
+    stepEls.forEach(step => {
+      const key = step.dataset.step || '';
+      const val = map[key] || 0;
+      const optional = step.dataset.optional === '1';
+      const filled = val > 0;
+      step.classList.toggle('is-filled', filled);
+      const totalEl = step.querySelector('[data-step-total]');
+      if (totalEl) totalEl.textContent = filled ? fmtArs(val) : (optional ? 'Omitir' : 'Completar');
+    });
+  }
+
+  function updateSidebar(t: Totals, score: number, grade: string, balance: number) {
+    const setTxt = (id: string, v: string) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    setTxt('bp-side-score', t.ingresos > 0 ? String(score) : '—');
+    setTxt('bp-side-grade', grade);
+    const balEl = document.getElementById('bp-side-balance');
+    if (balEl) {
+      balEl.textContent = (balance >= 0 ? '+' : '') + fmtArs(balance);
+      balEl.style.color = t.ingresos > 0 ? (balance >= 0 ? 'var(--success-text, #059669)' : 'var(--danger, #dc2626)') : '';
+    }
+    setTxt('bp-side-ahorro', t.ingresos > 0 ? fmtPct((t.ahorro / t.ingresos) * 100) : '0%');
+    setTxt('bp-side-deuda', t.ingresos > 0 ? fmtPct((t.deudas / t.ingresos) * 100) : '0%');
+  }
+
   function render() {
     const t = getTotals();
     const total50 = t.necesidades + t.deseos + t.ahorro + t.deudas;
@@ -438,15 +554,6 @@ const schema = {
     balEl.textContent = (balance >= 0 ? '+' : '') + fmtArs(balance).replace('$', '$');
     balEl.style.color = balance >= 0 ? 'var(--success-text, #059669)' : 'var(--danger, #dc2626)';
 
-    // Barra sticky en vivo
-    const gastosTotal = gastos + t.ahorro;
-    const disp = t.ingresos - gastosTotal;
-    (document.getElementById('sticky-ing') as any).textContent = fmtArs(t.ingresos);
-    (document.getElementById('sticky-gastos') as any).textContent = fmtArs(gastosTotal);
-    const dispEl = document.getElementById('sticky-disp')!;
-    dispEl.textContent = (disp >= 0 ? '+' : '') + fmtArs(disp);
-    dispEl.classList.toggle('is-pos', disp >= 0);
-    dispEl.classList.toggle('is-neg', disp < 0);
     (document.getElementById('bp-balance-pct') as any).textContent = t.ingresos > 0 ? fmtPct((balance / t.ingresos) * 100) + ' del ingreso' : '—';
     const mesesReserva = gastos > 0 ? (t.reserva / gastos) : 0;
     (document.getElementById('bp-reserva-meses') as any).textContent = mesesReserva.toFixed(1) + ' meses';
@@ -485,6 +592,11 @@ const schema = {
     if (recs.length === 0 && t.ingresos > 0) recs.push('<strong>¡Muy bien!</strong> Tu presupuesto está en buen camino. Considerá aumentar aportes a inversión de largo plazo (plazo fijo UVA, FCI, ETFs).');
 
     recsEl.innerHTML = recs.map(r => '<li>' + r + '</li>').join('');
+
+    // Chrome del wizard: estado de bloques + sidebar + parcial del stepper
+    updateSteps(t);
+    updateSidebar(t, score, grade, balance);
+    updatePartial(t);
 
     // localStorage
     saveState(!suppressSave);
@@ -595,6 +707,90 @@ const schema = {
     });
   });
 
+  // ---- Acordeón (desktop) ----
+  stepEls.forEach(step => {
+    const head = step.querySelector<HTMLButtonElement>('.bp-step-head');
+    if (!head) return;
+    head.addEventListener('click', () => {
+      // En mobile la navegación la maneja el stepper, no el click del head.
+      if (isMobile()) return;
+      const open = step.classList.toggle('is-open');
+      head.setAttribute('aria-expanded', String(open));
+    });
+  });
+
+  // ---- Stepper (mobile) ----
+  const mq = window.matchMedia('(max-width: 860px)');
+  const wizard = document.getElementById('bp-wizard')!;
+  const progFill = document.getElementById('bp-prog-fill')!;
+  const stepNumEl = document.getElementById('bp-step-num')!;
+  const stepLabelEl = document.getElementById('bp-step-label')!;
+  const partialEl = document.getElementById('bp-step-partial')!;
+  const prevBtn = document.getElementById('bp-prev') as HTMLButtonElement;
+  const nextBtn = document.getElementById('bp-next') as HTMLButtonElement;
+  const skipBtn = document.getElementById('bp-skip') as HTMLButtonElement;
+  let curStep = 0;
+
+  function isMobile() { return mq.matches; }
+
+  function updatePartial(t?: Totals) {
+    const tt = t || getTotals();
+    const map = stepTotals(tt);
+    const step = STEPS[curStep];
+    const val = map[step.key] || 0;
+    if (val > 0) partialEl.textContent = 'Subtotal: ' + fmtArs(val);
+    else partialEl.textContent = step.optional ? 'Opcional — podés omitir' : 'Sin cargar';
+  }
+
+  function showStep(i: number) {
+    curStep = Math.max(0, Math.min(STEPS.length - 1, i));
+    stepEls.forEach((s, idx) => s.classList.toggle('is-current', idx === curStep));
+    const pct = ((curStep + 1) / STEPS.length) * 100;
+    progFill.style.width = pct + '%';
+    stepNumEl.textContent = String(curStep + 1);
+    stepLabelEl.textContent = STEPS[curStep].label;
+    prevBtn.style.visibility = curStep === 0 ? 'hidden' : 'visible';
+    const last = curStep === STEPS.length - 1;
+    nextBtn.textContent = last ? 'Ver mi presupuesto →' : 'Continuar →';
+    // "Saltar opcionales" cuando el próximo paso es opcional
+    skipBtn.hidden = last || !STEPS[curStep + 1].optional;
+    updatePartial();
+  }
+
+  function goResults() {
+    document.getElementById('bp-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  nextBtn.addEventListener('click', () => {
+    if (curStep === STEPS.length - 1) { goResults(); return; }
+    showStep(curStep + 1);
+    wizard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  prevBtn.addEventListener('click', () => {
+    showStep(curStep - 1);
+    wizard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  skipBtn.addEventListener('click', goResults);
+
+  function applyMode() {
+    if (isMobile()) {
+      wizard.classList.add('is-mobile');
+      wizard.classList.remove('is-desktop');
+      showStep(curStep);
+    } else {
+      wizard.classList.remove('is-mobile');
+      wizard.classList.add('is-desktop');
+      // Desktop: todos los bloques expandidos
+      stepEls.forEach(s => {
+        s.classList.add('is-open');
+        s.classList.remove('is-current');
+        const head = s.querySelector('.bp-step-head');
+        if (head) head.setAttribute('aria-expanded', 'true');
+      });
+    }
+  }
+  mq.addEventListener('change', applyMode);
+
   document.getElementById('bp-reset')!.addEventListener('click', () => {
     numInputs.forEach(el => el.value = '');
     document.querySelectorAll('.bp-inputs label.is-collapsed').forEach(l => {
@@ -603,6 +799,7 @@ const schema = {
       if (b) b.textContent = 'No tengo este gasto';
     });
     localStorage.removeItem(STORE_KEY);
+    if (isMobile()) showStep(0);
     render();
   });
 
@@ -633,6 +830,7 @@ const schema = {
   });
 
   loadState();
+  applyMode();
   render();
   suppressSave = false;
 </script>
@@ -643,12 +841,15 @@ const schema = {
   .breadcrumbs a { color: var(--accent); text-decoration: none; }
   .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
 
+  /* Heading visualmente oculto (mantiene outline SEO/a11y) */
+  .bp-vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
   .bp-header {
     padding: 2.5rem 2rem 2rem;
     border-radius: var(--radius-lg);
     background: linear-gradient(135deg, var(--bg-card), var(--bg-soft));
     border: 1px solid var(--border);
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     text-align: center;
   }
   .bp-header h1 {
@@ -660,56 +861,132 @@ const schema = {
   .lead { color: var(--text-muted); font-size: 1.1rem; max-width: 720px; margin: 0 auto; line-height: 1.6; }
   .lead strong { color: var(--text); font-weight: 700; }
 
-  /* Resumen sticky en vivo */
-  .bp-sticky {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    margin: 0 0 1.5rem;
-    background: var(--bg-card);
+  /* ===== WIZARD ===== */
+  .bp-wizard { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: start; margin-bottom: 1.5rem; }
+  @media (min-width: 861px) {
+    .bp-wizard { grid-template-columns: minmax(0, 1fr) 260px; }
+  }
+  .bp-steps { min-width: 0; }
+
+  /* Bloque / paso */
+  .bp-step {
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    backdrop-filter: saturate(1.2) blur(6px);
+    background: var(--bg-card);
+    margin-bottom: .75rem;
+    overflow: hidden;
+    transition: border-color .15s, box-shadow .15s;
   }
-  .bp-sticky-inner {
+  .bp-step.is-filled { border-color: color-mix(in srgb, var(--success-text, #059669) 40%, var(--border)); }
+  .bp-step-head {
+    width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    padding: .7rem 1rem;
-  }
-  .bp-sticky-item { display: flex; align-items: baseline; gap: .4rem; }
-  .bp-sticky-lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; color: var(--text-subtle); }
-  .bp-sticky-val {
-    font-family: var(--font-num), var(--font-mono), ui-monospace, monospace;
-    font-size: 1.05rem;
-    font-weight: 700;
+    gap: .75rem;
+    padding: 1rem 1.1rem;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
     color: var(--text);
+  }
+  .bp-step-head:hover { background: var(--bg-soft); }
+  .bp-step-marker {
+    width: 26px; height: 26px; flex: none;
+    border-radius: 50%;
+    border: 2px solid var(--border-strong);
+    display: grid; place-items: center;
+    font-size: .8rem; font-weight: 800;
+    color: var(--text-subtle);
+    background: var(--bg-soft);
+    transition: background .2s, border-color .2s, color .2s;
+  }
+  .bp-step.is-filled .bp-step-marker { background: var(--success-text, #059669); border-color: var(--success-text, #059669); color: #fff; }
+  .bp-step-check { display: none; }
+  .bp-step.is-filled .bp-step-n { display: none; }
+  .bp-step.is-filled .bp-step-check { display: block; }
+  .bp-step-title { flex: 1; font-weight: 700; font-size: 1rem; }
+  .bp-step-total {
     font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: .9rem;
+    color: var(--text-subtle);
+    white-space: nowrap;
   }
-  .bp-sticky-val.is-pos { color: var(--success-text, #059669); }
-  .bp-sticky-val.is-neg { color: var(--danger, #dc2626); }
-  .bp-sticky-sep { color: var(--text-subtle); font-weight: 700; }
-  @media (max-width: 640px) {
-    .bp-sticky {
-      position: fixed;
-      top: auto;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      margin: 0;
-      border-radius: 0;
-      border-left: 0;
-      border-right: 0;
-      border-bottom: 0;
-    }
-    .bp-sticky-inner { gap: .6rem; padding: .55rem .6rem; }
-    .bp-sticky-lbl { font-size: .62rem; }
-    .bp-sticky-val { font-size: .92rem; }
-    .bp-page { padding-bottom: 6.5rem; }
+  .bp-step.is-filled .bp-step-total { color: var(--success-text, #059669); }
+  .bp-step-caret {
+    width: 9px; height: 9px; flex: none; margin-left: .1rem;
+    border: 2px solid var(--text-subtle); border-top: 0; border-left: 0;
+    transform: rotate(45deg);
+    transition: transform .2s;
   }
+  .bp-step.is-open .bp-step-caret { transform: rotate(-135deg); }
+  .bp-step:not(.is-open) .bp-step-body { display: none; }
+  .bp-step-body { padding: 0 1.1rem 1.15rem; }
+  .bp-step-hint { font-size: .85rem; color: var(--text-muted); margin: 0 0 .9rem; }
+
+  /* Sidebar en vivo (desktop) */
+  .bp-side { position: sticky; top: 1rem; }
+  .bp-side-inner {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-soft));
+    padding: 1.25rem 1.25rem 1.4rem;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .bp-side-scorewrap { display: flex; align-items: baseline; justify-content: center; gap: .25rem; }
+  .bp-side-score { font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+  .bp-side-score-sub { font-size: .9rem; font-weight: 700; color: var(--text-subtle); }
+  .bp-side-grade { margin: .35rem 0 1rem; font-weight: 700; color: var(--text); font-size: .95rem; }
+  .bp-side-metrics { display: grid; gap: .45rem; text-align: left; }
+  .bp-side-metric {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: .5rem .7rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: .82rem; color: var(--text-muted); font-weight: 600;
+  }
+  .bp-side-metric b { font-variant-numeric: tabular-nums; color: var(--text); font-size: .95rem; }
+  .bp-side-cta { display: inline-block; margin-top: 1rem; font-size: .85rem; color: var(--accent); text-decoration: none; font-weight: 600; }
+  .bp-side-cta:hover { text-decoration: underline; }
+  @media (max-width: 860px) { .bp-side { display: none; } }
+
+  /* Stepper mobile (fijo abajo) */
+  .bp-stepper-nav { display: none; }
+  .bp-wizard.is-mobile .bp-side { display: none; }
+  .bp-wizard.is-mobile .bp-step { display: none; }
+  .bp-wizard.is-mobile .bp-step.is-current { display: block; }
+  .bp-wizard.is-mobile .bp-step.is-current .bp-step-head { display: none; }
+  .bp-wizard.is-mobile .bp-step.is-current .bp-step-body { display: block; padding-top: 1rem; }
+  .bp-wizard.is-mobile .bp-stepper-nav {
+    display: block;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    padding: .6rem .8rem calc(.6rem + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -4px 16px rgba(0,0,0,.1);
+  }
+  .bp-progress { height: 6px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; margin-bottom: .55rem; }
+  .bp-progress-fill { height: 100%; width: 20%; background: var(--accent); border-radius: 999px; transition: width .3s ease; }
+  .bp-stepper-row { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; margin-bottom: .55rem; }
+  .bp-stepper-meta { font-size: .85rem; font-weight: 600; color: var(--text-muted); }
+  .bp-stepper-meta b { color: var(--text); }
+  .bp-stepper-partial { font-size: .82rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap; }
+  .bp-stepper-btns { display: flex; gap: .5rem; }
+  .bp-nav-btn {
+    flex: 1; padding: .72rem .5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 700; font-size: .9rem; cursor: pointer;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-card); color: var(--text);
+  }
+  .bp-nav-next { flex: 1.5; background: var(--accent); color: #fff; border-color: var(--accent); }
+  .bp-nav-next:hover { background: var(--accent-hover); }
+  .bp-nav-skip { flex: 1; font-size: .78rem; color: var(--text-muted); }
+  .bp-nav-prev[style*="hidden"] { visibility: hidden; }
 
   /* Chip autoguardado */
   .bp-saved-chip {
@@ -735,12 +1012,13 @@ const schema = {
   }
   .bp-saved-chip.is-visible { opacity: 1; transform: translateY(0); }
   .bp-saved-chip svg { flex-shrink: 0; }
-  @media (max-width: 640px) {
-    .bp-saved-chip { bottom: 4.5rem; right: .75rem; }
+  @media (max-width: 860px) {
+    .bp-saved-chip { bottom: 7rem; right: .75rem; }
+    .bp-page { padding-bottom: 8.5rem; }
   }
 
   /* Campos "Más ..." colapsables */
-  .bp-more-fields { margin-bottom: 1rem; }
+  .bp-more-fields { margin-top: .25rem; }
   .bp-more-fields > summary {
     cursor: pointer;
     font-size: .85rem;
@@ -782,17 +1060,11 @@ const schema = {
   .bp-inputs label.is-collapsed { opacity: .6; }
   .bp-inputs label.is-collapsed > span:first-child { text-decoration: line-through; }
 
-  .bp-form h2 {
-    font-size: 1.15rem;
-    font-weight: 700;
-    margin: 2rem 0 1rem;
-    color: var(--text);
-  }
   .bp-inputs {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: .75rem 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: .25rem;
   }
   .bp-inputs label { display: flex; flex-direction: column; gap: .35rem; font-size: .88rem; color: var(--text-muted); font-weight: 500; }
   .bp-input-wrap {
@@ -841,6 +1113,7 @@ const schema = {
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
+    scroll-margin-top: 1rem;
   }
   .bp-score-row {
     display: grid;

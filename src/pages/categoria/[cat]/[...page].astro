@@ -1633,9 +1633,10 @@ function md(text: string): string {
         autocomplete="off"
       />
     </label>
-    <span class="cat-filter-count" data-total={calcs.length}>{calcs.length} resultados</span>
+    <span class="cat-filter-count" data-total={calcs.length} data-cat-total={totalCalcs}>{totalPages > 1 ? `${calcs.length} de ${totalCalcs}` : `${calcs.length} calculadoras`}</span>
     {showCountryFilter && (
       <div class="cat-country" role="group" aria-label="Filtrar por país">
+        <span class="ctry-label" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>País:</span>
         <button type="button" class="ctry-tab" data-ctry="all" aria-pressed="true">Todas</button>
         <button type="button" class="ctry-tab" data-ctry="AR" aria-pressed="false">🇦🇷 Argentina</button>
         <button type="button" class="ctry-tab" data-ctry="global" aria-pressed="false">🌎 Global</button>
@@ -1959,8 +1960,9 @@ function md(text: string): string {
         } else {
           groupEls.forEach(function (g) { g.hidden = false; });
         }
-        if (q || subFilter || ctryFilter !== 'all') counter.textContent = visible + ' / ' + total + ' resultados';
-        else counter.textContent = total + ' resultados';
+        var catTotal = counter.getAttribute('data-cat-total') || total;
+        if (q || subFilter || ctryFilter !== 'all') counter.textContent = visible + ' de ' + total + ' en esta página';
+        else counter.textContent = (String(catTotal) !== String(total)) ? (total + ' de ' + catTotal) : (total + ' calculadoras');
         if (empty) empty.hidden = visible > 0;
       }
 
@@ -2262,7 +2264,13 @@ function md(text: string): string {
   .card-arrow { flex-shrink: 0; color: var(--text-subtle); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s; margin-top: 0.5rem; }
 
   /* ===== Filtro por país (Task 4) ===== */
-  .cat-country { display: inline-flex; gap: 0.3rem; flex-wrap: wrap; }
+  .cat-country { display: inline-flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+  .ctry-label {
+    display: inline-flex; align-items: center; gap: 0.28rem;
+    font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+    margin-right: 0.1rem; white-space: nowrap;
+  }
+  .ctry-label svg { color: var(--accent); }
   .ctry-tab {
     padding: 0.32rem 0.65rem;
     background: var(--bg-soft);

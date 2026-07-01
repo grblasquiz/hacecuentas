@@ -31,7 +31,9 @@ export const FEATURED: Record<string, string[]> = {
     'calculadora-equipaje-vuelo-kg-lb-limites',
   ],
   finanzas: [
-    'calculadora-sueldo-neto-a-bruto',
+    // Sueldo EN MANO (bruto→neto) primero: es la intención principal y la calc
+    // más enlazada desde la home. El neto→bruto es un caso secundario.
+    'sueldo-en-mano-argentina',
     'calculadora-aguinaldo-sac',
     'calculadora-indemnizacion-despido',
     'calculadora-monotributo-2026',
