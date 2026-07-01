@@ -772,6 +772,7 @@ const schema = {
   });
   skipBtn.addEventListener('click', goResults);
 
+  let deskInit = false;
   function applyMode() {
     if (isMobile()) {
       wizard.classList.add('is-mobile');
@@ -780,13 +781,28 @@ const schema = {
     } else {
       wizard.classList.remove('is-mobile');
       wizard.classList.add('is-desktop');
-      // Desktop: todos los bloques expandidos
-      stepEls.forEach(s => {
-        s.classList.add('is-open');
-        s.classList.remove('is-current');
-        const head = s.querySelector('.bp-step-head');
-        if (head) head.setAttribute('aria-expanded', 'true');
-      });
+      stepEls.forEach(s => s.classList.remove('is-current'));
+      if (!deskInit) {
+        deskInit = true;
+        // Desktop: acordeón GUIADO (stepper real, no los 5 bloques abiertos).
+        // Arranca sólo el primer bloque expandido — la promesa del H1 es
+        // "paso a paso". Si hay datos previos (usuario que vuelve a editar,
+        // localStorage ya cargado por loadState()), se abre todo como antes.
+        // OJO: los inputs shipean value="0" en el SSR → "hay datos" se decide
+        // por los totales, no por value no-vacío.
+        const t0 = getTotals();
+        const hasData = (t0.ingresos + t0.necesidades + t0.deseos + t0.ahorro + t0.deudas + t0.reserva) > 0;
+        stepEls.forEach((s, idx) => {
+          const open = hasData || idx === 0;
+          s.classList.toggle('is-open', open);
+          const head = s.querySelector('.bp-step-head');
+          if (head) head.setAttribute('aria-expanded', String(open));
+        });
+      } else if (!stepEls.some(s => s.classList.contains('is-open'))) {
+        // Volver de mobile: garantizar al menos un bloque visible.
+        stepEls[0].classList.add('is-open');
+        stepEls[0].querySelector('.bp-step-head')?.setAttribute('aria-expanded', 'true');
+      }
     }
   }
   mq.addEventListener('change', applyMode);
