@@ -54,8 +54,8 @@ const updatedLabel = new Intl.DateTimeFormat('es-AR', {
 
 const total = fixture.total || fixture.matches.length;
 
-const title = 'Partidos de hoy del Mundial 2026: horarios (hora ARG) y resultados en vivo | Hacé Cuentas';
-const description = 'Qué partidos del Mundial 2026 se juegan hoy y los próximos días, con horario en hora argentina y resultados en vivo. Mirá a qué hora juega cada selección y seguí los marcadores.';
+const title = 'Partidos del Mundial 2026 de hoy: horarios (hora ARG) y resultados en vivo | Hacé Cuentas';
+const description = 'Partidos del Mundial 2026 de hoy y los próximos días: qué se juega hoy, a qué hora (hora argentina) y resultados en vivo. Mirá a qué hora juega cada selección y seguí los marcadores.';
 
 const faqItems = [
   { q: '¿Qué partidos del Mundial hay hoy?', a: todayMatches.length ? `Hoy se juegan ${todayMatches.length} partido${todayMatches.length > 1 ? 's' : ''} del Mundial 2026. Arriba ves cada uno con el horario en hora argentina y el resultado en vivo.` : 'La lista de arriba muestra los partidos del día (en hora argentina). Si hoy no hay partidos, te mostramos los próximos.' },
@@ -88,10 +88,20 @@ const renderCard = (m: any) => {
     <article class="ph-page">
       <header class="ph-header">
         <div class="ph-eyebrow">⚽ Mundial 2026 · en vivo</div>
-        <h1>Partidos de hoy del Mundial 2026</h1>
+        <h1>Partidos del Mundial 2026 de hoy</h1>
         <p class="lede">Los partidos del Mundial 2026 que se juegan <strong>hoy</strong> y los próximos días, con <strong>horario en hora argentina</strong> y <strong>resultados en vivo</strong>.</p>
         <p class="ph-upd">🔄 Actualizado <strong data-live-updated>{updatedLabel}</strong> · hora argentina (UTC-3)</p>
       </header>
+
+      <p class="ph-answer" data-live-answer>
+        {todayMatches.length
+          ? <>Hoy se juegan <strong>{todayMatches.length}</strong> partido{todayMatches.length > 1 ? 's' : ''} del Mundial 2026. Debajo tenés cada uno con el horario en hora argentina (UTC-3) y el resultado en vivo.</>
+          : torneoNoEmpezo
+            ? <>El Mundial 2026 arranca el 11 de junio de 2026. Hoy todavía no hay partidos: debajo ves los próximos, con horario en hora argentina y resultados en vivo.</>
+            : torneoTerminado
+              ? <>El Mundial 2026 ya terminó. Hoy no hay partidos: mirá todos los resultados en el fixture completo.</>
+              : <>Hoy no hay partidos del Mundial 2026. Debajo tenés los próximos partidos, con horario en hora argentina (UTC-3) y resultados en vivo.</>}
+      </p>
 
       <section class="ph-today" aria-labelledby="ph-today-h">
         <h2 id="ph-today-h">
@@ -244,7 +254,8 @@ const renderCard = (m: any) => {
   .ph-eyebrow { font-size: 0.8rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; }
   .ph-header h1 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); font-weight: 800; margin: 0.3rem 0 0.5rem; }
   .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.5rem; }
-  .ph-upd { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.5rem; }
+  .ph-upd { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1rem; }
+  .ph-answer { font-size: 1rem; line-height: 1.6; color: var(--text); background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; margin: 0 0 1.5rem; }
   .ph-page h2 { font-size: 1.3rem; font-weight: 700; margin: 2rem 0 1rem; }
   .ph-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem; }
   .ph-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.9rem 1rem; }
