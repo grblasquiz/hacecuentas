@@ -45,10 +45,11 @@ export const FEATURED: Record<string, string[]> = {
     'calculadora-agua-diaria-recomendada',
   ],
   deportes: [
-    'calculadora-descenso-futbol-argentino-promedios',
+    // Evergreen y de apelación amplia primero; el descenso es estacional/nicho.
+    'calculadora-calorias-quemadas-deporte',
     'calculadora-maraton-pace-goal-time-split-kilometro',
     'calculadora-1rm-peso-maximo',
-    'calculadora-calorias-quemadas-deporte',
+    'calculadora-descenso-futbol-argentino-promedios',
   ],
   negocios: [
     'calculadora-margen-ganancia-markup',
@@ -69,8 +70,10 @@ export const FEATURED: Record<string, string[]> = {
     'calculadora-edad-gato-anos-humanos',
   ],
   matematica: [
-    'calculadora-regla-de-tres-compuesta-directa-inversa',
+    // Porcentaje: la query matemática más universal. Regla de tres (compuesta)
+    // es más avanzada → segunda.
     'calculadora-porcentaje-de-numero-calculadora',
+    'calculadora-regla-de-tres-compuesta-directa-inversa',
     'calculadora-ecuacion-cuadratica-formula-resolvente',
     'calculadora-teorema-pitagoras-hipotenusa-cateto',
   ],
