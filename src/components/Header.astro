@@ -1,4 +1,5 @@
 ---
+import Icon from './ui/Icon.astro';
 export interface Props { lang?: 'es' | 'en' | 'pt'; }
 const { lang = 'es' } = Astro.props;
 const currentPath = Astro.url.pathname;
@@ -58,6 +59,9 @@ const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePa
     { href: '/mi/trabajo', label: 'Trabajo', activePath: '/mi/trabajo' },
     { href: '/mi/casa', label: 'Casa', activePath: '/mi/casa' },
     { href: '/mi/familia', label: 'Salud', activePath: '/mi/familia' },
+    // Decidir = 5º dominio (superficie decisional). Promovido desde "Más": es
+    // un universo propio (salas multi-fórmula), no una categoría suelta.
+    { href: '/decidir', label: 'Decidir', activePath: '/decidir' },
   ],
   ES: [
     { href: '/es/calculadora-irpf-2026-tramos-espana-nomina', label: 'IRPF', activePath: '/es/calculadora-irpf' },
@@ -159,9 +163,8 @@ const navItems = COUNTRY_NAVS[pageCountry];
 // Dropdown "Más" (solo AR): el resto de dominios/superficies que salieron de la
 // nav principal. Preserva los links internos que tenía la nav vieja (Decidir,
 // Guías, conversores) para no perder esos enlaces del grafo SEO.
-const NAV_MORE: Array<{ href: string; label: string }> = pageCountry === 'AR' ? [
-  { href: '/decidir', label: '🧭 Salas de decisión' },
-  { href: '/valores-bcra', label: '📊 Dólar y economía' },
+const NAV_MORE: Array<{ href: string; label: string; icon?: string }> = pageCountry === 'AR' ? [
+  { href: '/valores-bcra', label: 'Dólar y economía', icon: 'chart' },
   { href: '/categoria/viajes', label: 'Viajes' },
   { href: '/categoria/cocina', label: 'Cocina' },
   { href: '/categoria/tecnologia', label: 'Tecnología' },
@@ -230,7 +233,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
           <details class="nav-more">
             <summary>Más <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
             <div class="nav-more-menu">
-              {NAV_MORE.map(m => <a href={m.href}>{m.label}</a>)}
+              {NAV_MORE.map(m => <a href={m.href}>{m.icon && <Icon name={m.icon} size={15} />}{m.label}</a>)}
             </div>
           </details>
         )}
@@ -917,7 +920,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
 
   nav {
     display: flex;
-    gap: 0.25rem;
+    gap: 0.125rem;
     align-items: center;
     /* El contenedor tiene max-width:1120px y el nav (9 categorías) + logo +
        acciones no entra → antes desbordaba y clipeaba los iconos de la derecha.
@@ -935,7 +938,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     color: var(--text-muted);
     font-size: 0.9375rem;
     font-weight: 500;
-    padding: 0.5rem 0.875rem;
+    padding: 0.5rem 0.7rem;
     border-radius: var(--radius-sm);
     transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
     text-decoration: none;
@@ -949,7 +952,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
   .nav-more > summary {
     list-style: none; cursor: pointer; white-space: nowrap;
     color: var(--text-muted); font-size: 0.9375rem; font-weight: 500;
-    padding: 0.5rem 0.875rem; border-radius: var(--radius-sm);
+    padding: 0.5rem 0.7rem; border-radius: var(--radius-sm);
     display: inline-flex; align-items: center; gap: 0.25rem;
     transition: background-color 0.15s, color 0.15s;
   }
@@ -968,9 +971,13 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 6px;
   }
   .nav-more-menu a {
+    display: flex; align-items: center; gap: 0.5rem;
     padding: 0.5rem 0.7rem; border-radius: var(--radius-sm);
     color: var(--text-muted); font-size: 0.9rem; font-weight: 500; white-space: nowrap;
   }
+  /* :global — el <svg> lo renderiza el componente Icon (otro scope Astro);
+     sin :global el selector scopeado no lo alcanza. */
+  .nav-more-menu a :global(svg) { color: var(--accent); flex-shrink: 0; }
   .nav-more-menu a:hover { background: var(--bg-muted); color: var(--text); text-decoration: none; }
 
   .header-actions {
@@ -1267,10 +1274,15 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-  @media (max-width: 860px) {
-    nav { display: none; }
+  /* Zona intermedia: el nav de 5 dominios + "Más" sigue visible, pero la caja de
+     búsqueda se compacta a solo-ícono para dejarle lugar (recupera ~130px). */
+  @media (max-width: 1080px) {
     .search-label, .kbd { display: none; }
     .header-search-btn { min-width: auto; padding: 0.5rem; }
+  }
+
+  @media (max-width: 940px) {
+    nav { display: none; }
     .menu-toggle { display: inline-flex; }
   }
 
