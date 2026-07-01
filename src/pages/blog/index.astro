@@ -49,8 +49,15 @@ function formatDate(dateStr: string): string {
 }
 
 const hasPosts = posts.length > 0;
-const featuredPost = hasPosts ? posts[0] : null;
-const restPosts = hasPosts ? posts.slice(1) : [];
+// Featured: preferir un post marcado `featured: true` en su JSON; si no, el más
+// nuevo que NO sea efímero (partidos/mundial/fixture caducan) para no dejar un
+// evento ya pasado como cara del blog; fallback al más nuevo.
+const EPHEMERAL_RE = /mundial|partidos|fixture|copa|finde|fin-de-semana/i;
+const isEphemeral = (p: BlogPost) => EPHEMERAL_RE.test(p.slug) || p.category === 'deportes';
+const featuredPost = hasPosts
+  ? (posts.find((p) => (p as any).featured) || posts.find((p) => !isEphemeral(p)) || posts[0])
+  : null;
+const restPosts = hasPosts ? posts.filter((p) => p !== featuredPost) : [];
 
 // ── Agrupación temática ──────────────────────────────────────────────────────
 // El grid plano no da jerarquía. Agrupamos los posts (menos el featured) en
