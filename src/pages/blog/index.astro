@@ -21,6 +21,10 @@ interface BlogPost {
   heroEmoji: string;
   seoKeywords?: string[];
   author?: string;
+  // Dato principal para las notas-análisis: en vez de un emoji decorativo,
+  // la card muestra el número que resume la nota (ej: "−23%" · "salario real
+  // desde 2017"). Sólo lo definen las notas-dato; el resto cae al heroEmoji.
+  stat?: { value: string; label: string };
 }
 
 // Autor E-E-A-T por defecto del sitio. Los JSON viejos traen "author" genérico
@@ -63,13 +67,17 @@ const restPosts = hasPosts ? posts.filter((p) => p !== featuredPost) : [];
 // El grid plano no da jerarquía. Agrupamos los posts (menos el featured) en
 // secciones temáticas según su `category`. Cada sección tiene un ícono del UI
 // kit (no emoji). Las categorías que no mapean caen en "Más artículos".
-type SectionKey = 'datos' | 'cambios' | 'guias' | 'casos' | 'otros';
+type SectionKey = 'datos' | 'cambios' | 'guias' | 'casos' | 'otros' | 'actualidad';
 const SECTIONS: { key: SectionKey; title: string; icon: string; desc: string }[] = [
   { key: 'datos',   title: 'Datos y análisis', icon: 'chart',    desc: 'Informes con números actualizados: inflación, sueldos, costo de vida.' },
   { key: 'cambios', title: 'Qué cambió',       icon: 'calendar', desc: 'Vencimientos, escalas y novedades fiscales del mes.' },
   { key: 'guias',   title: 'Guías',            icon: 'book',     desc: 'Paso a paso para calcular y entender, sin tecnicismos.' },
   { key: 'casos',   title: 'Casos prácticos',  icon: 'target',   desc: 'Decisiones concretas: dónde conviene, cuánto sale, cómo dividir.' },
   { key: 'otros',   title: 'Más artículos',    icon: 'info',     desc: '' },
+  // Actualidad va SIEMPRE al final y separada: coberturas de temporada
+  // (Mundial, findes largos) que caducan y no son la promesa editorial del
+  // blog financiero. No las mezclamos con "Casos prácticos".
+  { key: 'actualidad', title: 'Actualidad', icon: 'clock', desc: 'Coberturas de temporada: Mundial, findes largos y eventos. Caducan rápido.' },
 ];
 
 // Mapeo category → sección temática. Data-driven: se apoya en el `category`
@@ -89,6 +97,8 @@ const CATEGORY_TO_SECTION: Record<string, SectionKey> = {
 // vencimientos → cambios, guías how-to → guías. El resto queda en casos.
 function sectionFor(p: BlogPost): SectionKey {
   const slug = p.slug;
+  // Efímeras (deportes/mundial/findes) → Actualidad, sin importar su category.
+  if (isEphemeral(p)) return 'actualidad';
   if (/^informe-financiero|^inflacion-|costo-de-vida|sueldo-real|argentino-promedio/.test(slug)) return 'datos';
   if (/vencimiento|recategorizacion|escala-ganancias|prorroga/.test(slug)) return 'cambios';
   if (/^como-|^guia-/.test(slug)) return 'guias';
@@ -173,7 +183,14 @@ const schema = {
         {/* Featured post — full width */}
         {featuredPost && (
           <a href={`/blog/${featuredPost.slug}`} class="post-card post-card--featured">
-            <div class="post-card__emoji" aria-hidden="true">{featuredPost.heroEmoji}</div>
+            {featuredPost.stat ? (
+              <div class="post-card__stat" aria-hidden="true">
+                <span class="stat-value">{featuredPost.stat.value}</span>
+                <span class="stat-label">{featuredPost.stat.label}</span>
+              </div>
+            ) : (
+              <div class="post-card__emoji" aria-hidden="true">{featuredPost.heroEmoji}</div>
+            )}
             <div class="post-card__body">
               <span class={`cat-tag cat-${featuredPost.category}`}>{featuredPost.category}</span>
               <h2 class="post-card__title">{featuredPost.title}</h2>
@@ -194,7 +211,7 @@ const schema = {
 
         {/* Rest of posts — grouped into thematic sections */}
         {grouped.map((section) => (
-          <div class="topic-group">
+          <div class={`topic-group${section.key === 'actualidad' ? ' topic-group--actualidad' : ''}`}>
             <div class="topic-head">
               <span class="topic-icon" aria-hidden="true">
                 <Icon name={section.icon} size={18} />
@@ -208,7 +225,14 @@ const schema = {
               {section.posts.map((post) => (
                 <li>
                   <a href={`/blog/${post.slug}`} class="post-card">
-                    <div class="post-card__emoji" aria-hidden="true">{post.heroEmoji}</div>
+                    {post.stat ? (
+                      <div class="post-card__stat" aria-hidden="true">
+                        <span class="stat-value">{post.stat.value}</span>
+                        <span class="stat-label">{post.stat.label}</span>
+                      </div>
+                    ) : (
+                      <div class="post-card__emoji" aria-hidden="true">{post.heroEmoji}</div>
+                    )}
                     <div class="post-card__body">
                       <span class={`cat-tag cat-${post.category}`}>{post.category}</span>
                       <h3 class="post-card__title">{post.title}</h3>
@@ -437,6 +461,62 @@ const schema = {
     font-size: 2rem;
     line-height: 1;
   }
+
+  /* ── Dato principal (reemplaza al emoji en notas-análisis) ── */
+  /* Card de grilla: número en línea, compacto, con etiqueta debajo. */
+  .post-card .post-card__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .post-card .stat-value {
+    font-family: var(--font-display, inherit);
+    font-size: 2rem;
+    font-weight: 850;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .post-card .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    line-height: 1.25;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  /* Featured: el dato ocupa el panel tintado como "tapa" editorial. */
+  .post-card--featured .post-card__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    text-align: center;
+    min-height: 200px;
+    padding: 1.5rem;
+    background: linear-gradient(150deg, var(--accent-soft), color-mix(in srgb, var(--accent-2, #7c3aed) 14%, var(--accent-soft)));
+    border-right: 1px solid var(--border);
+  }
+  .post-card--featured .stat-value {
+    font-size: clamp(3rem, 6vw, 4rem);
+    font-weight: 850;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .post-card--featured .stat-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    max-width: 22ch;
+    line-height: 1.35;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  @media (max-width: 640px) {
+    .post-card--featured .post-card__stat { min-height: 130px; border-right: 0; border-bottom: 1px solid var(--border); }
+  }
   .post-card .post-card__title {
     font-size: 1rem;
     line-height: 1.35;
@@ -479,6 +559,19 @@ const schema = {
 
   .topic-group { margin-top: 2.5rem; }
   .topic-group:first-of-type { margin-top: 0; }
+
+  /* Actualidad: visualmente separada y atenuada — es contenido de temporada,
+     no la promesa editorial del blog. Regla arriba + tono apagado. */
+  .topic-group--actualidad {
+    margin-top: 3.5rem;
+    padding-top: 2.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .topic-group--actualidad .topic-icon {
+    background: var(--bg-subtle, var(--accent-soft));
+    color: var(--text-subtle);
+  }
+  .topic-group--actualidad .topic-title { color: var(--text-muted); }
 
   .topic-head {
     display: flex;

@@ -138,6 +138,36 @@ function injectH2Ids(html: string, toc: TocItem[]): string {
 const toc = buildToc(post.content || '');
 const contentWithIds = injectH2Ids(post.content || '', toc);
 
+// ─── CTA contextual inline ────────────────────────────────────────────────
+// El bloque "Calculadoras relacionadas" del pie es genérico y llega tarde.
+// Insertamos un CTA a la calculadora principal (relatedCalcs[0]) justo después
+// del primer párrafo: contextual ("hacé el cálculo con tus números"), no un
+// "más calculadoras" al final. Se inyecta en el HTML del cuerpo.
+const primaryCalc: any = relatedCalcs[0];
+const ctaVerb = post.category === 'salud'
+  ? 'Calculalo para tu caso'
+  : (['finanzas', 'economia', 'fiscal', 'negocios'].includes(post.category)
+      ? 'Hacé el cálculo con tus números'
+      : 'Probalo con tus datos');
+const primaryCalcLabel = primaryCalc
+  ? String(primaryCalc.h1 || primaryCalc.title || '').split('|')[0].trim()
+  : '';
+const inlineCta = primaryCalc
+  ? `<aside class="inline-cta" role="note">`
+    + `<span class="inline-cta__icon" aria-hidden="true">${primaryCalc.icon || '🧮'}</span>`
+    + `<span class="inline-cta__txt"><strong>${ctaVerb}</strong>`
+    + `<a href="/${primaryCalc.slug}">${primaryCalcLabel} →</a></span>`
+    + `</aside>`
+  : '';
+// Insertar tras el primer </p>; si no hay párrafo, al inicio del cuerpo.
+let bodyHtml = contentWithIds;
+if (inlineCta) {
+  const p = bodyHtml.indexOf('</p>');
+  bodyHtml = p !== -1
+    ? bodyHtml.slice(0, p + 4) + inlineCta + bodyHtml.slice(p + 4)
+    : inlineCta + bodyHtml;
+}
+
 // ─── Schema.org ──────────────────────────────────────────────────────────────
 // NewsArticle si es un informe periódico (datos económicos, news real).
 // Mejora elegibilidad para Google Discover + Top Stories carousel.
@@ -349,7 +379,7 @@ const pageSchema = {
         )}
 
         <!-- Article body -->
-        <div class="article-body prose" set:html={contentWithIds} />
+        <div class="article-body prose" set:html={bodyHtml} />
 
         <!-- Disclaimer post-content en YMYL -->
         {['finanzas', 'negocios'].includes(post.category) && (
@@ -918,6 +948,43 @@ const pageSchema = {
     border-top: 1px solid var(--border);
     margin: 2.5rem 0;
   }
+
+  /* ── CTA contextual inline (inyectado en el cuerpo con set:html) ───────────
+     Va con :global porque el HTML viene de set:html y no recibe el atributo
+     de scope de Astro. */
+  .article-body :global(.inline-cta) {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin: 1.75rem 0;
+    padding: 0.95rem 1.15rem;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+  }
+  .article-body :global(.inline-cta__icon) {
+    font-size: 1.6rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .article-body :global(.inline-cta__txt) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+  .article-body :global(.inline-cta__txt strong) {
+    font-size: 0.95rem;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .article-body :global(.inline-cta__txt a) {
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .article-body :global(.inline-cta__txt a:hover) { text-decoration: underline; }
 
   /* ── Related calcs ──────────────────────────────────────────────────────── */
   .related-calcs-section {
