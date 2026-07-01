@@ -20,6 +20,13 @@
  *   "calcs_cl":      { "slugs": [...] },
  *   "calcs_co":      { "slugs": [...] },
  *   "calcs_es":      { "slugs": [...] },
+ *   "calcs_ec":      { "slugs": [...] },          // ...un bucket por vertical
+ *   "calcs_pe":      { "slugs": [...] },
+ *   "calcs_do":      { "slugs": [...] },
+ *   "calcs_py":      { "slugs": [...] },
+ *   "calcs_uy":      { "slugs": [...] },
+ *   "calcs_ve":      { "slugs": [...] },
+ *   "calcs_pt-pt":   { "slugs": [...] },          // locale compuesto
  *   "blog":          { "slugs": ["a-post"] },
  *   "guias":         { "slugs": ["la-guia"] },
  *   "tablas":        { "slugs": ["la-tabla"] },
@@ -31,7 +38,8 @@
  *   "provincias":    ["caba","buenos-aires"]         // derivado si aplica
  * }
  *
- * Locales válidos: 'ar' (root), 'en', 'es', 'mx', 'cl', 'co', 'pt'.
+ * Locales válidos: 'ar' (root), 'en', 'es', 'mx', 'cl', 'co', 'pt', 'ec',
+ * 'pe', 'do', 'py', 'uy', 've', 'pt-pt'.
  * Para calcs, filterByIncremental con locale='ar' lee `calcs`; con cualquier
  * otro locale lee `calcs_<locale>`. Cada bucket es independiente y solo
  * contiene los slugs de su locale → cero falsos positivos cross-locale.
@@ -62,6 +70,13 @@ interface Changes {
   calcs_cl?: ContentChanges;
   calcs_co?: ContentChanges;
   calcs_es?: ContentChanges;
+  calcs_ec?: ContentChanges;
+  calcs_pe?: ContentChanges;
+  calcs_do?: ContentChanges;
+  calcs_py?: ContentChanges;
+  calcs_uy?: ContentChanges;
+  calcs_ve?: ContentChanges;
+  'calcs_pt-pt'?: ContentChanges;
   blog?: ContentChanges;
   guias?: ContentChanges;
   tablas?: ContentChanges;
