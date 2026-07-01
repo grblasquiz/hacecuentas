@@ -1,0 +1,512 @@
+---
+// ─────────────────────────────────────────────────────────────────────────────
+// BUSCADOR INSTANTÁNEO DEL HERO
+//
+// Input primario de la portada: el usuario tipea el nombre y ve al instante
+// (client-side, sub-100ms una vez cargado el índice) la calculadora más adecuada,
+// con framing CONFIADO ("Tu calculadora") en vez del asistente IA lento que
+// hedgeaba ("no encontré pero te recomiendo"). El asistente IA queda secundario
+// (ProblemInterpreter) para casos conversacionales/complejos.
+//
+// Índice: /search-index.json (claves abreviadas {s,h,d,c,i,a}). Se carga lazy al
+// primer foco/hover para no pegarle al CWV del home (INP-sensible). Robusto a los
+// swaps de Astro ClientRouter: re-init idempotente en astro:page-load.
+// ─────────────────────────────────────────────────────────────────────────────
+interface Props {
+  totalDisplay?: string; // "3.300+" para el placeholder/aria
+  interpreterAnchor?: string; // id del textarea del asistente para el handoff (0 resultados)
+}
+const { totalDisplay = '', interpreterAnchor = 'pi-input' } = Astro.props as Props;
+
+const categoryLabels: Record<string, string> = {
+  finanzas: 'Finanzas', negocios: 'Negocios', negocio: 'Negocios', salud: 'Salud',
+  marketing: 'Marketing', deportes: 'Deportes', viajes: 'Viajes', vida: 'Vida cotidiana',
+  mascotas: 'Mascotas', matematica: 'Matemática', construccion: 'Construcción',
+  cocina: 'Cocina', educacion: 'Educación', automotor: 'Automotor', tecnologia: 'Tecnología',
+  'medio-ambiente': 'Medio Ambiente', electronica: 'Electrónica', entretenimiento: 'Entretenimiento',
+  ciencia: 'Ciencia', jardineria: 'Jardinería', familia: 'Familia', idiomas: 'Idiomas',
+  impuestos: 'Impuestos', hogar: 'Hogar', clima: 'Clima', juegos: 'Juegos', astronomia: 'Astronomía',
+};
+---
+
+<div class="hsx" data-hsx data-interp={interpreterAnchor}>
+  <form class="hsx-form" id="hsx-form" role="search" autocomplete="off">
+    <svg class="hsx-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input
+      id="hsx-input"
+      class="hsx-input"
+      type="search"
+      inputmode="search"
+      placeholder={totalDisplay ? `Buscá entre ${totalDisplay} calculadoras…` : 'Buscá tu calculadora…'}
+      aria-label={totalDisplay ? `Buscar entre ${totalDisplay} calculadoras` : 'Buscar calculadora'}
+      aria-expanded="false"
+      aria-controls="hsx-panel"
+      role="combobox"
+      aria-autocomplete="list"
+    />
+    <button type="button" class="hsx-clear" id="hsx-clear" aria-label="Limpiar" hidden>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </form>
+  <div class="hsx-panel" id="hsx-panel" role="listbox" aria-label="Resultados" hidden></div>
+</div>
+
+<style>
+  /* z-index alto: los bloques hermanos del hero (fav-strip, country-picker,
+     meta-row) tienen z-index:1 y taparían el dropdown si .hsx no establece su
+     propio contexto de apilado por encima de ellos. */
+  .hsx { position: relative; width: 100%; max-width: 640px; z-index: 50; }
+
+  .hsx-form {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    background: var(--bg-card);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 0.875rem 0.75rem 1.125rem;
+    box-shadow: var(--shadow-md);
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .hsx-form:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .hsx-icon { flex-shrink: 0; color: var(--text-subtle); }
+  .hsx-form:focus-within .hsx-icon { color: var(--accent); }
+  .hsx-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 1.0625rem;
+    color: var(--text);
+    padding: 0.25rem 0;
+  }
+  .hsx-input::placeholder { color: var(--text-subtle); }
+  /* quita la X nativa de <input type=search> (usamos la nuestra) */
+  .hsx-input::-webkit-search-decoration,
+  .hsx-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+  .hsx-clear {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+  }
+  .hsx-clear:hover { color: var(--text); background: var(--bg-muted); }
+
+  /* ── Panel de resultados ─────────────────────────────────────────── */
+  .hsx-panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg, var(--shadow-md));
+    padding: 0.5rem;
+    max-height: min(64vh, 30rem);
+    overflow-y: auto;
+    text-align: left;
+  }
+
+  /* OJO: el contenido del panel se inyecta por innerHTML desde el <script>, así
+     que NO recibe el atributo de scope de Astro (data-astro-cid-*). Los estilos
+     de esos elementos van con :global() (contenidos bajo .hsx para no filtrar). */
+  .hsx :global(.hsx-label) {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-subtle);
+    padding: 0.5rem 0.625rem 0.375rem;
+  }
+
+  .hsx :global(.hsx-item) {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.625rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: background-color 0.12s;
+  }
+  .hsx :global(.hsx-item:hover),
+  .hsx :global(.hsx-item.is-active) { background: var(--bg-muted); }
+  .hsx :global(.hsx-ico) {
+    flex-shrink: 0;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+  }
+  .hsx :global(.hsx-body) { flex: 1; min-width: 0; }
+  .hsx :global(.hsx-name) {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hsx :global(.hsx-cat) {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.125rem;
+  }
+  .hsx :global(.hsx-go) {
+    flex-shrink: 0;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 0.25rem;
+  }
+
+  /* Primer resultado (la "mejor opción") destacado */
+  .hsx :global(.hsx-item.hsx-top) {
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .hsx :global(.hsx-item.hsx-top .hsx-ico) { background: var(--bg-card); }
+  .hsx :global(.hsx-item.hsx-top.is-active) { background: color-mix(in srgb, var(--accent) 18%, var(--bg-card)); }
+
+  .hsx :global(.hsx-empty) { padding: 1rem 0.75rem 0.75rem; }
+  .hsx :global(.hsx-empty-title) { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.375rem; }
+  .hsx :global(.hsx-empty-sub) { font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem; }
+  .hsx :global(.hsx-cta) {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.875rem; font-weight: 600;
+    color: var(--accent);
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+    padding: 0.4375rem 0.875rem;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .hsx :global(.hsx-cta:hover) { background: var(--accent-soft); }
+
+  .hsx :global(.hsx-foot) {
+    display: block;
+    text-align: center;
+    padding: 0.625rem;
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .hsx :global(.hsx-foot:hover) { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .hsx { max-width: 100%; }
+    .hsx-input { font-size: 1rem; }
+  }
+</style>
+
+<script define:vars={{ categoryLabels }}>
+  // JS puro (este bloque NO transpila TS por `define:vars`). Sin tipos ni generics.
+  const norm = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  // Levenshtein con early-exit por límite (typos: "agunaldo" → "aguinaldo").
+  function levenshtein(a, b, max) {
+    const la = a.length, lb = b.length;
+    if (Math.abs(la - lb) > max) return max + 1;
+    if (la === 0) return lb;
+    if (lb === 0) return la;
+    let prev = new Array(lb + 1), cur = new Array(lb + 1);
+    for (let j = 0; j <= lb; j++) prev[j] = j;
+    for (let i = 1; i <= la; i++) {
+      cur[0] = i;
+      let rowMin = cur[0];
+      const ai = a.charCodeAt(i - 1);
+      for (let j = 1; j <= lb; j++) {
+        const cost = ai === b.charCodeAt(j - 1) ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+        if (cur[j] < rowMin) rowMin = cur[j];
+      }
+      if (rowMin > max) return max + 1;
+      const tmp = prev; prev = cur; cur = tmp;
+    }
+    return prev[lb];
+  }
+  const fuzzyTol = (len) => (len <= 6 ? 1 : 2);
+  function fuzzyWordScore(words, token) {
+    if (token.length < 4) return 0;
+    const tol = fuzzyTol(token.length);
+    let best = 0;
+    for (const w of words) {
+      if (Math.abs(w.length - token.length) > tol) continue;
+      const d = levenshtein(w, token, tol);
+      if (d <= tol) {
+        const s = d === 0 ? 3 : (tol - d + 1);
+        if (s > best) best = s;
+        if (d === 1) break;
+      }
+    }
+    return best;
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // Score por entrada (semántica AND: cada token tiene que matchear en algún lado).
+  function scoreEntry(e, qNorm, tokens) {
+    let score = 0;
+    if (e._h.startsWith(qNorm)) score += 45;
+    else if (e._h.includes(qNorm)) score += 28;
+    for (const t of tokens) {
+      let ts = 0;
+      if (e._hw.includes(t)) ts = 30;
+      else if (e._hw.some((w) => w.startsWith(t))) ts = 22;
+      else if (e._h.includes(t)) ts = 14;
+      else if (e._sw.some((w) => w.startsWith(t))) ts = 12;
+      else if (e._s.includes(t)) ts = 8;
+      else if (e._d.includes(t)) ts = 4;
+      else {
+        const fh = fuzzyWordScore(e._hw, t);
+        const fsw = fh ? 0 : fuzzyWordScore(e._sw, t);
+        if (fh) ts = 6 + fh * 2;
+        else if (fsw) ts = 3 + fsw;
+        else return 0;
+      }
+      score += ts;
+    }
+    return score;
+  }
+
+  const arrow = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+
+  // Índice compartido entre re-inits SPA (module-scoped).
+  let ENTRIES = null;
+  let LOAD_PROMISE = null;
+  let LOAD_FAILED = false;
+  function ensureIndex() {
+    if (ENTRIES) return Promise.resolve(ENTRIES);
+    if (!LOAD_PROMISE) {
+      LOAD_PROMISE = fetch('/search-index.json', { cache: 'force-cache' })
+        .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then((data) => {
+          for (const e of data) {
+            e._h = norm(e.h);
+            e._s = norm(e.s).replace(/-/g, ' ');
+            e._d = norm(e.d);
+            e._hw = e._h.split(/\s+/).filter(Boolean);
+            e._sw = e._s.split(/\s+/).filter(Boolean);
+          }
+          ENTRIES = data;
+          LOAD_FAILED = false;
+          return data;
+        })
+        .catch((err) => {
+          console.error('[hsx] index fetch failed', err);
+          LOAD_FAILED = true;
+          LOAD_PROMISE = null;
+          return null;
+        });
+    }
+    return LOAD_PROMISE;
+  }
+
+  const POPULAR = [
+    'sueldo-en-mano-argentina', 'calculadora-aguinaldo-sac', 'calculadora-imc',
+    'calculadora-interes-compuesto', 'calculadora-porcentajes', 'calculadora-plazo-fijo',
+  ];
+  const POPULAR_SET = new Set(POPULAR);
+
+  function initHsx(root) {
+    if (root.dataset.hsxInit) return;
+    root.dataset.hsxInit = '1';
+    const form = root.querySelector('#hsx-form');
+    const input = root.querySelector('#hsx-input');
+    const clear = root.querySelector('#hsx-clear');
+    const panel = root.querySelector('#hsx-panel');
+    const interpId = root.dataset.interp || 'pi-input';
+    if (!form || !input || !panel) return;
+
+    let active = -1; // índice del item resaltado (teclado)
+
+    const preferredAudience = (() => {
+      const p = location.pathname;
+      if (p.startsWith('/es/') || p === '/es') return 'ES';
+      if (p.startsWith('/mx/') || p === '/mx') return 'MX';
+      if (p.startsWith('/co/') || p === '/co') return 'CO';
+      if (p.startsWith('/cl/') || p === '/cl') return 'CL';
+      return 'AR';
+    })();
+
+    function itemHtml(e, i, isTop) {
+      const cat = categoryLabels[e.c] || e.c || '';
+      return '<a href="/' + escapeHtml(e.s) + '" class="hsx-item' + (isTop ? ' hsx-top' : '') + '" role="option" data-i="' + i + '">'
+        + '<span class="hsx-ico">' + escapeHtml(e.i || '🔢') + '</span>'
+        + '<span class="hsx-body"><span class="hsx-name">' + escapeHtml(e.h) + '</span>'
+        + '<span class="hsx-cat">' + escapeHtml(cat) + '</span></span>'
+        + '<span class="hsx-go">' + (isTop ? 'Abrir' : '') + arrow + '</span>'
+        + '</a>';
+    }
+
+    function openPanel() { panel.hidden = false; input.setAttribute('aria-expanded', 'true'); }
+    function closePanel() { panel.hidden = true; input.setAttribute('aria-expanded', 'false'); active = -1; }
+
+    function renderPopular() {
+      if (!ENTRIES) return;
+      const bySlug = new Map(ENTRIES.map((e) => [e.s, e]));
+      const picks = [];
+      for (const s of POPULAR) { const e = bySlug.get(s); if (e) picks.push(e); }
+      if (!picks.length) return;
+      panel.innerHTML = '<div class="hsx-label">Populares</div>'
+        + picks.map((e, i) => itemHtml(e, i, false)).join('');
+      openPanel();
+    }
+
+    function render() {
+      const raw = input.value.trim();
+      clear.hidden = !raw;
+      if (LOAD_FAILED) {
+        panel.innerHTML = '<div class="hsx-empty"><div class="hsx-empty-title">No pude cargar el buscador.</div>'
+          + '<div class="hsx-empty-sub">Recargá la página o probá de nuevo en un rato.</div></div>';
+        openPanel();
+        return;
+      }
+      if (!ENTRIES) {
+        // aún cargando el índice: pedirlo y re-renderizar al llegar
+        ensureIndex().then(() => { if (document.activeElement === input || !panel.hidden) render(); });
+        return;
+      }
+      if (!raw) { renderPopular(); return; }
+
+      const qNorm = norm(raw);
+      const tokens = qNorm.split(/\s+/).filter(Boolean);
+      const scored = [];
+      for (const e of ENTRIES) {
+        let sc = scoreEntry(e, qNorm, tokens);
+        if (sc <= 0) continue;
+        if (e.a === preferredAudience) sc += 8;
+        // Empujón a las calcs canónicas de alto tráfico, pero SOLO cuando ya
+        // matchean fuerte (sc>=22 = match a nivel título): así "sueldo" abre la
+        // canónica en vez de una variante ("Sueldo USD vs pesos"), sin promover
+        // populares que apenas matchean por descripción.
+        if (sc >= 22 && POPULAR_SET.has(e.s)) sc += 30;
+        scored.push({ e, sc });
+      }
+      scored.sort((a, b) => b.sc - a.sc || a.e.h.length - b.e.h.length);
+      const top = scored.slice(0, 7).map((x) => x.e);
+
+      if (!top.length) {
+        panel.innerHTML = '<div class="hsx-empty">'
+          + '<div class="hsx-empty-title">No tengo una con ese nombre exacto.</div>'
+          + '<div class="hsx-empty-sub">Contámelo con tus palabras y armo el cálculo por vos, o mirá el catálogo completo.</div>'
+          + '<button type="button" class="hsx-cta" data-handoff>Contámelo con tus palabras ' + arrow + '</button>'
+          + '<a class="hsx-foot" href="/buscar?q=' + encodeURIComponent(raw) + '">Ver todo el catálogo →</a>'
+          + '</div>';
+        openPanel();
+        active = -1;
+        return;
+      }
+
+      let html = '<div class="hsx-label">Tu calculadora</div>' + itemHtml(top[0], 0, true);
+      if (top.length > 1) {
+        html += '<div class="hsx-label">También te puede servir</div>'
+          + top.slice(1).map((e, i) => itemHtml(e, i + 1, false)).join('');
+      }
+      html += '<a class="hsx-foot" href="/buscar?q=' + encodeURIComponent(raw) + '">Ver todas las coincidencias →</a>';
+      panel.innerHTML = html;
+      openPanel();
+      active = -1;
+    }
+
+    function items() { return Array.prototype.slice.call(panel.querySelectorAll('.hsx-item')); }
+    function setActive(n) {
+      const list = items();
+      if (!list.length) return;
+      active = (n + list.length) % list.length;
+      list.forEach((el, i) => el.classList.toggle('is-active', i === active));
+      list[active].scrollIntoView({ block: 'nearest' });
+    }
+
+    function handoff() {
+      const q = input.value.trim();
+      closePanel();
+      const ta = document.getElementById(interpId);
+      if (ta) {
+        // Abrir el <details> del asistente si está colapsado.
+        const det = ta.closest('details');
+        if (det) det.open = true;
+        ta.value = q;
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        ta.focus();
+        ta.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      } else {
+        location.href = '/buscar?q=' + encodeURIComponent(q);
+      }
+    }
+
+    // Precarga en el primer hover/focus (no en load: cuida el CWV del home).
+    input.addEventListener('focus', () => { ensureIndex().then(() => { if (document.activeElement === input) render(); }); });
+    input.addEventListener('mouseenter', ensureIndex, { once: true });
+    input.addEventListener('input', render);
+    clear.addEventListener('click', () => { input.value = ''; input.focus(); render(); });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); if (panel.hidden) render(); setActive(active + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+      else if (e.key === 'Escape') { if (!panel.hidden) { e.preventDefault(); closePanel(); } }
+      else if (e.key === 'Enter') {
+        // Enter va al item resaltado, o al primero, o (si no hay) al handoff/IA.
+        const list = items();
+        if (list.length) {
+          e.preventDefault();
+          (active >= 0 ? list[active] : list[0]).click();
+        } else if (input.value.trim() && !panel.hidden) {
+          e.preventDefault();
+          handoff();
+        }
+      }
+    });
+
+    // Submit del form (mobile "Ir"): al primer resultado o handoff.
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const list = items();
+      if (list.length) list[0].click();
+      else if (input.value.trim()) handoff();
+    });
+
+    panel.addEventListener('click', (e) => {
+      if (e.target.closest && e.target.closest('[data-handoff]')) { e.preventDefault(); handoff(); }
+    });
+
+    // Cerrar al clickear afuera.
+    document.addEventListener('click', (e) => {
+      if (!root.contains(e.target)) closePanel();
+    });
+  }
+
+  function setupHsx() {
+    document.querySelectorAll('[data-hsx]').forEach(initHsx);
+  }
+  setupHsx();
+  document.addEventListener('astro:page-load', setupHsx);
+</script>

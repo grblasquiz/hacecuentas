@@ -8,6 +8,7 @@ import ScrollToTop from '../components/ScrollToTop.astro';
 import Newsletter from '../components/Newsletter.astro';
 import CategoryIcon from '../components/CategoryIcon.astro';
 import ProblemInterpreter from '../components/ProblemInterpreter.astro';
+import HeroSearch from '../components/HeroSearch.astro';
 import { TOTAL_DISPLAY, PT_DISPLAY, TOTAL_PLAIN, CALC_COUNTS } from '../lib/calc-counts';
 import { DECISION_MANIFEST } from '../lib/decisions/manifest';
 import { PRODUCTS } from '../lib/products/manifest';
@@ -432,32 +433,32 @@ const schema = {
         <p class="hero-kicker">Tu vida más fácil.</p>
         <h1 class="hero-title">¿Qué necesitás <span class="accent">resolver</span> hoy?</h1>
         <p class="hero-lead">
-          Contanos tu situación y te llevamos a la cuenta exacta — en español, con <strong>fórmulas oficiales</strong> y sin vueltas.
+          Escribí lo que querés calcular y te llevamos a la cuenta exacta — en español, con <strong>fórmulas oficiales</strong> y sin vueltas.
         </p>
 
-        {/* Intérprete de problemas: entrada primaria. El usuario cuenta su situación
-            en lenguaje natural y el asistente elige la calc, pide lo que falte y
-            ejecuta el cálculo en el motor determinístico. Cae al buscador (503). */}
-        <ProblemInterpreter
-          variant="hero"
-          searchHref="/buscar"
-          showSearchLink={false}
-          examples={[
-            'Me ofrecen 3,4M brutos pero viajo a Capital 4 veces por semana',
-            'Me despidieron después de 8 años, ¿cuánto me corresponde?',
-            '¿Conviene plazo fijo o cancelar el préstamo?',
-          ]}
-        />
+        {/* Buscador instantáneo (entrada primaria). Match por nombre client-side:
+            tipeás y ves al instante "Tu calculadora". El asistente IA queda debajo,
+            como opción secundaria para casos conversacionales/complejos. */}
+        <HeroSearch totalDisplay={TOTAL_DISPLAY} />
 
-        {/* Buscador por nombre (secundario). Mantiene ⌘K, el modal y el contador. */}
-        <button type="button" class="hero-search hero-search--secondary" id="hero-search-btn" aria-label={`Buscar entre ${TOTAL_DISPLAY} calculadoras`}>
-          <svg class="hs-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <span class="hs-placeholder" id="hs-placeholder">Buscar entre {TOTAL_DISPLAY} calculadoras por nombre…</span>
-          <kbd class="hs-kbd">⌘K</kbd>
-        </button>
+        {/* Asistente IA (secundario): para cuando no sabés qué calc buscar y
+            preferís contar la situación. Llama a /api/interpret (LLM), más lento;
+            por eso ahora es opt-in y no el input protagonista. */}
+        <details class="hero-assistant" id="hero-assistant">
+          <summary class="hero-assistant-summary">
+            <span>¿No sabés qué buscar? Contámelo con tus palabras</span>
+          </summary>
+          <ProblemInterpreter
+            variant="hero"
+            searchHref="/buscar"
+            showSearchLink={false}
+            examples={[
+              'Me ofrecen 3,4M brutos pero viajo a Capital 4 veces por semana',
+              'Me despidieron después de 8 años, ¿cuánto me corresponde?',
+              '¿Conviene plazo fijo o cancelar el préstamo?',
+            ]}
+          />
+        </details>
 
         <div class="hero-intents" aria-label="Atajos">
           <span class="hero-intents-label">Resolvé:</span>
@@ -1573,6 +1574,11 @@ const schema = {
     z-index: 0;
   }
   .hero > * { position: relative; z-index: 1; }
+  /* El buscador del hero abre un dropdown absoluto que debe solaparse sobre las
+     bandas de abajo (fav-strip, country-picker, meta-row). Como todos los hijos
+     de .hero comparten z-index:1, el orden del DOM haría que esas bandas pinten
+     encima del dropdown. Subimos hero-grid por encima de ellas. */
+  .hero > .hero-grid { z-index: 2; }
 
   /* Hero asimétrico: izquierda intención + buscador, derecha panel "Hoy". */
   .hero-grid {
@@ -1848,6 +1854,36 @@ const schema = {
   }
   .hero-search--secondary .hs-placeholder { font-size: 0.9375rem; }
   .hero-search--secondary .hs-icon { width: 18px; height: 18px; }
+
+  /* Asistente IA demoteado a secundario (opt-in, dentro de un <details>). */
+  .hero-assistant {
+    max-width: 640px;
+    margin-top: 0.875rem;
+  }
+  .hero-assistant-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    list-style: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    padding: 0.375rem 0;
+    user-select: none;
+  }
+  .hero-assistant-summary::-webkit-details-marker { display: none; }
+  .hero-assistant-summary::before {
+    content: '';
+    width: 0; height: 0;
+    border-left: 5px solid currentColor;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    transition: transform 0.15s;
+  }
+  .hero-assistant[open] > .hero-assistant-summary::before { transform: rotate(90deg); }
+  .hero-assistant-summary span { text-decoration: underline; text-underline-offset: 2px; }
+  .hero-assistant-summary:hover { color: var(--accent); }
+  .hero-assistant[open] > .hero-assistant-summary { margin-bottom: 0.75rem; }
 
   /* Chips de búsquedas populares — debajo del buscador */
   .hero-pop {

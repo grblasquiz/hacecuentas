@@ -656,6 +656,7 @@ const inputType = (t: string) =>
         var r = await api('/api/auth/verify', { method: 'POST', body: JSON.stringify({ email: state.email, code: code, newsletter: newsletter }) });
         btn.disabled = false; btn.textContent = 'Entrar';
         if (!r.ok) { err('[data-code-err]', (r.data && r.data.error) || 'Código incorrecto.'); return; }
+        trackLogin('email');
         showProfile({ email: r.data.email, profile: r.data.profile || {} });
         // Si vino de una calc (?next=/ruta), volver allá (el perfil ya quedó en
         // el caché local, así que la calc precarga). Guard anti open-redirect.
@@ -709,9 +710,16 @@ const inputType = (t: string) =>
         body: JSON.stringify({ credential: resp.credential, newsletter: newsletter }),
       });
       if (!r.ok) { err('[data-google-err]', (r.data && r.data.error) || 'No se pudo iniciar sesión con Google.'); return; }
+      trackLogin('google');
       showProfile({ email: r.data.email, profile: r.data.profile || {} });
       var next = new URLSearchParams(location.search).get('next');
       if (next && next.charAt(0) === '/' && next.charAt(1) !== '/') location.assign(next);
+    }
+
+    // Evento GA4 de login completado (embudo: vio la pantalla → se logueó).
+    function trackLogin(method) {
+      try { if (typeof window.gtag === 'function') window.gtag('event', 'login', { method: method }); }
+      catch (_) {}
     }
 
     async function init() {
