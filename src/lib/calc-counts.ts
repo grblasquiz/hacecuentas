@@ -67,6 +67,16 @@ function formatES(n: number): string {
   return n.toLocaleString('es-AR');
 }
 
+// Categorías reales del catálogo AR (ES-root), computadas de la data — la misma
+// fuente que alimenta la home y /categoria/*. NUNCA hardcodear "N categorías" en
+// páginas (sobre-nosotros decía 19 mientras la home mostraba 26).
+const arEager = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+export const CATEGORY_COUNT = new Set(
+  Object.values(arEager)
+    .map((m: any) => (m.default || m).category)
+    .filter(Boolean)
+).size;
+
 export const TOTAL_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.total))}+`;
 export const AR_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.ar))}+`;
 export const PT_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.pt))}+`;

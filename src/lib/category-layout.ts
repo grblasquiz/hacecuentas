@@ -33,10 +33,17 @@ export const FEATURED: Record<string, string[]> = {
   finanzas: [
     // Sueldo EN MANO (bruto→neto) primero: es la intención principal y la calc
     // más enlazada desde la home. El neto→bruto es un caso secundario.
+    // Monotributo vive ahora en la categoría impuestos (hub Impuestos Argentina).
     'sueldo-en-mano-argentina',
     'calculadora-aguinaldo-sac',
     'calculadora-indemnizacion-despido',
+    'calculadora-plazo-fijo',
+  ],
+  impuestos: [
     'calculadora-monotributo-2026',
+    'calculadora-ganancias-empleados-4ta-categoria-2026',
+    'calculadora-iva-incluido-neto-discriminar',
+    'calculadora-bienes-personales-2026',
   ],
   salud: [
     'calculadora-imc',
@@ -103,6 +110,25 @@ export const SUBGROUPS: Record<string, SubGroup[]> = {
     { id: 'inversiones', title: 'Inversiones, cripto y trading', icon: '📈', kw: ['cripto', 'staking', 'yield', 'rendimiento', 'plazo', 'dolar', 'mep', 'ccl', 'bono', 'fci', 'accion', 'interes', 'bitcoin', 'ethereum', 'usdt', 'inflacion', 'apy', 'apr', 'defi', 'aave', 'compound', 'airdrop', 'mining', 'token', 'tokens', 'wallet', 'stablecoin', 'arbitraje', 'liquidation', 'margin', 'greeks', 'opcion', 'futuros', 'broker', 'trading', 'backtest', 'sharpe', 'drawdown', 'leverage', 'kelly', 'scholes', 'impermanent', 'portfolio', 'nft', 'etf'] },
     { id: 'anses', title: 'ANSES y jubilación', icon: '🏛️', kw: ['anses', 'jubilacion', 'jubilarse', 'auh', 'asignacion', 'moratoria', 'haber', 'pension', 'pnc', 'puam', 'subsidio'] },
     { id: 'inmuebles', title: 'Alquiler e inmuebles', icon: '🏠', kw: ['alquiler', 'inmueble', 'expensas', 'metros', 'propiedad', 'escritura', 'abl'] },
+  ],
+  impuestos: [
+    // Hub Impuestos Argentina. Los kw de cada subcluster están elegidos para NO
+    // matchear las calcs de otros países (IRPF España, IVA México), que caen al
+    // subgrupo "Otros países" del final. Por eso el bucket IVA usa substrings
+    // largos ('iva-incluido') y no el token corto 'iva' (matchearía iva-mexico).
+    { id: 'monotributo', title: 'Monotributo', icon: '🧾', kw: ['monotributo', 'monotributista', 'recategorizacion'] },
+    { id: 'ganancias', title: 'Impuesto a las Ganancias', icon: '💼', kw: ['ganancias', 'cuarta-categoria', 'siradig', 'deduccion'] },
+    { id: 'iva', title: 'IVA', icon: '🧮', kw: ['iva-incluido', 'iva-saldo', 'iva-paises', 'discriminar'] },
+    { id: 'iibb', title: 'Ingresos Brutos', icon: '🏛️', kw: ['iibb', 'ingresos-brutos', 'multilateral'] },
+    { id: 'bienes-personales', title: 'Bienes Personales', icon: '💎', kw: ['bienes-personales'] },
+    { id: 'autonomos', title: 'Autónomos', icon: '👤', kw: ['autonomo', 'autonomos'] },
+    { id: 'cheque-sellos', title: 'Impuesto al cheque y sellos', icon: '🖋️', kw: ['cheque', 'debitos', 'sellos'] },
+    { id: 'retenciones', title: 'Retenciones y percepciones', icon: '📋', kw: ['retencion', 'percepcion', 'dolar-tarjeta'] },
+    // vehiculos ANTES que inmuebles: la patente de Córdoba contiene 'valuacion'
+    // en el slug y caería en inmuebles si se evaluara después.
+    { id: 'vehiculos', title: 'Impuestos sobre vehículos', icon: '🚗', kw: ['patente', 'ciclomotor', 'automotor'] },
+    { id: 'inmuebles', title: 'Compraventa de inmuebles', icon: '🏠', kw: ['inmueble', 'inmobiliario', 'escritura', 'escriturar', 'escribano', 'valuacion', 'iti'] },
+    { id: 'otros-paises', title: 'Impuestos de otros países', icon: '🌍', kw: ['irpf', 'madrid', 'cataluna', 'espana', 'mexico', 'frontera', 'oficio'] },
   ],
   salud: [
     { id: 'peso', title: 'Peso y composición corporal', icon: '⚖️', kw: ['imc', 'peso', 'grasa', 'corporal', 'indice', 'masa', 'cintura', 'sobrepeso'] },

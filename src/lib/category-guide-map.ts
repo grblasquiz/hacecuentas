@@ -14,7 +14,10 @@
 
 export const CATEGORY_TO_GUIDE: Record<string, string> = {
   finanzas: 'finanzas-personales',
-  negocios: 'finanzas-personales',
+  // Negocios apuntaba a "Finanzas personales" — incoherente para una categoría
+  // de pymes/emprendedores. Marketing y ROI (métricas, LTV, CAC, churn) es la
+  // guía temáticamente más cercana mientras no exista una guía pilar de negocios.
+  negocios: 'marketing-roi-metricas',
   marketing: 'marketing-roi-metricas',
   salud: 'salud-nutricion-fitness',
   deportes: 'salud-nutricion-fitness',
@@ -116,7 +119,8 @@ export const GUIDE_TITLES: Record<string, string> = {
 
 /** Categorías hermanas (temáticas cercanas) para sidebar de categoría. */
 export const SIBLING_CATEGORIES: Record<string, string[]> = {
-  finanzas: ['negocios', 'marketing'],
+  finanzas: ['impuestos', 'negocios'],
+  impuestos: ['finanzas', 'negocios'],
   negocios: ['finanzas', 'marketing'],
   marketing: ['negocios', 'finanzas'],
   salud: ['deportes', 'familia'],
@@ -141,7 +145,7 @@ export const SIBLING_CATEGORIES: Record<string, string[]> = {
 
 /** Reverse map: guía pilar → categorías relacionadas (para links guía→categoría). */
 export const GUIDE_TO_CATEGORIES: Record<string, string[]> = {
-  'finanzas-personales': ['finanzas', 'negocios', 'marketing'],
+  'finanzas-personales': ['finanzas', 'impuestos', 'marketing'],
   'marketing-roi-metricas': ['marketing', 'negocios', 'finanzas'],
   'inversion-inmobiliaria': ['finanzas', 'negocios'],
   'salud-nutricion-fitness': ['salud', 'deportes'],
@@ -150,7 +154,7 @@ export const GUIDE_TO_CATEGORIES: Record<string, string[]> = {
   'matematicas-ciencias': ['matematica', 'ciencia', 'medio-ambiente'],
   'cocina-medidas-recetas': ['cocina'],
   'construccion-diy-hogar': ['construccion', 'jardineria', 'hogar'],
-  'impuestos-argentina-2026': ['finanzas'],
+  'impuestos-argentina-2026': ['impuestos', 'finanzas'],
   'subsidios-anses-2026': ['finanzas', 'familia'],
   'sueldos-argentina-2026': ['finanzas'],
   'vida-cotidiana': ['vida', 'entretenimiento'],
@@ -161,6 +165,11 @@ export const GUIDE_TO_CATEGORIES: Record<string, string[]> = {
 /** Iconos por categoría (fallback). */
 export const CATEGORY_ICONS: Record<string, string> = {
   finanzas: '💰',
+  impuestos: '🧾',
+  hogar: '🏠',
+  clima: '☀️',
+  juegos: '🎲',
+  astronomia: '🔭',
   negocios: '💼',
   marketing: '📣',
   salud: '🩺',
@@ -186,6 +195,11 @@ export const CATEGORY_ICONS: Record<string, string> = {
 /** Títulos legibles de categorías para UI. */
 export const CATEGORY_TITLES: Record<string, string> = {
   finanzas: 'Finanzas',
+  impuestos: 'Impuestos',
+  hogar: 'Hogar',
+  clima: 'Clima',
+  juegos: 'Juegos',
+  astronomia: 'Astronomía',
   negocios: 'Negocios',
   marketing: 'Marketing',
   salud: 'Salud',
