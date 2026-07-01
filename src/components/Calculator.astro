@@ -694,15 +694,6 @@ const formatFreshnessDate = (iso: string): string => {
       {lang === 'en' ? 'Clear data' : lang === 'pt' ? 'Limpar dados' : 'Borrar datos'}
     </button>
 
-    {/* "Seguí calculando" — contenido inyectado vía slot desde CalcLayoutV2
-        (NextCalcs, locale-correcto). Va DENTRO del form a propósito: así vive en
-        la celda de la columna izquierda (grid-column 1) y llena el hueco que el
-        form —más corto— dejaba frente al panel de resultados. Oculto hasta que
-        hay resultado (:has en calc-redesign.css). En embed (sin slot) queda
-        vacío → no renderiza. */}
-    <div class="calc-next-box" data-nosnippet data-next-box>
-      <slot name="next-steps" />
-    </div>
   </form>
 
   {/* Mi Hacé Cuentas: prefill + writeback del perfil numérico. Sólo si la calc
@@ -1040,6 +1031,15 @@ const formatFreshnessDate = (iso: string): string => {
         <input type="email" placeholder={t.emailPlaceholder} required data-email-input>
         <button type="submit" data-label-sending={t.sending}>{t.send}</button>
       </form>
+      {/* Opt-in de alerta por dato FUSIONADO acá (antes era un módulo aparte
+          .data-alert con su propio input de email — dos pedidos de correo en
+          el mismo panel). Un solo email, una decisión extra opcional. */}
+      {alertableFields.length > 0 && (
+        <label class="email-alert-optin">
+          <input type="checkbox" data-email-alert-optin data-alert-source={alertSource}>
+          <span class="email-alert-optin-txt"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg> {lang === 'en' ? `Also notify me when ${alertTopic} changes` : lang === 'pt' ? `Avise-me também quando ${alertTopic} mudar` : `Avisame también cuando cambie ${alertTopic}`}</span>
+        </label>
+      )}
       <p class="email-note">{t.emailNote}</p>
       <p class="email-success" data-email-status style="display:none" data-msg-sent={t.emailSuccess} data-msg-saved={t.emailSaved} data-msg-error={t.emailError}></p>
     </div>
@@ -1099,20 +1099,10 @@ const formatFreshnessDate = (iso: string): string => {
     <!-- Calc usage counter -->
     <div class="calc-counter" data-calc-counter style="display:none"></div>
 
-    {alertableFields.length > 0 && (
-      <div class="data-alert" data-data-alert data-alert-source={alertSource}>
-        <p class="data-alert-heading">
-          <span class="data-alert-bell" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></span>
-          <strong>{lang === 'en' ? `Notify me when ${alertTopic} changes` : lang === 'pt' ? `Avise-me quando ${alertTopic} mudar` : `Avisame cuando cambie ${alertTopic}`}</strong>
-        </p>
-        <form class="data-alert-form" data-data-alert-form>
-          <input type="email" placeholder={t.emailPlaceholder} required data-data-alert-input aria-label={t.emailPlaceholder}>
-          <button type="submit">{lang === 'en' ? 'Notify me' : lang === 'pt' ? 'Avisar' : 'Avisarme'}</button>
-        </form>
-        <p class="data-alert-note">{t.emailNote}</p>
-        <p class="data-alert-success" data-data-alert-success hidden>{lang === 'en' ? 'Done. We will email you when it changes.' : lang === 'pt' ? 'Pronto. Avisaremos por e-mail quando mudar.' : 'Listo. Te avisamos por email cuando cambie.'}</p>
-      </div>
-    )}
+    {/* El módulo "Avisame cuando cambie" (.data-alert) se FUSIONÓ con el
+        email-capture de arriba: era un segundo input de email en el mismo
+        panel. Ahora es un checkbox opt-in dentro del email-capture; cuando el
+        calc es alertEligible, el alert-capture ya cubre la alerta de cambio. */}
 
     <!-- Feedback inline: thumbs + comentario opcional -->
     <div class="feedback" data-feedback>
@@ -1136,6 +1126,16 @@ const formatFreshnessDate = (iso: string): string => {
       </div>
       <div class="feedback-thanks" data-feedback-thanks hidden>{lang === 'en' ? 'Thanks! Your feedback helps us improve.' : '¡Gracias! Tu feedback nos ayuda a mejorar.'}</div>
     </div>
+  </div>
+
+  {/* "Seguí calculando" — contenido inyectado vía slot desde CalcLayoutV2
+      (NextCalcs, locale-correcto). Va DESPUÉS de .calc-results a propósito:
+      en mobile queda apilado DEBAJO del resultado (antes vivía dentro del form
+      y aparecía arriba del resultado), y en desktop ocupa el ancho completo
+      bajo el widget. Oculto hasta que hay resultado (:has en calc-redesign.css).
+      En embed (sin slot) queda vacío → no renderiza. */}
+  <div class="calc-next-box" data-nosnippet data-next-box>
+    <slot name="next-steps" />
   </div>
 
   <div class="calc-error" data-nosnippet id={`error-${config.slug}`} hidden role="alert"></div>
@@ -3107,6 +3107,26 @@ const formatFreshnessDate = (iso: string): string => {
   }
   .email-form button:hover {
     background: var(--accent-hover);
+  }
+  /* Opt-in "avisame cuando cambie" fusionado dentro del email-capture */
+  .email-alert-optin {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 0.25rem 0 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .email-alert-optin input[type="checkbox"] {
+    margin: 0.125rem 0 0;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+  }
+  .email-alert-optin-txt svg {
+    display: inline-flex;
+    vertical-align: -2px;
+    color: var(--accent);
   }
   .email-note {
     font-size: 0.75rem;
@@ -5309,33 +5329,9 @@ const formatFreshnessDate = (iso: string): string => {
       }
     });
 
-    // ── #9 Alerta por dato (alertableFields): suscripción a /api/newsletter ──
-    const dataAlertEl = container.querySelector<HTMLElement>('[data-data-alert]');
-    if (dataAlertEl) {
-      const alertForm = dataAlertEl.querySelector<HTMLFormElement>('[data-data-alert-form]');
-      const alertSource = dataAlertEl.getAttribute('data-alert-source') || 'alert';
-      alertForm?.addEventListener('submit', (ev) => {
-        ev.preventDefault();
-        const input = alertForm.querySelector<HTMLInputElement>('[data-data-alert-input]');
-        const email = (input?.value || '').trim();
-        if (!email) return;
-        fetch('/api/newsletter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, source: alertSource }),
-          keepalive: true,
-        }).catch(() => { /* silencioso */ });
-        // Feedback inmediato (optimista).
-        alertForm.style.display = 'none';
-        const note = dataAlertEl.querySelector<HTMLElement>('.data-alert-note');
-        if (note) note.style.display = 'none';
-        const ok = dataAlertEl.querySelector<HTMLElement>('[data-data-alert-success]');
-        if (ok) ok.hidden = false;
-        if (typeof (window as any).gtag === 'function') {
-          (window as any).gtag('event', 'data_alert_subscribe', { calc_slug: slug, alert_source: alertSource });
-        }
-      });
-    }
+    // #9 Alerta por dato (alertableFields): el módulo standalone .data-alert se
+    // fusionó como checkbox opt-in dentro del email-capture (ver handler de
+    // [data-email-form] más abajo) — un solo pedido de email en el panel.
 
     // ── #7 Prueba social real: badge de votos 👍 si up ≥ 30 ──
     if (socialProofEl) {
@@ -5939,6 +5935,22 @@ const formatFreshnessDate = (iso: string): string => {
         // se cierra durante el await. Mismo shape histórico (sólo calc_slug).
         if (typeof (window as any).gtag === 'function') {
           (window as any).gtag('event', 'email_capture', { calc_slug: slug });
+        }
+
+        // Opt-in "avisame cuando cambie" (ex módulo .data-alert, fusionado acá):
+        // mismo POST optimista a /api/newsletter que hacía el módulo standalone.
+        const alertOptin = emailForm.querySelector<HTMLInputElement>('[data-email-alert-optin]');
+        if (alertOptin?.checked) {
+          const optinSource = alertOptin.getAttribute('data-alert-source') || 'alert';
+          fetch('/api/newsletter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, source: optinSource }),
+            keepalive: true,
+          }).catch(() => { /* silencioso */ });
+          if (typeof (window as any).gtag === 'function') {
+            (window as any).gtag('event', 'data_alert_subscribe', { calc_slug: slug, alert_source: optinSource });
+          }
         }
 
         // Obtener resultado primary

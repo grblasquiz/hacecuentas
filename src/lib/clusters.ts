@@ -458,7 +458,7 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Ciclo menstrual",
     "items": [
       {
-        "slug": "calculadora-calendario-ovulacion-ciclo-menstrual",
+        "slug": "calculadora-ovulacion-dias-fertiles",
         "label": "Calendario ovulación",
         "icon": "🌸"
       },
@@ -489,11 +489,6 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🌙"
       },
       {
-        "slug": "calculadora-melatonina-dosis-sueno-edad",
-        "label": "Melatonina dosis",
-        "icon": "🌙"
-      },
-      {
         "slug": "calculadora-meditacion-minutos-ansiedad-cortisol-impacto",
         "label": "Meditación impacto",
         "icon": "🧘"
@@ -510,7 +505,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "💧"
       },
       {
-        "slug": "calculadora-agua-diaria-recomendada",
+        "slug": "calculadora-agua-diaria-necesaria",
         "label": "Agua diaria RDA",
         "icon": "💧"
       },
@@ -520,7 +515,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🥤"
       },
       {
-        "slug": "calculadora-hidratacion-diaria-personalizada",
+        "slug": "calculadora-agua-diaria-necesaria",
         "label": "Hidratación personal",
         "icon": "💧"
       }

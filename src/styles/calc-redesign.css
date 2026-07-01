@@ -255,13 +255,17 @@ body[data-domain] .calc-v2 .calc-form .btn-primary { color:#fff; }
   .calc-v2 .calc-container > .calc-results{ position:sticky; top:84px; align-self:start; }
 }
 
-/* "Seguí calculando" vive DENTRO del form (columna izquierda). Se revela sólo
-   cuando hay resultado (patrón inverso al empty-preview) y sólo si trae
-   contenido ([data-next-calcs]; en embed o calcs sin relacionadas queda vacío →
-   no aparece). Así llena el hueco que el form —más corto— dejaba frente al
-   panel de resultados. Separado de los botones con un borde superior. */
-.calc-v2 .calc-next-box{ display:none; margin-top:18px; padding-top:18px; border-top:1px solid var(--v2-line); }
+/* "Seguí calculando" es hijo directo del container, DESPUÉS de .calc-results:
+   en mobile queda apilado debajo del resultado y en desktop ocupa el ancho
+   completo bajo las dos columnas (grid-column 1/-1, la regla genérica del
+   container). Se revela sólo cuando hay resultado (patrón inverso al
+   empty-preview) y sólo si trae contenido ([data-next-calcs]; en embed o calcs
+   sin relacionadas queda vacío → no aparece). */
+.calc-v2 .calc-next-box{ display:none; padding-top:18px; padding-bottom:20px; border-top:1px solid var(--v2-line); }
 .calc-v2 .calc-container:has(.calc-results:not([hidden])) .calc-next-box:has([data-next-calcs]){ display:block; }
+@media (min-width: 861px){
+  .calc-v2 .calc-container > .calc-next-box{ padding-left:24px !important; padding-right:24px !important; }
+}
 
 /* Input "tipo plata": número grande en mono con prefijo $ */
 .calc-v2 .calc-form :where(input[type="text"],input[type="number"]){ font-family:var(--v2-mono) !important; font-size:18px !important; font-weight:600 !important; color:var(--v2-ink) !important; }

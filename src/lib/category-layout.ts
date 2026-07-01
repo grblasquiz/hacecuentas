@@ -49,7 +49,7 @@ export const FEATURED: Record<string, string[]> = {
     'calculadora-imc',
     'calculadora-calorias-diarias-tdee',
     'calculadora-semanas-embarazo',
-    'calculadora-agua-diaria-recomendada',
+    'calculadora-agua-diaria-necesaria',
   ],
   deportes: [
     // Evergreen y de apelación amplia primero; el descenso es estacional/nicho.
