@@ -1491,9 +1491,14 @@ const schema = {
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse 80% 60% at 20% 10%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 20% 22%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%),
       radial-gradient(ellipse 60% 50% at 80% 30%, rgba(14, 165, 233, 0.06), transparent 55%),
       radial-gradient(ellipse 50% 40% at 50% 90%, rgba(168, 85, 247, 0.05), transparent 50%);
+    /* El tinte se recortaba plano contra el borde superior del hero (overflow:hidden)
+       → línea dura "cortante". Un mask vertical lo hace aparecer con un fundido
+       desde arriba y desvanecerse hacia abajo, sin bordes secos. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 80%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 80%, transparent 100%);
     pointer-events: none;
     z-index: 0;
   }
