@@ -60,6 +60,23 @@ if [ -z "$REAL" ]; then
   exit 0
 fi
 
+# 3b) Bump de frescura para Bing. fetch-all (paso 1) refresca los valores live
+#     pero NO toca `dataUpdate.lastUpdated` de las calcs — ese campo alimenta el
+#     sitemap-fresh.xml que lee Bing. En GitHub Actions lo mantenía el pipeline
+#     update-data, pero ese pipeline vive en el main remoto (forkeado, NO llega
+#     a prod). Acá lo corremos LOCAL: parchea el fallback SSR de las fórmulas
+#     (dólar) + toca lastUpdated en las calcs dólar/UVA/ICL/plazo-fijo. Corre
+#     SOLO tras confirmar cambio de valor real (paso 3), así lastUpdated no se
+#     mueve en días sin cambios (regla #3 SEO: no inflar el sitemap). Es
+#     best-effort: si falla el fetch, se loguea y el deploy sigue igual.
+#     Causa raíz del warning "feed was empty" en sitemap-fresh de Bing (jul-2026).
+log "bump lastUpdated (update-data daily)…"
+if node --experimental-strip-types scripts/update-data/index.ts --frequency=daily >> "$LOG" 2>&1; then
+  log "lastUpdated bumpeado OK"
+else
+  log "update-data WARN (no bloqueante) — deploy sigue"
+fi
+
 # 4) Deploy (force-full; auto-commitea los JSON). Incremental rompe root-routes.
 log "valores cambiaron → deployando…"
 log "$(echo "$REAL" | grep -E '^[+]' | head -8 | tr '\n' ' ')"
