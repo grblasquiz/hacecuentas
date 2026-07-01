@@ -13,8 +13,10 @@ import { sourceRel } from '../lib/source-rel';
 interface Props {
   data: FeriadosPais;
   related?: { href: string; label: string }[];
+  title?: string;
+  description?: string;
 }
-const { data, related = [] } = Astro.props as Props;
+const { data, related = [], title: titleOverride, description: descriptionOverride } = Astro.props as Props;
 const { pais, gentilicio, audience, slug, totalLabel, dataAsOf, marco, notaTipo, fuentes, feriados } = data;
 
 const SITE = 'https://hacecuentas.com';
@@ -29,8 +31,8 @@ const fmtFecha = (iso: string) => {
   return `${d}/${meses[Number(m) - 1]}`;
 };
 
-const title = `Calendario ${pais} 2026: feriados y días festivos con fechas | Hacé Cuentas`;
-const description = `Calendario ${pais} 2026: los ${total} feriados y días festivos con la fecha exacta, el día de la semana y todos los fines de semana largos y puentes. Mirá cuál es el próximo. Datos oficiales verificados.`;
+const title = titleOverride ?? `Calendario ${pais} 2026: feriados y días festivos con fechas | Hacé Cuentas`;
+const description = descriptionOverride ?? `Calendario ${pais} 2026: los ${total} feriados y días festivos con la fecha exacta, el día de la semana y todos los fines de semana largos y puentes. Mirá cuál es el próximo. Datos oficiales verificados.`;
 
 const faq = [
   { q: `¿Cuántos feriados hay en ${pais} en 2026?`, a: `En 2026 hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de arriba.` },
