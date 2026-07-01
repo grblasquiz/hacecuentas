@@ -1,0 +1,353 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const title = '¿Qué sueldo necesito para...? Calculadoras 2026 | Hacé Cuentas';
+const description =
+  'Qué sueldo necesitás para alquilar, comprar un auto, sacar un crédito, mantener una familia o vivir del monotributo. Calculadoras con las reglas que usan bancos e inmobiliarias, actualizadas 2026.';
+
+const cards = [
+  {
+    href: '/calculadora-sueldo-minimo-para-alquilar',
+    icon: '🏠',
+    title: 'Alquilar',
+    desc: 'El sueldo mínimo para que el alquiler no supere el 30% de tu ingreso (la regla que miran las inmobiliarias).',
+  },
+  {
+    href: '/calculadora-que-sueldo-necesito-para-comprar-un-auto',
+    icon: '🚗',
+    title: 'Comprar un auto',
+    desc: 'Cuota del prendario con sistema francés y regla del 20%: qué sueldo banca el auto que querés.',
+  },
+  {
+    href: '/calculadora-que-sueldo-necesito-para-sacar-un-credito',
+    icon: '🏦',
+    title: 'Sacar un crédito',
+    desc: 'La relación cuota-ingreso (RCI) que aplican los bancos: cuánto tenés que demostrar para que te aprueben.',
+  },
+  {
+    href: '/calculadora-capacidad-credito-hipotecario',
+    icon: '🔑',
+    title: 'Un crédito hipotecario',
+    desc: 'Cuánto te presta el banco para la vivienda según tu sueldo, y qué ingreso exige la propiedad que mirás.',
+  },
+  {
+    href: '/calculadora-sueldo-bruto-desde-neto',
+    icon: '💵',
+    title: 'Cobrar $X netos',
+    desc: 'El bruto que tenés que negociar para que te quede el neto que querés, después de aportes y descuentos.',
+  },
+  {
+    href: '/calculadora-cuanto-necesito-ganar-para-mantener-una-familia',
+    icon: '👨‍👩‍👧‍👦',
+    title: 'Mantener una familia',
+    desc: 'Canasta Básica Total del INDEC por adulto equivalente + alquiler + ahorro: el ingreso que necesita tu hogar.',
+  },
+  {
+    href: '/calculadora-cuanto-tengo-que-facturar-para-ganar-x-neto',
+    icon: '🧾',
+    title: 'Facturar para ganar $X',
+    desc: 'Cuánto facturar como monotributista para que, pagada la cuota y los gastos, te quede el neto que buscás.',
+  },
+  {
+    href: '/calculadora-cuanto-facturar-cubrir-gastos',
+    icon: '📊',
+    title: 'Cubrir mis gastos facturando',
+    desc: 'El punto de equilibrio del freelancer: la facturación mínima que cubre tus gastos fijos más un margen.',
+  },
+  {
+    href: '/decidir/cuanto-sueldo-para-mantener-mi-nivel-de-vida',
+    icon: '🧭',
+    title: 'Mantener mi nivel de vida',
+    desc: 'Sala de decisión completa: cargás tus gastos reales y te decimos el sueldo que sostiene tu vida actual.',
+  },
+];
+
+const faq = [
+  {
+    q: '¿Qué sueldo necesito para alquilar en Argentina?',
+    a: 'La regla estándar dice que el alquiler (con expensas) no debería superar el 30% de tu ingreso neto: sueldo mínimo = alquiler ÷ 0,30. Las inmobiliarias suelen pedir que el sueldo sea 3 veces el alquiler. Para un alquiler de $400.000 necesitás alrededor de $1.333.000 en mano.',
+  },
+  {
+    q: '¿Qué porcentaje del sueldo puede irse en la cuota de un auto o un préstamo?',
+    a: 'Para el auto, la regla de finanzas personales es que la cuota del prendario no supere el 20% del ingreso neto (y el costo total de tenencia, el 35%). Para préstamos personales, los bancos aplican una relación cuota-ingreso (RCI) de entre 25% y 35%: con el estándar del 30%, necesitás ganar unas 3,3 veces la cuota.',
+  },
+  {
+    q: '¿Cuánto necesita ganar una familia tipo para no ser pobre?',
+    a: 'El INDEC mide el umbral con la Canasta Básica Total por adulto equivalente: una familia tipo (2 adultos + 2 hijos) equivale a 3,26 adultos equivalentes, así que su línea de pobreza es 3,26 × la CBT del mes. Si el hogar alquila, hay que sumar el alquiler real, que la CBT subestima.',
+  },
+  {
+    q: '¿Cuánto tengo que facturar como monotributista para igualar un sueldo?',
+    a: 'Al neto deseado hay que sumarle la cuota del monotributo de la categoría en la que caés (que depende de tu facturación anual) y tus gastos del negocio. Por ejemplo, para que te queden $2.000.000 netos por mes en servicios tenés que facturar alrededor de $2.072.000 mensuales (categoría D de la escala vigente).',
+  },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      name: '¿Qué sueldo necesito para...?',
+      description,
+      url: `${site}/que-sueldo-necesito`,
+      inLanguage: 'es-AR',
+      isPartOf: { '@id': `${site}/#website` },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+        { '@type': 'ListItem', position: 2, name: '¿Qué sueldo necesito?', item: `${site}/que-sueldo-necesito` },
+      ],
+    },
+    {
+      '@type': 'ItemList',
+      itemListElement: cards.map((c, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${site}${c.href}`,
+        name: `¿Qué sueldo necesito para ${c.title.toLowerCase()}?`,
+      })),
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+
+<Layout title={title} description={description} schema={schema} audience="AR">
+  <Header slot="header" />
+
+  <main class="qs">
+    <header class="qs-head">
+      <span class="qs-eyebrow">💰 Guía 2026</span>
+      <h1>¿Qué sueldo necesito para...?</h1>
+      <p class="qs-lede">
+        Antes de firmar un contrato, pedir un crédito o renunciar para ser freelance, hacé la
+        cuenta al revés: <strong>del objetivo a tu sueldo</strong>. Elegí qué querés lograr y te
+        decimos cuánto necesitás ganar, con las mismas reglas que usan bancos, inmobiliarias y
+        el INDEC. Sin registro, con datos 2026.
+      </p>
+    </header>
+
+    <ul class="qs-grid">
+      {cards.map((c) => (
+        <li>
+          <a href={c.href} class="qs-card">
+            <span class="qs-icon" aria-hidden="true">{c.icon}</span>
+            <span class="qs-card-title">{c.title}</span>
+            <span class="qs-card-desc">{c.desc}</span>
+            <span class="qs-card-cta">Calcular →</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <section class="qs-text">
+      <h2>Las reglas detrás de cada cuenta</h2>
+      <p>
+        Todas estas calculadoras responden la misma pregunta con distinta ropa: <em>¿mi ingreso
+        banca esta decisión?</em> La diferencia está en la regla que aplica cada caso, y conocerlas
+        te ahorra sorpresas antes de comprometerte.
+      </p>
+      <p>
+        <strong>Para alquilar, la regla es el 30%.</strong> Viene de los estudios de vivienda de
+        EE.UU. (HUD) y es la vara que usan las inmobiliarias argentinas cuando piden que el sueldo
+        sea "3 veces el alquiler". Si el alquiler con expensas supera el 30% de tu ingreso neto,
+        cualquier aumento por ICL te deja sin margen.
+        <a href="/calculadora-sueldo-minimo-para-alquilar">Calculá el sueldo mínimo para alquilar</a>
+        con tu alquiler real.
+      </p>
+      <p>
+        <strong>Para el auto, la regla es el 20%.</strong> La cuota del prendario no debería
+        llevarse más del 20% de tu sueldo neto, porque el auto suma costos por fuera de la cuota
+        — seguro, patente, nafta, service — que empujan el costo total de tenencia hacia el 35%.
+        La cuenta se hace con la cuota del sistema francés sobre el monto financiado:
+        <a href="/calculadora-que-sueldo-necesito-para-comprar-un-auto">probala con el auto que estás mirando</a>.
+      </p>
+      <p>
+        <strong>Para un préstamo, los bancos miran la RCI.</strong> La relación cuota-ingreso es
+        el filtro con el que se aprueba o rechaza tu solicitud: la cuota no puede superar entre el
+        25% y el 35% de tu ingreso neto demostrable (el estándar es 30%, o sea que necesitás ganar
+        unas 3,3 veces la cuota). Aplica a
+        <a href="/calculadora-que-sueldo-necesito-para-sacar-un-credito">préstamos personales</a> y,
+        con plazos más largos y tasas menores, al
+        <a href="/calculadora-capacidad-credito-hipotecario">crédito hipotecario</a>.
+      </p>
+      <p>
+        <strong>Para mantener una familia, la vara es el adulto equivalente.</strong> El INDEC no
+        mide por persona: convierte a cada integrante del hogar en "adultos equivalentes" (un
+        adulto = 1,00, un menor = 0,63 en promedio) y multiplica por la Canasta Básica Total del
+        mes. Una familia tipo equivale a 3,26 adultos equivalentes — ese es su umbral de pobreza,
+        al que hay que sumarle el alquiler real si no hay vivienda propia.
+        <a href="/calculadora-cuanto-necesito-ganar-para-mantener-una-familia">Calculá el ingreso que necesita tu hogar</a>.
+      </p>
+      <p>
+        <strong>Y si sos freelance, la cuenta se da vuelta.</strong> Tu "sueldo" es lo que queda
+        después de la cuota del monotributo y los gastos del negocio, así que la pregunta es
+        cuánto facturar para llegar al neto que querés — con la trampa de que la cuota depende de
+        la categoría y la categoría de cuánto facturás.
+        <a href="/calculadora-cuanto-tengo-que-facturar-para-ganar-x-neto">Resolvela acá</a>, o
+        empezá por el <a href="/calculadora-cuanto-facturar-cubrir-gastos">punto de equilibrio de tus gastos</a>.
+        Y si venís de relación de dependencia, acordate de que lo que negociás es bruto:
+        <a href="/calculadora-sueldo-bruto-desde-neto">convertí el neto que querés al bruto que tenés que pedir</a>.
+      </p>
+      <p>
+        Un consejo transversal: hacé todas estas cuentas con tu <strong>ingreso neto</strong> (en
+        mano), nunca con el bruto, y dejá siempre un margen para ahorro — si el número te da justo
+        hoy, con la próxima suba de alquiler o de cuota deja de darte.
+      </p>
+    </section>
+
+    <section class="qs-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (
+        <details class="qs-faq-item">
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+    </section>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .qs {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+  .qs-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .qs-eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--accent-strong, #0369a1);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .qs-head h1 {
+    margin: 0;
+    font-size: clamp(1.625rem, 5vw, 2.375rem);
+    line-height: 1.15;
+    color: var(--text);
+  }
+  .qs-lede {
+    margin: 0;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--text);
+    max-width: 62ch;
+  }
+  .qs-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .qs-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 0.75rem);
+    background: var(--bg);
+    text-decoration: none;
+    transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+  }
+  .qs-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
+  }
+  .qs-icon {
+    font-size: 1.75rem;
+  }
+  .qs-card-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+  }
+  .qs-card-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    flex: 1;
+  }
+  .qs-card-cta {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--accent-strong, #0369a1);
+  }
+  .qs-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .qs-text h2 {
+    margin: 0;
+    font-size: 1.375rem;
+    color: var(--text);
+  }
+  .qs-text p {
+    margin: 0;
+    font-size: 0.9875rem;
+    line-height: 1.65;
+    color: var(--text);
+    max-width: 70ch;
+  }
+  .qs-text a {
+    color: var(--accent-strong, #0369a1);
+  }
+  .qs-faq {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .qs-faq h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.375rem;
+    color: var(--text);
+  }
+  .qs-faq-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 0.75rem);
+    background: var(--bg);
+    padding: 0.75rem 1rem;
+  }
+  .qs-faq-item summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9875rem;
+    color: var(--text);
+  }
+  .qs-faq-item p {
+    margin: 0.6rem 0 0.15rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+</style>

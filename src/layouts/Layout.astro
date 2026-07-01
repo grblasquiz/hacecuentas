@@ -677,9 +677,6 @@ const globalSchema = {
     <!-- Mi Hacé Cuentas: store del perfil numérico. Primero en el body para que
          window.HCProfile exista antes que los inline scripts de las calcs. -->
     <ProfileStore />
-    <!-- Print-only header (hidden on screen, visible when printing) -->
-    <div class="print-header" aria-hidden="true">{lang === 'en' ? 'Calculator result — hacecuentas.com' : lang === 'pt' ? 'Resultado da calculadora — hacecuentas.com' : 'Resultado de calculadora — hacecuentas.com'}</div>
-
     <slot name="header" />
     <main id="main" tabindex="-1">
       <slot />
@@ -743,7 +740,7 @@ const globalSchema = {
     </script>
 
     <!-- Service Worker — solo en producción y si el browser lo soporta -->
-    <!-- SW registration + print-header date: diferidos a idle para no bloquear TBT -->
+    <!-- SW registration diferido a idle para no bloquear TBT -->
     <script is:inline>
       (function () {
         var deferFn = window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); };
@@ -752,19 +749,36 @@ const globalSchema = {
           if ('serviceWorker' in navigator && location.protocol === 'https:') {
             navigator.serviceWorker.register('/sw.js').catch(function () {});
           }
-          // Print header date (lang-aware via html lang attr)
-          var ph = document.querySelector('.print-header');
-          if (ph) {
-            var d = new Date();
-            var htmlLang = (document.documentElement.lang || '').toLowerCase();
-            var isEn = htmlLang.indexOf('en') === 0;
-            var isPt = htmlLang.indexOf('pt') === 0;
-            var locale = isEn ? 'en-US' : isPt ? 'pt-BR' : 'es-AR';
-            var fecha = d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
-            var label = isEn ? 'Calculator result' : isPt ? 'Resultado da calculadora' : 'Resultado de calculadora';
-            ph.textContent = label + ' — hacecuentas.com — ' + fecha;
-          }
         });
+        // Print header: NO vive en el HTML inicial (Google lo estaba usando como
+        // snippet — "Resultado de calculadora" aparecía antes del contenido real).
+        // Se inyecta recién en beforeprint (lo dispara también window.print()).
+        function ensurePrintHeader() {
+          if (document.querySelector('.print-header')) return;
+          var d = new Date();
+          var htmlLang = (document.documentElement.lang || '').toLowerCase();
+          var isEn = htmlLang.indexOf('en') === 0;
+          var isPt = htmlLang.indexOf('pt') === 0;
+          var locale = isEn ? 'en-US' : isPt ? 'pt-BR' : 'es-AR';
+          var fecha = d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+          var label = isEn ? 'Calculator result' : isPt ? 'Resultado da calculadora' : 'Resultado de calculadora';
+          var ph = document.createElement('div');
+          ph.className = 'print-header';
+          ph.setAttribute('aria-hidden', 'true');
+          ph.setAttribute('data-nosnippet', '');
+          ph.textContent = label + ' — hacecuentas.com — ' + fecha;
+          document.body.insertBefore(ph, document.body.firstChild);
+        }
+        window.addEventListener('beforeprint', ensurePrintHeader);
+        // Fallback Safari viejo (sin beforeprint confiable): matchMedia('print')
+        if (window.matchMedia) {
+          try {
+            var mql = window.matchMedia('print');
+            var mmHandler = function (e) { if (e.matches) ensurePrintHeader(); };
+            if (mql.addEventListener) mql.addEventListener('change', mmHandler);
+            else if (mql.addListener) mql.addListener(mmHandler);
+          } catch (e) {}
+        }
       })();
     </script>
 

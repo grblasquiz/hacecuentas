@@ -1,0 +1,311 @@
+---
+// Landing por vertical de Partner Studio (/partners/<vertical>).
+// Estrategia de link building: cada rubro ve las calcs que le sirven, con el
+// código de embed listo. El widget incluye el enlace "Powered by Hacé Cuentas"
+// en la página host — ese es el intercambio: herramienta gratis por atribución.
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Newsletter from '../../components/Newsletter.astro';
+import { VERTICALES } from '../../lib/partners/verticales';
+
+export function getStaticPaths() {
+  return VERTICALES.map((v) => ({ params: { vertical: v.slug }, props: { vertical: v } }));
+}
+
+const { vertical } = Astro.props;
+
+const ORIGIN = 'https://hacecuentas.com';
+const pageUrl = `${ORIGIN}/partners/${vertical.slug}`;
+
+const title = `Calculadoras embebibles para ${vertical.nombre.toLowerCase()} — Hacé Cuentas`;
+const description =
+  `${vertical.headline}. Embebé gratis calculadoras como ${vertical.calcs
+    .slice(0, 3)
+    .map((c) => c.nombre.toLowerCase())
+    .join(', ')} en tu sitio con una línea de código. Siempre actualizadas, con tu marca.`;
+
+const demoCalc = vertical.calcs[0];
+
+function snippetFor(slug: string): string {
+  return `<script async src="https://hacecuentas.com/hc.js"><\/script>\n<hace-cuentas calculator="${slug}"></hace-cuentas>`;
+}
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  '@id': `${pageUrl}#webpage`,
+  name: title,
+  description,
+  url: pageUrl,
+  inLanguage: ['es', 'es-AR', 'es-419'],
+  isPartOf: { '@type': 'WebSite', name: 'Hacé Cuentas', url: ORIGIN },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Hacé Cuentas',
+    url: ORIGIN,
+    logo: `${ORIGIN}/favicon.svg`,
+  },
+};
+
+const schemaItemList = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  '@id': `${pageUrl}#calcs`,
+  name: `Calculadoras embebibles para ${vertical.nombre.toLowerCase()}`,
+  numberOfItems: vertical.calcs.length,
+  itemListElement: vertical.calcs.map((c, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: c.nombre,
+    url: `${ORIGIN}/${c.slug}`,
+  })),
+};
+
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${ORIGIN}/` },
+    { '@type': 'ListItem', position: 2, name: 'Partner Studio', item: `${ORIGIN}/partners` },
+    { '@type': 'ListItem', position: 3, name: vertical.nombre, item: pageUrl },
+  ],
+};
+---
+
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="vertical-page">
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs" aria-label="Migas de pan">
+      <a href="/">Inicio</a>
+      <span aria-hidden="true">›</span>
+      <a href="/partners">Partner Studio</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">{vertical.nombre}</span>
+    </nav>
+
+    <!-- 1. HERO -->
+    <header class="hero">
+      <div class="hero__badge"><span aria-hidden="true">{vertical.icon}</span> Partner Studio · {vertical.nombre}</div>
+      <h1>{vertical.headline}</h1>
+      <p class="hero__sub">{vertical.pitch}</p>
+      <div class="hero__cta">
+        <a href="#calcs" class="btn-primary">Ver las calculadoras <span aria-hidden="true">→</span></a>
+        <a href="#demo" class="btn-ghost">Ver una demo en vivo</a>
+      </div>
+    </header>
+
+    <!-- 2. EJEMPLO DE USO -->
+    <section class="example-section" aria-labelledby="example-heading">
+      <div class="example-box">
+        <h2 id="example-heading">En la práctica</h2>
+        <p>{vertical.ejemploUso}</p>
+      </div>
+    </section>
+
+    <!-- 3. CALCS DEL VERTICAL -->
+    <section id="calcs" class="calcs-section" aria-labelledby="calcs-heading">
+      <h2 id="calcs-heading">Calculadoras para {vertical.nombre.toLowerCase()}</h2>
+      <p class="section-intro">
+        Cada una se embebe con dos líneas: pegás el código y listo. Sin API keys, sin registro,
+        sin nada que mantener.
+      </p>
+      <div class="calc-cards">
+        {vertical.calcs.map((c) => (
+          <div class="calc-card">
+            <div class="calc-card__head">
+              <h3>{c.nombre}</h3>
+              <a class="calc-card__demo" href={`/${c.slug}`}>Ver demo <span aria-hidden="true">→</span></a>
+            </div>
+            <p class="calc-card__uso">{c.usoSugerido}</p>
+            <div class="code-block-wrapper">
+              <div class="code-block-header">
+                <span class="code-block-label">Código para embeber</span>
+                <button class="btn-copy" type="button" data-code={snippetFor(c.slug)} aria-label={`Copiar código de ${c.nombre}`}>
+                  Copiar código
+                </button>
+              </div>
+              <pre class="code-block"><code>{snippetFor(c.slug)}</code></pre>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- 4. DEMO VIVA -->
+    <section id="demo" class="demo-section" aria-labelledby="demo-heading">
+      <h2 id="demo-heading">Así se ve en tu sitio</h2>
+      <p class="section-intro">
+        Esto no es una captura: es el widget real de <strong>{demoCalc.nombre}</strong>, funcionando
+        con el mismo código que copiás arriba. Probalo.
+      </p>
+      <div class="demo-frame">
+        <span class="demo-frame__label">Demo en vivo — {demoCalc.nombre}</span>
+        <hace-cuentas calculator={demoCalc.slug}></hace-cuentas>
+      </div>
+    </section>
+
+    <!-- 5. ATRIBUCIÓN -->
+    <section class="attribution-section" aria-labelledby="attr-heading">
+      <div class="attribution-inner">
+        <div class="attribution-icon" aria-hidden="true">🤝</div>
+        <h2 id="attr-heading">Cómo funciona la atribución</h2>
+        <p>
+          El widget incluye un enlace editorial visible, <strong>"Powered by Hacé Cuentas"</strong>,
+          que apunta a la calculadora y su metodología. Es lo único que pedimos: la herramienta es
+          <strong>gratuita a cambio de mantener ese enlace</strong> en tu página. Así el proyecto se
+          sostiene y tu widget se actualiza solo cuando cambia una ley o un valor.
+        </p>
+        <p class="attribution-reason">
+          ¿Querés personalizar color, logo o el botón de acción con tu URL? Está disponible para
+          partners: armá tu widget en el <a href="/partners">Partner Studio</a> o escribinos desde
+          <a href="/contacto">contacto</a>.
+        </p>
+      </div>
+    </section>
+
+    <!-- 6. CTA FINAL -->
+    <section class="cta-final" aria-labelledby="cta-heading">
+      <h2 id="cta-heading">Personalizalo con tu marca</h2>
+      <p>
+        En el Partner Studio configurás color, logo, título y CTA propios, con vista previa en vivo,
+        y salís con el código listo.
+      </p>
+      <div class="hero__cta">
+        <a href="/partners" class="btn-primary btn-primary--large">Abrir el Partner Studio <span aria-hidden="true">→</span></a>
+        <a href="/contacto" class="btn-ghost">Hablar con nosotros</a>
+      </div>
+    </section>
+
+    <Newsletter />
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaItemList)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline async src="/hc.js"></script>
+
+  <script>
+    // Botones "Copiar código" (dentro del Layout: después de </Layout> no corren).
+    function copyText(btn: HTMLButtonElement, text: string) {
+      const done = () => {
+        const orig = btn.textContent ?? '';
+        btn.textContent = '¡Copiado!';
+        btn.classList.add('btn-copy--success');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('btn-copy--success'); }, 2000);
+      };
+      navigator.clipboard.writeText(text).then(done).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch {}
+        document.body.removeChild(ta); done();
+      });
+    }
+
+    document.querySelectorAll<HTMLButtonElement>('.btn-copy[data-code]').forEach((btn) => {
+      btn.addEventListener('click', () => copyText(btn, btn.dataset.code ?? ''));
+    });
+  </script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .vertical-page { max-width: 960px; margin: 1rem auto 2rem; padding: 0 1rem; }
+
+  .breadcrumbs {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+
+  section { margin-bottom: 4rem; }
+  section h2 { font-size: clamp(1.375rem, 3vw, 1.75rem); margin-bottom: 0.75rem; color: var(--text); }
+  .section-intro { color: var(--text-muted); font-size: 0.9375rem; margin-bottom: 1.5rem; line-height: 1.6; }
+
+  code { font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace; font-size: 0.875em; }
+
+  /* HERO */
+  .hero { text-align: center; padding: 2.5rem 1rem 3rem; border-bottom: 1px solid var(--border); margin-bottom: 3rem; }
+  .hero__badge {
+    display: inline-block; background: var(--accent-subtle, #eff6ff); color: var(--accent);
+    border: 1px solid var(--accent); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1.25rem;
+  }
+  .hero h1 { font-size: clamp(1.75rem, 4.5vw, 2.5rem); line-height: 1.18; margin-bottom: 1rem; }
+  .hero__sub { font-size: 1.0625rem; color: var(--text-muted); max-width: 680px; margin: 0 auto 1.75rem; line-height: 1.6; }
+  .hero__cta { display: flex; gap: 0.75rem; justify-content: center; align-items: center; flex-wrap: wrap; }
+
+  /* Botones */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 0.4em; background: var(--accent); color: #fff;
+    font-size: 1rem; font-weight: 600; padding: 0.75rem 1.75rem; border-radius: var(--radius);
+    text-decoration: none; transition: filter 0.15s, transform 0.15s; border: none; cursor: pointer;
+  }
+  .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); color: #fff; text-decoration: none; }
+  .btn-primary--large { font-size: 1.0625rem; padding: 0.875rem 2rem; }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 0.3em; color: var(--text-muted);
+    font-size: 0.9375rem; font-weight: 500; text-decoration: none; padding: 0.7rem 1rem;
+    border-radius: var(--radius); border: 1px solid var(--border); transition: color 0.15s, border-color 0.15s;
+  }
+  .btn-ghost:hover { color: var(--accent); border-color: var(--accent); text-decoration: none; }
+
+  /* EJEMPLO DE USO */
+  .example-box {
+    background: var(--bg-card); border: 1px solid var(--border); border-left: 4px solid var(--accent);
+    border-radius: var(--radius); padding: 1.5rem 1.75rem;
+  }
+  .example-box h2 { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 0.625rem; }
+  .example-box p { font-size: 1rem; color: var(--text); line-height: 1.7; margin: 0; }
+
+  /* CALC CARDS */
+  .calc-cards { display: flex; flex-direction: column; gap: 1.25rem; }
+  .calc-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.375rem; transition: border-color 0.15s;
+  }
+  .calc-card:hover { border-color: var(--accent); }
+  .calc-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .calc-card__head h3 { font-size: 1.0625rem; font-weight: 700; color: var(--text); margin: 0; }
+  .calc-card__demo { font-size: 0.875rem; font-weight: 600; color: var(--accent); text-decoration: none; white-space: nowrap; }
+  .calc-card__demo:hover { text-decoration: underline; }
+  .calc-card__uso { font-size: 0.9375rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 1rem; }
+
+  /* CODE BLOCKS */
+  .code-block-wrapper { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .code-block-header { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; background: var(--bg-soft, var(--bg)); border-bottom: 1px solid var(--border); }
+  .code-block-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .code-block { margin: 0; padding: 1rem; background: #1e293b; color: #e2e8f0; font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace; font-size: 0.8125rem; line-height: 1.65; overflow-x: auto; tab-size: 2; white-space: pre; }
+  .btn-copy { display: inline-flex; align-items: center; gap: 0.4em; background: var(--bg); color: var(--text); border: 1px solid var(--border); font-size: 0.8125rem; font-weight: 500; padding: 0.35rem 0.8rem; border-radius: var(--radius); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-copy--success { border-color: var(--success, #16a34a) !important; color: var(--success, #16a34a) !important; }
+
+  /* DEMO VIVA */
+  .demo-frame { background: var(--bg-soft); border: 2px dashed var(--border); border-radius: var(--radius); padding: 1rem; min-height: 400px; }
+  .demo-frame__label { display: block; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-subtle); margin-bottom: 0.75rem; }
+
+  /* ATTRIBUTION */
+  .attribution-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem 2rem; }
+  .attribution-inner { max-width: 620px; margin: 0 auto; text-align: center; }
+  .attribution-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+  .attribution-inner h2 { font-size: 1.5rem; margin-bottom: 0.875rem; }
+  .attribution-inner p { font-size: 1rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 0.75rem; }
+  .attribution-inner strong { color: var(--text); }
+  .attribution-inner a { color: var(--accent); }
+  .attribution-reason { font-size: 0.9375rem !important; opacity: 0.9; }
+
+  /* FINAL CTA */
+  .cta-final { text-align: center; padding: 3rem 1rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .cta-final h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); margin-bottom: 0.75rem; }
+  .cta-final p { color: var(--text-muted); font-size: 1rem; max-width: 560px; margin: 0 auto 1.75rem; line-height: 1.6; }
+
+  @media (max-width: 720px) {
+    .calc-card { padding: 1.125rem; }
+  }
+</style>

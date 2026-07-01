@@ -39,7 +39,7 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
           },
           {
             "label": "Neto a bruto",
-            "slug": "calculadora-sueldo-neto-a-bruto"
+            "slug": "calculadora-sueldo-bruto-desde-neto"
           },
           {
             "label": "Tu sueldo vs inflación",

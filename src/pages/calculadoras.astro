@@ -6,6 +6,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { CATEGORY_COLORS, BRAND_DEFAULT } from '../lib/category-colors';
 import { TOTAL_DISPLAY } from '../lib/calc-counts';
+import { PILLARS } from '../lib/pillars';
 
 // Índice navegable de TODAS las calculadoras del catálogo raíz (las que se
 // sirven en /{slug}). Mismo glob que /buscar y /categoria — no incluye las
@@ -96,13 +97,26 @@ const orderedCats = [
 ];
 
 // Dentro de cada categoría, ordenar alfabéticamente por título (locale es).
-const groups = orderedCats.map((cat) => ({
-  cat,
-  label: CATEGORY_LABELS[cat] || cat,
-  icon: CATEGORY_ICONS[cat] || '🧮',
-  color: CATEGORY_COLORS[cat] || BRAND_DEFAULT,
-  calcs: byCat[cat].slice().sort((a, b) => (a.h1 || '').localeCompare(b.h1 || '', 'es')),
-}));
+//
+// ARQUITECTURA jul-2026: la página ya NO renderiza el listado plano completo
+// (~1.750 <a> diluían la autoridad interna: "todas las páginas → todas las
+// calculadoras"). En HTML van sólo las TOP_N destacadas por categoría + el
+// link a /categoria/<cat> (que pagina el resto server-side). El remanente se
+// carga POR INTERACCIÓN desde /search-index.json (client-side, invisible
+// para el crawler) al tocar "Mostrar todas" o al filtrar.
+const TOP_N = 12;
+const groups = orderedCats.map((cat) => {
+  const sorted = byCat[cat].slice().sort((a, b) => (a.h1 || '').localeCompare(b.h1 || '', 'es'));
+  return {
+    cat,
+    label: CATEGORY_LABELS[cat] || cat,
+    icon: CATEGORY_ICONS[cat] || '🧮',
+    color: CATEGORY_COLORS[cat] || BRAND_DEFAULT,
+    calcs: sorted.slice(0, TOP_N),
+    total: sorted.length,
+    hiddenCount: Math.max(0, sorted.length - TOP_N),
+  };
+});
 
 const totalCount = allCalcs.length;
 
@@ -162,12 +176,22 @@ const schemaBreadcrumb = {
   <header class="page-header">
     <h1>Calculadoras para Argentina</h1>
     <p>
-      <strong>{totalCount.toLocaleString('es-AR')}</strong> calculadoras gratuitas para Argentina,
-      ordenadas por categoría. Filtrá por nombre o navegá la lista. Sumando las ediciones
-      por país, la red llega a <strong>{TOTAL_DISPLAY}</strong>.
+      <strong>{totalCount.toLocaleString('es-AR')}</strong> calculadoras gratuitas para Argentina.
+      Buscá por nombre, entrá por categoría o empezá por las destacadas de cada tema.
+      Sumando las ediciones por país, la red llega a <strong>{TOTAL_DISPLAY}</strong>.
     </p>
     <p style="margin-top:0.75rem;font-size:0.9rem;color:var(--text-muted)">🌎 Calculadoras adaptadas por país: <a href="/es/calculadoras" style="color:var(--accent);font-weight:600">España</a> · <a href="/cl/calculadoras" style="color:var(--accent);font-weight:600">Chile</a> · <a href="/co/calculadoras" style="color:var(--accent);font-weight:600">Colombia</a> · <a href="/mx/calculadoras" style="color:var(--accent);font-weight:600">México</a> · <a href="/pe/calculadoras" style="color:var(--accent);font-weight:600">Perú</a> · <a href="/ec/calculadoras" style="color:var(--accent);font-weight:600">Ecuador</a>.</p>
   </header>
+
+  {/* Los 4 pilares: la puerta de entrada recomendada antes del directorio */}
+  <nav class="pillar-strip" aria-label="Pilares principales">
+    {PILLARS.map((p) => (
+      <a href={`/${p.slug}`} class="pillar-strip-card" style={`--pilar: ${p.color}`}>
+        <span class="ps-icon" aria-hidden="true">{p.icon}</span>
+        <span class="ps-name">{p.h1}</span>
+      </a>
+    ))}
+  </nav>
 
   <div class="search-wrap">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -190,7 +214,7 @@ const schemaBreadcrumb = {
     {groups.map((g) => (
       <a class="cat-jump-chip" href={`#cat-${g.cat}`} data-cat={g.cat} style={`--cat: ${g.color}`}>
         <span class="cat-jump-icon" aria-hidden="true">{g.icon}</span>
-        {g.label} <span class="cat-jump-n">{g.calcs.length}</span>
+        {g.label} <span class="cat-jump-n">{g.total}</span>
       </a>
     ))}
   </nav>
@@ -201,11 +225,11 @@ const schemaBreadcrumb = {
         <h2 class="cat-title">
           <span class="cat-title-icon" aria-hidden="true">{g.icon}</span>
           <a href={`/categoria/${g.cat}`}>{g.label}</a>
-          <span class="cat-title-n">{g.calcs.length}</span>
+          <span class="cat-title-n">{g.total}</span>
         </h2>
         <ul class="calc-list">
           {g.calcs.map((c: any) => (
-            <li class="calc-item" data-name={`${c.h1} ${c.slug}`.toLowerCase()}>
+            <li class="calc-item" data-slug={c.slug} data-name={`${c.h1} ${c.slug}`.toLowerCase()}>
               <a href={`/${c.slug}`}>
                 <span class="calc-item-icon" aria-hidden="true">{c.icon || '🧮'}</span>
                 <span class="calc-item-name">{c.h1}</span>
@@ -216,6 +240,14 @@ const schemaBreadcrumb = {
             </li>
           ))}
         </ul>
+        <div class="cat-foot">
+          {g.hiddenCount > 0 && (
+            <button type="button" class="cat-expand" data-expand={g.cat}>
+              Mostrar las {g.hiddenCount} restantes
+            </button>
+          )}
+          <a href={`/categoria/${g.cat}`} class="cat-full">Ver la categoría completa →</a>
+        </div>
       </section>
     ))}
   </div>
@@ -246,6 +278,28 @@ const schemaBreadcrumb = {
   .page-header h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); margin-bottom: 0.5rem; }
   .page-header p { color: var(--text-muted); margin: 0; max-width: 640px; }
   .page-header strong { color: var(--text); }
+
+  .pillar-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.625rem;
+    margin-bottom: 1.5rem;
+  }
+  .pillar-strip-card {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem 0.875rem;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--pilar);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .pillar-strip-card:hover { border-color: var(--pilar); box-shadow: var(--shadow-lg); text-decoration: none; }
+  .ps-icon { font-size: 1.25rem; flex-shrink: 0; }
+  .ps-name { font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.3; }
 
   .search-wrap {
     display: flex;
@@ -380,6 +434,34 @@ const schemaBreadcrumb = {
   .calc-item-name { flex: 1; min-width: 0; }
   .ar-badge { flex-shrink: 0; font-size: 0.9em; line-height: 1; }
 
+  .cat-foot {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.625rem;
+    padding-left: 0.625rem;
+  }
+  .cat-foot[hidden] { display: none; }
+  .cat-expand {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .cat-expand:hover { border-color: var(--cat); color: var(--cat); }
+  .cat-full {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--cat);
+    text-decoration: none;
+  }
+  .cat-full:hover { text-decoration: underline; }
+
   .empty {
     text-align: center;
     padding: 3rem 1rem;
@@ -390,32 +472,110 @@ const schemaBreadcrumb = {
 </style>
 
 <script>
-  // Filtro de texto 100% client-side sobre los nodos ya renderizados. No fetchea
-  // nada — toda la lista vive en el HTML estático. Se re-ata en cada navegación
-  // SPA de Astro (astro:page-load) porque ClientRouter swap-ea el <body>.
+  // Directorio con carga POR INTERACCIÓN (arquitectura de pilares jul-2026):
+  // el HTML estático sólo trae las TOP_N destacadas por categoría. El resto
+  // del catálogo se trae de /search-index.json (mismo índice que el buscador
+  // del header) recién cuando el usuario toca "Mostrar todas" o filtra.
+  // Así el crawler ve un directorio curado y el usuario no pierde nada.
+  // Se re-ata en cada navegación SPA (astro:page-load) porque ClientRouter
+  // swap-ea el <body>.
   function initCalcFilter() {
     const input = document.getElementById('filter-input') as HTMLInputElement | null;
     const clear = document.getElementById('filter-clear');
     const count = document.getElementById('results-count');
     const empty = document.getElementById('empty');
     const list = document.getElementById('cat-list');
-    if (!input || !list) return;
+    if (!input || !list || (list as HTMLElement).dataset.init) return;
+    (list as HTMLElement).dataset.init = '1';
 
-    const items = Array.from(list.querySelectorAll<HTMLElement>('.calc-item'));
     const blocks = Array.from(list.querySelectorAll<HTMLElement>('[data-cat-block]'));
     const jumpChips = Array.from(document.querySelectorAll<HTMLElement>('.cat-jump-chip'));
 
     const norm = (s: string) =>
       s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+    // Categorías que el usuario expandió a mano ("Mostrar todas"): sus items
+    // extra quedan visibles también sin filtro activo.
+    const expandedCats = new Set<string>();
+    let indexPromise: Promise<void> | null = null;
+
+    // Nodos construidos con createElement/textContent (nunca innerHTML con
+    // datos del índice) — mismo criterio anti-XSS que el modal del header.
+    function makeItem(c: any): HTMLElement {
+      const li = document.createElement('li');
+      li.className = 'calc-item';
+      li.dataset.slug = c.s;
+      li.dataset.name = `${c.h} ${c.s}`.toLowerCase();
+      li.dataset.extra = '1';
+      const a = document.createElement('a');
+      a.href = '/' + c.s;
+      const icon = document.createElement('span');
+      icon.className = 'calc-item-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = c.i || '🧮';
+      const name = document.createElement('span');
+      name.className = 'calc-item-name';
+      name.textContent = c.h;
+      a.appendChild(icon);
+      a.appendChild(name);
+      if (c.a === 'AR') {
+        const badge = document.createElement('span');
+        badge.className = 'ar-badge';
+        badge.title = 'Específica para Argentina';
+        badge.textContent = '🇦🇷';
+        a.appendChild(badge);
+      }
+      li.appendChild(a);
+      return li;
+    }
+
+    // Trae el índice completo UNA vez y appendea a cada categoría los items
+    // que el HTML estático no trajo. La visibilidad la decide apply().
+    function ensureIndex(): Promise<void> {
+      if (indexPromise) return indexPromise;
+      indexPromise = fetch('/search-index.json', { cache: 'force-cache' })
+        .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then((data: any[]) => {
+          for (const block of blocks) {
+            const cat = block.getAttribute('data-cat-block');
+            const ul = block.querySelector('.calc-list');
+            if (!cat || !ul) continue;
+            const have = new Set(
+              Array.from(ul.querySelectorAll<HTMLElement>('.calc-item')).map((li) => li.dataset.slug),
+            );
+            const rest = data
+              .filter((c) => (c.c || 'otros') === cat && c.s && !have.has(c.s))
+              .sort((a, b) => (a.h || '').localeCompare(b.h || '', 'es'));
+            const frag = document.createDocumentFragment();
+            for (const c of rest) frag.appendChild(makeItem(c));
+            ul.appendChild(frag);
+          }
+        })
+        .catch((err) => {
+          console.error('[calculadoras] index fetch failed', err);
+          indexPromise = null;
+          throw err;
+        });
+      return indexPromise;
+    }
+
     function apply() {
       const q = norm(input!.value.trim());
       const tokens = q.split(/\s+/).filter(Boolean);
       let visible = 0;
 
+      const items = Array.from(list!.querySelectorAll<HTMLElement>('.calc-item'));
       for (const it of items) {
-        const name = norm(it.dataset.name || '');
-        const match = !tokens.length || tokens.every((t) => name.includes(t));
+        let match: boolean;
+        if (tokens.length) {
+          const name = norm(it.dataset.name || '');
+          match = tokens.every((t) => name.includes(t));
+        } else {
+          // Sin filtro: los items extra (cargados por interacción) sólo se ven
+          // en las categorías que el usuario expandió.
+          const cat = it.closest('[data-cat-block]')?.getAttribute('data-cat-block') || '';
+          match = !it.dataset.extra || expandedCats.has(cat);
+        }
         it.hidden = !match;
         if (match) visible++;
       }
@@ -427,6 +587,9 @@ const schemaBreadcrumb = {
         b.hidden = !anyVisible;
         const chip = jumpChips.find((c) => c.dataset.cat === cat);
         if (chip) chip.hidden = !anyVisible;
+        // El footer de la categoría (expandir / ver completa) sólo sin filtro.
+        const foot = b.querySelector<HTMLElement>('.cat-foot');
+        if (foot) foot.hidden = tokens.length > 0;
       }
 
       if (empty) empty.hidden = visible > 0;
@@ -438,7 +601,36 @@ const schemaBreadcrumb = {
       if (clear) clear.hidden = !input!.value;
     }
 
-    input.addEventListener('input', apply);
+    // "Mostrar las N restantes" por categoría.
+    for (const btn of Array.from(list.querySelectorAll<HTMLElement>('.cat-expand'))) {
+      btn.addEventListener('click', async () => {
+        const cat = btn.getAttribute('data-expand');
+        if (!cat) return;
+        btn.textContent = 'Cargando…';
+        try {
+          await ensureIndex();
+          expandedCats.add(cat);
+          btn.remove();
+          apply();
+        } catch {
+          btn.textContent = 'No se pudo cargar — reintentar';
+        }
+      });
+    }
+
+    let searchToken = 0;
+    input.addEventListener('input', () => {
+      const q = input.value.trim();
+      if (q) {
+        // Filtrar necesita el catálogo completo: lo traemos al primer tipeo y
+        // aplicamos sobre lo que haya mientras tanto (evita esperar el fetch).
+        apply();
+        const my = ++searchToken;
+        ensureIndex().then(() => { if (my === searchToken) apply(); }).catch(() => {});
+      } else {
+        apply();
+      }
+    });
     clear?.addEventListener('click', () => {
       input.value = '';
       input.focus();
@@ -451,6 +643,7 @@ const schemaBreadcrumb = {
     if (q) {
       input.value = q;
       apply();
+      ensureIndex().then(apply).catch(() => {});
     }
   }
 

@@ -9,8 +9,10 @@ import Newsletter from '../components/Newsletter.astro';
 import CategoryIcon from '../components/CategoryIcon.astro';
 import ProblemInterpreter from '../components/ProblemInterpreter.astro';
 import HeroSearch from '../components/HeroSearch.astro';
-import { TOTAL_DISPLAY, PT_DISPLAY, TOTAL_PLAIN, CALC_COUNTS } from '../lib/calc-counts';
+import { TOTAL_DISPLAY, PT_DISPLAY, TOTAL_PLAIN, CALC_COUNTS, CATEGORY_COUNT } from '../lib/calc-counts';
 import { DECISION_MANIFEST } from '../lib/decisions/manifest';
+import { DECISION_HUBS } from '../lib/decisions/hubs';
+import { PILLARS } from '../lib/pillars';
 import { GONE_410_URLS } from '../lib/gone-410';
 import { HOME_HREFLANG } from '../lib/hreflang';
 import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
@@ -83,7 +85,7 @@ calcs.forEach((c) => {
 });
 
 const categoryMeta: Record<string, { label: string; desc: string; color: string; icon: string }> = {
-  finanzas: { label: 'Finanzas', desc: 'Sueldo, aguinaldo, indemnización, préstamos, impuestos.', color: '#2563eb', icon: '💰' },
+  finanzas: { label: 'Finanzas', desc: 'Sueldo, aguinaldo, indemnización, préstamos, inversiones.', color: '#2563eb', icon: '💰' },
   salud: { label: 'Salud', desc: 'IMC, calorías, macros, embarazo, frecuencia cardíaca.', color: '#16a34a', icon: '❤️' },
   negocios: { label: 'Negocios', desc: 'Márgenes, IVA, punto de equilibrio, costo laboral.', color: '#7c3aed', icon: '📊' },
   marketing: { label: 'Marketing', desc: 'CTR, CPC, ROAS, CAC, LTV, MRR, churn.', color: '#e11d48', icon: '📈' },
@@ -111,22 +113,28 @@ const categoryMeta: Record<string, { label: string; desc: string; color: string;
   astronomia: { label: 'Astronomía', desc: 'Peso en planetas, distancias, órbitas.', color: '#4f46e5', icon: '🔭' },
 };
 
-// Categorías destacadas (las más usadas en AR) → cards ricas con sus calcs estrella.
-const featuredCats = ['finanzas', 'salud', 'vida', 'negocios'];
-// Categorías recuperadas que antes no aparecían en la home → badge "Nuevo".
-const newlyAddedCats = new Set(['familia', 'idiomas', 'impuestos', 'hogar', 'clima', 'juegos', 'astronomia']);
-// Mosaico: el resto de las categorías con calcs, ordenadas por volumen desc.
+// ARQUITECTURA jul-2026: las cards destacadas de la home son los 4 PILARES
+// (src/lib/pillars.ts) — hubs curados que concentran la autoridad interna.
+// Las 26 categorías quedan demotadas a chips compactos: siguen crawleables
+// pero sin dominar la arquitectura ni competir con los pilares.
+// Los contadores "N categorías" visibles usan CATEGORY_COUNT (calc-counts).
+const pillarCards = PILLARS.map((p) => ({
+  ...p,
+  top: [p.mainCalc, ...p.calcs]
+    .map((s) => calcs.find((c: any) => c.slug === s))
+    .filter(Boolean)
+    .slice(0, 3),
+}));
+// Chips: TODAS las categorías con calcs, ordenadas por volumen desc.
 const mosaicCats = Object.keys(byCategory)
-  .filter((c) => categoryMeta[c] && !featuredCats.includes(c))
+  .filter((c) => categoryMeta[c])
   .sort((a, b) => byCategory[b].length - byCategory[a].length);
-// Orden completo (alimenta los contadores "N categorías" de la home).
-const categoryOrder = [...featuredCats, ...mosaicCats];
 
 // Top 3 calcs por categoría (curadas para destacar las más útiles)
 const topPerCategory: Record<string, string[]> = {
   finanzas: ['sueldo-en-mano-argentina', 'calculadora-aguinaldo-sac', 'calculadora-indemnizacion-despido'],
   salud: ['calculadora-imc', 'calculadora-calorias-diarias-tdee', 'calculadora-embarazo'],
-  negocios: ['calculadora-iva-agregar-discriminar', 'calculadora-margen-ganancia-markup', 'calculadora-monotributo-vs-responsable-inscripto'],
+  negocios: ['calculadora-iva-agregar-discriminar', 'calculadora-margen-ganancia-markup', 'calculadora-punto-equilibrio-break-even'],
   marketing: ['calculadora-roas-retorno-inversion-publicitaria', 'calculadora-cac-ltv-costo-adquisicion-cliente', 'calculadora-tasa-de-conversion'],
   vida: ['calculadora-edad-exacta', 'calculadora-porcentajes', 'calculadora-regla-de-tres-simple'],
   deportes: ['calculadora-pace-ritmo-running', 'calculadora-1rm-peso-maximo-levantamiento', 'calculadora-calorias-quemadas-deporte'],
@@ -136,7 +144,8 @@ const topPerCategory: Record<string, string[]> = {
   mascotas: ['calculadora-edad-perro-anos-humanos', 'calculadora-edad-gato-anos-humanos', 'calculadora-alimento-diario-perro'],
   matematica: ['calculadora-conversor-pies-a-metros', 'calculadora-conversor-celsius-a-fahrenheit', 'calculadora-teorema-pitagoras-hipotenusa-cateto'],
   educacion: ['calculadora-promedio-ponderado-universidad', 'calculadora-nota-necesaria-aprobar', 'calculadora-costo-universidad-privada-cuota'],
-  automotor: ['calculadora-costo-por-kilometro-auto', 'calculadora-comparar-nafta-vs-gnc-ahorro', 'calculadora-patente-auto-provincia'],
+  automotor: ['calculadora-costo-por-kilometro-auto', 'calculadora-comparar-nafta-vs-gnc-ahorro', 'calculadora-vtv-costo-provincia-2026'],
+  impuestos: ['calculadora-monotributo-2026', 'calculadora-ganancias-empleados-4ta-categoria-2026', 'calculadora-bienes-personales-2026'],
   tecnologia: ['calculadora-conversor-mbps-a-mb-s', 'calculadora-conversor-gb-a-tb', 'calculadora-velocidad-internet-mbps-real'],
   'medio-ambiente': ['calculadora-huella-carbono-auto-anual', 'calculadora-ahorro-energia-solar-paneles', 'calculadora-arboles-compensar-co2-huella'],
   electronica: ['calculadora-ley-ohm-voltaje-corriente-resistencia', 'calculadora-consumo-electrico-aparato-kwh-mes', 'calculadora-resistencia-led-voltaje-caida'],
@@ -525,7 +534,7 @@ const schema = {
     <div class="hero-meta-row">
       <span class="hero-stat"><strong>{totalCalcsDisplay}</strong> calculadoras</span>
       <span class="hero-dot" aria-hidden="true">·</span>
-      <span class="hero-stat"><strong>{categoryOrder.length}</strong> categorías</span>
+      <span class="hero-stat"><strong>{CATEGORY_COUNT}</strong> categorías</span>
       <span class="hero-dot" aria-hidden="true">·</span>
       <span class="hero-stat"><strong data-live-counter="true" data-initial={totalResults}>{totalResults.toLocaleString('es-AR')}</strong> cálculos hechos</span>
       <span class="hero-dot" aria-hidden="true">·</span>
@@ -597,6 +606,11 @@ const schema = {
         </a>
       ))}
     </div>
+    <nav class="salas-home-hubs" aria-label="Hubs de decisión">
+      {DECISION_HUBS.map((h) => (
+        <a href={`/decidir/${h.slug}`}>{h.icon} Decisiones {h.slug === 'laborales' ? 'laborales' : `de ${h.shortLabel.toLowerCase()}`}</a>
+      ))}
+    </nav>
   </section>
 
   {/* Bloque estacional Mundial 2026 (11 jun – 19 jul 2026) — surfacea el cluster
@@ -630,64 +644,52 @@ const schema = {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
           </svg>
-          Explorá por categoría
+          Empezá por acá
         </span>
-        <h2 id="categorias-heading">Todas las categorías</h2>
+        <h2 id="categorias-heading">Los 4 pilares de Hacé Cuentas</h2>
       </div>
       <a href="/calculadoras" class="see-all">Ver todas →</a>
     </div>
-    {/* Destacadas: las más usadas en AR, con sus calcs estrella */}
-    <div class="row-label"><span class="row-star" aria-hidden="true">★</span>Las más usadas<span class="row-line"></span></div>
+    {/* Pilares: hubs curados con guía + calculadora principal + salas de decisión */}
     <div class="feat-grid">
-      {featuredCats.filter(cat => byCategory[cat]?.length).map((cat) => {
-        const meta = categoryMeta[cat];
-        const top = getTopCalcs(cat);
-        const count = byCategory[cat].length;
-        return (
-          <div class="feat-card" style={`--cat-color: ${meta.color}`}>
-            <a href={`/categoria/${cat}`} class="feat-head">
-              <div class="feat-icon" aria-hidden="true"><CategoryIcon cat={cat} fallback={meta.icon} size={24} /></div>
-              <div class="feat-titles">
-                <div class="feat-name">{meta.label}</div>
-                <div class="feat-count">{count} calculadoras</div>
-              </div>
-            </a>
-            <ul class="feat-list">
-              {top.map((c: any) => (
-                <li>
-                  <a href={`/${c.slug}`} class="feat-item">
-                    <span class="feat-dot" aria-hidden="true"></span>
-                    <span class="feat-item-name">
-                      {c.h1}
-                      {c.audience === 'AR' && (
-                        <span class="ar-badge" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>
-                      )}
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <a href={`/categoria/${cat}`} class="feat-all">Ver las {count} →</a>
-          </div>
-        );
-      })}
+      {pillarCards.map((p) => (
+        <div class="feat-card" style={`--cat-color: ${p.color}`}>
+          <a href={`/${p.slug}`} class="feat-head">
+            <div class="feat-icon" aria-hidden="true">{p.icon}</div>
+            <div class="feat-titles">
+              <div class="feat-name">{p.h1}</div>
+              <div class="feat-count">Guía + calculadoras + salas de decisión</div>
+            </div>
+          </a>
+          <ul class="feat-list">
+            {p.top.map((c: any) => (
+              <li>
+                <a href={`/${c.slug}`} class="feat-item">
+                  <span class="feat-dot" aria-hidden="true"></span>
+                  <span class="feat-item-name">
+                    {c.h1}
+                    {c.audience === 'AR' && (
+                      <span class="ar-badge" title="Específica para Argentina" aria-label="Específica para Argentina">🇦🇷</span>
+                    )}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <a href={`/${p.slug}`} class="feat-all">Entrá al pilar →</a>
+        </div>
+      ))}
     </div>
 
-    {/* El resto del catálogo, en mosaico compacto y escaneable */}
-    <div class="row-label">Todas las demás<span class="row-line"></span></div>
-    <div class="cat-mosaic">
+    {/* Las 26 categorías, demotadas a chips compactos (siguen crawleables,
+        pero sin competir en prominencia con los pilares) */}
+    <div class="row-label">Explorá por categoría<span class="row-line"></span></div>
+    <div class="cat-chips">
       {mosaicCats.filter(cat => byCategory[cat]?.length).map((cat) => {
         const meta = categoryMeta[cat];
-        const count = byCategory[cat].length;
-        const isNew = newlyAddedCats.has(cat);
         return (
-          <a href={`/categoria/${cat}`} class="cat-tile" style={`--cat-color: ${meta.color}`}>
-            {isNew && <span class="tile-new">Nuevo</span>}
-            <div class="tile-icon" aria-hidden="true"><CategoryIcon cat={cat} fallback={meta.icon} size={20} /></div>
-            <div class="tile-meta">
-              <div class="tile-name">{meta.label}</div>
-              <div class="tile-count">{count} calcs</div>
-            </div>
+          <a href={`/categoria/${cat}`} class="cat-chip" style={`--cat-color: ${meta.color}`}>
+            <span aria-hidden="true">{meta.icon}</span> {meta.label}
           </a>
         );
       })}
@@ -844,7 +846,7 @@ const schema = {
       <div class="stat-icon stat-icon-flag">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
       </div>
-      <div class="stat-num">{categoryOrder.length}</div>
+      <div class="stat-num">{CATEGORY_COUNT}</div>
       <div class="stat-label">Categorías temáticas</div>
     </div>
   </section>
@@ -906,7 +908,7 @@ const schema = {
         ladrillos necesitás para una pared.
       </p>
       <p>
-        Hoy cubrimos <strong>{categoryOrder.length} categorías</strong>: finanzas
+        Hoy cubrimos <strong>{CATEGORY_COUNT} categorías</strong>: finanzas
         personales y empleo (sueldo en mano, indemnización, vacaciones,
         préstamos, interés compuesto, plazo fijo, UVA, ganancias, monotributo,
         bienes personales); salud (IMC, calorías diarias, embarazo semana a
@@ -2101,6 +2103,27 @@ const schema = {
   /* Salas de decisión (super calculadoras) — banda destacada post-buscador */
   /* Banda de productos verticales */
   .salas-home { margin: 2.5rem 0 3rem; }
+  .salas-home-hubs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .salas-home-hubs a {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--accent-strong, #0369a1);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  .salas-home-hubs a:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft, #e0f2fe);
+  }
   .salas-home-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
   /* Salas = navegación decisional → lista editorial de filas, SIN cards ni cajas.
      Silueta: índice de dos columnas con hairlines (no un grid de recuadros). */
@@ -2676,6 +2699,34 @@ const schema = {
     letter-spacing: 0.01em;
   }
   .feat-all:hover { text-decoration: underline; }
+
+  /* ---- Chips de categoría (arquitectura de pilares jul-2026) ---- */
+  /* Las 26 categorías demotadas a navegación terciaria: chips chicos en una
+     banda compacta. Crawleables pero sin competir con las cards de pilar. */
+  .cat-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .cat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .cat-chip:hover {
+    border-color: var(--cat-color);
+    color: var(--cat-color);
+    text-decoration: none;
+  }
 
   /* ---- Mosaico compacto: el resto del catálogo ---- */
   /* Navegación secundaria → links compactos, sin caja ni borde: el color vive

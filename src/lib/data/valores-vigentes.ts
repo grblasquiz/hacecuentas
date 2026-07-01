@@ -1,0 +1,263 @@
+// ────────────────────────────────────────────────────────────────────────────
+// VALORES VIGENTES EN ARGENTINA — registro central para /valores-vigentes
+// ────────────────────────────────────────────────────────────────────────────
+// NO duplica números: importa todo de las fuentes únicas del repo
+// (smvm-ar-2026.ts, _ganancias-escala.ts, monotributo-2026.ts), así el hub
+// se actualiza solo cuando los fetchers patchean esas fuentes.
+//
+// Lo único propio de este archivo es el HISTORIAL de cambios (qué cambió,
+// desde cuándo, valor anterior/nuevo, fuente) y los PRÓXIMOS cambios esperados.
+// Cada entrada del historial exige norma + fuenteUrl: acá no entra ningún
+// número sin respaldo oficial (regla YMYL del repo).
+// ────────────────────────────────────────────────────────────────────────────
+
+import {
+  SMVM_MENSUAL,
+  SMVM_HORA,
+  SMVM_FECHA,
+  SMVM_RESOLUCION,
+  DESEMPLEO_PISO,
+  DESEMPLEO_TECHO,
+} from './smvm-ar-2026';
+import {
+  MNI_MENSUAL_BASE,
+  INCREMENTO_CONYUGE_MENSUAL,
+  INCREMENTO_HIJO_MENSUAL,
+  ESCALA,
+} from '../formulas/_ganancias-escala';
+import {
+  TOPES,
+  CUOTA_SERVICIOS,
+  CUOTA_BIENES,
+  META as MONO_META,
+} from './monotributo-2026';
+
+export interface ValorVigente {
+  id: string;
+  seccion: 'Trabajo y sueldos' | 'Impuesto a las Ganancias' | 'Monotributo' | 'Seguridad social';
+  nombre: string;
+  /** Valor numérico en ARS (o null si el valor se expresa en `valorTexto`). */
+  valor: number | null;
+  valorTexto?: string;
+  detalle: string;
+  vigenciaDesde: string; // legible: 'junio 2026', 'desde el 1/2/2026'
+  norma: string;
+  fuente: string;
+  fuenteUrl: string;
+  /** Link interno a la calculadora que usa este valor. */
+  calcHref?: string;
+  /** Link interno a la página de datos con la tabla completa. */
+  datosHref?: string;
+}
+
+export interface CambioHistorial {
+  fecha: string; // YYYY-MM-DD (entrada en vigencia)
+  titulo: string;
+  queCambio: string;
+  anterior?: string;
+  nuevo?: string;
+  impacto: string; // en un ejemplo real
+  norma: string;
+  fuenteUrl: string;
+}
+
+export interface ProximoCambio {
+  cuando: string;
+  titulo: string;
+  detalle: string;
+}
+
+const fmtARS = (n: number): string => '$' + Math.round(n).toLocaleString('es-AR');
+
+export const VALORES: ValorVigente[] = [
+  {
+    id: 'smvm-mensual',
+    seccion: 'Trabajo y sueldos',
+    nombre: 'Salario Mínimo, Vital y Móvil (mensual)',
+    valor: SMVM_MENSUAL,
+    detalle: 'Jornada completa (48 h semanales). Piso legal de remuneración para trabajadores registrados.',
+    vigenciaDesde: SMVM_FECHA,
+    norma: SMVM_RESOLUCION,
+    fuente: 'Consejo Nacional del Empleo (CNEPySMVyM)',
+    fuenteUrl: 'https://www.argentina.gob.ar/trabajo/consejodelsalario',
+    calcHref: '/salario-minimo-vital-movil-argentina',
+  },
+  {
+    id: 'smvm-hora',
+    seccion: 'Trabajo y sueldos',
+    nombre: 'Salario mínimo por hora (jornalizados)',
+    valor: SMVM_HORA,
+    detalle: 'Valor hora del SMVM (mensual ÷ 200: 8 h × 25 días).',
+    vigenciaDesde: SMVM_FECHA,
+    norma: SMVM_RESOLUCION,
+    fuente: 'Consejo Nacional del Empleo (CNEPySMVyM)',
+    fuenteUrl: 'https://www.argentina.gob.ar/trabajo/consejodelsalario',
+  },
+  {
+    id: 'mni-ganancias',
+    seccion: 'Impuesto a las Ganancias',
+    nombre: 'Mínimo efectivo mensual (empleado soltero)',
+    valor: MNI_MENSUAL_BASE,
+    detalle: 'Ganancia no imponible + deducción especial (art. 30 LIG) prorrateadas por mes. Por debajo de esa ganancia neta no se retiene impuesto.',
+    vigenciaDesde: 'primer semestre 2026 (enero a junio)',
+    norma: 'RG 4003 · Ley 27.743',
+    fuente: 'ARCA',
+    fuenteUrl: 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-ene-a-jun-2026.pdf',
+    calcHref: '/calculadora-impuesto-ganancias-sueldo',
+    datosHref: '/datos-ganancias-2026',
+  },
+  {
+    id: 'ganancias-deduccion-conyuge',
+    seccion: 'Impuesto a las Ganancias',
+    nombre: 'Deducción mensual por cónyuge a cargo',
+    valor: INCREMENTO_CONYUGE_MENSUAL,
+    detalle: 'Art. 30 inc. b.1 LIG. El cónyuge deduce aproximadamente el doble que un hijo.',
+    vigenciaDesde: 'primer semestre 2026 (enero a junio)',
+    norma: 'RG 4003 · Ley 27.743',
+    fuente: 'ARCA',
+    fuenteUrl: 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-ene-a-jun-2026.pdf',
+    calcHref: '/calculadora-deduccion-familia-conyuge-hijo-ganancias',
+    datosHref: '/datos-ganancias-2026',
+  },
+  {
+    id: 'ganancias-deduccion-hijo',
+    seccion: 'Impuesto a las Ganancias',
+    nombre: 'Deducción mensual por hijo a cargo',
+    valor: INCREMENTO_HIJO_MENSUAL,
+    detalle: 'Art. 30 inc. b.2 LIG, por cada hijo menor de 18 años (o incapacitado para el trabajo, sin límite de edad y monto doble).',
+    vigenciaDesde: 'primer semestre 2026 (enero a junio)',
+    norma: 'RG 4003 · Ley 27.743',
+    fuente: 'ARCA',
+    fuenteUrl: 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-ene-a-jun-2026.pdf',
+    datosHref: '/datos-ganancias-2026',
+  },
+  {
+    id: 'ganancias-escala',
+    seccion: 'Impuesto a las Ganancias',
+    nombre: 'Escala del impuesto (art. 94 LIG)',
+    valor: null,
+    valorTexto: `${ESCALA.length} tramos, 5% a 35%`,
+    detalle: `Alícuotas marginales progresivas sobre la ganancia neta imponible mensual. El tramo más alto (35%) arranca en ${fmtARS(ESCALA[ESCALA.length - 2].hasta)} de ganancia imponible mensual.`,
+    vigenciaDesde: 'primer semestre 2026 (enero a junio)',
+    norma: 'Art. 94 LIG · RG 4003',
+    fuente: 'ARCA',
+    fuenteUrl: 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/documentos/Tabla-Art-94-LIG-per-ene-a-jun-2026.pdf',
+    calcHref: '/sueldo-en-mano-argentina',
+    datosHref: '/datos-ganancias-2026',
+  },
+  {
+    id: 'monotributo-tope-k',
+    seccion: 'Monotributo',
+    nombre: 'Tope de facturación anual (categoría K)',
+    valor: TOPES.K,
+    detalle: 'Facturación bruta anual máxima para permanecer en el monotributo. Superado ese monto, corresponde el régimen general.',
+    vigenciaDesde: `desde el 1/2/2026 (recategorización ${MONO_META.recategorizacion})`,
+    norma: 'Régimen Simplificado (Ley 24.977 y modif.)',
+    fuente: MONO_META.fuente,
+    fuenteUrl: MONO_META.fuenteUrl,
+    calcHref: '/calculadora-monotributo-2026',
+    datosHref: '/datos-monotributo-2026',
+  },
+  {
+    id: 'monotributo-cuota-a',
+    seccion: 'Monotributo',
+    nombre: 'Cuota mensual mínima (categoría A)',
+    valor: CUOTA_SERVICIOS.A,
+    detalle: 'Cuota total (impuesto integrado + SIPA + obra social) de la categoría más baja. Igual para servicios y venta de bienes.',
+    vigenciaDesde: 'desde el 1/2/2026',
+    norma: 'Régimen Simplificado (Ley 24.977 y modif.)',
+    fuente: MONO_META.fuente,
+    fuenteUrl: MONO_META.fuenteUrl,
+    calcHref: '/calculadora-monotributo-cuota-2026-todas-categorias',
+    datosHref: '/datos-monotributo-2026',
+  },
+  {
+    id: 'monotributo-cuota-k',
+    seccion: 'Monotributo',
+    nombre: 'Cuota mensual máxima (categoría K)',
+    valor: null,
+    valorTexto: `${fmtARS(CUOTA_BIENES.K)} (bienes) · ${fmtARS(CUOTA_SERVICIOS.K)} (servicios)`,
+    detalle: 'Desde la reforma 2026, servicios llega hasta la categoría K con cuota diferenciada (paga más que venta de bienes en las categorías altas).',
+    vigenciaDesde: 'desde el 1/2/2026',
+    norma: 'Régimen Simplificado (Ley 24.977 y modif.)',
+    fuente: MONO_META.fuente,
+    fuenteUrl: MONO_META.fuenteUrl,
+    datosHref: '/datos-monotributo-2026',
+  },
+  {
+    id: 'desempleo-techo',
+    seccion: 'Seguridad social',
+    nombre: 'Prestación por desempleo: piso y techo',
+    valor: null,
+    valorTexto: `${fmtARS(DESEMPLEO_PISO)} a ${fmtARS(DESEMPLEO_TECHO)}`,
+    detalle: 'La prestación es el 75% del promedio de las mejores 6 remuneraciones, acotada entre piso y techo que ANSES ajusta con ~1 mes de rezago respecto del SMVM.',
+    vigenciaDesde: 'junio 2026',
+    norma: 'Ley 24.013 · Decreto 267/2006',
+    fuente: 'ANSES',
+    fuenteUrl: 'https://www.anses.gob.ar/prestacion-por-desempleo',
+    calcHref: '/calculadora-asignacion-desempleo-seguro-prestacion-anses',
+  },
+];
+
+/**
+ * Historial de cambios — sólo entradas con respaldo documental.
+ * Ordenado del más reciente al más viejo. Al registrar un cambio nuevo:
+ * completar anterior/nuevo/impacto/norma/fuenteUrl (todos verificables).
+ */
+export const HISTORIAL: CambioHistorial[] = [
+  {
+    fecha: '2026-06-01',
+    titulo: 'Aumentó el Salario Mínimo, Vital y Móvil',
+    queCambio: 'SMVM mensual, tramo de junio del cronograma de la Res 9/2025.',
+    anterior: '$363.000 (mayo 2026)',
+    nuevo: `${fmtARS(SMVM_MENSUAL)} (junio 2026)`,
+    impacto: `Un trabajador jornalizado pasó a cobrar ${fmtARS(SMVM_HORA)} por hora. Los topes de la prestación por desempleo de ANSES siguen al SMVM con un mes de rezago: en junio quedaron en ${fmtARS(DESEMPLEO_PISO)}–${fmtARS(DESEMPLEO_TECHO)}.`,
+    norma: 'Resolución 9/2025 CNEPySMVyM (cronograma nov-2025 a ago-2026, BO 03-12-2025)',
+    fuenteUrl: 'https://www.argentina.gob.ar/trabajo/consejodelsalario',
+  },
+  {
+    fecha: '2026-02-01',
+    titulo: 'Nuevas categorías del monotributo (recategorización de enero)',
+    queCambio:
+      'Se actualizaron topes de facturación y cuotas de las 11 categorías (A a K). Además, cambio estructural de la reforma 2026: las locaciones y prestaciones de servicios dejaron de topear en la categoría H y ahora llegan hasta la K, con cuota diferenciada.',
+    anterior: 'Servicios topeaba en categoría H',
+    nuevo: `Servicios alcanza la categoría K (tope anual ${fmtARS(TOPES.K)})`,
+    impacto: `Un profesional de servicios que facturaba por encima del viejo tope de H ya no queda excluido del régimen: puede recategorizarse en I, J o K. La cuota de servicios en K es ${fmtARS(CUOTA_SERVICIOS.K)}/mes contra ${fmtARS(CUOTA_BIENES.K)}/mes de venta de bienes.`,
+    norma: 'Régimen Simplificado (Ley 24.977 y modif.) — escala vigente desde el 1/2/2026',
+    fuenteUrl: 'https://www.afip.gob.ar/monotributo/categorias.asp',
+  },
+  {
+    fecha: '2026-01-01',
+    titulo: 'Nueva escala y deducciones de Ganancias (primer semestre 2026)',
+    queCambio:
+      'ARCA actualizó por IPC la escala del art. 94 y las deducciones personales del art. 30, como cada semestre desde la Ley 27.743.',
+    nuevo: `Mínimo efectivo mensual para empleado soltero: ${fmtARS(MNI_MENSUAL_BASE)} · deducción por hijo: ${fmtARS(INCREMENTO_HIJO_MENSUAL)}/mes · por cónyuge: ${fmtARS(INCREMENTO_CONYUGE_MENSUAL)}/mes`,
+    impacto: `Un empleado soltero sin hijos empieza a pagar Ganancias desde un bruto de aproximadamente ${fmtARS(MNI_MENSUAL_BASE / 0.83)} mensuales (el mínimo se compara contra el sueldo neto de aportes).`,
+    norma: 'Ley 27.743 · RG 4003 · tablas ARCA enero-junio 2026',
+    fuenteUrl: 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-ene-a-jun-2026.pdf',
+  },
+];
+
+export const PROXIMOS: ProximoCambio[] = [
+  {
+    cuando: 'julio 2026',
+    titulo: 'Nueva escala de Ganancias (segundo semestre)',
+    detalle:
+      'ARCA publica la actualización semestral por IPC de la escala del art. 94 y las deducciones del art. 30 (Ley 27.743). Cuando salga la tabla oficial, esta página y las calculadoras se actualizan desde la misma fuente única.',
+  },
+  {
+    cuando: 'julio 2026 (cierra 5/8/2026)',
+    titulo: 'Recategorización del monotributo',
+    detalle:
+      'Recategorización semestral obligatoria para quienes cambiaron de parámetros. Plazo hasta el 5 de agosto de 2026 inclusive.',
+  },
+  {
+    cuando: 'julio y agosto 2026',
+    titulo: 'Últimos tramos del cronograma del SMVM',
+    detalle:
+      'La Resolución 9/2025 del Consejo del Salario fijó aumentos mensuales hasta agosto 2026. Después de ese mes, el Consejo debe reunirse para definir el cronograma siguiente.',
+  },
+];
+
+/** Fecha de última revisión editorial de esta página (bump al registrar cambios). */
+export const ULTIMA_REVISION = '2026-07-01';

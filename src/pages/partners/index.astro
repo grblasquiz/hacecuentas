@@ -6,6 +6,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Newsletter from '../../components/Newsletter.astro';
 import { TOTAL_DISPLAY, TOTAL_PLAIN } from '../../lib/calc-counts';
+import { VERTICALES } from '../../lib/partners/verticales';
 
 const title = 'Partner Studio — Calculadoras white-label para medios y productos | Hacé Cuentas';
 const description =
@@ -186,6 +187,20 @@ const exampleSnippet = `<script async src="https://hacecuentas.com/hc.js"><\/scr
             <h3>{c.title}</h3>
             <p>{c.desc}</p>
           </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- 3b. SOLUCIONES POR RUBRO -->
+    <section class="verticals-section" aria-labelledby="verticals-heading">
+      <h2 id="verticals-heading">Soluciones por rubro</h2>
+      <p class="section-intro">Calculadoras elegidas para tu tipo de sitio, con el código listo y casos de uso concretos.</p>
+      <div class="verticals-grid">
+        {VERTICALES.map((v) => (
+          <a class="vertical-card" href={`/partners/${v.slug}`}>
+            <span class="vertical-card__icon" aria-hidden="true">{v.icon}</span>
+            <span class="vertical-card__name">{v.nombre}</span>
+          </a>
         ))}
       </div>
     </section>
@@ -435,8 +450,8 @@ const exampleSnippet = `<script async src="https://hacecuentas.com/hc.js"><\/scr
     });
   }
 
-  $('gen-copy')?.addEventListener('click', () => {
-    const b = $('gen-copy') as HTMLButtonElement;
+  byId('gen-copy')?.addEventListener('click', () => {
+    const b = byId('gen-copy') as HTMLButtonElement;
     copyText(b, snippet?.textContent ?? '');
   });
   document.querySelectorAll<HTMLButtonElement>('.btn-copy[data-code]').forEach((btn) => {
@@ -509,6 +524,18 @@ const exampleSnippet = `<script async src="https://hacecuentas.com/hc.js"><\/scr
   .cap-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text); }
   .cap-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.55; margin: 0; }
 
+  /* SOLUCIONES POR RUBRO */
+  .verticals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+  .vertical-card {
+    display: flex; align-items: center; gap: 0.625rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 0.875rem 1rem;
+    text-decoration: none; transition: border-color 0.15s, transform 0.15s;
+  }
+  .vertical-card:hover { border-color: var(--accent); transform: translateY(-2px); text-decoration: none; }
+  .vertical-card__icon { font-size: 1.375rem; flex-shrink: 0; }
+  .vertical-card__name { font-size: 0.875rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .vertical-card:hover .vertical-card__name { color: var(--accent); }
+
   /* GENERADOR */
   .gen-grid { display: grid; grid-template-columns: 360px 1fr; gap: 1.5rem; align-items: start; }
   .gen-controls { display: flex; flex-direction: column; gap: 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
@@ -578,6 +605,7 @@ const exampleSnippet = `<script async src="https://hacecuentas.com/hc.js"><\/scr
   /* RESPONSIVE */
   @media (max-width: 720px) {
     .caps-grid { grid-template-columns: 1fr; }
+    .verticals-grid { grid-template-columns: repeat(2, 1fr); }
     .gen-grid { grid-template-columns: 1fr; }
     .gen-field--split { flex-direction: column; }
   }

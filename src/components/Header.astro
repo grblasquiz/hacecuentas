@@ -52,16 +52,14 @@ else if (_seg === 'global') pageCountry = 'GLOBAL';
 
 // Nav items por país
 const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePath?: string}>> = {
-  // Nav por DOMINIOS (no por inventario de categorías): 4 universos principales
-  // → productos /mi/*. El resto vive en el dropdown "Más". Header decluttered.
+  // Nav por PILARES (jul-2026): la autoridad interna se concentra en 4 hubs
+  // curados (src/lib/pillars.ts) en vez de repartirse entre 26 categorías.
+  // Los productos /mi/*, Decidir y las categorías viven en el dropdown "Más".
   AR: [
-    { href: '/mi/plata', label: 'Dinero', activePath: '/mi/plata' },
-    { href: '/mi/trabajo', label: 'Trabajo', activePath: '/mi/trabajo' },
-    { href: '/mi/casa', label: 'Casa', activePath: '/mi/casa' },
-    { href: '/mi/familia', label: 'Salud', activePath: '/mi/familia' },
-    // Decidir = 5º dominio (superficie decisional). Promovido desde "Más": es
-    // un universo propio (salas multi-fórmula), no una categoría suelta.
-    { href: '/decidir', label: 'Decidir', activePath: '/decidir' },
+    { href: '/sueldos-y-trabajo', label: 'Sueldos y trabajo', activePath: '/sueldos-y-trabajo' },
+    { href: '/impuestos-argentina', label: 'Impuestos', activePath: '/impuestos-argentina' },
+    { href: '/finanzas-personales', label: 'Finanzas', activePath: '/finanzas-personales' },
+    { href: '/negocios-e-independientes', label: 'Negocios', activePath: '/negocios-e-independientes' },
   ],
   ES: [
     { href: '/es/calculadora-irpf-2026-tramos-espana-nomina', label: 'IRPF', activePath: '/es/calculadora-irpf' },
@@ -165,53 +163,34 @@ const navItems = COUNTRY_NAVS[pageCountry];
 // Guías, conversores) para no perder esos enlaces del grafo SEO.
 const NAV_MORE: Array<{ href: string; label: string; icon?: string }> = pageCountry === 'AR' ? [
   { href: '/valores-bcra', label: 'Dólar y economía', icon: 'chart' },
-  { href: '/categoria/viajes', label: 'Viajes' },
-  { href: '/categoria/cocina', label: 'Cocina' },
-  { href: '/categoria/tecnologia', label: 'Tecnología' },
-  { href: '/categoria/educacion', label: 'Educación' },
-  { href: '/categoria/deportes', label: 'Deportes' },
-  { href: '/categoria/mascotas', label: 'Mascotas' },
+  { href: '/decidir', label: 'Salas de decisión' },
+  { href: '/mi/plata', label: 'Mi Plata' },
+  { href: '/mi/trabajo', label: 'Mi Trabajo' },
+  { href: '/mi/casa', label: 'Mi Casa' },
+  { href: '/mi/familia', label: 'Mi Familia' },
   { href: '/guias', label: 'Guías y notas' },
   { href: '/calculadoras', label: 'Todas las categorías →' },
 ] : [];
 
-// Menú mobile: lista COMPLETA de categorías (la nav de escritorio sólo muestra
-// un subset). Cada slug tiene su ruta /categoria/<slug> (las construye
-// src/pages/categoria/[cat]/[...page].astro). Labels = CATEGORY_TITLES.
+// Menú mobile: sólo las categorías PRINCIPALES (arquitectura de pilares
+// jul-2026: la lista completa de 26 categorías inflaba el grafo de links
+// sitewide y diluía autoridad). El resto se llega vía /calculadoras.
 const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
   { slug: 'finanzas', label: 'Finanzas' },
+  { slug: 'impuestos', label: 'Impuestos' },
+  { slug: 'negocios', label: 'Negocios' },
   { slug: 'salud', label: 'Salud' },
   { slug: 'vida', label: 'Vida diaria' },
   { slug: 'matematica', label: 'Matemática' },
-  { slug: 'cocina', label: 'Cocina' },
-  { slug: 'deportes', label: 'Deportes' },
-  { slug: 'negocios', label: 'Negocios' },
-  { slug: 'marketing', label: 'Marketing' },
-  { slug: 'viajes', label: 'Viajes' },
-  { slug: 'construccion', label: 'Hogar / Construcción' },
-  { slug: 'automotor', label: 'Automotor' },
-  { slug: 'mascotas', label: 'Mascotas' },
-  { slug: 'familia', label: 'Familia' },
-  { slug: 'educacion', label: 'Educación' },
-  { slug: 'tecnologia', label: 'Tecnología' },
-  { slug: 'ciencia', label: 'Ciencia' },
-  { slug: 'electronica', label: 'Electrónica' },
-  { slug: 'jardineria', label: 'Jardinería' },
-  { slug: 'idiomas', label: 'Idiomas' },
-  { slug: 'entretenimiento', label: 'Entretenimiento' },
-  { slug: 'impuestos', label: 'Impuestos' },
-  { slug: 'hogar', label: 'Hogar' },
-  { slug: 'medio-ambiente', label: 'Medio Ambiente' },
-  { slug: 'clima', label: 'Clima' },
-  { slug: 'juegos', label: 'Juegos' },
-  { slug: 'astronomia', label: 'Astronomía' },
 ];
 ---
 
-<a href="#main" class="skip-link">{t.skip}</a>
+<a href="#main" class="skip-link"><span data-nosnippet>{t.skip}</span></a>
 
 <header class="site-header" data-lang={lang}>
-  <div class="header-container">
+  {/* data-nosnippet: navegación = boilerplate; Google lo estaba usando para armar
+      snippets. No afecta crawling/indexación de los links, solo el snippet. */}
+  <div class="header-container" data-nosnippet>
     <a href={isIntl ? intlHome : '/'} class="logo" aria-label={t.logoAria}>
       <picture>
         <source type="image/webp" srcset="/logo-64.webp 1x, /logo-128.webp 2x" />
@@ -310,13 +289,13 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
   </div>
 
   {isIntl ? (
-    <div class="mobile-nav" id="mobile-nav" hidden>
+    <div class="mobile-nav" data-nosnippet id="mobile-nav" hidden>
       <a href="/mi-hacecuentas">👤 {lang === 'en' ? 'My account' : lang === 'pt' ? 'Minha conta' : 'Mi Hacé Cuentas'}</a>
       <a href={intlHome}>🔍 {t.allCalcs}</a>
       <a href={`${intlHome}#popular`}>⭐ {lang === 'pt' ? 'Populares' : 'Popular'}</a>
     </div>
   ) : (
-    <div class="mobile-nav" id="mobile-nav" hidden>
+    <div class="mobile-nav" data-nosnippet id="mobile-nav" hidden>
       <a href="/mi-hacecuentas">👤 Mi Hacé Cuentas</a>
       <a href="/buscar">🔍 Buscar</a>
       {navItems.map(item => (
@@ -332,7 +311,7 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
 </header>
 
 <!-- Search Modal -->
-<div class="search-modal" id="search-modal" hidden role="dialog" aria-modal="true" aria-label={lang === 'en' ? 'Calculator search' : lang === 'pt' ? 'Busca de calculadoras' : 'Buscador de calculadoras'} data-lang={lang}>
+<div class="search-modal" data-nosnippet id="search-modal" hidden role="dialog" aria-modal="true" aria-label={lang === 'en' ? 'Calculator search' : lang === 'pt' ? 'Busca de calculadoras' : 'Buscador de calculadoras'} data-lang={lang}>
   <div class="search-backdrop" data-close></div>
   <div class="search-panel">
     <div class="search-input-wrap">

@@ -172,7 +172,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "💰"
       },
       {
-        "slug": "calculadora-sueldo-neto-a-bruto",
+        "slug": "calculadora-sueldo-bruto-desde-neto",
         "label": "Neto a bruto",
         "icon": "🔄"
       },
@@ -471,11 +471,6 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-ovulacion-dias-fertiles",
         "label": "Días fértiles",
         "icon": "📅"
-      },
-      {
-        "slug": "calculadora-fertilidad-amh-reserva-ovarica-edad",
-        "label": "AMH reserva ovárica",
-        "icon": "🥚"
       }
     ]
   },

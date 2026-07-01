@@ -1,0 +1,282 @@
+---
+/**
+ * Hub de PILAR — página curada que concentra la autoridad interna de uno de
+ * los 4 pilares (src/lib/pillars.ts). Implementa el flujo:
+ *   Guía → calculadora principal → salas de decisión → contenido relacionado.
+ *
+ * Los slugs curados se validan contra el catálogo real: un slug inexistente
+ * se filtra (no rompe build ni genera 404), pero conviene mantener la lista
+ * limpia en pillars.ts.
+ */
+import type { PillarDef } from '../lib/pillars';
+import { DECISION_MANIFEST } from '../lib/decisions/manifest';
+
+export interface Props {
+  pillar: PillarDef;
+}
+const { pillar } = Astro.props;
+
+const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const bySlug = new Map<string, any>();
+for (const m of Object.values(calcModules)) {
+  const c = (m as any).default || m;
+  if (c?.slug && c.h1 && !c.noindex) bySlug.set(c.slug, c);
+}
+
+const mainCalc = bySlug.get(pillar.mainCalc);
+const calcs = pillar.calcs.map((s) => bySlug.get(s)).filter(Boolean);
+
+const roomsBySlug = new Map(DECISION_MANIFEST.map((r) => [r.slug, r]));
+const rooms = pillar.rooms.map((s) => roomsBySlug.get(s)).filter(Boolean);
+
+const guiaModules = import.meta.glob<any>('../content/guias/*.json', { eager: true });
+const guia = Object.values(guiaModules)
+  .map((m: any) => m.default || m)
+  .find((g: any) => g?.slug === pillar.guide);
+
+const CATEGORY_LABELS: Record<string, string> = {
+  finanzas: 'Finanzas',
+  impuestos: 'Impuestos',
+  negocios: 'Negocios',
+  marketing: 'Marketing',
+};
+
+const siteUrl = 'https://hacecuentas.com';
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: pillar.h1,
+  description: pillar.description,
+  url: `${siteUrl}/${pillar.slug}`,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: 1 + calcs.length,
+    itemListElement: [mainCalc, ...calcs].filter(Boolean).map((c: any, i: number) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.h1,
+      url: `${siteUrl}/${c.slug}`,
+    })),
+  },
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
+    { '@type': 'ListItem', position: 2, name: pillar.h1, item: `${siteUrl}/${pillar.slug}` },
+  ],
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />
+<script type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)} />
+
+<div class="pillar" style={`--pilar: ${pillar.color}`}>
+  <nav class="breadcrumbs" aria-label="Ruta de navegación">
+    <a href="/">Inicio</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="current">{pillar.h1}</span>
+  </nav>
+
+  <header class="pillar-hero">
+    <span class="pillar-icon" aria-hidden="true">{pillar.icon}</span>
+    <h1>{pillar.h1}</h1>
+    <p class="pillar-intro">{pillar.intro}</p>
+  </header>
+
+  {guia && (
+    <a href={`/guia/${guia.slug}`} class="pillar-guide">
+      <span class="pg-eyebrow">📖 Empezá por la guía</span>
+      <span class="pg-title">{guia.h1}</span>
+      <span class="pg-desc">{guia.description}</span>
+      <span class="pg-cta">Leer la guía completa →</span>
+    </a>
+  )}
+
+  {mainCalc && (
+    <a href={`/${mainCalc.slug}`} class="pillar-main">
+      <span class="pm-icon" aria-hidden="true">{mainCalc.icon || '🧮'}</span>
+      <span class="pm-body">
+        <span class="pm-eyebrow">La calculadora principal</span>
+        <span class="pm-title">{mainCalc.h1}</span>
+        {mainCalc.description && <span class="pm-desc">{mainCalc.description}</span>}
+      </span>
+      <span class="pm-cta">Calcular →</span>
+    </a>
+  )}
+
+  <section aria-labelledby="pillar-calcs-h">
+    <h2 id="pillar-calcs-h">Calculadoras destacadas</h2>
+    <ul class="pillar-calcs">
+      {calcs.map((c: any) => (
+        <li>
+          <a href={`/${c.slug}`}>
+            <span class="pc-icon" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="pc-name">{c.h1}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  {rooms.length > 0 && (
+    <section aria-labelledby="pillar-rooms-h">
+      <h2 id="pillar-rooms-h">¿Estás por decidir? Entrá a una sala</h2>
+      <p class="section-sub">
+        Las salas de decisión combinan varias calculadoras y te devuelven una
+        recomendación con números, no un resultado suelto.
+      </p>
+      <div class="pillar-rooms">
+        {rooms.map((r: any) => (
+          <a href={`/decidir/${r.slug}`} class="room-card">
+            <span class="room-icon" aria-hidden="true">{r.icon}</span>
+            <span class="room-title">{r.h1}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section aria-labelledby="pillar-more-h" class="pillar-more">
+    <h2 id="pillar-more-h">Seguí explorando</h2>
+    <div class="pillar-links">
+      {pillar.dataPages.map((d) => (
+        <a href={d.href} class="pl-chip">📈 {d.label}</a>
+      ))}
+      {pillar.categories.map((cat) => (
+        <a href={`/categoria/${cat}`} class="pl-chip">
+          Categoría {CATEGORY_LABELS[cat] || cat}
+        </a>
+      ))}
+      <a href="/decidir" class="pl-chip">Todas las salas de decisión</a>
+      <a href="/calculadoras" class="pl-chip">Todas las calculadoras</a>
+    </div>
+  </section>
+</div>
+
+<style>
+  .pillar { max-width: 880px; margin: 0 auto; }
+
+  .breadcrumbs {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    margin-bottom: 1.25rem;
+  }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+  .breadcrumbs .sep { color: var(--border-strong); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+
+  .pillar-hero { margin-bottom: 1.75rem; }
+  .pillar-icon { font-size: 2rem; display: inline-block; margin-bottom: 0.25rem; }
+  .pillar-hero h1 { font-size: clamp(1.75rem, 4vw, 2.375rem); margin: 0 0 0.5rem; }
+  .pillar-intro { color: var(--text-muted); max-width: 640px; margin: 0; font-size: 1.0625rem; line-height: 1.55; }
+
+  /* Guía-pilar: el punto de entrada del flujo de autoridad */
+  .pillar-guide {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 1.125rem 1.25rem;
+    border: 1.5px solid color-mix(in srgb, var(--pilar) 35%, transparent);
+    border-left: 4px solid var(--pilar);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--pilar) 5%, var(--bg-card));
+    text-decoration: none;
+    margin-bottom: 1rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .pillar-guide:hover { border-color: var(--pilar); box-shadow: var(--shadow-lg); text-decoration: none; }
+  .pg-eyebrow { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--pilar); }
+  .pg-title { font-size: 1.125rem; font-weight: 700; color: var(--text); }
+  .pg-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.45; }
+  .pg-cta { font-size: 0.875rem; font-weight: 600; color: var(--pilar); }
+
+  /* Calculadora principal */
+  .pillar-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.125rem 1.25rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    text-decoration: none;
+    margin-bottom: 2.25rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .pillar-main:hover { border-color: var(--pilar); box-shadow: var(--shadow-lg); text-decoration: none; }
+  .pm-icon { font-size: 1.75rem; flex-shrink: 0; }
+  .pm-body { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+  .pm-eyebrow { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); }
+  .pm-title { font-size: 1.0625rem; font-weight: 700; color: var(--text); }
+  .pm-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .pm-cta { margin-left: auto; flex-shrink: 0; font-weight: 700; color: #fff; background: var(--pilar); border-radius: 999px; padding: 0.5rem 1rem; font-size: 0.875rem; white-space: nowrap; }
+
+  section { margin-bottom: 2.25rem; }
+  h2 { font-size: 1.375rem; margin-bottom: 0.75rem; }
+  .section-sub { color: var(--text-muted); font-size: 0.9375rem; margin: -0.25rem 0 1rem; max-width: 560px; }
+
+  .pillar-calcs {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.25rem 1.25rem;
+    margin: 0;
+    padding: 0;
+  }
+  .pillar-calcs a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5625rem 0.625rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    transition: background 0.12s, color 0.12s;
+  }
+  .pillar-calcs a:hover { background: color-mix(in srgb, var(--pilar) 10%, transparent); color: var(--pilar); }
+  .pc-icon { flex-shrink: 0; }
+
+  .pillar-rooms {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.625rem;
+  }
+  .room-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    text-decoration: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .room-card:hover { border-color: var(--pilar); box-shadow: var(--shadow-lg); text-decoration: none; }
+  .room-icon { font-size: 1.25rem; flex-shrink: 0; }
+  .room-title { font-size: 0.9375rem; font-weight: 600; color: var(--text); line-height: 1.35; }
+
+  .pillar-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .pl-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4375rem 0.875rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 0.8438rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .pl-chip:hover { border-color: var(--pilar); color: var(--pilar); text-decoration: none; }
+</style>

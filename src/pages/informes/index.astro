@@ -1,0 +1,264 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { INFORMES } from '../../lib/informes/registry';
+import { MIN_OBS } from '../../lib/coop/datasets';
+
+// Hub de /informes — informes con datos propios (cooperativa anónima + cálculos
+// metodológicos sobre datos oficiales). Diseñados para ser citados: licencia
+// CC-BY 4.0, metodología pública, schema Dataset. Patrón espejado de
+// /datos-ganancias-2026 (página citable) + /cooperativa-de-datos (ética de datos).
+
+const PAGE_URL = 'https://hacecuentas.com/informes';
+
+const title = 'Informes Hacé Cuentas — datos propios sobre sueldos, alquileres y tasas en Argentina';
+const description =
+  'Informes con datos propios de Hacé Cuentas: sueldo neto, esfuerzo de alquiler, tasas reales de plazo fijo y brecha bruto-neto. Datos agregados y anónimos (k-anonimato, mínimo 30 aportes por segmento), metodología pública y licencia CC-BY 4.0: citá libremente con enlace.';
+
+const tipoLabel = (t: string) =>
+  t === 'cooperativa' ? 'Datos de la cooperativa' : 'Calculado de datos oficiales';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${PAGE_URL}#webpage`,
+      name: 'Informes Hacé Cuentas',
+      description,
+      url: PAGE_URL,
+      inLanguage: 'es-AR',
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      publisher: { '@id': 'https://hacecuentas.com/#organization' },
+      hasPart: INFORMES.map((inf) => ({ '@id': `${PAGE_URL}/${inf.slug}#dataset` })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Informes', item: PAGE_URL },
+      ],
+    },
+    ...INFORMES.map((inf) => ({
+      '@type': 'Dataset',
+      '@id': `${PAGE_URL}/${inf.slug}#dataset`,
+      name: inf.titulo,
+      description: inf.resumen,
+      url: `${PAGE_URL}/${inf.slug}`,
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      isAccessibleForFree: true,
+      inLanguage: 'es-AR',
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      measurementTechnique:
+        inf.tipo === 'cooperativa'
+          ? `Aporte anónimo voluntario con consentimiento explícito; agregación por segmento con mínimo de ${MIN_OBS} observaciones (k-anonimato).`
+          : 'Cálculo reproducible sobre datos oficiales (ARCA/ANSES) con las fórmulas públicas de las calculadoras de Hacé Cuentas.',
+    })),
+  ],
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical="/informes"
+  audience="AR"
+  schema={schema}
+  domain="data"
+>
+  <Header slot="header" />
+
+  <main class="article-main">
+    <article class="page-content informes-hub">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan">
+          <a href="/">Inicio</a> <span>›</span> <span>Informes</span>
+        </nav>
+        <h1>Informes Hacé Cuentas</h1>
+        <p class="lede">
+          Informes con <strong>datos propios</strong>, agregados y anónimos, construidos con las
+          calculadoras más usadas de Argentina. Nada de repetir estadísticas ajenas: acá el dato
+          nace de aportes voluntarios de usuarios reales (o de nuestras fórmulas sobre datos
+          oficiales), con metodología pública de <strong>k-anonimato</strong> — nunca publicamos un
+          segmento con menos de {MIN_OBS} aportes.
+        </p>
+        <p class="updated">
+          Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a>:
+          citá libremente con un enlace a hacecuentas.com. Pensado para periodistas, medios,
+          universidades y asistentes de IA.
+        </p>
+      </header>
+
+      <section class="informes-grid" aria-label="Informes publicados">
+        {INFORMES.map((inf) => (
+          <a class="informe-card" href={`/informes/${inf.slug}`}>
+            <div class="informe-top">
+              <span class="informe-icon" aria-hidden="true">{inf.icon}</span>
+              <span class:list={['informe-badge', inf.tipo]}>{tipoLabel(inf.tipo)}</span>
+            </div>
+            <h2>{inf.titulo}</h2>
+            <p class="informe-sub">{inf.subtitulo}</p>
+            <span class="informe-more">Leer el informe →</span>
+          </a>
+        ))}
+      </section>
+
+      <section id="metodologia">
+        <h2>Metodología y ética de datos</h2>
+        <p>
+          Hacé Cuentas no envía los datos que cargás en las calculadoras: el cálculo pasa en tu
+          dispositivo y tu privacidad está protegida por defecto. Los datos de estos informes
+          vienen de otro lado: de la <a href="/cooperativa-de-datos">cooperativa de datos
+          anónimos</a>, donde después de ciertos resultados ofrecemos aportar el dato de forma
+          anónima y voluntaria — o de cálculos reproducibles sobre datos oficiales.
+        </p>
+        <ul class="etica-list">
+          <li><strong>Opt-in explícito.</strong> Nada se guarda automáticamente: siempre hay un botón y una casilla de consentimiento.</li>
+          <li><strong>Revocable.</strong> Cada aporte deja un token en el dispositivo del usuario, que puede revocarlo cuando quiera.</li>
+          <li><strong>k-anonimato (k ≥ {MIN_OBS}).</strong> Ningún segmento con menos de {MIN_OBS} observaciones se publica, ni en los informes ni en la API.</li>
+          <li><strong>Sin datos personales.</strong> El aporte nunca se asocia a un email, cuenta o IP en claro; la geografía máxima es la provincia.</li>
+        </ul>
+        <p>
+          La metodología completa, las salvaguardas y el detalle de cada índice están en
+          <a href="/cooperativa-de-datos">/cooperativa-de-datos</a>. Los agregados también se
+          publican vía la API abierta <code>/api/coop/stats</code>.
+        </p>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Uso libre con atribución</h2>
+        <p>
+          Todos los informes se publican bajo licencia
+          <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">Creative Commons CC-BY 4.0</a>:
+          podés reproducir los datos en notas, papers, apps o webs citando a Hacé Cuentas con un
+          enlace. Cada informe incluye su bloque «Cómo citar». Si querés mostrar estos datos en tu
+          sitio, también podés <a href="/partners">embeber nuestras calculadoras y datos</a>.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .informes-hub {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem 1rem 4rem;
+  }
+  .crumbs {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-bottom: 0.75rem;
+  }
+  .crumbs a { color: var(--accent, #2563eb); text-decoration: none; }
+  .informes-hub h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .lede {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text, #222);
+  }
+  .updated {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.5rem;
+  }
+  .informes-hub h2 {
+    font-size: 1.4rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .informes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin: 1.75rem 0 0.5rem;
+  }
+  .informe-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius, 0.75rem);
+    padding: 1.1rem 1.25rem;
+    background: var(--bg-card, #fff);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .informe-card:hover {
+    border-color: var(--accent, #2563eb);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  }
+  .informe-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .informe-icon { font-size: 1.5rem; line-height: 1; }
+  .informe-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent, #2563eb) 14%, transparent);
+    color: var(--accent, #2563eb);
+  }
+  .informe-badge.metodologico {
+    background: color-mix(in srgb, var(--success, #16a34a) 14%, transparent);
+    color: var(--success, #16a34a);
+  }
+  .informe-card h2 {
+    margin: 0;
+    font-size: 1.08rem;
+    line-height: 1.3;
+  }
+  .informe-sub {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted, #666);
+    line-height: 1.5;
+    flex: 1;
+  }
+  .informe-more {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent, #2563eb);
+  }
+  .etica-list {
+    line-height: 1.6;
+    list-style: none;
+    padding-left: 0;
+  }
+  .etica-list li {
+    margin-bottom: 0.55rem;
+    padding-left: 1.4rem;
+    position: relative;
+  }
+  .etica-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--success, #16a34a);
+    font-weight: 700;
+  }
+  .cite-instructions {
+    margin-top: 2.5rem;
+    padding: 1.1rem;
+    background: var(--bg-soft, #f4f6f9);
+    border-radius: 0.6rem;
+  }
+  .cite-instructions a { color: var(--accent, #2563eb); }
+  #metodologia a { color: var(--accent, #2563eb); }
+</style>

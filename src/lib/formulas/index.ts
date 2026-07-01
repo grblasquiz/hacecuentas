@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-06-30
+// Generated: 2026-07-01
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -7,7 +7,6 @@ import { rmPressBancaEstimador } from './1rm-press-banca-estimador';
 import { rmSentadillaEstimador } from './1rm-sentadilla-estimador';
 import { compute as compute__401k_contribution_match_calculator } from './401k-contribution-match-calculator';
 import { aQueHoraAcostarme } from './a-que-hora-acostarme';
-import { a1cGlucosa } from './a1c-glucosa';
 import { a1cHemoglobinaGlicosiladaDiabetes } from './a1c-hemoglobina-glicosilada-diabetes';
 import { ablCabaValuacionFiscalActualizada2026 } from './abl-caba-valuacion-fiscal-actualizada-2026';
 import { ablExpensasQuienPagaInquilinoPropietario } from './abl-expensas-quien-paga-inquilino-propietario';
@@ -98,7 +97,6 @@ import { anchoBandaDescargaTiempo } from './ancho-banda-descarga-tiempo';
 import { angelGuardianFecha } from './angel-guardian-fecha';
 import { anilloCompromisoPrecioSueldo } from './anillo-compromiso-precio-sueldo';
 import { compute as compute__anime_tiempo_bingear_temporadas_episodios_horas } from './anime-tiempo-bingear-temporadas-episodios-horas';
-import { anionGapElectrolitos } from './anion-gap-electrolitos';
 import { aniversarioPareja } from './aniversario-pareja';
 import { ankiFlashcardsDiaAprenderPalabras } from './anki-flashcards-dia-aprender-palabras';
 import { compute as compute__annual_salary_to_hourly_rate_converter } from './annual-salary-to-hourly-rate-converter';
@@ -226,7 +224,6 @@ import { compute as compute__becas_junaeb_chile_cuantia_requisitos_2026 } from '
 import { becasManuelBelgranoMonto } from './becas-manuel-belgrano-monto';
 import { compute as compute__becas_mec_2026_espana_renta_familiar_rendimiento } from './becas-mec-2026-espana-renta-familiar-rendimiento';
 import { becasPorcentajeCobertura } from './becas-porcentaje-cobertura';
-import { betaHcg } from './beta-hcg';
 import { compute as compute__bicicleta_electrica_vs_moto_vs_carro_colombia } from './bicicleta-electrica-vs-moto-vs-carro-colombia';
 import { bienesPersonales } from './bienes-personales';
 import { bienesPersonales2026 } from './bienes-personales-2026';
@@ -269,7 +266,6 @@ import { bpcIdosoDeficiente } from './bpc-idoso-deficiente';
 import { bpmTempoCancion } from './bpm-tempo-cancion';
 import { breakEven } from './break-even';
 import { burnRateRunway } from './burn-rate-runway';
-import { burnoutIndiceCargaLaboralTestMbi } from './burnout-indice-carga-laboral-test-mbi';
 import { cableAwgAmperajeSeccion } from './cable-awg-amperaje-seccion';
 import { cableElectricoSeccionAmperajeDistancia } from './cable-electrico-seccion-amperaje-distancia';
 import { cacCostoAdquisicionSalesFunnel } from './cac-costo-adquisicion-sales-funnel';
@@ -505,7 +501,6 @@ import { cftPrestamoPersonalComparativa } from './cft-prestamo-personal-comparat
 import { checkInAnticipoHorasAeropuerto } from './check-in-anticipo-horas-aeropuerto';
 import { compute as compute__cheque_guarderia_0_3_anos_espana_deduccion } from './cheque-guarderia-0-3-anos-espana-deduccion';
 import { chiCuadradoIndependencia } from './chi-cuadrado-independencia';
-import { chokingHeimlichEdadManiobra } from './choking-heimlich-edad-maniobra';
 import { chorizosPorInvitadoAsado } from './chorizos-por-invitado-asado';
 import { churn } from './churn';
 import { ciclismoPowerWKgCategoriaFtp } from './ciclismo-power-w-kg-categoria-ftp';
@@ -522,7 +517,6 @@ import { claudeGeminiTokensComparativaPrecioUso } from './claude-gemini-tokens-c
 import { clausulaFormacionFifa } from './clausula-formacion-fifa';
 import { clausulaRescisionValor } from './clausula-rescision-valor';
 import { clearanceCreatininaCockcroft } from './clearance-creatinina-cockcroft';
-import { clearanceCreatininaCockcroftGault } from './clearance-creatinina-cockcroft-gault';
 import { compute as compute__cobre_precio_bolsa_chile_impacto_fiscal_codelco } from './cobre-precio-bolsa-chile-impacto-fiscal-codelco';
 import { compute as compute__coche_electrico_vs_gasolina_chile_tco_5_anos } from './coche-electrico-vs-gasolina-chile-tco-5-anos';
 import { codigoColorHexRgb } from './codigo-color-hex-rgb';
@@ -532,8 +526,6 @@ import { compute as compute__coffee_water_ratio_brewing_calculator } from './cof
 import { coldBrewRatio } from './cold-brew-ratio';
 import { coldPlungeTiempoTemperaturaCortisol } from './cold-plunge-tiempo-temperatura-cortisol';
 import { compute as compute__colegiaturas_deducibles_sat_mexico } from './colegiaturas-deducibles-sat-mexico';
-import { colesterolLdlHdlRatio } from './colesterol-ldl-hdl-ratio';
-import { colesterolTotalLdlHdlValoresDeseables } from './colesterol-total-ldl-hdl-valores-deseables';
 import { colorCabelloIdeal } from './color-cabello-ideal';
 import { colorParedCombinacion } from './color-pared-combinacion';
 import { combinatoriaPermutaciones } from './combinatoria-permutaciones';
@@ -577,7 +569,6 @@ import { concursoDocentePuntajeAntecedentesBaires } from './concurso-docente-pun
 import { conejoComidaHenoPesoEdad } from './conejo-comida-heno-peso-edad';
 import { conexionVueloMinimoMinutos } from './conexion-vuelo-minimo-minutos';
 import { configuracionPcBottleneck } from './configuracion-pc-bottleneck';
-import { conmocionCerebralProtocoloFifa } from './conmocion-cerebral-protocolo-fifa';
 import { compute as compute__constitucion_compania_sas_ecuador } from './constitucion-compania-sas-ecuador';
 import { consumoAguaMensual } from './consumo-agua-mensual';
 import { consumoAireAcondicionadoAutoExtra } from './consumo-aire-acondicionado-auto-extra';
@@ -592,7 +583,6 @@ import { consumoNaftaLitros100km } from './consumo-nafta-litros-100km';
 import { consumoWattsPcGamerFuente } from './consumo-watts-pc-gamer-fuente';
 import { compute as compute__contabilidad_electronica_multa_sat_mexico } from './contabilidad-electronica-multa-sat-mexico';
 import { contadorDePalabrasYCaracteres } from './contador-de-palabras-y-caracteres';
-import { contraccionesParto } from './contracciones-parto';
 import { contratoAlquiler2AniosVs3Anios } from './contrato-alquiler-2-anios-vs-3-anios';
 import { compute as compute__contrato_alquiler_espana_fianza_aval_mes_renta } from './contrato-alquiler-espana-fianza-aval-mes-renta';
 import { compute as compute__convenio_comercio_espana_sueldo_categoria_2026 } from './convenio-comercio-espana-sueldo-categoria-2026';
@@ -683,8 +673,6 @@ import { coolingFan3dMaterial } from './cooling-fan-3d-material';
 import { compute as compute__cooperativas_prestamo_colombia_tasa_interes } from './cooperativas-prestamo-colombia-tasa-interes';
 import { copomTasaReferenciaBancoCentralImpacto } from './copom-tasa-referencia-banco-central-impacto';
 import { correaDistribucionCambioIntervaloKm } from './correa-distribucion-cambio-intervalo-km';
-import { correccionCalcioAlbumina } from './correccion-calcio-albumina';
-import { correccionSodioGlucemia } from './correccion-sodio-glucemia';
 import { correlacionPearson } from './correlacion-pearson';
 import { corteOptimoTablero } from './corte-optimo-tablero';
 import { cortinaMedidaVentana } from './cortina-medida-ventana';
@@ -781,7 +769,6 @@ import { cpa } from './cpa';
 import { cpmCpcConversionAds } from './cpm-cpc-conversion-ads';
 import { creatinaCargaMantenimientoPeso } from './creatina-carga-mantenimiento-peso';
 import { creatinaDosisarga } from './creatina-dosis-carga-mantenimiento';
-import { creatininaFuncionRenal } from './creatinina-funcion-renal';
 import { crecimientoPercentilEdadAlturaPesoOms } from './crecimiento-percentil-edad-altura-peso-oms';
 import { crecimientoSeguidoresProyeccion } from './crecimiento-seguidores-proyeccion';
 import { compute as compute__credit_card_payoff_time_calculator } from './credit-card-payoff-time-calculator';
@@ -824,6 +811,7 @@ import { cuantoEsEnGuaraniesPesoArgentino } from './cuanto-es-en-guaranies-peso-
 import { cuantoEsEnGuaraniesRealBrasileno } from './cuanto-es-en-guaranies-real-brasileno';
 import { cuantoEsSalarioMinimoVenezuela2026 } from './cuanto-es-salario-minimo-venezuela-2026';
 import { cuantoEsUnidadTributariaBolivares } from './cuanto-es-unidad-tributaria-bolivares';
+import { cuantoFacturarParaGanarXNeto } from './cuanto-facturar-para-ganar-x-neto';
 import { cuantoFaltaAguinaldoJunioDiciembre } from './cuanto-falta-aguinaldo-junio-diciembre';
 import { cuantoFaltaCumpleanosFechaEspecifica } from './cuanto-falta-cumpleanos-fecha-especifica';
 import { compute as compute__cuanto_falta_cumpleanos_fecha_personalizada_eventos } from './cuanto-falta-cumpleanos-fecha-personalizada-eventos';
@@ -837,6 +825,7 @@ import { cuantoFaltaVencTarjetaCreditoMes } from './cuanto-falta-venc-tarjeta-cr
 import { cuantoFaltaVeranoEneroFebrero } from './cuanto-falta-verano-enero-febrero';
 import { cuantoGanoPorSegundo } from './cuanto-gano-por-segundo';
 import { cuantoGastoEnDelivery } from './cuanto-gasto-en-delivery';
+import { cuantoNecesitoGanarParaMantenerUnaFamilia } from './cuanto-necesito-ganar-para-mantener-una-familia';
 import { cuantoValeMiSueldoEnDolaresVenezuela } from './cuanto-vale-mi-sueldo-en-dolares-venezuela';
 import { cuantoValeMiTiempo } from './cuanto-vale-mi-tiempo';
 import { compute as compute__cuanto_vale_mi_tiempo_hora_anual_salario } from './cuanto-vale-mi-tiempo-hora-anual-salario';
@@ -912,7 +901,6 @@ import { compute as compute__deposito_plazo_fijo_peru } from './deposito-plazo-f
 import { compute as compute__deposito_vista_vs_cuenta_corriente_chile_comisiones } from './deposito-vista-vs-cuenta-corriente-chile-comisiones';
 import { depositosAlquilerCuantosMesesDevolucion } from './depositos-alquiler-cuantos-meses-devolucion';
 import { depreciacionActivosLineaRecta } from './depreciacion-activos-linea-recta';
-import { depresionPospartoTest } from './depresion-posparto-test';
 import { derechosTvMundial2026 } from './derechos-tv-mundial-2026';
 import { derivadaFuncionBasica } from './derivada-funcion-basica';
 import { derivadaPolinomioCoeficientes } from './derivada-polinomio-coeficientes';
@@ -1087,9 +1075,6 @@ import { equivalenciaHuevosTamanoGramosClaras } from './equivalencia-huevos-tama
 import { equivalenciaToeflIeltsCambridgeMcer } from './equivalencia-toefl-ielts-cambridge-mcer';
 import { ergonomiaEscritorioMedidas } from './ergonomia-escritorio-medidas';
 import { compute as compute__erte_vs_ere_diferencias_cuantia_espana } from './erte-vs-ere-diferencias-cuantia-espana';
-import { escalaDolorNumerica } from './escala-dolor-numerica';
-import { escalaEvaDolor } from './escala-eva-dolor';
-import { escalaGlasgowNivelConciencia } from './escala-glasgow-nivel-conciencia';
 import { escalaRichterMagnitudEnergia } from './escala-richter-magnitud-energia';
 import { escalaSuficienteTiempo } from './escala-suficiente-tiempo';
 import { escaleraHuellaContrahuellaLeyBlondel } from './escalera-huella-contrahuella-ley-blondel';
@@ -1098,7 +1083,6 @@ import { escrituraRegistroCustos } from './escritura-registro-custos';
 import { espacioJaulaHamsterTamano } from './espacio-jaula-hamster-tamano';
 import { espejoTamanoPared } from './espejo-tamano-pared';
 import { esperanzaVidaGatoRazaIndoor } from './esperanza-vida-gato-raza-indoor';
-import { espermogramaValoresNormalesOms2021 } from './espermograma-valores-normales-oms-2021';
 import { espesorVidrio } from './espesor-vidrio';
 import { espressoTdsYield } from './espresso-tds-yield';
 import { esquiPaseCerroCatedralBarilochePrecioDia } from './esqui-pase-cerro-catedral-bariloche-precio-dia';
@@ -1162,7 +1146,6 @@ import { feriasProporcionaisClt } from './ferias-proporcionais-clt';
 import { fermentacionMasa } from './fermentacion-masa';
 import { fernetColaPorInvitadoJuntada } from './fernet-cola-por-invitado-juntada';
 import { fernetColaProporciones } from './fernet-cola-proporciones';
-import { fertilidadAmhReservaOvaricaEdad } from './fertilidad-amh-reserva-ovarica-edad';
 import { fertilidadIntentosIvfFivEdadCostoArgentina } from './fertilidad-intentos-ivf-fiv-edad-costo-argentina';
 import { fertilidadMasculinaEdad } from './fertilidad-masculina-edad';
 import { festaChurrascoGramasBr } from './festa-churrasco-gramas-br';
@@ -1231,7 +1214,6 @@ import { fpsFluidezVideoJuego } from './fps-fluidez-video-juego';
 import { fpsFramesPorSegundoJuego } from './fps-frames-por-segundo-juego';
 import { fpsIdealMonitorHz } from './fps-ideal-monitor-hz';
 import { fracciones } from './fracciones';
-import { framinghamRiesgoCardiovascular } from './framingham-riesgo-cardiovascular';
 import { frecuenciaBanoPerro } from './frecuencia-bano-perro';
 import { frecuenciaCardiaca } from './frecuencia-cardiaca';
 import { frecuenciaCardiacaEntrenamiento } from './frecuencia-cardiaca-entrenamiento';
@@ -1246,7 +1228,6 @@ import { frecuenciaRespiratoria } from './frecuencia-respiratoria';
 import { compute as compute__freelance_hourly_rate_calculator } from './freelance-hourly-rate-calculator';
 import { freelanceTarifaHora } from './freelance-tarifa-hora';
 import { fructosaMalabsorcion } from './fructosa-malabsorcion';
-import { fshLhMenopausiaPerimenopausiaEdad } from './fsh-lh-menopausia-perimenopausia-edad';
 import { ftpWattsCiclismo } from './ftp-watts-ciclismo';
 import { fuerzaFriccionCoeficiente } from './fuerza-friccion-coeficiente';
 import { fusibleAmperajeCableSeccion } from './fusible-amperaje-cable-seccion';
@@ -1282,7 +1263,6 @@ import { gestacionPerra } from './gestacion-perra';
 import { gfrFiltradoGlomerularCkdEpi } from './gfr-filtrado-glomerular-ckd-epi';
 import { ginTonicProporciones } from './gin-tonic-proporciones';
 import { globosDecoracionSalonMetros } from './globos-decoracion-salon-metros';
-import { glucemiaAyunasDiabetesValoresNormales } from './glucemia-ayunas-diabetes-valores-normales';
 import { glucemiaConversionMgDlMmolL } from './glucemia-conversion-mg-dl-mmol-l';
 import { golesTiempoAnadido } from './goles-tiempo-anadido';
 import { gooseAgenteIaVsOperarioHumanoCusto } from './goose-agente-ia-vs-operario-humano-custo';
@@ -1320,7 +1300,6 @@ import { hidromielProporcionesMielAgua } from './hidromiel-proporciones-miel-agu
 import { hidroponiaNutrientesEcPpm } from './hidroponia-nutrientes-ec-ppm';
 import { hierroConstruccion } from './hierro-construccion';
 import { hierroDiarioVegetariano } from './hierro-diario-vegetariano';
-import { hierroFerritinaAnemiaDiagnostico } from './hierro-ferritina-anemia-diagnostico';
 import { hipotecaDivisaExtranjeraVsUva } from './hipoteca-divisa-extranjera-vs-uva';
 import { compute as compute__hipoteca_fija_vs_variable_euribor_espana_2026 } from './hipoteca-fija-vs-variable-euribor-espana-2026';
 import { hipotecaInfonavitMx } from './hipoteca-infonavit-mx';
@@ -1487,7 +1466,6 @@ import { indiceGlucemicoPorAlimento } from './indice-glucemico-por-alimento';
 import { indiceMasaCorporalPediatrico } from './indice-masa-corporal-pediatrico';
 import { indiceReadability } from './indice-readability';
 import { indiceSaciedadAlimento } from './indice-saciedad-alimento';
-import { indiceTobilloBrazoItb } from './indice-tobillo-brazo-itb';
 import { ineTramiteCostos } from './ine-tramite-costos';
 import { inferenciaLlmTokensSegundoThroughput } from './inferencia-llm-tokens-segundo-throughput';
 import { inflacionAcumuladaPeriodo } from './inflacion-acumulada-periodo';
@@ -1838,7 +1816,6 @@ import { mxnUsdConversion } from './mxn-usd-conversion';
 import { natacionPace100m } from './natacion-pace-100m';
 import { necesidadCaloricaHospitalizado } from './necesidad-calorica-hospitalizado';
 import { compute as compute__net_worth_tracker_calculator } from './net-worth-tracker-calculator';
-import { netoABruto } from './neto-a-bruto';
 import { neumaticosMedidaEquivalente } from './neumaticos-medida-equivalente';
 import { newsletterIngresoSuscriptoresPago } from './newsletter-ingreso-suscriptores-pago';
 import { nineraHoraNocheFinDeSemanaTarifa } from './ninera-hora-noche-fin-de-semana-tarifa';
@@ -2091,11 +2068,8 @@ import { premiosCopaArgentina } from './premios-copa-argentina';
 import { premiosLigaProfesionalAfa } from './premios-liga-profesional-afa';
 import { premiosMundial2026Seleccion } from './premios-mundial-2026-seleccion';
 import { presentismoPuntualidad } from './presentismo-puntualidad';
-import { presionArterial } from './presion-arterial';
 import { presionArterialClasificacionOms } from './presion-arterial-clasificacion-oms';
-import { presionArterialRango } from './presion-arterial-rango';
 import { presionArterialTablaNormalHipertension } from './presion-arterial-tabla-normal-hipertension';
-import { compute as compute__presion_arterial_tension_categorias_oms_2026 } from './presion-arterial-tension-categorias-oms-2026';
 import { presionAtmosfericaAltitud } from './presion-atmosferica-altitud';
 import { presionHidrostatica } from './presion-hidrostatica';
 import { presionHidrostaticaProfundidad } from './presion-hidrostatica-profundidad';
@@ -2183,8 +2157,6 @@ import { compute as compute__ptu_reparto_utilidades_mexico_10_porcentaje } from 
 import { compute as compute__puam_pension_universal_adulto_mayor_anses_2026 } from './puam-pension-universal-adulto-mayor-anses-2026';
 import { pubalgiaRecuperacion } from './pubalgia-recuperacion';
 import { pulgadasCentimetros } from './pulgadas-centimetros';
-import { pulsoArterialOximetriaSaturacionNormal } from './pulso-arterial-oximetria-saturacion-normal';
-import { puntajeApgar } from './puntaje-apgar';
 import { puntajeDeleSpanish } from './puntaje-dele-spanish';
 import { puntajeDelfFrances } from './puntaje-delf-frances';
 import { puntajeIngresoUniversidad } from './puntaje-ingreso-universidad';
@@ -2197,6 +2169,8 @@ import { puntosVsCashVueloCuandoConviene } from './puntos-vs-cash-vuelo-cuando-c
 import { compute as compute__puzzle_1000_piezas_tiempo_promedio_dificultad } from './puzzle-1000-piezas-tiempo-promedio-dificultad';
 import { compute as compute__pyme_chile_regimen_14d_tributacion_simplificada } from './pyme-chile-regimen-14d-tributacion-simplificada';
 import { queDia } from './que-dia';
+import { queSueldoNecesitoParaComprarUnAuto } from './que-sueldo-necesito-para-comprar-un-auto';
+import { queSueldoNecesitoParaSacarUnCredito } from './que-sueldo-necesito-para-sacar-un-credito';
 import { compute as compute__quita_jubilatoria_bono_refuerzo_anses_2026 } from './quita-jubilatoria-bono-refuerzo-anses-2026';
 import { raidAlmacenamientoUtilDiscos } from './raid-almacenamiento-util-discos';
 import { raizCuadradaCubica } from './raiz-cuadrada-cubica';
@@ -2318,10 +2292,8 @@ import { compute as compute__rfc_homoclave_persona_fisica_mexico } from './rfc-h
 import { rfcResicoPfMexico } from './rfc-resico-pf-mexico';
 import { riegoAutomaticoProgramacion } from './riego-automatico-programacion';
 import { riegoGoteoLitros } from './riego-goteo-litros';
-import { riesgoBurnoutLaboral } from './riesgo-burnout-laboral';
 import { riesgoCaidaAdultoMayorEscala } from './riesgo-caida-adulto-mayor-escala';
-import { riesgoDiabetesFindrisc as riesgoDiabetesFindrisc__riesgo_diabetes_findrisc } from './riesgo-diabetes-findrisc';
-import { riesgoDiabetesFindrisc } from './riesgo-diabetes-findrisc-v2';
+import { riesgoDiabetesFindrisc } from './riesgo-diabetes-findrisc';
 import { riesgoEmbarazoEdad } from './riesgo-embarazo-edad';
 import { compute as compute__rimpe_emprendedor_ecuador } from './rimpe-emprendedor-ecuador';
 import { compute as compute__rimpe_negocio_popular_ecuador } from './rimpe-negocio-popular-ecuador';
@@ -2374,11 +2346,8 @@ import { compute as compute__sancion_correccion_declaracion_dian_colombia_2026 }
 import { compute as compute__sancion_extemporaneidad_dian_2026 } from './sancion-extemporaneidad-dian-2026';
 import { compute as compute__sancion_minima_dian_colombia_2026 } from './sancion-minima-dian-colombia-2026';
 import { satIeltsToeflEquivalenciasPuntajeConvertidor } from './sat-ielts-toefl-equivalencias-puntaje-convertidor';
-import { saturacionOxigenoEvaluacion } from './saturacion-oxigeno-evaluacion';
 import { compute as compute__savings_goal_monthly_amount_calculator } from './savings-goal-monthly-amount-calculator';
-import { scoreApgarNeonatal } from './score-apgar-neonatal';
 import { scoreIeltsBandObjetivo } from './score-ielts-band-objetivo';
-import { scoreWellsTrombosisVenosa } from './score-wells-trombosis-venosa';
 import { compute as compute__screen_time_adultos_fatiga_visual_pausas } from './screen-time-adultos-fatiga-visual-pausas';
 import { compute as compute__screen_time_pediatra_edad_hora_dia } from './screen-time-pediatra-edad-hora-dia';
 import { scrumSprintVelocityStoryPoints } from './scrum-sprint-velocity-story-points';
@@ -2496,8 +2465,6 @@ import { compute as compute__sueno_bebe_horas_meses_tabla_padres } from './sueno
 import { suenoIdealEdad } from './sueno-ideal-edad';
 import { superavitCalorico } from './superavit-calorico';
 import { superficieCorporal } from './superficie-corporal';
-import { superficieCorporalBsa } from './superficie-corporal-bsa';
-import { superficieQuemaduraReglaNueves } from './superficie-quemadura-regla-nueves';
 import { compute as compute__sushi_piezas_por_persona_evento_cumpleanos } from './sushi-piezas-por-persona-evento-cumpleanos';
 import { sushiPorInvitadoCena } from './sushi-por-invitado-cena';
 import { suspensionAlturaLibrePisoAuto } from './suspension-altura-libre-piso-auto';
@@ -2565,7 +2532,6 @@ import { telaNecesariaPrendaVestido } from './tela-necesaria-prenda-vestido';
 import { temperaturaAceiteFritura } from './temperatura-aceite-fritura';
 import { temperaturaAcuarioEspecie } from './temperatura-acuario-especie';
 import { temperaturaCarne } from './temperatura-carne';
-import { temperaturaCorporal } from './temperatura-corporal';
 import { temperaturaHornoConversion } from './temperatura-horno-conversion';
 import { compute as compute__tenencia_vehicular_mexico_cdmx_edomex_2026 } from './tenencia-vehicular-mexico-cdmx-edomex-2026';
 import { tenenciaVehicularMx } from './tenencia-vehicular-mx';
@@ -2577,7 +2543,6 @@ import { tesouroSelic } from './tesouro-selic';
 import { testEmbarazoCuando } from './test-embarazo-cuando';
 import { testLenguajeAmor } from './test-lenguaje-amor';
 import { testPrenatalNoInvasivoNiptPrecioArg } from './test-prenatal-no-invasivo-nipt-precio-arg';
-import { tfgCreatinina } from './tfg-creatinina';
 import { ticketPromedio } from './ticket-promedio';
 import { compute as compute__tiempo_c1_ingles_horas_semanales_meta_meses } from './tiempo-c1-ingles-horas-semanales-meta-meses';
 import { tiempoCalidadHijosPadresMadresMinutos } from './tiempo-calidad-hijos-padres-madres-minutos';
@@ -2638,7 +2603,6 @@ import { transposicionAcordes } from './transposicion-acordes';
 import { trasladoAeropuertoCiudadTiempo } from './traslado-aeropuerto-ciudad-tiempo';
 import { traspasoVehiculoRepublicaDominicana } from './traspaso-vehiculo-republica-dominicana';
 import { compute as compute__trastero_garaje_precio_alquiler_espana_2026 } from './trastero-garaje-precio-alquiler-espana-2026';
-import { trigliceridosValoresNormalesRiesgo } from './trigliceridos-valores-normales-riesgo';
 import { trigonometria } from './trigonometria';
 import { trimestreEmbarazo } from './trimestre-embarazo';
 import { twitchBitsDonacionesDolares } from './twitch-bits-donaciones-dolares';
@@ -2788,7 +2752,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   '1rm-sentadilla-estimador': rmSentadillaEstimador,
   '401k-contribution-match-calculator': compute__401k_contribution_match_calculator,
   'a-que-hora-acostarme': aQueHoraAcostarme,
-  'a1c-glucosa': a1cGlucosa,
   'a1c-hemoglobina-glicosilada-diabetes': a1cHemoglobinaGlicosiladaDiabetes,
   'abl-caba-valuacion-fiscal-actualizada-2026': ablCabaValuacionFiscalActualizada2026,
   'abl-expensas-quien-paga-inquilino-propietario': ablExpensasQuienPagaInquilinoPropietario,
@@ -2879,7 +2842,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'angel-guardian-fecha': angelGuardianFecha,
   'anillo-compromiso-precio-sueldo': anilloCompromisoPrecioSueldo,
   'anime-tiempo-bingear-temporadas-episodios-horas': compute__anime_tiempo_bingear_temporadas_episodios_horas,
-  'anion-gap-electrolitos': anionGapElectrolitos,
   'aniversario-pareja': aniversarioPareja,
   'anki-flashcards-dia-aprender-palabras': ankiFlashcardsDiaAprenderPalabras,
   'annual-salary-to-hourly-rate-converter': compute__annual_salary_to_hourly_rate_converter,
@@ -3007,7 +2969,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'becas-manuel-belgrano-monto': becasManuelBelgranoMonto,
   'becas-mec-2026-espana-renta-familiar-rendimiento': compute__becas_mec_2026_espana_renta_familiar_rendimiento,
   'becas-porcentaje-cobertura': becasPorcentajeCobertura,
-  'beta-hcg': betaHcg,
   'bicicleta-electrica-vs-moto-vs-carro-colombia': compute__bicicleta_electrica_vs_moto_vs_carro_colombia,
   'bienes-personales': bienesPersonales,
   'bienes-personales-2026': bienesPersonales2026,
@@ -3050,7 +3011,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'bpm-tempo-cancion': bpmTempoCancion,
   'break-even': breakEven,
   'burn-rate-runway': burnRateRunway,
-  'burnout-indice-carga-laboral-test-mbi': burnoutIndiceCargaLaboralTestMbi,
   'cable-awg-amperaje-seccion': cableAwgAmperajeSeccion,
   'cable-electrico-seccion-amperaje-distancia': cableElectricoSeccionAmperajeDistancia,
   'cac-costo-adquisicion-sales-funnel': cacCostoAdquisicionSalesFunnel,
@@ -3286,7 +3246,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'check-in-anticipo-horas-aeropuerto': checkInAnticipoHorasAeropuerto,
   'cheque-guarderia-0-3-anos-espana-deduccion': compute__cheque_guarderia_0_3_anos_espana_deduccion,
   'chi-cuadrado-independencia': chiCuadradoIndependencia,
-  'choking-heimlich-edad-maniobra': chokingHeimlichEdadManiobra,
   'chorizos-por-invitado-asado': chorizosPorInvitadoAsado,
   'churn': churn,
   'ciclismo-power-w-kg-categoria-ftp': ciclismoPowerWKgCategoriaFtp,
@@ -3303,7 +3262,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'clausula-formacion-fifa': clausulaFormacionFifa,
   'clausula-rescision-valor': clausulaRescisionValor,
   'clearance-creatinina-cockcroft': clearanceCreatininaCockcroft,
-  'clearance-creatinina-cockcroft-gault': clearanceCreatininaCockcroftGault,
   'cobre-precio-bolsa-chile-impacto-fiscal-codelco': compute__cobre_precio_bolsa_chile_impacto_fiscal_codelco,
   'coche-electrico-vs-gasolina-chile-tco-5-anos': compute__coche_electrico_vs_gasolina_chile_tco_5_anos,
   'codigo-color-hex-rgb': codigoColorHexRgb,
@@ -3313,8 +3271,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cold-brew-ratio': coldBrewRatio,
   'cold-plunge-tiempo-temperatura-cortisol': coldPlungeTiempoTemperaturaCortisol,
   'colegiaturas-deducibles-sat-mexico': compute__colegiaturas_deducibles_sat_mexico,
-  'colesterol-ldl-hdl-ratio': colesterolLdlHdlRatio,
-  'colesterol-total-ldl-hdl-valores-deseables': colesterolTotalLdlHdlValoresDeseables,
   'color-cabello-ideal': colorCabelloIdeal,
   'color-pared-combinacion': colorParedCombinacion,
   'combinatoria-permutaciones': combinatoriaPermutaciones,
@@ -3358,7 +3314,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conejo-comida-heno-peso-edad': conejoComidaHenoPesoEdad,
   'conexion-vuelo-minimo-minutos': conexionVueloMinimoMinutos,
   'configuracion-pc-bottleneck': configuracionPcBottleneck,
-  'conmocion-cerebral-protocolo-fifa': conmocionCerebralProtocoloFifa,
   'constitucion-compania-sas-ecuador': compute__constitucion_compania_sas_ecuador,
   'consumo-agua-mensual': consumoAguaMensual,
   'consumo-aire-acondicionado-auto-extra': consumoAireAcondicionadoAutoExtra,
@@ -3373,7 +3328,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'consumo-watts-pc-gamer-fuente': consumoWattsPcGamerFuente,
   'contabilidad-electronica-multa-sat-mexico': compute__contabilidad_electronica_multa_sat_mexico,
   'contador-de-palabras-y-caracteres': contadorDePalabrasYCaracteres,
-  'contracciones-parto': contraccionesParto,
   'contrato-alquiler-2-anios-vs-3-anios': contratoAlquiler2AniosVs3Anios,
   'contrato-alquiler-espana-fianza-aval-mes-renta': compute__contrato_alquiler_espana_fianza_aval_mes_renta,
   'convenio-comercio-espana-sueldo-categoria-2026': compute__convenio_comercio_espana_sueldo_categoria_2026,
@@ -3464,8 +3418,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cooperativas-prestamo-colombia-tasa-interes': compute__cooperativas_prestamo_colombia_tasa_interes,
   'copom-tasa-referencia-banco-central-impacto': copomTasaReferenciaBancoCentralImpacto,
   'correa-distribucion-cambio-intervalo-km': correaDistribucionCambioIntervaloKm,
-  'correccion-calcio-albumina': correccionCalcioAlbumina,
-  'correccion-sodio-glucemia': correccionSodioGlucemia,
   'correlacion-pearson': correlacionPearson,
   'corte-optimo-tablero': corteOptimoTablero,
   'cortina-medida-ventana': cortinaMedidaVentana,
@@ -3562,7 +3514,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cpm-cpc-conversion-ads': cpmCpcConversionAds,
   'creatina-carga-mantenimiento-peso': creatinaCargaMantenimientoPeso,
   'creatina-dosis-carga-mantenimiento': creatinaDosisarga,
-  'creatinina-funcion-renal': creatininaFuncionRenal,
   'crecimiento-percentil-edad-altura-peso-oms': crecimientoPercentilEdadAlturaPesoOms,
   'crecimiento-seguidores-proyeccion': crecimientoSeguidoresProyeccion,
   'credit-card-payoff-time-calculator': compute__credit_card_payoff_time_calculator,
@@ -3605,6 +3556,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-es-en-guaranies-real-brasileno': cuantoEsEnGuaraniesRealBrasileno,
   'cuanto-es-salario-minimo-venezuela-2026': cuantoEsSalarioMinimoVenezuela2026,
   'cuanto-es-unidad-tributaria-bolivares': cuantoEsUnidadTributariaBolivares,
+  'cuanto-facturar-para-ganar-x-neto': cuantoFacturarParaGanarXNeto,
   'cuanto-falta-aguinaldo-junio-diciembre': cuantoFaltaAguinaldoJunioDiciembre,
   'cuanto-falta-cumpleanos-fecha-especifica': cuantoFaltaCumpleanosFechaEspecifica,
   'cuanto-falta-cumpleanos-fecha-personalizada-eventos': compute__cuanto_falta_cumpleanos_fecha_personalizada_eventos,
@@ -3618,6 +3570,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-falta-verano-enero-febrero': cuantoFaltaVeranoEneroFebrero,
   'cuanto-gano-por-segundo': cuantoGanoPorSegundo,
   'cuanto-gasto-en-delivery': cuantoGastoEnDelivery,
+  'cuanto-necesito-ganar-para-mantener-una-familia': cuantoNecesitoGanarParaMantenerUnaFamilia,
   'cuanto-vale-mi-sueldo-en-dolares-venezuela': cuantoValeMiSueldoEnDolaresVenezuela,
   'cuanto-vale-mi-tiempo': cuantoValeMiTiempo,
   'cuanto-vale-mi-tiempo-hora-anual-salario': compute__cuanto_vale_mi_tiempo_hora_anual_salario,
@@ -3693,7 +3646,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'deposito-vista-vs-cuenta-corriente-chile-comisiones': compute__deposito_vista_vs_cuenta_corriente_chile_comisiones,
   'depositos-alquiler-cuantos-meses-devolucion': depositosAlquilerCuantosMesesDevolucion,
   'depreciacion-activos-linea-recta': depreciacionActivosLineaRecta,
-  'depresion-posparto-test': depresionPospartoTest,
   'derechos-tv-mundial-2026': derechosTvMundial2026,
   'derivada-funcion-basica': derivadaFuncionBasica,
   'derivada-polinomio-coeficientes': derivadaPolinomioCoeficientes,
@@ -3868,9 +3820,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'equivalencia-toefl-ielts-cambridge-mcer': equivalenciaToeflIeltsCambridgeMcer,
   'ergonomia-escritorio-medidas': ergonomiaEscritorioMedidas,
   'erte-vs-ere-diferencias-cuantia-espana': compute__erte_vs_ere_diferencias_cuantia_espana,
-  'escala-dolor-numerica': escalaDolorNumerica,
-  'escala-eva-dolor': escalaEvaDolor,
-  'escala-glasgow-nivel-conciencia': escalaGlasgowNivelConciencia,
   'escala-richter-magnitud-energia': escalaRichterMagnitudEnergia,
   'escala-suficiente-tiempo': escalaSuficienteTiempo,
   'escalera-huella-contrahuella-ley-blondel': escaleraHuellaContrahuellaLeyBlondel,
@@ -3879,7 +3828,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'espacio-jaula-hamster-tamano': espacioJaulaHamsterTamano,
   'espejo-tamano-pared': espejoTamanoPared,
   'esperanza-vida-gato-raza-indoor': esperanzaVidaGatoRazaIndoor,
-  'espermograma-valores-normales-oms-2021': espermogramaValoresNormalesOms2021,
   'espesor-vidrio': espesorVidrio,
   'espresso-tds-yield': espressoTdsYield,
   'esqui-pase-cerro-catedral-bariloche-precio-dia': esquiPaseCerroCatedralBarilochePrecioDia,
@@ -3943,7 +3891,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'fermentacion-masa': fermentacionMasa,
   'fernet-cola-por-invitado-juntada': fernetColaPorInvitadoJuntada,
   'fernet-cola-proporciones': fernetColaProporciones,
-  'fertilidad-amh-reserva-ovarica-edad': fertilidadAmhReservaOvaricaEdad,
   'fertilidad-intentos-ivf-fiv-edad-costo-argentina': fertilidadIntentosIvfFivEdadCostoArgentina,
   'fertilidad-masculina-edad': fertilidadMasculinaEdad,
   'festa-churrasco-gramas-br': festaChurrascoGramasBr,
@@ -4012,7 +3959,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'fps-frames-por-segundo-juego': fpsFramesPorSegundoJuego,
   'fps-ideal-monitor-hz': fpsIdealMonitorHz,
   'fracciones': fracciones,
-  'framingham-riesgo-cardiovascular': framinghamRiesgoCardiovascular,
   'frecuencia-bano-perro': frecuenciaBanoPerro,
   'frecuencia-cardiaca': frecuenciaCardiaca,
   'frecuencia-cardiaca-entrenamiento': frecuenciaCardiacaEntrenamiento,
@@ -4027,7 +3973,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'freelance-hourly-rate-calculator': compute__freelance_hourly_rate_calculator,
   'freelance-tarifa-hora': freelanceTarifaHora,
   'fructosa-malabsorcion': fructosaMalabsorcion,
-  'fsh-lh-menopausia-perimenopausia-edad': fshLhMenopausiaPerimenopausiaEdad,
   'ftp-watts-ciclismo': ftpWattsCiclismo,
   'fuerza-friccion-coeficiente': fuerzaFriccionCoeficiente,
   'fusible-amperaje-cable-seccion': fusibleAmperajeCableSeccion,
@@ -4063,7 +4008,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'gfr-filtrado-glomerular-ckd-epi': gfrFiltradoGlomerularCkdEpi,
   'gin-tonic-proporciones': ginTonicProporciones,
   'globos-decoracion-salon-metros': globosDecoracionSalonMetros,
-  'glucemia-ayunas-diabetes-valores-normales': glucemiaAyunasDiabetesValoresNormales,
   'glucemia-conversion-mg-dl-mmol-l': glucemiaConversionMgDlMmolL,
   'goles-tiempo-anadido': golesTiempoAnadido,
   'goose-agente-ia-vs-operario-humano-custo': gooseAgenteIaVsOperarioHumanoCusto,
@@ -4101,7 +4045,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'hidroponia-nutrientes-ec-ppm': hidroponiaNutrientesEcPpm,
   'hierro-construccion': hierroConstruccion,
   'hierro-diario-vegetariano': hierroDiarioVegetariano,
-  'hierro-ferritina-anemia-diagnostico': hierroFerritinaAnemiaDiagnostico,
   'hipoteca-divisa-extranjera-vs-uva': hipotecaDivisaExtranjeraVsUva,
   'hipoteca-fija-vs-variable-euribor-espana-2026': compute__hipoteca_fija_vs_variable_euribor_espana_2026,
   'hipoteca-infonavit-mx': hipotecaInfonavitMx,
@@ -4268,7 +4211,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'indice-masa-corporal-pediatrico': indiceMasaCorporalPediatrico,
   'indice-readability': indiceReadability,
   'indice-saciedad-alimento': indiceSaciedadAlimento,
-  'indice-tobillo-brazo-itb': indiceTobilloBrazoItb,
   'ine-tramite-costos': ineTramiteCostos,
   'inferencia-llm-tokens-segundo-throughput': inferenciaLlmTokensSegundoThroughput,
   'inflacion-acumulada-periodo': inflacionAcumuladaPeriodo,
@@ -4619,7 +4561,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'natacion-pace-100m': natacionPace100m,
   'necesidad-calorica-hospitalizado': necesidadCaloricaHospitalizado,
   'net-worth-tracker-calculator': compute__net_worth_tracker_calculator,
-  'neto-a-bruto': netoABruto,
   'neumaticos-medida-equivalente': neumaticosMedidaEquivalente,
   'newsletter-ingreso-suscriptores-pago': newsletterIngresoSuscriptoresPago,
   'ninera-hora-noche-fin-de-semana-tarifa': nineraHoraNocheFinDeSemanaTarifa,
@@ -4872,11 +4813,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'premios-liga-profesional-afa': premiosLigaProfesionalAfa,
   'premios-mundial-2026-seleccion': premiosMundial2026Seleccion,
   'presentismo-puntualidad': presentismoPuntualidad,
-  'presion-arterial': presionArterial,
   'presion-arterial-clasificacion-oms': presionArterialClasificacionOms,
-  'presion-arterial-rango': presionArterialRango,
   'presion-arterial-tabla-normal-hipertension': presionArterialTablaNormalHipertension,
-  'presion-arterial-tension-categorias-oms-2026': compute__presion_arterial_tension_categorias_oms_2026,
   'presion-atmosferica-altitud': presionAtmosfericaAltitud,
   'presion-hidrostatica': presionHidrostatica,
   'presion-hidrostatica-profundidad': presionHidrostaticaProfundidad,
@@ -4964,8 +4902,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'puam-pension-universal-adulto-mayor-anses-2026': compute__puam_pension_universal_adulto_mayor_anses_2026,
   'pubalgia-recuperacion': pubalgiaRecuperacion,
   'pulgadas-centimetros': pulgadasCentimetros,
-  'pulso-arterial-oximetria-saturacion-normal': pulsoArterialOximetriaSaturacionNormal,
-  'puntaje-apgar': puntajeApgar,
   'puntaje-dele-spanish': puntajeDeleSpanish,
   'puntaje-delf-frances': puntajeDelfFrances,
   'puntaje-ingreso-universidad': puntajeIngresoUniversidad,
@@ -4978,6 +4914,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'puzzle-1000-piezas-tiempo-promedio-dificultad': compute__puzzle_1000_piezas_tiempo_promedio_dificultad,
   'pyme-chile-regimen-14d-tributacion-simplificada': compute__pyme_chile_regimen_14d_tributacion_simplificada,
   'que-dia': queDia,
+  'que-sueldo-necesito-para-comprar-un-auto': queSueldoNecesitoParaComprarUnAuto,
+  'que-sueldo-necesito-para-sacar-un-credito': queSueldoNecesitoParaSacarUnCredito,
   'quita-jubilatoria-bono-refuerzo-anses-2026': compute__quita_jubilatoria_bono_refuerzo_anses_2026,
   'raid-almacenamiento-util-discos': raidAlmacenamientoUtilDiscos,
   'raiz-cuadrada-cubica': raizCuadradaCubica,
@@ -5099,10 +5037,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'rfc-resico-pf-mexico': rfcResicoPfMexico,
   'riego-automatico-programacion': riegoAutomaticoProgramacion,
   'riego-goteo-litros': riegoGoteoLitros,
-  'riesgo-burnout-laboral': riesgoBurnoutLaboral,
   'riesgo-caida-adulto-mayor-escala': riesgoCaidaAdultoMayorEscala,
-  'riesgo-diabetes-findrisc': riesgoDiabetesFindrisc__riesgo_diabetes_findrisc,
-  'riesgo-diabetes-findrisc-v2': riesgoDiabetesFindrisc,
+  'riesgo-diabetes-findrisc': riesgoDiabetesFindrisc,
   'riesgo-embarazo-edad': riesgoEmbarazoEdad,
   'rimpe-emprendedor-ecuador': compute__rimpe_emprendedor_ecuador,
   'rimpe-negocio-popular-ecuador': compute__rimpe_negocio_popular_ecuador,
@@ -5155,11 +5091,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sancion-extemporaneidad-dian-2026': compute__sancion_extemporaneidad_dian_2026,
   'sancion-minima-dian-colombia-2026': compute__sancion_minima_dian_colombia_2026,
   'sat-ielts-toefl-equivalencias-puntaje-convertidor': satIeltsToeflEquivalenciasPuntajeConvertidor,
-  'saturacion-oxigeno-evaluacion': saturacionOxigenoEvaluacion,
   'savings-goal-monthly-amount-calculator': compute__savings_goal_monthly_amount_calculator,
-  'score-apgar-neonatal': scoreApgarNeonatal,
   'score-ielts-band-objetivo': scoreIeltsBandObjetivo,
-  'score-wells-trombosis-venosa': scoreWellsTrombosisVenosa,
   'screen-time-adultos-fatiga-visual-pausas': compute__screen_time_adultos_fatiga_visual_pausas,
   'screen-time-pediatra-edad-hora-dia': compute__screen_time_pediatra_edad_hora_dia,
   'scrum-sprint-velocity-story-points': scrumSprintVelocityStoryPoints,
@@ -5277,8 +5210,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sueno-ideal-edad': suenoIdealEdad,
   'superavit-calorico': superavitCalorico,
   'superficie-corporal': superficieCorporal,
-  'superficie-corporal-bsa': superficieCorporalBsa,
-  'superficie-quemadura-regla-nueves': superficieQuemaduraReglaNueves,
   'sushi-piezas-por-persona-evento-cumpleanos': compute__sushi_piezas_por_persona_evento_cumpleanos,
   'sushi-por-invitado-cena': sushiPorInvitadoCena,
   'suspension-altura-libre-piso-auto': suspensionAlturaLibrePisoAuto,
@@ -5346,7 +5277,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'temperatura-aceite-fritura': temperaturaAceiteFritura,
   'temperatura-acuario-especie': temperaturaAcuarioEspecie,
   'temperatura-carne': temperaturaCarne,
-  'temperatura-corporal': temperaturaCorporal,
   'temperatura-horno-conversion': temperaturaHornoConversion,
   'tenencia-vehicular-mexico-cdmx-edomex-2026': compute__tenencia_vehicular_mexico_cdmx_edomex_2026,
   'tenencia-vehicular-mx': tenenciaVehicularMx,
@@ -5358,7 +5288,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'test-embarazo-cuando': testEmbarazoCuando,
   'test-lenguaje-amor': testLenguajeAmor,
   'test-prenatal-no-invasivo-nipt-precio-arg': testPrenatalNoInvasivoNiptPrecioArg,
-  'tfg-creatinina': tfgCreatinina,
   'ticket-promedio': ticketPromedio,
   'tiempo-c1-ingles-horas-semanales-meta-meses': compute__tiempo_c1_ingles_horas_semanales_meta_meses,
   'tiempo-calidad-hijos-padres-madres-minutos': tiempoCalidadHijosPadresMadresMinutos,
@@ -5419,7 +5348,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'traslado-aeropuerto-ciudad-tiempo': trasladoAeropuertoCiudadTiempo,
   'traspaso-vehiculo-republica-dominicana': traspasoVehiculoRepublicaDominicana,
   'trastero-garaje-precio-alquiler-espana-2026': compute__trastero_garaje_precio_alquiler_espana_2026,
-  'trigliceridos-valores-normales-riesgo': trigliceridosValoresNormalesRiesgo,
   'trigonometria': trigonometria,
   'trimestre-embarazo': trimestreEmbarazo,
   'twitch-bits-donaciones-dolares': twitchBitsDonacionesDolares,

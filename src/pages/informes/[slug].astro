@@ -1,0 +1,475 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { INFORMES, BRECHA_FILAS, type Informe } from '../../lib/informes/registry';
+import { MIN_OBS } from '../../lib/coop/datasets';
+
+// Página de informe citable. Dos modos:
+//  · cooperativa  — los agregados viven en D1 y sólo se sirven vía /api/coop/stats
+//    (mismo sitio → no disponible en build), así que la carga es 100% client-side
+//    con fallback estático "recolectando datos" en el HTML.
+//  · metodologico — todo server-rendered en build con la fórmula real del repo:
+//    tabla crawleable, números siempre frescos con cada deploy.
+
+export function getStaticPaths() {
+  return INFORMES.map((informe) => ({ params: { slug: informe.slug }, props: { informe } }));
+}
+
+interface Props {
+  informe: Informe;
+}
+const { informe } = Astro.props;
+
+const PAGE_URL = `https://hacecuentas.com/informes/${informe.slug}`;
+const anio = informe.fechaPublicacion.slice(0, 4);
+const fechaLegible = new Date(informe.fechaPublicacion + 'T12:00:00Z').toLocaleDateString('es-AR', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+const fmtArs = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtPct = (n: number) => `${n.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`;
+
+// ── Mini-markdown de la metodología (párrafos + viñetas "- " + **negrita**).
+//    Contenido propio del registry, sin input de usuario → set:html es seguro.
+function mdToHtml(md: string): string {
+  const inline = (s: string) => s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return md
+    .trim()
+    .split(/\n{2,}/)
+    .map((block) => {
+      const lines = block.split('\n');
+      if (lines.every((l) => l.trim().startsWith('- '))) {
+        return `<ul>${lines.map((l) => `<li>${inline(l.trim().slice(2))}</li>`).join('')}</ul>`;
+      }
+      return `<p>${inline(block)}</p>`;
+    })
+    .join('');
+}
+const metodologiaHtml = mdToHtml(informe.metodologia);
+
+// ── Cita (APA-ish + snippet HTML; el snippet se muestra escapado por Astro).
+const citaApa = `Hacé Cuentas (${anio}). ${informe.titulo}: ${informe.subtitulo.toLowerCase()}. Recuperado de ${PAGE_URL} (licencia CC-BY 4.0).`;
+const citaHtml = `Fuente: <a href="${PAGE_URL}">${informe.titulo} — Hacé Cuentas</a> (CC-BY 4.0)`;
+
+const title = `${informe.titulo}: ${informe.subtitulo} | Informes Hacé Cuentas`;
+const description = informe.resumen;
+
+const measurementTechnique =
+  informe.tipo === 'cooperativa'
+    ? `Aporte anónimo voluntario con consentimiento explícito desde las calculadoras de Hacé Cuentas; recálculo del valor en el servidor; agregación por segmento con mínimo de ${MIN_OBS} observaciones (k-anonimato). Percentiles p10/p25/p50/p75/p90, media, mínimo y máximo.`
+    : 'Cálculo reproducible en cada build del sitio con las fórmulas públicas de las calculadoras de Hacé Cuentas sobre datos oficiales (escala y deducciones ARCA, base imponible máxima ANSES).';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Article',
+      '@id': `${PAGE_URL}#article`,
+      headline: `${informe.titulo}: ${informe.subtitulo}`,
+      description,
+      url: PAGE_URL,
+      inLanguage: 'es-AR',
+      datePublished: informe.fechaPublicacion,
+      dateModified: new Date().toISOString().slice(0, 10),
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      publisher: { '@id': 'https://hacecuentas.com/#organization' },
+      author: {
+        '@type': 'Person',
+        '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person',
+        name: 'Martín Rodríguez',
+        url: 'https://hacecuentas.com/autores/martin-rodriguez',
+      },
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      about: { '@id': `${PAGE_URL}#dataset` },
+    },
+    {
+      '@type': 'Dataset',
+      '@id': `${PAGE_URL}#dataset`,
+      name: informe.titulo,
+      description,
+      url: PAGE_URL,
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      isAccessibleForFree: true,
+      inLanguage: 'es-AR',
+      dateModified: new Date().toISOString().slice(0, 10),
+      spatialCoverage: { '@type': 'Place', name: 'Argentina' },
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      measurementTechnique,
+      ...(informe.coopDataset
+        ? {
+            distribution: [
+              {
+                '@type': 'DataDownload',
+                name: `${informe.titulo} (JSON, API abierta)`,
+                encodingFormat: 'application/json',
+                contentUrl: `https://hacecuentas.com/api/coop/stats?dataset=${informe.coopDataset}`,
+              },
+            ],
+          }
+        : {}),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Informes', item: 'https://hacecuentas.com/informes' },
+        { '@type': 'ListItem', position: 3, name: informe.titulo, item: PAGE_URL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={`/informes/${informe.slug}`}
+  audience="AR"
+  schema={schema}
+  domain="data"
+>
+  <Header slot="header" />
+
+  <main class="article-main">
+    <article class="page-content informe-page">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan">
+          <a href="/">Inicio</a> <span>›</span> <a href="/informes">Informes</a> <span>›</span>
+          <span>{informe.titulo}</span>
+        </nav>
+        <p class="informe-kicker">
+          <span aria-hidden="true">{informe.icon}</span>
+          {informe.tipo === 'cooperativa' ? 'Datos de la cooperativa anónima' : 'Calculado de datos oficiales'}
+        </p>
+        <h1>{informe.titulo}</h1>
+        <p class="lede">{informe.subtitulo}</p>
+        <p class="updated">
+          Publicado: <time datetime={informe.fechaPublicacion}>{fechaLegible}</time> ·
+          Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)
+        </p>
+      </header>
+
+      <section class="resumen-box" aria-label="Resumen del informe">
+        <h2>En resumen</h2>
+        <p>{informe.resumen}</p>
+      </section>
+
+      {informe.tipo === 'metodologico' && informe.hallazgosEstaticos && (
+        <section aria-label="Hallazgos">
+          <h2>La brecha, sueldo por sueldo</h2>
+          <div class="stats-callout">
+            {informe.hallazgosEstaticos.map((h) => (
+              <div class="stat">
+                <span class="stat-num">{h.valor}</span>
+                <span class="stat-label">{h.titulo}</span>
+              </div>
+            ))}
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sueldo bruto</th>
+                  <th>Aportes (17%)</th>
+                  <th>Ganancias</th>
+                  <th>Neto en mano</th>
+                  <th>Brecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {BRECHA_FILAS.map((f) => (
+                  <tr>
+                    <td data-label="Bruto"><strong>{fmtArs(f.bruto)}</strong></td>
+                    <td data-label="Aportes">{fmtArs(f.aportes)}</td>
+                    <td data-label="Ganancias">{f.ganancias > 0 ? fmtArs(f.ganancias) : '—'}</td>
+                    <td data-label="Neto">{fmtArs(f.neto)}</td>
+                    <td data-label="Brecha"><strong>{fmtPct(f.brechaPct)}</strong></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="note">
+            Empleado registrado, soltero y sin hijos, sin deducciones adicionales. Calculado en el
+            último build del sitio con la misma fórmula de la
+            <a href={informe.calcHref}>{informe.calcLabel?.toLowerCase()}</a>, escala ARCA vigente.
+          </p>
+          <ul class="hallazgos-detalle">
+            {informe.hallazgosEstaticos.map((h) => (
+              <li><strong>{h.titulo} → brecha del {h.valor}.</strong> {h.detalle}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {informe.tipo === 'cooperativa' && (
+        <section aria-label="Datos del índice">
+          <h2>Los números del índice</h2>
+          <div class="informe-live" data-informe-live data-dataset={informe.coopDataset}>
+            <div class="informe-seed">
+              <p class="seed-title">🌱 Recolectando datos</p>
+              <p>
+                Este informe se publica automáticamente cuando el índice alcanza
+                <strong> {MIN_OBS} aportes anónimos</strong> en algún segmento. Los datos se cargan
+                en vivo desde la API abierta y se actualizan a diario.
+              </p>
+              {informe.calcHref && (
+                <p>
+                  <a class="seed-cta" href={informe.calcHref}>Aportá tu dato anónimo desde la {informe.calcLabel?.toLowerCase()} →</a>
+                </p>
+              )}
+            </div>
+          </div>
+          <p class="note">
+            Sólo se muestran segmentos con {MIN_OBS} o más aportes (k-anonimato). API abierta:
+            <code>/api/coop/stats?dataset={informe.coopDataset}</code>.
+          </p>
+        </section>
+      )}
+
+      <section>
+        <h2>Metodología</h2>
+        <div class="metodologia" set:html={metodologiaHtml} />
+        <p>
+          Más sobre las salvaguardas (opt-in explícito, aportes revocables, sin datos personales)
+          en <a href="/cooperativa-de-datos">la página de la cooperativa de datos</a>.
+        </p>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Cómo citar este informe</h2>
+        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
+        <pre><code>{citaApa}</code></pre>
+        <p>Si publicás online, con este HTML alcanza:</p>
+        <pre><code>{citaHtml}</code></pre>
+        <p>
+          Los datos se publican bajo licencia
+          <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a>:
+          reproducción libre citando a Hacé Cuentas con un enlace.
+        </p>
+      </section>
+
+      <section class="embed-cta">
+        <h2>Embebé este dato</h2>
+        <p>
+          ¿Querés mostrar este índice o nuestras calculadoras en tu sitio o nota? Tenemos un web
+          component listo para pegar: <a href="/partners">conocé el programa de partners →</a>
+        </p>
+      </section>
+
+      <section>
+        <h2>Más informes</h2>
+        <ul class="calc-links">
+          {INFORMES.filter((i) => i.slug !== informe.slug).map((i) => (
+            <li><a href={`/informes/${i.slug}`}>{i.titulo}: {i.subtitulo.toLowerCase()}</a></li>
+          ))}
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <Footer slot="footer" />
+
+  <script>
+    // Carga en vivo de los agregados de la cooperativa (sólo informes tipo=cooperativa).
+    // Va DENTRO del Layout: los scripts después de </Layout> no corren en este repo.
+    const box = document.querySelector<HTMLElement>('[data-informe-live]');
+
+    const CURRENCY = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+    const fmt = (unit: string, n: number) =>
+      unit === 'pct' ? `${Math.round(n * 10) / 10}%` : CURRENCY(n);
+    const escapeHtml = (s: string) =>
+      s.replace(/[<>&"]/g, (c) => (c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '&' ? '&amp;' : '&quot;'));
+
+    async function loadLive(el: HTMLElement) {
+      const id = el.dataset.dataset;
+      if (!id) return;
+      try {
+        const resp = await fetch(`/api/coop/stats?dataset=${encodeURIComponent(id)}`);
+        if (!resp.ok) return; // queda el fallback "recolectando"
+        const data = await resp.json();
+        const segs = (data && data.segments) || [];
+        if (!segs.length) return; // n < 30 en todos los segmentos → fallback
+        const unit = (data.dataset && data.dataset.unit) || 'ARS';
+        const rows = segs
+          .slice(0, 15)
+          .map((s: any) => {
+            const name = s.isOverall
+              ? 'Todos los aportes'
+              : Object.values(s.segments || {}).filter(Boolean).join(' · ') || 'Segmento';
+            return `<tr class="${s.isOverall ? 'is-overall' : ''}">
+              <td>${escapeHtml(name)}</td>
+              <td>${s.n}</td>
+              <td>${fmt(unit, s.p25)}</td>
+              <td><strong>${fmt(unit, s.p50)}</strong></td>
+              <td>${fmt(unit, s.p75)}</td>
+            </tr>`;
+          })
+          .join('');
+        el.innerHTML = `<div class="table-wrap"><table>
+          <thead><tr><th>Segmento</th><th>Aportes</th><th>p25</th><th>Mediana</th><th>p75</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+        <p class="note">Percentiles del índice. Sólo segmentos con 30+ aportes anónimos. Actualizado a diario.</p>`;
+      } catch {
+        /* sin red / dev sin DB → queda el fallback estático */
+      }
+    }
+
+    if (box) loadLive(box);
+  </script>
+</Layout>
+
+<style>
+  .informe-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem 1rem 4rem;
+  }
+  .crumbs {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-bottom: 0.75rem;
+  }
+  .crumbs a { color: var(--accent, #2563eb); text-decoration: none; }
+  .informe-kicker {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent, #2563eb);
+    margin-bottom: 0.5rem;
+  }
+  .informe-page h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .lede {
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: var(--text-muted, #444);
+  }
+  .updated {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.5rem;
+  }
+  .informe-page h2 {
+    font-size: 1.4rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .resumen-box {
+    margin: 1.75rem 0;
+    padding: 1.1rem 1.25rem;
+    background: var(--bg-soft, #f4f6f9);
+    border-left: 4px solid var(--accent, #2563eb);
+    border-radius: 0.6rem;
+  }
+  .resumen-box h2 { margin-top: 0; font-size: 1.05rem; }
+  .resumen-box p { margin: 0; line-height: 1.65; }
+  .stats-callout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+  }
+  .stat {
+    background: var(--bg-soft, #f4f6f9);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 0.6rem;
+    padding: 0.9rem 1rem;
+    text-align: center;
+  }
+  .stat-num {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--accent, #2563eb);
+    line-height: 1.2;
+  }
+  .stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.25rem;
+  }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  .informe-page table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    min-width: 540px;
+  }
+  .informe-page th {
+    background: var(--bg-soft, #f1f5f9);
+    padding: 0.6rem 0.7rem;
+    text-align: right;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border, #e5e7eb);
+    white-space: nowrap;
+  }
+  .informe-page th:first-child { text-align: left; }
+  .informe-page td {
+    padding: 0.55rem 0.7rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border, #eee);
+    white-space: nowrap;
+  }
+  .informe-page td:first-child { text-align: left; white-space: normal; }
+  .informe-page tbody tr:nth-child(odd) { background: var(--bg-card, #fafafa); }
+  .informe-page tbody tr.is-overall td { font-weight: 600; }
+  .note {
+    font-size: 0.85rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.5rem;
+  }
+  .note a, .note code { color: var(--accent, #2563eb); }
+  .hallazgos-detalle { margin: 1rem 0 0 1.25rem; line-height: 1.7; }
+  .hallazgos-detalle li { margin-bottom: 0.5rem; }
+  .informe-seed {
+    border: 1px dashed var(--border, #cbd5e1);
+    border-radius: 0.6rem;
+    padding: 1.25rem 1.4rem;
+    background: var(--bg-card, #fafafa);
+  }
+  .seed-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+  }
+  .informe-seed p { margin: 0 0 0.6rem; line-height: 1.6; }
+  .seed-cta {
+    font-weight: 600;
+    color: var(--accent, #2563eb);
+  }
+  .metodologia :global(p) { line-height: 1.65; margin-bottom: 0.9rem; }
+  .metodologia :global(ul) { margin: 0 0 0.9rem 1.25rem; line-height: 1.7; }
+  .metodologia :global(li) { margin-bottom: 0.4rem; }
+  .cite-instructions, .embed-cta {
+    margin-top: 2.5rem;
+    padding: 1.1rem;
+    background: var(--bg-soft, #f4f6f9);
+    border-radius: 0.6rem;
+  }
+  .cite-instructions pre {
+    background: var(--code-bg, #eaeef3);
+    padding: 0.75rem;
+    border-radius: 0.4rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .cite-instructions a, .embed-cta a { color: var(--accent, #2563eb); }
+  .calc-links { margin-left: 1.25rem; }
+  .calc-links li { line-height: 1.7; margin-bottom: 0.5rem; }
+  .calc-links a { color: var(--accent, #2563eb); }
+</style>

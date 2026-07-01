@@ -72,6 +72,7 @@ const TRANSLATIONS = {
     whenUse: 'Cuándo usar esta calculadora', howWorks: 'Cómo funciona', example: 'Ejemplo paso a paso',
     solvedCases: 'Casos resueltos', faq: 'Preguntas frecuentes', sources: 'Fuentes y referencias',
     methodology: 'Metodología y confianza', editorial: 'Editorial', updateLbl: 'Actualización',
+    changelog: 'Historial de actualizaciones', changelogNote: 'Registro de cambios de datos, fórmula y contenido de esta calculadora.',
     privacy: 'Privacidad', limits: 'Limitaciones', howCite: '📌 Cómo citar esta calculadora',
     alsoSee: 'También te puede interesar', guideEyebrow: '📘 ¿Querés entender más a fondo?',
     guideRead: 'Leé la guía:', guideOpen: 'Abrir guía →', compareEyebrow: '¿Dudás entre opciones?',
@@ -89,6 +90,7 @@ const TRANSLATIONS = {
     whenUse: 'When to use this calculator', howWorks: 'How it works', example: 'Step-by-step example',
     solvedCases: 'Worked examples', faq: 'Frequently asked questions', sources: 'Sources & references',
     methodology: 'Methodology & trust', editorial: 'Editorial', updateLbl: 'Updates',
+    changelog: 'Update history', changelogNote: 'Log of data, formula and content changes for this calculator.',
     privacy: 'Privacy', limits: 'Limitations', howCite: '📌 How to cite this calculator',
     alsoSee: 'You might also like', guideEyebrow: '📘 Want to go deeper?',
     guideRead: 'Read the guide:', guideOpen: 'Open guide →', compareEyebrow: 'Torn between options?',
@@ -106,6 +108,7 @@ const TRANSLATIONS = {
     whenUse: 'Quando usar esta calculadora', howWorks: 'Como funciona', example: 'Exemplo passo a passo',
     solvedCases: 'Exemplos resolvidos', faq: 'Perguntas frequentes', sources: 'Fontes e referências',
     methodology: 'Metodologia e confiança', editorial: 'Editorial', updateLbl: 'Atualização',
+    changelog: 'Histórico de atualizações', changelogNote: 'Registro de mudanças de dados, fórmula e conteúdo desta calculadora.',
     privacy: 'Privacidade', limits: 'Limitações', howCite: '📌 Como citar esta calculadora',
     alsoSee: 'Você também pode gostar', guideEyebrow: '📘 Quer se aprofundar?',
     guideRead: 'Leia o guia:', guideOpen: 'Abrir guia →', compareEyebrow: 'Em dúvida entre opções?',
@@ -167,6 +170,14 @@ const datosSource = getDatosSource(calc);
 const useCases: Array<string | {title?:string;description?:string}> = calc.useCases || [];
 const example = calc.example || null;
 const solvedExamples = Array.isArray(calc.solvedExamples) ? calc.solvedExamples : [];
+// Historial de actualizaciones visible (señal de mantenimiento activo). Cada
+// entrada del JSON es {date:'YYYY-MM-DD', change:'…'}; se muestra en el panel
+// Fuentes, ordenada descendente por fecha.
+const changelog: Array<{ date:string; change:string }> = (Array.isArray(calc.changelog) ? calc.changelog : [])
+  .filter((e: any) => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date || '') && e.change)
+  .sort((a: any, b: any) => b.date.localeCompare(a.date));
+const fmtChangelogDate = (d: string) =>
+  new Date(d + 'T00:00:00Z').toLocaleDateString(dateLocale, { day:'2-digit', month:'short', year:'numeric', timeZone:'UTC' });
 const keyTakeaway: string = calc.keyTakeaway || '';
 const answerSnippet: string = calc.answerSnippet || '';
 const downloads: Array<{label:string;href:string;description?:string}> = calc.downloads || [];
@@ -478,6 +489,18 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
           <ul class="v2-sources">
             {sources.map((s: any) => (
               <li><cite>{s.url ? <a href={s.url} target="_blank" rel={sourceRel(s.url)}>{s.name}</a> : s.name}{s.publisher && <span style="color:var(--v2-muted);"> — {s.publisher}</span>}{s.date && <span style="color:var(--v2-muted);"> ({s.date})</span>}</cite></li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {changelog.length > 0 && (
+        <div class="v2-block" id="historial">
+          <h2>{L.changelog}</h2>
+          <p style="margin:0 0 10px;color:var(--v2-muted);font-size:14px;">{L.changelogNote}</p>
+          <ul class="v2-changelog">
+            {changelog.map((e) => (
+              <li><time datetime={e.date}>{fmtChangelogDate(e.date)}</time><span set:html={mdInline(e.change)}></span></li>
             ))}
           </ul>
         </div>

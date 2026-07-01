@@ -27,6 +27,7 @@ import { execSync } from 'node:child_process';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
+import { DECISION_HUBS } from '../src/lib/decisions/hubs.ts';
 import { PRODUCTS } from '../src/lib/products/manifest.ts';
 
 const PRUNED_SLUGS = new Set(Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')));
@@ -755,6 +756,11 @@ sitemaps.push({
   name: 'sitemap-core.xml',
   urls: [
     core('/',                                    '1.0',  'daily',   true),
+    // Pilares (jul-2026): los 4 hubs que concentran la autoridad interna.
+    core('/sueldos-y-trabajo',                   '0.95', 'weekly'),
+    core('/impuestos-argentina',                 '0.95', 'weekly'),
+    core('/finanzas-personales',                 '0.95', 'weekly'),
+    core('/negocios-e-independientes',           '0.95', 'weekly'),
     core('/calculadoras',                        '0.9',  'weekly'),
     core('/populares',                           '0.85', 'weekly'),
     core('/comparador-plazo-fijo',               '0.85', 'daily',   true),
@@ -1101,6 +1107,14 @@ if (DECISION_MANIFEST.length > 0) {
   );
   const decidirUrls: Url[] = [
     { loc: `${site}/decidir`, priority: '0.8', changefreq: 'weekly', lastmod: hubLastmod },
+    // Hubs de decisión (/decidir/laborales|vivienda|deudas|negocio) — lastmod
+    // editorial FIJO (hub.lastReviewed), mismo criterio anti-churn que las salas.
+    ...DECISION_HUBS.map((h) => ({
+      loc: `${site}/decidir/${h.slug}`,
+      priority: '0.8',
+      changefreq: 'weekly',
+      lastmod: clampToToday(h.lastReviewed),
+    })),
     ...DECISION_MANIFEST.map((r) => ({
       loc: `${site}/decidir/${r.slug}`,
       priority: '0.8',

@@ -5,11 +5,39 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { DECISION_MANIFEST } from '../../lib/decisions/manifest';
+import { DECISION_HUBS, INDEX_EXTRA_GROUPS } from '../../lib/decisions/hubs';
 
 const site = 'https://hacecuentas.com';
 const title = 'Salas de decisión — decidí con números reales | Hacé Cuentas';
 const description =
   'No son calculadoras sueltas: son experiencias completas para decisiones de plata importantes. Cargás tus datos una vez y combinamos varias fórmulas para darte una conclusión clara, escenarios y próximos pasos.';
+
+const bySlug = new Map(DECISION_MANIFEST.map((r) => [r.slug, r]));
+
+// Índice agrupado: cada sala aparece UNA vez, bajo su hub primario (el primero
+// de DECISION_HUBS que la contiene; los hubs pueden solaparse entre sí, el
+// índice no). Después, los grupos sin hub propio (auto/familia/ahorro).
+const seen = new Set<string>();
+const hubSections = DECISION_HUBS.map((hub) => {
+  const rooms = hub.roomSlugs
+    .filter((s) => !seen.has(s) && bySlug.has(s))
+    .map((s) => {
+      seen.add(s);
+      return bySlug.get(s)!;
+    });
+  return { hub, rooms };
+});
+const extraSections = INDEX_EXTRA_GROUPS.map((g) => ({
+  ...g,
+  rooms: g.roomSlugs
+    .filter((s) => !seen.has(s) && bySlug.has(s))
+    .map((s) => {
+      seen.add(s);
+      return bySlug.get(s)!;
+    }),
+}));
+// Red de seguridad: salas nuevas que todavía no fueron asignadas a ningún grupo.
+const unsorted = DECISION_MANIFEST.filter((r) => !seen.has(r.slug));
 
 const schema = {
   '@context': 'https://schema.org',
@@ -47,20 +75,75 @@ const schema = {
         decisión completa: cargás tus datos una vez y te damos una conclusión clara, tres
         escenarios y los próximos pasos. Sin vueltas, sin registro.
       </p>
+      <nav class="dh-hub-nav" aria-label="Hubs de decisión">
+        {DECISION_HUBS.map((h) => (
+          <a href={`/decidir/${h.slug}`}>{h.icon} {h.shortLabel}</a>
+        ))}
+      </nav>
     </header>
 
-    <ul class="dh-grid">
-      {DECISION_MANIFEST.map((r) => (
-        <li>
-          <a href={`/decidir/${r.slug}`} class="dh-card">
-            <span class="dh-icon" aria-hidden="true">{r.icon}</span>
-            <span class="dh-card-title">{r.h1}</span>
-            <span class="dh-card-desc">{r.intro}</span>
-            <span class="dh-card-cta">Abrir la sala →</span>
-          </a>
-        </li>
-      ))}
-    </ul>
+    {hubSections.map(({ hub, rooms }) => (
+      <section class="dh-group">
+        <div class="dh-group-head">
+          <h2>
+            <a href={`/decidir/${hub.slug}`}>{hub.icon} {hub.h1}</a>
+          </h2>
+          <a class="dh-group-more" href={`/decidir/${hub.slug}`}>Ver el hub →</a>
+        </div>
+        <ul class="dh-grid">
+          {rooms.map((r) => (
+            <li>
+              <a href={`/decidir/${r.slug}`} class="dh-card">
+                <span class="dh-icon" aria-hidden="true">{r.icon}</span>
+                <span class="dh-card-title">{r.h1}</span>
+                <span class="dh-card-desc">{r.description}</span>
+                <span class="dh-card-cta">Abrir la sala →</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {extraSections.map((g) => (
+      <section class="dh-group">
+        <div class="dh-group-head">
+          <h2>{g.icon} {g.title}</h2>
+        </div>
+        <ul class="dh-grid">
+          {g.rooms.map((r) => (
+            <li>
+              <a href={`/decidir/${r.slug}`} class="dh-card">
+                <span class="dh-icon" aria-hidden="true">{r.icon}</span>
+                <span class="dh-card-title">{r.h1}</span>
+                <span class="dh-card-desc">{r.description}</span>
+                <span class="dh-card-cta">Abrir la sala →</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {unsorted.length > 0 && (
+      <section class="dh-group">
+        <div class="dh-group-head">
+          <h2>🧩 Más decisiones</h2>
+        </div>
+        <ul class="dh-grid">
+          {unsorted.map((r) => (
+            <li>
+              <a href={`/decidir/${r.slug}`} class="dh-card">
+                <span class="dh-icon" aria-hidden="true">{r.icon}</span>
+                <span class="dh-card-title">{r.h1}</span>
+                <span class="dh-card-desc">{r.description}</span>
+                <span class="dh-card-cta">Abrir la sala →</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     <p class="dh-foot">
       ¿Te falta una decisión? <a href="/sugerir">Sugerí una sala</a> y la sumamos.
@@ -77,7 +160,7 @@ const schema = {
     padding: 1.5rem 1rem 3rem;
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
+    gap: 2.25rem;
   }
   .dh-head {
     display: flex;
@@ -103,6 +186,62 @@ const schema = {
     line-height: 1.6;
     color: var(--text);
     max-width: 60ch;
+  }
+  .dh-hub-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .dh-hub-nav a {
+    display: inline-block;
+    padding: 0.45rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--accent-strong, #0369a1);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .dh-hub-nav a:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft, #e0f2fe);
+  }
+  .dh-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+  .dh-group-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .dh-group-head h2 {
+    margin: 0;
+    font-size: 1.375rem;
+    line-height: 1.25;
+    color: var(--text);
+  }
+  .dh-group-head h2 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .dh-group-head h2 a:hover {
+    color: var(--accent-strong, #0369a1);
+    text-decoration: underline;
+  }
+  .dh-group-more {
+    flex-shrink: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--accent-strong, #0369a1);
+    text-decoration: none;
+  }
+  .dh-group-more:hover {
+    text-decoration: underline;
   }
   .dh-grid {
     list-style: none;
