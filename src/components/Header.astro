@@ -1040,8 +1040,9 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
   .account-btn:not(.is-authed):hover { filter: brightness(1.05); background: var(--accent, #2563eb); color: #fff; }
   .account-btn.is-authed { color: var(--accent, #2563eb); border-color: var(--accent, #2563eb); }
   .account-btn.is-authed .account-label { display: none; }
-  @media (max-width: 380px) {
-    /* En pantallas muy chicas, colapsar a ícono para no apretar el header. */
+  @media (max-width: 480px) {
+    /* En teléfonos, "Ingresá" colapsa a ícono: con 5 acciones + logo el texto no
+       entra (los iPhone son ~375-430px). El CTA sigue como ícono tappable. */
     .account-btn:not(.is-authed) { width: 44px; padding: 0; }
     .account-label { display: none; }
   }
@@ -1283,10 +1284,12 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     /* El logo no se aprieta (flex-shrink:0): antes min-width:0 + ellipsis dejaban
        que el flex aplastara el texto a ~0 → se veía "Hacé C…". */
     .logo { flex-shrink: 0; }
-    /* Texto visible (nowrap viene del base) con un punto menos de font para que
-       "Hacé Cuentas" + ícono + las 4 acciones entren sin desbordar (≥~361px).
-       En pantallas más chicas se oculta (bloque ≤360px abajo). */
-    .logo-text { font-size: 0.875rem; }
+    /* Con 5 acciones (búsqueda + país + cuenta/"Ingresá" + tema + hamburguesa)
+       + el logo con texto NO entra en ~375-430px (los iPhone actuales) → la
+       página entera scrolleaba de costado y el contenido "se corría a la
+       izquierda". En teléfonos el logo va icon-only (la marca sigue siendo el
+       ícono); el texto vuelve ≥481px. */
+    .logo-text { display: none; }
     .header-actions { gap: 0.375rem; margin-left: 0; }
     /* Botón de búsqueda compacto pero cómodo de tocar (44px alto). */
     .header-search-btn { width: 44px; height: 44px; min-width: 44px; padding: 0; justify-content: center; }
