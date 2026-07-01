@@ -1038,6 +1038,12 @@ const globalSchema = {
       html {
         font-family: var(--font-body);
         scroll-behavior: smooth;
+        /* Guard anti scroll-horizontal en mobile: si CUALQUIER elemento desborda
+           (aunque sea transitorio en la carga — p.ej. el logo antes de cargar la
+           imagen, o un carrusel), sin esto la página scrollea de lado y "se corre
+           a la izquierda". `clip` (no `hidden`) NO crea un scroll-container → no
+           rompe el header sticky ni scroll-padding-top. */
+        overflow-x: clip;
         /* El header es sticky (.site-header, top:0, ~64px). Sin esto, los
            anchors internos (#faq, #resultado, etc.) quedan tapados por el
            header al saltar. 72px = alto del header + margen de respiro. */
