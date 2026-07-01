@@ -1,0 +1,22 @@
+---
+/**
+ * TrustStrip — una sola línea de confianza (fuente oficial · actualizado · autor),
+ * no señales dispersas. Pasá `items` (texto plano) o usá el slot para markup rico.
+ * Cada item lleva un ✓ de dominio por default.
+ */
+interface Props {
+  items?: string[];
+  class?: string;
+}
+const { items = [], class: className = '' } = Astro.props;
+const CHECK = '<path d="M20 6 9 17l-5-5"/>';
+---
+<div class={`ui-trust ${className}`}>
+  {items.map((it) => (
+    <span class="ui-trust__item">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={CHECK} />
+      {it}
+    </span>
+  ))}
+  <slot />
+</div>

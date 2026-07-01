@@ -11,7 +11,6 @@ import ProblemInterpreter from '../components/ProblemInterpreter.astro';
 import HeroSearch from '../components/HeroSearch.astro';
 import { TOTAL_DISPLAY, PT_DISPLAY, TOTAL_PLAIN, CALC_COUNTS } from '../lib/calc-counts';
 import { DECISION_MANIFEST } from '../lib/decisions/manifest';
-import { PRODUCTS } from '../lib/products/manifest';
 import { GONE_410_URLS } from '../lib/gone-410';
 import { HOME_HREFLANG } from '../lib/hreflang';
 import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
@@ -570,30 +569,6 @@ const schema = {
         <span class="camino-d">Presupuesto, ahorro y deudas, guardados mes a mes.</span>
         <span class="camino-go">Empezar →</span>
       </a>
-    </div>
-  </section>
-
-  {/* Productos verticales: la experiencia de marca principal. 4 productos con
-      recurrencia (perfil + alertas + hitos + historial), no 26 categorías sueltas. */}
-  <section class="productos-home" aria-labelledby="productos-home-h">
-    <div class="section-header">
-      <div>
-        <span class="eyebrow eyebrow-inline">⭐ Tus productos</span>
-        <h2 id="productos-home-h">Las cuentas que hacés todos los meses, en un solo lugar</h2>
-        <p class="productos-home-lede">
-          Cargás tus números una vez y vuelven con alertas, fechas e historial. Elegí tu producto.
-        </p>
-      </div>
-      <a href="/mi" class="see-all">Ver mis productos →</a>
-    </div>
-    <div class="productos-home-grid">
-      {PRODUCTS.map((p) => (
-        <a href={`/mi/${p.slug}`} class="producto-card" style={`--c-accent:${p.accent}`}>
-          <span class="producto-icon" aria-hidden="true">{p.icon}</span>
-          <span class="producto-name">{p.name}</span>
-          <span class="producto-tag">{p.tagline}</span>
-        </a>
-      ))}
     </div>
   </section>
 
@@ -1608,21 +1583,21 @@ const schema = {
   /* Mobile (#5): los destacados pasan a CARRUSEL horizontal con snap, no a una
      pila infinita. Aplica a caminos, productos y "lo nuevo" (feature cards). */
   @media (max-width: 640px) {
-    .caminos-grid, .productos-home-grid, .destacados-grid {
+    .caminos-grid, .destacados-grid {
       display: grid; grid-auto-flow: column; grid-template-columns: none;
       grid-auto-columns: 78%; gap: 0.75rem;
       overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
       scrollbar-width: none; margin: 0 -1rem; padding: 0 1rem 0.5rem;
     }
-    .caminos-grid::-webkit-scrollbar, .productos-home-grid::-webkit-scrollbar, .destacados-grid::-webkit-scrollbar { display: none; }
-    .caminos-grid > *, .productos-home-grid > *, .destacados-grid > * { scroll-snap-align: start; }
+    .caminos-grid::-webkit-scrollbar, .destacados-grid::-webkit-scrollbar { display: none; }
+    .caminos-grid > *, .destacados-grid > * { scroll-snap-align: start; }
   }
 
   /* Motion = causalidad, no decoración: calmamos rotaciones de íconos en hover
      (quedan los lifts/translate, que sí comunican estado). */
   .feat-card:hover .feat-icon { transform: scale(1.04); }
   @media (hover: none) {
-    .pop-card:hover, .pilar-card:hover, .feat-card:hover, .producto-card:hover, .camino:hover { transform: none; box-shadow: none; }
+    .pop-card:hover, .pilar-card:hover, .feat-card:hover, .camino:hover { transform: none; box-shadow: none; }
   }
 
   .trust-row {
@@ -2116,30 +2091,6 @@ const schema = {
   /* [4] Destacados (BCRA + Comparador) with shimmer */
   /* Salas de decisión (super calculadoras) — banda destacada post-buscador */
   /* Banda de productos verticales */
-  .productos-home { margin: 2rem 0 2.5rem; }
-  .productos-home-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
-  /* Productos = la experiencia de marca → tiles grandes, cada uno con su color
-     propio (no más cards blancas idénticas). Silueta: bloque de tiles con color. */
-  .productos-home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.25rem; }
-  .producto-card {
-    position: relative;
-    display: flex; flex-direction: column; gap: 0.35rem;
-    padding: 1.5rem 1.4rem 1.45rem;
-    background: linear-gradient(165deg, color-mix(in srgb, var(--c-accent) 13%, var(--bg-card)), var(--bg-card) 72%);
-    border: 1px solid color-mix(in srgb, var(--c-accent) 30%, var(--border));
-    border-radius: 18px; text-decoration: none; color: var(--text); overflow: hidden;
-    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
-  }
-  .producto-card:hover { transform: translateY(-3px); border-color: var(--c-accent); box-shadow: 0 10px 28px -6px color-mix(in srgb, var(--c-accent) 32%, transparent); }
-  .producto-icon {
-    width: 54px; height: 54px; border-radius: 15px; margin-bottom: 0.35rem;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: color-mix(in srgb, var(--c-accent) 18%, var(--bg-card));
-    font-size: 1.85rem; line-height: 1;
-  }
-  .producto-name { font-size: 1.1875rem; font-weight: 800; letter-spacing: -0.02em; }
-  .producto-tag { color: var(--c-accent); font-weight: 600; font-size: 0.875rem; }
-
   .salas-home { margin: 2.5rem 0 3rem; }
   .salas-home-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
   /* Salas = navegación decisional → lista editorial de filas, SIN cards ni cajas.

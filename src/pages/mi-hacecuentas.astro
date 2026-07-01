@@ -7,6 +7,7 @@ import Footer from '../components/Footer.astro';
 import {
   PROFILE_GROUPS, PROFILE_FIELDS, PROVINCES_BY_COUNTRY, CURRENCY_BY_COUNTRY,
 } from '../lib/profile/schema';
+import { PRODUCTS } from '../lib/products/manifest';
 import profileUsage from '../lib/profile/usage-auto.json';
 
 const groups = PROFILE_GROUPS.map((g) => ({
@@ -121,6 +122,30 @@ const inputType = (t: string) =>
           <button type="button" class="link-btn link-subtle" data-logout-all>Cerrar en todos los dispositivos</button>
         </div>
       </div>
+
+      <!-- Tus productos: la experiencia de marca con recurrencia (perfil + alertas
+           + hitos + historial). Movido acá desde la home: vive en el área logueada. -->
+      <section class="productos-mi" aria-labelledby="productos-mi-h">
+        <div class="section-header">
+          <div>
+            <span class="eyebrow eyebrow-inline">⭐ Tus productos</span>
+            <h2 id="productos-mi-h">Las cuentas que hacés todos los meses, en un solo lugar</h2>
+            <p class="productos-mi-lede">
+              Tus números precargan cada producto y vuelven con alertas, fechas e historial. Elegí uno.
+            </p>
+          </div>
+          <a href="/mi" class="see-all">Ver mis productos →</a>
+        </div>
+        <div class="productos-mi-grid">
+          {PRODUCTS.map((p) => (
+            <a href={`/mi/${p.slug}`} class="producto-card" style={`--c-accent:${p.accent}`}>
+              <span class="producto-icon" aria-hidden="true">{p.icon}</span>
+              <span class="producto-name">{p.name}</span>
+              <span class="producto-tag">{p.tagline}</span>
+            </a>
+          ))}
+        </div>
+      </section>
 
       <!-- Progreso del perfil (#7) + toggle ocultar montos (#16) -->
       <div class="profile-toolbar">
@@ -737,6 +762,53 @@ const inputType = (t: string) =>
 </script>
 
 <style>
+  /* Tus productos (movido desde la home → área logueada). */
+  .productos-mi { margin: 1.5rem 0 2rem; }
+  .productos-mi .section-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 1rem; margin-bottom: 1.25rem;
+  }
+  .productos-mi .section-header h2 { margin: 0; font-size: 1.5rem; }
+  .productos-mi .eyebrow {
+    font-size: 0.75rem; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .productos-mi .eyebrow-inline {
+    display: inline-flex; align-items: center; gap: 0.375rem; margin-bottom: 0.375rem;
+  }
+  .productos-mi .see-all {
+    font-size: 0.875rem; color: var(--accent); text-decoration: none;
+    font-weight: 500; white-space: nowrap;
+  }
+  .productos-mi .see-all:hover { text-decoration: underline; }
+  .productos-mi-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
+  .productos-mi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.25rem; }
+  .producto-card {
+    position: relative;
+    display: flex; flex-direction: column; gap: 0.35rem;
+    padding: 1.5rem 1.4rem 1.45rem;
+    background: linear-gradient(165deg, color-mix(in srgb, var(--c-accent) 13%, var(--bg-card)), var(--bg-card) 72%);
+    border: 1px solid color-mix(in srgb, var(--c-accent) 30%, var(--border));
+    border-radius: 18px; text-decoration: none; color: var(--text); overflow: hidden;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+  }
+  .producto-card:hover { transform: translateY(-3px); border-color: var(--c-accent); box-shadow: 0 10px 28px -6px color-mix(in srgb, var(--c-accent) 32%, transparent); }
+  .producto-icon {
+    width: 54px; height: 54px; border-radius: 15px; margin-bottom: 0.35rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--c-accent) 18%, var(--bg-card));
+    font-size: 1.85rem; line-height: 1;
+  }
+  .producto-name { font-size: 1.1875rem; font-weight: 800; letter-spacing: -0.02em; }
+  .producto-tag { color: var(--c-accent); font-weight: 600; font-size: 0.875rem; }
+  @media (hover: none) {
+    .producto-card:hover { transform: none; box-shadow: none; }
+  }
+  @media (max-width: 640px) {
+    .productos-mi .section-header { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+    .productos-mi .section-header h2 { font-size: 1.25rem; }
+  }
+
   .profile-page { max-width: 720px; margin: 0 auto; padding: 2rem 1rem 3rem; }
   .profile-hero h1 { font-size: 1.75rem; margin: 0 0 0.5rem; }
   .profile-lead { color: var(--text-muted); margin: 0 0 1.25rem; line-height: 1.5; }

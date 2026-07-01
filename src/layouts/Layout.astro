@@ -15,6 +15,8 @@ import '@fontsource/jetbrains-mono/latin-500.css';
 // cuerpo (el resultado grande). Mismo family, +1 woff2 chico; no se preloadea.
 import '@fontsource/jetbrains-mono/latin-700.css';
 import interVariableFontUrl from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+// UI kit — primitivas de marca (cards/rows domain-aware). Global en toda página.
+import '../styles/ui-kit.css';
 
 export interface Props {
   title: string;
@@ -966,7 +968,7 @@ const globalSchema = {
          focus, tablas), la personalidad se propaga sola sin tocar componentes.
          Los alias --domain-* se derivan acá una vez (resuelven el --accent ya
          re-mapeado del propio <body>). =================================== */
-      body[data-domain] {
+      body[data-domain], [data-domain] {
         --grad-brand: linear-gradient(135deg, var(--accent), var(--accent-2));
         --grad-brand-soft: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--bg-card)), color-mix(in srgb, var(--accent-2) 12%, var(--bg-card)));
         --domain-accent: var(--accent);
@@ -977,43 +979,44 @@ const globalSchema = {
         --domain-gradient: var(--grad-brand);
       }
 
-      /* — Light — */
-      body[data-domain="money"] {      /* Índigo */
+      /* — Light — (aplica a <body> y a cualquier contenedor [data-domain],
+         para poder teñir una BANDA por dominio dentro de una misma página) */
+      body[data-domain="money"], [data-domain="money"] {      /* Índigo */
         --accent: #4f46e5; --accent-hover: #4338ca; --accent-strong: #3730a3; --accent-soft: #eef2ff; --on-accent: #ffffff; --accent-2: #7c3aed;
       }
-      body[data-domain="data"] {       /* Esmeralda */
+      body[data-domain="data"], [data-domain="data"] {       /* Esmeralda */
         --accent: #059669; --accent-hover: #047857; --accent-strong: #065f46; --accent-soft: #ecfdf5; --on-accent: #ffffff; --accent-2: #0d9488;
       }
-      body[data-domain="health"] {     /* Rosa coral */
+      body[data-domain="health"], [data-domain="health"] {     /* Rosa coral */
         --accent: #f43f5e; --accent-hover: #e11d48; --accent-strong: #be123c; --accent-soft: #fff1f2; --on-accent: #ffffff; --accent-2: #ec4899;
       }
-      body[data-domain="home"] {       /* Ámbar — texto oscuro sobre el fill (amber falla con blanco) */
+      body[data-domain="home"], [data-domain="home"] {       /* Ámbar — texto oscuro sobre el fill (amber falla con blanco) */
         --accent: #d97706; --accent-hover: #b45309; --accent-strong: #92400e; --accent-soft: #fffbeb; --on-accent: #1c1917; --accent-2: #f59e0b;
       }
-      body[data-domain="knowledge"] {  /* Violeta */
+      body[data-domain="knowledge"], [data-domain="knowledge"] {  /* Violeta */
         --accent: #7c3aed; --accent-hover: #6d28d9; --accent-strong: #5b21b6; --accent-soft: #f5f3ff; --on-accent: #ffffff; --accent-2: #a855f7;
       }
-      body[data-domain="life"] {       /* Cian */
+      body[data-domain="life"], [data-domain="life"] {       /* Cian */
         --accent: #0891b2; --accent-hover: #0e7490; --accent-strong: #155e75; --accent-soft: #ecfeff; --on-accent: #ffffff; --accent-2: #06b6d4;
       }
 
       /* — Dark (acentos aclarados, texto oscuro sobre el fill como la marca) — */
-      html[data-theme="dark"] body[data-domain="money"] {
+      html[data-theme="dark"] body[data-domain="money"], html[data-theme="dark"] [data-domain="money"] {
         --accent: #818cf8; --accent-hover: #6366f1; --accent-strong: #c7d2fe; --accent-soft: #4f46e533; --on-accent: #0f172a; --accent-2: #a78bfa;
       }
-      html[data-theme="dark"] body[data-domain="data"] {
+      html[data-theme="dark"] body[data-domain="data"], html[data-theme="dark"] [data-domain="data"] {
         --accent: #34d399; --accent-hover: #10b981; --accent-strong: #a7f3d0; --accent-soft: #05966933; --on-accent: #0f172a; --accent-2: #2dd4bf;
       }
-      html[data-theme="dark"] body[data-domain="health"] {
+      html[data-theme="dark"] body[data-domain="health"], html[data-theme="dark"] [data-domain="health"] {
         --accent: #fb7185; --accent-hover: #f43f5e; --accent-strong: #fecdd3; --accent-soft: #f43f5e33; --on-accent: #0f172a; --accent-2: #f472b6;
       }
-      html[data-theme="dark"] body[data-domain="home"] {
+      html[data-theme="dark"] body[data-domain="home"], html[data-theme="dark"] [data-domain="home"] {
         --accent: #fbbf24; --accent-hover: #f59e0b; --accent-strong: #fde68a; --accent-soft: #d9770633; --on-accent: #0f172a; --accent-2: #f59e0b;
       }
-      html[data-theme="dark"] body[data-domain="knowledge"] {
+      html[data-theme="dark"] body[data-domain="knowledge"], html[data-theme="dark"] [data-domain="knowledge"] {
         --accent: #a78bfa; --accent-hover: #8b5cf6; --accent-strong: #ddd6fe; --accent-soft: #7c3aed33; --on-accent: #0f172a; --accent-2: #c084fc;
       }
-      html[data-theme="dark"] body[data-domain="life"] {
+      html[data-theme="dark"] body[data-domain="life"], html[data-theme="dark"] [data-domain="life"] {
         --accent: #22d3ee; --accent-hover: #06b6d4; --accent-strong: #a5f3fc; --accent-soft: #0891b233; --on-accent: #0f172a; --accent-2: #2dd4bf;
       }
 

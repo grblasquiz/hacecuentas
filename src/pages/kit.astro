@@ -1,0 +1,146 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ContentCard from '../components/ui/ContentCard.astro';
+import ActionCard from '../components/ui/ActionCard.astro';
+import MetricCard from '../components/ui/MetricCard.astro';
+import ResultCard from '../components/ui/ResultCard.astro';
+import CompactRow from '../components/ui/CompactRow.astro';
+import TrustStrip from '../components/ui/TrustStrip.astro';
+import EmptyState from '../components/ui/EmptyState.astro';
+import Icon from '../components/ui/Icon.astro';
+
+const DOMAINS = [
+  { id: 'money', label: 'Dinero y trabajo', color: 'Índigo' },
+  { id: 'data', label: 'Economía', color: 'Esmeralda' },
+  { id: 'health', label: 'Salud y familia', color: 'Coral' },
+  { id: 'home', label: 'Casa y proyectos', color: 'Ámbar' },
+  { id: 'knowledge', label: 'Conocimiento', color: 'Violeta' },
+  { id: 'life', label: 'Vida cotidiana', color: 'Cian' },
+];
+
+const ACTION_ICONS = ['share', 'copy', 'download', 'print', 'reset', 'check', 'info', 'alert', 'search', 'star', 'calendar', 'clock', 'mail', 'link', 'filter', 'sparkles'];
+const PRODUCT_ICONS = ['calculator', 'wallet', 'coins', 'percent', 'receipt', 'trending-up', 'trending-down', 'chart', 'home', 'heart', 'book', 'globe', 'target', 'scale'];
+---
+
+<Layout
+  title="UI Kit — Hacé Cuentas"
+  description="Referencia interna del sistema de diseño."
+  noindex={true}
+>
+  <Header slot="header" />
+
+  <section class="kit">
+    <header class="kit-head">
+      <p class="kit-eyebrow"><Icon name="sparkles" size={15} /> Sistema de diseño</p>
+      <h1>UI Kit de Hacé Cuentas</h1>
+      <p class="kit-lead">
+        Primitivas obligatorias. Toda superficie (calc, sala, blog, BCRA) reusa
+        estas cards en vez de inventar una nueva. Son <strong>domain-aware</strong>:
+        heredan el color de su dominio vía <code>data-domain</code>.
+      </p>
+    </header>
+
+    <!-- Íconos -->
+    <h2 class="kit-h2">Íconos de acción</h2>
+    <div class="kit-icons">
+      {ACTION_ICONS.map((n) => (
+        <span class="kit-icon"><Icon name={n} size={22} /><em>{n}</em></span>
+      ))}
+    </div>
+    <h2 class="kit-h2">Íconos de producto</h2>
+    <div class="kit-icons">
+      {PRODUCT_ICONS.map((n) => (
+        <span class="kit-icon"><Icon name={n} size={22} /><em>{n}</em></span>
+      ))}
+    </div>
+
+    <!-- Cada dominio, mismas primitivas -->
+    {DOMAINS.map((d) => (
+      <div class="kit-domain" data-domain={d.id}>
+        <div class="kit-domain-head">
+          <span class="kit-swatch"></span>
+          <div>
+            <strong>{d.label}</strong>
+            <span class="kit-domain-meta">data-domain="{d.id}" · {d.color}</span>
+          </div>
+        </div>
+
+        <div class="ui-grid ui-grid--auto">
+          <ResultCard eyebrow="Resultado principal" value="$ 2.490.000" sub="83% del sueldo bruto — neto estimado en mano.">
+            <span>Bruto: <b>$ 3.000.000</b></span>
+            <span>Descuentos: <b>17%</b></span>
+          </ResultCard>
+
+          <MetricCard label="Dólar hoy" value="$ 1.485" delta="+1,2%" deltaTone="pos" sub="Blue · promedio compra/venta">
+            <Icon name="trending-up" size={14} slot="icon" />
+          </MetricCard>
+
+          <MetricCard label="Inflación mensual" value="2,1%" delta="-0,4 pp" deltaTone="neg" sub="IPC INDEC" />
+        </div>
+
+        <div class="ui-grid ui-grid--3" style="margin-top:12px">
+          <ActionCard href="#" title="Sueldo en mano" desc="Neto después de aportes y ganancias" icon='<rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/>' />
+          <ActionCard href="#" title="Aguinaldo (SAC)" desc="Medio aguinaldo de junio y diciembre">
+            <Icon name="coins" size={22} slot="icon" />
+          </ActionCard>
+          <ContentCard variant="soft">
+            <TrustStrip items={['Fuente oficial AFIP', 'Actualizado hoy', 'Revisado por Martín R.']} />
+            <div style="margin-top:12px">
+              <CompactRow label="Mínimo no imponible" value="$ 2.490.038" icon='<path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>' />
+              <CompactRow label="Tope jubilatorio" value="$ 1.980.000" href="#" />
+              <CompactRow label="Alícuota máxima" value="35%" />
+            </div>
+          </ContentCard>
+        </div>
+
+        <div class="ui-grid ui-grid--2" style="margin-top:12px">
+          <ContentCard>
+            <EmptyState
+              title="Sin resultados"
+              desc="No encontramos calculadoras para tu búsqueda. Probá con otra palabra."
+              ctaHref="#"
+              ctaLabel="Ver todas"
+            />
+          </ContentCard>
+          <div class="ui-grid" style="align-content:start">
+            <ResultCard eyebrow="Ahorro" value="+ $ 148.000" sub="Ganás esto por año" tone="pos" />
+            <ResultCard eyebrow="Costo extra" value="− $ 62.500" sub="Pagás de más" tone="neg" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </section>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .kit { max-width: 1120px; margin: 0 auto; }
+  .kit-head { margin: 8px 0 28px; }
+  .kit-eyebrow {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--accent-strong);
+  }
+  .kit-head h1 { font-size: clamp(28px, 5vw, 40px); margin: 6px 0 8px; letter-spacing: -.02em; }
+  .kit-lead { color: var(--text-muted); max-width: 62ch; font-size: 16px; line-height: 1.5; }
+  .kit-lead code { font-family: var(--font-mono); font-size: 13px; background: var(--bg-muted); padding: 1px 6px; border-radius: 6px; }
+  .kit-h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-subtle); margin: 26px 0 12px; }
+  .kit-icons { display: flex; flex-wrap: wrap; gap: 10px; }
+  .kit-icon {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    width: 84px; padding: 12px 6px;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--text);
+  }
+  .kit-icon em { font-style: normal; font-size: 10.5px; color: var(--text-subtle); font-family: var(--font-mono); }
+  .kit-domain { margin: 30px 0; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-soft); }
+  .kit-domain-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .kit-swatch { width: 38px; height: 38px; border-radius: 10px; background: var(--accent); box-shadow: var(--shadow-sm); flex: 0 0 auto; }
+  .kit-domain-head strong { display: block; font-size: 17px; letter-spacing: -.01em; }
+  .kit-domain-meta { display: block; font-size: 12px; color: var(--text-subtle); font-family: var(--font-mono); margin-top: 2px; }
+</style>

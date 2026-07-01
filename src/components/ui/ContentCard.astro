@@ -1,0 +1,38 @@
+---
+/**
+ * ContentCard — contenedor base del UI kit. Cualquier "cajita" del sitio debería
+ * ser esto (o una de las primitivas hermanas), no una `.foo-card` nueva.
+ * Domain-aware: hereda --accent del body[data-domain].
+ */
+interface Props {
+  as?: 'div' | 'article' | 'section' | 'li';
+  href?: string;
+  variant?: 'default' | 'soft' | 'accent';
+  pad?: 'default' | 'lg' | 'flush';
+  interactive?: boolean;
+  class?: string;
+}
+const {
+  as = 'div',
+  href,
+  variant = 'default',
+  pad = 'default',
+  interactive = false,
+  class: className = '',
+} = Astro.props;
+
+const Tag = href ? 'a' : as;
+const isInteractive = interactive || !!href;
+const cls = [
+  'ui-card',
+  variant === 'soft' && 'ui-card--soft',
+  variant === 'accent' && 'ui-card--accent',
+  pad === 'lg' && 'ui-card--pad-lg',
+  pad === 'flush' && 'ui-card--flush',
+  isInteractive && 'ui-card--interactive',
+  className,
+].filter(Boolean).join(' ');
+---
+<Tag class={cls} href={href}>
+  <slot />
+</Tag>

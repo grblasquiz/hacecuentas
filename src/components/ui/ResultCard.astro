@@ -1,0 +1,24 @@
+---
+/**
+ * ResultCard — la identidad de los NÚMEROS. El resultado es el centro visual de
+ * la marca: eyebrow → valor hero (mono tabular) → sub → comparación.
+ * `tone` tiñe SOLO el valor: accent (default, color de dominio), pos (verde),
+ * neg (rojo), warn (ámbar), neutral (tinta). El slot default va en la comparación.
+ */
+interface Props {
+  eyebrow?: string;
+  value: string | number;
+  sub?: string;
+  tone?: 'accent' | 'pos' | 'neg' | 'warn' | 'neutral';
+  class?: string;
+}
+const { eyebrow, value, sub, tone = 'accent', class: className = '' } = Astro.props;
+const toneClass = tone !== 'accent' ? `ui-result--${tone}` : '';
+const hasCompare = Astro.slots.has('default');
+---
+<div class={`ui-result ${toneClass} ${className}`}>
+  {eyebrow && <span class="ui-result__eyebrow"><slot name="icon" />{eyebrow}</span>}
+  <span class="ui-result__value">{value}</span>
+  {sub && <span class="ui-result__sub">{sub}</span>}
+  {hasCompare && <div class="ui-result__compare"><slot /></div>}
+</div>

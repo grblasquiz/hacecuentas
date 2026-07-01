@@ -1,0 +1,27 @@
+---
+/**
+ * MetricCard — label + número grande (mono tabular) + sub/delta. Para dashboards
+ * y páginas-dato (dólar, inflación, BCRA). El número usa la voz de marca.
+ */
+interface Props {
+  label: string;
+  value: string | number;
+  sub?: string;
+  delta?: string;                 // ej "+2,3%"
+  deltaTone?: 'pos' | 'neg' | 'neutral';
+  class?: string;
+}
+const { label, value, sub, delta, deltaTone = 'neutral', class: className = '' } = Astro.props;
+const deltaColor =
+  deltaTone === 'pos' ? 'var(--success-text)'
+  : deltaTone === 'neg' ? 'var(--danger)'
+  : 'var(--text-muted)';
+---
+<div class={`ui-card ui-metric ${className}`}>
+  <span class="ui-metric__label">
+    <slot name="icon" />{label}
+  </span>
+  <span class="ui-metric__value">{value}</span>
+  {delta && <span class="ui-metric__delta" style={`color:${deltaColor}`}>{delta}</span>}
+  {sub && <span class="ui-metric__sub">{sub}</span>}
+</div>

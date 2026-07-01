@@ -1,0 +1,193 @@
+/* =========================================================================
+   UI KIT — primitivas de marca obligatorias (Hacé Cuentas)
+   -------------------------------------------------------------------------
+   Un set pequeño y cerrado de cards/rows que TODA superficie debe reusar en
+   vez de inventar su propia `.foo-card`. Se apoyan en los tokens de marca ya
+   definidos en Layout.astro:
+     · --accent / --accent-soft / --accent-strong / --on-accent   (domain-aware:
+        body[data-domain] los remapea → una card en /blog se ve violeta y la
+        misma card en /dolar-hoy se ve esmeralda, sin tocar el componente)
+     · --bg-card / --border / --text* / --radius* / --shadow*
+     · --font-num (JetBrains Mono, tabular) → LA VOZ DE LOS NÚMEROS
+   Reglas: sin colores hardcodeados, sin radios sueltos, sin sombras nuevas.
+   Cada primitiva vive en src/components/ui/*.astro como wrapper delgado.
+   ========================================================================= */
+
+/* ---- Base: contenedor (ContentCard) ---------------------------------- */
+.ui-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.ui-card--flush { padding: 0; overflow: hidden; }
+.ui-card--pad-lg { padding: 24px 26px; }
+.ui-card--soft { background: var(--domain-surface, var(--bg-soft)); }
+.ui-card--accent {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+}
+
+/* Variante clickable: hover lift + borde de dominio. Aplicar en <a>/<button>. */
+.ui-card--interactive {
+  display: block;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  text-decoration: none;
+  color: inherit;
+}
+.ui-card--interactive:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+.ui-card--interactive:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-color: var(--accent);
+}
+
+/* ---- ActionCard: ícono + título + desc + flecha ---------------------- */
+.ui-action { display: flex; align-items: flex-start; gap: 14px; }
+.ui-action__icon {
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  border-radius: var(--radius);
+  display: grid; place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.ui-action__icon svg { width: 22px; height: 22px; }
+.ui-action__body { min-width: 0; flex: 1; }
+.ui-action__title {
+  font-weight: 700; font-size: 15.5px; color: var(--text);
+  letter-spacing: -.01em; line-height: 1.25;
+}
+.ui-action__desc {
+  font-size: 13.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.4;
+}
+.ui-action__arrow {
+  flex: 0 0 auto; color: var(--text-subtle); align-self: center;
+  transition: transform .15s ease, color .15s ease;
+}
+.ui-card--interactive:hover .ui-action__arrow { transform: translateX(3px); color: var(--accent); }
+
+/* ---- MetricCard: label chico + número grande (mono) + delta ---------- */
+.ui-metric { display: flex; flex-direction: column; gap: 4px; }
+.ui-metric__label {
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--text-subtle);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.ui-metric__value {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  font-weight: 700; font-size: 26px; line-height: 1.1;
+  color: var(--text); letter-spacing: -.02em;
+}
+.ui-metric__sub { font-size: 12.5px; color: var(--text-muted); }
+.ui-metric__delta {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+/* ---- ResultCard: LA identidad de los números ------------------------- */
+/* El resultado es el centro visual de la marca: eyebrow → valor hero mono →
+   sub → comparación. Tono semántico (pos/neg/neutral/warn) tiñe SOLO el valor. */
+.ui-result {
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: var(--radius-xl);
+  padding: 22px 24px;
+}
+.ui-result__eyebrow {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--accent-strong);
+  display: inline-flex; align-items: center; gap: 7px; margin-bottom: 8px;
+}
+.ui-result__value {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;
+  font-weight: 700; font-size: clamp(30px, 6vw, 42px); line-height: 1.05;
+  letter-spacing: -.02em; color: var(--accent-strong);
+  display: block;
+}
+.ui-result--pos .ui-result__value { color: var(--success-text); }
+.ui-result--neg .ui-result__value { color: var(--danger); }
+.ui-result--warn .ui-result__value { color: var(--warning-text); }
+.ui-result--neutral .ui-result__value { color: var(--text); }
+.ui-result__sub { font-size: 14px; color: var(--text-muted); margin-top: 8px; line-height: 1.45; }
+.ui-result__compare {
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 15%, var(--border));
+  display: flex; flex-wrap: wrap; gap: 6px 18px;
+  font-size: 13px; color: var(--text-muted);
+}
+.ui-result__compare b {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  color: var(--text); font-weight: 700;
+}
+
+/* ---- CompactRow: fila densa (ícono · label · valor) ------------------ */
+.ui-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.ui-row:last-child { border-bottom: 0; }
+.ui-row__icon { flex: 0 0 auto; color: var(--accent); display: grid; place-items: center; }
+.ui-row__icon svg { width: 18px; height: 18px; }
+.ui-row__label { flex: 1; min-width: 0; font-size: 14px; color: var(--text); font-weight: 500; }
+.ui-row__value {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-weight: 700; font-size: 14px; color: var(--text);
+}
+a.ui-row { text-decoration: none; transition: background .12s ease; border-radius: var(--radius-sm); }
+a.ui-row:hover { background: var(--bg-soft); }
+
+/* ---- TrustStrip: una sola línea de confianza ------------------------- */
+.ui-trust {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+  padding: 10px 14px;
+  background: var(--domain-surface, var(--bg-soft));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.ui-trust__item {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--text-muted); font-weight: 500;
+}
+.ui-trust__item svg { width: 15px; height: 15px; color: var(--accent); flex: 0 0 auto; }
+
+/* ---- EmptyState: ícono + título + desc + CTA opcional ---------------- */
+.ui-empty {
+  text-align: center; padding: 40px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.ui-empty__icon {
+  width: 56px; height: 56px; border-radius: var(--radius-lg);
+  display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent-strong);
+}
+.ui-empty__icon svg { width: 30px; height: 30px; }
+.ui-empty__title { font-weight: 800; font-size: 19px; color: var(--text); letter-spacing: -.01em; }
+.ui-empty__desc { font-size: 14px; color: var(--text-muted); max-width: 42ch; line-height: 1.5; }
+.ui-empty__cta {
+  margin-top: 6px; display: inline-flex; align-items: center; gap: 7px;
+  background: var(--accent); color: var(--on-accent);
+  font-weight: 700; font-size: 14px; text-decoration: none;
+  padding: 11px 20px; border-radius: var(--radius-full);
+  transition: background .15s ease;
+}
+.ui-empty__cta:hover { background: var(--accent-hover); }
+
+/* ---- Grids utilitarios para componer las cards ----------------------- */
+.ui-grid { display: grid; gap: 12px; }
+.ui-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.ui-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.ui-grid--auto { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+@media (max-width: 640px) {
+  .ui-grid--2, .ui-grid--3 { grid-template-columns: 1fr; }
+}

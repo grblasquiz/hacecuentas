@@ -1,0 +1,30 @@
+---
+/**
+ * EmptyState — ícono + título + descripción + CTA opcional. Para 404, búsquedas
+ * sin resultados, listas vacías. Ícono por slot "icon" o prop `icon` (SVG inner).
+ */
+interface Props {
+  title: string;
+  desc?: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+  icon?: string;
+  class?: string;
+}
+const { title, desc, ctaHref, ctaLabel, icon, class: className = '' } = Astro.props;
+const hasIcon = !!icon || Astro.slots.has('icon');
+const SEARCH = '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>';
+---
+<div class={`ui-empty ${className}`}>
+  <span class="ui-empty__icon">
+    {hasIcon
+      ? (icon
+          ? <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon} />
+          : <slot name="icon" />)
+      : <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={SEARCH} />}
+  </span>
+  <span class="ui-empty__title">{title}</span>
+  {desc && <span class="ui-empty__desc">{desc}</span>}
+  {ctaHref && ctaLabel && <a class="ui-empty__cta" href={ctaHref}>{ctaLabel}</a>}
+  <slot />
+</div>

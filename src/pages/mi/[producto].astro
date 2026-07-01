@@ -15,6 +15,9 @@ export function getStaticPaths() {
 const { producto } = Astro.params;
 const product = getProduct(producto!)!;
 
+// Familia visual del vertical (money es default → sólo mapeamos los que difieren).
+const productDomain = ({ casa: 'home', familia: 'health' } as const)[producto as string];
+
 const fieldByKey = new Map(PROFILE_FIELDS.map((f) => [f.key, f]));
 const salaBySlug = new Map(DECISION_MANIFEST.map((r) => [r.slug, r]));
 
@@ -74,6 +77,7 @@ const schema = {
   description={product.description}
   canonical={canonical}
   schema={schema}
+  domain={productDomain}
 >
   <Header slot="header" />
 
