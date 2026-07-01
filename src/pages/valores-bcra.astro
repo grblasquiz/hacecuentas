@@ -65,7 +65,11 @@ const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDig
 const fmtDate = (s: string) => {
   if (!s) return '—';
   try {
-    return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    // Fechas 'YYYY-MM-DD' (sin hora) se parsean como UTC y, al pasarlas a hora
+    // AR (UTC-3), retroceden un día (ej. CER 2026-07-15 mostraba 14/07). Forzamos
+    // medianoche local para que el día quede exacto. Las ISO con hora van tal cual.
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00') : new Date(s);
+    return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch {
     return s;
   }
@@ -535,9 +539,7 @@ const faqSchema = {
         <div class="card-grid">
           {tasasBcra.map((t) => {
             const s = sparkFrom(t.spark);
-            const cur = t.deltaKind === 'pct'
-              ? (t.spark && t.spark.length ? t.spark[t.spark.length - 1] : null)
-              : (t.spark && t.spark.length ? t.spark[t.spark.length - 1] : null);
+            const cur = t.spark && t.spark.length ? t.spark[t.spark.length - 1] : null;
             const delta = t.deltaKind === 'pct'
               ? deltaSigned(cur, t.prev, { pct: true, digits: 2 })
               : t.deltaKind === 'pb'
@@ -556,7 +558,7 @@ const faqSchema = {
                     <span class={`delta delta-${tone}`} title="Variación vs el dato anterior">{delta}</span>
                   )}
                 </div>
-                <div class="card-value" data-tasa={t.label === 'ICL' ? 'icl' : t.label === 'BADLAR' ? 'badlar' : undefined}>{t.value}</div>
+                <div class="card-value" data-tasa={t.label === 'ICL' ? 'icl' : undefined}>{t.value}</div>
                 {s.pts && (
                   <svg class={`spark spark-${s.up ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true" role="img">
                     <polyline points={s.pts} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
@@ -1279,4 +1281,80 @@ const faqSchema = {
     padding: 0 0 1rem; max-width: 70ch;
   }
   .faq-answer a { color: var(--accent-strong); font-weight: 600; }
+
+  /* ── LECTURA EJECUTIVA (B) ─────────────────────────────────────────────── */
+  .exec {
+    margin: 1.5rem 0 0;
+    padding: 1.1rem 1.25rem 0.9rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: var(--shadow-sm);
+  }
+  .exec-head { margin-bottom: 0.6rem; }
+  .exec-kicker {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--accent-strong);
+  }
+  .exec-title { font-size: 1.1rem; margin: 0.15rem 0 0; }
+  .exec-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  .exec-item { display: flex; gap: 0.6rem; align-items: flex-start; }
+  .exec-icon { font-size: 1.05rem; line-height: 1.5; flex: none; }
+  .exec-body { display: flex; flex-direction: column; gap: 0.15rem; }
+  .exec-text { font-size: 0.95rem; line-height: 1.55; color: var(--text); }
+  .exec-text strong { font-weight: 700; }
+  .exec-cta { align-self: flex-start; font-size: 0.84rem; font-weight: 600; color: var(--accent-strong); }
+  .exec-cta:hover { text-decoration: underline; }
+  .exec-note { margin: 0.85rem 0 0; font-size: 0.75rem; color: var(--text-subtle); font-style: italic; }
+
+  /* Pie de tarjeta: fuente + acción (D). */
+  .card-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px solid var(--border);
+  }
+  .card-src { font-size: 0.68rem; color: var(--text-subtle); }
+  .card-act { font-size: 0.75rem; font-weight: 600; color: var(--accent-strong); white-space: nowrap; }
+  .card-act:hover { text-decoration: underline; }
+  .card-hint-future { color: var(--warning, #b45309); font-weight: 600; cursor: help; }
+
+  /* ── ALERTAS (C) ───────────────────────────────────────────────────────── */
+  .alert-lead { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; max-width: 720px; }
+  .alert-form { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg, 12px); padding: 1rem 1.1rem; }
+  .alert-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
+  .alert-field { display: flex; flex-direction: column; gap: 0.25rem; }
+  .alert-lbl { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+  .alert-input {
+    font-size: 0.9rem; padding: 0.5rem 0.65rem; border-radius: var(--radius, 8px);
+    border: 1px solid var(--border-strong, var(--border)); background: var(--bg); color: var(--text); min-width: 130px;
+  }
+  .alert-btn {
+    font-size: 0.9rem; font-weight: 600; padding: 0.55rem 1.1rem; border-radius: var(--radius, 8px);
+    border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap;
+    transition: background-color 0.15s, transform 0.1s;
+  }
+  .alert-btn:hover { background: var(--accent-strong); }
+  .alert-btn:active { transform: translateY(1px); }
+  .alert-hint { margin: 0.7rem 0 0; font-size: 0.8rem; color: var(--text-muted); }
+  .alert-msg { margin: 0.6rem 0 0; font-size: 0.85rem; min-height: 1em; }
+  .alert-msg-ok { color: var(--success-text, #15803d); }
+  .alert-msg-err { color: var(--danger, #dc2626); }
+  .alert-list { list-style: none; margin: 0.9rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .alert-chip {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.82rem; padding: 0.3rem 0.4rem 0.3rem 0.7rem; border-radius: 999px;
+    background: var(--accent-soft); border: 1px solid var(--border); color: var(--text);
+  }
+  .alert-chip-fired { background: var(--success-soft, rgba(22, 163, 74, 0.14)); border-color: var(--success-text, #15803d); }
+  .alert-chip-x {
+    border: none; background: transparent; color: var(--text-muted); cursor: pointer;
+    font-size: 0.8rem; line-height: 1; padding: 0.15rem 0.3rem; border-radius: 999px;
+  }
+  .alert-chip-x:hover { background: var(--danger-soft, rgba(220, 38, 38, 0.12)); color: var(--danger, #dc2626); }
+  .alert-fallback { margin: 1rem 0 0; font-size: 0.82rem; color: var(--text-subtle); line-height: 1.6; max-width: 720px; }
+  .alert-fallback a { color: var(--accent-strong); font-weight: 600; }
+  @media (max-width: 520px) {
+    .alert-row { flex-direction: column; align-items: stretch; }
+    .alert-input, .alert-btn { width: 100%; }
+  }
 </style>
