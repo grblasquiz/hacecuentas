@@ -637,6 +637,30 @@ const schema = {
     </div>
   </section>
 
+  <!-- Modo finde: solo visible vie-dom (JS abajo). SSR siempre lo emite para no pelear con el cache de CF. -->
+  <section class="seasonal-mundial finde-mode" id="finde-mode" hidden aria-labelledby="finde-mode-h">
+    <div class="sm-inner fm-inner">
+      <div class="sm-head">
+        <span class="sm-badge fm-badge">🍖 Modo finde</span>
+        <h2 id="finde-mode-h">Las cuentas del fin de semana</h2>
+        <p>
+          Asado, juntada, escapada o proyecto en casa: estas son las calculadoras
+          que más se usan los sábados y domingos.
+        </p>
+      </div>
+      <div class="sm-links">
+        <a href="/calculadora-carne-asado-kg-por-persona" class="sm-cta fm-cta sm-cta-primary fm-cta-primary">🥩 Asado: kg por persona</a>
+        <a href="/calculadora-split-gastos-grupo-amigos" class="sm-cta fm-cta">💸 Dividir gastos entre amigos</a>
+        <a href="/calculadora-litros-nafta-viaje-ruta-argentina" class="sm-cta fm-cta">⛽ Nafta para el viaje</a>
+        <a href="/calculadora-rendimiento-masa-empanadas-cantidad" class="sm-cta fm-cta">🥟 Cuántas empanadas salen</a>
+        <a href="/conversor-tazas-gramos-cocina-recetas" class="sm-cta fm-cta">🍰 Tazas ↔ gramos</a>
+        <a href="/calculadora-pintura-paredes-habitacion-litros" class="sm-cta fm-cta">🎨 Pintura para la pieza</a>
+        <a href="/calculadora-edad-perro-anos-humanos" class="sm-cta fm-cta">🐶 Edad de tu perro</a>
+        <a href="/calculadora-cuanto-falta-feriado-proximo-argentina-2026" class="sm-cta fm-cta">📅 Próximo feriado</a>
+      </div>
+    </div>
+  </section>
+
   <section class="categorias" aria-labelledby="categorias-heading">
     <div class="section-header">
       <div>
@@ -1107,6 +1131,17 @@ const schema = {
   <!-- Próximo feriado 2026 — texto en el tile de feriados. Lo calculamos
        client-side porque la fecha "hoy" es dinámica (cambia cada día).
        La lista viene de la FUENTE ÚNICA feriados-ar-2026.ts vía define:vars. -->
+  <!-- Modo finde: se muestra solo vie-dom. Client-side a propósito: la home
+       está cacheada en CF y el "día" no puede resolverse en SSR. -->
+  <script is:inline>
+    (function () {
+      var fm = document.getElementById('finde-mode');
+      if (!fm) return;
+      var d = new Date().getDay(); // hora local del visitante (audiencia AR)
+      if (d === 5 || d === 6 || d === 0) fm.hidden = false;
+    })();
+  </script>
+
   <script is:inline define:vars={{ FERIADOS_DATA }}>
     (function () {
       // Próximo feriado (panel "Hoy en Argentina") — formato compacto.
@@ -3321,4 +3356,9 @@ const schema = {
   .sm-cta-primary { background: var(--accent, #2c5cdc); color: #fff; }
   .sm-cta-primary:hover { filter: brightness(1.07); }
   @media (max-width: 560px) { .sm-inner { padding: 1.25rem; } .sm-cta { flex: 1 1 calc(50% - 0.3rem); justify-content: center; } }
+  /* Modo finde: mismo layout que seasonal-mundial con acento cálido */
+  .fm-inner { background: linear-gradient(135deg, #fff4ec, var(--bg, #fff)); border-color: #ea580c; }
+  .fm-badge { background: #ea580c; }
+  .fm-cta { border-color: #ea580c; color: #c2410c; }
+  .fm-cta-primary { background: #ea580c; color: #fff; }
 </style>
