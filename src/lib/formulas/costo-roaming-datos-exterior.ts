@@ -19,12 +19,14 @@ interface PrecioRegion {
   nombre: string;
 }
 
+// Precios referenciales julio 2026: pases diarios de operadoras AR (USD 5-15 según zona,
+// Latam más barato y Chile sin cargo por acuerdo bilateral) + eSIM (Airalo/Holafly) + chip local.
 const REGIONES: Record<string, PrecioRegion> = {
-  europa: { roamingDia: 20, esim15d: 40, chipLocal: 20, nombre: 'Europa' },
-  eeuu: { roamingDia: 22, esim15d: 40, chipLocal: 25, nombre: 'EE.UU./Canadá' },
-  latam: { roamingDia: 15, esim15d: 30, chipLocal: 15, nombre: 'Latinoamérica' },
-  asia: { roamingDia: 22, esim15d: 35, chipLocal: 12, nombre: 'Asia' },
-  mundial: { roamingDia: 25, esim15d: 50, chipLocal: 25, nombre: 'Otros/Mundial' },
+  europa: { roamingDia: 12, esim15d: 40, chipLocal: 20, nombre: 'Europa' },
+  eeuu: { roamingDia: 12, esim15d: 40, chipLocal: 25, nombre: 'EE.UU./Canadá' },
+  latam: { roamingDia: 6, esim15d: 30, chipLocal: 15, nombre: 'Latinoamérica' },
+  asia: { roamingDia: 15, esim15d: 35, chipLocal: 12, nombre: 'Asia' },
+  mundial: { roamingDia: 18, esim15d: 50, chipLocal: 25, nombre: 'Otros/Mundial' },
 };
 
 export function costoRoamingDatosExterior(inputs: CostoRoamingInputs): CostoRoamingOutputs {

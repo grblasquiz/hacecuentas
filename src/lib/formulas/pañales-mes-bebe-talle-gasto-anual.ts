@@ -15,12 +15,12 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Precios de referencia por unidad en ARS — abril 2026
-// Fuente: relevamiento Precios Claros y cadenas de pañaleras
+// Precios de referencia por unidad en ARS — julio 2026
+// Fuente: relevamiento cadenas de pañaleras (Pañal Once, Pañales Online), líneas estándar/premium, paquete mediano
 const PRECIO_UNITARIO_2026: Record<string, Record<string, number>> = {
-  pampers: { rn: 560, p: 560, m: 620, g: 620, xg: 680, xxg: 680 },
-  huggies: { rn: 520, p: 520, m: 580, g: 580, xg: 640, xxg: 640 },
-  estrella: { rn: 220, p: 220, m: 250, g: 250, xg: 280, xxg: 280 },
+  pampers: { rn: 500, p: 500, m: 510, g: 510, xg: 610, xxg: 610 },
+  huggies: { rn: 500, p: 500, m: 440, g: 440, xg: 520, xxg: 520 },
+  estrella: { rn: 350, p: 350, m: 350, g: 350, xg: 420, xxg: 420 },
 };
 
 // Unidades por paquete estándar de referencia (paquete mediano)
@@ -62,7 +62,7 @@ export function compute(i: Inputs): Outputs {
     fuentePrecio = `precio ingresado ($${precioPaqueteInput.toLocaleString("es-AR")} / ${unidadesPaquete} unidades)`;
   } else {
     precioUnitario = PRECIO_UNITARIO_2026[marcaValida][talleValido];
-    fuentePrecio = "precio de referencia abril 2026";
+    fuentePrecio = "precio de referencia julio 2026";
   }
 
   // Calcular consumo

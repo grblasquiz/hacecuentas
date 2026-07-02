@@ -27,13 +27,14 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Tarifas base 2026 solo internet (Bogotá)
-  // Fuente: Sitios web operadores abril 2026
+  // Tarifas base 2026 solo internet (Bogotá) — plan comercial más cercano que cubre la velocidad
+  // Fuente: sitios/comparadores operadores feb–jul 2026 (Claro jun-2026, Movistar jul-2026, ETB/Tigo feb–jun 2026).
+  // Nota: los operadores ya casi no venden <250 Mbps; para tiers bajos se usa el plan de entrada.
   const tarifasBase: { [key: number]: { claro: number; etb: number; tigo: number; movistar: number } } = {
-    100: { claro: 49900, etb: 54900, tigo: 59900, movistar: 52900 },
-    300: { claro: 89900, etb: 94900, tigo: 99900, movistar: 92900 },
-    500: { claro: 129900, etb: 134900, tigo: 139900, movistar: 132900 },
-    600: { claro: 159900, etb: 164900, tigo: 189900, movistar: 162900 }
+    100: { claro: 59900, etb: 79900, tigo: 84900, movistar: 46990 },
+    300: { claro: 79900, etb: 79900, tigo: 89900, movistar: 55990 },
+    500: { claro: 79900, etb: 79900, tigo: 89900, movistar: 55990 },
+    600: { claro: 79900, etb: 94900, tigo: 89900, movistar: 79990 }
   };
 
   // Ajuste por ciudad
@@ -52,12 +53,12 @@ export function compute(i: Inputs): Outputs {
 
   const ajusteCiudad = ajustesCiudad[i.ciudad] || 1.0;
 
-  // Costo instalación por operador
+  // Costo instalación por operador (2026: la mayoría la incluye sin costo; Tigo cobra cargo único prorrateado)
   const instalaciones: { [key: string]: { sin: number; con: number } } = {
-    claro: { sin: 99900, con: i.contrato_meses >= 24 ? 0 : 49900 },
-    etb: { sin: 79900, con: i.contrato_meses >= 24 ? 0 : 39900 },
-    tigo: { sin: 89900, con: i.contrato_meses >= 24 ? 0 : 49900 },
-    movistar: { sin: 99900, con: i.contrato_meses >= 24 ? 0 : 49900 }
+    claro: { sin: 0, con: 0 },
+    etb: { sin: 0, con: 0 },
+    tigo: { sin: 199900, con: 199900 },
+    movistar: { sin: 0, con: 0 }
   };
 
   const instClaro = i.contrato_meses === 0 ? instalaciones.claro.sin : instalaciones.claro.con;
@@ -71,10 +72,10 @@ export function compute(i: Inputs): Outputs {
   const baseTigo = (tarifasBase[i.velocidad_mbps as keyof typeof tarifasBase]?.tigo || 0) * ajusteCiudad;
   const baseMovistar = (tarifasBase[i.velocidad_mbps as keyof typeof tarifasBase]?.movistar || 0) * ajusteCiudad;
 
-  // Recargo triple play
+  // Recargo triple play (ETB verificado feb-2026: TV base +$50.000; resto estimado según paquetes vigentes)
   const recargoTriplePlay: { [key: string]: number } = {
     claro: i.tipo_plan === 'triple_play' ? 19900 : 0,
-    etb: i.tipo_plan === 'triple_play' ? 24900 : 0,
+    etb: i.tipo_plan === 'triple_play' ? 50000 : 0,
     tigo: i.tipo_plan === 'triple_play' ? 16900 : 0,
     movistar: i.tipo_plan === 'triple_play' ? 22900 : 0
   };

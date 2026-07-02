@@ -18,7 +18,7 @@ export function costoMascotaMes(i: Inputs): Outputs {
   const tipo = String(i.tipoMascota || 'perro-mediano');
   const incluyeVet = String(i.incluyeVeterinario || 'si');
 
-  // Costos estimados en ARS (abril 2026, orientativos)
+  // Costos estimados en ARS (revalidados julio 2026, orientativos)
   const costos: Record<string, { alimento: number; vet: number; otros: number; nombre: string }> = {
     'perro-chico': { alimento: 30000, vet: 13000, otros: 15000, nombre: 'Perro chico (<10 kg)' },
     'perro-mediano': { alimento: 55000, vet: 15000, otros: 12000, nombre: 'Perro mediano (10-25 kg)' },
@@ -47,7 +47,7 @@ export function costoMascotaMes(i: Inputs): Outputs {
     costoVeterinario,
     costoOtros: data.otros,
     costoAnual,
-    detalle: `${data.nombre}: ~$${fmt.format(costoMensual)}/mes (alimento $${fmt.format(data.alimento)} + ${incluyeVet === 'si' ? `veterinario $${fmt.format(costoVeterinario)} + ` : ''}higiene y extras $${fmt.format(data.otros)}). Costo anual: ~$${fmt.format(costoAnual)}. Valores orientativos Argentina abril 2026.`,
+    detalle: `${data.nombre}: ~$${fmt.format(costoMensual)}/mes (alimento $${fmt.format(data.alimento)} + ${incluyeVet === 'si' ? `veterinario $${fmt.format(costoVeterinario)} + ` : ''}higiene y extras $${fmt.format(data.otros)}). Costo anual: ~$${fmt.format(costoAnual)}. Valores orientativos Argentina julio 2026.`,
     _insight: {
       title: 'Lo que sale tener tu mascota',
       text: `${data.nombre} cuesta unos **$${fmt.format(costoMensual)}/mes**, o sea **$${fmt.format(costoAnual)}** al año. El alimento se lleva el grueso del gasto (**${pctAlim}%**, $${fmt.format(data.alimento)}/mes).`,

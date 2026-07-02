@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-gpu-h100-renta-hora-cloud-comparativa",
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-07-02",
   "title": "Precio GPU H100 por hora en cloud: comparativa AWS, Lambda y RunPod | Hacé Cuentas",
   "h1": "GPU H100 / A100 — costo por hora en cloud: AWS vs Lambda vs RunPod vs Vast.ai",
   "description": "Calculá el costo total de rentar una GPU H100, H200 o A100 en AWS, GCP, Azure, Lambda Labs, RunPod o Vast.ai. Comparativa de precios por hora, spot vs on-demand y costo idle para entrenamiento de LLMs y fine-tuning.",
@@ -8,7 +8,7 @@
   "audience": "global",
   "icon": "🖥️",
   "formulaId": "gpu-h100-renta-hora-cloud-comparativa",
-  "answerSnippet": "El precio de una GPU H100 por hora en la nube varía según proveedor: AWS p5 ~USD 4,50/h, Lambda Labs USD 2,49/h, RunPod Secure USD 2,49/h, RunPod Community USD 1,99/h y Vast.ai desde USD 1,80/h (on-demand). El spot pricing de AWS puede bajar a USD 1,50–2,00/h con riesgo de interrupción. Lambda, RunPod y Vast.ai son 2–3× más baratos que los grandes clouds para fine-tuning y experimentos.",
+  "answerSnippet": "El precio de una GPU H100 por hora en la nube varía según proveedor: AWS p5 ~USD 6,88/h por GPU (p5.48xlarge), GCP A3 ~USD 11/h, Azure ND H100 v5 ~USD 12,30/h, Lambda USD 3,99/h (SXM en cluster 8×), RunPod desde USD 2,89/h (PCIe) y Vast.ai desde ~USD 2,00/h en su marketplace. El spot de AWS baja a ~USD 4,40/h (–36%) y el de GCP a ~USD 3,70/h (–66%), con riesgo de interrupción. Lambda, RunPod y Vast.ai siguen siendo 2–4× más baratos que los grandes clouds para fine-tuning y experimentos.",
   "seoKeywords": [
     "h100 precio hora cloud",
     "gpu h100 costo por hora 2026",
@@ -18,8 +18,8 @@
     "rentar gpu h100 cuanto cuesta",
     "gpu cloud comparativa precios"
   ],
-  "intro": "Entrenar o servir un **LLM** propio requiere GPUs de alto costo. La opción más popular en 2026 sigue siendo la **NVIDIA H100 (80 GB VRAM)** y su sucesora **H200 (141 GB)**, con la **A100** todavía vigente para workloads medianos. Los precios por hora varían **brutalmente** entre proveedores: **AWS p5.48xlarge** cobra ~USD 4,50/h por H100 on-demand, **Lambda Labs** USD 2,49/h, **RunPod** USD 1,99/h y **Vast.ai** desde **USD 1,80/h** en su marketplace P2P. El descuento **spot/preemptible** de AWS/GCP agrega un 40–70% adicional pero la VM puede ser terminada con 30 segundos de aviso. Esta calculadora multiplica horas × cantidad de GPUs × precio con descuento spot, te da el costo total más el costo idle (cuando dejás la instancia encendida sin entrenar).",
-  "keyTakeaway": "Para fine-tuning de modelos open-source, **RunPod / Vast.ai** cuestan **2–3× menos** que AWS/GCP. Para producción 24/7 con SLA enterprise, AWS/Azure/GCP justifican el sobreprecio. **Spot** ahorra 50–70% pero exige checkpointing frecuente.",
+  "intro": "Entrenar o servir un **LLM** propio requiere GPUs de alto costo. La opción más popular en 2026 sigue siendo la **NVIDIA H100 (80 GB VRAM)** y su sucesora **H200 (141 GB)**, con la **A100** todavía vigente para workloads medianos. Los precios por hora varían **brutalmente** entre proveedores: **AWS p5.48xlarge** cobra ~USD 6,88/h por H100 on-demand (USD 55,04/h la instancia de 8 GPUs, ya con el recorte de precios de 2025), **Lambda** USD 3,99/h (SXM, cluster 8×), **RunPod** desde USD 2,89/h (PCIe) y **Vast.ai** desde **~USD 2,00/h** en su marketplace P2P. El descuento **spot/preemptible** agrega un 35–66% adicional según cloud, pero la VM puede ser terminada con 30 segundos de aviso. Esta calculadora multiplica horas × cantidad de GPUs × precio con descuento spot, te da el costo total más el costo idle (cuando dejás la instancia encendida sin entrenar).",
+  "keyTakeaway": "Para fine-tuning de modelos open-source, **RunPod / Vast.ai** cuestan **2–4× menos** que AWS/GCP/Azure. Para producción 24/7 con SLA enterprise, AWS/Azure/GCP justifican el sobreprecio. **Spot** ahorra 35–66% según cloud pero exige checkpointing frecuente.",
   "useCases": [
     "Estimar el costo total de un entrenamiento de N épocas en GPU H100.",
     "Comparar AWS p5 vs Lambda Labs vs RunPod para el mismo workload.",
@@ -44,11 +44,11 @@
       "label": "Precio por hora (on-demand)",
       "type": "number",
       "suffix": "USD/h",
-      "placeholder": "2.49",
+      "placeholder": "2.89",
       "min": 0,
       "step": 0.01,
       "required": true,
-      "help": "AWS H100 ~USD 4,50, Lambda ~USD 2,49, RunPod ~USD 1,99, Vast.ai ~USD 1,80. A100 ~50% más barata que H100."
+      "help": "AWS H100 ~USD 6,88, Lambda ~USD 3,99 (SXM), RunPod ~USD 2,89 (PCIe), Vast.ai ~USD 2,00. A100 ~50% más barata que H100."
     },
     {
       "id": "cantidadGpus",
@@ -71,7 +71,7 @@
       "max": 90,
       "step": 5,
       "required": false,
-      "help": "AWS Spot ~50–70%, GCP Preemptible ~60%, RunPod Community ~40%. Dejá en 0 si usás on-demand."
+      "help": "AWS Spot ~35–40%, GCP Spot ~60–66%. Dejá en 0 si usás on-demand o proveedores sin spot (Lambda, RunPod)."
     },
     {
       "id": "horasIdlePorDia",
@@ -88,8 +88,8 @@
   ],
   "dataUpdate": {
     "frequency": "monthly",
-    "lastUpdated": "2026-04-26",
-    "source": "AWS / GCP / Lambda Labs / RunPod / Vast.ai — páginas oficiales de precios",
+    "lastUpdated": "2026-07-02",
+    "source": "AWS / GCP / Lambda / RunPod / Vast.ai — páginas oficiales de precios",
     "sourceUrl": "https://lambda.ai/pricing",
     "updateType": "manual"
   },
@@ -124,31 +124,31 @@
   "example": {
     "title": "Ejemplo: fine-tuning Llama 70B una semana en 8× H100",
     "steps": [
-      "**RunPod 8× H100 SXM**: USD 1,99/h × 8 = USD 15,92/h on-demand.",
-      "168 horas (1 semana) → **USD 2.674,56**.",
-      "**AWS p5.48xlarge** (8× H100): USD 4,50/h × 8 = USD 36/h → **USD 6.048**.",
-      "**AWS Spot** (–65%): USD 12,60/h → **USD 2.116,80**.",
-      "**Lambda Labs reservado** USD 2,49/h × 8 = USD 19,92/h → **USD 3.346,56**."
+      "**RunPod 8× H100 SXM**: USD 3,29/h × 8 = USD 26,32/h on-demand.",
+      "168 horas (1 semana) → **USD 4.421,76**.",
+      "**AWS p5.48xlarge** (8× H100): USD 55,04/h → **USD 9.246,72**.",
+      "**AWS Spot** (–36%): USD 35,20/h → **USD 5.913,60**.",
+      "**Lambda 8× H100 SXM** USD 3,99/h × 8 = USD 31,92/h → **USD 5.362,56**."
     ],
-    "result": "AWS Spot empata a RunPod si el workload tolera interrupciones y tiene checkpointing."
+    "result": "RunPod sigue siendo lo más barato; AWS Spot y Lambda quedan 20–35% arriba, y AWS on-demand más que duplica el costo."
   },
-  "explanation": "## Precios GPU H100 por hora en cloud — tabla comparativa (2026)\n\n| Proveedor | H100 on-demand | H100 spot | A100 80GB on-demand | SLA | Egress |\n|---|---|---|---|---|---|\n| **AWS p5 / p5e** | ~USD 4,50/h | ~USD 1,50–2,00/h | ~USD 3,06/h (p4de) | enterprise | USD 0,09/GB |\n| **GCP A3** | ~USD 4,40/h | ~USD 1,80/h | ~USD 3,67/h | enterprise | USD 0,08/GB |\n| **Azure ND H100** | ~USD 4,30/h | ~USD 1,80/h | ~USD 3,40/h | enterprise | USD 0,087/GB |\n| **CoreWeave** | USD 4,25/h | – | USD 2,45/h | enterprise | incluido |\n| **Lambda Labs** | USD 2,49/h | sin spot | USD 1,29/h | alto | gratis |\n| **RunPod Secure** | USD 2,49/h | – | USD 1,89/h | medio | gratis |\n| **RunPod Community** | USD 1,99/h | – | USD 1,29/h | bajo | gratis |\n| **Vast.ai** | desde USD 1,80/h | – | desde USD 0,89/h | variable | gratis |\n\n> Precios de referencia a junio 2026. Verificá siempre en la página oficial del proveedor antes de comprometer presupuesto.\n\n## Tabla de costo según horas de uso (1× H100 on-demand, USD 2,49/h)\n\n| Horas de uso | Costo total (1 GPU) | Costo total (4 GPUs) | Costo total (8 GPUs) |\n|---|---|---|---|\n| 10 h | USD 24,90 | USD 99,60 | USD 199,20 |\n| 24 h (1 día) | USD 59,76 | USD 239,04 | USD 478,08 |\n| 168 h (1 semana) | USD 418,32 | USD 1.673,28 | USD 3.346,56 |\n| 360 h (15 días) | USD 896,40 | USD 3.585,60 | USD 7.171,20 |\n| 720 h (1 mes 24/7) | USD 1.792,80 | USD 7.171,20 | USD 14.342,40 |\n\n## Spot vs On-demand: cuándo conviene cada uno\n\n| Caso de uso | Recomendación |\n|---|---|\n| Entrenamiento desde cero sin checkpointing | **On-demand** (no perder horas de cómputo) |\n| Fine-tuning con checkpoints cada 100 steps | **Spot** (se recupera del checkpoint) |\n| Inferencia en producción con SLA | **On-demand** + instancia reservada |\n| Experimentos y debugging | **Spot** o RunPod Community |\n| Job nocturno largo con monitoring | **Spot** + alerta automática al terminar |\n\n## Capacidad VRAM por GPU (referencia para LLMs)\n\n| GPU | VRAM | Inferencia Q4 | Fine-tuning LoRA fp16 |\n|---|---|---|---|\n| A100 40GB | 40 GB | Llama 3 8B–13B | Llama 3 7B |\n| A100 80GB | 80 GB | Llama 3.3 70B Q4 | Llama 3 13B |\n| H100 80GB SXM | 80 GB | Llama 3.3 70B Q4 | Llama 3 13B |\n| H200 141GB | 141 GB | Llama 3.3 70B fp16 | Llama 3 70B QLoRA |\n| GB200 (Blackwell) | 192 GB | Mixtral 8×22B fp16 | Mixtral fine-tuning |\n\n## Los 4 errores que más cuestan\n\n1. **GPU idle**: 1 H100 a USD 2,49/h = USD 60/día. Si la dejás 4 horas idle por día = USD 300/mes perdidos.\n2. **Olvidar egress**: bajar un modelo Llama 70B fp16 (140 GB) desde AWS/GCP cuesta ~USD 12–13 en transferencia. Lambda, RunPod y Vast.ai no cobran egress.\n3. **Sin flash-attention ni DeepSpeed**: si tu training tarda 2× más por configuración subóptima, pagás el doble por el mismo resultado.\n4. **Confundir SXM vs PCIe**: H100 SXM tiene NVLink (900 GB/s inter-GPU) y es 30–40% más rápida en multi-GPU. Para 1 GPU sola, PCIe es suficiente.\n\n> **Aviso legal**: Calculadora educativa. Los precios cambian a diario — verificá siempre en las páginas oficiales de cada proveedor antes de contratar.\n",
+  "explanation": "## Precios GPU H100 por hora en cloud — tabla comparativa (julio 2026)\n\n| Proveedor | H100 on-demand | H100 spot | A100 80GB on-demand | SLA | Egress |\n|---|---|---|---|---|---|\n| **AWS p5 (p5.48xlarge)** | ~USD 6,88/h por GPU | ~USD 4,40/h (–36%) | ~USD 3,06/h (p4de) | enterprise | USD 0,09/GB |\n| **GCP A3 High** | ~USD 11,00/h | ~USD 3,70/h (–66%) | ~USD 3,67/h | enterprise | USD 0,08/GB |\n| **Azure ND H100 v5** | ~USD 12,30/h | ~USD 8,80/h (–28%) | ~USD 3,40/h | enterprise | USD 0,087/GB |\n| **CoreWeave** | ~USD 6,16/h (nodo 8× HGX) | – | – | enterprise | incluido |\n| **Lambda** | USD 3,99/h (SXM 8×) / USD 3,29/h (PCIe) | sin spot | USD 2,79/h (SXM) / USD 1,99/h (40GB) | alto | gratis |\n| **RunPod** | USD 2,89/h (PCIe) / USD 3,29/h (SXM) | – | USD 1,39–1,49/h | medio | gratis |\n| **Vast.ai** | desde ~USD 2,00/h (PCIe) | – | desde USD 0,89/h | variable | gratis |\n\n> Precios de referencia a julio 2026. Referencias adicionales: RunPod H200 USD 4,39/h, Lambda B200 USD 6,69–6,99/h. Verificá siempre en la página oficial del proveedor antes de comprometer presupuesto.\n\n## Tabla de costo según horas de uso (1× H100 on-demand, USD 2,89/h)\n\n| Horas de uso | Costo total (1 GPU) | Costo total (4 GPUs) | Costo total (8 GPUs) |\n|---|---|---|---|\n| 10 h | USD 28,90 | USD 115,60 | USD 231,20 |\n| 24 h (1 día) | USD 69,36 | USD 277,44 | USD 554,88 |\n| 168 h (1 semana) | USD 485,52 | USD 1.942,08 | USD 3.884,16 |\n| 360 h (15 días) | USD 1.040,40 | USD 4.161,60 | USD 8.323,20 |\n| 720 h (1 mes 24/7) | USD 2.080,80 | USD 8.323,20 | USD 16.646,40 |\n\n## Spot vs On-demand: cuándo conviene cada uno\n\n| Caso de uso | Recomendación |\n|---|---|\n| Entrenamiento desde cero sin checkpointing | **On-demand** (no perder horas de cómputo) |\n| Fine-tuning con checkpoints cada 100 steps | **Spot** (se recupera del checkpoint) |\n| Inferencia en producción con SLA | **On-demand** + instancia reservada |\n| Experimentos y debugging | **Spot** o RunPod Community |\n| Job nocturno largo con monitoring | **Spot** + alerta automática al terminar |\n\n## Capacidad VRAM por GPU (referencia para LLMs)\n\n| GPU | VRAM | Inferencia Q4 | Fine-tuning LoRA fp16 |\n|---|---|---|---|\n| A100 40GB | 40 GB | Llama 3 8B–13B | Llama 3 7B |\n| A100 80GB | 80 GB | Llama 3.3 70B Q4 | Llama 3 13B |\n| H100 80GB SXM | 80 GB | Llama 3.3 70B Q4 | Llama 3 13B |\n| H200 141GB | 141 GB | Llama 3.3 70B fp16 | Llama 3 70B QLoRA |\n| GB200 (Blackwell) | 192 GB | Mixtral 8×22B fp16 | Mixtral fine-tuning |\n\n## Los 4 errores que más cuestan\n\n1. **GPU idle**: 1 H100 a USD 2,89/h = USD 69/día. Si la dejás 4 horas idle por día = ~USD 350/mes perdidos.\n2. **Olvidar egress**: bajar un modelo Llama 70B fp16 (140 GB) desde AWS/GCP cuesta ~USD 12–13 en transferencia. Lambda, RunPod y Vast.ai no cobran egress.\n3. **Sin flash-attention ni DeepSpeed**: si tu training tarda 2× más por configuración subóptima, pagás el doble por el mismo resultado.\n4. **Confundir SXM vs PCIe**: H100 SXM tiene NVLink (900 GB/s inter-GPU) y es 30–40% más rápida en multi-GPU. Para 1 GPU sola, PCIe es suficiente.\n\n> **Aviso legal**: Calculadora educativa. Los precios cambian a diario — verificá siempre en las páginas oficiales de cada proveedor antes de contratar.\n",
   "faq": [
     {
       "q": "¿Cuánto cuesta una GPU H100 por hora en la nube en 2026?",
-      "a": "El precio varía según proveedor: **AWS p5** ~USD 4,50/h on-demand (spot ~USD 1,50–2,00/h), **GCP A3** ~USD 4,40/h, **Lambda Labs** USD 2,49/h, **RunPod Secure** USD 2,49/h, **RunPod Community** USD 1,99/h y **Vast.ai** desde USD 1,80/h en el marketplace P2P."
+      "a": "El precio varía según proveedor: **AWS p5** ~USD 6,88/h por GPU on-demand (spot ~USD 4,40/h), **GCP A3** ~USD 11/h (spot ~USD 3,70/h), **Azure ND H100 v5** ~USD 12,30/h, **Lambda** USD 3,99/h (SXM en cluster 8×) o USD 3,29/h (PCIe), **RunPod** desde USD 2,89/h (PCIe) y **Vast.ai** desde ~USD 2,00/h en el marketplace P2P."
     },
     {
       "q": "¿Lambda Labs o RunPod: cuál es más barato para fine-tuning?",
-      "a": "**RunPod Community** (USD 1,99/h) suele ser más barato que Lambda Labs (USD 2,49/h) por la misma H100, aunque con menor SLA. Ambos son 2–3× más baratos que AWS/GCP. Lambda Labs tiene mejor uptime garantizado y no cobra egress."
+      "a": "**RunPod** (USD 2,89/h la H100 PCIe) suele ser más barato que Lambda (USD 3,99/h la SXM, USD 3,29/h la PCIe), aunque con menor SLA. Ambos son 2–4× más baratos que AWS/GCP/Azure. Lambda tiene mejor uptime garantizado y ninguno de los dos cobra egress."
     },
     {
       "q": "¿Cuánto cuesta entrenar Llama 70B en la nube?",
-      "a": "Fine-tuning de Llama 70B con QLoRA necesita mínimo 2× H100. En **RunPod Community** (USD 3,98/h las 2 GPUs), una semana (168 horas) cuesta **~USD 669**. En **AWS p5** on-demand (USD 4,50/h × 8 GPUs = USD 36/h), la misma semana cuesta **~USD 6.048**."
+      "a": "Fine-tuning de Llama 70B con QLoRA necesita mínimo 2× H100. En **RunPod** (USD 5,78/h las 2 GPUs PCIe), una semana (168 horas) cuesta **~USD 971**. En **AWS p5** on-demand (USD 55,04/h la instancia de 8 GPUs), la misma semana cuesta **~USD 9.247**."
     },
     {
       "q": "¿Qué es el spot pricing en GPU cloud y cuándo usarlo?",
-      "a": "**Spot** = capacidad sobrante del proveedor con 30–70% de descuento, pero la VM puede ser **terminada con 30–120 segundos de aviso**. Conviene si tu workload tiene checkpointing frecuente (cada N steps guardás el estado a disco), porque podés relanzar y continuar desde el último checkpoint."
+      "a": "**Spot** = capacidad sobrante del proveedor con descuento (AWS ~36%, GCP ~66% en H100 a julio 2026), pero la VM puede ser **terminada con 30–120 segundos de aviso**. Conviene si tu workload tiene checkpointing frecuente (cada N steps guardás el estado a disco), porque podés relanzar y continuar desde el último checkpoint."
     },
     {
       "q": "¿Cuánta VRAM necesito para servir Llama 3.3 70B?",
@@ -164,7 +164,7 @@
     },
     {
       "q": "¿Cómo evito pagar por GPU idle entre experimentos?",
-      "a": "1) **Auto-shutdown** al terminar el job. 2) En RunPod podés **pausar el pod** (cobra almacenamiento barato pero no GPU). 3) Usá una GPU pequeña (T4 o L4) para desarrollo y arrancá la H100 solo cuando vayas a entrenar. Una H100 idle a USD 2,49/h = **USD 59,76/día** perdidos."
+      "a": "1) **Auto-shutdown** al terminar el job. 2) En RunPod podés **pausar el pod** (cobra almacenamiento barato pero no GPU). 3) Usá una GPU pequeña (T4 o L4) para desarrollo y arrancá la H100 solo cuando vayas a entrenar. Una H100 idle a USD 2,89/h = **USD 69,36/día** perdidos."
     },
     {
       "q": "¿Cuándo conviene reservar GPU en cloud vs pagar on-demand?",
@@ -195,19 +195,19 @@
   ],
   "referenceTables": [
     {
-      "title": "Precios GPU H100 y A100 por proveedor cloud (2026)",
+      "title": "Precios GPU H100 y A100 por proveedor cloud (julio 2026)",
       "headers": ["Proveedor", "H100 on-demand", "H100 spot/preemptible", "A100 80GB on-demand", "Egress"],
       "rows": [
-        ["AWS p5 / p5e", "~USD 4,50/h", "~USD 1,50–2,00/h (–55–65%)", "~USD 3,06/h (p4de)", "USD 0,09/GB"],
-        ["GCP A3", "~USD 4,40/h", "~USD 1,80/h (–59%)", "~USD 3,67/h", "USD 0,08/GB"],
-        ["Azure ND H100", "~USD 4,30/h", "~USD 1,80/h (–58%)", "~USD 3,40/h", "USD 0,087/GB"],
-        ["CoreWeave", "USD 4,25/h", "no disponible", "USD 2,45/h", "incluido"],
-        ["Lambda Labs", "USD 2,49/h", "no disponible", "USD 1,29/h", "gratis"],
-        ["RunPod Secure", "USD 2,49/h", "no disponible", "USD 1,89/h", "gratis"],
-        ["RunPod Community", "USD 1,99/h", "no disponible", "USD 1,29/h", "gratis"],
-        ["Vast.ai", "desde USD 1,80/h", "no disponible", "desde USD 0,89/h", "gratis"]
+        ["AWS p5 (p5.48xlarge)", "~USD 6,88/h por GPU", "~USD 4,40/h (–36%)", "~USD 3,06/h (p4de)", "USD 0,09/GB"],
+        ["GCP A3 High", "~USD 11,00/h", "~USD 3,70/h (–66%)", "~USD 3,67/h", "USD 0,08/GB"],
+        ["Azure ND H100 v5", "~USD 12,30/h", "~USD 8,80/h (–28%)", "~USD 3,40/h", "USD 0,087/GB"],
+        ["CoreWeave", "~USD 6,16/h (nodo 8× HGX)", "no disponible", "–", "incluido"],
+        ["Lambda (SXM 8×)", "USD 3,99/h", "no disponible", "USD 2,79/h (SXM)", "gratis"],
+        ["Lambda (PCIe)", "USD 3,29/h", "no disponible", "USD 1,99/h (40GB)", "gratis"],
+        ["RunPod", "USD 2,89/h (PCIe) / USD 3,29/h (SXM)", "no disponible", "USD 1,39–1,49/h", "gratis"],
+        ["Vast.ai", "desde ~USD 2,00/h", "no disponible", "desde USD 0,89/h", "gratis"]
       ],
-      "note": "Fuente: AWS / GCP / Lambda Labs / RunPod / Vast.ai — páginas oficiales de precios (junio 2026). Verificar antes de contratar."
+      "note": "Fuente: AWS (Vantage p5.48xlarge USD 55,04/h on-demand, USD 35,20/h spot) / GCP / Azure / Lambda / RunPod / Vast.ai — páginas oficiales de precios (julio 2026). Verificar antes de contratar."
     }
   ],
   "relatedSlugs": [
@@ -230,7 +230,7 @@
     },
     {
       "name": "Agregá el descuento spot si aplica",
-      "text": "Si tu workload tolera interrupciones, ingresá 50–70% de descuento para AWS Spot o 60% para GCP."
+      "text": "Si tu workload tolera interrupciones, ingresá ~36% de descuento para AWS Spot o ~66% para GCP Spot."
     },
     {
       "name": "Ingresá las horas idle por día",

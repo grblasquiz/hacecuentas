@@ -16,8 +16,9 @@ export interface Outputs {
   _insight?: any;
 }
 
-// Precios orientativos AMBA, abril 2026 (sin IVA)
-// Fuente: relevamiento de corralones y Cámara Argentina de la Construcción
+// Precios orientativos AMBA, julio 2026 (sin IVA)
+// Fuente: relevamiento corralones/e-commerce (Sodimac, MercadoLibre, El Amigo) y guías de colocación 2026.
+// Geotextil 40 kg retail $115-137k c/IVA; aluminio 35 kg estándar $47-51k c/IVA; MO profesional ~$17,5k/m².
 const CONFIGS: Record<string, {
   label: string;
   areaPorRollo: number;      // m² por rollo
@@ -29,26 +30,26 @@ const CONFIGS: Record<string, {
   geotextil_35: {
     label: "Geotextil 3,5 mm",
     areaPorRollo: 10,
-    precioRollo: 28000,
+    precioRollo: 80000,
     kgPegPorM2: 0.30,
-    precioPegKg: 2200,
-    moporM2: 3500,
+    precioPegKg: 2400,
+    moporM2: 16000,
   },
   geotextil_40: {
     label: "Geotextil 4 mm",
     areaPorRollo: 10,
-    precioRollo: 36000,
+    precioRollo: 100000,
     kgPegPorM2: 0.30,
-    precioPegKg: 2200,
-    moporM2: 3800,
+    precioPegKg: 2400,
+    moporM2: 17000,
   },
   aluminio: {
     label: "Aluminio 4 mm",
     areaPorRollo: 10,
-    precioRollo: 52000,
+    precioRollo: 48000,
     kgPegPorM2: 0.25,
-    precioPegKg: 2200,
-    moporM2: 4500,
+    precioPegKg: 2400,
+    moporM2: 18000,
   },
 };
 
@@ -102,7 +103,7 @@ export function compute(i: Inputs): Outputs {
     `Rollos: ${rollosNecesarios} × $${config.precioRollo.toLocaleString("es-AR")} = $${costoRollos.toLocaleString("es-AR")}. ` +
     `Pegamento: ${kgPegamento} kg × $${config.precioPegKg.toLocaleString("es-AR")} = $${costoPegamento.toLocaleString("es-AR")}. ` +
     moTexto +
-    ` Precios orientativos sin IVA, AMBA abril 2026.`;
+    ` Precios orientativos sin IVA, AMBA julio 2026.`;
 
   const chart = {
     type: "doughnut" as const,

@@ -19,22 +19,23 @@ export interface Outputs {
 export function compute(i: Inputs): Outputs {
   const monthlySales = Number(i.monthly_sales) || 0;
   const ticketPromedio = Number(i.ticket_promedio) || 1;
-  const planType = String(i.plan_type || 'crece');
+  const planType = String(i.plan_type || 'esencial');
 
-  // Plan costs and commissions (ARS, 2026)
+  // Plan costs and transaction fees (ARS, tarifa oficial tiendanube.com/planes-y-precios, julio 2026)
+  // Costo por transacción aplica cobrando con medios de pago externos (con Pago Nube se bonifica).
   const planData: Record<string, { cost: number; commission: number }> = {
-    inicio: { cost: 14990, commission: 0.035 },
-    crece: { cost: 24990, commission: 0.028 },
-    prospera: { cost: 44990, commission: 0.02 },
-    imperio: { cost: 69990, commission: 0 }
+    inicial: { cost: 0, commission: 0.02 },
+    esencial: { cost: 26999, commission: 0.01 },
+    impulso: { cost: 78999, commission: 0.007 },
+    escala: { cost: 234999, commission: 0 }
   };
 
-  const selectedPlan = planData[planType] || planData['crece'];
+  const selectedPlan = planData[planType] || planData['esencial'];
   const planCost = selectedPlan.cost;
   const tnCommissionRate = selectedPlan.commission;
 
-  // Mercado Pago commission (5.5% on total sales)
-  const MERCADO_PAGO_RATE = 0.055;
+  // Mercado Pago Checkout: 4,99% + IVA ≈ 6,04% efectivo (acreditación inmediata, jul-2026)
+  const MERCADO_PAGO_RATE = 0.0604;
 
   // Calculations
   const numTransactions = Math.round(monthlySales / ticketPromedio);

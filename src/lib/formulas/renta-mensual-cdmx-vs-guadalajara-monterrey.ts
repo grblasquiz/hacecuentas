@@ -20,6 +20,7 @@ export interface Outputs {
 
 function obtenerBaseRenta(ciudad: string, recamaras: string): { base: number; minimo: number; maximo: number } {
   // Datos 2026 mercado inmobiliario México (Inmuebles24, Vivanuncios)
+  // Bases GDL/MTY ajustadas jul-2026 con promedios Inmuebles24 abr-2026 (65 m²: CDMX ~21k, MTY ~24k, GDL ~18k; 100 m²: CDMX/MTY >30k, GDL ~25k)
   const tablas: Record<string, Record<string, { base: number; minimo: number; maximo: number }>> = {
     cdmx: {
       '1': { base: 22000, minimo: 18000, maximo: 40000 },
@@ -27,13 +28,13 @@ function obtenerBaseRenta(ciudad: string, recamaras: string): { base: number; mi
       '3': { base: 48000, minimo: 35000, maximo: 70000 }
     },
     guadalajara: {
-      '1': { base: 14000, minimo: 10000, maximo: 22000 },
-      '2': { base: 21000, minimo: 15000, maximo: 32000 },
+      '1': { base: 18000, minimo: 10000, maximo: 22000 },
+      '2': { base: 25000, minimo: 15000, maximo: 32000 },
       '3': { base: 29000, minimo: 20000, maximo: 42000 }
     },
     monterrey: {
-      '1': { base: 17000, minimo: 12000, maximo: 28000 },
-      '2': { base: 26000, minimo: 18000, maximo: 40000 },
+      '1': { base: 24000, minimo: 12000, maximo: 28000 },
+      '2': { base: 31000, minimo: 18000, maximo: 40000 },
       '3': { base: 36000, minimo: 25000, maximo: 50000 }
     },
     queretaro: {

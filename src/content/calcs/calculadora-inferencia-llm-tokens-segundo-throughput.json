@@ -1,7 +1,7 @@
 {
   "slug": "calculadora-inferencia-llm-tokens-segundo-throughput",
   "answerSnippet": "Servir un LLM open-source (Llama 3 70B, Mistral Large, Qwen 2.5 72B, DeepSeek V3) en producción reemplaza a las APIs comerciales cuando tu volumen lo justifica. La métrica clave es tokens/segundo que tu servidor puede generar — combinación de GPU + framework de inferencia (vLLM, TGI, TensorRT-LLM, SGLang) + batch size + sequence length.",
-  "lastReviewed": "2026-04-26",
+  "lastReviewed": "2026-07-02",
   "title": "Calculadora inferencia LLM: tokens/segundo y costo 1M 2026",
   "h1": "Inferencia LLM — throughput y costo por 1M tokens",
   "description": "⚡ Calculá throughput esperado y costo por 1M tokens al servir LLM (Llama 70B, Mistral, Qwen) según GPU, batch size y tokens promedio por request.",
@@ -18,7 +18,7 @@
     "costo por millon tokens self host"
   ],
   "intro": "Servir un **LLM open-source** (Llama 3 70B, Mistral Large, Qwen 2.5 72B, DeepSeek V3) en producción reemplaza a las APIs comerciales cuando tu volumen lo justifica. La métrica clave es **tokens/segundo** que tu servidor puede generar — combinación de GPU + framework de inferencia (**vLLM**, **TGI**, **TensorRT-LLM**, **SGLang**) + batch size + sequence length. En 2026 los benchmarks típicos: **Llama 3 8B en H100 con vLLM** ~3.000-5.000 tok/s con batch 64. **Llama 3 70B Q4 en 1× H100** ~80-150 tok/s por request, 600-1.200 tok/s con batching. Esta calculadora multiplica throughput por request × batch concurrente para darte tokens/segundo totales y divide el costo de la GPU por hora entre los tokens generados, devolviendo el **costo por 1M tokens** y por request. Útil para comparar self-host contra OpenAI/Anthropic.",
-  "keyTakeaway": "Self-hostear **Llama 3 70B Q4 en 1× H100** sale **USD 0,40-0,80 por 1M tokens output** si la GPU está bien aprovechada (batch 32+). Comparado con **GPT-4o (~USD 10/M output)** o **Claude Sonnet 4 (~USD 15/M output)**, el self-host se amortiza desde **1-2M tokens/día**.",
+  "keyTakeaway": "Self-hostear **Llama 3 70B Q4 en 1× H100** sale **USD 0,25-0,80 por 1M tokens output** si la GPU está bien aprovechada (batch 32+). Comparado con **GPT-5.5 (USD 30/M output)** o **Claude Sonnet 4.6 (USD 15/M output)**, el self-host se amortiza desde **1-2M tokens/día**.",
   "useCases": [
     "Decidir entre self-host de Llama 70B vs API de GPT-4o.",
     "Estimar capacidad máxima de un servidor LLM en QPS o tokens/s.",
@@ -54,11 +54,11 @@
       "label": "Precio GPU por hora",
       "type": "number",
       "suffix": "USD/h",
-      "placeholder": "2.49",
+      "placeholder": "2.89",
       "min": 0,
       "step": 0.01,
       "required": true,
-      "help": "RunPod ~USD 1,99, Lambda ~USD 2,49, AWS ~USD 4,50 por H100."
+      "help": "RunPod ~USD 2,89 (PCIe), Lambda ~USD 3,99 (SXM), AWS ~USD 6,88 por H100."
     },
     {
       "id": "cantidadGpus",
@@ -85,8 +85,8 @@
   ],
   "dataUpdate": {
     "frequency": "monthly",
-    "lastUpdated": "2026-04-26",
-    "source": "vLLM / TGI / Lambda benchmarks",
+    "lastUpdated": "2026-07-02",
+    "source": "vLLM / TGI / Lambda benchmarks + pricing oficial GPU y APIs",
     "sourceUrl": "https://docs.vllm.ai",
     "updateType": "manual"
   },
@@ -123,13 +123,13 @@
     "steps": [
       "**Tok/s por request** (Llama 70B Q4 vLLM): 100 tok/s.",
       "**Batch 32**: 100 × 32 = **3.200 tok/s totales** (vLLM continuous batching).",
-      "**RunPod USD 1,99/h**: USD 1,99 / (3.200 × 3.600) × 1e6 = **USD 0,17 / 1M tokens**.",
-      "**Request promedio 300 tokens**: USD 0,17 × 300 / 1M = **USD 0,000051 / request**.",
-      "**vs GPT-4o (USD 10/M output)**: 60× más barato self-host."
+      "**RunPod USD 2,89/h**: USD 2,89 / (3.200 × 3.600) × 1e6 = **USD 0,25 / 1M tokens**.",
+      "**Request promedio 300 tokens**: USD 0,25 × 300 / 1M = **USD 0,000075 / request**.",
+      "**vs GPT-5.5 (USD 30/M output)**: ~120× más barato self-host."
     ],
     "result": "El self-host se vuelve economic sensible desde >1M tokens/día."
   },
-  "explanation": "## Cómo se calcula\n\n```\nTok/s totales = tok/s por request × batch size\nRequests/hora = (tok/s totales × 3600) / tokens por request\nCosto/1M tokens = (precio_gpu_hora × cant_gpus / tok/s totales / 3600) × 1.000.000\n```\n\nLa clave del costo bajo es **maximizar batch size** sin saturar VRAM. Frameworks modernos (vLLM, TGI, SGLang, TensorRT-LLM) implementan **continuous batching** + **paged attention**, que hacen escalar throughput total casi lineal hasta batch 32-64 y luego con retornos decrecientes.\n\n## Throughput esperado (referencia abril 2026)\n\n### Llama 3 8B (Q4 / fp16)\n\n| GPU | Framework | Tok/s 1 req | Tok/s batch 32 |\n|---|---|---|---|\n| RTX 4090 24GB | vLLM | 80 | 1.500 |\n| L4 24GB | vLLM | 50 | 800 |\n| A100 40GB | vLLM | 200 | 4.500 |\n| H100 80GB | vLLM | 250 | 6.000 |\n| H100 80GB | TensorRT-LLM | 280 | 7.500 |\n\n### Llama 3 70B (Q4 / fp16)\n\n| GPU | Precision | Tok/s 1 req | Tok/s batch 32 |\n|---|---|---|---|\n| 1× H100 80GB | Q4 | 100 | 1.800 |\n| 1× H200 141GB | fp16 | 90 | 1.500 |\n| 2× H100 80GB | fp16 (TP=2) | 150 | 3.000 |\n| 4× H100 80GB | fp16 (TP=4) | 200 | 4.500 |\n| 8× H100 80GB | fp16 (TP=8) | 240 | 5.500 |\n\n## Costo por 1M tokens vs APIs comerciales\n\n| Modelo / Setup | Output USD/1M tokens | Notas |\n|---|---|---|\n| **Llama 70B Q4, 1× H100, batch 32** | ~USD 0,15-0,30 | self-host RunPod |\n| **Llama 70B fp16, 4× H100, batch 64** | ~USD 0,40-0,70 | self-host RunPod/Lambda |\n| **GPT-4o** | USD 10 input / USD 30 output (consultar [pricing](https://openai.com/api/pricing/)) | API |\n| **GPT-4o-mini** | USD 0,15 / USD 0,60 (consultar pricing oficial) | API barata |\n| **Claude Sonnet 4** | USD 3 / USD 15 (consultar [pricing Anthropic](https://www.anthropic.com/pricing)) | API |\n| **Claude Haiku 4** | USD 0,80 / USD 4 (consultar pricing) | API |\n| **Gemini 1.5 Pro** | USD 1,25 / USD 5 (consultar [pricing Google](https://ai.google.dev/pricing)) | API |\n\n*Cifras orientativas a abril 2026. Verificá las páginas oficiales antes de comprometer presupuesto.*\n\n## Cuándo conviene self-host\n\n| Volumen mensual | Recomendación |\n|---|---|\n| < 10M tokens | API (no se amortiza GPU) |\n| 10M - 100M | API barata (gpt-4o-mini, Haiku) |\n| 100M - 1B | self-host evaluación |\n| > 1B | self-host casi siempre |\n| Datos ultra-sensibles | self-host independiente del volumen |\n\n## Frameworks de inferencia en 2026\n\n| Framework | Pros | Contras |\n|---|---|---|\n| **vLLM** | mainstream, fácil, paged attention, OpenAI-compatible API | menor optimización extreme low-level |\n| **TGI (HF)** | maduro, integrado con HF | menos rápido que vLLM en algunos casos |\n| **TensorRT-LLM** | máximo throughput en NVIDIA | más complejo, requiere build de engine |\n| **SGLang** | rápido en estructura compleja, prompt caching | comunidad más chica |\n| **llama.cpp / llamafile** | CPU + GPU, edge | throughput menor, no orientado batching alto |\n\n## Errores típicos\n\n1. **Batch=1**: Tirás 90% del throughput posible. Continuous batching es gratis con vLLM/TGI.\n2. **Sequence length excesivo**: cargar 32k tokens de contexto cuando solo usás 2k cuadruplica latencia.\n3. **No usar quantization**: Q4 baja 3-4× el costo con pérdida marginal.\n4. **Olvidar input tokens**: el costo total incluye prefill (input) + decode (output).\n\n> **Aviso legal**: Calculadora educativa. Throughput real depende de muchos factores. **No constituye recomendación de proveedor ni de modelo.** Las cifras de APIs son referenciales — verificá en pricing pages oficiales (OpenAI, Anthropic, Google).\n",
+  "explanation": "## Cómo se calcula\n\n```\nTok/s totales = tok/s por request × batch size\nRequests/hora = (tok/s totales × 3600) / tokens por request\nCosto/1M tokens = (precio_gpu_hora × cant_gpus / tok/s totales / 3600) × 1.000.000\n```\n\nLa clave del costo bajo es **maximizar batch size** sin saturar VRAM. Frameworks modernos (vLLM, TGI, SGLang, TensorRT-LLM) implementan **continuous batching** + **paged attention**, que hacen escalar throughput total casi lineal hasta batch 32-64 y luego con retornos decrecientes.\n\n## Throughput esperado (referencia 2026)\n\n### Llama 3 8B (Q4 / fp16)\n\n| GPU | Framework | Tok/s 1 req | Tok/s batch 32 |\n|---|---|---|---|\n| RTX 4090 24GB | vLLM | 80 | 1.500 |\n| L4 24GB | vLLM | 50 | 800 |\n| A100 40GB | vLLM | 200 | 4.500 |\n| H100 80GB | vLLM | 250 | 6.000 |\n| H100 80GB | TensorRT-LLM | 280 | 7.500 |\n\n### Llama 3 70B (Q4 / fp16)\n\n| GPU | Precision | Tok/s 1 req | Tok/s batch 32 |\n|---|---|---|---|\n| 1× H100 80GB | Q4 | 100 | 1.800 |\n| 1× H200 141GB | fp16 | 90 | 1.500 |\n| 2× H100 80GB | fp16 (TP=2) | 150 | 3.000 |\n| 4× H100 80GB | fp16 (TP=4) | 200 | 4.500 |\n| 8× H100 80GB | fp16 (TP=8) | 240 | 5.500 |\n\n## Costo por 1M tokens vs APIs comerciales\n\n| Modelo / Setup | Input / Output USD por 1M tokens | Notas |\n|---|---|---|\n| **Llama 70B Q4, 1× H100, batch 32** | ~USD 0,20-0,40 output | self-host RunPod |\n| **Llama 70B fp16, 4× H100, batch 64** | ~USD 0,50-0,90 output | self-host RunPod/Lambda |\n| **GPT-5.5** | USD 5 / USD 30 (consultar [pricing](https://openai.com/api/pricing/)) | API flagship |\n| **GPT-5.4** | USD 2,50 / USD 15 (consultar pricing oficial) | API |\n| **Claude Opus 4.8** | USD 5 / USD 25 (consultar [pricing Anthropic](https://www.anthropic.com/pricing)) | API flagship |\n| **Claude Sonnet 4.6** | USD 3 / USD 15 (consultar pricing) | API |\n| **Claude Haiku 4.5** | USD 1 / USD 5 (consultar pricing) | API barata |\n| **Gemini 3.1 Pro** | USD 2 / USD 18 según contexto (consultar [pricing Google](https://ai.google.dev/gemini-api/docs/pricing)) | API |\n| **Gemini 3 Flash** | USD 0,50 / USD 3 (consultar pricing) | API barata |\n\n*Cifras orientativas a julio 2026. Verificá las páginas oficiales antes de comprometer presupuesto.*\n\n## Cuándo conviene self-host\n\n| Volumen mensual | Recomendación |\n|---|---|\n| < 10M tokens | API (no se amortiza GPU) |\n| 10M - 100M | API barata (Gemini Flash, Haiku, GPT mini/nano) |\n| 100M - 1B | self-host evaluación |\n| > 1B | self-host casi siempre |\n| Datos ultra-sensibles | self-host independiente del volumen |\n\n## Frameworks de inferencia en 2026\n\n| Framework | Pros | Contras |\n|---|---|---|\n| **vLLM** | mainstream, fácil, paged attention, OpenAI-compatible API | menor optimización extreme low-level |\n| **TGI (HF)** | maduro, integrado con HF | menos rápido que vLLM en algunos casos |\n| **TensorRT-LLM** | máximo throughput en NVIDIA | más complejo, requiere build de engine |\n| **SGLang** | rápido en estructura compleja, prompt caching | comunidad más chica |\n| **llama.cpp / llamafile** | CPU + GPU, edge | throughput menor, no orientado batching alto |\n\n## Errores típicos\n\n1. **Batch=1**: Tirás 90% del throughput posible. Continuous batching es gratis con vLLM/TGI.\n2. **Sequence length excesivo**: cargar 32k tokens de contexto cuando solo usás 2k cuadruplica latencia.\n3. **No usar quantization**: Q4 baja 3-4× el costo con pérdida marginal.\n4. **Olvidar input tokens**: el costo total incluye prefill (input) + decode (output).\n\n> **Aviso legal**: Calculadora educativa. Throughput real depende de muchos factores. **No constituye recomendación de proveedor ni de modelo.** Las cifras de APIs son referenciales — verificá en pricing pages oficiales (OpenAI, Anthropic, Google).\n",
   "faq": [
     {
       "q": "¿Cuántos tokens/segundo genera Llama 70B?",
@@ -137,7 +137,7 @@
     },
     {
       "q": "¿Self-host es realmente más barato que GPT-4o?",
-      "a": "**Sí, a partir de cierto volumen.** Llama 70B Q4 self-host sale **~USD 0,20-0,50/1M tokens** output. GPT-4o cobra ~USD 30/1M output (consultá pricing oficial actualizado). Si procesás >100M tokens/mes y mantenés la GPU bien batcheada, self-host se amortiza fácil."
+      "a": "**Sí, a partir de cierto volumen.** Llama 70B Q4 self-host sale **~USD 0,20-0,50/1M tokens** output. GPT-5.5 cobra USD 30/1M output y Claude Sonnet 4.6 USD 15/1M (consultá pricing oficial actualizado). Si procesás >100M tokens/mes y mantenés la GPU bien batcheada, self-host se amortiza fácil."
     },
     {
       "q": "¿Qué framework de inferencia usar?",
@@ -153,7 +153,7 @@
     },
     {
       "q": "¿Cuánto cuesta servir Llama 8B?",
-      "a": "**Muy poco.** En 1× H100 con vLLM podés llegar a 6.000 tok/s totales. A USD 2,49/h Lambda → **~USD 0,12 / 1M tokens**. En L4 24GB (USD 0,80/h) sale aún más barato — ~USD 0,15/1M con menor throughput por request."
+      "a": "**Muy poco.** En 1× H100 con vLLM podés llegar a 6.000 tok/s totales. A USD 2,89/h en RunPod → **~USD 0,13 / 1M tokens**. En una L4 24GB (mucho más barata por hora) el costo por millón queda en un rango similar, con menor throughput por request."
     },
     {
       "q": "¿Necesito GPU dedicada 24/7 para servir LLM?",
@@ -182,7 +182,7 @@
       "url": "https://www.anthropic.com/pricing"
     }
   ],
-  "lastReviewed": "2026-06-20",
+  "lastReviewed": "2026-07-02",
   "referenceTables": [
     {
       "title": "Throughput de inferencia LLM por GPU (vLLM, batch 32) — Referencia 2026",
@@ -196,7 +196,7 @@
         ["Llama 3 70B", "4× H100 80 GB", "fp16 (TP=4)", "200", "4.500"],
         ["Llama 3 70B", "8× H100 80 GB", "fp16 (TP=8)", "240", "5.500"]
       ],
-      "note": "Valores orientativos con vLLM y continuous batching (abril 2026). El throughput real depende de sequence length, hardware exacto y versión de framework. Fuente: vLLM Docs / benchmarks publicados (docs.vllm.ai)"
+      "note": "Valores orientativos con vLLM y continuous batching (revisado julio 2026). El throughput real depende de sequence length, hardware exacto y versión de framework. Fuente: vLLM Docs / benchmarks publicados (docs.vllm.ai)"
     }
   ],
   "relatedSlugs": [

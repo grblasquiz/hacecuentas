@@ -17,34 +17,39 @@ export interface Outputs {
   _chart?: any;
 }
 
-// Precios mensuales por velocidad (CLP, IVA incluido) - abril 2026
+// Precios mensuales por velocidad (CLP, IVA incluido) - julio 2026.
+// Precios promocionales de los primeros 12 meses (fuente: sitios oficiales Mundo/GTD +
+// comparadores Comparaiso/Selectra, jun-jul 2026). Los operadores ya casi no venden
+// planes <500 Mbps: las velocidades bajas colapsan al precio del plan de entrada vigente.
 const preciosPorOperador: Record<string, Record<number, number>> = {
-  vtr: { 200: 15990, 300: 21990, 400: 29990, 500: 39990, 600: 49990, 800: 59990, 1000: 79990 },
-  claro: { 200: 16990, 300: 24990, 400: 34990, 500: 44990, 600: 54990, 800: 64990, 1000: 89990 },
-  mundo: { 200: 14990, 300: 19990, 400: 27990, 500: 34990, 600: 44990, 800: 54990, 1000: 74990 },
-  gtd: { 200: 17990, 300: 25990, 400: 35990, 500: 45990, 600: 55990, 800: 65990, 1000: 85990 },
-  movistar: { 200: 18990, 300: 27990, 400: 39990, 500: 49990, 600: 59990, 800: 69990, 1000: 89990 },
-  entel: { 200: 19990, 300: 28990, 400: 44990, 500: 54990, 600: 64990, 800: 74990, 1000: 95990 }
+  vtr: { 200: 14990, 300: 14990, 400: 14990, 500: 14990, 600: 14990, 800: 20990, 1000: 20990 },
+  claro: { 200: 15990, 300: 15990, 400: 15990, 500: 15990, 600: 15990, 800: 19990, 1000: 19990 },
+  mundo: { 200: 15990, 300: 15990, 400: 15990, 500: 15990, 600: 15990, 800: 15990, 1000: 16990 },
+  gtd: { 200: 17990, 300: 17990, 400: 17990, 500: 17990, 600: 17990, 800: 19990, 1000: 19990 },
+  movistar: { 200: 14990, 300: 14990, 400: 14990, 500: 14990, 600: 14990, 800: 19990, 1000: 19990 },
+  entel: { 200: 16990, 300: 16990, 400: 16990, 500: 16990, 600: 16990, 800: 20990, 1000: 20990 }
 };
 
-// Costos de instalación por operador (rango: min-max) - promedio para cálculo
+// Costos de instalación por operador - julio 2026: instalación incluida sin costo
+// en los planes vigentes de todos los operadores.
 const instalacionPorOperador: Record<string, number> = {
-  vtr: 24500,      // 0-49000
-  claro: 49500,    // 0-99000
-  mundo: 19500,    // 0-39000
-  gtd: 64000,      // 49000-79000
-  movistar: 29500, // 0-59000
-  entel: 34500     // 0-69000
+  vtr: 0,
+  claro: 0,
+  mundo: 0,
+  gtd: 0,
+  movistar: 0,
+  entel: 0
 };
 
-// Permanencia mínima por operador (meses)
+// Permanencia mínima por operador (meses) - julio 2026: los planes fibra vigentes
+// se comercializan sin permanencia (planes libres).
 const permanenciaPorOperador: Record<string, number> = {
-  vtr: 24,
-  claro: 24,
-  mundo: 18,
-  gtd: 18,
-  movistar: 24,
-  entel: 24
+  vtr: 0,
+  claro: 0,
+  mundo: 0,
+  gtd: 0,
+  movistar: 0,
+  entel: 0
 };
 
 // Velocidades soportadas por región (simplificado)
@@ -83,12 +88,12 @@ function obtenerPrecioMensual(operador: string, velocidad: number): number {
 
 function obtenerInstalacion(operador: string): number {
   const operadorLower = operador.toLowerCase();
-  return instalacionPorOperador[operadorLower] || 30000;
+  return instalacionPorOperador[operadorLower] ?? 0;
 }
 
 function obtenerPermanencia(operador: string): number {
   const operadorLower = operador.toLowerCase();
-  return permanenciaPorOperador[operadorLower] || 24;
+  return permanenciaPorOperador[operadorLower] ?? 0;
 }
 
 function generarRecomendacion(operador: string, valorPorMbps: number, velocidad: number, precioMensual: number): string {
@@ -101,15 +106,15 @@ function generarRecomendacion(operador: string, valorPorMbps: number, velocidad:
   let msg = "";
   
   if (operadorLower === "mundo") {
-    msg = "✓ Mejor relación precio/velocidad. Permanencia 18 meses, más flexible.";
+    msg = "✓ Mejor relación precio/velocidad en gigabit. Sin permanencia; ojo: parte del descuento es promocional.";
   } else if (operadorLower === "vtr") {
-    msg = "✓ Buena cobertura RM/Valparaíso. Instalación desde $0. Atención técnica 24/7.";
+    msg = "✓ Buena cobertura RM/Valparaíso. Instalación incluida. Atención técnica 24/7.";
   } else if (operadorLower === "claro") {
-    msg = "✓ Máxima velocidad disponible. Planes desde 200 hasta 1000 Mbps en zonas urbanas.";
+    msg = "✓ Fibra Experto hasta 940 Mbps a precio competitivo en zonas urbanas.";
   } else if (operadorLower === "gtd") {
-    msg = "✓ Cobertura regional. Velocidades altas a precios competitivos en Bío Bío.";
+    msg = "✓ Cobertura regional fuerte (zona sur). Router Wi-Fi 6 incluido.";
   } else if (operadorLower === "movistar") {
-    msg = "✓ Bundle disponible con móvil/TV. Permanencia 24 meses estándar.";
+    msg = "✓ Bundle disponible con móvil/TV. Planes libres, sin permanencia.";
   } else if (operadorLower === "entel") {
     msg = "✓ Plan Fibra Entel con soporte premium. Bundles móvil/TV/internet disponibles.";
   }
@@ -174,7 +179,7 @@ export function compute(inputs: Inputs): Outputs {
   const _insight = {
     title: 'Costo real de tu plan de fibra',
     text: `A lo largo de ${meses} ${meses === 1 ? 'mes' : 'meses'} pagás **${fmt(totalRound)}** (${fmt(costoMensualPromedio)}/mes con la instalación prorrateada). El valor por velocidad es de **$${(Math.round(valorPorMbps * 100) / 100).toLocaleString('es-CL')}/Mbps**: cuanto más bajo, más conviene.`,
-    tone: valorPorMbps <= 80 ? 'good' : valorPorMbps >= 130 ? 'warn' : 'neutral',
+    tone: valorPorMbps <= 40 ? 'good' : valorPorMbps >= 60 ? 'warn' : 'neutral',
     icon: '🌐',
   };
 

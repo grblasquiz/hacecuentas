@@ -52,7 +52,8 @@ const VUELOS: Record<string, Record<string, number>> = {
 // Hotel por noche (USD) por ciudad y nivel
 const HOTEL: Record<string, Record<string, number>> = {
   miami: { economico: 100, medio: 280, premium: 700 },
-  nyc: { economico: 180, medio: 350, premium: 800 },
+  // NYC semana de la final (14-20 jul): tarifas reembolsables $450-$900/noche; Newark $180-$320 (verificado jul-2026)
+  nyc: { economico: 200, medio: 450, premium: 900 },
   dallas: { economico: 130, medio: 240, premium: 500 },
   houston: { economico: 125, medio: 230, premium: 480 },
   'los-angeles': { economico: 160, medio: 320, premium: 750 },
@@ -79,7 +80,7 @@ const NOMBRES_CIUDAD: Record<string, string> = {
   cdmx: 'CDMX', guadalajara: 'Guadalajara', monterrey: 'Monterrey',
 };
 
-const ARS_USD = 1130;
+const ARS_USD = 1525; // dólar blue venta 2-jul-2026
 
 export function mundial2026CostoViaje(i: Inputs): Outputs {
   const origen = String(i.origen || 'argentina').toLowerCase();
@@ -98,7 +99,8 @@ export function mundial2026CostoViaje(i: Inputs): Outputs {
   // Hotel: asume 2 personas por habitación (suma el valor completo dividido en grupos de 2)
   const habitaciones = Math.ceil(personas / 2);
   const costoHotel = precioHotel * noches * habitaciones;
-  // Entradas: 3 partidos fase grupos Tier 3 = $450 por persona
+  // Entradas: presupuesto base $450/persona ≈ 2 entradas de eliminatorias en categoría
+  // económica a precio oficial (face value octavos $170-$980, cuartos $275-$1.775; jul-2026)
   const costoEntradas = 450 * personas;
   // Extras
   const costoComida = gastoDia * personas * noches;
