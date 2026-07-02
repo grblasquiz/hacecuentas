@@ -76,6 +76,12 @@ const schema = { '@context': 'https://schema.org', '@graph': [
 
 const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey };
 
+// Última nota "partidos del finde" (se publica una por semana) — link evergreen.
+const findeModules = import.meta.glob<any>('../content/blog/partidos-mundial-finde-*.json', { eager: true });
+const findePost = Object.values(findeModules)
+  .map((m: any) => m.default ?? m)
+  .sort((a: any, b: any) => String(b.date || '').localeCompare(String(a.date || '')))[0];
+
 const renderCard = (m: any) => {
   const t1 = teamLabel(m.team1); const t2 = teamLabel(m.team2); const r = result(m);
   return { m, t1, t2, r };
@@ -167,6 +173,9 @@ const renderCard = (m: any) => {
       <section class="ph-links">
         <h2>Seguí el Mundial</h2>
         <ul>
+          {findePost && (
+            <li><a href={`/blog/${findePost.slug}`}>🗓️ Los partidos de este fin de semana, en hora argentina</a></li>
+          )}
           <li><a href="/fixture-mundial-2026">📅 Fixture completo ({total} partidos)</a></li>
           <li><a href="/donde-ver-mundial-2026">📺 Dónde verlo: canales por país</a></li>
           <li><a href="/posiciones-mundial-2026">📊 Posiciones de los grupos</a></li>

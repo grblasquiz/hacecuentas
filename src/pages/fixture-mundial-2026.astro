@@ -21,6 +21,12 @@ import {
 
 // Calcs de fútbol para el funnel (se resuelven del catálogo para tomar título/icono).
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+
+// Última nota "partidos del finde" (una por semana) — link evergreen.
+const findeModules = import.meta.glob<any>('../content/blog/partidos-mundial-finde-*.json', { eager: true });
+const findePost = Object.values(findeModules)
+  .map((m: any) => m.default ?? m)
+  .sort((a: any, b: any) => String(b.date || '').localeCompare(String(a.date || '')))[0];
 const bySlug = new Map(
   Object.values(calcModules).map((m: any) => {
     const c = m.default || m;
@@ -279,6 +285,9 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
           <a href="/goleadores-mundial-2026">Goleadores</a> ·
           <a href="/llave-mundial-2026">Llave de eliminación</a> ·
           <a href="/cuando-juega-argentina-mundial-2026">¿Cuándo juega Argentina?</a>
+          {findePost && (
+            <Fragment> · <a href={`/blog/${findePost.slug}`}>Los partidos del finde</a></Fragment>
+          )}
         </p>
       </aside>
 
