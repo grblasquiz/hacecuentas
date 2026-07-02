@@ -23,6 +23,12 @@ export interface Inputs {
   valorDia?: number | string;   // pago por día trabajado
   fechaIngreso?: string;        // YYYY-MM-DD
   fechaSalida?: string;         // YYYY-MM-DD
+  // Prestaciones ya pagadas oportunamente durante la relación (opcionales, $).
+  // Se descuentan del total devengado para mostrar el saldo real pendiente.
+  cesantiasPagadas?: number | string;
+  interesesPagados?: number | string;
+  primaPagada?: number | string;
+  vacacionesPagadas?: number | string;
 }
 export interface Outputs { [k: string]: any; _insight?: any; _chart?: any; }
 
@@ -94,12 +100,35 @@ export function compute(i: Inputs): Outputs {
   const prima = baseConAux * prop;
   const vacaciones = salarioMensualizado * (diasCalendario / 720);
 
-  const prestaciones = cesantias + intereses + prima + vacaciones;
-  const total = prestaciones;
+  // Total DEVENGADO por el período completo (el derecho acumulado).
+  const devengado = cesantias + intereses + prima + vacaciones;
+
+  // Montos ya pagados oportunamente durante la relación (opcionales). Muchos
+  // empleadores formales pagan la prima semestral (junio/diciembre), consignan
+  // las cesantías al fondo cada febrero y dan las vacaciones cada año: eso NO se
+  // vuelve a deber en la liquidación final. Se descuenta por concepto y nunca
+  // baja de 0. Sin montos cargados, el saldo = devengado (comportamiento previo).
+  const cesantiasPag = Math.max(0, num(i.cesantiasPagadas));
+  const interesesPag = Math.max(0, num(i.interesesPagados));
+  const primaPag = Math.max(0, num(i.primaPagada));
+  const vacacionesPag = Math.max(0, num(i.vacacionesPagadas));
+  const yaPagado = cesantiasPag + interesesPag + primaPag + vacacionesPag;
+  const hayPagos = yaPagado > 0;
+
+  const cesantiasPend = Math.max(0, cesantias - cesantiasPag);
+  const interesesPend = Math.max(0, intereses - interesesPag);
+  const primaPend = Math.max(0, prima - primaPag);
+  const vacacionesPend = Math.max(0, vacaciones - vacacionesPag);
+  const pendiente = cesantiasPend + interesesPend + primaPend + vacacionesPend;
+
+  // El resultado principal es el SALDO PENDIENTE a pagar en la liquidación.
+  const total = pendiente;
 
   const _insight = {
     title: 'Liquidación de tu empleada por días',
-    text: `Trabajando **${diasSemana} día${diasSemana === 1 ? '' : 's'} a la semana** a **${fmtCOP(valorDia)}** el día, durante ${diasCalendario.toLocaleString('es-CO')} días (~${(diasCalendario / 30).toLocaleString('es-CO', { maximumFractionDigits: 1 })} meses), la liquidación es de **${fmtCOP(total)}**: cesantías ${fmtCOP(cesantias)}, intereses ${fmtCOP(intereses)}, prima ${fmtCOP(prima)} y vacaciones ${fmtCOP(vacaciones)}. La trabajadora doméstica por días tiene derecho a TODAS las prestaciones, proporcionales al tiempo${tieneAuxilio ? ', incluido el auxilio de transporte en la base de cesantías y prima' : ' (el salario mensualizado supera 2 SMLMV: sin auxilio en la base)'}.`,
+    text: hayPagos
+      ? `Por ${diasCalendario.toLocaleString('es-CO')} días trabajando **${diasSemana} día${diasSemana === 1 ? '' : 's'} a la semana** a **${fmtCOP(valorDia)}** el día, el total **devengado** en prestaciones es **${fmtCOP(devengado)}**. Como ya pagaste **${fmtCOP(yaPagado)}** durante la relación, el **saldo pendiente a pagar** en la liquidación es **${fmtCOP(total)}**: cesantías ${fmtCOP(cesantiasPend)}, intereses ${fmtCOP(interesesPend)}, prima ${fmtCOP(primaPend)} y vacaciones ${fmtCOP(vacacionesPend)}.`
+      : `Trabajando **${diasSemana} día${diasSemana === 1 ? '' : 's'} a la semana** a **${fmtCOP(valorDia)}** el día, durante ${diasCalendario.toLocaleString('es-CO')} días (~${(diasCalendario / 30).toLocaleString('es-CO', { maximumFractionDigits: 1 })} meses), la liquidación es de **${fmtCOP(total)}**: cesantías ${fmtCOP(cesantias)}, intereses ${fmtCOP(intereses)}, prima ${fmtCOP(prima)} y vacaciones ${fmtCOP(vacaciones)}. Es el total **devengado**; si ya pagaste alguna prestación durante la relación, cargala en los campos opcionales para ver el saldo real. La trabajadora doméstica por días tiene derecho a TODAS las prestaciones, proporcionales al tiempo${tieneAuxilio ? ', incluido el auxilio de transporte en la base de cesantías y prima' : ' (el salario mensualizado supera 2 SMLMV: sin auxilio en la base)'}.`,
     tone: 'good' as const,
     icon: '🏠',
   };
@@ -107,30 +136,39 @@ export function compute(i: Inputs): Outputs {
   const _chart = {
     type: 'doughnut',
     slices: [
-      { label: 'Cesantías', value: Math.round(cesantias) },
-      { label: 'Intereses (12%)', value: Math.round(intereses) },
-      { label: 'Prima', value: Math.round(prima) },
-      { label: 'Vacaciones', value: Math.round(vacaciones) },
+      { label: 'Cesantías', value: Math.round(cesantiasPend) },
+      { label: 'Intereses (12%)', value: Math.round(interesesPend) },
+      { label: 'Prima', value: Math.round(primaPend) },
+      { label: 'Vacaciones', value: Math.round(vacacionesPend) },
     ].filter((s) => s.value > 0),
     prefix: '$',
     centerValue: fmtCOP(total),
-    centerLabel: 'liquidación',
-    ariaLabel: `Liquidación total ${fmtCOP(total)}: cesantías ${fmtCOP(cesantias)}, intereses ${fmtCOP(intereses)}, prima ${fmtCOP(prima)}, vacaciones ${fmtCOP(vacaciones)}.`,
+    centerLabel: hayPagos ? 'saldo a pagar' : 'liquidación',
+    ariaLabel: `${hayPagos ? 'Saldo pendiente' : 'Liquidación total'} ${fmtCOP(total)}: cesantías ${fmtCOP(cesantiasPend)}, intereses ${fmtCOP(interesesPend)}, prima ${fmtCOP(primaPend)}, vacaciones ${fmtCOP(vacacionesPend)}.`,
   };
 
-  return {
-    totalLiquidacion: fmtCOP(total),
-    cesantias: `${fmtCOP(cesantias)} (1 mes/año × ${diasCalendario.toLocaleString('es-CO')}/360${tieneAuxilio ? ', incluye auxilio' : ''})`,
-    interesesCesantias: `${fmtCOP(intereses)} (12% anual del saldo)`,
-    prima: `${fmtCOP(prima)} (1 mes/año proporcional${tieneAuxilio ? ', incluye auxilio' : ''})`,
-    vacaciones: `${fmtCOP(vacaciones)} (15 días hábiles/año, solo salario)`,
+  const out: Outputs = {
+    totalLiquidacion: hayPagos
+      ? `${fmtCOP(total)} (saldo pendiente tras descontar ${fmtCOP(yaPagado)} ya pagado)`
+      : fmtCOP(total),
+    cesantias: `${fmtCOP(cesantias)} (1 mes/año × ${diasCalendario.toLocaleString('es-CO')}/360${tieneAuxilio ? ', incluye auxilio' : ''})${cesantiasPag > 0 ? ` − ${fmtCOP(cesantiasPag)} pagado = ${fmtCOP(cesantiasPend)}` : ''}`,
+    interesesCesantias: `${fmtCOP(intereses)} (12% anual del saldo)${interesesPag > 0 ? ` − ${fmtCOP(interesesPag)} pagado = ${fmtCOP(interesesPend)}` : ''}`,
+    prima: `${fmtCOP(prima)} (1 mes/año proporcional${tieneAuxilio ? ', incluye auxilio' : ''})${primaPag > 0 ? ` − ${fmtCOP(primaPag)} pagado = ${fmtCOP(primaPend)}` : ''}`,
+    vacaciones: `${fmtCOP(vacaciones)} (15 días hábiles/año, solo salario)${vacacionesPag > 0 ? ` − ${fmtCOP(vacacionesPag)} pagado = ${fmtCOP(vacacionesPend)}` : ''}`,
     salarioMensualizado: `${fmtCOP(totalMensualizado)} (${diasMes.toLocaleString('es-CO', { maximumFractionDigits: 1 })} días/mes × ${fmtCOP(valorDia)})`,
     auxilioProporcional: tieneAuxilio
       ? `${fmtCOP(auxParaBase * prop)} incluido en la base prestacional`
       : 'No aplica (mensualizado mayor a 2 SMLMV)',
-    detalle: `Cesantías ${fmtCOP(cesantias)} + intereses ${fmtCOP(intereses)} + prima ${fmtCOP(prima)} + vacaciones ${fmtCOP(vacaciones)} = ${fmtCOP(total)} por ${diasCalendario.toLocaleString('es-CO')} días.`,
-    nota: 'La trabajadora doméstica por días tiene los mismos derechos prestacionales que cualquier empleada (Corte Constitucional C-871/2014). Si trabaja por días para varios hogares, cada empleador liquida en proporción a los días que trabajó para él. Además se le deben los aportes a seguridad social por semanas (Decreto 2616/2013) durante la relación.',
+    detalle: hayPagos
+      ? `Devengado ${fmtCOP(devengado)} − ya pagado ${fmtCOP(yaPagado)} = saldo pendiente ${fmtCOP(total)} por ${diasCalendario.toLocaleString('es-CO')} días.`
+      : `Cesantías ${fmtCOP(cesantias)} + intereses ${fmtCOP(intereses)} + prima ${fmtCOP(prima)} + vacaciones ${fmtCOP(vacaciones)} = ${fmtCOP(total)} por ${diasCalendario.toLocaleString('es-CO')} días.`,
+    nota: 'El resultado es lo DEVENGADO en el período; si ya pagaste prima (semestral), consignaste cesantías o diste vacaciones oportunamente, cargá esos montos en los campos opcionales para ver el saldo real pendiente. La trabajadora doméstica por días tiene los mismos derechos prestacionales que cualquier empleada (Corte Constitucional C-871/2014). Si trabaja por días para varios hogares, cada empleador liquida en proporción a los días que trabajó para él. Además se le deben los aportes a seguridad social por semanas (Decreto 2616/2013) durante la relación.',
     _insight,
     _chart,
   };
+  if (hayPagos) {
+    out.totalDevengado = `${fmtCOP(devengado)} (derecho acumulado del período)`;
+    out.yaPagado = `${fmtCOP(yaPagado)} (prestaciones pagadas durante la relación)`;
+  }
+  return out;
 }
