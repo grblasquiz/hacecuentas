@@ -314,6 +314,14 @@ export const INDEX_EXTRA_GROUPS: Array<{
     ],
   },
   {
+    title: 'Viajes',
+    icon: '🧳',
+    roomSlugs: [
+      'cuanto-necesito-para-mi-viaje',
+      'podemos-afrontar-este-viaje-familiar',
+    ],
+  },
+  {
     title: 'Familia',
     icon: '👨‍👩‍👧',
     roomSlugs: [
@@ -321,7 +329,6 @@ export const INDEX_EXTRA_GROUPS: Array<{
       'como-cambia-mi-presupuesto-con-un-hijo',
       'cuanto-ahorrar-para-la-educacion-de-mis-hijos',
       'podemos-vivir-con-un-solo-ingreso',
-      'podemos-afrontar-este-viaje-familiar',
     ],
   },
   {

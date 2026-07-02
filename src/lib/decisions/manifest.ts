@@ -269,6 +269,16 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "lastReviewed": "2026-06-29"
   },
   {
+    "slug": "cuanto-necesito-para-mi-viaje",
+    "title": "¿Cuánto necesito para mi viaje? Presupuesto completo y plan de ahorro 2026",
+    "h1": "¿Cuánto necesito para mi viaje?",
+    "description": "Armá el presupuesto completo de tu viaje rubro por rubro (pasajes, alojamiento, comida, actividades, recargo por moneda extranjera, imprevistos) y mirá si con tu ritmo de ahorro llegás a la fecha o cuánto tenés que apartar por mes.",
+    "intro": "Un viaje no es solo el pasaje: es el alojamiento por noche, la comida de cada persona cada día, los traslados, las excursiones, el seguro, el recargo por pagar en moneda extranjera y los imprevistos que siempre aparecen. Esta sala arma el presupuesto completo rubro por rubro — total, por persona y por día — y lo cruza con tu plan de ahorro: cuánto tenés hoy, cuánto apartás por mes y cuántos meses faltan. El resultado no es solo el costo: es si llegás a la fecha del viaje, y si no, exactamente cuánto tenés que ahorrar por mes para llegar.",
+    "icon": "🧳",
+    "category": "finanzas",
+    "lastReviewed": "2026-07-02"
+  },
+  {
     "slug": "cuanto-puedo-gastar-por-mes",
     "title": "¿Cuánto puedo gastar por mes sin endeudarme? 2026",
     "h1": "¿Cuánto puedo gastar por mes sin endeudarme?",
