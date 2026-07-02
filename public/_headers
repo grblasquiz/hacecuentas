@@ -53,7 +53,12 @@
   # a nivel worker (generate-worker-wrapper.mjs), NO acá.
   # ⚠️ Tampoco 'unsafe-eval': misma directiva que con Infolinks (rev 7/8) cascadeó y MATÓ
   # GA4. El fill puede arrancar PARCIAL; subirlo = decisión explícita y testeada.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://accounts.google.com https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://*.adtrafficquality.google https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://www.clarity.ms https://*.clarity.ms https://www.ezojs.com https://*.ezoic.net https://*.ezoiccdn.com https://ezoicanalytics.com https://*.gatekeeperconsent.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; font-src 'self' data:; connect-src 'self' https://accounts.google.com https://raw.githubusercontent.com https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://dolarapi.com https://ve.dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com https://www.clarity.ms https://*.clarity.ms https://*.adtrafficquality.google https://*.ezoic.net https://*.ezoiccdn.com https://ezoicanalytics.com https://*.gatekeeperconsent.com; frame-src 'self' https://accounts.google.com https://td.doubleclick.net https://googleads.g.doubleclick.net https://*.googlesyndication.com https://*.adtrafficquality.google https://*.ezoic.net https://*.ezoiccdn.com; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'self'
+  # CSP rev 15 (2026-07-02): la política principal se MOVIÓ a src/lib/csp-main.txt
+  # y se sirve desde el worker wrapper (generate-worker-wrapper.mjs). Motivo: la
+  # línea acá medía 1605/2000 chars (límite duro CF) y un partner más la rompía;
+  # además _headers no cubre respuestas SSR. Para agregar orígenes: editar
+  # src/lib/csp-main.txt (una sola línea, sin límite) y rebuild. NO re-agregar
+  # la línea Content-Security-Policy en este bloque: dos CSP = intersección.
   # Cross-Origin-Opener/Embedder/Resource Policy: aplicados vía
   # src/middleware.ts (CF Workers Static Assets ignora silenciosamente estos
   # headers en _headers — verificado 2026-05-04).

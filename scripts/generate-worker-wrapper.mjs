@@ -67,6 +67,20 @@ if (redirectEntries.length === 0 || goneEntries.length === 0) {
   process.exit(1);
 }
 
+// ---- CSP principal ----------------------------------------------------------
+// Vive en src/lib/csp-main.txt y se sirve desde el wrapper (no desde _headers):
+// CF Workers Static Assets corta lineas de _headers a 2000 chars y la politica
+// ya rozaba el limite. Ademas _headers solo aplica a assets estaticos → las
+// paginas SSR quedaban sin CSP. El wrapper cubre ambos casos.
+const mainCsp = readFileSync(
+  join(REPO_ROOT, 'src', 'lib', 'csp-main.txt'),
+  'utf8',
+).trim();
+if (!mainCsp.startsWith("default-src 'self'")) {
+  console.error('[wrap-worker] src/lib/csp-main.txt invalida — aborting.');
+  process.exit(1);
+}
+
 // ---- Build REDIRECT_MAP: path → { dst, status } ----------------------------
 // Mantenemos status por entry (mayoria 301, pero algunos pueden ser 302/308).
 const redirectMap = {};
@@ -107,6 +121,11 @@ const SITEMAP_410_HEADERS = {
 // plugin de WordPress, /embeber y oEmbed no cargan cross-origin (el caso de uso
 // entero). Mantener en sync con el bloque /embed/* de public/_headers.
 const EMBED_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://dolarapi.com https://api.argentinadatos.com https://region1.google-analytics.com https://open.er-api.com https://api.coingecko.com; frame-ancestors *";
+
+// CSP principal del sitio (fuente: src/lib/csp-main.txt, inyectada en build).
+// Se setea aca y no en _headers: limite de 2000 chars/linea de CF + _headers
+// no cubre respuestas SSR.
+const MAIN_CSP = ${JSON.stringify(mainCsp)};
 
 export default {
   async fetch(request, env, ctx) {
@@ -151,7 +170,11 @@ export default {
       return embedRes;
     }
 
-    return response;
+    // 7) CSP principal en todo lo demas (los headers de ASSETS son inmutables →
+    //    copia). Reemplaza la linea CSP que vivia en el bloque /* de _headers.
+    const finalRes = new Response(response.body, response);
+    finalRes.headers.set('Content-Security-Policy', MAIN_CSP);
+    return finalRes;
   },
 };
 `;
