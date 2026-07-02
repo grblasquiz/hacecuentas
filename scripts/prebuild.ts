@@ -82,6 +82,9 @@ async function main() {
     // valor fiscal viejo conocido (teto INSS 2025, SM 1518, etc.) en vez de
     // importar la fuente única de src/lib/data/.
     run(task('fiscal-gate', 'check-fiscal-hardcode')),
+    // Gate de links/slugs hardcodeados (Header/Footer/home/pillars): falla si
+    // un slug a mano no resuelve a ruta viva o apunta a un 410.
+    run(task('link-guard', 'validate-hardcoded-slugs')),
     run(task('formula-index', 'regenerate-formula-index')),
     run(mjsTask('converter-tables', 'generate-converter-tables')),
     run(mjsTask('bcra-indices', 'fetch-bcra-indices')),

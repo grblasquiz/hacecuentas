@@ -142,9 +142,15 @@ function cosineSimilarity(
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
+// Versión del algoritmo: bumpearla invalida el cache aunque los JSONs no
+// cambien (el hash solo mira inputs — sin esto, editar este script no
+// regenera los mapas ya cacheados).
+const ALGO_VERSION = 'v2-coverage';
+
 function hashCalcsInputs(dir: string, files: string[]): string {
   // Hash basado en el contenido raw de todos los JSONs + path (si cambia el nombre de un slug, invalida cache).
   const hash = createHash('sha1');
+  hash.update(ALGO_VERSION);
   for (const f of files.sort()) {
     hash.update(f);
     hash.update(readFileSync(join(dir, f), 'utf8'));
@@ -245,6 +251,50 @@ function computeRelated(opts: {
       return bBoost - aBoost;
     });
     related[c.slug] = scores.slice(0, topK).map((s) => s.slug);
+  }
+
+  // Coverage pass: toda calc tiene que recibir ≥1 link ENTRANTE del grafo
+  // (contando también los relatedSlugs manuales). Sin esto ~64 calcs solo
+  // apuntaban hacia afuera y nunca recibían — cero equity interno del bloque
+  // related. A cada huérfana se la inserta en la lista de su vecino más
+  // similar (cosine es simétrico: su top-1 es también quien más se le parece),
+  // desplazando al entrante más débil que tenga otros links entrantes.
+  const incoming = new Map<string, number>();
+  for (const c of calcs) incoming.set(c.slug, 0);
+  for (const c of calcs) {
+    for (const s of c.relatedSlugs || []) {
+      if (incoming.has(s)) incoming.set(s, (incoming.get(s) || 0) + 1);
+    }
+  }
+  for (const list of Object.values(related)) {
+    for (const s of list) incoming.set(s, (incoming.get(s) || 0) + 1);
+  }
+  const orphans = calcs.filter((c) => (incoming.get(c.slug) || 0) === 0);
+  let placedCount = 0;
+  for (const o of orphans) {
+    let placed = false;
+    for (const host of related[o.slug] || []) {
+      const hostList = related[host];
+      if (!hostList || hostList.includes(o.slug)) continue;
+      for (let i = hostList.length - 1; i >= 0; i--) {
+        const victim = hostList[i];
+        if ((incoming.get(victim) || 0) > 1) {
+          hostList.splice(i, 1);
+          incoming.set(victim, (incoming.get(victim) || 1) - 1);
+          // Insertar arriba (idx 2) para caer dentro de las 4 cards renderizadas.
+          hostList.splice(Math.min(2, hostList.length), 0, o.slug);
+          incoming.set(o.slug, 1);
+          placed = true;
+          placedCount++;
+          break;
+        }
+      }
+      if (placed) break;
+    }
+    if (!placed) console.warn(`[related-auto:${label}] huérfana sin host viable: ${o.slug}`);
+  }
+  if (orphans.length > 0) {
+    console.log(`[related-auto:${label}] coverage pass: ${placedCount}/${orphans.length} huérfanas enlazadas`);
   }
 
   writeFileSync(outputFile, JSON.stringify(related, null, 2));

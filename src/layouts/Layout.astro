@@ -129,9 +129,12 @@ const _GEO_BY_AUDIENCE: Record<string, {region: string; placename: string; icbm:
   CA: { region: 'CA', placename: 'Ottawa, Canada', icbm: '45.4215, -75.6972', country: 'Canada' },
   AU: { region: 'AU', placename: 'Canberra, Australia', icbm: '-35.2809, 149.1300', country: 'Australia' },
 };
-// _geo default: si lang='en' default a US (mercado Bing prioritario); pt → BR; es → AR.
-const _geo = _GEO_BY_AUDIENCE[audience] ||
-  (lang === 'en' ? _GEO_BY_AUDIENCE.US : lang === 'pt' ? _GEO_BY_AUDIENCE.BR : _GEO_BY_AUDIENCE.AR);
+// Geo SOLO con audiencia país-específica. audience='global' (1.043 calcs
+// conversores/matemática/etc. lo declaran explícito) NO emite geo tags:
+// clavarle Buenos Aires a contenido global era señal contradictoria para
+// Bing Local. Las páginas AR-first (home, pilares) pasan audience="AR"
+// explícito para conservar su geo — el resto de estáticos queda sin geo.
+const _geo = _GEO_BY_AUDIENCE[audience] || null;
 const ogLocale = lang === 'en'
   ? (['US','GB','CA','AU'].includes(audience) ? _audByLocale[1] : 'en_US')
   : lang === 'pt' ? (audience === 'PT' ? 'pt_PT' : 'pt_BR') : _audByLocale[1];
@@ -353,11 +356,15 @@ const globalSchema = {
     {/* Geo targeting — Bing Local + Yandex usan estos; Google ignora.
         AR es el mercado principal (62%+ del tráfico); para otras audiences
         ajustamos a su país. Map definido en frontmatter (_geo). */}
-    <meta name="geo.region" content={_geo.region} />
-    <meta name="geo.placename" content={_geo.placename} />
-    <meta name="geo.position" content={_geo.icbm.replace(', ', ';')} />
-    <meta name="ICBM" content={_geo.icbm} />
-    <meta name="country" content={_geo.country} />
+    {_geo && (
+      <>
+        <meta name="geo.region" content={_geo.region} />
+        <meta name="geo.placename" content={_geo.placename} />
+        <meta name="geo.position" content={_geo.icbm.replace(', ', ';')} />
+        <meta name="ICBM" content={_geo.icbm} />
+        <meta name="country" content={_geo.country} />
+      </>
+    )}
 
     {/* content-language: Bing y crawlers viejos lo leen como señal idioma fuerte
         (separada del <html lang>). Google deprecó este meta pero no penaliza. */}
