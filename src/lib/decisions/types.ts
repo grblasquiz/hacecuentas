@@ -95,7 +95,9 @@ export interface DecisionRoom {
   icon: string;
   /** Categoría para breadcrumb / theming (reusa la taxonomía de calcs). */
   category: string;
-  audience: 'AR';
+  /** País de la sala. Las salas raíz (/decidir/*) son 'AR'; las localizadas
+   *  viven en subdirectorios co/mx/cl/pe y se sirven bajo /<cc>/decidir/*. */
+  audience: 'AR' | 'CO' | 'MX' | 'CL' | 'PE';
   /** YYYY-MM-DD — alimenta el lastmod del sitemap y el sello "revisado". */
   lastReviewed: string;
   /** Campos del formulario. */

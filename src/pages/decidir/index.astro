@@ -6,6 +6,17 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { DECISION_MANIFEST } from '../../lib/decisions/manifest';
 import { DECISION_HUBS, INDEX_EXTRA_GROUPS } from '../../lib/decisions/hubs';
+import { DECISION_COUNTRY_LIST } from '../../lib/decisions/locales';
+import { buildHreflangCluster } from '../../lib/hreflang';
+
+// Cluster hreflang de los índices de salas: AR raíz + verticales país.
+const hreflang = buildHreflangCluster({
+  es: 'decidir',
+  co: 'decidir',
+  mx: 'decidir',
+  cl: 'decidir',
+  pe: 'decidir',
+});
 
 const site = 'https://hacecuentas.com';
 const title = 'Salas de decisión — decidí con números reales | Hacé Cuentas';
@@ -63,7 +74,7 @@ const schema = {
 };
 ---
 
-<Layout title={title} description={description} schema={schema} audience="AR">
+<Layout title={title} description={description} schema={schema} audience="AR" hreflang={hreflang}>
   <Header slot="header" />
 
   <main class="dh">
@@ -144,6 +155,21 @@ const schema = {
         </ul>
       </section>
     )}
+
+    <section class="dh-group">
+      <div class="dh-group-head">
+        <h2>🌎 Salas de decisión por país</h2>
+      </div>
+      <p class="dh-countries-lede">
+        Las decisiones son universales; las tasas y los impuestos, no. Estas salas también existen
+        con números locales de:
+      </p>
+      <nav class="dh-hub-nav" aria-label="Salas de decisión por país">
+        {DECISION_COUNTRY_LIST.map((c) => (
+          <a href={`/${c.cc}/decidir`}>{c.flag} {c.name}</a>
+        ))}
+      </nav>
+    </section>
 
     <p class="dh-foot">
       ¿Te falta una decisión? <a href="/sugerir">Sugerí una sala</a> y la sumamos.
@@ -287,6 +313,12 @@ const schema = {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--accent-strong, #0369a1);
+  }
+  .dh-countries-lede {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    max-width: 60ch;
   }
   .dh-foot {
     font-size: 0.9375rem;

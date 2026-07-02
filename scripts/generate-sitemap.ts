@@ -27,6 +27,7 @@ import { execSync } from 'node:child_process';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
+import { DECISION_MANIFEST_LOCALES } from '../src/lib/decisions/manifest-locales.ts';
 import { DECISION_HUBS } from '../src/lib/decisions/hubs.ts';
 import { PRODUCTS } from '../src/lib/products/manifest.ts';
 
@@ -1123,6 +1124,25 @@ if (DECISION_MANIFEST.length > 0) {
       lastmod: clampToToday(r.lastReviewed),
     })),
   ];
+  // Salas país (/co|mx|cl|pe/decidir/*) — mismo criterio anti-churn: lastmod
+  // editorial de cada sala; el índice país toma el máximo de sus salas.
+  const decidirCountries = [...new Set(DECISION_MANIFEST_LOCALES.map((r) => r.country))];
+  for (const cc of decidirCountries) {
+    const ccRooms = DECISION_MANIFEST_LOCALES.filter((r) => r.country === cc);
+    const ccLastmod = maxLastmod(
+      ccRooms.map((r) => ({ loc: '', priority: '', changefreq: '', lastmod: clampToToday(r.lastReviewed) })),
+      buildDate,
+    );
+    decidirUrls.push({ loc: `${site}/${cc}/decidir`, priority: '0.8', changefreq: 'weekly', lastmod: ccLastmod });
+    for (const r of ccRooms) {
+      decidirUrls.push({
+        loc: `${site}/${cc}/decidir/${r.slug}`,
+        priority: '0.8',
+        changefreq: 'monthly',
+        lastmod: clampToToday(r.lastReviewed),
+      });
+    }
+  }
   sitemaps.push({ name: 'sitemap-decidir.xml', urls: decidirUrls });
 }
 

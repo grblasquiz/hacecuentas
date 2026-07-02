@@ -1,26 +1,30 @@
 ---
 /**
- * DecisionRoom — renderiza una "sala de decisión" (/decidir/*).
+ * DecisionRoomIntl — renderiza una sala de decisión LOCALIZADA
+ * (/co|mx|cl|pe/decidir/*). Hermano de DecisionRoom.astro con tres
+ * diferencias deliberadas:
  *
- * Hermano de Calculator.astro, pero para decisiones multi-fórmula: form
- * agrupado (reusa FieldRow + el prefill de "Mi Hacé Cuentas") y un resultado
- * integrado de 4 bloques (conclusión, número decisivo, 3 escenarios, próximos
- * pasos) + comparación A/B.
+ *  1. Su <script> importa locales-registry.ts (solo salas país), así el
+ *     bundle de las salas AR no viaja a las páginas país ni viceversa.
+ *  2. Formatea y parsea los montos según el locale del país (CO/CL agrupan
+ *     con punto; MX/PE con coma) vía data-locale / data-group-sep.
+ *  3. Copy de UI en tuteo neutro ("carga tus datos") — las salas país no
+ *     usan voseo — y sin ProfilePrefill (el perfil "Mi Hacé Cuentas" guarda
+ *     magnitudes argentinas; precargarlas acá daría números sin sentido).
  *
- * El cómputo corre en el CLIENTE (room.compute, que compone las fórmulas). El
- * server pre-renderiza un baseline de ejemplo (initialResult) para que el bot
- * vea contenido sin ejecutar JS y no haya layout shift.
+ * Estilos: reusa src/styles/decision-room.css (compartido, global).
  */
 import FieldRow from './FieldRow.astro';
-import ProfilePrefill from './ProfilePrefill.astro';
 import '../styles/decision-room.css';
 import type { DecisionRoom, DecisionResult, DecisionField } from '../lib/decisions/types';
+import type { DecisionCountry } from '../lib/decisions/locales';
 
 interface Props {
   room: DecisionRoom;
+  country: DecisionCountry;
   initialResult: DecisionResult;
 }
-const { room, initialResult } = Astro.props;
+const { room, country, initialResult } = Astro.props;
 
 // Agrupar campos por `group` preservando el orden de aparición.
 const groups: { name: string; icon?: string; fields: DecisionField[] }[] = [];
@@ -34,7 +38,6 @@ for (const f of room.fields) {
   if (!g.icon && f.groupIcon) g.icon = f.groupIcon;
   g.fields.push(f);
 }
-const hasAdvanced = room.fields.some((f) => f.advanced);
 
 // Markdown inline mínimo (**negrita**) → HTML, con escape defensivo.
 function esc(s: string): string {
@@ -44,14 +47,19 @@ function mdInline(s: string): string {
   return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 }
 const STATUS_BADGE: Record<DecisionResult['status'], string> = {
-  a: 'Conviene quedarte',
-  b: 'Conviene la oferta',
-  tie: 'Mejora, pensalo',
+  a: 'Conviene la primera opción',
+  b: 'Conviene la segunda opción',
+  tie: 'Está parejo',
   insufficient: 'Faltan datos',
 };
 ---
 
-<section class="dr" data-decision-room={room.slug}>
+<section
+  class="dr"
+  data-decision-room={`${country.cc}/${room.slug}`}
+  data-locale={country.locale}
+  data-group-sep={country.groupSep}
+>
   <p class="dr-intro" data-speakable>{room.intro}</p>
 
   <form class="dr-form" id="dr-form" novalidate>
@@ -86,11 +94,9 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
     </button>
   </form>
 
-  <ProfilePrefill slug={`decidir/${room.slug}`} />
-
   <!-- Resultado integrado (baseline SSR; el cliente lo reescribe al analizar) -->
   <div class="dr-result" id="dr-result" data-example="true">
-    <p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — cargá tus datos y tocá <strong>Analizar mi decisión</strong>.</p>
+    <p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — carga tus datos y presiona <strong>Analizar mi decisión</strong>.</p>
 
     <div class={`dr-verdict dr-tone-${initialResult.verdict.tone}`} data-dr-verdict>
       <span class="dr-badge" data-dr-badge>{initialResult.verdict.badge || STATUS_BADGE[initialResult.status]}</span>
@@ -190,19 +196,21 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
 </section>
 
 <script>
-  import { DECISION_ROOMS } from '../lib/decisions/index';
+  import { DECISION_ROOMS_INTL } from '../lib/decisions/locales-registry';
 
-  const root = document.querySelector('[data-decision-room]');
+  const root = document.querySelector('[data-decision-room]') as HTMLElement | null;
   if (root) {
-    const slug = root.getAttribute('data-decision-room') || '';
-    const room = DECISION_ROOMS[slug];
+    const key = root.getAttribute('data-decision-room') || '';
+    const room = DECISION_ROOMS_INTL[key];
+    const locale = root.getAttribute('data-locale') || 'es-CO';
+    const groupSep = root.getAttribute('data-group-sep') || '.';
     const form = document.getElementById('dr-form') as HTMLFormElement | null;
     const resultEl = document.getElementById('dr-result');
 
     const STATUS_BADGE: Record<string, string> = {
-      a: 'Conviene quedarte',
-      b: 'Conviene la oferta',
-      tie: 'Mejora, pensalo',
+      a: 'Conviene la primera opción',
+      b: 'Conviene la segunda opción',
+      tie: 'Está parejo',
       insufficient: 'Faltan datos',
     };
 
@@ -210,10 +218,9 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
       String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] || c));
     const mdInline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-    // Separador de miles en vivo (es-AR) en los campos de plata. El formateador
-    // de Calculator.astro no vive acá, así que lo replicamos mínimo: al tipear,
-    // reagrupa los dígitos ("1500000" → "1.500.000"). Caret al final (suficiente).
-    const nf = new Intl.NumberFormat('es-AR');
+    // Separador de miles en vivo según el locale del país (CO/CL agrupan con
+    // punto, MX/PE con coma). Reagrupa dígitos al tipear; caret al final.
+    const nf = new Intl.NumberFormat(locale);
     form?.querySelectorAll('input[data-format="thousands"]').forEach((node) => {
       const input = node as HTMLInputElement;
       const fmt = () => {
@@ -222,10 +229,11 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
         input.value = digits ? (neg ? '-' : '') + nf.format(Number(digits)) : '';
       };
       input.addEventListener('input', fmt);
-      fmt(); // formatea defaults / valores precargados del perfil
+      fmt(); // formatea defaults al cargar
     });
 
-    // Lee un input parseando el separador de miles / decimal según data-format.
+    // Parseo según el separador de miles del país: quita el separador de
+    // grupos y normaliza el decimal local a '.' para Number().
     function readVal(id: string): string {
       const el = form?.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(id) : id)) as
         | HTMLInputElement
@@ -236,6 +244,12 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
       const v = (el as HTMLInputElement).value.trim();
       if (v === '') return '';
       const fmt = el.getAttribute('data-format');
+      if (groupSep === ',') {
+        // MX/PE: miles con coma, decimal con punto.
+        if (fmt === 'thousands') return v.replace(/,/g, '').replace(/[^\d-]/g, '');
+        return v.replace(/,/g, '');
+      }
+      // CO/CL: miles con punto, decimal con coma.
       if (fmt === 'thousands') return v.replace(/\./g, '').replace(/[^\d-]/g, '');
       return v.replace(/\.(?=\d{3}\b)/g, '').replace(',', '.');
     }
@@ -252,7 +266,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
       const tone = r.verdict.tone || 'neutral';
 
       const flag = isExample
-        ? '<p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — cargá tus datos y tocá <strong>Analizar mi decisión</strong>.</p>'
+        ? '<p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — carga tus datos y presiona <strong>Analizar mi decisión</strong>.</p>'
         : '';
 
       const scenarios = (r.scenarios && r.scenarios.length)
@@ -313,28 +327,20 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
 
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
+      if (!room) return;
       try {
         const result = room.compute(collect());
         render(result, false);
         resultEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         if (typeof (window as any).gtag === 'function') {
           (window as any).gtag('event', 'decision_compute', {
-            decision_slug: slug,
+            decision_slug: key, // 'cc/slug' — distingue país sin evento nuevo
             decision_status: result.status, // sin montos: solo metadata
           });
         }
       } catch (err) {
-        console.error('[decision-room] compute error', err);
+        console.error('[decision-room-intl] compute error', err);
       }
     });
   }
 </script>
-
-
-<!--
-  Estilos .dr-* compartidos con DecisionRoomIntl.astro: viven en
-  src/styles/decision-room.css (importado en el frontmatter, global a
-  propósito: el resultado se re-renderiza por innerHTML desde el script
-  cliente y los nodos nuevos NO llevan el data-astro-cid del scope — el CSS
-  scopeado no los alcanzaría. Selectores namespaceados bajo .dr-* → seguro).
--->
