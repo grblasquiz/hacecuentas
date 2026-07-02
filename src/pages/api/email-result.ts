@@ -8,27 +8,17 @@
  *   - Guarda SIEMPRE el pedido en D1 (tabla email_results, sent=0).
  *   - Suma el email a newsletter_subs con source='result' (INSERT OR IGNORE)
  *     para que la lista crezca en un solo lugar.
- *   - Si está configurada RESEND_API_KEY, envía el resultado al USUARIO
- *     vía Resend y marca sent=1. Best-effort: si el send falla, la fila
- *     queda en sent=0 y se puede reintentar después con un batch.
+ *   - Envía el resultado al USUARIO vía Cloudflare Email Sending (binding
+ *     EMAIL, el hosting) y marca sent=1. Best-effort: si el send falla (o en
+ *     dev, donde no hay binding), la fila queda en sent=0 y se puede
+ *     reintentar después con /api/admin/resend-results.
  *   - Responde { ok: true, sent: boolean } — el frontend elige el mensaje
  *     de éxito según `sent`.
  */
 import type { APIRoute } from 'astro';
-import { json, isValidEmail, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, isValidCalcSlug, sendResendEmail } from '../../lib/api-utils';
+import { json, isValidEmail, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, isValidCalcSlug, sendHostingEmail, buildResultEmail } from '../../lib/api-utils';
 
 export const prerender = false;
-
-/** "/calculadora-sueldo-en-mano" → "Sueldo en mano" (para el asunto). */
-function humanizeSlug(slug: string): string {
-  const seg = slug.replace(/^\/+|\/+$/g, '').split('/').pop() || '';
-  const base = seg
-    .replace(/^(calculadora|calculator|calculadoras|simulador|conversor)-(de-)?/, '')
-    .replace(/-/g, ' ')
-    .trim();
-  if (!base) return 'tu cálculo';
-  return base.charAt(0).toUpperCase() + base.slice(1);
-}
 
 export const POST: APIRoute = async ({ request, locals }) => {
   let body: Record<string, unknown>;
@@ -77,50 +67,23 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return json({ error: 'No se pudo guardar, intentá en un rato.' }, { status: 500 });
   }
 
-  // ── Envío real vía Resend (gateado por RESEND_API_KEY) ──────────────
-  // Configurar secret: npx wrangler secret put RESEND_API_KEY
-  // Hasta que exista la key, las filas quedan en sent=0 (backlog enviable).
-  let sent = false;
-  const env = getEnv() as any;
-  const apiKey = env.RESEND_API_KEY;
+  // ── Envío real vía Cloudflare Email Sending (binding EMAIL, el hosting) ──
+  // Best-effort: si falla (o en dev, sin binding), la fila ya quedó en D1 con
+  // sent=0 → backlog reenviable con /api/admin/resend-results.
+  const env = getEnv();
   const fromEmail = env.RESULT_EMAIL_FROM || 'resultados@hacecuentas.com';
-
-  if (apiKey) {
-    const calcName = humanizeSlug(slug);
-    const calcUrl = `https://hacecuentas.com${slug}`;
-    const subject = `Tu resultado de ${calcName} — Hacé Cuentas`;
-    const htmlBody = `
-        <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; color: #1f2937;">
-          <h2 style="color: #2563eb; margin-bottom: 0.25em;">Hacé Cuentas</h2>
-          <p style="margin-top: 0;">Tu resultado de <strong>${escapeHtml(calcName)}</strong>:</p>
-          <p style="font-size: 1.6em; font-weight: 700; background: #f1f5f9; border-radius: 8px; padding: 16px 20px; text-align: center;">
-            ${escapeHtml(result || '—')}
-          </p>
-          <p>
-            <a href="${escapeHtml(calcUrl)}" style="color: #2563eb;">Volver a la calculadora</a>
-            para ajustar los datos o probar otro escenario.
-          </p>
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
-          <p style="color: #888; font-size: 0.85em;">
-            Recibiste esto porque lo pediste en hacecuentas.com.
-          </p>
-        </div>
-      `;
-
-    // Best-effort: si falla, la fila ya quedó en D1 con sent=0 (backlog enviable).
-    sent = await sendResendEmail({
-      apiKey,
-      from: `Hacé Cuentas <${fromEmail}>`,
-      to: [email],
-      subject,
-      html: htmlBody,
-    });
-    if (sent && rowId != null) {
-      try {
-        await db.prepare(`UPDATE email_results SET sent = 1 WHERE id = ?`).bind(rowId).run();
-      } catch (err) {
-        console.error('email-result sent-flag update failed:', err);
-      }
+  const { subject, html } = buildResultEmail(slug, result);
+  const sent = await sendHostingEmail({
+    from: `Hacé Cuentas <${fromEmail}>`,
+    to: email,
+    subject,
+    html,
+  });
+  if (sent && rowId != null) {
+    try {
+      await db.prepare(`UPDATE email_results SET sent = 1 WHERE id = ?`).bind(rowId).run();
+    } catch (err) {
+      console.error('email-result sent-flag update failed:', err);
     }
   }
 

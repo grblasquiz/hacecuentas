@@ -2,8 +2,8 @@
  * POST /api/feedback
  * Body: { slug: string, vote: 'up' | 'down', feedback_text: string }
  *
- * Guarda feedback abierto del usuario en D1 (tabla calc_feedback).
- * Si está configurada RESEND_API_KEY, también envía email a editorial.
+ * Guarda feedback abierto del usuario en D1 (tabla calc_feedback) y lo
+ * reenvía por email a editorial vía Cloudflare Email Sending (el hosting).
  *
  * Diseño:
  *   - El vote en sí ya se registra en /api/vote (tabla calc_votes).
@@ -11,7 +11,7 @@
  *   - Si feedback_text está vacío, no insertamos (no hay info útil que guardar).
  */
 import type { APIRoute } from 'astro';
-import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, sendResendEmail } from '../../lib/api-utils';
+import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, sendHostingEmail } from '../../lib/api-utils';
 
 export const prerender = false;
 
@@ -52,41 +52,36 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return json({ error: 'No se pudo guardar el feedback.' }, { status: 500 });
   }
 
-  // Email forward via Resend (best-effort, no rompe el flow si falla)
-  // Configurar secret: npx wrangler secret put RESEND_API_KEY
-  // Free tier Resend: 100 emails/día.
-  const env = getEnv() as any;
-  const apiKey = env.RESEND_API_KEY;
+  // Email forward vía Cloudflare Email Sending (best-effort, no rompe el
+  // flow si falla; en dev no hay binding y no envía).
+  const env = getEnv();
   const toEmail = env.FEEDBACK_EMAIL_TO || 'rodriguezb.martin@gmail.com';
   const fromEmail = env.FEEDBACK_EMAIL_FROM || 'feedback@hacecuentas.com';
 
-  if (apiKey) {
-    const voteEmoji = vote === 'up' ? '👍' : '👎';
-    const subject = `${voteEmoji} Feedback en ${slug}`;
-    const htmlBody = `
-        <h2>Nuevo feedback en hacecuentas.com</h2>
-        <p><strong>Calc:</strong> <a href="https://hacecuentas.com${escapeHtml(slug)}">${escapeHtml(slug)}</a></p>
-        <p><strong>Vote:</strong> ${voteEmoji} ${vote}</p>
-        <p><strong>Texto:</strong></p>
-        <blockquote style="border-left: 3px solid #ccc; padding-left: 1em; color: #555;">
-          ${escapeHtml(feedbackText).replace(/\n/g, '<br>')}
-        </blockquote>
-        <hr>
-        <p style="color: #888; font-size: 0.85em;">
-          User agent: ${escapeHtml(ua)}<br>
-          Recibido: ${new Date().toISOString()}
-        </p>
-      `;
+  const voteEmoji = vote === 'up' ? '👍' : '👎';
+  const subject = `${voteEmoji} Feedback en ${slug}`;
+  const htmlBody = `
+      <h2>Nuevo feedback en hacecuentas.com</h2>
+      <p><strong>Calc:</strong> <a href="https://hacecuentas.com${escapeHtml(slug)}">${escapeHtml(slug)}</a></p>
+      <p><strong>Vote:</strong> ${voteEmoji} ${vote}</p>
+      <p><strong>Texto:</strong></p>
+      <blockquote style="border-left: 3px solid #ccc; padding-left: 1em; color: #555;">
+        ${escapeHtml(feedbackText).replace(/\n/g, '<br>')}
+      </blockquote>
+      <hr>
+      <p style="color: #888; font-size: 0.85em;">
+        User agent: ${escapeHtml(ua)}<br>
+        Recibido: ${new Date().toISOString()}
+      </p>
+    `;
 
-    // Best-effort (sendResendEmail nunca tira) — el feedback ya está en D1.
-    await sendResendEmail({
-      apiKey,
-      from: `Hacé Cuentas Feedback <${fromEmail}>`,
-      to: [toEmail],
-      subject,
-      html: htmlBody,
-    });
-  }
+  // Best-effort (sendHostingEmail nunca tira) — el feedback ya está en D1.
+  await sendHostingEmail({
+    from: `Hacé Cuentas Feedback <${fromEmail}>`,
+    to: toEmail,
+    subject,
+    html: htmlBody,
+  });
 
   return json({ ok: true });
 };

@@ -3,8 +3,8 @@
  * Body: { slug: string, name: string, phone: string, result?: string, offer_id?: string }
  *
  * Recibe leads del mini-form de las ofertas kind:'lead' (src/lib/offers.ts,
- * vertical legal). Guarda en D1 (tabla legal_leads) y, si está configurada
- * RESEND_API_KEY, reenvía por email a Martin (mismo patrón que feedback.ts).
+ * vertical legal). Guarda en D1 (tabla legal_leads) y reenvía por email a
+ * Martin vía Cloudflare Email Sending (mismo patrón que feedback.ts).
  *
  * Diseño:
  *   - `result` es el valor primario que calculó el usuario (ej. el monto de
@@ -13,7 +13,7 @@
  *   - ip_hash (FNV-1a, sin IP real) para poder detectar spam/dedupe.
  */
 import type { APIRoute } from 'astro';
-import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, isValidCalcSlug, sendResendEmail } from '../../lib/api-utils';
+import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, isValidCalcSlug, sendHostingEmail } from '../../lib/api-utils';
 
 export const prerender = false;
 
@@ -63,47 +63,43 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return json({ error: 'No se pudo guardar el lead.' }, { status: 500 });
   }
 
-  // Email forward via Resend (best-effort, no rompe el flow si falla)
-  // Configurar secret: npx wrangler secret put RESEND_API_KEY
-  const env = getEnv() as any;
-  const apiKey = env.RESEND_API_KEY;
+  // Email forward vía Cloudflare Email Sending (best-effort, no rompe el
+  // flow si falla; en dev no hay binding y no envía).
+  const env = getEnv();
   const toEmail = env.FEEDBACK_EMAIL_TO || 'rodriguezb.martin@gmail.com';
   const fromEmail = env.FEEDBACK_EMAIL_FROM || 'feedback@hacecuentas.com';
 
-  if (apiKey) {
-    const subject = `⚖️ Lead legal en ${slug}`;
-    const htmlBody = `
-        <h2>Nuevo lead legal en hacecuentas.com</h2>
-        <p><strong>Calc:</strong> <a href="https://hacecuentas.com${escapeHtml(slug)}">${escapeHtml(slug)}</a></p>
-        <p><strong>Oferta:</strong> ${escapeHtml(offerId || '—')}</p>
-        <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
-        <p><strong>WhatsApp:</strong> ${escapeHtml(phone)}</p>
-        <p><strong>Resultado calculado:</strong> ${escapeHtml(result || '—')}</p>
-        <hr>
-        <p style="color: #888; font-size: 0.85em;">
-          User agent: ${escapeHtml(ua)}<br>
-          Recibido: ${new Date().toISOString()}
-        </p>
-      `;
+  const subject = `⚖️ Lead legal en ${slug}`;
+  const htmlBody = `
+      <h2>Nuevo lead legal en hacecuentas.com</h2>
+      <p><strong>Calc:</strong> <a href="https://hacecuentas.com${escapeHtml(slug)}">${escapeHtml(slug)}</a></p>
+      <p><strong>Oferta:</strong> ${escapeHtml(offerId || '—')}</p>
+      <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
+      <p><strong>WhatsApp:</strong> ${escapeHtml(phone)}</p>
+      <p><strong>Resultado calculado:</strong> ${escapeHtml(result || '—')}</p>
+      <hr>
+      <p style="color: #888; font-size: 0.85em;">
+        User agent: ${escapeHtml(ua)}<br>
+        Recibido: ${new Date().toISOString()}
+      </p>
+    `;
 
-    // Notificación pura: la respuesta al user NO depende del email.
-    // sendResendEmail nunca tira, así que es seguro despacharla en background.
-    // Astro v6 + @astrojs/cloudflare expone el ExecutionContext del Worker en
-    // locals.cfContext (locals.runtime.ctx fue REMOVIDO y su getter tira).
-    const sendPromise = sendResendEmail({
-      apiKey,
-      from: `Hacé Cuentas Leads <${fromEmail}>`,
-      to: [toEmail],
-      subject,
-      html: htmlBody,
-    });
-    const cfCtx = (locals as any)?.cfContext as ExecutionContext | undefined;
-    if (cfCtx && typeof cfCtx.waitUntil === 'function') {
-      cfCtx.waitUntil(sendPromise);
-    } else {
-      // Sin ExecutionContext (ej. dev local): mantener el await.
-      await sendPromise;
-    }
+  // Notificación pura: la respuesta al user NO depende del email.
+  // sendHostingEmail nunca tira, así que es seguro despacharla en background.
+  // Astro v6 + @astrojs/cloudflare expone el ExecutionContext del Worker en
+  // locals.cfContext (locals.runtime.ctx fue REMOVIDO y su getter tira).
+  const sendPromise = sendHostingEmail({
+    from: `Hacé Cuentas Leads <${fromEmail}>`,
+    to: toEmail,
+    subject,
+    html: htmlBody,
+  });
+  const cfCtx = (locals as any)?.cfContext as ExecutionContext | undefined;
+  if (cfCtx && typeof cfCtx.waitUntil === 'function') {
+    cfCtx.waitUntil(sendPromise);
+  } else {
+    // Sin ExecutionContext (ej. dev local): mantener el await.
+    await sendPromise;
   }
 
   return json({ ok: true });

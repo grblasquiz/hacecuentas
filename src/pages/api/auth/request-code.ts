@@ -3,8 +3,9 @@
  * Body: { email }
  *
  * Genera un código OTP de 6 dígitos, guarda su HASH (no el plano) con expiry
- * y lo manda al mail vía Resend. Si no hay RESEND_API_KEY (dev), NO envía y
- * devuelve el código en la respuesta para poder testear el flujo localmente.
+ * y lo manda al mail vía Cloudflare Email Sending (binding EMAIL). En dev el
+ * binding no existe → NO envía y devuelve el código en la respuesta para
+ * poder testear el flujo localmente.
  */
 import type { APIRoute } from 'astro';
 import {
