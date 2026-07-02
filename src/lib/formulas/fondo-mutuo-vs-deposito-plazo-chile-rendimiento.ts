@@ -26,14 +26,14 @@ export interface Outputs {
   _chart?: any;
 }
 
-// Valor UTM junio 2026 según SII (https://www.sii.cl/valores_y_fechas/utm/utm2026.htm).
+// Valor UTM julio 2026 según SII (https://www.sii.cl/valores_y_fechas/utm/utm2026.htm).
 // ACTUALIZAR mensualmente: las exenciones se expresan en UTM, así que driftan con la UTM.
-const UTM_VIGENTE = 71506;
+const UTM_VIGENTE = 71649;
 // Art. 57 LIR (DL 824): para trabajadores (Art. 42 N°1), pensionados y pequeños contribuyentes,
 //  - los intereses de un depósito a plazo (renta de capitales mobiliarios, Art. 20 N°2) están
-//    exentos del Impuesto Global Complementario hasta 20 UTM al año (~$1.430.120 con UTM jun-2026);
+//    exentos del Impuesto Global Complementario hasta 20 UTM al año (~$1.432.980 con UTM jul-2026);
 //  - el mayor valor obtenido en el rescate de cuotas de fondos mutuos está exento hasta 30 UTM al
-//    año (~$2.145.180). Para fondos mutuos la exención opera "todo o nada": si el mayor valor anual
+//    año (~$2.149.470). Para fondos mutuos la exención opera "todo o nada": si el mayor valor anual
 //    supera las 30 UTM, tributa la ganancia completa (no solo el excedente).
 // No existe ninguna retención fija del 19% sobre ninguno de los dos instrumentos. Lo que el banco/
 // administradora puede informar al SII no es un impuesto: el tributo final es el IGC progresivo.

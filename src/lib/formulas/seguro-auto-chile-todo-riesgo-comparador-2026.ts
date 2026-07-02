@@ -24,10 +24,12 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 Chile - SII, Banco Central, SVS
-  // UTA 2026: $36.923 (reajuste anual)
-  // Prima base estimada mensual según datos AAC
-  const PRIMA_BASE_MENSUAL = 28000; // pesos, base para cálculo
+  // Constantes 2026 Chile - CMF, SII, AAC
+  // UTA jul-2026: $859.788 (SII); UTM jul-2026: $71.649
+  // Prima base mensual calibrada a mercado julio 2026: todo riesgo de un auto medio
+  // (~$11,5M) en RM ≈ $40.000/mes; rango de mercado $25.000-$90.000/mes
+  // (fuentes: ROLAV 2026, ComparaOnline abr-2025).
+  const PRIMA_BASE_MENSUAL = 13000; // pesos, base para cálculo
 
   // Factor edad - estadística de siniestralidad
   const factorEdad = (() => {
@@ -150,7 +152,7 @@ export function compute(i: Inputs): Outputs {
   })();
 
   // Cálculo prima anual terceros (base obligatoria)
-  const primaBase = PRIMA_BASE_MENSUAL * 12; // $336.000 anual base
+  const primaBase = PRIMA_BASE_MENSUAL * 12; // $156.000 anual base
   const primaBaseTerceros = primaBase * factorEdad * factorAntiguedad * factorMarca * factorRegion * factorUso * descuentoAntirrobo;
 
   // Prima terceros - sin factor cobertura (es la base legal obligatoria)

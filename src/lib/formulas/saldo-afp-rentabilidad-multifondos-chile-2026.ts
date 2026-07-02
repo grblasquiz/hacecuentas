@@ -17,13 +17,14 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Datos rentabilidad histórica SII 2026 (% anual real)
+  // Datos rentabilidad histórica (% anual real)
+  // 10 años: promedio sistema a dic-2025 (Superintendencia de Pensiones / AAFP Boletín Multifondos N°73, mar-2026)
   const rentabilidades: Record<string, { cinco: number; diez: number }> = {
-    A: { cinco: 6.8, diez: 7.2 },
-    B: { cinco: 6.1, diez: 6.5 },
-    C: { cinco: 5.8, diez: 5.9 },
-    D: { cinco: 4.5, diez: 4.8 },
-    E: { cinco: 3.2, diez: 3.5 },
+    A: { cinco: 6.8, diez: 4.5 },
+    B: { cinco: 6.1, diez: 4.1 },
+    C: { cinco: 5.8, diez: 3.3 },
+    D: { cinco: 4.5, diez: 2.3 },
+    E: { cinco: 3.2, diez: 2.1 },
   };
 
   // Regla de recomendación por edad (SII normativa)
