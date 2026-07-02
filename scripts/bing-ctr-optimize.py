@@ -24,7 +24,7 @@ MAXCTR = arg('--maxctr', 3.0)
 MINIMPR = arg('--minimpr', 300, int)
 LIMIT = arg('--limit', 100000, int)
 DRY = '--dry' in sys.argv
-TODAY = '2026-06-20'
+TODAY = '2026-07-02'
 P_IN, P_OUT, P_CR, P_CW = 3/1e6, 15/1e6, 0.30/1e6, 3.75/1e6
 
 key = None
