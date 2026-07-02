@@ -234,7 +234,7 @@ export const room: DecisionRoom = {
     { slug: 'calculadora-combustible-viaje-auto', label: 'Costo de combustible' },
     { slug: 'calculadora-cuota-prestamo', label: 'Saldo de la prenda' },
     { slug: 'calculadora-plazo-fijo', label: 'Invertir lo liberado' },
-    { slug: 'regla-50-30-20', label: 'Regla 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Regla 50/30/20' },
   ],
   howItWorks: `La sala mide los dos beneficios de vender —plata de golpe y ahorro mensual— netos de lo que cambia.
 

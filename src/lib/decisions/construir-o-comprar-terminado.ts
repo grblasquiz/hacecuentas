@@ -280,10 +280,10 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'costo-m2-construccion', label: 'Costo por m² de construcción' },
+    { slug: 'calculadora-costo-m2-construccion-argentina', label: 'Costo por m² de construcción' },
     { slug: 'calculadora-costo-total-comprar-propiedad-gastos', label: 'Costo total de comprar' },
     { slug: 'calculadora-hierro-construccion-losa-m2', label: 'Hierro para losa' },
-    { slug: 'alquiler-vs-comprar', label: 'Alquilar vs comprar' },
+    { slug: 'calculadora-alquiler-vs-comprar', label: 'Alquilar vs comprar' },
   ],
   howItWorks: `Esta sala compara el costo total de cada camino, no solo el precio cara a cara.
 

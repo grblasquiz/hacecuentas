@@ -12,6 +12,8 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
+import { DECISION_MANIFEST_LOCALES } from '../src/lib/decisions/manifest-locales.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -50,6 +52,19 @@ for (const f of files) {
     if (c.audience) e.a = c.audience;
     entries.push(e);
   } catch {}
+}
+
+// Salas de decisión (/decidir/*): descubribles desde el buscador interno y
+// desde los consumidores del índice (bot X, backlink bot). El slug lleva el
+// path completo porque los consumidores arman la URL como `/${s}`.
+for (const r of DECISION_MANIFEST) {
+  entries.push({ s: `decidir/${r.slug}`, h: r.h1, d: r.description, c: 'decidir', i: r.icon, a: 'AR' });
+}
+for (const r of DECISION_MANIFEST_LOCALES) {
+  entries.push({
+    s: `${r.country}/decidir/${r.slug}`, h: r.h1, d: r.description,
+    c: 'decidir', i: r.icon, a: r.country.toUpperCase(),
+  });
 }
 
 entries.sort((a, b) => a.h.localeCompare(b.h, 'es'));

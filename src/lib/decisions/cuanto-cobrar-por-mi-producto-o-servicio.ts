@@ -243,7 +243,7 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'calculadora-cafeteria-cuanto-cobrar-pais-cafe-medialuna-margen', label: 'Cuánto cobrar (cafetería)' },
-    { slug: 'calculadora-break-even-freelance-mes', label: 'Punto de equilibrio' },
+    { slug: 'calculadora-punto-equilibrio-break-even', label: 'Punto de equilibrio' },
     { slug: 'calculadora-costo-hora-empleado-real', label: 'Costo real de la hora' },
     { slug: 'calculadora-monotributo-2026', label: 'Cuota de monotributo' },
   ],

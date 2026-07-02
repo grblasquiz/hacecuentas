@@ -458,7 +458,7 @@ export const room: DecisionRoom = {
     { slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano (neto)' },
     { slug: 'calculadora-impuesto-ganancias-sueldo', label: 'Impuesto a las Ganancias' },
     { slug: 'calculadora-aguinaldo-sac', label: 'Aguinaldo (SAC)' },
-    { slug: 'sueldo-bruto-desde-neto', label: 'Sueldo bruto desde el neto' },
+    { slug: 'calculadora-sueldo-bruto-desde-neto', label: 'Sueldo bruto desde el neto' },
   ],
   howItWorks: `Esta sala no usa una sola fórmula: orquesta varias para responder la decisión completa.
 

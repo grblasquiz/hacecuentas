@@ -17,6 +17,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🏠",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-coste-arriendo-vs-comprar-colombia-10-anos",
+        "label": "Arriendo vs compra a 10 años"
+      },
+      {
+        "slug": "co/calculadora-credito-hipotecario-colombia-2026-uvr-pesos",
+        "label": "Crédito hipotecario UVR o pesos"
+      },
+      {
+        "slug": "co/calculadora-gastos-notariales-registro-compraventa-2026",
+        "label": "Gastos notariales y registro"
+      },
+      {
+        "slug": "co/calculadora-subsidio-vivienda-mi-casa-ya-colombia-2026",
+        "label": "Subsidio Mi Casa Ya"
+      }
+    ],
     "country": "co"
   },
   {
@@ -28,6 +46,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🪜",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-tarjeta-credito-colombia-tasa-usura-cuota-pago-minimo",
+        "label": "Tarjeta y pago mínimo"
+      },
+      {
+        "slug": "co/calculadora-credito-libranza-colombia-empleado-cuota-tasa",
+        "label": "Crédito de libranza"
+      },
+      {
+        "slug": "co/calculadora-cooperativas-prestamo-colombia-tasa-interes",
+        "label": "Préstamo en cooperativa"
+      },
+      {
+        "slug": "co/calculadora-tasa-interes-mora-colombia-tarjeta-credito-2026",
+        "label": "Interés de mora"
+      }
+    ],
     "country": "co"
   },
   {
@@ -39,6 +75,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🎯",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-cdt-colombia-rentabilidad-90-180-360-dias",
+        "label": "Rentabilidad de un CDT"
+      },
+      {
+        "slug": "co/calculadora-ahorro-en-pesos-vs-cdt-vs-fic-vs-tes-colombia",
+        "label": "Pesos vs CDT vs FIC vs TES"
+      },
+      {
+        "slug": "co/calculadora-rentabilidad-fondo-inversion-colectiva-fic-colombia",
+        "label": "Rentabilidad de un FIC"
+      },
+      {
+        "slug": "co/calculadora-cuenta-afc-ahorro-fomento-construccion-colombia",
+        "label": "Cuenta AFC (vivienda)"
+      }
+    ],
     "country": "co"
   },
   {
@@ -50,6 +104,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🔑",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-canon-arrendamiento-vivienda-aumento-anual-colombia-ipc",
+        "label": "Aumento anual del arriendo"
+      },
+      {
+        "slug": "co/calculadora-arriendo-bogota-medellin-cali-precio-promedio",
+        "label": "Arriendo promedio por ciudad"
+      },
+      {
+        "slug": "co/calculadora-salario-neto-colombia-2026-bruto-a-neto",
+        "label": "Salario neto"
+      },
+      {
+        "slug": "co/calculadora-coste-arriendo-vs-comprar-colombia-10-anos",
+        "label": "Arriendo vs compra"
+      }
+    ],
     "country": "co"
   },
   {
@@ -61,6 +133,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "⏱️",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-pila-independientes-colombia-2026",
+        "label": "PILA de independientes"
+      },
+      {
+        "slug": "co/calculadora-honorarios-prestacion-servicios-colombia-retencion",
+        "label": "Honorarios y retención"
+      },
+      {
+        "slug": "co/calculadora-ibc-independientes-contratista-colombia-2026-40-porciento",
+        "label": "IBC del independiente (40%)"
+      },
+      {
+        "slug": "co/calculadora-costo-hora-empleado-empresa-colombia-2026",
+        "label": "Costo hora de un empleado"
+      }
+    ],
     "country": "co"
   },
   {
@@ -72,6 +162,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🛟",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-fondo-emergencia-colombia-meses-gastos",
+        "label": "Fondo de emergencia por meses de gastos"
+      },
+      {
+        "slug": "co/calculadora-cdt-colombia-rentabilidad-90-180-360-dias",
+        "label": "Rentabilidad de un CDT"
+      },
+      {
+        "slug": "co/calculadora-cesantias-colombia-12-porciento-anual",
+        "label": "Cesantías e intereses"
+      },
+      {
+        "slug": "co/calculadora-coste-vida-mensual-colombia-soltero-pareja",
+        "label": "Costo de vida mensual"
+      }
+    ],
     "country": "co"
   },
   {
@@ -83,6 +191,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🧮",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-salario-neto-colombia-2026-bruto-a-neto",
+        "label": "Salario neto (bruto a neto)"
+      },
+      {
+        "slug": "co/calculadora-coste-vida-mensual-colombia-soltero-pareja",
+        "label": "Costo de vida mensual"
+      },
+      {
+        "slug": "co/calculadora-canasta-familiar-colombia-dane-mes",
+        "label": "Canasta familiar DANE"
+      },
+      {
+        "slug": "co/calculadora-salario-minimo-colombia-2026-auxilio-transporte",
+        "label": "Salario mínimo 2026"
+      }
+    ],
     "country": "co"
   },
   {
@@ -94,6 +220,20 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "💳",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-tarjeta-credito-colombia-tasa-usura-cuota-pago-minimo",
+        "label": "Tarjeta y tasa de usura"
+      },
+      {
+        "slug": "co/calculadora-cdt-colombia-rentabilidad-90-180-360-dias",
+        "label": "Rentabilidad de un CDT"
+      },
+      {
+        "slug": "co/calculadora-tasa-interes-mora-colombia-tarjeta-credito-2026",
+        "label": "Interés de mora de tarjeta"
+      }
+    ],
     "country": "co"
   },
   {
@@ -105,6 +245,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "⚖️",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-tarjeta-credito-colombia-tasa-usura-cuota-pago-minimo",
+        "label": "Tarjeta y tasa de usura"
+      },
+      {
+        "slug": "co/calculadora-cdt-colombia-rentabilidad-90-180-360-dias",
+        "label": "Rentabilidad de un CDT"
+      },
+      {
+        "slug": "co/calculadora-rentabilidad-fondo-inversion-colectiva-fic-colombia",
+        "label": "Rentabilidad de un FIC"
+      },
+      {
+        "slug": "co/calculadora-fondo-emergencia-colombia-meses-gastos",
+        "label": "Fondo de emergencia"
+      }
+    ],
     "country": "co"
   },
   {
@@ -116,6 +274,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🏦",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "co/calculadora-credito-libranza-colombia-empleado-cuota-tasa",
+        "label": "Crédito de libranza"
+      },
+      {
+        "slug": "co/calculadora-tarjeta-credito-colombia-tasa-usura-cuota-pago-minimo",
+        "label": "Tarjeta de crédito y tasa de usura"
+      },
+      {
+        "slug": "co/calculadora-cooperativas-prestamo-colombia-tasa-interes",
+        "label": "Préstamo en cooperativa"
+      },
+      {
+        "slug": "co/calculadora-salario-neto-colombia-2026-bruto-a-neto",
+        "label": "Salario neto (bruto a neto)"
+      }
+    ],
     "country": "co"
   },
   {
@@ -127,6 +303,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🪜",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-tarjeta-credito-cat-mexico-pago-minimo-trampa",
+        "label": "La trampa del pago mínimo"
+      },
+      {
+        "slug": "mx/calculadora-prestamo-personal-mensualidad-cat-mexico",
+        "label": "Préstamo personal y CAT"
+      },
+      {
+        "slug": "mx/calculadora-fonacot-credito-mexico-monto-cat-tasa",
+        "label": "Crédito FONACOT"
+      },
+      {
+        "slug": "mx/calculadora-fondo-emergencia-mexico-meses-gastos",
+        "label": "Fondo de emergencia"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -138,6 +332,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🎯",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-cetes-mexico-rendimiento-28-91-182-364-dias",
+        "label": "Rendimiento de CETES"
+      },
+      {
+        "slug": "mx/calculadora-ahorro-programado-mexico",
+        "label": "Ahorro programado"
+      },
+      {
+        "slug": "mx/calculadora-pagare-bancario-vs-cete-rendimiento-mexico",
+        "label": "Pagaré bancario vs CETES"
+      },
+      {
+        "slug": "mx/calculadora-cuenta-de-ahorro-mexico-rendimiento-cetes-directo-nu-mercado-pago",
+        "label": "Cuentas con rendimiento"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -149,6 +361,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🔑",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-renta-mensual-cdmx-vs-guadalajara-monterrey",
+        "label": "Renta CDMX vs GDL vs MTY"
+      },
+      {
+        "slug": "mx/calculadora-sueldo-neto-mexico",
+        "label": "Sueldo neto México"
+      },
+      {
+        "slug": "mx/calculadora-coste-vida-mensual-mexico-soltero-pareja-familia",
+        "label": "Costo de vida mensual"
+      },
+      {
+        "slug": "mx/calculadora-fondo-emergencia-mexico-meses-gastos",
+        "label": "Fondo de emergencia"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -160,6 +390,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "⏱️",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-resico-personas-fisicas-mexico-2026-cuota",
+        "label": "ISR en RESICO personas físicas"
+      },
+      {
+        "slug": "mx/calculadora-isr-honorarios-persona-fisica",
+        "label": "ISR por honorarios"
+      },
+      {
+        "slug": "mx/calculadora-iva-mexico-trasladado-acreditable",
+        "label": "IVA trasladado y acreditable"
+      },
+      {
+        "slug": "mx/calculadora-honorarios-asimilados-vs-honorarios-libres-mexico",
+        "label": "Asimilados vs honorarios libres"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -171,6 +419,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🛟",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-fondo-emergencia-mexico-meses-gastos",
+        "label": "Fondo de emergencia en meses de gastos"
+      },
+      {
+        "slug": "mx/calculadora-cetes-mexico-rendimiento-28-91-182-364-dias",
+        "label": "Rendimiento de CETES"
+      },
+      {
+        "slug": "mx/calculadora-cuenta-de-ahorro-mexico-rendimiento-cetes-directo-nu-mercado-pago",
+        "label": "Cuentas de ahorro con rendimiento"
+      },
+      {
+        "slug": "mx/calculadora-aguinaldo-mexico-2026-15-dias-tope-30",
+        "label": "Aguinaldo 2026"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -182,6 +448,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🧮",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-sueldo-neto-mexico",
+        "label": "Sueldo neto en México"
+      },
+      {
+        "slug": "mx/calculadora-coste-vida-mensual-mexico-soltero-pareja-familia",
+        "label": "Costo de vida mensual"
+      },
+      {
+        "slug": "mx/calculadora-canasta-basica-mexico-costo-mensual-familia",
+        "label": "Canasta básica familiar"
+      },
+      {
+        "slug": "mx/calculadora-salario-minimo-mexico-2026",
+        "label": "Salario mínimo 2026"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -193,6 +477,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "⚖️",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-cetes-mexico-rendimiento-28-91-182-364-dias",
+        "label": "Rendimiento de CETES"
+      },
+      {
+        "slug": "mx/calculadora-tarjeta-credito-interes-cat-mexico",
+        "label": "Intereses de tarjeta (CAT)"
+      },
+      {
+        "slug": "mx/calculadora-prestamo-personal-mensualidad-cat-mexico",
+        "label": "Préstamo personal y CAT"
+      },
+      {
+        "slug": "mx/calculadora-fondo-emergencia-mexico-meses-gastos",
+        "label": "Fondo de emergencia"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -204,6 +506,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "💳",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-cetes-mexico-rendimiento-28-91-182-364-dias",
+        "label": "Rendimiento de CETES"
+      },
+      {
+        "slug": "mx/calculadora-tarjeta-credito-cat-mexico-pago-minimo-trampa",
+        "label": "La trampa del pago mínimo"
+      },
+      {
+        "slug": "mx/calculadora-tarjeta-credito-interes-cat-mexico",
+        "label": "Intereses de tarjeta (CAT)"
+      },
+      {
+        "slug": "mx/calculadora-auto-contado-vs-financiado-mexico",
+        "label": "Auto: contado vs financiado"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -215,6 +535,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🏦",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-prestamo-personal-mensualidad-cat-mexico",
+        "label": "Préstamo personal: mensualidad y CAT"
+      },
+      {
+        "slug": "mx/calculadora-sueldo-neto-mexico",
+        "label": "Sueldo neto en México"
+      },
+      {
+        "slug": "mx/calculadora-tarjeta-credito-cat-mexico-pago-minimo-trampa",
+        "label": "Tarjeta de crédito: la trampa del pago mínimo"
+      },
+      {
+        "slug": "mx/calculadora-fonacot-credito-mexico-monto-cat-tasa",
+        "label": "Crédito FONACOT"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -226,6 +564,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🏠",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "mx/calculadora-pagos-hipoteca-infonavit",
+        "label": "Pagos de hipoteca Infonavit"
+      },
+      {
+        "slug": "mx/calculadora-infonavit-credito-mexico-puntaje-monto-2026",
+        "label": "Puntos y monto Infonavit"
+      },
+      {
+        "slug": "mx/calculadora-predial-cdmx-monterrey-guadalajara-2026",
+        "label": "Predial CDMX/MTY/GDL"
+      },
+      {
+        "slug": "mx/calculadora-cetes-mexico-rendimiento-28-91-182-364-dias",
+        "label": "Rendimiento de CETES"
+      }
+    ],
     "country": "mx"
   },
   {
@@ -237,6 +593,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🏠",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-arriendo-vs-comprar-chile-10-anos-uf",
+        "label": "Arriendo vs compra a 10 años"
+      },
+      {
+        "slug": "cl/calculadora-credito-hipotecario-chile-uf-cmf-2026",
+        "label": "Crédito hipotecario en UF"
+      },
+      {
+        "slug": "cl/calculadora-cae-credito-hipotecario-chile-bancos-2026",
+        "label": "CAE hipotecario por banco"
+      },
+      {
+        "slug": "cl/calculadora-impuesto-territorial-contribuciones-bienes-raices-chile",
+        "label": "Contribuciones"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -248,6 +622,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🪜",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-tarjeta-credito-chile-tasa-rotativa-pago-minimo",
+        "label": "Tarjeta: rotativo y pago mínimo"
+      },
+      {
+        "slug": "cl/calculadora-prestamo-personal-chile-cae-cmf-cuota",
+        "label": "Crédito de consumo y CAE"
+      },
+      {
+        "slug": "cl/calculadora-sueldo-liquido-chile-2026-impuesto-segunda-categoria",
+        "label": "Sueldo líquido"
+      },
+      {
+        "slug": "cl/calculadora-fondo-emergencia-chile-meses-gastos-recomendado",
+        "label": "Fondo de emergencia"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -259,6 +651,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🎯",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-deposito-plazo-chile-bancos-2026-tasa",
+        "label": "Depósito a plazo"
+      },
+      {
+        "slug": "cl/calculadora-fondos-mutuos-chile-rentabilidad-comparativa-2026",
+        "label": "Fondos mutuos (rentabilidad)"
+      },
+      {
+        "slug": "cl/calculadora-apv-beneficio-tributario-chile-regimen-a-b",
+        "label": "APV (régimen A o B)"
+      },
+      {
+        "slug": "cl/calculadora-cuenta-2-afp-chile-aporte-voluntario-rendimiento",
+        "label": "Cuenta 2 de la AFP"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -270,6 +680,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🔑",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-arriendo-santiago-vina-concepcion-precio-promedio",
+        "label": "Precios de arriendo por ciudad"
+      },
+      {
+        "slug": "cl/calculadora-reajuste-arriendo-ipc-chile",
+        "label": "Reajuste de arriendo por IPC"
+      },
+      {
+        "slug": "cl/calculadora-sueldo-liquido-chile-2026-impuesto-segunda-categoria",
+        "label": "Sueldo líquido"
+      },
+      {
+        "slug": "cl/calculadora-arriendo-vs-comprar-chile-10-anos-uf",
+        "label": "Arrendar vs comprar"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -281,6 +709,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "⏱️",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-aporte-trabajador-honorarios-chile-cotizacion-obligatoria",
+        "label": "Cotizaciones del trabajador a honorarios"
+      },
+      {
+        "slug": "cl/calculadora-honorarios-vs-contrato-chile-conveniencia-tributaria",
+        "label": "Honorarios vs contrato"
+      },
+      {
+        "slug": "cl/calculadora-iva-honorarios-chile-10-porciento-retencion",
+        "label": "Retención de honorarios"
+      },
+      {
+        "slug": "cl/calculadora-impuesto-renta-segunda-categoria-chile-2026-tabla",
+        "label": "Impuesto de segunda categoría"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -292,6 +738,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🛟",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-fondo-emergencia-chile-meses-gastos-recomendado",
+        "label": "Fondo de emergencia (meses de gastos)"
+      },
+      {
+        "slug": "cl/calculadora-seguro-cesantia-chile-afc-cuota-fondo",
+        "label": "Seguro de cesantía AFC"
+      },
+      {
+        "slug": "cl/calculadora-deposito-plazo-chile-bancos-2026-tasa",
+        "label": "Depósito a plazo"
+      },
+      {
+        "slug": "cl/calculadora-fondo-mutuo-vs-deposito-plazo-chile-rendimiento",
+        "label": "Fondo mutuo vs depósito a plazo"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -303,6 +767,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🧮",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-sueldo-liquido-chile-2026-impuesto-segunda-categoria",
+        "label": "Sueldo líquido"
+      },
+      {
+        "slug": "cl/calculadora-coste-vida-mensual-chile-soltero-pareja-familia",
+        "label": "Costo de vida mensual"
+      },
+      {
+        "slug": "cl/calculadora-canasta-basica-mensual-chile-ine-2026",
+        "label": "Canasta básica mensual"
+      },
+      {
+        "slug": "cl/calculadora-tarjeta-credito-chile-tasa-rotativa-pago-minimo",
+        "label": "Tarjeta: rotativo y pago mínimo"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -314,6 +796,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "💳",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-tarjeta-credito-chile-tasa-rotativa-pago-minimo",
+        "label": "Tarjeta de crédito: rotativo y pago mínimo"
+      },
+      {
+        "slug": "cl/calculadora-prestamo-personal-chile-cae-cmf-cuota",
+        "label": "Crédito de consumo y CAE"
+      },
+      {
+        "slug": "cl/calculadora-deposito-plazo-chile-bancos-2026-tasa",
+        "label": "Depósito a plazo"
+      },
+      {
+        "slug": "cl/calculadora-crefacile-financiar-electrodomesticos-chile-cuota-cae",
+        "label": "Financiar electrodomésticos"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -325,6 +825,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "⚖️",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-deposito-plazo-chile-bancos-2026-tasa",
+        "label": "Depósito a plazo"
+      },
+      {
+        "slug": "cl/calculadora-fondos-mutuos-chile-rentabilidad-comparativa-2026",
+        "label": "Fondos mutuos"
+      },
+      {
+        "slug": "cl/calculadora-tarjeta-credito-chile-tasa-rotativa-pago-minimo",
+        "label": "Tarjeta: rotativo y pago mínimo"
+      },
+      {
+        "slug": "cl/calculadora-pago-anticipado-credito-hipotecario-chile-ahorro-uf",
+        "label": "Prepago de hipotecario"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -336,6 +854,20 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🏦",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "cl/calculadora-prestamo-personal-chile-cae-cmf-cuota",
+        "label": "Préstamo personal (CAE y cuota)"
+      },
+      {
+        "slug": "cl/calculadora-sueldo-liquido-chile-2026-impuesto-segunda-categoria",
+        "label": "Sueldo líquido"
+      },
+      {
+        "slug": "cl/calculadora-tarjeta-credito-chile-tasa-rotativa-pago-minimo",
+        "label": "Tarjeta de crédito (rotativo)"
+      }
+    ],
     "country": "cl"
   },
   {
@@ -347,6 +879,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🏠",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-credito-hipotecario-peru",
+        "label": "Crédito hipotecario"
+      },
+      {
+        "slug": "pe/calculadora-impuesto-alcabala-peru",
+        "label": "Impuesto de alcabala"
+      },
+      {
+        "slug": "pe/calculadora-alquiler-asequible-ingreso-peru",
+        "label": "Alquiler según tu ingreso"
+      },
+      {
+        "slug": "pe/calculadora-impuesto-predial-peru",
+        "label": "Impuesto predial"
+      }
+    ],
     "country": "pe"
   },
   {
@@ -358,6 +908,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "⚖️",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-tarjeta-credito-pago-minimo-peru",
+        "label": "Pago mínimo de tarjeta"
+      },
+      {
+        "slug": "pe/calculadora-deposito-plazo-fijo-peru",
+        "label": "Depósito a plazo fijo"
+      },
+      {
+        "slug": "pe/calculadora-prestamo-personal-tcea-peru",
+        "label": "Préstamo personal (TCEA)"
+      },
+      {
+        "slug": "pe/calculadora-retiro-cts-desempleo-peru",
+        "label": "Retiro de CTS"
+      }
+    ],
     "country": "pe"
   },
   {
@@ -369,6 +937,20 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🪜",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-tarjeta-credito-pago-minimo-peru",
+        "label": "Pago mínimo de tarjeta"
+      },
+      {
+        "slug": "pe/calculadora-prestamo-personal-tcea-peru",
+        "label": "Préstamo personal (TCEA)"
+      },
+      {
+        "slug": "pe/calculadora-costo-vida-mensual-peru",
+        "label": "Costo de vida mensual"
+      }
+    ],
     "country": "pe"
   },
   {
@@ -380,6 +962,20 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🎯",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-deposito-plazo-fijo-peru",
+        "label": "Depósito a plazo fijo"
+      },
+      {
+        "slug": "pe/calculadora-cts-peru-deposito-semestral",
+        "label": "Depósito de CTS"
+      },
+      {
+        "slug": "pe/calculadora-costo-vida-mensual-peru",
+        "label": "Costo de vida mensual"
+      }
+    ],
     "country": "pe"
   },
   {
@@ -391,6 +987,20 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🔑",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-alquiler-asequible-ingreso-peru",
+        "label": "Alquiler según tu ingreso"
+      },
+      {
+        "slug": "pe/calculadora-sueldo-bruto-a-neto-peru",
+        "label": "Sueldo bruto a neto"
+      },
+      {
+        "slug": "pe/calculadora-costo-vida-mensual-peru",
+        "label": "Costo de vida mensual"
+      }
+    ],
     "country": "pe"
   },
   {
@@ -402,6 +1012,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "⏱️",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-renta-cuarta-categoria-honorarios-peru",
+        "label": "Renta de cuarta categoría"
+      },
+      {
+        "slug": "pe/calculadora-salario-por-hora-dia-peru",
+        "label": "Salario por hora y día"
+      },
+      {
+        "slug": "pe/calculadora-aporte-onp-afp-independiente-peru",
+        "label": "Aporte ONP/AFP independiente"
+      },
+      {
+        "slug": "pe/calculadora-costo-vida-mensual-peru",
+        "label": "Costo de vida mensual"
+      }
+    ],
     "country": "pe"
   },
   {
@@ -413,6 +1041,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🛟",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-cts-peru-deposito-semestral",
+        "label": "Depósito de CTS"
+      },
+      {
+        "slug": "pe/calculadora-retiro-cts-desempleo-peru",
+        "label": "Retiro de CTS por desempleo"
+      },
+      {
+        "slug": "pe/calculadora-deposito-plazo-fijo-peru",
+        "label": "Depósito a plazo fijo"
+      },
+      {
+        "slug": "pe/calculadora-costo-vida-mensual-peru",
+        "label": "Costo de vida mensual"
+      }
+    ],
     "country": "pe"
   },
   {
@@ -424,6 +1070,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🧮",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-sueldo-bruto-a-neto-peru",
+        "label": "Sueldo bruto a neto"
+      },
+      {
+        "slug": "pe/calculadora-costo-vida-mensual-peru",
+        "label": "Costo de vida mensual"
+      },
+      {
+        "slug": "pe/calculadora-canasta-basica-peru-inei",
+        "label": "Canasta básica (INEI)"
+      },
+      {
+        "slug": "pe/calculadora-alquiler-asequible-ingreso-peru",
+        "label": "Alquiler según tu ingreso"
+      }
+    ],
     "country": "pe"
   },
   {
@@ -435,6 +1099,20 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "💳",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-tarjeta-credito-pago-minimo-peru",
+        "label": "Pago mínimo de tarjeta"
+      },
+      {
+        "slug": "pe/calculadora-deposito-plazo-fijo-peru",
+        "label": "Depósito a plazo fijo"
+      },
+      {
+        "slug": "pe/calculadora-prestamo-personal-tcea-peru",
+        "label": "Préstamo personal (TCEA)"
+      }
+    ],
     "country": "pe"
   },
   {
@@ -446,6 +1124,24 @@ export const DECISION_MANIFEST_LOCALES: DecisionRoomLocaleMeta[] = [
     "icon": "🏦",
     "category": "finanzas",
     "lastReviewed": "2026-07-02",
+    "componentCalcs": [
+      {
+        "slug": "pe/calculadora-prestamo-personal-tcea-peru",
+        "label": "Préstamo personal por TCEA"
+      },
+      {
+        "slug": "pe/calculadora-credito-vehicular-peru",
+        "label": "Crédito vehicular"
+      },
+      {
+        "slug": "pe/calculadora-tarjeta-credito-pago-minimo-peru",
+        "label": "Pago mínimo de tarjeta"
+      },
+      {
+        "slug": "pe/calculadora-sueldo-bruto-a-neto-peru",
+        "label": "Sueldo bruto a neto"
+      }
+    ],
     "country": "pe"
   }
 ];

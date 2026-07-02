@@ -231,7 +231,7 @@ export const room: DecisionRoom = {
     { slug: 'calculadora-fire-retiro-temprano', label: 'FIRE / retiro temprano' },
     { slug: 'calculadora-interes-compuesto', label: 'Interés compuesto' },
     { slug: 'calculadora-plazo-fijo', label: 'Plazo fijo' },
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
   ],
   howItWorks: `Estar listo para jubilarte es cumplir los requisitos Y que te alcance. Esta sala mira las dos cosas.
 

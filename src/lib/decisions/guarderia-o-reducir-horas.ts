@@ -204,7 +204,7 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano (neto)' },
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
     { slug: 'calculadora-fire-retiro-temprano', label: 'Impacto en el largo plazo' },
   ],
   howItWorks: `Esta sala compara cuánta plata neta te queda en cada camino.

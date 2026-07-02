@@ -210,7 +210,7 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'calculadora-break-even-freelance-mes', label: 'Punto de equilibrio' },
+    { slug: 'calculadora-punto-equilibrio-break-even', label: 'Punto de equilibrio' },
     { slug: 'calculadora-cafeteria-cuanto-cobrar-pais-cafe-medialuna-margen', label: 'Margen por producto' },
     { slug: 'calculadora-costo-laboral-total-empleador-cargas', label: 'Costo laboral' },
     { slug: 'calculadora-cuota-prestamo', label: 'Cuota de préstamo' },

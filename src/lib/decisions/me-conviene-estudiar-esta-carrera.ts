@@ -264,7 +264,7 @@ export const room: DecisionRoom = {
   componentCalcs: [
     { slug: 'calculadora-interes-compuesto', label: 'Interés compuesto' },
     { slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano (neto)' },
-    { slug: 'regla-50-30-20', label: 'Regla 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Regla 50/30/20' },
     { slug: 'calculadora-inflacion-acumulada-periodo', label: 'Inflación acumulada' },
   ],
   howItWorks: `Esta sala calcula el retorno de tu formación como una inversión.

@@ -270,7 +270,7 @@ export const room: DecisionRoom = {
   componentCalcs: [
     { slug: 'calculadora-combustible-viaje-auto', label: 'Costo de combustible' },
     { slug: 'sueldo-en-mano-argentina', label: 'Tu sueldo por hora' },
-    { slug: 'regla-50-30-20', label: 'Regla 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Regla 50/30/20' },
     { slug: 'calculadora-inflacion-acumulada-periodo', label: 'Inflación acumulada' },
   ],
   howItWorks: `La sala calcula cuánto te cuesta moverte por mes con cada medio, según tu nivel de uso, y le suma el valor de tu tiempo.

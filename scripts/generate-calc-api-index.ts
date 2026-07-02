@@ -13,6 +13,8 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
+import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
+import { DECISION_MANIFEST_LOCALES } from '../src/lib/decisions/manifest-locales.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'public', 'api');
@@ -212,6 +214,34 @@ for (const { dir, pathPrefix, locale } of LOCALES) {
       skipped++;
     }
   }
+}
+
+// Salas de decisión (/decidir/*): herramientas de decisión multi-cálculo.
+// Van al index full (ingestion LLM) y al slim (404 fuzzy + agentes) con el
+// path completo como slug — los consumidores arman la URL como /{slug}.
+const CC_LOCALE: Record<string, string> = { co: 'es-CO', mx: 'es-MX', cl: 'es-CL', pe: 'es-PE' };
+for (const r of DECISION_MANIFEST) {
+  out.push({
+    slug: `decidir/${r.slug}`,
+    url: `https://hacecuentas.com/decidir/${r.slug}`,
+    title: r.title, h1: r.h1,
+    description: r.description.slice(0, 200),
+    category: 'decidir', locale: 'es', audience: 'AR', icon: r.icon,
+  });
+  slim.push({ s: `decidir/${r.slug}`, t: shortTitle(r.h1), l: '' });
+  included++;
+}
+for (const r of DECISION_MANIFEST_LOCALES) {
+  out.push({
+    slug: `${r.country}/decidir/${r.slug}`,
+    url: `https://hacecuentas.com/${r.country}/decidir/${r.slug}`,
+    title: r.title, h1: r.h1,
+    description: r.description.slice(0, 200),
+    category: 'decidir', locale: CC_LOCALE[r.country] ?? 'es',
+    audience: r.country.toUpperCase(), icon: r.icon,
+  });
+  slim.push({ s: `${r.country}/decidir/${r.slug}`, t: shortTitle(r.h1), l: r.country });
+  included++;
 }
 
 // Ordenar por categoria → slug para consistencia

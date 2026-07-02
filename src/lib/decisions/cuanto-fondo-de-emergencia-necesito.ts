@@ -174,7 +174,7 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
     { slug: 'calculadora-plazo-fijo', label: 'Plazo fijo' },
     { slug: 'calculadora-interes-compuesto', label: 'Interés compuesto' },
     { slug: 'calculadora-inflacion-acumulada-periodo', label: 'Inflación acumulada' },

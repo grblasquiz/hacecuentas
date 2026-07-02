@@ -236,9 +236,9 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'calculadora-cac-ltv-costo-adquisicion-cliente', label: 'CAC y LTV' },
-    { slug: 'calculadora-cpa-maximo-rentable-target-cpa', label: 'CPA máximo rentable' },
-    { slug: 'calculadora-break-even-campana-publicitaria', label: 'Break-even de campaña' },
-    { slug: 'calculadora-cac-payback-meses-recuperar-cliente', label: 'Payback del CAC' },
+    { slug: 'calculadora-cpa-cac-ltv', label: 'CPA máximo rentable' },
+    { slug: 'calculadora-roas-retorno-inversion-publicitaria', label: 'Break-even de campaña' },
+    { slug: 'calculadora-cac-costo-adquisicion-sales-funnel', label: 'Payback del CAC' },
   ],
   howItWorks: `Esta sala parte de cuánto vale un cliente para vos y deriva cuánto podés gastar en captarlo.
 

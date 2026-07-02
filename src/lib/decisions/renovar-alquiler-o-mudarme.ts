@@ -302,10 +302,10 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'aumento-alquiler-trimestral-cuatrimestral-semestral', label: 'Aumento del alquiler' },
-    { slug: 'alquiler-icl', label: 'Actualización de alquiler (ICL)' },
+    { slug: 'calculadora-aumento-alquiler-trimestral-cuatrimestral-semestral', label: 'Aumento del alquiler' },
+    { slug: 'calculadora-actualizacion-alquiler-icl', label: 'Actualización de alquiler (ICL)' },
     { slug: 'calculadora-comision-inmobiliaria-venta-inmueble-4-porciento', label: 'Comisión inmobiliaria' },
-    { slug: 'alquiler-vs-comprar', label: 'Alquilar vs comprar' },
+    { slug: 'calculadora-alquiler-vs-comprar', label: 'Alquilar vs comprar' },
   ],
   howItWorks: `Mudarte no se compara mes contra mes: hay que mirar el primer año entero, porque ahí pesan los costos de entrada.
 

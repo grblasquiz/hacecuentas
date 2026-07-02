@@ -239,7 +239,7 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'calculadora-break-even-freelance-mes', label: 'Break-even freelance' },
+    { slug: 'calculadora-punto-equilibrio-break-even', label: 'Break-even freelance' },
     { slug: 'calculadora-costo-hora-empleado-real', label: 'Costo real de la hora' },
     { slug: 'calculadora-monotributo-2026', label: 'Cuota de monotributo' },
     { slug: 'calculadora-cuanto-cobrar-traduccion-palabra-2026-espanol-ingles', label: 'Cuánto cobrar (por palabra)' },

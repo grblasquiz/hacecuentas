@@ -16,12 +16,13 @@ import { pathToFileURL } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIR = join(__dirname, '..', 'src', 'lib', 'decisions');
-const SKIP = new Set(['types.ts', 'index.ts', 'manifest.ts', 'manifest-locales.ts', 'locales.ts', 'locales-registry.ts', 'hubs.ts']);
+const SKIP = new Set(['types.ts', 'index.ts', 'manifest.ts', 'manifest-locales.ts', 'locales.ts', 'locales-registry.ts', 'hubs.ts', 'calc-backlinks.ts']);
 const LOCALE_DIRS = ['co', 'mx', 'cl', 'pe'] as const;
 
 interface Meta {
   slug: string; title: string; h1: string; description: string; intro: string;
   icon: string; category: string; lastReviewed: string;
+  componentCalcs: { slug: string; label: string }[];
 }
 
 const errors: string[] = [];
@@ -61,6 +62,8 @@ async function loadRoom(dir: string, f: string, label: string): Promise<Meta | n
     slug: room.slug, title: room.title, h1: room.h1, description: room.description,
     intro: room.intro, icon: room.icon, category: room.category || 'finanzas',
     lastReviewed: room.lastReviewed || '2026-06-29',
+    componentCalcs: (Array.isArray(room.componentCalcs) ? room.componentCalcs : []).map(
+      (c: any) => ({ slug: c.slug, label: c.label })),
   };
 }
 
@@ -79,6 +82,7 @@ const out = `/**
 export interface DecisionRoomMeta {
   slug: string; title: string; h1: string; description: string; intro: string;
   icon: string; category: string; lastReviewed: string;
+  componentCalcs: { slug: string; label: string }[];
 }
 
 export const DECISION_MANIFEST: DecisionRoomMeta[] = ${JSON.stringify(metas, null, 2)};

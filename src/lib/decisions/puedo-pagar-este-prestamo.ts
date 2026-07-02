@@ -164,7 +164,7 @@ export const room: DecisionRoom = {
   componentCalcs: [
     { slug: 'calculadora-cuota-prestamo', label: 'Cuota de préstamo' },
     { slug: 'calculadora-cft-prestamo-personal-comparativa', label: 'CFT de un préstamo' },
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
     { slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano (neto)' },
   ],
   howItWorks: `Esta sala no calcula solo la cuota: te dice si tu bolsillo la banca.

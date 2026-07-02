@@ -229,9 +229,9 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'calculadora-comision-inmobiliaria-venta-inmueble-4-porciento', label: 'Comisión inmobiliaria' },
-    { slug: 'calculadora-rentabilidad-alquiler-cap-rate', label: 'Rentabilidad de alquiler' },
-    { slug: 'plazo-fijo', label: 'Plazo fijo' },
-    { slug: 'interes-compuesto', label: 'Interés compuesto' },
+    { slug: 'calculadora-cap-rate-rentabilidad-alquiler-inmobiliario', label: 'Rentabilidad de alquiler' },
+    { slug: 'calculadora-plazo-fijo', label: 'Plazo fijo' },
+    { slug: 'calculadora-interes-compuesto', label: 'Interés compuesto' },
   ],
   howItWorks: `Esta sala traduce el precio de venta en el dinero que de verdad te queda y lo que rinde.
 

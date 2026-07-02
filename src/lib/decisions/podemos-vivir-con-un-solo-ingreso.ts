@@ -239,7 +239,7 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
     { slug: 'calculadora-fire-retiro-temprano', label: 'Independencia financiera' },
     { slug: 'calculadora-interes-compuesto', label: 'Armar el colchón' },
   ],

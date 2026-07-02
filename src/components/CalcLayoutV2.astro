@@ -42,6 +42,7 @@ import { getComparatorForCalc } from '../lib/comparators';
 import { getOfferForCalc } from '../lib/offers';
 import { resolveGuideSlug, GUIDE_TITLES } from '../lib/category-guide-map';
 import { getJourneySteps } from '../lib/journeys';
+import { getRoomsForCalc } from '../lib/decisions/calc-backlinks';
 import converterTables from '../lib/converter-tables.json';
 import '../styles/calc-redesign.css';
 
@@ -63,6 +64,9 @@ const calcWidgetLang = lang === 'en' ? 'en' : (lang === 'pt' || lang === 'pt-pt'
 // Locale para RelatedCalcs (bucket correcto): AR→'es' (=calcs/), España→'es-ES'
 // (=calcs-es), resto = código de locale (en/pt/pt-pt/mx/co/...).
 const relatedLang = !lang ? 'es' : (lang === 'es' ? 'es-ES' : lang);
+// Salas de decisión que usan esta calc como componente (AR y verticales con
+// salas propias; el resto devuelve []). Máx 2 para no diluir.
+const decisionRooms = getRoomsForCalc(calc.slug, lang).slice(0, 2);
 
 const TRANSLATIONS = {
   es: {
@@ -537,6 +541,17 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
       <CalendarGrid feriados={FERIADOS_AR_2026.map((f) => ({ fecha: f.fecha, nombre: f.nombre }))} pais="Argentina" />
     </section>
   )}
+
+  {decisionRooms.map((room) => (
+    <aside class="v2-guide">
+      <div class="gc-text">
+        <span class="eb">{room.icon} ¿Estás por tomar esta decisión?</span>
+        <strong>{room.h1}</strong>
+        <span class="gd">Esta calculadora es parte de una sala de decisión: varios cálculos juntos y un veredicto claro.</span>
+      </div>
+      <a class="gb" href={room.href}>Entrar a la sala →</a>
+    </aside>
+  ))}
 
   <RelatedCalcs currentSlug={calc.slug} category={calc.category} limit={4} manualSlugs={journeyRelated} lang={relatedLang} />
 

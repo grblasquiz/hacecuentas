@@ -260,8 +260,8 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'calculadora-costo-total-comprar-propiedad-gastos', label: 'Costo total de comprar' },
-    { slug: 'calculadora-honorarios-escribano-pba-escritura', label: 'Honorarios de escribano' },
-    { slug: 'arba-sellos-inmobiliarios-pba-compraventa', label: 'Sellos inmobiliarios (PBA)' },
+    { slug: 'calculadora-honorarios-escribano-caba-compraventa', label: 'Honorarios de escribano' },
+    { slug: 'calculadora-arba-sellos-inmobiliarios-pba-compraventa', label: 'Sellos inmobiliarios (PBA)' },
     { slug: 'calculadora-comision-inmobiliaria-venta-inmueble-4-porciento', label: 'Comisión inmobiliaria' },
   ],
   howItWorks: `Esta sala desarma el precio publicado en el efectivo real que necesitás para entrar.

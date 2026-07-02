@@ -222,10 +222,10 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'regla-50-30-20', label: 'Regla 50/30/20' },
-    { slug: 'aumento-alquiler-trimestral-cuatrimestral-semestral', label: 'Aumento del alquiler' },
-    { slug: 'alquiler-icl', label: 'Actualización de alquiler (ICL)' },
-    { slug: 'alquiler-vs-comprar', label: 'Alquilar vs comprar' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Regla 50/30/20' },
+    { slug: 'calculadora-aumento-alquiler-trimestral-cuatrimestral-semestral', label: 'Aumento del alquiler' },
+    { slug: 'calculadora-actualizacion-alquiler-icl', label: 'Actualización de alquiler (ICL)' },
+    { slug: 'calculadora-alquiler-vs-comprar', label: 'Alquilar vs comprar' },
   ],
   howItWorks: `Esta sala traduce tu ingreso en un alquiler que podés sostener sin ahogarte.
 

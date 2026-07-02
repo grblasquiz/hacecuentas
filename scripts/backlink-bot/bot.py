@@ -48,21 +48,25 @@ def cap_for(tier):
 
 # ---------- topics (autónomo: baja slugs reales del site) ----------
 def load_topics():
+    # El seed curado (config.json) entra SIEMPRE: son las páginas prioritarias
+    # (datos, salas de decisión). El modo auto solo AGREGA el catálogo del API
+    # — antes lo reemplazaba y el corte data[:400] alfabético dejaba afuera
+    # todo lo que no empieza con 'calculadora-a...'.
+    seed = list(CFG['topics_seed'])
+    seen = {t['slug'] for t in seed}
     src = CFG['topics_source']
     if src.get('mode') == 'auto':
         status, data = get_json(src['api'], timeout=25)
-        topics = []
         if isinstance(data, list):
             for item in data[: src.get('max_from_api', 400)]:
                 slug = item.get('s') or item.get('slug') or item.get('url')
                 title = item.get('t') or item.get('title') or item.get('name')
                 if slug and title:
                     slug = slug if slug.startswith('/') else f'/{slug}'
-                    topics.append({'slug': slug, 'title': title})
-        if topics:
-            return topics
-    # fallback
-    return CFG['topics_seed']
+                    if slug not in seen:
+                        seen.add(slug)
+                        seed.append({'slug': slug, 'title': title})
+    return seed
 
 
 def site_url(slug):

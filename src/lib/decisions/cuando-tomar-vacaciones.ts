@@ -203,7 +203,7 @@ export const room: DecisionRoom = {
   componentCalcs: [
     { slug: 'calculadora-vacaciones-no-tomadas-indemnizacion-formula', label: 'Vacaciones no tomadas' },
     { slug: 'calculadora-inflacion-acumulada-periodo', label: 'Inflación acumulada' },
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
   ],
   howItWorks: `Elegir bien la fecha de las vacaciones tiene un impacto real en el bolsillo. Esta sala lo cuantifica.
 

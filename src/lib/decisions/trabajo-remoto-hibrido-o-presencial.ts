@@ -233,7 +233,7 @@ export const room: DecisionRoom = {
   componentCalcs: [
     { slug: 'calculadora-combustible-viaje-auto', label: 'Combustible de un viaje en auto' },
     { slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano (neto)' },
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
   ],
   howItWorks: `Esta sala pone en pesos el costo real de cada modalidad de trabajo.
 

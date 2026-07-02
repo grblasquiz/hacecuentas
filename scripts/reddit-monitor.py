@@ -119,6 +119,40 @@ KEYWORD_MAP = {
         'calc': 'https://hacecuentas.com/dias-entre-dos-fechas',
         'topic': 'días entre fechas',
     },
+    # Salas de decisión (/decidir/*) — el formato "¿me conviene X o Y?" es el
+    # match perfecto para threads de Reddit pidiendo consejo con números.
+    r'\b(acept[oa]r?.*(oferta|propuesta).*(laboral|trabajo|sueldo)|me ofrecieron.*(trabajo|sueldo)|cambiar.*de.*trabajo.*conviene)\b': {
+        'calc': 'https://hacecuentas.com/decidir/aceptar-oferta-laboral',
+        'topic': 'aceptar oferta laboral (sala de decisión)',
+    },
+    r'\b(alquil[oa]r?\s+o\s+compr[oa]r?|comprar?\s+o\s+alquilar|conviene.*comprar.*depto|seguir alquilando)\b': {
+        'calc': 'https://hacecuentas.com/decidir/alquilar-o-comprar',
+        'topic': 'alquilar o comprar (sala de decisión)',
+    },
+    r'\b(adelant[oa]r?.*cuotas|cancel[oa]r?.*(deuda|pr[eé]stamo).*(invertir|plazo fijo)|invertir o pagar.*deuda)\b': {
+        'calc': 'https://hacecuentas.com/decidir/me-conviene-adelantar-cuotas',
+        'topic': 'adelantar cuotas vs invertir (sala de decisión)',
+    },
+    r'\b(me despidieron|me echaron|liquidaci[oó]n.*qu[eé] hago|cobr[eé] la indemnizaci[oó]n)\b': {
+        'calc': 'https://hacecuentas.com/decidir/me-despidieron',
+        'topic': 'me despidieron: plan con números (sala de decisión)',
+    },
+    r'\b(monotributo\s+o\s+responsable|responsable inscripto\s+o\s+monotributo|conviene.*pasar.*responsable)\b': {
+        'calc': 'https://hacecuentas.com/decidir/monotributo-o-responsable-inscripto',
+        'topic': 'monotributo vs RI (sala de decisión)',
+    },
+    r'\b(relaci[oó]n de dependencia\s+o\s+factur|facturar\s+o\s+relaci[oó]n|conviene.*monotributo.*sueldo)\b': {
+        'calc': 'https://hacecuentas.com/decidir/relacion-dependencia-o-facturar',
+        'topic': 'dependencia vs facturar (sala de decisión)',
+    },
+    r'\b(fondo de emergencia|cu[aá]nto.*ahorr[oa]r.*(colch[oó]n|emergencia)|cuantos meses.*ahorro)\b': {
+        'calc': 'https://hacecuentas.com/decidir/cuanto-fondo-de-emergencia-necesito',
+        'topic': 'fondo de emergencia (sala de decisión)',
+    },
+    r'\b(cr[eé]dito uva.*(conviene|puedo|animo)|uva.*hipotecario.*(sueldo|cuota)|sacar.*uva)\b': {
+        'calc': 'https://hacecuentas.com/decidir/puedo-afrontar-un-credito-uva',
+        'topic': 'crédito UVA: ¿puedo afrontarlo? (sala de decisión)',
+    },
 }
 
 # Threads conversacionales/opinion que siempre skipear (no son calculable queries)

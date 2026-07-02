@@ -247,7 +247,7 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'regla-50-30-20', label: 'Regla 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Regla 50/30/20' },
     { slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano (neto)' },
     { slug: 'calculadora-actualizacion-alquiler-icl', label: 'Actualización de alquiler (ICL)' },
     { slug: 'calculadora-inflacion-acumulada-periodo', label: 'Inflación acumulada' },

@@ -244,7 +244,7 @@ export const room: DecisionRoom = {
   componentCalcs: [
     { slug: 'calculadora-cuota-prestamo', label: 'Cuota si lo financiás' },
     { slug: 'calculadora-inflacion-acumulada-periodo', label: 'Inflación acumulada' },
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
   ],
   howItWorks: `Esta sala compara las dos opciones con una métrica justa: el costo por mes de uso.
 

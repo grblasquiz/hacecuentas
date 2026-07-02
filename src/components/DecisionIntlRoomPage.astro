@@ -97,6 +97,21 @@ const schemaGraph: any[] = [
     offers: freeOfferSchema({ priceCurrency: country.currency, validFrom: datePublished }),
     publisher: { '@type': 'Organization', name: 'Hacé Cuentas', url: site },
     author: { '@type': 'Person', ...authorRef, name: 'Martín Rodríguez', url: `${site}/autores/martin-rodriguez` },
+    // Citation + speakable: mismo enrichment AEO que la sala AR (ver
+    // src/pages/decidir/[slug].astro) — LLMs ponderan fuentes verificables.
+    ...(room.sources?.length
+      ? {
+          citation: room.sources.map((s: any) => ({
+            '@type': 'CreativeWork',
+            name: s.name,
+            ...(s.url ? { url: s.url } : {}),
+          })),
+        }
+      : {}),
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['.dr-intro', '.dr-decisive-value', '.dr-decisive-label'],
+    },
   },
 ];
 

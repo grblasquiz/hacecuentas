@@ -142,7 +142,7 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano (neto)' },
-    { slug: 'sueldo-bruto-desde-neto', label: 'Sueldo bruto desde el neto' },
+    { slug: 'calculadora-sueldo-bruto-desde-neto', label: 'Sueldo bruto desde el neto' },
     { slug: 'calculadora-impuesto-ganancias-sueldo', label: 'Impuesto a las Ganancias' },
     { slug: 'calculadora-inflacion-acumulada-periodo', label: 'Inflación acumulada' },
   ],

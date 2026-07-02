@@ -202,7 +202,7 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'calculadora-monotributo-2026', label: 'Cuota de monotributo' },
-    { slug: 'calculadora-break-even-freelance-mes', label: 'Break-even freelance' },
+    { slug: 'calculadora-punto-equilibrio-break-even', label: 'Break-even freelance' },
     { slug: 'calculadora-monotributo-vs-responsable-inscripto', label: 'Monotributo vs RI' },
     { slug: 'calculadora-costo-hora-empleado-real', label: 'Costo real de la hora' },
   ],

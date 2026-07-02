@@ -248,7 +248,7 @@ export const room: DecisionRoom = {
     { slug: 'calculadora-fire-retiro-temprano', label: 'Número FIRE / retiro temprano' },
     { slug: 'calculadora-interes-compuesto', label: 'Interés compuesto' },
     { slug: 'calculadora-plazo-fijo', label: 'Plazo fijo' },
-    { slug: 'regla-50-30-20', label: 'Regla 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Regla 50/30/20' },
   ],
   howItWorks: `Esta sala aplica la regla del 4% y proyecta tu camino al retiro.
 

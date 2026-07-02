@@ -347,10 +347,10 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'alquiler-vs-comprar', label: 'Alquilar vs comprar' },
+    { slug: 'calculadora-alquiler-vs-comprar', label: 'Alquilar vs comprar' },
     { slug: 'calculadora-hipoteca-mensual-cuota-fija', label: 'Cuota de hipoteca' },
     { slug: 'calculadora-costo-total-comprar-propiedad-gastos', label: 'Costo total de comprar' },
-    { slug: 'alquiler-icl', label: 'Actualización de alquiler (ICL)' },
+    { slug: 'calculadora-actualizacion-alquiler-icl', label: 'Actualización de alquiler (ICL)' },
   ],
   howItWorks: `Esta sala no mira la cuota contra el alquiler de un mes: compara el costo total de cada camino a lo largo del tiempo.
 

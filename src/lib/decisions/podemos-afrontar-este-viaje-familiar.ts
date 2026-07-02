@@ -282,7 +282,7 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'calculadora-cuota-prestamo', label: 'Cuota de préstamo' },
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
     { slug: 'calculadora-combustible-viaje-auto', label: 'Costo de combustible (si vas en auto)' },
     { slug: 'calculadora-interes-compuesto', label: 'Ahorrar para el viaje' },
   ],

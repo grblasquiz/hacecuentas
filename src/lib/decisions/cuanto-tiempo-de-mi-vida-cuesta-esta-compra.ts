@@ -213,7 +213,7 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano (neto)' },
-    { slug: 'regla-50-30-20', label: 'Regla 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Regla 50/30/20' },
     { slug: 'calculadora-interes-compuesto', label: 'Interés compuesto' },
     { slug: 'calculadora-cuota-prestamo', label: 'Cuota de préstamo' },
   ],

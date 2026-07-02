@@ -218,7 +218,7 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'calculadora-indemnizacion-despido', label: 'Indemnización por despido' },
-    { slug: 'regla-50-30-20', label: 'Regla 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Regla 50/30/20' },
     { slug: 'calculadora-plazo-fijo', label: 'Plazo fijo' },
     { slug: 'calculadora-interes-compuesto', label: 'Interés compuesto' },
   ],

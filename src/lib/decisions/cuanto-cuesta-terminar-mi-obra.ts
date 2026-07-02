@@ -250,10 +250,10 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'costo-m2-construccion', label: 'Costo por m² de construcción' },
+    { slug: 'calculadora-costo-m2-construccion-argentina', label: 'Costo por m² de construcción' },
     { slug: 'calculadora-hierro-construccion-losa-m2', label: 'Hierro para losa' },
     { slug: 'calculadora-paritaria-uocra-construccion-2026-categoria', label: 'Paritaria UOCRA' },
-    { slug: 'inflacion-acumulada-periodo', label: 'Inflación acumulada' },
+    { slug: 'calculadora-inflacion-acumulada-periodo', label: 'Inflación acumulada' },
   ],
   howItWorks: `Esta sala proyecta el costo de lo que falta, no el de la obra entera.
 

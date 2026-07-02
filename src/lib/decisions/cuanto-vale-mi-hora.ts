@@ -255,7 +255,7 @@ export const room: DecisionRoom = {
   componentCalcs: [
     { slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano (neto)' },
     { slug: 'calculadora-horas-extra', label: 'Horas extra' },
-    { slug: 'regla-50-30-20', label: 'Presupuesto 50/30/20' },
+    { slug: 'calculadora-presupuesto-regla-50-30-20', label: 'Presupuesto 50/30/20' },
   ],
   howItWorks: `Tu valor hora "de folleto" no cuenta todo lo que el trabajo te saca. Esta sala calcula el real.
 

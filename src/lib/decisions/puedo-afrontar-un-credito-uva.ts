@@ -266,9 +266,9 @@ export const room: DecisionRoom = {
   compute,
   componentCalcs: [
     { slug: 'calculadora-ingreso-minimo-credito-hipotecario-uva-banco-nacion', label: 'Ingreso mínimo para crédito UVA' },
-    { slug: 'calculadora-hipoteca-uva-bbva-argentina', label: 'Hipoteca UVA BBVA' },
+    { slug: 'calculadora-credito-uva-cuota-actual', label: 'Hipoteca UVA BBVA' },
     { slug: 'calculadora-hipoteca-mensual-cuota-fija', label: 'Cuota de hipoteca' },
-    { slug: 'inflacion-acumulada-periodo', label: 'Inflación acumulada' },
+    { slug: 'calculadora-inflacion-acumulada-periodo', label: 'Inflación acumulada' },
   ],
   howItWorks: `Esta sala combina el cálculo de la cuota con el riesgo propio del crédito UVA.
 

@@ -245,10 +245,10 @@ export const room: DecisionRoom = {
   ],
   compute,
   componentCalcs: [
-    { slug: 'costo-m2-construccion', label: 'Costo por m² de construcción' },
+    { slug: 'calculadora-costo-m2-construccion-argentina', label: 'Costo por m² de construcción' },
     { slug: 'calculadora-costo-total-comprar-propiedad-gastos', label: 'Costo total de comprar' },
-    { slug: 'alquiler-vs-comprar', label: 'Alquilar vs comprar' },
-    { slug: 'calculadora-rentabilidad-alquiler-cap-rate', label: 'Rentabilidad de alquiler' },
+    { slug: 'calculadora-alquiler-vs-comprar', label: 'Alquilar vs comprar' },
+    { slug: 'calculadora-cap-rate-rentabilidad-alquiler-inmobiliario', label: 'Rentabilidad de alquiler' },
   ],
   howItWorks: `Esta sala compara el costo real de cada camino, no el costo a secas.
 
