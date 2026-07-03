@@ -649,16 +649,18 @@ const schema = {
           que más se usan los sábados y domingos.
         </p>
       </div>
-      <div class="sm-links">
-        <a href="/calculadora-carne-asado-kg-por-persona" class="sm-cta fm-cta sm-cta-primary fm-cta-primary">🥩 Asado: kg por persona</a>
-        <a href="/calculadora-split-gastos-grupo-amigos" class="sm-cta fm-cta">💸 Dividir gastos entre amigos</a>
-        <a href="/calculadora-litros-nafta-viaje-ruta-argentina" class="sm-cta fm-cta">⛽ Nafta para el viaje</a>
-        <a href="/calculadora-rendimiento-masa-empanadas-cantidad" class="sm-cta fm-cta">🥟 Cuántas empanadas salen</a>
-        <a href="/conversor-tazas-gramos-cocina-recetas" class="sm-cta fm-cta">🍰 Tazas ↔ gramos</a>
-        <a href="/calculadora-pintura-paredes-habitacion-litros" class="sm-cta fm-cta">🎨 Pintura para la pieza</a>
-        <a href="/calculadora-edad-perro-anos-humanos" class="sm-cta fm-cta">🐶 Edad de tu perro</a>
-        <a href="/calculadora-cuanto-falta-feriado-proximo-argentina-2026" class="sm-cta fm-cta">📅 Próximo feriado</a>
+      <p class="fm-question" id="finde-mode-q">¿Qué plan tenés este finde?</p>
+      <div class="sm-links" data-finde-links>
+        <a href="/calculadora-asado-kg-por-persona-cortes-tira-vacio-pollo" class="sm-cta fm-cta sm-cta-primary fm-cta-primary" data-finde-cta data-cluster="asado">🥩 Hacer un asado</a>
+        <a href="/calculadora-cerveza-invitado-evento" class="sm-cta fm-cta" data-finde-cta data-cluster="bebidas-evento">🍺 Organizar una juntada</a>
+        <a href="/calculadora-conversion-medidas-cocina-tazas-gramos" class="sm-cta fm-cta" data-finde-cta data-cluster="cocina-conversores">🍳 Cocinar</a>
+        <a href="/calculadora-costo-viaje-combustible-kilometros" class="sm-cta fm-cta" data-finde-cta data-cluster="viajes-combustible">🚗 Viajar</a>
+        <a href="/calculadora-ritmo-carrera-pace-km" class="sm-cta fm-cta" data-finde-cta data-cluster="deporte">🏃 Entrenar</a>
+        <a href="/calculadora-pintura-por-m2-litros-latas" class="sm-cta fm-cta" data-finde-cta data-cluster="hogar-pintura">🔨 Arreglar la casa</a>
+        <a href="/calculadora-presupuesto-cumpleanos" class="sm-cta fm-cta" data-finde-cta data-cluster="presupuesto-evento">🎉 Organizar una fiesta</a>
+        <a href="/calculadora-split-gastos-grupo-amigos" class="sm-cta fm-cta" data-finde-cta data-cluster="split">💸 Dividir gastos</a>
       </div>
+      <p class="fm-more"><a href="/calculadoras-fin-de-semana">Ver todas las calculadoras del finde →</a></p>
     </div>
   </section>
 
@@ -1132,15 +1134,29 @@ const schema = {
   <!-- Próximo feriado 2026 — texto en el tile de feriados. Lo calculamos
        client-side porque la fecha "hoy" es dinámica (cambia cada día).
        La lista viene de la FUENTE ÚNICA feriados-ar-2026.ts vía define:vars. -->
-  <!-- Modo finde: se muestra solo vie-dom. Client-side a propósito: la home
-       está cacheada en CF y el "día" no puede resolverse en SSR. -->
-  <script is:inline>
-    (function () {
-      var fm = document.getElementById('finde-mode');
-      if (!fm) return;
-      var d = new Date().getDay(); // hora local del visitante (audiencia AR)
-      if (d === 5 || d === 6 || d === 0) fm.hidden = false;
-    })();
+  <!-- Modo finde: se muestra vie (desde 15hs ART) a dom. Client-side a propósito:
+       la home está cacheada en CF y el "día" no puede resolverse en SSR (sin
+       cloaking: el SSR SIEMPRE emite el bloque, el JS solo togglea visibilidad).
+       Usa getHomeContextByDate (testeado) — la fecha se pasa como argumento. -->
+  <script>
+    import { getHomeContextByDate, isWeekendMode } from '../lib/home-context';
+    import { trackWeekendEvent } from '../lib/weekend-analytics';
+    const fm = document.getElementById('finde-mode');
+    if (fm) {
+      const ctx = getHomeContextByDate(new Date());
+      if (isWeekendMode(ctx)) {
+        fm.hidden = false;
+        fm.querySelectorAll('[data-finde-cta]').forEach((a) => {
+          a.addEventListener('click', () => {
+            trackWeekendEvent('weekend_recommendation_click', {
+              weekend_module: 'home_finde_mode',
+              content_cluster: a.getAttribute('data-cluster') || '',
+              day_type: ctx,
+            });
+          });
+        });
+      }
+    }
   </script>
 
   <script is:inline define:vars={{ FERIADOS_DATA }}>
@@ -3362,4 +3378,8 @@ const schema = {
   .fm-badge { background: #ea580c; }
   .fm-cta { border-color: #ea580c; color: #c2410c; }
   .fm-cta-primary { background: #ea580c; color: #fff; }
+  .fm-question { font-weight: 700; font-size: 1.05rem; color: #9a3412; margin: 0.75rem 0 0.5rem; }
+  .fm-more { margin: 0.9rem 0 0; font-size: 0.9rem; }
+  .fm-more a { color: #c2410c; font-weight: 600; text-decoration: none; }
+  .fm-more a:hover { text-decoration: underline; }
 </style>

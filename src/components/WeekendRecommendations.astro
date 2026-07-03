@@ -1,0 +1,84 @@
+---
+/**
+ * Módulo reutilizable "3 cuentas para resolver tu finde" (Fase 8).
+ * Usable en home, hub de finde, categorías, bloques editoriales. Configuración
+ * por props (sin URL nueva por semana). Analytics aditivo: dispara
+ * `weekend_recommendation_click` al clickear una recomendación.
+ */
+interface RecItem {
+  href: string;
+  label: string;
+  icon?: string;
+}
+interface Props {
+  title: string;
+  description?: string;
+  items: RecItem[];
+  /** para el param de analytics `weekend_module` */
+  moduleName?: string;
+  /** para el param `content_cluster` */
+  cluster?: string;
+  /** link opcional "ver más" */
+  moreHref?: string;
+  moreLabel?: string;
+}
+const {
+  title,
+  description,
+  items,
+  moduleName = 'weekend_recommendations',
+  cluster = '',
+  moreHref,
+  moreLabel = 'Ver más →',
+} = Astro.props;
+---
+
+<section class="wk-recs" data-wk-module={moduleName} aria-labelledby={`wk-${moduleName}-h`}>
+  <div class="wk-recs-head">
+    <span class="wk-recs-badge">🗓️ Para tu finde</span>
+    <h2 id={`wk-${moduleName}-h`}>{title}</h2>
+    {description && <p class="wk-recs-desc">{description}</p>}
+  </div>
+  <ul class="wk-recs-list">
+    {items.map((it) => (
+      <li>
+        <a href={it.href} class="wk-rec-cta" data-wk-rec data-wk-cluster={cluster}>
+          {it.icon && <span class="wk-rec-icon" aria-hidden="true">{it.icon}</span>}
+          <span>{it.label}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+  {moreHref && <p class="wk-recs-more"><a href={moreHref}>{moreLabel}</a></p>}
+</section>
+
+<script>
+  import { trackWeekendEvent } from '../lib/weekend-analytics';
+  import { getHomeContextByDate } from '../lib/home-context';
+  const day_type = getHomeContextByDate(new Date());
+  document.querySelectorAll('[data-wk-rec]').forEach((a) => {
+    a.addEventListener('click', () => {
+      const section = a.closest('[data-wk-module]');
+      trackWeekendEvent('weekend_recommendation_click', {
+        weekend_module: section?.getAttribute('data-wk-module') || 'weekend_recommendations',
+        content_cluster: a.getAttribute('data-wk-cluster') || '',
+        day_type,
+      });
+    });
+  });
+</script>
+
+<style>
+  .wk-recs { margin: 2rem 0; padding: 1.25rem 1.5rem; border: 1px solid #ea580c; border-radius: 0.85rem; background: linear-gradient(135deg, #fff4ec, var(--bg, #fff)); }
+  .wk-recs-head { margin-bottom: 0.85rem; }
+  .wk-recs-badge { display: inline-block; background: #ea580c; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.6rem; border-radius: 999px; letter-spacing: 0.02em; margin-bottom: 0.5rem; }
+  .wk-recs-head h2 { font-size: 1.25rem; margin: 0.25rem 0 0.35rem; color: #9a3412; }
+  .wk-recs-desc { margin: 0; color: var(--text-2, #475569); font-size: 0.95rem; line-height: 1.5; }
+  .wk-recs-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .wk-rec-cta { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border: 1px solid #ea580c; border-radius: 999px; background: #fff; color: #c2410c; font-weight: 600; font-size: 0.92rem; text-decoration: none; transition: transform 0.15s, background 0.15s; }
+  .wk-rec-cta:hover { transform: translateY(-1px); background: #ea580c; color: #fff; }
+  .wk-rec-icon { font-size: 1.1rem; line-height: 1; }
+  .wk-recs-more { margin: 0.9rem 0 0; font-size: 0.9rem; }
+  .wk-recs-more a { color: #c2410c; font-weight: 600; text-decoration: none; }
+  .wk-recs-more a:hover { text-decoration: underline; }
+</style>

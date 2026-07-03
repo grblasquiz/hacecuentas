@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
+import WeekendRecommendations from '../components/WeekendRecommendations.astro';
 import { WEEKEND_CLUSTERS } from '../lib/weekend-clusters';
 
 export const prerender = true;
@@ -142,6 +143,17 @@ const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, co
         </p>
       </header>
 
+      <WeekendRecommendations
+        title="Las 3 cuentas que más se usan el finde"
+        description="Arrancá por acá — el asado, la juntada y la escapada en auto."
+        moduleName="hub_top3"
+        items={[
+          { href: '/calculadora-asado-kg-por-persona-cortes-tira-vacio-pollo', label: 'Planificar el asado', icon: '🥩' },
+          { href: '/calculadora-cerveza-invitado-evento', label: 'Bebida para la juntada', icon: '🍺' },
+          { href: '/calculadora-costo-viaje-combustible-kilometros', label: 'Costo del viaje en auto', icon: '🚗' },
+        ]}
+      />
+
       <nav class="hub-toc" aria-label="Índice del hub">
         <strong>Saltar a:</strong>
         <ul>
@@ -197,6 +209,22 @@ const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, co
   </main>
   <Footer />
 </Layout>
+
+<script>
+  import { trackWeekendEvent } from '../lib/weekend-analytics';
+  import { getHomeContextByDate } from '../lib/home-context';
+  const day_type = getHomeContextByDate(new Date());
+  document.querySelectorAll('.hub-link, .hub-featured').forEach((a) => {
+    a.addEventListener('click', () => {
+      const href = a.getAttribute('href') || '';
+      trackWeekendEvent('weekend_hub_click', {
+        weekend_module: 'hub',
+        calculator_slug: href.replace(/^\//, ''),
+        day_type,
+      });
+    });
+  });
+</script>
 
 <style>
   .hub-page { max-width: 980px; margin: 0 auto; padding: 1rem 1rem 3rem; }

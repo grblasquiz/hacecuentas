@@ -4,6 +4,10 @@ export interface Inputs {
   intensidad: string; // 'liviano' | 'estandar' | 'abundante'
   incluye_pollo: string; // 'si' | 'no'
   incluye_achuras: string; // 'si' | 'no'
+  // --- Planificador integral (opcionales, backward-compatible) ---
+  incluye_bebidas?: string; // 'si' | 'no' — bebidas con y sin alcohol
+  incluye_guarniciones?: string; // 'si' | 'no' — pan, ensalada, provoleta
+  precio_kg_carne?: number; // ARS/kg — si >0 estima el presupuesto de la carne
 }
 
 export interface Outputs {
@@ -14,6 +18,18 @@ export interface Outputs {
   morcilla_cant: number;
   pollo_kg: number;
   achuras_kg: number;
+  // --- Integral (opcionales) ---
+  pan_g?: number;
+  ensalada_kg?: number;
+  provoleta_cant?: number;
+  bebida_alcohol_litros?: number;
+  bebida_sin_litros?: number;
+  agua_litros?: number;
+  hielo_kg?: number;
+  carbon_kg?: number;
+  presupuesto_carne?: number;
+  costo_carne_por_persona?: number;
+  lista_compras?: string;
   resumen: string;
   _insight?: any;
   _chart?: any;
@@ -143,6 +159,54 @@ export function compute(i: Inputs): Outputs {
     ariaLabel: `Distribución del asado: ${total_kg.toFixed(2)} kg totales repartidos entre tira, vacío, embutidos${conPollo ? ", pollo" : ""}${conAchuras ? ", achuras" : ""}.`,
   };
 
+  // ─── Planificador integral (aditivo) ──────────────────────────────────────
+  const conBebidas = (i.incluye_bebidas ?? "si") !== "no";
+  const conGuarniciones = (i.incluye_guarniciones ?? "si") !== "no";
+  const precioKg = Math.max(0, Number(i.precio_kg_carne) || 0);
+
+  // Guarniciones (referencia de parrilleros): pan 80g/adulto + 40g/niño;
+  // ensalada 150g/adulto + 80g/niño; provoleta ~1 cada 4 comensales.
+  const pan_g = conGuarniciones ? Math.round((adultos * 80 + ninos * 40) / 50) * 50 : 0;
+  const ensalada_kg = conGuarniciones ? parseFloat(((adultos * 150 + ninos * 80) / 1000).toFixed(2)) : 0;
+  const provoleta_cant = conGuarniciones ? Math.ceil(totalComensales / 4) : 0;
+
+  // Bebidas: con alcohol ~1 L por adulto (asado largo); sin alcohol 0,5 L/persona.
+  const bebida_alcohol_litros = conBebidas ? parseFloat((adultos * 1.0).toFixed(1)) : 0;
+  const bebida_sin_litros = conBebidas ? parseFloat((totalComensales * 0.5).toFixed(1)) : 0;
+  const agua_litros = parseFloat((totalComensales * 0.5).toFixed(1));
+  // Hielo ~0,5 kg/persona para enfriar bebidas (solo si hay bebidas).
+  const hielo_kg = conBebidas ? Math.max(2, Math.round(totalComensales * 0.5)) : 0;
+  // Carbón: regla ~1 kg por kg de carne, mínimo 3 kg.
+  const carbon_kg = Math.max(3, Math.round(total_kg));
+
+  // Presupuesto: SOLO si el usuario ingresa el precio del kg (no inventamos precios).
+  const presupuesto_carne = precioKg > 0 ? Math.round(total_kg * precioKg) : 0;
+  const costo_carne_por_persona = precioKg > 0 && totalComensales > 0
+    ? Math.round(presupuesto_carne / totalComensales) : 0;
+
+  // Lista de compras (texto compartible).
+  const lc: string[] = [
+    `Carne: ${total_kg.toFixed(2)} kg (tira ${tira_kg.toFixed(2)} kg, vacío ${vacio_kg.toFixed(2)} kg)`,
+    `Chorizos: ${chorizo_cant} u`,
+    `Morcillas: ${morcilla_cant} u`,
+  ];
+  if (conPollo) lc.push(`Pollo: ${pollo_kg.toFixed(2)} kg`);
+  if (conAchuras) lc.push(`Achuras: ${achuras_kg.toFixed(2)} kg`);
+  if (conGuarniciones) {
+    lc.push(`Pan: ${pan_g} g`);
+    lc.push(`Ensalada: ${ensalada_kg.toFixed(2)} kg`);
+    if (provoleta_cant > 0) lc.push(`Provoleta: ${provoleta_cant} u`);
+  }
+  if (conBebidas) {
+    lc.push(`Bebida con alcohol: ${bebida_alcohol_litros} L`);
+    lc.push(`Bebida sin alcohol: ${bebida_sin_litros} L`);
+    lc.push(`Hielo: ${hielo_kg} kg`);
+  }
+  lc.push(`Agua: ${agua_litros} L`);
+  lc.push(`Carbón/leña: ${carbon_kg} kg`);
+  if (presupuesto_carne > 0) lc.push(`Presupuesto carne: $${presupuesto_carne.toLocaleString("es-AR")} (~$${costo_carne_por_persona.toLocaleString("es-AR")}/persona)`);
+  const lista_compras = lc.join(" · ");
+
   return {
     total_kg: parseFloat(total_kg.toFixed(3)),
     tira_kg,
@@ -151,6 +215,17 @@ export function compute(i: Inputs): Outputs {
     morcilla_cant,
     pollo_kg,
     achuras_kg,
+    pan_g,
+    ensalada_kg,
+    provoleta_cant,
+    bebida_alcohol_litros,
+    bebida_sin_litros,
+    agua_litros,
+    hielo_kg,
+    carbon_kg,
+    presupuesto_carne,
+    costo_carne_por_persona,
+    lista_compras,
     resumen,
     _insight,
     _chart,
