@@ -2,6 +2,7 @@
 export const prerender = true;
 
 import Layout from '../../layouts/Layout.astro';
+import { isRestrictedCalc } from '../../lib/content-policy';
 import { categoryDomain } from '../../lib/category-colors';
 import { freeOfferSchema } from '../../lib/offer-schema';
 import Header from '../../components/Header.astro';
@@ -271,7 +272,9 @@ if (calc.category === 'educacion') {
   });
 }
 
-const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
+const effectiveNoindex = calc.noindex === true || isRestrictedCalc(calc);
+// YMYL: en páginas noindex/restringidas sólo emitimos BreadcrumbList (sin rich results).
+const schema = { '@context': 'https://schema.org', '@graph': effectiveNoindex ? schemaGraph.filter((n: any) => n['@type'] === 'BreadcrumbList') : schemaGraph };
 
 const updated = lastReviewedLabel;
 
@@ -353,7 +356,7 @@ const hreflangTags = buildHreflangCluster({
   lang="es"
   audience="EC"
   hreflang={hreflangTags}
-  noindex={calc.noindex === true}
+  noindex={effectiveNoindex}
   domain={categoryDomain(calc.category)}
 >
   <Header slot="header" />

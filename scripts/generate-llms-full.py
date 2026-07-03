@@ -38,9 +38,26 @@ def load_calc(path: Path) -> dict | None:
         return None
 
 
+def _has_valid_reviewer(calc: dict) -> bool:
+    r = calc.get("professionalReviewer")
+    if not isinstance(r, dict):
+        return False
+    return all(r.get(k) for k in ("name", "profession", "credential", "profileUrl", "reviewedAt"))
+
+
+def is_restricted(calc: dict) -> bool:
+    """Espeja src/lib/content-policy.ts isRestrictedCalc: restringida si
+    distribution=='restricted' o (ymylRisk=='high' sin revisor profesional válido)."""
+    if calc.get("distribution") == "restricted":
+        return True
+    if calc.get("ymylRisk") == "high" and not _has_valid_reviewer(calc):
+        return True
+    return False
+
+
 def is_eligible(calc: dict) -> bool:
-    """Filtros: no-noindex + audience AR (foco principal del sitio)."""
-    if calc.get("noindex") is True:
+    """Filtros: no-noindex + no-restringida (YMYL) + audience AR."""
+    if calc.get("noindex") is True or is_restricted(calc):
         return False
     return calc.get("audience") == "AR"
 

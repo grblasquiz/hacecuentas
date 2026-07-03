@@ -14,6 +14,7 @@ import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
 import { DECISION_MANIFEST_LOCALES } from '../src/lib/decisions/manifest-locales.ts';
+import { canDistributeCalc } from '../src/lib/content-policy.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -36,9 +37,10 @@ const entries: Entry[] = [];
 for (const f of files) {
   try {
     const c = JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8'));
-    // Excluir noindex: si Google no las indexa, tampoco deberían aparecer en buscador
-    // interno. Esto bajó el índice de ~2850 → ~2366 entries (~17% menos payload).
-    if (!c.slug || !c.h1 || c.noindex) continue;
+    // Excluir noindex/restringidas: si Google no las indexa, tampoco deberían
+    // aparecer en el buscador interno. canDistributeCalc cubre noindex manual +
+    // restricción YMYL (ymylRisk:high sin revisor / distribution:restricted).
+    if (!c.slug || !c.h1 || !canDistributeCalc(c)) continue;
     const e: Entry = {
       s: c.slug,
       h: c.h1,

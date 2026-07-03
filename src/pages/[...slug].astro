@@ -43,6 +43,7 @@ import { datasetSchemasForCalc } from '../lib/calc-datasets';
 import { filterByIncremental } from '../lib/incremental';
 import { buildHreflangCluster, findVersionByEsSlug } from '../lib/hreflang';
 import { getDataAsOf } from '../lib/data-freshness';
+import { hasValidProfessionalReviewer, isRestrictedCalc, canAdvertiseCalc } from '../lib/content-policy';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
@@ -595,6 +596,19 @@ const schemaArticle = {
     name: 'Martín Rodríguez',
     url: 'https://hacecuentas.com/autores/martin-rodriguez',
   },
+  // Revisor profesional real (médico/nutricionista/veterinario/kinesiólogo…)
+  // como `contributor` — propiedad estándar Schema.org. NO reemplaza al author
+  // editorial (Martín). Solo se emite si el revisor es completo y válido.
+  ...(hasValidProfessionalReviewer(calc) ? {
+    contributor: {
+      '@type': 'Person',
+      name: calc.professionalReviewer.name,
+      ...(calc.professionalReviewer.profileUrl ? { url: calc.professionalReviewer.profileUrl } : {}),
+      ...(calc.professionalReviewer.profession || calc.professionalReviewer.credential
+        ? { jobTitle: [calc.professionalReviewer.profession, calc.professionalReviewer.credential].filter(Boolean).join(', ') }
+        : {}),
+    },
+  } : {}),
   publisher: {
     '@type': 'Organization',
     name: 'Hacé Cuentas',
@@ -963,7 +977,16 @@ if (calcRatings && calcRatings.count >= 5) {
   }
 }
 
-const schema = { '@context': 'https://schema.org', '@graph': schemaGraph };
+// YMYL (Fase 6): en páginas noindex/restringidas NO emitimos schemas de rich
+// results (SoftwareApplication, Article, HowTo, FAQPage, MedicalWebPage, Dataset,
+// VideoObject…). Google no debe generar rich snippets de una herramienta que le
+// pedimos no indexar, y evitamos claims de MedicalAudience/diagnóstico sin
+// revisor. Conservamos sólo BreadcrumbList (navegación básica).
+const effectiveNoindex = calc.noindex === true || isRestrictedCalc(calc);
+const finalGraph = effectiveNoindex
+  ? schemaGraph.filter((n: any) => n['@type'] === 'BreadcrumbList')
+  : schemaGraph;
+const schema = { '@context': 'https://schema.org', '@graph': finalGraph };
 
 const updated = lastReviewedLabel;
 
@@ -1153,7 +1176,8 @@ const langPills = [
   image={ogImage}
   hreflang={hreflangTags}
   canonical={calc.canonicalSlug ? `/${calc.canonicalSlug}` : undefined}
-  noindex={calc.noindex === true}
+  noindex={effectiveNoindex}
+  noAds={!canAdvertiseCalc(calc)}
   domain={categoryDomain(calc.category)}
   pageType="calculator"
 >

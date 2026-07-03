@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { canDistributeCalc } from '../lib/content-policy';
 
 // Sitemap fresh — calcs con `dataUpdate.lastUpdated` en los últimos 14 días.
 // Bing valora freshness signals y el sitemap-news.xml standard limita entries a
@@ -50,7 +51,7 @@ function buildEntries(modules: Record<string, any>, prefix: string): Entry[] {
   const out: Entry[] = [];
   for (const m of Object.values(modules)) {
     const calc = m.default || m;
-    if (calc.noindex) continue;
+    if (!canDistributeCalc(calc)) continue;
     // Solo dataUpdate.lastUpdated cuenta para freshness signal.
     // lastReviewed se bumpea con backfills metadata y NO refleja
     // cambio editorial real — incluirlo infla el fresh con falsos positivos.

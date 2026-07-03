@@ -468,6 +468,15 @@ const showReviewerBlock = Boolean(config.lastReviewed) || Boolean(config.reviewe
 const reviewerName = config.reviewer?.name || t.teamFallback;
 const reviewerUrl = config.reviewer?.url;
 
+// Autoría editorial vs revisión clínica (política YMYL, ver content-policy.ts).
+// Cuando NO hay un `reviewer` real declarado, la señal cae a Martín como
+// AUTOR/EDITOR — nunca como "revisor". Usamos etiqueta editorial ("Editado por"
+// / "Última revisión editorial") en vez de "Revisado por", que podría leerse
+// como revisión profesional/clínica. Aplica a todo el sitio; en temas sensibles
+// es imprescindible.
+const editorialByLabel = lang === 'en' ? 'Edited by' : lang === 'pt' ? 'Editado por' : 'Editado por';
+const editorialOnLabel = lang === 'en' ? 'Last editorial review' : lang === 'pt' ? 'Última revisão editorial' : 'Última revisión editorial';
+
 // Embed inline: snippet server-rendered (no necesita JS para construirse) con
 // crédito = backlink followable en la página anfitriona (marca→home, nombre→calc).
 const embedOrigin = 'https://hacecuentas.com';
@@ -548,7 +557,7 @@ const formatFreshnessDate = (iso: string): string => {
     <div class="reviewer-block">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <span>
-        {t.reviewedBy}:{' '}
+        {config.reviewer ? t.reviewedBy : editorialByLabel}:{' '}
         {reviewerUrl ? (
           <a href={reviewerUrl} target="_blank" rel="noopener noreferrer">{reviewerName}</a>
         ) : !config.reviewer ? (
@@ -566,7 +575,7 @@ const formatFreshnessDate = (iso: string): string => {
         )}
         {config.lastReviewed && (
           <>
-            {' · '}{t.reviewedOn}:{' '}
+            {' · '}{config.reviewer ? t.reviewedOn : editorialOnLabel}:{' '}
             <time datetime={config.lastReviewed}>{formatFreshnessDate(config.lastReviewed)}</time>
           </>
         )}
@@ -616,7 +625,7 @@ const formatFreshnessDate = (iso: string): string => {
   <script is:inline data-astro-rerun>
 (function(){var c=document.currentScript.parentElement;c.addEventListener('submit',function(e){var f=e.target;if(c.dataset.hcReady||!f.classList||!f.classList.contains('calc-form'))return;e.preventDefault();c.dataset.hcQueued='1';var b=f.querySelector('.btn-primary');if(b)b.classList.add('loading')},true)})();
   </script>
-  <form id={`form-${config.slug}`} class="calc-form" data-calc-input novalidate>
+  <form id={`form-${config.slug}`} class="calc-form" data-calc-input data-nosnippet novalidate>
     {useGroupsBasic ? (
       basicGroups.map((g) => (
         g.name ? (

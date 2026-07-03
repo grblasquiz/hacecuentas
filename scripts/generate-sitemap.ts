@@ -24,6 +24,7 @@ import { readFileSync, writeFileSync, statSync, readdirSync, existsSync } from '
 import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
+import { canDistributeCalc } from '../src/lib/content-policy.ts';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
@@ -82,7 +83,9 @@ function readJSONs(dir: string, pathPrefix = ''): any[] {
     // <meta name="robots" content="noindex">, listarla en el sitemap es
     // contradictorio (Google se confunde) y desperdicia crawl budget.
     // Cuando alguien des-noindexa una calc, regenerar sitemap la incluye de nuevo.
-    .filter((d: any) => !d.noindex)
+    // canDistributeCalc = !noindex && !restringida (YMYL). No confiamos sólo en
+    // noindex manual: una calc ymylRisk:high sin revisor queda fuera igual.
+    .filter((d: any) => canDistributeCalc(d))
     // Excluimos páginas con `canonicalSlug`: son duplicados que canonicalizan a
     // OTRA URL (vienen de la unificación de similares). Listarlas en el sitemap
     // es "non-canonical page in sitemap" (Ahrefs) y desperdicia crawl budget.
@@ -725,7 +728,7 @@ function completenessScore(c: any): number {
   return s;
 }
 const autoTopPriority = (calcs as any[])
-  .filter((c) => !c.noindex && !seenInPriority.has(c.slug))
+  .filter((c) => canDistributeCalc(c) && !seenInPriority.has(c.slug))
   .map((c) => ({ c, score: completenessScore(c) }))
   .filter((x) => x.score >= 8)
   .sort((a, b) => b.score - a.score)

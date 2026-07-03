@@ -16,13 +16,14 @@ import { PILLARS } from '../lib/pillars';
 import { GONE_410_URLS } from '../lib/gone-410';
 import { HOME_HREFLANG } from '../lib/hreflang';
 import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
+import { canDistributeCalc } from '../lib/content-policy';
 // Tile "próximo feriado": data de la FUENTE ÚNICA (no hardcodear acá — el drift
 // fue justo lo que la fuente vino a eliminar: Soberanía 20→23 nov + 3 puentes).
 const FERIADOS_DATA: [string, string][] = FERIADOS_AR_2026.map((f) => [f.fecha, f.nombre]);
 
 // Cargar todas las calculadoras
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
-const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+const calcs = Object.values(calcModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c));
 
 // Salas de decisión destacadas en la home (super calculadoras). Slugs de alto
 // interés; si alguno no existe en el manifest, se completa con las primeras.

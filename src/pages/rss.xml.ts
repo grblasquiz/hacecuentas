@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
+import { canDistributeCalc } from '../lib/content-policy';
 
 // Force static generation at build time
 export const prerender = true;
 
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
-const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+const calcs = Object.values(calcModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c));
 
 interface CalcWithDate {
   calc: any;

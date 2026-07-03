@@ -7,6 +7,7 @@ import Footer from '../components/Footer.astro';
 import { CATEGORY_COLORS, BRAND_DEFAULT } from '../lib/category-colors';
 import { TOTAL_DISPLAY } from '../lib/calc-counts';
 import { PILLARS } from '../lib/pillars';
+import { canDistributeCalc } from '../lib/content-policy';
 
 // Índice navegable de TODAS las calculadoras del catálogo raíz (las que se
 // sirven en /{slug}). Mismo glob que /buscar y /categoria — no incluye las
@@ -18,7 +19,7 @@ import { PILLARS } from '../lib/pillars';
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(calcModules)
   .map((m: any) => m.default || m)
-  .filter((c: any) => c && c.slug && c.h1 && !c.noindex);
+  .filter((c: any) => c && c.slug && c.h1 && canDistributeCalc(c));
 
 // Label + icono + orden de categorías. Espeja el `categoryMeta` de index.astro;
 // el color sale de la fuente única CATEGORY_COLORS (category-colors.ts).

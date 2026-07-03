@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { canDistributeCalc } from '../lib/content-policy';
 
 // Endpoint estático: genera /search-index.json en build time.
 // Se carga lazy desde Header.astro al abrir el modal de search,
@@ -19,7 +20,7 @@ export const prerender = true;
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules)
   .map((m: any) => m.default || m)
-  .filter((c: any) => c.slug && c.h1 && !c.noindex)
+  .filter((c: any) => c.slug && c.h1 && canDistributeCalc(c))
   .map((c: any) => {
     const entry: any = {
       s: c.slug,

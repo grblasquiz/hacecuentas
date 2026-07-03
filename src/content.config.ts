@@ -52,6 +52,28 @@ const dateString = z.string().regex(
   { message: 'Debe ser YYYY-MM-DD' },
 );
 
+// ---- YMYL / política de contenido (ver src/lib/content-policy.ts) ----
+// Campos opcionales y backward-compatible: las miles de calcs existentes que
+// no los declaran siguen validando. La restricción efectiva la deriva
+// content-policy.ts (ymylRisk==='high' sin revisor => restringida), NO depende
+// de que cada JSON ponga noindex:true a mano.
+
+const ymylRiskEnum = z.enum(['low', 'medium', 'high']);
+const reviewTypeEnum = z.enum(['editorial', 'professional']);
+const distributionEnum = z.enum(['normal', 'restricted']);
+
+// Revisor profesional REAL (médico/nutricionista/veterinario/kinesiólogo…),
+// distinto del autor/editor Martín Rodríguez. Si el objeto existe, exige los
+// campos obligatorios: un revisor incompleto hace fallar el build (spec Fase 2).
+const professionalReviewer = z.object({
+  name: z.string().min(1, 'professionalReviewer.name requerido'),
+  profession: z.string().min(1, 'professionalReviewer.profession requerido'),
+  credential: z.string().min(1, 'professionalReviewer.credential requerido'),
+  licenseNumber: z.string().optional(),
+  profileUrl: z.string().url('professionalReviewer.profileUrl debe ser una URL válida'),
+  reviewedAt: dateString,
+}).strict();
+
 // ---- dataUpdate sub-schema (donde se rompian deploys silenciosos) ----
 
 // dataUpdate base — sin reglas de source (acepta cualquier combinacion)
@@ -115,7 +137,26 @@ const makeCalcSchema = (strictDataUpdate: boolean) => z.object({
   formulaId: z.string().optional(),
   lastReviewed: dateString.optional(),
   referenceTables: z.array(referenceTable).optional(),
-}).passthrough();
+  // ---- YMYL / política de contenido ----
+  ymylRisk: ymylRiskEnum.optional(),          // default conceptual: 'low'
+  reviewType: reviewTypeEnum.optional(),      // default conceptual: 'editorial'
+  distribution: distributionEnum.optional(),  // 'restricted' fuerza restricción manual
+  restrictedMode: z.enum(['dose', 'injury', 'baby']).optional(),  // subgrupo del aviso
+  noindex: z.boolean().optional(),
+  professionalReviewer: professionalReviewer.optional(),
+}).passthrough().superRefine((val, ctx) => {
+  // reviewType='professional' EXIGE un revisor profesional completo.
+  if (val.reviewType === 'professional' && !val.professionalReviewer) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['professionalReviewer'],
+      message: "reviewType='professional' requiere professionalReviewer (name, profession, credential, profileUrl, reviewedAt)",
+    });
+  }
+  // NOTA: una calc ymylRisk='high' SIN revisor profesional es válida y compila;
+  // content-policy.ts la marca restringida (noindex) automáticamente. No se
+  // valida aquí para no obligar a tocar cada JSON a mano.
+});
 
 // ---- Collection definitions (Astro v6 glob loader) ----
 

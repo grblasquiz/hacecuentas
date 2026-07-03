@@ -22,6 +22,7 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { isRestrictedCalc } from '../src/lib/content-policy.ts';
 
 const ROOT = process.cwd();
 const TOP_K = 6;
@@ -201,6 +202,10 @@ function computeRelated(opts: {
       return null;
     }
   }).filter((c): c is Calc => c !== null);
+  // Restringidas (YMYL: dosis/tratamiento sin revisor) NUNCA se recomiendan como
+  // relacionadas, en ningún locale. Las noindex se excluyen sólo donde ya se hacía
+  // (EN/PT), preservando el comportamiento AR para las noindex "comunes".
+  calcs = calcs.filter((c) => !isRestrictedCalc(c as any));
   if (excludeNoindex) calcs = calcs.filter((c) => !c.noindex);
 
   // Tokenizar cada una

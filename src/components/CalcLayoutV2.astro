@@ -44,6 +44,8 @@ import { resolveGuideSlug, GUIDE_TITLES } from '../lib/category-guide-map';
 import { getJourneySteps } from '../lib/journeys';
 import { getRoomsForCalc } from '../lib/decisions/calc-backlinks';
 import converterTables from '../lib/converter-tables.json';
+import { hasValidProfessionalReviewer, isSensitiveCalc, isRestrictedCalc } from '../lib/content-policy';
+import RestrictedNotice from './RestrictedNotice.astro';
 import '../styles/calc-redesign.css';
 
 interface Props {
@@ -67,6 +69,24 @@ const relatedLang = !lang ? 'es' : (lang === 'es' ? 'es-ES' : lang);
 // Salas de decisión que usan esta calc como componente (AR y verticales con
 // salas propias; el resto devuelve []). Máx 2 para no diluir.
 const decisionRooms = getRoomsForCalc(calc.slug, lang).slice(0, 2);
+
+// ---- Autoría / revisión (política YMYL, ver src/lib/content-policy.ts) ----
+// Martín Rodríguez es autor/editor, NO revisor clínico. En temas sensibles
+// (salud/nutrición/embarazo/bebés/lesiones/mascotas/suplementos/dosis) NO se
+// muestra "Fórmula revisada por Martín Rodríguez". Si hay un revisor profesional
+// real y válido, se muestra su bloque separado, con enlace verificable y fecha.
+const calcIsSensitive = isSensitiveCalc(calc);
+// Restringida (dosis/tratamiento/retorno deportivo de riesgo alto sin revisor
+// profesional): se reemplaza el widget por un aviso y se suprimen los bloques
+// con números/dosis (tablas, ejemplos, explicación, FAQ, respuesta rápida).
+const calcIsRestricted = isRestrictedCalc(calc);
+const proReviewer = hasValidProfessionalReviewer(calc) ? calc.professionalReviewer : null;
+const proReviewerCred = proReviewer
+  ? [proReviewer.profession, proReviewer.credential].filter(Boolean).join(', ')
+  : '';
+const proReviewedAtLabel = proReviewer?.reviewedAt
+  ? new Date(proReviewer.reviewedAt + 'T00:00:00Z').toLocaleDateString(dateLocale, { year: 'numeric', month: 'long' })
+  : '';
 
 const TRANSLATIONS = {
   es: {
@@ -208,7 +228,8 @@ const themeHub = lang ? null
   : ['matematica', 'ciencia'].includes(calc.category)
     ? { icon: '🧮', eb: 'Calculadora científica', label: 'Abrí la calculadora científica', href: '/calculadora-cientifica' }
   : null;
-const contextualOffer = getOfferForCalc(calc.slug);
+// Restringidas: sin ofertas comerciales/afiliados (spec Fase 8).
+const contextualOffer = calcIsRestricted ? null : getOfferForCalc(calc.slug);
 const converterTable = (converterTables as Record<string, any>)[calc.slug] || null;
 const audienceRedirect = calc.audienceRedirect || null;
 
@@ -278,7 +299,14 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
             : (pub ? `Datos ${pub} · ${updatedLabel}` : `Datos verificados · ${updatedLabel}`);
         })()}</li>
       )}
-      <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Formula reviewed by' : 'Fórmula revisada por'} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
+      {calcIsSensitive ? (
+        <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Edited by' : 'Editado por'} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
+      ) : (
+        <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Formula reviewed by' : 'Fórmula revisada por'} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
+      )}
+      {proReviewer && (
+        <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Professional review by' : 'Revisión profesional por'} <a href={proReviewer.profileUrl} target="_blank" rel="noopener noreferrer">{proReviewer.name}</a>{proReviewerCred && <span>, {proReviewerCred}</span>}{proReviewedAtLabel && <span> · {proReviewedAtLabel}</span>}</li>
+      )}
       <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Private — runs on your device' : lang === 'pt' ? 'Cálculo privado no seu dispositivo' : 'Cálculo privado en tu dispositivo'}</li>
     </ul>
     <div class="v2-trust-actions">
@@ -289,12 +317,16 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
 
   <!-- Calculadora (widget real). NADA arriba del calc salvo el hero — como el prototipo. -->
   <section id="calculadora">
-    <Calculator config={calc} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang}>
-      {/* "Seguí calculando" dentro del widget: el slot cae en el hueco de la
-          columna izquierda (bajo el form) y se revela al haber resultado.
-          lang completo (no calcWidgetLang) para resolver el locale correcto. */}
-      <NextCalcs slot="next-steps" calc={calc} lang={lang} />
-    </Calculator>
+    {calcIsRestricted ? (
+      <RestrictedNotice calc={calc} lang={lang} />
+    ) : (
+      <Calculator config={calc} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang}>
+        {/* "Seguí calculando" dentro del widget: el slot cae en el hueco de la
+            columna izquierda (bajo el form) y se revela al haber resultado.
+            lang completo (no calcWidgetLang) para resolver el locale correcto. */}
+        <NextCalcs slot="next-steps" calc={calc} lang={lang} />
+      </Calculator>
+    )}
   </section>
 
   <!-- Datos en vivo (si la calc los declara) -->
@@ -316,13 +348,13 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
       post-resultado. La malla SEO del pie la sigue cubriendo RelatedCalcs. */}
 
   <!-- Respuesta rápida (keyTakeaway / AEO) — visible, fuera de tabs -->
-  {keyTakeaway && (
+  {!calcIsRestricted && keyTakeaway && (
     <aside id="respuesta-rapida" class="v2-quick" data-speakable="true" aria-label="Respuesta rápida">
       <div class="v2-quick-h">{L.quickAnswer}</div>
       <div set:html={md(keyTakeaway)}></div>
     </aside>
   )}
-  {!keyTakeaway && answerSnippet && (
+  {!calcIsRestricted && !keyTakeaway && answerSnippet && (
     <aside class="v2-quick" data-speakable="true" aria-label="Respuesta directa">
       <div class="v2-quick-h">{L.quickAnswer}</div>
       <p set:html={mdInline(answerSnippet)}></p>
@@ -371,7 +403,7 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
         <div class="v2-block"><p>Completá los datos arriba y obtené el resultado al instante. Abajo tenés cómo funciona el cálculo, ejemplos y preguntas frecuentes.</p></div>
       )}
 
-      {referenceTables.length > 0 && referenceTables.map((tbl: any) => (
+      {!calcIsRestricted && referenceTables.length > 0 && referenceTables.map((tbl: any) => (
         <div class="v2-block">
           <h2>{tbl.title}</h2>
           {tbl.caption && <p class="v2-tbl-note">{tbl.caption}</p>}
@@ -412,14 +444,24 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
 
     <!-- Panel Cómo funciona -->
     <section class="v2-panel" id="v2-como" role="tabpanel">
-      {calc.explanation && (
+      {calcIsRestricted && (
+        <div class="v2-block">
+          <h2>{L.howWorks}</h2>
+          <p>Esta herramienta no entrega dosis, cantidades ni pautas individuales. Una
+            recomendación personalizada depende de factores clínicos que sólo un
+            profesional matriculado puede evaluar. Usá el aviso de arriba como guía y
+            consultá con un profesional.</p>
+        </div>
+      )}
+
+      {!calcIsRestricted && calc.explanation && (
         <div class="v2-block" id="como-funciona" data-has-math={hasMath ? 'true' : 'false'}>
           <h2>{L.howWorks}</h2>
           <div set:html={md(calc.explanation)}></div>
         </div>
       )}
 
-      {example && example.steps && (
+      {!calcIsRestricted && example && example.steps && (
         <div class="v2-block" id="ejemplo">
           <h2>{example.title || 'Ejemplo paso a paso'}</h2>
           <div class="v2-ledger">
@@ -431,7 +473,7 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
         </div>
       )}
 
-      {solvedExamples.length > 0 && (
+      {!calcIsRestricted && solvedExamples.length > 0 && (
         <div class="v2-block" id="casos-resueltos">
           <h2>Casos resueltos</h2>
           {solvedExamples.map((c: any, i: number) => (
@@ -464,7 +506,7 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
 
     <!-- Panel Preguntas -->
     <section class="v2-panel" id="v2-faq" role="tabpanel">
-      {calc.faq && calc.faq.length > 0 ? (
+      {!calcIsRestricted && calc.faq && calc.faq.length > 0 ? (
         <div class="v2-block v2-faq" id="faq">
           <h2>{L.faq}</h2>
           {calc.faq.map((f: any) => (

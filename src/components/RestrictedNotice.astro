@@ -1,0 +1,64 @@
+---
+/**
+ * RestrictedNotice — reemplaza el widget interactivo en calculadoras
+ * restringidas (dosis/tratamiento/retorno deportivo sin revisor profesional).
+ *
+ * NO ejecuta ninguna fórmula ni muestra resultados personalizados: sólo el
+ * aviso de la spec (Fase 5A/B/C) + qué evalúa un profesional (sin números) +
+ * "Reportar error" (la única acción que se conserva, spec Fase 8).
+ *
+ * Todo el bloque va con data-nosnippet para que Google no lo levante como
+ * respuesta, y la página igual queda accesible por su URL (noindex,follow).
+ */
+import { restrictedMode, RESTRICTED_NOTICES, RESTRICTED_PRO_FACTORS } from '../lib/content-policy';
+
+interface Props {
+  calc: any;
+  lang?: string;
+}
+const { calc } = Astro.props as Props;
+const mode = restrictedMode(calc);
+const notice = RESTRICTED_NOTICES[mode];
+const factors = RESTRICTED_PRO_FACTORS[mode];
+const reportSubject = encodeURIComponent(`Reporte: ${calc.h1 || calc.slug}`);
+---
+
+<div class="restricted-tool" data-nosnippet role="note" aria-label="Herramienta limitada">
+  <div class="rt-head">
+    <span class="rt-ico" aria-hidden="true">⚠️</span>
+    <h2 class="rt-title">Herramienta temporalmente limitada</h2>
+  </div>
+  <p class="rt-notice">{notice}</p>
+
+  <div class="rt-factors">
+    <p class="rt-factors-h">Qué evalúa un profesional matriculado:</p>
+    <ul>
+      {factors.map((f) => <li>{f}</li>)}
+    </ul>
+  </div>
+
+  <p class="rt-foot">
+    Mantenemos esta página como referencia general; no entrega dosis, cantidades
+    ni pautas individuales.
+    <a href={`mailto:ideas@hacecuentas.com?subject=${reportSubject}`}>Reportar un error</a>.
+  </p>
+</div>
+
+<style>
+  .restricted-tool {
+    border: 1px solid #fad9b3;
+    background: #fff7ed;
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin: 8px 0 24px;
+  }
+  .rt-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .rt-ico { font-size: 22px; }
+  .rt-title { font-size: 1.15rem; margin: 0; color: #9a3412; }
+  .rt-notice { margin: 0 0 14px; line-height: 1.55; color: var(--v2-text, #1e293b); }
+  .rt-factors-h { font-weight: 600; margin: 0 0 6px; }
+  .rt-factors ul { margin: 0 0 14px; padding-left: 1.2rem; }
+  .rt-factors li { margin: 2px 0; }
+  .rt-foot { margin: 0; font-size: 0.9rem; color: var(--v2-muted, #64748b); }
+  .rt-foot a { color: var(--v2-accent, #2563eb); font-weight: 500; }
+</style>

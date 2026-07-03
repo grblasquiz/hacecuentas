@@ -1,5 +1,6 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { shouldBuildCategory } from '../../../lib/incremental';
+import { canDistributeCalc } from '../../../lib/content-policy';
 
 // RSS por categoría — feeds nicho para bloggers/aggregators temáticos.
 // Mejor descubribilidad y syndication targeting.
@@ -35,7 +36,7 @@ export const GET: APIRoute = ({ params }) => {
   const site = 'https://hacecuentas.com';
 
   const items = calcs
-    .filter((c: any) => c.category === cat)
+    .filter((c: any) => c.category === cat && canDistributeCalc(c))
     .map((c: any) => {
       const dateStr =
         (c.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(c.lastReviewed) ? c.lastReviewed : null) ||

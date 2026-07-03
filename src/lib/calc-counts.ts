@@ -11,6 +11,8 @@
  * 3607 → "3.600+", nunca "3.700+" hasta que realmente lo sea.
  */
 
+import { canDistributeCalc } from './content-policy';
+
 const arGlob = import.meta.glob('../content/calcs/*.json');
 const enGlob = import.meta.glob('../content/calcs-en/*.json');
 const ptGlob = import.meta.glob('../content/calcs-pt/*.json');
@@ -77,8 +79,27 @@ export const CATEGORY_COUNT = new Set(
     .filter(Boolean)
 ).size;
 
-export const TOTAL_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.total))}+`;
-export const AR_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.ar))}+`;
+// YMYL (Fase 10): la cifra PÚBLICA ("calculadoras disponibles en buscadores")
+// NO cuenta páginas restringidas ni noindex. `canDistributeCalc` = indexable +
+// distribuible. `CALC_COUNTS.total` sigue siendo el bruto del repositorio (para
+// métricas internas), pero el display público usa el indexable.
+const AR_INDEXABLE = Object.values(arEager)
+  .map((m: any) => m.default || m)
+  .filter((c: any) => canDistributeCalc(c)).length;
+const AR_RESTRICTED = CALC_COUNTS.ar - AR_INDEXABLE; // noindex + restringidas
+// Las restringidas viven sólo en AR por ahora; el público total resta esas.
+const PUBLIC_TOTAL = CALC_COUNTS.total - AR_RESTRICTED;
+
+export const CALC_COUNTS_PUBLIC = {
+  arIndexable: AR_INDEXABLE,
+  arRestricted: AR_RESTRICTED,
+  publicTotal: PUBLIC_TOTAL,
+  repoTotal: CALC_COUNTS.total,
+} as const;
+
+// Displays públicos: usan el conteo indexable (excluye restringidas/noindex).
+export const TOTAL_DISPLAY = `${formatES(floorTo100(PUBLIC_TOTAL))}+`;
+export const AR_DISPLAY = `${formatES(floorTo100(AR_INDEXABLE))}+`;
 export const PT_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.pt))}+`;
 // Sin sufijo "+", para frases tipo "Más de {TOTAL_PLAIN} calculadoras".
-export const TOTAL_PLAIN = formatES(floorTo100(CALC_COUNTS.total));
+export const TOTAL_PLAIN = formatES(floorTo100(PUBLIC_TOTAL));

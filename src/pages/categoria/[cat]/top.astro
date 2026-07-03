@@ -7,6 +7,7 @@ import Footer from '../../../components/Footer.astro';
 import topSlugsData from '../../../lib/top-slugs.json';
 import { shouldBuildCategory } from '../../../lib/incremental';
 import { categoryDomain } from '../../../lib/category-colors';
+import { canDistributeCalc } from '../../../lib/content-policy';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../../../content/calcs/*.json', { eager: true });
@@ -14,7 +15,7 @@ export async function getStaticPaths() {
   const cats = [...new Set(all.map((c) => c.category))].filter(shouldBuildCategory);
   return cats.map((cat) => ({
     params: { cat },
-    props: { cat, calcs: all.filter((c) => c.category === cat) },
+    props: { cat, calcs: all.filter((c) => c.category === cat && canDistributeCalc(c)) },
   }));
 }
 

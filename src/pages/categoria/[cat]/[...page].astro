@@ -9,6 +9,7 @@ import { shouldBuildCategory } from '../../../lib/incremental';
 import { groupCalcs, featuredCalcs, cleanDesc } from '../../../lib/category-layout';
 import CategoryIcon from '../../../components/CategoryIcon.astro';
 import { categoryColor, categoryDomain } from '../../../lib/category-colors';
+import { canDistributeCalc } from '../../../lib/content-policy';
 
 const PAGE_SIZE = 60;
 
@@ -19,7 +20,7 @@ export async function getStaticPaths() {
   const cats = [...new Set(all.map((c) => c.category))].filter(shouldBuildCategory);
   const paths: any[] = [];
   for (const cat of cats) {
-    const filtered = all.filter((c) => c.category === cat);
+    const filtered = all.filter((c) => c.category === cat && canDistributeCalc(c));
     const totalPages = Math.max(1, Math.ceil(filtered.length / 60));
     for (let i = 1; i <= totalPages; i++) {
       const start = (i - 1) * 60;

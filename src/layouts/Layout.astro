@@ -44,6 +44,7 @@ export interface Props {
                              // <title> del <head> NO cambia — sigue optimizado SEO.
   domain?: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life';  // familia visual → data-domain en <body> (tokens --domain-*)
   pageType?: 'calculator' | 'category' | 'guide' | 'hub' | 'home' | 'data' | 'room';  // data-page-type en <body>
+  noAds?: boolean;           // YMYL: páginas restringidas no cargan AdSense (Fase 8)
 }
 
 const {
@@ -70,6 +71,7 @@ const {
   ogTitle,
   domain,
   pageType,
+  noAds = false,
 } = Astro.props;
 
 // Defensivo: keywords/newsKeywords deben ser string[]. Si una página los pasa
@@ -645,7 +647,7 @@ const globalSchema = {
         partner de mediación en el panel), así que cargarlo nosotros duplicaría
         y violaría policy. La verificación de cuenta (meta de arriba + línea en
         ads.txt) se mantiene SIEMPRE — Ezoic la necesita. */}
-    {!EZOIC_ENABLED && (
+    {!EZOIC_ENABLED && !noAds && (
       <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){setTimeout(f,1500)})(function(){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';document.head.appendChild(s);});});`} />
     )}
 

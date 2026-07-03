@@ -1,0 +1,276 @@
+/**
+ * content-policy.ts — Política centralizada de riesgo YMYL.
+ *
+ * Punto único de verdad para decidir, a partir de los metadatos de una
+ * calculadora, si:
+ *   - es de riesgo alto y está "restringida" (dosis/tratamiento/retorno
+ *     deportivo sin revisión profesional),
+ *   - debe renderizarse `noindex`,
+ *   - puede distribuirse (sitemap, buscador interno, feeds, relacionadas,
+ *     populares/nuevas),
+ *   - puede embeberse,
+ *   - puede mostrar anuncios,
+ *   - puede compartir/exportar resultados personalizados.
+ *
+ * REGLA DE ORO (spec Fase 1):
+ *   Una calculadora es RESTRINGIDA cuando `ymylRisk === 'high'` y NO tiene
+ *   un revisor profesional completo y válido. La restricción NO depende de
+ *   que el JSON tenga `noindex: true` a mano — se deriva de la política.
+ *
+ * Las páginas restringidas siguen siendo accesibles por su URL original
+ * (respondemos 200 con `noindex,follow`). NO se bloquean por robots.txt ni
+ * se redirigen con 301, porque Google necesita rastrearlas para ver el
+ * `noindex`.
+ *
+ * Este módulo es puro (sin side-effects, sin I/O) para poder usarse tanto
+ * en el render de Astro como en los scripts de build (sitemap, search-index,
+ * page-feed, related, llms) y en los tests.
+ */
+
+// ---- Tipos de la política ----
+
+export type YmylRisk = 'low' | 'medium' | 'high';
+export type ReviewType = 'editorial' | 'professional';
+export type DistributionMode = 'normal' | 'restricted';
+
+/**
+ * Revisor profesional real y verificable (médico, nutricionista, farmacéutico,
+ * kinesiólogo, veterinario, etc.). NO es Martín Rodríguez (autor/editor).
+ */
+export interface ProfessionalReviewer {
+  /** Nombre y apellido del profesional. */
+  name?: string;
+  /** Profesión: "Médico", "Nutricionista", "Veterinario", etc. */
+  profession?: string;
+  /** Credencial / título habilitante mostrado al usuario. */
+  credential?: string;
+  /** Nº de matrícula (opcional pero recomendado). */
+  licenseNumber?: string;
+  /** URL de un perfil verificable (colegio profesional, LinkedIn, sitio, etc.). */
+  profileUrl?: string;
+  /** Fecha de la revisión, formato YYYY-MM-DD. */
+  reviewedAt?: string;
+}
+
+/**
+ * Forma mínima de una calculadora que le interesa a la política.
+ * Se mantiene laxa (todos opcionales) para ser compatible con los miles de
+ * JSON existentes que no declaran estos campos.
+ */
+export interface CalcPolicyInput {
+  slug?: string;
+  category?: string;
+  ymylRisk?: YmylRisk | string;
+  reviewType?: ReviewType | string;
+  distribution?: DistributionMode | string;
+  noindex?: boolean;
+  professionalReviewer?: ProfessionalReviewer | null;
+  // toleramos cualquier otro campo del calc sin romper el tipo
+  [key: string]: unknown;
+}
+
+// ---- Constantes de política ----
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Categorías sensibles (salud, cuerpo, deporte-lesión, familia, mascotas).
+ * Se usa para NO atribuir "revisión de fórmula" a Martín en estos temas y
+ * como señal auxiliar en la auditoría YMYL. NO define por sí sola la
+ * restricción (eso lo hace `ymylRisk === 'high'`).
+ */
+export const SENSITIVE_CATEGORIES: ReadonlySet<string> = new Set([
+  'salud',
+  'mascotas',
+  'deportes',
+  'familia',
+]);
+
+/**
+ * Palabras/temas que, aunque estén en una categoría no sensible (ej. "vida"),
+ * indican contenido de salud/embarazo/bebés y por lo tanto tampoco deben
+ * mostrar atribución de "revisión de fórmula" a Martín.
+ */
+const SENSITIVE_SLUG_HINTS: readonly string[] = [
+  'embarazo', 'embarazada', 'gestacion', 'parto', 'ovulacion', 'fertilidad',
+  'bebe', 'bebes', 'lactancia', 'pediatr', 'percentil',
+  'dosis', 'medicamento', 'medicacion', 'suplement', 'insulina', 'paracetamol',
+  'ibuprofeno', 'antibiotic', 'magnesio', 'creatinina', 'filtrado-glomerular',
+  'imc', 'grasa-corporal', 'calorias', 'macros', 'nutricion',
+  'lesion', 'pubalgia', 'isquiotibial', 'rehabilitacion', 'antipulgas',
+];
+
+/**
+ * Aviso estándar para herramientas restringidas cuyo cálculo prescriptivo
+ * fue desactivado (dosis / tratamiento). Texto de la spec (Fase 5A).
+ */
+export const RESTRICTED_DOSE_NOTICE =
+  'Esta herramienta está temporalmente limitada porque una dosis individual ' +
+  'depende de antecedentes, medicamentos, función renal, edad y otros factores ' +
+  'clínicos. Consultá con un médico, farmacéutico o veterinario matriculado.';
+
+/**
+ * Subgrupo de restricción (spec Fase 5):
+ *   - 'dose'   → medicamentos, suplementos y dosis veterinarias (A)
+ *   - 'injury' → lesiones y retorno deportivo (B)
+ *   - 'baby'   → alimentación de bebés (C)
+ * Determina el aviso y la lista de "qué evalúa un profesional".
+ */
+export type RestrictedMode = 'dose' | 'injury' | 'baby';
+
+export const RESTRICTED_NOTICES: Record<RestrictedMode, string> = {
+  dose: RESTRICTED_DOSE_NOTICE,
+  injury:
+    'Esta herramienta está temporalmente limitada porque los tiempos de ' +
+    'recuperación y el retorno al deporte dependen de la evaluación clínica, el ' +
+    'dolor, la fuerza y criterios funcionales individuales. Consultá con un ' +
+    'traumatólogo, deportólogo o kinesiólogo matriculado.',
+  baby:
+    'Esta herramienta está temporalmente limitada porque la alimentación de un ' +
+    'bebé depende de signos de preparación, el control pediátrico y la evolución ' +
+    'individual. La introducción de alimentos suele iniciarse alrededor de los 6 ' +
+    'meses; consultá con tu pediatra antes de cualquier cambio.',
+};
+
+/** Factores generales que evalúa un profesional (sin números ni dosis). */
+export const RESTRICTED_PRO_FACTORS: Record<RestrictedMode, string[]> = {
+  dose: [
+    'Antecedentes y enfermedades previas',
+    'Medicación actual e interacciones',
+    'Función renal y hepática',
+    'Edad y peso',
+    'Alergias, embarazo o lactancia',
+  ],
+  injury: [
+    'Examen clínico y nivel de dolor',
+    'Fuerza y rango de movimiento',
+    'Tests funcionales específicos',
+    'Grado de la lesión confirmado por estudios',
+    'Objetivo y demanda deportiva individual',
+  ],
+  baby: [
+    'Signos de preparación para comer',
+    'Edad y evolución del peso',
+    'Control y seguimiento pediátrico',
+    'Antecedentes alérgicos familiares',
+    'Lactancia y necesidades individuales',
+  ],
+};
+
+/** Subgrupo de restricción declarado por la calc (default 'dose'). */
+export function restrictedMode(calc: CalcPolicyInput | null | undefined): RestrictedMode {
+  const m = calc?.restrictedMode;
+  return m === 'injury' || m === 'baby' ? m : 'dose';
+}
+
+// ---- Helpers de normalización ----
+
+function nonEmpty(v: unknown): v is string {
+  return typeof v === 'string' && v.trim().length > 0;
+}
+
+function normalizeSlug(slug: unknown): string {
+  return typeof slug === 'string' ? slug.toLowerCase() : '';
+}
+
+// ---- Funciones de política ----
+
+/**
+ * ¿La calculadora tiene un revisor profesional COMPLETO y VÁLIDO?
+ * Exige: name, profession, credential, profileUrl y reviewedAt (YYYY-MM-DD).
+ * `licenseNumber` es opcional. Si falta cualquiera de los obligatorios, o la
+ * fecha no tiene formato válido, devuelve false.
+ */
+export function hasValidProfessionalReviewer(calc: CalcPolicyInput | null | undefined): boolean {
+  const r = calc?.professionalReviewer;
+  if (!r || typeof r !== 'object') return false;
+  return (
+    nonEmpty(r.name) &&
+    nonEmpty(r.profession) &&
+    nonEmpty(r.credential) &&
+    nonEmpty(r.profileUrl) &&
+    nonEmpty(r.reviewedAt) &&
+    DATE_RE.test(r.reviewedAt as string)
+  );
+}
+
+/**
+ * ¿La calculadora está RESTRINGIDA?
+ * Es restringida cuando:
+ *   - `ymylRisk === 'high'` y NO tiene revisor profesional válido, O
+ *   - se marcó explícitamente `distribution === 'restricted'`.
+ * Un revisor profesional válido "desbloquea" una calc de riesgo alto (deja de
+ * estar restringida por política), pero la indexabilidad final la decide
+ * `isIndexableCalc` (que además respeta un `noindex` explícito).
+ */
+export function isRestrictedCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  if (!calc) return false;
+  if (calc.distribution === 'restricted') return true;
+  if (calc.ymylRisk === 'high' && !hasValidProfessionalReviewer(calc)) return true;
+  return false;
+}
+
+/**
+ * `noindex` efectivo: verdadero si el JSON pide `noindex: true` a mano O si la
+ * política la considera restringida. Esta es la fuente de verdad para el meta
+ * robots (`noindex,follow`) en el render.
+ */
+export function isNoindexCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  if (!calc) return false;
+  return calc.noindex === true || isRestrictedCalc(calc);
+}
+
+/**
+ * ¿La calculadora es INDEXABLE? (inverso de `isNoindexCalc`).
+ * Una calc de riesgo alto vuelve a ser indexable sólo cuando tiene revisor
+ * profesional válido Y no tiene `noindex: true` explícito.
+ */
+export function isIndexableCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  return !isNoindexCalc(calc);
+}
+
+/**
+ * ¿Se puede DISTRIBUIR? (sitemap, buscador interno, page feed, feeds LLM,
+ * relacionadas, populares/nuevas, hubs, RSS/JSON/CSV).
+ * Regla: sólo se distribuye lo indexable — cualquier página `noindex` o
+ * restringida queda fuera de todos los canales.
+ */
+export function canDistributeCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  return isIndexableCalc(calc);
+}
+
+/**
+ * ¿Se puede EMBEBER? Las restringidas no tienen versión embebible.
+ */
+export function canEmbedCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  return !isRestrictedCalc(calc);
+}
+
+/**
+ * ¿Se pueden mostrar ANUNCIOS / afiliados? No en páginas restringidas.
+ */
+export function canAdvertiseCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  return !isRestrictedCalc(calc);
+}
+
+/**
+ * ¿Se pueden compartir/exportar RESULTADOS personalizados (email, PDF, PNG,
+ * links con datos ingresados)? No en páginas restringidas.
+ */
+export function canShareResultsCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  return !isRestrictedCalc(calc);
+}
+
+// ---- Helpers de categoría sensible (para autoría / auditoría) ----
+
+/**
+ * ¿Es una categoría o slug de tema sensible (salud/embarazo/bebés/lesión/
+ * mascotas/suplementos/dosis)? Se usa para NO mostrar "Fórmula revisada por
+ * Martín Rodríguez" en esos temas (Fase 3).
+ */
+export function isSensitiveCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  if (!calc) return false;
+  if (calc.category && SENSITIVE_CATEGORIES.has(String(calc.category))) return true;
+  const slug = normalizeSlug(calc.slug);
+  return SENSITIVE_SLUG_HINTS.some((hint) => slug.includes(hint));
+}

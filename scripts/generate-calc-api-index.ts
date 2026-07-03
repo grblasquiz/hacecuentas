@@ -15,6 +15,7 @@ import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
 import { DECISION_MANIFEST_LOCALES } from '../src/lib/decisions/manifest-locales.ts';
+import { canDistributeCalc } from '../src/lib/content-policy.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'public', 'api');
@@ -170,7 +171,7 @@ for (const { dir, pathPrefix, locale } of LOCALES) {
     if (!file.endsWith('.json')) continue;
     try {
       const data = JSON.parse(readFileSync(join(fullDir, file), 'utf8'));
-      if (data.noindex === true) {
+      if (!canDistributeCalc(data)) {  // noindex manual o restricción YMYL
         skipped++;
         continue;
       }

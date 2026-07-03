@@ -18,6 +18,7 @@
  */
 import { findClusterForSlug } from '../lib/clusters';
 import { getJourneySteps } from '../lib/journeys';
+import { canDistributeCalc } from '../lib/content-policy';
 import relatedAutoEs from '../lib/related-auto.json';
 import relatedAutoEn from '../lib/related-auto-en.json';
 import relatedAutoPt from '../lib/related-auto-pt.json';
@@ -70,7 +71,7 @@ const modules = BUCKETS[lang] || BUCKETS[''];
 const relatedAuto = (AUTOS[lang] || relatedAutoEs) as Record<string, string[]>;
 const linkPrefix = lang ? `/${lang}/` : '/';
 
-const allCalcs = Object.values(modules).map((m: any) => m.default || m).filter((c: any) => c && c.slug);
+const allCalcs = Object.values(modules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && canDistributeCalc(c));
 const bySlug = new Map<string, any>(allCalcs.map((c: any) => [c.slug, c]));
 
 const relatedSlugs: string[] = calc.relatedSlugs || [];

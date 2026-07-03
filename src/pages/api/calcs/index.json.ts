@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { canDistributeCalc } from '../../../lib/content-policy';
 
 // API pública: listado de todas las calcs.
 // GET /api/calcs/index.json
@@ -7,7 +8,7 @@ import type { APIRoute } from 'astro';
 export const prerender = true;
 
 const calcModules = import.meta.glob<any>('../../../content/calcs/*.json', { eager: true });
-const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+const calcs = Object.values(calcModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c));
 
 export const GET: APIRoute = () => {
   const site = 'https://hacecuentas.com';

@@ -3,6 +3,7 @@ export const prerender = true;
 
 import Calculator from '../../components/Calculator.astro';
 import { filterByIncremental } from '../../lib/incremental';
+import { canEmbedCalc } from '../../lib/content-policy';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
@@ -14,6 +15,8 @@ export async function getStaticPaths() {
 }
 
 const { calc } = Astro.props;
+// Restringidas (YMYL) no se pueden embeber: mostramos un aviso sin calculadora.
+const embeddable = canEmbedCalc(calc);
 ---
 <!doctype html>
 <html lang="es-AR">
@@ -35,7 +38,15 @@ const { calc } = Astro.props;
           por <strong>Hacé Cuentas</strong> ↗
         </a>
       </div>
-      <Calculator config={calc} />
+      {embeddable ? (
+        <Calculator config={calc} />
+      ) : (
+        <div class="embed-unavailable" role="note">
+          <p><strong>Esta herramienta no está disponible para embeber.</strong></p>
+          <p>Por seguridad, esta calculadora no ofrece una versión insertable. Podés
+            consultarla en <a href={`https://hacecuentas.com/${calc.slug}`} target="_blank" rel="noopener">Hacé Cuentas</a>.</p>
+        </div>
+      )}
     </div>
 
     <script is:inline define:vars={{ slug: calc.slug, name: calc.h1 }}>

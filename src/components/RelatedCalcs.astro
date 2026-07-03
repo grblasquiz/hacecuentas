@@ -1,4 +1,5 @@
 ---
+import { canDistributeCalc } from '../lib/content-policy';
 import relatedAutoEs from '../lib/related-auto.json';
 import relatedAutoEn from '../lib/related-auto-en.json';
 import relatedAutoPt from '../lib/related-auto-pt.json';
@@ -42,7 +43,8 @@ const ptPtModules = import.meta.glob<any>('../content/calcs-pt-pt/*.json', { eag
 const VERTICAL_MODULES: Record<string, any> = { co: coModules, mx: mxModules, cl: clModules, pe: peModules, ec: ecModules, ve: veModules, py: pyModules, uy: uyModules, do: doModules, 'pt-pt': ptPtModules };
 const calcModules = lang === 'en' ? enModules : lang === 'pt' ? ptModules : lang === 'es-ES' ? esEsModules
   : VERTICAL_MODULES[lang] ? VERTICAL_MODULES[lang] : esModules;
-const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+// Excluir restringidas/noindex del pool: no se recomiendan como relacionadas.
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c));
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
 
 const VERTICAL_PREFIX: Record<string, string> = { co: '/co/', mx: '/mx/', cl: '/cl/', pe: '/pe/', ec: '/ec/', ve: '/ve/', py: '/py/', uy: '/uy/', do: '/do/', 'pt-pt': '/pt-pt/' };
