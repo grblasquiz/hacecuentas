@@ -550,6 +550,12 @@ const priorityUrls: Url[] = [
   prio('/calculadoras-evento',               '0.8',  'monthly'),
   // Meta-hub de fin de semana (clusters resilientes: cocina, escapadas, fitness, ocio, mascotas)
   prio('/calculadoras-fin-de-semana',        '0.8',  'monthly'),
+  // Sub-hubs de fin de semana por intención (comida, fiestas, escapadas, proyectos)
+  prio('/fin-de-semana',                     '0.8',  'monthly'),
+  prio('/fin-de-semana/comida-y-juntadas',   '0.8',  'monthly'),
+  prio('/fin-de-semana/fiestas-y-reuniones', '0.8',  'monthly'),
+  prio('/fin-de-semana/escapadas',           '0.8',  'monthly'),
+  prio('/fin-de-semana/proyectos-en-casa',   '0.8',  'monthly'),
   // Landings de feriados LATAM 2026 (evergreen del año, alta intención)
   prio('/feriados-mexico-2026',              '0.85', 'weekly'),
   prio('/feriados-colombia-2026',            '0.85', 'weekly'),
@@ -581,6 +587,15 @@ const priorityUrls: Url[] = [
   prio('/guia/viajes',                       '0.9',  'weekly'),
   prio('/guia/sueldos-impuestos-peru-2026',  '0.9',  'weekly'),
   prio('/guia/sueldos-impuestos-ecuador-2026', '0.9', 'weekly'),
+  // guías nuevas del lote fin-de-semana / vida cotidiana (evergreen)
+  prio('/guia/comida-reunion-cuanto-comprar',                    '0.85', 'monthly'),
+  prio('/guia/presupuesto-fiesta-como-armar',                    '0.85', 'monthly'),
+  prio('/guia/dividir-gastos-amigos-sin-errores',                '0.85', 'monthly'),
+  prio('/guia/presupuesto-viaje-completo',                       '0.85', 'monthly'),
+  prio('/guia/combustible-peajes-costo-por-persona-viaje',       '0.85', 'monthly'),
+  prio('/guia/pintar-casa-materiales-litros',                    '0.85', 'monthly'),
+  prio('/guia/estimar-materiales-construccion-sin-comprar-de-mas', '0.85', 'monthly'),
+  prio('/guia/fondo-emergencia-como-calcular',                   '0.85', 'monthly'),
 ];
 // Top categorías (las más grandes) — estable salvo deploys del template de categoría
 for (const cat of ['finanzas', 'vida', 'salud', 'educacion', 'mascotas', 'matematica', 'cocina', 'deportes', 'tecnologia', 'viajes', 'construccion', 'marketing', 'negocios', 'ciencia', 'automotor', 'familia', 'idiomas', 'jardineria', 'electronica', 'entretenimiento']) {

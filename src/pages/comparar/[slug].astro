@@ -10,13 +10,24 @@ import { filterByIncremental } from '../../lib/incremental';
 export async function getStaticPaths() {
   const comparaciones = import.meta.glob<any>('../../content/comparaciones/*.json', { eager: true });
   const all = Object.values(comparaciones).map((mod: any) => mod.default || mod);
-  return filterByIncremental(all, 'comparaciones').map((c: any) => ({
-    params: { slug: c.slug },
-    props: { comparacion: c },
-  }));
+  // Anillo estable de interlinking: cada comparación enlaza a las 6 siguientes
+  // (orden alfabético por slug, con wrap-around). Así toda comparación recibe
+  // enlaces entrantes de otras 6 páginas (evita huérfanas, reparte link-equity).
+  const sorted = [...all].sort((a: any, b: any) => String(a.slug || '').localeCompare(String(b.slug || '')));
+  const idxBySlug = new Map(sorted.map((c: any, i: number) => [c.slug, i]));
+  return filterByIncremental(all, 'comparaciones').map((c: any) => {
+    const i = idxBySlug.get(c.slug) ?? 0;
+    const otras = Array.from({ length: 6 }, (_, k) => sorted[(i + 1 + k) % sorted.length])
+      .filter((o: any) => o && o.slug !== c.slug)
+      .map((o: any) => ({ slug: o.slug, title: String(o.title || '').replace(/\s*\|.*$/, ''), heroEmoji: o.heroEmoji || '⚖️' }));
+    return {
+      params: { slug: c.slug },
+      props: { comparacion: c, otras },
+    };
+  });
 }
 
-const { comparacion } = Astro.props;
+const { comparacion, otras = [] } = Astro.props;
 
 const siteUrl = 'https://hacecuentas.com';
 
@@ -343,6 +354,18 @@ const pageSchema = {
       <div class="newsletter-wrap">
         <Newsletter />
       </div>
+
+      <!-- Otras comparaciones (interlinking) -->
+      {otras && otras.length > 0 && (
+        <section class="otras-comparaciones">
+          <h2>Otras comparaciones</h2>
+          <ul class="otras-comparaciones-list">
+            {otras.map((o: any) => (
+              <li><a href={`/comparar/${o.slug}`}>{o.heroEmoji} {o.title}</a></li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <!-- Sources -->
       {comparacion.sources && comparacion.sources.length > 0 && (
@@ -945,6 +968,39 @@ const pageSchema = {
   /* ── Newsletter ──────────────────────────────────────────────────────────── */
   .newsletter-wrap {
     margin-bottom: 2.5rem;
+  }
+
+  /* ── Otras comparaciones (interlinking) ──────────────────────────────────── */
+  .otras-comparaciones {
+    margin-bottom: 2.5rem;
+  }
+  .otras-comparaciones h2 {
+    font-size: 1.3rem;
+    margin: 0 0 0.9rem;
+  }
+  .otras-comparaciones-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.6rem;
+  }
+  .otras-comparaciones-list a {
+    display: block;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    background: var(--bg);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+  .otras-comparaciones-list a:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft, #e0f2fe);
   }
 
   /* ── Sources ─────────────────────────────────────────────────────────────── */

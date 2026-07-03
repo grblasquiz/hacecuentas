@@ -1,0 +1,300 @@
+---
+/**
+ * Template de sub-hub de FIN DE SEMANA (/fin-de-semana/<slug>). Lo instancian
+ * las rutas explícitas src/pages/fin-de-semana/{comida-y-juntadas,...}.astro.
+ *
+ * Producto SEO completo: CollectionPage + ItemList + FAQPage + BreadcrumbList,
+ * herramientas destacadas, grilla de tools resueltas desde la colección viva,
+ * secciones "Qué necesitás calcular" y "Orden recomendado", FAQ ≥7 y malla a
+ * los otros 3 hubs + al meta-hub /calculadoras-fin-de-semana.
+ *
+ * Fuente de slugs: WEEKEND_CLUSTERS (validados) + extraSlugs del lote nuevo.
+ * Si un slug no resuelve, se omite y se emite un warn en build (no silencioso).
+ */
+import Layout from '../layouts/Layout.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
+import { WEEKEND_CLUSTERS } from '../lib/weekend-clusters';
+import { FINDE_HUBS, type FindeHubDef } from '../lib/fin-de-semana-hubs';
+
+interface Props {
+  hub: FindeHubDef;
+}
+const { hub } = Astro.props;
+
+const site = 'https://hacecuentas.com';
+const url = `${site}/fin-de-semana/${hub.slug}`;
+const title = hub.title;
+const canonical = `/fin-de-semana/${hub.slug}`;
+
+// Cargar colección viva de calcs → mapa por slug.
+const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
+const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+const clusterByKey = new Map(WEEKEND_CLUSTERS.map((c) => [c.key, c]));
+
+// Resolver los slugs del hub: clusters (master+members) + extraSlugs, dedup.
+const wantSlugs: string[] = [];
+for (const key of hub.clusterKeys) {
+  const cl = clusterByKey.get(key);
+  if (!cl) continue;
+  wantSlugs.push(cl.master, ...cl.members);
+}
+wantSlugs.push(...hub.extraSlugs);
+
+const seen = new Set<string>();
+const tools: Array<{ slug: string; icon: string; name: string; desc: string }> = [];
+for (const s of wantSlugs) {
+  if (seen.has(s)) continue;
+  seen.add(s);
+  const c = bySlug.get(s);
+  if (!c) {
+    // eslint-disable-next-line no-console
+    console.warn(`[finde-hub:${hub.slug}] slug sin resolver (omitido): ${s}`);
+    continue;
+  }
+  tools.push({
+    slug: c.slug,
+    icon: c.icon || '🧮',
+    name: c.h1 || c.title?.replace(/\s*\|.*$/, '') || c.slug,
+    desc: c.answerSnippet ? String(c.answerSnippet).split('. ')[0] + '.' : (c.description || ''),
+  });
+}
+
+const featured = hub.featuredSlugs
+  .map((s) => tools.find((t) => t.slug === s))
+  .filter(Boolean) as typeof tools;
+const featuredSet = new Set(featured.map((t) => t.slug));
+const rest = tools.filter((t) => !featuredSet.has(t.slug));
+
+const otherHubs = FINDE_HUBS.filter((h) => h.slug !== hub.slug);
+const dateModified = new Date(hub.lastReviewed + 'T00:00:00Z').toISOString();
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+        { '@type': 'ListItem', position: 2, name: 'Fin de semana', item: `${site}/calculadoras-fin-de-semana` },
+        { '@type': 'ListItem', position: 3, name: hub.h1 },
+      ],
+    },
+    {
+      '@type': 'CollectionPage',
+      name: hub.h1,
+      description: hub.description,
+      url,
+      inLanguage: 'es-AR',
+      dateModified,
+      isPartOf: { '@id': `${site}/#website` },
+      publisher: { '@type': 'Organization', name: 'Hacé Cuentas', url: site },
+    },
+    {
+      '@type': 'ItemList',
+      numberOfItems: tools.length,
+      itemListElement: tools.map((t, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${site}/${t.slug}`,
+        name: t.name,
+      })),
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${url}#faq`,
+      url,
+      inLanguage: 'es-AR',
+      mainEntity: hub.faq.map((f, i) => ({
+        '@type': 'Question',
+        '@id': `${url}#faq-${i + 1}`,
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a, inLanguage: 'es-AR' },
+      })),
+    },
+  ],
+};
+---
+
+<Layout title={title} description={hub.description} canonical={canonical} audience="AR" schema={schema} domain="home">
+  <Header slot="header" />
+
+  <main class="fhub">
+    <Breadcrumbs items={[
+      { label: 'Inicio', href: '/' },
+      { label: 'Fin de semana', href: '/calculadoras-fin-de-semana' },
+      { label: hub.h1 },
+    ]} />
+
+    <header class="fhub-head">
+      <span class="fhub-eyebrow">🗓️ Hub de fin de semana</span>
+      <h1>{hub.icon} {hub.h1}</h1>
+      <p class="fhub-lede">{hub.lede}</p>
+    </header>
+
+    {featured.length > 0 && (
+      <section class="fhub-featured" aria-label="Herramientas destacadas">
+        <h2>Herramientas destacadas</h2>
+        <ul class="fhub-featured-grid">
+          {featured.map((t) => (
+            <li>
+              <a href={`/${t.slug}`} class="fhub-card fhub-card--hero">
+                <span class="fhub-badge">⭐ Principal</span>
+                <span class="fhub-icon" aria-hidden="true">{t.icon}</span>
+                <span class="fhub-card-title">{t.name}</span>
+                <span class="fhub-card-desc">{t.desc}</span>
+                <span class="fhub-card-cta">Abrir la calculadora →</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section class="fhub-need">
+      <h2>Qué necesitás calcular</h2>
+      <ul class="fhub-need-list">
+        {hub.quePodesCalcular.map((q) => (<li>{q}</li>))}
+      </ul>
+    </section>
+
+    <section class="fhub-tools" aria-label="Todas las herramientas">
+      <h2>Todas las calculadoras del hub</h2>
+      <ul class="fhub-grid">
+        {rest.map((t) => (
+          <li>
+            <a href={`/${t.slug}`} class="fhub-card">
+              <span class="fhub-icon" aria-hidden="true">{t.icon}</span>
+              <span class="fhub-card-title">{t.name}</span>
+              <span class="fhub-card-desc">{t.desc}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="fhub-order">
+      <h2>Orden recomendado</h2>
+      <ol class="fhub-order-list">
+        {hub.ordenRecomendado.map((o) => (
+          <li>
+            <strong>{o.paso}.</strong> {o.detalle}
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    {(hub.relatedGuides.length > 0 || hub.relatedComparisons.length > 0) && (
+      <section class="fhub-reading">
+        <h2>Guías y comparaciones para profundizar</h2>
+        <ul class="fhub-reading-list">
+          {hub.relatedGuides.map((g) => (
+            <li><a href={`/guia/${g.slug}`}><span aria-hidden="true">📘</span> {g.label}</a></li>
+          ))}
+          {hub.relatedComparisons.map((c) => (
+            <li><a href={`/comparar/${c.slug}`}><span aria-hidden="true">⚖️</span> {c.label}</a></li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section class="fhub-pitch">
+      <p>{hub.pitch}</p>
+    </section>
+
+    <section class="fhub-faq-section" id="faq">
+      <h2>Preguntas frecuentes</h2>
+      <div class="fhub-faq">
+        {hub.faq.map((f, i) => (
+          <details id={`faq-${i + 1}`}>
+            <summary>{f.q}</summary>
+            <div><p>{f.a}</p></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="fhub-others">
+      <h2>Otros planes de fin de semana</h2>
+      <ul class="fhub-other-links">
+        {otherHubs.map((h) => (
+          <li><a href={`/fin-de-semana/${h.slug}`}>{h.icon} {h.shortLabel}</a></li>
+        ))}
+        <li><a href="/calculadoras-fin-de-semana">🗓️ Todas las calculadoras del finde</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .fhub {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+  .fhub-head { display: flex; flex-direction: column; gap: 0.5rem; }
+  .fhub-eyebrow {
+    font-size: 0.8125rem; font-weight: 600;
+    color: var(--accent-strong, #0369a1);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .fhub-head h1 {
+    margin: 0; font-size: clamp(1.625rem, 5vw, 2.375rem);
+    line-height: 1.15; color: var(--text);
+  }
+  .fhub-lede { margin: 0; font-size: 1.0625rem; line-height: 1.6; color: var(--text); max-width: 64ch; }
+  .fhub-featured h2, .fhub-need h2, .fhub-tools h2, .fhub-order h2, .fhub-faq-section h2, .fhub-others h2 {
+    font-size: 1.375rem; margin: 0 0 0.85rem; color: var(--text);
+  }
+  .fhub-featured-grid, .fhub-grid {
+    list-style: none; padding: 0; margin: 0; display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;
+  }
+  .fhub-card {
+    display: flex; flex-direction: column; gap: 0.4rem; height: 100%;
+    padding: 1.15rem; border: 1px solid var(--border); border-radius: var(--radius-md, 0.75rem);
+    background: var(--bg); text-decoration: none;
+    transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s; position: relative;
+  }
+  .fhub-card:hover {
+    border-color: var(--accent); transform: translateY(-2px);
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08));
+  }
+  .fhub-card--hero { border-color: var(--accent-soft, #bae6fd); background: var(--bg-soft, #f8fafc); }
+  .fhub-badge {
+    align-self: flex-start; font-size: 0.7rem; font-weight: 700;
+    color: var(--accent-strong, #0369a1); text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .fhub-icon { font-size: 1.6rem; }
+  .fhub-card-title { font-size: 1.03rem; font-weight: 700; color: var(--text); line-height: 1.25; }
+  .fhub-card-desc { font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; flex: 1; }
+  .fhub-card-cta { font-size: 0.86rem; font-weight: 600; color: var(--accent-strong, #0369a1); }
+  .fhub-need-list, .fhub-order-list { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.55rem; }
+  .fhub-need-list li, .fhub-order-list li { line-height: 1.55; color: var(--text); }
+  .fhub-pitch p { margin: 0; line-height: 1.65; color: var(--text-muted); max-width: 70ch; }
+  .fhub-reading-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.6rem; }
+  .fhub-reading-list a {
+    display: block; padding: 0.7rem 0.95rem; border: 1px solid var(--border);
+    border-radius: 0.6rem; background: var(--bg); color: var(--text);
+    text-decoration: none; font-size: 0.9rem; font-weight: 500; line-height: 1.4;
+  }
+  .fhub-reading-list a:hover { border-color: var(--accent); background: var(--accent-soft, #e0f2fe); }
+  .fhub-faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .fhub-faq summary { cursor: pointer; font-weight: 600; color: var(--text); line-height: 1.4; }
+  .fhub-faq details > div { padding-top: 0.5rem; }
+  .fhub-faq p { margin: 0; line-height: 1.6; color: var(--text); }
+  .fhub-other-links { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.625rem; }
+  .fhub-other-links a {
+    display: inline-block; padding: 0.5rem 0.875rem; border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 0.5rem); background: var(--bg);
+    color: var(--accent-strong, #0369a1); text-decoration: none; font-size: 0.875rem; font-weight: 500;
+  }
+  .fhub-other-links a:hover { border-color: var(--accent); background: var(--accent-soft, #e0f2fe); }
+</style>
