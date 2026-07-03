@@ -456,6 +456,7 @@ import { capacitorCargaDescargaRc } from './capacitor-carga-descarga-rc';
 import { captacionAguaLluviaTecho } from './captacion-agua-lluvia-techo';
 import { compute as compute__car_loan_monthly_payment_calculator } from './car-loan-monthly-payment-calculator';
 import { carbohidratosDuranteEjercicio } from './carbohidratos-durante-ejercicio';
+import { carbonAsadoKg } from './carbon-asado-kg';
 import { carbonCreditToneladaPrecioMercado2026 } from './carbon-credit-tonelada-precio-mercado-2026';
 import { cargaBateriaTiempoAmp } from './carga-bateria-tiempo-amp';
 import { cargaCapacitorConstanteRc } from './carga-capacitor-constante-rc';
@@ -1059,6 +1060,7 @@ import { energiaElectricaImpresion3d } from './energia-electrica-impresion-3d';
 import { energiaPcGamingCostoMes } from './energia-pc-gaming-costo-mes';
 import { engagement } from './engagement';
 import { engagementRateInstagram } from './engagement-rate-instagram';
+import { ensaladaPorPersona } from './ensalada-por-persona';
 import { entropiaCambioFase } from './entropia-cambio-fase';
 import { envejecerMascotaHumanoTablaRazaTamano } from './envejecer-mascota-humano-tabla-raza-tamano';
 import { epinefrinaDosisPesoAnafilaxia } from './epinefrina-dosis-peso-anafilaxia';
@@ -1850,6 +1852,7 @@ import { pagoProvisionalIsrArrendamientoMexico2026 } from './pago-provisional-is
 import { palabrasPorPagina } from './palabras-por-pagina';
 import { palabrasPorPaginaTrabajo } from './palabras-por-pagina-trabajo';
 import { pamiPrestacionesMontoCopago2026 } from './pami-prestaciones-monto-copago-2026';
+import { panParaComidaEvento } from './pan-para-comida-evento';
 import { panalesMensualBebeTallaCambiosDia } from './panales-mensual-bebe-talla-cambios-dia';
 import { panelSolarKwConsumoHogarAutoconsumo } from './panel-solar-kw-consumo-hogar-autoconsumo';
 import { panelSolarKwhDimensionar } from './panel-solar-kwh-dimensionar';
@@ -3175,6 +3178,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'captacion-agua-lluvia-techo': captacionAguaLluviaTecho,
   'car-loan-monthly-payment-calculator': compute__car_loan_monthly_payment_calculator,
   'carbohidratos-durante-ejercicio': carbohidratosDuranteEjercicio,
+  'carbon-asado-kg': carbonAsadoKg,
   'carbon-credit-tonelada-precio-mercado-2026': carbonCreditToneladaPrecioMercado2026,
   'carga-bateria-tiempo-amp': cargaBateriaTiempoAmp,
   'carga-capacitor-constante-rc': cargaCapacitorConstanteRc,
@@ -3778,6 +3782,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'energia-pc-gaming-costo-mes': energiaPcGamingCostoMes,
   'engagement': engagement,
   'engagement-rate-instagram': engagementRateInstagram,
+  'ensalada-por-persona': ensaladaPorPersona,
   'entropia-cambio-fase': entropiaCambioFase,
   'envejecer-mascota-humano-tabla-raza-tamano': envejecerMascotaHumanoTablaRazaTamano,
   'epinefrina-dosis-peso-anafilaxia': epinefrinaDosisPesoAnafilaxia,
@@ -4569,6 +4574,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'palabras-por-pagina': palabrasPorPagina,
   'palabras-por-pagina-trabajo': palabrasPorPaginaTrabajo,
   'pami-prestaciones-monto-copago-2026': pamiPrestacionesMontoCopago2026,
+  'pan-para-comida-evento': panParaComidaEvento,
   'panales-mensual-bebe-talla-cambios-dia': panalesMensualBebeTallaCambiosDia,
   'panel-solar-kw-consumo-hogar-autoconsumo': panelSolarKwConsumoHogarAutoconsumo,
   'panel-solar-kwh-dimensionar': panelSolarKwhDimensionar,
