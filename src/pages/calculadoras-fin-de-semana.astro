@@ -2,165 +2,196 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { WEEKEND_CLUSTERS } from '../lib/weekend-clusters';
 
 export const prerender = true;
 
 // Meta-hub de FIN DE SEMANA. El catálogo pesa hacia intención de día hábil
-// (fiscal/laboral) → el orgánico se cae ~48% sáb/dom. Este hub agrupa los
-// clusters RESILIENTES al finde (cocina, escapadas, fitness, ocio, mascotas),
-// concentra link-equity interna en calcs que hoy rankean sólo en la cola, y
-// crea una superficie nativa de finde apta para Discover. Complementa (no
-// duplica) /calculadoras-evento, que es el hub profundo de asado/fiesta.
+// (fiscal/laboral) → el orgánico se cae ~48% sáb/dom. Este hub concentra
+// link-equity en los clusters de ocio (asado, fiesta, cocina, escapada, hogar,
+// entretenimiento, mascotas), destacando la herramienta ancla de cada uno.
+// Fuente de verdad de los slugs: src/lib/weekend-clusters.ts (validado por el
+// link-guard en prebuild — nada de slugs muertos que desaparecen en silencio).
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
 
-const groups: Array<{ title: string; icon: string; intro: string; slugs: string[] }> = [
+const clusterByKey = new Map(WEEKEND_CLUSTERS.map((c) => [c.key, c]));
+
+// Grupos de presentación → clusters. Cada grupo destaca la ancla del primer cluster.
+type Group = { title: string; icon: string; intro: string; clusters: string[]; more?: { label: string; href: string } };
+const groupDefs: Group[] = [
   {
-    title: 'Asado y juntadas',
-    icon: '🔥',
-    intro: 'El plan clásico de finde: cuánta carne, cerveza, empanadas y pizza por invitado para que no falte ni sobre. Tenés el hub completo con +40 calculadoras de evento.',
-    slugs: [
-      'calculadora-asado-kg-por-persona-cortes-tira-vacio-pollo',
-      'calculadora-cerveza-por-invitado-duracion-fiesta',
-      'calculadora-empanadas-por-invitado-juntada',
-      'calculadora-pizza-por-invitado-porciones',
-    ],
+    title: 'Asado y parrilla', icon: '🔥',
+    intro: 'El plan más argentino del finde. Arrancá por el planificador de asado —te da kg de carne, cortes, chorizos y achuras por persona— y sumá empanadas, tamaño de parrilla y hamburguesas si hay chicos.',
+    clusters: ['asado'],
+    more: { label: 'Ver el hub completo de asado, fiesta y evento →', href: '/calculadoras-evento' },
   },
   {
-    title: 'Recetas y medidas de cocina',
-    icon: '🍳',
-    intro: 'Cocinar tranquilo el finde: convertí tazas a gramos, calculá las porciones de arroz, la proporción de cocción y la equivalencia de huevos sin tener que adivinar.',
-    slugs: [
-      'calculadora-conversion-medidas-cocina-tazas-gramos',
-      'calculadora-porcion-arroz-gramos-personas',
-      'calculadora-arroz-agua-proporcion-coccion',
-      'calculadora-huevos-por-receta-comensales',
-      'equivalencia-huevos-tamano-gramos-claras',
-      'conversor-celsius-fahrenheit-temperatura',
-    ],
+    title: 'Fiesta, bebidas y comida para invitados', icon: '🎉',
+    intro: 'Organizá la juntada sin comprar de más ni quedarte corto: cuánta cerveza, vino, fernet y agua por invitado, cuántas pizzas y empanadas, la torta según los comensales y el presupuesto total del evento.',
+    clusters: ['bebidas-evento', 'comida-invitados', 'presupuesto-evento'],
   },
   {
-    title: 'Escapadas y viajes',
-    icon: '🚗',
-    intro: 'La escapada de finde, sin sorpresas: cuánta nafta vas a gastar, cuánto salen los peajes, el costo del remis, el consumo cada 100 km y a qué hora llegás.',
-    slugs: [
-      'calculadora-combustible-viaje-auto',
-      'calculadora-consumo-nafta-litros-100km',
-      'calculadora-costo-peaje-ruta',
-      'calculadora-estimador-costo-viaje-taxi-remis',
-      'calculadora-horario-llegada-zona-horaria',
-      'calculadora-llegada-aeropuerto-minutos-vuelo',
-    ],
+    title: 'Cocina y recetas', icon: '🍳',
+    intro: 'Cocinar tranquilo: convertí tazas a gramos, escalá la receta para más o menos comensales, la proporción exacta de café por método y la temperatura del horno sin adivinar.',
+    clusters: ['cocina-conversores', 'cocina-porciones', 'cocina-cafe', 'cocina-horno'],
   },
   {
-    title: 'Fitness y salud',
-    icon: '💪',
-    intro: 'El finde es para ponerse al día con el cuerpo: tu IMC, las calorías de mantenimiento, el déficit para bajar de peso, cuánto quemás caminando, el ritmo de carrera y el agua que tenés que tomar.',
-    slugs: [
-      'calculadora-imc',
-      'calculadora-calorias-diarias-tdee',
-      'calculadora-deficit-calorico-semanal',
-      'calculadora-calorias-caminando',
-      'ritmo-carrera-pace-km',
-      'calculadora-agua-diaria-litros-segun-peso',
-    ],
+    title: 'Viajes y escapadas', icon: '🚗',
+    intro: 'La escapada, sin sorpresas: cuánta nafta y peajes vas a gastar, el consumo cada 100 km, la autonomía del tanque y el presupuesto del viaje según el destino.',
+    clusters: ['viajes-combustible', 'viajes-presupuesto'],
   },
   {
-    title: 'Ocio y curiosidades',
-    icon: '🎲',
-    intro: 'Para matar el aburrimiento o resolver una discusión de sobremesa: compatibilidad de nombres, tu edad exacta, los días entre dos fechas y cuánto tardás en leer un libro.',
-    slugs: [
-      'calculadora-compatibilidad-nombres',
-      'calculadora-edad-exacta',
-      'dias-entre-dos-fechas',
-      'calculadora-tiempo-lectura-paginas-estudio',
-    ],
+    title: 'Hogar y proyectos', icon: '🔨',
+    intro: 'El finde de arreglar la casa: cuánta pintura para la habitación, cajas de cerámicos o piso, el calendario de siembra de la huerta y el mantenimiento de la pileta.',
+    clusters: ['hogar-pintura', 'hogar-pisos', 'hogar-jardin', 'hogar-pileta'],
   },
   {
-    title: 'Mascotas',
-    icon: '🐶',
-    intro: 'El finde tenés tiempo para tu mascota: cuántos gramos de comida por día, su peso ideal según la raza, su edad en años humanos y cuántos paseos necesita.',
-    slugs: [
-      'calculadora-comida-diaria-raza-perro',
-      'calculadora-peso-ideal-perro-raza',
-      'calculadora-edad-perro-anos-humanos',
-      'calculadora-edad-gato-anos-humanos',
-      'calculadora-paseos-diarios-perro-raza',
-    ],
+    title: 'Entretenimiento en casa', icon: '🎬',
+    intro: 'Para el plan de sillón: cuánto tardás en maratonear una serie o temporada de anime, la duración de tu playlist, cuántas canciones entran en el karaoke y cuánto lleva terminar ese jueguito.',
+    clusters: ['entretenimiento-ocio'],
+  },
+  {
+    title: 'Mascotas', icon: '🐶',
+    intro: 'El finde tenés tiempo para tu mascota (temas no médicos): cuántos gramos de comida por día, el costo mensual, cuántos paseos necesita y su edad en años humanos.',
+    clusters: ['mascotas-presupuesto'],
   },
 ];
 
-const resolvedGroups = groups.map((g) => ({ ...g, items: g.slugs.map((s) => bySlug.get(s)).filter(Boolean) }));
-const totalItems = resolvedGroups.reduce((acc, g) => acc + g.items.length, 0);
+// Resolver cada grupo: featured = ancla del primer cluster; items = resto (deduplicado, cap 10).
+const groups = groupDefs.map((g) => {
+  const clusters = g.clusters.map((k) => clusterByKey.get(k)!).filter(Boolean);
+  const featuredSlug = clusters[0]?.master;
+  const featured = bySlug.get(featuredSlug);
+  const seen = new Set<string>([featuredSlug]);
+  const items: any[] = [];
+  for (const cl of clusters) {
+    for (const s of [cl.master, ...cl.members]) {
+      if (seen.has(s)) continue;
+      seen.add(s);
+      const c = bySlug.get(s);
+      if (c) items.push(c);
+    }
+  }
+  return { ...g, id: g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'), featured, items: items.slice(0, 10) };
+}).filter((g) => g.featured);
 
-const title = `Calculadoras para el fin de semana — asado, recetas, escapadas, fitness y más | Hacé Cuentas`;
-const description = `Las ${totalItems} calculadoras que más sirven el sábado y domingo: cuánta carne y cerveza para el asado, medidas de cocina, nafta y peajes de la escapada, IMC y calorías, y todo para tu mascota. Gratis y sin registro.`;
+const totalItems = groups.reduce((acc, g) => acc + 1 + g.items.length, 0);
+
+const title = 'Calculadoras para el fin de semana: asado, fiesta, escapada, cocina y hogar | Hacé Cuentas';
+const description = `Las calculadoras que de verdad usás el sábado y domingo: cuánta carne y cerveza para el asado, comida y bebida por invitado, nafta y peajes de la escapada, pintura y proyectos del hogar, y todo para tu mascota. Gratis y sin registro.`;
 const canonical = '/calculadoras-fin-de-semana';
 
-const allItems = resolvedGroups.flatMap((g) => g.items);
+// FAQ real (≥7) — cada respuesta enlaza a la herramienta que la resuelve.
+const faqs = [
+  { q: '¿Cuánta carne calculo por persona para un asado?', a: 'Como referencia, entre 350 g (asado liviano) y 500 g (abundante) de carne por adulto, y unos 250 g por chico. El <a href="/calculadora-asado-kg-por-persona-cortes-tira-vacio-pollo">planificador de asado</a> te da el total y el desglose por corte (tira, vacío, chorizo, morcilla, pollo y achuras) según cuántos sean.' },
+  { q: '¿Cuánta bebida y hielo compro para una juntada?', a: 'Depende de las horas y de si hay alcohol. La <a href="/calculadora-cerveza-invitado-evento">calculadora de cerveza por invitado</a> y la de <a href="/calculadora-agua-por-invitado-fiesta">agua por invitado</a> te dan los litros; sumá vino y fernet con sus calculadoras específicas del grupo de fiesta.' },
+  { q: '¿Cuántas pizzas o empanadas pido según los invitados?', a: 'Con la <a href="/calculadora-pizza-por-invitado-porciones">calculadora de pizza por invitado</a> sacás cuántas pizzas según el tamaño y el apetito, y con la de <a href="/calculadora-empanadas-por-persona-evento-asado-cumple">empanadas por persona</a> el total para la mesa.' },
+  { q: '¿Cómo convierto tazas a gramos si la receta viene en tazas?', a: 'Cada ingrediente pesa distinto por taza. La <a href="/calculadora-conversion-medidas-cocina-tazas-gramos">calculadora de tazas a gramos</a> tiene la tabla por ingrediente (harina, azúcar, arroz, etc.) y la <a href="/calculadora-multiplicar-dividir-receta-porciones">de escalar recetas</a> la ajusta para más o menos comensales.' },
+  { q: '¿Cuánta nafta y peaje voy a gastar en la escapada?', a: 'Con la <a href="/calculadora-costo-viaje-combustible-kilometros">calculadora de costo de viaje en auto</a> ponés la distancia, el consumo y el precio de la nafta y te da los litros y el costo; sumá los peajes con la <a href="/calculadora-costo-peaje-ruta">calculadora de peajes por ruta</a>.' },
+  { q: '¿Cuánta pintura necesito para pintar una habitación?', a: 'Se calcula por metros cuadrados de pared y manos de pintura. La <a href="/calculadora-pintura-por-m2-litros-latas">calculadora de pintura por m²</a> te dice cuántos litros y latas comprar, descontando puertas y ventanas.' },
+  { q: '¿Cuánto tardo en maratonear una serie o temporada?', a: 'La <a href="/calculadora-maraton-serie-tiempo">calculadora de maratón de series</a> multiplica episodios por duración y te dice las horas (y días) que te lleva terminarla, incluida la variante para anime por temporadas.' },
+  { q: '¿Cuánta comida por día necesita mi perro o gato?', a: 'Depende del peso y la edad. La <a href="/calculadora-comida-perro-diaria-gramos">calculadora de comida diaria para perros</a> y la <a href="/calculadora-comida-gato-diaria-gramos">de gatos</a> te dan los gramos por día y te sirven para estimar cuánto dura la bolsa y el costo mensual.' },
+];
+
+const breadcrumbItems = [
+  { label: 'Inicio', href: '/' },
+  { label: 'Calculadoras', href: '/calculadoras' },
+  { label: 'Fin de semana' },
+];
+
 const itemListSchema = {
-  '@context': 'https://schema.org', '@type': 'ItemList',
-  name: 'Calculadoras para el fin de semana', description, numberOfItems: allItems.length,
-  itemListElement: allItems.map((c: any, i: number) => ({ '@type': 'ListItem', position: i + 1, url: `https://hacecuentas.com/${c.slug}`, name: c.h1 })),
+  '@type': 'ItemList', name: 'Calculadoras para el fin de semana', description, numberOfItems: totalItems,
+  itemListElement: groups.flatMap((g) => [g.featured, ...g.items]).map((c: any, i: number) => ({ '@type': 'ListItem', position: i + 1, url: `https://hacecuentas.com/${c.slug}`, name: c.h1 || c.title })),
 };
 const collectionSchema = {
-  '@context': 'https://schema.org', '@type': 'CollectionPage',
-  name: 'Calculadoras para el fin de semana', description, url: `https://hacecuentas.com${canonical}`, inLanguage: 'es-AR',
+  '@type': 'CollectionPage', name: 'Calculadoras para el fin de semana', description,
+  url: `https://hacecuentas.com${canonical}`, inLanguage: 'es-AR',
   isPartOf: { '@type': 'WebSite', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
 };
-const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, collectionSchema] };
+const breadcrumbSchema = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Calculadoras', item: 'https://hacecuentas.com/calculadoras' },
+    { '@type': 'ListItem', position: 3, name: 'Fin de semana', item: `https://hacecuentas.com${canonical}` },
+  ],
+};
+const faqSchema = {
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, collectionSchema, breadcrumbSchema, faqSchema] };
 ---
 
 <Layout title={title} description={description} canonical={canonical} audience="global" schema={schema}>
   <Header />
   <main class="article-main">
     <article class="hub-page">
+      <Breadcrumbs items={breadcrumbItems} />
       <header class="hub-header">
         <div class="hub-eyebrow">🗓️ Hub temático</div>
         <h1>Calculadoras para el fin de semana</h1>
         <p class="lede">
           Las cuentas que de verdad hacés el <strong>sábado y domingo</strong>: el <strong>asado</strong> y la juntada,
-          las <strong>medidas de cocina</strong>, la <strong>nafta y los peajes</strong> de la escapada, el <strong>fitness</strong>
-          que retomás y todo lo de tu <strong>mascota</strong>. {totalItems} calculadoras, gratis y sin registro.
+          la <strong>fiesta</strong>, las <strong>medidas de cocina</strong>, la <strong>escapada en auto</strong>,
+          los <strong>proyectos del hogar</strong>, el <strong>plan de sillón</strong> y todo lo de tu <strong>mascota</strong>.
+          Todas gratis y sin registro.
         </p>
       </header>
 
       <nav class="hub-toc" aria-label="Índice del hub">
         <strong>Saltar a:</strong>
         <ul>
-          {resolvedGroups.map((g) => (
-            <li><a href={`#${g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>{g.icon} {g.title}</a></li>
-          ))}
+          {groups.map((g) => (<li><a href={`#${g.id}`}>{g.icon} {g.title}</a></li>))}
         </ul>
       </nav>
 
-      {resolvedGroups.map((g) => {
-        const id = g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        return (
-          <section class="hub-group" id={id}>
-            <h2><span class="group-icon" aria-hidden="true">{g.icon}</span> {g.title}</h2>
-            <p class="group-intro">{g.intro}</p>
+      {groups.map((g) => (
+        <section class="hub-group" id={g.id}>
+          <h2><span class="group-icon" aria-hidden="true">{g.icon}</span> {g.title}</h2>
+          <p class="group-intro">{g.intro}</p>
+
+          <a href={`/${g.featured.slug}`} class="hub-featured">
+            <span class="hub-featured-badge">⭐ Herramienta principal</span>
+            <span class="hub-featured-icon" aria-hidden="true">{g.featured.icon || '🧮'}</span>
+            <span class="hub-featured-body">
+              <strong>{g.featured.h1 || g.featured.title}</strong>
+              <span>{g.featured.description}</span>
+            </span>
+          </a>
+
+          {g.items.length > 0 && (
             <ul class="hub-list">
               {g.items.map((c: any) => (
                 <li class="hub-item">
                   <a href={`/${c.slug}`} class="hub-link">
                     <span class="hub-icon" aria-hidden="true">{c.icon || '🗓️'}</span>
-                    <div class="hub-body"><strong>{c.h1}</strong><p>{c.description}</p></div>
+                    <span class="hub-body"><strong>{c.h1 || c.title}</strong><span>{c.description}</span></span>
                   </a>
                 </li>
               ))}
             </ul>
-            {g.title === 'Asado y juntadas' && (
-              <p class="group-more"><a href="/calculadoras-evento">Ver el hub completo de asado, fiesta y evento →</a></p>
-            )}
-          </section>
-        );
-      })}
+          )}
+          {g.more && (<p class="group-more"><a href={g.more.href}>{g.more.label}</a></p>)}
+        </section>
+      ))}
+
+      <section class="hub-faq" id="preguntas-frecuentes">
+        <h2>Preguntas frecuentes</h2>
+        {faqs.map((f) => (
+          <details class="faq-item">
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={f.a}></div>
+          </details>
+        ))}
+      </section>
 
       <aside class="hub-cta">
         <h2>Buscás otra cosa</h2>
-        <p>Explorá <a href="/categoria/cocina">cocina</a>, <a href="/categoria/viajes">viajes</a>, <a href="/categoria/salud">salud</a> o <a href="/categoria/mascotas">mascotas</a>, o mirá <a href="/calculadoras">todas las calculadoras →</a></p>
+        <p>Explorá <a href="/categoria/cocina">cocina</a>, <a href="/categoria/viajes">viajes</a>, <a href="/categoria/entretenimiento">entretenimiento</a> o <a href="/categoria/mascotas">mascotas</a>, o mirá <a href="/calculadoras">todas las calculadoras →</a></p>
       </aside>
     </article>
   </main>
@@ -169,10 +200,10 @@ const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, co
 
 <style>
   .hub-page { max-width: 980px; margin: 0 auto; padding: 1rem 1rem 3rem; }
-  .hub-header { text-align: center; padding: 1.5rem 0 2rem; border-bottom: 1px solid var(--border, #e2e8f0); margin-bottom: 2rem; }
+  .hub-header { text-align: center; padding: 1rem 0 2rem; border-bottom: 1px solid var(--border, #e2e8f0); margin-bottom: 2rem; }
   .hub-eyebrow { display: inline-block; background: var(--accent-soft, #eef4ff); color: var(--accent-strong, #1e40af); padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
   .hub-header h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); margin: 0.25rem 0 0.75rem; line-height: 1.15; }
-  .lede { font-size: 1.05rem; color: var(--text-2, #475569); max-width: 760px; margin: 0 auto; line-height: 1.55; }
+  .lede { font-size: 1.05rem; color: var(--text-2, #475569); max-width: 780px; margin: 0 auto; line-height: 1.55; }
   .hub-toc { background: var(--surface-2, #f8fafc); padding: 1rem 1.25rem; border-radius: 0.75rem; margin: 0 0 2rem; font-size: 0.9rem; }
   .hub-toc strong { display: block; margin-bottom: 0.5rem; color: var(--text-2, #475569); }
   .hub-toc ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
@@ -182,6 +213,13 @@ const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, co
   .hub-group h2 { font-size: 1.4rem; margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
   .group-icon { font-size: 1.5rem; line-height: 1; }
   .group-intro { color: var(--text-2, #475569); margin: 0 0 1rem; font-size: 0.975rem; line-height: 1.5; }
+  .hub-featured { display: flex; align-items: center; gap: 1rem; padding: 1.1rem 1.25rem; margin: 0 0 1rem; border: 1px solid var(--accent, #2c5cdc); border-radius: 0.75rem; background: var(--accent-soft, #eef4ff); text-decoration: none; color: inherit; position: relative; transition: transform 0.15s, box-shadow 0.15s; }
+  .hub-featured:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(44,92,220,0.12); }
+  .hub-featured-badge { position: absolute; top: -0.6rem; left: 1rem; background: var(--accent, #2c5cdc); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 999px; letter-spacing: 0.02em; }
+  .hub-featured-icon { font-size: 2rem; line-height: 1; flex-shrink: 0; }
+  .hub-featured-body { display: flex; flex-direction: column; min-width: 0; }
+  .hub-featured-body strong { color: var(--accent-strong, #1e40af); font-size: 1.05rem; line-height: 1.25; }
+  .hub-featured-body span { margin-top: 0.2rem; color: var(--text-2, #475569); font-size: 0.9rem; line-height: 1.4; }
   .hub-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
   .hub-item { margin: 0; }
   .hub-link { display: flex; gap: 0.75rem; padding: 0.875rem; border: 1px solid var(--border, #e2e8f0); border-radius: 0.5rem; text-decoration: none; color: inherit; transition: border-color 0.15s, transform 0.15s; height: 100%; box-sizing: border-box; }
@@ -189,10 +227,16 @@ const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, co
   .hub-icon { font-size: 1.4rem; line-height: 1.2; flex-shrink: 0; }
   .hub-body { display: flex; flex-direction: column; min-width: 0; }
   .hub-body strong { color: var(--text, #1e293b); font-size: 0.975rem; line-height: 1.3; }
-  .hub-body p { margin: 0.25rem 0 0; color: var(--text-2, #64748b); font-size: 0.85rem; line-height: 1.4; }
+  .hub-body span { margin: 0.25rem 0 0; color: var(--text-2, #64748b); font-size: 0.85rem; line-height: 1.4; }
   .group-more { margin: 1rem 0 0; font-size: 0.95rem; }
   .group-more a { color: var(--accent, #2c5cdc); font-weight: 500; text-decoration: none; }
   .group-more a:hover { text-decoration: underline; }
+  .hub-faq { margin: 3rem 0 0; }
+  .hub-faq h2 { font-size: 1.4rem; margin: 0 0 1rem; }
+  .faq-item { border: 1px solid var(--border, #e2e8f0); border-radius: 0.5rem; margin-bottom: 0.6rem; padding: 0 1rem; }
+  .faq-item summary { cursor: pointer; font-weight: 600; padding: 0.875rem 0; color: var(--text, #1e293b); list-style-position: inside; }
+  .faq-answer { padding: 0 0 1rem; color: var(--text-2, #475569); line-height: 1.55; font-size: 0.95rem; }
+  .faq-answer :global(a) { color: var(--accent, #2c5cdc); font-weight: 500; }
   .hub-cta { margin-top: 3rem; padding: 1.5rem; background: var(--surface-2, #f8fafc); border-radius: 0.75rem; text-align: center; }
   .hub-cta h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
   .hub-cta p { margin: 0; color: var(--text-2, #475569); }

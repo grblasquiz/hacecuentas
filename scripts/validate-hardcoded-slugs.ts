@@ -281,6 +281,40 @@ for (const f of ['src/components/Header.astro', 'src/components/Footer.astro', '
   if (longTitles > 0) warns.push(`${longTitles} calcs root con title > 70 chars (truncan en SERP)`);
 }
 
+// ---- Audit de relatedSlugs en calcs root (enlazado interno del cluster de ocio) --
+// Los relatedSlugs muertos son 404 internos silenciosos (se filtran en runtime pero
+// desperdician enlazado). Reporta 4 buckets. WARN por defecto; STRICT_RELATED=1 lo
+// escala a ERROR (usar recién cuando los buckets "roto" estén en cero).
+{
+  const rootCalcs = calcsByLocale.get('')!;
+  const goneSlugs = new Set([...goneUrls].map((u) => u.replace(/^\//, '')));
+  const redirSlugs = new Set([...redirectSources.keys()].map((u) => u.replace(/^\//, '')));
+  let hop = 0, gone = 0, dead = 0, fixable = 0;
+  const deadList: string[] = [];
+  const fixableList: string[] = [];
+  for (const f of readdirSync(join(ROOT, 'src/content/calcs'))) {
+    if (!f.endsWith('.json')) continue;
+    let c: { slug?: string; relatedSlugs?: string[] };
+    try { c = JSON.parse(readFileSync(join(ROOT, 'src/content/calcs', f), 'utf8')); } catch { continue; }
+    for (const rs of c.relatedSlugs || []) {
+      if (rootCalcs.has(rs)) continue;                       // ok: resuelve a calc viva
+      if (goneSlugs.has(rs)) { gone++; deadList.push(`${c.slug} → "${rs}" (410)`); continue; }
+      if (redirSlugs.has(rs)) { hop++; continue; }           // funciona vía 301
+      if (rootCalcs.has(`calculadora-${rs}`)) {              // typo de prefijo auto-fixable
+        fixable++; fixableList.push(`${c.slug}: "${rs}" → "calculadora-${rs}"`); continue;
+      }
+      dead++; deadList.push(`${c.slug} → "${rs}"`);           // inexistente
+    }
+  }
+  const strict = process.env.STRICT_RELATED === '1';
+  if (fixable > 0) warns.push(`relatedSlugs con typo de prefijo (auto-fixable a 'calculadora-…'): ${fixable}. Ej: ${fixableList.slice(0, 4).join(' | ')}`);
+  if (hop > 0) warns.push(`relatedSlugs que apuntan a origen de 301 (gastan un hop): ${hop} — actualizar al destino`);
+  if (gone + dead > 0) {
+    const msg = `relatedSlugs ROTOS en calcs root: ${dead} inexistentes + ${gone} a 410 Gone (404 interno silencioso). Ej: ${deadList.slice(0, 4).join(' | ')}`;
+    if (strict) errors.push(msg); else warns.push(msg);
+  }
+}
+
 // ---- Reporte -------------------------------------------------------------------
 for (const w of warns) console.warn(`[link-guard] ⚠ ${w}`);
 for (const e of errors) console.error(`[link-guard] ✗ ${e}`);
