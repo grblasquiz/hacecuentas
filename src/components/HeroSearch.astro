@@ -297,6 +297,53 @@ const categoryLabels: Record<string, string> = {
     return score;
   }
 
+  // ── Sinónimos / lenguaje natural / siglas (Fase 4) ────────────────────────
+  // Expansión OR: si la query gatilla un sinónimo, se SUMA score a las entradas
+  // que matchean los tokens canónicos, sin volverlos obligatorios (no rompe la
+  // semántica AND de scoreEntry). Todo normalizado (sin tildes, minúscula).
+  // Siglas/token exacto (evita falsos positivos por substring: "sac" ≠ "sacar").
+  const TOKEN_SYN = {
+    sac: ['aguinaldo'],
+    iva: ['iva'],
+  };
+  // Frases (match por substring sobre la query normalizada completa).
+  const PHRASE_SYN = {
+    'cuanto cobro': ['sueldo', 'neto'],
+    'sueldo en mano': ['sueldo', 'neto'],
+    'en mano': ['sueldo', 'neto'],
+    'me echaron': ['indemnizacion', 'despido'],
+    'me despidieron': ['indemnizacion', 'despido'],
+    'me despidio': ['indemnizacion', 'despido'],
+    'sacar iva': ['iva'],
+    'agregar iva': ['iva'],
+    'quitar iva': ['iva'],
+    'descuento': ['porcentaje', 'descuento'],
+    'aumento de sueldo': ['porcentaje', 'aumento'],
+    'aumento sueldo': ['porcentaje', 'aumento'],
+    'materiales pared': ['ladrillos', 'cemento', 'construccion'],
+    'materiales para pared': ['ladrillos', 'cemento', 'construccion'],
+    'cuota credito': ['prestamo', 'cuota'],
+    'cuota del credito': ['prestamo', 'cuota'],
+    'interes plazo fijo': ['plazo', 'fijo'],
+  };
+  function synonymTokens(qNorm, tokens) {
+    const out = [];
+    for (const t of tokens) { const s = TOKEN_SYN[t]; if (s) out.push.apply(out, s); }
+    for (const p in PHRASE_SYN) { if (qNorm.indexOf(p) !== -1) out.push.apply(out, PHRASE_SYN[p]); }
+    return out.length ? Array.from(new Set(out)) : out;
+  }
+  function synScoreForEntry(e, syn) {
+    let s = 0;
+    for (const t of syn) {
+      if (e._hw.includes(t)) s += 26;
+      else if (e._hw.some((w) => w.startsWith(t))) s += 18;
+      else if (e._h.includes(t)) s += 12;
+      else if (e._sw.includes(t)) s += 8;
+      else if (e._s.includes(t)) s += 5;
+    }
+    return s;
+  }
+
   const arrow = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
 
   // Índice compartido entre re-inits SPA (module-scoped).
@@ -347,6 +394,16 @@ const categoryLabels: Record<string, string> = {
     if (!form || !input || !panel) return;
 
     let active = -1; // índice del item resaltado (teclado)
+
+    // Analytics (Fase 15): emisor central window.hcTrack (shim en Layout).
+    // Aditivo y a prueba de fallos: nunca rompe la UI ni envía la query como
+    // dato sensible (search_term está whitelisteado a propósito).
+    const track = (event, params) => {
+      try { if (typeof window.hcTrack === 'function') window.hcTrack(event, params || {}); } catch (e) {}
+    };
+    let focusedOnce = false;
+    let startedOnce = false;
+    let lastNoResultQ = '';
 
     const preferredAudience = (() => {
       const p = location.pathname;
@@ -399,9 +456,11 @@ const categoryLabels: Record<string, string> = {
 
       const qNorm = norm(raw);
       const tokens = qNorm.split(/\s+/).filter(Boolean);
+      const synToks = synonymTokens(qNorm, tokens);
       const scored = [];
       for (const e of ENTRIES) {
         let sc = scoreEntry(e, qNorm, tokens);
+        if (synToks.length) sc += synScoreForEntry(e, synToks);
         if (sc <= 0) continue;
         if (e.a === preferredAudience) sc += 8;
         // Empujón a las calcs canónicas de alto tráfico, pero SOLO cuando ya
@@ -415,6 +474,10 @@ const categoryLabels: Record<string, string> = {
       const top = scored.slice(0, 7).map((x) => x.e);
 
       if (!top.length) {
+        if (raw && norm(raw) !== lastNoResultQ) {
+          lastNoResultQ = norm(raw);
+          track('hc_search_no_results', { search_term: raw, source_page: location.pathname });
+        }
         panel.innerHTML = '<div class="hsx-empty">'
           + '<div class="hsx-empty-title">No tengo una con ese nombre exacto.</div>'
           + '<div class="hsx-empty-sub">Contámelo con tus palabras y armo el cálculo por vos, o mirá el catálogo completo.</div>'
@@ -464,10 +527,16 @@ const categoryLabels: Record<string, string> = {
     }
 
     // Precarga en el primer hover/focus (no en load: cuida el CWV del home).
-    input.addEventListener('focus', () => { ensureIndex().then(() => { if (document.activeElement === input) render(); }); });
+    input.addEventListener('focus', () => {
+      if (!focusedOnce) { focusedOnce = true; track('hc_home_search_focus', { source_page: location.pathname }); }
+      ensureIndex().then(() => { if (document.activeElement === input) render(); });
+    });
     input.addEventListener('mouseenter', ensureIndex, { once: true });
-    input.addEventListener('input', render);
-    clear.addEventListener('click', () => { input.value = ''; input.focus(); render(); });
+    input.addEventListener('input', () => {
+      if (!startedOnce && input.value.trim()) { startedOnce = true; track('hc_search_started', { source_page: location.pathname }); }
+      render();
+    });
+    clear.addEventListener('click', () => { input.value = ''; startedOnce = false; lastNoResultQ = ''; input.focus(); render(); });
 
     input.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowDown') { e.preventDefault(); if (panel.hidden) render(); setActive(active + 1); }
@@ -489,13 +558,24 @@ const categoryLabels: Record<string, string> = {
     // Submit del form (mobile "Ir"): al primer resultado o handoff.
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+      const q = input.value.trim();
+      if (q) track('hc_search_submitted', { search_term: q, source_page: location.pathname });
       const list = items();
       if (list.length) list[0].click();
-      else if (input.value.trim()) handoff();
+      else if (q) handoff();
     });
 
     panel.addEventListener('click', (e) => {
-      if (e.target.closest && e.target.closest('[data-handoff]')) { e.preventDefault(); handoff(); }
+      if (e.target.closest && e.target.closest('[data-handoff]')) { e.preventDefault(); handoff(); return; }
+      const item = e.target.closest && e.target.closest('.hsx-item');
+      if (item) {
+        const href = item.getAttribute('href') || '';
+        track('hc_search_result_clicked', {
+          calculator_slug: href.replace(/^\//, ''),
+          result_position: parseInt(item.getAttribute('data-i') || '0', 10),
+          source_page: location.pathname,
+        });
+      }
     });
 
     // Cerrar al clickear afuera.

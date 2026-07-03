@@ -183,6 +183,110 @@ a.ui-row:hover { background: var(--bg-soft); }
 }
 .ui-empty__cta:hover { background: var(--accent-hover); }
 
+/* ---- Controles: input + botón canónicos -----------------------------
+   Primitivas de formulario reutilizables. Cualquier calc/superficie que
+   necesite un input o botón debe reusar estas clases en vez de inventar su
+   propio `.foo-input`. Se apoyan en los tokens de control de Layout
+   (--h-input*, --radius-control, --tap-*, estados). Son clases nuevas: no
+   pisan el markup existente, se adoptan gradualmente. */
+
+/* Campo: label visible + control + ayuda + error, asociados semánticamente. */
+.hc-field { display: flex; flex-direction: column; gap: var(--space-2, 8px); }
+.hc-field__label {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  display: inline-flex; align-items: baseline; gap: 6px;
+}
+.hc-field__req { color: var(--danger); font-weight: 700; }
+.hc-field__hint { font-size: 13px; color: var(--text-subtle); line-height: 1.4; }
+.hc-field__error {
+  font-size: 13px; color: var(--danger); font-weight: 600;
+  display: none; align-items: center; gap: 6px; line-height: 1.4;
+}
+.hc-field[data-invalid="true"] .hc-field__error { display: flex; }
+
+/* Input / select / textarea. Sufijo de unidad opcional vía .hc-control--suffix. */
+.hc-input {
+  width: 100%;
+  height: var(--h-input, 48px);
+  padding: 0 14px;
+  font-family: inherit;
+  font-size: 16px;                 /* 16px evita el zoom de iOS al enfocar */
+  color: var(--text);
+  background: var(--bg-card);
+  border: 1px solid var(--border-input, #6b7280);
+  border-radius: var(--radius-control, 12px);
+  transition: border-color var(--t-fast, .12s ease), box-shadow var(--t-fast, .12s ease);
+  -moz-appearance: textfield;
+}
+textarea.hc-input { height: auto; min-height: 96px; padding: 12px 14px; line-height: 1.5; }
+.hc-input::placeholder { color: var(--text-subtle); opacity: .8; }
+.hc-input:hover { border-color: var(--border-strong); }
+.hc-input:focus,
+.hc-input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--ring);
+}
+.hc-input[aria-invalid="true"],
+.hc-field[data-invalid="true"] .hc-input {
+  border-color: var(--danger);
+}
+.hc-input[aria-invalid="true"]:focus,
+.hc-field[data-invalid="true"] .hc-input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
+}
+.hc-input:disabled { background: var(--bg-muted); color: var(--text-subtle); cursor: not-allowed; }
+@media (max-width: 640px) {
+  .hc-input { height: var(--h-input-mobile, 52px); }
+}
+
+/* Wrapper con sufijo visual de unidad ($, %, kg, m²…). */
+.hc-control { position: relative; display: block; }
+.hc-control__suffix {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-num); font-size: 14px; font-weight: 600;
+  color: var(--text-subtle); pointer-events: none;
+}
+.hc-control:has(.hc-control__suffix) .hc-input { padding-right: 42px; }
+
+/* Botón. Primario = CTA del funnel; secundario/ghost para acciones de apoyo. */
+.hc-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: var(--h-btn, 52px);
+  padding: 0 22px;
+  font-family: inherit; font-size: 16px; font-weight: 700;
+  border-radius: var(--radius-control, 12px);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--t-fast, .12s ease), border-color var(--t-fast, .12s ease),
+              transform var(--t-fast, .12s ease), box-shadow var(--t-fast, .12s ease);
+}
+.hc-btn:active { transform: translateY(1px); }
+.hc-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hc-btn--primary { background: var(--accent); color: var(--on-accent); }
+.hc-btn--primary:hover { background: var(--accent-hover); }
+.hc-btn--secondary {
+  background: var(--bg-card); color: var(--text); border-color: var(--border-strong);
+}
+.hc-btn--secondary:hover { border-color: var(--accent); color: var(--accent-strong); }
+.hc-btn--ghost { background: transparent; color: var(--accent-strong); }
+.hc-btn--ghost:hover { background: var(--accent-soft); }
+.hc-btn--block { width: 100%; }
+.hc-btn:disabled, .hc-btn[aria-disabled="true"] {
+  opacity: .55; cursor: not-allowed; transform: none;
+}
+/* Estado loading: spinner + tamaño estable (no cambia el ancho del botón). */
+.hc-btn[data-loading="true"] { pointer-events: none; }
+.hc-btn[data-loading="true"] .hc-btn__label { visibility: hidden; }
+.hc-btn[data-loading="true"]::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: hc-spin .6s linear infinite;
+}
+.hc-btn { position: relative; }
+@keyframes hc-spin { to { transform: rotate(360deg); } }
+
 /* ---- Grids utilitarios para componer las cards ----------------------- */
 .ui-grid { display: grid; gap: 12px; }
 .ui-grid--2 { grid-template-columns: repeat(2, 1fr); }

@@ -1,5 +1,6 @@
 import calcIndex from './calc-compute-index.json';
 import type { Formula } from './formula-types';
+import { parseLocaleNumber } from './format/number';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Núcleo compartido de cómputo de calculadoras. Lo usan tanto el endpoint REST
@@ -73,7 +74,9 @@ export function coerce(field: SlimField, raw: unknown): string | number | boolea
   const s = String(raw);
   if (field.t === 'number') {
     if (field.fmt === 'thousands') {
-      const n = Number(s.replace(/\./g, '').replace(/,/g, '.')); // es-AR: "." miles, "," decimal
+      // Fuente única de parseo (format/number.ts): superset de la vieja lógica
+      // es-AR — además acepta "1,000,000" y "1000000.50" sin romper "1.000.000,50".
+      const n = parseLocaleNumber(s, { locale: 'es-AR' });
       return isNaN(n) ? s : n;
     }
     const n = Number(s);

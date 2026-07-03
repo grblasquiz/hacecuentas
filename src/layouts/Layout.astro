@@ -3,6 +3,7 @@ import CookieConsent from '../components/CookieConsent.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
 import ProfileStore from '../components/ProfileStore.astro';
 import { EZOIC_ENABLED } from '../lib/ezoic';
+import { HC_ALLOWED_PARAMS } from '../lib/analytics';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
 // Antes (5 weights estáticos): 5 woff2 × ~17 KB = ~85 KB de Inter.
@@ -163,6 +164,7 @@ const globalSchema = {
         'https://www.linkedin.com/company/122324467/',
         'https://www.facebook.com/profile.php?id=61590473465354',
         'https://www.youtube.com/@HaceCuentas',
+        'https://www.tiktok.com/@hace.cuentas',
         'https://github.com/grblasquiz/hacecuentas',
         'https://www.wikidata.org/wiki/Q139824747',
       ],
@@ -683,6 +685,36 @@ const globalSchema = {
     </script>
   </head>
   <body data-domain={domain} data-page-type={pageType}>
+    <!-- Skip-link (WCAG 2.4.1): primer elemento focuseable, salta al contenido. -->
+    <a href="#main" class="skip-link">Saltar al contenido</a>
+    <!-- Emisor central de eventos `hc_*` (src/lib/analytics.ts). Define
+         window.hcTrack con la MISMA whitelist de parámetros que el módulo TS
+         (inyectada acá para no duplicarla). Sanea anti-PII y reusa el gtag/
+         dataLayer existentes; no-op si no hay. Cero cambios a tags de GA4/Ads. -->
+    <script is:inline define:vars={{ HC_ALLOWED_PARAMS }}>
+      (function () {
+        var allowed = new Set(HC_ALLOWED_PARAMS);
+        window.hcTrack = function (event, params) {
+          try {
+            var clean = {};
+            if (params) {
+              for (var k in params) {
+                if (!Object.prototype.hasOwnProperty.call(params, k)) continue;
+                if (!allowed.has(k)) continue;
+                var v = params[k];
+                if (v == null) continue;
+                if (typeof v === 'number') { if (isFinite(v)) clean[k] = v; }
+                else if (typeof v === 'boolean') { clean[k] = v; }
+                else { var s = String(v).slice(0, 120).trim(); if (s) clean[k] = s; }
+              }
+            }
+            if (typeof window.gtag === 'function') window.gtag('event', event, clean);
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push(Object.assign({ event: event }, clean));
+          } catch (e) { /* analytics nunca rompe la UI */ }
+        };
+      })();
+    </script>
     <!-- Mi Hacé Cuentas: store del perfil numérico. Primero en el body para que
          window.HCProfile exista antes que los inline scripts de las calcs. -->
     <ProfileStore />
@@ -914,6 +946,42 @@ const globalSchema = {
         --domain-surface: var(--bg-soft);
         --domain-contrast: var(--on-accent);
         --domain-gradient: var(--grad-brand);
+
+        /* ── Escala de espaciado (4-base). Antes cada superficie inventaba su
+           propio padding/gap suelto; estos tokens son la única fuente. ────── */
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-6: 24px;
+        --space-8: 32px;
+        --space-12: 48px;
+        --space-16: 64px;
+
+        /* Radios semánticos (además de los --radius-* de tamaño): el rol define
+           el radio, no el número suelto. Inputs/botones 12, cards 16, destacados 20. */
+        --radius-control: 12px;
+        --radius-card: 16px;
+        --radius-feature: 20px;
+
+        /* Alturas de control — el input crece en mobile (dedo, no cursor). */
+        --h-input: 48px;
+        --h-input-mobile: 52px;
+        --h-btn: 52px;
+        /* Objetivos táctiles (WCAG 2.2 AA 2.5.8 + holgura recomendada). */
+        --tap-min: 44px;
+        --tap-comfortable: 48px;
+
+        /* Anchos de contenedor por tipo de contenido. */
+        --w-container: 1200px;   /* general */
+        --w-form: 720px;         /* formulario simple */
+        --w-calc: 1180px;        /* calc dos columnas */
+        --measure: 72ch;         /* medida editorial (largo de línea legible) */
+
+        /* Transición estándar de estados (hover/active/focus). Respeta
+           prefers-reduced-motion vía la regla global de abajo. */
+        --t-fast: .12s ease;
+        --t-base: .18s ease;
       }
 
       /* Nivel display: peso alto + tracking apretado + optical sizing.
@@ -1169,6 +1237,42 @@ const globalSchema = {
         outline: 2px solid var(--accent);
         outline-offset: 2px;
         border-radius: 4px;
+      }
+
+      /* Skip-link — WCAG 2.4.1: primer foco de la página, salta al <main>.
+         Oculto visualmente hasta recibir foco por teclado. */
+      .skip-link {
+        position: absolute;
+        left: var(--space-3, 12px);
+        top: var(--space-3, 12px);
+        z-index: 1000;
+        transform: translateY(-160%);
+        background: var(--accent);
+        color: var(--on-accent);
+        padding: 10px 16px;
+        border-radius: var(--radius-control, 12px);
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: none;
+        box-shadow: var(--shadow-md);
+        transition: transform var(--t-base, .18s ease);
+      }
+      .skip-link:focus {
+        transform: translateY(0);
+        outline: 2px solid var(--on-accent);
+        outline-offset: 2px;
+        color: var(--on-accent);
+      }
+
+      /* Helper de objetivo táctil cómodo (WCAG 2.2 AA 2.5.8). Aplicar a
+         controles chicos (íconos, chips) para garantizar ≥44px sin cambiar su
+         tamaño visual. */
+      .hc-tap {
+        min-width: var(--tap-min, 44px);
+        min-height: var(--tap-min, 44px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .container {
