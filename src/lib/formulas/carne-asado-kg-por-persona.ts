@@ -5,6 +5,8 @@ export interface Inputs {
   tipoEvento?: string;
   hayEntrada?: string;
   incluirAchuras?: string;
+  /** País del vertical ('mx','co',…). Inyectado por Calculator; ausente/'ar' = terminología rioplatense. */
+  __country?: string;
 }
 export interface Outputs {
   kgCarne: number;
@@ -22,6 +24,16 @@ export function carneAsadoKgPorPersona(i: Inputs): Outputs {
   const evento = i.tipoEvento || 'almuerzo';
   const hayEntrada = i.hayEntrada === 'si';
   const conAchuras = i.incluirAchuras !== 'no';
+
+  // Terminología por país (default 'ar' = rioplatense; cero regresión para las calcs AR).
+  const c = i.__country || 'ar';
+  const voseo = c === 'ar' || c === 'uy' || c === 'py';
+  const achurasW = ({ cl: 'interiores', mx: 'vísceras', es: 'casquería', co: 'vísceras', ve: 'vísceras', do: 'vísceras', pe: 'menudencias', ec: 'menudencias' } as Record<string, string>)[c] || 'achuras';
+  const achurasCap = achurasW.charAt(0).toUpperCase() + achurasW.slice(1);
+  const chorizoW = c === 'cl' ? 'longanizas' : 'chorizos';
+  const morcillaW = ({ cl: 'prietas', mx: 'morongas' } as Record<string, string>)[c] || 'morcillas';
+  const vPlan = voseo ? 'planificá' : 'planifica';
+  const vSuma = voseo ? 'Sumá' : 'Suma';
 
   if (!adultos || adultos <= 0) throw new Error('Ingresá la cantidad de adultos');
 

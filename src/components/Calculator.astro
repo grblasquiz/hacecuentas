@@ -4083,6 +4083,20 @@ const formatFreshnessDate = (iso: string): string => {
     _path.startsWith('/pe/') || _path === '/pe' ? 'PEN' :
     _path.startsWith('/ec/') || _path === '/ec' ? 'USD' :
     'ARS';
+  // País derivado del path (para que las fórmulas localicen terminología: asado→carne asada,
+  // achuras→vísceras, etc.). Default 'ar' → comportamiento idéntico al histórico (cero regresión).
+  const CALC_COUNTRY: string =
+    _path.startsWith('/mx/') || _path === '/mx' ? 'mx' :
+    _path.startsWith('/co/') || _path === '/co' ? 'co' :
+    _path.startsWith('/cl/') || _path === '/cl' ? 'cl' :
+    _path.startsWith('/es/') || _path === '/es' ? 'es' :
+    _path.startsWith('/pe/') || _path === '/pe' ? 'pe' :
+    _path.startsWith('/ec/') || _path === '/ec' ? 'ec' :
+    _path.startsWith('/ve/') || _path === '/ve' ? 've' :
+    _path.startsWith('/do/') || _path === '/do' ? 'do' :
+    _path.startsWith('/uy/') || _path === '/uy' ? 'uy' :
+    _path.startsWith('/py/') || _path === '/py' ? 'py' :
+    'ar';
 
   // Dict de traducciones ES→EN por-fórmula, generado build-time con Haiku (scripts/translate-formula-strings.py).
   // Lookup exacto: si el output string existe en el dict, se usa su traducción (calidad nativa).
@@ -4655,6 +4669,9 @@ const formatFreshnessDate = (iso: string): string => {
       // Inyectar lang como input especial: las fórmulas pueden leerlo como i.__lang
       // para devolver strings en EN cuando aplique. Fórmulas que no lo usan lo ignoran.
       (inputs as any).__lang = CALC_LANG;
+      // Inyectar país: las fórmulas pueden leer i.__country ('mx','co',…) para localizar
+      // terminología. Las que no lo usan lo ignoran; ausencia/'ar' = comportamiento histórico.
+      (inputs as any).__country = CALC_COUNTRY;
       let output: any;
       try { output = formulaRef(inputs); } catch { return; }
       // Actualizar outputs (sin animar — cambios son rápidos)
