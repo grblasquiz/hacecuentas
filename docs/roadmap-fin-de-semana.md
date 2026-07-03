@@ -29,32 +29,37 @@ Leyenda: ✅ hecho · 🟡 en progreso · ⬜ pendiente · ⏸️ bloqueado por 
 | **Rescate de huérfanas (enlazado)** | ✅ | 117 calcs interlinkeadas, 721 links nuevos; huérfanas categorías finde 253→199. Cola larga (millas/visas/construcción industrial) queda para después |
 | Enriquecer hub general (Fase 3) | ✅ | `/calculadoras-fin-de-semana` reescrito: breadcrumb, 7 grupos, herramienta destacada, FAQ (8), schema completo. Arregla 9 slugs muertos que desaparecían en silencio |
 | `getHomeContextByDate` (Fase 7) | ✅ | `src/lib/home-context.ts` puro y testeable |
-| Home dinámica (render del módulo finde) | ⬜ | Cablear `getHomeContextByDate` en `index.astro` para el bloque "¿Qué plan tenés este finde?" (vie 15hs–dom). Sin cloaking |
-| Módulo `WeekendRecommendations` (Fase 8) | ⬜ | Componente reutilizable (home/hub/categorías/newsletter) |
-| Cablear analytics en calcs/hubs | ⏸️ | Necesita OK explícito (toca tracking) |
+| Home dinámica (render del módulo finde) | ✅ | `#finde-mode` en `index.astro` reescrito: 8 intents con masters verificados, toggle vía `getHomeContextByDate` (vie 15hs–dom, tz AR), sin cloaking (SSR siempre emite, JS togglea) |
+| Módulo `WeekendRecommendations` (Fase 8) | ✅ | `src/components/WeekendRecommendations.astro` reutilizable; usado en el hub (bloque "Las 3 cuentas que más se usan") |
+| Cablear analytics en calcs/hubs | ✅ | Aditivo (solo `gtag('event',…)`, no toca config/tags): `weekend_recommendation_click` (finde-mode + componente) + `weekend_hub_click` (cards del hub) |
 
-## Etapa 3 — Herramienta maestra: asado
+## Etapa 3 — Herramienta maestra: asado ✅
 
 | Ítem | Estado | Notas |
 |---|---|---|
-| Ampliar planificador de asado | ⬜ | Sumar pan, ensaladas, bebidas, agua, hielo, carbón/leña, presupuesto, costo/invitado, lista de compras |
-| `ShareableCalculatorResult` (Fase 9) | ⬜ | WhatsApp, copiar, link con params, imprimir, descargar |
-| Lista de compras + división de gastos | ⬜ | Módulos reutilizables |
+| Ampliar planificador de asado | ✅ | Fórmula extendida ADITIVA (backward-compat): +pan, ensalada, provoleta, bebidas con/sin alcohol, agua, hielo, carbón, presupuesto (solo si se ingresa precio — no inventa precios) + lista de compras. 3 inputs + 11 outputs nuevos. Test `tests/asado-planner.test.ts` (12) |
+| `ShareableCalculatorResult` (Fase 9) | ✅ | YA es genérico en `Calculator.astro` (share nativo, WhatsApp, copiar link con datos que re-ejecuta, imprimir) — no se duplicó |
+| Contenido estacional (Fase 6) | ✅ | `src/lib/seasonal-events.ts` (config año-agnóstico, `getActiveSeasonalEvent`) + test (8) |
 
-## Etapa 4 — Viaje · Fiesta · Comida
+## Etapa 4 — Viaje · Fiesta · Comida ✅
 
-| Ítem | Estado |
-|---|---|
-| Planificador de viaje en auto (ampliar `costo-viaje-combustible-kilometros` + capa de mapas desacoplada, sin API paga) | ⬜ |
-| Planificador de fiesta (ampliar `presupuesto-cumpleanos`) | ⬜ |
-| Comida para invitados (**crear** `/calculadora-comida-para-invitados`, con parámetros) | ⬜ |
+| Ítem | Estado | Notas |
+|---|---|---|
+| Planificador de viaje en auto | ✅ | `costo-viaje-combustible-kilometros` ampliado (aditivo, ida/vuelta afecta todo con default 'no' backward-compat): +ida-vuelta, pasajeros, peajes, estacionamiento, comidas, alojamiento → `costo_total` + `costo_por_pasajero`. Capa de mapas: diferida (no se agregó API paga; la calc funciona manual) |
+| Planificador de fiesta | ✅ | `presupuesto-cumpleanos` ampliado con **cantidades** (sin inventar precios): vasos, platos, cubiertos, servilletas, mesas, sillas, hielo, margen para invitados extra |
+| Comida para invitados | ✅ | **Creado** `/calculadora-comida-para-invitados` (formulaId `comida-para-invitados`): 8 tipos de comida, parámetros (no URLs por cantidad), FAQ 8, tabla de referencia, tests. Master del cluster `comida-invitados` |
 
-## Etapa 5 — Hogar · Editorial · Estacional
+## Etapa 5 — Hogar · Editorial ✅
 
-| Ítem | Estado |
-|---|---|
-| Proyectos para el hogar (**crear** `/calculadora-proyectos-hogar`) | ⬜ |
-| Contenido editorial (guías que enlazan a herramientas) | ⬜ |
+| Ítem | Estado | Notas |
+|---|---|---|
+| Proyectos para el hogar | ✅ | **Creado** `/calculadora-proyectos-hogar` (7 proyectos: pintar/pisos/empapelar/limpieza/mudanza/césped), con materiales+desperdicio+tiempo+cronograma+DIY-vs-contratar. Cubre los gaps cajas-mudanza y limpieza-profunda. FAQ 8, tests. Master del cluster `hogar-proyectos` |
+| Contenido editorial (guías) | ✅ | En vez de crear guías nuevas (thin/duplicado), se enlazaron las herramientas maestras nuevas desde las guías existentes: `comida-para-invitados` + asado en la guía de cocina; `proyectos-hogar` en la guía de construcción/DIY |
+
+## Pendiente menor (no bloqueante)
+
+- Capa de mapas para el planificador de viaje (API de rutas desacoplada, sin claves en repo — cuando se decida el proveedor).
+- Cablear analytics en las calcs individuales (hoy cableado en hub + finde-mode + recomendaciones).
 | Contenido estacional (config central de fechas, sin URL por fecha) | ⬜ |
 
 ## Consolidaciones bloqueadas por datos (⏸️ — necesitan GA4/GSC/backlinks)

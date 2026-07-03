@@ -1,6 +1,12 @@
 /** Calculadora de Presupuesto de Cumpleaños */
 export interface Inputs { invitados: number; tipo: string; comida: string; bebida: string; }
-export interface Outputs { costoTotal: number; costoPorPersona: number; detalleComida: number; detalleBebida: number; _insight?: any; _chart?: any; }
+export interface Outputs {
+  costoTotal: number; costoPorPersona: number; detalleComida: number; detalleBebida: number;
+  // --- Logística (cantidades, sin precios) ---
+  vasos?: number; platos?: number; cubiertos?: number; servilletas?: number;
+  mesas?: number; sillas?: number; hielo_kg?: number; margen_invitados?: number;
+  _insight?: any; _chart?: any;
+}
 
 export function presupuestoCumpleanos(i: Inputs): Outputs {
   const inv = Number(i.invitados);
@@ -44,5 +50,19 @@ export function presupuestoCumpleanos(i: Inputs): Outputs {
     ariaLabel: `Distribución del costo del cumpleaños por rubro, total $${fmt.format(costoTotal)}`,
   };
 
-  return { costoTotal, costoPorPersona, detalleComida, detalleBebida, _insight, _chart };
+  // Logística (cantidades por invitado — referencia de organización de eventos).
+  const vasos = inv * 2;              // se pierden/cambian ~2 por persona
+  const platos = Math.ceil(inv * 1.5);
+  const cubiertos = inv;              // juegos (tenedor+cuchillo+cuchara)
+  const servilletas = inv * 3;
+  const mesas = Math.ceil(inv / 8);   // ~8 personas por mesa
+  const sillas = inv;
+  const hielo_kg = Math.max(2, Math.round(inv * 0.5));
+  const margen_invitados = Math.ceil(inv * 0.1); // 10% de colchón para invitados extra
+
+  return {
+    costoTotal, costoPorPersona, detalleComida, detalleBebida,
+    vasos, platos, cubiertos, servilletas, mesas, sillas, hielo_kg, margen_invitados,
+    _insight, _chart,
+  };
 }

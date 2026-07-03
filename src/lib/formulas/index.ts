@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-07-01
+// Generated: 2026-07-03
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -530,6 +530,7 @@ import { compute as compute__comida_bulldog_frances_cantidad_edad_peso } from '.
 import { comidaCachorroGramosEdad } from './comida-cachorro-gramos-edad';
 import { comidaDiariaConejoPeso } from './comida-diaria-conejo-peso';
 import { comidaGatoDiaria } from './comida-gato-diaria';
+import { comidaParaInvitados } from './comida-para-invitados';
 import { comidaPerroDiaria } from './comida-perro-diaria';
 import { comidaTortugaDiariaGramos } from './comida-tortuga-diaria-gramos';
 import { compute as compute__comida_yorkshire_terrier_porcion_diaria_edad } from './comida-yorkshire-terrier-porcion-diaria-edad';
@@ -2132,6 +2133,7 @@ import { proteinaPorComidaAnabolismo } from './proteina-por-comida-anabolismo';
 import { proximoCumpleanos } from './proximo-cumpleanos';
 import { proyeccionCrecimientoSeguidoresMeses } from './proyeccion-crecimiento-seguidores-meses';
 import { proyeccionVentas } from './proyeccion-ventas';
+import { proyectosHogar } from './proyectos-hogar';
 import { ptuMexico } from './ptu-mexico';
 import { compute as compute__ptu_reparto_utilidades_mexico_10_porcentaje } from './ptu-reparto-utilidades-mexico-10-porcentaje';
 import { compute as compute__puam_pension_universal_adulto_mayor_anses_2026 } from './puam-pension-universal-adulto-mayor-anses-2026';
@@ -3247,6 +3249,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'comida-cachorro-gramos-edad': comidaCachorroGramosEdad,
   'comida-diaria-conejo-peso': comidaDiariaConejoPeso,
   'comida-gato-diaria': comidaGatoDiaria,
+  'comida-para-invitados': comidaParaInvitados,
   'comida-perro-diaria': comidaPerroDiaria,
   'comida-tortuga-diaria-gramos': comidaTortugaDiariaGramos,
   'comida-yorkshire-terrier-porcion-diaria-edad': compute__comida_yorkshire_terrier_porcion_diaria_edad,
@@ -4849,6 +4852,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'proximo-cumpleanos': proximoCumpleanos,
   'proyeccion-crecimiento-seguidores-meses': proyeccionCrecimientoSeguidoresMeses,
   'proyeccion-ventas': proyeccionVentas,
+  'proyectos-hogar': proyectosHogar,
   'ptu-mexico': ptuMexico,
   'ptu-reparto-utilidades-mexico-10-porcentaje': compute__ptu_reparto_utilidades_mexico_10_porcentaje,
   'puam-pension-universal-adulto-mayor-anses-2026': compute__puam_pension_universal_adulto_mayor_anses_2026,

@@ -54,7 +54,8 @@ export const WEEKEND_CLUSTERS: WeekendCluster[] = [
     'calculadora-cotillon-cumple-personas',
     'calculadora-regalos-invitado-souvenir',
   ] },
-  { key: 'comida-invitados', master: 'calculadora-pizza-por-invitado-porciones', members: [
+  { key: 'comida-invitados', master: 'calculadora-comida-para-invitados', members: [
+    'calculadora-pizza-por-invitado-porciones',
     'calculadora-empanadas-por-persona-evento-asado-cumple',
     'calculadora-canape-por-invitado-coctel',
     'calculadora-fiambre-queso-por-invitado-picada',
@@ -111,6 +112,14 @@ export const WEEKEND_CLUSTERS: WeekendCluster[] = [
     'calculadora-vacaciones-bariloche-presupuesto-7-dias-familia',
     'calculadora-presupuesto-diario-mochilero-ciudad',
     'calculadora-dias-ideales-viaje-destino',
+  ] },
+  { key: 'hogar-proyectos', master: 'calculadora-proyectos-hogar', members: [
+    'calculadora-pintura-por-m2-litros-latas',
+    'calculadora-piso-flotante-m2-tablas',
+    'calculadora-pisos-ceramicos-porcellanato-cajas',
+    'calculadora-rollos-empapelado-papel-pared',
+    'calculadora-cesped-semillas-kg-m2',
+    'calculadora-madera-necesaria-mueble',
   ] },
   { key: 'hogar-pintura', master: 'calculadora-pintura-por-m2-litros-latas', members: [
     'calculadora-conversor-litros-pintura-por-metro-cuadrado',
