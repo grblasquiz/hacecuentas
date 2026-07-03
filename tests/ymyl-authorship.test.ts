@@ -60,12 +60,12 @@ describe('Fase 3 — autoría vs revisión clínica', () => {
     expect(src).toMatch(/contributor:/);
   });
 
-  it('CalcLayoutV2 no muestra "Fórmula revisada por" a menos que la calc NO sea sensible', () => {
+  it('CalcLayoutV2 usa "Editado por" en TODA la web y nunca "Fórmula revisada por"', () => {
     const src = readFileSync(join(ROOT, 'src/components/CalcLayoutV2.astro'), 'utf8');
-    // Rama sensible => "Editado por"; rama else (no sensible) => "Fórmula revisada por".
-    expect(src).toMatch(
-      /calcIsSensitive\s*\?\s*\(\s*<li>[\s\S]{0,200}?Editado por[\s\S]{0,400}?\)\s*:\s*\(\s*<li>[\s\S]{0,200}?Fórmula revisada por/,
-    );
+    // Byline único e incondicional: "Editado por" / "Edited by".
+    expect(src).toMatch(/'Edited by'\s*:\s*'Editado por'\}\s*<a href="\/autores\/martin-rodriguez"/);
+    // Ya NO existe el literal "Fórmula revisada por" / "Formula reviewed by" en el markup.
+    expect(src).not.toMatch(/'Formula reviewed by'\s*:\s*'Fórmula revisada por'/);
   });
 
   it('Calculator usa etiqueta editorial cuando no hay reviewer real', () => {

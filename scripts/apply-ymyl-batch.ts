@@ -53,6 +53,14 @@ const BATCH: Array<[string, string, 'dose' | 'injury' | 'baby']> = [
   ['calcs-en', 'pet-medication-dosage-by-weight', 'dose'],
   ['calcs-en', 'superficie-corporal-du-bois', 'dose'],
   ['calcs-en', 'vitamina-b12-vegano', 'dose'],
+
+  // === Tercera tanda: alimentación individualizada de bebés (dosis pediátrica) ===
+  ['calcs', 'calculadora-formula-leche-bebe-litros-mes-edad-marca', 'baby'],
+  ['calcs', 'formula-infantil-biberon-edad-ml-dia', 'baby'],  // filename≠slug
+  ['calcs', 'onzas-biberon-peso-bebe-dia', 'baby'],           // filename≠slug
+  ['calcs-en', 'baby-feeding-amount-by-age-calculator', 'baby'],
+  ['calcs-en', 'breast-milk-formula', 'baby'],
+  ['calcs-en', 'infant-formula-bottle-ml-by-age', 'baby'],
 ];
 
 let changed = 0, skipped = 0, missing = 0;

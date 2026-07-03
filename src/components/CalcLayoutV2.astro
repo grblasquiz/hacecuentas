@@ -44,7 +44,7 @@ import { resolveGuideSlug, GUIDE_TITLES } from '../lib/category-guide-map';
 import { getJourneySteps } from '../lib/journeys';
 import { getRoomsForCalc } from '../lib/decisions/calc-backlinks';
 import converterTables from '../lib/converter-tables.json';
-import { hasValidProfessionalReviewer, isSensitiveCalc, isRestrictedCalc } from '../lib/content-policy';
+import { hasValidProfessionalReviewer, isRestrictedCalc } from '../lib/content-policy';
 import RestrictedNotice from './RestrictedNotice.astro';
 import '../styles/calc-redesign.css';
 
@@ -71,11 +71,9 @@ const relatedLang = !lang ? 'es' : (lang === 'es' ? 'es-ES' : lang);
 const decisionRooms = getRoomsForCalc(calc.slug, lang).slice(0, 2);
 
 // ---- Autoría / revisión (política YMYL, ver src/lib/content-policy.ts) ----
-// Martín Rodríguez es autor/editor, NO revisor clínico. En temas sensibles
-// (salud/nutrición/embarazo/bebés/lesiones/mascotas/suplementos/dosis) NO se
-// muestra "Fórmula revisada por Martín Rodríguez". Si hay un revisor profesional
-// real y válido, se muestra su bloque separado, con enlace verificable y fecha.
-const calcIsSensitive = isSensitiveCalc(calc);
+// Martín Rodríguez es autor/editor en TODA la web, NO revisor clínico. Ninguna
+// calc muestra "Fórmula revisada por Martín Rodríguez". Si hay un revisor
+// profesional real y válido, se muestra su bloque separado (enlace + fecha).
 // Restringida (dosis/tratamiento/retorno deportivo de riesgo alto sin revisor
 // profesional): se reemplaza el widget por un aviso y se suprimen los bloques
 // con números/dosis (tablas, ejemplos, explicación, FAQ, respuesta rápida).
@@ -299,11 +297,9 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
             : (pub ? `Datos ${pub} · ${updatedLabel}` : `Datos verificados · ${updatedLabel}`);
         })()}</li>
       )}
-      {calcIsSensitive ? (
-        <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Edited by' : 'Editado por'} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
-      ) : (
-        <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Formula reviewed by' : 'Fórmula revisada por'} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
-      )}
+      {/* Martín = autor/editor en TODA la web (nunca "revisor"). Sin distinción
+          por categoría: ninguna calc debe decir "Fórmula revisada por Martín". */}
+      <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Edited by' : 'Editado por'} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
       {proReviewer && (
         <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Professional review by' : 'Revisión profesional por'} <a href={proReviewer.profileUrl} target="_blank" rel="noopener noreferrer">{proReviewer.name}</a>{proReviewerCred && <span>, {proReviewerCred}</span>}{proReviewedAtLabel && <span> · {proReviewedAtLabel}</span>}</li>
       )}
