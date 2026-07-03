@@ -1340,8 +1340,20 @@ for (const c of calcs) pushImageEntries(`${site}/${c.slug}`, c);
 for (const [loc, list] of [['es', calcsEs], ['mx', calcsMx], ['cl', calcsCl], ['co', calcsCo], ['pe', calcsPe], ['ec', calcsEc], ['ve', calcsVe], ['py', calcsPy], ['uy', calcsUy], ['do', calcsDo], ['pt-pt', calcsPtPt], ['en', calcsEn], ['pt', calcsPt]] as const) {
   for (const c of list as any[]) pushImageEntries(`${site}/${loc}/${c.slug}`, c);
 }
-if (imageEntries.length > 0) {
-  writeFileSync(join(PUBLIC_DIR, 'sitemap-images.xml'), imagesetXml(imageEntries), 'utf8');
+// Excluir del sitemap de imágenes los mismos zombies 301/308 de _redirects.
+let imageEntriesClean = imageEntries;
+try {
+  const redirSrc = new Set<string>();
+  for (const line of readFileSync(join(PUBLIC_DIR, '_redirects'), 'utf8').split('\n')) {
+    const m = line.trim().match(/^(\/[^\s]+)\s+\S+\s+30[18]\b/);
+    if (m && !m[1].includes('*') && !m[1].includes(':')) redirSrc.add(m[1].replace(/\/$/, '') || '/');
+  }
+  imageEntriesClean = imageEntries.filter((e) => {
+    try { return !redirSrc.has(new URL(e.loc).pathname.replace(/\/$/, '') || '/'); } catch { return true; }
+  });
+} catch { /* no-op */ }
+if (imageEntriesClean.length > 0) {
+  writeFileSync(join(PUBLIC_DIR, 'sitemap-images.xml'), imagesetXml(imageEntriesClean), 'utf8');
   // El sitemap de imágenes va al index con lastmod = buildDate (representa el set actual de OG).
   // Como urlset propio no calza con el typing Url[], lo agregamos al sitemaps[] para el index
   // pero usamos un dummy URL para que maxLastmod no rompa.
@@ -1405,6 +1417,33 @@ for (const s of sitemaps) {
 }
 if (gone410Stripped > 0) {
   console.log(`Stripped ${gone410Stripped} URLs marcadas como 410 GONE.`);
+}
+
+// Filtro defensivo: excluir sources de 301/308 declarados en public/_redirects.
+// El generador ya excluye canonicalSlug + PRUNING_REDIRECTS + GONE_410, pero NO
+// las 301 manuales de _redirects. Un JSON vivo con slug 301eado (zombie) se
+// colaba en el sitemap (auditoría bing-growth 2026-07-03: calculadora-plan-
+// maraton-semanas-experiencia, calculadora-regla-72-duplicar-dinero).
+let redirectSrcStripped = 0;
+try {
+  const redirectSources = new Set<string>();
+  const rtxt = readFileSync(join(PUBLIC_DIR, '_redirects'), 'utf8');
+  for (const line of rtxt.split('\n')) {
+    const m = line.trim().match(/^(\/[^\s]+)\s+\S+\s+30[18]\b/);
+    if (m && !m[1].includes('*') && !m[1].includes(':')) {
+      redirectSources.add(m[1].replace(/\/$/, '') || '/');
+    }
+  }
+  for (const s of sitemaps) {
+    const before = s.urls.length;
+    s.urls = s.urls.filter((u: any) => {
+      try { const path = new URL(u.loc).pathname.replace(/\/$/, '') || '/'; return !redirectSources.has(path); } catch { return true; }
+    });
+    redirectSrcStripped += before - s.urls.length;
+  }
+} catch { /* sin _redirects: no-op */ }
+if (redirectSrcStripped > 0) {
+  console.log(`Stripped ${redirectSrcStripped} URLs con 301/308 en _redirects (zombies JSON-vivo/URL-redirigida).`);
 }
 
 let totalUrls = 0;

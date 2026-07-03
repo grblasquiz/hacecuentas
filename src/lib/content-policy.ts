@@ -274,3 +274,55 @@ export function isSensitiveCalc(calc: CalcPolicyInput | null | undefined): boole
   const slug = normalizeSlug(calc.slug);
   return SENSITIVE_SLUG_HINTS.some((hint) => slug.includes(hint));
 }
+
+/**
+ * Permisos de una calculadora sensible en un solo objeto (API compuesta).
+ *
+ * Envuelve las funciones ya centralizadas arriba para exponer, en una sola
+ * llamada, todos los permisos de distribución/exportación. Fuente de verdad
+ * única: si `isRestrictedCalc` es true (riesgo alto sin revisor válido o
+ * `distribution:'restricted'`), TODOS los permisos quedan en `false`.
+ *
+ * Usar este helper cuando un consumidor necesite decidir varios canales a la
+ * vez (meta robots + sitemap + buscador + relacionados + widgets + pdf + imagen
+ * + email + link compartible + embed). Los helpers individuales siguen válidos.
+ */
+export interface SensitivePermissions {
+  isSensitive: boolean;
+  riskLevel: 'low' | 'medium' | 'high';
+  allowIndex: boolean;
+  allowSitemap: boolean;
+  allowSearch: boolean;
+  allowRelated: boolean;
+  allowWidget: boolean;
+  allowPdf: boolean;
+  allowImage: boolean;
+  allowEmail: boolean;
+  allowShareLink: boolean;
+  allowEmbed: boolean;
+}
+
+export function isSensitiveCalculator(calc: CalcPolicyInput | null | undefined): SensitivePermissions {
+  const restricted = isRestrictedCalc(calc);
+  const indexable = isIndexableCalc(calc);
+  const distribute = canDistributeCalc(calc);
+  const share = canShareResultsCalc(calc);
+  const embed = canEmbedCalc(calc);
+  const riskLevel = (calc?.ymylRisk as 'low' | 'medium' | 'high') || 'low';
+  return {
+    // "sensible" a efectos de permisos = restringida (riesgo alto sin revisor).
+    // isSensitiveCalc() (categoría/tema) sigue disponible para autoría/byline.
+    isSensitive: restricted,
+    riskLevel,
+    allowIndex: indexable,
+    allowSitemap: distribute,
+    allowSearch: distribute,
+    allowRelated: distribute,
+    allowWidget: embed,
+    allowPdf: share,
+    allowImage: share,
+    allowEmail: share,
+    allowShareLink: share,
+    allowEmbed: embed,
+  };
+}

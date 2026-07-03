@@ -74,7 +74,19 @@ def push(urls: list) -> bool:
 
 def main():
     args = sys.argv[1:]
-    if args and args[0] == '--all':
+    batch = 10000
+    if args and args[0] == '--changed':
+        # Modo por CAMBIOS (§27): lee el change-set producido por
+        # scripts/bing-growth/indexnow-manifest.mjs (solo CREATED/UPDATED/DELETED).
+        # No envía el sitio entero. Lotes de 500.
+        from pathlib import Path as _P
+        changed_file = _P(__file__).resolve().parent.parent / 'reports' / 'bing-growth' / 'indexnow-urls.txt'
+        if not changed_file.exists():
+            print('No existe reports/bing-growth/indexnow-urls.txt — corré indexnow-manifest.mjs primero')
+            return 1
+        urls = [ln.strip() for ln in changed_file.read_text().splitlines() if ln.strip()]
+        batch = 500
+    elif args and args[0] == '--all':
         urls = []
         for f in PUBLIC.glob('sitemap-*.xml'):
             urls.extend(urls_from_sitemap(f.name))
@@ -86,10 +98,10 @@ def main():
 
     if not urls:
         print('No hay URLs para pushear')
-        return 1
+        return 0 if (args and args[0] == '--changed') else 1
 
-    # IndexNow: max 10000 URLs por submission
-    BATCH = 10000
+    # IndexNow: lotes (500 en modo --changed, 10000 en el resto)
+    BATCH = batch
     for i in range(0, len(urls), BATCH):
         chunk = urls[i:i + BATCH]
         print(f'Pusheando {len(chunk)} URLs...')
