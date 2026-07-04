@@ -4231,6 +4231,14 @@ const formatFreshnessDate = (iso: string): string => {
     return s;
   }
 
+  // Cache lazy de Intl.NumberFormat: uno por combo de opciones, reusado.
+  // Antes se construía uno nuevo por llamada → por tecla en formatThousands
+  // y ~36 veces por frame en animateValue (contribuía al INP alto).
+  const _nfCache: Record<string, Intl.NumberFormat> = {};
+  function nf(key: string, make: () => Intl.NumberFormat): Intl.NumberFormat {
+    return _nfCache[key] || (_nfCache[key] = make());
+  }
+
   function formatValue(value: number | string, format: string, suffix = ''): string {
     if (value === null || value === undefined || value === '') return '—';
     let formatted: string;
@@ -4248,25 +4256,18 @@ const formatFreshnessDate = (iso: string): string => {
     else if (fmt === 'thousands' || fmt === 'integer') fmt = 'integer-internal';
 
     if (fmt === 'currency') {
-      formatted = new Intl.NumberFormat(NUM_LOCALE, {
-        style: 'currency',
-        currency: NUM_CURRENCY,
-        maximumFractionDigits: 0,
-      }).format(Number(value));
+      formatted = nf('cur', () => new Intl.NumberFormat(NUM_LOCALE, { style: 'currency', currency: NUM_CURRENCY, maximumFractionDigits: 0 })).format(Number(value));
     } else if (fmt === 'number') {
-      formatted = new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 2 }).format(Number(value));
+      formatted = nf('num2', () => new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 2 })).format(Number(value));
     } else if (fmt === 'integer-internal') {
       // thousands/integer: separadores de miles AR, sin decimales
-      formatted = new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 0 }).format(Number(value));
+      formatted = nf('int0', () => new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 0 })).format(Number(value));
     } else if (fmt === 'percentage') {
       // Fix bug: aplicar Intl.NumberFormat para thousands separator (1.234,50%)
       // antes de toFixed devolvia "1234.50%" sin formato AR.
       const num = Number(value);
       if (Number.isFinite(num)) {
-        formatted = new Intl.NumberFormat(NUM_LOCALE, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(num) + '%';
+        formatted = nf('pct2', () => new Intl.NumberFormat(NUM_LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 })).format(num) + '%';
       } else {
         formatted = `${value}%`;
       }
@@ -4298,7 +4299,7 @@ const formatFreshnessDate = (iso: string): string => {
       const strVal = String(value);
       const num = Number(strVal);
       if (Number.isFinite(num) && strVal.trim() !== '' && /^-?\d+(\.\d{1,2})?$/.test(strVal.trim())) {
-        formatted = new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 2 }).format(num);
+        formatted = nf('num2', () => new Intl.NumberFormat(NUM_LOCALE, { maximumFractionDigits: 2 })).format(num);
       } else {
         formatted = translateOutputStr(strVal);
       }
@@ -4317,7 +4318,7 @@ const formatFreshnessDate = (iso: string): string => {
     const neg = /^\s*-/.test(v);
     const clean = v.replace(/[^\d]/g, '');
     if (!clean) return neg ? '-' : '';
-    return (neg ? '-' : '') + new Intl.NumberFormat('es-AR').format(Number(clean));
+    return (neg ? '-' : '') + nf('thouAR', () => new Intl.NumberFormat('es-AR')).format(Number(clean));
   }
 
   // Copia robusta reutilizable: Clipboard API → fallback textarea+execCommand
