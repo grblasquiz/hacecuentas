@@ -534,6 +534,7 @@ const priorityUrls: Url[] = [
   prio('/calculadora-integrales',            '0.9',  'monthly'),
   prio('/simplificar-expresiones',           '0.85', 'monthly'),
   prio('/valores-bcra',                      '0.9',  'daily',  true),
+  prio('/cuanto-perdio-tu-sueldo',           '0.95', 'daily',  true),
   prio('/dolar-hoy',                         '0.95', 'daily',  true),
   prio('/dolar-hoy-chile',                   '0.9',  'daily',  true),
   prio('/dolar-hoy-colombia',                '0.9',  'daily',  true),

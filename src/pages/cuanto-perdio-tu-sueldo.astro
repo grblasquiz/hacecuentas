@@ -1,0 +1,409 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import inflacion from '../data/live/inflacion.json';
+import dolar from '../data/live/dolar.json';
+import { NAFTA_NACIONAL } from '../lib/data/nafta-precios';
+
+const site = 'https://hacecuentas.com';
+const path = '/cuanto-perdio-tu-sueldo';
+
+// ── Inflación interanual REAL: compuesta desde los 12 meses del INDEC ──
+const meses = (inflacion as any).last_12_months || [];
+const factor = meses.reduce((f: number, m: any) => f * (1 + (Number(m.valor) || 0) / 100), 1);
+const inflInteranual = (factor - 1) * 100;            // p.ej. 33.2
+const perdidaFrozen = (1 - 1 / factor) * 100;          // p.ej. 24.9 (sueldo congelado)
+const inflStr = inflInteranual.toLocaleString('es-AR', { maximumFractionDigits: 1 });
+const perdidaStr = perdidaFrozen.toLocaleString('es-AR', { maximumFractionDigits: 1 });
+
+const dolarVenta = (dolar as any)?.quotes?.oficial?.venta ?? 1510;
+const naftaSuper = (NAFTA_NACIONAL as any)['Nafta Súper'] ?? 1425;
+const fetchedAt = (inflacion as any)?._meta?.fetchedAt || (dolar as any)?._meta?.fetchedAt;
+const updatedStr = fetchedAt
+  ? new Date(fetchedAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
+  : 'julio de 2026';
+const ultimoMes = (inflacion as any)?.last_month?.valor;
+
+// ── Precios de referencia HOY (reales donde hay fuente; el resto, referencia de mercado) ──
+const items = [
+  { key: 'dolar',    emoji: '💵', label: 'dólares oficiales',        priceToday: dolarVenta,  fuente: 'DolarAPI (dólar oficial venta)' },
+  { key: 'nafta',    emoji: '⛽', label: 'litros de nafta súper',    priceToday: naftaSuper,  fuente: 'Secretaría de Energía (surtidor)' },
+  { key: 'cafe',     emoji: '☕', label: 'cafés en un bar',          priceToday: 3500,        fuente: 'precio de referencia de mercado' },
+  { key: 'bigmac',   emoji: '🍔', label: 'Big Macs',                 priceToday: 8500,        fuente: 'precio de referencia de mercado' },
+  { key: 'asado',    emoji: '🥩', label: 'kilos de asado (tira)',    priceToday: 13000,       fuente: 'precio de referencia de mercado' },
+  { key: 'alquiler', emoji: '🏠', label: 'meses de alquiler (2 amb)', priceToday: 470000,     fuente: 'referencia CABA/GBA' },
+];
+
+// ── Valores SSR por defecto (contenido visible sin JS) ──
+const DEFAULT_SALARY = 1200000;
+function fmtUnits(n: number): string {
+  if (!isFinite(n)) return '—';
+  if (n >= 100) return Math.round(n).toLocaleString('es-AR');
+  if (n >= 10) return n.toLocaleString('es-AR', { maximumFractionDigits: 1 });
+  return n.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+}
+const tilesSSR = items.map((it) => {
+  const hoy = DEFAULT_SALARY / it.priceToday;
+  const anio = hoy * factor; // hace 1 año el mismo sueldo compraba más
+  return { ...it, hoy: fmtUnits(hoy), anio: fmtUnits(anio) };
+});
+
+const title = `¿Cuánto perdió tu sueldo? Poder de compra vs inflación (${inflStr}% en 12 meses)`;
+const description = `La inflación fue ${inflStr}% en los últimos 12 meses (INDEC). Meté tu sueldo y mirá en vivo cuántos cafés, dólares, litros de nafta o meses de alquiler compra hoy comparado con hace un año.`;
+
+const relatedCalcs = [
+  { href: '/calculadora-ajuste-sueldo-inflacion', emoji: '📈', title: 'Ajustá tu sueldo por inflación', desc: 'Cuánto debería haber subido tu sueldo para no perder contra la inflación.' },
+  { href: '/calculadora-poder-adquisitivo-sueldo-real', emoji: '💸', title: 'Tu sueldo real', desc: 'El valor de tu sueldo hoy medido en poder de compra, no en pesos nominales.' },
+  { href: '/calculadora-sueldo-bruto-desde-neto', emoji: '💵', title: 'De neto a bruto', desc: 'Qué bruto tenés que negociar para que te quede el neto que querés.' },
+  { href: '/valores-bcra', emoji: '🏦', title: 'Inflación y dólar hoy', desc: 'Los indicadores del BCRA e INDEC actualizados, con lectura para tu bolsillo.' },
+];
+
+const faq = [
+  { q: '¿Cuánto fue la inflación en los últimos 12 meses?', a: `Según el IPC del INDEC, la inflación acumulada de los últimos 12 meses fue de ${inflStr}%. Eso significa que, en promedio, lo que hace un año costaba $100 hoy cuesta alrededor de $${(factor * 100).toLocaleString('es-AR', { maximumFractionDigits: 0 })}.` },
+  { q: '¿Cuánto poder de compra perdió mi sueldo si no me lo aumentaron?', a: `Si tu sueldo en pesos es el mismo que hace un año, perdiste aproximadamente ${perdidaStr}% de poder de compra. La cuenta es 1 − 1÷(1+inflación): tu sueldo compra hoy esa fracción menos de casi todo. Para no perder, tu sueldo tendría que haber subido al menos ${inflStr}%.` },
+  { q: '¿Cómo se calcula lo que "compra" mi sueldo?', a: 'Dividimos tu sueldo por el precio de cada cosa (dólar, café, nafta, asado, alquiler). Para la comparación con hace un año asumimos que cada precio acompañó la inflación general del INDEC. Es una estimación para dimensionar el impacto, no una medición exacta producto por producto.' },
+  { q: '¿Los precios que usan son reales?', a: `Sí donde hay fuente oficial: el dólar oficial (venta) sale de DolarAPI y el litro de nafta súper de la Secretaría de Energía. El café, el Big Mac, el asado y el alquiler son precios de referencia de mercado a ${updatedStr}, que podés cambiar mentalmente por los tuyos.` },
+  { q: '¿Sirve para saber si mi aumento le ganó a la inflación?', a: `Sí: si te aumentaron el sueldo, activá la opción "cargar mi sueldo de hace un año" y comparamos tu sueldo de antes ajustado por inflación contra el de ahora. Si tu sueldo subió más de ${inflStr}%, le ganaste a la inflación; si subió menos, perdiste poder de compra igual.` },
+  { q: '¿Es lo mismo la inflación general que la de mi bolsillo?', a: 'No exactamente. El INDEC mide una canasta promedio; tu inflación personal depende de cuánto pesan el alquiler, la comida, el transporte o la salud en tus gastos. Por eso esto es una referencia general, no tu número exacto.' },
+  { q: '¿Cada cuánto se actualiza?', a: `Se actualiza con cada dato nuevo del INDEC y del dólar. La última actualización es del ${updatedStr}${ultimoMes ? ` (último IPC mensual: ${ultimoMes.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%)` : ''}.` },
+  { q: '¿Qué hago con este dato?', a: 'Si perdiste poder de compra, es el número con el que ir a pedir aumento: "para empatar la inflación necesito un ajuste del ' + inflStr + '%". Abajo tenés la calculadora para ajustar tu sueldo exacto y la de tu sueldo real.' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebApplication',
+      name: '¿Cuánto perdió tu sueldo? — Poder de compra vs inflación',
+      description,
+      url: `${site}${path}`,
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'Web',
+      inLanguage: 'es-AR',
+      isPartOf: { '@id': `${site}/#website` },
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+        { '@type': 'ListItem', position: 2, name: '¿Cuánto perdió tu sueldo?', item: `${site}${path}` },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    },
+  ],
+};
+---
+
+<Layout title={title} description={description} schema={schema} audience="AR" canonical={path}>
+  <Header slot="header" />
+
+  <main class="pa">
+    <!-- HERO -->
+    <section class="pa-hero">
+      <div class="pa-hero-stat">
+        <span class="pa-hero-stat-num">{inflStr}%</span>
+        <span class="pa-hero-stat-lbl">inflación en 12 meses<br /><small>INDEC · {updatedStr}</small></span>
+      </div>
+      <div class="pa-hero-txt">
+        <h1>¿Cuánto perdió tu sueldo contra la inflación?</h1>
+        <p>Si tu sueldo en pesos no cambió en un año, hoy compra <strong>{perdidaStr}% menos</strong> de casi todo. Meté tu sueldo y miralo en cosas reales.</p>
+      </div>
+    </section>
+
+    <!-- CALCULADORA -->
+    <section class="pa-card" id="pa-app"
+      data-factor={factor}
+      data-infl={inflInteranual.toFixed(2)}
+      data-perdida={perdidaFrozen.toFixed(2)}
+      data-items={JSON.stringify(items)}
+      data-default={DEFAULT_SALARY}>
+      <div class="pa-inputs">
+        <label class="pa-field">
+          <span>Tu sueldo hoy (por mes)</span>
+          <div class="pa-inwrap">
+            <span class="pa-cur">$</span>
+            <input id="pa-salary" type="text" inputmode="numeric" enterkeyhint="done"
+              value={DEFAULT_SALARY.toLocaleString('es-AR')} autocomplete="off"
+              aria-label="Tu sueldo mensual hoy en pesos" />
+          </div>
+        </label>
+        <label class="pa-field pa-field--adv" id="pa-adv" hidden>
+          <span>Tu sueldo hace 1 año (opcional)</span>
+          <div class="pa-inwrap">
+            <span class="pa-cur">$</span>
+            <input id="pa-salary-old" type="text" inputmode="numeric" enterkeyhint="done"
+              placeholder="mismo que hoy" autocomplete="off"
+              aria-label="Tu sueldo mensual hace un año en pesos" />
+          </div>
+        </label>
+        <button type="button" class="pa-adv-toggle" id="pa-adv-toggle" aria-expanded="false">
+          ¿Te aumentaron? Cargá tu sueldo de hace un año →
+        </button>
+      </div>
+
+      <!-- VEREDICTO -->
+      <div class="pa-verdict" id="pa-verdict" role="status" aria-live="polite">
+        <p class="pa-verdict-lead">Con tu sueldo congelado, en 12 meses perdiste</p>
+        <p class="pa-verdict-big"><span id="pa-verdict-num">{perdidaStr}%</span> de poder de compra</p>
+        <p class="pa-verdict-sub" id="pa-verdict-sub">Para empatar la inflación, tu sueldo tendría que haber subido <strong>{inflStr}%</strong>.</p>
+      </div>
+
+      <!-- TILES -->
+      <p class="pa-tiles-head">Ese sueldo, en cosas reales:</p>
+      <div class="pa-tiles" id="pa-tiles">
+        {tilesSSR.map((t) => (
+          <div class="pa-tile" data-key={t.key} data-price={t.priceToday}>
+            <span class="pa-tile-emoji">{t.emoji}</span>
+            <div class="pa-tile-body">
+              <span class="pa-tile-now"><strong class="pa-now-n">{t.hoy}</strong> {t.label}</span>
+              <span class="pa-tile-then">hace 1 año compraba <strong class="pa-then-n">{t.anio}</strong></span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="pa-actions">
+        <button type="button" class="pa-share" id="pa-share">📤 Compartir mi resultado</button>
+      </div>
+
+      <p class="pa-method">
+        <strong>Cómo lo calculamos:</strong> tomamos la inflación general del INDEC ({inflStr}% en 12 meses) y los precios de hoy
+        ({updatedStr}). Para "hace 1 año" asumimos que cada precio acompañó esa inflación. Es una estimación para dimensionar,
+        no una medición exacta por producto. Dólar oficial: DolarAPI · Nafta: Secretaría de Energía.
+      </p>
+    </section>
+
+    <!-- RECUPERAR TERRENO -->
+    <section class="pa-related">
+      <h2>Recuperá terreno</h2>
+      <div class="pa-related-grid">
+        {relatedCalcs.map((c) => (
+          <a class="pa-related-card" href={c.href}>
+            <span class="pa-related-emoji">{c.emoji}</span>
+            <span class="pa-related-title">{c.title}</span>
+            <span class="pa-related-desc">{c.desc}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- CONTEXTO -->
+    <section class="pa-text">
+      <h2>Qué significa "perder poder de compra"</h2>
+      <p>
+        La inflación no te saca plata de la cuenta: te saca <em>cosas</em>. Si en un año los precios suben {inflStr}% y tu sueldo
+        no se mueve, seguís teniendo los mismos pesos pero comprás menos con ellos. Por eso el número que importa no es cuánto
+        ganás en pesos, sino cuántos cafés, litros de nafta, dólares o meses de alquiler te alcanza a pagar ese sueldo.
+      </p>
+      <p>
+        La cuenta de la pérdida es simple: si los precios subieron {inflStr}%, tu sueldo congelado compra
+        1 ÷ {factor.toLocaleString('es-AR', { maximumFractionDigits: 3 })} de lo que compraba, es decir, {perdidaStr}% menos.
+        Para quedar igual que hace un año, tu sueldo tendría que haber subido exactamente esa inflación del {inflStr}%.
+      </p>
+    </section>
+
+    <!-- FAQ -->
+    <section class="pa-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (
+        <details class="pa-faq-item">
+          <summary>{f.q}</summary>
+          <p set:html={f.a}></p>
+        </details>
+      ))}
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  (function () {
+    const app = document.getElementById('pa-app');
+    if (!app) return;
+    const factor = parseFloat(app.getAttribute('data-factor') || '1');
+    const inflPct = parseFloat(app.getAttribute('data-infl') || '0');
+    const perdida = parseFloat(app.getAttribute('data-perdida') || '0');
+
+    const nf = new Intl.NumberFormat('es-AR');
+    const track = (window as any).hcTrack;
+
+    function parseNum(v: string): number {
+      const clean = (v || '').replace(/[^\d]/g, '');
+      return clean ? Number(clean) : 0;
+    }
+    function fmtInput(v: string): string {
+      const n = parseNum(v);
+      return n ? nf.format(n) : '';
+    }
+    function fmtUnits(n: number): string {
+      if (!isFinite(n) || n <= 0) return '—';
+      if (n >= 100) return nf.format(Math.round(n));
+      if (n >= 10) return n.toLocaleString('es-AR', { maximumFractionDigits: 1 });
+      return n.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+    }
+
+    const salaryEl = document.getElementById('pa-salary') as HTMLInputElement;
+    const oldEl = document.getElementById('pa-salary-old') as HTMLInputElement;
+    const advToggle = document.getElementById('pa-adv-toggle');
+    const advField = document.getElementById('pa-adv');
+    const verdictNum = document.getElementById('pa-verdict-num');
+    const verdictLead = document.querySelector('.pa-verdict-lead');
+    const verdictSub = document.getElementById('pa-verdict-sub');
+    const tiles = Array.from(document.querySelectorAll('#pa-tiles .pa-tile')) as HTMLElement[];
+
+    function recompute() {
+      const S = parseNum(salaryEl.value);
+      if (!S) return;
+      const hasOld = advField && !advField.hidden && parseNum(oldEl.value) > 0;
+      const S0 = hasOld ? parseNum(oldEl.value) : S;
+
+      // poder de compra: sueldo de hace 1 año ajustado por inflación vs sueldo de hoy
+      // ratio > 1 => le ganaste a la inflación; < 1 => perdiste
+      const realRatio = S / (S0 * factor);
+      const deltaPct = (realRatio - 1) * 100;
+
+      if (verdictNum && verdictLead && verdictSub) {
+        if (!hasOld) {
+          verdictLead.textContent = 'Con tu sueldo congelado, en 12 meses perdiste';
+          verdictNum.textContent = perdida.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%';
+          (verdictNum.parentElement as HTMLElement).classList.remove('pa-win');
+          verdictSub.innerHTML = 'Para empatar la inflación, tu sueldo tendría que haber subido <strong>' + inflPct.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%</strong>.';
+        } else if (deltaPct >= 0) {
+          verdictLead.textContent = 'Tu aumento le ganó a la inflación por';
+          verdictNum.textContent = '+' + deltaPct.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%';
+          (verdictNum.parentElement as HTMLElement).classList.add('pa-win');
+          verdictSub.innerHTML = 'Tu sueldo subió más que la inflación del <strong>' + inflPct.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%</strong>. Ganaste poder de compra.';
+        } else {
+          verdictLead.textContent = 'Aún con el aumento, perdiste';
+          verdictNum.textContent = Math.abs(deltaPct).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%';
+          (verdictNum.parentElement as HTMLElement).classList.remove('pa-win');
+          verdictSub.innerHTML = 'Tu sueldo subió menos que la inflación del <strong>' + inflPct.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%</strong>. Perdiste poder de compra igual.';
+        }
+      }
+
+      tiles.forEach((tile) => {
+        const price = parseFloat(tile.getAttribute('data-price') || '0');
+        if (!price) return;
+        const hoy = S / price;
+        const anio = (S0 / price) * factor;
+        const nowN = tile.querySelector('.pa-now-n');
+        const thenN = tile.querySelector('.pa-then-n');
+        if (nowN) nowN.textContent = fmtUnits(hoy);
+        if (thenN) thenN.textContent = fmtUnits(anio);
+      });
+    }
+
+    let t: any = null;
+    salaryEl.addEventListener('input', () => {
+      const pos = salaryEl.selectionStart || 0;
+      const before = salaryEl.value.length;
+      salaryEl.value = fmtInput(salaryEl.value);
+      const after = salaryEl.value.length;
+      try { salaryEl.setSelectionRange(pos + (after - before), pos + (after - before)); } catch (e) {}
+      recompute();
+    });
+    if (oldEl) oldEl.addEventListener('input', () => {
+      oldEl.value = fmtInput(oldEl.value);
+      recompute();
+    });
+
+    if (advToggle && advField) {
+      advToggle.addEventListener('click', () => {
+        const show = advField.hidden;
+        advField.hidden = !show;
+        advToggle.setAttribute('aria-expanded', String(show));
+        if (show) { (advToggle as HTMLElement).style.display = 'none'; oldEl && oldEl.focus(); }
+        recompute();
+      });
+    }
+
+    const shareBtn = document.getElementById('pa-share');
+    if (shareBtn) shareBtn.addEventListener('click', async () => {
+      const S = parseNum(salaryEl.value);
+      const txt = `Con un sueldo de $${nf.format(S)}, la inflación del ${inflPct.toLocaleString('es-AR', { maximumFractionDigits: 1 })}% (INDEC) me hizo perder poder de compra. Calculá el tuyo:`;
+      const url = 'https://hacecuentas.com/cuanto-perdio-tu-sueldo';
+      try {
+        if ((navigator as any).share) { await (navigator as any).share({ title: '¿Cuánto perdió tu sueldo?', text: txt, url }); }
+        else { await navigator.clipboard.writeText(txt + ' ' + url); shareBtn.textContent = '✅ Copiado'; setTimeout(() => { shareBtn.textContent = '📤 Compartir mi resultado'; }, 1800); }
+        if (typeof track === 'function') track('share', { method: 'poder_adquisitivo' });
+      } catch (e) {}
+    });
+
+    if (typeof track === 'function') track('calc_view', { calc: 'poder-adquisitivo' });
+    recompute();
+  })();
+</script>
+
+<style>
+  .pa { max-width: 760px; margin: 0 auto; padding: 1.25rem 1rem 3rem; display: flex; flex-direction: column; gap: 1.75rem; }
+
+  .pa-hero { display: flex; gap: 1.1rem; align-items: center; padding: 1.25rem 1.25rem; border-radius: var(--radius-lg, 1rem); background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--bg-card)), var(--bg-card)); border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border)); }
+  .pa-hero-stat { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 0 0 auto; padding-right: 1.1rem; border-right: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border)); }
+  .pa-hero-stat-num { font-size: clamp(2rem, 8vw, 2.9rem); font-weight: 800; line-height: 1; color: var(--accent-strong, #b91c1c); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .pa-hero-stat-lbl { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.25; }
+  .pa-hero-stat-lbl small { font-size: 0.66rem; opacity: 0.8; }
+  .pa-hero-txt h1 { margin: 0 0 0.35rem; font-size: clamp(1.15rem, 4.6vw, 1.5rem); line-height: 1.2; color: var(--text); }
+  .pa-hero-txt p { margin: 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-muted); }
+
+  .pa-card { border: 1px solid var(--border); border-radius: var(--radius-lg, 1rem); background: var(--bg-card); padding: 1.25rem; box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,.06)); }
+
+  .pa-inputs { display: flex; flex-direction: column; gap: 0.6rem; }
+  .pa-field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .pa-field > span { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+  .pa-inwrap { display: flex; align-items: center; border: 1px solid var(--border-input, #6b7280); border-radius: var(--radius-md, 0.6rem); background: var(--bg); overflow: hidden; }
+  .pa-inwrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .pa-cur { padding: 0 0.55rem; font-weight: 700; color: var(--text-muted); }
+  .pa-inwrap input { flex: 1; border: 0; background: transparent; padding: 0.7rem 0.6rem 0.7rem 0; font-size: 1.35rem; font-weight: 700; color: var(--text); width: 100%; outline: none; font-variant-numeric: tabular-nums; }
+  .pa-adv-toggle { align-self: flex-start; background: none; border: 0; color: var(--accent-strong, #0369a1); font-weight: 600; font-size: 0.85rem; cursor: pointer; padding: 0.15rem 0; }
+
+  .pa-verdict { margin: 1.1rem 0 0.4rem; text-align: center; padding: 1rem; border-radius: var(--radius-md, 0.6rem); background: color-mix(in srgb, var(--accent) 6%, var(--bg)); }
+  .pa-verdict-lead { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
+  .pa-verdict-big { margin: 0.15rem 0 0.25rem; font-size: clamp(1.3rem, 5vw, 1.8rem); font-weight: 800; color: var(--text); line-height: 1.15; }
+  .pa-verdict-big #pa-verdict-num { color: var(--accent-strong, #b91c1c); font-variant-numeric: tabular-nums; }
+  .pa-verdict-big.pa-win #pa-verdict-num { color: #15803d; }
+  .pa-verdict-sub { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+
+  .pa-tiles-head { margin: 1.1rem 0 0.5rem; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); }
+  .pa-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  .pa-tile { display: flex; gap: 0.55rem; align-items: flex-start; border: 1px solid var(--border); border-radius: var(--radius-md, 0.6rem); padding: 0.7rem; background: var(--bg); }
+  .pa-tile-emoji { font-size: 1.4rem; line-height: 1; flex: 0 0 auto; }
+  .pa-tile-body { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+  .pa-tile-now { font-size: 0.9rem; color: var(--text); line-height: 1.25; }
+  .pa-now-n { font-size: 1.05rem; color: var(--accent-strong, #0369a1); font-variant-numeric: tabular-nums; }
+  .pa-tile-then { font-size: 0.76rem; color: var(--text-muted); }
+  .pa-then-n { color: var(--text); font-variant-numeric: tabular-nums; }
+
+  .pa-actions { margin-top: 1rem; }
+  .pa-share { width: 100%; padding: 0.8rem; border-radius: var(--radius-md, 0.6rem); border: 0; background: var(--accent); color: var(--on-accent, #fff); font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+  .pa-share:hover { background: var(--accent-hover, var(--accent)); }
+  .pa-method { margin: 1rem 0 0; font-size: 0.76rem; line-height: 1.5; color: var(--text-subtle); }
+
+  .pa-related h2, .pa-text h2, .pa-faq h2 { font-size: 1.25rem; margin: 0 0 0.75rem; color: var(--text); }
+  .pa-related-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  .pa-related-card { display: flex; flex-direction: column; gap: 0.25rem; border: 1px solid var(--border); border-radius: var(--radius-md, 0.6rem); padding: 0.8rem; background: var(--bg-card); text-decoration: none; }
+  .pa-related-card:hover { border-color: var(--accent); }
+  .pa-related-emoji { font-size: 1.3rem; }
+  .pa-related-title { font-weight: 700; font-size: 0.92rem; color: var(--text); }
+  .pa-related-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
+  .pa-text p { margin: 0 0 0.75rem; font-size: 0.95rem; line-height: 1.65; color: var(--text); max-width: 70ch; }
+
+  .pa-faq { display: flex; flex-direction: column; gap: 0.5rem; }
+  .pa-faq-item { border: 1px solid var(--border); border-radius: var(--radius-md, 0.6rem); background: var(--bg); padding: 0.75rem 1rem; }
+  .pa-faq-item summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text); }
+  .pa-faq-item p { margin: 0.55rem 0 0.1rem; font-size: 0.9rem; line-height: 1.6; color: var(--text-muted); }
+
+  @media (max-width: 460px) {
+    .pa-tiles, .pa-related-grid { grid-template-columns: 1fr; }
+    .pa-hero { flex-direction: column; text-align: center; }
+    .pa-hero-stat { border-right: 0; padding-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border)); padding-bottom: 0.75rem; }
+  }
+</style>
