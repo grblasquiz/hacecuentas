@@ -25,18 +25,42 @@ const total = feriados.length;
 // Fin de semana largo = feriado en lunes o viernes (pega con el finde).
 const findesLargos = feriados.filter((f) => f.dia === 'Lunes' || f.dia === 'Viernes');
 
+// Próximo feriado — SSR (computado al build; el <script> lo refina client-side).
+// La build corre a diario (data-refresh cron), así que el SSR se mantiene fresco
+// para los crawlers, que es lo que permite rankear "cuándo es el próximo feriado".
+const buildHoy = new Date().toISOString().slice(0, 10);
+const pendientes = feriados.filter((f) => f.fecha >= buildHoy);
+const proximo = pendientes[0] ?? null;
+const diasHasta = proximo
+  ? Math.max(0, Math.round((Date.parse(proximo.fecha + 'T00:00:00') - Date.parse(buildHoy + 'T00:00:00')) / 86400000))
+  : null;
+const quedanEnAnio = pendientes.length;
+const diasHastaTxt = diasHasta === 0 ? 'es hoy' : diasHasta === 1 ? 'es mañana' : `faltan ${diasHasta} días`;
+
+// Cross-linking entre países (cluster temático de feriados LATAM).
+const OTROS_FERIADOS = [
+  { slug: 'calculadora-feriados-argentina-2026-calendario', pais: 'Argentina', flag: '🇦🇷' },
+  { slug: 'feriados-chile-2026', pais: 'Chile', flag: '🇨🇱' },
+  { slug: 'feriados-colombia-2026', pais: 'Colombia', flag: '🇨🇴' },
+  { slug: 'feriados-peru-2026', pais: 'Perú', flag: '🇵🇪' },
+  { slug: 'feriados-mexico-2026', pais: 'México', flag: '🇲🇽' },
+  { slug: 'feriados-ecuador-2026', pais: 'Ecuador', flag: '🇪🇨' },
+].filter((p) => p.slug !== slug);
+
 const fmtFecha = (iso: string) => {
   const [, m, d] = iso.split('-');
   const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   return `${d}/${meses[Number(m) - 1]}`;
 };
+const mesesLargos = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const fmtLarga = (iso: string) => { const [, m, d] = iso.split('-'); return `${Number(d)} de ${mesesLargos[Number(m) - 1]}`; };
 
 const title = titleOverride ?? `Calendario ${pais} 2026: feriados y días festivos con fechas | Hacé Cuentas`;
 const description = descriptionOverride ?? `Calendario ${pais} 2026: los ${total} feriados y días festivos con la fecha exacta, el día de la semana y todos los fines de semana largos y puentes. Mirá cuál es el próximo. Datos oficiales verificados.`;
 
 const faq = [
   { q: `¿Cuántos feriados hay en ${pais} en 2026?`, a: `En 2026 hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de arriba.` },
-  { q: `¿Cuándo es el próximo feriado en ${pais}?`, a: `El próximo feriado se marca automáticamente en la tabla según la fecha de hoy. Repasá el calendario completo para planificar tus días libres y los fines de semana largos.` },
+  { q: `¿Cuándo es el próximo feriado en ${pais}?`, a: proximo ? `El próximo feriado en ${pais} es el ${fmtLarga(proximo.fecha)} (${proximo.dia}): ${proximo.nombre}${diasHasta !== null && diasHasta > 1 ? `, faltan ${diasHasta} días` : ''}. Quedan ${quedanEnAnio} feriado${quedanEnAnio === 1 ? '' : 's'} en lo que resta de 2026. La tabla marca el próximo automáticamente según la fecha de hoy.` : `Ya pasaron todos los feriados nacionales de 2026 en ${pais}. Usá el calendario para planificar tus días libres del próximo año.` },
   { q: `¿Cuántos fines de semana largos hay en 2026?`, a: `En 2026 hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo. Sumando puentes y feriados pegados, conviene mirar el calendario completo.` },
   { q: `¿Estos feriados son nacionales o también hay locales?`, a: `La tabla lista los feriados nacionales de ${pais} (válidos en todo el país). Además puede haber feriados locales o provinciales según la ciudad o región, que no están incluidos acá.` },
   { q: `¿Se trabaja en los feriados? ¿Cómo se paga?`, a: `${notaTipo || 'Los feriados son días de descanso; si trabajás, suele corresponder un pago con recargo según la legislación laboral vigente.'}` },
@@ -74,11 +98,18 @@ const schema = { '@context': 'https://schema.org', '@graph': [
         <h1>Calendario {pais} 2026: feriados y días festivos</h1>
         <p class="lede">Todos los <strong>feriados y días festivos de {pais}</strong> en 2026, con la fecha exacta, el día de la semana y los <strong>fines de semana largos</strong>. Para que {gentilicio} planifiquen sus días libres.</p>
         <p class="updated">Última revisión: <time datetime={dataAsOf}>{dataAsOf}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a></p>
+        {proximo && (
+          <div class="proximo-hero" data-proximo>
+            <span class="proximo-hero-label">⏳ Próximo feriado en {pais}</span>
+            <span class="proximo-hero-main"><strong>{proximo.dia} {fmtLarga(proximo.fecha)}</strong> — {proximo.nombre}</span>
+            <span class="proximo-hero-days" data-proximo-days>{diasHastaTxt}</span>
+          </div>
+        )}
       </header>
 
       <section class="stats-callout">
         <div class="stat"><span class="stat-num">{total}</span><span class="stat-label">feriados en 2026</span></div>
-        <div class="stat" id="proximo-stat"><span class="stat-num" id="proximo-fecha">—</span><span class="stat-label" id="proximo-label">próximo feriado</span></div>
+        <div class="stat" id="proximo-stat"><span class="stat-num" id="proximo-fecha">{proximo ? fmtFecha(proximo.fecha) : '2027'}</span><span class="stat-label" id="proximo-label">{proximo ? `${proximo.dia} · próximo feriado` : 'sin feriados pendientes'}</span></div>
         <div class="stat"><span class="stat-num">{findesLargos.length}</span><span class="stat-label">fines de semana largos</span></div>
       </section>
 
@@ -116,7 +147,18 @@ const schema = { '@context': 'https://schema.org', '@graph': [
             <li><strong>{f.dia} {fmtFecha(f.fecha)}</strong> — {f.nombre}</li>
           ))}
         </ul>
+        <p class="note">Un <strong>puente</strong> es cuando tomás el día hábil que queda entre un feriado y el fin de semana (por ejemplo, un martes feriado + el lunes libre) para armarte una escapada más larga.</p>
       </section>
+
+      {OTROS_FERIADOS.length > 0 && (
+        <section class="otros-paises">
+          <h2>Feriados de otros países en 2026</h2>
+          <p>Calendarios de feriados de otros países de la región, con fechas, días de la semana y fines de semana largos:</p>
+          <ul class="paises-links">
+            {OTROS_FERIADOS.map((p) => (<li><a href={`/${p.slug}`}>{p.flag} Feriados {p.pais} 2026</a></li>))}
+          </ul>
+        </section>
+      )}
 
       {related.length > 0 && (
         <section>
@@ -174,9 +216,18 @@ Feriados {pais} 2026 · Licencia CC-BY 4.0</code></pre>
       badge.className = 'proximo-badge';
       badge.textContent = 'Próximo';
       td.appendChild(badge);
+      // Refrescar el hero del próximo feriado (el SSR es del build; esto lo deja exacto).
+      const dd = Math.max(0, Math.round((Date.parse(prox.fecha + 'T00:00:00') - Date.parse(hoyISO + 'T00:00:00')) / 86400000));
+      const heroDays = document.querySelector('[data-proximo-days]');
+      if (heroDays) heroDays.textContent = dd === 0 ? 'es hoy' : dd === 1 ? 'es mañana' : 'faltan ' + dd + ' días';
+      const heroMain = document.querySelector('.proximo-hero-main');
+      const mesesL = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      if (heroMain) heroMain.innerHTML = '<strong>' + dia + ' ' + Number(d) + ' de ' + mesesL[Number(m) - 1] + '</strong> — ' + nombre;
     } else if (numEl && labelEl) {
       numEl.textContent = '2027';
       labelEl.textContent = 'sin feriados pendientes en 2026';
+      const hero = document.querySelector('[data-proximo]');
+      if (hero) hero.style.display = 'none';
     }
   })();
 </script>
@@ -211,4 +262,11 @@ Feriados {pais} 2026 · Licencia CC-BY 4.0</code></pre>
   .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
   .faq summary { font-weight: 600; cursor: pointer; }
   .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+  .proximo-hero { display: flex; flex-direction: column; gap: 0.15rem; margin-top: 1rem; padding: 0.85rem 1.1rem; border-radius: 0.7rem; background: color-mix(in srgb, var(--accent) 10%, var(--bg-card, var(--bg))); border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border)); }
+  .proximo-hero-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-strong, var(--accent)); }
+  .proximo-hero-main { font-size: 1.05rem; color: var(--text); line-height: 1.35; }
+  .proximo-hero-days { font-size: 0.85rem; color: var(--text-muted); }
+  .otros-paises .paises-links { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1rem; }
+  .otros-paises .paises-links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  @media (max-width: 520px) { .otros-paises .paises-links { grid-template-columns: 1fr; } }
 </style>
