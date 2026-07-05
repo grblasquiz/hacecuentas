@@ -1,0 +1,550 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { freeOfferSchema } from '../lib/offer-schema';
+
+const title = 'Planificador de Objetivos de Ahorro — Cuánto Ahorrar por Mes';
+const description = 'Ponete una meta ($X para un viaje, auto, fondo de emergencia) y calculá cuánto ahorrar por mes o en cuánto tiempo llegás, con interés compuesto. Guardá tus objetivos y seguí el progreso. Gratis.';
+
+const schemaApp = {
+  '@type': 'WebApplication',
+  name: 'Planificador de Objetivos de Ahorro',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  url: 'https://hacecuentas.com/planificador-de-objetivos',
+  description,
+  offers: freeOfferSchema({ priceCurrency: 'ARS' }),
+  speakable: {
+    '@type': 'SpeakableSpecification',
+    cssSelector: ['h1', '.lead', '[data-plan-primary]'],
+  },
+};
+
+const schemaBreadcrumb = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Finanzas', item: 'https://hacecuentas.com/categoria/finanzas' },
+    { '@type': 'ListItem', position: 3, name: 'Planificador de objetivos', item: 'https://hacecuentas.com/planificador-de-objetivos' },
+  ],
+};
+
+const faq = [
+  { q: '¿Cómo funciona el planificador de objetivos?', a: 'Definís una meta de plata (por ejemplo, $2.000.000 para un viaje), cuánto tenés ahorrado hoy y una de dos cosas: cuánto podés ahorrar por mes (te decimos <strong>cuándo llegás</strong>) o para cuándo lo querés (te decimos <strong>cuánto ahorrar por mes</strong>). Considera el interés compuesto si esperás un rendimiento.' },
+  { q: '¿Qué es el interés compuesto y por qué importa?', a: 'Es cuando los intereses generan más intereses. Si ponés tus ahorros en un instrumento que rinde (plazo fijo, FCI, etc.), cada mes ganás sobre el capital <em>y</em> sobre los intereses previos. En metas de largo plazo hace una diferencia enorme: buena parte del objetivo la puede cubrir el rendimiento, no tu bolsillo.' },
+  { q: '¿Qué rendimiento anual pongo?', a: 'Si vas a dejar la plata en la cuenta sin invertir, poné <strong>0%</strong>. Si la vas a poner a rendir, usá una estimación conservadora <em>real</em> (por encima de la inflación). En Argentina conviene pensar en términos reales o en dólares para no engañarte con tasas nominales altas.' },
+  { q: '¿Los cálculos son en términos reales o nominales?', a: 'El planificador trabaja con los números que cargás. Si querés protegerte de la inflación, definí el objetivo y el rendimiento en la misma moneda/base (por ejemplo, todo en dólares, o el rendimiento como tasa real). Así el "cuánto ahorrar por mes" mantiene su poder de compra.' },
+  { q: '¿Se guardan mis objetivos?', a: 'Sí, quedan guardados en <strong>tu dispositivo</strong> (localStorage), no en un servidor. Podés tener varios objetivos, verlos cuando volvés y borrarlos cuando quieras. Nunca compartimos ni subimos tus datos.' },
+  { q: '¿Sirve para un fondo de emergencia?', a: 'Perfecto para eso. La recomendación clásica es juntar de <strong>3 a 6 meses de gastos</strong>. Cargá ese monto como objetivo y definí en cuánto tiempo querés tenerlo: el planificador te dice el aporte mensual necesario.' },
+  { q: '¿Y si no llego con lo que puedo ahorrar?', a: 'El planificador te lo dice claramente. Ahí tenés tres palancas: ahorrar más por mes, estirar el plazo, o hacer rendir la plata (subir el rendimiento). Probá combinaciones hasta que el plan sea realista para tu bolsillo.' },
+  { q: '¿Puedo usarlo para pagar una deuda?', a: 'Este planificador está pensado para <em>juntar</em> plata hacia una meta. Para amortizar deudas conviene una calculadora de préstamos o de <a href="/decidir/deudas">salida de deudas</a>, que contempla la tasa que te cobran y el orden de pago.' },
+  { q: '¿Es asesoramiento financiero?', a: 'No. Es una herramienta de cálculo orientativa para ayudarte a planificar. Las proyecciones dependen de supuestos (rendimiento, constancia del ahorro). Para decisiones de inversión, consultá a un profesional matriculado.' },
+];
+
+const schemaFaq = {
+  '@type': 'FAQPage',
+  mainEntity: faq.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
+  })),
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [schemaApp, schemaBreadcrumb, schemaFaq],
+};
+---
+<Layout title={title} description={description} schema={schema} audience="AR" domain="money" pageType="calculator">
+  <Header slot="header" />
+
+  <article class="plan-page" data-domain="money">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Planificador de objetivos</span>
+    </nav>
+
+    <header class="plan-hero">
+      <h1>Planificador de objetivos de ahorro 🎯</h1>
+      <p class="lead">
+        Ponete una meta y te decimos <strong>cuánto ahorrar por mes</strong> —o <strong>en cuánto tiempo llegás</strong>—
+        con interés compuesto. Guardá tus objetivos y seguí el progreso. Sin registro, privado, en tu dispositivo.
+      </p>
+    </header>
+
+    <section class="plan-tool">
+      <form class="plan-form" id="plan-form" novalidate>
+        <div class="plan-field plan-field--full">
+          <label for="plan-name">¿Cuál es tu objetivo?</label>
+          <input type="text" id="plan-name" maxlength="60" placeholder="Ej: Viaje a Europa, auto, fondo de emergencia" value="Mi objetivo" />
+        </div>
+
+        <div class="plan-field">
+          <label for="plan-target">Monto que querés juntar</label>
+          <div class="plan-input-wrap"><span class="plan-prefix">$</span><input type="text" inputmode="numeric" id="plan-target" data-money value="2.000.000" /></div>
+        </div>
+
+        <div class="plan-field">
+          <label for="plan-current">Ya tengo ahorrado <span class="plan-opt">(opcional)</span></label>
+          <div class="plan-input-wrap"><span class="plan-prefix">$</span><input type="text" inputmode="numeric" id="plan-current" data-money value="0" /></div>
+        </div>
+
+        <div class="plan-field plan-field--full">
+          <span class="plan-modelabel">¿Qué querés averiguar?</span>
+          <div class="plan-modes" role="radiogroup" aria-label="Modo de cálculo">
+            <label class="plan-mode"><input type="radio" name="plan-mode" value="cuanto" checked /> <span>Tengo una fecha límite → <strong>cuánto ahorrar por mes</strong></span></label>
+            <label class="plan-mode"><input type="radio" name="plan-mode" value="cuando" /> <span>Sé cuánto puedo ahorrar → <strong>en cuánto tiempo llego</strong></span></label>
+          </div>
+        </div>
+
+        <div class="plan-field" data-when-cuanto>
+          <label for="plan-months">¿En cuánto tiempo?</label>
+          <div class="plan-input-wrap"><input type="number" id="plan-months" min="1" max="1200" value="24" /><span class="plan-suffix">meses</span></div>
+        </div>
+
+        <div class="plan-field" data-when-cuando hidden>
+          <label for="plan-monthly">¿Cuánto podés ahorrar por mes?</label>
+          <div class="plan-input-wrap"><span class="plan-prefix">$</span><input type="text" inputmode="numeric" id="plan-monthly" data-money value="70.000" /></div>
+        </div>
+
+        <div class="plan-field">
+          <label for="plan-rate">Rendimiento anual estimado <span class="plan-opt">(opcional)</span></label>
+          <div class="plan-input-wrap"><input type="number" id="plan-rate" min="0" max="200" step="0.5" value="0" /><span class="plan-suffix">% anual</span></div>
+        </div>
+
+        <div class="plan-field plan-field--full plan-actions">
+          <button type="submit" class="plan-btn-primary">Calcular mi plan</button>
+        </div>
+      </form>
+
+      <section class="plan-results" id="plan-results" aria-live="polite" hidden>
+        <div class="plan-hero-result">
+          <div class="plan-result-label" id="plan-result-label">Tenés que ahorrar por mes</div>
+          <div class="plan-result-value" data-plan-primary id="plan-result-value">$0</div>
+          <div class="plan-result-sub" id="plan-result-sub">—</div>
+        </div>
+
+        <div class="plan-metrics">
+          <div class="plan-metric"><span class="plan-metric-label">Total que vas a aportar</span><span class="plan-metric-value" id="plan-aportado">—</span></div>
+          <div class="plan-metric"><span class="plan-metric-label">Intereses ganados</span><span class="plan-metric-value" id="plan-intereses">—</span></div>
+          <div class="plan-metric"><span class="plan-metric-label">Monto final</span><span class="plan-metric-value" id="plan-final">—</span></div>
+        </div>
+
+        <div class="plan-plain" id="plan-plain"></div>
+
+        <div class="plan-chart-wrap">
+          <div class="plan-chart-title">Cómo crece tu ahorro</div>
+          <div class="plan-chart" id="plan-chart"></div>
+        </div>
+
+        <div class="plan-save-row">
+          <button type="button" class="plan-btn-save" id="plan-save">💾 Guardar este objetivo</button>
+          <a class="plan-link-panel" href="/mi-hacecuentas">Ver todos tus números en Mi Panel →</a>
+        </div>
+      </section>
+    </section>
+
+    <section class="plan-saved" id="plan-saved" hidden>
+      <h2>🎯 Tus objetivos guardados</h2>
+      <div class="plan-saved-list" id="plan-saved-list"></div>
+    </section>
+
+    <section class="plan-explain">
+      <h2>Cómo planificar un objetivo de ahorro</h2>
+      <p>Un objetivo de ahorro se vuelve alcanzable cuando lo convertís en un número por mes. La cuenta tiene cuatro piezas: <strong>cuánto querés juntar</strong>, <strong>cuánto tenés hoy</strong>, <strong>cuánto tiempo</strong> te das y qué <strong>rendimiento</strong> le sacás a la plata mientras la juntás.</p>
+      <ul>
+        <li><strong>Sin rendimiento (0%):</strong> el aporte mensual es simplemente lo que falta dividido los meses. Simple y predecible.</li>
+        <li><strong>Con rendimiento:</strong> el interés compuesto trabaja a tu favor. Cuanto más largo el plazo, más parte del objetivo la cubren los intereses y menos tu bolsillo.</li>
+        <li><strong>El poder del tiempo:</strong> empezar antes baja fuerte el esfuerzo mensual. Duplicar el plazo puede más que reducir a la mitad el aporte necesario cuando hay rendimiento.</li>
+      </ul>
+      <p>Si el número que te da es más de lo que podés, tenés tres palancas: <strong>estirar el plazo</strong>, <strong>subir el ahorro mensual</strong> o <strong>hacer rendir la plata</strong>. Probá combinaciones hasta que el plan sea realista y sostenible.</p>
+    </section>
+
+    <section class="plan-faq">
+      <h2>Preguntas frecuentes</h2>
+      <div class="plan-faq-list">
+        {faq.map(f => (
+          <details class="plan-faq-item">
+            <summary>{f.q}</summary>
+            <div class="plan-faq-a" set:html={f.a}></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="plan-related">
+      <h2>Seguí calculando</h2>
+      <div class="plan-related-grid">
+        <a href="/calculadora-interes-compuesto">📈 Calculadora de interés compuesto</a>
+        <a href="/calculadora-plazo-fijo">🏦 Plazo fijo</a>
+        <a href="/decidir/cuanto-necesito-para-mi-viaje">✈️ ¿Cuánto necesito para mi viaje?</a>
+        <a href="/presupuesto-familiar">🏠 Presupuesto familiar</a>
+      </div>
+    </section>
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  /* Planificador de objetivos (#22). Global con prefijo .plan-* — evita el
+     problema de scope de Astro en los bloques que inyectamos por innerHTML
+     (gráfico + objetivos guardados). Todo tematizado por tokens (domain=money). */
+  .plan-page { max-width: 860px; margin: 0 auto; }
+  .plan-page .breadcrumbs { font-size: 13px; color: var(--text-subtle); margin-bottom: 18px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .plan-page .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .plan-page .breadcrumbs a:hover { color: var(--accent); }
+  .plan-hero { margin-bottom: 1.5rem; }
+  .plan-hero h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); font-weight: 800; letter-spacing: -0.025em; margin-bottom: 0.6rem; }
+  .plan-hero .lead { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; max-width: 62ch; }
+
+  .plan-tool { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card, 16px); padding: 1.5rem; box-shadow: var(--shadow-sm); }
+  .plan-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; }
+  .plan-field { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
+  .plan-field--full { grid-column: 1 / -1; }
+  .plan-field[hidden] { display: none; }
+  .plan-field label, .plan-modelabel { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+  .plan-opt { font-weight: 400; color: var(--text-subtle); font-size: 0.8125rem; }
+  .plan-input-wrap { display: flex; align-items: center; gap: 0; border: 1.5px solid var(--border-input); border-radius: var(--radius-control, 12px); background: var(--bg); overflow: hidden; transition: border-color .15s, box-shadow .15s; }
+  .plan-input-wrap:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
+  .plan-input-wrap .plan-prefix, .plan-input-wrap .plan-suffix { padding: 0 0.7rem; color: var(--text-subtle); font-weight: 600; font-size: 0.95rem; white-space: nowrap; background: var(--bg-muted); align-self: stretch; display: flex; align-items: center; }
+  .plan-input-wrap .plan-suffix { border-left: 1px solid var(--border); }
+  .plan-input-wrap .plan-prefix { border-right: 1px solid var(--border); }
+  .plan-input-wrap input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 0 0.75rem; height: 48px; font-family: var(--font-num); font-size: 1.05rem; font-weight: 600; color: var(--text); }
+  #plan-name { border: 1.5px solid var(--border-input); border-radius: var(--radius-control, 12px); background: var(--bg); padding: 0 0.85rem; height: 48px; font-size: 1rem; color: var(--text); font-family: var(--font-body); font-weight: 500; }
+  #plan-name:focus-visible { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
+  .plan-modes { display: flex; flex-direction: column; gap: 0.5rem; }
+  .plan-mode { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.7rem 0.85rem; border: 1.5px solid var(--border); border-radius: var(--radius-control, 12px); cursor: pointer; font-size: 0.9rem; color: var(--text-muted); transition: border-color .15s, background .15s; }
+  .plan-mode:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+  .plan-mode input { margin-top: 3px; accent-color: var(--accent); }
+  .plan-mode strong { color: var(--text); }
+  .plan-actions { margin-top: 0.25rem; }
+  .plan-btn-primary { width: 100%; height: 52px; background: var(--accent); color: var(--on-accent); border: none; border-radius: var(--radius-control, 12px); font-size: 1.05rem; font-weight: 700; cursor: pointer; box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--accent) 60%, transparent); transition: filter .15s, transform .1s; }
+  .plan-btn-primary:hover { filter: brightness(1.05); }
+  .plan-btn-primary:active { transform: translateY(1px); }
+
+  .plan-results { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .plan-results[hidden] { display: none; }
+  .plan-hero-result { background: radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 55%), linear-gradient(135deg, var(--accent-soft) 0%, color-mix(in srgb, var(--accent-2) 14%, var(--accent-soft)) 100%); border: 1.5px solid color-mix(in srgb, var(--accent) 32%, transparent); border-radius: var(--radius-card, 16px); padding: 1.5rem; text-align: center; }
+  .plan-result-label { font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-strong); }
+  .plan-result-value { font-family: var(--font-num); font-size: clamp(2rem, 8vw, 3.25rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; color: var(--accent-strong); margin: 0.35rem 0 0.25rem; }
+  .plan-result-sub { font-size: 0.95rem; color: var(--text-muted); }
+  .plan-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1rem; }
+  .plan-metric { background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius, 10px); padding: 0.8rem 0.9rem; display: flex; flex-direction: column; gap: 0.2rem; }
+  .plan-metric-label { font-size: 0.75rem; color: var(--text-subtle); }
+  .plan-metric-value { font-family: var(--font-num); font-size: 1.05rem; font-weight: 700; color: var(--text); }
+  .plan-plain { margin-top: 1rem; padding: 0.9rem 1.1rem; background: var(--bg-soft); border-left: 4px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; font-size: 0.95rem; color: var(--text); line-height: 1.55; }
+  .plan-plain[hidden] { display: none; }
+
+  .plan-chart-wrap { margin-top: 1.25rem; }
+  .plan-chart-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--text-muted); margin-bottom: 0.6rem; }
+  .plan-chart { width: 100%; }
+  .plan-chart svg { width: 100%; height: auto; display: block; }
+
+  .plan-save-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin-top: 1.25rem; }
+  .plan-btn-save { background: var(--bg-card); border: 1.5px solid var(--accent); color: var(--accent-strong); border-radius: var(--radius-control, 12px); padding: 0.6rem 1.1rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+  .plan-btn-save:hover { background: var(--accent-soft); }
+  .plan-btn-save.saved { border-color: var(--success); color: var(--success-text, var(--success)); }
+  .plan-link-panel { color: var(--accent); font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+  .plan-link-panel:hover { text-decoration: underline; }
+
+  .plan-saved { margin-top: 2rem; }
+  .plan-saved[hidden] { display: none; }
+  .plan-saved h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+  .plan-saved-list { display: grid; gap: 0.75rem; }
+  .plan-goal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card, 16px); padding: 1rem 1.15rem; }
+  .plan-goal-top { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
+  .plan-goal-name { font-weight: 700; color: var(--text); font-size: 1rem; }
+  .plan-goal-del { background: none; border: none; color: var(--text-subtle); cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+  .plan-goal-del:hover { color: var(--danger); background: var(--bg-muted); }
+  .plan-goal-sub { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem; }
+  .plan-goal-bar { height: 8px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; margin-top: 0.7rem; }
+  .plan-goal-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; }
+  .plan-goal-pct { font-size: 0.8rem; color: var(--text-subtle); margin-top: 0.35rem; font-variant-numeric: tabular-nums; }
+
+  .plan-explain, .plan-faq, .plan-related { margin-top: 2.25rem; }
+  .plan-explain h2, .plan-faq h2, .plan-related h2 { font-size: 1.35rem; margin-bottom: 0.8rem; }
+  .plan-explain p { color: var(--text-muted); line-height: 1.65; margin-bottom: 0.75rem; }
+  .plan-explain ul { margin: 0 0 0.75rem 1.1rem; color: var(--text-muted); line-height: 1.7; }
+  .plan-explain strong { color: var(--text); }
+  .plan-faq-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 0.5rem; }
+  .plan-faq-item summary { padding: 0.9rem 1.1rem; font-weight: 600; font-size: 0.95rem; cursor: pointer; color: var(--text); list-style: none; }
+  .plan-faq-item summary::-webkit-details-marker { display: none; }
+  .plan-faq-item[open] summary { color: var(--accent-strong); }
+  .plan-faq-a { padding: 0 1.1rem 1rem; color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; }
+  .plan-faq-a a { color: var(--accent); }
+  .plan-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.6rem; }
+  .plan-related-grid a { display: block; padding: 0.85rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: transform .12s, border-color .12s, box-shadow .12s; }
+  .plan-related-grid a:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow-md); color: var(--accent-strong); }
+
+  @media (max-width: 640px) {
+    .plan-form { grid-template-columns: 1fr; }
+    .plan-metrics { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .plan-related-grid a, .plan-btn-primary { transition: none; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var form = document.getElementById('plan-form');
+    if (!form) return;
+
+    var NF = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+    function money(n) { return '$ ' + NF.format(Math.round(isFinite(n) ? n : 0)); }
+    function digits(s) { return String(s == null ? '' : s).replace(/\D/g, ''); }
+    function parseMoney(s) { var d = digits(s); return d ? Number(d) : 0; }
+
+    // Formateo de miles en vivo en los campos [data-money]
+    document.querySelectorAll('#plan-form [data-money]').forEach(function (el) {
+      el.addEventListener('input', function () {
+        var d = digits(el.value);
+        el.value = d ? NF.format(Number(d)) : '';
+      });
+    });
+
+    // Toggle de campos según modo
+    var modeRadios = form.querySelectorAll('input[name="plan-mode"]');
+    function currentMode() {
+      var checked = form.querySelector('input[name="plan-mode"]:checked');
+      return checked ? checked.value : 'cuanto';
+    }
+    function applyMode() {
+      var m = currentMode();
+      var cuantoField = form.querySelector('[data-when-cuanto]');
+      var cuandoField = form.querySelector('[data-when-cuando]');
+      if (cuantoField) cuantoField.hidden = m !== 'cuanto';
+      if (cuandoField) cuandoField.hidden = m !== 'cuando';
+    }
+    modeRadios.forEach(function (r) { r.addEventListener('change', applyMode); });
+    applyMode();
+
+    // ── Matemática financiera (anualidad ordinaria, aportes a fin de mes) ──
+    function futureValue(pv, pmt, i, n) {
+      if (i === 0) return pv + pmt * n;
+      var f = Math.pow(1 + i, n);
+      return pv * f + pmt * ((f - 1) / i);
+    }
+    function solvePmt(pv, target, i, n) {
+      if (n <= 0) return Infinity;
+      if (i === 0) return (target - pv) / n;
+      var f = Math.pow(1 + i, n);
+      return (target - pv * f) * i / (f - 1);
+    }
+    function solveMonths(pv, pmt, i, target) {
+      // Menor n tal que el balance alcanza el objetivo. Cap 1200 meses.
+      if (pv >= target) return 0;
+      for (var n = 1; n <= 1200; n++) {
+        if (futureValue(pv, pmt, i, n) >= target) return n;
+      }
+      return -1; // no alcanza en 100 años
+    }
+    function fmtDuration(n) {
+      if (n <= 0) return 'ya';
+      var y = Math.floor(n / 12), m = n % 12;
+      var parts = [];
+      if (y) parts.push(y + (y === 1 ? ' año' : ' años'));
+      if (m) parts.push(m + (m === 1 ? ' mes' : ' meses'));
+      return parts.join(' y ') || (n + ' meses');
+    }
+    function targetDate(n) {
+      var d = new Date();
+      d.setMonth(d.getMonth() + n);
+      return d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    }
+
+    // ── Gráfico SVG de crecimiento (sin dependencias) ──
+    function renderChart(balances, target) {
+      var el = document.getElementById('plan-chart');
+      if (!el) return;
+      var W = 640, H = 220, PAD = 8;
+      var maxV = Math.max(target, balances[balances.length - 1] || 0, 1);
+      var n = balances.length - 1;
+      function x(i) { return PAD + (i / Math.max(n, 1)) * (W - PAD * 2); }
+      function y(v) { return H - PAD - (v / maxV) * (H - PAD * 2 - 14); }
+      var pts = balances.map(function (v, i) { return x(i).toFixed(1) + ',' + y(v).toFixed(1); }).join(' ');
+      var area = 'M ' + x(0).toFixed(1) + ',' + (H - PAD).toFixed(1) + ' L ' + pts.split(' ').join(' L ') + ' L ' + x(n).toFixed(1) + ',' + (H - PAD).toFixed(1) + ' Z';
+      var ty = y(target).toFixed(1);
+      el.innerHTML =
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Crecimiento del ahorro hasta el objetivo">' +
+        '<defs><linearGradient id="planGrad" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="var(--accent)" stop-opacity="0.28"/>' +
+        '<stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>' +
+        '</linearGradient></defs>' +
+        '<line x1="' + PAD + '" y1="' + ty + '" x2="' + (W - PAD) + '" y2="' + ty + '" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7"/>' +
+        '<text x="' + (W - PAD) + '" y="' + (Number(ty) - 5) + '" text-anchor="end" font-size="11" fill="var(--danger)">Objetivo</text>' +
+        '<path d="' + area + '" fill="url(#planGrad)"/>' +
+        '<polyline points="' + pts + '" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>';
+    }
+
+    // ── Cálculo principal ──
+    var results = document.getElementById('plan-results');
+    var lastPlan = null;
+
+    function compute() {
+      var mode = currentMode();
+      var target = parseMoney(document.getElementById('plan-target').value);
+      var current = parseMoney(document.getElementById('plan-current').value);
+      var rate = Number(document.getElementById('plan-rate').value) || 0;
+      var i = rate / 100 / 12;
+      if (!(target > 0)) return null;
+
+      var months, pmt;
+      if (mode === 'cuanto') {
+        months = Math.max(1, Math.round(Number(document.getElementById('plan-months').value) || 0));
+        pmt = solvePmt(current, target, i, months);
+      } else {
+        pmt = parseMoney(document.getElementById('plan-monthly').value);
+        months = solveMonths(current, pmt, i, target);
+      }
+
+      // Serie de balances mes a mes (para el gráfico), capeada a 240 puntos.
+      var nForChart = (months > 0 && isFinite(months)) ? months : 0;
+      var balances = [];
+      if (nForChart > 0) {
+        var step = Math.max(1, Math.ceil(nForChart / 240));
+        for (var k = 0; k <= nForChart; k += step) balances.push(futureValue(current, Math.max(0, pmt), i, k));
+        if (balances.length && (nForChart % step !== 0)) balances.push(futureValue(current, Math.max(0, pmt), i, nForChart));
+      }
+
+      var finalV = (nForChart > 0) ? futureValue(current, Math.max(0, pmt), i, nForChart) : current;
+      var aportado = current + Math.max(0, pmt) * (nForChart > 0 ? nForChart : 0);
+      var intereses = Math.max(0, finalV - aportado);
+
+      return {
+        mode: mode, target: target, current: current, rate: rate,
+        months: months, pmt: pmt, finalV: finalV, aportado: aportado,
+        intereses: intereses, balances: balances,
+        name: (document.getElementById('plan-name').value || 'Mi objetivo').trim(),
+      };
+    }
+
+    function render(p) {
+      var label = document.getElementById('plan-result-label');
+      var value = document.getElementById('plan-result-value');
+      var sub = document.getElementById('plan-result-sub');
+      var plain = document.getElementById('plan-plain');
+
+      if (p.mode === 'cuanto') {
+        label.textContent = 'Tenés que ahorrar por mes';
+        if (p.pmt <= 0) {
+          value.textContent = '$ 0';
+          sub.textContent = 'Con lo que ya tenés (más los intereses) llegás sin ahorrar un peso más.';
+        } else {
+          value.textContent = money(p.pmt);
+          sub.textContent = 'durante ' + fmtDuration(p.months) + ' para juntar ' + money(p.target) + '.';
+        }
+      } else {
+        label.textContent = 'Vas a llegar en';
+        if (p.months < 0) {
+          value.textContent = '—';
+          sub.textContent = 'Con ese ahorro mensual no llegás en 100 años. Subí el aporte o el rendimiento.';
+        } else if (p.months === 0) {
+          value.textContent = '¡Ya!';
+          sub.textContent = 'Ya tenés lo suficiente para tu objetivo. 🎉';
+        } else {
+          value.textContent = fmtDuration(p.months);
+          sub.textContent = 'aprox. ' + targetDate(p.months) + ', ahorrando ' + money(p.pmt) + '/mes.';
+        }
+      }
+
+      document.getElementById('plan-aportado').textContent = money(p.aportado);
+      document.getElementById('plan-intereses').textContent = money(p.intereses);
+      document.getElementById('plan-final').textContent = money(p.finalV);
+
+      // Frase-plan en lenguaje claro
+      if (plain) {
+        var txt = '';
+        var pctInt = p.finalV > 0 ? Math.round((p.intereses / p.finalV) * 100) : 0;
+        if (p.mode === 'cuanto' && p.pmt > 0) {
+          txt = 'Para tener <strong>' + money(p.target) + '</strong> en <strong>' + fmtDuration(p.months) + '</strong>, apartá <strong>' + money(p.pmt) + '</strong> por mes.';
+        } else if (p.mode === 'cuando' && p.months > 0) {
+          txt = 'Ahorrando <strong>' + money(p.pmt) + '</strong> por mes, alcanzás <strong>' + money(p.target) + '</strong> en <strong>' + fmtDuration(p.months) + '</strong>.';
+        }
+        if (txt && p.rate > 0 && pctInt > 0) {
+          txt += ' El rendimiento del ' + p.rate + '% anual cubre <strong>' + pctInt + '%</strong> del total (' + money(p.intereses) + ' en intereses).';
+        }
+        plain.innerHTML = txt;
+        plain.hidden = !txt;
+      }
+
+      renderChart(p.balances.length ? p.balances : [p.current, p.finalV], p.target);
+      results.hidden = false;
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var p = compute();
+      if (!p) return;
+      lastPlan = p;
+      render(p);
+      var saveBtn = document.getElementById('plan-save');
+      if (saveBtn) { saveBtn.classList.remove('saved'); saveBtn.textContent = '💾 Guardar este objetivo'; }
+      try { results.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e2) {}
+      try { if (typeof window.hcTrack === 'function') window.hcTrack('hc_calculator_success', { calculator_slug: 'planificador-de-objetivos', calculator_category: 'finanzas' }); } catch (e3) {}
+    });
+
+    // ── Objetivos guardados (localStorage hc_goals) ──
+    var GKEY = 'hc_goals';
+    function readGoals() { try { var a = JSON.parse(localStorage.getItem(GKEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+    function writeGoals(a) { try { localStorage.setItem(GKEY, JSON.stringify(a)); } catch (e) {} }
+
+    function renderGoals() {
+      var wrap = document.getElementById('plan-saved');
+      var list = document.getElementById('plan-saved-list');
+      if (!wrap || !list) return;
+      var goals = readGoals();
+      if (!goals.length) { wrap.hidden = true; return; }
+      list.innerHTML = '';
+      goals.slice().reverse().forEach(function (g) {
+        var pct = g.target > 0 ? Math.max(0, Math.min(100, Math.round((g.current / g.target) * 100))) : 0;
+        var sub = g.mode === 'cuanto'
+          ? (money(g.pmt) + '/mes durante ' + fmtDuration(g.months))
+          : ('llegás en ' + fmtDuration(g.months) + ' ahorrando ' + money(g.pmt) + '/mes');
+        var card = document.createElement('div');
+        card.className = 'plan-goal';
+        card.innerHTML =
+          '<div class="plan-goal-top"><span class="plan-goal-name"></span>' +
+          '<button type="button" class="plan-goal-del" aria-label="Borrar objetivo">×</button></div>' +
+          '<div class="plan-goal-sub"></div>' +
+          '<div class="plan-goal-bar"><div class="plan-goal-bar-fill" style="width:' + pct + '%"></div></div>' +
+          '<div class="plan-goal-pct">' + NF.format(g.current) + ' de ' + NF.format(g.target) + ' · ' + pct + '%</div>';
+        card.querySelector('.plan-goal-name').textContent = '🎯 ' + (g.name || 'Objetivo') + ' — ' + money(g.target);
+        card.querySelector('.plan-goal-sub').textContent = sub;
+        card.querySelector('.plan-goal-del').addEventListener('click', function () {
+          var next = readGoals().filter(function (x) { return x.id !== g.id; });
+          writeGoals(next); renderGoals();
+        });
+        list.appendChild(card);
+      });
+      wrap.hidden = false;
+    }
+
+    var saveBtn = document.getElementById('plan-save');
+    if (saveBtn) saveBtn.addEventListener('click', function () {
+      if (!lastPlan) return;
+      var goals = readGoals();
+      goals.push({
+        id: 'g' + Date.now(),
+        name: lastPlan.name, target: lastPlan.target, current: lastPlan.current,
+        mode: lastPlan.mode, months: lastPlan.months, pmt: Math.max(0, Math.round(lastPlan.pmt)), rate: lastPlan.rate,
+      });
+      writeGoals(goals);
+      saveBtn.classList.add('saved');
+      saveBtn.textContent = '✓ Guardado';
+      renderGoals();
+      try { if (typeof window.hcTrack === 'function') window.hcTrack('hc_result_save', { calculator_slug: 'planificador-de-objetivos' }); } catch (e) {}
+    });
+
+    renderGoals();
+  })();
+</script>
+</content>
