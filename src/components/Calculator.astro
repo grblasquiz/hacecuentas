@@ -834,6 +834,11 @@ const formatFreshnessDate = (iso: string): string => {
       <ol class="result-steps-list" data-steps-list></ol>
     </details>
 
+    {/* Slot del gráfico dinámico de fallback (auto-donut): el motor lo puebla
+        tras calcular con el desglose REAL del resultado, SOLO si la fórmula no
+        trae su propio gráfico Chart.js. Cliente puro, sin dependencias. */}
+    <div class="calc-dynviz" data-viz-slot hidden></div>
+
     {config.visualization && (
       <Visualization title={config.visualization.title} data={config.visualization.data} />
     )}
@@ -4051,6 +4056,90 @@ const formatFreshnessDate = (iso: string): string => {
     requestAnimationFrame(step);
   }
 
+  // ── Auto-donut de resultado (part-to-whole) ────────────────────────────────
+  // Deriva un donut del resultado REAL cuando hay un "todo" (el mayor valor) que
+  // ≈ la suma de ≥2 "partes" del mismo formato (±1.5%). Detector conservador: si
+  // no está seguro, no dibuja nada (mejor sin gráfico que con uno engañoso sobre
+  // 2500 URLs). Complementa —no reemplaza— al sistema Chart.js (output._charts).
+  const HC_VIZ_COLORS = ['var(--accent)', '#a78bfa', 'var(--success)', 'var(--warning)', '#0ea5e9', '#f472b6'];
+
+  function hcBuildVizFromOutputs(outputEls: NodeListOf<HTMLElement>, output: any): any {
+    try {
+      const items: any[] = [];
+      outputEls.forEach((el) => {
+        const id = el.dataset.output;
+        const fmt = el.dataset.format || '';
+        const v = output[id as string];
+        if ((fmt === 'currency' || fmt === 'number') && typeof v === 'number' && isFinite(v)) {
+          items.push({
+            fmt,
+            suffix: el.dataset.suffix || '',
+            label: ((el.querySelector('.result-label') as HTMLElement | null)?.textContent || id || '').trim(),
+            value: v,
+          });
+        }
+      });
+      if (items.length < 3) return null;
+      const sorted = items.slice().sort((a, b) => b.value - a.value);
+      const whole = sorted[0];
+      if (!(whole.value > 0)) return null;
+      const parts = sorted.slice(1).filter((p) => p.value > 0 && p.fmt === whole.fmt);
+      if (parts.length < 2) return null;
+      const sum = parts.reduce((s, p) => s + p.value, 0);
+      const ratio = sum / whole.value;
+      if (ratio < 0.985 || ratio > 1.015) return null;
+      const title = CALC_LANG === 'en' ? 'How it breaks down' : CALC_LANG === 'pt' ? 'Como se distribui' : 'Cómo se reparte';
+      return {
+        type: 'donut',
+        title,
+        centerValue: formatValue(whole.value, whole.fmt, whole.suffix),
+        centerLabel: whole.label,
+        parts: parts.map((p) => ({ label: p.label, value: p.value })),
+      };
+    } catch (e) { return null; }
+  }
+
+  function hcRenderAutoViz(scope: Element, output: any): void {
+    try {
+      const slot = scope.querySelector('[data-viz-slot]') as HTMLElement | null;
+      if (!slot) return;
+      // Si la fórmula ya trae su propio gráfico Chart.js, ese manda: no dupliques.
+      if ((Array.isArray(output._charts) && output._charts.length) || output._chart) {
+        slot.hidden = true; slot.innerHTML = ''; return;
+      }
+      const ov = output._viz;
+      const viz = (ov && ov.type === 'donut' && Array.isArray(ov.parts) && ov.parts.length >= 2)
+        ? ov
+        : hcBuildVizFromOutputs(scope.querySelectorAll<HTMLElement>('[data-output]'), output);
+      if (!viz) { slot.hidden = true; slot.innerHTML = ''; return; }
+      const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const R = 38, C = 2 * Math.PI * R;
+      const total = viz.parts.reduce((s: number, p: any) => s + Math.max(0, p.value), 0) || 1;
+      let off = 0;
+      const segs = viz.parts.map((p: any, i: number) => {
+        const len = (Math.max(0, p.value) / total) * C;
+        const color = p.color || HC_VIZ_COLORS[i % HC_VIZ_COLORS.length];
+        const s = '<circle cx="50" cy="50" r="' + R + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-dasharray="' + len.toFixed(2) + ' ' + C.toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 50 50)"></circle>';
+        off += len;
+        return s;
+      }).join('');
+      const legend = viz.parts.map((p: any, i: number) => {
+        const color = p.color || HC_VIZ_COLORS[i % HC_VIZ_COLORS.length];
+        const pct = Math.round((Math.max(0, p.value) / total) * 100);
+        return '<span class="cdv-li"><span class="cdv-dot" style="background:' + color + '"></span>' + escapeHtml(p.label) + ' <strong>' + pct + '%</strong></span>';
+      }).join('');
+      const a11y = ((viz.title || 'Distribución') + ': ' + viz.parts.map((p: any) => p.label + ' ' + Math.round((Math.max(0, p.value) / total) * 100) + '%').join(', ')).replace(/"/g, '');
+      slot.innerHTML =
+        (viz.title ? '<div class="cdv-title">' + escapeHtml(viz.title) + '</div>' : '') +
+        '<div class="cdv-donut-wrap"><div class="cdv-donut">' +
+        '<svg viewBox="0 0 100 100" class="cdv-svg' + (reduce ? '' : ' cdv-anim') + '" role="img" aria-label="' + a11y + '">' +
+        '<circle cx="50" cy="50" r="' + R + '" fill="none" stroke="var(--bg-muted)" stroke-width="14"></circle>' + segs + '</svg>' +
+        (viz.centerValue ? '<div class="cdv-center"><div class="cdv-value">' + escapeHtml(String(viz.centerValue)) + '</div>' + (viz.centerLabel ? '<div class="cdv-label">' + escapeHtml(String(viz.centerLabel)) + '</div>' : '') + '</div>' : '') +
+        '</div><div class="cdv-legend">' + legend + '</div></div>';
+      slot.hidden = false;
+    } catch (e) { /* nunca romper el cálculo por un gráfico */ }
+  }
+
   // Lang del calc (inyectado vía data-lang="en" | "es" en .calc-container).
   // Leído una sola vez para evitar múltiples querys al DOM.
   const _rawLang = (document.querySelector('.calc-container') as HTMLElement | null)?.dataset?.lang;
@@ -4694,6 +4783,8 @@ const formatFreshnessDate = (iso: string): string => {
       renderResultTable(output._table);
       // Actualizar insight (si corresponde)
       renderInsight(output._insight);
+      // Mantener el auto-donut en sync al mover sliders (si aplica a este calc)
+      hcRenderAutoViz(container, output);
     }
 
     function scheduleWhatIf(overrides: Record<string, number>) {
@@ -5142,6 +5233,11 @@ const formatFreshnessDate = (iso: string): string => {
             chartWrap.hidden = true;
             clearCharts();
           }
+
+          // Auto-donut de fallback — SOLO si la fórmula no trajo su propio chart.
+          // Le da un gráfico del desglose real a los calcs que hoy no tienen uno,
+          // sin cargar Chart.js (cliente puro, cero costo en LCP/INP).
+          hcRenderAutoViz(container, output);
 
           // Tabla de resultado opcional — solo si la fórmula devolvió _table
           renderResultTable(output._table);

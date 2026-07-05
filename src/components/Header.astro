@@ -1142,8 +1142,13 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     position: relative;
     width: 100%;
     max-width: 600px;
-    background: var(--bg);
-    border: 1px solid var(--border);
+    /* Panel esmerilado (glass): fondo semitransparente + blur de lo que queda
+       detrás. En navegadores sin backdrop-filter el color base sigue siendo
+       legible (color-mix cae sobre --bg casi opaco). */
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid color-mix(in srgb, var(--border-strong) 55%, transparent);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     overflow: hidden;

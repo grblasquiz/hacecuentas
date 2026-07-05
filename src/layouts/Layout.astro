@@ -1052,6 +1052,16 @@ const globalSchema = {
         color: var(--accent-strong);
       }
 
+      /* Profundidad en dark: un halo de acento muy sutil arriba del fondo, que
+         le da "lift" a la página sin tocar ningún componente. Sin repeat y sin
+         background-attachment:fixed (evita el costo de repaint en scroll mobile,
+         que ya tenemos ajustado por INP). El resto del fondo queda en --bg. */
+      html[data-theme="dark"] body {
+        background-image: radial-gradient(1100px 480px at 50% -6%, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 68%);
+        background-repeat: no-repeat;
+        background-position: top center;
+      }
+
       /* ===================================================================
          IDENTIDAD DE DOMINIO (6 familias visuales)
          Cada página de calc lleva data-domain en el <body>. Re-mapeamos los
@@ -1154,6 +1164,25 @@ const globalSchema = {
         line-height: 1.6;
         min-height: 100vh;
         font-size: 16px;
+      }
+
+      /* Scrollbar de marca — SOLO en punteros finos (desktop). En touch se deja
+         el overlay nativo (más fino, no molesta). Thumb sutil con inset (border
+         del color del fondo + background-clip) que se tiñe de acento al hover.
+         Firefox usa scrollbar-width/color; WebKit el pseudo-elemento. No pisa el
+         `nav` del header (que oculta su scrollbar con mayor especificidad). */
+      @media (pointer: fine) {
+        * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+        ::-webkit-scrollbar { width: 11px; height: 11px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+          background: var(--border-strong);
+          border-radius: var(--radius-full);
+          border: 3px solid var(--bg);
+          background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        ::-webkit-scrollbar-corner { background: transparent; }
       }
 
       main {
@@ -1308,6 +1337,53 @@ const globalSchema = {
       }
       .hc-skeleton-row { height: 2.5rem; }
 
+      /* ── Gráfico dinámico de resultado (auto-donut part-to-whole) ──────────
+         El motor del calc lo inyecta por JS cuando la fórmula NO trae su propio
+         gráfico Chart.js y detecta un desglose válido. Vive en CSS GLOBAL porque
+         el scope de Astro no alcanza al HTML inyectado con innerHTML. Namespace
+         .calc-dynviz / .cdv-*. Colores vía tokens → hereda el acento del dominio. */
+      .calc-dynviz { margin: 1.25rem 0 0; }
+      .calc-dynviz[hidden] { display: none; }
+      .cdv-title {
+        font-size: 0.75rem; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.06em;
+        font-weight: 700; margin-bottom: 0.875rem;
+      }
+      .cdv-donut-wrap {
+        display: flex; flex-direction: column; align-items: center;
+        gap: 0.9rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card, 16px);
+        padding: 1.1rem 1.125rem;
+      }
+      .cdv-donut { position: relative; width: 150px; height: 150px; flex-shrink: 0; }
+      .cdv-svg { width: 100%; height: 100%; display: block; }
+      .cdv-anim { animation: cdv-in .5s cubic-bezier(0.22, 1, 0.36, 1); transform-origin: 50% 50%; }
+      @keyframes cdv-in { from { opacity: 0; transform: rotate(-14deg) scale(0.9); } to { opacity: 1; transform: none; } }
+      .cdv-center {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; text-align: center; pointer-events: none;
+      }
+      .cdv-value {
+        font-family: var(--font-num); font-variant-numeric: tabular-nums;
+        font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em;
+        color: var(--text); line-height: 1.1; max-width: 92px;
+      }
+      .cdv-label { font-size: 0.625rem; color: var(--text-subtle); margin-top: 2px; max-width: 100px; line-height: 1.2; }
+      .cdv-legend {
+        display: flex; gap: 0.5rem 1rem; flex-wrap: wrap; justify-content: center;
+        font-size: 0.8125rem; color: var(--text-muted);
+      }
+      .cdv-li { display: inline-flex; align-items: center; gap: 0.4rem; }
+      .cdv-li strong { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+      .cdv-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+      @media (min-width: 560px) {
+        .cdv-donut-wrap { flex-direction: row; justify-content: flex-start; gap: 1.75rem; padding: 1.25rem 1.5rem; }
+        .cdv-legend { flex-direction: column; align-items: flex-start; gap: 0.55rem; }
+      }
+      @media (prefers-reduced-motion: reduce) { .cdv-anim { animation: none; } }
+
       /* Respect prefers-reduced-motion */
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {
@@ -1384,7 +1460,9 @@ const globalSchema = {
         /* Data update badge (not useful on print) */
         .data-update,
         /* Presets section (already selected) */
-        .presets { display: none !important; }
+        .presets,
+        /* Auto-donut dinámico (colores por token → ilegible en grises de print) */
+        .calc-dynviz { display: none !important; }
 
         /* Hide all interactive buttons on print */
         button { display: none !important; }
