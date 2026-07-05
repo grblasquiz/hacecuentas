@@ -6,16 +6,19 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { fixture, LIVE_FIXTURE_URL } from '../lib/data/mundial-2026';
 import { topScorers } from '../lib/mundial-live';
+import { allTimeScorers, WC_HISTORIC_SCORERS } from '../lib/data/mundial-goleadores-historicos';
 
 const scorers = topScorers(fixture.matches, 40);
+const allTime = allTimeScorers(fixture.matches, 12);
 const SITE = 'https://hacecuentas.com';
 const URL = `${SITE}/goleadores-mundial-2026`;
 const title = 'Goleadores del Mundial 2026 EN VIVO — tabla del Botín de Oro | Hacé Cuentas';
-const description = 'Tabla de goleadores del Mundial 2026 en vivo: quién va puntero en la carrera por el Botín de Oro, goles y penales. Se actualiza con cada gol.';
+const description = 'Goleadores del Mundial 2026 en vivo (carrera por el Botín de Oro) + el ranking histórico de todos los Mundiales: Messi ya es el máximo goleador de la historia. Se actualiza con cada gol.';
 const updated = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fixture.fetchedAt));
 
 const faq = [
   { q: '¿Quién es el goleador del Mundial 2026?', a: scorers.length ? `Por ahora va puntero ${scorers[0].es} (${scorers[0].flag}) con ${scorers[0].goles} gol${scorers[0].goles === 1 ? '' : 'es'}. La tabla se actualiza con cada partido.` : 'Todavía no se jugaron partidos con goles; la tabla se completa a medida que avanza el torneo.' },
+  { q: '¿Quién es el máximo goleador en la historia de los Mundiales?', a: `${allTime[0].name} (${allTime[0].flag}) es el máximo goleador histórico de los Mundiales con ${allTime[0].total} goles${allTime[0].en2026 > 0 ? `, sumando ${allTime[0].en2026} en el Mundial 2026` : ''}. Lo escoltan ${allTime[1].name} con ${allTime[1].total} y ${allTime[2].name} con ${allTime[2].total}. El récord venía siendo de Miroslav Klose con 16.` },
   { q: '¿Qué es el Botín de Oro?', a: 'Es el premio al máximo goleador del Mundial. Si hay empate en goles, se define por asistencias y luego por menos minutos jugados. Los autogoles no cuentan para el goleador.' },
   { q: '¿Los penales cuentan para el Botín de Oro?', a: 'Sí, los goles de penal en el desarrollo del partido cuentan. No cuentan los goles en las definiciones por penales (tandas), que son un desempate aparte.' },
   { q: '¿Cada cuánto se actualiza?', a: 'Con el feed abierto de openfootball: al abrir la página se recalcula con los goles más recientes.' },
@@ -26,6 +29,7 @@ const schema = { '@context': 'https://schema.org', '@graph': [
     { '@type': 'ListItem', position: 2, name: 'Mundial 2026', item: `${SITE}/mundial-2026` },
     { '@type': 'ListItem', position: 3, name: 'Goleadores', item: URL } ] },
   { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  { '@type': 'ItemList', name: 'Máximos goleadores en la historia de los Mundiales', itemListElement: allTime.map((s, i) => ({ '@type': 'ListItem', position: i + 1, name: `${s.name} (${s.country}) — ${s.total} goles` })) },
 ] };
 const liveConfig = { url: LIVE_FIXTURE_URL };
 ---
@@ -35,7 +39,7 @@ const liveConfig = { url: LIVE_FIXTURE_URL };
   <main class="wrap">
     <nav class="crumbs"><a href="/">Inicio</a> › <a href="/mundial-2026">Mundial 2026</a> › <span>Goleadores</span></nav>
     <h1>⚽ Goleadores del Mundial 2026 — en vivo</h1>
-    <p class="lede">Carrera por el <strong>Botín de Oro</strong>: quién va puntero, goles y penales. Se actualiza con cada gol.</p>
+    <p class="lede">Carrera por el <strong>Botín de Oro</strong>: quién va puntero, goles y penales. Y más abajo, el <strong>ranking histórico de todos los Mundiales</strong> — {allTime[0].name} es el máximo goleador de la historia con {allTime[0].total} goles. Se actualiza con cada gol.</p>
     <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Datos: <a href="https://github.com/openfootball/worldcup.json" rel="noopener" target="_blank">openfootball</a></p>
 
     {scorers.length === 0 ? (
@@ -50,6 +54,24 @@ const liveConfig = { url: LIVE_FIXTURE_URL };
         </tbody>
       </table>
     )}
+
+    <section class="alltime">
+      <h2>🏆 Máximos goleadores en la historia de los Mundiales</h2>
+      <p class="alltime-sub">El ranking de todos los Mundiales <strong>con el 2026 sumando en vivo</strong>. Messi y Mbappé ya reescribieron la tabla del récord histórico.</p>
+      <table data-alltime>
+        <thead><tr><th class="l">#</th><th class="l">Jugador</th><th>Goles</th></tr></thead>
+        <tbody>
+          {allTime.map((s, i) => (
+            <tr class={s.en2026 > 0 ? 'is-live' : ''}>
+              <td class="l">{i + 1}</td>
+              <td class="l">{s.flag} {s.name}{s.en2026 > 0 && <span class="badge">▲ +{s.en2026} en 2026</span>}</td>
+              <td><strong>{s.total}</strong></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="alltime-note">Goles en Mundiales hasta Qatar 2022 (fuente: FIFA / RSSSF) + goles del Mundial 2026 en curso. Se actualiza con cada partido. <a href="/calculadora-top-10-goleadores-historico-mundial-fifa">Ver el top 10 histórico con promedios y períodos →</a></p>
+    </section>
 
     <section class="links">
       <h2>Seguí el Mundial</h2>
@@ -70,6 +92,7 @@ const liveConfig = { url: LIVE_FIXTURE_URL };
 </Layout>
 
 <script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script type="application/json" id="historic-scorers" set:html={JSON.stringify(WC_HISTORIC_SCORERS)} />
 <script>
   (function () {
     const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
@@ -86,6 +109,17 @@ const liveConfig = { url: LIVE_FIXTURE_URL };
         const rows = Object.values(map).sort((a, b) => b.goles - a.goles || a.name.localeCompare(b.name)).slice(0, 40);
         const tb = document.querySelector('[data-scorers] tbody');
         if (tb && rows.length) tb.innerHTML = rows.map((s, i) => `<tr><td class="l">${i + 1}</td><td class="l">${s.name}</td><td class="l">${s.team}</td><td><strong>${s.goles}</strong></td><td>${s.penales || '—'}</td></tr>`).join('');
+        // Ranking histórico all-time (base hasta 2022 + goles 2026 en vivo).
+        try {
+          const hist = JSON.parse(document.getElementById('historic-scorers')?.textContent || '[]');
+          const norm = (x) => (x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+          const g26 = {};
+          for (const s of Object.values(map)) { const k = norm(s.name); g26[k] = (g26[k] || 0) + s.goles; }
+          const at = hist.map((h) => { const en = h.matchName ? (g26[norm(h.matchName)] || 0) : 0; return { ...h, en2026: en, total: h.pre2026 + en }; })
+            .sort((a, b) => b.total - a.total || b.en2026 - a.en2026 || a.name.localeCompare(b.name)).slice(0, 12);
+          const atb = document.querySelector('[data-alltime] tbody');
+          if (atb && at.length) atb.innerHTML = at.map((s, i) => `<tr class="${s.en2026 > 0 ? 'is-live' : ''}"><td class="l">${i + 1}</td><td class="l">${s.flag} ${s.name}${s.en2026 > 0 ? ` <span class="badge">▲ +${s.en2026} en 2026</span>` : ''}</td><td><strong>${s.total}</strong></td></tr>`).join('');
+        } catch {}
         const u = document.querySelector('[data-live-updated]');
         if (u) u.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
       } catch {}
@@ -115,4 +149,11 @@ const liveConfig = { url: LIVE_FIXTURE_URL };
   .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
   .faq summary { font-weight: 600; cursor: pointer; }
   .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+  .alltime { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .alltime h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 0.4rem; }
+  .alltime-sub { font-size: 0.92rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 1rem; }
+  .alltime tr.is-live td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .badge { display: inline-block; font-size: 0.66rem; font-weight: 700; color: var(--on-accent, #fff); background: var(--accent); border-radius: 999px; padding: 0.05rem 0.42rem; margin-left: 0.35rem; vertical-align: middle; white-space: nowrap; }
+  .alltime-note { font-size: 0.76rem; color: var(--text-subtle); margin: 0.6rem 0 0; line-height: 1.5; }
+  .alltime-note a { color: var(--accent); font-weight: 600; }
 </style>
