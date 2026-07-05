@@ -240,6 +240,20 @@ const inputType = (t: string) =>
         ))}
       </form>
 
+      <!-- Recientes + Favoritos (#19): tu actividad, unificada en el panel.
+           Datos de localStorage (hc_recent / hc_favs, contrato {s,t,l,d}), 100%
+           cliente, ocultos si están vacíos. Misma reconstrucción de URL que el home. -->
+      <section class="panel-calcs" data-panel-calcs hidden>
+        <div class="panel-calcs-group" data-recent-group hidden>
+          <h2 class="panel-calcs-h">🕘 Usadas recientemente</h2>
+          <div class="panel-calcs-grid" data-recent-grid></div>
+        </div>
+        <div class="panel-calcs-group" data-favs-group hidden>
+          <h2 class="panel-calcs-h">⭐ Tus favoritas</h2>
+          <div class="panel-calcs-grid" data-favs-grid></div>
+        </div>
+      </section>
+
       <!-- Alertas de cambios normativos -->
       <section class="alerts-block" data-alerts-block>
         <h2 class="alerts-h">🔔 Tus alertas de cambios</h2>
@@ -265,6 +279,75 @@ const inputType = (t: string) =>
 
   <Footer slot="footer" />
 </Layout>
+
+<style is:global>
+  /* Recientes + Favoritos del panel (#19). Global porque el markup se puebla
+     por DOM API (sin scope hash de Astro). Tokens → hereda tema/dominio. */
+  .panel-calcs { display: grid; gap: 1.25rem; margin: 1.75rem 0; }
+  .panel-calcs[hidden] { display: none; }
+  .panel-calcs-group[hidden] { display: none; }
+  .panel-calcs-h { font-size: 1.05rem; margin-bottom: 0.75rem; }
+  .panel-calcs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.6rem; }
+  .pc-card { position: relative; display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius, 10px); padding: 0.7rem 0.85rem; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
+  .pc-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow-md); }
+  .pc-link { color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.9rem; line-height: 1.3; flex: 1; }
+  .pc-link:hover { color: var(--accent); }
+  .pc-remove { flex-shrink: 0; width: 26px; height: 26px; border-radius: 999px; border: none; background: transparent; color: var(--text-subtle); font-size: 1.15rem; line-height: 1; cursor: pointer; }
+  .pc-remove:hover { background: var(--bg-muted); color: var(--danger, #dc2626); }
+</style>
+
+<script is:inline>
+  // Panel de Recientes + Favoritos (#19). Independiente del script principal.
+  (function () {
+    function read(key) {
+      try { var a = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+    }
+    function write(key, arr) { try { localStorage.setItem(key, JSON.stringify(arr)); } catch (e) {} }
+    function urlOf(f) { return (f.l ? '/' + f.l : '') + '/' + f.s; }
+    function valid(f) { return f && typeof f.s === 'string' && /^[a-z0-9][a-z0-9/-]*$/i.test(f.s); }
+
+    function renderGroup(items, gridSel, groupSel, removableKey) {
+      var grid = document.querySelector(gridSel);
+      var group = document.querySelector(groupSel);
+      if (!grid || !group) return false;
+      while (grid.firstChild) grid.removeChild(grid.firstChild);
+      var list = items.filter(valid).slice(0, 12);
+      if (!list.length) { group.hidden = true; return false; }
+      list.forEach(function (f) {
+        var card = document.createElement('div'); card.className = 'pc-card';
+        var a = document.createElement('a'); a.className = 'pc-link'; a.href = urlOf(f);
+        a.textContent = (typeof f.t === 'string' && f.t) ? f.t : f.s.replace(/-/g, ' ');
+        card.appendChild(a);
+        if (removableKey) {
+          var rm = document.createElement('button'); rm.type = 'button'; rm.className = 'pc-remove';
+          rm.setAttribute('aria-label', 'Quitar de tus favoritas'); rm.textContent = '×';
+          rm.addEventListener('click', function (ev) {
+            ev.preventDefault(); ev.stopPropagation();
+            var next = read(removableKey).filter(function (x) { return !(x && x.s === f.s && (x.l || '') === (f.l || '')); });
+            write(removableKey, next); renderAll();
+          });
+          card.appendChild(rm);
+        }
+        grid.appendChild(card);
+      });
+      group.hidden = false;
+      return true;
+    }
+
+    function renderAll() {
+      var panel = document.querySelector('[data-panel-calcs]');
+      if (!panel) return;
+      var recent = read('hc_recent').slice().reverse(); // más nuevo primero
+      var favs = read('hc_favs').slice().reverse();
+      var hasRecent = renderGroup(recent, '[data-recent-grid]', '[data-recent-group]', null);
+      var hasFavs = renderGroup(favs, '[data-favs-grid]', '[data-favs-group]', 'hc_favs');
+      panel.hidden = !(hasRecent || hasFavs);
+    }
+
+    renderAll();
+    document.addEventListener('astro:page-load', renderAll);
+  })();
+</script>
 
 <script is:inline>
   (function () {

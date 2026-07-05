@@ -32,6 +32,22 @@ const t = translations[lang as keyof typeof translations] || translations.es;
 const isIntl = lang === 'en' || lang === 'pt';
 const intlHome = lang === 'en' ? '/en' : '/pt';
 
+// #13 Acciones rápidas del overlay de búsqueda (command-palette liviano): atajos
+// de navegación arriba de los resultados. Lang-aware — /valores-vigentes y
+// /decidir son AR, así que intl muestra sólo cuenta + catálogo.
+const searchQuick = lang === 'en' ? [
+  { href: '/mi-hacecuentas', label: 'My account', icon: '👤' },
+  { href: intlHome, label: 'All calculators', icon: '🔢' },
+] : lang === 'pt' ? [
+  { href: '/mi-hacecuentas', label: 'Minha conta', icon: '👤' },
+  { href: intlHome, label: 'Todas', icon: '🔢' },
+] : [
+  { href: '/mi-hacecuentas', label: 'Mi Panel', icon: '👤' },
+  { href: '/valores-vigentes', label: 'Valores', icon: '📊' },
+  { href: '/decidir', label: 'Decidir', icon: '🧭' },
+  { href: '/calculadoras', label: 'Todas', icon: '🔢' },
+];
+
 // Detección de país por path para nav country-aware
 type Country = 'AR' | 'ES' | 'MX' | 'CO' | 'CL' | 'PE' | 'EC' | 'VE' | 'PY' | 'UY' | 'DO' | 'PT' | 'GLOBAL';
 // Primer segmento del path (evita falsos positivos como /peso-ideal → 'pe', /como-... → 'co').
@@ -325,6 +341,11 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
       </svg>
       <input id="search-input" type="search" placeholder={lang === 'en' ? 'Search calculator...' : lang === 'pt' ? 'Buscar calculadora...' : 'Buscar calculadora...'} autocomplete="off" />
       <kbd class="kbd">ESC</kbd>
+    </div>
+    <div class="search-quick" data-nosnippet>
+      {searchQuick.map((q) => (
+        <a href={q.href} class="search-quick-item"><span aria-hidden="true">{q.icon}</span> {q.label}</a>
+      ))}
     </div>
     <div class="search-results" id="search-results" aria-live="polite"></div>
     <div class="search-footer">
@@ -1176,6 +1197,29 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
     outline-offset: 2px;
     border-radius: 4px;
   }
+
+  /* #13 Acciones rápidas (command-palette liviano) */
+  .search-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    padding: 0.625rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-quick-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-full, 999px);
+    background: var(--bg-muted);
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+  }
+  .search-quick-item:hover { background: var(--accent-soft); color: var(--accent-strong); }
 
   .search-results {
     max-height: 50vh;
