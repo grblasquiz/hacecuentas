@@ -179,8 +179,10 @@ function analyze(url: string, html: string, statusCode: number): Row {
 
   // Links internos (href relativo o absoluto al dominio) dentro de <main>
   const internalLinks = [...mainHtml.matchAll(/<a[^>]+href="(\/[^"#?]*|https:\/\/hacecuentas\.com\/[^"#?]*)"/g)].length;
-  // Related: bloque id="related" o sección "Calculadoras relacionadas"
-  const relIdx = html.search(/id="related"|Calculadoras relacionadas/i);
+  // Related: bloque real primero (related-grid / id="related"); el texto plano
+  // también matchea secciones markdown del explanation (falso positivo).
+  const relBlockIdx = html.search(/class="related-grid"|id="related"/i);
+  const relIdx = relBlockIdx >= 0 ? relBlockIdx : html.search(/Calculadoras relacionadas/i);
   let relatedCount = 0;
   if (relIdx >= 0) {
     const relChunk = html.slice(relIdx, relIdx + 12000);

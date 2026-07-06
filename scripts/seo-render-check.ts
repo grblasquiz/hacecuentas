@@ -72,7 +72,11 @@ for (const path of PRIORITY_PATHS) {
   const mainHtml = mainMatch ? mainMatch[0] : html;
   const words = stripTags(mainHtml).split(/\s+/).length;
 
-  const relIdx = html.search(/id="related"|Calculadoras relacionadas|Calcs relacionadas/i);
+  // Bloque related real primero (related-grid / id="related"); el texto plano
+  // matchea también secciones markdown del explanation (falso positivo).
+  const relIdx = html.search(/class="related-grid"|id="related"/i) >= 0
+    ? html.search(/class="related-grid"|id="related"/i)
+    : html.search(/Calculadoras relacionadas|Calcs relacionadas/i);
   const relatedLinks = relIdx >= 0 ? [...html.slice(relIdx, relIdx + 12000).matchAll(/<a[^>]+href="\/[^"#?]*"/g)].length : 0;
 
   const canonical = (head.match(/<link\s+rel="canonical"\s+href="([^"]+)"/i) || [])[1] || '';
