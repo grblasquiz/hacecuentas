@@ -590,6 +590,10 @@ const priorityUrls: Url[] = [
   prio('/guia/vida-cotidiana',               '0.9',  'weekly'),
   prio('/guia/mascotas',                     '0.9',  'weekly'),
   prio('/guia/viajes',                       '0.9',  'weekly'),
+  prio('/guia/negocios-e-independientes-2026', '0.9', 'weekly'),
+  prio('/guia/tecnologia-electronica',       '0.9',  'weekly'),
+  prio('/guia/deportes-fitness',             '0.9',  'weekly'),
+  prio('/guia/auto-y-movilidad',             '0.9',  'weekly'),
   prio('/guia/sueldos-impuestos-peru-2026',  '0.9',  'weekly'),
   prio('/guia/sueldos-impuestos-ecuador-2026', '0.9', 'weekly'),
   // guías nuevas del lote fin-de-semana / vida cotidiana (evergreen)
