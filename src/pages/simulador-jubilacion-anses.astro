@@ -9,6 +9,8 @@ import Footer from '../components/Footer.astro';
 const title = 'Simulador de Jubilación ANSES 2026 — Tu Haber';
 const description = 'Simulador de jubilación ANSES: ingresá edad, años de aportes y sueldo actual → obtené tu haber jubilatorio proyectado, si cumplís requisitos y años que te faltan. Gratis.';
 
+const lastReviewed = '2026-07-06';
+
 const schemaApp = {
   '@type': 'WebApplication',
   name: 'Simulador de Jubilación ANSES',
@@ -16,6 +18,7 @@ const schemaApp = {
   operatingSystem: 'Web',
   url: 'https://hacecuentas.com/simulador-jubilacion-anses',
   description,
+  dateModified: lastReviewed,
   offers: freeOfferSchema({ priceCurrency: 'ARS' }),
   speakable: {
     '@type': 'SpeakableSpecification',
@@ -180,7 +183,70 @@ const schema = {
         <li><strong>Tope máximo</strong>: 8 veces la jubilación mínima (~$2.3M con bono).</li>
         <li><strong>Tope mínimo</strong>: jubilación mínima + bono (~$360k).</li>
       </ul>
-      <p>Esta calculadora usa una <strong>fórmula simplificada</strong>: sueldo actualizado por inflación y aumentos, multiplicado por (años de aportes × 1.5%), limitado por tope máximo/mínimo. Orientativo; para cálculo exacto consultá <a href="https://www.anses.gob.ar/" rel="noopener">ANSES</a>.</p>
+      <h3>Fórmula simplificada vs cálculo real de ANSES</h3>
+      <p>Este simulador usa una <strong>fórmula simplificada</strong>: sueldo actualizado por inflación y aumentos, multiplicado por (años de aportes × 1.5%), limitado por tope máximo/mínimo. El cálculo real de ANSES difiere en varios puntos que acá no se capturan:</p>
+      <ul>
+        <li>ANSES toma el <strong>promedio de las mejores 120 remuneraciones</strong> (10 años) actualizadas por el índice RIPTE, no tu sueldo actual proyectado.</li>
+        <li>La PBU es un componente fijo que acá queda subsumido en el porcentaje único del 1,5%.</li>
+        <li>Los períodos regularizados por <strong>moratoria</strong> computan para el requisito de años, pero pueden descontar cuotas del haber inicial.</li>
+        <li>Regímenes especiales (docentes, investigadores, luz y fuerza, policías) tienen porcentajes y edades propias.</li>
+      </ul>
+      <p>Por eso el resultado es <strong>orientativo</strong>: sirve para ubicarte en un rango y comparar escenarios, no para conocer tu haber exacto. El cálculo oficial lo hace ANSES con tu historia laboral real (podés consultarla en <a href="https://www.anses.gob.ar/" rel="noopener">Mi ANSES</a>).</p>
+    </section>
+
+    <section class="sj-escenarios">
+      <h2>Escenarios de referencia 2026</h2>
+      <p>Cinco situaciones típicas, calculadas con la fórmula simplificada de este simulador y los valores de referencia 2026, para ubicarte rápido:</p>
+      <table class="sj-table">
+        <thead>
+          <tr><th>Escenario</th><th>Situación al jubilarse</th><th>Haber estimado 2026</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>30 años aportados</strong>, sueldo promedio $1.500.000</td>
+            <td>Cumple régimen general (1,5% × 30 años × sueldo)</td>
+            <td>~$675.000</td>
+          </tr>
+          <tr>
+            <td><strong>20 años aportados</strong> a los 65</td>
+            <td>No cumple los 30 años: moratoria (si está vigente) para completar, o esperar y acceder a PUAM</td>
+            <td>según opción</td>
+          </tr>
+          <tr>
+            <td><strong>PUAM</strong> (65+, sin 30 años de aportes)</td>
+            <td>80% de la jubilación mínima, sin requisito de aportes</td>
+            <td>~$232.000</td>
+          </tr>
+          <tr>
+            <td><strong>Jubilación mínima + bono</strong></td>
+            <td>Piso legal para quien cumple requisitos</td>
+            <td>~$360.000</td>
+          </tr>
+          <tr>
+            <td><strong>Jubilación máxima</strong></td>
+            <td>Tope legal (8× la mínima aprox.)</td>
+            <td>~$1.950.000</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="sj-escenarios-nota">Los montos de referencia se actualizan por movilidad mensual (IPC). Usá el simulador de arriba con tus datos reales para ver tu proyección personalizada.</p>
+    </section>
+
+    <aside class="sj-disclaimer" role="note">
+      <strong>⚠️ Importante:</strong> este simulador es una <strong>estimación orientativa con fórmula simplificada</strong>. No reemplaza el cálculo oficial de ANSES ni el asesoramiento de un abogado previsional. Los montos, topes y requisitos cambian con cada actualización por movilidad y con las leyes vigentes. Antes de tomar decisiones (renunciar, iniciar trámite, entrar a una moratoria), verificá tu situación real en Mi ANSES o con un profesional matriculado.
+    </aside>
+
+    <section class="sj-fuentes">
+      <h2>Fuentes y metodología</h2>
+      <ul>
+        <li><a href="https://www.anses.gob.ar/" rel="noopener">ANSES</a> — requisitos de jubilación ordinaria, PUAM y moratorias; consulta de historia laboral en Mi ANSES.</li>
+        <li><a href="https://www.argentina.gob.ar/normativa/nacional/ley-24241-639/actualizacion" rel="noopener">Ley 24.241 (SIPA)</a> — Sistema Integrado Previsional Argentino: PBU, PC, PAP y topes (texto actualizado, InfoLeg).</li>
+        <li>Movilidad jubilatoria mensual por IPC (DNU 274/2024) — los valores de referencia de esta página se revisan con cada actualización.</li>
+      </ul>
+      <p class="sj-review-line">
+        Última revisión editorial: <time datetime={lastReviewed}>6 de julio de 2026</time> · Editor responsable: Equipo Hacé Cuentas.
+        Metodología: fórmula simplificada (1,5% × años de aportes × sueldo proyectado, con topes mínimo/máximo 2026) documentada arriba.
+      </p>
     </section>
 
     <section class="sj-faq">
@@ -539,8 +605,25 @@ const schema = {
   .sj-timeline h3 { font-size: 1rem; margin: 0 0 .75rem; color: var(--text); font-weight: 700; }
   .sj-timeline canvas { width: 100%; max-width: 600px; height: auto; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 
-  .sj-explanation, .sj-faq, .sj-related { margin: 2.5rem 0; }
-  .sj-explanation h2, .sj-faq h2, .sj-related h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
+  .sj-explanation, .sj-faq, .sj-related, .sj-escenarios, .sj-fuentes { margin: 2.5rem 0; }
+  .sj-explanation h2, .sj-faq h2, .sj-related h2, .sj-escenarios h2, .sj-fuentes h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
+  .sj-explanation h3 { font-size: 1.05rem; margin: 1.25rem 0 .5rem; color: var(--text); font-weight: 700; }
+  .sj-escenarios p, .sj-fuentes li { color: var(--text-muted); line-height: 1.65; }
+  .sj-escenarios .sj-table { overflow-x: auto; display: block; }
+  .sj-escenarios-nota { font-size: .88rem; margin-top: .75rem; }
+  .sj-fuentes ul { padding-left: 1.2rem; margin: 0 0 1rem; }
+  .sj-fuentes a { color: var(--accent); }
+  .sj-review-line { font-size: .85rem; color: var(--text-subtle); border-top: 1px solid var(--border); padding-top: .75rem; }
+  .sj-disclaimer {
+    margin: 2rem 0;
+    padding: 1.1rem 1.4rem;
+    border-left: 4px solid #f59e0b;
+    background: rgba(245,158,11,.08);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: .93rem;
+  }
   .sj-explanation p, .sj-explanation li { color: var(--text-muted); line-height: 1.65; }
   .sj-explanation a { color: var(--accent); }
   .sj-related ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .5rem; }

@@ -653,11 +653,10 @@ const topPrioritySlugs = [
   'calculadora-bebidas-evento-litros-por-persona',
   'calculadora-twitter-x-monetizacion-ingreso',
   'calculadora-duracion-bateria-mah-consumo',
-  'calculadora-tiempo-lectura-libro-paginas',
+  'calculadora-tiempo-lectura-paginas-estudio',
   'calculadora-costo-m2-construccion-argentina',
   'calculadora-conversor-mb-a-gb',
   'calculadora-palabras-paginas-conversor',
-  'calculadora-combustible-viaje-auto',
   'calculadora-rendimiento-masa-empanadas-cantidad',
   'calculadora-estimador-costo-viaje-taxi-remis',
   'calculadora-arboles-compensar-co2-huella',
@@ -717,12 +716,35 @@ const topPrioritySlugs = [
   'calculadora-proteina-gramos-por-peso-actividad',
   'calculadora-semanas-embarazo',
   'calculadora-vacaciones-argentina',
+  // === Recuperación GSC julio 2026: URLs probadas por Google (pos 8-13, CTR bajo) ===
+  // Slugs canónicos verificados contra dist/ — los duplicados GSC (combustible-viaje-auto,
+  // impuesto-sellos, tazas-gramos, mercadolibre, seguro-auto, dividir-gastos) entran por
+  // su canonical, no por el alias.
+  'calculadora-indice-asistencia-faltas',
+  'calculadora-millas-latam-destino',
+  'calculadora-video-bitrate-tamano-archivo',
+  'calculadora-sueldo-por-hora',
+  'calculadora-costo-por-kilometro-auto',
+  'calculadora-patente-auto-provincia',
+  'calculadora-costo-viaje-combustible-kilometros',
+  'calculadora-sellos-compra-inmueble-caba-pba',
+  'calculadora-comision-venta-vendedor',
+  'calculadora-propina-por-pais-viaje',
+  'calculadora-consumo-electrico-aparato-kwh-mes',
+  'calculadora-split-gastos-grupo-amigos',
+  'calculadora-conversion-medidas-cocina-tazas-gramos',
+  'calculadora-seguro-auto-estimado',
 ];
 const calcBySlug = new Map((calcs as any[]).map((c: any) => [c.slug, c]));
 const seenInPriority = new Set<string>(topPrioritySlugs);
 for (const slug of topPrioritySlugs) {
   const c = calcBySlug.get(slug);
   if (!c) continue;
+  // Nunca listar URLs cuyo canonical apunta a otra página — el sitemap solo lleva canonicals.
+  if (c.canonicalSlug && c.canonicalSlug !== slug) {
+    console.warn(`⚠ sitemap-priority: '${slug}' tiene canonicalSlug='${c.canonicalSlug}' — se omite (agregá el canonical en su lugar)`);
+    continue;
+  }
   const fp = join(CALCS_DIR, `${c.formulaId || c.slug}.json`);
   priorityUrls.push({
     loc: `${site}/${slug}`,

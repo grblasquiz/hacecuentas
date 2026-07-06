@@ -93,7 +93,9 @@ const socialTitle = ogTitle || title;
 const siteUrl = 'https://hacecuentas.com';
 // Cloudflare Pages sirve /foo.html en /foo — canonical sin .html para matchear sitemap
 const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
-const fullCanonical = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${cleanPath}`;
+const fullCanonical = canonical
+  ? (canonical.startsWith('http') ? canonical : `${siteUrl}${canonical}`)
+  : `${siteUrl}${cleanPath}`;
 const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
 
 // Lang/locale dinámicos según audience y lang.
