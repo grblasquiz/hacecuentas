@@ -267,6 +267,9 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/calculadora-divisor-voltaje-resistencias': '/categoria/electronica',
   '/calculadora-dolar-bolsa-vs-cripto-arbitraje-spread-real': '/categoria/finanzas',
   '/calculadora-domingos-restantes-navidad-2026-fin-de-ano': '/cuanto-falta-para-Navidad-2026',
+  // Variante con N mayúscula (slug real del JSON zombie): sin esta entrada la URL
+  // capital daba 404 en prod y se colaba en sitemap-calcs-vida (case-mismatch).
+  '/calculadora-domingos-restantes-Navidad-2026-fin-de-ano': '/cuanto-falta-para-Navidad-2026',
   '/calculadora-dosis-mascota': '/calculadora-dosis-medicamento-mascota-por-peso',
   '/calculadora-dps-damage-per-second': '/categoria/entretenimiento',
   '/calculadora-drawdown-maximo-aceptable': '/categoria/finanzas',

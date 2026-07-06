@@ -1,5 +1,16 @@
 import type { APIRoute } from 'astro';
 import { canDistributeCalc } from '../lib/content-policy';
+import { GONE_410_URLS } from '../lib/gone-410';
+import { PRUNING_REDIRECTS } from '../lib/pruning-redirects';
+
+// Un path 410/pruneado NUNCA va en un sitemap, aunque su JSON siga vivo y
+// "fresco" (zombie). Ya pasó con 2 posts de blog en GONE_410 que reaparecían
+// acá (auditoría seo-recovery 2026-07-06). Comparación case-insensitive:
+// los mismatches de mayúsculas (Navidad vs navidad) vencían al filtro.
+const DEAD_PATHS = new Set<string>(
+  [...GONE_410_URLS, ...Object.keys(PRUNING_REDIRECTS)].map((p) => p.toLowerCase()),
+);
+const isDead = (path: string) => DEAD_PATHS.has(path.toLowerCase());
 
 // Sitemap fresh — calcs con `dataUpdate.lastUpdated` en los últimos 14 días.
 // Bing valora freshness signals y el sitemap-news.xml standard limita entries a
@@ -59,6 +70,7 @@ function buildEntries(modules: Record<string, any>, prefix: string): Entry[] {
     if (!du) continue;
     const t = Date.parse(du + 'T00:00:00Z');
     if (Number.isNaN(t) || now - t > FOURTEEN_DAYS_MS) continue;
+    if (isDead(`${prefix}${calc.slug}`)) continue;
     out.push({
       loc: `${SITE}${prefix}${calc.slug}`,
       lastmod: new Date(t).toISOString(),
@@ -89,6 +101,7 @@ export const GET: APIRoute = () => {
     if (!valid) continue;
     const t = Date.parse(valid + 'T00:00:00Z');
     if (Number.isNaN(t) || now - t > FOURTEEN_DAYS_MS) continue;
+    if (isDead(`/blog/${p.slug}`)) continue;
     entries.push({
       loc: `${SITE}/blog/${p.slug}`,
       lastmod: new Date(t).toISOString(),

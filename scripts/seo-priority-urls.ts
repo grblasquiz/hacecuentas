@@ -49,14 +49,16 @@ export const PRIORITY_PATHS: string[] = [
 /**
  * Aliases que GSC reportó con impresiones y que deben responder 301
  * hacia su canonical (verificados por seo-audit.ts con --live).
+ *
+ * NOTA: /calculadora-combustible-viaje-auto, /conversor-tazas-gramos-cocina-recetas
+ * y /calculadora-impuesto-sellos-inmueble-contrato NO van acá: son páginas vivas
+ * con canonicalSlug (patrón deliberado de consolidación jul-2026 — 200 + rel=canonical
+ * a la cabeza de familia, sin 301). El audit las reporta como canonical_consolidation.
  */
 export const GSC_ALIAS_301: Record<string, string> = {
-  '/calculadora-combustible-viaje-auto': '/calculadora-costo-viaje-combustible-kilometros',
   '/calculadora-comision-mercadolibre-venta': '/calculadora-comision-venta-vendedor',
   '/calculadora-mercadolibre-comision-venta': '/calculadora-comision-venta-vendedor',
   '/calculadora-tiempo-lectura-libro-paginas': '/calculadora-tiempo-lectura-paginas-estudio',
   '/calculadora-dividir-gastos-viaje-amigos': '/calculadora-split-gastos-grupo-amigos',
   '/calculadora-seguro-auto-estimacion-precio': '/calculadora-seguro-auto-estimado',
-  '/conversor-tazas-gramos-cocina-recetas': '/calculadora-conversion-medidas-cocina-tazas-gramos',
-  '/calculadora-impuesto-sellos-inmueble-contrato': '/calculadora-sellos-compra-inmueble-caba-pba',
 };
