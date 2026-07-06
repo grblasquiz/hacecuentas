@@ -4,6 +4,9 @@
  *
  * Generado parcialmente: 3 clusters seed (embarazo/dolar/pesoPerros) +
  * clusters nuevos curados (slugs validados contra el catálogo real).
+ *
+ * Última auditoría de slugs: 2026-07-06 (todos los items validados contra
+ * dist/client/<slug>.html; muertos reemplazados por su destino 301 o removidos).
  */
 
 export interface ClusterSlug {
@@ -29,7 +32,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🤰"
       },
       {
-        "slug": "calculadora-fecha-probable-parto-ultima-menstruacion",
+        "slug": "calculadora-fecha-probable-parto",
         "label": "Fecha de parto",
         "icon": "📅"
       },
@@ -44,7 +47,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🍎"
       },
       {
-        "slug": "calculadora-aumento-peso-embarazo-imc-semana",
+        "slug": "calculadora-aumento-peso-recomendado-embarazo",
         "label": "Aumento peso",
         "icon": "⚖️"
       },
@@ -59,7 +62,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "📊"
       },
       {
-        "slug": "calculadora-calendario-vacunas-bebe-argentina-2026-completo",
+        "slug": "calculadora-vacunas-bebe-calendario-2026-argentina-edad",
         "label": "Vacunas bebé",
         "icon": "💉"
       }
@@ -80,7 +83,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🏦"
       },
       {
-        "slug": "calculadora-brecha-dolar-blue-mep-ccl-oficial",
+        "slug": "calculadora-dolar-blue-vs-oficial-brecha",
         "label": "Brecha dólar",
         "icon": "📊"
       },
@@ -141,19 +144,9 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🐕"
       },
       {
-        "slug": "calculadora-peso-ideal-chihuahua",
-        "label": "Chihuahua",
-        "icon": "🐕"
-      },
-      {
         "slug": "calculadora-peso-ideal-boxer",
         "label": "Boxer",
         "icon": "🐕"
-      },
-      {
-        "slug": "calculadora-peso-ideal-caniche-poodle",
-        "label": "Caniche",
-        "icon": "🐩"
       },
       {
         "slug": "calculadora-peso-ideal-dachshund-salchicha",
@@ -190,6 +183,11 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-cuota-sindical-descuento-sueldo",
         "label": "Cuota sindical",
         "icon": "🏛️"
+      },
+      {
+        "slug": "calculadora-sueldo-por-hora",
+        "label": "Sueldo por hora",
+        "icon": "⏱️"
       }
     ]
   },
@@ -244,11 +242,6 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "📈"
       },
       {
-        "slug": "calculadora-monotributo-alta-afip-tramite-zero",
-        "label": "Alta monotributo",
-        "icon": "📝"
-      },
-      {
         "slug": "calculadora-ganancias-monotributista-pase-regimen-general",
         "label": "Pase a RI",
         "icon": "🧾"
@@ -260,7 +253,7 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Ganancias 4ta categoría",
     "items": [
       {
-        "slug": "calculadora-ganancias-4ta-categoria-2026",
+        "slug": "calculadora-ganancias-empleados-4ta-categoria-2026",
         "label": "Ganancias 4ta 2026",
         "icon": "📊"
       },
@@ -301,7 +294,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "💰"
       },
       {
-        "slug": "calculadora-credito-prendario-auto-cft-comparativa-bancos",
+        "slug": "calculadora-financiacion-auto-cuota-prendario",
         "label": "Crédito auto",
         "icon": "🚗"
       },
@@ -309,6 +302,16 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-hipoteca-divisa-extranjera-vs-uva",
         "label": "Hipoteca USD vs UVA",
         "icon": "🏠"
+      },
+      {
+        "slug": "calculadora-cuota-prestamo",
+        "label": "Cuota préstamo",
+        "icon": "💳"
+      },
+      {
+        "slug": "calculadora-sellos-compra-inmueble-caba-pba",
+        "label": "Sellos inmueble",
+        "icon": "🧾"
       }
     ]
   },
@@ -320,11 +323,6 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-autonomos-categoria-monto-2026",
         "label": "Categorías autónomos",
         "icon": "🧑‍💼"
-      },
-      {
-        "slug": "calculadora-autonomos-categorias-2026-aportes",
-        "label": "Aportes autónomos",
-        "icon": "👔"
       },
       {
         "slug": "calculadora-sueldo-neto-autonomo-monotributista",
@@ -364,11 +362,6 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Ciclismo",
     "items": [
       {
-        "slug": "calculadora-ftp-cycling-watts",
-        "label": "FTP test 20min",
-        "icon": "🚴"
-      },
-      {
         "slug": "calculadora-ftp-watts-ciclismo",
         "label": "Zonas potencia",
         "icon": "🚴"
@@ -379,7 +372,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🔥"
       },
       {
-        "slug": "calculadora-potencia-ciclismo-watts-kg",
+        "slug": "calculadora-ciclismo-power-w-kg-categoria-ftp",
         "label": "Potencia W/kg",
         "icon": "💪"
       }
@@ -390,18 +383,18 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Gimnasio",
     "items": [
       {
-        "slug": "calculadora-1rm-peso-maximo",
+        "slug": "calculadora-1rm-peso-maximo-levantamiento",
         "label": "1RM",
-        "icon": "🏋️"
-      },
-      {
-        "slug": "calculadora-1rm-peso-muerto-estimador",
-        "label": "1RM peso muerto",
         "icon": "🏋️"
       },
       {
         "slug": "calculadora-calorias-gym-pesas-hora",
         "label": "Calorías gym",
+        "icon": "🔥"
+      },
+      {
+        "slug": "calculadora-calorias-quemadas-deporte",
+        "label": "Calorías deporte",
         "icon": "🔥"
       }
     ]
@@ -411,7 +404,7 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Natación",
     "items": [
       {
-        "slug": "calculadora-calorias-natacion-estilo",
+        "slug": "calculadora-calorias-natacion-estilos-distancia-velocidad",
         "label": "Calorías nado",
         "icon": "🏊"
       },
@@ -466,11 +459,6 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-ciclo-menstrual",
         "label": "Ciclo menstrual",
         "icon": "🌙"
-      },
-      {
-        "slug": "calculadora-ovulacion-dias-fertiles",
-        "label": "Días fértiles",
-        "icon": "📅"
       }
     ]
   },
@@ -489,9 +477,9 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🌙"
       },
       {
-        "slug": "calculadora-meditacion-minutos-ansiedad-cortisol-impacto",
-        "label": "Meditación impacto",
-        "icon": "🧘"
+        "slug": "calculadora-calidad-sueno-pittsburgh",
+        "label": "Calidad de sueño",
+        "icon": "🛌"
       }
     ]
   },
@@ -500,9 +488,9 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Hidratación",
     "items": [
       {
-        "slug": "calculadora-agua-diaria-litros-segun-peso",
-        "label": "Agua por peso",
-        "icon": "💧"
+        "slug": "calculadora-agua-cafe-te-hidratacion-real-mitos",
+        "label": "Hidratación café/té",
+        "icon": "☕"
       },
       {
         "slug": "calculadora-agua-diaria-necesaria",
@@ -510,14 +498,9 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "💧"
       },
       {
-        "slug": "calculadora-agua-ingesta-diaria-peso-actividad",
-        "label": "Agua actividad",
-        "icon": "🥤"
-      },
-      {
-        "slug": "calculadora-agua-diaria-necesaria",
-        "label": "Hidratación personal",
-        "icon": "💧"
+        "slug": "calculadora-hidratacion-corredor-maraton-carrera",
+        "label": "Hidratación corredor",
+        "icon": "🏃"
       }
     ]
   },
@@ -541,7 +524,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "📅"
       },
       {
-        "slug": "calculadora-cuanto-falta-cumpleanos-fecha-personalizada-eventos",
+        "slug": "calculadora-proximo-cumpleanos",
         "label": "Cuánto falta",
         "icon": "🎂"
       }
@@ -583,12 +566,12 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Ahorro y consumo hogar",
     "items": [
       {
-        "slug": "calculadora-consumo-agua-hogar-mensual",
+        "slug": "calculadora-consumo-agua-mensual",
         "label": "Consumo agua mensual",
         "icon": "💧"
       },
       {
-        "slug": "calculadora-ahorro-cambiar-lamparas-led",
+        "slug": "calculadora-ahorro-led-vs-incandescente",
         "label": "Ahorro a LED",
         "icon": "💡"
       },
@@ -611,6 +594,11 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-costo-mantenimiento-hogar-anual",
         "label": "Mantenimiento hogar",
         "icon": "🏠"
+      },
+      {
+        "slug": "calculadora-consumo-electrico-aparato-kwh-mes",
+        "label": "Consumo eléctrico",
+        "icon": "⚡"
       }
     ]
   },
@@ -619,12 +607,7 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Bebés y crianza",
     "items": [
       {
-        "slug": "calculadora-fecha-probable-parto-calcular-semanas",
-        "label": "Fecha probable parto",
-        "icon": "🤰"
-      },
-      {
-        "slug": "calculadora-panales-por-dia-mes-bebe-edad",
+        "slug": "calculadora-cantidad-panales-bebe-por-mes-edad",
         "label": "Pañales por mes",
         "icon": "🧷"
       },
@@ -634,7 +617,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🍼"
       },
       {
-        "slug": "calculadora-horas-sueno-bebe-por-edad-tabla-recomendada",
+        "slug": "calculadora-sueno-bebe-horas",
         "label": "Sueño bebé",
         "icon": "😴"
       },
@@ -665,9 +648,9 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🏫"
       },
       {
-        "slug": "calculadora-frecuencia-desparasitar-familia-tipos",
-        "label": "Desparasitar familia",
-        "icon": "💊"
+        "slug": "calculadora-ayuda-escolar-anual-asignacion",
+        "label": "Ayuda escolar",
+        "icon": "🎒"
       }
     ]
   },
@@ -676,24 +659,19 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Gastos de hijos",
     "items": [
       {
-        "slug": "calculadora-ahorro-educacion-hijo-plan-colegio-universidad",
-        "label": "Ahorro educación hijo",
+        "slug": "calculadora-ingreso-colegio-privado-cuota-anual-caba",
+        "label": "Colegio privado",
+        "icon": "🏫"
+      },
+      {
+        "slug": "calculadora-costo-hijo-mensual",
+        "label": "Costo hijo mensual",
         "icon": "💰"
       },
       {
-        "slug": "calculadora-costo-total-criar-hijo-18-anios",
-        "label": "Costo criar hijo",
-        "icon": "💰"
-      },
-      {
-        "slug": "calculadora-mesada-por-edad-hijo-semanal-mensual",
-        "label": "Mesada por edad",
-        "icon": "💵"
-      },
-      {
-        "slug": "calculadora-edad-gestacional-ecografia-corona-rabadilla",
-        "label": "Edad gestacional",
-        "icon": "🩺"
+        "slug": "calculadora-costo-hijo-primer-ano",
+        "label": "Costo primer año",
+        "icon": "🍼"
       }
     ]
   },
@@ -733,18 +711,13 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "☕"
       },
       {
-        "slug": "calculadora-cafe-aeropress-receta",
-        "label": "Receta AeroPress",
+        "slug": "calculadora-cafe-ratio-agua-gramos-metodo-preparacion",
+        "label": "Ratio agua/café",
         "icon": "☕"
       },
       {
         "slug": "calculadora-cafe-french-press-ratio",
         "label": "French Press",
-        "icon": "☕"
-      },
-      {
-        "slug": "calculadora-cafe-ratio-v60-pour-over",
-        "label": "V60 y Pour Over",
         "icon": "☕"
       },
       {
@@ -769,24 +742,19 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🍸"
       },
       {
-        "slug": "calculadora-margarita-ingredientes-jarra",
-        "label": "Margarita",
-        "icon": "🍹"
-      },
-      {
         "slug": "calculadora-mojito-cubano-ingredientes",
         "label": "Mojito",
-        "icon": "🍹"
-      },
-      {
-        "slug": "calculadora-negroni-proporciones-invitados",
-        "label": "Negroni",
         "icon": "🍹"
       },
       {
         "slug": "calculadora-pisco-sour-receta",
         "label": "Pisco Sour",
         "icon": "🍹"
+      },
+      {
+        "slug": "calculadora-bebidas-evento-litros-por-persona",
+        "label": "Bebidas evento",
+        "icon": "🥤"
       }
     ]
   },
@@ -862,9 +830,9 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "💰"
       },
       {
-        "slug": "calculadora-agua-perro-gato-diaria-ml",
-        "label": "Agua diaria",
-        "icon": "💧"
+        "slug": "calculadora-peso-ideal-gato-raza",
+        "label": "Peso ideal gato",
+        "icon": "⚖️"
       }
     ]
   },
@@ -909,11 +877,6 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🧱"
       },
       {
-        "slug": "calculadora-cemento-arena-hormigon-receta-metro-cubico",
-        "label": "Hormigón receta",
-        "icon": "🪨"
-      },
-      {
         "slug": "calculadora-arena-grava-hormigon",
         "label": "Arena y grava",
         "icon": "📦"
@@ -932,6 +895,16 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-cerramiento-perimetro-casa-ladrillos-costo",
         "label": "Cerco perímetro",
         "icon": "🧱"
+      },
+      {
+        "slug": "calculadora-costo-m2-construccion-argentina",
+        "label": "Costo m² obra",
+        "icon": "🏗️"
+      },
+      {
+        "slug": "calculadora-tejas-techo-m2",
+        "label": "Tejas por m²",
+        "icon": "🏠"
       }
     ]
   },
@@ -940,7 +913,7 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Pintura y revestimientos",
     "items": [
       {
-        "slug": "calculadora-pintura-litros-m2-manos",
+        "slug": "calculadora-pintura-por-m2-litros-latas",
         "label": "Pintura por m²",
         "icon": "🎨"
       },
@@ -978,6 +951,11 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-barniz-aceite-m2-madera",
         "label": "Barniz/aceite",
         "icon": "🔨"
+      },
+      {
+        "slug": "calculadora-conversor-metros-lineales-a-metros-cuadrados",
+        "label": "Lineales a m²",
+        "icon": "📏"
       }
     ]
   },
@@ -1073,7 +1051,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🚗"
       },
       {
-        "slug": "calculadora-seguro-auto-estimacion-precio",
+        "slug": "calculadora-seguro-auto-estimado",
         "label": "Seguro estimado",
         "icon": "🚗"
       },
@@ -1093,7 +1071,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🚗"
       },
       {
-        "slug": "calculadora-peaje-ruta-costo-total-viaje",
+        "slug": "calculadora-costo-peaje-ruta",
         "label": "Peajes ruta",
         "icon": "🚗"
       }
@@ -1119,8 +1097,8 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🌳"
       },
       {
-        "slug": "calculadora-combustible-auto-viaje-emisiones",
-        "label": "Emisiones viaje",
+        "slug": "calculadora-emisiones-co2-auto-g-km-anual",
+        "label": "Emisiones auto",
         "icon": "🚗"
       },
       {
@@ -1129,7 +1107,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🌱"
       },
       {
-        "slug": "calculadora-consumo-bicicleta-vs-auto-anual",
+        "slug": "calculadora-ahorro-bicicleta-vs-auto-mensual",
         "label": "Bici vs auto",
         "icon": "🚴"
       }
@@ -1139,6 +1117,11 @@ export const CLUSTERS: Record<string, Cluster> = {
     "id": "porcentajesDescuentos",
     "title": "Porcentajes y descuentos",
     "items": [
+      {
+        "slug": "calculadora-porcentajes",
+        "label": "Porcentajes",
+        "icon": "🧮"
+      },
       {
         "slug": "calculadora-porcentaje-aumento-disminucion",
         "label": "Aumento/Disminución %",
@@ -1202,7 +1185,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🌡️"
       },
       {
-        "slug": "calculadora-conversor-kilogramos-a-libras",
+        "slug": "conversor-kilogramos-libras-onzas",
         "label": "Kilos ↔ Libras",
         "icon": "⚖️"
       },
@@ -1212,7 +1195,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "📏"
       },
       {
-        "slug": "calculadora-conversor-litros-a-galones",
+        "slug": "conversor-litros-galones-mililitros",
         "label": "Litros ↔ Galones",
         "icon": "💧"
       }
@@ -1228,7 +1211,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "📐"
       },
       {
-        "slug": "calculadora-regla-de-tres-simple-directa-inversa",
+        "slug": "calculadora-regla-de-tres-simple",
         "label": "Regla de 3",
         "icon": "➗"
       },
@@ -1238,7 +1221,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "📐"
       },
       {
-        "slug": "calculadora-sistema-ecuaciones-2x2-cramer",
+        "slug": "calculadora-sistemas-ecuaciones-2x2-cramer",
         "label": "Sistema 2x2",
         "icon": "📊"
       }
@@ -1249,12 +1232,12 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Estadística básica",
     "items": [
       {
-        "slug": "calculadora-media-mediana-moda",
+        "slug": "calculadora-media-mediana-moda-rango-estadistica",
         "label": "Media/Mediana/Moda",
         "icon": "📊"
       },
       {
-        "slug": "calculadora-desviacion-estandar-varianza",
+        "slug": "calculadora-desvio-estandar-varianza-conjunto",
         "label": "Desviación estándar",
         "icon": "📉"
       },
@@ -1280,7 +1263,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "💻"
       },
       {
-        "slug": "calculadora-bits-bytes-kilobytes-megabytes-conversion",
+        "slug": "calculadora-conversor-bits-a-bytes",
         "label": "Bits a Bytes",
         "icon": "💽"
       },
@@ -1288,6 +1271,16 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-conversor-mb-a-gb",
         "label": "Megabytes a GB",
         "icon": "💾"
+      },
+      {
+        "slug": "calculadora-video-bitrate-tamano-archivo",
+        "label": "Peso de video",
+        "icon": "🎞️"
+      },
+      {
+        "slug": "calculadora-duracion-bateria-mah-consumo",
+        "label": "Duración batería",
+        "icon": "🔋"
       }
     ]
   },
@@ -1301,14 +1294,9 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "⬇️"
       },
       {
-        "slug": "calculadora-tiempo-descarga-archivo-ancho-banda",
-        "label": "Descarga por velocidad",
-        "icon": "📡"
-      },
-      {
-        "slug": "calculadora-bandwidth-streaming-bitrate-resolucion-youtube",
-        "label": "Bitrate streaming",
-        "icon": "📺"
+        "slug": "calculadora-consumo-datos-moviles-streaming",
+        "label": "Datos streaming",
+        "icon": "📱"
       },
       {
         "slug": "calculadora-velocidad-internet-mbps-real",
@@ -1358,13 +1346,13 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "⚡"
       },
       {
-        "slug": "calculadora-conversor-hp-a-kw",
-        "label": "HP a kW",
+        "slug": "calculadora-conversor-kw-a-hp",
+        "label": "kW a HP",
         "icon": "🐎"
       },
       {
-        "slug": "calculadora-conversor-bar-a-psi",
-        "label": "Bar a PSI",
+        "slug": "calculadora-conversor-psi-a-bar",
+        "label": "PSI a Bar",
         "icon": "🔧"
       }
     ]
@@ -1384,11 +1372,6 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🎓"
       },
       {
-        "slug": "calculadora-nota-final-necesaria-universidad",
-        "label": "Nota final necesaria",
-        "icon": "🎓"
-      },
-      {
         "slug": "calculadora-gpa-argentino-a-escala-4",
         "label": "GPA a escala 4.0",
         "icon": "🎓"
@@ -1402,6 +1385,11 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-nota-minima-aprobar-final-parcial-promedio",
         "label": "Nota mínima final",
         "icon": "📝"
+      },
+      {
+        "slug": "calculadora-indice-asistencia-faltas",
+        "label": "Asistencia y faltas",
+        "icon": "📋"
       }
     ]
   },
@@ -1415,24 +1403,24 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "📝"
       },
       {
-        "slug": "calculadora-pomodoro-optimo-materia",
+        "slug": "calculadora-tecnica-pomodoro-bloques-descanso-optimo",
         "label": "Pomodoros óptimos",
         "icon": "🍅"
-      },
-      {
-        "slug": "calculadora-cornell-apuntes-tiempo",
-        "label": "Método Cornell",
-        "icon": "📝"
-      },
-      {
-        "slug": "calculadora-metodo-feynman-tiempo",
-        "label": "Método Feynman",
-        "icon": "🎓"
       },
       {
         "slug": "calculadora-ciclo-circadiano-estudio",
         "label": "Mejor hora estudiar",
         "icon": "⏰"
+      },
+      {
+        "slug": "calculadora-tiempo-lectura-paginas-estudio",
+        "label": "Tiempo de lectura",
+        "icon": "📖"
+      },
+      {
+        "slug": "calculadora-palabras-paginas-conversor",
+        "label": "Palabras a páginas",
+        "icon": "📄"
       }
     ]
   },
@@ -1446,8 +1434,8 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "💰"
       },
       {
-        "slug": "calculadora-markup-vs-margen",
-        "label": "Markup vs margen",
+        "slug": "calculadora-margen-ganancia-markup",
+        "label": "Margen y markup",
         "icon": "🔄"
       },
       {
@@ -1456,9 +1444,9 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🏷️"
       },
       {
-        "slug": "calculadora-margen-dropshipping-real",
-        "label": "Margen dropshipping",
-        "icon": "📦"
+        "slug": "calculadora-comision-venta-vendedor",
+        "label": "Comisión venta",
+        "icon": "🤝"
       }
     ]
   },
@@ -1477,12 +1465,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🎯"
       },
       {
-        "slug": "calculadora-facturacion-minima-negocio",
-        "label": "Facturación mínima",
-        "icon": "💰"
-      },
-      {
-        "slug": "calculadora-inventario-turnover-ratio",
+        "slug": "calculadora-rotacion-inventario-stock",
         "label": "Rotación inventario",
         "icon": "📊"
       },
@@ -1498,9 +1481,9 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "ROI y publicidad",
     "items": [
       {
-        "slug": "calculadora-instagram-ads-presupuesto-cpm-cpr-roi-2026",
-        "label": "Instagram ROI",
-        "icon": "📱"
+        "slug": "calculadora-cpm-cpc-conversion-ads",
+        "label": "CPM y CPC",
+        "icon": "💸"
       },
       {
         "slug": "calculadora-cpa-cac-ltv",
@@ -1513,9 +1496,9 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "📣"
       },
       {
-        "slug": "calculadora-roi-coaching-1-on-1-venta",
-        "label": "ROI coaching",
-        "icon": "💼"
+        "slug": "calculadora-roi-publicidad-redes",
+        "label": "ROI publicidad",
+        "icon": "📈"
       }
     ]
   },
@@ -1524,13 +1507,8 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Redes y engagement",
     "items": [
       {
-        "slug": "calculadora-alcance-organico-vs-pago-redes",
-        "label": "Orgánico vs pago",
-        "icon": "📱"
-      },
-      {
-        "slug": "calculadora-instagram-reach-organico-promedio",
-        "label": "Reach Instagram",
+        "slug": "calculadora-engagement-rate-instagram",
+        "label": "Engagement Instagram",
         "icon": "📱"
       },
       {
@@ -1539,14 +1517,14 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "📱"
       },
       {
-        "slug": "calculadora-frecuencia-publicacion-redes-sociales",
-        "label": "Frecuencia posteo",
-        "icon": "📅"
-      },
-      {
         "slug": "calculadora-youtube-suscriptores-para-1000",
         "label": "Suscriptores YouTube",
         "icon": "📺"
+      },
+      {
+        "slug": "calculadora-twitter-x-monetizacion-ingreso",
+        "label": "Monetización X",
+        "icon": "🐦"
       }
     ]
   },
@@ -1555,29 +1533,29 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Presupuesto de viaje",
     "items": [
       {
-        "slug": "calculadora-costo-mochilero-por-pais",
+        "slug": "calculadora-presupuesto-diario-mochilero-ciudad",
         "label": "Presupuesto mochilero",
         "icon": "🌎"
-      },
-      {
-        "slug": "calculadora-presupuesto-viaje-bali-indonesia",
-        "label": "Presupuesto Bali",
-        "icon": "🌍"
-      },
-      {
-        "slug": "calculadora-presupuesto-viaje-barcelona",
-        "label": "Presupuesto Barcelona",
-        "icon": "🌍"
-      },
-      {
-        "slug": "calculadora-coliving-precio-mes-bali-medellin-mexico",
-        "label": "Coliving nómadas",
-        "icon": "🌴"
       },
       {
         "slug": "calculadora-emigrar-espana-presupuesto-primer-ano-familia",
         "label": "Emigrar a España",
         "icon": "🇪🇸"
+      },
+      {
+        "slug": "calculadora-estimador-costo-viaje-taxi-remis",
+        "label": "Taxi y remis",
+        "icon": "🚕"
+      },
+      {
+        "slug": "calculadora-propina-por-pais-viaje",
+        "label": "Propinas por país",
+        "icon": "💵"
+      },
+      {
+        "slug": "calculadora-split-gastos-grupo-amigos",
+        "label": "Dividir gastos",
+        "icon": "🧾"
       }
     ]
   },
@@ -1586,7 +1564,7 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Transporte y millas",
     "items": [
       {
-        "slug": "calculadora-alquiler-auto-pais-presupuesto",
+        "slug": "calculadora-alquiler-auto-costo-dias",
         "label": "Alquiler auto",
         "icon": "🚗"
       },
@@ -1630,20 +1608,73 @@ export const CLUSTERS: Record<string, Cluster> = {
         "slug": "calculadora-horas-peliculas-serie-inmersion-idioma",
         "label": "Horas series",
         "icon": "🎬"
+      }
+    ]
+  },
+  "jubilacionRetiro": {
+    "id": "jubilacionRetiro",
+    "title": "Jubilación y retiro",
+    "items": [
+      {
+        "slug": "simulador-jubilacion-anses",
+        "label": "Simulador ANSES",
+        "icon": "🧓"
       },
       {
-        "slug": "calculadora-tiempo-pronunciacion-nativa-practica-diaria",
-        "label": "Pronunciación nativa",
-        "icon": "🗣️"
+        "slug": "calculadora-jubilacion-anses-monto-minimo-maxima-2026",
+        "label": "Mínima y máxima",
+        "icon": "💰"
       },
       {
-        "slug": "calculadora-horas-semanales-mantener-nivel-idioma",
-        "label": "Mantener nivel",
-        "icon": "🔁"
+        "slug": "calculadora-puam-pension-universal-adulto-mayor-anses-2026",
+        "label": "PUAM",
+        "icon": "👵"
+      },
+      {
+        "slug": "calculadora-pension-viudez-porcentaje-conyuge",
+        "label": "Pensión viudez",
+        "icon": "🕊️"
+      },
+      {
+        "slug": "calculadora-pami-prestaciones-monto-copago-2026",
+        "label": "PAMI copagos",
+        "icon": "🏥"
+      },
+      {
+        "slug": "calculadora-jubilacion-cuanto-necesito",
+        "label": "Cuánto necesito",
+        "icon": "🎯"
+      }
+    ]
+  },
+  "mascotasEdades": {
+    "id": "mascotasEdades",
+    "title": "Edad de tu mascota",
+    "items": [
+      {
+        "slug": "calculadora-edad-perro-anos-humanos",
+        "label": "Edad perro",
+        "icon": "🐶"
+      },
+      {
+        "slug": "calculadora-edad-gato-anos-humanos",
+        "label": "Edad gato",
+        "icon": "🐱"
+      },
+      {
+        "slug": "calculadora-edad-humana-conejo-anos",
+        "label": "Edad conejo",
+        "icon": "🐰"
+      },
+      {
+        "slug": "calculadora-edad-humana-tortuga",
+        "label": "Edad tortuga",
+        "icon": "🐢"
       }
     ]
   }
 };
+
 
 /** Busca cluster al que pertenece un slug. */
 export function findClusterForSlug(slug: string): Cluster | null {
