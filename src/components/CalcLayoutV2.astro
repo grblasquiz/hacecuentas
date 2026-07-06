@@ -20,6 +20,8 @@ import RelatedCalcs from './RelatedCalcs.astro';
 import CalendarGrid from './CalendarGrid.astro';
 import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
 import NextCalcs from './NextCalcs.astro';
+import PostResultDecisionBlock from './PostResultDecisionBlock.astro';
+import PostResultTracking from './PostResultTracking.astro';
 import CategoryIcon from './CategoryIcon.astro';
 import FavoriteStar from './FavoriteStar.astro';
 import LiveData from './LiveData.astro';
@@ -317,10 +319,27 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
       <RestrictedNotice calc={calc} lang={lang} />
     ) : (
       <Calculator config={calc} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang}>
+        {/* Bloque de decisión post-resultado (opt-in vía calc.postResult): el
+            número se vuelve el principio de una segunda acción. Va PRIMERO en el
+            slot para quedar arriba del "seguí calculando". */}
+        {calc.postResult && (
+          <PostResultDecisionBlock
+            slot="next-steps"
+            slug={calc.slug}
+            category={calc.category}
+            lead={calc.postResult.lead}
+            meaning={calc.postResult.meaning}
+            room={calc.postResult.room}
+            lang={lang}
+          />
+        )}
         {/* "Seguí calculando" dentro del widget: el slot cae en el hueco de la
             columna izquierda (bajo el form) y se revela al haber resultado.
             lang completo (no calcWidgetLang) para resolver el locale correcto. */}
         <NextCalcs slot="next-steps" calc={calc} lang={lang} />
+        {/* Instrumentación del funnel post-resultado (solo donde hay bloque de
+            decisión, para acotar el piloto y medir post_result_interaction_rate). */}
+        {calc.postResult && <PostResultTracking slot="next-steps" slug={calc.slug} category={calc.category} />}
       </Calculator>
     )}
   </section>

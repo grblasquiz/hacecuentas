@@ -42,6 +42,12 @@ export const HC_EVENTS = [
   'hc_result_email_sent',
   'hc_formula_expanded',
   'hc_related_calculator_clicked',
+  // Post-resultado (segunda acción) — mide post_result_interaction_rate
+  'hc_scenario_viewed',
+  'hc_next_step_clicked',
+  'hc_decision_room_clicked',
+  'hc_post_result_scroll',
+  'hc_post_result_interaction',
   // Feedback / historial
   'hc_feedback_positive',
   'hc_feedback_negative',
@@ -67,6 +73,9 @@ export const HC_ALLOWED_PARAMS = [
   'device_type',
   'logged_in',
   'source_page',
+  // Tipo de la primera acción post-resultado (scroll|next_step|decision_room|save).
+  // Categórico, no identificatorio.
+  'interaction_type',
 ] as const;
 
 export type HcParamKey = (typeof HC_ALLOWED_PARAMS)[number];

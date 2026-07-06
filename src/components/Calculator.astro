@@ -178,8 +178,10 @@ export interface CalcConfig {
   dynamicScenarios?: Array<{
     /** Tag corto del escenario (ej. "Semestre completo"). */
     label: string;
-    /** Overrides a aplicar sobre los inputs antes de recomputar. */
-    overrides: Record<string, string | number>;
+    /** Overrides sobre los inputs antes de recomputar. Cada valor es absoluto
+     *  (string|number) o relativo al input del usuario vía objeto
+     *  {pct}|{mul}|{add}|{set} → habilita escenarios como "si me aumentan 10%". */
+    overrides: Record<string, string | number | { pct?: number; mul?: number; add?: number; set?: string | number }>;
     /** Texto descriptivo opcional bajo el resultado del escenario. */
     detail?: string;
   }>;
@@ -5185,7 +5187,29 @@ const formatFreshnessDate = (iso: string): string => {
                 // Cards alternativos
                 for (const s of scenarios) {
                   try {
-                    const altInputs = { ...inputs, ...s.overrides };
+                    // Overrides: valor absoluto (default, backward-compatible) o
+                    // relativo al input actual del usuario si es un objeto con
+                    // {pct} / {mul} / {add} / {set} → habilita "si me aumentan 10%".
+                    const altInputs: Record<string, any> = { ...inputs };
+                    for (const ok of Object.keys(s.overrides || {})) {
+                      const ov = (s.overrides as any)[ok];
+                      if (ov && typeof ov === 'object' && !Array.isArray(ov)) {
+                        if (ov.set !== undefined) {
+                          altInputs[ok] = ov.set;
+                        } else {
+                          const b = Number(altInputs[ok]);
+                          if (isFinite(b)) {
+                            let v = b;
+                            if (typeof ov.pct === 'number') v = v * (1 + ov.pct / 100);
+                            if (typeof ov.mul === 'number') v = v * ov.mul;
+                            if (typeof ov.add === 'number') v = v + ov.add;
+                            altInputs[ok] = Math.round(v);
+                          }
+                        }
+                      } else {
+                        altInputs[ok] = ov;
+                      }
+                    }
                     (altInputs as any).__lang = CALC_LANG;
                     const altOut = formula(altInputs);
                     // Encontrar primary output id

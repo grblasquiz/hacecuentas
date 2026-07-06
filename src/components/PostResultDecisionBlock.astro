@@ -1,0 +1,151 @@
+---
+/**
+ * PostResultDecisionBlock — "el resultado es el principio de una segunda acción".
+ *
+ * Se revela DESPUÉS de calcular (evento `hc-calc-result`) y transforma el número
+ * en una DECISIÓN: una línea que interpreta el resultado + un CTA agresivo a la
+ * sala de decisión relevante. NO duplica el `_insight` de la fórmula (que da el
+ * desglose técnico) — este bloque agrega la capa "qué hacés con este número".
+ *
+ * Vive dentro del slot `next-steps` de Calculator (data-nosnippet, oculto hasta
+ * que hay resultado) → no afecta wordCount/SEO ni se snippetea en Google.
+ *
+ * Opt-in y data-driven: la calc declara `postResult: { lead, meaning, room }` en
+ * su JSON. Escala al rollout agregando ese campo a cualquier calc.
+ */
+export interface PostResultRoom {
+  /** Slug de la sala en /decidir/<slug>. */
+  slug: string;
+  /** Gancho arriba del CTA (ej. "¿Estás usando este número para decidir algo?"). */
+  hook?: string;
+  /** Label del CTA (ej. "Abrí la sala: ¿Me conviene aceptar esta oferta?"). */
+  label?: string;
+}
+interface Props {
+  /** Slug de la calc (para analytics). */
+  slug: string;
+  /** Categoría (para analytics). */
+  category?: string;
+  /** Plantilla de la línea-diagnóstico. Usa `{value}` como placeholder del primary. */
+  lead?: string;
+  /** Prosa de interpretación de decisión (qué hacer con el número). */
+  meaning?: string;
+  /** Sala de decisión recomendada. */
+  room?: PostResultRoom;
+  lang?: 'es' | 'en' | 'pt';
+}
+const { slug, category, lead, meaning, room, lang = 'es' } = Astro.props;
+
+const T = ({
+  es: { title: 'Qué significa este número', openRoom: 'Tomar esta decisión completa →', hookDefault: '¿Estás usando este número para decidir algo?' },
+  en: { title: 'What this number means', openRoom: 'Make the full decision →', hookDefault: 'Are you using this number to decide something?' },
+  pt: { title: 'O que este número significa', openRoom: 'Tomar esta decisão completa →', hookDefault: 'Está usando este número para decidir algo?' },
+} as const)[lang] || { title: 'Qué significa este número', openRoom: 'Tomar esta decisión completa →', hookDefault: '¿Estás usando este número para decidir algo?' };
+
+// Partimos el lead alrededor de {value} para inyectar el primary como <strong> sin
+// parsear markdown en cliente (cero superficie de XSS: el value es texto formateado).
+const leadTpl = lead || 'Tu resultado: {value}';
+const leadParts = leadTpl.split('{value}');
+const hasBlock = Boolean(meaning || room);
+---
+
+{hasBlock && (
+  <section class="prd" data-prd data-prd-slug={slug} data-prd-category={category} hidden aria-labelledby="prd-h">
+    <div class="prd-lead">
+      <span class="prd-ico" aria-hidden="true">🧭</span>
+      <div class="prd-lead-body">
+        <strong id="prd-h" class="prd-title">{T.title}</strong>
+        <p class="prd-lead-txt">
+          {leadParts[0]}<strong class="prd-value" data-prd-value>—</strong>{leadParts.length > 1 ? leadParts.slice(1).join('{value}') : ''}
+        </p>
+        {meaning && <p class="prd-meaning">{meaning}</p>}
+      </div>
+    </div>
+
+    {room && (
+      <a
+        class="prd-room"
+        href={`/decidir/${room.slug}`}
+        data-decision-room
+        data-room-slug={room.slug}
+      >
+        <span class="prd-room-body">
+          <span class="prd-room-hook">{room.hook || T.hookDefault}</span>
+          <span class="prd-room-label">{room.label || T.openRoom}</span>
+        </span>
+        <span class="prd-room-cta" aria-hidden="true">{T.openRoom}</span>
+      </a>
+    )}
+  </section>
+
+  <script is:inline>
+    (function () {
+      var host = document.querySelector('[data-prd]');
+      if (!host) return;
+      var valueEl = host.querySelector('[data-prd-value]');
+      var containers = document.querySelectorAll('.calc-container');
+      if (!containers.length) return;
+      function onResult(ev) {
+        var detail = ev && ev.detail ? ev.detail : null;
+        if (!detail || !detail.output) return;
+        if (valueEl && detail.primary) valueEl.textContent = detail.primary;
+        host.hidden = false;
+      }
+      containers.forEach(function (c) {
+        c.addEventListener('hc-calc-result', onResult);
+      });
+    })();
+  </script>
+)}
+
+<style>
+  .prd {
+    margin: 1rem 0 0;
+    padding: 1.1rem 1.2rem 1.2rem;
+    background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+    border-radius: var(--radius-md, 12px);
+  }
+  .prd[hidden] { display: none; }
+  .prd-lead { display: flex; gap: 0.75rem; align-items: flex-start; }
+  .prd-ico { font-size: 1.5rem; line-height: 1.1; flex: 0 0 auto; }
+  .prd-lead-body { min-width: 0; }
+  .prd-title {
+    display: block;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-2, #666);
+    margin-bottom: 0.25rem;
+  }
+  .prd-lead-txt { margin: 0; font-size: 1.05rem; line-height: 1.4; }
+  .prd-value { color: var(--accent); font-weight: 700; }
+  .prd-meaning {
+    margin: 0.55rem 0 0;
+    font-size: 0.925rem;
+    line-height: 1.5;
+    color: var(--text-2, #555);
+  }
+  .prd-room {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+    padding: 0.85rem 1rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius-sm, 8px);
+    text-decoration: none;
+    transition: filter 0.15s ease, transform 0.15s ease;
+  }
+  .prd-room:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .prd-room-body { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+  .prd-room-hook { font-size: 0.8rem; opacity: 0.9; }
+  .prd-room-label { font-size: 0.98rem; font-weight: 700; line-height: 1.25; }
+  .prd-room-cta { font-size: 0.85rem; font-weight: 700; white-space: nowrap; flex: 0 0 auto; }
+  @media (max-width: 520px) {
+    .prd-room { flex-direction: column; align-items: flex-start; }
+    .prd-room-cta { align-self: flex-end; }
+  }
+</style>

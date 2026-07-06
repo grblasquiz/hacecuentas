@@ -1,0 +1,97 @@
+---
+/**
+ * PostResultTracking — instrumentación del funnel POST-resultado.
+ *
+ * Mide la métrica clave que hoy no existe: `post_result_interaction_rate` =
+ * de los que calcularon (hc_calculator_success), cuántos HICIERON algo después.
+ *
+ * Centraliza el tracking en un solo lugar (no scatter por componente). Emite:
+ *   · hc_scenario_viewed        — se revelaron los escenarios dinámicos
+ *   · hc_next_step_clicked      — click en "seguí calculando" / próximo paso
+ *   · hc_decision_room_clicked  — click en el CTA a la sala de decisión
+ *   · hc_post_result_scroll     — el usuario scrolleó a la zona post-resultado
+ *   · hc_post_result_interaction — META: primera acción post-resultado (una vez
+ *                                   por cálculo), con interaction_type.
+ *
+ * Todo vía window.hcTrack (aditivo, anti-PII, no toca ningún tag existente).
+ */
+interface Props { slug: string; category?: string; }
+const { slug, category } = Astro.props;
+---
+
+<script is:inline define:vars={{ slug, category }}>
+  (function () {
+    var containers = document.querySelectorAll('.calc-container');
+    if (!containers.length) return;
+    var track = (typeof window.hcTrack === 'function') ? window.hcTrack : function () {};
+    var base = { calculator_slug: slug };
+    if (category) base.calculator_category = category;
+    function p(extra) { return Object.assign({}, base, extra || {}); }
+
+    var interacted = false;    // meta: una vez por cálculo
+    var scenariosSeen = false;
+    var scrollSeen = false;
+    var observer = null;
+    var nextBox = document.querySelector('[data-next-box]');
+
+    function meta(type) {
+      if (interacted) return;
+      interacted = true;
+      track('hc_post_result_interaction', p({ interaction_type: type }));
+    }
+
+    function onResult(ev) {
+      var detail = ev && ev.detail ? ev.detail : null;
+      if (!detail || !detail.output) return;
+      // Reset por cada nuevo cálculo (el usuario puede recalcular varias veces).
+      interacted = false; scenariosSeen = false; scrollSeen = false;
+
+      // Escenarios dinámicos: Calculator los revela síncrono tras el resultado.
+      setTimeout(function () {
+        var sc = document.querySelector('[data-dynamic-scenarios]');
+        if (sc && !sc.hidden && !scenariosSeen) {
+          scenariosSeen = true;
+          track('hc_scenario_viewed', p());
+        }
+      }, 80);
+
+      // Scroll hacia la zona post-resultado.
+      if (nextBox && !observer && 'IntersectionObserver' in window) {
+        observer = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting && !scrollSeen) {
+              scrollSeen = true;
+              track('hc_post_result_scroll', p());
+              meta('scroll');
+            }
+          }
+        }, { threshold: 0.4 });
+        observer.observe(nextBox);
+      }
+    }
+
+    containers.forEach(function (c) {
+      c.addEventListener('hc-calc-result', onResult);
+    });
+
+    // Delegación de clicks en la zona post-resultado.
+    document.addEventListener('click', function (ev) {
+      var node = ev.target;
+      if (!node || !node.closest) return;
+      // 1) CTA a la sala de decisión (tiene prioridad; también vive en next-box).
+      if (node.closest('[data-decision-room]')) {
+        track('hc_decision_room_clicked', p());
+        meta('decision_room');
+        return;
+      }
+      // 2) Link dentro de la caja "seguí calculando" / próximo paso.
+      if (node.closest('[data-next-box] a, [data-next-step] a')) {
+        track('hc_next_step_clicked', p());
+        meta('next_step');
+      }
+    }, true);
+
+    // Guardar: Calculator emite `hc:result-saved` al snapshot → cuenta como meta.
+    window.addEventListener('hc:result-saved', function () { meta('save'); });
+  })();
+</script>
