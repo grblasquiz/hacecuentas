@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-07-03
+// Generated: 2026-07-06
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -879,6 +879,7 @@ import { compute as compute__data_parto_dum_naegele_portugues } from './data-par
 import { compute as compute__debt_avalanche_payoff_calculator } from './debt-avalanche-payoff-calculator';
 import { compute as compute__debt_snowball_payoff_calculator } from './debt-snowball-payoff-calculator';
 import { decibeliosDistanciaSonido } from './decibelios-distancia-sonido';
+import { decimalBinarioHexadecimal } from './decimal-binario-hexadecimal';
 import { compute as compute__decimo_cuarto_sueldo_ecuador } from './decimo-cuarto-sueldo-ecuador';
 import { decimoTerceiroPrimeiraParcela } from './decimo-terceiro-primeira-parcela';
 import { decimoTerceiroProporcional } from './decimo-terceiro-proporcional';
@@ -1218,6 +1219,7 @@ import { compute as compute__fp_grado_medio_superior_precio_publica_privada } fr
 import { fpsFluidezVideoJuego } from './fps-fluidez-video-juego';
 import { fpsFramesPorSegundoJuego } from './fps-frames-por-segundo-juego';
 import { fpsIdealMonitorHz } from './fps-ideal-monitor-hz';
+import { fraccionADecimal } from './fraccion-a-decimal';
 import { fracciones } from './fracciones';
 import { frecuenciaBanoPerro } from './frecuencia-bano-perro';
 import { frecuenciaCardiaca } from './frecuencia-cardiaca';
@@ -1633,6 +1635,7 @@ import { leerRapidoPalabrasPorMinutoTiempoLibro } from './leer-rapido-palabras-p
 import { lenaEstufaHogarInvierno } from './lena-estufa-hogar-invierno';
 import { lenteDistanciaFocal } from './lente-distancia-focal';
 import { letraDniArgentina } from './letra-dni-argentina';
+import { letrasANumero } from './letras-a-numero';
 import { compute as compute__letras_tesoro_espana_3_6_12_meses_rentabilidad } from './letras-tesoro-espana-3-6-12-meses-rentabilidad';
 import { leudadoPanLevaduraTiempoTemperatura } from './leudado-pan-levadura-tiempo-temperatura';
 import { levaduraFermentacion } from './levadura-fermentacion';
@@ -1842,6 +1845,7 @@ import { notacionCientifica } from './notacion-cientifica';
 import { nps } from './nps';
 import { numeroOxidacionElemento } from './numero-oxidacion-elemento';
 import { numerosPrimos } from './numeros-primos';
+import { numerosRomanosArabigos } from './numeros-romanos-arabigos';
 import { numerosRomanosConversor } from './numeros-romanos-conversor';
 import { compute as compute__obligado_declarar_renta_2026 } from './obligado-declarar-renta-2026';
 import { obraSocialMonotributistaAporteExtraFamiliar } from './obra-social-monotributista-aporte-extra-familiar';
@@ -2176,6 +2180,7 @@ import { puntosVsCashVueloCuandoConviene } from './puntos-vs-cash-vuelo-cuando-c
 import { compute as compute__puzzle_1000_piezas_tiempo_promedio_dificultad } from './puzzle-1000-piezas-tiempo-promedio-dificultad';
 import { compute as compute__pyme_chile_regimen_14d_tributacion_simplificada } from './pyme-chile-regimen-14d-tributacion-simplificada';
 import { queDia } from './que-dia';
+import { quePorcentajeEsUnNumero } from './que-porcentaje-es-un-numero';
 import { queSueldoNecesitoParaComprarUnAuto } from './que-sueldo-necesito-para-comprar-un-auto';
 import { queSueldoNecesitoParaSacarUnCredito } from './que-sueldo-necesito-para-sacar-un-credito';
 import { compute as compute__quita_jubilatoria_bono_refuerzo_anses_2026 } from './quita-jubilatoria-bono-refuerzo-anses-2026';
@@ -2223,6 +2228,7 @@ import { registroDnrpaAuto0kmArancel } from './registro-dnrpa-auto-0km-arancel';
 import { regla503020 } from './regla-50-30-20';
 import { regla600Estrellas } from './regla-600-estrellas';
 import { regla72DuplicarDinero } from './regla-72-duplicar-dinero';
+import { reglaDeTresSimple } from './regla-de-tres-simple';
 import { reglaDeTresSimpleDirectaInversa } from './regla-de-tres-simple-directa-inversa';
 import { reglaNumeroDunbar150ContactosRed } from './regla-numero-dunbar-150-contactos-red';
 import { reglaTres } from './regla-tres';
@@ -3629,6 +3635,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'debt-avalanche-payoff-calculator': compute__debt_avalanche_payoff_calculator,
   'debt-snowball-payoff-calculator': compute__debt_snowball_payoff_calculator,
   'decibelios-distancia-sonido': decibeliosDistanciaSonido,
+  'decimal-binario-hexadecimal': decimalBinarioHexadecimal,
   'decimo-cuarto-sueldo-ecuador': compute__decimo_cuarto_sueldo_ecuador,
   'decimo-terceiro-primeira-parcela': decimoTerceiroPrimeiraParcela,
   'decimo-terceiro-proporcional': decimoTerceiroProporcional,
@@ -3968,6 +3975,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'fps-fluidez-video-juego': fpsFluidezVideoJuego,
   'fps-frames-por-segundo-juego': fpsFramesPorSegundoJuego,
   'fps-ideal-monitor-hz': fpsIdealMonitorHz,
+  'fraccion-a-decimal': fraccionADecimal,
   'fracciones': fracciones,
   'frecuencia-bano-perro': frecuenciaBanoPerro,
   'frecuencia-cardiaca': frecuenciaCardiaca,
@@ -4383,6 +4391,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'lena-estufa-hogar-invierno': lenaEstufaHogarInvierno,
   'lente-distancia-focal': lenteDistanciaFocal,
   'letra-dni-argentina': letraDniArgentina,
+  'letras-a-numero': letrasANumero,
   'letras-tesoro-espana-3-6-12-meses-rentabilidad': compute__letras_tesoro_espana_3_6_12_meses_rentabilidad,
   'leudado-pan-levadura-tiempo-temperatura': leudadoPanLevaduraTiempoTemperatura,
   'levadura-fermentacion': levaduraFermentacion,
@@ -4592,6 +4601,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'nps': nps,
   'numero-oxidacion-elemento': numeroOxidacionElemento,
   'numeros-primos': numerosPrimos,
+  'numeros-romanos-arabigos': numerosRomanosArabigos,
   'numeros-romanos-conversor': numerosRomanosConversor,
   'obligado-declarar-renta-2026': compute__obligado_declarar_renta_2026,
   'obra-social-monotributista-aporte-extra-familiar': obraSocialMonotributistaAporteExtraFamiliar,
@@ -4926,6 +4936,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'puzzle-1000-piezas-tiempo-promedio-dificultad': compute__puzzle_1000_piezas_tiempo_promedio_dificultad,
   'pyme-chile-regimen-14d-tributacion-simplificada': compute__pyme_chile_regimen_14d_tributacion_simplificada,
   'que-dia': queDia,
+  'que-porcentaje-es-un-numero': quePorcentajeEsUnNumero,
   'que-sueldo-necesito-para-comprar-un-auto': queSueldoNecesitoParaComprarUnAuto,
   'que-sueldo-necesito-para-sacar-un-credito': queSueldoNecesitoParaSacarUnCredito,
   'quita-jubilatoria-bono-refuerzo-anses-2026': compute__quita_jubilatoria_bono_refuerzo_anses_2026,
@@ -4973,6 +4984,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'regla-50-30-20': regla503020,
   'regla-600-estrellas': regla600Estrellas,
   'regla-72-duplicar-dinero': regla72DuplicarDinero,
+  'regla-de-tres-simple': reglaDeTresSimple,
   'regla-de-tres-simple-directa-inversa': reglaDeTresSimpleDirectaInversa,
   'regla-numero-dunbar-150-contactos-red': reglaNumeroDunbar150ContactosRed,
   'regla-tres': reglaTres,
