@@ -92,6 +92,17 @@ function tokenize(text: string, stopwords: Set<string>): string[] {
     .filter((w) => w.length >= 3 && !stopwords.has(w));
 }
 
+// País implícito de un slug. El master AR (src/content/calcs) contiene calcs
+// país-específicas (peru, chile, mexico…) además de las AR-genéricas; sin esto
+// el TF-IDF puede recomendar una calc de otro país como "relacionada" sólo por
+// similitud de texto (ej: aguinaldo AR → CTS Perú). Todo lo que no matchea un
+// marcador de país se considera 'ar' (genérico/master). Ver denoiseCountry.
+const COUNTRY_RE = /(^|-)(mexico|espana|colombia|chile|peru|bolivia|ecuador|venezuela|paraguay|uruguay|dominicana|brasil|eeuu|usa)(-|$)/;
+function countryOf(slug: string): string {
+  const m = slug.match(COUNTRY_RE);
+  return m ? m[2] : 'ar';
+}
+
 function buildText(calc: Calc): string {
   // Priorizamos los campos más discriminativos: title, description, keyTakeaway, seoKeywords.
   // Pesamos título doble (repetido) y seoKeywords triple (repetidos) para que dominen el signal.
@@ -146,7 +157,7 @@ function cosineSimilarity(
 // Versión del algoritmo: bumpearla invalida el cache aunque los JSONs no
 // cambien (el hash solo mira inputs — sin esto, editar este script no
 // regenera los mapas ya cacheados).
-const ALGO_VERSION = 'v2-coverage';
+const ALGO_VERSION = 'v3-country-denoise';
 
 function hashCalcsInputs(dir: string, files: string[]): string {
   // Hash basado en el contenido raw de todos los JSONs + path (si cambia el nombre de un slug, invalida cache).
@@ -172,8 +183,9 @@ function computeRelated(opts: {
   excludeNoindex: boolean;
   label: string;
   topK?: number; // vecinos a guardar. Default 6; EN usa 12 para densificar el grafo de crawl interno.
+  denoiseCountry?: boolean; // penaliza vecinos de otro país (solo master AR, donde conviven varios países).
 }): void {
-  const { dir, stopwords, outputFile, cacheHashFile, excludeNoindex, label, topK = TOP_K } = opts;
+  const { dir, stopwords, outputFile, cacheHashFile, excludeNoindex, label, topK = TOP_K, denoiseCountry = false } = opts;
   const started = Date.now();
 
   if (!existsSync(dir)) {
@@ -237,8 +249,9 @@ function computeRelated(opts: {
   // Para cada calc, encontrar los top-K más similares
   const related: Record<string, string[]> = {};
   for (const c of calcs) {
-    const scores: { slug: string; score: number; sameCategory: boolean }[] = [];
+    const scores: { slug: string; score: number; sameCategory: boolean; crossCountry: boolean }[] = [];
     const myTf = tfBySlug.get(c.slug)!;
+    const myCountry = denoiseCountry ? countryOf(c.slug) : 'ar';
     for (const other of calcs) {
       if (other.slug === c.slug) continue;
       const otherTf = tfBySlug.get(other.slug)!;
@@ -247,12 +260,16 @@ function computeRelated(opts: {
         slug: other.slug,
         score: sim,
         sameCategory: other.category === c.category,
+        crossCountry: denoiseCountry && countryOf(other.slug) !== myCountry,
       });
     }
-    // Ordenar: bump de +0.1 a los de la misma categoría, después por score.
+    // Ordenar: bump de +0.1 a los de la misma categoría, penalización -0.5 a los
+    // de otro país (solo master AR), después por score. La penalización supera al
+    // bump de categoría: una calc de otro país en la misma categoría no le gana a
+    // una del mismo país en otra categoría.
     scores.sort((a, b) => {
-      const aBoost = a.score + (a.sameCategory ? 0.1 : 0);
-      const bBoost = b.score + (b.sameCategory ? 0.1 : 0);
+      const aBoost = a.score + (a.sameCategory ? 0.1 : 0) - (a.crossCountry ? 0.5 : 0);
+      const bBoost = b.score + (b.sameCategory ? 0.1 : 0) - (b.crossCountry ? 0.5 : 0);
       return bBoost - aBoost;
     });
     related[c.slug] = scores.slice(0, topK).map((s) => s.slug);
@@ -316,6 +333,7 @@ function main() {
     cacheHashFile: join(ROOT, 'src/lib/related-auto.hash'),
     excludeNoindex: false,
     label: 'es',
+    denoiseCountry: true, // el master AR mezcla calcs de varios países
   });
   // EN — solo indexables (46% son noindex; no malgastar slots de link).
   computeRelated({

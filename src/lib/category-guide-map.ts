@@ -14,18 +14,22 @@
 
 export const CATEGORY_TO_GUIDE: Record<string, string> = {
   finanzas: 'finanzas-personales',
-  // Negocios apuntaba a "Finanzas personales" — incoherente para una categoría
-  // de pymes/emprendedores. Marketing y ROI (métricas, LTV, CAC, churn) es la
-  // guía temáticamente más cercana mientras no exista una guía pilar de negocios.
-  negocios: 'marketing-roi-metricas',
+  // Guía pilar dedicada de negocios (pymes/emprendedores/freelancers): precios,
+  // márgenes, comisiones de plataformas, costo laboral, métricas de startup.
+  // Antes caía en marketing-roi-metricas por falta de guía propia.
+  negocios: 'negocios-e-independientes-2026',
   marketing: 'marketing-roi-metricas',
   salud: 'salud-nutricion-fitness',
-  deportes: 'salud-nutricion-fitness',
+  // Deportes tiene guía propia (fitness + competición) — 111 calcs; antes
+  // enterrado en salud-nutricion-fitness.
+  deportes: 'deportes-fitness',
   familia: 'embarazo-y-bebe',
   educacion: 'productividad-aprendizaje',
   idiomas: 'productividad-aprendizaje',
-  tecnologia: 'productividad-aprendizaje',
-  electronica: 'productividad-aprendizaje',
+  // Tecnología + electrónica comparten guía pilar propia (almacenamiento,
+  // energía, circuitos) — antes caían en productividad-aprendizaje (mal fit).
+  tecnologia: 'tecnologia-electronica',
+  electronica: 'tecnologia-electronica',
   matematica: 'matematicas-ciencias',
   ciencia: 'matematicas-ciencias',
   'medio-ambiente': 'matematicas-ciencias',
@@ -40,7 +44,9 @@ export const CATEGORY_TO_GUIDE: Record<string, string> = {
   juegos: 'vida-cotidiana',
   mascotas: 'mascotas',
   viajes: 'viajes',
-  automotor: 'viajes',
+  // Auto tiene guía propia (consumo, TCO, mantenimiento, patente/seguro) —
+  // antes compartía la guía de viajes.
+  automotor: 'auto-y-movilidad',
   impuestos: 'impuestos-argentina-2026',
 };
 
@@ -115,6 +121,10 @@ export const GUIDE_TITLES: Record<string, string> = {
   'vida-cotidiana': 'Vida cotidiana y hogar',
   mascotas: 'Mascotas',
   viajes: 'Viajes y auto',
+  'negocios-e-independientes-2026': 'Negocios e independientes',
+  'tecnologia-electronica': 'Tecnología y electrónica',
+  'deportes-fitness': 'Deportes y fitness',
+  'auto-y-movilidad': 'Auto y movilidad',
 };
 
 /** Categorías hermanas (temáticas cercanas) para sidebar de categoría. */
@@ -159,7 +169,11 @@ export const GUIDE_TO_CATEGORIES: Record<string, string[]> = {
   'sueldos-argentina-2026': ['finanzas'],
   'vida-cotidiana': ['vida', 'entretenimiento'],
   mascotas: ['mascotas'],
-  viajes: ['viajes', 'automotor'],
+  viajes: ['viajes'],
+  'negocios-e-independientes-2026': ['negocios', 'marketing'],
+  'tecnologia-electronica': ['tecnologia', 'electronica'],
+  'deportes-fitness': ['deportes', 'salud'],
+  'auto-y-movilidad': ['automotor', 'viajes'],
 };
 
 /** Iconos por categoría (fallback). */

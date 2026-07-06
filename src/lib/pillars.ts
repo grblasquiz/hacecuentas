@@ -186,7 +186,7 @@ export const PILLARS: PillarDef[] = [
       'me-conviene-aceptar-este-cliente',
       'cuanto-invertir-en-publicidad',
     ],
-    guide: 'marketing-roi-metricas',
+    guide: 'negocios-e-independientes-2026',
     categories: ['negocios', 'marketing'],
     dataPages: [
       { href: '/datos-monotributo-2026', label: 'Categorías del monotributo 2026' },
