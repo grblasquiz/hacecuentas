@@ -2122,6 +2122,7 @@ import { presupuestoViajeRioJaneiro } from './presupuesto-viaje-rio-janeiro';
 import { presupuestoViajeSantiagoChile } from './presupuesto-viaje-santiago-chile';
 import { previdenciaPgblVgbl } from './previdencia-pgbl-vgbl';
 import { primaAntiguedadMexico } from './prima-antiguedad-mexico';
+import { primaDeAntiguedadMexico } from './prima-de-antiguedad-mexico';
 import { compute as compute__prima_dominical_dias_festivos_mexico } from './prima-dominical-dias-festivos-mexico';
 import { compute as compute__prima_legal_colombia_30_dias_junio_diciembre } from './prima-legal-colombia-30-dias-junio-diciembre';
 import { compute as compute__prima_riesgo_trabajo_imss_siniestralidad } from './prima-riesgo-trabajo-imss-siniestralidad';
@@ -4884,6 +4885,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'presupuesto-viaje-santiago-chile': presupuestoViajeSantiagoChile,
   'previdencia-pgbl-vgbl': previdenciaPgblVgbl,
   'prima-antiguedad-mexico': primaAntiguedadMexico,
+  'prima-de-antiguedad-mexico': primaDeAntiguedadMexico,
   'prima-dominical-dias-festivos-mexico': compute__prima_dominical_dias_festivos_mexico,
   'prima-legal-colombia-30-dias-junio-diciembre': compute__prima_legal_colombia_30_dias_junio_diciembre,
   'prima-riesgo-trabajo-imss-siniestralidad': compute__prima_riesgo_trabajo_imss_siniestralidad,
