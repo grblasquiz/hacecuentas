@@ -16,8 +16,16 @@
  * Fuente: BCV, MinTrabajo (LOTTT), Banca y Negocios.
  */
 
+// Datos cambiarios en vivo (refrescados por scripts/data-sources/fetch-venezuela.mjs
+// vía el cron diario → src/data/live/venezuela.json → re-bundleados en cada build).
+// Fallback hardcodeado abajo si el fetch falla o el valor viene vacío.
+import liveVe from '../../data/live/venezuela.json';
+
 /** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
 export const DATA_AS_OF = '2026-06-22';
+
+const _liveBcv = Number((liveVe as any)?.bcv?.valor) || null;
+const _liveParalelo = Number((liveVe as any)?.paralelo?.valor) || null;
 
 export const VENEZUELA_2026 = {
   anio: 2026,
@@ -25,16 +33,17 @@ export const VENEZUELA_2026 = {
   simbolo: 'Bs.',
 
   // ───────────────────────── CAMBIARIO ─────────────────────────
-  // Tasas de referencia. CAMBIAN A DIARIO — actualizar (o reemplazar con live data).
+  // Tasas de referencia. CAMBIAN A DIARIO — se leen de src/data/live/venezuela.json
+  // (cron diario, fetch-venezuela.mjs) con fallback hardcodeado.
   // BCV: tasa oficial publicada por el Banco Central de Venezuela.
   // Paralelo: promedio del mercado libre (Monitor Dólar / Binance P2P).
-  // Fuentes: BCV (https://www.bcv.org.ve), Finanzas Digital, Monitor Dólar Venezuela.
+  // Fuentes: BCV (https://www.bcv.org.ve), ve.dolarapi.com, Monitor Dólar Venezuela.
   fx: {
-    bcv: 612.43,               // Bs./USD — snapshot 22-jun-2026 (BCV). ⚠️ ACTUALIZAR
-    paralelo: 807.92,          // Bs./USD — snapshot 20-jun-2026 (Monitor Dólar). ⚠️ ACTUALIZAR
-    fechaBcv: '2026-06-22',
-    fechaParalelo: '2026-06-20',
-    // Brecha = (paralelo/bcv - 1). Snapshot ≈ 31,9%. Se recalcula en runtime.
+    bcv: _liveBcv ?? 612.43,               // Bs./USD — live (fallback snapshot 22-jun-2026)
+    paralelo: _liveParalelo ?? 807.92,     // Bs./USD — live (fallback snapshot 20-jun-2026)
+    fechaBcv: (liveVe as any)?.bcv?.fecha ?? '2026-06-22',
+    fechaParalelo: (liveVe as any)?.paralelo?.fecha ?? '2026-06-20',
+    // Brecha = (paralelo/bcv - 1). Se recalcula en runtime.
   },
 
   // ───────────────────────── SALARIO Y CESTATICKET ─────────────────────────

@@ -11,6 +11,7 @@ const sources = [
   "scripts/data-sources/fetch-colombia.mjs",
   "scripts/data-sources/fetch-mexico.mjs",
   "scripts/data-sources/fetch-peru.mjs",
+  "scripts/data-sources/fetch-venezuela.mjs",
   "scripts/data-sources/generate-datasets.mjs",
 ];
 

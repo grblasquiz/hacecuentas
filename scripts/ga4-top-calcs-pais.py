@@ -13,7 +13,8 @@ from google.analytics.data_v1beta.types import DateRange, Dimension, Metric, Run
 PAIS = sys.argv[sys.argv.index('--pais')+1].upper() if '--pais' in sys.argv else 'CO'
 DAYS = int(sys.argv[sys.argv.index('--days')+1]) if '--days' in sys.argv else 28
 TOP = int(sys.argv[sys.argv.index('--top')+1]) if '--top' in sys.argv else 40
-PREFIX = {'MX': 'mx', 'CL': 'cl', 'CO': 'co', 'PE': 'pe', 'EC': 'ec', 'ES': 'es'}[PAIS]
+PREFIX = {'MX': 'mx', 'CL': 'cl', 'CO': 'co', 'PE': 'pe', 'EC': 'ec', 'ES': 'es',
+          'PY': 'py', 'UY': 'uy', 'VE': 've', 'DO': 'do'}[PAIS]
 
 # slug→audience de la raíz, para capturar las calcs del país que viven sin prefijo
 root2aud = {}
