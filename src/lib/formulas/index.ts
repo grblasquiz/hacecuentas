@@ -673,6 +673,7 @@ import { conversorTbAGb } from './conversor-tb-a-gb';
 import { conversorToneladasCortasAToneladasMetricas } from './conversor-toneladas-cortas-a-toneladas-metricas';
 import { conversorUnidades } from './conversor-unidades';
 import { conversorVarasAMetros } from './conversor-varas-a-metros';
+import { convertirMayusculasMinusculas } from './convertir-mayusculas-minusculas';
 import { coolingFan3dMaterial } from './cooling-fan-3d-material';
 import { compute as compute__cooperativas_prestamo_colombia_tasa_interes } from './cooperativas-prestamo-colombia-tasa-interes';
 import { copomTasaReferenciaBancoCentralImpacto } from './copom-tasa-referencia-banco-central-impacto';
@@ -835,6 +836,7 @@ import { cuantoNecesitoGanarParaMantenerUnaFamilia } from './cuanto-necesito-gan
 import { cuantoValeMiSueldoEnDolaresVenezuela } from './cuanto-vale-mi-sueldo-en-dolares-venezuela';
 import { cuantoValeMiTiempo } from './cuanto-vale-mi-tiempo';
 import { compute as compute__cuanto_vale_mi_tiempo_hora_anual_salario } from './cuanto-vale-mi-tiempo-hora-anual-salario';
+import { cuantosDiasFaltanFecha } from './cuantos-dias-faltan-fecha';
 import { cuantosDiasVacacionesLaboralesAntiguedad } from './cuantos-dias-vacaciones-laborales-antiguedad';
 import { cuantosFeriadosRestanAnoArgentina } from './cuantos-feriados-restan-ano-argentina';
 import { cuantosSalariosMinimosParaguay } from './cuantos-salarios-minimos-paraguay';
@@ -1263,6 +1265,8 @@ import { compute as compute__gastos_notariales_registro_compraventa_2026 } from 
 import { compute as compute__gato_persa_grooming_baño_frecuencia_costo } from './gato-persa-grooming-baño-frecuencia-costo';
 import { gelEnergeticoCarreraCuantos } from './gel-energetico-carrera-cuantos';
 import { generacionPerteneces } from './generacion-perteneces';
+import { generadorContrasenas } from './generador-contrasenas';
+import { generadorNumerosAleatorios } from './generador-numeros-aleatorios';
 import { generadorQr } from './generador-qr';
 import { germinacionTiempoTemperatura } from './germinacion-tiempo-temperatura';
 import { gestacionAnimal } from './gestacion-animal';
@@ -1843,6 +1847,7 @@ import { notaParcialRecuperatorioPromocion } from './nota-parcial-recuperatorio-
 import { notaPromedioBachilleratoSecundarioMaterias } from './nota-promedio-bachillerato-secundario-materias';
 import { notacionCientifica } from './notacion-cientifica';
 import { nps } from './nps';
+import { numeroAOrdinal } from './numero-a-ordinal';
 import { numeroOxidacionElemento } from './numero-oxidacion-elemento';
 import { numerosPrimos } from './numeros-primos';
 import { numerosRomanosArabigos } from './numeros-romanos-arabigos';
@@ -2167,6 +2172,7 @@ import { ptuMexico } from './ptu-mexico';
 import { compute as compute__ptu_reparto_utilidades_mexico_10_porcentaje } from './ptu-reparto-utilidades-mexico-10-porcentaje';
 import { compute as compute__puam_pension_universal_adulto_mayor_anses_2026 } from './puam-pension-universal-adulto-mayor-anses-2026';
 import { pubalgiaRecuperacion } from './pubalgia-recuperacion';
+import { pulgadasACentimetros } from './pulgadas-a-centimetros';
 import { pulgadasCentimetros } from './pulgadas-centimetros';
 import { puntajeDeleSpanish } from './puntaje-dele-spanish';
 import { puntajeDelfFrances } from './puntaje-delf-frances';
@@ -3429,6 +3435,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversor-toneladas-cortas-a-toneladas-metricas': conversorToneladasCortasAToneladasMetricas,
   'conversor-unidades': conversorUnidades,
   'conversor-varas-a-metros': conversorVarasAMetros,
+  'convertir-mayusculas-minusculas': convertirMayusculasMinusculas,
   'cooling-fan-3d-material': coolingFan3dMaterial,
   'cooperativas-prestamo-colombia-tasa-interes': compute__cooperativas_prestamo_colombia_tasa_interes,
   'copom-tasa-referencia-banco-central-impacto': copomTasaReferenciaBancoCentralImpacto,
@@ -3591,6 +3598,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-vale-mi-sueldo-en-dolares-venezuela': cuantoValeMiSueldoEnDolaresVenezuela,
   'cuanto-vale-mi-tiempo': cuantoValeMiTiempo,
   'cuanto-vale-mi-tiempo-hora-anual-salario': compute__cuanto_vale_mi_tiempo_hora_anual_salario,
+  'cuantos-dias-faltan-fecha': cuantosDiasFaltanFecha,
   'cuantos-dias-vacaciones-laborales-antiguedad': cuantosDiasVacacionesLaboralesAntiguedad,
   'cuantos-feriados-restan-ano-argentina': cuantosFeriadosRestanAnoArgentina,
   'cuantos-salarios-minimos-paraguay': cuantosSalariosMinimosParaguay,
@@ -4019,6 +4027,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'gato-persa-grooming-baño-frecuencia-costo': compute__gato_persa_grooming_baño_frecuencia_costo,
   'gel-energetico-carrera-cuantos': gelEnergeticoCarreraCuantos,
   'generacion-perteneces': generacionPerteneces,
+  'generador-contrasenas': generadorContrasenas,
+  'generador-numeros-aleatorios': generadorNumerosAleatorios,
   'generador-qr': generadorQr,
   'germinacion-tiempo-temperatura': germinacionTiempoTemperatura,
   'gestacion-animal': gestacionAnimal,
@@ -4599,6 +4609,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'nota-promedio-bachillerato-secundario-materias': notaPromedioBachilleratoSecundarioMaterias,
   'notacion-cientifica': notacionCientifica,
   'nps': nps,
+  'numero-a-ordinal': numeroAOrdinal,
   'numero-oxidacion-elemento': numeroOxidacionElemento,
   'numeros-primos': numerosPrimos,
   'numeros-romanos-arabigos': numerosRomanosArabigos,
@@ -4923,6 +4934,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ptu-reparto-utilidades-mexico-10-porcentaje': compute__ptu_reparto_utilidades_mexico_10_porcentaje,
   'puam-pension-universal-adulto-mayor-anses-2026': compute__puam_pension_universal_adulto_mayor_anses_2026,
   'pubalgia-recuperacion': pubalgiaRecuperacion,
+  'pulgadas-a-centimetros': pulgadasACentimetros,
   'pulgadas-centimetros': pulgadasCentimetros,
   'puntaje-dele-spanish': puntajeDeleSpanish,
   'puntaje-delf-frances': puntajeDelfFrances,
