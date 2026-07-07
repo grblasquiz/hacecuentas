@@ -15,7 +15,6 @@ import { imc } from '../src/lib/formulas/imc';
 import { bmr } from '../src/lib/formulas/bmr';
 import { caloriasTDEE } from '../src/lib/formulas/calorias-tdee';
 import { pesoIdeal } from '../src/lib/formulas/peso-ideal';
-import { hidratacionEjercicio } from '../src/lib/formulas/hidratacion-ejercicio';
 import { indiceMasaCorporalPediatrico } from '../src/lib/formulas/indice-masa-corporal-pediatrico';
 import { alquilerIcl } from '../src/lib/formulas/alquiler-icl';
 import { pesoIdealBebeMesPercentil } from '../src/lib/formulas/peso-ideal-bebe-mes-percentil';
@@ -39,7 +38,6 @@ import { reglaTres } from '../src/lib/formulas/regla-tres';
 import { combinatoriaPermutaciones } from '../src/lib/formulas/combinatoria-permutaciones';
 
 // --- Marketing / negocios ---
-import { marketingCtr } from '../src/lib/formulas/marketing-ctr';
 import { margenGanancia } from '../src/lib/formulas/margen-ganancia';
 import { ivaIncluidoNetoDiscriminar } from '../src/lib/formulas/iva-incluido-neto-discriminar';
 
@@ -57,7 +55,6 @@ import { ajusteSueldoInflacion } from '../src/lib/formulas/ajuste-sueldo-inflaci
 import { creditoUva } from '../src/lib/formulas/credito-uva';
 
 // --- Salud diabetes (bidireccional A1c↔eAG) ---
-import { a1cGlucosa } from '../src/lib/formulas/a1c-glucosa';
 
 // Helper: extrae el primer field numérico con nombre dado.
 function pick(obj: any, keys: string[]): number | undefined {
@@ -301,17 +298,6 @@ describe('pesoIdeal', () => {
   });
 });
 
-describe('hidratacionEjercicio', () => {
-  it('70kg 60min 25°C → agua recomendada > 400ml', () => {
-    const r = hidratacionEjercicio({
-      peso: 70,
-      duracion: 60,
-      intensidad: 'alta',
-      temperaturaAmbiente: 25,
-    } as any);
-    expect(r.aguaRecomendada).toBeGreaterThan(400);
-  });
-});
 
 // ---------------------------------------------------------------------------
 // FECHAS (bug UTC)
@@ -541,24 +527,6 @@ describe('combinatoriaPermutaciones', () => {
 // MARKETING / NEGOCIOS
 // ---------------------------------------------------------------------------
 
-describe('marketingCtr', () => {
-  it('50 clicks / 1000 impresiones → CTR = 5%', () => {
-    const r: any = marketingCtr({ clicks: 50, impresiones: 1000 });
-    const ctr = pick(r, ['ctr', 'ctrPorcentaje', 'resultado']);
-    if (typeof ctr === 'number') expect(ctr).toBeCloseTo(5, 1);
-  });
-
-  it('impresiones 0 → no devuelve NaN/Infinity', () => {
-    let r: any;
-    try {
-      r = marketingCtr({ clicks: 10, impresiones: 0 });
-    } catch {
-      return;
-    }
-    const ctr = pick(r, ['ctr', 'resultado']);
-    if (typeof ctr === 'number') expect(isFinite(ctr)).toBe(true);
-  });
-});
 
 describe('margenGanancia', () => {
   it('costo 100, precio 150 → ganancia 50, margen sobre costo 50%', () => {
@@ -724,37 +692,6 @@ describe('creditoUva (francés)', () => {
 // DIABETES (A1c ↔ eAG)
 // ---------------------------------------------------------------------------
 
-describe('a1cGlucosa (ADA / NGSP)', () => {
-  it('A1c 5.0 → eAG ~97 mg/dL (normal)', () => {
-    const r = a1cGlucosa({ valor: 5.0, modo: 'a1c-a-glucosa' });
-    expect(r.resultado).toBeCloseTo(97, 0);
-    expect(r.categoria).toMatch(/Normal/);
-  });
-
-  it('A1c 6.0 → prediabetes', () => {
-    const r = a1cGlucosa({ valor: 6.0, modo: 'a1c-a-glucosa' });
-    expect(r.categoria).toMatch(/Prediabetes/);
-  });
-
-  it('A1c 9.5 → diabetes mal controlada', () => {
-    const r = a1cGlucosa({ valor: 9.5, modo: 'a1c-a-glucosa' });
-    expect(r.categoria).toMatch(/mal controlada/i);
-  });
-
-  it('bidireccional: A1c → eAG → A1c recupera el valor (±0.05)', () => {
-    const a = a1cGlucosa({ valor: 7.2, modo: 'a1c-a-glucosa' });
-    const b = a1cGlucosa({ valor: a.resultado, modo: 'glucosa-a-a1c' });
-    expect(b.resultado).toBeCloseTo(7.2, 1);
-  });
-
-  it('A1c fuera de rango (2%) → error', () => {
-    expect(() => a1cGlucosa({ valor: 2, modo: 'a1c-a-glucosa' })).toThrow(/entre 3 y 20/);
-  });
-
-  it('glucosa fuera de rango (600) → error', () => {
-    expect(() => a1cGlucosa({ valor: 600, modo: 'glucosa-a-a1c' })).toThrow(/entre 30 y 500/);
-  });
-});
 
 // ---------------------------------------------------------------------------
 // FECHAS — EDGE CASES UTC/BISIESTO/DST

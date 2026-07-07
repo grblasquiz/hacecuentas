@@ -134,8 +134,14 @@ function buildInputs(fields: CalcField[] | undefined): Record<string, any> {
         ? f.placeholder
         : todayIsoDateTime();
     } else {
-      // text / textarea / cualquier otro
-      inputs[f.id] = f.placeholder !== undefined ? String(f.placeholder) : '';
+      // text / textarea / cualquier otro. Los placeholders suelen ser ejemplos
+      // decorados ("Ej: 255", "2026  o  MMXXVI") — extraer el ejemplo usable:
+      // quitar prefijo "Ej:"/"ej." y quedarse con la primera alternativa " o ".
+      let txt = f.placeholder !== undefined ? String(f.placeholder) : '';
+      txt = txt.replace(/^\s*ej\s*[.:]?\s*/i, '');
+      const alt = txt.split(/\s+o\s+/)[0];
+      if (alt) txt = alt;
+      inputs[f.id] = txt.trim();
     }
   }
   return inputs;

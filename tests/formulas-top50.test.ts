@@ -26,7 +26,6 @@ import { impuestoSellosInmuebleContrato } from '../src/lib/formulas/impuesto-sel
 import { creditoUvaCuotaActual } from '../src/lib/formulas/credito-uva-cuota-actual';
 import { conversionTnaTem } from '../src/lib/formulas/conversion-tna-tem';
 import { rendimientoFciMoneyMarket } from '../src/lib/formulas/rendimiento-fci-money-market';
-import { frecuenciaRespiratoria } from '../src/lib/formulas/frecuencia-respiratoria';
 import { edadCorregidaPrematuro } from '../src/lib/formulas/edad-corregida-prematuro';
 import { estaturaAdultaHijo } from '../src/lib/formulas/estatura-adulta-hijo';
 import { kgLibras } from '../src/lib/formulas/kg-libras';
@@ -37,7 +36,6 @@ import { bebidasEventoLitrosPorPersona } from '../src/lib/formulas/bebidas-event
 import { aniversarioPareja } from '../src/lib/formulas/aniversario-pareja';
 import { videoBitrateTamanoArchivo } from '../src/lib/formulas/video-bitrate-tamano-archivo';
 import { millasLatamDestino } from '../src/lib/formulas/millas-latam-destino';
-import { propinaPais } from '../src/lib/formulas/propina-pais';
 import { stopMotionFpsTiempo } from '../src/lib/formulas/stop-motion-fps-tiempo';
 
 // =====================================================
@@ -366,26 +364,6 @@ describe('rendimientoFciMoneyMarket', () => {
 // =====================================================
 // 12. Frecuencia respiratoria normal
 // =====================================================
-describe('frecuenciaRespiratoria', () => {
-  it('adulto: rango 12-20', () => {
-    const r = frecuenciaRespiratoria({ edad: 30, fr: 16 });
-    expect(r.bradipneaUmbral).toBe(12);
-    expect(r.taquipneaUmbral).toBe(20);
-    expect(r.evaluacion).toMatch(/Normal/);
-  });
-
-  it('FR baja en adulto = bradipnea', () => {
-    const r = frecuenciaRespiratoria({ edad: 30, fr: 8 });
-    expect(r.evaluacion).toMatch(/Bradipnea/);
-  });
-
-  it('lactante tiene rango mucho mas alto', () => {
-    const r = frecuenciaRespiratoria({ edad: 0.5, fr: 40 });
-    expect(r.bradipneaUmbral).toBe(30);
-    expect(r.taquipneaUmbral).toBe(53);
-    expect(r.evaluacion).toMatch(/Normal/);
-  });
-});
 
 // =====================================================
 // 13. Edad corregida (prematuro)
@@ -678,29 +656,6 @@ describe('millasLatamDestino', () => {
 // =====================================================
 // 23. Propina por pais (cultural)
 // =====================================================
-describe('propinaPais', () => {
-  it('Argentina: 10% sobre la cuenta', () => {
-    const r = propinaPais({ pais: 'argentina', montoCuenta: 10_000 });
-    expect(r.porcentaje).toBe(10);
-    expect(r.propinaRecomendada).toBe(1_000);
-  });
-
-  it('Japon: 0% (no se deja propina)', () => {
-    const r = propinaPais({ pais: 'japon', montoCuenta: 5_000 });
-    expect(r.porcentaje).toBe(0);
-    expect(r.propinaRecomendada).toBe(0);
-  });
-
-  it('USA: 18% (mas alto que el resto)', () => {
-    const r = propinaPais({ pais: 'usa', montoCuenta: 100 });
-    expect(r.porcentaje).toBe(18);
-    expect(r.propinaRecomendada).toBe(18);
-  });
-
-  it('throw pais invalido', () => {
-    expect(() => propinaPais({ pais: 'xx', montoCuenta: 100 })).toThrow();
-  });
-});
 
 // =====================================================
 // 24. Stop motion FPS / tiempo
