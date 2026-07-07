@@ -1,0 +1,152 @@
+---
+/**
+ * CalcEmailBand — banda de captura de email en CADA página de calculadora.
+ * Antes el newsletter solo estaba en la home y páginas-dato: las ~1.700 calcs
+ * (el grueso del tráfico) no pedían el mail salvo el widget in-result (oculto
+ * hasta calcular). Esta banda, en el flujo de contenido, convierte cada calc en
+ * una superficie de captura.
+ *
+ * País-neutral (funciona en AR/CO/MX/PE/… y EN/PT). POST a /api/newsletter con
+ * source='calc-band'. Copy contextual: si el resultado cambia por datos
+ * (alertable) → "te avisamos cuando cambie"; si no → resumen de datos útiles.
+ */
+interface Props {
+  lang?: string;
+  alertable?: boolean;   // el resultado cambia por actualización de datos
+  topic?: string;        // tema legible ("el monotributo", "el salario mínimo")
+}
+const { lang = 'es', alertable = false, topic } = Astro.props as Props;
+
+const COPY: Record<string, any> = {
+  es: {
+    eyebrow: '🔔 Gratis · Sin spam',
+    headingAlert: topic ? `Te avisamos cuando cambie ${topic}` : 'Te avisamos cuando cambien estos números',
+    headingPlain: 'Los números que te conviene saber, sin buscarlos',
+    leadAlert: 'Salarios, impuestos, tasas y topes se actualizan seguido y te impactan en el bolsillo. Dejanos tu email y te escribimos cuando cambia el dato —más el resumen semanal.',
+    leadPlain: 'Una vez por semana, el dato económico que cambió y la calculadora para entenderlo. Dos minutos, cero spam.',
+    placeholder: 'tu@email.com',
+    cta: 'Avisame',
+    ok: '¡Listo! Te vamos a avisar cuando haya novedades.',
+    invalid: 'Ingresá un email válido.',
+    err: 'No se pudo guardar, probá en un rato.',
+    net: 'Error de red. Revisá tu conexión.',
+    saving: 'Guardando…',
+  },
+  en: {
+    eyebrow: '🔔 Free · No spam',
+    headingAlert: 'We\'ll email you when this number changes',
+    headingPlain: 'The numbers worth knowing, without the digging',
+    leadAlert: 'Wages, taxes and rates change often. Drop your email and we\'ll tell you when the data updates — plus a short weekly recap.',
+    leadPlain: 'Once a week, the number that changed and the calculator to understand it. Two minutes, zero spam.',
+    placeholder: 'you@email.com',
+    cta: 'Notify me',
+    ok: 'Done! We\'ll email you when there\'s news.',
+    invalid: 'Enter a valid email.',
+    err: 'Could not save, try again shortly.',
+    net: 'Network error. Check your connection.',
+    saving: 'Saving…',
+  },
+  pt: {
+    eyebrow: '🔔 Grátis · Sem spam',
+    headingAlert: 'Avisamos você quando esse número mudar',
+    headingPlain: 'Os números que vale a pena saber, sem procurar',
+    leadAlert: 'Salários, impostos e taxas mudam com frequência. Deixe seu e-mail e avisamos quando o dado for atualizado — além do resumo semanal.',
+    leadPlain: 'Uma vez por semana, o dado que mudou e a calculadora para entender. Dois minutos, sem spam.',
+    placeholder: 'voce@email.com',
+    cta: 'Avise-me',
+    ok: 'Pronto! Avisaremos quando houver novidades.',
+    invalid: 'Digite um e-mail válido.',
+    err: 'Não deu para salvar, tente em breve.',
+    net: 'Erro de rede. Verifique sua conexão.',
+    saving: 'Salvando…',
+  },
+};
+const t = COPY[lang] || COPY.es;
+const heading = alertable ? t.headingAlert : t.headingPlain;
+const lead = alertable ? t.leadAlert : t.leadPlain;
+---
+
+<section class="ceb" data-nosnippet aria-labelledby="ceb-h">
+  <div class="ceb-card">
+    <div class="ceb-txt">
+      <span class="ceb-eyebrow">{t.eyebrow}</span>
+      <p class="ceb-h" id="ceb-h"><strong>{heading}</strong></p>
+      <p class="ceb-lead">{lead}</p>
+    </div>
+    <form class="ceb-form" data-ceb-form novalidate>
+      <label class="ceb-vh" for="ceb-email">Email</label>
+      <input type="email" id="ceb-email" name="email" placeholder={t.placeholder} required autocomplete="email" data-ceb-input />
+      <button type="submit" class="ceb-btn" data-ceb-btn>
+        {t.cta}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <p class="ceb-msg" data-ceb-msg role="status" aria-live="polite" hidden
+        data-ok={t.ok} data-invalid={t.invalid} data-err={t.err} data-net={t.net} data-saving={t.saving}></p>
+    </form>
+  </div>
+</section>
+
+<style>
+  .ceb { margin: 2.5rem auto 1rem; max-width: 780px; }
+  .ceb-card {
+    display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px 22px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent, #2563eb) 7%, #fff), var(--surface, #fff));
+  }
+  .ceb-txt { flex: 1 1 300px; min-width: 260px; }
+  .ceb-eyebrow { display: inline-block; font-size: .8rem; font-weight: 700; color: var(--accent, #2563eb); margin-bottom: 6px; }
+  .ceb-h { margin: 0 0 4px; font-size: 1.15rem; line-height: 1.3; }
+  .ceb-lead { margin: 0; font-size: .92rem; line-height: 1.5; color: var(--text-2, #475569); }
+  .ceb-form { flex: 1 1 260px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .ceb-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .ceb-form input {
+    flex: 1 1 160px; min-width: 0; padding: 12px 14px; font-size: 1rem;
+    border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a);
+  }
+  .ceb-form input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  .ceb-btn {
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none;
+    border-radius: 10px; padding: 12px 20px; font-size: 1rem; cursor: pointer;
+  }
+  .ceb-btn:hover { filter: brightness(1.08); }
+  .ceb-btn:disabled { opacity: .6; cursor: default; }
+  .ceb-msg { flex: 1 1 100%; margin: 2px 0 0; font-size: .85rem; }
+  .ceb-msg.ok { color: #15803d; }
+  .ceb-msg.err { color: #b91c1c; }
+</style>
+
+<script is:inline>
+  (window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); })(function () {
+    document.querySelectorAll('[data-ceb-form]').forEach(function (form) {
+      if (form.dataset.cebReady === '1') return;
+      form.dataset.cebReady = '1';
+      var input = form.querySelector('[data-ceb-input]');
+      var btn = form.querySelector('[data-ceb-btn]');
+      var msg = form.querySelector('[data-ceb-msg]');
+      function show(text, cls) { msg.hidden = false; msg.textContent = text; msg.className = 'ceb-msg' + (cls ? ' ' + cls : ''); }
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var email = input ? input.value.trim() : '';
+        if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { show(msg.dataset.invalid, 'err'); return; }
+        if (btn) btn.disabled = true;
+        show(msg.dataset.saving, '');
+        try {
+          var res = await fetch('/api/newsletter', {
+            method: 'POST', headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ email: email, source: 'calc-band' }),
+          });
+          if (res.ok) {
+            show(msg.dataset.ok, 'ok');
+            if (input) input.value = '';
+            if (typeof window.gtag === 'function') window.gtag('event', 'newsletter_signup', { method: 'calc-band' });
+          } else {
+            var j = await res.json().catch(function () { return {}; });
+            show(j.error || msg.dataset.err, 'err');
+          }
+        } catch (err) { show(msg.dataset.net, 'err'); }
+        finally { if (btn) btn.disabled = false; }
+      });
+    });
+  });
+</script>
