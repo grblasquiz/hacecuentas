@@ -18,6 +18,7 @@ describe('catálogo de eventos', () => {
       'hc_result_email_sent', 'hc_formula_expanded', 'hc_related_calculator_clicked',
       'hc_scenario_viewed', 'hc_next_step_clicked', 'hc_decision_room_clicked',
       'hc_post_result_scroll', 'hc_post_result_interaction',
+      'hc_email_band_view', 'hc_email_band_focus', 'hc_email_band_signup',
       'hc_feedback_positive', 'hc_feedback_negative', 'hc_recent_calculator_opened',
     ];
     expect([...HC_EVENTS].sort()).toEqual([...spec].sort());
