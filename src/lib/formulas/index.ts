@@ -2000,6 +2000,7 @@ import { numerosPrimos } from './numeros-primos';
 import { numerosRomanosArabigos } from './numeros-romanos-arabigos';
 import { compute as compute__obligado_declarar_renta_2026 } from './obligado-declarar-renta-2026';
 import { obraSocialMonotributistaAporteExtraFamiliar } from './obra-social-monotributista-aporte-extra-familiar';
+import { obraSocialMonotributo2026 } from './obra-social-monotributo-2026';
 import { offsideDistanciaVar } from './offside-distancia-var';
 import { omega3DosisDiariaDhaEpa } from './omega-3-dosis-diaria-dha-epa';
 import { ondaLongitudFrecuenciaVelocidad } from './onda-longitud-frecuencia-velocidad';
@@ -5013,6 +5014,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'numeros-romanos-arabigos': numerosRomanosArabigos,
   'obligado-declarar-renta-2026': compute__obligado_declarar_renta_2026,
   'obra-social-monotributista-aporte-extra-familiar': obraSocialMonotributistaAporteExtraFamiliar,
+  'obra-social-monotributo-2026': obraSocialMonotributo2026,
   'offside-distancia-var': offsideDistanciaVar,
   'omega-3-dosis-diaria-dha-epa': omega3DosisDiariaDhaEpa,
   'onda-longitud-frecuencia-velocidad': ondaLongitudFrecuenciaVelocidad,
