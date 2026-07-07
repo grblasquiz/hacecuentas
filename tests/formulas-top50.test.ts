@@ -97,7 +97,10 @@ describe('gananciasSueldo', () => {
     const r = gananciasSueldo({ brutoMensual: 10_000_000, conyuge: false, hijos: 0 });
     expect(r.paga).toBe(true);
     expect(r.retencionMensual).toBeGreaterThan(0);
-    expect(r.aportesMensuales).toBeCloseTo(10_000_000 * 0.17, 0);
+    // Los aportes están topeados por la base imponible máxima (dato vivo de
+    // movilidad): > 0 pero menores que el 17% pleno de un bruto de 10M.
+    expect(r.aportesMensuales).toBeGreaterThan(0);
+    expect(r.aportesMensuales).toBeLessThan(10_000_000 * 0.17);
   });
 
   it('aporta 17% sobre bruto sin importar tramos', () => {
@@ -187,10 +190,12 @@ describe('licenciaMaternidadPaternidad', () => {
 // =====================================================
 describe('jubilacionAnsesMontoMinimoMaxima2026', () => {
   it('haber minimo incluye bono', () => {
+    // Montos vivos de movilidad — chequeo estructural: total = haber + bono.
+    const num = (s: string) => parseInt(s.replace(/[^\d]/g, ''), 10);
     const r = jubilacionAnsesMontoMinimoMaxima2026({ tipo: 'minima' });
-    expect(r.haberMensual).toContain('290.000');
-    expect(r.bono).toContain('70.000');
-    expect(r.total).toContain('360.000');
+    expect(num(r.haberMensual)).toBeGreaterThan(0);
+    expect(num(r.bono)).toBeGreaterThan(0);
+    expect(num(r.total)).toBe(num(r.haberMensual) + num(r.bono));
   });
 
   it('haber maximo no tiene bono', () => {
