@@ -1,0 +1,266 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import { freeOfferSchema } from '../../lib/offer-schema';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/pe/validar-ruc`;
+
+const title = 'Validar RUC Perú Online Gratis (dígito verificador) | Hacé Cuentas';
+const description =
+  'Validá un RUC peruano al instante: verifica el dígito verificador y te dice el tipo de contribuyente (persona natural 10, empresa 20). 100% en tu navegador. Para la consulta RUC oficial (razón social, estado) te llevamos a SUNAT.';
+
+const faqs = [
+  {
+    q: '¿Cómo validar un RUC?',
+    a: 'Escribí los 11 dígitos del RUC y tocá <strong>Validar</strong>. La herramienta calcula el <strong>dígito verificador</strong> (el último número) con el algoritmo módulo 11 de SUNAT y te dice al instante si el RUC es matemáticamente válido y qué tipo de contribuyente es. Todo corre en tu navegador; no se envía nada.',
+  },
+  {
+    q: '¿Validar el RUC es lo mismo que la "consulta RUC" de SUNAT?',
+    a: 'No. Acá se <strong>valida el dígito verificador</strong> (que el número esté bien formado). La <strong>consulta RUC</strong> —razón social, estado ACTIVO/BAJA, domicilio fiscal, condición HABIDO— la hace SUNAT en su padrón oficial. Un RUC puede tener el dígito correcto y aun así no estar registrado o estar de baja. Para la consulta oficial, entrá a <a href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp" rel="nofollow noopener" target="_blank">SUNAT Consulta RUC</a>.',
+  },
+  {
+    q: '¿Qué significan los dos primeros dígitos del RUC?',
+    a: 'Indican el <strong>tipo de contribuyente</strong>: <strong>10</strong> = persona natural con negocio (o el DNI + dígitos); <strong>20</strong> = persona jurídica (empresa, S.A.C., S.R.L., etc.); <strong>15</strong> y <strong>17</strong> = otros regímenes y no domiciliados; <strong>16</strong> también existe. Los RUC que empiezan con otro par de dígitos no son válidos.',
+  },
+  {
+    q: '¿Cómo se calcula el dígito verificador del RUC?',
+    a: 'Se toman los primeros 10 dígitos y se multiplican por los pesos fijos 5,4,3,2,7,6,5,4,3,2. Se suman los productos, se calcula el resto de dividir por 11 y se hace <strong>11 menos ese resto</strong>. Si da 10 el dígito es 0, si da 11 es 1; en el resto de los casos, es ese número. Ese dígito tiene que coincidir con el <strong>11.º</strong> del RUC.',
+  },
+  {
+    q: '¿Un RUC que empieza con 10 es mi DNI?',
+    a: 'Para una persona natural, el RUC suele ser <strong>10 + los 8 dígitos del DNI + 1 dígito verificador</strong>. Por eso, si conocés el DNI de una persona con negocio, muchas veces su RUC es "10DNIx". Igual, el dígito verificador se calcula sobre los 10 primeros números, así que esta herramienta te confirma si el arma bien.',
+  },
+  {
+    q: '¿La herramienta guarda o envía el RUC?',
+    a: 'No. La validación es <strong>100% en tu navegador</strong>, en JavaScript. El número no sale de tu dispositivo y funciona incluso sin conexión una vez cargada la página.',
+  },
+  {
+    q: '¿Para qué sirve validar un RUC antes de facturar?',
+    a: 'Sirve para <strong>detectar tipeos</strong> antes de emitir un comprobante electrónico: si el dígito verificador no cierra, el RUC está mal escrito y el comprobante puede ser rechazado. Ojo: validar el dígito <strong>no reemplaza</strong> verificar en SUNAT que el RUC exista y esté ACTIVO y HABIDO, que es lo que te habilita a usar el crédito fiscal.',
+  },
+  {
+    q: '¿Es gratis?',
+    a: 'Sí, es <strong>gratis, ilimitado y sin registro</strong>, sin marca de agua. Funciona en la compu y en el celular, directo en el navegador.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Escribí el RUC', text: 'Ingresá los 11 dígitos del RUC (empieza con 10, 20, 15 o 17).' },
+  { name: 'Tocá Validar', text: 'La herramienta verifica el dígito verificador y muestra el tipo de contribuyente.' },
+  { name: 'Consulta oficial', text: 'Para razón social y estado, seguí al enlace de la consulta RUC de SUNAT.' },
+];
+
+const related = [
+  { href: '/pe/datos-sueldo-minimo-peru-2026', t: 'Sueldo mínimo Perú 2026', i: '💵' },
+  { href: '/pe/calculadora-intereses-moratorios-sunat-peru', t: 'Intereses moratorios SUNAT', i: '📈' },
+  { href: '/convertir-imagen-a-pdf', t: 'Convertir imagen a PDF', i: '📄' },
+  { href: '/pe/calculadoras', t: 'Todas las calculadoras Perú', i: '🧮' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Validar RUC Perú',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es-PE',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'PEN' }),
+  featureList: ['Validar el dígito verificador del RUC', 'Detectar el tipo de contribuyente (10 / 20)', 'Procesamiento 100% en el navegador'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/pe` },
+    { '@type': 'ListItem', position: 2, name: 'Validar RUC', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo validar un RUC',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} audience="PE" lang="es" domain="knowledge">
+  <Header slot="header" />
+
+  <article class="idv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/pe">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Validar RUC</span>
+    </nav>
+
+    <h1>Validar RUC del Perú</h1>
+    <p class="lead">
+      Verificá si un <strong>RUC</strong> es válido chequeando su <strong>dígito verificador</strong> y descubrí el tipo de
+      contribuyente. Todo <strong>en tu navegador</strong>. Para la <strong>consulta RUC</strong> oficial (razón social y
+      estado), te llevamos a SUNAT.
+    </p>
+
+    <div class="idv-answer">
+      <p>
+        <strong>¿Cómo validar un RUC?</strong> Escribí los 11 dígitos y la herramienta calcula el <strong>dígito
+        verificador</strong> (módulo 11) para confirmar que el número está bien formado. Esto <strong>no reemplaza</strong>
+        la consulta en el padrón de SUNAT, que te dice si existe, está ACTIVO y HABIDO.
+      </p>
+    </div>
+
+    <div id="idv" class="idv-card" data-kind="ruc">
+      <label class="idv-label" for="idvInput">Escribí el RUC (11 dígitos)</label>
+      <div class="idv-row">
+        <input id="idvInput" class="idv-input" type="text" inputmode="numeric" autocomplete="off"
+          placeholder="20131312955" maxlength="11" aria-describedby="idvResult" />
+        <button id="idvValidate" type="button" class="idv-btn">Validar</button>
+      </div>
+      <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
+
+      <div class="idv-gen">
+        <a class="idv-btn-ghost" href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp" rel="nofollow noopener" target="_blank">🔎 Consulta RUC oficial en SUNAT</a>
+        <p class="idv-note">La razón social, el estado (ACTIVO/BAJA) y la condición (HABIDO) solo los da el padrón de SUNAT.</p>
+      </div>
+    </div>
+
+    <section class="idv-sec">
+      <h2>Cómo se calcula el dígito verificador del RUC</h2>
+      <ul>
+        <li>Se multiplican los <strong>10 primeros dígitos</strong> por los pesos 5,4,3,2,7,6,5,4,3,2.</li>
+        <li>Se suman los productos y se calcula <strong>11 − (suma mód 11)</strong>.</li>
+        <li>Si da 10 → dígito 0; si da 11 → dígito 1; en otro caso, ese número. Debe coincidir con el 11.º dígito.</li>
+        <li>Los dos primeros dígitos marcan el tipo: <strong>10</strong> persona natural, <strong>20</strong> persona jurídica (empresa), <strong>15/16/17</strong> otros.</li>
+      </ul>
+    </section>
+
+    <section class="idv-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="idv-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="idv-related">
+      <h2>Otras herramientas gratis</h2>
+      <div class="idv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="idv-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .idv-page { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .idv-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .idv-answer p { margin: 0; line-height: 1.6; }
+  .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.15rem; letter-spacing: 1px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  #idv .idv-btn { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 13px 24px; font-size: 1rem; cursor: pointer; }
+  #idv .idv-btn:hover { filter: brightness(1.08); }
+  #idv .idv-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  #idv .idv-result.ok { background: color-mix(in srgb, #16a34a 12%, #fff); border: 1px solid color-mix(in srgb, #16a34a 35%, #fff); color: #15803d; }
+  #idv .idv-result.bad { background: color-mix(in srgb, #dc2626 10%, #fff); border: 1px solid color-mix(in srgb, #dc2626 30%, #fff); color: #b91c1c; }
+  #idv .idv-result small { display: block; font-weight: 400; color: var(--text-2, #64748b); margin-top: 2px; }
+  #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
+  #idv .idv-btn-ghost { display: inline-block; background: transparent; color: var(--accent, #2563eb); border: 1px solid var(--accent, #2563eb); border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
+  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
+  .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .idv-faq summary { font-weight: 600; cursor: pointer; }
+  .idv-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-faq-a a { color: var(--accent, #2563eb); }
+  .idv-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .idv-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .idv-related-card:hover { border-color: var(--accent, #2563eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('idv');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var input = document.getElementById('idvInput');
+      var validateBtn = document.getElementById('idvValidate');
+      var resultBox = document.getElementById('idvResult');
+
+      var TIPOS = { '10': 'Persona natural con negocio', '15': 'Otros / no domiciliados', '16': 'Otros regímenes', '17': 'No domiciliados', '20': 'Persona jurídica (empresa)' };
+
+      function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+      function rucDV(base10) {
+        var w = [5,4,3,2,7,6,5,4,3,2], sum = 0;
+        for (var i = 0; i < 10; i++) sum += parseInt(base10[i], 10) * w[i];
+        var r = 11 - (sum % 11);
+        return r === 10 ? 0 : (r === 11 ? 1 : r);
+      }
+      function validRUC(str) {
+        var d = onlyDigits(str);
+        if (d.length !== 11) return false;
+        if (!TIPOS[d.slice(0, 2)]) return false;
+        return rucDV(d.slice(0, 10)) === parseInt(d[10], 10);
+      }
+
+      function showResult() {
+        var d = onlyDigits(input.value);
+        resultBox.hidden = false;
+        if (d.length !== 11) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ El RUC tiene 11 dígitos (faltan ' + Math.max(0, 11 - d.length) + ').';
+          return;
+        }
+        var pre = d.slice(0, 2);
+        if (!TIPOS[pre]) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ RUC inválido <small>Debe empezar con 10, 15, 16, 17 o 20.</small>';
+          return;
+        }
+        if (validRUC(d)) {
+          resultBox.className = 'idv-result ok';
+          resultBox.innerHTML = '✓ RUC válido <small>' + d + ' · ' + TIPOS[pre] + '. Dígito verificador correcto. Confirmá razón social y estado en SUNAT.</small>';
+        } else {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ RUC inválido <small>El dígito verificador no coincide.</small>';
+        }
+      }
+
+      input.addEventListener('input', function () {
+        input.value = onlyDigits(input.value).slice(0, 11);
+        if (!resultBox.hidden) showResult();
+      });
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+      validateBtn.addEventListener('click', showResult);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

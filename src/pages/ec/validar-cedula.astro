@@ -1,0 +1,276 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import { freeOfferSchema } from '../../lib/offer-schema';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/ec/validar-cedula`;
+
+const title = 'Validar Cédula Ecuatoriana Online Gratis (dígito verificador) | Hacé Cuentas';
+const description =
+  'Validá una cédula ecuatoriana al instante: verifica el dígito verificador (módulo 10) y te dice la provincia de emisión. También sirve para el RUC de persona natural. 100% en tu navegador. Para consultar el nombre, te llevamos al SRI/Registro Civil.';
+
+const faqs = [
+  {
+    q: '¿Cómo validar una cédula ecuatoriana?',
+    a: 'Escribí los 10 dígitos de la cédula y tocá <strong>Validar</strong>. La herramienta aplica el algoritmo oficial de <strong>módulo 10</strong> (coeficientes 2,1,2,1…) para verificar el dígito verificador y te dice al instante si la cédula es matemáticamente válida y de qué <strong>provincia</strong> es. Todo corre en tu navegador; no se envía nada.',
+  },
+  {
+    q: '¿Validar la cédula es lo mismo que consultar el nombre de la persona?',
+    a: 'No. Acá se <strong>valida el dígito verificador</strong> (que el número esté bien formado). Para saber a <strong>quién pertenece</strong> la cédula, su estado o los datos de la persona, hay que consultar el <strong>Registro Civil</strong> o el <strong>SRI</strong>. Un número puede tener el dígito correcto y no corresponder a ninguna persona registrada.',
+  },
+  {
+    q: '¿Cómo se calcula el dígito verificador de la cédula?',
+    a: 'Se toman los <strong>9 primeros dígitos</strong> y se multiplican, alternadamente, por <strong>2 y 1</strong> (2,1,2,1,2,1,2,1,2). Si un producto da 10 o más, se le resta 9. Se suman todos los productos y se calcula el <strong>múltiplo de 10 siguiente</strong> menos esa suma: ese es el dígito verificador (si la suma ya es múltiplo de 10, el dígito es 0). Debe coincidir con el <strong>10.º</strong> dígito.',
+  },
+  {
+    q: '¿Qué indican los dos primeros dígitos de la cédula?',
+    a: 'Indican la <strong>provincia de emisión</strong>: del <strong>01 al 24</strong> según la provincia (01 Azuay, 09 Guayas, 17 Pichincha, etc.) y <strong>30</strong> para ecuatorianos registrados en el <strong>exterior</strong>. Si los dos primeros dígitos están fuera de ese rango, la cédula no es válida. La herramienta te muestra la provincia automáticamente.',
+  },
+  {
+    q: '¿Sirve para validar el RUC de persona natural?',
+    a: 'Sí. El <strong>RUC de una persona natural</strong> en Ecuador es la <strong>cédula (10 dígitos) + “001”</strong>, formando 13 dígitos. Si tu RUC empieza con una cédula válida y termina en 001, es un RUC de persona natural correcto. Los RUC de <strong>sociedades</strong> (tercer dígito 9) y del <strong>sector público</strong> (tercer dígito 6) usan otro algoritmo (módulo 11); esta herramienta valida cédulas y RUC de persona natural.',
+  },
+  {
+    q: '¿El tercer dígito tiene algún significado?',
+    a: 'Sí. En una <strong>cédula de persona natural</strong>, el tercer dígito va de <strong>0 a 5</strong>. Un tercer dígito 6 corresponde a entidades del <strong>sector público</strong> y 9 a <strong>sociedades/empresas</strong> (esos son RUC, no cédulas). Por eso la herramienta rechaza como cédula cualquier número con tercer dígito 6 o mayor.',
+  },
+  {
+    q: '¿La herramienta guarda o envía la cédula?',
+    a: 'No. La validación es <strong>100% en tu navegador</strong>, en JavaScript. El número no sale de tu dispositivo y la herramienta funciona incluso sin conexión una vez cargada la página.',
+  },
+  {
+    q: '¿Es gratis?',
+    a: 'Sí, es <strong>gratis, ilimitada y sin registro</strong>, sin marca de agua. Funciona en la computadora y en el celular, directo en el navegador.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Escribí la cédula', text: 'Ingresá los 10 dígitos de la cédula ecuatoriana.' },
+  { name: 'Tocá Validar', text: 'La herramienta verifica el dígito verificador (módulo 10) y muestra la provincia.' },
+  { name: 'Consulta oficial', text: 'Para el nombre y el estado, consultá el Registro Civil o el SRI.' },
+];
+
+const related = [
+  { href: '/ec/calculadoras', t: 'Todas las calculadoras Ecuador', i: '🧮' },
+  { href: '/ec/datos-salario-basico-ecuador-2026', t: 'Salario básico Ecuador 2026', i: '💵' },
+  { href: '/pe/validar-ruc', t: 'Validar RUC (Perú)', i: '🧾' },
+  { href: '/convertir-imagen-a-pdf', t: 'Convertir imagen a PDF', i: '📄' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Validar cédula ecuatoriana',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es-EC',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'USD' }),
+  featureList: ['Validar el dígito verificador de la cédula (módulo 10)', 'Detectar la provincia de emisión', 'Validar RUC de persona natural', 'Procesamiento 100% en el navegador'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/ec` },
+    { '@type': 'ListItem', position: 2, name: 'Validar cédula', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo validar una cédula ecuatoriana',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} audience="EC" lang="es" domain="knowledge">
+  <Header slot="header" />
+
+  <article class="idv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/ec">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Validar cédula</span>
+    </nav>
+
+    <h1>Validar cédula ecuatoriana</h1>
+    <p class="lead">
+      Verificá si una <strong>cédula ecuatoriana</strong> es válida por su <strong>dígito verificador</strong> (módulo 10) y
+      descubrí la <strong>provincia</strong> de emisión. También sirve para el <strong>RUC de persona natural</strong>. Todo
+      <strong>en tu navegador</strong>, sin enviar nada.
+    </p>
+
+    <div class="idv-answer">
+      <p>
+        <strong>¿Cómo validar una cédula?</strong> Escribí los 10 dígitos y la herramienta aplica el algoritmo oficial de
+        <strong>módulo 10</strong> para confirmar que el número está bien formado. Esto <strong>no reemplaza</strong> la
+        consulta en el Registro Civil o el SRI, que te dice a quién pertenece.
+      </p>
+    </div>
+
+    <div id="idv" class="idv-card" data-kind="cedula">
+      <label class="idv-label" for="idvInput">Escribí la cédula (10 dígitos)</label>
+      <div class="idv-row">
+        <input id="idvInput" class="idv-input" type="text" inputmode="numeric" autocomplete="off"
+          placeholder="1710034065" maxlength="10" aria-describedby="idvResult" />
+        <button id="idvValidate" type="button" class="idv-btn">Validar</button>
+      </div>
+      <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
+
+      <div class="idv-gen">
+        <a class="idv-btn-ghost" href="https://www.registrocivil.gob.ec/" rel="nofollow noopener" target="_blank">🔎 Consultar en el Registro Civil</a>
+        <p class="idv-note">El nombre y el estado de la cédula solo los da el Registro Civil o el SRI.</p>
+      </div>
+    </div>
+
+    <section class="idv-sec">
+      <h2>Cómo se calcula el dígito verificador (módulo 10)</h2>
+      <ul>
+        <li>Se multiplican los <strong>9 primeros dígitos</strong> alternando por 2 y 1 (2,1,2,1,2,1,2,1,2).</li>
+        <li>A cada producto de 10 o más se le resta 9; se suman todos.</li>
+        <li>El dígito verificador es el <strong>siguiente múltiplo de 10 menos la suma</strong> (0 si la suma ya es múltiplo de 10). Debe coincidir con el 10.º dígito.</li>
+        <li>Los dos primeros dígitos = provincia (<strong>01–24</strong> o <strong>30</strong> exterior); el tercero, <strong>0–5</strong> en personas naturales.</li>
+      </ul>
+    </section>
+
+    <section class="idv-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="idv-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="idv-related">
+      <h2>Otras herramientas gratis</h2>
+      <div class="idv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="idv-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .idv-page { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .idv-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .idv-answer p { margin: 0; line-height: 1.6; }
+  .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.15rem; letter-spacing: 1px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  #idv .idv-btn { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 13px 24px; font-size: 1rem; cursor: pointer; }
+  #idv .idv-btn:hover { filter: brightness(1.08); }
+  #idv .idv-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  #idv .idv-result.ok { background: color-mix(in srgb, #16a34a 12%, #fff); border: 1px solid color-mix(in srgb, #16a34a 35%, #fff); color: #15803d; }
+  #idv .idv-result.bad { background: color-mix(in srgb, #dc2626 10%, #fff); border: 1px solid color-mix(in srgb, #dc2626 30%, #fff); color: #b91c1c; }
+  #idv .idv-result small { display: block; font-weight: 400; color: var(--text-2, #64748b); margin-top: 2px; }
+  #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
+  #idv .idv-btn-ghost { display: inline-block; background: transparent; color: var(--accent, #2563eb); border: 1px solid var(--accent, #2563eb); border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
+  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
+  .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .idv-faq summary { font-weight: 600; cursor: pointer; }
+  .idv-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-faq-a a { color: var(--accent, #2563eb); }
+  .idv-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .idv-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .idv-related-card:hover { border-color: var(--accent, #2563eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('idv');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var input = document.getElementById('idvInput');
+      var validateBtn = document.getElementById('idvValidate');
+      var resultBox = document.getElementById('idvResult');
+
+      var PROV = {
+        1: 'Azuay', 2: 'Bolívar', 3: 'Cañar', 4: 'Carchi', 5: 'Cotopaxi', 6: 'Chimborazo',
+        7: 'El Oro', 8: 'Esmeraldas', 9: 'Guayas', 10: 'Imbabura', 11: 'Loja', 12: 'Los Ríos',
+        13: 'Manabí', 14: 'Morona Santiago', 15: 'Napo', 16: 'Pastaza', 17: 'Pichincha',
+        18: 'Tungurahua', 19: 'Zamora Chinchipe', 20: 'Galápagos', 21: 'Sucumbíos', 22: 'Orellana',
+        23: 'Santo Domingo de los Tsáchilas', 24: 'Santa Elena', 30: 'Exterior'
+      };
+
+      function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+      function validCedula(str) {
+        var d = onlyDigits(str);
+        if (d.length !== 10) return false;
+        var prov = parseInt(d.slice(0, 2), 10);
+        if (!(prov >= 1 && prov <= 24) && prov !== 30) return false;
+        if (parseInt(d[2], 10) > 5) return false;
+        var coef = [2, 1, 2, 1, 2, 1, 2, 1, 2], sum = 0;
+        for (var i = 0; i < 9; i++) { var p = parseInt(d[i], 10) * coef[i]; if (p >= 10) p -= 9; sum += p; }
+        var check = (sum % 10 === 0) ? 0 : 10 - (sum % 10);
+        return check === parseInt(d[9], 10);
+      }
+
+      function showResult() {
+        var d = onlyDigits(input.value);
+        resultBox.hidden = false;
+        if (d.length !== 10) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ La cédula tiene 10 dígitos (faltan ' + Math.max(0, 10 - d.length) + ').';
+          return;
+        }
+        var prov = parseInt(d.slice(0, 2), 10);
+        if (!((prov >= 1 && prov <= 24) || prov === 30)) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ Cédula inválida <small>Los dos primeros dígitos (' + d.slice(0, 2) + ') no son una provincia válida (01–24 o 30).</small>';
+          return;
+        }
+        if (parseInt(d[2], 10) > 5) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ No es una cédula de persona natural <small>El tercer dígito (' + d[2] + ') indica sociedad o sector público (eso es un RUC, no una cédula).</small>';
+          return;
+        }
+        if (validCedula(d)) {
+          resultBox.className = 'idv-result ok';
+          resultBox.innerHTML = '✓ Cédula válida <small>' + d + ' · Provincia: ' + (PROV[prov] || '—') + '. Dígito verificador correcto. El nombre se confirma en el Registro Civil.</small>';
+        } else {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ Cédula inválida <small>El dígito verificador no coincide.</small>';
+        }
+      }
+
+      input.addEventListener('input', function () {
+        input.value = onlyDigits(input.value).slice(0, 10);
+        if (!resultBox.hidden) showResult();
+      });
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+      validateBtn.addEventListener('click', showResult);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

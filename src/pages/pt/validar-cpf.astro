@@ -1,0 +1,301 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import { freeOfferSchema } from '../../lib/offer-schema';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/pt/validar-cpf`;
+
+const title = 'Validar CPF e Gerar CPF Válido Online Grátis | Hacé Cuentas';
+const description =
+  'Valide um CPF e confira os dígitos verificadores na hora, ou gere um CPF válido para testes. Descubra a região fiscal pelo 9º dígito. 100% no navegador, nada é enviado. Grátis e sem cadastro.';
+
+const faqs = [
+  {
+    q: 'Como validar um CPF?',
+    a: 'Digite os 11 números do CPF e clique em <strong>Validar</strong>. A ferramenta calcula os <strong>dois dígitos verificadores</strong> (as duas últimas casas) por módulo 11 e diz na hora se o número é matematicamente válido. Nada sai do seu navegador.',
+  },
+  {
+    q: 'CPF válido significa que a pessoa existe ou que o CPF está regular?',
+    a: 'Não. A validação confirma só que o número é <strong>matematicamente correto</strong> (os dígitos verificadores batem). Para saber se o CPF está <strong>regular, suspenso ou cancelado</strong>, é preciso consultar a situação cadastral no site da <strong>Receita Federal</strong>. Um número pode passar no cálculo e não pertencer a ninguém.',
+  },
+  {
+    q: 'Como são calculados os dígitos verificadores do CPF?',
+    a: 'O CPF tem 9 dígitos de base + 2 verificadores. O <strong>1º dígito</strong> multiplica os 9 primeiros números pelos pesos 10,9,8,7,6,5,4,3,2, soma tudo, multiplica por 10 e calcula o resto por 11 — se der 10, vira 0. O <strong>2º dígito</strong> repete o processo sobre os 10 primeiros números com pesos 11 a 2.',
+  },
+  {
+    q: 'O que é a região fiscal do CPF (9º dígito)?',
+    a: 'O <strong>9º dígito</strong> do CPF indica a <strong>região fiscal</strong> onde ele foi emitido. Por exemplo: 8 = São Paulo; 7 = Rio de Janeiro e Espírito Santo; 6 = Minas Gerais; 0 = Rio Grande do Sul. A ferramenta mostra a região automaticamente quando o CPF é válido. Isso não localiza a pessoa, apenas o estado de emissão.',
+  },
+  {
+    q: 'Posso gerar um CPF válido para testes?',
+    a: 'Sim. O botão <strong>Gerar CPF</strong> cria um número com dígitos verificadores corretos, útil para <strong>testar cadastros e sistemas</strong>. É válido apenas no cálculo: <strong>não pertence a nenhuma pessoa real</strong>. Usar um CPF gerado para se passar por outra pessoa ou fraudar é crime.',
+  },
+  {
+    q: 'Por que CPFs com todos os números iguais são rejeitados?',
+    a: 'Sequências como 111.111.111-11 ou 000.000.000-00 <strong>passam no cálculo</strong> dos dígitos verificadores, mas a Receita Federal as considera <strong>inválidas</strong> por convenção. Por isso a ferramenta rejeita qualquer CPF com os 11 dígitos idênticos.',
+  },
+  {
+    q: 'A ferramenta envia meu CPF para algum servidor?',
+    a: 'Não. A validação e a geração são <strong>100% no navegador</strong>, em JavaScript. O número digitado não sai do seu dispositivo — seguro para usar com dados pessoais e até offline depois de carregar a página.',
+  },
+  {
+    q: 'Qual a diferença entre CPF e CNPJ?',
+    a: 'O <strong>CPF</strong> (11 dígitos) identifica <strong>pessoas físicas</strong>; o <strong>CNPJ</strong> (14 dígitos) identifica <strong>empresas</strong>. Para validar um CNPJ, use nossa ferramenta de <a href="/pt/validar-cnpj">validar CNPJ</a>.',
+  },
+  {
+    q: 'É grátis?',
+    a: 'Sim: <strong>grátis, ilimitado e sem cadastro</strong>, sem marca d\'água. Funciona no computador e no celular direto no navegador.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Digite o CPF', text: 'Cole ou digite os 11 números. A máscara formata como 000.000.000-00.' },
+  { name: 'Clique em Validar', text: 'A ferramenta confere os dígitos verificadores e mostra a região fiscal.' },
+  { name: 'Ou gere um CPF', text: 'Use "Gerar CPF" para criar um número válido para testes.' },
+];
+
+const related = [
+  { href: '/pt/validar-cnpj', t: 'Validar CNPJ', i: '🏢' },
+  { href: '/pt/dados-inss-irrf-2026', t: 'Tabela INSS e IRRF 2026', i: '📊' },
+  { href: '/pt/dados-salario-minimo-brasil-2026', t: 'Salário mínimo Brasil 2026', i: '💵' },
+  { href: '/convertir-imagen-a-pdf', t: 'Converter imagem em PDF', i: '📄' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Validar e gerar CPF',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'pt-BR',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'BRL' }),
+  featureList: ['Validar dígitos verificadores do CPF', 'Mostrar região fiscal', 'Gerar CPF válido para testes', 'Processamento 100% no navegador'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: `${site}/pt` },
+    { '@type': 'ListItem', position: 2, name: 'Validar CPF', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Como validar um CPF',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} audience="BR" lang="pt" domain="knowledge">
+  <Header slot="header" lang="pt" />
+
+  <article class="idv-page">
+    <nav class="breadcrumbs" aria-label="Navegação">
+      <a href="/pt">Início</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Validar CPF</span>
+    </nav>
+
+    <h1>Validar CPF e gerar CPF válido</h1>
+    <p class="lead">
+      Verifique se um <strong>CPF</strong> é válido pelos dígitos verificadores e descubra a <strong>região fiscal</strong>,
+      ou <strong>gere um CPF válido</strong> para testes. Tudo <strong>no seu navegador</strong>, sem enviar nada.
+    </p>
+
+    <div class="idv-answer">
+      <p>
+        <strong>Como validar um CPF?</strong> Digite os 11 números e a ferramenta confere os <strong>dois dígitos
+        verificadores</strong> por módulo 11. Isso confirma que o número é <strong>matematicamente válido</strong> — não que
+        o CPF esteja regular. Para a situação cadastral, consulte a Receita Federal.
+      </p>
+    </div>
+
+    <div id="idv" class="idv-card" data-kind="cpf">
+      <label class="idv-label" for="idvInput">Digite o CPF</label>
+      <div class="idv-row">
+        <input id="idvInput" class="idv-input" type="text" inputmode="numeric" autocomplete="off"
+          placeholder="000.000.000-00" maxlength="14" aria-describedby="idvResult" />
+        <button id="idvValidate" type="button" class="idv-btn">Validar</button>
+      </div>
+      <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
+
+      <div class="idv-gen">
+        <button id="idvGenerate" type="button" class="idv-btn-ghost">🎲 Gerar CPF válido</button>
+        <div id="idvGenBox" class="idv-genbox" hidden>
+          <code id="idvGenValue"></code>
+          <button id="idvCopy" type="button" class="idv-copy">Copiar</button>
+        </div>
+        <p class="idv-note">Número válido apenas no cálculo, para testes. Não pertence a nenhuma pessoa real.</p>
+      </div>
+    </div>
+
+    <section class="idv-sec">
+      <h2>Como funciona o dígito verificador do CPF</h2>
+      <ul>
+        <li><strong>1º dígito:</strong> multiplica os 9 primeiros números pelos pesos 10,9,8,7,6,5,4,3,2, soma, ×10, resto por 11 (se 10 → 0).</li>
+        <li><strong>2º dígito:</strong> mesmo processo sobre os 10 primeiros com pesos 11 a 2.</li>
+        <li><strong>9º dígito:</strong> indica a região fiscal de emissão (ex.: 8 = SP, 7 = RJ/ES, 6 = MG, 0 = RS).</li>
+      </ul>
+    </section>
+
+    <section class="idv-faq">
+      <h2>Perguntas frequentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="idv-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="idv-related">
+      <h2>Outras ferramentas grátis</h2>
+      <div class="idv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="idv-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" lang="pt" />
+</Layout>
+
+<style is:global>
+  .idv-page { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .idv-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .idv-answer p { margin: 0; line-height: 1.6; }
+  .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.15rem; letter-spacing: .5px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  #idv .idv-btn, #idv .idv-copy { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 13px 24px; font-size: 1rem; cursor: pointer; }
+  #idv .idv-btn:hover { filter: brightness(1.08); }
+  #idv .idv-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  #idv .idv-result.ok { background: color-mix(in srgb, #16a34a 12%, #fff); border: 1px solid color-mix(in srgb, #16a34a 35%, #fff); color: #15803d; }
+  #idv .idv-result.bad { background: color-mix(in srgb, #dc2626 10%, #fff); border: 1px solid color-mix(in srgb, #dc2626 30%, #fff); color: #b91c1c; }
+  #idv .idv-result small { display: block; font-weight: 400; color: var(--text-2, #64748b); margin-top: 2px; }
+  #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
+  #idv .idv-btn-ghost { background: transparent; color: var(--accent, #2563eb); border: 1px solid var(--accent, #2563eb); border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+  #idv .idv-genbox { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  #idv .idv-genbox code { font-size: 1.15rem; background: var(--surface-2, #f1f5f9); padding: 8px 12px; border-radius: 8px; letter-spacing: .5px; }
+  #idv .idv-copy { padding: 8px 14px; font-size: .9rem; }
+  #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
+  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
+  .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .idv-faq summary { font-weight: 600; cursor: pointer; }
+  .idv-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-faq-a a { color: var(--accent, #2563eb); }
+  .idv-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .idv-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .idv-related-card:hover { border-color: var(--accent, #2563eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('idv');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var input = document.getElementById('idvInput');
+      var validateBtn = document.getElementById('idvValidate');
+      var resultBox = document.getElementById('idvResult');
+      var genBtn = document.getElementById('idvGenerate');
+      var genBox = document.getElementById('idvGenBox');
+      var genValue = document.getElementById('idvGenValue');
+      var copyBtn = document.getElementById('idvCopy');
+
+      var REGIOES = {
+        '0': 'RS', '1': 'DF, GO, MS, MT, TO', '2': 'AC, AP, AM, PA, RO, RR',
+        '3': 'CE, MA, PI', '4': 'AL, PB, PE, RN', '5': 'BA, SE', '6': 'MG',
+        '7': 'RJ, ES', '8': 'SP', '9': 'PR, SC'
+      };
+
+      function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+      function cpfDV(base) {
+        var len = base.length, sum = 0;
+        for (var i = 0; i < len; i++) sum += parseInt(base[i], 10) * (len + 1 - i);
+        var r = (sum * 10) % 11;
+        return r === 10 ? 0 : r;
+      }
+      function validCPF(str) {
+        var d = onlyDigits(str);
+        if (d.length !== 11) return false;
+        if (/^(\d)\1{10}$/.test(d)) return false;
+        return cpfDV(d.slice(0, 9)) === parseInt(d[9], 10) && cpfDV(d.slice(0, 10)) === parseInt(d[10], 10);
+      }
+      function format(d) {
+        d = onlyDigits(d).slice(0, 11);
+        if (d.length > 9) return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, '$1.$2.$3-$4');
+        if (d.length > 6) return d.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, '$1.$2.$3');
+        if (d.length > 3) return d.replace(/^(\d{3})(\d{0,3}).*/, '$1.$2');
+        return d;
+      }
+      function generate() {
+        var b = '';
+        for (var i = 0; i < 9; i++) b += Math.floor(Math.random() * 10);
+        if (/^(\d)\1{8}$/.test(b)) b = '123456789';
+        b += cpfDV(b); b += cpfDV(b);
+        return b;
+      }
+
+      function showResult() {
+        var d = onlyDigits(input.value);
+        resultBox.hidden = false;
+        if (d.length !== 11) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ Digite os 11 números do CPF (faltam ' + Math.max(0, 11 - d.length) + ').';
+          return;
+        }
+        if (validCPF(d)) {
+          var reg = REGIOES[d[8]] || '—';
+          resultBox.className = 'idv-result ok';
+          resultBox.innerHTML = '✓ CPF válido <small>' + format(d) + ' · Região fiscal: ' + reg + '. Válido no cálculo; a situação cadastral se confere na Receita Federal.</small>';
+        } else {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ CPF inválido <small>Os dígitos verificadores não conferem.</small>';
+        }
+      }
+
+      input.addEventListener('input', function () {
+        input.value = format(input.value);
+        if (!resultBox.hidden) showResult();
+      });
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+      validateBtn.addEventListener('click', showResult);
+      genBtn.addEventListener('click', function () {
+        genValue.textContent = format(generate());
+        genBox.hidden = false;
+      });
+      copyBtn.addEventListener('click', function () {
+        if (navigator.clipboard) navigator.clipboard.writeText(genValue.textContent);
+        copyBtn.textContent = 'Copiado!';
+        setTimeout(function () { copyBtn.textContent = 'Copiar'; }, 1500);
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

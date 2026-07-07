@@ -1,0 +1,302 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import { freeOfferSchema } from '../../lib/offer-schema';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/pt/validar-cnpj`;
+
+const title = 'Validar CNPJ e Gerar CNPJ Válido Online Grátis | Hacé Cuentas';
+const description =
+  'Valide um CNPJ e verifique o dígito verificador na hora, ou gere um CNPJ válido para testes. 100% no seu navegador, sem enviar dados. Grátis, sem cadastro. Entenda como funciona o cálculo dos dígitos verificadores do CNPJ.';
+
+const faqs = [
+  {
+    q: 'Como validar um CNPJ?',
+    a: 'Digite os 14 números do CNPJ no campo acima e clique em <strong>Validar</strong>. A ferramenta confere os <strong>dois dígitos verificadores</strong> (as duas últimas casas) usando o cálculo oficial da Receita Federal e diz na hora se o número é matematicamente válido. Tudo acontece no seu navegador: nada é enviado para nenhum servidor.',
+  },
+  {
+    q: 'Validar o CNPJ significa que a empresa existe e está ativa?',
+    a: 'Não. Esta ferramenta confirma apenas que o número é <strong>matematicamente válido</strong> (os dígitos verificadores batem). Para saber se a empresa <strong>existe, está ativa e quem são os sócios</strong>, você precisa fazer a <em>consulta CNPJ</em> no site oficial da Receita Federal (Cadastro Nacional da Pessoa Jurídica). Um número pode ser válido no cálculo e mesmo assim não pertencer a nenhuma empresa registrada.',
+  },
+  {
+    q: 'Como são calculados os dígitos verificadores do CNPJ?',
+    a: 'O CNPJ tem 14 dígitos: 8 de base, 4 de filial (0001 na matriz) e 2 verificadores. O <strong>primeiro dígito</strong> multiplica os 12 primeiros números pelos pesos 5,4,3,2,9,8,7,6,5,4,3,2, soma tudo e calcula o resto por 11 — se o resto for menor que 2 o dígito é 0, senão é 11 menos o resto. O <strong>segundo dígito</strong> repete o processo sobre os 13 primeiros números com os pesos 6,5,4,3,2,9,8,7,6,5,4,3,2.',
+  },
+  {
+    q: 'O que significam os números 0001 no meio do CNPJ?',
+    a: 'Os quatro dígitos depois da barra (posições 9 a 12) indicam a <strong>ordem do estabelecimento</strong>: <strong>0001</strong> é a matriz, <strong>0002</strong> em diante são as filiais. Por isso um mesmo grupo empresarial pode ter vários CNPJs com a mesma base de 8 dígitos e finais diferentes.',
+  },
+  {
+    q: 'Posso gerar um CNPJ válido com esta ferramenta?',
+    a: 'Sim. O botão <strong>Gerar CNPJ</strong> cria um número com dígitos verificadores corretos, útil para <strong>testar formulários, sistemas e cadastros</strong> em desenvolvimento. Atenção: é um número válido apenas no cálculo, <strong>não corresponde a nenhuma empresa real</strong> e não deve ser usado para fraude — usá-lo para se passar por uma empresa é crime.',
+  },
+  {
+    q: 'A ferramenta envia o CNPJ para algum servidor?',
+    a: 'Não. Toda a validação e a geração acontecem <strong>100% no seu navegador</strong>, em JavaScript. O número digitado não sai do seu dispositivo, o que torna a ferramenta segura e utilizável até sem conexão depois que a página carrega.',
+  },
+  {
+    q: 'Qual a diferença entre CNPJ e CPF?',
+    a: 'O <strong>CNPJ</strong> (14 dígitos) identifica <strong>empresas e pessoas jurídicas</strong>; o <strong>CPF</strong> (11 dígitos) identifica <strong>pessoas físicas</strong>. Ambos usam dígitos verificadores calculados por módulo 11, mas com quantidades de dígitos e pesos diferentes. Para validar um CPF, use nossa ferramenta de <a href="/pt/validar-cpf">validar CPF</a>.',
+  },
+  {
+    q: 'O novo CNPJ alfanumérico vai funcionar aqui?',
+    a: 'A Receita Federal anunciou o <strong>CNPJ alfanumérico</strong> (com letras e números na base) a partir de 2026, mantendo os 14 caracteres e os 2 dígitos verificadores finais, agora calculados a partir do valor ASCII de cada caractere. Esta ferramenta valida o <strong>formato numérico tradicional</strong>, que continua válido; assim que o novo formato entrar em vigor de forma ampla, atualizamos o cálculo.',
+  },
+  {
+    q: 'A ferramenta é grátis?',
+    a: 'Sim, é <strong>grátis, ilimitada e sem cadastro</strong>. Não tem marca d\'água nem limite de consultas. Funciona no computador e no celular, direto no navegador.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Digite o CNPJ', text: 'Cole ou digite os 14 números no campo. A máscara formata automaticamente (00.000.000/0001-00).' },
+  { name: 'Clique em Validar', text: 'A ferramenta confere os dois dígitos verificadores e mostra na hora se é válido.' },
+  { name: 'Ou gere um CNPJ', text: 'Use "Gerar CNPJ" para criar um número válido para testes de sistemas e formulários.' },
+];
+
+const related = [
+  { href: '/pt/validar-cpf', t: 'Validar CPF', i: '🧾' },
+  { href: '/pt/dados-inss-irrf-2026', t: 'Tabela INSS e IRRF 2026', i: '📊' },
+  { href: '/convertir-imagen-a-pdf', t: 'Converter imagem em PDF', i: '📄' },
+  { href: '/pt/dados-salario-minimo-brasil-2026', t: 'Salário mínimo Brasil 2026', i: '💵' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Validar e gerar CNPJ',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'pt-BR',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'BRL' }),
+  featureList: ['Validar dígitos verificadores do CNPJ', 'Gerar CNPJ válido para testes', 'Formatação automática', 'Processamento 100% no navegador'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: `${site}/pt` },
+    { '@type': 'ListItem', position: 2, name: 'Validar CNPJ', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Como validar um CNPJ',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} audience="BR" lang="pt" domain="knowledge">
+  <Header slot="header" lang="pt" />
+
+  <article class="idv-page">
+    <nav class="breadcrumbs" aria-label="Navegação">
+      <a href="/pt">Início</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Validar CNPJ</span>
+    </nav>
+
+    <h1>Validar CNPJ e gerar CNPJ válido</h1>
+    <p class="lead">
+      Verifique se um <strong>CNPJ</strong> é válido conferindo os dígitos verificadores, ou <strong>gere um CNPJ válido</strong>
+      para testar sistemas. Tudo <strong>no seu navegador</strong> — nada é enviado para servidores.
+    </p>
+
+    <div class="idv-answer">
+      <p>
+        <strong>Como validar um CNPJ?</strong> Digite os 14 números e a ferramenta confere os <strong>dois dígitos
+        verificadores</strong> pelo cálculo oficial (módulo 11). Isso confirma que o número é <strong>matematicamente
+        válido</strong>, mas não que a empresa existe ou está ativa — para isso, faça a consulta no site da Receita Federal.
+      </p>
+    </div>
+
+    <div id="idv" class="idv-card" data-kind="cnpj">
+      <label class="idv-label" for="idvInput">Digite o CNPJ</label>
+      <div class="idv-row">
+        <input id="idvInput" class="idv-input" type="text" inputmode="numeric" autocomplete="off"
+          placeholder="00.000.000/0001-00" maxlength="18" aria-describedby="idvResult" />
+        <button id="idvValidate" type="button" class="idv-btn">Validar</button>
+      </div>
+      <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
+
+      <div class="idv-gen">
+        <button id="idvGenerate" type="button" class="idv-btn-ghost">🎲 Gerar CNPJ válido</button>
+        <div id="idvGenBox" class="idv-genbox" hidden>
+          <code id="idvGenValue"></code>
+          <button id="idvCopy" type="button" class="idv-copy">Copiar</button>
+        </div>
+        <p class="idv-note">Número válido apenas no cálculo, para testes. Não corresponde a nenhuma empresa real.</p>
+      </div>
+    </div>
+
+    <section class="idv-sec">
+      <h2>Como funciona o dígito verificador do CNPJ</h2>
+      <p>O CNPJ tem 14 dígitos: <strong>8 de base</strong> + <strong>4 de estabelecimento</strong> (0001 = matriz) + <strong>2 verificadores</strong>. Os dois últimos são calculados por módulo 11:</p>
+      <ul>
+        <li><strong>1º dígito:</strong> multiplica os 12 primeiros pelos pesos 5,4,3,2,9,8,7,6,5,4,3,2, soma e calcula o resto por 11 — se o resto &lt; 2, dígito = 0; senão, 11 − resto.</li>
+        <li><strong>2º dígito:</strong> mesmo processo sobre os 13 primeiros com pesos 6,5,4,3,2,9,8,7,6,5,4,3,2.</li>
+      </ul>
+    </section>
+
+    <section class="idv-faq">
+      <h2>Perguntas frequentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="idv-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="idv-related">
+      <h2>Outras ferramentas grátis</h2>
+      <div class="idv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="idv-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" lang="pt" />
+</Layout>
+
+<style is:global>
+  .idv-page { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .idv-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .idv-answer p { margin: 0; line-height: 1.6; }
+  .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.15rem; letter-spacing: .5px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  #idv .idv-btn, #idv .idv-copy { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 13px 24px; font-size: 1rem; cursor: pointer; }
+  #idv .idv-btn:hover { filter: brightness(1.08); }
+  #idv .idv-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  #idv .idv-result.ok { background: color-mix(in srgb, #16a34a 12%, #fff); border: 1px solid color-mix(in srgb, #16a34a 35%, #fff); color: #15803d; }
+  #idv .idv-result.bad { background: color-mix(in srgb, #dc2626 10%, #fff); border: 1px solid color-mix(in srgb, #dc2626 30%, #fff); color: #b91c1c; }
+  #idv .idv-result small { display: block; font-weight: 400; color: var(--text-2, #64748b); margin-top: 2px; }
+  #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
+  #idv .idv-btn-ghost { background: transparent; color: var(--accent, #2563eb); border: 1px solid var(--accent, #2563eb); border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+  #idv .idv-genbox { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  #idv .idv-genbox code { font-size: 1.15rem; background: var(--surface-2, #f1f5f9); padding: 8px 12px; border-radius: 8px; letter-spacing: .5px; }
+  #idv .idv-copy { padding: 8px 14px; font-size: .9rem; }
+  #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
+  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
+  .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .idv-faq summary { font-weight: 600; cursor: pointer; }
+  .idv-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-faq-a a { color: var(--accent, #2563eb); }
+  .idv-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .idv-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .idv-related-card:hover { border-color: var(--accent, #2563eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('idv');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var input = document.getElementById('idvInput');
+      var validateBtn = document.getElementById('idvValidate');
+      var resultBox = document.getElementById('idvResult');
+      var genBtn = document.getElementById('idvGenerate');
+      var genBox = document.getElementById('idvGenBox');
+      var genValue = document.getElementById('idvGenValue');
+      var copyBtn = document.getElementById('idvCopy');
+
+      function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+      function cnpjDV(base) {
+        var w = base.length === 12 ? [5,4,3,2,9,8,7,6,5,4,3,2] : [6,5,4,3,2,9,8,7,6,5,4,3,2];
+        var sum = 0;
+        for (var i = 0; i < base.length; i++) sum += parseInt(base[i], 10) * w[i];
+        var r = sum % 11;
+        return r < 2 ? 0 : 11 - r;
+      }
+      function validCNPJ(str) {
+        var d = onlyDigits(str);
+        if (d.length !== 14) return false;
+        if (/^(\d)\1{13}$/.test(d)) return false;
+        return cnpjDV(d.slice(0, 12)) === parseInt(d[12], 10) && cnpjDV(d.slice(0, 13)) === parseInt(d[13], 10);
+      }
+      function format(d) {
+        d = onlyDigits(d).slice(0, 14);
+        var out = d;
+        if (d.length > 12) out = d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2}).*/, '$1.$2.$3/$4-$5');
+        else if (d.length > 8) out = d.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4}).*/, '$1.$2.$3/$4');
+        else if (d.length > 5) out = d.replace(/^(\d{2})(\d{3})(\d{0,3}).*/, '$1.$2.$3');
+        else if (d.length > 2) out = d.replace(/^(\d{2})(\d{0,3}).*/, '$1.$2');
+        return out;
+      }
+      function generate() {
+        var b = '';
+        for (var i = 0; i < 8; i++) b += Math.floor(Math.random() * 10);
+        b += '0001';
+        b += cnpjDV(b); b += cnpjDV(b);
+        return b;
+      }
+
+      function showResult() {
+        var d = onlyDigits(input.value);
+        resultBox.hidden = false;
+        if (d.length !== 14) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ Digite os 14 números do CNPJ (faltam ' + Math.max(0, 14 - d.length) + ').';
+          return;
+        }
+        if (validCNPJ(d)) {
+          var tipo = d.slice(8, 12) === '0001' ? 'Matriz' : 'Filial ' + d.slice(8, 12);
+          resultBox.className = 'idv-result ok';
+          resultBox.innerHTML = '✓ CNPJ válido <small>' + format(d) + ' · ' + tipo + '. Válido no cálculo; confirme a situação na Receita Federal.</small>';
+        } else {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ CNPJ inválido <small>Os dígitos verificadores não conferem.</small>';
+        }
+      }
+
+      input.addEventListener('input', function () {
+        var pos = input.selectionStart, before = input.value;
+        input.value = format(input.value);
+        if (before !== input.value) { /* mantém cursor razoável */ }
+        if (!resultBox.hidden) showResult();
+      });
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+      validateBtn.addEventListener('click', showResult);
+      genBtn.addEventListener('click', function () {
+        var g = generate();
+        genValue.textContent = format(g);
+        genBox.hidden = false;
+      });
+      copyBtn.addEventListener('click', function () {
+        var t = genValue.textContent;
+        if (navigator.clipboard) navigator.clipboard.writeText(t);
+        copyBtn.textContent = 'Copiado!';
+        setTimeout(function () { copyBtn.textContent = 'Copiar'; }, 1500);
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>
