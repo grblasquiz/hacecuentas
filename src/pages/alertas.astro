@@ -1,0 +1,211 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import { freeOfferSchema } from '../lib/offer-schema';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/alertas`;
+
+const title = 'Alertas: te avisamos cuando cambian tus números | Hacé Cuentas';
+const description =
+  'Sueldo, monotributo, salario mínimo, dólar, impuestos: se actualizan seguido y te impactan. Calculá una vez, guardá tu resultado con tu email y te avisamos —con el nuevo valor— cuando el dato cambie. Gratis, sin spam.';
+
+// Calcs data-driven populares donde se puede activar la alerta (link directo).
+const popular = [
+  { href: '/calculadora-monotributo-2026', t: 'Monotributo 2026', i: '🧾', d: 'Categoría y cuota — te avisamos en cada recategorización.' },
+  { href: '/calculadora-impuesto-ganancias-sueldo', t: 'Ganancias sobre el sueldo', i: '💸', d: 'Tu retención mensual, actualizada por cada cambio de escala.' },
+  { href: '/sueldo-en-mano-argentina', t: 'Sueldo en mano', i: '💰', d: 'Tu neto, recalculado ante cada paritaria o cambio de aportes.' },
+  { href: '/calculadora-actualizacion-alquiler-icl', t: 'Actualización de alquiler (ICL)', i: '🏠', d: 'El nuevo valor cuando se publica el índice.' },
+  { href: '/co/calculadora-salario-neto-colombia-2026-bruto-a-neto', t: 'Salario neto Colombia', i: '🇨🇴', d: 'Tu neto, al cambiar el salario mínimo o los aportes.' },
+  { href: '/mx/calculadora-salario-diario-integrado-sdi-mexico', t: 'SDI México', i: '🇲🇽', d: 'Tu salario diario integrado, ante cambios de ley.' },
+];
+
+const faqs = [
+  {
+    q: '¿Qué es una alerta de cambio de resultado?',
+    a: 'Cuando calculás algo cuyo valor depende de datos que se actualizan (una escala de impuestos, un salario mínimo, una tasa, un índice), podés <strong>guardar ese resultado con tu email</strong>. Cuando el dato oficial cambia, <strong>reejecutamos tu cálculo con los mismos datos que pusiste</strong> y te mandamos un mail avisándote cuánto pasó a ser. No tenés que acordarte de volver a entrar.',
+  },
+  {
+    q: '¿En qué calculadoras puedo activar la alerta?',
+    a: 'En todas las calculadoras <strong>data-driven</strong> —las de sueldos, impuestos, aportes, jubilaciones, alquileres, tasas y afines— de Argentina, Colombia, México, Perú, Chile, Uruguay, Paraguay, Venezuela, Ecuador y R. Dominicana. Son más de <strong>800</strong>. Cuando calculás en una de ellas, aparece la opción «Guardá este resultado y avisame si cambia» debajo del resultado.',
+  },
+  {
+    q: '¿Cómo activo una alerta?',
+    a: 'Entrá a la calculadora que te interese, <strong>hacé el cálculo con tus datos</strong> y, en el bloque que aparece bajo el resultado, dejá tu email y tocá «Guardar y avisarme». Listo: guardamos tu resultado y te escribimos solo cuando ese número cambie de verdad.',
+  },
+  {
+    q: '¿Cada cuánto me van a escribir?',
+    a: 'Solo <strong>cuando el resultado cambia</strong>. Si la escala de Ganancias, el salario mínimo o el índice que afecta a tu cálculo se actualiza, recibís un mail. Si no cambia nada, no te molestamos. Muchos datos cambian pocas veces al año, así que no es spam.',
+  },
+  {
+    q: '¿Es lo mismo que el newsletter?',
+    a: 'No exactamente. La <strong>alerta</strong> es personalizada: sigue <em>tu</em> resultado concreto y te avisa cuando ese número cambia. El <strong>newsletter</strong> es un resumen semanal general de los datos económicos que se movieron. Podés tener los dos, o solo el que prefieras.',
+  },
+  {
+    q: '¿Es gratis? ¿Me van a mandar publicidad?',
+    a: 'Es <strong>gratis</strong> y <strong>sin spam</strong>. Usamos tu email únicamente para avisarte cuando cambia el dato que seguís (y, si te suscribís, para el newsletter). Podés darte de baja cuando quieras desde cualquier mail que te enviemos.',
+  },
+  {
+    q: '¿Guardan mis datos del cálculo?',
+    a: 'Guardamos los <strong>valores que ingresaste</strong> asociados a tu email, solo para poder reejecutar el cálculo cuando el dato cambie y decirte el nuevo resultado. No los compartimos ni los usamos para otra cosa. Podés pedir la baja y se eliminan.',
+  },
+  {
+    q: '¿Funciona en el celular?',
+    a: 'Sí. Activás la alerta desde cualquier dispositivo y el aviso te llega por email, así que lo ves en el celular, la compu o donde tengas tu correo.',
+  },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Alertas de cambio de resultado — Hacé Cuentas',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'ARS' }),
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} domain="knowledge">
+  <Header slot="header" />
+
+  <article class="al-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Alertas</span>
+    </nav>
+
+    <h1>Te avisamos cuando cambian los números que te importan</h1>
+    <p class="lead">
+      Sueldo, monotributo, salario mínimo, dólar, impuestos, alquiler: se actualizan seguido y te impactan en el bolsillo.
+      <strong>Calculá una vez, guardá tu resultado con tu email</strong> y te escribimos —con el nuevo valor— cuando el dato cambie.
+      Gratis, sin spam.
+    </p>
+
+    <section class="al-how">
+      <h2>Cómo funciona</h2>
+      <ol class="al-steps">
+        <li><span class="al-num">1</span> <div><strong>Calculás.</strong> Entrás a una calculadora (sueldo, monotributo, salario mínimo…) y hacés la cuenta con tus datos.</div></li>
+        <li><span class="al-num">2</span> <div><strong>Guardás con tu email.</strong> Bajo el resultado tocás «Guardar y avisarme».</div></li>
+        <li><span class="al-num">3</span> <div><strong>Te avisamos cuando cambia.</strong> Reejecutamos tu cálculo y te mandamos el nuevo número. Solo cuando cambia de verdad.</div></li>
+      </ol>
+    </section>
+
+    <section class="al-signup">
+      <div class="al-signup-card">
+        <p class="al-eyebrow">🔔 Gratis · Sin spam</p>
+        <h2>Sumate al resumen semanal</h2>
+        <p>Además de las alertas por cálculo, una vez por semana te mandamos el dato económico que cambió y la calculadora para entenderlo.</p>
+        <form class="al-form" id="al-newsletter" novalidate>
+          <label class="al-vh" for="al-email">Email</label>
+          <input type="email" id="al-email" name="email" placeholder="tu@email.com" required autocomplete="email" />
+          <button type="submit">Suscribirme</button>
+          <p class="al-msg" id="al-msg" role="status" aria-live="polite" hidden></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="al-popular">
+      <h2>Calculadoras donde podés activar la alerta</h2>
+      <div class="al-grid">
+        {popular.map((p) => (
+          <a href={p.href} class="al-card">
+            <span class="al-ico" aria-hidden="true">{p.i}</span>
+            <div>
+              <strong>{p.t}</strong>
+              <span class="al-d">{p.d}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+      <p class="al-more"><a href="/calculadoras">Ver todas las calculadoras →</a></p>
+    </section>
+
+    <section class="al-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="al-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+
+  <script is:inline>
+    (window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); })(function () {
+      var form = document.getElementById('al-newsletter');
+      var msg = document.getElementById('al-msg');
+      if (!form) return;
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var input = form.querySelector('input[type="email"]');
+        var email = input ? input.value.trim() : '';
+        var btn = form.querySelector('button[type="submit"]');
+        function show(t, c) { msg.hidden = false; msg.textContent = t; msg.className = 'al-msg' + (c ? ' ' + c : ''); }
+        if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { show('Ingresá un email válido.', 'err'); return; }
+        if (btn) btn.disabled = true;
+        show('Guardando…', '');
+        try {
+          var res = await fetch('/api/newsletter', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: email, source: 'alertas-page' }) });
+          if (res.ok) {
+            show('¡Listo! Quedás suscripto. Te avisamos cuando haya novedades.', 'ok');
+            if (input) input.value = '';
+            if (typeof window.gtag === 'function') window.gtag('event', 'newsletter_signup', { method: 'alertas-page' });
+          } else { var j = await res.json().catch(function () { return {}; }); show(j.error || 'No se pudo guardar, probá en un rato.', 'err'); }
+        } catch (err) { show('Error de red. Revisá tu conexión.', 'err'); }
+        finally { if (btn) btn.disabled = false; }
+      });
+    });
+  </script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .al-page { max-width: 800px; margin: 0 auto; padding: 0 16px 48px; }
+  .al-page h1 { font-size: 2rem; line-height: 1.2; }
+  .al-page .lead { font-size: 1.1rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .al-how, .al-signup, .al-popular, .al-faq { margin-top: 34px; }
+  .al-how h2, .al-popular h2, .al-faq h2 { font-size: 1.35rem; margin: 0 0 16px; }
+  .al-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+  .al-steps li { display: flex; gap: 14px; align-items: flex-start; line-height: 1.5; }
+  .al-num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 999px; background: var(--accent, #2563eb); color: #fff; font-weight: 700; display: grid; place-items: center; }
+  .al-signup-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 24px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent, #2563eb) 8%, #fff), var(--surface, #fff)); text-align: center; }
+  .al-eyebrow { font-size: .85rem; font-weight: 700; color: var(--accent, #2563eb); margin: 0 0 6px; }
+  .al-signup-card h2 { margin: 0 0 6px; font-size: 1.4rem; }
+  .al-signup-card p { color: var(--text-2, #475569); margin: 0 auto 16px; max-width: 520px; }
+  .al-form { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 440px; margin: 0 auto; }
+  .al-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .al-form input { flex: 1 1 200px; padding: 12px 14px; font-size: 1rem; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; }
+  .al-form button { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 12px 24px; font-size: 1rem; cursor: pointer; }
+  .al-form button:hover { filter: brightness(1.08); }
+  .al-form button:disabled { opacity: .6; }
+  .al-msg { flex: 1 1 100%; margin: 4px 0 0; font-size: .88rem; }
+  .al-msg.ok { color: #15803d; } .al-msg.err { color: #b91c1c; }
+  .al-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .al-card { display: flex; gap: 12px; align-items: flex-start; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 14px 16px; background: var(--surface, #fff); transition: border-color .15s; }
+  .al-card:hover { border-color: var(--accent, #2563eb); }
+  .al-ico { font-size: 1.5rem; }
+  .al-card strong { display: block; }
+  .al-d { color: var(--text-2, #64748b); font-size: .88rem; line-height: 1.4; }
+  .al-more { margin-top: 14px; } .al-more a { color: var(--accent, #2563eb); font-weight: 600; }
+  .al-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .al-faq summary { font-weight: 600; cursor: pointer; }
+  .al-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .al-faq-a a { color: var(--accent, #2563eb); }
+</style>
