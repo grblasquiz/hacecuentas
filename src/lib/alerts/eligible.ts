@@ -10,6 +10,8 @@
  * `headlineField` = la clave del objeto `result` del compute que mostramos en
  * el mail ("tu X pasó de A a B"). El diff real se hace sobre TODO el result.
  */
+import { ALERT_ELIGIBLE_GENERATED } from './eligible-generated';
+
 export interface AlertEligible {
   slug: string;
   /** Clave del result que es "el resultado" para el copy del mail. */
@@ -33,7 +35,10 @@ export const ALERT_ELIGIBLE: AlertEligible[] = [
   { slug: 'calculadora-sueldo-empleados-comercio-cct-130-75', headlineField: 'basico', headlineLabel: 'tu básico de convenio', kind: 'currency' },
 ];
 
-const BY_SLUG = new Map(ALERT_ELIGIBLE.map((a) => [a.slug, a]));
+// Fusión: generadas (todas las calcs data-driven económicas ES, autogeneradas por
+// scripts/generate-alert-eligible.mjs) + curadas. Las curadas van ÚLTIMAS → ganan
+// en caso de colisión (tienen headlineLabel afinado a mano).
+const BY_SLUG = new Map([...ALERT_ELIGIBLE_GENERATED, ...ALERT_ELIGIBLE].map((a) => [a.slug, a]));
 
 export const ALERT_ELIGIBLE_SLUGS: ReadonlySet<string> = new Set(BY_SLUG.keys());
 
