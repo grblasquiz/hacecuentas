@@ -25,7 +25,7 @@ const hash = createHash('sha1');
 // Debe coincidir con ALGO_VERSION de compute-related.ts (hashCalcsInputs): ese
 // script mete la versión del algoritmo primero en el hash. Si acá no la incluimos,
 // los hashes nunca matchean y el pre-commit falla en todo commit que toque calcs.
-hash.update('v2-coverage');
+hash.update('v3-country-denoise');
 for (const f of files.sort()) {
   hash.update(f);
   hash.update(readFileSync(join(CALCS_DIR, f), 'utf8'));
