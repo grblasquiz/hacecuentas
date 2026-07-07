@@ -395,6 +395,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/calculadora-fsh-lh-menopausia-perimenopausia-edad': '/categoria/salud',
   '/calculadora-fuente-dc-watts-amperaje': '/categoria/electronica',
   '/calculadora-fumigacion-frecuencia-hogar-plaga': '/categoria/vida',
+  '/calculadora-ganancia-neta-uber-conductor-argentina': '/calculadora-comision-uber-driver-ganancia-real-argentina-2026',
   '/calculadora-ganancias': '/calculadora-impuesto-ganancias-sueldo',
   '/calculadora-ganancias-4ta-categoria-2026': '/calculadora-ganancias-empleados-4ta-categoria-2026',
   '/calculadora-gas-fee-ethereum-transaccion-swap': '/categoria/finanzas',
