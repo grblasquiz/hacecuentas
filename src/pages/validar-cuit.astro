@@ -1,0 +1,271 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import { freeOfferSchema } from '../lib/offer-schema';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/validar-cuit`;
+
+const title = 'Validar CUIT / CUIL Online Gratis (dígito verificador) | Hacé Cuentas';
+const description =
+  'Validá un CUIT o CUIL argentino al instante: verifica el dígito verificador con el algoritmo módulo 11 de AFIP/ARCA y te dice si es persona física o jurídica. 100% en tu navegador, sin enviar el número a ningún lado.';
+
+const faqs = [
+  {
+    q: '¿Cómo validar un CUIT o CUIL?',
+    a: 'Escribí los 11 dígitos (con o sin guiones) y tocá <strong>Validar</strong>. La herramienta calcula el <strong>dígito verificador</strong> (el último número) con el algoritmo módulo 11 oficial y te dice al instante si el CUIT/CUIL es matemáticamente válido y qué tipo de sujeto indica el prefijo. Todo corre en tu navegador; el número no se envía a ningún servidor.',
+  },
+  {
+    q: '¿Cuál es la diferencia entre CUIT y CUIL?',
+    a: 'El <strong>CUIL</strong> (Código Único de Identificación Laboral) lo asigna ANSES a trabajadores en relación de dependencia; el <strong>CUIT</strong> (Clave Única de Identificación Tributaria) lo asigna AFIP/ARCA a quienes tienen actividad económica propia (monotributistas, autónomos, empresas). Para una persona física suelen ser <strong>el mismo número</strong>: prefijo + DNI + dígito verificador. El algoritmo de validación es idéntico.',
+  },
+  {
+    q: '¿Qué significan los dos primeros dígitos del CUIT?',
+    a: '<strong>20</strong> = hombre, <strong>27</strong> = mujer, <strong>23/24/25/26</strong> = casos especiales (cuando el dígito verificador daría 10 o hay duplicados), <strong>30</strong> = persona jurídica (empresa), <strong>33/34</strong> = casos especiales de personas jurídicas. Cualquier otro prefijo no es un CUIT/CUIL estándar.',
+  },
+  {
+    q: '¿Cómo se calcula el dígito verificador del CUIT?',
+    a: 'Se toman los primeros 10 dígitos y se multiplican por los pesos fijos <strong>5, 4, 3, 2, 7, 6, 5, 4, 3, 2</strong>. Se suman los productos, se calcula el resto de dividir por 11 y se hace <strong>11 menos ese resto</strong>. Si da 11, el dígito es 0; si da 10, ese número con ese prefijo no existe (AFIP usa el prefijo 23 en esos casos). El resultado tiene que coincidir con el 11.º dígito.',
+  },
+  {
+    q: '¿Validar el CUIT me dice si está activo en AFIP/ARCA?',
+    a: 'No. Acá se valida que el número esté <strong>bien formado</strong> (dígito verificador correcto). La <strong>constancia de inscripción</strong> —situación fiscal, actividad, domicilio, si está activo o dado de baja— la da el organismo en su web oficial: <a href="https://seti.afip.gob.ar/padron-puc-constancia-internet/ConsultaConstanciaAction.do" rel="nofollow noopener" target="_blank">Constancia de inscripción AFIP/ARCA</a>. Un CUIT puede tener el dígito correcto y aun así no estar registrado.',
+  },
+  {
+    q: '¿Puedo sacar el CUIL de una persona a partir del DNI?',
+    a: 'Para la mayoría de las personas físicas, el CUIL se arma como <strong>prefijo (20 o 27) + los 8 dígitos del DNI + dígito verificador</strong>. Si escribís esa combinación acá, la herramienta te confirma si el dígito verificador cierra. Ojo: en casos especiales (dígito 10, duplicados históricos) el prefijo cambia a 23/24, así que la única fuente oficial es <a href="https://www.anses.gob.ar/consulta/constancia-de-cuil" rel="nofollow noopener" target="_blank">la constancia de CUIL de ANSES</a>.',
+  },
+  {
+    q: '¿La herramienta guarda o envía el CUIT?',
+    a: 'No. La validación es <strong>100% en tu navegador</strong>, en JavaScript. El número no sale de tu dispositivo y la página funciona incluso sin conexión una vez cargada.',
+  },
+  {
+    q: '¿Para qué sirve validar un CUIT antes de facturar?',
+    a: 'Para <strong>detectar errores de tipeo</strong> antes de emitir una factura electrónica: si el dígito verificador no cierra, el CUIT está mal escrito y el comprobante va a ser rechazado por AFIP/ARCA. También sirve al cargar proveedores o clientes en un sistema contable.',
+  },
+  {
+    q: '¿Es gratis?',
+    a: 'Sí, es <strong>gratis, ilimitado y sin registro</strong>. Funciona en la compu y en el celular, directo en el navegador.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Escribí el CUIT o CUIL', text: 'Ingresá los 11 dígitos, con o sin guiones (ej: 20-12345678-9).' },
+  { name: 'Tocá Validar', text: 'La herramienta verifica el dígito verificador y muestra el tipo de sujeto según el prefijo.' },
+  { name: 'Constancia oficial', text: 'Para situación fiscal y actividad, seguí al enlace de la constancia de inscripción de AFIP/ARCA.' },
+];
+
+const related = [
+  { href: '/validar-cbu', t: 'Validar CBU / CVU', i: '🏦' },
+  { href: '/calculadora-letra-dni-argentina', t: 'Letra del DNI argentino', i: '🪪' },
+  { href: '/calculadora-monotributo-categoria-2026-recategorizacion-julio', t: 'Categoría de monotributo 2026', i: '📋' },
+  { href: '/calculadoras', t: 'Todas las calculadoras', i: '🧮' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Validar CUIT / CUIL',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es-AR',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'ARS' }),
+  featureList: ['Validar el dígito verificador del CUIT/CUIL', 'Detectar el tipo de sujeto por prefijo (20/27/30…)', 'Procesamiento 100% en el navegador'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+    { '@type': 'ListItem', position: 2, name: 'Validar CUIT', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo validar un CUIT o CUIL',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} lang="es" domain="knowledge">
+  <Header slot="header" />
+
+  <article class="idv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Validar CUIT</span>
+    </nav>
+
+    <h1>Validar CUIT / CUIL</h1>
+    <p class="lead">
+      Verificá si un <strong>CUIT o CUIL</strong> es válido chequeando su <strong>dígito verificador</strong> y descubrí qué
+      indica el prefijo (persona física o jurídica). Todo <strong>en tu navegador</strong>. Para la situación fiscal oficial,
+      te llevamos a la constancia de AFIP/ARCA.
+    </p>
+
+    <div class="idv-answer">
+      <p>
+        <strong>¿Cómo validar un CUIT?</strong> Escribí los 11 dígitos (con o sin guiones) y la herramienta calcula el
+        <strong>dígito verificador</strong> (módulo 11, pesos 5-4-3-2-7-6-5-4-3-2) para confirmar que el número está bien
+        formado. Esto <strong>no reemplaza</strong> la constancia de inscripción, que te dice si el CUIT existe y está activo.
+      </p>
+    </div>
+
+    <div id="idv" class="idv-card" data-kind="cuit">
+      <label class="idv-label" for="idvInput">Escribí el CUIT o CUIL (11 dígitos, con o sin guiones)</label>
+      <div class="idv-row">
+        <input id="idvInput" class="idv-input" type="text" inputmode="numeric" autocomplete="off"
+          placeholder="20-12345678-9" maxlength="13" aria-describedby="idvResult" />
+        <button id="idvValidate" type="button" class="idv-btn">Validar</button>
+      </div>
+      <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
+
+      <div class="idv-gen">
+        <a class="idv-btn-ghost" href="https://seti.afip.gob.ar/padron-puc-constancia-internet/ConsultaConstanciaAction.do" rel="nofollow noopener" target="_blank">🔎 Constancia de inscripción oficial (AFIP/ARCA)</a>
+        <p class="idv-note">La situación fiscal, la actividad y el estado (activo/baja) solo los da el padrón oficial.</p>
+      </div>
+    </div>
+
+    <section class="idv-sec">
+      <h2>Cómo se calcula el dígito verificador del CUIT</h2>
+      <ul>
+        <li>Se multiplican los <strong>10 primeros dígitos</strong> por los pesos 5, 4, 3, 2, 7, 6, 5, 4, 3, 2.</li>
+        <li>Se suman los productos y se calcula <strong>11 − (suma mód 11)</strong>.</li>
+        <li>Si da 11 → dígito 0. Si da 10 → ese prefijo no se usa (AFIP asigna prefijo 23). En otro caso, ese número debe coincidir con el 11.º dígito.</li>
+        <li>Prefijos: <strong>20</strong> hombre · <strong>27</strong> mujer · <strong>23/24/25/26</strong> casos especiales · <strong>30</strong> empresa · <strong>33/34</strong> especiales de empresas.</li>
+      </ul>
+    </section>
+
+    <section class="idv-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="idv-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="idv-related">
+      <h2>Otras herramientas gratis</h2>
+      <div class="idv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="idv-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .idv-page { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .idv-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .idv-answer p { margin: 0; line-height: 1.6; }
+  .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.15rem; letter-spacing: 1px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  #idv .idv-btn { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 13px 24px; font-size: 1rem; cursor: pointer; }
+  #idv .idv-btn:hover { filter: brightness(1.08); }
+  #idv .idv-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  #idv .idv-result.ok { background: color-mix(in srgb, #16a34a 12%, #fff); border: 1px solid color-mix(in srgb, #16a34a 35%, #fff); color: #15803d; }
+  #idv .idv-result.bad { background: color-mix(in srgb, #dc2626 10%, #fff); border: 1px solid color-mix(in srgb, #dc2626 30%, #fff); color: #b91c1c; }
+  #idv .idv-result small { display: block; font-weight: 400; color: var(--text-2, #64748b); margin-top: 2px; }
+  #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
+  #idv .idv-btn-ghost { display: inline-block; background: transparent; color: var(--accent, #2563eb); border: 1px solid var(--accent, #2563eb); border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
+  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
+  .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .idv-faq summary { font-weight: 600; cursor: pointer; }
+  .idv-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-faq-a a { color: var(--accent, #2563eb); }
+  .idv-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .idv-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .idv-related-card:hover { border-color: var(--accent, #2563eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('idv');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var input = document.getElementById('idvInput');
+      var validateBtn = document.getElementById('idvValidate');
+      var resultBox = document.getElementById('idvResult');
+
+      var PREFIJOS = {
+        '20': 'Persona física (hombre)', '23': 'Persona física (caso especial)', '24': 'Persona física (caso especial)',
+        '25': 'Persona física (caso especial)', '26': 'Persona física (caso especial)', '27': 'Persona física (mujer)',
+        '30': 'Persona jurídica (empresa)', '33': 'Persona jurídica (caso especial)', '34': 'Persona jurídica (caso especial)',
+      };
+
+      function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+      function cuitDV(base10) {
+        var w = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2], sum = 0;
+        for (var i = 0; i < 10; i++) sum += parseInt(base10[i], 10) * w[i];
+        var r = 11 - (sum % 11);
+        return r === 11 ? 0 : r; // r === 10 → inválido con ese prefijo
+      }
+      function fmt(d) { return d.slice(0, 2) + '-' + d.slice(2, 10) + '-' + d[10]; }
+
+      function showResult() {
+        var d = onlyDigits(input.value);
+        resultBox.hidden = false;
+        if (d.length !== 11) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ El CUIT/CUIL tiene 11 dígitos (faltan ' + Math.max(0, 11 - d.length) + ').';
+          return;
+        }
+        var pre = d.slice(0, 2);
+        if (!PREFIJOS[pre]) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ CUIT inválido <small>Debe empezar con 20, 23, 24, 25, 26, 27, 30, 33 o 34.</small>';
+          return;
+        }
+        var dv = cuitDV(d.slice(0, 10));
+        if (dv !== 10 && dv === parseInt(d[10], 10)) {
+          resultBox.className = 'idv-result ok';
+          resultBox.innerHTML = '✓ CUIT/CUIL válido <small>' + fmt(d) + ' · ' + PREFIJOS[pre] + '. Dígito verificador correcto. Confirmá la situación fiscal en AFIP/ARCA.</small>';
+        } else {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ CUIT/CUIL inválido <small>El dígito verificador no coincide.</small>';
+        }
+      }
+
+      input.addEventListener('input', function () {
+        var d = onlyDigits(input.value).slice(0, 11);
+        input.value = d.length > 10 ? d.slice(0, 2) + '-' + d.slice(2, 10) + '-' + d.slice(10) : input.value;
+        if (!resultBox.hidden) showResult();
+      });
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+      validateBtn.addEventListener('click', showResult);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

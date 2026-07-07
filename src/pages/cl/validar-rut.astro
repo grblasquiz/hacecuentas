@@ -1,0 +1,266 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import { freeOfferSchema } from '../../lib/offer-schema';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/cl/validar-rut`;
+
+const title = 'Validar RUT Chile Online Gratis (dígito verificador) | Hacé Cuentas';
+const description =
+  'Valida un RUT chileno al instante: verifica el dígito verificador (incluida la K) con el algoritmo módulo 11 y formatea el RUT con puntos y guión. 100% en tu navegador, sin enviar el número a ningún lado.';
+
+const faqs = [
+  {
+    q: '¿Cómo validar un RUT?',
+    a: 'Escribe el RUT completo (con o sin puntos y guión) y presiona <strong>Validar</strong>. La herramienta calcula el <strong>dígito verificador</strong> con el algoritmo módulo 11 y te dice al instante si el RUT es matemáticamente válido, además de mostrarlo formateado con puntos y guión. Todo corre en tu navegador.',
+  },
+  {
+    q: '¿Cómo se calcula el dígito verificador del RUT?',
+    a: 'Se toman los dígitos del RUT (sin el verificador) <strong>de derecha a izquierda</strong> y se multiplican por la serie cíclica <strong>2, 3, 4, 5, 6, 7</strong>. Se suman los productos, se calcula el resto de dividir por 11 y se hace <strong>11 menos ese resto</strong>: si da 11 el dígito es <strong>0</strong>, si da 10 es la letra <strong>K</strong>, y en el resto de los casos es ese número.',
+  },
+  {
+    q: '¿Qué significa la K en el RUT?',
+    a: 'La <strong>K</strong> es un dígito verificador válido: aparece cuando el cálculo módulo 11 da exactamente 10, que no se puede representar con un solo dígito. No tiene ningún significado especial sobre la persona — es solo matemática. Alrededor de 1 de cada 11 RUT termina en K.',
+  },
+  {
+    q: '¿Validar el RUT es lo mismo que saber si existe o de quién es?',
+    a: 'No. Aquí se valida que el número esté <strong>bien formado</strong> (dígito verificador correcto). Un RUT puede ser matemáticamente válido y no estar asignado a nadie. El estado tributario de un RUT se consulta en el <a href="https://zeus.sii.cl/cvc/stc/stc.html" rel="nofollow noopener" target="_blank">Servicio de Impuestos Internos (SII)</a>.',
+  },
+  {
+    q: '¿Cuál es la diferencia entre RUT y RUN?',
+    a: 'Son el <strong>mismo número</strong>: el <strong>RUN</strong> (Rol Único Nacional) identifica a la persona y aparece en el carnet; el <strong>RUT</strong> (Rol Único Tributario) es ese mismo número usado con fines tributarios. Las empresas tienen solo RUT (generalmente sobre 50 millones). El algoritmo de validación es idéntico para ambos.',
+  },
+  {
+    q: '¿Los RUT de empresas se validan igual?',
+    a: 'Sí. Los RUT de <strong>personas jurídicas</strong> (empresas) usan exactamente el mismo dígito verificador módulo 11. En la práctica, los RUT de empresas suelen estar en el rango de <strong>50.000.000 a 99.999.999</strong>, mientras que los de personas naturales van más abajo.',
+  },
+  {
+    q: '¿Para qué sirve validar un RUT antes de facturar o registrar un cliente?',
+    a: 'Para <strong>detectar errores de tipeo al instante</strong>: si el dígito verificador no cierra, el RUT está mal escrito y una factura electrónica o un registro en el sistema va a ser rechazado. Es el chequeo estándar que hacen los formularios chilenos.',
+  },
+  {
+    q: '¿La herramienta guarda o envía el RUT?',
+    a: 'No. La validación es <strong>100% en tu navegador</strong>, en JavaScript. El número no sale de tu dispositivo y la página funciona incluso sin conexión una vez cargada.',
+  },
+  {
+    q: '¿Es gratis?',
+    a: 'Sí, es <strong>gratis, ilimitado y sin registro</strong>. Funciona en el computador y en el celular, directo en el navegador.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Escribe el RUT', text: 'Ingresa el RUT con o sin puntos y guión (ej: 12.345.678-5 o 123456785).' },
+  { name: 'Presiona Validar', text: 'La herramienta verifica el dígito verificador (incluida la K) y muestra el RUT formateado.' },
+  { name: 'Consulta oficial', text: 'Para el estado tributario, sigue al enlace de consulta del SII.' },
+];
+
+const related = [
+  { href: '/cl/calculadora-sueldo-liquido-chile-2026-impuesto-segunda-categoria', t: 'Sueldo líquido Chile', i: '💵' },
+  { href: '/cl/calculadora-finiquito-chile-completo-causal-despido', t: 'Finiquito Chile', i: '📋' },
+  { href: '/cl/calculadora-cuenta-rut-chile-banco-estado-comisiones', t: 'Comisiones CuentaRUT', i: '🏦' },
+  { href: '/cl/calculadoras', t: 'Todas las calculadoras Chile', i: '🧮' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Validar RUT Chile',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es-CL',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'CLP' }),
+  featureList: ['Validar el dígito verificador del RUT (incluida la K)', 'Formatear el RUT con puntos y guión', 'Procesamiento 100% en el navegador'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/cl` },
+    { '@type': 'ListItem', position: 2, name: 'Validar RUT', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo validar un RUT',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} audience="CL" lang="es" domain="knowledge">
+  <Header slot="header" />
+
+  <article class="idv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/cl">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Validar RUT</span>
+    </nav>
+
+    <h1>Validar RUT de Chile</h1>
+    <p class="lead">
+      Verifica si un <strong>RUT</strong> es válido chequeando su <strong>dígito verificador</strong> (incluida la
+      <strong>K</strong>) y míralo formateado con puntos y guión. Todo <strong>en tu navegador</strong>. Para el estado
+      tributario oficial, te llevamos al SII.
+    </p>
+
+    <div class="idv-answer">
+      <p>
+        <strong>¿Cómo validar un RUT?</strong> Escribe el número (con o sin puntos y guión) y la herramienta calcula el
+        <strong>dígito verificador</strong> con el algoritmo módulo 11: serie 2-3-4-5-6-7 de derecha a izquierda; si da 11 es
+        0, si da 10 es K. Esto <strong>no reemplaza</strong> la consulta en el SII, que dice si el RUT existe y su estado.
+      </p>
+    </div>
+
+    <div id="idv" class="idv-card" data-kind="rut">
+      <label class="idv-label" for="idvInput">Escribe el RUT (con o sin puntos y guión)</label>
+      <div class="idv-row">
+        <input id="idvInput" class="idv-input" type="text" autocomplete="off"
+          placeholder="12.345.678-5" maxlength="13" aria-describedby="idvResult" />
+        <button id="idvValidate" type="button" class="idv-btn">Validar</button>
+      </div>
+      <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
+
+      <div class="idv-gen">
+        <a class="idv-btn-ghost" href="https://zeus.sii.cl/cvc/stc/stc.html" rel="nofollow noopener" target="_blank">🔎 Consulta de situación tributaria en el SII</a>
+        <p class="idv-note">La razón social, la actividad y el estado tributario solo los entrega el SII.</p>
+      </div>
+    </div>
+
+    <section class="idv-sec">
+      <h2>Cómo se calcula el dígito verificador del RUT</h2>
+      <ul>
+        <li>Se toman los dígitos del RUT (sin el verificador) <strong>de derecha a izquierda</strong>.</li>
+        <li>Se multiplican por la serie cíclica <strong>2, 3, 4, 5, 6, 7</strong> y se suman los productos.</li>
+        <li>Se calcula <strong>11 − (suma mód 11)</strong>: si da 11 → dígito <strong>0</strong>; si da 10 → letra <strong>K</strong>; en otro caso, ese número.</li>
+        <li>El resultado debe coincidir con el dígito después del guión.</li>
+      </ul>
+    </section>
+
+    <section class="idv-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="idv-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="idv-related">
+      <h2>Otras herramientas gratis</h2>
+      <div class="idv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="idv-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .idv-page { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .idv-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .idv-answer p { margin: 0; line-height: 1.6; }
+  .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.15rem; letter-spacing: 1px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  #idv .idv-btn { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 13px 24px; font-size: 1rem; cursor: pointer; }
+  #idv .idv-btn:hover { filter: brightness(1.08); }
+  #idv .idv-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  #idv .idv-result.ok { background: color-mix(in srgb, #16a34a 12%, #fff); border: 1px solid color-mix(in srgb, #16a34a 35%, #fff); color: #15803d; }
+  #idv .idv-result.bad { background: color-mix(in srgb, #dc2626 10%, #fff); border: 1px solid color-mix(in srgb, #dc2626 30%, #fff); color: #b91c1c; }
+  #idv .idv-result small { display: block; font-weight: 400; color: var(--text-2, #64748b); margin-top: 2px; }
+  #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
+  #idv .idv-btn-ghost { display: inline-block; background: transparent; color: var(--accent, #2563eb); border: 1px solid var(--accent, #2563eb); border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
+  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
+  .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .idv-faq summary { font-weight: 600; cursor: pointer; }
+  .idv-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-faq-a a { color: var(--accent, #2563eb); }
+  .idv-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .idv-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .idv-related-card:hover { border-color: var(--accent, #2563eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('idv');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var input = document.getElementById('idvInput');
+      var validateBtn = document.getElementById('idvValidate');
+      var resultBox = document.getElementById('idvResult');
+
+      function clean(s) { return (s || '').replace(/[^0-9kK]/g, '').toUpperCase(); }
+      function rutDV(num) {
+        var w = [2, 3, 4, 5, 6, 7], sum = 0;
+        var digits = num.split('').reverse();
+        for (var i = 0; i < digits.length; i++) sum += parseInt(digits[i], 10) * w[i % 6];
+        var r = 11 - (sum % 11);
+        return r === 11 ? '0' : (r === 10 ? 'K' : String(r));
+      }
+      function fmt(num, dv) {
+        return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
+      }
+
+      function showResult() {
+        var c = clean(input.value);
+        resultBox.hidden = false;
+        if (c.length < 2) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ Escribe el RUT completo, incluido el dígito verificador.';
+          return;
+        }
+        var dv = c.slice(-1);
+        var num = c.slice(0, -1);
+        if (!/^\d{6,9}$/.test(num)) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ RUT inválido <small>El cuerpo del RUT tiene entre 6 y 9 dígitos (más el verificador).</small>';
+          return;
+        }
+        var esperado = rutDV(num);
+        if (esperado === dv) {
+          var tipo = parseInt(num, 10) >= 50000000 ? 'Rango típico de persona jurídica (empresa)' : 'Rango típico de persona natural';
+          resultBox.className = 'idv-result ok';
+          resultBox.innerHTML = '✓ RUT válido <small>' + fmt(num, dv) + ' · ' + tipo + '. Dígito verificador correcto. El estado tributario lo confirma el SII.</small>';
+        } else {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ RUT inválido <small>El dígito verificador no coincide (para ese número correspondería ' + esperado + ').</small>';
+        }
+      }
+
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+      input.addEventListener('input', function () { if (!resultBox.hidden) showResult(); });
+      validateBtn.addEventListener('click', showResult);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

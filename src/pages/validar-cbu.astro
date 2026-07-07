@@ -1,0 +1,268 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import { freeOfferSchema } from '../lib/offer-schema';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/validar-cbu`;
+
+const title = 'Validar CBU o CVU Online Gratis (dígitos verificadores) | Hacé Cuentas';
+const description =
+  'Validá un CBU o CVU argentino al instante: verifica los dos dígitos verificadores de los 22 números e identifica el banco emisor. 100% en tu navegador, sin enviar el número a ningún lado.';
+
+const faqs = [
+  {
+    q: '¿Cómo validar un CBU?',
+    a: 'Pegá los 22 dígitos del CBU y tocá <strong>Validar</strong>. La herramienta chequea los <strong>dos dígitos verificadores</strong> (el 8.º y el 22.º) con el algoritmo oficial del BCRA y, si el código de entidad es conocido, te dice de qué banco es. Todo corre en tu navegador; el número no se envía a ningún servidor.',
+  },
+  {
+    q: '¿Qué diferencia hay entre CBU y CVU?',
+    a: 'El <strong>CBU</strong> (Clave Bancaria Uniforme) identifica una cuenta en un <strong>banco</strong>; el <strong>CVU</strong> (Clave Virtual Uniforme) identifica una cuenta en una <strong>billetera virtual</strong> (Mercado Pago, Ualá, Personal Pay, etc.). Los dos tienen <strong>22 dígitos y la misma estructura</strong>, así que esta herramienta valida ambos. Los CVU empiezan con el código 000.',
+  },
+  {
+    q: '¿Qué significan los 22 dígitos del CBU?',
+    a: 'Se dividen en dos bloques: el primero tiene <strong>3 dígitos de entidad + 4 de sucursal + 1 dígito verificador</strong>; el segundo tiene <strong>13 dígitos que identifican la cuenta + 1 dígito verificador final</strong>. Los primeros 3 dígitos te dicen el banco (011 = Nación, 007 = Galicia, 072 = Santander, etc.).',
+  },
+  {
+    q: '¿Cómo se calculan los dígitos verificadores del CBU?',
+    a: 'Cada bloque usa una suma ponderada módulo 10. Bloque 1: los 7 primeros dígitos se multiplican por los pesos <strong>7,1,3,9,7,1,3</strong>; el verificador es <strong>(10 − (suma mód 10)) mód 10</strong>. Bloque 2: los 13 dígitos de la cuenta se multiplican por <strong>3,9,7,1,3,9,7,1,3,9,7,1,3</strong> y se aplica la misma fórmula.',
+  },
+  {
+    q: '¿Validar el CBU me asegura que la cuenta existe?',
+    a: 'No. La validación confirma que el número está <strong>bien formado</strong> (no tiene errores de tipeo). Que la cuenta exista, esté activa y pertenezca a quien dice ser titular solo lo confirma el banco al momento de transferir. Antes de una transferencia grande, verificá también el <strong>titular por alias o CBU</strong> en tu home banking.',
+  },
+  {
+    q: '¿Para qué sirve validar un CBU antes de transferir?',
+    a: 'Para <strong>detectar errores de tipeo al instante</strong>: si te pasaron un CBU por WhatsApp y le falta un número o hay un dígito cambiado, los verificadores no cierran y la herramienta lo marca al instante, antes de que el banco rechace la transferencia (o peor, que vaya a otra cuenta válida).',
+  },
+  {
+    q: '¿Qué es el alias y en qué se diferencia del CBU?',
+    a: 'El <strong>alias</strong> es un nombre corto (ej: "perro.sol.mesa") que apunta a un CBU/CVU para no tener que dictar 22 dígitos. El alias se puede cambiar; el CBU no (salvo que cambies de cuenta). Esta herramienta valida el número, no el alias — el alias lo resuelve tu banco al transferir.',
+  },
+  {
+    q: '¿La herramienta guarda o envía el CBU?',
+    a: 'No. La validación es <strong>100% en tu navegador</strong>, en JavaScript. El número no sale de tu dispositivo y la página funciona incluso sin conexión una vez cargada.',
+  },
+  {
+    q: '¿Es gratis?',
+    a: 'Sí, es <strong>gratis, ilimitado y sin registro</strong>. Funciona en la compu y en el celular, directo en el navegador.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Pegá el CBU o CVU', text: 'Ingresá los 22 dígitos (podés pegarlos directo desde WhatsApp o el home banking).' },
+  { name: 'Tocá Validar', text: 'La herramienta chequea los dos dígitos verificadores e identifica el banco o billetera.' },
+  { name: 'Transferí tranquilo', text: 'Si los verificadores cierran, el número está bien formado. Confirmá el titular en tu banco antes de transferir.' },
+];
+
+const related = [
+  { href: '/validar-cuit', t: 'Validar CUIT / CUIL', i: '🪪' },
+  { href: '/calculadora-letra-dni-argentina', t: 'Letra del DNI argentino', i: '🔤' },
+  { href: '/comparador-plazo-fijo', t: 'Comparador de plazos fijos', i: '🏦' },
+  { href: '/calculadoras', t: 'Todas las calculadoras', i: '🧮' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Validar CBU / CVU',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es-AR',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'ARS' }),
+  featureList: ['Validar los dos dígitos verificadores del CBU/CVU', 'Identificar el banco emisor por código de entidad', 'Procesamiento 100% en el navegador'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+    { '@type': 'ListItem', position: 2, name: 'Validar CBU', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo validar un CBU o CVU',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} lang="es" domain="knowledge">
+  <Header slot="header" />
+
+  <article class="idv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Validar CBU</span>
+    </nav>
+
+    <h1>Validar CBU / CVU</h1>
+    <p class="lead">
+      Verificá si un <strong>CBU o CVU</strong> es válido chequeando sus <strong>dos dígitos verificadores</strong> e
+      identificá el banco o billetera emisora. Todo <strong>en tu navegador</strong>, ideal para chequear un CBU que te
+      pasaron por WhatsApp antes de transferir.
+    </p>
+
+    <div class="idv-answer">
+      <p>
+        <strong>¿Cómo validar un CBU?</strong> Pegá los 22 dígitos y la herramienta chequea los <strong>dos dígitos
+        verificadores</strong> (algoritmo oficial del BCRA, módulo 10 ponderado) y te dice el banco según el código de
+        entidad. Si los verificadores no cierran, hay un error de tipeo.
+      </p>
+    </div>
+
+    <div id="idv" class="idv-card" data-kind="cbu">
+      <label class="idv-label" for="idvInput">Pegá el CBU o CVU (22 dígitos)</label>
+      <div class="idv-row">
+        <input id="idvInput" class="idv-input" type="text" inputmode="numeric" autocomplete="off"
+          placeholder="0070999030000012345678" maxlength="22" aria-describedby="idvResult" />
+        <button id="idvValidate" type="button" class="idv-btn">Validar</button>
+      </div>
+      <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
+
+      <div class="idv-gen">
+        <p class="idv-note">La titularidad de la cuenta solo la confirma tu banco al transferir. Ante una transferencia grande, verificá también el alias y el titular en tu home banking.</p>
+      </div>
+    </div>
+
+    <section class="idv-sec">
+      <h2>Cómo se calculan los dígitos verificadores del CBU</h2>
+      <ul>
+        <li><strong>Bloque 1 (8 dígitos)</strong>: entidad (3) + sucursal (4) + verificador. Los 7 primeros se multiplican por 7, 1, 3, 9, 7, 1, 3; el verificador es (10 − (suma mód 10)) mód 10.</li>
+        <li><strong>Bloque 2 (14 dígitos)</strong>: cuenta (13) + verificador. Los 13 se multiplican por 3, 9, 7, 1, 3, 9, 7, 1, 3, 9, 7, 1, 3; misma fórmula.</li>
+        <li>Los primeros <strong>3 dígitos</strong> identifican la entidad: 011 Nación, 007 Galicia, 072 Santander, 014 Provincia, 285 Macro… y <strong>000</strong> indica un CVU de billetera virtual.</li>
+      </ul>
+    </section>
+
+    <section class="idv-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="idv-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="idv-related">
+      <h2>Otras herramientas gratis</h2>
+      <div class="idv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="idv-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .idv-page { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .idv-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .idv-answer p { margin: 0; line-height: 1.6; }
+  .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.1rem; letter-spacing: 1px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  #idv .idv-btn { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 13px 24px; font-size: 1rem; cursor: pointer; }
+  #idv .idv-btn:hover { filter: brightness(1.08); }
+  #idv .idv-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  #idv .idv-result.ok { background: color-mix(in srgb, #16a34a 12%, #fff); border: 1px solid color-mix(in srgb, #16a34a 35%, #fff); color: #15803d; }
+  #idv .idv-result.bad { background: color-mix(in srgb, #dc2626 10%, #fff); border: 1px solid color-mix(in srgb, #dc2626 30%, #fff); color: #b91c1c; }
+  #idv .idv-result small { display: block; font-weight: 400; color: var(--text-2, #64748b); margin-top: 2px; }
+  #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
+  #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
+  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
+  .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .idv-faq summary { font-weight: 600; cursor: pointer; }
+  .idv-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-faq-a a { color: var(--accent, #2563eb); }
+  .idv-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .idv-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .idv-related-card:hover { border-color: var(--accent, #2563eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('idv');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var input = document.getElementById('idvInput');
+      var validateBtn = document.getElementById('idvValidate');
+      var resultBox = document.getElementById('idvResult');
+
+      var BANCOS = {
+        '000': 'CVU — billetera virtual (Mercado Pago, Ualá, etc.)',
+        '007': 'Banco Galicia', '011': 'Banco Nación', '014': 'Banco Provincia', '015': 'ICBC',
+        '017': 'BBVA', '020': 'Banco de Córdoba', '027': 'Supervielle', '029': 'Banco Ciudad',
+        '034': 'Banco Patagonia', '044': 'Banco Hipotecario', '045': 'Banco San Juan',
+        '072': 'Banco Santander', '083': 'Banco del Chubut', '093': 'Banco de La Pampa',
+        '143': 'Brubank', '191': 'Banco Credicoop', '285': 'Banco Macro', '299': 'Banco Comafi',
+        '322': 'Banco Industrial', '330': 'Banco de Santa Fe', '386': 'Nuevo Banco de Entre Ríos',
+      };
+
+      function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+      function dvMod10(digits, weights) {
+        var sum = 0;
+        for (var i = 0; i < digits.length; i++) sum += parseInt(digits[i], 10) * weights[i % weights.length];
+        return (10 - (sum % 10)) % 10;
+      }
+      function validCBU(d) {
+        var dv1 = dvMod10(d.slice(0, 7), [7, 1, 3, 9, 7, 1, 3]);
+        var dv2 = dvMod10(d.slice(8, 21), [3, 9, 7, 1, 3, 9, 7, 1, 3, 9, 7, 1, 3]);
+        return dv1 === parseInt(d[7], 10) && dv2 === parseInt(d[21], 10);
+      }
+
+      function showResult() {
+        var d = onlyDigits(input.value);
+        resultBox.hidden = false;
+        if (d.length !== 22) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ El CBU/CVU tiene 22 dígitos (faltan ' + Math.max(0, 22 - d.length) + ').';
+          return;
+        }
+        var banco = BANCOS[d.slice(0, 3)];
+        if (validCBU(d)) {
+          resultBox.className = 'idv-result ok';
+          resultBox.innerHTML = '✓ CBU/CVU válido <small>' + (banco ? 'Entidad: ' + banco + '. ' : 'Entidad ' + d.slice(0, 3) + '. ') + 'Los dos dígitos verificadores cierran. Confirmá el titular en tu banco antes de transferir.</small>';
+        } else {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ CBU/CVU inválido <small>Los dígitos verificadores no coinciden — probablemente haya un error de tipeo.</small>';
+        }
+      }
+
+      input.addEventListener('input', function () {
+        input.value = onlyDigits(input.value).slice(0, 22);
+        if (!resultBox.hidden) showResult();
+      });
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+      validateBtn.addEventListener('click', showResult);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>
