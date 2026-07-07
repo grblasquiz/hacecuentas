@@ -956,6 +956,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/en/costo-servidor-cloud-aws-ec2-mensual': '/en/aws-ec2-monthly-cost-calculator',
   '/en/creatine-dosage-loading-maintenance': '/en/creatine-loading-maintenance',
   '/en/daily-water-intake-calculator': '/en/daily-water-intake-by-weight-calculator',
+  '/en/daily-water-intake-exercise-climate': '/en/daily-water-intake-by-weight-calculator',
   '/en/dog-age-by-breed': '/en',
   '/en/dog-age-human-years-breed-size': '/en/pet-age-calculator-human-years-breed-size',
   '/en/english-levels-cambridge-duolingo-time-conversion': '/en/duolingo-time-cefr-level-progress',

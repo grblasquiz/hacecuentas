@@ -38,7 +38,6 @@ import { compute as compute__afp_vs_onp_peru } from './afp-vs-onp-peru';
 import { aguaCafeTeHidratacionRealMitos } from './agua-cafe-te-hidratacion-real-mitos';
 import { aguaConsumoHogarAhorro } from './agua-consumo-hogar-ahorro';
 import { aguaDiariaDeportista } from './agua-diaria-deportista';
-import { aguaDiariaLitrosNecesariosEjercicioClima } from './agua-diaria-litros-necesarios-ejercicio-clima';
 import { aguaDiariaNecesaria } from './agua-diaria-necesaria';
 import { aguaJardinMensual } from './agua-jardin-mensual';
 import { aguaMineralizacionCafe } from './agua-mineralizacion-cafe';
@@ -1207,7 +1206,6 @@ import { etapasDueloPerdidaFamiliarMeses } from './etapas-duelo-perdida-familiar
 import { compute as compute__ethereum_gas_fee_estimator } from './ethereum-gas-fee-estimator';
 import { compute as compute__etiqueta_dgt_coche_espana_eco_cero_b_c } from './etiqueta-dgt-coche-espana-eco-cero-b-c';
 import { euroRealViagem } from './euro-real-viagem';
-import { evaluacionHidratacion } from './evaluacion-hidratacion';
 import { evaporacionPiscinaLitrosDia } from './evaporacion-piscina-litros-dia';
 import { evaporationRateBoil } from './evaporation-rate-boil';
 import { compute as compute__evau_nota_media_ponderaciones_grado_espana } from './evau-nota-media-ponderaciones-grado-espana';
@@ -3059,7 +3057,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'agua-cafe-te-hidratacion-real-mitos': aguaCafeTeHidratacionRealMitos,
   'agua-consumo-hogar-ahorro': aguaConsumoHogarAhorro,
   'agua-diaria-deportista': aguaDiariaDeportista,
-  'agua-diaria-litros-necesarios-ejercicio-clima': aguaDiariaLitrosNecesariosEjercicioClima,
   'agua-diaria-necesaria': aguaDiariaNecesaria,
   'agua-jardin-mensual': aguaJardinMensual,
   'agua-mineralizacion-cafe': aguaMineralizacionCafe,
@@ -4228,7 +4225,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ethereum-gas-fee-estimator': compute__ethereum_gas_fee_estimator,
   'etiqueta-dgt-coche-espana-eco-cero-b-c': compute__etiqueta_dgt_coche_espana_eco_cero_b_c,
   'euro-real-viagem': euroRealViagem,
-  'evaluacion-hidratacion': evaluacionHidratacion,
   'evaporacion-piscina-litros-dia': evaporacionPiscinaLitrosDia,
   'evaporation-rate-boil': evaporationRateBoil,
   'evau-nota-media-ponderaciones-grado-espana': compute__evau_nota_media_ponderaciones_grado_espana,
