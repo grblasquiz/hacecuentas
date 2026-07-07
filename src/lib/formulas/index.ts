@@ -2861,7 +2861,6 @@ import { twitchHorasParaPartner } from './twitch-horas-para-partner';
 import { twitterXMonetizacionIngreso } from './twitter-x-monetizacion-ingreso';
 import { typingSpeed } from './typing-speed';
 import { ubaXxiNotaFinalPromedio } from './uba-xxi-nota-final-promedio';
-import { uberConductorArgentina } from './uber-conductor-argentina';
 import { uberDidiCabifyComparativaCiudad } from './uber-didi-cabify-comparativa-ciudad';
 import { uberDriverChile } from './uber-driver-chile';
 import { uberDriverMexico } from './uber-driver-mexico';
@@ -5875,7 +5874,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'twitter-x-monetizacion-ingreso': twitterXMonetizacionIngreso,
   'typing-speed': typingSpeed,
   'uba-xxi-nota-final-promedio': ubaXxiNotaFinalPromedio,
-  'uber-conductor-argentina': uberConductorArgentina,
   'uber-didi-cabify-comparativa-ciudad': uberDidiCabifyComparativaCiudad,
   'uber-driver-chile': uberDriverChile,
   'uber-driver-mexico': uberDriverMexico,
