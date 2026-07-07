@@ -1,5 +1,5 @@
 // AUTOGENERADO por scripts/generate-alert-eligible.mjs — NO editar a mano.
-// Calcs data-driven ES elegibles para "avisame cuando cambie". 819 entradas.
+// Calcs data-driven ES elegibles para "avisame cuando cambie". 817 entradas.
 import type { AlertEligible } from './eligible';
 
 export const ALERT_ELIGIBLE_GENERATED: AlertEligible[] = [
@@ -382,12 +382,6 @@ export const ALERT_ELIGIBLE_GENERATED: AlertEligible[] = [
     "kind": "text"
   },
   {
-    "slug": "calculadora-asignacion-familiar-hijo-anses-tramo",
-    "headlineField": "asignacionPorHijo",
-    "headlineLabel": "asignación por hijo",
-    "kind": "text"
-  },
-  {
     "slug": "calculadora-asignacion-familiar-peru",
     "headlineField": "monto",
     "headlineLabel": "asignación familiar mensual",
@@ -467,12 +461,6 @@ export const ALERT_ELIGIBLE_GENERATED: AlertEligible[] = [
   },
   {
     "slug": "calculadora-bienes-personales-2026",
-    "headlineField": "impuesto",
-    "headlineLabel": "impuesto a pagar",
-    "kind": "currency"
-  },
-  {
-    "slug": "calculadora-bienes-personales-simulacion-rapida-2026",
     "headlineField": "impuesto",
     "headlineLabel": "impuesto a pagar",
     "kind": "currency"
