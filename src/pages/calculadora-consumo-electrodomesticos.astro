@@ -1,0 +1,548 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import { freeOfferSchema } from '../lib/offer-schema';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/calculadora-consumo-electrodomesticos`;
+
+const title = 'Calculadora de Consumo de Electrodomésticos: cuánto gastan de luz por mes | Hacé Cuentas';
+const description =
+  'Elegí tus electrodomésticos (aire, heladera, TV, lavarropas y +45 más), ajustá horas de uso y descubrí cuántos kWh consume tu casa y cuánto pagás por mes. Con tarifas de Argentina, México, Colombia, Chile, Perú, Uruguay, Ecuador, Paraguay, R. Dominicana y España.';
+
+const faqs = [
+  {
+    q: '¿Cómo calculo cuánta luz consume un electrodoméstico?',
+    a: 'Multiplicá la <strong>potencia en watts</strong> por las <strong>horas de uso</strong> y dividí por 1.000: eso da los kWh. Por ejemplo, un aire acondicionado de 1.000 W usado 6 horas por día consume 6 kWh diarios ≈ <strong>180 kWh al mes</strong>. Después multiplicás por el precio del kWh de tu factura. Esta calculadora lo hace automáticamente para todos los aparatos de tu casa a la vez.',
+  },
+  {
+    q: '¿Qué electrodomésticos consumen más luz?',
+    a: 'Los que <strong>generan calor o frío</strong>: aire acondicionado (150-250 kWh/mes en verano), termotanque eléctrico (~135 kWh/mes), heladera (30-60 kWh/mes porque está siempre enchufada), secarropas por calor (~75 kWh/mes) y estufas eléctricas (90-225 kWh/mes en invierno). La TV, el lavarropas y el microondas quedan muy por detrás.',
+  },
+  {
+    q: '¿Cuánto consume una heladera por mes?',
+    a: 'Una heladera con freezer <strong>moderna (inverter)</strong> consume unos <strong>30-35 kWh/mes</strong> (≈45 W promedio las 24 horas). Una <strong>vieja no frost</strong> puede duplicar eso: 55-60 kWh/mes. Es el electrodoméstico que más pesa en la factura después del aire acondicionado, justamente porque nunca se apaga.',
+  },
+  {
+    q: '¿Cuánto gasta un aire acondicionado por mes?',
+    a: 'Un split de 3.000 frigorías <strong>inverter</strong> consume en promedio ~1.000 W funcionando: usado 6 horas por día son <strong>180 kWh/mes</strong>. Uno <strong>no inverter</strong> o más grande puede superar los 250 kWh/mes. En modo calor (bomba de calor) el consumo es similar, y sigue siendo mucho más eficiente que un caloventor o estufa de cuarzo.',
+  },
+  {
+    q: '¿Qué es un kWh y cómo lo cobro en mi factura?',
+    a: 'El <strong>kilowatt-hora (kWh)</strong> es la energía que consume un aparato de 1.000 W funcionando una hora. Tu factura multiplica los kWh consumidos por el <strong>precio por kWh</strong> más cargos fijos e impuestos. Buscá el precio final por kWh en el detalle de tu factura y cargalo en la calculadora para un resultado exacto.',
+  },
+  {
+    q: '¿Cuánto cuesta el kWh en cada país (2026)?',
+    a: 'Valores residenciales de referencia a mediados de 2026: <strong>Argentina</strong> ~$125 ARS (segmento N1 con impuestos), <strong>México</strong> $1,13-4,00 MXN según escalón CFE (DAC: 6-7), <strong>Colombia</strong> ~$870 COP (estrato 4), <strong>Chile</strong> ~$160 CLP, <strong>Perú</strong> ~S/ 0,75, <strong>Uruguay</strong> ~$U 11, <strong>Ecuador</strong> ~US$ 0,10, <strong>Paraguay</strong> ~₲ 420, <strong>R. Dominicana</strong> ~RD$ 10 y <strong>España</strong> ~0,17 €. Varían por región, distribuidora y nivel de consumo: usá el valor de tu factura.',
+  },
+  {
+    q: '¿El modo standby gasta electricidad?',
+    a: 'Sí: TV, consolas, microondas y cargadores enchufados consumen <strong>1-15 W las 24 horas</strong> aunque estén "apagados". En una casa típica el standby suma <strong>10-30 kWh/mes</strong>, entre un 5% y 10% de la factura. Tenemos una <a href="/calculadora-consumo-standby-aparatos">calculadora de consumo en standby</a> para medirlo aparato por aparato.',
+  },
+  {
+    q: '¿Cómo bajo el consumo eléctrico de mi casa?',
+    a: 'Los cambios con más impacto: poner el aire a <strong>24 °C</strong> en vez de 20 °C (ahorra ~30%), reemplazar la heladera de más de 15 años, usar el lavarropas con <strong>agua fría</strong>, cambiar todas las lámparas a <strong>LED</strong>, cortar el standby con zapatillas con interruptor y calefaccionar con <strong>aire acondicionado (bomba de calor)</strong> en vez de estufas resistivas, que consumen el triple para el mismo calor.',
+  },
+  {
+    q: '¿Los valores de potencia son exactos para mi aparato?',
+    a: 'Son <strong>valores típicos</strong> de mercado (por eso podés editarlos). La potencia real figura en la etiqueta del aparato o en su ficha técnica. En heladeras, freezers y aires usamos la <strong>potencia promedio efectiva</strong> (el compresor arranca y para), que es la que determina el consumo mensual real.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Elegí tu país', text: 'Carga el precio del kWh de referencia y la moneda. Podés ajustarlo con el valor exacto de tu factura.' },
+  { name: 'Agregá tus electrodomésticos', text: 'Tocá los aparatos que tenés en casa. Ajustá cantidad, horas de uso y potencia si hace falta.' },
+  { name: 'Mirá el resultado', text: 'La calculadora muestra los kWh por mes y el costo de cada aparato y del total, ordenado de mayor a menor.' },
+];
+
+const related = [
+  { href: '/calculadora-costo-mensual-aire-acondicionado-consumo-kwh-factura', t: 'Cuánto gasta el aire acondicionado', i: '❄️' },
+  { href: '/calculadora-consumo-standby-aparatos', t: 'Consumo en standby', i: '🔌' },
+  { href: '/consumo-electrico-aparato-kwh-mes', t: 'Consumo de un aparato (kWh/mes)', i: '⚡' },
+  { href: '/calculadora-watts-consumo-electrico-aparato-hora', t: 'Watts y consumo por hora', i: '💡' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Calculadora de Consumo de Electrodomésticos',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'ARS' }),
+  featureList: ['Más de 45 electrodomésticos con potencias típicas', 'Tarifas eléctricas de 10 países', 'Desglose de kWh y costo mensual por aparato', 'Cantidad, horas y potencia editables'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+    { '@type': 'ListItem', position: 2, name: 'Consumo de electrodomésticos', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo calcular el consumo eléctrico de tu casa',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+
+// Tabla estática crawleable (kWh/mes con uso típico; costo con ARS $125/kWh)
+const TABLA = [
+  ['Aire acondicionado split 3.000 fg (inverter, frío)', '1.000 W', '6 h/día', '180', '$ 22.500'],
+  ['Aire acondicionado split (frío/calor, invierno)', '1.200 W', '6 h/día', '216', '$ 27.000'],
+  ['Aire acondicionado de ventana', '1.500 W', '6 h/día', '270', '$ 33.750'],
+  ['Termotanque eléctrico', '1.500 W', '3 h/día', '135', '$ 16.875'],
+  ['Ducha / calefón eléctrico instantáneo', '5.500 W', '30 min/día', '82,5', '$ 10.300'],
+  ['Caloventor', '2.000 W', '3 h/día', '180', '$ 22.500'],
+  ['Estufa de cuarzo', '1.200 W', '3 h/día', '108', '$ 13.500'],
+  ['Radiador de aceite', '1.500 W', '5 h/día', '225', '$ 28.125'],
+  ['Panel calefactor eléctrico', '1.000 W', '6 h/día', '180', '$ 22.500'],
+  ['Heladera con freezer (inverter, moderna)', '45 W prom.', '24 h', '32,4', '$ 4.050'],
+  ['Heladera vieja (más de 15 años)', '80 W prom.', '24 h', '57,6', '$ 7.200'],
+  ['Freezer independiente', '60 W prom.', '24 h', '43,2', '$ 5.400'],
+  ['Lavarropas automático (agua fría)', '500 W', '1 h/día', '15', '$ 1.875'],
+  ['Lavarropas con agua caliente', '2.000 W', '1 h/día', '60', '$ 7.500'],
+  ['Secarropas por calor', '2.500 W', '1 h/día', '75', '$ 9.375'],
+  ['Secarropas centrífugo', '300 W', '20 min/día', '3', '$ 375'],
+  ['Lavavajillas', '1.500 W', '48 min/día', '36', '$ 4.500'],
+  ['Horno eléctrico', '2.000 W', '30 min/día', '30', '$ 3.750'],
+  ['Anafe vitrocerámico', '1.800 W', '42 min/día', '37,8', '$ 4.725'],
+  ['Microondas', '1.200 W', '18 min/día', '10,8', '$ 1.350'],
+  ['Pava eléctrica', '2.000 W', '12 min/día', '12', '$ 1.500'],
+  ['Freidora de aire', '1.500 W', '24 min/día', '18', '$ 2.250'],
+  ['Cafetera espresso', '1.300 W', '9 min/día', '5,9', '$ 730'],
+  ['Tostadora', '800 W', '6 min/día', '2,4', '$ 300'],
+  ['Campana extractora', '150 W', '1 h/día', '4,5', '$ 560'],
+  ['Plancha', '1.500 W', '30 min/día', '22,5', '$ 2.800'],
+  ['TV LED 50"', '100 W', '5 h/día', '15', '$ 1.875'],
+  ['TV LED 32"', '55 W', '5 h/día', '8,3', '$ 1.030'],
+  ['TV OLED 65"', '180 W', '5 h/día', '27', '$ 3.375'],
+  ['Consola de videojuegos (PS5/Xbox)', '200 W', '2 h/día', '12', '$ 1.500'],
+  ['PC de escritorio gamer', '450 W', '4 h/día', '54', '$ 6.750'],
+  ['PC de escritorio (oficina)', '200 W', '6 h/día', '36', '$ 4.500'],
+  ['Notebook', '60 W', '6 h/día', '10,8', '$ 1.350'],
+  ['Monitor adicional', '30 W', '6 h/día', '5,4', '$ 675'],
+  ['Router + módem', '12 W', '24 h', '8,6', '$ 1.080'],
+  ['10 lámparas LED', '100 W', '6 h/día', '18', '$ 2.250'],
+  ['Ventilador de techo', '70 W', '8 h/día', '16,8', '$ 2.100'],
+  ['Ventilador de pie', '60 W', '8 h/día', '14,4', '$ 1.800'],
+  ['Secador de pelo', '1.800 W', '12 min/día', '10,8', '$ 1.350'],
+  ['Aspiradora', '1.400 W', '18 min/día', '12,6', '$ 1.575'],
+  ['Robot aspiradora', '50 W', '2 h/día', '3', '$ 375'],
+  ['Bomba de agua', '750 W', '1 h/día', '22,5', '$ 2.800'],
+  ['Bomba de pileta', '750 W', '6 h/día', '135', '$ 16.875'],
+  ['Dispenser de agua frío/calor', '100 W prom.', '24 h', '72', '$ 9.000'],
+  ['Pecera (filtro + calentador)', '100 W prom.', '24 h', '72', '$ 9.000'],
+  ['Cinta de correr', '900 W', '1 h/día', '27', '$ 3.375'],
+  ['Cargador de celular', '7 W', '2 h/día', '0,4', '$ 50'],
+];
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} lang="es" domain="knowledge">
+  <Header slot="header" />
+
+  <article class="sc-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Consumo de electrodomésticos</span>
+    </nav>
+
+    <h1>¿Cuánta luz consumen tus electrodomésticos?</h1>
+    <p class="lead">
+      Armá tu casa: elegí entre <strong>más de 45 electrodomésticos</strong>, ajustá cuántas horas los usás y descubrí
+      cuántos <strong>kWh consume cada uno</strong> y <strong>cuánto pagás por mes</strong>, con tarifas de referencia de
+      10 países.
+    </p>
+
+    <div class="sc-answer">
+      <p>
+        <strong>¿Cómo se calcula?</strong> kWh por mes = potencia (W) × horas de uso diarias × 30 ÷ 1.000, multiplicado
+        por el precio del kWh de tu factura. Los que más gastan son los que generan frío o calor: aire acondicionado
+        (~180 kWh/mes), termotanque eléctrico (~135), estufas eléctricas (~100-225) y la heladera (~32, porque nunca se apaga).
+      </p>
+    </div>
+
+    <div id="sc" class="sc-card">
+      <div class="sc-toprow">
+        <div class="sc-field">
+          <label for="scPais">País</label>
+          <select id="scPais"></select>
+        </div>
+        <div class="sc-field">
+          <label for="scPrecio">Precio por kWh (<span id="scMoneda">$</span>)</label>
+          <input id="scPrecio" type="number" step="0.01" min="0" inputmode="decimal" />
+        </div>
+      </div>
+      <p class="sc-tarifa-nota" id="scTarifaNota"></p>
+
+      <div class="sc-field">
+        <label for="scBuscar">Buscá y agregá tus electrodomésticos</label>
+        <input id="scBuscar" type="text" placeholder="heladera, aire, TV, lavarropas…" autocomplete="off" />
+      </div>
+      <div id="scCatChips" class="sc-chips" role="tablist" aria-label="Categorías"></div>
+      <div id="scGrid" class="sc-grid" aria-live="polite"></div>
+
+      <div class="sc-mi-casa">
+        <h2 class="sc-subtitle">Mi casa <span id="scCount" class="sc-count"></span></h2>
+        <div id="scItems" class="sc-items"></div>
+        <p id="scVacio" class="sc-vacio">Todavía no agregaste ningún electrodoméstico. Tocá los de arriba para armar tu casa 👆</p>
+      </div>
+
+      <div id="scResultado" class="sc-resultado" hidden>
+        <div class="sc-total">
+          <div><span class="sc-total-num" id="scTotalKwh">0</span><span class="sc-total-label">kWh por mes</span></div>
+          <div><span class="sc-total-num" id="scTotalCosto">$ 0</span><span class="sc-total-label">costo mensual estimado</span></div>
+        </div>
+        <div id="scDesglose" class="sc-desglose"></div>
+        <p class="sc-nota">Estimación con potencias típicas y el precio de kWh ingresado. No incluye cargos fijos ni impuestos de tu factura. Editá potencia y horas para ajustar a tus aparatos reales.</p>
+      </div>
+    </div>
+
+    <section class="sc-sec">
+      <h2>Tabla de consumo típico por electrodoméstico</h2>
+      <p>kWh mensuales con el uso típico indicado y costo estimado en Argentina (kWh a $125, julio 2026):</p>
+      <div class="sc-table-wrap">
+        <table class="sc-table">
+          <thead><tr><th>Electrodoméstico</th><th>Potencia</th><th>Uso típico</th><th>kWh/mes</th><th>Costo/mes (AR)</th></tr></thead>
+          <tbody>
+            {TABLA.map((r) => (
+              <tr><td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td><td>{r[4]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="sc-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="sc-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="sc-related">
+      <h2>Otras calculadoras de consumo</h2>
+      <div class="sc-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="sc-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .sc-page { max-width: 860px; margin: 0 auto; padding: 0 16px 48px; }
+  .sc-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .sc-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .sc-answer p { margin: 0; line-height: 1.6; }
+  .sc-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  .sc-toprow { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .sc-field { flex: 1 1 200px; margin-bottom: 10px; }
+  .sc-field label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 6px; color: var(--text-2, #475569); }
+  .sc-field input, .sc-field select { width: 100%; padding: 11px 12px; font-size: 1rem; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  .sc-field input:focus, .sc-field select:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  .sc-tarifa-nota { font-size: .8rem; color: var(--text-2, #64748b); margin: 0 0 14px; }
+  .sc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+  .sc-chip { border: 1px solid var(--border, #cbd5e1); background: var(--surface, #fff); color: var(--text-2, #475569); border-radius: 999px; padding: 5px 12px; font-size: .8rem; cursor: pointer; }
+  .sc-chip.on { background: var(--accent, #2563eb); border-color: var(--accent, #2563eb); color: #fff; }
+  .sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding: 2px; }
+  .sc-tile { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 9px 10px; background: var(--surface, #fff); cursor: pointer; font-size: .82rem; line-height: 1.25; text-align: left; color: var(--text, #0f172a); }
+  .sc-tile:hover { border-color: var(--accent, #2563eb); }
+  .sc-tile.added { background: color-mix(in srgb, var(--accent, #2563eb) 10%, transparent); border-color: var(--accent, #2563eb); }
+  .sc-tile .em { font-size: 1.15rem; }
+  .sc-mi-casa { margin-top: 20px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 14px; }
+  .sc-subtitle { font-size: 1.1rem; margin: 0 0 10px; }
+  .sc-count { font-weight: 400; font-size: .85rem; color: var(--text-2, #64748b); }
+  .sc-vacio { color: var(--text-2, #64748b); font-size: .9rem; }
+  .sc-items { display: flex; flex-direction: column; gap: 8px; }
+  .sc-item { display: grid; grid-template-columns: minmax(130px, 1.4fr) repeat(3, minmax(74px, 1fr)) auto auto; gap: 8px; align-items: center; border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 8px 10px; font-size: .85rem; }
+  .sc-item .nm { font-weight: 600; }
+  .sc-item label { display: block; font-size: .68rem; color: var(--text-2, #64748b); margin-bottom: 2px; }
+  .sc-item input { width: 100%; padding: 5px 7px; font-size: .85rem; border: 1px solid var(--border, #cbd5e1); border-radius: 7px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  .sc-item .kwh { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; color: var(--text-2, #475569); }
+  .sc-item .del { background: none; border: none; color: #b91c1c; cursor: pointer; font-size: 1rem; padding: 4px; }
+  .sc-resultado { margin-top: 18px; border-top: 2px solid var(--accent, #2563eb); padding-top: 16px; }
+  .sc-total { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 14px; }
+  .sc-total-num { display: block; font-size: 1.9rem; font-weight: 800; color: var(--accent, #2563eb); font-variant-numeric: tabular-nums; }
+  .sc-total-label { font-size: .82rem; color: var(--text-2, #64748b); }
+  .sc-desglose { display: flex; flex-direction: column; gap: 6px; }
+  .sc-bar-row { display: grid; grid-template-columns: minmax(120px, 1fr) 3fr auto; gap: 10px; align-items: center; font-size: .82rem; }
+  .sc-bar-track { background: var(--surface-2, #f1f5f9); border-radius: 6px; height: 18px; overflow: hidden; }
+  .sc-bar-fill { height: 100%; background: var(--accent, #2563eb); border-radius: 6px; min-width: 2px; }
+  .sc-bar-val { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-2, #475569); }
+  .sc-nota { font-size: .78rem; color: var(--text-2, #64748b); margin-top: 12px; }
+  .sc-sec { margin-top: 34px; } .sc-sec h2, .sc-faq h2, .sc-related h2 { font-size: 1.25rem; margin: 0 0 10px; }
+  .sc-table-wrap { overflow-x: auto; }
+  .sc-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  .sc-table th, .sc-table td { border-bottom: 1px solid var(--border, #e2e8f0); padding: 7px 9px; text-align: left; }
+  .sc-table th { background: var(--surface-2, #f8fafc); }
+  .sc-table td:nth-child(4), .sc-table td:nth-child(5) { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sc-faq { margin-top: 30px; } .sc-related { margin-top: 30px; }
+  .sc-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .sc-faq summary { font-weight: 600; cursor: pointer; }
+  .sc-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .sc-faq-a a { color: var(--accent, #2563eb); }
+  .sc-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .sc-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .sc-related-card:hover { border-color: var(--accent, #2563eb); }
+  @media (max-width: 560px) { .sc-item { grid-template-columns: 1fr 1fr 1fr; } .sc-item .nm { grid-column: 1 / -1; } }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('sc');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var PAISES = [
+        { c: 'AR', n: '🇦🇷 Argentina', m: 'ARS', s: '$', p: 125, dec: 0, nota: 'Referencia: segmento N1 (sin subsidio) con impuestos, AMBA jul-2026. Mirá el precio final por kWh en tu factura.' },
+        { c: 'MX', n: '🇲🇽 México', m: 'MXN', s: '$', p: 1.5, dec: 2, nota: 'Referencia: tarifa 1 CFE (escalones jun-2026: $1,13 básico / $1,37 intermedio / $4,00 excedente; DAC $6-7).' },
+        { c: 'CO', n: '🇨🇴 Colombia', m: 'COP', s: '$', p: 870, dec: 0, nota: 'Referencia: estrato 4 (tarifa plena) 2026. Estratos 1-3 pagan menos por subsidio; 5-6 pagan sobrecosto.' },
+        { c: 'CL', n: '🇨🇱 Chile', m: 'CLP', s: '$', p: 160, dec: 0, nota: 'Referencia: tarifa residencial RM 2026 (~$140-170 según región).' },
+        { c: 'PE', n: '🇵🇪 Perú', m: 'PEN', s: 'S/', p: 0.75, dec: 2, nota: 'Referencia: tarifa BT5B residencial 2026 (S/ 0,49-0,81 según empresa y zona).' },
+        { c: 'UY', n: '🇺🇾 Uruguay', m: 'UYU', s: '$U', p: 11, dec: 1, nota: 'Referencia: tarifa residencial simple UTE 2026.' },
+        { c: 'EC', n: '🇪🇨 Ecuador', m: 'USD', s: 'US$', p: 0.10, dec: 3, nota: 'Referencia: tarifa residencial 2026 (~US$ 0,09-0,10).' },
+        { c: 'PY', n: '🇵🇾 Paraguay', m: 'PYG', s: '₲', p: 420, dec: 0, nota: 'Referencia: tarifa residencial ANDE 2026.' },
+        { c: 'DO', n: '🇩🇴 R. Dominicana', m: 'DOP', s: 'RD$', p: 10, dec: 1, nota: 'Referencia: tarifa BTS1 2026 (escalonada: sube con el consumo).' },
+        { c: 'ES', n: '🇪🇸 España', m: 'EUR', s: '€', p: 0.17, dec: 3, nota: 'Referencia: PVPC con peajes y cargos 2026 (varía por hora del día).' },
+      ];
+
+      // [id, nombre, emoji, watts, horasDía, categoría]  — 24 h = siempre enchufado
+      var ELECTRO = [
+        ['ac-inv', 'Aire acond. split inverter (frío)', '❄️', 1000, 6, 'Clima'],
+        ['ac-fc', 'Aire acond. frío/calor (invierno)', '🔥', 1200, 6, 'Clima'],
+        ['ac-ven', 'Aire acond. de ventana', '🌬️', 1500, 6, 'Clima'],
+        ['vent-techo', 'Ventilador de techo', '🪭', 70, 8, 'Clima'],
+        ['vent-pie', 'Ventilador de pie', '💨', 60, 8, 'Clima'],
+        ['caloventor', 'Caloventor', '♨️', 2000, 3, 'Clima'],
+        ['cuarzo', 'Estufa de cuarzo', '🟥', 1200, 3, 'Clima'],
+        ['radiador', 'Radiador de aceite', '🛢️', 1500, 5, 'Clima'],
+        ['panel', 'Panel calefactor', '🧱', 1000, 6, 'Clima'],
+        ['termotanque', 'Termotanque eléctrico', '🚿', 1500, 3, 'Clima'],
+        ['ducha', 'Ducha/calefón eléctrico', '🛁', 5500, 0.5, 'Clima'],
+        ['heladera', 'Heladera c/freezer (moderna)', '🧊', 45, 24, 'Cocina'],
+        ['heladera-vieja', 'Heladera vieja (+15 años)', '🥶', 80, 24, 'Cocina'],
+        ['freezer', 'Freezer independiente', '❄️', 60, 24, 'Cocina'],
+        ['micro', 'Microondas', '📦', 1200, 0.3, 'Cocina'],
+        ['horno-e', 'Horno eléctrico', '🍞', 2000, 0.5, 'Cocina'],
+        ['anafe', 'Anafe vitrocerámico', '🍳', 1800, 0.7, 'Cocina'],
+        ['pava', 'Pava eléctrica', '🫖', 2000, 0.2, 'Cocina'],
+        ['cafetera', 'Cafetera espresso', '☕', 1300, 0.15, 'Cocina'],
+        ['tostadora', 'Tostadora', '🍞', 800, 0.1, 'Cocina'],
+        ['airfryer', 'Freidora de aire', '🍟', 1500, 0.4, 'Cocina'],
+        ['licuadora', 'Licuadora', '🥤', 600, 0.05, 'Cocina'],
+        ['lavavajillas', 'Lavavajillas', '🍽️', 1500, 0.8, 'Cocina'],
+        ['campana', 'Campana extractora', '🌀', 150, 1, 'Cocina'],
+        ['dispenser', 'Dispenser frío/calor', '⛲', 100, 24, 'Cocina'],
+        ['lavarropas', 'Lavarropas (agua fría)', '🧺', 500, 1, 'Lavado'],
+        ['lavarropas-ac', 'Lavarropas c/agua caliente', '🌡️', 2000, 1, 'Lavado'],
+        ['secarropas', 'Secarropas por calor', '👕', 2500, 1, 'Lavado'],
+        ['centrifugo', 'Secarropas centrífugo', '🌪️', 300, 0.3, 'Lavado'],
+        ['plancha', 'Plancha', '🧴', 1500, 0.5, 'Lavado'],
+        ['tv50', 'TV LED 50"', '📺', 100, 5, 'Tecno'],
+        ['tv32', 'TV LED 32"', '📺', 55, 5, 'Tecno'],
+        ['tv65', 'TV OLED 65"', '🖥️', 180, 5, 'Tecno'],
+        ['consola', 'Consola (PS5/Xbox)', '🎮', 200, 2, 'Tecno'],
+        ['pc-gamer', 'PC de escritorio gamer', '🖥️', 450, 4, 'Tecno'],
+        ['pc', 'PC de escritorio (oficina)', '💻', 200, 6, 'Tecno'],
+        ['notebook', 'Notebook', '💻', 60, 6, 'Tecno'],
+        ['monitor', 'Monitor adicional', '🖥️', 30, 6, 'Tecno'],
+        ['router', 'Router + módem', '📡', 12, 24, 'Tecno'],
+        ['equipo', 'Equipo de música', '🔊', 80, 2, 'Tecno'],
+        ['led10', '10 lámparas LED', '💡', 100, 6, 'Iluminación'],
+        ['tira-led', 'Tira LED', '🌈', 15, 6, 'Iluminación'],
+        ['incandescente', 'Lámpara incandescente', '🔆', 60, 6, 'Iluminación'],
+        ['secador', 'Secador de pelo', '💇', 1800, 0.2, 'Otros'],
+        ['aspiradora', 'Aspiradora', '🧹', 1400, 0.3, 'Otros'],
+        ['robot', 'Robot aspiradora', '🤖', 50, 2, 'Otros'],
+        ['bomba', 'Bomba de agua', '🚰', 750, 1, 'Otros'],
+        ['bomba-pileta', 'Bomba de pileta', '🏊', 750, 6, 'Otros'],
+        ['pecera', 'Pecera (filtro + calentador)', '🐠', 100, 24, 'Otros'],
+        ['cinta', 'Cinta de correr', '🏃', 900, 1, 'Otros'],
+        ['cargador', 'Cargador de celular', '🔋', 7, 2, 'Otros'],
+      ];
+      var CATS = ['Todos', 'Clima', 'Cocina', 'Lavado', 'Tecno', 'Iluminación', 'Otros'];
+
+      var pais = PAISES[0];
+      var precio = pais.p;
+      var casa = []; // {id, cant, watts, horas}
+      var catActiva = 'Todos';
+      var filtro = '';
+
+      var $ = function (id) { return document.getElementById(id); };
+      var selPais = $('scPais'), inpPrecio = $('scPrecio'), nota = $('scTarifaNota'),
+          buscar = $('scBuscar'), chips = $('scCatChips'), grid = $('scGrid'),
+          itemsBox = $('scItems'), vacio = $('scVacio'), resBox = $('scResultado'),
+          totalKwh = $('scTotalKwh'), totalCosto = $('scTotalCosto'), desglose = $('scDesglose'),
+          count = $('scCount'), moneda = $('scMoneda');
+
+      function fmt(n, dec) {
+        return n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+      }
+      function fmtMoney(n) {
+        var dec = n < 100 ? (n < 10 ? 2 : 1) : 0;
+        return pais.s + ' ' + fmt(n, dec);
+      }
+      function findE(id) {
+        for (var i = 0; i < ELECTRO.length; i++) if (ELECTRO[i][0] === id) return ELECTRO[i];
+        return null;
+      }
+      function kwhMes(it) { return it.watts * it.horas * 30 * it.cant / 1000; }
+
+      // ---- País
+      PAISES.forEach(function (p) {
+        var o = document.createElement('option');
+        o.value = p.c; o.textContent = p.n;
+        selPais.appendChild(o);
+      });
+      selPais.addEventListener('change', function () {
+        pais = PAISES.filter(function (p) { return p.c === selPais.value; })[0] || PAISES[0];
+        precio = pais.p;
+        inpPrecio.value = precio;
+        moneda.textContent = pais.s;
+        nota.textContent = pais.nota;
+        render();
+      });
+      inpPrecio.value = precio;
+      nota.textContent = pais.nota;
+      inpPrecio.addEventListener('input', function () {
+        var v = parseFloat(inpPrecio.value);
+        if (!isNaN(v) && v >= 0) { precio = v; render(); }
+      });
+
+      // ---- Chips + grid
+      CATS.forEach(function (c) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'sc-chip' + (c === catActiva ? ' on' : ''); b.textContent = c;
+        b.addEventListener('click', function () {
+          catActiva = c;
+          Array.prototype.forEach.call(chips.children, function (x) { x.classList.toggle('on', x.textContent === c); });
+          renderGrid();
+        });
+        chips.appendChild(b);
+      });
+      buscar.addEventListener('input', function () { filtro = buscar.value.toLowerCase().trim(); renderGrid(); });
+
+      function renderGrid() {
+        grid.innerHTML = '';
+        ELECTRO.forEach(function (e) {
+          if (catActiva !== 'Todos' && e[5] !== catActiva) return;
+          if (filtro && e[1].toLowerCase().indexOf(filtro) === -1) return;
+          var added = casa.some(function (it) { return it.id === e[0]; });
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'sc-tile' + (added ? ' added' : '');
+          b.innerHTML = '<span class="em">' + e[2] + '</span><span>' + e[1] + '</span>';
+          b.addEventListener('click', function () { toggle(e[0]); });
+          grid.appendChild(b);
+        });
+      }
+
+      function toggle(id) {
+        var i = casa.findIndex(function (it) { return it.id === id; });
+        if (i >= 0) casa.splice(i, 1);
+        else {
+          var e = findE(id);
+          casa.push({ id: id, cant: 1, watts: e[3], horas: e[4] });
+        }
+        renderGrid(); render();
+      }
+
+      function render() {
+        itemsBox.innerHTML = '';
+        vacio.hidden = casa.length > 0;
+        resBox.hidden = casa.length === 0;
+        count.textContent = casa.length ? '(' + casa.length + ' aparato' + (casa.length > 1 ? 's' : '') + ')' : '';
+        var total = 0;
+        casa.forEach(function (it, idx) {
+          var e = findE(it.id);
+          var k = kwhMes(it);
+          total += k;
+          var row = document.createElement('div');
+          row.className = 'sc-item';
+          row.innerHTML =
+            '<span class="nm">' + e[2] + ' ' + e[1] + '</span>' +
+            '<span><label>Cantidad</label><input type="number" min="1" max="20" step="1" value="' + it.cant + '" data-f="cant" data-i="' + idx + '"></span>' +
+            '<span><label>Watts</label><input type="number" min="1" step="1" value="' + it.watts + '" data-f="watts" data-i="' + idx + '"></span>' +
+            '<span><label>Horas/día</label><input type="number" min="0" max="24" step="0.1" value="' + it.horas + '" data-f="horas" data-i="' + idx + '"></span>' +
+            '<span class="kwh">' + fmt(k, 1) + ' kWh<br>' + fmtMoney(k * precio) + '</span>' +
+            '<button type="button" class="del" aria-label="Quitar" data-del="' + idx + '">✕</button>';
+          itemsBox.appendChild(row);
+        });
+        itemsBox.querySelectorAll('input[data-f]').forEach(function (inp) {
+          inp.addEventListener('input', function () {
+            var it = casa[Number(inp.dataset.i)];
+            var v = parseFloat(inp.value);
+            if (!it || isNaN(v) || v < 0) return;
+            it[inp.dataset.f] = v;
+            renderTotals();
+          });
+        });
+        itemsBox.querySelectorAll('button[data-del]').forEach(function (b) {
+          b.addEventListener('click', function () { casa.splice(Number(b.dataset.del), 1); renderGrid(); render(); });
+        });
+        renderTotals();
+      }
+
+      function renderTotals() {
+        var total = 0;
+        var rows = [];
+        casa.forEach(function (it) {
+          var e = findE(it.id);
+          var k = kwhMes(it);
+          total += k;
+          rows.push({ n: e[2] + ' ' + e[1] + (it.cant > 1 ? ' ×' + it.cant : ''), k: k });
+        });
+        // actualizar kwh por fila
+        var cells = itemsBox.querySelectorAll('.sc-item');
+        casa.forEach(function (it, idx) {
+          var k = kwhMes(it);
+          var cell = cells[idx] && cells[idx].querySelector('.kwh');
+          if (cell) cell.innerHTML = fmt(k, 1) + ' kWh<br>' + fmtMoney(k * precio);
+        });
+        totalKwh.textContent = fmt(total, total < 100 ? 1 : 0);
+        totalCosto.textContent = fmtMoney(total * precio);
+        rows.sort(function (a, b) { return b.k - a.k; });
+        var max = rows.length ? rows[0].k : 1;
+        desglose.innerHTML = '';
+        rows.forEach(function (r) {
+          var pct = total > 0 ? (r.k / total * 100) : 0;
+          var div = document.createElement('div');
+          div.className = 'sc-bar-row';
+          div.innerHTML = '<span>' + r.n + '</span>' +
+            '<span class="sc-bar-track"><span class="sc-bar-fill" style="width:' + (max > 0 ? (r.k / max * 100) : 0) + '%"></span></span>' +
+            '<span class="sc-bar-val">' + fmt(r.k, 1) + ' kWh · ' + pct.toFixed(0) + '%</span>';
+          desglose.appendChild(div);
+        });
+      }
+
+      renderGrid();
+      render();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

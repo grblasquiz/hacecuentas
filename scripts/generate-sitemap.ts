@@ -879,6 +879,7 @@ sitemaps.push({
     core('/pe/calculadoras',                     '0.85', 'weekly',  true),
     core('/pe/datos-sueldo-minimo-peru-2026',    '0.8',  'monthly', true),
     core('/pe/validar-ruc',                      '0.8',  'monthly'),
+    core('/calculadora-consumo-electrodomesticos', '0.9', 'monthly'),
     core('/validar-cuit',                        '0.8',  'monthly'),
     core('/validar-cbu',                         '0.8',  'monthly'),
     core('/cl/validar-rut',                      '0.8',  'monthly'),
