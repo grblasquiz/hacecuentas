@@ -20,6 +20,12 @@ import { acentoExtranjeroScorePracticaHoras } from './acento-extranjero-score-pr
 import { aceroKgM2Losa } from './acero-kg-m2-losa';
 import { acidezOrinaAlimentos } from './acidez-orina-alimentos';
 import { actualizacionAlquilerIclBcraMensual } from './actualizacion-alquiler-icl-bcra-mensual';
+import { compute as compute__actualizacion_inflacion_inpc_venezuela } from './actualizacion-inflacion-inpc-venezuela';
+import { compute as compute__actualizacion_inflacion_ipc_ecuador } from './actualizacion-inflacion-ipc-ecuador';
+import { compute as compute__actualizacion_inflacion_ipc_paraguay } from './actualizacion-inflacion-ipc-paraguay';
+import { compute as compute__actualizacion_inflacion_ipc_peru } from './actualizacion-inflacion-ipc-peru';
+import { compute as compute__actualizacion_inflacion_ipc_republica_dominicana } from './actualizacion-inflacion-ipc-republica-dominicana';
+import { compute as compute__actualizacion_inflacion_ipc_uruguay } from './actualizacion-inflacion-ipc-uruguay';
 import { adaptadorEnchufeVoltajePais } from './adaptador-enchufe-voltaje-pais';
 import { adicionalNoturnoClt } from './adicional-noturno-clt';
 import { adolescenteEstaturaFinalPrediccionEdadHuesos } from './adolescente-estatura-final-prediccion-edad-huesos';
@@ -108,6 +114,13 @@ import { compute as compute__anticipo_impuesto_renta_colombia_2026 } from './ant
 import { compute as compute__anticipo_impuesto_renta_ecuador } from './anticipo-impuesto-renta-ecuador';
 import { antiguedadAutoAmortizacion } from './antiguedad-auto-amortizacion';
 import { antiguedadLaboral } from './antiguedad-laboral';
+import { compute as compute__antiguedad_laboral_colombia } from './antiguedad-laboral-colombia';
+import { compute as compute__antiguedad_laboral_ecuador } from './antiguedad-laboral-ecuador';
+import { compute as compute__antiguedad_laboral_espana } from './antiguedad-laboral-espana';
+import { compute as compute__antiguedad_laboral_paraguay } from './antiguedad-laboral-paraguay';
+import { compute as compute__antiguedad_laboral_peru } from './antiguedad-laboral-peru';
+import { compute as compute__antiguedad_laboral_republica_dominicana } from './antiguedad-laboral-republica-dominicana';
+import { compute as compute__antiguedad_laboral_uruguay } from './antiguedad-laboral-uruguay';
 import { antiguedadLaboralVenezuela } from './antiguedad-laboral-venezuela';
 import { apalancamientoLiquidacion } from './apalancamiento-liquidacion';
 import { aperolSpritzProporciones } from './aperol-spritz-proporciones';
@@ -589,6 +602,7 @@ import { contadorDePalabrasYCaracteres } from './contador-de-palabras-y-caracter
 import { contrapisoM3 } from './contrapiso-m3';
 import { contratoAlquiler2AniosVs3Anios } from './contrato-alquiler-2-anios-vs-3-anios';
 import { compute as compute__contrato_alquiler_espana_fianza_aval_mes_renta } from './contrato-alquiler-espana-fianza-aval-mes-renta';
+import { compute as compute__contribuciones_morosas_tgr_chile } from './contribuciones-morosas-tgr-chile';
 import { compute as compute__convenio_comercio_espana_sueldo_categoria_2026 } from './convenio-comercio-espana-sueldo-categoria-2026';
 import { compute as compute__convenio_hosteleria_espana_sueldo_2026_categoria } from './convenio-hosteleria-espana-sueldo-2026-categoria';
 import { compute as compute__conversion_atmosferas_pascales_bar } from './conversion-atmosferas-pascales-bar';
@@ -676,6 +690,7 @@ import { conversorVarasAMetros } from './conversor-varas-a-metros';
 import { convertirMayusculasMinusculas } from './convertir-mayusculas-minusculas';
 import { coolingFan3dMaterial } from './cooling-fan-3d-material';
 import { compute as compute__cooperativas_prestamo_colombia_tasa_interes } from './cooperativas-prestamo-colombia-tasa-interes';
+import { compute as compute__copago_bonificacion_fonasa_chile } from './copago-bonificacion-fonasa-chile';
 import { copomTasaReferenciaBancoCentralImpacto } from './copom-tasa-referencia-banco-central-impacto';
 import { correaDistribucionCambioIntervaloKm } from './correa-distribucion-cambio-intervalo-km';
 import { correlacionPearson } from './correlacion-pearson';
@@ -703,6 +718,11 @@ import { costoCarreraTotal } from './costo-carrera-total';
 import { costoCarreraUniversitaria } from './costo-carrera-universitaria';
 import { costoCloudServidorMensual } from './costo-cloud-servidor-mensual';
 import { compute as compute__costo_constitucion_empresa_peru } from './costo-constitucion-empresa-peru';
+import { compute as compute__costo_construccion_m2_chile } from './costo-construccion-m2-chile';
+import { compute as compute__costo_construccion_m2_ecuador } from './costo-construccion-m2-ecuador';
+import { compute as compute__costo_construccion_m2_espana } from './costo-construccion-m2-espana';
+import { compute as compute__costo_construccion_m2_mexico } from './costo-construccion-m2-mexico';
+import { compute as compute__costo_construccion_m2_peru } from './costo-construccion-m2-peru';
 import { compute as compute__costo_empleada_domestica_patron_mexico_2026 } from './costo-empleada-domestica-patron-mexico-2026';
 import { compute as compute__costo_empleado_patron_mexico_2026 } from './costo-empleado-patron-mexico-2026';
 import { costoEmpleadoTotalEmpresa } from './costo-empleado-total-empresa';
@@ -781,6 +801,7 @@ import { compute as compute__credit_card_payoff_time_calculator } from './credit
 import { creditoAnsesPreAprobadoJubiladoCuota } from './credito-anses-pre-aprobado-jubilado-cuota';
 import { compute as compute__credito_automotriz_mexico_cat_mensualidad_2026 } from './credito-automotriz-mexico-cat-mensualidad-2026';
 import { compute as compute__credito_aval_cae_chile_deuda_final_promedio } from './credito-aval-cae-chile-deuda-final-promedio';
+import { compute as compute__credito_consumo_bci_chile_cuota_cae } from './credito-consumo-bci-chile-cuota-cae';
 import { compute as compute__credito_educativo_icetex_vs_banco_colombia_2026 } from './credito-educativo-icetex-vs-banco-colombia-2026';
 import { compute as compute__credito_hipotecario_biess_ecuador } from './credito-hipotecario-biess-ecuador';
 import { compute as compute__credito_hipotecario_chile_uf_cmf_2026 } from './credito-hipotecario-chile-uf-cmf-2026';
@@ -1765,6 +1786,7 @@ import { millasAmericanAaDestino } from './millas-american-aa-destino';
 import { millasAviancaLifemiles } from './millas-avianca-lifemiles';
 import { millasDeltaSkymiles } from './millas-delta-skymiles';
 import { millasLatamDestino } from './millas-latam-destino';
+import { compute as compute__millas_latam_pass_acumulacion_valor_chile } from './millas-latam-pass-acumulacion-valor-chile';
 import { millasUnitedMileageplus } from './millas-united-mileageplus';
 import { mlsPlayoffs } from './mls-playoffs';
 import { compute as compute__mochila_escolar_peso_maximo_edad_espalda } from './mochila-escolar-peso-maximo-edad-espalda';
@@ -2178,6 +2200,7 @@ import { pulgadasCentimetros } from './pulgadas-centimetros';
 import { puntajeDeleSpanish } from './puntaje-dele-spanish';
 import { puntajeDelfFrances } from './puntaje-delf-frances';
 import { puntajeIngresoUniversidad } from './puntaje-ingreso-universidad';
+import { compute as compute__puntaje_ponderado_paes_universidad_de_chile } from './puntaje-ponderado-paes-universidad-de-chile';
 import { puntoDeRocio } from './punto-de-rocio';
 import { puntoEquilibrioOpciones } from './punto-equilibrio-opciones';
 import { puntosAmexMembershipRewards } from './puntos-amex-membership-rewards';
@@ -2206,6 +2229,11 @@ import { rebalanceoPortafolio } from './rebalanceo-portafolio';
 import { compute as compute__recargo_dominical_festivo_colombia_2026 } from './recargo-dominical-festivo-colombia-2026';
 import { compute as compute__recargo_equivalencia_comerciantes_espana } from './recargo-equivalencia-comerciantes-espana';
 import { compute as compute__recargo_nocturno_colombia_2026 } from './recargo-nocturno-colombia-2026';
+import { compute as compute__recargo_nocturno_ecuador } from './recargo-nocturno-ecuador';
+import { compute as compute__recargo_nocturno_paraguay } from './recargo-nocturno-paraguay';
+import { compute as compute__recargo_nocturno_peru } from './recargo-nocturno-peru';
+import { compute as compute__recargo_nocturno_republica_dominicana } from './recargo-nocturno-republica-dominicana';
+import { compute as compute__recargo_nocturno_uruguay } from './recargo-nocturno-uruguay';
 import { recargosActualizacionSatMexico2026 } from './recargos-actualizacion-sat-mexico-2026';
 import { compute as compute__recibo_agua_sedapal_peru } from './recibo-agua-sedapal-peru';
 import { reciboDeSueldoArgentina } from './recibo-de-sueldo-argentina';
@@ -2298,6 +2326,7 @@ import { retencionRg2616ProveedorMonotributo } from './retencion-rg2616-proveedo
 import { compute as compute__retencion_salarios_procedimiento_1_colombia_2026 } from './retencion-salarios-procedimiento-1-colombia-2026';
 import { compute as compute__retiro_afore_desempleo_mexico } from './retiro-afore-desempleo-mexico';
 import { compute as compute__retiro_afp_jubilacion_peru } from './retiro-afp-jubilacion-peru';
+import { compute as compute__retiro_cesantia_cic_afc_chile } from './retiro-cesantia-cic-afc-chile';
 import { compute as compute__retiro_cts_desempleo_peru } from './retiro-cts-desempleo-peru';
 import { retrasoAmanecerAtardecer } from './retraso-amanecer-atardecer';
 import { retroactivoAumentoSueldoVenezuela } from './retroactivo-aumento-sueldo-venezuela';
@@ -2353,9 +2382,15 @@ import { salarioMinimoParaguay2026 } from './salario-minimo-paraguay-2026';
 import { compute as compute__salario_minimo_uruguay } from './salario-minimo-uruguay';
 import { compute as compute__salario_neto_colombia_2026_bruto_a_neto } from './salario-neto-colombia-2026-bruto-a-neto';
 import { salarioNetoRepublicaDominicana } from './salario-neto-republica-dominicana';
+import { compute as compute__salario_por_hora_chile } from './salario-por-hora-chile';
+import { compute as compute__salario_por_hora_colombia } from './salario-por-hora-colombia';
 import { compute as compute__salario_por_hora_dia_peru } from './salario-por-hora-dia-peru';
 import { compute as compute__salario_por_hora_ecuador } from './salario-por-hora-ecuador';
+import { compute as compute__salario_por_hora_espana } from './salario-por-hora-espana';
 import { salarioPorHoraMensualDiarioMexico } from './salario-por-hora-mensual-diario-mexico';
+import { compute as compute__salario_por_hora_republica_dominicana } from './salario-por-hora-republica-dominicana';
+import { compute as compute__salario_por_hora_uruguay } from './salario-por-hora-uruguay';
+import { compute as compute__salario_por_hora_venezuela } from './salario-por-hora-venezuela';
 import { salarioRealInflacion } from './salario-real-inflacion';
 import { salarioVacacionalUruguay } from './salario-vacacional-uruguay';
 import { compute as compute__salarios_minimos_a_pesos_colombia_2026 } from './salarios-minimos-a-pesos-colombia-2026';
@@ -2783,6 +2818,12 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'acero-kg-m2-losa': aceroKgM2Losa,
   'acidez-orina-alimentos': acidezOrinaAlimentos,
   'actualizacion-alquiler-icl-bcra-mensual': actualizacionAlquilerIclBcraMensual,
+  'actualizacion-inflacion-inpc-venezuela': compute__actualizacion_inflacion_inpc_venezuela,
+  'actualizacion-inflacion-ipc-ecuador': compute__actualizacion_inflacion_ipc_ecuador,
+  'actualizacion-inflacion-ipc-paraguay': compute__actualizacion_inflacion_ipc_paraguay,
+  'actualizacion-inflacion-ipc-peru': compute__actualizacion_inflacion_ipc_peru,
+  'actualizacion-inflacion-ipc-republica-dominicana': compute__actualizacion_inflacion_ipc_republica_dominicana,
+  'actualizacion-inflacion-ipc-uruguay': compute__actualizacion_inflacion_ipc_uruguay,
   'adaptador-enchufe-voltaje-pais': adaptadorEnchufeVoltajePais,
   'adicional-noturno-clt': adicionalNoturnoClt,
   'adolescente-estatura-final-prediccion-edad-huesos': adolescenteEstaturaFinalPrediccionEdadHuesos,
@@ -2871,6 +2912,13 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'anticipo-impuesto-renta-ecuador': compute__anticipo_impuesto_renta_ecuador,
   'antiguedad-auto-amortizacion': antiguedadAutoAmortizacion,
   'antiguedad-laboral': antiguedadLaboral,
+  'antiguedad-laboral-colombia': compute__antiguedad_laboral_colombia,
+  'antiguedad-laboral-ecuador': compute__antiguedad_laboral_ecuador,
+  'antiguedad-laboral-espana': compute__antiguedad_laboral_espana,
+  'antiguedad-laboral-paraguay': compute__antiguedad_laboral_paraguay,
+  'antiguedad-laboral-peru': compute__antiguedad_laboral_peru,
+  'antiguedad-laboral-republica-dominicana': compute__antiguedad_laboral_republica_dominicana,
+  'antiguedad-laboral-uruguay': compute__antiguedad_laboral_uruguay,
   'antiguedad-laboral-venezuela': antiguedadLaboralVenezuela,
   'apalancamiento-liquidacion': apalancamientoLiquidacion,
   'aperol-spritz-proporciones': aperolSpritzProporciones,
@@ -3352,6 +3400,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'contrapiso-m3': contrapisoM3,
   'contrato-alquiler-2-anios-vs-3-anios': contratoAlquiler2AniosVs3Anios,
   'contrato-alquiler-espana-fianza-aval-mes-renta': compute__contrato_alquiler_espana_fianza_aval_mes_renta,
+  'contribuciones-morosas-tgr-chile': compute__contribuciones_morosas_tgr_chile,
   'convenio-comercio-espana-sueldo-categoria-2026': compute__convenio_comercio_espana_sueldo_categoria_2026,
   'convenio-hosteleria-espana-sueldo-2026-categoria': compute__convenio_hosteleria_espana_sueldo_2026_categoria,
   'conversion-atmosferas-pascales-bar': compute__conversion_atmosferas_pascales_bar,
@@ -3439,6 +3488,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'convertir-mayusculas-minusculas': convertirMayusculasMinusculas,
   'cooling-fan-3d-material': coolingFan3dMaterial,
   'cooperativas-prestamo-colombia-tasa-interes': compute__cooperativas_prestamo_colombia_tasa_interes,
+  'copago-bonificacion-fonasa-chile': compute__copago_bonificacion_fonasa_chile,
   'copom-tasa-referencia-banco-central-impacto': copomTasaReferenciaBancoCentralImpacto,
   'correa-distribucion-cambio-intervalo-km': correaDistribucionCambioIntervaloKm,
   'correlacion-pearson': correlacionPearson,
@@ -3466,6 +3516,11 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-carrera-universitaria': costoCarreraUniversitaria,
   'costo-cloud-servidor-mensual': costoCloudServidorMensual,
   'costo-constitucion-empresa-peru': compute__costo_constitucion_empresa_peru,
+  'costo-construccion-m2-chile': compute__costo_construccion_m2_chile,
+  'costo-construccion-m2-ecuador': compute__costo_construccion_m2_ecuador,
+  'costo-construccion-m2-espana': compute__costo_construccion_m2_espana,
+  'costo-construccion-m2-mexico': compute__costo_construccion_m2_mexico,
+  'costo-construccion-m2-peru': compute__costo_construccion_m2_peru,
   'costo-empleada-domestica-patron-mexico-2026': compute__costo_empleada_domestica_patron_mexico_2026,
   'costo-empleado-patron-mexico-2026': compute__costo_empleado_patron_mexico_2026,
   'costo-empleado-total-empresa': costoEmpleadoTotalEmpresa,
@@ -3544,6 +3599,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'credito-anses-pre-aprobado-jubilado-cuota': creditoAnsesPreAprobadoJubiladoCuota,
   'credito-automotriz-mexico-cat-mensualidad-2026': compute__credito_automotriz_mexico_cat_mensualidad_2026,
   'credito-aval-cae-chile-deuda-final-promedio': compute__credito_aval_cae_chile_deuda_final_promedio,
+  'credito-consumo-bci-chile-cuota-cae': compute__credito_consumo_bci_chile_cuota_cae,
   'credito-educativo-icetex-vs-banco-colombia-2026': compute__credito_educativo_icetex_vs_banco_colombia_2026,
   'credito-hipotecario-biess-ecuador': compute__credito_hipotecario_biess_ecuador,
   'credito-hipotecario-chile-uf-cmf-2026': compute__credito_hipotecario_chile_uf_cmf_2026,
@@ -4528,6 +4584,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'millas-avianca-lifemiles': millasAviancaLifemiles,
   'millas-delta-skymiles': millasDeltaSkymiles,
   'millas-latam-destino': millasLatamDestino,
+  'millas-latam-pass-acumulacion-valor-chile': compute__millas_latam_pass_acumulacion_valor_chile,
   'millas-united-mileageplus': millasUnitedMileageplus,
   'mls-playoffs': mlsPlayoffs,
   'mochila-escolar-peso-maximo-edad-espalda': compute__mochila_escolar_peso_maximo_edad_espalda,
@@ -4941,6 +4998,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'puntaje-dele-spanish': puntajeDeleSpanish,
   'puntaje-delf-frances': puntajeDelfFrances,
   'puntaje-ingreso-universidad': puntajeIngresoUniversidad,
+  'puntaje-ponderado-paes-universidad-de-chile': compute__puntaje_ponderado_paes_universidad_de_chile,
   'punto-de-rocio': puntoDeRocio,
   'punto-equilibrio-opciones': puntoEquilibrioOpciones,
   'puntos-amex-membership-rewards': puntosAmexMembershipRewards,
@@ -4969,6 +5027,11 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'recargo-dominical-festivo-colombia-2026': compute__recargo_dominical_festivo_colombia_2026,
   'recargo-equivalencia-comerciantes-espana': compute__recargo_equivalencia_comerciantes_espana,
   'recargo-nocturno-colombia-2026': compute__recargo_nocturno_colombia_2026,
+  'recargo-nocturno-ecuador': compute__recargo_nocturno_ecuador,
+  'recargo-nocturno-paraguay': compute__recargo_nocturno_paraguay,
+  'recargo-nocturno-peru': compute__recargo_nocturno_peru,
+  'recargo-nocturno-republica-dominicana': compute__recargo_nocturno_republica_dominicana,
+  'recargo-nocturno-uruguay': compute__recargo_nocturno_uruguay,
   'recargos-actualizacion-sat-mexico-2026': recargosActualizacionSatMexico2026,
   'recibo-agua-sedapal-peru': compute__recibo_agua_sedapal_peru,
   'recibo-de-sueldo-argentina': reciboDeSueldoArgentina,
@@ -5061,6 +5124,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'retencion-salarios-procedimiento-1-colombia-2026': compute__retencion_salarios_procedimiento_1_colombia_2026,
   'retiro-afore-desempleo-mexico': compute__retiro_afore_desempleo_mexico,
   'retiro-afp-jubilacion-peru': compute__retiro_afp_jubilacion_peru,
+  'retiro-cesantia-cic-afc-chile': compute__retiro_cesantia_cic_afc_chile,
   'retiro-cts-desempleo-peru': compute__retiro_cts_desempleo_peru,
   'retraso-amanecer-atardecer': retrasoAmanecerAtardecer,
   'retroactivo-aumento-sueldo-venezuela': retroactivoAumentoSueldoVenezuela,
@@ -5116,9 +5180,15 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'salario-minimo-uruguay': compute__salario_minimo_uruguay,
   'salario-neto-colombia-2026-bruto-a-neto': compute__salario_neto_colombia_2026_bruto_a_neto,
   'salario-neto-republica-dominicana': salarioNetoRepublicaDominicana,
+  'salario-por-hora-chile': compute__salario_por_hora_chile,
+  'salario-por-hora-colombia': compute__salario_por_hora_colombia,
   'salario-por-hora-dia-peru': compute__salario_por_hora_dia_peru,
   'salario-por-hora-ecuador': compute__salario_por_hora_ecuador,
+  'salario-por-hora-espana': compute__salario_por_hora_espana,
   'salario-por-hora-mensual-diario-mexico': salarioPorHoraMensualDiarioMexico,
+  'salario-por-hora-republica-dominicana': compute__salario_por_hora_republica_dominicana,
+  'salario-por-hora-uruguay': compute__salario_por_hora_uruguay,
+  'salario-por-hora-venezuela': compute__salario_por_hora_venezuela,
   'salario-real-inflacion': salarioRealInflacion,
   'salario-vacacional-uruguay': salarioVacacionalUruguay,
   'salarios-minimos-a-pesos-colombia-2026': compute__salarios_minimos_a_pesos_colombia_2026,
