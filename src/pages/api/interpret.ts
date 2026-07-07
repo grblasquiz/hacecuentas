@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getEnv, json, parseBody, getClientIP, hashIP } from '../../lib/api-utils';
+import { getEnv, json, parseBody, getClientIP, hashIP, enforceRateLimit } from '../../lib/api-utils';
 import { interpret, type ChatMessage } from '../../lib/interpret';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,6 +48,17 @@ function sanitizeHistory(raw: unknown): ChatMessage[] {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  // Cada request gasta 1 embedding + hasta 4 llamadas a Workers AI (Neurons
+  // facturables) y, degradado, un fetch pago a Anthropic. Sin tope es
+  // cost-exhaustion. Límite por IP (429 con CORS para no romper cross-origin).
+  const limited = await enforceRateLimit(request, 'interpret', 30, 3600);
+  if (limited) {
+    return json(
+      { ok: false, error: 'Demasiadas consultas. Esperá un momento e intentá de nuevo.' },
+      { status: 429, headers: { ...CORS, 'retry-after': '60' } },
+    );
+  }
+
   const env = getEnv();
   const ai = env.AI && typeof env.AI.run === 'function' ? env.AI : undefined;
   const anthropicKey = env.ANTHROPIC_API_KEY;

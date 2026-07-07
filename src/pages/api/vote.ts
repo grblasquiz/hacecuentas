@@ -3,11 +3,15 @@
  * Body: { slug: string, vote: 'up' | 'down' }
  */
 import type { APIRoute } from 'astro';
-import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals } from '../../lib/api-utils';
+import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, enforceRateLimit } from '../../lib/api-utils';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
+  // Generoso: un usuario real vota varias calcs. Corta el DB-fill scripteado.
+  const limited = await enforceRateLimit(request, 'vote', 80, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try { body = await parseBody(request); }
   catch { return json({ error: 'Body inválido' }, { status: 400 }); }

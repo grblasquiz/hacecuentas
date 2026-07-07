@@ -12,7 +12,7 @@
  * jamás se asocia a la identidad del usuario. Ver db/schema.sql (coop_*).
  */
 import type { APIRoute } from 'astro';
-import { json, sanitizeText, parseBody, getEnv, getClientIP, hashIP } from '../../../lib/api-utils';
+import { json, sanitizeText, parseBody, getEnv, getClientIP, hashIP, enforceRateLimit } from '../../../lib/api-utils';
 import { sha256Hex, generateSessionToken } from '../../../lib/auth';
 import { runCompute } from '../../../lib/calc-compute';
 import {
@@ -57,6 +57,11 @@ async function segmentStats(
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  // runCompute (CPU) + INSERT por request, y la dedup se evade variando el
+  // segmento → envenenamiento de agregados. Límite por IP.
+  const limited = await enforceRateLimit(request, 'coop', 20, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try { body = await parseBody(request); }
   catch { return json({ error: 'Body inválido' }, { status: 400 }); }

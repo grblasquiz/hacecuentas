@@ -16,7 +16,17 @@
  *   GET /?run=TOKEN&dry=1 → pasada en seco: dice qué cambiaría, NO manda mails
  */
 
-const RUN_TOKEN = 'hc-alerts-7Qm2xV'; // dispara run manual; no es dato sensible
+// Token del run manual (?run=TOKEN) — se lee de un secret, NO se hardcodea.
+// Setup (una vez):  cd workers/alerts-recompute && npx wrangler secret put ALERTS_RUN_TOKEN
+// El cron (scheduled) NO usa el token: si el secret no está seteado, solo se
+// deshabilita el disparo manual, la pasada diaria sigue corriendo igual.
+/** Comparación en tiempo constante (evita timing oracle sobre el token). */
+function safeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -188,7 +198,8 @@ export default {
     const url = new URL(request.url);
     const H = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
     try {
-      if (url.searchParams.get('run') === RUN_TOKEN) {
+      const provided = url.searchParams.get('run');
+      if (provided && env.ALERTS_RUN_TOKEN && safeEqual(provided, env.ALERTS_RUN_TOKEN)) {
         const r = await runPass(env, { dry: url.searchParams.get('dry') === '1' });
         return new Response(JSON.stringify(r, null, 2), { headers: H });
       }

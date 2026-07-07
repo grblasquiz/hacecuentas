@@ -19,6 +19,8 @@ import {
   hashIP,
   parseBody,
   getEnv,
+  enforceRateLimit,
+  isAdminAuthed,
 } from '../../lib/api-utils';
 
 export const prerender = false;
@@ -60,8 +62,7 @@ export const GET: APIRoute = async ({ request }) => {
 
   const url = new URL(request.url);
   const category = sanitizeText(url.searchParams.get('category'), 30);
-  const adminKey = url.searchParams.get('k') || '';
-  const isAdmin = !!env.ADMIN_PASSCODE && adminKey === env.ADMIN_PASSCODE;
+  const isAdmin = isAdminAuthed(request, [env.ADMIN_PASSCODE]);
 
   // Por defecto solo mostramos approved + pending (UGC visible).
   // Admin puede pedir 'rejected' o 'built' con ?status=...
@@ -101,6 +102,12 @@ export const GET: APIRoute = async ({ request }) => {
 // POST — crear sugerencia
 // ─────────────────────────────────────────────────────────────────────────────
 export const POST: APIRoute = async ({ request }) => {
+  // La sugerencia se guarda como 'pending' y el GET público la muestra → sin
+  // tope es data-poisoning visible. El honeypot de abajo solo frena bots
+  // ingenuos (se evita no mandando el campo); el rate-limit es el corte real.
+  const limited = await enforceRateLimit(request, 'suggestions', 10, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try {
     body = await parseBody(request);
@@ -160,9 +167,7 @@ export const POST: APIRoute = async ({ request }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 export const PATCH: APIRoute = async ({ request }) => {
   const env = getEnv();
-  const url = new URL(request.url);
-  const adminKey = url.searchParams.get('k') || '';
-  if (!env.ADMIN_PASSCODE || adminKey !== env.ADMIN_PASSCODE) {
+  if (!isAdminAuthed(request, [env.ADMIN_PASSCODE])) {
     return json({ error: 'No autorizado' }, { status: 401 });
   }
 

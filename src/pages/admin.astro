@@ -5,7 +5,7 @@
  */
 export const prerender = false;
 
-import { getEnv } from '../lib/api-utils';
+import { getEnv, constantTimeEqual } from '../lib/api-utils';
 
 const url = new URL(Astro.request.url);
 const providedKey = url.searchParams.get('k') || '';
@@ -13,7 +13,7 @@ const providedKey = url.searchParams.get('k') || '';
 // (no `Astro.locals.runtime.env` — se removió).
 const env = getEnv();
 const expectedKey = env.ADMIN_PASSCODE || '';
-const authorized = expectedKey && providedKey === expectedKey;
+const authorized = !!expectedKey && constantTimeEqual(providedKey, expectedKey);
 
 let newsletterSubs: any[] = [];
 let voteSummary: any[] = [];

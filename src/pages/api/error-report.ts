@@ -3,11 +3,14 @@
  * Body: { slug: string, message: string, email?: string }
  */
 import type { APIRoute } from 'astro';
-import { json, sanitizeText, isValidEmail, getClientIP, hashIP, parseBody, getD1FromLocals } from '../../lib/api-utils';
+import { json, sanitizeText, isValidEmail, getClientIP, hashIP, parseBody, getD1FromLocals, enforceRateLimit } from '../../lib/api-utils';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
+  const limited = await enforceRateLimit(request, 'error-report', 40, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try { body = await parseBody(request); }
   catch { return json({ error: 'Body inválido' }, { status: 400 }); }

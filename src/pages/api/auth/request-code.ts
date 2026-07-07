@@ -9,13 +9,18 @@
  */
 import type { APIRoute } from 'astro';
 import {
-  json, isValidEmail, sanitizeText, parseBody, getEnv, escapeHtml,
+  json, isValidEmail, sanitizeText, parseBody, getEnv, escapeHtml, enforceRateLimit,
 } from '../../../lib/api-utils';
 import { generateCode, sha256Hex, CODE_TTL_MS, RESEND_COOLDOWN_MS } from '../../../lib/auth';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
+  // El cooldown de 45s es por-email: rotar el destino (o usar +alias) lo evade
+  // y permite envío ilimitado. Límite por IP para cortar el mass-send / bombing.
+  const limited = await enforceRateLimit(request, 'otp', 8, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try { body = await parseBody(request); }
   catch { return json({ error: 'Body inválido' }, { status: 400 }); }

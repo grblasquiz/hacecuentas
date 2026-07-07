@@ -16,17 +16,18 @@
  *     hasta que `remaining` sea 0.
  */
 import type { APIRoute } from 'astro';
-import { json, getEnv, getD1FromLocals, isValidCalcSlug, sendHostingEmail, buildResultEmail } from '../../../lib/api-utils';
+import { json, getEnv, getD1FromLocals, isValidCalcSlug, sendHostingEmail, buildResultEmail, isAdminAuthed } from '../../../lib/api-utils';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const env = getEnv();
   const url = new URL(request.url);
-  const k = url.searchParams.get('k') || '';
-  const authorized =
-    !!k && ((!!env.ADMIN_PASSCODE && k === env.ADMIN_PASSCODE) || (!!env.BACKFILL_KEY && k === env.BACKFILL_KEY));
-  if (!authorized) return json({ error: 'No autorizado' }, { status: 401 });
+  // Preferí el header X-Admin-Key (no queda en logs/Referer); ?k= sigue válido.
+  // Comparación en tiempo constante.
+  if (!isAdminAuthed(request, [env.ADMIN_PASSCODE, env.BACKFILL_KEY])) {
+    return json({ error: 'No autorizado' }, { status: 401 });
+  }
 
   const db = getD1FromLocals(locals);
   if (!db) return json({ error: 'DB no disponible' }, { status: 500 });

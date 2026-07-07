@@ -9,7 +9,7 @@
  * Híbrido: si hay sesión usa ese email (+ user_id); si no, pide email en el body.
  */
 import type { APIRoute } from 'astro';
-import { json, isValidEmail, sanitizeText, parseBody, getEnv } from '../../../lib/api-utils';
+import { json, isValidEmail, sanitizeText, parseBody, getEnv, enforceRateLimit } from '../../../lib/api-utils';
 import { getSessionUser, sha256Hex, generateSessionToken } from '../../../lib/auth';
 import { getAlertConfig } from '../../../lib/alerts/eligible';
 import { runCompute } from '../../../lib/calc-compute';
@@ -24,6 +24,12 @@ function headlineOf(result: Record<string, unknown>, field: string): string {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  // Path anónimo: acepta email de tercero sin verificar, y el cron le manda
+  // mails cuando cambia la normativa. runCompute (CPU) + INSERT por request.
+  // Límite por IP para cortar el spam por email de víctima y el DB-fill.
+  const limited = await enforceRateLimit(request, 'alerts-subscribe', 15, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try { body = await parseBody(request); }
   catch { return json({ error: 'Body inválido' }, { status: 400 }); }

@@ -10,7 +10,7 @@
  * GA4 desde el cliente vía gtag('event', 'web_vital', {...}).
  */
 import type { APIRoute } from 'astro';
-import { json, sanitizeText, getD1FromLocals } from '../../lib/api-utils';
+import { json, sanitizeText, getD1FromLocals, enforceRateLimit } from '../../lib/api-utils';
 
 export const prerender = false;
 
@@ -18,6 +18,11 @@ const VALID_METRICS = new Set(['LCP', 'INP', 'CLS', 'FCP', 'TTFB']);
 const VALID_RATINGS = new Set(['good', 'needs-improvement', 'poor']);
 
 export const POST: APIRoute = async ({ request }) => {
+  // Generoso: telemetría real (sendBeacon sampleado al 25%). Solo corta el
+  // DB-fill scripteado. 429 no afecta UX (el beacon es fire-and-forget).
+  const limited = await enforceRateLimit(request, 'vitals', 300, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try {
     // sendBeacon manda como text/plain o application/json segun el cliente.

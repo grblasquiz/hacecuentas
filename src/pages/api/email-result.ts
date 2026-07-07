@@ -16,11 +16,16 @@
  *     de éxito según `sent`.
  */
 import type { APIRoute } from 'astro';
-import { json, isValidEmail, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, isValidCalcSlug, sendHostingEmail, buildResultEmail } from '../../lib/api-utils';
+import { json, isValidEmail, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, isValidCalcSlug, sendHostingEmail, buildResultEmail, enforceRateLimit } from '../../lib/api-utils';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
+  // El destinatario lo elige quien llama (body.email) → sin tope esto es un
+  // relay de email-bombing a terceros. Límite estricto por IP.
+  const limited = await enforceRateLimit(request, 'email-result', 8, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try { body = await parseBody(request); }
   catch { return json({ error: 'Body inválido' }, { status: 400 }); }

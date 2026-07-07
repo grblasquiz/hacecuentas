@@ -13,11 +13,16 @@
  *   - ip_hash (FNV-1a, sin IP real) para poder detectar spam/dedupe.
  */
 import type { APIRoute } from 'astro';
-import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, isValidCalcSlug, sendHostingEmail } from '../../lib/api-utils';
+import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, isValidCalcSlug, sendHostingEmail, enforceRateLimit } from '../../lib/api-utils';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
+  // Cada lead válido dispara 1 mail de notificación a Martin → límite por IP
+  // para que no sea amplificable a inbox-flooding.
+  const limited = await enforceRateLimit(request, 'lead', 10, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try { body = await parseBody(request); }
   catch { return json({ error: 'Body inválido' }, { status: 400 }); }

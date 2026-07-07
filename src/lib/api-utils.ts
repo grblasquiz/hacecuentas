@@ -218,6 +218,89 @@ export function hashIP(ip: string): string {
   return (h >>> 0).toString(16).padStart(8, '0').slice(0, 10);
 }
 
+/** Comparación de strings en tiempo constante (evita timing oracle sobre secretos). */
+export function constantTimeEqual(a: string, b: string): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/**
+ * ¿La request trae una clave de admin válida? Preferí el header `X-Admin-Key`
+ * (NO queda en access-logs de Cloudflare, historial del browser ni Referer);
+ * `?k=` sigue soportado por compatibilidad con la página /admin (se carga por
+ * GET y no puede mandar headers). Compara en tiempo constante contra cualquiera
+ * de las claves válidas (ADMIN_PASSCODE / BACKFILL_KEY).
+ */
+export function isAdminAuthed(request: Request, validKeys: Array<string | undefined>): boolean {
+  let provided = request.headers.get('x-admin-key') || '';
+  if (!provided) {
+    try { provided = new URL(request.url).searchParams.get('k') || ''; } catch { /* no-op */ }
+  }
+  if (!provided) return false;
+  return validKeys.some((k) => !!k && constantTimeEqual(provided, k));
+}
+
+/**
+ * Rate-limit por ip_hash usando el KV SESSION (ventana fija). Anti-abuso para
+ * endpoints públicos de escritura/envío: frena scripts que bombardean sin
+ * autenticación (email-bombing, DB-fill, quema de cuota de AI/EMAIL).
+ *
+ * Devuelve una Response 429 si se superó el límite, o `null` si la request
+ * puede seguir. Uso en un handler:
+ *
+ *     const limited = await enforceRateLimit(request, 'feedback', 10, 3600);
+ *     if (limited) return limited;
+ *
+ * FAIL-OPEN por diseño: si no hay binding SESSION (dev) o KV falla, deja pasar
+ * la request. Un problema de infra NUNCA debe bloquear a usuarios reales — el
+ * objetivo es cortar el abuso sostenido, no ser un contador exacto. Por la
+ * consistencia eventual de KV, un burst muy concurrente puede colar unas pocas
+ * de más; aceptable para anti-abuso.
+ *
+ * `bucket` separa los contadores por endpoint. `limit` = requests permitidas en
+ * `windowSec` segundos (mínimo efectivo 60s por el TTL mínimo de KV).
+ */
+export async function enforceRateLimit(
+  request: Request,
+  bucket: string,
+  limit: number,
+  windowSec: number,
+): Promise<Response | null> {
+  const kv = getEnv().SESSION;
+  if (!kv) return null; // sin binding (astro dev) → fail-open
+  const key = `rl:${bucket}:${hashIP(getClientIP(request))}`;
+  const now = Date.now();
+  try {
+    let count = 0;
+    let resetAt = now + windowSec * 1000;
+    const raw = await kv.get(key);
+    if (raw) {
+      try {
+        const p = JSON.parse(raw) as { count?: number; resetAt?: number };
+        if (p && typeof p.resetAt === 'number' && p.resetAt > now) {
+          count = p.count || 0;
+          resetAt = p.resetAt;
+        }
+      } catch { /* valor corrupto → arrancar ventana nueva */ }
+    }
+    if (count >= limit) {
+      const retryAfter = Math.max(1, Math.ceil((resetAt - now) / 1000));
+      return json(
+        { error: 'Demasiadas solicitudes. Esperá un momento e intentá de nuevo.' },
+        { status: 429, headers: { 'retry-after': String(retryAfter) } },
+      );
+    }
+    const ttl = Math.max(60, Math.ceil((resetAt - now) / 1000));
+    await kv.put(key, JSON.stringify({ count: count + 1, resetAt }), { expirationTtl: ttl });
+    return null;
+  } catch (err) {
+    console.error(`rate-limit fail-open (${bucket}):`, err);
+    return null;
+  }
+}
+
 /** Parsea body JSON o form-urlencoded. */
 export async function parseBody(request: Request): Promise<Record<string, unknown>> {
   const ct = request.headers.get('content-type') || '';

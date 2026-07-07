@@ -11,11 +11,16 @@
  *   - Si feedback_text está vacío, no insertamos (no hay info útil que guardar).
  */
 import type { APIRoute } from 'astro';
-import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, sendHostingEmail } from '../../lib/api-utils';
+import { json, sanitizeText, getClientIP, hashIP, parseBody, getD1FromLocals, getEnv, escapeHtml, sendHostingEmail, enforceRateLimit } from '../../lib/api-utils';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
+  // Cada feedback válido dispara 1 mail al inbox personal de Martin → sin tope
+  // es inbox-flooding. Límite por IP.
+  const limited = await enforceRateLimit(request, 'feedback', 15, 3600);
+  if (limited) return limited;
+
   let body: Record<string, unknown>;
   try { body = await parseBody(request); }
   catch { return json({ error: 'Body inválido' }, { status: 400 }); }
