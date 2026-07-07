@@ -52,6 +52,11 @@ export const HC_EVENTS = [
   'hc_feedback_positive',
   'hc_feedback_negative',
   'hc_recent_calculator_opened',
+  // Banda de captura de email (CalcEmailBand) — view/focus/signup permiten
+  // medir viewability y CVR real de la banda (antes solo se veía el éxito).
+  'hc_email_band_view',
+  'hc_email_band_focus',
+  'hc_email_band_signup',
 ] as const;
 
 export type HcEvent = (typeof HC_EVENTS)[number];

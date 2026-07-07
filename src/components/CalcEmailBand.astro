@@ -14,15 +14,16 @@ interface Props {
   lang?: string;
   alertable?: boolean;   // el resultado cambia por actualización de datos
   topic?: string;        // tema legible ("el monotributo", "el salario mínimo")
+  slug?: string;         // slug de la calc — parámetro calculator_slug en analytics
 }
-const { lang = 'es', alertable = false, topic } = Astro.props as Props;
+const { lang = 'es', alertable = false, topic, slug = '' } = Astro.props as Props;
 
 const COPY: Record<string, any> = {
   es: {
-    eyebrow: '🔔 Gratis · Sin spam',
-    headingAlert: topic ? `Te avisamos cuando cambie ${topic}` : 'Te avisamos cuando cambien estos números',
-    headingPlain: 'Los números que te conviene saber, sin buscarlos',
-    leadAlert: 'Salarios, impuestos, tasas y topes se actualizan seguido y te impactan en el bolsillo. Dejanos tu email y te escribimos cuando cambia el dato —más el resumen semanal.',
+    eyebrow: '🔔 Gratis · Sin spam · Salís con un click',
+    headingAlert: topic ? `Te avisamos cuando cambie ${topic}` : 'Te avisamos si cambia este resultado',
+    headingPlain: 'Enterate cuando cambian los números que usás',
+    leadAlert: 'Impuestos, salarios y tasas se actualizan seguido. Dejá tu email y te escribimos cuando el dato se mueva — nada más.',
     leadPlain: 'Una vez por semana, el dato económico que cambió y la calculadora para entenderlo. Dos minutos, cero spam.',
     placeholder: 'tu@email.com',
     cta: 'Avisame',
@@ -33,10 +34,10 @@ const COPY: Record<string, any> = {
     saving: 'Guardando…',
   },
   en: {
-    eyebrow: '🔔 Free · No spam',
-    headingAlert: 'We\'ll email you when this number changes',
-    headingPlain: 'The numbers worth knowing, without the digging',
-    leadAlert: 'Wages, taxes and rates change often. Drop your email and we\'ll tell you when the data updates — plus a short weekly recap.',
+    eyebrow: '🔔 Free · No spam · One-click unsubscribe',
+    headingAlert: 'We\'ll email you if this result changes',
+    headingPlain: 'Know when the numbers you use change',
+    leadAlert: 'Wages, taxes and rates change often. Drop your email and we\'ll write only when the data moves — nothing else.',
     leadPlain: 'Once a week, the number that changed and the calculator to understand it. Two minutes, zero spam.',
     placeholder: 'you@email.com',
     cta: 'Notify me',
@@ -47,10 +48,10 @@ const COPY: Record<string, any> = {
     saving: 'Saving…',
   },
   pt: {
-    eyebrow: '🔔 Grátis · Sem spam',
-    headingAlert: 'Avisamos você quando esse número mudar',
-    headingPlain: 'Os números que vale a pena saber, sem procurar',
-    leadAlert: 'Salários, impostos e taxas mudam com frequência. Deixe seu e-mail e avisamos quando o dado for atualizado — além do resumo semanal.',
+    eyebrow: '🔔 Grátis · Sem spam · Sair com um clique',
+    headingAlert: 'Avisamos você se este resultado mudar',
+    headingPlain: 'Saiba quando mudam os números que você usa',
+    leadAlert: 'Impostos, salários e taxas mudam com frequência. Deixe seu e-mail e escrevemos só quando o dado mudar — nada mais.',
     leadPlain: 'Uma vez por semana, o dado que mudou e a calculadora para entender. Dois minutos, sem spam.',
     placeholder: 'voce@email.com',
     cta: 'Avise-me',
@@ -66,7 +67,7 @@ const heading = alertable ? t.headingAlert : t.headingPlain;
 const lead = alertable ? t.leadAlert : t.leadPlain;
 ---
 
-<section class="ceb" data-nosnippet aria-labelledby="ceb-h">
+<section class="ceb" data-nosnippet aria-labelledby="ceb-h" data-slug={slug}>
   <div class="ceb-card">
     <div class="ceb-txt">
       <span class="ceb-eyebrow">{t.eyebrow}</span>
@@ -75,7 +76,7 @@ const lead = alertable ? t.leadAlert : t.leadPlain;
     </div>
     <form class="ceb-form" data-ceb-form novalidate>
       <label class="ceb-vh" for="ceb-email">Email</label>
-      <input type="email" id="ceb-email" name="email" placeholder={t.placeholder} required autocomplete="email" data-ceb-input />
+      <input type="email" id="ceb-email" name="email" placeholder={t.placeholder} required autocomplete="email" inputmode="email" enterkeyhint="send" data-ceb-input />
       <button type="submit" class="ceb-btn" data-ceb-btn>
         {t.cta}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -118,12 +119,36 @@ const lead = alertable ? t.leadAlert : t.leadPlain;
 
 <script is:inline>
   (window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); })(function () {
-    document.querySelectorAll('[data-ceb-form]').forEach(function (form) {
-      if (form.dataset.cebReady === '1') return;
+    var LS_KEY = 'hc-nl-done';
+    function alreadySubscribed() { try { return localStorage.getItem(LS_KEY) === '1'; } catch (e) { return false; } }
+    function markSubscribed() { try { localStorage.setItem(LS_KEY, '1'); } catch (e) { /* private mode */ } }
+    function track(ev, slug) { if (typeof window.hcTrack === 'function') window.hcTrack(ev, { calculator_slug: slug }); }
+
+    document.querySelectorAll('.ceb').forEach(function (band) {
+      var form = band.querySelector('[data-ceb-form]');
+      if (!form || form.dataset.cebReady === '1') return;
       form.dataset.cebReady = '1';
+      var slug = band.dataset.slug || '';
+
+      // Si ya dejó el mail (acá o en la captura post-resultado), no insistimos.
+      if (alreadySubscribed()) { band.hidden = true; return; }
+      document.addEventListener('hc:subscribed', function () { band.hidden = true; }, { once: true });
+
+      // Impresión real (≥40% visible, una vez): sin esto no se distingue
+      // "nadie la ve" de "la ven y no convierte".
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) { track('hc_email_band_view', slug); io.disconnect(); break; }
+          }
+        }, { threshold: 0.4 });
+        io.observe(band);
+      }
+
       var input = form.querySelector('[data-ceb-input]');
       var btn = form.querySelector('[data-ceb-btn]');
       var msg = form.querySelector('[data-ceb-msg]');
+      if (input) input.addEventListener('focus', function () { track('hc_email_band_focus', slug); }, { once: true });
       function show(text, cls) { msg.hidden = false; msg.textContent = text; msg.className = 'ceb-msg' + (cls ? ' ' + cls : ''); }
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -139,6 +164,8 @@ const lead = alertable ? t.leadAlert : t.leadPlain;
           if (res.ok) {
             show(msg.dataset.ok, 'ok');
             if (input) input.value = '';
+            markSubscribed();
+            track('hc_email_band_signup', slug);
             if (typeof window.gtag === 'function') window.gtag('event', 'newsletter_signup', { method: 'calc-band' });
           } else {
             var j = await res.json().catch(function () { return {}; });

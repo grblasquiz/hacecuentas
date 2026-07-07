@@ -1,0 +1,270 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import { freeOfferSchema } from '../../lib/offer-schema';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/co/validar-nit`;
+
+const title = 'Validar NIT Colombia Online Gratis (dígito de verificación DIAN) | Hacé Cuentas';
+const description =
+  'Valida un NIT colombiano al instante: calcula el dígito de verificación con el algoritmo oficial de la DIAN (pesos primos, módulo 11). 100% en tu navegador, sin enviar el número a ningún lado.';
+
+const faqs = [
+  {
+    q: '¿Cómo validar un NIT?',
+    a: 'Escribe el NIT (con o sin puntos y guion) y presiona <strong>Validar</strong>. La herramienta calcula el <strong>dígito de verificación</strong> (DV) con el algoritmo oficial de la DIAN y te dice al instante si el NIT está bien formado. Todo corre en tu navegador; el número no se envía a ningún servidor.',
+  },
+  {
+    q: '¿Cómo se calcula el dígito de verificación del NIT?',
+    a: 'Es el algoritmo de la DIAN (Orden Administrativa 4 de 1989): cada dígito del NIT, <strong>de derecha a izquierda</strong>, se multiplica por la serie de números primos <strong>3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71</strong>. Se suman los productos y se calcula el residuo de dividir entre 11. Si el residuo es 0 o 1, ese es el DV; si es mayor, el DV es <strong>11 menos el residuo</strong>.',
+  },
+  {
+    q: '¿Qué es el NIT y quién lo asigna?',
+    a: 'El <strong>NIT</strong> (Número de Identificación Tributaria) lo asigna la <strong>DIAN</strong> al inscribirse en el RUT (Registro Único Tributario). Identifica a personas naturales y jurídicas para efectos tributarios. Para personas naturales suele ser el número de cédula + el dígito de verificación.',
+  },
+  {
+    q: '¿NIT y RUT son lo mismo en Colombia?',
+    a: 'No exactamente: el <strong>RUT</strong> es el registro (el trámite y el documento), y el <strong>NIT</strong> es el número que sale de ese registro. Cuando te piden "el RUT" suelen referirse al documento completo; el NIT es el número con su dígito de verificación.',
+  },
+  {
+    q: '¿Validar el NIT me dice si la empresa existe o está activa?',
+    a: 'No. Aquí se valida que el número esté <strong>bien formado</strong> (DV correcto). Para saber el estado, la razón social y la actividad económica hay que consultar el <a href="https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces" rel="nofollow noopener" target="_blank">RUT en el portal de la DIAN</a>, que es la fuente oficial.',
+  },
+  {
+    q: '¿Para qué sirve validar un NIT antes de facturar?',
+    a: 'Para <strong>detectar errores de digitación</strong> antes de emitir una factura electrónica: si el DV no coincide, el NIT está mal escrito y la factura va a ser rechazada por la DIAN. Es el chequeo estándar al registrar clientes o proveedores en un sistema contable.',
+  },
+  {
+    q: '¿El NIT de una persona natural es su cédula?',
+    a: 'En general sí: para personas naturales inscritas en el RUT, el NIT es <strong>el número de la cédula de ciudadanía + el dígito de verificación</strong>. Por eso puedes escribir una cédula aquí y obtener su DV.',
+  },
+  {
+    q: '¿La herramienta guarda o envía el NIT?',
+    a: 'No. La validación es <strong>100% en tu navegador</strong>, en JavaScript. El número no sale de tu dispositivo y la página funciona incluso sin conexión una vez cargada.',
+  },
+  {
+    q: '¿Es gratis?',
+    a: 'Sí, es <strong>gratis, ilimitado y sin registro</strong>. Funciona en el computador y en el celular, directo en el navegador.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Escribe el NIT', text: 'Ingresa el NIT con o sin puntos y guion (ej: 890.903.938-8). También sirve una cédula.' },
+  { name: 'Presiona Validar', text: 'La herramienta calcula el dígito de verificación con el algoritmo DIAN y lo compara.' },
+  { name: 'Consulta oficial', text: 'Para el estado y la razón social, sigue al enlace de consulta del RUT en la DIAN.' },
+];
+
+const related = [
+  { href: '/co/calculadora-liquidacion-laboral-colombia-completa-cesantias', t: 'Liquidación laboral Colombia', i: '💵' },
+  { href: '/validar-cuit', t: 'Validar CUIT (Argentina)', i: '🇦🇷' },
+  { href: '/cl/validar-rut', t: 'Validar RUT (Chile)', i: '🇨🇱' },
+  { href: '/co/calculadoras', t: 'Todas las calculadoras Colombia', i: '🧮' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Validar NIT Colombia',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es-CO',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'COP' }),
+  featureList: ['Calcular y validar el dígito de verificación del NIT (algoritmo DIAN)', 'Sirve también para cédulas (NIT de persona natural)', 'Procesamiento 100% en el navegador'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/co` },
+    { '@type': 'ListItem', position: 2, name: 'Validar NIT', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo validar un NIT',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} audience="CO" lang="es" domain="knowledge">
+  <Header slot="header" />
+
+  <article class="idv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/co">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Validar NIT</span>
+    </nav>
+
+    <h1>Validar NIT de Colombia</h1>
+    <p class="lead">
+      Verifica si un <strong>NIT</strong> es válido calculando su <strong>dígito de verificación</strong> con el algoritmo
+      oficial de la <strong>DIAN</strong>. Todo <strong>en tu navegador</strong>. Para el estado del RUT y la razón social,
+      te llevamos a la consulta oficial.
+    </p>
+
+    <div class="idv-answer">
+      <p>
+        <strong>¿Cómo validar un NIT?</strong> Escribe el número (con o sin puntos y guion) y la herramienta calcula el
+        <strong>dígito de verificación</strong>: cada dígito, de derecha a izquierda, se multiplica por la serie de primos
+        3, 7, 13, 17, 19, 23, 29… , se suma todo y se toma el residuo módulo 11. Esto <strong>no reemplaza</strong> la
+        consulta del RUT en la DIAN, que dice si el NIT existe y su estado.
+      </p>
+    </div>
+
+    <div id="idv" class="idv-card" data-kind="nit">
+      <label class="idv-label" for="idvInput">Escribe el NIT con su dígito de verificación (o sin él, para calcularlo)</label>
+      <div class="idv-row">
+        <input id="idvInput" class="idv-input" type="text" autocomplete="off"
+          placeholder="890.903.938-8" maxlength="15" aria-describedby="idvResult" />
+        <button id="idvValidate" type="button" class="idv-btn">Validar</button>
+      </div>
+      <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
+
+      <div class="idv-gen">
+        <a class="idv-btn-ghost" href="https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces" rel="nofollow noopener" target="_blank">🔎 Consulta oficial del RUT en la DIAN</a>
+        <p class="idv-note">La razón social, la actividad y el estado del RUT solo los entrega la DIAN.</p>
+      </div>
+    </div>
+
+    <section class="idv-sec">
+      <h2>Cómo se calcula el dígito de verificación del NIT</h2>
+      <ul>
+        <li>Se toman los dígitos del NIT (sin el DV) <strong>de derecha a izquierda</strong>.</li>
+        <li>Se multiplican por la serie de primos <strong>3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71</strong> y se suman los productos.</li>
+        <li>Se calcula el residuo de la suma módulo 11: si es <strong>0 o 1</strong>, ese es el DV; si es mayor, el DV es <strong>11 − residuo</strong>.</li>
+        <li>El resultado debe coincidir con el dígito después del guion.</li>
+      </ul>
+    </section>
+
+    <section class="idv-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="idv-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="idv-related">
+      <h2>Otras herramientas gratis</h2>
+      <div class="idv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="idv-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .idv-page { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .idv-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .idv-answer p { margin: 0; line-height: 1.6; }
+  .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.15rem; letter-spacing: 1px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  #idv .idv-btn { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 13px 24px; font-size: 1rem; cursor: pointer; }
+  #idv .idv-btn:hover { filter: brightness(1.08); }
+  #idv .idv-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  #idv .idv-result.ok { background: color-mix(in srgb, #16a34a 12%, #fff); border: 1px solid color-mix(in srgb, #16a34a 35%, #fff); color: #15803d; }
+  #idv .idv-result.bad { background: color-mix(in srgb, #dc2626 10%, #fff); border: 1px solid color-mix(in srgb, #dc2626 30%, #fff); color: #b91c1c; }
+  #idv .idv-result small { display: block; font-weight: 400; color: var(--text-2, #64748b); margin-top: 2px; }
+  #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
+  #idv .idv-btn-ghost { display: inline-block; background: transparent; color: var(--accent, #2563eb); border: 1px solid var(--accent, #2563eb); border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
+  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
+  .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .idv-faq summary { font-weight: 600; cursor: pointer; }
+  .idv-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-faq-a a { color: var(--accent, #2563eb); }
+  .idv-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .idv-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .idv-related-card:hover { border-color: var(--accent, #2563eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('idv');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var input = document.getElementById('idvInput');
+      var validateBtn = document.getElementById('idvValidate');
+      var resultBox = document.getElementById('idvResult');
+
+      var PRIMOS = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+
+      function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+      function nitDV(num) {
+        var digits = num.split('').reverse(), sum = 0;
+        for (var i = 0; i < digits.length; i++) sum += parseInt(digits[i], 10) * PRIMOS[i];
+        var r = sum % 11;
+        return r < 2 ? r : 11 - r;
+      }
+      function fmt(num, dv) { return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv; }
+
+      function showResult() {
+        var raw = (input.value || '').trim();
+        var d = onlyDigits(raw);
+        resultBox.hidden = false;
+        if (d.length < 5 || d.length > 16) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ Escribe un NIT válido (entre 5 y 15 dígitos, con o sin DV).';
+          return;
+        }
+        // Si escribió guion, lo último es el DV declarado; si no, tratamos el
+        // número completo como NIT sin DV y solo CALCULAMOS el dígito.
+        var tieneDv = raw.indexOf('-') !== -1;
+        if (tieneDv) {
+          var dv = parseInt(d.slice(-1), 10);
+          var num = d.slice(0, -1);
+          var esperado = nitDV(num);
+          if (esperado === dv) {
+            resultBox.className = 'idv-result ok';
+            resultBox.innerHTML = '✓ NIT válido <small>' + fmt(num, dv) + ' · Dígito de verificación correcto. El estado del RUT lo confirma la DIAN.</small>';
+          } else {
+            resultBox.className = 'idv-result bad';
+            resultBox.innerHTML = '✗ NIT inválido <small>El dígito de verificación no coincide (para ese número corresponde ' + esperado + ').</small>';
+          }
+        } else {
+          var calc = nitDV(d);
+          resultBox.className = 'idv-result ok';
+          resultBox.innerHTML = '✓ Dígito de verificación: <strong>' + calc + '</strong> <small>NIT completo: ' + fmt(d, calc) + '. Escríbelo con guion para validar uno existente.</small>';
+        }
+      }
+
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+      input.addEventListener('input', function () { if (!resultBox.hidden) showResult(); });
+      validateBtn.addEventListener('click', showResult);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

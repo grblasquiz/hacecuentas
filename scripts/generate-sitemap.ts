@@ -882,6 +882,8 @@ sitemaps.push({
     core('/validar-cuit',                        '0.8',  'monthly'),
     core('/validar-cbu',                         '0.8',  'monthly'),
     core('/cl/validar-rut',                      '0.8',  'monthly'),
+    core('/co/validar-nit',                      '0.8',  'monthly'),
+    core('/uy/validar-cedula',                   '0.8',  'monthly'),
     core('/ec/calculadoras',                     '0.85', 'weekly',  true),
     core('/ec/validar-cedula',                   '0.8',  'monthly'),
     core('/ve/calculadoras',                     '0.85', 'weekly',  true),

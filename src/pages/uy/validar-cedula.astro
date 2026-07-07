@@ -1,0 +1,269 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import { freeOfferSchema } from '../../lib/offer-schema';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const PAGE_URL = `${site}/uy/validar-cedula`;
+
+const title = 'Validar Cédula Uruguaya Online Gratis (dígito verificador) | Hacé Cuentas';
+const description =
+  'Validá una cédula de identidad uruguaya al instante: verifica el dígito verificador con el algoritmo oficial (pesos 2-9-8-7-6-3-4, módulo 10). 100% en tu navegador, sin enviar el número a ningún lado.';
+
+const faqs = [
+  {
+    q: '¿Cómo validar una cédula uruguaya?',
+    a: 'Escribí la cédula completa (con o sin puntos y guión) y tocá <strong>Validar</strong>. La herramienta calcula el <strong>dígito verificador</strong> (el número después del guión) con el algoritmo oficial y te dice al instante si la cédula está bien formada. Todo corre en tu navegador; el número no se envía a ningún servidor.',
+  },
+  {
+    q: '¿Cómo se calcula el dígito verificador de la cédula?',
+    a: 'Los 7 dígitos de la cédula (si tiene 6, se antepone un cero) se multiplican por los pesos <strong>2, 9, 8, 7, 6, 3, 4</strong>. Se suman los productos, se toma el resto de dividir entre 10 y el dígito es <strong>(10 − resto) mód 10</strong>. Ejemplo: para 1.234.567 la suma da 148, el resto es 8 y el verificador es 2 → 1.234.567-2.',
+  },
+  {
+    q: '¿Validar la cédula me dice si existe o de quién es?',
+    a: 'No. Acá se valida que el número esté <strong>bien formado</strong> (dígito verificador correcto). Una cédula puede ser matemáticamente válida y no estar asignada. La titularidad y vigencia son datos de la <strong>Dirección Nacional de Identificación Civil (DNIC)</strong>, que no expone consulta pública por número.',
+  },
+  {
+    q: '¿Sirve para cédulas de 6 dígitos (personas mayores)?',
+    a: 'Sí. Las cédulas más viejas tienen 6 dígitos: para el cálculo se les antepone un <strong>cero</strong> y el algoritmo es el mismo. La herramienta lo hace automáticamente.',
+  },
+  {
+    q: '¿Para qué sirve validar una cédula antes de cargarla en un sistema?',
+    a: 'Para <strong>detectar errores de tipeo al instante</strong>: es el chequeo estándar de los formularios uruguayos (bancos, e-commerce, trámites). Si el dígito no cierra, el número está mal escrito y conviene pedirlo de nuevo antes de facturar o registrar al cliente.',
+  },
+  {
+    q: '¿La cédula uruguaya y el RUT de empresas usan el mismo algoritmo?',
+    a: 'No. El <strong>RUT uruguayo</strong> (empresas, 12 dígitos, lo asigna la DGI) usa otro esquema de pesos. Esta herramienta valida la <strong>cédula de identidad</strong> de personas físicas, que es lo que piden casi todos los formularios.',
+  },
+  {
+    q: '¿La herramienta guarda o envía la cédula?',
+    a: 'No. La validación es <strong>100% en tu navegador</strong>, en JavaScript. El número no sale de tu dispositivo y la página funciona incluso sin conexión una vez cargada.',
+  },
+  {
+    q: '¿Puedo calcular el dígito si solo tengo los primeros números?',
+    a: 'Sí: escribí los 6 o 7 dígitos sin el verificador y la herramienta te muestra qué dígito corresponde. Útil para completar formularios que piden la cédula con el dígito separado.',
+  },
+  {
+    q: '¿Es gratis?',
+    a: 'Sí, es <strong>gratis, ilimitado y sin registro</strong>. Funciona en la computadora y en el celular, directo en el navegador.',
+  },
+];
+
+const howToSteps = [
+  { name: 'Escribí la cédula', text: 'Ingresá el número con o sin puntos y guión (ej: 1.234.567-2). Si no incluís el dígito, te lo calculamos.' },
+  { name: 'Tocá Validar', text: 'La herramienta verifica el dígito verificador con el algoritmo oficial (módulo 10).' },
+  { name: 'Usala en formularios', text: 'Si el dígito cierra, el número está bien formado y no va a rebotar en sistemas.' },
+];
+
+const related = [
+  { href: '/uy/aguinaldo-uruguay', t: 'Aguinaldo Uruguay', i: '💵' },
+  { href: '/validar-cuit', t: 'Validar CUIT (Argentina)', i: '🇦🇷' },
+  { href: '/cl/validar-rut', t: 'Validar RUT (Chile)', i: '🇨🇱' },
+  { href: '/uy/calculadoras', t: 'Todas las calculadoras Uruguay', i: '🧮' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Validar Cédula Uruguaya',
+  url: PAGE_URL,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es-UY',
+  isAccessibleForFree: true,
+  offers: freeOfferSchema({ priceCurrency: 'UYU' }),
+  featureList: ['Validar el dígito verificador de la cédula uruguaya', 'Calcular el dígito si falta', 'Procesamiento 100% en el navegador'],
+};
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/uy` },
+    { '@type': 'ListItem', position: 2, name: 'Validar cédula', item: PAGE_URL },
+  ],
+};
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
+};
+const schemaHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Cómo validar una cédula uruguaya',
+  step: howToSteps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.name, text: s.text })),
+};
+---
+
+<Layout title={title} description={description} canonical={PAGE_URL} schema={schema} audience="UY" lang="es" domain="knowledge">
+  <Header slot="header" />
+
+  <article class="idv-page">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/uy">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Validar cédula</span>
+    </nav>
+
+    <h1>Validar cédula de identidad uruguaya</h1>
+    <p class="lead">
+      Verificá si una <strong>cédula uruguaya</strong> es válida chequeando su <strong>dígito verificador</strong>, o
+      calculalo si te falta. Todo <strong>en tu navegador</strong> — el chequeo estándar de los formularios uruguayos.
+    </p>
+
+    <div class="idv-answer">
+      <p>
+        <strong>¿Cómo validar una cédula?</strong> Escribí el número (con o sin puntos y guión) y la herramienta aplica el
+        algoritmo oficial: los 7 dígitos se multiplican por los pesos <strong>2, 9, 8, 7, 6, 3, 4</strong>, se suma todo y el
+        dígito es (10 − suma mód 10) mód 10. Si tu cédula tiene 6 dígitos, se antepone un cero.
+      </p>
+    </div>
+
+    <div id="idv" class="idv-card" data-kind="ci-uy">
+      <label class="idv-label" for="idvInput">Escribí la cédula (con o sin dígito verificador)</label>
+      <div class="idv-row">
+        <input id="idvInput" class="idv-input" type="text" autocomplete="off"
+          placeholder="1.234.567-2" maxlength="11" aria-describedby="idvResult" />
+        <button id="idvValidate" type="button" class="idv-btn">Validar</button>
+      </div>
+      <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
+
+      <div class="idv-gen">
+        <p class="idv-note">La titularidad y vigencia de una cédula son datos de la DNIC. Esta herramienta solo verifica que el número esté bien formado.</p>
+      </div>
+    </div>
+
+    <section class="idv-sec">
+      <h2>Cómo se calcula el dígito verificador</h2>
+      <ul>
+        <li>Se toman los <strong>7 dígitos</strong> de la cédula (si tiene 6, se antepone un cero).</li>
+        <li>Se multiplican por los pesos <strong>2, 9, 8, 7, 6, 3, 4</strong> y se suman los productos.</li>
+        <li>El dígito verificador es <strong>(10 − (suma mód 10)) mód 10</strong>.</li>
+        <li>Ejemplo: 1.234.567 → suma 148 → resto 8 → dígito <strong>2</strong> → 1.234.567-2.</li>
+      </ul>
+    </section>
+
+    <section class="idv-faq">
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <div class="idv-faq-a" set:html={f.a} />
+        </details>
+      ))}
+    </section>
+
+    <section class="idv-related">
+      <h2>Otras herramientas gratis</h2>
+      <div class="idv-related-grid">
+        {related.map((r) => (
+          <a href={r.href} class="idv-related-card"><span aria-hidden="true">{r.i}</span><span>{r.t}</span></a>
+        ))}
+      </div>
+    </section>
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaHowTo)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  .idv-page { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+  .idv-page .lead { font-size: 1.05rem; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-answer { background: var(--surface-2, #f1f5f9); border-radius: 12px; padding: 14px 18px; margin: 18px 0 22px; }
+  .idv-answer p { margin: 0; line-height: 1.6; }
+  .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.15rem; letter-spacing: 1px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
+  #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  #idv .idv-btn { background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: 13px 24px; font-size: 1rem; cursor: pointer; }
+  #idv .idv-btn:hover { filter: brightness(1.08); }
+  #idv .idv-result { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  #idv .idv-result.ok { background: color-mix(in srgb, #16a34a 12%, #fff); border: 1px solid color-mix(in srgb, #16a34a 35%, #fff); color: #15803d; }
+  #idv .idv-result.bad { background: color-mix(in srgb, #dc2626 10%, #fff); border: 1px solid color-mix(in srgb, #dc2626 30%, #fff); color: #b91c1c; }
+  #idv .idv-result small { display: block; font-weight: 400; color: var(--text-2, #64748b); margin-top: 2px; }
+  #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
+  #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
+  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
+  .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
+  .idv-faq summary { font-weight: 600; cursor: pointer; }
+  .idv-faq-a { margin-top: 8px; line-height: 1.6; color: var(--text-2, #475569); }
+  .idv-faq-a a { color: var(--accent, #2563eb); }
+  .idv-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .idv-related-card { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--surface, #fff); }
+  .idv-related-card:hover { border-color: var(--accent, #2563eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    function init() {
+      var root = document.getElementById('idv');
+      if (!root || root.dataset.ready === '1') return;
+      root.dataset.ready = '1';
+
+      var input = document.getElementById('idvInput');
+      var validateBtn = document.getElementById('idvValidate');
+      var resultBox = document.getElementById('idvResult');
+
+      var PESOS = [2, 9, 8, 7, 6, 3, 4];
+
+      function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+      function ciDV(num7) {
+        var sum = 0;
+        for (var i = 0; i < 7; i++) sum += parseInt(num7[i], 10) * PESOS[i];
+        return (10 - (sum % 10)) % 10;
+      }
+      function fmt(num, dv) {
+        var sinCeros = String(parseInt(num, 10));
+        return sinCeros.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
+      }
+
+      function showResult() {
+        var raw = (input.value || '').trim();
+        var d = onlyDigits(raw);
+        resultBox.hidden = false;
+        var tieneDv = raw.indexOf('-') !== -1;
+        if (tieneDv ? (d.length < 7 || d.length > 8) : (d.length < 6 || d.length > 7)) {
+          resultBox.className = 'idv-result bad';
+          resultBox.innerHTML = '✗ La cédula tiene 6 o 7 dígitos más el verificador (ej: 1.234.567-2).';
+          return;
+        }
+        if (tieneDv) {
+          var dv = parseInt(d.slice(-1), 10);
+          var num = d.slice(0, -1);
+          while (num.length < 7) num = '0' + num;
+          var esperado = ciDV(num);
+          if (esperado === dv) {
+            resultBox.className = 'idv-result ok';
+            resultBox.innerHTML = '✓ Cédula válida <small>' + fmt(num, dv) + ' · Dígito verificador correcto.</small>';
+          } else {
+            resultBox.className = 'idv-result bad';
+            resultBox.innerHTML = '✗ Cédula inválida <small>El dígito verificador no coincide (para ese número corresponde ' + esperado + ').</small>';
+          }
+        } else {
+          var num2 = d;
+          while (num2.length < 7) num2 = '0' + num2;
+          var calc = ciDV(num2);
+          resultBox.className = 'idv-result ok';
+          resultBox.innerHTML = '✓ Dígito verificador: <strong>' + calc + '</strong> <small>Cédula completa: ' + fmt(num2, calc) + '.</small>';
+        }
+      }
+
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
+      input.addEventListener('input', function () { if (!resultBox.hidden) showResult(); });
+      validateBtn.addEventListener('click', showResult);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

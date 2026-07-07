@@ -6186,6 +6186,9 @@ const formatFreshnessDate = (iso: string): string => {
           emailForm.style.display = 'none';
           if (noteEl) noteEl.style.display = 'none';
           showStatus(emailSent ? 'sent' : 'saved');
+          // Ya dejó el mail → la banda de captura (CalcEmailBand) deja de insistir.
+          try { localStorage.setItem('hc-nl-done', '1'); } catch { /* private mode */ }
+          document.dispatchEvent(new CustomEvent('hc:subscribed'));
         } else {
           // Error real (400/500/red): NO ocultamos el form para que pueda reintentar.
           showStatus('error');
@@ -6280,6 +6283,9 @@ const formatFreshnessDate = (iso: string): string => {
             } catch { /* la alerta ya quedó creada; no bloqueamos por esto */ }
           }
           showStatus('✅ Listo. Te enviamos el resultado y te avisamos si una norma lo cambia.', false);
+          // Ya dejó el mail → la banda de captura (CalcEmailBand) deja de insistir.
+          try { localStorage.setItem('hc-nl-done', '1'); } catch { /* private mode */ }
+          document.dispatchEvent(new CustomEvent('hc:subscribed'));
         } else {
           showStatus(msg, true);
         }
