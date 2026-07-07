@@ -9,12 +9,12 @@ export function testPrenatalNoInvasivoNiptPrecioArg(i: Inputs): Outputs {
   if (!semanas || semanas < 9) throw new Error('NIPT requiere mínimo 9-10 semanas de gestación');
   // Precios lista 2026 Argentina (ARS) — referencia
   const baseLab: Record<string, number> = {
-    'genoma': 850000, 'biocodices': 920000, 'cibic': 780000, 'igen': 880000, 'manlab': 950000,
+    'genoma': 880000, 'biocodices': 960000, 'cibic': 810000, 'igen': 920000, 'manlab': 990000,
   };
   const multPanel: Record<string, number> = {
     'basico': 1, 'extendido': 1.25, 'completo': 1.5, 'microdeleciones': 1.7,
   };
-  const base = baseLab[lab] ?? 880000;
+  const base = baseLab[lab] ?? 920000;
   const mult = multPanel[panel] ?? 1;
   const precioLista = base * mult;
   const coberturaArs = precioLista * cobertura;

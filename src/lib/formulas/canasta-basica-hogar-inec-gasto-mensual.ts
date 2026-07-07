@@ -17,11 +17,11 @@ const AE_TABLE: Record<string, number> = {
 };
 
 // Coeficiente de Engel inverso (ICE) para Gran Buenos Aires
-// ICE = CBT / CBA = 475.653 / 215.222 ≈ 2.21 (abril 2026)
-const ICE_DEFAULT = 2.21;
+// ICE = CBT / CBA = 484.851 / 220.387 ≈ 2.20 (mayo 2026)
+const ICE_DEFAULT = 2.20;
 
-// CBA por adulto equivalente publicada por INDEC (abril 2026, GBA)
-const CBA_AE_DEFAULT = 215222;
+// CBA por adulto equivalente publicada por INDEC (mayo 2026, GBA)
+const CBA_AE_DEFAULT = 220387;
 
 export function canastaBasicaHogarInecGastoMensual(i: Inputs): Outputs {
   const lang = (i.__lang as string) || 'es';
@@ -135,7 +135,7 @@ export function canastaBasicaHogarInecGastoMensual(i: Inputs): Outputs {
     resumen: `${totalPersonas} integrantes · ${aeTotal.toFixed(2)} adultos equivalentes · CBA (indigencia): ${fmt(cbaHogar)} · CBT (pobreza): ${fmt(cbtHogar)}`,
     _insight: {
       title: 'Referencia línea de pobreza',
-      text: interpretacion + ` La **canasta básica alimentaria (CBA)** marca la línea de indigencia en **${fmt(cbaHogar)}**. Si el ingreso total cae por debajo, el hogar se considera indigente según el INDEC. Los valores se basan en los datos de abril 2026 del INDEC — actualizá el campo CBA/AE mensualmente con la última publicación oficial.`,
+      text: interpretacion + ` La **canasta básica alimentaria (CBA)** marca la línea de indigencia en **${fmt(cbaHogar)}**. Si el ingreso total cae por debajo, el hogar se considera indigente según el INDEC. Los valores se basan en los datos de mayo 2026 del INDEC — actualizá el campo CBA/AE mensualmente con la última publicación oficial.`,
       tone: 'neutral',
       icon: '🛒',
     },

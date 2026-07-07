@@ -15,9 +15,9 @@ export interface CostoMedianeraOutputs {
 }
 
 const COSTOS_REF: Record<string, { nombre: string; costoM2: number }> = {
-  ladrilloHueco: { nombre: 'Ladrillo hueco 18 cm + revoque', costoM2: 100000 },
-  ladrilloComun: { nombre: 'Ladrillo común 15 cm + revoque', costoM2: 85000 },
-  bloqueHormigon: { nombre: 'Bloque hormigón 20 cm', costoM2: 110000 },
+  ladrilloHueco: { nombre: 'Ladrillo hueco 18 cm + revoque', costoM2: 104000 },
+  ladrilloComun: { nombre: 'Ladrillo común 15 cm + revoque', costoM2: 88000 },
+  bloqueHormigon: { nombre: 'Bloque hormigón 20 cm', costoM2: 114000 },
 };
 
 export function costoMedianeraMuroLindero(inputs: CostoMedianeraInputs): CostoMedianeraOutputs {
