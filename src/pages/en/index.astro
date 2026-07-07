@@ -47,6 +47,53 @@ const activeCategories = categoryOrder.filter((cat) => byCategory[cat] && byCate
 
 const totalCalcs = calcs.length;
 
+// Featured: niche calculators with a clear search gap (curated from the
+// EN long-tail triage). Early position in the HTML = internal link priority.
+const FEATURED: Array<{ slug: string; label: string }> = [
+  { slug: 'premature-infant-corrected-age', label: 'Corrected age calculator for premature babies' },
+  { slug: 'dog-food-calculator-by-weight', label: 'How much to feed a dog per day, by weight' },
+  { slug: 'pizzas-by-guests', label: 'How many pizzas do I need for a party?' },
+  { slug: 'bbq-meat-portions-per-person', label: 'How much meat per person for a BBQ' },
+  { slug: 'rice-grams-per-person', label: 'How much rice per person (grams)' },
+  { slug: 'dry-pasta-portions-per-person', label: 'How much dry pasta per person' },
+  { slug: 'birthday-cake-servings-calculator', label: 'Cake servings by pan size' },
+  { slug: 'bakers-percentage-calculator', label: "Baker's percentage & hydration calculator" },
+  { slug: 'ibu-beer-hops-tinseth', label: 'Beer IBU calculator (Tinseth formula)' },
+  { slug: 'srm-color-cerveza-morey', label: 'Beer SRM color calculator (Morey formula)' },
+  { slug: 'priming-sugar-carbonation', label: 'Priming sugar calculator for carbonation' },
+  { slug: 'vodka-fruit-infusion-time', label: 'How long to infuse vodka with fruit' },
+  { slug: 'heart-rate-zones-karvonen', label: 'Karvonen heart rate zone calculator' },
+  { slug: 'ftp-cycling-watts', label: 'FTP calculator from a 20-minute test' },
+  { slug: 'half-marathon-projection-from-10k-cameron', label: 'Predict your half marathon time from a 10K' },
+  { slug: 'endurance-race-gel-calculator', label: 'How many energy gels for a race' },
+  { slug: 'aceite-motor-capacidad-cambio-km', label: 'Oil change interval by oil type and km' },
+  { slug: 'car-battery-cca-calculator', label: 'Car battery CCA calculator by engine size' },
+  { slug: 'extra-ac-fuel-consumption', label: 'How much extra fuel does car A/C use?' },
+  { slug: 'truck-payload-capacity-calculator', label: 'Truck payload capacity from GVWR and curb weight' },
+  { slug: 'dilution-concentration-c1v1-c2v2', label: 'C1V1 = C2V2 dilution calculator' },
+  { slug: 'parallax-distance-parsecs', label: 'Parallax to parsecs calculator (d = 1/p)' },
+  { slug: 'redshift-radial-velocity', label: 'Redshift to radial velocity calculator' },
+  { slug: 'richter-scale-magnitude-energy', label: 'Richter magnitude to energy (joules / TNT)' },
+  { slug: 'weight-on-other-planets', label: 'Weight on other planets calculator' },
+  { slug: 'bricks-per-square-meter-wall', label: 'How many bricks per square meter of wall' },
+  { slug: 'ceramic-tile-adhesive-bags', label: 'Bags of tile adhesive per square meter' },
+  { slug: 'grass-seed-per-m2-lawn', label: 'Grass seed per square meter calculator' },
+  { slug: 'ph-soil-correction-lime-sulfur', label: 'Lime or sulfur to change soil pH' },
+  { slug: 'anki-daily-flashcards-memorization-vocabulary', label: 'New Anki cards per day to finish a deck' },
+  { slug: 'english-levels-cambridge-duolingo-time-conversion', label: 'Hours to reach each English CEFR level' },
+  { slug: 'ielts-toefl-cefr-equivalency', label: 'IELTS to TOEFL score conversion' },
+  { slug: 'servo-pwm-angle', label: 'Servo PWM pulse width to angle' },
+  { slug: 'karaoke-songs-per-hour', label: 'How many karaoke songs per hour' },
+  { slug: 'baby-shower-budget-calculator', label: 'Baby shower budget per guest' },
+  { slug: 'criminal-background-certificate-cost', label: 'FBI criminal background check cost (2026)' },
+  { slug: 'us-b1-b2-tourist-visa-cost', label: 'Total cost of a US B1/B2 tourist visa' },
+  { slug: 'annual-pet-carbon-footprint', label: 'Pet carbon footprint calculator (dog & cat)' },
+  { slug: 'material-biodegradation-time', label: 'How long materials take to biodegrade' },
+  { slug: 'bmi-seniors-65-plus-table', label: 'BMI calculator for seniors 65+ (geriatric ranges)' },
+];
+const featuredSlugs = new Set(calcs.map((c) => c.slug));
+const featured = FEATURED.filter((f) => featuredSlugs.has(f.slug));
+
 // Schema.org
 const schema = {
   '@context': 'https://schema.org',
@@ -129,6 +176,19 @@ const hreflangTags = HOME_HREFLANG;
       <span class="sep" aria-hidden="true">/</span>
       <span class="current">English Calculators</span>
     </nav>
+
+    <!-- Featured niche calculators -->
+    {featured.length > 0 && (
+      <section class="featured" aria-labelledby="featured-title">
+        <h2 id="featured-title" class="featured-title">Featured calculators</h2>
+        <p class="featured-sub">Hand-picked tools you won't find everywhere else.</p>
+        <ul class="featured-list">
+          {featured.map((f) => (
+            <li><a href={`/en/${f.slug}`} class="featured-link">{f.label}</a></li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     <!-- Calculator grid grouped by category -->
     <div class="categories">
@@ -270,6 +330,55 @@ const hreflangTags = HOME_HREFLANG;
   .breadcrumbs .current {
     color: var(--text);
     font-weight: 500;
+  }
+
+  /* ── Featured ── */
+  .featured {
+    margin-bottom: 3rem;
+    padding: 1.5rem 1.75rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .featured-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+  }
+
+  .featured-sub {
+    font-size: 0.875rem;
+    color: var(--text-subtle);
+    margin: 0 0 1rem;
+  }
+
+  .featured-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .featured-link {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    color: var(--text);
+    text-decoration: none;
+    line-height: 1.4;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .featured-link:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
   }
 
   /* ── Category sections ── */
