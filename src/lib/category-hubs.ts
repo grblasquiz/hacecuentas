@@ -1020,7 +1020,7 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
         "calcs": [
           {
             "label": "Temperatura",
-            "slug": "calculadora-conversion-celsius-fahrenheit-kelvin"
+            "slug": "calculadora-conversion-celsius-fahrenheit-kelvin-rankine-temperatura"
           },
           {
             "label": "°C a Kelvin",

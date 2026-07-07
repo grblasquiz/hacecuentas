@@ -1180,7 +1180,7 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Conversión de unidades",
     "items": [
       {
-        "slug": "calculadora-conversion-celsius-fahrenheit-kelvin",
+        "slug": "calculadora-conversion-celsius-fahrenheit-kelvin-rankine-temperatura",
         "label": "Temperatura",
         "icon": "🌡️"
       },

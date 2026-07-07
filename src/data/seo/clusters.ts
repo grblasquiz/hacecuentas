@@ -242,7 +242,7 @@ export const SEO_CLUSTERS: SeoCluster[] = [
     urls_secundarias: [
       "/calculadora-descuento-porcentaje-precio",
       "/calculadora-regla-de-tres-simple",
-      "/calculadora-conversion-celsius-fahrenheit-kelvin",
+      "/calculadora-conversion-celsius-fahrenheit-kelvin-rankine-temperatura",
       "/calculadora-media-mediana-moda-rango-estadistica",
     ],
     anchors_recomendados: [

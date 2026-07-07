@@ -652,7 +652,6 @@ import { compute as compute__convenio_comercio_espana_sueldo_categoria_2026 } fr
 import { compute as compute__convenio_hosteleria_espana_sueldo_2026_categoria } from './convenio-hosteleria-espana-sueldo-2026-categoria';
 import { compute as compute__conversion_atmosferas_pascales_bar } from './conversion-atmosferas-pascales-bar';
 import { conversionBaseDecimalBinarioHexa } from './conversion-base-decimal-binario-hexa';
-import { conversionBases } from './conversion-bases';
 import { conversionBtuKcalAireAcondicionado } from './conversion-btu-kcal-aire-acondicionado';
 import { conversionBytesKbMbGbTb } from './conversion-bytes-kb-mb-gb-tb';
 import { conversionCelsiusFahrenheitKelvin } from './conversion-celsius-fahrenheit-kelvin';
@@ -2004,7 +2003,6 @@ import { numeroCuidadoresFiestaInfantilEdad } from './numero-cuidadores-fiesta-i
 import { numeroOxidacionElemento } from './numero-oxidacion-elemento';
 import { numerosPrimos } from './numeros-primos';
 import { numerosRomanosArabigos } from './numeros-romanos-arabigos';
-import { numerosRomanosConversor } from './numeros-romanos-conversor';
 import { compute as compute__obligado_declarar_renta_2026 } from './obligado-declarar-renta-2026';
 import { obraSocialMonotributistaAporteExtraFamiliar } from './obra-social-monotributista-aporte-extra-familiar';
 import { offsideDistanciaVar } from './offside-distancia-var';
@@ -2361,7 +2359,6 @@ import { compute as compute__ptu_reparto_utilidades_mexico_10_porcentaje } from 
 import { compute as compute__puam_pension_universal_adulto_mayor_anses_2026 } from './puam-pension-universal-adulto-mayor-anses-2026';
 import { pubalgiaRecuperacion } from './pubalgia-recuperacion';
 import { pulgadasACentimetros } from './pulgadas-a-centimetros';
-import { pulgadasCentimetros } from './pulgadas-centimetros';
 import { pulsoArterialOximetriaSaturacionNormal } from './pulso-arterial-oximetria-saturacion-normal';
 import { puntajeDeleSpanish } from './puntaje-dele-spanish';
 import { puntajeDelfFrances } from './puntaje-delf-frances';
@@ -3676,7 +3673,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'convenio-hosteleria-espana-sueldo-2026-categoria': compute__convenio_hosteleria_espana_sueldo_2026_categoria,
   'conversion-atmosferas-pascales-bar': compute__conversion_atmosferas_pascales_bar,
   'conversion-base-decimal-binario-hexa': conversionBaseDecimalBinarioHexa,
-  'conversion-bases': conversionBases,
   'conversion-btu-kcal-aire-acondicionado': conversionBtuKcalAireAcondicionado,
   'conversion-bytes-kb-mb-gb-tb': conversionBytesKbMbGbTb,
   'conversion-celsius-fahrenheit-kelvin': conversionCelsiusFahrenheitKelvin,
@@ -5028,7 +5024,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'numero-oxidacion-elemento': numeroOxidacionElemento,
   'numeros-primos': numerosPrimos,
   'numeros-romanos-arabigos': numerosRomanosArabigos,
-  'numeros-romanos-conversor': numerosRomanosConversor,
   'obligado-declarar-renta-2026': compute__obligado_declarar_renta_2026,
   'obra-social-monotributista-aporte-extra-familiar': obraSocialMonotributistaAporteExtraFamiliar,
   'offside-distancia-var': offsideDistanciaVar,
@@ -5385,7 +5380,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'puam-pension-universal-adulto-mayor-anses-2026': compute__puam_pension_universal_adulto_mayor_anses_2026,
   'pubalgia-recuperacion': pubalgiaRecuperacion,
   'pulgadas-a-centimetros': pulgadasACentimetros,
-  'pulgadas-centimetros': pulgadasCentimetros,
   'pulso-arterial-oximetria-saturacion-normal': pulsoArterialOximetriaSaturacionNormal,
   'puntaje-dele-spanish': puntajeDeleSpanish,
   'puntaje-delf-frances': puntajeDelfFrances,
