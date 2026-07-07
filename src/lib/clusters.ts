@@ -607,7 +607,7 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Bebés y crianza",
     "items": [
       {
-        "slug": "calculadora-cantidad-panales-bebe-por-mes-edad",
+        "slug": "calculadora-panales-mes-bebe-talle-gasto-anual",
         "label": "Pañales por mes",
         "icon": "🧷"
       },
@@ -1010,7 +1010,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🚗"
       },
       {
-        "slug": "calculadora-ahorro-gnc-vs-nafta-anual-ars",
+        "slug": "calculadora-comparar-nafta-vs-gnc-ahorro",
         "label": "GNC vs nafta",
         "icon": "⛽"
       },

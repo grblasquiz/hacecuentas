@@ -75,7 +75,6 @@ export const WEEKEND_CLUSTERS: WeekendCluster[] = [
   ] },
   { key: 'cocina-cafe', master: 'calculadora-cafe-ratio-agua-gramos-metodo-preparacion', members: [
     'calculadora-cafe-french-press-ratio',
-    'calculadora-proporcion-cafe-agua-metodo-preparacion',
     'calculadora-cafe-molido-taza-metodo-preparacion',
     'calculadora-moka-pot-agua-cafe',
     'calculadora-cold-brew-ratio',
@@ -163,7 +162,7 @@ export const WEEKEND_CLUSTERS: WeekendCluster[] = [
   { key: 'mascotas-presupuesto', master: 'calculadora-comida-perro-diaria-gramos', members: [
     'calculadora-comida-gato-diaria-gramos',
     'calculadora-costo-mensual-mascota-perro-gato',
-    'calculadora-minutos-paseo-perro-raza-edad',
+    'calculadora-paseos-perro-minutos-raza-energia',
     'calculadora-paseos-perro-minutos-raza-energia',
     'calculadora-tamano-cucha-perro-medidas',
     'calculadora-arena-sanitaria-gato-kg-mes',

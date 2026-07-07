@@ -761,7 +761,7 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
           },
           {
             "label": "GNC vs nafta",
-            "slug": "calculadora-ahorro-gnc-vs-nafta-anual-ars"
+            "slug": "calculadora-comparar-nafta-vs-gnc-ahorro"
           },
           {
             "label": "Costo viaje",

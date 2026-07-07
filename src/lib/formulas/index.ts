@@ -191,7 +191,6 @@ import { asignacionDiscapacidadPensionado } from './asignacion-discapacidad-pens
 import { compute as compute__asignacion_familiar_anses_2026_tramos_ingreso } from './asignacion-familiar-anses-2026-tramos-ingreso';
 import { compute as compute__asignacion_familiar_chile_2026_tramos_renta } from './asignacion-familiar-chile-2026-tramos-renta';
 import { asignacionFamiliarEmpleadoRegistradoAnses } from './asignacion-familiar-empleado-registrado-anses';
-import { asignacionFamiliarHijoAnsesTramo } from './asignacion-familiar-hijo-anses-tramo';
 import { compute as compute__asignacion_familiar_pareja_no_casados_chile_derechos } from './asignacion-familiar-pareja-no-casados-chile-derechos';
 import { compute as compute__asignacion_familiar_peru } from './asignacion-familiar-peru';
 import { compute as compute__asignacion_familiar_vs_gratuidad_chile } from './asignacion-familiar-vs-gratuidad-chile';
@@ -257,7 +256,6 @@ import { compute as compute__becas_mec_2026_espana_renta_familiar_rendimiento } 
 import { becasPorcentajeCobertura } from './becas-porcentaje-cobertura';
 import { compute as compute__bicicleta_electrica_vs_moto_vs_carro_colombia } from './bicicleta-electrica-vs-moto-vs-carro-colombia';
 import { bienesPersonales } from './bienes-personales';
-import { bienesPersonales2026 } from './bienes-personales-2026';
 import { bienesPersonalesMinimoNoImponible2026 } from './bienes-personales-minimo-no-imponible-2026';
 import { bienesPersonalesTramosAlicuota2026 } from './bienes-personales-tramos-alicuota-2026';
 import { bilingueSimultaneoNinos } from './bilingue-simultaneo-ninos';
@@ -488,7 +486,6 @@ import { cantidadAlmohadonesSofa } from './cantidad-almohadones-sofa';
 import { cantidadEmpanadasPorInvitadoEvento } from './cantidad-empanadas-por-invitado-evento';
 import { cantidadHamburguesasParrillaCumpleanos } from './cantidad-hamburguesas-parrilla-cumpleanos';
 import { cantidadLadrillosMetroCuadradoPared } from './cantidad-ladrillos-metro-cuadrado-pared';
-import { cantidadPanalesBebePorMesEdad } from './cantidad-panales-bebe-por-mes-edad';
 import { cantidadPizzasPorInvitadosPizzeria } from './cantidad-pizzas-por-invitados-pizzeria';
 import { cantidadPlantasSetoMetros } from './cantidad-plantas-seto-metros';
 import { cantidadVentanasLuzNaturalM2 } from './cantidad-ventanas-luz-natural-m2';
@@ -2049,7 +2046,6 @@ import { compute as compute__paro_prestacion_desempleo_espana_2026_meses } from 
 import { pasajeAereoMillasVsPesosCanjear } from './pasaje-aereo-millas-vs-pesos-canjear';
 import { pasaporteRenovacionCostoTiempo } from './pasaporte-renovacion-costo-tiempo';
 import { compute as compute__pase_escolar_tne_chile_precio_2026_recargo } from './pase-escolar-tne-chile-precio-2026-recargo';
-import { paseoPerro } from './paseo-perro';
 import { paseosPerroMinutosRazaEnergia } from './paseos-perro-minutos-raza-energia';
 import { pasosDiariosRecomendadosCaminarSalud } from './pasos-diarios-recomendados-caminar-salud';
 import { compute as compute__passive_income_from_investments_calculator } from './passive-income-from-investments-calculator';
@@ -2338,7 +2334,6 @@ import { propina } from './propina';
 import { propinaDividirCuenta } from './propina-dividir-cuenta';
 import { propinaRestaurante } from './propina-restaurante';
 import { propinaViaje } from './propina-viaje';
-import { proporcionCafe } from './proporcion-cafe';
 import { protectorSolarSpf } from './protector-solar-spf';
 import { proteinaDiaria } from './proteina-diaria';
 import { proteinaDiariaFisicoculturismoGanarMusculo } from './proteina-diaria-fisicoculturismo-ganar-musculo';
@@ -3210,7 +3205,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'asignacion-familiar-anses-2026-tramos-ingreso': compute__asignacion_familiar_anses_2026_tramos_ingreso,
   'asignacion-familiar-chile-2026-tramos-renta': compute__asignacion_familiar_chile_2026_tramos_renta,
   'asignacion-familiar-empleado-registrado-anses': asignacionFamiliarEmpleadoRegistradoAnses,
-  'asignacion-familiar-hijo-anses-tramo': asignacionFamiliarHijoAnsesTramo,
   'asignacion-familiar-pareja-no-casados-chile-derechos': compute__asignacion_familiar_pareja_no_casados_chile_derechos,
   'asignacion-familiar-peru': compute__asignacion_familiar_peru,
   'asignacion-familiar-vs-gratuidad-chile': compute__asignacion_familiar_vs_gratuidad_chile,
@@ -3276,7 +3270,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'becas-porcentaje-cobertura': becasPorcentajeCobertura,
   'bicicleta-electrica-vs-moto-vs-carro-colombia': compute__bicicleta_electrica_vs_moto_vs_carro_colombia,
   'bienes-personales': bienesPersonales,
-  'bienes-personales-2026': bienesPersonales2026,
   'bienes-personales-minimo-no-imponible-2026': bienesPersonalesMinimoNoImponible2026,
   'bienes-personales-tramos-alicuota-2026': bienesPersonalesTramosAlicuota2026,
   'bilingue-simultaneo-ninos': bilingueSimultaneoNinos,
@@ -3507,7 +3500,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cantidad-empanadas-por-invitado-evento': cantidadEmpanadasPorInvitadoEvento,
   'cantidad-hamburguesas-parrilla-cumpleanos': cantidadHamburguesasParrillaCumpleanos,
   'cantidad-ladrillos-metro-cuadrado-pared': cantidadLadrillosMetroCuadradoPared,
-  'cantidad-panales-bebe-por-mes-edad': cantidadPanalesBebePorMesEdad,
   'cantidad-pizzas-por-invitados-pizzeria': cantidadPizzasPorInvitadosPizzeria,
   'cantidad-plantas-seto-metros': cantidadPlantasSetoMetros,
   'cantidad-ventanas-luz-natural-m2': cantidadVentanasLuzNaturalM2,
@@ -5068,7 +5060,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pasaje-aereo-millas-vs-pesos-canjear': pasajeAereoMillasVsPesosCanjear,
   'pasaporte-renovacion-costo-tiempo': pasaporteRenovacionCostoTiempo,
   'pase-escolar-tne-chile-precio-2026-recargo': compute__pase_escolar_tne_chile_precio_2026_recargo,
-  'paseo-perro': paseoPerro,
   'paseos-perro-minutos-raza-energia': paseosPerroMinutosRazaEnergia,
   'pasos-diarios-recomendados-caminar-salud': pasosDiariosRecomendadosCaminarSalud,
   'passive-income-from-investments-calculator': compute__passive_income_from_investments_calculator,
@@ -5357,7 +5348,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'propina-dividir-cuenta': propinaDividirCuenta,
   'propina-restaurante': propinaRestaurante,
   'propina-viaje': propinaViaje,
-  'proporcion-cafe': proporcionCafe,
   'protector-solar-spf': protectorSolarSpf,
   'proteina-diaria': proteinaDiaria,
   'proteina-diaria-fisicoculturismo-ganar-musculo': proteinaDiariaFisicoculturismoGanarMusculo,
