@@ -21,6 +21,7 @@ import CalendarGrid from './CalendarGrid.astro';
 import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
 import NextCalcs from './NextCalcs.astro';
 import CalcEmailBand from './CalcEmailBand.astro';
+import { isAlertEligible } from '../lib/alerts/eligible';
 import PostResultDecisionBlock from './PostResultDecisionBlock.astro';
 import PostResultTracking from './PostResultTracking.astro';
 import CategoryIcon from './CategoryIcon.astro';
@@ -236,6 +237,11 @@ const audienceRedirect = calc.audienceRedirect || null;
 
 const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
+// Banda de captura de email en cada calc. "alertable" = mismo criterio que la
+// alerta per-resultado (calcs económicas data-driven) → copy "te avisamos cuando
+// cambie". El resto usa copy neutral de newsletter. Honesto y consistente.
+const bandAlertable: boolean = isAlertEligible(calc.slug);
+
 const relatedSlugs: string[] = calc.relatedSlugs || [];
 const journeySlugs = getJourneySteps(calc.slug, relatedSlugs, 6);
 const _clusterSlugs = new Set((cluster?.items || []).map((it: any) => it.slug));
@@ -587,6 +593,8 @@ const reportBody = encodeURIComponent(`Hola Equipo Hacé Cuentas,\n\nEncontré u
       <p class="v2-tbl-note" style="margin-top:14px;"><a href={`mailto:errores@hacecuentas.com?subject=${reportSubject}&body=${reportBody}`}>✉️ Reportar un error en esta calculadora</a></p>
     </section>
   </div>
+
+  {!calcIsRestricted && <CalcEmailBand lang={lang} alertable={bandAlertable} />}
 
   {/* "También te puede interesar" se removió: era redundante con el bloque
       "Seguí calculando" de arriba (misma fuente relatedSlugs). La malla SEO del
