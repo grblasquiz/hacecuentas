@@ -290,6 +290,11 @@ const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
 // alerta per-resultado (calcs económicas data-driven) → copy "te avisamos cuando
 // cambie". El resto usa copy neutral de newsletter. Honesto y consistente.
 const bandAlertable: boolean = isAlertEligible(calc.slug);
+// El copy "dato económico" del newsletter solo tiene sentido en calcs económicas;
+// en el resto (mascotas, salud, cocina…) la banda usa copy neutral. AdSense
+// re-audit flaggeó el CTA económico como boilerplate en calcs no relacionadas.
+const ECON_BAND_CATS = new Set(['finanzas', 'impuestos', 'negocios']);
+const bandEconomic: boolean = bandAlertable || ECON_BAND_CATS.has(calc.category);
 
 const relatedSlugs: string[] = calc.relatedSlugs || [];
 const journeySlugs = getJourneySteps(calc.slug, relatedSlugs, 6);
@@ -473,7 +478,7 @@ const editorialHtml = uiLang === 'en'
 
   {/* Banda de captura de email — acá (entre la calc y las tabs) la ve todo el
       que scrollea; en su posición original al pie de la página dio 0 altas. */}
-  {!calcIsRestricted && <CalcEmailBand lang={lang} alertable={bandAlertable} slug={calc.slug} />}
+  {!calcIsRestricted && <CalcEmailBand lang={lang} alertable={bandAlertable} economic={bandEconomic} slug={calc.slug} />}
 
   <div style="margin-bottom:30px;"></div>
 

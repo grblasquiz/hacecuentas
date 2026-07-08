@@ -13,10 +13,11 @@
 interface Props {
   lang?: string;
   alertable?: boolean;   // el resultado cambia por actualización de datos
+  economic?: boolean;    // calc de categoría económica → copy "dato económico"; si no, copy neutral
   topic?: string;        // tema legible ("el monotributo", "el salario mínimo")
   slug?: string;         // slug de la calc — parámetro calculator_slug en analytics
 }
-const { lang = 'es', alertable = false, topic, slug = '' } = Astro.props as Props;
+const { lang = 'es', alertable = false, economic = false, topic, slug = '' } = Astro.props as Props;
 
 const COPY: Record<string, any> = {
   es: {
@@ -24,7 +25,10 @@ const COPY: Record<string, any> = {
     headingAlert: topic ? `Te avisamos cuando cambie ${topic}` : 'Te avisamos si cambia este resultado',
     headingPlain: 'Enterate cuando cambian los números que usás',
     leadAlert: 'Impuestos, salarios y tasas se actualizan seguido. Dejá tu email y te escribimos cuando el dato se mueva — nada más.',
-    leadPlain: 'Una vez por semana, el dato económico que cambió y la calculadora para entenderlo. Dos minutos, cero spam.',
+    // "dato económico" solo en calcs de categoría económica (AdSense flaggeó el
+    // copy económico como boilerplate irrelevante en calcs de mascotas/salud/etc).
+    leadPlainEcon: 'Una vez por semana, el dato económico que cambió y la calculadora para entenderlo. Dos minutos, cero spam.',
+    leadPlain: 'Una vez por semana, el dato que cambió y la calculadora para entenderlo. Dos minutos, cero spam.',
     placeholder: 'tu@email.com',
     cta: 'Avisame',
     ok: '¡Listo! Te vamos a avisar cuando haya novedades.',
@@ -64,7 +68,8 @@ const COPY: Record<string, any> = {
 };
 const t = COPY[lang] || COPY.es;
 const heading = alertable ? t.headingAlert : t.headingPlain;
-const lead = alertable ? t.leadAlert : t.leadPlain;
+// EN/PT ya usan copy neutral ("the number that changed"); leadPlainEcon solo existe en ES.
+const lead = alertable ? t.leadAlert : (economic && t.leadPlainEcon) || t.leadPlain;
 ---
 
 <section class="ceb" data-nosnippet aria-labelledby="ceb-h" data-slug={slug}>
