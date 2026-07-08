@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-subnetting-mascara-red-cidr",
-  "lastReviewed": "2026-06-04",
+  "lastReviewed": "2026-06-20",
   "title": "Calculadora Subnetting CIDR: hosts y máscara al instante | Hacé Cuentas",
   "h1": "Calculadora de Subnetting CIDR: hosts, máscara y subredes",
   "description": "Ingresá el prefijo CIDR /n y calculá al instante los hosts útiles, la máscara decimal y cuántas subredes entran en un /24. Tabla completa /24 a /30 incluida.",
@@ -62,7 +62,7 @@
     ],
     "result": "62 hosts útiles, máscara 255.255.255.192"
   },
-  "explanation": "## Cómo se calcula el subnetting CIDR\n\nEl estándar CIDR (RFC 4632) define que una dirección IPv4 de 32 bits se divide en **prefijo de red** (n bits) y **porción de host** (32 − n bits).\n\n```\nBits de host    = 32 − n\nTotal IPs       = 2^(32 − n)\nHosts útiles    = 2^(32 − n) − 2\nMáscara decimal = 32 bits: los primeros n en \"1\", el resto en \"0\"\nSubredes en /24 = 2^(n − 24)   [válido cuando n ≥ 24]\n```\n\n**Ejemplo /26:**\n- Bits de host = 32 − 26 = 6\n- Total IPs = 2^6 = 64\n- Hosts útiles = 64 − 2 = **62**\n- Máscara: `11111111.11111111.11111111.11000000` → **255.255.255.192**\n- Subredes en /24: 2^(26−24) = **4**\n\n---\n\n## Tabla completa de subnetting IPv4\n\n| CIDR | Máscara           | Total IPs | Hosts útiles | Subredes en /24 | Uso típico                  |\n|------|-------------------|-----------|--------------|------------------|-----------------------------|\n| /24  | 255.255.255.0     | 256       | 254          | 1                | Red LAN estándar de oficina |\n| /25  | 255.255.255.128   | 128       | 126          | 2                | División en 2 segmentos     |\n| /26  | 255.255.255.192   | 64        | 62           | 4                | Departamentos medianos      |\n| /27  | 255.255.255.224   | 32        | 30           | 8                | Grupos pequeños (~30 PCs)   |\n| /28  | 255.255.255.240   | 16        | 14           | 16               | Sucursales o pisos pequeños |\n| /29  | 255.255.255.248   | 8         | 6            | 32               | Servidores o DMZ chica      |\n| /30  | 255.255.255.252   | 4         | 2            | 64               | Enlace punto a punto        |\n| /31  | 255.255.255.254   | 2         | 0*           | 128              | P2P sin broadcast (RFC 3021)|\n| /32  | 255.255.255.255   | 1         | 0*           | 256              | Host route / loopback       |\n\n> **/32** se usa para rutas de host específico. **/31** solo en implementaciones que soporten RFC 3021.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Red de oficina con 3 departamentos dentro de 192.168.10.0/24\n\nUna empresa necesita separar Finanzas (≤30 hosts), IT (≤60 hosts) y Producción (≤120 hosts):\n\n| Departamento | Subred                  | CIDR | Hosts disponibles |\n|--------------|-------------------------|------|-------------------|\n| Producción   | 192.168.10.0            | /25  | 126               |\n| IT           | 192.168.10.128          | /26  | 62                |\n| Finanzas     | 192.168.10.192          | /27  | 30                |\n| Reserva      | 192.168.10.224          | /27  | 30                |\n\nTodo el espacio /24 queda distribuido sin solapamiento.\n\n### Caso 2 — Enlace WAN punto a punto\n\nPara conectar dos routers de borde se asigna `10.0.0.0/30`:\n- Dirección de red: `10.0.0.0`\n- Router A: `10.0.0.1`\n- Router B: `10.0.0.2`\n- Broadcast: `10.0.0.3`\n\nSolo 2 hosts útiles; usar /29 desperdiciaría 4 IPs innecesariamente.\n\n### Caso 3 — VPC en AWS con subnetting por tier\n\nUn bloque `10.0.0.0/16` se divide:\n- `10.0.1.0/24` → Capa pública (load balancers): 254 hosts\n- `10.0.2.0/24` → Capa de aplicación: 254 hosts\n- `10.0.3.0/28` → Base de datos (solo 3 instancias RDS): 14 hosts disponibles, mínimo desperdicio\n\n---\n\n## Errores comunes al calcular subnetting\n\n1. **Olvidar restar 2 al total de IPs.** La dirección de red (todos los bits de host en 0) y la de broadcast (todos en 1) no son asignables. Un /28 tiene 16 IPs pero solo **14 hosts útiles**.\n\n2. **Confundir la máscara con el prefijo.** `/24` es la notación CIDR; `255.255.255.0` es la máscara decimal. Son equivalentes pero no intercambiables en todos los campos de configuración: algunos sistemas operativos esperan la máscara decimal y otros aceptan solo el prefijo CIDR.\n\n3. **Intentar subdividir un /24 en rangos no alineados a potencias de 2.** Las subredes deben empezar en múltiplos de su tamaño de bloque. Por ejemplo, un /26 empieza en .0, .64, .128 o .192 — nunca en .100.\n\n4. **Usar /31 sin considerar el contexto.** El RFC 3021 permite /31 para enlaces punto a punto (2 IPs, 0 broadcast, 0 red), pero muchos dispositivos legacy no lo soportan. En ese escenario, /30 es la opción más segura y portable.\n\n5. **Calcular subredes en /24 para prefijos menores a /24.** La fórmula `2^(n−24)` solo es válida para n ≥ 24. Para un /22 (que contiene 4 bloques /24), el razonamiento es inverso.\n\n---\n",
+  "explanation": "## Cómo se calcula el subnetting CIDR\n\nEl estándar CIDR (RFC 4632) define que una dirección IPv4 de 32 bits se divide en **prefijo de red** (n bits) y **porción de host** (32 − n bits).\n\n```\nBits de host    = 32 − n\nTotal IPs       = 2^(32 − n)\nHosts útiles    = 2^(32 − n) − 2\nMáscara decimal = 32 bits: los primeros n en \"1\", el resto en \"0\"\nSubredes en /24 = 2^(n − 24)   [válido cuando n ≥ 24]\n```\n\n**Ejemplo /26:**\n- Bits de host = 32 − 26 = 6\n- Total IPs = 2^6 = 64\n- Hosts útiles = 64 − 2 = **62**\n- Máscara: `11111111.11111111.11111111.11000000` → **255.255.255.192**\n- Subredes en /24: 2^(26−24) = **4**\n\n---\n\n## Tabla completa de subnetting IPv4\n\n> **/32** se usa para rutas de host específico. **/31** solo en implementaciones que soporten RFC 3021.\n\n---\n\n## Casos típicos\n\n### Caso 1 — Red de oficina con 3 departamentos dentro de 192.168.10.0/24\n\nUna empresa necesita separar Finanzas (≤30 hosts), IT (≤60 hosts) y Producción (≤120 hosts):\n\n| Departamento | Subred                  | CIDR | Hosts disponibles |\n|--------------|-------------------------|------|-------------------|\n| Producción   | 192.168.10.0            | /25  | 126               |\n| IT           | 192.168.10.128          | /26  | 62                |\n| Finanzas     | 192.168.10.192          | /27  | 30                |\n| Reserva      | 192.168.10.224          | /27  | 30                |\n\nTodo el espacio /24 queda distribuido sin solapamiento.\n\n### Caso 2 — Enlace WAN punto a punto\n\nPara conectar dos routers de borde se asigna `10.0.0.0/30`:\n- Dirección de red: `10.0.0.0`\n- Router A: `10.0.0.1`\n- Router B: `10.0.0.2`\n- Broadcast: `10.0.0.3`\n\nSolo 2 hosts útiles; usar /29 desperdiciaría 4 IPs innecesariamente.\n\n### Caso 3 — VPC en AWS con subnetting por tier\n\nUn bloque `10.0.0.0/16` se divide:\n- `10.0.1.0/24` → Capa pública (load balancers): 254 hosts\n- `10.0.2.0/24` → Capa de aplicación: 254 hosts\n- `10.0.3.0/28` → Base de datos (solo 3 instancias RDS): 14 hosts disponibles, mínimo desperdicio\n\n---\n\n## Errores comunes al calcular subnetting\n\n1. **Olvidar restar 2 al total de IPs.** La dirección de red (todos los bits de host en 0) y la de broadcast (todos en 1) no son asignables. Un /28 tiene 16 IPs pero solo **14 hosts útiles**.\n\n2. **Confundir la máscara con el prefijo.** `/24` es la notación CIDR; `255.255.255.0` es la máscara decimal. Son equivalentes pero no intercambiables en todos los campos de configuración: algunos sistemas operativos esperan la máscara decimal y otros aceptan solo el prefijo CIDR.\n\n3. **Intentar subdividir un /24 en rangos no alineados a potencias de 2.** Las subredes deben empezar en múltiplos de su tamaño de bloque. Por ejemplo, un /26 empieza en .0, .64, .128 o .192 — nunca en .100.\n\n4. **Usar /31 sin considerar el contexto.** El RFC 3021 permite /31 para enlaces punto a punto (2 IPs, 0 broadcast, 0 red), pero muchos dispositivos legacy no lo soportan. En ese escenario, /30 es la opción más segura y portable.\n\n5. **Calcular subredes en /24 para prefijos menores a /24.** La fórmula `2^(n−24)` solo es válida para n ≥ 24. Para un /22 (que contiene 4 bloques /24), el razonamiento es inverso.\n\n---\n",
   "faq": [
     {
       "q": "¿Cuántos hosts tiene una subred /24?",
@@ -139,21 +139,90 @@
     "mascara subred cidr",
     "tabla subnetting ipv4"
   ],
-  "lastReviewed": "2026-06-20",
   "referenceTables": [
     {
       "title": "Tabla completa de subnetting IPv4 (/24 a /32)",
-      "headers": ["CIDR", "Máscara decimal", "Total IPs", "Hosts útiles", "Subredes en /24", "Uso típico"],
+      "headers": [
+        "CIDR",
+        "Máscara decimal",
+        "Total IPs",
+        "Hosts útiles",
+        "Subredes en /24",
+        "Uso típico"
+      ],
       "rows": [
-        ["/24", "255.255.255.0", "256", "254", "1", "Red LAN estándar de oficina"],
-        ["/25", "255.255.255.128", "128", "126", "2", "División en 2 segmentos"],
-        ["/26", "255.255.255.192", "64", "62", "4", "Departamentos medianos"],
-        ["/27", "255.255.255.224", "32", "30", "8", "Grupos pequeños (~30 PCs)"],
-        ["/28", "255.255.255.240", "16", "14", "16", "Sucursales o pisos pequeños"],
-        ["/29", "255.255.255.248", "8", "6", "32", "Servidores o DMZ chica"],
-        ["/30", "255.255.255.252", "4", "2", "64", "Enlace punto a punto"],
-        ["/31", "255.255.255.254", "2", "0*", "128", "P2P sin broadcast (RFC 3021)"],
-        ["/32", "255.255.255.255", "1", "0*", "256", "Host route / loopback"]
+        [
+          "/24",
+          "255.255.255.0",
+          "256",
+          "254",
+          "1",
+          "Red LAN estándar de oficina"
+        ],
+        [
+          "/25",
+          "255.255.255.128",
+          "128",
+          "126",
+          "2",
+          "División en 2 segmentos"
+        ],
+        [
+          "/26",
+          "255.255.255.192",
+          "64",
+          "62",
+          "4",
+          "Departamentos medianos"
+        ],
+        [
+          "/27",
+          "255.255.255.224",
+          "32",
+          "30",
+          "8",
+          "Grupos pequeños (~30 PCs)"
+        ],
+        [
+          "/28",
+          "255.255.255.240",
+          "16",
+          "14",
+          "16",
+          "Sucursales o pisos pequeños"
+        ],
+        [
+          "/29",
+          "255.255.255.248",
+          "8",
+          "6",
+          "32",
+          "Servidores o DMZ chica"
+        ],
+        [
+          "/30",
+          "255.255.255.252",
+          "4",
+          "2",
+          "64",
+          "Enlace punto a punto"
+        ],
+        [
+          "/31",
+          "255.255.255.254",
+          "2",
+          "0*",
+          "128",
+          "P2P sin broadcast (RFC 3021)"
+        ],
+        [
+          "/32",
+          "255.255.255.255",
+          "1",
+          "0*",
+          "256",
+          "Host route / loopback"
+        ]
       ],
       "note": "Fuente: RFC 4632 — Classless Inter-Domain Routing (IETF, rfc-editor.org); RFC 950 — Internet Standard Subnetting Procedure (IETF)"
     }

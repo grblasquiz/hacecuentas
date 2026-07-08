@@ -2,23 +2,82 @@
 // CookieConsent.astro — banner GDPR/IAB TCF compatible con Consent Mode v2
 // El gtag('consent', 'default', ...) se setea en Layout.astro ANTES de gtag('config').
 // Este componente lee/escribe la decisión del usuario y dispara gtag('consent', 'update').
+//
+// i18n: SOLO los textos visibles se traducen (es/en/pt). La lógica de consent
+// (gtag, dataLayer, REQUIRES_CONSENT, storage) es idéntica en todos los idiomas
+// — regla del repo: cero cambios de comportamiento en tags/consent.
+export interface Props { lang?: 'es' | 'en' | 'pt'; }
+const { lang = 'es' } = Astro.props;
+
+const COPY = {
+  es: {
+    bannerAria: 'Aviso de cookies',
+    title: 'Cookies y privacidad',
+    text: 'Usamos cookies para medir el tráfico (Google Analytics) y mostrar publicidad relevante. Las cookies necesarias para que el sitio funcione siempre están activas. Podés aceptar todo, rechazar las opcionales o configurar tus preferencias.',
+    moreInfo: 'Más info', cookieList: 'Lista de cookies',
+    reject: 'Solo necesarias', customize: 'Configurar', acceptAll: 'Aceptar todo',
+    modalTitle: 'Configurar cookies', close: 'Cerrar',
+    modalIntro: 'Elegí qué cookies querés permitir. Tu decisión se guarda en este dispositivo.',
+    necessary: 'Necesarias', alwaysOn: 'Siempre activas',
+    necessaryDesc: 'Permiten el funcionamiento básico del sitio (ej. recordar tu preferencia de tema claro/oscuro). No se pueden desactivar.',
+    necessaryAria: 'Cookies necesarias (siempre activas)',
+    analytics: 'Análisis (Google Analytics)',
+    analyticsDesc: 'Nos ayudan a entender qué calculadoras se usan más y mejorar el sitio. Datos agregados, sin información personal.',
+    ads: 'Publicidad (Google AdSense)',
+    adsDesc: 'Permiten mostrar anuncios relevantes y medir su efectividad. Sin esto verás anuncios genéricos.',
+    cancel: 'Cancelar', save: 'Guardar preferencias',
+  },
+  en: {
+    bannerAria: 'Cookie notice',
+    title: 'Cookies & privacy',
+    text: 'We use cookies to measure traffic (Google Analytics) and show relevant ads. The cookies the site needs to work are always on. You can accept everything, reject the optional ones, or set your own preferences.',
+    moreInfo: 'Learn more', cookieList: 'Cookie list',
+    reject: 'Essential only', customize: 'Customize', acceptAll: 'Accept all',
+    modalTitle: 'Cookie settings', close: 'Close',
+    modalIntro: 'Choose which cookies to allow. Your choice is saved on this device.',
+    necessary: 'Essential', alwaysOn: 'Always on',
+    necessaryDesc: 'They keep core site features working (e.g. remembering your light/dark theme). They cannot be turned off.',
+    necessaryAria: 'Essential cookies (always on)',
+    analytics: 'Analytics (Google Analytics)',
+    analyticsDesc: 'They help us understand which calculators people use most and improve the site. Aggregated data, no personal information.',
+    ads: 'Advertising (Google AdSense)',
+    adsDesc: 'They let us show relevant ads and measure how they perform. Without them you will see generic ads.',
+    cancel: 'Cancel', save: 'Save preferences',
+  },
+  pt: {
+    bannerAria: 'Aviso de cookies',
+    title: 'Cookies e privacidade',
+    text: 'Usamos cookies para medir o tráfego (Google Analytics) e exibir publicidade relevante. Os cookies necessários para o site funcionar ficam sempre ativos. Você pode aceitar tudo, recusar os opcionais ou configurar suas preferências.',
+    moreInfo: 'Saiba mais', cookieList: 'Lista de cookies',
+    reject: 'Somente necessários', customize: 'Configurar', acceptAll: 'Aceitar tudo',
+    modalTitle: 'Configurar cookies', close: 'Fechar',
+    modalIntro: 'Escolha quais cookies permitir. Sua decisão fica salva neste dispositivo.',
+    necessary: 'Necessários', alwaysOn: 'Sempre ativos',
+    necessaryDesc: 'Permitem o funcionamento básico do site (ex.: lembrar sua preferência de tema claro/escuro). Não podem ser desativados.',
+    necessaryAria: 'Cookies necessários (sempre ativos)',
+    analytics: 'Análise (Google Analytics)',
+    analyticsDesc: 'Ajudam a entender quais calculadoras são mais usadas e a melhorar o site. Dados agregados, sem informações pessoais.',
+    ads: 'Publicidade (Google AdSense)',
+    adsDesc: 'Permitem exibir anúncios relevantes e medir seu desempenho. Sem eles, você verá anúncios genéricos.',
+    cancel: 'Cancelar', save: 'Salvar preferências',
+  },
+} as const;
+const t = COPY[lang] || COPY.es;
 ---
 
-<div class="hc-cookie-banner" data-nosnippet id="hc-cookie-banner" role="dialog" aria-modal="false" aria-label="Aviso de cookies" hidden>
+<div class="hc-cookie-banner" data-nosnippet id="hc-cookie-banner" role="dialog" aria-modal="false" aria-label={t.bannerAria} hidden>
   <div class="hc-cb-card">
     <div class="hc-cb-icon" aria-hidden="true">🍪</div>
     <div class="hc-cb-body">
-      <h2 class="hc-cb-title">Cookies y privacidad</h2>
+      <h2 class="hc-cb-title">{t.title}</h2>
       <p class="hc-cb-text">
-        Usamos cookies para medir el tráfico (Google Analytics) y mostrar publicidad relevante.
-        Las cookies necesarias para que el sitio funcione siempre están activas. Podés aceptar todo,
-        rechazar las opcionales o configurar tus preferencias.
-        <a href="/privacidad">Más info</a> · <a href="/cookies">Lista de cookies</a>
+        {t.text}
+        <a href="/privacidad">{t.moreInfo}</a> · <a href="/cookies">{t.cookieList}</a>
       </p>
       <div class="hc-cb-actions">
-        <button type="button" class="hc-btn hc-btn-ghost" id="hc-cb-reject">Solo necesarias</button>
-        <button type="button" class="hc-btn hc-btn-secondary" id="hc-cb-customize">Configurar</button>
-        <button type="button" class="hc-btn hc-btn-primary" id="hc-cb-accept">Aceptar todo</button>
+        <button type="button" class="hc-btn hc-btn-ghost" id="hc-cb-reject">{t.reject}</button>
+        <button type="button" class="hc-btn hc-btn-secondary" id="hc-cb-customize">{t.customize}</button>
+        <button type="button" class="hc-btn hc-btn-primary" id="hc-cb-accept">{t.acceptAll}</button>
       </div>
     </div>
   </div>
@@ -28,39 +87,39 @@
   <div class="hc-cm-backdrop" data-close></div>
   <div class="hc-cm-panel">
     <div class="hc-cm-head">
-      <h2 id="hc-cm-title">Configurar cookies</h2>
-      <button type="button" class="hc-cm-close" aria-label="Cerrar" data-close>×</button>
+      <h2 id="hc-cm-title">{t.modalTitle}</h2>
+      <button type="button" class="hc-cm-close" aria-label={t.close} data-close>×</button>
     </div>
     <div class="hc-cm-body">
-      <p>Elegí qué cookies querés permitir. Tu decisión se guarda en este dispositivo.</p>
+      <p>{t.modalIntro}</p>
 
       <label class="hc-cm-row hc-cm-row-locked">
         <div>
-          <div class="hc-cm-label">Necesarias <span class="hc-cm-required">Siempre activas</span></div>
-          <p class="hc-cm-desc">Permiten el funcionamiento básico del sitio (ej. recordar tu preferencia de tema claro/oscuro). No se pueden desactivar.</p>
+          <div class="hc-cm-label">{t.necessary} <span class="hc-cm-required">{t.alwaysOn}</span></div>
+          <p class="hc-cm-desc">{t.necessaryDesc}</p>
         </div>
-        <input type="checkbox" checked disabled aria-label="Cookies necesarias (siempre activas)" />
+        <input type="checkbox" checked disabled aria-label={t.necessaryAria} />
       </label>
 
       <label class="hc-cm-row">
         <div>
-          <div class="hc-cm-label">Análisis (Google Analytics)</div>
-          <p class="hc-cm-desc">Nos ayudan a entender qué calculadoras se usan más y mejorar el sitio. Datos agregados, sin información personal.</p>
+          <div class="hc-cm-label">{t.analytics}</div>
+          <p class="hc-cm-desc">{t.analyticsDesc}</p>
         </div>
         <input type="checkbox" id="hc-cm-analytics" />
       </label>
 
       <label class="hc-cm-row">
         <div>
-          <div class="hc-cm-label">Publicidad (Google AdSense)</div>
-          <p class="hc-cm-desc">Permiten mostrar anuncios relevantes y medir su efectividad. Sin esto verás anuncios genéricos.</p>
+          <div class="hc-cm-label">{t.ads}</div>
+          <p class="hc-cm-desc">{t.adsDesc}</p>
         </div>
         <input type="checkbox" id="hc-cm-ads" />
       </label>
     </div>
     <div class="hc-cm-foot">
-      <button type="button" class="hc-btn hc-btn-ghost" data-close>Cancelar</button>
-      <button type="button" class="hc-btn hc-btn-primary" id="hc-cm-save">Guardar preferencias</button>
+      <button type="button" class="hc-btn hc-btn-ghost" data-close>{t.cancel}</button>
+      <button type="button" class="hc-btn hc-btn-primary" id="hc-cm-save">{t.save}</button>
     </div>
   </div>
 </div>

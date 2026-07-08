@@ -91,7 +91,7 @@
     ],
     "result": "Novo 1516"
   },
-  "explanation": "## Como se calcula\n\nO sistema ELO usa duas etapas: primeiro calcula a **expectativa** (probabilidade de vitória prevista) e depois aplica a **variação** com base no resultado real.\n\n### Passo 1 — Expectativa (E)\n\n```\nE = 1 / (1 + 10^((ELO_oponente − ELO_atual) / 400))\n```\n\n- Resultado possível: entre 0 e 1 (ex.: E = 0,36 significa 36% de chance de vitória)\n- Empate vale 0,5; vitória vale 1; derrota vale 0\n\n### Passo 2 — Variação (ΔR)\n\n```\nΔR = K × (S − E)\n```\n\n- **K** = Fator K (sensibilidade do rating)\n- **S** = Resultado real (1 = vitória, 0,5 = empate, 0 = derrota)\n- **E** = Expectativa calculada no passo 1\n\n### Passo 3 — Novo ELO\n\n```\nNovo ELO = ELO_atual + ΔR\n```\n\n---\n\n## Tabela de referência\n\n### Fator K por categoria (padrão FIDE 2024)\n\n| Categoria de jogador | Fator K | Condição |\n|---|---|---|\n| Estreante / Jovem (< 18 anos) | **40** | Até atingir 30 partidas ou ELO 2300 |\n| Jogador geral | **20** | ELO abaixo de 2400, mais de 30 partidas |\n| Grande Mestre / Elite | **10** | ELO já atingiu 2400 em algum momento |\n\n### Expectativa vs. Diferença de ELO\n\n| Diferença (Oponente − Você) | Sua expectativa (E) | Pontos ganhos com vitória (K=20) | Pontos perdidos com derrota (K=20) |\n|---|---|---|---|\n| −400 (você é muito mais forte) | 0,91 | +1,8 pts | −18,2 pts |\n| −200 | 0,76 | +4,8 pts | −15,2 pts |\n| 0 (mesmo ELO) | 0,50 | +10,0 pts | −10,0 pts |\n| +200 (oponente mais forte) | 0,24 | +15,2 pts | −4,8 pts |\n| +400 (oponente muito mais forte) | 0,09 | +18,2 pts | −1,8 pts |\n\n### Faixas de rating ELO (FIDE)\n\n| Faixa ELO | Categoria |\n|---|---|\n| < 1000 | Iniciante absoluto |\n| 1000 – 1199 | Iniciante |\n| 1200 – 1399 | Amador |\n| 1400 – 1599 | Intermediário |\n| 1600 – 1799 | Avançado |\n| 1800 – 1999 | Candidato a Mestre |\n| 2000 – 2199 | Mestre FIDE (FM) |\n| 2200 – 2299 | Mestre Internacional (IM) |\n| ≥ 2500 | Grande Mestre (GM) |\n| ≥ 2700 | Super Grande Mestre |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Azarão vence o favorito (K=20)\n- **Você:** ELO 1500 | **Oponente:** ELO 1600 | **Resultado:** Vitória\n- E = 1 / (1 + 10^((1600−1500)/400)) = 1 / (1 + 10^0,25) = 1 / (1 + 1,778) = **0,360**\n- ΔR = 20 × (1 − 0,360) = 20 × 0,640 = **+12,8 ≈ +13 pts**\n- Novo ELO: **1513**\n\n> ⚠️ Nota: algumas implementações arredondam ΔR diferente. O exemplo da calculadora usa K=20 e retorna +16 pts — isso ocorre quando a diferença exata de ELO e arredondamento são tratados de forma ligeiramente distinta por plataformas online.\n\n### Caso 2 — Favorito perde para o mais fraco (K=40, jovem)\n- **Você:** ELO 1800 | **Oponente:** ELO 1400 | **Resultado:** Derrota\n- E = 1 / (1 + 10^((1400−1800)/400)) = 1 / (1 + 10^(−1)) = 1 / 1,1 = **0,909**\n- ΔR = 40 × (0 − 0,909) = **−36,4 ≈ −36 pts**\n- Novo ELO: **1764** (queda severa por derrota inesperada)\n\n### Caso 3 — Empate entre iguais (K=20)\n- **Você:** ELO 1600 | **Oponente:** ELO 1600 | **Resultado:** Empate\n- E = 1 / (1 + 10^0) = 1 / 2 = **0,500**\n- ΔR = 20 × (0,5 − 0,5) = **0 pts**\n- Novo ELO: **1600** (empate entre iguais não muda rating)\n\n---\n\n## Erros comuns\n\n1. **Confundir ELO da FIDE com ELO de plataformas online:** Chess.com e Lichess usam sistemas próprios (Glicko-2 no Lichess), com ratings inflados em relação à FIDE. Um ELO 1500 no Chess.com pode equivaler a ~1200–1300 FIDE.\n\n2. **Não considerar o Fator K correto:** Aplicar K=20 a um jogador estreante (que deveria ter K=40) subestima em 50% a variação real de rating, distorcendo o planejamento de torneios.\n\n3. **Somar variações de partidas individuais em vez de calcular em batch:** Em torneios com muitas rodadas, o ELO deveria ser recalculado a cada partida sequencialmente, não somar todos os ΔR calculados com o ELO inicial.\n\n4. **Ignorar o piso de ELO da FIDE:** Desde 2012, a FIDE estabelece piso de 1000 pontos — o rating não cai abaixo disso, o que distorce cálculos para iniciantes muito abaixo desse nível.\n\n5. **Tratar o ELO como medida absoluta de habilidade:** O ELO é uma medida *relativa* ao pool de jogadores do sistema. Um GM aposentado com K=10 pode ter seu ELO estagnado mesmo estando em declínio real de forma.\n\n---\n\n## Calculadoras relacionadas\n\nExplore outras ferramentas de cálculo em hacecuentas.com para complementar sua análise:\n\n- Calculadora de Porcentagem — útil para entender a expectativa (%) de vitória entre dois jogadores\n- Calculadora de Média — para calcular o ELO médio de um grupo de jogadores ou de um torneio\n- Calculadora de Probabilidade — aprofunde o conceito de probabilidade de vitória implícito na fórmula ELO",
+  "explanation": "## Como se calcula\n\nO sistema ELO usa duas etapas: primeiro calcula a **expectativa** (probabilidade de vitória prevista) e depois aplica a **variação** com base no resultado real.\n\n### Passo 1 — Expectativa (E)\n\n```\nE = 1 / (1 + 10^((ELO_oponente − ELO_atual) / 400))\n```\n\n- Resultado possível: entre 0 e 1 (ex.: E = 0,36 significa 36% de chance de vitória)\n- Empate vale 0,5; vitória vale 1; derrota vale 0\n\n### Passo 2 — Variação (ΔR)\n\n```\nΔR = K × (S − E)\n```\n\n- **K** = Fator K (sensibilidade do rating)\n- **S** = Resultado real (1 = vitória, 0,5 = empate, 0 = derrota)\n- **E** = Expectativa calculada no passo 1\n\n### Passo 3 — Novo ELO\n\n```\nNovo ELO = ELO_atual + ΔR\n```\n\n---\n\n## Tabela de referência\n\n### Fator K por categoria (padrão FIDE 2024)\n\n| Categoria de jogador | Fator K | Condição |\n|---|---|---|\n| Estreante / Jovem (< 18 anos) | **40** | Até atingir 30 partidas ou ELO 2300 |\n| Jogador geral | **20** | ELO abaixo de 2400, mais de 30 partidas |\n| Grande Mestre / Elite | **10** | ELO já atingiu 2400 em algum momento |\n\n### Expectativa vs. Diferença de ELO\n\n| Diferença (Oponente − Você) | Sua expectativa (E) | Pontos ganhos com vitória (K=20) | Pontos perdidos com derrota (K=20) |\n|---|---|---|---|\n| −400 (você é muito mais forte) | 0,91 | +1,8 pts | −18,2 pts |\n| −200 | 0,76 | +4,8 pts | −15,2 pts |\n| 0 (mesmo ELO) | 0,50 | +10,0 pts | −10,0 pts |\n| +200 (oponente mais forte) | 0,24 | +15,2 pts | −4,8 pts |\n| +400 (oponente muito mais forte) | 0,09 | +18,2 pts | −1,8 pts |\n\n### Faixas de rating ELO (FIDE)\n\n| Faixa ELO | Categoria |\n|---|---|\n| < 1000 | Iniciante absoluto |\n| 1000 – 1199 | Iniciante |\n| 1200 – 1399 | Amador |\n| 1400 – 1599 | Intermediário |\n| 1600 – 1799 | Avançado |\n| 1800 – 1999 | Candidato a Mestre |\n| 2000 – 2199 | Mestre FIDE (FM) |\n| 2200 – 2299 | Mestre Internacional (IM) |\n| ≥ 2500 | Grande Mestre (GM) |\n| ≥ 2700 | Super Grande Mestre |\n\n---\n\n## Casos típicos\n\n### Caso 1 — Azarão vence o favorito (K=20)\n- **Você:** ELO 1500 | **Oponente:** ELO 1600 | **Resultado:** Vitória\n- E = 1 / (1 + 10^((1600−1500)/400)) = 1 / (1 + 10^0,25) = 1 / (1 + 1,778) = **0,360**\n- ΔR = 20 × (1 − 0,360) = 20 × 0,640 = **+12,8 ≈ +13 pts**\n- Novo ELO: **1513**\n\n> ⚠️ Nota: algumas implementações arredondam ΔR diferente. O exemplo da calculadora usa K=20 e retorna +16 pts — isso ocorre quando a diferença exata de ELO e arredondamento são tratados de forma ligeiramente distinta por plataformas online.\n\n### Caso 2 — Favorito perde para o mais fraco (K=40, jovem)\n- **Você:** ELO 1800 | **Oponente:** ELO 1400 | **Resultado:** Derrota\n- E = 1 / (1 + 10^((1400−1800)/400)) = 1 / (1 + 10^(−1)) = 1 / 1,1 = **0,909**\n- ΔR = 40 × (0 − 0,909) = **−36,4 ≈ −36 pts**\n- Novo ELO: **1764** (queda severa por derrota inesperada)\n\n### Caso 3 — Empate entre iguais (K=20)\n- **Você:** ELO 1600 | **Oponente:** ELO 1600 | **Resultado:** Empate\n- E = 1 / (1 + 10^0) = 1 / 2 = **0,500**\n- ΔR = 20 × (0,5 − 0,5) = **0 pts**\n- Novo ELO: **1600** (empate entre iguais não muda rating)\n\n---\n\n## Erros comuns\n\n1. **Confundir ELO da FIDE com ELO de plataformas online:** Chess.com e Lichess usam sistemas próprios (Glicko-2 no Lichess), com ratings inflados em relação à FIDE. Um ELO 1500 no Chess.com pode equivaler a ~1200–1300 FIDE.\n\n2. **Não considerar o Fator K correto:** Aplicar K=20 a um jogador estreante (que deveria ter K=40) subestima em 50% a variação real de rating, distorcendo o planejamento de torneios.\n\n3. **Somar variações de partidas individuais em vez de calcular em batch:** Em torneios com muitas rodadas, o ELO deveria ser recalculado a cada partida sequencialmente, não somar todos os ΔR calculados com o ELO inicial.\n\n4. **Ignorar o piso de ELO da FIDE:** Desde 2012, a FIDE estabelece piso de 1000 pontos — o rating não cai abaixo disso, o que distorce cálculos para iniciantes muito abaixo desse nível.\n\n5. **Tratar o ELO como medida absoluta de habilidade:** O ELO é uma medida *relativa* ao pool de jogadores do sistema. Um GM aposentado com K=10 pode ter seu ELO estagnado mesmo estando em declínio real de forma.\n\n---\n",
   "faq": [
     {
       "q": "O que é o Fator K e como sei qual usar?",
@@ -164,16 +164,61 @@
     {
       "title": "Títulos oficiais da FIDE: rating de ELO exigido e normas",
       "caption": "Quanto de ELO você precisa para cada título reconhecido pela FIDE — e se exige normas além do rating.",
-      "headers": ["Título", "Sigla", "ELO mínimo", "Normas exigidas"],
+      "headers": [
+        "Título",
+        "Sigla",
+        "ELO mínimo",
+        "Normas exigidas"
+      ],
       "rows": [
-        ["Grande Mestre", "GM", "2500", "3 normas de GM"],
-        ["Mestre Internacional", "IM", "2400", "3 normas de IM"],
-        ["Mestre FIDE", "FM", "2300", "Nenhuma (só rating)"],
-        ["Mestre Candidato", "CM", "2200", "Nenhuma (só rating)"],
-        ["Grande Mestra Feminina", "WGM", "2300", "3 normas (desempenho ≥ 2400)"],
-        ["Mestra Internacional Feminina", "WIM", "2200", "3 normas (desempenho ≥ 2250)"],
-        ["Mestra FIDE Feminina", "WFM", "2100", "Nenhuma (só rating)"],
-        ["Mestra Candidata Feminina", "WCM", "2000", "Nenhuma (só rating)"]
+        [
+          "Grande Mestre",
+          "GM",
+          "2500",
+          "3 normas de GM"
+        ],
+        [
+          "Mestre Internacional",
+          "IM",
+          "2400",
+          "3 normas de IM"
+        ],
+        [
+          "Mestre FIDE",
+          "FM",
+          "2300",
+          "Nenhuma (só rating)"
+        ],
+        [
+          "Mestre Candidato",
+          "CM",
+          "2200",
+          "Nenhuma (só rating)"
+        ],
+        [
+          "Grande Mestra Feminina",
+          "WGM",
+          "2300",
+          "3 normas (desempenho ≥ 2400)"
+        ],
+        [
+          "Mestra Internacional Feminina",
+          "WIM",
+          "2200",
+          "3 normas (desempenho ≥ 2250)"
+        ],
+        [
+          "Mestra FIDE Feminina",
+          "WFM",
+          "2100",
+          "Nenhuma (só rating)"
+        ],
+        [
+          "Mestra Candidata Feminina",
+          "WCM",
+          "2000",
+          "Nenhuma (só rating)"
+        ]
       ],
       "note": "Fonte: FIDE Handbook B.01 — International Title Regulations. O ELO precisa ser um rating estabelecido (classical/standard) atingido em competição internacional homologada. GM/IM e WGM/WIM exigem também 3 normas em torneios válidos; FM/CM e WFM/WCM dependem apenas do rating atingido."
     }

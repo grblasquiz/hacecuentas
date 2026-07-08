@@ -336,7 +336,7 @@
     ],
     "result": "220 Ω ± 5% (209-231 Ω)"
   },
-  "explanation": "## Cómo se calcula\n\nEl valor de una resistencia con código de colores se obtiene combinando los dígitos de las bandas significativas con el multiplicador, y luego se aplica la tolerancia para obtener el rango admisible.\n\n**Resistencia de 4 bandas:**\n```\nValor (Ω) = (Banda1 × 10 + Banda2) × Multiplicador\nMínimo    = Valor × (1 − Tolerancia/100)\nMáximo    = Valor × (1 + Tolerancia/100)\n```\n\n**Resistencia de 5 bandas:**\n```\nValor (Ω) = (Banda1 × 100 + Banda2 × 10 + Banda3) × Multiplicador\nMínimo    = Valor × (1 − Tolerancia/100)\nMáximo    = Valor × (1 + Tolerancia/100)\n```\n\n---\n\n## Tabla de referencia\n\n### Dígitos y multiplicadores por color (IEC 60062)\n\n| Color     | Dígito | Multiplicador | Tolerancia |\n|-----------|--------|---------------|------------|\n| Negro     | 0      | ×1            | —          |\n| Marrón    | 1      | ×10           | ±1%        |\n| Rojo      | 2      | ×100          | ±2%        |\n| Naranja   | 3      | ×1.000        | —          |\n| Amarillo  | 4      | ×10.000       | —          |\n| Verde     | 5      | ×100.000      | ±0,5%      |\n| Azul      | 6      | ×1.000.000    | ±0,25%     |\n| Violeta   | 7      | ×10.000.000   | ±0,1%      |\n| Gris      | 8      | ×100.000.000  | ±0,05%     |\n| Blanco    | 9      | —             | —          |\n| Dorado    | —      | ×0,1          | ±5%        |\n| Plateado  | —      | ×0,01         | ±10%       |\n| Sin banda | —      | —             | ±20%       |\n\n> **Nota:** Los colores Marrón, Rojo, Verde, Azul, Violeta y Gris aparecen tanto como dígito/multiplicador como tolerancia (usos en resistencias de precisión de 5 bandas).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Resistencia de 4 bandas: Rojo-Rojo-Marrón-Dorado\n```\nDígitos:       2, 2\nMultiplicador: ×10 (Marrón)\nTolerancia:    ±5% (Dorado)\n\nValor   = (2×10 + 2) × 10 = 220 Ω\nMínimo  = 220 × (1 − 0,05) = 209 Ω\nMáximo  = 220 × (1 + 0,05) = 231 Ω\n```\nEsta es una de las resistencias más comunes en circuitos de LEDs con fuente de 12 V.\n\n### Caso 2 — Resistencia de 4 bandas: Naranja-Naranja-Naranja-Dorado\n```\nDígitos:       3, 3\nMultiplicador: ×1.000 (Naranja)\nTolerancia:    ±5% (Dorado)\n\nValor   = (3×10 + 3) × 1.000 = 33.000 Ω = 33 kΩ\nMínimo  = 33.000 × 0,95 = 31.350 Ω\nMáximo  = 33.000 × 1,05 = 34.650 Ω\n```\nValor típico de pull-up/pull-down en entradas digitales.\n\n### Caso 3 — Resistencia de 5 bandas (precisión): Rojo-Violeta-Verde-Marrón-Marrón\n```\nDígitos:       2, 7, 5\nMultiplicador: ×10 (Marrón)\nTolerancia:    ±1% (Marrón)\n\nValor   = (2×100 + 7×10 + 5) × 10 = 275 × 10 = 2.750 Ω = 2,75 kΩ\nMínimo  = 2.750 × 0,99 = 2.722,5 Ω\nMáximo  = 2.750 × 1,01 = 2.777,5 Ω\n```\nResistencias de 5 bandas con tolerancia ±1% o menor pertenecen a la serie E96 y se usan en instrumentación de precisión.\n\n---\n\n## Errores comunes\n\n1. **Leer las bandas en sentido contrario:** Las resistencias se leen de izquierda a derecha, empezando por la banda más cercana a uno de los extremos. La banda de tolerancia (dorado, plateado o marrón) siempre va al final. Invertir el orden da un valor completamente diferente —por ejemplo, Dorado-Marrón-Rojo-Rojo leído al revés da 220 Ω, pero leído al derecho daría un valor erróneo.\n\n2. **Confundir dorado (×0,1) con amarillo (dígito 4) como multiplicador:** El dorado **solo** aparece en la posición de multiplicador o tolerancia, nunca como dígito. Su valor multiplicador es ×0,1 (para resistencias de fracción de ohm, como 2,2 Ω = Rojo-Rojo-Dorado-Dorado).\n\n3. **Ignorar la tolerancia al dimensionar circuitos:** Una resistencia de 1 kΩ ±10% puede medir entre 900 Ω y 1.100 Ω. En divisores de tensión o filtros RC esto puede modificar la frecuencia de corte hasta un 10%, lo que en audio o comunicaciones es crítico.\n\n4. **Confundir resistencias de 4 y 5 bandas:** Una resistencia de 5 bandas con la banda de tolerancia marrón (±1%) puede confundirse con una de 4 bandas si no se identifica correctamente cuál es la banda final. La distancia física entre la última banda y el cuerpo de la resistencia suele ser mayor para la tolerancia.\n\n5. **Aplicar la fórmula de 4 bandas a una resistencia de 5 bandas:** Esto produce un error de un orden de magnitud. Por ejemplo, Verde-Azul-Negro-Naranja-Marrón (5 bandas) = 560.000 Ω = 560 kΩ ±1%; si se leyera como 4 bandas, el resultado sería 56 × 1.000 = 56 kΩ, un error de 10×.\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de Ley de Ohm (V, I, R)](/calculadora-ley-ohm-voltaje-corriente-resistencia) — Calculá tensión, corriente o resistencia con cualquier valor obtenido aquí.\n- [Calculadora de potencia eléctrica (P = V·I)](/calculadora-potencia-electrica-p-vi) — Determiná la potencia disipada por la resistencia para elegir el wattaje correcto (1/4 W, 1/2 W, 1 W, etc.).\n- [Calculadora de resistencia para LED](/calculadora-resistencia-led-serie-paralelo) — Usá el valor de tu resistencia para verificar que limita correctamente la corriente del LED.\n- [Calculadora de divisor de voltaje](/calculadora-divisor-voltaje-resistencias) — Diseñá divisores resistivos teniendo en cuenta la tolerancia real de cada componente.\n",
+  "explanation": "## Cómo se calcula\n\nEl valor de una resistencia con código de colores se obtiene combinando los dígitos de las bandas significativas con el multiplicador, y luego se aplica la tolerancia para obtener el rango admisible.\n\n**Resistencia de 4 bandas:**\n```\nValor (Ω) = (Banda1 × 10 + Banda2) × Multiplicador\nMínimo    = Valor × (1 − Tolerancia/100)\nMáximo    = Valor × (1 + Tolerancia/100)\n```\n\n**Resistencia de 5 bandas:**\n```\nValor (Ω) = (Banda1 × 100 + Banda2 × 10 + Banda3) × Multiplicador\nMínimo    = Valor × (1 − Tolerancia/100)\nMáximo    = Valor × (1 + Tolerancia/100)\n```\n\n---\n\n## Tabla de referencia\n\n### Dígitos y multiplicadores por color (IEC 60062)\n\n> **Nota:** Los colores Marrón, Rojo, Verde, Azul, Violeta y Gris aparecen tanto como dígito/multiplicador como tolerancia (usos en resistencias de precisión de 5 bandas).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Resistencia de 4 bandas: Rojo-Rojo-Marrón-Dorado\n```\nDígitos:       2, 2\nMultiplicador: ×10 (Marrón)\nTolerancia:    ±5% (Dorado)\n\nValor   = (2×10 + 2) × 10 = 220 Ω\nMínimo  = 220 × (1 − 0,05) = 209 Ω\nMáximo  = 220 × (1 + 0,05) = 231 Ω\n```\nEsta es una de las resistencias más comunes en circuitos de LEDs con fuente de 12 V.\n\n### Caso 2 — Resistencia de 4 bandas: Naranja-Naranja-Naranja-Dorado\n```\nDígitos:       3, 3\nMultiplicador: ×1.000 (Naranja)\nTolerancia:    ±5% (Dorado)\n\nValor   = (3×10 + 3) × 1.000 = 33.000 Ω = 33 kΩ\nMínimo  = 33.000 × 0,95 = 31.350 Ω\nMáximo  = 33.000 × 1,05 = 34.650 Ω\n```\nValor típico de pull-up/pull-down en entradas digitales.\n\n### Caso 3 — Resistencia de 5 bandas (precisión): Rojo-Violeta-Verde-Marrón-Marrón\n```\nDígitos:       2, 7, 5\nMultiplicador: ×10 (Marrón)\nTolerancia:    ±1% (Marrón)\n\nValor   = (2×100 + 7×10 + 5) × 10 = 275 × 10 = 2.750 Ω = 2,75 kΩ\nMínimo  = 2.750 × 0,99 = 2.722,5 Ω\nMáximo  = 2.750 × 1,01 = 2.777,5 Ω\n```\nResistencias de 5 bandas con tolerancia ±1% o menor pertenecen a la serie E96 y se usan en instrumentación de precisión.\n\n---\n\n## Errores comunes\n\n1. **Leer las bandas en sentido contrario:** Las resistencias se leen de izquierda a derecha, empezando por la banda más cercana a uno de los extremos. La banda de tolerancia (dorado, plateado o marrón) siempre va al final. Invertir el orden da un valor completamente diferente —por ejemplo, Dorado-Marrón-Rojo-Rojo leído al revés da 220 Ω, pero leído al derecho daría un valor erróneo.\n\n2. **Confundir dorado (×0,1) con amarillo (dígito 4) como multiplicador:** El dorado **solo** aparece en la posición de multiplicador o tolerancia, nunca como dígito. Su valor multiplicador es ×0,1 (para resistencias de fracción de ohm, como 2,2 Ω = Rojo-Rojo-Dorado-Dorado).\n\n3. **Ignorar la tolerancia al dimensionar circuitos:** Una resistencia de 1 kΩ ±10% puede medir entre 900 Ω y 1.100 Ω. En divisores de tensión o filtros RC esto puede modificar la frecuencia de corte hasta un 10%, lo que en audio o comunicaciones es crítico.\n\n4. **Confundir resistencias de 4 y 5 bandas:** Una resistencia de 5 bandas con la banda de tolerancia marrón (±1%) puede confundirse con una de 4 bandas si no se identifica correctamente cuál es la banda final. La distancia física entre la última banda y el cuerpo de la resistencia suele ser mayor para la tolerancia.\n\n5. **Aplicar la fórmula de 4 bandas a una resistencia de 5 bandas:** Esto produce un error de un orden de magnitud. Por ejemplo, Verde-Azul-Negro-Naranja-Marrón (5 bandas) = 560.000 Ω = 560 kΩ ±1%; si se leyera como 4 bandas, el resultado sería 56 × 1.000 = 56 kΩ, un error de 10×.\n\n---\n",
   "faq": [
     {
       "q": "¿Cómo sé desde qué lado leer las bandas de una resistencia?",
@@ -411,21 +411,91 @@
     {
       "title": "Código de colores de resistencias (IEC 60062)",
       "caption": "Valor de cada color según su posición: dígito, multiplicador y tolerancia.",
-      "headers": ["Color", "Dígito", "Multiplicador", "Tolerancia"],
+      "headers": [
+        "Color",
+        "Dígito",
+        "Multiplicador",
+        "Tolerancia"
+      ],
       "rows": [
-        ["Negro", "0", "×1", "—"],
-        ["Marrón", "1", "×10", "±1%"],
-        ["Rojo", "2", "×100", "±2%"],
-        ["Naranja", "3", "×1.000", "—"],
-        ["Amarillo", "4", "×10.000", "—"],
-        ["Verde", "5", "×100.000", "±0,5%"],
-        ["Azul", "6", "×1.000.000", "±0,25%"],
-        ["Violeta", "7", "×10.000.000", "±0,1%"],
-        ["Gris", "8", "—", "—"],
-        ["Blanco", "9", "—", "—"],
-        ["Dorado", "—", "×0,1", "±5%"],
-        ["Plateado", "—", "×0,01", "±10%"],
-        ["Sin banda", "—", "—", "±20%"]
+        [
+          "Negro",
+          "0",
+          "×1",
+          "—"
+        ],
+        [
+          "Marrón",
+          "1",
+          "×10",
+          "±1%"
+        ],
+        [
+          "Rojo",
+          "2",
+          "×100",
+          "±2%"
+        ],
+        [
+          "Naranja",
+          "3",
+          "×1.000",
+          "—"
+        ],
+        [
+          "Amarillo",
+          "4",
+          "×10.000",
+          "—"
+        ],
+        [
+          "Verde",
+          "5",
+          "×100.000",
+          "±0,5%"
+        ],
+        [
+          "Azul",
+          "6",
+          "×1.000.000",
+          "±0,25%"
+        ],
+        [
+          "Violeta",
+          "7",
+          "×10.000.000",
+          "±0,1%"
+        ],
+        [
+          "Gris",
+          "8",
+          "—",
+          "—"
+        ],
+        [
+          "Blanco",
+          "9",
+          "—",
+          "—"
+        ],
+        [
+          "Dorado",
+          "—",
+          "×0,1",
+          "±5%"
+        ],
+        [
+          "Plateado",
+          "—",
+          "×0,01",
+          "±10%"
+        ],
+        [
+          "Sin banda",
+          "—",
+          "—",
+          "±20%"
+        ]
       ],
       "note": "Estándar IEC 60062. Coincide con los valores usados por esta calculadora. 4 bandas: (díg1×10 + díg2) × mult. 5 bandas: (díg1×100 + díg2×10 + díg3) × mult."
     }

@@ -40,8 +40,14 @@
       "type": "select",
       "default": "nominal_a_liquido",
       "options": [
-        { "value": "nominal_a_liquido", "label": "Tengo el nominal → ver el líquido" },
-        { "value": "liquido_a_nominal", "label": "Quiero un líquido objetivo → ver el nominal" }
+        {
+          "value": "nominal_a_liquido",
+          "label": "Tengo el nominal → ver el líquido"
+        },
+        {
+          "value": "liquido_a_nominal",
+          "label": "Quiero un líquido objetivo → ver el nominal"
+        }
       ]
     },
     {
@@ -50,8 +56,14 @@
       "type": "select",
       "default": "no",
       "options": [
-        { "value": "no", "label": "No" },
-        { "value": "si", "label": "Sí" }
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
       ]
     },
     {
@@ -60,17 +72,39 @@
       "type": "select",
       "default": "no",
       "options": [
-        { "value": "no", "label": "No" },
-        { "value": "si", "label": "Sí" }
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí"
+        }
       ]
     }
   ],
   "outputs": [
-    { "id": "liquido", "label": "Sueldo líquido", "primary": true },
-    { "id": "nominal", "label": "Sueldo nominal" },
-    { "id": "aportesBps", "label": "Aportes BPS" },
-    { "id": "irpf", "label": "IRPF" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "liquido",
+      "label": "Sueldo líquido",
+      "primary": true
+    },
+    {
+      "id": "nominal",
+      "label": "Sueldo nominal"
+    },
+    {
+      "id": "aportesBps",
+      "label": "Aportes BPS"
+    },
+    {
+      "id": "irpf",
+      "label": "IRPF"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: quiero $U 48.240 líquidos → ¿qué nominal?",
@@ -82,7 +116,7 @@
     ],
     "result": "Nominal a pactar: $U 60.000"
   },
-  "explanation": "## Cómo se convierte nominal ↔ líquido en Uruguay\n\n### Del nominal al líquido\n\nEs el cálculo directo:\n\n```\nLíquido = nominal − aportes BPS (montepío 15% + FONASA 3–8% + FRL 0,1%) − IRPF\n```\n\nPor debajo del mínimo no imponible de 7 BPC ($U 48.048) no hay IRPF, así que el descuento es sólo BPS (~18% a 19,6%). Por encima, se suma el IRPF progresivo.\n\n### Del líquido al nominal\n\nAcá está el truco: **no podés simplemente dividir el líquido por un factor fijo**. El IRPF es progresivo (cada franja paga una tasa distinta) y la tasa de FONASA cambia al cruzar 2,5 BPC, así que la relación nominal/líquido **no es una recta**. La calculadora resuelve el problema **iterando** (búsqueda binaria): prueba nominales hasta encontrar el que produce exactamente tu líquido objetivo.\n\n## Tabla nominal → líquido (sin familiares a cargo)\n\n| Nominal | Aportes BPS | IRPF | Líquido |\n|---|---|---|---|\n| $U 35.000 | $U 6.860 | $U 0 | $U 28.140 |\n| $U 50.000 | $U 9.800 | $U 0 | $U 40.200 |\n| $U 60.000 | $U 11.760 | $U 0 | $U 48.240 |\n| $U 90.000 | $U 17.640 | $U 2.794 | $U 69.566 |\n| $U 120.000 | $U 23.520 | $U 9.415 | $U 87.065 |\n\n## Tabla líquido → nominal (sin familiares a cargo, aproximado)\n\n| Líquido objetivo | Nominal a pactar |\n|---|---|\n| $U 28.140 | ~$U 35.000 |\n| $U 40.200 | ~$U 50.000 |\n| $U 48.240 | ~$U 60.000 |\n| $U 69.566 | ~$U 90.000 |\n\nA mayor sueldo, la brecha entre nominal y líquido crece, porque entra a jugar el IRPF progresivo.\n\n## Por qué importa la dirección\n\nCuando negociás un sueldo, conviene tener claro en qué base estás hablando. Pactar \"$U 50.000\" no es lo mismo si es nominal (cobrás ~$U 40.200) o líquido (te pagan ~$U 62.000 nominales). Confundir ambas bases es la fuente más común de malentendidos al aceptar un trabajo.\n\n## Qué NO incluye\n\n- El aporte patronal (lo paga el empleador, no sale de tu sueldo).\n- Aguinaldo y salario vacacional (partidas aparte).\n- Deducciones extra de IRPF (hijos, alquiler, fondos de retiro), que en su caso bajarían el nominal necesario para un mismo líquido.\n- Descuentos particulares (adelantos, préstamos, embargos).\n\n## Errores comunes\n\n- **Dividir el líquido por 0,80 para sacar el nominal.** No funciona: el IRPF es progresivo, hay que iterar.\n- **Mezclar nominal y líquido en la negociación.** Aclará siempre en qué base hablás.\n- **Olvidar las cargas de familia.** Cambian tu FONASA y, por lo tanto, el resultado.\n- **Asumir relación lineal.** Duplicar el nominal no duplica el líquido, porque el IRPF crece más rápido.\n\n## Disclaimer\n\nCálculo orientativo según escalas 2026 (BPC $U 6.864). El IRPF usa como deducción los aportes BPS personales (caso base); con hijos a cargo, alquiler o aportes a fondos de retiro, el nominal necesario para un mismo líquido sería menor. Verificá con tu empleador y con BPS/DGI.\n",
+  "explanation": "## Cómo se convierte nominal ↔ líquido en Uruguay\n\n### Del nominal al líquido\n\nEs el cálculo directo:\n\n```\nLíquido = nominal − aportes BPS (montepío 15% + FONASA 3–8% + FRL 0,1%) − IRPF\n```\n\nPor debajo del mínimo no imponible de 7 BPC ($U 48.048) no hay IRPF, así que el descuento es sólo BPS (~18% a 19,6%). Por encima, se suma el IRPF progresivo.\n\n### Del líquido al nominal\n\nAcá está el truco: **no podés simplemente dividir el líquido por un factor fijo**. El IRPF es progresivo (cada franja paga una tasa distinta) y la tasa de FONASA cambia al cruzar 2,5 BPC, así que la relación nominal/líquido **no es una recta**. La calculadora resuelve el problema **iterando** (búsqueda binaria): prueba nominales hasta encontrar el que produce exactamente tu líquido objetivo.\n\n## Tabla líquido → nominal (sin familiares a cargo, aproximado)\n\n| Líquido objetivo | Nominal a pactar |\n|---|---|\n| $U 28.140 | ~$U 35.000 |\n| $U 40.200 | ~$U 50.000 |\n| $U 48.240 | ~$U 60.000 |\n| $U 69.566 | ~$U 90.000 |\n\nA mayor sueldo, la brecha entre nominal y líquido crece, porque entra a jugar el IRPF progresivo.\n\n## Por qué importa la dirección\n\nCuando negociás un sueldo, conviene tener claro en qué base estás hablando. Pactar \"$U 50.000\" no es lo mismo si es nominal (cobrás ~$U 40.200) o líquido (te pagan ~$U 62.000 nominales). Confundir ambas bases es la fuente más común de malentendidos al aceptar un trabajo.\n\n## Qué NO incluye\n\n- El aporte patronal (lo paga el empleador, no sale de tu sueldo).\n- Aguinaldo y salario vacacional (partidas aparte).\n- Deducciones extra de IRPF (hijos, alquiler, fondos de retiro), que en su caso bajarían el nominal necesario para un mismo líquido.\n- Descuentos particulares (adelantos, préstamos, embargos).\n\n## Errores comunes\n\n- **Dividir el líquido por 0,80 para sacar el nominal.** No funciona: el IRPF es progresivo, hay que iterar.\n- **Mezclar nominal y líquido en la negociación.** Aclará siempre en qué base hablás.\n- **Olvidar las cargas de familia.** Cambian tu FONASA y, por lo tanto, el resultado.\n- **Asumir relación lineal.** Duplicar el nominal no duplica el líquido, porque el IRPF crece más rápido.\n\n## Disclaimer\n\nCálculo orientativo según escalas 2026 (BPC $U 6.864). El IRPF usa como deducción los aportes BPS personales (caso base); con hijos a cargo, alquiler o aportes a fondos de retiro, el nominal necesario para un mismo líquido sería menor. Verificá con tu empleador y con BPS/DGI.\n",
   "faq": [
     {
       "q": "¿Cómo paso mi nominal a líquido en Uruguay?",
@@ -122,22 +156,68 @@
     }
   ],
   "sources": [
-    { "name": "BPS — Tasas de aportes personales y FONASA", "url": "https://www.bps.gub.uy/835/tasas.html" },
-    { "name": "DGI — IRPF (rentas del trabajo)", "url": "https://www.dgi.gub.uy/" }
+    {
+      "name": "BPS — Tasas de aportes personales y FONASA",
+      "url": "https://www.bps.gub.uy/835/tasas.html"
+    },
+    {
+      "name": "DGI — IRPF (rentas del trabajo)",
+      "url": "https://www.dgi.gub.uy/"
+    }
   ],
   "relatedSlugs": [],
   "referenceTables": [
     {
       "title": "Nominal a líquido según el sueldo — Uruguay 2026 (sin familiares a cargo)",
-      "headers": ["Sueldo nominal ($U)", "Aportes BPS ($U)", "IRPF ($U)", "Líquido en mano ($U)"],
+      "headers": [
+        "Sueldo nominal ($U)",
+        "Aportes BPS ($U)",
+        "IRPF ($U)",
+        "Líquido en mano ($U)"
+      ],
       "rows": [
-        ["35.000", "6.860", "0", "28.140"],
-        ["50.000", "9.800", "0", "40.200"],
-        ["60.000", "11.760", "0", "48.240"],
-        ["70.000", "13.720", "342", "55.938"],
-        ["90.000", "17.640", "2.794", "69.566"],
-        ["120.000", "23.520", "9.415", "87.065"],
-        ["150.000", "29.400", "16.145", "104.455"]
+        [
+          "35.000",
+          "6.860",
+          "0",
+          "28.140"
+        ],
+        [
+          "50.000",
+          "9.800",
+          "0",
+          "40.200"
+        ],
+        [
+          "60.000",
+          "11.760",
+          "0",
+          "48.240"
+        ],
+        [
+          "70.000",
+          "13.720",
+          "342",
+          "55.938"
+        ],
+        [
+          "90.000",
+          "17.640",
+          "2.794",
+          "69.566"
+        ],
+        [
+          "120.000",
+          "23.520",
+          "9.415",
+          "87.065"
+        ],
+        [
+          "150.000",
+          "29.400",
+          "16.145",
+          "104.455"
+        ]
       ],
       "note": "Fuente: BPS (bps.gub.uy) y DGI (dgi.gub.uy), escalas 2026. BPC 2026 = $U 6.864. Caso sin cónyuge ni hijos a cargo (FONASA 3% hasta 2,5 BPC, 4,5% por encima). Para el camino inverso (líquido → nominal), buscá en la columna del líquido y leé el nominal correspondiente."
     }
@@ -149,12 +229,27 @@
   },
   "_table": {
     "title": "Líquido objetivo → nominal a pactar (aproximado, sin familiares a cargo)",
-    "headers": ["Líquido objetivo", "Nominal necesario"],
+    "headers": [
+      "Líquido objetivo",
+      "Nominal necesario"
+    ],
     "rows": [
-      ["$U 28.140", "~$U 35.000"],
-      ["$U 40.200", "~$U 50.000"],
-      ["$U 48.240", "~$U 60.000"],
-      ["$U 69.566", "~$U 90.000"]
+      [
+        "$U 28.140",
+        "~$U 35.000"
+      ],
+      [
+        "$U 40.200",
+        "~$U 50.000"
+      ],
+      [
+        "$U 48.240",
+        "~$U 60.000"
+      ],
+      [
+        "$U 69.566",
+        "~$U 90.000"
+      ]
     ],
     "note": "Calculado por iteración. La brecha crece con el sueldo por el IRPF progresivo."
   },

@@ -9,7 +9,7 @@
   "icon": "🧠",
   "audience": "global",
   "formulaId": "claude-gemini-tokens-comparativa-precio-uso",
-  "lastReviewed": "2026-06-04",
+  "lastReviewed": "2026-06-20",
   "intro": "Compare real token-based API costs across Anthropic's Claude, Google's Gemini, and OpenAI's GPT-4o. The formula is straightforward: **Monthly Cost (USD) = (Input Tokens in millions × Input Price per MTok) + (Output Tokens in millions × Output Price per MTok)**. Output tokens are always 3–5× more expensive than input tokens — Claude Sonnet charges $3/MTok input vs. $15/MTok output, so a workload with more output than input can cost dramatically more than a naive estimate suggests. Use this calculator to budget API spend before committing to a model, compare cost-efficiency at your specific input/output ratio, or evaluate whether a cheaper model's context-window limitations affect your use case.",
   "keyTakeaway": "**Monthly Cost = (Input_M × $/MTok_in) + (Output_M × $/MTok_out)** — e.g., 10M input + 5M output on Claude Sonnet = (10 × $3.00) + (5 × $15.00) = **$105.00/month**. The same volume on Gemini Pro = (10 × $3.50) + (5 × $10.50) = **$87.50/month**. Output-heavy workloads widen the gap significantly.",
   "useCases": [
@@ -97,7 +97,7 @@
     ],
     "result": "Monthly cost: $105.00 USD — output tokens account for 71% of the bill. Context window: 200k tokens."
   },
-  "explanation": "## How It Works\n\nEvery major LLM API provider bills input and output tokens at separate per-million-token (MTok) rates. The formula used by this calculator:\n\n```\nMonthly Cost (USD) =\n  (Input_Tokens_Millions × Input_Price_per_MTok)\n  + (Output_Tokens_Millions × Output_Price_per_MTok)\n```\n\n**Example — Claude Sonnet with 10M input + 5M output:**\n```\nInput:  10M × $3.00/MTok  = $30.00\nOutput:  5M × $15.00/MTok = $75.00\nTotal:                      $105.00/month\n```\n\n**Example — Gemini Pro with the same 10M input + 5M output:**\n```\nInput:  10M × $3.50/MTok  = $35.00\nOutput:  5M × $10.50/MTok = $52.50\nTotal:                      $87.50/month\n```\n\nNote: even though Gemini Pro costs more per input token ($3.50 vs. $3.00), its lower output price ($10.50 vs. $15.00) makes it cheaper for output-heavy workloads. The crossover point depends on your input/output ratio.\n\n---\n\n## Pricing Reference Table\n\nPrices used in this calculator (USD per million tokens):\n\n| Model | Input $/MTok | Output $/MTok | Context Window |\n|---|---|---|---|\n| Claude Sonnet | $3.00 | $15.00 | 200k tokens |\n| Claude Opus | $15.00 | $75.00 | 200k tokens |\n| Gemini Pro | $3.50 | $10.50 | 2M tokens |\n| Gemini Ultra | $7.00 | $21.00 | 1M tokens |\n| GPT-4o | $5.00 | $15.00 | 128k tokens |\n\n*Pricing can change. Always verify at each provider's official pricing page before committing to a production budget.*\n\n---\n\n## Why Output Tokens Cost More\n\nInput tokens are processed in parallel (the attention mechanism reads the entire prompt at once). Output tokens require sequential autoregressive decoding — the model generates one token at a time, each step depending on the previous. This means output compute is fundamentally more expensive, which is why Claude Sonnet charges $15/MTok for output vs. $3/MTok for input (a 5:1 ratio). Minimizing verbose output through precise system prompts can yield meaningful savings at scale.\n\n---\n\n## Common Estimation Mistakes\n\n1. **Assuming a flat token price.** Always calculate input and output separately — a 1:1 input/output ratio means output dominates your bill.\n\n2. **Ignoring system prompts in input token counts.** A 1,500-token system prompt sent with every request adds 1.5M tokens of input per million API calls — invisible until the invoice arrives.\n\n3. **Not accounting for conversation history accumulation.** In chatbots, each turn resends the full conversation history. By turn 10 of a 500-token-per-turn chat, you're sending 5,000 tokens of input just for context — costs grow quadratically, not linearly.\n\n4. **Comparing context windows without checking pricing tiers.** Gemini Pro's 2M token context sounds better than Claude's 200k — but if a provider charges double for prompts above a certain length threshold, that \"bigger\" window can be 2× more expensive per token.\n\n5. **Forgetting batch API discounts.** Anthropic's Batch API (asynchronous, 24h turnaround) cuts all Claude prices by 50%. Non-real-time workloads — nightly enrichment, document pipelines — should always use batch pricing.",
+  "explanation": "## How It Works\n\nEvery major LLM API provider bills input and output tokens at separate per-million-token (MTok) rates. The formula used by this calculator:\n\n```\nMonthly Cost (USD) =\n  (Input_Tokens_Millions × Input_Price_per_MTok)\n  + (Output_Tokens_Millions × Output_Price_per_MTok)\n```\n\n**Example — Claude Sonnet with 10M input + 5M output:**\n```\nInput:  10M × $3.00/MTok  = $30.00\nOutput:  5M × $15.00/MTok = $75.00\nTotal:                      $105.00/month\n```\n\n**Example — Gemini Pro with the same 10M input + 5M output:**\n```\nInput:  10M × $3.50/MTok  = $35.00\nOutput:  5M × $10.50/MTok = $52.50\nTotal:                      $87.50/month\n```\n\nNote: even though Gemini Pro costs more per input token ($3.50 vs. $3.00), its lower output price ($10.50 vs. $15.00) makes it cheaper for output-heavy workloads. The crossover point depends on your input/output ratio.\n\n---\n\n## Pricing Reference Table\n\nPrices used in this calculator (USD per million tokens):\n\n*Pricing can change. Always verify at each provider's official pricing page before committing to a production budget.*\n\n---\n\n## Why Output Tokens Cost More\n\nInput tokens are processed in parallel (the attention mechanism reads the entire prompt at once). Output tokens require sequential autoregressive decoding — the model generates one token at a time, each step depending on the previous. This means output compute is fundamentally more expensive, which is why Claude Sonnet charges $15/MTok for output vs. $3/MTok for input (a 5:1 ratio). Minimizing verbose output through precise system prompts can yield meaningful savings at scale.\n\n---\n\n## Common Estimation Mistakes\n\n1. **Assuming a flat token price.** Always calculate input and output separately — a 1:1 input/output ratio means output dominates your bill.\n\n2. **Ignoring system prompts in input token counts.** A 1,500-token system prompt sent with every request adds 1.5M tokens of input per million API calls — invisible until the invoice arrives.\n\n3. **Not accounting for conversation history accumulation.** In chatbots, each turn resends the full conversation history. By turn 10 of a 500-token-per-turn chat, you're sending 5,000 tokens of input just for context — costs grow quadratically, not linearly.\n\n4. **Comparing context windows without checking pricing tiers.** Gemini Pro's 2M token context sounds better than Claude's 200k — but if a provider charges double for prompts above a certain length threshold, that \"bigger\" window can be 2× more expensive per token.\n\n5. **Forgetting batch API discounts.** Anthropic's Batch API (asynchronous, 24h turnaround) cuts all Claude prices by 50%. Non-real-time workloads — nightly enrichment, document pipelines — should always use batch pricing.\n",
   "faq": [
     {
       "q": "Which model is cheapest overall: Claude, Gemini, or GPT-4o?",
@@ -140,17 +140,46 @@
       "a": "Divide the monthly cost by the number of API calls. If you send 100,000 calls/month with an average of 1,000 input tokens and 500 output tokens each: total = 100M input + 50M output tokens. On Claude Sonnet: (100 × $3.00) + (50 × $15.00) = $300 + $750 = $1,050/month ÷ 100,000 calls = **$0.0105 per query**. This per-query cost is what you need for pricing an end-user product with a per-query or subscription model."
     }
   ],
-  "lastReviewed": "2026-06-20",
   "referenceTables": [
     {
       "title": "LLM API Pricing Comparison (USD per Million Tokens)",
-      "headers": ["Model", "Input $/MTok", "Output $/MTok", "Context Window"],
+      "headers": [
+        "Model",
+        "Input $/MTok",
+        "Output $/MTok",
+        "Context Window"
+      ],
       "rows": [
-        ["Claude Sonnet", "$3.00", "$15.00", "200k tokens"],
-        ["Claude Opus", "$15.00", "$75.00", "200k tokens"],
-        ["Gemini Pro", "$3.50", "$10.50", "2M tokens"],
-        ["Gemini Ultra", "$7.00", "$21.00", "1M tokens"],
-        ["GPT-4o", "$5.00", "$15.00", "128k tokens"]
+        [
+          "Claude Sonnet",
+          "$3.00",
+          "$15.00",
+          "200k tokens"
+        ],
+        [
+          "Claude Opus",
+          "$15.00",
+          "$75.00",
+          "200k tokens"
+        ],
+        [
+          "Gemini Pro",
+          "$3.50",
+          "$10.50",
+          "2M tokens"
+        ],
+        [
+          "Gemini Ultra",
+          "$7.00",
+          "$21.00",
+          "1M tokens"
+        ],
+        [
+          "GPT-4o",
+          "$5.00",
+          "$15.00",
+          "128k tokens"
+        ]
       ],
       "note": "Source: Anthropic (anthropic.com/pricing), Google AI (ai.google.dev/pricing), OpenAI (openai.com/api/pricing) — verified mid-2025; check providers for current rates"
     }

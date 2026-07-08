@@ -9,7 +9,7 @@ import Newsletter from '../components/Newsletter.astro';
 import CategoryIcon from '../components/CategoryIcon.astro';
 import ProblemInterpreter from '../components/ProblemInterpreter.astro';
 import HeroSearch from '../components/HeroSearch.astro';
-import { TOTAL_DISPLAY, PT_DISPLAY, TOTAL_PLAIN, CALC_COUNTS, CATEGORY_COUNT } from '../lib/calc-counts';
+import { PT_DISPLAY, CALC_COUNTS, CATEGORY_COUNT } from '../lib/calc-counts';
 import { DECISION_MANIFEST } from '../lib/decisions/manifest';
 import { DECISION_HUBS } from '../lib/decisions/hubs';
 import { PILLARS } from '../lib/pillars';
@@ -43,7 +43,6 @@ const totalSalas = DECISION_MANIFEST.length;
 // H1 hero: total del catálogo COMPLETO (todos los países, no solo ES-root) desde
 // la fuente única calc-counts (NUNCA hardcodear el número), redondeado HACIA ABAJO
 // a la centena para no over-promise: 4.179 → "Más de 4.100".
-const heroCalcsDisplay = TOTAL_PLAIN;
 
 // Conteo EXACTO del catálogo completo (todos los países), de la MISMA fuente única
 // que el hero. Antes estos displays usaban calcs.length (sólo el catálogo AR ≈ 2.793),
@@ -281,7 +280,7 @@ const schema = {
           name: '¿Qué es Hacé Cuentas?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: `Hacé Cuentas es un sitio argentino de ${TOTAL_DISPLAY} calculadoras online gratuitas en español, inglés y portugués. Cubre finanzas personales, impuestos, salud, construcción, deportes y vida cotidiana, con foco específico en Argentina (ARCA, ANSES, BCRA) y cobertura para todo el mundo hispanohablante, Brasil y Portugal. Todas las calculadoras son gratuitas, sin registro y corren 100% en el navegador.`,
+            text: `Hacé Cuentas es un sitio argentino de calculadoras online gratuitas en español, inglés y portugués. Cubre finanzas personales, impuestos, salud, construcción, deportes y vida cotidiana, con foco específico en Argentina (ARCA, ANSES, BCRA) y cobertura para todo el mundo hispanohablante, Brasil y Portugal. Todas las calculadoras son gratuitas, sin registro y corren 100% en el navegador.`,
           },
         },
         {
@@ -289,7 +288,7 @@ const schema = {
           name: '¿Las calculadoras de Hacé Cuentas son gratis?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: `Sí, todas las ${TOTAL_DISPLAY} calculadoras son 100% gratis y sin registro. No hay muro de pago, suscripción ni versión premium. El sitio se sostiene con publicidad y acuerdos comerciales (incluidos enlaces de afiliados, siempre claramente identificados), sin que eso condicione los cálculos ni los resultados. Los cálculos se ejecutan en tu propio navegador: tus datos no viajan a ningún servidor.`,
+            text: `Sí, todas las calculadoras son 100% gratis y sin registro. No hay muro de pago, suscripción ni versión premium. El sitio se sostiene con publicidad y acuerdos comerciales (incluidos enlaces de afiliados, siempre claramente identificados), sin que eso condicione los cálculos ni los resultados. Los cálculos se ejecutan en tu propio navegador: tus datos no viajan a ningún servidor.`,
           },
         },
         {
@@ -329,7 +328,7 @@ const schema = {
           name: '¿Puedo embeber una calculadora de Hacé Cuentas en mi sitio?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: `Sí, cualquiera de las ${TOTAL_DISPLAY} calculadoras se puede embedar gratis en blogs, medios, consultorios y sitios educativos. Basta con copiar un iframe de una línea (formato: https://hacecuentas.com/embed/<slug>) con atribución automática en el footer. No requiere aprobación previa. Ver instrucciones completas en hacecuentas.com/embeber.`,
+            text: `Sí, cualquier calculadora del sitio se puede embedar gratis en blogs, medios, consultorios y sitios educativos. Basta con copiar un iframe de una línea (formato: https://hacecuentas.com/embed/<slug>) con atribución automática en el footer. No requiere aprobación previa. Ver instrucciones completas en hacecuentas.com/embeber.`,
           },
         },
         {
@@ -450,7 +449,7 @@ const schema = {
         {/* Buscador instantáneo (entrada primaria). Match por nombre client-side:
             tipeás y ves al instante "Tu calculadora". El asistente IA queda debajo,
             como opción secundaria para casos conversacionales/complejos. */}
-        <HeroSearch totalDisplay={TOTAL_DISPLAY} />
+        <HeroSearch />
 
         {/* Asistente IA (secundario): para cuando no sabés qué calc buscar y
             preferís contar la situación. Llama a /api/interpret (LLM), más lento;
@@ -534,8 +533,6 @@ const schema = {
     </div>
 
     <div class="hero-meta-row">
-      <span class="hero-stat"><strong>{totalCalcsDisplay}</strong> calculadoras</span>
-      <span class="hero-dot" aria-hidden="true">·</span>
       <span class="hero-stat"><strong>{CATEGORY_COUNT}</strong> categorías</span>
       <span class="hero-dot" aria-hidden="true">·</span>
       <span class="hero-stat"><strong data-live-counter="true" data-initial={totalResults}>{totalResults.toLocaleString('es-AR')}</strong> cálculos hechos</span>
@@ -560,7 +557,7 @@ const schema = {
       <a href="/calculadoras" class="camino" style="--c-ac:#4f46e5;--c-bg:#eef2ff;--c-bd:#c7d2fe">
         <span class="camino-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="12" y1="10" x2="14" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="12" y1="14" x2="16" y2="18"/></svg></span>
         <span class="camino-t">Hacer una cuenta</span>
-        <span class="camino-d">Sueldo, IMC, interés, conversores y +{TOTAL_PLAIN} más.</span>
+        <span class="camino-d">Sueldo, IMC, interés, conversores y muchas más.</span>
         <span class="camino-go">Ver calculadoras →</span>
       </a>
       <a href="/decidir" class="camino" style="--c-ac:#7c3aed;--c-bg:#f5f3ff;--c-bd:#ddd6fe">
@@ -860,8 +857,8 @@ const schema = {
       <div class="stat-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/></svg>
       </div>
-      <div class="stat-num">{totalCalcsDisplay}</div>
-      <div class="stat-label">Calculadoras disponibles</div>
+      <div class="stat-num">Diaria</div>
+      <div class="stat-label">Actualización con datos oficiales (BCRA, ARCA, ANSES)</div>
     </div>
     <div class="stat">
       <div class="stat-icon stat-icon-green">
@@ -1033,7 +1030,7 @@ const schema = {
         <summary>¿Es gratis? ¿Tengo que registrarme?</summary>
         <p>
           Sí, es completamente gratis y no necesitás registrarte ni dejar tu
-          email. Las {totalCalcsDisplay} calculadoras están abiertas a cualquiera que entre al
+          email. Todas las calculadoras están abiertas a cualquiera que entre al
           sitio. Nos sostenemos con publicidad y acuerdos comerciales (incluidos
           enlaces de afiliados, siempre identificados): no cobramos por listar
           calculadoras, no tenemos versión premium oculta ni muros de pago.
@@ -1116,7 +1113,7 @@ const schema = {
 
   <section class="final-cta">
     <h3>¿No encontrás la calculadora que buscás?</h3>
-    <p>Explorá el buscador con las {totalCalcsDisplay} calculadoras disponibles, o escribinos qué te falta.</p>
+    <p>Explorá el buscador, o escribinos qué te falta.</p>
     <div class="cta-actions">
       <a href="/buscar" class="btn-primary">Buscar calculadora</a>
       <a href="/contacto" class="btn-ghost">Sugerir una nueva →</a>

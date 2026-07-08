@@ -269,6 +269,7 @@ const translations = {
     teamFallback: 'Martín Rodríguez',
     changelogTitle: 'What changed', changelogShow: 'See change history',
     editorialPolicy: 'editorial policy',
+    fbUp: 'What worked best? (optional)', fbDown: 'What was missing or wrong? (optional)',
   },
   pt: {
     calculator: 'Calculadora', badge: 'Grátis · Privado', calculate: 'Calcular',
@@ -299,6 +300,7 @@ const translations = {
     teamFallback: 'Martín Rodríguez',
     changelogTitle: 'O que mudou', changelogShow: 'Ver histórico de mudanças',
     editorialPolicy: 'política editorial',
+    fbUp: 'O que foi melhor? (opcional)', fbDown: 'O que faltou ou deu errado? (opcional)',
   },
   es: {
     calculator: 'Calculadora', badge: 'Gratis · Privada', calculate: 'Calcular',
@@ -329,6 +331,7 @@ const translations = {
     teamFallback: 'Martín Rodríguez',
     changelogTitle: 'Qué cambió', changelogShow: 'Ver historial de cambios',
     editorialPolicy: 'política editorial',
+    fbUp: '¿Qué fue lo mejor? (opcional)', fbDown: '¿Qué te faltó o estuvo mal? (opcional)',
   },
 };
 const t = translations[lang as keyof typeof translations] || translations.es;
@@ -877,8 +880,8 @@ const formatFreshnessDate = (iso: string): string => {
         hidden
       >
         <div class="dynamic-scenarios-head">
-          <span class="dynamic-scenarios-title">¿Y si...?</span>
-          <span class="dynamic-scenarios-sub">Comparativa con tus datos</span>
+          <span class="dynamic-scenarios-title">{lang === 'en' ? 'What if...?' : lang === 'pt' ? 'E se...?' : '¿Y si...?'}</span>
+          <span class="dynamic-scenarios-sub">{lang === 'en' ? 'Compared with your data' : lang === 'pt' ? 'Comparação com seus dados' : 'Comparativa con tus datos'}</span>
         </div>
         <div class="dynamic-scenarios-grid" data-dynamic-scenarios-grid></div>
       </section>
@@ -1147,11 +1150,11 @@ const formatFreshnessDate = (iso: string): string => {
         </button>
       </div>
       <div class="feedback-followup" data-feedback-followup hidden>
-        <label for={`fb-msg-${config.slug}`} class="fb-label" data-feedback-label></label>
+        <label for={`fb-msg-${config.slug}`} class="fb-label" data-feedback-label data-label-up={t.fbUp} data-label-down={t.fbDown}></label>
         <textarea id={`fb-msg-${config.slug}`} rows="2" maxlength="500" placeholder={t.feedback} data-feedback-text></textarea>
         <button type="button" class="fb-send" data-feedback-send>{t.send}</button>
       </div>
-      <div class="feedback-thanks" data-feedback-thanks hidden>{lang === 'en' ? 'Thanks! Your feedback helps us improve.' : '¡Gracias! Tu feedback nos ayuda a mejorar.'}</div>
+      <div class="feedback-thanks" data-feedback-thanks hidden>{lang === 'en' ? 'Thanks! Your feedback helps us improve.' : lang === 'pt' ? 'Obrigado! Seu feedback nos ajuda a melhorar.' : '¡Gracias! Tu feedback nos ayuda a mejorar.'}</div>
     </div>
   </div>
 
@@ -6087,7 +6090,7 @@ const formatFreshnessDate = (iso: string): string => {
           currentVote = btn.dataset.feedbackVote as 'up' | 'down';
           fbEl.querySelectorAll('[data-feedback-vote]').forEach((b) => b.classList.remove('selected'));
           btn.classList.add('selected');
-          labelEl.textContent = currentVote === 'up' ? '¿Qué fue lo mejor? (opcional)' : '¿Qué te faltó o estuvo mal? (opcional)';
+          labelEl.textContent = (currentVote === 'up' ? labelEl.dataset.labelUp : labelEl.dataset.labelDown) || '';
           followupEl.hidden = false;
           textEl.focus();
           if (typeof (window as any).gtag === 'function') {

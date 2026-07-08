@@ -99,7 +99,7 @@
     ],
     "result": "Se necesita un capacitor de 45 µF para mejorar el cos φ de 0,70 a 0,95"
   },
-  "explanation": "## Cómo se calcula la corrección del factor de potencia\n\nEl proceso parte del **triángulo de potencias**: P (W), Q (VAR) y S (VA) se relacionan mediante:\n\n```\nS = P / cos(φ)           → Potencia aparente [VA]\nQ = P × tan(φ)           → Potencia reactiva [VAR]\n\nPotencia reactiva a compensar:\nQc = P × (tan φ₁ − tan φ₂)    [VAR]\n\nCapacitor necesario (monofásico):\nC = Qc / (2π × f × V²)        [Faradios]\n\nDonde:\n  P   = Potencia activa [W]\n  φ₁  = acos(cos φ₁)  — ángulo actual\n  φ₂  = acos(cos φ₂)  — ángulo objetivo\n  f   = frecuencia de red [Hz]\n  V   = tensión de red [V]\n```\n\n---\n\n## Tabla de corrección rápida (motor 1000 W, 220 V, 50 Hz)\n\n| cos φ actual | cos φ objetivo | Qc (kVAR) | Capacitor (µF) | Reducción kVA |\n|:---:|:---:|:---:|:---:|:---:|\n| 0,50 | 0,95 | 1,40 | 92 | 0,95 kVA |\n| 0,60 | 0,95 | 1,00 | 66 | 0,61 kVA |\n| 0,70 | 0,95 | 0,69 | 45 | 0,36 kVA |\n| 0,75 | 0,95 | 0,55 | 36 | 0,25 kVA |\n| 0,80 | 0,95 | 0,40 | 26 | 0,15 kVA |\n| 0,85 | 0,95 | 0,25 | 16 | 0,07 kVA |\n| 0,90 | 0,95 | 0,09 | 6  | 0,02 kVA |\n\n---\n\n## Tabla de cos φ típico por tipo de carga\n\n| Tipo de carga | cos φ típico | Penalizable (< 0,85) |\n|---|:---:|:---:|\n| Motor asincrónico en vacío | 0,17 – 0,40 | Sí |\n| Motor asincrónico a plena carga | 0,75 – 0,90 | Parcial |\n| Soldadora de arco | 0,35 – 0,60 | Sí |\n| Balasto electromagnético (HID) | 0,40 – 0,60 | Sí |\n| Balasto electrónico (HID) | 0,90 – 0,95 | No |\n| Resistencia pura (horno, caldera) | 1,00 | No |\n| Computadoras / UPS sin PFC | 0,60 – 0,70 | Sí |\n| Variador de frecuencia con filtro | 0,95 – 0,99 | No |\n| Transformador en vacío | 0,10 – 0,30 | Sí |\n\nTensiones de red en Argentina (ENRE): **220 V** (fase-neutro) y **380 V** (fase-fase) a **50 Hz**.\n\nLímite mínimo exigido por distribuidoras en GBA: **cos φ ≥ 0,85** (Resolución ENRE 184/2000).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Motor de 5,5 kW en taller\nUn motor trifásico de 5,5 kW trabaja a cos φ = 0,72 y se quiere llevar a 0,95 con tensión de 380 V a 50 Hz.\n- Qc = 5500 × (tan 43,95° − tan 18,19°) = 5500 × (0,9638 − 0,3287) ≈ **3493 VAR ≈ 3,5 kVAR**\n- C = 3493 / (314,16 × 380²) ≈ **77 µF** (o banco de 3,5 kVAR en paralelo)\n\n### Caso 2 — Local con luminarias HID de 250 W\n20 luminarias × 250 W = 5000 W total, cos φ = 0,50, V = 220 V.\n- Qc = 5000 × (tan 60° − tan 18,19°) ≈ **7017 VAR ≈ 7 kVAR**\n\n### Caso 3 — Diferencia 50 Hz vs 60 Hz\nEl mismo Qc a 60 Hz requiere un 17% menos de µF que a 50 Hz, porque la reactancia capacitiva es Xc = 1/(2π×f×C). Siempre ingresá la frecuencia real de tu red.\n\n---\n\n## Errores comunes\n\n1. **Usar tensión incorrecta en trifásico**: En trifásico la fórmula usa tensión de fase (V_fase = V_línea / √3). Usar 380 V en lugar de 220 V sobreestima C por un factor de 3.\n2. **No considerar variación de carga**: Un banco fijo puede sobrecompensar en horas valle, generando cos φ capacitivo (leading) que también penaliza.\n3. **Confundir kW con kVA**: El cálculo de Qc siempre usa potencia activa en W, no aparente en VA.\n4. **Ignorar armónicas**: Inversores y variadores generan armónicas que pueden crear resonancia con los capacitores. Se requieren reactores de desintonía al 7% o 14%.\n5. **Temperatura del capacitor**: Operar a más de 40 °C reduce vida útil y capacitancia real.\n\n---\n\n## Calculadoras relacionadas\n\n- [Ley de Ohm — Voltaje, Corriente y Resistencia](/calculadora-ley-ohm-voltaje-corriente-resistencia)\n- [Potencia eléctrica P = V × I](/calculadora-potencia-electrica-p-vi)\n- [Divisor de voltaje con resistencias](/calculadora-divisor-voltaje-resistencias)\n",
+  "explanation": "## Cómo se calcula la corrección del factor de potencia\n\nEl proceso parte del **triángulo de potencias**: P (W), Q (VAR) y S (VA) se relacionan mediante:\n\n```\nS = P / cos(φ)           → Potencia aparente [VA]\nQ = P × tan(φ)           → Potencia reactiva [VAR]\n\nPotencia reactiva a compensar:\nQc = P × (tan φ₁ − tan φ₂)    [VAR]\n\nCapacitor necesario (monofásico):\nC = Qc / (2π × f × V²)        [Faradios]\n\nDonde:\n  P   = Potencia activa [W]\n  φ₁  = acos(cos φ₁)  — ángulo actual\n  φ₂  = acos(cos φ₂)  — ángulo objetivo\n  f   = frecuencia de red [Hz]\n  V   = tensión de red [V]\n```\n\n---\n\n## Tabla de corrección rápida (motor 1000 W, 220 V, 50 Hz)\n\n| cos φ actual | cos φ objetivo | Qc (kVAR) | Capacitor (µF) | Reducción kVA |\n|:---:|:---:|:---:|:---:|:---:|\n| 0,50 | 0,95 | 1,40 | 92 | 0,95 kVA |\n| 0,60 | 0,95 | 1,00 | 66 | 0,61 kVA |\n| 0,70 | 0,95 | 0,69 | 45 | 0,36 kVA |\n| 0,75 | 0,95 | 0,55 | 36 | 0,25 kVA |\n| 0,80 | 0,95 | 0,40 | 26 | 0,15 kVA |\n| 0,85 | 0,95 | 0,25 | 16 | 0,07 kVA |\n| 0,90 | 0,95 | 0,09 | 6  | 0,02 kVA |\n\n---\n\n## Tabla de cos φ típico por tipo de carga\n\nTensiones de red en Argentina (ENRE): **220 V** (fase-neutro) y **380 V** (fase-fase) a **50 Hz**.\n\nLímite mínimo exigido por distribuidoras en GBA: **cos φ ≥ 0,85** (Resolución ENRE 184/2000).\n\n---\n\n## Casos típicos\n\n### Caso 1 — Motor de 5,5 kW en taller\nUn motor trifásico de 5,5 kW trabaja a cos φ = 0,72 y se quiere llevar a 0,95 con tensión de 380 V a 50 Hz.\n- Qc = 5500 × (tan 43,95° − tan 18,19°) = 5500 × (0,9638 − 0,3287) ≈ **3493 VAR ≈ 3,5 kVAR**\n- C = 3493 / (314,16 × 380²) ≈ **77 µF** (o banco de 3,5 kVAR en paralelo)\n\n### Caso 2 — Local con luminarias HID de 250 W\n20 luminarias × 250 W = 5000 W total, cos φ = 0,50, V = 220 V.\n- Qc = 5000 × (tan 60° − tan 18,19°) ≈ **7017 VAR ≈ 7 kVAR**\n\n### Caso 3 — Diferencia 50 Hz vs 60 Hz\nEl mismo Qc a 60 Hz requiere un 17% menos de µF que a 50 Hz, porque la reactancia capacitiva es Xc = 1/(2π×f×C). Siempre ingresá la frecuencia real de tu red.\n\n---\n\n## Errores comunes\n\n1. **Usar tensión incorrecta en trifásico**: En trifásico la fórmula usa tensión de fase (V_fase = V_línea / √3). Usar 380 V en lugar de 220 V sobreestima C por un factor de 3.\n2. **No considerar variación de carga**: Un banco fijo puede sobrecompensar en horas valle, generando cos φ capacitivo (leading) que también penaliza.\n3. **Confundir kW con kVA**: El cálculo de Qc siempre usa potencia activa en W, no aparente en VA.\n4. **Ignorar armónicas**: Inversores y variadores generan armónicas que pueden crear resonancia con los capacitores. Se requieren reactores de desintonía al 7% o 14%.\n5. **Temperatura del capacitor**: Operar a más de 40 °C reduce vida útil y capacitancia real.\n\n---\n",
   "faq": [
     {
       "q": "¿Qué es el factor de potencia y por qué me lo cobran en la factura eléctrica?",
@@ -163,17 +163,57 @@
   "referenceTables": [
     {
       "title": "Factor de potencia (cos φ) típico por tipo de carga eléctrica",
-      "headers": ["Tipo de carga", "cos φ típico", "Penalizable (< 0,85 ENRE)"],
+      "headers": [
+        "Tipo de carga",
+        "cos φ típico",
+        "Penalizable (< 0,85 ENRE)"
+      ],
       "rows": [
-        ["Motor asincrónico en vacío", "0,17 – 0,40", "Sí"],
-        ["Motor asincrónico a plena carga", "0,75 – 0,90", "Parcial"],
-        ["Soldadora de arco", "0,35 – 0,60", "Sí"],
-        ["Balasto electromagnético (HID)", "0,40 – 0,60", "Sí"],
-        ["Balasto electrónico (HID)", "0,90 – 0,95", "No"],
-        ["Resistencia pura (horno, caldera)", "1,00", "No"],
-        ["Computadoras / UPS sin PFC", "0,60 – 0,70", "Sí"],
-        ["Variador de frecuencia con filtro", "0,95 – 0,99", "No"],
-        ["Transformador en vacío", "0,10 – 0,30", "Sí"]
+        [
+          "Motor asincrónico en vacío",
+          "0,17 – 0,40",
+          "Sí"
+        ],
+        [
+          "Motor asincrónico a plena carga",
+          "0,75 – 0,90",
+          "Parcial"
+        ],
+        [
+          "Soldadora de arco",
+          "0,35 – 0,60",
+          "Sí"
+        ],
+        [
+          "Balasto electromagnético (HID)",
+          "0,40 – 0,60",
+          "Sí"
+        ],
+        [
+          "Balasto electrónico (HID)",
+          "0,90 – 0,95",
+          "No"
+        ],
+        [
+          "Resistencia pura (horno, caldera)",
+          "1,00",
+          "No"
+        ],
+        [
+          "Computadoras / UPS sin PFC",
+          "0,60 – 0,70",
+          "Sí"
+        ],
+        [
+          "Variador de frecuencia con filtro",
+          "0,95 – 0,99",
+          "No"
+        ],
+        [
+          "Transformador en vacío",
+          "0,10 – 0,30",
+          "Sí"
+        ]
       ],
       "note": "Fuente: ENRE — Resolución 184/2000: Calidad del Servicio Eléctrico. Límite mínimo exigido: cos φ ≥ 0,85. Valores para instalaciones en Argentina a 220/380 V, 50 Hz."
     }

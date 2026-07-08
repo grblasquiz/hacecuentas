@@ -24,30 +24,115 @@
     {
       "title": "Vapor de agua máximo que retiene el aire por temperatura (tabla psicrométrica)",
       "caption": "Presión de saturación (Magnus) y humedad absoluta a 100 % y a 50 % de HR.",
-      "headers": ["Temperatura", "Presión saturación es (hPa)", "Agua máx. al 100 % HR (g/m³)", "Agua al 50 % HR (g/m³)"],
+      "headers": [
+        "Temperatura",
+        "Presión saturación es (hPa)",
+        "Agua máx. al 100 % HR (g/m³)",
+        "Agua al 50 % HR (g/m³)"
+      ],
       "rows": [
-        ["0 °C", "6,11", "4,8", "2,4"],
-        ["5 °C", "8,72", "6,8", "3,4"],
-        ["10 °C", "12,28", "9,4", "4,7"],
-        ["15 °C", "17,05", "12,8", "6,4"],
-        ["20 °C", "23,38", "17,3", "8,6"],
-        ["22 °C", "26,44", "19,4", "9,7"],
-        ["25 °C", "31,68", "23,0", "11,5"],
-        ["30 °C", "42,43", "30,3", "15,2"]
+        [
+          "0 °C",
+          "6,11",
+          "4,8",
+          "2,4"
+        ],
+        [
+          "5 °C",
+          "8,72",
+          "6,8",
+          "3,4"
+        ],
+        [
+          "10 °C",
+          "12,28",
+          "9,4",
+          "4,7"
+        ],
+        [
+          "15 °C",
+          "17,05",
+          "12,8",
+          "6,4"
+        ],
+        [
+          "20 °C",
+          "23,38",
+          "17,3",
+          "8,6"
+        ],
+        [
+          "22 °C",
+          "26,44",
+          "19,4",
+          "9,7"
+        ],
+        [
+          "25 °C",
+          "31,68",
+          "23,0",
+          "11,5"
+        ],
+        [
+          "30 °C",
+          "42,43",
+          "30,3",
+          "15,2"
+        ]
       ],
       "note": "es = 6,1078·exp(17,27·T/(T+237,3)) hPa. Humedad absoluta = es·(HR/100)·100 ÷ (461,5·(T+273,15)) en g/m³. Por eso al calentar un cuarto sin agregar vapor, la HR baja: la misma agua en aire más caliente representa menor porcentaje."
     },
     {
       "title": "Humedad relativa ideal y umbrales de riesgo por ambiente",
-      "headers": ["Ambiente", "Rango ideal (HR %)", "Riesgo si está muy seco", "Riesgo si está muy húmedo"],
+      "headers": [
+        "Ambiente",
+        "Rango ideal (HR %)",
+        "Riesgo si está muy seco",
+        "Riesgo si está muy húmedo"
+      ],
       "rows": [
-        ["Dormitorio", "40–55 %", "<35 %: mucosas y ojos secos", ">60 %: ácaros del polvo"],
-        ["Cuarto de bebé", "45–55 %", "<40 %: reseca vías respiratorias", ">60 %: riesgo infeccioso"],
-        ["Living / comedor", "40–60 %", "<35 %: estática, madera contrae", ">65 %: condensación en ventanas"],
-        ["Home office", "40–55 %", "<35 %: descarga estática a equipos", ">60 %: corrosión de metales"],
-        ["Baño ventilado", "50–70 %", "—", ">75 %: moho en juntas (48 h)"],
-        ["Cocina", "40–65 %", "—", ">70 %: humedad en muebles"],
-        ["Sótano / depósito", "40–60 %", "—", ">65 %: herrumbre y condensación"]
+        [
+          "Dormitorio",
+          "40–55 %",
+          "<35 %: mucosas y ojos secos",
+          ">60 %: ácaros del polvo"
+        ],
+        [
+          "Cuarto de bebé",
+          "45–55 %",
+          "<40 %: reseca vías respiratorias",
+          ">60 %: riesgo infeccioso"
+        ],
+        [
+          "Living / comedor",
+          "40–60 %",
+          "<35 %: estática, madera contrae",
+          ">65 %: condensación en ventanas"
+        ],
+        [
+          "Home office",
+          "40–55 %",
+          "<35 %: descarga estática a equipos",
+          ">60 %: corrosión de metales"
+        ],
+        [
+          "Baño ventilado",
+          "50–70 %",
+          "—",
+          ">75 %: moho en juntas (48 h)"
+        ],
+        [
+          "Cocina",
+          "40–65 %",
+          "—",
+          ">70 %: humedad en muebles"
+        ],
+        [
+          "Sótano / depósito",
+          "40–60 %",
+          "—",
+          ">65 %: herrumbre y condensación"
+        ]
       ],
       "note": "Rangos según OMS (Indoor Air Quality), ACSM y norma IRAM 11625. Por encima de 70 % sostenido +48 h aparecen Aspergillus y Cladosporium; los ácaros se reproducen al máximo entre 70-80 % HR y 25 °C."
     }
@@ -207,7 +292,7 @@
       "text": "Podés modificar cualquier dato y volver a calcular."
     }
   ],
-  "explanation": "## Cómo se calcula\n\nLa humedad relativa se obtiene comparando cuánto vapor de agua hay en el aire con cuánto podría haber como máximo a esa temperatura:\n\n```\nHR (%) = (e / es) × 100\n\nDonde:\n  e  = presión parcial real del vapor de agua (hPa o mbar)\n  es = presión de vapor de saturación a la temperatura actual (hPa)\n\nFórmula de Magnus para estimar es (entre -40 °C y +60 °C):\n  es = 6,1078 × exp( (17,27 × T) / (T + 237,3) )\n  T en grados Celsius, es en hPa\n\nEjemplo: T = 22 °C → es = 6,1078 × exp(17,27×22 / 259,3) ≈ 26,4 hPa\nSi e = 10,6 hPa → HR = (10,6 / 26,4) × 100 ≈ 40 %\n```\n\nEn la práctica doméstica no se mide la presión de vapor; se usa un **higrómetro digital** (menos de $5.000 ARS en ferreterías) que realiza el cálculo internamente. Esta calculadora toma ese porcentaje ya medido y lo compara con los rangos recomendados por ambiente.\n\n---\n\n## Tabla de referencia\n\n| Ambiente | Rango ideal (HR %) | Por debajo de… | Por encima de… |\n|---|---|---|---|\n| Dormitorio adultos | 40 – 55 % | 35 %: irritación ocular y mucosas | 60 %: ácaros y hongos |\n| Cuarto de bebé | 45 – 55 % | 40 %: reseca vías respiratorias | 60 %: riesgo infeccioso |\n| Living / comedor | 40 – 60 % | 35 %: electricidad estática, madera contrae | 65 %: condensación en ventanas |\n| Home office | 40 – 55 % | 35 %: daño en componentes electrónicos | 60 %: corrosión en metales |\n| Baño con ventilación | 50 – 70 % | 40 %: reseca piel en duchas | 75 %: moho en juntas y azulejos |\n| Cocina | 40 – 65 % | 35 %: mal ambiente para cocinar | 70 %: humedad en alimentos y muebles |\n| Sótano / garage | 40 – 60 % | 35 %: polvo y estática | 65 %: herrumbre y deterioro |\n| Invernadero / plantas | 50 – 70 % | 40 %: hojas secas, plagas de arañuela | 80 %: hongos foliares |\n\n*Fuentes: OMS Guidelines for Indoor Air Quality; ACSM Position Stand; norma IRAM 11.625.*\n\n---\n\n## Casos típicos\n\n**Caso 1 — Dormitorio seco en invierno porteño (HR = 30 %)**\nCon calefacción a gas encendida toda la noche, la HR cae de ~55 % a ~30 %. Resultado: tos seca al despertar, ojos irritados, mayor concentración de partículas de polvo. Solución: humidificador de vapor frío (500–800 ml/h) encendido 2 horas antes de dormir + cuenco con agua sobre el radiador. Meta: llegar a 45 % antes de acostarse.\n\n**Caso 2 — Baño sin extractor (HR = 85 %)**\nDucha diaria sin ventilación sube la HR a 85 % y la mantiene alta horas. En 3–6 meses aparece moho negro en juntas de azulejos (Cladosporium spp.), irritante respiratorio. Solución: extractor eléctrico 15 min post-ducha o ventana entreabierta; aplicar sellador antimohoso en juntas cada 12 meses.\n\n**Caso 3 — Cuarto de bebé recién nacido (HR = 60 %)**\n60 % está en el límite superior seguro. Si sube a 65–70 % en verano húmedo, los ácaros del polvo (Dermatophagoides pteronyssinus) se reproducen exponencialmente; son el alérgeno más común en Argentina según datos del ANLIS. Acción: deshumidificador portátil + lavado de ropa de cama a 60 °C semanal.\n\n---\n\n## Errores comunes\n\n1. **Medir la HR sin calibrar el higrómetro**: los higrómetros baratos pueden tener un error de ±5–8 %. Calibrá el tuyo con el método de la sal (NaCl saturada = 75 % HR a 25 °C); si marca otro valor, restá o sumá esa diferencia a todas tus lecturas.\n\n2. **Confundir humedad absoluta con relativa**: la HR depende de la temperatura. Si calentás un cuarto de 15 °C a 22 °C sin agregar vapor, la HR baja aunque el agua en el aire sea la misma. Por eso en invierno la HR interior cae incluso sin secar el ambiente.\n\n3. **Usar humidificador sin limpiar el depósito**: el agua estancada en el depósito acumula legionela y bacterias en 24–48 h. La OMS recomienda vaciar, secar y limpiar con solución de agua oxigenada al 3 % cada 72 horas de uso.\n\n4. **Ventilar con ventanas abiertas en días muy húmedos**: en Buenos Aires, en enero la HR exterior puede ser del 80–85 %. Abrir ventanas en esas condiciones sube la HR interior, lo opuesto a lo que se busca. Mejor ventilar temprano a la mañana (7–9 h) o cuando la HR exterior baje del 60 %.\n\n5. **Ignorar la temperatura de punto de rocío**: si la pared está más fría que el punto de rocío del aire interior, se condensa agua aunque la HR parezca aceptable (50–55 %). Esto pasa en paredes sin aislación en invierno y genera manchas de humedad sin que el higrómetro \"lo detecte\".\n\n---\n\n## Calculadoras relacionadas\n\n- [Calculadora de porcentajes](/calculadora-porcentajes) — convertí lecturas de higrómetro y rangos a diferencias porcentuales concretas\n- [Calculadora de regalo ideal por presupuesto](/calculadora-regalo-ideal-presupuesto) — si estás equipando un hogar nuevo, estimá cuánto invertir en humidificador o deshumidificador\n- [Calculadora de edad ideal de pareja](/calculadora-edad-ideal-pareja) — otras calculadoras de rangos ideales para decisiones cotidianas\n- [Calculadora de fecha de boda ideal](/calculadora-fecha-boda-ideal) — planificá eventos en interiores considerando la época del año y la humedad ambiente\n",
+  "explanation": "## Cómo se calcula\n\nLa humedad relativa se obtiene comparando cuánto vapor de agua hay en el aire con cuánto podría haber como máximo a esa temperatura:\n\n```\nHR (%) = (e / es) × 100\n\nDonde:\n  e  = presión parcial real del vapor de agua (hPa o mbar)\n  es = presión de vapor de saturación a la temperatura actual (hPa)\n\nFórmula de Magnus para estimar es (entre -40 °C y +60 °C):\n  es = 6,1078 × exp( (17,27 × T) / (T + 237,3) )\n  T en grados Celsius, es en hPa\n\nEjemplo: T = 22 °C → es = 6,1078 × exp(17,27×22 / 259,3) ≈ 26,4 hPa\nSi e = 10,6 hPa → HR = (10,6 / 26,4) × 100 ≈ 40 %\n```\n\nEn la práctica doméstica no se mide la presión de vapor; se usa un **higrómetro digital** (menos de $5.000 ARS en ferreterías) que realiza el cálculo internamente. Esta calculadora toma ese porcentaje ya medido y lo compara con los rangos recomendados por ambiente.\n\n---\n\n## Tabla de referencia\n\n| Ambiente | Rango ideal (HR %) | Por debajo de… | Por encima de… |\n|---|---|---|---|\n| Dormitorio adultos | 40 – 55 % | 35 %: irritación ocular y mucosas | 60 %: ácaros y hongos |\n| Cuarto de bebé | 45 – 55 % | 40 %: reseca vías respiratorias | 60 %: riesgo infeccioso |\n| Living / comedor | 40 – 60 % | 35 %: electricidad estática, madera contrae | 65 %: condensación en ventanas |\n| Home office | 40 – 55 % | 35 %: daño en componentes electrónicos | 60 %: corrosión en metales |\n| Baño con ventilación | 50 – 70 % | 40 %: reseca piel en duchas | 75 %: moho en juntas y azulejos |\n| Cocina | 40 – 65 % | 35 %: mal ambiente para cocinar | 70 %: humedad en alimentos y muebles |\n| Sótano / garage | 40 – 60 % | 35 %: polvo y estática | 65 %: herrumbre y deterioro |\n| Invernadero / plantas | 50 – 70 % | 40 %: hojas secas, plagas de arañuela | 80 %: hongos foliares |\n\n*Fuentes: OMS Guidelines for Indoor Air Quality; ACSM Position Stand; norma IRAM 11.625.*\n\n---\n\n## Casos típicos\n\n**Caso 1 — Dormitorio seco en invierno porteño (HR = 30 %)**\nCon calefacción a gas encendida toda la noche, la HR cae de ~55 % a ~30 %. Resultado: tos seca al despertar, ojos irritados, mayor concentración de partículas de polvo. Solución: humidificador de vapor frío (500–800 ml/h) encendido 2 horas antes de dormir + cuenco con agua sobre el radiador. Meta: llegar a 45 % antes de acostarse.\n\n**Caso 2 — Baño sin extractor (HR = 85 %)**\nDucha diaria sin ventilación sube la HR a 85 % y la mantiene alta horas. En 3–6 meses aparece moho negro en juntas de azulejos (Cladosporium spp.), irritante respiratorio. Solución: extractor eléctrico 15 min post-ducha o ventana entreabierta; aplicar sellador antimohoso en juntas cada 12 meses.\n\n**Caso 3 — Cuarto de bebé recién nacido (HR = 60 %)**\n60 % está en el límite superior seguro. Si sube a 65–70 % en verano húmedo, los ácaros del polvo (Dermatophagoides pteronyssinus) se reproducen exponencialmente; son el alérgeno más común en Argentina según datos del ANLIS. Acción: deshumidificador portátil + lavado de ropa de cama a 60 °C semanal.\n\n---\n\n## Errores comunes\n\n1. **Medir la HR sin calibrar el higrómetro**: los higrómetros baratos pueden tener un error de ±5–8 %. Calibrá el tuyo con el método de la sal (NaCl saturada = 75 % HR a 25 °C); si marca otro valor, restá o sumá esa diferencia a todas tus lecturas.\n\n2. **Confundir humedad absoluta con relativa**: la HR depende de la temperatura. Si calentás un cuarto de 15 °C a 22 °C sin agregar vapor, la HR baja aunque el agua en el aire sea la misma. Por eso en invierno la HR interior cae incluso sin secar el ambiente.\n\n3. **Usar humidificador sin limpiar el depósito**: el agua estancada en el depósito acumula legionela y bacterias en 24–48 h. La OMS recomienda vaciar, secar y limpiar con solución de agua oxigenada al 3 % cada 72 horas de uso.\n\n4. **Ventilar con ventanas abiertas en días muy húmedos**: en Buenos Aires, en enero la HR exterior puede ser del 80–85 %. Abrir ventanas en esas condiciones sube la HR interior, lo opuesto a lo que se busca. Mejor ventilar temprano a la mañana (7–9 h) o cuando la HR exterior baje del 60 %.\n\n5. **Ignorar la temperatura de punto de rocío**: si la pared está más fría que el punto de rocío del aire interior, se condensa agua aunque la HR parezca aceptable (50–55 %). Esto pasa en paredes sin aislación en invierno y genera manchas de humedad sin que el higrómetro \"lo detecte\".\n\n---\n",
   "example": {
     "title": "Ejemplo real: dormitorio con 30% en invierno por calefacción",
     "steps": [

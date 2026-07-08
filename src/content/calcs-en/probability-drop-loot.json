@@ -130,7 +130,7 @@
       "a": "Use the **Binomial distribution**: P(exactly k drops) = C(n, k) × pᵏ × (1 − p)^(n−k), where C(n,k) is the binomial coefficient n!/(k!(n−k)!). For example, P(exactly 2 drops in 100 attempts at 1% rate) = C(100,2) × 0.01² × 0.99⁹⁸ ≈ 4,950 × 0.0001 × 0.3660 ≈ **18.5%**."
     }
   ],
-  "explanation": "## How It's Calculated\n\nThe core model treats each attempt as a **Bernoulli trial** — an independent event with a fixed success probability `p` (the drop rate). The probability of getting **at least one** success in `n` attempts is derived from the complement of getting *zero* drops every single time:\n\n```\nP(at least 1 drop) = 1 − (1 − p)^n\n\nWhere:\n  p = drop rate per attempt (e.g., 0.01 for 1%)\n  n = number of attempts / kills / pulls\n\nAttempts needed for a target probability T:\n  n = log(1 − T) / log(1 − p)\n\nExamples:\n  50% confidence → n = log(0.5) / log(1 − p)\n  90% confidence → n = log(0.1) / log(1 − p)\n  99% confidence → n = log(0.01) / log(1 − p)\n```\n\nThis is the **geometric distribution** cumulative distribution function (CDF). Each attempt is independent — previous failures do NOT increase future odds. The \"gambler's fallacy\" is the mistaken belief that they do.\n\n---\n\n## Reference Table\n\nAttempts needed to reach 50%, 90%, and 99% probability for common drop rates found in real games:\n\n| Drop Rate (p) | Real Example | 50% Attempts | 90% Attempts | 99% Attempts |\n|---|---|---|---|---|\n| 25% (1/4) | Pokémon common item | 2 | 8 | 16 |\n| 10% (1/10) | Minecraft mob loot | 7 | 22 | 44 |\n| 5% (1/20) | FFXIV rare crafting mat | 14 | 45 | 90 |\n| 1% (1/100) | WoW rare mount | 69 | 230 | 459 |\n| 0.5% (1/200) | Many gacha SSR rates | 139 | 460 | 919 |\n| 0.3% (1/333) | CS2 rare item grade | 231 | 767 | 1,532 |\n| 0.1% (1/1,000) | WoW Invincible mount | 693 | 2,302 | 4,603 |\n| 0.0244% (1/4,096) | Pokémon Shiny (base) | 2,839 | 9,430 | 18,861 |\n\n*Note: Pity systems in gacha games set hard caps that alter these raw probabilities.*\n\n---\n\n## Typical Use Cases with Concrete Numbers\n\n### Example 1 — WoW Rare Mount (1% Drop Rate)\nYou're farming Kael'thas in Tempest Keep for the Ashes of Al'ar mount, widely reported at approximately 1% drop rate.\n- After **100 kills**: P = 1 − 0.99¹⁰⁰ = **63.4%**\n- After **230 kills**: P = 1 − 0.99²³⁰ = **90.0%**\n- After **459 kills**: P = 1 − 0.99⁴⁵⁹ = **99.0%**\n- On average (mean of geometric distribution = 1/p), you'd expect a drop every **100 kills** — but the median is only **69 kills**.\n\n### Example 2 — Gacha SSR Pull (0.6% Drop Rate)\nA mobile gacha game advertises a 0.6% SSR rate per pull. You have 100 pulls saved.\n- P(at least 1 SSR in 100 pulls) = 1 − 0.994¹⁰⁰ = **45.1%** — less than a coin flip.\n- You need **115 pulls** for 50% confidence, **383 pulls** for 90%, **765 pulls** for 99%.\n- Many games add a **pity system at 90 pulls** that guarantees one SSR — this dramatically changes the effective probability curve.\n\n### Example 3 — Pokémon Shiny Hunting (1/4,096 rate, no Shiny Charm)\nThe base shiny encounter rate in modern Pokémon games (Gen VI+) is 1/4,096 ≈ 0.0244%.\n- After **1,000 encounters**: P = 1 − (4095/4096)¹⁰⁰⁰ = **21.7%**\n- After **2,839 encounters**: P ≈ **50.0%** (median)\n- After **9,430 encounters**: P ≈ **90.0%**\n- With the **Shiny Charm** (rate becomes 3/4,096), just ~946 encounters give 50% odds.\n\n---\n\n## Common Mistakes\n\n1. **Confusing drop rate with guaranteed frequency** — A 10% drop rate does NOT mean you get a drop every 10 kills. It means each kill independently has a 10% chance. You can go 30 kills without a drop (~4.2% probability of that happening, frustrating but real).\n\n2. **Falling for the Gambler's Fallacy** — \"I've done 90 kills without a drop, so I'm due.\" Each attempt has the exact same probability regardless of history. Past failures do not \"charge up\" future probability for independent events.\n\n3. **Using linear math instead of geometric** — Multiplying: \"1% × 100 attempts = 100% guaranteed\" is **completely wrong**. The correct answer is 63.4%, not 100%. Linear addition of probabilities only works for mutually exclusive events without replacement.\n\n4. **Ignoring rate boosts and modifiers** — Many games apply hidden multipliers (e.g., Magic Find in Diablo, Shiny Charm in Pokémon, Research in Pokémon GO). Always use the *modified* rate in the formula, not the base rate, or results will be significantly off.\n\n5. **Mistaking mean for median** — The **mean** (expected value) of the geometric distribution is 1/p. For a 1% rate, the mean is 100 attempts. But the **median** is only 69 attempts — meaning half of all players will have obtained the drop before 100 kills. These are very different statistics.\n\n6. **Overlooking pity/soft-pity systems** — Gacha games often have escalating probabilities after a threshold (e.g., Genshin Impact's soft pity starting at 74 pulls). Applying the base formula without accounting for pity significantly underestimates true probability in those systems.\n\n---\n\n## Related Calculators\n\n- Percentage Calculator\n- Statistics & Probability Calculator\n- [Random Number Generator](/calculadora-aleatorio-numero-dado)\n",
+  "explanation": "## How It's Calculated\n\nThe core model treats each attempt as a **Bernoulli trial** — an independent event with a fixed success probability `p` (the drop rate). The probability of getting **at least one** success in `n` attempts is derived from the complement of getting *zero* drops every single time:\n\n```\nP(at least 1 drop) = 1 − (1 − p)^n\n\nWhere:\n  p = drop rate per attempt (e.g., 0.01 for 1%)\n  n = number of attempts / kills / pulls\n\nAttempts needed for a target probability T:\n  n = log(1 − T) / log(1 − p)\n\nExamples:\n  50% confidence → n = log(0.5) / log(1 − p)\n  90% confidence → n = log(0.1) / log(1 − p)\n  99% confidence → n = log(0.01) / log(1 − p)\n```\n\nThis is the **geometric distribution** cumulative distribution function (CDF). Each attempt is independent — previous failures do NOT increase future odds. The \"gambler's fallacy\" is the mistaken belief that they do.\n\n---\n\n## Reference Table\n\nAttempts needed to reach 50%, 90%, and 99% probability for common drop rates found in real games:\n\n*Note: Pity systems in gacha games set hard caps that alter these raw probabilities.*\n\n---\n\n## Typical Use Cases with Concrete Numbers\n\n### Example 1 — WoW Rare Mount (1% Drop Rate)\nYou're farming Kael'thas in Tempest Keep for the Ashes of Al'ar mount, widely reported at approximately 1% drop rate.\n- After **100 kills**: P = 1 − 0.99¹⁰⁰ = **63.4%**\n- After **230 kills**: P = 1 − 0.99²³⁰ = **90.0%**\n- After **459 kills**: P = 1 − 0.99⁴⁵⁹ = **99.0%**\n- On average (mean of geometric distribution = 1/p), you'd expect a drop every **100 kills** — but the median is only **69 kills**.\n\n### Example 2 — Gacha SSR Pull (0.6% Drop Rate)\nA mobile gacha game advertises a 0.6% SSR rate per pull. You have 100 pulls saved.\n- P(at least 1 SSR in 100 pulls) = 1 − 0.994¹⁰⁰ = **45.1%** — less than a coin flip.\n- You need **115 pulls** for 50% confidence, **383 pulls** for 90%, **765 pulls** for 99%.\n- Many games add a **pity system at 90 pulls** that guarantees one SSR — this dramatically changes the effective probability curve.\n\n### Example 3 — Pokémon Shiny Hunting (1/4,096 rate, no Shiny Charm)\nThe base shiny encounter rate in modern Pokémon games (Gen VI+) is 1/4,096 ≈ 0.0244%.\n- After **1,000 encounters**: P = 1 − (4095/4096)¹⁰⁰⁰ = **21.7%**\n- After **2,839 encounters**: P ≈ **50.0%** (median)\n- After **9,430 encounters**: P ≈ **90.0%**\n- With the **Shiny Charm** (rate becomes 3/4,096), just ~946 encounters give 50% odds.\n\n---\n\n## Common Mistakes\n\n1. **Confusing drop rate with guaranteed frequency** — A 10% drop rate does NOT mean you get a drop every 10 kills. It means each kill independently has a 10% chance. You can go 30 kills without a drop (~4.2% probability of that happening, frustrating but real).\n\n2. **Falling for the Gambler's Fallacy** — \"I've done 90 kills without a drop, so I'm due.\" Each attempt has the exact same probability regardless of history. Past failures do not \"charge up\" future probability for independent events.\n\n3. **Using linear math instead of geometric** — Multiplying: \"1% × 100 attempts = 100% guaranteed\" is **completely wrong**. The correct answer is 63.4%, not 100%. Linear addition of probabilities only works for mutually exclusive events without replacement.\n\n4. **Ignoring rate boosts and modifiers** — Many games apply hidden multipliers (e.g., Magic Find in Diablo, Shiny Charm in Pokémon, Research in Pokémon GO). Always use the *modified* rate in the formula, not the base rate, or results will be significantly off.\n\n5. **Mistaking mean for median** — The **mean** (expected value) of the geometric distribution is 1/p. For a 1% rate, the mean is 100 attempts. But the **median** is only 69 attempts — meaning half of all players will have obtained the drop before 100 kills. These are very different statistics.\n\n6. **Overlooking pity/soft-pity systems** — Gacha games often have escalating probabilities after a threshold (e.g., Genshin Impact's soft pity starting at 74 pulls). Applying the base formula without accounting for pity significantly underestimates true probability in those systems.\n\n---\n\n## Related Calculators\n\n- Percentage Calculator\n- Statistics & Probability Calculator\n- [Random Number Generator](/calculadora-aleatorio-numero-dado)\n",
   "example": {
     "title": "Real Example: 1% Drop Rate Over 100 Attempts",
     "steps": [
@@ -164,16 +164,70 @@
   "referenceTables": [
     {
       "title": "Attempts Needed to Hit 50%, 90%, and 99% Drop Probability by Drop Rate",
-      "headers": ["Drop Rate", "Example", "50% Confidence (attempts)", "90% Confidence (attempts)", "99% Confidence (attempts)"],
+      "headers": [
+        "Drop Rate",
+        "Example",
+        "50% Confidence (attempts)",
+        "90% Confidence (attempts)",
+        "99% Confidence (attempts)"
+      ],
       "rows": [
-        ["25% (1/4)", "Pokémon common item", "2", "8", "16"],
-        ["10% (1/10)", "Minecraft mob loot", "7", "22", "44"],
-        ["5% (1/20)", "FFXIV rare crafting mat", "14", "45", "90"],
-        ["1% (1/100)", "WoW rare mount", "69", "230", "459"],
-        ["0.5% (1/200)", "Gacha SSR (many JP games)", "139", "460", "919"],
-        ["0.3% (1/333)", "CS2 rare item grade", "231", "767", "1,532"],
-        ["0.1% (1/1,000)", "WoW Invincible mount", "693", "2,302", "4,603"],
-        ["0.0244% (1/4,096)", "Pokémon Shiny (base rate)", "2,839", "9,430", "18,861"]
+        [
+          "25% (1/4)",
+          "Pokémon common item",
+          "2",
+          "8",
+          "16"
+        ],
+        [
+          "10% (1/10)",
+          "Minecraft mob loot",
+          "7",
+          "22",
+          "44"
+        ],
+        [
+          "5% (1/20)",
+          "FFXIV rare crafting mat",
+          "14",
+          "45",
+          "90"
+        ],
+        [
+          "1% (1/100)",
+          "WoW rare mount",
+          "69",
+          "230",
+          "459"
+        ],
+        [
+          "0.5% (1/200)",
+          "Gacha SSR (many JP games)",
+          "139",
+          "460",
+          "919"
+        ],
+        [
+          "0.3% (1/333)",
+          "CS2 rare item grade",
+          "231",
+          "767",
+          "1,532"
+        ],
+        [
+          "0.1% (1/1,000)",
+          "WoW Invincible mount",
+          "693",
+          "2,302",
+          "4,603"
+        ],
+        [
+          "0.0244% (1/4,096)",
+          "Pokémon Shiny (base rate)",
+          "2,839",
+          "9,430",
+          "18,861"
+        ]
       ],
       "note": "Formula: n = log(1 − T) / log(1 − p), where T = target probability and p = drop rate per attempt. Source: NIST/SEMATECH Handbook — Geometric Distribution. Pity systems alter these raw values."
     }

@@ -34,9 +34,18 @@
       "required": true,
       "default": "sumar",
       "options": [
-        { "value": "sumar", "label": "Sumar tiempos" },
-        { "value": "restar", "label": "Restar tiempos" },
-        { "value": "entre", "label": "Horas entre dos horarios" }
+        {
+          "value": "sumar",
+          "label": "Sumar tiempos"
+        },
+        {
+          "value": "restar",
+          "label": "Restar tiempos"
+        },
+        {
+          "value": "entre",
+          "label": "Horas entre dos horarios"
+        }
       ],
       "help": "Sumar/restar duraciones, o calcular cuánto hay entre dos horas del reloj."
     },
@@ -110,7 +119,7 @@
     ],
     "result": "La jornada neta es de **8:30** (ocho horas y media), equivalente a **8,5 horas decimales** o **510 minutos** trabajados."
   },
-  "explanation": "## Por qué las horas no se suman como decimales\n\nEstamos acostumbrados al sistema **decimal** (base 10), donde 10 unidades hacen una decena. Pero el reloj usa el sistema **sexagesimal** (base 60), heredado de los babilonios: **60 segundos = 1 minuto** y **60 minutos = 1 hora**. Por eso no podés sumar `2:45 + 1:30` como si fueran `2,45 + 1,30 = 3,75`. Tenés que sumar los minutos por un lado (45 + 30 = 75) y, como 75 supera 60, **\"llevarte\" una hora**: 75 min = 1 h 15 min. El resultado correcto es **4:15**, no 3:75 (que ni siquiera es una hora válida).\n\nEl truco que usa esta calculadora —y el que conviene aplicar a mano— es **convertir todo a minutos**, operar con números enteros y recién al final volver a horas y minutos.\n\n## El método paso a paso\n\n```\n1) Cada tiempo a minutos:   minutos = horas × 60 + minutos\n2) Sumás o restás los minutos (números normales)\n3) Volvés a HH:MM:           horas = total ÷ 60  (parte entera)\n                            minutos = resto de esa división\n```\n\nEjemplo de suma: `2:45 + 1:30`\n- 2:45 → 2×60 + 45 = **165 min**\n- 1:30 → 1×60 + 30 = **90 min**\n- 165 + 90 = **255 min**\n- 255 ÷ 60 = **4** horas, resto **15** → **4:15** ✅\n\n## Horas decimales vs. horas y minutos\n\nPara liquidar sueldos, facturar o cargar en Excel casi siempre se usan **horas decimales**: el total en minutos dividido por 60. No es lo mismo que \"la coma del reloj\". La clave: **30 minutos son 0,5 horas**, no 0,30.\n\n| HH:MM | Minutos | Horas decimales |\n|---|---|---|\n| 0:15 | 15 | 0,25 |\n| 0:30 | 30 | 0,50 |\n| 0:45 | 45 | 0,75 |\n| 1:00 | 60 | 1,00 |\n| 1:30 | 90 | 1,50 |\n| 7:30 | 450 | 7,50 |\n| 8:15 | 495 | 8,25 |\n\nFórmula: `decimal = horas + minutos ÷ 60`. Así, 8:15 = 8 + 15/60 = **8,25**.\n\n## Turnos que cruzan la medianoche\n\nCuando la hora de fin es **menor** que la de inicio (por ejemplo, un turno de 22:00 a 06:00), el cálculo directo daría negativo. La calculadora detecta ese caso en el modo *Horas entre dos horarios* y **suma 24 horas (1440 minutos)** a la hora de fin: 06:00 + 24:00 = 30:00, y `30:00 − 22:00 = 8:00`. Son las 8 horas reales del turno nocturno.",
+  "explanation": "## Por qué las horas no se suman como decimales\n\nEstamos acostumbrados al sistema **decimal** (base 10), donde 10 unidades hacen una decena. Pero el reloj usa el sistema **sexagesimal** (base 60), heredado de los babilonios: **60 segundos = 1 minuto** y **60 minutos = 1 hora**. Por eso no podés sumar `2:45 + 1:30` como si fueran `2,45 + 1,30 = 3,75`. Tenés que sumar los minutos por un lado (45 + 30 = 75) y, como 75 supera 60, **\"llevarte\" una hora**: 75 min = 1 h 15 min. El resultado correcto es **4:15**, no 3:75 (que ni siquiera es una hora válida).\n\nEl truco que usa esta calculadora —y el que conviene aplicar a mano— es **convertir todo a minutos**, operar con números enteros y recién al final volver a horas y minutos.\n\n## El método paso a paso\n\n```\n1) Cada tiempo a minutos:   minutos = horas × 60 + minutos\n2) Sumás o restás los minutos (números normales)\n3) Volvés a HH:MM:           horas = total ÷ 60  (parte entera)\n                            minutos = resto de esa división\n```\n\nEjemplo de suma: `2:45 + 1:30`\n- 2:45 → 2×60 + 45 = **165 min**\n- 1:30 → 1×60 + 30 = **90 min**\n- 165 + 90 = **255 min**\n- 255 ÷ 60 = **4** horas, resto **15** → **4:15** ✅\n\n## Horas decimales vs. horas y minutos\n\nPara liquidar sueldos, facturar o cargar en Excel casi siempre se usan **horas decimales**: el total en minutos dividido por 60. No es lo mismo que \"la coma del reloj\". La clave: **30 minutos son 0,5 horas**, no 0,30.\n\nFórmula: `decimal = horas + minutos ÷ 60`. Así, 8:15 = 8 + 15/60 = **8,25**.\n\n## Turnos que cruzan la medianoche\n\nCuando la hora de fin es **menor** que la de inicio (por ejemplo, un turno de 22:00 a 06:00), el cálculo directo daría negativo. La calculadora detecta ese caso en el modo *Horas entre dos horarios* y **suma 24 horas (1440 minutos)** a la hora de fin: 06:00 + 24:00 = 30:00, y `30:00 − 22:00 = 8:00`. Son las 8 horas reales del turno nocturno.\n",
   "faq": [
     {
       "q": "¿Cómo sumo horas y minutos a mano sin equivocarme?",
@@ -193,14 +202,38 @@
         "Horas decimales"
       ],
       "rows": [
-        ["0:15", "0,25"],
-        ["0:30", "0,50"],
-        ["0:45", "0,75"],
-        ["1:00", "1,00"],
-        ["1:30", "1,50"],
-        ["7:30", "7,50"],
-        ["8:00", "8,00"],
-        ["40:00", "40,00"]
+        [
+          "0:15",
+          "0,25"
+        ],
+        [
+          "0:30",
+          "0,50"
+        ],
+        [
+          "0:45",
+          "0,75"
+        ],
+        [
+          "1:00",
+          "1,00"
+        ],
+        [
+          "1:30",
+          "1,50"
+        ],
+        [
+          "7:30",
+          "7,50"
+        ],
+        [
+          "8:00",
+          "8,00"
+        ],
+        [
+          "40:00",
+          "40,00"
+        ]
       ],
       "note": "Fórmula: decimal = horas + minutos ÷ 60. Por eso 0:30 = 0,50 (no 0,30) y 0:15 = 0,25. Usá las horas decimales para multiplicar por un valor-hora o cargar en una planilla de sueldos."
     }
