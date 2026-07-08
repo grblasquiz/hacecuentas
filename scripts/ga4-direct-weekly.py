@@ -127,6 +127,33 @@ if len(complete) >= 8:
     l4 = statistics.mean(complete[-4:])
     print(f'  tendencia (sem. completas): media primeras 4 {f4:,.0f} → últimas 4 {l4:,.0f} = {((l4 - f4) / f4 * 100):+.0f}%')
 
+# ---- SECCIÓN 1b: directo HUMANO (países target; excluye el ruido bot US/China/Singapur) ----
+# KPI del plan de tráfico directo (2026-07-08): baseline ~15/día AR.
+HUMAN_COUNTRIES = {
+    'Argentina', 'Colombia', 'Mexico', 'Chile', 'Peru', 'Ecuador', 'Venezuela',
+    'Paraguay', 'Uruguay', 'Bolivia', 'Dominican Republic', 'Spain', 'Portugal',
+    'Brazil', 'Guatemala', 'Costa Rica', 'Panama', 'Honduras', 'Nicaragua', 'El Salvador'}
+wk_human = defaultdict(int)
+wk_ar = defaultdict(int)
+for r in run(['date', 'country'], ['sessions'], filt=DIRECT):
+    w = week_of(r.dimension_values[0].value)
+    if w is None:
+        continue
+    c = r.dimension_values[1].value
+    if c in HUMAN_COUNTRIES:
+        wk_human[w] += int(r.metric_values[0].value)
+    if c == 'Argentina':
+        wk_ar[w] += int(r.metric_values[0].value)
+print(f'\nDIRECTO HUMANO (países target, sin US/China/Singapur y demás ruido bot)')
+print(f'{"semana":<17}{"target":>8}{"/día":>7}{"AR":>7}{"AR/día":>8}')
+print('-' * 48)
+for w in range(WEEKS - 1, -1, -1):
+    if wk_total.get(w, 0) == 0:
+        continue
+    h, a = wk_human.get(w, 0), wk_ar.get(w, 0)
+    tag = ' *' if w == 0 else ''
+    print(f'{wk_label(w) + tag:<17}{h:>8,}{h / 7:>7.1f}{a:>7,}{a / 7:>8.1f}')
+
 # ---- SECCIÓN 2: mix de canales por semana ----
 chan_tot = defaultdict(int)
 for w in wk_chan:

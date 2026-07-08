@@ -20,6 +20,8 @@
 // Setup (una vez):  cd workers/alerts-recompute && npx wrangler secret put ALERTS_RUN_TOKEN
 // El cron (scheduled) NO usa el token: si el secret no está seteado, solo se
 // deshabilita el disparo manual, la pasada diaria sigue corriendo igual.
+import { sendPush } from './webpush.mjs';
+
 /** Comparación en tiempo constante (evita timing oracle sobre el token). */
 function safeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
@@ -177,20 +179,188 @@ async function runPass(env, { dry = false } = {}) {
   return { ok: true, checked, changed, sent, failed, dry, changes: changes.slice(0, 50) };
 }
 
+// ── Web Push: topics 'valores' (dólar) y 'mundial' (partidos AR / final) ─────
+// Corre en los crons intradía además del diario. Sólo notifica cuando hay
+// novedad real (umbral de cambio / partido próximo) y nunca repite la misma.
+
+const LIVE_FIXTURE_URL =
+  'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+
+async function getTopicState(env, topic) {
+  const row = await env.DB.prepare(
+    'SELECT last_value, last_sent_at FROM push_topic_state WHERE topic = ?').bind(topic).first();
+  let value = null;
+  try { value = row?.last_value ? JSON.parse(row.last_value) : null; } catch { /* corrupto → null */ }
+  return { value, sentAt: row?.last_sent_at ?? null };
+}
+
+async function setTopicState(env, topic, value) {
+  await env.DB.prepare(
+    `INSERT INTO push_topic_state (topic, last_value, last_sent_at) VALUES (?, ?, ?)
+     ON CONFLICT(topic) DO UPDATE SET last_value = excluded.last_value, last_sent_at = excluded.last_sent_at`,
+  ).bind(topic, JSON.stringify(value), Date.now()).run();
+}
+
+/** Manda `payload` a todas las suscripciones activas del topic. Poda endpoints muertos. */
+async function broadcast(env, topic, payload, { ttl = 3 * 3600, collapse } = {}) {
+  const rows = (await env.DB.prepare(
+    "SELECT id, endpoint, p256dh, auth, topics FROM push_subscriptions WHERE status = 'active'",
+  ).all()).results || [];
+  const targets = rows.filter((s) => String(s.topics || '').split(',').includes(topic));
+  const opts = {
+    vapidPublicKey: env.VAPID_PUBLIC_KEY,
+    vapidPrivateKey: env.VAPID_PRIVATE_KEY,
+    subject: env.VAPID_SUBJECT || 'mailto:novedades@hacecuentas.com',
+    ttl,
+    topic: collapse, // header Topic: colapsa avisos pendientes del mismo tema
+  };
+  let sent = 0, gone = 0, failed = 0;
+  for (const s of targets) {
+    try {
+      const r = await sendPush({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, opts);
+      if (r.ok) {
+        sent++;
+        await env.DB.prepare('UPDATE push_subscriptions SET last_ok_at = ?, fail_count = 0 WHERE id = ?')
+          .bind(Date.now(), s.id).run();
+      } else if (r.gone) {
+        gone++;
+        await env.DB.prepare("UPDATE push_subscriptions SET status = 'gone' WHERE id = ?").bind(s.id).run();
+      } else {
+        failed++;
+        await env.DB.prepare('UPDATE push_subscriptions SET fail_count = fail_count + 1 WHERE id = ?')
+          .bind(s.id).run();
+      }
+    } catch { failed++; }
+  }
+  return { targets: targets.length, sent, gone, failed };
+}
+
+/** Dólar: notifica si oficial o blue (venta) se movieron ≥ $5 desde el último aviso. */
+async function checkDolarTopic(env) {
+  const resp = await fetch('https://dolarapi.com/v1/dolares', { headers: { accept: 'application/json' } });
+  if (!resp.ok) return { skip: `dolarapi ${resp.status}` };
+  const arr = await resp.json().catch(() => null);
+  if (!Array.isArray(arr)) return { skip: 'respuesta inválida' };
+  const venta = (casa) => Math.round(Number(arr.find((d) => d.casa === casa)?.venta) || 0);
+  const oficial = venta('oficial'), blue = venta('blue');
+  if (!oficial || !blue) return { skip: 'sin cotizaciones' };
+
+  const st = await getTopicState(env, 'dolar');
+  const prev = st.value;
+  if (!prev) { await setTopicState(env, 'dolar', { oficial, blue }); return { skip: 'baseline inicial' }; }
+  const dOf = oficial - prev.oficial, dBl = blue - prev.blue;
+  if (Math.abs(dOf) < 5 && Math.abs(dBl) < 5) return { skip: 'sin cambio relevante' };
+
+  const arrow = (d) => (d > 0 ? `subió $${fmtNum(d)}` : `bajó $${fmtNum(-d)}`);
+  const lead = Math.abs(dBl) >= Math.abs(dOf)
+    ? `Blue $${fmtNum(blue)} (${arrow(dBl)})` : `Oficial $${fmtNum(oficial)} (${arrow(dOf)})`;
+  const r = await broadcast(env, 'valores', {
+    title: `💵 Dólar hoy: ${lead}`,
+    body: `Oficial $${fmtNum(oficial)} · Blue $${fmtNum(blue)}`,
+    url: '/dolar-hoy?utm_source=push&utm_medium=push&utm_campaign=valores',
+    tag: 'hc-valores',
+  }, { ttl: 3 * 3600, collapse: 'hc-valores' });
+  await setTopicState(env, 'dolar', { oficial, blue });
+  return { oficial, blue, ...r };
+}
+
+/** Kickoff a Date UTC (misma lógica que el sitio: sin offset → UTC-6 fallback). */
+function kickoffUTC(date, time) {
+  if (!date) return null;
+  const t = String(time || '00:00').match(/^(\d{1,2}):(\d{2})(?:\s*UTC([+-]\d{1,2}))?/);
+  if (!t) return null;
+  const off = t[3] !== undefined && t[3] !== null ? Number(t[3]) : -6;
+  const sign = off >= 0 ? '+' : '-';
+  return new Date(`${date}T${t[1].padStart(2, '0')}:${t[2]}:00${sign}${String(Math.abs(off)).padStart(2, '0')}:00`);
+}
+
+/** Mundial: avisa una vez por partido de Argentina (o la final), hasta 4 h antes. */
+async function checkMundialTopic(env) {
+  if (Date.now() > Date.parse('2026-07-20T12:00:00Z')) return { skip: 'mundial terminado' };
+  const resp = await fetch(LIVE_FIXTURE_URL, { headers: { accept: 'application/json' } });
+  if (!resp.ok) return { skip: `fixture ${resp.status}` };
+  const raw = await resp.json().catch(() => null);
+  if (!raw || !Array.isArray(raw.rounds)) return { skip: 'fixture inválido' };
+
+  const st = await getTopicState(env, 'mundial');
+  const notified = Array.isArray(st.value?.notified) ? st.value.notified : [];
+  const now = Date.now();
+
+  for (const round of raw.rounds) {
+    for (const m of round.matches || []) {
+      const team1 = typeof m.team1 === 'string' ? m.team1 : m.team1?.name;
+      const team2 = typeof m.team2 === 'string' ? m.team2 : m.team2?.name;
+      if (!team1 || !team2) continue;
+      const isAR = team1 === 'Argentina' || team2 === 'Argentina';
+      const isFinal = /^final$/i.test(String(round.name || ''));
+      if (!isAR && !isFinal) continue;
+      const ko = kickoffUTC(m.date, m.time);
+      if (!ko) continue;
+      const msTo = ko.getTime() - now;
+      if (msTo < 0 || msTo > 4 * 3600 * 1000) continue; // sólo ventana de 4 h pre-partido
+      const key = `${m.date}|${team1}|${team2}`;
+      if (notified.includes(key)) continue;
+
+      const hhART = new Intl.DateTimeFormat('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false,
+      }).format(ko);
+      const r = await broadcast(env, 'mundial', {
+        title: isAR ? `⚽ Hoy juega Argentina vs ${team2 === 'Argentina' ? team1 : team2}` : `⚽ Hoy es la final del Mundial`,
+        body: `${round.name || 'Mundial 2026'} · ${hhART} h (hora argentina)`,
+        url: '/fixture-mundial-2026?utm_source=push&utm_medium=push&utm_campaign=mundial',
+        tag: 'hc-mundial',
+      }, { ttl: 4 * 3600, collapse: 'hc-mundial' });
+      await setTopicState(env, 'mundial', { notified: [...notified, key].slice(-10) });
+      return { match: key, ...r };
+    }
+  }
+  return { skip: 'sin partido próximo' };
+}
+
+/** Pasada de push: barata si no hay suscriptores. Nunca tira — reporta errores. */
+async function pushPass(env) {
+  if (!env.VAPID_PRIVATE_KEY || !env.VAPID_PUBLIC_KEY) return { skip: 'sin claves VAPID' };
+  const n = (await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM push_subscriptions WHERE status = 'active'").first())?.n ?? 0;
+  if (!n) return { subs: 0 };
+  const out = { subs: n };
+  try { out.dolar = await checkDolarTopic(env); } catch (e) { out.dolar = { error: String(e).slice(0, 160) }; }
+  try { out.mundial = await checkMundialTopic(env); } catch (e) { out.mundial = { error: String(e).slice(0, 160) }; }
+  return out;
+}
+
 async function status(env) {
   const active = (await env.DB.prepare("SELECT COUNT(*) AS n FROM result_alerts WHERE status = 'active'").first())?.n ?? 0;
   const total = (await env.DB.prepare('SELECT COUNT(*) AS n FROM result_alerts').first())?.n ?? 0;
   const lastChanged = (await env.DB.prepare('SELECT MAX(last_changed_at) AS t FROM result_alerts').first())?.t ?? null;
-  return { active_alerts: active, total_alerts: total, last_change_at: lastChanged, tiene_email_binding: !!env.EMAIL };
+  let pushSubs = 0;
+  try {
+    pushSubs = (await env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM push_subscriptions WHERE status = 'active'").first())?.n ?? 0;
+  } catch { /* tabla aún no creada */ }
+  return {
+    active_alerts: active, total_alerts: total, last_change_at: lastChanged,
+    tiene_email_binding: !!env.EMAIL, push_subs: pushSubs, tiene_vapid: !!env.VAPID_PRIVATE_KEY,
+  };
 }
 
 export default {
-  async scheduled(_event, env, _ctx) {
+  async scheduled(event, env, _ctx) {
+    // El cron diario (14:30 UTC) corre alertas por email + push; los crons
+    // intradía (12/15/18/21 UTC) sólo chequean los topics de push.
+    if (event.cron === '30 14 * * *') {
+      try {
+        const r = await runPass(env, { dry: false });
+        console.log('[alerts] pass', JSON.stringify(r));
+      } catch (e) {
+        console.error('[alerts] pass error', String(e));
+      }
+    }
     try {
-      const r = await runPass(env, { dry: false });
-      console.log('[alerts] pass', JSON.stringify(r));
+      const p = await pushPass(env);
+      console.log('[push] pass', JSON.stringify(p));
     } catch (e) {
-      console.error('[alerts] pass error', String(e));
+      console.error('[push] pass error', String(e));
     }
   },
 
@@ -200,6 +370,10 @@ export default {
     try {
       const provided = url.searchParams.get('run');
       if (provided && env.ALERTS_RUN_TOKEN && safeEqual(provided, env.ALERTS_RUN_TOKEN)) {
+        if (url.searchParams.get('push') === '1') {
+          const p = await pushPass(env);
+          return new Response(JSON.stringify(p, null, 2), { headers: H });
+        }
         const r = await runPass(env, { dry: url.searchParams.get('dry') === '1' });
         return new Response(JSON.stringify(r, null, 2), { headers: H });
       }

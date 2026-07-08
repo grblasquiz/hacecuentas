@@ -247,6 +247,33 @@ CREATE INDEX IF NOT EXISTS idx_result_alerts_user ON result_alerts(user_id);
 CREATE INDEX IF NOT EXISTS idx_result_alerts_status_slug ON result_alerts(status, slug);
 CREATE INDEX IF NOT EXISTS idx_result_alerts_unsub ON result_alerts(unsub_token);
 
+-- ── Web Push ──────────────────────────────────────────────────────────────────
+-- Suscripciones push por navegador (sin email, sin identidad: el endpoint del
+-- push service ES la identidad). Topics por CSV: 'valores' (dólar/BCRA cambia),
+-- 'mundial' (partidos de Argentina / final). El worker alerts-recompute las lee
+-- y les manda pushes cifrados (RFC 8291) cuando el topic tiene novedad.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  endpoint TEXT NOT NULL,                -- URL del push service (única por browser)
+  p256dh TEXT NOT NULL,                  -- clave pública del user agent (b64url)
+  auth TEXT NOT NULL,                    -- auth secret del user agent (b64url)
+  topics TEXT NOT NULL,                  -- CSV: 'valores,mundial'
+  created_at INTEGER NOT NULL,           -- unix ms
+  last_ok_at INTEGER,                    -- último envío exitoso
+  fail_count INTEGER NOT NULL DEFAULT 0, -- fallos consecutivos (para poda)
+  status TEXT DEFAULT 'active',          -- 'active' | 'gone' (404/410 del push service)
+  UNIQUE(endpoint)
+);
+CREATE INDEX IF NOT EXISTS idx_push_subs_status ON push_subscriptions(status);
+
+-- Estado por topic: último valor notificado, para disparar sólo cuando hay
+-- cambio real y no repetir la misma novedad en cada corrida del cron.
+CREATE TABLE IF NOT EXISTS push_topic_state (
+  topic TEXT PRIMARY KEY,
+  last_value TEXT,                       -- JSON del último estado notificado
+  last_sent_at INTEGER                   -- unix ms del último broadcast
+);
+
 -- ── Cooperativa de datos anónimos ─────────────────────────────────────────────
 -- Sistema y política SEPARADOS del feedback/votos. Tras ciertos resultados, el
 -- usuario puede APORTAR EXPLÍCITAMENTE (consentimiento granular, nada automático)

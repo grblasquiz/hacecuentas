@@ -13,9 +13,11 @@ main = "index.mjs"
 compatibility_date = "2026-06-01"
 workers_dev = true
 
-# Diario 14:30 UTC = 11:30 ART (después de la ventana típica de data-refresh+deploy).
+# Diario 14:30 UTC = 11:30 ART (después de la ventana típica de data-refresh+deploy):
+# alertas por email + push. Los intradía (12/15/18/21 UTC = 9-18 ART) sólo
+# chequean topics de Web Push (dólar/mundial) — baratos si no hay novedad.
 [triggers]
-crons = ["30 14 * * *"]
+crons = ["30 14 * * *", "0 12,15,18,21 * * *"]
 
 # Cloudflare Email Service — binding de envío (mismo que el newsletter).
 [[send_email]]
@@ -24,6 +26,10 @@ name = "EMAIL"
 [vars]
 ALERTS_FROM = "Hacé Cuentas <novedades@hacecuentas.com>"
 SITE_BASE = "https://hacecuentas.com"
+# Web Push (VAPID). La clave PÚBLICA no es secreta (viaja en cada suscripción del
+# browser); la PRIVADA es secret: npx wrangler secret put VAPID_PRIVATE_KEY
+VAPID_PUBLIC_KEY = "BJU0dNu2PLYBkx2KmNrgfLKiZ3YM_nrf6n8qQEI7CU3a_HMATTSdk8tyjY7lOtzaOAt__ATnfzbu2lU0RfGCf1M"
+VAPID_SUBJECT = "mailto:novedades@hacecuentas.com"
 
 # Misma base D1 que el sitio (hacecuentas-forms) — bind por id.
 [[d1_databases]]

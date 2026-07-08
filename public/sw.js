@@ -143,3 +143,58 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
+
+// ── Web Push ─────────────────────────────────────────────────────────────────
+// Payload JSON: { title, body, url, tag }. Lo manda el worker alerts-recompute
+// (cifrado RFC 8291); acá solo se muestra y se abre el link al click.
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (e) { /* payload no-JSON */ }
+  const title = data.title || 'Hacé Cuentas';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: data.tag || 'hc-push',
+      data: { url: data.url || '/' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/';
+  const target = new URL(url, self.location.origin);
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if (new URL(w.url).pathname === target.pathname && 'focus' in w) return w.focus();
+      }
+      return clients.openWindow(target.href);
+    })
+  );
+});
+
+// El push service puede rotar la suscripción: re-suscribir con la misma clave
+// y avisar al backend pasando el endpoint viejo para migrar los topics.
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const old = event.oldSubscription;
+        const key = old && old.options && old.options.applicationServerKey;
+        if (!key) return;
+        const sub = await self.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: key,
+        });
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription: sub.toJSON(), oldEndpoint: old ? old.endpoint : null }),
+        });
+      } catch (e) { /* mejor esfuerzo */ }
+    })()
+  );
+});

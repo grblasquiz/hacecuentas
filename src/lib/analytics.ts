@@ -57,6 +57,13 @@ export const HC_EVENTS = [
   'hc_email_band_view',
   'hc_email_band_focus',
   'hc_email_band_signup',
+  // Web Push (PushOptIn) — funnel de opt-in: view → subscribe | dismiss | denied.
+  // KPI del plan de tráfico directo (suscriptores push = canal de retorno propio).
+  'hc_push_view',
+  'hc_push_subscribe',
+  'hc_push_dismiss',
+  'hc_push_denied',
+  'hc_push_unsubscribe',
 ] as const;
 
 export type HcEvent = (typeof HC_EVENTS)[number];

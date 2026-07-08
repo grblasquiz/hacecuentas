@@ -1,0 +1,224 @@
+---
+/**
+ * PushOptIn — tarjeta "Activá avisos" para Web Push por topic.
+ *
+ * Topics: 'valores' (dólar/BCRA se movió) · 'mundial' (hoy juega Argentina).
+ * El envío lo hace el worker alerts-recompute (crons intradía); acá sólo se
+ * pide permiso, se suscribe con la clave VAPID pública y se registra en
+ * POST /api/push/subscribe.
+ *
+ * Se oculta solo cuando no aplica: browser sin Push API, permiso denegado, o
+ * iOS fuera de la PWA instalada (Safari iOS sólo soporta push standalone).
+ * Estado local en localStorage 'hc-push' = { topics: [...] }.
+ */
+interface Props {
+  topic: 'valores' | 'mundial';
+  title?: string;
+  body?: string;
+}
+const { topic } = Astro.props;
+const title = Astro.props.title
+  ?? (topic === 'mundial' ? 'Te avisamos cuando juega Argentina' : 'Te avisamos cuando se mueve el dólar');
+const body = Astro.props.body
+  ?? (topic === 'mundial'
+    ? 'Una notificación antes de cada partido de la Selección y de la final. Sin spam.'
+    : 'Una notificación cuando el oficial o el blue cambian de verdad. Sin spam.');
+---
+
+<div class="hc-push" data-push-topic={topic} hidden>
+  <div class="hc-push-txt">
+    <p class="hc-push-title">🔔 {title}</p>
+    <p class="hc-push-body">{body}</p>
+  </div>
+  <div class="hc-push-actions">
+    <button type="button" class="hc-push-btn" data-push-on>Activar avisos</button>
+    <span class="hc-push-done" data-push-done hidden>
+      Avisos activados ✓
+      <button type="button" class="hc-push-off" data-push-off>Desactivar</button>
+    </span>
+  </div>
+</div>
+
+<style>
+  .hc-push {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    background: var(--accent-soft, #eff6ff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+    padding: 0.9rem 1.1rem;
+    margin: 1rem 0;
+  }
+  .hc-push[hidden] { display: none; }
+  .hc-push-txt { flex: 1 1 260px; min-width: 0; }
+  .hc-push-title {
+    margin: 0 0 0.15rem;
+    font-weight: 700;
+    font-size: 0.98rem;
+    color: var(--text, #0f172a);
+  }
+  .hc-push-body {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted, #64748b);
+  }
+  .hc-push-btn {
+    background: var(--accent, #2563eb);
+    color: var(--on-accent, #fff);
+    border: none;
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .hc-push-btn:hover { background: var(--accent-hover, #1d4ed8); }
+  .hc-push-done {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent, #2563eb);
+  }
+  .hc-push-off {
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.8rem;
+    color: var(--text-muted, #64748b);
+    text-decoration: underline;
+    cursor: pointer;
+    margin-left: 0.4rem;
+    padding: 0;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var PUB_KEY = 'BJU0dNu2PLYBkx2KmNrgfLKiZ3YM_nrf6n8qQEI7CU3a_HMATTSdk8tyjY7lOtzaOAt__ATnfzbu2lU0RfGCf1M';
+    var LS = 'hc-push'; // { topics: ['valores', ...] }
+
+    function track(ev) {
+      try {
+        if (typeof window.hcTrack === 'function') window.hcTrack(ev, { source_page: location.pathname });
+      } catch (e) {}
+    }
+    function readState() {
+      try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) { return {}; }
+    }
+    function writeState(s) {
+      try { localStorage.setItem(LS, JSON.stringify(s)); } catch (e) {}
+    }
+    function b64ToBytes(s) {
+      var b64 = (s + '='.repeat((4 - (s.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+      var bin = atob(b64);
+      var out = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    }
+
+    var cards = document.querySelectorAll('[data-push-topic]');
+    if (!cards.length) return;
+
+    var supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    // Safari iOS sólo permite push con la PWA instalada; fuera de eso no ofrecemos.
+    if (!supported || (isIOS && !standalone)) return;
+    if (Notification.permission === 'denied') return;
+
+    cards.forEach(function (card) {
+      var topic = card.getAttribute('data-push-topic');
+      var btnOn = card.querySelector('[data-push-on]');
+      var done = card.querySelector('[data-push-done]');
+      var btnOff = card.querySelector('[data-push-off]');
+
+      function render(subscribed) {
+        btnOn.hidden = subscribed;
+        done.hidden = !subscribed;
+      }
+
+      var st = readState();
+      render((st.topics || []).indexOf(topic) !== -1);
+      card.hidden = false;
+
+      // Viewability (una vez por carga): mide cuánta gente VE la oferta.
+      if ('IntersectionObserver' in window) {
+        var seen = false;
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (!seen && en.isIntersecting && en.intersectionRatio >= 0.4) {
+              seen = true;
+              track('hc_push_view');
+              io.disconnect();
+            }
+          });
+        }, { threshold: 0.4 });
+        io.observe(card);
+      }
+
+      btnOn.addEventListener('click', function () {
+        btnOn.disabled = true;
+        Notification.requestPermission().then(function (perm) {
+          if (perm !== 'granted') {
+            btnOn.disabled = false;
+            track(perm === 'denied' ? 'hc_push_denied' : 'hc_push_dismiss');
+            if (perm === 'denied') card.hidden = true;
+            return;
+          }
+          navigator.serviceWorker.ready
+            .then(function (reg) {
+              return reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: b64ToBytes(PUB_KEY),
+              });
+            })
+            .then(function (sub) {
+              return fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subscription: sub.toJSON(), topics: [topic] }),
+              });
+            })
+            .then(function (resp) {
+              if (!resp.ok) throw new Error('subscribe ' + resp.status);
+              var s = readState();
+              s.topics = (s.topics || []).filter(function (t) { return t !== topic; }).concat([topic]);
+              writeState(s);
+              render(true);
+              track('hc_push_subscribe');
+            })
+            .catch(function () { btnOn.disabled = false; });
+        });
+      });
+
+      btnOff.addEventListener('click', function () {
+        navigator.serviceWorker.ready
+          .then(function (reg) { return reg.pushManager.getSubscription(); })
+          .then(function (sub) {
+            if (!sub) return null;
+            var s = readState();
+            s.topics = (s.topics || []).filter(function (t) { return t !== topic; });
+            writeState(s);
+            return fetch('/api/push/unsubscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ endpoint: sub.endpoint, topic: topic }),
+            }).then(function () {
+              // Si no le queda ningún topic, soltamos la suscripción del browser.
+              if (!s.topics.length) return sub.unsubscribe();
+            });
+          })
+          .then(function () {
+            render(false);
+            btnOn.disabled = false;
+            track('hc_push_unsubscribe');
+          })
+          .catch(function () {});
+      });
+    });
+  })();
+</script>
