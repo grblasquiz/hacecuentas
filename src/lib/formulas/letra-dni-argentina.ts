@@ -26,7 +26,7 @@ export function letraDniArgentina(inputs: LetraDniInputs): LetraDniOutputs {
 
   const _insight = {
     title: 'Letra del DNI',
-    text: `Para el DNI **${dniFormateado}**, la letra verificadora es **${letra}**. Es el carácter que figura junto al número en tu CUIT/CUIL y trámites de RENAPER.`,
+    text: `Para el DNI **${dniFormateado}**, la letra de control por módulo 11 es **${letra}**. Es un valor orientativo: el DNI argentino no tiene letra verificadora oficial — en los trámites se usa el dígito verificador del CUIL/CUIT.`,
     tone: 'neutral',
     icon: '🪪',
   };
