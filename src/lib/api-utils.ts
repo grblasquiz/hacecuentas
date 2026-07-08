@@ -176,7 +176,8 @@ export function humanizeSlug(slug: string): string {
  */
 export function buildResultEmail(slug: string, result: string): { subject: string; html: string } {
   const calcName = humanizeSlug(slug);
-  const calcUrl = `https://hacecuentas.com${slug}`;
+  // UTM: sin esto el click de vuelta cuenta como Direct y el canal Email queda invisible.
+  const calcUrl = `https://hacecuentas.com${slug}?utm_source=result-email&utm_medium=email&utm_campaign=email-result`;
   return {
     subject: `Tu resultado de ${calcName} — Hacé Cuentas`,
     html: `

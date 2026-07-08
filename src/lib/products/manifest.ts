@@ -154,6 +154,7 @@ export const PRODUCTS: Product[] = [
       { slug: 'calculadora-aguinaldo-sac', label: 'Aguinaldo (SAC)' },
       { slug: 'calculadora-dias-vacaciones-ganadas-antiguedad-lct', label: 'Días de vacaciones' },
       { slug: 'calculadora-horas-extra', label: 'Horas extra' },
+      { slug: 'calculadora-indemnizacion-despido', label: 'Indemnización por despido' },
       { slug: 'calculadora-liquidacion-final-renuncia', label: 'Liquidación final' },
       { slug: 'calculadora-monotributo-2026', label: 'Monotributo' },
       { slug: 'calculadora-paritaria-comercio-2026-aumento-acumulado', label: 'Paritaria de comercio' },

@@ -151,7 +151,9 @@ async function runPass(env, { dry = false } = {}) {
     if (dry) continue;
 
     const attr = await fetchAttribution(siteBase, a.slug, attrCache);
-    const calcUrl = `${siteBase}/${a.slug}`;
+    // UTM: sin esto GA4 cuenta el click como Direct (o lo pierde) y el canal
+    // Email queda invisible — higiene de medición del plan de tráfico directo.
+    const calcUrl = `${siteBase}/${a.slug}?utm_source=alert&utm_medium=email&utm_campaign=result-alert&utm_content=${encodeURIComponent(a.slug)}`;
     const unsubUrl = `${siteBase}/api/alerts/unsubscribe?token=${encodeURIComponent(a.unsub_token)}`;
     const html = renderEmail({
       label: a.headline_label || 'tu resultado', oldH: a.last_headline, newH: newHStr, calcUrl, attr, unsubUrl,

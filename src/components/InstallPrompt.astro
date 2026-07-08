@@ -4,14 +4,16 @@
 // componente es SOLO la UI de descubrimiento: sin esto el usuario no se entera
 // de que puede instalarla.
 //
-// Estrategia:
-//  - SOLO Android: captura `beforeinstallprompt`, muestra el chip y al click
-//    dispara el prompt nativo de instalación.
-//  - Desktop: NO mostramos chip (se deja el ícono de instalación nativo del
-//    browser intacto; no instalamos UI propia).
-//  - iOS/Safari: NO se muestra (no hay instalación real de PWA en iOS).
+// Estrategia (dos niveles):
+//  - Páginas comunes: SOLO Android — captura `beforeinstallprompt`, muestra el
+//    chip y al click dispara el prompt nativo. Desktop e iOS no ven nada.
+//  - PÁGINAS CON HÁBITO (HABIT_PATHS: las calcs que la gente re-visita + el
+//    dashboard de valores): a partir de la 2ª visita a esa página ofrecemos
+//    también en desktop (mismo beforeinstallprompt) y en iOS/Safari
+//    (instrucciones Compartir → Agregar a inicio, no hay prompt nativo).
+//    Es la palanca de tráfico directo: instalada = sesión Direct.
 //  - Nunca aparece si ya está instalada (display-mode: standalone) ni si el
-//    usuario lo descartó (re-aparece a los 30 días).
+//    usuario lo descartó (política anti-molestia de abajo).
 //  - z-index 190 (debajo del banner de cookies, 200) y se corre hacia arriba
 //    cuando el banner está visible para no colisionar.
 ---
@@ -35,6 +37,16 @@
     class="hc-install-close"
     aria-label="No mostrar más"
   >&times;</button>
+</div>
+
+<!-- Instrucciones iOS: Safari no tiene prompt nativo de instalación -->
+<div id="hc-install-ios" class="hc-install-ios" data-nosnippet hidden>
+  <p class="hc-install-ios-title">Instalá Hacé Cuentas en tu iPhone</p>
+  <ol class="hc-install-ios-steps">
+    <li>Tocá <strong>Compartir</strong> <span aria-hidden="true">⎋</span> en la barra de Safari</li>
+    <li>Elegí <strong>“Agregar a inicio”</strong></li>
+  </ol>
+  <button type="button" id="hc-install-ios-close" class="hc-install-ios-btn">Listo</button>
 </div>
 
 <style>
@@ -96,6 +108,39 @@
     color: var(--text, #0f172a);
   }
 
+  .hc-install-ios {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    left: auto;
+    max-width: 300px;
+    z-index: 191;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 14px;
+    box-shadow: 0 6px 24px rgba(2, 6, 23, 0.18);
+    padding: 1rem 1.1rem;
+    animation: hc-install-in 0.28s ease both;
+  }
+  .hc-install-ios[hidden] { display: none; }
+  .hc-install-ios-title { margin: 0 0 0.5rem; font-weight: 700; font-size: 0.95rem; }
+  .hc-install-ios-steps { margin: 0 0 0.75rem; padding-left: 1.2rem; font-size: 0.88rem; color: var(--text-muted, #64748b); }
+  .hc-install-ios-steps li { margin: 0.2rem 0; }
+  .hc-install-ios-btn {
+    background: var(--accent, #2563eb);
+    color: var(--on-accent, #fff);
+    border: none;
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  @media (max-width: 480px) {
+    .hc-install-ios { left: 0.75rem; right: 0.75rem; max-width: none; }
+  }
+
   @keyframes hc-install-in {
     from { opacity: 0; transform: translateY(0.5rem); }
     to   { opacity: 1; transform: translateY(0); }
@@ -117,8 +162,21 @@
     //  - Tope duro HARD_CAP: aunque lo ignore siempre, no aparece más de N veces.
     var LS = 'hc-install';   // estado persistente {v: vistas, d: descartó 0/1}
     var SS = 'hc-install-s'; // guard de sesión
+    var VISITS = 'hc-visits'; // {path: visitas} — gate de 2ª visita en páginas hábito
     var MAX_VIEWS_IF_DISMISSED = 2;
     var HARD_CAP = 3;
+
+    // Páginas que la gente re-visita (recurrentes reales en GA4): acá la
+    // instalación tiene sentido y la ofrecemos también en desktop e iOS.
+    var HABIT_PATHS = {
+      '/calculadora-imc': 1,
+      '/calculadora-actualizacion-alquiler-icl': 1,
+      '/dias-entre-dos-fechas': 1,
+      '/calculadora-indemnizacion-despido': 1,
+      '/valores-bcra': 1,
+      '/dolar-hoy': 1,
+    };
+
     var root = document.getElementById('hc-install');
     if (!root) return;
 
@@ -146,6 +204,23 @@
       root.hidden = true;
     }
 
+    // Contador de visitas por página hábito (1 por sesión: los reloads no cuentan).
+    var path = location.pathname.replace(/\/+$/, '') || '/';
+    var isHabit = HABIT_PATHS[path] === 1;
+    var habitVisits = 0;
+    if (isHabit) {
+      try {
+        var v = JSON.parse(localStorage.getItem(VISITS) || '{}') || {};
+        var sessKey = 'hc-visit-s:' + path;
+        if (sessionStorage.getItem(sessKey) !== '1') {
+          v[path] = Math.min((v[path] || 0) + 1, 99);
+          sessionStorage.setItem(sessKey, '1');
+          localStorage.setItem(VISITS, JSON.stringify(v));
+        }
+        habitVisits = v[path] || 0;
+      } catch (e) { habitVisits = 0; }
+    }
+
     var state = readState();
     var views = state.v || 0;
     var dismissed = state.d === 1;
@@ -158,11 +233,14 @@
     var deferred = null;
     var btn = document.getElementById('hc-install-btn');
     var closeBtn = document.getElementById('hc-install-close');
+    var iosPanel = document.getElementById('hc-install-ios');
+    var iosClose = document.getElementById('hc-install-ios-close');
 
     var ua = navigator.userAgent || '';
-    // Solo Android: es donde la PWA se instala de verdad vía beforeinstallprompt.
-    // Desktop e iOS quedan excluidos a propósito.
     var isAndroid = /android/i.test(ua);
+    var isIOS = /iphone|ipad|ipod/i.test(ua);
+    // En páginas hábito, recién a partir de la 2ª visita (ya demostró que vuelve).
+    var habitReady = isHabit && habitVisits >= 2;
 
     // Revela el chip y cuenta la aparición (1 sola vez por sesión)
     function reveal() {
@@ -177,17 +255,23 @@
       root.hidden = true;
     });
 
-    // Solo Android: capturamos el prompt nativo y mostramos el chip.
-    // En desktop (Chrome/Edge también disparan el evento) NO lo mostramos:
-    // hacemos return sin preventDefault para no tocar el ícono nativo del browser.
+    // beforeinstallprompt: Android siempre; desktop sólo en páginas hábito con
+    // 2+ visitas (en el resto se deja intacto el ícono nativo del browser).
     window.addEventListener('beforeinstallprompt', function (e) {
-      if (!isAndroid) return;
+      if (!isAndroid && !habitReady) return;
       e.preventDefault();
       deferred = e;
       reveal();
     });
 
     btn.addEventListener('click', function () {
+      // iOS: no hay prompt nativo → instrucciones Compartir → Agregar a inicio.
+      if (!deferred && isIOS) {
+        root.hidden = true;
+        if (iosPanel) iosPanel.hidden = false;
+        if (window.gtag) gtag('event', 'pwa_install_prompt', { outcome: 'ios_hint' });
+        return;
+      }
       if (!deferred) return;
       deferred.prompt();
       deferred.userChoice.then(function (choice) {
@@ -199,6 +283,19 @@
         deferred = null;
       });
     });
+
+    if (iosClose) {
+      iosClose.addEventListener('click', function () {
+        if (iosPanel) iosPanel.hidden = true;
+        setDismissed();
+      });
+    }
+
+    // iOS + página hábito + 2ª visita: no hay beforeinstallprompt que esperar,
+    // revelamos el chip directamente (Safari/iOS solamente).
+    if (isIOS && habitReady && /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua)) {
+      reveal();
+    }
 
     // Instalada → no molestar nunca más
     window.addEventListener('appinstalled', function () {

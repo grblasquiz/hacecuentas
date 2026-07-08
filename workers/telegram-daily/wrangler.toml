@@ -1,0 +1,22 @@
+# Canal de Telegram "valores hoy": postea el dólar cada día hábil con link al
+# sitio. Ver setup en index.mjs (necesita TELEGRAM_BOT_TOKEN de @BotFather).
+#
+# Deploy: cd workers/telegram-daily && npx wrangler deploy --config ./wrangler.toml
+name = "hacecuentas-telegram-daily"
+main = "index.mjs"
+compatibility_date = "2026-06-01"
+workers_dev = true
+
+# Días hábiles 14:00 UTC = 11:00 ART (el dólar no se mueve el finde).
+[triggers]
+crons = ["0 14 * * 1-5"]
+
+[vars]
+# Canal público del sitio. Cambiar cuando Martin cree el canal en Telegram.
+TELEGRAM_CHAT_ID = "@hacecuentas"
+
+# Misma D1 del sitio: guarda el último estado en push_topic_state (deltas).
+[[d1_databases]]
+binding = "DB"
+database_name = "hacecuentas-forms"
+database_id = "73216cf9-dba3-4c16-875c-4073d8184bcd"

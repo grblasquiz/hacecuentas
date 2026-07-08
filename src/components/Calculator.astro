@@ -10,7 +10,7 @@ import ScenarioComparator from "./ScenarioComparator.astro";
 import type { Scenario } from "./ScenarioComparator.astro";
 import ResultContext from "./ResultContext.astro";
 import type { EquivalenciaId } from "./ResultContext.astro";
-import { isAlertEligible } from "../lib/alerts/eligible";
+import { isAlertEligible, getAlertConfig } from "../lib/alerts/eligible";
 import { getCoopSource, getDataset } from "../lib/coop/datasets";
 export interface Field {
   id: string;
@@ -202,6 +202,9 @@ const { config, lang = 'es', dataAsOf: dataAsOfProp } = Astro.props;
 // Alerta "avisame cuando este resultado cambie": solo en calcs AR fiscales
 // elegibles (data-driven) y nunca en embeds. La UI se rellena con JS.
 const alertEligible = lang === 'es' && isAlertEligible(config.slug);
+// Copy contextual: "te avisamos cuando cambie TU SUELDO EN MANO" convierte
+// mejor que la promesa genérica de "este número" (plan tráfico directo 7-08).
+const alertHeadlineLabel = alertEligible ? getAlertConfig(config.slug)?.headlineLabel : null;
 
 // Cooperativa de datos anónimos: tras el resultado, invitación OPT-IN a aportar
 // el dato de forma anónima a cambio del percentil del segmento. Solo calcs AR
@@ -1072,7 +1075,7 @@ const formatFreshnessDate = (iso: string): string => {
       <!-- Alerta de cambio normativo: "avisame cuando este resultado cambie" -->
       <div class="alert-capture" data-alert-capture style="display:none">
         <p class="alert-heading"><strong><svg class="alert-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg> Guardá este resultado</strong></p>
-        <p class="alert-sub">Te lo mandamos por mail y te avisamos si una <strong>actualización oficial</strong> (un nuevo salario mínimo, un cambio de impuesto o de tabla) cambia <em>este</em> número. Reejecutamos tu cálculo y te mostramos cuánto pasó a ser.</p>
+        <p class="alert-sub">Te lo mandamos por mail y te avisamos si una <strong>actualización oficial</strong> (un nuevo salario mínimo, un cambio de impuesto o de tabla) cambia <em>{alertHeadlineLabel || 'este número'}</em>. Reejecutamos tu cálculo y te mostramos cuánto pasó a ser.</p>
         <form class="alert-form" data-alert-form>
           <input type="email" placeholder="tu@email.com" autocomplete="email" data-alert-email>
           <button type="submit" data-label-sending="Guardando…">Guardar y avisarme</button>
@@ -2614,6 +2617,15 @@ const formatFreshnessDate = (iso: string): string => {
     border-top: 1px solid var(--border);
     flex-wrap: wrap;
   }
+
+  /* Link post-guardado → resultados guardados en la home (#saved-strip) */
+  .saved-goto {
+    flex-basis: 100%;
+    margin: 0.25rem 0 0;
+    font-size: 0.82rem;
+  }
+  .saved-goto a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .saved-goto a:hover { text-decoration: underline; }
 
   .share-label {
     font-size: 0.8125rem;
@@ -5602,6 +5614,20 @@ const formatFreshnessDate = (iso: string): string => {
               label.textContent = CALC_LANG === 'en' ? 'Saved ✓' : CALC_LANG === 'pt' ? 'Salvo ✓' : 'Guardado ✓';
               btn.classList.add('copied');
               setTimeout(() => { label.textContent = original; btn.classList.remove('copied'); }, 1600);
+            }
+            // Cerrar el loop de retorno: el guardado vive en la home (#saved-strip);
+            // sin este link el usuario nunca se entera de dónde quedó.
+            const shareBlock = btn.closest('.share');
+            if (shareBlock && !shareBlock.querySelector('.saved-goto')) {
+              const goto = document.createElement('p');
+              goto.className = 'saved-goto';
+              const a = document.createElement('a');
+              a.href = '/#saved-strip';
+              a.textContent = CALC_LANG === 'en' ? 'Saved to your home — see your results →'
+                : CALC_LANG === 'pt' ? 'Salvo na sua página inicial — ver resultados →'
+                : 'Quedó en tu inicio — ver tus resultados guardados →';
+              goto.appendChild(a);
+              shareBlock.appendChild(goto);
             }
             if (typeof (window as any).gtag === 'function') (window as any).gtag('event', 'save_result', { calc_slug: slug });
           } catch { /* localStorage lleno/bloqueado: no romper la página */ }
