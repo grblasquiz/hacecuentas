@@ -15,6 +15,7 @@
  */
 import Calculator from './Calculator.astro';
 import { getDatosSource } from '../lib/datos-source-map';
+import { shouldShowReviewDate } from '../lib/review-dates';
 import { sourceRel } from '../lib/source-rel';
 import RelatedCalcs from './RelatedCalcs.astro';
 import CalendarGrid from './CalendarGrid.astro';
@@ -232,7 +233,7 @@ let updatedLabel = '';
 if (/^\d{4}-\d{2}-\d{2}$/.test(_src)) {
   updatedLabel = new Date(_src + 'T00:00:00Z').toLocaleDateString(dateLocale, { month:'long', year:'numeric', timeZone:'UTC' });
 }
-const updated = (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed))
+const updated = (calc.lastReviewed && /^\d{4}-\d{2}-\d{2}$/.test(calc.lastReviewed) && shouldShowReviewDate(calc.lastReviewed))
   ? new Date(calc.lastReviewed + 'T00:00:00Z').toLocaleDateString(dateLocale,{day:'2-digit',month:'long',year:'numeric',timeZone:'UTC'})
   : updatedLabel;
 

@@ -1275,8 +1275,10 @@ if (argUrls.length > 0) {
 }
 
 // --------------------------------------------------------------------------
-// IIBB programmatic — /iibb/index, /iibb/[provincia], /iibb/[prov]/[actividad]
-// 1 + 24 + 240 = 265 páginas. Long-tail comercial alta intent.
+// IIBB — /iibb/index + /iibb/[provincia] (1 + 24 = 25 páginas).
+// Las 240 combinaciones /iibb/[prov]/[actividad] se consolidaron con 301 a la
+// página de provincia (2026-07-08): eran fill-in-the-blank puro y el patrón
+// doorway fue señalado en la auditoría AdSense. NO volver a generarlas.
 // --------------------------------------------------------------------------
 const iibbUrls: Url[] = [];
 const iibbActFile = join(ROOT, 'src', 'content', 'iibb', 'actividades.json');
@@ -1301,15 +1303,6 @@ if (iibbActividades.length > 0 && provincias.length > 0) {
       changefreq: 'monthly',
       lastmod: buildDate,
     });
-    // detalle por actividad
-    for (const act of iibbActividades) {
-      iibbUrls.push({
-        loc: `${site}/iibb/${p.slug}/${act.slug}`,
-        priority: '0.7',
-        changefreq: 'monthly',
-        lastmod: buildDate,
-      });
-    }
   }
   sitemaps.push({ name: 'sitemap-iibb.xml', urls: iibbUrls });
 }

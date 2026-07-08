@@ -79,23 +79,23 @@ const schema = {
     )}
 
     <section>
-      <h2>Buscar IIBB en {provincia.name} por actividad</h2>
-      <p>Elegí tu rubro para ver la alícuota exacta aplicable en {provincia.name},
-        cómo se calcula el impuesto sobre tu facturación, retenciones bancarias
-        habituales y régimen simplificado disponible para monotributistas.</p>
-      <ul class="act-grid">
-        {actividades.map((a) => (
-          <li>
-            <a href={`/iibb/${provincia.slug}/${a.slug}`}>
-              <span class="act-icon">{a.icon}</span>
-              <div>
-                <strong>{a.label} en {provincia.name}</strong>
-                <small>Alícuota base: {a.rateRange}</small>
-              </div>
-            </a>
-          </li>
-        ))}
-      </ul>
+      <h2>Alícuotas de IIBB en {provincia.name} por actividad</h2>
+      <p>Rangos de alícuota por rubro en {provincia.name}. El valor exacto
+        depende del código de actividad (NAES) y de la facturación anual;
+        verificalo en el nomenclador de la agencia de recaudación provincial.</p>
+      <table class="act-table">
+        <thead>
+          <tr><th>Actividad</th><th>Alícuota base</th></tr>
+        </thead>
+        <tbody>
+          {actividades.map((a) => (
+            <tr>
+              <td>{a.icon} {a.label}</td>
+              <td>{a.rateRange}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </section>
 
     <section>
@@ -180,18 +180,11 @@ const schema = {
   section { margin: 28px 0; }
   section ul { padding-left: 22px; }
   section ul li { margin-bottom: 6px; color: #475569; }
-  .act-grid {
-    list-style: none; padding: 0;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 10px;
+  .act-table { width: 100%; border-collapse: collapse; }
+  .act-table th, .act-table td {
+    padding: 10px 14px; text-align: left; font-size: 15px;
+    border-bottom: 1px solid #e2e8f0; color: #1e293b;
   }
-  .act-grid a {
-    display: flex; gap: 12px; padding: 14px 16px;
-    background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;
-    text-decoration: none; color: #1e293b; align-items: center;
-  }
-  .act-grid a:hover { background: #f1f5f9; border-color: #cbd5e1; }
-  .act-icon { font-size: 26px; }
-  .act-grid strong { display: block; font-size: 15px; }
-  .act-grid small { color: #64748b; font-size: 13px; }
+  .act-table th { background: #f8fafc; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .act-table tr:hover td { background: #f8fafc; }
 </style>
