@@ -108,7 +108,7 @@ const TRANSLATIONS = {
     guideRead: 'Leé la guía:', guideOpen: 'Abrir guía →', compareEyebrow: '¿Dudás entre opciones?',
     compareLbl: 'Compará:', compareOpen: 'Ver comparación →', downloads: '⬇️ Llevate esto contigo',
     backQ: '¿Buscabas otra calculadora?', backAll: 'Ver todas las calculadoras →',
-    reportErr: '✉️ Reportar un error en esta calculadora', noFaq: '¿Tenés una duda sobre esta calculadora? Escribinos y la sumamos.',
+    reportErr: '✉️ Reportar un error en esta calculadora', suggestEdit: 'Proponer mejora', suggestEditTitle: 'Enviar una corrección o mejora para esta calculadora', noFaq: '¿Tenés una duda sobre esta calculadora? Escribinos y la sumamos.',
     licensePre: 'Contenido bajo licencia', licensePost: '— reutilizable citando la fuente con enlace a',
     privacyTxt: 'Los cálculos corren 100% en tu navegador. No guardamos ni transmitimos tus datos.',
     limitsTxt: 'Resultados orientativos. Para decisiones críticas, consultá con un profesional.',
@@ -137,7 +137,7 @@ const TRANSLATIONS = {
     guideRead: 'Read the guide:', guideOpen: 'Open guide →', compareEyebrow: 'Torn between options?',
     compareLbl: 'Compare:', compareOpen: 'See comparison →', downloads: '⬇️ Take this with you',
     backQ: 'Looking for another calculator?', backAll: 'See all calculators →',
-    reportErr: '✉️ Report an error in this calculator', noFaq: 'Have a question about this calculator? Write to us and we will add it.',
+    reportErr: '✉️ Report an error in this calculator', suggestEdit: 'Suggest an improvement', suggestEditTitle: 'Send a correction or improvement for this calculator', noFaq: 'Have a question about this calculator? Write to us and we will add it.',
     licensePre: 'Content licensed under', licensePost: '— reuse it citing the source with a link to',
     privacyTxt: 'Calculations run 100% in your browser. We do not store or transmit your data.',
     limitsTxt: 'Indicative results. For critical decisions, consult a professional.',
@@ -166,7 +166,7 @@ const TRANSLATIONS = {
     guideRead: 'Leia o guia:', guideOpen: 'Abrir guia →', compareEyebrow: 'Em dúvida entre opções?',
     compareLbl: 'Compare:', compareOpen: 'Ver comparação →', downloads: '⬇️ Leve isto com você',
     backQ: 'Procurando outra calculadora?', backAll: 'Ver todas as calculadoras →',
-    reportErr: '✉️ Relatar um erro nesta calculadora', noFaq: 'Tem uma dúvida sobre esta calculadora? Escreva para nós e a adicionamos.',
+    reportErr: '✉️ Relatar um erro nesta calculadora', suggestEdit: 'Sugerir melhoria', suggestEditTitle: 'Envie uma correção ou melhoria para esta calculadora', noFaq: 'Tem uma dúvida sobre esta calculadora? Escreva para nós e a adicionamos.',
     licensePre: 'Conteúdo sob licença', licensePost: '— reutilizável citando a fonte com link para',
     privacyTxt: 'Os cálculos rodam 100% no seu navegador. Não guardamos nem transmitimos seus dados.',
     limitsTxt: 'Resultados orientativos. Para decisões críticas, consulte um profissional.',
@@ -388,6 +388,19 @@ const reportBody = encodeURIComponent(
     ? `Olá equipe Hacé Cuentas,\n\nEncontrei um erro em "${calc.h1}":\n\nURL: ${calcUrl}\n\nObrigado.`
     : `Hola Equipo Hacé Cuentas,\n\nEncontré un error en "${calc.h1}":\n\nURL: ${calcUrl}\n\nGracias.`
 );
+const suggestSubject = encodeURIComponent(
+  uiLang === 'en' ? `Improvement for ${calc.h1}`
+  : uiLang === 'pt' ? `Melhoria para ${calc.h1}`
+  : `Mejora para ${calc.h1}`
+);
+const suggestBody = encodeURIComponent(
+  uiLang === 'en'
+    ? `Hi Hacé Cuentas team,\n\nI want to suggest an improvement for this calculator:\n\n${calc.h1}\n${calcUrl}\n\nWhat I would change or add:\n\n\nSource or explanation, if relevant:\n`
+    : uiLang === 'pt'
+    ? `Olá equipe Hacé Cuentas,\n\nQuero sugerir uma melhoria para esta calculadora:\n\n${calc.h1}\n${calcUrl}\n\nO que eu mudaria ou adicionaria:\n\n\nFonte ou explicação, se aplicável:\n`
+    : `Hola Equipo Hacé Cuentas,\n\nQuiero proponer una mejora para esta calculadora:\n\n${calc.h1}\n${calcUrl}\n\nQué corregiría o agregaría:\n\n\nFuente o explicación, si aplica:\n`
+);
+const suggestHref = `mailto:errores@hacecuentas.com?subject=${suggestSubject}&body=${suggestBody}`;
 // Párrafo "Editorial" del panel Fuentes: el orden de las palabras cambia por
 // idioma (Finance calculator vs Calculadora de finanzas) → se compone acá.
 const _polAnchor = uiLang === 'en' ? 'editorial policy' : uiLang === 'pt' ? 'política editorial' : 'política editorial';
@@ -441,6 +454,13 @@ const editorialHtml = uiLang === 'en'
       <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Private — runs on your device' : lang === 'pt' ? 'Cálculo privado no seu dispositivo' : 'Cálculo privado en tu dispositivo'}</li>
     </ul>
     <div class="v2-trust-actions">
+      <a class="v2-suggest-edit" href={suggestHref} title={L.suggestEditTitle} data-nosnippet>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+        <span>{L.suggestEdit}</span>
+      </a>
       <button type="button" class="v2-trust-more" data-goto-tab="v2-fuentes">{lang === 'en' ? 'See sources & methodology →' : lang === 'pt' ? 'Ver fontes e metodologia →' : 'Ver fuentes y metodología →'}</button>
       <FavoriteStar slug={calc.slug} title={calc.h1} langPrefix="" labelSave={L.saveLabel} />
     </div>

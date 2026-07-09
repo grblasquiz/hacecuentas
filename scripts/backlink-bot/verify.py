@@ -10,12 +10,12 @@ def _host_of(url):
     return m.group(1) if m else (url or '')
 
 
-def check_url(published_url, target_url):
+def check_url(published_url, target_url, timeout=3):
     """¿La página publicada tiene un <a href> REAL al target + sin noindex?
     Devuelve (alive, dofollow|None). NO da por bueno el host en texto plano (eso no es backlink).
     """
     target_host = _host_of(target_url)
-    status, body, headers = request(published_url, method='GET', timeout=20)
+    status, body, headers = request(published_url, method='GET', timeout=timeout)
     if not status or status >= 400 or not body:
         return False, None
     # noindex = la página no se indexa → el link no vale, lo tratamos como no-backlink
@@ -32,11 +32,14 @@ def check_url(published_url, target_url):
     return False, None
 
 
-def run(limit=200):
+def run(limit=10):
     c = db.conn()
     rows = c.execute(
         "SELECT id, published_url, target_url FROM links WHERE published_url IS NOT NULL "
-        "AND status IN ('published','verified_live','dead') ORDER BY created_at DESC LIMIT ?",
+        "AND status IN ('published','verified_live','dead') "
+        "AND (verified_at IS NULL OR verified_at < datetime('now','-14 days')) "
+        "ORDER BY CASE status WHEN 'published' THEN 0 WHEN 'dead' THEN 1 ELSE 2 END, "
+        "created_at DESC LIMIT ?",
         (limit,),
     ).fetchall()
     live = dead = 0
