@@ -127,7 +127,7 @@ export const FERIADOS_EC_2026: Feriado[] = [
 export const FERIADOS_LATAM_2026: Record<string, FeriadosPais> = {
   mexico: {
     pais: 'México', gentilicio: 'los mexicanos', audience: 'MX', slug: 'feriados-mexico-2026',
-    totalLabel: '7 días de descanso obligatorio', dataAsOf: '2026-06-13',
+    totalLabel: '7 días de descanso obligatorio', dataAsOf: '2026-07-09',
     marco: 'Ley Federal del Trabajo (Art. 74)',
     notaTipo: 'Todos son días de descanso obligatorio: si trabajás, te corresponde el pago triple (salario del día + doble) conforme al Art. 75 de la LFT.',
     fuentes: [
@@ -138,7 +138,7 @@ export const FERIADOS_LATAM_2026: Record<string, FeriadosPais> = {
   },
   colombia: {
     pais: 'Colombia', gentilicio: 'los colombianos', audience: 'CO', slug: 'feriados-colombia-2026',
-    totalLabel: '19 festivos nacionales', dataAsOf: '2026-06-13',
+    totalLabel: '19 festivos nacionales', dataAsOf: '2026-07-09',
     marco: 'Ley 51 de 1983 (Ley Emiliani) y Ley 2578 de 2026',
     notaTipo: 'Trasladable = festivo que por la Ley Emiliani se corre al lunes siguiente. Fijo = se celebra en su fecha exacta.',
     fuentes: [
@@ -149,7 +149,7 @@ export const FERIADOS_LATAM_2026: Record<string, FeriadosPais> = {
   },
   chile: {
     pais: 'Chile', gentilicio: 'los chilenos', audience: 'CL', slug: 'feriados-chile-2026',
-    totalLabel: '16 feriados nacionales', dataAsOf: '2026-06-13',
+    totalLabel: '16 feriados nacionales', dataAsOf: '2026-07-09',
     marco: 'feriados legales fijados por ley (Dirección del Trabajo)',
     notaTipo: 'Irrenunciable = el comercio cierra obligatoriamente y no se puede pactar trabajo (Año Nuevo, 1 de mayo, 18 y 19 de septiembre, y Navidad).',
     fuentes: [
@@ -160,7 +160,7 @@ export const FERIADOS_LATAM_2026: Record<string, FeriadosPais> = {
   },
   peru: {
     pais: 'Perú', gentilicio: 'los peruanos', audience: 'PE', slug: 'feriados-peru-2026',
-    totalLabel: '16 feriados nacionales', dataAsOf: '2026-06-13',
+    totalLabel: '16 feriados nacionales', dataAsOf: '2026-07-09',
     marco: 'Decreto Legislativo 713 y leyes complementarias',
     notaTipo: 'Todos son feriados nacionales: descanso obligatorio remunerado en el sector público y privado. Si trabajás, corresponde el pago con sobretasa.',
     fuentes: [
@@ -171,7 +171,7 @@ export const FERIADOS_LATAM_2026: Record<string, FeriadosPais> = {
   },
   ecuador: {
     pais: 'Ecuador', gentilicio: 'los ecuatorianos', audience: 'EC', slug: 'feriados-ecuador-2026',
-    totalLabel: '11 feriados nacionales (+ día adicional)', dataAsOf: '2026-06-13',
+    totalLabel: '11 feriados nacionales (+ día adicional)', dataAsOf: '2026-07-09',
     marco: 'Código del Trabajo y Ley de feriados',
     notaTipo: 'Las fechas que ves son las observadas (con traslado ya aplicado). El único traslado real de 2026 es la Batalla de Pichincha, que cae domingo 24 y se descansa el lunes 25.',
     fuentes: [

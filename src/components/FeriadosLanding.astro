@@ -55,15 +55,39 @@ const fmtFecha = (iso: string) => {
 const mesesLargos = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const fmtLarga = (iso: string) => { const [, m, d] = iso.split('-'); return `${Number(d)} de ${mesesLargos[Number(m) - 1]}`; };
 
+// ── Puentes y próximo fin de semana largo (derivados de los datos; sin inventar) ──
+// Puente clásico: feriado en martes → pedís el lunes; en jueves → pedís el viernes.
+// En ambos casos armás un fin de semana de 4 días con un solo día de licencia.
+const puentes = feriados
+  .filter((f) => f.dia === 'Martes' || f.dia === 'Jueves')
+  .map((f) => ({ ...f, pedir: f.dia === 'Martes' ? 'el lunes anterior' : 'el viernes siguiente' }));
+const puentesPend = puentes.filter((f) => f.fecha >= buildHoy);
+// Próximo finde largo: feriado lunes/viernes (pega solo) o martes/jueves (con puente).
+const findesYPuentes = feriados.filter((f) => ['Lunes', 'Viernes', 'Martes', 'Jueves'].includes(f.dia));
+const proxFindeLargo = findesYPuentes.find((f) => f.fecha >= buildHoy) ?? null;
+const proxFindeEsPuente = proxFindeLargo ? (proxFindeLargo.dia === 'Martes' || proxFindeLargo.dia === 'Jueves') : false;
+
+// Interlink transaccional: "trabajás el feriado → cuánto cobrás" hacia la calc de
+// recargo / horas extra del mismo país. Mapea audience → calc real existente.
+const RECARGO_CALC: Record<string, { href: string; label: string }> = {
+  CL: { href: '/cl/calculadora-horas-extras-chile-recargo-50-ley-40-horas', label: 'Calculadora de horas extra en Chile (recargo 50%)' },
+  CO: { href: '/co/calculadora-recargo-dominical-festivo-colombia-2026', label: 'Calculadora de recargo dominical y festivo en Colombia' },
+  PE: { href: '/pe/calculadora-horas-extras-peru', label: 'Calculadora de horas extra en Perú' },
+  MX: { href: '/mx/calculadora-prima-dominical-dias-festivos-mexico', label: 'Calculadora de prima dominical y días festivos en México' },
+  EC: { href: '/ec/horas-extra-suplementarias-ecuador', label: 'Calculadora de horas extra suplementarias en Ecuador' },
+};
+const recargoCalc = RECARGO_CALC[audience] ?? null;
+
 const title = titleOverride ?? `Calendario ${pais} 2026: feriados y días festivos con fechas | Hacé Cuentas`;
 const description = descriptionOverride ?? `Calendario ${pais} 2026: los ${total} feriados y días festivos con la fecha exacta, el día de la semana y todos los fines de semana largos y puentes. Mirá cuál es el próximo. Datos oficiales verificados.`;
 
 const faq = [
   { q: `¿Cuántos feriados hay en ${pais} en 2026?`, a: `En 2026 hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de arriba.` },
   { q: `¿Cuándo es el próximo feriado en ${pais}?`, a: proximo ? `El próximo feriado en ${pais} es el ${fmtLarga(proximo.fecha)} (${proximo.dia}): ${proximo.nombre}${diasHasta !== null && diasHasta > 1 ? `, faltan ${diasHasta} días` : ''}. Quedan ${quedanEnAnio} feriado${quedanEnAnio === 1 ? '' : 's'} en lo que resta de 2026. La tabla marca el próximo automáticamente según la fecha de hoy.` : `Ya pasaron todos los feriados nacionales de 2026 en ${pais}. Usá el calendario para planificar tus días libres del próximo año.` },
-  { q: `¿Cuántos fines de semana largos hay en 2026?`, a: `En 2026 hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo. Sumando puentes y feriados pegados, conviene mirar el calendario completo.` },
+  { q: `¿Cuántos fines de semana largos hay en 2026?`, a: `En 2026 hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo por sí solos.${proxFindeLargo ? ` El próximo es ${proxFindeLargo.dia} ${fmtLarga(proxFindeLargo.fecha)} (${proxFindeLargo.nombre}).` : ''}` },
+  { q: `¿Cómo armo un puente en 2026 en ${pais}?`, a: puentes.length ? `Un puente se arma cuando un feriado cae martes o jueves: pedís el lunes anterior o el viernes siguiente y te quedan 4 días seguidos. En ${pais} hay ${puentes.length} feriado${puentes.length === 1 ? '' : 's'} en martes o jueves en 2026 para aprovechar así. El detalle está en la sección "Puentes 2026" de esta página.` : `En 2026 no hay feriados nacionales en martes o jueves en ${pais}, así que no se arma un puente clásico de 4 días con un solo día de licencia. Los fines de semana largos vienen de los feriados que caen lunes o viernes.` },
   { q: `¿Estos feriados son nacionales o también hay locales?`, a: `La tabla lista los feriados nacionales de ${pais} (válidos en todo el país). Además puede haber feriados locales o provinciales según la ciudad o región, que no están incluidos acá.` },
-  { q: `¿Se trabaja en los feriados? ¿Cómo se paga?`, a: `${notaTipo || 'Los feriados son días de descanso; si trabajás, suele corresponder un pago con recargo según la legislación laboral vigente.'}` },
+  { q: `¿Se trabaja en los feriados? ¿Cómo se paga si trabajo un feriado en ${pais}?`, a: `${notaTipo || 'Los feriados son días de descanso; si trabajás, suele corresponder un pago con recargo según la legislación laboral vigente.'}${recargoCalc ? ` Para calcular exactamente cuánto cobrás por trabajar un feriado, usá la ${recargoCalc.label.toLowerCase()}, enlazada en esta página.` : ''}` },
   { q: `¿De dónde salen estas fechas?`, a: `De las normas oficiales de ${pais} (${marco}). Verificamos cada fecha y su día de la semana contra el calendario real 2026. Última revisión: ${dataAsOf}.` },
   { q: `¿Puedo usar este calendario en mi web o trabajo?`, a: `Sí, bajo licencia CC-BY 4.0: reproducí los datos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".` },
 ];
@@ -107,6 +131,14 @@ const schema = { '@context': 'https://schema.org', '@graph': [
         )}
       </header>
 
+      <p class="answer-box">
+        En <strong>2026</strong>, {pais} tiene <strong>{totalLabel}</strong>.{' '}
+        {proximo
+          ? <span>El próximo es <strong>{proximo.dia} {fmtLarga(proximo.fecha)}</strong> ({proximo.nombre}), {diasHastaTxt}. </span>
+          : <span>Ya pasaron todos los feriados nacionales de 2026. </span>}
+        Hay <strong>{findesLargos.length} {findesLargos.length === 1 ? 'fin de semana largo' : 'fines de semana largos'}</strong>{puentes.length > 0 && <span> y <strong>{puentes.length} {puentes.length === 1 ? 'puente' : 'puentes'}</strong> aprovechables (feriados en martes o jueves)</span>}.
+      </p>
+
       <section class="stats-callout">
         <div class="stat"><span class="stat-num">{total}</span><span class="stat-label">feriados en 2026</span></div>
         <div class="stat" id="proximo-stat"><span class="stat-num" id="proximo-fecha">{proximo ? fmtFecha(proximo.fecha) : '2027'}</span><span class="stat-label" id="proximo-label">{proximo ? `${proximo.dia} · próximo feriado` : 'sin feriados pendientes'}</span></div>
@@ -149,6 +181,29 @@ const schema = { '@context': 'https://schema.org', '@graph': [
         </ul>
         <p class="note">Un <strong>puente</strong> es cuando tomás el día hábil que queda entre un feriado y el fin de semana (por ejemplo, un martes feriado + el lunes libre) para armarte una escapada más larga.</p>
       </section>
+
+      {puentes.length > 0 && (
+        <section class="puentes">
+          <h2>Puentes 2026 en {pais}: 4 días con un solo día de licencia</h2>
+          <p>Un <strong>puente</strong> se arma cuando un feriado cae <strong>martes o jueves</strong>: pedís un único día de licencia y te quedan <strong>4 días seguidos</strong>. Estos son los puentes aprovechables de {pais} en 2026:</p>
+          <ul class="findes">
+            {puentes.map((f) => (
+              <li><strong>{f.dia} {fmtFecha(f.fecha)}</strong> — {f.nombre}: pedí <strong>{f.pedir}</strong> y armás un fin de semana de 4 días.</li>
+            ))}
+          </ul>
+          {proxFindeLargo && (
+            <p class="note">Próximo fin de semana largo: <strong>{proxFindeLargo.dia} {fmtLarga(proxFindeLargo.fecha)}</strong> — {proxFindeLargo.nombre}{proxFindeEsPuente ? ' (armá el puente pidiendo un día)' : ' (pega solo con el fin de semana)'}.</p>
+          )}
+        </section>
+      )}
+
+      {recargoCalc && (
+        <section class="trabajar-feriado">
+          <h2>¿Trabajás un feriado en {pais}? Calculá cuánto cobrás</h2>
+          <p>Si te toca trabajar un día feriado, la legislación laboral suele reconocer un <strong>recargo</strong> sobre el valor de la jornada. Para saber el monto exacto según tu sueldo y las horas trabajadas, usá la calculadora del recargo vigente:</p>
+          <p class="calc-cta"><a href={recargoCalc.href}>→ {recargoCalc.label}</a></p>
+        </section>
+      )}
 
       {OTROS_FERIADOS.length > 0 && (
         <section class="otros-paises">
@@ -268,5 +323,10 @@ Feriados {pais} 2026 · Licencia CC-BY 4.0</code></pre>
   .proximo-hero-days { font-size: 0.85rem; color: var(--text-muted); }
   .otros-paises .paises-links { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1rem; }
   .otros-paises .paises-links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .answer-box { margin: 1.25rem 0 0; padding: 0.9rem 1.1rem; background: var(--bg-soft); border-left: 3px solid var(--accent); border-radius: 0.5rem; font-size: 1.02rem; line-height: 1.55; color: var(--text); }
+  .trabajar-feriado { margin-top: 2.5rem; }
+  .calc-cta { margin-top: 0.5rem; }
+  .calc-cta a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .calc-cta a:hover { text-decoration: underline; }
   @media (max-width: 520px) { .otros-paises .paises-links { grid-template-columns: 1fr; } }
 </style>
