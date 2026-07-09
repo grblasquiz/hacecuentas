@@ -23,22 +23,99 @@
     "Un contador de nómina verifica los importes de prima dominical y festivos laborados antes de timbrar la nómina del mes."
   ],
   "fields": [
-    { "id": "salario", "label": "Tu salario", "type": "number", "required": true, "placeholder": "500", "min": 0, "step": 0.01, "unit": "MXN", "help": "Tu salario diario (el de tu contrato o recibo). Si solo conoces el mensual, elige 'Mensual' abajo." },
-    { "id": "periodo", "label": "¿Es salario diario o mensual?", "type": "select", "default": "diario", "options": [ { "value": "diario", "label": "Diario" }, { "value": "mensual", "label": "Mensual (se divide entre 30.4)" } ] },
-    { "id": "domingos", "label": "Domingos trabajados como día normal", "type": "number", "default": 0, "placeholder": "4", "min": 0, "max": 31, "step": 1, "help": "Domingos que trabajaste teniendo tu descanso en otro día de la semana. Generan prima del 25%." },
-    { "id": "festivos", "label": "Días festivos obligatorios trabajados", "type": "number", "default": 0, "placeholder": "0", "min": 0, "max": 10, "step": 1, "help": "Festivos del Art. 74 LFT (1 ene, 2 feb, 16 mar, 1 may, 16 sep, 16 nov, 25 dic en 2026). Se pagan al triple." },
-    { "id": "descansos", "label": "Días de descanso semanal trabajados", "type": "number", "default": 0, "placeholder": "0", "min": 0, "max": 10, "step": 1, "help": "Veces que trabajaste tu día de descanso (sea domingo u otro día). Se pagan al triple." }
+    {
+      "id": "salario",
+      "label": "Tu salario",
+      "type": "number",
+      "required": true,
+      "placeholder": "500",
+      "min": 0,
+      "step": 0.01,
+      "unit": "MXN",
+      "help": "Tu salario diario (el de tu contrato o recibo). Si solo conoces el mensual, elige 'Mensual' abajo."
+    },
+    {
+      "id": "periodo",
+      "label": "¿Es salario diario o mensual?",
+      "type": "select",
+      "default": "diario",
+      "options": [
+        {
+          "value": "diario",
+          "label": "Diario"
+        },
+        {
+          "value": "mensual",
+          "label": "Mensual (se divide entre 30.4)"
+        }
+      ]
+    },
+    {
+      "id": "domingos",
+      "label": "Domingos trabajados como día normal",
+      "type": "number",
+      "default": 0,
+      "placeholder": "4",
+      "min": 0,
+      "max": 31,
+      "step": 1,
+      "help": "Domingos que trabajaste teniendo tu descanso en otro día de la semana. Generan prima del 25%."
+    },
+    {
+      "id": "festivos",
+      "label": "Días festivos obligatorios trabajados",
+      "type": "number",
+      "default": 0,
+      "placeholder": "0",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "help": "Festivos del Art. 74 LFT (1 ene, 2 feb, 16 mar, 1 may, 16 sep, 16 nov, 25 dic en 2026). Se pagan al triple."
+    },
+    {
+      "id": "descansos",
+      "label": "Días de descanso semanal trabajados",
+      "type": "number",
+      "default": 0,
+      "placeholder": "0",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "help": "Veces que trabajaste tu día de descanso (sea domingo u otro día). Se pagan al triple."
+    }
   ],
   "outputs": [
-    { "id": "totalExtra", "label": "Total extra que te deben pagar", "primary": true },
-    { "id": "primaDominical", "label": "Prima dominical (25%)" },
-    { "id": "pagoFestivos", "label": "Pago por festivos trabajados" },
-    { "id": "pagoDescansos", "label": "Pago por descansos trabajados" },
-    { "id": "detalle", "label": "Detalle del cálculo" }
+    {
+      "id": "totalExtra",
+      "label": "Total extra que te deben pagar",
+      "primary": true
+    },
+    {
+      "id": "primaDominical",
+      "label": "Prima dominical (25%)"
+    },
+    {
+      "id": "pagoFestivos",
+      "label": "Pago por festivos trabajados"
+    },
+    {
+      "id": "pagoDescansos",
+      "label": "Pago por descansos trabajados"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle del cálculo"
+    }
   ],
   "example": {
     "title": "Ejemplo: salario diario $500, 4 domingos, 1 festivo y 1 descanso trabajados en el mes",
-    "inputs": { "salario": 500, "periodo": "diario", "domingos": 4, "festivos": 1, "descansos": 1 },
+    "inputs": {
+      "salario": 500,
+      "periodo": "diario",
+      "domingos": 4,
+      "festivos": 1,
+      "descansos": 1
+    },
     "steps": [
       "Prima dominical: 4 domingos × $500 × 25% = $500 (LFT Art. 71).",
       "Festivo trabajado: 1 × $500 × 2 (doble adicional) = $1,000 extra; ese día se cobra $1,500 en total (LFT Art. 75).",
@@ -49,28 +126,72 @@
   },
   "explanation": "## Las tres reglas de pago (y cuál te aplica)\n\n```\nDomingo como día normal  → +25% del salario diario   (LFT Art. 71)\nFestivo obligatorio trabajado → +200% (total: triple)  (LFT Art. 75)\nDía de descanso trabajado    → +200% (total: triple)  (LFT Art. 73)\n```\n\nLa confusión más común es creer que el domingo \"se paga doble\". No: si el domingo es **parte de tu semana normal** de trabajo (porque descansas otro día), lo que te corresponde es la **prima dominical del 25%**. El pago **triple** se reserva para dos casos: trabajar un **día festivo obligatorio** o trabajar tu **día de descanso semanal**. En ambos, recibes tu salario del día más **un salario doble adicional** — por eso el día completo se cobra 3 veces.\n\n## Tabla 2026: cuánto vale cada concepto según tu salario\n\n| Salario diario | Prima dominical (25%) | Festivo trabajado (total del día) | Extra por descanso laborado |\n|---|---|---|---|\n| $315.04 (mínimo general) | $78.76 | $945.12 | $630.08 |\n| $440.87 (mínimo ZLFN) | $110.22 | $1,322.61 | $881.74 |\n| $500 | $125.00 | $1,500.00 | $1,000.00 |\n| $800 | $200.00 | $2,400.00 | $1,600.00 |\n| $1,000 | $250.00 | $3,000.00 | $2,000.00 |\n\nSi conoces tu salario mensual, divide entre 30.4 para obtener el diario (es el factor que usan IMSS y CONASAMI): $12,000 mensuales ≈ $394.74 diarios → prima dominical de $98.68 por domingo.\n\n## Los días festivos obligatorios de 2026\n\nEl Art. 74 de la LFT fija los días de descanso obligatorio. En 2026 son:\n\n| Fecha | Motivo |\n|---|---|\n| Jueves 1 de enero | Año Nuevo |\n| Lunes 2 de febrero | Día de la Constitución (primer lunes de febrero) |\n| Lunes 16 de marzo | Natalicio de Benito Juárez (tercer lunes de marzo) |\n| Viernes 1 de mayo | Día del Trabajo |\n| Miércoles 16 de septiembre | Independencia |\n| Lunes 16 de noviembre | Revolución Mexicana (tercer lunes de noviembre) |\n| Viernes 25 de diciembre | Navidad |\n\nOjo: el 10 de mayo, el 12 de diciembre o el Jueves y Viernes Santo **no** son festivos de ley — si tu empresa los da, es prestación contractual y el pago por trabajarlos depende del contrato. El 1 de octubre solo es festivo cada 6 años (transmisión del Poder Ejecutivo Federal; el próximo es en 2030), y los días de elecciones federales o locales también cuentan cuando la ley electoral los declare.\n\n## Cómo se combinan los conceptos\n\n- **Domingo normal trabajado**: salario del día + 25%. Nada más.\n- **Festivo que cae en tu jornada y lo trabajas**: salario + doble adicional (triple total). No se suma prima dominical, salvo que el festivo además sea domingo trabajado como día normal — ahí aplican ambos.\n- **Tu día de descanso trabajado**: salario + doble adicional. Y si tu descanso era **domingo** y lo trabajaste, la Suprema Corte ha sostenido que se acumula también la prima dominical del 25%: doble adicional + 25%.\n- **Festivo en tu día de descanso y lo trabajas**: es el caso más pagado de todos — se acumulan los conceptos y conviene revisarlo con el contrato y la jurisprudencia a la mano.\n\nEstos pagos son independientes de las **horas extra**: si además de trabajar el festivo te quedaste más horas de tu jornada, esas horas se pagan aparte al doble o triple — calcula ese concepto con la [calculadora de horas extras dobles y triples](/mx/calculadora-horas-extras-doble-triple-mexico).\n\n## Prima dominical e ISR\n\nLa prima dominical está **exenta de ISR hasta 1 UMA por cada domingo** trabajado: $117.31 en 2026 (LISR Art. 93). Si tu prima por domingo es de $125, solo tributan $7.69; si ganas el mínimo ($78.76 de prima), está exenta completa. El excedente se suma a tu base gravable como cualquier ingreso — puedes ver el efecto en tu neto con la [calculadora de sueldo neto en México](/mx/calculadora-sueldo-neto-mexico).\n\n## Cómo verificarlo en tu recibo de nómina\n\nEn el CFDI de nómina, estos pagos deben aparecer como **percepciones separadas** del sueldo: busca los conceptos \"prima dominical\", \"día festivo laborado\" o \"descanso trabajado\" (claves 020, 019 y similares del catálogo del SAT). Tres señales de alerta:\n\n1. Trabajas domingos todas las semanas y el concepto de prima dominical **no existe** en tu recibo.\n2. El festivo trabajado aparece pagado como día sencillo o solo como \"horas extra\".\n3. Te pagan estos conceptos **en efectivo y fuera del recibo**: ese dinero no integra tu salario para aguinaldo, vacaciones, Infonavit ni AFORE, y te perjudica a futuro.\n\nGuarda tus recibos timbrados y tus registros de asistencia: son la evidencia central si reclamas ante la PROFEDET o en un juicio laboral.\n\n## Errores comunes\n\n- **Creer que todo domingo se paga doble**: el domingo como día normal genera prima del 25%; el doble adicional es solo para descansos y festivos trabajados.\n- **Aceptar \"día festivo pagado sencillo\"**: si trabajaste un festivo del Art. 74, te deben el día más el doble adicional. Pagarte solo el día normal es ilegal aunque \"así se acostumbre\".\n- **No distinguir festivo de ley vs. festivo de contrato**: Jueves Santo o 12 de diciembre no obligan al triple por LFT; revisa tu contrato colectivo.\n- **Olvidar la prima dominical en salario mensual**: que tu sueldo sea fijo mensual no elimina la prima; se calcula sobre el salario diario equivalente.\n- **No reclamar a tiempo**: las acciones laborales por estos pagos prescriben en un año; junta tus recibos de nómina como evidencia.\n- **Confundir con la prima vacacional**: la prima del 25% sobre vacaciones es otra prestación distinta — esa se estima con la [calculadora de prima vacacional](/mx/calculadora-prima-vacacional-mexico).\n\n## Cuándo aplica y excepciones\n\nAplica a trabajadores bajo la **LFT** (sector privado). Los porcentajes son **mínimos de ley**: tu contrato individual o colectivo puede fijar primas mayores (30%, 50% o más son comunes en comercio y hotelería), nunca menores. El trabajo en festivo o descanso requiere en principio tu consentimiento — el patrón no puede obligarte —, y los menores de edad no pueden laborar en domingos ni festivos. Para quienes cobran por comisión o a destajo, el salario diario base es el promedio de lo percibido. Estos extras forman parte del salario para efectos de [aguinaldo](/mx/calculadora-aguinaldo-mexico-lft) e indemnizaciones cuando son percepciones regulares.\n\n## Datos clave 2026\n\n| Concepto | Valor |\n|---|---|\n| Prima dominical mínima | 25% del salario diario (LFT Art. 71) |\n| Festivo obligatorio trabajado | Salario + doble adicional = triple (LFT Art. 75) |\n| Descanso semanal trabajado | Salario + doble adicional = triple (LFT Art. 73) |\n| Festivos de ley en 2026 | 7 días (Art. 74) |\n| Salario mínimo general 2026 | $315.04/día |\n| Salario mínimo ZLFN 2026 | $440.87/día |\n| Exención ISR prima dominical | 1 UMA por domingo = $117.31 |\n| Prescripción del reclamo | 1 año |\n\n## Disclaimer\n\nCálculo orientativo con los mínimos de la LFT. Tu contrato individual o colectivo puede establecer primas superiores, y la acumulación de conceptos (festivo + descanso + domingo) tiene matices de jurisprudencia. Para reclamos, conserva tus recibos y consulta a la PROFEDET (asesoría gratuita) o a un abogado laboral.\n",
   "faq": [
-    { "q": "¿Cuánto pagan por trabajar un día festivo en México?", "a": "El **triple**: tu salario del día más un **salario doble adicional** (LFT Art. 75). Con salario diario de $500, el festivo trabajado se paga $1,500; con el mínimo 2026 ($315.04), son $945.12. Esto aplica a los festivos obligatorios del Art. 74, como el 16 de septiembre o el 25 de diciembre." },
-    { "q": "¿Cuánto es la prima dominical en 2026?", "a": "Mínimo el **25% de tu salario diario** por cada domingo que trabajes como parte de tu semana normal (LFT Art. 71). Con salario de $500 son $125 por domingo; con el mínimo general ($315.04), $78.76. Tu contrato puede fijar un porcentaje mayor, nunca menor." },
-    { "q": "¿El domingo se paga doble o al 25%?", "a": "Depende de tu situación: si el domingo es **día normal** de tu semana (descansas otro día), te toca la **prima del 25%**. Si el domingo era tu **día de descanso** y lo trabajaste, te toca el **doble adicional** (total triple) y, según jurisprudencia, también la prima dominical del 25%." },
-    { "q": "¿Cuáles son los días festivos oficiales de 2026?", "a": "Siete: 1 de enero, lunes 2 de febrero (Constitución), lunes 16 de marzo (Juárez), 1 de mayo, 16 de septiembre, lunes 16 de noviembre (Revolución) y 25 de diciembre (LFT Art. 74). El 10 de mayo, el 12 de diciembre y la Semana Santa **no** son festivos de ley. El 1 de octubre solo aplica cada 6 años por el cambio de gobierno federal (próximo: 2030)." },
-    { "q": "¿Me pueden obligar a trabajar en domingo o festivo?", "a": "En los festivos obligatorios y en tu día de descanso, en principio se requiere tu **consentimiento**; la LFT incluso prevé que si el patrón te exige trabajar tu descanso, debe pagarte el doble adicional. El domingo como día normal sí puede ser parte de tu jornada pactada (comercio, restaurantes, hospitales), y por eso existe la prima del 25%." },
-    { "q": "¿Cómo calculo mi salario diario si cobro mensual?", "a": "Divide tu sueldo mensual entre **30.4** (el factor promedio que usan IMSS y CONASAMI). Con $12,000 mensuales, tu salario diario es $394.74: la prima dominical sería $98.68 y un festivo trabajado se pagaría $1,184.21 en total." },
-    { "q": "¿La prima dominical paga ISR?", "a": "Está **exenta hasta 1 UMA por domingo**: $117.31 en 2026 (LISR Art. 93). Si tu prima es de $125 por domingo, solo $7.69 se suman a tu base gravable; las primas de salarios bajos quedan exentas por completo." },
-    { "q": "¿Qué pasa si trabajo un festivo que cae en domingo?", "a": "Si era tu día laboral normal, cobras el festivo al **triple** y se discute sumar la prima dominical — la postura mayoritaria es que sí se acumula el 25% cuando el domingo era tu día normal de labores. Si además era tu día de descanso, se acumulan descanso + festivo: es el escenario mejor pagado y conviene revisarlo con asesoría." },
-    { "q": "¿El medio día trabajado en festivo se paga proporcional?", "a": "Sí: el pago triple corresponde a las horas efectivamente trabajadas ese día. Si laboraste media jornada del festivo, te deben el salario del día (que ya es pago obligatorio aunque no trabajes) más el doble adicional proporcional a las horas trabajadas." },
-    { "q": "¿Las horas extra de un festivo se pagan aparte?", "a": "Sí. El triple del festivo cubre tu **jornada normal** de ese día; si además te excediste de la jornada, esas horas extra se pagan al doble (las primeras 9 de la semana) o al triple, como cualquier hora extra. Son conceptos independientes y se suman." },
-    { "q": "¿Qué hago si mi patrón no me paga estos conceptos?", "a": "Documenta con tus recibos de nómina y registros de asistencia, y reclama primero por escrito. Si no corrige, la **PROFEDET** da asesoría y representación gratuita, o puedes demandar ante los tribunales laborales. El plazo de prescripción es de **1 año** desde que el pago fue exigible, así que no lo dejes pasar." }
+    {
+      "q": "¿Cuánto pagan por trabajar un día festivo en México?",
+      "a": "El **triple**: tu salario del día más un **salario doble adicional** (LFT Art. 75). Con salario diario de $500, el festivo trabajado se paga $1,500; con el mínimo 2026 ($315.04), son $945.12. Esto aplica a los festivos obligatorios del Art. 74, como el 16 de septiembre o el 25 de diciembre."
+    },
+    {
+      "q": "¿Cuánto es la prima dominical en 2026?",
+      "a": "Mínimo el **25% de tu salario diario** por cada domingo que trabajes como parte de tu semana normal (LFT Art. 71). Con salario de $500 son $125 por domingo; con el mínimo general ($315.04), $78.76. Tu contrato puede fijar un porcentaje mayor, nunca menor."
+    },
+    {
+      "q": "¿El domingo se paga doble o al 25%?",
+      "a": "Depende de tu situación: si el domingo es **día normal** de tu semana (descansas otro día), te toca la **prima del 25%**. Si el domingo era tu **día de descanso** y lo trabajaste, te toca el **doble adicional** (total triple) y, según jurisprudencia, también la prima dominical del 25%."
+    },
+    {
+      "q": "¿Cuáles son los días festivos oficiales de 2026?",
+      "a": "Siete: 1 de enero, lunes 2 de febrero (Constitución), lunes 16 de marzo (Juárez), 1 de mayo, 16 de septiembre, lunes 16 de noviembre (Revolución) y 25 de diciembre (LFT Art. 74). El 10 de mayo, el 12 de diciembre y la Semana Santa **no** son festivos de ley. El 1 de octubre solo aplica cada 6 años por el cambio de gobierno federal (próximo: 2030)."
+    },
+    {
+      "q": "¿Me pueden obligar a trabajar en domingo o festivo?",
+      "a": "En los festivos obligatorios y en tu día de descanso, en principio se requiere tu **consentimiento**; la LFT incluso prevé que si el patrón te exige trabajar tu descanso, debe pagarte el doble adicional. El domingo como día normal sí puede ser parte de tu jornada pactada (comercio, restaurantes, hospitales), y por eso existe la prima del 25%."
+    },
+    {
+      "q": "¿Cómo calculo mi salario diario si cobro mensual?",
+      "a": "Divide tu sueldo mensual entre **30.4** (el factor promedio que usan IMSS y CONASAMI). Con $12,000 mensuales, tu salario diario es $394.74: la prima dominical sería $98.68 y un festivo trabajado se pagaría $1,184.21 en total."
+    },
+    {
+      "q": "¿La prima dominical paga ISR?",
+      "a": "Está **exenta hasta 1 UMA por domingo**: $117.31 en 2026 (LISR Art. 93). Si tu prima es de $125 por domingo, solo $7.69 se suman a tu base gravable; las primas de salarios bajos quedan exentas por completo."
+    },
+    {
+      "q": "¿Qué pasa si trabajo un festivo que cae en domingo?",
+      "a": "Si era tu día laboral normal, cobras el festivo al **triple** y se discute sumar la prima dominical — la postura mayoritaria es que sí se acumula el 25% cuando el domingo era tu día normal de labores. Si además era tu día de descanso, se acumulan descanso + festivo: es el escenario mejor pagado y conviene revisarlo con asesoría."
+    },
+    {
+      "q": "¿El medio día trabajado en festivo se paga proporcional?",
+      "a": "Sí: el pago triple corresponde a las horas efectivamente trabajadas ese día. Si laboraste media jornada del festivo, te deben el salario del día (que ya es pago obligatorio aunque no trabajes) más el doble adicional proporcional a las horas trabajadas."
+    },
+    {
+      "q": "¿Las horas extra de un festivo se pagan aparte?",
+      "a": "Sí. El triple del festivo cubre tu **jornada normal** de ese día; si además te excediste de la jornada, esas horas extra se pagan al doble (las primeras 9 de la semana) o al triple, como cualquier hora extra. Son conceptos independientes y se suman."
+    },
+    {
+      "q": "¿Qué hago si mi patrón no me paga estos conceptos?",
+      "a": "Documenta con tus recibos de nómina y registros de asistencia, y reclama primero por escrito. Si no corrige, la **PROFEDET** da asesoría y representación gratuita, o puedes demandar ante los tribunales laborales. El plazo de prescripción es de **1 año** desde que el pago fue exigible, así que no lo dejes pasar."
+    }
   ],
   "sources": [
-    { "name": "Ley Federal del Trabajo — Arts. 69-75 (Cámara de Diputados)", "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf" },
-    { "name": "PROFEDET — Asesoría gratuita sobre derechos laborales", "url": "https://www.gob.mx/profedet" },
-    { "name": "CONASAMI — Salarios mínimos 2026 ($315.04 general / $440.87 ZLFN)", "url": "https://www.gob.mx/conasami" }
+    {
+      "name": "Ley Federal del Trabajo — Arts. 69-75 (Cámara de Diputados)",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf"
+    },
+    {
+      "name": "PROFEDET — Asesoría gratuita sobre derechos laborales",
+      "url": "https://www.gob.mx/profedet"
+    },
+    {
+      "name": "CONASAMI — Salarios mínimos 2026 ($315.04 general / $440.87 ZLFN)",
+      "url": "https://www.gob.mx/conasami"
+    }
   ],
   "relatedSlugs": [
     "calculadora-horas-extras-doble-triple-mexico",
-    "calculadora-aguinaldo-mexico-lft",
     "calculadora-prima-vacacional-mexico",
-    "calculadora-sueldo-neto-mexico"
+    "calculadora-sueldo-neto-mexico",
+    "calculadora-vacaciones-dias-antiguedad-mexico",
+    "calculadora-vacaciones-mexico-2024-reforma-12-dias-incremento",
+    "calculadora-aguinaldo-mexico-2026-15-dias-tope-30"
   ],
   "dataUpdate": {
     "frequency": "yearly",
@@ -93,18 +214,58 @@
   "referenceTables": [
     {
       "title": "Días festivos obligatorios México 2026 (Art. 74 LFT) y pago por trabajarlos",
-      "headers": ["Fecha 2026", "Motivo", "Pago si se trabaja", "Fundamento"],
+      "headers": [
+        "Fecha 2026",
+        "Motivo",
+        "Pago si se trabaja",
+        "Fundamento"
+      ],
       "rows": [
-        ["Jueves 1 de enero", "Año Nuevo", "Triple (salario + doble adicional)", "LFT Art. 74 y 75"],
-        ["Lunes 2 de febrero", "Día de la Constitución", "Triple (salario + doble adicional)", "LFT Art. 74 y 75"],
-        ["Lunes 16 de marzo", "Natalicio de Benito Juárez", "Triple (salario + doble adicional)", "LFT Art. 74 y 75"],
-        ["Viernes 1 de mayo", "Día del Trabajo", "Triple (salario + doble adicional)", "LFT Art. 74 y 75"],
-        ["Miércoles 16 de septiembre", "Independencia de México", "Triple (salario + doble adicional)", "LFT Art. 74 y 75"],
-        ["Lunes 16 de noviembre", "Revolución Mexicana", "Triple (salario + doble adicional)", "LFT Art. 74 y 75"],
-        ["Viernes 25 de diciembre", "Navidad", "Triple (salario + doble adicional)", "LFT Art. 74 y 75"]
+        [
+          "Jueves 1 de enero",
+          "Año Nuevo",
+          "Triple (salario + doble adicional)",
+          "LFT Art. 74 y 75"
+        ],
+        [
+          "Lunes 2 de febrero",
+          "Día de la Constitución",
+          "Triple (salario + doble adicional)",
+          "LFT Art. 74 y 75"
+        ],
+        [
+          "Lunes 16 de marzo",
+          "Natalicio de Benito Juárez",
+          "Triple (salario + doble adicional)",
+          "LFT Art. 74 y 75"
+        ],
+        [
+          "Viernes 1 de mayo",
+          "Día del Trabajo",
+          "Triple (salario + doble adicional)",
+          "LFT Art. 74 y 75"
+        ],
+        [
+          "Miércoles 16 de septiembre",
+          "Independencia de México",
+          "Triple (salario + doble adicional)",
+          "LFT Art. 74 y 75"
+        ],
+        [
+          "Lunes 16 de noviembre",
+          "Revolución Mexicana",
+          "Triple (salario + doble adicional)",
+          "LFT Art. 74 y 75"
+        ],
+        [
+          "Viernes 25 de diciembre",
+          "Navidad",
+          "Triple (salario + doble adicional)",
+          "LFT Art. 74 y 75"
+        ]
       ],
       "note": "Fuente: Ley Federal del Trabajo, Arts. 74 y 75 (Cámara de Diputados, 2026). Con salario mínimo general 2026 ($315.04/día, CONASAMI), el festivo trabajado se paga $945.12. El 10 de mayo, 12 de diciembre y Semana Santa no son festivos de ley."
     }
   ],
-  "lastReviewed": "2026-06-20"
+  "lastReviewed": "2026-07-09"
 }
