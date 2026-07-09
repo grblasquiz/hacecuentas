@@ -113,7 +113,9 @@ elif [ ! -f .last-deploy-sha ]; then
 else
   LAST_SHA=$(cat .last-deploy-sha | tr -d '[:space:]')
   if [ "$LAST_SHA" = "$CURRENT_SHA" ]; then
-    warn "sin cambios desde el último deploy (HEAD=${CURRENT_SHA:0:8}). Forzando full igual."
+    ok "SKIP — sin cambios desde el último deploy (HEAD=${CURRENT_SHA:0:8})"
+    echo "Nada que deployar. Saliendo en $(($(date +%s) - T_START))s."
+    exit 0
   else
     log "diff desde ${LAST_SHA:0:8}..."
     DETECT_OUT=$(LAST_DEPLOY_SHA="$LAST_SHA" node --experimental-strip-types scripts/detect-changes.ts 2>&1) || DETECT_OUT="ERROR"
@@ -123,6 +125,13 @@ else
       echo "Solo cambios en tooling/docs. Nada que deployar. Saliendo en $(($(date +%s) - T_START))s."
       echo "$CURRENT_SHA" > .last-deploy-sha
       exit 0
+    elif echo "$DETECT_OUT" | grep -q "^mode=assets"; then
+      MODE=assets
+      INCREMENTAL_CHANGES=$(echo "$DETECT_OUT" | grep "^changes_json=" | sed 's/^changes_json=//')
+      REASON=$(echo "$DETECT_OUT" | grep "^reason=" | sed 's/^reason=//')
+      ok "modo ASSETS — $REASON"
+      echo "    changes: $INCREMENTAL_CHANGES" | head -c 300
+      echo ""
     elif echo "$DETECT_OUT" | grep -q "^mode=incremental"; then
       MODE=incremental
       INCREMENTAL_CHANGES=$(echo "$DETECT_OUT" | grep "^changes_json=" | sed 's/^changes_json=//')
@@ -139,7 +148,37 @@ fi
 
 # ─── 3. Build ──────────────────────────────────────────────────────────────
 T_BUILD_START=$(date +%s)
-if [ "$MODE" = "incremental" ]; then
+if [ "$MODE" = "assets" ]; then
+  log "deploy ASSETS (sin Astro build)..."
+  if [ ! -f dist/server/wrapper.mjs ] || [ ! -f dist/server/wrangler.json ] || [ ! -d dist/client ]; then
+    warn "dist cache incompleto → fallback FULL build"
+    MODE=full
+  else
+    ASSET_CHANGES="$INCREMENTAL_CHANGES" node --input-type=module <<'NODE'
+import { dirname, join } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
+
+const raw = process.env.ASSET_CHANGES || '{}';
+const changes = JSON.parse(raw);
+for (const file of changes.assets?.paths || []) {
+  const rel = file.replace(/^public\//, '');
+  const dst = join('dist/client', rel);
+  if (existsSync(file)) {
+    mkdirSync(dirname(dst), { recursive: true });
+    copyFileSync(file, dst);
+    console.log(`[assets] copied ${file} → ${dst}`);
+  } else {
+    rmSync(dst, { force: true, recursive: true });
+    console.log(`[assets] removed ${dst}`);
+  }
+}
+NODE
+  fi
+fi
+
+if [ "$MODE" = "assets" ]; then
+  :
+elif [ "$MODE" = "incremental" ]; then
   log "build INCREMENTAL (estimado ~60-90s)..."
   # NO limpiamos dist — emptyOutDir:false en astro.config.mjs preserva los
   # HTMLs cacheados; Astro solo regenera los slugs cambiados.
@@ -152,7 +191,11 @@ else
   npm run build 2>&1 | grep -E "(\[(prebuild|build|vite|wrap-worker|strip-pruned|optimize-css)\]|Server built|Completed in|✓ built in|EXIT|Files processed)" | tail -20
 fi
 T_BUILD=$(($(date +%s) - T_BUILD_START))
-ok "build $MODE completado en ${T_BUILD}s"
+if [ "$MODE" = "assets" ]; then
+  ok "assets preparados en ${T_BUILD}s"
+else
+  ok "build $MODE completado en ${T_BUILD}s"
+fi
 
 # ─── 3b. Verificar el build ANTES de subirlo (no deployar un build roto) ───
 # Incidente 2026-06-01: un build con prerender vacío (1 HTML en vez de ~3800)
@@ -250,9 +293,9 @@ fi
 # ─── 7. Purge CF cache (solo si el smoke pasó) ─────────────────────────────
 if [ "$PURGE" = true ]; then
   log "purge CF cache..."
-  if [ "$MODE" = "incremental" ] && [ -n "$INCREMENTAL_CHANGES" ]; then
+  if { [ "$MODE" = "incremental" ] || [ "$MODE" = "assets" ]; } && [ -n "$INCREMENTAL_CHANGES" ]; then
     # Purge selectivo — solo URLs cambiadas + sitemaps.
-    INCREMENTAL_MODE=incremental \
+    INCREMENTAL_MODE="$MODE" \
       INCREMENTAL_CHANGES="$INCREMENTAL_CHANGES" \
       CF_TOKEN="$CLOUDFLARE_API_TOKEN" \
       CF_ZONE="$CLOUDFLARE_ZONE_ID" \

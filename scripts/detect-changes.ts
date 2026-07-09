@@ -36,7 +36,7 @@
  * Fallbacks defensivos:
  *   - LAST_DEPLOY_SHA vacío → full
  *   - git diff fail → full
- *   - Delete/rename → full (emptyOutDir:false dejaría ghosts en dist)
+ *   - Delete/rename → full, salvo assets públicos seguros
  *   - Archivo no clasificado → full
  */
 
@@ -65,6 +65,23 @@ const SHARED_PATTERNS: RegExp[] = [
   // Archivos de content que afectan TODA una ruta cuando cambian
   /^src\/content\/argentina\/provincias\.json$/,
   /^src\/content\/iibb\/actividades\.json$/,
+];
+
+// Archivos públicos que se pueden desplegar sin rebuild Astro. Se copian directo
+// a dist/client y wrangler sube el delta de assets. Excluimos rutas que afectan
+// wrapper, routing, sitemap o service worker.
+const PUBLIC_ASSET_RE = /^public\/(.+)$/;
+const UNSAFE_PUBLIC_ASSET_PATTERNS: RegExp[] = [
+  /^public\/_redirects$/,
+  /^public\/_headers$/,
+  /^public\/_routes\.json$/,
+  /^public\/sitemap.*\.xml$/,
+  /^public\/rss\.xml$/,
+  /^public\/feed\.json$/,
+  /^public\/search-index\.json$/,
+  /^public\/sw\.js$/,
+  /^public\/robots\.txt$/,
+  /^public\/manifest\.webmanifest$/,
 ];
 
 // Patrones que se pueden ignorar (no afectan build de prod).
@@ -126,8 +143,9 @@ interface ContentChanges {
 }
 
 interface DetectResult {
-  mode: 'full' | 'incremental' | 'skip';
+  mode: 'assets' | 'full' | 'incremental' | 'skip';
   changes?: {
+    assets?: { paths: string[] };
     calcs?: { slugs: string[] };
     calcs_en?: { slugs: string[] };
     calcs_pt?: { slugs: string[] };
@@ -220,7 +238,29 @@ function detect(baseSha: string): DetectResult {
   }
 
   if (entries.length === 0) {
-    return fullResult('sin cambios detectados');
+    return {
+      mode: 'skip',
+      reason: 'sin cambios detectados',
+      filesAnalyzed: 0,
+    };
+  }
+
+  const files = entries.map((e) => e.path);
+
+  const hasRename = entries.some((e) => e.status.startsWith('R'));
+  const publicAssetFiles = files.filter((file) => {
+    if (!PUBLIC_ASSET_RE.test(file)) return false;
+    return !UNSAFE_PUBLIC_ASSET_PATTERNS.some((p) => p.test(file));
+  });
+  const onlyPublicAssets = !hasRename && publicAssetFiles.length === files.length;
+
+  if (onlyPublicAssets) {
+    return {
+      mode: 'assets',
+      changes: { assets: { paths: Array.from(new Set(publicAssetFiles)).sort() } },
+      reason: `${publicAssetFiles.length} asset(s) públicos`,
+      filesAnalyzed: files.length,
+    };
   }
 
   // Delete/rename → full (emptyOutDir:false dejaría ghosts)
@@ -230,8 +270,6 @@ function detect(baseSha: string): DetectResult {
   if (dr) {
     return fullResult(`delete/rename: ${dr.status} ${dr.path}`, entries.length);
   }
-
-  const files = entries.map((e) => e.path);
 
   const calcsByLocale: Record<Locale, Set<string>> = {
     ar: new Set(), en: new Set(), es: new Set(), mx: new Set(),
@@ -434,7 +472,14 @@ function main(): void {
 
   console.log(`[detect-changes] mode=${result.mode} files=${result.filesAnalyzed} reason="${result.reason}"`);
 
-  if (result.mode === 'incremental' && result.changes) {
+  if (result.mode === 'assets' && result.changes) {
+    console.log('[detect-changes] assets:', JSON.stringify(result.changes, null, 2));
+    writeOutput([
+      'mode=assets',
+      `changes_json=${JSON.stringify(result.changes)}`,
+      `reason=${result.reason}`,
+    ]);
+  } else if (result.mode === 'incremental' && result.changes) {
     console.log('[detect-changes] changes:', JSON.stringify(result.changes, null, 2));
     writeOutput([
       'mode=incremental',

@@ -7,13 +7,13 @@
  *
  * Env:
  *   - CF_TOKEN, CF_ZONE
- *   - INCREMENTAL_MODE = 'full' | 'incremental'
+ *   - INCREMENTAL_MODE = 'full' | 'incremental' | 'assets'
  *   - INCREMENTAL_CHANGES = JSON con la estructura de Changes (ver incremental.ts)
  */
 
 const CF_TOKEN = process.env.CF_TOKEN || '';
 const CF_ZONE = process.env.CF_ZONE || '';
-const MODE = (process.env.INCREMENTAL_MODE || 'full') as 'full' | 'incremental';
+const MODE = (process.env.INCREMENTAL_MODE || 'full') as 'assets' | 'full' | 'incremental';
 const CHANGES_RAW = process.env.INCREMENTAL_CHANGES || '';
 
 const BASE = 'https://hacecuentas.com';
@@ -23,6 +23,7 @@ interface ContentChanges {
 }
 
 interface Changes {
+  assets?: { paths: string[] };
   calcs?: ContentChanges;
   calcs_en?: ContentChanges;
   calcs_pt?: ContentChanges;
@@ -104,6 +105,13 @@ async function purgeFiles(urls: string[]): Promise<void> {
 
 function buildUrls(changes: Changes): string[] {
   const set = new Set<string>();
+
+  if (changes.assets) {
+    for (const path of changes.assets.paths) {
+      set.add(`${BASE}/${path.replace(/^public\//, '')}`);
+    }
+    if (MODE === 'assets') return Array.from(set);
+  }
 
   // Sitemaps + feeds + search-index siempre cambian al editar contenido
   set.add(`${BASE}/sitemap.xml`);
