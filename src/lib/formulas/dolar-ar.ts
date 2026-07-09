@@ -38,12 +38,12 @@ async function getCotizaciones(): Promise<Record<string, number>> {
   } catch {
     // Fallback con valores estimados si falla la API
     return {
-      blue: 1515,
-      bolsa: 1531, // MEP
-      contadoconliqui: 1574,
-      oficial: 1515,
-      tarjeta: 1970, // oficial × 1,30: percepción 30% que subsiste sólo para turismo/transporte en pesos (PAÍS derogado; percepción sobre consumo directo eliminada 02/01/2026)
-      cripto: 1564,
+      blue: 1510,
+      bolsa: 1532, // MEP
+      contadoconliqui: 1566,
+      oficial: 1510,
+      tarjeta: 1963, // oficial × 1,30: percepción 30% que subsiste sólo para turismo/transporte en pesos (PAÍS derogado; percepción sobre consumo directo eliminada 02/01/2026)
+      cripto: 1566,
     };
   }
 }
