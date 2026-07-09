@@ -54,12 +54,16 @@ const updatedLabel = new Intl.DateTimeFormat('es-AR', {
 
 const total = fixture.total || fixture.matches.length;
 
-const title = 'Partidos del Mundial 2026 de hoy: horarios (hora ARG) y resultados en vivo | Hacé Cuentas';
-const description = 'Partidos del Mundial 2026 de hoy y los próximos días: qué se juega hoy, a qué hora (hora argentina) y resultados en vivo. Mirá a qué hora juega cada selección y seguí los marcadores.';
+const titleTeams = todayMatches.slice(0, 2).flatMap((m) => [teamLabel(m.team1).es, teamLabel(m.team2).es]);
+const titleHook = titleTeams.length ? `${titleTeams.slice(0, 2).join(' vs ')}` : 'horarios y resultados';
+const title = `Partidos de hoy Mundial 2026: ${titleHook} | Hacé Cuentas`;
+const description = todayMatches.length
+  ? `Hoy se juegan ${todayMatches.length} partidos del Mundial 2026. Consultá equipos, horarios convertidos a tu zona y resultados en vivo.`
+  : 'Partidos del Mundial 2026 de hoy y próximos días: equipos, horarios convertidos a tu zona y resultados en vivo.';
 
 const faqItems = [
   { q: '¿Qué partidos del Mundial hay hoy?', a: todayMatches.length ? `Hoy se juegan ${todayMatches.length} partido${todayMatches.length > 1 ? 's' : ''} del Mundial 2026. Arriba ves cada uno con el horario en hora argentina y el resultado en vivo.` : 'La lista de arriba muestra los partidos del día (en hora argentina). Si hoy no hay partidos, te mostramos los próximos.' },
-  { q: '¿A qué hora juegan hoy en hora argentina?', a: 'Todos los horarios de esta página están convertidos a la hora de Argentina (UTC-3). El horario de cada partido figura junto a los equipos.' },
+  { q: '¿A qué hora juegan hoy?', a: 'La jornada se organiza en hora argentina (UTC-3), pero el navegador convierte cada horario automáticamente a tu zona local. El horario original de Argentina queda disponible al pasar el cursor.' },
   { q: '¿Dónde veo los resultados en vivo?', a: 'Esta misma página actualiza los marcadores automáticamente mientras se juegan los partidos: dejala abierta y el resultado se completa solo, sin recargar.' },
   { q: '¿Juega Argentina hoy?', a: argNextHoy ? '¡Sí! Argentina juega hoy. Mirá el horario en la lista de arriba.' : (argNext ? `Hoy no juega Argentina. Su próximo partido es ${teamLabel(argNext.team1).es} vs ${teamLabel(argNext.team2).es}; mirá la fecha y hora en la calculadora de cuándo juega Argentina.` : 'Consultá la página de cuándo juega Argentina para ver su próximo partido.') },
   { q: '¿Qué partidos hay este fin de semana?', a: 'En "Próximos partidos" ves los días que vienen con sus horarios. Los fines de semana suele haber varios partidos por día durante la fase de grupos.' },
@@ -99,8 +103,9 @@ const renderCard = (m: any) => {
       <header class="ph-header">
         <div class="ph-eyebrow">⚽ Mundial 2026 · en vivo</div>
         <h1>Partidos del Mundial 2026 de hoy</h1>
-        <p class="lede">Los partidos del Mundial 2026 que se juegan <strong>hoy</strong> y los próximos días, con <strong>horario en hora argentina</strong> y <strong>resultados en vivo</strong>.</p>
+        <p class="lede">Los partidos del Mundial 2026 que se juegan <strong>hoy</strong> y los próximos días, con <strong>horarios convertidos a tu zona</strong> y <strong>resultados en vivo</strong>.</p>
         <p class="ph-upd">🔄 Actualizado <strong data-live-updated>{updatedLabel}</strong> · hora argentina (UTC-3)</p>
+        <p class="ph-zone" data-zone-note>🕐 La jornada se calcula en hora argentina; los horarios se adaptan a tu dispositivo.</p>
       </header>
 
       <p class="ph-answer" data-live-answer>
@@ -130,7 +135,7 @@ const renderCard = (m: any) => {
               <div class="ph-card" data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
                 <div class="ph-card-top">
                   <span class="ph-round">{m.group ? roundLabel(m.round) + ' · ' + m.group.replace('Group', 'Grupo') : roundLabel(m.round)}</span>
-                  <span class="ph-time" data-time>{artTime(m.date, m.time)}</span>
+                  <span class="ph-time" data-time data-local-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()} title={`${artTime(m.date, m.time)} Argentina`}>{artTime(m.date, m.time)}</span>
                 </div>
                 <div class="ph-teams">
                   <span class="ph-team t1"><span class="flag">{t1.flag}</span><span class="name">{t1.es}</span></span>
@@ -161,7 +166,7 @@ const renderCard = (m: any) => {
               <ul class="ph-rows">
                 {d.matches.map(renderCard).map(({ m, t1, t2, r }) => (
                   <li class={`ph-row${r ? ' played' : ''}`} data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
-                    <span class="ph-row-time" data-time>{artTime(m.date, m.time)}</span>
+                    <span class="ph-row-time" data-time data-local-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()} title={`${artTime(m.date, m.time)} Argentina`}>{artTime(m.date, m.time)}</span>
                     <span class="ph-row-stage">{m.group ? m.group.replace('Group', 'Gr.') : roundLabel(m.round)}</span>
                     <span class="ph-row-team"><span class="name">{t1.es}</span><span class="flag">{t1.flag}</span></span>
                     <span class="ph-row-score" data-score>{r ? `${r.a} – ${r.b}` : 'vs'}</span>
@@ -223,6 +228,19 @@ const renderCard = (m: any) => {
     let cfg: any;
     try { cfg = JSON.parse(cfgEl.textContent || '{}'); } catch { return; }
     const TEAMS = cfg.teams || {};
+    function localizeTimes() {
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'tu zona';
+      const formatter = new Intl.DateTimeFormat(undefined, {
+        hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+      });
+      document.querySelectorAll<HTMLElement>('[data-local-time][data-utc]').forEach((el) => {
+        const date = new Date(el.dataset.utc || '');
+        if (!Number.isNaN(date.getTime())) el.textContent = formatter.format(date);
+      });
+      const note = document.querySelector('[data-zone-note]');
+      if (note) note.textContent = `🕐 Horarios adaptados a ${zone}. La jornada “de hoy” se calcula en hora argentina (UTC-3).`;
+    }
+    localizeTimes();
     function label(name: string | null): { es: string; flag: string } {
       if (!name) return { es: 'A definir', flag: '⚽' };
       if (TEAMS[name]) return TEAMS[name];
@@ -282,6 +300,7 @@ const renderCard = (m: any) => {
   .ph-header h1 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); font-weight: 800; margin: 0.3rem 0 0.5rem; }
   .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.5rem; }
   .ph-upd { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1rem; }
+  .ph-zone { font-size: 0.8rem; color: var(--text-subtle); margin: -0.55rem 0 1rem; }
   .ph-answer { font-size: 1rem; line-height: 1.6; color: var(--text); background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; margin: 0 0 1.5rem; }
   .ph-page h2 { font-size: 1.3rem; font-weight: 700; margin: 2rem 0 1rem; }
   .ph-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem; }

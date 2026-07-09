@@ -1,6 +1,7 @@
 export interface Inputs {
   numero: number;
   formato: string;
+  moneda?: string;
 }
 
 export interface Outputs {
@@ -8,6 +9,26 @@ export interface Outputs {
   decimal: number;
   _insight?: any;
 }
+
+const MONEDAS: Record<string, {
+  singular: string;
+  plural: string;
+  centSingular: string;
+  centPlural: string;
+  simbolo: string;
+}> = {
+  ARS: { singular: 'peso argentino', plural: 'pesos argentinos', centSingular: 'centavo', centPlural: 'centavos', simbolo: '$' },
+  MXN: { singular: 'peso mexicano', plural: 'pesos mexicanos', centSingular: 'centavo', centPlural: 'centavos', simbolo: '$' },
+  COP: { singular: 'peso colombiano', plural: 'pesos colombianos', centSingular: 'centavo', centPlural: 'centavos', simbolo: '$' },
+  CLP: { singular: 'peso chileno', plural: 'pesos chilenos', centSingular: 'centavo', centPlural: 'centavos', simbolo: '$' },
+  USD: { singular: 'dólar estadounidense', plural: 'dólares estadounidenses', centSingular: 'centavo', centPlural: 'centavos', simbolo: 'US$' },
+  EUR: { singular: 'euro', plural: 'euros', centSingular: 'céntimo', centPlural: 'céntimos', simbolo: '€' },
+  PEN: { singular: 'sol', plural: 'soles', centSingular: 'céntimo', centPlural: 'céntimos', simbolo: 'S/' },
+  UYU: { singular: 'peso uruguayo', plural: 'pesos uruguayos', centSingular: 'centésimo', centPlural: 'centésimos', simbolo: '$U' },
+  VES: { singular: 'bolívar', plural: 'bolívares', centSingular: 'céntimo', centPlural: 'céntimos', simbolo: 'Bs.' },
+  DOP: { singular: 'peso dominicano', plural: 'pesos dominicanos', centSingular: 'centavo', centPlural: 'centavos', simbolo: 'RD$' },
+  BRL: { singular: 'real brasileño', plural: 'reales brasileños', centSingular: 'centavo', centPlural: 'centavos', simbolo: 'R$' },
+};
 
 // ---------- Núcleo: enteros a letras (reglas RAE, escala larga española) ----------
 
@@ -140,6 +161,7 @@ function capitalizar(s: string): string {
 export function compute(i: Inputs): Outputs {
   const numeroRaw = Number(i.numero);
   const formato = String(i.formato || 'simple').toLowerCase();
+  const moneda = MONEDAS[String(i.moneda || 'ARS').toUpperCase()] || MONEDAS.ARS;
 
   if (!isFinite(numeroRaw)) {
     return {
@@ -198,16 +220,16 @@ export function compute(i: Inputs): Outputs {
   let nota = '';
 
   if (formato === 'moneda') {
-    const peso = enteroFinal === 1 && !negativo ? 'peso' : 'pesos';
+    const unidad = enteroFinal === 1 ? moneda.singular : moneda.plural;
     const centTxt = centavosFinal.toString().padStart(2, '0');
-    const centWord = centavosFinal === 1 ? 'centavo' : 'centavos';
-    textoFinal = `${capitalizar(letrasEntero)} ${conector}${peso} con ${centavosFinal} ${centWord}`;
+    const centWord = centavosFinal === 1 ? moneda.centSingular : moneda.centPlural;
+    textoFinal = `${capitalizar(letrasEntero)} ${conector}${unidad} con ${centavosFinal} ${centWord}`;
     nota = `Importe formateado para factura o recibo: incluye los ${centTxt} centavos en letras.`;
   } else if (formato === 'cheque') {
     // Cheque: TODO en mayúsculas, centavos como "NN/100".
-    const peso = enteroFinal === 1 && !negativo ? 'PESO' : 'PESOS';
+    const unidad = enteroFinal === 1 ? moneda.singular : moneda.plural;
     const centTxt = centavosFinal.toString().padStart(2, '0');
-    textoFinal = `${letrasEntero} ${conector}${peso} CON ${centTxt}/100`.toUpperCase();
+    textoFinal = `${letrasEntero} ${conector}${unidad} CON ${centTxt}/100`.toUpperCase();
     nota = 'Formato cheque: todo en MAYÚSCULAS y los centavos como NN/100, como exige la mayoría de los bancos.';
   } else {
     // simple: solo el entero en letras.
@@ -216,7 +238,7 @@ export function compute(i: Inputs): Outputs {
   }
 
   const ejemploCifra = formato === 'cheque'
-    ? `**$${enteroFinal.toLocaleString('es-AR')}** → ${textoFinal}`
+    ? `**${moneda.simbolo}${enteroFinal.toLocaleString('es-AR')}** → ${textoFinal}`
     : `**${negativo ? '-' : ''}${abs.toLocaleString('es-AR', { minimumFractionDigits: formato === 'simple' ? 0 : 2, maximumFractionDigits: formato === 'simple' ? 0 : 2 })}**`;
 
   return {

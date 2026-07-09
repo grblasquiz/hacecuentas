@@ -17,7 +17,6 @@
  * Generated: 2026-05-27 (1182 URLs total — 521 previas + 661 batch hoy)
  */
 export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
-  "/blog/como-calcular-porcentajes",
   "/blog/guia-imc-peso-saludable",
   "/calculadora-aave-flash-loan-arbitraje-fee-net-profit",
   "/calculadora-abertura-pvc-vs-aluminio-ahorro-anual",

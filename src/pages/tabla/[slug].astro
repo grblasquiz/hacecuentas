@@ -6,6 +6,14 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Newsletter from '../../components/Newsletter.astro';
 import { filterByIncremental } from '../../lib/incremental';
+import {
+  CATEGORIAS as MONO_CATEGORIAS,
+  TOPES as MONO_TOPES,
+  CUOTA_SERVICIOS as MONO_CUOTA_SERVICIOS,
+  CUOTA_BIENES as MONO_CUOTA_BIENES,
+  META as MONO_META,
+  fmtARS,
+} from '../../lib/data/monotributo-2026';
 
 export async function getStaticPaths() {
   const tablas = import.meta.glob<any>('../../content/tablas/*.json', { eager: true });
@@ -16,7 +24,33 @@ export async function getStaticPaths() {
   }));
 }
 
-const { tabla } = Astro.props;
+const { tabla: rawTabla } = Astro.props;
+
+// Esta landing recibe tráfico de Bing y no puede duplicar valores fiscales a
+// mano. Derivamos la tabla de la misma fuente única que usan /datos y las calcs.
+const tabla = rawTabla.slug === 'tabla-categorias-monotributo-2026'
+  ? {
+      ...rawTabla,
+      title: 'Tabla Monotributo 2026: qué categoría te corresponde (A a K) | Hacé Cuentas',
+      description: `Tabla Monotributo 2026 actualizada: topes de facturación y cuotas de servicios y venta de bienes para las categorías A a K. Valores ARCA vigentes desde ${new Date(MONO_META.vigencia).toLocaleDateString('es-AR')}.`,
+      intro: `<p>Compará las <strong>11 categorías del Monotributo 2026</strong> con los valores oficiales de ARCA vigentes desde el ${new Date(MONO_META.vigencia).toLocaleDateString('es-AR')}. La tabla se genera desde la misma fuente que usan nuestras calculadoras: cuando cambia una escala, cambia en todos lados.</p>`,
+      tables: [
+        {
+          id: 'categorias-monotributo',
+          caption: `Tabla Monotributo 2026 — valores ARCA vigentes desde ${new Date(MONO_META.vigencia).toLocaleDateString('es-AR')}`,
+          headers: ['Cat.', 'Tope anual', 'Promedio mensual', 'Cuota servicios', 'Cuota venta de bienes'],
+          rows: MONO_CATEGORIAS.map((cat) => [
+            cat,
+            fmtARS(MONO_TOPES[cat]),
+            fmtARS(MONO_TOPES[cat] / 12),
+            fmtARS(MONO_CUOTA_SERVICIOS[cat]),
+            fmtARS(MONO_CUOTA_BIENES[cat]),
+          ]),
+        },
+        ...(rawTabla.tables || []).filter((t: any) => t.id !== 'categorias-monotributo'),
+      ],
+    }
+  : rawTabla;
 
 const siteUrl = 'https://hacecuentas.com';
 

@@ -1,16 +1,19 @@
-// ============================================================
-// IRPF 2026 España — Calculadora nómina
-// Fuente: AEAT, Ley 35/2006 LIRPF (consolidada 2026)
-//         Tipos autonómicos: leyes tributarias CCAA 2026
-// ============================================================
+// IRPF 2026 España — retenciones de rendimientos del trabajo.
+// Implementa el núcleo del algoritmo oficial AEAT publicado el 26-12-2025:
+// https://sede.agenciatributaria.gob.es/static_files/Sede/Programas_ayuda/Retenciones/2026/ALGORITMO_2026.pdf
+//
+// Alcance: cálculo inicial (sin regularizaciones, anualidades, ascendientes,
+// movilidad geográfica, Ceuta/Melilla ni préstamo vivienda pre-2013).
 
 export interface Inputs {
-  salario_bruto: number;           // Euros anuales
-  comunidad_autonoma: string;      // Código CCAA (MAD, CAT, AND...)
-  edad: number;                    // Años a 31-dic-2026
-  num_hijos: number;               // Hijos menores 25 años a cargo
-  discapacidad: string;            // '0' | '33' | '65'
-  situacion_familiar: string;      // 'individual' | 'conjunta_biparental' | 'conjunta_monoparental'
+  salario_bruto: number;
+  edad: number;
+  num_hijos: number;
+  discapacidad: string;
+  situacion_familiar: string;
+  tipo_contrato?: string;
+  numero_pagas?: number | string;
+  comunidad_autonoma?: string; // compatibilidad con URLs guardadas antiguas
 }
 
 export interface Outputs {
@@ -26,361 +29,160 @@ export interface Outputs {
   _chart?: any;
 }
 
-// ------------------------------------------------------------
-// Tipos de cotización SS empleado 2026
-// Fuente: Ministerio de Inclusión, Seguridad Social y Migraciones
-// ------------------------------------------------------------
-const SS_TRABAJADOR_PCT = 0.0635; // 4.70% CC + 1.55% desempleo + 0.10% FP
+const BASE_MAXIMA_SS_ANUAL = 5_101.2 * 12;
 
-// ------------------------------------------------------------
-// Tramos estatales IRPF 2026
-// Fuente: Art. 63 Ley 35/2006 (Ley 7/2024 con efectos 2025-2026)
-// ------------------------------------------------------------
-const TRAMOS_ESTATALES: Array<{ hasta: number; tipo: number }> = [
-  { hasta: 12450,   tipo: 0.095 },
-  { hasta: 20200,   tipo: 0.120 },
-  { hasta: 35200,   tipo: 0.150 },
-  { hasta: 60000,   tipo: 0.185 },
-  { hasta: 300000,  tipo: 0.225 },
-  { hasta: Infinity, tipo: 0.245 },
+function cotizacionTrabajador(bruto: number): number {
+  const baseOrdinaria = Math.min(bruto, BASE_MAXIMA_SS_ANUAL);
+  // Contingencias comunes 4,70% + desempleo 1,55% + formación 0,10% + MEI 0,15%.
+  let cuota = baseOrdinaria * 0.065;
+  const exceso = Math.max(0, bruto - BASE_MAXIMA_SS_ANUAL);
+  // Cotización adicional de solidaridad 2026, parte a cargo del trabajador.
+  cuota += Math.min(exceso, BASE_MAXIMA_SS_ANUAL * 0.1) * 0.0019;
+  cuota += Math.min(Math.max(0, exceso - BASE_MAXIMA_SS_ANUAL * 0.1), BASE_MAXIMA_SS_ANUAL * 0.4) * 0.0021;
+  cuota += Math.max(0, exceso - BASE_MAXIMA_SS_ANUAL * 0.5) * 0.0024;
+  return cuota;
+}
+
+const ESCALA_RETENCION = [
+  { hasta: 12_450, tipo: 0.19 },
+  { hasta: 20_200, tipo: 0.24 },
+  { hasta: 35_200, tipo: 0.30 },
+  { hasta: 60_000, tipo: 0.37 },
+  { hasta: 300_000, tipo: 0.45 },
+  { hasta: Number.POSITIVE_INFINITY, tipo: 0.47 },
 ];
 
-// ------------------------------------------------------------
-// Tramos autonómicos IRPF 2026 por CCAA
-// Fuentes: Leyes presupuestarias autonómicas 2026
-// (Navarra: aproximación régimen común; País Vasco: no incluido)
-// ------------------------------------------------------------
-type Tramo = { hasta: number; tipo: number };
+type Situacion = 'situacion1' | 'situacion2' | 'situacion3';
 
-const TRAMOS_AUTONOMICOS: Record<string, Tramo[]> = {
-  // Andalucía — Ley 5/2021 (sin cambios 2026)
-  AND: [
-    { hasta: 12450,    tipo: 0.095 },
-    { hasta: 20200,    tipo: 0.120 },
-    { hasta: 35200,    tipo: 0.150 },
-    { hasta: 60000,    tipo: 0.185 },
-    { hasta: 120000,   tipo: 0.195 },
-    { hasta: Infinity, tipo: 0.225 },
-  ],
-  // Aragón
-  ARA: [
-    { hasta: 12450,    tipo: 0.095 },
-    { hasta: 20200,    tipo: 0.125 },
-    { hasta: 35200,    tipo: 0.155 },
-    { hasta: 60000,    tipo: 0.190 },
-    { hasta: 120000,   tipo: 0.220 },
-    { hasta: Infinity, tipo: 0.250 },
-  ],
-  // Asturias
-  AST: [
-    { hasta: 12450,    tipo: 0.100 },
-    { hasta: 17707,    tipo: 0.120 },
-    { hasta: 33007,    tipo: 0.140 },
-    { hasta: 53407,    tipo: 0.185 },
-    { hasta: 90000,    tipo: 0.215 },
-    { hasta: 175000,   tipo: 0.235 },
-    { hasta: Infinity, tipo: 0.250 },
-  ],
-  // Islas Baleares
-  BAL: [
-    { hasta: 10000,    tipo: 0.090 },
-    { hasta: 18000,    tipo: 0.115 },
-    { hasta: 30000,    tipo: 0.145 },
-    { hasta: 50000,    tipo: 0.185 },
-    { hasta: 80000,    tipo: 0.210 },
-    { hasta: Infinity, tipo: 0.240 },
-  ],
-  // Canarias
-  CAN: [
-    { hasta: 12450,    tipo: 0.090 },
-    { hasta: 20200,    tipo: 0.115 },
-    { hasta: 35200,    tipo: 0.145 },
-    { hasta: 60000,    tipo: 0.175 },
-    { hasta: Infinity, tipo: 0.205 },
-  ],
-  // Cantabria
-  CAB: [
-    { hasta: 12450,    tipo: 0.095 },
-    { hasta: 20200,    tipo: 0.120 },
-    { hasta: 35200,    tipo: 0.150 },
-    { hasta: 60000,    tipo: 0.185 },
-    { hasta: 90000,    tipo: 0.210 },
-    { hasta: Infinity, tipo: 0.235 },
-  ],
-  // Castilla-La Mancha
-  CLM: [
-    { hasta: 12450,    tipo: 0.095 },
-    { hasta: 20200,    tipo: 0.120 },
-    { hasta: 35200,    tipo: 0.150 },
-    { hasta: 60000,    tipo: 0.185 },
-    { hasta: Infinity, tipo: 0.225 },
-  ],
-  // Castilla y León
-  CYL: [
-    { hasta: 12450,    tipo: 0.095 },
-    { hasta: 20200,    tipo: 0.120 },
-    { hasta: 35200,    tipo: 0.150 },
-    { hasta: 60000,    tipo: 0.185 },
-    { hasta: Infinity, tipo: 0.215 },
-  ],
-  // Cataluña
-  CAT: [
-    { hasta: 12450,    tipo: 0.105 },
-    { hasta: 17707,    tipo: 0.120 },
-    { hasta: 21000,    tipo: 0.140 },
-    { hasta: 33007,    tipo: 0.155 },
-    { hasta: 53407,    tipo: 0.175 },
-    { hasta: 90000,    tipo: 0.215 },
-    { hasta: 120000,   tipo: 0.235 },
-    { hasta: 175000,   tipo: 0.245 },
-    { hasta: Infinity, tipo: 0.250 },
-  ],
-  // Extremadura
-  EXT: [
-    { hasta: 12450,    tipo: 0.080 },
-    { hasta: 20200,    tipo: 0.115 },
-    { hasta: 35200,    tipo: 0.145 },
-    { hasta: 60000,    tipo: 0.175 },
-    { hasta: 120000,   tipo: 0.205 },
-    { hasta: Infinity, tipo: 0.245 },
-  ],
-  // Galicia
-  GAL: [
-    { hasta: 12450,    tipo: 0.095 },
-    { hasta: 20200,    tipo: 0.120 },
-    { hasta: 35200,    tipo: 0.150 },
-    { hasta: 60000,    tipo: 0.185 },
-    { hasta: 70000,    tipo: 0.215 },
-    { hasta: Infinity, tipo: 0.235 },
-  ],
-  // Madrid — Ley 6/1999 (bonificación del 25% sobre tramos autonómicos base)
-  MAD: [
-    { hasta: 12450,    tipo: 0.090 },
-    { hasta: 17707,    tipo: 0.110 },
-    { hasta: 33007,    tipo: 0.130 },
-    { hasta: 53407,    tipo: 0.170 },
-    { hasta: Infinity, tipo: 0.210 },
-  ],
-  // Murcia
-  MUR: [
-    { hasta: 12450,    tipo: 0.095 },
-    { hasta: 20200,    tipo: 0.120 },
-    { hasta: 35200,    tipo: 0.150 },
-    { hasta: 60000,    tipo: 0.185 },
-    { hasta: Infinity, tipo: 0.225 },
-  ],
-  // Navarra (régimen foral — aproximación régimen común)
-  NAV: [
-    { hasta: 12450,    tipo: 0.095 },
-    { hasta: 20200,    tipo: 0.120 },
-    { hasta: 35200,    tipo: 0.150 },
-    { hasta: 60000,    tipo: 0.185 },
-    { hasta: Infinity, tipo: 0.225 },
-  ],
-  // La Rioja
-  RIO: [
-    { hasta: 12450,    tipo: 0.095 },
-    { hasta: 20200,    tipo: 0.120 },
-    { hasta: 35200,    tipo: 0.150 },
-    { hasta: 60000,    tipo: 0.185 },
-    { hasta: Infinity, tipo: 0.225 },
-  ],
-  // Comunitat Valenciana
-  VAL: [
-    { hasta: 12450,    tipo: 0.100 },
-    { hasta: 17707,    tipo: 0.120 },
-    { hasta: 33007,    tipo: 0.150 },
-    { hasta: 53407,    tipo: 0.193 },
-    { hasta: 120000,   tipo: 0.235 },
-    { hasta: 175000,   tipo: 0.245 },
-    { hasta: Infinity, tipo: 0.250 },
-  ],
-};
-
-// Fallback: tramos estatales (en caso de CCAA no reconocida)
-const TRAMOS_FALLBACK: Tramo[] = [
-  { hasta: 12450,    tipo: 0.095 },
-  { hasta: 20200,    tipo: 0.120 },
-  { hasta: 35200,    tipo: 0.150 },
-  { hasta: 60000,    tipo: 0.185 },
-  { hasta: Infinity, tipo: 0.225 },
-];
-
-// ------------------------------------------------------------
-// Mínimo personal — Art. 57 LIRPF
-// ------------------------------------------------------------
-function minimoPersonal(edad: number): number {
-  let minimo = 5550;
-  if (edad >= 65 && edad < 75) minimo += 1150;
-  if (edad >= 75) minimo += 1150 + 1400; // ambos adicionales
-  return minimo;
+function situacionAEAT(raw: string, hijos: number): Situacion {
+  if ((raw === 'monoparental' || raw === 'conjunta_monoparental') && hijos > 0) return 'situacion1';
+  if (raw === 'conyuge_sin_rentas' || raw === 'conjunta_biparental') return 'situacion2';
+  return 'situacion3';
 }
 
-// ------------------------------------------------------------
-// Mínimo por descendientes — Art. 58 LIRPF
-// ------------------------------------------------------------
-function minimoDescendientes(numHijos: number): number {
-  const cuantias = [2400, 2700, 4000, 4500];
-  let total = 0;
-  for (let i = 0; i < numHijos; i++) {
-    total += i < 4 ? cuantias[i] : 4500;
-  }
-  return total;
-}
-
-// ------------------------------------------------------------
-// Mínimo por discapacidad contribuyente — Art. 60 LIRPF
-// ------------------------------------------------------------
-function minimoDiscapacidad(grado: string): number {
-  if (grado === '65') return 9000;
-  if (grado === '33') return 3000;
-  return 0;
-}
-
-// ------------------------------------------------------------
-// Reducción por obtención de rendimientos del trabajo — Art. 20 LIRPF
-// Actualizado Ley 7/2024 (efectos 2025-2026)
-// ------------------------------------------------------------
-function reduccionRendimientosTrabajo(rendimientoNeto: number): number {
-  if (rendimientoNeto <= 0) return 0;
-  if (rendimientoNeto <= 14852) return 6498;
-  if (rendimientoNeto <= 17673.52) {
-    return Math.max(0, 6498 - 1.14286 * (rendimientoNeto - 14852));
-  }
-  if (rendimientoNeto <= 33007) return 2364;
-  return 0;
-}
-
-// ------------------------------------------------------------
-// Función genérica de cálculo progresivo de cuota
-// ------------------------------------------------------------
-function calcularCuotaProgresiva(base: number, tramos: Tramo[]): number {
+function escala(base: number): number {
   if (base <= 0) return 0;
   let cuota = 0;
-  let baseAcumulada = 0;
-  for (const tramo of tramos) {
-    const limite = tramo.hasta;
-    if (base <= baseAcumulada) break;
-    const baseEnTramo = Math.min(base, limite) - baseAcumulada;
-    cuota += baseEnTramo * tramo.tipo;
-    baseAcumulada = limite;
-    if (limite === Infinity) break;
+  let anterior = 0;
+  for (const tramo of ESCALA_RETENCION) {
+    const parte = Math.max(0, Math.min(base, tramo.hasta) - anterior);
+    cuota += parte * tramo.tipo;
+    if (base <= tramo.hasta) break;
+    anterior = tramo.hasta;
   }
   return cuota;
 }
 
-// ------------------------------------------------------------
-// Tipo marginal combinado (estatal + autonómico)
-// ------------------------------------------------------------
-function tipoMarginalCombinado(base: number, tramosAutonomicos: Tramo[]): number {
-  if (base <= 0) return TRAMOS_ESTATALES[0].tipo + tramosAutonomicos[0].tipo;
-  let tipoEstatal = TRAMOS_ESTATALES[TRAMOS_ESTATALES.length - 1].tipo;
-  for (const t of TRAMOS_ESTATALES) {
-    if (base <= t.hasta) { tipoEstatal = t.tipo; break; }
-  }
-  let tipoAut = tramosAutonomicos[tramosAutonomicos.length - 1].tipo;
-  for (const t of tramosAutonomicos) {
-    if (base <= t.hasta) { tipoAut = t.tipo; break; }
-  }
-  return tipoEstatal + tipoAut;
+function reduccionTrabajo(rnt: number): number {
+  if (rnt <= 0) return 0;
+  if (rnt <= 14_852) return 7_302;
+  if (rnt <= 17_673.52) return Math.max(0, 7_302 - 1.75 * (rnt - 14_852));
+  if (rnt < 19_747.5) return Math.max(0, 2_364.34 - 1.14 * (rnt - 17_673.52));
+  return 0;
 }
 
-// ------------------------------------------------------------
-// FUNCIÓN PRINCIPAL
-// ------------------------------------------------------------
+function minimoPersonal(edad: number): number {
+  return 5_550 + (edad >= 65 ? 1_150 : 0) + (edad >= 75 ? 1_400 : 0);
+}
+
+function minimoDescendientes(hijos: number): number {
+  const cuantias = [2_400, 2_700, 4_000, 4_500];
+  let total = 0;
+  for (let i = 0; i < hijos; i++) total += cuantias[Math.min(i, 3)];
+  return total;
+}
+
+function minimoDiscapacidad(grado: string): number {
+  if (grado === '65') return 12_000; // 9.000 + 3.000 asistencia
+  if (grado === '33') return 3_000;
+  return 0;
+}
+
+function incrementoGastosDiscapacidad(grado: string): number {
+  if (grado === '65') return 7_750;
+  if (grado === '33') return 3_500;
+  return 0;
+}
+
+function limiteExento(situacion: Situacion, hijos: number): number {
+  const col = hijos <= 0 ? 0 : hijos === 1 ? 1 : 2;
+  const tabla: Record<Situacion, number[]> = {
+    situacion1: [0, 17_644, 18_694],
+    situacion2: [17_197, 18_130, 19_262],
+    situacion3: [15_876, 16_342, 16_867],
+  };
+  return tabla[situacion][col];
+}
+
+function truncar2(n: number): number {
+  return Math.trunc((n + Number.EPSILON) * 100) / 100;
+}
+
 export function compute(i: Inputs): Outputs {
-  const bruto = Math.max(0, i.salario_bruto ?? 0);
-  const edad = Math.max(16, Math.min(99, i.edad ?? 35));
-  const numHijos = Math.max(0, Math.min(10, i.num_hijos ?? 0));
-  const discapacidad = i.discapacidad ?? '0';
-  const situacion = i.situacion_familiar ?? 'individual';
-  const ccaa = i.comunidad_autonoma ?? 'MAD';
+  const bruto = Math.max(0, Number(i.salario_bruto) || 0);
+  const edad = Math.max(16, Math.min(99, Number(i.edad) || 35));
+  const hijos = Math.max(0, Math.min(10, Math.round(Number(i.num_hijos) || 0)));
+  const discapacidad = String(i.discapacidad || '0');
+  const situacion = situacionAEAT(String(i.situacion_familiar || 'otras'), hijos);
+  const contrato = String(i.tipo_contrato || 'general');
+  const pagas = Number(i.numero_pagas) === 14 ? 14 : 12;
 
-  const tramosAut: Tramo[] = TRAMOS_AUTONOMICOS[ccaa] ?? TRAMOS_FALLBACK;
+  const ss = cotizacionTrabajador(bruto);
+  const otrosGastos = Math.min(
+    Math.max(0, bruto - ss),
+    2_000 + incrementoGastosDiscapacidad(discapacidad),
+  );
+  const rnt = Math.max(0, bruto - ss);
+  const red20 = reduccionTrabajo(rnt);
+  const rntReducido = Math.max(0, rnt - otrosGastos - red20);
+  const reduccionesAdicionales = hijos > 2 ? 600 : 0;
+  const base = Math.max(0, rntReducido - reduccionesAdicionales);
 
-  // 1. Cotización SS empleado
-  const ss = bruto * SS_TRABAJADOR_PCT;
+  const minimo = minimoPersonal(edad) + minimoDescendientes(hijos) + minimoDiscapacidad(discapacidad);
+  const exento = limiteExento(situacion, hijos);
 
-  // 2. Rendimiento neto previo (antes reducción art. 20)
-  const rendimientoNetoPrevio = Math.max(0, bruto - ss);
+  let cuota = bruto <= exento ? 0 : Math.max(0, escala(base) - escala(minimo));
+  if (bruto <= 35_200 && bruto > exento) {
+    cuota = Math.min(cuota, Math.max(0, (bruto - exento) * 0.43));
+  }
 
-  // 3. Reducción por rendimientos del trabajo
-  const redRendimientos = reduccionRendimientosTrabajo(rendimientoNetoPrevio);
+  let tipo = bruto > 0 ? truncar2((cuota / bruto) * 100) : 0;
+  if (contrato === 'inferior_anio' && tipo > 0 && tipo < 2) tipo = 2;
+  if (contrato === 'especial' && tipo > 0 && tipo < 15) tipo = 15;
 
-  // 4. Rendimiento neto reducido
-  const rendimientoNetReducido = Math.max(0, rendimientoNetoPrevio - redRendimientos);
+  const retencionAnual = Math.round((bruto * tipo)) / 100;
+  const retencionPorPaga = retencionAnual / pagas;
+  const netoAnual = Math.max(0, bruto - ss - retencionAnual);
+  const netoPorPaga = netoAnual / pagas;
 
-  // 5. Reducción por tributación conjunta
-  let redConjunta = 0;
-  if (situacion === 'conjunta_biparental') redConjunta = 3400;
-  if (situacion === 'conjunta_monoparental') redConjunta = 2150;
-
-  // 6. Base liquidable general
-  const baseLiquidable = Math.max(0, rendimientoNetReducido - redConjunta);
-
-  // 7. Cuota íntegra estatal y autonómica
-  const cuotaEstatal = calcularCuotaProgresiva(baseLiquidable, TRAMOS_ESTATALES);
-  const cuotaAutonomica = calcularCuotaProgresiva(baseLiquidable, tramosAut);
-
-  // 8. Mínimo personal y familiar
-  const minPersonal = minimoPersonal(edad);
-  const minDescend = minimoDescendientes(numHijos);
-  const minDiscap = minimoDiscapacidad(discapacidad);
-  const minimoTotal = minPersonal + minDescend + minDiscap;
-
-  // Cuota generada por el mínimo (a los tipos del primer tramo estatal + autonómico)
-  // Según LIRPF se aplica el tipo del primer tramo a la base del mínimo
-  const tipoEstatalPrimerTramo = TRAMOS_ESTATALES[0].tipo;
-  const tipoAutPrimerTramo = tramosAut[0].tipo;
-  const cuotaMinimoEstatal = Math.min(minimoTotal, baseLiquidable) * tipoEstatalPrimerTramo;
-  const cuotaMinimoAut = Math.min(minimoTotal, baseLiquidable) * tipoAutPrimerTramo;
-
-  // 9. Cuota diferencial (no puede ser negativa)
-  const cuotaEstatalNeta = Math.max(0, cuotaEstatal - cuotaMinimoEstatal);
-  const cuotaAutNeta = Math.max(0, cuotaAutonomica - cuotaMinimoAut);
-  const cuotaTotal = cuotaEstatalNeta + cuotaAutNeta;
-
-  // 10. Magnitudes finales
-  const tipoEfectivo = bruto > 0 ? (cuotaTotal / bruto) * 100 : 0;
-  const tipoMarginal = tipoMarginalCombinado(baseLiquidable, tramosAut) * 100;
-  const retencionMensual = cuotaTotal / 12;
-  const netoAnual = Math.max(0, bruto - ss - cuotaTotal);
-  const netoMensual = netoAnual / 12;
-
-  // --- Insight + gráfico ---
-  const fmtEur = (n: number) =>
-    '€' + Math.round(n).toLocaleString('es-ES');
-  const _insight = {
-    title: 'Lo que te queda en mano',
-    text: `De un bruto de **${fmtEur(bruto)}** te quedan **${fmtEur(netoAnual)}** netos al año (**${fmtEur(netoMensual)}**/mes), tras IRPF y Seguridad Social. Tu tipo efectivo es **${tipoEfectivo.toFixed(1)}%**, pero cada euro extra tributa al marginal del **${tipoMarginal.toFixed(1)}%**.`,
-    tone: 'neutral',
+  const fmtEur = (n: number) => `${Math.round(n).toLocaleString('es-ES')} €`;
+  const insight = {
+    title: 'Tu retención estimada de nómina',
+    text: bruto <= exento
+      ? `Con **${fmtEur(bruto)} brutos** y tus datos familiares, el límite excluyente es **${fmtEur(exento)}**: la retención inicial estimada es **0%**.`
+      : `Sobre **${fmtEur(bruto)} brutos**, el algoritmo AEAT 2026 estima un tipo de retención de **${tipo.toFixed(2)}%**: **${fmtEur(retencionAnual)} al año** o **${fmtEur(retencionPorPaga)} por paga** (${pagas} pagas).`,
+    tone: 'neutral' as const,
     icon: '💶',
   };
-  const _chart = bruto > 0
-    ? {
-        type: 'doughnut',
-        slices: [
-          { label: 'Neto en mano', value: Math.round(netoAnual * 100) / 100 },
-          { label: 'IRPF', value: Math.round(cuotaTotal * 100) / 100 },
-          { label: 'Seguridad Social', value: Math.round(ss * 100) / 100 },
-        ],
-        prefix: '€',
-        centerValue: fmtEur(bruto),
-        centerLabel: 'Salario bruto',
-        ariaLabel: `Reparto del salario bruto de ${fmtEur(bruto)}: ${fmtEur(netoAnual)} netos, ${fmtEur(cuotaTotal)} de IRPF y ${fmtEur(ss)} de Seguridad Social.`,
-      }
-    : undefined;
 
   return {
-    base_liquidable: Math.round(baseLiquidable * 100) / 100,
-    cuota_irpf_total: Math.round(cuotaTotal * 100) / 100,
-    tipo_efectivo: Math.round(tipoEfectivo * 100) / 100,
-    tipo_marginal: Math.round(tipoMarginal * 100) / 100,
-    retencion_mensual: Math.round(retencionMensual * 100) / 100,
+    base_liquidable: Math.round(base * 100) / 100,
+    cuota_irpf_total: Math.round(retencionAnual * 100) / 100,
+    tipo_efectivo: tipo,
+    tipo_marginal: exento,
+    retencion_mensual: Math.round(retencionPorPaga * 100) / 100,
     neto_anual: Math.round(netoAnual * 100) / 100,
-    neto_mensual: Math.round(netoMensual * 100) / 100,
+    neto_mensual: Math.round(netoPorPaga * 100) / 100,
     ss_trabajador: Math.round(ss * 100) / 100,
-    _insight,
-    ...(_chart ? { _chart } : {}),
+    _insight: insight,
+    _chart: bruto > 0 ? {
+      type: 'donut',
+      segments: [
+        { label: 'Neto', value: Math.round(netoAnual) },
+        { label: 'Retención IRPF', value: Math.round(retencionAnual) },
+        { label: 'Seguridad Social', value: Math.round(ss) },
+      ],
+      ariaLabel: `Neto ${fmtEur(netoAnual)}, retención ${fmtEur(retencionAnual)} y Seguridad Social ${fmtEur(ss)}.`,
+    } : undefined,
   };
 }
